@@ -4,9 +4,9 @@
 // 1 stud = 10cm
 export const ROOM_W = 30;  // 3m
 export const ROOM_D = 40;  // 4m
-export const WALL_H = 25;  // 2.5m
+export const WALL_H = 24;  // 2.4m
 export const BRICK_H = 3;
-export const NUM_LAYERS = Math.ceil(WALL_H / BRICK_H); // 9
+export const NUM_LAYERS = WALL_H / BRICK_H; // 8
 export const GAP = 0.08;
 export const STUD_R = 0.30;
 export const STUD_HT = 0.35;
