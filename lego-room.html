@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Appartement LEGO 3D</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #1a1a2e; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+    canvas { display: block; }
+    #info {
+      position: absolute; top: 16px; left: 16px;
+      background: rgba(0,0,0,0.8); color: #fff;
+      padding: 14px 18px; border-radius: 10px;
+      font-size: 13px; line-height: 1.6;
+      backdrop-filter: blur(8px);
+    }
+    #info h2 { margin-bottom: 6px; color: #ffd700; font-size: 15px; }
+    #info .dim { color: #aaa; font-size: 11px; }
+    #info-toggle {
+      position: absolute; top: 16px; left: 16px;
+      background: rgba(0,0,0,0.8); color: #ffd700;
+      border: 1px solid #ffd700; border-radius: 6px;
+      padding: 4px 10px; cursor: pointer; font-size: 13px;
+      backdrop-filter: blur(8px); z-index: 10;
+      display: none;
+    }
+    #info-toggle:hover { background: rgba(255,215,0,0.15); }
+    #info .close-btn {
+      position: absolute; top: 6px; right: 10px;
+      background: none; border: none; color: #888;
+      cursor: pointer; font-size: 16px; padding: 2px 6px;
+    }
+    #info .close-btn:hover { color: #fff; }
+    #info.hidden { display: none; }
+    #controls {
+      position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.8); color: #888; padding: 8px 16px;
+      border-radius: 8px; font-size: 11px; backdrop-filter: blur(8px);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <button id="info-toggle" onclick="document.getElementById('info').classList.remove('hidden');this.style.display='none';">Info</button>
+  <div id="info">
+    <button class="close-btn" onclick="this.parentElement.classList.add('hidden');document.getElementById('info-toggle').style.display='block';">&times;</button>
+    <h2>Salon - LEGO Bricks</h2>
+    <div>Pièce : <strong>3m x 4m</strong> → 30 x 40 studs</div>
+    <div>Murs : <strong>8 briques</strong> (25 studs)</div>
+    <div>Porte : <strong>80cm</strong> ouverture, 30cm du mur gauche</div>
+    <div class="dim">1 stud = 10cm | Briques : 1x16, 1x8, 1x6, 1x4, 1x2, 1x1</div>
+    <div style="margin-top:8px; border-top:1px solid #444; padding-top:8px;">
+      <strong>Repère :</strong><br>
+      <span style="color:#ff4444">X (rouge)</span> = largeur 3m (0→30)<br>
+      <span style="color:#44ff44">Y (vert)</span> = hauteur 2.5m<br>
+      <span style="color:#4488ff">Z (bleu)</span> = profondeur 4m (0→40)<br>
+    </div>
+    <div style="margin-top:6px;">
+      <strong>Murs :</strong>
+      <span style="color:#ff9">A</span>=X0 |
+      <span style="color:#ff9">B</span>=X30 |
+      <span style="color:#ff9">C</span>=Z0 |
+      <span style="color:#ff9">D</span>=Z40 (porte + cuisine X3→13, prof Z46)
+    </div>
+  </div>
+  <div id="controls">Clic gauche : orbiter | Molette : zoom | Clic droit : pan</div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { Reflector } from 'three/addons/objects/Reflector.js';
+
+    // =============================================
+    // CONFIG
+    // =============================================
+    // 1 stud = 10cm
+    const ROOM_W = 30;  // 3m
+    const ROOM_D = 40;  // 4m
+    const WALL_H = 25;  // 2.5m
+    const BRICK_H = 3;
+    const NUM_LAYERS = Math.ceil(WALL_H / BRICK_H); // 9
+    const GAP = 0.08;
+    const STUD_R = 0.30;
+    const STUD_HT = 0.35;
+    const PLATE_H = 0.35;  // hauteur d'une plate (sol fin)
+
+    // Porte : 80cm d'ouverture, 30cm du mur B (X=30)
+    const DOOR_START = 19;  // stud 19
+    const DOOR_END = 27;    // stud 27
+
+    // Renfoncement cuisine : 1m large, 60cm profond, à droite de la porte
+    const KITCHEN_X0 = 3;   // début (depuis mur A)
+    const KITCHEN_X1 = 13;  // fin (1m = 10 studs)
+    const KITCHEN_DEPTH = 6; // 60cm = 6 studs (s'étend vers Z+)
+    const KITCHEN_Z = ROOM_D + KITCHEN_DEPTH; // Z=46
+
+    // Enfoncement angle D-A : 10cm profond, 1m20 le long du mur A
+    const NICHE_DEPTH = 1;       // 10cm = 1 stud (protrusion vers X+)
+    const NICHE_LENGTH = 12;     // 1m20 = 12 studs le long de Z
+    const NICHE_Z_START = ROOM_D - NICHE_LENGTH; // Z=28
+
+    // Baie vitrée double : 170cm large, 190cm haut, 50cm du mur B, sur mur C
+    // Muret de 20cm sous la baie (~1 couche = 30cm en LEGO)
+    const GLASS_START = 8;       // 30 - 5 - 17 = stud 8
+    const GLASS_END = 25;        // 30 - 5 = stud 25
+    const GLASS_MIN_LAYER = 1;   // muret : 1 couche = 3 studs = 30cm (~20cm)
+    const GLASS_MAX_LAYER = 7;   // 6 couches vitrées au-dessus = 18 studs = 1.80m (~190cm)
+    const DOOR_H_LAYERS = 7; // ~2.1m de haut (7 x 3 studs = 21 studs = 2.1m)
+
+    const BRICK_SIZES = [16, 12, 10, 8, 6, 4, 3, 2, 1];
+
+    const COLORS = {
+      wall: 0xc8c8b8, studWall: 0xb8b8a8,
+      floor: 0xd4a437, studFloor: 0xc49530,
+      accent: 0xcc0000, accentS: 0xaa0000,
+      ground: 0x3a7d44,
+    };
+
+    // =============================================
+    // FILL ROW WITH REAL BRICKS
+    // =============================================
+    function fillRow(length, stagger) {
+      const bricks = [];
+      let pos = 0;
+      if (stagger && length > 8) {
+        bricks.push({ start: 0, size: 8 });
+        pos = 8;
+      }
+      while (pos < length) {
+        const remaining = length - pos;
+        for (const size of BRICK_SIZES) {
+          if (size <= remaining) {
+            bricks.push({ start: pos, size });
+            pos += size;
+            break;
+          }
+        }
+      }
+      return bricks;
+    }
+
+    // =============================================
+    // SCENE
+    // =============================================
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x2a2a3e);
+    scene.fog = new THREE.FogExp2(0x2a2a3e, 0.006);
+
+    const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 500);
+    camera.position.set(50, 35, 55);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(ROOM_W / 2, WALL_H / 3, ROOM_D / 2);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.maxPolarAngle = Math.PI / 2.05;
+    controls.update();
+
+    // Environment map (pour les surfaces réfléchissantes)
+    {
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      const envScene = new THREE.Scene();
+      envScene.background = new THREE.Color(0x889ab5);
+      // Lumière simulée pour l'env map
+      envScene.add(new THREE.AmbientLight(0xffffff, 1));
+      const envDir = new THREE.DirectionalLight(0xfff8e8, 2);
+      envDir.position.set(1, 1, 0.5);
+      envScene.add(envDir);
+      // Sol simulé
+      const envFloor = new THREE.Mesh(
+        new THREE.PlaneGeometry(100, 100),
+        new THREE.MeshStandardMaterial({ color: 0xc4a060 })
+      );
+      envFloor.rotation.x = -Math.PI / 2;
+      envFloor.position.y = -1;
+      envScene.add(envFloor);
+      // Murs simulés
+      const envWall = new THREE.Mesh(
+        new THREE.PlaneGeometry(100, 30),
+        new THREE.MeshStandardMaterial({ color: 0xccccbb })
+      );
+      envWall.position.set(0, 10, -10);
+      envScene.add(envWall);
+      scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+      pmrem.dispose();
+    }
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0x8899bb, 0.6));
+    const dir = new THREE.DirectionalLight(0xfff5e0, 1.8);
+    dir.position.set(50, 70, 40);
+    dir.castShadow = true;
+    dir.shadow.mapSize.set(2048, 2048);
+    dir.shadow.camera.left = -60; dir.shadow.camera.right = 60;
+    dir.shadow.camera.top = 60; dir.shadow.camera.bottom = -60;
+    dir.shadow.bias = -0.002;
+    scene.add(dir);
+    const fill = new THREE.DirectionalLight(0xaabbff, 0.4);
+    fill.position.set(-20, 30, -10);
+    scene.add(fill);
+
+    // =============================================
+    // BUILD BRICKS
+    // =============================================
+    const allBricks = []; // {x,y,z, sx,sy,sz, type}
+
+    function addBrickX(startX, layer, z, size, type) {
+      allBricks.push({
+        x: startX + size / 2, y: layer * BRICK_H + BRICK_H / 2, z,
+        sx: size - GAP, sy: BRICK_H - GAP, sz: 1 - GAP,
+        len: size, axis: 'x', type
+      });
+    }
+
+    function addBrickZ(x, layer, startZ, size, type) {
+      allBricks.push({
+        x, y: layer * BRICK_H + BRICK_H / 2, z: startZ + size / 2,
+        sx: 1 - GAP, sy: BRICK_H - GAP, sz: size - GAP,
+        len: size, axis: 'z', type
+      });
+    }
+
+    // --- Helper: mur avec ouvertures multiples ---
+    // openings: [{start, end, maxLayer, minLayer?}]
+    function buildWallWithOpenings(wallZ, length, openings) {
+      for (let layer = 0; layer < NUM_LAYERS; layer++) {
+        for (const b of fillRow(length, layer % 2 === 1)) {
+          const bS = b.start;
+          const bE = bS + b.size;
+          let segments = [{ s: bS, e: bE }];
+          for (const op of openings) {
+            const minL = op.minLayer || 0;
+            if (layer < minL || layer >= op.maxLayer) continue;
+            const newSegments = [];
+            for (const seg of segments) {
+              if (seg.e <= op.start || seg.s >= op.end) {
+                newSegments.push(seg);
+              } else {
+                if (seg.s < op.start) newSegments.push({ s: seg.s, e: op.start });
+                if (seg.e > op.end) newSegments.push({ s: op.end, e: seg.e });
+              }
+            }
+            segments = newSegments;
+          }
+          for (const seg of segments) {
+            const size = seg.e - seg.s;
+            if (size > 0) addBrickX(seg.s, layer, wallZ, size, 'wall');
+          }
+        }
+      }
+    }
+
+    // --- Mur gauche A (x = -0.5) - avec enfoncement angle D-A ---
+    // Section haute : Z=0 à Z=28 (avant la niche, mur normal)
+    for (let layer = 0; layer < NUM_LAYERS; layer++) {
+      for (const b of fillRow(NICHE_Z_START, layer % 2 === 1))
+        addBrickZ(-0.5, layer, b.start, b.size, 'wall');
+    }
+    // Section niche : Z=28 à Z=40, reculée de 1 stud dans le mur (vers -X)
+    for (let layer = 0; layer < NUM_LAYERS; layer++) {
+      for (const b of fillRow(NICHE_LENGTH, layer % 2 === 1))
+        addBrickZ(-NICHE_DEPTH - 0.5, layer, NICHE_Z_START + b.start, b.size, 'wall');
+    }
+    // Retour de niche à Z=28 (ferme le décrochement)
+    for (let layer = 0; layer < NUM_LAYERS; layer++) {
+      addBrickX(-NICHE_DEPTH, layer, NICHE_Z_START - 0.5, NICHE_DEPTH, 'wall');
+    }
+
+    // --- Mur droit (x = ROOM_W + 0.5) ---
+    for (let layer = 0; layer < NUM_LAYERS; layer++) {
+      for (const b of fillRow(ROOM_D, layer % 2 === 1))
+        addBrickZ(ROOM_W + 0.5, layer, b.start, b.size, 'wall');
+    }
+
+    // --- Mur arrière C (z = -0.5) avec baie vitrée ---
+    buildWallWithOpenings(-0.5, ROOM_W, [
+      { start: GLASS_START, end: GLASS_END, minLayer: GLASS_MIN_LAYER, maxLayer: GLASS_MAX_LAYER },
+    ]);
+
+    // Encadrement baie vitrée (accent bleu)
+    for (let layer = GLASS_MIN_LAYER; layer < GLASS_MAX_LAYER; layer++) {
+      addBrickX(GLASS_START - 1, layer, -0.5, 1, 'glass_frame');
+      addBrickX(GLASS_END, layer, -0.5, 1, 'glass_frame');
+    }
+    // Linteau
+    addBrickX(GLASS_START, GLASS_MAX_LAYER, -0.5, GLASS_END - GLASS_START, 'glass_frame');
+
+    // Vitrage (panneau semi-transparent, au-dessus du muret)
+    {
+      const glassW = GLASS_END - GLASS_START;
+      const glassBaseY = GLASS_MIN_LAYER * BRICK_H;
+      const glassTopY = GLASS_MAX_LAYER * BRICK_H;
+      const glassH = glassTopY - glassBaseY;
+      const glassGeo = new THREE.PlaneGeometry(glassW, glassH);
+      const glassMat = new THREE.MeshPhysicalMaterial({
+        color: 0x88ccff,
+        transparent: true,
+        opacity: 0.25,
+        roughness: 0.05,
+        metalness: 0.1,
+        side: THREE.DoubleSide,
+      });
+      const glassMesh = new THREE.Mesh(glassGeo, glassMat);
+      glassMesh.position.set(GLASS_START + glassW / 2, glassBaseY + glassH / 2, -0.5);
+      scene.add(glassMesh);
+
+      // Barre centrale (montant entre les 2 portes)
+      const barGeo = new THREE.BoxGeometry(0.3, glassH, 0.5);
+      const barMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.4 });
+      const bar = new THREE.Mesh(barGeo, barMat);
+      bar.position.set(GLASS_START + glassW / 2, glassBaseY + glassH / 2, -0.5);
+      scene.add(bar);
+    }
+
+    // --- Mur avant D (z = ROOM_D + 0.5) avec porte + ouverture cuisine ---
+    buildWallWithOpenings(ROOM_D + 0.5, ROOM_W, [
+      { start: KITCHEN_X0, end: KITCHEN_X1, maxLayer: NUM_LAYERS }, // cuisine (toute hauteur)
+      { start: DOOR_START,  end: DOOR_END,   maxLayer: DOOR_H_LAYERS }, // porte
+    ]);
+
+    // Extension mur D côté A : 1 stud supplémentaire (X=-1 à X=0) pour rejoindre la niche
+    for (let layer = 0; layer < NUM_LAYERS; layer++) {
+      addBrickX(-NICHE_DEPTH, layer, ROOM_D + 0.5, NICHE_DEPTH, 'wall');
+    }
+
+    // --- Encadrement porte (accent rouge) ---
+    for (let layer = 0; layer < DOOR_H_LAYERS; layer++) {
+      addBrickX(DOOR_START - 1, layer, ROOM_D + 0.5, 1, 'accent');
+      addBrickX(DOOR_END, layer, ROOM_D + 0.5, 1, 'accent');
+    }
+    addBrickX(DOOR_START, DOOR_H_LAYERS, ROOM_D + 0.5, DOOR_END - DOOR_START, 'accent');
+
+    // --- Renfoncement cuisine (3 murs) ---
+    // Mur gauche cuisine (X = KITCHEN_X0 - 0.5, de Z=40 à Z=46)
+    for (let layer = 0; layer < NUM_LAYERS; layer++) {
+      for (const b of fillRow(KITCHEN_DEPTH, layer % 2 === 1))
+        addBrickZ(KITCHEN_X0 - 0.5, layer, ROOM_D + b.start, b.size, 'wall');
+    }
+    // Mur droit cuisine (X = KITCHEN_X1 + 0.5, de Z=40 à Z=46)
+    for (let layer = 0; layer < NUM_LAYERS; layer++) {
+      for (const b of fillRow(KITCHEN_DEPTH, layer % 2 === 1))
+        addBrickZ(KITCHEN_X1 + 0.5, layer, ROOM_D + b.start, b.size, 'wall');
+    }
+    // Mur fond cuisine (Z = KITCHEN_Z + 0.5, de X=3 à X=13)
+    for (let layer = 0; layer < NUM_LAYERS; layer++) {
+      for (const b of fillRow(KITCHEN_X1 - KITCHEN_X0, layer % 2 === 1))
+        addBrickX(KITCHEN_X0 + b.start, layer, KITCHEN_Z + 0.5, b.size, 'wall');
+    }
+
+    // Sol cuisine (sous les murs du renfoncement)
+    const KIT_FX0 = KITCHEN_X0 - 1;
+    const KIT_FX1 = KITCHEN_X1 + 1;
+    const KIT_FW = KIT_FX1 - KIT_FX0;
+    for (let z = ROOM_D + 1; z < KITCHEN_Z + 1; z++) {
+      for (const b of fillRow(KIT_FW, z % 2 === 1)) {
+        allBricks.push({
+          x: KIT_FX0 + b.start + b.size / 2, y: PLATE_H / 2, z: z + 0.5,
+          sx: b.size - GAP, sy: PLATE_H - GAP, sz: 1 - GAP,
+          len: b.size, axis: 'x', type: 'floor'
+        });
+      }
+    }
+
+    // =============================================
+    // MOBILIER CUISINE
+    // =============================================
+    const COUNTER_H = 9;  // 90cm = 9 studs
+    const COUNTER_SLAB = 0.5; // épaisseur du plan
+    const KIT_W = KITCHEN_X1 - KITCHEN_X0; // 10 studs
+    const KIT_D = KITCHEN_DEPTH;            // 6 studs
+    const FRIDGE_W = 6;   // 60cm
+    const CABINET_W = 4;  // 40cm
+
+    // --- Placard (bois, X=3→7, sous le plan, côté mur A) ---
+    {
+      const cabinetH = COUNTER_H - PLATE_H;
+      const geo = new THREE.BoxGeometry(CABINET_W - GAP, cabinetH, KIT_D - GAP);
+      const mat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(
+        KITCHEN_X0 + CABINET_W / 2,
+        PLATE_H + cabinetH / 2,
+        ROOM_D + KIT_D / 2
+      );
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+
+      // Porte du placard
+      const doorGeo = new THREE.BoxGeometry(CABINET_W - 0.4, cabinetH - 0.4, 0.05);
+      const doorMat = new THREE.MeshStandardMaterial({ color: 0x9B7924, roughness: 0.5 });
+      const door = new THREE.Mesh(doorGeo, doorMat);
+      door.position.set(
+        KITCHEN_X0 + CABINET_W / 2,
+        PLATE_H + cabinetH / 2,
+        ROOM_D + 0.05
+      );
+      scene.add(door);
+
+      // Poignée placard
+      const hGeo = new THREE.BoxGeometry(0.15, 1.5, 0.2);
+      const hMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.5, roughness: 0.2 });
+      const h = new THREE.Mesh(hGeo, hMat);
+      h.position.set(
+        KITCHEN_X0 + CABINET_W - 0.8,
+        PLATE_H + cabinetH * 0.5,
+        ROOM_D + 0.15
+      );
+      scene.add(h);
+    }
+
+    // --- Frigo (blanc, X=7→13, sous le plan, côté mur B) ---
+    {
+      const frigoH = COUNTER_H - PLATE_H;
+      const geo = new THREE.BoxGeometry(FRIDGE_W - GAP, frigoH, KIT_D - GAP);
+      const mat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.3, metalness: 0.1 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(
+        KITCHEN_X0 + CABINET_W + FRIDGE_W / 2,
+        PLATE_H + frigoH / 2,
+        ROOM_D + KIT_D / 2
+      );
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+
+      // Poignée frigo
+      const handleGeo = new THREE.BoxGeometry(0.15, 3, 0.2);
+      const handleMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.5, roughness: 0.2 });
+      const handle = new THREE.Mesh(handleGeo, handleMat);
+      handle.position.set(
+        KITCHEN_X0 + CABINET_W + 0.8,
+        PLATE_H + frigoH * 0.6,
+        ROOM_D + 0.15
+      );
+      scene.add(handle);
+    }
+
+    // --- Plan de travail (gris foncé, toute la largeur) ---
+    {
+      const geo = new THREE.BoxGeometry(KIT_W + 0.2, COUNTER_SLAB, KIT_D + 0.2);
+      const mat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.25, metalness: 0.05 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(
+        KITCHEN_X0 + KIT_W / 2,
+        COUNTER_H + COUNTER_SLAB / 2,
+        ROOM_D + KIT_D / 2
+      );
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+    }
+
+    // --- Évier (au-dessus du placard, côté gauche X=3→7) ---
+    {
+      const sinkW = 3;   // 30cm
+      const sinkD = 3.5; // 35cm
+      const sinkDepth = 0.4;
+      const sinkCX = KITCHEN_X0 + CABINET_W / 2;
+      const sinkCZ = ROOM_D + KIT_D / 2;
+      const sinkY = COUNTER_H + COUNTER_SLAB;
+
+      // Bac (creux - bords)
+      const rimMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.4, roughness: 0.15 });
+
+      // Fond
+      const bottomGeo = new THREE.BoxGeometry(sinkW, 0.05, sinkD);
+      const bottom = new THREE.Mesh(bottomGeo, rimMat);
+      bottom.position.set(sinkCX, sinkY - sinkDepth + 0.025, sinkCZ);
+      scene.add(bottom);
+
+      // 4 côtés du bac
+      const sides = [
+        { sx: sinkW, sy: sinkDepth, sz: 0.1, px: 0, pz: -sinkD / 2 },
+        { sx: sinkW, sy: sinkDepth, sz: 0.1, px: 0, pz: sinkD / 2 },
+        { sx: 0.1, sy: sinkDepth, sz: sinkD, px: -sinkW / 2, pz: 0 },
+        { sx: 0.1, sy: sinkDepth, sz: sinkD, px: sinkW / 2, pz: 0 },
+      ];
+      for (const s of sides) {
+        const geo = new THREE.BoxGeometry(s.sx, s.sy, s.sz);
+        const mesh = new THREE.Mesh(geo, rimMat);
+        mesh.position.set(sinkCX + s.px, sinkY - sinkDepth / 2, sinkCZ + s.pz);
+        scene.add(mesh);
+      }
+
+      // Robinet
+      const faucetMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.7, roughness: 0.1 });
+      // Tige verticale
+      const fTige = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2, 8), faucetMat);
+      fTige.position.set(sinkCX, sinkY + 1, sinkCZ + sinkD / 2 - 0.3);
+      scene.add(fTige);
+      // Bec
+      const fBec = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8), faucetMat);
+      fBec.rotation.x = Math.PI / 2;
+      fBec.position.set(sinkCX, sinkY + 1.9, sinkCZ + sinkD / 2 - 0.9);
+      scene.add(fBec);
+    }
+
+    // --- Double plaque de cuisson (au-dessus du frigo, côté droit X=7→13) ---
+    {
+      const plateY = COUNTER_H + COUNTER_SLAB + 0.02;
+      const plateCX = KITCHEN_X0 + CABINET_W + FRIDGE_W / 2;
+      const plateCZ = ROOM_D + KIT_D / 2;
+      const plateMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.2, metalness: 0.1 });
+      const ringMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.3, metalness: 0.2 });
+
+      // Plaque de base
+      const baseGeo = new THREE.BoxGeometry(FRIDGE_W - 1, 0.1, KIT_D - 1.5);
+      const base = new THREE.Mesh(baseGeo, plateMat);
+      base.position.set(plateCX, plateY + 0.05, plateCZ);
+      scene.add(base);
+
+      // 2 plaques rondes (cercles)
+      const ringGeo = new THREE.TorusGeometry(0.9, 0.12, 8, 24);
+      const diskGeo = new THREE.CircleGeometry(0.9, 24);
+      const diskMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.15 });
+
+      for (let i = 0; i < 2; i++) {
+        const offsetZ = (i === 0) ? -1.2 : 1.2;
+        // Anneau
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set(plateCX, plateY + 0.12, plateCZ + offsetZ);
+        scene.add(ring);
+        // Disque
+        const disk = new THREE.Mesh(diskGeo, diskMat);
+        disk.rotation.x = -Math.PI / 2;
+        disk.position.set(plateCX, plateY + 0.11, plateCZ + offsetZ);
+        scene.add(disk);
+      }
+    }
+
+    // =============================================
+    // DRONA - Helper pour remplir une Kallax
+    // =============================================
+    const dronaMat = new THREE.MeshStandardMaterial({ color: 0xcc2222, roughness: 0.7 });
+    const dronaTopMat = new THREE.MeshStandardMaterial({ color: 0xbb1e1e, roughness: 0.75 });
+    const dronaHandleMat = new THREE.MeshStandardMaterial({ color: 0x881515, roughness: 0.8 });
+
+    function addDronaBoxes(cx, cz, baseY, cols, rows, cell, panel, depth) {
+      const totalW = cols * cell + (cols + 1) * panel;
+      const dronaMargin = 0.15;
+      const dronaW = cell - dronaMargin * 2;
+      const dronaH = cell - dronaMargin * 2;
+      const dronaD = depth - 0.6;
+      const wallThick = 0.1;
+      const handleFromTop = 0.7; // 7cm du haut
+      const handleLineH = 0.06;  // trait fin
+      const handleLineW = 1.2;   // largeur du trait
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const dy = baseY + r * (cell + panel) + panel + cell / 2;
+          const dz = cz - totalW / 2 + c * (cell + panel) + panel + cell / 2;
+
+          // Corps du Drona
+          const boxGeo = new THREE.BoxGeometry(dronaD, dronaH, dronaW);
+          const box = new THREE.Mesh(boxGeo, dronaMat);
+          box.position.set(cx, dy, dz);
+          box.castShadow = true;
+          box.receiveShadow = true;
+          scene.add(box);
+
+          // Rebord supérieur
+          const rimGeo = new THREE.BoxGeometry(dronaD + 0.1, wallThick, dronaW + 0.1);
+          const rim = new THREE.Mesh(rimGeo, dronaTopMat);
+          rim.position.set(cx, dy + dronaH / 2 - wallThick / 2, dz);
+          scene.add(rim);
+
+          // Trait d'ombre poignée sur les 2 faces X (avant et arrière)
+          const handleY = dy + dronaH / 2 - handleFromTop;
+          const handleGeo = new THREE.PlaneGeometry(handleLineW, handleLineH);
+          for (const sign of [-1, 1]) {
+            const handle = new THREE.Mesh(handleGeo, dronaHandleMat);
+            handle.rotation.y = Math.PI / 2;
+            handle.position.set(cx + sign * (dronaD / 2 + 0.005), handleY, dz);
+            scene.add(handle);
+          }
+        }
+      }
+    }
+
+    // =============================================
+    // KALLAX 2x3 - Angle mur C (Z=0) + mur B (X=30)
+    // =============================================
+    {
+      const KX_COLS = 2;       // 2 cubes en largeur (le long de Z)
+      const KX_ROWS = 3;       // 3 cubes en hauteur
+      const KX_CELL = 3.3;     // 33cm = 3.3 studs (intérieur case)
+      const KX_PANEL = 0.15;   // épaisseur panneau
+      const KX_DEPTH = 4;      // 39cm ≈ 4 studs
+      const KX_W = KX_COLS * KX_CELL + (KX_COLS + 1) * KX_PANEL; // largeur totale
+      const KX_H = KX_ROWS * KX_CELL + (KX_ROWS + 1) * KX_PANEL; // hauteur totale
+
+      // Position : dos au mur B, collé au mur C
+      const kxX = ROOM_W - KX_DEPTH / 2;  // dos au mur B
+      const kxZ = KX_W / 2;               // collé au mur C
+      const kxBaseY = PLATE_H;
+
+      const kxMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
+      const kxMatInner = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.5 });
+
+      // Panneau arrière (fin, contre mur B)
+      const backGeo = new THREE.BoxGeometry(0.08, KX_H, KX_W);
+      const back = new THREE.Mesh(backGeo, kxMatInner);
+      back.position.set(kxX + KX_DEPTH / 2 - 0.04, kxBaseY + KX_H / 2, kxZ);
+      back.castShadow = true;
+      scene.add(back);
+
+      // Panneaux horizontaux (KX_ROWS + 1)
+      for (let r = 0; r <= KX_ROWS; r++) {
+        const y = kxBaseY + r * (KX_CELL + KX_PANEL) + KX_PANEL / 2;
+        const geo = new THREE.BoxGeometry(KX_DEPTH, KX_PANEL, KX_W);
+        const mesh = new THREE.Mesh(geo, kxMat);
+        mesh.position.set(kxX, y, kxZ);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+      }
+
+      // Panneaux verticaux (KX_COLS + 1, le long de Z)
+      for (let c = 0; c <= KX_COLS; c++) {
+        const z = kxZ - KX_W / 2 + c * (KX_CELL + KX_PANEL) + KX_PANEL / 2;
+        const geo = new THREE.BoxGeometry(KX_DEPTH, KX_H, KX_PANEL);
+        const mesh = new THREE.Mesh(geo, kxMat);
+        mesh.position.set(kxX, kxBaseY + KX_H / 2, z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+      }
+
+      // Drona rouges
+      addDronaBoxes(kxX, kxZ, kxBaseY, KX_COLS, KX_ROWS, KX_CELL, KX_PANEL, KX_DEPTH);
+    }
+
+    // =============================================
+    // LIT IKEA UTAKER - Le long du mur B, après Kallax 2x3
+    // =============================================
+    {
+      const BED_L = 20;     // 200cm longueur (le long de Z)
+      const BED_W = 8;      // 83cm largeur ≈ 8 studs
+      const BED_H = 3;      // 30cm hauteur
+      const BED_FRAME = 0.5; // épaisseur cadre
+      const BED_LEG = 0.5;   // hauteur pieds
+
+      // Kallax 2x3 finit à Z ≈ 7.05 studs
+      const KX2_END_Z = 2 * 3.3 + 3 * 0.15; // ~7.05
+      const bedZ0 = KX2_END_Z + 0.3;  // petit espace après Kallax
+      const bedX1 = ROOM_W;            // collé au mur B
+
+      const bedCX = bedX1 - BED_W / 2;
+      const bedCZ = bedZ0 + BED_L / 2;
+      const bedBaseY = PLATE_H;
+
+      const woodMat = new THREE.MeshStandardMaterial({ color: 0xC4A46C, roughness: 0.7 });
+      const woodDarkMat = new THREE.MeshStandardMaterial({ color: 0xB0935A, roughness: 0.65 });
+
+      // 4 pieds
+      const legGeo = new THREE.BoxGeometry(0.5, BED_LEG, 0.5);
+      const legPositions = [
+        [bedX1 - BED_W + 0.3, bedZ0 + 0.3],
+        [bedX1 - 0.3,         bedZ0 + 0.3],
+        [bedX1 - BED_W + 0.3, bedZ0 + BED_L - 0.3],
+        [bedX1 - 0.3,         bedZ0 + BED_L - 0.3],
+      ];
+      for (const [lx, lz] of legPositions) {
+        const leg = new THREE.Mesh(legGeo, woodDarkMat);
+        leg.position.set(lx, bedBaseY + BED_LEG / 2, lz);
+        leg.castShadow = true;
+        scene.add(leg);
+      }
+
+      const frameY = bedBaseY + BED_LEG;
+
+      // Cadre long côté mur B (X = bedX1)
+      const sideLongGeo = new THREE.BoxGeometry(BED_FRAME, BED_H - BED_LEG, BED_L);
+      const sideB = new THREE.Mesh(sideLongGeo, woodMat);
+      sideB.position.set(bedX1 - BED_FRAME / 2, frameY + (BED_H - BED_LEG) / 2, bedCZ);
+      sideB.castShadow = true;
+      scene.add(sideB);
+
+      // Cadre long côté intérieur
+      const sideInt = new THREE.Mesh(sideLongGeo, woodMat);
+      sideInt.position.set(bedX1 - BED_W + BED_FRAME / 2, frameY + (BED_H - BED_LEG) / 2, bedCZ);
+      sideInt.castShadow = true;
+      scene.add(sideInt);
+
+      // Tête de lit (côté Kallax, Z = bedZ0)
+      const headGeo = new THREE.BoxGeometry(BED_W, BED_H - BED_LEG, BED_FRAME);
+      const head = new THREE.Mesh(headGeo, woodMat);
+      head.position.set(bedCX, frameY + (BED_H - BED_LEG) / 2, bedZ0 + BED_FRAME / 2);
+      head.castShadow = true;
+      scene.add(head);
+
+      // Pied de lit (Z = bedZ0 + BED_L)
+      const foot = new THREE.Mesh(headGeo, woodMat);
+      foot.position.set(bedCX, frameY + (BED_H - BED_LEG) / 2, bedZ0 + BED_L - BED_FRAME / 2);
+      foot.castShadow = true;
+      scene.add(foot);
+
+      // Lattes (slats) - environ 15 lattes
+      const numSlats = 15;
+      const slatSpacing = (BED_L - BED_FRAME * 2) / (numSlats + 1);
+      const slatGeo = new THREE.BoxGeometry(BED_W - BED_FRAME * 2, 0.12, 0.6);
+      for (let i = 1; i <= numSlats; i++) {
+        const slat = new THREE.Mesh(slatGeo, woodDarkMat);
+        slat.position.set(bedCX, frameY + 0.06, bedZ0 + BED_FRAME + i * slatSpacing);
+        scene.add(slat);
+      }
+
+      // Matelas - déborde du cadre
+      const matH = 1.8;  // 18cm épaisseur
+      const matW = BED_W - BED_FRAME * 2 + 0.6;  // déborde du cadre intérieur
+      const matL = BED_L - BED_FRAME * 2 + 0.4;
+      const frameTopY = frameY + (BED_H - BED_LEG);
+      const matBottomY = frameTopY - 0.4;  // légèrement enfoncé dans le cadre
+      const matCenterY = matBottomY + matH / 2;
+      const matTopY = matBottomY + matH;
+
+      const matMat = new THREE.MeshStandardMaterial({ color: 0xF5F0E8, roughness: 0.8 });
+      const mattress = new THREE.Mesh(
+        new THREE.BoxGeometry(matW, matH, matL),
+        matMat
+      );
+      mattress.position.set(bedCX, matCenterY, bedCZ);
+      mattress.castShadow = true;
+      mattress.receiveShadow = true;
+      scene.add(mattress);
+
+      // Couverture rouge - couvre tout le lit et déborde sur les côtés
+      const redMat = new THREE.MeshStandardMaterial({ color: 0xCC2222, roughness: 0.75 });
+      const BLK_T = 0.12;       // épaisseur couverture
+      const BLK_DRAPE = 2.0;    // longueur du drapé qui pend
+
+      // Dessus de la couverture (couvre tout le matelas)
+      const blkTopW = matW + 0.6;   // déborde de 0.3 chaque côté
+      const blkTopL = matL + 0.3;
+      const blkTop = new THREE.Mesh(
+        new THREE.BoxGeometry(blkTopW, BLK_T, blkTopL),
+        redMat
+      );
+      blkTop.position.set(bedCX, matTopY + BLK_T / 2, bedCZ + 0.15);
+      blkTop.castShadow = true;
+      blkTop.receiveShadow = true;
+      scene.add(blkTop);
+
+      // Drapé côté intérieur (X-)
+      const drapeSide = new THREE.Mesh(
+        new THREE.BoxGeometry(BLK_T, BLK_DRAPE, blkTopL),
+        redMat
+      );
+      drapeSide.position.set(bedCX - blkTopW / 2, matTopY - BLK_DRAPE / 2, bedCZ + 0.15);
+      drapeSide.castShadow = true;
+      scene.add(drapeSide);
+
+      // Drapé côté mur B (X+)
+      const drapeSideB = new THREE.Mesh(
+        new THREE.BoxGeometry(BLK_T, BLK_DRAPE, blkTopL),
+        redMat
+      );
+      drapeSideB.position.set(bedCX + blkTopW / 2, matTopY - BLK_DRAPE / 2, bedCZ + 0.15);
+      drapeSideB.castShadow = true;
+      scene.add(drapeSideB);
+
+      // Drapé au pied du lit (Z+)
+      const drapeFoot = new THREE.Mesh(
+        new THREE.BoxGeometry(blkTopW, BLK_DRAPE, BLK_T),
+        redMat
+      );
+      drapeFoot.position.set(bedCX, matTopY - BLK_DRAPE / 2, bedCZ + blkTopL / 2 + 0.15);
+      drapeFoot.castShadow = true;
+      scene.add(drapeFoot);
+
+      // 2 polochons rouges (cylindres, côté tête de lit)
+      const polochonR = 0.8;
+      const polochonL = 2.8;
+      const polochonGeo = new THREE.CylinderGeometry(polochonR, polochonR, polochonL, 12);
+      const polochonY = matTopY + BLK_T + polochonR + 0.05;
+      const polochonZ = bedZ0 + BED_FRAME + 1.5;
+
+      for (const side of [-1, 1]) {
+        const p = new THREE.Mesh(polochonGeo, redMat);
+        p.rotation.z = Math.PI / 2;
+        p.position.set(bedCX + side * (matW / 2 - polochonL / 2 - 0.2), polochonY, polochonZ);
+        p.castShadow = true;
+        scene.add(p);
+      }
+    }
+
+    // =============================================
+    // KALLAX 1x4 - Mur B, à 60cm du mur D
+    // =============================================
+    {
+      const K3_COLS = 1;
+      const K3_ROWS = 4;
+      const K3_CELL = 3.3;
+      const K3_PANEL = 0.15;
+      const K3_DEPTH = 4;
+      const K3_W = K3_COLS * K3_CELL + (K3_COLS + 1) * K3_PANEL; // ~3.6 studs
+      const K3_H = K3_ROWS * K3_CELL + (K3_ROWS + 1) * K3_PANEL; // ~14 studs
+
+      // Dos au mur B, bord le plus proche à 6 studs (60cm) du mur D
+      const k3X = ROOM_W - K3_DEPTH / 2;   // dos au mur B
+      const k3Z = ROOM_D - 6 - K3_W / 2;   // 60cm du mur D
+      const k3BaseY = PLATE_H;
+
+      const k3Mat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
+      const k3MatInner = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.5 });
+
+      // Panneau arrière
+      const backGeo = new THREE.BoxGeometry(0.08, K3_H, K3_W);
+      const back = new THREE.Mesh(backGeo, k3MatInner);
+      back.position.set(k3X + K3_DEPTH / 2 - 0.04, k3BaseY + K3_H / 2, k3Z);
+      back.castShadow = true;
+      scene.add(back);
+
+      // Panneaux horizontaux
+      for (let r = 0; r <= K3_ROWS; r++) {
+        const y = k3BaseY + r * (K3_CELL + K3_PANEL) + K3_PANEL / 2;
+        const geo = new THREE.BoxGeometry(K3_DEPTH, K3_PANEL, K3_W);
+        const mesh = new THREE.Mesh(geo, k3Mat);
+        mesh.position.set(k3X, y, k3Z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+      }
+
+      // Panneaux verticaux
+      for (let c = 0; c <= K3_COLS; c++) {
+        const z = k3Z - K3_W / 2 + c * (K3_CELL + K3_PANEL) + K3_PANEL / 2;
+        const geo = new THREE.BoxGeometry(K3_DEPTH, K3_H, K3_PANEL);
+        const mesh = new THREE.Mesh(geo, k3Mat);
+        mesh.position.set(k3X, k3BaseY + K3_H / 2, z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+      }
+
+      // Drona rouges
+      addDronaBoxes(k3X, k3Z, k3BaseY, K3_COLS, K3_ROWS, K3_CELL, K3_PANEL, K3_DEPTH);
+    }
+
+    // =============================================
+    // KALLAX 1x4 - Angle mur A (X=0) + mur C (Z=0)
+    // =============================================
+    {
+      const K2_COLS = 1;       // 1 cube en largeur
+      const K2_ROWS = 4;       // 4 cubes en hauteur
+      const K2_CELL = 3.3;     // 33cm intérieur
+      const K2_PANEL = 0.15;
+      const K2_DEPTH = 4;      // 39cm ≈ 4 studs
+      const K2_W = K2_COLS * K2_CELL + (K2_COLS + 1) * K2_PANEL; // ~3.6 studs (42cm)
+      const K2_H = K2_ROWS * K2_CELL + (K2_ROWS + 1) * K2_PANEL; // ~14 studs (147cm)
+
+      // Dos au mur A (X=0), collé au mur C (Z=0)
+      const k2X = K2_DEPTH / 2;   // dos au mur A
+      const k2Z = K2_W / 2;       // collé au mur C
+      const k2BaseY = PLATE_H;
+
+      const k2Mat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
+      const k2MatInner = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.5 });
+
+      // Panneau arrière (contre mur A)
+      const backGeo = new THREE.BoxGeometry(0.08, K2_H, K2_W);
+      const back = new THREE.Mesh(backGeo, k2MatInner);
+      back.position.set(k2X - K2_DEPTH / 2 + 0.04, k2BaseY + K2_H / 2, k2Z);
+      back.castShadow = true;
+      scene.add(back);
+
+      // Panneaux horizontaux
+      for (let r = 0; r <= K2_ROWS; r++) {
+        const y = k2BaseY + r * (K2_CELL + K2_PANEL) + K2_PANEL / 2;
+        const geo = new THREE.BoxGeometry(K2_DEPTH, K2_PANEL, K2_W);
+        const mesh = new THREE.Mesh(geo, k2Mat);
+        mesh.position.set(k2X, y, k2Z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+      }
+
+      // Panneaux verticaux
+      for (let c = 0; c <= K2_COLS; c++) {
+        const z = k2Z - K2_W / 2 + c * (K2_CELL + K2_PANEL) + K2_PANEL / 2;
+        const geo = new THREE.BoxGeometry(K2_DEPTH, K2_H, K2_PANEL);
+        const mesh = new THREE.Mesh(geo, k2Mat);
+        mesh.position.set(k2X, k2BaseY + K2_H / 2, z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+      }
+
+      // Drona rouges
+      addDronaBoxes(k2X, k2Z, k2BaseY, K2_COLS, K2_ROWS, K2_CELL, K2_PANEL, K2_DEPTH);
+    }
+
+    // =============================================
+    // KALLAX 2x5 - Angle mur A (X=0) + mur D (Z=40)
+    // =============================================
+    {
+      const K4_COLS = 2;       // 2 cubes en largeur (le long de Z)
+      const K4_ROWS = 5;       // 5 cubes en hauteur
+      const K4_CELL = 3.3;
+      const K4_PANEL = 0.15;
+      const K4_DEPTH = 4;
+      const K4_W = K4_COLS * K4_CELL + (K4_COLS + 1) * K4_PANEL; // ~7.05 studs
+      const K4_H = K4_ROWS * K4_CELL + (K4_ROWS + 1) * K4_PANEL; // ~17.4 studs
+
+      // Dos au mur A (niche, face intérieure à X=-1), flanc contre mur D
+      const k4X = -NICHE_DEPTH + K4_DEPTH / 2;   // dos dans la niche
+      const k4Z = ROOM_D - K4_W / 2;              // flanc contre mur D
+      const k4BaseY = PLATE_H;
+
+      const k4Mat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
+      const k4MatInner = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.5 });
+
+      // Panneau arrière (contre mur A niche)
+      const backGeo = new THREE.BoxGeometry(0.08, K4_H, K4_W);
+      const back = new THREE.Mesh(backGeo, k4MatInner);
+      back.position.set(k4X - K4_DEPTH / 2 + 0.04, k4BaseY + K4_H / 2, k4Z);
+      back.castShadow = true;
+      scene.add(back);
+
+      // Panneaux horizontaux
+      for (let r = 0; r <= K4_ROWS; r++) {
+        const y = k4BaseY + r * (K4_CELL + K4_PANEL) + K4_PANEL / 2;
+        const geo = new THREE.BoxGeometry(K4_DEPTH, K4_PANEL, K4_W);
+        const mesh = new THREE.Mesh(geo, k4Mat);
+        mesh.position.set(k4X, y, k4Z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+      }
+
+      // Panneaux verticaux
+      for (let c = 0; c <= K4_COLS; c++) {
+        const z = k4Z - K4_W / 2 + c * (K4_CELL + K4_PANEL) + K4_PANEL / 2;
+        const geo = new THREE.BoxGeometry(K4_DEPTH, K4_H, K4_PANEL);
+        const mesh = new THREE.Mesh(geo, k4Mat);
+        mesh.position.set(k4X, k4BaseY + K4_H / 2, z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+      }
+
+      // Drona rouges
+      addDronaBoxes(k4X, k4Z, k4BaseY, K4_COLS, K4_ROWS, K4_CELL, K4_PANEL, K4_DEPTH);
+    }
+
+    // =============================================
+    // 3x MIROIR IKEA NISSEDAL 60x60 - Mur D entre porte et cuisine
+    // =============================================
+    {
+      const MIRROR_SIZE = 6;     // 60cm = 6 studs
+      const MIRROR_FRAME = 0.15; // épaisseur cadre
+      const MIRROR_CX = (KITCHEN_X1 + DOOR_START) / 2; // X=16, centre du mur
+      const MIRROR_Z = ROOM_D - 0.02; // face intérieure du mur D
+      const WALL_TOP = NUM_LAYERS * BRICK_H; // haut du mur
+
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
+      const FRAME_T = 0.2;  // épaisseur visible du cadre
+      const FRAME_D = 0.15; // profondeur du cadre
+      const MIRROR_GAP = 0; // pas d'espace entre miroirs
+
+      for (let i = 0; i < 3; i++) {
+        const mirrorY = WALL_TOP - MIRROR_SIZE / 2 - i * (MIRROR_SIZE + MIRROR_GAP);
+        const fz = MIRROR_Z - FRAME_D / 2; // cadre devant le mur
+
+        // Surface miroir (Reflector)
+        const mirGeo = new THREE.PlaneGeometry(MIRROR_SIZE - FRAME_T * 2, MIRROR_SIZE - FRAME_T * 2);
+        const mir = new Reflector(mirGeo, {
+          textureWidth: 512,
+          textureHeight: 512,
+          color: 0xbbbbbb,
+        });
+        mir.position.set(MIRROR_CX, mirrorY, fz - 0.01);
+        mir.rotation.y = Math.PI;
+        scene.add(mir);
+
+        // Cadre : 4 barres autour du miroir, devant le mur
+        // Haut
+        const barH = new THREE.Mesh(new THREE.BoxGeometry(MIRROR_SIZE, FRAME_T, FRAME_D), frameMat);
+        barH.position.set(MIRROR_CX, mirrorY + MIRROR_SIZE / 2 - FRAME_T / 2, fz);
+        scene.add(barH);
+        // Bas
+        const barB = new THREE.Mesh(new THREE.BoxGeometry(MIRROR_SIZE, FRAME_T, FRAME_D), frameMat);
+        barB.position.set(MIRROR_CX, mirrorY - MIRROR_SIZE / 2 + FRAME_T / 2, fz);
+        scene.add(barB);
+        // Gauche
+        const barG = new THREE.Mesh(new THREE.BoxGeometry(FRAME_T, MIRROR_SIZE, FRAME_D), frameMat);
+        barG.position.set(MIRROR_CX - MIRROR_SIZE / 2 + FRAME_T / 2, mirrorY, fz);
+        scene.add(barG);
+        // Droite
+        const barD = new THREE.Mesh(new THREE.BoxGeometry(FRAME_T, MIRROR_SIZE, FRAME_D), frameMat);
+        barD.position.set(MIRROR_CX + MIRROR_SIZE / 2 - FRAME_T / 2, mirrorY, fz);
+        scene.add(barD);
+      }
+    }
+
+    // =============================================
+    // 3x MIROIR IKEA NISSEDAL 40x150 - Mur A, après Kallax 1x4
+    // =============================================
+    {
+      const MA_W = 4;       // 40cm largeur
+      const MA_H = 15;      // 150cm hauteur
+      const MA_FRAME_T = 0.18;
+      const MA_FRAME_D = 0.12;
+
+      // Kallax 1x4 angle A-C : largeur le long de Z
+      const K2_W_CALC = 1 * 3.3 + 2 * 0.15; // ~3.6
+      const MA_START_Z = K2_W_CALC + 1;      // 10cm après Kallax
+
+      const MA_X = 0.02 + MA_FRAME_D / 2;    // face intérieure mur A
+      const MA_BOTTOM_Y = PLATE_H + 0.6;     // 6cm du sol
+      const frameMat2 = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
+
+      for (let i = 0; i < 3; i++) {
+        const mz = MA_START_Z + MA_W / 2 + i * MA_W;
+        const my = MA_BOTTOM_Y + MA_H / 2;
+        const fx = MA_X;
+
+        // Surface miroir (Reflector) - face vers +X (vers la pièce)
+        const mirGeo = new THREE.PlaneGeometry(MA_W - MA_FRAME_T * 2, MA_H - MA_FRAME_T * 2);
+        const mir = new Reflector(mirGeo, {
+          textureWidth: 512,
+          textureHeight: 512,
+          color: 0xbbbbbb,
+        });
+        mir.rotation.y = Math.PI / 2;
+        mir.position.set(fx + 0.01, my, mz);
+        scene.add(mir);
+
+        // Cadre : 4 barres (dans le plan YZ, profondeur en X)
+        // Haut
+        const bH = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, MA_W), frameMat2);
+        bH.position.set(fx, my + MA_H / 2 - MA_FRAME_T / 2, mz);
+        scene.add(bH);
+        // Bas
+        const bB = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, MA_W), frameMat2);
+        bB.position.set(fx, my - MA_H / 2 + MA_FRAME_T / 2, mz);
+        scene.add(bB);
+        // Gauche (Z-)
+        const bG = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_H, MA_FRAME_T), frameMat2);
+        bG.position.set(fx, my, mz - MA_W / 2 + MA_FRAME_T / 2);
+        scene.add(bG);
+        // Droite (Z+)
+        const bD = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_H, MA_FRAME_T), frameMat2);
+        bD.position.set(fx, my, mz + MA_W / 2 - MA_FRAME_T / 2);
+        scene.add(bD);
+      }
+
+      // 4e miroir NISSEDAL 70x160cm, à la suite du 3e
+      const M4_W = 7;       // 70cm
+      const M4_H = 16;      // 160cm
+      const m4z = MA_START_Z + 3 * MA_W + M4_W / 2; // juste après le 3e miroir
+      const m4y = MA_BOTTOM_Y + M4_H / 2;
+      const m4x = MA_X;
+
+      const mirGeo4 = new THREE.PlaneGeometry(M4_W - MA_FRAME_T * 2, M4_H - MA_FRAME_T * 2);
+      const mir4 = new Reflector(mirGeo4, {
+        textureWidth: 512,
+        textureHeight: 512,
+        color: 0xbbbbbb,
+      });
+      mir4.rotation.y = Math.PI / 2;
+      mir4.position.set(m4x + 0.01, m4y, m4z);
+      scene.add(mir4);
+
+      // Cadre
+      const b4H = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, M4_W), frameMat2);
+      b4H.position.set(m4x, m4y + M4_H / 2 - MA_FRAME_T / 2, m4z);
+      scene.add(b4H);
+      const b4B = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, M4_W), frameMat2);
+      b4B.position.set(m4x, m4y - M4_H / 2 + MA_FRAME_T / 2, m4z);
+      scene.add(b4B);
+      const b4G = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, M4_H, MA_FRAME_T), frameMat2);
+      b4G.position.set(m4x, m4y, m4z - M4_W / 2 + MA_FRAME_T / 2);
+      scene.add(b4G);
+      const b4D = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, M4_H, MA_FRAME_T), frameMat2);
+      b4D.position.set(m4x, m4y, m4z + M4_W / 2 - MA_FRAME_T / 2);
+      scene.add(b4D);
+    }
+
+    // =============================================
+    // CHAISE BUREAU IKEA SMÖRKULL (rouge)
+    // =============================================
+    {
+      const chairX = 3;
+      const chairZ = 13;
+      const chairRot = Math.PI / 2; // dos au mur A (miroir)
+
+      const redMat = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
+      const metalMat = new THREE.MeshStandardMaterial({ color: 0xaa1a1a, metalness: 0.4, roughness: 0.35 });
+      const darkMat = new THREE.MeshStandardMaterial({ color: 0xb01818, roughness: 0.55 });
+
+      const chairGroup = new THREE.Group();
+      chairGroup.position.set(chairX, PLATE_H, chairZ);
+      chairGroup.rotation.y = chairRot;
+
+      // --- Base étoile 5 branches ---
+      const baseY = 0.2;
+      for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2;
+        const branchLen = 2.8;
+        const branch = new THREE.Mesh(
+          new THREE.BoxGeometry(0.3, 0.2, branchLen),
+          metalMat
+        );
+        branch.position.set(
+          Math.sin(angle) * branchLen / 2,
+          baseY,
+          Math.cos(angle) * branchLen / 2
+        );
+        branch.rotation.y = -angle;
+        chairGroup.add(branch);
+
+        // Roulette au bout
+        const wheel = new THREE.Mesh(
+          new THREE.SphereGeometry(0.2, 8, 8),
+          darkMat
+        );
+        wheel.position.set(
+          Math.sin(angle) * branchLen,
+          0.15,
+          Math.cos(angle) * branchLen
+        );
+        chairGroup.add(wheel);
+      }
+
+      // --- Vérin central ---
+      const liftH = 3.5;
+      const lift = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.25, liftH, 8),
+        metalMat
+      );
+      lift.position.set(0, baseY + liftH / 2, 0);
+      chairGroup.add(lift);
+
+      const seatY = baseY + liftH;
+
+      // --- Assise ---
+      const seatW = 4.5;
+      const seatD = 4.5;
+      const seatH = 0.6;
+      const seat = new THREE.Mesh(
+        new THREE.BoxGeometry(seatW, seatH, seatD),
+        redMat
+      );
+      // Arrondir les coins visuellement avec un peu d'épaisseur
+      seat.position.set(0, seatY + seatH / 2, 0);
+      seat.castShadow = true;
+      chairGroup.add(seat);
+
+      // Coussin bord arrondi (avant)
+      const cushFront = new THREE.Mesh(
+        new THREE.CylinderGeometry(seatH / 2, seatH / 2, seatW - 0.2, 12),
+        redMat
+      );
+      cushFront.rotation.z = Math.PI / 2;
+      cushFront.position.set(0, seatY + seatH / 2, seatD / 2);
+      chairGroup.add(cushFront);
+
+      // --- Dossier ---
+      const backW = 4.2;
+      const backH = 5;
+      const backT = 0.5;
+      const back = new THREE.Mesh(
+        new THREE.BoxGeometry(backW, backH, backT),
+        redMat
+      );
+      back.position.set(0, seatY + seatH + backH / 2, -seatD / 2 + backT / 2);
+      back.rotation.x = 0.1; // légèrement incliné
+      back.castShadow = true;
+      chairGroup.add(back);
+
+      // Arrondi haut du dossier
+      const backTop = new THREE.Mesh(
+        new THREE.CylinderGeometry(backT / 2, backT / 2, backW - 0.2, 12),
+        redMat
+      );
+      backTop.rotation.z = Math.PI / 2;
+      backTop.position.set(0, seatY + seatH + backH, -seatD / 2 + backT / 2);
+      backTop.rotation.x = 0.1;
+      chairGroup.add(backTop);
+
+      // --- Accoudoirs ---
+      for (const side of [-1, 1]) {
+        // Support vertical
+        const armSupport = new THREE.Mesh(
+          new THREE.BoxGeometry(0.3, 2, 0.3),
+          darkMat
+        );
+        armSupport.position.set(side * (seatW / 2 - 0.2), seatY + seatH + 1, 0);
+        chairGroup.add(armSupport);
+
+        // Coussin accoudoir
+        const armPad = new THREE.Mesh(
+          new THREE.BoxGeometry(0.5, 0.25, 2.5),
+          darkMat
+        );
+        armPad.position.set(side * (seatW / 2 - 0.2), seatY + seatH + 2.1, 0.2);
+        chairGroup.add(armPad);
+      }
+
+      scene.add(chairGroup);
+    }
+
+    // =============================================
+    // 2x BUREAU IKEA BOLLSIDAN assis-debout
+    // Pied excentré en C pour glisser sous/autour du lit
+    // =============================================
+    function addBollsidan(px, pz, rot, height, label) {
+      const DESK_W = 6;    // 59cm ≈ 6 studs
+      const DESK_D = 3.7;  // 37cm ≈ 3.7 studs
+      const TOP_T = 0.25;  // épaisseur plateau
+      const LEG_R = 0.15;  // rayon pied
+
+      const wMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.35 });
+      const legMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, metalness: 0.3, roughness: 0.3 });
+
+      const deskGroup = new THREE.Group();
+      deskGroup.position.set(px, PLATE_H, pz);
+      deskGroup.rotation.y = rot;
+
+      // Plateau
+      const top = new THREE.Mesh(
+        new THREE.BoxGeometry(DESK_W, TOP_T, DESK_D),
+        wMat
+      );
+      top.position.set(0, height, 0);
+      top.castShadow = true;
+      top.receiveShadow = true;
+      deskGroup.add(top);
+
+      // Colonne excentrée (sur un côté X-)
+      const legOffsetX = -DESK_W / 2 + 0.5;
+      const colH = height - 0.3;
+      const col = new THREE.Mesh(
+        new THREE.CylinderGeometry(LEG_R, LEG_R * 1.2, colH, 8),
+        legMat
+      );
+      col.position.set(legOffsetX, colH / 2 + 0.3, 0);
+      deskGroup.add(col);
+
+      // Base en C : barre horizontale au sol allant sous le plateau
+      const baseH = 0.25;
+      const baseL = DESK_W - 0.5;
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(baseL, baseH, 0.4),
+        legMat
+      );
+      base.position.set(legOffsetX + baseL / 2, baseH / 2, 0);
+      base.castShadow = true;
+      deskGroup.add(base);
+
+      // Pieds stabilisateurs aux 2 bouts de la base
+      const footGeo = new THREE.BoxGeometry(0.3, 0.12, 2.0);
+      const foot1 = new THREE.Mesh(footGeo, legMat);
+      foot1.position.set(legOffsetX, 0.06, 0);
+      deskGroup.add(foot1);
+      const foot2 = new THREE.Mesh(footGeo, legMat);
+      foot2.position.set(legOffsetX + baseL, 0.06, 0);
+      deskGroup.add(foot2);
+
+      scene.add(deskGroup);
+    }
+
+    // Bureau 1 : position assise, angle Kallax 1x4 (A-C), face miroir, pied côté Kallax
+    addBollsidan(2.2, 6.8, -Math.PI / 2, 7.2, 'assis');
+
+    // Bureau 2 : au-dessus du lit (~10cm au-dessus du matelas+couverture)
+    addBollsidan(22, 17, 0, 5.5, 'debout');
+
+    // =============================================
+    // PORTANT IKEA MACKAPÄR - Niche mur A, contre Kallax 2x5
+    // 78cm x 32cm x 200cm, ouvert des 2 côtés, pas de façade
+    // 32cm (petit côté) le long du mur Z, 78cm en profondeur (X)
+    // =============================================
+    {
+      const MP_X = 7.8;     // 78cm longueur en profondeur (le long de X, vers la pièce)
+      const MP_Z = 3.2;     // 32cm petit côté (le long de Z, contre le mur)
+      const MP_H = 20;      // 200cm hauteur
+      const FRAME_T = 0.2;
+
+      const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
+      const metalMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.4, roughness: 0.3 });
+
+      // Position : dos au mur A niche, collé contre Kallax 2x5
+      const K4_W_CALC = 2 * 3.3 + 3 * 0.15; // ~7.05
+      const kallaxEdgeZ = ROOM_D - K4_W_CALC; // ~32.95
+
+      const mpX = -NICHE_DEPTH + MP_X / 2;     // X : dos dans la niche, 78cm vers la pièce
+      const mpZ = kallaxEdgeZ - MP_Z / 2;       // Z : collé contre Kallax, petit côté 32cm
+      const mpBaseY = PLATE_H;
+
+      // 4 montants verticaux aux coins (pas de panneaux, ouvert des 2 côtés)
+      for (const dz of [-1, 1]) {
+        for (const dx of [-1, 1]) {
+          const m = new THREE.Mesh(new THREE.BoxGeometry(FRAME_T, MP_H, FRAME_T), whiteMat);
+          m.position.set(
+            mpX + dx * (MP_X / 2 - FRAME_T / 2),
+            mpBaseY + MP_H / 2,
+            mpZ + dz * (MP_Z / 2 - FRAME_T / 2)
+          );
+          m.castShadow = true;
+          scene.add(m);
+        }
+      }
+
+      // Traverses horizontales haut et bas (le long de X, sur les 2 côtés Z)
+      for (const dz of [-1, 1]) {
+        const tH = new THREE.Mesh(new THREE.BoxGeometry(MP_X, FRAME_T, FRAME_T), whiteMat);
+        tH.position.set(mpX, mpBaseY + MP_H - FRAME_T / 2, mpZ + dz * (MP_Z / 2 - FRAME_T / 2));
+        scene.add(tH);
+        const tB = new THREE.Mesh(new THREE.BoxGeometry(MP_X, FRAME_T, FRAME_T), whiteMat);
+        tB.position.set(mpX, mpBaseY + FRAME_T / 2, mpZ + dz * (MP_Z / 2 - FRAME_T / 2));
+        scene.add(tB);
+      }
+
+      // Barre de penderie (rail, le long de X = longueur 78cm)
+      const rail = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.1, MP_X - FRAME_T * 2, 8),
+        metalMat
+      );
+      rail.rotation.z = Math.PI / 2;
+      rail.position.set(mpX, mpBaseY + MP_H - 2, mpZ);
+      scene.add(rail);
+
+      // 2 étagères à chaussures en bas
+      for (const sy of [1, 3]) {
+        const shelf = new THREE.Mesh(
+          new THREE.BoxGeometry(MP_X, 0.12, MP_Z),
+          whiteMat
+        );
+        shelf.position.set(mpX, mpBaseY + sy, mpZ);
+        shelf.castShadow = true;
+        scene.add(shelf);
+      }
+
+      // Étagère haute
+      const shelfTop = new THREE.Mesh(
+        new THREE.BoxGeometry(MP_X, 0.15, MP_Z),
+        whiteMat
+      );
+      shelfTop.position.set(mpX, mpBaseY + MP_H - 0.08, mpZ);
+      shelfTop.castShadow = true;
+      scene.add(shelfTop);
+
+      // Vêtements rouges sur la barre de penderie
+      const clothMat = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.8 });
+      const clothDarkMat = new THREE.MeshStandardMaterial({ color: 0xa01818, roughness: 0.85 });
+      const hangerMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.3, roughness: 0.4 });
+      const railY = mpBaseY + MP_H - 2;
+      const CLOTH_T = 0.12; // épaisseur tissu
+
+      function addHanger(hx) {
+        // Crochet
+        const hook = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.6, 6), hangerMat);
+        hook.position.set(hx, railY + 0.3, mpZ);
+        scene.add(hook);
+        // Barre épaules
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 2.4), hangerMat);
+        bar.position.set(hx, railY - 0.05, mpZ);
+        scene.add(bar);
+      }
+
+      // Positions des 4 vêtements le long de X
+      const clothPositions = [mpX - 2.4, mpX - 0.8, mpX + 0.8, mpX + 2.4];
+
+      // 0,1 = combinaisons ; 2,3 = sweats
+      for (let ci = 0; ci < 4; ci++) {
+        const cx = clothPositions[ci];
+        addHanger(cx);
+        const topY = railY - 0.1;
+        const mat = ci % 2 === 0 ? clothMat : clothDarkMat;
+
+        if (ci < 2) {
+          // Combinaison (torse + jambes)
+          // Torse
+          const torso = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 5.5, 2.2), mat);
+          torso.position.set(cx, topY - 2.75, mpZ);
+          torso.castShadow = true;
+          scene.add(torso);
+          // Manches
+          for (const side of [-1, 1]) {
+            const sleeve = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 4, 1.0), mat);
+            sleeve.position.set(cx, topY - 2.2, mpZ + side * 1.5);
+            sleeve.rotation.x = side * 0.15;
+            sleeve.castShadow = true;
+            scene.add(sleeve);
+          }
+          // Jambes
+          for (const side of [-1, 1]) {
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 6.5, 0.9), mat);
+            leg.position.set(cx, topY - 5.5 - 3.25, mpZ + side * 0.55);
+            leg.castShadow = true;
+            scene.add(leg);
+          }
+        } else {
+          // Sweat (torse + manches, pas de jambes)
+          const torso = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 6, 2.4), mat);
+          torso.position.set(cx, topY - 3, mpZ);
+          torso.castShadow = true;
+          scene.add(torso);
+          // Manches
+          for (const side of [-1, 1]) {
+            const sleeve = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 5, 1.1), mat);
+            sleeve.position.set(cx, topY - 2.8, mpZ + side * 1.6);
+            sleeve.rotation.x = side * 0.2;
+            sleeve.castShadow = true;
+            scene.add(sleeve);
+          }
+        }
+      }
+    }
+
+    // =============================================
+    // 4 CUBES ROUGES - 2 sur MACKAPÄR, 2 sur Kallax 2x5
+    // =============================================
+    {
+      const CUBE_S = 3;  // ~30cm
+      const cubeMat = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
+      const cubeGeo = new THREE.BoxGeometry(CUBE_S, CUBE_S, CUBE_S);
+
+      // MACKAPÄR top : mpX=2.9, mpZ=31.35, topY ≈ PLATE_H + 20
+      const mpTopY = PLATE_H + 20;
+      const mpCX = -NICHE_DEPTH + 7.8 / 2;  // 2.9
+      const mpCZ = (ROOM_D - (2 * 3.3 + 3 * 0.15)) - 3.2 / 2; // 31.35
+
+      const c1 = new THREE.Mesh(cubeGeo, cubeMat);
+      c1.position.set(mpCX - 1.8, mpTopY + CUBE_S / 2, mpCZ);
+      c1.castShadow = true;
+      scene.add(c1);
+      const c2 = new THREE.Mesh(cubeGeo, cubeMat);
+      c2.position.set(mpCX + 1.8, mpTopY + CUBE_S / 2, mpCZ);
+      c2.castShadow = true;
+      scene.add(c2);
+
+      // Kallax 2x5 top : k4X=1.0, k4Z=36.475, topY ≈ PLATE_H + 17.4
+      const k4TopY = PLATE_H + 17.4 + 0.075;
+      const k4CX = -NICHE_DEPTH + 4 / 2;  // 1.0
+      const k4CZ = ROOM_D - (2 * 3.3 + 3 * 0.15) / 2; // 36.475
+
+      const c3 = new THREE.Mesh(cubeGeo, cubeMat);
+      c3.position.set(k4CX, k4TopY + CUBE_S / 2, k4CZ - 1.8);
+      c3.castShadow = true;
+      scene.add(c3);
+      const c4 = new THREE.Mesh(cubeGeo, cubeMat);
+      c4.position.set(k4CX, k4TopY + CUBE_S / 2, k4CZ + 1.8);
+      c4.castShadow = true;
+      scene.add(c4);
+    }
+
+    // =============================================
+    // CONGÉLATEUR CHIQ CSD46D4E - Mur A, après le 4e miroir
+    // 44.7 x 47.4 x 49.6 cm, noir
+    // =============================================
+    {
+      const FRZ_W = 4.5;   // 44.7cm largeur (le long de Z)
+      const FRZ_D = 4.7;   // 47.4cm profondeur (le long de X)
+      const FRZ_H = 5;     // 49.6cm hauteur
+
+      // Après le 4e miroir : Z = 4.6 + 3*4 + 7 = 23.6
+      const frzZ = 23.6 + 0.5 + FRZ_W / 2;  // petit espace après miroir
+      const frzX = FRZ_D / 2 + 0.1;          // contre mur A
+      const frzBaseY = PLATE_H;
+
+      const frzMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3, metalness: 0.2 });
+      const frzMatDark = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 });
+
+      // Corps principal
+      const body = new THREE.Mesh(new THREE.BoxGeometry(FRZ_D, FRZ_H, FRZ_W), frzMat);
+      body.position.set(frzX, frzBaseY + FRZ_H / 2, frzZ);
+      body.castShadow = true;
+      body.receiveShadow = true;
+      scene.add(body);
+
+      // Porte (face avant, légèrement en relief)
+      const door = new THREE.Mesh(
+        new THREE.BoxGeometry(0.08, FRZ_H - 0.4, FRZ_W - 0.3),
+        frzMat
+      );
+      door.position.set(frzX + FRZ_D / 2 + 0.04, frzBaseY + FRZ_H / 2, frzZ);
+      scene.add(door);
+
+      // Poignée (barre verticale)
+      const handle = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 2.5, 0.15),
+        frzMatDark
+      );
+      handle.position.set(frzX + FRZ_D / 2 + 0.1, frzBaseY + FRZ_H / 2, frzZ + FRZ_W / 2 - 0.5);
+      scene.add(handle);
+
+      // Pieds
+      for (const dz of [-1, 1]) {
+        for (const dx of [-1, 1]) {
+          const foot = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.15, 0.15, 0.15, 8),
+            frzMatDark
+          );
+          foot.position.set(
+            frzX + dx * (FRZ_D / 2 - 0.3),
+            frzBaseY + 0.075,
+            frzZ + dz * (FRZ_W / 2 - 0.3)
+          );
+          scene.add(foot);
+        }
+      }
+    }
+
+    // --- Sol (plate fine, étendu sous les murs) ---
+    const FLOOR_X0 = -1;             // sous mur A
+    const FLOOR_X1 = ROOM_W + 1;     // sous mur B
+    const FLOOR_Z0 = -1;             // sous mur C
+    const FLOOR_Z1 = ROOM_D + 1;     // sous mur D
+    const FLOOR_W = FLOOR_X1 - FLOOR_X0;
+
+    for (let z = FLOOR_Z0; z < FLOOR_Z1; z++) {
+      for (const b of fillRow(FLOOR_W, z % 2 === 1)) {
+        allBricks.push({
+          x: FLOOR_X0 + b.start + b.size / 2, y: PLATE_H / 2, z: z + 0.5,
+          sx: b.size - GAP, sy: PLATE_H - GAP, sz: 1 - GAP,
+          len: b.size, axis: 'x', type: 'floor'
+        });
+      }
+    }
+
+    // =============================================
+    // INSTANCED MESHES
+    // =============================================
+    const dummy = new THREE.Object3D();
+    const studGeo = new THREE.CylinderGeometry(STUD_R, STUD_R, STUD_HT, 16);
+
+    const mats = {
+      wall:        new THREE.MeshStandardMaterial({ color: COLORS.wall, roughness: 0.35 }),
+      accent:      new THREE.MeshStandardMaterial({ color: COLORS.accent, roughness: 0.3 }),
+      glass_frame: new THREE.MeshStandardMaterial({ color: 0x4477aa, roughness: 0.3 }),
+      floor:       new THREE.MeshStandardMaterial({ color: COLORS.floor, roughness: 0.3 }),
+    };
+    const studMats = {
+      wall:        new THREE.MeshStandardMaterial({ color: COLORS.studWall, roughness: 0.3, metalness: 0.05 }),
+      accent:      new THREE.MeshStandardMaterial({ color: COLORS.accentS, roughness: 0.25 }),
+      glass_frame: new THREE.MeshStandardMaterial({ color: 0x336688, roughness: 0.25 }),
+      floor:       new THREE.MeshStandardMaterial({ color: COLORS.studFloor, roughness: 0.25, metalness: 0.05 }),
+    };
+
+    // Group by type and size for instancing
+    for (const type of ['wall', 'accent', 'glass_frame', 'floor']) {
+      const bricks = allBricks.filter(b => b.type === type);
+      if (!bricks.length) continue;
+
+      // Group by geometry size
+      const bySize = new Map();
+      for (const b of bricks) {
+        const key = `${b.sx.toFixed(2)}_${b.sy.toFixed(2)}_${b.sz.toFixed(2)}`;
+        if (!bySize.has(key)) bySize.set(key, { sx: b.sx, sy: b.sy, sz: b.sz, items: [] });
+        bySize.get(key).items.push(b);
+      }
+
+      for (const [, g] of bySize) {
+        const geo = new THREE.BoxGeometry(g.sx, g.sy, g.sz);
+        const mesh = new THREE.InstancedMesh(geo, mats[type], g.items.length);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        g.items.forEach((b, i) => {
+          dummy.position.set(b.x, b.y, b.z);
+          dummy.updateMatrix();
+          mesh.setMatrixAt(i, dummy.matrix);
+        });
+        mesh.instanceMatrix.needsUpdate = true;
+        scene.add(mesh);
+      }
+
+      // Studs: top of walls + floor
+      const studPos = [];
+      for (const b of bricks) {
+        const isTopWall = type !== 'floor' && b.y + b.sy / 2 >= (NUM_LAYERS - 1) * BRICK_H;
+        if (!isTopWall && type !== 'floor') continue;
+
+        const topY = b.y + b.sy / 2 + STUD_HT / 2;
+        if (b.axis === 'x' || b.sx > b.sz) {
+          const startX = b.x - (b.sx + GAP) / 2 + 0.5;
+          for (let s = 0; s < Math.round(b.sx + GAP); s++)
+            studPos.push(startX + s, topY, b.z);
+        } else {
+          const startZ = b.z - (b.sz + GAP) / 2 + 0.5;
+          for (let s = 0; s < Math.round(b.sz + GAP); s++)
+            studPos.push(b.x, topY, startZ + s);
+        }
+      }
+
+      if (studPos.length) {
+        const count = studPos.length / 3;
+        const sm = new THREE.InstancedMesh(studGeo, studMats[type], count);
+        sm.castShadow = true;
+        for (let i = 0; i < count; i++) {
+          dummy.position.set(studPos[i*3], studPos[i*3+1], studPos[i*3+2]);
+          dummy.updateMatrix();
+          sm.setMatrixAt(i, dummy.matrix);
+        }
+        sm.instanceMatrix.needsUpdate = true;
+        scene.add(sm);
+      }
+    }
+
+    // Ground
+    const gnd = new THREE.Mesh(
+      new THREE.PlaneGeometry(200, 200),
+      new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9 })
+    );
+    gnd.rotation.x = -Math.PI / 2;
+    gnd.position.y = -0.01;
+    gnd.receiveShadow = true;
+    scene.add(gnd);
+
+    // =============================================
+    // REPÈRE 3D : Axes + Grille numérotée + Labels murs
+    // =============================================
+
+    // --- Axes XYZ ---
+    const axesSize = Math.max(ROOM_W, ROOM_D) * 0.4;
+    const axes = new THREE.AxesHelper(axesSize);
+    axes.position.set(-3, 0, -3);
+    scene.add(axes);
+
+    // --- Texte sprite helper ---
+    function makeTextSprite(text, color, fontSize = 48) {
+      const canvas = document.createElement('canvas');
+      const sz = 256;
+      canvas.width = sz; canvas.height = sz;
+      const ctx = canvas.getContext('2d');
+      ctx.font = `bold ${fontSize}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = color;
+      ctx.fillText(text, sz / 2, sz / 2);
+      const tex = new THREE.CanvasTexture(canvas);
+      const mat = new THREE.SpriteMaterial({ map: tex, depthTest: false });
+      const sprite = new THREE.Sprite(mat);
+      sprite.scale.set(3, 3, 1);
+      return sprite;
+    }
+
+    // Labels axes
+    const xLabel = makeTextSprite('X', '#ff4444');
+    xLabel.position.set(-3 + axesSize + 1.5, 0.5, -3);
+    scene.add(xLabel);
+
+    const yLabel = makeTextSprite('Y', '#44ff44');
+    yLabel.position.set(-3, axesSize + 1.5, -3);
+    scene.add(yLabel);
+
+    const zLabel = makeTextSprite('Z', '#4488ff');
+    zLabel.position.set(-3, 0.5, -3 + axesSize + 1.5);
+    scene.add(zLabel);
+
+    // --- Grille numérotée au sol ---
+    // Ticks le long de X (tous les 5 studs)
+    for (let x = 0; x <= ROOM_W; x += 5) {
+      const label = makeTextSprite(`${x}`, '#ff8888', 36);
+      label.position.set(x, 0.3, -3);
+      label.scale.set(2, 2, 1);
+      scene.add(label);
+
+      // Petite ligne au sol
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(x, 0.05, -1.5),
+        new THREE.Vector3(x, 0.05, -0.2),
+      ]);
+      scene.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0xff6666 })));
+    }
+
+    // Ticks le long de Z (tous les 5 studs)
+    for (let z = 0; z <= ROOM_D; z += 5) {
+      const label = makeTextSprite(`${z}`, '#6688ff', 36);
+      label.position.set(-3, 0.3, z);
+      label.scale.set(2, 2, 1);
+      scene.add(label);
+
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-1.5, 0.05, z),
+        new THREE.Vector3(-0.2, 0.05, z),
+      ]);
+      scene.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0x6688ff })));
+    }
+
+    // --- Labels des murs ---
+    function makeWallLabel(text, x, y, z, bgColor) {
+      const sprite = makeTextSprite(text, bgColor, 42);
+      sprite.position.set(x, y, z);
+      sprite.scale.set(4, 4, 1);
+      scene.add(sprite);
+    }
+
+    const labelY = WALL_H * 0.6;
+    makeWallLabel('MUR A (X=0)',    -3,           labelY, ROOM_D / 2,     '#ffdd44');
+    makeWallLabel('MUR B (X=30)',   ROOM_W + 3,   labelY, ROOM_D / 2,     '#ffdd44');
+    makeWallLabel('MUR C (Z=0)',    ROOM_W / 2,   labelY, -3,             '#ffdd44');
+    makeWallLabel('MUR D (Z=40)',   ROOM_W / 2,   labelY, ROOM_D + 3,    '#ffdd44');
+
+    // --- Grille au sol ---
+    // Lignes principales tous les 10 studs (1m)
+    const gridMatMajor = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 });
+    // Lignes secondaires tous les 5 studs (50cm)
+    const gridMatMinor = new THREE.LineBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.2 });
+
+    const GRID_Y = 1.1; // juste au-dessus du sol LEGO (1 stud de haut)
+
+    for (let x = 0; x <= ROOM_W; x += 5) {
+      const mat = (x % 10 === 0) ? gridMatMajor : gridMatMinor;
+      const g = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(x, GRID_Y, 0),
+        new THREE.Vector3(x, GRID_Y, ROOM_D),
+      ]);
+      scene.add(new THREE.Line(g, mat));
+    }
+    for (let z = 0; z <= ROOM_D; z += 5) {
+      const mat = (z % 10 === 0) ? gridMatMajor : gridMatMinor;
+      const g = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, GRID_Y, z),
+        new THREE.Vector3(ROOM_W, GRID_Y, z),
+      ]);
+      scene.add(new THREE.Line(g, mat));
+    }
+
+    // Numéros sur la grille intérieure (coins des carrés 10x10)
+    for (let x = 0; x <= ROOM_W; x += 10) {
+      for (let z = 0; z <= ROOM_D; z += 10) {
+        const label = makeTextSprite(`${x},${z}`, '#ffffff', 28);
+        label.position.set(x + 1.5, GRID_Y + 0.3, z + 1.5);
+        label.scale.set(1.8, 1.8, 1);
+        scene.add(label);
+      }
+    }
+
+    // =============================================
+    // ANIMATE
+    // =============================================
+    (function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    })();
+
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    console.log(`LEGO Room: ${ROOM_W}x${ROOM_D}, ${allBricks.length} briques`);
+    console.log(`Porte: studs ${DOOR_START}-${DOOR_END} (80cm), 30cm du mur gauche`);
+  </script>
+</body>
+</html>
