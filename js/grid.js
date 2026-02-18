@@ -1,50 +1,24 @@
 import * as THREE from 'three';
 import { ROOM_W, ROOM_D, WALL_H } from './config.js';
-
-function makeTextSprite(text, color, fontSize = 48) {
-  const canvas = document.createElement('canvas');
-  const sz = 256;
-  canvas.width = sz; canvas.height = sz;
-  const ctx = canvas.getContext('2d');
-  ctx.font = `bold ${fontSize}px monospace`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = color;
-  ctx.fillText(text, sz / 2, sz / 2);
-  const tex = new THREE.CanvasTexture(canvas);
-  const mat = new THREE.SpriteMaterial({ map: tex, depthTest: false });
-  const sprite = new THREE.Sprite(mat);
-  sprite.scale.set(3, 3, 1);
-  return sprite;
-}
+import { makeText } from './labels.js';
 
 export function buildGrid(scene) {
+  const GRID_Z_MAX = 80; // 8m au lieu de 4m
+
   // --- Axes XYZ ---
-  const axesSize = Math.max(ROOM_W, ROOM_D) * 0.4;
+  const axesSize = Math.max(ROOM_W, GRID_Z_MAX) * 0.4;
   const axes = new THREE.AxesHelper(axesSize);
   axes.position.set(-3, 0, -3);
   scene.add(axes);
 
   // Labels axes
-  const xLabel = makeTextSprite('X', '#ff4444');
-  xLabel.position.set(-3 + axesSize + 1.5, 0.5, -3);
-  scene.add(xLabel);
+  makeText(scene, 'X', { color: '#ff4444', size: 1.5, x: -3 + axesSize + 1.5, y: 0.5, z: -3 });
+  makeText(scene, 'Y', { color: '#44ff44', size: 1.5, x: -3, y: axesSize + 1.5, z: -3 });
+  makeText(scene, 'Z', { color: '#4488ff', size: 1.5, x: -3, y: 0.5, z: -3 + axesSize + 1.5, rotY: -Math.PI / 2 });
 
-  const yLabel = makeTextSprite('Y', '#44ff44');
-  yLabel.position.set(-3, axesSize + 1.5, -3);
-  scene.add(yLabel);
-
-  const zLabel = makeTextSprite('Z', '#4488ff');
-  zLabel.position.set(-3, 0.5, -3 + axesSize + 1.5);
-  scene.add(zLabel);
-
-  // --- Grille numérotée au sol ---
-  // Ticks le long de X
+  // --- Ticks le long de X ---
   for (let x = 0; x <= ROOM_W; x += 5) {
-    const label = makeTextSprite(`${x}`, '#ff8888', 36);
-    label.position.set(x, 0.3, -3);
-    label.scale.set(2, 2, 1);
-    scene.add(label);
+    makeText(scene, `${x}`, { color: '#ff8888', size: 0.8, x, y: 0.3, z: -2.5 });
 
     const lineGeo = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(x, 0.05, -1.5),
@@ -53,12 +27,9 @@ export function buildGrid(scene) {
     scene.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0xff6666 })));
   }
 
-  // Ticks le long de Z
-  for (let z = 0; z <= ROOM_D; z += 5) {
-    const label = makeTextSprite(`${z}`, '#6688ff', 36);
-    label.position.set(-3, 0.3, z);
-    label.scale.set(2, 2, 1);
-    scene.add(label);
+  // --- Ticks le long de Z ---
+  for (let z = 0; z <= GRID_Z_MAX; z += 5) {
+    makeText(scene, `${z}`, { color: '#6688ff', size: 0.8, x: -2.5, y: 0.3, z, rotY: -Math.PI / 2 });
 
     const lineGeo = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(-1.5, 0.05, z),
@@ -68,34 +39,26 @@ export function buildGrid(scene) {
   }
 
   // --- Labels des murs ---
-  function makeWallLabel(text, x, y, z, bgColor) {
-    const sprite = makeTextSprite(text, bgColor, 42);
-    sprite.position.set(x, y, z);
-    sprite.scale.set(4, 4, 1);
-    scene.add(sprite);
-  }
-
   const labelY = WALL_H * 0.6;
-  makeWallLabel('MUR A (X=0)',    -3,           labelY, ROOM_D / 2,     '#ffdd44');
-  makeWallLabel('MUR B (X=30)',   ROOM_W + 3,   labelY, ROOM_D / 2,     '#ffdd44');
-  makeWallLabel('MUR C (Z=0)',    ROOM_W / 2,   labelY, -3,             '#ffdd44');
-  makeWallLabel('MUR D (Z=40)',   ROOM_W / 2,   labelY, ROOM_D + 3,    '#ffdd44');
+  makeText(scene, 'MUR A OUEST (X=0)',  { size: 1.2, x: -3,         y: labelY, z: ROOM_D / 2, rotY: Math.PI / 2 });
+  makeText(scene, 'MUR B EST (X=30)',   { size: 1.2, x: ROOM_W + 3, y: labelY, z: ROOM_D / 2, rotY: -Math.PI / 2 });
+  makeText(scene, 'MUR C NORD (Z=0)',   { size: 1.2, x: ROOM_W / 2, y: labelY, z: -3 });
+  makeText(scene, 'MUR D SUD (Z=40)',   { size: 1.2, x: ROOM_W / 2, y: labelY, z: ROOM_D + 3, rotY: Math.PI });
 
   // --- Grille au sol ---
   const gridMatMajor = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 });
   const gridMatMinor = new THREE.LineBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.2 });
-
   const GRID_Y = 1.1;
 
   for (let x = 0; x <= ROOM_W; x += 5) {
     const mat = (x % 10 === 0) ? gridMatMajor : gridMatMinor;
     const g = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(x, GRID_Y, 0),
-      new THREE.Vector3(x, GRID_Y, ROOM_D),
+      new THREE.Vector3(x, GRID_Y, GRID_Z_MAX),
     ]);
     scene.add(new THREE.Line(g, mat));
   }
-  for (let z = 0; z <= ROOM_D; z += 5) {
+  for (let z = 0; z <= GRID_Z_MAX; z += 5) {
     const mat = (z % 10 === 0) ? gridMatMajor : gridMatMinor;
     const g = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(0, GRID_Y, z),
@@ -106,11 +69,8 @@ export function buildGrid(scene) {
 
   // Numéros sur la grille intérieure
   for (let x = 0; x <= ROOM_W; x += 10) {
-    for (let z = 0; z <= ROOM_D; z += 10) {
-      const label = makeTextSprite(`${x},${z}`, '#ffffff', 28);
-      label.position.set(x + 1.5, GRID_Y + 0.3, z + 1.5);
-      label.scale.set(1.8, 1.8, 1);
-      scene.add(label);
+    for (let z = 0; z <= GRID_Z_MAX; z += 10) {
+      makeText(scene, `${x},${z}`, { color: '#ffffff', size: 0.6, x: x + 0.5, y: GRID_Y + 0.3, z: z + 0.5 });
     }
   }
 }

@@ -60,8 +60,10 @@ export function buildWalls(scene) {
   }
 
   // --- Mur arrière C (z = -0.5) avec baie vitrée ---
+  // Ouvertures élargies pour inclure l'encadrement (évite z-fighting)
   buildWallWithOpenings(-0.5, ROOM_W, [
-    { start: GLASS_START, end: GLASS_END, minLayer: GLASS_MIN_LAYER, maxLayer: GLASS_MAX_LAYER },
+    { start: GLASS_START - 1, end: GLASS_END + 1, minLayer: GLASS_MIN_LAYER, maxLayer: GLASS_MAX_LAYER },
+    { start: GLASS_START, end: GLASS_END, minLayer: GLASS_MAX_LAYER, maxLayer: GLASS_MAX_LAYER + 1 },
   ]);
 
   // Encadrement baie vitrée (accent bleu)
@@ -100,9 +102,11 @@ export function buildWalls(scene) {
   }
 
   // --- Mur avant D (z = ROOM_D + 0.5) avec porte + ouverture cuisine ---
+  // Ouvertures élargies pour inclure l'encadrement (évite z-fighting)
   buildWallWithOpenings(ROOM_D + 0.5, ROOM_W, [
     { start: KITCHEN_X0, end: KITCHEN_X1, maxLayer: NUM_LAYERS },
-    { start: DOOR_START, end: DOOR_END, maxLayer: DOOR_H_LAYERS },
+    { start: DOOR_START - 1, end: DOOR_END + 1, maxLayer: DOOR_H_LAYERS },
+    { start: DOOR_START, end: DOOR_END, minLayer: DOOR_H_LAYERS, maxLayer: DOOR_H_LAYERS + 1 },
   ]);
 
   // Extension mur D côté A
@@ -126,9 +130,11 @@ export function buildWalls(scene) {
     for (const b of fillRow(KITCHEN_DEPTH, layer % 2 === 1))
       addBrickZ(KITCHEN_X1 + 0.5, layer, ROOM_D + b.start, b.size, 'wall');
   }
+  // Mur salle de bain (fond cuisine étendu) : X=-NICHE_DEPTH → DOOR_START
+  const SDB_LEN = DOOR_START + NICHE_DEPTH; // 20 studs = 2m
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(KITCHEN_X1 - KITCHEN_X0, layer % 2 === 1))
-      addBrickX(KITCHEN_X0 + b.start, layer, KITCHEN_Z + 0.5, b.size, 'wall');
+    for (const b of fillRow(SDB_LEN, layer % 2 === 1))
+      addBrickX(-NICHE_DEPTH + b.start, layer, KITCHEN_Z + 0.5, b.size, 'wall');
   }
 
   // Sol cuisine

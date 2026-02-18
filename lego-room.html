@@ -38,11 +38,24 @@
       border-radius: 8px; font-size: 11px; backdrop-filter: blur(8px);
       pointer-events: none;
     }
+    #views {
+      position: absolute; top: 16px; right: 16px;
+      display: flex; flex-direction: column; gap: 4px;
+      backdrop-filter: blur(8px);
+    }
+    #views button {
+      background: rgba(0,0,0,0.8); color: #ccc;
+      border: 1px solid #555; border-radius: 6px;
+      padding: 5px 12px; cursor: pointer; font-size: 12px;
+      text-align: left; white-space: nowrap;
+    }
+    #views button:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: #888; }
+    #views .view-label { color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; }
   </style>
 </head>
 <body>
-  <button id="info-toggle" onclick="document.getElementById('info').classList.remove('hidden');this.style.display='none';">Info</button>
-  <div id="info">
+  <button id="info-toggle" style="display:block" onclick="document.getElementById('info').classList.remove('hidden');this.style.display='none';">Info</button>
+  <div id="info" class="hidden">
     <button class="close-btn" onclick="this.parentElement.classList.add('hidden');document.getElementById('info-toggle').style.display='block';">&times;</button>
     <h2>Salon - LEGO Bricks</h2>
     <div>Pièce : <strong>3m x 4m</strong> → 30 x 40 studs</div>
@@ -62,6 +75,16 @@
       <span style="color:#ff9">C</span>=Z0 |
       <span style="color:#ff9">D</span>=Z40 (porte + cuisine X3→13, prof Z46)
     </div>
+  </div>
+  <div id="views">
+    <div class="view-label">Vues</div>
+    <button data-view="perspective">Perspective</button>
+    <button data-view="top">Dessus</button>
+    <button data-view="front">Face (D)</button>
+    <button data-view="back">Arrière (C)</button>
+    <button data-view="left">Gauche (A)</button>
+    <button data-view="right">Droite (B)</button>
+    <button data-view="bottom">Dessous</button>
   </div>
   <div id="controls">Clic gauche : orbiter | Molette : zoom | Clic droit : pan</div>
 
