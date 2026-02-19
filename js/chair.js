@@ -14,10 +14,16 @@ export function buildChair(scene) {
   chairGroup.rotation.y = chairRot;
 
   // --- Base étoile 5 branches ---
-  const baseY = 0.2;
+  const WHEEL_R = 0.15;
+  const CASTER_H = 0.3;
+  const baseY = CASTER_H + 0.1;
   for (let i = 0; i < 5; i++) {
     const angle = (i / 5) * Math.PI * 2;
     const branchLen = 2.8;
+    const tipX = Math.sin(angle) * branchLen;
+    const tipZ = Math.cos(angle) * branchLen;
+
+    // Branche (orientée du centre vers le bout)
     const branch = new THREE.Mesh(
       new THREE.BoxGeometry(0.3, 0.2, branchLen),
       metalMat
@@ -27,18 +33,25 @@ export function buildChair(scene) {
       baseY,
       Math.cos(angle) * branchLen / 2
     );
-    branch.rotation.y = -angle;
+    branch.rotation.y = angle;
     chairGroup.add(branch);
 
-    const wheel = new THREE.Mesh(
-      new THREE.SphereGeometry(0.2, 8, 8),
+    // Fourche roulette (petit cylindre vertical sous la branche)
+    const fork = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.08, CASTER_H, 6),
       darkMat
     );
-    wheel.position.set(
-      Math.sin(angle) * branchLen,
-      0.15,
-      Math.cos(angle) * branchLen
+    fork.position.set(tipX, baseY - 0.1 - CASTER_H / 2, tipZ);
+    chairGroup.add(fork);
+
+    // Roue (essieu perpendiculaire à la branche → roule dans l'axe de la branche)
+    const wheel = new THREE.Mesh(
+      new THREE.CylinderGeometry(WHEEL_R, WHEEL_R, 0.12, 10),
+      darkMat
     );
+    wheel.position.set(tipX, WHEEL_R, tipZ);
+    const branchDir = new THREE.Vector3(Math.sin(angle), 0, Math.cos(angle));
+    wheel.quaternion.setFromAxisAngle(branchDir, Math.PI / 2);
     chairGroup.add(wheel);
   }
 

@@ -48,8 +48,8 @@ export function buildBathroom(scene) {
   // Double porte coulissante vitrée (X=7→19, Z=60)
   // =============================================
   {
-    const SLIDE_X0 = SHOWER_X1; // 7
-    const SLIDE_X1 = DOOR_START; // 19
+    const SLIDE_X0 = SHOWER_X1 + 1; // 8
+    const SLIDE_X1 = DOOR_START - 1; // 18
     const SLIDE_W = SLIDE_X1 - SLIDE_X0; // 12
     const SLIDE_CX = (SLIDE_X0 + SLIDE_X1) / 2;
     const SLIDE_Z = SDB_Z;
@@ -199,7 +199,7 @@ export function buildBathroom(scene) {
   const VANITY_D = 4.7;
   const VANITY_H = 5;
   const VANITY_Y0 = 3;
-  const VANITY_X1 = DOOR_START - 4;
+  const VANITY_X1 = DOOR_START - 4.8;
   const VANITY_X0 = VANITY_X1 - VANITY_W;
   const VANITY_CX = (VANITY_X0 + VANITY_X1) / 2;
   const VANITY_CZ = KITCHEN_Z + VANITY_D / 2;
@@ -265,7 +265,7 @@ export function buildBathroom(scene) {
   scene.add(cbnW);
 
   const cbnE = new THREE.Mesh(new THREE.BoxGeometry(CBN_W, CBN_H, CBN_D), cbnMat);
-  cbnE.position.set(DOOR_START - CBN_W / 2, CBN_H / 2, KITCHEN_Z + CBN_D / 2);
+  cbnE.position.set(DOOR_START - CBN_W / 2 - 0.8, CBN_H / 2, KITCHEN_Z + CBN_D / 2);
   cbnE.castShadow = true;
   cbnE.receiveShadow = true;
   scene.add(cbnE);
