@@ -49,8 +49,9 @@ export function buildInstancedMeshes(scene, allBricks) {
     // Studs
     const studPos = [];
     for (const b of bricks) {
-      const isTopWall = type !== 'floor' && b.y + b.sy / 2 >= (NUM_LAYERS - 1) * BRICK_H;
-      if (!isTopWall && type !== 'floor') continue;
+      const isPlate = type === 'floor' || type === 'grass';
+      const isTopWall = !isPlate && b.y + b.sy / 2 >= (NUM_LAYERS - 1) * BRICK_H;
+      if (!isTopWall && !isPlate) continue;
 
       const topY = b.y + b.sy / 2 + STUD_HT / 2;
       if (b.axis === 'x' || b.sx > b.sz) {
