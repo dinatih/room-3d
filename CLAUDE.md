@@ -21,22 +21,27 @@ room-3d/
 ├── lego-room.html          # HTML + CSS + importmap + <script type="module" src="js/main.js">
 └── js/
     ├── main.js              # Point d'entrée : imports, animate loop, resize
-    ├── config.js            # Constantes (ROOM_W, BRICK_H, COLORS, etc.)
+    ├── config.js            # Constantes (ROOM_W, BRICK_H, KALLAX_*, FLOOR_Y, COLORS, etc.)
     ├── scene.js             # Scene, camera, renderer, controls, lights, env map
-    ├── brickHelpers.js      # fillRow, addBrickX, addBrickZ, allBricks
+    ├── brickHelpers.js      # fillRow, addBrickX, addBrickZ, addFloorBrick, allBricks
     ├── walls.js             # buildWallWithOpenings + 4 murs + niche + cuisine walls
     ├── kitchen.js           # Mobilier cuisine (plan de travail, frigo, évier, plaques)
     ├── drona.js             # dronaMat, addDronaBoxes
-    ├── kallax.js            # 4 Kallax (2x3, 2x 1x4, 2x5) + appels addDronaBoxes
+    ├── kallax.js            # buildKallaxUnit + 4 Kallax (2x3, 2x 1x4, 2x5) + Drona
     ├── bed.js               # Lit Utaker + matelas + couverture + polochons
     ├── mirrors.js           # 3x Nissedal mur D + 4x Nissedal mur A (Reflector)
     ├── chair.js             # Chaise SMÖRKULL
     ├── desks.js             # addBollsidan + 2 appels
     ├── mackapar.js          # Portant + vêtements
-    ├── decor.js             # 4 cubes rouges + congélateur CHIQ
-    ├── floor.js             # Sol LEGO (push into allBricks)
+    ├── decor.js             # Drona déco, congélateur CHIQ, étagère LACK, tringle MULIG, TV, desserte
+    ├── corridor.js          # Couloir studio, placard coulissant, mur diagonal + porte entrée
+    ├── bathroom.js          # SDB : murs, porte vitrée, douche, WC, vasque, chauffe-eau
+    ├── floor.js             # Sol LEGO (séjour, niche, porte, jardin) + parquet
     ├── instancedMeshes.js   # InstancedMesh builder + studs + ground plane
-    └── grid.js              # Axes, grille, labels, makeTextSprite
+    ├── grid.js              # Axes, grille, labels, makeTextSprite
+    ├── labels.js            # Font loader + makeText (TextGeometry)
+    ├── minimap.js           # Minimap interactive (canvas 2D)
+    └── floorplan.js         # Plan 2D (Three.js, toggle)
 ```
 
 ### Graphe de dépendances
@@ -53,12 +58,17 @@ main.js
 ├── bed.js ← config.js, THREE
 ├── mirrors.js ← config.js, THREE, Reflector
 ├── chair.js ← config.js, THREE
-├── desks.js ← config.js, THREE
+├── desks.js ← THREE
 ├── mackapar.js ← config.js, THREE
-├── decor.js ← config.js, THREE
+├── decor.js ← config.js, drona.js, THREE
+├── corridor.js ← config.js, brickHelpers.js, labels.js, THREE
+├── bathroom.js ← config.js, brickHelpers.js, labels.js, THREE
 ├── floor.js ← config.js, brickHelpers.js
 ├── instancedMeshes.js ← config.js, THREE
-└── grid.js ← config.js, THREE
+├── grid.js ← config.js, THREE
+├── labels.js ← THREE
+├── minimap.js ← config.js
+└── floorplan.js ← config.js, labels.js, THREE
 ```
 
 ### Conventions

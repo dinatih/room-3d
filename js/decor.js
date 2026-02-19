@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, WALL_H, PLATE_H, GAP, NICHE_DEPTH, NICHE_Z_START, KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH } from './config.js';
-import { fillRow, allBricks } from './brickHelpers.js';
+import { ROOM_W, ROOM_D, WALL_H, NICHE_DEPTH, NICHE_Z_START, KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, KALLAX_CELL, KALLAX_PANEL } from './config.js';
 import { addSingleDrona } from './drona.js';
 
 export function buildDecor(scene) {
@@ -13,21 +12,21 @@ export function buildDecor(scene) {
     // 2 sur MACKAPÄR
     const mpTopY = 20;
     const mpCX = -NICHE_DEPTH + 7.8 / 2;
-    const mpCZ = (ROOM_D - (2 * 3.3 + 3 * 0.15)) - 3.2 / 2;
+    const mpCZ = (ROOM_D - (2 * KALLAX_CELL + 3 * KALLAX_PANEL)) - 3.2 / 2;
 
     addSingleDrona(scene, mpCX - 1.8, mpTopY + DS / 2, mpCZ, DS, DS, DS);
     addSingleDrona(scene, mpCX + 1.8, mpTopY + DS / 2, mpCZ, DS, DS, DS);
 
     // 1 sur Kallax 2x3 (angle C+B)
-    const k1TopY = 3 * 3.3 + 4 * 0.15; // 10.5
+    const k1TopY = 3 * KALLAX_CELL + 4 * KALLAX_PANEL; // 10.5
     const k1CX = ROOM_W - 2; // 28
-    const k1CZ = (2 * 3.3 + 3 * 0.15) / 2; // 3.525
+    const k1CZ = (2 * KALLAX_CELL + 3 * KALLAX_PANEL) / 2; // 3.525
     addSingleDrona(scene, k1CX, k1TopY + DS / 2, k1CZ, DS, DS, DS);
 
     // 2 sur Kallax 2x5
     const k4TopY = 17.4 + 0.075;
     const k4CX = -NICHE_DEPTH + 4 / 2;
-    const k4CZ = ROOM_D - (2 * 3.3 + 3 * 0.15) / 2;
+    const k4CZ = ROOM_D - (2 * KALLAX_CELL + 3 * KALLAX_PANEL) / 2;
 
     addSingleDrona(scene, k4CX, k4TopY + DS / 2, k4CZ - 1.8, DS, DS, DS);
     addSingleDrona(scene, k4CX, k4TopY + DS / 2, k4CZ + 1.8, DS, DS, DS);
@@ -37,10 +36,8 @@ export function buildDecor(scene) {
   // 3 DRONA - sur le meuble haut cuisine
   // =============================================
   {
-    const CELL = 3.3;
-    const MARGIN = 0.15;
-    const dronaW = CELL - MARGIN * 2;  // 3.0
-    const dronaH = CELL - MARGIN * 2;  // 3.0
+    const dronaW = KALLAX_CELL - KALLAX_PANEL * 2;  // 3.0
+    const dronaH = KALLAX_CELL - KALLAX_PANEL * 2;  // 3.0
     const HC_D = 4;
     const dronaD = HC_D - 0.6;         // 3.4
 
@@ -146,7 +143,7 @@ export function buildDecor(scene) {
   {
     const MUL_W = 8;    // 80cm le long de Z
     const MUL_D = 2.6;  // 26cm profondeur depuis le mur
-    const MUL_MOUNT_Y = 24 - 2; // 20cm du plafond (WALL_H=24, 2 studs en dessous)
+    const MUL_MOUNT_Y = WALL_H - 2; // 20cm du plafond (2 studs en dessous)
 
     const mulZ0 = NICHE_Z_START - 11; // 17 (après étagère)
     const mulCZ = mulZ0 - MUL_W / 2;  // 13
@@ -208,34 +205,6 @@ export function buildDecor(scene) {
         leg.position.set(MUL_D + dx, MUL_MOUNT_Y - pantH / 2, pz);
         leg.castShadow = true;
         scene.add(leg);
-      }
-    }
-  }
-
-  // =============================================
-  // SOL LEGO VERT - Jardin (quadrilatère délimité par pointillés)
-  // Couvre tout le jardin : pleine largeur Z>=-14, puis suit la diagonale
-  // =============================================
-  {
-    const JC_Z = -14 - 19 * 32 / 31; // ≈ -33.61
-    const zStart = Math.ceil(JC_Z);   // -34
-
-    for (let z = zStart; z < -1; z++) {
-      let x0 = -1;
-      if (z + 0.5 < -14) {
-        // En dessous du départ de la diagonale : limiter X à gauche
-        x0 = Math.ceil(-1 - 31 * (z + 0.5 + 14) / 19);
-      }
-      const x1 = 31;
-      const w = x1 - x0;
-      if (w <= 0) continue;
-
-      for (const b of fillRow(w, Math.abs(z) % 2 === 1)) {
-        allBricks.push({
-          x: x0 + b.start + b.size / 2, y: -1/3, z: z + 0.5,
-          sx: b.size - GAP, sy: PLATE_H - GAP, sz: 1 - GAP,
-          len: b.size, axis: 'x', type: 'grass'
-        });
       }
     }
   }

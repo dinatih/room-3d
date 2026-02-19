@@ -1,4 +1,4 @@
-import { BRICK_SIZES, BRICK_H, GAP } from './config.js';
+import { BRICK_SIZES, BRICK_H, GAP, PLATE_H, FLOOR_Y } from './config.js';
 
 // =============================================
 // FILL ROW WITH REAL BRICKS
@@ -41,5 +41,13 @@ export function addBrickZ(x, layer, startZ, size, type) {
     x, y: layer * BRICK_H + BRICK_H / 2, z: startZ + size / 2,
     sx: 1 - GAP, sy: BRICK_H - GAP, sz: size - GAP,
     len: size, axis: 'z', type
+  });
+}
+
+export function addFloorBrick(x, z, size, type = 'floor') {
+  allBricks.push({
+    x: x + size / 2, y: FLOOR_Y, z: z + 0.5,
+    sx: size - GAP, sy: PLATE_H - GAP, sz: 1 - GAP,
+    len: size, axis: 'x', type
   });
 }

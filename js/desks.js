@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 
-
 function addBollsidan(scene, px, pz, rot, height) {
   const DESK_W = 6.8;  // 68cm
   const DESK_D = 3.6;  // 36cm

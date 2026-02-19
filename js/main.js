@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ROOM_W, ROOM_D, WALL_H, DOOR_START, DOOR_END, NICHE_DEPTH, KITCHEN_Z } from './config.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'; // pour la caméra ortho 2D (les controls 3D sont dans scene.js)
+import { ROOM_W, ROOM_D, WALL_H, DOOR_START, DOOR_END, NICHE_DEPTH, KITCHEN_Z, GARDEN_JC_Z } from './config.js';
 import { scene, camera, renderer, controls } from './scene.js';
 import { allBricks } from './brickHelpers.js';
 import { loadFont } from './labels.js';
@@ -14,6 +14,7 @@ import { buildDesks } from './desks.js';
 import { buildMackapar } from './mackapar.js';
 import { buildDecor } from './decor.js';
 import { buildCorridor } from './corridor.js';
+import { buildBathroom } from './bathroom.js';
 import { buildFloor } from './floor.js';
 import { buildInstancedMeshes } from './instancedMeshes.js';
 import { buildGrid } from './grid.js';
@@ -33,6 +34,7 @@ buildDesks(scene);
 buildMackapar(scene);
 buildDecor(scene);
 buildCorridor(scene);
+buildBathroom(scene);
 buildFloor(allBricks);
 buildInstancedMeshes(scene, allBricks);
 buildGrid(scene);
@@ -47,7 +49,7 @@ const buildingChildren = scene.children.filter(c => !c.isLight);
   const gardenMat = new THREE.LineDashedMaterial({
     color: 0x4a9e54, dashSize: 0.8, gapSize: 0.4,
   });
-  const JC_Z = -14 - 19 * 32 / 31; // diagonale prolongée jusqu'à X=31
+  const JC_Z = GARDEN_JC_Z;
   const pts = [
     [-1, -1],  [-1, -14],           // côté MA ext, 1.30m en -Z
     [-1, -14], [31, JC_Z],          // diagonale // MDiag → MB ext
@@ -121,7 +123,7 @@ document.getElementById('xray-toggle')?.addEventListener('click', toggleXray);
 // SOL ONLY MODE
 // =============================================
 let floorOnly = false;
-const FLOOR_TYPES = new Set(['floor', 'grass', 'ground', 'grid']);
+const FLOOR_TYPES = new Set(['floor', 'grass', 'ground', 'grid', 'parquet']);
 
 function toggleFloorOnly() {
   // Désactiver plan si actif

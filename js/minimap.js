@@ -2,11 +2,9 @@ import {
   ROOM_W, ROOM_D, DOOR_START, DOOR_END,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   NICHE_DEPTH, NICHE_Z_START,
-  GLASS_START, GLASS_END
+  GLASS_START, GLASS_END,
+  GARDEN_JC_Z, CORR_DOOR_S, CORR_DOOR_E,
 } from './config.js';
-
-// Définitions des pièces (ordre = priorité de détection)
-const GARDEN_JC_Z = -14 - 19 * 32 / 31;
 
 const ROOMS = [
   {
@@ -176,12 +174,9 @@ export function buildMinimap() {
     drawDoor(DOOR_START, ROOM_D + 1, DOOR_START, KITCHEN_Z);
 
     // === COULOIR STUDIO ===
-    const CD_S = KITCHEN_Z + 5;  // 51
-    const CD_E = KITCHEN_Z + 13; // 59
-
-    drawWall(DOOR_START, KITCHEN_Z, DOOR_START, CD_S);
-    drawDoor(DOOR_START, CD_S, DOOR_START, CD_E);
-    drawWall(DOOR_START, CD_E, DOOR_START, KITCHEN_Z + 14);
+    drawWall(DOOR_START, KITCHEN_Z, DOOR_START, CORR_DOOR_S);
+    drawDoor(DOOR_START, CORR_DOOR_S, DOOR_START, CORR_DOOR_E);
+    drawWall(DOOR_START, CORR_DOOR_E, DOOR_START, KITCHEN_Z + 14);
 
     drawWall(ROOM_W, ROOM_D + 1, ROOM_W, ROOM_D + 14);
 
@@ -212,12 +207,11 @@ export function buildMinimap() {
     drawWall(doorE.x, doorE.z, DC.x, DC.z);
 
     // === JARDIN (pointillés verts) ===
-    const JC_Z = -14 - 19 * 32 / 31;
     ctx.fillStyle = 'rgba(74, 158, 84, 0.08)';
     ctx.beginPath();
     ctx.moveTo(tx(-1), tz(-1));
     ctx.lineTo(tx(-1), tz(-14));
-    ctx.lineTo(tx(31), tz(JC_Z));
+    ctx.lineTo(tx(31), tz(GARDEN_JC_Z));
     ctx.lineTo(tx(31), tz(-1));
     ctx.closePath();
     ctx.fill();
@@ -227,8 +221,8 @@ export function buildMinimap() {
     ctx.setLineDash([3, 2]);
     for (const [x1, z1, x2, z2] of [
       [-1, -1, -1, -14],
-      [-1, -14, 31, JC_Z],
-      [31, JC_Z, 31, -1],
+      [-1, -14, 31, GARDEN_JC_Z],
+      [31, GARDEN_JC_Z, 31, -1],
     ]) {
       ctx.beginPath();
       ctx.moveTo(tx(x1), tz(z1));

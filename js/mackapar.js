@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_D, NICHE_DEPTH } from './config.js';
+import { ROOM_D, NICHE_DEPTH, KALLAX_CELL, KALLAX_PANEL } from './config.js';
 
 export function buildMackapar(scene) {
   const MP_X = 7.8;
@@ -10,7 +10,7 @@ export function buildMackapar(scene) {
   const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
   const metalMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.4, roughness: 0.3 });
 
-  const K4_W_CALC = 2 * 3.3 + 3 * 0.15;
+  const K4_W_CALC = 2 * KALLAX_CELL + 3 * KALLAX_PANEL;
   const kallaxEdgeZ = ROOM_D - K4_W_CALC;
 
   const mpX = -NICHE_DEPTH + MP_X / 2;
