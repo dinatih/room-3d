@@ -91,9 +91,9 @@ export function addSingleDrona(scene, cx, cy, cz, dronaW, dronaH, dronaD) {
 export function addDronaBoxes(scene, cx, cz, baseY, cols, rows, cell, panel, depth) {
   const totalW = cols * cell + (cols + 1) * panel;
   const dronaMargin = 0.15;
-  const dronaW = cell - dronaMargin * 2;
-  const dronaH = cell - dronaMargin * 2;
-  const dronaD = depth - 0.6;
+  const dronaW = cell - dronaMargin * 2;  // face Z (contraint par cellule)
+  const dronaH = cell - dronaMargin * 2;  // face Y
+  const dronaD = Math.min(3.8, depth - 0.2); // profondeur 38cm (réel DRONA)
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
