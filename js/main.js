@@ -20,6 +20,7 @@ import { buildInstancedMeshes } from './instancedMeshes.js';
 import { buildGrid } from './grid.js';
 import { buildMinimap } from './minimap.js';
 import { buildFloorPlan } from './floorplan.js';
+import { VRButton } from 'three/addons/webxr/VRButton.js';
 
 // Charger la font avant de construire les labels
 await loadFont();
@@ -39,6 +40,33 @@ buildFloor(allBricks);
 buildInstancedMeshes(scene, allBricks);
 buildGrid(scene);
 buildMinimap();
+
+// =============================================
+// VR MODE (Google Cardboard / WebXR)
+// =============================================
+document.body.appendChild(VRButton.createButton(renderer));
+
+let vrWalking = false;
+
+renderer.xr.addEventListener('sessionstart', () => {
+  exitPOV(); exitWalk(); exit2D();
+  controls.enabled = false;
+  camera.position.set(ROOM_W / 2, WALK_H, ROOM_D / 2);
+  camera.rotation.set(0, 0, 0);
+});
+
+renderer.xr.addEventListener('sessionend', () => {
+  vrWalking = false;
+  controls.enabled = true;
+  camera.position.set(50, 35, 55);
+  controls.target.set(CX, WALL_H / 3, CZ);
+  controls.update();
+});
+
+const xrController = renderer.xr.getController(0);
+xrController.addEventListener('selectstart', () => { vrWalking = true; });
+xrController.addEventListener('selectend', () => { vrWalking = false; });
+scene.add(xrController);
 
 // Snapshot des objets "bâtiment" (avant ajout du floor plan)
 const buildingChildren = scene.children.filter(c => !c.isLight);
@@ -379,9 +407,7 @@ document.addEventListener('pointerlockchange', () => {
 // =============================================
 // ANIMATE
 // =============================================
-(function animate() {
-  requestAnimationFrame(animate);
-
+renderer.setAnimationLoop(() => {
   // Rotation fluide en mode POV
   if (povActive && keysPressed.size > 0) {
     if (keysPressed.has('ArrowLeft'))  povYaw -= POV_ROT_SPEED;
@@ -409,11 +435,23 @@ document.addEventListener('pointerlockchange', () => {
     updateWalkLook();
   }
 
-  if (is2D && orthoControls) orthoControls.update();
-  else controls.update();
+  // VR walk (bouton Cardboard ou tap écran)
+  if (vrWalking && renderer.xr.isPresenting) {
+    const dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    dir.y = 0;
+    dir.normalize();
+    camera.position.addScaledVector(dir, WALK_SPEED);
+  }
 
-  renderer.render(scene, activeCamera);
-})();
+  if (renderer.xr.isPresenting) {
+    renderer.render(scene, camera);
+  } else {
+    if (is2D && orthoControls) orthoControls.update();
+    else controls.update();
+    renderer.render(scene, activeCamera);
+  }
+});
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
