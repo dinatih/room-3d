@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import {
-  ROOM_D, NUM_LAYERS, BRICK_H, PLATE_H,
+  ROOM_D, NUM_LAYERS, BRICK_H,
   KITCHEN_X1, DOOR_START,
 } from './config.js';
 
@@ -63,7 +63,7 @@ export function buildMirrors(scene) {
     const MA_START_Z = K2_W_CALC + 1;
 
     const MA_X = 0.02 + MA_FRAME_D / 2;
-    const MA_BOTTOM_Y = PLATE_H + 0.6;
+    const MA_BOTTOM_Y = 0.6;
     const frameMat2 = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
 
     for (let i = 0; i < 3; i++) {

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, PLATE_H } from './config.js';
+import { ROOM_W } from './config.js';
 
 export function buildBed(scene) {
   const BED_L = 20;
@@ -14,7 +14,7 @@ export function buildBed(scene) {
 
   const bedCX = bedX1 - BED_W / 2;
   const bedCZ = bedZ0 + BED_L / 2;
-  const bedBaseY = PLATE_H;
+  const bedBaseY = 0;
 
   const woodMat = new THREE.MeshStandardMaterial({ color: 0xC4A46C, roughness: 0.7 });
   const woodDarkMat = new THREE.MeshStandardMaterial({ color: 0xB0935A, roughness: 0.65 });

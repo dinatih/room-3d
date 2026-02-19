@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { PLATE_H } from './config.js';
+
 
 function addBollsidan(scene, px, pz, rot, height) {
   const DESK_W = 6;
@@ -11,7 +11,7 @@ function addBollsidan(scene, px, pz, rot, height) {
   const legMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, metalness: 0.3, roughness: 0.3 });
 
   const deskGroup = new THREE.Group();
-  deskGroup.position.set(px, PLATE_H, pz);
+  deskGroup.position.set(px, 0, pz);
   deskGroup.rotation.y = rot;
 
   // Plateau

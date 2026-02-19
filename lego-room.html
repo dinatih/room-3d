@@ -17,7 +17,7 @@
     #info h2 { margin-bottom: 6px; color: #ffd700; font-size: 15px; }
     #info .dim { color: #aaa; font-size: 11px; }
     #info-toggle {
-      position: absolute; top: 16px; left: 16px;
+      position: absolute; bottom: 16px; right: 170px;
       background: rgba(0,0,0,0.8); color: #ffd700;
       border: 1px solid #ffd700; border-radius: 6px;
       padding: 4px 10px; cursor: pointer; font-size: 13px;
@@ -51,6 +51,19 @@
     }
     #views button:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: #888; }
     #views .view-label { color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; }
+    #views-toggle {
+      background: rgba(0,0,0,0.8); color: #ffd700;
+      border: 1px solid #ffd700; border-radius: 6px;
+      padding: 5px 12px; cursor: pointer; font-size: 12px;
+      text-align: left; white-space: nowrap; width: 100%;
+    }
+    #views-toggle:hover { background: rgba(255,215,0,0.15); }
+    #views-list.hidden { display: none; }
+    #minimap {
+      position: absolute; bottom: 16px; right: 16px;
+      border-radius: 6px;
+      border: 1px solid #555; background: #111122;
+    }
   </style>
 </head>
 <body>
@@ -77,15 +90,33 @@
     </div>
   </div>
   <div id="views">
-    <div class="view-label">Vues</div>
-    <button data-view="perspective">Perspective</button>
-    <button data-view="top">Dessus</button>
-    <button data-view="front">Face (D)</button>
-    <button data-view="back">Arrière (C)</button>
-    <button data-view="left">Gauche (A)</button>
-    <button data-view="right">Droite (B)</button>
-    <button data-view="bottom">Dessous</button>
+    <button id="zoom-cursor-toggle" style="background:rgba(0,0,0,0.8);color:#cccccc;border:1px solid #888;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">Zoom souris : OFF</button>
+    <button id="floor-toggle" style="background:rgba(0,0,0,0.8);color:#d4a437;border:1px solid #d4a437;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">Sol : OFF</button>
+    <button id="xray-toggle" style="background:rgba(0,0,0,0.8);color:#44ddff;border:1px solid #44ddff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">X-Ray : OFF</button>
+    <button id="plan-toggle" style="background:rgba(0,0,0,0.8);color:#4488ff;border:1px solid #4488ff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">Plan : OFF</button>
+    <button id="views-toggle">Vues ▸</button>
+    <div id="views-list" class="hidden">
+      <div class="view-label">Caméra</div>
+      <button data-view="perspective">Perspective</button>
+      <button data-view="top">Dessus 3D</button>
+      <button data-view="top2d">2D Dessus</button>
+      <button data-view="front">Face (D)</button>
+      <button data-view="back">Arrière (C)</button>
+      <button data-view="left">Gauche (A)</button>
+      <button data-view="right">Droite (B)</button>
+      <button data-view="bottom">Dessous</button>
+      <button data-view="iso-se">Iso Sud-Est</button>
+      <button data-view="iso-nw">Iso Nord-Ouest</button>
+      <div class="view-label" style="margin-top:6px">POV 1.8m</div>
+      <button data-pov="living">Séjour</button>
+      <button data-pov="entry">Entrée</button>
+      <button data-pov="bathroom">Salle d'eau</button>
+      <button data-pov="garden">Jardin</button>
+      <div class="view-label" style="margin-top:6px">Exploration</div>
+      <button id="walk-btn">Marche libre</button>
+    </div>
   </div>
+  <canvas id="minimap" width="150"></canvas>
   <div id="controls">Clic gauche : orbiter | Molette : zoom | Clic droit : pan</div>
 
   <script type="importmap">

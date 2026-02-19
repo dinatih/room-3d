@@ -24,7 +24,7 @@ export const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(ROOM_W / 2, WALL_H / 3, ROOM_D / 2);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
-controls.maxPolarAngle = Math.PI / 2.05;
+controls.maxPolarAngle = Math.PI;
 controls.update();
 
 // Environment map (pour les surfaces réfléchissantes)

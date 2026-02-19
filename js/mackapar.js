@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_D, PLATE_H, NICHE_DEPTH } from './config.js';
+import { ROOM_D, NICHE_DEPTH } from './config.js';
 
 export function buildMackapar(scene) {
   const MP_X = 7.8;
@@ -15,7 +15,7 @@ export function buildMackapar(scene) {
 
   const mpX = -NICHE_DEPTH + MP_X / 2;
   const mpZ = kallaxEdgeZ - MP_Z / 2;
-  const mpBaseY = PLATE_H;
+  const mpBaseY = 0;
 
   // 4 montants verticaux aux coins
   for (const dz of [-1, 1]) {

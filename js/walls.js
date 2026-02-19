@@ -137,14 +137,14 @@ export function buildWalls(scene) {
       addBrickX(-NICHE_DEPTH + b.start, layer, KITCHEN_Z + 0.5, b.size, 'wall');
   }
 
-  // Sol cuisine
-  const KIT_FX0 = KITCHEN_X0 - 1;
-  const KIT_FX1 = KITCHEN_X1 + 1;
+  // Sol cuisine (à l'intérieur des murs MK-O, MK-E et MS-N)
+  const KIT_FX0 = KITCHEN_X0;
+  const KIT_FX1 = KITCHEN_X1;
   const KIT_FW = KIT_FX1 - KIT_FX0;
-  for (let z = ROOM_D + 1; z < KITCHEN_Z + 1; z++) {
+  for (let z = ROOM_D + 1; z < KITCHEN_Z; z++) {
     for (const b of fillRow(KIT_FW, z % 2 === 1)) {
       allBricks.push({
-        x: KIT_FX0 + b.start + b.size / 2, y: PLATE_H / 2, z: z + 0.5,
+        x: KIT_FX0 + b.start + b.size / 2, y: -1/3, z: z + 0.5,
         sx: b.size - GAP, sy: PLATE_H - GAP, sz: 1 - GAP,
         len: b.size, axis: 'x', type: 'floor'
       });

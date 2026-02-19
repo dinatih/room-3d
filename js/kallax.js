@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, PLATE_H, NICHE_DEPTH } from './config.js';
+import { ROOM_W, ROOM_D, NICHE_DEPTH } from './config.js';
 import { addDronaBoxes } from './drona.js';
 
 export function buildKallax(scene) {
@@ -17,7 +17,7 @@ export function buildKallax(scene) {
 
     const kxX = ROOM_W - KX_DEPTH / 2;
     const kxZ = KX_W / 2;
-    const kxBaseY = PLATE_H;
+    const kxBaseY = 0;
 
     const kxMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
     const kxMatInner = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.5 });
@@ -65,7 +65,7 @@ export function buildKallax(scene) {
 
     const k3X = ROOM_W - K3_DEPTH / 2;
     const k3Z = ROOM_D - 6 - K3_W / 2;
-    const k3BaseY = PLATE_H;
+    const k3BaseY = 0;
 
     const k3Mat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
     const k3MatInner = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.5 });
@@ -113,7 +113,7 @@ export function buildKallax(scene) {
 
     const k2X = K2_DEPTH / 2;
     const k2Z = K2_W / 2;
-    const k2BaseY = PLATE_H;
+    const k2BaseY = 0;
 
     const k2Mat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
     const k2MatInner = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.5 });
@@ -161,7 +161,7 @@ export function buildKallax(scene) {
 
     const k4X = -NICHE_DEPTH + K4_DEPTH / 2;
     const k4Z = ROOM_D - K4_W / 2;
-    const k4BaseY = PLATE_H;
+    const k4BaseY = 0;
 
     const k4Mat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
     const k4MatInner = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.5 });
@@ -192,6 +192,6 @@ export function buildKallax(scene) {
       scene.add(mesh);
     }
 
-    addDronaBoxes(scene, k4X, k4Z, k4BaseY, K4_COLS, K4_ROWS, K4_CELL, K4_PANEL, K4_DEPTH);
+    addDronaBoxes(scene, k4X, k4Z, k4BaseY, K4_COLS, 2, K4_CELL, K4_PANEL, K4_DEPTH);
   }
 }

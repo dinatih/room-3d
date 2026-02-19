@@ -10,15 +10,17 @@ export function buildInstancedMeshes(scene, allBricks) {
     accent:      new THREE.MeshStandardMaterial({ color: COLORS.accent, roughness: 0.3 }),
     glass_frame: new THREE.MeshStandardMaterial({ color: 0x4477aa, roughness: 0.3 }),
     floor:       new THREE.MeshStandardMaterial({ color: COLORS.floor, roughness: 0.3 }),
+    grass:       new THREE.MeshStandardMaterial({ color: 0x4a9e54, roughness: 0.5 }),
   };
   const studMats = {
     wall:        new THREE.MeshStandardMaterial({ color: COLORS.studWall, roughness: 0.3, metalness: 0.05 }),
     accent:      new THREE.MeshStandardMaterial({ color: COLORS.accentS, roughness: 0.25 }),
     glass_frame: new THREE.MeshStandardMaterial({ color: 0x336688, roughness: 0.25 }),
     floor:       new THREE.MeshStandardMaterial({ color: COLORS.studFloor, roughness: 0.25, metalness: 0.05 }),
+    grass:       new THREE.MeshStandardMaterial({ color: 0x3d8545, roughness: 0.4, metalness: 0.05 }),
   };
 
-  for (const type of ['wall', 'accent', 'glass_frame', 'floor']) {
+  for (const type of ['wall', 'accent', 'glass_frame', 'floor', 'grass']) {
     const bricks = allBricks.filter(b => b.type === type);
     if (!bricks.length) continue;
 
@@ -40,6 +42,7 @@ export function buildInstancedMeshes(scene, allBricks) {
         mesh.setMatrixAt(i, dummy.matrix);
       });
       mesh.instanceMatrix.needsUpdate = true;
+      mesh.userData.brickType = type;
       scene.add(mesh);
     }
 
@@ -71,6 +74,7 @@ export function buildInstancedMeshes(scene, allBricks) {
         sm.setMatrixAt(i, dummy.matrix);
       }
       sm.instanceMatrix.needsUpdate = true;
+      sm.userData.brickType = type;
       scene.add(sm);
     }
   }
@@ -81,7 +85,8 @@ export function buildInstancedMeshes(scene, allBricks) {
     new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9 })
   );
   gnd.rotation.x = -Math.PI / 2;
-  gnd.position.y = -0.01;
+  gnd.position.y = -0.5;
   gnd.receiveShadow = true;
+  gnd.userData.brickType = 'ground';
   scene.add(gnd);
 }

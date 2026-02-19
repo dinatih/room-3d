@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { PLATE_H } from './config.js';
 
 export function buildChair(scene) {
   const chairX = 3;
@@ -11,7 +10,7 @@ export function buildChair(scene) {
   const darkMat = new THREE.MeshStandardMaterial({ color: 0xb01818, roughness: 0.55 });
 
   const chairGroup = new THREE.Group();
-  chairGroup.position.set(chairX, PLATE_H, chairZ);
+  chairGroup.position.set(chairX, 0, chairZ);
   chairGroup.rotation.y = chairRot;
 
   // --- Base étoile 5 branches ---

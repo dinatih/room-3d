@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {
-  KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, ROOM_D, PLATE_H, GAP,
+  KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, ROOM_D, GAP,
 } from './config.js';
 
 export function buildKitchen(scene) {
@@ -13,13 +13,13 @@ export function buildKitchen(scene) {
 
   // --- Placard (bois) ---
   {
-    const cabinetH = COUNTER_H - PLATE_H;
+    const cabinetH = COUNTER_H;
     const geo = new THREE.BoxGeometry(CABINET_W - GAP, cabinetH, KIT_D - GAP);
     const mat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6 });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(
       KITCHEN_X0 + CABINET_W / 2,
-      PLATE_H + cabinetH / 2,
+      cabinetH / 2,
       ROOM_D + KIT_D / 2
     );
     mesh.castShadow = true;
@@ -32,7 +32,7 @@ export function buildKitchen(scene) {
     const door = new THREE.Mesh(doorGeo, doorMat);
     door.position.set(
       KITCHEN_X0 + CABINET_W / 2,
-      PLATE_H + cabinetH / 2,
+      cabinetH / 2,
       ROOM_D + 0.05
     );
     scene.add(door);
@@ -43,7 +43,7 @@ export function buildKitchen(scene) {
     const h = new THREE.Mesh(hGeo, hMat);
     h.position.set(
       KITCHEN_X0 + CABINET_W - 0.8,
-      PLATE_H + cabinetH * 0.5,
+      cabinetH * 0.5,
       ROOM_D + 0.15
     );
     scene.add(h);
@@ -51,13 +51,13 @@ export function buildKitchen(scene) {
 
   // --- Frigo (blanc) ---
   {
-    const frigoH = COUNTER_H - PLATE_H;
+    const frigoH = COUNTER_H;
     const geo = new THREE.BoxGeometry(FRIDGE_W - GAP, frigoH, KIT_D - GAP);
     const mat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.3, metalness: 0.1 });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(
       KITCHEN_X0 + CABINET_W + FRIDGE_W / 2,
-      PLATE_H + frigoH / 2,
+      frigoH / 2,
       ROOM_D + KIT_D / 2
     );
     mesh.castShadow = true;
@@ -70,7 +70,7 @@ export function buildKitchen(scene) {
     const handle = new THREE.Mesh(handleGeo, handleMat);
     handle.position.set(
       KITCHEN_X0 + CABINET_W + 0.8,
-      PLATE_H + frigoH * 0.6,
+      frigoH * 0.6,
       ROOM_D + 0.15
     );
     scene.add(handle);
@@ -131,6 +131,51 @@ export function buildKitchen(scene) {
     fBec.rotation.x = Math.PI / 2;
     fBec.position.set(sinkCX, sinkY + 1.9, sinkCZ + sinkD / 2 - 0.9);
     scene.add(fBec);
+  }
+
+  // --- Meuble haut (ouvert, sans porte ni fond) ---
+  {
+    const HC_W = KIT_W;    // 100cm = 10 studs
+    const HC_H = 4;        // 40cm
+    const HC_D = 4;        // 40cm
+    const HC_PANEL = 0.15;
+    const HC_Y0 = COUNTER_H + COUNTER_SLAB + 6; // 60cm au-dessus du plan
+    const HC_CX = KITCHEN_X0 + KIT_W / 2;
+    const HC_CZ = ROOM_D + KITCHEN_DEPTH - HC_D / 2; // plaqué contre le mur fond
+
+    const hcMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.35 });
+
+    // Dessus
+    const topGeo = new THREE.BoxGeometry(HC_W, HC_PANEL, HC_D);
+    const top = new THREE.Mesh(topGeo, hcMat);
+    top.position.set(HC_CX, HC_Y0 + HC_H - HC_PANEL / 2, HC_CZ);
+    top.castShadow = true;
+    scene.add(top);
+
+    // Dessous
+    const bot = new THREE.Mesh(topGeo, hcMat);
+    bot.position.set(HC_CX, HC_Y0 + HC_PANEL / 2, HC_CZ);
+    bot.castShadow = true;
+    bot.receiveShadow = true;
+    scene.add(bot);
+
+    // Côté gauche
+    const sideGeo = new THREE.BoxGeometry(HC_PANEL, HC_H, HC_D);
+    const sideL = new THREE.Mesh(sideGeo, hcMat);
+    sideL.position.set(HC_CX - HC_W / 2 + HC_PANEL / 2, HC_Y0 + HC_H / 2, HC_CZ);
+    sideL.castShadow = true;
+    scene.add(sideL);
+
+    // Côté droit
+    const sideR = new THREE.Mesh(sideGeo, hcMat);
+    sideR.position.set(HC_CX + HC_W / 2 - HC_PANEL / 2, HC_Y0 + HC_H / 2, HC_CZ);
+    sideR.castShadow = true;
+    scene.add(sideR);
+
+    // Étagère milieu
+    const shelf = new THREE.Mesh(topGeo, hcMat);
+    shelf.position.set(HC_CX, HC_Y0 + HC_H / 2, HC_CZ);
+    scene.add(shelf);
   }
 
   // --- Double plaque de cuisson ---
