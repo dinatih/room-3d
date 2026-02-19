@@ -44,20 +44,33 @@ buildMinimap();
 // =============================================
 // VR MODE (Google Cardboard / WebXR)
 // =============================================
-document.body.appendChild(VRButton.createButton(renderer));
+const vrButton = VRButton.createButton(renderer);
+vrButton.style.bottom = '60px';
+document.body.appendChild(vrButton);
+
+const vrRig = new THREE.Group();
+scene.add(vrRig);
+vrRig.add(camera);
 
 let vrWalking = false;
 
 renderer.xr.addEventListener('sessionstart', () => {
   exitPOV(); exitWalk(); exit2D();
   controls.enabled = false;
-  camera.position.set(ROOM_W / 2, WALK_H, ROOM_D / 2);
-  camera.rotation.set(0, 0, 0);
+  vrRig.position.set(ROOM_W / 2, WALK_H, ROOM_D / 2);
+
+  const hint = document.createElement('div');
+  hint.textContent = 'Tap écran ou bouton Cardboard pour avancer';
+  hint.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.5s';
+  document.body.appendChild(hint);
+  setTimeout(() => { hint.style.opacity = '0'; }, 4500);
+  setTimeout(() => { hint.remove(); }, 5000);
 });
 
 renderer.xr.addEventListener('sessionend', () => {
   vrWalking = false;
   controls.enabled = true;
+  vrRig.position.set(0, 0, 0);
   camera.position.set(50, 35, 55);
   controls.target.set(CX, WALL_H / 3, CZ);
   controls.update();
@@ -66,7 +79,7 @@ renderer.xr.addEventListener('sessionend', () => {
 const xrController = renderer.xr.getController(0);
 xrController.addEventListener('selectstart', () => { vrWalking = true; });
 xrController.addEventListener('selectend', () => { vrWalking = false; });
-scene.add(xrController);
+vrRig.add(xrController);
 
 // Snapshot des objets "bâtiment" (avant ajout du floor plan)
 const buildingChildren = scene.children.filter(c => !c.isLight);
@@ -441,7 +454,7 @@ renderer.setAnimationLoop(() => {
     camera.getWorldDirection(dir);
     dir.y = 0;
     dir.normalize();
-    camera.position.addScaledVector(dir, WALK_SPEED);
+    vrRig.position.addScaledVector(dir, WALK_SPEED);
   }
 
   if (renderer.xr.isPresenting) {
