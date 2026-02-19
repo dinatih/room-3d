@@ -264,4 +264,68 @@ export function buildDecor(scene) {
     screen.translateZ(TV_D / 2 + 0.01);
     scene.add(screen);
   }
+
+  // =============================================
+  // DESSERTE SUNNERSTA 56x36x90cm - Entre lit et Kallax 1x4, mur B
+  // =============================================
+  {
+    const SW = 5.6;  // 56cm le long de X (largeur)
+    const SD = 3.6;  // 36cm le long de Z (profondeur)
+    const SH = 9.0;  // 90cm hauteur
+    const LEG_T = 0.15;
+    const SHELF_T = 0.1;
+
+    // Position : contre mur B, entre lit (fin ~Z=27.35) et Kallax 1x4 (début ~Z=30.4)
+    const sCX = ROOM_W - SW / 2;
+    const sCZ = 28.9;
+
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, metalness: 0.3, roughness: 0.4 });
+    const shelfMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.35 });
+
+    // 4 montants verticaux
+    for (const dx of [-1, 1]) {
+      for (const dz of [-1, 1]) {
+        const leg = new THREE.Mesh(
+          new THREE.BoxGeometry(LEG_T, SH, LEG_T),
+          frameMat
+        );
+        leg.position.set(
+          sCX + dx * (SW / 2 - LEG_T / 2),
+          SH / 2,
+          sCZ + dz * (SD / 2 - LEG_T / 2)
+        );
+        leg.castShadow = true;
+        scene.add(leg);
+      }
+    }
+
+    // 3 plateaux (bas, milieu, haut)
+    for (const sy of [0.5, SH / 2, SH - 0.5]) {
+      const shelf = new THREE.Mesh(
+        new THREE.BoxGeometry(SW - LEG_T * 2, SHELF_T, SD - LEG_T * 2),
+        shelfMat
+      );
+      shelf.position.set(sCX, sy, sCZ);
+      shelf.castShadow = true;
+      shelf.receiveShadow = true;
+      scene.add(shelf);
+    }
+
+    // 4 roulettes
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.6 });
+    for (const dx of [-1, 1]) {
+      for (const dz of [-1, 1]) {
+        const wheel = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.15, 0.15, 0.12, 8),
+          wheelMat
+        );
+        wheel.position.set(
+          sCX + dx * (SW / 2 - 0.3),
+          0.06,
+          sCZ + dz * (SD / 2 - 0.3)
+        );
+        scene.add(wheel);
+      }
+    }
+  }
 }

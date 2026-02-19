@@ -9,8 +9,8 @@ export const BRICK_H = 3;
 export const NUM_LAYERS = WALL_H / BRICK_H; // 8
 export const GAP = 0.08;
 export const STUD_R = 0.3;
-export const STUD_HT = 0.35;
 export const PLATE_H = 0.35; // hauteur d'une plate (sol fin)
+export const STUD_HT = PLATE_H / 2; // 0.175
 
 // Porte : 80cm d'ouverture, 30cm du mur B (X=30)
 export const DOOR_START = 19; // stud 19

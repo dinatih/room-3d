@@ -1,4 +1,4 @@
-import { ROOM_W, ROOM_D, PLATE_H, GAP, DOOR_START, DOOR_END } from './config.js';
+import { ROOM_W, ROOM_D, PLATE_H, GAP, DOOR_START, DOOR_END, NICHE_DEPTH, NICHE_Z_START } from './config.js';
 import { fillRow } from './brickHelpers.js';
 
 export function buildFloor(allBricks) {
@@ -16,6 +16,15 @@ export function buildFloor(allBricks) {
         len: b.size, axis: 'x', type: 'floor'
       });
     }
+  }
+
+  // Sol niche MN (X=-1→0, Z=28→40)
+  for (let z = NICHE_Z_START; z < ROOM_D; z++) {
+    allBricks.push({
+      x: -NICHE_DEPTH + 0.5, y: -1/3, z: z + 0.5,
+      sx: NICHE_DEPTH - GAP, sy: PLATE_H - GAP, sz: 1 - GAP,
+      len: NICHE_DEPTH, axis: 'x', type: 'floor'
+    });
   }
 
   // Sol sous la porte P1 (z = ROOM_D, entre les montants)
