@@ -73,8 +73,8 @@ renderer.xr.addEventListener('sessionend', () => {
   vrWalking = false;
   controls.enabled = true;
   vrRig.position.set(0, 0, 0);
-  camera.position.set(50, 35, 55);
-  controls.target.set(CX, WALL_H / 3, CZ);
+  camera.position.set(...VIEWS.perspective.pos);
+  controls.target.set(...VIEWS.perspective.target);
   controls.update();
 });
 
@@ -480,7 +480,7 @@ addEventListener('resize', () => {
 // =============================================
 const ISO = 45;
 const VIEWS = {
-  perspective: { pos: [50, 35, 55],       target: [CX, WALL_H / 3, CZ] },
+  perspective: { pos: [-20, 35, -15],      target: [CX, WALL_H / 3, CZ] },
   top:         { pos: [CX, DIST + 20, CZ], target: [CX, 0, CZ] },
   bottom:      { pos: [CX, -DIST, CZ],     target: [CX, 0, CZ] },
   front:       { pos: [CX, CY, CZ + DIST], target: [CX, CY, CZ] },
@@ -491,9 +491,24 @@ const VIEWS = {
   'iso-nw':    { pos: [CX - ISO, ISO, CZ - ISO], target: [CX, 0, CZ] },
 };
 
+// Position initiale = vue perspective
+camera.position.set(...VIEWS.perspective.pos);
+controls.target.set(...VIEWS.perspective.target);
+controls.update();
+
+// Modal vues
+const viewsOverlay = document.getElementById('views-modal-overlay');
+function openViewsModal() { viewsOverlay.classList.add('visible'); }
+function closeViewsModal() { viewsOverlay.classList.remove('visible'); }
+
+document.getElementById('views-toggle')?.addEventListener('click', openViewsModal);
+document.getElementById('views-modal-close')?.addEventListener('click', closeViewsModal);
+viewsOverlay?.addEventListener('click', (e) => { if (e.target === viewsOverlay) closeViewsModal(); });
+
 // Boutons vues classiques (sortent du mode POV et 2D)
-document.querySelectorAll('#views-list button[data-view]').forEach(btn => {
+document.querySelectorAll('#views-modal button[data-view]').forEach(btn => {
   btn.addEventListener('click', () => {
+    closeViewsModal();
     if (btn.dataset.view === 'top2d') {
       enter2DTop();
       return;
@@ -510,8 +525,9 @@ document.querySelectorAll('#views-list button[data-view]').forEach(btn => {
 });
 
 // Boutons POV par pièce
-document.querySelectorAll('#views-list button[data-pov]').forEach(btn => {
+document.querySelectorAll('#views-modal button[data-pov]').forEach(btn => {
   btn.addEventListener('click', () => {
+    closeViewsModal();
     const room = POV_ROOMS[btn.dataset.pov];
     if (room) enterPOV(room.x, room.z);
   });
@@ -523,16 +539,9 @@ document.addEventListener('minimap-pov', (e) => {
   enterPOV(x, z);
 });
 
-// Toggle panneau vues
-document.getElementById('views-toggle')?.addEventListener('click', () => {
-  const list = document.getElementById('views-list');
-  list.classList.toggle('hidden');
-  const btn = document.getElementById('views-toggle');
-  btn.textContent = list.classList.contains('hidden') ? 'Vues ▸' : 'Vues ▾';
-});
-
 // Bouton marche
 document.getElementById('walk-btn')?.addEventListener('click', () => {
+  closeViewsModal();
   enterWalk(ROOM_W / 2, ROOM_D / 2);
 });
 
