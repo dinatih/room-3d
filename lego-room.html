@@ -50,7 +50,6 @@
       text-align: left; white-space: nowrap;
     }
     #views button:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: #888; }
-    #views .view-label { color: #888; font-size: 10px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; }
     #views-toggle {
       background: rgba(0,0,0,0.8); color: #ffd700;
       border: 1px solid #ffd700; border-radius: 6px;
@@ -58,7 +57,39 @@
       text-align: left; white-space: nowrap; width: 100%;
     }
     #views-toggle:hover { background: rgba(255,215,0,0.15); }
-    #views-list.hidden { display: none; }
+    #views-modal-overlay {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); z-index: 100; backdrop-filter: blur(2px);
+    }
+    #views-modal-overlay.visible { display: flex; align-items: center; justify-content: center; }
+    #views-modal {
+      background: rgba(20,20,30,0.95); border: 1px solid #555; border-radius: 12px;
+      padding: 20px 24px; min-width: 260px; max-width: 340px;
+      backdrop-filter: blur(12px); position: relative;
+    }
+    #views-modal h3 {
+      color: #ffd700; font-size: 14px; margin: 0 0 12px 0;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    #views-modal .view-label {
+      color: #888; font-size: 10px; margin: 10px 0 4px 0;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    #views-modal .view-label:first-of-type { margin-top: 0; }
+    #views-modal button {
+      background: rgba(255,255,255,0.06); color: #ccc;
+      border: 1px solid #444; border-radius: 6px;
+      padding: 6px 12px; cursor: pointer; font-size: 12px;
+      text-align: left; white-space: nowrap; width: 100%;
+      margin-bottom: 3px; display: block;
+    }
+    #views-modal button:hover { background: rgba(255,255,255,0.14); color: #fff; border-color: #888; }
+    #views-modal .close-modal {
+      position: absolute; top: 8px; right: 12px;
+      background: none; border: none; color: #888; font-size: 18px;
+      padding: 2px 6px; width: auto; min-width: 0; margin: 0;
+    }
+    #views-modal .close-modal:hover { color: #fff; }
     #minimap {
       position: absolute; bottom: 16px; right: 16px;
       border-radius: 6px;
@@ -94,8 +125,12 @@
     <button id="floor-toggle" style="background:rgba(0,0,0,0.8);color:#d4a437;border:1px solid #d4a437;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">Sol : OFF</button>
     <button id="xray-toggle" style="background:rgba(0,0,0,0.8);color:#44ddff;border:1px solid #44ddff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">X-Ray : OFF</button>
     <button id="plan-toggle" style="background:rgba(0,0,0,0.8);color:#4488ff;border:1px solid #4488ff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">Plan : OFF</button>
-    <button id="views-toggle">Vues ▸</button>
-    <div id="views-list" class="hidden">
+    <button id="views-toggle">Vues</button>
+  </div>
+  <div id="views-modal-overlay">
+    <div id="views-modal">
+      <button class="close-modal" id="views-modal-close">&times;</button>
+      <h3>Vues</h3>
       <div class="view-label">Caméra</div>
       <button data-view="perspective">Perspective</button>
       <button data-view="top">Dessus 3D</button>
@@ -107,12 +142,12 @@
       <button data-view="bottom">Dessous</button>
       <button data-view="iso-se">Iso Sud-Est</button>
       <button data-view="iso-nw">Iso Nord-Ouest</button>
-      <div class="view-label" style="margin-top:6px">POV 1.8m</div>
+      <div class="view-label">POV 1.8m</div>
       <button data-pov="living">Séjour</button>
       <button data-pov="entry">Entrée</button>
       <button data-pov="bathroom">Salle d'eau</button>
       <button data-pov="garden">Jardin</button>
-      <div class="view-label" style="margin-top:6px">Exploration</div>
+      <div class="view-label">Exploration</div>
       <button id="walk-btn">Marche libre</button>
     </div>
   </div>
