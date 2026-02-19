@@ -37,12 +37,32 @@ export const GLASS_MAX_LAYER = 7; // 6 couches vitrées au-dessus = 18 studs = 1
 
 export const BRICK_SIZES = [16, 12, 10, 8, 6, 4, 3, 2, 1];
 
+// Kallax dimensions (shared by kallax, decor, mackapar, mirrors, bed)
+export const KALLAX_CELL = 3.3;
+export const KALLAX_PANEL = 0.15;
+export const KALLAX_DEPTH = 4;
+
+// Floor plate Y position
+export const FLOOR_Y = -1 / 3;
+
+// Jardin diagonal endpoint (diagonale prolongée jusqu'à X=31)
+export const GARDEN_JC_Z = -14 - 19 * 32 / 31;
+
+// Corridor / SDB boundaries
+export const CORR_DOOR_S = KITCHEN_Z + 5;
+export const CORR_DOOR_E = KITCHEN_Z + 13;
+export const SDB_Z_END = KITCHEN_Z + 14;
+export const DIAG_END_Z = 73;
+
 export const COLORS = {
   wall: 0xeeeeee,
   studWall: 0xb8b8a8,
   floor: 0xd4a437,
   studFloor: 0xc49530,
+  parquet: 0xC19A6B,
   accent: 0xcc0000,
   accentS: 0xaa0000,
   ground: 0x3a7d44,
+  grass: 0x4a9e54,
+  grassStud: 0x3d8545,
 };

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W } from './config.js';
+import { ROOM_W, KALLAX_CELL, KALLAX_PANEL } from './config.js';
 
 export function buildBed(scene) {
   const BED_L = 20;
@@ -8,7 +8,7 @@ export function buildBed(scene) {
   const BED_FRAME = 0.5;
   const BED_LEG = 0.5;
 
-  const KX2_END_Z = 2 * 3.3 + 3 * 0.15; // ~7.05
+  const KX2_END_Z = 2 * KALLAX_CELL + 3 * KALLAX_PANEL; // ~7.05
   const bedZ0 = KX2_END_Z + 0.3;
   const bedX1 = ROOM_W;
 

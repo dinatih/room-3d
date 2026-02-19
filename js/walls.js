@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import {
-  ROOM_W, ROOM_D, NUM_LAYERS, BRICK_H, PLATE_H, GAP,
+  ROOM_W, ROOM_D, NUM_LAYERS, BRICK_H,
   NICHE_DEPTH, NICHE_LENGTH, NICHE_Z_START,
   GLASS_START, GLASS_END, GLASS_MIN_LAYER, GLASS_MAX_LAYER,
   DOOR_START, DOOR_END, DOOR_H_LAYERS,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, KITCHEN_Z,
 } from './config.js';
-import { fillRow, addBrickX, addBrickZ, allBricks } from './brickHelpers.js';
+import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
 
 // --- Helper: mur avec ouvertures multiples ---
 function buildWallWithOpenings(wallZ, length, openings) {
@@ -138,16 +138,10 @@ export function buildWalls(scene) {
   }
 
   // Sol cuisine (à l'intérieur des murs MK-O, MK-E et MS-N)
-  const KIT_FX0 = KITCHEN_X0;
-  const KIT_FX1 = KITCHEN_X1;
-  const KIT_FW = KIT_FX1 - KIT_FX0;
+  const KIT_FW = KITCHEN_X1 - KITCHEN_X0;
   for (let z = ROOM_D + 1; z < KITCHEN_Z; z++) {
     for (const b of fillRow(KIT_FW, z % 2 === 1)) {
-      allBricks.push({
-        x: KIT_FX0 + b.start + b.size / 2, y: -1/3, z: z + 0.5,
-        sx: b.size - GAP, sy: PLATE_H - GAP, sz: 1 - GAP,
-        len: b.size, axis: 'x', type: 'floor'
-      });
+      addFloorBrick(KITCHEN_X0 + b.start, z, b.size);
     }
   }
 }

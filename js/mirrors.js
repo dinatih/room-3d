@@ -3,9 +3,12 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 import {
   ROOM_D, NUM_LAYERS, BRICK_H,
   KITCHEN_X1, DOOR_START,
+  KALLAX_CELL, KALLAX_PANEL,
 } from './config.js';
 
 export function buildMirrors(scene) {
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
+
   // =============================================
   // 3x MIROIR IKEA NISSEDAL 60x60 - Mur D
   // =============================================
@@ -15,13 +18,11 @@ export function buildMirrors(scene) {
     const MIRROR_Z = ROOM_D - 0.02;
     const WALL_TOP = NUM_LAYERS * BRICK_H;
 
-    const frameMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
     const FRAME_T = 0.2;
     const FRAME_D = 0.15;
-    const MIRROR_GAP = 0;
 
     for (let i = 0; i < 3; i++) {
-      const mirrorY = WALL_TOP - MIRROR_SIZE / 2 - i * (MIRROR_SIZE + MIRROR_GAP);
+      const mirrorY = WALL_TOP - MIRROR_SIZE / 2 - i * MIRROR_SIZE;
       const fz = MIRROR_Z - FRAME_D / 2;
 
       const mirGeo = new THREE.PlaneGeometry(MIRROR_SIZE - FRAME_T * 2, MIRROR_SIZE - FRAME_T * 2);
@@ -59,12 +60,11 @@ export function buildMirrors(scene) {
     const MA_FRAME_T = 0.18;
     const MA_FRAME_D = 0.12;
 
-    const K2_W_CALC = 1 * 3.3 + 2 * 0.15;
+    const K2_W_CALC = 1 * KALLAX_CELL + 2 * KALLAX_PANEL;
     const MA_START_Z = K2_W_CALC + 1;
 
     const MA_X = 0.02 + MA_FRAME_D / 2;
     const MA_BOTTOM_Y = 0.6;
-    const frameMat2 = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
 
     for (let i = 0; i < 3; i++) {
       const mz = MA_START_Z + MA_W / 2 + i * MA_W;
@@ -81,16 +81,16 @@ export function buildMirrors(scene) {
       mir.position.set(fx + 0.01, my, mz);
       scene.add(mir);
 
-      const bH = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, MA_W), frameMat2);
+      const bH = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, MA_W), frameMat);
       bH.position.set(fx, my + MA_H / 2 - MA_FRAME_T / 2, mz);
       scene.add(bH);
-      const bB = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, MA_W), frameMat2);
+      const bB = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, MA_W), frameMat);
       bB.position.set(fx, my - MA_H / 2 + MA_FRAME_T / 2, mz);
       scene.add(bB);
-      const bG = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_H, MA_FRAME_T), frameMat2);
+      const bG = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_H, MA_FRAME_T), frameMat);
       bG.position.set(fx, my, mz - MA_W / 2 + MA_FRAME_T / 2);
       scene.add(bG);
-      const bD = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_H, MA_FRAME_T), frameMat2);
+      const bD = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_H, MA_FRAME_T), frameMat);
       bD.position.set(fx, my, mz + MA_W / 2 - MA_FRAME_T / 2);
       scene.add(bD);
     }
@@ -112,16 +112,16 @@ export function buildMirrors(scene) {
     mir4.position.set(m4x + 0.01, m4y, m4z);
     scene.add(mir4);
 
-    const b4H = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, M4_W), frameMat2);
+    const b4H = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, M4_W), frameMat);
     b4H.position.set(m4x, m4y + M4_H / 2 - MA_FRAME_T / 2, m4z);
     scene.add(b4H);
-    const b4B = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, M4_W), frameMat2);
+    const b4B = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, M4_W), frameMat);
     b4B.position.set(m4x, m4y - M4_H / 2 + MA_FRAME_T / 2, m4z);
     scene.add(b4B);
-    const b4G = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, M4_H, MA_FRAME_T), frameMat2);
+    const b4G = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, M4_H, MA_FRAME_T), frameMat);
     b4G.position.set(m4x, m4y, m4z - M4_W / 2 + MA_FRAME_T / 2);
     scene.add(b4G);
-    const b4D = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, M4_H, MA_FRAME_T), frameMat2);
+    const b4D = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, M4_H, MA_FRAME_T), frameMat);
     b4D.position.set(m4x, m4y, m4z + M4_W / 2 - MA_FRAME_T / 2);
     scene.add(b4D);
   }

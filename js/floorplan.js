@@ -3,7 +3,8 @@ import {
   ROOM_W, ROOM_D, DOOR_START, DOOR_END,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, KITCHEN_DEPTH,
   NICHE_DEPTH, NICHE_Z_START,
-  GLASS_START, GLASS_END
+  GLASS_START, GLASS_END,
+  CORR_DOOR_S, CORR_DOOR_E,
 } from './config.js';
 import { makeText } from './labels.js';
 
@@ -87,12 +88,9 @@ export function buildFloorPlan() {
   door(DOOR_START, CW_Z0, DOOR_START, KITCHEN_Z); // porte coulissante
 
   // === COULOIR STUDIO ===
-  const CD_S = KITCHEN_Z + 5;  // 51
-  const CD_E = KITCHEN_Z + 13; // 59
-
-  wallLine(DOOR_START, KITCHEN_Z, DOOR_START, CD_S);
-  door(DOOR_START, CD_S, DOOR_START, CD_E);
-  wallLine(DOOR_START, CD_E, DOOR_START, KITCHEN_Z + 14);
+  wallLine(DOOR_START, KITCHEN_Z, DOOR_START, CORR_DOOR_S);
+  door(DOOR_START, CORR_DOOR_S, DOOR_START, CORR_DOOR_E);
+  wallLine(DOOR_START, CORR_DOOR_E, DOOR_START, KITCHEN_Z + 14);
 
   wallLine(ROOM_W, CW_Z0, ROOM_W, CW_Z0 + 13);
 
@@ -180,7 +178,7 @@ export function buildFloorPlan() {
 
   // --- Portes ---
   label('P1', (DOOR_START + DOOR_END) / 2, ROOM_D - 2, 0, DOOR_COLOR, 1.0);    // Porte Séjour
-  label('P2', DOOR_START + 2, (CD_S + CD_E) / 2, 0, DOOR_COLOR, 1.0);           // Porte SdB
+  label('P2', DOOR_START + 2, (CORR_DOOR_S + CORR_DOOR_E) / 2, 0, DOOR_COLOR, 1.0);           // Porte SdB
   const doorMid = { x: (doorS.x + doorE.x) / 2, z: (doorS.z + doorE.z) / 2 };
   label('P3', doorMid.x + 2, doorMid.z - 2, diagAngle, DOOR_COLOR, 1.0);        // Porte Entrée
 
@@ -275,7 +273,7 @@ export function buildFloorPlan() {
   // --- Ouvertures ---
   dim(7, 60, DOOR_START, 60, -2);                          // PV : 1.2m
   dim(0, 60, 7, 60, 2);                                    // VDch : 70cm
-  dim(DOOR_START, CD_S, DOOR_START, CD_E, -2);             // P2 : 80cm
+  dim(DOOR_START, CORR_DOOR_S, DOOR_START, CORR_DOOR_E, -2);             // P2 : 80cm
   dim(doorS.x, doorS.z, doorE.x, doorE.z, 3);             // P3 : 90cm
 
   // --- Ext. mur diagonal ---
