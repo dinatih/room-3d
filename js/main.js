@@ -549,11 +549,6 @@ document.addEventListener('minimap-pov', (e) => {
   enterPOV(x, z);
 });
 
-// Bouton marche
-document.getElementById('walk-btn')?.addEventListener('click', () => {
-  closeViewsModal();
-  enterWalk(ROOM_W / 2, ROOM_D / 2);
-});
 
 console.log(`LEGO Room: ${ROOM_W}x${ROOM_D}, ${allBricks.length} briques`);
 console.log(`Porte: studs ${DOOR_START}-${DOOR_END} (80cm), 30cm du mur gauche`);
