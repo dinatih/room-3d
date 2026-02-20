@@ -79,27 +79,7 @@ vrRig.add(camera);
 
 let vrWalking = false;
 
-renderer.xr.addEventListener('sessionstart', () => {
-  exitPOV(); exitWalk(); exit2D();
-  controls.enabled = false;
-  vrRig.position.set(ROOM_W / 2, WALK_H, ROOM_D / 2);
-
-  const hint = document.createElement('div');
-  hint.textContent = 'Tap écran ou bouton Cardboard pour avancer';
-  hint.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.5s';
-  document.body.appendChild(hint);
-  setTimeout(() => { hint.style.opacity = '0'; }, 4500);
-  setTimeout(() => { hint.remove(); }, 5000);
-});
-
-renderer.xr.addEventListener('sessionend', () => {
-  vrWalking = false;
-  controls.enabled = true;
-  vrRig.position.set(0, 0, 0);
-  camera.position.set(...VIEWS.perspective.pos);
-  controls.target.set(...VIEWS.perspective.target);
-  controls.update();
-});
+// VR session handlers sont regroupés après la boucle de rendu
 
 const xrController = renderer.xr.getController(0);
 xrController.addEventListener('selectstart', () => { vrWalking = true; });
@@ -146,6 +126,7 @@ function toggleFloorPlan() {
   floorPlanGroup.visible = floorPlanMode;
   const btn = document.getElementById('plan-toggle');
   if (btn) btn.textContent = floorPlanMode ? 'Plan : ON' : 'Plan : OFF';
+  requestRender();
 }
 
 document.getElementById('plan-toggle')?.addEventListener('click', toggleFloorPlan);
@@ -181,6 +162,7 @@ function toggleXray() {
   if (!xrayMode) savedMaterials.clear();
   const btn = document.getElementById('xray-toggle');
   if (btn) btn.textContent = xrayMode ? 'X-Ray : ON' : 'X-Ray : OFF';
+  requestRender();
 }
 
 document.getElementById('xray-toggle')?.addEventListener('click', toggleXray);
@@ -196,6 +178,7 @@ function makeLayerToggle(btnId, layer, label) {
     else camera.layers.disable(layer);
     const btn = document.getElementById(btnId);
     if (btn) btn.textContent = `${label} : ${on ? 'ON' : 'OFF'}`;
+    requestRender();
   });
 }
 makeLayerToggle('layer-equip-toggle', LAYER_EQUIPMENT, 'Équipements');
@@ -220,6 +203,7 @@ function toggleFloorOnly() {
   }
   const btn = document.getElementById('floor-toggle');
   if (btn) btn.textContent = floorOnly ? 'Sol : ON' : 'Sol : OFF';
+  requestRender();
 }
 
 document.getElementById('floor-toggle')?.addEventListener('click', toggleFloorOnly);
@@ -304,6 +288,10 @@ function enter2DTop() {
 
   activeCamera = orthoCamera;
   is2D = true;
+  orthoControls.addEventListener('change', requestRender);
+  orthoControls.addEventListener('start', startDamping);
+  orthoControls.addEventListener('end', startDamping);
+  requestRender();
 }
 
 function exit2D() {
@@ -315,6 +303,7 @@ function exit2D() {
   controls.enabled = true;
   activeCamera = camera;
   is2D = false;
+  requestRender();
 }
 
 // =============================================
@@ -350,6 +339,7 @@ function enterPOV(x, z) {
   controls.enableRotate = false;
   controls.enablePan = false;
   controls.enableZoom = false;
+  requestRender();
 }
 
 function updatePOVLook() {
@@ -371,6 +361,7 @@ function exitPOV() {
   controls.enableRotate = true;
   controls.enablePan = true;
   controls.enableZoom = true;
+  requestRender();
 }
 
 addEventListener('keydown', (e) => {
@@ -379,6 +370,7 @@ addEventListener('keydown', (e) => {
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(k)) {
     keysPressed.add(k);
     e.preventDefault();
+    requestRender();
     return;
   }
   if (walkActive) {
@@ -386,6 +378,7 @@ addEventListener('keydown', (e) => {
     if ('zqsdwa'.includes(lk) && lk.length === 1) {
       keysPressed.add(lk);
       e.preventDefault();
+      requestRender();
     }
   }
 });
@@ -421,6 +414,7 @@ function enterWalk(x, z) {
   renderer.domElement.requestPointerLock();
   const c = document.getElementById('controls');
   if (c) c.textContent = 'Flèches / ZQSD : marcher | Souris : regarder | Échap : quitter';
+  requestRender();
 }
 
 function exitWalk() {
@@ -433,6 +427,7 @@ function exitWalk() {
   if (document.pointerLockElement) document.exitPointerLock();
   const c = document.getElementById('controls');
   if (c) c.textContent = defaultControlsHint;
+  requestRender();
 }
 
 function updateWalkLook() {
@@ -452,6 +447,7 @@ document.addEventListener('mousemove', (e) => {
   walkYaw += e.movementX * MOUSE_SENS;
   walkPitch = Math.max(-1.4, Math.min(1.4, walkPitch - e.movementY * MOUSE_SENS));
   updateWalkLook();
+  requestRender();
 });
 
 document.addEventListener('pointerlockchange', () => {
@@ -459,9 +455,27 @@ document.addEventListener('pointerlockchange', () => {
 });
 
 // =============================================
-// ANIMATE
+// ANIMATE (render on demand)
 // =============================================
-renderer.setAnimationLoop(() => {
+let renderPending = false;
+let dampingFrames = 0;
+const DAMPING_TAIL = 60; // frames de damping après interaction
+
+export function requestRender() {
+  if (renderPending) return;
+  renderPending = true;
+  requestAnimationFrame(renderFrame);
+}
+
+// Déclencher un rendu continu pendant N frames (damping / inertie)
+function startDamping() {
+  dampingFrames = DAMPING_TAIL;
+  requestRender();
+}
+
+function renderFrame() {
+  renderPending = false;
+
   // Rotation fluide en mode POV
   if (povActive && keysPressed.size > 0) {
     if (keysPressed.has('ArrowLeft'))  povYaw -= POV_ROT_SPEED;
@@ -489,29 +503,63 @@ renderer.setAnimationLoop(() => {
     updateWalkLook();
   }
 
-  // VR walk (bouton Cardboard ou tap écran)
-  if (vrWalking && renderer.xr.isPresenting) {
-    const dir = new THREE.Vector3();
-    camera.getWorldDirection(dir);
-    dir.y = 0;
-    dir.normalize();
-    vrRig.position.addScaledVector(dir, WALK_SPEED);
-  }
+  if (is2D && orthoControls) orthoControls.update();
+  else controls.update();
+  renderer.render(scene, activeCamera);
 
-  if (renderer.xr.isPresenting) {
+  // Continuer le rendu si interaction active ou damping en cours
+  if (povActive && keysPressed.size > 0) requestRender();
+  if (walkActive && keysPressed.size > 0) requestRender();
+  if (dampingFrames > 0) { dampingFrames--; requestRender(); }
+}
+
+// VR : setAnimationLoop séparé (toujours 60fps en XR)
+renderer.xr.addEventListener('sessionstart', () => {
+  exitPOV(); exitWalk(); exit2D();
+  controls.enabled = false;
+  vrRig.position.set(ROOM_W / 2, WALK_H, ROOM_D / 2);
+  const hint = document.createElement('div');
+  hint.textContent = 'Tap écran ou bouton Cardboard pour avancer';
+  hint.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.5s';
+  document.body.appendChild(hint);
+  setTimeout(() => { hint.style.opacity = '0'; }, 4500);
+  setTimeout(() => { hint.remove(); }, 5000);
+  renderer.setAnimationLoop(() => {
+    if (vrWalking) {
+      const dir = new THREE.Vector3();
+      camera.getWorldDirection(dir);
+      dir.y = 0;
+      dir.normalize();
+      vrRig.position.addScaledVector(dir, WALK_SPEED);
+    }
     renderer.render(scene, camera);
-  } else {
-    if (is2D && orthoControls) orthoControls.update();
-    else controls.update();
-    renderer.render(scene, activeCamera);
-  }
+  });
 });
+renderer.xr.addEventListener('sessionend', () => {
+  renderer.setAnimationLoop(null);
+  vrWalking = false;
+  controls.enabled = true;
+  vrRig.position.set(0, 0, 0);
+  camera.position.set(...VIEWS.perspective.pos);
+  controls.target.set(...VIEWS.perspective.target);
+  controls.update();
+  requestRender();
+});
+
+// Déclencher le rendu sur les interactions OrbitControls
+controls.addEventListener('change', requestRender);
+controls.addEventListener('start', startDamping);
+controls.addEventListener('end', startDamping);
+
+// Premier rendu
+requestRender();
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   if (is2D) updateOrthoFrustum();
   renderer.setSize(innerWidth, innerHeight);
+  requestRender();
 });
 
 // =============================================
@@ -560,6 +608,7 @@ document.querySelectorAll('#views-modal button[data-view]').forEach(btn => {
     camera.position.set(...v.pos);
     controls.target.set(...v.target);
     controls.update();
+    requestRender();
   });
 });
 
