@@ -12,6 +12,7 @@ import {
   KITCHEN_Z,
   SDB_Z_END,
   DIAG_END_Z,
+  LAYER_FURNITURE,
 } from "./config.js";
 import {
   fillRow,
@@ -548,6 +549,10 @@ export function buildBathroom(scene) {
   cbnE.castShadow = true;
   cbnE.receiveShadow = true;
   scene.add(cbnE);
+
+  // Tag meubles SDB → layer mobilier (respecté par buildOnLayer)
+  cbnW.userData.layerOverride = LAYER_FURNITURE;
+  cbnE.userData.layerOverride = LAYER_FURNITURE;
 
   // =============================================
   // Ballon d'eau chaude 100L vertical
