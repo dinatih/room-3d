@@ -620,7 +620,7 @@ export function buildDecor(scene) {
       sofaGroup.add(arm);
     }
 
-    sofaGroup.position.set(31 - SOFA_D / 2, 0, -8);
+    sofaGroup.position.set(31 - SOFA_D / 2, 0, -9);
     scene.add(sofaGroup);
   }
 
@@ -765,5 +765,143 @@ export function buildDecor(scene) {
         scene.add(tile);
       }
     }
+  }
+
+  // =============================================
+  // COFFRE BANC YITAHOME 100 Gal (gris, 122×55×62cm)
+  // Derrière le canapé ouest (sofa 2)
+  // =============================================
+  {
+    const CB_L = 12.2;   // 122cm le long de Z
+    const CB_W = 5.5;    // 55cm profondeur (X)
+    const CB_H = 6.2;    // 62cm hauteur
+    const LID_H = 0.3;   // couvercle
+
+    const cbMat = new THREE.MeshStandardMaterial({
+      color: 0x4a4a4a, roughness: 0.6,
+    });
+    const cbLidMat = new THREE.MeshStandardMaterial({
+      color: 0x555555, roughness: 0.5,
+    });
+
+    // Sofa 2 : dos à X≈7, Z=-8
+    const cbX = 7 - CB_W / 2;  // juste derrière le dossier
+    const cbZ = -8;
+
+    // Corps
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(CB_W, CB_H - LID_H, CB_L),
+      cbMat,
+    );
+    body.position.set(cbX, (CB_H - LID_H) / 2, cbZ);
+    body.castShadow = true;
+    body.receiveShadow = true;
+    scene.add(body);
+
+    // Couvercle (légèrement plus large)
+    const lid = new THREE.Mesh(
+      new THREE.BoxGeometry(CB_W + 0.15, LID_H, CB_L + 0.15),
+      cbLidMat,
+    );
+    lid.position.set(cbX, CB_H - LID_H / 2, cbZ);
+    lid.castShadow = true;
+    scene.add(lid);
+
+    // Poignées latérales (2 côtés Z)
+    const handleMat = new THREE.MeshStandardMaterial({
+      color: 0x3a3a3a, roughness: 0.4,
+    });
+    for (const dz of [-1, 1]) {
+      const handle = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 0.3, 0.15),
+        handleMat,
+      );
+      handle.position.set(cbX, CB_H * 0.55, cbZ + dz * (CB_L / 2 + 0.08));
+      scene.add(handle);
+    }
+  }
+
+  // =============================================
+  // DESSERTE IKEA VIGGJA (blanc, 37×50×74cm)
+  // À côté du canapé ouest (côté sud)
+  // =============================================
+  {
+    const VG_W = 3.7;     // 37cm (le long de Z)
+    const VG_D = 5.0;     // 50cm (le long de X)
+    const VG_H = 7.4;     // 74cm hauteur
+    const TOP_Y = 5.08;   // plateau haut à 51cm
+    const BOT_Y = 2.29;   // plateau bas à 23cm
+    const TRAY_T = 0.1;   // épaisseur fond plateau
+    const TRAY_RIM = 0.25; // hauteur rebord
+    const LEG_R = 0.08;   // rayon tube acier
+
+    const vgMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.35 });
+    const vgFrameMat = new THREE.MeshStandardMaterial({
+      color: 0xe8e8e8, roughness: 0.3, metalness: 0.3,
+    });
+
+    const vgGroup = new THREE.Group();
+
+    // 4 pieds (tubes verticaux, légèrement inclinés vers l'extérieur)
+    const legGeo = new THREE.CylinderGeometry(LEG_R, LEG_R, VG_H, 6);
+    for (const dx of [-1, 1]) {
+      for (const dz of [-1, 1]) {
+        const leg = new THREE.Mesh(legGeo, vgFrameMat);
+        leg.position.set(
+          dx * (VG_D / 2 - 0.3),
+          VG_H / 2,
+          dz * (VG_W / 2 - 0.2),
+        );
+        vgGroup.add(leg);
+      }
+    }
+
+    // Traverses horizontales (bas, connectent les pieds en X)
+    for (const dz of [-1, 1]) {
+      const bar = new THREE.Mesh(
+        new THREE.CylinderGeometry(LEG_R, LEG_R, VG_D - 0.6, 6),
+        vgFrameMat,
+      );
+      bar.rotation.z = Math.PI / 2;
+      bar.position.set(0, 0.4, dz * (VG_W / 2 - 0.2));
+      vgGroup.add(bar);
+    }
+
+    // Plateaux (2 : bas et haut)
+    function addTray(y) {
+      // Fond
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(VG_D - 0.4, TRAY_T, VG_W - 0.3),
+        vgMat,
+      );
+      base.position.y = y;
+      base.receiveShadow = true;
+      vgGroup.add(base);
+
+      // Rebords (4 côtés)
+      for (const dz of [-1, 1]) {
+        const rim = new THREE.Mesh(
+          new THREE.BoxGeometry(VG_D - 0.4, TRAY_RIM, TRAY_T),
+          vgMat,
+        );
+        rim.position.set(0, y + TRAY_RIM / 2, dz * (VG_W / 2 - 0.15));
+        vgGroup.add(rim);
+      }
+      for (const dx of [-1, 1]) {
+        const rim = new THREE.Mesh(
+          new THREE.BoxGeometry(TRAY_T, TRAY_RIM, VG_W - 0.3),
+          vgMat,
+        );
+        rim.position.set(dx * (VG_D / 2 - 0.2), y + TRAY_RIM / 2, 0);
+        vgGroup.add(rim);
+      }
+    }
+
+    addTray(BOT_Y);
+    addTray(TOP_Y);
+
+    // Position : côté sud du canapé ouest (sofa2 à X=10, Z=-8, spans Z=-13→-3)
+    vgGroup.position.set(10, 0, -13 - VG_W / 2 - 0.3);
+    scene.add(vgGroup);
   }
 }
