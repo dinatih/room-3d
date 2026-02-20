@@ -16,7 +16,7 @@ import { buildMackapar } from './mackapar.js';
 import { buildDecor } from './decor.js';
 import { buildCorridor } from './corridor.js';
 import { buildBathroom } from './bathroom.js';
-import { buildFloor } from './floor.js';
+import { buildFloor, buildParquet } from './floor.js';
 import { buildInstancedMeshes } from './instancedMeshes.js';
 import { buildGrid } from './grid.js';
 import { buildMinimap } from './minimap.js';
@@ -61,6 +61,9 @@ buildOnLayer(buildDecor, LAYER_FURNITURE);
 
 // Layer 0 (structure) + layer 2 (placard) : géré dans corridor.js
 buildCorridor(scene);
+
+// Parquet après tous les builds (couvre séjour + couloir + SDB)
+buildParquet(allBricks);
 
 buildInstancedMeshes(scene, allBricks);
 buildGrid(scene);
@@ -189,7 +192,7 @@ makeLayerToggle('layer-furniture-toggle', LAYER_FURNITURE, 'Mobilier');
 // SOL ONLY MODE
 // =============================================
 let floorOnly = false;
-const FLOOR_TYPES = new Set(['floor', 'grass', 'ground', 'grid', 'parquet']);
+const FLOOR_TYPES = new Set(['floor', 'tile', 'grass', 'ground', 'grid', 'parquet']);
 
 function toggleFloorOnly() {
   // Désactiver plan si actif

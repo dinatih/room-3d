@@ -1,4 +1,4 @@
-import { ROOM_W, ROOM_D, PLATE_H, GAP, DOOR_START, DOOR_END, NICHE_DEPTH, NICHE_Z_START, FLOOR_Y, GARDEN_JC_Z } from './config.js';
+import { ROOM_W, ROOM_D, PLATE_H, GAP, DOOR_START, DOOR_END, NICHE_DEPTH, NICHE_Z_START, FLOOR_Y, GARDEN_JC_Z, KITCHEN_Z, SDB_Z_END } from './config.js';
 import { fillRow, addFloorBrick } from './brickHelpers.js';
 
 export function buildFloor(allBricks) {
@@ -25,6 +25,12 @@ export function buildFloor(allBricks) {
     addFloorBrick(DOOR_START + b.start, ROOM_D, b.size);
   }
 
+  // Sol ouverture cuisine (z = ROOM_D, X=3→13)
+  const KIT_OPEN_X0 = 3, KIT_OPEN_W = 10;
+  for (const b of fillRow(KIT_OPEN_W, ROOM_D % 2 === 1)) {
+    addFloorBrick(KIT_OPEN_X0 + b.start, ROOM_D, b.size);
+  }
+
   // =============================================
   // SOL LEGO VERT - Jardin (quadrilatère délimité par pointillés)
   // =============================================
@@ -46,13 +52,17 @@ export function buildFloor(allBricks) {
     }
   }
 
-  // Flat tiles parquet sur toutes les plates jaunes
+}
+
+export function buildParquet(allBricks) {
+  // Flat tiles : parquet (séjour + couloir) ou carrelage gris (SDB)
   const floorBricks = allBricks.filter(b => b.type === 'floor');
   for (const b of floorBricks) {
+    const isSDB = b.z >= KITCHEN_Z && b.z < SDB_Z_END && b.x < DOOR_START;
     allBricks.push({
       x: b.x, y: b.y + PLATE_H, z: b.z,
       sx: b.sx, sy: b.sy, sz: b.sz,
-      len: b.len, axis: b.axis, type: 'parquet'
+      len: b.len, axis: b.axis, type: isSDB ? 'tile' : 'parquet'
     });
   }
 }

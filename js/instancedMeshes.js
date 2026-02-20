@@ -10,6 +10,7 @@ export function buildInstancedMeshes(scene, allBricks) {
     accent:      new THREE.MeshStandardMaterial({ color: COLORS.accent, roughness: 0.3 }),
     glass_frame: new THREE.MeshStandardMaterial({ color: 0x4477aa, roughness: 0.3 }),
     floor:       new THREE.MeshStandardMaterial({ color: COLORS.floor, roughness: 0.3 }),
+    tile:        new THREE.MeshStandardMaterial({ color: COLORS.tile, roughness: 0.2 }),
     grass:       new THREE.MeshStandardMaterial({ color: COLORS.grass, roughness: 0.5 }),
     parquet:     new THREE.MeshStandardMaterial({ color: COLORS.parquet, roughness: 0.25 }),
   };
@@ -18,10 +19,11 @@ export function buildInstancedMeshes(scene, allBricks) {
     accent:      new THREE.MeshStandardMaterial({ color: COLORS.accentS, roughness: 0.25 }),
     glass_frame: new THREE.MeshStandardMaterial({ color: 0x336688, roughness: 0.25 }),
     floor:       new THREE.MeshStandardMaterial({ color: COLORS.studFloor, roughness: 0.25, metalness: 0.05 }),
+    tile:        new THREE.MeshStandardMaterial({ color: COLORS.studTile, roughness: 0.2, metalness: 0.05 }),
     grass:       new THREE.MeshStandardMaterial({ color: COLORS.grassStud, roughness: 0.4, metalness: 0.05 }),
   };
 
-  for (const type of ['wall', 'accent', 'glass_frame', 'floor', 'grass', 'parquet']) {
+  for (const type of ['wall', 'accent', 'glass_frame', 'floor', 'tile', 'grass', 'parquet']) {
     const bricks = allBricks.filter(b => b.type === type);
     if (!bricks.length) continue;
 
