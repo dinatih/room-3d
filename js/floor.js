@@ -1,4 +1,4 @@
-import { ROOM_W, ROOM_D, PLATE_H, GAP, DOOR_START, DOOR_END, NICHE_DEPTH, NICHE_Z_START, FLOOR_Y, GARDEN_JC_Z, KITCHEN_Z, SDB_Z_END } from './config.js';
+import { ROOM_W, ROOM_D, PLATE_H, GAP, DOOR_START, DOOR_END, NICHE_DEPTH, NICHE_Z_START, FLOOR_Y, GARDEN_JC_Z, KITCHEN_Z, SDB_Z_END, DIAG_CZ } from './config.js';
 import { fillRow, addFloorBrick } from './brickHelpers.js';
 
 export function buildFloor(allBricks) {
@@ -58,7 +58,8 @@ export function buildParquet(allBricks) {
   // Flat tiles : parquet (séjour + couloir) ou carrelage gris (SDB)
   const floorBricks = allBricks.filter(b => b.type === 'floor');
   for (const b of floorBricks) {
-    const isSDB = b.z >= KITCHEN_Z && b.z < SDB_Z_END && b.x < DOOR_START;
+    const isSDB = (b.z >= KITCHEN_Z && b.z < SDB_Z_END && b.x < DOOR_START) ||
+                  (b.z >= SDB_Z_END && b.z < DIAG_CZ);
     allBricks.push({
       x: b.x, y: b.y + PLATE_H, z: b.z,
       sx: b.sx, sy: b.sy, sz: b.sz,

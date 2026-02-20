@@ -36,13 +36,19 @@ const ROOMS = [
     nameFr: 'Entrée',
     nameEn: 'entry',
     contains: (x, z) => {
-      if (x < DOOR_START || x > ROOM_W || z <= ROOM_D) return false;
-      if (z <= DIAG_AZ) return true;
-      return z <= SDB_Z_END && x <= diagXat(z);
+      if (z <= ROOM_D || z > SDB_Z_END) return false;
+      // Placard (X=13→19, Z=41→46)
+      if (x >= KITCHEN_X1 && x <= DOOR_START && z <= KITCHEN_Z) return true;
+      // Couloir rect (X=19→30, Z=41→53)
+      if (x >= DOOR_START && x <= ROOM_W && z <= DIAG_AZ) return true;
+      // Triangle diagonal (X=19→diagX, Z=53→60)
+      if (x >= DOOR_START && z <= SDB_Z_END && x <= diagXat(z)) return true;
+      return false;
     },
     labelX: (DOOR_START + ROOM_W) / 2,
     labelZ: ROOM_D + 7,
     fills: (tx, tz, S) => [
+      [tx(KITCHEN_X1), tz(ROOM_D + 1), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D - 1) * S],
       [tx(DOOR_START), tz(ROOM_D + 1), (ROOM_W - DOOR_START) * S, (DIAG_AZ - ROOM_D - 1) * S],
     ],
     fillPath: (ctx, tx, tz) => {
