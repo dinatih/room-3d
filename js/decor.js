@@ -729,4 +729,41 @@ export function buildDecor(scene) {
     vhGroup.position.set(20, 0, 10);
     scene.add(vhGroup);
   }
+
+  // =============================================
+  // CAILLEBOTIS ALTAPPEN IKEA (blanc, 30×30cm = 3×3 studs)
+  // Zone jardin Z=-29 → Z=-16
+  // =============================================
+  {
+    const ALT_S = 3;       // 30cm = 3 studs
+    const ALT_H = 0.2;    // ~2cm épaisseur
+    const ALT_GAP = 0.06; // espacement entre dalles
+
+    const altMat = new THREE.MeshStandardMaterial({
+      color: 0xf0ece4, roughness: 0.55,
+    });
+    const altGeo = new THREE.BoxGeometry(
+      ALT_S - ALT_GAP, ALT_H, ALT_S - ALT_GAP,
+    );
+
+    const Z0 = -29;
+    const Z1 = -16;
+    const X_RIGHT = 31;
+
+    // Limite gauche jardin (même formule que floor.js)
+    function gardenX0(z) {
+      if (z + 0.5 >= -14) return -1;
+      return Math.ceil(-1 - 11 * (z + 0.5 + 14) / 7);
+    }
+
+    for (let tz = Z0; tz + ALT_S <= Z1; tz += ALT_S) {
+      const x0 = gardenX0(tz);
+      for (let tx = X_RIGHT - ALT_S; tx >= x0; tx -= ALT_S) {
+        const tile = new THREE.Mesh(altGeo, altMat);
+        tile.position.set(tx + ALT_S / 2, ALT_H / 2, tz + ALT_S / 2);
+        tile.receiveShadow = true;
+        scene.add(tile);
+      }
+    }
+  }
 }
