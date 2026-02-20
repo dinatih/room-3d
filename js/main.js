@@ -225,7 +225,7 @@ const _zoomHit = new THREE.Vector3();
 const _zoomMouse = new THREE.Vector2();
 
 renderer.domElement.addEventListener('wheel', (e) => {
-  if (!zoomToCursor || is2D || povActive || walkActive) return;
+  if (!zoomToCursor || is2D || walkActive) return;
 
   const rect = renderer.domElement.getBoundingClientRect();
   _zoomMouse.set(
@@ -264,7 +264,7 @@ function updateOrthoFrustum() {
 }
 
 function enter2DTop() {
-  exitPOV();
+  exitWalk();
   exitWalk();
 
   if (!orthoCamera) {
@@ -309,10 +309,6 @@ function exit2D() {
 // =============================================
 // POV MODE (point de vue 1ère personne)
 // =============================================
-const EYE_H = 18; // 1.8m
-const POV_LOOK_DIST = 10;
-const POV_ROT_SPEED = 0.03;
-
 const POV_ROOMS = {
   living:   { x: ROOM_W / 2,                            z: ROOM_D / 2 },
   entry:    { x: (DOOR_START + ROOM_W) / 2,             z: ROOM_D + 7.5 },
@@ -320,52 +316,15 @@ const POV_ROOMS = {
   garden:   { x: 15,                                     z: -12 },
 };
 
-let povActive = false;
-let povYaw = 0, povPitch = 0;
-const povPos = { x: 0, y: EYE_H, z: 0 };
 const keysPressed = new Set();
 
+// POV = enterWalk à la position donnée
 function enterPOV(x, z) {
-  exit2D();
-  exitWalk();
-  povActive = true;
-  povPos.x = x;
-  povPos.y = EYE_H;
-  povPos.z = z;
-  povYaw = 0;
-  povPitch = 0;
-  camera.position.set(x, EYE_H, z);
-  updatePOVLook();
-  controls.enableRotate = false;
-  controls.enablePan = false;
-  controls.enableZoom = false;
-  requestRender();
-}
-
-function updatePOVLook() {
-  const d = POV_LOOK_DIST;
-  const cosP = Math.cos(povPitch);
-  controls.target.set(
-    povPos.x + Math.sin(povYaw) * cosP * d,
-    povPos.y + Math.sin(povPitch) * d,
-    povPos.z + Math.cos(povYaw) * cosP * d,
-  );
-  camera.position.set(povPos.x, povPos.y, povPos.z);
-  controls.update();
-}
-
-function exitPOV() {
-  if (!povActive) return;
-  povActive = false;
-  keysPressed.clear();
-  controls.enableRotate = true;
-  controls.enablePan = true;
-  controls.enableZoom = true;
-  requestRender();
+  enterWalk(x, z);
 }
 
 addEventListener('keydown', (e) => {
-  if (!povActive && !walkActive) return;
+  if (!walkActive) return;
   const k = e.key;
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(k)) {
     keysPressed.add(k);
@@ -373,13 +332,11 @@ addEventListener('keydown', (e) => {
     requestRender();
     return;
   }
-  if (walkActive) {
-    const lk = k.toLowerCase();
-    if ('zqsdwa'.includes(lk) && lk.length === 1) {
-      keysPressed.add(lk);
-      e.preventDefault();
-      requestRender();
-    }
+  const lk = k.toLowerCase();
+  if ('zqsdwa'.includes(lk) && lk.length === 1) {
+    keysPressed.add(lk);
+    e.preventDefault();
+    requestRender();
   }
 });
 
@@ -401,7 +358,7 @@ const walkPos = { x: 0, y: WALK_H, z: 0 };
 const defaultControlsHint = 'Clic gauche : orbiter | Molette : zoom | Clic droit : pan';
 
 function enterWalk(x, z) {
-  exitPOV();
+  exitWalk();
   exit2D();
   walkActive = true;
   walkPos.x = x; walkPos.y = WALK_H; walkPos.z = z;
@@ -444,7 +401,7 @@ function updateWalkLook() {
 
 document.addEventListener('mousemove', (e) => {
   if (!walkActive || !document.pointerLockElement) return;
-  walkYaw += e.movementX * MOUSE_SENS;
+  walkYaw -= e.movementX * MOUSE_SENS;
   walkPitch = Math.max(-1.4, Math.min(1.4, walkPitch - e.movementY * MOUSE_SENS));
   updateWalkLook();
   requestRender();
@@ -476,28 +433,25 @@ function startDamping() {
 function renderFrame() {
   renderPending = false;
 
-  // Rotation fluide en mode POV
-  if (povActive && keysPressed.size > 0) {
-    if (keysPressed.has('ArrowLeft'))  povYaw -= POV_ROT_SPEED;
-    if (keysPressed.has('ArrowRight')) povYaw += POV_ROT_SPEED;
-    if (keysPressed.has('ArrowUp'))    povPitch = Math.min(povPitch + POV_ROT_SPEED, 1.2);
-    if (keysPressed.has('ArrowDown'))  povPitch = Math.max(povPitch - POV_ROT_SPEED, -1.2);
-    updatePOVLook();
-  }
-
   // Déplacement en mode marche
   if (walkActive && keysPressed.size > 0) {
     const fwdX = Math.sin(walkYaw) * WALK_SPEED;
     const fwdZ = Math.cos(walkYaw) * WALK_SPEED;
     const rgtX = fwdZ, rgtZ = -fwdX;
 
+    // Flèches gauche/droite = rotation
+    const KEY_ROT = 0.03;
+    if (keysPressed.has('ArrowLeft'))  walkYaw += KEY_ROT;
+    if (keysPressed.has('ArrowRight')) walkYaw -= KEY_ROT;
+
+    // Flèches haut/bas + ZQSD/WASD = translation
     if (keysPressed.has('ArrowUp') || keysPressed.has('z') || keysPressed.has('w'))
       { walkPos.x += fwdX; walkPos.z += fwdZ; }
     if (keysPressed.has('ArrowDown') || keysPressed.has('s'))
       { walkPos.x -= fwdX; walkPos.z -= fwdZ; }
-    if (keysPressed.has('ArrowLeft') || keysPressed.has('q') || keysPressed.has('a'))
+    if (keysPressed.has('q') || keysPressed.has('a'))
       { walkPos.x -= rgtX; walkPos.z -= rgtZ; }
-    if (keysPressed.has('ArrowRight') || keysPressed.has('d'))
+    if (keysPressed.has('d'))
       { walkPos.x += rgtX; walkPos.z += rgtZ; }
 
     updateWalkLook();
@@ -508,14 +462,13 @@ function renderFrame() {
   renderer.render(scene, activeCamera);
 
   // Continuer le rendu si interaction active ou damping en cours
-  if (povActive && keysPressed.size > 0) requestRender();
   if (walkActive && keysPressed.size > 0) requestRender();
   if (dampingFrames > 0) { dampingFrames--; requestRender(); }
 }
 
 // VR : setAnimationLoop séparé (toujours 60fps en XR)
 renderer.xr.addEventListener('sessionstart', () => {
-  exitPOV(); exitWalk(); exit2D();
+  exitWalk(); exit2D();
   controls.enabled = false;
   vrRig.position.set(ROOM_W / 2, WALK_H, ROOM_D / 2);
   const hint = document.createElement('div');
@@ -600,7 +553,7 @@ document.querySelectorAll('#views-modal button[data-view]').forEach(btn => {
       enter2DTop();
       return;
     }
-    exitPOV();
+    exitWalk();
     exitWalk();
     exit2D();
     const v = VIEWS[btn.dataset.view];
