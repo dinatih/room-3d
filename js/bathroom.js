@@ -53,21 +53,16 @@ export function buildBathroom(scene) {
   // =============================================
   const SDB_Z = KITCHEN_Z + SDB_WALL_LEN; // Z=60
 
-  // Douche 70x70cm encastrée dans le mur sud
+  // Douche 70x70cm encastrée dans le mur sud, contre MS-O
   const SHOWER_W = 7;
   const SHOWER_D = 7;
-  const SHOWER_X0 = 0;
-  const SHOWER_X1 = SHOWER_X0 + SHOWER_W; // X=7
+  const SHOWER_X0 = -NICHE_DEPTH; // -1, contre mur ouest
+  const SHOWER_X1 = SHOWER_X0 + SHOWER_W; // X=6
   const SHOWER_Z0 = SDB_Z; // Z=60
   const SHOWER_Z1 = SHOWER_Z0 + SHOWER_D; // Z=67
 
-  // Mur sud SDB (Z=60) : seul raccord X=-1→0
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    addBrickX(-NICHE_DEPTH, layer, SDB_Z + 0.5, NICHE_DEPTH, "wall");
-  }
-
   // =============================================
-  // Double porte coulissante bois (X=8→18, Z=60, jusqu'au plafond)
+  // Double porte coulissante placard PC-SDB (Z=60, jusqu'au plafond)
   // =============================================
   {
     const SLIDE_X0 = SHOWER_X1 + 1; // 8
@@ -160,8 +155,8 @@ export function buildBathroom(scene) {
       addBrickZ(SHOWER_X1 + 0.5, layer, SHOWER_Z0 + b.start, b.size, "wall");
   }
 
-  // Mur fond douche (Z=67) — élargi de 1 stud pour rejoindre le mur ouest
-  const BACK_W = SHOWER_W + NICHE_DEPTH; // 8
+  // Mur fond douche (Z=67)
+  const BACK_W = SHOWER_W; // 7 (de -1 à 6)
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
     for (const b of fillRow(BACK_W, layer % 2 === 1))
       addBrickX(-NICHE_DEPTH + b.start, layer, SHOWER_Z1 + 0.5, b.size, "wall");
@@ -183,7 +178,7 @@ export function buildBathroom(scene) {
   base.receiveShadow = true;
   scene.add(base);
 
-  // Porte vitrée au niveau du mur sud (Z=60)
+  // Vitrage douche au niveau du mur sud (Z=60)
   const glassBaseY = BASE_H;
   const glass = new THREE.Mesh(
     new THREE.PlaneGeometry(SHOWER_W, GLASS_H),
@@ -192,7 +187,7 @@ export function buildBathroom(scene) {
   glass.position.set(showerCX, glassBaseY + GLASS_H / 2, SHOWER_Z0);
   scene.add(glass);
 
-  // Cadre haut de la porte vitrée
+  // Cadre haut du vitrage douche
   const showerTopBar = new THREE.Mesh(
     new THREE.BoxGeometry(SHOWER_W, 0.3, 0.15),
     frameMat,
