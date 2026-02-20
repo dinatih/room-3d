@@ -516,4 +516,217 @@ export function buildDecor(scene) {
 
     scene.add(scootGroup);
   }
+
+  // =============================================
+  // CORBEILLES IKEA FNISS (×2)
+  // =============================================
+  {
+    const FN_R_TOP = 1.4;    // 28cm diamètre haut
+    const FN_R_BOT = 0.95;   // 19cm diamètre bas
+    const FN_H = 2.8;        // 28cm hauteur
+    const FN_THICK = 0.06;
+
+    const fnMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
+    const fnInnerMat = new THREE.MeshStandardMaterial({
+      color: 0xe0e0e0, roughness: 0.3, side: THREE.BackSide,
+    });
+
+    function addFniss(x, z) {
+      const group = new THREE.Group();
+      // Coque extérieure
+      const outer = new THREE.Mesh(
+        new THREE.CylinderGeometry(FN_R_TOP, FN_R_BOT, FN_H, 24, 1, true),
+        fnMat,
+      );
+      outer.position.y = FN_H / 2;
+      outer.castShadow = true;
+      group.add(outer);
+      // Face intérieure
+      const inner = new THREE.Mesh(
+        new THREE.CylinderGeometry(FN_R_TOP - FN_THICK, FN_R_BOT - FN_THICK, FN_H, 24, 1, true),
+        fnInnerMat,
+      );
+      inner.position.y = FN_H / 2;
+      group.add(inner);
+      // Fond
+      const bottom = new THREE.Mesh(
+        new THREE.CircleGeometry(FN_R_BOT - FN_THICK, 24),
+        fnMat,
+      );
+      bottom.rotation.x = -Math.PI / 2;
+      bottom.position.y = 0.05;
+      group.add(bottom);
+      // Lèvre supérieure (anneau)
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(FN_R_TOP - FN_THICK / 2, FN_THICK, 8, 24),
+        fnMat,
+      );
+      rim.rotation.x = Math.PI / 2;
+      rim.position.y = FN_H;
+      group.add(rim);
+
+      group.position.set(x, 0, z);
+      scene.add(group);
+      return group;
+    }
+
+    addFniss(11, 50);    // SDB, à côté meuble vasque
+    addFniss(7.5, 26);  // Séjour, en face du congélateur
+  }
+
+  // =============================================
+  // CANAPÉ DE JARDIN (rouge, côté est)
+  // =============================================
+  {
+    const SOFA_W = 16;   // 160cm le long de Z
+    const SOFA_D = 6;    // 60cm profondeur (X)
+    const SOFA_H = 9;    // 90cm hauteur totale
+    const SEAT_H = 4;    // 40cm hauteur assise
+    const BACK_T = 1;    // 10cm épaisseur dossier
+    const ARM_W = 1;     // 10cm largeur accoudoir
+    const ARM_H = 6;     // 60cm hauteur accoudoir
+
+    const sofaMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.7 });
+
+    const sofaGroup = new THREE.Group();
+
+    // Assise
+    const seat = new THREE.Mesh(
+      new THREE.BoxGeometry(SOFA_D, SEAT_H, SOFA_W),
+      sofaMat,
+    );
+    seat.position.set(0, SEAT_H / 2, 0);
+    seat.castShadow = true;
+    seat.receiveShadow = true;
+    sofaGroup.add(seat);
+
+    // Dossier (contre le mur est)
+    const back = new THREE.Mesh(
+      new THREE.BoxGeometry(BACK_T, SOFA_H, SOFA_W),
+      sofaMat,
+    );
+    back.position.set(SOFA_D / 2 - BACK_T / 2, SOFA_H / 2, 0);
+    back.castShadow = true;
+    sofaGroup.add(back);
+
+    // Accoudoirs
+    for (const side of [-1, 1]) {
+      const arm = new THREE.Mesh(
+        new THREE.BoxGeometry(SOFA_D, ARM_H, ARM_W),
+        sofaMat,
+      );
+      arm.position.set(0, ARM_H / 2, side * (SOFA_W / 2 - ARM_W / 2));
+      arm.castShadow = true;
+      sofaGroup.add(arm);
+    }
+
+    sofaGroup.position.set(31 - SOFA_D / 2, 0, -8);
+    scene.add(sofaGroup);
+  }
+
+  // =============================================
+  // CANAPÉ DE JARDIN 2 (rouge, sans accoudoirs, côté est)
+  // =============================================
+  {
+    const S2_W = 10;    // 100cm le long de Z
+    const S2_D = 6;     // 60cm profondeur (X)
+    const S2_H = 10;    // 100cm hauteur totale
+    const S2_SEAT = 4;  // 40cm hauteur assise
+    const S2_BACK = 1;  // 10cm épaisseur dossier
+
+    const sofa2Mat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.7 });
+    const sofa2Group = new THREE.Group();
+
+    // Assise
+    const seat2 = new THREE.Mesh(
+      new THREE.BoxGeometry(S2_D, S2_SEAT, S2_W),
+      sofa2Mat,
+    );
+    seat2.position.set(0, S2_SEAT / 2, 0);
+    seat2.castShadow = true;
+    seat2.receiveShadow = true;
+    sofa2Group.add(seat2);
+
+    // Dossier
+    const back2 = new THREE.Mesh(
+      new THREE.BoxGeometry(S2_BACK, S2_H, S2_W),
+      sofa2Mat,
+    );
+    back2.position.set(S2_D / 2 - S2_BACK / 2, S2_H / 2, 0);
+    back2.castShadow = true;
+    sofa2Group.add(back2);
+
+    sofa2Group.rotation.y = Math.PI;
+    sofa2Group.position.set(31 - 6 - 6 - S2_D / 2 - 6, 0, -8);
+    scene.add(sofa2Group);
+  }
+
+  // =============================================
+  // CHAISE PLIANTE IKEA VIHALS (rouge)
+  // =============================================
+  {
+    const VH_W = 4.3;     // 43cm largeur
+    const VH_D = 4.7;     // 47cm profondeur
+    const VH_H = 8;       // 80cm hauteur totale
+    const VH_SEAT_H = 4.5; // 45cm hauteur assise
+    const VH_SEAT_W = 3.9; // 39cm largeur assise
+    const VH_SEAT_D = 4.1; // 41cm profondeur assise
+    const VH_SEAT_T = 0.2; // épaisseur assise
+    const VH_BACK_H = VH_H - VH_SEAT_H; // 3.5 hauteur dossier
+    const VH_LEG_R = 0.12; // rayon tubes
+
+    const vhRedMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 });
+    const legGeo = new THREE.CylinderGeometry(VH_LEG_R, VH_LEG_R, 1, 6);
+
+    const vhGroup = new THREE.Group();
+
+    // Assise
+    const vhSeat = new THREE.Mesh(
+      new THREE.BoxGeometry(VH_SEAT_W, VH_SEAT_T, VH_SEAT_D),
+      vhRedMat,
+    );
+    vhSeat.position.y = VH_SEAT_H;
+    vhSeat.castShadow = true;
+    vhGroup.add(vhSeat);
+
+    // Dossier (léger angle en arrière)
+    const backAngle = 0.15; // ~8°
+    const vhBack = new THREE.Mesh(
+      new THREE.BoxGeometry(VH_SEAT_W, VH_BACK_H, VH_SEAT_T),
+      vhRedMat,
+    );
+    vhBack.position.set(0, VH_SEAT_H + VH_BACK_H / 2, -VH_SEAT_D / 2 + VH_SEAT_T / 2);
+    vhBack.rotation.x = backAngle;
+    vhBack.castShadow = true;
+    vhGroup.add(vhBack);
+
+    // Pieds avant (droits)
+    for (const sx of [-1, 1]) {
+      const leg = new THREE.Mesh(legGeo, vhRedMat);
+      leg.scale.y = VH_SEAT_H;
+      leg.position.set(sx * (VH_W / 2 - VH_LEG_R), VH_SEAT_H / 2, VH_SEAT_D / 2 - 0.3);
+      vhGroup.add(leg);
+    }
+
+    // Pieds arrière (montants du dossier, jusqu'en haut)
+    for (const sx of [-1, 1]) {
+      const leg = new THREE.Mesh(legGeo, vhRedMat);
+      leg.scale.y = VH_H;
+      leg.position.set(sx * (VH_W / 2 - VH_LEG_R), VH_H / 2, -VH_SEAT_D / 2 + 0.3);
+      leg.rotation.x = backAngle * 0.5;
+      vhGroup.add(leg);
+    }
+
+    // Traverse avant + arrière
+    for (const tz of [VH_SEAT_D / 2 - 0.3, -VH_SEAT_D / 2 + 0.3]) {
+      const bar = new THREE.Mesh(legGeo, vhRedMat);
+      bar.rotation.z = Math.PI / 2;
+      bar.scale.y = VH_W - VH_LEG_R * 4;
+      bar.position.set(0, VH_SEAT_H * 0.3, tz);
+      vhGroup.add(bar);
+    }
+
+    vhGroup.position.set(20, 0, 10);
+    scene.add(vhGroup);
+  }
 }
