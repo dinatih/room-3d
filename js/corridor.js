@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, STUD_R, STUD_HT, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_END_Z, LAYER_FURNITURE } from './config.js';
+import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, STUD_R, STUD_HT, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_FURNITURE } from './config.js';
 import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
 import { makeText } from './labels.js';
 
@@ -133,9 +133,9 @@ export function buildCorridor(scene) {
       obj.layers.set(LAYER_FURNITURE);
   }
 
-  // Mur droit du couloir (en face de la porte SDB), 1m30 = 13 studs
+  // Mur droit du couloir (en face de la porte SDB), jusqu'au début du diag
   const CORR_RIGHT_X = ROOM_W + 0.5;
-  const CORR_RIGHT_LEN = 13;
+  const CORR_RIGHT_LEN = DIAG_AZ - WALL_Z0;
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
     for (const b of fillRow(CORR_RIGHT_LEN, layer % 2 === 1))
       addBrickZ(CORR_RIGHT_X, layer, WALL_Z0 + b.start, b.size, 'wall');
@@ -144,13 +144,9 @@ export function buildCorridor(scene) {
   // =============================================
   // Mur couloir bâtiment (diagonal, briques LEGO dans un Group rotaté)
   // =============================================
-  const DIAG_AX = CORR_RIGHT_X - 0.5;          // 30
-  const DIAG_AZ = WALL_Z0 + CORR_RIGHT_LEN;    // 54
-  const DIAG_CX = -NICHE_DEPTH;                 // -1
-  const DIAG_CZ = DIAG_END_Z;                   // 73
 
-  const diagDX = DIAG_CX - DIAG_AX;
-  const diagDZ = DIAG_CZ - DIAG_AZ;
+  const diagDX = DIAG_CX - DIAG_AX;   // -31
+  const diagDZ = DIAG_CZ - DIAG_AZ;   // 19
   const diagLen = Math.sqrt(diagDX * diagDX + diagDZ * diagDZ);
   const diagWallLen = Math.round(diagLen);
 
@@ -256,7 +252,7 @@ export function buildCorridor(scene) {
   // Sol complémentaire sous le mur bâtiment (diagonal)
   const SDB_Z = KITCHEN_Z + LEFT_WALL_LEN; // 60
   for (let z = DIAG_AZ; z < Math.ceil(DIAG_CZ); z++) {
-    const rawDiagX = 30.5 - 31 * (z + 0.5 - 54.5) / 19;
+    const rawDiagX = DIAG_AX + 0.5 - (DIAG_AX - DIAG_CX) * (z + 0.5 - (DIAG_AZ + 0.5)) / (DIAG_CZ - DIAG_AZ);
     const maxX = Math.floor(rawDiagX);
     const minX = z < SDB_Z ? DOOR_START : -NICHE_DEPTH;
     const width = maxX - minX;
