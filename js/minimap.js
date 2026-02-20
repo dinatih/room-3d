@@ -184,14 +184,13 @@ export function buildMinimap() {
     // === SDB OUEST (toute la longueur) ===
     drawWall(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, 73);
 
-    // === MUR SDB SUD (tout en vitrage) ===
-    drawWall(-NICHE_DEPTH, 60, 0, 60);
-    drawWindow(0, 60, 7, 60);
-    drawDoor(7, 60, DOOR_START, 60);
+    // === MUR SDB SUD (vitrage douche + PC-SDB) ===
+    drawWindow(-NICHE_DEPTH, 60, 6, 60);
+    drawDoor(6, 60, DOOR_START, 60);
 
     // === DOUCHE ===
-    drawWall(7, 60, 7, 67);
-    drawWall(-NICHE_DEPTH, 67, 7, 67);
+    drawWall(6, 60, 6, 67);
+    drawWall(-NICHE_DEPTH, 67, 6, 67);
 
     // === MUR DIAGONAL BATIMENT (avec porte d'entrée) ===
     const DA = { x: DIAG_AX + 0.5, z: DIAG_AZ + 0.5 };

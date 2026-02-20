@@ -55,7 +55,7 @@ export function buildFloorPlan() {
   floorRect(KITCHEN_X0, ROOM_D, KITCHEN_X1 - KITCHEN_X0, KITCHEN_DEPTH);   // Cuisine
   floorRect(DOOR_START, ROOM_D + 1, ROOM_W - DOOR_START, 13);              // Entrée
   floorRect(-NICHE_DEPTH, KITCHEN_Z + 1, DOOR_START + NICHE_DEPTH, 13);    // SDB
-  floorRect(0, 60, 7, 7);                                                   // Douche
+  floorRect(-NICHE_DEPTH, 60, 7, 7);                                          // Douche
 
   // === MUR A OUEST (niche) ===
   wallLine(0, 0, 0, NICHE_Z_START);
@@ -98,14 +98,13 @@ export function buildFloorPlan() {
   // === SDB OUEST ===
   wallLine(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, 73);
 
-  // === MUR SDB SUD (pas de mur, tout en vitrage) ===
-  wallLine(-NICHE_DEPTH, 60, 0, 60);       // raccord MS-O
-  window_(0, 60, 7, 60);                    // VDch (porte vitrée douche)
-  door(7, 60, DOOR_START, 60);              // PV (double porte coulissante vitrée)
+  // === MUR SDB SUD (vitrage douche + PC-SDB) ===
+  window_(-NICHE_DEPTH, 60, 6, 60);         // VDch (vitrage douche)
+  door(6, 60, DOOR_START, 60);              // PC-SDB (double porte coulissante placard)
 
   // === DOUCHE ===
-  wallLine(7, 60, 7, 67);
-  wallLine(-NICHE_DEPTH, 67, 7, 67);
+  wallLine(6, 60, 6, 67);                   // MDch (X=6)
+  wallLine(-NICHE_DEPTH, 67, 6, 67);
 
   // === MUR DIAGONAL BATIMENT (avec porte d'entrée) ===
   const DA = { x: DIAG_AX + 0.5, z: DIAG_AZ + 0.5 };
@@ -141,7 +140,7 @@ export function buildFloorPlan() {
   label('Cuisine', (KITCHEN_X0 + KITCHEN_X1) / 2, ROOM_D + KITCHEN_DEPTH / 2, 0, ROOM_COLOR, 1.5);
   label('Entrée', (DOOR_START + ROOM_W) / 2, ROOM_D + 7, 0, ROOM_COLOR, 1.5);
   label('SdB', ((-NICHE_DEPTH) + DOOR_START) / 2, (KITCHEN_Z + 60) / 2, 0, ROOM_COLOR, 1.8);
-  label('Douche', 3.5, 63.5, 0, ROOM_COLOR, 1.2);
+  label('Douche', 2.5, 63.5, 0, ROOM_COLOR, 1.2);
 
   // --- Murs principaux (séjour) ---
   label('MA', -2.5, NICHE_Z_START / 2, Math.PI / 2, WALL_COLOR, 1.0);     // Mur A Ouest
@@ -159,10 +158,10 @@ export function buildFloorPlan() {
   // --- SdB ---
   label('MS-N', ((-NICHE_DEPTH) + DOOR_START) / 2, KITCHEN_Z - 1.5, 0, WALL_COLOR, 0.8);     // Mur SdB Nord
   label('MS-O', -NICHE_DEPTH - 1.5, (KITCHEN_Z + 60) / 2, Math.PI / 2, WALL_COLOR, 0.8);     // Mur SdB Ouest
-  label('PV', (7 + DOOR_START) / 2, 60 + 1.5, 0, DOOR_COLOR, 0.8);                             // Porte Vitrée double coulissante
+  label('PC-SDB', (6 + DOOR_START) / 2, 60 + 1.5, 0, DOOR_COLOR, 0.8);                          // Double porte coulissante placard
 
   // --- Douche ---
-  label('MDch', 7 + 1.5, 63.5, -Math.PI / 2, WALL_COLOR, 0.7);  // Mur Douche Est
+  label('MDch', 6 + 1.5, 63.5, -Math.PI / 2, WALL_COLOR, 0.7);  // Mur Douche Est
 
   // --- Placard ---
   label('Placard', (KITCHEN_X1 + DOOR_START) / 2, (CW_Z0 + KITCHEN_Z) / 2, 0, ROOM_COLOR, 1.0);
@@ -261,8 +260,8 @@ export function buildFloorPlan() {
   dim(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, 60, -2);     // prof int : 1.4m
 
   // --- Douche ---
-  dim(-NICHE_DEPTH, 67, 7, 67, -2);                      // larg int : 80cm
-  dim(7, 60, 7, 67, 2);                                   // prof int : 70cm
+  dim(-NICHE_DEPTH, 67, 6, 67, -2);                      // larg int : 70cm
+  dim(6, 60, 6, 67, 2);                                   // prof int : 70cm
 
   // --- Entrée / Couloir ---
   dim(DOOR_START, ROOM_D + 1, ROOM_W, ROOM_D + 1, 3);   // larg : 1.1m
@@ -272,8 +271,8 @@ export function buildFloorPlan() {
   dim(KITCHEN_X1, ROOM_D + 1, DOOR_START, ROOM_D + 1, 2); // larg : 60cm
 
   // --- Ouvertures ---
-  dim(7, 60, DOOR_START, 60, -2);                          // PV : 1.2m
-  dim(0, 60, 7, 60, 2);                                    // VDch : 70cm
+  dim(6, 60, DOOR_START, 60, -2);                          // PC-SDB : 1.3m
+  dim(-NICHE_DEPTH, 60, 6, 60, 2);                         // VDch : 70cm
   dim(DOOR_START, CORR_DOOR_S, DOOR_START, CORR_DOOR_E, -2);             // P2 : 80cm
   dim(doorS.x, doorS.z, doorE.x, doorE.z, 3);             // P3 : 90cm
 
