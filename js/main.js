@@ -210,38 +210,6 @@ function toggleFloorOnly() {
 document.getElementById('floor-toggle')?.addEventListener('click', toggleFloorOnly);
 
 // =============================================
-// ZOOM TO CURSOR
-// =============================================
-let zoomToCursor = false;
-
-document.getElementById('zoom-cursor-toggle')?.addEventListener('click', () => {
-  zoomToCursor = !zoomToCursor;
-  const btn = document.getElementById('zoom-cursor-toggle');
-  if (btn) btn.textContent = zoomToCursor ? 'Zoom souris : ON' : 'Zoom souris : OFF';
-});
-
-const _zoomRay = new THREE.Raycaster();
-const _zoomPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-const _zoomHit = new THREE.Vector3();
-const _zoomMouse = new THREE.Vector2();
-
-renderer.domElement.addEventListener('wheel', (e) => {
-  if (!zoomToCursor || is2D || walkActive) return;
-
-  const rect = renderer.domElement.getBoundingClientRect();
-  _zoomMouse.set(
-    ((e.clientX - rect.left) / rect.width) * 2 - 1,
-    -((e.clientY - rect.top) / rect.height) * 2 + 1
-  );
-  _zoomRay.setFromCamera(_zoomMouse, camera);
-  if (!_zoomRay.ray.intersectPlane(_zoomPlane, _zoomHit)) return;
-
-  const shift = _zoomHit.clone().sub(controls.target);
-  const factor = e.deltaY < 0 ? 0.1 : -0.05;
-  controls.target.addScaledVector(shift, factor);
-}, true);
-
-// =============================================
 // CAMERAS
 // =============================================
 const CX = ROOM_W / 2, CY = WALL_H / 2, CZ = ROOM_D / 2;
