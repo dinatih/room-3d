@@ -1,34 +1,38 @@
 import * as THREE from 'three';
-import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
-const FONT_URL = 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/fonts/helvetiker_bold.typeface.json';
-
-let _font = null;
-
-export async function loadFont() {
-  if (!_font) {
-    const loader = new FontLoader();
-    _font = await loader.loadAsync(FONT_URL);
-  }
-  return _font;
-}
+// No font loading needed — canvas text supports all Unicode
+export async function loadFont() {}
 
 export function makeText(scene, text, { color = '#ffdd44', size = 1, x = 0, y = 0, z = 0, rotY = 0 } = {}) {
-  if (!_font) throw new Error('Font not loaded — call loadFont() first');
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
 
-  const geo = new TextGeometry(text, {
-    font: _font,
-    size,
-    depth: 0.05,
-    curveSegments: 3,
+  const fontSize = 96;
+  const fontStr = `bold ${fontSize}px Arial, Helvetica, sans-serif`;
+  ctx.font = fontStr;
+  const tw = ctx.measureText(text).width;
+
+  const pad = 4;
+  canvas.width  = Math.ceil(tw) + pad * 2;
+  canvas.height = Math.ceil(fontSize * 1.3) + pad * 2;
+
+  ctx.font = fontStr;          // re-set after resize
+  ctx.fillStyle = color;
+  ctx.textBaseline = 'top';
+  ctx.fillText(text, pad, pad);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+
+  const aspect = canvas.width / canvas.height;
+  const geo = new THREE.PlaneGeometry(size * aspect, size);
+  const mat = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    depthTest: false,
+    side: THREE.DoubleSide,
   });
-  geo.computeBoundingBox();
-  const bb = geo.boundingBox;
-  // centrer horizontalement
-  geo.translate(-(bb.max.x - bb.min.x) / 2, 0, 0);
 
-  const mat = new THREE.MeshBasicMaterial({ color, depthTest: false });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.set(x, y, z);
   mesh.rotation.y = rotY;

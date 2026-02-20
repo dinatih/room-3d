@@ -32,7 +32,7 @@ function buildOnLayer(buildFn, layer) {
   buildFn(scene);
   for (const child of scene.children) {
     if (!before.has(child))
-      child.traverse(obj => obj.layers.set(layer));
+      child.traverse(obj => obj.layers.set(obj.userData?.layerOverride ?? layer));
   }
 }
 
