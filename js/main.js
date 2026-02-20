@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'; // pour la caméra ortho 2D (les controls 3D sont dans scene.js)
-import { ROOM_W, ROOM_D, WALL_H, DOOR_START, DOOR_END, NICHE_DEPTH, KITCHEN_Z, GARDEN_JC_Z, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NETWORKS } from './config.js';
+import { ROOM_W, ROOM_D, WALL_H, DOOR_START, DOOR_END, NICHE_DEPTH, KITCHEN_Z, GARDEN_JC_Z, LAYER_STRUCTURE, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NETWORKS } from './config.js';
 import { scene, camera, renderer, controls } from './scene.js';
 import { allBricks } from './brickHelpers.js';
 import { loadFont } from './labels.js';
@@ -181,6 +181,7 @@ function makeLayerToggle(btnId, layer, label) {
     requestRender();
   });
 }
+makeLayerToggle('layer-struct-toggle', LAYER_STRUCTURE, 'Structure');
 makeLayerToggle('layer-equip-toggle', LAYER_EQUIPMENT, 'Équipements');
 makeLayerToggle('layer-furniture-toggle', LAYER_FURNITURE, 'Mobilier');
 
