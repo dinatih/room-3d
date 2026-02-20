@@ -43,7 +43,7 @@ export const KALLAX_PANEL = 0.15;
 export const KALLAX_DEPTH = 4;
 
 // Floor plate Y position
-export const FLOOR_Y = -1 / 3;
+export const FLOOR_Y = -1 / 3 - STUD_HT / 2;
 
 // Jardin diagonal endpoint (diagonale prolongée jusqu'à X=31)
 export const GARDEN_JC_Z = -14 - 19 * 32 / 31;
@@ -52,7 +52,12 @@ export const GARDEN_JC_Z = -14 - 19 * 32 / 31;
 export const CORR_DOOR_S = KITCHEN_Z + 5;
 export const CORR_DOOR_E = KITCHEN_Z + 13;
 export const SDB_Z_END = KITCHEN_Z + 14;
-export const DIAG_END_Z = 73;
+// Mur diagonal bâtiment (point A = coin couloir Est, point C = coin Ouest)
+export const DIAG_AX = ROOM_W;           // 30
+export const DIAG_AZ = 53;               // Z départ diagonale
+export const DIAG_CX = -NICHE_DEPTH;     // -1
+export const DIAG_CZ = 72;               // Z fin diagonale
+export const DIAG_END_Z = DIAG_CZ;       // alias rétrocompat
 
 // Layers Three.js
 export const LAYER_STRUCTURE  = 0; // Murs, sol, plafond

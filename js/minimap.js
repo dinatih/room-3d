@@ -4,6 +4,7 @@ import {
   NICHE_DEPTH, NICHE_Z_START,
   GLASS_START, GLASS_END,
   GARDEN_JC_Z, CORR_DOOR_S, CORR_DOOR_E,
+  DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
 } from './config.js';
 
 const ROOMS = [
@@ -193,9 +194,9 @@ export function buildMinimap() {
     drawWall(-NICHE_DEPTH, 67, 7, 67);
 
     // === MUR DIAGONAL BATIMENT (avec porte d'entrée) ===
-    const DA = { x: 30.5, z: 54.5 };
-    const DC = { x: -0.5, z: 73.5 };
-    const dLen = Math.sqrt(31 * 31 + 19 * 19);
+    const DA = { x: DIAG_AX + 0.5, z: DIAG_AZ + 0.5 };
+    const DC = { x: DIAG_CX - 0.5, z: DIAG_CZ + 0.5 };
+    const dLen = Math.sqrt((DA.x - DC.x) ** 2 + (DA.z - DC.z) ** 2);
     const dX = (DC.x - DA.x) / dLen;
     const dZ = (DC.z - DA.z) / dLen;
 
