@@ -45,19 +45,21 @@ export const KALLAX_DEPTH = 4;
 // Floor plate Y position
 export const FLOOR_Y = -1 / 3 - STUD_HT / 2;
 
-// Jardin diagonal endpoint (diagonale prolongée jusqu'à X=31)
-export const GARDEN_JC_Z = -14 - 19 * 32 / 31;
-
 // Corridor / SDB boundaries
 export const CORR_DOOR_S = KITCHEN_Z + 5;
 export const CORR_DOOR_E = KITCHEN_Z + 13;
 export const SDB_Z_END = KITCHEN_Z + 14;
-// Mur diagonal bâtiment (point A = coin couloir Est, point C = coin Ouest)
+// Mur diagonal bâtiment
+// Contrainte : passe exactement par arête SE MCo-O (DOOR_START, SDB_Z_END)
+// Point A = fin MCo-E, Point C = mur ouest
 export const DIAG_AX = ROOM_W;           // 30
-export const DIAG_AZ = 53;               // Z départ diagonale
+export const DIAG_AZ = 53;               // Z départ diagonale (entier pour briques couloir)
 export const DIAG_CX = -NICHE_DEPTH;     // -1
-export const DIAG_CZ = 72;               // Z fin diagonale
-export const DIAG_END_Z = DIAG_CZ;       // alias rétrocompat
+export const DIAG_CZ = DIAG_AZ + (SDB_Z_END - DIAG_AZ) * (DIAG_AX - DIAG_CX) / (DIAG_AX - DOOR_START); // ≈72.73
+export const DIAG_END_Z = DIAG_CZ;
+
+// Jardin diagonal endpoint (parallèle à MDiag, pente -7/11)
+export const GARDEN_JC_Z = -14 - (DIAG_CZ - DIAG_AZ) * 32 / (DIAG_AX - DIAG_CX); // ≈-34.36
 
 // Layers Three.js
 export const LAYER_STRUCTURE  = 0; // Murs, sol, plafond

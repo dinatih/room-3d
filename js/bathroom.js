@@ -641,8 +641,8 @@ export function buildBathroom(scene) {
     scene.add(bracket);
   }
 
-  // Extension mur SDB ouest de 6 studs vers le sud (Z=67 → Z=73)
-  const WEST_EXT = DIAG_END_Z - SHOWER_Z1; // 6
+  // Extension mur SDB ouest vers le sud (Z=67 → DIAG_END_Z)
+  const WEST_EXT = Math.floor(DIAG_END_Z - SHOWER_Z1) + 1;
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
     for (const b of fillRow(WEST_EXT, layer % 2 === 1))
       addBrickZ(-NICHE_DEPTH - 0.5, layer, SHOWER_Z1 + b.start, b.size, "wall");

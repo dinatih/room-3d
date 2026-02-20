@@ -96,7 +96,7 @@ export function buildFloorPlan() {
   wallLine(ROOM_W, CW_Z0, ROOM_W, CW_Z0 + 13);
 
   // === SDB OUEST ===
-  wallLine(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, 73);
+  wallLine(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, DIAG_CZ);
 
   // === MUR SDB SUD (vitrage douche + PC-SDB) ===
   window_(-NICHE_DEPTH, 60, 6, 60);         // VDch (vitrage douche)
