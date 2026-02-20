@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, STUD_R, STUD_HT, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_END_Z } from './config.js';
+import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, STUD_R, STUD_HT, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_END_Z, LAYER_FURNITURE } from './config.js';
 import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
 import { makeText } from './labels.js';
 
@@ -65,6 +65,7 @@ export function buildCorridor(scene) {
     const CLOSET_CZ = (CLOSET_Z0 + CLOSET_Z1) / 2;
 
     // 3 étagères
+    const closetParts = [];
     const shelfMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
     const shelfT = 0.3;
     for (const shelfY of [6, 12, 18]) {
@@ -76,6 +77,7 @@ export function buildCorridor(scene) {
       shelf.castShadow = true;
       shelf.receiveShadow = true;
       scene.add(shelf);
+      closetParts.push(shelf);
     }
 
     // Porte coulissante (panneau à X=19)
@@ -88,6 +90,7 @@ export function buildCorridor(scene) {
     slidePanel.position.set(CLOSET_X1 - 0.1, slideH / 2, CLOSET_CZ);
     slidePanel.castShadow = true;
     scene.add(slidePanel);
+    closetParts.push(slidePanel);
 
     // Rail haut
     const railMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6, roughness: 0.3 });
@@ -97,6 +100,7 @@ export function buildCorridor(scene) {
     );
     rail.position.set(CLOSET_X1 - 0.1, slideH + 0.15, CLOSET_CZ);
     scene.add(rail);
+    closetParts.push(rail);
 
     // Rail bas
     const railBot = new THREE.Mesh(
@@ -105,6 +109,7 @@ export function buildCorridor(scene) {
     );
     railBot.position.set(CLOSET_X1 - 0.1, 0.075, CLOSET_CZ);
     scene.add(railBot);
+    closetParts.push(railBot);
 
     // Poignée
     const handleMat = new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.8, roughness: 0.2 });
@@ -114,6 +119,7 @@ export function buildCorridor(scene) {
     );
     handle.position.set(CLOSET_X1 + 0.05, WALL_H / 2, CLOSET_CZ);
     scene.add(handle);
+    closetParts.push(handle);
 
     // Sol placard
     for (let z = CLOSET_Z0; z < CLOSET_Z1; z++) {
@@ -121,6 +127,10 @@ export function buildCorridor(scene) {
         addFloorBrick(CLOSET_X0 + b.start, z, b.size);
       }
     }
+
+    // Tag placard → layer mobilier
+    for (const obj of closetParts)
+      obj.layers.set(LAYER_FURNITURE);
   }
 
   // Mur droit du couloir (en face de la porte SDB), 1m30 = 13 studs
@@ -210,6 +220,27 @@ export function buildCorridor(scene) {
   addDiagBrick(E_DOOR_START, DOOR_H_LAYERS, E_DOOR_W, accentMat, accentStudMat);
 
   scene.add(diagGroup);
+
+  // =============================================
+  // Charnières LEGO 19954 entre MCo-E et MDiag (une par couche)
+  // =============================================
+  {
+    const hingeX = DIAG_AX + 0.5; // 30.5
+    const hingeZ = DIAG_AZ + 0.5; // 54.5
+    const barrelR = 0.25;
+    const barrelH = BRICK_H - GAP;
+    const hingeMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });
+
+    for (let layer = 0; layer < NUM_LAYERS; layer++) {
+      const barrel = new THREE.Mesh(
+        new THREE.CylinderGeometry(barrelR, barrelR, barrelH, 8),
+        hingeMat
+      );
+      barrel.position.set(hingeX, layer * BRICK_H + BRICK_H / 2, hingeZ);
+      barrel.castShadow = true;
+      scene.add(barrel);
+    }
+  }
 
   // =============================================
   // Sols couloir studio

@@ -66,50 +66,79 @@ export function buildBathroom(scene) {
   }
 
   // =============================================
-  // Double porte coulissante vitrée (X=7→19, Z=60)
+  // Double porte coulissante bois (X=8→18, Z=60, jusqu'au plafond)
   // =============================================
   {
     const SLIDE_X0 = SHOWER_X1 + 1; // 8
     const SLIDE_X1 = DOOR_START - 1; // 18
-    const SLIDE_W = SLIDE_X1 - SLIDE_X0; // 12
+    const SLIDE_W = SLIDE_X1 - SLIDE_X0; // 10
     const SLIDE_CX = (SLIDE_X0 + SLIDE_X1) / 2;
     const SLIDE_Z = SDB_Z;
-    const SLIDE_H = WALL_H - 2;
+    const SLIDE_H = WALL_H;
 
-    // Deux panneaux vitrés (6 studs chacun)
+    const doorMat = new THREE.MeshStandardMaterial({
+      color: 0xf5f0e0,
+      roughness: 0.5,
+    });
+    const railMat = new THREE.MeshStandardMaterial({
+      color: 0xf5f0e0,
+      roughness: 0.5,
+    });
+
+    // Rail commun avec séparateur central
     const panelW = SLIDE_W / 2;
-    for (const offset of [SLIDE_X0 + panelW / 2, SLIDE_X1 - panelW / 2]) {
-      const panel = new THREE.Mesh(
-        new THREE.PlaneGeometry(panelW, SLIDE_H),
-        glassMat,
-      );
-      panel.position.set(offset, SLIDE_H / 2, SLIDE_Z);
-      scene.add(panel);
-    }
+    const panelT = 0.23;  // 2.3cm
+    const railD = 0.7;    // 7cm
+    const sepT = 0.1;     // séparateur central 1cm
 
-    // Barre haute
-    const topBar = new THREE.Mesh(
-      new THREE.BoxGeometry(SLIDE_W, 0.3, 0.15),
-      frameMat,
+    // Séparateur central (uniquement dans les rails haut et bas)
+    const sepTop = new THREE.Mesh(
+      new THREE.BoxGeometry(SLIDE_W + 0.4, 0.3, sepT),
+      railMat,
     );
-    topBar.position.set(SLIDE_CX, SLIDE_H, SLIDE_Z);
-    scene.add(topBar);
+    sepTop.position.set(SLIDE_CX, SLIDE_H - 0.15, SLIDE_Z);
+    scene.add(sepTop);
+
+    const sepBot = new THREE.Mesh(
+      new THREE.BoxGeometry(SLIDE_W + 0.4, 0.15, sepT),
+      railMat,
+    );
+    sepBot.position.set(SLIDE_CX, 0.075, SLIDE_Z);
+    scene.add(sepBot);
+
+    // Porte gauche (côté SDB, Z-)
+    const panelL = new THREE.Mesh(
+      new THREE.BoxGeometry(panelW, SLIDE_H, panelT),
+      doorMat,
+    );
+    panelL.position.set(SLIDE_X0 + panelW / 2, SLIDE_H / 2, SLIDE_Z - sepT / 2 - panelT / 2);
+    panelL.castShadow = true;
+    scene.add(panelL);
+
+    // Porte droite (côté douche, Z+)
+    const panelR = new THREE.Mesh(
+      new THREE.BoxGeometry(panelW, SLIDE_H, panelT),
+      doorMat,
+    );
+    panelR.position.set(SLIDE_X1 - panelW / 2, SLIDE_H / 2, SLIDE_Z + sepT / 2 + panelT / 2);
+    panelR.castShadow = true;
+    scene.add(panelR);
+
+    // Rail haut (au plafond)
+    const topRail = new THREE.Mesh(
+      new THREE.BoxGeometry(SLIDE_W + 0.4, 0.3, railD),
+      railMat,
+    );
+    topRail.position.set(SLIDE_CX, SLIDE_H - 0.15, SLIDE_Z);
+    scene.add(topRail);
 
     // Rail bas
     const botRail = new THREE.Mesh(
-      new THREE.BoxGeometry(SLIDE_W, 0.15, 0.3),
-      frameMat,
+      new THREE.BoxGeometry(SLIDE_W + 0.4, 0.15, railD),
+      railMat,
     );
     botRail.position.set(SLIDE_CX, 0.075, SLIDE_Z);
     scene.add(botRail);
-
-    // Montant central
-    const center = new THREE.Mesh(
-      new THREE.BoxGeometry(0.2, SLIDE_H, 0.15),
-      frameMat,
-    );
-    center.position.set(SLIDE_CX, SLIDE_H / 2, SLIDE_Z);
-    scene.add(center);
   }
 
   // =============================================

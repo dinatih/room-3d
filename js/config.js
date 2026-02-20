@@ -54,6 +54,12 @@ export const CORR_DOOR_E = KITCHEN_Z + 13;
 export const SDB_Z_END = KITCHEN_Z + 14;
 export const DIAG_END_Z = 73;
 
+// Layers Three.js
+export const LAYER_STRUCTURE  = 0; // Murs, sol, plafond
+export const LAYER_EQUIPMENT  = 1; // WC, douche, évier, chauffe-eau…
+export const LAYER_FURNITURE  = 2; // Lit, tables, chaises, étagères…
+export const LAYER_NETWORKS   = 3; // Tuyauterie, électricité (optionnel)
+
 export const COLORS = {
   wall: 0xeeeeee,
   studWall: 0xb8b8a8,

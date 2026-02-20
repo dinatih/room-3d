@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'; // pour la caméra ortho 2D (les controls 3D sont dans scene.js)
-import { ROOM_W, ROOM_D, WALL_H, DOOR_START, DOOR_END, NICHE_DEPTH, KITCHEN_Z, GARDEN_JC_Z } from './config.js';
+import { ROOM_W, ROOM_D, WALL_H, DOOR_START, DOOR_END, NICHE_DEPTH, KITCHEN_Z, GARDEN_JC_Z, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NETWORKS } from './config.js';
 import { scene, camera, renderer, controls } from './scene.js';
 import { allBricks } from './brickHelpers.js';
 import { loadFont } from './labels.js';
@@ -26,19 +26,42 @@ import { VRButton } from 'three/addons/webxr/VRButton.js';
 // Charger la font avant de construire les labels
 await loadFont();
 
+// Helper : tag les objets ajoutés à scene pendant un build
+function buildOnLayer(buildFn, layer) {
+  const before = new Set(scene.children);
+  buildFn(scene);
+  for (const child of scene.children) {
+    if (!before.has(child))
+      child.traverse(obj => obj.layers.set(layer));
+  }
+}
+
+// Activer tous les layers sur la caméra
+camera.layers.enable(LAYER_EQUIPMENT);
+camera.layers.enable(LAYER_FURNITURE);
+camera.layers.enable(LAYER_NETWORKS);
+
+// Layer 0 : structure
 buildWalls(scene);
-buildKitchen(scene);
-buildKallax(scene);
-buildBed(scene);
-buildMirrors(scene);
-buildChair(scene);
-buildDesks(scene);
-buildLaptop(scene);
-buildMackapar(scene);
-buildDecor(scene);
-buildCorridor(scene);
-buildBathroom(scene);
 buildFloor(allBricks);
+
+// Layer 1 : équipements
+buildOnLayer(buildKitchen, LAYER_EQUIPMENT);
+buildOnLayer(buildBathroom, LAYER_EQUIPMENT);
+
+// Layer 2 : mobilier
+buildOnLayer(buildKallax, LAYER_FURNITURE);
+buildOnLayer(buildBed, LAYER_FURNITURE);
+buildOnLayer(buildMirrors, LAYER_FURNITURE);
+buildOnLayer(buildChair, LAYER_FURNITURE);
+buildOnLayer(buildDesks, LAYER_FURNITURE);
+buildOnLayer(buildLaptop, LAYER_FURNITURE);
+buildOnLayer(buildMackapar, LAYER_FURNITURE);
+buildOnLayer(buildDecor, LAYER_FURNITURE);
+
+// Layer 0 (structure) + layer 2 (placard) : géré dans corridor.js
+buildCorridor(scene);
+
 buildInstancedMeshes(scene, allBricks);
 buildGrid(scene);
 buildMinimap();
@@ -161,6 +184,22 @@ function toggleXray() {
 }
 
 document.getElementById('xray-toggle')?.addEventListener('click', toggleXray);
+
+// =============================================
+// LAYER TOGGLES
+// =============================================
+function makeLayerToggle(btnId, layer, label) {
+  let on = true;
+  document.getElementById(btnId)?.addEventListener('click', () => {
+    on = !on;
+    if (on) camera.layers.enable(layer);
+    else camera.layers.disable(layer);
+    const btn = document.getElementById(btnId);
+    if (btn) btn.textContent = `${label} : ${on ? 'ON' : 'OFF'}`;
+  });
+}
+makeLayerToggle('layer-equip-toggle', LAYER_EQUIPMENT, 'Équipements');
+makeLayerToggle('layer-furniture-toggle', LAYER_FURNITURE, 'Mobilier');
 
 // =============================================
 // SOL ONLY MODE
