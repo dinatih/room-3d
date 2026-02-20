@@ -5,6 +5,7 @@ import {
   NICHE_DEPTH, NICHE_Z_START,
   GLASS_START, GLASS_END,
   CORR_DOOR_S, CORR_DOOR_E,
+  SDB_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
 } from './config.js';
 import { makeText } from './labels.js';
@@ -49,13 +50,26 @@ export function buildFloorPlan() {
     group.add(mesh);
   }
 
+  // --- Helper : sol triangulaire ---
+  function floorTri(x1, z1, x2, z2, x3, z3) {
+    const y = Y - 0.1;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute([
+      x1, y, z1, x2, y, z2, x3, y, z3,
+    ], 3));
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, floorMat);
+    group.add(mesh);
+  }
+
   // === SOLS ===
   floorRect(0, 0, ROOM_W, ROOM_D);                                         // Séjour
   floorRect(-NICHE_DEPTH, NICHE_Z_START, NICHE_DEPTH, ROOM_D - NICHE_Z_START); // Niche
   floorRect(KITCHEN_X0, ROOM_D, KITCHEN_X1 - KITCHEN_X0, KITCHEN_DEPTH);   // Cuisine
-  floorRect(DOOR_START, ROOM_D + 1, ROOM_W - DOOR_START, 13);              // Entrée
-  floorRect(-NICHE_DEPTH, KITCHEN_Z + 1, DOOR_START + NICHE_DEPTH, 13);    // SDB
-  floorRect(-NICHE_DEPTH, 60, 7, 7);                                          // Douche
+  floorRect(DOOR_START, ROOM_D + 1, ROOM_W - DOOR_START, DIAG_AZ - ROOM_D - 1); // Entrée (rect)
+  floorTri(DOOR_START, DIAG_AZ, ROOM_W, DIAG_AZ, DOOR_START, SDB_Z_END);       // Entrée (triangle)
+  floorRect(-NICHE_DEPTH, KITCHEN_Z + 1, DOOR_START + NICHE_DEPTH, SDB_Z_END - KITCHEN_Z - 1); // SDB
+  floorTri(-NICHE_DEPTH, SDB_Z_END, DOOR_START, SDB_Z_END, -NICHE_DEPTH, DIAG_CZ); // SDB sud (douche + PC-SDB + triangle)
 
   // === MUR A OUEST (niche) ===
   wallLine(0, 0, 0, NICHE_Z_START);
@@ -93,7 +107,7 @@ export function buildFloorPlan() {
   door(DOOR_START, CORR_DOOR_S, DOOR_START, CORR_DOOR_E);
   wallLine(DOOR_START, CORR_DOOR_E, DOOR_START, KITCHEN_Z + 14);
 
-  wallLine(ROOM_W, CW_Z0, ROOM_W, CW_Z0 + 13);
+  wallLine(ROOM_W, CW_Z0, ROOM_W, DIAG_AZ);
 
   // === SDB OUEST ===
   wallLine(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, DIAG_CZ);
@@ -107,8 +121,8 @@ export function buildFloorPlan() {
   wallLine(-NICHE_DEPTH, 67, 6, 67);
 
   // === MUR DIAGONAL BATIMENT (avec porte d'entrée) ===
-  const DA = { x: DIAG_AX + 0.5, z: DIAG_AZ + 0.5 };
-  const DC = { x: DIAG_CX - 0.5, z: DIAG_CZ + 0.5 };
+  const DA = { x: DIAG_AX, z: DIAG_AZ };
+  const DC = { x: DIAG_CX, z: DIAG_CZ };
   const dLen = Math.sqrt((DA.x - DC.x) ** 2 + (DA.z - DC.z) ** 2);
   const dX = (DC.x - DA.x) / dLen;
   const dZ = (DC.z - DA.z) / dLen;
