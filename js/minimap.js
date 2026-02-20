@@ -4,8 +4,12 @@ import {
   NICHE_DEPTH, NICHE_Z_START,
   GLASS_START, GLASS_END,
   GARDEN_JC_Z, CORR_DOOR_S, CORR_DOOR_E,
+  SDB_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
 } from './config.js';
+
+// X sur la diagonale à un Z donné
+const diagXat = z => DIAG_AX + (z - DIAG_AZ) * (DIAG_CX - DIAG_AX) / (DIAG_CZ - DIAG_AZ);
 
 const ROOMS = [
   {
@@ -31,23 +35,46 @@ const ROOMS = [
   {
     nameFr: 'Entrée',
     nameEn: 'entry',
-    contains: (x, z) => x >= DOOR_START && x <= ROOM_W && z > ROOM_D && z <= ROOM_D + 14,
+    contains: (x, z) => {
+      if (x < DOOR_START || x > ROOM_W || z <= ROOM_D) return false;
+      if (z <= DIAG_AZ) return true;
+      return z <= SDB_Z_END && x <= diagXat(z);
+    },
     labelX: (DOOR_START + ROOM_W) / 2,
     labelZ: ROOM_D + 7,
-    fills: (tx, tz, S) => [[tx(DOOR_START), tz(ROOM_D + 1), (ROOM_W - DOOR_START) * S, 13 * S]],
+    fills: (tx, tz, S) => [
+      [tx(DOOR_START), tz(ROOM_D + 1), (ROOM_W - DOOR_START) * S, (DIAG_AZ - ROOM_D - 1) * S],
+    ],
+    fillPath: (ctx, tx, tz) => {
+      ctx.beginPath();
+      ctx.moveTo(tx(DOOR_START), tz(DIAG_AZ));
+      ctx.lineTo(tx(ROOM_W), tz(DIAG_AZ));
+      ctx.lineTo(tx(DOOR_START), tz(SDB_Z_END));
+      ctx.closePath();
+      ctx.fill();
+    },
   },
   {
     nameFr: 'Salle d\'eau',
     nameEn: 'bathroom',
-    contains: (x, z) =>
-      (x >= -NICHE_DEPTH && x <= DOOR_START && z >= KITCHEN_Z && z <= 60) ||
-      (x >= -NICHE_DEPTH && x <= 7 && z > 60 && z <= 67),
+    contains: (x, z) => {
+      if (x < -NICHE_DEPTH) return false;
+      if (x <= DOOR_START && z >= KITCHEN_Z && z <= SDB_Z_END) return true;
+      return z > SDB_Z_END && z <= DIAG_CZ && x <= diagXat(z);
+    },
     labelX: (DOOR_START - NICHE_DEPTH) / 2,
     labelZ: 53,
     fills: (tx, tz, S) => [
-      [tx(-NICHE_DEPTH), tz(KITCHEN_Z + 1), (DOOR_START + NICHE_DEPTH) * S, 13 * S],
-      [tx(0), tz(60), 7 * S, 7 * S],
+      [tx(-NICHE_DEPTH), tz(KITCHEN_Z + 1), (DOOR_START + NICHE_DEPTH) * S, (SDB_Z_END - KITCHEN_Z - 1) * S],
     ],
+    fillPath: (ctx, tx, tz) => {
+      ctx.beginPath();
+      ctx.moveTo(tx(-NICHE_DEPTH), tz(SDB_Z_END));
+      ctx.lineTo(tx(DOOR_START), tz(SDB_Z_END));
+      ctx.lineTo(tx(-NICHE_DEPTH), tz(DIAG_CZ));
+      ctx.closePath();
+      ctx.fill();
+    },
   },
   {
     nameFr: 'Séjour',
@@ -99,9 +126,22 @@ export function buildMinimap() {
     ctx.fillRect(tx(-NICHE_DEPTH), tz(NICHE_Z_START), NICHE_DEPTH * S, (ROOM_D - NICHE_Z_START) * S);
     ctx.fillRect(tx(KITCHEN_X0), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_X0) * S, (KITCHEN_Z - ROOM_D) * S);
     ctx.fillRect(tx(KITCHEN_X1), tz(ROOM_D + 1), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D - 1) * S); // placard
-    ctx.fillRect(tx(DOOR_START), tz(ROOM_D + 1), (ROOM_W - DOOR_START) * S, 13 * S);
-    ctx.fillRect(tx(-NICHE_DEPTH), tz(KITCHEN_Z + 1), (DOOR_START + NICHE_DEPTH) * S, 13 * S);
-    ctx.fillRect(tx(0), tz(60), 7 * S, 7 * S);
+    // Entrée : rect + triangle
+    ctx.fillRect(tx(DOOR_START), tz(ROOM_D + 1), (ROOM_W - DOOR_START) * S, (DIAG_AZ - ROOM_D - 1) * S);
+    ctx.beginPath();
+    ctx.moveTo(tx(DOOR_START), tz(DIAG_AZ));
+    ctx.lineTo(tx(ROOM_W), tz(DIAG_AZ));
+    ctx.lineTo(tx(DOOR_START), tz(SDB_Z_END));
+    ctx.closePath();
+    ctx.fill();
+    // SDB : rect + triangle sud (douche + PC-SDB + sous-douche)
+    ctx.fillRect(tx(-NICHE_DEPTH), tz(KITCHEN_Z + 1), (DOOR_START + NICHE_DEPTH) * S, (SDB_Z_END - KITCHEN_Z - 1) * S);
+    ctx.beginPath();
+    ctx.moveTo(tx(-NICHE_DEPTH), tz(SDB_Z_END));
+    ctx.lineTo(tx(DOOR_START), tz(SDB_Z_END));
+    ctx.lineTo(tx(-NICHE_DEPTH), tz(DIAG_CZ));
+    ctx.closePath();
+    ctx.fill();
 
     // Hover highlight
     if (hoveredRoom) {
@@ -179,7 +219,7 @@ export function buildMinimap() {
     drawDoor(DOOR_START, CORR_DOOR_S, DOOR_START, CORR_DOOR_E);
     drawWall(DOOR_START, CORR_DOOR_E, DOOR_START, KITCHEN_Z + 14);
 
-    drawWall(ROOM_W, ROOM_D + 1, ROOM_W, ROOM_D + 14);
+    drawWall(ROOM_W, ROOM_D + 1, ROOM_W, DIAG_AZ);
 
     // === SDB OUEST (toute la longueur) ===
     drawWall(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, DIAG_CZ);
@@ -193,8 +233,8 @@ export function buildMinimap() {
     drawWall(-NICHE_DEPTH, 67, 6, 67);
 
     // === MUR DIAGONAL BATIMENT (avec porte d'entrée) ===
-    const DA = { x: DIAG_AX + 0.5, z: DIAG_AZ + 0.5 };
-    const DC = { x: DIAG_CX - 0.5, z: DIAG_CZ + 0.5 };
+    const DA = { x: DIAG_AX, z: DIAG_AZ };
+    const DC = { x: DIAG_CX, z: DIAG_CZ };
     const dLen = Math.sqrt((DA.x - DC.x) ** 2 + (DA.z - DC.z) ** 2);
     const dX = (DC.x - DA.x) / dLen;
     const dZ = (DC.z - DA.z) / dLen;
