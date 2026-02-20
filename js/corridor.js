@@ -150,9 +150,13 @@ export function buildCorridor(scene) {
   const diagLen = Math.sqrt(diagDX * diagDX + diagDZ * diagDZ);
   const diagWallLen = Math.round(diagLen);
 
+  // Perpendiculaire au mur (vers l'intérieur couloir) pour centrer l'épaisseur 1 stud
+  const perpX = 0.5 * diagDZ / diagLen;
+  const perpZ = -0.5 * diagDX / diagLen;
+
   const diagGroup = new THREE.Group();
   diagGroup.rotation.y = Math.atan2(diagDX, diagDZ);
-  diagGroup.position.set(DIAG_AX + 0.5, 0, DIAG_AZ + 0.5);
+  diagGroup.position.set(DIAG_AX + perpX, 0, DIAG_AZ + perpZ);
 
   // Porte d'entrée : 9 studs (90cm), à 1 stud du côté couloir
   const E_DOOR_START = 1;
@@ -221,8 +225,8 @@ export function buildCorridor(scene) {
   // Charnières LEGO 19954 entre MCo-E et MDiag (une par couche)
   // =============================================
   {
-    const hingeX = DIAG_AX + 0.5; // 30.5
-    const hingeZ = DIAG_AZ + 0.5; // 54.5
+    const hingeX = DIAG_AX + perpX;
+    const hingeZ = DIAG_AZ + perpZ;
     const barrelR = 0.25;
     const barrelH = BRICK_H - GAP;
     const hingeMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });

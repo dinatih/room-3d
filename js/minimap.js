@@ -13,7 +13,7 @@ const ROOMS = [
     nameEn: 'garden',
     contains: (x, z) => {
       if (x < -1 || x > 31 || z > -1) return false;
-      return z >= -14 - 19 * (x + 1) / 31;
+      return z >= -14 - 7 * (x + 1) / 11;
     },
     labelX: 15,
     labelZ: -12,
@@ -182,7 +182,7 @@ export function buildMinimap() {
     drawWall(ROOM_W, ROOM_D + 1, ROOM_W, ROOM_D + 14);
 
     // === SDB OUEST (toute la longueur) ===
-    drawWall(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, 73);
+    drawWall(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, DIAG_CZ);
 
     // === MUR SDB SUD (vitrage douche + PC-SDB) ===
     drawWindow(-NICHE_DEPTH, 60, 6, 60);

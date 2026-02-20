@@ -40,7 +40,7 @@ export function buildFloor(allBricks) {
     for (let z = zStart; z < -1; z++) {
       let x0 = -1;
       if (z + 0.5 < -14) {
-        x0 = Math.ceil(-1 - 31 * (z + 0.5 + 14) / 19);
+        x0 = Math.ceil(-1 - 11 * (z + 0.5 + 14) / 7);
       }
       const x1 = 31;
       const w = x1 - x0;
