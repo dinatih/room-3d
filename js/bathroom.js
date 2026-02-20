@@ -19,7 +19,7 @@ import {
   addBrickZ,
   addFloorBrick,
 } from "./brickHelpers.js";
-import { makeText } from "./labels.js";
+
 
 export function buildBathroom(scene) {
   const WALL_X = DOOR_START - 0.5;
@@ -614,30 +614,4 @@ export function buildBathroom(scene) {
     }
   }
 
-  // =============================================
-  // Labels
-  // =============================================
-  const labelY = WALL_H * 0.6;
-  const sdbCX = (-NICHE_DEPTH + DOOR_START) / 2;
-  const sdbCZ = (KITCHEN_Z + SDB_Z) / 2;
-  makeText(scene, "MUR SDB NORD", {
-    size: 1.2,
-    x: sdbCX,
-    y: labelY,
-    z: KITCHEN_Z - 3,
-  });
-  makeText(scene, "MUR SDB OUEST", {
-    size: 1.2,
-    x: -NICHE_DEPTH - 4,
-    y: labelY,
-    z: sdbCZ,
-    rotY: Math.PI / 2,
-  });
-  makeText(scene, "PORTE VITRÉE", {
-    size: 1.2,
-    x: sdbCX,
-    y: labelY,
-    z: SDB_Z + 3,
-    rotY: Math.PI,
-  });
 }
