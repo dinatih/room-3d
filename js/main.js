@@ -177,8 +177,8 @@ function makeLayerToggle(btnId, layer, label) {
   let on = true;
   document.getElementById(btnId)?.addEventListener('click', () => {
     on = !on;
-    if (on) camera.layers.enable(layer);
-    else camera.layers.disable(layer);
+    if (on) { camera.layers.enable(layer); if (orthoCamera) orthoCamera.layers.enable(layer); }
+    else { camera.layers.disable(layer); if (orthoCamera) orthoCamera.layers.disable(layer); }
     const btn = document.getElementById(btnId);
     if (btn) btn.textContent = `${label} : ${on ? 'ON' : 'OFF'}`;
     requestRender();
@@ -253,6 +253,9 @@ function enter2DTop() {
 
   if (!orthoCamera) {
     orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
+    orthoCamera.layers.enable(LAYER_EQUIPMENT);
+    orthoCamera.layers.enable(LAYER_FURNITURE);
+    orthoCamera.layers.enable(LAYER_NETWORKS);
   }
   updateOrthoFrustum();
   orthoCamera.up.set(0, 0, -1); // -Z vers le haut de l'écran (nord)
