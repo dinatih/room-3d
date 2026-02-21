@@ -12,6 +12,7 @@ import {
   DOOR_START,
   KALLAX_CELL,
   KALLAX_PANEL,
+  KALLAX_DEPTH,
 } from "./config.js";
 import { addSingleDrona } from "./drona.js";
 
@@ -971,7 +972,7 @@ export function buildDecor(scene) {
   }
 
   // =============================================
-  // TÊTE DE MANNEQUIN — sur desserte SUNNERSTA
+  // TÊTES DE MANNEQUIN — sur desserte SUNNERSTA + Kallax 1x4 NO
   // Épaules 41cm, hauteur 45cm, tour de tête 56cm
   // =============================================
   {
@@ -987,52 +988,133 @@ export function buildDecor(scene) {
       color: 0xf5f0eb, roughness: 0.5,
     });
 
-    // Desserte SUNNERSTA : sCX=27.2, sCZ=28.9, top Y=9.0
-    const baseY = 9.0;
-    const mCX = ROOM_W - 5.6 / 2;  // 27.2
-    const mCZ = 28.9;
+    function addMannequin(x, baseY, z, rotY) {
+      const g = new THREE.Group();
 
-    const mannGroup = new THREE.Group();
+      // Épaules (ellipsoïde aplati)
+      const shoulders = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 16, 8), mannMat,
+      );
+      shoulders.scale.set(SHOULDER_W / 2, SHOULDER_H / 2, SHOULDER_D / 2);
+      shoulders.position.y = SHOULDER_H / 2;
+      shoulders.castShadow = true;
+      g.add(shoulders);
 
-    // Épaules (ellipsoïde aplati)
-    const shoulders = new THREE.Mesh(
-      new THREE.SphereGeometry(1, 16, 8),
-      mannMat,
+      // Cou (cylindre)
+      const neck = new THREE.Mesh(
+        new THREE.CylinderGeometry(NECK_R, NECK_R * 1.1, NECK_H, 12), mannMat,
+      );
+      neck.position.y = SHOULDER_H + NECK_H / 2;
+      neck.castShadow = true;
+      g.add(neck);
+
+      // Tête (sphère légèrement allongée verticalement)
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(HEAD_R, 16, 12), mannMat,
+      );
+      head.scale.y = 1.15;
+      head.position.y = SHOULDER_H + NECK_H + HEAD_R;
+      head.castShadow = true;
+      g.add(head);
+
+      // Nez (petit cône)
+      const nose = new THREE.Mesh(
+        new THREE.ConeGeometry(0.12, 0.25, 6), mannMat,
+      );
+      nose.rotation.x = -Math.PI / 2;
+      nose.position.set(0, SHOULDER_H + NECK_H + HEAD_R, HEAD_R + 0.05);
+      g.add(nose);
+
+      g.rotation.y = rotY;
+      g.position.set(x, baseY, z);
+      scene.add(g);
+    }
+
+    // 1) Sur desserte SUNNERSTA (sCX=27.2, sCZ=28.9, top Y=9.0)
+    addMannequin(ROOM_W - 5.6 / 2, 9.0, 28.9, 0);
+
+    // 2) Sur Kallax 1x4 NO (cx=2, cz=1.8, top≈13.95), face centre séjour
+    const k14CX = KALLAX_DEPTH / 2;
+    const k14CZ = (KALLAX_CELL + 2 * KALLAX_PANEL) / 2;
+    const k14Top = 4 * KALLAX_CELL + 5 * KALLAX_PANEL;
+    addMannequin(k14CX, k14Top, k14CZ,
+      Math.atan2(15 - k14CX, 20 - k14CZ));
+
+    // 3) Sur étagère LACK mur A (cx=1.3, cz=22.5, top≈19.1), face centre séjour
+    const lackCX = 2.6 / 2;  // LACK_D / 2
+    const lackCZ = NICHE_Z_START - 11 / 2;  // 28 - 5.5 = 22.5
+    const lackTopY = 0.6 + 16 + 2 + 0.5;  // M4_TOP_Y + 2 + LACK_H = 19.1
+    addMannequin(lackCX, lackTopY, lackCZ,
+      Math.atan2(15 - lackCX, 20 - lackCZ));
+  }
+
+  // =============================================
+  // NINJA FOODI 8-en-1 — Kallax 2x5 cuisine, 2e rangée du haut
+  // 51cm largeur × 19cm hauteur × 37cm profondeur, planche milieu retirée
+  // =============================================
+  {
+    const NF_W = 5.1;     // 51cm largeur (le long de Z dans le Kallax)
+    const NF_H = 1.9;     // 19cm hauteur
+    const NF_D = 3.7;     // 37cm profondeur (le long de X)
+
+    // Kallax 2x5 : cx=1, cz=36.475
+    // 2e rangée du haut : plancher Y = top shelf r=3 = 10.5
+    const k25CX = -NICHE_DEPTH + KALLAX_DEPTH / 2;  // 1
+    const k25CZ = ROOM_D - (2 * KALLAX_CELL + 3 * KALLAX_PANEL) / 2;  // 36.475
+    const shelfTopY = 3 * (KALLAX_CELL + KALLAX_PANEL) + KALLAX_PANEL;  // 10.5
+
+    const nfBlack = new THREE.MeshStandardMaterial({
+      color: 0x1a1a1a, roughness: 0.4, metalness: 0.2,
+    });
+    const nfSilver = new THREE.MeshStandardMaterial({
+      color: 0xb0b0b0, roughness: 0.3, metalness: 0.5,
+    });
+
+    const nfGroup = new THREE.Group();
+
+    // Corps principal (boîtier rectangulaire noir)
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(NF_D, NF_H, NF_W),
+      nfBlack,
     );
-    shoulders.scale.set(SHOULDER_W / 2, SHOULDER_H / 2, SHOULDER_D / 2);
-    shoulders.position.y = SHOULDER_H / 2;
-    shoulders.castShadow = true;
-    mannGroup.add(shoulders);
+    body.position.y = NF_H / 2;
+    body.castShadow = true;
+    body.receiveShadow = true;
+    nfGroup.add(body);
 
-    // Cou (cylindre)
-    const neck = new THREE.Mesh(
-      new THREE.CylinderGeometry(NECK_R, NECK_R * 1.1, NECK_H, 12),
-      mannMat,
+    // Couvercle / dessus (légèrement plus large, argenté)
+    const lid = new THREE.Mesh(
+      new THREE.BoxGeometry(NF_D + 0.1, 0.1, NF_W + 0.1),
+      nfSilver,
     );
-    neck.position.y = SHOULDER_H + NECK_H / 2;
-    neck.castShadow = true;
-    mannGroup.add(neck);
+    lid.position.y = NF_H;
+    nfGroup.add(lid);
 
-    // Tête (sphère légèrement allongée verticalement)
-    const head = new THREE.Mesh(
-      new THREE.SphereGeometry(HEAD_R, 16, 12),
-      mannMat,
+    // Panneau de contrôle (face avant)
+    const panel = new THREE.Mesh(
+      new THREE.BoxGeometry(NF_D * 0.6, NF_H * 0.5, 0.05),
+      nfSilver,
     );
-    head.scale.y = 1.15;
-    head.position.y = SHOULDER_H + NECK_H + HEAD_R * 1.0;
-    head.castShadow = true;
-    mannGroup.add(head);
+    panel.position.set(0, NF_H * 0.55, NF_W / 2 + 0.03);
+    nfGroup.add(panel);
 
-    // Nez (petit cône)
-    const nose = new THREE.Mesh(
-      new THREE.ConeGeometry(0.12, 0.25, 6),
-      mannMat,
+    // Écran LCD
+    const screen = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 0.5, 0.02),
+      new THREE.MeshStandardMaterial({ color: 0x003322, roughness: 0.1, metalness: 0.3 }),
     );
-    nose.rotation.x = -Math.PI / 2;
-    nose.position.set(0, SHOULDER_H + NECK_H + HEAD_R * 1.0, HEAD_R + 0.05);
-    mannGroup.add(nose);
+    screen.position.set(0, NF_H * 0.6, NF_W / 2 + 0.06);
+    nfGroup.add(screen);
 
-    mannGroup.position.set(mCX, baseY, mCZ);
-    scene.add(mannGroup);
+    // Poignée sur le couvercle
+    const handle = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5, 0.15, 0.3),
+      nfSilver,
+    );
+    handle.position.set(0, NF_H + 0.15, 0);
+    nfGroup.add(handle);
+
+    nfGroup.position.set(k25CX, shelfTopY, k25CZ);
+    scene.add(nfGroup);
   }
 }
