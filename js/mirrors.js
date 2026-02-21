@@ -6,6 +6,21 @@ import {
   KALLAX_CELL, KALLAX_PANEL,
 } from './config.js';
 
+// Patch Reflector pour que sa caméra virtuelle hérite des layers de la caméra principale
+// (Three.js r170 ne copie pas layers.mask dans onBeforeRender)
+let mirrorLayersEnabled = false;
+
+function patchReflectorLayers(reflector) {
+  const origOnBeforeRender = reflector.onBeforeRender;
+  reflector.onBeforeRender = function(renderer, scene, camera) {
+    // reflector.camera = la caméra virtuelle interne du Reflector
+    reflector.camera.layers.mask = mirrorLayersEnabled ? camera.layers.mask : 1;
+    origOnBeforeRender.call(this, renderer, scene, camera);
+  };
+}
+
+export function setMirrorLayers(on) { mirrorLayersEnabled = on; }
+
 export function buildMirrors(scene) {
   const frameMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
 
@@ -33,6 +48,7 @@ export function buildMirrors(scene) {
       });
       mir.position.set(MIRROR_CX, mirrorY, fz - 0.01);
       mir.rotation.y = Math.PI;
+      patchReflectorLayers(mir);
       scene.add(mir);
 
       // Cadre
@@ -79,6 +95,7 @@ export function buildMirrors(scene) {
       });
       mir.rotation.y = Math.PI / 2;
       mir.position.set(fx + 0.01, my, mz);
+      patchReflectorLayers(mir);
       scene.add(mir);
 
       const bH = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, MA_W), frameMat);
@@ -110,6 +127,7 @@ export function buildMirrors(scene) {
     });
     mir4.rotation.y = Math.PI / 2;
     mir4.position.set(m4x + 0.01, m4y, m4z);
+    patchReflectorLayers(mir4);
     scene.add(mir4);
 
     const b4H = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, M4_W), frameMat);

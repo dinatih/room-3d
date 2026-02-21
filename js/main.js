@@ -188,6 +188,18 @@ makeLayerToggle('layer-struct-toggle', LAYER_STRUCTURE, 'Structure');
 makeLayerToggle('layer-equip-toggle', LAYER_EQUIPMENT, 'Équipements');
 makeLayerToggle('layer-furniture-toggle', LAYER_FURNITURE, 'Mobilier');
 
+// Toggle miroirs HD (patch layers)
+import { setMirrorLayers } from './mirrors.js';
+{
+  let on = false;
+  document.getElementById('mirror-layers-toggle')?.addEventListener('click', () => {
+    on = !on;
+    setMirrorLayers(on);
+    document.getElementById('mirror-layers-toggle').textContent = `Miroirs HD : ${on ? 'ON' : 'OFF'}`;
+    requestRender();
+  });
+}
+
 // =============================================
 // SOL ONLY MODE
 // =============================================
