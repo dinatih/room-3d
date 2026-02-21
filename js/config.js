@@ -42,8 +42,8 @@ export const KALLAX_CELL = 3.3;
 export const KALLAX_PANEL = 0.15;
 export const KALLAX_DEPTH = 4;
 
-// Floor plate Y position
-export const FLOOR_Y = -1 / 3 - STUD_HT / 2;
+// Floor plate Y position — parquet surface at Y=0
+export const FLOOR_Y = -PLATE_H - (PLATE_H - GAP) / 2;
 
 // Corridor / SDB boundaries
 export const CORR_DOOR_S = KITCHEN_Z + 5;

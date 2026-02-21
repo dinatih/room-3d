@@ -89,7 +89,7 @@ export function buildInstancedMeshes(scene, allBricks) {
     new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9 })
   );
   gnd.rotation.x = -Math.PI / 2;
-  gnd.position.y = -0.5;
+  gnd.position.y = -1;
   gnd.receiveShadow = true;
   gnd.userData.brickType = 'ground';
   scene.add(gnd);
