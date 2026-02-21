@@ -530,6 +530,16 @@ function closeViewsModal() { viewsOverlay.classList.remove('visible'); }
 
 document.getElementById('views-toggle')?.addEventListener('click', openViewsModal);
 document.getElementById('views-modal-close')?.addEventListener('click', closeViewsModal);
+
+// Raccourcis Perspective / 2D Dessus
+document.getElementById('quick-perspective')?.addEventListener('click', () => {
+  exitWalk(); exitWalk(); exit2D();
+  camera.position.set(...VIEWS.perspective.pos);
+  controls.target.set(...VIEWS.perspective.target);
+  controls.update();
+  requestRender();
+});
+document.getElementById('quick-top2d')?.addEventListener('click', () => enter2DTop());
 viewsOverlay?.addEventListener('click', (e) => { if (e.target === viewsOverlay) closeViewsModal(); });
 
 // Boutons vues classiques (sortent du mode POV et 2D)
