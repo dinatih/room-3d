@@ -969,4 +969,70 @@ export function buildDecor(scene) {
     vgGroup.position.set(10, 0, -13 - VG_W / 2 - 0.3);
     scene.add(vgGroup);
   }
+
+  // =============================================
+  // TÊTE DE MANNEQUIN — sur desserte SUNNERSTA
+  // Épaules 41cm, hauteur 45cm, tour de tête 56cm
+  // =============================================
+  {
+    const SHOULDER_W = 4.1;   // 41cm largeur épaules
+    const TOTAL_H = 4.5;      // 45cm hauteur totale
+    const HEAD_R = 0.89;      // circ 56cm → r≈8.9cm
+    const NECK_R = 0.4;       // ~8cm diamètre cou
+    const NECK_H = 0.8;       // ~8cm hauteur cou
+    const SHOULDER_H = 0.8;   // épaisseur épaules
+    const SHOULDER_D = 2.2;   // profondeur épaules ~22cm
+
+    const mannMat = new THREE.MeshStandardMaterial({
+      color: 0xf5f0eb, roughness: 0.5,
+    });
+
+    // Desserte SUNNERSTA : sCX=27.2, sCZ=28.9, top Y=9.0
+    const baseY = 9.0;
+    const mCX = ROOM_W - 5.6 / 2;  // 27.2
+    const mCZ = 28.9;
+
+    const mannGroup = new THREE.Group();
+
+    // Épaules (ellipsoïde aplati)
+    const shoulders = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 16, 8),
+      mannMat,
+    );
+    shoulders.scale.set(SHOULDER_W / 2, SHOULDER_H / 2, SHOULDER_D / 2);
+    shoulders.position.y = SHOULDER_H / 2;
+    shoulders.castShadow = true;
+    mannGroup.add(shoulders);
+
+    // Cou (cylindre)
+    const neck = new THREE.Mesh(
+      new THREE.CylinderGeometry(NECK_R, NECK_R * 1.1, NECK_H, 12),
+      mannMat,
+    );
+    neck.position.y = SHOULDER_H + NECK_H / 2;
+    neck.castShadow = true;
+    mannGroup.add(neck);
+
+    // Tête (sphère légèrement allongée verticalement)
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(HEAD_R, 16, 12),
+      mannMat,
+    );
+    head.scale.y = 1.15;
+    head.position.y = SHOULDER_H + NECK_H + HEAD_R * 1.0;
+    head.castShadow = true;
+    mannGroup.add(head);
+
+    // Nez (petit cône)
+    const nose = new THREE.Mesh(
+      new THREE.ConeGeometry(0.12, 0.25, 6),
+      mannMat,
+    );
+    nose.rotation.x = -Math.PI / 2;
+    nose.position.set(0, SHOULDER_H + NECK_H + HEAD_R * 1.0, HEAD_R + 0.05);
+    mannGroup.add(nose);
+
+    mannGroup.position.set(mCX, baseY, mCZ);
+    scene.add(mannGroup);
+  }
 }
