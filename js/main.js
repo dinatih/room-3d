@@ -16,7 +16,7 @@ import { buildMackapar } from './mackapar.js';
 import { buildDecor } from './decor.js';
 import { buildCorridor } from './corridor.js';
 import { buildBathroom } from './bathroom.js';
-import { buildFloor, buildParquet } from './floor.js';
+import { buildFloor, buildParquet, buildConcreteSlab } from './floor.js';
 import { buildInstancedMeshes } from './instancedMeshes.js';
 import { buildGrid } from './grid.js';
 import { buildMinimap } from './minimap.js';
@@ -44,6 +44,7 @@ camera.layers.enable(LAYER_NETWORKS);
 // Layer 0 : structure
 buildWalls(scene);
 buildFloor(allBricks);
+buildConcreteSlab(scene);
 
 // Layer 1 : équipements
 buildOnLayer(buildKitchen, LAYER_EQUIPMENT);

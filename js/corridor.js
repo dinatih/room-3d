@@ -121,10 +121,10 @@ export function buildCorridor(scene) {
     scene.add(handle);
     closetParts.push(handle);
 
-    // Sol placard
+    // Sol placard (après MK-E, la porte coulissante est côté couloir)
     for (let z = CLOSET_Z0; z < CLOSET_Z1; z++) {
-      for (const b of fillRow(CLOSET_W, z % 2 === 1)) {
-        addFloorBrick(CLOSET_X0 + b.start, z, b.size);
+      for (const b of fillRow(CLOSET_W - 1, z % 2 === 1)) {
+        addFloorBrick(CLOSET_X0 + 1 + b.start, z, b.size);
       }
     }
 
@@ -255,14 +255,32 @@ export function buildCorridor(scene) {
 
   // Sol complémentaire sous le mur bâtiment (diagonal)
   const SDB_Z = KITCHEN_Z + LEFT_WALL_LEN; // 60
+  const SHOWER_EAST = -NICHE_DEPTH + 7;    // X=6 (fin mur est douche intérieur)
+  const SHOWER_Z_END = SDB_Z + 7;          // Z=67 (fin mur fond douche intérieur)
+
   for (let z = DIAG_AZ; z < Math.ceil(DIAG_CZ); z++) {
     const rawDiagX = DIAG_AX + 0.5 - (DIAG_AX - DIAG_CX) * (z + 0.5 - (DIAG_AZ + 0.5)) / (DIAG_CZ - DIAG_AZ);
     const maxX = Math.floor(rawDiagX);
     const minX = z < SDB_Z ? DOOR_START : -NICHE_DEPTH;
     const width = maxX - minX;
     if (width <= 0) continue;
-    for (const b of fillRow(width, z % 2 === 1)) {
-      addFloorBrick(minX + b.start, z, b.size);
+
+    if (z >= SDB_Z && z < SHOWER_Z_END) {
+      // Couper autour du mur est douche (X=6→7)
+      const w1 = SHOWER_EAST - minX;
+      if (w1 > 0) for (const b of fillRow(w1, z % 2 === 1))
+        addFloorBrick(minX + b.start, z, b.size);
+      const w2 = maxX - (SHOWER_EAST + 1);
+      if (w2 > 0) for (const b of fillRow(w2, z % 2 === 1))
+        addFloorBrick(SHOWER_EAST + 1 + b.start, z, b.size);
+    } else if (z === SHOWER_Z_END) {
+      // Sauter le mur fond douche (X=-1→6)
+      const w = maxX - SHOWER_EAST;
+      if (w > 0) for (const b of fillRow(w, z % 2 === 1))
+        addFloorBrick(SHOWER_EAST + b.start, z, b.size);
+    } else {
+      for (const b of fillRow(width, z % 2 === 1))
+        addFloorBrick(minX + b.start, z, b.size);
     }
   }
 
