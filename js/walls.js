@@ -59,20 +59,22 @@ export function buildWalls(scene) {
       addBrickZ(ROOM_W + 0.5, layer, b.start, b.size, 'wall');
   }
 
-  // --- Mur arrière C (z = -0.5) avec baie vitrée ---
-  // Ouvertures élargies pour inclure l'encadrement (évite z-fighting)
-  buildWallWithOpenings(-0.5, ROOM_W, [
+  // --- Mur arrière C (30cm = 3 rangées, z = -0.5 / -1.5 / -2.5) avec baie vitrée ---
+  const wallC_openings = [
     { start: GLASS_START - 1, end: GLASS_END + 1, minLayer: GLASS_MIN_LAYER, maxLayer: GLASS_MAX_LAYER },
     { start: GLASS_START, end: GLASS_END, minLayer: GLASS_MAX_LAYER, maxLayer: GLASS_MAX_LAYER + 1 },
-  ]);
+  ];
+  for (const wz of [-0.5, -1.5, -2.5])
+    buildWallWithOpenings(wz, ROOM_W, wallC_openings);
 
-  // Encadrement baie vitrée (accent bleu)
-  for (let layer = GLASS_MIN_LAYER; layer < GLASS_MAX_LAYER; layer++) {
-    addBrickX(GLASS_START - 1, layer, -0.5, 1, 'glass_frame');
-    addBrickX(GLASS_END, layer, -0.5, 1, 'glass_frame');
+  // Encadrement baie vitrée (accent bleu) sur les 3 rangées
+  for (const wz of [-0.5, -1.5, -2.5]) {
+    for (let layer = GLASS_MIN_LAYER; layer < GLASS_MAX_LAYER; layer++) {
+      addBrickX(GLASS_START - 1, layer, wz, 1, 'glass_frame');
+      addBrickX(GLASS_END, layer, wz, 1, 'glass_frame');
+    }
+    addBrickX(GLASS_START, GLASS_MAX_LAYER, wz, GLASS_END - GLASS_START, 'glass_frame');
   }
-  // Linteau
-  addBrickX(GLASS_START, GLASS_MAX_LAYER, -0.5, GLASS_END - GLASS_START, 'glass_frame');
 
   // Vitrage (panneau semi-transparent)
   {

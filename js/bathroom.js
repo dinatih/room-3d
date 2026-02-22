@@ -649,10 +649,10 @@ export function buildBathroom(scene) {
   }
 
   // =============================================
-  // Sol SDB (X=-1→19, Z=47→60)
+  // Sol SDB (X=-1→18, Z=47→60, sans recouvrir MCo-O)
   // =============================================
   for (let z = KITCHEN_Z + 1; z < SDB_Z; z++) {
-    for (const b of fillRow(SDB_W, z % 2 === 1)) {
+    for (const b of fillRow(SDB_W - 1, z % 2 === 1)) {
       addFloorBrick(-NICHE_DEPTH + b.start, z, b.size);
     }
   }

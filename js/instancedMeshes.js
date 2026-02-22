@@ -23,7 +23,7 @@ export function buildInstancedMeshes(scene, allBricks) {
     grass:       new THREE.MeshStandardMaterial({ color: COLORS.grassStud, roughness: 0.4, metalness: 0.05 }),
   };
 
-  for (const type of ['wall', 'accent', 'glass_frame', 'floor', 'tile', 'grass', 'parquet']) {
+  for (const type of ['wall', 'accent', 'glass_frame', 'tile', 'grass', 'parquet']) {
     const bricks = allBricks.filter(b => b.type === type);
     if (!bricks.length) continue;
 

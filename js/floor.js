@@ -1,4 +1,5 @@
-import { ROOM_W, ROOM_D, PLATE_H, GAP, DOOR_START, DOOR_END, NICHE_DEPTH, NICHE_Z_START, FLOOR_Y, GARDEN_JC_Z, KITCHEN_Z, SDB_Z_END, DIAG_CZ } from './config.js';
+import * as THREE from 'three';
+import { ROOM_W, ROOM_D, PLATE_H, GAP, DOOR_START, DOOR_END, NICHE_DEPTH, NICHE_Z_START, FLOOR_Y, GARDEN_JC_Z, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, COLORS } from './config.js';
 import { fillRow, addFloorBrick } from './brickHelpers.js';
 
 export function buildFloor(allBricks) {
@@ -37,7 +38,7 @@ export function buildFloor(allBricks) {
   {
     const zStart = Math.ceil(GARDEN_JC_Z); // -34
 
-    for (let z = zStart; z < -1; z++) {
+    for (let z = zStart; z < -3; z++) {
       let x0 = -1;
       if (z + 0.5 < -14) {
         x0 = Math.ceil(-1 - 11 * (z + 0.5 + 14) / 7);
@@ -66,4 +67,57 @@ export function buildParquet(allBricks) {
       len: b.len, axis: b.axis, type: isSDB ? 'tile' : 'parquet'
     });
   }
+}
+
+// =============================================
+// DALLE BÉTON COULÉ (remplace les plates LEGO jaunes)
+// Couvre toute la surface bâtiment, épaisseur murs ext. comprise
+// =============================================
+export function buildConcreteSlab(scene) {
+  // Perpendiculaire extérieure du mur diagonal (1 stud d'épaisseur)
+  const diagDX = DIAG_CX - DIAG_AX;
+  const diagDZ = DIAG_CZ - DIAG_AZ;
+  const diagLen = Math.sqrt(diagDX * diagDX + diagDZ * diagDZ);
+  const perpX = diagDZ / diagLen;   // composante X vers l'extérieur
+  const perpZ = -diagDX / diagLen;  // composante Z vers l'extérieur
+
+  // Limites extérieures des murs
+  const EXT_E = ROOM_W + 1;                 // mur B extérieur (X=31)
+  const EXT_S = -3;                          // mur C extérieur (Z=-3, 30cm)
+  const EXT_W_MAIN = -1;                     // mur A extérieur avant niche
+  const EXT_W_NICHE = -(NICHE_DEPTH + 1);   // niche/SDB extérieur (X=-2)
+
+  // Points extérieurs du mur diagonal
+  const dAX = DIAG_AX + perpX, dAZ = DIAG_AZ + perpZ;
+  const dCX = DIAG_CX + perpX, dCZ = DIAG_CZ + perpZ;
+
+  // Contour extérieur bâtiment (sens trigo dans le plan XZ)
+  const shape = new THREE.Shape();
+  shape.moveTo(EXT_W_MAIN, EXT_S);            // 1. coin SO
+  shape.lineTo(EXT_E, EXT_S);                 // 2. coin SE
+  shape.lineTo(EXT_E, dAZ);                   // 3. mur E → coin diag
+  shape.lineTo(dAX, dAZ);                     // 4. départ diag extérieur
+  shape.lineTo(dCX, dCZ);                     // 5. fin diag extérieur
+  shape.lineTo(EXT_W_NICHE, dCZ);             // 6. retour vers mur O niche
+  shape.lineTo(EXT_W_NICHE, NICHE_Z_START);   // 7. descente le long du mur niche/SDB
+  shape.lineTo(EXT_W_MAIN, NICHE_Z_START);    // 8. retour mur A principal
+  // fermeture auto vers (1)
+
+  const SLAB_DEPTH = 1; // 10cm
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth: SLAB_DEPTH,
+    bevelEnabled: false,
+  });
+
+  const mat = new THREE.MeshStandardMaterial({
+    color: COLORS.floor,
+    roughness: 0.6,
+  });
+
+  const slab = new THREE.Mesh(geo, mat);
+  slab.rotation.x = Math.PI / 2;
+  // Surface haute de la dalle = sommet des anciennes plates
+  slab.position.y = FLOOR_Y + (PLATE_H - GAP) / 2;
+  slab.receiveShadow = true;
+  scene.add(slab);
 }
