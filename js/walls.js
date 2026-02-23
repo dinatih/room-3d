@@ -38,25 +38,54 @@ function buildWallWithOpenings(wallZ, length, openings) {
 }
 
 export function buildWalls(scene) {
-  // --- Mur gauche A (x = -0.5) - avec enfoncement angle D-A ---
+  // --- Mur gauche A (x = -0.5), prolongé jusqu'à Z=-3 ---
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(NICHE_Z_START, layer % 2 === 1))
-      addBrickZ(-0.5, layer, b.start, b.size, 'wall');
+    for (const b of fillRow(NICHE_Z_START + 3, layer % 2 === 1))
+      addBrickZ(-0.5, layer, -3 + b.start, b.size, 'wall');
   }
-  // Section niche : Z=28 à Z=40, reculée de 1 stud dans le mur (vers -X)
+  // Section niche ouest (x = -NICHE_DEPTH - 0.5), prolongée jusqu'à Z=-3
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(NICHE_LENGTH, layer % 2 === 1))
-      addBrickZ(-NICHE_DEPTH - 0.5, layer, NICHE_Z_START + b.start, b.size, 'wall');
+    for (const b of fillRow(NICHE_Z_START + NICHE_LENGTH + 3, layer % 2 === 1))
+      addBrickZ(-NICHE_DEPTH - 0.5, layer, -3 + b.start, b.size, 'wall');
   }
   // Retour de niche à Z=28
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
     addBrickX(-NICHE_DEPTH, layer, NICHE_Z_START - 0.5, NICHE_DEPTH, 'wall');
   }
 
-  // --- Mur droit (x = ROOM_W + 0.5) ---
+  // --- Mur droit B (x = ROOM_W + 0.5) ---
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
     for (const b of fillRow(ROOM_D, layer % 2 === 1))
       addBrickZ(ROOM_W + 0.5, layer, b.start, b.size, 'wall');
+  }
+
+  // Extension mur B vers le jardin (3 studs mur C + 20 studs)
+  const WALLB_EXT = 23;
+  for (let layer = 0; layer < NUM_LAYERS; layer++) {
+    for (const b of fillRow(WALLB_EXT, layer % 2 === 1))
+      addBrickZ(ROOM_W + 0.5, layer, -WALLB_EXT + b.start, b.size, 'wall');
+  }
+
+  // Panneaux bois occultants (2 × 90cm = 18 studs) à la suite du mur B prolongé
+  {
+    const panelMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6 });
+    const PANEL_W = 9;    // 90cm chacun
+    const PANEL_H = 19;    // 190cm
+    const PANEL_T = 1;    // 1 stud d'épaisseur
+    const panelX = ROOM_W + 0.5;
+    const panelZ0 = -WALLB_EXT; // Z=-23, suite du mur
+
+    for (let i = 0; i < 2; i++) {
+      const pz = panelZ0 - i * PANEL_W - PANEL_W / 2;
+      const panel = new THREE.Mesh(
+        new THREE.BoxGeometry(PANEL_T, PANEL_H, PANEL_W),
+        panelMat
+      );
+      panel.position.set(panelX, PANEL_H / 2, pz);
+      panel.castShadow = true;
+      panel.receiveShadow = true;
+      scene.add(panel);
+    }
   }
 
   // --- Mur arrière C (30cm = 3 rangées, z = -0.5 / -1.5 / -2.5) avec baie vitrée ---

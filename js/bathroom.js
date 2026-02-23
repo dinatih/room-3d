@@ -21,7 +21,6 @@ import {
   addFloorBrick,
 } from "./brickHelpers.js";
 
-
 export function buildBathroom(scene) {
   const WALL_X = DOOR_START - 0.5;
   const SDB_W = DOOR_START + NICHE_DEPTH; // 20 studs
@@ -83,9 +82,9 @@ export function buildBathroom(scene) {
 
     // Rail commun avec séparateur central
     const panelW = SLIDE_W / 2;
-    const panelT = 0.23;  // 2.3cm
-    const railD = 0.7;    // 7cm
-    const sepT = 0.1;     // séparateur central 1cm
+    const panelT = 0.23; // 2.3cm
+    const railD = 0.7; // 7cm
+    const sepT = 0.1; // séparateur central 1cm
 
     // Séparateur central (uniquement dans les rails haut et bas)
     const sepTop = new THREE.Mesh(
@@ -107,7 +106,11 @@ export function buildBathroom(scene) {
       new THREE.BoxGeometry(panelW, SLIDE_H, panelT),
       doorMat,
     );
-    panelL.position.set(SLIDE_X0 + panelW / 2, SLIDE_H / 2, SLIDE_Z - sepT / 2 - panelT / 2);
+    panelL.position.set(
+      SLIDE_X0 + panelW / 2,
+      SLIDE_H / 2,
+      SLIDE_Z - sepT / 2 - panelT / 2,
+    );
     panelL.castShadow = true;
     scene.add(panelL);
 
@@ -116,7 +119,11 @@ export function buildBathroom(scene) {
       new THREE.BoxGeometry(panelW, SLIDE_H, panelT),
       doorMat,
     );
-    panelR.position.set(SLIDE_X1 - panelW / 2, SLIDE_H / 2, SLIDE_Z + sepT / 2 + panelT / 2);
+    panelR.position.set(
+      SLIDE_X1 - panelW / 2,
+      SLIDE_H / 2,
+      SLIDE_Z + sepT / 2 + panelT / 2,
+    );
     panelR.castShadow = true;
     scene.add(panelR);
 
@@ -203,11 +210,18 @@ export function buildBathroom(scene) {
   const WC_Z0 = KITCHEN_Z + 0.5;
   const WC_CX = WC_X0 + WC_W / 2;
 
-  const wcMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.25 });
-  const wcInnerMat = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.15, side: THREE.DoubleSide });
+  const wcMat = new THREE.MeshStandardMaterial({
+    color: 0xf5f5f5,
+    roughness: 0.25,
+  });
+  const wcInnerMat = new THREE.MeshStandardMaterial({
+    color: 0xe8e8e8,
+    roughness: 0.15,
+    side: THREE.DoubleSide,
+  });
 
-  const R = WC_W / 2;    // rayon max = 2
-  const bowlOval = 1.1;  // étirement Z pour forme ovale
+  const R = WC_W / 2; // rayon max = 2
+  const bowlOval = 1.1; // étirement Z pour forme ovale
   const bowlH = 4;
   const tankD = 1.8;
   const bowlCZ = WC_Z0 + tankD + R * bowlOval;
@@ -217,12 +231,12 @@ export function buildBathroom(scene) {
     new THREE.Vector2(0.01, 0),
     new THREE.Vector2(R * 0.92, 0),
     new THREE.Vector2(R * 0.92, 0.3),
-    new THREE.Vector2(R * 0.5,  0.55),
+    new THREE.Vector2(R * 0.5, 0.55),
     new THREE.Vector2(R * 0.48, 1.6),
     new THREE.Vector2(R * 0.65, 2.6),
     new THREE.Vector2(R * 0.95, 3.4),
     new THREE.Vector2(R + 0.06, 3.75),
-    new THREE.Vector2(R,        bowlH),
+    new THREE.Vector2(R, bowlH),
     new THREE.Vector2(R * 0.72, bowlH),
   ];
   const outerGeo = new THREE.LatheGeometry(outerPts, 24);
@@ -237,9 +251,9 @@ export function buildBathroom(scene) {
   const innerPts = [
     new THREE.Vector2(R * 0.72, bowlH),
     new THREE.Vector2(R * 0.68, 3.5),
-    new THREE.Vector2(R * 0.5,  2.5),
+    new THREE.Vector2(R * 0.5, 2.5),
     new THREE.Vector2(R * 0.25, 1.5),
-    new THREE.Vector2(0.01,     1.2),
+    new THREE.Vector2(0.01, 1.2),
   ];
   const innerGeo = new THREE.LatheGeometry(innerPts, 24);
   const innerMesh = new THREE.Mesh(innerGeo, wcInnerMat);
@@ -258,7 +272,10 @@ export function buildBathroom(scene) {
 
   // -- Eau au fond --
   const waterMat = new THREE.MeshStandardMaterial({
-    color: 0x88bbdd, roughness: 0.05, transparent: true, opacity: 0.6,
+    color: 0x88bbdd,
+    roughness: 0.05,
+    transparent: true,
+    opacity: 0.6,
   });
   const wcWaterGeo = new THREE.CircleGeometry(bottomR * 0.85, 24);
   const wcWater = new THREE.Mesh(wcWaterGeo, waterMat);
@@ -278,8 +295,12 @@ export function buildBathroom(scene) {
   scene.add(seat);
 
   // -- Réservoir --
-  const tankW = WC_W - 0.2, tankH = 7;
-  const tank = new THREE.Mesh(new THREE.BoxGeometry(tankW, tankH, tankD), wcMat);
+  const tankW = WC_W - 0.2,
+    tankH = 7;
+  const tank = new THREE.Mesh(
+    new THREE.BoxGeometry(tankW, tankH, tankD),
+    wcMat,
+  );
   tank.position.set(WC_CX, tankH / 2, WC_Z0 + tankD / 2);
   tank.castShadow = true;
   tank.receiveShadow = true;
@@ -288,15 +309,23 @@ export function buildBathroom(scene) {
   // Couvercle du réservoir (pièce séparée)
   const tankLidH = 0.35;
   const tankLid = new THREE.Mesh(
-    new THREE.BoxGeometry(tankW + 0.1, tankLidH, tankD + 0.1), wcMat,
+    new THREE.BoxGeometry(tankW + 0.1, tankLidH, tankD + 0.1),
+    wcMat,
   );
   tankLid.position.set(WC_CX, tankH + tankLidH / 2, WC_Z0 + tankD / 2);
   tankLid.castShadow = true;
   scene.add(tankLid);
 
   // -- Bouton chasse d'eau --
-  const flushMat = new THREE.MeshStandardMaterial({ color: 0xd0d0d0, roughness: 0.3, metalness: 0.3 });
-  const flushBtn = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.25, 12), flushMat);
+  const flushMat = new THREE.MeshStandardMaterial({
+    color: 0xd0d0d0,
+    roughness: 0.3,
+    metalness: 0.3,
+  });
+  const flushBtn = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.35, 0.35, 0.25, 12),
+    flushMat,
+  );
   flushBtn.position.set(WC_CX, tankH + tankLidH + 0.125, WC_Z0 + tankD / 2);
   scene.add(flushBtn);
 
@@ -656,5 +685,4 @@ export function buildBathroom(scene) {
       addFloorBrick(-NICHE_DEPTH + b.start, z, b.size);
     }
   }
-
 }

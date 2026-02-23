@@ -1,170 +1,466 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Appartement LEGO 3D</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #1a1a2e; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
-    canvas { display: block; }
-    #info {
-      position: absolute; top: 16px; left: 16px;
-      background: rgba(0,0,0,0.8); color: #fff;
-      padding: 14px 18px; border-radius: 10px;
-      font-size: 13px; line-height: 1.6;
-      backdrop-filter: blur(8px);
-    }
-    #info h2 { margin-bottom: 6px; color: #ffd700; font-size: 15px; }
-    #info .dim { color: #aaa; font-size: 11px; }
-    #info-toggle {
-      position: absolute; bottom: 16px; right: 170px;
-      background: rgba(0,0,0,0.8); color: #ffd700;
-      border: 1px solid #ffd700; border-radius: 6px;
-      padding: 4px 10px; cursor: pointer; font-size: 13px;
-      backdrop-filter: blur(8px); z-index: 10;
-      display: none;
-    }
-    #info-toggle:hover { background: rgba(255,215,0,0.15); }
-    #info .close-btn {
-      position: absolute; top: 6px; right: 10px;
-      background: none; border: none; color: #888;
-      cursor: pointer; font-size: 16px; padding: 2px 6px;
-    }
-    #info .close-btn:hover { color: #fff; }
-    #info.hidden { display: none; }
-    #controls {
-      position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.8); color: #888; padding: 8px 16px;
-      border-radius: 8px; font-size: 11px; backdrop-filter: blur(8px);
-      pointer-events: none;
-    }
-    #views {
-      position: absolute; top: 16px; right: 16px;
-      display: flex; flex-direction: column; gap: 4px;
-      backdrop-filter: blur(8px);
-    }
-    #views button {
-      background: rgba(0,0,0,0.8); color: #ccc;
-      border: 1px solid #555; border-radius: 6px;
-      padding: 5px 12px; cursor: pointer; font-size: 12px;
-      text-align: left; white-space: nowrap;
-    }
-    #views button:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: #888; }
-    #views-toggle {
-      background: rgba(0,0,0,0.8); color: #ffd700;
-      border: 1px solid #ffd700; border-radius: 6px;
-      padding: 5px 12px; cursor: pointer; font-size: 12px;
-      text-align: left; white-space: nowrap; width: 100%;
-    }
-    #views-toggle:hover { background: rgba(255,215,0,0.15); }
-    #views-modal-overlay {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); z-index: 100; backdrop-filter: blur(2px);
-    }
-    #views-modal-overlay.visible { display: flex; align-items: center; justify-content: center; }
-    #views-modal {
-      background: rgba(20,20,30,0.95); border: 1px solid #555; border-radius: 12px;
-      padding: 20px 24px; min-width: 260px; max-width: 340px;
-      backdrop-filter: blur(12px); position: relative;
-    }
-    #views-modal h3 {
-      color: #ffd700; font-size: 14px; margin: 0 0 12px 0;
-      text-transform: uppercase; letter-spacing: 1px;
-    }
-    #views-modal .view-label {
-      color: #888; font-size: 10px; margin: 10px 0 4px 0;
-      text-transform: uppercase; letter-spacing: 1px;
-    }
-    #views-modal .view-label:first-of-type { margin-top: 0; }
-    #views-modal button {
-      background: rgba(255,255,255,0.06); color: #ccc;
-      border: 1px solid #444; border-radius: 6px;
-      padding: 6px 12px; cursor: pointer; font-size: 12px;
-      text-align: left; white-space: nowrap; width: 100%;
-      margin-bottom: 3px; display: block;
-    }
-    #views-modal button:hover { background: rgba(255,255,255,0.14); color: #fff; border-color: #888; }
-    #views-modal .close-modal {
-      position: absolute; top: 8px; right: 12px;
-      background: none; border: none; color: #888; font-size: 18px;
-      padding: 2px 6px; width: auto; min-width: 0; margin: 0;
-    }
-    #views-modal .close-modal:hover { color: #fff; }
-    #minimap {
-      position: absolute; bottom: 16px; right: 16px;
-      border-radius: 6px;
-      border: 1px solid #555; background: #111122;
-    }
-  </style>
-</head>
-<body>
-  <button id="info-toggle" style="display:block" onclick="document.getElementById('info').classList.remove('hidden');this.style.display='none';">Info</button>
-  <div id="info" class="hidden">
-    <button class="close-btn" onclick="this.parentElement.classList.add('hidden');document.getElementById('info-toggle').style.display='block';">&times;</button>
-    <h2>Salon - LEGO Bricks</h2>
-    <div>Pièce : <strong>3m x 4m</strong> → 30 x 40 studs</div>
-    <div>Murs : <strong>8 briques</strong> (25 studs)</div>
-    <div>Porte : <strong>80cm</strong> ouverture, 30cm du mur gauche</div>
-    <div class="dim">1 stud = 10cm | Briques : 1x16, 1x8, 1x6, 1x4, 1x2, 1x1</div>
-    <div style="margin-top:8px; border-top:1px solid #444; padding-top:8px;">
-      <strong>Repère :</strong><br>
-      <span style="color:#ff4444">X (rouge)</span> = largeur 3m (0→30)<br>
-      <span style="color:#44ff44">Y (vert)</span> = hauteur 2.5m<br>
-      <span style="color:#4488ff">Z (bleu)</span> = profondeur 4m (0→40)<br>
-    </div>
-    <div style="margin-top:6px;">
-      <strong>Murs :</strong>
-      <span style="color:#ff9">A</span>=X0 |
-      <span style="color:#ff9">B</span>=X30 |
-      <span style="color:#ff9">C</span>=Z0 |
-      <span style="color:#ff9">D</span>=Z40 (porte + cuisine X3→13, prof Z46)
-    </div>
-  </div>
-  <div id="views">
-<button id="floor-toggle" style="background:rgba(0,0,0,0.8);color:#d4a437;border:1px solid #d4a437;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">Sol : OFF</button>
-    <button id="xray-toggle" style="background:rgba(0,0,0,0.8);color:#44ddff;border:1px solid #44ddff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">X-Ray : OFF</button>
-    <button id="plan-toggle" style="background:rgba(0,0,0,0.8);color:#4488ff;border:1px solid #4488ff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">Plan : OFF</button>
-    <button id="layer-struct-toggle" style="background:rgba(0,0,0,0.8);color:#88cc88;border:1px solid #88cc88;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">Structure : ON</button>
-    <button id="layer-equip-toggle" style="background:rgba(0,0,0,0.8);color:#ff9966;border:1px solid #ff9966;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">Équipements : ON</button>
-    <button id="layer-furniture-toggle" style="background:rgba(0,0,0,0.8);color:#aa88ff;border:1px solid #aa88ff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">Mobilier : ON</button>
-    <button id="mirror-layers-toggle" style="background:rgba(0,0,0,0.8);color:#66cccc;border:1px solid #66cccc;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">Miroirs HD : OFF</button>
-    <button id="quick-perspective" style="background:rgba(0,0,0,0.8);color:#fff;border:1px solid #888;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">Perspective</button>
-    <button id="quick-top2d" style="background:rgba(0,0,0,0.8);color:#fff;border:1px solid #888;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;width:100%;text-align:left;margin-bottom:4px">2D Dessus</button>
-    <button id="views-toggle">Autres vues</button>
-  </div>
-  <div id="views-modal-overlay">
-    <div id="views-modal">
-      <button class="close-modal" id="views-modal-close">&times;</button>
-      <h3>Vues</h3>
-      <div class="view-label">Caméra</div>
-      <button data-view="perspective">Perspective</button>
-      <button data-view="top">Dessus 3D</button>
-      <button data-view="top2d">2D Dessus</button>
-      <button data-view="front">Face (D)</button>
-      <button data-view="back">Arrière (C)</button>
-      <button data-view="left">Gauche (A)</button>
-      <button data-view="right">Droite (B)</button>
-      <button data-view="bottom">Dessous</button>
-      <button data-view="iso-se">Iso Sud-Est</button>
-      <button data-view="iso-nw">Iso Nord-Ouest</button>
-      <div class="view-label">POV 1.8m</div>
-      <button data-pov="living">Séjour</button>
-      <button data-pov="entry">Entrée</button>
-      <button data-pov="bathroom">Salle d'eau</button>
-      <button data-pov="garden">Jardin</button>
-    </div>
-  </div>
-  <canvas id="minimap" width="150"></canvas>
-  <div id="controls">Clic gauche : orbiter | Molette : zoom | Clic droit : pan</div>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Appartement LEGO 3D</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                background: #1a1a2e;
+                overflow: hidden;
+                font-family: "Segoe UI", sans-serif;
+            }
+            canvas {
+                display: block;
+            }
+            #info {
+                position: absolute;
+                top: 16px;
+                left: 16px;
+                background: rgba(0, 0, 0, 0.8);
+                color: #fff;
+                padding: 14px 18px;
+                border-radius: 10px;
+                font-size: 13px;
+                line-height: 1.6;
+                backdrop-filter: blur(8px);
+            }
+            #info h2 {
+                margin-bottom: 6px;
+                color: #ffd700;
+                font-size: 15px;
+            }
+            #info .dim {
+                color: #aaa;
+                font-size: 11px;
+            }
+            #info-toggle {
+                position: absolute;
+                bottom: 16px;
+                right: 170px;
+                background: rgba(0, 0, 0, 0.8);
+                color: #ffd700;
+                border: 1px solid #ffd700;
+                border-radius: 6px;
+                padding: 4px 10px;
+                cursor: pointer;
+                font-size: 13px;
+                backdrop-filter: blur(8px);
+                z-index: 10;
+                display: none;
+            }
+            #info-toggle:hover {
+                background: rgba(255, 215, 0, 0.15);
+            }
+            #info .close-btn {
+                position: absolute;
+                top: 6px;
+                right: 10px;
+                background: none;
+                border: none;
+                color: #888;
+                cursor: pointer;
+                font-size: 16px;
+                padding: 2px 6px;
+            }
+            #info .close-btn:hover {
+                color: #fff;
+            }
+            #info.hidden {
+                display: none;
+            }
+            #controls {
+                position: absolute;
+                bottom: 12px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: #888;
+                padding: 8px 16px;
+                border-radius: 8px;
+                font-size: 11px;
+                backdrop-filter: blur(8px);
+                pointer-events: none;
+            }
+            #views {
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                backdrop-filter: blur(8px);
+            }
+            #views button {
+                background: rgba(0, 0, 0, 0.8);
+                color: #ccc;
+                border: 1px solid #555;
+                border-radius: 6px;
+                padding: 5px 12px;
+                cursor: pointer;
+                font-size: 12px;
+                text-align: left;
+                white-space: nowrap;
+            }
+            #views button:hover {
+                background: rgba(255, 255, 255, 0.12);
+                color: #fff;
+                border-color: #888;
+            }
+            #views-toggle {
+                background: rgba(0, 0, 0, 0.8);
+                color: #ffd700;
+                border: 1px solid #ffd700;
+                border-radius: 6px;
+                padding: 5px 12px;
+                cursor: pointer;
+                font-size: 12px;
+                text-align: left;
+                white-space: nowrap;
+                width: 100%;
+            }
+            #views-toggle:hover {
+                background: rgba(255, 215, 0, 0.15);
+            }
+            #views-modal-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 100;
+                backdrop-filter: blur(2px);
+            }
+            #views-modal-overlay.visible {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #views-modal {
+                background: rgba(20, 20, 30, 0.95);
+                border: 1px solid #555;
+                border-radius: 12px;
+                padding: 20px 24px;
+                min-width: 260px;
+                max-width: 340px;
+                backdrop-filter: blur(12px);
+                position: relative;
+            }
+            #views-modal h3 {
+                color: #ffd700;
+                font-size: 14px;
+                margin: 0 0 12px 0;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            #views-modal .view-label {
+                color: #888;
+                font-size: 10px;
+                margin: 10px 0 4px 0;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            #views-modal .view-label:first-of-type {
+                margin-top: 0;
+            }
+            #views-modal button {
+                background: rgba(255, 255, 255, 0.06);
+                color: #ccc;
+                border: 1px solid #444;
+                border-radius: 6px;
+                padding: 6px 12px;
+                cursor: pointer;
+                font-size: 12px;
+                text-align: left;
+                white-space: nowrap;
+                width: 100%;
+                margin-bottom: 3px;
+                display: block;
+            }
+            #views-modal button:hover {
+                background: rgba(255, 255, 255, 0.14);
+                color: #fff;
+                border-color: #888;
+            }
+            #views-modal .close-modal {
+                position: absolute;
+                top: 8px;
+                right: 12px;
+                background: none;
+                border: none;
+                color: #888;
+                font-size: 18px;
+                padding: 2px 6px;
+                width: auto;
+                min-width: 0;
+                margin: 0;
+            }
+            #views-modal .close-modal:hover {
+                color: #fff;
+            }
+            #minimap {
+                position: absolute;
+                bottom: 16px;
+                right: 16px;
+                border-radius: 6px;
+                border: 1px solid #555;
+                background: #111122;
+            }
+        </style>
+    </head>
+    <body>
+        <button
+            id="info-toggle"
+            style="display: block"
+            onclick="
+                document.getElementById('info').classList.remove('hidden');
+                this.style.display = 'none';
+            "
+        >
+            Info
+        </button>
+        <div id="info" class="hidden">
+            <button
+                class="close-btn"
+                onclick="
+                    this.parentElement.classList.add('hidden');
+                    document.getElementById('info-toggle').style.display =
+                        'block';
+                "
+            >
+                &times;
+            </button>
+            <h2>Salon - LEGO Bricks</h2>
+            <div>Pièce : <strong>3m x 4m</strong> → 30 x 40 studs</div>
+            <div>Murs : <strong>8 briques</strong> (25 studs)</div>
+            <div>
+                Porte : <strong>80cm</strong> ouverture, 30cm du mur gauche
+            </div>
+            <div class="dim">
+                1 stud = 10cm | Briques : 1x16, 1x8, 1x6, 1x4, 1x2, 1x1
+            </div>
+            <div
+                style="
+                    margin-top: 8px;
+                    border-top: 1px solid #444;
+                    padding-top: 8px;
+                "
+            >
+                <strong>Repère :</strong><br />
+                <span style="color: #ff4444">X (rouge)</span> = largeur 3m
+                (0→30)<br />
+                <span style="color: #44ff44">Y (vert)</span> = hauteur 2.5m<br />
+                <span style="color: #4488ff">Z (bleu)</span> = profondeur 4m
+                (0→40)<br />
+            </div>
+            <div style="margin-top: 6px">
+                <strong>Murs :</strong>
+                <span style="color: #ff9">A</span>=X0 |
+                <span style="color: #ff9">B</span>=X30 |
+                <span style="color: #ff9">C</span>=Z0 |
+                <span style="color: #ff9">D</span>=Z40 (porte + cuisine X3→13,
+                prof Z46)
+            </div>
+        </div>
+        <div id="views">
+            <button
+                id="floor-toggle"
+                style="
+                    background: rgba(0, 0, 0, 0.8);
+                    color: #d4a437;
+                    border: 1px solid #d4a437;
+                    border-radius: 6px;
+                    padding: 5px 12px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    width: 100%;
+                    text-align: left;
+                    margin-bottom: 4px;
+                "
+            >
+                Sol : OFF
+            </button>
+            <button
+                id="xray-toggle"
+                style="
+                    background: rgba(0, 0, 0, 0.8);
+                    color: #44ddff;
+                    border: 1px solid #44ddff;
+                    border-radius: 6px;
+                    padding: 5px 12px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    width: 100%;
+                    text-align: left;
+                    margin-bottom: 4px;
+                "
+            >
+                X-Ray : OFF
+            </button>
+            <button
+                id="plan-toggle"
+                style="
+                    background: rgba(0, 0, 0, 0.8);
+                    color: #4488ff;
+                    border: 1px solid #4488ff;
+                    border-radius: 6px;
+                    padding: 5px 12px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    width: 100%;
+                    text-align: left;
+                    margin-bottom: 4px;
+                "
+            >
+                Plan : OFF
+            </button>
+            <button
+                id="layer-struct-toggle"
+                style="
+                    background: rgba(0, 0, 0, 0.8);
+                    color: #88cc88;
+                    border: 1px solid #88cc88;
+                    border-radius: 6px;
+                    padding: 5px 12px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    width: 100%;
+                    text-align: left;
+                    margin-bottom: 4px;
+                "
+            >
+                Structure : ON
+            </button>
+            <button
+                id="layer-equip-toggle"
+                style="
+                    background: rgba(0, 0, 0, 0.8);
+                    color: #ff9966;
+                    border: 1px solid #ff9966;
+                    border-radius: 6px;
+                    padding: 5px 12px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    width: 100%;
+                    text-align: left;
+                    margin-bottom: 4px;
+                "
+            >
+                Équipements : ON
+            </button>
+            <button
+                id="layer-furniture-toggle"
+                style="
+                    background: rgba(0, 0, 0, 0.8);
+                    color: #aa88ff;
+                    border: 1px solid #aa88ff;
+                    border-radius: 6px;
+                    padding: 5px 12px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    width: 100%;
+                    text-align: left;
+                    margin-bottom: 4px;
+                "
+            >
+                Mobilier : ON
+            </button>
+            <button
+                id="mirror-layers-toggle"
+                style="
+                    background: rgba(0, 0, 0, 0.8);
+                    color: #66cccc;
+                    border: 1px solid #66cccc;
+                    border-radius: 6px;
+                    padding: 5px 12px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    width: 100%;
+                    text-align: left;
+                    margin-bottom: 4px;
+                "
+            >
+                Miroirs HD : OFF
+            </button>
+            <button
+                id="quick-perspective"
+                style="
+                    background: rgba(0, 0, 0, 0.8);
+                    color: #fff;
+                    border: 1px solid #888;
+                    border-radius: 6px;
+                    padding: 5px 12px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    width: 100%;
+                    text-align: left;
+                    margin-bottom: 4px;
+                "
+            >
+                Perspective
+            </button>
+            <button
+                id="quick-top2d"
+                style="
+                    background: rgba(0, 0, 0, 0.8);
+                    color: #fff;
+                    border: 1px solid #888;
+                    border-radius: 6px;
+                    padding: 5px 12px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    width: 100%;
+                    text-align: left;
+                    margin-bottom: 4px;
+                "
+            >
+                2D Dessus
+            </button>
+            <button id="views-toggle">Autres vues</button>
+        </div>
+        <div id="views-modal-overlay">
+            <div id="views-modal">
+                <button class="close-modal" id="views-modal-close">
+                    &times;
+                </button>
+                <h3>Vues</h3>
+                <div class="view-label">Caméra</div>
+                <button data-view="perspective">Perspective</button>
+                <button data-view="top">Dessus 3D</button>
+                <button data-view="top2d">2D Dessus</button>
+                <button data-view="front">Face (D)</button>
+                <button data-view="back">Arrière (C)</button>
+                <button data-view="left">Gauche (A)</button>
+                <button data-view="right">Droite (B)</button>
+                <button data-view="bottom">Dessous</button>
+                <button data-view="iso-se">Iso Sud-Est</button>
+                <button data-view="iso-nw">Iso Nord-Ouest</button>
+                <div class="view-label">POV 1.8m</div>
+                <button data-pov="living">Séjour</button>
+                <button data-pov="entry">Entrée</button>
+                <button data-pov="bathroom">Salle d'eau</button>
+                <button data-pov="garden">Jardin</button>
+            </div>
+        </div>
+        <canvas id="minimap" width="150"></canvas>
+        <div id="controls">
+            Clic gauche : orbiter | Molette : zoom | Clic droit : pan
+        </div>
 
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-    }
-  }
-  </script>
-  <script type="module" src="js/main.js"></script>
-</body>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+                    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+                }
+            }
+        </script>
+        <script type="module" src="js/main.js"></script>
+    </body>
 </html>

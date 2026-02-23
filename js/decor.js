@@ -621,7 +621,7 @@ export function buildDecor(scene) {
       sofaGroup.add(arm);
     }
 
-    sofaGroup.position.set(31 - SOFA_D / 2, 0, -9);
+    sofaGroup.position.set(30 - SOFA_D / 2, 0, -11);
     scene.add(sofaGroup);
   }
 
@@ -658,7 +658,7 @@ export function buildDecor(scene) {
     sofa2Group.add(back2);
 
     sofa2Group.rotation.y = Math.PI;
-    sofa2Group.position.set(31 - 6 - 6 - S2_D / 2 - 6, 0, -8);
+    sofa2Group.position.set(31 - 6 - 6 - S2_D / 2 - 6, 0, -9);
     scene.add(sofa2Group);
   }
 
@@ -787,7 +787,7 @@ export function buildDecor(scene) {
 
     // Sofa 2 : dos à X≈7, Z=-8
     const cbX = 7 - CB_W / 2;  // juste derrière le dossier
-    const cbZ = -8;
+    const cbZ = -9;
 
     // Corps
     const body = new THREE.Mesh(
@@ -967,7 +967,7 @@ export function buildDecor(scene) {
     addTray(TOP_Y);
 
     // Position : côté sud du canapé ouest (sofa2 à X=10, Z=-8, spans Z=-13→-3)
-    vgGroup.position.set(10, 0, -13 - VG_W / 2 - 0.3);
+    vgGroup.position.set(10, 0, -14 - VG_W / 2 - 0.3);
     scene.add(vgGroup);
   }
 
