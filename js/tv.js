@@ -12,6 +12,14 @@ export function buildTV(scene) {
   const TV_H = 40; // 40cm
   const TV_D = 1.5; // épaisseur
   const TV_Y = WALL_H - 10 - TV_H / 2; // 10cm du plafond
+  const TILT = -Math.PI / 36; // ~5° penché vers le bas
+
+  const group = new THREE.Group();
+  group.position.set(ROOM_W - 25, TV_Y, 25);
+  group.rotation.order = 'YXZ';
+  group.rotation.y = (3 * Math.PI) / 4; // face vers le centre du séjour
+  group.rotation.x = TILT;
+  scene.add(group);
 
   const tvMat = new THREE.MeshStandardMaterial({
     color: 0x111111,
@@ -19,10 +27,8 @@ export function buildTV(scene) {
     metalness: 0.4,
   });
   const tv = new THREE.Mesh(new THREE.BoxGeometry(TV_W, TV_H, TV_D), tvMat);
-  tv.position.set(ROOM_W - 25, TV_Y, 25);
-  tv.rotation.y = (3 * Math.PI) / 4; // face vers le centre du séjour
   tv.castShadow = true;
-  scene.add(tv);
+  group.add(tv);
 
   // Écran (face avant, légèrement en avant) — wallpaper Omarchy
   const screenMat = new THREE.MeshStandardMaterial({
@@ -34,8 +40,7 @@ export function buildTV(scene) {
     new THREE.PlaneGeometry(TV_W - 3, TV_H - 3),
     screenMat,
   );
-  screen.position.set(ROOM_W - 25, TV_Y, 25);
-  screen.rotation.y = (3 * Math.PI) / 4 + Math.PI; // face vers le séjour
+  screen.rotation.y = Math.PI;
   screen.translateZ(TV_D / 2 + 0.1);
-  scene.add(screen);
+  group.add(screen);
 }
