@@ -26,26 +26,26 @@ export function buildDecor(scene) {
     const DF = 33; // face 33x33cm
     const DD = 38; // profondeur 38cm
 
-    // 2 sur MACKAPÄR
+    // 2 sur MACKAPÄR (tournées 90° pour aligner profondeur avec le meuble)
     const mpTopY = 200;
     const mpCX = -NICHE_DEPTH + 78 / 2;
     const mpCZ = ROOM_D - kallaxW(2) - 32 / 2;
 
-    addSingleDrona(scene, mpCX - 18, mpTopY + DF / 2, mpCZ, DF, DF, DD);
-    addSingleDrona(scene, mpCX + 18, mpTopY + DF / 2, mpCZ, DF, DF, DD);
+    addSingleDrona(scene, mpCX - 20, mpTopY + DF / 2, mpCZ, DF, DF, DD, Math.PI / 2);
+    addSingleDrona(scene, mpCX + 20, mpTopY + DF / 2, mpCZ, DF, DF, DD, Math.PI / 2);
 
     // 1 sur Kallax NE empilé 2×1+2×2 (angle C+B), poussé contre mur C (Z=0)
     const k1TopY = kallaxH(1) + kallaxH(2);
     const k1CX = ROOM_W - 20; // 280
-    addSingleDrona(scene, k1CX, k1TopY + DF / 2, DF / 2, DF, DF, DD);
+    addSingleDrona(scene, k1CX, k1TopY + DF / 2, DD / 2, DF, DF, DD);
 
     // 2 sur Kallax cuisine empilé 2×2+2×2+2×1
     const k4TopY = kallaxH(2) * 2 + kallaxH(1);
     const k4CX = -NICHE_DEPTH + KALLAX_DEPTH / 2;
     const k4CZ = ROOM_D - kallaxW(2) / 2;
 
-    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ - 18, DF, DF, DD);
-    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ + 18, DF, DF, DD);
+    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ - 18, DF, DF, DD, Math.PI / 2);
+    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ + 18, DF, DF, DD, Math.PI / 2);
 
     // 1 sur meuble SDB côté évier (cbnE), légèrement décalé du coin
     addSingleDrona(
@@ -67,23 +67,17 @@ export function buildDecor(scene) {
     const dronaDepth = 38; // 38cm
 
     const hcTopY = 195;
-    const HC_D = 40;
-    const hcCZ = ROOM_D + KITCHEN_DEPTH - HC_D / 2;
+    // Plaquées contre mur du fond (KITCHEN_Z), profondeur 38cm le long de Z
+    // Débordent de ~2cm du meuble (HC_D=40, Drona=38 plaqué au fond)
+    const hcCZ = KITCHEN_Z - dronaDepth / 2;
     const KIT_W = KITCHEN_X1 - KITCHEN_X0;
 
     const gap = (KIT_W - 3 * dronaFace) / 4;
 
     for (let i = 0; i < 3; i++) {
       const cx = KITCHEN_X0 + gap + dronaFace / 2 + i * (dronaFace + gap);
-      addSingleDrona(
-        scene,
-        cx,
-        hcTopY + dronaFace / 2,
-        hcCZ,
-        dronaDepth,
-        dronaFace,
-        dronaFace,
-      );
+      addSingleDrona(scene, cx, hcTopY + dronaFace / 2, hcCZ,
+        dronaFace, dronaFace, dronaDepth);
     }
   }
 
@@ -885,7 +879,7 @@ export function buildDecor(scene) {
 
     // Rotation 90° : dome → -X (vers la pièce), ouverture → +X (mur), visière → bas
     capGroup.rotation.z = Math.PI / 2;
-    capGroup.position.set(299, 144, 173.5);
+    capGroup.position.set(297, 144, 173.5);
     scene.add(capGroup);
   }
 
