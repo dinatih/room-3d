@@ -4,7 +4,7 @@ import { ROOM_W, ROOM_D, WALL_H, DOOR_START, DOOR_END, NICHE_DEPTH, KITCHEN_Z, G
 import { scene, camera, renderer, controls } from './scene.js';
 import { allBricks } from './brickHelpers.js';
 import { loadFont } from './labels.js';
-import { buildWalls } from './walls.js';
+import { buildWalls, toggleEastDoor } from './walls.js';
 import { buildKitchen } from './kitchen.js';
 import { buildKallax } from './kallax.js';
 import { buildBed, toggleBedStack } from './bed.js';
@@ -216,6 +216,12 @@ document.getElementById('bed-toggle')?.addEventListener('click', () => {
 document.getElementById('desk-toggle')?.addEventListener('click', () => {
   const s = toggleDesksHeight();
   document.getElementById('desk-toggle').textContent = `Bureaux : ${s ? 'DEBOUT' : 'ASSIS'}`;
+  requestRender();
+});
+
+document.getElementById('door-toggle')?.addEventListener('click', () => {
+  const s = toggleEastDoor();
+  document.getElementById('door-toggle').textContent = `Porte-fenêtre : ${s ? 'OUVERTE' : 'FERMÉE'}`;
   requestRender();
 });
 
