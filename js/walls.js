@@ -70,7 +70,7 @@ export function buildWalls(scene) {
 
   // --- Mur droit B (x = ROOM_W + 5) ---
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(ROOM_D, layer % 2 === 1))
+    for (const b of fillRow(ROOM_D + 10, layer % 2 === 1))
       addBrickZ(ROOM_W + 5, layer, b.start, b.size, 'wall');
   }
 
