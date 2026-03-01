@@ -28,9 +28,9 @@ export const NICHE_DEPTH = 10; // 10cm (protrusion vers X+)
 export const NICHE_LENGTH = 120; // 1m20 le long de Z
 export const NICHE_Z_START = ROOM_D - NICHE_LENGTH; // Z=280
 
-// Baie vitrée double : 170cm large, 190cm haut, 50cm du mur B, sur mur C
+// Baie vitrée double : 160cm large, 190cm haut, 50cm du mur B, sur mur C
 // Muret de 20cm sous la baie (~1 couche = 30cm en LEGO)
-export const GLASS_START = 80; // 300 - 50 - 170 = cm 80
+export const GLASS_START = 90; // 300 - 50 - 160 = cm 90
 export const GLASS_END = 250; // 300 - 50 = cm 250
 export const GLASS_MIN_LAYER = 1; // muret : 1 couche = 30cm (~20cm)
 export const GLASS_MAX_LAYER = 7; // 6 couches vitrées au-dessus = 180cm (~190cm)
