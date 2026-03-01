@@ -7,9 +7,9 @@ import { ROOM_W, ROOM_D, WALL_H } from './config.js';
 // =============================================
 export const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x2a2a3e);
-scene.fog = new THREE.FogExp2(0x2a2a3e, 0.006);
+scene.fog = new THREE.FogExp2(0x2a2a3e, 0.0006);
 
-export const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 500);
+export const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 1, 5000);
 
 export const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
@@ -34,20 +34,20 @@ controls.update();
   envScene.background = new THREE.Color(0x889ab5);
   envScene.add(new THREE.AmbientLight(0xffffff, 1));
   const envDir = new THREE.DirectionalLight(0xfff8e8, 2);
-  envDir.position.set(1, 1, 0.5);
+  envDir.position.set(10, 10, 5);
   envScene.add(envDir);
   const envFloor = new THREE.Mesh(
-    new THREE.PlaneGeometry(100, 100),
+    new THREE.PlaneGeometry(1000, 1000),
     new THREE.MeshStandardMaterial({ color: 0xc4a060 })
   );
   envFloor.rotation.x = -Math.PI / 2;
-  envFloor.position.y = -1;
+  envFloor.position.y = -10;
   envScene.add(envFloor);
   const envWall = new THREE.Mesh(
-    new THREE.PlaneGeometry(100, 30),
+    new THREE.PlaneGeometry(1000, 300),
     new THREE.MeshStandardMaterial({ color: 0xccccbb })
   );
-  envWall.position.set(0, 10, -10);
+  envWall.position.set(0, 100, -100);
   envScene.add(envWall);
   scene.environment = pmrem.fromScene(envScene, 0.04).texture;
   pmrem.dispose();
@@ -56,13 +56,13 @@ controls.update();
 // Lights
 scene.add(new THREE.AmbientLight(0x8899bb, 0.6));
 const dir = new THREE.DirectionalLight(0xfff5e0, 1.8);
-dir.position.set(50, 70, 40);
+dir.position.set(500, 700, 400);
 dir.castShadow = true;
 dir.shadow.mapSize.set(2048, 2048);
-dir.shadow.camera.left = -60; dir.shadow.camera.right = 60;
-dir.shadow.camera.top = 60; dir.shadow.camera.bottom = -60;
+dir.shadow.camera.left = -600; dir.shadow.camera.right = 600;
+dir.shadow.camera.top = 600; dir.shadow.camera.bottom = -600;
 dir.shadow.bias = -0.002;
 scene.add(dir);
 const fill = new THREE.DirectionalLight(0xaabbff, 0.4);
-fill.position.set(-20, 30, -10);
+fill.position.set(-200, 300, -100);
 scene.add(fill);

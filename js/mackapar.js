@@ -1,16 +1,17 @@
 import * as THREE from 'three';
-import { ROOM_D, NICHE_DEPTH, KALLAX_CELL, KALLAX_PANEL } from './config.js';
+import { ROOM_D, NICHE_DEPTH } from './config.js';
+import { kallaxW } from './kallax.js';
 
 export function buildMackapar(scene) {
-  const MP_X = 7.8;
-  const MP_Z = 3.2;
-  const MP_H = 20;
-  const FRAME_T = 0.2;
+  const MP_X = 78;
+  const MP_Z = 32;
+  const MP_H = 200;
+  const FRAME_T = 2;
 
   const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
   const metalMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.4, roughness: 0.3 });
 
-  const K4_W_CALC = 2 * KALLAX_CELL + 3 * KALLAX_PANEL;
+  const K4_W_CALC = kallaxW(2); // 2-col Kallax total width
   const kallaxEdgeZ = ROOM_D - K4_W_CALC;
 
   const mpX = -NICHE_DEPTH + MP_X / 2;
@@ -43,17 +44,17 @@ export function buildMackapar(scene) {
 
   // Barre de penderie
   const rail = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.1, 0.1, MP_X - FRAME_T * 2, 8),
+    new THREE.CylinderGeometry(1, 1, MP_X - FRAME_T * 2, 8),
     metalMat
   );
   rail.rotation.z = Math.PI / 2;
-  rail.position.set(mpX, mpBaseY + MP_H - 2, mpZ);
+  rail.position.set(mpX, mpBaseY + MP_H - 20, mpZ);
   scene.add(rail);
 
   // 2 étagères à chaussures
-  for (const sy of [1, 3]) {
+  for (const sy of [10, 30]) {
     const shelf = new THREE.Mesh(
-      new THREE.BoxGeometry(MP_X, 0.12, MP_Z),
+      new THREE.BoxGeometry(MP_X, 1.2, MP_Z),
       whiteMat
     );
     shelf.position.set(mpX, mpBaseY + sy, mpZ);
@@ -63,10 +64,10 @@ export function buildMackapar(scene) {
 
   // Étagère haute
   const shelfTop = new THREE.Mesh(
-    new THREE.BoxGeometry(MP_X, 0.15, MP_Z),
+    new THREE.BoxGeometry(MP_X, 1.5, MP_Z),
     whiteMat
   );
-  shelfTop.position.set(mpX, mpBaseY + MP_H - 0.08, mpZ);
+  shelfTop.position.set(mpX, mpBaseY + MP_H - 0.8, mpZ);
   shelfTop.castShadow = true;
   scene.add(shelfTop);
 
@@ -74,54 +75,54 @@ export function buildMackapar(scene) {
   const clothMat = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.8 });
   const clothDarkMat = new THREE.MeshStandardMaterial({ color: 0xa01818, roughness: 0.85 });
   const hangerMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.3, roughness: 0.4 });
-  const railY = mpBaseY + MP_H - 2;
-  const CLOTH_T = 0.12;
+  const railY = mpBaseY + MP_H - 20;
+  const CLOTH_T = 1.2;
 
   function addHanger(hx) {
-    const hook = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.6, 6), hangerMat);
-    hook.position.set(hx, railY + 0.3, mpZ);
+    const hook = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 6, 6), hangerMat);
+    hook.position.set(hx, railY + 3, mpZ);
     scene.add(hook);
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 2.4), hangerMat);
-    bar.position.set(hx, railY - 0.05, mpZ);
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 24), hangerMat);
+    bar.position.set(hx, railY - 0.5, mpZ);
     scene.add(bar);
   }
 
-  const clothPositions = [mpX - 2.4, mpX - 0.8, mpX + 0.8, mpX + 2.4];
+  const clothPositions = [mpX - 24, mpX - 8, mpX + 8, mpX + 24];
 
   for (let ci = 0; ci < 4; ci++) {
     const cx = clothPositions[ci];
     addHanger(cx);
-    const topY = railY - 0.1;
+    const topY = railY - 1;
     const mat = ci % 2 === 0 ? clothMat : clothDarkMat;
 
     if (ci < 2) {
       // Combinaison
-      const torso = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 5.5, 2.2), mat);
-      torso.position.set(cx, topY - 2.75, mpZ);
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 55, 22), mat);
+      torso.position.set(cx, topY - 27.5, mpZ);
       torso.castShadow = true;
       scene.add(torso);
       for (const side of [-1, 1]) {
-        const sleeve = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 4, 1.0), mat);
-        sleeve.position.set(cx, topY - 2.2, mpZ + side * 1.5);
+        const sleeve = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 40, 10), mat);
+        sleeve.position.set(cx, topY - 22, mpZ + side * 15);
         sleeve.rotation.x = side * 0.15;
         sleeve.castShadow = true;
         scene.add(sleeve);
       }
       for (const side of [-1, 1]) {
-        const leg = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 6.5, 0.9), mat);
-        leg.position.set(cx, topY - 5.5 - 3.25, mpZ + side * 0.55);
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 65, 9), mat);
+        leg.position.set(cx, topY - 55 - 32.5, mpZ + side * 5.5);
         leg.castShadow = true;
         scene.add(leg);
       }
     } else {
       // Sweat
-      const torso = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 6, 2.4), mat);
-      torso.position.set(cx, topY - 3, mpZ);
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 60, 24), mat);
+      torso.position.set(cx, topY - 30, mpZ);
       torso.castShadow = true;
       scene.add(torso);
       for (const side of [-1, 1]) {
-        const sleeve = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 5, 1.1), mat);
-        sleeve.position.set(cx, topY - 2.8, mpZ + side * 1.6);
+        const sleeve = new THREE.Mesh(new THREE.BoxGeometry(CLOTH_T, 50, 11), mat);
+        sleeve.position.set(cx, topY - 28, mpZ + side * 16);
         sleeve.rotation.x = side * 0.2;
         sleeve.castShadow = true;
         scene.add(sleeve);

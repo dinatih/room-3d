@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 
 export function buildChair(scene) {
-  const chairX = 3;
-  const chairZ = 13;
+  const chairX = 30;
+  const chairZ = 130;
   const chairRot = Math.PI / 2;
 
   const redMat = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
@@ -14,18 +14,18 @@ export function buildChair(scene) {
   chairGroup.rotation.y = chairRot;
 
   // --- Base étoile 5 branches ---
-  const WHEEL_R = 0.15;
-  const CASTER_H = 0.3;
-  const baseY = CASTER_H + 0.1;
+  const WHEEL_R = 1.5;
+  const CASTER_H = 3;
+  const baseY = CASTER_H + 1;
   for (let i = 0; i < 5; i++) {
     const angle = (i / 5) * Math.PI * 2;
-    const branchLen = 2.8;
+    const branchLen = 28;
     const tipX = Math.sin(angle) * branchLen;
     const tipZ = Math.cos(angle) * branchLen;
 
     // Branche (orientée du centre vers le bout)
     const branch = new THREE.Mesh(
-      new THREE.BoxGeometry(0.3, 0.2, branchLen),
+      new THREE.BoxGeometry(3, 2, branchLen),
       metalMat
     );
     branch.position.set(
@@ -38,15 +38,15 @@ export function buildChair(scene) {
 
     // Fourche roulette (petit cylindre vertical sous la branche)
     const fork = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.08, 0.08, CASTER_H, 6),
+      new THREE.CylinderGeometry(0.8, 0.8, CASTER_H, 6),
       darkMat
     );
-    fork.position.set(tipX, baseY - 0.1 - CASTER_H / 2, tipZ);
+    fork.position.set(tipX, baseY - 1 - CASTER_H / 2, tipZ);
     chairGroup.add(fork);
 
     // Roue (essieu perpendiculaire à la branche → roule dans l'axe de la branche)
     const wheel = new THREE.Mesh(
-      new THREE.CylinderGeometry(WHEEL_R, WHEEL_R, 0.12, 10),
+      new THREE.CylinderGeometry(WHEEL_R, WHEEL_R, 1.2, 10),
       darkMat
     );
     wheel.position.set(tipX, WHEEL_R, tipZ);
@@ -56,9 +56,9 @@ export function buildChair(scene) {
   }
 
   // --- Vérin central ---
-  const liftH = 3.5;
+  const liftH = 35;
   const lift = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.2, 0.25, liftH, 8),
+    new THREE.CylinderGeometry(2, 2.5, liftH, 8),
     metalMat
   );
   lift.position.set(0, baseY + liftH / 2, 0);
@@ -67,9 +67,9 @@ export function buildChair(scene) {
   const seatY = baseY + liftH;
 
   // --- Assise ---
-  const seatW = 4.5;
-  const seatD = 4.5;
-  const seatH = 0.6;
+  const seatW = 45;
+  const seatD = 45;
+  const seatH = 6;
   const seat = new THREE.Mesh(
     new THREE.BoxGeometry(seatW, seatH, seatD),
     redMat
@@ -80,7 +80,7 @@ export function buildChair(scene) {
 
   // Coussin bord arrondi
   const cushFront = new THREE.Mesh(
-    new THREE.CylinderGeometry(seatH / 2, seatH / 2, seatW - 0.2, 12),
+    new THREE.CylinderGeometry(seatH / 2, seatH / 2, seatW - 2, 12),
     redMat
   );
   cushFront.rotation.z = Math.PI / 2;
@@ -88,9 +88,9 @@ export function buildChair(scene) {
   chairGroup.add(cushFront);
 
   // --- Dossier ---
-  const backW = 4.2;
-  const backH = 5;
-  const backT = 0.5;
+  const backW = 42;
+  const backH = 50;
+  const backT = 5;
   const back = new THREE.Mesh(
     new THREE.BoxGeometry(backW, backH, backT),
     redMat
@@ -101,7 +101,7 @@ export function buildChair(scene) {
   chairGroup.add(back);
 
   const backTop = new THREE.Mesh(
-    new THREE.CylinderGeometry(backT / 2, backT / 2, backW - 0.2, 12),
+    new THREE.CylinderGeometry(backT / 2, backT / 2, backW - 2, 12),
     redMat
   );
   backTop.rotation.z = Math.PI / 2;
@@ -112,17 +112,17 @@ export function buildChair(scene) {
   // --- Accoudoirs ---
   for (const side of [-1, 1]) {
     const armSupport = new THREE.Mesh(
-      new THREE.BoxGeometry(0.3, 2, 0.3),
+      new THREE.BoxGeometry(3, 20, 3),
       darkMat
     );
-    armSupport.position.set(side * (seatW / 2 - 0.2), seatY + seatH + 1, 0);
+    armSupport.position.set(side * (seatW / 2 - 2), seatY + seatH + 10, 0);
     chairGroup.add(armSupport);
 
     const armPad = new THREE.Mesh(
-      new THREE.BoxGeometry(0.5, 0.25, 2.5),
+      new THREE.BoxGeometry(5, 2.5, 25),
       darkMat
     );
-    armPad.position.set(side * (seatW / 2 - 0.2), seatY + seatH + 2.1, 0.2);
+    armPad.position.set(side * (seatW / 2 - 2), seatY + seatH + 21, 2);
     chairGroup.add(armPad);
   }
 
