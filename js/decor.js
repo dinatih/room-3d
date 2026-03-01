@@ -43,7 +43,7 @@ export function buildDecor(scene) {
     addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ - 18, DF, DF, DD, Math.PI / 2);
     addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ + 18, DF, DF, DD, Math.PI / 2);
 
-    // 1 sur meuble SDB côté évier (cbnE), légèrement décalé du coin
+    // 1 sur meuble SDB côté évier (cbnE), plaqué contre mur nord
     addSingleDrona(
       scene,
       DOOR_START - 28,
@@ -52,6 +52,7 @@ export function buildDecor(scene) {
       DD,
       DF,
       DF,
+      Math.PI / 2,
     );
   }
 

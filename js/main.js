@@ -42,12 +42,13 @@ await loadFont();
 
 // Helper : tag les objets ajoutés à scene pendant un build
 function buildOnLayer(buildFn, layer) {
-  const before = new Set(scene.children);
+  const before = new Set();
+  scene.traverse(obj => before.add(obj));
   buildFn(scene);
-  for (const child of scene.children) {
-    if (!before.has(child))
-      child.traverse(obj => obj.layers.set(obj.userData?.layerOverride ?? layer));
-  }
+  scene.traverse(obj => {
+    if (!before.has(obj))
+      obj.layers.set(obj.userData?.layerOverride ?? layer);
+  });
 }
 
 // Activer tous les layers sur la caméra
