@@ -41,9 +41,11 @@ export function buildInstancedMeshes(scene, allBricks) {
       mesh.receiveShadow = true;
       g.items.forEach((b, i) => {
         dummy.position.set(b.x, b.y, b.z);
+        dummy.rotation.y = b.rotY || 0;
         dummy.updateMatrix();
         mesh.setMatrixAt(i, dummy.matrix);
       });
+      dummy.rotation.y = 0;
       mesh.instanceMatrix.needsUpdate = true;
       mesh.userData.brickType = type;
       scene.add(mesh);
@@ -60,18 +62,20 @@ export function buildInstancedMeshes(scene, allBricks) {
       if (!isPlate && !isWall) continue;
 
       const topY = b.y + b.sy / 2 + STUD_HT / 2;
+      const cosR = Math.cos(b.rotY || 0);
+      const sinR = Math.sin(b.rotY || 0);
       if (b.axis === 'x' || b.sx > b.sz) {
         const count = Math.round((b.sx + GAP) / 10);
-        const startX = b.x - (b.sx + GAP) / 2 + 5;
         for (let s = 0; s < count; s++) {
-          studPos.push(startX + s * 10, topY, b.z);
+          const dx = -(b.sx + GAP) / 2 + 5 + s * 10;
+          studPos.push(b.x + dx * cosR, topY, b.z - dx * sinR);
           studBrickY.push(b.y); studBrickZ.push(b.z); studBrickX.push(b.x);
         }
       } else {
         const count = Math.round((b.sz + GAP) / 10);
-        const startZ = b.z - (b.sz + GAP) / 2 + 5;
         for (let s = 0; s < count; s++) {
-          studPos.push(b.x, topY, startZ + s * 10);
+          const dz = -(b.sz + GAP) / 2 + 5 + s * 10;
+          studPos.push(b.x + dz * sinR, topY, b.z + dz * cosR);
           studBrickY.push(b.y); studBrickZ.push(b.z); studBrickX.push(b.x);
         }
       }

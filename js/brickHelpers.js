@@ -28,19 +28,19 @@ export function fillRow(length, stagger) {
 // =============================================
 export const allBricks = []; // {x,y,z, sx,sy,sz, type}
 
-export function addBrickX(startX, layer, z, size, type) {
+export function addBrickX(startX, layer, z, size, type, rotY = 0) {
   allBricks.push({
     x: startX + size / 2, y: layer * BRICK_H + BRICK_H / 2, z,
     sx: size - GAP, sy: BRICK_H - GAP, sz: 10 - GAP,
-    len: size, axis: 'x', type
+    len: size, axis: 'x', type, rotY
   });
 }
 
-export function addBrickZ(x, layer, startZ, size, type) {
+export function addBrickZ(x, layer, startZ, size, type, rotY = 0) {
   allBricks.push({
     x, y: layer * BRICK_H + BRICK_H / 2, z: startZ + size / 2,
     sx: 10 - GAP, sy: BRICK_H - GAP, sz: size - GAP,
-    len: size, axis: 'z', type
+    len: size, axis: 'z', type, rotY
   });
 }
 
