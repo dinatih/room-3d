@@ -209,7 +209,7 @@ export function buildBathroom(scene) {
   // =============================================
   const WC_X0 = -NICHE_DEPTH + 40;
   const WC_W = 40;
-  const WC_Z0 = KITCHEN_Z + 5;
+  const WC_Z0 = KITCHEN_Z + 11; // face intérieure mur nord (KITCHEN_Z+10) + 1cm gap
   const WC_CX = WC_X0 + WC_W / 2;
 
   const wcMat = new THREE.MeshStandardMaterial({
@@ -585,41 +585,45 @@ export function buildBathroom(scene) {
   // =============================================
   // 2 meubles blancs 40x40x60cm dans les coins du mur SDB Nord
   // =============================================
-  const CBN_W = 40,
-    CBN_D = 40,
-    CBN_H = 60;
-  const cbnMat = new THREE.MeshStandardMaterial({
-    color: 0xf0f0f0,
-    roughness: 0.3,
-  });
+  const CBN_W = 40, CBN_BODY_D = 37, CBN_DOOR_D = 2, CBN_H = 60;
+  const CBN_BODY_Z = KITCHEN_Z + 11 + CBN_BODY_D / 2;
+  const CBN_DOOR_Z = KITCHEN_Z + 11 + CBN_BODY_D + CBN_DOOR_D / 2;
 
-  const cbnW = new THREE.Mesh(
-    new THREE.BoxGeometry(CBN_W, CBN_H, CBN_D),
-    cbnMat,
-  );
-  cbnW.position.set(
-    -NICHE_DEPTH + CBN_W / 2,
-    CBN_H / 2,
-    KITCHEN_Z + 5 + CBN_D / 2,
-  );
-  cbnW.castShadow = true;
-  cbnW.receiveShadow = true;
+  const cbnMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
+  const cbnDoorMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.2 });
+  const cbnHandleMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.5, roughness: 0.3 });
+
+  // Corps meuble ouest
+  const cbnW = new THREE.Mesh(new THREE.BoxGeometry(CBN_W, CBN_H, CBN_BODY_D), cbnMat);
+  cbnW.position.set(-NICHE_DEPTH + CBN_W / 2, CBN_H / 2, CBN_BODY_Z);
+  cbnW.castShadow = true; cbnW.receiveShadow = true;
   scene.add(cbnW);
+  // Porte meuble ouest
+  const doorW = new THREE.Mesh(new THREE.BoxGeometry(CBN_W - 2, CBN_H - 2, CBN_DOOR_D), cbnDoorMat);
+  doorW.position.set(-NICHE_DEPTH + CBN_W / 2, CBN_H / 2, CBN_DOOR_Z);
+  doorW.castShadow = true;
+  scene.add(doorW);
+  // Poignée meuble ouest (côté droit)
+  const handleW = new THREE.Mesh(new THREE.BoxGeometry(2, 12, 1.5), cbnHandleMat);
+  handleW.position.set(-NICHE_DEPTH + CBN_W - 6, CBN_H * 0.6, CBN_DOOR_Z + CBN_DOOR_D / 2 + 0.75);
+  scene.add(handleW);
 
-  const cbnE = new THREE.Mesh(
-    new THREE.BoxGeometry(CBN_W, CBN_H, CBN_D),
-    cbnMat,
-  );
-  cbnE.position.set(
-    DOOR_START - CBN_W / 2 - 8,
-    CBN_H / 2,
-    KITCHEN_Z + 5 + CBN_D / 2,
-  );
-  cbnE.castShadow = true;
-  cbnE.receiveShadow = true;
+  // Corps meuble est
+  const cbnE = new THREE.Mesh(new THREE.BoxGeometry(CBN_W, CBN_H, CBN_BODY_D), cbnMat);
+  cbnE.position.set(DOOR_START - CBN_W / 2 - 8, CBN_H / 2, CBN_BODY_Z);
+  cbnE.castShadow = true; cbnE.receiveShadow = true;
   scene.add(cbnE);
+  // Porte meuble est
+  const doorE = new THREE.Mesh(new THREE.BoxGeometry(CBN_W - 2, CBN_H - 2, CBN_DOOR_D), cbnDoorMat);
+  doorE.position.set(DOOR_START - CBN_W / 2 - 8, CBN_H / 2, CBN_DOOR_Z);
+  doorE.castShadow = true;
+  scene.add(doorE);
+  // Poignée meuble est (côté gauche)
+  const handleE = new THREE.Mesh(new THREE.BoxGeometry(2, 12, 1.5), cbnHandleMat);
+  handleE.position.set(DOOR_START - CBN_W - 8 + 6, CBN_H * 0.6, CBN_DOOR_Z + CBN_DOOR_D / 2 + 0.75);
+  scene.add(handleE);
 
-  // Tag meubles SDB → layer mobilier (respecté par buildOnLayer)
+  // Tag meubles SDB → layer mobilier
   cbnW.userData.layerOverride = LAYER_FURNITURE;
   cbnE.userData.layerOverride = LAYER_FURNITURE;
 
