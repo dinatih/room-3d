@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 export function buildChair(scene) {
   const chairX = 30;
-  const chairZ = 130;
+  const chairZ = 145;
   const chairRot = Math.PI / 2;
 
   const redMat = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });

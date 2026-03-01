@@ -10,7 +10,7 @@ import { buildKallax } from './kallax.js';
 import { buildBed, toggleBedStack } from './bed.js';
 import { buildMirrors } from './mirrors.js';
 import { buildChair } from './chair.js';
-import { buildDesks } from './desks.js';
+import { buildDesks, toggleDesksHeight } from './desks.js';
 import { buildLaptop } from './laptop.js';
 import { buildMackapar } from './mackapar.js';
 import { buildDecor } from './decor.js';
@@ -207,6 +207,15 @@ import { setMirrorLayers } from './mirrors.js';
 document.getElementById('bed-toggle')?.addEventListener('click', () => {
   const s = toggleBedStack();
   document.getElementById('bed-toggle').textContent = `Lit : ${s ? 'EMPILÉ' : 'DÉPLIÉ'}`;
+  requestRender();
+});
+
+// =============================================
+// DESK TOGGLE (sit / stand)
+// =============================================
+document.getElementById('desk-toggle')?.addEventListener('click', () => {
+  const s = toggleDesksHeight();
+  document.getElementById('desk-toggle').textContent = `Bureaux : ${s ? 'DEBOUT' : 'ASSIS'}`;
   requestRender();
 });
 
