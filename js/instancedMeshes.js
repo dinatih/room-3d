@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { COLORS, STUD_R, STUD_HT, BRICK_H, NUM_LAYERS, GAP } from './config.js';
+import { COLORS, STUD_R, STUD_HT, GAP } from './config.js';
 
 export function buildInstancedMeshes(scene, allBricks) {
   const dummy = new THREE.Object3D();
@@ -51,22 +51,29 @@ export function buildInstancedMeshes(scene, allBricks) {
 
     // Studs
     const studPos = [];
+    const studBrickY = []; // Y de la brique parente (pour tri animation)
+    const studBrickZ = []; // Z de la brique parente (clé secondaire)
+    const studBrickX = []; // X de la brique parente (clé tertiaire)
     for (const b of bricks) {
       const isPlate = type === 'grass';
-      const isTopWall = !isPlate && b.y + b.sy / 2 >= (NUM_LAYERS - 1) * BRICK_H;
-      if (!isTopWall && !isPlate) continue;
+      const isWall = type === 'wall' || type === 'accent' || type === 'glass_frame';
+      if (!isPlate && !isWall) continue;
 
       const topY = b.y + b.sy / 2 + STUD_HT / 2;
       if (b.axis === 'x' || b.sx > b.sz) {
         const count = Math.round((b.sx + GAP) / 10);
         const startX = b.x - (b.sx + GAP) / 2 + 5;
-        for (let s = 0; s < count; s++)
+        for (let s = 0; s < count; s++) {
           studPos.push(startX + s * 10, topY, b.z);
+          studBrickY.push(b.y); studBrickZ.push(b.z); studBrickX.push(b.x);
+        }
       } else {
         const count = Math.round((b.sz + GAP) / 10);
         const startZ = b.z - (b.sz + GAP) / 2 + 5;
-        for (let s = 0; s < count; s++)
+        for (let s = 0; s < count; s++) {
           studPos.push(b.x, topY, startZ + s * 10);
+          studBrickY.push(b.y); studBrickZ.push(b.z); studBrickX.push(b.x);
+        }
       }
     }
 
@@ -81,6 +88,9 @@ export function buildInstancedMeshes(scene, allBricks) {
       }
       sm.instanceMatrix.needsUpdate = true;
       sm.userData.brickType = type;
+      sm.userData.studBrickY = studBrickY;
+      sm.userData.studBrickZ = studBrickZ;
+      sm.userData.studBrickX = studBrickX;
       scene.add(sm);
     }
   }

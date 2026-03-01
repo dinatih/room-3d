@@ -3,7 +3,7 @@ import { requestRender } from './cameraManager.js';
 
 const ZERO_MATRIX = new THREE.Matrix4().makeScale(0, 0, 0);
 
-let buildOrder = []; // [{ mesh, idx, matrix, y }] trié par Y croissant
+let buildOrder = []; // [{ mesh, idx, matrix, sortY }] trié par Y croissant
 let currentStep = 0;
 let animating = false;
 let rafId = null;
@@ -14,21 +14,29 @@ export function prepareBuildAnimation(scene) {
   const m = new THREE.Matrix4();
   buildOrder = [];
 
+  // Clé de tri composée : Y + Z/1000 + X/100000
+  // Briques et studs d'une même brique partagent les mêmes Y,Z,X → studs +0.001
+  const key = (y, z, x) => y + z / 1000 + x / 100000;
+
   scene.traverse(obj => {
     if (obj.isInstancedMesh) {
-      // Briques via InstancedMesh (murs, sol, accents…)
+      const sY = obj.userData.studBrickY || null;
+      const sZ = obj.userData.studBrickZ || null;
+      const sX = obj.userData.studBrickX || null;
       for (let i = 0; i < obj.count; i++) {
         obj.getMatrixAt(i, m);
         pos.setFromMatrixPosition(m);
-        buildOrder.push({ kind: 'instanced', mesh: obj, idx: i, matrix: m.clone(), y: pos.y });
+        const sortY = sY
+          ? key(sY[i], sZ[i], sX[i]) + 0.001   // stud : clé brique parente + epsilon
+          : key(pos.y, pos.z, pos.x);            // brique normale
+        buildOrder.push({ kind: 'instanced', mesh: obj, idx: i, matrix: m.clone(), sortY });
       }
     } else if (obj.isMesh && obj.userData.buildAnim) {
-      // Briques individuelles (mur diagonal)
-      buildOrder.push({ kind: 'mesh', mesh: obj, y: obj.position.y });
+      buildOrder.push({ kind: 'mesh', mesh: obj, sortY: obj.position.y });
     }
   });
 
-  buildOrder.sort((a, b) => a.y - b.y);
+  buildOrder.sort((a, b) => a.sortY - b.sortY);
 
   // Viser ~10s d'animation à ~60fps
   bricksPerFrame = Math.max(1, Math.ceil(buildOrder.length / (10 * 60)));
