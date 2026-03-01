@@ -1,0 +1,334 @@
+import * as THREE from "three";
+
+export function buildGarden(scene) {
+  // =============================================
+  // CANAPÉ DE JARDIN (rouge, côté est)
+  // =============================================
+  {
+    const SOFA_W = 160;   // 160cm le long de Z
+    const SOFA_D = 60;    // 60cm profondeur (X)
+    const SOFA_H = 90;    // 90cm hauteur totale
+    const SEAT_H = 40;    // 40cm hauteur assise
+    const BACK_T = 10;    // 10cm épaisseur dossier
+    const ARM_W = 10;     // 10cm largeur accoudoir
+    const ARM_H = 60;     // 60cm hauteur accoudoir
+
+    const sofaMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.7 });
+
+    const sofaGroup = new THREE.Group();
+
+    // Assise
+    const seat = new THREE.Mesh(
+      new THREE.BoxGeometry(SOFA_D, SEAT_H, SOFA_W),
+      sofaMat,
+    );
+    seat.position.set(0, SEAT_H / 2, 0);
+    seat.castShadow = true;
+    seat.receiveShadow = true;
+    sofaGroup.add(seat);
+
+    // Dossier (contre le mur est)
+    const back = new THREE.Mesh(
+      new THREE.BoxGeometry(BACK_T, SOFA_H, SOFA_W),
+      sofaMat,
+    );
+    back.position.set(SOFA_D / 2 - BACK_T / 2, SOFA_H / 2, 0);
+    back.castShadow = true;
+    sofaGroup.add(back);
+
+    // Accoudoirs
+    for (const side of [-1, 1]) {
+      const arm = new THREE.Mesh(
+        new THREE.BoxGeometry(SOFA_D, ARM_H, ARM_W),
+        sofaMat,
+      );
+      arm.position.set(0, ARM_H / 2, side * (SOFA_W / 2 - ARM_W / 2));
+      arm.castShadow = true;
+      sofaGroup.add(arm);
+    }
+
+    sofaGroup.position.set(300 - SOFA_D / 2, 0, -110);
+    scene.add(sofaGroup);
+  }
+
+  // =============================================
+  // CANAPÉ DE JARDIN 2 (rouge, sans accoudoirs, côté est)
+  // =============================================
+  {
+    const S2_W = 100;    // 100cm le long de Z
+    const S2_D = 60;     // 60cm profondeur (X)
+    const S2_H = 100;    // 100cm hauteur totale
+    const S2_SEAT = 40;  // 40cm hauteur assise
+    const S2_BACK = 10;  // 10cm épaisseur dossier
+
+    const sofa2Mat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.7 });
+    const sofa2Group = new THREE.Group();
+
+    // Assise
+    const seat2 = new THREE.Mesh(
+      new THREE.BoxGeometry(S2_D, S2_SEAT, S2_W),
+      sofa2Mat,
+    );
+    seat2.position.set(0, S2_SEAT / 2, 0);
+    seat2.castShadow = true;
+    seat2.receiveShadow = true;
+    sofa2Group.add(seat2);
+
+    // Dossier
+    const back2 = new THREE.Mesh(
+      new THREE.BoxGeometry(S2_BACK, S2_H, S2_W),
+      sofa2Mat,
+    );
+    back2.position.set(S2_D / 2 - S2_BACK / 2, S2_H / 2, 0);
+    back2.castShadow = true;
+    sofa2Group.add(back2);
+
+    sofa2Group.rotation.y = Math.PI;
+    sofa2Group.position.set(310 - 60 - 60 - S2_D / 2 - 60, 0, -90);
+    scene.add(sofa2Group);
+  }
+
+  // =============================================
+  // CHAISE PLIANTE IKEA VIHALS (rouge)
+  // =============================================
+  {
+    const VH_W = 43;     // 43cm largeur
+    const VH_D = 47;     // 47cm profondeur
+    const VH_H = 80;       // 80cm hauteur totale
+    const VH_SEAT_H = 45; // 45cm hauteur assise
+    const VH_SEAT_W = 39; // 39cm largeur assise
+    const VH_SEAT_D = 41; // 41cm profondeur assise
+    const VH_SEAT_T = 2; // épaisseur assise
+    const VH_BACK_H = VH_H - VH_SEAT_H; // 35 hauteur dossier
+    const VH_LEG_R = 1.2; // rayon tubes
+
+    const vhRedMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 });
+    const legGeo = new THREE.CylinderGeometry(VH_LEG_R, VH_LEG_R, 10, 6);
+
+    const vhGroup = new THREE.Group();
+
+    // Assise
+    const vhSeat = new THREE.Mesh(
+      new THREE.BoxGeometry(VH_SEAT_W, VH_SEAT_T, VH_SEAT_D),
+      vhRedMat,
+    );
+    vhSeat.position.y = VH_SEAT_H;
+    vhSeat.castShadow = true;
+    vhGroup.add(vhSeat);
+
+    // Dossier (léger angle en arrière)
+    const backAngle = 0.15; // ~8°
+    const vhBack = new THREE.Mesh(
+      new THREE.BoxGeometry(VH_SEAT_W, VH_BACK_H, VH_SEAT_T),
+      vhRedMat,
+    );
+    vhBack.position.set(0, VH_SEAT_H + VH_BACK_H / 2, -VH_SEAT_D / 2 + VH_SEAT_T / 2);
+    vhBack.rotation.x = backAngle;
+    vhBack.castShadow = true;
+    vhGroup.add(vhBack);
+
+    // Pieds avant (droits)
+    for (const sx of [-1, 1]) {
+      const leg = new THREE.Mesh(legGeo, vhRedMat);
+      leg.scale.y = VH_SEAT_H / 10;
+      leg.position.set(sx * (VH_W / 2 - VH_LEG_R), VH_SEAT_H / 2, VH_SEAT_D / 2 - 3);
+      vhGroup.add(leg);
+    }
+
+    // Pieds arrière (montants du dossier, jusqu'en haut)
+    for (const sx of [-1, 1]) {
+      const leg = new THREE.Mesh(legGeo, vhRedMat);
+      leg.scale.y = VH_H / 10;
+      leg.position.set(sx * (VH_W / 2 - VH_LEG_R), VH_H / 2, -VH_SEAT_D / 2 + 3);
+      leg.rotation.x = backAngle * 0.5;
+      vhGroup.add(leg);
+    }
+
+    // Traverse avant + arrière
+    for (const tz of [VH_SEAT_D / 2 - 3, -VH_SEAT_D / 2 + 3]) {
+      const bar = new THREE.Mesh(legGeo, vhRedMat);
+      bar.rotation.z = Math.PI / 2;
+      bar.scale.y = (VH_W - VH_LEG_R * 4) / 10;
+      bar.position.set(0, VH_SEAT_H * 0.3, tz);
+      vhGroup.add(bar);
+    }
+
+    vhGroup.position.set(200, 0, 100);
+    scene.add(vhGroup);
+  }
+
+  // =============================================
+  // CAILLEBOTIS ALTAPPEN IKEA (blanc, 30×30cm)
+  // Zone jardin Z=-290 → Z=-160
+  // =============================================
+  {
+    const ALT_S = 30;       // 30cm
+    const ALT_H = 2;    // ~2cm épaisseur
+    const ALT_GAP = 0.6; // espacement entre dalles
+
+    const altMat = new THREE.MeshStandardMaterial({
+      color: 0xf0ece4, roughness: 0.55,
+    });
+    const altGeo = new THREE.BoxGeometry(
+      ALT_S - ALT_GAP, ALT_H, ALT_S - ALT_GAP,
+    );
+
+    const Z0 = -290;
+    const Z1 = -160;
+    const X_RIGHT = 310;
+
+    // Limite gauche jardin (même formule que floor.js)
+    function gardenX0(z) {
+      if (z + 5 >= -140) return -10;
+      return Math.ceil((-10 - 110 * (z + 5 + 140) / 70) / 10) * 10;
+    }
+
+    for (let tz = Z0; tz + ALT_S <= Z1; tz += ALT_S) {
+      const x0 = gardenX0(tz);
+      for (let tx = X_RIGHT - ALT_S; tx >= x0; tx -= ALT_S) {
+        const tile = new THREE.Mesh(altGeo, altMat);
+        tile.position.set(tx + ALT_S / 2, ALT_H / 2, tz + ALT_S / 2);
+        tile.receiveShadow = true;
+        scene.add(tile);
+      }
+    }
+  }
+
+  // =============================================
+  // COFFRE BANC YITAHOME 100 Gal (gris, 122×55×62cm)
+  // Derrière le canapé ouest (sofa 2)
+  // =============================================
+  {
+    const CB_L = 122;   // 122cm le long de Z
+    const CB_W = 55;    // 55cm profondeur (X)
+    const CB_H = 62;    // 62cm hauteur
+    const LID_H = 3;   // couvercle
+
+    const cbMat = new THREE.MeshStandardMaterial({
+      color: 0x4a4a4a, roughness: 0.6,
+    });
+    const cbLidMat = new THREE.MeshStandardMaterial({
+      color: 0x555555, roughness: 0.5,
+    });
+
+    // Sofa 2 : dos à X≈70, Z=-80
+    const cbX = 70 - CB_W / 2;  // juste derrière le dossier
+    const cbZ = -90;
+
+    // Corps
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(CB_W, CB_H - LID_H, CB_L),
+      cbMat,
+    );
+    body.position.set(cbX, (CB_H - LID_H) / 2, cbZ);
+    body.castShadow = true;
+    body.receiveShadow = true;
+    scene.add(body);
+
+    // Couvercle (légèrement plus large)
+    const lid = new THREE.Mesh(
+      new THREE.BoxGeometry(CB_W + 1.5, LID_H, CB_L + 1.5),
+      cbLidMat,
+    );
+    lid.position.set(cbX, CB_H - LID_H / 2, cbZ);
+    lid.castShadow = true;
+    scene.add(lid);
+
+    // Poignées latérales (2 côtés Z)
+    const handleMat = new THREE.MeshStandardMaterial({
+      color: 0x3a3a3a, roughness: 0.4,
+    });
+    for (const dz of [-1, 1]) {
+      const handle = new THREE.Mesh(
+        new THREE.BoxGeometry(15, 3, 1.5),
+        handleMat,
+      );
+      handle.position.set(cbX, CB_H * 0.55, cbZ + dz * (CB_L / 2 + 0.8));
+      scene.add(handle);
+    }
+  }
+
+  // =============================================
+  // DESSERTE IKEA VIGGJA (blanc, 37×50×74cm)
+  // À côté du canapé ouest (côté sud)
+  // =============================================
+  {
+    const VG_W = 37;     // 37cm (le long de Z)
+    const VG_D = 50;     // 50cm (le long de X)
+    const VG_H = 74;     // 74cm hauteur
+    const TOP_Y = 50.8;   // plateau haut à 50.8cm
+    const BOT_Y = 22.9;   // plateau bas à 22.9cm
+    const TRAY_T = 1;   // épaisseur fond plateau
+    const TRAY_RIM = 2.5; // hauteur rebord
+    const LEG_R = 0.8;   // rayon tube acier
+
+    const vgMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.35 });
+    const vgFrameMat = new THREE.MeshStandardMaterial({
+      color: 0xe8e8e8, roughness: 0.3, metalness: 0.3,
+    });
+
+    const vgGroup = new THREE.Group();
+
+    // 4 pieds (tubes verticaux, légèrement inclinés vers l'extérieur)
+    const legGeo = new THREE.CylinderGeometry(LEG_R, LEG_R, VG_H, 6);
+    for (const dx of [-1, 1]) {
+      for (const dz of [-1, 1]) {
+        const leg = new THREE.Mesh(legGeo, vgFrameMat);
+        leg.position.set(
+          dx * (VG_D / 2 - 3),
+          VG_H / 2,
+          dz * (VG_W / 2 - 2),
+        );
+        vgGroup.add(leg);
+      }
+    }
+
+    // Traverses horizontales (bas, connectent les pieds en X)
+    for (const dz of [-1, 1]) {
+      const bar = new THREE.Mesh(
+        new THREE.CylinderGeometry(LEG_R, LEG_R, VG_D - 6, 6),
+        vgFrameMat,
+      );
+      bar.rotation.z = Math.PI / 2;
+      bar.position.set(0, 4, dz * (VG_W / 2 - 2));
+      vgGroup.add(bar);
+    }
+
+    // Plateaux (2 : bas et haut)
+    function addTray(y) {
+      // Fond
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(VG_D - 4, TRAY_T, VG_W - 3),
+        vgMat,
+      );
+      base.position.y = y;
+      base.receiveShadow = true;
+      vgGroup.add(base);
+
+      // Rebords (4 côtés)
+      for (const dz of [-1, 1]) {
+        const rim = new THREE.Mesh(
+          new THREE.BoxGeometry(VG_D - 4, TRAY_RIM, TRAY_T),
+          vgMat,
+        );
+        rim.position.set(0, y + TRAY_RIM / 2, dz * (VG_W / 2 - 1.5));
+        vgGroup.add(rim);
+      }
+      for (const dx of [-1, 1]) {
+        const rim = new THREE.Mesh(
+          new THREE.BoxGeometry(TRAY_T, TRAY_RIM, VG_W - 3),
+          vgMat,
+        );
+        rim.position.set(dx * (VG_D / 2 - 2), y + TRAY_RIM / 2, 0);
+        vgGroup.add(rim);
+      }
+    }
+
+    addTray(BOT_Y);
+    addTray(TOP_Y);
+
+    // Position : côté sud du canapé ouest (sofa2 à X=100, Z=-80, spans Z=-130→-30)
+    vgGroup.position.set(100, 0, -140 - VG_W / 2 - 3);
+    scene.add(vgGroup);
+  }
+}
