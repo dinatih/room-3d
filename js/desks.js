@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-
-const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 });
+import { whiteMat } from './materials.js';
 const footHgt = 2.5;
 const colSize = 4.2;
 
