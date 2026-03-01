@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W } from './config.js';
+import { ROOM_W, KALLAX_DEPTH } from './config.js';
 import { kallaxW } from './kallax.js';
 
 let stacked = true;
@@ -13,9 +13,6 @@ export function toggleBedStack() {
 
 export function buildBed(scene) {
   const woodMat = new THREE.MeshStandardMaterial({ color: 0xe8c39e, roughness: 0.8 });
-
-  const KX2_END_Z = kallaxW(2);
-  const bedZ0 = KX2_END_Z + 3;
 
   // Utåker bed unit (from kallax.html)
   // Frame: 205×83cm, legs 23cm, sides 12cm high
@@ -112,8 +109,31 @@ export function buildBed(scene) {
     b2.add(p);
   }
 
-  // Position: long axis along Z (rotated 90°), against mur B
-  utaker.rotation.y = Math.PI / 2;
-  utaker.position.set(ROOM_W - 83 / 2, 0, bedZ0 + 205 / 2);
+  // Position: pivoté ~13° — 3 contraintes simultanées :
+  // 1) Coin NE contre mur B (X=300)
+  // 2) Face nord touche coin SO Kallax NE (261, 75.5)
+  // 3) Face est touche coin NO Sunnersta (264, 243.5)
+  const KALLAX_S = kallaxW(2);                // 75.5 — bord sud Kallax NE
+  const KALLAX_SW_X = ROOM_W - KALLAX_DEPTH; // 261 — bord ouest Kallax NE
+  const SUNNERSTA_NW_X = ROOM_W - 36;        // 264 — bord ouest Sunnersta
+  const SUNNERSTA_NW_Z = 243.5;              // bord nord Sunnersta
+  const halfL = 205 / 2;
+  const halfW = 83 / 2;
+
+  // Marge pour la couette/drapé (~2cm de débord du cadre)
+  const PAD = 3;
+  // Résolution : tan(α) = dxK/u = (dzT-u)/dxS → u²-dzT·u+dxK·dxS = 0
+  const dxK = ROOM_W - KALLAX_SW_X;                    // 39
+  const dxS = ROOM_W - SUNNERSTA_NW_X + PAD;           // 39
+  const dzT = SUNNERSTA_NW_Z - (KALLAX_S + PAD);       // 165
+  const u = (dzT - Math.sqrt(dzT * dzT - 4 * dxK * dxS)) / 2;
+  const NE_Z = KALLAX_S + PAD + u;            // ~88.3
+  const alpha = Math.atan2(dxK, u);           // ~77° → tilt ~13°
+
+  // Positionner le groupe pour que le coin NE local (+halfL,+halfW) tombe à (300, NE_Z)
+  const neOffX = halfL * Math.cos(alpha) + halfW * Math.sin(alpha);
+  const neOffZ = -halfL * Math.sin(alpha) + halfW * Math.cos(alpha);
+  utaker.rotation.y = alpha;
+  utaker.position.set(ROOM_W - neOffX, 0, NE_Z - neOffZ);
   scene.add(utaker);
 }
