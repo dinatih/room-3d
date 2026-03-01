@@ -53,7 +53,7 @@ export function enterWalk(x, z) {
   controls.enablePan = false;
   controls.enableZoom = false;
   const c = document.getElementById('controls');
-  if (c) c.textContent = 'Flèches / ZQSD : marcher | Clic+glisser : regarder | Échap : quitter';
+  if (c) c.textContent = 'Flèches / ZQSD : marcher | ←→ : pivoter | Ctrl+↑↓ : incliner | Clic+glisser : regarder | Échap : quitter';
   requestRender();
 }
 
