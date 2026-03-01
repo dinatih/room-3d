@@ -330,6 +330,7 @@ function enterPOV(x, z) {
 }
 
 addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && walkActive) { exitWalk(); requestRender(); return; }
   if (!walkActive) return;
   const k = e.key;
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(k)) {
@@ -374,20 +375,19 @@ function enterWalk(x, z) {
   controls.enableRotate = false;
   controls.enablePan = false;
   controls.enableZoom = false;
-  renderer.domElement.requestPointerLock();
   const c = document.getElementById('controls');
-  if (c) c.textContent = 'Flèches / ZQSD : marcher | Souris : regarder | Échap : quitter';
+  if (c) c.textContent = 'Flèches / ZQSD : marcher | Clic+glisser : regarder | Échap : quitter';
   requestRender();
 }
 
 function exitWalk() {
   if (!walkActive) return;
   walkActive = false;
+  walkDragging = false;
   keysPressed.clear();
   controls.enableRotate = true;
   controls.enablePan = true;
   controls.enableZoom = true;
-  if (document.pointerLockElement) document.exitPointerLock();
   const c = document.getElementById('controls');
   if (c) c.textContent = defaultControlsHint;
   requestRender();
@@ -405,16 +405,18 @@ function updateWalkLook() {
   controls.update();
 }
 
+let walkDragging = false;
+renderer.domElement.addEventListener('mousedown', (e) => {
+  if (!walkActive || e.button !== 0) return;
+  walkDragging = true;
+});
+document.addEventListener('mouseup', () => { walkDragging = false; });
 document.addEventListener('mousemove', (e) => {
-  if (!walkActive || !document.pointerLockElement) return;
+  if (!walkActive || !walkDragging) return;
   walkYaw -= e.movementX * MOUSE_SENS;
   walkPitch = Math.max(-1.4, Math.min(1.4, walkPitch - e.movementY * MOUSE_SENS));
   updateWalkLook();
   requestRender();
-});
-
-document.addEventListener('pointerlockchange', () => {
-  if (walkActive && !document.pointerLockElement) exitWalk();
 });
 
 // =============================================
