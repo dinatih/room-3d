@@ -54,9 +54,15 @@ export function buildWalls(scene) {
   }
   // Section niche ouest (x = -NICHE_DEPTH - 5), prolongée jusqu'à Z=-30
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(NICHE_Z_START + NICHE_LENGTH + 30, layer % 2 === 1))
+    for (const b of fillRow(NICHE_Z_START + NICHE_LENGTH + 40, layer % 2 === 1))
       addBrickZ(-NICHE_DEPTH - 5, layer, -30 + b.start, b.size, 'wall');
   }
+  // Mur de gaine technique ouest (x = -NICHE_DEPTH - 5), de Z=410 à Z=460
+  for (let layer = 0; layer < NUM_LAYERS; layer++) {
+    for (const b of fillRow(KITCHEN_Z - ROOM_D - 10, layer % 2 === 1))
+      addBrickZ(-NICHE_DEPTH - 5, layer, ROOM_D + 10 + b.start, b.size, 'wall');
+  }
+
   // Retour de niche à Z=280
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
     addBrickX(-NICHE_DEPTH, layer, NICHE_Z_START - 5, NICHE_DEPTH, 'wall');
