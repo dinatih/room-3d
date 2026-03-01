@@ -152,22 +152,54 @@ export function buildKallax(scene) {
     scene.add(gStack);
   }
 
-  // 2) KALLAX 1×4 — Mur B, 60cm from mur D
-  //    Back against mur B (+X)
+  // 2) KALLAX 2×1 + 2×1 pivotés — Mur B, 60cm from mur D
+  //    Config Gemini SE : 2 × Kallax(2,1) rotation.z=90°, tous Drona
   {
-    const k = new Kallax(1, 4);
-    k.fillAll();
-    addKallaxToScene(scene, k, ROOM_W - depth / 2, ROOM_D - 60 - w1 / 2, 0, Math.PI / 2);
-    kList.push(k);
+    const gStack = new THREE.Group();
+    let ySE = 0;
+    [1, 2].forEach(() => {
+      const k = new Kallax(2, 1);
+      k.group.rotation.z = Math.PI / 2;
+      k.group.position.y = ySE + k.totalW / 2;
+      k.fillAll();
+      gStack.add(k.group);
+      kList.push(k);
+      ySE += k.totalW;
+    });
+    gStack.rotation.y = Math.PI / 2;
+    gStack.position.set(ROOM_W - depth / 2, 0, ROOM_D - 60 - w1 / 2);
+    scene.add(gStack);
   }
 
-  // 3) KALLAX 1×4 — Angle mur A (X=0) + mur C (Z=0)
-  //    Back against mur A (-X)
+  // 3) KALLAX 2×1 + 1×1 + 1×1 pivotés — Angle mur A (X=0) + mur C (Z=0)
+  //    Config Gemini NW : tour pivotée (rotation.z=90°), tous Drona
   {
-    const k = new Kallax(1, 4);
-    k.fillAll();
-    addKallaxToScene(scene, k, depth / 2, w1 / 2, 0, -Math.PI / 2);
-    kList.push(k);
+    const gStack = new THREE.Group();
+
+    const nwB = new Kallax(2, 1);
+    nwB.group.rotation.z = Math.PI / 2;
+    nwB.group.position.y = nwB.totalW / 2;
+    nwB.fillAll();
+    gStack.add(nwB.group);
+    kList.push(nwB);
+
+    const nwM = new Kallax(1, 1);
+    nwM.group.rotation.z = Math.PI / 2;
+    nwM.group.position.y = nwB.totalW + nwM.totalW / 2;
+    nwM.fillAll();
+    gStack.add(nwM.group);
+    kList.push(nwM);
+
+    const nwT = new Kallax(1, 1);
+    nwT.group.rotation.z = Math.PI / 2;
+    nwT.group.position.y = nwM.group.position.y + nwM.totalW;
+    nwT.fillAll();
+    gStack.add(nwT.group);
+    kList.push(nwT);
+
+    gStack.rotation.y = -Math.PI / 2;
+    gStack.position.set(depth / 2, 0, w1 / 2);
+    scene.add(gStack);
   }
 
   // 4) KALLAX "2×5" — Angle mur A (X=0) + mur D (Z=400), in the niche
