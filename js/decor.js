@@ -316,18 +316,16 @@ export function buildDecor(scene) {
   }
 
   // =============================================
-  // DESSERTE SUNNERSTA 56x36x90cm - Entre lit et Kallax 1x4, mur B
+  // DESSERTE SUNNERSTA 56x36x90cm - Mur B, contre Kallax SE, tournée 90°
   // =============================================
   {
-    const SW = 56; // 56cm le long de X (largeur)
-    const SD = 36; // 36cm le long de Z (profondeur)
+    const SW = 56; // 56cm (longueur)
+    const SD = 36; // 36cm (profondeur)
     const SH = 90; // 90cm hauteur
     const LEG_T = 1.5;
     const SHELF_T = 1;
 
-    // Position : contre mur B, entre lit (fin ~Z=273.5) et Kallax 1x4 (début ~Z=304)
-    const sCX = ROOM_W - SW / 2;
-    const sCZ = 289;
+    const g = new THREE.Group();
 
     const frameMat = new THREE.MeshStandardMaterial({
       color: 0xe0e0e0,
@@ -347,12 +345,12 @@ export function buildDecor(scene) {
           frameMat,
         );
         leg.position.set(
-          sCX + dx * (SW / 2 - LEG_T / 2),
+          dx * (SW / 2 - LEG_T / 2),
           SH / 2,
-          sCZ + dz * (SD / 2 - LEG_T / 2),
+          dz * (SD / 2 - LEG_T / 2),
         );
         leg.castShadow = true;
-        scene.add(leg);
+        g.add(leg);
       }
     }
 
@@ -362,10 +360,10 @@ export function buildDecor(scene) {
         new THREE.BoxGeometry(SW - LEG_T * 2, SHELF_T, SD - LEG_T * 2),
         shelfMat,
       );
-      shelf.position.set(sCX, sy, sCZ);
+      shelf.position.set(0, sy, 0);
       shelf.castShadow = true;
       shelf.receiveShadow = true;
-      scene.add(shelf);
+      g.add(shelf);
     }
 
     // 4 roulettes
@@ -380,13 +378,19 @@ export function buildDecor(scene) {
           wheelMat,
         );
         wheel.position.set(
-          sCX + dx * (SW / 2 - 3),
+          dx * (SW / 2 - 3),
           0.6,
-          sCZ + dz * (SD / 2 - 3),
+          dz * (SD / 2 - 3),
         );
-        scene.add(wheel);
+        g.add(wheel);
       }
     }
+
+    // Rotation 90° : 56cm le long de Z, 36cm le long de X
+    // Plaqué contre mur B (X=300) et Kallax SE (bord ~Z=299.5)
+    g.rotation.y = Math.PI / 2;
+    g.position.set(ROOM_W - SD / 2, 0, 299.5 - SW / 2);
+    scene.add(g);
   }
 
   // =============================================
@@ -1032,8 +1036,8 @@ export function buildDecor(scene) {
       scene.add(g);
     }
 
-    // 1) Sur desserte SUNNERSTA (sCX=272, sCZ=289, top Y=90)
-    addMannequin(ROOM_W - 56 / 2, 90, 289, 0);
+    // 1) Sur desserte SUNNERSTA (tournée 90°, centre X=282, Z=271.5, top Y=90)
+    addMannequin(ROOM_W - 36 / 2, 90, 299.5 - 56 / 2, 0);
 
     // 2) Sur Kallax NW empilé 2×1+1×1+1×1 pivoté (top≈156.5), face centre séjour
     const k14CX = KALLAX_DEPTH / 2;

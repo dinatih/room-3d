@@ -93,7 +93,7 @@ export function buildDesks(scene) {
 
   // Desk 2 : in the room
   const d2 = new Bollsidan();
-  d2.group.position.set(220, 0, 170);
+  d2.group.position.set(200, 0, 170);
   d2.group.rotation.y = Math.PI;
   scene.add(d2.group);
   desks.push(d2);
