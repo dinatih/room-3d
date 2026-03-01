@@ -199,7 +199,7 @@ export function buildMinimap() {
     drawWall(-NICHE_DEPTH, ROOM_D, -NICHE_DEPTH, KITCHEN_Z);
 
     // === MUR B EST ===
-    drawWall(ROOM_W, 0, ROOM_W, ROOM_D);
+    drawWall(ROOM_W, 0, ROOM_W, ROOM_D + 10);
 
     // === MUR C NORD (baie vitrée) ===
     drawWall(0, 0, GLASS_START, 0);

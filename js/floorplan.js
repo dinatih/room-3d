@@ -79,7 +79,7 @@ export function buildFloorPlan() {
   wallLine(-NICHE_DEPTH, ROOM_D, -NICHE_DEPTH, KITCHEN_Z);
 
   // === MUR B EST ===
-  wallLine(ROOM_W, 0, ROOM_W, ROOM_D);
+  wallLine(ROOM_W, 0, ROOM_W, ROOM_D + 10);
 
   // === MUR C NORD (baie vitrée) ===
   wallLine(0, 0, GLASS_START, 0);
