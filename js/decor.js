@@ -34,13 +34,13 @@ export function buildDecor(scene) {
     addSingleDrona(scene, mpCX - 18, mpTopY + DF / 2, mpCZ, DF, DF, DD);
     addSingleDrona(scene, mpCX + 18, mpTopY + DF / 2, mpCZ, DF, DF, DD);
 
-    // 1 sur Kallax 2x3 (angle C+B), poussé contre mur C (Z=0)
-    const k1TopY = kallaxH(3);
+    // 1 sur Kallax NE empilé 2×1+2×2 (angle C+B), poussé contre mur C (Z=0)
+    const k1TopY = kallaxH(1) + kallaxH(2);
     const k1CX = ROOM_W - 20; // 280
     addSingleDrona(scene, k1CX, k1TopY + DF / 2, DF / 2, DF, DF, DD);
 
-    // 2 sur Kallax 2x5
-    const k4TopY = kallaxH(5);
+    // 2 sur Kallax cuisine empilé 2×2+2×2+2×1
+    const k4TopY = kallaxH(2) * 2 + kallaxH(1);
     const k4CX = -NICHE_DEPTH + KALLAX_DEPTH / 2;
     const k4CZ = ROOM_D - kallaxW(2) / 2;
 
@@ -1035,10 +1035,10 @@ export function buildDecor(scene) {
     // 1) Sur desserte SUNNERSTA (sCX=272, sCZ=289, top Y=90)
     addMannequin(ROOM_W - 56 / 2, 90, 289, 0);
 
-    // 2) Sur Kallax 1x4 NO (cx=20, cz=18, top≈139.5), face centre séjour
+    // 2) Sur Kallax NW empilé 2×1+1×1+1×1 pivoté (top≈156.5), face centre séjour
     const k14CX = KALLAX_DEPTH / 2;
     const k14CZ = kallaxW(1) / 2;
-    const k14Top = kallaxH(4);
+    const k14Top = kallaxW(2) + kallaxW(1) * 2;
     addMannequin(k14CX, k14Top, k14CZ,
       Math.atan2(150 - k14CX, 200 - k14CZ));
 
@@ -1051,19 +1051,19 @@ export function buildDecor(scene) {
   }
 
   // =============================================
-  // NINJA FOODI 8-en-1 — Kallax 2x5 cuisine, 2e rangée du haut
-  // 51cm largeur × 19cm hauteur × 37cm profondeur, planche milieu retirée
+  // NINJA FOODI 8-en-1 — Kallax cuisine, étagère spec (planche milieu retirée)
+  // 51cm largeur × 19cm hauteur × 37cm profondeur
   // =============================================
   {
     const NF_W = 51;     // 51cm largeur (le long de Z dans le Kallax)
     const NF_H = 19;     // 19cm hauteur
     const NF_D = 37;     // 37cm profondeur (le long de X)
 
-    // Kallax 2x5 : cx=10, cz=364.75
-    // 2e rangée du haut : plancher Y = top shelf r=3 = 105
+    // Posé sur l'étagère médiane de la pièce spec (2×2 milieu)
+    // = top du 2×2 base + centre du spec + demi-épaisseur étagère
     const k25CX = -NICHE_DEPTH + KALLAX_DEPTH / 2;
     const k25CZ = ROOM_D - kallaxW(2) / 2;
-    const shelfTopY = KALLAX_FRAME + 3 * (KALLAX_CELL_H + KALLAX_PANEL); // floor of row 3 from bottom
+    const shelfTopY = kallaxH(2) + kallaxH(2) / 2 + KALLAX_PANEL / 2;
 
     const nfBlack = new THREE.MeshStandardMaterial({
       color: 0x1a1a1a, roughness: 0.4, metalness: 0.2,
