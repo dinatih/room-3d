@@ -1,68 +1,213 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, NICHE_DEPTH, KALLAX_CELL, KALLAX_PANEL, KALLAX_DEPTH } from './config.js';
-import { addDronaBoxes } from './drona.js';
+import {
+  ROOM_W, ROOM_D, NICHE_DEPTH, KALLAX_DEPTH,
+} from './config.js';
+import { Drona } from './drona.js';
 
-function buildKallaxUnit(scene, cols, rows, cx, cz, baseY, backSide, dronaRows) {
-  const W = cols * KALLAX_CELL + (cols + 1) * KALLAX_PANEL;
-  const H = rows * KALLAX_CELL + (rows + 1) * KALLAX_PANEL;
+// =============================================
+// KALLAX — Ported from Gemini kallax.html
+// Geometry in cm
+// =============================================
 
-  const mat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
-  const matInner = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.5 });
+// Gemini constants (cm)
+const THICK_FRAME = 3.5;
+const THICK_INNER = 1.5;
+const D_H_EXT = 39;
+const NICHE_H = 34;
+const NICHE_W = 33.5;
 
-  // Back panel (backSide: +1 = back towards +X, -1 = back towards -X)
-  const backGeo = new THREE.BoxGeometry(0.08, H, W);
-  const back = new THREE.Mesh(backGeo, matInner);
-  back.position.set(cx + backSide * (KALLAX_DEPTH / 2 - 0.04), baseY + H / 2, cz);
-  back.castShadow = true;
-  scene.add(back);
-
-  // Horizontal shelves
-  for (let r = 0; r <= rows; r++) {
-    const y = baseY + r * (KALLAX_CELL + KALLAX_PANEL) + KALLAX_PANEL / 2;
-    const geo = new THREE.BoxGeometry(KALLAX_DEPTH, KALLAX_PANEL, W);
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(cx, y, cz);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    scene.add(mesh);
+export class Kallax {
+  constructor(cols, rows, spec = false) {
+    this.cols = cols;
+    this.rows = rows;
+    this.spec = spec;
+    this.totalW = cols * NICHE_W + 2 * THICK_FRAME + (cols - 1) * THICK_INNER;
+    this.totalH = rows * NICHE_H + 2 * THICK_FRAME + (rows - 1) * THICK_INNER;
+    this.group = new THREE.Group();
+    this.woodMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 });
+    this.build();
   }
 
-  // Vertical dividers
-  for (let c = 0; c <= cols; c++) {
-    const z = cz - W / 2 + c * (KALLAX_CELL + KALLAX_PANEL) + KALLAX_PANEL / 2;
-    const geo = new THREE.BoxGeometry(KALLAX_DEPTH, H, KALLAX_PANEL);
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(cx, baseY + H / 2, z);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    scene.add(mesh);
+  putDrona(col, row) {
+    const d = new Drona();
+    const x = -(this.totalW / 2) + THICK_FRAME + NICHE_W / 2 + col * (NICHE_W + THICK_INNER);
+    const y = this.totalH / 2 - THICK_FRAME - NICHE_H / 2 - row * (NICHE_H + THICK_INNER);
+    d.group.position.set(x, y, 0);
+    if (Math.abs(this.group.rotation.z) > 0.1) d.group.rotation.z = -this.group.rotation.z;
+    this.group.add(d.group);
   }
 
-  addDronaBoxes(scene, cx, cz, baseY, cols, dronaRows, KALLAX_CELL, KALLAX_PANEL, KALLAX_DEPTH);
+  fillAll() {
+    for (let r = 0; r < this.rows; r++) {
+      for (let c = 0; c < this.cols; c++) this.putDrona(c, r);
+    }
+  }
+
+  fillRows(startRow, endRow) {
+    for (let r = startRow; r <= endRow; r++) {
+      for (let c = 0; c < this.cols; c++) this.putDrona(c, r);
+    }
+  }
+
+  getScrewPositions() {
+    const pos = [];
+    const sX = this.totalW / 2 - THICK_FRAME / 2 - 0.1;
+    const sY = this.totalH / 2;
+    const sZ = D_H_EXT / 2 - 2;
+    [sX, -sX].forEach(x => {
+      [sY, -sY].forEach(y => {
+        [sZ, -sZ].forEach(z => {
+          const p = new THREE.Vector3(x, y > 0 ? y + 0.026 : y - 0.026, z);
+          p.applyMatrix4(this.group.matrixWorld);
+          pos.push(p);
+        });
+      });
+    });
+    return pos;
+  }
+
+  build() {
+    const addP = (w, h, d, x, y, z) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), this.woodMat);
+      m.position.set(x, y, z);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      this.group.add(m);
+    };
+    // Top & bottom shelves
+    addP(this.totalW, THICK_FRAME, D_H_EXT, 0, this.totalH / 2 - THICK_FRAME / 2, 0);
+    addP(this.totalW, THICK_FRAME, D_H_EXT, 0, -(this.totalH / 2) + THICK_FRAME / 2, 0);
+    // Left & right sides
+    const sH = this.totalH - 2 * THICK_FRAME;
+    const sX = this.totalW / 2 - THICK_FRAME / 2 - 0.1;
+    addP(THICK_FRAME, sH, 38.8, -sX, 0, 0);
+    addP(THICK_FRAME, sH, 38.8, sX, 0, 0);
+    // Horizontal dividers
+    for (let i = 1; i < this.rows; i++) {
+      const y = this.totalH / 2 - THICK_FRAME - i * NICHE_H - (i - 0.5) * THICK_INNER;
+      addP(this.totalW - 2 * THICK_FRAME - 0.2, THICK_INNER, 38.6, 0, y, 0);
+    }
+    // Vertical dividers
+    for (let c = 1; c < this.cols; c++) {
+      const x = -(this.totalW / 2) + THICK_FRAME + c * NICHE_W + (c - 0.5) * THICK_INNER;
+      for (let r = 0; r < this.rows; r++) {
+        if (this.spec && r === 0) continue;
+        const yOff = this.totalH / 2 - THICK_FRAME - NICHE_H / 2 - r * (NICHE_H + THICK_INNER);
+        addP(THICK_INNER, NICHE_H, 38.4, x, yOff, 0);
+      }
+    }
+  }
+}
+
+// Helper: total width/height of a Kallax in cm
+export function kallaxW(cols) {
+  return cols * NICHE_W + 2 * THICK_FRAME + (cols - 1) * THICK_INNER;
+}
+export function kallaxH(rows) {
+  return rows * NICHE_H + 2 * THICK_FRAME + (rows - 1) * THICK_INNER;
+}
+
+// Add a Kallax to the scene, positioned so that its center-bottom
+// is at (cx, baseY, cz), facing along Z (depth along Z axis).
+function addKallaxToScene(scene, kallax, cx, cz, baseY, rotY = 0) {
+  // Position: center of group is at mid-height. baseY is bottom.
+  const hScene = kallax.totalH;
+  kallax.group.position.set(cx, baseY + hScene / 2, cz);
+  if (rotY) kallax.group.rotation.y = rotY;
+  scene.add(kallax.group);
+  return kallax;
 }
 
 export function buildKallax(scene) {
-  // KALLAX 2x3 - Angle mur C (Z=0) + mur B (X=30)
-  buildKallaxUnit(scene, 2, 3,
-    ROOM_W - KALLAX_DEPTH / 2,
-    (2 * KALLAX_CELL + 3 * KALLAX_PANEL) / 2,
-    0, +1, 3);
+  const kList = [];
 
-  // KALLAX 1x4 - Mur B, à 60cm du mur D
-  buildKallaxUnit(scene, 1, 4,
-    ROOM_W - KALLAX_DEPTH / 2,
-    ROOM_D - 6 - (1 * KALLAX_CELL + 2 * KALLAX_PANEL) / 2,
-    0, +1, 4);
+  // Dimensions in cm for positioning
+  const w1 = kallaxW(1); // 1-col width
+  const w2 = kallaxW(2); // 2-col width
+  const h3 = kallaxH(3);
+  const h4 = kallaxH(4);
+  const h5 = kallaxH(5);
+  const depth = KALLAX_DEPTH; // 39
 
-  // KALLAX 1x4 - Angle mur A (X=0) + mur C (Z=0)
-  buildKallaxUnit(scene, 1, 4,
-    KALLAX_DEPTH / 2,
-    (1 * KALLAX_CELL + 2 * KALLAX_PANEL) / 2,
-    0, -1, 4);
+  // 1) KALLAX 2×3 — Angle mur C (Z=0) + mur B (X=300)
+  //    Back against mur B (+X), centered along Z starting from Z=0
+  {
+    const k = new Kallax(2, 3);
+    k.fillAll();
+    // depth along X, width along Z
+    addKallaxToScene(scene, k, ROOM_W - depth / 2, w2 / 2, 0, Math.PI / 2);
+    kList.push(k);
+  }
 
-  // KALLAX 2x5 - Angle mur A (X=0) + mur D (Z=40)
-  buildKallaxUnit(scene, 2, 5,
-    -NICHE_DEPTH + KALLAX_DEPTH / 2,
-    ROOM_D - (2 * KALLAX_CELL + 3 * KALLAX_PANEL) / 2,
-    0, -1, 2);
+  // 2) KALLAX 1×4 — Mur B, 60cm from mur D
+  //    Back against mur B (+X)
+  {
+    const k = new Kallax(1, 4);
+    k.fillAll();
+    addKallaxToScene(scene, k, ROOM_W - depth / 2, ROOM_D - 60 - w1 / 2, 0, Math.PI / 2);
+    kList.push(k);
+  }
+
+  // 3) KALLAX 1×4 — Angle mur A (X=0) + mur C (Z=0)
+  //    Back against mur A (-X)
+  {
+    const k = new Kallax(1, 4);
+    k.fillAll();
+    addKallaxToScene(scene, k, depth / 2, w1 / 2, 0, -Math.PI / 2);
+    kList.push(k);
+  }
+
+  // 4) KALLAX "2×5" — Angle mur A (X=0) + mur D (Z=400), in the niche
+  //    Actually 3 stacked units (like kallax.html south-west):
+  //    2×2 (base, Drona remplies) + 2×2 (spec, planche haute retirée) + 2×1 (top)
+  //    Back against niche wall (-X)
+  {
+    const gStack = new THREE.Group();
+    let ySW = 0;
+    const configs = [
+      { c: 2, r: 2, s: false },
+      { c: 2, r: 2, s: true },
+      { c: 2, r: 1, s: false },
+    ];
+    configs.forEach((conf, idx) => {
+      const k = new Kallax(conf.c, conf.r, conf.s);
+      k.group.position.y = ySW + k.totalH / 2;
+      // Seulement les 2 rangées du bas (base 2×2)
+      if (idx === 0) k.fillAll();
+      gStack.add(k.group);
+      kList.push(k);
+      ySW += k.totalH;
+    });
+    gStack.rotation.y = -Math.PI / 2;
+    gStack.position.set(-NICHE_DEPTH + depth / 2, 0, ROOM_D - w2 / 2);
+    scene.add(gStack);
+  }
+
+  // Diagnostic: log Kallax sizes
+  for (const k of kList) {
+    const box = new THREE.Box3().setFromObject(k.group);
+    const size = box.getSize(new THREE.Vector3());
+    console.log(`Kallax ${k.cols}×${k.rows}: ${size.x.toFixed(1)}×${size.y.toFixed(1)}×${size.z.toFixed(1)} cm, pos=(${k.group.position.x.toFixed(1)}, ${k.group.position.y.toFixed(1)}, ${k.group.position.z.toFixed(1)})`);
+  }
+
+  // Screws (instanced)
+  scene.updateMatrixWorld(true);
+  const screwCount = kList.length * 8; // 6 units × 8 screws
+  const instScrews = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.6, 0.6, 0.05, 16),
+    new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.7 }),
+    screwCount,
+  );
+  let sIdx = 0;
+  const dummy = new THREE.Object3D();
+  for (const k of kList) {
+    for (const p of k.getScrewPositions()) {
+      dummy.position.copy(p);
+      dummy.rotation.copy(k.group.rotation);
+      dummy.updateMatrix();
+      instScrews.setMatrixAt(sIdx++, dummy.matrix);
+    }
+  }
+  instScrews.instanceMatrix.needsUpdate = true;
+  scene.add(instScrews);
 }

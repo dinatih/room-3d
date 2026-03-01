@@ -4,12 +4,12 @@ import {
 } from './config.js';
 
 export function buildKitchen(scene) {
-  const COUNTER_H = 9;
-  const COUNTER_SLAB = 0.5;
+  const COUNTER_H = 90;
+  const COUNTER_SLAB = 5;
   const KIT_W = KITCHEN_X1 - KITCHEN_X0;
   const KIT_D = KITCHEN_DEPTH;
-  const FRIDGE_W = 6;
-  const CABINET_W = 4;
+  const FRIDGE_W = 60;
+  const CABINET_W = 40;
 
   // --- Placard (bois) ---
   {
@@ -27,24 +27,24 @@ export function buildKitchen(scene) {
     scene.add(mesh);
 
     // Porte du placard
-    const doorGeo = new THREE.BoxGeometry(CABINET_W - 0.4, cabinetH - 0.4, 0.05);
+    const doorGeo = new THREE.BoxGeometry(CABINET_W - 4, cabinetH - 4, 0.5);
     const doorMat = new THREE.MeshStandardMaterial({ color: 0x9B7924, roughness: 0.5 });
     const door = new THREE.Mesh(doorGeo, doorMat);
     door.position.set(
       KITCHEN_X0 + CABINET_W / 2,
       cabinetH / 2,
-      ROOM_D + 0.05
+      ROOM_D + 0.5
     );
     scene.add(door);
 
     // Poignée placard
-    const hGeo = new THREE.BoxGeometry(0.15, 1.5, 0.2);
+    const hGeo = new THREE.BoxGeometry(1.5, 15, 2);
     const hMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.5, roughness: 0.2 });
     const h = new THREE.Mesh(hGeo, hMat);
     h.position.set(
-      KITCHEN_X0 + CABINET_W - 0.8,
+      KITCHEN_X0 + CABINET_W - 8,
       cabinetH * 0.5,
-      ROOM_D + 0.15
+      ROOM_D + 1.5
     );
     scene.add(h);
   }
@@ -65,29 +65,29 @@ export function buildKitchen(scene) {
     scene.add(mesh);
 
     // Poignée frigo
-    const handleGeo = new THREE.BoxGeometry(0.15, 3, 0.2);
+    const handleGeo = new THREE.BoxGeometry(1.5, 30, 2);
     const handleMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.5, roughness: 0.2 });
     const handle = new THREE.Mesh(handleGeo, handleMat);
     handle.position.set(
-      KITCHEN_X0 + CABINET_W + 0.8,
+      KITCHEN_X0 + CABINET_W + 8,
       frigoH * 0.6,
-      ROOM_D + 0.15
+      ROOM_D + 1.5
     );
     scene.add(handle);
   }
 
   // --- Évier (30x47cm, 16cm de profondeur) ---
-  const sinkW = 3;      // 30cm le long de X
-  const sinkD = 4.7;    // 47cm le long de Z
-  const sinkDepth = 1.6; // 16cm de creux
+  const sinkW = 30;      // 30cm le long de X
+  const sinkD = 47;      // 47cm le long de Z
+  const sinkDepth = 16;  // 16cm de creux
   const sinkCX = KITCHEN_X0 + CABINET_W / 2;
   const sinkCZ = ROOM_D + KIT_D / 2;
   const sinkY = COUNTER_H + COUNTER_SLAB;
 
   // --- Plan de travail avec trou pour l'évier (Shape + ExtrudeGeometry) ---
   {
-    const cW = KIT_W + 0.2;
-    const cD = KIT_D + 0.2;
+    const cW = KIT_W + 2;
+    const cD = KIT_D + 2;
     // Origine du shape en coin bas-gauche du plan de travail
     const cx0 = KITCHEN_X0 + KIT_W / 2 - cW / 2; // bord gauche X
     const cz0 = ROOM_D + KIT_D / 2 - cD / 2;     // bord avant Z
@@ -134,13 +134,13 @@ export function buildKitchen(scene) {
     });
 
     // Fond
-    const bottomGeo = new THREE.BoxGeometry(sinkW, 0.05, sinkD);
+    const bottomGeo = new THREE.BoxGeometry(sinkW, 0.5, sinkD);
     const bottom = new THREE.Mesh(bottomGeo, rimMat);
-    bottom.position.set(sinkCX, sinkY - sinkDepth + 0.025, sinkCZ);
+    bottom.position.set(sinkCX, sinkY - sinkDepth + 0.25, sinkCZ);
     scene.add(bottom);
 
     // 4 parois
-    const wallT = 0.1;
+    const wallT = 1;
     const sides = [
       { sx: sinkW, sy: sinkDepth, sz: wallT, px: 0, pz: -sinkD / 2 + wallT / 2 },
       { sx: sinkW, sy: sinkDepth, sz: wallT, px: 0, pz:  sinkD / 2 - wallT / 2 },
@@ -156,22 +156,22 @@ export function buildKitchen(scene) {
 
     // Robinet
     const faucetMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.7, roughness: 0.1 });
-    const fTige = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2, 8), faucetMat);
-    fTige.position.set(sinkCX, sinkY + 1, sinkCZ + sinkD / 2 - 0.3);
+    const fTige = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 20, 8), faucetMat);
+    fTige.position.set(sinkCX, sinkY + 10, sinkCZ + sinkD / 2 - 3);
     scene.add(fTige);
-    const fBec = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8), faucetMat);
+    const fBec = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 12, 8), faucetMat);
     fBec.rotation.x = Math.PI / 2;
-    fBec.position.set(sinkCX, sinkY + 1.9, sinkCZ + sinkD / 2 - 0.9);
+    fBec.position.set(sinkCX, sinkY + 19, sinkCZ + sinkD / 2 - 9);
     scene.add(fBec);
   }
 
   // --- Meuble haut (ouvert, sans porte ni fond) ---
   {
-    const HC_W = KIT_W;    // 100cm = 10 studs
-    const HC_H = 4;        // 40cm
-    const HC_D = 4;        // 40cm
-    const HC_PANEL = 0.15;
-    const HC_Y0 = COUNTER_H + COUNTER_SLAB + 6; // 60cm au-dessus du plan
+    const HC_W = KIT_W;    // 100cm
+    const HC_H = 40;       // 40cm
+    const HC_D = 40;       // 40cm
+    const HC_PANEL = 1.5;
+    const HC_Y0 = COUNTER_H + COUNTER_SLAB + 60; // 60cm au-dessus du plan
     const HC_CX = KITCHEN_X0 + KIT_W / 2;
     const HC_CZ = ROOM_D + KITCHEN_DEPTH - HC_D / 2; // plaqué contre le mur fond
 
@@ -212,30 +212,30 @@ export function buildKitchen(scene) {
 
   // --- Double plaque de cuisson ---
   {
-    const plateY = COUNTER_H + COUNTER_SLAB + 0.02;
+    const plateY = COUNTER_H + COUNTER_SLAB + 0.2;
     const plateCX = KITCHEN_X0 + CABINET_W + FRIDGE_W / 2;
     const plateCZ = ROOM_D + KIT_D / 2;
     const plateMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.2, metalness: 0.1 });
     const ringMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.3, metalness: 0.2 });
 
-    const baseGeo = new THREE.BoxGeometry(FRIDGE_W - 1, 0.1, KIT_D - 1.5);
+    const baseGeo = new THREE.BoxGeometry(FRIDGE_W - 10, 1, KIT_D - 15);
     const base = new THREE.Mesh(baseGeo, plateMat);
-    base.position.set(plateCX, plateY + 0.05, plateCZ);
+    base.position.set(plateCX, plateY + 0.5, plateCZ);
     scene.add(base);
 
-    const ringGeo = new THREE.TorusGeometry(0.9, 0.12, 8, 24);
-    const diskGeo = new THREE.CircleGeometry(0.9, 24);
+    const ringGeo = new THREE.TorusGeometry(9, 1.2, 8, 24);
+    const diskGeo = new THREE.CircleGeometry(9, 24);
     const diskMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.15 });
 
     for (let i = 0; i < 2; i++) {
-      const offsetZ = (i === 0) ? -1.2 : 1.2;
+      const offsetZ = (i === 0) ? -12 : 12;
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.rotation.x = -Math.PI / 2;
-      ring.position.set(plateCX, plateY + 0.12, plateCZ + offsetZ);
+      ring.position.set(plateCX, plateY + 1.2, plateCZ + offsetZ);
       scene.add(ring);
       const disk = new THREE.Mesh(diskGeo, diskMat);
       disk.rotation.x = -Math.PI / 2;
-      disk.position.set(plateCX, plateY + 0.11, plateCZ + offsetZ);
+      disk.position.set(plateCX, plateY + 1.1, plateCZ + offsetZ);
       scene.add(disk);
     }
   }

@@ -95,15 +95,15 @@ const buildingChildren = scene.children.filter(c => !c.isLight);
 
 // Jardin : délimitation en pointillés (toujours visible)
 {
-  const Y = 0.5;
+  const Y = 5;
   const gardenMat = new THREE.LineDashedMaterial({
-    color: 0x4a9e54, dashSize: 0.8, gapSize: 0.4,
+    color: 0x4a9e54, dashSize: 8, gapSize: 4,
   });
   const JC_Z = GARDEN_JC_Z;
   const pts = [
-    [-1, -1],  [-1, -14],           // côté MA ext, 1.30m en -Z
-    [-1, -14], [31, JC_Z],          // diagonale // MDiag → MB ext
-    [31, JC_Z], [31, -1],           // côté MB ext, vertical
+    [-10, -10],  [-10, -140],           // côté MA ext, 1.30m en -Z
+    [-10, -140], [310, JC_Z],          // diagonale // MDiag → MB ext
+    [310, JC_Z], [310, -10],           // côté MB ext, vertical
   ];
   for (let i = 0; i < pts.length; i += 2) {
     const geo = new THREE.BufferGeometry().setFromPoints([
@@ -229,7 +229,7 @@ document.getElementById('floor-toggle')?.addEventListener('click', toggleFloorOn
 // CAMERAS
 // =============================================
 const CX = ROOM_W / 2, CY = WALL_H / 2, CZ = ROOM_D / 2;
-const DIST = 60;
+const DIST = 600;
 
 let activeCamera = camera;
 let is2D = false;
@@ -239,7 +239,7 @@ let orthoControls = null;
 function updateOrthoFrustum() {
   if (!orthoCamera) return;
   const aspect = innerWidth / innerHeight;
-  const viewH = 80;
+  const viewH = 800;
   const viewW = viewH * aspect;
   orthoCamera.left = -viewW / 2;
   orthoCamera.right = viewW / 2;
@@ -253,14 +253,14 @@ function enter2DTop() {
   exitWalk();
 
   if (!orthoCamera) {
-    orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
+    orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 5000);
     orthoCamera.layers.enable(LAYER_EQUIPMENT);
     orthoCamera.layers.enable(LAYER_FURNITURE);
     orthoCamera.layers.enable(LAYER_NETWORKS);
   }
   updateOrthoFrustum();
   orthoCamera.up.set(0, 0, -1); // -Z vers le haut de l'écran (nord)
-  orthoCamera.position.set(CX, 200, CZ);
+  orthoCamera.position.set(CX, 2000, CZ);
   orthoCamera.lookAt(CX, 0, CZ);
 
   controls.enabled = false;
@@ -299,9 +299,9 @@ function exit2D() {
 // =============================================
 const POV_ROOMS = {
   living:   { x: ROOM_W / 2,                            z: ROOM_D / 2 },
-  entry:    { x: (DOOR_START + ROOM_W) / 2,             z: ROOM_D + 7.5 },
-  bathroom: { x: (-NICHE_DEPTH + DOOR_START) / 2,       z: (KITCHEN_Z + 60) / 2 },
-  garden:   { x: 15,                                     z: -12 },
+  entry:    { x: (DOOR_START + ROOM_W) / 2,             z: ROOM_D + 75 },
+  bathroom: { x: (-NICHE_DEPTH + DOOR_START) / 2,       z: (KITCHEN_Z + 600) / 2 },
+  garden:   { x: 150,                                    z: -120 },
 };
 
 const keysPressed = new Set();
@@ -336,8 +336,8 @@ addEventListener('keyup', (e) => {
 // =============================================
 // WALK MODE (marche libre première personne)
 // =============================================
-const WALK_H = 17; // 1.70m
-const WALK_SPEED = 0.2;
+const WALK_H = 170; // 1.70m
+const WALK_SPEED = 2;
 const MOUSE_SENS = 0.002;
 
 let walkActive = false;
@@ -376,7 +376,7 @@ function exitWalk() {
 }
 
 function updateWalkLook() {
-  const d = 10;
+  const d = 100;
   const cosP = Math.cos(walkPitch);
   controls.target.set(
     walkPos.x + Math.sin(walkYaw) * cosP * d,
@@ -506,10 +506,10 @@ addEventListener('resize', () => {
 // =============================================
 // VUES CAMERA
 // =============================================
-const ISO = 45;
+const ISO = 450;
 const VIEWS = {
-  perspective: { pos: [-20, 35, -15],      target: [CX, WALL_H / 3, CZ] },
-  top:         { pos: [CX, DIST + 20, CZ], target: [CX, 0, CZ] },
+  perspective: { pos: [-200, 350, -150],      target: [CX, WALL_H / 3, CZ] },
+  top:         { pos: [CX, DIST + 200, CZ], target: [CX, 0, CZ] },
   bottom:      { pos: [CX, -DIST, CZ],     target: [CX, 0, CZ] },
   front:       { pos: [CX, CY, CZ + DIST], target: [CX, CY, CZ] },
   back:        { pos: [CX, CY, CZ - DIST], target: [CX, CY, CZ] },
@@ -580,4 +580,4 @@ document.addEventListener('minimap-pov', (e) => {
 
 
 console.log(`LEGO Room: ${ROOM_W}x${ROOM_D}, ${allBricks.length} briques`);
-console.log(`Porte: studs ${DOOR_START}-${DOOR_END} (80cm), 30cm du mur gauche`);
+console.log(`Porte: ${DOOR_START}-${DOOR_END} (80cm), 30cm du mur gauche`);

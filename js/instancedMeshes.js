@@ -58,13 +58,15 @@ export function buildInstancedMeshes(scene, allBricks) {
 
       const topY = b.y + b.sy / 2 + STUD_HT / 2;
       if (b.axis === 'x' || b.sx > b.sz) {
-        const startX = b.x - (b.sx + GAP) / 2 + 0.5;
-        for (let s = 0; s < Math.round(b.sx + GAP); s++)
-          studPos.push(startX + s, topY, b.z);
+        const count = Math.round((b.sx + GAP) / 10);
+        const startX = b.x - (b.sx + GAP) / 2 + 5;
+        for (let s = 0; s < count; s++)
+          studPos.push(startX + s * 10, topY, b.z);
       } else {
-        const startZ = b.z - (b.sz + GAP) / 2 + 0.5;
-        for (let s = 0; s < Math.round(b.sz + GAP); s++)
-          studPos.push(b.x, topY, startZ + s);
+        const count = Math.round((b.sz + GAP) / 10);
+        const startZ = b.z - (b.sz + GAP) / 2 + 5;
+        for (let s = 0; s < count; s++)
+          studPos.push(b.x, topY, startZ + s * 10);
       }
     }
 
@@ -85,11 +87,11 @@ export function buildInstancedMeshes(scene, allBricks) {
 
   // Ground
   const gnd = new THREE.Mesh(
-    new THREE.PlaneGeometry(200, 200),
+    new THREE.PlaneGeometry(2000, 2000),
     new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9 })
   );
   gnd.rotation.x = -Math.PI / 2;
-  gnd.position.y = -1;
+  gnd.position.y = -10;
   gnd.receiveShadow = true;
   gnd.userData.brickType = 'ground';
   scene.add(gnd);

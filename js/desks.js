@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 
 function addBollsidan(scene, px, pz, rot, height) {
-  const DESK_W = 6.8;  // 68cm
-  const DESK_D = 3.6;  // 36cm
-  const TOP_T = 0.25;
-  const LEG_R = 0.15;
+  const DESK_W = 68;  // 68cm
+  const DESK_D = 36;  // 36cm
+  const TOP_T = 2.5;
+  const LEG_R = 1.5;
 
   const wMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.35 });
   const legMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, metalness: 0.3, roughness: 0.3 });
@@ -24,20 +24,20 @@ function addBollsidan(scene, px, pz, rot, height) {
   deskGroup.add(top);
 
   // Colonne excentrée
-  const legOffsetX = -DESK_W / 2 + 0.5;
-  const colH = height - 0.3;
+  const legOffsetX = -DESK_W / 2 + 5;
+  const colH = height - 3;
   const col = new THREE.Mesh(
     new THREE.CylinderGeometry(LEG_R, LEG_R * 1.2, colH, 8),
     legMat
   );
-  col.position.set(legOffsetX, colH / 2 + 0.3, 0);
+  col.position.set(legOffsetX, colH / 2 + 3, 0);
   deskGroup.add(col);
 
   // Base en C
-  const baseH = 0.25;
-  const baseL = DESK_W - 0.5;
+  const baseH = 2.5;
+  const baseL = DESK_W - 5;
   const base = new THREE.Mesh(
-    new THREE.BoxGeometry(baseL, baseH, 0.4),
+    new THREE.BoxGeometry(baseL, baseH, 4),
     legMat
   );
   base.position.set(legOffsetX + baseL / 2, baseH / 2, 0);
@@ -45,18 +45,18 @@ function addBollsidan(scene, px, pz, rot, height) {
   deskGroup.add(base);
 
   // Pieds stabilisateurs
-  const footGeo = new THREE.BoxGeometry(0.3, 0.12, 2.0);
+  const footGeo = new THREE.BoxGeometry(3, 1.2, 20);
   const foot1 = new THREE.Mesh(footGeo, legMat);
-  foot1.position.set(legOffsetX, 0.06, 0);
+  foot1.position.set(legOffsetX, 0.6, 0);
   deskGroup.add(foot1);
   const foot2 = new THREE.Mesh(footGeo, legMat);
-  foot2.position.set(legOffsetX + baseL, 0.06, 0);
+  foot2.position.set(legOffsetX + baseL, 0.6, 0);
   deskGroup.add(foot2);
 
   scene.add(deskGroup);
 }
 
 export function buildDesks(scene) {
-  addBollsidan(scene, 2.2, 6.8, -Math.PI / 2, 7.2);
-  addBollsidan(scene, 22, 17, 0, 5.5);
+  addBollsidan(scene, 22, 68, -Math.PI / 2, 72);
+  addBollsidan(scene, 220, 170, 0, 55);
 }

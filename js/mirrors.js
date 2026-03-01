@@ -3,8 +3,8 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 import {
   ROOM_D, NUM_LAYERS, BRICK_H,
   KITCHEN_X1, DOOR_START,
-  KALLAX_CELL, KALLAX_PANEL,
 } from './config.js';
+import { kallaxW } from './kallax.js';
 
 // Patch Reflector pour que sa caméra virtuelle hérite des layers de la caméra principale
 // (Three.js r170 ne copie pas layers.mask dans onBeforeRender)
@@ -28,13 +28,13 @@ export function buildMirrors(scene) {
   // 3x MIROIR IKEA NISSEDAL 60x60 - Mur D
   // =============================================
   {
-    const MIRROR_SIZE = 6;
+    const MIRROR_SIZE = 60;
     const MIRROR_CX = (KITCHEN_X1 + DOOR_START) / 2;
-    const MIRROR_Z = ROOM_D - 0.02;
+    const MIRROR_Z = ROOM_D - 0.2;
     const WALL_TOP = NUM_LAYERS * BRICK_H;
 
-    const FRAME_T = 0.2;
-    const FRAME_D = 0.15;
+    const FRAME_T = 2;
+    const FRAME_D = 1.5;
 
     for (let i = 0; i < 3; i++) {
       const mirrorY = WALL_TOP - MIRROR_SIZE / 2 - i * MIRROR_SIZE;
@@ -46,7 +46,7 @@ export function buildMirrors(scene) {
         textureHeight: 512,
         color: 0xbbbbbb,
       });
-      mir.position.set(MIRROR_CX, mirrorY, fz - 0.01);
+      mir.position.set(MIRROR_CX, mirrorY, fz - 0.1);
       mir.rotation.y = Math.PI;
       patchReflectorLayers(mir);
       scene.add(mir);
@@ -71,16 +71,16 @@ export function buildMirrors(scene) {
   // 3x MIROIR IKEA NISSEDAL 40x150 - Mur A + 4e 70x160
   // =============================================
   {
-    const MA_W = 4;
-    const MA_H = 15;
-    const MA_FRAME_T = 0.18;
-    const MA_FRAME_D = 0.12;
+    const MA_W = 40;
+    const MA_H = 150;
+    const MA_FRAME_T = 1.8;
+    const MA_FRAME_D = 1.2;
 
-    const K2_W_CALC = 1 * KALLAX_CELL + 2 * KALLAX_PANEL;
-    const MA_START_Z = K2_W_CALC + 1;
+    const K1_W = kallaxW(1); // 1-col Kallax total width
+    const MA_START_Z = K1_W + 10;
 
-    const MA_X = 0.02 + MA_FRAME_D / 2;
-    const MA_BOTTOM_Y = 0.6;
+    const MA_X = 0.2 + MA_FRAME_D / 2;
+    const MA_BOTTOM_Y = 6;
 
     for (let i = 0; i < 3; i++) {
       const mz = MA_START_Z + MA_W / 2 + i * MA_W;
@@ -94,7 +94,7 @@ export function buildMirrors(scene) {
         color: 0xbbbbbb,
       });
       mir.rotation.y = Math.PI / 2;
-      mir.position.set(fx + 0.01, my, mz);
+      mir.position.set(fx + 0.1, my, mz);
       patchReflectorLayers(mir);
       scene.add(mir);
 
@@ -113,8 +113,8 @@ export function buildMirrors(scene) {
     }
 
     // 4e miroir NISSEDAL 70x160cm
-    const M4_W = 7;
-    const M4_H = 16;
+    const M4_W = 70;
+    const M4_H = 160;
     const m4z = MA_START_Z + 3 * MA_W + M4_W / 2;
     const m4y = MA_BOTTOM_Y + M4_H / 2;
     const m4x = MA_X;
@@ -126,7 +126,7 @@ export function buildMirrors(scene) {
       color: 0xbbbbbb,
     });
     mir4.rotation.y = Math.PI / 2;
-    mir4.position.set(m4x + 0.01, m4y, m4z);
+    mir4.position.set(m4x + 0.1, m4y, m4z);
     patchReflectorLayers(mir4);
     scene.add(mir4);
 

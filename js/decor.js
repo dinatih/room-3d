@@ -10,47 +10,49 @@ import {
   KITCHEN_DEPTH,
   KITCHEN_Z,
   DOOR_START,
-  KALLAX_CELL,
-  KALLAX_PANEL,
   KALLAX_DEPTH,
+  KALLAX_FRAME,
+  KALLAX_CELL_H,
+  KALLAX_PANEL,
 } from "./config.js";
 import { addSingleDrona } from "./drona.js";
+import { kallaxW, kallaxH } from "./kallax.js";
 
 export function buildDecor(scene) {
   // =============================================
   // 4 DRONA - 2 sur MACKAPÄR, 2 sur Kallax 2x5
   // =============================================
   {
-    const DF = 3.3; // face 33x33cm
-    const DD = 3.8; // profondeur 38cm
+    const DF = 33; // face 33x33cm
+    const DD = 38; // profondeur 38cm
 
     // 2 sur MACKAPÄR
-    const mpTopY = 20;
-    const mpCX = -NICHE_DEPTH + 7.8 / 2;
-    const mpCZ = ROOM_D - (2 * KALLAX_CELL + 3 * KALLAX_PANEL) - 3.2 / 2;
+    const mpTopY = 200;
+    const mpCX = -NICHE_DEPTH + 78 / 2;
+    const mpCZ = ROOM_D - kallaxW(2) - 32 / 2;
 
-    addSingleDrona(scene, mpCX - 1.8, mpTopY + DF / 2, mpCZ, DF, DF, DD);
-    addSingleDrona(scene, mpCX + 1.8, mpTopY + DF / 2, mpCZ, DF, DF, DD);
+    addSingleDrona(scene, mpCX - 18, mpTopY + DF / 2, mpCZ, DF, DF, DD);
+    addSingleDrona(scene, mpCX + 18, mpTopY + DF / 2, mpCZ, DF, DF, DD);
 
     // 1 sur Kallax 2x3 (angle C+B), poussé contre mur C (Z=0)
-    const k1TopY = 3 * KALLAX_CELL + 4 * KALLAX_PANEL; // 10.5
-    const k1CX = ROOM_W - 2; // 28
+    const k1TopY = kallaxH(3);
+    const k1CX = ROOM_W - 20; // 280
     addSingleDrona(scene, k1CX, k1TopY + DF / 2, DF / 2, DF, DF, DD);
 
     // 2 sur Kallax 2x5
-    const k4TopY = 17.4 + 0.075;
-    const k4CX = -NICHE_DEPTH + 4 / 2;
-    const k4CZ = ROOM_D - (2 * KALLAX_CELL + 3 * KALLAX_PANEL) / 2;
+    const k4TopY = kallaxH(5);
+    const k4CX = -NICHE_DEPTH + KALLAX_DEPTH / 2;
+    const k4CZ = ROOM_D - kallaxW(2) / 2;
 
-    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ - 1.8, DF, DF, DD);
-    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ + 1.8, DF, DF, DD);
+    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ - 18, DF, DF, DD);
+    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ + 18, DF, DF, DD);
 
     // 1 sur meuble SDB côté évier (cbnE), légèrement décalé du coin
     addSingleDrona(
       scene,
-      DOOR_START - 2.8,
-      6 + DF / 2,
-      KITCHEN_Z + 3,
+      DOOR_START - 28,
+      60 + DF / 2,
+      KITCHEN_Z + 30,
       DD,
       DF,
       DF,
@@ -61,11 +63,11 @@ export function buildDecor(scene) {
   // 3 DRONA - sur le meuble haut cuisine
   // =============================================
   {
-    const dronaFace = 3.3; // 33cm
-    const dronaDepth = 3.8; // 38cm
+    const dronaFace = 33; // 33cm
+    const dronaDepth = 38; // 38cm
 
-    const hcTopY = 19.5;
-    const HC_D = 4;
+    const hcTopY = 195;
+    const HC_D = 40;
     const hcCZ = ROOM_D + KITCHEN_DEPTH - HC_D / 2;
     const KIT_W = KITCHEN_X1 - KITCHEN_X0;
 
@@ -89,12 +91,12 @@ export function buildDecor(scene) {
   // CONGÉLATEUR CHIQ CSD46D4E
   // =============================================
   {
-    const FRZ_W = 4.5;
-    const FRZ_D = 4.7;
-    const FRZ_H = 5;
+    const FRZ_W = 45;
+    const FRZ_D = 47;
+    const FRZ_H = 50;
 
-    const frzZ = 23.6 + 0.5 + FRZ_W / 2;
-    const frzX = FRZ_D / 2 + 0.1;
+    const frzZ = 236 + 5 + FRZ_W / 2;
+    const frzX = FRZ_D / 2 + 1;
     const frzBaseY = 0;
 
     const frzMat = new THREE.MeshStandardMaterial({
@@ -117,33 +119,33 @@ export function buildDecor(scene) {
     scene.add(body);
 
     const door = new THREE.Mesh(
-      new THREE.BoxGeometry(0.08, FRZ_H - 0.4, FRZ_W - 0.3),
+      new THREE.BoxGeometry(0.8, FRZ_H - 4, FRZ_W - 3),
       frzMat,
     );
-    door.position.set(frzX + FRZ_D / 2 + 0.04, frzBaseY + FRZ_H / 2, frzZ);
+    door.position.set(frzX + FRZ_D / 2 + 0.4, frzBaseY + FRZ_H / 2, frzZ);
     scene.add(door);
 
     const handle = new THREE.Mesh(
-      new THREE.BoxGeometry(0.12, 2.5, 0.15),
+      new THREE.BoxGeometry(1.2, 25, 1.5),
       frzMatDark,
     );
     handle.position.set(
-      frzX + FRZ_D / 2 + 0.1,
+      frzX + FRZ_D / 2 + 1,
       frzBaseY + FRZ_H / 2,
-      frzZ + FRZ_W / 2 - 0.5,
+      frzZ + FRZ_W / 2 - 5,
     );
     scene.add(handle);
 
     for (const dz of [-1, 1]) {
       for (const dx of [-1, 1]) {
         const foot = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.15, 0.15, 0.15, 8),
+          new THREE.CylinderGeometry(1.5, 1.5, 1.5, 8),
           frzMatDark,
         );
         foot.position.set(
-          frzX + dx * (FRZ_D / 2 - 0.3),
-          frzBaseY + 0.075,
-          frzZ + dz * (FRZ_W / 2 - 0.3),
+          frzX + dx * (FRZ_D / 2 - 3),
+          frzBaseY + 0.75,
+          frzZ + dz * (FRZ_W / 2 - 3),
         );
         scene.add(foot);
       }
@@ -153,31 +155,31 @@ export function buildDecor(scene) {
     addSingleDrona(
       scene,
       frzX,
-      frzBaseY + FRZ_H + 3.3 / 2,
+      frzBaseY + FRZ_H + 33 / 2,
       frzZ,
-      3.3,
-      3.3,
-      3.8,
+      33,
+      33,
+      38,
     );
   }
 
   // =============================================
   // ÉTAGÈRE LACK IKEA 110x26cm - Mur MA
-  // 20cm au-dessus du miroir 4 (70x160), alignée avec le bout du mur MA (Z=28)
+  // 20cm au-dessus du miroir 4 (70x160), alignée avec le bout du mur MA (Z=280)
   // =============================================
   {
-    const LACK_W = 11; // 110cm le long de Z
-    const LACK_D = 2.6; // 26cm profondeur le long de X
-    const LACK_H = 0.5; // 5cm épaisseur
+    const LACK_W = 110; // 110cm le long de Z
+    const LACK_D = 26; // 26cm profondeur le long de X
+    const LACK_H = 5; // 5cm épaisseur
 
-    // Miroir 4 : top Y = 0.6 + 16 = 16.6
-    const M4_TOP_Y = 0.6 + 16;
-    const LACK_Y = M4_TOP_Y + 2 + LACK_H / 2; // 20cm au-dessus + demi-épaisseur
+    // Miroir 4 : top Y = 6 + 160 = 166
+    const M4_TOP_Y = 6 + 160;
+    const LACK_Y = M4_TOP_Y + 20 + LACK_H / 2; // 20cm au-dessus + demi-épaisseur
 
-    // Aligné avec le bout du mur MA (Z=28)
-    const LACK_Z1 = NICHE_Z_START; // 28
-    const LACK_CZ = LACK_Z1 - LACK_W / 2; // 22.5
-    const LACK_CX = LACK_D / 2; // 1.3
+    // Aligné avec le bout du mur MA (Z=280)
+    const LACK_Z1 = NICHE_Z_START; // 280
+    const LACK_CZ = LACK_Z1 - LACK_W / 2; // 225
+    const LACK_CX = LACK_D / 2; // 13
 
     const lackMat = new THREE.MeshStandardMaterial({
       color: 0xf0f0f0,
@@ -197,12 +199,12 @@ export function buildDecor(scene) {
   // TRINGLE MURALE MULIG IKEA 80cm - Mur MA, à la suite de l'étagère LACK
   // =============================================
   {
-    const MUL_W = 8; // 80cm le long de Z
-    const MUL_D = 2.6; // 26cm profondeur depuis le mur
-    const MUL_MOUNT_Y = WALL_H - 2; // 20cm du plafond (2 studs en dessous)
+    const MUL_W = 80; // 80cm le long de Z
+    const MUL_D = 26; // 26cm profondeur depuis le mur
+    const MUL_MOUNT_Y = WALL_H - 20; // 20cm du plafond
 
-    const mulZ0 = NICHE_Z_START - 11; // 17 (après étagère)
-    const mulCZ = mulZ0 - MUL_W / 2; // 13
+    const mulZ0 = NICHE_Z_START - 110; // 170 (après étagère)
+    const mulCZ = mulZ0 - MUL_W / 2; // 130
 
     const mulMat = new THREE.MeshStandardMaterial({
       color: 0xf0f0f0,
@@ -212,7 +214,7 @@ export function buildDecor(scene) {
       color: 0xd0d0d0,
       roughness: 0.3,
     });
-    const r = 0.15;
+    const r = 1.5;
 
     // Barre horizontale (tringle)
     const bar = new THREE.Mesh(
@@ -224,10 +226,10 @@ export function buildDecor(scene) {
     scene.add(bar);
 
     // 2 supports muraux
-    for (const dz of [-MUL_W / 2 + 0.5, MUL_W / 2 - 0.5]) {
+    for (const dz of [-MUL_W / 2 + 5, MUL_W / 2 - 5]) {
       // Bras horizontal (du mur vers la barre)
       const arm = new THREE.Mesh(
-        new THREE.BoxGeometry(MUL_D, 0.2, 0.2),
+        new THREE.BoxGeometry(MUL_D, 2, 2),
         bracketMat,
       );
       arm.position.set(MUL_D / 2, MUL_MOUNT_Y, mulCZ + dz);
@@ -235,10 +237,10 @@ export function buildDecor(scene) {
 
       // Plaque murale
       const plate = new THREE.Mesh(
-        new THREE.BoxGeometry(0.15, 1, 0.8),
+        new THREE.BoxGeometry(1.5, 10, 8),
         bracketMat,
       );
-      plate.position.set(0.075, MUL_MOUNT_Y, mulCZ + dz);
+      plate.position.set(0.75, MUL_MOUNT_Y, mulCZ + dz);
       scene.add(plate);
     }
 
@@ -251,23 +253,23 @@ export function buildDecor(scene) {
       color: 0x999999,
       roughness: 0.3,
     });
-    const pantH = 6; // 60cm de longueur
-    const pantW = 3.5; // 35cm plié (le long de X)
-    const pantT = 0.25; // épaisseur tissu
+    const pantH = 60; // 60cm de longueur
+    const pantW = 35; // 35cm plié (le long de X)
+    const pantT = 2.5; // épaisseur tissu
 
-    for (const pz of [mulCZ - 2.5, mulCZ, mulCZ + 2.5]) {
+    for (const pz of [mulCZ - 25, mulCZ, mulCZ + 25]) {
       // Pince sur la barre
       const clip = new THREE.Mesh(
-        new THREE.BoxGeometry(0.3, 0.5, 0.4),
+        new THREE.BoxGeometry(3, 5, 4),
         pantClipMat,
       );
-      clip.position.set(MUL_D, MUL_MOUNT_Y + 0.15, pz);
+      clip.position.set(MUL_D, MUL_MOUNT_Y + 1.5, pz);
       scene.add(clip);
 
       // Corps du pantalon (2 jambes côte à côte)
-      for (const dx of [-0.7, 0.7]) {
+      for (const dx of [-7, 7]) {
         const leg = new THREE.Mesh(
-          new THREE.BoxGeometry(pantW / 2 - 0.15, pantH, pantT),
+          new THREE.BoxGeometry(pantW / 2 - 1.5, pantH, pantT),
           pantMat,
         );
         leg.position.set(MUL_D + dx, MUL_MOUNT_Y - pantH / 2, pz);
@@ -281,10 +283,10 @@ export function buildDecor(scene) {
   // ÉCRAN TV 70x40cm - Angle mur C + B
   // =============================================
   {
-    const TV_W = 7; // 70cm
-    const TV_H = 4; // 40cm
-    const TV_D = 0.15; // épaisseur
-    const TV_Y = WALL_H - 1 - TV_H / 2; // 10cm du plafond
+    const TV_W = 70; // 70cm
+    const TV_H = 40; // 40cm
+    const TV_D = 1.5; // épaisseur
+    const TV_Y = WALL_H - 10 - TV_H / 2; // 10cm du plafond
 
     const tvMat = new THREE.MeshStandardMaterial({
       color: 0x111111,
@@ -292,7 +294,7 @@ export function buildDecor(scene) {
       metalness: 0.4,
     });
     const tv = new THREE.Mesh(new THREE.BoxGeometry(TV_W, TV_H, TV_D), tvMat);
-    tv.position.set(ROOM_W - 2.5, TV_Y, 2.5);
+    tv.position.set(ROOM_W - 25, TV_Y, 25);
     tv.rotation.y = (3 * Math.PI) / 4; // face vers le centre du séjour
     tv.castShadow = true;
     scene.add(tv);
@@ -304,12 +306,12 @@ export function buildDecor(scene) {
       metalness: 0.8,
     });
     const screen = new THREE.Mesh(
-      new THREE.PlaneGeometry(TV_W - 0.3, TV_H - 0.3),
+      new THREE.PlaneGeometry(TV_W - 3, TV_H - 3),
       screenMat,
     );
-    screen.position.set(ROOM_W - 2.5, TV_Y, 2.5);
+    screen.position.set(ROOM_W - 25, TV_Y, 25);
     screen.rotation.y = (3 * Math.PI) / 4;
-    screen.translateZ(TV_D / 2 + 0.01);
+    screen.translateZ(TV_D / 2 + 0.1);
     scene.add(screen);
   }
 
@@ -317,15 +319,15 @@ export function buildDecor(scene) {
   // DESSERTE SUNNERSTA 56x36x90cm - Entre lit et Kallax 1x4, mur B
   // =============================================
   {
-    const SW = 5.6; // 56cm le long de X (largeur)
-    const SD = 3.6; // 36cm le long de Z (profondeur)
-    const SH = 9.0; // 90cm hauteur
-    const LEG_T = 0.15;
-    const SHELF_T = 0.1;
+    const SW = 56; // 56cm le long de X (largeur)
+    const SD = 36; // 36cm le long de Z (profondeur)
+    const SH = 90; // 90cm hauteur
+    const LEG_T = 1.5;
+    const SHELF_T = 1;
 
-    // Position : contre mur B, entre lit (fin ~Z=27.35) et Kallax 1x4 (début ~Z=30.4)
+    // Position : contre mur B, entre lit (fin ~Z=273.5) et Kallax 1x4 (début ~Z=304)
     const sCX = ROOM_W - SW / 2;
-    const sCZ = 28.9;
+    const sCZ = 289;
 
     const frameMat = new THREE.MeshStandardMaterial({
       color: 0xe0e0e0,
@@ -355,7 +357,7 @@ export function buildDecor(scene) {
     }
 
     // 3 plateaux (bas, milieu, haut)
-    for (const sy of [0.5, SH / 2, SH - 0.5]) {
+    for (const sy of [5, SH / 2, SH - 5]) {
       const shelf = new THREE.Mesh(
         new THREE.BoxGeometry(SW - LEG_T * 2, SHELF_T, SD - LEG_T * 2),
         shelfMat,
@@ -374,13 +376,13 @@ export function buildDecor(scene) {
     for (const dx of [-1, 1]) {
       for (const dz of [-1, 1]) {
         const wheel = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.15, 0.15, 0.12, 8),
+          new THREE.CylinderGeometry(1.5, 1.5, 1.2, 8),
           wheelMat,
         );
         wheel.position.set(
-          sCX + dx * (SW / 2 - 0.3),
-          0.06,
-          sCZ + dz * (SD / 2 - 0.3),
+          sCX + dx * (SW / 2 - 3),
+          0.6,
+          sCZ + dz * (SD / 2 - 3),
         );
         scene.add(wheel);
       }
@@ -410,18 +412,18 @@ export function buildDecor(scene) {
     });
 
     const scootGroup = new THREE.Group();
-    scootGroup.position.set(28.2, 0, 46);
+    scootGroup.position.set(282, 0, 460);
     scootGroup.rotation.y = 0; // avant vers +Z (vers le couloir)
 
-    const WHEEL_R = 0.5;
-    const DECK_L = 5.5;
-    const DECK_W = 1.5;
-    const DECK_H = 0.2;
-    const DECK_Y = WHEEL_R + 0.3;
-    const STEM_H = 9;
-    const STEM_R = 0.15;
-    const HBAR_W = 4.7;
-    const FRONT_Z = -DECK_L / 2 + 0.3;
+    const WHEEL_R = 5;
+    const DECK_L = 55;
+    const DECK_W = 15;
+    const DECK_H = 2;
+    const DECK_Y = WHEEL_R + 3;
+    const STEM_H = 90;
+    const STEM_R = 1.5;
+    const HBAR_W = 47;
+    const FRONT_Z = -DECK_L / 2 + 3;
 
     // Deck (plateforme)
     const deck = new THREE.Mesh(
@@ -434,14 +436,14 @@ export function buildDecor(scene) {
 
     // Grip antidérapant sur le deck
     const grip = new THREE.Mesh(
-      new THREE.BoxGeometry(DECK_W - 0.1, 0.02, DECK_L - 0.6),
+      new THREE.BoxGeometry(DECK_W - 1, 0.2, DECK_L - 6),
       gripMat,
     );
-    grip.position.set(0, DECK_Y + DECK_H / 2 + 0.01, 0);
+    grip.position.set(0, DECK_Y + DECK_H / 2 + 0.1, 0);
     scootGroup.add(grip);
 
     // Roue avant
-    const wheelGeo = new THREE.CylinderGeometry(WHEEL_R, WHEEL_R, 0.3, 16);
+    const wheelGeo = new THREE.CylinderGeometry(WHEEL_R, WHEEL_R, 3, 16);
     const frontWheel = new THREE.Mesh(wheelGeo, wheelMat);
     frontWheel.rotation.z = Math.PI / 2;
     frontWheel.position.set(0, WHEEL_R, FRONT_Z);
@@ -450,22 +452,22 @@ export function buildDecor(scene) {
     // Roue arrière
     const rearWheel = new THREE.Mesh(wheelGeo, wheelMat);
     rearWheel.rotation.z = Math.PI / 2;
-    rearWheel.position.set(0, WHEEL_R, DECK_L / 2 - 0.3);
+    rearWheel.position.set(0, WHEEL_R, DECK_L / 2 - 3);
     scootGroup.add(rearWheel);
 
     // Garde-boue arrière
     const fender = new THREE.Mesh(
-      new THREE.BoxGeometry(0.4, 0.06, WHEEL_R * 1.5),
+      new THREE.BoxGeometry(4, 0.6, WHEEL_R * 1.5),
       scootMat,
     );
-    fender.position.set(0, WHEEL_R * 1.6, DECK_L / 2 - 0.1);
+    fender.position.set(0, WHEEL_R * 1.6, DECK_L / 2 - 1);
     fender.rotation.x = -0.3;
     scootGroup.add(fender);
 
     // Fourche avant (2 tiges)
-    for (const side of [-0.2, 0.2]) {
+    for (const side of [-2, 2]) {
       const forkTube = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.06, 0.06, DECK_Y - WHEEL_R + 0.1, 6),
+        new THREE.CylinderGeometry(0.6, 0.6, DECK_Y - WHEEL_R + 1, 6),
         scootMat,
       );
       forkTube.position.set(side, WHEEL_R + (DECK_Y - WHEEL_R) / 2, FRONT_Z);
@@ -496,11 +498,11 @@ export function buildDecor(scene) {
     // Poignées (grips rouges)
     for (const side of [-1, 1]) {
       const gripHandle = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.18, 0.18, 0.8, 8),
+        new THREE.CylinderGeometry(1.8, 1.8, 8, 8),
         scootAccentMat,
       );
       gripHandle.rotation.z = Math.PI / 2;
-      gripHandle.position.set(side * (HBAR_W / 2 - 0.3), 0, 0);
+      gripHandle.position.set(side * (HBAR_W / 2 - 3), 0, 0);
       hbarGroup.add(gripHandle);
     }
 
@@ -508,11 +510,11 @@ export function buildDecor(scene) {
 
     // Phare avant
     const headlight = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.15, 0.15, 0.05, 8),
+      new THREE.CylinderGeometry(1.5, 1.5, 0.5, 8),
       scootAccentMat,
     );
     headlight.rotation.x = Math.PI / 2;
-    headlight.position.set(0, DECK_Y + STEM_H - 1, FRONT_Z - 0.2);
+    headlight.position.set(0, DECK_Y + STEM_H - 10, FRONT_Z - 2);
     scootGroup.add(headlight);
 
     scene.add(scootGroup);
@@ -522,10 +524,10 @@ export function buildDecor(scene) {
   // CORBEILLES IKEA FNISS (×2)
   // =============================================
   {
-    const FN_R_TOP = 1.4;    // 28cm diamètre haut
-    const FN_R_BOT = 0.95;   // 19cm diamètre bas
-    const FN_H = 2.8;        // 28cm hauteur
-    const FN_THICK = 0.06;
+    const FN_R_TOP = 14;    // 28cm diamètre haut
+    const FN_R_BOT = 9.5;   // 19cm diamètre bas
+    const FN_H = 28;        // 28cm hauteur
+    const FN_THICK = 0.6;
 
     const fnMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
     const fnInnerMat = new THREE.MeshStandardMaterial({
@@ -555,7 +557,7 @@ export function buildDecor(scene) {
         fnMat,
       );
       bottom.rotation.x = -Math.PI / 2;
-      bottom.position.y = 0.05;
+      bottom.position.y = 0.5;
       group.add(bottom);
       // Lèvre supérieure (anneau)
       const rim = new THREE.Mesh(
@@ -571,21 +573,21 @@ export function buildDecor(scene) {
       return group;
     }
 
-    addFniss(11, 50);    // SDB, à côté meuble vasque
-    addFniss(7.5, 26);  // Séjour, en face du congélateur
+    addFniss(110, 500);    // SDB, à côté meuble vasque
+    addFniss(75, 260);  // Séjour, en face du congélateur
   }
 
   // =============================================
   // CANAPÉ DE JARDIN (rouge, côté est)
   // =============================================
   {
-    const SOFA_W = 16;   // 160cm le long de Z
-    const SOFA_D = 6;    // 60cm profondeur (X)
-    const SOFA_H = 9;    // 90cm hauteur totale
-    const SEAT_H = 4;    // 40cm hauteur assise
-    const BACK_T = 1;    // 10cm épaisseur dossier
-    const ARM_W = 1;     // 10cm largeur accoudoir
-    const ARM_H = 6;     // 60cm hauteur accoudoir
+    const SOFA_W = 160;   // 160cm le long de Z
+    const SOFA_D = 60;    // 60cm profondeur (X)
+    const SOFA_H = 90;    // 90cm hauteur totale
+    const SEAT_H = 40;    // 40cm hauteur assise
+    const BACK_T = 10;    // 10cm épaisseur dossier
+    const ARM_W = 10;     // 10cm largeur accoudoir
+    const ARM_H = 60;     // 60cm hauteur accoudoir
 
     const sofaMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.7 });
 
@@ -621,7 +623,7 @@ export function buildDecor(scene) {
       sofaGroup.add(arm);
     }
 
-    sofaGroup.position.set(30 - SOFA_D / 2, 0, -11);
+    sofaGroup.position.set(300 - SOFA_D / 2, 0, -110);
     scene.add(sofaGroup);
   }
 
@@ -629,11 +631,11 @@ export function buildDecor(scene) {
   // CANAPÉ DE JARDIN 2 (rouge, sans accoudoirs, côté est)
   // =============================================
   {
-    const S2_W = 10;    // 100cm le long de Z
-    const S2_D = 6;     // 60cm profondeur (X)
-    const S2_H = 10;    // 100cm hauteur totale
-    const S2_SEAT = 4;  // 40cm hauteur assise
-    const S2_BACK = 1;  // 10cm épaisseur dossier
+    const S2_W = 100;    // 100cm le long de Z
+    const S2_D = 60;     // 60cm profondeur (X)
+    const S2_H = 100;    // 100cm hauteur totale
+    const S2_SEAT = 40;  // 40cm hauteur assise
+    const S2_BACK = 10;  // 10cm épaisseur dossier
 
     const sofa2Mat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.7 });
     const sofa2Group = new THREE.Group();
@@ -658,7 +660,7 @@ export function buildDecor(scene) {
     sofa2Group.add(back2);
 
     sofa2Group.rotation.y = Math.PI;
-    sofa2Group.position.set(31 - 6 - 6 - S2_D / 2 - 6, 0, -9);
+    sofa2Group.position.set(310 - 60 - 60 - S2_D / 2 - 60, 0, -90);
     scene.add(sofa2Group);
   }
 
@@ -666,18 +668,18 @@ export function buildDecor(scene) {
   // CHAISE PLIANTE IKEA VIHALS (rouge)
   // =============================================
   {
-    const VH_W = 4.3;     // 43cm largeur
-    const VH_D = 4.7;     // 47cm profondeur
-    const VH_H = 8;       // 80cm hauteur totale
-    const VH_SEAT_H = 4.5; // 45cm hauteur assise
-    const VH_SEAT_W = 3.9; // 39cm largeur assise
-    const VH_SEAT_D = 4.1; // 41cm profondeur assise
-    const VH_SEAT_T = 0.2; // épaisseur assise
-    const VH_BACK_H = VH_H - VH_SEAT_H; // 3.5 hauteur dossier
-    const VH_LEG_R = 0.12; // rayon tubes
+    const VH_W = 43;     // 43cm largeur
+    const VH_D = 47;     // 47cm profondeur
+    const VH_H = 80;       // 80cm hauteur totale
+    const VH_SEAT_H = 45; // 45cm hauteur assise
+    const VH_SEAT_W = 39; // 39cm largeur assise
+    const VH_SEAT_D = 41; // 41cm profondeur assise
+    const VH_SEAT_T = 2; // épaisseur assise
+    const VH_BACK_H = VH_H - VH_SEAT_H; // 35 hauteur dossier
+    const VH_LEG_R = 1.2; // rayon tubes
 
     const vhRedMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 });
-    const legGeo = new THREE.CylinderGeometry(VH_LEG_R, VH_LEG_R, 1, 6);
+    const legGeo = new THREE.CylinderGeometry(VH_LEG_R, VH_LEG_R, 10, 6);
 
     const vhGroup = new THREE.Group();
 
@@ -704,41 +706,41 @@ export function buildDecor(scene) {
     // Pieds avant (droits)
     for (const sx of [-1, 1]) {
       const leg = new THREE.Mesh(legGeo, vhRedMat);
-      leg.scale.y = VH_SEAT_H;
-      leg.position.set(sx * (VH_W / 2 - VH_LEG_R), VH_SEAT_H / 2, VH_SEAT_D / 2 - 0.3);
+      leg.scale.y = VH_SEAT_H / 10;
+      leg.position.set(sx * (VH_W / 2 - VH_LEG_R), VH_SEAT_H / 2, VH_SEAT_D / 2 - 3);
       vhGroup.add(leg);
     }
 
     // Pieds arrière (montants du dossier, jusqu'en haut)
     for (const sx of [-1, 1]) {
       const leg = new THREE.Mesh(legGeo, vhRedMat);
-      leg.scale.y = VH_H;
-      leg.position.set(sx * (VH_W / 2 - VH_LEG_R), VH_H / 2, -VH_SEAT_D / 2 + 0.3);
+      leg.scale.y = VH_H / 10;
+      leg.position.set(sx * (VH_W / 2 - VH_LEG_R), VH_H / 2, -VH_SEAT_D / 2 + 3);
       leg.rotation.x = backAngle * 0.5;
       vhGroup.add(leg);
     }
 
     // Traverse avant + arrière
-    for (const tz of [VH_SEAT_D / 2 - 0.3, -VH_SEAT_D / 2 + 0.3]) {
+    for (const tz of [VH_SEAT_D / 2 - 3, -VH_SEAT_D / 2 + 3]) {
       const bar = new THREE.Mesh(legGeo, vhRedMat);
       bar.rotation.z = Math.PI / 2;
-      bar.scale.y = VH_W - VH_LEG_R * 4;
+      bar.scale.y = (VH_W - VH_LEG_R * 4) / 10;
       bar.position.set(0, VH_SEAT_H * 0.3, tz);
       vhGroup.add(bar);
     }
 
-    vhGroup.position.set(20, 0, 10);
+    vhGroup.position.set(200, 0, 100);
     scene.add(vhGroup);
   }
 
   // =============================================
-  // CAILLEBOTIS ALTAPPEN IKEA (blanc, 30×30cm = 3×3 studs)
-  // Zone jardin Z=-29 → Z=-16
+  // CAILLEBOTIS ALTAPPEN IKEA (blanc, 30×30cm)
+  // Zone jardin Z=-290 → Z=-160
   // =============================================
   {
-    const ALT_S = 3;       // 30cm = 3 studs
-    const ALT_H = 0.2;    // ~2cm épaisseur
-    const ALT_GAP = 0.06; // espacement entre dalles
+    const ALT_S = 30;       // 30cm
+    const ALT_H = 2;    // ~2cm épaisseur
+    const ALT_GAP = 0.6; // espacement entre dalles
 
     const altMat = new THREE.MeshStandardMaterial({
       color: 0xf0ece4, roughness: 0.55,
@@ -747,14 +749,14 @@ export function buildDecor(scene) {
       ALT_S - ALT_GAP, ALT_H, ALT_S - ALT_GAP,
     );
 
-    const Z0 = -29;
-    const Z1 = -16;
-    const X_RIGHT = 31;
+    const Z0 = -290;
+    const Z1 = -160;
+    const X_RIGHT = 310;
 
     // Limite gauche jardin (même formule que floor.js)
     function gardenX0(z) {
-      if (z + 0.5 >= -14) return -1;
-      return Math.ceil(-1 - 11 * (z + 0.5 + 14) / 7);
+      if (z + 5 >= -140) return -10;
+      return Math.ceil((-10 - 110 * (z + 5 + 140) / 70) / 10) * 10;
     }
 
     for (let tz = Z0; tz + ALT_S <= Z1; tz += ALT_S) {
@@ -773,10 +775,10 @@ export function buildDecor(scene) {
   // Derrière le canapé ouest (sofa 2)
   // =============================================
   {
-    const CB_L = 12.2;   // 122cm le long de Z
-    const CB_W = 5.5;    // 55cm profondeur (X)
-    const CB_H = 6.2;    // 62cm hauteur
-    const LID_H = 0.3;   // couvercle
+    const CB_L = 122;   // 122cm le long de Z
+    const CB_W = 55;    // 55cm profondeur (X)
+    const CB_H = 62;    // 62cm hauteur
+    const LID_H = 3;   // couvercle
 
     const cbMat = new THREE.MeshStandardMaterial({
       color: 0x4a4a4a, roughness: 0.6,
@@ -785,9 +787,9 @@ export function buildDecor(scene) {
       color: 0x555555, roughness: 0.5,
     });
 
-    // Sofa 2 : dos à X≈7, Z=-8
-    const cbX = 7 - CB_W / 2;  // juste derrière le dossier
-    const cbZ = -9;
+    // Sofa 2 : dos à X≈70, Z=-80
+    const cbX = 70 - CB_W / 2;  // juste derrière le dossier
+    const cbZ = -90;
 
     // Corps
     const body = new THREE.Mesh(
@@ -801,7 +803,7 @@ export function buildDecor(scene) {
 
     // Couvercle (légèrement plus large)
     const lid = new THREE.Mesh(
-      new THREE.BoxGeometry(CB_W + 0.15, LID_H, CB_L + 0.15),
+      new THREE.BoxGeometry(CB_W + 1.5, LID_H, CB_L + 1.5),
       cbLidMat,
     );
     lid.position.set(cbX, CB_H - LID_H / 2, cbZ);
@@ -814,10 +816,10 @@ export function buildDecor(scene) {
     });
     for (const dz of [-1, 1]) {
       const handle = new THREE.Mesh(
-        new THREE.BoxGeometry(1.5, 0.3, 0.15),
+        new THREE.BoxGeometry(15, 3, 1.5),
         handleMat,
       );
-      handle.position.set(cbX, CB_H * 0.55, cbZ + dz * (CB_L / 2 + 0.08));
+      handle.position.set(cbX, CB_H * 0.55, cbZ + dz * (CB_L / 2 + 0.8));
       scene.add(handle);
     }
   }
@@ -826,10 +828,10 @@ export function buildDecor(scene) {
   // CASQUETTE ROUGE - Mur B, 1m au-dessus du lit
   // =============================================
   {
-    const CAP_R = 0.9;     // rayon calotte ~9cm
-    const BAND_H = 0.6;   // hauteur bande tour de tête ~6cm
-    const VISOR_L = 0.7;   // longueur visière ~7cm
-    const VISOR_W = 1.4;   // largeur visière
+    const CAP_R = 9;     // rayon calotte ~9cm
+    const BAND_H = 6;   // hauteur bande tour de tête ~6cm
+    const VISOR_L = 7;   // longueur visière ~7cm
+    const VISOR_W = 14;   // largeur visière
 
     const capMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.65 });
 
@@ -854,7 +856,7 @@ export function buildDecor(scene) {
 
     // Bouton sommital
     const button = new THREE.Mesh(
-      new THREE.SphereGeometry(0.12, 8, 4),
+      new THREE.SphereGeometry(1.2, 8, 4),
       capMat,
     );
     button.position.y = BAND_H / 2 + CAP_R;
@@ -864,7 +866,7 @@ export function buildDecor(scene) {
     const visorShape = new THREE.Shape();
     const VR = VISOR_W / 2;
     const VL = VISOR_L;
-    const cr = 0.2;
+    const cr = 2;
     visorShape.moveTo(0, -VR);
     visorShape.lineTo(-VL + cr, -VR);
     visorShape.quadraticCurveTo(-VL, -VR, -VL, -VR + cr);
@@ -873,17 +875,17 @@ export function buildDecor(scene) {
     visorShape.lineTo(0, VR);
     visorShape.closePath();
     const visorGeo = new THREE.ExtrudeGeometry(visorShape, {
-      depth: 0.06, bevelEnabled: false,
+      depth: 0.6, bevelEnabled: false,
     });
     const visor = new THREE.Mesh(visorGeo, capMat);
     visor.rotation.x = Math.PI / 2;
-    visor.position.set(-CAP_R + 0.1, -BAND_H / 2, 0);
+    visor.position.set(-CAP_R + 1, -BAND_H / 2, 0);
     visor.castShadow = true;
     capGroup.add(visor);
 
     // Rotation 90° : dome → -X (vers la pièce), ouverture → +X (mur), visière → bas
     capGroup.rotation.z = Math.PI / 2;
-    capGroup.position.set(29.9, 14.4, 17.35);
+    capGroup.position.set(299, 144, 173.5);
     scene.add(capGroup);
   }
 
@@ -892,14 +894,14 @@ export function buildDecor(scene) {
   // À côté du canapé ouest (côté sud)
   // =============================================
   {
-    const VG_W = 3.7;     // 37cm (le long de Z)
-    const VG_D = 5.0;     // 50cm (le long de X)
-    const VG_H = 7.4;     // 74cm hauteur
-    const TOP_Y = 5.08;   // plateau haut à 51cm
-    const BOT_Y = 2.29;   // plateau bas à 23cm
-    const TRAY_T = 0.1;   // épaisseur fond plateau
-    const TRAY_RIM = 0.25; // hauteur rebord
-    const LEG_R = 0.08;   // rayon tube acier
+    const VG_W = 37;     // 37cm (le long de Z)
+    const VG_D = 50;     // 50cm (le long de X)
+    const VG_H = 74;     // 74cm hauteur
+    const TOP_Y = 50.8;   // plateau haut à 50.8cm
+    const BOT_Y = 22.9;   // plateau bas à 22.9cm
+    const TRAY_T = 1;   // épaisseur fond plateau
+    const TRAY_RIM = 2.5; // hauteur rebord
+    const LEG_R = 0.8;   // rayon tube acier
 
     const vgMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.35 });
     const vgFrameMat = new THREE.MeshStandardMaterial({
@@ -914,9 +916,9 @@ export function buildDecor(scene) {
       for (const dz of [-1, 1]) {
         const leg = new THREE.Mesh(legGeo, vgFrameMat);
         leg.position.set(
-          dx * (VG_D / 2 - 0.3),
+          dx * (VG_D / 2 - 3),
           VG_H / 2,
-          dz * (VG_W / 2 - 0.2),
+          dz * (VG_W / 2 - 2),
         );
         vgGroup.add(leg);
       }
@@ -925,11 +927,11 @@ export function buildDecor(scene) {
     // Traverses horizontales (bas, connectent les pieds en X)
     for (const dz of [-1, 1]) {
       const bar = new THREE.Mesh(
-        new THREE.CylinderGeometry(LEG_R, LEG_R, VG_D - 0.6, 6),
+        new THREE.CylinderGeometry(LEG_R, LEG_R, VG_D - 6, 6),
         vgFrameMat,
       );
       bar.rotation.z = Math.PI / 2;
-      bar.position.set(0, 0.4, dz * (VG_W / 2 - 0.2));
+      bar.position.set(0, 4, dz * (VG_W / 2 - 2));
       vgGroup.add(bar);
     }
 
@@ -937,7 +939,7 @@ export function buildDecor(scene) {
     function addTray(y) {
       // Fond
       const base = new THREE.Mesh(
-        new THREE.BoxGeometry(VG_D - 0.4, TRAY_T, VG_W - 0.3),
+        new THREE.BoxGeometry(VG_D - 4, TRAY_T, VG_W - 3),
         vgMat,
       );
       base.position.y = y;
@@ -947,18 +949,18 @@ export function buildDecor(scene) {
       // Rebords (4 côtés)
       for (const dz of [-1, 1]) {
         const rim = new THREE.Mesh(
-          new THREE.BoxGeometry(VG_D - 0.4, TRAY_RIM, TRAY_T),
+          new THREE.BoxGeometry(VG_D - 4, TRAY_RIM, TRAY_T),
           vgMat,
         );
-        rim.position.set(0, y + TRAY_RIM / 2, dz * (VG_W / 2 - 0.15));
+        rim.position.set(0, y + TRAY_RIM / 2, dz * (VG_W / 2 - 1.5));
         vgGroup.add(rim);
       }
       for (const dx of [-1, 1]) {
         const rim = new THREE.Mesh(
-          new THREE.BoxGeometry(TRAY_T, TRAY_RIM, VG_W - 0.3),
+          new THREE.BoxGeometry(TRAY_T, TRAY_RIM, VG_W - 3),
           vgMat,
         );
-        rim.position.set(dx * (VG_D / 2 - 0.2), y + TRAY_RIM / 2, 0);
+        rim.position.set(dx * (VG_D / 2 - 2), y + TRAY_RIM / 2, 0);
         vgGroup.add(rim);
       }
     }
@@ -966,8 +968,8 @@ export function buildDecor(scene) {
     addTray(BOT_Y);
     addTray(TOP_Y);
 
-    // Position : côté sud du canapé ouest (sofa2 à X=10, Z=-8, spans Z=-13→-3)
-    vgGroup.position.set(10, 0, -14 - VG_W / 2 - 0.3);
+    // Position : côté sud du canapé ouest (sofa2 à X=100, Z=-80, spans Z=-130→-30)
+    vgGroup.position.set(100, 0, -140 - VG_W / 2 - 3);
     scene.add(vgGroup);
   }
 
@@ -976,13 +978,13 @@ export function buildDecor(scene) {
   // Épaules 41cm, hauteur 45cm, tour de tête 56cm
   // =============================================
   {
-    const SHOULDER_W = 4.1;   // 41cm largeur épaules
-    const TOTAL_H = 4.5;      // 45cm hauteur totale
-    const HEAD_R = 0.89;      // circ 56cm → r≈8.9cm
-    const NECK_R = 0.4;       // ~8cm diamètre cou
-    const NECK_H = 0.8;       // ~8cm hauteur cou
-    const SHOULDER_H = 0.8;   // épaisseur épaules
-    const SHOULDER_D = 2.2;   // profondeur épaules ~22cm
+    const SHOULDER_W = 41;   // 41cm largeur épaules
+    const TOTAL_H = 45;      // 45cm hauteur totale
+    const HEAD_R = 8.9;      // circ 56cm → r≈8.9cm
+    const NECK_R = 4;       // ~8cm diamètre cou
+    const NECK_H = 8;       // ~8cm hauteur cou
+    const SHOULDER_H = 8;   // épaisseur épaules
+    const SHOULDER_D = 22;   // profondeur épaules ~22cm
 
     const mannMat = new THREE.MeshStandardMaterial({
       color: 0xf5f0eb, roughness: 0.5,
@@ -1019,10 +1021,10 @@ export function buildDecor(scene) {
 
       // Nez (petit cône)
       const nose = new THREE.Mesh(
-        new THREE.ConeGeometry(0.12, 0.25, 6), mannMat,
+        new THREE.ConeGeometry(1.2, 2.5, 6), mannMat,
       );
       nose.rotation.x = -Math.PI / 2;
-      nose.position.set(0, SHOULDER_H + NECK_H + HEAD_R, HEAD_R + 0.05);
+      nose.position.set(0, SHOULDER_H + NECK_H + HEAD_R, HEAD_R + 0.5);
       g.add(nose);
 
       g.rotation.y = rotY;
@@ -1030,22 +1032,22 @@ export function buildDecor(scene) {
       scene.add(g);
     }
 
-    // 1) Sur desserte SUNNERSTA (sCX=27.2, sCZ=28.9, top Y=9.0)
-    addMannequin(ROOM_W - 5.6 / 2, 9.0, 28.9, 0);
+    // 1) Sur desserte SUNNERSTA (sCX=272, sCZ=289, top Y=90)
+    addMannequin(ROOM_W - 56 / 2, 90, 289, 0);
 
-    // 2) Sur Kallax 1x4 NO (cx=2, cz=1.8, top≈13.95), face centre séjour
+    // 2) Sur Kallax 1x4 NO (cx=20, cz=18, top≈139.5), face centre séjour
     const k14CX = KALLAX_DEPTH / 2;
-    const k14CZ = (KALLAX_CELL + 2 * KALLAX_PANEL) / 2;
-    const k14Top = 4 * KALLAX_CELL + 5 * KALLAX_PANEL;
+    const k14CZ = kallaxW(1) / 2;
+    const k14Top = kallaxH(4);
     addMannequin(k14CX, k14Top, k14CZ,
-      Math.atan2(15 - k14CX, 20 - k14CZ));
+      Math.atan2(150 - k14CX, 200 - k14CZ));
 
-    // 3) Sur étagère LACK mur A (cx=1.3, cz=22.5, top≈19.1), face centre séjour
-    const lackCX = 2.6 / 2;  // LACK_D / 2
-    const lackCZ = NICHE_Z_START - 11 / 2;  // 28 - 5.5 = 22.5
-    const lackTopY = 0.6 + 16 + 2 + 0.5;  // M4_TOP_Y + 2 + LACK_H = 19.1
+    // 3) Sur étagère LACK mur A (cx=13, cz=225, top≈191), face centre séjour
+    const lackCX = 26 / 2;  // LACK_D / 2
+    const lackCZ = NICHE_Z_START - 110 / 2;  // 280 - 55 = 225
+    const lackTopY = 6 + 160 + 20 + 5;  // M4_TOP_Y + 20 + LACK_H = 191
     addMannequin(lackCX, lackTopY, lackCZ,
-      Math.atan2(15 - lackCX, 20 - lackCZ));
+      Math.atan2(150 - lackCX, 200 - lackCZ));
   }
 
   // =============================================
@@ -1053,15 +1055,15 @@ export function buildDecor(scene) {
   // 51cm largeur × 19cm hauteur × 37cm profondeur, planche milieu retirée
   // =============================================
   {
-    const NF_W = 5.1;     // 51cm largeur (le long de Z dans le Kallax)
-    const NF_H = 1.9;     // 19cm hauteur
-    const NF_D = 3.7;     // 37cm profondeur (le long de X)
+    const NF_W = 51;     // 51cm largeur (le long de Z dans le Kallax)
+    const NF_H = 19;     // 19cm hauteur
+    const NF_D = 37;     // 37cm profondeur (le long de X)
 
-    // Kallax 2x5 : cx=1, cz=36.475
-    // 2e rangée du haut : plancher Y = top shelf r=3 = 10.5
-    const k25CX = -NICHE_DEPTH + KALLAX_DEPTH / 2;  // 1
-    const k25CZ = ROOM_D - (2 * KALLAX_CELL + 3 * KALLAX_PANEL) / 2;  // 36.475
-    const shelfTopY = 3 * (KALLAX_CELL + KALLAX_PANEL) + KALLAX_PANEL;  // 10.5
+    // Kallax 2x5 : cx=10, cz=364.75
+    // 2e rangée du haut : plancher Y = top shelf r=3 = 105
+    const k25CX = -NICHE_DEPTH + KALLAX_DEPTH / 2;
+    const k25CZ = ROOM_D - kallaxW(2) / 2;
+    const shelfTopY = KALLAX_FRAME + 3 * (KALLAX_CELL_H + KALLAX_PANEL); // floor of row 3 from bottom
 
     const nfBlack = new THREE.MeshStandardMaterial({
       color: 0x1a1a1a, roughness: 0.4, metalness: 0.2,
@@ -1084,7 +1086,7 @@ export function buildDecor(scene) {
 
     // Couvercle / dessus (légèrement plus large, argenté)
     const lid = new THREE.Mesh(
-      new THREE.BoxGeometry(NF_D + 0.1, 0.1, NF_W + 0.1),
+      new THREE.BoxGeometry(NF_D + 1, 1, NF_W + 1),
       nfSilver,
     );
     lid.position.y = NF_H;
@@ -1092,26 +1094,26 @@ export function buildDecor(scene) {
 
     // Panneau de contrôle (face avant)
     const panel = new THREE.Mesh(
-      new THREE.BoxGeometry(NF_D * 0.6, NF_H * 0.5, 0.05),
+      new THREE.BoxGeometry(NF_D * 0.6, NF_H * 0.5, 0.5),
       nfSilver,
     );
-    panel.position.set(0, NF_H * 0.55, NF_W / 2 + 0.03);
+    panel.position.set(0, NF_H * 0.55, NF_W / 2 + 0.3);
     nfGroup.add(panel);
 
     // Écran LCD
     const screen = new THREE.Mesh(
-      new THREE.BoxGeometry(1.2, 0.5, 0.02),
+      new THREE.BoxGeometry(12, 5, 0.2),
       new THREE.MeshStandardMaterial({ color: 0x003322, roughness: 0.1, metalness: 0.3 }),
     );
-    screen.position.set(0, NF_H * 0.6, NF_W / 2 + 0.06);
+    screen.position.set(0, NF_H * 0.6, NF_W / 2 + 0.6);
     nfGroup.add(screen);
 
     // Poignée sur le couvercle
     const handle = new THREE.Mesh(
-      new THREE.BoxGeometry(1.5, 0.15, 0.3),
+      new THREE.BoxGeometry(15, 1.5, 3),
       nfSilver,
     );
-    handle.position.set(0, NF_H + 0.15, 0);
+    handle.position.set(0, NF_H + 1.5, 0);
     nfGroup.add(handle);
 
     nfGroup.position.set(k25CX, shelfTopY, k25CZ);

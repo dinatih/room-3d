@@ -16,18 +16,18 @@ const ROOMS = [
     nameFr: 'Jardin',
     nameEn: 'garden',
     contains: (x, z) => {
-      if (x < -1 || x > 31 || z > -1) return false;
-      return z >= -14 - 7 * (x + 1) / 11;
+      if (x < -10 || x > 310 || z > -10) return false;
+      return z >= -140 - 70 * (x + 10) / 110;
     },
-    labelX: 15,
-    labelZ: -12,
+    labelX: 150,
+    labelZ: -120,
     fills: () => [],
     fillPath: (ctx, tx, tz) => {
       ctx.beginPath();
-      ctx.moveTo(tx(-1), tz(-1));
-      ctx.lineTo(tx(-1), tz(-14));
-      ctx.lineTo(tx(31), tz(GARDEN_JC_Z));
-      ctx.lineTo(tx(31), tz(-1));
+      ctx.moveTo(tx(-10), tz(-10));
+      ctx.lineTo(tx(-10), tz(-140));
+      ctx.lineTo(tx(310), tz(GARDEN_JC_Z));
+      ctx.lineTo(tx(310), tz(-10));
       ctx.closePath();
       ctx.fill();
     },
@@ -37,19 +37,19 @@ const ROOMS = [
     nameEn: 'entry',
     contains: (x, z) => {
       if (z <= ROOM_D || z > SDB_Z_END) return false;
-      // Placard (X=13→19, Z=41→46)
+      // Placard (X=130→190, Z=410→460)
       if (x >= KITCHEN_X1 && x <= DOOR_START && z <= KITCHEN_Z) return true;
-      // Couloir rect (X=19→30, Z=41→53)
+      // Couloir rect (X=190→300, Z=410→530)
       if (x >= DOOR_START && x <= ROOM_W && z <= DIAG_AZ) return true;
-      // Triangle diagonal (X=19→diagX, Z=53→60)
+      // Triangle diagonal (X=190→diagX, Z=530→600)
       if (x >= DOOR_START && z <= SDB_Z_END && x <= diagXat(z)) return true;
       return false;
     },
     labelX: (DOOR_START + ROOM_W) / 2,
-    labelZ: ROOM_D + 7,
+    labelZ: ROOM_D + 70,
     fills: (tx, tz, S) => [
-      [tx(KITCHEN_X1), tz(ROOM_D + 1), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D - 1) * S],
-      [tx(DOOR_START), tz(ROOM_D + 1), (ROOM_W - DOOR_START) * S, (DIAG_AZ - ROOM_D - 1) * S],
+      [tx(KITCHEN_X1), tz(ROOM_D + 10), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D - 10) * S],
+      [tx(DOOR_START), tz(ROOM_D + 10), (ROOM_W - DOOR_START) * S, (DIAG_AZ - ROOM_D - 10) * S],
     ],
     fillPath: (ctx, tx, tz) => {
       ctx.beginPath();
@@ -69,9 +69,9 @@ const ROOMS = [
       return z > SDB_Z_END && z <= DIAG_CZ && x <= diagXat(z);
     },
     labelX: (DOOR_START - NICHE_DEPTH) / 2,
-    labelZ: 53,
+    labelZ: 530,
     fills: (tx, tz, S) => [
-      [tx(-NICHE_DEPTH), tz(KITCHEN_Z + 1), (DOOR_START + NICHE_DEPTH) * S, (SDB_Z_END - KITCHEN_Z - 1) * S],
+      [tx(-NICHE_DEPTH), tz(KITCHEN_Z + 10), (DOOR_START + NICHE_DEPTH) * S, (SDB_Z_END - KITCHEN_Z - 10) * S],
     ],
     fillPath: (ctx, tx, tz) => {
       ctx.beginPath();
@@ -90,7 +90,7 @@ const ROOMS = [
       (x >= -NICHE_DEPTH && x < 0 && z >= NICHE_Z_START && z <= ROOM_D) ||
       (x >= KITCHEN_X0 && x <= KITCHEN_X1 && z > ROOM_D && z <= KITCHEN_Z),
     labelX: ROOM_W / 2,
-    labelZ: ROOM_D / 2 - 2,
+    labelZ: ROOM_D / 2 - 20,
     fills: (tx, tz, S) => [
       [tx(0), tz(0), ROOM_W * S, ROOM_D * S],
       [tx(-NICHE_DEPTH), tz(NICHE_Z_START), NICHE_DEPTH * S, (ROOM_D - NICHE_Z_START) * S],
@@ -105,11 +105,11 @@ export function buildMinimap() {
   const ctx = canvas.getContext('2d');
 
   // Limites du plan
-  const PAD = 2;
+  const PAD = 20;
   const X_MIN = -NICHE_DEPTH - PAD;
   const X_MAX = ROOM_W + PAD;
-  const Z_MIN = -35;
-  const Z_MAX = 76;
+  const Z_MIN = -350;
+  const Z_MAX = 760;
 
   // Ajuster la hauteur du canvas au ratio du plan
   const ratio = (Z_MAX - Z_MIN) / (X_MAX - X_MIN);
@@ -131,9 +131,9 @@ export function buildMinimap() {
     ctx.fillRect(tx(0), tz(0), ROOM_W * S, ROOM_D * S);
     ctx.fillRect(tx(-NICHE_DEPTH), tz(NICHE_Z_START), NICHE_DEPTH * S, (ROOM_D - NICHE_Z_START) * S);
     ctx.fillRect(tx(KITCHEN_X0), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_X0) * S, (KITCHEN_Z - ROOM_D) * S);
-    ctx.fillRect(tx(KITCHEN_X1), tz(ROOM_D + 1), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D - 1) * S); // placard
+    ctx.fillRect(tx(KITCHEN_X1), tz(ROOM_D + 10), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D - 10) * S); // placard
     // Entrée : rect + triangle
-    ctx.fillRect(tx(DOOR_START), tz(ROOM_D + 1), (ROOM_W - DOOR_START) * S, (DIAG_AZ - ROOM_D - 1) * S);
+    ctx.fillRect(tx(DOOR_START), tz(ROOM_D + 10), (ROOM_W - DOOR_START) * S, (DIAG_AZ - ROOM_D - 10) * S);
     ctx.beginPath();
     ctx.moveTo(tx(DOOR_START), tz(DIAG_AZ));
     ctx.lineTo(tx(ROOM_W), tz(DIAG_AZ));
@@ -141,7 +141,7 @@ export function buildMinimap() {
     ctx.closePath();
     ctx.fill();
     // SDB : rect + triangle sud (douche + PC-SDB + sous-douche)
-    ctx.fillRect(tx(-NICHE_DEPTH), tz(KITCHEN_Z + 1), (DOOR_START + NICHE_DEPTH) * S, (SDB_Z_END - KITCHEN_Z - 1) * S);
+    ctx.fillRect(tx(-NICHE_DEPTH), tz(KITCHEN_Z + 10), (DOOR_START + NICHE_DEPTH) * S, (SDB_Z_END - KITCHEN_Z - 10) * S);
     ctx.beginPath();
     ctx.moveTo(tx(-NICHE_DEPTH), tz(SDB_Z_END));
     ctx.lineTo(tx(DOOR_START), tz(SDB_Z_END));
@@ -159,7 +159,7 @@ export function buildMinimap() {
     }
 
     // Helpers
-    const wallW = Math.max(S * 0.8, 1.5);
+    const wallW = Math.max(S * 8, 1.5);
 
     function drawWall(x1, z1, x2, z2) {
       ctx.strokeStyle = '#bbb';
@@ -218,25 +218,25 @@ export function buildMinimap() {
     drawWall(-NICHE_DEPTH, KITCHEN_Z, DOOR_START, KITCHEN_Z);
 
     // === PORTE COULISSANTE PLACARD ===
-    drawDoor(DOOR_START, ROOM_D + 1, DOOR_START, KITCHEN_Z);
+    drawDoor(DOOR_START, ROOM_D + 10, DOOR_START, KITCHEN_Z);
 
     // === COULOIR STUDIO ===
     drawWall(DOOR_START, KITCHEN_Z, DOOR_START, CORR_DOOR_S);
     drawDoor(DOOR_START, CORR_DOOR_S, DOOR_START, CORR_DOOR_E);
-    drawWall(DOOR_START, CORR_DOOR_E, DOOR_START, KITCHEN_Z + 14);
+    drawWall(DOOR_START, CORR_DOOR_E, DOOR_START, KITCHEN_Z + 140);
 
-    drawWall(ROOM_W, ROOM_D + 1, ROOM_W, DIAG_AZ);
+    drawWall(ROOM_W, ROOM_D + 10, ROOM_W, DIAG_AZ);
 
     // === SDB OUEST (toute la longueur) ===
     drawWall(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, DIAG_CZ);
 
     // === MUR SDB SUD (vitrage douche + PC-SDB) ===
-    drawWindow(-NICHE_DEPTH, 60, 6, 60);
-    drawDoor(6, 60, DOOR_START, 60);
+    drawWindow(-NICHE_DEPTH, 600, 60, 600);
+    drawDoor(60, 600, DOOR_START, 600);
 
     // === DOUCHE ===
-    drawWall(6, 60, 6, 67);
-    drawWall(-NICHE_DEPTH, 67, 6, 67);
+    drawWall(60, 600, 60, 670);
+    drawWall(-NICHE_DEPTH, 670, 60, 670);
 
     // === MUR DIAGONAL BATIMENT (avec porte d'entrée) ===
     const DA = { x: DIAG_AX, z: DIAG_AZ };
@@ -245,8 +245,8 @@ export function buildMinimap() {
     const dX = (DC.x - DA.x) / dLen;
     const dZ = (DC.z - DA.z) / dLen;
 
-    const doorS = { x: DA.x + 1 * dX, z: DA.z + 1 * dZ };
-    const doorE = { x: DA.x + 10 * dX, z: DA.z + 10 * dZ };
+    const doorS = { x: DA.x + 10 * dX, z: DA.z + 10 * dZ };
+    const doorE = { x: DA.x + 100 * dX, z: DA.z + 100 * dZ };
 
     drawWall(DA.x, DA.z, doorS.x, doorS.z);
     drawDoor(doorS.x, doorS.z, doorE.x, doorE.z);
@@ -255,10 +255,10 @@ export function buildMinimap() {
     // === JARDIN (pointillés verts) ===
     ctx.fillStyle = 'rgba(74, 158, 84, 0.08)';
     ctx.beginPath();
-    ctx.moveTo(tx(-1), tz(-1));
-    ctx.lineTo(tx(-1), tz(-14));
-    ctx.lineTo(tx(31), tz(GARDEN_JC_Z));
-    ctx.lineTo(tx(31), tz(-1));
+    ctx.moveTo(tx(-10), tz(-10));
+    ctx.lineTo(tx(-10), tz(-140));
+    ctx.lineTo(tx(310), tz(GARDEN_JC_Z));
+    ctx.lineTo(tx(310), tz(-10));
     ctx.closePath();
     ctx.fill();
 
@@ -266,9 +266,9 @@ export function buildMinimap() {
     ctx.lineWidth = Math.max(wallW * 0.5, 1);
     ctx.setLineDash([3, 2]);
     for (const [x1, z1, x2, z2] of [
-      [-1, -1, -1, -14],
-      [-1, -14, 31, GARDEN_JC_Z],
-      [31, GARDEN_JC_Z, 31, -1],
+      [-10, -10, -10, -140],
+      [-10, -140, 310, GARDEN_JC_Z],
+      [310, GARDEN_JC_Z, 310, -10],
     ]) {
       ctx.beginPath();
       ctx.moveTo(tx(x1), tz(z1));

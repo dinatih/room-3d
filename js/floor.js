@@ -9,26 +9,26 @@ export function buildFloor(allBricks) {
   const FLOOR_Z1 = ROOM_D;
   const FLOOR_W = FLOOR_X1 - FLOOR_X0;
 
-  for (let z = FLOOR_Z0; z < FLOOR_Z1; z++) {
-    for (const b of fillRow(FLOOR_W, z % 2 === 1)) {
+  for (let z = FLOOR_Z0; z < FLOOR_Z1; z += 10) {
+    for (const b of fillRow(FLOOR_W, (z / 10) % 2 === 1)) {
       addFloorBrick(FLOOR_X0 + b.start, z, b.size);
     }
   }
 
-  // Sol niche MN (X=-1→0, Z=28→40)
-  for (let z = NICHE_Z_START; z < ROOM_D; z++) {
+  // Sol niche MN (X=-10→0, Z=280→400)
+  for (let z = NICHE_Z_START; z < ROOM_D; z += 10) {
     addFloorBrick(-NICHE_DEPTH, z, NICHE_DEPTH);
   }
 
   // Sol sous la porte P1 (z = ROOM_D, entre les montants)
   const DOOR_W = DOOR_END - DOOR_START;
-  for (const b of fillRow(DOOR_W, ROOM_D % 2 === 1)) {
+  for (const b of fillRow(DOOR_W, (ROOM_D / 10) % 2 === 1)) {
     addFloorBrick(DOOR_START + b.start, ROOM_D, b.size);
   }
 
-  // Sol ouverture cuisine (z = ROOM_D, X=3→13)
-  const KIT_OPEN_X0 = 3, KIT_OPEN_W = 10;
-  for (const b of fillRow(KIT_OPEN_W, ROOM_D % 2 === 1)) {
+  // Sol ouverture cuisine (z = ROOM_D, X=30→130)
+  const KIT_OPEN_X0 = 30, KIT_OPEN_W = 100;
+  for (const b of fillRow(KIT_OPEN_W, (ROOM_D / 10) % 2 === 1)) {
     addFloorBrick(KIT_OPEN_X0 + b.start, ROOM_D, b.size);
   }
 
@@ -36,18 +36,18 @@ export function buildFloor(allBricks) {
   // SOL LEGO VERT - Jardin (quadrilatère délimité par pointillés)
   // =============================================
   {
-    const zStart = Math.ceil(GARDEN_JC_Z); // -34
+    const zStart = Math.ceil(GARDEN_JC_Z / 10) * 10; // round up to 10cm boundary
 
-    for (let z = zStart; z < -3; z++) {
-      let x0 = -1;
-      if (z + 0.5 < -14) {
-        x0 = Math.ceil(-1 - 11 * (z + 0.5 + 14) / 7);
+    for (let z = zStart; z < -30; z += 10) {
+      let x0 = -10;
+      if (z + 5 < -140) {
+        x0 = Math.ceil((-10 - 110 * (z + 5 + 140) / 70) / 10) * 10;
       }
-      const x1 = 31;
+      const x1 = 310;
       const w = x1 - x0;
       if (w <= 0) continue;
 
-      for (const b of fillRow(w, Math.abs(z) % 2 === 1)) {
+      for (const b of fillRow(w, Math.abs(z / 10) % 2 === 1)) {
         addFloorBrick(x0 + b.start, z, b.size, 'grass');
       }
     }
@@ -74,7 +74,7 @@ export function buildParquet(allBricks) {
 // Couvre toute la surface bâtiment, épaisseur murs ext. comprise
 // =============================================
 export function buildConcreteSlab(scene) {
-  // Perpendiculaire extérieure du mur diagonal (1 stud d'épaisseur)
+  // Perpendiculaire extérieure du mur diagonal (10cm d'épaisseur)
   const diagDX = DIAG_CX - DIAG_AX;
   const diagDZ = DIAG_CZ - DIAG_AZ;
   const diagLen = Math.sqrt(diagDX * diagDX + diagDZ * diagDZ);
@@ -82,10 +82,10 @@ export function buildConcreteSlab(scene) {
   const perpZ = -diagDX / diagLen;  // composante Z vers l'extérieur
 
   // Limites extérieures des murs
-  const EXT_E = ROOM_W + 1;                 // mur B extérieur (X=31)
-  const EXT_S = -3;                          // mur C extérieur (Z=-3, 30cm)
-  const EXT_W_MAIN = -1;                     // mur A extérieur avant niche
-  const EXT_W_NICHE = -(NICHE_DEPTH + 1);   // niche/SDB extérieur (X=-2)
+  const EXT_E = ROOM_W + 10;                 // mur B extérieur (X=310)
+  const EXT_S = -30;                          // mur C extérieur (Z=-30, 30cm)
+  const EXT_W_MAIN = -10;                     // mur A extérieur avant niche
+  const EXT_W_NICHE = -(NICHE_DEPTH + 10);   // niche/SDB extérieur (X=-20)
 
   // Points extérieurs du mur diagonal
   const dAX = DIAG_AX + perpX, dAZ = DIAG_AZ + perpZ;
@@ -103,7 +103,7 @@ export function buildConcreteSlab(scene) {
   shape.lineTo(EXT_W_MAIN, NICHE_Z_START);    // 8. retour mur A principal
   // fermeture auto vers (1)
 
-  const SLAB_DEPTH = 1; // 10cm
+  const SLAB_DEPTH = 10; // 10cm
   const geo = new THREE.ExtrudeGeometry(shape, {
     depth: SLAB_DEPTH,
     bevelEnabled: false,
