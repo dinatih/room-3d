@@ -8,26 +8,49 @@ import * as THREE from 'three';
 export class Drona {
   constructor(color = 0xcc0000, width = 33, height = 33, depth = 38) {
     this.group = new THREE.Group();
-    const material = new THREE.MeshStandardMaterial({ color, roughness: 1 });
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 1 });
+    const T = 0.5; // épaisseur paroi
 
-    const body = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
-    body.castShadow = true;
-    this.group.add(body);
+    // Boîte creuse (5 faces, pas de dessus)
+    // Fond
+    const bottom = new THREE.Mesh(new THREE.BoxGeometry(width, T, depth), mat);
+    bottom.position.y = -height / 2 + T / 2;
+    this.group.add(bottom);
 
-    // Sangles horizontales (30cm de large, position haute)
-    const handleW = width - 3; // proportional to body width
-    const handleGeom = new THREE.BoxGeometry(handleW, 2.5, 0.5);
+    // Face avant / arrière
+    const fbGeo = new THREE.BoxGeometry(width, height - T, T);
+    const front = new THREE.Mesh(fbGeo, mat);
+    front.position.set(0, T / 2, depth / 2 - T / 2);
+    front.castShadow = true;
+    this.group.add(front);
+    const back = new THREE.Mesh(fbGeo, mat);
+    back.position.set(0, T / 2, -depth / 2 + T / 2);
+    back.castShadow = true;
+    this.group.add(back);
+
+    // Côtés gauche / droit
+    const sideGeo = new THREE.BoxGeometry(T, height - T, depth - T * 2);
+    const left = new THREE.Mesh(sideGeo, mat);
+    left.position.set(-width / 2 + T / 2, T / 2, 0);
+    this.group.add(left);
+    const right = new THREE.Mesh(sideGeo, mat);
+    right.position.set(width / 2 - T / 2, T / 2, 0);
+    this.group.add(right);
+
+    // Languettes (toute la largeur, partent du haut)
+    const handleH = 4;
+    const handleGeo = new THREE.BoxGeometry(width, handleH, 0.5);
     const handleMat = new THREE.MeshStandardMaterial({ color, roughness: 0.8, emissive: 0x220000 });
 
-    const posY = height / 2 - 3;
-    const posZ = depth / 2 + 0.05;
+    const hY = height / 2 - handleH / 2;
+    const hZ = depth / 2 + 0.05;
 
-    const hFront = new THREE.Mesh(handleGeom, handleMat);
-    hFront.position.set(0, posY, posZ);
+    const hFront = new THREE.Mesh(handleGeo, handleMat);
+    hFront.position.set(0, hY, hZ);
     this.group.add(hFront);
 
-    const hBack = new THREE.Mesh(handleGeom, handleMat);
-    hBack.position.set(0, posY, -posZ);
+    const hBack = new THREE.Mesh(handleGeo, handleMat);
+    hBack.position.set(0, hY, -hZ);
     this.group.add(hBack);
   }
 }
@@ -42,9 +65,10 @@ export class Drona {
  * @param {number} h - height (cm, default 33)
  * @param {number} d - depth  (cm, default 38)
  */
-export function addSingleDrona(parent, cx, cy, cz, w = 33, h = 33, d = 38) {
+export function addSingleDrona(parent, cx, cy, cz, w = 33, h = 33, d = 38, rotY = 0) {
   const drona = new Drona(0xcc0000, w, h, d);
   drona.group.position.set(cx, cy, cz);
+  if (rotY) drona.group.rotation.y = rotY;
   parent.add(drona.group);
   return drona;
 }
