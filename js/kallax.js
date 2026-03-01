@@ -1,8 +1,6 @@
-import * as THREE from 'three';
-import {
-  ROOM_W, ROOM_D, NICHE_DEPTH, KALLAX_DEPTH,
-} from './config.js';
-import { Drona } from './drona.js';
+import * as THREE from "three";
+import { ROOM_W, ROOM_D, NICHE_DEPTH, KALLAX_DEPTH } from "./config.js";
+import { Drona } from "./drona.js";
 
 // =============================================
 // KALLAX — Ported from Gemini kallax.html
@@ -54,9 +52,9 @@ export class Kallax {
     const sX = this.totalW / 2 - THICK_FRAME / 2 - 0.1;
     const sY = this.totalH / 2;
     const sZ = D_H_EXT / 2 - 2;
-    [sX, -sX].forEach(x => {
-      [sY, -sY].forEach(y => {
-        [sZ, -sZ].forEach(z => {
+    [sX, -sX].forEach((x) => {
+      [sY, -sY].forEach((y) => {
+        [sZ, -sZ].forEach((z) => {
           const p = new THREE.Vector3(x, y > 0 ? y + 0.026 : y - 0.026, z);
           p.applyMatrix4(this.group.matrixWorld);
           pos.push(p);
@@ -129,14 +127,29 @@ export function buildKallax(scene) {
   const h5 = kallaxH(5);
   const depth = KALLAX_DEPTH; // 39
 
-  // 1) KALLAX 2×3 — Angle mur C (Z=0) + mur B (X=300)
-  //    Back against mur B (+X), centered along Z starting from Z=0
+  // 1) KALLAX 2×1 + 2×2 empilés — Angle mur C (Z=0) + mur B (X=300)
+  //    Config Gemini NE : 2×1 (bas) + 2×2 (haut), tous Drona
   {
-    const k = new Kallax(2, 3);
-    k.fillAll();
-    // depth along X, width along Z
-    addKallaxToScene(scene, k, ROOM_W - depth / 2, w2 / 2, 0, Math.PI / 2);
-    kList.push(k);
+    const gStack = new THREE.Group();
+    let yNE = 0;
+
+    const neB = new Kallax(2, 1);
+    neB.group.position.y = yNE + neB.totalH / 2;
+    neB.fillAll();
+    gStack.add(neB.group);
+    kList.push(neB);
+    yNE += neB.totalH;
+
+    const neT = new Kallax(2, 2);
+    neT.group.position.y = yNE + neT.totalH / 2;
+    neT.fillAll();
+    gStack.add(neT.group);
+    kList.push(neT);
+    yNE += neT.totalH;
+
+    gStack.rotation.y = Math.PI / 2;
+    gStack.position.set(ROOM_W - depth / 2, 0, w2 / 2);
+    scene.add(gStack);
   }
 
   // 2) KALLAX 1×4 — Mur B, 60cm from mur D
@@ -181,13 +194,6 @@ export function buildKallax(scene) {
     gStack.rotation.y = -Math.PI / 2;
     gStack.position.set(-NICHE_DEPTH + depth / 2, 0, ROOM_D - w2 / 2);
     scene.add(gStack);
-  }
-
-  // Diagnostic: log Kallax sizes
-  for (const k of kList) {
-    const box = new THREE.Box3().setFromObject(k.group);
-    const size = box.getSize(new THREE.Vector3());
-    console.log(`Kallax ${k.cols}×${k.rows}: ${size.x.toFixed(1)}×${size.y.toFixed(1)}×${size.z.toFixed(1)} cm, pos=(${k.group.position.x.toFixed(1)}, ${k.group.position.y.toFixed(1)}, ${k.group.position.z.toFixed(1)})`);
   }
 
   // Screws (instanced)
