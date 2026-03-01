@@ -8,6 +8,15 @@ import {
 } from './config.js';
 import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
 
+let eastDoorGroup;
+let eastDoorOpen = false;
+
+export function toggleEastDoor() {
+  eastDoorOpen = !eastDoorOpen;
+  eastDoorGroup.rotation.y = eastDoorOpen ? Math.PI / 2 : 0;
+  return eastDoorOpen;
+}
+
 // --- Helper: mur avec ouvertures multiples ---
 function buildWallWithOpenings(wallZ, length, openings) {
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
@@ -105,31 +114,72 @@ export function buildWalls(scene) {
     addBrickX(GLASS_START, GLASS_MAX_LAYER, wz, GLASS_END - GLASS_START, 'glass_frame');
   }
 
-  // Vitrage (panneau semi-transparent)
+  // Porte-fenêtre double avec cadre PVC blanc et poignée
   {
-    const glassW = GLASS_END - GLASS_START;
-    const glassBaseY = GLASS_MIN_LAYER * BRICK_H;
-    const glassTopY = GLASS_MAX_LAYER * BRICK_H;
-    const glassH = glassTopY - glassBaseY;
-    const glassGeo = new THREE.PlaneGeometry(glassW, glassH);
-    const glassMat = new THREE.MeshPhysicalMaterial({
-      color: 0x88ccff,
-      transparent: true,
-      opacity: 0.25,
-      roughness: 0.05,
-      metalness: 0.1,
-      side: THREE.DoubleSide,
-    });
-    const glassMesh = new THREE.Mesh(glassGeo, glassMat);
-    glassMesh.position.set(GLASS_START + glassW / 2, glassBaseY + glassH / 2, -5);
-    scene.add(glassMesh);
+    const glassW = GLASS_END - GLASS_START; // 160
+    const glassBaseY = GLASS_MIN_LAYER * BRICK_H; // 30
+    const glassTopY = GLASS_MAX_LAYER * BRICK_H;  // 210
+    const glassH = glassTopY - glassBaseY;         // 180
+    const midX = GLASS_START + glassW / 2;         // 170 — axe central
+    const Z = -5;
+    const FRAME = 8; // largeur cadre PVC
+    const FRAME_D = 5; // profondeur cadre
+    const doorW = glassW / 2; // 80cm chaque
+    const innerH = glassH - FRAME * 2;
 
-    // Barre centrale
-    const barGeo = new THREE.BoxGeometry(3, glassH, 5);
-    const barMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.4 });
-    const bar = new THREE.Mesh(barGeo, barMat);
-    bar.position.set(GLASS_START + glassW / 2, glassBaseY + glassH / 2, -5);
-    scene.add(bar);
+    const pvcMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
+    const glassMat = new THREE.MeshPhysicalMaterial({
+      color: 0x88ccff, transparent: true, opacity: 0.25,
+      roughness: 0.05, metalness: 0.1, side: THREE.DoubleSide,
+    });
+    const handleMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6, roughness: 0.3 });
+
+    // Helper : ajoute un battant (cadre + vitrage) dans un parent
+    function addDoorPanel(parent, lx, ly) {
+      const top = new THREE.Mesh(new THREE.BoxGeometry(doorW, FRAME, FRAME_D), pvcMat);
+      top.position.set(lx, ly + glassH - FRAME / 2, Z);
+      parent.add(top);
+
+      const bot = new THREE.Mesh(new THREE.BoxGeometry(doorW, FRAME, FRAME_D), pvcMat);
+      bot.position.set(lx, ly + FRAME / 2, Z);
+      parent.add(bot);
+
+      const left = new THREE.Mesh(new THREE.BoxGeometry(FRAME, innerH, FRAME_D), pvcMat);
+      left.position.set(lx - doorW / 2 + FRAME / 2, ly + FRAME + innerH / 2, Z);
+      parent.add(left);
+
+      const right = new THREE.Mesh(new THREE.BoxGeometry(FRAME, innerH, FRAME_D), pvcMat);
+      right.position.set(lx + doorW / 2 - FRAME / 2, ly + FRAME + innerH / 2, Z);
+      parent.add(right);
+
+      const paneW = doorW - FRAME * 2;
+      const pane = new THREE.Mesh(new THREE.PlaneGeometry(paneW, innerH), glassMat);
+      pane.position.set(lx, ly + FRAME + innerH / 2, Z);
+      parent.add(pane);
+    }
+
+    // Battant ouest (fixe) — directement dans la scène
+    addDoorPanel(scene, GLASS_START + doorW / 2, glassBaseY);
+
+    // Battant est (ouvrant) — dans un groupe, pivot à la charnière droite (GLASS_END)
+    eastDoorGroup = new THREE.Group();
+    eastDoorGroup.position.set(GLASS_END, 0, 0);
+    addDoorPanel(eastDoorGroup, -doorW / 2, glassBaseY);
+
+    // Poignée (côté intérieur, près du centre)
+    const HANDLE_H = 20;
+    const HANDLE_Y = glassBaseY + glassH * 0.5;
+    const HANDLE_LX = -doorW + FRAME + 4; // près du bord central
+
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(3, HANDLE_H + 4, 1), handleMat);
+    plate.position.set(HANDLE_LX, HANDLE_Y, Z + FRAME_D / 2 + 0.5);
+    eastDoorGroup.add(plate);
+
+    const lever = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 8), handleMat);
+    lever.position.set(HANDLE_LX, HANDLE_Y, Z + FRAME_D / 2 + 4.5);
+    eastDoorGroup.add(lever);
+
+    scene.add(eastDoorGroup);
   }
 
   // --- Mur avant D (z = ROOM_D + 5) avec porte + ouverture cuisine ---

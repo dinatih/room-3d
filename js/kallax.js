@@ -238,10 +238,14 @@ export function buildKallax(scene) {
   );
   let sIdx = 0;
   const dummy = new THREE.Object3D();
+  const worldQuat = new THREE.Quaternion();
+  const tmpV = new THREE.Vector3();
+  const tmpS = new THREE.Vector3();
   for (const k of kList) {
+    k.group.matrixWorld.decompose(tmpV, worldQuat, tmpS);
     for (const p of k.getScrewPositions()) {
       dummy.position.copy(p);
-      dummy.rotation.copy(k.group.rotation);
+      dummy.quaternion.copy(worldQuat);
       dummy.updateMatrix();
       instScrews.setMatrixAt(sIdx++, dummy.matrix);
     }
