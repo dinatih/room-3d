@@ -4,9 +4,10 @@
 // 1 unit = 1cm
 export const ROOM_W = 300; // 3m
 export const ROOM_D = 400; // 4m
-export const WALL_H = 240; // 2.4m
+export const WALL_H = 250; // 2.5m (8 × 30cm + 1 plaque 10cm)
 export const BRICK_H = 30;
-export const NUM_LAYERS = WALL_H / BRICK_H; // 8
+export const NUM_LAYERS = 8; // 8 couches × 30cm = 240cm
+export const WALL_PLATE_H = 10; // plaque de finition haut de mur
 export const GAP = 0.8;
 export const STUD_R = 3;
 export const PLATE_H = 3.5; // hauteur d'une plate (sol fin)

@@ -1,4 +1,4 @@
-import { BRICK_SIZES, BRICK_H, GAP, PLATE_H, FLOOR_Y } from './config.js';
+import { BRICK_SIZES, BRICK_H, GAP, PLATE_H, FLOOR_Y, NUM_LAYERS, WALL_PLATE_H } from './config.js';
 
 // =============================================
 // FILL ROW WITH REAL BRICKS
@@ -34,6 +34,13 @@ export function addBrickX(startX, layer, z, size, type, rotY = 0) {
     sx: size - GAP, sy: BRICK_H - GAP, sz: 10 - GAP,
     len: size, axis: 'x', type, rotY
   });
+  if (layer === NUM_LAYERS - 1) {
+    allBricks.push({
+      x: startX + size / 2, y: NUM_LAYERS * BRICK_H + WALL_PLATE_H / 2, z,
+      sx: size - GAP, sy: WALL_PLATE_H - GAP, sz: 10 - GAP,
+      len: size, axis: 'x', type, rotY
+    });
+  }
 }
 
 export function addBrickZ(x, layer, startZ, size, type, rotY = 0) {
@@ -42,6 +49,13 @@ export function addBrickZ(x, layer, startZ, size, type, rotY = 0) {
     sx: 10 - GAP, sy: BRICK_H - GAP, sz: size - GAP,
     len: size, axis: 'z', type, rotY
   });
+  if (layer === NUM_LAYERS - 1) {
+    allBricks.push({
+      x, y: NUM_LAYERS * BRICK_H + WALL_PLATE_H / 2, z: startZ + size / 2,
+      sx: 10 - GAP, sy: WALL_PLATE_H - GAP, sz: size - GAP,
+      len: size, axis: 'z', type, rotY
+    });
+  }
 }
 
 export function addFloorBrick(x, z, size, type = 'floor') {
