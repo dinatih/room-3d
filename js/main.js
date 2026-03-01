@@ -32,6 +32,10 @@ import {
   getOrthoCamera, getIs2D,
   requestRender, startDamping,
 } from './cameraManager.js';
+import {
+  prepareBuildAnimation, startBuildAnimation,
+  stopBuildAnimation, isBuildAnimating,
+} from './buildAnimation.js';
 
 // Charger la font avant de construire les labels
 await loadFont();
@@ -81,6 +85,7 @@ buildCorridor(scene);
 buildParquet(allBricks);
 
 buildInstancedMeshes(scene, allBricks);
+prepareBuildAnimation(scene);
 buildGrid(scene);
 buildMinimap();
 
@@ -260,6 +265,25 @@ function toggleFloorOnly() {
 }
 
 document.getElementById('floor-toggle')?.addEventListener('click', toggleFloorOnly);
+
+// =============================================
+// ANIMATION CONSTRUCTION
+// =============================================
+const buildBtn = document.getElementById('build-anim-toggle');
+if (buildBtn) {
+  buildBtn.addEventListener('click', () => {
+    if (isBuildAnimating()) {
+      stopBuildAnimation();
+      buildBtn.textContent = '▶ Construction';
+    } else {
+      startBuildAnimation();
+      buildBtn.textContent = '■ Stop';
+    }
+  });
+  document.addEventListener('build-animation-complete', () => {
+    buildBtn.textContent = '▶ Construction';
+  });
+}
 
 // =============================================
 // VR session handlers

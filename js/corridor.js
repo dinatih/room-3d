@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, STUD_R, STUD_HT, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_FURNITURE } from './config.js';
+import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, STUD_R, STUD_HT, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_FURNITURE, COLORS } from './config.js';
 import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
 import { makeText } from './labels.js';
 
@@ -165,9 +165,9 @@ export function buildCorridor(scene) {
   const E_FRAME_START = E_DOOR_START - 10;
   const E_FRAME_END = E_DOOR_END + 10;
 
-  const brickMat = new THREE.MeshStandardMaterial({ color: 0xc8c8b8, roughness: 0.8 });
+  const brickMat = new THREE.MeshStandardMaterial({ color: COLORS.wall, roughness: 0.35 });
   const accentMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });
-  const studMat = new THREE.MeshStandardMaterial({ color: 0xb8b8a8, roughness: 0.8 });
+  const studMat = new THREE.MeshStandardMaterial({ color: COLORS.studWall, roughness: 0.3, metalness: 0.05 });
   const accentStudMat = new THREE.MeshStandardMaterial({ color: 0xaa0000, roughness: 0.8 });
   const studGeo = new THREE.CylinderGeometry(STUD_R, STUD_R, STUD_HT, 8);
 
@@ -177,10 +177,12 @@ export function buildCorridor(scene) {
     mesh.position.set(0, layer * BRICK_H + BRICK_H / 2, z + size / 2);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
+    mesh.userData.buildAnim = true;
     diagGroup.add(mesh);
     for (let s = 0; s < size; s += 10) {
       const stud = new THREE.Mesh(studGeo, sMat);
       stud.position.set(0, (layer + 1) * BRICK_H + STUD_HT / 2, z + s + 5);
+      stud.userData.buildAnim = true;
       diagGroup.add(stud);
     }
   }
