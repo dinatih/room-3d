@@ -53,7 +53,7 @@ export function enterWalk(x, z) {
   controls.enablePan = false;
   controls.enableZoom = false;
   const c = document.getElementById('controls');
-  if (c) c.textContent = 'Flèches / ZQSD : marcher | ←→ : pivoter | Ctrl+↑↓ : incliner | Clic+glisser : regarder | Échap : quitter';
+  if (c) c.textContent = 'Flèches / WASD : marcher | ←→ : pivoter | Ctrl+↑↓ : incliner | Alt+↑↓ : hauteur | Clic+glisser : regarder | Échap : quitter';
   requestRender();
 }
 
@@ -198,12 +198,16 @@ function renderFrame() {
     if (keysPressed.has('CtrlArrowUp'))   walkPitch = Math.min(1.4, walkPitch + KEY_PITCH);
     if (keysPressed.has('CtrlArrowDown')) walkPitch = Math.max(-1.4, walkPitch - KEY_PITCH);
 
-    // Flèches haut/bas + ZQSD/WASD = translation (si Ctrl non enfoncé)
-    if (!keysPressed.has('CtrlArrowUp') && (keysPressed.has('ArrowUp') || keysPressed.has('z') || keysPressed.has('w')))
+    // Alt + flèches haut/bas = hauteur de la caméra
+    if (keysPressed.has('AltArrowUp'))   walkPos.y += WALK_SPEED;
+    if (keysPressed.has('AltArrowDown')) walkPos.y -= WALK_SPEED;
+
+    // Flèches haut/bas + ZQSD/WASD = translation (si Ctrl/Alt non enfoncé)
+    if (!keysPressed.has('CtrlArrowUp') && !keysPressed.has('AltArrowUp') && (keysPressed.has('ArrowUp') || keysPressed.has('w')))
       { walkPos.x += fwdX; walkPos.z += fwdZ; }
-    if (!keysPressed.has('CtrlArrowDown') && (keysPressed.has('ArrowDown') || keysPressed.has('s')))
+    if (!keysPressed.has('CtrlArrowDown') && !keysPressed.has('AltArrowDown') && (keysPressed.has('ArrowDown') || keysPressed.has('s')))
       { walkPos.x -= fwdX; walkPos.z -= fwdZ; }
-    if (keysPressed.has('q') || keysPressed.has('a'))
+    if (keysPressed.has('a'))
       { walkPos.x -= rgtX; walkPos.z -= rgtZ; }
     if (keysPressed.has('d'))
       { walkPos.x += rgtX; walkPos.z += rgtZ; }
@@ -231,12 +235,14 @@ addEventListener('keydown', (e) => {
     keysPressed.add(k);
     if (e.ctrlKey && (k === 'ArrowUp' || k === 'ArrowDown'))
       keysPressed.add('Ctrl' + k);
+    if (e.altKey && (k === 'ArrowUp' || k === 'ArrowDown'))
+      keysPressed.add('Alt' + k);
     e.preventDefault();
     requestRender();
     return;
   }
   const lk = k.toLowerCase();
-  if ('zqsdwa'.includes(lk) && lk.length === 1) {
+  if ('wasd'.includes(lk) && lk.length === 1) {
     keysPressed.add(lk);
     e.preventDefault();
     requestRender();
@@ -247,6 +253,7 @@ addEventListener('keyup', (e) => {
   keysPressed.delete(e.key);
   keysPressed.delete(e.key.toLowerCase());
   keysPressed.delete('Ctrl' + e.key);
+  keysPressed.delete('Alt' + e.key);
 });
 
 let walkDragging = false;
