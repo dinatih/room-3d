@@ -195,6 +195,8 @@ export function buildMinimap() {
     drawWall(0, 0, 0, NICHE_Z_START);
     drawWall(0, NICHE_Z_START, -NICHE_DEPTH, NICHE_Z_START);
     drawWall(-NICHE_DEPTH, NICHE_Z_START, -NICHE_DEPTH, ROOM_D);
+    // Mur gaine technique ouest
+    drawWall(-NICHE_DEPTH, ROOM_D, -NICHE_DEPTH, KITCHEN_Z);
 
     // === MUR B EST ===
     drawWall(ROOM_W, 0, ROOM_W, ROOM_D);

@@ -75,6 +75,8 @@ export function buildFloorPlan() {
   wallLine(0, 0, 0, NICHE_Z_START);
   wallLine(0, NICHE_Z_START, -NICHE_DEPTH, NICHE_Z_START);
   wallLine(-NICHE_DEPTH, NICHE_Z_START, -NICHE_DEPTH, ROOM_D);
+  // Mur gaine technique ouest
+  wallLine(-NICHE_DEPTH, ROOM_D, -NICHE_DEPTH, KITCHEN_Z);
 
   // === MUR B EST ===
   wallLine(ROOM_W, 0, ROOM_W, ROOM_D);
@@ -164,6 +166,9 @@ export function buildFloorPlan() {
 
   // --- Niche (extension mur A) ---
   label('MN', -NICHE_DEPTH - 15, (NICHE_Z_START + ROOM_D) / 2, Math.PI / 2, WALL_COLOR, 8);
+
+  // --- Gaine technique ---
+  label('MGT-O', -NICHE_DEPTH - 15, (ROOM_D + KITCHEN_Z) / 2, Math.PI / 2, WALL_COLOR, 7);
 
   // --- Cuisine ---
   label('MK-O', KITCHEN_X0 - 15, (ROOM_D + KITCHEN_Z) / 2, Math.PI / 2, WALL_COLOR, 8);  // Mur Cuisine Ouest
