@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, STUD_R, STUD_HT, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_FURNITURE, COLORS } from './config.js';
+import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_FURNITURE } from './config.js';
 import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
 import { makeText } from './labels.js';
 
@@ -142,21 +142,22 @@ export function buildCorridor(scene) {
   }
 
   // =============================================
-  // Mur couloir bâtiment (diagonal, briques LEGO dans un Group rotaté)
+  // Mur couloir bâtiment (diagonal)
   // =============================================
 
   const diagDX = DIAG_CX - DIAG_AX;   // -310
   const diagDZ = DIAG_CZ - DIAG_AZ;   // 190
   const diagLen = Math.sqrt(diagDX * diagDX + diagDZ * diagDZ);
   const diagWallLen = Math.round(diagLen / 10) * 10;
+  const diagRotY = Math.atan2(diagDX, diagDZ);
 
   // Perpendiculaire au mur (vers l'intérieur couloir) pour centrer l'épaisseur 10cm
   const perpX = 5 * diagDZ / diagLen;
   const perpZ = -5 * diagDX / diagLen;
-
-  const diagGroup = new THREE.Group();
-  diagGroup.rotation.y = Math.atan2(diagDX, diagDZ);
-  diagGroup.position.set(DIAG_AX + perpX, 0, DIAG_AZ + perpZ);
+  const originX = DIAG_AX + perpX;
+  const originZ = DIAG_AZ + perpZ;
+  const sinθ = diagDX / diagLen;
+  const cosθ = diagDZ / diagLen;
 
   // Porte d'entrée : 90cm, à 10cm du côté couloir
   const E_DOOR_START = 10;
@@ -165,26 +166,9 @@ export function buildCorridor(scene) {
   const E_FRAME_START = E_DOOR_START - 10;
   const E_FRAME_END = E_DOOR_END + 10;
 
-  const brickMat = new THREE.MeshStandardMaterial({ color: COLORS.wall, roughness: 0.35 });
-  const accentMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });
-  const studMat = new THREE.MeshStandardMaterial({ color: COLORS.studWall, roughness: 0.3, metalness: 0.05 });
-  const accentStudMat = new THREE.MeshStandardMaterial({ color: 0xaa0000, roughness: 0.8 });
-  const studGeo = new THREE.CylinderGeometry(STUD_R, STUD_R, STUD_HT, 8);
-
-  function addDiagBrick(z, layer, size, mat, sMat) {
-    const geo = new THREE.BoxGeometry(10 - GAP, BRICK_H - GAP, size - GAP);
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(0, layer * BRICK_H + BRICK_H / 2, z + size / 2);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    mesh.userData.buildAnim = true;
-    diagGroup.add(mesh);
-    for (let s = 0; s < size; s += 10) {
-      const stud = new THREE.Mesh(studGeo, sMat);
-      stud.position.set(0, (layer + 1) * BRICK_H + STUD_HT / 2, z + s + 5);
-      stud.userData.buildAnim = true;
-      diagGroup.add(stud);
-    }
+  function addDiagBrick(localZ, layer, size, type) {
+    const center = localZ + size / 2;
+    addBrickZ(originX + center * sinθ, layer, originZ + center * cosθ - size / 2, size, type, diagRotY);
   }
 
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
@@ -205,23 +189,21 @@ export function buildCorridor(scene) {
 
       if (skipS >= 0 && bE > skipS && bS < skipE) {
         if (bS < skipS)
-          addDiagBrick(bS, layer, skipS - bS, brickMat, studMat);
+          addDiagBrick(bS, layer, skipS - bS, 'wall');
         if (bE > skipE)
-          addDiagBrick(skipE, layer, bE - skipE, brickMat, studMat);
+          addDiagBrick(skipE, layer, bE - skipE, 'wall');
       } else {
-        addDiagBrick(bS, layer, b.size, brickMat, studMat);
+        addDiagBrick(bS, layer, b.size, 'wall');
       }
     }
   }
 
   // Encadrement porte d'entrée (accent rouge)
   for (let layer = 0; layer < DOOR_H_LAYERS; layer++) {
-    addDiagBrick(E_FRAME_START, layer, 10, accentMat, accentStudMat);
-    addDiagBrick(E_DOOR_END, layer, 10, accentMat, accentStudMat);
+    addDiagBrick(E_FRAME_START, layer, 10, 'accent');
+    addDiagBrick(E_DOOR_END, layer, 10, 'accent');
   }
-  addDiagBrick(E_DOOR_START, DOOR_H_LAYERS, E_DOOR_W, accentMat, accentStudMat);
-
-  scene.add(diagGroup);
+  addDiagBrick(E_DOOR_START, DOOR_H_LAYERS, E_DOOR_W, 'accent');
 
   // =============================================
   // Charnières LEGO 19954 entre MCo-E et MDiag (une par couche)
