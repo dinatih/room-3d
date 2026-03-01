@@ -193,10 +193,15 @@ function renderFrame() {
     if (keysPressed.has('ArrowLeft'))  walkYaw += KEY_ROT;
     if (keysPressed.has('ArrowRight')) walkYaw -= KEY_ROT;
 
-    // Flèches haut/bas + ZQSD/WASD = translation
-    if (keysPressed.has('ArrowUp') || keysPressed.has('z') || keysPressed.has('w'))
+    // Ctrl + flèches haut/bas = inclinaison verticale de la caméra
+    const KEY_PITCH = 0.02;
+    if (keysPressed.has('CtrlArrowUp'))   walkPitch = Math.min(1.4, walkPitch + KEY_PITCH);
+    if (keysPressed.has('CtrlArrowDown')) walkPitch = Math.max(-1.4, walkPitch - KEY_PITCH);
+
+    // Flèches haut/bas + ZQSD/WASD = translation (si Ctrl non enfoncé)
+    if (!keysPressed.has('CtrlArrowUp') && (keysPressed.has('ArrowUp') || keysPressed.has('z') || keysPressed.has('w')))
       { walkPos.x += fwdX; walkPos.z += fwdZ; }
-    if (keysPressed.has('ArrowDown') || keysPressed.has('s'))
+    if (!keysPressed.has('CtrlArrowDown') && (keysPressed.has('ArrowDown') || keysPressed.has('s')))
       { walkPos.x -= fwdX; walkPos.z -= fwdZ; }
     if (keysPressed.has('q') || keysPressed.has('a'))
       { walkPos.x -= rgtX; walkPos.z -= rgtZ; }
@@ -224,6 +229,8 @@ addEventListener('keydown', (e) => {
   const k = e.key;
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(k)) {
     keysPressed.add(k);
+    if (e.ctrlKey && (k === 'ArrowUp' || k === 'ArrowDown'))
+      keysPressed.add('Ctrl' + k);
     e.preventDefault();
     requestRender();
     return;
@@ -239,6 +246,7 @@ addEventListener('keydown', (e) => {
 addEventListener('keyup', (e) => {
   keysPressed.delete(e.key);
   keysPressed.delete(e.key.toLowerCase());
+  keysPressed.delete('Ctrl' + e.key);
 });
 
 let walkDragging = false;
