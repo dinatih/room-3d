@@ -7,7 +7,7 @@ import { loadFont } from './labels.js';
 import { buildWalls } from './walls.js';
 import { buildKitchen } from './kitchen.js';
 import { buildKallax } from './kallax.js';
-import { buildBed } from './bed.js';
+import { buildBed, toggleBedStack } from './bed.js';
 import { buildMirrors } from './mirrors.js';
 import { buildChair } from './chair.js';
 import { buildDesks } from './desks.js';
@@ -200,6 +200,15 @@ import { setMirrorLayers } from './mirrors.js';
     requestRender();
   });
 }
+
+// =============================================
+// BED TOGGLE (Utåker stack/unstack)
+// =============================================
+document.getElementById('bed-toggle')?.addEventListener('click', () => {
+  const s = toggleBedStack();
+  document.getElementById('bed-toggle').textContent = `Lit : ${s ? 'EMPILÉ' : 'DÉPLIÉ'}`;
+  requestRender();
+});
 
 // =============================================
 // SOL ONLY MODE

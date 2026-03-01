@@ -6,124 +6,53 @@ export function buildChair(scene) {
   const chairRot = Math.PI / 2;
 
   const redMat = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
-  const metalMat = new THREE.MeshStandardMaterial({ color: 0xaa1a1a, metalness: 0.4, roughness: 0.35 });
-  const darkMat = new THREE.MeshStandardMaterial({ color: 0xb01818, roughness: 0.55 });
 
   const chairGroup = new THREE.Group();
   chairGroup.position.set(chairX, 0, chairZ);
   chairGroup.rotation.y = chairRot;
 
-  // --- Base étoile 5 branches ---
-  const WHEEL_R = 1.5;
-  const CASTER_H = 3;
-  const baseY = CASTER_H + 1;
+  // Base étoile 5 branches (from kallax.html Smörkull)
+  const base = new THREE.Group();
   for (let i = 0; i < 5; i++) {
     const angle = (i / 5) * Math.PI * 2;
-    const branchLen = 28;
-    const tipX = Math.sin(angle) * branchLen;
-    const tipZ = Math.cos(angle) * branchLen;
-
-    // Branche (orientée du centre vers le bout)
-    const branch = new THREE.Mesh(
-      new THREE.BoxGeometry(3, 2, branchLen),
-      metalMat
-    );
-    branch.position.set(
-      Math.sin(angle) * branchLen / 2,
-      baseY,
-      Math.cos(angle) * branchLen / 2
-    );
-    branch.rotation.y = angle;
-    chairGroup.add(branch);
-
-    // Fourche roulette (petit cylindre vertical sous la branche)
-    const fork = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.8, 0.8, CASTER_H, 6),
-      darkMat
-    );
-    fork.position.set(tipX, baseY - 1 - CASTER_H / 2, tipZ);
-    chairGroup.add(fork);
-
-    // Roue (essieu perpendiculaire à la branche → roule dans l'axe de la branche)
-    const wheel = new THREE.Mesh(
-      new THREE.CylinderGeometry(WHEEL_R, WHEEL_R, 1.2, 10),
-      darkMat
-    );
-    wheel.position.set(tipX, WHEEL_R, tipZ);
-    const branchDir = new THREE.Vector3(Math.sin(angle), 0, Math.cos(angle));
-    wheel.quaternion.setFromAxisAngle(branchDir, Math.PI / 2);
-    chairGroup.add(wheel);
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(25, 2, 3), redMat);
+    leg.position.set(Math.cos(angle) * 12.5, 5, Math.sin(angle) * 12.5);
+    leg.rotation.y = -angle;
+    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 3, 12), redMat);
+    wheel.rotation.z = Math.PI / 2;
+    wheel.position.set(Math.cos(angle) * 25, 3, Math.sin(angle) * 25);
+    base.add(leg, wheel);
   }
+  chairGroup.add(base);
 
-  // --- Vérin central ---
-  const liftH = 35;
-  const lift = new THREE.Mesh(
-    new THREE.CylinderGeometry(2, 2.5, liftH, 8),
-    metalMat
-  );
-  lift.position.set(0, baseY + liftH / 2, 0);
-  chairGroup.add(lift);
+  // Vérin
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.5, 35), redMat);
+  pole.position.y = 22;
+  chairGroup.add(pole);
 
-  const seatY = baseY + liftH;
-
-  // --- Assise ---
-  const seatW = 45;
-  const seatD = 45;
-  const seatH = 6;
-  const seat = new THREE.Mesh(
-    new THREE.BoxGeometry(seatW, seatH, seatD),
-    redMat
-  );
-  seat.position.set(0, seatY + seatH / 2, 0);
+  // Assise (capsule aplatie)
+  const seat = new THREE.Mesh(new THREE.CapsuleGeometry(22, 5, 4, 16), redMat);
+  seat.scale.set(1, 0.4, 1.1);
+  seat.position.y = 45;
   seat.castShadow = true;
   chairGroup.add(seat);
 
-  // Coussin bord arrondi
-  const cushFront = new THREE.Mesh(
-    new THREE.CylinderGeometry(seatH / 2, seatH / 2, seatW - 2, 12),
-    redMat
-  );
-  cushFront.rotation.z = Math.PI / 2;
-  cushFront.position.set(0, seatY + seatH / 2, seatD / 2);
-  chairGroup.add(cushFront);
-
-  // --- Dossier ---
-  const backW = 42;
-  const backH = 50;
-  const backT = 5;
-  const back = new THREE.Mesh(
-    new THREE.BoxGeometry(backW, backH, backT),
-    redMat
-  );
-  back.position.set(0, seatY + seatH + backH / 2, -seatD / 2 + backT / 2);
-  back.rotation.x = 0.1;
+  // Dossier (capsule aplatie en Z)
+  const back = new THREE.Mesh(new THREE.CapsuleGeometry(18, 40, 4, 16), redMat);
+  back.scale.set(1, 1, 0.2);
+  back.position.set(0, 80, -18);
+  back.rotation.x = -0.15;
   back.castShadow = true;
   chairGroup.add(back);
 
-  const backTop = new THREE.Mesh(
-    new THREE.CylinderGeometry(backT / 2, backT / 2, backW - 2, 12),
-    redMat
-  );
-  backTop.rotation.z = Math.PI / 2;
-  backTop.position.set(0, seatY + seatH + backH, -seatD / 2 + backT / 2);
-  backTop.rotation.x = 0.1;
-  chairGroup.add(backTop);
-
-  // --- Accoudoirs ---
-  for (const side of [-1, 1]) {
-    const armSupport = new THREE.Mesh(
-      new THREE.BoxGeometry(3, 20, 3),
-      darkMat
-    );
-    armSupport.position.set(side * (seatW / 2 - 2), seatY + seatH + 10, 0);
-    chairGroup.add(armSupport);
-
-    const armPad = new THREE.Mesh(
-      new THREE.BoxGeometry(5, 2.5, 25),
-      darkMat
-    );
-    armPad.position.set(side * (seatW / 2 - 2), seatY + seatH + 21, 2);
-    chairGroup.add(armPad);
+  // Accoudoirs
+  for (const side of [1, -1]) {
+    const sup = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 15), redMat);
+    sup.position.set(side * 22, 52, 0);
+    const pad = new THREE.Mesh(new THREE.CapsuleGeometry(3, 10, 4, 10), redMat);
+    pad.rotation.x = Math.PI / 2;
+    pad.position.set(side * 22, 59, 0);
+    chairGroup.add(sup, pad);
   }
 
   scene.add(chairGroup);
