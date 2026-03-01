@@ -13,6 +13,8 @@ import {
   SDB_Z_END,
   DIAG_END_Z,
   LAYER_FURNITURE,
+  CORR_DOOR_S,
+  CORR_DOOR_E,
 } from "./config.js";
 import {
   fillRow,
@@ -680,9 +682,14 @@ export function buildBathroom(scene) {
   // =============================================
   // Sol SDB (X=-10→180, Z=470→600, sans recouvrir MCo-O)
   // =============================================
+  // Sol principal (X=-10→180, sans passer sous les murs)
   for (let z = KITCHEN_Z + 10; z < SDB_Z; z += 10) {
     for (const b of fillRow(SDB_W - 10, (z / 10) % 2 === 1)) {
       addFloorBrick(-NICHE_DEPTH + b.start, z, b.size);
     }
+  }
+  // Seuil porte P2 (X=180→190, uniquement sous l'ouverture Z=CORR_DOOR_S→CORR_DOOR_E)
+  for (let z = CORR_DOOR_S; z < CORR_DOOR_E; z += 10) {
+    addFloorBrick(DOOR_START - 10, z, 10);
   }
 }
