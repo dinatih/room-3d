@@ -380,7 +380,7 @@ export function buildBathroom(scene) {
 
   // Counter as 4 strips around basin opening
   const backW = counterW;
-  const backD_val = counterCZ - counterD / 2 - (basinCZ - basinD / 2);
+  const backD_val = (basinCZ - basinD / 2) - (counterCZ - counterD / 2);
   if (backD_val > 0.1) {
     const cBack = new THREE.Mesh(
       new THREE.BoxGeometry(backW, counterH, backD_val),
