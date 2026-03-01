@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 import { desk2Surface } from './desks.js';
+import { renderer, scene as sceneRef, camera } from './scene.js';
+
+const screenTex = new THREE.TextureLoader().load('media/omarchy-screen.png', () => {
+  renderer.render(sceneRef, camera);
+});
+screenTex.colorSpace = THREE.SRGBColorSpace;
 
 export function buildLaptop(scene) {
   const BASE_W = 29.7;
@@ -14,7 +20,7 @@ export function buildLaptop(scene) {
   const PORT_D = 3;
 
   const aluMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.6, roughness: 0.35 });
-  const screenMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1, metalness: 0.4 });
+  const screenMat = new THREE.MeshStandardMaterial({ map: screenTex, roughness: 0.1, metalness: 0.2 });
   const bezelMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.4 });
   const kbMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.6 });
   const portMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.3, metalness: 0.5 });

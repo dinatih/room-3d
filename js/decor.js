@@ -17,6 +17,12 @@ import {
 } from "./config.js";
 import { addSingleDrona } from "./drona.js";
 import { kallaxW, kallaxH } from "./kallax.js";
+import { renderer, scene as sceneRef, camera } from "./scene.js";
+
+const screenTex = new THREE.TextureLoader().load('media/omarchy-screen.png', () => {
+  renderer.render(sceneRef, camera);
+});
+screenTex.colorSpace = THREE.SRGBColorSpace;
 
 export function buildDecor(scene) {
   // =============================================
@@ -293,18 +299,18 @@ export function buildDecor(scene) {
     tv.castShadow = true;
     scene.add(tv);
 
-    // Écran (face avant, légèrement en avant)
+    // Écran (face avant, légèrement en avant) — wallpaper Omarchy
     const screenMat = new THREE.MeshStandardMaterial({
-      color: 0x000000,
+      map: screenTex,
       roughness: 0.05,
-      metalness: 0.8,
+      metalness: 0.3,
     });
     const screen = new THREE.Mesh(
       new THREE.PlaneGeometry(TV_W - 3, TV_H - 3),
       screenMat,
     );
     screen.position.set(ROOM_W - 25, TV_Y, 25);
-    screen.rotation.y = (3 * Math.PI) / 4;
+    screen.rotation.y = (3 * Math.PI) / 4 + Math.PI; // face vers le séjour
     screen.translateZ(TV_D / 2 + 0.1);
     scene.add(screen);
   }
