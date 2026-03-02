@@ -16,6 +16,7 @@ import { buildDecor } from './decor.js';
 import { buildGarden } from './garden.js';
 import { buildTV } from './tv.js';
 import { buildSunnersta } from './sunnersta.js';
+import { buildAirPerformer } from './airPerformer.js';
 import { buildScooter } from './scooter.js';
 import { buildCorridor } from './corridor.js';
 import { buildBathroom } from './bathroom.js';
@@ -77,6 +78,7 @@ buildOnLayer(buildDecor, LAYER_FURNITURE);
 buildOnLayer(buildGarden, LAYER_FURNITURE);
 buildOnLayer(buildTV, LAYER_FURNITURE);
 buildOnLayer(buildSunnersta, LAYER_FURNITURE);
+buildOnLayer(buildAirPerformer, LAYER_FURNITURE);
 buildOnLayer(buildScooter, LAYER_FURNITURE);
 
 // Layer 0 (structure) + layer 2 (placard) : géré dans corridor.js

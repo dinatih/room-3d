@@ -70,7 +70,7 @@ export function buildCorridor(scene) {
     const shelfT = 3;
     for (const shelfY of [60, 120, 180]) {
       const shelf = new THREE.Mesh(
-        new THREE.BoxGeometry(CLOSET_W - 4, shelfT, CLOSET_D - 4),
+        new THREE.BoxGeometry(CLOSET_W - 4, shelfT, CLOSET_D),
         shelfMat
       );
       shelf.position.set(CLOSET_CX, shelfY, CLOSET_CZ);
