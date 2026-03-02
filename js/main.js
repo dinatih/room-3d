@@ -18,7 +18,7 @@ import { buildTV } from './tv.js';
 import { buildSunnersta } from './sunnersta.js';
 import { buildAirPerformer } from './airPerformer.js';
 import { buildScooter } from './scooter.js';
-import { buildCorridor } from './corridor.js';
+import { buildCorridor, toggleCorridorDoors } from './corridor.js';
 import { buildBathroom } from './bathroom.js';
 import { buildFloor, buildParquet, buildConcreteSlab } from './floor.js';
 import { buildInstancedMeshes } from './instancedMeshes.js';
@@ -242,6 +242,12 @@ document.getElementById('desk-toggle')?.addEventListener('click', () => {
 document.getElementById('door-toggle')?.addEventListener('click', () => {
   const s = toggleEastDoor();
   document.getElementById('door-toggle').textContent = `Porte-fenêtre : ${s ? 'OUVERTE' : 'FERMÉE'}`;
+  requestRender();
+});
+
+document.getElementById('corr-doors-toggle')?.addEventListener('click', () => {
+  const s = toggleCorridorDoors();
+  document.getElementById('corr-doors-toggle').textContent = `Portes couloir : ${s ? 'OUVERTES' : 'FERMÉES'}`;
   requestRender();
 });
 

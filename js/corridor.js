@@ -3,6 +3,16 @@ import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, DOOR_START, DOOR_END,
 import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
 import { makeText } from './labels.js';
 
+let doorsOpen = false;
+const doorGroups = [];
+
+export function toggleCorridorDoors() {
+  doorsOpen = !doorsOpen;
+  for (const { group, closedY, openY } of doorGroups)
+    group.rotation.y = doorsOpen ? openY : closedY;
+  return doorsOpen;
+}
+
 export function buildCorridor(scene) {
   const WALL_X = DOOR_START - 5;
   const WALL_Z0 = ROOM_D + 10; // après l'épaisseur du mur D
@@ -204,6 +214,60 @@ export function buildCorridor(scene) {
     addDiagBrick(E_DOOR_END, layer, 10, 'accent');
   }
   addDiagBrick(E_DOOR_START, DOOR_H_LAYERS, E_DOOR_W, 'accent');
+
+  const doorH = DOOR_H_LAYERS * BRICK_H;
+
+  // Porte d'entrée (rouge) - pivotable
+  {
+    const doorMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5, metalness: 0.1 });
+    const hingeX = originX + E_DOOR_START * sinθ;
+    const hingeZ = originZ + E_DOOR_START * cosθ;
+    const entryGroup = new THREE.Group();
+    entryGroup.position.set(hingeX, 0, hingeZ);
+    entryGroup.rotation.y = diagRotY;
+    const entryPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(4, doorH, E_DOOR_W),
+      doorMat
+    );
+    entryPanel.position.set(0, doorH / 2, E_DOOR_W / 2);
+    entryPanel.castShadow = true;
+    entryGroup.add(entryPanel);
+    scene.add(entryGroup);
+    doorGroups.push({ group: entryGroup, closedY: diagRotY, openY: diagRotY - 2 * Math.PI / 3 });
+  }
+
+  // Porte couloir→séjour (blanc) - mur D (Z=ROOM_D), charnière côté est (X=DOOR_END)
+  {
+    const DOOR_W = DOOR_END - DOOR_START;
+    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.4 });
+    const dGroup = new THREE.Group();
+    dGroup.position.set(DOOR_END, 0, ROOM_D);
+    const dPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(DOOR_W, doorH, 4),
+      whiteMat
+    );
+    dPanel.position.set(-DOOR_W / 2, doorH / 2, 0);
+    dPanel.castShadow = true;
+    dGroup.add(dPanel);
+    scene.add(dGroup);
+    doorGroups.push({ group: dGroup, closedY: 0, openY: -Math.PI / 2 });
+  }
+
+  // Porte SDB (blanc) - mur couloir gauche (X=WALL_X), s'ouvre vers SDB (-X)
+  {
+    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.4 });
+    const sGroup = new THREE.Group();
+    sGroup.position.set(WALL_X, 0, LEFT_WALL_Z0 + C_DOOR_END);
+    const sPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(4, doorH, C_DOOR_W),
+      whiteMat
+    );
+    sPanel.position.set(0, doorH / 2, -C_DOOR_W / 2);
+    sPanel.castShadow = true;
+    sGroup.add(sPanel);
+    scene.add(sGroup);
+    doorGroups.push({ group: sGroup, closedY: 0, openY: Math.PI / 2 });
+  }
 
   // =============================================
   // Charnières LEGO 19954 entre MCo-E et MDiag (une par couche)
