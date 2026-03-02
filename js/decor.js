@@ -325,7 +325,7 @@ export function buildDecor(scene) {
     }
 
     addFniss(110, 500);    // SDB, à côté meuble vasque
-    addFniss(75, 260);  // Séjour, en face du congélateur
+    addFniss(286, 202);  // Séjour, contre mur B en face (au nord) de l'Air Performer
   }
 
 
