@@ -329,70 +329,7 @@ export function buildDecor(scene) {
   }
 
 
-  // =============================================
-  // CASQUETTE ROUGE - Mur B, 1m au-dessus du lit
-  // =============================================
-  {
-    const CAP_R = 9;     // rayon calotte ~9cm
-    const BAND_H = 6;   // hauteur bande tour de tête ~6cm
-    const VISOR_L = 7;   // longueur visière ~7cm
-    const VISOR_W = 14;   // largeur visière
-
-    const capMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.65 });
-
-    const capGroup = new THREE.Group();
-
-    // Construction locale : calotte vers +Y, visière vers -X
-    // Bande tour de tête (cylindre ouvert)
-    const band = new THREE.Mesh(
-      new THREE.CylinderGeometry(CAP_R, CAP_R, BAND_H, 20, 1, true),
-      capMat,
-    );
-    capGroup.add(band);
-
-    // Calotte (demi-sphère sur la bande)
-    const crown = new THREE.Mesh(
-      new THREE.SphereGeometry(CAP_R, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2),
-      capMat,
-    );
-    crown.position.y = BAND_H / 2;
-    crown.castShadow = true;
-    capGroup.add(crown);
-
-    // Bouton sommital
-    const button = new THREE.Mesh(
-      new THREE.SphereGeometry(1.2, 8, 4),
-      capMat,
-    );
-    button.position.y = BAND_H / 2 + CAP_R;
-    capGroup.add(button);
-
-    // Visière arrondie (shape X→-X extension, shape Y→Z largeur, rot PI/2 autour X)
-    const visorShape = new THREE.Shape();
-    const VR = VISOR_W / 2;
-    const VL = VISOR_L;
-    const cr = 2;
-    visorShape.moveTo(0, -VR);
-    visorShape.lineTo(-VL + cr, -VR);
-    visorShape.quadraticCurveTo(-VL, -VR, -VL, -VR + cr);
-    visorShape.lineTo(-VL, VR - cr);
-    visorShape.quadraticCurveTo(-VL, VR, -VL + cr, VR);
-    visorShape.lineTo(0, VR);
-    visorShape.closePath();
-    const visorGeo = new THREE.ExtrudeGeometry(visorShape, {
-      depth: 0.6, bevelEnabled: false,
-    });
-    const visor = new THREE.Mesh(visorGeo, capMat);
-    visor.rotation.x = Math.PI / 2;
-    visor.position.set(-CAP_R + 1, -BAND_H / 2, 0);
-    visor.castShadow = true;
-    capGroup.add(visor);
-
-    // Rotation 90° : dome → -X (vers la pièce), ouverture → +X (mur), visière → bas
-    capGroup.rotation.z = Math.PI / 2;
-    capGroup.position.set(297, 144, 173.5);
-    scene.add(capGroup);
-  }
+  // Casquette rouge mur B → remplacée par GLB dans casquettes.js
 
   // =============================================
   // TÊTES DE MANNEQUIN — sur desserte SUNNERSTA + Kallax 1x4 NO

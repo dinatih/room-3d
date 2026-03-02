@@ -18,6 +18,7 @@ import { buildTV } from './tv.js';
 import { buildSunnersta } from './sunnersta.js';
 import { buildAirPerformer } from './airPerformer.js';
 import { buildScooter } from './scooter.js';
+import { buildCasquettes } from './casquettes.js';
 import { buildCorridor, toggleCorridorDoors } from './corridor.js';
 import { buildBathroom } from './bathroom.js';
 import { buildFloor, buildParquet, buildConcreteSlab } from './floor.js';
@@ -80,6 +81,7 @@ buildOnLayer(buildTV, LAYER_FURNITURE);
 buildOnLayer(buildSunnersta, LAYER_FURNITURE);
 buildOnLayer(buildAirPerformer, LAYER_FURNITURE);
 buildOnLayer(buildScooter, LAYER_FURNITURE);
+buildCasquettes(scene); // async GLB, gère ses propres layers + requestRender
 
 // Layer 0 (structure) + layer 2 (placard) : géré dans corridor.js
 buildCorridor(scene);
