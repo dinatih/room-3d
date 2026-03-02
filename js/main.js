@@ -19,6 +19,7 @@ import { buildSunnersta } from './sunnersta.js';
 import { buildAirPerformer } from './airPerformer.js';
 import { buildScooter } from './scooter.js';
 import { buildCasquettes } from './casquettes.js';
+import { buildManSuit, getSuit } from './manSuit.js';
 import { buildCorridor, toggleCorridorDoors } from './corridor.js';
 import { buildBathroom } from './bathroom.js';
 import { buildFloor, buildParquet, buildConcreteSlab } from './floor.js';
@@ -29,9 +30,10 @@ import { buildFloorPlan } from './floorplan.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import {
   VIEWS, POV_ROOMS,
-  enterWalk, exitWalk, enterPOV,
+  enterWalk, exitWalk, enterPOV, resumeWalk,
   enter2DTop, exit2D, onResize,
   getOrthoCamera, getIs2D,
+  isWalkActive,
   requestRender, startDamping,
 } from './cameraManager.js';
 import {
@@ -82,6 +84,7 @@ buildOnLayer(buildSunnersta, LAYER_FURNITURE);
 buildOnLayer(buildAirPerformer, LAYER_FURNITURE);
 buildOnLayer(buildScooter, LAYER_FURNITURE);
 buildCasquettes(scene); // async GLB, gère ses propres layers + requestRender
+buildManSuit(scene);
 
 // Layer 0 (structure) + layer 2 (placard) : géré dans corridor.js
 buildCorridor(scene);
@@ -244,6 +247,31 @@ document.getElementById('desk-toggle')?.addEventListener('click', () => {
 document.getElementById('door-toggle')?.addEventListener('click', () => {
   const s = toggleEastDoor();
   document.getElementById('door-toggle').textContent = `Porte-fenêtre : ${s ? 'OUVERTE' : 'FERMÉE'}`;
+  requestRender();
+});
+
+document.getElementById('resume-walk')?.addEventListener('click', () => {
+  resumeWalk();
+});
+
+// Flèches en mode non-walk : déplacer/pivoter le costume
+addEventListener('keydown', e => {
+  if (isWalkActive() || getIs2D()) return;
+  const suit = getSuit();
+  if (!suit) return;
+  const STEP = 10, ROT = 0.1;
+  if (e.key === 'ArrowUp') {
+    suit.position.x += Math.sin(suit.rotation.y) * STEP;
+    suit.position.z += Math.cos(suit.rotation.y) * STEP;
+  } else if (e.key === 'ArrowDown') {
+    suit.position.x -= Math.sin(suit.rotation.y) * STEP;
+    suit.position.z -= Math.cos(suit.rotation.y) * STEP;
+  } else if (e.key === 'ArrowLeft') {
+    suit.rotation.y += ROT;
+  } else if (e.key === 'ArrowRight') {
+    suit.rotation.y -= ROT;
+  } else return;
+  e.preventDefault();
   requestRender();
 });
 

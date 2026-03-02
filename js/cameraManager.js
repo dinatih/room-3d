@@ -29,7 +29,7 @@ export const POV_ROOMS = {
 // =============================================
 // WALK MODE (marche libre première personne)
 // =============================================
-const WALK_H = 170; // 1.70m
+const WALK_H = 180; // 1.80m
 const WALK_SPEED = 2;
 const MOUSE_SENS = 0.002;
 
@@ -80,6 +80,22 @@ function updateWalkLook() {
   );
   camera.position.set(walkPos.x, walkPos.y, walkPos.z);
   controls.update();
+}
+
+// Reprend le walk mode à la dernière position/orientation sans reset
+export function resumeWalk() {
+  if (walkActive) return;
+  exit2D();
+  walkActive = true;
+  walkPos.y = WALK_H;
+  camera.position.set(walkPos.x, walkPos.y, walkPos.z);
+  updateWalkLook();
+  controls.enableRotate = false;
+  controls.enablePan = false;
+  controls.enableZoom = false;
+  const c = document.getElementById('controls');
+  if (c) c.textContent = 'Flèches / WASD : marcher | ←→ : pivoter | Ctrl+↑↓ : incliner | Alt+↑↓ : hauteur | Clic+glisser : regarder | Échap : quitter';
+  requestRender();
 }
 
 // POV = enterWalk à la position donnée
@@ -164,6 +180,13 @@ export function onResize() {
 // =============================================
 // RENDER ON DEMAND
 // =============================================
+const walkFollowers = [];
+export function addWalkFollower(obj) { walkFollowers.push(obj); }
+
+export function setInitialWalkPos(x, z) {
+  if (!walkActive) { walkPos.x = x; walkPos.z = z; }
+}
+
 let renderPending = false;
 let dampingFrames = 0;
 const DAMPING_TAIL = 60; // frames de damping après interaction
@@ -213,6 +236,15 @@ function renderFrame() {
       { walkPos.x += rgtX; walkPos.z += rgtZ; }
 
     updateWalkLook();
+  }
+
+  // Followers (ex: costume) calqués sur position/orientation de la caméra
+  if (walkActive) {
+    for (const obj of walkFollowers) {
+      obj.position.x = walkPos.x;
+      obj.position.z = walkPos.z;
+      obj.rotation.y = walkYaw;
+    }
   }
 
   if (is2D && orthoControls) orthoControls.update();
