@@ -3,6 +3,41 @@ import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, DOOR_START, DOOR_END,
 import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
 import { makeText } from './labels.js';
 
+// Crée un mesh PlaneGeometry avec texture canvas représentant un mètre ruban
+function makeTapeMesh(totalCm = 200) {
+  const pxPerCm = 8;
+  const cw = 40, ch = totalCm * pxPerCm;
+  const canvas = document.createElement('canvas');
+  canvas.width = cw; canvas.height = ch;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#f5e6a0';
+  ctx.fillRect(0, 0, cw, ch);
+
+  for (let cm = 0; cm <= totalCm; cm++) {
+    // canvas y=0 → top du canvas → bas du plane en Three.js (flipY), donc cm=0 en bas ✓
+    const y = (totalCm - cm) * pxPerCm;
+    const isMaj = cm % 10 === 0, isMid = cm % 5 === 0;
+    const tickLen = isMaj ? 18 : isMid ? 12 : 6;
+    ctx.strokeStyle = '#3a2a00';
+    ctx.lineWidth = isMaj ? 1.5 : isMid ? 1 : 0.5;
+    ctx.beginPath(); ctx.moveTo(1, y);      ctx.lineTo(1 + tickLen, y);      ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cw - 1, y); ctx.lineTo(cw - 1 - tickLen, y); ctx.stroke();
+    if (isMaj && cm > 0) {
+      ctx.fillStyle = '#3a2a00';
+      ctx.font = `bold ${Math.round(pxPerCm * 0.85)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(`${cm}`, cw / 2, y - 2);
+    }
+  }
+  ctx.strokeStyle = '#8a6900'; ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, cw - 2, ch - 2);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, depthWrite: false });
+  return new THREE.Mesh(new THREE.PlaneGeometry(5, totalCm), mat);
+}
+
 let doorsOpen = false;
 const doorGroups = [];
 
@@ -249,6 +284,12 @@ export function buildCorridor(scene) {
     dPanel.position.set(-DOOR_W / 2, doorH / 2, 0);
     dPanel.castShadow = true;
     dGroup.add(dPanel);
+    // Mètre ruban sur les 2 faces (z=±2.5), centré à 15cm du bord libre
+    for (const [rY, zOff] of [[Math.PI, -2.5], [0, 2.5]]) {
+      const t = makeTapeMesh(); t.rotation.y = rY;
+      t.position.set(-DOOR_W + 15, 100, zOff);
+      dGroup.add(t);
+    }
     scene.add(dGroup);
     doorGroups.push({ group: dGroup, closedY: 0, openY: -Math.PI / 2 });
   }
@@ -265,6 +306,12 @@ export function buildCorridor(scene) {
     sPanel.position.set(0, doorH / 2, -C_DOOR_W / 2);
     sPanel.castShadow = true;
     sGroup.add(sPanel);
+    // Mètre ruban sur les 2 faces (x=±2.5), centré à 15cm du bord libre
+    for (const [rY, xOff] of [[Math.PI / 2, 2.5], [-Math.PI / 2, -2.5]]) {
+      const t = makeTapeMesh(); t.rotation.y = rY;
+      t.position.set(xOff, 100, -C_DOOR_W + 15);
+      sGroup.add(t);
+    }
     scene.add(sGroup);
     doorGroups.push({ group: sGroup, closedY: 0, openY: Math.PI / 2 });
   }
