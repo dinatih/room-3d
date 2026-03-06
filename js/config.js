@@ -6,6 +6,7 @@ export const ROOM_W = 300; // 3m
 export const ROOM_D = 400; // 4m
 export const WALL_H = 250; // 2.5m (8 × 30cm + 1 plaque 10cm)
 export const BRICK_H = 30;
+export const BRICK_W = 10;  // épaisseur d'un mur / largeur d'un stud (1 stud = 10cm)
 export const NUM_LAYERS = 8; // 8 couches × 30cm = 240cm
 export const WALL_PLATE_H = 10; // plaque de finition haut de mur
 export const GAP = 0.8;
@@ -63,6 +64,14 @@ export const DIAG_END_Z = DIAG_CZ;
 
 // Jardin diagonal endpoint (parallèle à MDiag, pente -7/11)
 export const GARDEN_JC_Z = -140 - (DIAG_CZ - DIAG_AZ) * 320 / (DIAG_AX - DIAG_CX); // ≈-343.6
+
+// Emprise rectangulaire du bâtiment — dalle béton et plafond partagent cette forme
+// NW(-100, 0)  NE(400, 0)
+// SW(-100,800) SE(400,800)
+export const BLDG_X_MIN = -100;
+export const BLDG_X_MAX =  400;
+export const BLDG_Z_MIN =  -30;
+export const BLDG_Z_MAX =  800;
 
 // Layers Three.js
 export const LAYER_STRUCTURE  = 0; // Murs, sol, plafond

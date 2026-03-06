@@ -1,45 +1,60 @@
-import * as THREE from 'three';
-import { ROOM_W, ROOM_D, DOOR_START, DOOR_END, GARDEN_JC_Z, LAYER_STRUCTURE, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NETWORKS } from './config.js';
-import { scene, camera, renderer, controls } from './scene.js';
-import { allBricks } from './brickHelpers.js';
-import { loadFont } from './labels.js';
-import { buildWalls, toggleEastDoor } from './walls.js';
-import { buildKitchen } from './kitchen.js';
-import { buildKallax } from './kallax.js';
-import { buildBed, toggleBedStack } from './bed.js';
-import { buildMirrors, setMirrorLayers } from './mirrors.js';
-import { buildChair } from './chair.js';
-import { buildDesks, toggleDesksHeight } from './desks.js';
-import { buildLaptop } from './laptop.js';
-import { buildMackapar } from './mackapar.js';
-import { buildDecor } from './decor.js';
-import { buildGarden } from './garden.js';
-import { buildTV } from './tv.js';
-import { buildSunnersta } from './sunnersta.js';
-import { buildAirPerformer } from './airPerformer.js';
-import { buildScooter } from './scooter.js';
-import { buildCasquettes } from './casquettes.js';
-import { buildManSuit, getSuit } from './manSuit.js';
-import { buildCorridor, toggleCorridorDoors } from './corridor.js';
-import { buildBathroom } from './bathroom.js';
-import { buildFloor, buildParquet, buildConcreteSlab } from './floor.js';
-import { buildInstancedMeshes } from './instancedMeshes.js';
-import { buildGrid } from './grid.js';
-import { buildMinimap } from './minimap.js';
-import { buildFloorPlan } from './floorplan.js';
-import { VRButton } from 'three/addons/webxr/VRButton.js';
+import * as THREE from "three";
 import {
-  VIEWS, POV_ROOMS,
-  enterWalk, exitWalk, enterPOV, resumeWalk,
-  enter2DTop, exit2D, onResize,
-  getOrthoCamera, getIs2D,
+  ROOM_W,
+  ROOM_D,
+  DOOR_START,
+  DOOR_END,
+  GARDEN_JC_Z,
+  LAYER_STRUCTURE,
+  LAYER_EQUIPMENT,
+  LAYER_FURNITURE,
+  LAYER_NETWORKS,
+} from "./config.js";
+import { scene, camera, renderer, controls } from "./scene.js";
+import { allBricks } from "./brickHelpers.js";
+import { loadFont } from "./labels.js";
+import { buildWalls, toggleEastDoor } from "./walls.js";
+import { buildKitchen } from "./kitchen.js";
+import { buildKallax } from "./kallax.js";
+import { buildBed, toggleBedStack } from "./bed.js";
+import { buildMirrors, setMirrorLayers } from "./mirrors.js";
+import { buildChair } from "./chair.js";
+import { buildDesks, toggleDesksHeight } from "./desks.js";
+import { buildLaptop } from "./laptop.js";
+import { buildMackapar } from "./mackapar.js";
+import { buildDecor } from "./decor.js";
+import { buildGarden } from "./garden.js";
+import { buildTV } from "./tv.js";
+import { buildSunnersta } from "./sunnersta.js";
+import { buildAirPerformer } from "./airPerformer.js";
+import { buildScooter } from "./scooter.js";
+import { buildCasquettes } from "./casquettes.js";
+import { buildManSuit, getSuit } from "./manSuit.js";
+import { buildCorridor, toggleCorridorDoors } from "./corridor.js";
+import { buildBathroom } from "./bathroom.js";
+import { buildFloor, buildParquet, buildConcreteSlab, buildCeiling } from "./floor.js";
+import { buildInstancedMeshes } from "./instancedMeshes.js";
+import { buildGrid } from "./grid.js";
+import { buildMinimap } from "./minimap.js";
+import { buildFloorPlan } from "./floorplan.js";
+import { VRButton } from "three/addons/webxr/VRButton.js";
+import {
+  VIEWS,
+  POV_ROOMS,
+  enterWalk,
+  exitWalk,
+  enterPOV,
+  resumeWalk,
+  enter2DTop,
+  exit2D,
+  onResize,
+  getOrthoCamera,
+  getIs2D,
   isWalkActive,
-  requestRender, startDamping,
-} from './cameraManager.js';
-import {
-  prepareBuildAnimation, startBuildAnimation,
-  stopBuildAnimation, isBuildAnimating,
-} from './buildAnimation.js';
+  requestRender,
+  startDamping,
+} from "./cameraManager.js";
+import { prepareBuildAnimation, startBuildAnimation, stopBuildAnimation, isBuildAnimating } from "./buildAnimation.js";
 
 // Charger la font avant de construire les labels
 await loadFont();
@@ -47,11 +62,10 @@ await loadFont();
 // Helper : tag les objets ajoutés à scene pendant un build
 function buildOnLayer(buildFn, layer) {
   const before = new Set();
-  scene.traverse(obj => before.add(obj));
+  scene.traverse((obj) => before.add(obj));
   buildFn(scene);
-  scene.traverse(obj => {
-    if (!before.has(obj))
-      obj.layers.set(obj.userData?.layerOverride ?? layer);
+  scene.traverse((obj) => {
+    if (!before.has(obj)) obj.layers.set(obj.userData?.layerOverride ?? layer);
   });
 }
 
@@ -64,6 +78,7 @@ camera.layers.enable(LAYER_NETWORKS);
 buildWalls(scene);
 buildFloor(allBricks);
 buildConcreteSlab(scene);
+buildCeiling(scene);
 
 // Layer 1 : équipements
 buildOnLayer(buildKitchen, LAYER_EQUIPMENT);
@@ -101,7 +116,7 @@ buildMinimap();
 // VR MODE (Google Cardboard / WebXR)
 // =============================================
 const vrButton = VRButton.createButton(renderer);
-vrButton.style.bottom = '60px';
+vrButton.style.bottom = "60px";
 document.body.appendChild(vrButton);
 
 const vrRig = new THREE.Group();
@@ -111,24 +126,33 @@ vrRig.add(camera);
 let vrWalking = false;
 
 const xrController = renderer.xr.getController(0);
-xrController.addEventListener('selectstart', () => { vrWalking = true; });
-xrController.addEventListener('selectend', () => { vrWalking = false; });
+xrController.addEventListener("selectstart", () => {
+  vrWalking = true;
+});
+xrController.addEventListener("selectend", () => {
+  vrWalking = false;
+});
 vrRig.add(xrController);
 
 // Snapshot des objets "bâtiment" (avant ajout du floor plan)
-const buildingChildren = scene.children.filter(c => !c.isLight);
+const buildingChildren = scene.children.filter((c) => !c.isLight);
 
 // Jardin : délimitation en pointillés (toujours visible)
 {
   const Y = 5;
   const gardenMat = new THREE.LineDashedMaterial({
-    color: 0x4a9e54, dashSize: 8, gapSize: 4,
+    color: 0x4a9e54,
+    dashSize: 8,
+    gapSize: 4,
   });
   const JC_Z = GARDEN_JC_Z;
   const pts = [
-    [-10, -10],  [-10, -140],           // côté MA ext, 1.30m en -Z
-    [-10, -140], [310, JC_Z],          // diagonale // MDiag → MB ext
-    [310, JC_Z], [310, -10],           // côté MB ext, vertical
+    [-10, -10],
+    [-10, -140], // côté MA ext, 1.30m en -Z
+    [-10, -140],
+    [310, JC_Z], // diagonale // MDiag → MB ext
+    [310, JC_Z],
+    [310, -10], // côté MB ext, vertical
   ];
   for (let i = 0; i < pts.length; i += 2) {
     const geo = new THREE.BufferGeometry().setFromPoints([
@@ -149,16 +173,19 @@ scene.add(floorPlanGroup);
 let floorPlanMode = false;
 function toggleFloorPlan() {
   // Désactiver sol only si actif
-  if (floorOnly) { floorOnly = false; document.getElementById('floor-toggle').textContent = 'Sol : OFF'; }
+  if (floorOnly) {
+    floorOnly = false;
+    document.getElementById("floor-toggle").textContent = "Sol : OFF";
+  }
   floorPlanMode = !floorPlanMode;
   for (const obj of buildingChildren) obj.visible = !floorPlanMode;
   floorPlanGroup.visible = floorPlanMode;
-  const btn = document.getElementById('plan-toggle');
-  if (btn) btn.textContent = floorPlanMode ? 'Plan : ON' : 'Plan : OFF';
+  const btn = document.getElementById("plan-toggle");
+  if (btn) btn.textContent = floorPlanMode ? "Plan : ON" : "Plan : OFF";
   requestRender();
 }
 
-document.getElementById('plan-toggle')?.addEventListener('click', toggleFloorPlan);
+document.getElementById("plan-toggle")?.addEventListener("click", toggleFloorPlan);
 
 // =============================================
 // X-RAY MODE
@@ -177,7 +204,7 @@ const xrayMat = new THREE.MeshPhysicalMaterial({
 
 function toggleXray() {
   xrayMode = !xrayMode;
-  scene.traverse(obj => {
+  scene.traverse((obj) => {
     if (!obj.isMesh && !obj.isInstancedMesh) return;
     if (obj.parent === floorPlanGroup) return;
     if (xrayMode) {
@@ -189,39 +216,44 @@ function toggleXray() {
     }
   });
   if (!xrayMode) savedMaterials.clear();
-  const btn = document.getElementById('xray-toggle');
-  if (btn) btn.textContent = xrayMode ? 'X-Ray : ON' : 'X-Ray : OFF';
+  const btn = document.getElementById("xray-toggle");
+  if (btn) btn.textContent = xrayMode ? "X-Ray : ON" : "X-Ray : OFF";
   requestRender();
 }
 
-document.getElementById('xray-toggle')?.addEventListener('click', toggleXray);
+document.getElementById("xray-toggle")?.addEventListener("click", toggleXray);
 
 // =============================================
 // LAYER TOGGLES
 // =============================================
 function makeLayerToggle(btnId, layer, label) {
   let on = true;
-  document.getElementById(btnId)?.addEventListener('click', () => {
+  document.getElementById(btnId)?.addEventListener("click", () => {
     on = !on;
     const orthoCamera = getOrthoCamera();
-    if (on) { camera.layers.enable(layer); if (orthoCamera) orthoCamera.layers.enable(layer); }
-    else { camera.layers.disable(layer); if (orthoCamera) orthoCamera.layers.disable(layer); }
+    if (on) {
+      camera.layers.enable(layer);
+      if (orthoCamera) orthoCamera.layers.enable(layer);
+    } else {
+      camera.layers.disable(layer);
+      if (orthoCamera) orthoCamera.layers.disable(layer);
+    }
     const btn = document.getElementById(btnId);
-    if (btn) btn.textContent = `${label} : ${on ? 'ON' : 'OFF'}`;
+    if (btn) btn.textContent = `${label} : ${on ? "ON" : "OFF"}`;
     requestRender();
   });
 }
-makeLayerToggle('layer-struct-toggle', LAYER_STRUCTURE, 'Structure');
-makeLayerToggle('layer-equip-toggle', LAYER_EQUIPMENT, 'Équipements');
-makeLayerToggle('layer-furniture-toggle', LAYER_FURNITURE, 'Mobilier');
+makeLayerToggle("layer-struct-toggle", LAYER_STRUCTURE, "Structure");
+makeLayerToggle("layer-equip-toggle", LAYER_EQUIPMENT, "Équipements");
+makeLayerToggle("layer-furniture-toggle", LAYER_FURNITURE, "Mobilier");
 
 // Toggle miroirs HD (patch layers)
 {
   let on = false;
-  document.getElementById('mirror-layers-toggle')?.addEventListener('click', () => {
+  document.getElementById("mirror-layers-toggle")?.addEventListener("click", () => {
     on = !on;
     setMirrorLayers(on);
-    document.getElementById('mirror-layers-toggle').textContent = `Miroirs HD : ${on ? 'ON' : 'OFF'}`;
+    document.getElementById("mirror-layers-toggle").textContent = `Miroirs HD : ${on ? "ON" : "OFF"}`;
     requestRender();
   });
 }
@@ -229,55 +261,56 @@ makeLayerToggle('layer-furniture-toggle', LAYER_FURNITURE, 'Mobilier');
 // =============================================
 // BED TOGGLE (Utåker stack/unstack)
 // =============================================
-document.getElementById('bed-toggle')?.addEventListener('click', () => {
+document.getElementById("bed-toggle")?.addEventListener("click", () => {
   const s = toggleBedStack();
-  document.getElementById('bed-toggle').textContent = `Lit : ${s ? 'EMPILÉ' : 'DÉPLIÉ'}`;
+  document.getElementById("bed-toggle").textContent = `Lit : ${s ? "EMPILÉ" : "DÉPLIÉ"}`;
   requestRender();
 });
 
 // =============================================
 // DESK TOGGLE (sit / stand)
 // =============================================
-document.getElementById('desk-toggle')?.addEventListener('click', () => {
+document.getElementById("desk-toggle")?.addEventListener("click", () => {
   const s = toggleDesksHeight();
-  document.getElementById('desk-toggle').textContent = `Bureaux : ${s ? 'DEBOUT' : 'ASSIS'}`;
+  document.getElementById("desk-toggle").textContent = `Bureaux : ${s ? "DEBOUT" : "ASSIS"}`;
   requestRender();
 });
 
-document.getElementById('door-toggle')?.addEventListener('click', () => {
+document.getElementById("door-toggle")?.addEventListener("click", () => {
   const s = toggleEastDoor();
-  document.getElementById('door-toggle').textContent = `Porte-fenêtre : ${s ? 'OUVERTE' : 'FERMÉE'}`;
+  document.getElementById("door-toggle").textContent = `Porte-fenêtre : ${s ? "OUVERTE" : "FERMÉE"}`;
   requestRender();
 });
 
-document.getElementById('resume-walk')?.addEventListener('click', () => {
+document.getElementById("resume-walk")?.addEventListener("click", () => {
   resumeWalk();
 });
 
 // Flèches en mode non-walk : déplacer/pivoter le costume
-addEventListener('keydown', e => {
+addEventListener("keydown", (e) => {
   if (isWalkActive() || getIs2D()) return;
   const suit = getSuit();
   if (!suit) return;
-  const STEP = 10, ROT = 0.1;
-  if (e.key === 'ArrowUp') {
+  const STEP = 10,
+    ROT = 0.1;
+  if (e.key === "ArrowUp") {
     suit.position.x += Math.sin(suit.rotation.y) * STEP;
     suit.position.z += Math.cos(suit.rotation.y) * STEP;
-  } else if (e.key === 'ArrowDown') {
+  } else if (e.key === "ArrowDown") {
     suit.position.x -= Math.sin(suit.rotation.y) * STEP;
     suit.position.z -= Math.cos(suit.rotation.y) * STEP;
-  } else if (e.key === 'ArrowLeft') {
+  } else if (e.key === "ArrowLeft") {
     suit.rotation.y += ROT;
-  } else if (e.key === 'ArrowRight') {
+  } else if (e.key === "ArrowRight") {
     suit.rotation.y -= ROT;
   } else return;
   e.preventDefault();
   requestRender();
 });
 
-document.getElementById('corr-doors-toggle')?.addEventListener('click', () => {
+document.getElementById("corr-doors-toggle")?.addEventListener("click", () => {
   const s = toggleCorridorDoors();
-  document.getElementById('corr-doors-toggle').textContent = `Portes couloir : ${s ? 'OUVERTES' : 'FERMÉES'}`;
+  document.getElementById("corr-doors-toggle").textContent = `Portes couloir : ${s ? "OUVERTES" : "FERMÉES"}`;
   requestRender();
 });
 
@@ -285,42 +318,42 @@ document.getElementById('corr-doors-toggle')?.addEventListener('click', () => {
 // SOL ONLY MODE
 // =============================================
 let floorOnly = false;
-const FLOOR_TYPES = new Set(['floor', 'tile', 'grass', 'ground', 'grid', 'parquet']);
+const FLOOR_TYPES = new Set(["floor", "tile", "grass", "ground", "grid", "parquet"]);
 
 function toggleFloorOnly() {
   // Désactiver plan si actif
   if (floorPlanMode) {
     floorPlanMode = false;
     floorPlanGroup.visible = false;
-    document.getElementById('plan-toggle').textContent = 'Plan : OFF';
+    document.getElementById("plan-toggle").textContent = "Plan : OFF";
   }
   floorOnly = !floorOnly;
   for (const obj of buildingChildren) {
     obj.visible = floorOnly ? FLOOR_TYPES.has(obj.userData?.brickType) : true;
   }
-  const btn = document.getElementById('floor-toggle');
-  if (btn) btn.textContent = floorOnly ? 'Sol : ON' : 'Sol : OFF';
+  const btn = document.getElementById("floor-toggle");
+  if (btn) btn.textContent = floorOnly ? "Sol : ON" : "Sol : OFF";
   requestRender();
 }
 
-document.getElementById('floor-toggle')?.addEventListener('click', toggleFloorOnly);
+document.getElementById("floor-toggle")?.addEventListener("click", toggleFloorOnly);
 
 // =============================================
 // ANIMATION CONSTRUCTION
 // =============================================
-const buildBtn = document.getElementById('build-anim-toggle');
+const buildBtn = document.getElementById("build-anim-toggle");
 if (buildBtn) {
-  buildBtn.addEventListener('click', () => {
+  buildBtn.addEventListener("click", () => {
     if (isBuildAnimating()) {
       stopBuildAnimation();
-      buildBtn.textContent = '▶ Construction';
+      buildBtn.textContent = "▶ Construction";
     } else {
       startBuildAnimation();
-      buildBtn.textContent = '■ Stop';
+      buildBtn.textContent = "■ Stop";
     }
   });
-  document.addEventListener('build-animation-complete', () => {
-    buildBtn.textContent = '▶ Construction';
+  document.addEventListener("build-animation-complete", () => {
+    buildBtn.textContent = "▶ Construction";
   });
 }
 
@@ -329,16 +362,22 @@ if (buildBtn) {
 // =============================================
 const WALK_SPEED = 2;
 
-renderer.xr.addEventListener('sessionstart', () => {
-  exitWalk(); exit2D();
+renderer.xr.addEventListener("sessionstart", () => {
+  exitWalk();
+  exit2D();
   controls.enabled = false;
   vrRig.position.set(ROOM_W / 2, 170, ROOM_D / 2);
-  const hint = document.createElement('div');
-  hint.textContent = 'Tap écran ou bouton Cardboard pour avancer';
-  hint.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.5s';
+  const hint = document.createElement("div");
+  hint.textContent = "Tap écran ou bouton Cardboard pour avancer";
+  hint.style.cssText =
+    "position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.5s";
   document.body.appendChild(hint);
-  setTimeout(() => { hint.style.opacity = '0'; }, 4500);
-  setTimeout(() => { hint.remove(); }, 5000);
+  setTimeout(() => {
+    hint.style.opacity = "0";
+  }, 4500);
+  setTimeout(() => {
+    hint.remove();
+  }, 5000);
   renderer.setAnimationLoop(() => {
     if (vrWalking) {
       const dir = new THREE.Vector3();
@@ -350,7 +389,7 @@ renderer.xr.addEventListener('sessionstart', () => {
     renderer.render(scene, camera);
   });
 });
-renderer.xr.addEventListener('sessionend', () => {
+renderer.xr.addEventListener("sessionend", () => {
   renderer.setAnimationLoop(null);
   vrWalking = false;
   controls.enabled = true;
@@ -364,7 +403,7 @@ renderer.xr.addEventListener('sessionend', () => {
 // Premier rendu
 requestRender();
 
-addEventListener('resize', () => {
+addEventListener("resize", () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   onResize();
@@ -375,29 +414,37 @@ addEventListener('resize', () => {
 // =============================================
 // VUES CAMERA (modal + raccourcis)
 // =============================================
-const viewsOverlay = document.getElementById('views-modal-overlay');
-function openViewsModal() { viewsOverlay.classList.add('visible'); }
-function closeViewsModal() { viewsOverlay.classList.remove('visible'); }
+const viewsOverlay = document.getElementById("views-modal-overlay");
+function openViewsModal() {
+  viewsOverlay.classList.add("visible");
+}
+function closeViewsModal() {
+  viewsOverlay.classList.remove("visible");
+}
 
-document.getElementById('views-toggle')?.addEventListener('click', openViewsModal);
-document.getElementById('views-modal-close')?.addEventListener('click', closeViewsModal);
+document.getElementById("views-toggle")?.addEventListener("click", openViewsModal);
+document.getElementById("views-modal-close")?.addEventListener("click", closeViewsModal);
 
 // Raccourcis Perspective / 2D Dessus
-document.getElementById('quick-perspective')?.addEventListener('click', () => {
-  exitWalk(); exitWalk(); exit2D();
+document.getElementById("quick-perspective")?.addEventListener("click", () => {
+  exitWalk();
+  exitWalk();
+  exit2D();
   camera.position.set(...VIEWS.perspective.pos);
   controls.target.set(...VIEWS.perspective.target);
   controls.update();
   requestRender();
 });
-document.getElementById('quick-top2d')?.addEventListener('click', () => enter2DTop());
-viewsOverlay?.addEventListener('click', (e) => { if (e.target === viewsOverlay) closeViewsModal(); });
+document.getElementById("quick-top2d")?.addEventListener("click", () => enter2DTop());
+viewsOverlay?.addEventListener("click", (e) => {
+  if (e.target === viewsOverlay) closeViewsModal();
+});
 
 // Boutons vues classiques (sortent du mode POV et 2D)
-document.querySelectorAll('#views-modal button[data-view]').forEach(btn => {
-  btn.addEventListener('click', () => {
+document.querySelectorAll("#views-modal button[data-view]").forEach((btn) => {
+  btn.addEventListener("click", () => {
     closeViewsModal();
-    if (btn.dataset.view === 'top2d') {
+    if (btn.dataset.view === "top2d") {
       enter2DTop();
       return;
     }
@@ -414,8 +461,8 @@ document.querySelectorAll('#views-modal button[data-view]').forEach(btn => {
 });
 
 // Boutons POV par pièce
-document.querySelectorAll('#views-modal button[data-pov]').forEach(btn => {
-  btn.addEventListener('click', () => {
+document.querySelectorAll("#views-modal button[data-pov]").forEach((btn) => {
+  btn.addEventListener("click", () => {
     closeViewsModal();
     const room = POV_ROOMS[btn.dataset.pov];
     if (room) enterPOV(room.x, room.z);
@@ -423,11 +470,7 @@ document.querySelectorAll('#views-modal button[data-pov]').forEach(btn => {
 });
 
 // Clic minimap → mode POV dans la pièce
-document.addEventListener('minimap-pov', (e) => {
+document.addEventListener("minimap-pov", (e) => {
   const { x, z } = e.detail;
   enterPOV(x, z);
 });
-
-
-console.log(`LEGO Room: ${ROOM_W}x${ROOM_D}, ${allBricks.length} briques`);
-console.log(`Porte: ${DOOR_START}-${DOOR_END} (80cm), 30cm du mur gauche`);

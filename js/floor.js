@@ -1,7 +1,16 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, PLATE_H, GAP, DOOR_START, DOOR_END, NICHE_DEPTH, NICHE_Z_START, FLOOR_Y, GARDEN_JC_Z, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, COLORS } from './config.js';
+import {
+  ROOM_W, ROOM_D, PLATE_H, GAP, WALL_H,
+  DOOR_START, DOOR_END, NICHE_DEPTH, NICHE_Z_START, FLOOR_Y, GARDEN_JC_Z,
+  KITCHEN_Z, SDB_Z_END, DIAG_CZ,
+  BLDG_X_MIN, BLDG_X_MAX, BLDG_Z_MIN, BLDG_Z_MAX,
+  COLORS,
+} from './config.js';
 import { fillRow, addFloorBrick } from './brickHelpers.js';
 
+// =============================================
+// SOL LEGO (briques de sol)
+// =============================================
 export function buildFloor(allBricks) {
   const FLOOR_X0 = 0;
   const FLOOR_X1 = ROOM_W;
@@ -52,9 +61,11 @@ export function buildFloor(allBricks) {
       }
     }
   }
-
 }
 
+// =============================================
+// PARQUET / CARRELAGE
+// =============================================
 export function buildParquet(allBricks) {
   // Flat tiles : parquet (séjour + couloir) ou carrelage gris (SDB)
   const floorBricks = allBricks.filter(b => b.type === 'floor');
@@ -70,54 +81,50 @@ export function buildParquet(allBricks) {
 }
 
 // =============================================
-// DALLE BÉTON COULÉ (remplace les plates LEGO jaunes)
-// Couvre toute la surface bâtiment, épaisseur murs ext. comprise
+// DALLE BÉTON + PLAFOND
+// Les deux partagent l'emprise BLDG_* définie dans config.js :
+//   NW(-100, 0)  NE(400, 0)
+//   SW(-100,800) SE(400,800)
 // =============================================
+const BLDG_W  = BLDG_X_MAX - BLDG_X_MIN;  // 500 cm
+const BLDG_D  = BLDG_Z_MAX - BLDG_Z_MIN;  // 800 cm
+const BLDG_CX = (BLDG_X_MIN + BLDG_X_MAX) / 2;  // 150 cm
+const BLDG_CZ = (BLDG_Z_MIN + BLDG_Z_MAX) / 2;  // 400 cm
+
 export function buildConcreteSlab(scene) {
-  // Perpendiculaire extérieure du mur diagonal (10cm d'épaisseur)
-  const diagDX = DIAG_CX - DIAG_AX;
-  const diagDZ = DIAG_CZ - DIAG_AZ;
-  const diagLen = Math.sqrt(diagDX * diagDX + diagDZ * diagDZ);
-  const perpX = diagDZ / diagLen;   // composante X vers l'extérieur
-  const perpZ = -diagDX / diagLen;  // composante Z vers l'extérieur
+  const SLAB_DEPTH = 10; // 10cm d'épaisseur
 
-  // Limites extérieures des murs
-  const EXT_E = ROOM_W + 10;                 // mur B extérieur (X=310)
-  const EXT_S = -30;                          // mur C extérieur (Z=-30, 30cm)
-  const EXT_W_MAIN = -10;                     // mur A extérieur avant niche
-  const EXT_W_NICHE = -(NICHE_DEPTH + 10);   // niche/SDB extérieur (X=-20)
+  const mat = new THREE.MeshStandardMaterial({ color: COLORS.floor, roughness: 0.6 });
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(BLDG_W, SLAB_DEPTH, BLDG_D), mat);
 
-  // Points extérieurs du mur diagonal
-  const dAX = DIAG_AX + perpX, dAZ = DIAG_AZ + perpZ;
-  const dCX = DIAG_CX + perpX, dCZ = DIAG_CZ + perpZ;
-
-  // Contour extérieur bâtiment (sens trigo dans le plan XZ)
-  const shape = new THREE.Shape();
-  shape.moveTo(EXT_W_MAIN, EXT_S);            // 1. coin SO
-  shape.lineTo(EXT_E, EXT_S);                 // 2. coin SE
-  shape.lineTo(EXT_E, dAZ);                   // 3. mur E → coin diag
-  shape.lineTo(dAX, dAZ);                     // 4. départ diag extérieur
-  shape.lineTo(dCX, dCZ);                     // 5. fin diag extérieur
-  shape.lineTo(EXT_W_NICHE, dCZ);             // 6. retour vers mur O niche
-  shape.lineTo(EXT_W_NICHE, NICHE_Z_START);   // 7. descente le long du mur niche/SDB
-  shape.lineTo(EXT_W_MAIN, NICHE_Z_START);    // 8. retour mur A principal
-  // fermeture auto vers (1)
-
-  const SLAB_DEPTH = 10; // 10cm
-  const geo = new THREE.ExtrudeGeometry(shape, {
-    depth: SLAB_DEPTH,
-    bevelEnabled: false,
-  });
-
-  const mat = new THREE.MeshStandardMaterial({
-    color: COLORS.floor,
-    roughness: 0.6,
-  });
-
-  const slab = new THREE.Mesh(geo, mat);
-  slab.rotation.x = Math.PI / 2;
   // Surface haute de la dalle = sommet des anciennes plates
-  slab.position.y = FLOOR_Y + (PLATE_H - GAP) / 2;
+  slab.position.set(BLDG_CX, FLOOR_Y + (PLATE_H - GAP) / 2 - SLAB_DEPTH / 2, BLDG_CZ);
   slab.receiveShadow = true;
   scene.add(slab);
+}
+
+// =============================================
+// PLAFOND
+// Boîte 20cm d'épaisseur, même emprise que la dalle.
+// Face inférieure (-Y) : opaque, même aspect que les murs → cache les studs.
+// Face supérieure (+Y) : transparent → effet ghost depuis au-dessus.
+// =============================================
+const CEIL_THICK = 20;
+
+// BoxGeometry material order: [+X, -X, +Y (top), -Y (bottom), +Z, -Z]
+const _ceilBottom = new THREE.MeshStandardMaterial({
+  color: COLORS.wall, roughness: 0.35, envMapIntensity: 0.15,
+});
+const _ceilTop = new THREE.MeshStandardMaterial({
+  color: COLORS.wall, roughness: 0.35,
+  transparent: true, opacity: 0.18, depthWrite: false,
+});
+const _ceilSide = new THREE.MeshStandardMaterial({ color: COLORS.wall, roughness: 0.35 });
+const _ceilMats = [_ceilSide, _ceilSide, _ceilTop, _ceilBottom, _ceilSide, _ceilSide];
+
+export function buildCeiling(scene) {
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(BLDG_W, CEIL_THICK, BLDG_D), _ceilMats);
+  // Base à WALL_H - 1 : légèrement sous la base des studs (évite le z-fighting)
+  mesh.position.set(BLDG_CX, WALL_H - 1 + CEIL_THICK / 2, BLDG_CZ);
+  scene.add(mesh);
 }
