@@ -183,6 +183,10 @@ export function onResize() {
 const walkFollowers = [];
 export function addWalkFollower(obj) { walkFollowers.push(obj); }
 
+// Followers dont rotation.x suit le pitch de la caméra walk
+const pitchFollowers = [];
+export function addWalkPitchFollower(obj) { pitchFollowers.push(obj); }
+
 export function setInitialWalkPos(x, z) {
   if (!walkActive) { walkPos.x = x; walkPos.z = z; }
 }
@@ -244,6 +248,9 @@ function renderFrame() {
       obj.position.x = walkPos.x;
       obj.position.z = walkPos.z;
       obj.rotation.y = walkYaw;
+    }
+    for (const obj of pitchFollowers) {
+      obj.rotation.x = -walkPitch;
     }
   }
 

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ROOM_W, ROOM_D } from './config.js';
-import { requestRender, addWalkFollower, setInitialWalkPos } from './cameraManager.js';
+import { requestRender, addWalkFollower, addWalkPitchFollower, setInitialWalkPos } from './cameraManager.js';
 
 // Le Walking Man est un THREE.Group (scale = 1) qui contient :
 //   - le costume (suit), enfant positionné localement
@@ -40,7 +40,7 @@ export function buildWalkingMan(scene) {
 
     const box  = new THREE.Box3().setFromObject(suit);
     const size = box.getSize(new THREE.Vector3());
-    suit.scale.setScalar(145 / size.y);      // hauteur costume = 145cm
+    suit.scale.setScalar(156 / size.y);      // hauteur costume = 156cm → sommet à 161cm (181-20)
     box.setFromObject(suit);                 // recalculer après scale
     suit.position.set(0, -box.min.y + SHOE_H, 0); // semelle à SHOE_H cm
     suit.castShadow = true;
@@ -66,6 +66,7 @@ export function buildWalkingMan(scene) {
     cap.castShadow = true;
 
     group.add(cap);
+    addWalkPitchFollower(cap); // rotation.x suit le pitch caméra en walk mode
     capReady = true;
     onBothReady();
   }, undefined, err => console.error('baseball_cap.glb:', err));
