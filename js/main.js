@@ -301,11 +301,11 @@ addEventListener("keydown", (e) => {
   if (!wm) return;
   const STEP = 10, ROT = 0.1;
   if (e.key === "ArrowUp") {
-    wm.position.x += Math.sin(wm.rotation.y) * STEP;
-    wm.position.z += Math.cos(wm.rotation.y) * STEP;
-  } else if (e.key === "ArrowDown") {
     wm.position.x -= Math.sin(wm.rotation.y) * STEP;
     wm.position.z -= Math.cos(wm.rotation.y) * STEP;
+  } else if (e.key === "ArrowDown") {
+    wm.position.x += Math.sin(wm.rotation.y) * STEP;
+    wm.position.z += Math.cos(wm.rotation.y) * STEP;
   } else if (e.key === "ArrowLeft") {
     wm.rotation.y += ROT;
   } else if (e.key === "ArrowRight") {

@@ -76,9 +76,9 @@ function updateWalkLook() {
   const d = 100;
   const cosP = Math.cos(walkPitch);
   controls.target.set(
-    walkPos.x + Math.sin(walkYaw) * cosP * d,
+    walkPos.x - Math.sin(walkYaw) * cosP * d,
     walkPos.y + Math.sin(walkPitch) * d,
-    walkPos.z + Math.cos(walkYaw) * cosP * d,
+    walkPos.z - Math.cos(walkYaw) * cosP * d,
   );
   camera.position.set(walkPos.x, walkPos.y, walkPos.z);
   controls.update();
@@ -234,9 +234,9 @@ function renderFrame() {
 
     // Flèches haut/bas + ZQSD/WASD = translation (si Ctrl/Alt non enfoncé)
     if (!keysPressed.has('CtrlArrowUp') && !keysPressed.has('AltArrowUp') && (keysPressed.has('ArrowUp') || keysPressed.has('w')))
-      { walkPos.x += fwdX; walkPos.z += fwdZ; }
-    if (!keysPressed.has('CtrlArrowDown') && !keysPressed.has('AltArrowDown') && (keysPressed.has('ArrowDown') || keysPressed.has('s')))
       { walkPos.x -= fwdX; walkPos.z -= fwdZ; }
+    if (!keysPressed.has('CtrlArrowDown') && !keysPressed.has('AltArrowDown') && (keysPressed.has('ArrowDown') || keysPressed.has('s')))
+      { walkPos.x += fwdX; walkPos.z += fwdZ; }
     if (keysPressed.has('a'))
       { walkPos.x -= rgtX; walkPos.z -= rgtZ; }
     if (keysPressed.has('d'))
