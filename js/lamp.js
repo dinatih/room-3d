@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ROOM_W, ROOM_D } from './config.js';
-import { KALLAX_SE_X, KALLAX_SE_Z, KALLAX_SE_TOP } from './kallax.js';
+import { KALLAX_SE_TOP } from './kallax.js';
+import { MEUBLE_T_X, MEUBLE_T_Z } from './meubleT.js';
 import { requestRender } from './cameraManager.js';
 
 const LAMP_ABOVE = 55.5; // cm au-dessus du meuble T
@@ -37,8 +38,8 @@ export function buildLamp(scene) {
     });
 
     // Orienter vers le centre du salon
-    const dx = ROOM_W / 2 - KALLAX_SE_X;
-    const dz = ROOM_D / 2 - KALLAX_SE_Z;
+    const dx = ROOM_W / 2 - MEUBLE_T_X;
+    const dz = ROOM_D / 2 - MEUBLE_T_Z;
     lamp.rotation.y = Math.atan2(dx, dz);
 
     // Centrer la lampe sur le meuble T (le GLB n'est pas centré sur son origine)
@@ -47,14 +48,14 @@ export function buildLamp(scene) {
     const cz = (box.min.z + box.max.z) / 2;
     const baseY = KALLAX_SE_TOP + LAMP_ABOVE - box.min.y;
 
-    lamp.position.set(KALLAX_SE_X - cx, baseY, KALLAX_SE_Z - cz);
+    lamp.position.set(MEUBLE_T_X - cx, baseY, MEUBLE_T_Z - cz);
     lamp.castShadow  = true;
     lamp.receiveShadow = true;
     scene.add(lamp);
 
     // PointLight au niveau de l'abat-jour (80% de la hauteur du modèle)
     lampLight = new THREE.PointLight(0xfff5e0, 120000, 350, 2);
-    lampLight.position.set(KALLAX_SE_X - cx, baseY + (box.max.y - box.min.y) * 0.8, KALLAX_SE_Z - cz);
+    lampLight.position.set(MEUBLE_T_X - cx, baseY + (box.max.y - box.min.y) * 0.8, MEUBLE_T_Z - cz);
     lampLight.visible = false;
     scene.add(lampLight);
 
