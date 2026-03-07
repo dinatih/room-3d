@@ -268,6 +268,16 @@ function renderFrame() {
 // =============================================
 addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && walkActive) { exitWalk(); requestRender(); return; }
+  if (e.key === 'p' || e.key === 'P') {
+    exitWalk();
+    exit2D();
+    camera.position.set(...VIEWS.perspective.pos);
+    controls.target.set(...VIEWS.perspective.target);
+    controls.update();
+    requestRender();
+    return;
+  }
+  if (e.key === 'm' || e.key === 'M') { resumeWalk(); return; }
   if (!walkActive) return;
   const k = e.key;
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(k)) {
