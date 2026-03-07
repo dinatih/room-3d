@@ -31,7 +31,10 @@ export class Kallax {
     const x = -(this.totalW / 2) + THICK_FRAME + NICHE_W / 2 + col * (NICHE_W + THICK_INNER);
     const y = this.totalH / 2 - THICK_FRAME - NICHE_H / 2 - row * (NICHE_H + THICK_INNER);
     d.group.position.set(x, y, 0);
-    if (Math.abs(this.group.rotation.z) > 0.1) d.group.rotation.z = -this.group.rotation.z;
+    d.group.rotation.y = Math.PI;
+    // Pour les Kallax pivotés (rotation.z ≠ 0) : contrer le pivot avec +θ (pas -θ),
+    // sinon rotation.y=π combiné à -θ inverse le Y local → languette en bas.
+    if (Math.abs(this.group.rotation.z) > 0.1) d.group.rotation.z = this.group.rotation.z;
     this.group.add(d.group);
   }
 
