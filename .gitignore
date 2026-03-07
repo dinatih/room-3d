@@ -1,1 +1,3 @@
 tries/*
+*.pem
+nohup.out
