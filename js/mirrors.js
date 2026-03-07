@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import {
-  ROOM_D, NUM_LAYERS, BRICK_H,
+  ROOM_D, WALL_H,
   KITCHEN_X1, DOOR_START,
 } from './config.js';
 import { kallaxW } from './kallax.js';
@@ -25,19 +25,23 @@ export function buildMirrors(scene) {
   const frameMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
 
   // =============================================
-  // 3x MIROIR IKEA NISSEDAL 60x60 - Mur D
+  // 3x MIROIR IKEA NISSEDAL 60x60 - Mur D (groupés, 0.5cm d'écart, 3.5cm du plafond)
   // =============================================
   {
     const MIRROR_SIZE = 60;
     const MIRROR_CX = (KITCHEN_X1 + DOOR_START) / 2;
     const MIRROR_Z = ROOM_D - 0.2;
-    const WALL_TOP = NUM_LAYERS * BRICK_H;
+    const GAP = 0.5;
 
     const FRAME_T = 2;
     const FRAME_D = 1.5;
 
+    const gD = new THREE.Group();
+    scene.add(gD);
+
     for (let i = 0; i < 3; i++) {
-      const mirrorY = WALL_TOP - MIRROR_SIZE / 2 - i * MIRROR_SIZE;
+      // Sommet du groupe à WALL_H - 3.5cm, miroirs empilés vers le bas avec GAP entre eux
+      const mirrorY = (WALL_H - 3.5) - MIRROR_SIZE / 2 - i * (MIRROR_SIZE + GAP);
       const fz = MIRROR_Z - FRAME_D / 2;
 
       const mirGeo = new THREE.PlaneGeometry(MIRROR_SIZE - FRAME_T * 2, MIRROR_SIZE - FRAME_T * 2);
@@ -49,21 +53,21 @@ export function buildMirrors(scene) {
       mir.position.set(MIRROR_CX, mirrorY, fz - 0.1);
       mir.rotation.y = Math.PI;
       patchReflectorLayers(mir);
-      scene.add(mir);
+      gD.add(mir);
 
       // Cadre
       const barH = new THREE.Mesh(new THREE.BoxGeometry(MIRROR_SIZE, FRAME_T, FRAME_D), frameMat);
       barH.position.set(MIRROR_CX, mirrorY + MIRROR_SIZE / 2 - FRAME_T / 2, fz);
-      scene.add(barH);
+      gD.add(barH);
       const barB = new THREE.Mesh(new THREE.BoxGeometry(MIRROR_SIZE, FRAME_T, FRAME_D), frameMat);
       barB.position.set(MIRROR_CX, mirrorY - MIRROR_SIZE / 2 + FRAME_T / 2, fz);
-      scene.add(barB);
+      gD.add(barB);
       const barG = new THREE.Mesh(new THREE.BoxGeometry(FRAME_T, MIRROR_SIZE, FRAME_D), frameMat);
       barG.position.set(MIRROR_CX - MIRROR_SIZE / 2 + FRAME_T / 2, mirrorY, fz);
-      scene.add(barG);
+      gD.add(barG);
       const barD = new THREE.Mesh(new THREE.BoxGeometry(FRAME_T, MIRROR_SIZE, FRAME_D), frameMat);
       barD.position.set(MIRROR_CX + MIRROR_SIZE / 2 - FRAME_T / 2, mirrorY, fz);
-      scene.add(barD);
+      gD.add(barD);
     }
   }
 
