@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { requestRender } from './cameraManager.js';
 
 export function buildGarden(scene) {
   // =============================================
@@ -249,86 +251,36 @@ export function buildGarden(scene) {
   }
 
   // =============================================
-  // DESSERTE IKEA VIGGJA (blanc, 37×50×74cm)
+  // DESSERTE IKEA VIGGJA (37×50×74cm) — GLB
   // À côté du canapé ouest (côté sud)
   // =============================================
-  {
-    const VG_W = 37;     // 37cm (le long de Z)
-    const VG_D = 50;     // 50cm (le long de X)
-    const VG_H = 74;     // 74cm hauteur
-    const TOP_Y = 50.8;   // plateau haut à 50.8cm
-    const BOT_Y = 22.9;   // plateau bas à 22.9cm
-    const TRAY_T = 1;   // épaisseur fond plateau
-    const TRAY_RIM = 2.5; // hauteur rebord
-    const LEG_R = 0.8;   // rayon tube acier
+  new GLTFLoader().load('media/viggja.glb', (gltf) => {
+    const viggja = gltf.scene;
 
-    const vgMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.35 });
-    const vgFrameMat = new THREE.MeshStandardMaterial({
-      color: 0xe8e8e8, roughness: 0.3, metalness: 0.3,
+    const rawBox = new THREE.Box3().setFromObject(viggja);
+    const rawSize = rawBox.getSize(new THREE.Vector3());
+    // Scale uniforme sur la hauteur réelle (74cm) — proportions fidèles au GLB
+    viggja.scale.setScalar(74 / Math.max(rawSize.x, rawSize.y, rawSize.z));
+
+    viggja.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(viggja);
+
+    // Sol à Y=0, centré en X=100, bord nord à Z=-143 (3cm du canapé)
+    viggja.position.set(
+      100 - (box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -143 - (box.max.z - box.min.z) / 2,
+    );
+
+    viggja.traverse(c => {
+      if (c.isMesh) {
+        c.castShadow = true;
+        c.receiveShadow = true;
+        c.frustumCulled = false;
+      }
     });
 
-    const vgGroup = new THREE.Group();
-
-    // 4 pieds (tubes verticaux, légèrement inclinés vers l'extérieur)
-    const legGeo = new THREE.CylinderGeometry(LEG_R, LEG_R, VG_H, 6);
-    for (const dx of [-1, 1]) {
-      for (const dz of [-1, 1]) {
-        const leg = new THREE.Mesh(legGeo, vgFrameMat);
-        leg.position.set(
-          dx * (VG_D / 2 - 3),
-          VG_H / 2,
-          dz * (VG_W / 2 - 2),
-        );
-        vgGroup.add(leg);
-      }
-    }
-
-    // Traverses horizontales (bas, connectent les pieds en X)
-    for (const dz of [-1, 1]) {
-      const bar = new THREE.Mesh(
-        new THREE.CylinderGeometry(LEG_R, LEG_R, VG_D - 6, 6),
-        vgFrameMat,
-      );
-      bar.rotation.z = Math.PI / 2;
-      bar.position.set(0, 4, dz * (VG_W / 2 - 2));
-      vgGroup.add(bar);
-    }
-
-    // Plateaux (2 : bas et haut)
-    function addTray(y) {
-      // Fond
-      const base = new THREE.Mesh(
-        new THREE.BoxGeometry(VG_D - 4, TRAY_T, VG_W - 3),
-        vgMat,
-      );
-      base.position.y = y;
-      base.receiveShadow = true;
-      vgGroup.add(base);
-
-      // Rebords (4 côtés)
-      for (const dz of [-1, 1]) {
-        const rim = new THREE.Mesh(
-          new THREE.BoxGeometry(VG_D - 4, TRAY_RIM, TRAY_T),
-          vgMat,
-        );
-        rim.position.set(0, y + TRAY_RIM / 2, dz * (VG_W / 2 - 1.5));
-        vgGroup.add(rim);
-      }
-      for (const dx of [-1, 1]) {
-        const rim = new THREE.Mesh(
-          new THREE.BoxGeometry(TRAY_T, TRAY_RIM, VG_W - 3),
-          vgMat,
-        );
-        rim.position.set(dx * (VG_D / 2 - 2), y + TRAY_RIM / 2, 0);
-        vgGroup.add(rim);
-      }
-    }
-
-    addTray(BOT_Y);
-    addTray(TOP_Y);
-
-    // Position : côté sud du canapé ouest (sofa2 à X=100, Z=-80, spans Z=-130→-30)
-    vgGroup.position.set(100, 0, -140 - VG_W / 2 - 3);
-    scene.add(vgGroup);
-  }
+    scene.add(viggja);
+    requestRender();
+  }, undefined, err => console.error('viggja.glb:', err));
 }
