@@ -250,7 +250,7 @@ function renderFrame() {
       obj.rotation.y = walkYaw;
     }
     for (const obj of pitchFollowers) {
-      obj.rotation.x = -walkPitch;
+      obj.rotation.x = (obj.userData.baseRotX ?? 0) - walkPitch;
     }
   }
 
