@@ -29,7 +29,7 @@ import { buildSunnersta } from "./sunnersta.js";
 import { buildAirPerformer } from "./airPerformer.js";
 import { buildScooter } from "./scooter.js";
 import { buildCasquettes } from "./casquettes.js";
-import { buildManSuit, getSuit } from "./manSuit.js";
+import { buildWalkingMan, getWalkingMan } from "./walkingMan.js";
 import { buildCorridor, toggleCorridorDoors } from "./corridor.js";
 import { buildBathroom } from "./bathroom.js";
 import { buildFloor, buildParquet, buildConcreteSlab, buildCeiling } from "./floor.js";
@@ -99,7 +99,7 @@ buildOnLayer(buildSunnersta, LAYER_FURNITURE);
 buildOnLayer(buildAirPerformer, LAYER_FURNITURE);
 buildOnLayer(buildScooter, LAYER_FURNITURE);
 buildCasquettes(scene); // async GLB, gère ses propres layers + requestRender
-buildManSuit(scene);
+buildWalkingMan(scene);
 
 // Layer 0 (structure) + layer 2 (placard) : géré dans corridor.js
 buildCorridor(scene);
@@ -286,23 +286,22 @@ document.getElementById("resume-walk")?.addEventListener("click", () => {
   resumeWalk();
 });
 
-// Flèches en mode non-walk : déplacer/pivoter le costume
+// Flèches en mode non-walk : déplacer/pivoter le Walking Man
 addEventListener("keydown", (e) => {
   if (isWalkActive() || getIs2D()) return;
-  const suit = getSuit();
-  if (!suit) return;
-  const STEP = 10,
-    ROT = 0.1;
+  const wm = getWalkingMan();
+  if (!wm) return;
+  const STEP = 10, ROT = 0.1;
   if (e.key === "ArrowUp") {
-    suit.position.x += Math.sin(suit.rotation.y) * STEP;
-    suit.position.z += Math.cos(suit.rotation.y) * STEP;
+    wm.position.x += Math.sin(wm.rotation.y) * STEP;
+    wm.position.z += Math.cos(wm.rotation.y) * STEP;
   } else if (e.key === "ArrowDown") {
-    suit.position.x -= Math.sin(suit.rotation.y) * STEP;
-    suit.position.z -= Math.cos(suit.rotation.y) * STEP;
+    wm.position.x -= Math.sin(wm.rotation.y) * STEP;
+    wm.position.z -= Math.cos(wm.rotation.y) * STEP;
   } else if (e.key === "ArrowLeft") {
-    suit.rotation.y += ROT;
+    wm.rotation.y += ROT;
   } else if (e.key === "ArrowRight") {
-    suit.rotation.y -= ROT;
+    wm.rotation.y -= ROT;
   } else return;
   e.preventDefault();
   requestRender();
