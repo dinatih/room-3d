@@ -129,9 +129,13 @@ function updateOrthoFrustum() {
   orthoCamera.updateProjectionMatrix();
 }
 
+let _savedFog = null;
+
 export function enter2DTop() {
   exitWalk();
   exitWalk();
+  _savedFog = scene.fog;
+  scene.fog = null; // le fog à Y=2000 assombrit ~70% de la scène
 
   if (!orthoCamera) {
     orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 5000);
@@ -170,6 +174,7 @@ export function exit2D() {
     orthoControls.dispose();
     orthoControls = null;
   }
+  scene.fog = _savedFog; // restaurer le fog
   controls.enabled = true;
   activeCamera = camera;
   is2D = false;
