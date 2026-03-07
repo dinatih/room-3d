@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { ROOM_W, ROOM_D } from "./config.js";
 import { requestRender, addWalkFollower, addWalkPitchFollower, setInitialWalkPos } from "./cameraManager.js";
+import { setMinimapWalker } from "./minimap.js";
 
 // Le Walking Man est un THREE.Group (scale = 1) qui contient :
 //   - le costume (suit), enfant positionné localement
@@ -27,6 +28,7 @@ export function buildWalkingMan(scene) {
   function onBothReady() {
     if (!suitReady || !capReady) return;
     walkingMan = group;
+    setMinimapWalker(group);
     scene.add(group);
     addWalkFollower(group);
     setInitialWalkPos(group.position.x, group.position.z);

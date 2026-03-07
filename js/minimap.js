@@ -1,3 +1,9 @@
+let _walker = null;
+let _redrawFn = null;
+
+export function setMinimapWalker(group) { _walker = group; }
+export function redrawMinimap() { if (_redrawFn) _redrawFn(); }
+
 import {
   ROOM_W, ROOM_D, DOOR_START, DOOR_END,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
@@ -296,7 +302,43 @@ export function buildMinimap() {
       ctx.font = '5px sans-serif';
       ctx.fillText(room.nameEn, tx(room.labelX), tz(room.labelZ) + 9);
     }
+
+    // === WALKING MAN (casquette vue du haut) ===
+    if (_walker) {
+      const wx = _walker.position.x;
+      const wz = _walker.position.z;
+      const ry = _walker.rotation.y;
+
+      ctx.save();
+      ctx.translate(tx(wx), tz(wz));
+      // Three.js rotation.y positive = CCW vu du dessus ; canvas rotate positive = CW → inverser
+      ctx.rotate(-ry);
+
+      const R = 5;   // rayon calotte px
+      const BW = 8;  // largeur visière px
+      const BH = 4;  // profondeur visière px
+
+      ctx.fillStyle = '#ff4444';
+      ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+      ctx.lineWidth = 0.8;
+
+      // Calotte (cercle)
+      ctx.beginPath();
+      ctx.arc(0, 0, R, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Visière (vers l'avant = local +Y après rotation)
+      ctx.beginPath();
+      ctx.rect(-BW / 2, R, BW, BH);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
   }
+
+  _redrawFn = () => draw(currentRoom);
 
   // Dessin initial
   draw(null);
