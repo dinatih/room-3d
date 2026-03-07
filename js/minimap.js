@@ -311,8 +311,8 @@ export function buildMinimap() {
 
       ctx.save();
       ctx.translate(tx(wx), tz(wz));
-      // Three.js rotation.y positive = CCW vu du dessus ; canvas rotate positive = CW → inverser
-      ctx.rotate(-ry);
+      // GLB face -Z (nord). Local +Y après rotate(π - ry) pointe vers (-sin(ry), -cos(ry)) = direction du regard.
+      ctx.rotate(Math.PI - ry);
 
       const R = 5;   // rayon calotte px
       const BW = 8;  // largeur visière px

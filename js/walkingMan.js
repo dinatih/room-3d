@@ -21,6 +21,12 @@ export function buildWalkingMan(scene) {
   const group = new THREE.Group();
   group.position.set(ROOM_W / 2, 0, ROOM_D / 2);
 
+  // Les GLBs GLTF font face à -Z par convention. On les tourne de π pour qu'ils
+  // fassent face à +Z (direction de marche), sans toucher à la logique de mouvement.
+  const dirGroup = new THREE.Group();
+  dirGroup.rotation.y = Math.PI;
+  group.add(dirGroup);
+
   const loader = new GLTFLoader();
   let suitReady = false;
   let capReady = false;
@@ -55,7 +61,7 @@ export function buildWalkingMan(scene) {
       suit.receiveShadow = true;
       // layer 0 (défaut) : visible dans les miroirs même sans HD
 
-      group.add(suit);
+      dirGroup.add(suit);
       suitReady = true;
       onBothReady();
     },
@@ -82,7 +88,7 @@ export function buildWalkingMan(scene) {
       cap.userData.baseRotX = cap.rotation.x; // offset conservé en walk mode
       cap.castShadow = true;
 
-      group.add(cap);
+      dirGroup.add(cap);
       addWalkPitchFollower(cap); // rotation.x suit le pitch caméra en walk mode
       capReady = true;
       onBothReady();
