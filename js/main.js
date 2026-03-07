@@ -9,6 +9,7 @@ import {
   LAYER_EQUIPMENT,
   LAYER_FURNITURE,
   LAYER_NETWORKS,
+  LAYER_GLB,
 } from "./config.js";
 import { scene, camera, renderer, controls } from "./scene.js";
 import { allBricks } from "./brickHelpers.js";
@@ -75,6 +76,7 @@ function buildOnLayer(buildFn, layer) {
 camera.layers.enable(LAYER_EQUIPMENT);
 camera.layers.enable(LAYER_FURNITURE);
 camera.layers.enable(LAYER_NETWORKS);
+camera.layers.enable(LAYER_GLB);
 
 // Layer 0 : structure
 buildWalls(scene);
@@ -250,6 +252,7 @@ function makeLayerToggle(btnId, layer, label) {
 makeLayerToggle("layer-struct-toggle", LAYER_STRUCTURE, "Structure");
 makeLayerToggle("layer-equip-toggle", LAYER_EQUIPMENT, "Équipements");
 makeLayerToggle("layer-furniture-toggle", LAYER_FURNITURE, "Mobilier");
+makeLayerToggle("layer-glb-toggle", LAYER_GLB, "GLB");
 
 // Toggle miroirs HD (patch layers)
 {

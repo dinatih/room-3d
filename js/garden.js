@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { requestRender } from './cameraManager.js';
+import { LAYER_GLB } from './config.js';
 
 export function buildGarden(scene) {
   // =============================================
@@ -273,6 +274,7 @@ export function buildGarden(scene) {
     );
 
     viggja.traverse(c => {
+      c.layers.set(LAYER_GLB);
       if (c.isMesh) {
         c.castShadow = true;
         c.receiveShadow = true;

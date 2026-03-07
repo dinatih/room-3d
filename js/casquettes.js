@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { LAYER_FURNITURE } from "./config.js";
+import { LAYER_GLB } from "./config.js";
 import { requestRender } from "./cameraManager.js";
 
 // HEAD_R=8.9, scale.y=1.15, SHOULDER_H=8, NECK_H=8
@@ -29,9 +29,7 @@ export function buildCasquettes(scene) {
         cap.rotation.set(rx ?? 0, ry ?? 0, rz ?? 0);
         cap.position.set(x, y, z);
         cap.castShadow = true;
-        cap.traverse((obj) => {
-          if (obj.isMesh) obj.layers.set(LAYER_FURNITURE);
-        });
+        cap.traverse((obj) => obj.layers.set(LAYER_GLB));
         scene.add(cap);
       }
 

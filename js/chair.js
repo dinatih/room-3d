@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { requestRender } from './cameraManager.js';
+import { LAYER_GLB } from './config.js';
 
 export function buildChair(scene) {
   const loader = new GLTFLoader();
@@ -10,6 +11,7 @@ export function buildChair(scene) {
   loader.load('media/smorkull.glb', (gltf) => {
     const chair = gltf.scene;
     chair.traverse(c => {
+      c.layers.set(LAYER_GLB);
       if (c.isMesh) {
         c.material = redMat;
         // boundingSphere calculée en bind-pose locale ≠ bbox réel après Ry(π/2) + position.

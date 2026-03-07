@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { ROOM_W, ROOM_D } from './config.js';
+import { ROOM_W, ROOM_D, LAYER_GLB } from './config.js';
 import { KALLAX_SE_TOP } from './kallax.js';
 import { MEUBLE_T_X, MEUBLE_T_Z } from './meubleT.js';
 import { requestRender } from './cameraManager.js';
@@ -49,6 +49,7 @@ export function buildLamp(scene) {
     const baseY = KALLAX_SE_TOP + LAMP_ABOVE - box.min.y;
 
     lamp.position.set(MEUBLE_T_X - cx, baseY, MEUBLE_T_Z - cz);
+    lamp.traverse(c => c.layers.set(LAYER_GLB));
     lamp.castShadow  = true;
     lamp.receiveShadow = true;
     scene.add(lamp);

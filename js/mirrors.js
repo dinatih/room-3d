@@ -3,17 +3,19 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 import {
   ROOM_D, WALL_H,
   KITCHEN_X1, DOOR_START,
+  LAYER_GLB,
 } from './config.js';
 import { kallaxW } from './kallax.js';
 
-// Patch Reflector pour que sa caméra virtuelle hérite des layers de la caméra principale
-// (Three.js r170 ne copie pas layers.mask dans onBeforeRender)
+// HD OFF : reflector camera limité à LAYER_STRUCTURE (layer 0) → GLBs et mobilier exclus.
+// HD ON  : reflector camera hérite du mask complet de la caméra principale → tout reflété.
+// (Three.js r170 : le Reflector crée sa propre caméra avec layers.mask=1 par défaut,
+//  il faut patcher onBeforeRender pour propager le mask souhaité.)
 let mirrorLayersEnabled = false;
 
 function patchReflectorLayers(reflector) {
   const origOnBeforeRender = reflector.onBeforeRender;
   reflector.onBeforeRender = function(renderer, scene, camera) {
-    // reflector.camera = la caméra virtuelle interne du Reflector
     reflector.camera.layers.mask = mirrorLayersEnabled ? camera.layers.mask : 1;
     origOnBeforeRender.call(this, renderer, scene, camera);
   };
