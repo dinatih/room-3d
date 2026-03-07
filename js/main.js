@@ -296,7 +296,7 @@ document.getElementById("resume-walk")?.addEventListener("click", () => {
 
 // Flèches en mode non-walk : déplacer/pivoter le Walking Man
 addEventListener("keydown", (e) => {
-  if (isWalkActive() || getIs2D()) return;
+  if (isWalkActive()) return;
   const wm = getWalkingMan();
   if (!wm) return;
   const STEP = 10, ROT = 0.1;
