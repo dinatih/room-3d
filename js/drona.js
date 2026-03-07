@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { requestRender } from './cameraManager.js';
+import { LAYER_GLB } from './config.js';
 
 // =============================================
 // DRONA — ikea_DRONA_black.glb, peint en rouge
@@ -41,6 +42,7 @@ function ensureLoaded() {
 function buildInstance(group) {
   const clone = _tpl.clone(true);
   clone.traverse(c => {
+    c.layers.set(LAYER_GLB);
     if (c.isMesh) {
       c.material = redMat;
       c.castShadow = true;

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ROOM_W, ROOM_D, WALL_H, DOOR_START, NICHE_DEPTH, KITCHEN_Z, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NETWORKS } from './config.js';
+import { ROOM_W, ROOM_D, WALL_H, DOOR_START, NICHE_DEPTH, KITCHEN_Z, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NETWORKS, LAYER_GLB } from './config.js';
 import { scene, camera, renderer, controls } from './scene.js';
 
 const CX = ROOM_W / 2, CY = WALL_H / 2, CZ = ROOM_D / 2;
@@ -136,6 +136,7 @@ export function enter2DTop() {
     orthoCamera.layers.enable(LAYER_EQUIPMENT);
     orthoCamera.layers.enable(LAYER_FURNITURE);
     orthoCamera.layers.enable(LAYER_NETWORKS);
+    orthoCamera.layers.enable(LAYER_GLB);
   }
   updateOrthoFrustum();
   orthoCamera.up.set(0, 0, -1); // -Z vers le haut de l'écran (nord)

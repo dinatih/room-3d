@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { ROOM_D, NICHE_DEPTH } from './config.js';
+import { ROOM_D, NICHE_DEPTH, LAYER_GLB } from './config.js';
 import { kallaxW } from './kallax.js';
 import { requestRender } from './cameraManager.js';
 
@@ -44,8 +44,13 @@ export function buildMackapar(scene) {
     const cz = (box.min.z + box.max.z) / 2;
     mack.position.set(posX, -box.min.y, mpZ - cz);
 
-    mack.castShadow = true;
-    mack.receiveShadow = true;
+    mack.traverse(c => {
+      c.layers.set(LAYER_GLB);
+      if (c.isMesh) {
+        c.castShadow = true;
+        c.receiveShadow = true;
+      }
+    });
     scene.add(mack);
     requestRender();
   }, undefined, err => console.error('mackapar_ikea.glb:', err));

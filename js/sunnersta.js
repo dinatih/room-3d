@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { ROOM_W } from './config.js';
+import { ROOM_W, LAYER_GLB } from './config.js';
 import { requestRender } from './cameraManager.js';
 
 export function buildSunnersta(scene) {
@@ -35,6 +35,7 @@ export function buildSunnersta(scene) {
     );
 
     trolley.traverse(c => {
+      c.layers.set(LAYER_GLB); // inclut Mesh, Line, Points (contours GLB)
       if (c.isMesh) {
         c.castShadow = true;
         c.receiveShadow = true;
