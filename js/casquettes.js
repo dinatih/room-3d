@@ -37,7 +37,7 @@ export function buildCasquettes(scene) {
 
       // 1) Mur B, au-dessus du lit — même position que la casquette procédurale
       //    rotation.z = π/2 : dome → -X (vers pièce), ouverture → +X (mur)
-      placeCap(297, 144, 173.5, 0, 0, Math.PI / 2);
+      placeCap(297, 144, 173.5, Math.PI / 2, 0, Math.PI / 2);
 
       // 2) Sur tête de mannequin Sunnersta (282, 90, 271.5)
       //    sommet tête ≈ 125.2cm, cap posé dessus

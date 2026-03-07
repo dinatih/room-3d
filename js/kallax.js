@@ -116,6 +116,11 @@ function addKallaxToScene(scene, kallax, cx, cz, baseY, rotY = 0) {
   return kallax;
 }
 
+// Position du groupe Kallax SE (2×1 + 2×1 pivotés, mur B 60cm de mur D)
+export const KALLAX_SE_X   = ROOM_W - KALLAX_DEPTH / 2;          // 280.5
+export const KALLAX_SE_Z   = ROOM_D - 60 - kallaxW(1) / 2;       // 319.75
+export const KALLAX_SE_TOP = 2 * kallaxW(2);                      // 151 cm
+
 export function buildKallax(scene) {
   const kList = [];
 
