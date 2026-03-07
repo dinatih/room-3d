@@ -1,74 +1,73 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { requestRender } from './cameraManager.js';
 
 // =============================================
-// DRONA — Ported from Gemini kallax.html
-// Geometry in cm
+// DRONA — ikea_DRONA_black.glb, peint en rouge
+// Template chargé une fois, cloné pour chaque instance
 // =============================================
+
+const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });
+
+let _tpl = null;   // false = en cours de chargement, object = prêt
+let _rawBox = null;
+const _pending = [];
+
+function ensureLoaded() {
+  if (_tpl !== null) return;
+  _tpl = false;
+  new GLTFLoader().load('media/ikea_DRONA_black.glb', (gltf) => {
+    _tpl = gltf.scene;
+    // Le GLB n'a pas d'unités réelles garanties, mais les proportions du modèle
+    // sont fidèles à la Drona réelle. On scale uniformément sur la profondeur
+    // connue (38cm = axe Z du GLB) — largeur et hauteur suivent les proportions.
+    const rawSize = new THREE.Box3().setFromObject(_tpl).getSize(new THREE.Vector3());
+    _tpl.scale.setScalar(38 / rawSize.z);
+    _tpl.updateMatrixWorld(true);
+    // Centrer le template à l'origine
+    const box = new THREE.Box3().setFromObject(_tpl);
+    _tpl.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -(box.min.y + box.max.y) / 2,
+      -(box.min.z + box.max.z) / 2,
+    );
+    for (const fn of _pending) fn();
+    _pending.length = 0;
+    requestRender();
+  }, undefined, err => console.error('ikea_DRONA_black.glb:', err));
+}
+
+// Clone le template (déjà dimensionné + centré) dans le group donné
+function buildInstance(group) {
+  const clone = _tpl.clone(true);
+  clone.traverse(c => {
+    if (c.isMesh) {
+      c.material = redMat;
+      c.castShadow = true;
+      c.receiveShadow = true;
+      c.frustumCulled = false;
+    }
+  });
+  group.add(clone);
+}
+
+// ── API publique ────────────────────────────────────────────────────────────
 
 export class Drona {
-  constructor(color = 0xcc0000, width = 33, height = 33, depth = 38) {
+  constructor() {
     this.group = new THREE.Group();
-    const mat = new THREE.MeshStandardMaterial({ color, roughness: 1 });
-    const T = 0.5; // épaisseur paroi
-
-    // Boîte creuse (5 faces, pas de dessus)
-    // Fond
-    const bottom = new THREE.Mesh(new THREE.BoxGeometry(width, T, depth), mat);
-    bottom.position.y = -height / 2 + T / 2;
-    this.group.add(bottom);
-
-    // Face avant / arrière
-    const fbGeo = new THREE.BoxGeometry(width, height - T, T);
-    const front = new THREE.Mesh(fbGeo, mat);
-    front.position.set(0, T / 2, depth / 2 - T / 2);
-    front.castShadow = true;
-    this.group.add(front);
-    const back = new THREE.Mesh(fbGeo, mat);
-    back.position.set(0, T / 2, -depth / 2 + T / 2);
-    back.castShadow = true;
-    this.group.add(back);
-
-    // Côtés gauche / droit
-    const sideGeo = new THREE.BoxGeometry(T, height - T, depth - T * 2);
-    const left = new THREE.Mesh(sideGeo, mat);
-    left.position.set(-width / 2 + T / 2, T / 2, 0);
-    this.group.add(left);
-    const right = new THREE.Mesh(sideGeo, mat);
-    right.position.set(width / 2 - T / 2, T / 2, 0);
-    this.group.add(right);
-
-    // Languettes (toute la largeur, partent du haut)
-    const handleH = 4;
-    const handleGeo = new THREE.BoxGeometry(width, handleH, 0.5);
-    const handleMat = new THREE.MeshStandardMaterial({ color, roughness: 0.8, emissive: 0x220000 });
-
-    const hY = height / 2 - handleH / 2;
-    const hZ = depth / 2 + 0.05;
-
-    const hFront = new THREE.Mesh(handleGeo, handleMat);
-    hFront.position.set(0, hY, hZ);
-    this.group.add(hFront);
-
-    const hBack = new THREE.Mesh(handleGeo, handleMat);
-    hBack.position.set(0, hY, -hZ);
-    this.group.add(hBack);
+    ensureLoaded();
+    if (_tpl) buildInstance(this.group);
+    else _pending.push(() => buildInstance(this.group));
   }
 }
 
-/**
- * Add a single Drona at a cm position
- * @param {THREE.Scene|THREE.Group} parent
- * @param {number} cx - centre X (cm)
- * @param {number} cy - centre Y (cm)
- * @param {number} cz - centre Z (cm)
- * @param {number} w - width  (cm, default 33)
- * @param {number} h - height (cm, default 33)
- * @param {number} d - depth  (cm, default 38)
- */
-export function addSingleDrona(parent, cx, cy, cz, w = 33, h = 33, d = 38, rotY = 0) {
-  const drona = new Drona(0xcc0000, w, h, d);
-  drona.group.position.set(cx, cy, cz);
-  if (rotY) drona.group.rotation.y = rotY;
-  parent.add(drona.group);
-  return drona;
+export function addSingleDrona(parent, cx, cy, cz, rotY = 0) {
+  const group = new THREE.Group();
+  group.position.set(cx, cy, cz);
+  if (rotY) group.rotation.y = rotY;
+  parent.add(group);
+  ensureLoaded();
+  if (_tpl) buildInstance(group);
+  else _pending.push(() => buildInstance(group));
 }

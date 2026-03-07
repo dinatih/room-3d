@@ -19,8 +19,8 @@ export function buildDecor(scene) {
   // 4 DRONA - 2 sur MACKAPÄR, 2 sur Kallax 2x5
   // =============================================
   {
-    const DF = 33; // face 33x33cm
-    const DD = 38; // profondeur 38cm
+    const DF = 33; // face 33x33cm (Drona réelle)
+    const DD = 38; // profondeur 38cm (Drona réelle)
 
     // 2 sur MACKAPÄR (tournées 90° pour aligner profondeur avec le meuble)
     // mpCX doit correspondre au centre calculé dans mackapar.js :
@@ -29,54 +29,44 @@ export function buildDecor(scene) {
     const mpCX = -NICHE_DEPTH + 3.5 + 77 / 2;  // ≈ 32cm
     const mpCZ = ROOM_D - kallaxW(2) - 32 / 2;
 
-    addSingleDrona(scene, mpCX - 20, mpTopY + DF / 2, mpCZ, DF, DF, DD, Math.PI / 2);
-    addSingleDrona(scene, mpCX + 20, mpTopY + DF / 2, mpCZ, DF, DF, DD, Math.PI / 2);
+    addSingleDrona(scene, mpCX - 20, mpTopY + DF / 2, mpCZ, Math.PI / 2);
+    addSingleDrona(scene, mpCX + 20, mpTopY + DF / 2, mpCZ, Math.PI / 2);
 
     // 1 sur Kallax NE empilé 2×1+2×2 (angle C+B), poussé contre mur C (Z=0)
     const k1TopY = kallaxH(1) + kallaxH(2);
     const k1CX = ROOM_W - 20; // 280
-    addSingleDrona(scene, k1CX, k1TopY + DF / 2, DD / 2, DF, DF, DD);
+    addSingleDrona(scene, k1CX, k1TopY + DF / 2, DD / 2);
 
     // 2 sur Kallax cuisine empilé 2×2+2×2+2×1
     const k4TopY = kallaxH(2) * 2 + kallaxH(1);
     const k4CX = -NICHE_DEPTH + KALLAX_DEPTH / 2;
     const k4CZ = ROOM_D - kallaxW(2) / 2;
 
-    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ - 18, DF, DF, DD, Math.PI / 2);
-    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ + 18, DF, DF, DD, Math.PI / 2);
+    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ - 18, Math.PI / 2);
+    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ + 18, Math.PI / 2);
 
     // 1 sur meuble SDB côté évier (cbnE), plaqué contre mur nord
-    addSingleDrona(
-      scene,
-      DOOR_START - 28,
-      60 + DF / 2,
-      KITCHEN_Z + 30,
-      DD,
-      DF,
-      DF,
-      Math.PI / 2,
-    );
+    addSingleDrona(scene, DOOR_START - 28, 60 + DF / 2, KITCHEN_Z + 30);
   }
 
   // =============================================
   // 3 DRONA - sur le meuble haut cuisine
   // =============================================
   {
-    const dronaFace = 33; // 33cm
-    const dronaDepth = 38; // 38cm
+    const DF = 33; // face 33x33cm (Drona réelle)
+    const DD = 38; // profondeur 38cm (Drona réelle)
 
     const hcTopY = 195;
     // Plaquées contre mur du fond (KITCHEN_Z), profondeur 38cm le long de Z
     // Débordent de ~2cm du meuble (HC_D=40, Drona=38 plaqué au fond)
-    const hcCZ = KITCHEN_Z - dronaDepth / 2;
+    const hcCZ = KITCHEN_Z - DD / 2;
     const KIT_W = KITCHEN_X1 - KITCHEN_X0;
 
-    const gap = (KIT_W - 3 * dronaFace) / 4;
+    const gap = (KIT_W - 3 * DF) / 4;
 
     for (let i = 0; i < 3; i++) {
-      const cx = KITCHEN_X0 + gap + dronaFace / 2 + i * (dronaFace + gap);
-      addSingleDrona(scene, cx, hcTopY + dronaFace / 2, hcCZ,
-        dronaFace, dronaFace, dronaDepth);
+      const cx = KITCHEN_X0 + gap + DF / 2 + i * (DF + gap);
+      addSingleDrona(scene, cx, hcTopY + DF / 2, hcCZ, Math.PI);
     }
   }
 
@@ -145,15 +135,8 @@ export function buildDecor(scene) {
     }
 
     // Drona sur le congélateur
-    addSingleDrona(
-      scene,
-      frzX,
-      frzBaseY + FRZ_H + 33 / 2,
-      frzZ,
-      33,
-      33,
-      38,
-    );
+    const DF = 33; // face 33x33cm (Drona réelle)
+    addSingleDrona(scene, frzX, frzBaseY + FRZ_H + DF / 2, frzZ, Math.PI);
   }
 
   // =============================================
