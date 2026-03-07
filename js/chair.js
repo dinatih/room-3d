@@ -40,7 +40,7 @@ export function buildChair(scene) {
     // Mais le corps visible (siège, colonne) ne démarre qu'à ~40cm de là en World X
     // → décalage GLB entre l'origine Z=0 (pointe de roulette) et la masse visible.
     // 40cm = position réaliste devant bureau + évite artefact de clipping Reflector Nissedal.
-    chair.position.set(40 - box.min.x, 0, 145 - cz);
+    chair.position.set(40 - box.min.x, 0, 151 - cz);
 
     chair.castShadow = true;
     chair.receiveShadow = true;
