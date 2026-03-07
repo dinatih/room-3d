@@ -23,8 +23,10 @@ export function buildDecor(scene) {
     const DD = 38; // profondeur 38cm
 
     // 2 sur MACKAPÄR (tournées 90° pour aligner profondeur avec le meuble)
+    // mpCX doit correspondre au centre calculé dans mackapar.js :
+    //   -NICHE_DEPTH + plinthe(3.5) + demi-largeur GLB(≈77/2)
     const mpTopY = 200;
-    const mpCX = -NICHE_DEPTH + 78 / 2;
+    const mpCX = -NICHE_DEPTH + 3.5 + 77 / 2;  // ≈ 32cm
     const mpCZ = ROOM_D - kallaxW(2) - 32 / 2;
 
     addSingleDrona(scene, mpCX - 20, mpTopY + DF / 2, mpCZ, DF, DF, DD, Math.PI / 2);
