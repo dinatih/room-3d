@@ -1,4 +1,7 @@
 import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { LAYER_GLB } from "./config.js";
+import { requestRender } from "./cameraManager.js";
 import {
   ROOM_W,
   ROOM_D,
@@ -462,4 +465,39 @@ export function buildDecor(scene) {
     nfGroup.position.set(k25CX, shelfTopY, k25CZ);
     scene.add(nfGroup);
   }
+
+  // =============================================
+  // SAC À DOS (red_backpack.glb) — mur A, Z=350, Y=160
+  // =============================================
+  new GLTFLoader().load('media/red_backpack.glb', (gltf) => {
+    const bag = gltf.scene;
+
+    const rawBox = new THREE.Box3().setFromObject(bag);
+    const rawSize = rawBox.getSize(new THREE.Vector3());
+    // Hauteur réelle sac à dos ~50cm
+    bag.scale.setScalar(50 / rawSize.y);
+
+    bag.rotation.y = Math.PI;
+    bag.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(bag);
+
+    // Dos contre mur A (X=0), centré en Z=300, centre à Y=160
+    bag.position.set(
+      -box.min.x,                            // dos contre X=0
+      160 - (box.min.y + box.max.y) / 2,    // centre Y=160
+      (236 + 5 + 45 / 2) - (box.min.z + box.max.z) / 2, // même Z que le congélateur CHIQ
+    );
+
+    bag.traverse(c => {
+      c.layers.set(LAYER_GLB);
+      if (c.isMesh) {
+        c.castShadow = true;
+        c.receiveShadow = true;
+        c.frustumCulled = false;
+      }
+    });
+
+    scene.add(bag);
+    requestRender();
+  }, undefined, err => console.error('red_backpack.glb:', err));
 }
