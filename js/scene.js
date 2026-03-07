@@ -9,7 +9,7 @@ export const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x2a2a3e);
 scene.fog = new THREE.FogExp2(0x2a2a3e, 0.0006);
 
-export const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 1, 5000);
+export const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 5000);
 
 export const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
