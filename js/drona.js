@@ -9,6 +9,7 @@ import { LAYER_GLB } from './config.js';
 // =============================================
 
 const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });
+const seamMat = new THREE.LineBasicMaterial({ color: 0x660000 }); // coutures rouge foncé
 
 let _tpl = null;   // false = en cours de chargement, object = prêt
 let _rawBox = null;
@@ -48,6 +49,8 @@ function buildInstance(group) {
       c.castShadow = true;
       c.receiveShadow = true;
       c.frustumCulled = false;
+    } else if (c.isLine) {
+      c.material = seamMat; // coutures en rouge foncé
     }
   });
   group.add(clone);

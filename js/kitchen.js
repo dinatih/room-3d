@@ -5,7 +5,7 @@ import {
 
 export function buildKitchen(scene) {
   const COUNTER_H = 90;
-  const COUNTER_SLAB = 5;
+  const COUNTER_SLAB = 3;
   const KIT_W = KITCHEN_X1 - KITCHEN_X0;
   const KIT_D = KITCHEN_DEPTH;
   const FRIDGE_W = 60;
@@ -116,7 +116,7 @@ export function buildKitchen(scene) {
     // ExtrudeGeometry extrude le long de Z local → on le tourne pour que l'extrusion soit en Y
     geo.rotateX(-Math.PI / 2);
 
-    const mat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.25, metalness: 0.05 });
+    const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25, metalness: 0.05 });
     const mesh = new THREE.Mesh(geo, mat);
     // After rotateX(-PI/2): shape Y maps to -Z, extrusion maps to +Y
     // Geometry spans x:[0,cW], y:[0,SLAB], z:[-cD,0]
