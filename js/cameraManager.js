@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ROOM_W, ROOM_D, WALL_H, DOOR_START, NICHE_DEPTH, KITCHEN_Z, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NETWORKS, LAYER_GLB } from './config.js';
+import { redrawMinimap } from './minimap.js';
 import { scene, camera, renderer, controls } from './scene.js';
 
 const CX = ROOM_W / 2, CY = WALL_H / 2, CZ = ROOM_D / 2;
@@ -54,6 +55,7 @@ export function enterWalk(x, z) {
   controls.enableZoom = false;
   const c = document.getElementById('controls');
   if (c) c.textContent = 'Flèches / WASD : marcher | ←→ : pivoter | Ctrl+↑↓ : incliner | Alt+↑↓ : hauteur | Clic+glisser : regarder | Échap : quitter';
+  redrawMinimap();
   requestRender();
 }
 
@@ -254,6 +256,7 @@ function renderFrame() {
       obj.rotation.x = (obj.userData.baseRotX ?? 0) - walkPitch;
     }
   }
+  redrawMinimap(); // toujours à jour (walk mode ET déplacement manuel en vue perspective)
 
   if (is2D && orthoControls) orthoControls.update();
   else controls.update();
