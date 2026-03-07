@@ -35,7 +35,7 @@ import { buildLamp, toggleLamp } from "./lamp.js";
 import { buildMeubleT } from "./meubleT.js";
 import { buildCorridor, toggleCorridorDoors } from "./corridor.js";
 import { buildBathroom } from "./bathroom.js";
-import { buildFloor, buildParquet, buildConcreteSlab, buildCeiling } from "./floor.js";
+import { buildFloor, buildParquet, buildConcreteSlab, buildGardenSlab, buildCeiling } from "./floor.js";
 import { buildInstancedMeshes } from "./instancedMeshes.js";
 import { buildGrid } from "./grid.js";
 import { buildMinimap } from "./minimap.js";
@@ -82,6 +82,7 @@ camera.layers.enable(LAYER_GLB);
 buildWalls(scene);
 buildFloor(allBricks);
 buildConcreteSlab(scene);
+buildGardenSlab(scene);
 buildCeiling(scene);
 
 // Layer 1 : équipements
@@ -329,7 +330,7 @@ document.getElementById("lamp-toggle")?.addEventListener("click", () => {
 // SOL ONLY MODE
 // =============================================
 let floorOnly = false;
-const FLOOR_TYPES = new Set(["floor", "tile", "grass", "ground", "grid", "parquet"]);
+const FLOOR_TYPES = new Set(["floor", "tile", "ground", "grid", "parquet"]);
 
 function toggleFloorOnly() {
   // Désactiver plan si actif
