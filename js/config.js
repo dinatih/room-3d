@@ -89,8 +89,6 @@ export const COLORS = {
   accent: 0xcc0000,
   accentS: 0xaa0000,
   ground: 0x3a7d44,
-  grass: 0x4a9e54,
-  grassStud: 0x3d8545,
   tile: 0xe8e8e8,
   studTile: 0xd0d0d0,
 };

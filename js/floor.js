@@ -41,26 +41,6 @@ export function buildFloor(allBricks) {
     addFloorBrick(KIT_OPEN_X0 + b.start, ROOM_D, b.size);
   }
 
-  // =============================================
-  // SOL LEGO VERT - Jardin (quadrilatère délimité par pointillés)
-  // =============================================
-  {
-    const zStart = Math.ceil(GARDEN_JC_Z / 10) * 10; // round up to 10cm boundary
-
-    for (let z = zStart; z < -30; z += 10) {
-      let x0 = -10;
-      if (z + 5 < -140) {
-        x0 = Math.ceil((-10 - 110 * (z + 5 + 140) / 70) / 10) * 10;
-      }
-      const x1 = 310;
-      const w = x1 - x0;
-      if (w <= 0) continue;
-
-      for (const b of fillRow(w, Math.abs(z / 10) % 2 === 1)) {
-        addFloorBrick(x0 + b.start, z, b.size, 'grass');
-      }
-    }
-  }
 }
 
 // =============================================
@@ -99,6 +79,21 @@ export function buildConcreteSlab(scene) {
 
   // Surface haute de la dalle = sommet des anciennes plates
   slab.position.set(BLDG_CX, FLOOR_Y + (PLATE_H - GAP) / 2 - SLAB_DEPTH / 2, BLDG_CZ);
+  slab.receiveShadow = true;
+  scene.add(slab);
+}
+
+// Dalle jardin verte — de Z = BLDG_Z_MIN-30 jusqu'à Z=-400, même emprise X et épaisseur
+export function buildGardenSlab(scene) {
+  const SLAB_DEPTH = 10;
+  const Z_START = BLDG_Z_MIN; // -30cm (même début que la dalle béton)
+  const Z_END = -400;
+  const D = Math.abs(Z_END - Z_START); // 340cm
+  const CZ = (Z_START + Z_END) / 2;   // -230cm
+
+  const mat = new THREE.MeshStandardMaterial({ color: 0x4a9e54, roughness: 0.7 });
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(BLDG_W, SLAB_DEPTH, D), mat);
+  slab.position.set(BLDG_CX, FLOOR_Y + (PLATE_H - GAP) / 2 - SLAB_DEPTH / 2, CZ);
   slab.receiveShadow = true;
   scene.add(slab);
 }

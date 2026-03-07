@@ -160,42 +160,6 @@ export function buildGarden(scene) {
     scene.add(vhGroup);
   }
 
-  // =============================================
-  // CAILLEBOTIS ALTAPPEN IKEA (blanc, 30×30cm)
-  // Zone jardin Z=-290 → Z=-160
-  // =============================================
-  {
-    const ALT_S = 30;       // 30cm
-    const ALT_H = 2;    // ~2cm épaisseur
-    const ALT_GAP = 0.6; // espacement entre dalles
-
-    const altMat = new THREE.MeshStandardMaterial({
-      color: 0xf0ece4, roughness: 0.55,
-    });
-    const altGeo = new THREE.BoxGeometry(
-      ALT_S - ALT_GAP, ALT_H, ALT_S - ALT_GAP,
-    );
-
-    const Z0 = -290;
-    const Z1 = -160;
-    const X_RIGHT = 310;
-
-    // Limite gauche jardin (même formule que floor.js)
-    function gardenX0(z) {
-      if (z + 5 >= -140) return -10;
-      return Math.ceil((-10 - 110 * (z + 5 + 140) / 70) / 10) * 10;
-    }
-
-    for (let tz = Z0; tz + ALT_S <= Z1; tz += ALT_S) {
-      const x0 = gardenX0(tz);
-      for (let tx = X_RIGHT - ALT_S; tx >= x0; tx -= ALT_S) {
-        const tile = new THREE.Mesh(altGeo, altMat);
-        tile.position.set(tx + ALT_S / 2, ALT_H / 2, tz + ALT_S / 2);
-        tile.receiveShadow = true;
-        scene.add(tile);
-      }
-    }
-  }
 
   // =============================================
   // COFFRE BANC YITAHOME 100 Gal (gris, 122×55×62cm)
