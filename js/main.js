@@ -31,6 +31,7 @@ import { buildScooter } from "./scooter.js";
 import { buildCasquettes } from "./casquettes.js";
 import { buildWalkingMan, getWalkingMan } from "./walkingMan.js";
 import { buildLamp, toggleLamp } from "./lamp.js";
+import { buildMeubleT } from "./meubleT.js";
 import { buildCorridor, toggleCorridorDoors } from "./corridor.js";
 import { buildBathroom } from "./bathroom.js";
 import { buildFloor, buildParquet, buildConcreteSlab, buildCeiling } from "./floor.js";
@@ -101,6 +102,7 @@ buildOnLayer(buildAirPerformer, LAYER_FURNITURE);
 buildOnLayer(buildScooter, LAYER_FURNITURE);
 buildCasquettes(scene); // async GLB, gère ses propres layers + requestRender
 buildWalkingMan(scene);
+buildOnLayer(buildMeubleT, LAYER_FURNITURE);
 buildLamp(scene); // async GLB
 
 // Layer 0 (structure) + layer 2 (placard) : géré dans corridor.js
