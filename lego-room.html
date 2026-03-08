@@ -301,6 +301,12 @@
                 background: #111122;
                 opacity: 0.7;
             }
+            #devtools-grp.open .grp-body {
+                max-height: 560px;
+                overflow-y: auto;
+                scrollbar-width: thin;
+                scrollbar-color: #333 transparent;
+            }
         </style>
     </head>
     <body>
@@ -393,6 +399,12 @@
                     <button id="plan-toggle"  class="c-blue" >Plan : OFF</button>
                     <button id="grid-toggle"  class="c-gray" >Grille : OFF</button>
                 </div>
+            </div>
+
+            <!-- Dev Tools -->
+            <div class="grp" id="devtools-grp">
+                <div class="grp-header">🛠 Dev Tools <span class="grp-arrow">▶</span></div>
+                <div class="grp-body" id="devtools-body"></div>
             </div>
 
             <!-- Mobilier -->

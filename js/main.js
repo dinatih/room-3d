@@ -41,6 +41,7 @@ import { buildLegoView } from "./legoView.js";
 import { buildGrid } from "./grid.js";
 import { buildMinimap } from "./minimap.js";
 import { buildFloorPlan } from "./floorplan.js";
+import { buildDevtools } from "./devtools.js";
 import { VRButton } from "three/addons/webxr/VRButton.js";
 import {
   VIEWS,
@@ -123,6 +124,7 @@ gridGroup.visible = false;
 if (corridorLabel) { scene.remove(corridorLabel); gridGroup.add(corridorLabel); }
 const legoViewGroup = buildLegoView(scene, allBricks);
 buildMinimap();
+buildDevtools(scene, renderer);
 
 // =============================================
 // VR MODE (Google Cardboard / WebXR)
