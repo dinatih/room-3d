@@ -85,4 +85,5 @@ export function buildGrid(scene) {
   }
 
   scene.add(group);
+  return group;
 }
