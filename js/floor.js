@@ -83,16 +83,72 @@ export function buildConcreteSlab(scene) {
   scene.add(slab);
 }
 
-// Dalle jardin verte — de Z = BLDG_Z_MIN-30 jusqu'à Z=-400, même emprise X et épaisseur
+// ── Texture herbe procédurale ────────────────────────────────────────────────
+function makeGrassTex() {
+  const SIZE = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = SIZE;
+  canvas.height = SIZE;
+  const ctx = canvas.getContext('2d');
+
+  // Sol : vert foncé terreux
+  ctx.fillStyle = '#1e4a22';
+  ctx.fillRect(0, 0, SIZE, SIZE);
+
+  // Variation de sol : taches terre sombre
+  const rng = () => Math.random();
+  for (let i = 0; i < 80; i++) {
+    const x = rng() * SIZE, y = rng() * SIZE;
+    const r = 5 + rng() * 15;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(10,30,10,0.35)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Brins d'herbe : traits épais et contrastés
+  const BLADES = 9000;
+  for (let i = 0; i < BLADES; i++) {
+    const x = rng() * SIZE;
+    const y = rng() * SIZE;
+    const len = 5 + rng() * 14;
+    const angle = -Math.PI / 2 + (rng() - 0.5) * 1.0;
+    // gamme : vert très foncé (#1a4a1a) à vert moyen (#4a9a40)
+    const g = Math.floor(60 + rng() * 100);   // 60–160
+    const r = Math.floor(10 + rng() * 30);
+    ctx.strokeStyle = `rgb(${r},${g},${r})`;
+    ctx.lineWidth = 0.8 + rng() * 1.6;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
+    ctx.stroke();
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  // Dalle ~500×370cm → tuile ~20×20cm → 25×18 répétitions
+  tex.repeat.set(25, 18);
+  return tex;
+}
+
+// Dalle jardin verte — de Z = BLDG_Z_MIN jusqu'à Z=-400, même emprise X et épaisseur
 export function buildGardenSlab(scene) {
   const SLAB_DEPTH = 10;
-  const Z_START = BLDG_Z_MIN; // -30cm (même début que la dalle béton)
+  const Z_START = BLDG_Z_MIN;
   const Z_END = -400;
-  const D = Math.abs(Z_END - Z_START); // 340cm
-  const CZ = (Z_START + Z_END) / 2;   // -230cm
+  const D = Math.abs(Z_END - Z_START);
+  const CZ = (Z_START + Z_END) / 2;
 
-  const mat = new THREE.MeshStandardMaterial({ color: 0x4a9e54, roughness: 0.7 });
-  const slab = new THREE.Mesh(new THREE.BoxGeometry(BLDG_W, SLAB_DEPTH, D), mat);
+  const grassTex = makeGrassTex();
+  const grassMat = new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.85, color: 0xffffff });
+  const sideMat  = new THREE.MeshStandardMaterial({ color: 0x1e4022, roughness: 0.9 });
+  // BoxGeometry face order: [+X, -X, +Y(top), -Y(bot), +Z, -Z]
+  const mats = [sideMat, sideMat, grassMat, sideMat, sideMat, sideMat];
+
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(BLDG_W, SLAB_DEPTH, D), mats);
   slab.position.set(BLDG_CX, FLOOR_Y + (PLATE_H - GAP) / 2 - SLAB_DEPTH / 2, CZ);
   slab.receiveShadow = true;
   scene.add(slab);

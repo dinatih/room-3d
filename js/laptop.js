@@ -20,9 +20,9 @@ export function buildLaptop(scene) {
   const PORT_D = 3;
 
   const aluMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.6, roughness: 0.35 });
-  const screenMat = new THREE.MeshStandardMaterial({ map: screenTex, roughness: 0.1, metalness: 0.2 });
+  const screenMat = new THREE.MeshStandardMaterial({ map: screenTex, roughness: 0.1, metalness: 0.2, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
   const bezelMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.4 });
-  const kbMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.6 });
+  const kbMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
   const portMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.3, metalness: 0.5 });
 
   // All items are children of desk2Surface — non-rotated anchor at desk height
@@ -108,7 +108,7 @@ export function buildLaptop(scene) {
   const PHONE_H = 0.8;   // 8mm
 
   const caseMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.4 });
-  const phoneScrMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.05, metalness: 0.3 });
+  const phoneScrMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.05, metalness: 0.3, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
   const camMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.6, roughness: 0.2 });
 
   const phoneGroup = new THREE.Group();

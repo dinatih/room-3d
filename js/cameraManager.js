@@ -287,6 +287,7 @@ addEventListener('keydown', (e) => {
     return;
   }
   if (e.key === 'm' || e.key === 'M') { resumeWalk(); return; }
+  if (e.key === 't' || e.key === 'T') { is2D ? exit2D() : enter2DTop(); requestRender(); return; }
   if (!walkActive) return;
   const k = e.key;
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(k)) {
