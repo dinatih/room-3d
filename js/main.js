@@ -35,7 +35,7 @@ import { buildLamp, toggleLamp } from "./lamp.js";
 import { buildMeubleT } from "./meubleT.js";
 import { buildCorridor, toggleCorridorDoors } from "./corridor.js";
 import { buildBathroom } from "./bathroom.js";
-import { buildFloor, buildParquet, buildConcreteSlab, buildGardenSlab, buildCeiling } from "./floor.js";
+import { buildFloor, buildParquetMesh, buildTileMesh, buildConcreteSlab, buildGardenSlab, buildCeiling } from "./floor.js";
 import { buildInstancedMeshes } from "./instancedMeshes.js";
 import { buildLegoView } from "./legoView.js";
 import { buildGrid } from "./grid.js";
@@ -112,8 +112,10 @@ buildLamp(scene); // async GLB
 // Layer 0 (structure) + layer 2 (placard) : géré dans corridor.js
 const corridorLabel = buildCorridor(scene);
 
-// Parquet après tous les builds (couvre séjour + couloir + SDB)
-buildParquet(allBricks);
+// Parquet texturé (lames 130×20cm dessinées en canvas) — séjour + couloir
+buildParquetMesh(scene);
+// Carrelage blanc 20×20cm — SDB + couloir entrée
+buildTileMesh(scene);
 
 buildInstancedMeshes(scene, allBricks);
 prepareBuildAnimation(scene);

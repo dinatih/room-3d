@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   ROOM_W, ROOM_D, PLATE_H, GAP, WALL_H,
   DOOR_START, DOOR_END, NICHE_DEPTH, NICHE_Z_START, FLOOR_Y, GARDEN_JC_Z,
-  KITCHEN_Z, SDB_Z_END, DIAG_CZ,
+  KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AZ, DIAG_CX, DIAG_CZ,
   BLDG_X_MIN, BLDG_X_MAX, BLDG_Z_MIN, BLDG_Z_MAX,
   COLORS,
 } from './config.js';
@@ -44,20 +44,188 @@ export function buildFloor(allBricks) {
 }
 
 // =============================================
-// PARQUET / CARRELAGE
+// PARQUET — dalle texturée, lames 130×20cm
 // =============================================
-export function buildParquet(allBricks) {
-  // Flat tiles : parquet (séjour + couloir) ou carrelage gris (SDB)
-  const floorBricks = allBricks.filter(b => b.type === 'floor');
-  for (const b of floorBricks) {
-    const isSDB = (b.z >= KITCHEN_Z && b.z < SDB_Z_END && b.x < DOOR_START) ||
-                  (b.z >= SDB_Z_END && b.z < DIAG_CZ);
-    allBricks.push({
-      x: b.x, y: b.y + PLATE_H, z: b.z,
-      sx: b.sx, sy: b.sy, sz: b.sz,
-      len: b.len, axis: b.axis, type: isSDB ? 'tile' : 'parquet'
-    });
+export function buildParquetMesh(scene) {
+  // Canvas portrait : 128×512px = 40cm × 260cm
+  // Colonne 1 (x=0..64) : 2 lames de 130cm. Colonne 2 : décalage 65cm.
+  // Lames verticales dans le canvas → courent le long de Z dans le monde.
+  const CW = 128, CH = 512, PW = CW / 2, PH = CH / 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = CW; canvas.height = CH;
+  const ctx = canvas.getContext('2d');
+  // Fond bois de base : évite les pixels transparents aux bords du canvas
+  ctx.fillStyle = 'rgb(122, 74, 30)';
+  ctx.fillRect(0, 0, CW, CH);
+
+  const PLANK_COLOR = 'rgb(122, 74, 30)';
+
+  // Règle : joint uniquement en HAUT de chaque lame, jamais en bas.
+  // → à la répétition du canvas, exactement 1 pixel de séparation (pas de double lame).
+  function drawPlank(x0, y0, w, h, { skipTop = false } = {}) {
+    ctx.fillStyle = PLANK_COLOR;
+    ctx.fillRect(x0 + 1, y0 + 1, w - 2, h - 2);
+    for (let i = 0; i < 10; i++) {
+      const lx = x0 + 2 + Math.random() * (w - 4);
+      ctx.strokeStyle = `rgba(0,0,0,${0.04 + Math.random() * 0.06})`;
+      ctx.lineWidth = 0.5 + Math.random() * 0.8;
+      ctx.beginPath(); ctx.moveTo(lx, y0 + 1); ctx.lineTo(lx, y0 + h - 1); ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.fillRect(x0, y0, 1, h);          // joint gauche
+    ctx.fillRect(x0 + w - 1, y0, 1, h); // joint droit
+    if (!skipTop) ctx.fillRect(x0, y0, w, 1); // joint haut uniquement
   }
+
+  // Col 1 : 2 lames complètes, joint haut à chaque début de lame
+  drawPlank(0, 0,  PW, PH);
+  drawPlank(0, PH, PW, PH);
+  // Col 2 : décalage 65cm — le fragment du haut est la CONTINUATION de la lame du bas
+  //         → skipTop pour éviter un joint là où la lame continue
+  drawPlank(PW, 0,           PW, PH / 2, { skipTop: true });
+  drawPlank(PW, PH / 2,      PW, PH);
+  drawPlank(PW, PH + PH / 2, PW, PH / 2);
+
+  // ── Contour unique du sol parquet ──────────────────────────────────────
+  // Séjour + niche + cuisine + couloir + triangle diagonal
+  // shape.x = worldX, shape.y = -worldZ (rotation.x = -PI/2 restitue worldZ)
+  // Ordre CCW (normales +Y = vers le haut)
+  const shape = new THREE.Shape([
+    new THREE.Vector2(0,             0),
+    new THREE.Vector2(0,             -NICHE_Z_START),
+    new THREE.Vector2(-NICHE_DEPTH,  -NICHE_Z_START),
+    new THREE.Vector2(-NICHE_DEPTH,  -ROOM_D),
+    new THREE.Vector2(0,             -ROOM_D),
+    new THREE.Vector2(KITCHEN_X0,    -ROOM_D),
+    new THREE.Vector2(KITCHEN_X0,    -KITCHEN_Z),
+    new THREE.Vector2(KITCHEN_X1,    -KITCHEN_Z),
+    new THREE.Vector2(KITCHEN_X1,    -ROOM_D),
+    new THREE.Vector2(DOOR_START,    -ROOM_D),
+    new THREE.Vector2(DOOR_START,    -SDB_Z_END),  // coin diagonal (X=190, Z=600)
+    new THREE.Vector2(ROOM_W,        -DIAG_AZ),    // départ diagonal  (X=300, Z=530)
+    new THREE.Vector2(ROOM_W,        0),
+  ]);
+
+  const geo = new THREE.ShapeGeometry(shape);
+
+  // UV auto (bounding box shape) : X=-10..300 (310cm), Z=0..600 (600cm)
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  // UV brut du ShapeGeometry = coordonnées world (cm), pas normalisées [0,1]
+  // → repeat = 1/tailleTuile pour que la texture se répète tous les N cm
+  tex.repeat.set(1 / 40, 1 / 260);
+
+  const mat = new THREE.MeshStandardMaterial({
+    map: tex, roughness: 0.45, metalness: 0.0,
+    polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.y = 0;
+  mesh.receiveShadow = true;
+  mesh.userData.brickType = 'parquet';
+  scene.add(mesh);
+}
+
+// =============================================
+// CARRELAGE — dalle blanche 20×20cm
+// Couvre la zone SDB + couloir entrée
+// =============================================
+export function buildTileMesh(scene) {
+  const SIZE = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = SIZE; canvas.height = SIZE;
+  const ctx = canvas.getContext('2d');
+
+  // Carreau blanc légèrement chaud
+  ctx.fillStyle = '#f4f4f2';
+  ctx.fillRect(0, 0, SIZE, SIZE);
+
+  // Joints gris (3px sur 128 = ~1.5cm sur 20cm)
+  ctx.fillStyle = '#c0c0c0';
+  ctx.fillRect(0, 0, SIZE, 3);
+  ctx.fillRect(0, SIZE - 3, SIZE, 3);
+  ctx.fillRect(0, 0, 3, SIZE);
+  ctx.fillRect(SIZE - 3, 0, 3, SIZE);
+
+  const baseTex = new THREE.CanvasTexture(canvas);
+  baseTex.wrapS = baseTex.wrapT = THREE.RepeatWrapping;
+
+  // Canvas marron pour le placard couloir
+  const canvasBrown = document.createElement('canvas');
+  canvasBrown.width = SIZE; canvasBrown.height = SIZE;
+  const ctxB = canvasBrown.getContext('2d');
+  ctxB.fillStyle = '#7a5030';
+  ctxB.fillRect(0, 0, SIZE, SIZE);
+  ctxB.fillStyle = '#4a3020';
+  ctxB.fillRect(0, 0, SIZE, 3);
+  ctxB.fillRect(0, SIZE - 3, SIZE, 3);
+  ctxB.fillRect(0, 0, 3, SIZE);
+  ctxB.fillRect(SIZE - 3, 0, 3, SIZE);
+  const brownTex = new THREE.CanvasTexture(canvasBrown);
+  brownTex.wrapS = brownTex.wrapT = THREE.RepeatWrapping;
+
+  // Helper : crée un plan carrelage avec le bon repeat pour les vraies dimensions
+  // Canvas = 20×20cm
+  function addTile(widthCm, depthCm, cx, cz, baseTx = baseTex) {
+    const t = baseTx.clone();
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(widthCm / 20, depthCm / 20);
+    t.needsUpdate = true;
+    const mat = new THREE.MeshStandardMaterial({
+      map: t, roughness: 0.25, metalness: 0.05,
+      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
+    });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(widthCm, depthCm), mat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(cx, 0, cz);
+    mesh.receiveShadow = true;
+    mesh.userData.brickType = 'tile';
+    scene.add(mesh);
+  }
+
+  // SDB + couloir entrée — trapèze découpé par le mur diagonal
+  // BufferGeometry explicite : vertices en XZ world, UV = worldCoord/20 (1 unit = 1 carreau 20cm)
+  {
+    // 4 coins du trapèze (Y=0)
+    const Ax = DIAG_CX,    Az = KITCHEN_Z;  // NW (-10, 460)
+    const Bx = DIAG_CX,    Bz = DIAG_CZ;   // SW (-10, 727)
+    const Cx = DOOR_START, Cz = SDB_Z_END;  // SE (190, 600) — diag ∩ X=190
+    const Dx = DOOR_START, Dz = KITCHEN_Z;  // NE (190, 460)
+    const positions = new Float32Array([
+      Ax, 0, Az,  Bx, 0, Bz,  Cx, 0, Cz,   // triangle ABC
+      Ax, 0, Az,  Cx, 0, Cz,  Dx, 0, Dz,   // triangle ACD
+    ]);
+    // UV = worldCoord / 20 → 1 unité UV = 1 carreau de 20cm
+    const uvs = new Float32Array([
+      Ax/20, Az/20,  Bx/20, Bz/20,  Cx/20, Cz/20,
+      Ax/20, Az/20,  Cx/20, Cz/20,  Dx/20, Dz/20,
+    ]);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('uv',       new THREE.BufferAttribute(uvs, 2));
+    geo.computeVertexNormals();
+    const t = baseTex.clone();
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(1, 1);
+    t.needsUpdate = true;
+    const mat = new THREE.MeshStandardMaterial({
+      map: t, roughness: 0.25, metalness: 0.05,
+      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.receiveShadow = true;
+    mesh.userData.brickType = 'tile';
+    scene.add(mesh);
+  }
+
+  // Placard couloir (X=130..190, Z=410..460) — carrelage marron
+  const CLOSET_W = DOOR_START - KITCHEN_X1; // 60 cm
+  const CLOSET_D = KITCHEN_Z - ROOM_D;      // 60 cm (inclut les 10cm sous mur D)
+  addTile(CLOSET_W, CLOSET_D,
+    KITCHEN_X1 + CLOSET_W / 2,
+    ROOM_D + CLOSET_D / 2,
+    brownTex);
 }
 
 // =============================================

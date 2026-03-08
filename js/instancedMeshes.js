@@ -21,7 +21,7 @@ export function buildInstancedMeshes(scene, allBricks) {
     tile:        new THREE.MeshStandardMaterial({ color: COLORS.studTile, roughness: 0.2, metalness: 0.05 }),
   };
 
-  for (const type of ['wall', 'accent', 'glass_frame', 'tile', 'parquet']) {
+  for (const type of ['wall', 'accent', 'glass_frame']) {
     const bricks = allBricks.filter(b => b.type === type);
     if (!bricks.length) continue;
 
