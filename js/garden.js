@@ -94,71 +94,38 @@ export function buildGarden(scene) {
   // =============================================
   // CHAISE PLIANTE IKEA VIHALS (rouge)
   // =============================================
-  {
-    const VH_W = 43;     // 43cm largeur
-    const VH_D = 47;     // 47cm profondeur
-    const VH_H = 80;       // 80cm hauteur totale
-    const VH_SEAT_H = 45; // 45cm hauteur assise
-    const VH_SEAT_W = 39; // 39cm largeur assise
-    const VH_SEAT_D = 41; // 41cm profondeur assise
-    const VH_SEAT_T = 2; // épaisseur assise
-    const VH_BACK_H = VH_H - VH_SEAT_H; // 35 hauteur dossier
-    const VH_LEG_R = 1.2; // rayon tubes
+  new GLTFLoader().load('media/folding-chair-generic.glb', (gltf) => {
+    const chair = gltf.scene;
 
-    const vhRedMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 });
-    const legGeo = new THREE.CylinderGeometry(VH_LEG_R, VH_LEG_R, 10, 6);
+    const rawBox = new THREE.Box3().setFromObject(chair);
+    const rawSize = rawBox.getSize(new THREE.Vector3());
+    chair.scale.setScalar(400 / rawSize.y);
 
-    const vhGroup = new THREE.Group();
+    chair.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(chair);
 
-    // Assise
-    const vhSeat = new THREE.Mesh(
-      new THREE.BoxGeometry(VH_SEAT_W, VH_SEAT_T, VH_SEAT_D),
-      vhRedMat,
+    chair.position.set(
+      -50 - (box.min.x + box.max.x) / 2,
+      0,
+      350 - (box.min.z + box.max.z) / 2,
     );
-    vhSeat.position.y = VH_SEAT_H;
-    vhSeat.castShadow = true;
-    vhGroup.add(vhSeat);
 
-    // Dossier (léger angle en arrière)
-    const backAngle = 0.15; // ~8°
-    const vhBack = new THREE.Mesh(
-      new THREE.BoxGeometry(VH_SEAT_W, VH_BACK_H, VH_SEAT_T),
-      vhRedMat,
-    );
-    vhBack.position.set(0, VH_SEAT_H + VH_BACK_H / 2, -VH_SEAT_D / 2 + VH_SEAT_T / 2);
-    vhBack.rotation.x = backAngle;
-    vhBack.castShadow = true;
-    vhGroup.add(vhBack);
+    const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 });
+    chair.traverse(c => {
+      c.layers.set(LAYER_GLB);
+      if (c.isMesh) {
+        c.material = redMat;
+        c.castShadow = true;
+        c.receiveShadow = true;
+        c.frustumCulled = false;
+      } else if (c.isLine) {
+        c.visible = false;
+      }
+    });
 
-    // Pieds avant (droits)
-    for (const sx of [-1, 1]) {
-      const leg = new THREE.Mesh(legGeo, vhRedMat);
-      leg.scale.y = VH_SEAT_H / 10;
-      leg.position.set(sx * (VH_W / 2 - VH_LEG_R), VH_SEAT_H / 2, VH_SEAT_D / 2 - 3);
-      vhGroup.add(leg);
-    }
-
-    // Pieds arrière (montants du dossier, jusqu'en haut)
-    for (const sx of [-1, 1]) {
-      const leg = new THREE.Mesh(legGeo, vhRedMat);
-      leg.scale.y = VH_H / 10;
-      leg.position.set(sx * (VH_W / 2 - VH_LEG_R), VH_H / 2, -VH_SEAT_D / 2 + 3);
-      leg.rotation.x = backAngle * 0.5;
-      vhGroup.add(leg);
-    }
-
-    // Traverse avant + arrière
-    for (const tz of [VH_SEAT_D / 2 - 3, -VH_SEAT_D / 2 + 3]) {
-      const bar = new THREE.Mesh(legGeo, vhRedMat);
-      bar.rotation.z = Math.PI / 2;
-      bar.scale.y = (VH_W - VH_LEG_R * 4) / 10;
-      bar.position.set(0, VH_SEAT_H * 0.3, tz);
-      vhGroup.add(bar);
-    }
-
-    vhGroup.position.set(200, 0, 100);
-    scene.add(vhGroup);
-  }
+    scene.add(chair);
+    requestRender();
+  }, undefined, err => console.error('folding-chair-generic.glb:', err));
 
 
   // =============================================
