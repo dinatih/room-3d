@@ -77,13 +77,14 @@ export function buildDevtools(scene, renderer) {
     let verts = 0, tris = 0;
     scene.traverse(obj => {
       if (!obj.isMesh || obj.isInstancedMesh) return;
+      if (!obj.visible) return; // skip hidden geometry
       const pos = obj.geometry?.attributes?.position;
       if (!pos) return;
       verts += pos.count;
       const idx = obj.geometry.index;
       tris  += idx ? idx.count / 3 : pos.count / 3;
     });
-    const tip = meshes > 300
+    const tip = meshes > 800
       ? `<br><span style="color:#ff8866;font-size:9px">⚠ ${meshes} meshes → fusionner</span>` : '';
     sceneRow.innerHTML =
       lbl('SCÈNE') +
