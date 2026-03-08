@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { gltfLoader } from "./loaders.js";
+import { mergeGlbByMaterial } from "./mergeUtils.js";
 import { LAYER_GLB } from "./config.js";
 import { requestRender } from "./cameraManager.js";
 
@@ -32,6 +33,7 @@ export function buildScooter(scene) {
       }
     });
 
+    mergeGlbByMaterial(scooter);
     scene.add(scooter);
     requestRender();
   }, undefined, err => console.error('xiaomi_electric_scooter_4.glb:', err));

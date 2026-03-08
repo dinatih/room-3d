@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { gltfLoader } from "./loaders.js";
+import { mergeGlbByMaterial } from "./mergeUtils.js";
 import { LAYER_GLB } from "./config.js";
 import { requestRender } from "./cameraManager.js";
 import {
@@ -497,6 +498,7 @@ export function buildDecor(scene) {
       }
     });
 
+    mergeGlbByMaterial(bag);
     scene.add(bag);
     requestRender();
   }, undefined, err => console.error('red_backpack.glb:', err));

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { gltfLoader } from './loaders.js';
+import { mergeGlbByMaterial } from './mergeUtils.js';
 import { ROOM_W, ROOM_D, LAYER_GLB } from './config.js';
 import { KALLAX_SE_TOP } from './kallax.js';
 import { MEUBLE_T_X, MEUBLE_T_Z } from './meubleT.js';
@@ -48,9 +49,11 @@ export function buildLamp(scene) {
     const baseY = KALLAX_SE_TOP + LAMP_ABOVE - box.min.y;
 
     lamp.position.set(MEUBLE_T_X - cx, baseY, MEUBLE_T_Z - cz);
-    lamp.traverse(c => c.layers.set(LAYER_GLB));
-    lamp.castShadow  = true;
-    lamp.receiveShadow = true;
+    lamp.traverse(c => {
+      c.layers.set(LAYER_GLB);
+      if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; c.frustumCulled = false; }
+    });
+    mergeGlbByMaterial(lamp);
     scene.add(lamp);
 
     // PointLight au niveau de l'abat-jour (80% de la hauteur du modèle)

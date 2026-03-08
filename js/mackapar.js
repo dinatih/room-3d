@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { gltfLoader } from './loaders.js';
+import { mergeGlbByMaterial } from './mergeUtils.js';
 import { ROOM_D, NICHE_DEPTH, LAYER_GLB } from './config.js';
 import { kallaxW } from './kallax.js';
 import { requestRender } from './cameraManager.js';
@@ -48,8 +49,10 @@ export function buildMackapar(scene) {
       if (c.isMesh) {
         c.castShadow = true;
         c.receiveShadow = true;
+        c.frustumCulled = false;
       }
     });
+    mergeGlbByMaterial(mack);
     scene.add(mack);
     requestRender();
   }, undefined, err => console.error('mackapar_ikea.glb:', err));

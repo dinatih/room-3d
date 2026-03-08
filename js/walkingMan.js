@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { gltfLoader } from "./loaders.js";
+import { mergeGlbByMaterial } from "./mergeUtils.js";
 import { ROOM_W, ROOM_D } from "./config.js";
 import { requestRender, addWalkFollower, addWalkPitchFollower, setInitialWalkPos } from "./cameraManager.js";
 import { setMinimapWalker } from "./minimap.js";
@@ -60,6 +61,7 @@ export function buildWalkingMan(scene) {
       suit.receiveShadow = true;
       // layer 0 (défaut) : visible dans les miroirs même sans HD
 
+      mergeGlbByMaterial(suit);
       dirGroup.add(suit);
       suitReady = true;
       onBothReady();
@@ -87,6 +89,7 @@ export function buildWalkingMan(scene) {
       cap.userData.baseRotX = cap.rotation.x; // offset conservé en walk mode
       cap.castShadow = true;
 
+      mergeGlbByMaterial(cap);
       dirGroup.add(cap);
       addWalkPitchFollower(cap); // rotation.x suit le pitch caméra en walk mode
       capReady = true;

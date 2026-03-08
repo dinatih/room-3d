@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { gltfLoader } from './loaders.js';
+import { mergeGlbByMaterial } from './mergeUtils.js';
 import { ROOM_W, LAYER_GLB } from './config.js';
 import { requestRender } from './cameraManager.js';
 
@@ -42,6 +43,7 @@ export function buildSunnersta(scene) {
       }
     });
 
+    mergeGlbByMaterial(trolley);
     scene.add(trolley);
     requestRender();
   }, undefined, err => console.error('sunnersta_trolley_ikea.glb:', err));

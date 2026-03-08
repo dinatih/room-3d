@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { gltfLoader } from './loaders.js';
+import { mergeGlbByMaterial } from './mergeUtils.js';
 import { requestRender } from './cameraManager.js';
 import { LAYER_GLB } from './config.js';
 
@@ -33,6 +34,9 @@ function ensureLoaded() {
       -(box.min.y + box.max.y) / 2,
       -(box.min.z + box.max.z) / 2,
     );
+    // Override all materials to redMat before merging so result is 1 mesh
+    _tpl.traverse(c => { if (c.isMesh) c.material = redMat; });
+    mergeGlbByMaterial(_tpl);
     for (const fn of _pending) fn();
     _pending.length = 0;
     requestRender();

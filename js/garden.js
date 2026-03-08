@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { gltfLoader } from './loaders.js';
+import { mergeGlbByMaterial } from './mergeUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { requestRender } from './cameraManager.js';
 import { LAYER_GLB } from './config.js';
@@ -126,6 +127,7 @@ export function buildGarden(scene) {
       }
     });
 
+    mergeGlbByMaterial(chair);
     scene.add(chair);
     requestRender();
   }, undefined, err => console.error('folding-chair-generic.glb:', err));
@@ -216,6 +218,7 @@ export function buildGarden(scene) {
       }
     });
 
+    mergeGlbByMaterial(viggja);
     scene.add(viggja);
     requestRender();
   }, undefined, err => console.error('viggja.glb:', err));
@@ -250,6 +253,7 @@ export function buildGarden(scene) {
       }
     });
 
+    mergeGlbByMaterial(palm);
     scene.add(palm);
     requestRender();
   }, undefined, err => console.error('potted_palm.glb:', err));

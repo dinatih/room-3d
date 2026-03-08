@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { gltfLoader } from "./loaders.js";
+import { mergeGlbByMaterial } from "./mergeUtils.js";
 import { LAYER_GLB } from "./config.js";
 import { requestRender } from "./cameraManager.js";
 
@@ -21,6 +22,8 @@ export function buildCasquettes(scene) {
       const box = new THREE.Box3().setFromObject(source);
       const size = box.getSize(new THREE.Vector3());
       const scale20 = 20 / size.x; // largeur 20cm
+
+      mergeGlbByMaterial(source);
 
       function placeCap(x, y, z, rx, ry, rz, sc) {
         const cap = source.clone(true);

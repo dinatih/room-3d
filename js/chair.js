@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { gltfLoader } from './loaders.js';
+import { mergeGlbByMaterial } from './mergeUtils.js';
 import { requestRender } from './cameraManager.js';
 import { LAYER_GLB } from './config.js';
 
@@ -41,6 +42,7 @@ export function buildChair(scene) {
     // 40cm = position réaliste devant bureau + évite artefact de clipping Reflector Nissedal.
     chair.position.set(40 - box.min.x, 0, 151 - cz);
 
+    mergeGlbByMaterial(chair);
     chair.castShadow = true;
     chair.receiveShadow = true;
     scene.add(chair);
