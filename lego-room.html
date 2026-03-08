@@ -86,45 +86,120 @@
                 backdrop-filter: blur(8px);
                 pointer-events: none;
             }
-            #views {
-                position: absolute;
+            #menu-hamburger {
+                display: none;
+                position: fixed;
                 top: 16px;
                 left: 16px;
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                backdrop-filter: blur(8px);
-            }
-            #views button {
-                background: rgba(0, 0, 0, 0.8);
-                color: #ccc;
-                border: 1px solid #555;
-                border-radius: 6px;
-                padding: 5px 12px;
-                cursor: pointer;
-                font-size: 12px;
-                text-align: left;
-                white-space: nowrap;
-            }
-            #views button:hover {
-                background: rgba(255, 255, 255, 0.12);
-                color: #fff;
-                border-color: #888;
-            }
-            #views-toggle {
-                background: rgba(0, 0, 0, 0.8);
+                z-index: 200;
+                background: rgba(0, 0, 0, 0.85);
                 color: #ffd700;
                 border: 1px solid #ffd700;
                 border-radius: 6px;
                 padding: 5px 12px;
+                font-size: 18px;
+                cursor: pointer;
+                backdrop-filter: blur(8px);
+            }
+            #side-panel {
+                position: absolute;
+                top: 16px;
+                left: 16px;
+                width: 188px;
+                max-height: calc(100vh - 32px);
+                overflow-y: auto;
+                overflow-x: hidden;
+                scrollbar-width: thin;
+                scrollbar-color: #444 transparent;
+                z-index: 100;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .grp {
+                border-radius: 8px;
+                overflow: hidden;
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+            .grp-header {
+                background: rgba(10, 10, 20, 0.92);
+                color: #ddd;
+                padding: 6px 10px;
+                cursor: pointer;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                user-select: none;
+                backdrop-filter: blur(8px);
+            }
+            .grp-header:hover { background: rgba(255,255,255,0.08); }
+            .grp-arrow { font-size: 9px; transition: transform 0.18s; }
+            .grp.open .grp-arrow { transform: rotate(90deg); }
+            .grp-body {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.22s ease;
+                background: rgba(0, 0, 0, 0.72);
+                backdrop-filter: blur(8px);
+            }
+            .grp.open .grp-body { max-height: 400px; }
+            .grp-body button {
+                background: rgba(0, 0, 0, 0.0);
+                border: none;
+                border-top: 1px solid rgba(255,255,255,0.06);
+                border-radius: 0;
+                padding: 6px 12px;
+                cursor: pointer;
+                font-size: 12px;
+                width: 100%;
+                text-align: left;
+                display: block;
+                white-space: nowrap;
+            }
+            .grp-body button:first-child { border-top: none; }
+            .grp-body button:hover { background: rgba(255,255,255,0.08); }
+            .c-orange { color: #ffaa00; }
+            .c-amber  { color: #d4a437; }
+            .c-cyan   { color: #44ddff; }
+            .c-blue   { color: #4488ff; }
+            .c-green  { color: #88cc88; }
+            .c-peach  { color: #ff9966; }
+            .c-purple { color: #aa88ff; }
+            .c-gold   { color: #ffaa44; }
+            .c-teal   { color: #66cccc; }
+            .c-tan    { color: #e8c39e; }
+            .c-white  { color: #ffffff; }
+            .c-light  { color: #f0f0f0; }
+            .c-gray   { color: #aaa;    }
+            .c-yellow { color: #ffd700; }
+            #views-toggle {
+                background: rgba(0, 0, 0, 0.0);
+                border: none;
+                border-top: 1px solid rgba(255,255,255,0.06);
+                color: #ffd700;
+                border-radius: 0;
+                padding: 6px 12px;
                 cursor: pointer;
                 font-size: 12px;
                 text-align: left;
                 white-space: nowrap;
                 width: 100%;
+                display: block;
             }
-            #views-toggle:hover {
-                background: rgba(255, 215, 0, 0.15);
+            #views-toggle:hover { background: rgba(255, 215, 0, 0.1); }
+            @media (max-width: 600px) {
+                #menu-hamburger { display: block; }
+                #side-panel {
+                    display: none;
+                    top: 56px;
+                    width: calc(100vw - 32px);
+                    max-width: 300px;
+                }
+                #side-panel.open { display: flex; }
             }
             #views-modal-overlay {
                 display: none;
@@ -204,6 +279,19 @@
             #views-modal .close-modal:hover {
                 color: #fff;
             }
+            #side-panel kbd {
+                display: inline-block;
+                float: right;
+                background: rgba(255,255,255,0.12);
+                border: 1px solid #555;
+                border-radius: 3px;
+                padding: 0 5px;
+                font-size: 10px;
+                font-family: monospace;
+                color: #bbb;
+                line-height: 16px;
+                margin-top: 1px;
+            }
             #minimap {
                 position: absolute;
                 bottom: 16px;
@@ -269,297 +357,62 @@
                 prof Z46)
             </div>
         </div>
-        <div id="views">
-            <button
-                id="build-anim-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #ffaa00;
-                    border: 1px solid #ffaa00;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                ▶ Construction
-            </button>
-            <button
-                id="floor-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #d4a437;
-                    border: 1px solid #d4a437;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Sol : OFF
-            </button>
-            <button
-                id="xray-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #44ddff;
-                    border: 1px solid #44ddff;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                X-Ray : OFF
-            </button>
-            <button
-                id="plan-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #4488ff;
-                    border: 1px solid #4488ff;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Plan : OFF
-            </button>
-            <button
-                id="layer-struct-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #88cc88;
-                    border: 1px solid #88cc88;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Structure : ON
-            </button>
-            <button
-                id="layer-equip-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #ff9966;
-                    border: 1px solid #ff9966;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Équipements : ON
-            </button>
-            <button
-                id="layer-furniture-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #aa88ff;
-                    border: 1px solid #aa88ff;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Mobilier : ON
-            </button>
-            <button
-                id="layer-glb-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #ffaa44;
-                    border: 1px solid #ffaa44;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                GLB : ON
-            </button>
-            <button
-                id="mirror-layers-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #66cccc;
-                    border: 1px solid #66cccc;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Miroirs HD : OFF
-            </button>
-            <button
-                id="bed-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #e8c39e;
-                    border: 1px solid #e8c39e;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Lit : EMPILÉ
-            </button>
-            <button
-                id="desk-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #ffffff;
-                    border: 1px solid #ffffff;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Bureaux : ASSIS
-            </button>
-            <button
-                id="door-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #f0f0f0;
-                    border: 1px solid #f0f0f0;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Porte-fenêtre : FERMÉE
-            </button>
-            <button
-                id="corr-doors-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #f0f0f0;
-                    border: 1px solid #f0f0f0;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Portes couloir : FERMÉES
-            </button>
-            <button
-                id="lamp-toggle"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #f0f0f0;
-                    border: 1px solid #f0f0f0;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Lampe OLA : OFF
-            </button>
-            <button
-                id="quick-perspective"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #fff;
-                    border: 1px solid #888;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Perspective
-            </button>
-            <button
-                id="resume-walk"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #fff;
-                    border: 1px solid #888;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                Reprendre Walk
-            </button>
-            <button
-                id="quick-top2d"
-                style="
-                    background: rgba(0, 0, 0, 0.8);
-                    color: #fff;
-                    border: 1px solid #888;
-                    border-radius: 6px;
-                    padding: 5px 12px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    width: 100%;
-                    text-align: left;
-                    margin-bottom: 4px;
-                "
-            >
-                2D Dessus
-            </button>
-            <button id="views-toggle">Autres vues</button>
+        <button id="menu-hamburger">☰</button>
+        <div id="side-panel">
+
+            <!-- Animation -->
+            <div class="grp">
+                <div class="grp-header">🎬 Animation <span class="grp-arrow">▶</span></div>
+                <div class="grp-body">
+                    <button id="build-anim-toggle" class="c-orange">▶ Construction</button>
+                </div>
+            </div>
+
+            <!-- Vues -->
+            <div class="grp open">
+                <div class="grp-header">📷 Vues <span class="grp-arrow">▶</span></div>
+                <div class="grp-body">
+                    <button id="quick-perspective" class="c-gray">Perspective <kbd>P</kbd></button>
+                    <button id="resume-walk"        class="c-gray">Walk <kbd>M</kbd></button>
+                    <button id="quick-top2d"        class="c-gray">2D Dessus <kbd>T</kbd></button>
+                    <button id="views-toggle"       class="c-yellow">Autres vues…</button>
+                </div>
+            </div>
+
+            <!-- Calques -->
+            <div class="grp open">
+                <div class="grp-header">🔲 Calques <span class="grp-arrow">▶</span></div>
+                <div class="grp-body">
+                    <button id="layer-struct-toggle"    class="c-green" >Structure : ON</button>
+                    <button id="layer-equip-toggle"     class="c-peach" >Équipements : ON</button>
+                    <button id="layer-furniture-toggle" class="c-purple">Mobilier : ON</button>
+                    <button id="layer-glb-toggle"       class="c-gold"  >GLB : ON</button>
+                    <button id="mirror-layers-toggle"   class="c-teal"  >Miroirs HD : OFF</button>
+                </div>
+            </div>
+
+            <!-- Affichage -->
+            <div class="grp open">
+                <div class="grp-header">👁 Affichage <span class="grp-arrow">▶</span></div>
+                <div class="grp-body">
+                    <button id="floor-toggle" class="c-amber">Sol : OFF</button>
+                    <button id="xray-toggle"  class="c-cyan" >X-Ray : OFF</button>
+                    <button id="plan-toggle"  class="c-blue" >Plan : OFF</button>
+                </div>
+            </div>
+
+            <!-- Mobilier -->
+            <div class="grp">
+                <div class="grp-header">🛋 Mobilier <span class="grp-arrow">▶</span></div>
+                <div class="grp-body">
+                    <button id="bed-toggle"        class="c-tan"  >Lit : EMPILÉ</button>
+                    <button id="desk-toggle"       class="c-white">Bureaux : ASSIS</button>
+                    <button id="door-toggle"       class="c-light">Porte-fenêtre : FERMÉE</button>
+                    <button id="corr-doors-toggle" class="c-light">Portes couloir : FERMÉES</button>
+                    <button id="lamp-toggle"       class="c-light">Lampe OLA : OFF</button>
+                </div>
+            </div>
+
         </div>
         <div id="views-modal-overlay">
             <div id="views-modal">
@@ -597,6 +450,16 @@
                     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
                 }
             }
+        </script>
+        <script>
+            // Accordéon
+            document.querySelectorAll('.grp-header').forEach(h => {
+                h.addEventListener('click', () => h.parentElement.classList.toggle('open'));
+            });
+            // Hamburger (mobile)
+            document.getElementById('menu-hamburger')?.addEventListener('click', () => {
+                document.getElementById('side-panel').classList.toggle('open');
+            });
         </script>
         <script type="module" src="js/main.js"></script>
     </body>

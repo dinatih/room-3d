@@ -1,7 +1,10 @@
 import * as THREE from "three";
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { requestRender } from './cameraManager.js';
 import { LAYER_GLB } from './config.js';
+
+const R = 6; // rayon d'arrondi des canapés (cm)
 
 export function buildGarden(scene) {
   // =============================================
@@ -22,7 +25,7 @@ export function buildGarden(scene) {
 
     // Assise
     const seat = new THREE.Mesh(
-      new THREE.BoxGeometry(SOFA_D, SEAT_H, SOFA_W),
+      new RoundedBoxGeometry(SOFA_D, SEAT_H, SOFA_W, 3, R),
       sofaMat,
     );
     seat.position.set(0, SEAT_H / 2, 0);
@@ -32,7 +35,7 @@ export function buildGarden(scene) {
 
     // Dossier (contre le mur est)
     const back = new THREE.Mesh(
-      new THREE.BoxGeometry(BACK_T, SOFA_H, SOFA_W),
+      new RoundedBoxGeometry(BACK_T, SOFA_H, SOFA_W, 3, R),
       sofaMat,
     );
     back.position.set(SOFA_D / 2 - BACK_T / 2, SOFA_H / 2, 0);
@@ -42,7 +45,7 @@ export function buildGarden(scene) {
     // Accoudoirs
     for (const side of [-1, 1]) {
       const arm = new THREE.Mesh(
-        new THREE.BoxGeometry(SOFA_D, ARM_H, ARM_W),
+        new RoundedBoxGeometry(SOFA_D, ARM_H, ARM_W, 3, R),
         sofaMat,
       );
       arm.position.set(0, ARM_H / 2, side * (SOFA_W / 2 - ARM_W / 2));
@@ -69,7 +72,7 @@ export function buildGarden(scene) {
 
     // Assise
     const seat2 = new THREE.Mesh(
-      new THREE.BoxGeometry(S2_D, S2_SEAT, S2_W),
+      new RoundedBoxGeometry(S2_D, S2_SEAT, S2_W, 3, R),
       sofa2Mat,
     );
     seat2.position.set(0, S2_SEAT / 2, 0);
@@ -79,7 +82,7 @@ export function buildGarden(scene) {
 
     // Dossier
     const back2 = new THREE.Mesh(
-      new THREE.BoxGeometry(S2_BACK, S2_H, S2_W),
+      new RoundedBoxGeometry(S2_BACK, S2_H, S2_W, 3, R),
       sofa2Mat,
     );
     back2.position.set(S2_D / 2 - S2_BACK / 2, S2_H / 2, 0);
@@ -264,6 +267,22 @@ export function buildGarden(scene) {
     botGeo.rotateX(-Math.PI / 2);
     const bot = new THREE.Mesh(botGeo, mat);
     tub.add(bot);
+
+    // Eau — surface plane statique
+    {
+      const waterMat = new THREE.MeshStandardMaterial({
+        color: 0x1a6fa8,
+        transparent: true, opacity: 0.80, depthWrite: false,
+        roughness: 0.05, metalness: 0.15,
+      });
+      const waterShape = new THREE.Shape();
+      rrTrace(waterShape, TUB_W - 2 * T - 1, TUB_L - 2 * T - 1, RC_IN);
+      const waterGeo = new THREE.ShapeGeometry(waterShape, 32);
+      waterGeo.rotateX(-Math.PI / 2);
+      const waterPlane = new THREE.Mesh(waterGeo, waterMat);
+      waterPlane.position.y = TUB_H - 12;
+      tub.add(waterPlane);
+    }
 
     tub.rotation.y = -1;
     tub.position.set(120, 0, -250);

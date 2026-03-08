@@ -9,13 +9,13 @@ export const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x2a2a3e);
 scene.fog = new THREE.FogExp2(0x2a2a3e, 0.0006);
 
-export const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 5000);
+export const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 1, 5000);
 
 export const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.xr.enabled = true;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 document.body.appendChild(renderer.domElement);
@@ -58,7 +58,7 @@ scene.add(new THREE.AmbientLight(0x8899bb, 0.6));
 const dir = new THREE.DirectionalLight(0xfff5e0, 1.8);
 dir.position.set(500, 700, 400);
 dir.castShadow = true;
-dir.shadow.mapSize.set(2048, 2048);
+dir.shadow.mapSize.set(1024, 1024);
 dir.shadow.camera.left = -600; dir.shadow.camera.right = 600;
 dir.shadow.camera.top = 600; dir.shadow.camera.bottom = -600;
 dir.shadow.bias = -0.002;

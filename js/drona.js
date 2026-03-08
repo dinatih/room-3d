@@ -50,7 +50,7 @@ function buildInstance(group) {
       c.receiveShadow = true;
       c.frustumCulled = false;
     } else if (c.isLine) {
-      c.material = seamMat; // coutures en rouge foncé
+      c.visible = false;
     }
   });
   group.add(clone);

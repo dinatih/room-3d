@@ -35,6 +35,7 @@ export function buildTV(scene) {
     map: screenTex,
     roughness: 0.05,
     metalness: 0.3,
+    polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
   });
   const screen = new THREE.Mesh(
     new THREE.PlaneGeometry(TV_W - 3, TV_H - 3),
