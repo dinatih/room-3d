@@ -17,8 +17,8 @@ export function buildInstancedMeshes(scene, allBricks) {
 
     const geos = [];
     for (const b of bricks) {
-      // Expand by GAP to close joints between adjacent bricks → surface lisse
-      const geo = new THREE.BoxGeometry(b.sx + GAP, b.sy + GAP, b.sz + GAP);
+      // Pas d'expansion : évite les faces coplanaires entre briques adjacentes (z-fighting)
+      const geo = new THREE.BoxGeometry(b.sx, b.sy, b.sz);
       dummy.position.set(b.x, b.y, b.z);
       dummy.rotation.y = b.rotY || 0;
       dummy.updateMatrix();
