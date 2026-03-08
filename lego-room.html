@@ -111,6 +111,8 @@
                 overflow-x: hidden;
                 scrollbar-width: thin;
                 scrollbar-color: #444 transparent;
+                touch-action: pan-y;
+                overscroll-behavior: contain;
                 z-index: 100;
                 display: flex;
                 flex-direction: column;
@@ -146,7 +148,8 @@
                 background: rgba(0, 0, 0, 0.72);
                 backdrop-filter: blur(8px);
             }
-            .grp.open .grp-body { max-height: 400px; }
+            .grp.open .grp-body  { max-height: 500px; }
+            #devtools-grp.open .grp-body { max-height: 750px; }
             .grp-body button {
                 background: rgba(0, 0, 0, 0.0);
                 border: none;
@@ -301,12 +304,6 @@
                 background: #111122;
                 opacity: 0.7;
             }
-            #devtools-grp.open .grp-body {
-                max-height: 560px;
-                overflow-y: auto;
-                scrollbar-width: thin;
-                scrollbar-color: #333 transparent;
-            }
         </style>
     </head>
     <body>
@@ -458,11 +455,14 @@
             }
         </script>
         <script>
-            // Accordéon
+            const panel = document.getElementById('side-panel');
+            panel.addEventListener('wheel',      e => e.stopPropagation(), { passive: true });
+            panel.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+            panel.addEventListener('touchmove',  e => e.stopPropagation(), { passive: true });
+
             document.querySelectorAll('.grp-header').forEach(h => {
                 h.addEventListener('click', () => h.parentElement.classList.toggle('open'));
             });
-            // Hamburger (mobile)
             document.getElementById('menu-hamburger')?.addEventListener('click', () => {
                 document.getElementById('side-panel').classList.toggle('open');
             });
