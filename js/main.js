@@ -58,7 +58,6 @@ import {
   requestRender,
   startDamping,
 } from "./cameraManager.js";
-import { prepareBuildAnimation, startBuildAnimation, stopBuildAnimation, isBuildAnimating } from "./buildAnimation.js";
 
 // Charger la font avant de construire les labels
 await loadFont();
@@ -118,7 +117,6 @@ buildParquetMesh(scene);
 buildTileMesh(scene);
 
 buildInstancedMeshes(scene, allBricks);
-prepareBuildAnimation(scene);
 const gridGroup = buildGrid(scene);
 gridGroup.visible = false;
 // Déplacer le label couloir dans gridGroup (il était ajouté à scene par makeText)
@@ -397,22 +395,6 @@ document.getElementById("floor-toggle")?.addEventListener("click", toggleFloorOn
 
 // =============================================
 // ANIMATION CONSTRUCTION
-// =============================================
-const buildBtn = document.getElementById("build-anim-toggle");
-if (buildBtn) {
-  buildBtn.addEventListener("click", () => {
-    if (isBuildAnimating()) {
-      stopBuildAnimation();
-      buildBtn.textContent = "▶ Construction";
-    } else {
-      startBuildAnimation();
-      buildBtn.textContent = "■ Stop";
-    }
-  });
-  document.addEventListener("build-animation-complete", () => {
-    buildBtn.textContent = "▶ Construction";
-  });
-}
 
 // =============================================
 // VR session handlers

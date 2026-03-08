@@ -1,97 +1,83 @@
 import * as THREE from 'three';
-import { COLORS, STUD_R, STUD_HT, GAP } from './config.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { COLORS, GAP, STUD_R, WALL_H, WALL_PLATE_H, NUM_LAYERS, BRICK_H } from './config.js';
 
 export function buildInstancedMeshes(scene, allBricks) {
   const dummy = new THREE.Object3D();
-  const studGeo = new THREE.CylinderGeometry(STUD_R, STUD_R, STUD_HT, 16);
 
   const mats = {
-    wall:        new THREE.MeshStandardMaterial({ color: COLORS.wall, roughness: 0.35 }),
-    accent:      new THREE.MeshStandardMaterial({ color: COLORS.accent, roughness: 0.3 }),
-    glass_frame: new THREE.MeshStandardMaterial({ color: 0x4477aa, roughness: 0.3 }),
-    floor:       new THREE.MeshStandardMaterial({ color: COLORS.floor, roughness: 0.3 }),
-    tile:        new THREE.MeshStandardMaterial({ color: COLORS.tile, roughness: 0.2 }),
-    parquet:     new THREE.MeshStandardMaterial({ color: COLORS.parquet, roughness: 0.25 }),
-  };
-  const studMats = {
-    wall:        new THREE.MeshStandardMaterial({ color: COLORS.studWall, roughness: 0.3, metalness: 0.05 }),
-    accent:      new THREE.MeshStandardMaterial({ color: COLORS.accentS, roughness: 0.25 }),
-    glass_frame: new THREE.MeshStandardMaterial({ color: 0x336688, roughness: 0.25 }),
-    floor:       new THREE.MeshStandardMaterial({ color: COLORS.studFloor, roughness: 0.25, metalness: 0.05 }),
-    tile:        new THREE.MeshStandardMaterial({ color: COLORS.studTile, roughness: 0.2, metalness: 0.05 }),
+    wall:        new THREE.MeshStandardMaterial({ color: 0xf0f0eb, roughness: 0.65 }),
+    accent:      new THREE.MeshStandardMaterial({ color: COLORS.accent, roughness: 0.55 }),
+    glass_frame: new THREE.MeshStandardMaterial({ color: 0x4477aa, roughness: 0.35 }),
   };
 
   for (const type of ['wall', 'accent', 'glass_frame']) {
     const bricks = allBricks.filter(b => b.type === type);
     if (!bricks.length) continue;
 
-    const bySize = new Map();
+    const geos = [];
     for (const b of bricks) {
-      const key = `${b.sx.toFixed(2)}_${b.sy.toFixed(2)}_${b.sz.toFixed(2)}`;
-      if (!bySize.has(key)) bySize.set(key, { sx: b.sx, sy: b.sy, sz: b.sz, items: [] });
-      bySize.get(key).items.push(b);
-    }
-
-    for (const [, g] of bySize) {
-      const geo = new THREE.BoxGeometry(g.sx, g.sy, g.sz);
-      const mesh = new THREE.InstancedMesh(geo, mats[type], g.items.length);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      g.items.forEach((b, i) => {
-        dummy.position.set(b.x, b.y, b.z);
-        dummy.rotation.y = b.rotY || 0;
-        dummy.updateMatrix();
-        mesh.setMatrixAt(i, dummy.matrix);
-      });
+      // Expand by GAP to close joints between adjacent bricks → surface lisse
+      const geo = new THREE.BoxGeometry(b.sx + GAP, b.sy + GAP, b.sz + GAP);
+      dummy.position.set(b.x, b.y, b.z);
+      dummy.rotation.y = b.rotY || 0;
+      dummy.updateMatrix();
+      geo.applyMatrix4(dummy.matrix);
       dummy.rotation.y = 0;
-      mesh.instanceMatrix.needsUpdate = true;
-      mesh.userData.brickType = type;
-      scene.add(mesh);
+      geos.push(geo);
     }
 
-    // Studs
-    const studPos = [];
-    const studBrickY = []; // Y de la brique parente (pour tri animation)
-    const studBrickZ = []; // Z de la brique parente (clé secondaire)
-    const studBrickX = []; // X de la brique parente (clé tertiaire)
-    for (const b of bricks) {
-      const isWall = type === 'wall' || type === 'accent' || type === 'glass_frame';
-      if (!isWall) continue;
+    const merged = mergeGeometries(geos);
+    geos.forEach(g => g.dispose());
 
-      const topY = b.y + b.sy / 2 + STUD_HT / 2;
+    const mesh = new THREE.Mesh(merged, mats[type]);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.userData.brickType = type;
+    scene.add(mesh);
+  }
+
+  // Disques de studs au sommet des murs — simule des trous dans le plafond,
+  // permet de visualiser les épaisseurs de mur (comme les studs LEGO avant)
+  {
+    const plateY = NUM_LAYERS * BRICK_H + WALL_PLATE_H / 2; // Y des briques de finition
+    const plateBricks = allBricks.filter(b =>
+      (b.type === 'wall' || b.type === 'accent' || b.type === 'glass_frame') &&
+      Math.abs(b.y - plateY) < 1
+    );
+
+    const studPos = [];
+    for (const b of plateBricks) {
       const cosR = Math.cos(b.rotY || 0);
       const sinR = Math.sin(b.rotY || 0);
-      if (b.axis === 'x' || b.sx > b.sz) {
+      if (b.sx >= b.sz) {
         const count = Math.round((b.sx + GAP) / 10);
         for (let s = 0; s < count; s++) {
           const dx = -(b.sx + GAP) / 2 + 5 + s * 10;
-          studPos.push(b.x + dx * cosR, topY, b.z - dx * sinR);
-          studBrickY.push(b.y); studBrickZ.push(b.z); studBrickX.push(b.x);
+          studPos.push(b.x + dx * cosR, WALL_H, b.z - dx * sinR);
         }
       } else {
         const count = Math.round((b.sz + GAP) / 10);
         for (let s = 0; s < count; s++) {
           const dz = -(b.sz + GAP) / 2 + 5 + s * 10;
-          studPos.push(b.x + dz * sinR, topY, b.z + dz * cosR);
-          studBrickY.push(b.y); studBrickZ.push(b.z); studBrickX.push(b.x);
+          studPos.push(b.x + dz * sinR, WALL_H, b.z + dz * cosR);
         }
       }
     }
 
     if (studPos.length) {
       const count = studPos.length / 3;
-      const sm = new THREE.InstancedMesh(studGeo, studMats[type], count);
-      sm.castShadow = true;
+      const studGeo = new THREE.CylinderGeometry(STUD_R, STUD_R, 0.5, 16);
+      const studMat = new THREE.MeshStandardMaterial({ color: 0xb8b8b2, roughness: 0.7 });
+      const sm = new THREE.InstancedMesh(studGeo, studMat, count);
+      sm.userData.brickType = 'wall';
       for (let i = 0; i < count; i++) {
-        dummy.position.set(studPos[i*3], studPos[i*3+1], studPos[i*3+2]);
+        dummy.position.set(studPos[i * 3], studPos[i * 3 + 1], studPos[i * 3 + 2]);
+        dummy.rotation.set(0, 0, 0);
         dummy.updateMatrix();
         sm.setMatrixAt(i, dummy.matrix);
       }
       sm.instanceMatrix.needsUpdate = true;
-      sm.userData.brickType = type;
-      sm.userData.studBrickY = studBrickY;
-      sm.userData.studBrickZ = studBrickZ;
-      sm.userData.studBrickX = studBrickX;
       scene.add(sm);
     }
   }
