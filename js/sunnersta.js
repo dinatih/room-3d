@@ -1,12 +1,11 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { gltfLoader } from './loaders.js';
 import { ROOM_W, LAYER_GLB } from './config.js';
 import { requestRender } from './cameraManager.js';
 
 export function buildSunnersta(scene) {
-  const loader = new GLTFLoader();
 
-  loader.load('media/sunnersta_trolley_ikea.glb', (gltf) => {
+  gltfLoader.load('media/sunnersta_trolley_ikea.glb', (gltf) => {
     const trolley = gltf.scene;
 
     // Axe le plus grand → 90cm (hauteur Sunnersta réelle)

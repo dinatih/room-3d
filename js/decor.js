@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { gltfLoader } from "./loaders.js";
 import { LAYER_GLB } from "./config.js";
 import { requestRender } from "./cameraManager.js";
 import {
@@ -469,7 +469,7 @@ export function buildDecor(scene) {
   // =============================================
   // SAC À DOS (red_backpack.glb) — mur A, Z=350, Y=160
   // =============================================
-  new GLTFLoader().load('media/red_backpack.glb', (gltf) => {
+  gltfLoader.load('media/red_backpack.glb', (gltf) => {
     const bag = gltf.scene;
 
     const rawBox = new THREE.Box3().setFromObject(bag);

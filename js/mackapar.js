@@ -1,17 +1,16 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { gltfLoader } from './loaders.js';
 import { ROOM_D, NICHE_DEPTH, LAYER_GLB } from './config.js';
 import { kallaxW } from './kallax.js';
 import { requestRender } from './cameraManager.js';
 
 export function buildMackapar(scene) {
-  const loader = new GLTFLoader();
 
   // mpZ : bord avant du Kallax 2×4 (Sud) - demi-profondeur Mackapar
   const kallaxEdgeZ = ROOM_D - kallaxW(2);
   const mpZ = kallaxEdgeZ - 32 / 2;
 
-  loader.load('media/mackapar_ikea.glb', (gltf) => {
+  gltfLoader.load('media/mackapar_ikea.glb', (gltf) => {
     const mack = gltf.scene;
 
     // TODO: trouver le GLB de la version actuelle IKEA (200cm) pour éviter le scale.y approximatif.

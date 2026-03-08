@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { gltfLoader } from './loaders.js';
 import { requestRender } from './cameraManager.js';
 import { LAYER_GLB } from './config.js';
 
@@ -18,7 +18,7 @@ const _pending = [];
 function ensureLoaded() {
   if (_tpl !== null) return;
   _tpl = false;
-  new GLTFLoader().load('media/ikea_DRONA_black.glb', (gltf) => {
+  gltfLoader.load('media/ikea_DRONA_black.glb', (gltf) => {
     _tpl = gltf.scene;
     // Le GLB n'a pas d'unités réelles garanties, mais les proportions du modèle
     // sont fidèles à la Drona réelle. On scale uniformément sur la profondeur

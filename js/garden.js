@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { gltfLoader } from './loaders.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { requestRender } from './cameraManager.js';
 import { LAYER_GLB } from './config.js';
@@ -97,7 +97,7 @@ export function buildGarden(scene) {
   // =============================================
   // CHAISE PLIANTE IKEA VIHALS (rouge)
   // =============================================
-  new GLTFLoader().load('media/folding-chair-generic.glb', (gltf) => {
+  gltfLoader.load('media/folding-chair-generic.glb', (gltf) => {
     const chair = gltf.scene;
 
     const rawBox = new THREE.Box3().setFromObject(chair);
@@ -189,7 +189,7 @@ export function buildGarden(scene) {
   // DESSERTE IKEA VIGGJA (37×50×74cm) — GLB
   // À côté du canapé ouest (côté sud)
   // =============================================
-  new GLTFLoader().load('media/viggja.glb', (gltf) => {
+  gltfLoader.load('media/viggja.glb', (gltf) => {
     const viggja = gltf.scene;
 
     const rawBox = new THREE.Box3().setFromObject(viggja);
@@ -223,7 +223,7 @@ export function buildGarden(scene) {
   // =============================================
   // PALMIER EN POT — entre canapé rouge ouest (X=100,Z=-90) et viggja (Z≈-145)
   // =============================================
-  new GLTFLoader().load('media/potted_palm.glb', (gltf) => {
+  gltfLoader.load('media/potted_palm.glb', (gltf) => {
     const palm = gltf.scene;
 
     const rawBox = new THREE.Box3().setFromObject(palm);

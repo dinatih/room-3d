@@ -1,14 +1,13 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { gltfLoader } from './loaders.js';
 import { requestRender } from './cameraManager.js';
 import { LAYER_GLB } from './config.js';
 
 export function buildChair(scene) {
-  const loader = new GLTFLoader();
 
   const redMat = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
 
-  loader.load('media/smorkull.glb', (gltf) => {
+  gltfLoader.load('media/smorkull.glb', (gltf) => {
     const chair = gltf.scene;
     chair.traverse(c => {
       c.layers.set(LAYER_GLB);

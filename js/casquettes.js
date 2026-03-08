@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { gltfLoader } from "./loaders.js";
 import { LAYER_GLB } from "./config.js";
 import { requestRender } from "./cameraManager.js";
 
@@ -8,10 +8,9 @@ import { requestRender } from "./cameraManager.js";
 const SUNNERSTA_HEAD_TOP = 90 + 8 + 8 + 8.9 * 1.15; // ≈ 125.2
 
 export function buildCasquettes(scene) {
-  const loader = new GLTFLoader();
   const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.65 });
 
-  loader.load(
+  gltfLoader.load(
     "media/baseball_cap.glb",
     (gltf) => {
       const source = gltf.scene;

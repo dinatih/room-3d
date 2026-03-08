@@ -1,10 +1,10 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { gltfLoader } from "./loaders.js";
 import { LAYER_GLB } from "./config.js";
 import { requestRender } from "./cameraManager.js";
 
 export function buildScooter(scene) {
-  new GLTFLoader().load('media/xiaomi_electric_scooter_4.glb', (gltf) => {
+  gltfLoader.load('media/xiaomi_electric_scooter_4.glb', (gltf) => {
     const scooter = gltf.scene;
 
     const rawBox = new THREE.Box3().setFromObject(scooter);

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { gltfLoader } from "./loaders.js";
 import { ROOM_W, ROOM_D } from "./config.js";
 import { requestRender, addWalkFollower, addWalkPitchFollower, setInitialWalkPos } from "./cameraManager.js";
 import { setMinimapWalker } from "./minimap.js";
@@ -27,7 +27,6 @@ export function buildWalkingMan(scene) {
   dirGroup.rotation.y = Math.PI;
   group.add(dirGroup);
 
-  const loader = new GLTFLoader();
   let suitReady = false;
   let capReady = false;
 
@@ -44,7 +43,7 @@ export function buildWalkingMan(scene) {
   // ── Costume ──────────────────────────────────────────────
   const redFabric = new THREE.MeshStandardMaterial({ color: 0xcc1111, roughness: 0.85 });
 
-  loader.load(
+  gltfLoader.load(
     "media/man_black_business_suit.glb",
     (gltf) => {
       const suit = gltf.scene;
@@ -72,7 +71,7 @@ export function buildWalkingMan(scene) {
   // ── Casquette ─────────────────────────────────────────────
   const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.65 });
 
-  loader.load(
+  gltfLoader.load(
     "media/baseball_cap.glb",
     (gltf) => {
       const cap = gltf.scene;
