@@ -230,11 +230,11 @@ export function buildGarden(scene) {
     viggja.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(viggja);
 
-    // Sol à Y=0, centré en X=100, bord nord à Z=-143 (3cm du canapé)
+    // Sol à Y=0, centré en X=100, bord sud à Z≈-155 (15cm du canapé, GLB centré à Z≈-35)
     viggja.position.set(
       100 - (box.min.x + box.max.x) / 2,
       -box.min.y,
-      -143 - (box.max.z - box.min.z) / 2,
+      -120 - (box.max.z - box.min.z) / 2,
     );
 
     viggja.traverse(c => {
@@ -249,4 +249,60 @@ export function buildGarden(scene) {
     scene.add(viggja);
     requestRender();
   }, undefined, err => console.error('viggja.glb:', err));
+
+  // =============================================
+  // BAIGNOIRE — rectangle à coins arrondis, 150×70×50cm
+  // =============================================
+  {
+    const TUB_L = 150;
+    const TUB_W = 70;
+    const TUB_H = 50;
+    const T  = 4;   // épaisseur paroi
+    const RC = 35;  // rayon coins extérieurs
+
+    const mat = new THREE.MeshStandardMaterial({ color: 0xd4b483, roughness: 0.4 });
+
+    // Trace un rectangle à coins arrondis sur un Shape ou Path existant
+    function rrTrace(p, w, h, r) {
+      p.moveTo(-w / 2 + r, -h / 2);
+      p.lineTo( w / 2 - r, -h / 2);
+      p.absarc( w / 2 - r, -h / 2 + r, r, -Math.PI / 2, 0, false);
+      p.lineTo( w / 2,  h / 2 - r);
+      p.absarc( w / 2 - r,  h / 2 - r, r, 0, Math.PI / 2, false);
+      p.lineTo(-w / 2 + r,  h / 2);
+      p.absarc(-w / 2 + r,  h / 2 - r, r, Math.PI / 2, Math.PI, false);
+      p.lineTo(-w / 2, -h / 2 + r);
+      p.absarc(-w / 2 + r, -h / 2 + r, r, Math.PI, -Math.PI / 2, false);
+    }
+
+    const RC_IN = Math.max(RC - T, 2);
+    const tub = new THREE.Group();
+
+    // Parois : outer shape avec trou inner → extrude TUB_H
+    const outer = new THREE.Shape();
+    rrTrace(outer, TUB_W, TUB_L, RC);
+    const hole = new THREE.Path();
+    rrTrace(hole, TUB_W - 2 * T, TUB_L - 2 * T, RC_IN);
+    outer.holes.push(hole);
+
+    const wallGeo = new THREE.ExtrudeGeometry(outer, { depth: TUB_H, bevelEnabled: false });
+    wallGeo.rotateX(-Math.PI / 2);
+    const walls = new THREE.Mesh(wallGeo, mat);
+    tub.add(walls);
+
+    // Fond
+    const botShape = new THREE.Shape();
+    rrTrace(botShape, TUB_W - 2 * T, TUB_L - 2 * T, RC_IN);
+    const botGeo = new THREE.ExtrudeGeometry(botShape, { depth: T, bevelEnabled: false });
+    botGeo.rotateX(-Math.PI / 2);
+    const bot = new THREE.Mesh(botGeo, mat);
+    tub.add(bot);
+
+    tub.rotation.y = -1;
+    tub.position.set(120, 0, -250);
+    tub.traverse(c => {
+      if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
+    });
+    scene.add(tub);
+  }
 }
