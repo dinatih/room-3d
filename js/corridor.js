@@ -384,5 +384,5 @@ export function buildCorridor(scene) {
   // =============================================
   const labelY = WALL_H * 0.6;
   const sdbCZ = (KITCHEN_Z + SDB_Z) / 2;
-  makeText(scene, 'MUR COULOIR', { size: 12, x: WALL_X - 30, y: labelY, z: sdbCZ, rotY: Math.PI / 2 });
+  return makeText(scene, 'MUR COULOIR', { size: 12, x: WALL_X - 30, y: labelY, z: sdbCZ, rotY: Math.PI / 2 });
 }

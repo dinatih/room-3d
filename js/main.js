@@ -37,6 +37,7 @@ import { buildCorridor, toggleCorridorDoors } from "./corridor.js";
 import { buildBathroom } from "./bathroom.js";
 import { buildFloor, buildParquet, buildConcreteSlab, buildGardenSlab, buildCeiling } from "./floor.js";
 import { buildInstancedMeshes } from "./instancedMeshes.js";
+import { buildLegoView } from "./legoView.js";
 import { buildGrid } from "./grid.js";
 import { buildMinimap } from "./minimap.js";
 import { buildFloorPlan } from "./floorplan.js";
@@ -109,14 +110,18 @@ buildOnLayer(buildMeubleT, LAYER_FURNITURE);
 buildLamp(scene); // async GLB
 
 // Layer 0 (structure) + layer 2 (placard) : géré dans corridor.js
-buildCorridor(scene);
+const corridorLabel = buildCorridor(scene);
 
 // Parquet après tous les builds (couvre séjour + couloir + SDB)
 buildParquet(allBricks);
 
 buildInstancedMeshes(scene, allBricks);
 prepareBuildAnimation(scene);
-buildGrid(scene);
+const gridGroup = buildGrid(scene);
+gridGroup.visible = false;
+// Déplacer le label couloir dans gridGroup (il était ajouté à scene par makeText)
+if (corridorLabel) { scene.remove(corridorLabel); gridGroup.add(corridorLabel); }
+const legoViewGroup = buildLegoView(scene, allBricks);
 buildMinimap();
 
 // =============================================
@@ -325,6 +330,44 @@ document.getElementById("lamp-toggle")?.addEventListener("click", () => {
   const s = toggleLamp();
   document.getElementById("lamp-toggle").textContent = `Lampe OLA : ${s ? "ON" : "OFF"}`;
 });
+
+document.getElementById("grid-toggle")?.addEventListener("click", () => {
+  gridGroup.visible = !gridGroup.visible;
+  document.getElementById("grid-toggle").textContent = `Grille : ${gridGroup.visible ? "ON" : "OFF"}`;
+  requestRender();
+});
+
+// Vue Lego : affiche seulement les 2 premières rangées de briques
+{
+  let legoActive = false;
+  const savedVis = new Map();
+
+  document.getElementById("lego-view-toggle")?.addEventListener("click", () => {
+    const btn = document.getElementById("lego-view-toggle");
+    if (!legoActive) {
+      // Sauvegarder et masquer tout sauf le groupe Lego
+      savedVis.clear();
+      for (const child of scene.children) {
+        savedVis.set(child.uuid, child.visible);
+        child.visible = (child === legoViewGroup);
+      }
+      legoViewGroup.visible = true;
+      enter2DTop();
+      legoActive = true;
+      btn.textContent = "Vue Lego : ON";
+    } else {
+      // Restaurer
+      for (const child of scene.children) {
+        if (savedVis.has(child.uuid)) child.visible = savedVis.get(child.uuid);
+      }
+      legoViewGroup.visible = false;
+      exit2D();
+      legoActive = false;
+      btn.textContent = "Vue Lego : OFF";
+    }
+    requestRender();
+  });
+}
 
 // =============================================
 // SOL ONLY MODE
