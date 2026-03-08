@@ -194,8 +194,8 @@ export function buildGarden(scene) {
 
     const rawBox = new THREE.Box3().setFromObject(viggja);
     const rawSize = rawBox.getSize(new THREE.Vector3());
-    // Scale uniforme sur la hauteur réelle (74cm) — proportions fidèles au GLB
-    viggja.scale.setScalar(74 / Math.max(rawSize.x, rawSize.y, rawSize.z));
+    // Scale sur Z (hauteur réelle 74cm) — export Collada/SKP = Z-up, rawSize.z=29.72 → scale=2.49
+    viggja.scale.setScalar(74 / rawSize.z);
 
     viggja.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(viggja);
@@ -204,7 +204,7 @@ export function buildGarden(scene) {
     viggja.position.set(
       100 - (box.min.x + box.max.x) / 2,
       -box.min.y,
-      -120 - (box.max.z - box.min.z) / 2,
+      -125 - (box.max.z - box.min.z) / 2,
     );
 
     viggja.traverse(c => {
@@ -219,6 +219,40 @@ export function buildGarden(scene) {
     scene.add(viggja);
     requestRender();
   }, undefined, err => console.error('viggja.glb:', err));
+
+  // =============================================
+  // PALMIER EN POT — entre canapé rouge ouest (X=100,Z=-90) et viggja (Z≈-145)
+  // =============================================
+  new GLTFLoader().load('media/potted_palm.glb', (gltf) => {
+    const palm = gltf.scene;
+
+    const rawBox = new THREE.Box3().setFromObject(palm);
+    const rawSize = rawBox.getSize(new THREE.Vector3());
+    // Hauteur cible ~150cm
+    palm.scale.setScalar(150 / Math.max(rawSize.x, rawSize.y, rawSize.z));
+
+    palm.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(palm);
+
+    // Sol à Y=0, entre sofa2 (centre Z=-90) et viggja (Z≈-140), côté ouest
+    palm.position.set(
+      100 - (box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -150 - (box.min.z + box.max.z) / 2,
+    );
+
+    palm.traverse(c => {
+      c.layers.set(LAYER_GLB);
+      if (c.isMesh) {
+        c.castShadow = true;
+        c.receiveShadow = true;
+        c.frustumCulled = false;
+      }
+    });
+
+    scene.add(palm);
+    requestRender();
+  }, undefined, err => console.error('potted_palm.glb:', err));
 
   // =============================================
   // BAIGNOIRE — rectangle à coins arrondis, 150×70×50cm

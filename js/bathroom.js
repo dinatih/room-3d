@@ -530,7 +530,7 @@ export function buildBathroom(scene) {
   const mirrorW = counterW; // toute la largeur du plan
   const mirrorH = 90; // 90cm
   const mirrorY = counterTopY + mirrorH / 2;
-  const mirrorZ = VANITY_CZ - VANITY_D / 2 + 5; // aligné au dos du meuble vasque
+  const mirrorZ = VANITY_CZ - VANITY_D / 2 + 5 + GAP; // +GAP : compense l'expansion des briques mur
 
   const mirGeo = new THREE.PlaneGeometry(mirrorW, mirrorH);
   const mirror = new Reflector(mirGeo, {
