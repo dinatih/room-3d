@@ -153,7 +153,7 @@ export function buildDecor(scene) {
 
     // Miroir 4 : top Y = 6 + 160 = 166
     const M4_TOP_Y = 6 + 160;
-    const LACK_Y = M4_TOP_Y + 20 + LACK_H / 2; // 20cm au-dessus + demi-épaisseur
+    const LACK_Y = 187.5 + LACK_H / 2; // bas à 187.5
 
     // Aligné avec le bout du mur MA (Z=280)
     const LACK_Z1 = NICHE_Z_START; // 280
@@ -391,7 +391,7 @@ export function buildDecor(scene) {
     // 3) Sur étagère LACK mur A (cx=13, cz=225, top≈191), face centre séjour
     const lackCX = 26 / 2;  // LACK_D / 2
     const lackCZ = NICHE_Z_START - 110 / 2;  // 280 - 55 = 225
-    const lackTopY = 6 + 160 + 20 + 5;  // M4_TOP_Y + 20 + LACK_H = 191
+    const lackTopY = 187.5 + 5;  // bas LACK + LACK_H = 192.5
     addMannequin(lackCX, lackTopY, lackCZ,
       Math.atan2(150 - lackCX, 200 - lackCZ));
   }
