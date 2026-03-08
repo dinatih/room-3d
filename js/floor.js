@@ -122,4 +122,14 @@ export function buildCeiling(scene) {
   // Base à WALL_H - 1 : légèrement sous la base des studs (évite le z-fighting)
   mesh.position.set(BLDG_CX, WALL_H - 1 + CEIL_THICK / 2, BLDG_CZ);
   scene.add(mesh);
+
+  // Plafond-terrasse 235cm (X, côté Est) × 150cm (Z, extension Nord)
+  // Collé au bord Nord du plafond principal (Z = BLDG_Z_MIN)
+  const TER_X = 235;
+  const TER_Z = 150;
+  const terCX = 300 - TER_X / 2;                // de X=65 à X=300 (vers l'Ouest, côté jardin)
+  const terCZ = BLDG_Z_MIN - TER_Z / 2;         // extension vers le Nord
+  const terrace = new THREE.Mesh(new THREE.BoxGeometry(TER_X, CEIL_THICK, TER_Z), _ceilMats);
+  terrace.position.set(terCX, WALL_H - 1 + CEIL_THICK / 2, terCZ);
+  scene.add(terrace);
 }
