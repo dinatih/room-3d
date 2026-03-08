@@ -8,10 +8,17 @@ const UPDATE_MS   = 500;
 const GLB_PATHS = [
   'media/potted_palm.glb',
   'media/viggja.glb',
-  'media/casquettes.glb',
-  'media/walkingMan.glb',
-  'media/lamp.glb',
-  'media/airPerformer.glb',
+  'media/baseball_cap.glb',
+  'media/man_black_business_suit.glb',
+  'media/smorkull.glb',
+  'media/sunnersta_trolley_ikea.glb',
+  'media/mackapar_ikea.glb',
+  'media/ikea_lamp_ola.glb',
+  'media/ikea_DRONA_black.glb',
+  'media/red_backpack.glb',
+  'media/ikea_Altappen.glb',
+  'media/xiaomi_electric_scooter_4.glb',
+  'media/folding-chair-generic.glb',
 ];
 
 export function buildDevtools(scene, renderer) {
