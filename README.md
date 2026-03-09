@@ -1,7 +1,28 @@
-# Appartement LEGO 3D
+# Studio de rêve — modélisation 3D LEGO
 
-Visualisation 3D d'un appartement en briques LEGO avec Three.js.
-ES Modules natifs, pas de bundler. Serveur HTTP local requis (CORS).
+Ce projet est la modélisation en 3D de **mon studio actuel** — mon studio de rêve.
+
+Tout a commencé parce que je voulais recréer mon appartement en LEGO. Le site
+[mecabricks.com](https://www.mecabricks.com) n'était pas adapté à ce que je
+voulais faire, alors j'ai ouvert un éditeur de texte et Three.js.
+
+Mais au fil des jours, j'ai réalisé que c'était bien plus que ça. Après **+15 ans**
+depuis mes débuts avec Three.js — à une époque où j'étais passionné par Flash/AS3
+(paix à son âme 🕯️) en début de carrière — le web 3D avait énormément évolué.
+J'avais toujours rêvé de modéliser mon studio de rêve. Je l'avais fait en SketchUp,
+mais le logiciel est devenu payant pour qui veut programmer la construction en Ruby.
+Blender a toujours été trop complexe pour moi.
+
+Aujourd'hui avec Three.js, je peux enfin réaliser ce rêve — **sans dépendre d'une
+technologie qui risque de disparaître** (Flash, SketchUp…). Open source, dans le
+navigateur, des modules ES natifs, aucun bundler.
+
+Le projet a démarré une semaine avant le premier commit (17 fév. 2026). En moins
+d'un mois, les progrès sont énormes.
+
+---
+
+## Lancement
 
 ```bash
 ruby server.rb        # http://localhost:8080 / https://localhost:8443
