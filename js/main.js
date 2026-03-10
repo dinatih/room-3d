@@ -444,6 +444,9 @@ renderer.xr.addEventListener("sessionend", () => {
 // Premier rendu
 requestRender();
 
+// Expose pour automation externe (screenshot.rb)
+window.__requestRender = requestRender;
+
 addEventListener("resize", () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();

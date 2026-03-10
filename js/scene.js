@@ -27,6 +27,11 @@ controls.dampingFactor = 0.08;
 controls.maxPolarAngle = Math.PI;
 controls.update();
 
+// Expose pour automation externe (screenshot.rb)
+window.__camera   = camera;
+window.__controls = controls;
+window.__renderer = renderer;
+
 // Environment map (pour les surfaces réfléchissantes)
 {
   const pmrem = new THREE.PMREMGenerator(renderer);
