@@ -9,7 +9,7 @@ const DIST = 600;
 const ISO = 450;
 
 export const VIEWS = {
-  perspective: { pos: [-200, 350, -150],      target: [CX, WALL_H / 3, CZ] },
+  perspective: { pos: [CX, 1000, -150],       target: [CX, WALL_H / 3, CZ] },
   top:         { pos: [CX, DIST + 200, CZ], target: [CX, 0, CZ] },
   bottom:      { pos: [CX, -DIST, CZ],     target: [CX, 0, CZ] },
   front:       { pos: [CX, CY, CZ + DIST], target: [CX, CY, CZ] },
