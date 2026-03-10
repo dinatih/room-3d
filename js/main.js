@@ -29,6 +29,7 @@ import { buildTV } from "./tv.js";
 import { buildSunnersta } from "./sunnersta.js";
 import { buildAirPerformer } from "./airPerformer.js";
 import { buildScooter } from "./scooter.js";
+import { buildSneakers } from "./sneakers.js";
 import { buildCasquettes } from "./casquettes.js";
 import { buildWalkingMan, getWalkingMan } from "./walkingMan.js";
 import { buildLamp, toggleLamp } from "./lamp.js";
@@ -104,6 +105,7 @@ buildOnLayer(buildTV, LAYER_FURNITURE);
 buildOnLayer(buildSunnersta, LAYER_FURNITURE);
 buildOnLayer(buildAirPerformer, LAYER_FURNITURE);
 buildOnLayer(buildScooter, LAYER_FURNITURE);
+buildSneakers(scene);
 buildCasquettes(scene); // async GLB, gère ses propres layers + requestRender
 buildWalkingMan(scene);
 buildOnLayer(buildMeubleT, LAYER_FURNITURE);
