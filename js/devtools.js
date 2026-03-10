@@ -22,6 +22,7 @@ const GLB_PATHS = [
   'media/sneaker.glb',
   'media/mechanic_jumpsuit.glb',
   'media/salopette-noir.glb',
+  'media/pizza_oven.glb',
 ];
 
 export function buildDevtools(scene, renderer) {

@@ -398,73 +398,43 @@ export function buildDecor(scene) {
   }
 
   // =============================================
-  // NINJA FOODI 8-en-1 — Kallax cuisine, étagère spec (planche milieu retirée)
-  // 51cm largeur × 19cm hauteur × 37cm profondeur
+  // PIZZA OVEN — Kallax cuisine, étagère spec (planche milieu retirée)
   // =============================================
   {
-    const NF_W = 51;     // 51cm largeur (le long de Z dans le Kallax)
-    const NF_H = 19;     // 19cm hauteur
-    const NF_D = 37;     // 37cm profondeur (le long de X)
-
-    // Posé sur l'étagère médiane de la pièce spec (2×2 milieu)
-    // = top du 2×2 base + centre du spec + demi-épaisseur étagère
     const k25CX = -NICHE_DEPTH + KALLAX_DEPTH / 2;
     const k25CZ = ROOM_D - kallaxW(2) / 2;
     const shelfTopY = kallaxH(2) + kallaxH(2) / 2 + KALLAX_PANEL / 2;
 
-    const nfBlack = new THREE.MeshStandardMaterial({
-      color: 0x1a1a1a, roughness: 0.4, metalness: 0.2,
-    });
-    const nfSilver = new THREE.MeshStandardMaterial({
-      color: 0xb0b0b0, roughness: 0.3, metalness: 0.5,
-    });
+    gltfLoader.load('media/pizza_oven.glb', (gltf) => {
+      const oven = gltf.scene;
 
-    const nfGroup = new THREE.Group();
+      const rawBox = new THREE.Box3().setFromObject(oven);
+      const rawSize = rawBox.getSize(new THREE.Vector3());
+      // Hauteur cible ~19cm (même gabarit que le Ninja Foodi)
+      oven.scale.setScalar(19 * 0.8 / rawSize.y);
+      oven.rotation.y = -Math.PI / 2;
+      oven.updateMatrixWorld(true);
 
-    // Corps principal (boîtier rectangulaire noir)
-    const body = new THREE.Mesh(
-      new THREE.BoxGeometry(NF_D, NF_H, NF_W),
-      nfBlack,
-    );
-    body.position.y = NF_H / 2;
-    body.castShadow = true;
-    body.receiveShadow = true;
-    nfGroup.add(body);
+      const box = new THREE.Box3().setFromObject(oven);
+      oven.position.set(
+        k25CX - (box.min.x + box.max.x) / 2,
+        shelfTopY - box.min.y,
+        k25CZ - (box.min.z + box.max.z) / 2,
+      );
 
-    // Couvercle / dessus (légèrement plus large, argenté)
-    const lid = new THREE.Mesh(
-      new THREE.BoxGeometry(NF_D + 1, 1, NF_W + 1),
-      nfSilver,
-    );
-    lid.position.y = NF_H;
-    nfGroup.add(lid);
+      oven.traverse(c => {
+        c.layers.set(LAYER_GLB);
+        if (c.isMesh) {
+          c.castShadow = true;
+          c.receiveShadow = true;
+          c.frustumCulled = false;
+        }
+      });
 
-    // Panneau de contrôle (face avant)
-    const panel = new THREE.Mesh(
-      new THREE.BoxGeometry(NF_D * 0.6, NF_H * 0.5, 0.5),
-      nfSilver,
-    );
-    panel.position.set(0, NF_H * 0.55, NF_W / 2 + 0.3);
-    nfGroup.add(panel);
-
-    // Écran LCD
-    const screen = new THREE.Mesh(
-      new THREE.BoxGeometry(12, 5, 0.2),
-      new THREE.MeshStandardMaterial({ color: 0x003322, roughness: 0.1, metalness: 0.3 }),
-    );
-    screen.position.set(0, NF_H * 0.6, NF_W / 2 + 0.6);
-    nfGroup.add(screen);
-
-    // Poignée sur le couvercle
-    const handle = new THREE.Mesh(
-      new THREE.BoxGeometry(15, 1.5, 3),
-      nfSilver,
-    );
-    handle.position.set(0, NF_H + 1.5, 0);
-    nfGroup.add(handle);
-
-    nfGroup.position.set(k25CX, shelfTopY, k25CZ);
-    scene.add(nfGroup);
+      mergeGlbByMaterial(oven);
+      scene.add(oven);
+      requestRender();
+    }, undefined, err => console.error('pizza_oven.glb:', err));
   }
 
   // =============================================
