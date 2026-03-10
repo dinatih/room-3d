@@ -16,12 +16,7 @@ import {
   CORR_DOOR_S,
   CORR_DOOR_E,
 } from "./config.js";
-import {
-  fillRow,
-  addBrickX,
-  addBrickZ,
-  addFloorBrick,
-} from "./brickHelpers.js";
+import { fillRow, addBrickX, addBrickZ, addFloorBrick } from "./brickHelpers.js";
 
 export function buildBathroom(scene) {
   const WALL_X = DOOR_START - 5;
@@ -89,59 +84,33 @@ export function buildBathroom(scene) {
     const sepT = 1; // séparateur central 1cm
 
     // Séparateur central (uniquement dans les rails haut et bas)
-    const sepTop = new THREE.Mesh(
-      new THREE.BoxGeometry(SLIDE_W + 4, 3, sepT),
-      railMat,
-    );
+    const sepTop = new THREE.Mesh(new THREE.BoxGeometry(SLIDE_W + 4, 3, sepT), railMat);
     sepTop.position.set(SLIDE_CX, SLIDE_H - 1.5, SLIDE_Z);
     scene.add(sepTop);
 
-    const sepBot = new THREE.Mesh(
-      new THREE.BoxGeometry(SLIDE_W + 4, 1.5, sepT),
-      railMat,
-    );
+    const sepBot = new THREE.Mesh(new THREE.BoxGeometry(SLIDE_W + 4, 1.5, sepT), railMat);
     sepBot.position.set(SLIDE_CX, 0.75, SLIDE_Z);
     scene.add(sepBot);
 
     // Porte gauche (côté SDB, Z-)
-    const panelL = new THREE.Mesh(
-      new THREE.BoxGeometry(panelW, SLIDE_H, panelT),
-      doorMat,
-    );
-    panelL.position.set(
-      SLIDE_X0 + panelW / 2,
-      SLIDE_H / 2,
-      SLIDE_Z - sepT / 2 - panelT / 2,
-    );
+    const panelL = new THREE.Mesh(new THREE.BoxGeometry(panelW, SLIDE_H, panelT), doorMat);
+    panelL.position.set(SLIDE_X0 + panelW / 2, SLIDE_H / 2, SLIDE_Z - sepT / 2 - panelT / 2);
     panelL.castShadow = true;
     scene.add(panelL);
 
     // Porte droite (côté douche, Z+)
-    const panelR = new THREE.Mesh(
-      new THREE.BoxGeometry(panelW, SLIDE_H, panelT),
-      doorMat,
-    );
-    panelR.position.set(
-      SLIDE_X1 - panelW / 2,
-      SLIDE_H / 2,
-      SLIDE_Z + sepT / 2 + panelT / 2,
-    );
+    const panelR = new THREE.Mesh(new THREE.BoxGeometry(panelW, SLIDE_H, panelT), doorMat);
+    panelR.position.set(SLIDE_X1 - panelW / 2, SLIDE_H / 2, SLIDE_Z + sepT / 2 + panelT / 2);
     panelR.castShadow = true;
     scene.add(panelR);
 
     // Rail haut (au plafond)
-    const topRail = new THREE.Mesh(
-      new THREE.BoxGeometry(SLIDE_W + 4, 3, railD),
-      railMat,
-    );
+    const topRail = new THREE.Mesh(new THREE.BoxGeometry(SLIDE_W + 4, 3, railD), railMat);
     topRail.position.set(SLIDE_CX, SLIDE_H - 1.5, SLIDE_Z);
     scene.add(topRail);
 
     // Rail bas
-    const botRail = new THREE.Mesh(
-      new THREE.BoxGeometry(SLIDE_W + 4, 1.5, railD),
-      railMat,
-    );
+    const botRail = new THREE.Mesh(new THREE.BoxGeometry(SLIDE_W + 4, 1.5, railD), railMat);
     botRail.position.set(SLIDE_CX, 0.75, SLIDE_Z);
     scene.add(botRail);
   }
@@ -178,10 +147,7 @@ export function buildBathroom(scene) {
     color: 0xf0f0f0,
     roughness: 0.3,
   });
-  const base = new THREE.Mesh(
-    new THREE.BoxGeometry(SHOWER_W, BASE_H, SHOWER_D),
-    baseMat,
-  );
+  const base = new THREE.Mesh(new THREE.BoxGeometry(SHOWER_W, BASE_H, SHOWER_D), baseMat);
   base.position.set(showerCX, BASE_H / 2, showerCZ);
   base.castShadow = true;
   base.receiveShadow = true;
@@ -189,18 +155,12 @@ export function buildBathroom(scene) {
 
   // Vitrage douche au niveau du mur sud (Z=600)
   const glassBaseY = BASE_H;
-  const glass = new THREE.Mesh(
-    new THREE.PlaneGeometry(SHOWER_W, GLASS_H),
-    glassMat,
-  );
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(SHOWER_W, GLASS_H), glassMat);
   glass.position.set(showerCX, glassBaseY + GLASS_H / 2, SHOWER_Z0);
   scene.add(glass);
 
   // Cadre haut du vitrage douche
-  const showerTopBar = new THREE.Mesh(
-    new THREE.BoxGeometry(SHOWER_W, 3, 1.5),
-    frameMat,
-  );
+  const showerTopBar = new THREE.Mesh(new THREE.BoxGeometry(SHOWER_W, 3, 1.5), frameMat);
   showerTopBar.position.set(showerCX, glassBaseY + GLASS_H, SHOWER_Z0);
   scene.add(showerTopBar);
 
@@ -299,10 +259,7 @@ export function buildBathroom(scene) {
   // -- Réservoir --
   const tankW = WC_W - 2,
     tankH = 70;
-  const tank = new THREE.Mesh(
-    new THREE.BoxGeometry(tankW, tankH, tankD),
-    wcMat,
-  );
+  const tank = new THREE.Mesh(new THREE.BoxGeometry(tankW, tankH, tankD), wcMat);
   tank.position.set(WC_CX, tankH / 2, WC_Z0 + tankD / 2);
   tank.castShadow = true;
   tank.receiveShadow = true;
@@ -310,10 +267,7 @@ export function buildBathroom(scene) {
 
   // Couvercle du réservoir (pièce séparée)
   const tankLidH = 3.5;
-  const tankLid = new THREE.Mesh(
-    new THREE.BoxGeometry(tankW + 1, tankLidH, tankD + 1),
-    wcMat,
-  );
+  const tankLid = new THREE.Mesh(new THREE.BoxGeometry(tankW + 1, tankLidH, tankD + 1), wcMat);
   tankLid.position.set(WC_CX, tankH + tankLidH / 2, WC_Z0 + tankD / 2);
   tankLid.castShadow = true;
   scene.add(tankLid);
@@ -324,10 +278,7 @@ export function buildBathroom(scene) {
     roughness: 0.3,
     metalness: 0.3,
   });
-  const flushBtn = new THREE.Mesh(
-    new THREE.CylinderGeometry(3.5, 3.5, 2.5, 12),
-    flushMat,
-  );
+  const flushBtn = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 2.5, 12), flushMat);
   flushBtn.position.set(WC_CX, tankH + tankLidH + 1.25, WC_Z0 + tankD / 2);
   scene.add(flushBtn);
 
@@ -356,10 +307,7 @@ export function buildBathroom(scene) {
     roughness: 0.15,
   });
 
-  const caisson = new THREE.Mesh(
-    new THREE.BoxGeometry(VANITY_W, VANITY_H, VANITY_D),
-    vanityMat,
-  );
+  const caisson = new THREE.Mesh(new THREE.BoxGeometry(VANITY_W, VANITY_H, VANITY_D), vanityMat);
   caisson.position.set(VANITY_CX, VANITY_Y0 + VANITY_H / 2, VANITY_CZ);
   caisson.castShadow = true;
   caisson.receiveShadow = true;
@@ -380,17 +328,10 @@ export function buildBathroom(scene) {
 
   // Counter as 4 strips around basin opening
   const backW = counterW;
-  const backD_val = (basinCZ - basinD / 2) - (counterCZ - counterD / 2);
+  const backD_val = basinCZ - basinD / 2 - (counterCZ - counterD / 2);
   if (backD_val > 0.1) {
-    const cBack = new THREE.Mesh(
-      new THREE.BoxGeometry(backW, counterH, backD_val),
-      counterMat,
-    );
-    cBack.position.set(
-      counterCX,
-      counterTopY - counterH / 2,
-      counterCZ - counterD / 2 + backD_val / 2,
-    );
+    const cBack = new THREE.Mesh(new THREE.BoxGeometry(backW, counterH, backD_val), counterMat);
+    cBack.position.set(counterCX, counterTopY - counterH / 2, counterCZ - counterD / 2 + backD_val / 2);
     cBack.castShadow = true;
     scene.add(cBack);
   }
@@ -398,101 +339,49 @@ export function buildBathroom(scene) {
   const frontD = basinCZ + basinD / 2 - (counterCZ + counterD / 2);
   const actualFrontD = counterCZ + counterD / 2 - (basinCZ + basinD / 2);
   if (actualFrontD > 0.1) {
-    const cFront = new THREE.Mesh(
-      new THREE.BoxGeometry(backW, counterH, actualFrontD),
-      counterMat,
-    );
-    cFront.position.set(
-      counterCX,
-      counterTopY - counterH / 2,
-      counterCZ + counterD / 2 - actualFrontD / 2,
-    );
+    const cFront = new THREE.Mesh(new THREE.BoxGeometry(backW, counterH, actualFrontD), counterMat);
+    cFront.position.set(counterCX, counterTopY - counterH / 2, counterCZ + counterD / 2 - actualFrontD / 2);
     cFront.castShadow = true;
     scene.add(cFront);
   }
 
   const sideW = (counterW - basinW) / 2;
-  const cLeft = new THREE.Mesh(
-    new THREE.BoxGeometry(sideW, counterH, basinD),
-    counterMat,
-  );
-  cLeft.position.set(
-    counterCX - counterW / 2 + sideW / 2,
-    counterTopY - counterH / 2,
-    basinCZ,
-  );
+  const cLeft = new THREE.Mesh(new THREE.BoxGeometry(sideW, counterH, basinD), counterMat);
+  cLeft.position.set(counterCX - counterW / 2 + sideW / 2, counterTopY - counterH / 2, basinCZ);
   cLeft.castShadow = true;
   scene.add(cLeft);
 
-  const cRight = new THREE.Mesh(
-    new THREE.BoxGeometry(sideW, counterH, basinD),
-    counterMat,
-  );
-  cRight.position.set(
-    counterCX + counterW / 2 - sideW / 2,
-    counterTopY - counterH / 2,
-    basinCZ,
-  );
+  const cRight = new THREE.Mesh(new THREE.BoxGeometry(sideW, counterH, basinD), counterMat);
+  cRight.position.set(counterCX + counterW / 2 - sideW / 2, counterTopY - counterH / 2, basinCZ);
   cRight.castShadow = true;
   scene.add(cRight);
 
   // Recessed basin (open-top box: 4 walls + bottom)
   const bT = 1; // basin wall thickness
   // Bottom
-  const basinBottom = new THREE.Mesh(
-    new THREE.BoxGeometry(basinW, bT, basinD),
-    basinMat,
-  );
+  const basinBottom = new THREE.Mesh(new THREE.BoxGeometry(basinW, bT, basinD), basinMat);
   basinBottom.position.set(counterCX, counterTopY - basinH, basinCZ);
   basinBottom.receiveShadow = true;
   scene.add(basinBottom);
 
   // Back wall (Z-)
-  const bWallBack = new THREE.Mesh(
-    new THREE.BoxGeometry(basinW, basinH, bT),
-    basinMat,
-  );
-  bWallBack.position.set(
-    counterCX,
-    counterTopY - basinH / 2,
-    basinCZ - basinD / 2 + bT / 2,
-  );
+  const bWallBack = new THREE.Mesh(new THREE.BoxGeometry(basinW, basinH, bT), basinMat);
+  bWallBack.position.set(counterCX, counterTopY - basinH / 2, basinCZ - basinD / 2 + bT / 2);
   scene.add(bWallBack);
 
   // Front wall (Z+)
-  const bWallFront = new THREE.Mesh(
-    new THREE.BoxGeometry(basinW, basinH, bT),
-    basinMat,
-  );
-  bWallFront.position.set(
-    counterCX,
-    counterTopY - basinH / 2,
-    basinCZ + basinD / 2 - bT / 2,
-  );
+  const bWallFront = new THREE.Mesh(new THREE.BoxGeometry(basinW, basinH, bT), basinMat);
+  bWallFront.position.set(counterCX, counterTopY - basinH / 2, basinCZ + basinD / 2 - bT / 2);
   scene.add(bWallFront);
 
   // Left wall (X-)
-  const bWallLeft = new THREE.Mesh(
-    new THREE.BoxGeometry(bT, basinH, basinD - bT * 2),
-    basinMat,
-  );
-  bWallLeft.position.set(
-    counterCX - basinW / 2 + bT / 2,
-    counterTopY - basinH / 2,
-    basinCZ,
-  );
+  const bWallLeft = new THREE.Mesh(new THREE.BoxGeometry(bT, basinH, basinD - bT * 2), basinMat);
+  bWallLeft.position.set(counterCX - basinW / 2 + bT / 2, counterTopY - basinH / 2, basinCZ);
   scene.add(bWallLeft);
 
   // Right wall (X+)
-  const bWallRight = new THREE.Mesh(
-    new THREE.BoxGeometry(bT, basinH, basinD - bT * 2),
-    basinMat,
-  );
-  bWallRight.position.set(
-    counterCX + basinW / 2 - bT / 2,
-    counterTopY - basinH / 2,
-    basinCZ,
-  );
+  const bWallRight = new THREE.Mesh(new THREE.BoxGeometry(bT, basinH, basinD - bT * 2), basinMat);
+  bWallRight.position.set(counterCX + basinW / 2 - bT / 2, counterTopY - basinH / 2, basinCZ);
   scene.add(bWallRight);
 
   // Robinet
@@ -501,27 +390,13 @@ export function buildBathroom(scene) {
     metalness: 0.8,
     roughness: 0.2,
   });
-  const faucetBase = new THREE.Mesh(
-    new THREE.CylinderGeometry(2, 2, 20, 8),
-    faucetMat,
-  );
+  const faucetBase = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 20, 8), faucetMat);
   const faucetTopY = VANITY_Y0 + VANITY_H + counterH;
-  faucetBase.position.set(
-    VANITY_CX,
-    faucetTopY + 10,
-    VANITY_CZ - VANITY_D / 2 + 8,
-  );
+  faucetBase.position.set(VANITY_CX, faucetTopY + 10, VANITY_CZ - VANITY_D / 2 + 8);
   scene.add(faucetBase);
 
-  const faucetSpout = new THREE.Mesh(
-    new THREE.BoxGeometry(1.5, 1.5, 12),
-    faucetMat,
-  );
-  faucetSpout.position.set(
-    VANITY_CX,
-    faucetTopY + 20,
-    VANITY_CZ - VANITY_D / 2 + 8 + 6,
-  );
+  const faucetSpout = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 12), faucetMat);
+  faucetSpout.position.set(VANITY_CX, faucetTopY + 20, VANITY_CZ - VANITY_D / 2 + 8 + 6);
   scene.add(faucetSpout);
 
   // =============================================
@@ -555,10 +430,7 @@ export function buildBathroom(scene) {
     roughness: 0.3,
     metalness: 0.5,
   });
-  const lamp = new THREE.Mesh(
-    new THREE.BoxGeometry(lampW, lampH, lampD),
-    lampMat,
-  );
+  const lamp = new THREE.Mesh(new THREE.BoxGeometry(lampW, lampH, lampD), lampMat);
   lamp.position.set(counterCX, lampY, lampZ);
   scene.add(lamp);
 
@@ -569,10 +441,7 @@ export function buildBathroom(scene) {
     emissiveIntensity: 1.5,
     roughness: 0.2,
   });
-  const lightFace = new THREE.Mesh(
-    new THREE.PlaneGeometry(lampW - 1, lampD - 0.5),
-    lightFaceMat,
-  );
+  const lightFace = new THREE.Mesh(new THREE.PlaneGeometry(lampW - 1, lampD - 0.5), lightFaceMat);
   lightFace.rotation.x = Math.PI / 2;
   lightFace.position.set(counterCX, lampY - lampH / 2 - 0.01, lampZ);
   scene.add(lightFace);
@@ -583,9 +452,13 @@ export function buildBathroom(scene) {
   scene.add(lampLight);
 
   // =============================================
-  // 2 meubles blancs 40x40x60cm dans les coins du mur SDB Nord
+  // 2 meubles blancs dans les coins du mur SDB Nord
+  // METOD Structure élément mural, blanc, 40x37x60 cm
   // =============================================
-  const CBN_W = 40, CBN_BODY_D = 37, CBN_DOOR_D = 2, CBN_H = 60;
+  const CBN_W = 40,
+    CBN_BODY_D = 37,
+    CBN_DOOR_D = 2,
+    CBN_H = 60;
   const CBN_BODY_Z = KITCHEN_Z + 11 + CBN_BODY_D / 2;
   const CBN_DOOR_Z = KITCHEN_Z + 11 + CBN_BODY_D + CBN_DOOR_D / 2;
 
@@ -596,7 +469,8 @@ export function buildBathroom(scene) {
   // Corps meuble ouest
   const cbnW = new THREE.Mesh(new THREE.BoxGeometry(CBN_W, CBN_H, CBN_BODY_D), cbnMat);
   cbnW.position.set(-NICHE_DEPTH + CBN_W / 2, CBN_H / 2, CBN_BODY_Z);
-  cbnW.castShadow = true; cbnW.receiveShadow = true;
+  cbnW.castShadow = true;
+  cbnW.receiveShadow = true;
   scene.add(cbnW);
   // Porte meuble ouest
   const doorW = new THREE.Mesh(new THREE.BoxGeometry(CBN_W - 2, CBN_H - 2, CBN_DOOR_D), cbnDoorMat);
@@ -611,7 +485,8 @@ export function buildBathroom(scene) {
   // Corps meuble est
   const cbnE = new THREE.Mesh(new THREE.BoxGeometry(CBN_W, CBN_H, CBN_BODY_D), cbnMat);
   cbnE.position.set(DOOR_START - CBN_W / 2 - 8, CBN_H / 2, CBN_BODY_Z);
-  cbnE.castShadow = true; cbnE.receiveShadow = true;
+  cbnE.castShadow = true;
+  cbnE.receiveShadow = true;
   scene.add(cbnE);
   // Porte meuble est
   const doorE = new THREE.Mesh(new THREE.BoxGeometry(CBN_W - 2, CBN_H - 2, CBN_DOOR_D), cbnDoorMat);
@@ -641,10 +516,7 @@ export function buildBathroom(scene) {
     roughness: 0.3,
   });
 
-  const hwBody = new THREE.Mesh(
-    new THREE.CylinderGeometry(HW_R, HW_R, HW_H, 16),
-    hwMat,
-  );
+  const hwBody = new THREE.Mesh(new THREE.CylinderGeometry(HW_R, HW_R, HW_H, 16), hwMat);
   hwBody.position.set(HW_X, HW_Y, HW_Z);
   hwBody.castShadow = true;
   hwBody.receiveShadow = true;
@@ -668,10 +540,7 @@ export function buildBathroom(scene) {
     roughness: 0.3,
   });
   for (const dy of [-20, 20]) {
-    const bracket = new THREE.Mesh(
-      new THREE.BoxGeometry(HW_R + 5, 4, 5),
-      bracketMat,
-    );
+    const bracket = new THREE.Mesh(new THREE.BoxGeometry(HW_R + 5, 4, 5), bracketMat);
     bracket.position.set(-NICHE_DEPTH + (HW_R + 5) / 2, HW_Y + dy, HW_Z);
     scene.add(bracket);
   }

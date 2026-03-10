@@ -14,9 +14,17 @@ export function buildKitchen(scene) {
   // --- Placard (bois) ---
   {
     const cabinetH = COUNTER_H;
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 });
     const geo = new THREE.BoxGeometry(CABINET_W - GAP, cabinetH, KIT_D - GAP);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6 });
-    const mesh = new THREE.Mesh(geo, mat);
+    // Material array : +X, -X, +Y(top→invisible), -Y, +Z, -Z
+    const mesh = new THREE.Mesh(geo, [
+      woodMat,
+      woodMat,
+      new THREE.MeshStandardMaterial({ visible: false }),
+      woodMat,
+      woodMat,
+      woodMat,
+    ]);
     mesh.position.set(
       KITCHEN_X0 + CABINET_W / 2,
       cabinetH / 2,
@@ -28,7 +36,7 @@ export function buildKitchen(scene) {
 
     // Porte du placard
     const doorGeo = new THREE.BoxGeometry(CABINET_W - 4, cabinetH - 4, 0.5);
-    const doorMat = new THREE.MeshStandardMaterial({ color: 0x9B7924, roughness: 0.5 });
+    const doorMat = new THREE.MeshStandardMaterial({ color: 0x607d8b, roughness: 0.4 });
     const door = new THREE.Mesh(doorGeo, doorMat);
     door.position.set(
       KITCHEN_X0 + CABINET_W / 2,
@@ -76,23 +84,41 @@ export function buildKitchen(scene) {
     scene.add(handle);
   }
 
-  // --- Évier (30x47cm, 16cm de profondeur) ---
-  const sinkW = 30;      // 30cm le long de X
-  const sinkD = 47;      // 47cm le long de Z
-  const sinkDepth = 16;  // 16cm de creux
+  // --- BOHOLMEN intégré 1 bac – rotation 90° : longueur (47cm) le long de Z ---
+  // https://www.ikea.com/fr/fr/p/boholmen-evier-integre-1-bac-acier-inoxydable-s99157501/
+  const sinkW    = 30;   // le long de X (profondeur évier = largeur comptoir utilisée)
+  const sinkD    = 47;   // le long de Z (longueur évier)
+  const holeW    = 28;   // découpe comptoir le long de X
+  const holeD    = 44.6; // découpe comptoir le long de Z
+  const basinW   = 23;   // largeur intérieure bac (X)
+  const basinD   = 40;   // profondeur intérieure bac (Z)
+  const sinkDepth = 15;  // profondeur bac
+  const CR       = 5;    // rayon coins arrondis
+
   const sinkCX = KITCHEN_X0 + CABINET_W / 2;
   const sinkCZ = ROOM_D + KIT_D / 2;
-  const sinkY = COUNTER_H + COUNTER_SLAB;
+  const sinkY  = COUNTER_H + COUNTER_SLAB;
 
-  // --- Plan de travail avec trou pour l'évier (Shape + ExtrudeGeometry) ---
+  // Helper arrondi (XY shape space)
+  function roundedRect(path, x, y, w, h, r) {
+    path.moveTo(x + r, y);
+    path.lineTo(x + w - r, y);
+    path.quadraticCurveTo(x + w, y, x + w, y + r);
+    path.lineTo(x + w, y + h - r);
+    path.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    path.lineTo(x + r, y + h);
+    path.quadraticCurveTo(x, y + h, x, y + h - r);
+    path.lineTo(x, y + r);
+    path.quadraticCurveTo(x, y, x + r, y);
+  }
+
+  // --- Plan de travail avec trou rectangulaire pour l'évier ---
   {
     const cW = KIT_W + 2;
     const cD = KIT_D + 2;
-    // Origine du shape en coin bas-gauche du plan de travail
-    const cx0 = KITCHEN_X0 + KIT_W / 2 - cW / 2; // bord gauche X
-    const cz0 = ROOM_D + KIT_D / 2 - cD / 2;     // bord avant Z
+    const cx0 = KITCHEN_X0 + KIT_W / 2 - cW / 2;
+    const cz0 = ROOM_D + KIT_D / 2 - cD / 2;
 
-    // Shape rectangulaire (dans le plan XZ, extrudé en Y)
     const shape = new THREE.Shape();
     shape.moveTo(0, 0);
     shape.lineTo(cW, 0);
@@ -100,59 +126,74 @@ export function buildKitchen(scene) {
     shape.lineTo(0, cD);
     shape.lineTo(0, 0);
 
-    // Trou pour l'évier (coordonnées locales dans le shape)
-    const holeX = sinkCX - cx0 - sinkW / 2;
-    const holeZ = sinkCZ - cz0 - sinkD / 2;
+    // Trou rectangulaire simple (coordonnées shape : X=world X, Y=world Z)
+    const hX = sinkCX - cx0 - holeW / 2;
+    const hZ = sinkCZ - cz0 - holeD / 2;
     const hole = new THREE.Path();
-    hole.moveTo(holeX, holeZ);
-    hole.lineTo(holeX + sinkW, holeZ);
-    hole.lineTo(holeX + sinkW, holeZ + sinkD);
-    hole.lineTo(holeX, holeZ + sinkD);
-    hole.lineTo(holeX, holeZ);
+    hole.moveTo(hX, hZ);
+    hole.lineTo(hX + holeW, hZ);
+    hole.lineTo(hX + holeW, hZ + holeD);
+    hole.lineTo(hX, hZ + holeD);
+    hole.lineTo(hX, hZ);
     shape.holes.push(hole);
 
-    const extrudeSettings = { depth: COUNTER_SLAB, bevelEnabled: false };
-    const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-    // ExtrudeGeometry extrude le long de Z local → on le tourne pour que l'extrusion soit en Y
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: COUNTER_SLAB, bevelEnabled: false });
     geo.rotateX(-Math.PI / 2);
-
     const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25, metalness: 0.05 });
     const mesh = new THREE.Mesh(geo, mat);
-    // After rotateX(-PI/2): shape Y maps to -Z, extrusion maps to +Y
-    // Geometry spans x:[0,cW], y:[0,SLAB], z:[-cD,0]
     mesh.position.set(cx0, COUNTER_H, cz0 + cD);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     scene.add(mesh);
   }
 
-  // --- Bac de l'évier ---
+  // --- Bac BOHOLMEN ---
   {
-    const rimMat = new THREE.MeshStandardMaterial({
-      color: 0xcccccc, metalness: 0.4, roughness: 0.15,
-      polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
+    const inoxMat = new THREE.MeshStandardMaterial({
+      color: 0xc8c8c8, metalness: 0.75, roughness: 0.12,
     });
 
-    // Fond
-    const bottomGeo = new THREE.BoxGeometry(sinkW, 0.5, sinkD);
-    const bottom = new THREE.Mesh(bottomGeo, rimMat);
-    bottom.position.set(sinkCX, sinkY - sinkDepth + 0.25, sinkCZ);
-    scene.add(bottom);
+    // Rebord inox : 4 strips autour du trou (plus fiable qu'ExtrudeGeometry+hole)
+    const rimT  = 1.2;                    // épaisseur rebord (hauteur)
+    const rimZW = (sinkD - holeD) / 2;   // largeur avant/arrière ≈ 1.2cm
+    const rimXW = (sinkW - holeW) / 2;   // largeur gauche/droite ≈ 1cm
+    const rimY2 = sinkY + rimT / 2;
 
-    // 4 parois
-    const wallT = 1;
+    for (const [w, d, cx, cz] of [
+      [sinkW,  rimZW, sinkCX,              sinkCZ - holeD / 2 - rimZW / 2],
+      [sinkW,  rimZW, sinkCX,              sinkCZ + holeD / 2 + rimZW / 2],
+      [rimXW,  holeD, sinkCX - holeW / 2 - rimXW / 2, sinkCZ],
+      [rimXW,  holeD, sinkCX + holeW / 2 + rimXW / 2, sinkCZ],
+    ]) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, rimT, d), inoxMat);
+      m.position.set(cx, rimY2, cz);
+      scene.add(m);
+    }
+
+    // 4 parois du bac (box simples, à l'intérieur du trou)
+    const wallT = (holeW - basinW) / 2; // ~2.5cm
+    const wallD = (holeD - basinD) / 2; // ~2.3cm
     const sides = [
-      { sx: sinkW, sy: sinkDepth, sz: wallT, px: 0, pz: -sinkD / 2 + wallT / 2 },
-      { sx: sinkW, sy: sinkDepth, sz: wallT, px: 0, pz:  sinkD / 2 - wallT / 2 },
-      { sx: wallT, sy: sinkDepth, sz: sinkD, px: -sinkW / 2 + wallT / 2, pz: 0 },
-      { sx: wallT, sy: sinkDepth, sz: sinkD, px:  sinkW / 2 - wallT / 2, pz: 0 },
+      { sx: holeW,  sy: sinkDepth, sz: wallT, px: 0,                        pz: -(basinD + wallD) / 2 },
+      { sx: holeW,  sy: sinkDepth, sz: wallT, px: 0,                        pz:  (basinD + wallD) / 2 },
+      { sx: wallT,  sy: sinkDepth, sz: holeD, px: -(basinW + wallT) / 2,    pz: 0 },
+      { sx: wallT,  sy: sinkDepth, sz: holeD, px:  (basinW + wallT) / 2,    pz: 0 },
     ];
     for (const s of sides) {
-      const geo = new THREE.BoxGeometry(s.sx, s.sy, s.sz);
-      const mesh = new THREE.Mesh(geo, rimMat);
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(s.sx, s.sy, s.sz), inoxMat);
       mesh.position.set(sinkCX + s.px, sinkY - sinkDepth / 2, sinkCZ + s.pz);
       scene.add(mesh);
     }
+
+    // Fond du bac
+    const floorMesh = new THREE.Mesh(new THREE.BoxGeometry(basinW, 0.5, basinD), inoxMat);
+    floorMesh.position.set(sinkCX, sinkY - sinkDepth + 0.25, sinkCZ);
+    scene.add(floorMesh);
+
+    // Bonde centrale
+    const drain = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 0.8, 16), inoxMat);
+    drain.position.set(sinkCX, sinkY - sinkDepth + 0.7, sinkCZ);
+    scene.add(drain);
 
     // Robinet
     const faucetMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.7, roughness: 0.1 });

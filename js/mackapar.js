@@ -55,5 +55,84 @@ export function buildMackapar(scene) {
     mergeGlbByMaterial(mack);
     scene.add(mack);
     requestRender();
+
+    // ── Combinaison accrochée sur la tringle du haut ──────────────────────
+    // Centre du mackapar en X et Z (pour accrocher au centre de la tringle)
+    const mackCX = posX + (box.max.x - box.min.x) / 2;
+    const mackCZ = mpZ;
+    // Tringle du haut à ~165cm du sol sur un mackapar 200cm
+    const RAIL_Y = 165;
+
+    gltfLoader.load('media/mechanic_jumpsuit.glb', (gltf) => {
+      const suit = gltf.scene;
+
+      // Scale : ~150cm de hauteur suspendue (combinaison de mécanicien adulte)
+      const suitRaw = new THREE.Box3().setFromObject(suit);
+      const suitSize = suitRaw.getSize(new THREE.Vector3());
+      suit.scale.setScalar(150 / suitSize.y);
+      suit.updateMatrixWorld(true);
+
+      const suitBox = new THREE.Box3().setFromObject(suit);
+
+      // Positionner : haut de la combinaison à hauteur de la tringle, centré sur le mackapar
+      suit.rotation.y = Math.PI / 2;
+      suit.position.set(
+        mackCX - (suitBox.min.x + suitBox.max.x) / 2 - 100 + 20,
+        RAIL_Y - suitBox.max.y + 30 - 15,
+        mackCZ - (suitBox.min.z + suitBox.max.z) / 2,
+      );
+
+      const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.6, side: THREE.DoubleSide });
+      suit.traverse(c => {
+        c.layers.set(LAYER_GLB);
+        if (c.isMesh) {
+          c.material = redMat;
+          c.castShadow = true;
+          c.receiveShadow = true;
+          c.frustumCulled = false;
+        }
+      });
+
+      mergeGlbByMaterial(suit);
+      scene.add(suit);
+      requestRender();
+
+      // ── Salopette accrochée à +5x du jumpsuit ──────────────────────────
+      const suitPosX = mackCX - (suitBox.min.x + suitBox.max.x) / 2 - 100 + 20;
+
+      gltfLoader.load('media/salopette-noir.glb', (gltf) => {
+        const sal = gltf.scene;
+
+        const salRaw = new THREE.Box3().setFromObject(sal);
+        const salSize = salRaw.getSize(new THREE.Vector3());
+        sal.scale.setScalar(150 / salSize.y);
+        sal.scale.z = 6 / salSize.z; // aplatir à 6cm d'épaisseur
+        sal.updateMatrixWorld(true);
+
+        const salBox = new THREE.Box3().setFromObject(sal);
+
+        sal.rotation.y = Math.PI / 2;
+        sal.position.set(
+          suitPosX + 40 - 10,
+          RAIL_Y - salBox.max.y + 30 - 15,
+          mackCZ - (salBox.min.z + salBox.max.z) / 2,
+        );
+
+        const redMat2 = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.6, side: THREE.DoubleSide });
+        sal.traverse(c => {
+          c.layers.set(LAYER_GLB);
+          if (c.isMesh) {
+            c.material = redMat2;
+            c.castShadow = true;
+            c.receiveShadow = true;
+            c.frustumCulled = false;
+          }
+        });
+
+        mergeGlbByMaterial(sal);
+        scene.add(sal);
+        requestRender();
+      }, undefined, err => console.error('salopette-noir.glb:', err));
+    }, undefined, err => console.error('mechanic_jumpsuit.glb:', err));
   }, undefined, err => console.error('mackapar_ikea.glb:', err));
 }

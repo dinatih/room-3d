@@ -20,12 +20,12 @@ export function buildChair(scene) {
       }
     });
 
-    // GLB en Z-up → dimensions brutes à scale=1
     const rawBox = new THREE.Box3().setFromObject(chair);
     const rawSize = rawBox.getSize(new THREE.Vector3());
 
     // Scaler pour que la hauteur = 128cm (Smörkull réel)
-    const scaleF = 128 / rawSize.z;
+    // Le GLB (gltf-transform + draco) est Y-up → hauteur en rawSize.y
+    const scaleF = 128 / rawSize.y;
     chair.scale.setScalar(scaleF);
 
     // Roue arrière vers mur A (180° par rapport à la précédente tentative)
