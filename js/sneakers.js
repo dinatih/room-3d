@@ -16,7 +16,7 @@ export function buildSneakers(scene) {
   // Taille cible : ~28cm (longueur d'une basket)
   const TARGET_LENGTH = 28;
 
-  gltfLoader.load('media/sleek_midnight_black_sneaker.glb', (gltf) => {
+  gltfLoader.load('media/sneaker.glb', (gltf) => {
     const shoe = gltf.scene;
 
     // Auto-scale sur la dimension la plus longue horizontale (X ou Z)
@@ -92,5 +92,5 @@ export function buildSneakers(scene) {
     scene.add(pair2);
 
     requestRender();
-  }, undefined, err => console.error('sleek_midnight_black_sneaker.glb:', err));
+  }, undefined, err => console.error('sneaker.glb:', err));
 }

@@ -19,6 +19,7 @@ const GLB_PATHS = [
   'media/ikea_Altappen.glb',
   'media/xiaomi_electric_scooter_4.glb',
   'media/folding-chair-generic.glb',
+  'media/sneaker.glb',
 ];
 
 export function buildDevtools(scene, renderer) {
