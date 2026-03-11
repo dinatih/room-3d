@@ -39,7 +39,6 @@ export function buildSunnersta(scene) {
       if (c.isMesh) {
         c.castShadow = true;
         c.receiveShadow = true;
-        c.frustumCulled = false;
       }
     });
 

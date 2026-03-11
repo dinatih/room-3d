@@ -77,11 +77,11 @@ export function mergeGlbByMaterial(root) {
     if (!merged) continue;
 
     merged.computeVertexNormals();
+    merged.computeBoundingSphere();
 
     const mesh        = new THREE.Mesh(merged, mat);
     mesh.castShadow   = castShadow;
     mesh.receiveShadow = true;
-    mesh.frustumCulled = false;
     mesh.layers.mask   = layersMask || 1; // default layer 0 if not set
     root.add(mesh);
   }

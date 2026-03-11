@@ -2,6 +2,7 @@
 // DEVELOPER TOOLS PANEL
 // FPS graph, renderer stats, scene stats, GLB sizes
 // =============================================
+import { gltfLoader, glbRegistry } from './loaders.js';
 const FPS_SAMPLES = 80;
 const UPDATE_MS   = 500;
 
@@ -107,10 +108,42 @@ export function buildDevtools(scene, renderer) {
   // Compute after async GLBs have loaded
   setTimeout(computeSceneStats, 3500);
 
-  // ── GLB sizes ──────────────────────────────────────────────────
+  // ── GLB sizes + hover stats ─────────────────────────────────────
   hr();
   const glbRow = el('div', 'padding:5px 10px 8px;font-size:10px;color:#888;line-height:1.8',
     dim('GLB : chargement…'));
+
+  // Tooltip flottant hors du panel
+  const glbTooltip = document.createElement('div');
+  glbTooltip.style.cssText =
+    'position:fixed;display:none;z-index:9999;pointer-events:none;' +
+    'background:#080812;border:1px solid rgba(255,255,255,0.13);border-radius:4px;' +
+    'padding:5px 9px;font:10px monospace;color:#888;line-height:1.7;white-space:nowrap;';
+  document.body.appendChild(glbTooltip);
+
+  // Lit le registre (objets réels en scène, chargés via gltfLoader)
+  function getGlbStats(path) {
+    const scenes = glbRegistry.get(path);
+    if (!scenes?.length) return null;
+    const s = { copies: scenes.length, meshes: 0, instanced: 0, lights: 0, lines: 0, groups: 0, verts: 0, tris: 0 };
+    for (const root of scenes) {
+      root.traverse(obj => {
+        if      (obj.isInstancedMesh) s.instanced++;
+        else if (obj.isMesh)          s.meshes++;
+        else if (obj.isLight)         s.lights++;
+        else if (obj.isLine)          s.lines++;
+        else if (obj.isGroup)         s.groups++;
+        if (obj.geometry) {
+          const pos = obj.geometry.attributes?.position;
+          if (pos) {
+            s.verts += pos.count;
+            s.tris  += obj.geometry.index ? obj.geometry.index.count / 3 : pos.count / 3;
+          }
+        }
+      });
+    }
+    return s;
+  }
 
   (async () => {
     const rows = [];
@@ -120,23 +153,46 @@ export function buildDevtools(scene, renderer) {
         const r = await fetch(p, { method: 'HEAD' });
         if (!r.ok) continue;
         const bytes = parseInt(r.headers.get('content-length') || '0');
-        rows.push({ name: p.split('/').pop().replace('.glb', ''), bytes });
+        rows.push({ path: p, name: p.split('/').pop().replace('.glb', ''), bytes });
         total += bytes;
       } catch { /* file missing, skip */ }
     }
     if (!rows.length) { glbRow.innerHTML = dim('aucun GLB'); return; }
-    const fmt = b => b > 1 << 20
-      ? `${(b / (1 << 20)).toFixed(1)} MB`
-      : `${Math.round(b / 1024)} KB`;
+    const fmt = b => b > 1 << 20 ? `${(b / (1 << 20)).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`;
     const col = b => b > 512 * 1024 ? '#ff8866' : b > 128 * 1024 ? '#ffcc66' : '#88cc88';
-    glbRow.innerHTML =
-      lbl('GLB') +
-      rows.sort((a, b) => b.bytes - a.bytes)
-          .map(({ name, bytes }) =>
-            `<span style="color:#888">${name}</span>` +
-            `<span style="color:${col(bytes)};float:right">${fmt(bytes)}</span>`
-          ).join('<br>') +
-      `<br><span style="color:#555">Total : ${fmt(total)}</span>`;
+
+    glbRow.innerHTML = lbl('GLB');
+    for (const { path, name, bytes } of rows.sort((a, b) => b.bytes - a.bytes)) {
+      const row = document.createElement('div');
+      row.innerHTML =
+        `<span style="color:#888">${name}</span>` +
+        `<span style="color:${col(bytes)};float:right">${fmt(bytes)}</span>`;
+
+      row.addEventListener('mouseenter', (e) => {
+        const s = getGlbStats(path);
+        if (!s) { glbTooltip.innerHTML = dim('non chargé'); }
+        else {
+          const k = n => Math.round(n / 1000) + 'k';
+          const copies = s.copies > 1 ? `  <span style="color:#ffaa44">×${s.copies}</span>` : '';
+          glbTooltip.innerHTML =
+            `Mesh: ${hi(s.meshes)}  Instanced: ${hi(s.instanced)}  ` +
+            `Lights: ${dim(s.lights)}  Lines: ${dim(s.lines)}  Groups: ${dim(s.groups)}${copies}<br>` +
+            `Vertices: ${dim(k(s.verts))}  Tris: ${dim(k(s.tris))}`;
+        }
+        glbTooltip.style.display = 'block';
+        glbTooltip.style.left = (e.clientX + 14) + 'px';
+        glbTooltip.style.top  = (e.clientY - 8)  + 'px';
+      });
+      row.addEventListener('mousemove', e => {
+        glbTooltip.style.left = (e.clientX + 14) + 'px';
+        glbTooltip.style.top  = (e.clientY - 8)  + 'px';
+      });
+      row.addEventListener('mouseleave', () => { glbTooltip.style.display = 'none'; });
+      glbRow.appendChild(row);
+    }
+    const totalDiv = document.createElement('div');
+    totalDiv.innerHTML = `<span style="color:#555">Total : ${fmt(total)}</span>`;
+    glbRow.appendChild(totalDiv);
   })();
 
   // ── FPS loop ───────────────────────────────────────────────────

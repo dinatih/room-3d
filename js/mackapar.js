@@ -49,7 +49,6 @@ export function buildMackapar(scene) {
       if (c.isMesh) {
         c.castShadow = true;
         c.receiveShadow = true;
-        c.frustumCulled = false;
       }
     });
     mergeGlbByMaterial(mack);
@@ -89,7 +88,6 @@ export function buildMackapar(scene) {
           c.material = redMat;
           c.castShadow = true;
           c.receiveShadow = true;
-          c.frustumCulled = false;
         }
       });
 
@@ -125,7 +123,6 @@ export function buildMackapar(scene) {
             c.material = redMat2;
             c.castShadow = true;
             c.receiveShadow = true;
-            c.frustumCulled = false;
           }
         });
 

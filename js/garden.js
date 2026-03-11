@@ -121,7 +121,6 @@ export function buildGarden(scene) {
         c.material = redMat;
         c.castShadow = true;
         c.receiveShadow = true;
-        c.frustumCulled = false;
       } else if (c.isLine) {
         c.visible = false;
       }
@@ -214,7 +213,6 @@ export function buildGarden(scene) {
       if (c.isMesh) {
         c.castShadow = true;
         c.receiveShadow = true;
-        c.frustumCulled = false;
       }
     });
 
@@ -249,7 +247,6 @@ export function buildGarden(scene) {
       if (c.isMesh) {
         c.castShadow = true;
         c.receiveShadow = true;
-        c.frustumCulled = false;
       }
     });
 

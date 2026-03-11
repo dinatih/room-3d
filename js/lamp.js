@@ -51,7 +51,6 @@ export function buildLamp(scene) {
     lamp.position.set(MEUBLE_T_X - cx, baseY, MEUBLE_T_Z - cz);
     lamp.traverse(c => {
       c.layers.set(LAYER_GLB);
-      if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; c.frustumCulled = false; }
     });
     mergeGlbByMaterial(lamp);
     scene.add(lamp);

@@ -16,7 +16,6 @@ export function buildChair(scene) {
         c.material = redMat;
         // boundingSphere calculée en bind-pose locale ≠ bbox réel après Ry(π/2) + position.
         // Sans ça, Three.js culle la chaise dès que la caméra dépasse le bord du bbox.
-        c.frustumCulled = false;
       }
     });
 

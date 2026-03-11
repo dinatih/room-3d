@@ -74,7 +74,6 @@ export function buildSneakers(scene) {
         c.material = redMat;
         c.castShadow = true;
         c.receiveShadow = true;
-        c.frustumCulled = false;
       }
     });
 

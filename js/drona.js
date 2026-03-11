@@ -52,7 +52,6 @@ function buildInstance(group) {
       c.material = redMat;
       c.castShadow = true;
       c.receiveShadow = true;
-      c.frustumCulled = false;
     } else if (c.isLine) {
       c.visible = false;
     }

@@ -427,7 +427,6 @@ export function buildDecor(scene) {
         if (c.isMesh) {
           c.castShadow = true;
           c.receiveShadow = true;
-          c.frustumCulled = false;
         }
       });
 
@@ -464,7 +463,6 @@ export function buildDecor(scene) {
       if (c.isMesh) {
         c.castShadow = true;
         c.receiveShadow = true;
-        c.frustumCulled = false;
       }
     });
 
