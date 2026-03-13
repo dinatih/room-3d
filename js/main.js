@@ -33,6 +33,7 @@ import { buildSneakers } from "./sneakers.js";
 import { buildCasquettes } from "./casquettes.js";
 import { buildWalkingMan, getWalkingMan } from "./walkingMan.js";
 import { buildLamp, toggleLamp } from "./lamp.js";
+import { toggleCelShading } from "./celShading.js";
 import { buildMeubleT } from "./meubleT.js";
 import { buildCorridor, toggleCorridorDoors } from "./corridor.js";
 import { buildBathroom } from "./bathroom.js";
@@ -333,6 +334,11 @@ document.getElementById("corr-doors-toggle")?.addEventListener("click", () => {
 document.getElementById("lamp-toggle")?.addEventListener("click", () => {
   const s = toggleLamp();
   document.getElementById("lamp-toggle").textContent = `Lampe OLA : ${s ? "ON" : "OFF"}`;
+});
+
+document.getElementById("cel-toggle")?.addEventListener("click", () => {
+  const s = toggleCelShading(scene);
+  document.getElementById("cel-toggle").textContent = `Cel-Shading : ${s ? "ON" : "OFF"}`;
 });
 
 document.getElementById("grid-toggle")?.addEventListener("click", () => {
