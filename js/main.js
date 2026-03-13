@@ -120,7 +120,7 @@ buildParquetMesh(scene);
 // Carrelage blanc 20×20cm — SDB + couloir entrée
 buildTileMesh(scene);
 
-buildInstancedMeshes(scene, allBricks);
+const brickBodyGroup = buildInstancedMeshes(scene, allBricks);
 const gridGroup = buildGrid(scene);
 gridGroup.visible = false;
 // Déplacer le label couloir dans gridGroup (il était ajouté à scene par makeText)
@@ -344,6 +344,12 @@ document.getElementById("cel-toggle")?.addEventListener("click", () => {
 document.getElementById("grid-toggle")?.addEventListener("click", () => {
   gridGroup.visible = !gridGroup.visible;
   document.getElementById("grid-toggle").textContent = `Grille : ${gridGroup.visible ? "ON" : "OFF"}`;
+  requestRender();
+});
+
+document.getElementById("bricks-toggle")?.addEventListener("click", () => {
+  brickBodyGroup.visible = !brickBodyGroup.visible;
+  document.getElementById("bricks-toggle").textContent = `Briques : ${brickBodyGroup.visible ? "ON" : "OFF"}`;
   requestRender();
 });
 

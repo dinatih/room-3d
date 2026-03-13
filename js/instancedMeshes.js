@@ -5,14 +5,45 @@ import { COLORS, GAP, STUD_R, WALL_H, WALL_PLATE_H, NUM_LAYERS, BRICK_H } from '
 export function buildInstancedMeshes(scene, allBricks) {
   const dummy = new THREE.Object3D();
 
+  const PLATE_MIN_Y = NUM_LAYERS * BRICK_H; // 240cm — au-dessus = plaque 10cm (y=245)
+
   const mats = {
     wall:        new THREE.MeshStandardMaterial({ color: 0xf0f0eb, roughness: 0.65 }),
     accent:      new THREE.MeshStandardMaterial({ color: COLORS.accent, roughness: 0.55 }),
     glass_frame: new THREE.MeshStandardMaterial({ color: 0x4477aa, roughness: 0.35 }),
   };
 
+  // Groupe pour les briques corps (30cm) — caché par défaut
+  const brickBodyGroup = new THREE.Group();
+  brickBodyGroup.visible = false;
+  scene.add(brickBodyGroup);
+
+  // Briques corps (y < 240cm) → dans le groupe
   for (const type of ['wall', 'accent', 'glass_frame']) {
-    const bricks = allBricks.filter(b => b.type === type);
+    const bricks = allBricks.filter(b => b.type === type && b.y < PLATE_MIN_Y);
+    if (!bricks.length) continue;
+    const geos = [];
+    for (const b of bricks) {
+      const geo = new THREE.BoxGeometry(b.sx, b.sy, b.sz);
+      dummy.position.set(b.x, b.y, b.z);
+      dummy.rotation.y = b.rotY || 0;
+      dummy.updateMatrix();
+      geo.applyMatrix4(dummy.matrix);
+      dummy.rotation.y = 0;
+      geos.push(geo);
+    }
+    const merged = mergeGeometries(geos);
+    geos.forEach(g => g.dispose());
+    merged.computeBoundingSphere();
+    const mesh = new THREE.Mesh(merged, mats[type]);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    brickBodyGroup.add(mesh);
+  }
+
+  // Plaques de finition (y >= 240cm) → toujours visibles dans scene
+  for (const type of ['wall', 'accent', 'glass_frame']) {
+    const bricks = allBricks.filter(b => b.type === type && b.y >= PLATE_MIN_Y);
     if (!bricks.length) continue;
 
     const geos = [];
@@ -29,6 +60,7 @@ export function buildInstancedMeshes(scene, allBricks) {
 
     const merged = mergeGeometries(geos);
     geos.forEach(g => g.dispose());
+    merged.computeBoundingSphere();
 
     const mesh = new THREE.Mesh(merged, mats[type]);
     mesh.castShadow = true;
@@ -92,4 +124,6 @@ export function buildInstancedMeshes(scene, allBricks) {
   gnd.receiveShadow = true;
   gnd.userData.brickType = 'ground';
   scene.add(gnd);
+
+  return brickBodyGroup;
 }

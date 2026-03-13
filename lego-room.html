@@ -364,7 +364,7 @@
         <div id="side-panel">
 
             <!-- Vues -->
-            <div class="grp open">
+            <div class="grp">
                 <div class="grp-header">📷 Vues <span class="grp-arrow">▶</span></div>
                 <div class="grp-body">
                     <button id="quick-perspective" class="c-gray">Perspective <kbd>P</kbd></button>
@@ -376,7 +376,7 @@
             </div>
 
             <!-- Calques -->
-            <div class="grp open">
+            <div class="grp">
                 <div class="grp-header">🔲 Calques <span class="grp-arrow">▶</span></div>
                 <div class="grp-body">
                     <button id="layer-struct-toggle"    class="c-green" >Structure : ON</button>
@@ -388,18 +388,20 @@
             </div>
 
             <!-- Affichage -->
-            <div class="grp open">
+            <div class="grp">
                 <div class="grp-header">👁 Affichage <span class="grp-arrow">▶</span></div>
                 <div class="grp-body">
-                    <button id="floor-toggle" class="c-amber">Sol : OFF</button>
-                    <button id="xray-toggle"  class="c-cyan" >X-Ray : OFF</button>
-                    <button id="plan-toggle"  class="c-blue" >Plan : OFF</button>
-                    <button id="grid-toggle"  class="c-gray" >Grille : OFF</button>
+                    <button id="floor-toggle"  class="c-amber">Sol : OFF</button>
+                    <button id="xray-toggle"   class="c-cyan" >X-Ray : OFF</button>
+                    <button id="plan-toggle"   class="c-blue" >Plan : OFF</button>
+                    <button id="grid-toggle"   class="c-gray" >Grille : OFF</button>
+                    <button id="bricks-toggle" class="c-gray" >Briques : OFF</button>
+                    <button id="cel-toggle"    class="c-gray" >Cel-Shading : OFF</button>
                 </div>
             </div>
 
             <!-- Dev Tools -->
-            <div class="grp" id="devtools-grp">
+            <div class="grp open" id="devtools-grp">
                 <div class="grp-header">🛠 Dev Tools <span class="grp-arrow">▶</span></div>
                 <div class="grp-body" id="devtools-body"></div>
             </div>
@@ -413,7 +415,6 @@
                     <button id="door-toggle"       class="c-light">Porte-fenêtre : FERMÉE</button>
                     <button id="corr-doors-toggle" class="c-light">Portes couloir : FERMÉES</button>
                     <button id="lamp-toggle"       class="c-light">Lampe OLA : OFF</button>
-                    <button id="cel-toggle"        class="c-gray" >Cel-Shading : OFF</button>
                 </div>
             </div>
 
