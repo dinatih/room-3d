@@ -13,12 +13,17 @@ export function buildInstancedMeshes(scene, allBricks) {
     glass_frame: new THREE.MeshStandardMaterial({ color: 0x4477aa, roughness: 0.35 }),
   };
 
-  // Groupe pour les briques corps (30cm) — caché par défaut
+  const ghostMats = {
+    wall:        new THREE.MeshStandardMaterial({ color: 0xf0f0eb, roughness: 0.65, transparent: true, opacity: 0.18, depthWrite: false }),
+    accent:      new THREE.MeshStandardMaterial({ color: COLORS.accent, roughness: 0.55, transparent: true, opacity: 0.18, depthWrite: false }),
+    glass_frame: new THREE.MeshStandardMaterial({ color: 0x4477aa, roughness: 0.35, transparent: true, opacity: 0.18, depthWrite: false }),
+  };
+
+  // Groupe pour les briques corps (30cm) — ghost (transparent) par défaut
   const brickBodyGroup = new THREE.Group();
-  brickBodyGroup.visible = false;
   scene.add(brickBodyGroup);
 
-  // Briques corps (y < 240cm) → dans le groupe
+  // Briques corps (y < 240cm) → dans le groupe, ghost par défaut
   for (const type of ['wall', 'accent', 'glass_frame']) {
     const bricks = allBricks.filter(b => b.type === type && b.y < PLATE_MIN_Y);
     if (!bricks.length) continue;
@@ -35,9 +40,11 @@ export function buildInstancedMeshes(scene, allBricks) {
     const merged = mergeGeometries(geos);
     geos.forEach(g => g.dispose());
     merged.computeBoundingSphere();
-    const mesh = new THREE.Mesh(merged, mats[type]);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+    const mesh = new THREE.Mesh(merged, ghostMats[type]);
+    mesh.castShadow = false;
+    mesh.receiveShadow = false;
+    mesh.userData.opaqueMat = mats[type];
+    mesh.userData.ghostMat  = ghostMats[type];
     brickBodyGroup.add(mesh);
   }
 
@@ -125,5 +132,14 @@ export function buildInstancedMeshes(scene, allBricks) {
   gnd.userData.brickType = 'ground';
   scene.add(gnd);
 
-  return brickBodyGroup;
+  function setBricksOpaque(opaque) {
+    brickBodyGroup.traverse(obj => {
+      if (!obj.isMesh) return;
+      obj.material = opaque ? obj.userData.opaqueMat : obj.userData.ghostMat;
+      obj.castShadow   = opaque;
+      obj.receiveShadow = opaque;
+    });
+  }
+
+  return { brickBodyGroup, setBricksOpaque };
 }
