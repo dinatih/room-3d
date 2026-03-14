@@ -317,27 +317,6 @@ export function buildCorridor(scene) {
   }
 
   // =============================================
-  // Charnières LEGO 19954 entre MCo-E et MDiag (une par couche)
-  // =============================================
-  {
-    const hingeX = DIAG_AX + perpX;
-    const hingeZ = DIAG_AZ + perpZ;
-    const barrelR = 2.5;
-    const barrelH = BRICK_H - GAP;
-    const hingeMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });
-
-    for (let layer = 0; layer < NUM_LAYERS; layer++) {
-      const barrel = new THREE.Mesh(
-        new THREE.CylinderGeometry(barrelR, barrelR, barrelH, 8),
-        hingeMat
-      );
-      barrel.position.set(hingeX, layer * BRICK_H + BRICK_H / 2, hingeZ);
-      barrel.castShadow = true;
-      scene.add(barrel);
-    }
-  }
-
-  // =============================================
   // Sols couloir studio
   // =============================================
   const CORR_FLOOR_W = ROOM_W - DOOR_START; // 110

@@ -36,10 +36,9 @@ export function buildChair(scene) {
     const cz = (box.min.z + box.max.z) / 2;
 
     // box.min.x = extrémité de la roue arrière (géométrie réelle, pas d'armature).
-    // Mais le corps visible (siège, colonne) ne démarre qu'à ~40cm de là en World X
     // → décalage GLB entre l'origine Z=0 (pointe de roulette) et la masse visible.
     // 40cm = position réaliste devant bureau + évite artefact de clipping Reflector Nissedal.
-    chair.position.set(40 - box.min.x, 0, 151 - cz);
+    chair.position.set(-box.min.x, 0, 151 - cz);
 
     mergeGlbByMaterial(chair);
     chair.castShadow = true;

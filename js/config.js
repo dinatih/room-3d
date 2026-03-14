@@ -9,7 +9,7 @@ export const BRICK_H = 30;
 export const BRICK_W = 10;  // épaisseur d'un mur / largeur d'un stud (1 stud = 10cm)
 export const NUM_LAYERS = 8; // 8 couches × 30cm = 240cm
 export const WALL_PLATE_H = 10; // plaque de finition haut de mur
-export const GAP = 0.8;
+export const GAP = 0; // temporairement désactivé (était 0.8)
 export const STUD_R = 3;
 export const PLATE_H = 3.5; // hauteur d'une plate (sol fin)
 export const STUD_HT = PLATE_H / 2; // 1.75
