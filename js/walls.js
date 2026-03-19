@@ -164,11 +164,15 @@ export function buildWalls(scene) {
       parent.add(pane);
     }
 
-    // Battant ouest (fixe) — directement dans la scène
-    addDoorPanel(scene, GLASS_START + doorW / 2, glassBaseY);
+    // Battant ouest (fixe) — groupe taggé pour hover menu
+    const westDoorGroup = new THREE.Group();
+    westDoorGroup.userData.hoverAction = { label: 'Porte-fenêtre', actionId: 'door-toggle' };
+    addDoorPanel(westDoorGroup, GLASS_START + doorW / 2, glassBaseY);
+    scene.add(westDoorGroup);
 
-    // Battant est (ouvrant) — dans un groupe, pivot à la charnière droite (GLASS_END)
+    // Battant est (ouvrant) — groupe avec pivot à la charnière droite (GLASS_END)
     eastDoorGroup = new THREE.Group();
+    eastDoorGroup.userData.hoverAction = { label: 'Porte-fenêtre', actionId: 'door-toggle' };
     eastDoorGroup.position.set(GLASS_END, 0, 0);
     addDoorPanel(eastDoorGroup, -doorW / 2, glassBaseY);
 

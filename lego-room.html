@@ -304,6 +304,50 @@
                 background: #111122;
                 opacity: 0.7;
             }
+
+            /* ── Hover menu ── */
+            #hover-menu {
+                position: fixed;
+                z-index: 300;
+                background: rgba(10, 10, 20, 0.90);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.13);
+                border-radius: 10px;
+                padding: 10px 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                min-width: 148px;
+                pointer-events: auto;
+                opacity: 1;
+                transition: opacity 0.15s ease;
+                box-shadow: 0 6px 24px rgba(0,0,0,0.55);
+            }
+            #hover-menu.hm-hidden {
+                opacity: 0;
+                pointer-events: none;
+            }
+            .hm-label {
+                color: #999;
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.07em;
+            }
+            .hm-btn {
+                background: rgba(255, 215, 0, 0.10);
+                color: #ffd700;
+                border: 1px solid rgba(255, 215, 0, 0.35);
+                border-radius: 6px;
+                padding: 6px 14px;
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                cursor: pointer;
+                transition: background 0.12s;
+                font-family: inherit;
+            }
+            .hm-btn:hover { background: rgba(255, 215, 0, 0.22); }
         </style>
     </head>
     <body>
@@ -476,5 +520,11 @@
             });
         </script>
         <script type="module" src="js/main.js"></script>
+
+        <!-- Hover menu : apparaît au survol d'un objet interactif -->
+        <div id="hover-menu" class="hm-hidden">
+            <div class="hm-label">…</div>
+            <button class="hm-btn">…</button>
+        </div>
     </body>
 </html>

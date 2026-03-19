@@ -25,6 +25,7 @@ import { buildLaptop } from "./laptop.js";
 import { buildMackapar } from "./mackapar.js";
 import { buildDecor, toggleFreezerDoor } from "./decor.js";
 import { toggleWCLid } from "./wc.js";
+import { registerHoverAction, initHoverMenu } from "./hoverMenu.js";
 import { buildGarden } from "./garden.js";
 import { buildTV } from "./tv.js";
 import { buildSunnersta } from "./sunnersta.js";
@@ -132,6 +133,15 @@ buildMinimap();
 buildDevtools(scene, renderer);
 const openInventory = buildInventory(scene);
 document.getElementById('inventory-open')?.addEventListener('click', openInventory);
+
+// =============================================
+// HOVER MENU — actions interactives sur survol
+// =============================================
+registerHoverAction('door-toggle', {
+  getLabel: () => eastDoorState ? 'Fermer' : 'Ouvrir',
+  execute:  doToggleEastDoor,
+});
+initHoverMenu(renderer, camera, scene);
 
 // =============================================
 // VR MODE (Google Cardboard / WebXR)
@@ -298,11 +308,13 @@ document.getElementById("desk-toggle")?.addEventListener("click", () => {
   requestRender();
 });
 
-document.getElementById("door-toggle")?.addEventListener("click", () => {
-  const s = toggleEastDoor();
-  document.getElementById("door-toggle").textContent = `Porte-fenêtre : ${s ? "OUVERTE" : "FERMÉE"}`;
+let eastDoorState = false;
+function doToggleEastDoor() {
+  eastDoorState = toggleEastDoor();
+  document.getElementById("door-toggle").textContent = `Porte-fenêtre : ${eastDoorState ? "OUVERTE" : "FERMÉE"}`;
   requestRender();
-});
+}
+document.getElementById("door-toggle")?.addEventListener("click", doToggleEastDoor);
 
 document.getElementById("resume-walk")?.addEventListener("click", () => {
   resumeWalk();
