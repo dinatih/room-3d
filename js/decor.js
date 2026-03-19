@@ -104,6 +104,7 @@ export function buildDecor(scene) {
     // Groupe principal (pour inventaire + positionnement)
     const freezerGroup = new THREE.Group();
     freezerGroup.userData.inventoryId = 'freezer';
+    freezerGroup.userData.hoverAction = { label: 'Congélateur', actionId: 'freezer-toggle' };
     freezerGroup.position.set(frzX, frzBaseY, frzZ);
 
     function addP(sx, sy, sz, x, y, z, mat = frzMat) {

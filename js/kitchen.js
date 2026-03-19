@@ -38,6 +38,7 @@ export function buildKitchen(scene) {
   {
     const cabinetGroup = new THREE.Group();
     cabinetGroup.userData.inventoryId = 'cabinet-wood';
+    cabinetGroup.userData.hoverAction = { label: 'Meuble évier', actionId: 'cabinet-toggle' };
     const cabinetH = COUNTER_H;
     const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 });
     const insideMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.5 });
@@ -99,6 +100,7 @@ export function buildKitchen(scene) {
   {
     const fridgeGroup = new THREE.Group();
     fridgeGroup.userData.inventoryId = 'fridge';
+    fridgeGroup.userData.hoverAction = { label: 'Réfrigérateur', actionId: 'fridge-toggle' };
     const frigoH = COUNTER_H;
     const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.2, metalness: 0.05 });
     const insideMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.5 });

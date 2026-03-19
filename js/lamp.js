@@ -5,6 +5,7 @@ import { ROOM_W, ROOM_D, LAYER_GLB } from './config.js';
 import { KALLAX_SE_TOP } from './kallax.js';
 import { MEUBLE_T_X, MEUBLE_T_Z } from './meubleT.js';
 import { requestRender } from './cameraManager.js';
+import { addHoverTarget } from './hoverMenu.js';
 
 const LAMP_ABOVE = 55.5; // cm au-dessus du meuble T
 
@@ -53,7 +54,9 @@ export function buildLamp(scene) {
       c.layers.set(LAYER_GLB);
     });
     mergeGlbByMaterial(lamp);
+    lamp.userData.hoverAction = { label: 'Lampe OLA', actionId: 'lamp-toggle' };
     scene.add(lamp);
+    addHoverTarget(lamp);
 
     // PointLight au niveau de l'abat-jour (80% de la hauteur du modèle)
     lampLight = new THREE.PointLight(0xfff5e0, 120000, 350, 2);

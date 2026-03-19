@@ -35,6 +35,7 @@ export function buildWC(scene) {
 
   const wcGroup = new THREE.Group();
   wcGroup.userData.inventoryId = 'toilet';
+  wcGroup.userData.hoverAction = { label: 'WC', actionId: 'wc-lid-toggle' };
 
   // ──────────────────────────────────────────────────
   // COQUE EXTÉRIEURE (LatheGeometry — profil réaliste)

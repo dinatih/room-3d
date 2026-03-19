@@ -63,6 +63,7 @@ export function buildBed(scene) {
   b2 = createUtakerBed(0xffffff, 24); // top: white mattress
   b2.userData.inventoryId = 'utaker-upper';
   b2.position.y = 23; // stacked
+  utaker.userData.hoverAction = { label: 'Lit Utåker', actionId: 'bed-toggle' };
   utaker.add(b1, b2);
 
   // Top of upper mattress: b2.y(23) + mat.y(11+12) + matH/2(12) = 58

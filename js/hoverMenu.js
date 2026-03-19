@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 const raycaster = new THREE.Raycaster();
+raycaster.layers.enableAll(); // intersect objects on any layer
 const pointer   = new THREE.Vector2();
 
 // Map<actionId, { getLabel: () => string, execute: () => void }>
@@ -8,6 +9,11 @@ const actionRegistry = new Map();
 
 // Interactive objects collected at init (groups/meshes with userData.hoverAction)
 let targets = [];
+
+/** Add a single target after init (for async-loaded objects like GLBs). */
+export function addHoverTarget(obj) {
+  if (!targets.includes(obj)) targets.push(obj);
+}
 
 let menuEl = null;
 let labelEl = null;
