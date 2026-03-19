@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_FURNITURE } from './config.js';
+import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_EQUIPMENT } from './config.js';
 import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
 import { makeText } from './labels.js';
 
@@ -173,9 +173,9 @@ export function buildCorridor(scene) {
       }
     }
 
-    // Tag placard → layer mobilier
+    // Tag placard → layer équipement
     for (const obj of closetParts)
-      obj.layers.set(LAYER_FURNITURE);
+      obj.layers.set(LAYER_EQUIPMENT);
   }
 
   // Mur droit du couloir (en face de la porte SDB), jusqu'au début du diag
