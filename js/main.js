@@ -24,6 +24,7 @@ import { buildDesks, toggleDesksHeight } from "./desks.js";
 import { buildLaptop } from "./laptop.js";
 import { buildMackapar } from "./mackapar.js";
 import { buildDecor, toggleFreezerDoor } from "./decor.js";
+import { toggleWCLid } from "./wc.js";
 import { buildGarden } from "./garden.js";
 import { buildTV } from "./tv.js";
 import { buildSunnersta } from "./sunnersta.js";
@@ -337,6 +338,12 @@ document.getElementById("corr-doors-toggle")?.addEventListener("click", () => {
 document.getElementById("freezer-toggle")?.addEventListener("click", () => {
   const s = toggleFreezerDoor();
   document.getElementById("freezer-toggle").textContent = `Congélateur : ${s ? "OUVERT" : "FERMÉ"}`;
+  requestRender();
+});
+
+document.getElementById("wc-lid-toggle")?.addEventListener("click", () => {
+  const s = toggleWCLid();
+  document.getElementById("wc-lid-toggle").textContent = `WC abattant : ${s ? "OUVERT" : "FERMÉ"}`;
   requestRender();
 });
 

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Reflector } from "three/addons/objects/Reflector.js";
+import { buildWC } from "./wc.js";
 import {
   ROOM_W,
   NUM_LAYERS,
@@ -172,126 +173,8 @@ export function buildBathroom(scene) {
   scene.add(showerTopBar);
 
   // =============================================
-  // WC (profil LatheGeometry, piédestal, cuvette creuse, eau)
-  // =============================================
-  const WC_X0 = -NICHE_DEPTH + 40;
-  const WC_W = 40;
-  const WC_Z0 = KITCHEN_Z + 11; // face intérieure mur nord (KITCHEN_Z+10) + 1cm gap
-  const WC_CX = WC_X0 + WC_W / 2;
-
-  const wcMat = new THREE.MeshStandardMaterial({
-    color: 0xf5f5f5,
-    roughness: 0.25,
-  });
-  const wcInnerMat = new THREE.MeshStandardMaterial({
-    color: 0xe8e8e8,
-    roughness: 0.15,
-    side: THREE.DoubleSide,
-  });
-
-  const R = WC_W / 2; // rayon max = 20
-  const bowlOval = 1.1; // étirement Z pour forme ovale
-  const bowlH = 40;
-  const tankD = 18;
-  const bowlCZ = WC_Z0 + tankD + R * bowlOval;
-
-  // -- Coque extérieure (LatheGeometry : base → piédestal → cuvette → rebord) --
-  const outerPts = [
-    new THREE.Vector2(0.1, 0),
-    new THREE.Vector2(R * 0.92, 0),
-    new THREE.Vector2(R * 0.92, 3),
-    new THREE.Vector2(R * 0.5, 5.5),
-    new THREE.Vector2(R * 0.48, 16),
-    new THREE.Vector2(R * 0.65, 26),
-    new THREE.Vector2(R * 0.95, 34),
-    new THREE.Vector2(R + 0.6, 37.5),
-    new THREE.Vector2(R, bowlH),
-    new THREE.Vector2(R * 0.72, bowlH),
-  ];
-  const wcGroup = new THREE.Group();
-  wcGroup.userData.inventoryId = 'toilet';
-
-  const outerGeo = new THREE.LatheGeometry(outerPts, 24);
-  const outerMesh = new THREE.Mesh(outerGeo, wcMat);
-  outerMesh.scale.z = bowlOval;
-  outerMesh.position.set(WC_CX, 0, bowlCZ);
-  outerMesh.castShadow = true;
-  outerMesh.receiveShadow = true;
-  wcGroup.add(outerMesh);
-
-  // -- Cavité intérieure (rebord → fond en entonnoir) --
-  const innerPts = [
-    new THREE.Vector2(R * 0.72, bowlH),
-    new THREE.Vector2(R * 0.68, 35),
-    new THREE.Vector2(R * 0.5, 25),
-    new THREE.Vector2(R * 0.25, 15),
-    new THREE.Vector2(0.1, 12),
-  ];
-  const innerGeo = new THREE.LatheGeometry(innerPts, 24);
-  const innerMesh = new THREE.Mesh(innerGeo, wcInnerMat);
-  innerMesh.scale.z = bowlOval;
-  innerMesh.position.set(WC_CX, 0, bowlCZ);
-  wcGroup.add(innerMesh);
-
-  // Fond de la cuvette
-  const bottomR = R * 0.25;
-  const wcBottomGeo = new THREE.CircleGeometry(bottomR, 24);
-  const wcBottom = new THREE.Mesh(wcBottomGeo, wcInnerMat);
-  wcBottom.rotation.x = -Math.PI / 2;
-  wcBottom.scale.y = bowlOval;
-  wcBottom.position.set(WC_CX, 12, bowlCZ);
-  wcGroup.add(wcBottom);
-
-  // -- Eau au fond --
-  const waterMat = new THREE.MeshStandardMaterial({
-    color: 0x88bbdd,
-    roughness: 0.05,
-    transparent: true,
-    opacity: 0.6,
-  });
-  const wcWaterGeo = new THREE.CircleGeometry(bottomR * 0.85, 24);
-  const wcWater = new THREE.Mesh(wcWaterGeo, waterMat);
-  wcWater.rotation.x = -Math.PI / 2;
-  wcWater.scale.y = bowlOval;
-  wcWater.position.set(WC_CX, 12.1, bowlCZ);
-  wcGroup.add(wcWater);
-
-  // -- Siège (torus ovale sur le rebord) --
-  const seatR = R * 0.85;
-  const seatGeo = new THREE.TorusGeometry(seatR, 1.5, 8, 24);
-  const seat = new THREE.Mesh(seatGeo, wcMat);
-  seat.rotation.x = -Math.PI / 2;
-  seat.scale.y = bowlOval;
-  seat.position.set(WC_CX, bowlH + 1.5, bowlCZ);
-  seat.castShadow = true;
-  wcGroup.add(seat);
-
-  // -- Réservoir --
-  const tankW = WC_W - 2,
-    tankH = 70;
-  const tank = new THREE.Mesh(new THREE.BoxGeometry(tankW, tankH, tankD), wcMat);
-  tank.position.set(WC_CX, tankH / 2, WC_Z0 + tankD / 2);
-  tank.castShadow = true;
-  tank.receiveShadow = true;
-  wcGroup.add(tank);
-
-  // Couvercle du réservoir (pièce séparée)
-  const tankLidH = 3.5;
-  const tankLid = new THREE.Mesh(new THREE.BoxGeometry(tankW + 1, tankLidH, tankD + 1), wcMat);
-  tankLid.position.set(WC_CX, tankH + tankLidH / 2, WC_Z0 + tankD / 2);
-  tankLid.castShadow = true;
-  wcGroup.add(tankLid);
-
-  // -- Bouton chasse d'eau --
-  const flushMat = new THREE.MeshStandardMaterial({
-    color: 0xd0d0d0,
-    roughness: 0.3,
-    metalness: 0.3,
-  });
-  const flushBtn = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 2.5, 12), flushMat);
-  flushBtn.position.set(WC_CX, tankH + tankLidH + 1.25, WC_Z0 + tankD / 2);
-  wcGroup.add(flushBtn);
-  scene.add(wcGroup);
+  // WC — délégué à js/wc.js
+  buildWC(scene);
 
   // =============================================
   // Meuble vasque suspendu, contre mur SDB Nord
@@ -416,7 +299,7 @@ export function buildBathroom(scene) {
   const mirrorW = counterW; // toute la largeur du plan
   const mirrorH = 90; // 90cm
   const mirrorY = counterTopY + mirrorH / 2;
-  const mirrorZ = VANITY_CZ - VANITY_D / 2 + 5 + GAP; // +GAP : compense l'expansion des briques mur
+  const mirrorZ = VANITY_CZ - VANITY_D / 2 + 5 + GAP + 0.5; // +0.5 : offset anti z-fighting
 
   const mirGeo = new THREE.PlaneGeometry(mirrorW, mirrorH);
   const mirror = new Reflector(mirGeo, {
@@ -517,8 +400,8 @@ export function buildBathroom(scene) {
   // =============================================
   // Ballon d'eau chaude 100L vertical
   // =============================================
-  const HW_R = 20;
-  const HW_H = 80;
+  const HW_R = 28;  // rayon = 56cm de diamètre
+  const HW_H = 65;  // hauteur cylindre
   const HW_X = -NICHE_DEPTH + HW_R;
   const HW_Y = WALL_H - 10 - HW_H / 2;
   const HW_Z = KITCHEN_Z + 10 + HW_R;
