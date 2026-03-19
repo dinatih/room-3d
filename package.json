@@ -1,0 +1,28 @@
+{
+  "name": "room-3d",
+  "version": "1.0.0",
+  "description": "Ce projet est la modélisation en 3D de **mon studio actuel** — mon studio de rêve.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dinatih/room-3d.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/dinatih/room-3d/issues"
+  },
+  "homepage": "https://github.com/dinatih/room-3d#readme",
+  "devDependencies": {
+    "@gltf-transform/core": "^4.3.0",
+    "@gltf-transform/extensions": "^4.3.0",
+    "@gltf-transform/functions": "^4.3.0",
+    "draco3dgltf": "^1.5.7",
+    "meshoptimizer": "^1.0.1"
+  }
+}

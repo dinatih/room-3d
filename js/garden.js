@@ -326,4 +326,39 @@ export function buildGarden(scene) {
     });
     scene.add(tub);
   }
+
+  // =============================================
+  // TENUE RÉALISTE (rouge) — près de la baignoire
+  // =============================================
+  gltfLoader.load('media/realistic_human_cloths.glb', (gltf) => {
+    const cloths = gltf.scene;
+
+    const rawBox = new THREE.Box3().setFromObject(cloths);
+    const rawSize = rawBox.getSize(new THREE.Vector3());
+    cloths.scale.setScalar(170 / Math.max(rawSize.x, rawSize.y, rawSize.z));
+
+    cloths.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(cloths);
+
+    // À côté de la baignoire (+140cm depuis tub center)
+    cloths.position.set(
+      260 - (box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -250 - (box.min.z + box.max.z) / 2,
+    );
+
+    const redMat = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
+    cloths.traverse(c => {
+      c.layers.set(LAYER_GLB);
+      if (c.isMesh) {
+        c.material = redMat;
+        c.castShadow = true;
+        c.receiveShadow = true;
+      }
+    });
+
+    mergeGlbByMaterial(cloths);
+    scene.add(cloths);
+    requestRender();
+  }, undefined, err => console.error('realistic_human_cloths.glb:', err));
 }

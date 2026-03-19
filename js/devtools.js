@@ -24,6 +24,7 @@ const GLB_PATHS = [
   'media/mechanic_jumpsuit.glb',
   'media/salopette-noir.glb',
   'media/pizza_oven.glb',
+  'media/realistic_human_cloths.glb',
 ];
 
 export function buildDevtools(scene, renderer) {
