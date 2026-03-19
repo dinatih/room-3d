@@ -17,7 +17,8 @@ export const STUD_HT = PLATE_H / 2; // 1.75
 // Porte : 80cm d'ouverture, 30cm du mur B (X=300)
 export const DOOR_START = 190; // cm 190
 export const DOOR_END = 270; // cm 270
-export const DOOR_H_LAYERS = 7; // ~2.1m de haut (7 x 30cm = 210cm)
+export const DOOR_H_LAYERS = 7; // ouverture brute : 7 × 30cm = 210cm
+export const DOOR_H = 204;      // hauteur standard française (panneaux de porte)
 
 // Renfoncement cuisine : 1m large, 60cm profond, à droite de la porte
 export const KITCHEN_X0 = 30; // début (depuis mur A)

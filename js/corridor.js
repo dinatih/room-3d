@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_EQUIPMENT } from './config.js';
+import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, DOOR_START, DOOR_END, DOOR_H_LAYERS, DOOR_H, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_EQUIPMENT } from './config.js';
 import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
 import { makeText } from './labels.js';
 
@@ -263,7 +263,7 @@ export function buildCorridor(scene) {
   }
   addDiagBrick(E_DOOR_START, DOOR_H_LAYERS, E_DOOR_W, 'accent');
 
-  const doorH = DOOR_H_LAYERS * BRICK_H;
+  const doorH = DOOR_H; // 204cm standard français (ouverture brute = 210cm)
 
   // Porte d'entrée (rouge) - pivotable
   {
