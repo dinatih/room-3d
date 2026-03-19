@@ -15,7 +15,7 @@ import { scene, camera, renderer, controls } from "./scene.js";
 import { allBricks } from "./brickHelpers.js";
 import { loadFont } from "./labels.js";
 import { buildWalls, toggleEastDoor } from "./walls.js";
-import { buildKitchen } from "./kitchen.js";
+import { buildKitchen, toggleFridgeDoor, toggleCabinetDoor } from "./kitchen.js";
 import { buildKallax } from "./kallax.js";
 import { buildBed, toggleBedStack } from "./bed.js";
 import { buildMirrors, setMirrorLayers } from "./mirrors.js";
@@ -23,7 +23,7 @@ import { buildChair } from "./chair.js";
 import { buildDesks, toggleDesksHeight } from "./desks.js";
 import { buildLaptop } from "./laptop.js";
 import { buildMackapar } from "./mackapar.js";
-import { buildDecor } from "./decor.js";
+import { buildDecor, toggleFreezerDoor } from "./decor.js";
 import { buildGarden } from "./garden.js";
 import { buildTV } from "./tv.js";
 import { buildSunnersta } from "./sunnersta.js";
@@ -331,6 +331,24 @@ addEventListener("keydown", (e) => {
 document.getElementById("corr-doors-toggle")?.addEventListener("click", () => {
   const s = toggleCorridorDoors();
   document.getElementById("corr-doors-toggle").textContent = `Portes couloir : ${s ? "OUVERTES" : "FERMÉES"}`;
+  requestRender();
+});
+
+document.getElementById("freezer-toggle")?.addEventListener("click", () => {
+  const s = toggleFreezerDoor();
+  document.getElementById("freezer-toggle").textContent = `Congélateur : ${s ? "OUVERT" : "FERMÉ"}`;
+  requestRender();
+});
+
+document.getElementById("fridge-toggle")?.addEventListener("click", () => {
+  const s = toggleFridgeDoor();
+  document.getElementById("fridge-toggle").textContent = `Réfrigérateur : ${s ? "OUVERT" : "FERMÉ"}`;
+  requestRender();
+});
+
+document.getElementById("cabinet-toggle")?.addEventListener("click", () => {
+  const s = toggleCabinetDoor();
+  document.getElementById("cabinet-toggle").textContent = `Meuble évier : ${s ? "OUVERT" : "FERMÉ"}`;
   requestRender();
 });
 

@@ -18,6 +18,16 @@ import {
 } from "./config.js";
 import { addSingleDrona } from "./drona.js";
 import { kallaxW, kallaxH } from "./kallax.js";
+
+let freezerDoorGroup = null;
+let freezerDoorOpen = false;
+
+export function toggleFreezerDoor() {
+  freezerDoorOpen = !freezerDoorOpen;
+  if (freezerDoorGroup) freezerDoorGroup.rotation.y = freezerDoorOpen ? Math.PI / 2 : 0;
+  return freezerDoorOpen;
+}
+
 export function buildDecor(scene) {
   // =============================================
   // 4 DRONA - 2 sur MACKAPÄR, 2 sur Kallax 2x5
@@ -78,72 +88,86 @@ export function buildDecor(scene) {
   // CONGÉLATEUR CHIQ CSD46D4E
   // =============================================
   {
-    const FRZ_W = 45;
-    const FRZ_D = 47;
-    const FRZ_H = 50;
+    const FRZ_W = 45;   // largeur (Z)
+    const FRZ_D = 47;   // profondeur (X)
+    const FRZ_H = 50;   // hauteur (Y)
+    const FRZ_T = 1.5;  // épaisseur parois
 
-    const frzZ = 236 + 5 + FRZ_W / 2;
-    const frzX = FRZ_D / 2 + 1;
+    const frzZ = 236 + 5 + FRZ_W / 2;   // 263.5 — centre Z
+    const frzX = FRZ_D / 2 + 1;          // 24.5  — centre X
     const frzBaseY = 0;
 
-    const frzMat = new THREE.MeshStandardMaterial({
-      color: 0x1a1a1a,
-      roughness: 0.3,
-      metalness: 0.2,
-    });
-    const frzMatDark = new THREE.MeshStandardMaterial({
-      color: 0x111111,
-      roughness: 0.4,
-    });
+    const frzMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3, metalness: 0.2 });
+    const frzDarkMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 });
+    const frzInsideMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.5 });
 
+    // Groupe principal (pour inventaire + positionnement)
     const freezerGroup = new THREE.Group();
     freezerGroup.userData.inventoryId = 'freezer';
+    freezerGroup.position.set(frzX, frzBaseY, frzZ);
 
-    const body = new THREE.Mesh(
-      new THREE.BoxGeometry(FRZ_D, FRZ_H, FRZ_W),
-      frzMat,
-    );
-    body.position.set(frzX, frzBaseY + FRZ_H / 2, frzZ);
-    body.castShadow = true;
-    body.receiveShadow = true;
-    freezerGroup.add(body);
+    function addP(sx, sy, sz, x, y, z, mat = frzMat) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat);
+      m.position.set(x, y, z);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      freezerGroup.add(m);
+    }
 
-    const door = new THREE.Mesh(
-      new THREE.BoxGeometry(0.8, FRZ_H - 4, FRZ_W - 3),
-      frzMat,
-    );
-    door.position.set(frzX + FRZ_D / 2 + 0.4, frzBaseY + FRZ_H / 2, frzZ);
-    freezerGroup.add(door);
+    // Carcasse : 5 panneaux, face avant (+X) ouverte
+    const innerH = FRZ_H - FRZ_T * 2;
+    const innerW = FRZ_W - FRZ_T * 2;
 
-    const handle = new THREE.Mesh(
-      new THREE.BoxGeometry(1.2, 25, 1.5),
-      frzMatDark,
-    );
-    handle.position.set(
-      frzX + FRZ_D / 2 + 1,
-      frzBaseY + FRZ_H / 2,
-      frzZ + FRZ_W / 2 - 5,
-    );
-    freezerGroup.add(handle);
+    // Dos
+    addP(FRZ_T, FRZ_H, FRZ_W,               -FRZ_D / 2 + FRZ_T / 2, FRZ_H / 2, 0);
+    // Dessus
+    addP(FRZ_D, FRZ_T, FRZ_W,               0, FRZ_H - FRZ_T / 2, 0);
+    // Dessous
+    addP(FRZ_D, FRZ_T, FRZ_W,               0, FRZ_T / 2, 0);
+    // Côté gauche (Z-)
+    addP(FRZ_D - FRZ_T, innerH, FRZ_T,      FRZ_T / 2, FRZ_H / 2, -FRZ_W / 2 + FRZ_T / 2);
+    // Côté droit (Z+)
+    addP(FRZ_D - FRZ_T, innerH, FRZ_T,      FRZ_T / 2, FRZ_H / 2,  FRZ_W / 2 - FRZ_T / 2);
 
+    // Intérieur : fond peint clair
+    addP(0.5, innerH, innerW,  -FRZ_D / 2 + FRZ_T + 0.25, FRZ_H / 2, 0, frzInsideMat);
+    // 2 étagères intérieures
+    addP(FRZ_D - FRZ_T - 1, FRZ_T, innerW,  FRZ_T / 2 - 0.5, FRZ_H * 0.35, 0, frzInsideMat);
+    addP(FRZ_D - FRZ_T - 1, FRZ_T, innerW,  FRZ_T / 2 - 0.5, FRZ_H * 0.60, 0, frzInsideMat);
+
+    // Pieds
     for (const dz of [-1, 1]) {
       for (const dx of [-1, 1]) {
-        const foot = new THREE.Mesh(
-          new THREE.CylinderGeometry(1.5, 1.5, 1.5, 8),
-          frzMatDark,
-        );
-        foot.position.set(
-          frzX + dx * (FRZ_D / 2 - 3),
-          frzBaseY + 0.75,
-          frzZ + dz * (FRZ_W / 2 - 3),
-        );
+        const foot = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 2, 8), frzDarkMat);
+        foot.position.set(dx * (FRZ_D / 2 - 3), 1, dz * (FRZ_W / 2 - 3));
         freezerGroup.add(foot);
       }
     }
+
+    // --- Porte (charnière côté -Z) ---
+    // En local du freezerGroup : charnière à (FRZ_D/2, 0, -FRZ_W/2)
+    freezerDoorGroup = new THREE.Group();
+    freezerDoorGroup.position.set(FRZ_D / 2, 0, -FRZ_W / 2);
+
+    // Panneau de porte : s'étend depuis la charnière en +Z
+    const doorPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(FRZ_T, FRZ_H - 2, FRZ_W - FRZ_T),
+      frzMat,
+    );
+    doorPanel.position.set(0, FRZ_H / 2, FRZ_W / 2);
+    doorPanel.castShadow = true;
+    freezerDoorGroup.add(doorPanel);
+
+    // Poignée : côté libre de la porte (bord +Z), face externe (+X)
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(1.5, 25, 1.5), frzDarkMat);
+    handle.position.set(FRZ_T / 2 + 0.9, FRZ_H / 2, FRZ_W - 7);
+    freezerDoorGroup.add(handle);
+
+    freezerGroup.add(freezerDoorGroup);
     scene.add(freezerGroup);
 
     // Drona sur le congélateur
-    const DF = 33; // face 33x33cm (Drona réelle)
+    const DF = 33;
     addSingleDrona(scene, frzX, frzBaseY + FRZ_H + DF / 2, frzZ, Math.PI);
   }
 

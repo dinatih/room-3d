@@ -3,6 +3,23 @@ import {
   KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, ROOM_D, GAP,
 } from './config.js';
 
+let fridgeDoorGroup = null;
+let fridgeDoorOpen = false;
+let cabinetDoorGroup = null;
+let cabinetDoorOpen = false;
+
+export function toggleFridgeDoor() {
+  fridgeDoorOpen = !fridgeDoorOpen;
+  if (fridgeDoorGroup) fridgeDoorGroup.rotation.y = fridgeDoorOpen ? Math.PI / 2 : 0;
+  return fridgeDoorOpen;
+}
+
+export function toggleCabinetDoor() {
+  cabinetDoorOpen = !cabinetDoorOpen;
+  if (cabinetDoorGroup) cabinetDoorGroup.rotation.y = cabinetDoorOpen ? Math.PI / 2 : 0;
+  return cabinetDoorOpen;
+}
+
 export function buildKitchen(scene) {
   const COUNTER_H = 90;
   const COUNTER_SLAB = 3;
@@ -10,102 +27,218 @@ export function buildKitchen(scene) {
   const KIT_D = KITCHEN_DEPTH;
   const FRIDGE_W = 60;
   const CABINET_W = 40;
+  const DOOR_T = 1.5;
+  const T = 1.5; // panel thickness
 
-  // --- Placard (bois) ---
+  const handleMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.5, roughness: 0.2 });
+
+  // -------------------------------------------------------
+  // MEUBLE SOUS ÉVIER (placard blanc avec porte articulée)
+  // -------------------------------------------------------
   {
     const cabinetGroup = new THREE.Group();
     cabinetGroup.userData.inventoryId = 'cabinet-wood';
     const cabinetH = COUNTER_H;
-    const woodMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 });
-    const geo = new THREE.BoxGeometry(CABINET_W - GAP, cabinetH, KIT_D - GAP);
-    // Material array : +X, -X, +Y(top→invisible), -Y, +Z, -Z
-    const mesh = new THREE.Mesh(geo, [
-      woodMat,
-      woodMat,
-      new THREE.MeshStandardMaterial({ visible: false }),
-      woodMat,
-      woodMat,
-      woodMat,
-    ]);
-    mesh.position.set(
-      KITCHEN_X0 + CABINET_W / 2,
-      cabinetH / 2,
-      ROOM_D + KIT_D / 2
-    );
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    cabinetGroup.add(mesh);
+    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 });
+    const insideMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.5 });
 
-    // Porte du placard
-    const doorGeo = new THREE.BoxGeometry(CABINET_W - 4, cabinetH - 4, 0.5);
-    const doorMat = new THREE.MeshStandardMaterial({ color: 0x607d8b, roughness: 0.4 });
-    const door = new THREE.Mesh(doorGeo, doorMat);
-    door.position.set(
-      KITCHEN_X0 + CABINET_W / 2,
-      cabinetH / 2,
-      ROOM_D + 0.5
-    );
-    cabinetGroup.add(door);
+    // Groupe centré à la base du meuble
+    cabinetGroup.position.set(KITCHEN_X0 + CABINET_W / 2, 0, ROOM_D + KIT_D / 2);
 
-    // Poignée placard
-    const hGeo = new THREE.BoxGeometry(1.5, 15, 2);
-    const hMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.5, roughness: 0.2 });
-    const h = new THREE.Mesh(hGeo, hMat);
-    h.position.set(
-      KITCHEN_X0 + CABINET_W - 8,
-      cabinetH * 0.5,
-      ROOM_D + 1.5
+    function addCabP(sx, sy, sz, x, y, z, mat = whiteMat) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat);
+      m.position.set(x, y, z);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      cabinetGroup.add(m);
+    }
+
+    const innerH = cabinetH - T * 2;
+
+    // Dos (+Z, plaqué contre mur cuisine)
+    addCabP(CABINET_W, cabinetH, T,          0, cabinetH / 2,  KIT_D / 2 - T / 2);
+    // Dessus (masqué par plan de travail)
+    addCabP(CABINET_W, T, KIT_D,             0, cabinetH - T / 2, 0);
+    // Dessous
+    addCabP(CABINET_W, T, KIT_D,             0, T / 2, 0);
+    // Côté gauche (-X)
+    addCabP(T, innerH, KIT_D - T,           -CABINET_W / 2 + T / 2, cabinetH / 2, -T / 2);
+    // Côté droit (+X, côté frigo)
+    addCabP(T, innerH, KIT_D - T,            CABINET_W / 2 - T / 2, cabinetH / 2, -T / 2);
+    // Fond intérieur (visible quand porte ouverte)
+    addCabP(CABINET_W - T * 2, innerH, 0.5,  0, cabinetH / 2, KIT_D / 2 - T - 0.3, insideMat);
+
+    // Séparation tuyaux (tablette basse)
+    addCabP(CABINET_W - T * 2 - 2, T, KIT_D - T * 2,  0, cabinetH * 0.3, -T / 2, insideMat);
+
+    // --- Porte articulée (charnière côté gauche -X, ouverture vers -Z) ---
+    cabinetDoorGroup = new THREE.Group();
+    cabinetDoorGroup.position.set(-CABINET_W / 2, 0, -KIT_D / 2);
+
+    const CAB_DT = 1.5;
+    const cabDoor = new THREE.Mesh(
+      new THREE.BoxGeometry(CABINET_W - 2, cabinetH - 2, CAB_DT),
+      whiteMat,
     );
-    cabinetGroup.add(h);
+    cabDoor.position.set(CABINET_W / 2, cabinetH / 2, CAB_DT / 2);
+    cabDoor.castShadow = true;
+    cabinetDoorGroup.add(cabDoor);
+
+    // Poignée sur face extérieure, côté libre (+X)
+    const cabHandle = new THREE.Mesh(new THREE.BoxGeometry(1.5, 15, 2), handleMat);
+    cabHandle.position.set(CABINET_W - 8, cabinetH / 2, -1.5);
+    cabinetDoorGroup.add(cabHandle);
+
+    cabinetGroup.add(cabinetDoorGroup);
     scene.add(cabinetGroup);
   }
 
-  // --- Frigo (blanc) ---
+  // -------------------------------------------------------
+  // RÉFRIGÉRATEUR (blanc, porte articulée)
+  // -------------------------------------------------------
   {
     const fridgeGroup = new THREE.Group();
     fridgeGroup.userData.inventoryId = 'fridge';
     const frigoH = COUNTER_H;
-    const geo = new THREE.BoxGeometry(FRIDGE_W - GAP, frigoH, KIT_D - GAP);
-    const mat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.3, metalness: 0.1 });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(
-      KITCHEN_X0 + CABINET_W + FRIDGE_W / 2,
-      frigoH / 2,
-      ROOM_D + KIT_D / 2
-    );
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    fridgeGroup.add(mesh);
+    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.2, metalness: 0.05 });
+    const insideMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.5 });
 
-    // Poignée frigo
-    const handleGeo = new THREE.BoxGeometry(1.5, 30, 2);
-    const handleMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.5, roughness: 0.2 });
-    const handle = new THREE.Mesh(handleGeo, handleMat);
-    handle.position.set(
-      KITCHEN_X0 + CABINET_W + 8,
-      frigoH * 0.6,
-      ROOM_D + 1.5
+    // Groupe centré à la base
+    fridgeGroup.position.set(KITCHEN_X0 + CABINET_W + FRIDGE_W / 2, 0, ROOM_D + KIT_D / 2);
+
+    function addFridgeP(sx, sy, sz, x, y, z, mat = whiteMat) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat);
+      m.position.set(x, y, z);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      fridgeGroup.add(m);
+    }
+
+    const innerH = frigoH - T * 2;
+
+    // Dos (+Z)
+    addFridgeP(FRIDGE_W, frigoH, T,           0, frigoH / 2,  KIT_D / 2 - T / 2);
+    // Dessus
+    addFridgeP(FRIDGE_W, T, KIT_D,            0, frigoH - T / 2, 0);
+    // Dessous
+    addFridgeP(FRIDGE_W, T, KIT_D,            0, T / 2, 0);
+    // Côté gauche (-X, côté placard)
+    addFridgeP(T, innerH, KIT_D - T,         -FRIDGE_W / 2 + T / 2, frigoH / 2, -T / 2);
+    // Côté droit (+X)
+    addFridgeP(T, innerH, KIT_D - T,          FRIDGE_W / 2 - T / 2, frigoH / 2, -T / 2);
+
+    // Fond intérieur
+    addFridgeP(FRIDGE_W - T * 2, innerH, 0.5,  0, frigoH / 2, KIT_D / 2 - T - 0.3, insideMat);
+    // 2 étagères intérieures
+    addFridgeP(FRIDGE_W - T * 2 - 2, T, KIT_D - T * 2,  0, frigoH * 0.35, -T / 2, insideMat);
+    addFridgeP(FRIDGE_W - T * 2 - 2, T, KIT_D - T * 2,  0, frigoH * 0.62, -T / 2, insideMat);
+
+    // Bac à légumes (bas)
+    addFridgeP(FRIDGE_W - T * 2 - 4, 10, KIT_D - T * 2 - 4,  0, T + 5, -T / 2, insideMat);
+
+    // --- Porte articulée (charnière côté gauche -X, ouverture vers -Z) ---
+    const FDT = 8; // épaisseur porte frigo (réaliste avec rangements)
+    fridgeDoorGroup = new THREE.Group();
+    fridgeDoorGroup.position.set(-FRIDGE_W / 2, 0, -KIT_D / 2);
+
+    const shelfMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.4, transparent: true, opacity: 0.85 });
+
+    // Panneau principal de la porte
+    const fridgeDoor = new THREE.Mesh(
+      new THREE.BoxGeometry(FRIDGE_W - 2, frigoH - 2, FDT),
+      whiteMat,
     );
-    fridgeGroup.add(handle);
+    fridgeDoor.position.set(FRIDGE_W / 2, frigoH / 2, FDT / 2);
+    fridgeDoor.castShadow = true;
+    fridgeDoorGroup.add(fridgeDoor);
+
+    // Poignée sur face extérieure (z=0), côté libre (+X)
+    const fridgeHandle = new THREE.Mesh(new THREE.BoxGeometry(1.5, 30, 2.5), handleMat);
+    fridgeHandle.position.set(FRIDGE_W - 10, frigoH * 0.6, -1.5);
+    fridgeDoorGroup.add(fridgeHandle);
+
+    // --- Rangements porte (balconnet bouteilles) ---
+    const SHELF_D  = 10;   // profondeur du balconnet (vers l'intérieur du frigo)
+    const SHELF_T  = 1.2;  // épaisseur tablette
+    const GUARD_H  = 6;    // hauteur du garde-fou
+
+    // Tablette basse (pour grande bouteille, Y=5..6)
+    const shelfBase = new THREE.Mesh(
+      new THREE.BoxGeometry(FRIDGE_W - 8, SHELF_T, SHELF_D),
+      shelfMat,
+    );
+    shelfBase.position.set(FRIDGE_W / 2, 5 + SHELF_T / 2, FDT + SHELF_D / 2);
+    fridgeDoorGroup.add(shelfBase);
+
+    // Garde-fou avant de la tablette basse
+    const guard = new THREE.Mesh(
+      new THREE.BoxGeometry(FRIDGE_W - 8, GUARD_H, 1.2),
+      shelfMat,
+    );
+    guard.position.set(FRIDGE_W / 2, 5 + SHELF_T + GUARD_H / 2, FDT + 0.6);
+    fridgeDoorGroup.add(guard);
+
+    // Tablette haute (petits pots, Y≈55)
+    const shelfTop = new THREE.Mesh(
+      new THREE.BoxGeometry(FRIDGE_W - 8, SHELF_T, SHELF_D),
+      shelfMat,
+    );
+    shelfTop.position.set(FRIDGE_W / 2, 56 + SHELF_T / 2, FDT + SHELF_D / 2);
+    fridgeDoorGroup.add(shelfTop);
+    const guardTop = new THREE.Mesh(
+      new THREE.BoxGeometry(FRIDGE_W - 8, 4, 1.2),
+      shelfMat,
+    );
+    guardTop.position.set(FRIDGE_W / 2, 56 + SHELF_T + 2, FDT + 0.6);
+    fridgeDoorGroup.add(guardTop);
+
+    // --- Bouteille de jus d'orange 50cm ---
+    const ojMat    = new THREE.MeshStandardMaterial({ color: 0xff6600, roughness: 0.3, transparent: true, opacity: 0.88 });
+    const ojCapMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.4 });
+    const ojLblMat = new THREE.MeshStandardMaterial({ color: 0xff8c00, roughness: 0.3 });
+
+    const ojBottleY = 5 + SHELF_T + 1; // base de la bouteille sur la tablette
+
+    // Corps de la bouteille (44cm)
+    const ojBody = new THREE.Mesh(new THREE.CylinderGeometry(3.8, 4.5, 44, 20), ojMat);
+    ojBody.position.set(FRIDGE_W / 2, ojBottleY + 22, FDT + 5);
+    fridgeDoorGroup.add(ojBody);
+
+    // Goulot (6cm)
+    const ojNeck = new THREE.Mesh(new THREE.CylinderGeometry(2, 3.5, 4, 16), ojMat);
+    ojNeck.position.set(FRIDGE_W / 2, ojBottleY + 44 + 2, FDT + 5);
+    fridgeDoorGroup.add(ojNeck);
+
+    // Bouchon (2cm)
+    const ojCap = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 2, 16), ojCapMat);
+    ojCap.position.set(FRIDGE_W / 2, ojBottleY + 44 + 4 + 1, FDT + 5);
+    fridgeDoorGroup.add(ojCap);
+
+    // Étiquette (cylindre légèrement plus large, 20cm de haut, centré sur le corps)
+    const ojLabel = new THREE.Mesh(new THREE.CylinderGeometry(4.51, 4.51, 20, 20), ojLblMat);
+    ojLabel.position.set(FRIDGE_W / 2, ojBottleY + 22, FDT + 5);
+    fridgeDoorGroup.add(ojLabel);
+
+    fridgeGroup.add(fridgeDoorGroup);
     scene.add(fridgeGroup);
   }
 
-  // --- BOHOLMEN intégré 1 bac – rotation 90° : longueur (47cm) le long de Z ---
-  // https://www.ikea.com/fr/fr/p/boholmen-evier-integre-1-bac-acier-inoxydable-s99157501/
-  const sinkW    = 30;   // le long de X (profondeur évier = largeur comptoir utilisée)
-  const sinkD    = 47;   // le long de Z (longueur évier)
-  const holeW    = 28;   // découpe comptoir le long de X
-  const holeD    = 44.6; // découpe comptoir le long de Z
-  const basinW   = 23;   // largeur intérieure bac (X)
-  const basinD   = 40;   // profondeur intérieure bac (Z)
-  const sinkDepth = 15;  // profondeur bac
-  const CR       = 5;    // rayon coins arrondis
+  // -------------------------------------------------------
+  // ÉVIER BOHOLMEN intégré 1 bac
+  // -------------------------------------------------------
+  const sinkW    = 30;
+  const sinkD    = 47;
+  const holeW    = 28;
+  const holeD    = 44.6;
+  const basinW   = 23;
+  const basinD   = 40;
+  const sinkDepth = 15;
+  const CR       = 5;
 
   const sinkCX = KITCHEN_X0 + CABINET_W / 2;
   const sinkCZ = ROOM_D + KIT_D / 2;
   const sinkY  = COUNTER_H + COUNTER_SLAB;
 
-  // Helper arrondi (XY shape space)
   function roundedRect(path, x, y, w, h, r) {
     path.moveTo(x + r, y);
     path.lineTo(x + w - r, y);
@@ -118,7 +251,7 @@ export function buildKitchen(scene) {
     path.quadraticCurveTo(x, y, x + r, y);
   }
 
-  // --- Plan de travail avec trou rectangulaire pour l'évier ---
+  // Plan de travail avec trou évier
   {
     const cW = KIT_W + 2;
     const cD = KIT_D + 2;
@@ -132,7 +265,6 @@ export function buildKitchen(scene) {
     shape.lineTo(0, cD);
     shape.lineTo(0, 0);
 
-    // Trou rectangulaire simple (coordonnées shape : X=world X, Y=world Z)
     const hX = sinkCX - cx0 - holeW / 2;
     const hZ = sinkCZ - cz0 - holeD / 2;
     const hole = new THREE.Path();
@@ -153,16 +285,15 @@ export function buildKitchen(scene) {
     scene.add(mesh);
   }
 
-  // --- Bac BOHOLMEN ---
+  // Bac BOHOLMEN
   {
     const inoxMat = new THREE.MeshStandardMaterial({
       color: 0xc8c8c8, metalness: 0.75, roughness: 0.12,
     });
 
-    // Rebord inox : 4 strips autour du trou (plus fiable qu'ExtrudeGeometry+hole)
-    const rimT  = 1.2;                    // épaisseur rebord (hauteur)
-    const rimZW = (sinkD - holeD) / 2;   // largeur avant/arrière ≈ 1.2cm
-    const rimXW = (sinkW - holeW) / 2;   // largeur gauche/droite ≈ 1cm
+    const rimT  = 1.2;
+    const rimZW = (sinkD - holeD) / 2;
+    const rimXW = (sinkW - holeW) / 2;
     const rimY2 = sinkY + rimT / 2;
 
     for (const [w, d, cx, cz] of [
@@ -176,9 +307,8 @@ export function buildKitchen(scene) {
       scene.add(m);
     }
 
-    // 4 parois du bac (box simples, à l'intérieur du trou)
-    const wallT = (holeW - basinW) / 2; // ~2.5cm
-    const wallD = (holeD - basinD) / 2; // ~2.3cm
+    const wallT = (holeW - basinW) / 2;
+    const wallD = (holeD - basinD) / 2;
     const sides = [
       { sx: holeW,  sy: sinkDepth, sz: wallT, px: 0,                        pz: -(basinD + wallD) / 2 },
       { sx: holeW,  sy: sinkDepth, sz: wallT, px: 0,                        pz:  (basinD + wallD) / 2 },
@@ -191,17 +321,14 @@ export function buildKitchen(scene) {
       scene.add(mesh);
     }
 
-    // Fond du bac
     const floorMesh = new THREE.Mesh(new THREE.BoxGeometry(basinW, 0.5, basinD), inoxMat);
     floorMesh.position.set(sinkCX, sinkY - sinkDepth + 0.25, sinkCZ);
     scene.add(floorMesh);
 
-    // Bonde centrale
     const drain = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 0.8, 16), inoxMat);
     drain.position.set(sinkCX, sinkY - sinkDepth + 0.7, sinkCZ);
     scene.add(drain);
 
-    // Robinet
     const faucetMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.7, roughness: 0.1 });
     const fTige = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 20, 8), faucetMat);
     fTige.position.set(sinkCX, sinkY + 10, sinkCZ + sinkD / 2 - 3);
@@ -212,78 +339,104 @@ export function buildKitchen(scene) {
     scene.add(fBec);
   }
 
-  // --- Meuble haut (ouvert, sans porte ni fond) ---
+  // -------------------------------------------------------
+  // MEUBLE HAUT (ouvert, sans porte ni fond)
+  // -------------------------------------------------------
   {
-    const HC_W = KIT_W;    // 100cm
-    const HC_H = 40;       // 40cm
-    const HC_D = 40;       // 40cm
+    const HC_W = KIT_W;
+    const HC_H = 40;
+    const HC_D = 40;
     const HC_PANEL = 1.5;
-    const HC_Y0 = COUNTER_H + COUNTER_SLAB + 60; // 60cm au-dessus du plan
+    const HC_Y0 = COUNTER_H + COUNTER_SLAB + 60;
     const HC_CX = KITCHEN_X0 + KIT_W / 2;
-    const HC_CZ = ROOM_D + KITCHEN_DEPTH - HC_D / 2; // plaqué contre le mur fond
+    const HC_CZ = ROOM_D + KITCHEN_DEPTH - HC_D / 2;
 
     const hcMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.35 });
 
-    // Dessus
     const topGeo = new THREE.BoxGeometry(HC_W, HC_PANEL, HC_D);
     const top = new THREE.Mesh(topGeo, hcMat);
     top.position.set(HC_CX, HC_Y0 + HC_H - HC_PANEL / 2, HC_CZ);
     top.castShadow = true;
     scene.add(top);
 
-    // Dessous
     const bot = new THREE.Mesh(topGeo, hcMat);
     bot.position.set(HC_CX, HC_Y0 + HC_PANEL / 2, HC_CZ);
     bot.castShadow = true;
     bot.receiveShadow = true;
     scene.add(bot);
 
-    // Côté gauche
     const sideGeo = new THREE.BoxGeometry(HC_PANEL, HC_H, HC_D);
     const sideL = new THREE.Mesh(sideGeo, hcMat);
     sideL.position.set(HC_CX - HC_W / 2 + HC_PANEL / 2, HC_Y0 + HC_H / 2, HC_CZ);
     sideL.castShadow = true;
     scene.add(sideL);
 
-    // Côté droit
     const sideR = new THREE.Mesh(sideGeo, hcMat);
     sideR.position.set(HC_CX + HC_W / 2 - HC_PANEL / 2, HC_Y0 + HC_H / 2, HC_CZ);
     sideR.castShadow = true;
     scene.add(sideR);
 
-    // Étagère milieu
     const shelf = new THREE.Mesh(topGeo, hcMat);
     shelf.position.set(HC_CX, HC_Y0 + HC_H / 2, HC_CZ);
     scene.add(shelf);
   }
 
-  // --- Double plaque de cuisson ---
+  // -------------------------------------------------------
+  // PLAQUES À INDUCTION (verre plat, sans brûleurs)
+  // -------------------------------------------------------
   {
-    const plateY = COUNTER_H + COUNTER_SLAB + 0.2;
+    const plateY  = COUNTER_H + COUNTER_SLAB;
     const plateCX = KITCHEN_X0 + CABINET_W + FRIDGE_W / 2;
     const plateCZ = ROOM_D + KIT_D / 2;
-    const plateMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.2, metalness: 0.1 });
-    const ringMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.3, metalness: 0.2 });
 
-    const baseGeo = new THREE.BoxGeometry(FRIDGE_W - 10, 1, KIT_D - 15);
-    const base = new THREE.Mesh(baseGeo, plateMat);
+    const glassMat  = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.08, metalness: 0.3 });
+    const zoneMat   = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.05, metalness: 0.2 });
+    const ringMat   = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.1,  metalness: 0.1 });
+    const controlMat = new THREE.MeshStandardMaterial({ color: 0xcc3333, roughness: 0.3, metalness: 0.1 });
+
+    // Surface principale en verre
+    const baseW = FRIDGE_W - 8;
+    const baseD = KIT_D - 12;
+    const base = new THREE.Mesh(new THREE.BoxGeometry(baseW, 1, baseD), glassMat);
     base.position.set(plateCX, plateY + 0.5, plateCZ);
+    base.castShadow = true;
     scene.add(base);
 
-    const ringGeo = new THREE.TorusGeometry(9, 1.2, 8, 24);
-    const diskGeo = new THREE.CircleGeometry(9, 24);
-    const diskMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.15 });
+    // 2 zones de cuisson : cercles plats gravés sur le verre
+    const zoneRadius = 9;
+    const ringInner  = 7.5;
+    const ringOuter  = 9;
 
     for (let i = 0; i < 2; i++) {
-      const offsetZ = (i === 0) ? -12 : 12;
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.rotation.x = -Math.PI / 2;
-      ring.position.set(plateCX, plateY + 1.2, plateCZ + offsetZ);
-      scene.add(ring);
-      const disk = new THREE.Mesh(diskGeo, diskMat);
-      disk.rotation.x = -Math.PI / 2;
-      disk.position.set(plateCX, plateY + 1.1, plateCZ + offsetZ);
+      const cz = plateCZ + (i === 0 ? -12 : 12);
+
+      // Disque de zone (très légèrement surélevé)
+      const disk = new THREE.Mesh(new THREE.CylinderGeometry(zoneRadius, zoneRadius, 0.15, 40), zoneMat);
+      disk.position.set(plateCX, plateY + 1.1, cz);
       scene.add(disk);
+
+      // Anneau extérieur (marquage zone)
+      const ring = new THREE.Mesh(new THREE.RingGeometry(ringInner, ringOuter, 40), ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(plateCX, plateY + 1.2, cz);
+      scene.add(ring);
+
+      // Petit cercle intérieur (indicateur centre)
+      const dot = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.05, 16), ringMat);
+      dot.position.set(plateCX, plateY + 1.2, cz);
+      scene.add(dot);
+    }
+
+    // Bande de contrôle (touches sensitives, avant du plan)
+    const ctrlStrip = new THREE.Mesh(new THREE.BoxGeometry(baseW - 10, 0.5, 6), glassMat);
+    ctrlStrip.position.set(plateCX, plateY + 1.1, plateCZ - baseD / 2 + 4);
+    scene.add(ctrlStrip);
+
+    // 4 petits témoins lumineux (DEL rouges)
+    for (let i = 0; i < 4; i++) {
+      const led = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.3, 8), controlMat);
+      led.position.set(plateCX - 10 + i * 7, plateY + 1.35, plateCZ - baseD / 2 + 4);
+      scene.add(led);
     }
   }
 }
