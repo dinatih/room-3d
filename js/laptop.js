@@ -33,6 +33,7 @@ export function buildLaptop(scene) {
 
   // === Laptop ===
   const laptopGroup = new THREE.Group();
+  laptopGroup.userData.inventoryId = 'laptop';
   laptopGroup.position.set(0, 0, 0); // centered on desk
 
   // Base
@@ -112,6 +113,7 @@ export function buildLaptop(scene) {
   const camMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.6, roughness: 0.2 });
 
   const phoneGroup = new THREE.Group();
+  phoneGroup.userData.inventoryId = 'phone';
   phoneGroup.position.set(22, 0, 2); // offset from desk center
   phoneGroup.rotation.y = 0.15; // légèrement de biais
 
@@ -147,6 +149,7 @@ export function buildLaptop(scene) {
   const mugInnerMat = new THREE.MeshStandardMaterial({ color: 0xf0e8dc, roughness: 0.5 });
 
   const mugGroup = new THREE.Group();
+  mugGroup.userData.inventoryId = 'mug';
   mugGroup.position.set(-22, 0, -7); // offset from desk center
 
   // Corps du mug (cylindre ouvert en haut)

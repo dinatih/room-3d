@@ -142,6 +142,7 @@ export function buildKallax(scene) {
     let yNE = 0;
 
     const neB = new Kallax(2, 1);
+    neB.group.userData.inventoryId = 'kallax-ne-2x1';
     neB.group.position.y = yNE + neB.totalH / 2;
     neB.fillAll();
     gStack.add(neB.group);
@@ -149,6 +150,7 @@ export function buildKallax(scene) {
     yNE += neB.totalH;
 
     const neT = new Kallax(2, 2);
+    neT.group.userData.inventoryId = 'kallax-ne-2x2';
     neT.group.position.y = yNE + neT.totalH / 2;
     neT.fillAll();
     gStack.add(neT.group);
@@ -167,6 +169,7 @@ export function buildKallax(scene) {
     let ySE = 0;
     [1, 2].forEach(() => {
       const k = new Kallax(2, 1);
+      k.group.userData.inventoryId = 'kallax-se-2x1';
       k.group.rotation.z = Math.PI / 2;
       k.group.position.y = ySE + k.totalW / 2;
       k.fillAll();
@@ -185,6 +188,7 @@ export function buildKallax(scene) {
     const gStack = new THREE.Group();
 
     const nwB = new Kallax(2, 1);
+    nwB.group.userData.inventoryId = 'kallax-nw-2x1';
     nwB.group.rotation.z = Math.PI / 2;
     nwB.group.position.y = nwB.totalW / 2;
     nwB.fillAll();
@@ -192,6 +196,7 @@ export function buildKallax(scene) {
     kList.push(nwB);
 
     const nwM = new Kallax(1, 1);
+    nwM.group.userData.inventoryId = 'kallax-nw-1x1-a';
     nwM.group.rotation.z = Math.PI / 2;
     nwM.group.position.y = nwB.totalW + nwM.totalW / 2;
     nwM.fillAll();
@@ -199,6 +204,7 @@ export function buildKallax(scene) {
     kList.push(nwM);
 
     const nwT = new Kallax(1, 1);
+    nwT.group.userData.inventoryId = 'kallax-nw-1x1-b';
     nwT.group.rotation.z = Math.PI / 2;
     nwT.group.position.y = nwM.group.position.y + nwM.totalW;
     nwT.fillAll();
@@ -224,6 +230,7 @@ export function buildKallax(scene) {
     ];
     configs.forEach((conf, idx) => {
       const k = new Kallax(conf.c, conf.r, conf.s);
+      k.group.userData.inventoryId = idx < 2 ? 'kallax-sw-2x2' : 'kallax-sw-2x1';
       k.group.position.y = ySW + k.totalH / 2;
       // Seulement les 2 rangées du bas (base 2×2)
       if (idx === 0) k.fillAll();

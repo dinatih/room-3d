@@ -248,6 +248,7 @@ export function buildConcreteSlab(scene) {
   // Surface haute de la dalle = sommet des anciennes plates
   slab.position.set(BLDG_CX, FLOOR_Y + (PLATE_H - GAP) / 2 - SLAB_DEPTH / 2, BLDG_CZ);
   slab.receiveShadow = true;
+  slab.userData.brickType = 'slab';
   scene.add(slab);
 }
 
@@ -319,6 +320,7 @@ export function buildGardenSlab(scene) {
   const slab = new THREE.Mesh(new THREE.BoxGeometry(BLDG_W, SLAB_DEPTH, D), mats);
   slab.position.set(BLDG_CX, FLOOR_Y + (PLATE_H - GAP) / 2 - SLAB_DEPTH / 2, CZ);
   slab.receiveShadow = true;
+  slab.userData.brickType = 'slab';
   scene.add(slab);
 }
 
@@ -345,6 +347,7 @@ export function buildCeiling(scene) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(BLDG_W, CEIL_THICK, BLDG_D), _ceilMats);
   // Base à WALL_H - 1 : légèrement sous la base des studs (évite le z-fighting)
   mesh.position.set(BLDG_CX, WALL_H - 1 + CEIL_THICK / 2, BLDG_CZ);
+  mesh.userData.brickType = 'ceiling';
   scene.add(mesh);
 
   // Plafond-terrasse 235cm (X, côté Est) × 150cm (Z, extension Nord)
@@ -355,5 +358,6 @@ export function buildCeiling(scene) {
   const terCZ = BLDG_Z_MIN - TER_Z / 2;         // extension vers le Nord
   const terrace = new THREE.Mesh(new THREE.BoxGeometry(TER_X, CEIL_THICK, TER_Z), _ceilMats);
   terrace.position.set(terCX, WALL_H - 1 + CEIL_THICK / 2, terCZ);
+  terrace.userData.brickType = 'ceiling';
   scene.add(terrace);
 }

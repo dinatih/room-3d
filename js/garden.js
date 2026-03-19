@@ -282,6 +282,7 @@ export function buildGarden(scene) {
 
     const RC_IN = Math.max(RC - T, 2);
     const tub = new THREE.Group();
+    tub.userData.inventoryId = 'bathtub';
 
     // Parois : outer shape avec trou inner → extrude TUB_H
     const outer = new THREE.Shape();

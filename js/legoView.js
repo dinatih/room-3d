@@ -44,6 +44,7 @@ export function buildLegoView(scene, allBricks) {
       );
       mesh.castShadow = true;
       mesh.receiveShadow = true;
+      mesh.userData.brickType = type;
       g.items.forEach((b, i) => {
         dummy.position.set(b.x, b.y, b.z);
         dummy.rotation.y = b.rotY || 0;
@@ -78,6 +79,7 @@ export function buildLegoView(scene, allBricks) {
     if (studPos.length) {
       const count = studPos.length / 3;
       const sm = new THREE.InstancedMesh(studGeo, studMats[type], count);
+      sm.userData.brickType = type;
       for (let i = 0; i < count; i++) {
         dummy.position.set(studPos[i * 3], studPos[i * 3 + 1], studPos[i * 3 + 2]);
         dummy.updateMatrix();

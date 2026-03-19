@@ -59,7 +59,9 @@ export function buildBed(scene) {
   // Two stacked Utåker frames
   const utaker = new THREE.Group();
   b1 = createUtakerBed(0x87ceeb, 18); // bottom: blue mattress
+  b1.userData.inventoryId = 'utaker-lower';
   b2 = createUtakerBed(0xffffff, 24); // top: white mattress
+  b2.userData.inventoryId = 'utaker-upper';
   b2.position.y = 23; // stacked
   utaker.add(b1, b2);
 

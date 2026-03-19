@@ -43,8 +43,9 @@ export function buildInstancedMeshes(scene, allBricks) {
     const mesh = new THREE.Mesh(merged, ghostMats[type]);
     mesh.castShadow = false;
     mesh.receiveShadow = false;
-    mesh.userData.opaqueMat = mats[type];
-    mesh.userData.ghostMat  = ghostMats[type];
+    mesh.userData.brickType  = type;
+    mesh.userData.opaqueMat  = mats[type];
+    mesh.userData.ghostMat   = ghostMats[type];
     brickBodyGroup.add(mesh);
   }
 

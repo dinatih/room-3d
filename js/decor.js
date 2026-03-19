@@ -96,6 +96,9 @@ export function buildDecor(scene) {
       roughness: 0.4,
     });
 
+    const freezerGroup = new THREE.Group();
+    freezerGroup.userData.inventoryId = 'freezer';
+
     const body = new THREE.Mesh(
       new THREE.BoxGeometry(FRZ_D, FRZ_H, FRZ_W),
       frzMat,
@@ -103,14 +106,14 @@ export function buildDecor(scene) {
     body.position.set(frzX, frzBaseY + FRZ_H / 2, frzZ);
     body.castShadow = true;
     body.receiveShadow = true;
-    scene.add(body);
+    freezerGroup.add(body);
 
     const door = new THREE.Mesh(
       new THREE.BoxGeometry(0.8, FRZ_H - 4, FRZ_W - 3),
       frzMat,
     );
     door.position.set(frzX + FRZ_D / 2 + 0.4, frzBaseY + FRZ_H / 2, frzZ);
-    scene.add(door);
+    freezerGroup.add(door);
 
     const handle = new THREE.Mesh(
       new THREE.BoxGeometry(1.2, 25, 1.5),
@@ -121,7 +124,7 @@ export function buildDecor(scene) {
       frzBaseY + FRZ_H / 2,
       frzZ + FRZ_W / 2 - 5,
     );
-    scene.add(handle);
+    freezerGroup.add(handle);
 
     for (const dz of [-1, 1]) {
       for (const dx of [-1, 1]) {
@@ -134,9 +137,10 @@ export function buildDecor(scene) {
           frzBaseY + 0.75,
           frzZ + dz * (FRZ_W / 2 - 3),
         );
-        scene.add(foot);
+        freezerGroup.add(foot);
       }
     }
+    scene.add(freezerGroup);
 
     // Drona sur le congélateur
     const DF = 33; // face 33x33cm (Drona réelle)
@@ -169,6 +173,7 @@ export function buildDecor(scene) {
       new THREE.BoxGeometry(LACK_D, LACK_H, LACK_W),
       lackMat,
     );
+    shelf.userData.inventoryId = 'shelf-lack';
     shelf.position.set(LACK_CX, LACK_Y, LACK_CZ);
     shelf.castShadow = true;
     shelf.receiveShadow = true;
@@ -196,6 +201,9 @@ export function buildDecor(scene) {
     });
     const r = 1.5;
 
+    const muligGroup = new THREE.Group();
+    muligGroup.userData.inventoryId = 'rail-mulig';
+
     // Barre horizontale (tringle)
     const bar = new THREE.Mesh(
       new THREE.CylinderGeometry(r, r, MUL_W, 8),
@@ -203,7 +211,7 @@ export function buildDecor(scene) {
     );
     bar.rotation.x = Math.PI / 2;
     bar.position.set(MUL_D, MUL_MOUNT_Y, mulCZ);
-    scene.add(bar);
+    muligGroup.add(bar);
 
     // 2 supports muraux
     for (const dz of [-MUL_W / 2 + 5, MUL_W / 2 - 5]) {
@@ -213,7 +221,7 @@ export function buildDecor(scene) {
         bracketMat,
       );
       arm.position.set(MUL_D / 2, MUL_MOUNT_Y, mulCZ + dz);
-      scene.add(arm);
+      muligGroup.add(arm);
 
       // Plaque murale
       const plate = new THREE.Mesh(
@@ -221,7 +229,7 @@ export function buildDecor(scene) {
         bracketMat,
       );
       plate.position.set(0.75, MUL_MOUNT_Y, mulCZ + dz);
-      scene.add(plate);
+      muligGroup.add(plate);
     }
 
     // 3 pantalons rouges suspendus
@@ -244,7 +252,7 @@ export function buildDecor(scene) {
         pantClipMat,
       );
       clip.position.set(MUL_D, MUL_MOUNT_Y + 1.5, pz);
-      scene.add(clip);
+      muligGroup.add(clip);
 
       // Corps du pantalon (2 jambes côte à côte)
       for (const dx of [-7, 7]) {
@@ -254,9 +262,10 @@ export function buildDecor(scene) {
         );
         leg.position.set(MUL_D + dx, MUL_MOUNT_Y - pantH / 2, pz);
         leg.castShadow = true;
-        scene.add(leg);
+        muligGroup.add(leg);
       }
     }
+    scene.add(muligGroup);
   }
 
 
@@ -313,8 +322,8 @@ export function buildDecor(scene) {
       return group;
     }
 
-    addFniss(110, 500);    // SDB, à côté meuble vasque
-    addFniss(286, 202);  // Séjour, contre mur B en face (au nord) de l'Air Performer
+    addFniss(110, 500).userData.inventoryId = 'basket-fniss';
+    addFniss(286, 202);
   }
 
 
@@ -374,6 +383,7 @@ export function buildDecor(scene) {
       nose.position.set(0, SHOULDER_H + NECK_H + HEAD_R, HEAD_R + 0.5);
       g.add(nose);
 
+      g.userData.inventoryId = 'mannequin-head';
       g.rotation.y = rotY;
       g.position.set(x, baseY, z);
       scene.add(g);

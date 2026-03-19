@@ -129,7 +129,7 @@ if (corridorLabel) { scene.remove(corridorLabel); gridGroup.add(corridorLabel); 
 const legoViewGroup = buildLegoView(scene, allBricks);
 buildMinimap();
 buildDevtools(scene, renderer);
-const openInventory = buildInventory();
+const openInventory = buildInventory(scene);
 document.getElementById('inventory-open')?.addEventListener('click', openInventory);
 
 // =============================================

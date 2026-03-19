@@ -85,6 +85,7 @@ export let desk2Surface; // non-rotated anchor on desk 2 surface for laptop.js
 export function buildDesks(scene) {
   // Desk 1 : against mur A
   const d1 = new Bollsidan();
+  d1.group.userData.inventoryId = 'desk-bollsidan-1';
   d1.group.position.set(22, 0, 83);
   d1.group.rotation.y = Math.PI / 2;
   scene.add(d1.group);
@@ -92,6 +93,7 @@ export function buildDesks(scene) {
 
   // Desk 2 : in the room
   const d2 = new Bollsidan();
+  d2.group.userData.inventoryId = 'desk-bollsidan-2';
   d2.group.position.set(200, 0, 170);
   d2.group.rotation.y = Math.PI;
   scene.add(d2.group);

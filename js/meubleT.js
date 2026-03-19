@@ -32,6 +32,7 @@ function addPanel(group, x, y, z, sx, sy, sz, mat = woodMat) {
 
 export function buildMeubleT(scene) {
   const group = new THREE.Group();
+  group.userData.inventoryId = 'meuble-t';
 
   // Dessus
   addPanel(group,           0,   H - T / 2,           0,  W,   T,   D);

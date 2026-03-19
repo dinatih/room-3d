@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 export function buildAirPerformer(scene) {
   const group = new THREE.Group();
+  group.userData.inventoryId = 'air-performer';
 
   const darkMat = new THREE.MeshStandardMaterial({
     color: 0x2a2a2a,

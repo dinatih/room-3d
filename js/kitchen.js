@@ -13,6 +13,8 @@ export function buildKitchen(scene) {
 
   // --- Placard (bois) ---
   {
+    const cabinetGroup = new THREE.Group();
+    cabinetGroup.userData.inventoryId = 'cabinet-wood';
     const cabinetH = COUNTER_H;
     const woodMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 });
     const geo = new THREE.BoxGeometry(CABINET_W - GAP, cabinetH, KIT_D - GAP);
@@ -32,7 +34,7 @@ export function buildKitchen(scene) {
     );
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-    scene.add(mesh);
+    cabinetGroup.add(mesh);
 
     // Porte du placard
     const doorGeo = new THREE.BoxGeometry(CABINET_W - 4, cabinetH - 4, 0.5);
@@ -43,7 +45,7 @@ export function buildKitchen(scene) {
       cabinetH / 2,
       ROOM_D + 0.5
     );
-    scene.add(door);
+    cabinetGroup.add(door);
 
     // Poignée placard
     const hGeo = new THREE.BoxGeometry(1.5, 15, 2);
@@ -54,11 +56,14 @@ export function buildKitchen(scene) {
       cabinetH * 0.5,
       ROOM_D + 1.5
     );
-    scene.add(h);
+    cabinetGroup.add(h);
+    scene.add(cabinetGroup);
   }
 
   // --- Frigo (blanc) ---
   {
+    const fridgeGroup = new THREE.Group();
+    fridgeGroup.userData.inventoryId = 'fridge';
     const frigoH = COUNTER_H;
     const geo = new THREE.BoxGeometry(FRIDGE_W - GAP, frigoH, KIT_D - GAP);
     const mat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.3, metalness: 0.1 });
@@ -70,7 +75,7 @@ export function buildKitchen(scene) {
     );
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-    scene.add(mesh);
+    fridgeGroup.add(mesh);
 
     // Poignée frigo
     const handleGeo = new THREE.BoxGeometry(1.5, 30, 2);
@@ -81,7 +86,8 @@ export function buildKitchen(scene) {
       frigoH * 0.6,
       ROOM_D + 1.5
     );
-    scene.add(handle);
+    fridgeGroup.add(handle);
+    scene.add(fridgeGroup);
   }
 
   // --- BOHOLMEN intégré 1 bac – rotation 90° : longueur (47cm) le long de Z ---

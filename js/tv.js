@@ -15,6 +15,7 @@ export function buildTV(scene) {
   const TILT = -Math.PI / 36; // ~5° penché vers le bas
 
   const group = new THREE.Group();
+  group.userData.inventoryId = 'tv';
   group.position.set(ROOM_W - 25, TV_Y, 25);
   group.rotation.order = 'YXZ';
   group.rotation.y = (3 * Math.PI) / 4; // face vers le centre du séjour
