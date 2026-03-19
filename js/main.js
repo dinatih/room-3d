@@ -44,6 +44,7 @@ import { buildGrid } from "./grid.js";
 import { buildMinimap } from "./minimap.js";
 import { buildFloorPlan } from "./floorplan.js";
 import { buildDevtools } from "./devtools.js";
+import { buildInventory } from "./inventory.js";
 import { VRButton } from "three/addons/webxr/VRButton.js";
 import {
   VIEWS,
@@ -128,6 +129,8 @@ if (corridorLabel) { scene.remove(corridorLabel); gridGroup.add(corridorLabel); 
 const legoViewGroup = buildLegoView(scene, allBricks);
 buildMinimap();
 buildDevtools(scene, renderer);
+const openInventory = buildInventory();
+document.getElementById('inventory-open')?.addEventListener('click', openInventory);
 
 // =============================================
 // VR MODE (Google Cardboard / WebXR)
