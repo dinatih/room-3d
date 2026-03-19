@@ -20,7 +20,7 @@ import { buildKallax } from "./kallax.js";
 import { buildBed, toggleBedStack } from "./bed.js";
 import { buildMirrors, setMirrorLayers } from "./mirrors.js";
 import { buildChair } from "./chair.js";
-import { buildDesks, toggleDesksHeight } from "./desks.js";
+import { buildDesks, toggleDesksHeight, toggleDesk1Height, toggleDesk2Height } from "./desks.js";
 import { buildLaptop } from "./laptop.js";
 import { buildMackapar } from "./mackapar.js";
 import { buildDecor, toggleFreezerDoor } from "./decor.js";
@@ -37,7 +37,7 @@ import { buildWalkingMan, getWalkingMan } from "./walkingMan.js";
 import { buildLamp, toggleLamp } from "./lamp.js";
 import { toggleCelShading } from "./celShading.js";
 import { buildMeubleT } from "./meubleT.js";
-import { buildCorridor, toggleCorridorDoors } from "./corridor.js";
+import { buildCorridor, toggleCorridorDoors, toggleEntryDoor, toggleLivingDoor, toggleBathroomDoor } from "./corridor.js";
 import { buildBathroom } from "./bathroom.js";
 import { buildFloor, buildParquetMesh, buildTileMesh, buildConcreteSlab, buildGardenSlab, buildCeiling } from "./floor.js";
 import { buildInstancedMeshes } from "./instancedMeshes.js";
@@ -140,6 +140,58 @@ document.getElementById('inventory-open')?.addEventListener('click', openInvento
 registerHoverAction('door-toggle', {
   getLabel: () => eastDoorState ? 'Fermer' : 'Ouvrir',
   execute:  doToggleEastDoor,
+});
+registerHoverAction('freezer-toggle', {
+  getLabel: () => freezerState ? 'Fermer' : 'Ouvrir',
+  execute:  doToggleFreezer,
+});
+registerHoverAction('fridge-toggle', {
+  getLabel: () => fridgeState ? 'Fermer' : 'Ouvrir',
+  execute:  doToggleFridge,
+});
+registerHoverAction('cabinet-toggle', {
+  getLabel: () => cabinetState ? 'Fermer' : 'Ouvrir',
+  execute:  doToggleCabinet,
+});
+registerHoverAction('bed-toggle', {
+  getLabel: () => bedState ? 'Déplier' : 'Empiler',
+  execute:  doToggleBed,
+});
+registerHoverAction('desks-toggle', {
+  getLabel: () => desksState ? 'Mode assis' : 'Mode debout',
+  execute:  doToggleDesks,
+});
+registerHoverAction('desk1-toggle', {
+  getLabel: () => desk1State ? 'Mode assis' : 'Mode debout',
+  execute:  doToggleDesk1,
+});
+registerHoverAction('desk2-toggle', {
+  getLabel: () => desk2State ? 'Mode assis' : 'Mode debout',
+  execute:  doToggleDesk2,
+});
+registerHoverAction('wc-lid-toggle', {
+  getLabel: () => wcLidState ? 'Fermer' : 'Ouvrir',
+  execute:  doToggleWCLid,
+});
+registerHoverAction('corr-doors-toggle', {
+  getLabel: () => corrDoorsState ? 'Fermer' : 'Ouvrir',
+  execute:  doToggleCorridorDoors,
+});
+registerHoverAction('entry-door-toggle', {
+  getLabel: () => entryDoorState ? 'Fermer' : 'Ouvrir',
+  execute:  doToggleEntryDoor,
+});
+registerHoverAction('living-door-toggle', {
+  getLabel: () => livingDoorState ? 'Fermer' : 'Ouvrir',
+  execute:  doToggleLivingDoor,
+});
+registerHoverAction('bathroom-door-toggle', {
+  getLabel: () => bathroomDoorState ? 'Fermer' : 'Ouvrir',
+  execute:  doToggleBathroomDoor,
+});
+registerHoverAction('lamp-toggle', {
+  getLabel: () => lampState ? 'Éteindre' : 'Allumer',
+  execute:  doToggleLamp,
 });
 initHoverMenu(renderer, camera, scene);
 
@@ -293,20 +345,36 @@ makeLayerToggle("layer-glb-toggle", LAYER_GLB, "GLB");
 // =============================================
 // BED TOGGLE (Utåker stack/unstack)
 // =============================================
-document.getElementById("bed-toggle")?.addEventListener("click", () => {
-  const s = toggleBedStack();
-  document.getElementById("bed-toggle").textContent = `Lit : ${s ? "EMPILÉ" : "DÉPLIÉ"}`;
+let bedState = true; // starts stacked
+function doToggleBed() {
+  bedState = toggleBedStack();
+  document.getElementById("bed-toggle").textContent = `Lit : ${bedState ? "EMPILÉ" : "DÉPLIÉ"}`;
   requestRender();
-});
+}
+document.getElementById("bed-toggle")?.addEventListener("click", doToggleBed);
 
 // =============================================
 // DESK TOGGLE (sit / stand)
 // =============================================
-document.getElementById("desk-toggle")?.addEventListener("click", () => {
-  const s = toggleDesksHeight();
-  document.getElementById("desk-toggle").textContent = `Bureaux : ${s ? "DEBOUT" : "ASSIS"}`;
+let desksState = false;
+function doToggleDesks() {
+  desksState = toggleDesksHeight();
+  document.getElementById("desk-toggle").textContent = `Bureaux : ${desksState ? "DEBOUT" : "ASSIS"}`;
   requestRender();
-});
+}
+document.getElementById("desk-toggle")?.addEventListener("click", doToggleDesks);
+
+let desk1State = false;
+function doToggleDesk1() {
+  desk1State = toggleDesk1Height();
+  requestRender();
+}
+
+let desk2State = false;
+function doToggleDesk2() {
+  desk2State = toggleDesk2Height();
+  requestRender();
+}
 
 let eastDoorState = false;
 function doToggleEastDoor() {
@@ -341,40 +409,70 @@ addEventListener("keydown", (e) => {
   requestRender();
 });
 
-document.getElementById("corr-doors-toggle")?.addEventListener("click", () => {
-  const s = toggleCorridorDoors();
-  document.getElementById("corr-doors-toggle").textContent = `Portes couloir : ${s ? "OUVERTES" : "FERMÉES"}`;
+let corrDoorsState = false;
+function doToggleCorridorDoors() {
+  corrDoorsState = toggleCorridorDoors();
+  document.getElementById("corr-doors-toggle").textContent = `Portes couloir : ${corrDoorsState ? "OUVERTES" : "FERMÉES"}`;
   requestRender();
-});
+}
+document.getElementById("corr-doors-toggle")?.addEventListener("click", doToggleCorridorDoors);
 
-document.getElementById("freezer-toggle")?.addEventListener("click", () => {
-  const s = toggleFreezerDoor();
-  document.getElementById("freezer-toggle").textContent = `Congélateur : ${s ? "OUVERT" : "FERMÉ"}`;
+let entryDoorState = false;
+function doToggleEntryDoor() {
+  entryDoorState = toggleEntryDoor();
   requestRender();
-});
+}
 
-document.getElementById("wc-lid-toggle")?.addEventListener("click", () => {
-  const s = toggleWCLid();
-  document.getElementById("wc-lid-toggle").textContent = `WC abattant : ${s ? "OUVERT" : "FERMÉ"}`;
+let livingDoorState = false;
+function doToggleLivingDoor() {
+  livingDoorState = toggleLivingDoor();
   requestRender();
-});
+}
 
-document.getElementById("fridge-toggle")?.addEventListener("click", () => {
-  const s = toggleFridgeDoor();
-  document.getElementById("fridge-toggle").textContent = `Réfrigérateur : ${s ? "OUVERT" : "FERMÉ"}`;
+let bathroomDoorState = false;
+function doToggleBathroomDoor() {
+  bathroomDoorState = toggleBathroomDoor();
   requestRender();
-});
+}
 
-document.getElementById("cabinet-toggle")?.addEventListener("click", () => {
-  const s = toggleCabinetDoor();
-  document.getElementById("cabinet-toggle").textContent = `Meuble évier : ${s ? "OUVERT" : "FERMÉ"}`;
+let freezerState = false;
+function doToggleFreezer() {
+  freezerState = toggleFreezerDoor();
+  document.getElementById("freezer-toggle").textContent = `Congélateur : ${freezerState ? "OUVERT" : "FERMÉ"}`;
   requestRender();
-});
+}
+document.getElementById("freezer-toggle")?.addEventListener("click", doToggleFreezer);
 
-document.getElementById("lamp-toggle")?.addEventListener("click", () => {
-  const s = toggleLamp();
-  document.getElementById("lamp-toggle").textContent = `Lampe OLA : ${s ? "ON" : "OFF"}`;
-});
+let wcLidState = false;
+function doToggleWCLid() {
+  wcLidState = toggleWCLid();
+  document.getElementById("wc-lid-toggle").textContent = `WC abattant : ${wcLidState ? "OUVERT" : "FERMÉ"}`;
+  requestRender();
+}
+document.getElementById("wc-lid-toggle")?.addEventListener("click", doToggleWCLid);
+
+let fridgeState = false;
+function doToggleFridge() {
+  fridgeState = toggleFridgeDoor();
+  document.getElementById("fridge-toggle").textContent = `Réfrigérateur : ${fridgeState ? "OUVERT" : "FERMÉ"}`;
+  requestRender();
+}
+document.getElementById("fridge-toggle")?.addEventListener("click", doToggleFridge);
+
+let cabinetState = false;
+function doToggleCabinet() {
+  cabinetState = toggleCabinetDoor();
+  document.getElementById("cabinet-toggle").textContent = `Meuble évier : ${cabinetState ? "OUVERT" : "FERMÉ"}`;
+  requestRender();
+}
+document.getElementById("cabinet-toggle")?.addEventListener("click", doToggleCabinet);
+
+let lampState = false;
+function doToggleLamp() {
+  lampState = toggleLamp();
+  document.getElementById("lamp-toggle").textContent = `Lampe OLA : ${lampState ? "ON" : "OFF"}`;
+}
+document.getElementById("lamp-toggle")?.addEventListener("click", doToggleLamp);
 
 document.getElementById("cel-toggle")?.addEventListener("click", () => {
   const s = toggleCelShading(scene);

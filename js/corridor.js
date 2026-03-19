@@ -41,10 +41,23 @@ function makeTapeMesh(totalCm = 200) {
 let doorsOpen = false;
 const doorGroups = [];
 
+function toggleDoor(index) {
+  const d = doorGroups[index];
+  d.open = !d.open;
+  d.group.rotation.y = d.open ? d.openY : d.closedY;
+  return d.open;
+}
+
+export function toggleEntryDoor()    { return toggleDoor(0); }
+export function toggleLivingDoor()   { return toggleDoor(1); }
+export function toggleBathroomDoor() { return toggleDoor(2); }
+
 export function toggleCorridorDoors() {
   doorsOpen = !doorsOpen;
-  for (const { group, closedY, openY } of doorGroups)
-    group.rotation.y = doorsOpen ? openY : closedY;
+  for (const d of doorGroups) {
+    d.open = doorsOpen;
+    d.group.rotation.y = d.open ? d.openY : d.closedY;
+  }
   return doorsOpen;
 }
 
@@ -266,9 +279,10 @@ export function buildCorridor(scene) {
     );
     entryPanel.position.set(0, doorH / 2, E_DOOR_W / 2);
     entryPanel.castShadow = true;
+    entryGroup.userData.hoverAction = { label: 'Porte entrée', actionId: 'entry-door-toggle' };
     entryGroup.add(entryPanel);
     scene.add(entryGroup);
-    doorGroups.push({ group: entryGroup, closedY: diagRotY, openY: diagRotY - 2 * Math.PI / 3 });
+    doorGroups.push({ group: entryGroup, closedY: diagRotY, openY: diagRotY - 2 * Math.PI / 3, open: false });
   }
 
   // Porte couloir→séjour (blanc) - mur D (Z=ROOM_D), charnière côté est (X=DOOR_END)
@@ -283,6 +297,7 @@ export function buildCorridor(scene) {
     );
     dPanel.position.set(-DOOR_W / 2, doorH / 2, 0);
     dPanel.castShadow = true;
+    dGroup.userData.hoverAction = { label: 'Porte séjour', actionId: 'living-door-toggle' };
     dGroup.add(dPanel);
     // Mètre ruban sur les 2 faces (z=±2.5), centré à 15cm du bord libre
     for (const [rY, zOff] of [[Math.PI, -2.5], [0, 2.5]]) {
@@ -291,7 +306,7 @@ export function buildCorridor(scene) {
       dGroup.add(t);
     }
     scene.add(dGroup);
-    doorGroups.push({ group: dGroup, closedY: 0, openY: -Math.PI / 2 });
+    doorGroups.push({ group: dGroup, closedY: 0, openY: -Math.PI / 2, open: false });
   }
 
   // Porte SDB (blanc) - mur couloir gauche (X=WALL_X), s'ouvre vers SDB (-X)
@@ -305,6 +320,7 @@ export function buildCorridor(scene) {
     );
     sPanel.position.set(0, doorH / 2, -C_DOOR_W / 2);
     sPanel.castShadow = true;
+    sGroup.userData.hoverAction = { label: 'Porte SDB', actionId: 'bathroom-door-toggle' };
     sGroup.add(sPanel);
     // Mètre ruban sur les 2 faces (x=±2.5), centré à 15cm du bord libre
     for (const [rY, xOff] of [[Math.PI / 2, 2.5], [-Math.PI / 2, -2.5]]) {
@@ -313,7 +329,7 @@ export function buildCorridor(scene) {
       sGroup.add(t);
     }
     scene.add(sGroup);
-    doorGroups.push({ group: sGroup, closedY: 0, openY: Math.PI / 2 });
+    doorGroups.push({ group: sGroup, closedY: 0, openY: Math.PI / 2, open: false });
   }
 
   // =============================================
