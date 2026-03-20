@@ -262,13 +262,13 @@ export function buildBackpacks(scene) {
   const bagS = buildBag(29, 39, 15);
   bagS.traverse(c => { if (c.isMesh) c.layers.set(LAYER_FURNITURE); });
   bagS.rotation.y = -Math.PI / 2;        // dos contre mur est, face vers la pièce
-  bagS.position.set(300 - 15 / 2, 0, 155);
+  bagS.position.set(300 - 15 / 2, 150, 155);
   scene.add(bagS);
 
   // Taille L : 40×43×17cm — corps W=32, H=43, D=17
   const bagL = buildBag(32, 43, 17);
   bagL.traverse(c => { if (c.isMesh) c.layers.set(LAYER_FURNITURE); });
   bagL.rotation.y = -Math.PI / 2;
-  bagL.position.set(300 - 17 / 2, 0, 200);
+  bagL.position.set(300 - 17 / 2, 150, 200);
   scene.add(bagL);
 }
