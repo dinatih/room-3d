@@ -58,8 +58,7 @@ export function buildKitchen(scene) {
 
     // Dos (+Z, plaqué contre mur cuisine)
     addCabP(CABINET_W, cabinetH, T,          0, cabinetH / 2,  KIT_D / 2 - T / 2);
-    // Dessus (masqué par plan de travail)
-    addCabP(CABINET_W, T, KIT_D,             0, cabinetH - T / 2, 0);
+    // Dessus supprimé — bloquait le trou de l'évier
     // Dessous
     addCabP(CABINET_W, T, KIT_D,             0, T / 2, 0);
     // Côté gauche (-X)
