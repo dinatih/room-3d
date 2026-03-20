@@ -612,6 +612,7 @@ requestRender();
 
 // Expose pour automation externe (screenshot.rb)
 window.__requestRender = requestRender;
+window.__scene = scene;
 
 addEventListener("resize", () => {
   camera.aspect = innerWidth / innerHeight;

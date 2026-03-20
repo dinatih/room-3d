@@ -86,6 +86,46 @@ export function buildDoors(scene, { entry, bathroom }) {
     entryPanel.position.set(0, doorH / 2, ENTRY_DOOR_W / 2);
     entryPanel.castShadow = true;
     entryGroup.add(entryPanel);
+
+    // ── Poignées ──────────────────────────────────────────────
+    const handleMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.15 });
+    const hz = 70;   // distance depuis le gond (cm)
+    const hy = 100;  // hauteur poignée (cm)
+
+    // Poignée intérieure (côté appartement, x = -2) : levier en L
+    {
+      const R = 1.3; // rayon du tube
+      // Rosette (base plate)
+      const rose = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 12), handleMat);
+      rose.rotation.z = Math.PI / 2;
+      rose.position.set(-2.5, hy, hz);
+      entryGroup.add(rose);
+      // Branche courte : sort perpendiculairement de la porte (-X), 5 cm
+      const horiz = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 5, 8), handleMat);
+      horiz.rotation.z = Math.PI / 2;
+      horiz.position.set(-3 - 5 / 2, hy, hz);
+      entryGroup.add(horiz);
+      // Manche horizontal : le long de la porte (+Z), 14 cm
+      const manche = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 14, 8), handleMat);
+      manche.rotation.x = Math.PI / 2;
+      manche.position.set(-3 - 5, hy, hz - 14 / 2);
+      entryGroup.add(manche);
+      // Embouts arrondis aux deux extrémités du L
+      for (const [x, y, z] of [[-3 - 5, hy, hz], [-3 - 5, hy, hz - 14]]) {
+        const ball = new THREE.Mesh(new THREE.SphereGeometry(R, 8, 6), handleMat);
+        ball.position.set(x, y, z);
+        entryGroup.add(ball);
+      }
+    }
+
+    // Boule extérieure (côté bâtiment, x = +2) : push knob rouge, centré sur la porte
+    {
+      const knobMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, metalness: 0.3, roughness: 0.4 });
+      const knob = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), knobMat);
+      knob.position.set(6, doorH / 2, ENTRY_DOOR_W / 2);
+      entryGroup.add(knob);
+    }
+
     scene.add(entryGroup);
     doorGroups.push({ group: entryGroup, closedY: entry.rotY, openY: entry.rotY - 2 * Math.PI / 3, open: false });
   }

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_EQUIPMENT } from './config.js';
+import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, DOOR_H, GAP, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_EQUIPMENT } from './config.js';
 import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
 import { makeText } from './labels.js';
 import { buildDoors, DOOR_W } from './doors.js';
@@ -147,47 +147,49 @@ export function buildCorridor(scene) {
   const E_DOOR_START = 10;
   const E_DOOR_W = 90;
   const E_DOOR_END = E_DOOR_START + E_DOOR_W;
-  const E_FRAME_START = E_DOOR_START - 10;
-  const E_FRAME_END = E_DOOR_END + 10;
 
-  function addDiagBrick(localZ, layer, size, type) {
-    const center = localZ + size / 2;
-    addBrickZ(originX + center * sinθ, layer, originZ + center * cosθ - size / 2, size, type, diagRotY);
-  }
+  // ── Mur diagonal plein (remplacement des briques) ──────────
+  {
+    const DIAG_DEPTH = 10; // épaisseur du mur (cm)
 
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    let skipS, skipE;
-    if (layer < DOOR_H_LAYERS) {
-      skipS = E_FRAME_START;
-      skipE = E_FRAME_END;
-    } else if (layer === DOOR_H_LAYERS) {
-      skipS = E_DOOR_START;
-      skipE = E_DOOR_END;
-    } else {
-      skipS = skipE = -1;
+    // Vecteur perpendiculaire extérieur (hors appartement) :
+    // rotation 90° CW de la direction du mur (sinθ, cosθ) → (cosθ, -sinθ)
+    const pX = cosθ;   //  diagDZ/diagLen ≈ +0.537
+    const pZ = -sinθ;  // -diagDX/diagLen ≈ +0.844
+
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
+
+    // Retourne [worldX, worldZ] sur la face intérieure à dist cm depuis A
+    function iP(dist) {
+      return [DIAG_AX + dist * sinθ, DIAG_AZ + dist * cosθ];
+    }
+    // Même point sur la face extérieure
+    function eP(dist) {
+      return [DIAG_AX + dist * sinθ + DIAG_DEPTH * pX,
+              DIAG_AZ + dist * cosθ + DIAG_DEPTH * pZ];
     }
 
-    for (const b of fillRow(diagWallLen, layer % 2 === 1)) {
-      const bS = b.start;
-      const bE = bS + b.size;
-
-      if (skipS >= 0 && bE > skipS && bS < skipE) {
-        if (bS < skipS)
-          addDiagBrick(bS, layer, skipS - bS, 'wall');
-        if (bE > skipE)
-          addDiagBrick(skipE, layer, bE - skipE, 'wall');
-      } else {
-        addDiagBrick(bS, layer, b.size, 'wall');
-      }
+    // Extrude une section du mur de d0 à d1 (cm le long du mur),
+    // de yBase à yBase+height en hauteur.
+    function diagSection(d0, d1, height, yBase = 0) {
+      const pts = [iP(d0), iP(d1), eP(d1), eP(d0)];
+      const shape = new THREE.Shape();
+      shape.moveTo(pts[0][0], -pts[0][1]);
+      for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], -pts[i][1]);
+      shape.closePath();
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });
+      geo.rotateX(-Math.PI / 2);
+      if (yBase > 0) geo.translate(0, yBase, 0);
+      const m = new THREE.Mesh(geo, wallMat);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      scene.add(m);
     }
-  }
 
-  // Encadrement porte d'entrée (accent rouge)
-  for (let layer = 0; layer < DOOR_H_LAYERS; layer++) {
-    addDiagBrick(E_FRAME_START, layer, 10, 'accent');
-    addDiagBrick(E_DOOR_END, layer, 10, 'accent');
+    diagSection(0,           E_DOOR_START, WALL_H);                        // section gauche
+    diagSection(E_DOOR_END,  diagLen,      WALL_H);                        // section droite
+    diagSection(E_DOOR_START,E_DOOR_END,   WALL_H - DOOR_H, DOOR_H);      // linteau aligné sur le panneau
   }
-  addDiagBrick(E_DOOR_START, DOOR_H_LAYERS, E_DOOR_W, 'accent');
 
   // =============================================
   // Portes (panneaux 3D) — déléguées à doors.js
