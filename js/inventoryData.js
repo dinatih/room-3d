@@ -75,7 +75,7 @@ export const INVENTORY = [
   { id: 'mannequin-head',    name: 'Tête de mannequin',              brand: '',         category: 'decor',     qty: 3,  dims: { w: 41,   d: 22,   h: 45   }, scenePos: { x: 150,  z: 200  }, notes: '1 Sunnersta, 1 Kallax NW, 1 LACK' },
   { id: 'air-performer',     name: 'Dyson Air Performer',            brand: 'Philips',  category: 'decor',     qty: 1,  dims: { w: 20,   d: 20,   h: 100  }, scenePos: { x: 150,  z: 200  }, notes: 'Ventilateur/purificateur' },
   { id: 'lamp-ola',          name: 'Lampe OLA',                      brand: 'IKEA',     category: 'decor',     qty: 1,  dims: { w: 30,   d: 30,   h: 120  }, scenePos: { x: 150,  z: 200  }, notes: 'Sur pied, toggle ON/OFF', glbPath: 'media/ikea_lamp_ola.glb' },
-  { id: 'altappen-lantern',  name: 'Lanterne ALTAPPEN',              brand: 'IKEA',     category: 'decor',     qty: 1,  dims: { w: 22,   d: 22,   h: 35   }, scenePos: { x: 100,  z: -125 }, notes: 'Jardin, desserte Viggja', glbPath: 'media/ikea_Altappen.glb' },
+  { id: 'altappen-lantern',  name: 'Lanterne ALTAPPEN',              brand: 'IKEA',     category: 'decor',     qty: 1,  dims: { w: 22,   d: 22,   h: 35   }, scenePos: { x: 100,  z: -125 }, notes: 'Jardin, desserte Viggja', glbPath: 'media/ikea_Altappen_single.glb' },
   { id: 'potted-palm',       name: 'Palmier en pot',                 brand: '',         category: 'decor',     qty: 1,  dims: { w: 60,   d: 60,   h: 150  }, scenePos: { x: 100,  z: -150 }, notes: 'Jardin, entre canapé et desserte', glbPath: 'media/potted_palm.glb' },
 ];
 
