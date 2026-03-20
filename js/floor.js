@@ -331,10 +331,13 @@ export function buildCeiling(scene) {
 // GROUND PLANE
 // =============================================
 export function buildGroundPlane(scene) {
-  const mat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 });
-  const ground = new THREE.Mesh(new THREE.BoxGeometry(2000, 10, 2000), mat);
-  ground.position.set(150, -5, 400);
-  ground.receiveShadow = true;
-  ground.userData.brickType = 'ground';
-  scene.add(ground);
+  const gnd = new THREE.Mesh(
+    new THREE.PlaneGeometry(2000, 2000),
+    new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9 })
+  );
+  gnd.rotation.x = -Math.PI / 2;
+  gnd.position.y = -10;
+  gnd.receiveShadow = true;
+  gnd.userData.brickType = 'ground';
+  scene.add(gnd);
 }
