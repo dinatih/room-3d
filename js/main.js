@@ -256,11 +256,7 @@ scene.add(floorPlanGroup);
 
 let floorPlanMode = false;
 function toggleFloorPlan() {
-  // Désactiver sol only si actif
-  if (floorOnly) {
-    floorOnly = false;
-    document.getElementById("floor-toggle").textContent = "Sol : OFF";
-  }
+
   floorPlanMode = !floorPlanMode;
   for (const obj of buildingChildren) obj.visible = !floorPlanMode;
   floorPlanGroup.visible = floorPlanMode;
@@ -493,29 +489,6 @@ document.getElementById("grid-toggle")?.addEventListener("click", () => {
 });
 
 
-// =============================================
-// SOL ONLY MODE
-// =============================================
-let floorOnly = false;
-const FLOOR_TYPES = new Set(["floor", "tile", "ground", "grid", "parquet"]);
-
-function toggleFloorOnly() {
-  // Désactiver plan si actif
-  if (floorPlanMode) {
-    floorPlanMode = false;
-    floorPlanGroup.visible = false;
-    document.getElementById("plan-toggle").textContent = "Plan : OFF";
-  }
-  floorOnly = !floorOnly;
-  for (const obj of buildingChildren) {
-    obj.visible = floorOnly ? FLOOR_TYPES.has(obj.userData?.brickType) : true;
-  }
-  const btn = document.getElementById("floor-toggle");
-  if (btn) btn.textContent = floorOnly ? "Sol : ON" : "Sol : OFF";
-  requestRender();
-}
-
-document.getElementById("floor-toggle")?.addEventListener("click", toggleFloorOnly);
 
 // =============================================
 // ANIMATION CONSTRUCTION
