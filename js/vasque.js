@@ -32,12 +32,26 @@ export function buildVasque(scene) {
   const counterCX = 0;
   const counterCZ = 0.75;          // was VANITY_CZ + 0.75
 
-  // ── Caisson suspendu ──
-  const caisson = new THREE.Mesh(new THREE.BoxGeometry(VANITY_W, VANITY_H, VANITY_D), vanityMat);
-  caisson.position.set(0, VANITY_Y0 + VANITY_H / 2, 0);
-  caisson.castShadow = true;
-  caisson.receiveShadow = true;
-  group.add(caisson);
+  // ── Caisson suspendu (sans dessus — le dessus bloquait le lavabo) ──
+  const T_CAB = 1.8; // épaisseur des panneaux
+  const caissonY0 = VANITY_Y0;
+  function addCabPanel(sx, sy, sz, x, y, z) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), vanityMat);
+    m.position.set(x, y, z);
+    m.castShadow = true;
+    m.receiveShadow = true;
+    group.add(m);
+  }
+  // Fond (dos, Z+)
+  addCabPanel(VANITY_W, VANITY_H, T_CAB,              0,                   caissonY0 + VANITY_H / 2,  VANITY_D / 2 - T_CAB / 2);
+  // Dessous
+  addCabPanel(VANITY_W, T_CAB,    VANITY_D,            0,                   caissonY0 + T_CAB / 2,     0);
+  // Côté gauche
+  addCabPanel(T_CAB,    VANITY_H, VANITY_D,           -VANITY_W / 2 + T_CAB / 2, caissonY0 + VANITY_H / 2, 0);
+  // Côté droit
+  addCabPanel(T_CAB,    VANITY_H, VANITY_D,            VANITY_W / 2 - T_CAB / 2, caissonY0 + VANITY_H / 2, 0);
+  // Façade (Z-)
+  addCabPanel(VANITY_W, VANITY_H, T_CAB,              0,                   caissonY0 + VANITY_H / 2, -VANITY_D / 2 + T_CAB / 2);
 
   // ── Plan vasque ──
   const counterH  = 4;
