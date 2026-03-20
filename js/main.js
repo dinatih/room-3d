@@ -17,7 +17,7 @@ import { loadFont } from "./labels.js";
 import { buildWalls, toggleEastDoor } from "./walls.js";
 import { buildKitchen, toggleFridgeDoor, toggleCabinetDoor } from "./kitchen.js";
 import { buildKallax } from "./kallax.js";
-import { buildBed, toggleBedStack } from "./bed.js";
+import { buildBed, toggleBedStack, toggleBedVersion } from "./bed.js";
 import { buildMirrors, setMirrorLayers } from "./mirrors.js";
 import { buildChair } from "./chair.js";
 import { buildDesks, toggleDesksHeight, toggleDesk1Height, toggleDesk2Height } from "./desks.js";
@@ -356,6 +356,12 @@ function doToggleBed() {
   requestRender();
 }
 document.getElementById("bed-toggle")?.addEventListener("click", doToggleBed);
+
+document.getElementById("bed-version-toggle")?.addEventListener("click", () => {
+  const isGlb = toggleBedVersion();
+  document.getElementById("bed-version-toggle").textContent = `Lit : ${isGlb ? "GLB" : "PROCÉDURAL"}`;
+  requestRender();
+});
 
 // =============================================
 // DESK TOGGLE (sit / stand)

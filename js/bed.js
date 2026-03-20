@@ -1,14 +1,38 @@
 import * as THREE from 'three';
-import { ROOM_W, KALLAX_DEPTH } from './config.js';
+import { ROOM_W, KALLAX_DEPTH, LAYER_FURNITURE } from './config.js';
 import { kallaxW } from './kallax.js';
+import { gltfLoader } from './loaders.js';
+import { requestRender } from './cameraManager.js';
 
 let stacked = true;
 let b1, b2;
 
+let proceduralGroup = null;
+let glbGroup = null;
+let glbB2 = null;          // second GLB instance
+let glbB2Base = null;      // {x, y, z} — position de b2 empilé (référence)
+let useGlb = false;
+
 export function toggleBedStack() {
   stacked = !stacked;
+  // Procédural
   b2.position.set(0, stacked ? 23 : 0, stacked ? 0 : -83);
+  // GLB
+  if (glbB2 && glbB2Base) {
+    glbB2.position.set(
+      glbB2Base.x,
+      stacked ? glbB2Base.y : glbB2Base.y - 23,
+      stacked ? glbB2Base.z : glbB2Base.z - 83,
+    );
+  }
   return stacked;
+}
+
+export function toggleBedVersion() {
+  useGlb = !useGlb;
+  if (proceduralGroup) proceduralGroup.visible = !useGlb;
+  if (glbGroup) glbGroup.visible = useGlb;
+  return useGlb; // true = GLB
 }
 
 export function buildBed(scene) {
@@ -136,7 +160,68 @@ export function buildBed(scene) {
   // Positionner le groupe pour que le coin NE local (+halfL,+halfW) tombe à (300, NE_Z)
   const neOffX = halfL * Math.cos(alpha) + halfW * Math.sin(alpha);
   const neOffZ = -halfL * Math.sin(alpha) + halfW * Math.cos(alpha);
+  const posX = ROOM_W - neOffX;
+  const posZ = NE_Z - neOffZ;
+
   utaker.rotation.y = alpha;
-  utaker.position.set(ROOM_W - neOffX, 0, NE_Z - neOffZ);
+  utaker.position.set(posX, 0, posZ);
   scene.add(utaker);
+  proceduralGroup = utaker;
+
+  // Version GLB — même position/rotation, chargée en async
+  gltfLoader.load('media/UTAKER.glb', (gltf) => {
+    const model = gltf.scene;
+
+    // Scale : axe long X → 205cm (1 unit ≈ 1 inch = 2.54cm)
+    const rawBox = new THREE.Box3().setFromObject(model);
+    const rawSize = new THREE.Vector3();
+    rawBox.getSize(rawSize);
+    const scl = 205 / rawSize.x;
+
+    // Centrage XZ, base à Y=0 — calculé depuis rawBox (avant scale)
+    const offX = -(rawBox.min.x + rawSize.x / 2) * scl;
+    const offY = -rawBox.min.y * scl;
+    const offZ = -(rawBox.min.z + rawSize.z / 2) * scl;
+
+    model.scale.setScalar(scl);
+    model.position.set(offX, offY, offZ);
+
+    // Instance b2 — clonée, empilée par défaut (Y +23cm)
+    const model2 = model.clone();
+    model2.position.set(offX, offY + 23, offZ);
+    glbB2 = model2;
+    glbB2Base = { x: offX, y: offY + 23, z: offZ };
+
+    // Wrapper group : même rotation/position que le lit procédural
+    glbGroup = new THREE.Group();
+    glbGroup.add(model);
+    glbGroup.add(model2);
+    glbGroup.rotation.y = alpha;
+    glbGroup.position.set(posX, 0, posZ);
+
+    for (const m of [model, model2]) {
+      m.traverse(c => {
+        if (c.isMesh) {
+          c.castShadow = true;
+          c.receiveShadow = true;
+          c.layers.set(LAYER_FURNITURE);
+        }
+      });
+    }
+
+    // Ajouter visible=true pour que setFromObject fonctionne
+    glbGroup.visible = true;
+    scene.add(glbGroup);
+
+    // Correction : aligner le centre XZ du GLB sur le centre XZ du lit procédural
+    proceduralGroup.updateMatrixWorld(true);
+    glbGroup.updateMatrixWorld(true);
+    const procBox = new THREE.Box3().setFromObject(proceduralGroup);
+    const glbBox2 = new THREE.Box3().setFromObject(glbGroup);
+    glbGroup.position.x += (procBox.min.x + procBox.max.x) / 2 - (glbBox2.min.x + glbBox2.max.x) / 2;
+    glbGroup.position.z += (procBox.min.z + procBox.max.z) / 2 - (glbBox2.min.z + glbBox2.max.z) / 2;
+
+    glbGroup.visible = false; // caché par défaut
+    requestRender();
+  }, undefined, err => console.error('UTAKER.glb:', err));
 }
