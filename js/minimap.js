@@ -314,6 +314,21 @@ export function buildMinimap() {
       // GLB face -Z (nord). Local +Y après rotate(π - ry) pointe vers (-sin(ry), -cos(ry)) = direction du regard.
       ctx.rotate(Math.PI - ry);
 
+      // Secteur FOV — centré sur +Y local (= avant), angle horizontal dépend du ratio fenêtre
+      const V_FOV_RAD = 50 * Math.PI / 180;
+      const hFov = 2 * Math.atan(Math.tan(V_FOV_RAD / 2) * (window.innerWidth / window.innerHeight));
+      const fovR = 120 * S; // 120cm en pixels minimap
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      // arc(cx, cy, r, start, end) : angle 0=+X, π/2=+Y canvas = direction avant
+      ctx.arc(0, 0, fovR, Math.PI / 2 - hFov / 2, Math.PI / 2 + hFov / 2);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(255, 221, 0, 0.18)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 221, 0, 0.55)';
+      ctx.lineWidth = 0.7;
+      ctx.stroke();
+
       const R = 5;   // rayon calotte px
       const BW = 8;  // largeur visière px
       const BH = 4;  // profondeur visière px
@@ -382,6 +397,8 @@ export function buildMinimap() {
       canvas.style.cursor = 'default';
     }
   });
+
+  window.addEventListener('resize', () => draw(currentRoom));
 
   canvas.addEventListener('mouseleave', () => {
     if (currentRoom) {

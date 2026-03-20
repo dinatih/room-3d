@@ -18,9 +18,46 @@ export function getWalkingMan() {
   return walkingMan;
 }
 
+const V_FOV_RAD = 50 * Math.PI / 180; // FOV vertical caméra (scene.js)
+const FOV_R     = 300;                 // rayon du secteur (cm)
+const FOV_SEG   = 48;
+
+function calcHFov() {
+  return 2 * Math.atan(Math.tan(V_FOV_RAD / 2) * (window.innerWidth / window.innerHeight));
+}
+
+function makeFovGeo() {
+  const half = calcHFov() / 2;
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 0);
+  for (let i = 0; i <= FOV_SEG; i++) {
+    const a = -half + (i / FOV_SEG) * calcHFov();
+    shape.lineTo(Math.sin(a) * FOV_R, Math.cos(a) * FOV_R);
+  }
+  shape.closePath();
+  const geo = new THREE.ShapeGeometry(shape);
+  geo.rotateX(-Math.PI / 2); // plan XY → plan XZ (sol)
+  return geo;
+}
+
 export function buildWalkingMan(scene) {
   const group = new THREE.Group();
   group.position.set(ROOM_W / 2, 0, ROOM_D / 2);
+
+  // Secteur de champ de vision — pointe en +Z local (= direction de marche)
+  const fovMat = new THREE.MeshBasicMaterial({
+    color: 0xffdd00, transparent: true, opacity: 0.13,
+    side: THREE.DoubleSide, depthWrite: false,
+  });
+  const fovMesh = new THREE.Mesh(makeFovGeo(), fovMat);
+  fovMesh.position.y = 1; // légèrement au-dessus du sol
+  group.add(fovMesh);
+
+  window.addEventListener('resize', () => {
+    fovMesh.geometry.dispose();
+    fovMesh.geometry = makeFovGeo();
+    requestRender();
+  });
 
   // Les GLBs GLTF font face à -Z par convention. On les tourne de π pour qu'ils
   // fassent face à +Z (direction de marche), sans toucher à la logique de mouvement.
