@@ -122,16 +122,17 @@ export function buildBed(scene) {
   drapeFoot.castShadow = true;
   b2.add(drapeFoot);
 
-  // 2 polochons rouges (near head, local -X end)
+  // 2 polochons rouges 90cm — axe X (longueur du lit), côté mur (local Z+)
   const polochonR = 8;
-  const polochonL = 28;
+  const polochonL = 90;
   const polochonGeo = new THREE.CylinderGeometry(polochonR, polochonR, polochonL, 12);
   const polochonY = relTop + BLK_T + polochonR + 0.5;
+  const polochonZ = 40 - polochonR - 1; // near wall-side edge of mattress
 
-  for (const side of [-1, 1]) {
+  for (const cx of [-50, 50]) {
     const p = new THREE.Mesh(polochonGeo, redMat);
-    p.rotation.x = Math.PI / 2;
-    p.position.set(-101 + 15, polochonY, side * (80 / 2 - polochonL / 2 - 2));
+    p.rotation.z = -Math.PI / 2; // cylinder axis → local X (bed length)
+    p.position.set(cx, polochonY, polochonZ);
     p.castShadow = true;
     b2.add(p);
   }
