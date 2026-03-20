@@ -134,7 +134,7 @@ export function buildDoors(scene, { entry, bathroom }) {
   {
     const dGroup = new THREE.Group();
     dGroup.userData.hoverAction = { label: 'Porte séjour', actionId: 'living-door-toggle' };
-    dGroup.position.set(DOOR_END, 0, ROOM_D);
+    dGroup.position.set(DOOR_END, 0, ROOM_D + 3);
 
     const dPanel = new THREE.Mesh(
       new THREE.BoxGeometry(DOOR_W, doorH, 4),
