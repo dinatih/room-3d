@@ -40,6 +40,7 @@ export function buildBathroom(scene) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
     m.position.set(x, y, z);
     m.castShadow = true; m.receiveShadow = true;
+    m.userData.layerOverride = LAYER_STRUCTURE;
     scene.add(m); return m;
   }
 
