@@ -35,20 +35,24 @@ export function buildCorridor(scene) {
   }
 
   // ── Mur gauche du couloir (côté SDB, à X=WALL_X=185) ─────────────────────
-  // Section avant porte (Z=460 → ~502)
-  const LEFT_SECTION1_D = 37; // ≈ C_DOOR_START_ABS - 5 - LEFT_WALL_Z0 - 5 = gap to door frame
-  panel(W, WALL_H, LEFT_SECTION1_D, WALL_X, WALL_H/2, LEFT_WALL_Z0 + LEFT_SECTION1_D/2);
+  // Section avant porte (Z=460 → C_DOOR_START_ABS)
+  panel(W, WALL_H, C_DOOR_START_ABS - LEFT_WALL_Z0, WALL_X, WALL_H/2,
+        (LEFT_WALL_Z0 + C_DOOR_START_ABS) / 2);
+  // Section après porte (C_DOOR_END_ABS → SDB_Z_END)
+  panel(W, WALL_H, SDB_Z_END - C_DOOR_END_ABS, WALL_X, WALL_H/2,
+        (C_DOOR_END_ABS + SDB_Z_END) / 2);
   // Linteau au-dessus de la porte SDB
   panel(W, WALL_H - DOOR_H, C_DOOR_W, WALL_X,
         DOOR_H + (WALL_H - DOOR_H) / 2,
         (C_DOOR_START_ABS + C_DOOR_END_ABS) / 2);
-  // Chambranle porte SDB (2 faces)
+  // Chambranle porte SDB (2 faces, plaqué contre le mur)
   {
     const frameMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.3 });
     const FW = 3;  // largeur
     const FT = 1;  // épaisseur
     const CZ = (C_DOOR_START_ABS + C_DOOR_END_ABS) / 2;
-    for (const xF of [WALL_X - W - FT / 2, WALL_X + FT / 2]) {
+    // Face couloir (X = WALL_X - W/2) et face SDB (X = WALL_X + W/2)
+    for (const xF of [WALL_X - W/2 - FT/2, WALL_X + W/2 + FT/2]) {
       panel(FT, DOOR_H, FW, xF, DOOR_H / 2, C_DOOR_START_ABS - FW / 2, frameMat);
       panel(FT, DOOR_H, FW, xF, DOOR_H / 2, C_DOOR_END_ABS   + FW / 2, frameMat);
       panel(FT, FW, C_DOOR_W + FW * 2, xF, DOOR_H + FW / 2, CZ, frameMat);
