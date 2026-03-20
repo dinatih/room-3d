@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import {
-  ROOM_W, ROOM_D, NUM_LAYERS, BRICK_H,
+  ROOM_W, ROOM_D, NUM_LAYERS, BRICK_H, WALL_H, STUD_R,
   NICHE_DEPTH, NICHE_LENGTH, NICHE_Z_START,
-  GLASS_START, GLASS_END, GLASS_MIN_LAYER, GLASS_MAX_LAYER,
+  GLASS_START, GLASS_END, GLASS_MAX_LAYER,
   DOOR_START, DOOR_END, DOOR_H_LAYERS,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, KITCHEN_Z,
 } from './config.js';
@@ -103,21 +103,99 @@ export function buildWalls(scene) {
     }
   }
 
-  // --- Mur arrière C (30cm = 3 rangées, z = -5 / -15 / -25) avec baie vitrée ---
-  const wallC_openings = [
-    { start: GLASS_START - 10, end: GLASS_END + 10, minLayer: GLASS_MIN_LAYER, maxLayer: GLASS_MAX_LAYER },
-    { start: GLASS_START, end: GLASS_END, minLayer: GLASS_MAX_LAYER, maxLayer: GLASS_MAX_LAYER + 1 },
-  ];
-  for (const wz of [-5, -15, -25])
-    buildWallWithOpenings(wz, ROOM_W, wallC_openings);
+  // --- Mur nord C — trapèze en vue du dessus ---
+  // Arêtes bisautées : extrémité NO s'aligne sur la face ext. du mur A (20cm),
+  // extrémité NE s'aligne sur la face ext. du mur B (10cm).
+  {
+    const WALL_DEPTH = 30; // 3 studs
+    const NW_EXT = 20;     // 2 studs — mur A déborde à l'ouest
+    const NE_EXT = 10;     // 1 stud  — mur B déborde à l'est
+    const LINTEAU_Y = GLASS_MAX_LAYER * BRICK_H; // 210cm
 
-  // Encadrement baie vitrée (accent bleu) sur les 3 rangées
-  for (const wz of [-5, -15, -25]) {
-    for (let layer = GLASS_MIN_LAYER; layer < GLASS_MAX_LAYER; layer++) {
-      addBrickX(GLASS_START - 10, layer, wz, 10, 'glass_frame');
-      addBrickX(GLASS_END, layer, wz, 10, 'glass_frame');
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
+
+    // Crée un trapèze XZ extrudé vers le haut sur `height` cm, décalé de `yBase`.
+    // pts : tableau de [worldX, worldZ] définissant le contour vu du dessus.
+    function trapWall(pts, height, yBase = 0) {
+      const shape = new THREE.Shape();
+      shape.moveTo(pts[0][0], -pts[0][1]);
+      for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], -pts[i][1]);
+      shape.closePath();
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });
+      geo.rotateX(-Math.PI / 2);
+      if (yBase > 0) geo.translate(0, yBase, 0);
+      const mesh = new THREE.Mesh(geo, wallMat);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
     }
-    addBrickX(GLASS_START, GLASS_MAX_LAYER, wz, GLASS_END - GLASS_START, 'glass_frame');
+
+    // Section gauche : angle NO bisauté → bord gauche de la baie
+    trapWall([
+      [0,           0          ],  // arête int. NW
+      [GLASS_START, 0          ],  // arête int. bord gauche baie
+      [GLASS_START, -WALL_DEPTH],  // arête ext. bord gauche baie
+      [-NW_EXT,     -WALL_DEPTH],  // arête ext. NW
+    ], WALL_H);
+
+    // Section droite : bord droit de la baie → angle NE bisauté
+    trapWall([
+      [GLASS_END,        0          ],  // arête int. bord droit baie
+      [ROOM_W,           0          ],  // arête int. NE
+      [ROOM_W + NE_EXT,  -WALL_DEPTH],  // arête ext. NE
+      [GLASS_END,        -WALL_DEPTH],  // arête ext. bord droit baie
+    ], WALL_H);
+
+    // Linteau (au-dessus de la baie) — rectangle simple
+    const linteauH = WALL_H - LINTEAU_Y;
+    const linteau = new THREE.Mesh(
+      new THREE.BoxGeometry(GLASS_END - GLASS_START, linteauH, WALL_DEPTH),
+      wallMat
+    );
+    linteau.position.set(
+      (GLASS_START + GLASS_END) / 2,
+      LINTEAU_Y + linteauH / 2,
+      -WALL_DEPTH / 2
+    );
+    linteau.castShadow = true;
+    linteau.receiveShadow = true;
+    scene.add(linteau);
+
+    // Studs de référence sur le dessus du mur (Y=WALL_H)
+    // Grille XZ couvrant la surface réelle du trapèze (coins bisautés inclus)
+    const studGeo = new THREE.CylinderGeometry(STUD_R, STUD_R, 1.5, 8);
+    const studMat = new THREE.MeshStandardMaterial({ color: 0x999988, roughness: 0.5 });
+
+    const studPositions = []; // [x, z]
+    const zRows = [-5, -15, -25]; // centre de chaque rangée de profondeur (10cm chacune)
+
+    for (const z of zRows) {
+      const t = -z / WALL_DEPTH; // 0 = face int., 1 = face ext.
+
+      // Section gauche : bord gauche bisauté → bord gauche baie
+      const xLeftMin  = -NW_EXT * t;
+      const xLeftStart = 10 * Math.ceil((xLeftMin - 5) / 10) + 5;
+      for (let x = xLeftStart; x < GLASS_START; x += 10) studPositions.push(x, z);
+
+      // Linteau (dessus, pleine largeur baie)
+      for (let x = GLASS_START + 5; x < GLASS_END; x += 10) studPositions.push(x, z);
+
+      // Section droite : bord droit baie → bord droit bisauté
+      const xRightMax = ROOM_W + NE_EXT * t;
+      const xRightEnd = 10 * Math.floor((xRightMax - 5) / 10) + 5;
+      for (let x = GLASS_END + 5; x <= xRightEnd; x += 10) studPositions.push(x, z);
+    }
+
+    const studCount = studPositions.length / 2;
+    const studMesh = new THREE.InstancedMesh(studGeo, studMat, studCount);
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < studCount; i++) {
+      dummy.position.set(studPositions[i * 2], WALL_H + 0.75, studPositions[i * 2 + 1]);
+      dummy.updateMatrix();
+      studMesh.setMatrixAt(i, dummy.matrix);
+    }
+    studMesh.instanceMatrix.needsUpdate = true;
+    scene.add(studMesh);
   }
 
   // Porte-fenêtre double avec cadre PVC blanc et poignée
