@@ -35,7 +35,7 @@ export const NICHE_Z_START = ROOM_D - NICHE_LENGTH; // Z=280
 // Muret de 20cm sous la baie (~1 couche = 30cm en LEGO)
 export const GLASS_START = 90; // 300 - 50 - 160 = cm 90
 export const GLASS_END = 250; // 300 - 50 = cm 250
-export const GLASS_MIN_LAYER = 1; // muret : 1 couche = 30cm (~20cm)
+export const GLASS_MIN_LAYER = 0; // porte de terrasse : accès direct au jardin (sans allège)
 export const GLASS_MAX_LAYER = 7; // 6 couches vitrées au-dessus = 180cm (~190cm)
 
 export const BRICK_SIZES = [160, 120, 100, 80, 60, 40, 30, 20, 10];

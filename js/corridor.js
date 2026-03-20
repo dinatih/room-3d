@@ -1,65 +1,10 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, DOOR_START, DOOR_END, DOOR_H_LAYERS, DOOR_H, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_EQUIPMENT } from './config.js';
+import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, GAP, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_EQUIPMENT } from './config.js';
 import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
 import { makeText } from './labels.js';
+import { buildDoors, DOOR_W } from './doors.js';
 
-// Crée un mesh PlaneGeometry avec texture canvas représentant un mètre ruban
-function makeTapeMesh(totalCm = 200) {
-  const pxPerCm = 8;
-  const cw = 40, ch = totalCm * pxPerCm;
-  const canvas = document.createElement('canvas');
-  canvas.width = cw; canvas.height = ch;
-  const ctx = canvas.getContext('2d');
-
-  ctx.fillStyle = '#f5e6a0';
-  ctx.fillRect(0, 0, cw, ch);
-
-  for (let cm = 0; cm <= totalCm; cm++) {
-    // canvas y=0 → top du canvas → bas du plane en Three.js (flipY), donc cm=0 en bas ✓
-    const y = (totalCm - cm) * pxPerCm;
-    const isMaj = cm % 10 === 0, isMid = cm % 5 === 0;
-    const tickLen = isMaj ? 18 : isMid ? 12 : 6;
-    ctx.strokeStyle = '#3a2a00';
-    ctx.lineWidth = isMaj ? 1.5 : isMid ? 1 : 0.5;
-    ctx.beginPath(); ctx.moveTo(1, y);      ctx.lineTo(1 + tickLen, y);      ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cw - 1, y); ctx.lineTo(cw - 1 - tickLen, y); ctx.stroke();
-    if (isMaj && cm > 0) {
-      ctx.fillStyle = '#3a2a00';
-      ctx.font = `bold ${Math.round(pxPerCm * 0.85)}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText(`${cm}`, cw / 2, y - 2);
-    }
-  }
-  ctx.strokeStyle = '#8a6900'; ctx.lineWidth = 2;
-  ctx.strokeRect(1, 1, cw - 2, ch - 2);
-
-  const tex = new THREE.CanvasTexture(canvas);
-  const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, depthWrite: false });
-  return new THREE.Mesh(new THREE.PlaneGeometry(5, totalCm), mat);
-}
-
-let doorsOpen = false;
-const doorGroups = [];
-
-function toggleDoor(index) {
-  const d = doorGroups[index];
-  d.open = !d.open;
-  d.group.rotation.y = d.open ? d.openY : d.closedY;
-  return d.open;
-}
-
-export function toggleEntryDoor()    { return toggleDoor(0); }
-export function toggleLivingDoor()   { return toggleDoor(1); }
-export function toggleBathroomDoor() { return toggleDoor(2); }
-
-export function toggleCorridorDoors() {
-  doorsOpen = !doorsOpen;
-  for (const d of doorGroups) {
-    d.open = doorsOpen;
-    d.group.rotation.y = d.open ? d.openY : d.closedY;
-  }
-  return doorsOpen;
-}
+export { toggleCorridorDoors, toggleEntryDoor, toggleLivingDoor, toggleBathroomDoor } from './doors.js';
 
 export function buildCorridor(scene) {
   const WALL_X = DOOR_START - 5;
@@ -69,10 +14,10 @@ export function buildCorridor(scene) {
   const LEFT_WALL_LEN = SDB_Z_END - KITCHEN_Z; // 140
   const LEFT_WALL_Z0 = KITCHEN_Z; // Z=460
 
-  // Porte SDB : 80cm, 7 couches, 10cm du bout
-  const C_DOOR_W = 80;
-  const C_DOOR_START = LEFT_WALL_LEN - 10 - C_DOOR_W; // = 50
-  const C_DOOR_END = C_DOOR_START + C_DOOR_W;         // = 130
+  // Ouverture porte SDB dans le mur briques (centrée à 10cm du bout, ~83cm)
+  const C_DOOR_W = DOOR_W; // 83cm — même largeur que séjour
+  const C_DOOR_START = LEFT_WALL_LEN - 10 - C_DOOR_W;
+  const C_DOOR_END = C_DOOR_START + C_DOOR_W;
 
   // Mur gauche du couloir (côté SDB) avec porte
   for (let layer = 0; layer < NUM_LAYERS; layer++) {
@@ -122,7 +67,6 @@ export function buildCorridor(scene) {
     const CLOSET_CX = (CLOSET_X0 + CLOSET_X1) / 2;
     const CLOSET_CZ = (CLOSET_Z0 + CLOSET_Z1) / 2;
 
-    // 3 étagères
     const closetParts = [];
     const shelfMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
     const shelfT = 3;
@@ -138,7 +82,6 @@ export function buildCorridor(scene) {
       closetParts.push(shelf);
     }
 
-    // Porte coulissante (panneau à X=190)
     const slideMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
     const slideH = WALL_H - 10;
     const slidePanel = new THREE.Mesh(
@@ -150,43 +93,29 @@ export function buildCorridor(scene) {
     scene.add(slidePanel);
     closetParts.push(slidePanel);
 
-    // Rail haut
     const railMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6, roughness: 0.3 });
-    const rail = new THREE.Mesh(
-      new THREE.BoxGeometry(4, 3, CLOSET_D),
-      railMat
-    );
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(4, 3, CLOSET_D), railMat);
     rail.position.set(CLOSET_X1 - 1, slideH + 1.5, CLOSET_CZ);
     scene.add(rail);
     closetParts.push(rail);
 
-    // Rail bas
-    const railBot = new THREE.Mesh(
-      new THREE.BoxGeometry(4, 1.5, CLOSET_D),
-      railMat
-    );
+    const railBot = new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, CLOSET_D), railMat);
     railBot.position.set(CLOSET_X1 - 1, 0.75, CLOSET_CZ);
     scene.add(railBot);
     closetParts.push(railBot);
 
-    // Poignée
     const handleMat = new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.8, roughness: 0.2 });
-    const handle = new THREE.Mesh(
-      new THREE.BoxGeometry(1.2, 20, 3),
-      handleMat
-    );
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(1.2, 20, 3), handleMat);
     handle.position.set(CLOSET_X1 + 0.5, WALL_H / 2, CLOSET_CZ);
     scene.add(handle);
     closetParts.push(handle);
 
-    // Sol placard (après MK-E, la porte coulissante est côté couloir)
     for (let z = CLOSET_Z0; z < CLOSET_Z1; z += 10) {
       for (const b of fillRow(CLOSET_W - 10, (z / 10) % 2 === 1)) {
         addFloorBrick(CLOSET_X0 + 10 + b.start, z, b.size);
       }
     }
 
-    // Tag placard → layer équipement
     for (const obj of closetParts)
       obj.layers.set(LAYER_EQUIPMENT);
   }
@@ -202,14 +131,12 @@ export function buildCorridor(scene) {
   // =============================================
   // Mur couloir bâtiment (diagonal)
   // =============================================
-
-  const diagDX = DIAG_CX - DIAG_AX;   // -310
-  const diagDZ = DIAG_CZ - DIAG_AZ;   // 190
+  const diagDX = DIAG_CX - DIAG_AX;
+  const diagDZ = DIAG_CZ - DIAG_AZ;
   const diagLen = Math.sqrt(diagDX * diagDX + diagDZ * diagDZ);
   const diagWallLen = Math.round(diagLen / 10) * 10;
   const diagRotY = Math.atan2(diagDX, diagDZ);
 
-  // Perpendiculaire au mur (vers l'intérieur couloir) pour centrer l'épaisseur 10cm
   const perpX = 5 * diagDZ / diagLen;
   const perpZ = -5 * diagDX / diagLen;
   const originX = DIAG_AX + perpX;
@@ -217,7 +144,6 @@ export function buildCorridor(scene) {
   const sinθ = diagDX / diagLen;
   const cosθ = diagDZ / diagLen;
 
-  // Porte d'entrée : 90cm, à 10cm du côté couloir
   const E_DOOR_START = 10;
   const E_DOOR_W = 90;
   const E_DOOR_END = E_DOOR_START + E_DOOR_W;
@@ -263,90 +189,34 @@ export function buildCorridor(scene) {
   }
   addDiagBrick(E_DOOR_START, DOOR_H_LAYERS, E_DOOR_W, 'accent');
 
-  const doorH = DOOR_H; // 204cm standard français (ouverture brute = 210cm)
-
-  // Porte d'entrée (rouge) - pivotable
-  {
-    const doorMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5, metalness: 0.1 });
-    const hingeX = originX + E_DOOR_START * sinθ;
-    const hingeZ = originZ + E_DOOR_START * cosθ;
-    const entryGroup = new THREE.Group();
-    entryGroup.position.set(hingeX, 0, hingeZ);
-    entryGroup.rotation.y = diagRotY;
-    const entryPanel = new THREE.Mesh(
-      new THREE.BoxGeometry(4, doorH, E_DOOR_W),
-      doorMat
-    );
-    entryPanel.position.set(0, doorH / 2, E_DOOR_W / 2);
-    entryPanel.castShadow = true;
-    entryGroup.userData.hoverAction = { label: 'Porte entrée', actionId: 'entry-door-toggle' };
-    entryGroup.add(entryPanel);
-    scene.add(entryGroup);
-    doorGroups.push({ group: entryGroup, closedY: diagRotY, openY: diagRotY - 2 * Math.PI / 3, open: false });
-  }
-
-  // Porte couloir→séjour (blanc) - mur D (Z=ROOM_D), charnière côté est (X=DOOR_END)
-  {
-    const DOOR_W = DOOR_END - DOOR_START;
-    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.4 });
-    const dGroup = new THREE.Group();
-    dGroup.position.set(DOOR_END, 0, ROOM_D);
-    const dPanel = new THREE.Mesh(
-      new THREE.BoxGeometry(DOOR_W, doorH, 4),
-      whiteMat
-    );
-    dPanel.position.set(-DOOR_W / 2, doorH / 2, 0);
-    dPanel.castShadow = true;
-    dGroup.userData.hoverAction = { label: 'Porte séjour', actionId: 'living-door-toggle' };
-    dGroup.add(dPanel);
-    // Mètre ruban sur les 2 faces (z=±2.5), centré à 15cm du bord libre
-    for (const [rY, zOff] of [[Math.PI, -2.5], [0, 2.5]]) {
-      const t = makeTapeMesh(); t.rotation.y = rY;
-      t.position.set(-DOOR_W + 15, 100, zOff);
-      dGroup.add(t);
-    }
-    scene.add(dGroup);
-    doorGroups.push({ group: dGroup, closedY: 0, openY: -Math.PI / 2, open: false });
-  }
-
-  // Porte SDB (blanc) - mur couloir gauche (X=WALL_X), s'ouvre vers SDB (-X)
-  {
-    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.4 });
-    const sGroup = new THREE.Group();
-    sGroup.position.set(WALL_X, 0, LEFT_WALL_Z0 + C_DOOR_END);
-    const sPanel = new THREE.Mesh(
-      new THREE.BoxGeometry(4, doorH, C_DOOR_W),
-      whiteMat
-    );
-    sPanel.position.set(0, doorH / 2, -C_DOOR_W / 2);
-    sPanel.castShadow = true;
-    sGroup.userData.hoverAction = { label: 'Porte SDB', actionId: 'bathroom-door-toggle' };
-    sGroup.add(sPanel);
-    // Mètre ruban sur les 2 faces (x=±2.5), centré à 15cm du bord libre
-    for (const [rY, xOff] of [[Math.PI / 2, 2.5], [-Math.PI / 2, -2.5]]) {
-      const t = makeTapeMesh(); t.rotation.y = rY;
-      t.position.set(xOff, 100, -C_DOOR_W + 15);
-      sGroup.add(t);
-    }
-    scene.add(sGroup);
-    doorGroups.push({ group: sGroup, closedY: 0, openY: Math.PI / 2, open: false });
-  }
+  // =============================================
+  // Portes (panneaux 3D) — déléguées à doors.js
+  // =============================================
+  buildDoors(scene, {
+    entry: {
+      hingeX: originX + E_DOOR_START * sinθ,
+      hingeZ: originZ + E_DOOR_START * cosθ,
+      rotY:   diagRotY,
+    },
+    bathroom: {
+      hingeX: WALL_X,
+      hingeZ: LEFT_WALL_Z0 + C_DOOR_END,
+    },
+  });
 
   // =============================================
   // Sols couloir studio
   // =============================================
   const CORR_FLOOR_W = ROOM_W - DOOR_START; // 110
-  // Sol couloir studio (X=190→300, Z=410→540)
   for (let z = WALL_Z0; z < WALL_Z0 + CORR_RIGHT_LEN; z += 10) {
     for (const b of fillRow(CORR_FLOOR_W, (z / 10) % 2 === 1)) {
       addFloorBrick(DOOR_START + b.start, z, b.size);
     }
   }
 
-  // Sol complémentaire sous le mur bâtiment (diagonal)
-  const SDB_Z = KITCHEN_Z + LEFT_WALL_LEN; // 600
-  const SHOWER_EAST = -NICHE_DEPTH + 70;    // X=60 (fin mur est douche intérieur)
-  const SHOWER_Z_END = SDB_Z + 70;          // Z=670 (fin mur fond douche intérieur)
+  const SDB_Z = KITCHEN_Z + LEFT_WALL_LEN;
+  const SHOWER_EAST = -NICHE_DEPTH + 70;
+  const SHOWER_Z_END = SDB_Z + 70;
 
   for (let z = DIAG_AZ; z < Math.ceil(DIAG_CZ / 10) * 10; z += 10) {
     const rawDiagX = DIAG_AX + 5 - (DIAG_AX - DIAG_CX) * (z + 5 - (DIAG_AZ + 5)) / (DIAG_CZ - DIAG_AZ);
@@ -356,7 +226,6 @@ export function buildCorridor(scene) {
     if (width <= 0) continue;
 
     if (z >= SDB_Z && z < SHOWER_Z_END) {
-      // Couper autour du mur est douche (X=60→70)
       const w1 = SHOWER_EAST - minX;
       if (w1 > 0) for (const b of fillRow(w1, (z / 10) % 2 === 1))
         addFloorBrick(minX + b.start, z, b.size);
@@ -364,7 +233,6 @@ export function buildCorridor(scene) {
       if (w2 > 0) for (const b of fillRow(w2, (z / 10) % 2 === 1))
         addFloorBrick(SHOWER_EAST + 10 + b.start, z, b.size);
     } else if (z === SHOWER_Z_END) {
-      // Sauter le mur fond douche (X=-10→60)
       const w = maxX - SHOWER_EAST;
       if (w > 0) for (const b of fillRow(w, (z / 10) % 2 === 1))
         addFloorBrick(SHOWER_EAST + b.start, z, b.size);
