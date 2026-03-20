@@ -2,8 +2,7 @@ import * as THREE from 'three';
 import { gltfLoader } from '../utils/loaders.js';
 import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
 import { requestRender } from '../cameraManager.js';
-import { LAYER_GLB } from '../config.js';
-import { KITCHEN_X1, DOOR_START, ROOM_D } from '../config.js';
+import { LAYER_GLB, KITCHEN_X1, DOOR_START, ROOM_D } from '../config.js';
 
 // =============================================
 // BASKETS – sleek_midnight_black_sneaker
