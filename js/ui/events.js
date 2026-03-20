@@ -102,15 +102,15 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
   initHoverMenu(renderer, camera, scene);
 
   // ── Boutons sidebar ───────────────────────────────────────────────────────
-  document.getElementById('door-toggle')?      .addEventListener('click', doToggleEastDoor);
-  document.getElementById('freezer-toggle')?   .addEventListener('click', doToggleFreezer);
-  document.getElementById('fridge-toggle')?    .addEventListener('click', doToggleFridge);
-  document.getElementById('cabinet-toggle')?   .addEventListener('click', doToggleCabinet);
-  document.getElementById('bed-toggle')?       .addEventListener('click', doToggleBed);
-  document.getElementById('desk-toggle')?      .addEventListener('click', doToggleDesks);
-  document.getElementById('wc-lid-toggle')?    .addEventListener('click', doToggleWCLid);
+  document.getElementById('door-toggle')?.addEventListener('click', doToggleEastDoor);
+  document.getElementById('freezer-toggle')?.addEventListener('click', doToggleFreezer);
+  document.getElementById('fridge-toggle')?.addEventListener('click', doToggleFridge);
+  document.getElementById('cabinet-toggle')?.addEventListener('click', doToggleCabinet);
+  document.getElementById('bed-toggle')?.addEventListener('click', doToggleBed);
+  document.getElementById('desk-toggle')?.addEventListener('click', doToggleDesks);
+  document.getElementById('wc-lid-toggle')?.addEventListener('click', doToggleWCLid);
   document.getElementById('corr-doors-toggle')?.addEventListener('click', doToggleCorridorDoors);
-  document.getElementById('lamp-toggle')?      .addEventListener('click', doToggleLamp);
+  document.getElementById('lamp-toggle')?.addEventListener('click', doToggleLamp);
 
   document.getElementById('bed-version-toggle')?.addEventListener('click', () => {
     const isGlb = toggleBedVersion();
@@ -269,7 +269,7 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
   const openViewsModal  = () => viewsOverlay.classList.add('visible');
   const closeViewsModal = () => viewsOverlay.classList.remove('visible');
 
-  document.getElementById('views-toggle')?     .addEventListener('click', openViewsModal);
+  document.getElementById('views-toggle')?.addEventListener('click', openViewsModal);
   document.getElementById('views-modal-close')?.addEventListener('click', closeViewsModal);
   viewsOverlay?.addEventListener('click', (e) => { if (e.target === viewsOverlay) closeViewsModal(); });
 
