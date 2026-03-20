@@ -251,14 +251,27 @@ export function buildWalls(scene) {
   // Section milieu (KITCHEN_X1=130 → DOOR_START-10=180)
   panel(DOOR_START - 10 - KITCHEN_X1, WALL_H, W,
         (KITCHEN_X1 + DOOR_START - 10) / 2,                        WALL_H/2, ROOM_D + W/2);
-  // Montant gauche porte (encadrement accent)
-  panel(10, WALL_H, W + 2, DOOR_START - 5,                         WALL_H/2, ROOM_D + W/2, accentMat);
-  // Montant droit porte (encadrement accent)
-  panel(10, WALL_H, W + 2, DOOR_END + 5,                           WALL_H/2, ROOM_D + W/2, accentMat);
-  // Linteau porte (accent)
-  panel(DOOR_END - DOOR_START, WALL_H - DOOR_H, W + 2,
+  // Montant gauche porte
+  panel(10, WALL_H, W, DOOR_START - 5, WALL_H/2, ROOM_D + W/2);
+  // Montant droit porte
+  panel(10, WALL_H, W, DOOR_END + 5,   WALL_H/2, ROOM_D + W/2);
+  // Linteau porte
+  panel(DOOR_END - DOOR_START, WALL_H - DOOR_H, W,
         (DOOR_START + DOOR_END) / 2,
-        DOOR_H + (WALL_H - DOOR_H) / 2,                                       ROOM_D + W/2, accentMat);
+        DOOR_H + (WALL_H - DOOR_H) / 2, ROOM_D + W/2);
+  // Dormant + gâche porte séjour
+  {
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.3 });
+    const gacheMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.75, roughness: 0.2 });
+    const FW = 7;   // largeur du chambranle
+    const FT = 1.5; // épaisseur (débord de la face du mur)
+    const zI = ROOM_D - FT / 2; // face intérieure séjour
+    panel(FW, DOOR_H, FT, DOOR_START - FW / 2, DOOR_H / 2, zI, frameMat); // montant gauche
+    panel(FW, DOOR_H, FT, DOOR_END   + FW / 2, DOOR_H / 2, zI, frameMat); // montant droit
+    panel(DOOR_END - DOOR_START + FW * 2, FW, FT, (DOOR_START + DOOR_END) / 2, DOOR_H + FW / 2, zI, frameMat); // traverse haute
+    // Gâche côté loquet (DOOR_START)
+    panel(1.5, 18, 3.5, DOOR_START - 0.5, 100, ROOM_D - 0.8, gacheMat);
+  }
   // Section droite (DOOR_END+10=280 → ROOM_W=300)
   panel(ROOM_W - DOOR_END - 10, WALL_H, W,
         (DOOR_END + 10 + ROOM_W) / 2,                              WALL_H/2, ROOM_D + W/2);

@@ -38,14 +38,23 @@ export function buildCorridor(scene) {
   // Section avant porte (Z=460 → ~502)
   const LEFT_SECTION1_D = 37; // ≈ C_DOOR_START_ABS - 5 - LEFT_WALL_Z0 - 5 = gap to door frame
   panel(W, WALL_H, LEFT_SECTION1_D, WALL_X, WALL_H/2, LEFT_WALL_Z0 + LEFT_SECTION1_D/2);
-  // Encadrement gauche (accent)
-  panel(W + 2, WALL_H, 10, WALL_X, WALL_H/2, LEFT_WALL_Z0 + 42, accentMat);
   // Linteau au-dessus de la porte SDB
   panel(W, WALL_H - DOOR_H, C_DOOR_W, WALL_X,
         DOOR_H + (WALL_H - DOOR_H) / 2,
         (C_DOOR_START_ABS + C_DOOR_END_ABS) / 2);
-  // Encadrement droit (accent)
-  panel(W + 2, WALL_H, 10, WALL_X, WALL_H/2, SDB_Z_END - 5, accentMat);
+  // Dormant + gâche porte SDB
+  {
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.3 });
+    const gacheMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.75, roughness: 0.2 });
+    const FW = 7;   // largeur du chambranle
+    const FT = 1.5; // épaisseur (débord de la face du mur)
+    const xI = WALL_X - W - FT / 2; // face côté couloir
+    panel(FT, DOOR_H, FW, xI, DOOR_H / 2, C_DOOR_START_ABS - FW / 2, frameMat); // jamb sud
+    panel(FT, DOOR_H, FW, xI, DOOR_H / 2, C_DOOR_END_ABS   + FW / 2, frameMat); // jamb nord
+    panel(FT, FW, C_DOOR_W + FW * 2, xI, DOOR_H + FW / 2, (C_DOOR_START_ABS + C_DOOR_END_ABS) / 2, frameMat); // traverse
+    // Gâche côté loquet (C_DOOR_START_ABS)
+    panel(3.5, 18, 1.5, WALL_X - W - FT - 0.5, 100, C_DOOR_START_ABS - 0.5, gacheMat);
+  }
 
   // =============================================
   // PLACARD COULISSANT (X=130→190, Z=410→460)
