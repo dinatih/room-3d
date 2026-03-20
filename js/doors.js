@@ -149,6 +149,32 @@ export function buildDoors(scene, { entry, bathroom }) {
       t.position.set(-DOOR_W + 15, 100, zOff);
       dGroup.add(t);
     }
+
+    // Poignées porte séjour
+    {
+      const hMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.15 });
+      const R = 1.3, hx = -DOOR_W + 15, hy = 100;
+      for (const [zF, sign] of [[-2.5, -1], [2.5, 1]]) {
+        const rose = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 12), hMat);
+        rose.rotation.x = Math.PI / 2;
+        rose.position.set(hx, hy, zF);
+        dGroup.add(rose);
+        const horiz = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 5, 8), hMat);
+        horiz.rotation.x = Math.PI / 2;
+        horiz.position.set(hx, hy, zF + sign * 2.5);
+        dGroup.add(horiz);
+        const manche = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 14, 8), hMat);
+        manche.rotation.z = Math.PI / 2;
+        manche.position.set(hx + 7, hy, zF + sign * 5);
+        dGroup.add(manche);
+        for (const [bx, by, bz] of [[hx, hy, zF + sign * 5], [hx + 14, hy, zF + sign * 5]]) {
+          const ball = new THREE.Mesh(new THREE.SphereGeometry(R, 8, 6), hMat);
+          ball.position.set(bx, by, bz);
+          dGroup.add(ball);
+        }
+      }
+    }
+
     scene.add(dGroup);
     doorGroups.push({ group: dGroup, closedY: 0, openY: -Math.PI / 2, open: false });
   }
@@ -172,6 +198,32 @@ export function buildDoors(scene, { entry, bathroom }) {
       t.position.set(xOff, 100, -DOOR_W + 15);
       sGroup.add(t);
     }
+
+    // Poignées porte SDB
+    {
+      const hMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.15 });
+      const R = 1.3, hz = -DOOR_W + 15, hy = 100;
+      for (const [xF, sign] of [[-2.5, -1], [2.5, 1]]) {
+        const rose = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1, 12), hMat);
+        rose.rotation.z = Math.PI / 2;
+        rose.position.set(xF, hy, hz);
+        sGroup.add(rose);
+        const horiz = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 5, 8), hMat);
+        horiz.rotation.z = Math.PI / 2;
+        horiz.position.set(xF + sign * 2.5, hy, hz);
+        sGroup.add(horiz);
+        const manche = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 14, 8), hMat);
+        manche.rotation.x = Math.PI / 2;
+        manche.position.set(xF + sign * 5, hy, hz + 7);
+        sGroup.add(manche);
+        for (const [bx, by, bz] of [[xF + sign * 5, hy, hz], [xF + sign * 5, hy, hz + 14]]) {
+          const ball = new THREE.Mesh(new THREE.SphereGeometry(R, 8, 6), hMat);
+          ball.position.set(bx, by, bz);
+          sGroup.add(ball);
+        }
+      }
+    }
+
     scene.add(sGroup);
     doorGroups.push({ group: sGroup, closedY: 0, openY: Math.PI / 2, open: false });
   }

@@ -184,6 +184,38 @@ export function buildCorridor(scene) {
     diagSection(0,           E_DOOR_START, WALL_H);                        // section gauche
     diagSection(E_DOOR_END,  diagLen,      WALL_H);                        // section droite
     diagSection(E_DOOR_START,E_DOOR_END,   WALL_H - DOOR_H, DOOR_H);      // linteau aligné sur le panneau
+
+    // Chambranle porte entrée — rouge extérieur, blanc intérieur
+    {
+      const redFMat   = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 });
+      const whiteFMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.3 });
+      const FW = 3, FT = 1;
+      function chambSection(d0, d1, height, yBase, outward, mat) {
+        const base = outward ? eP : iP;
+        const sign = outward ? 1 : -1;
+        const pts = [
+          base(d0),
+          base(d1),
+          [base(d1)[0] + sign * FT * pX, base(d1)[1] + sign * FT * pZ],
+          [base(d0)[0] + sign * FT * pX, base(d0)[1] + sign * FT * pZ],
+        ];
+        const shape = new THREE.Shape();
+        shape.moveTo(pts[0][0], -pts[0][1]);
+        for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], -pts[i][1]);
+        shape.closePath();
+        const geo = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });
+        geo.rotateX(-Math.PI / 2);
+        if (yBase > 0) geo.translate(0, yBase, 0);
+        const m = new THREE.Mesh(geo, mat);
+        m.castShadow = true;
+        scene.add(m);
+      }
+      for (const [outward, mat] of [[true, redFMat], [false, whiteFMat]]) {
+        chambSection(E_DOOR_START - FW, E_DOOR_START, DOOR_H, 0,      outward, mat); // jambage gauche
+        chambSection(E_DOOR_END,  E_DOOR_END + FW,   DOOR_H, 0,      outward, mat); // jambage droit
+        chambSection(E_DOOR_START - FW, E_DOOR_END + FW, FW, DOOR_H, outward, mat); // traverse
+      }
+    }
   }
 
   // =============================================
