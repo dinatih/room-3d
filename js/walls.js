@@ -123,9 +123,10 @@ export function buildWalls(scene) {
   // Porte-fenêtre double avec cadre PVC blanc et poignée
   {
     const glassW = GLASS_END - GLASS_START; // 160
-    const glassBaseY = GLASS_MIN_LAYER * BRICK_H; // 30
+    const SILL_H = 20;                            // seuil maçonné 20cm
+    const glassBaseY = SILL_H;                    // vitrage démarre à 20cm
     const glassTopY = GLASS_MAX_LAYER * BRICK_H;  // 210
-    const glassH = glassTopY - glassBaseY;         // 180
+    const glassH = glassTopY - glassBaseY;         // 190
     const midX = GLASS_START + glassW / 2;         // 170 — axe central
     const Z = -5;
     const FRAME = 8; // largeur cadre PVC
@@ -163,6 +164,17 @@ export function buildWalls(scene) {
       pane.position.set(lx, ly + FRAME + innerH / 2, Z);
       parent.add(pane);
     }
+
+    // Seuil maçonné 20cm dans l'épaisseur du mur C
+    const sillMat = new THREE.MeshStandardMaterial({ color: 0xb0a898, roughness: 0.8 });
+    const sill = new THREE.Mesh(
+      new THREE.BoxGeometry(glassW, SILL_H, 30),
+      sillMat
+    );
+    sill.position.set(midX, SILL_H / 2, -15);
+    sill.castShadow = true;
+    sill.receiveShadow = true;
+    scene.add(sill);
 
     // Battant ouest (fixe) — groupe taggé pour hover menu
     const westDoorGroup = new THREE.Group();

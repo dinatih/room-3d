@@ -7,9 +7,20 @@ port = ARGV[0]&.to_i || 8443
 http_port = port - 443 + 80 # 8443 → 8080, 9443 → 9080
 dir = __dir__
 
+no_cache = lambda do |env|
+  status, headers, body = Rack::Files.new(dir).call(env)
+  path = env['PATH_INFO']
+  if path.end_with?('.js', '.html', '.mjs')
+    headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    headers['Pragma'] = 'no-cache'
+    headers['Expires'] = '0'
+  end
+  [status, headers, body]
+end
+
 app = Rack::Builder.new do
   use Rack::Static, urls: ['/'], root: dir, index: 'lego-room.html'
-  run Rack::Files.new(dir)
+  run no_cache
 end.to_app
 
 conf = Puma::Configuration.new do |c|
