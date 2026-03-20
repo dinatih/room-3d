@@ -42,18 +42,17 @@ export function buildCorridor(scene) {
   panel(W, WALL_H - DOOR_H, C_DOOR_W, WALL_X,
         DOOR_H + (WALL_H - DOOR_H) / 2,
         (C_DOOR_START_ABS + C_DOOR_END_ABS) / 2);
-  // Dormant + gâche porte SDB
+  // Chambranle porte SDB (2 faces)
   {
     const frameMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.3 });
-    const gacheMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.75, roughness: 0.2 });
-    const FW = 7;   // largeur du chambranle
-    const FT = 1.5; // épaisseur (débord de la face du mur)
-    const xI = WALL_X - W - FT / 2; // face côté couloir
-    panel(FT, DOOR_H, FW, xI, DOOR_H / 2, C_DOOR_START_ABS - FW / 2, frameMat); // jamb sud
-    panel(FT, DOOR_H, FW, xI, DOOR_H / 2, C_DOOR_END_ABS   + FW / 2, frameMat); // jamb nord
-    panel(FT, FW, C_DOOR_W + FW * 2, xI, DOOR_H + FW / 2, (C_DOOR_START_ABS + C_DOOR_END_ABS) / 2, frameMat); // traverse
-    // Gâche côté loquet (C_DOOR_START_ABS)
-    panel(3.5, 18, 1.5, WALL_X - W - FT - 0.5, 100, C_DOOR_START_ABS - 0.5, gacheMat);
+    const FW = 3;  // largeur
+    const FT = 1;  // épaisseur
+    const CZ = (C_DOOR_START_ABS + C_DOOR_END_ABS) / 2;
+    for (const xF of [WALL_X - W - FT / 2, WALL_X + FT / 2]) {
+      panel(FT, DOOR_H, FW, xF, DOOR_H / 2, C_DOOR_START_ABS - FW / 2, frameMat);
+      panel(FT, DOOR_H, FW, xF, DOOR_H / 2, C_DOOR_END_ABS   + FW / 2, frameMat);
+      panel(FT, FW, C_DOOR_W + FW * 2, xF, DOOR_H + FW / 2, CZ, frameMat);
+    }
   }
 
   // =============================================
