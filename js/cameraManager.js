@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ROOM_W, ROOM_D, WALL_H, DOOR_START, NICHE_DEPTH, KITCHEN_Z, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NETWORKS, LAYER_GLB } from './config.js';
-import { redrawMinimap } from './minimap.js';
+import { redrawMinimap } from './ui/minimap.js';
 import { scene, camera, renderer, controls } from './scene.js';
 
 const CX = ROOM_W / 2, CY = WALL_H / 2, CZ = ROOM_D / 2;
