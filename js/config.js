@@ -6,9 +6,7 @@ export const ROOM_W = 300; // 3m
 export const ROOM_D = 400; // 4m
 export const WALL_H = 250; // 2.5m
 export const GAP = 0; // temporairement désactivé (était 0.8)
-export const STUD_R = 3;
 export const PLATE_H = 3.5; // hauteur d'une plate (sol fin)
-export const STUD_HT = PLATE_H / 2; // 1.75
 
 // Porte : 80cm d'ouverture, 30cm du mur B (X=300)
 export const DOOR_START = 190; // cm 190
@@ -74,13 +72,10 @@ export const LAYER_GLB        = 4; // Objets GLB async (jamais reflétés dans l
 
 export const COLORS = {
   wall: 0xeeeeee,
-  studWall: 0xb8b8a8,
   floor: 0xd4a437,
-  studFloor: 0xc49530,
   parquet: 0xC19A6B,
   accent: 0xcc0000,
   accentS: 0xaa0000,
   ground: 0x3a7d44,
   tile: 0xe8e8e8,
-  studTile: 0xd0d0d0,
 };

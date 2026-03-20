@@ -292,7 +292,7 @@ export function buildGardenSlab(scene) {
 // =============================================
 // PLAFOND
 // Boîte 20cm d'épaisseur, même emprise que la dalle.
-// Face inférieure (-Y) : opaque, même aspect que les murs → cache les studs.
+// Face inférieure (-Y) : opaque, même aspect que les murs.
 // Face supérieure (+Y) : transparent → effet ghost depuis au-dessus.
 // =============================================
 const CEIL_THICK = 20;
@@ -310,7 +310,7 @@ const _ceilMats = [_ceilSide, _ceilSide, _ceilTop, _ceilBottom, _ceilSide, _ceil
 
 export function buildCeiling(scene) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(BLDG_W, CEIL_THICK, BLDG_D), _ceilMats);
-  // Base à WALL_H - 1 : légèrement sous la base des studs (évite le z-fighting)
+  // Base à WALL_H - 1 : légèrement sous le sommet des murs (évite le z-fighting)
   mesh.position.set(BLDG_CX, WALL_H - 1 + CEIL_THICK / 2, BLDG_CZ);
   mesh.userData.brickType = 'ceiling';
   scene.add(mesh);

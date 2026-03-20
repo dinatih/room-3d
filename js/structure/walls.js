@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {
-  ROOM_W, ROOM_D, WALL_H, STUD_R,
+  ROOM_W, ROOM_D, WALL_H,
   NICHE_DEPTH, NICHE_Z_START,
   GLASS_START, GLASS_END,
   DOOR_START, DOOR_END, DOOR_H,
@@ -68,9 +68,9 @@ export function buildWalls(scene) {
 
   // ── MUR C (nord, Z=0) — trapèze + porte-fenêtre — KEPT VERBATIM ──────────
   {
-    const WALL_DEPTH = 30; // 3 studs
-    const NW_EXT = 20;     // 2 studs — mur A déborde à l'ouest
-    const NE_EXT = 10;     // 1 stud  — mur B déborde à l'est
+    const WALL_DEPTH = 30;
+    const NW_EXT = 20; // mur A déborde à l'ouest
+    const NE_EXT = 10; // mur B déborde à l'est
     const GLASS_TOP_Y = 210; // replaces GLASS_MAX_LAYER * BRICK_H
 
     const wallMatC = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
@@ -122,41 +122,6 @@ export function buildWalls(scene) {
     linteau.receiveShadow = true;
     scene.add(linteau);
 
-    // Studs de référence sur le dessus du mur (Y=WALL_H)
-    // Grille XZ couvrant la surface réelle du trapèze (coins bisautés inclus)
-    const studGeo = new THREE.CylinderGeometry(STUD_R, STUD_R, 1.5, 8);
-    const studMat = new THREE.MeshStandardMaterial({ color: 0x999988, roughness: 0.5 });
-
-    const studPositions = []; // [x, z]
-    const zRows = [-5, -15, -25]; // centre de chaque rangée de profondeur (10cm chacune)
-
-    for (const z of zRows) {
-      const t = -z / WALL_DEPTH; // 0 = face int., 1 = face ext.
-
-      // Section gauche : bord gauche bisauté → bord gauche baie
-      const xLeftMin  = -NW_EXT * t;
-      const xLeftStart = 10 * Math.ceil((xLeftMin - 5) / 10) + 5;
-      for (let x = xLeftStart; x < GLASS_START; x += 10) studPositions.push(x, z);
-
-      // Linteau (dessus, pleine largeur baie)
-      for (let x = GLASS_START + 5; x < GLASS_END; x += 10) studPositions.push(x, z);
-
-      // Section droite : bord droit baie → bord droit bisauté
-      const xRightMax = ROOM_W + NE_EXT * t;
-      const xRightEnd = 10 * Math.floor((xRightMax - 5) / 10) + 5;
-      for (let x = GLASS_END + 5; x <= xRightEnd; x += 10) studPositions.push(x, z);
-    }
-
-    const studCount = studPositions.length / 2;
-    const studMesh = new THREE.InstancedMesh(studGeo, studMat, studCount);
-    const dummy = new THREE.Object3D();
-    for (let i = 0; i < studCount; i++) {
-      dummy.position.set(studPositions[i * 2], WALL_H + 0.75, studPositions[i * 2 + 1]);
-      dummy.updateMatrix();
-      studMesh.setMatrixAt(i, dummy.matrix);
-    }
-    studMesh.instanceMatrix.needsUpdate = true;
-    scene.add(studMesh);
   }
 
   // Porte-fenêtre double avec cadre PVC blanc et poignée
@@ -284,54 +249,5 @@ export function buildWalls(scene) {
   {
     const SDB_LEN = DOOR_START + NICHE_DEPTH; // 200
     panel(SDB_LEN, WALL_H, W, (DOOR_START - NICHE_DEPTH) / 2, WALL_H/2, KITCHEN_Z + W/2);
-  }
-
-  // ── Studs — murs A, B, D et cuisine ──────────────────────────────────────
-  {
-    const studGeo = new THREE.CylinderGeometry(STUD_R, STUD_R, 1.5, 8);
-    const studMat = new THREE.MeshStandardMaterial({ color: 0x999988, roughness: 0.5 });
-    const pos = []; // [x, z] pairs
-
-    // Ajoute une grille de studs sur le dessus d'un panneau rectangulaire
-    function addStudsRect(cx, cz, wx, wz) {
-      for (let x = cx - wx / 2 + 5; x < cx + wx / 2; x += 10)
-        for (let z = cz - wz / 2 + 5; z < cz + wz / 2; z += 10)
-          pos.push(x, z);
-    }
-
-    // Mur A (ouest) — panneaux A1, A2, retour niche A4
-    addStudsRect(-W/2,                              (-30 + NICHE_Z_START) / 2,       W, 310);
-    addStudsRect(-NICHE_DEPTH - W/2,                (-30 + KITCHEN_Z) / 2,           W, 490);
-    addStudsRect(-NICHE_DEPTH / 2,                  NICHE_Z_START - W/2,             NICHE_DEPTH, W);
-
-    // Mur B (est)
-    addStudsRect(ROOM_W + W/2,                      (ROOM_D + 10) / 2,               W, ROOM_D + 10);
-    addStudsRect(ROOM_W + W/2,                      -115,                            W, 230);
-
-    // Mur D (sud) — toutes les sections
-    const czD = ROOM_D + W / 2;
-    addStudsRect(-NICHE_DEPTH / 2,                  czD, NICHE_DEPTH, W);
-    addStudsRect(KITCHEN_X0 / 2,                    czD, KITCHEN_X0,  W);
-    addStudsRect((KITCHEN_X1 + DOOR_START - 10) / 2, czD, DOOR_START - 10 - KITCHEN_X1, W);
-    addStudsRect(DOOR_START - 5,                    czD, 10, W);
-    addStudsRect(DOOR_END   + 5,                    czD, 10, W);
-    addStudsRect((DOOR_START + DOOR_END) / 2,       czD, DOOR_END - DOOR_START, W);
-    addStudsRect((DOOR_END + 10 + ROOM_W) / 2,      czD, ROOM_W - DOOR_END - 10, W);
-
-    // Cuisine — murs latéraux + mur nord SDB
-    addStudsRect(KITCHEN_X0 - W/2, ROOM_D + KITCHEN_DEPTH_VAL / 2, W, KITCHEN_DEPTH_VAL);
-    addStudsRect(KITCHEN_X1 + W/2, ROOM_D + KITCHEN_DEPTH_VAL / 2, W, KITCHEN_DEPTH_VAL);
-    addStudsRect((DOOR_START - NICHE_DEPTH) / 2, KITCHEN_Z + W/2, DOOR_START + NICHE_DEPTH, W);
-
-    const count = pos.length / 2;
-    const mesh = new THREE.InstancedMesh(studGeo, studMat, count);
-    const dummy = new THREE.Object3D();
-    for (let i = 0; i < count; i++) {
-      dummy.position.set(pos[i * 2], WALL_H + 0.75, pos[i * 2 + 1]);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(i, dummy.matrix);
-    }
-    mesh.instanceMatrix.needsUpdate = true;
-    scene.add(mesh);
   }
 }
