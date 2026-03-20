@@ -61,6 +61,8 @@ export function buildDecor(scene) {
 
     // 1 sur meuble SDB côté évier (cbnE), plaqué contre mur nord
     addSingleDrona(scene, DOOR_START - 28, 60 + DF / 2, KITCHEN_Z + 30);
+    // 1 sur meuble SDB ouest (cbnW)
+    addSingleDrona(scene, -NICHE_DEPTH + 20, 60 + DF / 2, KITCHEN_Z + 30);
   }
 
   // =============================================

@@ -16,10 +16,46 @@ export const INVENTORY = [
   { id: 'kallax-nw-1x1-b',  name: 'Kallax 1×1 pivotée (NW-haut)',  brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 45.5, d: 39,   h: 75.5 }, scenePos: { x: 20,   z: 38   }, notes: 'Haut tour NW' },
   { id: 'kallax-sw-2x2',    name: 'Kallax 2×2 (niche)',             brand: 'IKEA',     category: 'storage',   qty: 2,  dims: { w: 75.5, d: 39,   h: 149  }, scenePos: { x: -20,  z: 300  }, notes: 'Remplie de Drona' },
   { id: 'kallax-sw-2x1',    name: 'Kallax 2×1 (niche, haut)',       brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 75.5, d: 39,   h: 73   }, scenePos: { x: -20,  z: 300  }, notes: 'Haut de la pile cuisine' },
-  { id: 'drona-box',         name: 'Boîte Drona',                   brand: 'IKEA',     category: 'storage',   qty: 25, dims: { w: 33,   d: 38,   h: 33   }, scenePos: { x: 150,  z: 200  }, notes: 'Réparties dans les Kallax', glbPath: 'media/ikea_DRONA_black.glb' },
   { id: 'shelf-lack',        name: 'Étagère LACK',                  brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 26,   d: 110,  h: 5    }, scenePos: { x: 13,   z: 225  }, notes: 'Murale, mur A, 110cm le long de Z' },
   { id: 'basket-fniss',      name: 'Corbeille FNISS',               brand: 'IKEA',     category: 'storage',   qty: 2,  dims: { w: 28,   d: 28,   h: 28   }, scenePos: { x: 110,  z: 500  }, notes: '1 SDB, 1 séjour' },
   { id: 'meuble-t',          name: 'Bibliothèque (MeubleT)',         brand: '',         category: 'storage',   qty: 1,  dims: { w: 100,  d: 40,   h: 50   }, scenePos: { x: 240,  z: 30   }, notes: 'Procédural, mur C' },
+
+  // ── DRONAS ───────────────────────────────
+  // Numérotées dans l'ordre de création (buildKallax → buildDecor)
+  // Kallax NE empilé 2×1 + 2×2 (angle mur C + mur B)
+  { id: 'drona-1',  name: 'Drona #1',  brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 280, z: 55  }, notes: 'Kallax NE 2×1 bas — col G' },
+  { id: 'drona-2',  name: 'Drona #2',  brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 280, z: 20  }, notes: 'Kallax NE 2×1 bas — col D' },
+  { id: 'drona-3',  name: 'Drona #3',  brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 280, z: 55  }, notes: 'Kallax NE 2×2 — r1 col G' },
+  { id: 'drona-4',  name: 'Drona #4',  brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 280, z: 20  }, notes: 'Kallax NE 2×2 — r1 col D' },
+  { id: 'drona-5',  name: 'Drona #5',  brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 280, z: 55  }, notes: 'Kallax NE 2×2 — r2 col G' },
+  { id: 'drona-6',  name: 'Drona #6',  brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 280, z: 20  }, notes: 'Kallax NE 2×2 — r2 col D' },
+  // Kallax SE 2× 2×1 pivotés (mur B)
+  { id: 'drona-7',  name: 'Drona #7',  brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 280, z: 320 }, notes: 'Kallax SE unité 1 — col G' },
+  { id: 'drona-8',  name: 'Drona #8',  brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 280, z: 320 }, notes: 'Kallax SE unité 1 — col D' },
+  { id: 'drona-9',  name: 'Drona #9',  brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 280, z: 320 }, notes: 'Kallax SE unité 2 — col G' },
+  { id: 'drona-10', name: 'Drona #10', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 280, z: 320 }, notes: 'Kallax SE unité 2 — col D' },
+  // Kallax NW tour pivotée (angle mur A + mur C)
+  { id: 'drona-11', name: 'Drona #11', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 20,  z: 20  }, notes: 'Kallax NW 2×1 bas — col G' },
+  { id: 'drona-12', name: 'Drona #12', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 20,  z: 20  }, notes: 'Kallax NW 2×1 bas — col D' },
+  { id: 'drona-13', name: 'Drona #13', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 20,  z: 20  }, notes: 'Kallax NW 1×1 milieu' },
+  { id: 'drona-14', name: 'Drona #14', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 20,  z: 20  }, notes: 'Kallax NW 1×1 haut' },
+  // Kallax cuisine SW (niche, 2×2 bas)
+  { id: 'drona-15', name: 'Drona #15', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 10,  z: 362 }, notes: 'Kallax cuisine 2×2 — r1 col G' },
+  { id: 'drona-16', name: 'Drona #16', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 10,  z: 362 }, notes: 'Kallax cuisine 2×2 — r1 col D' },
+  { id: 'drona-17', name: 'Drona #17', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 10,  z: 362 }, notes: 'Kallax cuisine 2×2 — r2 col G' },
+  { id: 'drona-18', name: 'Drona #18', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 10,  z: 362 }, notes: 'Kallax cuisine 2×2 — r2 col D' },
+  // Standalone (buildDecor)
+  { id: 'drona-19', name: 'Drona #19', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 12,  z: 309 }, notes: 'Sur Mackapär — gauche' },
+  { id: 'drona-20', name: 'Drona #20', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 52,  z: 309 }, notes: 'Sur Mackapär — droite' },
+  { id: 'drona-21', name: 'Drona #21', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 280, z: 19  }, notes: 'Sur Kallax NE — dessus (contre mur C)' },
+  { id: 'drona-22', name: 'Drona #22', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 10,  z: 344 }, notes: 'Sur Kallax cuisine — dessus côté Z-' },
+  { id: 'drona-23', name: 'Drona #23', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 10,  z: 380 }, notes: 'Sur Kallax cuisine — dessus côté Z+' },
+  { id: 'drona-24', name: 'Drona #24', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 162, z: 490 }, notes: 'Sur meuble SDB (côté vasque)' },
+  { id: 'drona-25', name: 'Drona #25', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 47,  z: 441 }, notes: 'Meuble cuisine haut — gauche' },
+  { id: 'drona-26', name: 'Drona #26', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 80,  z: 441 }, notes: 'Meuble cuisine haut — centre' },
+  { id: 'drona-27', name: 'Drona #27', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 113, z: 441 }, notes: 'Meuble cuisine haut — droite' },
+  { id: 'drona-28', name: 'Drona #28', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 25,  z: 264 }, notes: 'Sur congélateur CHIQ' },
+  { id: 'drona-29', name: 'Drona #29', brand: 'IKEA', category: 'dronas', qty: 1, dims: { w: 33, d: 38, h: 33 }, scenePos: { x: 10,  z: 490 }, notes: 'Sur meuble SDB ouest' },
 
   // ── FURNITURE ────────────────────────────
   { id: 'utaker-lower',      name: 'Utåker - Lit bas',              brand: 'IKEA',     category: 'furniture', qty: 1,  dims: { w: 205,  d: 83,   h: 30   }, scenePos: { x: 290,  z: 88   }, notes: 'Empilable, matelas 200×80cm bleu' },
@@ -88,4 +124,5 @@ export const CATEGORIES = [
   { id: 'bathroom', label: 'Salle d\'eau' },
   { id: 'clothing', label: 'Vêtements' },
   { id: 'decor',    label: 'Déco' },
+  { id: 'dronas',   label: 'Dronas' },
 ];

@@ -16,25 +16,51 @@ let _tpl = null;   // false = en cours de chargement, object = prêt
 let _rawBox = null;
 const _pending = [];
 
+// Global sequential counter — assigned in declaration order (Kallax before Decor)
+let _dronaCounter = 0;
+
+function makeDronaLabel(n) {
+  const S = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = S; canvas.height = S;
+  const ctx = canvas.getContext('2d');
+  // Circle background
+  ctx.beginPath();
+  ctx.arc(S / 2, S / 2, S / 2 - 3, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(136,0,0,0.6)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  // Number
+  ctx.fillStyle = '#880000';
+  ctx.font = `bold ${n > 9 ? 54 : 66}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(n), S / 2, S / 2 + 3);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: tex, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.renderOrder = 10;
+  sprite.scale.set(13, 13, 1);
+  return sprite;
+}
+
 function ensureLoaded() {
   if (_tpl !== null) return;
   _tpl = false;
   gltfLoader.load('media/ikea_DRONA_black.glb', (gltf) => {
     _tpl = gltf.scene;
-    // Le GLB n'a pas d'unités réelles garanties, mais les proportions du modèle
-    // sont fidèles à la Drona réelle. On scale uniformément sur la profondeur
-    // connue (38cm = axe Z du GLB) — largeur et hauteur suivent les proportions.
     const rawSize = new THREE.Box3().setFromObject(_tpl).getSize(new THREE.Vector3());
     _tpl.scale.setScalar(38 / rawSize.z);
     _tpl.updateMatrixWorld(true);
-    // Centrer le template à l'origine
     const box = new THREE.Box3().setFromObject(_tpl);
     _tpl.position.set(
       -(box.min.x + box.max.x) / 2,
       -(box.min.y + box.max.y) / 2,
       -(box.min.z + box.max.z) / 2,
     );
-    // Override all materials to redMat before merging so result is 1 mesh
     _tpl.traverse(c => { if (c.isMesh) c.material = redMat; });
     mergeGlbByMaterial(_tpl);
     for (const fn of _pending) fn();
@@ -63,17 +89,40 @@ function buildInstance(group) {
 
 export class Drona {
   constructor() {
+    this.number = ++_dronaCounter;
     this.group = new THREE.Group();
+    this.group.userData.dronaNumber = this.number;
+    this.group.userData.inventoryId = `drona-${this.number}`;
+
+    // Label positioned above center by default; setLabelUp() adjusts for pivoted dronas
+    this._label = makeDronaLabel(this.number);
+    this._label.position.set(0, 22, 0);
+    this.group.add(this._label);
+
     ensureLoaded();
     if (_tpl) buildInstance(this.group);
     else _pending.push(() => buildInstance(this.group));
   }
+
+  // Call after rotation.z = ±π/2 is applied to this.group, so label is visually above
+  setLabelUp() {
+    // With rotation.z = π/2 on the group, local +X maps to parent +Y
+    this._label.position.set(22, 0, 0);
+  }
 }
 
 export function addSingleDrona(parent, cx, cy, cz, rotY = 0) {
+  const n = ++_dronaCounter;
   const group = new THREE.Group();
+  group.userData.dronaNumber = n;
+  group.userData.inventoryId = `drona-${n}`;
   group.position.set(cx, cy, cz);
   if (rotY) group.rotation.y = rotY;
+
+  const label = makeDronaLabel(n);
+  label.position.set(0, 22, 0);
+  group.add(label);
+
   parent.add(group);
   ensureLoaded();
   if (_tpl) buildInstance(group);

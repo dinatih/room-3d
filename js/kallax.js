@@ -34,7 +34,10 @@ export class Kallax {
     d.group.rotation.y = Math.PI;
     // Pour les Kallax pivotés (rotation.z ≠ 0) : contrer le pivot avec +θ (pas -θ),
     // sinon rotation.y=π combiné à -θ inverse le Y local → languette en bas.
-    if (Math.abs(this.group.rotation.z) > 0.1) d.group.rotation.z = this.group.rotation.z;
+    if (Math.abs(this.group.rotation.z) > 0.1) {
+      d.group.rotation.z = this.group.rotation.z;
+      d.setLabelUp();
+    }
     this.group.add(d.group);
   }
 
