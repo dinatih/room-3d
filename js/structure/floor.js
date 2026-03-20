@@ -218,7 +218,7 @@ export function buildConcreteSlab(scene) {
 }
 
 // ── Texture herbe procédurale ────────────────────────────────────────────────
-function makeGrassTex() {
+export function makeGrassTex() {
   const SIZE = 256;
   const canvas = document.createElement('canvas');
   canvas.width = SIZE;

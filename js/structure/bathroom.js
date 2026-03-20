@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { buildVasque } from './vasque.js';
 import { buildWC } from './wc.js';
+import { makeGrassTex } from './floor.js';
 import {
   ROOM_W,
   WALL_H,
@@ -277,4 +278,27 @@ export function buildBathroom(scene) {
   // Extension mur SDB ouest vers le sud (Z=670 → DIAG_END_Z)
   const WEST_EXT = DIAG_END_Z - SHOWER_Z1;
   panel(W, WALL_H, WEST_EXT, -NICHE_DEPTH - W/2, WALL_H/2, (SHOWER_Z1 + DIAG_END_Z) / 2);
+
+  // ── Tapis de pelouse synthétique 1×2m ────────────────────────────────────
+  // 200cm le long de X (largeur SDB), 100cm le long de Z, centré dans la pièce
+  {
+    const RUG_W = 200, RUG_D = 100, RUG_H = 1.5;
+    const rugCX = (- NICHE_DEPTH + DOOR_START) / 2; // ≈ 90
+    const rugCZ = SDB_Z_END - RUG_D / 2 - 3;       // calé contre le mur douche/placard
+
+    const grassTex = makeGrassTex();
+    grassTex.repeat.set(10, 5); // tuiles ~20×20cm sur 200×100cm
+
+    const topMat  = new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.85 });
+    const sideMat = new THREE.MeshStandardMaterial({ color: 0x2d6e30, roughness: 0.9 });
+    // BoxGeometry face order: [+X, -X, +Y(top), -Y(bot), +Z, -Z]
+    const rugMats = [sideMat, sideMat, topMat, sideMat, sideMat, sideMat];
+
+    const rug = new THREE.Mesh(new THREE.BoxGeometry(RUG_W, RUG_H, RUG_D), rugMats);
+    rug.position.set(rugCX, RUG_H / 2, rugCZ);
+    rug.receiveShadow = true;
+    rug.userData.inventoryId = 'sdb-grass-rug';
+    rug.userData.layerOverride = LAYER_FURNITURE;
+    scene.add(rug);
+  }
 }
