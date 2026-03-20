@@ -20,7 +20,6 @@ export const INVENTORY = [
   { id: 'shelf-lack',        name: 'Étagère LACK',                  brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 26,   d: 110,  h: 5    }, scenePos: { x: 13,   z: 225  }, notes: 'Murale, mur A, 110cm le long de Z' },
   { id: 'basket-fniss',      name: 'Corbeille FNISS',               brand: 'IKEA',     category: 'storage',   qty: 2,  dims: { w: 28,   d: 28,   h: 28   }, scenePos: { x: 110,  z: 500  }, notes: '1 SDB, 1 séjour' },
   { id: 'meuble-t',          name: 'Bibliothèque (MeubleT)',         brand: '',         category: 'storage',   qty: 1,  dims: { w: 100,  d: 40,   h: 50   }, scenePos: { x: 240,  z: 30   }, notes: 'Procédural, mur C' },
-  { id: 'vasque-sdb',        name: 'Ensemble vasque SDB',            brand: '',         category: 'storage',   qty: 1,  dims: { w: 63,   d: 48.5, h: 176  }, scenePos: { x: 112,  z: 488  }, notes: 'Meuble suspendu 60×47×50cm + plan vasque + lavabo + robinet + miroir 63×90cm + lampe LED' },
 
   // ── FURNITURE ────────────────────────────
   { id: 'utaker-lower',      name: 'Utåker - Lit bas',              brand: 'IKEA',     category: 'furniture', qty: 1,  dims: { w: 205,  d: 83,   h: 30   }, scenePos: { x: 290,  z: 88   }, notes: 'Empilable, matelas 200×80cm bleu' },
@@ -53,7 +52,7 @@ export const INVENTORY = [
   // ── BATHROOM ─────────────────────────────
   { id: 'shower',            name: 'Douche',                         brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 70,   d: 70,   h: 200  }, scenePos: { x: 25,   z: 635  }, notes: 'Cuve 20cm + vitrage translucide' },
   { id: 'toilet',            name: 'WC',                             brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 40,   d: 40,   h: 75   }, scenePos: { x: 10,   z: 481  }, notes: 'Avec réservoir et siège torus' },
-  { id: 'vanity',            name: 'Meuble vasque suspendu',         brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 60,   d: 47,   h: 50   }, scenePos: { x: 106,  z: 485  }, notes: 'Blanc, vasque 35×25cm + robinet' },
+  { id: 'vasque-sdb',        name: 'Meuble vasque suspendu',         brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 63,   d: 48.5, h: 176  }, scenePos: { x: 112,  z: 488  }, notes: 'Caisson 60×47×50cm + vasque 35×25cm + robinet + miroir 63×90cm + lampe LED' },
   { id: 'bathroom-cabinets', name: 'Meubles muraux SDB',             brand: 'IKEA',     category: 'bathroom',  qty: 2,  dims: { w: 40,   d: 37,   h: 60   }, scenePos: { x: 20,   z: 485  }, notes: 'Blanc' },
   { id: 'water-heater',      name: 'Ballon eau chaude 100L',         brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 40,   d: 40,   h: 80   }, scenePos: { x: 0,    z: 480  }, notes: 'Cylindrique, vertical' },
   { id: 'bathtub',           name: 'Baignoire',                      brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 150,  d: 70,   h: 50   }, scenePos: { x: 120,  z: -250 }, notes: 'Coins arrondis, jardin' },

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { DOOR_START, KITCHEN_Z, GAP } from './config.js';
+import { DOOR_START, KITCHEN_Z } from './config.js';
 
 // =============================================
 // Ensemble meuble-vasque-miroir-lampe SDB
@@ -21,14 +21,20 @@ const VANITY_CZ = KITCHEN_Z + 5 + VANITY_D / 2;
 export function buildVasque(scene) {
   const group = new THREE.Group();
   group.userData.inventoryId = 'vasque-sdb';
+  // Group positioned at world location; all children use local (relative) coordinates
+  group.position.set(VANITY_CX, 0, VANITY_CZ);
 
   const vanityMat  = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
   const counterMat = new THREE.MeshStandardMaterial({ color: 0xf8f8f8, roughness: 0.2 });
   const basinMat   = new THREE.MeshStandardMaterial({ color: 0xe0e4e8, roughness: 0.15 });
 
+  // Local coords: X=0 = center of vanity, Z=0 = center of vanity
+  const counterCX = 0;
+  const counterCZ = 0.75;          // was VANITY_CZ + 0.75
+
   // ── Caisson suspendu ──
   const caisson = new THREE.Mesh(new THREE.BoxGeometry(VANITY_W, VANITY_H, VANITY_D), vanityMat);
-  caisson.position.set(VANITY_CX, VANITY_Y0 + VANITY_H / 2, VANITY_CZ);
+  caisson.position.set(0, VANITY_Y0 + VANITY_H / 2, 0);
   caisson.castShadow = true;
   caisson.receiveShadow = true;
   group.add(caisson);
@@ -37,12 +43,10 @@ export function buildVasque(scene) {
   const counterH  = 4;
   const counterW  = VANITY_W + 3;        // 63
   const counterD  = VANITY_D + 1.5;      // 48.5
-  const counterCX = VANITY_CX;
-  const counterCZ = VANITY_CZ + 0.75;
   const counterTopY = VANITY_Y0 + VANITY_H + counterH;
 
   const basinW  = 35, basinD = 25, basinH = 12;
-  const basinCZ = VANITY_CZ + 3;
+  const basinCZ = 3;                     // was VANITY_CZ + 3
 
   // Dalle arrière
   const backD_val = basinCZ - basinD / 2 - (counterCZ - counterD / 2);
@@ -101,18 +105,18 @@ export function buildVasque(scene) {
   const faucetMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8, roughness: 0.2 });
   const faucetTopY = counterTopY;
   const faucetBase = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 20, 8), faucetMat);
-  faucetBase.position.set(VANITY_CX, faucetTopY + 10, VANITY_CZ - VANITY_D / 2 + 8);
+  faucetBase.position.set(0, faucetTopY + 10, -VANITY_D / 2 + 8);
   group.add(faucetBase);
 
   const faucetSpout = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 12), faucetMat);
-  faucetSpout.position.set(VANITY_CX, faucetTopY + 20, VANITY_CZ - VANITY_D / 2 + 8 + 6);
+  faucetSpout.position.set(0, faucetTopY + 20, -VANITY_D / 2 + 14);
   group.add(faucetSpout);
 
   // ── Miroir Reflector ──
   const mirrorW = counterW;
   const mirrorH = 90;
   const mirrorY = counterTopY + mirrorH / 2;
-  const mirrorZ = VANITY_CZ - VANITY_D / 2 + 5 + GAP + 0.5;
+  const mirrorZ = -VANITY_D / 2 + 0.5;              // flush with cabinet back face
 
   const mirror = new Reflector(new THREE.PlaneGeometry(mirrorW, mirrorH), {
     textureWidth: 512, textureHeight: 512, color: 0x888888,
