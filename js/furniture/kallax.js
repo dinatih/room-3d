@@ -1,6 +1,6 @@
-import * as THREE from "three";
-import { ROOM_W, ROOM_D, NICHE_DEPTH, KALLAX_DEPTH } from "../config.js";
-import { Drona } from "./drona.js";
+import * as THREE from 'three';
+import { ROOM_W, ROOM_D, NICHE_DEPTH, KALLAX_DEPTH } from '../config.js';
+import { Drona } from './drona.js';
 
 // =============================================
 // KALLAX — Ported from Gemini kallax.html

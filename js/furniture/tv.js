@@ -1,6 +1,6 @@
-import * as THREE from "three";
-import { ROOM_W, WALL_H } from "../config.js";
-import { renderer, scene as sceneRef, camera } from "../scene.js";
+import * as THREE from 'three';
+import { ROOM_W, WALL_H } from '../config.js';
+import { renderer, scene as sceneRef, camera } from '../scene.js';
 
 const screenTex = new THREE.TextureLoader().load('media/omarchy-screen.png', () => {
   renderer.render(sceneRef, camera);

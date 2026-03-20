@@ -1,9 +1,9 @@
-import * as THREE from "three";
-import { gltfLoader } from "../utils/loaders.js";
-import { mergeGlbByMaterial } from "../utils/mergeUtils.js";
-import { ROOM_W, ROOM_D } from "../config.js";
-import { requestRender, addWalkFollower, addWalkPitchFollower, setInitialWalkPos } from "../cameraManager.js";
-import { setMinimapWalker } from "../ui/minimap.js";
+import * as THREE from 'three';
+import { gltfLoader } from '../utils/loaders.js';
+import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
+import { ROOM_W, ROOM_D } from '../config.js';
+import { requestRender, addWalkFollower, addWalkPitchFollower, setInitialWalkPos } from '../cameraManager.js';
+import { setMinimapWalker } from '../ui/minimap.js';
 
 // Le Walking Man est un THREE.Group (scale = 1) qui contient :
 //   - le costume (suit), enfant positionné localement

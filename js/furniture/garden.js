@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import * as THREE from 'three';
 import { gltfLoader } from '../utils/loaders.js';
 import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';

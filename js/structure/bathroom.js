@@ -1,6 +1,6 @@
-import * as THREE from "three";
-import { buildVasque } from "./vasque.js";
-import { buildWC } from "./wc.js";
+import * as THREE from 'three';
+import { buildVasque } from './vasque.js';
+import { buildWC } from './wc.js';
 import {
   ROOM_W,
   WALL_H,
@@ -13,7 +13,7 @@ import {
   LAYER_STRUCTURE,
   CORR_DOOR_S,
   CORR_DOOR_E,
-} from "../config.js";
+} from '../config.js';
 
 const W = 10; // wall thickness
 

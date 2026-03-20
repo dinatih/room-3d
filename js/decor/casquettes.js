@@ -1,8 +1,8 @@
-import * as THREE from "three";
-import { gltfLoader } from "../utils/loaders.js";
-import { mergeGlbByMaterial } from "../utils/mergeUtils.js";
-import { LAYER_GLB } from "../config.js";
-import { requestRender } from "../cameraManager.js";
+import * as THREE from 'three';
+import { gltfLoader } from '../utils/loaders.js';
+import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
+import { LAYER_GLB } from '../config.js';
+import { requestRender } from '../cameraManager.js';
 
 // HEAD_R=8.9, scale.y=1.15, SHOULDER_H=8, NECK_H=8
 // Tête Sunnersta baseY=90 → centre tête = 90+8+8+8.9 = 114.9, sommet ≈ 125.1

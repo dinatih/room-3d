@@ -1,8 +1,8 @@
-import * as THREE from "three";
-import { gltfLoader } from "../utils/loaders.js";
-import { mergeGlbByMaterial } from "../utils/mergeUtils.js";
-import { LAYER_GLB } from "../config.js";
-import { requestRender } from "../cameraManager.js";
+import * as THREE from 'three';
+import { gltfLoader } from '../utils/loaders.js';
+import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
+import { LAYER_GLB } from '../config.js';
+import { requestRender } from '../cameraManager.js';
 import {
   ROOM_W,
   ROOM_D,
@@ -15,9 +15,9 @@ import {
   DOOR_START,
   KALLAX_DEPTH,
   KALLAX_PANEL,
-} from "../config.js";
-import { addSingleDrona } from "../furniture/drona.js";
-import { kallaxW, kallaxH } from "../furniture/kallax.js";
+} from '../config.js';
+import { addSingleDrona } from '../furniture/drona.js';
+import { kallaxW, kallaxH } from '../furniture/kallax.js';
 
 let freezerDoorGroup = null;
 let freezerDoorOpen = false;
