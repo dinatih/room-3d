@@ -16,7 +16,7 @@ const VANITY_Y0 = 30;
 const VANITY_X1 = DOOR_START - 48;           // 142
 const VANITY_X0 = VANITY_X1 - VANITY_W;      // 82
 const VANITY_CX = (VANITY_X0 + VANITY_X1) / 2;
-const VANITY_CZ = KITCHEN_Z + 5 + VANITY_D / 2;
+const VANITY_CZ = KITCHEN_Z + 11 + VANITY_D / 2;
 
 export function buildVasque(scene) {
   const group = new THREE.Group();
