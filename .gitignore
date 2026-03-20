@@ -2,3 +2,4 @@ tries/*
 *.pem
 nohup.out
 node_modules/
+screenshots/
