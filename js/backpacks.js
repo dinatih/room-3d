@@ -4,16 +4,16 @@ import { LAYER_FURNITURE } from './config.js';
 
 // =============================================
 // SAC À DOS TEMU "LIVING TRAVELING SHARE"
-// Roll-top backpack bordeaux
+// Roll-top backpack rouge
 // Taille S : 34×39×15cm (devant 29cm)
 // Taille L : 40×43×17cm (devant 32cm)
 // =============================================
 
 const _bag = new THREE.MeshStandardMaterial({
-  color: 0x8c1a2e, roughness: 0.83, metalness: 0.0,
+  color: 0xcc0000, roughness: 0.83, metalness: 0.0,
 });
 const _bagDark = new THREE.MeshStandardMaterial({
-  color: 0x6e1222, roughness: 0.88, metalness: 0.0,
+  color: 0xaa0000, roughness: 0.88, metalness: 0.0,
 });
 const _buck = new THREE.MeshStandardMaterial({
   color: 0x1a1a1a, roughness: 0.5, metalness: 0.35,
@@ -261,12 +261,12 @@ export function buildBackpacks(scene) {
   // Taille S : 34×39×15cm — corps W=29, H=39, D=15
   const bagS = buildBag(29, 39, 15);
   bagS.traverse(c => { if (c.isMesh) c.layers.set(LAYER_FURNITURE); });
-  bagS.position.set(55, 0, 390);
+  bagS.position.set(175, 17, 75);  // sur le lit (surface matelas ≈ Y=17)
   scene.add(bagS);
 
   // Taille L : 40×43×17cm — corps W=32, H=43, D=17
   const bagL = buildBag(32, 43, 17);
   bagL.traverse(c => { if (c.isMesh) c.layers.set(LAYER_FURNITURE); });
-  bagL.position.set(15, 0, 390);
+  bagL.position.set(210, 17, 75);  // sur le lit, à côté du S
   scene.add(bagL);
 }
