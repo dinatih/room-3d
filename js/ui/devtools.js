@@ -2,7 +2,7 @@
 // DEVELOPER TOOLS PANEL
 // FPS graph, renderer stats, scene stats, GLB sizes
 // =============================================
-import { gltfLoader, glbRegistry } from '../loaders.js';
+import { gltfLoader, glbRegistry } from '../utils/loaders.js';
 const FPS_SAMPLES = 80;
 const UPDATE_MS   = 500;
 

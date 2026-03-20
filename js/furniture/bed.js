@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ROOM_W, KALLAX_DEPTH, LAYER_FURNITURE } from '../config.js';
 import { kallaxW } from './kallax.js';
-import { gltfLoader } from '../loaders.js';
+import { gltfLoader } from '../utils/loaders.js';
 import { requestRender } from '../cameraManager.js';
 
 let stacked = true;

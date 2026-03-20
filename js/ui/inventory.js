@@ -2,7 +2,7 @@
 // INVENTORY PANEL — overlay modal + 3D preview
 // =============================================
 import * as THREE from 'three';
-import { gltfLoader } from '../loaders.js';
+import { gltfLoader } from '../utils/loaders.js';
 import { INVENTORY, CATEGORIES } from './inventoryData.js';
 
 let overlay = null;

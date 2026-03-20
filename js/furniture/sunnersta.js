@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { gltfLoader } from '../loaders.js';
-import { mergeGlbByMaterial } from '../mergeUtils.js';
+import { gltfLoader } from '../utils/loaders.js';
+import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
 import { ROOM_W, LAYER_GLB } from '../config.js';
 import { requestRender } from '../cameraManager.js';
 

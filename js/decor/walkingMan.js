@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { gltfLoader } from "../loaders.js";
-import { mergeGlbByMaterial } from "../mergeUtils.js";
+import { gltfLoader } from "../utils/loaders.js";
+import { mergeGlbByMaterial } from "../utils/mergeUtils.js";
 import { ROOM_W, ROOM_D } from "../config.js";
 import { requestRender, addWalkFollower, addWalkPitchFollower, setInitialWalkPos } from "../cameraManager.js";
 import { setMinimapWalker } from "../ui/minimap.js";

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { gltfLoader } from '../loaders.js';
-import { mergeGlbByMaterial } from '../mergeUtils.js';
+import { gltfLoader } from '../utils/loaders.js';
+import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
 import { ROOM_W, ROOM_D, LAYER_GLB } from '../config.js';
 import { KALLAX_SE_TOP } from './kallax.js';
 import { MEUBLE_T_X, MEUBLE_T_Z } from './meubleT.js';
