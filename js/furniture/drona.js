@@ -18,6 +18,12 @@ const _pending = [];
 
 // Global sequential counter — assigned in declaration order (Kallax before Decor)
 let _dronaCounter = 0;
+const _labels = [];
+
+export function setDronaLabelsVisible(visible) {
+  for (const l of _labels) l.visible = visible;
+  requestRender();
+}
 
 function makeDronaLabel(n) {
   const S = 128;
@@ -44,6 +50,8 @@ function makeDronaLabel(n) {
   const sprite = new THREE.Sprite(mat);
   sprite.renderOrder = 10;
   sprite.scale.set(13, 13, 1);
+  sprite.visible = false;
+  _labels.push(sprite);
   return sprite;
 }
 

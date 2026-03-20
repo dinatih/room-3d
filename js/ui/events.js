@@ -21,6 +21,7 @@ import { toggleWCLid } from '../structure/wc.js';
 import { toggleCorridorDoors, toggleEntryDoor, toggleLivingDoor, toggleBathroomDoor } from '../structure/corridor.js';
 import { toggleLamp } from '../furniture/lamp.js';
 import { toggleCelShading } from './celShading.js';
+import { setDronaLabelsVisible } from '../furniture/drona.js';
 import { registerHoverAction, initHoverMenu } from './hoverMenu.js';
 import { getWalkingMan } from '../decor/walkingMan.js';
 
@@ -192,6 +193,16 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
       setMirrorLayers(on);
       document.getElementById('mirror-layers-toggle').textContent = `Miroirs HD : ${on ? 'ON' : 'OFF'}`;
       requestRender();
+    });
+  }
+
+  // ── Numéros Drona ─────────────────────────────────────────────────────────
+  {
+    let dronaLabelsOn = false;
+    document.getElementById('drona-labels-toggle')?.addEventListener('click', () => {
+      dronaLabelsOn = !dronaLabelsOn;
+      setDronaLabelsVisible(dronaLabelsOn);
+      document.getElementById('drona-labels-toggle').textContent = `N° Drona : ${dronaLabelsOn ? 'ON' : 'OFF'}`;
     });
   }
 
