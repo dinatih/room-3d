@@ -1,74 +1,54 @@
-import * as THREE from "three";
+import * as THREE from 'three';
 import {
-  ROOM_W,
-  ROOM_D,
-  DOOR_START,
-  DOOR_END,
   GARDEN_JC_Z,
-  LAYER_STRUCTURE,
   LAYER_EQUIPMENT,
   LAYER_FURNITURE,
   LAYER_NETWORKS,
   LAYER_GLB,
-} from "./config.js";
-import { scene, camera, renderer, controls } from "./scene.js";
-import { loadFont } from "./ui/labels.js";
-import { buildWalls, toggleEastDoor } from "./structure/walls.js";
-import { buildKitchen, toggleFridgeDoor, toggleCabinetDoor } from "./structure/kitchen.js";
-import { buildKallax } from "./furniture/kallax.js";
-import { buildBed, toggleBedStack, toggleBedVersion } from "./furniture/bed.js";
-import { buildMirrors, setMirrorLayers } from "./furniture/mirrors.js";
-import { buildChair } from "./furniture/chair.js";
-import { buildDesks, toggleDesksHeight, toggleDesk1Height, toggleDesk2Height } from "./furniture/desks.js";
-import { buildLaptop } from "./furniture/laptop.js";
-import { buildMackapar } from "./furniture/mackapar.js";
-import { buildDecor, toggleFreezerDoor } from "./decor/decor.js";
-import { toggleWCLid } from "./structure/wc.js";
-import { registerHoverAction, initHoverMenu } from "./ui/hoverMenu.js";
-import { buildGarden } from "./furniture/garden.js";
-import { buildAltappen } from "./furniture/altappen.js";
-import { buildBackpacks } from "./decor/backpacks.js";
-import { buildTV } from "./furniture/tv.js";
-import { buildSunnersta } from "./furniture/sunnersta.js";
-import { buildAirPerformer } from "./furniture/airPerformer.js";
-import { buildScooter } from "./decor/scooter.js";
-import { buildSneakers } from "./decor/sneakers.js";
-import { buildCasquettes } from "./decor/casquettes.js";
-import { buildShoeHatRack } from "./decor/shoehatrack.js";
-import { buildWalkingMan, getWalkingMan } from "./decor/walkingMan.js";
-import { buildLamp, toggleLamp } from "./furniture/lamp.js";
-import { toggleCelShading } from "./ui/celShading.js";
-import { buildMeubleT } from "./furniture/meubleT.js";
-import { buildCorridor, toggleCorridorDoors, toggleEntryDoor, toggleLivingDoor, toggleBathroomDoor } from "./structure/corridor.js";
-import { buildBathroom } from "./structure/bathroom.js";
-import { buildGroundPlane, buildParquetMesh, buildTileMesh, buildConcreteSlab, buildGardenSlab, buildCeiling } from "./structure/floor.js";
-import { buildGrid } from "./ui/grid.js";
-import { buildMinimap } from "./ui/minimap.js";
-import { buildFloorPlan } from "./ui/floorplan.js";
-import { buildDevtools } from "./ui/devtools.js";
-import { buildInventory } from "./ui/inventory.js";
-import { VRButton } from "three/addons/webxr/VRButton.js";
+} from './config.js';
+import { scene, camera, renderer } from './scene.js';
+import { loadFont } from './ui/labels.js';
+import { requestRender } from './cameraManager.js';
+import { buildWalls } from './structure/walls.js';
+import { buildKitchen } from './structure/kitchen.js';
+import { buildKallax } from './furniture/kallax.js';
+import { buildBed } from './furniture/bed.js';
+import { buildMirrors } from './furniture/mirrors.js';
+import { buildChair } from './furniture/chair.js';
+import { buildDesks } from './furniture/desks.js';
+import { buildLaptop } from './furniture/laptop.js';
+import { buildMackapar } from './furniture/mackapar.js';
+import { buildDecor } from './decor/decor.js';
+import { buildGarden } from './furniture/garden.js';
+import { buildAltappen } from './furniture/altappen.js';
+import { buildBackpacks } from './decor/backpacks.js';
+import { buildTV } from './furniture/tv.js';
+import { buildSunnersta } from './furniture/sunnersta.js';
+import { buildAirPerformer } from './furniture/airPerformer.js';
+import { buildScooter } from './decor/scooter.js';
+import { buildSneakers } from './decor/sneakers.js';
+import { buildCasquettes } from './decor/casquettes.js';
+import { buildShoeHatRack } from './decor/shoehatrack.js';
+import { buildWalkingMan } from './decor/walkingMan.js';
+import { buildLamp } from './furniture/lamp.js';
+import { buildMeubleT } from './furniture/meubleT.js';
+import { buildCorridor } from './structure/corridor.js';
+import { buildBathroom } from './structure/bathroom.js';
 import {
-  VIEWS,
-  POV_ROOMS,
-  enterWalk,
-  exitWalk,
-  enterPOV,
-  resumeWalk,
-  enter2DTop,
-  exit2D,
-  onResize,
-  getOrthoCamera,
-  getIs2D,
-  isWalkActive,
-  requestRender,
-  startDamping,
-} from "./cameraManager.js";
+  buildGroundPlane, buildParquetMesh, buildTileMesh,
+  buildConcreteSlab, buildGardenSlab, buildCeiling,
+} from './structure/floor.js';
+import { buildGrid } from './ui/grid.js';
+import { buildMinimap } from './ui/minimap.js';
+import { buildFloorPlan } from './ui/floorplan.js';
+import { buildDevtools } from './ui/devtools.js';
+import { buildInventory } from './ui/inventory.js';
+import { initEvents } from './ui/events.js';
 
-// Charger la font avant de construire les labels
+// ── Font ──────────────────────────────────────────────────────────────────────
 await loadFont();
 
-// Helper : tag les objets ajoutés à scene pendant un build
+// ── Helper : tagger les objets ajoutés pendant un build ──────────────────────
 function buildOnLayer(buildFn, layer) {
   const before = new Set();
   scene.traverse((obj) => before.add(obj));
@@ -78,11 +58,13 @@ function buildOnLayer(buildFn, layer) {
   });
 }
 
-// Activer tous les layers sur la caméra
+// ── Activer tous les layers sur la caméra ─────────────────────────────────────
 camera.layers.enable(LAYER_EQUIPMENT);
 camera.layers.enable(LAYER_FURNITURE);
 camera.layers.enable(LAYER_NETWORKS);
 camera.layers.enable(LAYER_GLB);
+
+// ── Construction de la scène ──────────────────────────────────────────────────
 
 // Layer 0 : structure
 buildWalls(scene);
@@ -92,151 +74,63 @@ buildGardenSlab(scene);
 buildCeiling(scene);
 
 // Layer 1 : équipements
-buildOnLayer(buildKitchen, LAYER_EQUIPMENT);
+buildOnLayer(buildKitchen,  LAYER_EQUIPMENT);
 buildOnLayer(buildBathroom, LAYER_EQUIPMENT);
 
 // Layer 2 : mobilier
-buildOnLayer(buildKallax, LAYER_FURNITURE);
-buildOnLayer(buildBed, LAYER_FURNITURE);
-buildOnLayer(buildMirrors, LAYER_FURNITURE);
-buildOnLayer(buildChair, LAYER_FURNITURE);
-buildOnLayer(buildDesks, LAYER_FURNITURE);
-buildOnLayer(buildLaptop, LAYER_FURNITURE);
-buildOnLayer(buildMackapar, LAYER_FURNITURE);
-buildOnLayer(buildDecor, LAYER_FURNITURE);
-buildOnLayer(buildGarden, LAYER_FURNITURE);
+buildOnLayer(buildKallax,      LAYER_FURNITURE);
+buildOnLayer(buildBed,         LAYER_FURNITURE);
+buildOnLayer(buildMirrors,     LAYER_FURNITURE);
+buildOnLayer(buildChair,       LAYER_FURNITURE);
+buildOnLayer(buildDesks,       LAYER_FURNITURE);
+buildOnLayer(buildLaptop,      LAYER_FURNITURE);
+buildOnLayer(buildMackapar,    LAYER_FURNITURE);
+buildOnLayer(buildDecor,       LAYER_FURNITURE);
+buildOnLayer(buildGarden,      LAYER_FURNITURE);
 buildAltappen(scene);
 buildBackpacks(scene);
-buildOnLayer(buildTV, LAYER_FURNITURE);
-buildOnLayer(buildSunnersta, LAYER_FURNITURE);
-buildOnLayer(buildAirPerformer, LAYER_FURNITURE);
-buildOnLayer(buildScooter, LAYER_FURNITURE);
+buildOnLayer(buildTV,          LAYER_FURNITURE);
+buildOnLayer(buildSunnersta,   LAYER_FURNITURE);
+buildOnLayer(buildAirPerformer,LAYER_FURNITURE);
+buildOnLayer(buildScooter,     LAYER_FURNITURE);
 buildSneakers(scene);
-buildCasquettes(scene); // async GLB, gère ses propres layers + requestRender
+buildCasquettes(scene);
 buildShoeHatRack(scene);
 buildWalkingMan(scene);
 buildOnLayer(buildMeubleT, LAYER_FURNITURE);
-buildLamp(scene); // async GLB
+buildLamp(scene);
 
-// Layer 0 (structure) + layer 2 (placard) : géré dans corridor.js
+// Couloir (structure + placard)
 const corridorLabel = buildCorridor(scene);
 
-// Parquet texturé (lames 130×20cm dessinées en canvas) — séjour + couloir
+// Sols texturés
 buildParquetMesh(scene);
-// Carrelage blanc 20×20cm — SDB + couloir entrée
 buildTileMesh(scene);
 
+// ── UI ────────────────────────────────────────────────────────────────────────
 const gridGroup = buildGrid(scene);
 gridGroup.visible = false;
-// Déplacer le label couloir dans gridGroup (il était ajouté à scene par makeText)
-if (corridorLabel) { scene.remove(corridorLabel); gridGroup.add(corridorLabel); }
+if (corridorLabel) {
+  scene.remove(corridorLabel);
+  gridGroup.add(corridorLabel);
+}
 buildMinimap();
 buildDevtools(scene, renderer);
 const openInventory = buildInventory(scene);
 document.getElementById('inventory-open')?.addEventListener('click', openInventory);
 
-// =============================================
-// HOVER MENU — actions interactives sur survol
-// =============================================
-registerHoverAction('door-toggle', {
-  getLabel: () => eastDoorState ? 'Fermer' : 'Ouvrir',
-  execute:  doToggleEastDoor,
-});
-registerHoverAction('freezer-toggle', {
-  getLabel: () => freezerState ? 'Fermer' : 'Ouvrir',
-  execute:  doToggleFreezer,
-});
-registerHoverAction('fridge-toggle', {
-  getLabel: () => fridgeState ? 'Fermer' : 'Ouvrir',
-  execute:  doToggleFridge,
-});
-registerHoverAction('cabinet-toggle', {
-  getLabel: () => cabinetState ? 'Fermer' : 'Ouvrir',
-  execute:  doToggleCabinet,
-});
-registerHoverAction('bed-toggle', {
-  getLabel: () => bedState ? 'Déplier' : 'Empiler',
-  execute:  doToggleBed,
-});
-registerHoverAction('desks-toggle', {
-  getLabel: () => desksState ? 'Mode assis' : 'Mode debout',
-  execute:  doToggleDesks,
-});
-registerHoverAction('desk1-toggle', {
-  getLabel: () => desk1State ? 'Mode assis' : 'Mode debout',
-  execute:  doToggleDesk1,
-});
-registerHoverAction('desk2-toggle', {
-  getLabel: () => desk2State ? 'Mode assis' : 'Mode debout',
-  execute:  doToggleDesk2,
-});
-registerHoverAction('wc-lid-toggle', {
-  getLabel: () => wcLidState ? 'Fermer' : 'Ouvrir',
-  execute:  doToggleWCLid,
-});
-registerHoverAction('corr-doors-toggle', {
-  getLabel: () => corrDoorsState ? 'Fermer' : 'Ouvrir',
-  execute:  doToggleCorridorDoors,
-});
-registerHoverAction('entry-door-toggle', {
-  getLabel: () => entryDoorState ? 'Fermer' : 'Ouvrir',
-  execute:  doToggleEntryDoor,
-});
-registerHoverAction('living-door-toggle', {
-  getLabel: () => livingDoorState ? 'Fermer' : 'Ouvrir',
-  execute:  doToggleLivingDoor,
-});
-registerHoverAction('bathroom-door-toggle', {
-  getLabel: () => bathroomDoorState ? 'Fermer' : 'Ouvrir',
-  execute:  doToggleBathroomDoor,
-});
-registerHoverAction('lamp-toggle', {
-  getLabel: () => lampState ? 'Éteindre' : 'Allumer',
-  execute:  doToggleLamp,
-});
-initHoverMenu(renderer, camera, scene);
-
-// =============================================
-// VR MODE (Google Cardboard / WebXR)
-// =============================================
-const vrButton = VRButton.createButton(renderer);
-vrButton.style.bottom = "60px";
-document.body.appendChild(vrButton);
-
-const vrRig = new THREE.Group();
-scene.add(vrRig);
-vrRig.add(camera);
-
-let vrWalking = false;
-
-const xrController = renderer.xr.getController(0);
-xrController.addEventListener("selectstart", () => {
-  vrWalking = true;
-});
-xrController.addEventListener("selectend", () => {
-  vrWalking = false;
-});
-vrRig.add(xrController);
-
-// Snapshot des objets "bâtiment" (avant ajout du floor plan)
+// Snapshot des objets "bâtiment" (avant ajout du plan)
 const buildingChildren = scene.children.filter((c) => !c.isLight);
 
-// Jardin : délimitation en pointillés (toujours visible)
+// Jardin : délimitation en pointillés
 {
   const Y = 5;
-  const gardenMat = new THREE.LineDashedMaterial({
-    color: 0x4a9e54,
-    dashSize: 8,
-    gapSize: 4,
-  });
+  const gardenMat = new THREE.LineDashedMaterial({ color: 0x4a9e54, dashSize: 8, gapSize: 4 });
   const JC_Z = GARDEN_JC_Z;
   const pts = [
-    [-10, -10],
-    [-10, -140], // côté MA ext, 1.30m en -Z
-    [-10, -140],
-    [310, JC_Z], // diagonale // MDiag → MB ext
-    [310, JC_Z],
-    [310, -10], // côté MB ext, vertical
+    [-10, -10], [-10, -140],
+    [-10, -140], [310, JC_Z],
+    [310, JC_Z], [310, -10],
   ];
   for (let i = 0; i < pts.length; i += 2) {
     const geo = new THREE.BufferGeometry().setFromPoints([
@@ -249,368 +143,15 @@ const buildingChildren = scene.children.filter((c) => !c.isLight);
   }
 }
 
-// Floor plan (caché par défaut)
+// Plan 2D (caché par défaut)
 const floorPlanGroup = buildFloorPlan();
 floorPlanGroup.visible = false;
 scene.add(floorPlanGroup);
 
-let floorPlanMode = false;
-function toggleFloorPlan() {
+// ── Event handlers (UI, toggles, VR, vues caméra) ────────────────────────────
+initEvents({ gridGroup, floorPlanGroup, buildingChildren });
 
-  floorPlanMode = !floorPlanMode;
-  for (const obj of buildingChildren) obj.visible = !floorPlanMode;
-  floorPlanGroup.visible = floorPlanMode;
-  const btn = document.getElementById("plan-toggle");
-  if (btn) btn.textContent = floorPlanMode ? "Plan : ON" : "Plan : OFF";
-  requestRender();
-}
-
-document.getElementById("plan-toggle")?.addEventListener("click", toggleFloorPlan);
-
-// =============================================
-// X-RAY MODE
-// =============================================
-let xrayMode = false;
-const savedMaterials = new Map();
-const xrayMat = new THREE.MeshPhysicalMaterial({
-  color: 0x44aaff,
-  transparent: true,
-  opacity: 0.15,
-  roughness: 0.1,
-  metalness: 0.3,
-  side: THREE.DoubleSide,
-  depthWrite: false,
-});
-
-function toggleXray() {
-  xrayMode = !xrayMode;
-  scene.traverse((obj) => {
-    if (!obj.isMesh && !obj.isInstancedMesh) return;
-    if (obj.parent === floorPlanGroup) return;
-    if (xrayMode) {
-      savedMaterials.set(obj, obj.material);
-      obj.material = xrayMat;
-    } else {
-      const orig = savedMaterials.get(obj);
-      if (orig) obj.material = orig;
-    }
-  });
-  if (!xrayMode) savedMaterials.clear();
-  const btn = document.getElementById("xray-toggle");
-  if (btn) btn.textContent = xrayMode ? "X-Ray : ON" : "X-Ray : OFF";
-  requestRender();
-}
-
-document.getElementById("xray-toggle")?.addEventListener("click", toggleXray);
-
-// =============================================
-// LAYER TOGGLES
-// =============================================
-function makeLayerToggle(btnId, layer, label) {
-  let on = true;
-  document.getElementById(btnId)?.addEventListener("click", () => {
-    on = !on;
-    const orthoCamera = getOrthoCamera();
-    if (on) {
-      camera.layers.enable(layer);
-      if (orthoCamera) orthoCamera.layers.enable(layer);
-    } else {
-      camera.layers.disable(layer);
-      if (orthoCamera) orthoCamera.layers.disable(layer);
-    }
-    const btn = document.getElementById(btnId);
-    if (btn) btn.textContent = `${label} : ${on ? "ON" : "OFF"}`;
-    requestRender();
-  });
-}
-makeLayerToggle("layer-struct-toggle", LAYER_STRUCTURE, "Structure");
-makeLayerToggle("layer-equip-toggle", LAYER_EQUIPMENT, "Équipements");
-makeLayerToggle("layer-furniture-toggle", LAYER_FURNITURE, "Mobilier");
-makeLayerToggle("layer-glb-toggle", LAYER_GLB, "GLB");
-
-// Toggle miroirs HD (patch layers)
-{
-  let on = false;
-  document.getElementById("mirror-layers-toggle")?.addEventListener("click", () => {
-    on = !on;
-    setMirrorLayers(on);
-    document.getElementById("mirror-layers-toggle").textContent = `Miroirs HD : ${on ? "ON" : "OFF"}`;
-    requestRender();
-  });
-}
-
-// =============================================
-// BED TOGGLE (Utåker stack/unstack)
-// =============================================
-let bedState = true; // starts stacked
-function doToggleBed() {
-  bedState = toggleBedStack();
-  document.getElementById("bed-toggle").textContent = `Lit : ${bedState ? "EMPILÉ" : "DÉPLIÉ"}`;
-  requestRender();
-}
-document.getElementById("bed-toggle")?.addEventListener("click", doToggleBed);
-
-document.getElementById("bed-version-toggle")?.addEventListener("click", () => {
-  const isGlb = toggleBedVersion();
-  document.getElementById("bed-version-toggle").textContent = `Lit : ${isGlb ? "GLB" : "PROCÉDURAL"}`;
-  requestRender();
-});
-
-// =============================================
-// DESK TOGGLE (sit / stand)
-// =============================================
-let desksState = false;
-function doToggleDesks() {
-  desksState = toggleDesksHeight();
-  document.getElementById("desk-toggle").textContent = `Bureaux : ${desksState ? "DEBOUT" : "ASSIS"}`;
-  requestRender();
-}
-document.getElementById("desk-toggle")?.addEventListener("click", doToggleDesks);
-
-let desk1State = false;
-function doToggleDesk1() {
-  desk1State = toggleDesk1Height();
-  requestRender();
-}
-
-let desk2State = false;
-function doToggleDesk2() {
-  desk2State = toggleDesk2Height();
-  requestRender();
-}
-
-let eastDoorState = false;
-function doToggleEastDoor() {
-  eastDoorState = toggleEastDoor();
-  document.getElementById("door-toggle").textContent = `Porte-fenêtre : ${eastDoorState ? "OUVERTE" : "FERMÉE"}`;
-  requestRender();
-}
-document.getElementById("door-toggle")?.addEventListener("click", doToggleEastDoor);
-
-document.getElementById("resume-walk")?.addEventListener("click", () => {
-  resumeWalk();
-});
-
-// Flèches en mode non-walk : déplacer/pivoter le Walking Man
-addEventListener("keydown", (e) => {
-  if (isWalkActive()) return;
-  const wm = getWalkingMan();
-  if (!wm) return;
-  const STEP = 10, ROT = 0.1;
-  if (e.key === "ArrowUp") {
-    wm.position.x -= Math.sin(wm.rotation.y) * STEP;
-    wm.position.z -= Math.cos(wm.rotation.y) * STEP;
-  } else if (e.key === "ArrowDown") {
-    wm.position.x += Math.sin(wm.rotation.y) * STEP;
-    wm.position.z += Math.cos(wm.rotation.y) * STEP;
-  } else if (e.key === "ArrowLeft") {
-    wm.rotation.y += ROT;
-  } else if (e.key === "ArrowRight") {
-    wm.rotation.y -= ROT;
-  } else return;
-  e.preventDefault();
-  requestRender();
-});
-
-let corrDoorsState = false;
-function doToggleCorridorDoors() {
-  corrDoorsState = toggleCorridorDoors();
-  document.getElementById("corr-doors-toggle").textContent = `Portes couloir : ${corrDoorsState ? "OUVERTES" : "FERMÉES"}`;
-  requestRender();
-}
-document.getElementById("corr-doors-toggle")?.addEventListener("click", doToggleCorridorDoors);
-
-let entryDoorState = false;
-function doToggleEntryDoor() {
-  entryDoorState = toggleEntryDoor();
-  requestRender();
-}
-
-let livingDoorState = false;
-function doToggleLivingDoor() {
-  livingDoorState = toggleLivingDoor();
-  requestRender();
-}
-
-let bathroomDoorState = false;
-function doToggleBathroomDoor() {
-  bathroomDoorState = toggleBathroomDoor();
-  requestRender();
-}
-
-let freezerState = false;
-function doToggleFreezer() {
-  freezerState = toggleFreezerDoor();
-  document.getElementById("freezer-toggle").textContent = `Congélateur : ${freezerState ? "OUVERT" : "FERMÉ"}`;
-  requestRender();
-}
-document.getElementById("freezer-toggle")?.addEventListener("click", doToggleFreezer);
-
-let wcLidState = false;
-function doToggleWCLid() {
-  wcLidState = toggleWCLid();
-  document.getElementById("wc-lid-toggle").textContent = `WC abattant : ${wcLidState ? "OUVERT" : "FERMÉ"}`;
-  requestRender();
-}
-document.getElementById("wc-lid-toggle")?.addEventListener("click", doToggleWCLid);
-
-let fridgeState = false;
-function doToggleFridge() {
-  fridgeState = toggleFridgeDoor();
-  document.getElementById("fridge-toggle").textContent = `Réfrigérateur : ${fridgeState ? "OUVERT" : "FERMÉ"}`;
-  requestRender();
-}
-document.getElementById("fridge-toggle")?.addEventListener("click", doToggleFridge);
-
-let cabinetState = false;
-function doToggleCabinet() {
-  cabinetState = toggleCabinetDoor();
-  document.getElementById("cabinet-toggle").textContent = `Meuble évier : ${cabinetState ? "OUVERT" : "FERMÉ"}`;
-  requestRender();
-}
-document.getElementById("cabinet-toggle")?.addEventListener("click", doToggleCabinet);
-
-let lampState = false;
-function doToggleLamp() {
-  lampState = toggleLamp();
-  document.getElementById("lamp-toggle").textContent = `Lampe OLA : ${lampState ? "ON" : "OFF"}`;
-}
-document.getElementById("lamp-toggle")?.addEventListener("click", doToggleLamp);
-
-document.getElementById("cel-toggle")?.addEventListener("click", () => {
-  const s = toggleCelShading(scene);
-  document.getElementById("cel-toggle").textContent = `Cel-Shading : ${s ? "ON" : "OFF"}`;
-});
-
-document.getElementById("grid-toggle")?.addEventListener("click", () => {
-  gridGroup.visible = !gridGroup.visible;
-  document.getElementById("grid-toggle").textContent = `Grille : ${gridGroup.visible ? "ON" : "OFF"}`;
-  requestRender();
-});
-
-
-
-// =============================================
-// ANIMATION CONSTRUCTION
-
-// =============================================
-// VR session handlers
-// =============================================
-const WALK_SPEED = 2;
-
-renderer.xr.addEventListener("sessionstart", () => {
-  exitWalk();
-  exit2D();
-  controls.enabled = false;
-  vrRig.position.set(ROOM_W / 2, 170, ROOM_D / 2);
-  const hint = document.createElement("div");
-  hint.textContent = "Tap écran ou bouton Cardboard pour avancer";
-  hint.style.cssText =
-    "position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.5s";
-  document.body.appendChild(hint);
-  setTimeout(() => {
-    hint.style.opacity = "0";
-  }, 4500);
-  setTimeout(() => {
-    hint.remove();
-  }, 5000);
-  renderer.setAnimationLoop(() => {
-    if (vrWalking) {
-      const dir = new THREE.Vector3();
-      camera.getWorldDirection(dir);
-      dir.y = 0;
-      dir.normalize();
-      vrRig.position.addScaledVector(dir, WALK_SPEED);
-    }
-    renderer.render(scene, camera);
-  });
-});
-renderer.xr.addEventListener("sessionend", () => {
-  renderer.setAnimationLoop(null);
-  vrWalking = false;
-  controls.enabled = true;
-  vrRig.position.set(0, 0, 0);
-  camera.position.set(...VIEWS.perspective.pos);
-  controls.target.set(...VIEWS.perspective.target);
-  controls.update();
-  requestRender();
-});
-
-// Premier rendu
+// ── Premier rendu ─────────────────────────────────────────────────────────────
 requestRender();
-
-// Expose pour automation externe (screenshot.rb)
 window.__requestRender = requestRender;
 window.__scene = scene;
-
-addEventListener("resize", () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  onResize();
-  renderer.setSize(innerWidth, innerHeight);
-  requestRender();
-});
-
-// =============================================
-// VUES CAMERA (modal + raccourcis)
-// =============================================
-const viewsOverlay = document.getElementById("views-modal-overlay");
-function openViewsModal() {
-  viewsOverlay.classList.add("visible");
-}
-function closeViewsModal() {
-  viewsOverlay.classList.remove("visible");
-}
-
-document.getElementById("views-toggle")?.addEventListener("click", openViewsModal);
-document.getElementById("views-modal-close")?.addEventListener("click", closeViewsModal);
-
-// Raccourcis Perspective / 2D Dessus
-document.getElementById("quick-perspective")?.addEventListener("click", () => {
-  exitWalk();
-  exitWalk();
-  exit2D();
-  camera.position.set(...VIEWS.perspective.pos);
-  controls.target.set(...VIEWS.perspective.target);
-  controls.update();
-  requestRender();
-});
-document.getElementById("quick-top2d")?.addEventListener("click", () => enter2DTop());
-viewsOverlay?.addEventListener("click", (e) => {
-  if (e.target === viewsOverlay) closeViewsModal();
-});
-
-// Boutons vues classiques (sortent du mode POV et 2D)
-document.querySelectorAll("#views-modal button[data-view]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    closeViewsModal();
-    if (btn.dataset.view === "top2d") {
-      enter2DTop();
-      return;
-    }
-    exitWalk();
-    exitWalk();
-    exit2D();
-    const v = VIEWS[btn.dataset.view];
-    if (!v) return;
-    camera.position.set(...v.pos);
-    controls.target.set(...v.target);
-    controls.update();
-    requestRender();
-  });
-});
-
-// Boutons POV par pièce
-document.querySelectorAll("#views-modal button[data-pov]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    closeViewsModal();
-    const room = POV_ROOMS[btn.dataset.pov];
-    if (room) enterPOV(room.x, room.z);
-  });
-});
-
-// Clic minimap → mode POV dans la pièce
-document.addEventListener("minimap-pov", (e) => {
-  const { x, z } = e.detail;
-  enterPOV(x, z);
-});
