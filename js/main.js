@@ -42,7 +42,6 @@ import { buildMeubleT } from "./meubleT.js";
 import { buildCorridor, toggleCorridorDoors, toggleEntryDoor, toggleLivingDoor, toggleBathroomDoor } from "./corridor.js";
 import { buildBathroom } from "./bathroom.js";
 import { buildGroundPlane, buildParquetMesh, buildTileMesh, buildConcreteSlab, buildGardenSlab, buildCeiling } from "./floor.js";
-import { buildInstancedMeshes } from "./instancedMeshes.js";
 import { buildGrid } from "./grid.js";
 import { buildMinimap } from "./minimap.js";
 import { buildFloorPlan } from "./floorplan.js";
@@ -127,7 +126,6 @@ buildParquetMesh(scene);
 // Carrelage blanc 20×20cm — SDB + couloir entrée
 buildTileMesh(scene);
 
-buildInstancedMeshes();
 const gridGroup = buildGrid(scene);
 gridGroup.visible = false;
 // Déplacer le label couloir dans gridGroup (il était ajouté à scene par makeText)
