@@ -4,6 +4,7 @@ import { mergeGlbByMaterial } from './mergeUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { requestRender } from './cameraManager.js';
 import { LAYER_GLB } from './config.js';
+import { buildVihals } from './vihals.js';
 
 const R = 6; // rayon d'arrondi des canapés (cm)
 
@@ -98,38 +99,8 @@ export function buildGarden(scene) {
   // =============================================
   // CHAISE PLIANTE IKEA VIHALS (rouge)
   // =============================================
-  gltfLoader.load('media/folding-chair-generic.glb', (gltf) => {
-    const chair = gltf.scene;
-
-    const rawBox = new THREE.Box3().setFromObject(chair);
-    const rawSize = rawBox.getSize(new THREE.Vector3());
-    chair.scale.setScalar(400 / rawSize.y);
-
-    chair.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(chair);
-
-    chair.position.set(
-      -50 - (box.min.x + box.max.x) / 2,
-      0,
-      350 - (box.min.z + box.max.z) / 2,
-    );
-
-    const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 });
-    chair.traverse(c => {
-      c.layers.set(LAYER_GLB);
-      if (c.isMesh) {
-        c.material = redMat;
-        c.castShadow = true;
-        c.receiveShadow = true;
-      } else if (c.isLine) {
-        c.visible = false;
-      }
-    });
-
-    mergeGlbByMaterial(chair);
-    scene.add(chair);
-    requestRender();
-  }, undefined, err => console.error('folding-chair-generic.glb:', err));
+  // cx=-50 (à l'ouest du jardin), cz=350, orientée face à la pièce
+  buildVihals(scene, -50, 350, Math.PI, 0xcc2222);
 
 
   // =============================================

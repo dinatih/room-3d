@@ -16,7 +16,7 @@ const GLB_PATHS = [
   'media/mackapar_ikea.glb',
   'media/ikea_lamp_ola.glb',
   'media/ikea_DRONA_black.glb',
-  'media/red_backpack.glb',
+
   'media/ikea_Altappen_single.glb',
   'media/xiaomi_electric_scooter_4.glb',
   'media/folding-chair-generic.glb',

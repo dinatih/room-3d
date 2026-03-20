@@ -265,10 +265,19 @@ export function buildBackpacks(scene) {
   bagS.position.set(300 - 15 / 2, 160, 155);
   scene.add(bagS);
 
-  // Taille L : 40×43×17cm — corps W=32, H=43, D=17
+  // Taille L : 40×43×17cm — corps W=32, H=43, D=17 — mur B
   const bagL = buildBag(32, 43, 17);
   bagL.traverse(c => { if (c.isMesh) c.layers.set(LAYER_FURNITURE); });
   bagL.rotation.y = -Math.PI / 2;
   bagL.position.set(300 - 17 / 2, 160, 200);
   scene.add(bagL);
+
+  // Taille L — mur A (X=0), remplace red_backpack.glb
+  // rotation.y=π/2 : dos (local -Z) contre X=0, face vers +X (pièce)
+  // centre Y≈160 → position.y = 160 - 43/2 ≈ 138
+  const bagLWallA = buildBag(32, 43, 17);
+  bagLWallA.traverse(c => { if (c.isMesh) c.layers.set(LAYER_FURNITURE); });
+  bagLWallA.rotation.y = Math.PI / 2;
+  bagLWallA.position.set(17 / 2, 138, 258);
+  scene.add(bagLWallA);
 }
