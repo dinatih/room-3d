@@ -1,47 +1,12 @@
 import * as THREE from 'three';
 import {
   ROOM_W, ROOM_D, PLATE_H, GAP, WALL_H,
-  DOOR_START, DOOR_END, NICHE_DEPTH, NICHE_Z_START, FLOOR_Y, GARDEN_JC_Z,
+  NICHE_Z_START, FLOOR_Y, GARDEN_JC_Z,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AZ, DIAG_CX, DIAG_CZ,
   BLDG_X_MIN, BLDG_X_MAX, BLDG_Z_MIN, BLDG_Z_MAX,
+  DOOR_START,
   COLORS,
 } from './config.js';
-import { fillRow, addFloorBrick } from './brickHelpers.js';
-
-// =============================================
-// SOL LEGO (briques de sol)
-// =============================================
-export function buildFloor(allBricks) {
-  const FLOOR_X0 = 0;
-  const FLOOR_X1 = ROOM_W;
-  const FLOOR_Z0 = 0;
-  const FLOOR_Z1 = ROOM_D;
-  const FLOOR_W = FLOOR_X1 - FLOOR_X0;
-
-  for (let z = FLOOR_Z0; z < FLOOR_Z1; z += 10) {
-    for (const b of fillRow(FLOOR_W, (z / 10) % 2 === 1)) {
-      addFloorBrick(FLOOR_X0 + b.start, z, b.size);
-    }
-  }
-
-  // Sol niche MN (X=-10→0, Z=280→400)
-  for (let z = NICHE_Z_START; z < ROOM_D; z += 10) {
-    addFloorBrick(-NICHE_DEPTH, z, NICHE_DEPTH);
-  }
-
-  // Sol sous la porte P1 (z = ROOM_D, entre les montants)
-  const DOOR_W = DOOR_END - DOOR_START;
-  for (const b of fillRow(DOOR_W, (ROOM_D / 10) % 2 === 1)) {
-    addFloorBrick(DOOR_START + b.start, ROOM_D, b.size);
-  }
-
-  // Sol ouverture cuisine (z = ROOM_D, X=30→130)
-  const KIT_OPEN_X0 = 30, KIT_OPEN_W = 100;
-  for (const b of fillRow(KIT_OPEN_W, (ROOM_D / 10) % 2 === 1)) {
-    addFloorBrick(KIT_OPEN_X0 + b.start, ROOM_D, b.size);
-  }
-
-}
 
 // =============================================
 // PARQUET — dalle texturée, lames 130×20cm
@@ -360,4 +325,16 @@ export function buildCeiling(scene) {
   terrace.position.set(terCX, WALL_H - 1 + CEIL_THICK / 2, terCZ);
   terrace.userData.brickType = 'ceiling';
   scene.add(terrace);
+}
+
+// =============================================
+// GROUND PLANE
+// =============================================
+export function buildGroundPlane(scene) {
+  const mat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 });
+  const ground = new THREE.Mesh(new THREE.BoxGeometry(2000, 10, 2000), mat);
+  ground.position.set(150, -5, 400);
+  ground.receiveShadow = true;
+  ground.userData.brickType = 'ground';
+  scene.add(ground);
 }

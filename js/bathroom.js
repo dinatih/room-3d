@@ -3,11 +3,7 @@ import { buildVasque } from "./vasque.js";
 import { buildWC } from "./wc.js";
 import {
   ROOM_W,
-  NUM_LAYERS,
   WALL_H,
-  BRICK_H,
-  PLATE_H,
-  GAP,
   DOOR_START,
   NICHE_DEPTH,
   KITCHEN_Z,
@@ -18,7 +14,8 @@ import {
   CORR_DOOR_S,
   CORR_DOOR_E,
 } from "./config.js";
-import { fillRow, addBrickX, addBrickZ, addFloorBrick } from "./brickHelpers.js";
+
+const W = 10; // wall thickness
 
 export function buildBathroom(scene) {
   const WALL_X = DOOR_START - 5;
@@ -37,14 +34,22 @@ export function buildBathroom(scene) {
     roughness: 0.3,
   });
 
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
+
+  function panel(w, h, d, x, y, z, mat = wallMat) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m); return m;
+  }
+
   // =============================================
   // Mur salle de bain côté niche (parallèle au couloir), 1m40 = 140cm
   // =============================================
   const SDB_WALL_LEN = SDB_Z_END - KITCHEN_Z; // 140
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(SDB_WALL_LEN, layer % 2 === 1))
-      addBrickZ(-NICHE_DEPTH - 5, layer, KITCHEN_Z + b.start, b.size, "wall");
-  }
+  panel(W, WALL_H, SDB_WALL_LEN,
+        -NICHE_DEPTH - W/2, WALL_H/2,
+        (KITCHEN_Z + SDB_Z_END) / 2);
 
   // =============================================
   // Mur fond SDB (Z=600) avec ouverture douche
@@ -130,23 +135,13 @@ export function buildBathroom(scene) {
   const GLASS_H = 180;
 
   // Mur ouest douche (prolonge le mur SDB ouest de Z=600 à Z=670)
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(SHOWER_D, layer % 2 === 1))
-      addBrickZ(-NICHE_DEPTH - 5, layer, SHOWER_Z0 + b.start, b.size, "wall");
-  }
+  panel(W, WALL_H, SHOWER_D, -NICHE_DEPTH - W/2, WALL_H/2, SHOWER_Z0 + SHOWER_D/2);
 
   // Mur est douche (X=60, de Z=600 à Z=670)
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(SHOWER_D, layer % 2 === 1))
-      addBrickZ(SHOWER_X1 + 5, layer, SHOWER_Z0 + b.start, b.size, "wall");
-  }
+  panel(W, WALL_H, SHOWER_D, SHOWER_X1 + W/2, WALL_H/2, SHOWER_Z0 + SHOWER_D/2);
 
   // Mur fond douche (Z=670)
-  const BACK_W = SHOWER_W; // 70 (de -10 à 60)
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(BACK_W, layer % 2 === 1))
-      addBrickX(-NICHE_DEPTH + b.start, layer, SHOWER_Z1 + 5, b.size, "wall");
-  }
+  panel(SHOWER_W, WALL_H, W, (SHOWER_X0 + SHOWER_X1) / 2, WALL_H/2, SHOWER_Z1 + W/2);
 
   // Cuve (base surélevée 20cm)
   const showerCX = (SHOWER_X0 + SHOWER_X1) / 2;
@@ -279,23 +274,6 @@ export function buildBathroom(scene) {
   scene.add(hwGroup);
 
   // Extension mur SDB ouest vers le sud (Z=670 → DIAG_END_Z)
-  const WEST_EXT = (Math.floor((DIAG_END_Z - SHOWER_Z1) / 10) + 1) * 10;
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(WEST_EXT, layer % 2 === 1))
-      addBrickZ(-NICHE_DEPTH - 5, layer, SHOWER_Z1 + b.start, b.size, "wall");
-  }
-
-  // =============================================
-  // Sol SDB (X=-10→180, Z=470→600, sans recouvrir MCo-O)
-  // =============================================
-  // Sol principal (X=-10→180, sans passer sous les murs)
-  for (let z = KITCHEN_Z + 10; z < SDB_Z; z += 10) {
-    for (const b of fillRow(SDB_W - 10, (z / 10) % 2 === 1)) {
-      addFloorBrick(-NICHE_DEPTH + b.start, z, b.size);
-    }
-  }
-  // Seuil porte P2 (X=180→190, uniquement sous l'ouverture Z=CORR_DOOR_S→CORR_DOOR_E)
-  for (let z = CORR_DOOR_S; z < CORR_DOOR_E; z += 10) {
-    addFloorBrick(DOOR_START - 10, z, 10);
-  }
+  const WEST_EXT = DIAG_END_Z - SHOWER_Z1;
+  panel(W, WALL_H, WEST_EXT, -NICHE_DEPTH - W/2, WALL_H/2, (SHOWER_Z1 + DIAG_END_Z) / 2);
 }

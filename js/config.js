@@ -4,11 +4,7 @@
 // 1 unit = 1cm
 export const ROOM_W = 300; // 3m
 export const ROOM_D = 400; // 4m
-export const WALL_H = 250; // 2.5m (8 × 30cm + 1 plaque 10cm)
-export const BRICK_H = 30;
-export const BRICK_W = 10;  // épaisseur d'un mur / largeur d'un stud (1 stud = 10cm)
-export const NUM_LAYERS = 8; // 8 couches × 30cm = 240cm
-export const WALL_PLATE_H = 10; // plaque de finition haut de mur
+export const WALL_H = 250; // 2.5m
 export const GAP = 0; // temporairement désactivé (était 0.8)
 export const STUD_R = 3;
 export const PLATE_H = 3.5; // hauteur d'une plate (sol fin)
@@ -17,7 +13,6 @@ export const STUD_HT = PLATE_H / 2; // 1.75
 // Porte : 80cm d'ouverture, 30cm du mur B (X=300)
 export const DOOR_START = 190; // cm 190
 export const DOOR_END = 270; // cm 270
-export const DOOR_H_LAYERS = 7; // ouverture brute : 7 × 30cm = 210cm
 export const DOOR_H = 204;      // hauteur standard française (panneaux de porte)
 
 // Renfoncement cuisine : 1m large, 60cm profond, à droite de la porte
@@ -35,10 +30,6 @@ export const NICHE_Z_START = ROOM_D - NICHE_LENGTH; // Z=280
 // Muret de 20cm sous la baie (~1 couche = 30cm en LEGO)
 export const GLASS_START = 90; // 300 - 50 - 160 = cm 90
 export const GLASS_END = 250; // 300 - 50 = cm 250
-export const GLASS_MIN_LAYER = 0; // porte de terrasse : accès direct au jardin (sans allège)
-export const GLASS_MAX_LAYER = 7; // 6 couches vitrées au-dessus = 180cm (~190cm)
-
-export const BRICK_SIZES = [160, 120, 100, 80, 60, 40, 30, 20, 10];
 
 // Kallax dimensions (cm)
 export const KALLAX_CELL = 33.5;   // niche width 33.5cm

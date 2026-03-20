@@ -1,10 +1,11 @@
 import * as THREE from 'three';
-import { ROOM_W, ROOM_D, NUM_LAYERS, WALL_H, BRICK_H, DOOR_H, GAP, DOOR_START, DOOR_END, DOOR_H_LAYERS, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_EQUIPMENT } from './config.js';
-import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
+import { ROOM_W, ROOM_D, WALL_H, DOOR_H, DOOR_START, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_EQUIPMENT } from './config.js';
 import { makeText } from './labels.js';
 import { buildDoors, DOOR_W } from './doors.js';
 
 export { toggleCorridorDoors, toggleEntryDoor, toggleLivingDoor, toggleBathroomDoor } from './doors.js';
+
+const W = 10; // wall thickness
 
 export function buildCorridor(scene) {
   const WALL_X = DOOR_START - 5;
@@ -14,45 +15,37 @@ export function buildCorridor(scene) {
   const LEFT_WALL_LEN = SDB_Z_END - KITCHEN_Z; // 140
   const LEFT_WALL_Z0 = KITCHEN_Z; // Z=460
 
-  // Ouverture porte SDB dans le mur briques (centrée à 10cm du bout, ~83cm)
-  const C_DOOR_W = DOOR_W; // 83cm — même largeur que séjour
-  const C_DOOR_START = LEFT_WALL_LEN - 10 - C_DOOR_W;
+  // Ouverture porte SDB dans le mur
+  const C_DOOR_W = DOOR_W; // 83cm
+  const C_DOOR_START = LEFT_WALL_LEN - 10 - C_DOOR_W; // local offset along wall
   const C_DOOR_END = C_DOOR_START + C_DOOR_W;
 
-  // Mur gauche du couloir (côté SDB) avec porte
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    let skipS, skipE;
-    if (layer < DOOR_H_LAYERS) {
-      skipS = C_DOOR_START - 10;
-      skipE = C_DOOR_END + 10;
-    } else if (layer === DOOR_H_LAYERS) {
-      skipS = C_DOOR_START;
-      skipE = C_DOOR_END;
-    } else {
-      skipS = skipE = -1;
-    }
+  // Absolute Z positions for the bathroom door opening
+  const C_DOOR_START_ABS = LEFT_WALL_Z0 + C_DOOR_START; // ≈507
+  const C_DOOR_END_ABS   = LEFT_WALL_Z0 + C_DOOR_END;   // ≈590
 
-    for (const b of fillRow(LEFT_WALL_LEN, layer % 2 === 1)) {
-      const bS = b.start;
-      const bE = bS + b.size;
+  const wallMat  = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
+  const accentMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });
 
-      if (skipS >= 0 && bE > skipS && bS < skipE) {
-        if (bS < skipS)
-          addBrickZ(WALL_X, layer, LEFT_WALL_Z0 + bS, skipS - bS, 'wall');
-        if (bE > skipE)
-          addBrickZ(WALL_X, layer, LEFT_WALL_Z0 + skipE, bE - skipE, 'wall');
-      } else {
-        addBrickZ(WALL_X, layer, LEFT_WALL_Z0 + bS, b.size, 'wall');
-      }
-    }
+  function panel(w, h, d, x, y, z, mat = wallMat) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m); return m;
   }
 
-  // Encadrement porte SDB (accent rouge)
-  for (let layer = 0; layer < DOOR_H_LAYERS; layer++) {
-    addBrickZ(WALL_X, layer, LEFT_WALL_Z0 + C_DOOR_START - 10, 10, 'accent');
-    addBrickZ(WALL_X, layer, LEFT_WALL_Z0 + C_DOOR_END, 10, 'accent');
-  }
-  addBrickZ(WALL_X, DOOR_H_LAYERS, LEFT_WALL_Z0 + C_DOOR_START, C_DOOR_W, 'accent');
+  // ── Mur gauche du couloir (côté SDB, à X=WALL_X=185) ─────────────────────
+  // Section avant porte (Z=460 → ~502)
+  const LEFT_SECTION1_D = 37; // ≈ C_DOOR_START_ABS - 5 - LEFT_WALL_Z0 - 5 = gap to door frame
+  panel(W, WALL_H, LEFT_SECTION1_D, WALL_X, WALL_H/2, LEFT_WALL_Z0 + LEFT_SECTION1_D/2);
+  // Encadrement gauche (accent)
+  panel(W + 2, WALL_H, 10, WALL_X, WALL_H/2, LEFT_WALL_Z0 + 42, accentMat);
+  // Linteau au-dessus de la porte SDB
+  panel(W, WALL_H - DOOR_H, C_DOOR_W, WALL_X,
+        DOOR_H + (WALL_H - DOOR_H) / 2,
+        (C_DOOR_START_ABS + C_DOOR_END_ABS) / 2);
+  // Encadrement droit (accent)
+  panel(W + 2, WALL_H, 10, WALL_X, WALL_H/2, SDB_Z_END - 5, accentMat);
 
   // =============================================
   // PLACARD COULISSANT (X=130→190, Z=410→460)
@@ -110,23 +103,13 @@ export function buildCorridor(scene) {
     scene.add(handle);
     closetParts.push(handle);
 
-    for (let z = CLOSET_Z0; z < CLOSET_Z1; z += 10) {
-      for (const b of fillRow(CLOSET_W - 10, (z / 10) % 2 === 1)) {
-        addFloorBrick(CLOSET_X0 + 10 + b.start, z, b.size);
-      }
-    }
-
     for (const obj of closetParts)
       obj.layers.set(LAYER_EQUIPMENT);
   }
 
-  // Mur droit du couloir (en face de la porte SDB), jusqu'au début du diag
-  const CORR_RIGHT_X = ROOM_W + 5;
-  const CORR_RIGHT_LEN = DIAG_AZ - WALL_Z0;
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(CORR_RIGHT_LEN, layer % 2 === 1))
-      addBrickZ(CORR_RIGHT_X, layer, WALL_Z0 + b.start, b.size, 'wall');
-  }
+  // ── Mur droit du couloir (en face de la porte SDB), jusqu'au début du diag ─
+  const CORR_RIGHT_LEN = DIAG_AZ - WALL_Z0; // 530-410=120
+  panel(W, WALL_H, CORR_RIGHT_LEN, ROOM_W + W/2, WALL_H/2, (WALL_Z0 + DIAG_AZ) / 2);
 
   // =============================================
   // Mur couloir bâtiment (diagonal)
@@ -148,7 +131,7 @@ export function buildCorridor(scene) {
   const E_DOOR_W = 90;
   const E_DOOR_END = E_DOOR_START + E_DOOR_W;
 
-  // ── Mur diagonal plein (remplacement des briques) ──────────
+  // ── Mur diagonal plein ──────────────────────────────────────────────────
   {
     const DIAG_DEPTH = 10; // épaisseur du mur (cm)
 
@@ -157,7 +140,7 @@ export function buildCorridor(scene) {
     const pX = cosθ;   //  diagDZ/diagLen ≈ +0.537
     const pZ = -sinθ;  // -diagDX/diagLen ≈ +0.844
 
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
+    const wallMatDiag = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
 
     // Retourne [worldX, worldZ] sur la face intérieure à dist cm depuis A
     function iP(dist) {
@@ -180,7 +163,7 @@ export function buildCorridor(scene) {
       const geo = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });
       geo.rotateX(-Math.PI / 2);
       if (yBase > 0) geo.translate(0, yBase, 0);
-      const m = new THREE.Mesh(geo, wallMat);
+      const m = new THREE.Mesh(geo, wallMatDiag);
       m.castShadow = true;
       m.receiveShadow = true;
       scene.add(m);
@@ -207,47 +190,9 @@ export function buildCorridor(scene) {
   });
 
   // =============================================
-  // Sols couloir studio
-  // =============================================
-  const CORR_FLOOR_W = ROOM_W - DOOR_START; // 110
-  for (let z = WALL_Z0; z < WALL_Z0 + CORR_RIGHT_LEN; z += 10) {
-    for (const b of fillRow(CORR_FLOOR_W, (z / 10) % 2 === 1)) {
-      addFloorBrick(DOOR_START + b.start, z, b.size);
-    }
-  }
-
-  const SDB_Z = KITCHEN_Z + LEFT_WALL_LEN;
-  const SHOWER_EAST = -NICHE_DEPTH + 70;
-  const SHOWER_Z_END = SDB_Z + 70;
-
-  for (let z = DIAG_AZ; z < Math.ceil(DIAG_CZ / 10) * 10; z += 10) {
-    const rawDiagX = DIAG_AX + 5 - (DIAG_AX - DIAG_CX) * (z + 5 - (DIAG_AZ + 5)) / (DIAG_CZ - DIAG_AZ);
-    const maxX = Math.floor(rawDiagX / 10) * 10;
-    const minX = z < SDB_Z ? DOOR_START : -NICHE_DEPTH;
-    const width = maxX - minX;
-    if (width <= 0) continue;
-
-    if (z >= SDB_Z && z < SHOWER_Z_END) {
-      const w1 = SHOWER_EAST - minX;
-      if (w1 > 0) for (const b of fillRow(w1, (z / 10) % 2 === 1))
-        addFloorBrick(minX + b.start, z, b.size);
-      const w2 = maxX - (SHOWER_EAST + 10);
-      if (w2 > 0) for (const b of fillRow(w2, (z / 10) % 2 === 1))
-        addFloorBrick(SHOWER_EAST + 10 + b.start, z, b.size);
-    } else if (z === SHOWER_Z_END) {
-      const w = maxX - SHOWER_EAST;
-      if (w > 0) for (const b of fillRow(w, (z / 10) % 2 === 1))
-        addFloorBrick(SHOWER_EAST + b.start, z, b.size);
-    } else {
-      for (const b of fillRow(width, (z / 10) % 2 === 1))
-        addFloorBrick(minX + b.start, z, b.size);
-    }
-  }
-
-  // =============================================
   // Labels
   // =============================================
   const labelY = WALL_H * 0.6;
-  const sdbCZ = (KITCHEN_Z + SDB_Z) / 2;
+  const sdbCZ = (KITCHEN_Z + SDB_Z_END) / 2;
   return makeText(scene, 'MUR COULOIR', { size: 12, x: WALL_X - 30, y: labelY, z: sdbCZ, rotY: Math.PI / 2 });
 }

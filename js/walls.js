@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import {
-  ROOM_W, ROOM_D, NUM_LAYERS, BRICK_H, WALL_H, STUD_R,
-  NICHE_DEPTH, NICHE_LENGTH, NICHE_Z_START,
-  GLASS_START, GLASS_END, GLASS_MAX_LAYER,
-  DOOR_START, DOOR_END, DOOR_H_LAYERS,
+  ROOM_W, ROOM_D, WALL_H, STUD_R,
+  NICHE_DEPTH, NICHE_Z_START,
+  GLASS_START, GLASS_END,
+  DOOR_START, DOOR_END, DOOR_H,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, KITCHEN_Z,
 } from './config.js';
-import { fillRow, addBrickX, addBrickZ, addFloorBrick } from './brickHelpers.js';
+
+const W = 10; // wall thickness
 
 let eastDoorGroup;
 let eastDoorOpen = false;
@@ -17,102 +18,62 @@ export function toggleEastDoor() {
   return eastDoorOpen;
 }
 
-// --- Helper: mur avec ouvertures multiples ---
-function buildWallWithOpenings(wallZ, length, openings) {
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(length, layer % 2 === 1)) {
-      const bS = b.start;
-      const bE = bS + b.size;
-      let segments = [{ s: bS, e: bE }];
-      for (const op of openings) {
-        const minL = op.minLayer || 0;
-        if (layer < minL || layer >= op.maxLayer) continue;
-        const newSegments = [];
-        for (const seg of segments) {
-          if (seg.e <= op.start || seg.s >= op.end) {
-            newSegments.push(seg);
-          } else {
-            if (seg.s < op.start) newSegments.push({ s: seg.s, e: op.start });
-            if (seg.e > op.end) newSegments.push({ s: op.end, e: seg.e });
-          }
-        }
-        segments = newSegments;
-      }
-      for (const seg of segments) {
-        const size = seg.e - seg.s;
-        if (size > 0) addBrickX(seg.s, layer, wallZ, size, 'wall');
-      }
-    }
-  }
-}
-
 export function buildWalls(scene) {
-  // --- Mur gauche A (x = -5), prolongé jusqu'à Z=-30 ---
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(NICHE_Z_START + 30, layer % 2 === 1))
-      addBrickZ(-5, layer, -30 + b.start, b.size, 'wall');
-  }
-  // Section niche ouest (x = -NICHE_DEPTH - 5), prolongée jusqu'à Z=-30
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(NICHE_Z_START + NICHE_LENGTH + 40, layer % 2 === 1))
-      addBrickZ(-NICHE_DEPTH - 5, layer, -30 + b.start, b.size, 'wall');
-  }
-  // Mur de gaine technique ouest (x = -NICHE_DEPTH - 5), de Z=410 à Z=460
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(KITCHEN_Z - ROOM_D - 10, layer % 2 === 1))
-      addBrickZ(-NICHE_DEPTH - 5, layer, ROOM_D + 10 + b.start, b.size, 'wall');
+  const wallMat  = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
+  const accentMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });
+
+  function panel(w, h, d, x, y, z, mat = wallMat) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m); return m;
   }
 
-  // Retour de niche à Z=280
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    addBrickX(-NICHE_DEPTH, layer, NICHE_Z_START - 5, NICHE_DEPTH, 'wall');
-  }
+  // ── MUR A (ouest, face intérieure à X=0) ──────────────────────────────────
+  // A1 : de Z=-30 à Z=NICHE_Z_START=280 (longueur 310)
+  panel(W, WALL_H, 310,  -W/2,               WALL_H/2, (-30 + NICHE_Z_START) / 2);
+  // A2 : face X=-15, de Z=-30 à Z=KITCHEN_Z=460 (longueur 490)
+  panel(W, WALL_H, 490,  -NICHE_DEPTH - W/2, WALL_H/2, (-30 + KITCHEN_Z) / 2);
+  // A4 retour niche (ferme l'angle à Z=NICHE_Z_START)
+  panel(NICHE_DEPTH, WALL_H, W, -NICHE_DEPTH/2, WALL_H/2, NICHE_Z_START - W/2);
 
-  // --- Mur droit B (x = ROOM_W + 5) ---
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(ROOM_D + 10, layer % 2 === 1))
-      addBrickZ(ROOM_W + 5, layer, b.start, b.size, 'wall');
-  }
-
-  // Extension mur B vers le jardin (30cm mur C + 200cm)
-  const WALLB_EXT = 230;
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(WALLB_EXT, layer % 2 === 1))
-      addBrickZ(ROOM_W + 5, layer, -WALLB_EXT + b.start, b.size, 'wall');
-  }
+  // ── MUR B (est, X=ROOM_W=300) ────────────────────────────────────────────
+  // B1 : de Z=0 à Z=ROOM_D+10=410 (longueur 410+, centre 205)
+  panel(W, WALL_H, ROOM_D + 10, ROOM_W + W/2, WALL_H/2, (ROOM_D + 10) / 2);
+  // B2 extension jardin : de Z=-230 à Z=0 (longueur 230)
+  panel(W, WALL_H, 230, ROOM_W + W/2, WALL_H/2, -115);
 
   // Panneaux bois occultants (2 × 90cm) à la suite du mur B prolongé
   {
     const panelMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6 });
-    const PANEL_W = 90;    // 90cm chacun
-    const PANEL_H = 190;   // 190cm
-    const PANEL_T = 10;    // 10cm d'épaisseur
+    const PANEL_W = 90;
+    const PANEL_H = 190;
+    const PANEL_T = 10;
     const panelX = ROOM_W + 5;
-    const panelZ0 = -WALLB_EXT; // Z=-230, suite du mur
+    const WALLB_EXT = 230;
+    const panelZ0 = -WALLB_EXT;
 
     for (let i = 0; i < 2; i++) {
       const pz = panelZ0 - i * PANEL_W - PANEL_W / 2;
-      const panel = new THREE.Mesh(
+      const p = new THREE.Mesh(
         new THREE.BoxGeometry(PANEL_T, PANEL_H, PANEL_W),
         panelMat
       );
-      panel.position.set(panelX, PANEL_H / 2, pz);
-      panel.castShadow = true;
-      panel.receiveShadow = true;
-      scene.add(panel);
+      p.position.set(panelX, PANEL_H / 2, pz);
+      p.castShadow = true;
+      p.receiveShadow = true;
+      scene.add(p);
     }
   }
 
-  // --- Mur nord C — trapèze en vue du dessus ---
-  // Arêtes bisautées : extrémité NO s'aligne sur la face ext. du mur A (20cm),
-  // extrémité NE s'aligne sur la face ext. du mur B (10cm).
+  // ── MUR C (nord, Z=0) — trapèze + porte-fenêtre — KEPT VERBATIM ──────────
   {
     const WALL_DEPTH = 30; // 3 studs
     const NW_EXT = 20;     // 2 studs — mur A déborde à l'ouest
     const NE_EXT = 10;     // 1 stud  — mur B déborde à l'est
-    const LINTEAU_Y = GLASS_MAX_LAYER * BRICK_H; // 210cm
+    const GLASS_TOP_Y = 210; // replaces GLASS_MAX_LAYER * BRICK_H
 
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
+    const wallMatC = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
 
     // Crée un trapèze XZ extrudé vers le haut sur `height` cm, décalé de `yBase`.
     // pts : tableau de [worldX, worldZ] définissant le contour vu du dessus.
@@ -124,7 +85,7 @@ export function buildWalls(scene) {
       const geo = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });
       geo.rotateX(-Math.PI / 2);
       if (yBase > 0) geo.translate(0, yBase, 0);
-      const mesh = new THREE.Mesh(geo, wallMat);
+      const mesh = new THREE.Mesh(geo, wallMatC);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       scene.add(mesh);
@@ -147,14 +108,14 @@ export function buildWalls(scene) {
     ], WALL_H);
 
     // Linteau (au-dessus de la baie) — rectangle simple
-    const linteauH = WALL_H - LINTEAU_Y;
+    const linteauH = WALL_H - GLASS_TOP_Y;
     const linteau = new THREE.Mesh(
       new THREE.BoxGeometry(GLASS_END - GLASS_START, linteauH, WALL_DEPTH),
-      wallMat
+      wallMatC
     );
     linteau.position.set(
       (GLASS_START + GLASS_END) / 2,
-      LINTEAU_Y + linteauH / 2,
+      GLASS_TOP_Y + linteauH / 2,
       -WALL_DEPTH / 2
     );
     linteau.castShadow = true;
@@ -203,7 +164,7 @@ export function buildWalls(scene) {
     const glassW = GLASS_END - GLASS_START; // 160
     const SILL_H = 20;                            // seuil maçonné 20cm
     const glassBaseY = SILL_H;                    // vitrage démarre à 20cm
-    const glassTopY = GLASS_MAX_LAYER * BRICK_H;  // 210
+    const glassTopY = 210;                        // GLASS_TOP_Y = 210
     const glassH = glassTopY - glassBaseY;         // 190
     const midX = GLASS_START + glassW / 2;         // 170 — axe central
     const Z = -5;
@@ -282,47 +243,35 @@ export function buildWalls(scene) {
     scene.add(eastDoorGroup);
   }
 
-  // --- Mur avant D (z = ROOM_D + 5) avec porte + ouverture cuisine ---
-  // Ouvertures élargies pour inclure l'encadrement (évite z-fighting)
-  buildWallWithOpenings(ROOM_D + 5, ROOM_W, [
-    { start: KITCHEN_X0, end: KITCHEN_X1, maxLayer: NUM_LAYERS },
-    { start: DOOR_START - 10, end: DOOR_END + 10, maxLayer: DOOR_H_LAYERS },
-    { start: DOOR_START, end: DOOR_END, minLayer: DOOR_H_LAYERS, maxLayer: DOOR_H_LAYERS + 1 },
-  ]);
+  // ── MUR D (sud, Z=ROOM_D=400) ────────────────────────────────────────────
+  // Extension niche côté A
+  panel(NICHE_DEPTH, WALL_H, W, -NICHE_DEPTH/2,                    WALL_H/2, ROOM_D + W/2);
+  // Section gauche (X=0 → KITCHEN_X0=30)
+  panel(KITCHEN_X0, WALL_H, W,  KITCHEN_X0/2,                      WALL_H/2, ROOM_D + W/2);
+  // Section milieu (KITCHEN_X1=130 → DOOR_START-10=180)
+  panel(DOOR_START - 10 - KITCHEN_X1, WALL_H, W,
+        (KITCHEN_X1 + DOOR_START - 10) / 2,                        WALL_H/2, ROOM_D + W/2);
+  // Montant gauche porte (encadrement accent)
+  panel(10, WALL_H, W + 2, DOOR_START - 5,                         WALL_H/2, ROOM_D + W/2, accentMat);
+  // Montant droit porte (encadrement accent)
+  panel(10, WALL_H, W + 2, DOOR_END + 5,                           WALL_H/2, ROOM_D + W/2, accentMat);
+  // Linteau porte (accent)
+  panel(DOOR_END - DOOR_START, WALL_H - DOOR_H, W + 2,
+        (DOOR_START + DOOR_END) / 2,
+        DOOR_H + (WALL_H - DOOR_H) / 2,                                       ROOM_D + W/2, accentMat);
+  // Section droite (DOOR_END+10=280 → ROOM_W=300)
+  panel(ROOM_W - DOOR_END - 10, WALL_H, W,
+        (DOOR_END + 10 + ROOM_W) / 2,                              WALL_H/2, ROOM_D + W/2);
 
-  // Extension mur D côté A
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    addBrickX(-NICHE_DEPTH, layer, ROOM_D + 5, NICHE_DEPTH, 'wall');
-  }
-
-  // --- Encadrement porte (accent rouge) ---
-  for (let layer = 0; layer < DOOR_H_LAYERS; layer++) {
-    addBrickX(DOOR_START - 10, layer, ROOM_D + 5, 10, 'accent');
-    addBrickX(DOOR_END, layer, ROOM_D + 5, 10, 'accent');
-  }
-  addBrickX(DOOR_START, DOOR_H_LAYERS, ROOM_D + 5, DOOR_END - DOOR_START, 'accent');
-
-  // --- Renfoncement cuisine (3 murs) ---
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(KITCHEN_DEPTH, layer % 2 === 1))
-      addBrickZ(KITCHEN_X0 - 5, layer, ROOM_D + b.start, b.size, 'wall');
-  }
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(KITCHEN_DEPTH, layer % 2 === 1))
-      addBrickZ(KITCHEN_X1 + 5, layer, ROOM_D + b.start, b.size, 'wall');
-  }
-  // Mur salle de bain (fond cuisine étendu) : X=-NICHE_DEPTH → DOOR_START
-  const SDB_LEN = DOOR_START + NICHE_DEPTH; // 200cm = 2m
-  for (let layer = 0; layer < NUM_LAYERS; layer++) {
-    for (const b of fillRow(SDB_LEN, layer % 2 === 1))
-      addBrickX(-NICHE_DEPTH + b.start, layer, KITCHEN_Z + 5, b.size, 'wall');
-  }
-
-  // Sol cuisine (à l'intérieur des murs MK-O, MK-E et MS-N)
-  const KIT_FW = KITCHEN_X1 - KITCHEN_X0;
-  for (let z = ROOM_D + 10; z < KITCHEN_Z; z += 10) {
-    for (const b of fillRow(KIT_FW, (z / 10) % 2 === 1)) {
-      addFloorBrick(KITCHEN_X0 + b.start, z, b.size);
-    }
+  // ── CUISINE (renfoncement) ────────────────────────────────────────────────
+  const KITCHEN_DEPTH_VAL = KITCHEN_DEPTH; // 60
+  // Mur gauche cuisine
+  panel(W, WALL_H, KITCHEN_DEPTH_VAL, KITCHEN_X0 - W/2, WALL_H/2, ROOM_D + KITCHEN_DEPTH_VAL/2);
+  // Mur droit cuisine
+  panel(W, WALL_H, KITCHEN_DEPTH_VAL, KITCHEN_X1 + W/2, WALL_H/2, ROOM_D + KITCHEN_DEPTH_VAL/2);
+  // Mur nord SDB (fond cuisine étendu, X=-NICHE_DEPTH→DOOR_START)
+  {
+    const SDB_LEN = DOOR_START + NICHE_DEPTH; // 200
+    panel(SDB_LEN, WALL_H, W, (DOOR_START - NICHE_DEPTH) / 2, WALL_H/2, KITCHEN_Z + W/2);
   }
 }

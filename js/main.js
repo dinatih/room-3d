@@ -12,7 +12,6 @@ import {
   LAYER_GLB,
 } from "./config.js";
 import { scene, camera, renderer, controls } from "./scene.js";
-import { allBricks } from "./brickHelpers.js";
 import { loadFont } from "./labels.js";
 import { buildWalls, toggleEastDoor } from "./walls.js";
 import { buildKitchen, toggleFridgeDoor, toggleCabinetDoor } from "./kitchen.js";
@@ -42,9 +41,8 @@ import { toggleCelShading } from "./celShading.js";
 import { buildMeubleT } from "./meubleT.js";
 import { buildCorridor, toggleCorridorDoors, toggleEntryDoor, toggleLivingDoor, toggleBathroomDoor } from "./corridor.js";
 import { buildBathroom } from "./bathroom.js";
-import { buildFloor, buildParquetMesh, buildTileMesh, buildConcreteSlab, buildGardenSlab, buildCeiling } from "./floor.js";
+import { buildGroundPlane, buildParquetMesh, buildTileMesh, buildConcreteSlab, buildGardenSlab, buildCeiling } from "./floor.js";
 import { buildInstancedMeshes } from "./instancedMeshes.js";
-import { buildLegoView } from "./legoView.js";
 import { buildGrid } from "./grid.js";
 import { buildMinimap } from "./minimap.js";
 import { buildFloorPlan } from "./floorplan.js";
@@ -89,7 +87,7 @@ camera.layers.enable(LAYER_GLB);
 
 // Layer 0 : structure
 buildWalls(scene);
-buildFloor(allBricks);
+buildGroundPlane(scene);
 buildConcreteSlab(scene);
 buildGardenSlab(scene);
 buildCeiling(scene);
@@ -129,12 +127,11 @@ buildParquetMesh(scene);
 // Carrelage blanc 20×20cm — SDB + couloir entrée
 buildTileMesh(scene);
 
-const { brickBodyGroup, setBricksOpaque } = buildInstancedMeshes(scene, allBricks);
+buildInstancedMeshes();
 const gridGroup = buildGrid(scene);
 gridGroup.visible = false;
 // Déplacer le label couloir dans gridGroup (il était ajouté à scene par makeText)
 if (corridorLabel) { scene.remove(corridorLabel); gridGroup.add(corridorLabel); }
-const legoViewGroup = buildLegoView(scene, allBricks);
 buildMinimap();
 buildDevtools(scene, renderer);
 const openInventory = buildInventory(scene);
@@ -497,45 +494,6 @@ document.getElementById("grid-toggle")?.addEventListener("click", () => {
   requestRender();
 });
 
-let bricksOpaque = false;
-document.getElementById("bricks-toggle")?.addEventListener("click", () => {
-  bricksOpaque = !bricksOpaque;
-  setBricksOpaque(bricksOpaque);
-  document.getElementById("bricks-toggle").textContent = `Briques : ${bricksOpaque ? "ON" : "OFF"}`;
-  requestRender();
-});
-
-// Vue Lego : affiche seulement les 2 premières rangées de briques
-{
-  let legoActive = false;
-  const savedVis = new Map();
-
-  document.getElementById("lego-view-toggle")?.addEventListener("click", () => {
-    const btn = document.getElementById("lego-view-toggle");
-    if (!legoActive) {
-      // Sauvegarder et masquer tout sauf le groupe Lego
-      savedVis.clear();
-      for (const child of scene.children) {
-        savedVis.set(child.uuid, child.visible);
-        child.visible = (child === legoViewGroup);
-      }
-      legoViewGroup.visible = true;
-      enter2DTop();
-      legoActive = true;
-      btn.textContent = "Vue Lego : ON";
-    } else {
-      // Restaurer
-      for (const child of scene.children) {
-        if (savedVis.has(child.uuid)) child.visible = savedVis.get(child.uuid);
-      }
-      legoViewGroup.visible = false;
-      exit2D();
-      legoActive = false;
-      btn.textContent = "Vue Lego : OFF";
-    }
-    requestRender();
-  });
-}
 
 // =============================================
 // SOL ONLY MODE
