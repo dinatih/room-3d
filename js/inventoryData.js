@@ -20,6 +20,7 @@ export const INVENTORY = [
   { id: 'shelf-lack',        name: 'Étagère LACK',                  brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 26,   d: 110,  h: 5    }, scenePos: { x: 13,   z: 225  }, notes: 'Murale, mur A, 110cm le long de Z' },
   { id: 'basket-fniss',      name: 'Corbeille FNISS',               brand: 'IKEA',     category: 'storage',   qty: 2,  dims: { w: 28,   d: 28,   h: 28   }, scenePos: { x: 110,  z: 500  }, notes: '1 SDB, 1 séjour' },
   { id: 'meuble-t',          name: 'Bibliothèque (MeubleT)',         brand: '',         category: 'storage',   qty: 1,  dims: { w: 100,  d: 40,   h: 50   }, scenePos: { x: 240,  z: 30   }, notes: 'Procédural, mur C' },
+  { id: 'vasque-sdb',        name: 'Ensemble vasque SDB',            brand: '',         category: 'storage',   qty: 1,  dims: { w: 63,   d: 48.5, h: 176  }, scenePos: { x: 112,  z: 488  }, notes: 'Meuble suspendu 60×47×50cm + plan vasque + lavabo + robinet + miroir 63×90cm + lampe LED' },
 
   // ── FURNITURE ────────────────────────────
   { id: 'utaker-lower',      name: 'Utåker - Lit bas',              brand: 'IKEA',     category: 'furniture', qty: 1,  dims: { w: 205,  d: 83,   h: 30   }, scenePos: { x: 290,  z: 88   }, notes: 'Empilable, matelas 200×80cm bleu' },
