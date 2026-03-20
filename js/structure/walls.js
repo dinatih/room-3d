@@ -285,4 +285,53 @@ export function buildWalls(scene) {
     const SDB_LEN = DOOR_START + NICHE_DEPTH; // 200
     panel(SDB_LEN, WALL_H, W, (DOOR_START - NICHE_DEPTH) / 2, WALL_H/2, KITCHEN_Z + W/2);
   }
+
+  // ── Studs — murs A, B, D et cuisine ──────────────────────────────────────
+  {
+    const studGeo = new THREE.CylinderGeometry(STUD_R, STUD_R, 1.5, 8);
+    const studMat = new THREE.MeshStandardMaterial({ color: 0x999988, roughness: 0.5 });
+    const pos = []; // [x, z] pairs
+
+    // Ajoute une grille de studs sur le dessus d'un panneau rectangulaire
+    function addStudsRect(cx, cz, wx, wz) {
+      for (let x = cx - wx / 2 + 5; x < cx + wx / 2; x += 10)
+        for (let z = cz - wz / 2 + 5; z < cz + wz / 2; z += 10)
+          pos.push(x, z);
+    }
+
+    // Mur A (ouest) — panneaux A1, A2, retour niche A4
+    addStudsRect(-W/2,                              (-30 + NICHE_Z_START) / 2,       W, 310);
+    addStudsRect(-NICHE_DEPTH - W/2,                (-30 + KITCHEN_Z) / 2,           W, 490);
+    addStudsRect(-NICHE_DEPTH / 2,                  NICHE_Z_START - W/2,             NICHE_DEPTH, W);
+
+    // Mur B (est)
+    addStudsRect(ROOM_W + W/2,                      (ROOM_D + 10) / 2,               W, ROOM_D + 10);
+    addStudsRect(ROOM_W + W/2,                      -115,                            W, 230);
+
+    // Mur D (sud) — toutes les sections
+    const czD = ROOM_D + W / 2;
+    addStudsRect(-NICHE_DEPTH / 2,                  czD, NICHE_DEPTH, W);
+    addStudsRect(KITCHEN_X0 / 2,                    czD, KITCHEN_X0,  W);
+    addStudsRect((KITCHEN_X1 + DOOR_START - 10) / 2, czD, DOOR_START - 10 - KITCHEN_X1, W);
+    addStudsRect(DOOR_START - 5,                    czD, 10, W);
+    addStudsRect(DOOR_END   + 5,                    czD, 10, W);
+    addStudsRect((DOOR_START + DOOR_END) / 2,       czD, DOOR_END - DOOR_START, W);
+    addStudsRect((DOOR_END + 10 + ROOM_W) / 2,      czD, ROOM_W - DOOR_END - 10, W);
+
+    // Cuisine — murs latéraux + mur nord SDB
+    addStudsRect(KITCHEN_X0 - W/2, ROOM_D + KITCHEN_DEPTH_VAL / 2, W, KITCHEN_DEPTH_VAL);
+    addStudsRect(KITCHEN_X1 + W/2, ROOM_D + KITCHEN_DEPTH_VAL / 2, W, KITCHEN_DEPTH_VAL);
+    addStudsRect((DOOR_START - NICHE_DEPTH) / 2, KITCHEN_Z + W/2, DOOR_START + NICHE_DEPTH, W);
+
+    const count = pos.length / 2;
+    const mesh = new THREE.InstancedMesh(studGeo, studMat, count);
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < count; i++) {
+      dummy.position.set(pos[i * 2], WALL_H + 0.75, pos[i * 2 + 1]);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+  }
 }
