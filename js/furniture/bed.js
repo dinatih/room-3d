@@ -13,6 +13,9 @@ let glbB2 = null;          // second GLB instance
 let glbB2Base = null;      // {x, y, z} — position de b2 empilé (référence)
 let useGlb = false;
 
+let bedPosIdx = 0;         // 0 = pos1 (diagonale), 1 = pos2 (90° contre mur B)
+let BED_POSITIONS = null;  // initialisé dans buildBed après calcul
+
 export function toggleBedStack() {
   stacked = !stacked;
   // Procédural
@@ -26,6 +29,21 @@ export function toggleBedStack() {
     );
   }
   return stacked;
+}
+
+export function toggleBedPosition() {
+  bedPosIdx = (bedPosIdx + 1) % 3;
+  const p = BED_POSITIONS[bedPosIdx];
+  if (proceduralGroup) {
+    proceduralGroup.rotation.y = p.ry;
+    proceduralGroup.position.set(p.x, 0, p.z);
+  }
+  if (glbGroup) {
+    glbGroup.rotation.y = p.ry;
+    glbGroup.position.set(p.x, 0, p.z);
+  }
+  requestRender();
+  return bedPosIdx;
 }
 
 export function toggleBedVersion() {
@@ -87,7 +105,7 @@ export function buildBed(scene) {
   b2 = createUtakerBed(0xffffff, 24); // top: white mattress
   b2.userData.inventoryId = 'utaker-upper';
   b2.position.y = 23; // stacked
-  utaker.userData.hoverAction = { label: 'Lit Utåker', actionId: 'bed-toggle' };
+  utaker.userData.hoverAction = { label: 'Lit Utåker', actions: ['bed-toggle', 'bed-position'] };
   utaker.add(b1, b2);
 
   // Top of upper mattress: b2.y(23) + mat.y(11+12) + matH/2(12) = 58
@@ -163,6 +181,14 @@ export function buildBed(scene) {
   const neOffZ = -halfL * Math.sin(alpha) + halfW * Math.cos(alpha);
   const posX = ROOM_W - neOffX;
   const posZ = NE_Z - neOffZ;
+
+  // Pos 2 : parallèle à mur B, axe long le long de Z
+  // Pos 3 : perpendiculaire à mur B, tête contre le mur (local X+ → world X+, posX + 102.5 = 300)
+  BED_POSITIONS = [
+    { x: posX,                z: posZ, ry: alpha },
+    { x: ROOM_W - 83 / 2,    z: 190,  ry: Math.PI / 2 },
+    { x: ROOM_W - 205 / 2,   z: 200,  ry: 0 },
+  ];
 
   utaker.rotation.y = alpha;
   utaker.position.set(posX, 0, posZ);

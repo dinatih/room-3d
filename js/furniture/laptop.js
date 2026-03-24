@@ -43,12 +43,31 @@ export function buildLaptop(scene) {
   base.receiveShadow = true;
   laptopGroup.add(base);
 
-  // Keyboard area
-  const KB_W = 24, KB_D = 9;
-  const kb = new THREE.Mesh(new THREE.PlaneGeometry(KB_W, KB_D), kbMat);
-  kb.rotation.x = -Math.PI / 2;
-  kb.position.set(0, BASE_H + 0.01, -2.5);
-  laptopGroup.add(kb);
+  // Keyboard keys (InstancedMesh)
+  const KW = 1.28, KD = 1.22, KH = 0.18;  // dimensions d'une touche
+  const KPX = 1.64, KPZ = 1.56;            // pas colonne / rangée
+  const NCOLS = 14, NROWS = 5;
+  const KB_CZ = -2.8; // centre de la zone clavier (Z)
+  const KB_Z0 = KB_CZ - (NROWS - 1) * KPZ / 2; // rangée du haut
+
+  const keyGeo  = new THREE.BoxGeometry(KW, KH, KD);
+  const keyInst = new THREE.InstancedMesh(keyGeo, kbMat, NCOLS * NROWS);
+  keyInst.castShadow = true;
+  const _dummy = new THREE.Object3D();
+  let _ki = 0;
+  for (let r = 0; r < NROWS; r++) {
+    for (let c = 0; c < NCOLS; c++) {
+      _dummy.position.set(
+        (-NCOLS / 2 + 0.5 + c) * KPX,
+        BASE_H + KH / 2,
+        KB_Z0 + r * KPZ,
+      );
+      _dummy.updateMatrix();
+      keyInst.setMatrixAt(_ki++, _dummy.matrix);
+    }
+  }
+  keyInst.instanceMatrix.needsUpdate = true;
+  laptopGroup.add(keyInst);
 
   // Trackpad
   const TP_W = 10, TP_D = 6;

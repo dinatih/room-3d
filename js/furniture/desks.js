@@ -101,7 +101,7 @@ export function buildDesks(scene) {
   const d1 = new Bollsidan();
   d1.group.userData.inventoryId = 'desk-bollsidan-1';
   d1.group.userData.hoverAction = { label: 'Bureau 1', actionId: 'desk1-toggle' };
-  d1.group.position.set(22, 0, 83);
+  d1.group.position.set(22, 0, 74.5);
   d1.group.rotation.y = Math.PI / 2;
   scene.add(d1.group);
   desks.push(d1);

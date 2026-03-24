@@ -17,7 +17,6 @@ export function addHoverTarget(obj) {
 
 let menuEl = null;
 let labelEl = null;
-let btnEl   = null;
 let hideTimer = null;
 let currentActionId = null;
 
@@ -40,21 +39,10 @@ export function registerHoverAction(actionId, config) {
 export function initHoverMenu(renderer, camera, scene) {
   menuEl  = document.getElementById('hover-menu');
   labelEl = menuEl.querySelector('.hm-label');
-  btnEl   = menuEl.querySelector('.hm-btn');
 
   // Collect all tagged objects once
   scene.traverse(obj => {
     if (obj.userData.hoverAction) targets.push(obj);
-  });
-
-  // Button action
-  btnEl.addEventListener('click', e => {
-    e.stopPropagation();
-    const cfg = actionRegistry.get(currentActionId);
-    if (cfg) {
-      cfg.execute();
-      btnEl.textContent = cfg.getLabel();
-    }
   });
 
   // Keep menu alive when cursor is inside it
@@ -114,13 +102,29 @@ function resolveAction(obj) {
   return null;
 }
 
-function showMenu({ label, actionId }, mouseX, mouseY) {
-  const cfg = actionRegistry.get(actionId);
-  if (!cfg) return;
+function showMenu({ label, actionId, actions }, mouseX, mouseY) {
+  // Résoudre la liste d'actionIds (format simple ou tableau)
+  const ids = actions || [actionId];
+  if (!ids.some(id => actionRegistry.has(id))) return;
 
-  currentActionId     = actionId;
+  currentActionId = ids[0];
   labelEl.textContent = label;
-  btnEl.textContent   = cfg.getLabel();
+
+  // Recréer les boutons dynamiquement
+  menuEl.querySelectorAll('.hm-btn').forEach(b => b.remove());
+  for (const id of ids) {
+    const cfg = actionRegistry.get(id);
+    if (!cfg) continue;
+    const btn = document.createElement('button');
+    btn.className = 'hm-btn';
+    btn.textContent = cfg.getLabel();
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      cfg.execute();
+      btn.textContent = cfg.getLabel();
+    });
+    menuEl.appendChild(btn);
+  }
 
   // Pre-position before making visible
   placeNearCursor(mouseX, mouseY);
