@@ -1,10 +1,16 @@
 import * as THREE from 'three';
+import { requestRender } from '../cameraManager.js';
 const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
 const footHgt = 2.5;
 const colSize = 4.2;
 
 const desks = [];
 let standing = false;
+let desk1PosIdx = 0;
+const DESK1_POSITIONS = [
+  { x: 22, z: 74.5, ry: Math.PI / 2 },  // pos 1 : contre mur A
+  { x: 73.5, z: 18, ry: 0 },             // pos 2 : face mur C (Z=0), devant Kallax NW (bord ouest à X=39.5)
+];
 const SIT_H = 70;
 const STAND_H = 103;
 
@@ -80,6 +86,16 @@ export function toggleDesksHeight() {
   return standing;
 }
 
+export function toggleDesk1Position() {
+  desk1PosIdx = (desk1PosIdx + 1) % DESK1_POSITIONS.length;
+  const p = DESK1_POSITIONS[desk1PosIdx];
+  const g = desks[0].group;
+  g.rotation.y = p.ry;
+  g.position.set(p.x, 0, p.z);
+  requestRender();
+  return desk1PosIdx;
+}
+
 export function toggleDesk1Height() {
   const d = desks[0];
   const newH = d.currentHeight === SIT_H ? STAND_H : SIT_H;
@@ -100,7 +116,7 @@ export function buildDesks(scene) {
   // Desk 1 : against mur A
   const d1 = new Bollsidan();
   d1.group.userData.inventoryId = 'desk-bollsidan-1';
-  d1.group.userData.hoverAction = { label: 'Bureau 1', actionId: 'desk1-toggle' };
+  d1.group.userData.hoverAction = { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] };
   d1.group.position.set(22, 0, 74.5);
   d1.group.rotation.y = Math.PI / 2;
   scene.add(d1.group);
