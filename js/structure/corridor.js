@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ROOM_W, ROOM_D, WALL_H, DOOR_H, DOOR_START, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_EQUIPMENT } from '../config.js';
 import { makeText } from '../ui/labels.js';
-import { buildDoors, DOOR_W } from './doors.js';
+import { buildEntryDoor, buildBathroomDoor, DOOR_W } from './doors.js';
 import { getEastWallMats } from './walls.js';
 
 export { toggleCorridorDoors, toggleEntryDoor, toggleLivingDoor, toggleBathroomDoor } from './doors.js';
@@ -55,18 +55,25 @@ export function buildCorridor(scene) {
   panel(W, WALL_H - DOOR_H, C_DOOR_W, WALL_X,
         DOOR_H + (WALL_H - DOOR_H) / 2,
         (C_DOOR_START_ABS + C_DOOR_END_ABS) / 2);
-  // Chambranle porte SDB (2 faces, plaqué contre le mur)
+  // ── Assembly porte SDB (encadrement + panneau) ───────────────────────────
+  const sdbDoorAssembly = new THREE.Group();
+  sdbDoorAssembly.userData.inventoryId = 'door-sdb';
+  scene.add(sdbDoorAssembly);
   {
     const frameMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.3 });
-    const FW = 3;  // largeur
-    const FT = 1;  // épaisseur
+    const FW = 3, FT = 1;
     const CZ = (C_DOOR_START_ABS + C_DOOR_END_ABS) / 2;
-    // Face couloir (X = WALL_X - W/2) et face SDB (X = WALL_X + W/2)
-    for (const xF of [WALL_X - W/2 - FT/2, WALL_X + W/2 + FT/2]) {
-      panel(FT, DOOR_H, FW, xF, DOOR_H / 2, C_DOOR_START_ABS - FW / 2, frameMat);
-      panel(FT, DOOR_H, FW, xF, DOOR_H / 2, C_DOOR_END_ABS   + FW / 2, frameMat);
-      panel(FT, FW, C_DOOR_W + FW * 2, xF, DOOR_H + FW / 2, CZ, frameMat);
+    function fp(w, h, d, x, y, z) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), frameMat);
+      m.position.set(x, y, z);
+      sdbDoorAssembly.add(m);
     }
+    for (const xF of [WALL_X - W/2 - FT/2, WALL_X + W/2 + FT/2]) {
+      fp(FT, DOOR_H, FW, xF, DOOR_H / 2, C_DOOR_START_ABS - FW / 2);
+      fp(FT, DOOR_H, FW, xF, DOOR_H / 2, C_DOOR_END_ABS   + FW / 2);
+      fp(FT, FW, C_DOOR_W + FW * 2, xF, DOOR_H + FW / 2, CZ);
+    }
+    sdbDoorAssembly.add(buildBathroomDoor({ hingeX: WALL_X, hingeZ: LEFT_WALL_Z0 + C_DOOR_END }));
   }
 
   // =============================================
@@ -205,7 +212,10 @@ export function buildCorridor(scene) {
     diagSection(E_DOOR_END,  diagLen,      WALL_H);                        // section droite
     diagSection(E_DOOR_START,E_DOOR_END,   WALL_H - DOOR_H, DOOR_H);      // linteau aligné sur le panneau
 
-    // Chambranle porte entrée — rouge extérieur, blanc intérieur
+    // ── Assembly porte entrée (encadrement + panneau) ──────────────────────
+    const entryDoorAssembly = new THREE.Group();
+    entryDoorAssembly.userData.inventoryId = 'door-entry';
+    scene.add(entryDoorAssembly);
     {
       const redFMat   = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 });
       const whiteFMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.3 });
@@ -228,30 +238,20 @@ export function buildCorridor(scene) {
         if (yBase > 0) geo.translate(0, yBase, 0);
         const m = new THREE.Mesh(geo, mat);
         m.castShadow = true;
-        scene.add(m);
+        entryDoorAssembly.add(m);
       }
       for (const [outward, mat] of [[true, redFMat], [false, whiteFMat]]) {
         chambSection(E_DOOR_START - FW, E_DOOR_START, DOOR_H, 0,      outward, mat); // jambage gauche
         chambSection(E_DOOR_END,  E_DOOR_END + FW,   DOOR_H, 0,      outward, mat); // jambage droit
         chambSection(E_DOOR_START - FW, E_DOOR_END + FW, FW, DOOR_H, outward, mat); // traverse
       }
+      entryDoorAssembly.add(buildEntryDoor({
+        hingeX: originX + E_DOOR_START * sinθ,
+        hingeZ: originZ + E_DOOR_START * cosθ,
+        rotY:   diagRotY,
+      }));
     }
   }
-
-  // =============================================
-  // Portes (panneaux 3D) — déléguées à doors.js
-  // =============================================
-  buildDoors(scene, {
-    entry: {
-      hingeX: originX + E_DOOR_START * sinθ,
-      hingeZ: originZ + E_DOOR_START * cosθ,
-      rotY:   diagRotY,
-    },
-    bathroom: {
-      hingeX: WALL_X,
-      hingeZ: LEFT_WALL_Z0 + C_DOOR_END,
-    },
-  });
 
   // =============================================
   // Labels

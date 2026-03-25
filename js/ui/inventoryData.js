@@ -114,6 +114,12 @@ export const INVENTORY = [
   { id: 'lamp-ola',          name: 'Lampe OLA',                      brand: 'IKEA',     category: 'decor',     qty: 1,  dims: { w: 30,   d: 30,   h: 120  }, scenePos: { x: 150,  z: 200  }, notes: 'Sur pied, toggle ON/OFF', glbPath: 'media/ikea_lamp_ola.glb' },
   { id: 'altappen-lantern',  name: 'Lanterne ALTAPPEN',              brand: 'IKEA',     category: 'decor',     qty: 1,  dims: { w: 22,   d: 22,   h: 35   }, scenePos: { x: 100,  z: -125 }, notes: 'Jardin, desserte Viggja', glbPath: 'media/ikea_Altappen_single.glb' },
   { id: 'potted-palm',       name: 'Palmier en pot',                 brand: '',         category: 'decor',     qty: 1,  dims: { w: 60,   d: 60,   h: 150  }, scenePos: { x: 100,  z: -150 }, notes: 'Jardin, entre canapé et desserte', glbPath: 'media/potted_palm.glb' },
+
+  // ── PORTES ───────────────────────────────
+  { id: 'door-entry',   name: 'Porte d\'entrée',   brand: '', category: 'doors', qty: 1, dims: { w: 90,  d: 4,  h: 204 }, scenePos: { x: 255, z: 520 }, notes: 'Rouge, mur diagonal, poignée L intérieure + knob rouge extérieur', actions: ['entry-door-toggle'] },
+  { id: 'door-living',  name: 'Porte séjour',       brand: '', category: 'doors', qty: 1, dims: { w: 83,  d: 4,  h: 204 }, scenePos: { x: 229, z: 400 }, notes: 'Blanche, mur D, poignée L double face',                          actions: ['living-door-toggle'] },
+  { id: 'door-sdb',     name: 'Porte SDB',          brand: '', category: 'doors', qty: 1, dims: { w: 4,   d: 83, h: 204 }, scenePos: { x: 185, z: 548 }, notes: 'Blanche, mur couloir, poignée L double face',                    actions: ['bathroom-door-toggle'] },
+  { id: 'door-glass',   name: 'Porte-fenêtre',      brand: '', category: 'doors', qty: 1, dims: { w: 160, d: 5,  h: 190 }, scenePos: { x: 170, z: 0   }, notes: 'Double battant PVC blanc, vitrage, seuil 20cm, mur C',           actions: ['door-toggle'] },
 ];
 
 // =============================================
@@ -141,4 +147,5 @@ export const CATEGORIES = [
   { id: 'clothing', label: 'Vêtements' },
   { id: 'decor',    label: 'Déco' },
   { id: 'dronas',   label: 'Dronas' },
+  { id: 'doors',    label: 'Portes' },
 ];

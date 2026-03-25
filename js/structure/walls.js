@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildLivingDoor } from './doors.js';
 import {
   ROOM_W, ROOM_D, WALL_H,
   NICHE_DEPTH, NICHE_Z_START,
@@ -220,11 +221,15 @@ export function buildWalls(scene) {
     sill.receiveShadow = true;
     scene.add(sill);
 
+    const glassDoorGroup = new THREE.Group();
+    glassDoorGroup.userData.inventoryId = 'door-glass';
+    scene.add(glassDoorGroup);
+
     // Battant ouest (fixe) — groupe taggé pour hover menu
     const westDoorGroup = new THREE.Group();
     westDoorGroup.userData.hoverAction = { label: 'Porte-fenêtre', actionId: 'door-toggle' };
     addDoorPanel(westDoorGroup, GLASS_START + doorW / 2, glassBaseY);
-    scene.add(westDoorGroup);
+    glassDoorGroup.add(westDoorGroup);
 
     // Battant est (ouvrant) — groupe avec pivot à la charnière droite (GLASS_END)
     eastDoorGroup = new THREE.Group();
@@ -245,7 +250,7 @@ export function buildWalls(scene) {
     lever.position.set(HANDLE_LX, HANDLE_Y, Z + FRAME_D / 2 + 4.5);
     eastDoorGroup.add(lever);
 
-    scene.add(eastDoorGroup);
+    glassDoorGroup.add(eastDoorGroup);
   }
 
   // ── MUR D (sud, Z=ROOM_D=400) ────────────────────────────────────────────
@@ -264,16 +269,24 @@ export function buildWalls(scene) {
   panel(DOOR_END - DOOR_START, WALL_H - DOOR_H, W,
         (DOOR_START + DOOR_END) / 2,
         DOOR_H + (WALL_H - DOOR_H) / 2, ROOM_D + W/2);
-  // Chambranle porte séjour (2 faces)
+  // ── Assembly porte séjour (encadrement + panneau) ────────────────────────
+  const livingDoorAssembly = new THREE.Group();
+  livingDoorAssembly.userData.inventoryId = 'door-living';
+  scene.add(livingDoorAssembly);
   {
     const frameMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.3 });
-    const FW = 3;  // largeur
-    const FT = 1;  // épaisseur
-    for (const zF of [ROOM_D - FT / 2, ROOM_D + W + FT / 2]) {
-      panel(FW, DOOR_H, FT, DOOR_START - FW / 2, DOOR_H / 2, zF, frameMat);
-      panel(FW, DOOR_H, FT, DOOR_END   + FW / 2, DOOR_H / 2, zF, frameMat);
-      panel(DOOR_END - DOOR_START + FW * 2, FW, FT, (DOOR_START + DOOR_END) / 2, DOOR_H + FW / 2, zF, frameMat);
+    const FW = 3, FT = 1;
+    function fp(w, h, d, x, y, z) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), frameMat);
+      m.position.set(x, y, z);
+      livingDoorAssembly.add(m);
     }
+    for (const zF of [ROOM_D - FT / 2, ROOM_D + W + FT / 2]) {
+      fp(FW, DOOR_H, FT, DOOR_START - FW / 2, DOOR_H / 2, zF);
+      fp(FW, DOOR_H, FT, DOOR_END   + FW / 2, DOOR_H / 2, zF);
+      fp(DOOR_END - DOOR_START + FW * 2, FW, FT, (DOOR_START + DOOR_END) / 2, DOOR_H + FW / 2, zF);
+    }
+    livingDoorAssembly.add(buildLivingDoor());
   }
   // Section droite (DOOR_END+10=280 → ROOM_W=300)
   panel(ROOM_W - DOOR_END - 10, WALL_H, W,
