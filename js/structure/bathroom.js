@@ -1,4 +1,20 @@
 import * as THREE from 'three';
+
+let cbnWDoorGroup = null, cbnWDoorOpen = false;
+let cbnEDoorGroup = null, cbnEDoorOpen = false;
+
+export function toggleCbnWestDoor() {
+  cbnWDoorOpen = !cbnWDoorOpen;
+  if (cbnWDoorGroup) cbnWDoorGroup.rotation.y = cbnWDoorOpen ? -Math.PI / 2 : 0;
+  return cbnWDoorOpen;
+}
+
+export function toggleCbnEastDoor() {
+  cbnEDoorOpen = !cbnEDoorOpen;
+  if (cbnEDoorGroup) cbnEDoorGroup.rotation.y = cbnEDoorOpen ? Math.PI / 2 : 0;
+  return cbnEDoorOpen;
+}
+
 import { buildVasque } from './vasque.js';
 import { buildWC } from './wc.js';
 import { makeGrassTex } from './floor.js';
@@ -199,6 +215,7 @@ export function buildBathroom(scene) {
   // Meuble mural ouest
   const cbnWGroup = new THREE.Group();
   cbnWGroup.userData.inventoryId = 'bathroom-cabinet-west';
+  cbnWGroup.userData.hoverAction = { label: 'Meuble SDB ouest', actionId: 'cbn-west-toggle' };
   cbnWGroup.userData.layerOverride = LAYER_FURNITURE;
 
   const cbnW = new THREE.Mesh(new THREE.BoxGeometry(CBN_W, CBN_H, CBN_BODY_D), cbnMat);
@@ -206,18 +223,24 @@ export function buildBathroom(scene) {
   cbnW.castShadow = true;
   cbnW.receiveShadow = true;
   cbnWGroup.add(cbnW);
+
+  // Porte ouest — charnière gauche (x = -NICHE_DEPTH)
+  cbnWDoorGroup = new THREE.Group();
+  cbnWDoorGroup.position.set(-NICHE_DEPTH, 0, CBN_DOOR_Z);
   const doorW = new THREE.Mesh(new THREE.BoxGeometry(CBN_W - 2, CBN_H - 2, CBN_DOOR_D), cbnDoorMat);
-  doorW.position.set(-NICHE_DEPTH + CBN_W / 2, CBN_H / 2, CBN_DOOR_Z);
+  doorW.position.set(CBN_W / 2, CBN_H / 2, 0);
   doorW.castShadow = true;
-  cbnWGroup.add(doorW);
+  cbnWDoorGroup.add(doorW);
   const handleW = new THREE.Mesh(new THREE.BoxGeometry(2, 12, 1.5), cbnHandleMat);
-  handleW.position.set(-NICHE_DEPTH + CBN_W - 6, CBN_H * 0.6, CBN_DOOR_Z + CBN_DOOR_D / 2 + 0.75);
-  cbnWGroup.add(handleW);
+  handleW.position.set(CBN_W - 6, CBN_H * 0.6, CBN_DOOR_D / 2 + 0.75);
+  cbnWDoorGroup.add(handleW);
+  cbnWGroup.add(cbnWDoorGroup);
   scene.add(cbnWGroup);
 
   // Meuble mural est
   const cbnEGroup = new THREE.Group();
   cbnEGroup.userData.inventoryId = 'bathroom-cabinet-east';
+  cbnEGroup.userData.hoverAction = { label: 'Meuble SDB est', actionId: 'cbn-east-toggle' };
   cbnEGroup.userData.layerOverride = LAYER_FURNITURE;
 
   const cbnE = new THREE.Mesh(new THREE.BoxGeometry(CBN_W, CBN_H, CBN_BODY_D), cbnMat);
@@ -225,13 +248,18 @@ export function buildBathroom(scene) {
   cbnE.castShadow = true;
   cbnE.receiveShadow = true;
   cbnEGroup.add(cbnE);
+
+  // Porte est — charnière droite (x = DOOR_START - 8)
+  cbnEDoorGroup = new THREE.Group();
+  cbnEDoorGroup.position.set(DOOR_START - 8, 0, CBN_DOOR_Z);
   const doorE = new THREE.Mesh(new THREE.BoxGeometry(CBN_W - 2, CBN_H - 2, CBN_DOOR_D), cbnDoorMat);
-  doorE.position.set(DOOR_START - CBN_W / 2 - 8, CBN_H / 2, CBN_DOOR_Z);
+  doorE.position.set(-CBN_W / 2, CBN_H / 2, 0);
   doorE.castShadow = true;
-  cbnEGroup.add(doorE);
+  cbnEDoorGroup.add(doorE);
   const handleE = new THREE.Mesh(new THREE.BoxGeometry(2, 12, 1.5), cbnHandleMat);
-  handleE.position.set(DOOR_START - CBN_W - 8 + 6, CBN_H * 0.6, CBN_DOOR_Z + CBN_DOOR_D / 2 + 0.75);
-  cbnEGroup.add(handleE);
+  handleE.position.set(-CBN_W + 6, CBN_H * 0.6, CBN_DOOR_D / 2 + 0.75);
+  cbnEDoorGroup.add(handleE);
+  cbnEGroup.add(cbnEDoorGroup);
   scene.add(cbnEGroup);
 
   // =============================================

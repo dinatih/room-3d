@@ -5,6 +5,15 @@ import { buildDoors, DOOR_W } from './doors.js';
 
 export { toggleCorridorDoors, toggleEntryDoor, toggleLivingDoor, toggleBathroomDoor } from './doors.js';
 
+let closetDoorGroup = null;
+let closetDoorOpen = false;
+
+export function toggleCorridorCloset() {
+  closetDoorOpen = !closetDoorOpen;
+  if (closetDoorGroup) closetDoorGroup.rotation.y = closetDoorOpen ? Math.PI / 2 : 0;
+  return closetDoorOpen;
+}
+
 const W = 10; // wall thickness
 
 export function buildCorridor(scene) {
@@ -60,7 +69,7 @@ export function buildCorridor(scene) {
   }
 
   // =============================================
-  // PLACARD COULISSANT (X=130→190, Z=410→460)
+  // PLACARD COULOIR (X=130→190, Z=410→460) — porte pivotante
   // =============================================
   {
     const CLOSET_X0 = KITCHEN_X1; // 130
@@ -72,7 +81,16 @@ export function buildCorridor(scene) {
     const CLOSET_CX = (CLOSET_X0 + CLOSET_X1) / 2;
     const CLOSET_CZ = (CLOSET_Z0 + CLOSET_Z1) / 2;
 
-    const closetParts = [];
+    const closetGroup = new THREE.Group();
+    closetGroup.userData.inventoryId = 'corridor-closet';
+    closetGroup.userData.hoverAction = { label: 'Placard couloir', actionId: 'corridor-closet-toggle' };
+    scene.add(closetGroup);
+
+    const add = (mesh) => {
+      mesh.layers.set(LAYER_EQUIPMENT);
+      closetGroup.add(mesh);
+    };
+
     const shelfMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
     const shelfT = 3;
     for (const shelfY of [60, 120, 180]) {
@@ -83,40 +101,32 @@ export function buildCorridor(scene) {
       shelf.position.set(CLOSET_CX, shelfY, CLOSET_CZ);
       shelf.castShadow = true;
       shelf.receiveShadow = true;
-      scene.add(shelf);
-      closetParts.push(shelf);
+      add(shelf);
     }
 
-    const slideMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
-    const slideH = WALL_H - 10;
-    const slidePanel = new THREE.Mesh(
-      new THREE.BoxGeometry(2, slideH, CLOSET_D - 2),
-      slideMat
+    const doorMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
+    const doorH = WALL_H - 10;
+
+    // Porte sur face est (X=CLOSET_X1), pivot côté droit = Z=CLOSET_Z0
+    // Ouverture rotation.y=+π/2 : bord libre part vers +X (couloir)
+    closetDoorGroup = new THREE.Group();
+    closetDoorGroup.position.set(CLOSET_X1, 0, CLOSET_Z0);
+
+    const doorPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(2, doorH, CLOSET_D - 2),
+      doorMat
     );
-    slidePanel.position.set(CLOSET_X1 - 1, slideH / 2, CLOSET_CZ);
-    slidePanel.castShadow = true;
-    scene.add(slidePanel);
-    closetParts.push(slidePanel);
-
-    const railMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6, roughness: 0.3 });
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(4, 3, CLOSET_D), railMat);
-    rail.position.set(CLOSET_X1 - 1, slideH + 1.5, CLOSET_CZ);
-    scene.add(rail);
-    closetParts.push(rail);
-
-    const railBot = new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, CLOSET_D), railMat);
-    railBot.position.set(CLOSET_X1 - 1, 0.75, CLOSET_CZ);
-    scene.add(railBot);
-    closetParts.push(railBot);
+    doorPanel.position.set(0, doorH / 2, CLOSET_D / 2);
+    doorPanel.castShadow = true;
+    closetDoorGroup.add(doorPanel);
 
     const handleMat = new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.8, roughness: 0.2 });
-    const handle = new THREE.Mesh(new THREE.BoxGeometry(1.2, 20, 3), handleMat);
-    handle.position.set(CLOSET_X1 + 0.5, WALL_H / 2, CLOSET_CZ);
-    scene.add(handle);
-    closetParts.push(handle);
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(3, 20, 1.2), handleMat);
+    handle.position.set(2, WALL_H / 2, CLOSET_D - 6);
+    closetDoorGroup.add(handle);
 
-    for (const obj of closetParts)
-      obj.layers.set(LAYER_EQUIPMENT);
+    closetDoorGroup.traverse(c => { if (c.isMesh) c.layers.set(LAYER_EQUIPMENT); });
+    closetGroup.add(closetDoorGroup);
   }
 
   // ── Mur droit du couloir (en face de la porte SDB), jusqu'au début du diag ─

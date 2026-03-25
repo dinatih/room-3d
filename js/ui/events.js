@@ -13,6 +13,8 @@ import {
 } from '../config.js';
 import { toggleEastDoor } from '../structure/walls.js';
 import { toggleFridgeDoor, toggleCabinetDoor } from '../structure/kitchen.js';
+import { toggleCbnWestDoor, toggleCbnEastDoor } from '../structure/bathroom.js';
+import { toggleCorridorCloset } from '../structure/corridor.js';
 import { toggleBedStack, toggleBedVersion, toggleBedPosition, toggleSofaMode } from '../furniture/bed.js';
 import { toggleSunnerstPosition } from '../furniture/sunnersta.js';
 import { toggleDesksHeight, toggleDesk1Height, toggleDesk2Height, toggleDesk1Position, toggleDesk2Position } from '../furniture/desks.js';
@@ -32,6 +34,7 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
 
   // ── État des toggles ──────────────────────────────────────────────────────
   let eastDoorState = false, freezerState = false, fridgeState = false;
+  let cbnWestState = false, cbnEastState = false, corridorClosetState = false;
   let cabinetState = false, bedState = true,  desksState = false, bedPosIdx = 0, sofaModeState = false, sunnerstaPosIdx = 0, desk1PosIdx = 0, desk2PosIdx = 0, smorkullPosIdx = 0, apPosIdx = 0;
   let desk1State   = false, desk2State  = false, wcLidState = false;
   let corrDoorsState = false, entryDoorState = false;
@@ -58,6 +61,9 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
     document.getElementById('cabinet-toggle').textContent = `Meuble évier : ${cabinetState ? 'OUVERT' : 'FERMÉ'}`;
     requestRender();
   }
+  function doToggleCbnWest() { cbnWestState = toggleCbnWestDoor(); requestRender(); }
+  function doToggleCbnEast() { cbnEastState = toggleCbnEastDoor(); requestRender(); }
+  function doToggleCorridorCloset() { corridorClosetState = toggleCorridorCloset(); requestRender(); }
   function doToggleBed() {
     bedState = toggleBedStack();
     document.getElementById('bed-toggle').textContent = `Lit : ${bedState ? 'EMPILÉ' : 'DÉPLIÉ'}`;
@@ -93,6 +99,9 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
   registerHoverAction('freezer-toggle',       { getLabel: () => freezerState      ? 'Fermer' : 'Ouvrir',       execute: doToggleFreezer });
   registerHoverAction('fridge-toggle',        { getLabel: () => fridgeState       ? 'Fermer' : 'Ouvrir',       execute: doToggleFridge });
   registerHoverAction('cabinet-toggle',       { getLabel: () => cabinetState      ? 'Fermer' : 'Ouvrir',       execute: doToggleCabinet });
+  registerHoverAction('cbn-west-toggle',        { getLabel: () => cbnWestState       ? 'Fermer' : 'Ouvrir', execute: doToggleCbnWest });
+  registerHoverAction('cbn-east-toggle',        { getLabel: () => cbnEastState       ? 'Fermer' : 'Ouvrir', execute: doToggleCbnEast });
+  registerHoverAction('corridor-closet-toggle', { getLabel: () => corridorClosetState ? 'Fermer' : 'Ouvrir', execute: doToggleCorridorCloset });
   registerHoverAction('bed-toggle',           { getLabel: () => bedState          ? 'Déplier' : 'Empiler',     execute: doToggleBed });
   registerHoverAction('bed-position',         { getLabel: () => ['Pos 2 (∥ mur B)', 'Pos 3 (⊥ mur B)', 'Pos 1 (diagonale)'][bedPosIdx], execute: () => { bedPosIdx = toggleBedPosition(); } });
   registerHoverAction('bed-sofa',             { getLabel: () => sofaModeState ? 'Lit double' : 'Double canapé', execute: () => { sofaModeState = toggleSofaMode(); } });

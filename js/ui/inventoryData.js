@@ -89,8 +89,8 @@ export const INVENTORY = [
   { id: 'shower',            name: 'Douche',                         brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 70,   d: 70,   h: 200  }, scenePos: { x: 25,   z: 635  }, notes: 'Cuve 20cm + vitrage translucide' },
   { id: 'toilet',            name: 'WC',                             brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 40,   d: 40,   h: 75   }, scenePos: { x: 10,   z: 481  }, notes: 'Avec réservoir et siège torus' },
   { id: 'vasque-sdb',        name: 'Meuble vasque suspendu',         brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 63,   d: 48.5, h: 176  }, scenePos: { x: 112,  z: 488  }, notes: 'Caisson 60×47×50cm + vasque 35×25cm + robinet + miroir 63×90cm + lampe LED' },
-  { id: 'bathroom-cabinet-west', name: 'Meuble mural SDB ouest',     brand: 'IKEA',     category: 'bathroom',  qty: 1,  dims: { w: 40,   d: 37,   h: 60   }, scenePos: { x: 10,   z: 490  }, notes: 'Blanc, côté ballon d\'eau' },
-  { id: 'bathroom-cabinet-east', name: 'Meuble mural SDB est',       brand: 'IKEA',     category: 'bathroom',  qty: 1,  dims: { w: 40,   d: 37,   h: 60   }, scenePos: { x: 162,  z: 490  }, notes: 'Blanc, côté vasque' },
+  { id: 'bathroom-cabinet-west', name: 'Meuble mural SDB ouest',     brand: 'IKEA',     category: 'bathroom',  qty: 1,  dims: { w: 40,   d: 37,   h: 60   }, scenePos: { x: 10,   z: 490  }, notes: 'Blanc, côté ballon d\'eau', actions: ['cbn-west-toggle'] },
+  { id: 'bathroom-cabinet-east', name: 'Meuble mural SDB est',       brand: 'IKEA',     category: 'bathroom',  qty: 1,  dims: { w: 40,   d: 37,   h: 60   }, scenePos: { x: 162,  z: 490  }, notes: 'Blanc, côté vasque',        actions: ['cbn-east-toggle'] },
   { id: 'water-heater',      name: 'Ballon eau chaude 100L',         brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 40,   d: 40,   h: 80   }, scenePos: { x: 0,    z: 480  }, notes: 'Cylindrique, vertical' },
   { id: 'bathtub',           name: 'Baignoire',                      brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 150,  d: 70,   h: 50   }, scenePos: { x: 120,  z: -250 }, notes: 'Coins arrondis, jardin' },
 
@@ -127,6 +127,7 @@ export const STORAGE_SPACES = [
   { id: 'mackapar-stack',   name: 'Mackapär',       notes: 'Portant niche — combinaison + salopette + 2 Drona en haut',  scenePos: { x: 32,  z: 309 } },
   { id: 'sunnersta-stack',  name: 'Sunnersta',      notes: 'Desserte roulante — mannequin + casquette',                   scenePos: { x: 282, z: 272 } },
   { id: 'cuisine-stack',   name: 'Cuisine',        notes: 'Plan de travail, évier, plaques, frigo, meuble bas, meuble haut + 3 Drona', scenePos: { x: 75, z: 420 } },
+  { id: 'corridor-closet', name: 'Placard couloir', notes: 'Porte pivotante + 3 étagères (X=130→190, Z=410→460)',                    scenePos: { x: 160, z: 435 }, actions: ['corridor-closet-toggle'] },
 ];
 
 export const CATEGORIES = [
