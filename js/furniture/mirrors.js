@@ -39,6 +39,7 @@ export function buildMirrors(scene) {
     const FRAME_D = 1.5;
 
     const gD = new THREE.Group();
+    gD.userData.inventoryId = 'mirror-nissedal-d';
     scene.add(gD);
 
     for (let i = 0; i < 3; i++) {
