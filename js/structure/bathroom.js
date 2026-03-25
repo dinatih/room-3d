@@ -326,7 +326,7 @@ export function buildBathroom(scene) {
   const HW_H = 65;  // hauteur cylindre
   const HW_X = -NICHE_DEPTH + HW_R;
   const HW_Y = WALL_H - 10 - HW_H / 2;
-  const HW_Z = KITCHEN_Z + 10 + HW_R;
+  const HW_Z = KITCHEN_Z + 20 + HW_R;
 
   const hwMat = new THREE.MeshStandardMaterial({
     color: 0xf5f5f5,

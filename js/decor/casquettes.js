@@ -41,8 +41,8 @@ export function buildCasquettes(scene) {
       scene.add(placeCap(297, 144, 173.5, Math.PI / 2, 0, Math.PI / 2));
 
       // 2) Sur tête de mannequin Sunnersta — enfant de sunnerstaMannequin (Y=90 dans le monde)
-      //    Y relatif au plateau = SUNNERSTA_HEAD_TOP - 90 + 1 ≈ 36.2
-      sunnerstaMannequin.add(placeCap(0, SUNNERSTA_HEAD_TOP - 90 + 1, 0, 0, Math.PI, 0, scale20 * 0.9));
+      //    Y relatif au plateau = SUNNERSTA_HEAD_TOP - 90 + 2 ≈ 37.2
+      sunnerstaMannequin.add(placeCap(0, SUNNERSTA_HEAD_TOP - 90 + 2, 0, 0, Math.PI, 0, scale20 * 0.9));
 
       requestRender();
     },
