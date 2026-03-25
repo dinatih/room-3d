@@ -128,6 +128,7 @@ export const STORAGE_SPACES = [
   { id: 'sunnersta-stack',  name: 'Sunnersta',      notes: 'Desserte roulante — mannequin + casquette',                   scenePos: { x: 282, z: 272 } },
   { id: 'cuisine-stack',   name: 'Cuisine',        notes: 'Plan de travail, évier, plaques, frigo, meuble bas, meuble haut + 3 Drona', scenePos: { x: 75, z: 420 } },
   { id: 'corridor-closet', name: 'Placard couloir', notes: 'Porte pivotante + 3 étagères (X=130→190, Z=410→460)',                    scenePos: { x: 160, z: 435 }, actions: ['corridor-closet-toggle'] },
+  { id: 'sdb-closet',     name: 'Placard SDB',    notes: 'Double porte coulissante + étagère triangulaire 170cm (X=70→180, Z=600→660)', scenePos: { x: 125, z: 630 }, actions: ['sdb-closet-toggle'] },
 ];
 
 export const CATEGORIES = [

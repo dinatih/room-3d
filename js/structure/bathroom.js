@@ -3,6 +3,27 @@ import * as THREE from 'three';
 let cbnWDoorGroup = null, cbnWDoorOpen = false;
 let cbnEDoorGroup = null, cbnEDoorOpen = false;
 
+let sdbClosetPanelL = null, sdbClosetPanelR = null, sdbClosetState = 0;
+// États : 0=fermé, 1=panneaux à gauche (côté droit ouvert), 2=panneaux à droite (côté gauche ouvert)
+const SDB_CL_X0 = 70, SDB_CL_X1 = 180, SDB_CL_PW = 55; // constantes de build
+
+export function toggleSdbCloset() {
+  sdbClosetState = (sdbClosetState + 1) % 3;
+  const xL = sdbClosetState === 0 ? SDB_CL_X0 + SDB_CL_PW / 2
+           : sdbClosetState === 1 ? SDB_CL_X0 + SDB_CL_PW / 2
+           :                        SDB_CL_X1 - SDB_CL_PW / 2;
+  const xR = sdbClosetState === 0 ? SDB_CL_X1 - SDB_CL_PW / 2
+           : sdbClosetState === 1 ? SDB_CL_X0 + SDB_CL_PW / 2
+           :                        SDB_CL_X1 - SDB_CL_PW / 2;
+  if (sdbClosetPanelL) sdbClosetPanelL.position.x = xL;
+  if (sdbClosetPanelR) sdbClosetPanelR.position.x = xR;
+  return sdbClosetState;
+}
+
+export function getSdbClosetLabel() {
+  return ['Ouvrir à gauche', 'Ouvrir à droite', 'Fermer'][sdbClosetState];
+}
+
 export function toggleCbnWestDoor() {
   cbnWDoorOpen = !cbnWDoorOpen;
   if (cbnWDoorGroup) cbnWDoorGroup.rotation.y = cbnWDoorOpen ? -Math.PI / 2 : 0;
@@ -83,67 +104,92 @@ export function buildBathroom(scene) {
   const SHOWER_Z1 = SHOWER_Z0 + SHOWER_D; // Z=670
 
   // =============================================
-  // Double porte coulissante placard PC-SDB (Z=600, jusqu'au plafond)
+  // PLACARD PC-SDB — portes coulissantes + étagère triangulaire
   // =============================================
   {
-    const SLIDE_X0 = SHOWER_X1 + 10; // 70 → shifted: was +1 → +10
+    const SLIDE_X0 = SHOWER_X1 + 10; // 70
     const SLIDE_X1 = DOOR_START - 10; // 180
-    const SLIDE_W = SLIDE_X1 - SLIDE_X0; // 110 → was 10 studs
+    const SLIDE_W = SLIDE_X1 - SLIDE_X0; // 110
     const SLIDE_CX = (SLIDE_X0 + SLIDE_X1) / 2;
     const SLIDE_Z = SDB_Z;
     const SLIDE_H = WALL_H;
 
-    const doorMat = new THREE.MeshStandardMaterial({
-      color: 0xf5f0e0,
-      roughness: 0.5,
-    });
-    const railMat = new THREE.MeshStandardMaterial({
-      color: 0xf5f0e0,
-      roughness: 0.5,
-    });
+    const sdbClosetGroup = new THREE.Group();
+    sdbClosetGroup.userData.inventoryId = 'sdb-closet';
+    sdbClosetGroup.userData.hoverAction = { label: 'Placard SDB', actionId: 'sdb-closet-toggle' };
+    scene.add(sdbClosetGroup);
 
-    // Rail commun avec séparateur central
+    const add = (mesh) => sdbClosetGroup.add(mesh);
+
+    const doorMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e0, roughness: 0.5 });
+    const railMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e0, roughness: 0.5 });
+
     const panelW = SLIDE_W / 2;
-    const panelT = 2.3; // 2.3cm
-    const railD = 7; // 7cm
-    const sepT = 1; // séparateur central 1cm
+    const panelT = 2.3;
+    const railD = 7;
+    const sepT = 1;
 
-    // Séparateur central (uniquement dans les rails haut et bas)
+    // Séparateur central
     const sepTop = new THREE.Mesh(new THREE.BoxGeometry(SLIDE_W + 4, 3, sepT), railMat);
     sepTop.position.set(SLIDE_CX, SLIDE_H - 1.5, SLIDE_Z);
     sepTop.userData.layerOverride = LAYER_STRUCTURE;
-    scene.add(sepTop);
+    add(sepTop);
 
     const sepBot = new THREE.Mesh(new THREE.BoxGeometry(SLIDE_W + 4, 1.5, sepT), railMat);
     sepBot.position.set(SLIDE_CX, 0.75, SLIDE_Z);
     sepBot.userData.layerOverride = LAYER_STRUCTURE;
-    scene.add(sepBot);
+    add(sepBot);
 
     // Porte gauche (côté SDB, Z-)
-    const panelL = new THREE.Mesh(new THREE.BoxGeometry(panelW, SLIDE_H, panelT), doorMat);
-    panelL.position.set(SLIDE_X0 + panelW / 2, SLIDE_H / 2, SLIDE_Z - sepT / 2 - panelT / 2);
-    panelL.castShadow = true;
-    panelL.userData.layerOverride = LAYER_STRUCTURE;
-    scene.add(panelL);
+    sdbClosetPanelL = new THREE.Mesh(new THREE.BoxGeometry(panelW, SLIDE_H, panelT), doorMat);
+    sdbClosetPanelL.position.set(SLIDE_X0 + panelW / 2, SLIDE_H / 2, SLIDE_Z - sepT / 2 - panelT / 2);
+    sdbClosetPanelL.castShadow = true;
+    sdbClosetPanelL.userData.layerOverride = LAYER_STRUCTURE;
+    add(sdbClosetPanelL);
 
     // Porte droite (côté douche, Z+)
-    const panelR = new THREE.Mesh(new THREE.BoxGeometry(panelW, SLIDE_H, panelT), doorMat);
-    panelR.position.set(SLIDE_X1 - panelW / 2, SLIDE_H / 2, SLIDE_Z + sepT / 2 + panelT / 2);
-    panelR.castShadow = true;
-    panelR.userData.layerOverride = LAYER_STRUCTURE;
-    scene.add(panelR);
+    sdbClosetPanelR = new THREE.Mesh(new THREE.BoxGeometry(panelW, SLIDE_H, panelT), doorMat);
+    sdbClosetPanelR.position.set(SLIDE_X1 - panelW / 2, SLIDE_H / 2, SLIDE_Z + sepT / 2 + panelT / 2);
+    sdbClosetPanelR.castShadow = true;
+    sdbClosetPanelR.userData.layerOverride = LAYER_STRUCTURE;
+    add(sdbClosetPanelR);
 
-    // Rail haut (au plafond)
+    // Rail haut
     const topRail = new THREE.Mesh(new THREE.BoxGeometry(SLIDE_W + 4, 3, railD), railMat);
     topRail.position.set(SLIDE_CX, SLIDE_H - 1.5, SLIDE_Z);
     topRail.userData.layerOverride = LAYER_STRUCTURE;
-    scene.add(topRail);
+    add(topRail);
 
     // Rail bas
     const botRail = new THREE.Mesh(new THREE.BoxGeometry(SLIDE_W + 4, 1.5, railD), railMat);
     botRail.position.set(SLIDE_CX, 0.75, SLIDE_Z);
     botRail.userData.layerOverride = LAYER_STRUCTURE;
-    scene.add(botRail);
+    add(botRail);
+
+    // Étagère triangulaire — 170cm du sol, 2cm épaisseur
+    // Triangle : front-gauche (X=70,Z=600) → front-droit (X=180,Z=600) → arrière-gauche (X=70,Z=660)
+    {
+      const TRI_DEPTH = 60;
+      const SHELF_Y = 170;
+      const SHELF_T = 2;
+
+      const shelfMat = new THREE.MeshStandardMaterial({ color: 0xf0f0e8, roughness: 0.4 });
+      const shape = new THREE.Shape();
+      shape.moveTo(SLIDE_X0, -SLIDE_Z);
+      shape.lineTo(SLIDE_X1, -SLIDE_Z);
+      shape.lineTo(SLIDE_X0, -(SLIDE_Z + TRI_DEPTH));
+      shape.closePath();
+
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: SHELF_T, bevelEnabled: false });
+      geo.rotateX(-Math.PI / 2);
+      geo.translate(0, SHELF_Y, 0);
+
+      const triShelf = new THREE.Mesh(geo, shelfMat);
+      triShelf.castShadow = true;
+      triShelf.receiveShadow = true;
+      triShelf.userData.layerOverride = LAYER_FURNITURE;
+      add(triShelf);
+    }
   }
 
   // =============================================
