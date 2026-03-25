@@ -23,17 +23,10 @@ export function toggleSmorkullPosition() {
 
 export function buildChair(scene) {
 
-  const redMat = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
-
   gltfLoader.load('media/smorkull.glb', (gltf) => {
     const chair = gltf.scene;
     chair.traverse(c => {
       c.layers.set(LAYER_GLB);
-      if (c.isMesh) {
-        c.material = redMat;
-        // boundingSphere calculée en bind-pose locale ≠ bbox réel après Ry(π/2) + position.
-        // Sans ça, Three.js culle la chaise dès que la caméra dépasse le bord du bbox.
-      }
     });
 
     const rawBox = new THREE.Box3().setFromObject(chair);
