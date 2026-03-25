@@ -5,8 +5,6 @@
 export const ROOM_W = 300; // 3m
 export const ROOM_D = 400; // 4m
 export const WALL_H = 250; // 2.5m
-export const GAP = 0; // temporairement désactivé (était 0.8)
-export const PLATE_H = 3.5; // hauteur d'une plate (sol fin)
 
 // Porte : 80cm d'ouverture, 30cm du mur B (X=300)
 export const DOOR_START = 190; // cm 190
@@ -37,7 +35,7 @@ export const KALLAX_FRAME = 3.5;   // outer frame 3.5cm
 export const KALLAX_DEPTH = 39;    // depth 39cm
 
 // Floor plate Y position — parquet surface at Y=0
-export const FLOOR_Y = -PLATE_H - (PLATE_H - GAP) / 2;
+export const FLOOR_Y = -5.25; // surface du parquet à Y=0 (anciennement -PLATE_H * 1.5)
 
 // Corridor / SDB boundaries
 export const CORR_DOOR_S = KITCHEN_Z + 50;

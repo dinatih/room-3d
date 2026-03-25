@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {
-  ROOM_W, ROOM_D, PLATE_H, GAP, WALL_H,
+  ROOM_W, ROOM_D, WALL_H,
   NICHE_DEPTH, NICHE_Z_START, FLOOR_Y, GARDEN_JC_Z,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AZ, DIAG_CX, DIAG_CZ,
   BLDG_X_MIN, BLDG_X_MAX, BLDG_Z_MIN, BLDG_Z_MAX,
@@ -211,7 +211,7 @@ export function buildConcreteSlab(scene) {
   const slab = new THREE.Mesh(new THREE.BoxGeometry(BLDG_W, SLAB_DEPTH, BLDG_D), mat);
 
   // Surface haute de la dalle = sommet des anciennes plates
-  slab.position.set(BLDG_CX, FLOOR_Y + (PLATE_H - GAP) / 2 - SLAB_DEPTH / 2, BLDG_CZ);
+  slab.position.set(BLDG_CX, FLOOR_Y + 1.75 - SLAB_DEPTH / 2, BLDG_CZ);
   slab.receiveShadow = true;
   slab.userData.brickType = 'slab';
   scene.add(slab);
@@ -283,7 +283,7 @@ export function buildGardenSlab(scene) {
   const mats = [sideMat, sideMat, grassMat, sideMat, sideMat, sideMat];
 
   const slab = new THREE.Mesh(new THREE.BoxGeometry(BLDG_W, SLAB_DEPTH, D), mats);
-  slab.position.set(BLDG_CX, FLOOR_Y + (PLATE_H - GAP) / 2 - SLAB_DEPTH / 2, CZ);
+  slab.position.set(BLDG_CX, FLOOR_Y + 1.75 - SLAB_DEPTH / 2, CZ);
   slab.receiveShadow = true;
   slab.userData.brickType = 'slab';
   scene.add(slab);

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {
-  KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, ROOM_D, GAP,
+  KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, ROOM_D,
 } from '../config.js';
 
 let fridgeDoorGroup = null;
