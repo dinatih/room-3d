@@ -50,7 +50,7 @@ export function buildDecor(scene) {
     // local_x = world_z - pos_z = DD/2 - w2/2 ; local_z = pos_x - world_x ; local_rotY = -π/2
     const k1TopY = kallaxH(1) + kallaxH(2);
     const neLocalX = DD / 2 - kallaxW(2) / 2;
-    const neLocalZ = (ROOM_W - KALLAX_DEPTH / 2) - (ROOM_W - 20);
+    const neLocalZ = 20 - KALLAX_DEPTH / 2;
     addSingleDrona(kallaxNEGroup, neLocalX, k1TopY + DF / 2, neLocalZ, -Math.PI / 2);
 
     // 2 sur Kallax cuisine empilé 2×2+2×2+2×1 — enfants du groupe SW (ry=-π/2)
