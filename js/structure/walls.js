@@ -67,13 +67,7 @@ export function buildWalls(scene) {
     m.castShadow = true; m.receiveShadow = true;
     scene.add(m);
   }
-  // A2 : face X=-NICHE_DEPTH-W/2, de Z=-30 à Z=KITCHEN_Z=460 (longueur 490)
-  {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(W, WALL_H, 490), westMats);
-    m.position.set(-NICHE_DEPTH - W/2, WALL_H/2, (-30 + KITCHEN_Z) / 2);
-    m.castShadow = true; m.receiveShadow = true;
-    scene.add(m);
-  }
+  // A2 : ajouté après les constantes diagonales (voir plus bas)
   // A4 retour niche (ferme l'angle à Z=NICHE_Z_START) — face sud (-Z, index 5) vers l'ext.
   panel(NICHE_DEPTH, WALL_H, W, -NICHE_DEPTH/2, WALL_H/2, NICHE_Z_START - W/2);
 
@@ -401,9 +395,75 @@ export function buildWalls(scene) {
     scene.add(m);
   }
 
-  diagSection(0,            E_DOOR_START, WALL_H);
-  diagSection(E_DOOR_END,   diagLen,      WALL_H);
+  // d_start_cut : distance (négative) où la face ext atteint X=310 (face ext mur B) → bevel SE
+  const B_EXT_X   = ROOM_W + W;               // 310
+  const d_start_cut = (B_EXT_X - DIAG_AX - DIAG_DEPTH * pX) / sinθ;
+
+  // d_ext_cut : distance le long du diagonal où la face ext atteint X=-20 (face ext mur A) → bevel SW
+  const A_EXT_X  = -NICHE_DEPTH - W;          // -20
+  const d_ext_cut = (A_EXT_X - DIAG_AX - DIAG_DEPTH * pX) / sinθ;
+
+  // Section NE biseautée : face int de d=0, face ext de d=d_start_cut (angle aigu SE)
+  {
+    const pts = [iP(0), iP(E_DOOR_START), eP(E_DOOR_START), eP(d_start_cut)];
+    const shape = new THREE.Shape();
+    shape.moveTo(pts[0][0], -pts[0][1]);
+    for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], -pts[i][1]);
+    shape.closePath();
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: WALL_H, bevelEnabled: false });
+    geo.rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(geo, wallMatDiag);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
+
   diagSection(E_DOOR_START, E_DOOR_END,   WALL_H - DOOR_H, DOOR_H); // linteau
+
+  // Section SW biseautée : face int se termine à d=diagLen (X=-10), face ext à d_ext_cut (X=-20)
+  {
+    const pts = [iP(E_DOOR_END), iP(diagLen), eP(d_ext_cut), eP(E_DOOR_END)];
+    const shape = new THREE.Shape();
+    shape.moveTo(pts[0][0], -pts[0][1]);
+    for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], -pts[i][1]);
+    shape.closePath();
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: WALL_H, bevelEnabled: false });
+    geo.rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(geo, wallMatDiag);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
+
+  // A2 biseauté : trapèze XZ, face int (X=-10) jusqu'à Z=DIAG_CZ, face ext (X=-20) jusqu'à Z_sw
+  {
+    const A2_Z_INT = DIAG_CZ;
+    const A2_Z_EXT = DIAG_AZ + d_ext_cut * cosθ + DIAG_DEPTH * pZ;
+    const shape = new THREE.Shape();
+    shape.moveTo(-NICHE_DEPTH,  30);           // NE (Z=-30, int)
+    shape.lineTo(A_EXT_X,       30);           // NW (Z=-30, ext)
+    shape.lineTo(A_EXT_X,      -A2_Z_EXT);    // SW (biseauté, ext)
+    shape.lineTo(-NICHE_DEPTH, -A2_Z_INT);    // SE (biseauté, int)
+    shape.closePath();
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: WALL_H, bevelEnabled: false });
+    geo.rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(geo, wallMat);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
+
+  // Mur B couloir : triangle biseauté SE — prolonge la face ext (X=310) jusqu'à eP(d_start_cut)
+  {
+    const Z_se_ext = DIAG_AZ + d_start_cut * cosθ + DIAG_DEPTH * pZ;
+    const shape = new THREE.Shape();
+    shape.moveTo(ROOM_W,       -DIAG_AZ);      // int (X=300, Z=530)
+    shape.lineTo(ROOM_W + W,   -DIAG_AZ);      // ext blunt (X=310, Z=530)
+    shape.lineTo(ROOM_W + W,   -Z_se_ext);     // ext biseauté (X=310)
+    shape.closePath();
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: WALL_H, bevelEnabled: false });
+    geo.rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(geo, wallMat);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
 
   // ── Assembly porte entrée (encadrement + panneau) ──────────────────────
   const entryDoorAssembly = new THREE.Group();
