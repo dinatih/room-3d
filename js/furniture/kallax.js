@@ -160,6 +160,7 @@ export function buildKallax(scene) {
     kList.push(neT);
     yNE += neT.totalH;
 
+    gStack.userData.inventoryId = 'kallax-ne-stack';
     gStack.rotation.y = Math.PI / 2;
     gStack.position.set(ROOM_W - depth / 2, 0, w2 / 2);
     scene.add(gStack);
@@ -180,6 +181,7 @@ export function buildKallax(scene) {
       kList.push(k);
       ySE += k.totalW;
     });
+    gStack.userData.inventoryId = 'kallax-se-stack';
     gStack.rotation.y = Math.PI / 2;
     gStack.position.set(ROOM_W - depth / 2, 0, ROOM_D - 60 - w1 / 2);
     scene.add(gStack);
@@ -214,6 +216,7 @@ export function buildKallax(scene) {
     gStack.add(nwT.group);
     kList.push(nwT);
 
+    gStack.userData.inventoryId = 'kallax-nw-stack';
     gStack.rotation.y = -Math.PI / 2;
     gStack.position.set(depth / 2, 0, w1 / 2);
     scene.add(gStack);
@@ -241,6 +244,7 @@ export function buildKallax(scene) {
       kList.push(k);
       ySW += k.totalH;
     });
+    gStack.userData.inventoryId = 'kallax-sw-stack';
     gStack.rotation.y = -Math.PI / 2;
     gStack.position.set(-NICHE_DEPTH + depth / 2, 0, ROOM_D - w2 / 2);
     scene.add(gStack);

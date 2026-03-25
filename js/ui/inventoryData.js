@@ -115,6 +115,16 @@ export const INVENTORY = [
   { id: 'potted-palm',       name: 'Palmier en pot',                 brand: '',         category: 'decor',     qty: 1,  dims: { w: 60,   d: 60,   h: 150  }, scenePos: { x: 100,  z: -150 }, notes: 'Jardin, entre canapé et desserte', glbPath: 'media/potted_palm.glb' },
 ];
 
+// =============================================
+// STORAGE SPACES — ensembles de rangement (uniques)
+// =============================================
+export const STORAGE_SPACES = [
+  { id: 'kallax-ne-stack',  name: 'Kallax NE',      notes: 'Coin mur C+B — 2×1 bas + 2×2 haut empilés, 6 Drona',         scenePos: { x: 280, z: 38  } },
+  { id: 'kallax-se-stack',  name: 'Kallax SE',      notes: 'Mur B sud — 2× (2×1 pivoté), 4 Drona',                        scenePos: { x: 281, z: 320 } },
+  { id: 'kallax-nw-stack',  name: 'Kallax NW',      notes: 'Coin mur A+C — tour 2×1 + 1×1 + 1×1 pivotés, 4 Drona',       scenePos: { x: 20,  z: 38  } },
+  { id: 'kallax-sw-stack',  name: 'Kallax cuisine', notes: 'Niche mur D — 2×2 + 2×2 + 2×1 empilés, 4 Drona dans le bas', scenePos: { x: -20, z: 362 } },
+];
+
 export const CATEGORIES = [
   { id: 'all',      label: 'Tout' },
   { id: 'storage',  label: 'Rangement' },

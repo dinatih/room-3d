@@ -3,7 +3,7 @@
 // =============================================
 import * as THREE from 'three';
 import { gltfLoader } from '../utils/loaders.js';
-import { INVENTORY, CATEGORIES } from './inventoryData.js';
+import { INVENTORY, CATEGORIES, STORAGE_SPACES } from './inventoryData.js';
 
 let overlay = null;
 
@@ -191,11 +191,11 @@ function renderTable(tbody, items, onSelect) {
 export function buildInventory(mainScene) {
   const style = document.createElement('style');
   style.textContent = `
-    #inv-table tbody tr { cursor:pointer; }
-    #inv-table tbody tr:nth-child(even) { background:rgba(255,255,255,0.03); }
-    #inv-table tbody tr:hover           { background:rgba(255,215,0,0.07); }
-    #inv-table tbody tr.selected        { background:rgba(255,215,0,0.15) !important; }
-    #inv-table tbody td                 { padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.05); }
+    #inv-table tbody tr, #inv-spaces-table tbody tr { cursor:pointer; }
+    #inv-table tbody tr:nth-child(even), #inv-spaces-table tbody tr:nth-child(even) { background:rgba(255,255,255,0.03); }
+    #inv-table tbody tr:hover, #inv-spaces-table tbody tr:hover                     { background:rgba(255,215,0,0.07); }
+    #inv-table tbody tr.selected, #inv-spaces-table tbody tr.selected               { background:rgba(255,215,0,0.15) !important; }
+    #inv-table tbody td, #inv-spaces-table tbody td { padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.05); }
     #inv-search:focus { border-color:#ffd700; outline:none; }
     #inv-preview-label { font-size:11px; color:#888; text-align:center; padding:6px 8px; min-height:32px; }
   `;
@@ -254,6 +254,23 @@ export function buildInventory(mainScene) {
   const tableWrap = document.createElement('div');
   tableWrap.style.cssText = 'overflow-y:auto; flex:1; min-width:0;';
   tableWrap.innerHTML = `
+    <div id="inv-spaces-section" style="display:none;">
+      <div style="font-size:11px;color:#ffd700;text-transform:uppercase;letter-spacing:1px;
+                  padding:8px 0 6px;font-weight:bold">Espaces de rangement</div>
+      <table id="inv-spaces-table" style="width:100%;border-collapse:collapse;font-size:12px;color:#ddd;margin-bottom:16px;">
+        <thead>
+          <tr style="background:rgba(255,255,255,0.05);text-align:left;font-size:11px;color:#aaa;
+                     text-transform:uppercase;position:sticky;top:0;z-index:1;">
+            <th style="padding:6px 8px">Nom</th>
+            <th style="padding:6px 8px;text-align:center">Position</th>
+            <th style="padding:6px 8px">Description</th>
+          </tr>
+        </thead>
+        <tbody id="inv-spaces-tbody"></tbody>
+      </table>
+      <div style="font-size:11px;color:#ffd700;text-transform:uppercase;letter-spacing:1px;
+                  padding:4px 0 6px;font-weight:bold">Objets</div>
+    </div>
     <table id="inv-table" style="width:100%;border-collapse:collapse;font-size:12px;color:#ddd;">
       <thead>
         <tr style="background:rgba(255,255,255,0.05);text-align:left;font-size:11px;color:#aaa;
@@ -298,7 +315,7 @@ export function buildInventory(mainScene) {
 
   function onSelectItem(item) {
     previewLabel.innerHTML = `<strong style="color:#fff">${item.name}</strong>
-      <span style="color:#666;margin-left:6px">${dimsStr(item.dims)}</span>`;
+      ${item.dims ? `<span style="color:#666;margin-left:6px">${dimsStr(item.dims)}</span>` : ''}`;
     getPreview().loadItem(item);
   }
 
@@ -316,11 +333,37 @@ export function buildInventory(mainScene) {
     });
   }
 
+  function renderSpacesTable(tbody, spaces, onSelect) {
+    tbody.innerHTML = '';
+    spaces.forEach(sp => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-weight:500">${sp.name}</td>
+        <td style="text-align:center;font-family:monospace;font-size:10px;color:#aaa">${posStr(sp.scenePos)}</td>
+        <td style="color:#aaa;font-size:11px">${sp.notes || ''}</td>
+      `;
+      tr.addEventListener('click', () => {
+        tbody.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
+        tr.classList.add('selected');
+        onSelect(sp);
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
   function refresh() {
     const items = getFiltered();
     const totalQty = items.reduce((s, i) => s + i.qty, 0);
     overlay.querySelector('#inv-count').textContent = `${items.length} objets · ${totalQty} pièces`;
     renderTable(overlay.querySelector('#inv-tbody'), items, onSelectItem);
+
+    const spacesSection = overlay.querySelector('#inv-spaces-section');
+    if (activeCat === 'storage') {
+      spacesSection.style.display = '';
+      renderSpacesTable(overlay.querySelector('#inv-spaces-tbody'), STORAGE_SPACES, onSelectItem);
+    } else {
+      spacesSection.style.display = 'none';
+    }
   }
 
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
