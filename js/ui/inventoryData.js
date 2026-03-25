@@ -119,7 +119,7 @@ export const INVENTORY = [
 // STORAGE SPACES — ensembles de rangement (uniques)
 // =============================================
 export const STORAGE_SPACES = [
-  { id: 'kallax-ne-stack',  name: 'Kallax NE',      notes: 'Coin mur C+B — 2×1 bas + 2×2 haut empilés, 6 Drona',         scenePos: { x: 280, z: 38  } },
+  { id: 'kallax-ne-stack',  name: 'Kallax NE',      notes: 'Coin mur C+B — 2×1 bas + 2×2 haut empilés, 6 Drona + 1 dessus', scenePos: { x: 280, z: 38  } },
   { id: 'kallax-se-stack',  name: 'Kallax SE',      notes: 'Mur B sud — 2× (2×1 pivoté), 4 Drona',                        scenePos: { x: 281, z: 320 } },
   { id: 'kallax-nw-stack',  name: 'Kallax NW',      notes: 'Coin mur A+C — tour 2×1 + 1×1 + 1×1 pivotés, 4 Drona',       scenePos: { x: 20,  z: 38  } },
   { id: 'kallax-sw-stack',  name: 'Kallax cuisine', notes: 'Niche mur D — 2×2 + 2×2 + 2×1 empilés, 4 Drona dans le bas', scenePos: { x: -20, z: 362 } },

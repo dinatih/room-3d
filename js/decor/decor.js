@@ -18,7 +18,7 @@ import {
   KALLAX_PANEL,
 } from '../config.js';
 import { addSingleDrona } from '../furniture/drona.js';
-import { kallaxW, kallaxH, kallaxSWGroup } from '../furniture/kallax.js';
+import { kallaxW, kallaxH, kallaxNEGroup, kallaxSWGroup } from '../furniture/kallax.js';
 import { mackaparGroup } from '../furniture/mackapar.js';
 
 let freezerDoorGroup = null;
@@ -46,10 +46,12 @@ export function buildDecor(scene) {
     addSingleDrona(mackaparGroup, mpCX - 20, mpTopY + DF / 2, mpCZ, Math.PI / 2);
     addSingleDrona(mackaparGroup, mpCX + 20, mpTopY + DF / 2, mpCZ, Math.PI / 2);
 
-    // 1 sur Kallax NE empilé 2×1+2×2 (angle C+B), poussé contre mur C (Z=0)
+    // 1 sur Kallax NE empilé 2×1+2×2 (angle C+B) — enfant du groupe NE (rotY=π/2)
+    // local_x = world_z - pos_z = DD/2 - w2/2 ; local_z = pos_x - world_x ; local_rotY = -π/2
     const k1TopY = kallaxH(1) + kallaxH(2);
-    const k1CX = ROOM_W - 20; // 280
-    addSingleDrona(scene, k1CX, k1TopY + DF / 2, DD / 2);
+    const neLocalX = DD / 2 - kallaxW(2) / 2;
+    const neLocalZ = (ROOM_W - KALLAX_DEPTH / 2) - (ROOM_W - 20);
+    addSingleDrona(kallaxNEGroup, neLocalX, k1TopY + DF / 2, neLocalZ, -Math.PI / 2);
 
     // 2 sur Kallax cuisine empilé 2×2+2×2+2×1 — enfants du groupe SW (ry=-π/2)
     // local_x = gStack.pos.z - world_z ; local_z = 0 ; local_rotY = π
