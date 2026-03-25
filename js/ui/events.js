@@ -241,9 +241,21 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
         if ((obj.layers.mask & (1 << LAYER_STRUCTURE)) === 0) return;
         if (wallColorOn) {
           savedWallMats.set(obj, obj.material);
-          obj.material = Array.isArray(obj.material)
-            ? obj.material.map(m => m.transparent ? redGhostMat : redWallMat)
-            : (obj.material.transparent ? redGhostMat : redWallMat);
+          const orig = obj.material;
+          if (Array.isArray(orig)) {
+            // BoxGeometry multi-mat : index 2 = face +Y (dessus), conserver blanche
+            obj.material = orig.map((m, i) => i === 2 ? m : (m.transparent ? redGhostMat : redWallMat));
+          } else if (orig.transparent) {
+            obj.material = redGhostMat;
+          } else if (obj.geometry instanceof THREE.BoxGeometry) {
+            // Single mat : convertir en 6-array, index 2 (+Y) reste blanc
+            obj.material = [redWallMat, redWallMat, orig, redWallMat, redWallMat, redWallMat];
+          } else if (obj.geometry instanceof THREE.ExtrudeGeometry) {
+            // ExtrudeGeometry groups : 0=cap bas, 1=cap haut (dessus), 2=côtés
+            obj.material = [redWallMat, orig, redWallMat];
+          } else {
+            obj.material = redWallMat;
+          }
         } else {
           const orig = savedWallMats.get(obj);
           if (orig) obj.material = orig;
