@@ -10,6 +10,9 @@ let sunnerstaPosIdx = 0;
 let SUNNERSTA_POSITIONS = null;
 let SURFACE_POSITIONS = null;
 
+/** Groupe parent de l'ensemble Sunnersta (trolley + surface + mannequin). */
+export const sunnerstGroup = new THREE.Group();
+sunnerstGroup.userData.inventoryId = 'sunnersta-stack';
 /** Groupe anchor pour tout ce qui est posé sur le Sunnersta. */
 export const sunnerstaSurface  = new THREE.Group();
 /** Groupe parent du mannequin + casquette (enfant de sunnerstaSurface). */
@@ -29,6 +32,7 @@ export function toggleSunnerstPosition() {
 }
 
 export function buildSunnersta(scene) {
+  scene.add(sunnerstGroup);
 
   gltfLoader.load('media/sunnersta_trolley_ikea.glb', (gltf) => {
     const trolley = gltf.scene;
@@ -81,7 +85,7 @@ export function buildSunnersta(scene) {
     const s0 = SURFACE_POSITIONS[0];
     sunnerstaSurface.position.set(s0.x, s0.y, s0.z);
     sunnerstaSurface.add(sunnerstaMannequin);
-    scene.add(sunnerstaSurface);
+    sunnerstGroup.add(sunnerstaSurface);
 
     trolley.userData.hoverAction = { label: 'Sunnersta', actionId: 'sunnersta-position' };
 
@@ -94,7 +98,7 @@ export function buildSunnersta(scene) {
     });
 
     mergeGlbByMaterial(trolley);
-    scene.add(trolley);
+    sunnerstGroup.add(trolley);
     addHoverTarget(trolley);
     requestRender();
   }, undefined, err => console.error('sunnersta_trolley_ikea.glb:', err));
