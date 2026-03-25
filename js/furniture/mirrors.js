@@ -83,40 +83,39 @@ export function buildMirrors(scene) {
     const MA_FRAME_T = 1.8;
     const MA_FRAME_D = 1.2;
 
-    const K1_W = kallaxW(1); // 1-col Kallax total width
+    const K1_W = kallaxW(1);
     const MA_START_Z = K1_W + 10;
 
     const MA_X = 0.2 + MA_FRAME_D / 2;
     const MA_BOTTOM_Y = 6;
+
+    const gA = new THREE.Group();
+    gA.userData.inventoryId = 'mirror-nissedal-a';
+    scene.add(gA);
+
+    const addFrame = (geo, x, y, z) => {
+      const m = new THREE.Mesh(geo, frameMat);
+      m.position.set(x, y, z);
+      gA.add(m);
+    };
 
     for (let i = 0; i < 3; i++) {
       const mz = MA_START_Z + MA_W / 2 + i * MA_W;
       const my = MA_BOTTOM_Y + MA_H / 2;
       const fx = MA_X;
 
-      const mirGeo = new THREE.PlaneGeometry(MA_W - MA_FRAME_T * 2, MA_H - MA_FRAME_T * 2);
-      const mir = new Reflector(mirGeo, {
-        textureWidth: 512,
-        textureHeight: 512,
-        color: 0xbbbbbb,
+      const mir = new Reflector(new THREE.PlaneGeometry(MA_W - MA_FRAME_T * 2, MA_H - MA_FRAME_T * 2), {
+        textureWidth: 512, textureHeight: 512, color: 0xbbbbbb,
       });
       mir.rotation.y = Math.PI / 2;
       mir.position.set(fx + 0.1, my, mz);
       patchReflectorLayers(mir);
-      scene.add(mir);
+      gA.add(mir);
 
-      const bH = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, MA_W), frameMat);
-      bH.position.set(fx, my + MA_H / 2 - MA_FRAME_T / 2, mz);
-      scene.add(bH);
-      const bB = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, MA_W), frameMat);
-      bB.position.set(fx, my - MA_H / 2 + MA_FRAME_T / 2, mz);
-      scene.add(bB);
-      const bG = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_H, MA_FRAME_T), frameMat);
-      bG.position.set(fx, my, mz - MA_W / 2 + MA_FRAME_T / 2);
-      scene.add(bG);
-      const bD = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_H, MA_FRAME_T), frameMat);
-      bD.position.set(fx, my, mz + MA_W / 2 - MA_FRAME_T / 2);
-      scene.add(bD);
+      addFrame(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, MA_W), fx, my + MA_H / 2 - MA_FRAME_T / 2, mz);
+      addFrame(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, MA_W), fx, my - MA_H / 2 + MA_FRAME_T / 2, mz);
+      addFrame(new THREE.BoxGeometry(MA_FRAME_D, MA_H, MA_FRAME_T), fx, my, mz - MA_W / 2 + MA_FRAME_T / 2);
+      addFrame(new THREE.BoxGeometry(MA_FRAME_D, MA_H, MA_FRAME_T), fx, my, mz + MA_W / 2 - MA_FRAME_T / 2);
     }
 
     // 4e miroir NISSEDAL 70x160cm
@@ -126,28 +125,17 @@ export function buildMirrors(scene) {
     const m4y = MA_BOTTOM_Y + M4_H / 2;
     const m4x = MA_X;
 
-    const mirGeo4 = new THREE.PlaneGeometry(M4_W - MA_FRAME_T * 2, M4_H - MA_FRAME_T * 2);
-    const mir4 = new Reflector(mirGeo4, {
-      textureWidth: 512,
-      textureHeight: 512,
-      color: 0xbbbbbb,
+    const mir4 = new Reflector(new THREE.PlaneGeometry(M4_W - MA_FRAME_T * 2, M4_H - MA_FRAME_T * 2), {
+      textureWidth: 512, textureHeight: 512, color: 0xbbbbbb,
     });
     mir4.rotation.y = Math.PI / 2;
     mir4.position.set(m4x + 0.1, m4y, m4z);
     patchReflectorLayers(mir4);
-    scene.add(mir4);
+    gA.add(mir4);
 
-    const b4H = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, M4_W), frameMat);
-    b4H.position.set(m4x, m4y + M4_H / 2 - MA_FRAME_T / 2, m4z);
-    scene.add(b4H);
-    const b4B = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, M4_W), frameMat);
-    b4B.position.set(m4x, m4y - M4_H / 2 + MA_FRAME_T / 2, m4z);
-    scene.add(b4B);
-    const b4G = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, M4_H, MA_FRAME_T), frameMat);
-    b4G.position.set(m4x, m4y, m4z - M4_W / 2 + MA_FRAME_T / 2);
-    scene.add(b4G);
-    const b4D = new THREE.Mesh(new THREE.BoxGeometry(MA_FRAME_D, M4_H, MA_FRAME_T), frameMat);
-    b4D.position.set(m4x, m4y, m4z + M4_W / 2 - MA_FRAME_T / 2);
-    scene.add(b4D);
+    addFrame(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, M4_W), m4x, m4y + M4_H / 2 - MA_FRAME_T / 2, m4z);
+    addFrame(new THREE.BoxGeometry(MA_FRAME_D, MA_FRAME_T, M4_W), m4x, m4y - M4_H / 2 + MA_FRAME_T / 2, m4z);
+    addFrame(new THREE.BoxGeometry(MA_FRAME_D, M4_H, MA_FRAME_T), m4x, m4y, m4z - M4_W / 2 + MA_FRAME_T / 2);
+    addFrame(new THREE.BoxGeometry(MA_FRAME_D, M4_H, MA_FRAME_T), m4x, m4y, m4z + M4_W / 2 - MA_FRAME_T / 2);
   }
 }
