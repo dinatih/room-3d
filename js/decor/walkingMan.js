@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { gltfLoader } from '../utils/loaders.js';
 import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
-import { ROOM_W, ROOM_D } from '../config.js';
+import { ROOM_W, ROOM_D, LAYER_GLB } from '../config.js';
 import { requestRender, addWalkFollower, addWalkPitchFollower, setInitialWalkPos } from '../cameraManager.js';
 import { setMinimapWalker } from '../ui/minimap.js';
 
@@ -49,6 +49,7 @@ export function buildWalkingMan(scene) {
     (gltf) => {
       const suit = gltf.scene;
       suit.traverse((c) => {
+        c.layers.set(LAYER_GLB);
         if (c.isMesh) c.material = redFabric;
       });
 
@@ -59,8 +60,6 @@ export function buildWalkingMan(scene) {
       suit.position.set(0, -box.min.y + SHOE_H, 0); // semelle à SHOE_H cm
       suit.castShadow = true;
       suit.receiveShadow = true;
-      // layer 0 (défaut) : visible dans les miroirs même sans HD
-
       mergeGlbByMaterial(suit);
       dirGroup.add(suit);
       suitReady = true;
@@ -78,6 +77,7 @@ export function buildWalkingMan(scene) {
     (gltf) => {
       const cap = gltf.scene;
       cap.traverse((c) => {
+        c.layers.set(LAYER_GLB);
         if (c.isMesh) c.material = redMat;
       });
 
