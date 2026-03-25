@@ -79,11 +79,11 @@ export const INVENTORY = [
   // ── KITCHEN ──────────────────────────────
   { id: 'counter',           name: 'Plan de travail',                brand: '',         category: 'kitchen',   qty: 1,  dims: { w: 100,  d: 60,   h: 3    }, scenePos: { x: 75,   z: 420  }, notes: 'Blanc, avec trou évier' },
   { id: 'cabinet-wood',      name: 'Placard cuisine',                brand: '',         category: 'kitchen',   qty: 1,  dims: { w: 40,   d: 60,   h: 90   }, scenePos: { x: 60,   z: 420  }, notes: 'Blanc, porte gris-bleu #607d8b' },
-  { id: 'fridge',            name: 'Réfrigérateur',                  brand: '',         category: 'kitchen',   qty: 1,  dims: { w: 60,   d: 60,   h: 90   }, scenePos: { x: 100,  z: 420  }, notes: 'Blanc cassé' },
+  { id: 'fridge',            name: 'Réfrigérateur',                  brand: '',         category: 'kitchen',   qty: 1,  dims: { w: 60,   d: 60,   h: 90   }, scenePos: { x: 100,  z: 420  }, notes: 'Blanc cassé', actions: ['fridge-toggle'] },
   { id: 'sink-boholmen',     name: 'Évier BOHOLMEN 1 bac',          brand: 'IKEA',     category: 'kitchen',   qty: 1,  dims: { w: 30,   d: 47,   h: 15   }, scenePos: { x: 60,   z: 420  }, notes: 'Inox, avec robinet' },
   { id: 'stove',             name: 'Plaques de cuisson (double)',    brand: '',         category: 'kitchen',   qty: 1,  dims: { w: 50,   d: 40,   h: 1    }, scenePos: { x: 100,  z: 420  }, notes: '2 foyers électriques' },
   { id: 'pizza-oven',        name: 'Four à pizza',                   brand: '',         category: 'kitchen',   qty: 1,  dims: { w: 20,   d: 20,   h: 19   }, scenePos: { x: -20,  z: 300  }, notes: 'Sur Kallax cuisine', glbPath: 'media/pizza_oven.glb' },
-  { id: 'freezer',           name: 'Congélateur CHIQ CSD46D4E',     brand: 'CHIQ',     category: 'kitchen',   qty: 1,  dims: { w: 45,   d: 47,   h: 50   }, scenePos: { x: 47,   z: 236  }, notes: 'Noir, niche séjour' },
+  { id: 'freezer',           name: 'Congélateur CHIQ CSD46D4E',     brand: 'CHIQ',     category: 'kitchen',   qty: 1,  dims: { w: 45,   d: 47,   h: 50   }, scenePos: { x: 47,   z: 236  }, notes: 'Noir, niche séjour', actions: ['freezer-toggle'] },
 
   // ── BATHROOM ─────────────────────────────
   { id: 'shower',            name: 'Douche',                         brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 70,   d: 70,   h: 200  }, scenePos: { x: 25,   z: 635  }, notes: 'Cuve 20cm + vitrage translucide' },

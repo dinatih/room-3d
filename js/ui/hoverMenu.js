@@ -34,6 +34,10 @@ export function registerHoverAction(actionId, config) {
   actionRegistry.set(actionId, config);
 }
 
+export function getHoverAction(actionId) {
+  return actionRegistry.get(actionId);
+}
+
 /**
  * Initialize the hover menu after the scene is fully built.
  */

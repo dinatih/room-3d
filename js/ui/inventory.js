@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { gltfLoader } from '../utils/loaders.js';
 import { INVENTORY, CATEGORIES, STORAGE_SPACES } from './inventoryData.js';
+import { getHoverAction } from './hoverMenu.js';
 
 let overlay = null;
 
@@ -299,7 +300,9 @@ export function buildInventory(mainScene) {
   const previewLabel = document.createElement('div');
   previewLabel.id = 'inv-preview-label';
   previewLabel.textContent = 'Clique sur un objet';
-  previewPanel.append(previewCanvas, previewLabel);
+  const previewActions = document.createElement('div');
+  previewActions.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;padding:0 8px 8px;';
+  previewPanel.append(previewCanvas, previewLabel, previewActions);
 
   body.append(tableWrap, previewPanel);
   modal.append(header, filters, body);
@@ -317,6 +320,26 @@ export function buildInventory(mainScene) {
     previewLabel.innerHTML = `<strong style="color:#fff">${item.name}</strong>
       ${item.dims ? `<span style="color:#666;margin-left:6px">${dimsStr(item.dims)}</span>` : ''}`;
     getPreview().loadItem(item);
+
+    // Boutons d'action
+    previewActions.innerHTML = '';
+    if (item.actions?.length) {
+      for (const actionId of item.actions) {
+        const cfg = getHoverAction(actionId);
+        if (!cfg) continue;
+        const btn = document.createElement('button');
+        btn.style.cssText = `
+          background:rgba(255,255,255,0.08);border:1px solid #555;border-radius:6px;
+          color:#ccc;font-size:11px;padding:4px 12px;cursor:pointer;flex:1;
+        `;
+        btn.textContent = cfg.getLabel();
+        btn.addEventListener('click', () => {
+          cfg.execute();
+          btn.textContent = cfg.getLabel();
+        });
+        previewActions.appendChild(btn);
+      }
+    }
   }
 
   let activeCat = 'all';
