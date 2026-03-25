@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { LAYER_FURNITURE } from '../config.js';
+import { kallaxSEGroup } from '../furniture/kallax.js';
 
 // Dimensions version 4 layers (cm)
 const W  = 60;   // largeur
@@ -97,14 +98,16 @@ export function buildShoeHatRack(scene) {
 
   // === PLACEMENT ===
   // Coin SE du séjour : dos contre mur B (X=300), largeur le long de Z vers mur D (Z=400)
-  // rotation.y = -π/2 : local Z → world -X, local X → world +Z
-  // back face (local Z=0) à X=300, front (local Z=27) à X=273, crochets vers X-
-  g.rotation.y = -Math.PI / 2;
-  g.position.set(300, 0, 340);
+  // Parenté à kallaxSEGroup (rotation.y=π/2) → local rotation.y = -π pour garder monde -π/2
+  kallaxSEGroup.updateMatrixWorld(true);
+  const localPos = new THREE.Vector3(300, 0, 340);
+  kallaxSEGroup.worldToLocal(localPos);
+  g.rotation.y = -Math.PI;
+  g.position.copy(localPos);
 
   g.traverse(c => {
     if (c.isMesh) c.layers.set(LAYER_FURNITURE);
   });
 
-  scene.add(g);
+  kallaxSEGroup.add(g);
 }

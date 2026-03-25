@@ -24,6 +24,7 @@ export function buildGarden(scene) {
     const sofaMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.7 });
 
     const sofaGroup = new THREE.Group();
+    sofaGroup.userData.inventoryId = 'sofa-red-1';
 
     // Assise
     const seat = new THREE.Mesh(
@@ -71,6 +72,7 @@ export function buildGarden(scene) {
 
     const sofa2Mat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.7 });
     const sofa2Group = new THREE.Group();
+    sofa2Group.userData.inventoryId = 'sofa-red-2';
 
     // Assise
     const seat2 = new THREE.Mesh(
@@ -124,6 +126,10 @@ export function buildGarden(scene) {
     const cbX = 70 - CB_W / 2;  // juste derrière le dossier
     const cbZ = -90;
 
+    const cbGroup = new THREE.Group();
+    cbGroup.userData.inventoryId = 'chest-bench';
+    scene.add(cbGroup);
+
     // Corps
     const body = new THREE.Mesh(
       new THREE.BoxGeometry(CB_W, CB_H - LID_H, CB_L),
@@ -132,7 +138,7 @@ export function buildGarden(scene) {
     body.position.set(cbX, (CB_H - LID_H) / 2, cbZ);
     body.castShadow = true;
     body.receiveShadow = true;
-    scene.add(body);
+    cbGroup.add(body);
 
     // Couvercle (légèrement plus large)
     const lid = new THREE.Mesh(
@@ -141,7 +147,7 @@ export function buildGarden(scene) {
     );
     lid.position.set(cbX, CB_H - LID_H / 2, cbZ);
     lid.castShadow = true;
-    scene.add(lid);
+    cbGroup.add(lid);
 
     // Poignées latérales (2 côtés Z)
     const handleMat = new THREE.MeshStandardMaterial({
@@ -153,7 +159,7 @@ export function buildGarden(scene) {
         handleMat,
       );
       handle.position.set(cbX, CB_H * 0.55, cbZ + dz * (CB_L / 2 + 0.8));
-      scene.add(handle);
+      cbGroup.add(handle);
     }
   }
 
@@ -164,20 +170,8 @@ export function buildGarden(scene) {
   gltfLoader.load('media/viggja.glb', (gltf) => {
     const viggja = gltf.scene;
 
-    const rawBox = new THREE.Box3().setFromObject(viggja);
-    const rawSize = rawBox.getSize(new THREE.Vector3());
-    // Scale sur Z (hauteur réelle 74cm) — export Collada/SKP = Z-up, rawSize.z=29.72 → scale=2.49
-    viggja.scale.setScalar(74 / rawSize.z);
-
-    viggja.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(viggja);
-
-    // Sol à Y=0, centré en X=100, bord sud à Z≈-155 (15cm du canapé, GLB centré à Z≈-35)
-    viggja.position.set(
-      100 - (box.min.x + box.max.x) / 2,
-      -box.min.y,
-      -125 - (box.max.z - box.min.z) / 2,
-    );
+    // GLB déjà en cm, centré à l'origine, posé sur Y=0
+    viggja.position.set(100, 0, -178);
 
     viggja.traverse(c => {
       c.layers.set(LAYER_GLB);
