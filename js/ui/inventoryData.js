@@ -125,6 +125,7 @@ export const STORAGE_SPACES = [
   { id: 'kallax-sw-stack',  name: 'Kallax cuisine', notes: 'Niche mur D — 2×2 + 2×2 + 2×1 empilés, 4 Drona dans le bas', scenePos: { x: -20, z: 362 } },
   { id: 'mackapar-stack',   name: 'Mackapär',       notes: 'Portant niche — combinaison + salopette + 2 Drona en haut',  scenePos: { x: 32,  z: 309 } },
   { id: 'sunnersta-stack',  name: 'Sunnersta',      notes: 'Desserte roulante — mannequin + casquette',                   scenePos: { x: 282, z: 272 } },
+  { id: 'cuisine-stack',   name: 'Cuisine',        notes: 'Plan de travail, évier, plaques, frigo, meuble bas, meuble haut + 3 Drona', scenePos: { x: 75, z: 420 } },
 ];
 
 export const CATEGORIES = [

@@ -20,7 +20,11 @@ export function toggleCabinetDoor() {
   return cabinetDoorOpen;
 }
 
+export const kitchenGroup = new THREE.Group();
+kitchenGroup.userData.inventoryId = 'cuisine-stack';
+
 export function buildKitchen(scene) {
+  scene.add(kitchenGroup);
   const COUNTER_H = 90;
   const COUNTER_SLAB = 3;
   const KIT_W = KITCHEN_X1 - KITCHEN_X0;
@@ -90,7 +94,7 @@ export function buildKitchen(scene) {
     cabinetDoorGroup.add(cabHandle);
 
     cabinetGroup.add(cabinetDoorGroup);
-    scene.add(cabinetGroup);
+    kitchenGroup.add(cabinetGroup);
   }
 
   // -------------------------------------------------------
@@ -221,7 +225,7 @@ export function buildKitchen(scene) {
     fridgeDoorGroup.add(ojLabel);
 
     fridgeGroup.add(fridgeDoorGroup);
-    scene.add(fridgeGroup);
+    kitchenGroup.add(fridgeGroup);
   }
 
   // -------------------------------------------------------
@@ -280,17 +284,26 @@ export function buildKitchen(scene) {
     geo.rotateX(-Math.PI / 2);
     const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25, metalness: 0.05 });
     const mesh = new THREE.Mesh(geo, mat);
+    mesh.userData.inventoryId = 'counter';
     mesh.position.set(cx0, COUNTER_H, cz0 + cD);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-    scene.add(mesh);
+    kitchenGroup.add(mesh);
   }
 
   // Bac BOHOLMEN
   {
+    const sinkGroup = new THREE.Group();
+    sinkGroup.userData.inventoryId = 'sink-boholmen';
     const inoxMat = new THREE.MeshStandardMaterial({
       color: 0xc8c8c8, metalness: 0.75, roughness: 0.12,
     });
+
+    const add = (geo, x, y, z, mat = inoxMat) => {
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(x, y, z);
+      sinkGroup.add(m);
+    };
 
     const rimT  = 1.2;
     const rimZW = (sinkD - holeD) / 2;
@@ -302,48 +315,37 @@ export function buildKitchen(scene) {
       [sinkW,  rimZW, sinkCX,              sinkCZ + holeD / 2 + rimZW / 2],
       [rimXW,  holeD, sinkCX - holeW / 2 - rimXW / 2, sinkCZ],
       [rimXW,  holeD, sinkCX + holeW / 2 + rimXW / 2, sinkCZ],
-    ]) {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, rimT, d), inoxMat);
-      m.position.set(cx, rimY2, cz);
-      scene.add(m);
-    }
+    ]) add(new THREE.BoxGeometry(w, rimT, d), cx, rimY2, cz);
 
     const wallT = (holeW - basinW) / 2;
     const wallD = (holeD - basinD) / 2;
-    const sides = [
-      { sx: holeW,  sy: sinkDepth, sz: wallT, px: 0,                        pz: -(basinD + wallD) / 2 },
-      { sx: holeW,  sy: sinkDepth, sz: wallT, px: 0,                        pz:  (basinD + wallD) / 2 },
-      { sx: wallT,  sy: sinkDepth, sz: holeD, px: -(basinW + wallT) / 2,    pz: 0 },
-      { sx: wallT,  sy: sinkDepth, sz: holeD, px:  (basinW + wallT) / 2,    pz: 0 },
-    ];
-    for (const s of sides) {
-      const mesh = new THREE.Mesh(new THREE.BoxGeometry(s.sx, s.sy, s.sz), inoxMat);
-      mesh.position.set(sinkCX + s.px, sinkY - sinkDepth / 2, sinkCZ + s.pz);
-      scene.add(mesh);
-    }
+    for (const s of [
+      { sx: holeW, sy: sinkDepth, sz: wallT, px: 0,                     pz: -(basinD + wallD) / 2 },
+      { sx: holeW, sy: sinkDepth, sz: wallT, px: 0,                     pz:  (basinD + wallD) / 2 },
+      { sx: wallT, sy: sinkDepth, sz: holeD, px: -(basinW + wallT) / 2, pz: 0 },
+      { sx: wallT, sy: sinkDepth, sz: holeD, px:  (basinW + wallT) / 2, pz: 0 },
+    ]) add(new THREE.BoxGeometry(s.sx, s.sy, s.sz), sinkCX + s.px, sinkY - sinkDepth / 2, sinkCZ + s.pz);
 
-    const floorMesh = new THREE.Mesh(new THREE.BoxGeometry(basinW, 0.5, basinD), inoxMat);
-    floorMesh.position.set(sinkCX, sinkY - sinkDepth + 0.25, sinkCZ);
-    scene.add(floorMesh);
-
-    const drain = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 0.8, 16), inoxMat);
-    drain.position.set(sinkCX, sinkY - sinkDepth + 0.7, sinkCZ);
-    scene.add(drain);
+    add(new THREE.BoxGeometry(basinW, 0.5, basinD), sinkCX, sinkY - sinkDepth + 0.25, sinkCZ);
+    add(new THREE.CylinderGeometry(2.5, 2.5, 0.8, 16), sinkCX, sinkY - sinkDepth + 0.7, sinkCZ);
 
     const faucetMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.7, roughness: 0.1 });
-    const fTige = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 20, 8), faucetMat);
-    fTige.position.set(sinkCX, sinkY + 10, sinkCZ + sinkD / 2 - 3);
-    scene.add(fTige);
+    add(new THREE.CylinderGeometry(1, 1, 20, 8), sinkCX, sinkY + 10, sinkCZ + sinkD / 2 - 3, faucetMat);
     const fBec = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 12, 8), faucetMat);
     fBec.rotation.x = Math.PI / 2;
     fBec.position.set(sinkCX, sinkY + 19, sinkCZ + sinkD / 2 - 9);
-    scene.add(fBec);
+    sinkGroup.add(fBec);
+
+    kitchenGroup.add(sinkGroup);
   }
 
   // -------------------------------------------------------
   // MEUBLE HAUT (ouvert, sans porte ni fond)
   // -------------------------------------------------------
   {
+    const upperGroup = new THREE.Group();
+    upperGroup.userData.inventoryId = 'meuble-haut-cuisine';
+
     const HC_W = KIT_W;
     const HC_H = 40;
     const HC_D = 40;
@@ -354,90 +356,68 @@ export function buildKitchen(scene) {
 
     const hcMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.35 });
 
+    const add = (geo, x, y, z) => {
+      const m = new THREE.Mesh(geo, hcMat);
+      m.position.set(x, y, z);
+      m.castShadow = true;
+      upperGroup.add(m);
+    };
+
     const topGeo = new THREE.BoxGeometry(HC_W, HC_PANEL, HC_D);
-    const top = new THREE.Mesh(topGeo, hcMat);
-    top.position.set(HC_CX, HC_Y0 + HC_H - HC_PANEL / 2, HC_CZ);
-    top.castShadow = true;
-    scene.add(top);
-
-    const bot = new THREE.Mesh(topGeo, hcMat);
-    bot.position.set(HC_CX, HC_Y0 + HC_PANEL / 2, HC_CZ);
-    bot.castShadow = true;
-    bot.receiveShadow = true;
-    scene.add(bot);
-
     const sideGeo = new THREE.BoxGeometry(HC_PANEL, HC_H, HC_D);
-    const sideL = new THREE.Mesh(sideGeo, hcMat);
-    sideL.position.set(HC_CX - HC_W / 2 + HC_PANEL / 2, HC_Y0 + HC_H / 2, HC_CZ);
-    sideL.castShadow = true;
-    scene.add(sideL);
+    add(topGeo,  HC_CX, HC_Y0 + HC_H - HC_PANEL / 2, HC_CZ); // dessus
+    add(topGeo,  HC_CX, HC_Y0 + HC_PANEL / 2,         HC_CZ); // dessous
+    add(sideGeo, HC_CX - HC_W / 2 + HC_PANEL / 2, HC_Y0 + HC_H / 2, HC_CZ); // gauche
+    add(sideGeo, HC_CX + HC_W / 2 - HC_PANEL / 2, HC_Y0 + HC_H / 2, HC_CZ); // droite
+    add(topGeo,  HC_CX, HC_Y0 + HC_H / 2, HC_CZ); // étagère milieu
 
-    const sideR = new THREE.Mesh(sideGeo, hcMat);
-    sideR.position.set(HC_CX + HC_W / 2 - HC_PANEL / 2, HC_Y0 + HC_H / 2, HC_CZ);
-    sideR.castShadow = true;
-    scene.add(sideR);
-
-    const shelf = new THREE.Mesh(topGeo, hcMat);
-    shelf.position.set(HC_CX, HC_Y0 + HC_H / 2, HC_CZ);
-    scene.add(shelf);
+    kitchenGroup.add(upperGroup);
   }
 
   // -------------------------------------------------------
   // PLAQUES À INDUCTION (verre plat, sans brûleurs)
   // -------------------------------------------------------
   {
+    const stoveGroup = new THREE.Group();
+    stoveGroup.userData.inventoryId = 'stove';
+
     const plateY  = COUNTER_H + COUNTER_SLAB;
     const plateCX = KITCHEN_X0 + CABINET_W + FRIDGE_W / 2;
     const plateCZ = ROOM_D + KIT_D / 2;
 
-    const glassMat  = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.08, metalness: 0.3 });
-    const zoneMat   = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.05, metalness: 0.2 });
-    const ringMat   = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.1,  metalness: 0.1 });
-    const controlMat = new THREE.MeshStandardMaterial({ color: 0xcc3333, roughness: 0.3, metalness: 0.1 });
+    const glassMat   = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.08, metalness: 0.3 });
+    const zoneMat    = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.05, metalness: 0.2 });
+    const ringMat    = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.1,  metalness: 0.1 });
+    const controlMat = new THREE.MeshStandardMaterial({ color: 0xcc3333, roughness: 0.3,  metalness: 0.1 });
 
-    // Surface principale en verre
+    const add = (geo, x, y, z, mat = glassMat) => {
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(x, y, z);
+      stoveGroup.add(m);
+    };
+
     const baseW = FRIDGE_W - 8;
     const baseD = KIT_D - 12;
     const base = new THREE.Mesh(new THREE.BoxGeometry(baseW, 1, baseD), glassMat);
     base.position.set(plateCX, plateY + 0.5, plateCZ);
     base.castShadow = true;
-    scene.add(base);
-
-    // 2 zones de cuisson : cercles plats gravés sur le verre
-    const zoneRadius = 9;
-    const ringInner  = 7.5;
-    const ringOuter  = 9;
+    stoveGroup.add(base);
 
     for (let i = 0; i < 2; i++) {
       const cz = plateCZ + (i === 0 ? -12 : 12);
-
-      // Disque de zone (très légèrement surélevé)
-      const disk = new THREE.Mesh(new THREE.CylinderGeometry(zoneRadius, zoneRadius, 0.15, 40), zoneMat);
-      disk.position.set(plateCX, plateY + 1.1, cz);
-      scene.add(disk);
-
-      // Anneau extérieur (marquage zone)
-      const ring = new THREE.Mesh(new THREE.RingGeometry(ringInner, ringOuter, 40), ringMat);
+      add(new THREE.CylinderGeometry(9, 9, 0.15, 40), plateCX, plateY + 1.1, cz, zoneMat);
+      const ring = new THREE.Mesh(new THREE.RingGeometry(7.5, 9, 40), ringMat);
       ring.rotation.x = -Math.PI / 2;
       ring.position.set(plateCX, plateY + 1.2, cz);
-      scene.add(ring);
-
-      // Petit cercle intérieur (indicateur centre)
-      const dot = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.05, 16), ringMat);
-      dot.position.set(plateCX, plateY + 1.2, cz);
-      scene.add(dot);
+      stoveGroup.add(ring);
+      add(new THREE.CylinderGeometry(1.5, 1.5, 0.05, 16), plateCX, plateY + 1.2, cz, ringMat);
     }
 
-    // Bande de contrôle (touches sensitives, avant du plan)
-    const ctrlStrip = new THREE.Mesh(new THREE.BoxGeometry(baseW - 10, 0.5, 6), glassMat);
-    ctrlStrip.position.set(plateCX, plateY + 1.1, plateCZ - baseD / 2 + 4);
-    scene.add(ctrlStrip);
-
-    // 4 petits témoins lumineux (DEL rouges)
+    add(new THREE.BoxGeometry(baseW - 10, 0.5, 6), plateCX, plateY + 1.1, plateCZ - baseD / 2 + 4);
     for (let i = 0; i < 4; i++) {
-      const led = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.3, 8), controlMat);
-      led.position.set(plateCX - 10 + i * 7, plateY + 1.35, plateCZ - baseD / 2 + 4);
-      scene.add(led);
+      add(new THREE.CylinderGeometry(0.6, 0.6, 0.3, 8), plateCX - 10 + i * 7, plateY + 1.35, plateCZ - baseD / 2 + 4, controlMat);
     }
+
+    kitchenGroup.add(stoveGroup);
   }
 }

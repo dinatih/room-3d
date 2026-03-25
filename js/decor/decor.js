@@ -20,6 +20,7 @@ import {
 import { addSingleDrona } from '../furniture/drona.js';
 import { kallaxW, kallaxH, kallaxNEGroup, kallaxSWGroup } from '../furniture/kallax.js';
 import { mackaparGroup } from '../furniture/mackapar.js';
+import { kitchenGroup } from '../structure/kitchen.js';
 
 let freezerDoorGroup = null;
 let freezerDoorOpen = false;
@@ -82,7 +83,7 @@ export function buildDecor(scene) {
 
     for (let i = 0; i < 3; i++) {
       const cx = KITCHEN_X0 + gap + DF / 2 + i * (DF + gap);
-      addSingleDrona(scene, cx, hcTopY + DF / 2, hcCZ, Math.PI);
+      addSingleDrona(kitchenGroup, cx, hcTopY + DF / 2, hcCZ, Math.PI);
     }
   }
 
