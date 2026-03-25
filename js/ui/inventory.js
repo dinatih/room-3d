@@ -104,19 +104,51 @@ function createPreview(canvas, mainScene) {
   let pivot = null;
   let rafId = null;
 
+  // Orbit state
+  const orbit = { theta: 0.4, phi: 1.2, dist: 1, cx: 0, cy: 0, cz: 0 };
+  let autoRotate = true;
+  let dragging = false;
+  let lastX = 0, lastY = 0;
+
+  function applyOrbit() {
+    camera.position.set(
+      orbit.cx + orbit.dist * Math.sin(orbit.phi) * Math.sin(orbit.theta),
+      orbit.cy + orbit.dist * Math.cos(orbit.phi),
+      orbit.cz + orbit.dist * Math.sin(orbit.phi) * Math.cos(orbit.theta),
+    );
+    camera.lookAt(orbit.cx, orbit.cy, orbit.cz);
+  }
+
   function fitCamera(object) {
     const box = new THREE.Box3().setFromObject(object);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
     const fovRad = THREE.MathUtils.degToRad(camera.fov);
-    const dist = (maxDim / 2) / Math.tan(fovRad / 2) * 1.7;
-    camera.position.set(center.x + dist * 0.4, center.y + size.y * 0.2, center.z + dist);
-    camera.lookAt(center);
-    camera.near = dist * 0.01;
-    camera.far  = dist * 10;
+    orbit.dist = (maxDim / 2) / Math.tan(fovRad / 2) * 1.7;
+    orbit.cx = center.x; orbit.cy = center.y; orbit.cz = center.z;
+    orbit.theta = 0.4; orbit.phi = 1.2;
+    autoRotate = true;
+    camera.near = orbit.dist * 0.01;
+    camera.far  = orbit.dist * 10;
     camera.updateProjectionMatrix();
+    applyOrbit();
   }
+
+  canvas.addEventListener('pointerdown', e => {
+    dragging = true; autoRotate = false;
+    lastX = e.clientX; lastY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    orbit.theta -= (e.clientX - lastX) * 0.01;
+    orbit.phi = Math.max(0.1, Math.min(Math.PI - 0.1, orbit.phi + (e.clientY - lastY) * 0.01));
+    lastX = e.clientX; lastY = e.clientY;
+    applyOrbit();
+  });
+  canvas.addEventListener('pointerup',    () => { dragging = false; });
+  canvas.addEventListener('pointerleave', () => { dragging = false; });
 
   function clearScene() {
     if (pivot) {
@@ -154,7 +186,7 @@ function createPreview(canvas, mainScene) {
 
   function animate() {
     rafId = requestAnimationFrame(animate);
-    if (pivot) pivot.rotation.y += 0.008;
+    if (autoRotate) { orbit.theta += 0.008; applyOrbit(); }
     renderer.render(previewScene, camera);
   }
 
