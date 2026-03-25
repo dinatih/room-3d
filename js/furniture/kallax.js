@@ -127,6 +127,8 @@ export const KALLAX_SE_X   = ROOM_W - KALLAX_DEPTH / 2;          // 280.5
 export const KALLAX_SE_Z   = ROOM_D - 60 - kallaxW(1) / 2;       // 319.75
 export const KALLAX_SE_TOP = 2 * kallaxW(2);                      // 151 cm
 
+export let kallaxSWGroup = null;
+
 export function buildKallax(scene) {
   const kList = [];
 
@@ -248,6 +250,7 @@ export function buildKallax(scene) {
     gStack.rotation.y = -Math.PI / 2;
     gStack.position.set(-NICHE_DEPTH + depth / 2, 0, ROOM_D - w2 / 2);
     scene.add(gStack);
+    kallaxSWGroup = gStack;
   }
 
   // Screws (instanced)

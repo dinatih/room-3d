@@ -18,7 +18,7 @@ import {
   KALLAX_PANEL,
 } from '../config.js';
 import { addSingleDrona } from '../furniture/drona.js';
-import { kallaxW, kallaxH } from '../furniture/kallax.js';
+import { kallaxW, kallaxH, kallaxSWGroup } from '../furniture/kallax.js';
 
 let freezerDoorGroup = null;
 let freezerDoorOpen = false;
@@ -52,13 +52,11 @@ export function buildDecor(scene) {
     const k1CX = ROOM_W - 20; // 280
     addSingleDrona(scene, k1CX, k1TopY + DF / 2, DD / 2);
 
-    // 2 sur Kallax cuisine empilé 2×2+2×2+2×1
+    // 2 sur Kallax cuisine empilé 2×2+2×2+2×1 — enfants du groupe SW (ry=-π/2)
+    // local_x = gStack.pos.z - world_z ; local_z = 0 ; local_rotY = π
     const k4TopY = kallaxH(2) * 2 + kallaxH(1);
-    const k4CX = -NICHE_DEPTH + KALLAX_DEPTH / 2;
-    const k4CZ = ROOM_D - kallaxW(2) / 2;
-
-    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ - 18, Math.PI / 2);
-    addSingleDrona(scene, k4CX, k4TopY + DF / 2, k4CZ + 18, Math.PI / 2);
+    addSingleDrona(kallaxSWGroup,  18, k4TopY + DF / 2, 0, Math.PI);
+    addSingleDrona(kallaxSWGroup, -18, k4TopY + DF / 2, 0, Math.PI);
 
     // 1 sur meuble SDB côté évier (cbnE), plaqué contre mur nord
     addSingleDrona(scene, DOOR_START - 28, 60 + DF / 2, KITCHEN_Z + 30);
