@@ -5,7 +5,11 @@ import { ROOM_D, NICHE_DEPTH, LAYER_GLB } from '../config.js';
 import { kallaxW } from './kallax.js';
 import { requestRender } from '../cameraManager.js';
 
+export const mackaparGroup = new THREE.Group();
+mackaparGroup.userData.inventoryId = 'mackapar-stack';
+
 export function buildMackapar(scene) {
+  scene.add(mackaparGroup);
 
   // mpZ : bord avant du Kallax 2×4 (Sud) - demi-profondeur Mackapar
   const kallaxEdgeZ = ROOM_D - kallaxW(2);
@@ -52,7 +56,7 @@ export function buildMackapar(scene) {
       }
     });
     mergeGlbByMaterial(mack);
-    scene.add(mack);
+    mackaparGroup.add(mack);
     requestRender();
 
     // ── Combinaison accrochée sur la tringle du haut ──────────────────────
@@ -92,7 +96,7 @@ export function buildMackapar(scene) {
       });
 
       mergeGlbByMaterial(suit);
-      scene.add(suit);
+      mackaparGroup.add(suit);
       requestRender();
 
       // ── Salopette accrochée à +5x du jumpsuit ──────────────────────────
@@ -127,7 +131,7 @@ export function buildMackapar(scene) {
         });
 
         mergeGlbByMaterial(sal);
-        scene.add(sal);
+        mackaparGroup.add(sal);
         requestRender();
       }, undefined, err => console.error('salopette-noir.glb:', err));
     }, undefined, err => console.error('mechanic_jumpsuit.glb:', err));

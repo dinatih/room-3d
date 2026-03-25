@@ -19,6 +19,7 @@ import {
 } from '../config.js';
 import { addSingleDrona } from '../furniture/drona.js';
 import { kallaxW, kallaxH, kallaxSWGroup } from '../furniture/kallax.js';
+import { mackaparGroup } from '../furniture/mackapar.js';
 
 let freezerDoorGroup = null;
 let freezerDoorOpen = false;
@@ -37,15 +38,13 @@ export function buildDecor(scene) {
     const DF = 33; // face 33x33cm (Drona réelle)
     const DD = 38; // profondeur 38cm (Drona réelle)
 
-    // 2 sur MACKAPÄR (tournées 90° pour aligner profondeur avec le meuble)
-    // mpCX doit correspondre au centre calculé dans mackapar.js :
-    //   -NICHE_DEPTH + plinthe(3.5) + demi-largeur GLB(≈77/2)
+    // 2 sur MACKAPÄR — enfants du mackaparGroup (position 0,0,0 → coords monde = coords locales)
     const mpTopY = 200;
     const mpCX = -NICHE_DEPTH + 3.5 + 77 / 2;  // ≈ 32cm
     const mpCZ = ROOM_D - kallaxW(2) - 32 / 2;
 
-    addSingleDrona(scene, mpCX - 20, mpTopY + DF / 2, mpCZ, Math.PI / 2);
-    addSingleDrona(scene, mpCX + 20, mpTopY + DF / 2, mpCZ, Math.PI / 2);
+    addSingleDrona(mackaparGroup, mpCX - 20, mpTopY + DF / 2, mpCZ, Math.PI / 2);
+    addSingleDrona(mackaparGroup, mpCX + 20, mpTopY + DF / 2, mpCZ, Math.PI / 2);
 
     // 1 sur Kallax NE empilé 2×1+2×2 (angle C+B), poussé contre mur C (Z=0)
     const k1TopY = kallaxH(1) + kallaxH(2);

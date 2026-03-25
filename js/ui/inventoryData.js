@@ -123,6 +123,7 @@ export const STORAGE_SPACES = [
   { id: 'kallax-se-stack',  name: 'Kallax SE',      notes: 'Mur B sud — 2× (2×1 pivoté), 4 Drona',                        scenePos: { x: 281, z: 320 } },
   { id: 'kallax-nw-stack',  name: 'Kallax NW',      notes: 'Coin mur A+C — tour 2×1 + 1×1 + 1×1 pivotés, 4 Drona',       scenePos: { x: 20,  z: 38  } },
   { id: 'kallax-sw-stack',  name: 'Kallax cuisine', notes: 'Niche mur D — 2×2 + 2×2 + 2×1 empilés, 4 Drona dans le bas', scenePos: { x: -20, z: 362 } },
+  { id: 'mackapar-stack',   name: 'Mackapär',       notes: 'Portant niche — combinaison + salopette + 2 Drona en haut',  scenePos: { x: 32,  z: 309 } },
 ];
 
 export const CATEGORIES = [
