@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ROOM_W } from '../config.js';
-import { KALLAX_SE_Z, KALLAX_SE_TOP } from './kallax.js';
+import { KALLAX_SE_Z, KALLAX_SE_TOP, kallaxSEGroup } from './kallax.js';
+import { KALLAX_DEPTH } from '../config.js';
 
 // Meuble en T : pavé creux (ouvert sur l'avant)
 const W = 22.5;  // largeur cm
@@ -51,11 +52,9 @@ export function buildMeubleT(scene) {
   const plankY = 33 + PT / 2;              // 34.85
   addPanel(group, 0, plankY, plankZ, PL, PT, PD, whiteMat);
 
-  // Même orientation que le groupe Kallax en dessous (rotation.y = π/2)
-  group.rotation.y = -Math.PI / 2;
-
-  // Collé contre mur B, posé sur le Kallax SE
-  group.position.set(MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z);
-
-  scene.add(group);
+  // Coordonnées locales dans kallaxSEGroup (rotation.y = π/2)
+  // local_rot.y = -π  →  world: π/2 + (-π) = -π/2 ✓
+  group.rotation.y = -Math.PI;
+  group.position.set(0, KALLAX_SE_TOP, (KALLAX_DEPTH - D) / 2);
+  kallaxSEGroup.add(group);
 }

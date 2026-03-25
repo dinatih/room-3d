@@ -129,6 +129,8 @@ export const KALLAX_SE_TOP = 2 * kallaxW(2);                      // 151 cm
 
 export let kallaxNEGroup = null;
 export let kallaxSWGroup = null;
+export let kallaxSEGroup = null;
+export let kallaxNWGroup = null;
 
 export function buildKallax(scene) {
   const kList = [];
@@ -189,6 +191,7 @@ export function buildKallax(scene) {
     gStack.rotation.y = Math.PI / 2;
     gStack.position.set(ROOM_W - depth / 2, 0, ROOM_D - 60 - w1 / 2);
     scene.add(gStack);
+    kallaxSEGroup = gStack;
   }
 
   // 3) KALLAX 2×1 + 1×1 + 1×1 pivotés — Angle mur A (X=0) + mur C (Z=0)
@@ -224,6 +227,7 @@ export function buildKallax(scene) {
     gStack.rotation.y = -Math.PI / 2;
     gStack.position.set(depth / 2, 0, w1 / 2);
     scene.add(gStack);
+    kallaxNWGroup = gStack;
   }
 
   // 4) KALLAX "2×5" — Angle mur A (X=0) + mur D (Z=400), in the niche

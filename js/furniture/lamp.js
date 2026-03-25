@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { gltfLoader } from '../utils/loaders.js';
 import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
 import { ROOM_W, ROOM_D, LAYER_GLB } from '../config.js';
-import { KALLAX_SE_TOP } from './kallax.js';
+import { KALLAX_SE_TOP, kallaxSEGroup } from './kallax.js';
 import { MEUBLE_T_X, MEUBLE_T_Z } from './meubleT.js';
 import { requestRender } from '../cameraManager.js';
 import { addHoverTarget } from '../ui/hoverMenu.js';
@@ -49,16 +49,23 @@ export function buildLamp(scene) {
     const cz = (box.min.z + box.max.z) / 2;
     const baseY = KALLAX_SE_TOP + LAMP_ABOVE - box.min.y;
 
-    lamp.position.set(MEUBLE_T_X - cx, baseY, MEUBLE_T_Z - cz);
+    // Convertir la position monde en coordonnées locales du groupe kallaxSE
+    const worldPos = new THREE.Vector3(MEUBLE_T_X - cx, baseY, MEUBLE_T_Z - cz);
+    kallaxSEGroup.updateMatrixWorld(true);
+    kallaxSEGroup.worldToLocal(worldPos);
+    lamp.position.copy(worldPos);
+    // Rotation monde = atan2(dx, dz) ; parent a rotation.y=π/2 → local = monde - π/2
+    lamp.rotation.y = Math.atan2(dx, dz) - Math.PI / 2;
+
     lamp.traverse(c => {
       c.layers.set(LAYER_GLB);
     });
     mergeGlbByMaterial(lamp);
     lamp.userData.hoverAction = { label: 'Lampe OLA', actionId: 'lamp-toggle' };
-    scene.add(lamp);
+    kallaxSEGroup.add(lamp);
     addHoverTarget(lamp);
 
-    // PointLight au niveau de l'abat-jour (80% de la hauteur du modèle)
+    // PointLight reste dans la scène (en coordonnées monde)
     lampLight = new THREE.PointLight(0xfff5e0, 120000, 350, 2);
     lampLight.position.set(MEUBLE_T_X - cx, baseY + (box.max.y - box.min.y) * 0.8, MEUBLE_T_Z - cz);
     lampLight.visible = false;

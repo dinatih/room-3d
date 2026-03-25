@@ -336,6 +336,7 @@ export function buildInventory(mainScene) {
         btn.addEventListener('click', () => {
           cfg.execute();
           btn.textContent = cfg.getLabel();
+          getPreview().loadItem(item);
         });
         previewActions.appendChild(btn);
       }

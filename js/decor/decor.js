@@ -18,7 +18,7 @@ import {
   KALLAX_PANEL,
 } from '../config.js';
 import { addSingleDrona } from '../furniture/drona.js';
-import { kallaxW, kallaxH, kallaxNEGroup, kallaxSWGroup } from '../furniture/kallax.js';
+import { kallaxW, kallaxH, kallaxNEGroup, kallaxSWGroup, kallaxNWGroup } from '../furniture/kallax.js';
 import { mackaparGroup } from '../furniture/mackapar.js';
 import { kitchenGroup } from '../structure/kitchen.js';
 
@@ -421,11 +421,13 @@ export function buildDecor(scene) {
     addMannequin(0, 0, 0, 0, sunnerstaMannequin);
 
     // 2) Sur Kallax NW empilé 2×1+1×1+1×1 pivoté (top≈156.5), face centre séjour
+    // Coords locales dans kallaxNWGroup (rotation.y=-π/2, pos=(KALLAX_DEPTH/2,0,kallaxW(1)/2))
     const k14CX = KALLAX_DEPTH / 2;
     const k14CZ = kallaxW(1) / 2;
     const k14Top = kallaxW(2) + kallaxW(1) * 2;
-    addMannequin(k14CX, k14Top, k14CZ,
-      Math.atan2(150 - k14CX, 200 - k14CZ));
+    addMannequin(0, k14Top, 0,
+      Math.atan2(150 - k14CX, 200 - k14CZ) + Math.PI / 2,
+      kallaxNWGroup);
 
     // 3) Sur étagère LACK mur A (cx=13, cz=225, top≈191), face centre séjour
     const lackCX = 26 / 2;  // LACK_D / 2

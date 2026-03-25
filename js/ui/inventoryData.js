@@ -78,7 +78,7 @@ export const INVENTORY = [
 
   // ── KITCHEN ──────────────────────────────
   { id: 'counter',           name: 'Plan de travail',                brand: '',         category: 'kitchen',   qty: 1,  dims: { w: 100,  d: 60,   h: 3    }, scenePos: { x: 75,   z: 420  }, notes: 'Blanc, avec trou évier' },
-  { id: 'cabinet-wood',      name: 'Placard cuisine',                brand: '',         category: 'kitchen',   qty: 1,  dims: { w: 40,   d: 60,   h: 90   }, scenePos: { x: 60,   z: 420  }, notes: 'Blanc, porte gris-bleu #607d8b' },
+  { id: 'cabinet-wood',      name: 'Placard cuisine',                brand: '',         category: 'kitchen',   qty: 1,  dims: { w: 40,   d: 60,   h: 90   }, scenePos: { x: 60,   z: 420  }, notes: 'Blanc, porte gris-bleu #607d8b', actions: ['cabinet-toggle'] },
   { id: 'fridge',            name: 'Réfrigérateur',                  brand: '',         category: 'kitchen',   qty: 1,  dims: { w: 60,   d: 60,   h: 90   }, scenePos: { x: 100,  z: 420  }, notes: 'Blanc cassé', actions: ['fridge-toggle'] },
   { id: 'sink-boholmen',     name: 'Évier BOHOLMEN 1 bac',          brand: 'IKEA',     category: 'kitchen',   qty: 1,  dims: { w: 30,   d: 47,   h: 15   }, scenePos: { x: 60,   z: 420  }, notes: 'Inox, avec robinet' },
   { id: 'stove',             name: 'Plaques de cuisson (double)',    brand: '',         category: 'kitchen',   qty: 1,  dims: { w: 50,   d: 40,   h: 1    }, scenePos: { x: 100,  z: 420  }, notes: '2 foyers électriques' },
@@ -89,7 +89,8 @@ export const INVENTORY = [
   { id: 'shower',            name: 'Douche',                         brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 70,   d: 70,   h: 200  }, scenePos: { x: 25,   z: 635  }, notes: 'Cuve 20cm + vitrage translucide' },
   { id: 'toilet',            name: 'WC',                             brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 40,   d: 40,   h: 75   }, scenePos: { x: 10,   z: 481  }, notes: 'Avec réservoir et siège torus' },
   { id: 'vasque-sdb',        name: 'Meuble vasque suspendu',         brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 63,   d: 48.5, h: 176  }, scenePos: { x: 112,  z: 488  }, notes: 'Caisson 60×47×50cm + vasque 35×25cm + robinet + miroir 63×90cm + lampe LED' },
-  { id: 'bathroom-cabinets', name: 'Meubles muraux SDB',             brand: 'IKEA',     category: 'bathroom',  qty: 2,  dims: { w: 40,   d: 37,   h: 60   }, scenePos: { x: 20,   z: 485  }, notes: 'Blanc' },
+  { id: 'bathroom-cabinet-west', name: 'Meuble mural SDB ouest',     brand: 'IKEA',     category: 'bathroom',  qty: 1,  dims: { w: 40,   d: 37,   h: 60   }, scenePos: { x: 10,   z: 490  }, notes: 'Blanc, côté ballon d\'eau' },
+  { id: 'bathroom-cabinet-east', name: 'Meuble mural SDB est',       brand: 'IKEA',     category: 'bathroom',  qty: 1,  dims: { w: 40,   d: 37,   h: 60   }, scenePos: { x: 162,  z: 490  }, notes: 'Blanc, côté vasque' },
   { id: 'water-heater',      name: 'Ballon eau chaude 100L',         brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 40,   d: 40,   h: 80   }, scenePos: { x: 0,    z: 480  }, notes: 'Cylindrique, vertical' },
   { id: 'bathtub',           name: 'Baignoire',                      brand: '',         category: 'bathroom',  qty: 1,  dims: { w: 150,  d: 70,   h: 50   }, scenePos: { x: 120,  z: -250 }, notes: 'Coins arrondis, jardin' },
 
@@ -120,7 +121,7 @@ export const INVENTORY = [
 // =============================================
 export const STORAGE_SPACES = [
   { id: 'kallax-ne-stack',  name: 'Kallax NE',      notes: 'Coin mur C+B — 2×1 bas + 2×2 haut empilés, 6 Drona + 1 dessus', scenePos: { x: 280, z: 38  } },
-  { id: 'kallax-se-stack',  name: 'Kallax SE',      notes: 'Mur B sud — 2× (2×1 pivoté), 4 Drona',                        scenePos: { x: 281, z: 320 } },
+  { id: 'kallax-se-stack',  name: 'Kallax SE',      notes: 'Mur B sud — 2× (2×1 pivoté), 4 Drona + meuble en T dessus',  scenePos: { x: 281, z: 320 } },
   { id: 'kallax-nw-stack',  name: 'Kallax NW',      notes: 'Coin mur A+C — tour 2×1 + 1×1 + 1×1 pivotés, 4 Drona',       scenePos: { x: 20,  z: 38  } },
   { id: 'kallax-sw-stack',  name: 'Kallax cuisine', notes: 'Niche mur D — 2×2 + 2×2 + 2×1 empilés, 4 Drona dans le bas', scenePos: { x: -20, z: 362 } },
   { id: 'mackapar-stack',   name: 'Mackapär',       notes: 'Portant niche — combinaison + salopette + 2 Drona en haut',  scenePos: { x: 32,  z: 309 } },

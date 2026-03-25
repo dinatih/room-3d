@@ -191,42 +191,43 @@ export function buildBathroom(scene) {
   const cbnDoorMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.2 });
   const cbnHandleMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.5, roughness: 0.3 });
 
-  const cbnGroup = new THREE.Group();
-  cbnGroup.userData.inventoryId = 'bathroom-cabinets';
-  cbnGroup.userData.layerOverride = LAYER_FURNITURE;
+  // Meuble mural ouest
+  const cbnWGroup = new THREE.Group();
+  cbnWGroup.userData.inventoryId = 'bathroom-cabinet-west';
+  cbnWGroup.userData.layerOverride = LAYER_FURNITURE;
 
-  // Corps meuble ouest
   const cbnW = new THREE.Mesh(new THREE.BoxGeometry(CBN_W, CBN_H, CBN_BODY_D), cbnMat);
   cbnW.position.set(-NICHE_DEPTH + CBN_W / 2, CBN_H / 2, CBN_BODY_Z);
   cbnW.castShadow = true;
   cbnW.receiveShadow = true;
-  cbnGroup.add(cbnW);
-  // Porte meuble ouest
+  cbnWGroup.add(cbnW);
   const doorW = new THREE.Mesh(new THREE.BoxGeometry(CBN_W - 2, CBN_H - 2, CBN_DOOR_D), cbnDoorMat);
   doorW.position.set(-NICHE_DEPTH + CBN_W / 2, CBN_H / 2, CBN_DOOR_Z);
   doorW.castShadow = true;
-  cbnGroup.add(doorW);
-  // Poignée meuble ouest (côté droit)
+  cbnWGroup.add(doorW);
   const handleW = new THREE.Mesh(new THREE.BoxGeometry(2, 12, 1.5), cbnHandleMat);
   handleW.position.set(-NICHE_DEPTH + CBN_W - 6, CBN_H * 0.6, CBN_DOOR_Z + CBN_DOOR_D / 2 + 0.75);
-  cbnGroup.add(handleW);
+  cbnWGroup.add(handleW);
+  scene.add(cbnWGroup);
 
-  // Corps meuble est
+  // Meuble mural est
+  const cbnEGroup = new THREE.Group();
+  cbnEGroup.userData.inventoryId = 'bathroom-cabinet-east';
+  cbnEGroup.userData.layerOverride = LAYER_FURNITURE;
+
   const cbnE = new THREE.Mesh(new THREE.BoxGeometry(CBN_W, CBN_H, CBN_BODY_D), cbnMat);
   cbnE.position.set(DOOR_START - CBN_W / 2 - 8, CBN_H / 2, CBN_BODY_Z);
   cbnE.castShadow = true;
   cbnE.receiveShadow = true;
-  cbnGroup.add(cbnE);
-  // Porte meuble est
+  cbnEGroup.add(cbnE);
   const doorE = new THREE.Mesh(new THREE.BoxGeometry(CBN_W - 2, CBN_H - 2, CBN_DOOR_D), cbnDoorMat);
   doorE.position.set(DOOR_START - CBN_W / 2 - 8, CBN_H / 2, CBN_DOOR_Z);
   doorE.castShadow = true;
-  cbnGroup.add(doorE);
-  // Poignée meuble est (côté gauche)
+  cbnEGroup.add(doorE);
   const handleE = new THREE.Mesh(new THREE.BoxGeometry(2, 12, 1.5), cbnHandleMat);
   handleE.position.set(DOOR_START - CBN_W - 8 + 6, CBN_H * 0.6, CBN_DOOR_Z + CBN_DOOR_D / 2 + 0.75);
-  cbnGroup.add(handleE);
-  scene.add(cbnGroup);
+  cbnEGroup.add(handleE);
+  scene.add(cbnEGroup);
 
   // =============================================
   // Ballon d'eau chaude 100L vertical
