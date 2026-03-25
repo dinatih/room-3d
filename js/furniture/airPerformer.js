@@ -1,8 +1,26 @@
 import * as THREE from 'three';
+import { requestRender } from '../cameraManager.js';
+
+const AP_POSITIONS = [
+  { x: 287.5, z: 230 }, // pos 1 : contre mur B, au sud de la Sunnersta
+  { x: 246,   z:  20 }, // pos 2 : contre kallax nord
+];
+let apPosIdx = 0;
+let _group = null;
+
+export function toggleAirPerformerPosition() {
+  apPosIdx = (apPosIdx + 1) % AP_POSITIONS.length;
+  const p = AP_POSITIONS[apPosIdx];
+  _group.position.set(p.x, 0, p.z);
+  requestRender();
+  return apPosIdx;
+}
 
 export function buildAirPerformer(scene) {
   const group = new THREE.Group();
   group.userData.inventoryId = 'air-performer';
+  group.userData.hoverAction = { label: 'Air Performer', actionId: 'air-performer-position' };
+  _group = group;
 
   const darkMat = new THREE.MeshStandardMaterial({
     color: 0x2a2a2a,
@@ -35,9 +53,8 @@ export function buildAirPerformer(scene) {
   tower.position.set(0, 35, -5);
   group.add(tower);
 
-  // Contre mur B (face intérieure X=300), au sud de la Sunnersta (Z≈243)
-  // Cylindre rayon 12.5 → dos à X=300 → centre X=287.5
-  group.position.set(287.5, 0, 230);
+  const p0 = AP_POSITIONS[0];
+  group.position.set(p0.x, 0, p0.z);
 
   scene.add(group);
 }

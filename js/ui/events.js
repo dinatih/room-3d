@@ -17,6 +17,7 @@ import { toggleBedStack, toggleBedVersion, toggleBedPosition, toggleSofaMode } f
 import { toggleSunnerstPosition } from '../furniture/sunnersta.js';
 import { toggleDesksHeight, toggleDesk1Height, toggleDesk2Height, toggleDesk1Position, toggleDesk2Position } from '../furniture/desks.js';
 import { toggleSmorkullPosition } from '../furniture/chair.js';
+import { toggleAirPerformerPosition } from '../furniture/airPerformer.js';
 import { setMirrorLayers } from '../furniture/mirrors.js';
 import { toggleFreezerDoor } from '../decor/decor.js';
 import { toggleWCLid } from '../structure/wc.js';
@@ -31,7 +32,7 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
 
   // ── État des toggles ──────────────────────────────────────────────────────
   let eastDoorState = false, freezerState = false, fridgeState = false;
-  let cabinetState = false, bedState = true,  desksState = false, bedPosIdx = 0, sofaModeState = false, sunnerstaPosIdx = 0, desk1PosIdx = 0, desk2PosIdx = 0, smorkullPosIdx = 0;
+  let cabinetState = false, bedState = true,  desksState = false, bedPosIdx = 0, sofaModeState = false, sunnerstaPosIdx = 0, desk1PosIdx = 0, desk2PosIdx = 0, smorkullPosIdx = 0, apPosIdx = 0;
   let desk1State   = false, desk2State  = false, wcLidState = false;
   let corrDoorsState = false, entryDoorState = false;
   let livingDoorState = false, bathroomDoorState = false, lampState = false;
@@ -102,6 +103,7 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
   registerHoverAction('desk2-position',       { getLabel: () => desk2PosIdx === 0 ? 'Espace de travail' : 'Position initiale', execute: () => { desk2PosIdx = toggleDesk2Position(); } });
   registerHoverAction('desk2-toggle',         { getLabel: () => desk2State        ? 'Mode assis' : 'Mode debout', execute: doToggleDesk2 });
   registerHoverAction('smorkull-position',    { getLabel: () => ['Espace détente (pos 2)', 'Pos 3', 'Position bureau (pos 1)'][smorkullPosIdx], execute: () => { smorkullPosIdx = toggleSmorkullPosition(); } });
+  registerHoverAction('air-performer-position', { getLabel: () => apPosIdx === 0 ? 'Pos 2 (Z=20)' : 'Pos 1 (mur B)', execute: () => { apPosIdx = toggleAirPerformerPosition(); } });
   registerHoverAction('wc-lid-toggle',        { getLabel: () => wcLidState        ? 'Fermer' : 'Ouvrir',       execute: doToggleWCLid });
   registerHoverAction('corr-doors-toggle',    { getLabel: () => corrDoorsState    ? 'Fermer' : 'Ouvrir',       execute: doToggleCorridorDoors });
   registerHoverAction('entry-door-toggle',    { getLabel: () => entryDoorState    ? 'Fermer' : 'Ouvrir',       execute: doToggleEntryDoor });
