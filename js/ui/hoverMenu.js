@@ -19,6 +19,7 @@ let menuEl = null;
 let labelEl = null;
 let hideTimer = null;
 let currentActionId = null;
+let touchMenuLocked = false; // true = menu ouvert par tap touch, ne pas cacher sur pointerleave
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public API
@@ -49,9 +50,42 @@ export function initHoverMenu(renderer, camera, scene) {
   menuEl.addEventListener('pointerenter', cancelHide);
   menuEl.addEventListener('pointerleave', scheduleHide);
 
-  // Throttled pointer tracking (~30 fps)
+  // Touch : tap sur canvas → ouvre/ferme menu sans hover
+  renderer.domElement.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'touch') return;
+    cancelHide();
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+    pointer.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(targets, true);
+    let found = null;
+    for (const hit of hits) {
+      const action = resolveAction(hit.object);
+      if (action) { found = { action, x: e.clientX, y: e.clientY }; break; }
+    }
+    if (found) {
+      touchMenuLocked = true;
+      showMenu(found.action, found.x, found.y);
+    } else {
+      touchMenuLocked = false;
+      hideMenu();
+    }
+  });
+
+  // Tap en dehors du menu et du canvas → ferme
+  document.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'touch' || !touchMenuLocked) return;
+    if (menuEl.contains(e.target)) return;
+    if (renderer.domElement.contains(e.target)) return; // géré ci-dessus
+    touchMenuLocked = false;
+    hideMenu();
+  }, { capture: true });
+
+  // Throttled pointer tracking (~30 fps) — souris uniquement
   let lastMove = 0;
   renderer.domElement.addEventListener('pointermove', e => {
+    if (e.pointerType === 'touch') return;
     const now = performance.now();
     if (now - lastMove < 32) return;
     lastMove = now;
@@ -59,7 +93,10 @@ export function initHoverMenu(renderer, camera, scene) {
     onPointerMove(e, renderer, camera);
   });
 
-  renderer.domElement.addEventListener('pointerleave', scheduleHide);
+  renderer.domElement.addEventListener('pointerleave', e => {
+    if (touchMenuLocked) return;
+    scheduleHide();
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -122,6 +159,8 @@ function showMenu({ label, actionId, actions }, mouseX, mouseY) {
       e.stopPropagation();
       cfg.execute();
       btn.textContent = cfg.getLabel();
+      touchMenuLocked = false;
+      scheduleHide();
     });
     menuEl.appendChild(btn);
   }
