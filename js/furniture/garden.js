@@ -166,6 +166,11 @@ export function buildGarden(scene) {
   // =============================================
   // DESSERTE IKEA VIGGJA (37×50×74cm) — GLB
   // À côté du canapé ouest (côté sud)
+  // NOTE : GLB brut mesurait x=20.04, y=29.72, z=12.31. Scale 74/29.72≈2.49 appliqué
+  //        et baked → résultat ~50×74×31cm. Cohérent avec 37×50×74cm réels SAUF
+  //        la profondeur Z (31cm au lieu de 37cm) — les deux autres axes sont exacts.
+  // TODO : trouver un modèle Viggja aux bonnes proportions (37×50×74cm) pour remplacer
+  //        ce GLB dont la profondeur est incorrecte (~16% trop étroite).
   // =============================================
   gltfLoader.load('media/viggja.glb', (gltf) => {
     const viggja = gltf.scene;
