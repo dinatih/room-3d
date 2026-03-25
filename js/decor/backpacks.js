@@ -276,6 +276,7 @@ export function buildBackpacks(scene) {
   // rotation.y=π/2 : dos (local -Z) contre X=0, face vers +X (pièce)
   // centre Y≈160 → position.y = 160 - 43/2 ≈ 138
   const bagLWallA = buildBag(32, 43, 17);
+  bagLWallA.userData.inventoryId = 'backpack';
   bagLWallA.traverse(c => { if (c.isMesh) c.layers.set(LAYER_FURNITURE); });
   bagLWallA.rotation.y = Math.PI / 2;
   bagLWallA.position.set(17 / 2, 138, 258);

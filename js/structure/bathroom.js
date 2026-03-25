@@ -152,22 +152,27 @@ export function buildBathroom(scene) {
     color: 0xf0f0f0,
     roughness: 0.3,
   });
+
+  const showerGroup = new THREE.Group();
+  showerGroup.userData.inventoryId = 'shower';
+  scene.add(showerGroup);
+
   const base = new THREE.Mesh(new THREE.BoxGeometry(SHOWER_W, BASE_H, SHOWER_D), baseMat);
   base.position.set(showerCX, BASE_H / 2, showerCZ);
   base.castShadow = true;
   base.receiveShadow = true;
-  scene.add(base);
+  showerGroup.add(base);
 
   // Vitrage douche au niveau du mur sud (Z=600)
   const glassBaseY = BASE_H;
   const glass = new THREE.Mesh(new THREE.PlaneGeometry(SHOWER_W, GLASS_H), glassMat);
   glass.position.set(showerCX, glassBaseY + GLASS_H / 2, SHOWER_Z0);
-  scene.add(glass);
+  showerGroup.add(glass);
 
   // Cadre haut du vitrage douche
   const showerTopBar = new THREE.Mesh(new THREE.BoxGeometry(SHOWER_W, 3, 1.5), frameMat);
   showerTopBar.position.set(showerCX, glassBaseY + GLASS_H, SHOWER_Z0);
-  scene.add(showerTopBar);
+  showerGroup.add(showerTopBar);
 
   // =============================================
   // WC — délégué à js/wc.js
