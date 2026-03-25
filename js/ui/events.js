@@ -15,7 +15,7 @@ import { toggleEastDoor } from '../structure/walls.js';
 import { toggleFridgeDoor, toggleCabinetDoor } from '../structure/kitchen.js';
 import { toggleBedStack, toggleBedVersion, toggleBedPosition, toggleSofaMode } from '../furniture/bed.js';
 import { toggleSunnerstPosition } from '../furniture/sunnersta.js';
-import { toggleDesksHeight, toggleDesk1Height, toggleDesk2Height, toggleDesk1Position } from '../furniture/desks.js';
+import { toggleDesksHeight, toggleDesk1Height, toggleDesk2Height, toggleDesk1Position, toggleDesk2Position } from '../furniture/desks.js';
 import { setMirrorLayers } from '../furniture/mirrors.js';
 import { toggleFreezerDoor } from '../decor/decor.js';
 import { toggleWCLid } from '../structure/wc.js';
@@ -30,7 +30,7 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
 
   // ── État des toggles ──────────────────────────────────────────────────────
   let eastDoorState = false, freezerState = false, fridgeState = false;
-  let cabinetState = false, bedState = true,  desksState = false, bedPosIdx = 0, sofaModeState = false, sunnerstaPosIdx = 0, desk1PosIdx = 0;
+  let cabinetState = false, bedState = true,  desksState = false, bedPosIdx = 0, sofaModeState = false, sunnerstaPosIdx = 0, desk1PosIdx = 0, desk2PosIdx = 0;
   let desk1State   = false, desk2State  = false, wcLidState = false;
   let corrDoorsState = false, entryDoorState = false;
   let livingDoorState = false, bathroomDoorState = false, lampState = false;
@@ -98,6 +98,7 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
   registerHoverAction('desks-toggle',         { getLabel: () => desksState        ? 'Mode assis' : 'Mode debout', execute: doToggleDesks });
   registerHoverAction('desk1-toggle',         { getLabel: () => desk1State        ? 'Mode assis' : 'Mode debout', execute: doToggleDesk1 });
   registerHoverAction('desk1-position',       { getLabel: () => desk1PosIdx === 0 ? 'Pos 2 (∥ mur C)' : 'Pos 1 (mur A)', execute: () => { desk1PosIdx = toggleDesk1Position(); } });
+  registerHoverAction('desk2-position',       { getLabel: () => desk2PosIdx === 0 ? 'Espace de travail' : 'Position initiale', execute: () => { desk2PosIdx = toggleDesk2Position(); } });
   registerHoverAction('desk2-toggle',         { getLabel: () => desk2State        ? 'Mode assis' : 'Mode debout', execute: doToggleDesk2 });
   registerHoverAction('wc-lid-toggle',        { getLabel: () => wcLidState        ? 'Fermer' : 'Ouvrir',       execute: doToggleWCLid });
   registerHoverAction('corr-doors-toggle',    { getLabel: () => corrDoorsState    ? 'Fermer' : 'Ouvrir',       execute: doToggleCorridorDoors });

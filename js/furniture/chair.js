@@ -4,6 +4,9 @@ import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
 import { requestRender } from '../cameraManager.js';
 import { LAYER_GLB } from '../config.js';
 
+/** Groupe parent de la chaise (+ bureau 2 en mode espace de travail). */
+export const smorkullGroup = new THREE.Group();
+
 export function buildChair(scene) {
 
   const redMat = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
@@ -35,15 +38,19 @@ export function buildChair(scene) {
     const box = new THREE.Box3().setFromObject(chair);
     const cz = (box.min.z + box.max.z) / 2;
 
-    // box.min.x = extrémité de la roue arrière (géométrie réelle, pas d'armature).
-    // → décalage GLB entre l'origine Z=0 (pointe de roulette) et la masse visible.
-    // 40cm = position réaliste devant bureau + évite artefact de clipping Reflector Nissedal.
-    chair.position.set(-box.min.x, 0, 151 - cz);
+    // smorkullGroup centré sur la chaise (centre XZ, sol Y=0)
+    // box.min.x = extrémité de la roue arrière ; ouest à X=0 → centre X = (max-min)/2
+    const chairCX = (box.max.x - box.min.x) / 2;
+    smorkullGroup.position.set(chairCX, 0, 151);
+
+    // Chaise en local du groupe (centre du groupe = centre de la chaise)
+    chair.position.set(-box.min.x - chairCX, 0, -cz);
 
     mergeGlbByMaterial(chair);
     chair.castShadow = true;
     chair.receiveShadow = true;
-    scene.add(chair);
+    smorkullGroup.add(chair);
+    scene.add(smorkullGroup);
     requestRender();
   }, undefined, err => console.error('smorkull.glb:', err));
 }
