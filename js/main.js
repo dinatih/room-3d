@@ -32,7 +32,6 @@ import { buildShoeHatRack } from './decor/shoehatrack.js';
 import { buildWalkingMan } from './decor/walkingMan.js';
 import { buildLamp } from './furniture/lamp.js';
 import { buildMeubleT } from './furniture/meubleT.js';
-import { buildCorridor } from './structure/corridor.js';
 import { buildBathroom } from './structure/bathroom.js';
 import {
   buildGroundPlane, buildParquetMesh, buildTileMesh,
@@ -101,8 +100,6 @@ buildOnLayer(buildMeubleT, LAYER_FURNITURE);
 buildLamp(scene);
 
 // Couloir (structure + placard)
-const corridorLabel = buildCorridor(scene);
-
 // Sols texturés
 buildParquetMesh(scene);
 buildTileMesh(scene);
@@ -110,10 +107,6 @@ buildTileMesh(scene);
 // ── UI ────────────────────────────────────────────────────────────────────────
 const gridGroup = buildGrid(scene);
 gridGroup.visible = false;
-if (corridorLabel) {
-  scene.remove(corridorLabel);
-  gridGroup.add(corridorLabel);
-}
 buildMinimap();
 buildDevtools(scene, renderer);
 const openInventory = buildInventory(scene);

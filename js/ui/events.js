@@ -14,7 +14,7 @@ import {
 import { toggleEastDoor } from '../structure/walls.js';
 import { toggleFridgeDoor, toggleCabinetDoor } from '../structure/kitchen.js';
 import { toggleCbnWestDoor, toggleCbnEastDoor, toggleSdbCloset, getSdbClosetLabel } from '../structure/bathroom.js';
-import { toggleCorridorCloset } from '../structure/corridor.js';
+import { toggleCorridorCloset } from '../structure/walls.js';
 import { toggleBedStack, toggleBedVersion, toggleBedPosition, toggleSofaMode } from '../furniture/bed.js';
 import { toggleSunnerstPosition } from '../furniture/sunnersta.js';
 import { toggleDesksHeight, toggleDesk1Height, toggleDesk2Height, toggleDesk1Position, toggleDesk2Position } from '../furniture/desks.js';
@@ -23,7 +23,7 @@ import { toggleAirPerformerPosition } from '../furniture/airPerformer.js';
 import { setMirrorLayers } from '../furniture/mirrors.js';
 import { toggleFreezerDoor } from '../decor/decor.js';
 import { toggleWCLid } from '../structure/wc.js';
-import { toggleCorridorDoors, toggleEntryDoor, toggleLivingDoor, toggleBathroomDoor } from '../structure/corridor.js';
+import { toggleCorridorDoors, toggleEntryDoor, toggleLivingDoor, toggleBathroomDoor } from '../structure/walls.js';
 import { toggleLamp } from '../furniture/lamp.js';
 import { toggleCelShading } from './celShading.js';
 import { setDronaLabelsVisible } from '../furniture/drona.js';

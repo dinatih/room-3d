@@ -76,11 +76,42 @@ function makeTapeMesh(totalCm = 200) {
 }
 
 /**
- * Crée le panneau de la porte d'entrée (rouge) + poignées dans l'assembly fourni.
- * @param {{ hingeX, hingeZ, rotY }} params
+ * Crée l'encadrement + panneau de la porte d'entrée (rouge) dans l'assembly fourni.
+ * @param {{ hingeX, hingeZ, rotY, iP, eP, pX, pZ, E_DOOR_START, E_DOOR_END }} params
  * @param {THREE.Group} assembly — groupe parent (world-origin)
  */
-export function buildEntryDoor({ hingeX, hingeZ, rotY }, assembly) {
+export function buildEntryDoor({ hingeX, hingeZ, rotY, iP, eP, pX, pZ, E_DOOR_START, E_DOOR_END }, assembly) {
+  // ── Encadrement ────────────────────────────────────────────────────────────
+  const redFMat   = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 });
+  const whiteFMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.3 });
+  const FW = 3, FT = 1;
+  function chambSection(d0, d1, height, yBase, outward, mat) {
+    const base = outward ? eP : iP;
+    const sign = outward ? 1 : -1;
+    const pts = [
+      base(d0),
+      base(d1),
+      [base(d1)[0] + sign * FT * pX, base(d1)[1] + sign * FT * pZ],
+      [base(d0)[0] + sign * FT * pX, base(d0)[1] + sign * FT * pZ],
+    ];
+    const shape = new THREE.Shape();
+    shape.moveTo(pts[0][0], -pts[0][1]);
+    for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], -pts[i][1]);
+    shape.closePath();
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });
+    geo.rotateX(-Math.PI / 2);
+    if (yBase > 0) geo.translate(0, yBase, 0);
+    const m = new THREE.Mesh(geo, mat);
+    m.castShadow = true;
+    assembly.add(m);
+  }
+  for (const [outward, mat] of [[true, redFMat], [false, whiteFMat]]) {
+    chambSection(E_DOOR_START - FW, E_DOOR_START, DOOR_H, 0,      outward, mat); // jambage gauche
+    chambSection(E_DOOR_END,  E_DOOR_END + FW,   DOOR_H, 0,      outward, mat); // jambage droit
+    chambSection(E_DOOR_START - FW, E_DOOR_END + FW, FW, DOOR_H, outward, mat); // traverse
+  }
+
+  // ── Panneau ────────────────────────────────────────────────────────────────
   const doorH = DOOR_H;
   const doorMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5, metalness: 0.1 });
   const handleMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.15 });
@@ -205,6 +236,25 @@ export function buildLivingDoor(assembly) {
  */
 export function buildBathroomDoor({ hingeX, hingeZ }, assembly) {
   const doorH = DOOR_H;
+
+  // ── Encadrement ────────────────────────────────────────────────────────────
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.3 });
+  const FW = 3, FT = 1;
+  const doorStartZ = hingeZ - DOOR_W;
+  const doorEndZ   = hingeZ;
+  const CZ = (doorStartZ + doorEndZ) / 2;
+  function fp(w, h, d, x, y, z) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), frameMat);
+    m.position.set(x, y, z);
+    assembly.add(m);
+  }
+  for (const xF of [hingeX - WALL_W / 2 - FT / 2, hingeX + WALL_W / 2 + FT / 2]) {
+    fp(FT, doorH, FW, xF, doorH / 2, doorStartZ - FW / 2);
+    fp(FT, doorH, FW, xF, doorH / 2, doorEndZ   + FW / 2);
+    fp(FT, FW, DOOR_W + FW * 2, xF, doorH + FW / 2, CZ);
+  }
+
+  // ── Panneau ────────────────────────────────────────────────────────────────
   const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.4 });
 
   const sGroup = new THREE.Group();
