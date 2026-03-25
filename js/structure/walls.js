@@ -286,7 +286,7 @@ export function buildWalls(scene) {
       fp(FW, DOOR_H, FT, DOOR_END   + FW / 2, DOOR_H / 2, zF);
       fp(DOOR_END - DOOR_START + FW * 2, FW, FT, (DOOR_START + DOOR_END) / 2, DOOR_H + FW / 2, zF);
     }
-    livingDoorAssembly.add(buildLivingDoor());
+    buildLivingDoor(livingDoorAssembly);
   }
   // Section droite (DOOR_END+10=280 → ROOM_W=300)
   panel(ROOM_W - DOOR_END - 10, WALL_H, W,

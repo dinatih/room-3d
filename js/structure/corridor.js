@@ -73,7 +73,7 @@ export function buildCorridor(scene) {
       fp(FT, DOOR_H, FW, xF, DOOR_H / 2, C_DOOR_END_ABS   + FW / 2);
       fp(FT, FW, C_DOOR_W + FW * 2, xF, DOOR_H + FW / 2, CZ);
     }
-    sdbDoorAssembly.add(buildBathroomDoor({ hingeX: WALL_X, hingeZ: LEFT_WALL_Z0 + C_DOOR_END }));
+    buildBathroomDoor({ hingeX: WALL_X, hingeZ: LEFT_WALL_Z0 + C_DOOR_END }, sdbDoorAssembly);
   }
 
   // =============================================
@@ -245,11 +245,11 @@ export function buildCorridor(scene) {
         chambSection(E_DOOR_END,  E_DOOR_END + FW,   DOOR_H, 0,      outward, mat); // jambage droit
         chambSection(E_DOOR_START - FW, E_DOOR_END + FW, FW, DOOR_H, outward, mat); // traverse
       }
-      entryDoorAssembly.add(buildEntryDoor({
+      buildEntryDoor({
         hingeX: originX + E_DOOR_START * sinθ,
         hingeZ: originZ + E_DOOR_START * cosθ,
         rotY:   diagRotY,
-      }));
+      }, entryDoorAssembly);
     }
   }
 

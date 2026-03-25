@@ -1,9 +1,23 @@
 import * as THREE from 'three';
-import { DOOR_H, DOOR_END, ROOM_D } from '../config.js';
+import { DOOR_H, DOOR_START, DOOR_END, ROOM_D } from '../config.js';
 
 // Largeur standard NF (indépendant de la grille LEGO)
 export const DOOR_W       = 83; // séjour + SDB
 export const ENTRY_DOOR_W = 90; // porte d'entrée
+
+const WALL_W = 10;      // épaisseur des murs (cm)
+const DORMANT_T = 2.5;  // épaisseur des montants du dormant (cm)
+const STOP_T = 1;       // épaisseur arrêt de porte (cm)
+const STOP_W = 3;       // largeur arrêt de porte (cm)
+const dormantMat = new THREE.MeshStandardMaterial({ color: 0xf0ede8, roughness: 0.35 });
+const stopMat    = new THREE.MeshStandardMaterial({ color: 0xe8e5e0, roughness: 0.30 });
+
+function box(w, h, d, x, y, z, mat) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z);
+  m.castShadow = true;
+  return m;
+}
 
 let entryDoor = null, livingDoor = null, bathroomDoor = null;
 let doorsOpen = false;
@@ -62,11 +76,11 @@ function makeTapeMesh(totalCm = 200) {
 }
 
 /**
- * Crée le panneau de la porte d'entrée (rouge) + poignées.
- * L'assembly (encadrement + panneau) est créé dans corridor.js.
- * @returns {THREE.Group} groupe panneau (positionné en world-space)
+ * Crée le panneau de la porte d'entrée (rouge) + poignées dans l'assembly fourni.
+ * @param {{ hingeX, hingeZ, rotY }} params
+ * @param {THREE.Group} assembly — groupe parent (world-origin)
  */
-export function buildEntryDoor({ hingeX, hingeZ, rotY }) {
+export function buildEntryDoor({ hingeX, hingeZ, rotY }, assembly) {
   const doorH = DOOR_H;
   const doorMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5, metalness: 0.1 });
   const handleMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.15 });
@@ -108,15 +122,14 @@ export function buildEntryDoor({ hingeX, hingeZ, rotY }) {
   entryGroup.add(knob);
 
   entryDoor = { group: entryGroup, closedY: rotY, openY: rotY - 2 * Math.PI / 3, open: false };
-  return entryGroup;
+  assembly.add(entryGroup);
 }
 
 /**
- * Crée le panneau de la porte séjour (blanche) + poignées.
- * L'assembly (encadrement + panneau) est créé dans walls.js.
- * @returns {THREE.Group}
+ * Crée le dormant + panneau de la porte séjour dans l'assembly fourni.
+ * @param {THREE.Group} assembly — groupe parent (world-origin)
  */
-export function buildLivingDoor() {
+export function buildLivingDoor(assembly) {
   const doorH = DOOR_H;
   const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.4 });
 
@@ -158,15 +171,39 @@ export function buildLivingDoor() {
   }
 
   livingDoor = { group: dGroup, closedY: 0, openY: -Math.PI / 2, open: false };
-  return dGroup;
+
+  // ── Dormant — dans l'épaisseur du mur D (Z: ROOM_D → ROOM_D+WALL_W) ──────
+  // Mur D center Z = ROOM_D + WALL_W/2
+  const wallCZ = ROOM_D + WALL_W / 2;
+  const stopZ  = ROOM_D + STOP_T / 2; // face couloir (côté où la porte se ferme)
+
+  // Montant gauche (X=DOOR_START)
+  assembly.add(box(DORMANT_T, DOOR_H, WALL_W,
+    DOOR_START + DORMANT_T / 2, DOOR_H / 2, wallCZ, dormantMat));
+  // Montant droit (X=DOOR_END)
+  assembly.add(box(DORMANT_T, DOOR_H, WALL_W,
+    DOOR_END - DORMANT_T / 2, DOOR_H / 2, wallCZ, dormantMat));
+  // Traverse supérieure
+  assembly.add(box(DOOR_W - DORMANT_T * 2, DORMANT_T, WALL_W,
+    (DOOR_START + DOOR_END) / 2, DOOR_H + DORMANT_T / 2, wallCZ, dormantMat));
+
+  // Arrêt de porte (côté couloir, sur lequel le panneau vient butter)
+  assembly.add(box(STOP_T, DOOR_H, STOP_W,
+    DOOR_START + DORMANT_T + STOP_T / 2, DOOR_H / 2, stopZ, stopMat));
+  assembly.add(box(STOP_T, DOOR_H, STOP_W,
+    DOOR_END - DORMANT_T - STOP_T / 2, DOOR_H / 2, stopZ, stopMat));
+  assembly.add(box(DOOR_W - DORMANT_T * 2 - STOP_T * 2, STOP_W, STOP_T,
+    (DOOR_START + DOOR_END) / 2, DOOR_H - STOP_W / 2, stopZ, stopMat));
+
+  assembly.add(dGroup);
 }
 
 /**
- * Crée le panneau de la porte SDB (blanche) + poignées.
- * L'assembly (encadrement + panneau) est créé dans corridor.js.
- * @returns {THREE.Group}
+ * Crée le dormant + panneau de la porte SDB dans l'assembly fourni.
+ * @param {{ hingeX, hingeZ }} params — charnière calculée depuis le couloir
+ * @param {THREE.Group} assembly — groupe parent (world-origin)
  */
-export function buildBathroomDoor({ hingeX, hingeZ }) {
+export function buildBathroomDoor({ hingeX, hingeZ }, assembly) {
   const doorH = DOOR_H;
   const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.4 });
 
@@ -208,5 +245,30 @@ export function buildBathroomDoor({ hingeX, hingeZ }) {
   }
 
   bathroomDoor = { group: sGroup, closedY: 0, openY: Math.PI / 2, open: false };
-  return sGroup;
+
+  // ── Dormant — dans l'épaisseur du mur couloir (X: hingeX-WALL_W/2 → hingeX+WALL_W/2) ──
+  const wallCX = hingeX; // centre du mur = hingeX
+  const stopX  = hingeX - WALL_W / 2 - STOP_T / 2; // face couloir
+  const zS = hingeZ;              // jambage sud (côté charnière)
+  const zN = hingeZ - DOOR_W;    // jambage nord
+
+  // Jambage sud
+  assembly.add(box(WALL_W, DOOR_H, DORMANT_T,
+    wallCX, DOOR_H / 2, zS + DORMANT_T / 2, dormantMat));
+  // Jambage nord
+  assembly.add(box(WALL_W, DOOR_H, DORMANT_T,
+    wallCX, DOOR_H / 2, zN - DORMANT_T / 2, dormantMat));
+  // Traverse supérieure
+  assembly.add(box(WALL_W, DORMANT_T, DOOR_W - DORMANT_T * 2,
+    wallCX, DOOR_H + DORMANT_T / 2, (zS + zN) / 2, dormantMat));
+
+  // Arrêt de porte (face couloir)
+  assembly.add(box(STOP_T, DOOR_H, STOP_W,
+    stopX, DOOR_H / 2, zS - STOP_W / 2, stopMat));
+  assembly.add(box(STOP_T, DOOR_H, STOP_W,
+    stopX, DOOR_H / 2, zN + STOP_W / 2, stopMat));
+  assembly.add(box(STOP_T, STOP_W, DOOR_W - STOP_W * 2,
+    stopX, DOOR_H - STOP_W / 2, (zS + zN) / 2, stopMat));
+
+  assembly.add(sGroup);
 }

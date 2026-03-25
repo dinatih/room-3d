@@ -149,6 +149,11 @@ function createPreview(canvas, mainScene) {
   });
   canvas.addEventListener('pointerup',    () => { dragging = false; });
   canvas.addEventListener('pointerleave', () => { dragging = false; });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    orbit.dist = Math.max(orbit.dist * 0.1, orbit.dist * (1 + e.deltaY * 0.001));
+    applyOrbit();
+  }, { passive: false });
 
   function clearScene() {
     if (pivot) {

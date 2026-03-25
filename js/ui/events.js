@@ -227,6 +227,34 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
     });
   }
 
+  // ── Murs rouges ───────────────────────────────────────────────────────────
+  {
+    let wallColorOn = false;
+    const savedWallMats = new Map();
+    const redWallMat  = new THREE.MeshStandardMaterial({ color: 0xcc2200, roughness: 0.85 });
+    const redGhostMat = new THREE.MeshStandardMaterial({ color: 0xcc2200, roughness: 0.85, transparent: true, opacity: 0.18, depthWrite: false });
+
+    document.getElementById('wall-color-toggle')?.addEventListener('click', () => {
+      wallColorOn = !wallColorOn;
+      scene.traverse((obj) => {
+        if (!obj.isMesh) return;
+        if ((obj.layers.mask & (1 << LAYER_STRUCTURE)) === 0) return;
+        if (wallColorOn) {
+          savedWallMats.set(obj, obj.material);
+          obj.material = Array.isArray(obj.material)
+            ? obj.material.map(m => m.transparent ? redGhostMat : redWallMat)
+            : (obj.material.transparent ? redGhostMat : redWallMat);
+        } else {
+          const orig = savedWallMats.get(obj);
+          if (orig) obj.material = orig;
+        }
+      });
+      if (!wallColorOn) savedWallMats.clear();
+      document.getElementById('wall-color-toggle').textContent = `Murs rouges : ${wallColorOn ? 'ON' : 'OFF'}`;
+      requestRender();
+    });
+  }
+
   // ── Cel-shading ───────────────────────────────────────────────────────────
   document.getElementById('cel-toggle')?.addEventListener('click', () => {
     const s = toggleCelShading(scene);
