@@ -67,7 +67,14 @@ export function buildWalls(scene) {
     m.castShadow = true; m.receiveShadow = true;
     scene.add(m);
   }
-  // A2 : ajouté après les constantes diagonales (voir plus bas)
+  // A2 : face X=-NICHE_DEPTH-W/2, de Z=-30 à Z=DIAG_CZ (rejoint l'angle intérieur SW diagonal)
+  {
+    const A2_LEN = DIAG_CZ + 30; // de Z=-30 à Z=DIAG_CZ
+    const m = new THREE.Mesh(new THREE.BoxGeometry(W, WALL_H, A2_LEN), westMats);
+    m.position.set(-NICHE_DEPTH - W/2, WALL_H/2, (-30 + DIAG_CZ) / 2);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
   // A4 retour niche (ferme l'angle à Z=NICHE_Z_START) — face sud (-Z, index 5) vers l'ext.
   panel(NICHE_DEPTH, WALL_H, W, -NICHE_DEPTH/2, WALL_H/2, NICHE_Z_START - W/2);
 
@@ -433,15 +440,14 @@ export function buildWalls(scene) {
     scene.add(m);
   }
 
-  // A2 biseauté : trapèze XZ, face int (X=-10) jusqu'à Z=DIAG_CZ, face ext (X=-20) jusqu'à Z_sw
+  // A2 biseau SW : triangle prism qui complète l'angle aigu entre A2 et le diagonal
+  // — la partie rectangulaire (de Z=-30 à DIAG_CZ) est déjà couverte par le box A2 ci-dessus
   {
-    const A2_Z_INT = DIAG_CZ;
     const A2_Z_EXT = DIAG_AZ + d_ext_cut * cosθ + DIAG_DEPTH * pZ;
     const shape = new THREE.Shape();
-    shape.moveTo(-NICHE_DEPTH,  30);           // NE (Z=-30, int)
-    shape.lineTo(A_EXT_X,       30);           // NW (Z=-30, ext)
-    shape.lineTo(A_EXT_X,      -A2_Z_EXT);    // SW (biseauté, ext)
-    shape.lineTo(-NICHE_DEPTH, -A2_Z_INT);    // SE (biseauté, int)
+    shape.moveTo(-NICHE_DEPTH, -DIAG_CZ);  // coin intérieur (X=-10, Z=DIAG_CZ)
+    shape.lineTo(A_EXT_X,      -DIAG_CZ);  // coin extérieur nord (X=-20, Z=DIAG_CZ)
+    shape.lineTo(A_EXT_X,      -A2_Z_EXT); // coin extérieur sud biseauté (X=-20, Z=A2_Z_EXT)
     shape.closePath();
     const geo = new THREE.ExtrudeGeometry(shape, { depth: WALL_H, bevelEnabled: false });
     geo.rotateX(-Math.PI / 2);
