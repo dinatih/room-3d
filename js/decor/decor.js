@@ -95,7 +95,7 @@ export function buildDecor(scene) {
     const FRZ_H = 50;   // hauteur (Y)
     const FRZ_T = 1.5;  // épaisseur parois
 
-    const frzZ = 236 + 5 + FRZ_W / 2;   // 263.5 — centre Z
+    const frzZ = 236 + 5 + FRZ_W / 2 + 6; // 269.5 — centre Z
     const frzX = FRZ_D / 2 + 1;          // 24.5  — centre X
     const frzBaseY = 0;
 

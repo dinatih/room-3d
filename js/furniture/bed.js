@@ -15,6 +15,7 @@ let useGlb = false;
 
 let bedPosIdx = 0;         // 0 = pos1 (diagonale), 1 = pos2 (90° contre mur B)
 let BED_POSITIONS = null;  // initialisé dans buildBed après calcul
+let sofaMode = false;
 
 export function toggleBedStack() {
   stacked = !stacked;
@@ -29,6 +30,44 @@ export function toggleBedStack() {
     );
   }
   return stacked;
+}
+
+export function toggleSofaMode() {
+  sofaMode = !sofaMode;
+  const SOFA_Z = 190;        // b1 world Z
+  const B2_LOCAL_Z = -(ROOM_W - 83); // -217 → b2 world x = 83/2 (mur A), ry=π/2
+  const B2_LOCAL_X = 46;    // world_z_b2 = SOFA_Z - B2_LOCAL_X = 144 (calé contre Kallax NW)
+
+  if (sofaMode) {
+    if (proceduralGroup) {
+      proceduralGroup.rotation.y = Math.PI / 2;
+      proceduralGroup.position.set(ROOM_W - 83 / 2, 0, SOFA_Z);
+      b2.position.set(B2_LOCAL_X, 0, B2_LOCAL_Z);
+    }
+    if (glbGroup && glbB2 && glbB2Base) {
+      glbGroup.rotation.y = Math.PI / 2;
+      glbGroup.position.set(ROOM_W - 83 / 2, 0, SOFA_Z);
+      glbB2.position.set(glbB2Base.x + B2_LOCAL_X, glbB2Base.y - 23, glbB2Base.z + B2_LOCAL_Z);
+    }
+  } else {
+    const p = BED_POSITIONS[bedPosIdx];
+    if (proceduralGroup) {
+      proceduralGroup.rotation.y = p.ry;
+      proceduralGroup.position.set(p.x, 0, p.z);
+      b2.position.set(0, stacked ? 23 : 0, stacked ? 0 : -83);
+    }
+    if (glbGroup && glbB2 && glbB2Base) {
+      glbGroup.rotation.y = p.ry;
+      glbGroup.position.set(p.x, 0, p.z);
+      glbB2.position.set(
+        glbB2Base.x,
+        stacked ? glbB2Base.y : glbB2Base.y - 23,
+        stacked ? glbB2Base.z : glbB2Base.z - 83,
+      );
+    }
+  }
+  requestRender();
+  return sofaMode;
 }
 
 export function toggleBedPosition() {
@@ -105,7 +144,7 @@ export function buildBed(scene) {
   b2 = createUtakerBed(0xffffff, 24); // top: white mattress
   b2.userData.inventoryId = 'utaker-upper';
   b2.position.y = 23; // stacked
-  utaker.userData.hoverAction = { label: 'Lit Utåker', actions: ['bed-toggle', 'bed-position'] };
+  utaker.userData.hoverAction = { label: 'Lit Utåker', actions: ['bed-toggle', 'bed-position', 'bed-sofa'] };
   utaker.add(b1, b2);
 
   // Top of upper mattress: b2.y(23) + mat.y(11+12) + matH/2(12) = 58
