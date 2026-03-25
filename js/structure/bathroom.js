@@ -39,6 +39,7 @@ export function toggleCbnEastDoor() {
 import { buildVasque } from './vasque.js';
 import { buildWC } from './wc.js';
 import { makeGrassTex } from './floor.js';
+import { getWestWallMats } from './walls.js';
 import {
   ROOM_W,
   WALL_H,
@@ -84,11 +85,16 @@ export function buildBathroom(scene) {
 
   // =============================================
   // Mur salle de bain côté niche (parallèle au couloir), 1m40 = 140cm
+  // Face extérieure (-X, index 1) transparente, cohérent avec mur A.
   // =============================================
   const SDB_WALL_LEN = SDB_Z_END - KITCHEN_Z; // 140
-  panel(W, WALL_H, SDB_WALL_LEN,
-        -NICHE_DEPTH - W/2, WALL_H/2,
-        (KITCHEN_Z + SDB_Z_END) / 2);
+  const westMats = getWestWallMats(wallMat);
+  {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(W, WALL_H, SDB_WALL_LEN), westMats);
+    m.position.set(-NICHE_DEPTH - W/2, WALL_H/2, (KITCHEN_Z + SDB_Z_END) / 2);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
 
   // =============================================
   // Mur fond SDB (Z=600) avec ouverture douche
@@ -199,7 +205,12 @@ export function buildBathroom(scene) {
   const GLASS_H = 180;
 
   // Mur ouest douche (prolonge le mur SDB ouest de Z=600 à Z=670)
-  panel(W, WALL_H, SHOWER_D, -NICHE_DEPTH - W/2, WALL_H/2, SHOWER_Z0 + SHOWER_D/2);
+  {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(W, WALL_H, SHOWER_D), westMats);
+    m.position.set(-NICHE_DEPTH - W/2, WALL_H/2, SHOWER_Z0 + SHOWER_D/2);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
 
   // Mur est douche (X=60, de Z=600 à Z=670)
   panel(W, WALL_H, SHOWER_D, SHOWER_X1 + W/2, WALL_H/2, SHOWER_Z0 + SHOWER_D/2);
@@ -357,7 +368,12 @@ export function buildBathroom(scene) {
 
   // Extension mur SDB ouest vers le sud (Z=670 → DIAG_END_Z)
   const WEST_EXT = DIAG_END_Z - SHOWER_Z1;
-  panel(W, WALL_H, WEST_EXT, -NICHE_DEPTH - W/2, WALL_H/2, (SHOWER_Z1 + DIAG_END_Z) / 2);
+  {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(W, WALL_H, WEST_EXT), westMats);
+    m.position.set(-NICHE_DEPTH - W/2, WALL_H/2, (SHOWER_Z1 + DIAG_END_Z) / 2);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
 
   // ── Tapis de pelouse synthétique 1×2m ────────────────────────────────────
   // 200cm le long de X (largeur SDB), 100cm le long de Z, centré dans la pièce

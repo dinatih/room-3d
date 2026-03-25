@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { ROOM_W, ROOM_D, WALL_H, DOOR_H, DOOR_START, NICHE_DEPTH, KITCHEN_X1, KITCHEN_Z, SDB_Z_END, DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, LAYER_EQUIPMENT } from '../config.js';
 import { makeText } from '../ui/labels.js';
 import { buildDoors, DOOR_W } from './doors.js';
+import { getEastWallMats } from './walls.js';
 
 export { toggleCorridorDoors, toggleEntryDoor, toggleLivingDoor, toggleBathroomDoor } from './doors.js';
 
@@ -130,8 +131,17 @@ export function buildCorridor(scene) {
   }
 
   // ── Mur droit du couloir (en face de la porte SDB), jusqu'au début du diag ─
+  // Face extérieure (+X) transparente, cohérent avec mur B.
   const CORR_RIGHT_LEN = DIAG_AZ - WALL_Z0; // 530-410=120
-  panel(W, WALL_H, CORR_RIGHT_LEN, ROOM_W + W/2, WALL_H/2, (WALL_Z0 + DIAG_AZ) / 2);
+  {
+    const m = new THREE.Mesh(
+      new THREE.BoxGeometry(W, WALL_H, CORR_RIGHT_LEN),
+      getEastWallMats(wallMat),
+    );
+    m.position.set(ROOM_W + W/2, WALL_H/2, (WALL_Z0 + DIAG_AZ) / 2);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
 
   // =============================================
   // Mur couloir bâtiment (diagonal)

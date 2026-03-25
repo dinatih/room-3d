@@ -9,6 +9,19 @@ import {
 
 const W = 10; // wall thickness
 
+// Retourne un tableau de 6 matériaux pour BoxGeometry avec une face fantôme.
+// BoxGeometry order: [+X(0), -X(1), +Y(2), -Y(3), +Z(4), -Z(5)]
+// ghostIdx=0 → face extérieure est (+X) ; ghostIdx=1 → face extérieure ouest (-X)
+const _ghostMat = new THREE.MeshStandardMaterial({
+  color: 0xe8e4dc, roughness: 0.9,
+  transparent: true, opacity: 0.18, depthWrite: false,
+});
+export function makeGhostExteriorMats(opaqueMat, ghostIdx) {
+  return [0,1,2,3,4,5].map(i => i === ghostIdx ? _ghostMat : opaqueMat);
+}
+export const getEastWallMats = (m) => makeGhostExteriorMats(m, 0);
+export const getWestWallMats = (m) => makeGhostExteriorMats(m, 1);
+
 let eastDoorGroup;
 let eastDoorOpen = false;
 
@@ -29,19 +42,46 @@ export function buildWalls(scene) {
     scene.add(m); return m;
   }
 
-  // ── MUR A (ouest, face intérieure à X=0) ──────────────────────────────────
+  // ── MUR A (ouest, face extérieure à -X) ──────────────────────────────────
+  // Face extérieure (-X, index 1) transparente pour voir l'intérieur depuis l'ouest.
+  const westMats = getWestWallMats(wallMat);
+
   // A1 : de Z=-30 à Z=NICHE_Z_START=280 (longueur 310)
-  panel(W, WALL_H, 310,  -W/2,               WALL_H/2, (-30 + NICHE_Z_START) / 2);
-  // A2 : face X=-15, de Z=-30 à Z=KITCHEN_Z=460 (longueur 490)
-  panel(W, WALL_H, 490,  -NICHE_DEPTH - W/2, WALL_H/2, (-30 + KITCHEN_Z) / 2);
-  // A4 retour niche (ferme l'angle à Z=NICHE_Z_START)
+  {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(W, WALL_H, 310), westMats);
+    m.position.set(-W/2, WALL_H/2, (-30 + NICHE_Z_START) / 2);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
+  // A2 : face X=-NICHE_DEPTH-W/2, de Z=-30 à Z=KITCHEN_Z=460 (longueur 490)
+  {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(W, WALL_H, 490), westMats);
+    m.position.set(-NICHE_DEPTH - W/2, WALL_H/2, (-30 + KITCHEN_Z) / 2);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
+  // A4 retour niche (ferme l'angle à Z=NICHE_Z_START) — face sud (-Z, index 5) vers l'ext.
   panel(NICHE_DEPTH, WALL_H, W, -NICHE_DEPTH/2, WALL_H/2, NICHE_Z_START - W/2);
 
   // ── MUR B (est, X=ROOM_W=300) ────────────────────────────────────────────
-  // B1 : de Z=0 à Z=ROOM_D+10=410 (longueur 410+, centre 205)
-  panel(W, WALL_H, ROOM_D + 10, ROOM_W + W/2, WALL_H/2, (ROOM_D + 10) / 2);
-  // B2 extension jardin : de Z=-230 à Z=0 (longueur 230)
-  panel(W, WALL_H, 230, ROOM_W + W/2, WALL_H/2, -115);
+  // Face extérieure (+X, index 0) transparente pour voir l'intérieur depuis l'est.
+  // BoxGeometry material order: [+X, -X, +Y, -Y, +Z, -Z]
+  const eastMats = getEastWallMats(wallMat);
+
+  // B1 : de Z=-30 à Z=ROOM_D+10=410 (étendu à Z=-30 pour cacher la face nord dans le mur N)
+  {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(W, WALL_H, ROOM_D + 10 + 30), eastMats);
+    m.position.set(ROOM_W + W/2, WALL_H/2, (-30 + ROOM_D + 10) / 2);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
+  // B2 extension jardin : de Z=-230 à Z=-30 (joint avec B1 à Z=-30)
+  {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(W, WALL_H, 200), eastMats);
+    m.position.set(ROOM_W + W/2, WALL_H/2, (-230 + -30) / 2);
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
 
   // Panneaux bois occultants (2 × 90cm) à la suite du mur B prolongé
   {
