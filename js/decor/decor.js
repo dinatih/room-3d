@@ -3,6 +3,7 @@ import { gltfLoader } from '../utils/loaders.js';
 import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
 import { LAYER_GLB } from '../config.js';
 import { requestRender } from '../cameraManager.js';
+import { sunnerstaMannequin } from '../furniture/sunnersta.js';
 import {
   ROOM_W,
   ROOM_D,
@@ -373,7 +374,7 @@ export function buildDecor(scene) {
       color: 0xf5f0eb, roughness: 0.5,
     });
 
-    function addMannequin(x, baseY, z, rotY) {
+    function addMannequin(x, baseY, z, rotY, parent = scene) {
       const g = new THREE.Group();
 
       // Épaules (ellipsoïde aplati)
@@ -413,11 +414,11 @@ export function buildDecor(scene) {
       g.userData.inventoryId = 'mannequin-head';
       g.rotation.y = rotY;
       g.position.set(x, baseY, z);
-      scene.add(g);
+      parent.add(g);
     }
 
-    // 1) Sur desserte SUNNERSTA (tournée 90°, centre X=282, Z=271.5, top Y=90)
-    addMannequin(ROOM_W - 36 / 2, 90, 299.5 - 56 / 2, 0);
+    // 1) Sur desserte SUNNERSTA — enfant de sunnerstaMannequin (Y=90 dans le monde)
+    addMannequin(0, 0, 0, 0, sunnerstaMannequin);
 
     // 2) Sur Kallax NW empilé 2×1+1×1+1×1 pivoté (top≈156.5), face centre séjour
     const k14CX = KALLAX_DEPTH / 2;

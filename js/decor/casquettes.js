@@ -3,6 +3,7 @@ import { gltfLoader } from '../utils/loaders.js';
 import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
 import { LAYER_GLB } from '../config.js';
 import { requestRender } from '../cameraManager.js';
+import { sunnerstaMannequin } from '../furniture/sunnersta.js';
 
 // HEAD_R=8.9, scale.y=1.15, SHOULDER_H=8, NECK_H=8
 // Tête Sunnersta baseY=90 → centre tête = 90+8+8+8.9 = 114.9, sommet ≈ 125.1
@@ -32,16 +33,16 @@ export function buildCasquettes(scene) {
         cap.position.set(x, y, z);
         cap.castShadow = true;
         cap.traverse((obj) => obj.layers.set(LAYER_GLB));
-        scene.add(cap);
+        return cap;
       }
 
       // 1) Mur B, au-dessus du lit — même position que la casquette procédurale
       //    rotation.z = π/2 : dome → -X (vers pièce), ouverture → +X (mur)
-      placeCap(297, 144, 173.5, Math.PI / 2, 0, Math.PI / 2);
+      scene.add(placeCap(297, 144, 173.5, Math.PI / 2, 0, Math.PI / 2));
 
-      // 2) Sur tête de mannequin Sunnersta (282, 90, 271.5)
-      //    sommet tête ≈ 125.2cm, cap posé dessus
-      placeCap(282, SUNNERSTA_HEAD_TOP + 1, 271.5, 0, Math.PI, 0, scale20 * 0.9);
+      // 2) Sur tête de mannequin Sunnersta — enfant de sunnerstaMannequin (Y=90 dans le monde)
+      //    Y relatif au plateau = SUNNERSTA_HEAD_TOP - 90 + 1 ≈ 36.2
+      sunnerstaMannequin.add(placeCap(0, SUNNERSTA_HEAD_TOP - 90 + 1, 0, 0, Math.PI, 0, scale20 * 0.9));
 
       requestRender();
     },
