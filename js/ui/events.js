@@ -28,7 +28,7 @@ import { toggleLamp } from '../furniture/lamp.js';
 import { toggleCelShading } from './celShading.js';
 import { setDronaLabelsVisible } from '../furniture/drona.js';
 import { registerHoverAction, initHoverMenu } from './hoverMenu.js';
-import { getWalkingMan } from '../decor/walkingMan.js';
+import { getWalkingMan, toggleSkeleton } from '../decor/walkingMan.js';
 
 export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
 
@@ -271,6 +271,14 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
   document.getElementById('cel-toggle')?.addEventListener('click', () => {
     const s = toggleCelShading(scene);
     document.getElementById('cel-toggle').textContent = `Cel-Shading : ${s ? 'ON' : 'OFF'}`;
+  });
+
+  // ── Squelette ─────────────────────────────────────────────────────────────
+  let skelVisible = true;
+  document.getElementById('skeleton-toggle')?.addEventListener('click', () => {
+    skelVisible = !skelVisible;
+    toggleSkeleton();
+    document.getElementById('skeleton-toggle').textContent = `Squelette : ${skelVisible ? 'ON' : 'OFF'}`;
   });
 
   // ── Grille ────────────────────────────────────────────────────────────────

@@ -39,6 +39,9 @@ let walkYaw = 0, walkPitch = 0;
 const walkPos = { x: 0, y: WALK_H, z: 0 };
 const defaultControlsHint = 'Clic gauche : orbiter | Molette : zoom | Clic droit : pan';
 const keysPressed = new Set();
+// Touches de déplacement suivies globalement (walk mode ET perspective) pour l'animation
+const moveKeysDown = new Set();
+const MOVE_KEYS = new Set(['ArrowUp','ArrowDown','w','s','W','S']);
 
 export function isWalkActive() { return walkActive; }
 
@@ -195,6 +198,10 @@ export function addWalkFollower(obj) { walkFollowers.push(obj); }
 const pitchFollowers = [];
 export function addWalkPitchFollower(obj) { pitchFollowers.push(obj); }
 
+// Tickers d'animation : fn(dt, isMovingForward) appelé à chaque frame walk
+const animTickers = [];
+export function registerAnimTicker(fn) { animTickers.push(fn); }
+
 export function setInitialWalkPos(x, z) {
   if (!walkActive) { walkPos.x = x; walkPos.z = z; }
 }
@@ -202,6 +209,7 @@ export function setInitialWalkPos(x, z) {
 let renderPending = false;
 let dampingFrames = 0;
 const DAMPING_TAIL = 60; // frames de damping après interaction
+let _lastFrameTime = 0;
 
 export function requestRender() {
   if (renderPending) return;
@@ -214,7 +222,9 @@ export function startDamping() {
   requestRender();
 }
 
-function renderFrame() {
+function renderFrame(now) {
+  const dt = _lastFrameTime ? Math.min((now - _lastFrameTime) / 1000, 0.1) : 0;
+  _lastFrameTime = now;
   renderPending = false;
 
   // Déplacement en mode marche
@@ -261,6 +271,12 @@ function renderFrame() {
       obj.rotation.x = (obj.userData.baseRotX ?? 0) - walkPitch;
     }
   }
+    // Tickers d'animation — isMoving indépendant du walk mode
+  {
+    const isMoving = moveKeysDown.size > 0;
+    for (const fn of animTickers) fn(dt, isMoving, walkActive);
+  }
+
   redrawMinimap(); // toujours à jour (walk mode ET déplacement manuel en vue perspective)
 
   if (is2D && orthoControls) orthoControls.update();
@@ -276,6 +292,7 @@ function renderFrame() {
 // KEYBOARD + MOUSE event handlers
 // =============================================
 addEventListener('keydown', (e) => {
+  if (MOVE_KEYS.has(e.key)) { moveKeysDown.add(e.key); requestRender(); }
   if (e.key === 'Escape' && walkActive) { exitWalk(); requestRender(); return; }
   if (e.key === 'p' || e.key === 'P') {
     exitWalk();
@@ -309,6 +326,7 @@ addEventListener('keydown', (e) => {
 });
 
 addEventListener('keyup', (e) => {
+  moveKeysDown.delete(e.key);
   keysPressed.delete(e.key);
   keysPressed.delete(e.key.toLowerCase());
   keysPressed.delete('Ctrl' + e.key);
