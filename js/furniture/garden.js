@@ -299,6 +299,59 @@ export function buildGarden(scene) {
   }
 
   // =============================================
+  // LARA SWIM GEAR — allongée dans la baignoire
+  // Baignoire : centre (120, 0, -250), rotation.y=-1, 150×70×50cm
+  // =============================================
+  gltfLoader.load('media/lara_croft_swim_gear.glb', (gltf) => {
+    const lara = gltf.scene;
+
+    // Mise à l'échelle : 170cm de hauteur
+    const rawBox = new THREE.Box3().setFromObject(lara);
+    const rawSize = rawBox.getSize(new THREE.Vector3());
+    lara.scale.setScalar(170 / Math.max(rawSize.x, rawSize.y, rawSize.z));
+
+    // ── Pose : hanches à 90°, genoux pliés ──────────────────
+    function findBone(name) {
+      let found = null;
+      lara.traverse(c => { if (c.isBone && c.name === name) found = c; });
+      return found;
+    }
+    const DEG = Math.PI / 180;
+
+    const thighL = findBone('leg_left_thigh_04');
+    const thighR = findBone('leg_right_thigh_08');
+    const kneeL  = findBone('leg_left_knee_05');
+    const kneeR  = findBone('leg_right_knee_09');
+
+    if (thighL) thighL.rotation.x -= 90 * DEG;
+    if (thighR) thighR.rotation.x -= 90 * DEG;
+    if (kneeL)  kneeL.rotation.x  += 100 * DEG;
+    if (kneeR)  kneeR.rotation.x  += 100 * DEG;
+
+    // Allongée sur le dos, alignée avec l'axe long de la baignoire
+    lara.rotation.x = -Math.PI / 2;
+    lara.rotation.z = -1;
+
+    lara.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(lara);
+
+    const TUB_H = 50;
+    lara.position.set(
+      120,
+      TUB_H - 20,
+      -250,
+    );
+
+    lara.traverse(c => {
+      c.layers.set(LAYER_GLB);
+      if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
+    });
+
+    scene.add(lara);
+    requestRender();
+  }, undefined, err => console.error('lara_croft_swim_gear.glb:', err));
+
+  // =============================================
   // TENUE RÉALISTE (rouge) — près de la baignoire
   // =============================================
   gltfLoader.load('media/realistic_human_cloths.glb', (gltf) => {
@@ -332,4 +385,55 @@ export function buildGarden(scene) {
     scene.add(cloths);
     requestRender();
   }, undefined, err => console.error('realistic_human_cloths.glb:', err));
+
+  // =============================================
+  // GALERIE — 11 personnages alignés sur X au fond du jardin (Z=-370)
+  // Espacés de 60cm, centrés autour de X=150
+  // =============================================
+  {
+    const MODELS = [
+      'jill_valentine.glb',
+      'jill_valentine_2026_rigged.glb',
+      'lara_croft.glb',
+      'lara_croft_2026_rigged.glb',
+      'lara_croft_4259.glb',
+      'lara_croft__2026_rigged.glb',
+      'lara_croft_black_tank_top.glb',
+      'lara_croft__but_japanese_style.glb',
+      'lara_croft_gold_shades_2739_rigged.glb',
+      'lara_croft_rigged.glb',
+      'lara_croft_swim_gear.glb',
+    ];
+    const SPACING = 60;
+    const Z_BACK  = -370;
+    const totalW  = (MODELS.length - 1) * SPACING;
+    const startX  = 150 - totalW / 2;
+
+    MODELS.forEach((file, i) => {
+      gltfLoader.load(`media/${file}`, (gltf) => {
+        const model = gltf.scene;
+
+        const rawBox  = new THREE.Box3().setFromObject(model);
+        const rawSize = rawBox.getSize(new THREE.Vector3());
+        model.scale.setScalar(170 / Math.max(rawSize.x, rawSize.y, rawSize.z));
+
+        model.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(model);
+
+        model.position.set(
+          startX + i * SPACING - (box.min.x + box.max.x) / 2,
+          -box.min.y,
+          Z_BACK - (box.min.z + box.max.z) / 2,
+        );
+
+        model.traverse(c => {
+          c.layers.set(LAYER_GLB);
+          if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
+        });
+
+        scene.add(model);
+        requestRender();
+      }, undefined, err => console.error(`${file}:`, err));
+    });
+  }
 }

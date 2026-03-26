@@ -267,11 +267,13 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
   });
 
   // ── Switch walker ──────────────────────────────────────────────────────────
-  document.getElementById('switch-walker-toggle')?.addEventListener('click', () => {
+  function doSwitchWalker() {
     switchWalker();
     const idx = getActiveWalkerIdx();
     document.getElementById('switch-walker-toggle').textContent = `Lara : #${idx + 1}`;
-  });
+  }
+  document.getElementById('switch-walker-toggle')?.addEventListener('click', doSwitchWalker);
+  addEventListener('keydown', e => { if (e.key === 'l' || e.key === 'L') doSwitchWalker(); });
 
   // ── Grille ────────────────────────────────────────────────────────────────
   document.getElementById('grid-toggle')?.addEventListener('click', () => {
