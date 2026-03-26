@@ -41,7 +41,11 @@ const defaultControlsHint = 'Clic gauche : orbiter | Molette : zoom | Clic droit
 const keysPressed = new Set();
 // Touches de déplacement suivies globalement (walk mode ET perspective) pour l'animation
 const moveKeysDown = new Set();
-const MOVE_KEYS = new Set(['ArrowUp','ArrowDown','w','s','W','S']);
+const MOVE_KEYS = new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','s','W','S']);
+
+// Vitesse du personnage en mode perspective (unités/sec)
+const PERSP_SPEED = 120;
+const PERSP_ROT   = 1.5; // rad/sec
 
 export function isWalkActive() { return walkActive; }
 
@@ -258,6 +262,20 @@ function renderFrame(now) {
       { walkPos.x += rgtX; walkPos.z += rgtZ; }
 
     updateWalkLook();
+  }
+
+  // Mouvement du personnage en mode perspective (hors walk mode)
+  if (!walkActive && moveKeysDown.size > 0) {
+    for (const obj of walkFollowers) {
+      if (moveKeysDown.has('ArrowLeft'))  obj.rotation.y += PERSP_ROT * dt;
+      if (moveKeysDown.has('ArrowRight')) obj.rotation.y -= PERSP_ROT * dt;
+      const step = PERSP_SPEED * dt;
+      if (moveKeysDown.has('ArrowUp')   || moveKeysDown.has('w') || moveKeysDown.has('W'))
+        { obj.position.x -= Math.sin(obj.rotation.y) * step; obj.position.z -= Math.cos(obj.rotation.y) * step; }
+      if (moveKeysDown.has('ArrowDown') || moveKeysDown.has('s') || moveKeysDown.has('S'))
+        { obj.position.x += Math.sin(obj.rotation.y) * step; obj.position.z += Math.cos(obj.rotation.y) * step; }
+    }
+    requestRender();
   }
 
   // Followers (ex: costume) calqués sur position/orientation de la caméra

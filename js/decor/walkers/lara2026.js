@@ -15,7 +15,7 @@ import * as THREE from 'three';
 import { gltfLoader } from '../../utils/loaders.js';
 import { LAYER_GLB } from '../../config.js';
 
-const SHOE_H = 5;
+const SHOE_H = 0; // modèle complet avec pieds inclus
 
 function buildWalkClip(root) {
   const T = 0.8;

@@ -142,21 +142,6 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
 
   document.getElementById('resume-walk')?.addEventListener('click', () => resumeWalk());
 
-  // ── Flèches → Walking Man (hors mode walk) ────────────────────────────────
-  addEventListener('keydown', (e) => {
-    if (isWalkActive()) return;
-    const wm = getWalkingMan();
-    if (!wm) return;
-    const STEP = 10, ROT = 0.1;
-    if      (e.key === 'ArrowUp')    { wm.position.x -= Math.sin(wm.rotation.y) * STEP; wm.position.z -= Math.cos(wm.rotation.y) * STEP; }
-    else if (e.key === 'ArrowDown')  { wm.position.x += Math.sin(wm.rotation.y) * STEP; wm.position.z += Math.cos(wm.rotation.y) * STEP; }
-    else if (e.key === 'ArrowLeft')  { wm.rotation.y += ROT; }
-    else if (e.key === 'ArrowRight') { wm.rotation.y -= ROT; }
-    else return;
-    e.preventDefault();
-    requestRender();
-  });
-
   // ── Plan ──────────────────────────────────────────────────────────────────
   let floorPlanMode = false;
   document.getElementById('plan-toggle')?.addEventListener('click', () => {
