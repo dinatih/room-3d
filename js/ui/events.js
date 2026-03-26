@@ -259,7 +259,7 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
   });
 
   // ── Squelette ─────────────────────────────────────────────────────────────
-  let skelVisible = true;
+  let skelVisible = false;
   document.getElementById('skeleton-toggle')?.addEventListener('click', () => {
     skelVisible = !skelVisible;
     toggleSkeleton();

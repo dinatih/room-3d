@@ -95,6 +95,7 @@ export function load(animGroup, scene, onReady) {
 
       const skelHelper = new THREE.SkeletonHelper(mesh);
       skelHelper.material.linewidth = 3;
+      skelHelper.visible = false;
 
       animGroup.add(mesh);
       scene.add(skelHelper);
