@@ -14,6 +14,7 @@
 import * as THREE from 'three';
 import { gltfLoader } from '../../utils/loaders.js';
 import { LAYER_GLB } from '../../config.js';
+import { registerAnimTicker, requestRender } from '../../cameraManager.js';
 
 const SHOE_H = 0; // modèle complet avec pieds inclus
 
@@ -74,12 +75,89 @@ function buildWalkClip(root) {
  * @param {THREE.Scene}  scene
  * @param {Function}     onReady   callback({ mixer, action })
  */
-export function load(animGroup, scene, onReady) {
+/**
+ * @param {THREE.Group}  animGroup
+ * @param {THREE.Scene}  scene
+ * @param {Function}     onReady   callback({ mixer, action, skelHelper })
+ * @param {object}       [opts]
+ * @param {number[]}     [opts.topNodes]   noms de mesh à recolorer (ex: ['Object_8'])
+ * @param {number}       [opts.topColor]   couleur hex (ex: 0xcc1111)
+ */
+export function load(animGroup, scene, onReady, opts = {}) {
   gltfLoader.load(
     'media/lara_croft__2026_rigged.glb',
     (gltf) => {
       const mesh = gltf.scene;
       mesh.traverse(c => { c.layers.enable(LAYER_GLB); });
+
+      // Log des nœuds mesh pour découverte (une fois par chargement)
+      if (opts.logMeshes) {
+        const names = [];
+        mesh.traverse(c => { if (c.isMesh) names.push(`${c.name} [mat: ${c.material?.name ?? '?'}]`); });
+        console.log('[lara2026] meshes:\n' + names.join('\n'));
+      }
+
+      // Cheveux : cycle 3 couleurs — naturel → rouge → orangé → naturel …
+      // On clone le matériau original pour garder ses textures (la couleur brune
+      // vient de la map, color=#ffffff est juste un multiplicateur)
+      const HAIR_NODES = new Set(['Object_104', 'Object_111', 'Object_115', 'Object_116']);
+      let hairMat = null;
+      mesh.traverse(c => {
+        if (c.isMesh && HAIR_NODES.has(c.name) && !hairMat) {
+          hairMat = c.material.clone();
+        }
+      });
+      if (!hairMat) hairMat = new THREE.MeshStandardMaterial();
+      mesh.traverse(c => { if (c.isMesh && HAIR_NODES.has(c.name)) c.material = hairMat; });
+
+      // Coloration par nom de nœud (Object_XXX) — pour tester des variantes
+      if (Array.isArray(opts.extraColors)) {
+        opts.extraColors.forEach(({ nodes, color }) => {
+          const s = new Set(nodes);
+          mesh.traverse(c => {
+            if (c.isMesh && s.has(c.name)) {
+              c.material = c.material.clone();
+              c.material.color.set(color);
+              c.material.map = null;
+            }
+          });
+        });
+      }
+
+      // Coloration optionnelle par nom de matériau (ex: haut du corps)
+      if (opts.topColor != null && Array.isArray(opts.topNodes)) {
+        const topSet = new Set(opts.topNodes);
+        mesh.traverse(c => {
+          if (c.isMesh && topSet.has(c.material?.name)) {
+            c.material = c.material.clone();
+            c.material.color.set(opts.topColor);
+            c.material.map = null; // supprimer la texture pour une couleur unie
+          }
+        });
+      }
+
+      // Cycle sur emissive : la texture brune naturelle reste intacte,
+      // la lueur colorée s'additionne par-dessus pendant la marche
+      hairMat.emissiveIntensity = 1;
+      const _hairE0 = new THREE.Color(0x000000); // pas de lueur = naturel
+      const _hairE1 = new THREE.Color(0x990000); // lueur rouge
+      const _hairE2 = new THREE.Color(0xffffff); // lueur blanche
+      const _hairColors = [_hairE0, _hairE1, _hairE2, _hairE0];
+
+      let _hairT = 0;
+      registerAnimTicker((dt, isMoving) => {
+        if (!isMoving) {
+          // Retour progressif au naturel à l'arrêt
+          hairMat.emissive.lerp(_hairE0, 0.05);
+          requestRender();
+          return;
+        }
+        _hairT += dt * 1.2;
+        const t = _hairT % 4;
+        const i = Math.floor(t);
+        hairMat.emissive.lerpColors(_hairColors[i], _hairColors[(i + 1) % 3], t - i);
+        requestRender();
+      });
 
       mesh.rotation.y = Math.PI;
 

@@ -28,7 +28,7 @@ import { toggleLamp } from '../furniture/lamp.js';
 import { toggleCelShading } from './celShading.js';
 import { setDronaLabelsVisible } from '../furniture/drona.js';
 import { registerHoverAction, initHoverMenu } from './hoverMenu.js';
-import { getWalkingMan, toggleSkeleton } from '../decor/walkingMan.js';
+import { getWalkingMan, toggleSkeleton, switchWalker, getActiveWalkerIdx } from '../decor/walkingMan.js';
 
 export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
 
@@ -264,6 +264,13 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
     skelVisible = !skelVisible;
     toggleSkeleton();
     document.getElementById('skeleton-toggle').textContent = `Squelette : ${skelVisible ? 'ON' : 'OFF'}`;
+  });
+
+  // ── Switch walker ──────────────────────────────────────────────────────────
+  document.getElementById('switch-walker-toggle')?.addEventListener('click', () => {
+    switchWalker();
+    const idx = getActiveWalkerIdx();
+    document.getElementById('switch-walker-toggle').textContent = `Lara : #${idx + 1}`;
   });
 
   // ── Grille ────────────────────────────────────────────────────────────────

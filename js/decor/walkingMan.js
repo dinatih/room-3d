@@ -1,75 +1,94 @@
 import * as THREE from 'three';
 import { ROOM_W, ROOM_D } from '../config.js';
 import {
-  requestRender, addWalkFollower,
+  requestRender, addWalkFollower, removeWalkFollower,
   setInitialWalkPos, registerAnimTicker,
 } from '../cameraManager.js';
 import { setMinimapWalker } from '../ui/minimap.js';
 
-// ── Personnage actif ──────────────────────────────────────────
-// Changer cette ligne pour switcher de personnage (nitro / lara / …)
-import { load as loadWalker } from './walkers/lara2026.js';
-// import { load as loadWalker } from './walkers/harley.js';
-// import { load as loadWalker } from './walkers/ariel.js';
-// import { load as loadWalker } from './walkers/freefire.js';
-// import { load as loadWalker } from './walkers/nitro.js';
-// import { load as loadWalker } from './walkers/lara.js';
+// ── Walkers disponibles ───────────────────────────────────────
+import { load as loadWalker1 } from './walkers/lara2026.js';
+import { load as loadWalker2 } from './walkers/lara2026.js';
 
-// ── État d'animation ──────────────────────────────────────────
-let walkingMan = null;
-export function getWalkingMan() { return walkingMan; }
+// ── Instances ─────────────────────────────────────────────────
+// Chaque entrée : { group, mixer, action, skelHelper, active, fadeFrames }
+const _walkers = [];
+let _activeIdx = 0;
 
-let _mixer      = null;
-let _action     = null;
-let _active     = false;
-let _fadeFrames = 0;
-let _skelHelper = null;
+export function getWalkingMan() { return _walkers[_activeIdx]?.group ?? null; }
 
 export function toggleSkeleton() {
-  if (!_skelHelper) return;
-  _skelHelper.visible = !_skelHelper.visible;
+  const w = _walkers[_activeIdx];
+  if (!w?.skelHelper) return;
+  w.skelHelper.visible = !w.skelHelper.visible;
   requestRender();
 }
 
-export function buildWalkingMan(scene) {
-  const group = new THREE.Group();
-  group.position.set(ROOM_W / 2, 0, ROOM_D / 2);
+export function switchWalker() {
+  if (_walkers.length < 2) return;
+  const cur = _walkers[_activeIdx];
+  if (cur.active) { cur.action?.fadeOut(0.15); cur.active = false; cur.fadeFrames = 0; }
+  removeWalkFollower(cur.group);
+  _activeIdx = (_activeIdx + 1) % _walkers.length;
+  const next = _walkers[_activeIdx];
+  addWalkFollower(next.group);
+  setInitialWalkPos(next.group.position.x, next.group.position.z);
+  setMinimapWalker(next.group);
+  requestRender();
+}
 
+export function getActiveWalkerIdx() { return _activeIdx; }
+
+// ── Ticker unique (gère le walker actif) ──────────────────────
+registerAnimTicker((dt, isMoving) => {
+  const w = _walkers[_activeIdx];
+  if (!w?.mixer) return;
+  if (isMoving && !w.active) {
+    w.action.reset().fadeIn(0.15).play();
+    w.active = true;
+    w.fadeFrames = 0;
+  } else if (!isMoving && w.active) {
+    w.action.fadeOut(0.2);
+    w.active = false;
+    w.fadeFrames = 15;
+  }
+  if (w.active || w.fadeFrames > 0) {
+    w.mixer.update(dt);
+    if (!w.active && w.fadeFrames > 0) w.fadeFrames--;
+    requestRender();
+  }
+});
+
+// ── Construction d'un walker ──────────────────────────────────
+function buildWalker(scene, loadFn, startX, startZ, isFirst, opts = {}) {
+  const inst = { group: null, mixer: null, action: null, skelHelper: null, active: false, fadeFrames: 0 };
+  _walkers.push(inst);
+
+  const group = new THREE.Group();
+  group.position.set(startX, 0, startZ);
   const animGroup = new THREE.Group();
   group.add(animGroup);
+  inst.group = group;
 
-  // ── Ticker d'animation ────────────────────────────────────
-  registerAnimTicker((dt, isMoving) => {
-    if (!_mixer) return;
-    if (isMoving && !_active) {
-      _action.reset().fadeIn(0.15).play();
-      _active = true;
-      _fadeFrames = 0;
-    } else if (!isMoving && _active) {
-      _action.fadeOut(0.2);
-      _active = false;
-      _fadeFrames = 15;
-    }
-    if (_active || _fadeFrames > 0) {
-      _mixer.update(dt);
-      if (!_active && _fadeFrames > 0) _fadeFrames--;
-      requestRender();
-    }
-  });
-
-  // ── Chargement du personnage ──────────────────────────────
-  // Le walker gère : GLB, scale, position, clip, mixer, SkeletonHelper.
-  loadWalker(animGroup, scene, ({ mixer, action, skelHelper }) => {
-    _mixer      = mixer;
-    _action     = action;
-    _skelHelper = skelHelper ?? null;
-    walkingMan = group;
-    setMinimapWalker(group);
+  loadFn(animGroup, scene, ({ mixer, action, skelHelper }) => {
+    inst.mixer      = mixer;
+    inst.action     = action;
+    inst.skelHelper = skelHelper ?? null;
     scene.add(group);
-    addWalkFollower(group);
-    setInitialWalkPos(group.position.x, group.position.z);
+    if (isFirst) {
+      addWalkFollower(group);
+      setInitialWalkPos(startX, startZ);
+      setMinimapWalker(group);
+    }
     requestRender();
-  });
+  }, opts);
+}
+
+export function buildWalkingMan(scene) {
+  buildWalker(scene, loadWalker1, ROOM_W / 2,      ROOM_D / 2,      true);
+  buildWalker(scene, loadWalker2, ROOM_W / 2 + 80, ROOM_D / 2 - 60, false,
+    { topColor: 0xcc1111, topNodes: ['5_Shirt_1.0_0_0', '5_BackPack_1.0_0_0', '5_Shorts_1.0_0_0'],
+      extraColors: [{ nodes: ['Object_116'], color: 0xcc1111 }] });
 }
 
 

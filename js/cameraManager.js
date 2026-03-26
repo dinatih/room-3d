@@ -198,6 +198,11 @@ export function onResize() {
 const walkFollowers = [];
 export function addWalkFollower(obj) { walkFollowers.push(obj); }
 
+export function removeWalkFollower(obj) {
+  const idx = walkFollowers.indexOf(obj);
+  if (idx !== -1) walkFollowers.splice(idx, 1);
+}
+
 // Followers dont rotation.x suit le pitch de la caméra walk
 const pitchFollowers = [];
 export function addWalkPitchFollower(obj) { pitchFollowers.push(obj); }
