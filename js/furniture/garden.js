@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { gltfLoader } from '../utils/loaders.js';
 import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -391,7 +392,7 @@ export function buildGarden(scene) {
   // Rangée 1 (Z=-370) : 11 Lara/Jill
   // Rangées 2-5 (Z=-430…-610) : 34 nouveaux modèles, ~9 par rangée
   // =============================================
-  function spawnRow(files, zBack) {
+  function spawnRow(files, zBack, cx) {
     const file = files[Math.floor(Math.random() * files.length)];
     gltfLoader.load(`media/${file}`, (gltf) => {
       const model = gltf.scene;
@@ -401,7 +402,7 @@ export function buildGarden(scene) {
         model.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(model);
         model.position.set(
-          150 - (box.min.x + box.max.x) / 2,
+          cx - (box.min.x + box.max.x) / 2,
           -box.min.y,
           zBack - (box.min.z + box.max.z) / 2,
         );
@@ -412,17 +413,44 @@ export function buildGarden(scene) {
         scene.add(model);
         const skel = new THREE.SkeletonHelper(model);
         scene.add(skel);
+
+        // Label + bouton copier — en coordonnées monde (hors du scale du modèle)
+        model.updateMatrixWorld(true);
+        const topBox = new THREE.Box3().setFromObject(model);
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;align-items:center;gap:4px;pointer-events:auto;';
+        const span = document.createElement('span');
+        span.textContent = file;
+        span.style.cssText = 'color:#fff;background:rgba(0,0,0,.6);padding:2px 6px;border-radius:3px;font:11px monospace;white-space:nowrap;';
+        const btn = document.createElement('button');
+        btn.textContent = '⎘';
+        btn.title = 'Copier le nom';
+        btn.style.cssText = 'background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:3px;padding:1px 5px;font:11px monospace;cursor:pointer;pointer-events:auto;';
+        btn.addEventListener('click', () => {
+          navigator.clipboard.writeText(file);
+          btn.textContent = '✓';
+          setTimeout(() => { btn.textContent = '⎘'; }, 1200);
+        });
+        wrap.append(span, btn);
+        const obj = new CSS2DObject(wrap);
+        obj.position.set(
+          (topBox.min.x + topBox.max.x) / 2,
+          topBox.max.y + 3,
+          (topBox.min.z + topBox.max.z) / 2,
+        );
+        scene.add(obj);
+
         requestRender();
       }, undefined, err => console.error(`${file}:`, err));
   }
 
+  // Rangées décalées en X (−120, −60, 0, +60, +120 autour de X=150)
   spawnRow([
     'jill_valentine.glb', 'jill_valentine_2026_rigged.glb',
     'lara_croft.glb', 'lara_croft_2026_rigged.glb', 'lara_croft_4259.glb',
     'lara_croft__2026_rigged.glb', 'lara_croft_black_tank_top.glb',
-    'lara_croft__but_japanese_style.glb', 'lara_croft_gold_shades_2739_rigged.glb',
-    'lara_croft_rigged.glb', 'lara_croft_swim_gear.glb',
-  ], -370);
+    'lara_croft_gold_shades_2739_rigged.glb', 'lara_croft_swim_gear.glb',
+  ], -370,  30);
 
   spawnRow([
     'character_teen_red_2k.glb', 'crimson_lace_in_the_hallway.glb',
@@ -430,22 +458,22 @@ export function buildGarden(scene) {
     'harley_quinn_hip_hop_dancing.glb',
     'little_red_riding_hood.glb', 'low_animated_dog_shiba_inu.glb',
     'low_ariel_combat_idle_01.glb',
-  ], -430);
+  ], -430,  90);
 
   spawnRow([
     'low_lady_deadpool.glb', 'low_lady_in_red_dress.glb',
     'low_roan_of_arc_-_fortnite_skin.glb', 'low_terminator_zero.glb',
     'low_woman_in_red.glb', 'me3_doc_michel_fbx.glb',
-  ], -490);
+  ], -490, 150);
 
   spawnRow([
     'red_criminal_model_ff_freefire.glb', 'red_paint_3d_man_with_animation.glb',
     'red_robot.glb', 'resident_evil_creature_13.glb',
-  ], -550);
+  ], -550, 210);
 
   spawnRow([
     'resident_evil_npc.glb',
     'terminator_t-800_endo-skeleton_damaged.glb', 'tiffa_rigged.glb',
     'vrchat_ruiko.glb', 'zombie.glb',
-  ], -610);
+  ], -610, 270);
 }

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { ROOM_W, ROOM_D, WALL_H } from './config.js';
 
 // =============================================
@@ -19,6 +20,11 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.xr.enabled = true;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 document.body.appendChild(renderer.domElement);
+
+export const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(innerWidth, innerHeight);
+labelRenderer.domElement.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:10;';
+document.body.appendChild(labelRenderer.domElement);
 
 export const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(ROOM_W / 2, WALL_H / 3, ROOM_D / 2);

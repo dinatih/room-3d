@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ROOM_W, ROOM_D, WALL_H, DOOR_START, NICHE_DEPTH, KITCHEN_Z, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NETWORKS, LAYER_GLB } from './config.js';
 import { redrawMinimap } from './ui/minimap.js';
-import { scene, camera, renderer, controls } from './scene.js';
+import { scene, camera, renderer, controls, labelRenderer } from './scene.js';
 
 const CX = ROOM_W / 2, CY = WALL_H / 2, CZ = ROOM_D / 2;
 const DIST = 600;
@@ -242,6 +242,7 @@ export function exit2D() {
 
 export function onResize() {
   if (is2D) updateOrthoFrustum();
+  labelRenderer.setSize(innerWidth, innerHeight);
 }
 
 // =============================================
@@ -382,6 +383,7 @@ function renderFrame(now) {
   if (is2D && orthoControls) orthoControls.update();
   else controls.update();
   renderer.render(scene, activeCamera);
+  labelRenderer.render(scene, activeCamera);
 
   // Continuer le rendu si interaction active ou damping en cours
   if (walkActive && keysPressed.size > 0) requestRender();
