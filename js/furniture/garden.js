@@ -410,6 +410,8 @@ export function buildGarden(scene) {
           if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
         });
         scene.add(model);
+        const skel = new THREE.SkeletonHelper(model);
+        scene.add(skel);
         requestRender();
       }, undefined, err => console.error(`${file}:`, err));
   }
