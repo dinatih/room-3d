@@ -387,53 +387,63 @@ export function buildGarden(scene) {
   }, undefined, err => console.error('realistic_human_cloths.glb:', err));
 
   // =============================================
-  // GALERIE — 11 personnages alignés sur X au fond du jardin (Z=-370)
-  // Espacés de 60cm, centrés autour de X=150
+  // GALERIE — personnages alignés par rangées au fond du jardin
+  // Rangée 1 (Z=-370) : 11 Lara/Jill
+  // Rangées 2-5 (Z=-430…-610) : 34 nouveaux modèles, ~9 par rangée
   // =============================================
-  {
-    const MODELS = [
-      'jill_valentine.glb',
-      'jill_valentine_2026_rigged.glb',
-      'lara_croft.glb',
-      'lara_croft_2026_rigged.glb',
-      'lara_croft_4259.glb',
-      'lara_croft__2026_rigged.glb',
-      'lara_croft_black_tank_top.glb',
-      'lara_croft__but_japanese_style.glb',
-      'lara_croft_gold_shades_2739_rigged.glb',
-      'lara_croft_rigged.glb',
-      'lara_croft_swim_gear.glb',
-    ];
-    const SPACING = 60;
-    const Z_BACK  = -370;
-    const totalW  = (MODELS.length - 1) * SPACING;
-    const startX  = 150 - totalW / 2;
-
-    MODELS.forEach((file, i) => {
-      gltfLoader.load(`media/${file}`, (gltf) => {
-        const model = gltf.scene;
-
+  function spawnRow(files, zBack) {
+    const file = files[Math.floor(Math.random() * files.length)];
+    gltfLoader.load(`media/${file}`, (gltf) => {
+      const model = gltf.scene;
         const rawBox  = new THREE.Box3().setFromObject(model);
         const rawSize = rawBox.getSize(new THREE.Vector3());
         model.scale.setScalar(170 / Math.max(rawSize.x, rawSize.y, rawSize.z));
-
         model.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(model);
-
         model.position.set(
-          startX + i * SPACING - (box.min.x + box.max.x) / 2,
+          150 - (box.min.x + box.max.x) / 2,
           -box.min.y,
-          Z_BACK - (box.min.z + box.max.z) / 2,
+          zBack - (box.min.z + box.max.z) / 2,
         );
-
         model.traverse(c => {
           c.layers.set(LAYER_GLB);
           if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
         });
-
         scene.add(model);
         requestRender();
       }, undefined, err => console.error(`${file}:`, err));
-    });
   }
+
+  spawnRow([
+    'jill_valentine.glb', 'jill_valentine_2026_rigged.glb',
+    'lara_croft.glb', 'lara_croft_2026_rigged.glb', 'lara_croft_4259.glb',
+    'lara_croft__2026_rigged.glb', 'lara_croft_black_tank_top.glb',
+    'lara_croft__but_japanese_style.glb', 'lara_croft_gold_shades_2739_rigged.glb',
+    'lara_croft_rigged.glb', 'lara_croft_swim_gear.glb',
+  ], -370);
+
+  spawnRow([
+    'character_teen_red_2k.glb', 'crimson_lace_in_the_hallway.glb',
+    'doa_npc_fighter.glb', 'harley_quinn_.fbx_to_daz_studio.glb',
+    'harley_quinn_hip_hop_dancing.glb',
+    'little_red_riding_hood.glb', 'low_animated_dog_shiba_inu.glb',
+    'low_ariel_combat_idle_01.glb',
+  ], -430);
+
+  spawnRow([
+    'low_lady_deadpool.glb', 'low_lady_in_red_dress.glb',
+    'low_roan_of_arc_-_fortnite_skin.glb', 'low_terminator_zero.glb',
+    'low_woman_in_red.glb', 'me3_doc_michel_fbx.glb',
+  ], -490);
+
+  spawnRow([
+    'red_criminal_model_ff_freefire.glb', 'red_paint_3d_man_with_animation.glb',
+    'red_robot.glb', 'resident_evil_creature_13.glb',
+  ], -550);
+
+  spawnRow([
+    'resident_evil_npc.glb',
+    'terminator_t-800_endo-skeleton_damaged.glb', 'tiffa_rigged.glb',
+    'vrchat_ruiko.glb', 'zombie.glb',
+  ], -610);
 }

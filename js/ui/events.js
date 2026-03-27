@@ -6,6 +6,7 @@ import {
   enterWalk, exitWalk, enterPOV, resumeWalk,
   enter2DTop, exit2D, onResize,
   isWalkActive, requestRender, getOrthoCamera,
+  togglePlane, isPlaneActive,
 } from '../cameraManager.js';
 import {
   ROOM_W, ROOM_D,
@@ -274,6 +275,12 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
   }
   document.getElementById('switch-walker-toggle')?.addEventListener('click', doSwitchWalker);
   addEventListener('keydown', e => { if (e.key === 'l' || e.key === 'L') doSwitchWalker(); });
+
+  // ── Mode avion en papier ───────────────────────────────────────────────────
+  document.getElementById('plane-toggle')?.addEventListener('click', () => {
+    togglePlane();
+    document.getElementById('plane-toggle').textContent = `✈ Avion : ${isPlaneActive() ? 'ON' : 'OFF'}`;
+  });
 
   // ── Grille ────────────────────────────────────────────────────────────────
   document.getElementById('grid-toggle')?.addEventListener('click', () => {

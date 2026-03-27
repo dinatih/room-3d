@@ -113,6 +113,58 @@ export function enterPOV(x, z) {
 }
 
 // =============================================
+// PAPER AIRPLANE MODE
+// =============================================
+let planeActive = false;
+let planeYaw = 0, planePitch = 0;
+
+const PLANE_SPEED     = 300;  // cm/s
+const PLANE_GRAVITY   = 0.4;  // rad/s — le nez tombe naturellement
+const PLANE_PITCH_RT  = 1.6;  // rad/s — vitesse de cabrage clavier
+const PLANE_YAW_RT    = 1.2;  // rad/s — vitesse de virage clavier
+
+export function isPlaneActive() { return planeActive; }
+
+export function togglePlane() {
+  planeActive ? exitPlane() : enterPlane();
+}
+
+export function enterPlane() {
+  exitWalk();
+  exit2D();
+  planeActive = true;
+
+  // Initialise orientation depuis la caméra courante
+  const dir = new THREE.Vector3().subVectors(controls.target, camera.position).normalize();
+  planeYaw   = Math.atan2(-dir.x, -dir.z);
+  planePitch = Math.asin(Math.max(-1, Math.min(1, dir.y)));
+
+  walkPos.x = camera.position.x;
+  walkPos.y = camera.position.y;
+  walkPos.z = camera.position.z;
+
+  controls.enableRotate = false;
+  controls.enablePan    = false;
+  controls.enableZoom   = false;
+
+  const c = document.getElementById('controls');
+  if (c) c.textContent = '✈ Avion en papier | ←→ : virer | ↑↓ : cabrer/piquer | Échap : quitter';
+  requestRender();
+}
+
+export function exitPlane() {
+  if (!planeActive) return;
+  planeActive = false;
+  keysPressed.clear();
+  controls.enableRotate = true;
+  controls.enablePan    = true;
+  controls.enableZoom   = true;
+  const c = document.getElementById('controls');
+  if (c) c.textContent = defaultControlsHint;
+  requestRender();
+}
+
+// =============================================
 // 2D TOP VIEW (orthographic)
 // =============================================
 let is2D = false;
@@ -269,6 +321,31 @@ function renderFrame(now) {
     updateWalkLook();
   }
 
+  // ── Mode avion en papier ─────────────────────────────────────
+  if (planeActive) {
+    // Virage gauche/droite
+    if (keysPressed.has('ArrowLeft'))  planeYaw += PLANE_YAW_RT  * dt;
+    if (keysPressed.has('ArrowRight')) planeYaw -= PLANE_YAW_RT  * dt;
+    // Cabrer / piquer
+    if (keysPressed.has('ArrowUp'))   planePitch += PLANE_PITCH_RT * dt;
+    if (keysPressed.has('ArrowDown')) planePitch -= PLANE_PITCH_RT * dt;
+    // Gravité : le nez retombe si on ne cabre pas activement
+    const pitchTarget = keysPressed.has('ArrowUp') ? planePitch : planePitch - PLANE_GRAVITY * dt;
+    planePitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 4, pitchTarget));
+
+    // Déplacement dans la direction du nez
+    const cosP = Math.cos(planePitch);
+    walkPos.x -= Math.sin(planeYaw) * cosP * PLANE_SPEED * dt;
+    walkPos.z -= Math.cos(planeYaw) * cosP * PLANE_SPEED * dt;
+    walkPos.y += Math.sin(planePitch) * PLANE_SPEED * dt;
+
+    // Mise à jour caméra (réutilise walkYaw/walkPitch/walkPos)
+    walkYaw   = planeYaw;
+    walkPitch = planePitch;
+    updateWalkLook();
+    requestRender();
+  }
+
   // Mouvement du personnage en mode perspective (hors walk mode)
   if (!walkActive && moveKeysDown.size > 0) {
     for (const obj of walkFollowers) {
@@ -316,7 +393,14 @@ function renderFrame(now) {
 // =============================================
 addEventListener('keydown', (e) => {
   if (MOVE_KEYS.has(e.key)) { moveKeysDown.add(e.key); requestRender(); }
-  if (e.key === 'Escape' && walkActive) { exitWalk(); requestRender(); return; }
+  if (e.key === 'Escape' && walkActive)  { exitWalk();  requestRender(); return; }
+  if (e.key === 'Escape' && planeActive) { exitPlane(); requestRender(); return; }
+  if (planeActive) {
+    if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
+      keysPressed.add(e.key); e.preventDefault(); requestRender();
+    }
+    return;
+  }
   if (e.key === 'p' || e.key === 'P') {
     exitWalk();
     exit2D();
