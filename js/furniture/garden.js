@@ -3,11 +3,19 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { gltfLoader } from '../utils/loaders.js';
 import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { requestRender } from '../cameraManager.js';
+import { requestRender, registerAnimTicker } from '../cameraManager.js';
 import { LAYER_GLB } from '../config.js';
 import { buildVihals } from './vihals.js';
 
 const R = 6; // rayon d'arrondi des canapés (cm)
+
+// Pool d'animations pour les modèles de la galerie
+const _galleryMixers = [];
+registerAnimTicker((dt) => {
+  if (_galleryMixers.length === 0) return;
+  for (const m of _galleryMixers) m.update(dt);
+  requestRender();
+});
 
 export function buildGarden(scene) {
   // =============================================
@@ -431,7 +439,35 @@ export function buildGarden(scene) {
           btn.textContent = '✓';
           setTimeout(() => { btn.textContent = '⎘'; }, 1200);
         });
-        wrap.append(span, btn);
+        // Bouton animation (si le GLB en contient)
+        const btnAnim = document.createElement('button');
+        const btnStyle = 'background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:3px;padding:1px 5px;font:11px monospace;cursor:pointer;pointer-events:auto;';
+        btn.style.cssText = btnStyle;
+        btnAnim.style.cssText = btnStyle;
+        if (gltf.animations?.length > 0) {
+          const mixer = new THREE.AnimationMixer(model);
+          const actions = gltf.animations.map(clip => mixer.clipAction(clip));
+          let playing = false;
+          btnAnim.textContent = '▶';
+          btnAnim.title = `${gltf.animations.length} animation(s)`;
+          btnAnim.addEventListener('click', () => {
+            playing = !playing;
+            if (playing) {
+              actions.forEach(a => a.reset().play());
+              _galleryMixers.push(mixer);
+              btnAnim.textContent = '⏹';
+              requestRender();
+            } else {
+              actions.forEach(a => a.stop());
+              const idx = _galleryMixers.indexOf(mixer);
+              if (idx !== -1) _galleryMixers.splice(idx, 1);
+              btnAnim.textContent = '▶';
+            }
+          });
+          wrap.append(span, btn, btnAnim);
+        } else {
+          wrap.append(span, btn);
+        }
         const obj = new CSS2DObject(wrap);
         obj.position.set(
           (topBox.min.x + topBox.max.x) / 2,
@@ -463,7 +499,7 @@ export function buildGarden(scene) {
   spawnRow([
     'low_lady_deadpool.glb', 'low_lady_in_red_dress.glb',
     'low_roan_of_arc_-_fortnite_skin.glb', 'low_terminator_zero.glb',
-    'low_woman_in_red.glb', 'me3_doc_michel_fbx.glb',
+    'low_woman_in_red.glb',
   ], -490, 150);
 
   spawnRow([
