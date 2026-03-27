@@ -396,6 +396,43 @@ export function buildGarden(scene) {
   }, undefined, err => console.error('realistic_human_cloths.glb:', err));
 
   // =============================================
+  // SHIBA INU — près du grand canapé rouge (sofa 1 : X=270, Z=-110)
+  // =============================================
+  gltfLoader.load('media/low_animated_dog_shiba_inu.glb', (gltf) => {
+    const dog = gltf.scene;
+
+    const rawBox = new THREE.Box3().setFromObject(dog);
+    const rawSize = rawBox.getSize(new THREE.Vector3());
+    // Chien ~40cm de hauteur
+    dog.scale.setScalar(40 / Math.max(rawSize.x, rawSize.y, rawSize.z));
+
+    dog.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(dog);
+
+    // Devant le canapé, légèrement décalé sur le côté
+    dog.position.set(
+      230 - (box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -140 - (box.min.z + box.max.z) / 2,
+    );
+
+    dog.traverse(c => {
+      c.layers.set(LAYER_GLB);
+      if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
+    });
+
+    // Animation idle si disponible
+    if (gltf.animations?.length > 0) {
+      const mixer = new THREE.AnimationMixer(dog);
+      mixer.clipAction(gltf.animations[0]).play();
+      _galleryMixers.push(mixer);
+    }
+
+    scene.add(dog);
+    requestRender();
+  }, undefined, err => console.error('low_animated_dog_shiba_inu.glb:', err));
+
+  // =============================================
   // GALERIE — personnages alignés par rangées au fond du jardin
   // Rangée 1 (Z=-370) : 11 Lara/Jill
   // Rangées 2-5 (Z=-430…-610) : 34 nouveaux modèles, ~9 par rangée
@@ -489,10 +526,10 @@ export function buildGarden(scene) {
   ], -370,  30);
 
   spawnRow([
-    'character_teen_red_2k.glb', 'crimson_lace_in_the_hallway.glb',
+    'crimson_lace_in_the_hallway.glb',
     'doa_npc_fighter.glb', 'harley_quinn_.fbx_to_daz_studio.glb',
     'harley_quinn_hip_hop_dancing.glb',
-    'little_red_riding_hood.glb', 'low_animated_dog_shiba_inu.glb',
+    'little_red_riding_hood.glb',
     'low_ariel_combat_idle_01.glb',
   ], -430,  90);
 
@@ -512,4 +549,5 @@ export function buildGarden(scene) {
     'terminator_t-800_endo-skeleton_damaged.glb', 'tiffa_rigged.glb',
     'vrchat_ruiko.glb', 'zombie.glb',
   ], -610, 270);
+
 }
