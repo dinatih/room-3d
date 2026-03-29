@@ -30,6 +30,7 @@ import { toggleCelShading } from './celShading.js';
 import { setDronaLabelsVisible } from '../furniture/drona.js';
 import { registerHoverAction, initHoverMenu } from './hoverMenu.js';
 import { getWalkingMan, toggleSkeleton, switchWalker, getActiveWalkerIdx } from '../decor/walkingMan.js';
+import { toggleGallerySkeletons } from '../furniture/garden.js';
 
 export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
 
@@ -267,6 +268,11 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
     document.getElementById('skeleton-toggle').textContent = `Squelette : ${skelVisible ? 'ON' : 'OFF'}`;
   });
 
+  document.getElementById('gallery-skel-toggle')?.addEventListener('click', () => {
+    const on = toggleGallerySkeletons();
+    document.getElementById('gallery-skel-toggle').textContent = `Rigs galerie : ${on ? 'ON' : 'OFF'}`;
+  });
+
   // ── Switch walker ──────────────────────────────────────────────────────────
   function doSwitchWalker() {
     switchWalker();
@@ -293,6 +299,19 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
   const vrButton = VRButton.createButton(renderer);
   vrButton.style.bottom = '60px';
   document.body.appendChild(vrButton);
+
+  // Réduire le bouton si VR non supporté (le texte est mis à jour de façon async)
+  new MutationObserver(() => {
+    if (vrButton.textContent.includes('NOT SUPPORTED')) {
+      Object.assign(vrButton.style, {
+        fontSize: '9px', padding: '3px 7px',
+        width: 'fit-content', maxWidth: 'fit-content', minWidth: '0',
+        height: 'auto', borderRadius: '4px', opacity: '0.45',
+        position: 'fixed', bottom: '8px', right: '8px', left: 'auto',
+        transform: 'none',
+      });
+    }
+  }).observe(vrButton, { childList: true, characterData: true, subtree: true });
 
   const vrRig = new THREE.Group();
   scene.add(vrRig);

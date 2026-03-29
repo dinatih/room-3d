@@ -148,7 +148,10 @@ export function load(animGroup, scene, onReady, opts = {}) {
       registerAnimTicker((dt, isMoving) => {
         if (!isMoving) {
           // Retour progressif au naturel à l'arrêt
+          if (hairMat.emissive.r === 0 && hairMat.emissive.g === 0 && hairMat.emissive.b === 0) return;
           hairMat.emissive.lerp(_hairE0, 0.05);
+          if (hairMat.emissive.r < 0.002 && hairMat.emissive.g < 0.002 && hairMat.emissive.b < 0.002)
+            hairMat.emissive.set(0x000000);
           requestRender();
           return;
         }
