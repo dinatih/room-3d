@@ -156,6 +156,43 @@ export const WALL_LABELS = [
   { t: 'n', name: 'VDch',  x: 35,                              z: 600 - 15,                           rotZ:  0,            size: 8  },
 ];
 
+// Cotations — partagées entre floorplan.js (3D) et minimap.js (canvas 2D)
+// offset > 0 = vers la gauche/haut du segment, < 0 = vers la droite/bas
+// ext: true = cotation extérieure (couleur distincte)
+export const DIMENSIONS = [
+  // Séjour : largeur (MC)
+  { x1: GLASS_START,   z1: 0,            x2: GLASS_END,      z2: 0,            offset: -15 },
+  { x1: 0,             z1: 0,            x2: ROOM_W,         z2: 0,            offset: -35 },
+  { x1: -10,           z1: -10,          x2: ROOM_W + 10,    z2: -10,          offset: -50, ext: true },
+  // Séjour : profondeur (MA)
+  { x1: 0,             z1: 0,            x2: 0,              z2: ROOM_D,       offset:  30 },
+  { x1: -10,           z1: -10,          x2: -10,            z2: ROOM_D + 10,  offset:  50, ext: true },
+  // Porte P1
+  { x1: DOOR_START,    z1: ROOM_D,       x2: DOOR_END,       z2: ROOM_D,       offset: -20 },
+  // Cuisine
+  { x1: KITCHEN_X0,    z1: ROOM_D,       x2: KITCHEN_X1,     z2: ROOM_D,       offset: -20 },
+  { x1: KITCHEN_X0,    z1: ROOM_D,       x2: KITCHEN_X0,     z2: KITCHEN_Z,    offset: -20 },
+  { x1: KITCHEN_X0,    z1: KITCHEN_Z,    x2: KITCHEN_X1,     z2: KITCHEN_Z,    offset: -20 },
+  // SdB
+  { x1: -NICHE_DEPTH,  z1: KITCHEN_Z,    x2: DOOR_START,     z2: KITCHEN_Z,    offset:  20 },
+  { x1: -NICHE_DEPTH,  z1: KITCHEN_Z,    x2: -NICHE_DEPTH,   z2: 600,          offset: -20 },
+  // Douche
+  { x1: -NICHE_DEPTH,  z1: 670,          x2: 60,             z2: 670,          offset: -20 },
+  { x1: 60,            z1: 600,          x2: 60,             z2: 670,          offset:  20 },
+  // Entrée / Couloir
+  { x1: DOOR_START,    z1: ROOM_D + 10,  x2: ROOM_W,         z2: ROOM_D + 10,  offset:  30 },
+  { x1: ROOM_W,        z1: ROOM_D + 10,  x2: ROOM_W,         z2: ROOM_D + 140, offset: -20 },
+  // Placard
+  { x1: KITCHEN_X1,    z1: ROOM_D + 10,  x2: DOOR_START,     z2: ROOM_D + 10,  offset:  20 },
+  // Ouvertures
+  { x1: 60,            z1: 600,          x2: DOOR_START,     z2: 600,          offset: -20 },
+  { x1: -NICHE_DEPTH,  z1: 600,          x2: 60,             z2: 600,          offset:  20 },
+  { x1: DOOR_START,    z1: CORR_DOOR_S,  x2: DOOR_START,     z2: CORR_DOOR_E,  offset: -20 },
+  { x1: DIAG_DOOR_S.x, z1: DIAG_DOOR_S.z, x2: DIAG_DOOR_E.x, z2: DIAG_DOOR_E.z, offset: 30 },
+  // Mur diagonal ext.
+  { x1: DIAG_AX,       z1: DIAG_AZ,      x2: DIAG_CX,        z2: DIAG_CZ,      offset:  60, ext: true },
+];
+
 // Segments du contour — t: 'w' mur | 'd' porte | 'n' fenêtre
 export const FLOOR_SEGMENTS = [
   // MUR A OUEST (niche)

@@ -1,15 +1,14 @@
 import * as THREE from 'three';
 import {
-  ROOM_W, ROOM_D, DOOR_START, DOOR_END,
+  ROOM_W, ROOM_D, DOOR_START,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, KITCHEN_DEPTH,
   NICHE_DEPTH, NICHE_Z_START,
   GLASS_START, GLASS_END,
-  CORR_DOOR_S, CORR_DOOR_E,
   SDB_Z_END,
-  DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
+  DIAG_AZ, DIAG_CZ,
 } from '../config.js';
 import { makeText } from './labels.js';
-import { FLOOR_SEGMENTS, ROOMS, WALL_LABELS, DIAG_DOOR_S, DIAG_DOOR_E, DIAG_ANGLE } from './floorData.js';
+import { FLOOR_SEGMENTS, ROOMS, WALL_LABELS, DIMENSIONS } from './floorData.js';
 
 export function buildFloorPlan() {
   const group = new THREE.Group();
@@ -160,46 +159,10 @@ export function buildFloorPlan() {
     m.rotation.set(-Math.PI / 2, 0, angle);
   }
 
-  // --- Séjour : largeur (MC) ---
-  dim(GLASS_START, 0, GLASS_END, 0, -15);             // Baie vitrée : 1.7m
-  dim(0, 0, ROOM_W, 0, -35);                           // int : 3.0m
-  dim(-10, -10, ROOM_W + 10, -10, -50, true);           // ext : 3.2m
-
-  // --- Séjour : profondeur (MA) ---
-  dim(0, 0, 0, ROOM_D, 30);                              // int : 4.0m
-  dim(-10, -10, -10, ROOM_D + 10, 50, true);             // ext : 4.2m
-
-  // --- Porte P1 sur MD ---
-  dim(DOOR_START, ROOM_D, DOOR_END, ROOM_D, -20);        // P1 : 80cm
-
-  // --- Cuisine ---
-  dim(KITCHEN_X0, ROOM_D, KITCHEN_X1, ROOM_D, -20);      // ouverture : 1.0m
-  dim(KITCHEN_X0, ROOM_D, KITCHEN_X0, KITCHEN_Z, -20);   // prof int : 60cm
-  dim(KITCHEN_X0, KITCHEN_Z, KITCHEN_X1, KITCHEN_Z, -20); // larg int : 1.0m
-
-  // --- SdB ---
-  dim(-NICHE_DEPTH, KITCHEN_Z, DOOR_START, KITCHEN_Z, 20); // larg int : 2.0m
-  dim(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, 600, -20);     // prof int : 1.4m
-
-  // --- Douche ---
-  dim(-NICHE_DEPTH, 670, 60, 670, -20);                      // larg int : 70cm
-  dim(60, 600, 60, 670, 20);                                   // prof int : 70cm
-
-  // --- Entrée / Couloir ---
-  dim(DOOR_START, ROOM_D + 10, ROOM_W, ROOM_D + 10, 30);   // larg : 1.1m
-  dim(ROOM_W, ROOM_D + 10, ROOM_W, ROOM_D + 140, -20);     // prof MCo-E : 1.3m
-
-  // --- Placard ---
-  dim(KITCHEN_X1, ROOM_D + 10, DOOR_START, ROOM_D + 10, 20); // larg : 60cm
-
-  // --- Ouvertures ---
-  dim(60, 600, DOOR_START, 600, -20);                          // PC-SDB : 1.3m
-  dim(-NICHE_DEPTH, 600, 60, 600, 20);                         // VDch : 70cm
-  dim(DOOR_START, CORR_DOOR_S, DOOR_START, CORR_DOOR_E, -20);             // P2 : 80cm
-  dim(DIAG_DOOR_S.x, DIAG_DOOR_S.z, DIAG_DOOR_E.x, DIAG_DOOR_E.z, 30); // P3 : 90cm
-
-  // --- Ext. mur diagonal ---
-  dim(DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, 60, true);       // MDiag ext : 3.6m
+  // --- Cotations (depuis DIMENSIONS, source partagée avec minimap) ---
+  for (const d of DIMENSIONS) {
+    dim(d.x1, d.z1, d.x2, d.z2, d.offset, d.ext ?? false);
+  }
 
   return group;
 }

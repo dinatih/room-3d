@@ -12,7 +12,7 @@ import {
   SDB_Z_END,
   DIAG_AZ, DIAG_CZ,
 } from '../config.js';
-import { FLOOR_SEGMENTS, ROOMS, WALL_LABELS } from './floorData.js';
+import { FLOOR_SEGMENTS, ROOMS } from './floorData.js';
 
 
 export function buildMinimap() {
@@ -96,9 +96,9 @@ export function buildMinimap() {
     ctx.fillRect(tx(0), tz(0), ROOM_W * S, ROOM_D * S);
     ctx.fillRect(tx(-NICHE_DEPTH), tz(NICHE_Z_START), NICHE_DEPTH * S, (ROOM_D - NICHE_Z_START) * S);
     ctx.fillRect(tx(KITCHEN_X0), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_X0) * S, (KITCHEN_Z - ROOM_D) * S);
-    ctx.fillRect(tx(KITCHEN_X1), tz(ROOM_D + 10), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D - 10) * S); // placard
+    ctx.fillRect(tx(KITCHEN_X1), tz(ROOM_D), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D) * S); // placard
     // Entrée : rect + triangle
-    ctx.fillRect(tx(DOOR_START), tz(ROOM_D + 10), (ROOM_W - DOOR_START) * S, (DIAG_AZ - ROOM_D - 10) * S);
+    ctx.fillRect(tx(DOOR_START), tz(ROOM_D), (ROOM_W - DOOR_START) * S, (DIAG_AZ - ROOM_D) * S);
     ctx.beginPath();
     ctx.moveTo(tx(DOOR_START), tz(DIAG_AZ));
     ctx.lineTo(tx(ROOM_W), tz(DIAG_AZ));
@@ -106,7 +106,7 @@ export function buildMinimap() {
     ctx.closePath();
     ctx.fill();
     // SDB : rect + triangle sud
-    ctx.fillRect(tx(-NICHE_DEPTH), tz(KITCHEN_Z + 10), (DOOR_START + NICHE_DEPTH) * S, (SDB_Z_END - KITCHEN_Z - 10) * S);
+    ctx.fillRect(tx(-NICHE_DEPTH), tz(KITCHEN_Z), (DOOR_START + NICHE_DEPTH) * S, (SDB_Z_END - KITCHEN_Z) * S);
     ctx.beginPath();
     ctx.moveTo(tx(-NICHE_DEPTH), tz(SDB_Z_END));
     ctx.lineTo(tx(DOOR_START), tz(SDB_Z_END));
@@ -202,16 +202,6 @@ export function buildMinimap() {
       ctx.fillStyle = isHovered ? 'rgba(255, 215, 0, 0.6)' : 'rgba(255, 255, 255, 0.3)';
       ctx.font = `${Math.round(5 * scale)}px sans-serif`;
       ctx.fillText(room.nameEn, tx(room.labelX), tz(room.labelZ) + 9 * scale);
-    }
-
-    // === Labels des murs, portes, fenêtres ===
-    const wallLabelColor = { w: 'rgba(200,190,100,0.65)', d: 'rgba(220,80,80,0.7)', n: 'rgba(80,150,255,0.7)' };
-    ctx.font = `bold ${Math.round(5 * scale)}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    for (const w of WALL_LABELS) {
-      ctx.fillStyle = wallLabelColor[w.t];
-      ctx.fillText(w.name, tx(w.x), tz(w.z));
     }
 
     // === WALKING MAN (casquette vue du haut) ===
