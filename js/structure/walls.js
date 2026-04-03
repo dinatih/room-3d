@@ -75,9 +75,6 @@ export function buildWalls(scene) {
     m.castShadow = true; m.receiveShadow = true;
     scene.add(m);
   }
-  // A4 retour niche (ferme l'angle à Z=NICHE_Z_START) — face sud (-Z, index 5) vers l'ext.
-  panel(NICHE_DEPTH, WALL_H, W, -NICHE_DEPTH/2, WALL_H/2, NICHE_Z_START - W/2);
-
   // ── MUR B (est, X=ROOM_W=300) ────────────────────────────────────────────
   // Face extérieure (+X, index 0) transparente pour voir l'intérieur depuis l'est.
   // BoxGeometry material order: [+X, -X, +Y, -Y, +Z, -Z]

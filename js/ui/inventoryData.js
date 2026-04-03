@@ -68,7 +68,7 @@ export const INVENTORY = [
   { id: 'viggja',            name: 'Desserte VIGGJA',               brand: 'IKEA',     category: 'furniture', qty: 1,  dims: { w: 37,   d: 50,   h: 74   }, scenePos: { x: 100,  z: -125 }, notes: 'Jardin, à côté canapé ouest', glbPath: 'media/viggja.glb' },
   { id: 'sofa-red-1',        name: 'Canapé de jardin (grand)',      brand: '',         category: 'furniture', qty: 1,  dims: { w: 60,   d: 160,  h: 90   }, scenePos: { x: 300,  z: -110 }, notes: 'Rouge, côté est, avec accoudoirs' },
   { id: 'sofa-red-2',        name: 'Canapé de jardin (petit)',      brand: '',         category: 'furniture', qty: 1,  dims: { w: 60,   d: 100,  h: 100  }, scenePos: { x: 130,  z: -90  }, notes: 'Rouge, sans accoudoirs' },
-  { id: 'folding-chair',     name: 'Chaise pliante VIHALS',         brand: 'IKEA',     category: 'furniture', qty: 1,  dims: { w: 43,   d: 47,   h: 80   }, scenePos: { x: -50,  z: 350  }, notes: 'Rouge, jardin, procédurale' },
+
 
   // ── TECH ─────────────────────────────────
   { id: 'tv',                name: 'Télévision murale',              brand: '',         category: 'tech',      qty: 1,  dims: { w: 70,   d: 2,    h: 40   }, scenePos: { x: 275,  z: 25   }, notes: '70×40cm, orientée vers le séjour' },

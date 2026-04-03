@@ -5,7 +5,7 @@ import { mergeGlbByMaterial } from '../utils/mergeUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { requestRender, registerAnimTicker } from '../cameraManager.js';
 import { LAYER_GLB } from '../config.js';
-import { buildVihals } from './vihals.js';
+
 import { attachDance } from '../decor/dance.js';
 
 const R = 6; // rayon d'arrondi des canapés (cm)
@@ -118,13 +118,6 @@ export function buildGarden(scene) {
     sofa2Group.position.set(310 - 60 - 60 - S2_D / 2 - 60, 0, -90);
     scene.add(sofa2Group);
   }
-
-  // =============================================
-  // CHAISE PLIANTE IKEA VIHALS (rouge)
-  // =============================================
-  // cx=-50 (à l'ouest du jardin), cz=350, orientée face à la pièce
-  buildVihals(scene, -50, 350, Math.PI, 0xcc2222);
-
 
   // =============================================
   // COFFRE BANC YITAHOME 100 Gal (gris, 122×55×62cm)

@@ -19,7 +19,7 @@ const GLB_PATHS = [
 
   'media/ikea_Altappen_single.glb',
   'media/xiaomi_electric_scooter_4.glb',
-  'media/folding-chair-generic.glb',
+
   'media/sneaker.glb',
   'media/mechanic_jumpsuit.glb',
   'media/salopette-noir.glb',
