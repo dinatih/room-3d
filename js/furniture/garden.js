@@ -358,7 +358,7 @@ export function buildGarden(scene) {
   // =============================================
   // SHIBA INU — près du grand canapé rouge (sofa 1 : X=270, Z=-110)
   // =============================================
-  gltfLoader.load('media/low_animated_dog_shiba_inu.glb', (gltf) => {
+  if (false) gltfLoader.load('media/low_animated_dog_shiba_inu.glb', (gltf) => {
     const dog = gltf.scene;
 
     const rawBox = new THREE.Box3().setFromObject(dog);

@@ -9,6 +9,7 @@ import {
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
 } from '../config.js';
 import { makeText } from './labels.js';
+import { FLOOR_SEGMENTS, DIAG_DOOR_S, DIAG_DOOR_E, DIAG_ANGLE } from './floorData.js';
 
 export function buildFloorPlan() {
   const group = new THREE.Group();
@@ -71,70 +72,15 @@ export function buildFloorPlan() {
   floorRect(-NICHE_DEPTH, KITCHEN_Z + 10, DOOR_START + NICHE_DEPTH, SDB_Z_END - KITCHEN_Z - 10); // SDB
   floorTri(-NICHE_DEPTH, SDB_Z_END, DOOR_START, SDB_Z_END, -NICHE_DEPTH, DIAG_CZ); // SDB sud (douche + PC-SDB + triangle)
 
-  // === MUR A OUEST (niche) ===
-  wallLine(0, 0, 0, NICHE_Z_START);
-  wallLine(0, NICHE_Z_START, -NICHE_DEPTH, NICHE_Z_START);
-  wallLine(-NICHE_DEPTH, NICHE_Z_START, -NICHE_DEPTH, ROOM_D);
-  // Mur gaine technique ouest
-  wallLine(-NICHE_DEPTH, ROOM_D, -NICHE_DEPTH, KITCHEN_Z);
-
-  // === MUR B EST ===
-  wallLine(ROOM_W, 0, ROOM_W, ROOM_D + 10);
-
-  // === MUR C NORD (baie vitrée) ===
-  wallLine(0, 0, GLASS_START, 0);
-  window_(GLASS_START, 0, GLASS_END, 0);
-  wallLine(GLASS_END, 0, ROOM_W, 0);
-
-  // === MUR D SUD (porte + cuisine) ===
-  wallLine(-NICHE_DEPTH, ROOM_D, KITCHEN_X0, ROOM_D);
-  wallLine(KITCHEN_X1, ROOM_D, DOOR_START, ROOM_D);
-  door(DOOR_START, ROOM_D, DOOR_END, ROOM_D);
-  wallLine(DOOR_END, ROOM_D, ROOM_W, ROOM_D);
-
-  // === CUISINE ===
-  wallLine(KITCHEN_X0, ROOM_D, KITCHEN_X0, KITCHEN_Z);
-  wallLine(KITCHEN_X1, ROOM_D, KITCHEN_X1, KITCHEN_Z);
-
-  // === MUR SDB NORD ===
-  wallLine(-NICHE_DEPTH, KITCHEN_Z, DOOR_START, KITCHEN_Z);
-
-  // === PLACARD COULISSANT (X=130→190, Z=410→460) ===
-  const CW_Z0 = ROOM_D + 10; // 410
+  // === SEGMENTS (données partagées avec minimap via floorData.js) ===
+  const CW_Z0 = ROOM_D + 10;
   floorRect(KITCHEN_X1, CW_Z0, DOOR_START - KITCHEN_X1, KITCHEN_Z - CW_Z0); // sol placard
-  door(DOOR_START, CW_Z0, DOOR_START, KITCHEN_Z); // porte coulissante
 
-  // === COULOIR STUDIO ===
-  wallLine(DOOR_START, KITCHEN_Z, DOOR_START, CORR_DOOR_S);
-  door(DOOR_START, CORR_DOOR_S, DOOR_START, CORR_DOOR_E);
-  wallLine(DOOR_START, CORR_DOOR_E, DOOR_START, KITCHEN_Z + 140);
-
-  wallLine(ROOM_W, CW_Z0, ROOM_W, DIAG_AZ);
-
-  // === SDB OUEST ===
-  wallLine(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, DIAG_CZ);
-
-  // === MUR SDB SUD (vitrage douche + PC-SDB) ===
-  window_(-NICHE_DEPTH, 600, 60, 600);         // VDch (vitrage douche)
-  door(60, 600, DOOR_START, 600);              // PC-SDB (double porte coulissante placard)
-
-  // === DOUCHE ===
-  wallLine(60, 600, 60, 670);                   // MDch (X=60)
-  wallLine(-NICHE_DEPTH, 670, 60, 670);
-
-  // === MUR DIAGONAL BATIMENT (avec porte d'entrée) ===
-  const DA = { x: DIAG_AX, z: DIAG_AZ };
-  const DC = { x: DIAG_CX, z: DIAG_CZ };
-  const dLen = Math.sqrt((DA.x - DC.x) ** 2 + (DA.z - DC.z) ** 2);
-  const dX = (DC.x - DA.x) / dLen;
-  const dZ = (DC.z - DA.z) / dLen;
-
-  const doorS = { x: DA.x + 10 * dX, z: DA.z + 10 * dZ };
-  const doorE = { x: DA.x + 100 * dX, z: DA.z + 100 * dZ };
-
-  wallLine(DA.x, DA.z, doorS.x, doorS.z);
-  door(doorS.x, doorS.z, doorE.x, doorE.z);
-  wallLine(doorE.x, doorE.z, DC.x, DC.z);
+  for (const { t, x1, z1, x2, z2 } of FLOOR_SEGMENTS) {
+    if      (t === 'w') wallLine(x1, z1, x2, z2);
+    else if (t === 'd') door(x1, z1, x2, z2);
+    else if (t === 'n') window_(x1, z1, x2, z2);
+  }
 
   // === LABELS ===
   const LY = Y + 5;
@@ -191,15 +137,14 @@ export function buildFloorPlan() {
   label('MCo-E', ROOM_W + 20, (CW_Z0 + CW_Z0 + 130) / 2, -Math.PI / 2, WALL_COLOR, 7);            // Mur Couloir Est
 
   // --- Mur diagonal ---
-  const diagMid = { x: (DA.x + DC.x) / 2, z: (DA.z + DC.z) / 2 };
-  const diagAngle = Math.atan2(DC.z - DA.z, DC.x - DA.x);
-  label('MDiag', diagMid.x + 20, diagMid.z + 20, diagAngle, WALL_COLOR, 8);
+  const diagMid = { x: (DIAG_AX + DIAG_CX) / 2, z: (DIAG_AZ + DIAG_CZ) / 2 };
+  label('MDiag', diagMid.x + 20, diagMid.z + 20, DIAG_ANGLE, WALL_COLOR, 8);
 
   // --- Portes ---
   label('P1', (DOOR_START + DOOR_END) / 2, ROOM_D - 20, 0, DOOR_COLOR, 10);    // Porte Séjour
   label('P2', DOOR_START + 20, (CORR_DOOR_S + CORR_DOOR_E) / 2, 0, DOOR_COLOR, 10);           // Porte SdB
-  const doorMid = { x: (doorS.x + doorE.x) / 2, z: (doorS.z + doorE.z) / 2 };
-  label('P3', doorMid.x + 20, doorMid.z - 20, diagAngle, DOOR_COLOR, 10);        // Porte Entrée
+  const doorMid = { x: (DIAG_DOOR_S.x + DIAG_DOOR_E.x) / 2, z: (DIAG_DOOR_S.z + DIAG_DOOR_E.z) / 2 };
+  label('P3', doorMid.x + 20, doorMid.z - 20, DIAG_ANGLE, DOOR_COLOR, 10);        // Porte Entrée
 
   // --- Fenêtres ---
   label('Baie', (GLASS_START + GLASS_END) / 2, -40, 0, WIN_COLOR, 9);           // Baie vitrée
@@ -293,10 +238,10 @@ export function buildFloorPlan() {
   dim(60, 600, DOOR_START, 600, -20);                          // PC-SDB : 1.3m
   dim(-NICHE_DEPTH, 600, 60, 600, 20);                         // VDch : 70cm
   dim(DOOR_START, CORR_DOOR_S, DOOR_START, CORR_DOOR_E, -20);             // P2 : 80cm
-  dim(doorS.x, doorS.z, doorE.x, doorE.z, 30);             // P3 : 90cm
+  dim(DIAG_DOOR_S.x, DIAG_DOOR_S.z, DIAG_DOOR_E.x, DIAG_DOOR_E.z, 30); // P3 : 90cm
 
   // --- Ext. mur diagonal ---
-  dim(DA.x, DA.z, DC.x, DC.z, 60, true);                   // MDiag ext : 3.6m
+  dim(DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ, 60, true);       // MDiag ext : 3.6m
 
   return group;
 }

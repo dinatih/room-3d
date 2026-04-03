@@ -13,6 +13,7 @@ import {
   SDB_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
 } from '../config.js';
+import { FLOOR_SEGMENTS } from './floorData.js';
 
 // X sur la diagonale à un Z donné
 const diagXat = z => DIAG_AX + (z - DIAG_AZ) * (DIAG_CX - DIAG_AX) / (DIAG_CZ - DIAG_AZ);
@@ -197,68 +198,12 @@ export function buildMinimap() {
       ctx.stroke();
     }
 
-    // === MUR A OUEST (niche) ===
-    drawWall(0, 0, 0, NICHE_Z_START);
-    drawWall(0, NICHE_Z_START, -NICHE_DEPTH, NICHE_Z_START);
-    drawWall(-NICHE_DEPTH, NICHE_Z_START, -NICHE_DEPTH, ROOM_D);
-    // Mur gaine technique ouest
-    drawWall(-NICHE_DEPTH, ROOM_D, -NICHE_DEPTH, KITCHEN_Z);
-
-    // === MUR B EST ===
-    drawWall(ROOM_W, 0, ROOM_W, ROOM_D + 10);
-
-    // === MUR C NORD (baie vitrée) ===
-    drawWall(0, 0, GLASS_START, 0);
-    drawWindow(GLASS_START, 0, GLASS_END, 0);
-    drawWall(GLASS_END, 0, ROOM_W, 0);
-
-    // === MUR D SUD (porte + cuisine) ===
-    drawWall(-NICHE_DEPTH, ROOM_D, KITCHEN_X0, ROOM_D);
-    drawWall(KITCHEN_X1, ROOM_D, DOOR_START, ROOM_D);
-    drawDoor(DOOR_START, ROOM_D, DOOR_END, ROOM_D);
-    drawWall(DOOR_END, ROOM_D, ROOM_W, ROOM_D);
-
-    // === CUISINE ===
-    drawWall(KITCHEN_X0, ROOM_D, KITCHEN_X0, KITCHEN_Z);
-    drawWall(KITCHEN_X1, ROOM_D, KITCHEN_X1, KITCHEN_Z);
-
-    // === MUR SDB NORD ===
-    drawWall(-NICHE_DEPTH, KITCHEN_Z, DOOR_START, KITCHEN_Z);
-
-    // === PORTE COULISSANTE PLACARD ===
-    drawDoor(DOOR_START, ROOM_D + 10, DOOR_START, KITCHEN_Z);
-
-    // === COULOIR STUDIO ===
-    drawWall(DOOR_START, KITCHEN_Z, DOOR_START, CORR_DOOR_S);
-    drawDoor(DOOR_START, CORR_DOOR_S, DOOR_START, CORR_DOOR_E);
-    drawWall(DOOR_START, CORR_DOOR_E, DOOR_START, KITCHEN_Z + 140);
-
-    drawWall(ROOM_W, ROOM_D + 10, ROOM_W, DIAG_AZ);
-
-    // === SDB OUEST (toute la longueur) ===
-    drawWall(-NICHE_DEPTH, KITCHEN_Z, -NICHE_DEPTH, DIAG_CZ);
-
-    // === MUR SDB SUD (vitrage douche + PC-SDB) ===
-    drawWindow(-NICHE_DEPTH, 600, 60, 600);
-    drawDoor(60, 600, DOOR_START, 600);
-
-    // === DOUCHE ===
-    drawWall(60, 600, 60, 670);
-    drawWall(-NICHE_DEPTH, 670, 60, 670);
-
-    // === MUR DIAGONAL BATIMENT (avec porte d'entrée) ===
-    const DA = { x: DIAG_AX, z: DIAG_AZ };
-    const DC = { x: DIAG_CX, z: DIAG_CZ };
-    const dLen = Math.sqrt((DA.x - DC.x) ** 2 + (DA.z - DC.z) ** 2);
-    const dX = (DC.x - DA.x) / dLen;
-    const dZ = (DC.z - DA.z) / dLen;
-
-    const doorS = { x: DA.x + 10 * dX, z: DA.z + 10 * dZ };
-    const doorE = { x: DA.x + 100 * dX, z: DA.z + 100 * dZ };
-
-    drawWall(DA.x, DA.z, doorS.x, doorS.z);
-    drawDoor(doorS.x, doorS.z, doorE.x, doorE.z);
-    drawWall(doorE.x, doorE.z, DC.x, DC.z);
+    // === SEGMENTS (données partagées avec floorplan via floorData.js) ===
+    for (const { t, x1, z1, x2, z2 } of FLOOR_SEGMENTS) {
+      if      (t === 'w') drawWall(x1, z1, x2, z2);
+      else if (t === 'd') drawDoor(x1, z1, x2, z2);
+      else if (t === 'n') drawWindow(x1, z1, x2, z2);
+    }
 
     // === JARDIN (pointillés verts) ===
     ctx.fillStyle = 'rgba(74, 158, 84, 0.08)';
