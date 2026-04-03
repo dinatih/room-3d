@@ -20,6 +20,7 @@ let labelEl = null;
 let hideTimer = null;
 let currentActionId = null;
 let touchMenuLocked = false; // true = menu ouvert par tap touch, ne pas cacher sur pointerleave
+let _scene = null;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public API
@@ -44,6 +45,7 @@ export function getHoverAction(actionId) {
 export function initHoverMenu(renderer, camera, scene) {
   menuEl  = document.getElementById('hover-menu');
   labelEl = menuEl.querySelector('.hm-label');
+  _scene  = scene;
 
   // Collect all tagged objects once
   scene.traverse(obj => {
@@ -62,11 +64,18 @@ export function initHoverMenu(renderer, camera, scene) {
     pointer.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
     pointer.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
     raycaster.setFromCamera(pointer, camera);
-    const hits = raycaster.intersectObjects(targets, true);
+    const allHits = _scene ? raycaster.intersectObjects(_scene.children, true) : raycaster.intersectObjects(targets, true);
     let found = null;
-    for (const hit of hits) {
+    for (const hit of allHits) {
+      if (!hit.object.visible) continue;
+      const mat = hit.object.material;
+      const isTransparent = Array.isArray(mat)
+        ? mat.every(m => m.transparent && m.opacity < 0.3)
+        : (mat?.transparent && mat?.opacity < 0.3);
+      if (isTransparent) continue;
       const action = resolveAction(hit.object);
-      if (action) { found = { action, x: e.clientX, y: e.clientY }; break; }
+      if (action) found = { action, x: e.clientX, y: e.clientY };
+      break;
     }
     if (found) {
       touchMenuLocked = true;
@@ -114,13 +123,25 @@ function onPointerMove(e, renderer, camera) {
 
   raycaster.setFromCamera(pointer, camera);
 
-  // Only raycast against registered interactive objects
-  const hits = raycaster.intersectObjects(targets, true);
+  // Raycast against the full scene — first opaque hit wins (occlusion-aware)
+  const allHits = _scene ? raycaster.intersectObjects(_scene.children, true) : raycaster.intersectObjects(targets, true);
 
   let hovered = null;
-  for (const hit of hits) {
+  for (const hit of allHits) {
+    if (!hit.object.visible) continue;
+    // Skip transparent / fully invisible surfaces
+    const mat = hit.object.material;
+    const isTransparent = Array.isArray(mat)
+      ? mat.every(m => m.transparent && m.opacity < 0.3)
+      : (mat?.transparent && mat?.opacity < 0.3);
+    if (isTransparent) continue;
+    // Skip ceiling — allows clicking objects from top-down view
+    if (hit.object.userData.brickType === 'ceiling') continue;
+
+    // First opaque surface: interactive or blocker
     const action = resolveAction(hit.object);
-    if (action) { hovered = { action, x: e.clientX, y: e.clientY }; break; }
+    if (action) hovered = { action, x: e.clientX, y: e.clientY };
+    break; // stop here — anything behind is occluded
   }
 
   if (hovered) {
