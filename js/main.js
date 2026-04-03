@@ -5,11 +5,13 @@ import {
   LAYER_FURNITURE,
   LAYER_NETWORKS,
   LAYER_GLB,
+  LAYER_NEIGHBORS,
 } from './config.js';
 import { scene, camera, renderer } from './scene.js';
 import { loadFont } from './ui/labels.js';
 import { requestRender } from './cameraManager.js';
 import { buildWalls } from './structure/walls.js';
+import { buildNeighborWest, buildNeighborEast } from './structure/neighborWest.js';
 import { buildKitchen } from './structure/kitchen.js';
 import { buildKallax } from './furniture/kallax.js';
 import { buildBed } from './furniture/bed.js';
@@ -63,11 +65,16 @@ camera.layers.enable(LAYER_EQUIPMENT);
 camera.layers.enable(LAYER_FURNITURE);
 camera.layers.enable(LAYER_NETWORKS);
 camera.layers.enable(LAYER_GLB);
+// LAYER_NEIGHBORS désactivé par défaut (toggle bouton "Voisins")
 
 // ── Construction de la scène ──────────────────────────────────────────────────
 
 // Layer 0 : structure
 buildWalls(scene);
+
+// Layer 5 : voisins
+buildOnLayer(buildNeighborWest, LAYER_NEIGHBORS);
+buildOnLayer(buildNeighborEast, LAYER_NEIGHBORS);
 buildGroundPlane(scene);
 buildConcreteSlab(scene);
 buildGardenSlab(scene);

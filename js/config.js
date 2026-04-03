@@ -67,6 +67,7 @@ export const LAYER_EQUIPMENT  = 1; // WC, douche, évier, chauffe-eau…
 export const LAYER_FURNITURE  = 2; // Lit, tables, chaises, étagères…
 export const LAYER_NETWORKS   = 3; // Tuyauterie, électricité (optionnel)
 export const LAYER_GLB        = 4; // Objets GLB async (jamais reflétés dans les miroirs)
+export const LAYER_NEIGHBORS  = 5; // Appartements voisins (fantôme)
 
 export const COLORS = {
   wall: 0xeeeeee,

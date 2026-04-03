@@ -10,7 +10,7 @@ import {
 } from '../cameraManager.js';
 import {
   ROOM_W, ROOM_D,
-  LAYER_STRUCTURE, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_GLB,
+  LAYER_STRUCTURE, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_GLB, LAYER_NEIGHBORS,
 } from '../config.js';
 import { toggleEastDoor } from '../structure/walls.js';
 import { toggleFridgeDoor, toggleCabinetDoor } from '../structure/kitchen.js';
@@ -177,8 +177,8 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
   });
 
   // ── Layer toggles ─────────────────────────────────────────────────────────
-  function makeLayerToggle(btnId, layer, label) {
-    let on = true;
+  function makeLayerToggle(btnId, layer, label, initialOn = true) {
+    let on = initialOn;
     document.getElementById(btnId)?.addEventListener('click', () => {
       on = !on;
       const orthoCamera = getOrthoCamera();
@@ -193,6 +193,7 @@ export function initEvents({ gridGroup, floorPlanGroup, buildingChildren }) {
   makeLayerToggle('layer-equip-toggle',     LAYER_EQUIPMENT, 'Équipements');
   makeLayerToggle('layer-furniture-toggle', LAYER_FURNITURE, 'Mobilier');
   makeLayerToggle('layer-glb-toggle',       LAYER_GLB,       'GLB');
+  makeLayerToggle('layer-neighbors-toggle', LAYER_NEIGHBORS, 'Voisins', false);
 
   {
     let on = false;

@@ -29,7 +29,7 @@ registerAnimTicker((dt) => {
 
 export function buildGarden(scene) {
   // Mettre à true pour cacher temporairement tous les GLBs contenant "lara"
-  const HIDE_LARA = false;
+  const HIDE_LARA = true;
   // =============================================
   // CANAPÉ DE JARDIN (rouge, côté est)
   // =============================================
