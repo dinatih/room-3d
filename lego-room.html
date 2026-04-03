@@ -296,14 +296,54 @@
                 line-height: 16px;
                 margin-top: 1px;
             }
-            #minimap {
+            #minimap-container {
                 position: absolute;
                 bottom: 16px;
                 right: 16px;
+                z-index: 50;
+            }
+            #minimap-container.expanded {
+                position: fixed;
+                bottom: auto;
+                right: auto;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 201;
+            }
+            #minimap {
+                display: block;
                 border-radius: 6px;
                 border: 1px solid #555;
                 background: #111122;
-                opacity: 0.7;
+                opacity: 0.85;
+                transition: box-shadow 0.2s, border-color 0.2s;
+            }
+            #minimap-container.expanded #minimap {
+                opacity: 1;
+                border-color: #888;
+                box-shadow: 0 8px 60px rgba(0, 0, 0, 0.9);
+                border-radius: 8px;
+            }
+            #minimap-expand {
+                position: absolute;
+                top: 6px;
+                left: 6px;
+                background: rgba(0, 0, 0, 0.55);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                color: #ccc;
+                font-size: 12px;
+                line-height: 1;
+                cursor: pointer;
+                padding: 3px 5px;
+                border-radius: 4px;
+                opacity: 0;
+                transition: opacity 0.15s;
+                z-index: 1;
+            }
+            #minimap-container:hover #minimap-expand,
+            #minimap-container.expanded #minimap-expand {
+                opacity: 1;
             }
 
             /* ── Hover menu ── */
@@ -492,7 +532,10 @@
                 <button data-pov="garden">Jardin</button>
             </div>
         </div>
-        <canvas id="minimap" width="150"></canvas>
+        <div id="minimap-container">
+            <canvas id="minimap"></canvas>
+            <button id="minimap-expand" title="Agrandir">⛶</button>
+        </div>
         <div id="controls">
             Clic gauche : orbiter | Molette : zoom | Clic droit : pan
         </div>

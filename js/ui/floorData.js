@@ -114,6 +114,48 @@ export const ROOMS = [
   },
 ];
 
+// Labels des murs, portes et fenêtres — partagés entre floorplan.js et minimap.js
+// t: 'w' mur | 'd' porte | 'n' fenêtre
+// rotZ : rotation du texte 3D dans floorplan (ignoré par minimap)
+// size  : taille du texte 3D dans floorplan
+const _CW_Z0    = ROOM_D + 10;
+const _diagMidX = (DIAG_AX + DIAG_CX) / 2;
+const _diagMidZ = (DIAG_AZ + DIAG_CZ) / 2;
+const _doorMidX = (DIAG_DOOR_S.x + DIAG_DOOR_E.x) / 2;
+const _doorMidZ = (DIAG_DOOR_S.z + DIAG_DOOR_E.z) / 2;
+
+export const WALL_LABELS = [
+  // Murs principaux
+  { t: 'w', name: 'MA',    x: -25,                             z: NICHE_Z_START / 2,                  rotZ:  Math.PI / 2,  size: 10 },
+  { t: 'w', name: 'MB',    x: ROOM_W + 20,                     z: ROOM_D / 2,                         rotZ: -Math.PI / 2,  size: 10 },
+  { t: 'w', name: 'MC',    x: ROOM_W / 2,                      z: -20,                                rotZ:  0,            size: 10 },
+  { t: 'w', name: 'MD',    x: ROOM_W / 2,                      z: ROOM_D + 20,                        rotZ:  0,            size: 10 },
+  // Niche + gaine
+  { t: 'w', name: 'MN',    x: -NICHE_DEPTH - 15,               z: (NICHE_Z_START + ROOM_D) / 2,       rotZ:  Math.PI / 2,  size: 8  },
+  { t: 'w', name: 'MGT-O', x: -NICHE_DEPTH - 15,               z: (ROOM_D + KITCHEN_Z) / 2,           rotZ:  Math.PI / 2,  size: 7  },
+  // Cuisine
+  { t: 'w', name: 'MK-O',  x: KITCHEN_X0 - 15,                 z: (ROOM_D + KITCHEN_Z) / 2,           rotZ:  Math.PI / 2,  size: 8  },
+  { t: 'w', name: 'MK-E',  x: KITCHEN_X1 + 15,                 z: (ROOM_D + KITCHEN_Z) / 2,           rotZ: -Math.PI / 2,  size: 8  },
+  // SdB
+  { t: 'w', name: 'MS-N',  x: (-NICHE_DEPTH + DOOR_START) / 2, z: KITCHEN_Z - 15,                     rotZ:  0,            size: 8  },
+  { t: 'w', name: 'MS-O',  x: -NICHE_DEPTH - 15,               z: (KITCHEN_Z + 600) / 2,              rotZ:  Math.PI / 2,  size: 8  },
+  // Douche + couloir
+  { t: 'w', name: 'MDch',  x: 60 + 15,                         z: 635,                                rotZ: -Math.PI / 2,  size: 7  },
+  { t: 'w', name: 'MCo-O', x: DOOR_START - 15,                 z: (KITCHEN_Z * 2 + 140) / 2,          rotZ:  Math.PI / 2,  size: 7  },
+  { t: 'w', name: 'MCo-E', x: ROOM_W + 20,                     z: (_CW_Z0 * 2 + 130) / 2,            rotZ: -Math.PI / 2,  size: 7  },
+  // Mur diagonal
+  { t: 'w', name: 'MDiag', x: _diagMidX + 20,                  z: _diagMidZ + 20,                     rotZ:  DIAG_ANGLE,   size: 8  },
+  // Portes
+  { t: 'd', name: 'P1',    x: (DOOR_START + DOOR_END) / 2,     z: ROOM_D - 20,                        rotZ:  0,            size: 10 },
+  { t: 'd', name: 'P2',    x: DOOR_START + 20,                 z: (CORR_DOOR_S + CORR_DOOR_E) / 2,    rotZ:  0,            size: 10 },
+  { t: 'd', name: 'P3',    x: _doorMidX + 20,                  z: _doorMidZ - 20,                     rotZ:  DIAG_ANGLE,   size: 10 },
+  { t: 'd', name: 'PC-SDB',x: (60 + DOOR_START) / 2,           z: 600 + 15,                           rotZ:  0,            size: 8  },
+  { t: 'd', name: 'PC',    x: DOOR_START + 20,                 z: (_CW_Z0 + KITCHEN_Z) / 2,           rotZ: -Math.PI / 2,  size: 8  },
+  // Fenêtres
+  { t: 'n', name: 'Baie',  x: (GLASS_START + GLASS_END) / 2,   z: -40,                                rotZ:  0,            size: 9  },
+  { t: 'n', name: 'VDch',  x: 35,                              z: 600 - 15,                           rotZ:  0,            size: 8  },
+];
+
 // Segments du contour — t: 'w' mur | 'd' porte | 'n' fenêtre
 export const FLOOR_SEGMENTS = [
   // MUR A OUEST (niche)

@@ -9,7 +9,7 @@ import {
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
 } from '../config.js';
 import { makeText } from './labels.js';
-import { FLOOR_SEGMENTS, ROOMS, DIAG_DOOR_S, DIAG_DOOR_E, DIAG_ANGLE } from './floorData.js';
+import { FLOOR_SEGMENTS, ROOMS, WALL_LABELS, DIAG_DOOR_S, DIAG_DOOR_E, DIAG_ANGLE } from './floorData.js';
 
 export function buildFloorPlan() {
   const group = new THREE.Group();
@@ -102,51 +102,14 @@ export function buildFloorPlan() {
     label(r.nameFr, r.labelX, r.labelZ, 0, r.labelColor ?? ROOM_COLOR, r.labelSize);
   }
 
-  // --- Murs principaux (séjour) ---
-  label('MA', -25, NICHE_Z_START / 2, Math.PI / 2, WALL_COLOR, 10);     // Mur A Ouest
-  label('MB', ROOM_W + 20, ROOM_D / 2, -Math.PI / 2, WALL_COLOR, 10);    // Mur B Est
-  label('MC', ROOM_W / 2, -20, 0, WALL_COLOR, 10);                        // Mur C Nord
-  label('MD', ROOM_W / 2, ROOM_D + 20, 0, WALL_COLOR, 10);               // Mur D Sud
+  // --- Murs, portes, fenêtres (depuis WALL_LABELS, source partagée avec minimap) ---
+  const colorByType = { w: WALL_COLOR, d: DOOR_COLOR, n: WIN_COLOR };
+  for (const w of WALL_LABELS) {
+    label(w.name, w.x, w.z, w.rotZ, colorByType[w.t], w.size);
+  }
 
-  // --- Niche (extension mur A) ---
-  label('MN', -NICHE_DEPTH - 15, (NICHE_Z_START + ROOM_D) / 2, Math.PI / 2, WALL_COLOR, 8);
-
-  // --- Gaine technique ---
-  label('MGT-O', -NICHE_DEPTH - 15, (ROOM_D + KITCHEN_Z) / 2, Math.PI / 2, WALL_COLOR, 7);
-
-  // --- Cuisine ---
-  label('MK-O', KITCHEN_X0 - 15, (ROOM_D + KITCHEN_Z) / 2, Math.PI / 2, WALL_COLOR, 8);  // Mur Cuisine Ouest
-  label('MK-E', KITCHEN_X1 + 15, (ROOM_D + KITCHEN_Z) / 2, -Math.PI / 2, WALL_COLOR, 8); // Mur Cuisine Est
-
-  // --- SdB ---
-  label('MS-N', ((-NICHE_DEPTH) + DOOR_START) / 2, KITCHEN_Z - 15, 0, WALL_COLOR, 8);     // Mur SdB Nord
-  label('MS-O', -NICHE_DEPTH - 15, (KITCHEN_Z + 600) / 2, Math.PI / 2, WALL_COLOR, 8);     // Mur SdB Ouest
-  label('PC-SDB', (60 + DOOR_START) / 2, 600 + 15, 0, DOOR_COLOR, 8);                          // Double porte coulissante placard
-
-  // --- Douche ---
-  label('MDch', 60 + 15, 635, -Math.PI / 2, WALL_COLOR, 7);  // Mur Douche Est
-
-  // --- Placard ---
+  // --- Placard (label de zone, pas un mur) ---
   label('Placard', (KITCHEN_X1 + DOOR_START) / 2, (CW_Z0 + KITCHEN_Z) / 2, 0, ROOM_COLOR, 10);
-  label('PC', DOOR_START + 20, (CW_Z0 + KITCHEN_Z) / 2, -Math.PI / 2, DOOR_COLOR, 8);  // Porte Coulissante
-
-  // --- Couloir ---
-  label('MCo-O', DOOR_START - 15, (KITCHEN_Z + KITCHEN_Z + 140) / 2, Math.PI / 2, WALL_COLOR, 7); // Mur Couloir Ouest
-  label('MCo-E', ROOM_W + 20, (CW_Z0 + CW_Z0 + 130) / 2, -Math.PI / 2, WALL_COLOR, 7);            // Mur Couloir Est
-
-  // --- Mur diagonal ---
-  const diagMid = { x: (DIAG_AX + DIAG_CX) / 2, z: (DIAG_AZ + DIAG_CZ) / 2 };
-  label('MDiag', diagMid.x + 20, diagMid.z + 20, DIAG_ANGLE, WALL_COLOR, 8);
-
-  // --- Portes ---
-  label('P1', (DOOR_START + DOOR_END) / 2, ROOM_D - 20, 0, DOOR_COLOR, 10);    // Porte Séjour
-  label('P2', DOOR_START + 20, (CORR_DOOR_S + CORR_DOOR_E) / 2, 0, DOOR_COLOR, 10);           // Porte SdB
-  const doorMid = { x: (DIAG_DOOR_S.x + DIAG_DOOR_E.x) / 2, z: (DIAG_DOOR_S.z + DIAG_DOOR_E.z) / 2 };
-  label('P3', doorMid.x + 20, doorMid.z - 20, DIAG_ANGLE, DOOR_COLOR, 10);        // Porte Entrée
-
-  // --- Fenêtres ---
-  label('Baie', (GLASS_START + GLASS_END) / 2, -40, 0, WIN_COLOR, 9);           // Baie vitrée
-  label('VDch', 35, 600 - 15, 0, WIN_COLOR, 8);                               // Vitre douche
 
   // =============================================
   // COTATIONS (Dimensions internes / externes)
