@@ -188,7 +188,7 @@ let _groupWest = null;
 
 export function buildNeighborWest(scene) {
   _groupWest = new THREE.Group();
-  _groupWest.position.x = -ROOM_W - 30;
+  _groupWest.position.x = -ROOM_W - 30.5;
   _groupWest.position.z = 210;
   populateGroup(_groupWest);
   scene.add(_groupWest);
@@ -199,7 +199,7 @@ let _groupEast = null;
 
 export function buildNeighborEast(scene) {
   _groupEast = new THREE.Group();
-  _groupEast.position.x = ROOM_W + 30;
+  _groupEast.position.x = ROOM_W + 30.5;
   _groupEast.position.z = -210;
   populateGroup(_groupEast);
   scene.add(_groupEast);
