@@ -9,7 +9,7 @@ import {
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
 } from '../config.js';
 import { makeText } from './labels.js';
-import { FLOOR_SEGMENTS, DIAG_DOOR_S, DIAG_DOOR_E, DIAG_ANGLE } from './floorData.js';
+import { FLOOR_SEGMENTS, ROOMS, DIAG_DOOR_S, DIAG_DOOR_E, DIAG_ANGLE } from './floorData.js';
 
 export function buildFloorPlan() {
   const group = new THREE.Group();
@@ -97,12 +97,10 @@ export function buildFloorPlan() {
     return mesh;
   }
 
-  // --- Noms des pièces (gris, grand) ---
-  label('Séjour', ROOM_W / 2, ROOM_D / 2, 0, ROOM_COLOR, 25);
-  label('Cuisine', (KITCHEN_X0 + KITCHEN_X1) / 2, ROOM_D + KITCHEN_DEPTH / 2, 0, ROOM_COLOR, 15);
-  label('Entrée', (DOOR_START + ROOM_W) / 2, ROOM_D + 70, 0, ROOM_COLOR, 15);
-  label('SdB', ((-NICHE_DEPTH) + DOOR_START) / 2, (KITCHEN_Z + 600) / 2, 0, ROOM_COLOR, 18);
-  label('Douche', 25, 635, 0, ROOM_COLOR, 12);
+  // --- Noms des pièces (depuis ROOMS, source partagée avec minimap) ---
+  for (const r of ROOMS) {
+    label(r.nameFr, r.labelX, r.labelZ, 0, r.labelColor ?? ROOM_COLOR, r.labelSize);
+  }
 
   // --- Murs principaux (séjour) ---
   label('MA', -25, NICHE_Z_START / 2, Math.PI / 2, WALL_COLOR, 10);     // Mur A Ouest
@@ -149,9 +147,6 @@ export function buildFloorPlan() {
   // --- Fenêtres ---
   label('Baie', (GLASS_START + GLASS_END) / 2, -40, 0, WIN_COLOR, 9);           // Baie vitrée
   label('VDch', 35, 600 - 15, 0, WIN_COLOR, 8);                               // Vitre douche
-
-  // --- Label jardin (les pointillés sont dans la scène 3D, toujours visibles) ---
-  label('Jardin', 140, -160, 0, '#4a9e54', 20);
 
   // =============================================
   // COTATIONS (Dimensions internes / externes)

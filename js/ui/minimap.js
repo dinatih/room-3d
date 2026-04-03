@@ -5,106 +5,15 @@ export function setMinimapWalker(group) { _walker = group; }
 export function redrawMinimap() { if (_redrawFn) _redrawFn(); }
 
 import {
-  ROOM_W, ROOM_D, DOOR_START, DOOR_END,
+  ROOM_W, ROOM_D, DOOR_START,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   NICHE_DEPTH, NICHE_Z_START,
-  GLASS_START, GLASS_END,
-  GARDEN_JC_Z, CORR_DOOR_S, CORR_DOOR_E,
+  GARDEN_JC_Z,
   SDB_Z_END,
-  DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
+  DIAG_AZ, DIAG_CZ,
 } from '../config.js';
-import { FLOOR_SEGMENTS } from './floorData.js';
+import { FLOOR_SEGMENTS, ROOMS } from './floorData.js';
 
-// X sur la diagonale à un Z donné
-const diagXat = z => DIAG_AX + (z - DIAG_AZ) * (DIAG_CX - DIAG_AX) / (DIAG_CZ - DIAG_AZ);
-
-const ROOMS = [
-  {
-    nameFr: 'Jardin',
-    nameEn: 'garden',
-    contains: (x, z) => {
-      if (x < -10 || x > 310 || z > -10) return false;
-      return z >= -140 - 70 * (x + 10) / 110;
-    },
-    labelX: 150,
-    labelZ: -120,
-    fills: () => [],
-    fillPath: (ctx, tx, tz) => {
-      ctx.beginPath();
-      ctx.moveTo(tx(-10), tz(-10));
-      ctx.lineTo(tx(-10), tz(-140));
-      ctx.lineTo(tx(310), tz(GARDEN_JC_Z));
-      ctx.lineTo(tx(310), tz(-10));
-      ctx.closePath();
-      ctx.fill();
-    },
-  },
-  {
-    nameFr: 'Entrée',
-    nameEn: 'entry',
-    contains: (x, z) => {
-      if (z <= ROOM_D || z > SDB_Z_END) return false;
-      // Placard (X=130→190, Z=410→460)
-      if (x >= KITCHEN_X1 && x <= DOOR_START && z <= KITCHEN_Z) return true;
-      // Couloir rect (X=190→300, Z=410→530)
-      if (x >= DOOR_START && x <= ROOM_W && z <= DIAG_AZ) return true;
-      // Triangle diagonal (X=190→diagX, Z=530→600)
-      if (x >= DOOR_START && z <= SDB_Z_END && x <= diagXat(z)) return true;
-      return false;
-    },
-    labelX: (DOOR_START + ROOM_W) / 2,
-    labelZ: ROOM_D + 70,
-    fills: (tx, tz, S) => [
-      [tx(KITCHEN_X1), tz(ROOM_D + 10), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D - 10) * S],
-      [tx(DOOR_START), tz(ROOM_D + 10), (ROOM_W - DOOR_START) * S, (DIAG_AZ - ROOM_D - 10) * S],
-    ],
-    fillPath: (ctx, tx, tz) => {
-      ctx.beginPath();
-      ctx.moveTo(tx(DOOR_START), tz(DIAG_AZ));
-      ctx.lineTo(tx(ROOM_W), tz(DIAG_AZ));
-      ctx.lineTo(tx(DOOR_START), tz(SDB_Z_END));
-      ctx.closePath();
-      ctx.fill();
-    },
-  },
-  {
-    nameFr: 'Salle d\'eau',
-    nameEn: 'bathroom',
-    contains: (x, z) => {
-      if (x < -NICHE_DEPTH) return false;
-      if (x <= DOOR_START && z >= KITCHEN_Z && z <= SDB_Z_END) return true;
-      return z > SDB_Z_END && z <= DIAG_CZ && x <= diagXat(z);
-    },
-    labelX: (DOOR_START - NICHE_DEPTH) / 2,
-    labelZ: 530,
-    fills: (tx, tz, S) => [
-      [tx(-NICHE_DEPTH), tz(KITCHEN_Z + 10), (DOOR_START + NICHE_DEPTH) * S, (SDB_Z_END - KITCHEN_Z - 10) * S],
-    ],
-    fillPath: (ctx, tx, tz) => {
-      ctx.beginPath();
-      ctx.moveTo(tx(-NICHE_DEPTH), tz(SDB_Z_END));
-      ctx.lineTo(tx(DOOR_START), tz(SDB_Z_END));
-      ctx.lineTo(tx(-NICHE_DEPTH), tz(DIAG_CZ));
-      ctx.closePath();
-      ctx.fill();
-    },
-  },
-  {
-    nameFr: 'Séjour',
-    nameEn: 'living',
-    contains: (x, z) =>
-      (x >= 0 && x <= ROOM_W && z >= 0 && z <= ROOM_D) ||
-      (x >= -NICHE_DEPTH && x < 0 && z >= NICHE_Z_START && z <= ROOM_D) ||
-      (x >= KITCHEN_X0 && x <= KITCHEN_X1 && z > ROOM_D && z <= KITCHEN_Z),
-    labelX: ROOM_W / 2,
-    labelZ: ROOM_D / 2 - 20,
-    fills: (tx, tz, S) => [
-      [tx(0), tz(0), ROOM_W * S, ROOM_D * S],
-      [tx(-NICHE_DEPTH), tz(NICHE_Z_START), NICHE_DEPTH * S, (ROOM_D - NICHE_Z_START) * S],
-      [tx(KITCHEN_X0), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_X0) * S, (KITCHEN_Z - ROOM_D) * S],
-    ],
-  },
-];
 
 export function buildMinimap() {
   const canvas = document.getElementById('minimap');
