@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>R3F Inventaire</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { display: flex; height: 100vh; background: #0e0e18;
+           font-family: 'Segoe UI', sans-serif; color: #ccc; overflow: hidden; }
+    #root { display: flex; width: 100%; height: 100%; }
+
+    /* ── Left panel ── */
+    .panel-left {
+      width: 320px; flex-shrink: 0; display: flex; flex-direction: column;
+      background: rgba(14,14,24,0.97); border-right: 1px solid #2a2a3a;
+    }
+    .cats { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px; border-bottom: 1px solid #2a2a3a; }
+    .cat-btn { background: rgba(255,255,255,0.06); border: 1px solid #444; border-radius: 6px;
+               color: #aaa; font-size: 10px; padding: 3px 8px; cursor: pointer; }
+    .cat-btn.active { background: rgba(255,215,0,0.18); border-color: #ffd700; color: #ffd700; }
+    .search-wrap { padding: 8px 10px; border-bottom: 1px solid #2a2a3a; }
+    .search-wrap input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid #444;
+                         border-radius: 6px; color: #fff; font-size: 12px; padding: 5px 10px; }
+    .search-wrap input:focus { outline: none; border-color: #ffd700; }
+    .item-list { flex: 1; overflow-y: auto; }
+    .item-row { padding: 7px 12px; cursor: pointer; display: flex; align-items: center;
+                gap: 8px; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .item-row:hover  { background: rgba(255,215,0,0.07); }
+    .item-row.active { background: rgba(255,215,0,0.15); color: #ffd700; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #2a2a3a; flex-shrink: 0; }
+    .dot.glb { background: #44cc66; }
+    .item-name  { flex: 1; }
+    .item-brand { color: #555; font-size: 10px; }
+
+    /* ── Right panel ── */
+    .panel-right { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .preview-header { padding: 10px 16px; border-bottom: 1px solid #2a2a3a;
+                      min-height: 48px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .preview-name  { color: #fff; font-size: 14px; font-weight: 600; }
+    .preview-dims  { color: #666; font-size: 11px; font-family: monospace; }
+    .preview-noglb { color: #444; font-size: 10px; }
+    .preview-hint  { color: #444; font-size: 12px; }
+    .canvas-wrap { flex: 1; position: relative; }
+    .canvas-hint { position: absolute; bottom: 10px; right: 12px;
+                   font-size: 10px; color: #333; pointer-events: none; }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three":              "https://esm.sh/three@0.170.0",
+      "three/addons/":      "https://esm.sh/three@0.170.0/examples/jsm/",
+      "react":              "https://esm.sh/react@18",
+      "react/jsx-runtime":  "https://esm.sh/react@18/jsx-runtime",
+      "react-dom/client":   "https://esm.sh/react-dom@18/client",
+      "@react-three/fiber": "https://esm.sh/@react-three/fiber@8?deps=three@0.170.0,react@18,react-dom@18"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    import {
+      createElement as h, useRef, useState, useEffect,
+      useLayoutEffect, useMemo, Suspense, Fragment,
+    } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { Canvas, useFrame, useThree, useLoader } from '@react-three/fiber';
+    import * as THREE from 'three';
+    import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader }   from 'three/addons/loaders/DRACOLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { INVENTORY, CATEGORIES } from './js/ui/inventoryData.js';
+
+    // ── Shared DRACOLoader ────────────────────────────────────────────────────────
+    const draco = new DRACOLoader();
+    draco.setDecoderPath(
+      'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/'
+    );
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // R3F scene components (all run inside <Canvas>)
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    /** Loads a GLB, centers at origin, sits on Y=0, calls onSize once ready. */
+    function GlbModel({ path, onSize }) {
+      const gltf = useLoader(GLTFLoader, path, loader => loader.setDRACOLoader(draco));
+
+      const { obj, size } = useMemo(() => {
+        const obj  = gltf.scene.clone(true);
+        const box  = new THREE.Box3().setFromObject(obj);
+        const size = box.getSize(new THREE.Vector3());
+        obj.position.sub(box.getCenter(new THREE.Vector3()));
+        obj.position.y += size.y / 2;
+        return { obj, size };
+      }, [gltf]);
+
+      useLayoutEffect(() => { onSize(size); }, [size]);
+
+      return h('primitive', { object: obj });
+    }
+
+    /** Semi-transparent wireframe box matching item's physical dims (cm ÷ 10 = units). */
+    function DimBox({ dims }) {
+      const ref = useRef();
+      useFrame(() => { if (ref.current) ref.current.rotation.y += 0.005; });
+      const [w, hy, d] = [dims.w / 10, dims.h / 10, dims.d / 10];
+      return h('mesh', { ref, position: [0, hy / 2, 0] },
+        h('boxGeometry', { args: [w, hy, d] }),
+        h('meshStandardMaterial', { color: '#2255aa', opacity: 0.55, transparent: true }),
+      );
+    }
+
+    /** Spinning wireframe torus shown while a GLB is loading. */
+    function Spinner() {
+      const ref = useRef();
+      useFrame(({ clock }) => {
+        if (ref.current) ref.current.rotation.y = clock.getElapsedTime() * 2;
+      });
+      return h('mesh', { ref },
+        h('torusGeometry', { args: [12, 3, 8, 24] }),
+        h('meshStandardMaterial', { color: '#ffd700', wireframe: true }),
+      );
+    }
+
+    /**
+     * Orbit controls + camera fitter.
+     * Remounts on each item change (via key on SceneContent).
+     */
+    function Controller({ size }) {
+      const { camera, gl } = useThree();
+      const ctrlRef = useRef();
+
+      useEffect(() => {
+        const ctrl = new OrbitControls(camera, gl.domElement);
+        ctrl.enableDamping  = true;
+        ctrl.dampingFactor  = 0.08;
+        ctrl.autoRotate     = true;
+        ctrl.autoRotateSpeed = 1.5;
+        ctrlRef.current = ctrl;
+        return () => ctrl.dispose();
+      }, [camera, gl]);
+
+      useEffect(() => {
+        if (!size || !ctrlRef.current) return;
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const fovRad = THREE.MathUtils.degToRad(camera.fov);
+        const dist   = (maxDim / 2) / Math.tan(fovRad / 2) * 1.9;
+        camera.position.set(dist * 0.6, dist * 0.5, dist);
+        camera.near = Math.max(0.01, dist * 0.01);
+        camera.far  = dist * 20;
+        camera.updateProjectionMatrix();
+        ctrlRef.current.target.set(0, 0, 0);
+        ctrlRef.current.update();
+      }, [size]);
+
+      useFrame(() => ctrlRef.current?.update());
+      return null;
+    }
+
+    /**
+     * Full scene content. key=item.id causes full remount on item change,
+     * which resets orbit controls and camera fitting state.
+     */
+    function SceneContent({ item }) {
+      const [glbSize, setGlbSize] = useState(null);
+
+      // Rough size from inventory dims until GLB loads
+      const dimSize = useMemo(() => {
+        const d = item?.dims ?? { w: 50, h: 50, d: 50 };
+        return new THREE.Vector3(d.w / 10, d.h / 10, d.d / 10);
+      }, []);   // deps empty: computed once per mount
+
+      return h(Fragment, {},
+        h('ambientLight',     { intensity: 0.7 }),
+        h('directionalLight', { position: [200, 400, 300], intensity: 1.3 }),
+        h('directionalLight', { position: [-150, 80, -200], intensity: 0.4 }),
+        h(Controller, { size: glbSize ?? dimSize }),
+        item?.glbPath
+          ? h(Suspense, { fallback: h(Spinner) },
+              h(GlbModel, { path: item.glbPath, onSize: setGlbSize })
+            )
+          : item
+            ? h(DimBox, { dims: item.dims })
+            : null,
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // App — manages all state, renders layout + Canvas
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    function App() {
+      const [selected,  setSelected]  = useState(null);
+      const [activeCat, setActiveCat] = useState('all');
+      const [search,    setSearch]    = useState('');
+
+      const items = useMemo(() => {
+        const q = search.toLowerCase();
+        return INVENTORY.filter(item => {
+          if (activeCat !== 'all' && item.category !== activeCat) return false;
+          if (q && !item.name.toLowerCase().includes(q) &&
+                   !(item.brand || '').toLowerCase().includes(q)) return false;
+          return true;
+        });
+      }, [activeCat, search]);
+
+      // ── Left panel
+      const leftPanel = h('div', { className: 'panel-left' },
+        // Category filters
+        h('div', { className: 'cats' },
+          CATEGORIES.map(cat =>
+            h('button', {
+              key: cat.id,
+              className: 'cat-btn' + (cat.id === activeCat ? ' active' : ''),
+              onClick: () => setActiveCat(cat.id),
+            }, cat.label)
+          )
+        ),
+        // Search
+        h('div', { className: 'search-wrap' },
+          h('input', {
+            placeholder: 'Rechercher…',
+            value: search,
+            onChange: e => setSearch(e.target.value),
+          })
+        ),
+        // Item list
+        h('div', { className: 'item-list' },
+          items.map(item =>
+            h('div', {
+              key: item.id,
+              className: 'item-row' + (item.id === selected?.id ? ' active' : ''),
+              onClick: () => setSelected(item),
+            },
+              h('div', { className: 'dot' + (item.glbPath ? ' glb' : '') }),
+              h('span', { className: 'item-name' }, item.name),
+              h('span', { className: 'item-brand' }, item.brand || ''),
+            )
+          )
+        ),
+      );
+
+      // ── Right panel header
+      const header = h('div', { className: 'preview-header' },
+        selected
+          ? h(Fragment, {},
+              h('span', { className: 'preview-name' }, selected.name),
+              h('span', { className: 'preview-dims' },
+                `${selected.dims.w} × ${selected.dims.d} × ${selected.dims.h} cm`),
+              !selected.glbPath &&
+                h('span', { className: 'preview-noglb' }, '— boîte de dimensions'),
+            )
+          : h('span', { className: 'preview-hint' }, '← Sélectionne un objet'),
+      );
+
+      // ── Right panel
+      const rightPanel = h('div', { className: 'panel-right' },
+        header,
+        h('div', { className: 'canvas-wrap' },
+          h(Canvas, {
+            style: { width: '100%', height: '100%' },
+            camera: { position: [0, 50, 200], fov: 45 },
+            gl: { antialias: true },
+          },
+            h(SceneContent, { key: selected?.id ?? '__empty__', item: selected })
+          ),
+          h('div', { className: 'canvas-hint' }, 'drag · scroll'),
+        ),
+      );
+
+      return h(Fragment, {}, leftPanel, rightPanel);
+    }
+
+    createRoot(document.getElementById('root')).render(h(App));
+  </script>
+</body>
+</html>
