@@ -13,7 +13,10 @@ import { OrbitControls } from '@react-three/drei';
 import { ACESFilmicToneMapping, PCFSoftShadowMap, FogExp2, Color } from 'three';
 import { Walls }     from './structure/Walls';
 import { Floor }     from './structure/Floor';
-import { Furniture } from './Furniture';
+import { Kitchen }   from './structure/Kitchen';
+import { Bathroom }  from './structure/Bathroom';
+import { Furniture }   from './Furniture';
+import { Furnishings } from './Furnishings';
 
 // @ts-ignore — JS file with no type declarations
 import { ROOM_W, WALL_H, ROOM_D } from '@config';
@@ -65,7 +68,10 @@ export function Studio() {
 
       <Walls />
       <Floor />
+      <Kitchen />
+      <Bathroom />
       <Furniture />
+      <Furnishings />
     </Canvas>
   );
 }

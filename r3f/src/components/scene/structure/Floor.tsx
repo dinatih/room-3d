@@ -94,7 +94,7 @@ function makeTileTex(): THREE.CanvasTexture {
 }
 
 // ── Texture herbe ──────────────────────────────────────────────────────────────
-function makeGrassTex(): THREE.CanvasTexture {
+export function makeGrassTex(): THREE.CanvasTexture {
   const SIZE = 256;
   const canvas = document.createElement('canvas');
   canvas.width = SIZE; canvas.height = SIZE;
