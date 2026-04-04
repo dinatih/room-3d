@@ -8,10 +8,14 @@
  */
 import type { ComponentType } from 'react';
 import type { SceneItemProps } from '../../types';
-import { Freezer } from './items/Freezer';
+import { Freezer }         from './items/Freezer';
+import { Fridge }          from './items/Fridge';
+import { KitchenCabinet }  from './items/KitchenCabinet';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
-  'freezer': Freezer,
+  'freezer':      Freezer,
+  'fridge':       Fridge,
+  'cabinet-wood': KitchenCabinet,
 };
 
 /**
@@ -19,5 +23,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
  * [label quand inactif, label quand actif]
  */
 export const ACTION_LABELS: Record<string, [string, string]> = {
-  'freezer-toggle': ['Ouvrir', 'Fermer'],
+  'freezer-toggle':  ['Ouvrir', 'Fermer'],
+  'fridge-toggle':   ['Ouvrir', 'Fermer'],
+  'cabinet-toggle':  ['Ouvrir', 'Fermer'],
 };
