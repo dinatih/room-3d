@@ -15,6 +15,7 @@ import { BathroomCabinetWest, BathroomCabinetEast }  from './items/BathroomCabin
 import { DoorEntry }                                  from './items/DoorEntry';
 import { DoorLiving, DoorSdb }                        from './items/DoorWhite';
 import { GlassDoor }                                  from './items/GlassDoor';
+import { Kallax }                                      from './items/Kallax';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'freezer':                 Freezer,
@@ -26,6 +27,14 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'door-living':             DoorLiving,
   'door-sdb':                DoorSdb,
   'door-glass':              GlassDoor,
+  'kallax-ne-2x1':           Kallax,
+  'kallax-ne-2x2':           Kallax,
+  'kallax-se-2x1':           Kallax,
+  'kallax-nw-2x1':           Kallax,
+  'kallax-nw-1x1-a':         Kallax,
+  'kallax-nw-1x1-b':         Kallax,
+  'kallax-sw-2x2':           Kallax,
+  'kallax-sw-2x1':           Kallax,
 };
 
 /**
