@@ -15,7 +15,8 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@data': path.resolve(__dirname, '../js/ui'),
+      '@data':   path.resolve(__dirname, '../js/ui'),
+      '@config': path.resolve(__dirname, '../js/config.js'),
     },
   },
   // Remplace process.env.NODE_ENV dans le bundle — non défini dans un navigateur

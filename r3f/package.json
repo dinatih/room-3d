@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:studio": "vite --open /studio.html",
     "build": "vite build",
     "build:lib": "vite build --config vite.library.config.ts",
     "preview": "vite preview"

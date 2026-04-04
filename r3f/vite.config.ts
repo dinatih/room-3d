@@ -6,15 +6,22 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      // Allow importing shared data from the parent project
-      '@data': path.resolve(__dirname, '../js/ui'),
+      '@data':   path.resolve(__dirname, '../js/ui'),
+      '@config': path.resolve(__dirname, '../js/config.js'),
     },
   },
   server: {
     port: 5173,
     fs: {
-      // Allow Vite to follow the media symlink into the parent directory
       allow: ['..'],
+    },
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        inventory: path.resolve(__dirname, 'index.html'),
+        studio:    path.resolve(__dirname, 'studio.html'),
+      },
     },
   },
 });

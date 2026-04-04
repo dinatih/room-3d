@@ -12,7 +12,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
-    "allowJs": true
+    "allowJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "@config": ["../js/config.js"],
+      "@data/*": ["../js/ui/*"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "../js/config.js"]
 }
