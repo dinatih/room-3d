@@ -625,6 +625,14 @@ export function Walls() {
         );
       })()}
 
+      {/* ── Douche (au-delà de SDB_Z_END=600) ─────────────────────────────── */}
+      {/* Mur est douche (X=60, Z=600→670) */}
+      <P w={W} h={WALL_H} d={70}
+        x={-NICHE_DEPTH + 70 + W / 2} y={WALL_H / 2} z={SDB_Z_END + 35} />
+      {/* Mur fond douche (Z=670) */}
+      <P w={70} h={WALL_H} d={W}
+        x={-NICHE_DEPTH + 35} y={WALL_H / 2} z={SDB_Z_END + 70 + W / 2} />
+
       {/* ── Couloir droit (X=305, Z=410→530) ──────────────────────────────── */}
       <mesh
         ref={(m) => { if (m) m.material = eastMats as any; }}
