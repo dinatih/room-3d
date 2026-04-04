@@ -158,7 +158,8 @@ export function buildInventory(_mainScene) {
   function getFiltered() {
     const q = searchVal.trim().toLowerCase();
     return INVENTORY.filter(i => {
-      if (activeCat !== 'all' && i.category !== activeCat) return false;
+      if (activeCat === 'actionnable' && !i.actions?.length) return false;
+      if (activeCat !== 'all' && activeCat !== 'actionnable' && i.category !== activeCat) return false;
       if (q && !i.name.toLowerCase().includes(q) &&
                !i.brand.toLowerCase().includes(q) &&
                !(i.notes || '').toLowerCase().includes(q)) return false;

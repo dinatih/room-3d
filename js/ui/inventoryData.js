@@ -138,7 +138,8 @@ export const STORAGE_SPACES = [
 ];
 
 export const CATEGORIES = [
-  { id: 'all',      label: 'Tout' },
+  { id: 'all',         label: 'Tout' },
+  { id: 'actionnable', label: '⚡ Actionnable' },
   { id: 'storage',  label: 'Rangement' },
   { id: 'furniture',label: 'Mobilier' },
   { id: 'tech',     label: 'Tech' },
