@@ -1,205 +1,15 @@
 // =============================================
-// INVENTORY PANEL — overlay modal + 3D preview
+// INVENTORY PANEL — overlay modal + 3D preview (R3F)
 // =============================================
-import * as THREE from 'three';
-import { gltfLoader } from '../utils/loaders.js';
 import { INVENTORY, CATEGORIES, STORAGE_SPACES } from './inventoryData.js';
 import { getHoverAction } from './hoverMenu.js';
+import { mountPreview, unmountPreview } from '../lib/inventoryPreview.js';
 
 let overlay = null;
 
 function fmt(n) { return Number.isFinite(n) ? n : '—'; }
 function dimsStr(d) { return `${fmt(d.w)} × ${fmt(d.d)} × ${fmt(d.h)} cm`; }
 function posStr(p)  { return `X${fmt(p.x)}  Z${fmt(p.z)}`; }
-
-// ── Clone from main scene by bounding-box proximity ──────────────────────────
-
-function cloneFromScene(mainScene, item) {
-  const clones = [];
-
-  // Approche 1 : ciblage par inventoryId (précis)
-  const idGroups = [];
-  mainScene.traverse(obj => {
-    if (obj.userData.inventoryId === item.id) idGroups.push(obj);
-  });
-
-  if (idGroups.length) {
-    for (const grp of idGroups) {
-      grp.updateMatrixWorld(true);
-      grp.traverse(obj => {
-        if (!obj.isMesh) return;
-        obj.updateWorldMatrix(true, false);
-        const clone = obj.clone(false);
-        obj.matrixWorld.decompose(clone.position, clone.quaternion, clone.scale);
-        clone.layers.set(0);
-        clones.push(clone);
-      });
-    }
-  } else {
-    // Approche 2 : fallback bbox pour les objets sans tag inventoryId
-    const cx = item.scenePos.x;
-    const cz = item.scenePos.z;
-    const mx = item.dims.w / 2 + 25;
-    const mz = item.dims.d / 2 + 25;
-    const searchBox = new THREE.Box3(
-      new THREE.Vector3(cx - mx, -30, cz - mz),
-      new THREE.Vector3(cx + mx, 280, cz + mz)
-    );
-    mainScene.traverse(obj => {
-      if (!obj.isMesh) return;
-      if (obj.userData.brickType) return;
-      if (obj.layers.mask === 1) return;
-      const objBox = new THREE.Box3().setFromObject(obj);
-      if (objBox.max.y - objBox.min.y >= 240) return;
-      if (!searchBox.intersectsBox(objBox)) return;
-      obj.updateWorldMatrix(true, false);
-      const clone = obj.clone(false);
-      obj.matrixWorld.decompose(clone.position, clone.quaternion, clone.scale);
-      clone.layers.set(0);
-      clones.push(clone);
-    });
-  }
-
-  if (!clones.length) return null;
-
-  const group = new THREE.Group();
-  clones.forEach(c => group.add(c));
-  group.updateMatrixWorld(true);
-
-  // Center group at origin
-  const box = new THREE.Box3().setFromObject(group);
-  const center = box.getCenter(new THREE.Vector3());
-  group.position.sub(center);
-  // Sit on Y=0
-  group.position.y += (box.max.y - box.min.y) / 2;
-  group.updateMatrixWorld(true);
-
-  return group;
-}
-
-// ── Mini 3D Preview ───────────────────────────────────────────────────────────
-
-function createPreview(canvas, mainScene) {
-  const W = canvas.width;
-  const H = canvas.height;
-
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(W, H, false);
-  renderer.setClearColor(0x111118, 1);
-
-  const previewScene = new THREE.Scene();
-
-  const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 10000);
-  camera.layers.enableAll();
-
-  const ambient = new THREE.AmbientLight(0xffffff, 0.7);
-  const dir = new THREE.DirectionalLight(0xffffff, 1.2);
-  dir.position.set(1, 2, 2);
-  const dir2 = new THREE.DirectionalLight(0xffffff, 0.4);
-  dir2.position.set(-1, 0.5, -1);
-  previewScene.add(ambient, dir, dir2);
-
-
-  let pivot = null;
-  let rafId = null;
-
-  // Orbit state
-  const orbit = { theta: 0.4, phi: 1.2, dist: 1, cx: 0, cy: 0, cz: 0 };
-  let autoRotate = true;
-  let dragging = false;
-  let lastX = 0, lastY = 0;
-
-  function applyOrbit() {
-    camera.position.set(
-      orbit.cx + orbit.dist * Math.sin(orbit.phi) * Math.sin(orbit.theta),
-      orbit.cy + orbit.dist * Math.cos(orbit.phi),
-      orbit.cz + orbit.dist * Math.sin(orbit.phi) * Math.cos(orbit.theta),
-    );
-    camera.lookAt(orbit.cx, orbit.cy, orbit.cz);
-  }
-
-  function fitCamera(object) {
-    const box = new THREE.Box3().setFromObject(object);
-    const size = box.getSize(new THREE.Vector3());
-    const center = box.getCenter(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const fovRad = THREE.MathUtils.degToRad(camera.fov);
-    orbit.dist = (maxDim / 2) / Math.tan(fovRad / 2) * 1.7;
-    orbit.cx = center.x; orbit.cy = center.y; orbit.cz = center.z;
-    orbit.theta = 0.4; orbit.phi = 1.2;
-    autoRotate = true;
-    camera.near = orbit.dist * 0.01;
-    camera.far  = orbit.dist * 10;
-    camera.updateProjectionMatrix();
-    applyOrbit();
-  }
-
-  canvas.addEventListener('pointerdown', e => {
-    dragging = true; autoRotate = false;
-    lastX = e.clientX; lastY = e.clientY;
-    canvas.setPointerCapture(e.pointerId);
-  });
-  canvas.addEventListener('pointermove', e => {
-    if (!dragging) return;
-    orbit.theta -= (e.clientX - lastX) * 0.01;
-    orbit.phi = Math.max(0.1, Math.min(Math.PI - 0.1, orbit.phi + (e.clientY - lastY) * 0.01));
-    lastX = e.clientX; lastY = e.clientY;
-    applyOrbit();
-  });
-  canvas.addEventListener('pointerup',    () => { dragging = false; });
-  canvas.addEventListener('pointerleave', () => { dragging = false; });
-  canvas.addEventListener('wheel', e => {
-    e.preventDefault();
-    orbit.dist = Math.max(orbit.dist * 0.1, orbit.dist * (1 + e.deltaY * 0.001));
-    applyOrbit();
-  }, { passive: false });
-
-  function clearScene() {
-    if (pivot) {
-      previewScene.remove(pivot);
-      pivot.traverse(o => { if (o.isMesh) o.geometry?.dispose(); });
-      pivot = null;
-    }
-  }
-
-  function loadItem(item) {
-    clearScene();
-    pivot = new THREE.Group();
-    pivot.add(new THREE.AxesHelper(20));
-    previewScene.add(pivot);
-
-    if (item.glbPath) {
-      gltfLoader.load(item.glbPath, (gltf) => {
-        const obj = gltf.scene.clone(true);
-        pivot.add(obj);
-        obj.updateMatrixWorld(true);
-        const box = new THREE.Box3().setFromObject(obj);
-        const center = box.getCenter(new THREE.Vector3());
-        obj.position.sub(center);
-        obj.position.y += (box.max.y - box.min.y) / 2;
-        fitCamera(obj);
-      });
-    } else {
-      const cloned = cloneFromScene(mainScene, item);
-      if (cloned) {
-        pivot.add(cloned);
-        fitCamera(cloned);
-      }
-    }
-  }
-
-  function animate() {
-    rafId = requestAnimationFrame(animate);
-    if (autoRotate) { orbit.theta += 0.008; applyOrbit(); }
-    renderer.render(previewScene, camera);
-  }
-
-  function start() { if (!rafId) animate(); }
-  function stop()  { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
-
-  return { loadItem, start, stop };
-}
 
 // ── Table rendering ───────────────────────────────────────────────────────────
 
@@ -226,7 +36,7 @@ function renderTable(tbody, items, onSelect) {
 
 // ── Build ─────────────────────────────────────────────────────────────────────
 
-export function buildInventory(mainScene) {
+export function buildInventory(_mainScene) {
   const style = document.createElement('style');
   style.textContent = `
     #inv-table tbody tr, #inv-spaces-table tbody tr { cursor:pointer; }
@@ -327,57 +137,19 @@ export function buildInventory(mainScene) {
 
   const previewPanel = document.createElement('div');
   previewPanel.style.cssText = `
-    width:280px; min-width:280px; display:flex; flex-direction:column;
+    width:280px; min-width:280px; height:370px;
     background:#111118; border-radius:8px; border:1px solid #333; overflow:hidden;
   `;
-  const previewCanvas = document.createElement('canvas');
-  previewCanvas.width  = 280;
-  previewCanvas.height = 300;
-  previewCanvas.style.cssText = 'width:280px; height:300px; display:block;';
-  const previewLabel = document.createElement('div');
-  previewLabel.id = 'inv-preview-label';
-  previewLabel.textContent = 'Clique sur un objet';
-  const previewActions = document.createElement('div');
-  previewActions.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;padding:0 8px 8px;';
-  previewPanel.append(previewCanvas, previewLabel, previewActions);
 
   body.append(tableWrap, previewPanel);
   modal.append(header, filters, body);
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
 
-  // Preview (lazy init after first open so canvas is in DOM)
-  let preview = null;
-  function getPreview() {
-    if (!preview) preview = createPreview(previewCanvas, mainScene);
-    return preview;
-  }
-
   function onSelectItem(item) {
-    previewLabel.innerHTML = `<strong style="color:#fff">${item.name}</strong>
-      ${item.dims ? `<span style="color:#666;margin-left:6px">${dimsStr(item.dims)}</span>` : ''}`;
-    getPreview().loadItem(item);
-
-    // Boutons d'action
-    previewActions.innerHTML = '';
-    if (item.actions?.length) {
-      for (const actionId of item.actions) {
-        const cfg = getHoverAction(actionId);
-        if (!cfg) continue;
-        const btn = document.createElement('button');
-        btn.style.cssText = `
-          background:rgba(255,255,255,0.08);border:1px solid #555;border-radius:6px;
-          color:#ccc;font-size:11px;padding:4px 12px;cursor:pointer;flex:1;
-        `;
-        btn.textContent = cfg.getLabel();
-        btn.addEventListener('click', () => {
-          cfg.execute();
-          btn.textContent = cfg.getLabel();
-          getPreview().loadItem(item);
-        });
-        previewActions.appendChild(btn);
-      }
-    }
+    // Callback : synchronise aussi la scène principale quand un bouton est cliqué
+    const onAction = (actionId) => getHoverAction(actionId)?.execute();
+    mountPreview(previewPanel, item, onAction);
   }
 
   let activeCat = 'all';
@@ -445,12 +217,15 @@ export function buildInventory(mainScene) {
     refresh();
   });
 
-  function close() { overlay.style.display = 'none'; preview?.stop(); }
+  function close() {
+    overlay.style.display = 'none';
+    unmountPreview(previewPanel);
+  }
 
   refresh();
 
   return function openInventory() {
     overlay.style.display = 'flex';
-    getPreview().start();
+    mountPreview(previewPanel, null);  // initialise le canvas R3F à l'état vide
   };
 }
