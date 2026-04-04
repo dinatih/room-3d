@@ -1,3 +1,309 @@
+# room-3d — Appartement 3D interactif
+
+> **TL;DR** — Visualisation 3D en temps réel de mon appartement, construite depuis zéro en 7 semaines (~250 commits). Démarré comme un prototype LEGO en fichier unique, évolué vers une architecture ES Modules + Three.js, avec une migration en cours vers React Three Fiber. Projet personnel et portfolio technique en simultané.
+
+→ **[Demo live](https://dinatih.github.io/room-3d/lego-room.html)**
+
+---
+
+## Ce que c'est
+
+Un outil que j'utilise **vraiment au quotidien** : planifier les positions des meubles, visualiser l'éclairage, gérer l'inventaire de mes affaires. Et en même temps, un terrain d'expérimentation technique documenté commit par commit.
+
+---
+
+## Stack technique
+
+| Couche | Technologie | Pourquoi |
+|---|---|---|
+| Rendu 3D | **Three.js r170** | API bas niveau, contrôle total |
+| Modules | **ES Modules natifs** (sans bundler) | Zéro config, rechargement instantané |
+| Import CDN | **importmap** | Three.js + addons sans node_modules |
+| Prévisualisations | **React Three Fiber** (migration) | Composants déclaratifs, interactivité propre |
+| Build (R3F) | **Vite + TypeScript** | TSX, HMR, typage |
+| Serveur | Ruby / Python http.server | Simple, suffisant |
+| Modèles 3D | **GLB + Draco** | Compression ×3, chargement GLTF standard |
+
+---
+
+## Architecture du projet
+
+```
+room-3d/
+├── lego-room.html        # App principale (Three.js vanilla)
+├── r3f/                  # Sous-projet React Three Fiber (migration)
+│   └── src/
+│       ├── App.tsx
+│       ├── components/
+│       │   ├── LeftPanel.tsx
+│       │   ├── Preview.tsx
+│       │   └── scene/
+│       │       ├── SceneContent.tsx
+│       │       ├── registry.ts        ← composants interactifs par item.id
+│       │       └── items/
+│       │           └── Freezer.tsx    ← exemple de composant déclaratif
+│       └── types.ts
+└── js/                   # Modules Three.js vanilla
+    ├── config.js          # Constantes globales (ROOM_W, WALL_H…)
+    ├── structure/         # Géométrie architecturale
+    ├── furniture/         # Meubles
+    ├── decor/             # Accessoires
+    └── ui/                # Interface (minimap, floorplan, inventory…)
+```
+
+---
+
+## Lancement
+
+```bash
+# App principale Three.js
+ruby server.rb              # http://localhost:8080/lego-room.html
+# ou
+python3 -m http.server 8000
+
+# App R3F (sous-projet)
+cd r3f && npm install && npm run dev   # http://localhost:5173
+```
+
+---
+
+## Journal de décisions techniques
+
+Le vrai README. Pas une liste de features : le *pourquoi* de chaque virage.
+
+---
+
+### Phase 1 — Prototype LEGO (février 2026)
+
+**Commit initial** : un seul fichier `lego-room.html` de ~1 700 lignes. L'idée de départ était de représenter l'appartement avec des briques LEGO — chaque brique = un `InstancedMesh`, 1 unité = 1 stud (1,6 cm). Animation brique par brique, couches par matériau.
+
+**Pourquoi LEGO ?** C'est visuellement clair pour planifier un espace — les briques donnent une échelle intuitive, comme du papier quadrillé en 3D.
+
+**Limite vite atteinte** : ajouter une ouverture de porte impliquait de recalculer toute la géométrie brick par brick. Ajouter un mur diagonal (l'appartement en a un) devenait ingérable.
+
+---
+
+### Phase 2 — Refactoring ES Modules (17 → 30+ modules)
+
+```
+819f0c3  Refactor: split monolithic lego-room.html into 17 ES modules
+```
+
+**Décision** : découper le fichier unique en ES Modules natifs, sans bundler.
+
+**Pourquoi pas Vite/webpack tout de suite ?** Zéro friction. Un `importmap` + un serveur HTTP local suffisent. Les modules se rechargent directement dans le navigateur. Pour un projet solo d'expérimentation, pas de build step = pas de blocage mental.
+
+**Résultat** : `js/structure/`, `js/furniture/`, `js/decor/`, `js/ui/` — chaque module exporte une fonction `buildXxx(scene)`. Convention simple, facile à tenir sur la durée.
+
+---
+
+### Phase 3 — Abandon des briques LEGO (mars 2026)
+
+```
+ad83213  Remove LEGO brick system: replace all walls with solid BoxGeometry panels
+```
+
+**Pourquoi ?** Après avoir ajouté une niche dans le mur, une porte-fenêtre, un couloir en diagonale — le système de briques était devenu une contrainte. Recalculer quelles briques enlever pour chaque ouverture était une source constante de bugs.
+
+**Remplacement** : panneaux `BoxGeometry` solides via une fonction locale `panel()`. Plus flexibles, plus rapides à rendre. L'esthétique "LEGO" devient des studs décoratifs `InstancedMesh` par-dessus — séparation nette entre géométrie structurelle et apparence.
+
+**Ce que ça m'a appris** : une abstraction qui semble bonne au départ peut devenir un obstacle quand le scope grandit. Mieux vaut la remplacer tôt que de l'accumuler.
+
+---
+
+### Phase 4 — Performance : GLB, Draco, draw calls (mars 2026)
+
+Le projet accumule des objets GLB (meubles IKEA, vêtements, scooter). Deux problèmes émergent :
+
+**Problème 1 — Taille** : les GLBs bruts totalisent ~54 Mo.
+```
+6a483c9  Draco compress 10 GLBs + shared DRACOLoader (54 MB → 16 MB)
+```
+Solution : compression Draco via `gltf-pipeline`. Ratio ×3 sur la géométrie.
+
+**Problème 2 — Draw calls** : 500+ calls pour une scène normale.
+```
+0967a98  Merge GLB sub-meshes by material to reduce draw calls
+```
+Solution : `mergeGlbByMaterial()` dans `utils/mergeUtils.js` — fusionne toutes les géométries partageant le même matériau. Passe de ~547 à ~200 draw calls.
+
+**Ce que ça m'a appris** : le panel `devtools.js` (FPS + draw calls en temps réel, intégré dans la scène) a été indispensable pour mesurer avant/après. Optimiser sans mesurer = improviser.
+
+---
+
+### Phase 5 — Fonctionnalités UI avancées (mars–avril 2026)
+
+#### Minimap interactive
+
+Canvas 2D superposé, avec suivi du personnage (position + orientation), mode plein écran avec mise à l'échelle dynamique, plan annoté.
+
+La difficulté : toutes les dimensions du canvas (épaisseur des lignes, taille des icônes, polices) doivent scaler quand on passe en plein écran. Solution : facteur `scale = canvas.width / SMALL_W`, appliqué à chaque appel de rendu.
+
+#### Hover menu avec occlusion réelle
+
+```
+553baad  Fix hover menu showing through opaque obstacles
+```
+
+Le menu contextuel apparaissait sur des objets cachés derrière un mur. Fix : raycast sur *toute* la scène (pas seulement les objets interactifs), s'arrêter au premier hit opaque.
+
+```js
+const allHits = raycaster.intersectObjects(scene.children, true);
+for (const hit of allHits) {
+  if (isTransparent(hit.object.material)) continue;
+  if (hit.object.userData.brickType === 'ceiling') continue; // vue du dessus
+  const action = resolveAction(hit.object);
+  if (action) showMenu(action);
+  break; // premier hit opaque = fin du rayon
+}
+```
+
+#### Centralisation des données (floorData.js)
+
+```
+2b48e7f  Factorize floor plan data into floorData.js shared by minimap and floorplan
+```
+
+`floorplan.js` et `minimap.js` avaient chacun leurs coordonnées hardcodées pour les mêmes murs. Solution : `ROOMS`, `WALL_LABELS`, `DIMENSIONS` centralisés dans `floorData.js`. Une seule source de vérité, les deux modules importent et itèrent.
+
+#### Z-fighting entre voisins
+
+```
+cafe5a6  Add 0.5cm gap between neighbors and main apartment to fix z-fighting
+```
+
+Quand deux faces sont exactement coplanaires, le GPU scintille. Solution : décaler les appartements voisins de 0,5 cm. Imperceptible visuellement, élimine le problème.
+
+```js
+_groupWest.position.x = -ROOM_W - 30.5;  // était -30
+```
+
+---
+
+### Phase 6 — Migration React Three Fiber (avril 2026, en cours)
+
+**Le constat** : la preview 3D de l'inventaire gère manuellement un `WebGLRenderer`, une boucle `requestAnimationFrame`, des contrôles orbitaux maison, des event listeners sur le canvas. C'est ~120 lignes de code impératif pour afficher un objet qui tourne.
+
+**Avec R3F :**
+
+```tsx
+// SceneContent.tsx — ce qui remplace les 120 lignes
+export function SceneContent({ item, actionState }: Props) {
+  return (
+    <>
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[200, 400, 300]} intensity={1.3} />
+      <Controller size={...} />         {/* OrbitControls + camera fit */}
+      <GlbModel path={item.glbPath} />  {/* Suspense, centrage, onSize */}
+    </>
+  );
+}
+```
+
+**Pourquoi pas R3F dès le début ?**
+
+Deux raisons honnêtes :
+
+1. **Le projet vanilla ES Modules fonctionne sans build step** — pour itérer vite sur la géométrie et les positions, ne pas avoir à lancer `npm run dev` était un vrai confort. Le vanilla Three.js reste la référence pour la scène principale.
+
+2. **R3F brille sur l'UI réactive** — dès qu'un composant 3D doit synchroniser son état avec un composant HTML (bouton, liste, filtre), React devient naturel. La preview inventaire est exactement ce cas.
+
+**La démonstration concrète — le congélateur interactif :**
+
+```tsx
+// Freezer.tsx — traduction déclarative de la géométrie procédurale de decor.js
+export function Freezer({ actionState, onSize }: SceneItemProps) {
+  const isOpen  = actionState['freezer-toggle'] ?? false;
+  const doorRef = useRef<THREE.Group>(null!);
+
+  useFrame(() => {
+    const target = isOpen ? Math.PI / 2 : 0;
+    doorRef.current.rotation.y += (target - doorRef.current.rotation.y) * 0.12;
+  });
+
+  return (
+    <group>
+      {/* carcasse, étagères, pieds… */}
+      <group ref={doorRef} position={[FRZ_D/2, 0, -FRZ_W/2]}>
+        <mesh position={[0, FRZ_H/2, FRZ_W/2]}>
+          <boxGeometry args={[FRZ_T, FRZ_H-2, FRZ_W-FRZ_T]} />
+          <meshStandardMaterial color="#1a1a1a" />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+```
+
+| `decor.js` (impératif) | `Freezer.tsx` (déclaratif) |
+|---|---|
+| `addP(FRZ_T, FRZ_H, FRZ_W, ...)` | `<Panel sx={FRZ_T} sy={FRZ_H} .../>` |
+| `freezerDoorGroup.rotation.y = π/2` | `useFrame(() => doorRef.current.rotation.y += lerp...)` |
+| `registerHoverAction('freezer-toggle', ...)` | `<button onClick={() => toggle('freezer-toggle')}>` |
+
+**Pattern registry** : chaque objet interactif s'enregistre par `item.id`, sans toucher à `SceneContent` :
+
+```ts
+// registry.ts
+export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'freezer': Freezer,
+  // 'bed': Bed,     ← à venir
+  // 'desk-1': Desk, ← à venir
+};
+```
+
+---
+
+## Fonctionnalités actuelles
+
+| Feature | Détail |
+|---|---|
+| Navigation | Walk mode WASD, vue 2D dessus, perspective, POV |
+| Structure | Murs, niche, couloir diagonal, cuisine, SDB, WC |
+| Meubles | ~30 objets (procéduraux + GLB IKEA) |
+| Interactivité | Hover menu (clic objet → toggle position/état) |
+| Inventaire | ~120 items, preview 3D, filtres, recherche |
+| Minimap | Canvas 2D temps réel, plein écran, suivi personnage |
+| Floorplan | Plan 2D coté (Three.js) |
+| Layers | Structure / Équipement / Mobilier / GLB (toggles) |
+| Voisins | Appartements est/ouest semi-transparents |
+| Dev Tools | FPS graph, draw calls, stats mémoire, tailles GLB |
+| VR | WebXR / Google Cardboard |
+| Personnage | Walking man animé (Lara 2026, galerie de rigs) |
+
+---
+
+## Ce qui vient
+
+- [ ] Intégrer la preview R3F dans `lego-room.html` (remplacer `inventory.js` vanilla)
+- [ ] Composants TSX pour lit, bureaux, portes (registry)
+- [ ] Éclairage dynamique (heure du jour)
+
+---
+
+## Contexte personnel
+
+Ce projet a démarré parce que j'emménageais dans un nouvel appartement et que je voulais visualiser les configurations de meubles avant d'acheter. Les outils existants (IKEA Kreativ, Planner 5D) ne modélisent pas les contraintes spécifiques de mon appartement — la niche asymétrique, le mur diagonal, la cuisine en galley.
+
+Construire le mien était plus rapide que de contourner les limitations des outils existants. Et ça m'a donné une bonne raison de creuser Three.js sérieusement.
+
+**Statut** : en recherche d'emploi. Si vous êtes arrivé jusqu'ici et que ce genre d'approche vous parle, je suis disponible.
+
+→ [linkedin.com/in/david-herelle](https://linkedin.com/in/david-herelle)
+
+---
+
+*~250 commits · 7 semaines · Three.js vanilla → React Three Fiber*
+
+---
+---
+
+# README — version précédente (17 février 2026)
+
+> *Conservé pour montrer l'évolution du projet et de sa documentation.*
+
+---
+
 # Studio de rêve — modélisation 3D LEGO
 
 Ce projet est la modélisation en 3D de **mon studio actuel** — mon studio de rêve.
