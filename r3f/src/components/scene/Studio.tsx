@@ -11,8 +11,9 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { ACESFilmicToneMapping, PCFSoftShadowMap, FogExp2, Color } from 'three';
-import { Walls }  from './structure/Walls';
-import { Floor }  from './structure/Floor';
+import { Walls }     from './structure/Walls';
+import { Floor }     from './structure/Floor';
+import { Furniture } from './Furniture';
 
 // @ts-ignore — JS file with no type declarations
 import { ROOM_W, WALL_H, ROOM_D } from '@config';
@@ -64,6 +65,7 @@ export function Studio() {
 
       <Walls />
       <Floor />
+      <Furniture />
     </Canvas>
   );
 }
