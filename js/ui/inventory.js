@@ -192,9 +192,13 @@ export function buildInventory(_mainScene) {
     renderTable(overlay.querySelector('#inv-tbody'), items, onSelectItem);
 
     const spacesSection = overlay.querySelector('#inv-spaces-section');
+    const actionSpaces = STORAGE_SPACES.filter(sp => sp.actions?.length);
     if (activeCat === 'storage') {
       spacesSection.style.display = '';
       renderSpacesTable(overlay.querySelector('#inv-spaces-tbody'), STORAGE_SPACES, onSelectItem);
+    } else if (activeCat === 'actionnable' && actionSpaces.length) {
+      spacesSection.style.display = '';
+      renderSpacesTable(overlay.querySelector('#inv-spaces-tbody'), actionSpaces, onSelectItem);
     } else {
       spacesSection.style.display = 'none';
     }
@@ -215,6 +219,7 @@ export function buildInventory(_mainScene) {
       b.style.borderColor = on ? '#ffd700' : '#444';
       b.style.color       = on ? '#ffd700' : '#ccc';
     });
+    tableWrap.scrollTop = 0;
     refresh();
   });
 

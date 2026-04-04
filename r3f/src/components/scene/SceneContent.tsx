@@ -42,8 +42,8 @@ export function SceneContent({ item, actionState }: Props) {
         </Suspense>
 
       ) : item ? (
-        // Fallback : boîte aux dimensions de l'inventaire
-        <DimBox dims={item.dims} />
+        // Fallback : boîte aux dimensions de l'inventaire (dims peut être absent pour les espaces)
+        <DimBox dims={item.dims ?? { w: 50, h: 50, d: 50 }} />
 
       ) : null}
     </>

@@ -126,15 +126,15 @@ export const INVENTORY = [
 // STORAGE SPACES — ensembles de rangement (uniques)
 // =============================================
 export const STORAGE_SPACES = [
-  { id: 'kallax-ne-stack',  name: 'Kallax NE',      notes: 'Coin mur C+B — 2×1 bas + 2×2 haut empilés, 6 Drona + 1 dessus', scenePos: { x: 280, z: 38  } },
-  { id: 'kallax-se-stack',  name: 'Kallax SE',      notes: 'Mur B sud — 2× (2×1 pivoté), 4 Drona + meuble en T dessus',  scenePos: { x: 281, z: 320 } },
-  { id: 'kallax-nw-stack',  name: 'Kallax NW',      notes: 'Coin mur A+C — tour 2×1 + 1×1 + 1×1 pivotés, 4 Drona',       scenePos: { x: 20,  z: 38  } },
-  { id: 'kallax-sw-stack',  name: 'Kallax cuisine', notes: 'Niche mur D — 2×2 + 2×2 + 2×1 empilés, 4 Drona dans le bas', scenePos: { x: -20, z: 362 } },
-  { id: 'mackapar-stack',   name: 'Mackapär',       notes: 'Portant niche — combinaison + salopette + 2 Drona en haut',  scenePos: { x: 32,  z: 309 } },
-  { id: 'sunnersta-stack',  name: 'Sunnersta',      notes: 'Desserte roulante — mannequin + casquette',                   scenePos: { x: 282, z: 272 } },
-  { id: 'cuisine-stack',   name: 'Cuisine',        notes: 'Plan de travail, évier, plaques, frigo, meuble bas, meuble haut + 3 Drona', scenePos: { x: 75, z: 420 } },
-  { id: 'corridor-closet', name: 'Placard couloir', notes: 'Porte pivotante + 3 étagères (X=130→190, Z=410→460)',                    scenePos: { x: 160, z: 435 }, actions: ['corridor-closet-toggle'] },
-  { id: 'sdb-closet',     name: 'Placard SDB',    notes: 'Double porte coulissante + étagère triangulaire 170cm (X=70→180, Z=600→660)', scenePos: { x: 125, z: 630 }, actions: ['sdb-closet-toggle'] },
+  { id: 'kallax-ne-stack',  name: 'Kallax NE',      dims: { w: 75.5, d: 39,  h: 222  }, notes: 'Coin mur C+B — 2×1 bas + 2×2 haut empilés, 6 Drona + 1 dessus', scenePos: { x: 280, z: 38  } },
+  { id: 'kallax-se-stack',  name: 'Kallax SE',      dims: { w: 75.5, d: 39,  h: 151  }, notes: 'Mur B sud — 2× (2×1 pivoté), 4 Drona + meuble en T dessus',  scenePos: { x: 281, z: 320 } },
+  { id: 'kallax-nw-stack',  name: 'Kallax NW',      dims: { w: 75.5, d: 39,  h: 227  }, notes: 'Coin mur A+C — tour 2×1 + 1×1 + 1×1 pivotés, 4 Drona',       scenePos: { x: 20,  z: 38  } },
+  { id: 'kallax-sw-stack',  name: 'Kallax cuisine', dims: { w: 75.5, d: 39,  h: 371  }, notes: 'Niche mur D — 2×2 + 2×2 + 2×1 empilés, 4 Drona dans le bas', scenePos: { x: -20, z: 362 } },
+  { id: 'mackapar-stack',   name: 'Mackapär',       dims: { w: 77,   d: 32,  h: 200  }, notes: 'Portant niche — combinaison + salopette + 2 Drona en haut',  scenePos: { x: 32,  z: 309 } },
+  { id: 'sunnersta-stack',  name: 'Sunnersta',      dims: { w: 36,   d: 56,  h: 90   }, notes: 'Desserte roulante — mannequin + casquette',                   scenePos: { x: 282, z: 272 } },
+  { id: 'cuisine-stack',    name: 'Cuisine',        dims: { w: 100,  d: 60,  h: 93   }, notes: 'Plan de travail, évier, plaques, frigo, meuble bas, meuble haut + 3 Drona', scenePos: { x: 75, z: 420 } },
+  { id: 'corridor-closet',  name: 'Placard couloir',dims: { w: 60,   d: 50,  h: 250  }, notes: 'Porte pivotante + 3 étagères (X=130→190, Z=410→460)',                    scenePos: { x: 160, z: 435 }, actions: ['corridor-closet-toggle'] },
+  { id: 'sdb-closet',       name: 'Placard SDB',    dims: { w: 110,  d: 60,  h: 250  }, notes: 'Double porte coulissante + étagère triangulaire 170cm (X=70→180, Z=600→660)', scenePos: { x: 125, z: 630 }, actions: ['sdb-closet-toggle'] },
 ];
 
 export const CATEGORIES = [

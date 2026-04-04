@@ -14304,8 +14304,8 @@ function yT({ item: e, actionState: t }) {
       // Chargement GLB générique
       /* @__PURE__ */ T.jsx(W.Suspense, { fallback: /* @__PURE__ */ T.jsx(UE, {}), children: /* @__PURE__ */ T.jsx(DE, { path: e.glbPath, onSize: o }) })
     ) : e ? (
-      // Fallback : boîte aux dimensions de l'inventaire
-      /* @__PURE__ */ T.jsx(FE, { dims: e.dims })
+      // Fallback : boîte aux dimensions de l'inventaire (dims peut être absent pour les espaces)
+      /* @__PURE__ */ T.jsx(FE, { dims: e.dims ?? { w: 50, h: 50, d: 50 } })
     ) : null
   ] });
 }
