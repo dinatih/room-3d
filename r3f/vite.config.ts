@@ -12,5 +12,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    fs: {
+      // Allow Vite to follow the media symlink into the parent directory
+      allow: ['..'],
+    },
   },
 });

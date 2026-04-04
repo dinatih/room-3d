@@ -18,9 +18,9 @@ export function Freezer({ actionState, onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
   const isOpen  = actionState['freezer-toggle'] ?? false;
 
-  // Rapport la taille réelle au Controller pour le fit caméra
+  // Taille en unités scène (1 unit = 1cm ici, comme le reste du projet)
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(FRZ_D / 10, FRZ_H / 10, FRZ_W / 10));
+    onSize(new THREE.Vector3(FRZ_D, FRZ_H, FRZ_W));
   }, []);
 
   // Animation fluide de la porte
@@ -31,8 +31,8 @@ export function Freezer({ actionState, onSize }: SceneItemProps) {
   });
 
   return (
-    // Centré horizontalement, assis sur Y=0
-    <group>
+    // Centré sur X et Z, centré verticalement (décalage -FRZ_H/2)
+    <group position={[0, -FRZ_H / 2, 0]}>
 
       {/* ── Carcasse ── */}
 
