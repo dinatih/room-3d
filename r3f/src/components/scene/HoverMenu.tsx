@@ -57,6 +57,7 @@ export function HoverRaycaster() {
     function cancelHide() {
       if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
     }
+    hoverState.cancelHide = cancelHide;
 
     const onMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
@@ -114,6 +115,7 @@ export function HoverRaycaster() {
       canvas.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('pointerleave', onLeave);
       if (hideTimer) clearTimeout(hideTimer);
+      hoverState.cancelHide = null;
     };
   }, [camera, gl, scene]);
 
@@ -162,7 +164,7 @@ export function HoverOverlay() {
   return (
     <div
       ref={menuRef}
-      onMouseEnter={() => { hoverState.visible = true; }}
+      onMouseEnter={() => { hoverState.cancelHide?.(); hoverState.visible = true; }}
       onMouseLeave={() => { hoverState.visible = false; hoverState.onUpdate?.(); }}
       style={{
         position: 'fixed', left, top, zIndex: 300,
