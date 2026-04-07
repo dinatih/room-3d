@@ -13,6 +13,7 @@
  *   js/structure/kitchen.js (frigo, meuble évier)
  *   js/structure/bathroom.js (meubles SDB)
  */
+import { useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Kallax } from './items/Kallax';
 import { Freezer } from './items/Freezer';
@@ -24,7 +25,16 @@ import type { Item } from '../../types';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const noop = (_: THREE.Vector3) => {};
+
+// Empty actionState for items that have no toggleable state (Kallax, BathroomCabinet)
 const AS: Record<string, boolean> = {};
+
+// Map furniture-toggle key → actionState key used by item components
+const TOGGLE_MAP: Record<string, string> = {
+  freezer: 'freezer-toggle',
+  fridge:  'fridge-toggle',
+  cabinet: 'cabinet-toggle',
+};
 
 function stub(id: string): Item {
   return {
@@ -166,10 +176,11 @@ function KallaxNW() {
 // js/decor/decor.js : frzX=24.5, frzZ=269.5, frzBaseY=0
 // FRZ_H=50 → PY = FRZ_H/2 = 25
 
-function FreezerPlaced() {
+function FreezerPlaced({ as }: { as: Record<string, boolean> }) {
   return (
-    <group position={[24.5, 25, 269.5]}>
-      <Freezer item={stub('freezer')} actionState={AS} onSize={noop} />
+    <group position={[24.5, 25, 269.5]}
+      userData={{ hoverAction: { label: 'Congélateur', actionId: 'freezer' } }}>
+      <Freezer item={stub('freezer')} actionState={as} onSize={noop} />
     </group>
   );
 }
@@ -178,10 +189,11 @@ function FreezerPlaced() {
 // KitchenCabinet: W=40, H=90, D=60
 // X = KITCHEN_X0 + W/2 = 50  |  Z = KITCHEN_Z - D/2 = 430  |  PY = H/2 = 45
 
-function KitchenCabinetPlaced() {
+function KitchenCabinetPlaced({ as }: { as: Record<string, boolean> }) {
   return (
-    <group position={[KITCHEN_X0 + 40 / 2, 90 / 2, KITCHEN_Z - KITCHEN_D / 2]}>
-      <KitchenCabinet item={stub('kitchen-cabinet')} actionState={AS} onSize={noop} />
+    <group position={[KITCHEN_X0 + 40 / 2, 90 / 2, KITCHEN_Z - KITCHEN_D / 2]}
+      userData={{ hoverAction: { label: 'Meuble évier', actionId: 'cabinet' } }}>
+      <KitchenCabinet item={stub('kitchen-cabinet')} actionState={as} onSize={noop} />
     </group>
   );
 }
@@ -190,10 +202,11 @@ function KitchenCabinetPlaced() {
 // Fridge: W=60, H=90, D=60
 // X = KITCHEN_X0 + 40 + W/2 = 100  |  Z = 430  |  PY = H/2 = 45
 
-function FridgePlaced() {
+function FridgePlaced({ as }: { as: Record<string, boolean> }) {
   return (
-    <group position={[KITCHEN_X0 + 40 + 60 / 2, 90 / 2, KITCHEN_Z - KITCHEN_D / 2]}>
-      <Fridge item={stub('fridge')} actionState={AS} onSize={noop} />
+    <group position={[KITCHEN_X0 + 40 + 60 / 2, 90 / 2, KITCHEN_Z - KITCHEN_D / 2]}
+      userData={{ hoverAction: { label: 'Réfrigérateur', actionId: 'fridge' } }}>
+      <Fridge item={stub('fridge')} actionState={as} onSize={noop} />
     </group>
   );
 }
@@ -220,15 +233,28 @@ function BathroomCabinetsPlaced() {
 // ── Export principal ──────────────────────────────────────────────────────────
 
 export function Furniture() {
+  const [as, setAs] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const onToggle = (e: Event) => {
+      const { key } = (e as CustomEvent).detail as { key: string };
+      const asKey = TOGGLE_MAP[key];
+      if (!asKey) return;
+      setAs(prev => ({ ...prev, [asKey]: !prev[asKey] }));
+    };
+    document.addEventListener('furniture-toggle', onToggle);
+    return () => document.removeEventListener('furniture-toggle', onToggle);
+  }, []);
+
   return (
     <>
       <KallaxNE />
       <KallaxSW />
       <KallaxSE />
       <KallaxNW />
-      <FreezerPlaced />
-      <KitchenCabinetPlaced />
-      <FridgePlaced />
+      <FreezerPlaced as={as} />
+      <KitchenCabinetPlaced as={as} />
+      <FridgePlaced as={as} />
       <BathroomCabinetsPlaced />
     </>
   );

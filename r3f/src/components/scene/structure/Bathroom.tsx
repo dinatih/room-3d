@@ -5,7 +5,7 @@
  * ballon d'eau chaude, tapis pelouse synthétique.
  * Les meubles SDB (BathroomCabinetWest/East) sont placés par Furniture.tsx.
  */
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -116,7 +116,16 @@ function Shower() {
 
 function WC() {
   const lidRef = useRef<THREE.Group>(null!);
-  // Lid animation can be wired to state later
+  const lidOpen = useRef(false);
+  useEffect(() => {
+    const onToggle = (e: Event) => {
+      if ((e as CustomEvent).detail?.key !== 'wcLid') return;
+      lidOpen.current = !lidOpen.current;
+      if (lidRef.current) lidRef.current.rotation.x = lidOpen.current ? -Math.PI / 2 : 0;
+    };
+    document.addEventListener('furniture-toggle', onToggle);
+    return () => document.removeEventListener('furniture-toggle', onToggle);
+  }, []);
 
   const { outerGeo, innerGeo, seatGeo } = useMemo(() => {
     const outerPts = [
@@ -166,7 +175,7 @@ function WC() {
   const btnCZ  = WC_Z0 + tankD / 2;
 
   return (
-    <group>
+    <group userData={{ hoverAction: { label: 'WC abattant', actionId: 'wcLid' } }}>
       {/* Coque extérieure */}
       <mesh geometry={outerGeo} material={wcMat} castShadow receiveShadow
         position={[WC_CX, 0, bowlCZ]} scale={[1, 1, bowlOval]} />

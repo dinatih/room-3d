@@ -8,7 +8,7 @@
  * cohérentes avec le découpage d'origine. Un refactor ultérieur pourra
  * les extraire dans des composants dédiés.
  */
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -110,10 +110,17 @@ function WallC() {
   ], WALL_H), []);
 
   // Porte-fenêtre : battant gauche (fixe) + battant droit (animé)
-  const glassRef = useRef<THREE.Group>(null!);
-  useFrame(() => {
-    // TODO : brancher sur un état global (ex. useRoomStore)
-  });
+  const glassRef  = useRef<THREE.Group>(null!);
+  const eastOpen  = useRef(false);
+  useEffect(() => {
+    const onToggle = (e: Event) => {
+      if ((e as CustomEvent).detail?.key !== 'eastDoor') return;
+      eastOpen.current = !eastOpen.current;
+      if (glassRef.current) glassRef.current.rotation.y = eastOpen.current ? Math.PI / 2 : 0;
+    };
+    document.addEventListener('furniture-toggle', onToggle);
+    return () => document.removeEventListener('furniture-toggle', onToggle);
+  }, []);
 
   const doorW     = (GLASS_END - GLASS_START) / 2; // 80
   const FRAME     = 8, FRAME_D = 5;
@@ -175,7 +182,8 @@ function WallC() {
       <DoorPanel cx={GLASS_START + doorW / 2} />
 
       {/* Battant droit (pivot à GLASS_END) */}
-      <group ref={glassRef} position={[GLASS_END, 0, 0]}>
+      <group ref={glassRef} position={[GLASS_END, 0, 0]}
+        userData={{ hoverAction: { label: 'Porte-fenêtre', actionId: 'eastDoor' } }}>
         <DoorPanel cx={-doorW / 2} />
         {/* Poignée */}
         <mesh ref={(m) => { if (m) m.material = handleMat; }}
@@ -428,9 +436,19 @@ function CorridorCloset() {
   const CLOSET_D  = CLOSET_Z1 - CLOSET_Z0;
   const CX = (CLOSET_X0 + CLOSET_X1) / 2;
   const CZ = (CLOSET_Z0 + CLOSET_Z1) / 2;
-  const shelfMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
-  const doorMat  = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
+  const shelfMat  = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
+  const doorMat   = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
   const closetRef = useRef<THREE.Group>(null!);
+  const corrOpen  = useRef(false);
+  useEffect(() => {
+    const onToggle = (e: Event) => {
+      if ((e as CustomEvent).detail?.key !== 'corrDoors') return;
+      corrOpen.current = !corrOpen.current;
+      if (closetRef.current) closetRef.current.rotation.y = corrOpen.current ? Math.PI / 2 : 0;
+    };
+    document.addEventListener('furniture-toggle', onToggle);
+    return () => document.removeEventListener('furniture-toggle', onToggle);
+  }, []);
 
   return (
     <group>
@@ -440,7 +458,8 @@ function CorridorCloset() {
           <boxGeometry args={[CLOSET_W - 4, 3, CLOSET_D]} />
         </mesh>
       ))}
-      <group ref={closetRef} position={[CLOSET_X1, 0, CLOSET_Z0]}>
+      <group ref={closetRef} position={[CLOSET_X1, 0, CLOSET_Z0]}
+        userData={{ hoverAction: { label: 'Placard couloir', actionId: 'corrDoors' } }}>
         <mesh ref={(m) => { if (m) m.material = doorMat; }}
           position={[0, (WALL_H - 10) / 2, CLOSET_D / 2]} castShadow>
           <boxGeometry args={[2, WALL_H - 10, CLOSET_D - 2]} />
