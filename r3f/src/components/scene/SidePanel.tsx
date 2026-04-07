@@ -9,6 +9,7 @@
  *   🛋 Mobilier  — toggles portes / meubles (état partagé via props callbacks)
  */
 import { useState, useCallback } from 'react';
+import { DevToolsGroups } from './DevToolsOverlay';
 
 // @ts-ignore
 import {
@@ -303,6 +304,9 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer 
           {b0('light', `WC abattant : ${furniture.wcLid ? 'OUVERT' : 'FERMÉ'}`,
               () => onToggleFurniture('wcLid'))}
         </Group>
+
+        {/* ── Dev Tools ── */}
+        <DevToolsGroups Group={Group} />
 
       </div>
 

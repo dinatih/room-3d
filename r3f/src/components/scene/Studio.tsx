@@ -27,7 +27,6 @@ import { AltappenRug } from './AltappenRug';
 import { XRayLayer }   from './XRayLayer';
 import { HoverRaycaster, HoverOverlay } from './HoverMenu';
 import { DevToolsCollector }            from './DevToolsCollector';
-import { DevToolsOverlay }              from './DevToolsOverlay';
 
 // @ts-ignore — JS file with no type declarations
 import { ROOM_W, ROOM_D } from '@config';
@@ -140,7 +139,6 @@ export function Studio() {
       />
       <Minimap />
       <HoverOverlay />
-      <DevToolsOverlay />
     </div>
   );
 }

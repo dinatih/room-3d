@@ -197,6 +197,8 @@ export function CameraController() {
         keys.current.add(lk);
         e.preventDefault();
       }
+      // Kick off the first frame — useFrame keeps the loop going while keys held
+      if (keys.current.size > 0) invalidate();
     };
 
     const onUp = (e: KeyboardEvent) => {
@@ -256,6 +258,7 @@ export function CameraController() {
       walkYaw.current   -= e.movementX * MOUSE_SENS;
       walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - e.movementY * MOUSE_SENS));
       updateWalkLook();
+      invalidate();
     };
 
     canvas.addEventListener('mousedown', onDown);
