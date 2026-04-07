@@ -14,6 +14,7 @@
  *   js/structure/bathroom.js (meubles SDB)
  */
 import { useState, useEffect } from 'react';
+import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Kallax } from './items/Kallax';
 import { Freezer } from './items/Freezer';
@@ -234,6 +235,7 @@ function BathroomCabinetsPlaced() {
 
 export function Furniture() {
   const [as, setAs] = useState<Record<string, boolean>>({});
+  const { invalidate } = useThree();
 
   useEffect(() => {
     const onToggle = (e: Event) => {
@@ -241,10 +243,11 @@ export function Furniture() {
       const asKey = TOGGLE_MAP[key];
       if (!asKey) return;
       setAs(prev => ({ ...prev, [asKey]: !prev[asKey] }));
+      invalidate();
     };
     document.addEventListener('furniture-toggle', onToggle);
     return () => document.removeEventListener('furniture-toggle', onToggle);
-  }, []);
+  }, [invalidate]);
 
   return (
     <>

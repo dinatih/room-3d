@@ -6,7 +6,7 @@
  * Les meubles SDB (BathroomCabinetWest/East) sont placés par Furniture.tsx.
  */
 import { useMemo, useRef, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 // @ts-ignore
@@ -117,15 +117,17 @@ function Shower() {
 function WC() {
   const lidRef = useRef<THREE.Group>(null!);
   const lidOpen = useRef(false);
+  const { invalidate } = useThree();
   useEffect(() => {
     const onToggle = (e: Event) => {
       if ((e as CustomEvent).detail?.key !== 'wcLid') return;
       lidOpen.current = !lidOpen.current;
       if (lidRef.current) lidRef.current.rotation.x = lidOpen.current ? -Math.PI / 2 : 0;
+      invalidate();
     };
     document.addEventListener('furniture-toggle', onToggle);
     return () => document.removeEventListener('furniture-toggle', onToggle);
-  }, []);
+  }, [invalidate]);
 
   const { outerGeo, innerGeo, seatGeo } = useMemo(() => {
     const outerPts = [

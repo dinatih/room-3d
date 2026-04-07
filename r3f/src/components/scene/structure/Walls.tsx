@@ -9,7 +9,7 @@
  * les extraire dans des composants dédiés.
  */
 import { useMemo, useRef, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 // @ts-ignore
@@ -112,15 +112,17 @@ function WallC() {
   // Porte-fenêtre : battant gauche (fixe) + battant droit (animé)
   const glassRef  = useRef<THREE.Group>(null!);
   const eastOpen  = useRef(false);
+  const { invalidate: invalidateWallC } = useThree();
   useEffect(() => {
     const onToggle = (e: Event) => {
       if ((e as CustomEvent).detail?.key !== 'eastDoor') return;
       eastOpen.current = !eastOpen.current;
       if (glassRef.current) glassRef.current.rotation.y = eastOpen.current ? Math.PI / 2 : 0;
+      invalidateWallC();
     };
     document.addEventListener('furniture-toggle', onToggle);
     return () => document.removeEventListener('furniture-toggle', onToggle);
-  }, []);
+  }, [invalidateWallC]);
 
   const doorW     = (GLASS_END - GLASS_START) / 2; // 80
   const FRAME     = 8, FRAME_D = 5;
@@ -440,15 +442,17 @@ function CorridorCloset() {
   const doorMat   = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
   const closetRef = useRef<THREE.Group>(null!);
   const corrOpen  = useRef(false);
+  const { invalidate: invalidateCloset } = useThree();
   useEffect(() => {
     const onToggle = (e: Event) => {
       if ((e as CustomEvent).detail?.key !== 'corrDoors') return;
       corrOpen.current = !corrOpen.current;
       if (closetRef.current) closetRef.current.rotation.y = corrOpen.current ? Math.PI / 2 : 0;
+      invalidateCloset();
     };
     document.addEventListener('furniture-toggle', onToggle);
     return () => document.removeEventListener('furniture-toggle', onToggle);
-  }, []);
+  }, [invalidateCloset]);
 
   return (
     <group>

@@ -1,0 +1,343 @@
+/**
+ * CameraController.tsx — port de js/cameraManager.js
+ *
+ * Modes :
+ *   orbit  — OrbitControls standard (défaut)
+ *   walk   — première personne WASD + souris (touche M)
+ *   top    — vue orthographique du dessus (touche T)
+ *
+ * Raccourcis clavier :
+ *   P          — vue perspective (reset)
+ *   M          — reprendre / entrer walk mode
+ *   T          — toggle vue top-down
+ *   Échap      — quitter walk mode / top-down
+ *   Flèches / WASD  — déplacement walk
+ *   ←→         — pivoter (walk)
+ *   Ctrl+↑↓    — incliner la caméra (walk)
+ *   Alt+↑↓     — monter/descendre (walk)
+ *   Clic+glisser    — regarder librement (walk)
+ */
+import { useEffect, useRef, useState } from 'react';
+import { useThree, useFrame }          from '@react-three/fiber';
+import { OrbitControls, OrthographicCamera } from '@react-three/drei';
+import * as THREE from 'three';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
+
+// @ts-ignore
+import { ROOM_W, ROOM_D, WALL_H } from '@config';
+import { cameraState } from './cameraState';
+
+// ── Constantes ────────────────────────────────────────────────────────────────
+
+const CX = ROOM_W / 2;
+const CZ = ROOM_D / 2;
+
+const WALK_H      = 180;
+const WALK_SPEED  = 2;
+const MOUSE_SENS  = 0.002;
+
+const PERSP_POS:    [number, number, number] = [ROOM_W / 2 + 100, 200, ROOM_D / 2 + 300];
+const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, WALL_H / 3, ROOM_D / 2];
+
+type Mode = 'orbit' | 'walk' | 'top';
+
+// ── Composant ─────────────────────────────────────────────────────────────────
+
+export function CameraController() {
+  const { camera, size, invalidate } = useThree();
+
+  // Register invalidate for use outside Canvas (Studio.tsx layer/furniture toggles)
+  useEffect(() => {
+    cameraState.invalidate = invalidate;
+    return () => { cameraState.invalidate = null; };
+  }, [invalidate]);
+  const [mode, setMode] = useState<Mode>('orbit');
+  const modeRef = useRef<Mode>('orbit');
+
+  // sync ref with state so event handlers use latest mode without stale closure
+  function changeMode(m: Mode) {
+    modeRef.current = m;
+    cameraState.mode = m;
+    setMode(m);
+  }
+
+  // OrbitControls imperative ref
+  const ctrlRef = useRef<OrbitControlsImpl>(null!);
+
+  // Walk state (refs — updated every frame, no re-render needed)
+  const walkPos   = useRef({ x: CX, y: WALK_H, z: CZ });
+  const walkYaw   = useRef(0);
+  const walkPitch = useRef(0);
+  const keys      = useRef(new Set<string>());
+  const dragging  = useRef(false);
+
+  // Saved perspective state for top-down → orbit restore
+  const savedPerspPos    = useRef(new THREE.Vector3(...PERSP_POS));
+  const savedPerspTarget = useRef(new THREE.Vector3(...PERSP_TARGET));
+
+  // ── Walk helpers ────────────────────────────────────────────────────────────
+
+  function updateWalkLook() {
+    const ctrl = ctrlRef.current;
+    if (!ctrl) return;
+    const d    = 100;
+    const cosP = Math.cos(walkPitch.current);
+    ctrl.target.set(
+      walkPos.current.x - Math.sin(walkYaw.current) * cosP * d,
+      walkPos.current.y + Math.sin(walkPitch.current) * d,
+      walkPos.current.z - Math.cos(walkYaw.current) * cosP * d,
+    );
+    camera.position.set(walkPos.current.x, walkPos.current.y, walkPos.current.z);
+    ctrl.update();
+  }
+
+  function enterWalk(x: number, z: number) {
+    walkPos.current = { x, y: WALK_H, z };
+    walkYaw.current   = 0;
+    walkPitch.current = 0;
+    const ctrl = ctrlRef.current;
+    if (ctrl) {
+      ctrl.enableRotate = false;
+      ctrl.enablePan    = false;
+      ctrl.enableZoom   = false;
+    }
+    changeMode('walk');
+    // updateWalkLook called in frame after state settles
+  }
+
+  function exitWalkMode() {
+    dragging.current = false;
+    keys.current.clear();
+    const ctrl = ctrlRef.current;
+    if (ctrl) {
+      ctrl.enableRotate = true;
+      ctrl.enablePan    = true;
+      ctrl.enableZoom   = true;
+    }
+    changeMode('orbit');
+  }
+
+  function enterTop() {
+    if (modeRef.current === 'walk') exitWalkMode();
+    // Save current perspective so we can restore on exit
+    savedPerspPos.current.copy(camera.position);
+    if (ctrlRef.current) savedPerspTarget.current.copy(ctrlRef.current.target);
+    changeMode('top');
+  }
+
+  function exitTop() {
+    // Restore perspective state after OrthographicCamera unmounts (next frame)
+    changeMode('orbit');
+    // camera.position / target restored by useEffect below
+  }
+
+  // Restore persp camera after leaving top mode
+  useEffect(() => {
+    if (mode === 'orbit' && ctrlRef.current) {
+      // Only restore if we had a saved persp (i.e. we came from top mode)
+      camera.position.copy(savedPerspPos.current);
+      ctrlRef.current.target.copy(savedPerspTarget.current);
+      ctrlRef.current.update();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
+  // Apply walk look after entering walk (mode ref is set, state follows)
+  useEffect(() => {
+    if (mode === 'walk') {
+      // small delay to ensure OrbitControls has processed the enableRotate change
+      requestAnimationFrame(() => updateWalkLook());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
+  // ── Keyboard ────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    const onDown = (e: KeyboardEvent) => {
+      // Global shortcuts
+      if (e.key === 'Escape') {
+        if (modeRef.current === 'walk') exitWalkMode();
+        else if (modeRef.current === 'top') exitTop();
+        return;
+      }
+      if (e.key === 'p' || e.key === 'P') {
+        if (modeRef.current === 'walk') exitWalkMode();
+        else if (modeRef.current === 'top') exitTop();
+        // Reset to default perspective
+        camera.position.set(...PERSP_POS);
+        savedPerspPos.current.set(...PERSP_POS);
+        savedPerspTarget.current.set(...PERSP_TARGET);
+        if (ctrlRef.current) {
+          ctrlRef.current.target.set(...PERSP_TARGET);
+          ctrlRef.current.update();
+        }
+        return;
+      }
+      if ((e.key === 'm' || e.key === 'M') && modeRef.current !== 'walk') {
+        enterWalk(walkPos.current.x, walkPos.current.z);
+        return;
+      }
+      if (e.key === 't' || e.key === 'T') {
+        modeRef.current === 'top' ? exitTop() : enterTop();
+        return;
+      }
+
+      // Walk-only keys
+      if (modeRef.current !== 'walk') return;
+      const k = e.key;
+      if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(k)) {
+        keys.current.add(k);
+        if (e.ctrlKey)  keys.current.add('Ctrl' + k);
+        if (e.altKey)   keys.current.add('Alt' + k);
+        e.preventDefault();
+      }
+      const lk = k.toLowerCase();
+      if ('wasd'.includes(lk) && lk.length === 1) {
+        keys.current.add(lk);
+        e.preventDefault();
+      }
+    };
+
+    const onUp = (e: KeyboardEvent) => {
+      keys.current.delete(e.key);
+      keys.current.delete(e.key.toLowerCase());
+      keys.current.delete('Ctrl' + e.key);
+      keys.current.delete('Alt' + e.key);
+    };
+
+    // Minimap / panel click → enter walk in that room
+    const onPov = (e: Event) => {
+      const { x, z } = (e as CustomEvent).detail as { x: number; z: number };
+      enterWalk(x, z);
+    };
+
+    // Panel camera preset → move orbit camera
+    const onView = (e: Event) => {
+      const { pos, target } = (e as CustomEvent).detail as {
+        pos: [number, number, number];
+        target: [number, number, number];
+      };
+      if (modeRef.current === 'walk') exitWalkMode();
+      if (modeRef.current === 'top')  exitTop();
+      camera.position.set(...pos);
+      savedPerspPos.current.set(...pos);
+      savedPerspTarget.current.set(...target);
+      if (ctrlRef.current) { ctrlRef.current.target.set(...target); ctrlRef.current.update(); }
+      invalidate();
+    };
+
+    window.addEventListener('keydown', onDown);
+    window.addEventListener('keyup',   onUp);
+    document.addEventListener('minimap-pov',  onPov);
+    document.addEventListener('camera-pov',   onPov);
+    document.addEventListener('camera-view',  onView);
+    return () => {
+      window.removeEventListener('keydown', onDown);
+      window.removeEventListener('keyup',   onUp);
+      document.removeEventListener('minimap-pov',  onPov);
+      document.removeEventListener('camera-pov',   onPov);
+      document.removeEventListener('camera-view',  onView);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [camera]);
+
+  // ── Mouse drag (walk look) ──────────────────────────────────────────────────
+
+  useEffect(() => {
+    const { domElement } = (camera as any).__r3f?.root?.getState?.()?.gl ?? {};
+    // Fallback: grab canvas from document
+    const canvas = document.querySelector('canvas')!;
+
+    const onDown  = (e: MouseEvent) => { if (modeRef.current === 'walk' && e.button === 0) dragging.current = true; };
+    const onUp    = () => { dragging.current = false; };
+    const onMove  = (e: MouseEvent) => {
+      if (!dragging.current || modeRef.current !== 'walk') return;
+      walkYaw.current   -= e.movementX * MOUSE_SENS;
+      walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - e.movementY * MOUSE_SENS));
+      updateWalkLook();
+    };
+
+    canvas.addEventListener('mousedown', onDown);
+    document.addEventListener('mouseup',   onUp);
+    document.addEventListener('mousemove', onMove);
+    return () => {
+      canvas.removeEventListener('mousedown', onDown);
+      document.removeEventListener('mouseup',   onUp);
+      document.removeEventListener('mousemove', onMove);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Frame loop — walk movement ──────────────────────────────────────────────
+
+  useFrame(() => {
+    // Sync camera position for minimap
+    cameraState.camX  = camera.position.x;
+    cameraState.camZ  = camera.position.z;
+    cameraState.camRY = camera.rotation.y;
+    cameraState.onUpdate?.();
+
+    if (modeRef.current !== 'walk' || keys.current.size === 0) return;
+
+    // Keep rendering while walking
+    invalidate();
+
+    const yaw   = walkYaw.current;
+    const sp    = WALK_SPEED;
+    const fwdX  = Math.sin(yaw) * sp;
+    const fwdZ  = Math.cos(yaw) * sp;
+    const rgtX  = fwdZ, rgtZ = -fwdX;
+    const k     = keys.current;
+
+    if (k.has('ArrowLeft'))  walkYaw.current += 0.03;
+    if (k.has('ArrowRight')) walkYaw.current -= 0.03;
+
+    if (k.has('CtrlArrowUp'))   walkPitch.current = Math.min( 1.4, walkPitch.current + 0.02);
+    if (k.has('CtrlArrowDown')) walkPitch.current = Math.max(-1.4, walkPitch.current - 0.02);
+
+    if (k.has('AltArrowUp'))   walkPos.current.y += sp;
+    if (k.has('AltArrowDown')) walkPos.current.y -= sp;
+
+    const noMod = !k.has('CtrlArrowUp') && !k.has('CtrlArrowDown') && !k.has('AltArrowUp') && !k.has('AltArrowDown');
+    if (noMod && (k.has('ArrowUp')   || k.has('w'))) { walkPos.current.x -= fwdX; walkPos.current.z -= fwdZ; }
+    if (noMod && (k.has('ArrowDown') || k.has('s'))) { walkPos.current.x += fwdX; walkPos.current.z += fwdZ; }
+    if (k.has('a')) { walkPos.current.x -= rgtX; walkPos.current.z -= rgtZ; }
+    if (k.has('d')) { walkPos.current.x += rgtX; walkPos.current.z += rgtZ; }
+
+    updateWalkLook();
+  });
+
+  // ── Top-down orthographic frustum ──────────────────────────────────────────
+
+  const aspect = size.width / size.height;
+  const viewH  = 800;
+  const viewW  = viewH * aspect;
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+
+  return (
+    <>
+      {mode === 'top' && (
+        <OrthographicCamera
+          makeDefault
+          position={[CX, 2000, CZ]}
+          up={[0, 0, -1]}
+          left={-viewW / 2}  right={viewW / 2}
+          top={viewH / 2}    bottom={-viewH / 2}
+          near={1}           far={5000}
+        />
+      )}
+
+      <OrbitControls
+        ref={ctrlRef}
+        target={PERSP_TARGET}
+        enableDamping
+        dampingFactor={0.08}
+        maxPolarAngle={Math.PI}
+        enableRotate={mode !== 'top'}
+        screenSpacePanning={mode === 'top'}
+      />
+    </>
+  );
+}

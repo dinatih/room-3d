@@ -5,6 +5,7 @@ import { useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { ACESFilmicToneMapping, PCFSoftShadowMap, FogExp2, Color } from 'three';
 import { CameraController } from './CameraController';
+import { cameraState }      from './cameraState';
 import { Minimap }          from './Minimap';
 import { SidePanel, type FurnitureState, type LayerState } from './SidePanel';
 import { Walls }     from './structure/Walls';
@@ -42,16 +43,19 @@ export function Studio() {
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
     setFurniture(s => ({ ...s, [key]: !s[key] }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key } }));
+    cameraState.invalidate?.();
   }, []);
 
   const onToggleLayer = useCallback((key: keyof LayerState) => {
     setLayers(s => ({ ...s, [key]: !s[key] }));
+    cameraState.invalidate?.();
   }, []);
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <Canvas
         style={{ width: '100%', height: '100%' }}
+        frameloop="demand"
         camera={{
           fov:  50,
           near: 1,
