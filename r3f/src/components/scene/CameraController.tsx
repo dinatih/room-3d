@@ -83,9 +83,9 @@ export function CameraController() {
     const d    = 100;
     const cosP = Math.cos(walkPitch.current);
     ctrl.target.set(
-      walkPos.current.x - Math.sin(walkYaw.current) * cosP * d,
+      walkPos.current.x + Math.sin(walkYaw.current) * cosP * d,
       walkPos.current.y + Math.sin(walkPitch.current) * d,
-      walkPos.current.z - Math.cos(walkYaw.current) * cosP * d,
+      walkPos.current.z + Math.cos(walkYaw.current) * cosP * d,
     );
     camera.position.set(walkPos.current.x, walkPos.current.y, walkPos.current.z);
     ctrl.update();
@@ -102,7 +102,7 @@ export function CameraController() {
       ctrl.enableZoom   = false;
     }
     changeMode('walk');
-    // updateWalkLook called in frame after state settles
+    invalidate(); // déclenche un frame pour que la minimap affiche l'icône
   }
 
   function exitWalkMode() {
@@ -115,6 +115,7 @@ export function CameraController() {
       ctrl.enableZoom   = true;
     }
     changeMode('orbit');
+    invalidate(); // met à jour la minimap (supprime l'icône)
   }
 
   function enterTop() {
@@ -255,7 +256,7 @@ export function CameraController() {
     const onUp    = () => { dragging.current = false; };
     const onMove  = (e: MouseEvent) => {
       if (!dragging.current || modeRef.current !== 'walk') return;
-      walkYaw.current   -= e.movementX * MOUSE_SENS;
+      walkYaw.current   += e.movementX * MOUSE_SENS;
       walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - e.movementY * MOUSE_SENS));
       updateWalkLook();
       invalidate();
@@ -275,16 +276,20 @@ export function CameraController() {
   // ── Frame loop — walk movement ──────────────────────────────────────────────
 
   useFrame(() => {
-    // Sync camera position for minimap
-    cameraState.camX  = camera.position.x;
-    cameraState.camZ  = camera.position.z;
-    cameraState.camRY = camera.rotation.y;
+    // Sync camera position for minimap + walker
+    cameraState.camX     = camera.position.x;
+    cameraState.camZ     = camera.position.z;
+    cameraState.camRY    = camera.rotation.y;
+    cameraState.isWalking = modeRef.current === 'walk';
+    cameraState.isMoving  = modeRef.current === 'walk' && keys.current.size > 0;
+    cameraState.walkYaw   = walkYaw.current;
     cameraState.onUpdate?.();
 
-    if (modeRef.current !== 'walk' || keys.current.size === 0) return;
+    if (modeRef.current !== 'walk') return;
 
-    // Keep rendering while walking
+    // Keep rendering while in walk mode (minimap icon + smooth camera)
     invalidate();
+    if (keys.current.size === 0) return;
 
     const yaw   = walkYaw.current;
     const sp    = WALK_SPEED;
@@ -303,8 +308,8 @@ export function CameraController() {
     if (k.has('AltArrowDown')) walkPos.current.y -= sp;
 
     const noMod = !k.has('CtrlArrowUp') && !k.has('CtrlArrowDown') && !k.has('AltArrowUp') && !k.has('AltArrowDown');
-    if (noMod && (k.has('ArrowUp')   || k.has('w'))) { walkPos.current.x -= fwdX; walkPos.current.z -= fwdZ; }
-    if (noMod && (k.has('ArrowDown') || k.has('s'))) { walkPos.current.x += fwdX; walkPos.current.z += fwdZ; }
+    if (noMod && (k.has('ArrowUp')   || k.has('w'))) { walkPos.current.x += fwdX; walkPos.current.z += fwdZ; }
+    if (noMod && (k.has('ArrowDown') || k.has('s'))) { walkPos.current.x -= fwdX; walkPos.current.z -= fwdZ; }
     if (k.has('a')) { walkPos.current.x -= rgtX; walkPos.current.z -= rgtZ; }
     if (k.has('d')) { walkPos.current.x += rgtX; walkPos.current.z += rgtZ; }
 

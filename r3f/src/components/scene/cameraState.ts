@@ -11,6 +11,13 @@ export const cameraState = {
   camX: 150 as number,
   camZ: 200 as number,
   camRY: 0 as number,
+  /** Walk mode : état partagé avec Walker.tsx */
+  isWalking: false as boolean,
+  isMoving:  false as boolean,
+  walkYaw:   0     as number,
+  /** Position du walker (Lara) — mis à jour par Walker.tsx, lu par Minimap */
+  walkerX: 150 as number,
+  walkerZ: 200 as number,
   /** Déclenché par CameraController chaque frame — la minimap s'y abonne */
   onUpdate:   null as (() => void) | null,
   /** Enregistré par CameraController ; appeler pour forcer un frame R3F. */

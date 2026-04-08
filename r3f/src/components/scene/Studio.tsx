@@ -19,6 +19,7 @@ import { Furnishings } from './Furnishings';
 import { Decor }       from './Decor';
 import { Mirrors }     from './Mirrors';
 import { GlbItems }   from './GlbItems';
+import { Walker }     from './Walker';
 import { LaptopDesk } from './LaptopDesk';
 import { Backpacks }  from './Backpacks';
 import { Garden }      from './Garden';
@@ -124,6 +125,7 @@ export function Studio() {
         <group visible={layers.glb}>
           <GlbItems />
           <Garden />
+          <Walker />
         </group>
 
         {/* Voisins */}

@@ -12,6 +12,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { removeGlbLines } from '../../utils/glbUtils';
 
 // @ts-ignore
 import { ROOM_W, ROOM_D, NICHE_DEPTH, KALLAX_DEPTH } from '@config';
@@ -40,6 +41,7 @@ function Scooter() {
       460 - (box.min.z + box.max.z) / 2,
     );
     scene.rotation.y = Math.PI;
+    removeGlbLines(scene);
     scene.traverse(c => {
       if ((c as THREE.Mesh).isMesh) {
         c.castShadow = true;
@@ -64,6 +66,7 @@ function Chair() {
     const cz = (box.min.z + box.max.z) / 2;
     // smorkullGroup at (chairCX,0,151) + chair offset = net world (-box.min.x, 0, 151-cz)
     scene.position.set(-box.min.x, 0, 151 - cz);
+    removeGlbLines(scene);
     scene.castShadow = true;
     scene.receiveShadow = true;
   }, [scene]);
@@ -98,6 +101,7 @@ function Lamp() {
     const dz = ROOM_D / 2 - MEUBLE_T_Z;
     scene.position.set(MEUBLE_T_X - cx, baseY, MEUBLE_T_Z - cz);
     scene.rotation.y = Math.atan2(dx, dz);
+    removeGlbLines(scene);
   }, [scene]);
   return <primitive object={scene} />;
 }
@@ -116,6 +120,7 @@ function Sunnersta() {
     const cz = (box.min.z + box.max.z) / 2;
     // Position 1 : face est contre mur B, centre Z=271.5
     scene.position.set(ROOM_W - box.max.x, -box.min.y, 271.5 - cz);
+    removeGlbLines(scene);
     scene.traverse(c => {
       if ((c as THREE.Mesh).isMesh) {
         c.castShadow = true;
@@ -150,6 +155,7 @@ function Mackapar() {
     const posX = -NICHE_DEPTH + PLINTHE - box.min.x;
     const cz = (box.min.z + box.max.z) / 2;
     mack.position.set(posX, -box.min.y, mpZ - cz);
+    removeGlbLines(mack);
     mack.traverse(c => {
       if ((c as THREE.Mesh).isMesh) {
         c.castShadow = true;
@@ -175,6 +181,7 @@ function Mackapar() {
       RAIL_Y - suitBox.max.y + 30 - 15,
       mackCZ - (suitBox.min.z + suitBox.max.z) / 2,
     );
+    removeGlbLines(suit);
     suit.traverse(c => {
       const m = c as THREE.Mesh;
       if (m.isMesh) { m.material = redMat; m.castShadow = true; m.receiveShadow = true; }
@@ -193,6 +200,7 @@ function Mackapar() {
       RAIL_Y - salBox.max.y + 30 - 15,
       mackCZ - (salBox.min.z + salBox.max.z) / 2,
     );
+    removeGlbLines(sal);
     sal.traverse(c => {
       const m = c as THREE.Mesh;
       if (m.isMesh) { m.material = redMat; m.castShadow = true; m.receiveShadow = true; }
@@ -216,6 +224,7 @@ function Caps() {
   const { scene } = useGLTF('media/baseball_cap.glb');
 
   const { wall, mannequin } = useMemo(() => {
+    removeGlbLines(scene);
     const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.65 });
     const rawBox = new THREE.Box3().setFromObject(scene);
     const rawSize = rawBox.getSize(new THREE.Vector3());
@@ -271,6 +280,7 @@ function Sneakers() {
 
   // Build 4 clones (L+R for pair1, L+R for pair2) from the template
   const clones = useMemo(() => {
+    removeGlbLines(scene);
     const rawBox = new THREE.Box3().setFromObject(scene);
     const rawSize = rawBox.getSize(new THREE.Vector3());
     const longestH = Math.max(rawSize.x, rawSize.z);

@@ -173,8 +173,7 @@ const FLOOR_SEGMENTS: { t: SegType; x1: number; z1: number; x2: number; z2: numb
 function drawMinimap(
   canvas: HTMLCanvasElement,
   hoveredRoom: Room | null,
-  camX: number, camZ: number, camRY: number,
-  walkActive: boolean,
+  camX: number, camZ: number, yaw: number,
 ) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -248,25 +247,23 @@ function drawMinimap(
     ctx.fillText(room.nameEn, tx(room.labelX), tz(room.labelZ) + 9 * scale);
   }
 
-  // Walker icon
-  if (walkActive) {
-    ctx.save();
-    ctx.translate(tx(camX), tz(camZ));
-    ctx.rotate(Math.PI - camRY);
-    const V = 50 * Math.PI / 180;
-    const hFov = 2 * Math.atan(Math.tan(V / 2) * (window.innerWidth / window.innerHeight));
-    const fovR = 120 * S;
-    ctx.beginPath(); ctx.moveTo(0, 0);
-    ctx.arc(0, 0, fovR, Math.PI / 2 - hFov / 2, Math.PI / 2 + hFov / 2);
-    ctx.closePath();
-    ctx.fillStyle   = 'rgba(255,221,0,0.18)'; ctx.fill();
-    ctx.strokeStyle = 'rgba(255,221,0,0.55)'; ctx.lineWidth = 0.7 * scale; ctx.stroke();
-    const R = 5 * scale, BW = 8 * scale, BH = 4 * scale;
-    ctx.fillStyle = '#ff4444'; ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 0.8 * scale;
-    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.rect(-BW / 2, R, BW, BH); ctx.fill(); ctx.stroke();
-    ctx.restore();
-  }
+  // Walker (Lara) icon — toujours affiché à sa position
+  ctx.save();
+  ctx.translate(tx(camX), tz(camZ));
+  ctx.rotate(-yaw);
+  const V = 50 * Math.PI / 180;
+  const hFov = 2 * Math.atan(Math.tan(V / 2) * (window.innerWidth / window.innerHeight));
+  const fovR = 120 * S;
+  ctx.beginPath(); ctx.moveTo(0, 0);
+  ctx.arc(0, 0, fovR, Math.PI / 2 - hFov / 2, Math.PI / 2 + hFov / 2);
+  ctx.closePath();
+  ctx.fillStyle   = 'rgba(255,221,0,0.18)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,221,0,0.55)'; ctx.lineWidth = 0.7 * scale; ctx.stroke();
+  const R = 5 * scale, BW = 8 * scale, BH = 4 * scale;
+  ctx.fillStyle = '#ff4444'; ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 0.8 * scale;
+  ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.rect(-BW / 2, R, BW, BH); ctx.fill(); ctx.stroke();
+  ctx.restore();
 }
 
 // ── Composant HTML pur ────────────────────────────────────────────────────────
@@ -292,8 +289,7 @@ export function Minimap() {
       drawMinimap(
         canvas,
         hoveredRoom.current,
-        cameraState.camX, cameraState.camZ, cameraState.camRY,
-        cameraState.mode === 'walk',
+        cameraState.walkerX, cameraState.walkerZ, cameraState.walkYaw,
       );
     };
     // Initial draw

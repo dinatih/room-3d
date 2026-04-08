@@ -5,6 +5,7 @@
 import { useMemo, useLayoutEffect } from 'react';
 import { RoundedBox, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { removeGlbLines } from '../../utils/glbUtils';
 
 // ── Matériaux ─────────────────────────────────────────────────────────────────
 
@@ -79,6 +80,7 @@ function ChestBench() {
 function Viggja() {
   const { scene } = useGLTF('media/viggja.glb');
   useLayoutEffect(() => {
+    removeGlbLines(scene);
     scene.position.set(100, 0, -178);
     scene.traverse(c => {
       if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
@@ -101,6 +103,7 @@ function PottedPalm() {
       -box.min.y,
       -150 - (box.min.z + box.max.z) / 2,
     );
+    removeGlbLines(scene);
     scene.traverse(c => {
       if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
     });
@@ -175,6 +178,7 @@ function RealisticCloths() {
       -box.min.y,
       -250 - (box.min.z + box.max.z) / 2,
     );
+    removeGlbLines(scene);
     const red = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
     scene.traverse(c => {
       const m = c as THREE.Mesh;
