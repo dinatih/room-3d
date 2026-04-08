@@ -126,13 +126,14 @@ export function Walker() {
     const isWalking = cameraState.isWalking;
     const isMoving  = cameraState.isMoving;
 
-    // En walk mode : suivre la caméra. Sinon : rester à la dernière position.
+    // En walk mode : synchroniser walkerX/Z sur la caméra.
     if (isWalking) {
-      groupRef.current.position.set(cameraState.camX, 0, cameraState.camZ);
-      groupRef.current.rotation.y = cameraState.walkYaw;
       cameraState.walkerX = cameraState.camX;
       cameraState.walkerZ = cameraState.camZ;
     }
+    // Toujours appliquer walkerX/Z au groupe (orbit mode : mis à jour par les flèches)
+    groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
+    groupRef.current.rotation.y = cameraState.walkYaw;
 
     // Animation marche
     const mixer  = mixerRef.current;

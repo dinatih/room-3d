@@ -62,7 +62,7 @@ export function Studio() {
           fov:  50,
           near: 1,
           far:  5000,
-          position: [ROOM_W / 2 + 100, 200, ROOM_D / 2 + 300],
+          position: [ROOM_W / 2, 1000, -150],
         }}
         shadows={{ type: PCFSoftShadowMap }}
         gl={{

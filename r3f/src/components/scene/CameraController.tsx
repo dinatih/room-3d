@@ -36,7 +36,7 @@ const WALK_H      = 180;
 const WALK_SPEED  = 2;
 const MOUSE_SENS  = 0.002;
 
-const PERSP_POS:    [number, number, number] = [ROOM_W / 2 + 100, 200, ROOM_D / 2 + 300];
+const PERSP_POS:    [number, number, number] = [ROOM_W / 2, 1000, -150];
 const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, WALL_H / 3, ROOM_D / 2];
 
 type Mode = 'orbit' | 'walk' | 'top';
@@ -184,10 +184,30 @@ export function CameraController() {
         return;
       }
 
+      const k = e.key;
+      const isArrow = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(k);
+
+      // Orbit-mode arrow keys (Google Earth style)
+      if (modeRef.current === 'orbit' && isArrow) {
+        if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
+          keys.current.add(k);                      // plain  → move walker
+        } else if (e.shiftKey && e.ctrlKey) {
+          keys.current.add('ShiftCtrl' + k);         // Shift+Ctrl → pan
+        } else if (e.shiftKey) {
+          keys.current.add('Shift' + k);             // Shift  → orbit
+        } else if (e.ctrlKey) {
+          keys.current.add('Ctrl' + k);              // Ctrl   → rotate camera
+        } else if (e.altKey) {
+          keys.current.add('Alt' + k);               // Alt    → pan
+        }
+        e.preventDefault();
+        invalidate();
+        return;
+      }
+
       // Walk-only keys
       if (modeRef.current !== 'walk') return;
-      const k = e.key;
-      if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(k)) {
+      if (isArrow) {
         keys.current.add(k);
         if (e.ctrlKey)  keys.current.add('Ctrl' + k);
         if (e.altKey)   keys.current.add('Alt' + k);
@@ -203,10 +223,17 @@ export function CameraController() {
     };
 
     const onUp = (e: KeyboardEvent) => {
-      keys.current.delete(e.key);
-      keys.current.delete(e.key.toLowerCase());
-      keys.current.delete('Ctrl' + e.key);
-      keys.current.delete('Alt' + e.key);
+      const k = e.key;
+      keys.current.delete(k);
+      keys.current.delete(k.toLowerCase());
+      keys.current.delete('Shift'      + k);
+      keys.current.delete('Ctrl'       + k);
+      keys.current.delete('Alt'        + k);
+      keys.current.delete('ShiftCtrl'  + k);
+      // Modifier released → clear all keys that used it
+      if (k === 'Shift')   for (const key of [...keys.current]) { if (key.startsWith('Shift'))   keys.current.delete(key); }
+      if (k === 'Control') for (const key of [...keys.current]) { if (key.startsWith('Ctrl'))    keys.current.delete(key); }
+      if (k === 'Alt')     for (const key of [...keys.current]) { if (key.startsWith('Alt'))     keys.current.delete(key); }
     };
 
     // Minimap / panel click → enter walk in that room
@@ -282,8 +309,72 @@ export function CameraController() {
     cameraState.camRY    = camera.rotation.y;
     cameraState.isWalking = modeRef.current === 'walk';
     cameraState.isMoving  = modeRef.current === 'walk' && keys.current.size > 0;
-    cameraState.walkYaw   = walkYaw.current;
+    // walkYaw is only synced from walk controls when in walk mode;
+    // in orbit mode it is managed by the walker arrow keys below.
+    if (modeRef.current === 'walk') cameraState.walkYaw = walkYaw.current;
     cameraState.onUpdate?.();
+
+    // ── Orbit mode keyboard navigation (Google Earth style) ─────────────────────
+    if (modeRef.current === 'orbit' && keys.current.size > 0) {
+      const k   = keys.current;
+      const ctrl = ctrlRef.current;
+      invalidate();
+
+      // Plain arrows — move walker
+      if (k.has('ArrowLeft'))  cameraState.walkYaw += 0.03;
+      if (k.has('ArrowRight')) cameraState.walkYaw -= 0.03;
+      const wYaw = cameraState.walkYaw;
+      const ws   = WALK_SPEED;
+      if (k.has('ArrowUp'))   { cameraState.walkerX += Math.sin(wYaw)*ws; cameraState.walkerZ += Math.cos(wYaw)*ws; }
+      if (k.has('ArrowDown')) { cameraState.walkerX -= Math.sin(wYaw)*ws; cameraState.walkerZ -= Math.cos(wYaw)*ws; }
+
+      if (ctrl) {
+        // Shift+arrows — orbit (rotate camera around target)
+        if (k.has('ShiftArrowLeft') || k.has('ShiftArrowRight') || k.has('ShiftArrowUp') || k.has('ShiftArrowDown')) {
+          const offset = new THREE.Vector3().subVectors(camera.position, ctrl.target);
+          const sph    = new THREE.Spherical().setFromVector3(offset);
+          if (k.has('ShiftArrowLeft'))  sph.theta += 0.03;
+          if (k.has('ShiftArrowRight')) sph.theta -= 0.03;
+          if (k.has('ShiftArrowUp'))    sph.phi   -= 0.03;
+          if (k.has('ShiftArrowDown'))  sph.phi   += 0.03;
+          sph.makeSafe();
+          camera.position.setFromSpherical(sph).add(ctrl.target);
+          ctrl.update();
+        }
+
+        // Ctrl+arrows — rotate camera (heading/tilt, target moves around camera)
+        if (k.has('CtrlArrowLeft') || k.has('CtrlArrowRight') || k.has('CtrlArrowUp') || k.has('CtrlArrowDown')) {
+          const toTarget = new THREE.Vector3().subVectors(ctrl.target, camera.position);
+          const up       = new THREE.Vector3(0, 1, 0);
+          if (k.has('CtrlArrowLeft'))  toTarget.applyAxisAngle(up,  0.03);
+          if (k.has('CtrlArrowRight')) toTarget.applyAxisAngle(up, -0.03);
+          const camRight = new THREE.Vector3().crossVectors(toTarget.clone().normalize(), up).normalize();
+          if (k.has('CtrlArrowUp'))   toTarget.applyAxisAngle(camRight,  0.03);
+          if (k.has('CtrlArrowDown')) toTarget.applyAxisAngle(camRight, -0.03);
+          ctrl.target.copy(camera.position).add(toTarget);
+          ctrl.update();
+        }
+
+        // Alt or Shift+Ctrl+arrows — pan (translate camera + target together)
+        const hasPan = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown']
+          .some(a => k.has('Alt'+a) || k.has('ShiftCtrl'+a));
+        if (hasPan) {
+          const camDir   = new THREE.Vector3();
+          camera.getWorldDirection(camDir);
+          const camRight = new THREE.Vector3(-camDir.z, 0, camDir.x).normalize();
+          const panStep  = ctrl.target.distanceTo(camera.position) * 0.003;
+          const panDelta = new THREE.Vector3();
+          const isPan = (a: string) => k.has('Alt'+a) || k.has('ShiftCtrl'+a);
+          if (isPan('ArrowLeft'))  panDelta.addScaledVector(camRight, -panStep);
+          if (isPan('ArrowRight')) panDelta.addScaledVector(camRight,  panStep);
+          if (isPan('ArrowUp'))    panDelta.addScaledVector(new THREE.Vector3(0,1,0),  panStep);
+          if (isPan('ArrowDown'))  panDelta.addScaledVector(new THREE.Vector3(0,1,0), -panStep);
+          camera.position.add(panDelta);
+          ctrl.target.add(panDelta);
+          ctrl.update();
+        }
+      }
+    }
 
     if (modeRef.current !== 'walk') return;
 
