@@ -3,7 +3,7 @@
  * La porte tourne en Y autour de sa charnière (côté -Z), animée en douceur.
  */
 import { useRef, useLayoutEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '../../../types';
 
@@ -17,6 +17,7 @@ const INNER_W = FRZ_W - FRZ_T * 2;
 export function Freezer({ actionState, onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
   const isOpen  = actionState['freezer-toggle'] ?? false;
+  const { invalidate } = useThree();
 
   // Taille en unités scène (1 unit = 1cm ici, comme le reste du projet)
   useLayoutEffect(() => {
@@ -26,8 +27,13 @@ export function Freezer({ actionState, onSize }: SceneItemProps) {
   // Animation fluide de la porte
   useFrame(() => {
     const target = isOpen ? Math.PI / 2 : 0;
-    doorRef.current.rotation.y +=
-      (target - doorRef.current.rotation.y) * 0.12;
+    const delta = target - doorRef.current.rotation.y;
+    if (Math.abs(delta) > 0.001) {
+      doorRef.current.rotation.y += delta * 0.12;
+      invalidate();
+    } else {
+      doorRef.current.rotation.y = target;
+    }
   });
 
   return (

@@ -7,7 +7,7 @@
  *   DoorSdb    — charnière gauche (-X), ouvre +90° (côté couloir)
  */
 import { useRef, useLayoutEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '../../../types';
 
@@ -102,6 +102,7 @@ function DoorImpl({
 }) {
   const doorRef = useRef<THREE.Group>(null!);
   const isOpen  = actionState[actionKey] ?? false;
+  const { invalidate } = useThree();
 
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(TOTAL_W, WH, WW));
@@ -109,7 +110,13 @@ function DoorImpl({
 
   useFrame(() => {
     const target = isOpen ? openAngle : 0;
-    doorRef.current.rotation.y += (target - doorRef.current.rotation.y) * 0.12;
+    const delta = target - doorRef.current.rotation.y;
+    if (Math.abs(delta) > 0.001) {
+      doorRef.current.rotation.y += delta * 0.12;
+      invalidate();
+    } else {
+      doorRef.current.rotation.y = target;
+    }
   });
 
   return (

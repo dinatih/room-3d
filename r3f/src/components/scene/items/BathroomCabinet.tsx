@@ -3,7 +3,7 @@
  * Deux variantes : West (charnière gauche, ouvre -90°) et East (charnière droite, +90°)
  */
 import { useRef, useLayoutEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '../../../types';
 
@@ -25,6 +25,7 @@ function CabinetImpl({
 }) {
   const doorRef = useRef<THREE.Group>(null!);
   const isOpen  = actionState[actionKey] ?? false;
+  const { invalidate } = useThree();
 
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(W, H, D));
@@ -32,7 +33,13 @@ function CabinetImpl({
 
   useFrame(() => {
     const target = isOpen ? openAngle : 0;
-    doorRef.current.rotation.y += (target - doorRef.current.rotation.y) * 0.12;
+    const delta = target - doorRef.current.rotation.y;
+    if (Math.abs(delta) > 0.001) {
+      doorRef.current.rotation.y += delta * 0.12;
+      invalidate();
+    } else {
+      doorRef.current.rotation.y = target;
+    }
   });
 
   const pvcMat  = { color: '#f0f0f0', roughness: 0.3 } as const;

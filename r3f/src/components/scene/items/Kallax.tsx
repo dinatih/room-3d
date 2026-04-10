@@ -20,15 +20,15 @@ function totalW(cols: number) { return cols * NW + 2 * TF + (cols - 1) * TI; }
 function totalH(rows: number) { return rows * NH + 2 * TF + (rows - 1) * TI; }
 
 // ── Table des variantes ────────────────────────────────────────────────────────
-const VARIANTS: Record<string, { cols: number; rows: number; dronas: boolean }> = {
-  'kallax-ne-2x1':   { cols: 2, rows: 1, dronas: true  },
-  'kallax-ne-2x2':   { cols: 2, rows: 2, dronas: true  },
-  'kallax-se-2x1':   { cols: 2, rows: 1, dronas: true  },
-  'kallax-nw-2x1':   { cols: 2, rows: 1, dronas: true  },
-  'kallax-nw-1x1-a': { cols: 1, rows: 1, dronas: true  },
-  'kallax-nw-1x1-b': { cols: 1, rows: 1, dronas: true  },
-  'kallax-sw-2x2':   { cols: 2, rows: 2, dronas: true  },
-  'kallax-sw-2x1':   { cols: 2, rows: 1, dronas: false },
+const VARIANTS: Record<string, { cols: number; rows: number }> = {
+  'kallax-ne-2x1':   { cols: 2, rows: 1 },
+  'kallax-ne-2x2':   { cols: 2, rows: 2 },
+  'kallax-se-2x1':   { cols: 2, rows: 1 },
+  'kallax-nw-2x1':   { cols: 2, rows: 1 },
+  'kallax-nw-1x1-a': { cols: 1, rows: 1 },
+  'kallax-nw-1x1-b': { cols: 1, rows: 1 },
+  'kallax-sw-2x2':   { cols: 2, rows: 2 },
+  'kallax-sw-2x1':   { cols: 2, rows: 1 },
 };
 
 // ── Panneau bois ───────────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ function Panel({ sx, sy, sz, x, y, z }: {
 
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Kallax({ item, onSize }: SceneItemProps) {
-  const v = VARIANTS[item.id] ?? { cols: 2, rows: 1, dronas: false };
+  const v = VARIANTS[item.id] ?? { cols: 2, rows: 1 };
   const W = totalW(v.cols);
   const H = totalH(v.rows);
 
@@ -96,19 +96,6 @@ export function Kallax({ item, onSize }: SceneItemProps) {
         });
       })}
 
-      {/* ── Boîtes Drona ── */}
-      {v.dronas && Array.from({ length: v.rows }, (_, r) =>
-        Array.from({ length: v.cols }, (_, c) => {
-          const x = -W/2 + TF + NW/2 + c*(NW+TI);
-          const y =  H/2 - TF - NH/2 - r*(NH+TI);
-          return (
-            <mesh key={`drona${r}${c}`} position={[x, y, 0]}>
-              <boxGeometry args={[NW - 1, NH - 1, 33]} />
-              <meshStandardMaterial color="#c4a882" roughness={0.8} />
-            </mesh>
-          );
-        })
-      )}
 
     </group>
   );

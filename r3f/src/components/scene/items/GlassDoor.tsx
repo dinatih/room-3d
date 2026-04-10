@@ -4,7 +4,7 @@
  * Battant gauche fixe, battant droit ouvrant (pivot charnière droite, +90°).
  */
 import { useRef, useLayoutEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '../../../types';
 
@@ -85,6 +85,7 @@ function WallSurround() {
 export function GlassDoor({ actionState, onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
   const isOpen  = actionState['door-toggle'] ?? false;
+  const { invalidate } = useThree();
 
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(TOTAL_W, WH, WW));
@@ -92,7 +93,13 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
   useFrame(() => {
     const target = isOpen ? Math.PI / 2 : 0;
-    doorRef.current.rotation.y += (target - doorRef.current.rotation.y) * 0.12;
+    const delta = target - doorRef.current.rotation.y;
+    if (Math.abs(delta) > 0.001) {
+      doorRef.current.rotation.y += delta * 0.12;
+      invalidate();
+    } else {
+      doorRef.current.rotation.y = target;
+    }
   });
 
   const handleMat = <meshStandardMaterial color="#888888" metalness={0.6} roughness={0.3} />;

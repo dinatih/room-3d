@@ -3,7 +3,7 @@
  * Porte articulée (charnière gauche -X), animée en douceur.
  */
 import { useRef, useLayoutEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '../../../types';
 
@@ -21,6 +21,7 @@ const OJ_Y    = 5 + SHELF_T + 1;   // base bouteille OJ sur tablette basse
 export function Fridge({ actionState, onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
   const isOpen  = actionState['fridge-toggle'] ?? false;
+  const { invalidate } = useThree();
 
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(W, H, D));
@@ -28,7 +29,13 @@ export function Fridge({ actionState, onSize }: SceneItemProps) {
 
   useFrame(() => {
     const target = isOpen ? Math.PI / 2 : 0;
-    doorRef.current.rotation.y += (target - doorRef.current.rotation.y) * 0.12;
+    const delta = target - doorRef.current.rotation.y;
+    if (Math.abs(delta) > 0.001) {
+      doorRef.current.rotation.y += delta * 0.12;
+      invalidate();
+    } else {
+      doorRef.current.rotation.y = target;
+    }
   });
 
   return (

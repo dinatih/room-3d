@@ -4,7 +4,7 @@
  * La porte est dans le mur diagonal, ici simplifié en section rectangulaire.
  */
 import { useRef, useLayoutEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '../../../types';
 
@@ -70,6 +70,7 @@ function WallSurround() {
 export function DoorEntry({ actionState, onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
   const isOpen  = actionState['entry-door-toggle'] ?? false;
+  const { invalidate } = useThree();
 
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(TOTAL_W, WH, WW));
@@ -77,7 +78,13 @@ export function DoorEntry({ actionState, onSize }: SceneItemProps) {
 
   useFrame(() => {
     const target = isOpen ? -(2 * Math.PI / 3) : 0;
-    doorRef.current.rotation.y += (target - doorRef.current.rotation.y) * 0.12;
+    const delta = target - doorRef.current.rotation.y;
+    if (Math.abs(delta) > 0.001) {
+      doorRef.current.rotation.y += delta * 0.12;
+      invalidate();
+    } else {
+      doorRef.current.rotation.y = target;
+    }
   });
 
   // Handle L : 70cm depuis charnière (gauche = -W/2)

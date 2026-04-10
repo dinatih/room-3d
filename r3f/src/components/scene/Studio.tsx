@@ -3,7 +3,7 @@
  */
 import { useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { ACESFilmicToneMapping, PCFSoftShadowMap, FogExp2, Color } from 'three';
+import { ACESFilmicToneMapping, PCFSoftShadowMap, FogExp2, Color, PMREMGenerator, Scene, AmbientLight, DirectionalLight, Mesh, PlaneGeometry, MeshStandardMaterial } from 'three';
 import { CameraController } from './CameraController';
 import { cameraState }      from './cameraState';
 import { Minimap }          from './Minimap';
@@ -31,6 +31,7 @@ import { DevToolsCollector }            from './DevToolsCollector';
 
 // @ts-ignore — JS file with no type declarations
 import { ROOM_W, ROOM_D } from '@config';
+
 
 export function Studio() {
   const [furniture, setFurniture] = useState<FurnitureState>({
@@ -67,6 +68,7 @@ export function Studio() {
         shadows={{ type: PCFSoftShadowMap }}
         gl={{
           antialias:    true,
+          alpha:        false,
           toneMapping:  ACESFilmicToneMapping,
           toneMappingExposure: 1,
         }}
@@ -74,12 +76,37 @@ export function Studio() {
           scene.background = new Color(0x2a2a3e);
           scene.fog = new FogExp2(0x2a2a3e, 0.0006);
           gl.shadowMap.enabled = true;
+
+          // Environment map PMREM — fidèle à js/scene.js, synchrone avant le premier frame
+          const pmrem = new PMREMGenerator(gl);
+          const envScene = new Scene();
+          envScene.background = new Color(0x889ab5);
+          envScene.add(new AmbientLight(0xffffff, 1));
+          const envDir = new DirectionalLight(0xfff8e8, 2);
+          envDir.position.set(10, 10, 5);
+          envScene.add(envDir);
+          const envFloor = new Mesh(
+            new PlaneGeometry(1000, 1000),
+            new MeshStandardMaterial({ color: 0xc4a060 }),
+          );
+          envFloor.rotation.x = -Math.PI / 2;
+          envFloor.position.y = -10;
+          envScene.add(envFloor);
+          const envWall = new Mesh(
+            new PlaneGeometry(1000, 300),
+            new MeshStandardMaterial({ color: 0xccccbb }),
+          );
+          envWall.position.set(0, 100, -100);
+          envScene.add(envWall);
+          scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+          pmrem.dispose();
         }}
       >
-        <ambientLight intensity={0.6} />
+        <ambientLight color={0x8899bb} intensity={0.6} />
         <directionalLight
-          position={[300, 500, 400]}
-          intensity={1.4}
+          color={0xfff5e0}
+          position={[500, 700, 400]}
+          intensity={1.8}
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-camera-near={1}
@@ -88,8 +115,10 @@ export function Studio() {
           shadow-camera-right={600}
           shadow-camera-top={600}
           shadow-camera-bottom={-600}
+          shadow-bias={-0.003}
+          shadow-normalBias={0.4}
         />
-        <directionalLight position={[-200, 100, -300]} intensity={0.35} />
+        <directionalLight color={0xaabbff} position={[-200, 300, -100]} intensity={0.4} />
 
         <CameraController />
         <HoverRaycaster />
