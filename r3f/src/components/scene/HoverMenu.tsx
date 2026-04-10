@@ -5,7 +5,7 @@
  *   HoverRaycaster  — composant R3F (dans Canvas) : détecte l'objet survolé
  *   HoverOverlay    — composant HTML (hors Canvas) : affiche le popup
  */
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE   from 'three';
 import { hoverState } from './hoverState';
@@ -15,18 +15,25 @@ import { hoverState } from './hoverState';
 
 interface ActionDef { btnLabel: string; toggleKey: string; }
 const ACTIONS: Record<string, ActionDef> = {
-  eastDoor:  { btnLabel: 'Ouvrir / Fermer', toggleKey: 'eastDoor'  },
-  corrDoors: { btnLabel: 'Ouvrir / Fermer', toggleKey: 'corrDoors' },
-  freezer:   { btnLabel: 'Ouvrir / Fermer', toggleKey: 'freezer'   },
-  fridge:    { btnLabel: 'Ouvrir / Fermer', toggleKey: 'fridge'    },
-  cabinet:   { btnLabel: 'Ouvrir / Fermer', toggleKey: 'cabinet'   },
-  wcLid:     { btnLabel: 'Ouvrir / Fermer', toggleKey: 'wcLid'     },
+  eastDoor:       { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'eastDoor'      },
+  corrDoors:      { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'corrDoors'     },
+  freezer:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'freezer'       },
+  fridge:         { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'fridge'        },
+  cabinet:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'cabinet'       },
+  wcLid:          { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'wcLid'         },
+  'bed-toggle':   { btnLabel: 'Empiler / Déplier',  toggleKey: 'bed-toggle'    },
+  'bed-position': { btnLabel: 'Changer position',   toggleKey: 'bed-position'  },
+  'bed-sofa':     { btnLabel: 'Mode canapé',         toggleKey: 'bed-sofa'      },
 };
 
-function resolveAction(obj: THREE.Object3D): { label: string; actionId: string } | null {
+function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
   let cur: THREE.Object3D | null = obj;
   while (cur) {
-    if (cur.userData?.hoverAction) return cur.userData.hoverAction as { label: string; actionId: string };
+    const ha = cur.userData?.hoverAction as any;
+    if (ha) {
+      const ids: string[] = ha.actions ?? (ha.actionId ? [ha.actionId] : null);
+      if (ids?.length) return { label: ha.label as string, actionIds: ids };
+    }
     cur = cur.parent;
   }
   return null;
@@ -72,7 +79,7 @@ export function HoverRaycaster() {
       raycaster.setFromCamera(pointer, camera);
       const hits = raycaster.intersectObjects(scene.children, true);
 
-      let found: { label: string; actionId: string } | null = null;
+      let found: { label: string; actionIds: string[] } | null = null;
       for (const hit of hits) {
         if (!hit.object.visible) continue;
         // Skip transparent surfaces (ghost material, glass, neighbors)
@@ -85,9 +92,10 @@ export function HoverRaycaster() {
           : mat?.transparent && (mat?.opacity ?? 1) < 0.3;
         if (isTransparent) continue;
         if (hit.object.userData.brickType === 'ceiling') continue;
+        if (hit.object.userData.brickType === 'ground')  continue;
 
         const action = resolveAction(hit.object);
-        if (action && ACTIONS[action.actionId]) {
+        if (action && action.actionIds.some(id => ACTIONS[id])) {
           found = action;
         }
         break; // first opaque surface — stop here (occluded objects hidden)
@@ -95,11 +103,11 @@ export function HoverRaycaster() {
 
       if (found) {
         cancelHide();
-        hoverState.visible  = true;
-        hoverState.label    = found.label;
-        hoverState.actionId = found.actionId;
-        hoverState.x        = e.clientX;
-        hoverState.y        = e.clientY;
+        hoverState.visible    = true;
+        hoverState.label      = found.label;
+        hoverState.actionIds  = found.actionIds;
+        hoverState.x          = e.clientX;
+        hoverState.y          = e.clientY;
         canvas.style.cursor = 'pointer';
       } else {
         scheduleHide();
@@ -124,18 +132,30 @@ export function HoverRaycaster() {
 
 // ── Composant HTML (à placer hors Canvas) ────────────────────────────────────
 
+const BTN_STYLE: React.CSSProperties = {
+  background: 'rgba(255,215,0,0.08)',
+  color: '#ffd700',
+  border: '1px solid rgba(255,215,0,0.35)',
+  borderRadius: 6,
+  padding: '6px 14px',
+  fontSize: 12, fontWeight: 700,
+  letterSpacing: '0.05em',
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+};
+
 export function HoverOverlay() {
-  const [state, setState] = useState({ visible: false, label: '', actionId: '', x: 0, y: 0 });
+  const [state, setState] = useState({ visible: false, label: '', actionIds: [] as string[], x: 0, y: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     hoverState.onUpdate = () => {
       setState({
-        visible:  hoverState.visible,
-        label:    hoverState.label,
-        actionId: hoverState.actionId,
-        x:        hoverState.x,
-        y:        hoverState.y,
+        visible:    hoverState.visible,
+        label:      hoverState.label,
+        actionIds:  hoverState.actionIds,
+        x:          hoverState.x,
+        y:          hoverState.y,
       });
     };
     return () => { hoverState.onUpdate = null; };
@@ -143,23 +163,17 @@ export function HoverOverlay() {
 
   if (!state.visible) return null;
 
-  const action = ACTIONS[state.actionId];
-  if (!action) return null;
+  const actions = state.actionIds.map(id => ACTIONS[id]).filter(Boolean);
+  if (!actions.length) return null;
 
-  // Position near cursor
   const GAP = 14;
-  const approxW = 160, approxH = 70;
+  const approxW = 160;
+  const approxH = 44 + actions.length * 38;
   let left = state.x + GAP;
   let top  = state.y - approxH / 2;
   if (left + approxW > window.innerWidth  - 8) left = state.x - approxW - GAP;
   if (top < 8)                                  top  = 8;
   if (top + approxH > window.innerHeight  - 8) top  = window.innerHeight - approxH - 8;
-
-  const handleClick = () => {
-    document.dispatchEvent(new CustomEvent('furniture-toggle', {
-      detail: { key: action.toggleKey },
-    }));
-  };
 
   return (
     <div
@@ -179,22 +193,17 @@ export function HoverOverlay() {
       }}
     >
       <div style={{ color: '#ddd', fontSize: 12, fontWeight: 600 }}>{state.label}</div>
-      <button
-        onClick={handleClick}
-        style={{
-          background: 'rgba(255,215,0,0.08)',
-          color: '#ffd700',
-          border: '1px solid rgba(255,215,0,0.35)',
-          borderRadius: 6,
-          padding: '6px 14px',
-          fontSize: 12, fontWeight: 700,
-          letterSpacing: '0.05em',
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-        }}
-      >
-        {action.btnLabel}
-      </button>
+      {actions.map((action, i) => (
+        <button
+          key={i}
+          onClick={() => document.dispatchEvent(new CustomEvent('furniture-toggle', {
+            detail: { key: action.toggleKey },
+          }))}
+          style={BTN_STYLE}
+        >
+          {action.btnLabel}
+        </button>
+      ))}
     </div>
   );
 }

@@ -7,7 +7,7 @@
  *   - 2 bureaux BOLLSIDAN (plateau arrondi ExtrudeGeometry)
  *   - Téléviseur mural
  */
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -33,11 +33,11 @@ const tvBodyMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0
 // ────────────────────────────────────────────────────────────────────────────
 
 /** Un cadre Utåker : côtés + extrémités + 4 pieds + matelas. */
-function UtakerFrame({ matColor, matHeight, stacked = false }: {
-  matColor: number; matHeight: number; stacked?: boolean;
+function UtakerFrame({ matColor, matHeight }: {
+  matColor: number; matHeight: number;
 }) {
   return (
-    <group position={[0, stacked ? 23 : 0, 0]}>
+    <group>
       {/* Côtés longs */}
       <mesh position={[0, 17, 40]} castShadow receiveShadow material={woodMat}>
         <boxGeometry args={[205, 12, 3]} />
@@ -67,9 +67,9 @@ function UtakerFrame({ matColor, matHeight, stacked = false }: {
   );
 }
 
-/** Couette rouge + 2 polochons (attachés au cadre du haut, y relatif à b2). */
-function BedcoversRed({ b2Y }: { b2Y: number }) {
-  const relTop = b2Y + 11 + 24; // top of upper mattress in parent frame
+/** Couette rouge + 2 polochons — en coordonnées locales du cadre b2. */
+function BedcoversRed() {
+  const relTop = 11 + 24; // top of upper mattress (legs 11 + matH 24)
   const polR = 8, polL = 90;
   return (
     <group>
@@ -99,29 +99,57 @@ function BedcoversRed({ b2Y }: { b2Y: number }) {
 }
 
 function Bed() {
-  const pos = useMemo(() => {
+  const bedPositions = useMemo(() => {
     const PAD = 3;
     const halfL = 102.5, halfW = 41.5;
-    const dxK = ROOM_W - (ROOM_W - KALLAX_DEPTH);   // 39
-    const dxS = ROOM_W - SUNNERSTA_NW_X + PAD;       // 39
-    const dzT = SUNNERSTA_NW_Z - (kallaxW2 + PAD);   // 165
+    const dxK = ROOM_W - (ROOM_W - KALLAX_DEPTH);
+    const dxS = ROOM_W - SUNNERSTA_NW_X + PAD;
+    const dzT = SUNNERSTA_NW_Z - (kallaxW2 + PAD);
     const u = (dzT - Math.sqrt(dzT * dzT - 4 * dxK * dxS)) / 2;
     const NE_Z = kallaxW2 + PAD + u;
     const alpha = Math.atan2(dxK, u);
     const neOffX = halfL * Math.cos(alpha) + halfW * Math.sin(alpha);
     const neOffZ = -halfL * Math.sin(alpha) + halfW * Math.cos(alpha);
-    return {
-      x: ROOM_W - neOffX,
-      z: NE_Z - neOffZ,
-      ry: alpha,
-    };
+    return [
+      { x: ROOM_W - neOffX,    z: NE_Z - neOffZ, ry: alpha       }, // pos 0 — diagonale
+      { x: ROOM_W - 83 / 2,    z: 190,            ry: Math.PI / 2 }, // pos 1 — ∥ mur B
+      { x: ROOM_W - 205 / 2,   z: 200,            ry: 0           }, // pos 2 — ⊥ mur B
+    ];
   }, []);
 
+  const [stacked,    setStacked]    = useState(true);
+  const [sofa,       setSofa]       = useState(false);
+  const [bedPosIdx,  setBedPosIdx]  = useState(0);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { key } = (e as CustomEvent).detail as { key: string };
+      if (key === 'bed-toggle')   setStacked(v => !v);
+      if (key === 'bed-sofa')     setSofa(v => !v);
+      if (key === 'bed-position') { setSofa(false); setBedPosIdx(i => (i + 1) % 3); }
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, []);
+
+  const p    = bedPositions[bedPosIdx];
+  const gPos: [number, number, number] = sofa ? [ROOM_W - 83 / 2, 0, 190]            : [p.x, 0, p.z];
+  const gRy  = sofa ? Math.PI / 2 : p.ry;
+  const b2Pos: [number, number, number] = sofa
+    ? [46, 0, -(ROOM_W - 83)]
+    : [0, stacked ? 23 : 0, stacked ? 0 : -83];
+
   return (
-    <group position={[pos.x, 0, pos.z]} rotation={[0, pos.ry, 0]}>
+    <group
+      position={gPos}
+      rotation={[0, gRy, 0]}
+      userData={{ hoverAction: { label: 'Lit Utåker', actions: ['bed-toggle', 'bed-position', 'bed-sofa'] } }}
+    >
       <UtakerFrame matColor={0x87ceeb} matHeight={18} />
-      <UtakerFrame matColor={0xffffff} matHeight={24} stacked />
-      <BedcoversRed b2Y={23} />
+      <group position={b2Pos}>
+        <UtakerFrame matColor={0xffffff} matHeight={24} />
+        <BedcoversRed />
+      </group>
     </group>
   );
 }

@@ -281,6 +281,7 @@ export function Floor() {
       <mesh
         ref={(m) => { if (m) m.material = ceilMats as any; }}
         position={[BLDG_CX, WALL_H - 1 + CEIL_THICK / 2, BLDG_CZ]}
+        userData={{ brickType: 'ceiling' }}
       >
         <boxGeometry args={[BLDG_W, CEIL_THICK, BLDG_D]} />
       </mesh>
@@ -289,6 +290,7 @@ export function Floor() {
       <mesh
         ref={(m) => { if (m) m.material = ceilMats as any; }}
         position={[300 - 235 / 2, WALL_H - 1 + CEIL_THICK / 2, BLDG_Z_MIN - 75]}
+        userData={{ brickType: 'ceiling' }}
       >
         <boxGeometry args={[235, CEIL_THICK, 150]} />
       </mesh>
@@ -299,6 +301,7 @@ export function Floor() {
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, -10, 0]}
         receiveShadow
+        userData={{ brickType: 'ground' }}
       >
         <planeGeometry args={[2000, 2000]} />
       </mesh>

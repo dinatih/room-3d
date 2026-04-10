@@ -283,7 +283,7 @@ export function CameraController() {
     const onUp    = () => { dragging.current = false; };
     const onMove  = (e: MouseEvent) => {
       if (!dragging.current || modeRef.current !== 'walk') return;
-      walkYaw.current   += e.movementX * MOUSE_SENS;
+      walkYaw.current   -= e.movementX * MOUSE_SENS;
       walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - e.movementY * MOUSE_SENS));
       updateWalkLook();
       invalidate();
@@ -377,10 +377,10 @@ export function CameraController() {
     }
 
     if (modeRef.current !== 'walk') return;
-
-    // Keep rendering while in walk mode (minimap icon + smooth camera)
-    invalidate();
     if (keys.current.size === 0) return;
+
+    // Keep rendering while keys are held in walk mode
+    invalidate();
 
     const yaw   = walkYaw.current;
     const sp    = WALK_SPEED;
