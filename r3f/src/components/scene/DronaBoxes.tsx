@@ -136,28 +136,30 @@ export function DronaBoxes() {
   const iMeshRef = useRef<THREE.InstancedMesh>(null);
 
   const { geo } = useMemo(() => {
+    // Taille réelle du GLB (comme vanilla : setFromObject tient compte des transforms)
+    scene.updateMatrixWorld(true);
+    const sceneBox = new THREE.Box3().setFromObject(scene);
+    const rawSize  = sceneBox.getSize(new THREE.Vector3());
+    const s = rawSize.z > 0.01 ? 38 / rawSize.z : 1;
+
+    // Extraire la géométrie du premier mesh en bakant son matrixWorld
     let mergedGeo: THREE.BufferGeometry | null = null;
     scene.traverse(c => {
-      if ((c as THREE.Mesh).isMesh && !mergedGeo) {
-        mergedGeo = (c as THREE.Mesh).geometry.clone();
+      const m = c as THREE.Mesh;
+      if (m.isMesh && !mergedGeo) {
+        mergedGeo = m.geometry.clone();
+        mergedGeo.applyMatrix4(m.matrixWorld);
       }
     });
     if (!mergedGeo) mergedGeo = new THREE.BoxGeometry(33.5, 33.5, 38);
 
-    // Apply scale: 38/rawSize.z, centered
-    const box = new THREE.Box3().setFromBufferAttribute(
-      (mergedGeo as THREE.BufferGeometry).getAttribute('position') as THREE.BufferAttribute,
+    // Mise à l'échelle puis centrage
+    mergedGeo.applyMatrix4(new THREE.Matrix4().makeScale(s, s, s));
+    const scaled = new THREE.Box3().setFromBufferAttribute(
+      mergedGeo.getAttribute('position') as THREE.BufferAttribute,
     );
-    const rawSize = new THREE.Vector3();
-    box.getSize(rawSize);
-    const s = rawSize.z > 0.01 ? 38 / rawSize.z : 1;
-    const cx = (box.min.x + box.max.x) / 2;
-    const cy = (box.min.y + box.max.y) / 2;
-    const cz = (box.min.z + box.max.z) / 2;
-    const bake = new THREE.Matrix4()
-      .makeTranslation(-cx * s, -cy * s, -cz * s)
-      .multiply(new THREE.Matrix4().makeScale(s, s, s));
-    mergedGeo.applyMatrix4(bake);
+    const c = scaled.getCenter(new THREE.Vector3());
+    mergedGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(-c.x, -c.y, -c.z));
 
     return { geo: mergedGeo };
   }, [scene]);
