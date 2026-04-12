@@ -14,7 +14,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 // @ts-ignore
-import { ROOM_W, ROOM_D, NICHE_DEPTH, KALLAX_DEPTH } from '@config';
+import { ROOM_W, ROOM_D, NICHE_DEPTH, KALLAX_DEPTH, KITCHEN_Z, KITCHEN_X0, KITCHEN_X1, DOOR_START } from '@config';
 
 // Kallax geometry constants
 const THICK_FRAME = 3.5;
@@ -40,7 +40,8 @@ function cellPositions(cols: number, rows: number): Array<[number, number, numbe
   return pos;
 }
 
-const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });
+const redMatFront = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.FrontSide });
+const redMatBack  = new THREE.MeshStandardMaterial({ color: 0x991100, roughness: 0.9, side: THREE.BackSide });
 const DEPTH = KALLAX_DEPTH; // 39
 
 // ── Groupe NE : gStack(280.5, 0, 37.75) rotY=π/2 ────────────────────────────
@@ -125,6 +126,52 @@ function buildMatrices(): THREE.Matrix4[] {
   addDronas([-NICHE_DEPTH + DEPTH / 2, 0, ROOM_D - w2 / 2], -Math.PI / 2,
     [0, h2 / 2, 0], 0, cellPositions(2, 2));
 
+  // ── Dronas standalone (hors cases Kallax) ────────────────────────────────────
+  // Port de addSingleDrona() dans js/decor/decor.js.
+  // Toutes en coordonnées monde (les groupes parents ont position=(0,0,0)).
+
+  function addSingle(cx: number, cy: number, cz: number, rotY = 0) {
+    dummy.position.set(cx, cy + 0.2, cz);
+    dummy.rotation.set(0, rotY, 0);
+    dummy.updateMatrix();
+    mats.push(dummy.matrix.clone());
+  }
+
+  const DF = 33;
+
+  // 2 sur Mackapär (mackaparGroup.position=(0,0,0) → world = local)
+  const mpCX = -NICHE_DEPTH + 3.5 + 77 / 2; // 32
+  const mpCZ = ROOM_D - w2 - 16;             // 308.5
+  addSingle(mpCX - 20, 200 + DF / 2, mpCZ, Math.PI / 2);
+  addSingle(mpCX + 20, 200 + DF / 2, mpCZ, Math.PI / 2);
+
+  // 1 sur Kallax NE dessus — world calculé depuis kallaxNEGroup (pos=(280.5,0,37.75), rotY=π/2)
+  // local: (-18.75, k1TopY+DF/2, 0.5, -π/2) → world: (280, 134, 19, 0)
+  // +0.5 sur Z : face avant (profondeur le long de Z, rotY=0) à Z=0 = mur C → gap
+  addSingle(ROOM_W - DEPTH / 2 - 0.5, h1 + h2 + DF / 2, w2 / 2 - 18.75 + 0.5, 0);
+
+  // 2 sur Kallax SW dessus — kallaxSWGroup (pos=(9.5,0,362.25), rotY=-π/2)
+  // local: (±18, k4TopY+DF/2, 0, π) → world: (9.5, 210.5, 344.25/380.25, π/2)
+  const k4TopY = h2 * 2 + h1;
+  addSingle(-NICHE_DEPTH + DEPTH / 2, k4TopY + DF / 2, ROOM_D - w2 / 2 - 18, Math.PI / 2);
+  addSingle(-NICHE_DEPTH + DEPTH / 2, k4TopY + DF / 2, ROOM_D - w2 / 2 + 18, Math.PI / 2);
+
+  // 1 sur meuble SDB côté vasque (east cabinet top)
+  addSingle(DOOR_START - 28, 60 + DF / 2, KITCHEN_Z + 30);
+  // 1 sur meuble SDB ouest
+  addSingle(-NICHE_DEPTH + 20, 60 + DF / 2, KITCHEN_Z + 30);
+
+  // 3 sur meuble haut cuisine (kitchenGroup.position=(0,0,0))
+  const KIT_W = KITCHEN_X1 - KITCHEN_X0; // 100
+  const gap   = (KIT_W - 3 * DF) / 4;   // 0.25
+  const hcCZ  = KITCHEN_Z - 38 / 2 - 0.5; // 440.5 — gap avec mur cuisine (Z=KITCHEN_Z)
+  for (let i = 0; i < 3; i++) {
+    addSingle(KITCHEN_X0 + gap + DF / 2 + i * (DF + gap), 195 + DF / 2, hcCZ, Math.PI);
+  }
+
+  // 1 sur congélateur CHIQ
+  addSingle(24.5, 50 + DF / 2, 269.5, Math.PI);
+
   return mats;
 }
 
@@ -133,7 +180,8 @@ function buildMatrices(): THREE.Matrix4[] {
 export function DronaBoxes() {
   const { scene } = useGLTF('media/ikea_DRONA_black.glb');
 
-  const iMeshRef = useRef<THREE.InstancedMesh>(null);
+  const iFrontRef = useRef<THREE.InstancedMesh>(null);
+  const iBackRef  = useRef<THREE.InstancedMesh>(null);
 
   const { geo } = useMemo(() => {
     // Taille réelle du GLB (comme vanilla : setFromObject tient compte des transforms)
@@ -171,17 +219,18 @@ export function DronaBoxes() {
     // Will be set via ref callback
   }, [matrices]);
 
+  const applyMatrices = (self: THREE.InstancedMesh) => {
+    matrices.forEach((m, i) => self.setMatrixAt(i, m));
+    self.instanceMatrix.needsUpdate = true;
+  };
+
   return (
-    <instancedMesh
-      ref={iMeshRef}
-      args={[geo, redMat, matrices.length]}
-      castShadow
-      receiveShadow
-      onUpdate={(self) => {
-        matrices.forEach((m, i) => self.setMatrixAt(i, m));
-        self.instanceMatrix.needsUpdate = true;
-      }}
-    />
+    <>
+      <instancedMesh ref={iFrontRef} args={[geo, redMatFront, matrices.length]}
+        castShadow receiveShadow onUpdate={applyMatrices} />
+      <instancedMesh ref={iBackRef}  args={[geo, redMatBack,  matrices.length]}
+        onUpdate={applyMatrices} />
+    </>
   );
 }
 

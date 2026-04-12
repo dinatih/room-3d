@@ -349,10 +349,7 @@ function Vasque() {
         <boxGeometry args={[1.5, 1.5, 12]} />
       </mesh>
 
-      {/* ── Miroir ── */}
-      <mesh position={[counterCX, mirrorY, mirrorZ]} material={mirrorMat}>
-        <planeGeometry args={[mirrorW, mirrorH]} />
-      </mesh>
+      {/* Miroir — rendu par Mirrors.tsx (MirrorSDB) hors LayerGroup */}
 
       {/* ── Lampe LED ── */}
       <mesh position={[counterCX, lampY, lampZ]} material={lampMat}>

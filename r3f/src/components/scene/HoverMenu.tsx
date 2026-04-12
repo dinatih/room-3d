@@ -77,6 +77,7 @@ export function HoverRaycaster() {
       pointer.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(pointer, camera);
+      raycaster.layers.enableAll();
       const hits = raycaster.intersectObjects(scene.children, true);
 
       let found: { label: string; actionIds: string[] } | null = null;

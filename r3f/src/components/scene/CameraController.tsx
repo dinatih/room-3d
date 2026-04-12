@@ -308,7 +308,8 @@ export function CameraController() {
     cameraState.camZ     = camera.position.z;
     cameraState.camRY    = camera.rotation.y;
     cameraState.isWalking = modeRef.current === 'walk';
-    cameraState.isMoving  = modeRef.current === 'walk' && keys.current.size > 0;
+    cameraState.isMoving  = (modeRef.current === 'walk' && keys.current.size > 0)
+      || (modeRef.current === 'orbit' && (keys.current.has('ArrowUp') || keys.current.has('ArrowDown')));
     // walkYaw is only synced from walk controls when in walk mode;
     // in orbit mode it is managed by the walker arrow keys below.
     if (modeRef.current === 'walk') cameraState.walkYaw = walkYaw.current;
@@ -365,10 +366,14 @@ export function CameraController() {
           const panStep  = ctrl.target.distanceTo(camera.position) * 0.003;
           const panDelta = new THREE.Vector3();
           const isPan = (a: string) => k.has('Alt'+a) || k.has('ShiftCtrl'+a);
-          if (isPan('ArrowLeft'))  panDelta.addScaledVector(camRight, -panStep);
-          if (isPan('ArrowRight')) panDelta.addScaledVector(camRight,  panStep);
-          if (isPan('ArrowUp'))    panDelta.addScaledVector(new THREE.Vector3(0,1,0),  panStep);
-          if (isPan('ArrowDown'))  panDelta.addScaledVector(new THREE.Vector3(0,1,0), -panStep);
+          const camForward = new THREE.Vector3();
+          camera.getWorldDirection(camForward);
+          camForward.y = 0;
+          camForward.normalize();
+          if (isPan('ArrowLeft'))  panDelta.addScaledVector(camRight,   -panStep);
+          if (isPan('ArrowRight')) panDelta.addScaledVector(camRight,    panStep);
+          if (isPan('ArrowUp'))    panDelta.addScaledVector(camForward,  panStep);
+          if (isPan('ArrowDown'))  panDelta.addScaledVector(camForward, -panStep);
           camera.position.add(panDelta);
           ctrl.target.add(panDelta);
           ctrl.update();

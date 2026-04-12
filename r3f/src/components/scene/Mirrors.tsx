@@ -13,7 +13,7 @@ import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 
 // @ts-ignore
-import { ROOM_D, WALL_H, KITCHEN_X1, DOOR_START } from '@config';
+import { ROOM_D, WALL_H, KITCHEN_X1, DOOR_START, KITCHEN_Z } from '@config';
 
 const kallaxW1 = 40.5; // kallaxW(1)
 
@@ -179,6 +179,32 @@ function MirrorsA() {
   );
 }
 
+// ── Miroir vasque SDB ─────────────────────────────────────────────────────────
+// Reprend exactement les constantes de Vasque() dans Bathroom.tsx.
+
+function MirrorSDB() {
+  const VANITY_W    = 60, VANITY_D = 47, VANITY_Y0 = 30, VANITY_H = 50;
+  const VANITY_CX   = DOOR_START - 78;                  // (VANITY_X0+VANITY_X1)/2 = 112
+  const VANITY_CZ   = KITCHEN_Z + 11 + VANITY_D / 2;   // 494.5
+  const counterTopY = VANITY_Y0 + VANITY_H + 4;         // 84
+  const mirrorW     = VANITY_W + 3;                     // 63
+  const mirrorH     = 90;
+  const mirrorY     = counterTopY + mirrorH / 2;         // 129
+  const mirrorZ     = -VANITY_D / 2 + 0.5;              // -23
+
+  const cx = VANITY_CX;
+  const cy = mirrorY;
+  const cz = VANITY_CZ + mirrorZ;                        // KITCHEN_Z + 11.5 ≈ 471.5
+
+  return (
+    <ReflectorMirror
+      w={mirrorW} h={mirrorH}
+      position={[cx, cy, cz + 0.1]}
+      rotationY={0}
+    />
+  );
+}
+
 // ── Export principal ──────────────────────────────────────────────────────────
 
 export function Mirrors() {
@@ -186,6 +212,7 @@ export function Mirrors() {
     <>
       <MirrorsD />
       <MirrorsA />
+      <MirrorSDB />
     </>
   );
 }
