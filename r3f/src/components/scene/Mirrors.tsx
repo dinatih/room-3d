@@ -80,6 +80,9 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     } as ConstructorParameters<typeof Reflector>[1]);
     mir.position.set(...position);
     mir.rotation.y = rotationY;
+    // Fidèle au vanilla : la caméra miroir ne voit que le layer 0 (structure).
+    // Tout le reste (meubles, GLBs) est sur layer 1+ → exclu des reflets.
+    mir.camera.layers.mask = 1;
     return mir;
   }, []);
 

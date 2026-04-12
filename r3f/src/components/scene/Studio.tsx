@@ -1,8 +1,9 @@
 /**
  * Scène principale R3F — remplace lego-room.html + js/scene.js.
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useLayoutEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
+import * as THREE from 'three';
 import { ACESFilmicToneMapping, PCFSoftShadowMap, FogExp2, Color, PMREMGenerator, Scene, AmbientLight, DirectionalLight, Mesh, PlaneGeometry, MeshStandardMaterial } from 'three';
 import { CameraController } from './CameraController';
 import { cameraState }      from './cameraState';
@@ -32,6 +33,20 @@ import { DevToolsCollector }            from './DevToolsCollector';
 // @ts-ignore — JS file with no type declarations
 import { ROOM_W, ROOM_D } from '@config';
 
+/**
+ * Déplace tous les objets du sous-arbre sur le layer N (retire du layer 0).
+ * La caméra principale voit tous les layers ; la caméra miroir est limitée
+ * au layer 0 → tout ce qui est dans LayerGroup disparaît des reflets.
+ * useLayoutEffect sans deps = ré-exécuté après chaque render React, ce qui
+ * couvre les GLBs chargés asynchronement (Suspense déclenche un re-render).
+ */
+function LayerGroup({ layer, children }: { layer: number; children: React.ReactNode }) {
+  const ref = useRef<THREE.Group>(null!);
+  useLayoutEffect(() => {
+    ref.current.traverse(obj => obj.layers.set(layer));
+  });
+  return <group ref={ref}>{children}</group>;
+}
 
 export function Studio() {
   const [furniture, setFurniture] = useState<FurnitureState>({
@@ -72,10 +87,13 @@ export function Studio() {
           toneMapping:  ACESFilmicToneMapping,
           toneMappingExposure: 1,
         }}
-        onCreated={({ scene, gl }) => {
+        onCreated={({ scene, gl, camera }) => {
           scene.background = new Color(0x2a2a3e);
           scene.fog = new FogExp2(0x2a2a3e, 0.0006);
           gl.shadowMap.enabled = true;
+          // La caméra principale doit voir tous les layers (défaut Three.js = layer 0 seulement).
+          // La caméra miroir garde layers.mask=1 pour n'afficher que la structure.
+          camera.layers.enableAll();
 
           // Environment map PMREM — fidèle à js/scene.js, synchrone avant le premier frame
           const pmrem = new PMREMGenerator(gl);
@@ -108,7 +126,7 @@ export function Studio() {
           position={[500, 700, 400]}
           intensity={1.8}
           castShadow
-          shadow-mapSize={[2048, 2048]}
+          shadow-mapSize={[1024, 1024]}
           shadow-camera-near={1}
           shadow-camera-far={3000}
           shadow-camera-left={-600}
@@ -125,42 +143,40 @@ export function Studio() {
         <DevToolsCollector />
         {layers.xray && <XRayLayer />}
 
-        {/* Structure */}
+        {/* Layer 0 : structure + miroirs — seul ce layer est rendu dans les reflets */}
         <group visible={layers.structure}>
           <Walls />
           <Floor />
           <Doors />
         </group>
-
-        {/* Équipements */}
-        <group visible={layers.equipment}>
-          <Kitchen />
-          <Bathroom />
-        </group>
-
-        {/* Mobilier */}
         <group visible={layers.furniture}>
-          <Furniture />
-          <Furnishings />
-          <Decor />
           <Mirrors />
-          <LaptopDesk />
-          <Backpacks />
-          <DronaBoxes />
-          <AltappenRug />
         </group>
 
-        {/* GLB */}
-        <group visible={layers.glb}>
-          <GlbItems />
-          <Garden />
-          <Walker />
-        </group>
-
-        {/* Voisins */}
-        <group visible={layers.neighbors}>
-          <Neighbors />
-        </group>
+        {/* Layer 1 : tout le reste — exclu des reflets, visible à la caméra principale */}
+        <LayerGroup layer={1}>
+          <group visible={layers.equipment}>
+            <Kitchen />
+            <Bathroom />
+          </group>
+          <group visible={layers.furniture}>
+            <Furniture />
+            <Furnishings />
+            <Decor />
+            <LaptopDesk />
+            <Backpacks />
+            <DronaBoxes />
+            <AltappenRug />
+          </group>
+          <group visible={layers.glb}>
+            <GlbItems />
+            <Garden />
+            <Walker />
+          </group>
+          <group visible={layers.neighbors}>
+            <Neighbors />
+          </group>
+        </LayerGroup>
       </Canvas>
 
       {/* HTML overlays */}
