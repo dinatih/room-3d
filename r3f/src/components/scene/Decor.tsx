@@ -3,9 +3,9 @@
  * Port de js/decor/decor.js, js/furniture/meubleT.js,
  * js/furniture/airPerformer.js, js/decor/shoehatrack.js.
  */
-import { useMemo } from 'react';
 import * as THREE from 'three';
 import { AirPerformer } from './items/AirPerformer';
+import { MeubleT }    from './items/MeubleT';
 
 // @ts-ignore
 import {
@@ -31,8 +31,6 @@ const pantClipMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness:
 const fnMat      = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
 const fnInnerMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.3, side: THREE.BackSide });
 const mannMat    = new THREE.MeshStandardMaterial({ color: 0xf5f0eb, roughness: 0.5 });
-const woodMat    = new THREE.MeshStandardMaterial({ color: 0xc8a46e, roughness: 0.85 });
-const whitePlanMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.85 });
 const metalMat   = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.8 });
 const fabricMat  = new THREE.MeshStandardMaterial({ color: 0x7a7a7a, roughness: 0.95 });
 
@@ -143,41 +141,13 @@ function MannequinHead({ position, rotY }: {
 }
 
 // ── Meuble TV (BESTÅ bloc) — posé sur Kallax SE ───────────────────────────────
-// Coords world : position (274.75, KALLAX_SE_TOP, KALLAX_SE_Z), rotY=-π/2
 
-function MeubleTV() {
-  const W = 22.5, H = 55, D = 27.5, T = 1.5;
-  const PL = 80, PT = 3.7, PD = 23.5;
-  const plankY = 33 + PT / 2;
-  const plankZ = -D / 2 + PD / 2; // local Z dans le meuble
-
-  // World position: against mur B (X=ROOM_W), back face flush with wall
+function MeubleTPlaced() {
+  const D = 27.5;
   const wx = ROOM_W - D / 2;  // 286.25
-  const wy = KALLAX_SE_TOP;
-  const wz = KALLAX_SE_Z;
-
   return (
-    <group position={[wx, wy, wz]} rotation={[0, -Math.PI / 2, 0]}>
-      {/* Dessus */}
-      <mesh position={[0, H - T / 2, 0]} castShadow receiveShadow material={woodMat}>
-        <boxGeometry args={[W, T, D]} />
-      </mesh>
-      {/* Dessous */}
-      <mesh position={[0, T / 2, 0]} castShadow receiveShadow material={woodMat}>
-        <boxGeometry args={[W, T, D]} />
-      </mesh>
-      {/* Côté gauche */}
-      <mesh position={[-W / 2 + T / 2, H / 2, 0]} castShadow receiveShadow material={woodMat}>
-        <boxGeometry args={[T, H, D]} />
-      </mesh>
-      {/* Côté droit */}
-      <mesh position={[W / 2 - T / 2, H / 2, 0]} castShadow receiveShadow material={woodMat}>
-        <boxGeometry args={[T, H, D]} />
-      </mesh>
-      {/* Planche blanche */}
-      <mesh position={[0, plankY, plankZ]} castShadow material={whitePlanMat}>
-        <boxGeometry args={[PL, PT, PD]} />
-      </mesh>
+    <group position={[wx, KALLAX_SE_TOP, KALLAX_SE_Z]} rotation={[0, -Math.PI / 2, 0]}>
+      <MeubleT item={{} as any} actionState={{}} onSize={() => {}} />
     </group>
   );
 }
@@ -298,7 +268,7 @@ export function Decor() {
       <MannequinHead position={[lackCX, lackTopY, lackCZ]} rotY={mannRot} />
       <MannequinHead position={nwMannWorld} rotY={nwMannRot} />
       <MannequinHead position={[282, 90, 271.5]} rotY={0} />
-      <MeubleTV />
+      <MeubleTPlaced />
       <AirPerformerPlaced />
       <ShoeHatRack />
     </>

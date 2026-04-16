@@ -41,6 +41,7 @@ import { Bathtub }                                     from './items/Bathtub';
 import { ChestBench }                                  from './items/ChestBench';
 import { PottedPalm }                                  from './items/PottedPalm';
 import { Drona }                                         from './items/Drona';
+import { MeubleT }                                       from './items/MeubleT';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'freezer':                 Freezer,
@@ -84,6 +85,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'mackapar':                Mackapar,
   'salopette':               Salopette,
   'baseball-cap':            BaseballCap,
+  'meuble-t':                MeubleT,
   ...(Object.fromEntries(
     Array.from({ length: 29 }, (_, i) => [`drona-${i + 1}`, Drona]),
   ) as Record<string, ComponentType<SceneItemProps>>),
