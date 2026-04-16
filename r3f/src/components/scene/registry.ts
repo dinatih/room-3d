@@ -70,6 +70,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'kallax-nw-1x1-a':         Kallax,
   'kallax-nw-1x1-b':         Kallax,
   'kallax-sw-2x2':           Kallax,
+  'kallax-sw-2x2-spec':      Kallax,
   'kallax-sw-2x1':           Kallax,
   'toilet':                  Toilet,
   'shower':                  Shower,

@@ -119,9 +119,9 @@ function KallaxSW() {
       <group position={[0, h2, 0]}>
         <Kallax item={stub('kallax-sw-2x2')} actionState={AS} onSize={noop} />
       </group>
-      {/* sw1 2×2 — PY = h2 + h2 */}
+      {/* sw1 2×2 spec (sans barre haute) — PY = h2 + h2 */}
       <group position={[0, h2 + h2, 0]}>
-        <Kallax item={stub('kallax-sw-2x2')} actionState={AS} onSize={noop} />
+        <Kallax item={stub('kallax-sw-2x2-spec')} actionState={AS} onSize={noop} />
       </group>
       {/* sw2 2×1 — PY = h2 + h2 + h1 */}
       <group position={[0, h2 + h2 + h1, 0]}>
