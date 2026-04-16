@@ -217,12 +217,13 @@ function ViewsModal({ onClose }: { onClose: () => void }) {
 // ── Composant principal ───────────────────────────────────────────────────────
 
 export interface FurnitureState {
-  eastDoor:  boolean;
-  corrDoors: boolean;
-  freezer:   boolean;
-  fridge:    boolean;
-  cabinet:   boolean;
-  wcLid:     boolean;
+  eastDoor:   boolean;
+  corrDoors:  boolean;
+  sdbCloset:  boolean;
+  freezer:    boolean;
+  fridge:     boolean;
+  cabinet:    boolean;
+  wcLid:      boolean;
 }
 
 export interface LayerState {
@@ -308,6 +309,8 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
               () => onToggleFurniture('eastDoor'), true)}
           {b0('light', `Portes couloir : ${furniture.corrDoors ? 'OUVERTES' : 'FERMÉES'}`,
               () => onToggleFurniture('corrDoors'))}
+          {b0('light', `Placard SDB : ${furniture.sdbCloset ? 'OUVERT' : 'FERMÉ'}`,
+              () => onToggleFurniture('sdbCloset'))}
           {b0('light', `Congélateur : ${furniture.freezer ? 'OUVERT' : 'FERMÉ'}`,
               () => onToggleFurniture('freezer'))}
           {b0('light', `Réfrigérateur : ${furniture.fridge ? 'OUVERT' : 'FERMÉ'}`,

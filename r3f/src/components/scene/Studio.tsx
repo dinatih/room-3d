@@ -51,7 +51,7 @@ function LayerGroup({ layer, children }: { layer: number; children: React.ReactN
 
 export function Studio() {
   const [furniture, setFurniture] = useState<FurnitureState>({
-    eastDoor: false, corrDoors: false,
+    eastDoor: false, corrDoors: false, sdbCloset: false,
     freezer: false, fridge: false, cabinet: false, wcLid: false,
   });
   const [showInventory, setShowInventory] = useState(false);

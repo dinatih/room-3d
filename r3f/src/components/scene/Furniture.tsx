@@ -27,6 +27,7 @@ import { VasqueSdb } from './items/VasqueSdb';
 import { WaterHeater } from './items/WaterHeater';
 import { GrassRug } from './items/GrassRug';
 import { CorridorCloset } from './items/CorridorCloset';
+import { SdbCloset }      from './items/SdbCloset';
 import type { Item } from '../../types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -38,11 +39,12 @@ const AS: Record<string, boolean> = {};
 
 // Map furniture-toggle key → actionState key used by item components
 const TOGGLE_MAP: Record<string, string> = {
-  freezer: 'freezer-toggle',
-  fridge:  'fridge-toggle',
-  cabinet: 'cabinet-toggle',
+  freezer:   'freezer-toggle',
+  fridge:    'fridge-toggle',
+  cabinet:   'cabinet-toggle',
   wcLid:     'wc-lid-toggle',
   corrDoors: 'corr-doors-toggle',
+  sdbCloset: 'sdb-closet-toggle',
 };
 
 function stub(id: string): Item {
@@ -290,6 +292,17 @@ function ToiletPlaced({ as }: { as: Record<string, boolean> }) {
   );
 }
 
+// ── Placard SDB ───────────────────────────────────────────────────────────────
+// SLIDE_CX = (70+180)/2 = 125  |  SLIDE_Z = SDB_Z_END = 600
+
+function SdbClosetPlaced({ as }: { as: Record<string, boolean> }) {
+  return (
+    <group position={[125, 0, SDB_Z_END]}>
+      <SdbCloset item={stub('sdb-closet')} actionState={as} onSize={noop} />
+    </group>
+  );
+}
+
 // ── Meubles SDB ───────────────────────────────────────────────────────────────
 // BathroomCabinet: W=40, H=60, D=37
 // West : X = -NICHE_DEPTH + W/2 = 10  |  Z = KITCHEN_Z+11+37/2 = 489.5  |  PY = H/2 = 30
@@ -342,6 +355,7 @@ export function Furniture() {
       <GrassRugPlaced />
       <ShowerPlaced />
       <ToiletPlaced as={as} />
+      <SdbClosetPlaced as={as} />
       <BathroomCabinetsPlaced />
     </>
   );

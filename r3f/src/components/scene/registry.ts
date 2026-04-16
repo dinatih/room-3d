@@ -47,6 +47,7 @@ import { BollsidanDesk }                                  from './items/Bollsida
 import { LackShelf }                                      from './items/LackShelf';
 import { Fniss }                                          from './items/Fniss';
 import { MannequinHead }                                  from './items/MannequinHead';
+import { SdbCloset }                                      from './items/SdbCloset';
 import { Backpack }                                        from './items/Backpack';
 import { Mug }                                            from './items/Mug';
 import { NissedalMirror }                                 from './items/NissedalMirror';
@@ -75,6 +76,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'vasque-sdb':              VasqueSdb,
   'water-heater':            WaterHeater,
   'corridor-closet':         CorridorCloset,
+  'sdb-closet':              SdbCloset,
   'tv':                      TV,
   'laptop':                  Laptop,
   'phone':                   Phone,
@@ -129,4 +131,5 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'door-toggle':           ['Ouvrir', 'Fermer'],
   'wc-lid-toggle':         ['Ouvrir', 'Fermer'],
   'corr-doors-toggle':     ['Ouvrir', 'Fermer'],
+  'sdb-closet-toggle':     ['Ouvrir', 'Fermer'],
 };
