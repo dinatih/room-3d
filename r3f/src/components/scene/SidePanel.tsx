@@ -220,6 +220,8 @@ export interface FurnitureState {
   eastDoor:   boolean;
   corrDoors:  boolean;
   sdbCloset:  boolean;
+  cbnWest:    boolean;
+  cbnEast:    boolean;
   freezer:    boolean;
   fridge:     boolean;
   cabinet:    boolean;
@@ -311,6 +313,10 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
               () => onToggleFurniture('corrDoors'))}
           {b0('light', `Placard SDB : ${furniture.sdbCloset ? 'OUVERT' : 'FERMÉ'}`,
               () => onToggleFurniture('sdbCloset'))}
+          {b0('light', `Meuble SDB ouest : ${furniture.cbnWest ? 'OUVERT' : 'FERMÉ'}`,
+              () => onToggleFurniture('cbnWest'))}
+          {b0('light', `Meuble SDB est : ${furniture.cbnEast ? 'OUVERT' : 'FERMÉ'}`,
+              () => onToggleFurniture('cbnEast'))}
           {b0('light', `Congélateur : ${furniture.freezer ? 'OUVERT' : 'FERMÉ'}`,
               () => onToggleFurniture('freezer'))}
           {b0('light', `Réfrigérateur : ${furniture.fridge ? 'OUVERT' : 'FERMÉ'}`,

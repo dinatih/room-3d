@@ -107,6 +107,8 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'freezer',          name: 'Congélateur CHIQ CSD46D4E',     brand: 'CHIQ',     category: 'kitchen',   qty: 1, dims: { w: 45,   d: 47,   h: 50   }, scenePos: { x: 47,  z: 236 }, notes: 'Noir, niche séjour', actions: ['freezer'] },
 
   // ── BATHROOM ─────────────────────────────────────────────────────────────────
+  { id: 'bathroom-cabinet-west', name: 'Meuble bas SDB ouest',       brand: 'IKEA',     category: 'bathroom',  qty: 1, dims: { w: 40,   d: 37,   h: 60   }, scenePos: { x: 10,  z: 490 }, notes: 'METOD 40×37×60, blanc, porte pivotante gauche', actions: ['cbnWest'] },
+  { id: 'bathroom-cabinet-east', name: 'Meuble bas SDB est',         brand: 'IKEA',     category: 'bathroom',  qty: 1, dims: { w: 40,   d: 37,   h: 60   }, scenePos: { x: 162, z: 490 }, notes: 'METOD 40×37×60, blanc, porte pivotante droite', actions: ['cbnEast'] },
   { id: 'shower',           name: 'Douche',                         brand: '',         category: 'bathroom',  qty: 1, dims: { w: 70,   d: 70,   h: 200  }, scenePos: { x: 25,  z: 635 }, notes: 'Cuve 20cm + vitrage translucide' },
   { id: 'toilet',           name: 'WC',                             brand: '',         category: 'bathroom',  qty: 1, dims: { w: 40,   d: 40,   h: 75   }, scenePos: { x: 10,  z: 481 }, notes: 'Avec réservoir et siège torus', actions: ['wcLid'] },
   { id: 'vasque-sdb',       name: 'Meuble vasque suspendu',         brand: '',         category: 'bathroom',  qty: 1, dims: { w: 63,   d: 48.5, h: 176  }, scenePos: { x: 112, z: 488 }, notes: 'Caisson + vasque + robinet + miroir 63×90cm + lampe LED' },

@@ -45,6 +45,8 @@ const TOGGLE_MAP: Record<string, string> = {
   wcLid:     'wc-lid-toggle',
   corrDoors: 'corr-doors-toggle',
   sdbCloset: 'sdb-closet-toggle',
+  cbnWest:   'cbn-west-toggle',
+  cbnEast:   'cbn-east-toggle',
 };
 
 function stub(id: string): Item {
@@ -308,15 +310,15 @@ function SdbClosetPlaced({ as }: { as: Record<string, boolean> }) {
 // West : X = -NICHE_DEPTH + W/2 = 10  |  Z = KITCHEN_Z+11+37/2 = 489.5  |  PY = H/2 = 30
 // East : X = DOOR_START - W/2 - 8 = 162
 
-function BathroomCabinetsPlaced() {
+function BathroomCabinetsPlaced({ as }: { as: Record<string, boolean> }) {
   const cbZ = KITCHEN_Z + 11 + 37 / 2; // 489.5
   return (
     <>
       <group position={[-NICHE_DEPTH + 40 / 2, 60 / 2, cbZ]}>
-        <BathroomCabinetWest item={stub('cbn-west')} actionState={AS} onSize={noop} />
+        <BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={noop} />
       </group>
       <group position={[DOOR_START - 40 / 2 - 8, 60 / 2, cbZ]}>
-        <BathroomCabinetEast item={stub('cbn-east')} actionState={AS} onSize={noop} />
+        <BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={noop} />
       </group>
     </>
   );
@@ -356,7 +358,7 @@ export function Furniture() {
       <ShowerPlaced />
       <ToiletPlaced as={as} />
       <SdbClosetPlaced as={as} />
-      <BathroomCabinetsPlaced />
+      <BathroomCabinetsPlaced as={as} />
     </>
   );
 }
