@@ -27,4 +27,6 @@ export const cameraState = {
   onUpdate:   null as (() => void) | null,
   /** Enregistré par CameraController ; appeler pour forcer un frame R3F. */
   invalidate: null as (() => void) | null,
+  /** Vrai pendant une session WebXR — désactive les contrôles clavier/orb */
+  isXR: false as boolean,
 };

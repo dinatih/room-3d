@@ -30,6 +30,7 @@ import { XRayLayer }   from './XRayLayer';
 import { HoverRaycaster, HoverOverlay } from './HoverMenu';
 import { DevToolsCollector }            from './DevToolsCollector';
 import { Inventory }                    from './Inventory';
+import { VRMode }                       from './VRMode';
 
 // @ts-ignore — JS file with no type declarations
 import { ROOM_W, ROOM_D } from '@config';
@@ -141,6 +142,7 @@ export function Studio() {
         <directionalLight color={0xaabbff} position={[-200, 300, -100]} intensity={0.4} />
 
         <CameraController />
+        <VRMode />
         <HoverRaycaster />
         <DevToolsCollector />
         {layers.xray && <XRayLayer />}

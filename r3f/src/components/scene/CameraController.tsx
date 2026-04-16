@@ -314,6 +314,7 @@ export function CameraController() {
   // ── Frame loop — walk movement ──────────────────────────────────────────────
 
   useFrame((_, delta) => {
+    if (cameraState.isXR) return;
     // Normalize to 60 fps baseline so speed is frame-rate independent
     const dt = Math.min(delta, 0.1) * 60;
     // Sync camera position for minimap + walker
