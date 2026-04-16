@@ -4,6 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/r3f/dist/',
   resolve: {
     alias: {
       '@data':   path.resolve(__dirname, '../js/ui'),

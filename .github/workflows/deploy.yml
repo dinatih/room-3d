@@ -1,0 +1,49 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: r3f/package-lock.json
+
+      - name: Install R3F dependencies
+        run: npm ci
+        working-directory: r3f
+
+      - name: Build R3F app
+        run: npm run build
+        working-directory: r3f
+
+      # media/ est servi à la racine (dinatih.org/media/…).
+      # Le build référence 'media/lara.glb' relatif à r3f/dist/index.html,
+      # donc r3f/dist/media/ doit exister.
+      - name: Copy media into r3f/dist
+        run: cp -r media r3f/dist/media
+
+      - name: Prepare deploy directory
+        run: |
+          mkdir -p deploy/r3f
+          cp index.html CNAME lego-room.html deploy/
+          cp -r js media deploy/
+          cp -r r3f/dist deploy/r3f/dist
+          touch deploy/.nojekyll
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: deploy
+          cname: dinatih.org

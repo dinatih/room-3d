@@ -146,6 +146,7 @@ export const STORAGE_SPACES: StorageSpace[] = [
   { id: 'sunnersta-stack', name: 'Sunnersta',       dims: { w: 36,   d: 56, h: 90  }, notes: 'Desserte roulante — mannequin + casquette',                        scenePos: { x: 282, z: 272 } },
   { id: 'cuisine-stack',   name: 'Cuisine',         dims: { w: 100,  d: 60, h: 93  }, notes: 'Plan de travail, évier, plaques, frigo, meuble bas, meuble haut + 3 Drona', scenePos: { x: 75, z: 420 } },
   { id: 'corridor-closet', name: 'Placard couloir', dims: { w: 60,   d: 50, h: 250 }, notes: 'Porte pivotante + 3 étagères', scenePos: { x: 160, z: 435 }, actions: ['corrDoors'] },
+  { id: 'sdb-closet',      name: 'Placard SDB',     dims: { w: 110,  d: 60, h: 250 }, notes: 'Double porte coulissante + étagère triangulaire 170cm (X=70→180, Z=600→660)', scenePos: { x: 125, z: 630 } },
 ];
 
 export const CATEGORIES: Category[] = [
