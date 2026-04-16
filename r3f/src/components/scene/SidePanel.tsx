@@ -217,15 +217,18 @@ function ViewsModal({ onClose }: { onClose: () => void }) {
 // ── Composant principal ───────────────────────────────────────────────────────
 
 export interface FurnitureState {
-  eastDoor:   boolean;
-  corrDoors:  boolean;
-  sdbCloset:  boolean;
-  cbnWest:    boolean;
-  cbnEast:    boolean;
-  freezer:    boolean;
-  fridge:     boolean;
-  cabinet:    boolean;
-  wcLid:      boolean;
+  eastDoor:     boolean;
+  entryDoor:    boolean;
+  livingDoor:   boolean;
+  bathroomDoor: boolean;
+  corrDoors:    boolean;
+  sdbCloset:    boolean;
+  cbnWest:      boolean;
+  cbnEast:      boolean;
+  freezer:      boolean;
+  fridge:       boolean;
+  cabinet:      boolean;
+  wcLid:        boolean;
 }
 
 export interface LayerState {
@@ -309,6 +312,12 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
         <Group emoji="🛋" title="Mobilier">
           {b0('light', `Porte-fenêtre : ${furniture.eastDoor ? 'OUVERTE' : 'FERMÉE'}`,
               () => onToggleFurniture('eastDoor'), true)}
+          {b0('light', `Porte entrée : ${furniture.entryDoor ? 'OUVERTE' : 'FERMÉE'}`,
+              () => onToggleFurniture('entryDoor'))}
+          {b0('light', `Porte séjour : ${furniture.livingDoor ? 'OUVERTE' : 'FERMÉE'}`,
+              () => onToggleFurniture('livingDoor'))}
+          {b0('light', `Porte SDB : ${furniture.bathroomDoor ? 'OUVERTE' : 'FERMÉE'}`,
+              () => onToggleFurniture('bathroomDoor'))}
           {b0('light', `Portes couloir : ${furniture.corrDoors ? 'OUVERTES' : 'FERMÉES'}`,
               () => onToggleFurniture('corrDoors'))}
           {b0('light', `Placard SDB : ${furniture.sdbCloset ? 'OUVERT' : 'FERMÉ'}`,

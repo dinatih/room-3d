@@ -7,7 +7,8 @@
  *   - Porte SDB — blanche
  *   - Porte entrée (mur diagonal) — rouge
  */
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 // @ts-ignore
@@ -134,10 +135,37 @@ function LivingDoor() {
   const wallCZ = ROOM_D + WALL_W / 2;
   const stopZ  = ROOM_D + STOP_T / 2;
   const hx = -DOOR_W + 15, hy = 100;
+
+  const doorRef = useRef<THREE.Group>(null!);
+  const openRef = useRef(false);
+  const { invalidate } = useThree();
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail?.key !== 'livingDoor') return;
+      openRef.current = !openRef.current;
+      invalidate();
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, [invalidate]);
+
+  useFrame(() => {
+    const target = openRef.current ? -Math.PI / 2 : 0;
+    const delta = target - doorRef.current.rotation.y;
+    if (Math.abs(delta) > 0.001) {
+      doorRef.current.rotation.y += delta * 0.12;
+      invalidate();
+    } else {
+      doorRef.current.rotation.y = target;
+    }
+  });
+
   return (
     <group>
-      {/* Panneau — fermé (rotation=0) */}
-      <group position={[DOOR_END, 0, ROOM_D + 3]}>
+      {/* Panneau */}
+      <group ref={doorRef} position={[DOOR_END, 0, ROOM_D + 3]}
+        userData={{ hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
         <mesh position={[-DOOR_W / 2, DOOR_H / 2, 0]} castShadow material={whiteMat}>
           <boxGeometry args={[DOOR_W, DOOR_H, 4]} />
         </mesh>
@@ -189,6 +217,31 @@ function BathroomDoor() {
 
   const hy = 100, hz = -DOOR_W + 15;
 
+  const doorRef = useRef<THREE.Group>(null!);
+  const openRef = useRef(false);
+  const { invalidate } = useThree();
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail?.key !== 'bathroomDoor') return;
+      openRef.current = !openRef.current;
+      invalidate();
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, [invalidate]);
+
+  useFrame(() => {
+    const target = openRef.current ? Math.PI / 2 : 0;
+    const delta = target - doorRef.current.rotation.y;
+    if (Math.abs(delta) > 0.001) {
+      doorRef.current.rotation.y += delta * 0.12;
+      invalidate();
+    } else {
+      doorRef.current.rotation.y = target;
+    }
+  });
+
   return (
     <group>
       {/* Encadrement */}
@@ -205,8 +258,9 @@ function BathroomDoor() {
           </mesh>
         </group>
       ))}
-      {/* Panneau — fermé */}
-      <group position={[hingeX, 0, hingeZ]}>
+      {/* Panneau */}
+      <group ref={doorRef} position={[hingeX, 0, hingeZ]}
+        userData={{ hoverAction: { label: 'Porte SDB', actionId: 'bathroomDoor' } }}>
         <mesh position={[0, DOOR_H / 2, -DOOR_W / 2]} castShadow material={whiteMat}>
           <boxGeometry args={[4, DOOR_H, DOOR_W]} />
         </mesh>
@@ -270,6 +324,31 @@ function EntryDoor() {
   const FW = 3, FT = 1;
   const doorH = DOOR_H;
 
+  const doorRef = useRef<THREE.Group>(null!);
+  const openRef = useRef(false);
+  const { invalidate } = useThree();
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail?.key !== 'entryDoor') return;
+      openRef.current = !openRef.current;
+      invalidate();
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, [invalidate]);
+
+  useFrame(() => {
+    const target = openRef.current ? -2 * Math.PI / 3 : 0;
+    const delta = target - doorRef.current.rotation.y;
+    if (Math.abs(delta) > 0.001) {
+      doorRef.current.rotation.y += delta * 0.12;
+      invalidate();
+    } else {
+      doorRef.current.rotation.y = target;
+    }
+  });
+
   // Encadrements (extrudés le long du mur diagonal)
   const frames = useMemo(() => {
     const geos: THREE.BufferGeometry[] = [];
@@ -308,16 +387,19 @@ function EntryDoor() {
       {frames.slice(3).map((g, i) => (
         <mesh key={`w${i}`} geometry={g} material={whiteFrameMat} castShadow />
       ))}
-      {/* Panneau — fermé */}
+      {/* Panneau */}
       <group position={[hingeX, 0, hingeZ]} rotation={[0, diagRotY, 0]}>
-        <mesh position={[0, doorH / 2, ENTRY_DOOR_W / 2]} castShadow material={redDoorMat}>
-          <boxGeometry args={[4, doorH, ENTRY_DOOR_W]} />
-        </mesh>
-        {/* Bouton extérieur */}
-        <mesh position={[6, doorH / 2, ENTRY_DOOR_W / 2]} material={knobMat}>
-          <sphereGeometry args={[5, 16, 12]} />
-        </mesh>
-        <HandleV x={0} y={100} z={70} />
+        <group ref={doorRef}
+          userData={{ hoverAction: { label: 'Porte entrée', actionId: 'entryDoor' } }}>
+          <mesh position={[0, doorH / 2, ENTRY_DOOR_W / 2]} castShadow material={redDoorMat}>
+            <boxGeometry args={[4, doorH, ENTRY_DOOR_W]} />
+          </mesh>
+          {/* Bouton extérieur */}
+          <mesh position={[6, doorH / 2, ENTRY_DOOR_W / 2]} material={knobMat}>
+            <sphereGeometry args={[5, 16, 12]} />
+          </mesh>
+          <HandleV x={0} y={100} z={70} />
+        </group>
       </group>
     </group>
   );

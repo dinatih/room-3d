@@ -13,9 +13,10 @@ const H  = 60;   // hauteur Y (CBN_H)
 const DT = 2;    // épaisseur porte (CBN_DOOR_D)
 
 function CabinetImpl({
-  actionKey, pivotX, panelX, handleX, openAngle, actionState, onSize,
+  actionKey, actionId, pivotX, panelX, handleX, openAngle, actionState, onSize,
 }: {
   actionKey: string;
+  actionId: string;
   pivotX: number;
   panelX: number;
   handleX: number;
@@ -67,7 +68,8 @@ function CabinetImpl({
       </mesh>
 
       {/* ── Porte ── */}
-      <group ref={doorRef} position={[pivotX, 0, -(D / 2 + DT / 2)]}>
+      <group ref={doorRef} position={[pivotX, 0, -(D / 2 + DT / 2)]}
+        userData={{ hoverAction: { label: 'Meuble SDB', actionId } }}>
 
         {/* Panneau */}
         <mesh position={[panelX, H / 2, 0]}>
@@ -90,7 +92,7 @@ function CabinetImpl({
 export function BathroomCabinetWest({ actionState, onSize }: SceneItemProps) {
   return (
     <CabinetImpl
-      actionKey="cbn-west-toggle"
+      actionKey="cbn-west-toggle" actionId="cbnWest"
       pivotX={-W / 2}   panelX={W / 2}    handleX={W - 6}
       openAngle={-Math.PI / 2}
       actionState={actionState} onSize={onSize}
@@ -101,7 +103,7 @@ export function BathroomCabinetWest({ actionState, onSize }: SceneItemProps) {
 export function BathroomCabinetEast({ actionState, onSize }: SceneItemProps) {
   return (
     <CabinetImpl
-      actionKey="cbn-east-toggle"
+      actionKey="cbn-east-toggle" actionId="cbnEast"
       pivotX={W / 2}    panelX={-W / 2}   handleX={-(W - 6)}
       openAngle={Math.PI / 2}
       actionState={actionState} onSize={onSize}

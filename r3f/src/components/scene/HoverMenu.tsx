@@ -16,7 +16,13 @@ import { hoverState } from './hoverState';
 interface ActionDef { btnLabel: string; toggleKey: string; }
 const ACTIONS: Record<string, ActionDef> = {
   eastDoor:       { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'eastDoor'      },
+  entryDoor:      { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'entryDoor'     },
+  livingDoor:     { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'livingDoor'    },
+  bathroomDoor:   { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'bathroomDoor'  },
   corrDoors:      { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'corrDoors'     },
+  sdbCloset:      { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'sdbCloset'     },
+  cbnWest:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'cbnWest'       },
+  cbnEast:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'cbnEast'       },
   freezer:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'freezer'       },
   fridge:         { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'fridge'        },
   cabinet:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'cabinet'       },
