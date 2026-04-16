@@ -9,9 +9,9 @@
  *   SW : k1(2×2 fillAll)
  */
 import { useMemo, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useDronaGeo } from './items/Drona';
 
 // @ts-ignore
 import { ROOM_W, ROOM_D, NICHE_DEPTH, KALLAX_DEPTH, KITCHEN_Z, KITCHEN_X0, KITCHEN_X1, DOOR_START } from '@config';
@@ -178,39 +178,10 @@ function buildMatrices(): THREE.Matrix4[] {
 // ── Composant ─────────────────────────────────────────────────────────────────
 
 export function DronaBoxes() {
-  const { scene } = useGLTF('media/ikea_DRONA_black.glb');
+  const geo = useDronaGeo();
 
   const iFrontRef = useRef<THREE.InstancedMesh>(null);
   const iBackRef  = useRef<THREE.InstancedMesh>(null);
-
-  const { geo } = useMemo(() => {
-    // Taille réelle du GLB (comme vanilla : setFromObject tient compte des transforms)
-    scene.updateMatrixWorld(true);
-    const sceneBox = new THREE.Box3().setFromObject(scene);
-    const rawSize  = sceneBox.getSize(new THREE.Vector3());
-    const s = rawSize.z > 0.01 ? 38 / rawSize.z : 1;
-
-    // Extraire la géométrie du premier mesh en bakant son matrixWorld
-    let mergedGeo: THREE.BufferGeometry | null = null;
-    scene.traverse(c => {
-      const m = c as THREE.Mesh;
-      if (m.isMesh && !mergedGeo) {
-        mergedGeo = m.geometry.clone();
-        mergedGeo.applyMatrix4(m.matrixWorld);
-      }
-    });
-    if (!mergedGeo) mergedGeo = new THREE.BoxGeometry(33.5, 33.5, 38);
-
-    // Mise à l'échelle puis centrage
-    mergedGeo.applyMatrix4(new THREE.Matrix4().makeScale(s, s, s));
-    const scaled = new THREE.Box3().setFromBufferAttribute(
-      mergedGeo.getAttribute('position') as THREE.BufferAttribute,
-    );
-    const c = scaled.getCenter(new THREE.Vector3());
-    mergedGeo.applyMatrix4(new THREE.Matrix4().makeTranslation(-c.x, -c.y, -c.z));
-
-    return { geo: mergedGeo };
-  }, [scene]);
 
   const matrices = useMemo(() => buildMatrices(), []);
 
@@ -234,4 +205,3 @@ export function DronaBoxes() {
   );
 }
 
-useGLTF.preload('media/ikea_DRONA_black.glb');
