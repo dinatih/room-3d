@@ -151,8 +151,8 @@ function MeubleTV() {
   const plankY = 33 + PT / 2;
   const plankZ = -D / 2 + PD / 2; // local Z dans le meuble
 
-  // World position: kallaxSEGroup(280.5,0,319.75 rotY=π/2) + child(0,151,5.75 rotY=-π)
-  const wx = (ROOM_W - KALLAX_DEPTH / 2) - (KALLAX_DEPTH - D) / 2;  // 274.75
+  // World position: against mur B (X=ROOM_W), back face flush with wall
+  const wx = ROOM_W - D / 2;  // 286.25
   const wy = KALLAX_SE_TOP;
   const wz = KALLAX_SE_Z;
 

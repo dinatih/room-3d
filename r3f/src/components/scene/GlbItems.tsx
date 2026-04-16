@@ -17,13 +17,15 @@ import { removeGlbLines } from '../../utils/glbUtils';
 // @ts-ignore
 import { ROOM_W, ROOM_D, NICHE_DEPTH, KALLAX_DEPTH } from '@config';
 
-const kallaxW2     = 75.5;
-const KALLAX_SE_Z  = ROOM_D - 60 - 40.5 / 2;   // 319.75
-const KALLAX_SE_TOP = 2 * kallaxW2;              // 151
+const kallaxW2      = 75.5;
+const KALLAX_SE_Z   = ROOM_D - 60 - 40.5 / 2;  // 319.75
+const KALLAX_SE_TOP = 2 * kallaxW2;             // 151
+// Position monde du meuble en T (Decor.tsx MeubleTV) — même formule que wx/wz dans Decor.tsx
 const MEUBLE_T_D   = 27.5;
-const MEUBLE_T_X   = ROOM_W - MEUBLE_T_D / 2;   // 286.25
-const MEUBLE_T_Z   = KALLAX_SE_Z;               // 319.75
-const LAMP_ABOVE   = 55.5;
+const MEUBLE_T_H   = 55;
+const MEUBLE_T_X   = ROOM_W - MEUBLE_T_D / 2;  // 286.25 — centre monde X du meuble
+const MEUBLE_T_Z   = KALLAX_SE_Z;              // 319.75 — centre monde Z du meuble
+const MEUBLE_T_Y   = KALLAX_SE_TOP;            // 151    — base monde Y du meuble
 
 // ── Trottinette Xiaomi ────────────────────────────────────────────────────────
 
@@ -79,6 +81,8 @@ function Lamp() {
   const { scene } = useGLTF('media/ikea_lamp_ola.glb');
   useLayoutEffect(() => {
     scene.scale.setScalar(100);
+    scene.position.set(0, 0, 0);  // reset pour bbox propre (sans offset baked du GLB)
+    scene.rotation.set(0, 0, 0);
     // Remplacer les teintes jaunes par blanc
     scene.traverse(c => {
       const mesh = c as THREE.Mesh;
@@ -96,14 +100,22 @@ function Lamp() {
     const box = new THREE.Box3().setFromObject(scene);
     const cx = (box.min.x + box.max.x) / 2;
     const cz = (box.min.z + box.max.z) / 2;
-    const baseY = KALLAX_SE_TOP + LAMP_ABOVE - box.min.y;
+    // Position relative au groupe ancré sur le dessus du meuble en T :
+    // groupe à (MEUBLE_T_X, MEUBLE_T_Y + MEUBLE_T_H, MEUBLE_T_Z)
+    // → scène centrée en XZ, posée sur le dessus (baseY = -box.min.y)
+    scene.position.set(-cx, -box.min.y, -cz);
+    // Orienter vers le centre du salon
     const dx = ROOM_W / 2 - MEUBLE_T_X;
     const dz = ROOM_D / 2 - MEUBLE_T_Z;
-    scene.position.set(MEUBLE_T_X - cx, baseY, MEUBLE_T_Z - cz);
     scene.rotation.y = Math.atan2(dx, dz);
     removeGlbLines(scene);
   }, [scene]);
-  return <primitive object={scene} />;
+  // Groupe ancré sur le dessus du meuble en T
+  return (
+    <group position={[MEUBLE_T_X, MEUBLE_T_Y + MEUBLE_T_H, MEUBLE_T_Z]}>
+      <primitive object={scene} />
+    </group>
+  );
 }
 
 // ── Desserte SUNNERSTA ────────────────────────────────────────────────────────
