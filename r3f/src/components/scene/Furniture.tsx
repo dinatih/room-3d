@@ -21,6 +21,12 @@ import { Freezer } from './items/Freezer';
 import { Fridge } from './items/Fridge';
 import { KitchenCabinet } from './items/KitchenCabinet';
 import { BathroomCabinetWest, BathroomCabinetEast } from './items/BathroomCabinet';
+import { Toilet } from './items/Toilet';
+import { Shower } from './items/Shower';
+import { VasqueSdb } from './items/VasqueSdb';
+import { WaterHeater } from './items/WaterHeater';
+import { GrassRug } from './items/GrassRug';
+import { CorridorCloset } from './items/CorridorCloset';
 import type { Item } from '../../types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -35,6 +41,8 @@ const TOGGLE_MAP: Record<string, string> = {
   freezer: 'freezer-toggle',
   fridge:  'fridge-toggle',
   cabinet: 'cabinet-toggle',
+  wcLid:     'wc-lid-toggle',
+  corrDoors: 'corr-doors-toggle',
 };
 
 function stub(id: string): Item {
@@ -65,11 +73,14 @@ const h2 = th(2); // 76.5  (2 rangées)
 
 const ROOM_W      = 300;
 const ROOM_D      = 400;
+const KITCHEN_X1  = 130;
 const NICHE_DEPTH = 10;
 const KITCHEN_X0  = 30;
 const KITCHEN_D   = 60;  // KITCHEN_DEPTH
 const KITCHEN_Z   = ROOM_D + KITCHEN_D;  // 460
+const SDB_Z_END   = KITCHEN_Z + 140;     // 600
 const DOOR_START  = 190;
+const WALL_H      = 250;
 
 // ── Stack NE — mur B (X=300) + mur C (Z=0) ───────────────────────────────────
 // gStack.rotation.y = +π/2 ; gStack.position = (ROOM_W-DEP/2, 0, w2/2)
@@ -212,6 +223,73 @@ function FridgePlaced({ as }: { as: Record<string, boolean> }) {
   );
 }
 
+// ── Placard couloir ───────────────────────────────────────────────────────────
+// CX = (KITCHEN_X1 + DOOR_START) / 2 = 160  |  CZ = (ROOM_D+10 + KITCHEN_Z) / 2 = 435
+
+function CorridorClosetPlaced({ as }: { as: Record<string, boolean> }) {
+  return (
+    <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + 10 + KITCHEN_Z) / 2]}>
+      <CorridorCloset item={stub('corridor-closet')} actionState={as} onSize={noop} />
+    </group>
+  );
+}
+
+// ── Vasque SDB ────────────────────────────────────────────────────────────────
+// VANITY_CX = DOOR_START - 48 - 60/2 = 112  |  VANITY_CZ = KITCHEN_Z + 11 + 47/2 = 494.5
+
+function VasqueSdbPlaced() {
+  return (
+    <group position={[DOOR_START - 78, 0, KITCHEN_Z + 34.5]}>
+      <VasqueSdb item={stub('vasque-sdb')} actionState={AS} onSize={noop} />
+    </group>
+  );
+}
+
+// ── Ballon d'eau chaude ───────────────────────────────────────────────────────
+// HW_R=28, HW_H=65 → center at (-NICHE_DEPTH+HW_R, WALL_H-10-HW_H/2, KITCHEN_Z+20+HW_R)
+
+function WaterHeaterPlaced() {
+  const HW_R = 28, HW_H = 65;
+  return (
+    <group position={[-NICHE_DEPTH + HW_R, WALL_H - 10 - HW_H / 2, KITCHEN_Z + 20 + HW_R]}>
+      <WaterHeater item={stub('water-heater')} actionState={AS} onSize={noop} />
+    </group>
+  );
+}
+
+// ── Tapis pelouse synthétique ─────────────────────────────────────────────────
+// rugCX = (-NICHE_DEPTH + DOOR_START) / 2 = 90  |  rugCZ = SDB_Z_END - 53 = 547
+
+function GrassRugPlaced() {
+  return (
+    <group position={[(-NICHE_DEPTH + DOOR_START) / 2, 0, SDB_Z_END - 53]}>
+      <GrassRug item={stub('grass-rug')} actionState={AS} onSize={noop} />
+    </group>
+  );
+}
+
+// ── Douche ────────────────────────────────────────────────────────────────────
+// showerCX = (-NICHE_DEPTH + SHOWER_W) / 2 = 25  |  SHOWER_Z0 = SDB_Z_END = 600
+
+function ShowerPlaced() {
+  return (
+    <group position={[(-NICHE_DEPTH + 70) / 2, 0, SDB_Z_END]}>
+      <Shower item={stub('shower')} actionState={AS} onSize={noop} />
+    </group>
+  );
+}
+
+// ── WC ────────────────────────────────────────────────────────────────────────
+// WC_CX = -NICHE_DEPTH + 40 + 20 = 50  |  WC_Z0 = KITCHEN_Z + 11 = 471
+
+function ToiletPlaced({ as }: { as: Record<string, boolean> }) {
+  return (
+    <group position={[-NICHE_DEPTH + 60, 0, KITCHEN_Z + 11]}>
+      <Toilet item={stub('toilet')} actionState={as} onSize={noop} />
+    </group>
+  );
+}
+
 // ── Meubles SDB ───────────────────────────────────────────────────────────────
 // BathroomCabinet: W=40, H=60, D=37
 // West : X = -NICHE_DEPTH + W/2 = 10  |  Z = KITCHEN_Z+11+37/2 = 489.5  |  PY = H/2 = 30
@@ -257,7 +335,13 @@ export function Furniture() {
       <KallaxNW />
       <FreezerPlaced as={as} />
       <KitchenCabinetPlaced as={as} />
+      <CorridorClosetPlaced as={as} />
       <FridgePlaced as={as} />
+      <VasqueSdbPlaced />
+      <WaterHeaterPlaced />
+      <GrassRugPlaced />
+      <ShowerPlaced />
+      <ToiletPlaced as={as} />
       <BathroomCabinetsPlaced />
     </>
   );

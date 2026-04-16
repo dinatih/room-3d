@@ -29,4 +29,6 @@ export const cameraState = {
   invalidate: null as (() => void) | null,
   /** Vrai pendant une session WebXR — désactive les contrôles clavier/orb */
   isXR: false as boolean,
+  /** HD mirrors : reflector camera hérite du mask complet de la caméra principale */
+  mirrorsHD: false as boolean,
 };

@@ -5,6 +5,7 @@
  */
 import { useMemo } from 'react';
 import * as THREE from 'three';
+import { AirPerformer } from './items/AirPerformer';
 
 // @ts-ignore
 import {
@@ -32,7 +33,6 @@ const fnInnerMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 
 const mannMat    = new THREE.MeshStandardMaterial({ color: 0xf5f0eb, roughness: 0.5 });
 const woodMat    = new THREE.MeshStandardMaterial({ color: 0xc8a46e, roughness: 0.85 });
 const whitePlanMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.85 });
-const darkMat    = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.7, side: THREE.DoubleSide });
 const metalMat   = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5, metalness: 0.8 });
 const fabricMat  = new THREE.MeshStandardMaterial({ color: 0x7a7a7a, roughness: 0.95 });
 
@@ -182,32 +182,12 @@ function MeubleTV() {
   );
 }
 
-// ── Purificateur d'air (Dyson Air Performer) ──────────────────────────────────
+// ── Purificateur d'air (Philips Air Performer) ────────────────────────────────
 
-function AirPerformer() {
-  const towerGeo = useMemo(() => {
-    const h = 70, r = 10, holeR = 6;
-    const shape = new THREE.Shape();
-    shape.absarc(0, h - r, r, Math.PI, 0, true);
-    shape.absarc(0, r, r, 0, Math.PI, true);
-
-    const hole = new THREE.Path();
-    hole.absarc(0, h - 20 - holeR + 10, holeR, Math.PI, 0, true);
-    hole.absarc(0, holeR + 10, holeR, 0, Math.PI, true);
-    shape.holes.push(hole);
-
-    return new THREE.ExtrudeGeometry(shape, { depth: 10, bevelEnabled: false });
-  }, []);
-
-  const AP_X = 287.5, AP_Z = 230;
+function AirPerformerPlaced() {
   return (
-    <group position={[AP_X, 0, AP_Z]}>
-      {/* Base cylindrique */}
-      <mesh position={[0, 17.5, 0]} material={darkMat}>
-        <cylinderGeometry args={[12.5, 12.5, 35, 32]} />
-      </mesh>
-      {/* Tour */}
-      <mesh geometry={towerGeo} material={darkMat} position={[0, 35, -5]} />
+    <group position={[287.5, 0, 230]}>
+      <AirPerformer item={{} as any} actionState={{}} onSize={() => {}} />
     </group>
   );
 }
@@ -319,7 +299,7 @@ export function Decor() {
       <MannequinHead position={nwMannWorld} rotY={nwMannRot} />
       <MannequinHead position={[282, 90, 271.5]} rotY={0} />
       <MeubleTV />
-      <AirPerformer />
+      <AirPerformerPlaced />
       <ShoeHatRack />
     </>
   );

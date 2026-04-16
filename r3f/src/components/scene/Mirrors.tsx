@@ -11,6 +11,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
+import { cameraState } from './cameraState';
 
 // @ts-ignore
 import { ROOM_D, WALL_H, KITCHEN_X1, DOOR_START, KITCHEN_Z } from '@config';
@@ -80,9 +81,16 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     } as ConstructorParameters<typeof Reflector>[1]);
     mir.position.set(...position);
     mir.rotation.y = rotationY;
-    // Fidèle au vanilla : la caméra miroir ne voit que le layer 0 (structure).
-    // Tout le reste (meubles, GLBs) est sur layer 1+ → exclu des reflets.
-    mir.camera.layers.mask = 1;
+    mir.camera.layers.mask = 1; // HD OFF par défaut
+
+    // HD toggle : quand mirrorsHD est actif, la caméra miroir hérite du
+    // mask complet de la caméra principale → tout le mobilier est reflété.
+    const origOnBeforeRender = mir.onBeforeRender.bind(mir);
+    mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
+      mir.camera.layers.mask = cameraState.mirrorsHD ? camera.layers.mask : 1;
+      origOnBeforeRender(renderer, scene, camera, geometry, material, group);
+    };
+
     return mir;
   }, []);
 

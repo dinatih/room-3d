@@ -15,7 +15,6 @@ import { Doors }     from './structure/Doors';
 import { Neighbors } from './structure/Neighbors';
 
 import { Kitchen }   from './structure/Kitchen';
-import { Bathroom }  from './structure/Bathroom';
 import { Furniture }   from './Furniture';
 import { Furnishings } from './Furnishings';
 import { Decor }       from './Decor';
@@ -31,6 +30,7 @@ import { HoverRaycaster, HoverOverlay } from './HoverMenu';
 import { DevToolsCollector }            from './DevToolsCollector';
 import { Inventory }                    from './Inventory';
 import { VRMode }                       from './VRMode';
+import { FloorPlan }                    from './FloorPlan';
 
 // @ts-ignore — JS file with no type declarations
 import { ROOM_W, ROOM_D } from '@config';
@@ -58,7 +58,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
-    glb: true, neighbors: false, xray: false,
+    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -68,7 +68,11 @@ export function Studio() {
   }, []);
 
   const onToggleLayer = useCallback((key: keyof LayerState) => {
-    setLayers(s => ({ ...s, [key]: !s[key] }));
+    setLayers(s => {
+      const next = { ...s, [key]: !s[key] };
+      if (key === 'mirrorsHD') cameraState.mirrorsHD = next.mirrorsHD;
+      return next;
+    });
     cameraState.invalidate?.();
   }, []);
 
@@ -146,42 +150,47 @@ export function Studio() {
         <HoverRaycaster />
         <DevToolsCollector />
         {layers.xray && <XRayLayer />}
+        {layers.plan && <FloorPlan />}
 
-        {/* Layer 0 : structure + miroirs + walker — rendus dans les reflets */}
-        <group visible={layers.structure}>
-          <Walls />
-          <Floor />
-          <Doors />
-        </group>
-        <group visible={layers.furniture}>
-          <Mirrors />
-        </group>
-        <Walker />
-        <WalkerRed />
+        {/* Tout le contenu 3D — masqué en mode Plan */}
+        <group visible={!layers.plan}>
 
-        {/* Layer 1 : tout le reste — exclu des reflets, visible à la caméra principale */}
-        <LayerGroup layer={1}>
-          <group visible={layers.equipment}>
-            <Kitchen />
-            <Bathroom />
+          {/* Layer 0 : structure + miroirs + walker — rendus dans les reflets */}
+          <group visible={layers.structure}>
+            <Walls />
+            <Floor />
+            <Doors />
           </group>
           <group visible={layers.furniture}>
-            <Furniture />
-            <Furnishings />
-            <Decor />
-            <Backpacks />
-            <DronaBoxes />
-            <AltappenRug />
-            <Garden />
+            <Mirrors />
           </group>
-          <group visible={layers.glb}>
-            <GlbItems />
-            <GardenGlb />
-          </group>
-          <group visible={layers.neighbors}>
-            <Neighbors />
-          </group>
-        </LayerGroup>
+          <Walker />
+          <WalkerRed />
+
+          {/* Layer 1 : tout le reste — exclu des reflets, visible à la caméra principale */}
+          <LayerGroup layer={1}>
+            <group visible={layers.equipment}>
+              <Kitchen />
+            </group>
+            <group visible={layers.furniture}>
+              <Furniture />
+              <Furnishings />
+              <Decor />
+              <Backpacks />
+              <DronaBoxes />
+              <AltappenRug />
+              <Garden />
+            </group>
+            <group visible={layers.glb}>
+              <GlbItems />
+              <GardenGlb />
+            </group>
+            <group visible={layers.neighbors}>
+              <Neighbors />
+            </group>
+          </LayerGroup>
+
+        </group>
       </Canvas>
 
       {/* HTML overlays */}

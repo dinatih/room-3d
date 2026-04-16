@@ -8,8 +8,8 @@
  *   - Téléviseur mural
  */
 import { useMemo, useState, useEffect } from 'react';
-import { useTexture } from '@react-three/drei';
 import { LaptopDesk } from './LaptopDesk';
+import { TV, TV_W, TV_H, TV_D } from './items/TV';
 import * as THREE from 'three';
 
 // @ts-ignore
@@ -27,7 +27,6 @@ const woodMat   = new THREE.MeshStandardMaterial({ color: 0xe8c39e, roughness: 0
 const whiteMat  = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
 const blueMat   = new THREE.MeshStandardMaterial({ color: 0x87ceeb, roughness: 0.8 });
 const redMat    = new THREE.MeshStandardMaterial({ color: 0xCC2222, roughness: 0.75 });
-const tvBodyMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.4 });
 
 // ────────────────────────────────────────────────────────────────────────────
 // LIT UTÅKER
@@ -271,34 +270,16 @@ function Desks() {
 // TÉLÉVISEUR
 // ────────────────────────────────────────────────────────────────────────────
 
-function TV() {
-  const TV_W = 70, TV_H = 40, TV_D = 1.5;
+function TVPlaced() {
   const TV_Y = WALL_H - 10 - TV_H / 2;
   const TILT = -Math.PI / 36;
-
-  const screenTex = useTexture('media/omarchy-screen.png');
-  screenTex.colorSpace = THREE.SRGBColorSpace;
-
   return (
     <group
       position={[ROOM_W - 25, TV_Y, 25]}
       rotation-order="YXZ"
       rotation={[TILT, (3 * Math.PI) / 4, 0]}
     >
-      {/* Châssis */}
-      <mesh castShadow material={tvBodyMat}>
-        <boxGeometry args={[TV_W, TV_H, TV_D]} />
-      </mesh>
-      {/* Écran */}
-      <mesh rotation={[0, Math.PI, 0]} position={[0, 0, -(TV_D / 2 + 0.1)]}>
-        <planeGeometry args={[TV_W - 3, TV_H - 3]} />
-        <meshStandardMaterial
-          map={screenTex}
-          roughness={0.05}
-          metalness={0.3}
-          polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1}
-        />
-      </mesh>
+      <TV item={{} as any} actionState={{}} onSize={() => {}} />
     </group>
   );
 }
@@ -310,7 +291,7 @@ export function Furnishings() {
     <>
       <Bed />
       <Desks />
-      <TV />
+      <TVPlaced />
     </>
   );
 }

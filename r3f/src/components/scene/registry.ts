@@ -16,6 +16,15 @@ import { DoorEntry }                                  from './items/DoorEntry';
 import { DoorLiving, DoorSdb }                        from './items/DoorWhite';
 import { GlassDoor }                                  from './items/GlassDoor';
 import { Kallax }                                      from './items/Kallax';
+import { Toilet }                                      from './items/Toilet';
+import { Shower }                                      from './items/Shower';
+import { VasqueSdb }                                   from './items/VasqueSdb';
+import { WaterHeater }                                 from './items/WaterHeater';
+import { CorridorCloset }                              from './items/CorridorCloset';
+import { TV }                                          from './items/TV';
+import { Laptop }                                      from './items/Laptop';
+import { Phone }                                       from './items/Phone';
+import { AirPerformer }                                from './items/AirPerformer';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'freezer':                 Freezer,
@@ -35,6 +44,15 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'kallax-nw-1x1-b':         Kallax,
   'kallax-sw-2x2':           Kallax,
   'kallax-sw-2x1':           Kallax,
+  'toilet':                  Toilet,
+  'shower':                  Shower,
+  'vasque-sdb':              VasqueSdb,
+  'water-heater':            WaterHeater,
+  'corridor-closet':         CorridorCloset,
+  'tv':                      TV,
+  'laptop':                  Laptop,
+  'phone':                   Phone,
+  'air-performer':           AirPerformer,
 };
 
 /**
@@ -51,4 +69,6 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'living-door-toggle':    ['Ouvrir', 'Fermer'],
   'bathroom-door-toggle':  ['Ouvrir', 'Fermer'],
   'door-toggle':           ['Ouvrir', 'Fermer'],
+  'wc-lid-toggle':         ['Ouvrir', 'Fermer'],
+  'corr-doors-toggle':     ['Ouvrir', 'Fermer'],
 };

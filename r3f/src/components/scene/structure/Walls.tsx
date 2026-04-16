@@ -9,7 +9,7 @@
  * les extraire dans des composants dédiés.
  */
 import { useMemo, useRef, useEffect } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 // @ts-ignore
@@ -195,53 +195,6 @@ function WallC() {
   );
 }
 
-
-// ── Placard couloir ────────────────────────────────────────────────────────────
-function CorridorCloset() {
-  const CLOSET_X0 = KITCHEN_X1, CLOSET_X1 = DOOR_START;
-  const CLOSET_Z0 = ROOM_D + W, CLOSET_Z1 = KITCHEN_Z;
-  const CLOSET_W  = CLOSET_X1 - CLOSET_X0;
-  const CLOSET_D  = CLOSET_Z1 - CLOSET_Z0;
-  const CX = (CLOSET_X0 + CLOSET_X1) / 2;
-  const CZ = (CLOSET_Z0 + CLOSET_Z1) / 2;
-  const shelfMat  = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
-  const doorMat   = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
-  const closetRef = useRef<THREE.Group>(null!);
-  const corrOpen  = useRef(false);
-  const { invalidate: invalidateCloset } = useThree();
-  useEffect(() => {
-    const onToggle = (e: Event) => {
-      if ((e as CustomEvent).detail?.key !== 'corrDoors') return;
-      corrOpen.current = !corrOpen.current;
-      if (closetRef.current) closetRef.current.rotation.y = corrOpen.current ? Math.PI / 2 : 0;
-      invalidateCloset();
-    };
-    document.addEventListener('furniture-toggle', onToggle);
-    return () => document.removeEventListener('furniture-toggle', onToggle);
-  }, [invalidateCloset]);
-
-  return (
-    <group>
-      {[60, 120, 180].map((y) => (
-        <mesh key={y} ref={(m) => { if (m) m.material = shelfMat; }}
-          position={[CX, y, CZ]} castShadow receiveShadow>
-          <boxGeometry args={[CLOSET_W - 4, 3, CLOSET_D]} />
-        </mesh>
-      ))}
-      <group ref={closetRef} position={[CLOSET_X1, 0, CLOSET_Z0]}
-        userData={{ hoverAction: { label: 'Placard couloir', actionId: 'corrDoors' } }}>
-        <mesh ref={(m) => { if (m) m.material = doorMat; }}
-          position={[0, (WALL_H - 10) / 2, CLOSET_D / 2]} castShadow>
-          <boxGeometry args={[2, WALL_H - 10, CLOSET_D - 2]} />
-        </mesh>
-        <mesh ref={(m) => { if (m) m.material = handleMat; }}
-          position={[2, WALL_H / 2, CLOSET_D - 6]}>
-          <boxGeometry args={[3, 20, 1.2]} />
-        </mesh>
-      </group>
-    </group>
-  );
-}
 
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Walls() {
@@ -438,8 +391,6 @@ export function Walls() {
       <mesh geometry={diagGeos.a2}     material={wallMat}     castShadow receiveShadow />
       <mesh geometry={diagGeos.bSE}    material={wallMat}     castShadow receiveShadow />
 
-      {/* ── Placard couloir ─────────────────────────────────────────────────── */}
-      <CorridorCloset />
 
     </group>
   );

@@ -230,8 +230,10 @@ export interface LayerState {
   equipment: boolean;
   furniture: boolean;
   glb:       boolean;
-  neighbors: boolean;
-  xray:      boolean;
+  neighbors:  boolean;
+  xray:       boolean;
+  mirrorsHD:  boolean;
+  plan:       boolean;
 }
 
 export interface SidePanelProps {
@@ -291,6 +293,13 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('gold',   'GLB',         'glb')}
           {layerBtn('blue',   'Voisins',     'neighbors')}
           {layerBtn('cyan',   'X-Ray',       'xray')}
+          {layerBtn('purple', 'Miroirs HD',  'mirrorsHD')}
+          <button
+            style={{ ...btn(COLORS['gold']), opacity: layers.plan ? 1 : 0.45 }}
+            onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
+          >
+            Plan : {layers.plan ? 'ON' : 'OFF'}
+          </button>
         </Group>
 
         {/* ── Mobilier ── */}

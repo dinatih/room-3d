@@ -29,6 +29,8 @@ const ITEM_ACTIONS: Record<string, string> = {
   'door-living':            'living-door-toggle',
   'door-sdb':               'bathroom-door-toggle',
   'door-glass':             'door-toggle',
+  'toilet':                 'wc-lid-toggle',
+  'corridor-closet':        'corr-doors-toggle',
 };
 
 // ── Camera fit ────────────────────────────────────────────────────────────────
