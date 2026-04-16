@@ -183,7 +183,7 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
       {item && (
         <>
           <Canvas
-            key={glbPath ?? item.id}
+            key={item.id}
             frameloop="always"
             camera={{ fov: 45, near: 0.01, far: 100, position: [1.4, 0.9, 1.8] }}
             gl={{ antialias: true, alpha: false }}
@@ -203,10 +203,10 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
               target={[0, 0, 0]}
             />
 
-            {glbPath
-              ? <GlbScene glbPath={glbPath} />
-              : SCENE_REGISTRY[item.id]
-                ? <RegistryScene item={item as InventoryItem} actionState={liveActionState} />
+            {SCENE_REGISTRY[item.id]
+              ? <RegistryScene item={item as InventoryItem} actionState={liveActionState} />
+              : glbPath
+                ? <GlbScene glbPath={glbPath} />
                 : dims ? <BoxScene dims={dims} /> : null
             }
           </Canvas>

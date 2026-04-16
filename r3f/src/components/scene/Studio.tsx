@@ -24,7 +24,6 @@ import { Walker, WalkerRed } from './Walker';
 import { Backpacks }  from './Backpacks';
 import { Garden, GardenGlb } from './Garden';
 import { DronaBoxes }  from './DronaBoxes';
-import { AltappenRug } from './AltappenRug';
 import { XRayLayer }   from './XRayLayer';
 import { HoverRaycaster, HoverOverlay } from './HoverMenu';
 import { DevToolsCollector }            from './DevToolsCollector';
@@ -178,7 +177,6 @@ export function Studio() {
               <Decor />
               <Backpacks />
               <DronaBoxes />
-              <AltappenRug />
               <Garden />
             </group>
             <group visible={layers.glb}>

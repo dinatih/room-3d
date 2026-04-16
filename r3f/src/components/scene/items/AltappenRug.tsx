@@ -1,10 +1,13 @@
 /**
- * AltappenRug.tsx — dalles de terrasse IKEA ALTAPPEN (InstancedMesh).
- * Port fidèle de js/furniture/altappen.js.
+ * AltappenRug.tsx — Dalle de terrasse IKEA ALTAPPEN 30×30cm.
+ *
+ * AltappenRug      — tuile unique, SceneItemProps, pour l'inventaire.
+ * AltappenRugField — InstancedMesh couvrant tout le jardin, pour Garden.tsx.
  */
-import { useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import type { SceneItemProps } from '../../../types';
 
 const TILE_SIZE = 30;
 const Z0 = -290;
@@ -16,11 +19,40 @@ function gardenX0(z: number): number {
   return Math.ceil((-10 - 110 * (z + 5 + 140) / 70) / 10) * 10;
 }
 
-export function AltappenRug() {
+// ── Tuile unique (inventaire) ─────────────────────────────────────────────────
+
+export function AltappenRug({ onSize }: SceneItemProps) {
+  const { scene } = useGLTF('media/ikea_Altappen_single.glb');
+
+  useLayoutEffect(() => {
+    scene.updateMatrixWorld(true);
+    const rawBox = new THREE.Box3().setFromObject(scene);
+    const tileW = rawBox.max.x - rawBox.min.x;
+    const scl = TILE_SIZE / tileW;
+    scene.scale.setScalar(scl);
+    scene.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(scene);
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+    scene.traverse(c => {
+      if ((c as THREE.Mesh).isMesh) { c.receiveShadow = true; }
+    });
+    const size = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3());
+    onSize(size);
+  }, [scene]);
+
+  return <primitive object={scene} />;
+}
+
+// ── Champ de dalles (scène) ───────────────────────────────────────────────────
+
+export function AltappenRugField() {
   const { scene } = useGLTF('media/ikea_Altappen_single.glb');
 
   const { geo, mat } = useMemo(() => {
-    // Find first mesh
     let mesh: THREE.Mesh | null = null;
     scene.traverse(c => { if ((c as THREE.Mesh).isMesh && !mesh) mesh = c as THREE.Mesh; });
     if (!mesh) return { geo: new THREE.BoxGeometry(TILE_SIZE, 1, TILE_SIZE), mat: new THREE.MeshStandardMaterial() };

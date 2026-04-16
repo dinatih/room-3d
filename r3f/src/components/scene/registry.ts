@@ -25,6 +25,21 @@ import { TV }                                          from './items/TV';
 import { Laptop }                                      from './items/Laptop';
 import { Phone }                                       from './items/Phone';
 import { AirPerformer }                                from './items/AirPerformer';
+import { ArmrestSofa }                                 from './items/ArmrestSofa';
+import { ArmlessSofa }                                 from './items/ArmlessSofa';
+import { Viggja }                                      from './items/Viggja';
+import { JoggingSuit }                                 from './items/JoggingSuit';
+import { AltappenRug }                                 from './items/AltappenRug';
+import { Smorkull }                                    from './items/Smorkull';
+import { Sunnersta }                                   from './items/Sunnersta';
+import { Scooter }                                     from './items/Scooter';
+import { LampOla }                                     from './items/LampOla';
+import { Mackapar }                                    from './items/Mackapar';
+import { Salopette }                                   from './items/Salopette';
+import { BaseballCap }                                 from './items/BaseballCap';
+import { Bathtub }                                     from './items/Bathtub';
+import { ChestBench }                                  from './items/ChestBench';
+import { PottedPalm }                                  from './items/PottedPalm';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'freezer':                 Freezer,
@@ -53,6 +68,21 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'laptop':                  Laptop,
   'phone':                   Phone,
   'air-performer':           AirPerformer,
+  'armrest-sofa':            ArmrestSofa,
+  'armless-sofa':            ArmlessSofa,
+  'bathtub':                 Bathtub,
+  'chest-bench':             ChestBench,
+  'potted-palm':             PottedPalm,
+  'viggja':                  Viggja,
+  'jogging-suit':            JoggingSuit,
+  'altappen-rug':            AltappenRug,
+  'smorkull-chair':          Smorkull,
+  'sunnersta':               Sunnersta,
+  'scooter':                 Scooter,
+  'lamp-ola':                LampOla,
+  'mackapar':                Mackapar,
+  'salopette':               Salopette,
+  'baseball-cap':            BaseballCap,
 };
 
 /**

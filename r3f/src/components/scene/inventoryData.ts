@@ -87,8 +87,8 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'sunnersta',        name: 'Desserte SUNNERSTA',             brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 36,   d: 56,   h: 90   }, scenePos: { x: 282, z: 300 }, notes: 'Roulante, têtes de mannequin dessus', glbPath: 'media/sunnersta_trolley_ikea.glb' },
   { id: 'chest-bench',      name: 'Coffre banc YITAHOME 100 Gal',  brand: 'YITAHOME', category: 'furniture', qty: 1, dims: { w: 122,  d: 55,   h: 62   }, scenePos: { x: 70,  z: -90 }, notes: 'Gris, jardin derrière canapé ouest' },
   { id: 'viggja',           name: 'Desserte VIGGJA',                brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 37,   d: 50,   h: 74   }, scenePos: { x: 100, z:-125 }, notes: 'Jardin, à côté canapé ouest', glbPath: 'media/viggja.glb' },
-  { id: 'sofa-red-1',       name: 'Canapé de jardin (grand)',       brand: '',         category: 'furniture', qty: 1, dims: { w: 60,   d: 160,  h: 90   }, scenePos: { x: 300, z:-110 }, notes: 'Rouge, côté est, avec accoudoirs' },
-  { id: 'sofa-red-2',       name: 'Canapé de jardin (petit)',       brand: '',         category: 'furniture', qty: 1, dims: { w: 60,   d: 100,  h: 100  }, scenePos: { x: 130, z: -90 }, notes: 'Rouge, sans accoudoirs' },
+  { id: 'armrest-sofa',     name: 'Canapé de jardin (grand)',       brand: '',         category: 'furniture', qty: 1, dims: { w: 60,   d: 160,  h: 90   }, scenePos: { x: 300, z:-110 }, notes: 'Rouge, côté est, avec accoudoirs' },
+  { id: 'armless-sofa',     name: 'Canapé de jardin (petit)',       brand: '',         category: 'furniture', qty: 1, dims: { w: 60,   d: 100,  h: 100  }, scenePos: { x: 130, z: -90 }, notes: 'Rouge, sans accoudoirs' },
 
   // ── TECH ─────────────────────────────────────────────────────────────────────
   { id: 'tv',               name: 'Télévision murale',              brand: '',          category: 'tech',     qty: 1, dims: { w: 70,   d: 2,    h: 40   }, scenePos: { x: 275, z: 25  }, notes: '70×40cm, orientée vers le séjour' },
@@ -128,7 +128,9 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'mannequin-head',   name: 'Tête de mannequin',              brand: '',         category: 'decor',     qty: 3, dims: { w: 41,  d: 22,  h: 45  }, scenePos: { x: 150, z: 200 }, notes: '1 Sunnersta, 1 Kallax NW, 1 LACK' },
   { id: 'lamp-ola',         name: 'Lampe OLA',                      brand: 'IKEA',     category: 'decor',     qty: 1, dims: { w: 30,  d: 30,  h: 120 }, scenePos: { x: 286, z: 320 }, notes: 'Sur pied, meuble TV', glbPath: 'media/ikea_lamp_ola.glb' },
   { id: 'altappen-lantern', name: 'Lanterne ALTAPPEN',              brand: 'IKEA',     category: 'decor',     qty: 1, dims: { w: 22,  d: 22,  h: 35  }, scenePos: { x: 100, z:-125 }, notes: 'Jardin, desserte Viggja', glbPath: 'media/ikea_Altappen_single.glb' },
+  { id: 'altappen-rug',     name: 'Dalle terrasse ALTAPPEN',        brand: 'IKEA',     category: 'decor',     qty: 40, dims: { w: 30,  d: 30,  h: 2   }, scenePos: { x: 150, z:-220 }, notes: 'Jardin, dalles assemblées' },
   { id: 'potted-palm',      name: 'Palmier en pot',                 brand: '',         category: 'decor',     qty: 1, dims: { w: 60,  d: 60,  h: 150 }, scenePos: { x: 100, z:-150 }, notes: 'Jardin, entre canapé et desserte', glbPath: 'media/potted_palm.glb' },
+  { id: 'jogging-suit',     name: 'Jogging suit',                   brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 20,  h: 170 }, scenePos: { x: 260, z:-250 }, notes: 'Jardin, près de la baignoire', glbPath: 'media/realistic_human_cloths.glb' },
 
   // ── PORTES ────────────────────────────────────────────────────────────────────
   { id: 'door-entry',       name: 'Porte d\'entrée',                brand: '',         category: 'doors',     qty: 1, dims: { w: 90,  d: 4,   h: 204 }, scenePos: { x: 255, z: 520 }, notes: 'Rouge, mur diagonal, poignée L + knob rouge' },

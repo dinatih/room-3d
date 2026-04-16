@@ -1,0 +1,34 @@
+/**
+ * Viggja.tsx — Desserte IKEA VIGGJA (GLB media/viggja.glb, déjà en cm).
+ * Coordonnées locales : centré par bbox, Y=0 = sol.
+ * Placement monde dans Garden.tsx.
+ */
+import { useLayoutEffect } from 'react';
+import { useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
+import { removeGlbLines } from '../../../utils/glbUtils';
+import type { SceneItemProps } from '../../../types';
+
+export function Viggja({ onSize }: SceneItemProps) {
+  const { scene } = useGLTF('media/viggja.glb');
+
+  useLayoutEffect(() => {
+    removeGlbLines(scene);
+    scene.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(scene);
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+    scene.traverse(c => {
+      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
+    });
+    const size = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3());
+    onSize(size);
+  }, [scene]);
+
+  return <primitive object={scene} />;
+}
+
+useGLTF.preload('media/viggja.glb');
