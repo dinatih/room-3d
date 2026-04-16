@@ -78,7 +78,8 @@ function TapeMesh({ rotY, posX, posY, posZ }: { rotY: number; posX: number; posY
 }
 
 // ── Poignée en L ─────────────────────────────────────────────────────────────
-// Pour porte séjour et SDB (levier horizontal)
+// Porte fine en Z : disc en face Z, levier le long de X vers la charnière.
+// Pour une porte fine en X, envelopper dans <group rotation={[0, -PI/2, 0]}>.
 
 function HandleH({ x, y, z, sign }: { x: number; y: number; z: number; sign: 1 | -1 }) {
   const R = 1.3;
@@ -211,8 +212,11 @@ function BathroomDoor() {
         </mesh>
         <TapeMesh rotY={Math.PI / 2}  posX={2.5}  posY={100} posZ={hz} />
         <TapeMesh rotY={-Math.PI / 2} posX={-2.5} posY={100} posZ={hz} />
-        <HandleH x={-2.5} y={hy} z={hz} sign={-1} />
-        <HandleH x={2.5}  y={hy} z={hz} sign={1}  />
+        {/* Même poignée que LivingDoor, rotée -PI/2 autour de Y */}
+        <group rotation={[0, -Math.PI / 2, 0]}>
+          <HandleH x={hz} y={hy} z={-2.5} sign={-1} />
+          <HandleH x={hz} y={hy} z={2.5}  sign={1}  />
+        </group>
       </group>
       {/* Dormant */}
       <mesh position={[wallCX, DOOR_H / 2, doorEndZ  + DORMANT_T / 2]} material={dormantMat}>

@@ -188,17 +188,26 @@ function RealisticCloths() {
   return <primitive object={scene} />;
 }
 
-// ── Export principal ──────────────────────────────────────────────────────────
+// ── Exports ───────────────────────────────────────────────────────────────────
 
+/** Éléments procéduraux (visibles indépendamment du filtre GLB) */
 export function Garden() {
   return (
     <>
       <Sofa1 />
       <Sofa2 />
       <ChestBench />
+      <Bathtub />
+    </>
+  );
+}
+
+/** Éléments GLB du jardin (masqués par le filtre GLB) */
+export function GardenGlb() {
+  return (
+    <>
       <Viggja />
       <PottedPalm />
-      <Bathtub />
       <RealisticCloths />
     </>
   );

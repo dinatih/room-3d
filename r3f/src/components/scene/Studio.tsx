@@ -11,8 +11,9 @@ import { Minimap }          from './Minimap';
 import { SidePanel, type FurnitureState, type LayerState } from './SidePanel';
 import { Walls }     from './structure/Walls';
 import { Floor }     from './structure/Floor';
-import { Neighbors } from './structure/Neighbors';
 import { Doors }     from './structure/Doors';
+import { Neighbors } from './structure/Neighbors';
+
 import { Kitchen }   from './structure/Kitchen';
 import { Bathroom }  from './structure/Bathroom';
 import { Furniture }   from './Furniture';
@@ -22,7 +23,7 @@ import { Mirrors }     from './Mirrors';
 import { GlbItems }   from './GlbItems';
 import { Walker }     from './Walker';
 import { Backpacks }  from './Backpacks';
-import { Garden }      from './Garden';
+import { Garden, GardenGlb } from './Garden';
 import { DronaBoxes }  from './DronaBoxes';
 import { AltappenRug } from './AltappenRug';
 import { XRayLayer }   from './XRayLayer';
@@ -144,7 +145,7 @@ export function Studio() {
         <DevToolsCollector />
         {layers.xray && <XRayLayer />}
 
-        {/* Layer 0 : structure + miroirs — seul ce layer est rendu dans les reflets */}
+        {/* Layer 0 : structure + miroirs + walker — rendus dans les reflets */}
         <group visible={layers.structure}>
           <Walls />
           <Floor />
@@ -153,6 +154,7 @@ export function Studio() {
         <group visible={layers.furniture}>
           <Mirrors />
         </group>
+        <Walker />
 
         {/* Layer 1 : tout le reste — exclu des reflets, visible à la caméra principale */}
         <LayerGroup layer={1}>
@@ -167,11 +169,11 @@ export function Studio() {
             <Backpacks />
             <DronaBoxes />
             <AltappenRug />
+            <Garden />
           </group>
           <group visible={layers.glb}>
             <GlbItems />
-            <Garden />
-            <Walker />
+            <GardenGlb />
           </group>
           <group visible={layers.neighbors}>
             <Neighbors />

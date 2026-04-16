@@ -32,18 +32,12 @@ const ghostMat = new THREE.MeshStandardMaterial({
 const wallMatC = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
 const wallMatDiag = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
 const panelMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6 });
-const dormantMat = new THREE.MeshStandardMaterial({ color: 0xf0ede8, roughness: 0.35 });
-const stopMat    = new THREE.MeshStandardMaterial({ color: 0xe8e5e0, roughness: 0.30 });
 const pvcMat     = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
 const sillMat    = new THREE.MeshStandardMaterial({ color: 0xb0a898, roughness: 0.8 });
 const glassMat   = new THREE.MeshPhysicalMaterial({
   color: 0x88ccff, transparent: true, opacity: 0.25,
   roughness: 0.05, metalness: 0.1, side: THREE.DoubleSide,
 });
-const redFMat    = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 });
-const whiteFMat  = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.3 });
-const doorRedMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5, metalness: 0.1 });
-const doorWhtMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.4 });
 const handleMat  = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.15 });
 
 // BoxGeometry face order : [+X(0), -X(1), +Y(2), -Y(3), +Z(4), -Z(5)]
@@ -201,234 +195,6 @@ function WallC() {
   );
 }
 
-// ── Porte séjour (mur D) ──────────────────────────────────────────────────────
-function DoorLiving() {
-  const panelRef = useRef<THREE.Group>(null!);
-  // TODO : lier à un état global pour l'animation
-
-  const WW = W, DORMANT_T = 2.5, STOP_T = 1, STOP_W = 3;
-  const wallCZ = ROOM_D + WW / 2;
-  const stopZ  = ROOM_D + STOP_T / 2;
-
-  return (
-    <group>
-      {/* Dormant */}
-      <P w={DORMANT_T} h={DOOR_H} d={WW}
-        x={DOOR_START + DORMANT_T / 2} y={DOOR_H / 2} z={wallCZ} mat={dormantMat} />
-      <P w={DORMANT_T} h={DOOR_H} d={WW}
-        x={DOOR_END - DORMANT_T / 2} y={DOOR_H / 2} z={wallCZ} mat={dormantMat} />
-      <P w={DOOR_END - DOOR_START - DORMANT_T * 2} h={DORMANT_T} d={WW}
-        x={(DOOR_START + DOOR_END) / 2} y={DOOR_H + DORMANT_T / 2} z={wallCZ} mat={dormantMat} />
-      {/* Arrêts */}
-      <P w={STOP_T} h={DOOR_H} d={STOP_W}
-        x={DOOR_START + DORMANT_T + STOP_T / 2} y={DOOR_H / 2} z={stopZ} mat={stopMat} />
-      <P w={STOP_T} h={DOOR_H} d={STOP_W}
-        x={DOOR_END - DORMANT_T - STOP_T / 2} y={DOOR_H / 2} z={stopZ} mat={stopMat} />
-      <P w={DOOR_END - DOOR_START - DORMANT_T * 2 - STOP_T * 2} h={STOP_W} d={STOP_T}
-        x={(DOOR_START + DOOR_END) / 2} y={DOOR_H - STOP_W / 2} z={stopZ} mat={stopMat} />
-
-      {/* Panneau (pivot à DOOR_END) */}
-      <group ref={panelRef} position={[DOOR_END, 0, ROOM_D + 3]}>
-        <mesh ref={(m) => { if (m) m.material = doorWhtMat; }}
-          position={[-(DOOR_END - DOOR_START) / 2, DOOR_H / 2, 0]} castShadow>
-          <boxGeometry args={[DOOR_END - DOOR_START, DOOR_H, 4]} />
-        </mesh>
-        {/* Poignée L double face */}
-        {([-2.5, 2.5] as const).map((zF) => {
-          const sign = zF < 0 ? -1 : 1;
-          const hx = -(DOOR_END - DOOR_START) + 15, hy = 100, R = 1.3;
-          return (
-            <group key={zF}>
-              <mesh ref={(m) => { if (m) m.material = handleMat; }}
-                rotation={[Math.PI / 2, 0, 0]} position={[hx, hy, zF]}>
-                <cylinderGeometry args={[3, 3, 1, 12]} />
-              </mesh>
-              <mesh ref={(m) => { if (m) m.material = handleMat; }}
-                rotation={[Math.PI / 2, 0, 0]}
-                position={[hx, hy, zF + sign * 2.5]}>
-                <cylinderGeometry args={[R, R, 5, 8]} />
-              </mesh>
-              <mesh ref={(m) => { if (m) m.material = handleMat; }}
-                rotation={[0, 0, Math.PI / 2]}
-                position={[hx + 7, hy, zF + sign * 5]}>
-                <cylinderGeometry args={[R, R, 14, 8]} />
-              </mesh>
-              {([0, 14] as const).map((dx) => (
-                <mesh key={dx} ref={(m) => { if (m) m.material = handleMat; }}
-                  position={[hx + dx, hy, zF + sign * 5]}>
-                  <sphereGeometry args={[R, 8, 6]} />
-                </mesh>
-              ))}
-            </group>
-          );
-        })}
-      </group>
-    </group>
-  );
-}
-
-// ── Porte SDB (mur couloir gauche) ────────────────────────────────────────────
-function DoorSdb() {
-  const WALL_X        = DOOR_START - 5;
-  const LEFT_WALL_LEN = SDB_Z_END - KITCHEN_Z;
-  const C_DOOR_W      = 83;
-  const C_DOOR_START  = LEFT_WALL_LEN - 10 - C_DOOR_W;
-  const C_DOOR_END    = C_DOOR_START + C_DOOR_W;
-  const hingeZ        = KITCHEN_Z + C_DOOR_END;
-
-  const panelRef = useRef<THREE.Group>(null!);
-  const WW = W, DORMANT_T = 2.5, STOP_T = 1, STOP_W = 3;
-  const wallCX = WALL_X;
-  const stopX  = WALL_X - WW / 2 - STOP_T / 2;
-  const FW = 3, FT = 1;
-
-  return (
-    <group>
-      {/* Encadrement (2 faces) */}
-      {([WALL_X - WW / 2 - FT / 2, WALL_X + WW / 2 + FT / 2] as const).map((xF) => (
-        <group key={xF}>
-          <P w={FT} h={DOOR_H} d={FW} x={xF} y={DOOR_H / 2}
-            z={hingeZ - C_DOOR_W - FW / 2} mat={whiteFMat} />
-          <P w={FT} h={DOOR_H} d={FW} x={xF} y={DOOR_H / 2}
-            z={hingeZ + FW / 2} mat={whiteFMat} />
-          <P w={FT} h={FW} d={C_DOOR_W + FW * 2} x={xF}
-            y={DOOR_H + FW / 2} z={hingeZ - C_DOOR_W / 2} mat={whiteFMat} />
-        </group>
-      ))}
-      {/* Dormant */}
-      <P w={WW} h={DOOR_H} d={DORMANT_T}
-        x={wallCX} y={DOOR_H / 2} z={hingeZ + DORMANT_T / 2} mat={dormantMat} />
-      <P w={WW} h={DOOR_H} d={DORMANT_T}
-        x={wallCX} y={DOOR_H / 2} z={hingeZ - C_DOOR_W - DORMANT_T / 2} mat={dormantMat} />
-      <P w={WW} h={DORMANT_T} d={C_DOOR_W - DORMANT_T * 2}
-        x={wallCX} y={DOOR_H + DORMANT_T / 2} z={hingeZ - C_DOOR_W / 2} mat={dormantMat} />
-      {/* Arrêts */}
-      <P w={STOP_T} h={DOOR_H} d={STOP_W}
-        x={stopX} y={DOOR_H / 2} z={hingeZ - STOP_W / 2} mat={stopMat} />
-      <P w={STOP_T} h={DOOR_H} d={STOP_W}
-        x={stopX} y={DOOR_H / 2} z={hingeZ - C_DOOR_W + STOP_W / 2} mat={stopMat} />
-      <P w={STOP_T} h={STOP_W} d={C_DOOR_W - STOP_W * 2}
-        x={stopX} y={DOOR_H - STOP_W / 2} z={hingeZ - C_DOOR_W / 2} mat={stopMat} />
-
-      {/* Panneau (pivot à hingeZ) */}
-      <group ref={panelRef} position={[WALL_X, 0, hingeZ]}>
-        <mesh ref={(m) => { if (m) m.material = doorWhtMat; }}
-          position={[0, DOOR_H / 2, -C_DOOR_W / 2]} castShadow>
-          <boxGeometry args={[4, DOOR_H, C_DOOR_W]} />
-        </mesh>
-      </group>
-    </group>
-  );
-}
-
-// ── Porte d'entrée (mur diagonal) ─────────────────────────────────────────────
-function DoorEntry() {
-  // Calculs identiques à walls.js
-  const diagDX  = DIAG_CX - DIAG_AX;
-  const diagDZ  = DIAG_CZ - DIAG_AZ;
-  const diagLen = Math.sqrt(diagDX * diagDX + diagDZ * diagDZ);
-  const sinθ    = diagDX / diagLen;
-  const cosθ    = diagDZ / diagLen;
-  const pX      = cosθ;
-  const pZ      = -sinθ;
-  const DIAG_DEPTH = 10;
-
-  const perpX   = 5 * diagDZ / diagLen;
-  const perpZ   = -5 * diagDX / diagLen;
-  const originX = DIAG_AX + perpX;
-  const originZ = DIAG_AZ + perpZ;
-
-  const E_DOOR_START = 10, E_DOOR_W = 90;
-  const hingeX  = originX + E_DOOR_START * sinθ;
-  const hingeZ  = originZ + E_DOOR_START * cosθ;
-  const rotY    = Math.atan2(diagDX, diagDZ);
-
-  const iP = (d: number) => [DIAG_AX + d * sinθ, DIAG_AZ + d * cosθ] as [number, number];
-  const eP = (d: number) => [
-    DIAG_AX + d * sinθ + DIAG_DEPTH * pX,
-    DIAG_AZ + d * cosθ + DIAG_DEPTH * pZ,
-  ] as [number, number];
-  const FW = 3, FT = 1;
-
-  const chamberGeos = useMemo(() => {
-    function makeChambSection(d0: number, d1: number, height: number, yBase: number, outward: boolean) {
-      const base = outward ? eP : iP;
-      const sign = outward ? 1 : -1;
-      const pts: [number, number][] = [
-        base(d0),
-        base(d1),
-        [base(d1)[0] + sign * FT * pX, base(d1)[1] + sign * FT * pZ],
-        [base(d0)[0] + sign * FT * pX, base(d0)[1] + sign * FT * pZ],
-      ];
-      return makeExtrudeGeo(pts, height, yBase);
-    }
-    return {
-      red: [
-        makeChambSection(E_DOOR_START - FW, E_DOOR_START, DOOR_H, 0, true),
-        makeChambSection(E_DOOR_START + E_DOOR_W, E_DOOR_START + E_DOOR_W + FW, DOOR_H, 0, true),
-        makeChambSection(E_DOOR_START - FW, E_DOOR_START + E_DOOR_W + FW, FW, DOOR_H, true),
-      ],
-      white: [
-        makeChambSection(E_DOOR_START - FW, E_DOOR_START, DOOR_H, 0, false),
-        makeChambSection(E_DOOR_START + E_DOOR_W, E_DOOR_START + E_DOOR_W + FW, DOOR_H, 0, false),
-        makeChambSection(E_DOOR_START - FW, E_DOOR_START + E_DOOR_W + FW, FW, DOOR_H, false),
-      ],
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const panelRef = useRef<THREE.Group>(null!);
-
-  return (
-    <group>
-      {chamberGeos.red.map((g, i) => (
-        <mesh key={`r${i}`} geometry={g} material={redFMat} castShadow />
-      ))}
-      {chamberGeos.white.map((g, i) => (
-        <mesh key={`w${i}`} geometry={g} material={whiteFMat} castShadow />
-      ))}
-
-      {/* Panneau rouge (pivot à hinge) */}
-      <group ref={panelRef} position={[hingeX, 0, hingeZ]} rotation={[0, rotY, 0]}>
-        <mesh ref={(m) => { if (m) m.material = doorRedMat; }}
-          position={[0, DOOR_H / 2, E_DOOR_W / 2]} castShadow>
-          <boxGeometry args={[4, DOOR_H, E_DOOR_W]} />
-        </mesh>
-        {/* Poignée intérieure L */}
-        {(() => {
-          const hz = 70, hy = 100, R = 1.3;
-          return (
-            <>
-              <mesh ref={(m) => { if (m) m.material = handleMat; }}
-                rotation={[0, 0, Math.PI / 2]} position={[-2.5, hy, hz]}>
-                <cylinderGeometry args={[3, 3, 1, 12]} />
-              </mesh>
-              <mesh ref={(m) => { if (m) m.material = handleMat; }}
-                rotation={[0, 0, Math.PI / 2]} position={[-5.5, hy, hz]}>
-                <cylinderGeometry args={[R, R, 5, 8]} />
-              </mesh>
-              <mesh ref={(m) => { if (m) m.material = handleMat; }}
-                rotation={[Math.PI / 2, 0, 0]} position={[-8, hy, hz - 7]}>
-                <cylinderGeometry args={[R, R, 14, 8]} />
-              </mesh>
-              {([0, -14] as const).map((dz) => (
-                <mesh key={dz} ref={(m) => { if (m) m.material = handleMat; }}
-                  position={[-8, hy, hz + dz]}>
-                  <sphereGeometry args={[R, 8, 6]} />
-                </mesh>
-              ))}
-            </>
-          );
-        })()}
-        {/* Boule extérieure rouge */}
-        <mesh ref={(m) => { if (m) m.material = new THREE.MeshStandardMaterial({ color: 0xcc0000, metalness: 0.3, roughness: 0.4 }); }}
-          position={[6, DOOR_H / 2, E_DOOR_W / 2]}>
-          <sphereGeometry args={[5, 16, 12]} />
-        </mesh>
-      </group>
-    </group>
-  );
-}
 
 // ── Placard couloir ────────────────────────────────────────────────────────────
 function CorridorCloset() {
@@ -672,10 +438,7 @@ export function Walls() {
       <mesh geometry={diagGeos.a2}     material={wallMat}     castShadow receiveShadow />
       <mesh geometry={diagGeos.bSE}    material={wallMat}     castShadow receiveShadow />
 
-      {/* ── Portes ──────────────────────────────────────────────────────────── */}
-      <DoorLiving />
-      <DoorSdb />
-      <DoorEntry />
+      {/* ── Placard couloir ─────────────────────────────────────────────────── */}
       <CorridorCloset />
 
     </group>
