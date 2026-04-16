@@ -84,7 +84,7 @@ export function HoverRaycaster() {
       raycaster.layers.enableAll();
       const hits = raycaster.intersectObjects(scene.children, true);
 
-      let found: { label: string; actionIds: string[] } | null = null;
+let found: { label: string; actionIds: string[] } | null = null;
       for (const hit of hits) {
         if (!hit.object.visible) continue;
         // Skip transparent surfaces (ghost material, glass, neighbors)
@@ -102,8 +102,8 @@ export function HoverRaycaster() {
         const action = resolveAction(hit.object);
         if (action && action.actionIds.some(id => ACTIONS[id])) {
           found = action;
+          break;
         }
-        break; // first opaque surface — stop here (occluded objects hidden)
       }
 
       if (found) {

@@ -396,8 +396,8 @@ export function CameraController() {
     const rgtX  = fwdZ, rgtZ = -fwdX;
     const k     = keys.current;
 
-    if (k.has('ArrowLeft'))  walkYaw.current += 0.06 * dt;
-    if (k.has('ArrowRight')) walkYaw.current -= 0.06 * dt;
+    if (k.has('ArrowLeft'))  walkYaw.current += 0.03 * dt;
+    if (k.has('ArrowRight')) walkYaw.current -= 0.03 * dt;
 
     if (k.has('CtrlArrowUp'))   walkPitch.current = Math.min( 1.4, walkPitch.current + 0.02 * dt);
     if (k.has('CtrlArrowDown')) walkPitch.current = Math.max(-1.4, walkPitch.current - 0.02 * dt);

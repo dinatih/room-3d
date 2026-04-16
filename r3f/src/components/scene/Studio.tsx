@@ -28,6 +28,7 @@ import { AltappenRug } from './AltappenRug';
 import { XRayLayer }   from './XRayLayer';
 import { HoverRaycaster, HoverOverlay } from './HoverMenu';
 import { DevToolsCollector }            from './DevToolsCollector';
+import { Inventory }                    from './Inventory';
 
 // @ts-ignore — JS file with no type declarations
 import { ROOM_W, ROOM_D } from '@config';
@@ -52,6 +53,7 @@ export function Studio() {
     eastDoor: false, corrDoors: false,
     freezer: false, fridge: false, cabinet: false, wcLid: false,
   });
+  const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
     glb: true, neighbors: false, xray: false,
@@ -181,7 +183,9 @@ export function Studio() {
       <SidePanel
         furniture={furniture} onToggleFurniture={onToggleFurniture}
         layers={layers} onToggleLayer={onToggleLayer}
+        onOpenInventory={() => setShowInventory(true)}
       />
+      {showInventory && <Inventory onClose={() => setShowInventory(false)} />}
       <Minimap />
       <HoverOverlay />
     </div>

@@ -121,7 +121,7 @@ export function Walker() {
     actionRef.current = action;
   }, [scene]);
 
-  useFrame((_, delta) => {
+  useFrame(({ invalidate }, delta) => {
     if (!groupRef.current) return;
     const isWalking = cameraState.isWalking;
     const isMoving  = cameraState.isMoving;
@@ -151,6 +151,7 @@ export function Walker() {
       if (activeRef.current || fadeFrames.current > 0) {
         mixer.update(delta);
         if (!activeRef.current && fadeFrames.current > 0) fadeFrames.current--;
+        invalidate(); // maintenir le rendu pendant le fadeOut
       }
     }
 

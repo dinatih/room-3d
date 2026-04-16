@@ -241,7 +241,11 @@ export interface SidePanelProps {
   onToggleLayer:   (key: keyof LayerState) => void;
 }
 
-export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer }: SidePanelProps) {
+export interface SidePanelProps2 extends SidePanelProps {
+  onOpenInventory: () => void;
+}
+
+export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory }: SidePanelProps2) {
   const [showViews, setShowViews] = useState(false);
 
   const b0 = (color: string, label: string, onClick: () => void, first = false) => {
@@ -304,6 +308,17 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer 
           {b0('light', `WC abattant : ${furniture.wcLid ? 'OUVERT' : 'FERMÉ'}`,
               () => onToggleFurniture('wcLid'))}
         </Group>
+
+        {/* ── Inventaire ── */}
+        <div style={grpStyle}>
+          <button
+            style={{ ...grpHeaderStyle, width: '100%', border: 'none', cursor: 'pointer' }}
+            onClick={onOpenInventory}
+          >
+            <span>📦 Inventaire</span>
+            <span style={{ fontSize: 9 }}>▶</span>
+          </button>
+        </div>
 
         {/* ── Dev Tools ── */}
         <DevToolsGroups Group={Group} />
