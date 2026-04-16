@@ -21,7 +21,7 @@ import { Furnishings } from './Furnishings';
 import { Decor }       from './Decor';
 import { Mirrors }     from './Mirrors';
 import { GlbItems }   from './GlbItems';
-import { Walker }     from './Walker';
+import { Walker, WalkerRed } from './Walker';
 import { Backpacks }  from './Backpacks';
 import { Garden, GardenGlb } from './Garden';
 import { DronaBoxes }  from './DronaBoxes';
@@ -155,6 +155,7 @@ export function Studio() {
           <Mirrors />
         </group>
         <Walker />
+        <WalkerRed />
 
         {/* Layer 1 : tout le reste — exclu des reflets, visible à la caméra principale */}
         <LayerGroup layer={1}>

@@ -6,11 +6,15 @@
  * - Animation de marche custom (clip quaternion sur les bones)
  * - Cycling de couleur des cheveux pendant la marche
  */
-import { useRef, useLayoutEffect } from 'react';
+import { useRef, useLayoutEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { cameraState } from './cameraState';
+
+// @ts-ignore
+import { ROOM_W, ROOM_D } from '@config';
 
 // ── Animation de marche (port de buildWalkClip dans lara2026.js) ───────────────
 
@@ -109,8 +113,8 @@ export function Walker() {
     // Position initiale : centre de la pièce
     if (groupRef.current) {
       groupRef.current.position.set(cameraState.camX, 0, cameraState.camZ);
-      cameraState.walkerX = cameraState.camX;
-      cameraState.walkerZ = cameraState.camZ;
+      cameraState.walker0X = cameraState.camX;
+      cameraState.walker0Z = cameraState.camZ;
     }
 
     // Mixer + clip custom
@@ -125,25 +129,29 @@ export function Walker() {
     if (!groupRef.current) return;
     const isWalking = cameraState.isWalking;
     const isMoving  = cameraState.isMoving;
+    const active    = cameraState.activeWalkerIdx === 0;
 
-    // En walk mode : synchroniser walkerX/Z sur la caméra.
-    if (isWalking) {
-      cameraState.walkerX = cameraState.camX;
-      cameraState.walkerZ = cameraState.camZ;
+    if (active) {
+      if (isWalking) {
+        cameraState.walker0X = cameraState.camX;
+        cameraState.walker0Z = cameraState.camZ;
+      }
+      cameraState.walkerX = cameraState.walker0X;
+      cameraState.walkerZ = cameraState.walker0Z;
+      groupRef.current.rotation.y = cameraState.walkYaw;
     }
-    // Toujours appliquer walkerX/Z au groupe (orbit mode : mis à jour par les flèches)
-    groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
-    groupRef.current.rotation.y = cameraState.walkYaw;
+    groupRef.current.position.set(cameraState.walker0X, 0, cameraState.walker0Z);
 
-    // Animation marche
+    // Animation marche (seulement si walker actif)
     const mixer  = mixerRef.current;
     const action = actionRef.current;
+    const shouldMove = isMoving && active;
     if (mixer && action) {
-      if (isMoving && !activeRef.current) {
+      if (shouldMove && !activeRef.current) {
         action.reset().fadeIn(0.15).play();
         activeRef.current = true;
         fadeFrames.current = 0;
-      } else if (!isMoving && activeRef.current) {
+      } else if (!shouldMove && activeRef.current) {
         action.fadeOut(0.2);
         activeRef.current = false;
         fadeFrames.current = 15;
@@ -151,14 +159,14 @@ export function Walker() {
       if (activeRef.current || fadeFrames.current > 0) {
         mixer.update(delta);
         if (!activeRef.current && fadeFrames.current > 0) fadeFrames.current--;
-        invalidate(); // maintenir le rendu pendant le fadeOut
+        invalidate();
       }
     }
 
     // Cycling couleur cheveux
     const hairMat = hairMatRef.current;
     if (hairMat) {
-      if (isMoving) {
+      if (shouldMove) {
         hairTRef.current += delta * 1.2;
         const t = hairTRef.current % 4;
         const i = Math.floor(t);
@@ -174,6 +182,90 @@ export function Walker() {
   return (
     <group ref={groupRef}>
       <primitive object={scene} />
+    </group>
+  );
+}
+
+// ── Walker rouge (clone indépendant, position fixe) ───────────────────────────
+
+const RED_MAT_NAMES  = new Set(['5_Shirt_1.0_0_0', '5_BackPack_1.0_0_0', '5_Shorts_1.0_0_0']);
+const RED_NODE_NAMES = new Set(['Object_116']);
+const RED_COLOR      = new THREE.Color(0xcc1111);
+
+export function WalkerRed() {
+  const { scene: origScene } = useGLTF('media/lara_croft__2026_rigged.glb');
+  const clone = useMemo(() => SkeletonUtils.clone(origScene), [origScene]);
+
+  const groupRef    = useRef<THREE.Group>(null!);
+  const mixerRef    = useRef<THREE.AnimationMixer | null>(null);
+  const actionRef   = useRef<THREE.AnimationAction | null>(null);
+  const activeRef   = useRef(false);
+  const fadeFrames  = useRef(0);
+
+  useLayoutEffect(() => {
+    // Walker (sibling précédent) a déjà mis à l'échelle origScene — on copie
+    clone.scale.copy(origScene.scale);
+    clone.position.copy(origScene.position);
+
+    // Tenue rouge
+    clone.traverse(c => {
+      const m = c as THREE.Mesh;
+      if (!m.isMesh) return;
+      const mat = m.material as THREE.MeshStandardMaterial;
+      if (RED_MAT_NAMES.has(mat.name) || RED_NODE_NAMES.has(c.name)) {
+        m.material = mat.clone();
+        (m.material as THREE.MeshStandardMaterial).color.copy(RED_COLOR);
+        (m.material as THREE.MeshStandardMaterial).map = null;
+      }
+    });
+
+    // Animation de marche
+    const mixer  = new THREE.AnimationMixer(clone);
+    const action = mixer.clipAction(buildWalkClip(clone));
+    action.setLoop(THREE.LoopRepeat, Infinity);
+    mixerRef.current  = mixer;
+    actionRef.current = action;
+  }, [clone]);
+
+  useFrame(({ invalidate }, delta) => {
+    if (!groupRef.current) return;
+    const isMoving = cameraState.isMoving;
+    const active   = cameraState.activeWalkerIdx === 1;
+    const mixer    = mixerRef.current;
+    const action   = actionRef.current;
+
+    if (active) {
+      if (cameraState.isWalking) {
+        cameraState.walker1X = cameraState.camX;
+        cameraState.walker1Z = cameraState.camZ;
+      }
+      cameraState.walkerX = cameraState.walker1X;
+      cameraState.walkerZ = cameraState.walker1Z;
+      groupRef.current.rotation.y = cameraState.walkYaw;
+    }
+    groupRef.current.position.set(cameraState.walker1X, 0, cameraState.walker1Z);
+
+    const shouldMove = isMoving && active;
+    if (!mixer || !action) return;
+    if (shouldMove && !activeRef.current) {
+      action.reset().fadeIn(0.15).play();
+      activeRef.current  = true;
+      fadeFrames.current = 0;
+    } else if (!shouldMove && activeRef.current) {
+      action.fadeOut(0.2);
+      activeRef.current  = false;
+      fadeFrames.current = 15;
+    }
+    if (activeRef.current || fadeFrames.current > 0) {
+      mixer.update(delta);
+      if (!activeRef.current && fadeFrames.current > 0) fadeFrames.current--;
+      invalidate();
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      <primitive object={clone} />
     </group>
   );
 }

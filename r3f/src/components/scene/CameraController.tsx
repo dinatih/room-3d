@@ -183,6 +183,17 @@ export function CameraController() {
         modeRef.current === 'top' ? exitTop() : enterTop();
         return;
       }
+      if (e.key === 'l' || e.key === 'L') {
+        const newIdx = (cameraState.activeWalkerIdx + 1) % 2;
+        cameraState.activeWalkerIdx = newIdx;
+        if (modeRef.current === 'walk') {
+          walkPos.current.x = newIdx === 0 ? cameraState.walker0X : cameraState.walker1X;
+          walkPos.current.z = newIdx === 0 ? cameraState.walker0Z : cameraState.walker1Z;
+          updateWalkLook();
+        }
+        invalidate();
+        return;
+      }
 
       const k = e.key;
       const isArrow = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(k);
@@ -323,13 +334,18 @@ export function CameraController() {
       const ctrl = ctrlRef.current;
       invalidate();
 
-      // Plain arrows — move walker
+      // Plain arrows — move active walker
       if (k.has('ArrowLeft'))  cameraState.walkYaw += 0.06 * dt;
       if (k.has('ArrowRight')) cameraState.walkYaw -= 0.06 * dt;
       const wYaw = cameraState.walkYaw;
       const ws   = WALK_SPEED * dt;
-      if (k.has('ArrowUp'))   { cameraState.walkerX += Math.sin(wYaw)*ws; cameraState.walkerZ += Math.cos(wYaw)*ws; }
-      if (k.has('ArrowDown')) { cameraState.walkerX -= Math.sin(wYaw)*ws; cameraState.walkerZ -= Math.cos(wYaw)*ws; }
+      if (cameraState.activeWalkerIdx === 0) {
+        if (k.has('ArrowUp'))   { cameraState.walker0X += Math.sin(wYaw)*ws; cameraState.walker0Z += Math.cos(wYaw)*ws; }
+        if (k.has('ArrowDown')) { cameraState.walker0X -= Math.sin(wYaw)*ws; cameraState.walker0Z -= Math.cos(wYaw)*ws; }
+      } else {
+        if (k.has('ArrowUp'))   { cameraState.walker1X += Math.sin(wYaw)*ws; cameraState.walker1Z += Math.cos(wYaw)*ws; }
+        if (k.has('ArrowDown')) { cameraState.walker1X -= Math.sin(wYaw)*ws; cameraState.walker1Z -= Math.cos(wYaw)*ws; }
+      }
 
       if (ctrl) {
         // Shift+arrows — orbit (rotate camera around target)
