@@ -1,6 +1,6 @@
 /**
  * Porte-fenêtre double battant PVC blanc — 160×210cm total (seuil 20cm).
- * Inclut : sections murales latérales + linteau.
+ * Inclut : seuil maçonné, battant gauche fixe, battant droit animé.
  * Battant gauche fixe, battant droit ouvrant (pivot charnière droite, +90°).
  */
 import { useRef, useLayoutEffect } from 'react';
@@ -19,12 +19,7 @@ const FRAME_D   = 5;     // profondeur cadre
 const PANE_H    = GLASS_H - FRAME * 2;
 const PANE_W    = PANEL_W - FRAME * 2;
 
-const WW  = 10;   // épaisseur mur
-const WH  = 250;  // hauteur totale mur
-const PL  = 20;   // largeur sections murales latérales
-
-const TOTAL_W   = W_TOTAL + PL * 2;
-const LINTEAU_H = WH - GLASS_TOP;   // 40cm
+const WW  = 10;   // épaisseur du cadre (profondeur Z)
 
 /** Un battant : cadre PVC + vitrage, centré sur cx */
 function DoorPanel({ cx, baseY }: { cx: number; baseY: number }) {
@@ -57,30 +52,6 @@ function DoorPanel({ cx, baseY }: { cx: number; baseY: number }) {
   );
 }
 
-/** Sections murales : gauche, droit, linteau */
-function WallSurround() {
-  const wallMat = <meshStandardMaterial color="#e0dbd4" roughness={0.9} />;
-  return (
-    <>
-      {/* Mur latéral gauche */}
-      <mesh position={[-(W_TOTAL / 2 + PL / 2), WH / 2, 0]}>
-        <boxGeometry args={[PL, WH, WW]} />{wallMat}
-      </mesh>
-      {/* Mur latéral droit */}
-      <mesh position={[ (W_TOTAL / 2 + PL / 2), WH / 2, 0]}>
-        <boxGeometry args={[PL, WH, WW]} />{wallMat}
-      </mesh>
-      {/* Linteau au-dessus de la baie */}
-      <mesh position={[0, GLASS_TOP + LINTEAU_H / 2, 0]}>
-        <boxGeometry args={[TOTAL_W, LINTEAU_H, WW]} />{wallMat}
-      </mesh>
-      {/* Seuil maçonné */}
-      <mesh position={[0, SILL_H / 2, -4]}>
-        <boxGeometry args={[W_TOTAL, SILL_H, WW + 4]} />{wallMat}
-      </mesh>
-    </>
-  );
-}
 
 export function GlassDoor({ actionState, onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
@@ -88,7 +59,7 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(TOTAL_W, WH, WW));
+    onSize(new THREE.Vector3(W_TOTAL, GLASS_TOP, WW));
   }, []);
 
   useFrame(() => {
@@ -105,10 +76,15 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
   const handleMat = <meshStandardMaterial color="#888888" metalness={0.6} roughness={0.3} />;
   const HANDLE_LX = -PANEL_W + FRAME + 4;
 
-  return (
-    <group position={[0, -WH / 2, 0]}>
+  const sillMat = <meshStandardMaterial color="#b0a898" roughness={0.8} />;
 
-      <WallSurround />
+  return (
+    <group position={[0, -GLASS_TOP / 2, 0]}>
+
+      {/* Seuil */}
+      <mesh position={[0, SILL_H / 2, -4]}>
+        <boxGeometry args={[W_TOTAL, SILL_H, WW + 4]} />{sillMat}
+      </mesh>
 
       {/* Battant gauche — fixe */}
       <DoorPanel cx={-W_TOTAL / 4} baseY={SILL_H} />
