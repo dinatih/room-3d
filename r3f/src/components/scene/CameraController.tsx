@@ -302,7 +302,9 @@ export function CameraController() {
 
   // ── Frame loop — walk movement ──────────────────────────────────────────────
 
-  useFrame(() => {
+  useFrame((_, delta) => {
+    // Normalize to 60 fps baseline so speed is frame-rate independent
+    const dt = Math.min(delta, 0.1) * 60;
     // Sync camera position for minimap + walker
     cameraState.camX     = camera.position.x;
     cameraState.camZ     = camera.position.z;
@@ -322,10 +324,10 @@ export function CameraController() {
       invalidate();
 
       // Plain arrows — move walker
-      if (k.has('ArrowLeft'))  cameraState.walkYaw += 0.03;
-      if (k.has('ArrowRight')) cameraState.walkYaw -= 0.03;
+      if (k.has('ArrowLeft'))  cameraState.walkYaw += 0.06 * dt;
+      if (k.has('ArrowRight')) cameraState.walkYaw -= 0.06 * dt;
       const wYaw = cameraState.walkYaw;
-      const ws   = WALK_SPEED;
+      const ws   = WALK_SPEED * dt;
       if (k.has('ArrowUp'))   { cameraState.walkerX += Math.sin(wYaw)*ws; cameraState.walkerZ += Math.cos(wYaw)*ws; }
       if (k.has('ArrowDown')) { cameraState.walkerX -= Math.sin(wYaw)*ws; cameraState.walkerZ -= Math.cos(wYaw)*ws; }
 
@@ -334,10 +336,10 @@ export function CameraController() {
         if (k.has('ShiftArrowLeft') || k.has('ShiftArrowRight') || k.has('ShiftArrowUp') || k.has('ShiftArrowDown')) {
           const offset = new THREE.Vector3().subVectors(camera.position, ctrl.target);
           const sph    = new THREE.Spherical().setFromVector3(offset);
-          if (k.has('ShiftArrowLeft'))  sph.theta += 0.03;
-          if (k.has('ShiftArrowRight')) sph.theta -= 0.03;
-          if (k.has('ShiftArrowUp'))    sph.phi   -= 0.03;
-          if (k.has('ShiftArrowDown'))  sph.phi   += 0.03;
+          if (k.has('ShiftArrowLeft'))  sph.theta += 0.06 * dt;
+          if (k.has('ShiftArrowRight')) sph.theta -= 0.06 * dt;
+          if (k.has('ShiftArrowUp'))    sph.phi   -= 0.06 * dt;
+          if (k.has('ShiftArrowDown'))  sph.phi   += 0.06 * dt;
           sph.makeSafe();
           camera.position.setFromSpherical(sph).add(ctrl.target);
           ctrl.update();
@@ -347,11 +349,11 @@ export function CameraController() {
         if (k.has('CtrlArrowLeft') || k.has('CtrlArrowRight') || k.has('CtrlArrowUp') || k.has('CtrlArrowDown')) {
           const toTarget = new THREE.Vector3().subVectors(ctrl.target, camera.position);
           const up       = new THREE.Vector3(0, 1, 0);
-          if (k.has('CtrlArrowLeft'))  toTarget.applyAxisAngle(up,  0.03);
-          if (k.has('CtrlArrowRight')) toTarget.applyAxisAngle(up, -0.03);
+          if (k.has('CtrlArrowLeft'))  toTarget.applyAxisAngle(up,  0.06 * dt);
+          if (k.has('CtrlArrowRight')) toTarget.applyAxisAngle(up, -0.06 * dt);
           const camRight = new THREE.Vector3().crossVectors(toTarget.clone().normalize(), up).normalize();
-          if (k.has('CtrlArrowUp'))   toTarget.applyAxisAngle(camRight,  0.03);
-          if (k.has('CtrlArrowDown')) toTarget.applyAxisAngle(camRight, -0.03);
+          if (k.has('CtrlArrowUp'))   toTarget.applyAxisAngle(camRight,  0.06 * dt);
+          if (k.has('CtrlArrowDown')) toTarget.applyAxisAngle(camRight, -0.06 * dt);
           ctrl.target.copy(camera.position).add(toTarget);
           ctrl.update();
         }
@@ -388,17 +390,17 @@ export function CameraController() {
     invalidate();
 
     const yaw   = walkYaw.current;
-    const sp    = WALK_SPEED;
+    const sp    = WALK_SPEED * dt;
     const fwdX  = Math.sin(yaw) * sp;
     const fwdZ  = Math.cos(yaw) * sp;
     const rgtX  = fwdZ, rgtZ = -fwdX;
     const k     = keys.current;
 
-    if (k.has('ArrowLeft'))  walkYaw.current += 0.03;
-    if (k.has('ArrowRight')) walkYaw.current -= 0.03;
+    if (k.has('ArrowLeft'))  walkYaw.current += 0.06 * dt;
+    if (k.has('ArrowRight')) walkYaw.current -= 0.06 * dt;
 
-    if (k.has('CtrlArrowUp'))   walkPitch.current = Math.min( 1.4, walkPitch.current + 0.02);
-    if (k.has('CtrlArrowDown')) walkPitch.current = Math.max(-1.4, walkPitch.current - 0.02);
+    if (k.has('CtrlArrowUp'))   walkPitch.current = Math.min( 1.4, walkPitch.current + 0.02 * dt);
+    if (k.has('CtrlArrowDown')) walkPitch.current = Math.max(-1.4, walkPitch.current - 0.02 * dt);
 
     if (k.has('AltArrowUp'))   walkPos.current.y += sp;
     if (k.has('AltArrowDown')) walkPos.current.y -= sp;

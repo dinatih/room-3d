@@ -21,9 +21,13 @@ const ACTIONS: Record<string, ActionDef> = {
   fridge:         { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'fridge'        },
   cabinet:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'cabinet'       },
   wcLid:          { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'wcLid'         },
-  'bed-toggle':   { btnLabel: 'Empiler / Déplier',  toggleKey: 'bed-toggle'    },
-  'bed-position': { btnLabel: 'Changer position',   toggleKey: 'bed-position'  },
-  'bed-sofa':     { btnLabel: 'Mode canapé',         toggleKey: 'bed-sofa'      },
+  'bed-toggle':    { btnLabel: 'Empiler / Déplier',  toggleKey: 'bed-toggle'    },
+  'bed-position':  { btnLabel: 'Changer position',   toggleKey: 'bed-position'  },
+  'bed-sofa':      { btnLabel: 'Mode canapé',        toggleKey: 'bed-sofa'      },
+  'desk1-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk1-toggle'  },
+  'desk1-position':{ btnLabel: 'Changer position',   toggleKey: 'desk1-position'},
+  'desk2-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk2-toggle'  },
+  'desk2-position':{ btnLabel: 'Changer position',   toggleKey: 'desk2-position'},
 };
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {

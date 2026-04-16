@@ -155,7 +155,6 @@ function Mackapar() {
     const posX = -NICHE_DEPTH + PLINTHE - box.min.x;
     const cz = (box.min.z + box.max.z) / 2;
     mack.position.set(posX, -box.min.y, mpZ - cz);
-    removeGlbLines(mack);
     mack.traverse(c => {
       if ((c as THREE.Mesh).isMesh) {
         c.castShadow = true;

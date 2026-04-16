@@ -21,7 +21,6 @@ import { Decor }       from './Decor';
 import { Mirrors }     from './Mirrors';
 import { GlbItems }   from './GlbItems';
 import { Walker }     from './Walker';
-import { LaptopDesk } from './LaptopDesk';
 import { Backpacks }  from './Backpacks';
 import { Garden }      from './Garden';
 import { DronaBoxes }  from './DronaBoxes';
@@ -163,7 +162,6 @@ export function Studio() {
             <Furniture />
             <Furnishings />
             <Decor />
-            <LaptopDesk />
             <Backpacks />
             <DronaBoxes />
             <AltappenRug />

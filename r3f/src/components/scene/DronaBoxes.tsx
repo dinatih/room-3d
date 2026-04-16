@@ -142,8 +142,8 @@ function buildMatrices(): THREE.Matrix4[] {
   // 2 sur Mackapär (mackaparGroup.position=(0,0,0) → world = local)
   const mpCX = -NICHE_DEPTH + 3.5 + 77 / 2; // 32
   const mpCZ = ROOM_D - w2 - 16;             // 308.5
-  addSingle(mpCX - 20, 200 + DF / 2, mpCZ, Math.PI / 2);
-  addSingle(mpCX + 20, 200 + DF / 2, mpCZ, Math.PI / 2);
+  addSingle(mpCX - 20, 200 + DF / 2, mpCZ + 0.5, Math.PI / 2);
+  addSingle(mpCX + 20, 200 + DF / 2, mpCZ + 0.5, Math.PI / 2);
 
   // 1 sur Kallax NE dessus — world calculé depuis kallaxNEGroup (pos=(280.5,0,37.75), rotY=π/2)
   // local: (-18.75, k1TopY+DF/2, 0.5, -π/2) → world: (280, 134, 19, 0)

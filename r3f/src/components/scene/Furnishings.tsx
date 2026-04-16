@@ -9,6 +9,7 @@
  */
 import { useMemo, useState, useEffect } from 'react';
 import { useTexture } from '@react-three/drei';
+import { LaptopDesk } from './LaptopDesk';
 import * as THREE from 'three';
 
 // @ts-ignore
@@ -210,16 +211,57 @@ function Bollsidan({ height = 70 }: { height?: number }) {
   );
 }
 
+const SIT_H  = 70;
+const STAND_H = 103;
+
+const DESK1_POSITIONS = [
+  { x: 22,   z: 74.5, ry: Math.PI / 2 }, // contre mur A
+  { x: 73.5, z: 18,   ry: 0           }, // face mur C, devant Kallax NW
+] as const;
+
+const DESK2_POSITIONS = [
+  { x: 200, z: 170, ry: Math.PI       }, // position initiale
+  { x: 85,  z: 151, ry: Math.PI / 2   }, // devant la chaise
+] as const;
+
 function Desks() {
+  const [d1H,   setD1H]   = useState(SIT_H);
+  const [d2H,   setD2H]   = useState(SIT_H);
+  const [d1Pos, setD1Pos] = useState(0);
+  const [d2Pos, setD2Pos] = useState(0);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { key } = (e as CustomEvent).detail as { key: string };
+      if (key === 'desk1-toggle')   setD1H(h => h === SIT_H ? STAND_H : SIT_H);
+      if (key === 'desk1-position') setD1Pos(i => (i + 1) % DESK1_POSITIONS.length);
+      if (key === 'desk2-toggle')   setD2H(h => h === SIT_H ? STAND_H : SIT_H);
+      if (key === 'desk2-position') setD2Pos(i => (i + 1) % DESK2_POSITIONS.length);
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, []);
+
+  const p1 = DESK1_POSITIONS[d1Pos];
+  const p2 = DESK2_POSITIONS[d2Pos];
+
   return (
     <>
-      {/* Bureau 1 : contre mur A */}
-      <group position={[22, 0, 74.5]} rotation={[0, Math.PI / 2, 0]}>
-        <Bollsidan />
+      <group
+        position={[p1.x, 0, p1.z]} rotation={[0, p1.ry, 0]}
+        userData={{ hoverAction: { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] } }}
+      >
+        <Bollsidan height={d1H} />
       </group>
-      {/* Bureau 2 : au centre */}
-      <group position={[200, 0, 170]} rotation={[0, Math.PI, 0]}>
-        <Bollsidan />
+      <group
+        position={[p2.x, 0, p2.z]} rotation={[0, p2.ry, 0]}
+        userData={{ hoverAction: { label: 'Bureau 2', actions: ['desk2-toggle', 'desk2-position'] } }}
+      >
+        <Bollsidan height={d2H} />
+        {/* Objets surface — position [0, height, 0] rotY=π, fidèle à desk2Surface vanilla */}
+        <group position={[0, d2H, 0]} rotation={[0, Math.PI, 0]}>
+          <LaptopDesk />
+        </group>
       </group>
     </>
   );

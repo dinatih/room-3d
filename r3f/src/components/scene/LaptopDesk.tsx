@@ -157,15 +157,16 @@ function Mug() {
 // ── Export principal ──────────────────────────────────────────────────────────
 
 /**
- * Positionné à world [200, 70, 170] rotation 0
- * (desk2 rotY=π annulé par parent.rotation.y=π de laptop.js)
+ * Contenu posé sur la surface du bureau 2.
+ * Doit être rendu dans un group enfant du bureau 2 à [0, height, 0] rotation.y=π.
+ * (desk2 rotY=π annulé par ce π = net 0, fidèle à laptop.js vanilla)
  */
 export function LaptopDesk() {
   return (
-    <group position={[200, 70, 170]}>
+    <>
       <Laptop />
       <Phone />
       <Mug />
-    </group>
+    </>
   );
 }
