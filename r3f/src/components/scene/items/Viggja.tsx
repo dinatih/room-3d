@@ -5,12 +5,13 @@
  */
 import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
 export function Viggja({ onSize }: SceneItemProps) {
-  const { scene } = useGLTF('media/viggja.glb');
+  const { scene } = useGLTFClone('media/viggja.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);

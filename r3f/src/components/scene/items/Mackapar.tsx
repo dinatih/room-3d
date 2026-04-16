@@ -5,11 +5,12 @@
  */
 import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
 import type { SceneItemProps } from '../../../types';
 
 export function Mackapar({ onSize }: SceneItemProps) {
-  const { scene } = useGLTF('media/mackapar_ikea.glb');
+  const { scene } = useGLTFClone('media/mackapar_ikea.glb');
 
   useLayoutEffect(() => {
     const rawBox = new THREE.Box3().setFromObject(scene);

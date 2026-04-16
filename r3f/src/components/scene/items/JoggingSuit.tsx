@@ -5,6 +5,7 @@
  */
 import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
@@ -13,7 +14,7 @@ const TARGET_H = 170;
 const red = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
 
 export function JoggingSuit({ onSize }: SceneItemProps) {
-  const { scene } = useGLTF('media/realistic_human_cloths.glb');
+  const { scene } = useGLTFClone('media/realistic_human_cloths.glb');
 
   useLayoutEffect(() => {
     const raw = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3());

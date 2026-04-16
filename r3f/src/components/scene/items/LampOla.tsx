@@ -5,12 +5,13 @@
  */
 import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
 export function LampOla({ onSize }: SceneItemProps) {
-  const { scene } = useGLTF('media/ikea_lamp_ola.glb');
+  const { scene } = useGLTFClone('media/ikea_lamp_ola.glb');
 
   useLayoutEffect(() => {
     scene.scale.setScalar(100);

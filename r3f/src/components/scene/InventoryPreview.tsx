@@ -3,7 +3,7 @@
  * Charge les GLB de façon impérative (pas de cache useGLTF) pour obtenir une
  * scène vierge, sans les transforms baked par les composants de la scène principale.
  */
-import { useRef, useEffect, useLayoutEffect, useState } from 'react';
+import { useRef, useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -110,12 +110,12 @@ function CenteredItem({
   const outerRef = useRef<THREE.Group>(null!);
   const innerRef = useRef<THREE.Group>(null!);
 
-  useEffect(() => {
+  const fit = useCallback((size: THREE.Vector3) => {
+    if (!outerRef.current || !innerRef.current) return;
     innerRef.current.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(innerRef.current);
     if (box.isEmpty()) return;
     const center = box.getCenter(new THREE.Vector3());
-    const size   = box.getSize(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
     if (maxDim === 0) return;
     const s = 1.4 / maxDim;
@@ -123,10 +123,21 @@ function CenteredItem({
     outerRef.current.position.set(-center.x * s, -center.y * s, -center.z * s);
   }, []);
 
+  // Fallback pour les composants procéduraux qui ne passent pas leur taille via onSize
+  useEffect(() => {
+    if (!outerRef.current || !innerRef.current) return;
+    innerRef.current.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(innerRef.current);
+    if (box.isEmpty()) return;
+    const center = box.getCenter(new THREE.Vector3());
+    const size   = box.getSize(new THREE.Vector3());
+    fit(size);
+  }, [fit]);
+
   return (
     <group ref={outerRef}>
       <group ref={innerRef}>
-        <Component item={item ?? {} as any} actionState={actionState} onSize={() => {}} />
+        <Component item={item ?? {} as any} actionState={actionState} onSize={fit} />
       </group>
     </group>
   );

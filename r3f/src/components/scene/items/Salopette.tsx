@@ -5,12 +5,13 @@
  */
 import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
 export function Salopette({ onSize }: SceneItemProps) {
-  const { scene } = useGLTF('media/salopette-noir.glb');
+  const { scene } = useGLTFClone('media/salopette-noir.glb');
 
   useLayoutEffect(() => {
     const rawSize = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3());

@@ -5,6 +5,7 @@
  */
 import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
@@ -12,7 +13,7 @@ import type { SceneItemProps } from '../../../types';
 const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.65 });
 
 export function BaseballCap({ onSize }: SceneItemProps) {
-  const { scene } = useGLTF('media/baseball_cap.glb');
+  const { scene } = useGLTFClone('media/baseball_cap.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
