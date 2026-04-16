@@ -47,6 +47,10 @@ import { BollsidanDesk }                                  from './items/Bollsida
 import { LackShelf }                                      from './items/LackShelf';
 import { Fniss }                                          from './items/Fniss';
 import { MannequinHead }                                  from './items/MannequinHead';
+import { Backpack }                                        from './items/Backpack';
+import { Mug }                                            from './items/Mug';
+import { NissedalMirror }                                 from './items/NissedalMirror';
+import { MuligRail }                                      from './items/MuligRail';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'freezer':                 Freezer,
@@ -98,6 +102,12 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'shelf-lack':              LackShelf,
   'basket-fniss':            Fniss,
   'mannequin-head':          MannequinHead,
+  'backpack':                Backpack,
+  'mug':                     Mug,
+  'mirror-nissedal-a':       NissedalMirror,
+  'mirror-nissedal-wide':    NissedalMirror,
+  'mirror-nissedal-d':       NissedalMirror,
+  'rail-mulig':              MuligRail,
   ...(Object.fromEntries(
     Array.from({ length: 29 }, (_, i) => [`drona-${i + 1}`, Drona]),
   ) as Record<string, ComponentType<SceneItemProps>>),
