@@ -1,0 +1,230 @@
+import * as THREE from 'three';
+
+const raycaster = new THREE.Raycaster();
+raycaster.layers.enableAll(); // intersect objects on any layer
+const pointer   = new THREE.Vector2();
+
+// Map<actionId, { getLabel: () => string, execute: () => void }>
+const actionRegistry = new Map();
+
+// Interactive objects collected at init (groups/meshes with userData.hoverAction)
+let targets = [];
+
+/** Add a single target after init (for async-loaded objects like GLBs). */
+export function addHoverTarget(obj) {
+  if (!targets.includes(obj)) targets.push(obj);
+}
+
+let menuEl = null;
+let labelEl = null;
+let hideTimer = null;
+let currentActionId = null;
+let touchMenuLocked = false; // true = menu ouvert par tap touch, ne pas cacher sur pointerleave
+let _scene = null;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Public API
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Register an interactive action.
+ * @param {string} actionId - must match userData.hoverAction.actionId on the 3D object
+ * @param {{ getLabel: () => string, execute: () => void }} config
+ */
+export function registerHoverAction(actionId, config) {
+  actionRegistry.set(actionId, config);
+}
+
+export function getHoverAction(actionId) {
+  return actionRegistry.get(actionId);
+}
+
+/**
+ * Initialize the hover menu after the scene is fully built.
+ */
+export function initHoverMenu(renderer, camera, scene) {
+  menuEl  = document.getElementById('hover-menu');
+  labelEl = menuEl.querySelector('.hm-label');
+  _scene  = scene;
+
+  // Collect all tagged objects once
+  scene.traverse(obj => {
+    if (obj.userData.hoverAction) targets.push(obj);
+  });
+
+  // Keep menu alive when cursor is inside it
+  menuEl.addEventListener('pointerenter', cancelHide);
+  menuEl.addEventListener('pointerleave', scheduleHide);
+
+  // Touch : tap sur canvas → ouvre/ferme menu sans hover
+  renderer.domElement.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'touch') return;
+    cancelHide();
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+    pointer.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    const allHits = _scene ? raycaster.intersectObjects(_scene.children, true) : raycaster.intersectObjects(targets, true);
+    let found = null;
+    for (const hit of allHits) {
+      if (!hit.object.visible) continue;
+      const mat = hit.object.material;
+      const isTransparent = Array.isArray(mat)
+        ? mat.every(m => m.transparent && m.opacity < 0.3)
+        : (mat?.transparent && mat?.opacity < 0.3);
+      if (isTransparent) continue;
+      const action = resolveAction(hit.object);
+      if (action) found = { action, x: e.clientX, y: e.clientY };
+      break;
+    }
+    if (found) {
+      touchMenuLocked = true;
+      showMenu(found.action, found.x, found.y);
+    } else {
+      touchMenuLocked = false;
+      hideMenu();
+    }
+  });
+
+  // Tap en dehors du menu et du canvas → ferme
+  document.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'touch' || !touchMenuLocked) return;
+    if (menuEl.contains(e.target)) return;
+    if (renderer.domElement.contains(e.target)) return; // géré ci-dessus
+    touchMenuLocked = false;
+    hideMenu();
+  }, { capture: true });
+
+  // Throttled pointer tracking (~30 fps) — souris uniquement
+  let lastMove = 0;
+  renderer.domElement.addEventListener('pointermove', e => {
+    if (e.pointerType === 'touch') return;
+    const now = performance.now();
+    if (now - lastMove < 32) return;
+    lastMove = now;
+
+    onPointerMove(e, renderer, camera);
+  });
+
+  renderer.domElement.addEventListener('pointerleave', e => {
+    if (touchMenuLocked) return;
+    scheduleHide();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Internal
+// ─────────────────────────────────────────────────────────────────────────────
+
+function onPointerMove(e, renderer, camera) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+  pointer.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(pointer, camera);
+
+  // Raycast against the full scene — first opaque hit wins (occlusion-aware)
+  const allHits = _scene ? raycaster.intersectObjects(_scene.children, true) : raycaster.intersectObjects(targets, true);
+
+  let hovered = null;
+  for (const hit of allHits) {
+    if (!hit.object.visible) continue;
+    // Skip transparent / fully invisible surfaces
+    const mat = hit.object.material;
+    const isTransparent = Array.isArray(mat)
+      ? mat.every(m => m.transparent && m.opacity < 0.3)
+      : (mat?.transparent && mat?.opacity < 0.3);
+    if (isTransparent) continue;
+    // Skip ceiling — allows clicking objects from top-down view
+    if (hit.object.userData.brickType === 'ceiling') continue;
+
+    // First opaque surface: interactive or blocker
+    const action = resolveAction(hit.object);
+    if (action) hovered = { action, x: e.clientX, y: e.clientY };
+    break; // stop here — anything behind is occluded
+  }
+
+  if (hovered) {
+    cancelHide();
+    showMenu(hovered.action, hovered.x, hovered.y);
+    renderer.domElement.style.cursor = 'pointer';
+  } else {
+    scheduleHide();
+    renderer.domElement.style.cursor = '';
+  }
+}
+
+/** Walk up the parent chain to find the nearest hoverAction. */
+function resolveAction(obj) {
+  let cur = obj;
+  while (cur) {
+    if (cur.userData?.hoverAction) return cur.userData.hoverAction;
+    cur = cur.parent;
+  }
+  return null;
+}
+
+function showMenu({ label, actionId, actions }, mouseX, mouseY) {
+  // Résoudre la liste d'actionIds (format simple ou tableau)
+  const ids = actions || [actionId];
+  if (!ids.some(id => actionRegistry.has(id))) return;
+
+  currentActionId = ids[0];
+  labelEl.textContent = label;
+
+  // Recréer les boutons dynamiquement
+  menuEl.querySelectorAll('.hm-btn').forEach(b => b.remove());
+  for (const id of ids) {
+    const cfg = actionRegistry.get(id);
+    if (!cfg) continue;
+    const btn = document.createElement('button');
+    btn.className = 'hm-btn';
+    btn.textContent = cfg.getLabel();
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      cfg.execute();
+      btn.textContent = cfg.getLabel();
+      touchMenuLocked = false;
+      scheduleHide();
+    });
+    menuEl.appendChild(btn);
+  }
+
+  // Pre-position before making visible
+  placeNearCursor(mouseX, mouseY);
+  menuEl.classList.remove('hm-hidden');
+  // Refine after layout is known
+  requestAnimationFrame(() => placeNearCursor(mouseX, mouseY));
+}
+
+function placeNearCursor(mx, my) {
+  const mw = menuEl.offsetWidth  || 160;
+  const mh = menuEl.offsetHeight || 70;
+  const gap = 14;
+
+  let x = mx + gap;
+  let y = my - mh / 2;
+
+  if (x + mw > window.innerWidth  - 8) x = mx - mw - gap;
+  if (y < 8)                           y = 8;
+  if (y + mh > window.innerHeight - 8) y = window.innerHeight - mh - 8;
+
+  menuEl.style.left = x + 'px';
+  menuEl.style.top  = y + 'px';
+}
+
+function scheduleHide() {
+  if (!hideTimer) hideTimer = setTimeout(hideMenu, 420);
+}
+
+function cancelHide() {
+  clearTimeout(hideTimer);
+  hideTimer = null;
+}
+
+function hideMenu() {
+  menuEl.classList.add('hm-hidden');
+  hideTimer       = null;
+  currentActionId = null;
+  if (menuEl) menuEl.style.pointerEvents = '';
+}
