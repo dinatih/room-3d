@@ -6,18 +6,30 @@
 import { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { DoorEntry }          from './items/DoorEntry';
-import { DoorLiving, DoorSdb } from './items/DoorWhite';
-import { GlassDoor }          from './items/GlassDoor';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';
 import { type InventoryItem, type StorageSpace } from './inventoryData';
+import { SCENE_REGISTRY, ACTION_LABELS } from './registry';
 import type { SceneItemProps } from '../../types';
 
 // DRACOLoader partagé (même path que drei)
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+
+// ── Action key par item.id ────────────────────────────────────────────────────
+
+const ITEM_ACTIONS: Record<string, string> = {
+  'freezer':                'freezer-toggle',
+  'fridge':                 'fridge-toggle',
+  'cabinet-wood':           'cabinet-toggle',
+  'bathroom-cabinet-west':  'cbn-west-toggle',
+  'bathroom-cabinet-east':  'cbn-east-toggle',
+  'door-entry':             'entry-door-toggle',
+  'door-living':            'living-door-toggle',
+  'door-sdb':               'bathroom-door-toggle',
+  'door-glass':             'door-toggle',
+};
 
 // ── Camera fit ────────────────────────────────────────────────────────────────
 
@@ -47,16 +59,13 @@ function GlbScene({ glbPath }: { glbPath: string }) {
       const obj = gltf.scene;
 
       const g = groupRef.current;
-      // Vider le groupe et reset sa transform
       while (g.children.length) g.remove(g.children[0]);
       g.scale.set(1, 1, 1);
       g.position.set(0, 0, 0);
 
       g.add(obj);
-      // Forcer le calcul des matrixWorld depuis zéro
       g.updateMatrixWorld(true);
 
-      // Bbox en world-space (g = identité → world = g-local)
       const box = new THREE.Box3().setFromObject(obj);
       if (box.isEmpty()) return;
 
@@ -65,9 +74,8 @@ function GlbScene({ glbPath }: { glbPath: string }) {
       const maxDim = Math.max(size.x, size.y, size.z);
       if (maxDim === 0) return;
 
-      // Centrer obj à l'origine de g, puis scaler g pour tenir en 1.8 unités
       obj.position.sub(center);
-      g.scale.setScalar(1.8 / maxDim);
+      g.scale.setScalar(1.4 / maxDim);
     });
 
     return () => { cancelled = true; };
@@ -76,7 +84,7 @@ function GlbScene({ glbPath }: { glbPath: string }) {
   return <group ref={groupRef} />;
 }
 
-// ── Box scene (pas de GLB) ────────────────────────────────────────────────────
+// ── Box scene (fallback) ──────────────────────────────────────────────────────
 
 function BoxScene({ dims }: { dims: { w: number; d: number; h: number } }) {
   const maxDim = Math.max(dims.w, dims.d, dims.h, 0.001);
@@ -88,22 +96,14 @@ function BoxScene({ dims }: { dims: { w: number; d: number; h: number } }) {
   );
 }
 
-// ── Door scene — composants items/ complets, centrés par bbox ─────────────────
+// ── Registry scene — composant items/, centré par bbox ───────────────────────
 
-type DoorMapEntry = { Component: React.ComponentType<SceneItemProps>; actionKey: string };
-
-const DOOR_MAP: Record<string, DoorMapEntry> = {
-  'door-entry':  { Component: DoorEntry,  actionKey: 'entry-door-toggle'    },
-  'door-living': { Component: DoorLiving, actionKey: 'living-door-toggle'   },
-  'door-sdb':    { Component: DoorSdb,    actionKey: 'bathroom-door-toggle' },
-  'door-glass':  { Component: GlassDoor,  actionKey: 'door-toggle'          },
-};
-
-function CenteredDoor({
-  Component, actionState,
+function CenteredItem({
+  Component, actionState, item,
 }: {
   Component: React.ComponentType<SceneItemProps>;
   actionState: Record<string, boolean>;
+  item?: any;
 }) {
   const outerRef = useRef<THREE.Group>(null!);
   const innerRef = useRef<THREE.Group>(null!);
@@ -116,7 +116,7 @@ function CenteredDoor({
     const size   = box.getSize(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
     if (maxDim === 0) return;
-    const s = 1.8 / maxDim;
+    const s = 1.4 / maxDim;
     outerRef.current.scale.setScalar(s);
     outerRef.current.position.set(-center.x * s, -center.y * s, -center.z * s);
   }, []);
@@ -124,21 +124,21 @@ function CenteredDoor({
   return (
     <group ref={outerRef}>
       <group ref={innerRef}>
-        <Component item={{} as any} actionState={actionState} onSize={() => {}} />
+        <Component item={item ?? {} as any} actionState={actionState} onSize={() => {}} />
       </group>
     </group>
   );
 }
 
-function DoorScene({
-  id, dims, isOpen,
+function RegistryScene({
+  item, actionState,
 }: {
-  id: string; dims: { w: number; d: number; h: number }; isOpen: boolean;
+  item: InventoryItem;
+  actionState: Record<string, boolean>;
 }) {
-  const entry = DOOR_MAP[id];
-  if (!entry) return <BoxScene dims={dims} />;
-  const actionState = { [entry.actionKey]: isOpen };
-  return <CenteredDoor Component={entry.Component} actionState={actionState} />;
+  const Component = SCENE_REGISTRY[item.id];
+  if (!Component) return null;
+  return <CenteredItem Component={Component} actionState={actionState} item={item} />;
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -146,14 +146,17 @@ function DoorScene({
 type PreviewTarget = InventoryItem | StorageSpace | null;
 
 export function InventoryPreview({ item }: { item: PreviewTarget }) {
-  const glbPath  = item && 'glbPath' in item ? item.glbPath : undefined;
-  const category = item && 'category' in item ? (item as InventoryItem).category : undefined;
-  const dims     = item?.dims;
-  const isDoor   = category === 'doors';
-  const hasDoorAction = isDoor && item != null && item.id in DOOR_MAP;
+  const glbPath = item && 'glbPath' in item ? item.glbPath : undefined;
+  const dims    = item?.dims;
+
+  const actionKey   = item ? ITEM_ACTIONS[item.id] : undefined;
+  const actionState = actionKey ? { [actionKey]: false } : {};  // mis à jour ci-dessous
 
   const [isOpen, setIsOpen] = useState(false);
   useEffect(() => { setIsOpen(false); }, [item?.id]);
+
+  const liveActionState = actionKey ? { [actionKey]: isOpen } : {};
+  const labels = actionKey ? (ACTION_LABELS[actionKey] ?? ['Ouvrir', 'Fermer']) : null;
 
   return (
     <div style={{
@@ -200,13 +203,13 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
 
             {glbPath
               ? <GlbScene glbPath={glbPath} />
-              : isDoor && dims
-                ? <DoorScene id={item.id} dims={dims} isOpen={isOpen} />
+              : SCENE_REGISTRY[item.id]
+                ? <RegistryScene item={item as InventoryItem} actionState={liveActionState} />
                 : dims ? <BoxScene dims={dims} /> : null
             }
           </Canvas>
 
-          {hasDoorAction && (
+          {labels && (
             <button
               onClick={() => setIsOpen(o => !o)}
               style={{
@@ -220,7 +223,7 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
                 cursor: 'pointer',
               }}
             >
-              {isOpen ? 'Fermer' : 'Ouvrir'}
+              {isOpen ? labels[1] : labels[0]}
             </button>
           )}
 
