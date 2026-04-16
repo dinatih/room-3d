@@ -108,8 +108,9 @@ let found: { label: string; actionIds: string[] } | null = null;
         const action = resolveAction(hit.object);
         if (action && action.actionIds.some(id => ACTIONS[id])) {
           found = action;
-          break;
         }
+        // Solid object hit — stop regardless (occludes everything behind it)
+        break;
       }
 
       if (found) {
