@@ -42,6 +42,11 @@ import { ChestBench }                                  from './items/ChestBench'
 import { PottedPalm }                                  from './items/PottedPalm';
 import { Drona }                                         from './items/Drona';
 import { MeubleT }                                       from './items/MeubleT';
+import { UtakerFrame }                                    from './items/UtakerFrame';
+import { BollsidanDesk }                                  from './items/BollsidanDesk';
+import { LackShelf }                                      from './items/LackShelf';
+import { Fniss }                                          from './items/Fniss';
+import { MannequinHead }                                  from './items/MannequinHead';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'freezer':                 Freezer,
@@ -86,6 +91,13 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'salopette':               Salopette,
   'baseball-cap':            BaseballCap,
   'meuble-t':                MeubleT,
+  'utaker-lower':            UtakerFrame,
+  'utaker-upper':            UtakerFrame,
+  'desk-bollsidan-1':        BollsidanDesk,
+  'desk-bollsidan-2':        BollsidanDesk,
+  'shelf-lack':              LackShelf,
+  'basket-fniss':            Fniss,
+  'mannequin-head':          MannequinHead,
   ...(Object.fromEntries(
     Array.from({ length: 29 }, (_, i) => [`drona-${i + 1}`, Drona]),
   ) as Record<string, ComponentType<SceneItemProps>>),
