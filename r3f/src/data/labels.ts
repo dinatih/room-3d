@@ -3,9 +3,15 @@ import * as THREE from 'three';
 // No font loading needed — canvas text supports all Unicode
 export async function loadFont() {}
 
-export function makeText(scene, text, { color = '#ffdd44', size = 1, x = 0, y = 0, z = 0, rotY = 0 } = {}) {
+export function makeText(
+  scene: THREE.Object3D,
+  text: string,
+  { color = '#ffdd44', size = 1, x = 0, y = 0, z = 0, rotY = 0 }: {
+    color?: string; size?: number; x?: number; y?: number; z?: number; rotY?: number;
+  } = {},
+): THREE.Mesh {
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d')!;
 
   const fontSize = 96;
   const fontStr = `bold ${fontSize}px Arial, Helvetica, sans-serif`;

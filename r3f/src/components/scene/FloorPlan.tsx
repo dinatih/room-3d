@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 
 // @ts-ignore
-import { buildFloorPlan } from '@data/floorplan.js';
+import { buildFloorPlan } from '@data/floorplan';
 
 export function FloorPlan() {
   const group = useMemo(() => buildFloorPlan(), []);

@@ -6,9 +6,9 @@ import {
   GLASS_START, GLASS_END,
   SDB_Z_END,
   DIAG_AZ, DIAG_CZ,
-} from '../config.js';
-import { makeText } from './labels.js';
-import { FLOOR_SEGMENTS, ROOMS, WALL_LABELS, DIMENSIONS } from './floorData.js';
+} from '../config';
+import { makeText } from './labels';
+import { FLOOR_SEGMENTS, ROOMS, WALL_LABELS, DIMENSIONS } from './floorData';
 
 export function buildFloorPlan() {
   const group = new THREE.Group();
@@ -27,7 +27,7 @@ export function buildFloorPlan() {
   const DW = 3;   // largeur trait porte/fenêtre
 
   // --- Helper : trait de mur ---
-  function wallLine(x1, z1, x2, z2, mat = wallMat, width = W) {
+  function wallLine(x1: number, z1: number, x2: number, z2: number, mat: THREE.Material = wallMat, width: number = W) {
     const dx = x2 - x1, dz = z2 - z1;
     const len = Math.sqrt(dx * dx + dz * dz);
     if (len < 0.1) return;
@@ -38,11 +38,11 @@ export function buildFloorPlan() {
     group.add(mesh);
   }
 
-  function door(x1, z1, x2, z2) { wallLine(x1, z1, x2, z2, doorMat, DW); }
-  function window_(x1, z1, x2, z2) { wallLine(x1, z1, x2, z2, windowMat, DW); }
+  function door(x1: number, z1: number, x2: number, z2: number) { wallLine(x1, z1, x2, z2, doorMat, DW); }
+  function window_(x1: number, z1: number, x2: number, z2: number) { wallLine(x1, z1, x2, z2, windowMat, DW); }
 
   // --- Helper : sol de pièce ---
-  function floorRect(x, z, w, d) {
+  function floorRect(x: number, z: number, w: number, d: number) {
     const geo = new THREE.PlaneGeometry(w, d);
     const mesh = new THREE.Mesh(geo, floorMat);
     mesh.rotation.x = -Math.PI / 2;
@@ -51,7 +51,7 @@ export function buildFloorPlan() {
   }
 
   // --- Helper : sol triangulaire ---
-  function floorTri(x1, z1, x2, z2, x3, z3) {
+  function floorTri(x1: number, z1: number, x2: number, z2: number, x3: number, z3: number) {
     const y = Y - 1;
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute([
@@ -90,7 +90,7 @@ export function buildFloorPlan() {
 
   // Helper : texte à plat sur le sol (lisible du dessus)
   // rotZ : 0 = texte le long de +X, PI/2 = texte le long de +Z
-  function label(text, x, z, rotZ = 0, color = WALL_COLOR, size = 12) {
+  function label(text: string, x: number, z: number, rotZ = 0, color = WALL_COLOR, size = 12) {
     const mesh = makeText(group, text, { color, size, x, y: LY, z });
     mesh.rotation.set(-Math.PI / 2, 0, rotZ);
     return mesh;
@@ -118,7 +118,7 @@ export function buildFloorPlan() {
   const dimMatInt = new THREE.LineBasicMaterial({ color: 0x88ffaa, depthTest: false });
   const dimMatExt = new THREE.LineBasicMaterial({ color: 0xaaddff, depthTest: false });
 
-  function dim(x1, z1, x2, z2, offset, ext = false) {
+  function dim(x1: number, z1: number, x2: number, z2: number, offset: number, ext = false) {
     const dx = x2 - x1, dz = z2 - z1;
     const len = Math.sqrt(dx * dx + dz * dz);
     if (len < 0.1) return;
