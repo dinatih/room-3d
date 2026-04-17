@@ -25,6 +25,7 @@ import { Backpacks }  from './Backpacks';
 import { Garden, GardenGlb } from './Garden';
 import { DronaBoxes }  from './DronaBoxes';
 import { XRayLayer }   from './XRayLayer';
+import { GridLayer }   from './Grid';
 import { HoverRaycaster, HoverOverlay } from './HoverMenu';
 import { DevToolsCollector }            from './DevToolsCollector';
 import { Inventory }                    from './Inventory';
@@ -59,7 +60,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
-    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false,
+    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -151,6 +152,7 @@ export function Studio() {
         <HoverRaycaster />
         <DevToolsCollector />
         {layers.xray && <XRayLayer />}
+        {layers.grid && <GridLayer />}
         {layers.plan && <FloorPlan />}
 
         {/* Tout le contenu 3D — masqué en mode Plan */}
