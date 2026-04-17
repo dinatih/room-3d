@@ -37,6 +37,7 @@ import { LampOla }                                     from './items/LampOla';
 import { Mackapar }                                    from './items/Mackapar';
 import { Salopette }                                   from './items/Salopette';
 import { BaseballCap }                                 from './items/BaseballCap';
+import { Sneakers }                                    from './items/Sneakers';
 import { Bathtub }                                     from './items/Bathtub';
 import { ChestBench }                                  from './items/ChestBench';
 import { PottedPalm }                                  from './items/PottedPalm';
@@ -103,6 +104,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'mackapar':                Mackapar,
   'salopette':               Salopette,
   'baseball-cap':            BaseballCap,
+  'sneaker':                 Sneakers,
   'meuble-t':                MeubleT,
   'utaker-lower':            UtakerFrame,
   'utaker-upper':            UtakerFrame,

@@ -13,7 +13,6 @@ const GLB_PATHS = [
   'media/ikea_lamp_ola.glb',
   'media/sunnersta_trolley_ikea.glb',
   'media/mackapar_ikea.glb',
-  'media/mechanic_jumpsuit.glb',
   'media/salopette-noir.glb',
   'media/baseball_cap.glb',
   'media/sneaker.glb',

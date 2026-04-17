@@ -3,10 +3,7 @@
  * Les composants items/ gèrent tout le setup GLB (scale, centre, matériaux, shadows).
  * Les fonctions *Placed ici ne font que le positionnement monde via group.
  */
-import { useMemo, useState, useEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import * as THREE from 'three';
-import { removeGlbLines } from '../../utils/glbUtils';
+import { useState, useEffect } from 'react';
 import { Scooter }   from './items/Scooter';
 import { Smorkull }  from './items/Smorkull';
 import { LampOla }   from './items/LampOla';
@@ -15,6 +12,7 @@ import { Mackapar }  from './items/Mackapar';
 import { Salopette } from './items/Salopette';
 import { BaseballCap } from './items/BaseballCap';
 import { PizzaOven }  from './items/PizzaOven';
+import { Sneakers }   from './items/Sneakers';
 
 // @ts-ignore
 import { ROOM_W, ROOM_D, NICHE_DEPTH } from '@config';
@@ -161,60 +159,16 @@ function PizzaOvenPlaced() {
 const MIRROR_CX = (130 + 190) / 2; // KITCHEN_X1=130, DOOR_START=190
 
 function SneakersPlaced() {
-  const { scene } = useGLTF('media/sneaker.glb');
-
-  const clones = useMemo(() => {
-    removeGlbLines(scene);
-    const rawBox = new THREE.Box3().setFromObject(scene);
-    const rawSize = rawBox.getSize(new THREE.Vector3());
-    const longestH = Math.max(rawSize.x, rawSize.z);
-    const s = 28 / longestH;
-    const redM = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.6 });
-
-    function makeShoe() {
-      const c = scene.clone(true);
-      c.scale.setScalar(s);
-      c.rotation.y = Math.PI / 2;
-      c.traverse(m => {
-        if ((m as THREE.Mesh).isMesh) {
-          (m as THREE.Mesh).material = redM;
-          m.castShadow = true;
-          m.receiveShadow = true;
-        }
-      });
-      return c;
-    }
-
-    const shoeWid = rawSize.z * s;
-    const GAP = 1;
-    const localCX = (rawBox.min.x + rawBox.max.x) / 2 * s;
-    const floorY = -rawBox.min.y * s;
-
-    const l1 = makeShoe();
-    l1.position.set(shoeWid / 2 + GAP / 2, floorY, localCX);
-    const r1 = makeShoe();
-    r1.scale.z *= -1;
-    r1.position.set(-(shoeWid / 2 + GAP / 2), floorY, localCX);
-
-    const l2 = makeShoe();
-    l2.position.set(shoeWid / 2 + GAP / 2, floorY, localCX);
-    const r2 = makeShoe();
-    r2.scale.z *= -1;
-    r2.position.set(-(shoeWid / 2 + GAP / 2), floorY, localCX);
-
-    return { l1, r1, l2, r2, pairW: shoeWid * 2 + GAP };
-  }, [scene]);
-
+  const [pairW, setPairW] = useState(0);
   const px = MIRROR_CX + 40 - 50;
+  const pz = ROOM_D - 15;
   return (
     <>
-      <group position={[px, 0, ROOM_D - 15]}>
-        <primitive object={clones.l1} />
-        <primitive object={clones.r1} />
+      <group position={[px, 0, pz]}>
+        <Sneakers item={NOOP_ITEM} actionState={NOOP_STATE} onSize={s => setPairW(s.x)} />
       </group>
-      <group position={[px + clones.pairW + 3, 0, ROOM_D - 15]}>
-        <primitive object={clones.l2} />
-        <primitive object={clones.r2} />
+      <group position={[px + pairW + 3, 0, pz]}>
+        <Sneakers item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
   );
@@ -237,4 +191,3 @@ export function GlbItems() {
   );
 }
 
-useGLTF.preload('media/sneaker.glb');

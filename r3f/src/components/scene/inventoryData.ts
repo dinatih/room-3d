@@ -117,7 +117,6 @@ export const INVENTORY: InventoryItem[] = [
 
   // ── CLOTHING ─────────────────────────────────────────────────────────────────
   { id: 'mackapar',         name: 'Portant MACKAPÄR',               brand: 'IKEA',     category: 'clothing',  qty: 1, dims: { w: 77,  d: 32,  h: 200 }, scenePos: { x: 32, z: 300 }, notes: 'Avec 2 vêtements + casquette', glbPath: 'media/mackapar_ikea.glb' },
-  { id: 'jumpsuit',         name: 'Combinaison mécanicien',         brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 40,  h: 150 }, scenePos: { x: 32, z: 300 }, notes: 'Rouge, suspendue', glbPath: 'media/mechanic_jumpsuit.glb' },
   { id: 'salopette',        name: 'Salopette noire',                brand: '',         category: 'clothing',  qty: 1, dims: { w: 6,   d: 40,  h: 150 }, scenePos: { x: 42, z: 300 }, notes: 'Noire, suspendue', glbPath: 'media/salopette-noir.glb' },
   { id: 'baseball-cap',     name: 'Casquette baseball',             brand: '',         category: 'clothing',  qty: 3, dims: { w: 25,  d: 20,  h: 15  }, scenePos: { x: 40, z: 300 }, notes: '3 casquettes rouges sur portant', glbPath: 'media/baseball_cap.glb' },
   { id: 'backpack',         name: 'Sac à dos',                      brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 17,  h: 43  }, scenePos: { x: 8,  z: 258 }, notes: 'Rouge procédural, mur A' },
