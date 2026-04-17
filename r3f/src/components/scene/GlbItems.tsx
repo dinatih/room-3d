@@ -99,39 +99,12 @@ function SunnerstaplPlaced() {
 
 // ── Portant MACKAPÄR + habits ─────────────────────────────────────────────────
 
-const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.6, side: THREE.DoubleSide });
-
 function MackaparGroupPlaced() {
-  // mechanic_jumpsuit n'a pas de composant items/ dédié
-  const { scene: suit } = useGLTF('media/mechanic_jumpsuit.glb');
-
-  useMemo(() => {
-    const suitRaw = new THREE.Box3().setFromObject(suit).getSize(new THREE.Vector3());
-    suit.scale.setScalar(150 / suitRaw.y);
-    suit.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(suit);
-    suit.position.set(
-      -(box.min.x + box.max.x) / 2,
-      -box.min.y,
-      -(box.min.z + box.max.z) / 2,
-    );
-    removeGlbLines(suit);
-    suit.traverse(c => {
-      const m = c as THREE.Mesh;
-      if (m.isMesh) { m.material = redMat; m.castShadow = true; m.receiveShadow = true; }
-    });
-  }, [suit]);
-
   return (
     <>
       {/* Portant — items/Mackapar gère scale + centre */}
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2}>
         <Mackapar item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
-      {/* Combinaison mécanicien (GLB spécifique à la scène) */}
-      <group position={[MACK_X - 80, RAIL_Y - 120, MACK_Z]} rotation-y={Math.PI / 2}>
-        <primitive object={suit} />
       </group>
 
       {/* Salopette — items/Salopette gère scale + centre */}
@@ -143,58 +116,20 @@ function MackaparGroupPlaced() {
 }
 
 // ── Casquettes baseball (mur B + mannequin Sunnersta) ────────────────────────
-// Deux instances distinctes nécessitent des clones du scene GLB.
-// items/BaseballCap gère scale + redMat + centre sur la scène source.
 
 const SUNNERSTA_HEAD_TOP = 90 + 8 + 8 + 8.9 * 1.15; // ≈ 125.2 (world Y)
 
 function BaseballCapsPlaced() {
-  const { scene } = useGLTF('media/baseball_cap.glb');
-
-  const { wall, mannequin } = useMemo(() => {
-    removeGlbLines(scene);
-    const capMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.65 });
-    const rawBox = new THREE.Box3().setFromObject(scene);
-    const rawSize = rawBox.getSize(new THREE.Vector3());
-    const s20 = 20 / rawSize.x;
-
-    function makeCap(scale: number) {
-      const c = scene.clone(true);
-      c.scale.setScalar(scale);
-      c.traverse(obj => { if ((obj as THREE.Mesh).isMesh) (obj as THREE.Mesh).material = capMat; });
-      c.castShadow = true;
-      return c;
-    }
-
-    // Cap 1 — mur B au-dessus du lit (rx=π/2, rz=π/2)
-    const wall = makeCap(s20);
-    wall.rotation.set(Math.PI / 2, 0, Math.PI / 2);
-    wall.updateMatrixWorld(true);
-    const wallBox = new THREE.Box3().setFromObject(wall);
-    wall.position.set(
-      297 - (wallBox.min.x + wallBox.max.x) / 2,
-      144 - (wallBox.min.y + wallBox.max.y) / 2,
-      173.5 - (wallBox.min.z + wallBox.max.z) / 2,
-    );
-
-    // Cap 2 — tête mannequin Sunnersta (ry=π, scale×0.9)
-    const mannequin = makeCap(s20 * 0.9);
-    mannequin.rotation.set(0, Math.PI, 0);
-    mannequin.updateMatrixWorld(true);
-    const mannBox = new THREE.Box3().setFromObject(mannequin);
-    mannequin.position.set(
-      282 - (mannBox.min.x + mannBox.max.x) / 2,
-      SUNNERSTA_HEAD_TOP + 2 - (mannBox.min.y + mannBox.max.y) / 2,
-      271.5 - (mannBox.min.z + mannBox.max.z) / 2,
-    );
-
-    return { wall, mannequin };
-  }, [scene]);
-
   return (
     <>
-      <primitive object={wall} />
-      <primitive object={mannequin} />
+      {/* Cap 1 — mur B au-dessus du lit (rx=π/2, rz=π/2) */}
+      <group position={[297, 144, 173.5]} rotation={[Math.PI / 2, 0, Math.PI / 2]}>
+        <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* Cap 2 — tête mannequin Sunnersta (ry=π, scale×0.9) */}
+      <group position={[282, SUNNERSTA_HEAD_TOP + 2, 271.5]} rotation-y={Math.PI}>
+        <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
     </>
   );
 }
@@ -279,6 +214,4 @@ export function GlbItems() {
   );
 }
 
-useGLTF.preload('media/mechanic_jumpsuit.glb');
 useGLTF.preload('media/sneaker.glb');
-useGLTF.preload('media/baseball_cap.glb');

@@ -38,3 +38,5 @@ export function BaseballCap({ onSize }: SceneItemProps) {
 
   return <primitive object={scene} />;
 }
+
+useGLTF.preload('media/baseball_cap.glb');

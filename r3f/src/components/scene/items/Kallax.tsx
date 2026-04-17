@@ -34,15 +34,18 @@ const VARIANTS: Record<string, { cols: number; rows: number; noTopDivider?: bool
   'kallax-sw-2x1':      { cols: 2, rows: 1 },
 };
 
+// ── Matériaux module-level ─────────────────────────────────────────────────────
+const woodMat  = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.7 });
+const screwMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.7 });
+
 // ── Panneau bois ───────────────────────────────────────────────────────────────
 function Panel({ sx, sy, sz, x, y, z }: {
   sx: number; sy: number; sz: number;
   x: number; y: number; z: number;
 }) {
   return (
-    <mesh position={[x, y, z]}>
+    <mesh position={[x, y, z]} material={woodMat}>
       <boxGeometry args={[sx, sy, sz]} />
-      <meshStandardMaterial color="#ffffff" roughness={0.7} />
     </mesh>
   );
 }
@@ -57,8 +60,10 @@ export function Kallax({ item, onSize }: SceneItemProps) {
     onSize(new THREE.Vector3(W, H, DEP));
   }, []);
 
-  const sH = H - 2 * TF;
-  const sX = W / 2 - TF / 2 - 0.1;
+  const sH  = H - 2 * TF;
+  const sX  = W / 2 - TF / 2 - 0.1;
+  const sXv = W / 2 - TF / 2 - 0.1;   // vis X
+  const sZv = DEP / 2 - 2;             // vis Z
 
   return (
     <group position={[0, -H / 2, 0]}>
@@ -100,6 +105,16 @@ export function Kallax({ item, onSize }: SceneItemProps) {
         });
       })}
 
+      {/* Vis (8 par Kallax — CylinderGeometry axe Y, visible depuis dessus/dessous) */}
+      {([sXv, -sXv] as const).flatMap(x =>
+        ([H / 2 + 0.026, -(H / 2 + 0.026)] as const).flatMap(y =>
+          ([sZv, -sZv] as const).map(z => (
+            <mesh key={`s${x}${y}${z}`} position={[x, y, z]} material={screwMat}>
+              <cylinderGeometry args={[0.6, 0.6, 0.05, 16]} />
+            </mesh>
+          ))
+        )
+      )}
 
     </group>
   );
