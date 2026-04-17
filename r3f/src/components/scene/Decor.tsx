@@ -10,6 +10,7 @@ import { MannequinHead } from './items/MannequinHead';
 import { MeubleT }       from './items/MeubleT';
 import { MuligRail }     from './items/MuligRail';
 import { ShoeHatRack }   from './items/ShoeHatRack';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../utils/sceneItem';
 
 // @ts-ignore
 import {
@@ -23,12 +24,6 @@ const kallaxW1 = 40.5;  // kallaxW(1)
 const kallaxW2 = 75.5;  // kallaxW(2)
 const KALLAX_SE_Z   = ROOM_D - 60 - kallaxW1 / 2;  // 319.75
 const KALLAX_SE_TOP = 2 * kallaxW2;                  // 151
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-const NOOP_ITEM  = {} as any;
-const NOOP_STATE = {};
-const NOOP_SIZE  = () => {};
 
 // ── Meuble TV (BESTÅ bloc) — posé sur Kallax SE ───────────────────────────────
 

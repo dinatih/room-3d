@@ -13,13 +13,10 @@ import { Salopette } from './items/Salopette';
 import { BaseballCap } from './items/BaseballCap';
 import { PizzaOven }  from './items/PizzaOven';
 import { Sneakers }   from './items/Sneakers';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../utils/sceneItem';
 
 // @ts-ignore
 import { ROOM_W, ROOM_D, NICHE_DEPTH } from '@config';
-
-const NOOP_SIZE  = () => {};
-const NOOP_ITEM  = {} as any;
-const NOOP_STATE = {};
 
 // Kallax constants (mirrored from Furniture.tsx)
 const KALLAX_DEP = 39;
