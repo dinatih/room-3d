@@ -17,13 +17,13 @@ import { Mackapar }      from './items/Mackapar';
 import { MannequinHead } from './items/MannequinHead';
 import { MeubleT }       from './items/MeubleT';
 import { MuligRail }     from './items/MuligRail';
-import { PizzaOven }     from './items/PizzaOven';
 import { Salopette }     from './items/Salopette';
 import { Scooter }       from './items/Scooter';
 import { ShoeHatRack }   from './items/ShoeHatRack';
 import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
 import { Sunnersta }     from './items/Sunnersta';
+import { Dimpa }          from './items/Dimpa';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../utils/sceneItem';
 
 // @ts-ignore
@@ -39,13 +39,6 @@ const KALLAX_SE_TOP = 2 * kallaxW2;                  // 151
 
 // ── Constantes GlbItems ───────────────────────────────────────────────────────
 
-const KALLAX_DEP = 39;
-const KALLAX_TI  = 1.5;
-const kallaxH2   = 76.5;
-
-const PIZZA_X = -NICHE_DEPTH + KALLAX_DEP / 2;
-const PIZZA_Z = ROOM_D - kallaxW2 / 2;
-const PIZZA_Y = kallaxH2 + kallaxH2 / 2 + KALLAX_TI / 2;
 
 const MEUBLE_T_D = 27.5;
 const MEUBLE_T_H = 55;
@@ -140,6 +133,18 @@ export function FurniturePlacements() {
       <group position={[300, 0, 340]} rotation={[0, -Math.PI / 2, 0]}>
         <ShoeHatRack item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
+
+      {/* DIMPA — 5 sacs séjour, contre mur C (z=0), rangée 3+2 */}
+      {[75, 141, 207].map(x => (
+        <group key={x} position={[x, 0, 11]}>
+          <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      ))}
+      {[108, 174].map(x => (
+        <group key={x} position={[x, 0, 34]}>
+          <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      ))}
     </>
   );
 }
@@ -225,7 +230,7 @@ function SneakersPlaced() {
 export function GlbPlacements() {
   return (
     <>
-      <group position={[282, 0, 460]} rotation-y={Math.PI}>
+      <group position={[282, 0, 470]} rotation-y={Math.PI}>
         <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
@@ -240,7 +245,7 @@ export function GlbPlacements() {
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2}>
         <Mackapar item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[MACK_X - 50, RAIL_Y - 120, MACK_Z]} rotation-y={Math.PI / 2}>
+      <group position={[MACK_X, RAIL_Y - 120, MACK_Z]} rotation-y={Math.PI / 2}>
         <Salopette item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
@@ -254,10 +259,6 @@ export function GlbPlacements() {
       </group>
 
       <SneakersPlaced />
-
-      <group position={[PIZZA_X, PIZZA_Y, PIZZA_Z]}>
-        <PizzaOven item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
     </>
   );
 }

@@ -44,6 +44,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'kallax-sw-2x1',    name: 'Kallax 2×1 (niche, haut)',       brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 75.5, d: 39,   h: 73   }, scenePos: { x: -20,  z: 300  }, notes: 'Haut de la pile cuisine' },
   { id: 'shelf-lack',        name: 'Étagère LACK',                  brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 26,   d: 110,  h: 5    }, scenePos: { x: 13,   z: 225  }, notes: 'Murale, mur A, 110cm le long de Z' },
   { id: 'basket-fniss',      name: 'Corbeille FNISS',               brand: 'IKEA',     category: 'storage',   qty: 2,  dims: { w: 28,   d: 28,   h: 28   }, scenePos: { x: 110,  z: 500  }, notes: '1 SDB, 1 séjour' },
+  { id: 'dimpa',             name: 'Sac DIMPA',                     brand: 'IKEA',     category: 'storage',   qty: 5,  dims: { w: 65,   d: 22,   h: 65   }, scenePos: { x: 141,  z: 22   }, notes: 'Transparent, 5 sacs séjour mur C' },
   { id: 'rail-mulig',        name: 'Tringle MULIG',                 brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 26,   d: 80,   h: 3    }, scenePos: { x: 26,   z: 130  }, notes: 'Blanc, 3 pantalons rouges' },
   { id: 'meuble-t',          name: 'Bibliothèque (MeubleT)',         brand: '',         category: 'storage',   qty: 1,  dims: { w: 100,  d: 40,   h: 50   }, scenePos: { x: 240,  z: 30   }, notes: 'Procédural, mur C' },
 
@@ -88,13 +89,13 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'chest-bench',      name: 'Coffre banc YITAHOME 100 Gal',  brand: 'YITAHOME', category: 'furniture', qty: 1, dims: { w: 122,  d: 55,   h: 62   }, scenePos: { x: 70,  z: -90 }, notes: 'Gris, jardin derrière canapé ouest' },
   { id: 'viggja',           name: 'Desserte VIGGJA',                brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 37,   d: 50,   h: 74   }, scenePos: { x: 100, z:-125 }, notes: 'Jardin, à côté canapé ouest', glbPath: 'media/viggja.glb' },
   { id: 'armrest-sofa',     name: 'Canapé de jardin (grand)',       brand: '',         category: 'furniture', qty: 1, dims: { w: 60,   d: 160,  h: 90   }, scenePos: { x: 300, z:-110 }, notes: 'Rouge, côté est, avec accoudoirs' },
-  { id: 'armless-sofa',     name: 'Canapé de jardin (petit)',       brand: '',         category: 'furniture', qty: 1, dims: { w: 60,   d: 100,  h: 100  }, scenePos: { x: 130, z: -90 }, notes: 'Rouge, sans accoudoirs' },
+  { id: 'armless-sofa',     name: 'Canapé de jardin (petit)',       brand: '',         category: 'furniture', qty: 1, dims: { w: 60,   d: 100,  h: 100  }, scenePos: { x: 130, z: -80 }, notes: 'Rouge, sans accoudoirs' },
 
   // ── TECH ─────────────────────────────────────────────────────────────────────
   { id: 'tv',               name: 'Télévision murale',              brand: '',          category: 'tech',     qty: 1, dims: { w: 70,   d: 2,    h: 40   }, scenePos: { x: 275, z: 25  }, notes: '70×40cm, orientée vers le séjour' },
   { id: 'laptop',           name: 'Framework Laptop 13"',           brand: 'Framework', category: 'tech',     qty: 1, dims: { w: 29.7, d: 22.8, h: 1.55 }, scenePos: { x: 200, z: 170 }, notes: 'AMD Ryzen AI 5 340, 2256×1504 13", bureau 2' },
   { id: 'phone',            name: 'Téléphone OnePlus Nord 4',       brand: 'OnePlus',   category: 'tech',     qty: 1, dims: { w: 7.5,  d: 16.2, h: 0.8  }, scenePos: { x: 222, z: 172 }, notes: 'Coque rouge, bureau 2' },
-  { id: 'scooter',          name: 'Trottinette Xiaomi 4',           brand: 'Xiaomi',    category: 'tech',     qty: 1, dims: { w: 50,   d: 50,   h: 113  }, scenePos: { x: 282, z: 460 }, notes: 'Guidon déplié, couloir', glbPath: 'media/xiaomi_electric_scooter_4.glb' },
+  { id: 'scooter',          name: 'Trottinette Xiaomi 4',           brand: 'Xiaomi',    category: 'tech',     qty: 1, dims: { w: 50,   d: 50,   h: 113  }, scenePos: { x: 282, z: 470 }, notes: 'Guidon déplié, couloir', glbPath: 'media/xiaomi_electric_scooter_4.glb' },
   { id: 'air-performer',    name: 'Air Performer',                  brand: 'Philips',   category: 'tech',     qty: 1, dims: { w: 20,   d: 20,   h: 100  }, scenePos: { x: 150, z: 200 }, notes: 'Ventilateur/purificateur' },
 
   // ── KITCHEN ──────────────────────────────────────────────────────────────────
@@ -130,7 +131,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'lamp-ola',         name: 'Lampe OLA',                      brand: 'IKEA',     category: 'decor',     qty: 1, dims: { w: 30,  d: 30,  h: 120 }, scenePos: { x: 286, z: 320 }, notes: 'Sur pied, meuble TV', glbPath: 'media/ikea_lamp_ola.glb' },
   { id: 'altappen-lantern', name: 'Lanterne ALTAPPEN',              brand: 'IKEA',     category: 'decor',     qty: 1, dims: { w: 22,  d: 22,  h: 35  }, scenePos: { x: 100, z:-125 }, notes: 'Jardin, desserte Viggja', glbPath: 'media/ikea_Altappen_single.glb' },
   { id: 'altappen-rug',     name: 'Dalle terrasse ALTAPPEN',        brand: 'IKEA',     category: 'decor',     qty: 40, dims: { w: 30,  d: 30,  h: 2   }, scenePos: { x: 150, z:-220 }, notes: 'Jardin, dalles assemblées' },
-  { id: 'potted-palm',      name: 'Palmier en pot',                 brand: '',         category: 'decor',     qty: 1, dims: { w: 60,  d: 60,  h: 150 }, scenePos: { x: 100, z:-150 }, notes: 'Jardin, entre canapé et desserte', glbPath: 'media/potted_palm.glb' },
+  { id: 'potted-palm',      name: 'Palmier en pot',                 brand: '',         category: 'decor',     qty: 1, dims: { w: 60,  d: 60,  h: 150 }, scenePos: { x: 100, z:-145 }, notes: 'Jardin, entre canapé et desserte', glbPath: 'media/potted_palm.glb' },
   { id: 'jogging-suit',     name: 'Jogging suit',                   brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 20,  h: 170 }, scenePos: { x: 260, z:-250 }, notes: 'Jardin, près de la baignoire', glbPath: 'media/realistic_human_cloths.glb' },
 
   // ── PORTES ────────────────────────────────────────────────────────────────────

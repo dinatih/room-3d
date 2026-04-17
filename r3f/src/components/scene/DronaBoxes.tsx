@@ -121,9 +121,7 @@ function buildMatrices(): THREE.Matrix4[] {
   addDronas([DEPTH / 2, 0, w1 / 2], -Math.PI / 2,
     [0, w2 + w1 + w1 / 2, 0], Math.PI / 2, cellPositions(1, 1));
 
-  // SW: gStack at (-NICHE_DEPTH+DEPTH/2=-19.5, 0, ROOM_D-w2/2=362.25) rotY=-π/2
-  addDronas([-NICHE_DEPTH + DEPTH / 2, 0, ROOM_D - w2 / 2], -Math.PI / 2,
-    [0, h2 / 2, 0], 0, cellPositions(2, 2));
+  // SW : Drona intégrés dans KallaxCuisine.tsx (pas dans le mesh global)
 
   // ── Dronas standalone (hors cases Kallax) ────────────────────────────────────
   // Port de addSingleDrona() dans js/decor/decor.js.
@@ -149,11 +147,7 @@ function buildMatrices(): THREE.Matrix4[] {
   // +0.5 sur Z : face avant (profondeur le long de Z, rotY=0) à Z=0 = mur C → gap
   addSingle(ROOM_W - DEPTH / 2 - 0.5, h1 + h2 + DF / 2, w2 / 2 - 18.75 + 0.5, 0);
 
-  // 2 sur Kallax SW dessus — kallaxSWGroup (pos=(9.5,0,362.25), rotY=-π/2)
-  // local: (±18, k4TopY+DF/2, 0, π) → world: (9.5, 210.5, 344.25/380.25, π/2)
-  const k4TopY = h2 * 2 + h1;
-  addSingle(-NICHE_DEPTH + DEPTH / 2, k4TopY + DF / 2, ROOM_D - w2 / 2 - 18, Math.PI / 2);
-  addSingle(-NICHE_DEPTH + DEPTH / 2, k4TopY + DF / 2, ROOM_D - w2 / 2 + 18, Math.PI / 2);
+  // Kallax SW dessus : 2 Drona intégrés dans KallaxCuisine.tsx
 
   // 1 sur meuble SDB côté vasque (east cabinet top)
   addSingle(DOOR_START - 28, 60 + DF / 2, KITCHEN_Z + 30);

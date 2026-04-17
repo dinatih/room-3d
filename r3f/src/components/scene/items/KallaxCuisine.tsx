@@ -1,0 +1,115 @@
+/**
+ * KallaxCuisine.tsx — Tour Kallax cuisine (niche mur D, coin mur A).
+ * Composant auto-contenu : 3 Kallax empilés + 4 boîtes Drona dans le bas.
+ *
+ * Coordonnées locales : Y=0 = sol, centré XZ.
+ * Placement monde : wrapper group dans Furniture.tsx.
+ * Utilisé aussi dans l'inventaire (Espaces de rangement) via registry.ts.
+ */
+import { useRef, useLayoutEffect, useMemo } from 'react';
+import * as THREE from 'three';
+import { Kallax }      from './Kallax';
+import { PizzaOven }   from './PizzaOven';
+import { useDronaGeo } from './Drona';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../../utils/sceneItem';
+import type { SceneItemProps } from '../../../types';
+
+// ── Constantes Kallax ─────────────────────────────────────────────────────────
+const TF = 3.5, TI = 1.5, NH = 34, NW_K = 33.5;
+const tw   = (cols: number) => cols * NW_K + 2 * TF + (cols - 1) * TI;
+const th   = (rows: number) => rows * NH  + 2 * TF + (rows - 1) * TI;
+const h1   = th(1);              // 41
+const h2   = th(2);              // 76.5
+const DF   = 33;                 // Drona box size
+const TOP  = h2 * 2 + h1;       // 194 — dessus de la tour
+const PIZZA_Y = h2 + h2 / 2 + TI / 2;  // 115.5 — position four pizza
+
+function k(id: string) { return { id } as any; }
+
+// ── Positions des 4 cases dans un Kallax 2×2 (relatives au centre du Kallax) ──
+function cells22(): [number, number, number][] {
+  const W = tw(2), H = th(2); // 75.5, 76.5
+  const out: [number, number, number][] = [];
+  for (let r = 0; r < 2; r++) {
+    for (let c = 0; c < 2; c++) {
+      out.push([
+        -(W / 2) + TF + NW_K / 2 + c * (NW_K + TI),
+         (H / 2) - TF - NH  / 2 - r * (NH  + TI),
+        0,
+      ]);
+    }
+  }
+  return out;
+}
+
+// ── Drona (4 boîtes, mesh instancié) ──────────────────────────────────────────
+const redFront = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.FrontSide });
+const redBack  = new THREE.MeshStandardMaterial({ color: 0x991100, roughness: 0.9, side: THREE.BackSide });
+
+function DronaLayer() {
+  const geo = useDronaGeo();
+
+  const matrices = useMemo(() => {
+    const rotPI = new THREE.Matrix4().makeRotationY(Math.PI);
+
+    // 4 cases du premier Kallax 2×2 (centre à [0, h2/2, 0])
+    const inside = cells22().map(([cx, cy, cz]) =>
+      rotPI.clone().setPosition(cx, h2 / 2 + cy, cz),
+    );
+
+    // 2 Drona sur le dessus de la tour (local : ±18, TOP+DF/2, 0)
+    const top = [-18, 18].map(x =>
+      rotPI.clone().setPosition(x, TOP + DF / 2, 0),
+    );
+
+    return [...inside, ...top];
+  }, []);
+
+  const N     = matrices.length; // 6
+  const apply = (mesh: THREE.InstancedMesh) => {
+    matrices.forEach((m, i) => mesh.setMatrixAt(i, m));
+    mesh.instanceMatrix.needsUpdate = true;
+  };
+
+  return (
+    <>
+      <instancedMesh args={[geo, redFront, N]} castShadow receiveShadow onUpdate={apply} />
+      <instancedMesh args={[geo, redBack,  N]} onUpdate={apply} />
+    </>
+  );
+}
+
+// ── Composant principal ───────────────────────────────────────────────────────
+
+export function KallaxCuisine({ onSize }: SceneItemProps) {
+  const ref = useRef<THREE.Group>(null!);
+
+  useLayoutEffect(() => {
+    ref.current.updateMatrixWorld(true);
+    onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
+  }, []);
+
+  return (
+    <group ref={ref}>
+      {/* 2×2 bas — PY = h2 */}
+      <group position={[0, h2, 0]}>
+        <Kallax item={k('kallax-sw-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* 2×2 spec (sans barre haute) — PY = 2×h2 */}
+      <group position={[0, h2 + h2, 0]}>
+        <Kallax item={k('kallax-sw-2x2-spec')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* 2×1 haut — PY = 2×h2 + h1 */}
+      <group position={[0, h2 + h2 + h1, 0]}>
+        <Kallax item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* 6 Drona : 4 dans le 2×2 bas + 2 sur le dessus */}
+      <DronaLayer />
+
+      {/* Four à pizza — dans la case basse du 2×2 spec */}
+      <group position={[0, PIZZA_Y, 0]} rotation-y={Math.PI / 2}>
+        <PizzaOven item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+    </group>
+  );
+}

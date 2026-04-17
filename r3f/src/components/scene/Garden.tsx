@@ -25,7 +25,7 @@ function ArmrestSofaPlaced() {
 
 function ArmlessSofaPlaced() {
   return (
-    <group position={[100, 0, -90]} rotation={[0, Math.PI, 0]}>
+    <group position={[100, 0, -80]} rotation={[0, Math.PI, 0]}>
       <ArmlessSofa item={{} as any} actionState={{}} onSize={() => {}} />
     </group>
   );
@@ -35,7 +35,7 @@ function ArmlessSofaPlaced() {
 
 function ChestBenchPlaced() {
   return (
-    <group position={[15 / 2, 0, -90]}>
+    <group position={[40 , 0, -90]}>
       <ChestBench item={{} as any} actionState={{}} onSize={() => {}} />
     </group>
   );
@@ -55,7 +55,7 @@ function ViggjaPlaced() {
 
 function PottedPalmPlaced() {
   return (
-    <group position={[100, 0, -150]}>
+    <group position={[100, 0, -145]}>
       <PottedPalm item={{} as any} actionState={{}} onSize={() => {}} />
     </group>
   );

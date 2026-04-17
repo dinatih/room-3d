@@ -16,7 +16,8 @@
 import { useState, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Kallax } from './items/Kallax';
+import { Kallax }         from './items/Kallax';
+import { KallaxCuisine } from './items/KallaxCuisine';
 import { Freezer } from './items/Freezer';
 import { Fridge } from './items/Fridge';
 import { KitchenCabinet } from './items/KitchenCabinet';
@@ -106,27 +107,12 @@ function KallaxNE() {
 }
 
 // ── Stack SW — niche mur A (X=-NICHE_DEPTH) + mur D (Z=400) ─────────────────
-// gStack.rotation.y = -π/2 ; gStack.position = (-NICHE_DEPTH+DEP/2, 0, ROOM_D-w2/2)
-// 2×2 + 2×2 + 2×1
+// Kallax + Drona intégrés dans KallaxCuisine
 
 function KallaxSW() {
   return (
-    <group
-      position={[-NICHE_DEPTH + DEP / 2, 0, ROOM_D - w2 / 2]}
-      rotation={[0, -Math.PI / 2, 0]}
-    >
-      {/* sw0 2×2 — PY = h2 */}
-      <group position={[0, h2, 0]}>
-        <Kallax item={stub('kallax-sw-2x2')} actionState={AS} onSize={noop} />
-      </group>
-      {/* sw1 2×2 spec (sans barre haute) — PY = h2 + h2 */}
-      <group position={[0, h2 + h2, 0]}>
-        <Kallax item={stub('kallax-sw-2x2-spec')} actionState={AS} onSize={noop} />
-      </group>
-      {/* sw2 2×1 — PY = h2 + h2 + h1 */}
-      <group position={[0, h2 + h2 + h1, 0]}>
-        <Kallax item={stub('kallax-sw-2x1')} actionState={AS} onSize={noop} />
-      </group>
+    <group position={[-NICHE_DEPTH + DEP / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+      <KallaxCuisine item={stub('kallax-sw-stack')} actionState={AS} onSize={noop} />
     </group>
   );
 }

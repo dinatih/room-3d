@@ -57,8 +57,11 @@ import { MuligRail }                                      from './items/MuligRai
 import { Counter }                                        from './items/Counter';
 import { SinkBoholmen }                                   from './items/SinkBoholmen';
 import { Stove }                                          from './items/Stove';
+import { Dimpa }                                          from './items/Dimpa';
+import { KallaxCuisine }                                  from './items/KallaxCuisine';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'dimpa':                   Dimpa,
   'counter':                 Counter,
   'sink-boholmen':           SinkBoholmen,
   'stove':                   Stove,
@@ -72,7 +75,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'door-sdb':                DoorSdb,
   'door-glass':              GlassDoor,
   'kallax-ne-stack':         KallaxStack,
-  'kallax-sw-stack':         KallaxStack,
+  'kallax-sw-stack':         KallaxCuisine,
   'kallax-se-stack':         KallaxStack,
   'kallax-nw-stack':         KallaxStack,
   'kallax-ne-2x1':           Kallax,
