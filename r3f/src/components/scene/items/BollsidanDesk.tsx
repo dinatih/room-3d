@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import type { SceneItemProps } from '../../../types';
 
 const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
-const H = 70;
+const DEFAULT_H = 70;
 
 function DeskTop() {
   const geo = useMemo(() => {
@@ -29,7 +29,7 @@ function DeskTop() {
   return <mesh geometry={geo} material={whiteMat} castShadow receiveShadow />;
 }
 
-export function BollsidanDesk({ onSize }: SceneItemProps) {
+export function BollsidanDesk({ onSize, height = DEFAULT_H }: SceneItemProps & { height?: number }) {
   const groupRef = useRef<THREE.Group>(null!);
   const footHgt = 2.5, colSize = 4.2, w = 68;
   const refEastX = w / 2 - 8;
@@ -38,16 +38,16 @@ export function BollsidanDesk({ onSize }: SceneItemProps) {
   useLayoutEffect(() => {
     groupRef.current.updateMatrixWorld(true);
     onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
-  }, []);
+  }, [height]);
 
   return (
     <group ref={groupRef}>
-      <group position={[0, H, 0]}><DeskTop /></group>
-      <mesh position={[refEastX,       footHgt / 2, 0]} castShadow material={whiteMat}><boxGeometry args={[5, footHgt, 32]} /></mesh>
-      <mesh position={[refEastX - 55,  footHgt / 2, 0]} castShadow material={whiteMat}><boxGeometry args={[5, footHgt, 32]} /></mesh>
+      <group position={[0, height, 0]}><DeskTop /></group>
+      <mesh position={[refEastX,        footHgt / 2, 0]} castShadow material={whiteMat}><boxGeometry args={[5, footHgt, 32]} /></mesh>
+      <mesh position={[refEastX - 55,   footHgt / 2, 0]} castShadow material={whiteMat}><boxGeometry args={[5, footHgt, 32]} /></mesh>
       <mesh position={[refEastX - 27.5, footHgt / 2, 0]} castShadow material={whiteMat}><boxGeometry args={[55, footHgt, 5]} /></mesh>
-      <mesh position={[colX, footHgt + (H - footHgt) / 2, 0]} castShadow material={whiteMat}>
-        <boxGeometry args={[colSize, H - footHgt, colSize]} />
+      <mesh position={[colX, footHgt + (height - footHgt) / 2, 0]} castShadow material={whiteMat}>
+        <boxGeometry args={[colSize, height - footHgt, colSize]} />
       </mesh>
     </group>
   );
