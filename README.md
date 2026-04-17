@@ -1,6 +1,6 @@
 # room-3d — Appartement 3D interactif
 
-> **TL;DR** — Visualisation 3D en temps réel de mon appartement, construite depuis zéro en 7 semaines (~250 commits). Démarré comme un prototype LEGO en fichier unique, évolué vers une architecture ES Modules + Three.js, avec une migration en cours vers React Three Fiber. Projet personnel et portfolio technique en simultané.
+> **TL;DR** — Visualisation 3D en temps réel de mon appartement, construite depuis zéro (~300 commits). Démarré comme un prototype LEGO en fichier unique, évolué vers ES Modules + Three.js, puis migré vers React Three Fiber. Projet personnel et portfolio technique documenté commit par commit.
 
 → **[Demo live](https://dinatih.github.io/room-3d/lego-room.html)**
 
@@ -16,13 +16,10 @@ Un outil que j'utilise **vraiment au quotidien** : planifier les positions des m
 
 | Couche | Technologie | Pourquoi |
 |---|---|---|
-| Rendu 3D | **Three.js r170** | API bas niveau, contrôle total |
-| Modules | **ES Modules natifs** (sans bundler) | Zéro config, rechargement instantané |
-| Import CDN | **importmap** | Three.js + addons sans node_modules |
-| Prévisualisations | **React Three Fiber** (migration) | Composants déclaratifs, interactivité propre |
-| Build (R3F) | **Vite + TypeScript** | TSX, HMR, typage |
-| Serveur | Ruby / Python http.server | Simple, suffisant |
+| Rendu 3D | **React Three Fiber** + Three.js r170 | Composants déclaratifs, state React, interactivité propre |
+| Build | **Vite + TypeScript** | TSX, HMR, typage |
 | Modèles 3D | **GLB + Draco** | Compression ×3, chargement GLTF standard |
+| *(archive)* | ES Modules natifs + importmap | Version vanilla conservée dans `js/` |
 
 ---
 
@@ -30,25 +27,19 @@ Un outil que j'utilise **vraiment au quotidien** : planifier les positions des m
 
 ```
 room-3d/
-├── lego-room.html        # App principale (Three.js vanilla)
-├── r3f/                  # Sous-projet React Three Fiber (migration)
+├── r3f/                  # App principale — React Three Fiber
 │   └── src/
-│       ├── App.tsx
-│       ├── components/
-│       │   ├── LeftPanel.tsx
-│       │   ├── Preview.tsx
-│       │   └── scene/
-│       │       ├── SceneContent.tsx
-│       │       ├── registry.ts        ← composants interactifs par item.id
-│       │       └── items/
-│       │           └── Freezer.tsx    ← exemple de composant déclaratif
-│       └── types.ts
-└── js/                   # Modules Three.js vanilla
-    ├── config.js          # Constantes globales (ROOM_W, WALL_H…)
-    ├── structure/         # Géométrie architecturale
-    ├── furniture/         # Meubles
-    ├── decor/             # Accessoires
-    └── ui/                # Interface (minimap, floorplan, inventory…)
+│       ├── types.ts              # SceneItemProps (interface commune items/)
+│       ├── utils/                # useGLTFClone, glbUtils
+│       └── components/scene/
+│           ├── Studio.tsx        # Canvas R3F : lights, état global UI
+│           ├── structure/        # Murs, sol, portes, cuisine…
+│           ├── items/            # ~50 composants autonomes (1 objet = 1 fichier)
+│           ├── registry.ts       # id → composant items/ (preview inventaire)
+│           └── inventoryData.ts  # ~120 items avec dims, catégorie, scenePos…
+├── media/                # Modèles GLB (compressés Draco)
+├── js/                   # Archive vanilla Three.js — voir js/README.md
+└── lego-room.html        # Entrée vanilla (archive)
 ```
 
 ---
@@ -56,13 +47,10 @@ room-3d/
 ## Lancement
 
 ```bash
-# App principale Three.js
-ruby server.rb              # http://localhost:8080/lego-room.html
-# ou
-python3 -m http.server 8000
-
-# App R3F (sous-projet)
 cd r3f && npm install && npm run dev   # http://localhost:5173
+
+# Version vanilla (archive)
+ruby server.rb   # http://localhost:8080/lego-room.html
 ```
 
 ---
@@ -180,7 +168,7 @@ _groupWest.position.x = -ROOM_W - 30.5;  // était -30
 
 ---
 
-### Phase 6 — Migration React Three Fiber (avril 2026, en cours)
+### Phase 6 — Migration React Three Fiber (avril 2026, terminée)
 
 **Le constat** : la preview 3D de l'inventaire gère manuellement un `WebGLRenderer`, une boucle `requestAnimationFrame`, des contrôles orbitaux maison, des event listeners sur le canvas. C'est ~120 lignes de code impératif pour afficher un objet qui tourne.
 
@@ -204,9 +192,9 @@ export function SceneContent({ item, actionState }: Props) {
 
 Deux raisons honnêtes :
 
-1. **Le projet vanilla ES Modules fonctionne sans build step** — pour itérer vite sur la géométrie et les positions, ne pas avoir à lancer `npm run dev` était un vrai confort. Le vanilla Three.js reste la référence pour la scène principale.
+1. **Le projet vanilla ES Modules fonctionne sans build step** — pour itérer vite sur la géométrie et les positions, ne pas avoir à lancer `npm run dev` était un vrai confort.
 
-2. **R3F brille sur l'UI réactive** — dès qu'un composant 3D doit synchroniser son état avec un composant HTML (bouton, liste, filtre), React devient naturel. La preview inventaire est exactement ce cas.
+2. **R3F brille sur l'UI réactive** — dès qu'un composant 3D doit synchroniser son état avec un composant HTML (bouton, liste, filtre), React devient naturel. La preview inventaire est exactement ce cas. Et une fois la preview migrée, il était logique de migrer toute la scène.
 
 **La démonstration concrète — le congélateur interactif :**
 
@@ -241,16 +229,19 @@ export function Freezer({ actionState, onSize }: SceneItemProps) {
 | `freezerDoorGroup.rotation.y = π/2` | `useFrame(() => doorRef.current.rotation.y += lerp...)` |
 | `registerHoverAction('freezer-toggle', ...)` | `<button onClick={() => toggle('freezer-toggle')}>` |
 
-**Pattern registry** : chaque objet interactif s'enregistre par `item.id`, sans toucher à `SceneContent` :
+**Pattern registry** : chaque objet interactif s'enregistre par `item.id`, sans toucher au reste de la scène :
 
 ```ts
-// registry.ts
+// registry.ts — ~50 composants enregistrés
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
-  'freezer': Freezer,
-  // 'bed': Bed,     ← à venir
-  // 'desk-1': Desk, ← à venir
+  'freezer':   Freezer,
+  'kallax':    Kallax,
+  'sneaker':   Sneakers,
+  // …
 };
 ```
+
+**Résultat** : la scène complète est en R3F. La version vanilla (`js/`) est conservée comme archive.
 
 ---
 
@@ -258,26 +249,24 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
 
 | Feature | Détail |
 |---|---|
-| Navigation | Walk mode WASD, vue 2D dessus, perspective, POV |
+| Navigation | Walk mode WASD, vue 2D dessus, perspective, POV, WebXR VR |
 | Structure | Murs, niche, couloir diagonal, cuisine, SDB, WC |
-| Meubles | ~30 objets (procéduraux + GLB IKEA) |
-| Interactivité | Hover menu (clic objet → toggle position/état) |
-| Inventaire | ~120 items, preview 3D, filtres, recherche |
+| Meubles | ~50 items/ components (procéduraux + GLB IKEA) |
+| Interactivité | Hover menu, toggles portes/tiroirs/lit, murs rouges, X-Ray |
+| Inventaire | ~120 items, preview 3D interactive (registry), filtres, recherche |
 | Minimap | Canvas 2D temps réel, plein écran, suivi personnage |
-| Floorplan | Plan 2D coté (Three.js) |
-| Layers | Structure / Équipement / Mobilier / GLB (toggles) |
+| Floorplan | Plan 2D coté |
+| Couches visuelles | Structure / GLB / Mobilier + toggles X-Ray, murs rouges, grille |
 | Voisins | Appartements est/ouest semi-transparents |
 | Dev Tools | FPS graph, draw calls, stats mémoire, tailles GLB |
-| VR | WebXR / Google Cardboard |
-| Personnage | Walking man animé (Lara 2026, galerie de rigs) |
+| Personnage | Walking man animé (Lara 2026) + SkeletonHelper toggle |
 
 ---
 
 ## Ce qui vient
 
-- [ ] Intégrer la preview R3F dans `lego-room.html` (remplacer `inventory.js` vanilla)
-- [ ] Composants TSX pour lit, bureaux, portes (registry)
 - [ ] Éclairage dynamique (heure du jour)
+- [ ] Plan 2D interactif (cliquer un meuble → zoom scène)
 
 ---
 
