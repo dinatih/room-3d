@@ -6,14 +6,10 @@ export default defineConfig({
   plugins: [react()],
   base: '/r3f/dist/',
   resolve: {
-    alias: [
-      { find: '@data',         replacement: path.resolve(__dirname, '../js/ui') },
-      { find: '@config',       replacement: path.resolve(__dirname, '../js/config.js') },
-      // js/ files imported via @data alias use bare 'three' — resolve to r3f's own copy.
-      // three/addons/* must come before the bare 'three' alias so sub-paths resolve correctly.
-      { find: /^three\/addons\/(.*)$/, replacement: path.resolve(__dirname, 'node_modules/three/examples/jsm/$1') },
-      { find: 'three',         replacement: path.resolve(__dirname, 'node_modules/three') },
-    ],
+    alias: {
+      '@data':   path.resolve(__dirname, 'src/data'),
+      '@config': path.resolve(__dirname, 'src/config.js'),
+    },
   },
   server: {
     port: 5173,
