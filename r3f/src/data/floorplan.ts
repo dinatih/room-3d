@@ -104,7 +104,7 @@ export function buildFloorPlan() {
   // --- Murs, portes, fenêtres (depuis WALL_LABELS, source partagée avec minimap) ---
   const colorByType = { w: WALL_COLOR, d: DOOR_COLOR, n: WIN_COLOR };
   for (const w of WALL_LABELS) {
-    label(w.name, w.x, w.z, w.rotZ, colorByType[w.t], w.size);
+    label(w.name, w.x, w.z, w.rotZ, colorByType[w.t as keyof typeof colorByType], w.size);
   }
 
   // --- Placard (label de zone, pas un mur) ---

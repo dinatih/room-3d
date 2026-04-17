@@ -1,3 +1,5 @@
+type CoordFn = (n: number) => number;
+
 import {
   ROOM_W, ROOM_D, DOOR_START, DOOR_END,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, KITCHEN_DEPTH,
@@ -25,12 +27,12 @@ export const ROOMS = [
   {
     nameFr: 'Jardin', nameEn: 'garden',
     labelX: 140, labelZ: -160, labelSize: 20, labelColor: '#4a9e54',
-    contains: (x, z) => {
+    contains: (x: number, z: number) => {
       if (x < -10 || x > 310 || z > -10) return false;
       return z >= -140 - 70 * (x + 10) / 110;
     },
     fills: () => [],
-    fillPath: (ctx, tx, tz) => {
+    fillPath: (ctx: CanvasRenderingContext2D, tx: CoordFn, tz: CoordFn) => {
       ctx.beginPath();
       ctx.moveTo(tx(-10), tz(-10));
       ctx.lineTo(tx(-10), tz(-140));
@@ -43,18 +45,18 @@ export const ROOMS = [
   {
     nameFr: 'Entrée', nameEn: 'entry',
     labelX: (DOOR_START + ROOM_W) / 2, labelZ: ROOM_D + 70, labelSize: 15,
-    contains: (x, z) => {
+    contains: (x: number, z: number) => {
       if (z <= ROOM_D || z > SDB_Z_END) return false;
       if (x >= KITCHEN_X1 && x <= DOOR_START && z <= KITCHEN_Z) return true;
       if (x >= DOOR_START && x <= ROOM_W && z <= DIAG_AZ) return true;
       if (x >= DOOR_START && z <= SDB_Z_END && x <= diagXat(z)) return true;
       return false;
     },
-    fills: (tx, tz, S) => [
+    fills: (tx: CoordFn, tz: CoordFn, S: number) => [
       [tx(KITCHEN_X1), tz(ROOM_D + 10), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D - 10) * S],
       [tx(DOOR_START), tz(ROOM_D + 10), (ROOM_W - DOOR_START) * S, (DIAG_AZ - ROOM_D - 10) * S],
     ],
-    fillPath: (ctx, tx, tz) => {
+    fillPath: (ctx: CanvasRenderingContext2D, tx: CoordFn, tz: CoordFn) => {
       ctx.beginPath();
       ctx.moveTo(tx(DOOR_START), tz(DIAG_AZ));
       ctx.lineTo(tx(ROOM_W), tz(DIAG_AZ));
@@ -66,15 +68,15 @@ export const ROOMS = [
   {
     nameFr: 'Salle d\'eau', nameEn: 'bathroom',
     labelX: (DOOR_START - NICHE_DEPTH) / 2, labelZ: 530, labelSize: 18,
-    contains: (x, z) => {
+    contains: (x: number, z: number) => {
       if (x < -NICHE_DEPTH) return false;
       if (x <= DOOR_START && z >= KITCHEN_Z && z <= SDB_Z_END) return true;
       return z > SDB_Z_END && z <= DIAG_CZ && x <= diagXat(z);
     },
-    fills: (tx, tz, S) => [
+    fills: (tx: CoordFn, tz: CoordFn, S: number) => [
       [tx(-NICHE_DEPTH), tz(KITCHEN_Z + 10), (DOOR_START + NICHE_DEPTH) * S, (SDB_Z_END - KITCHEN_Z - 10) * S],
     ],
-    fillPath: (ctx, tx, tz) => {
+    fillPath: (ctx: CanvasRenderingContext2D, tx: CoordFn, tz: CoordFn) => {
       ctx.beginPath();
       ctx.moveTo(tx(-NICHE_DEPTH), tz(SDB_Z_END));
       ctx.lineTo(tx(DOOR_START), tz(SDB_Z_END));
@@ -86,11 +88,11 @@ export const ROOMS = [
   {
     nameFr: 'Séjour', nameEn: 'living',
     labelX: ROOM_W / 2, labelZ: ROOM_D / 2, labelSize: 25,
-    contains: (x, z) =>
+    contains: (x: number, z: number) =>
       (x >= 0 && x <= ROOM_W && z >= 0 && z <= ROOM_D) ||
       (x >= -NICHE_DEPTH && x < 0 && z >= NICHE_Z_START && z <= ROOM_D) ||
       (x >= KITCHEN_X0 && x <= KITCHEN_X1 && z > ROOM_D && z <= KITCHEN_Z),
-    fills: (tx, tz, S) => [
+    fills: (tx: CoordFn, tz: CoordFn, S: number) => [
       [tx(0), tz(0), ROOM_W * S, ROOM_D * S],
       [tx(-NICHE_DEPTH), tz(NICHE_Z_START), NICHE_DEPTH * S, (ROOM_D - NICHE_Z_START) * S],
       [tx(KITCHEN_X0), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_X0) * S, (KITCHEN_Z - ROOM_D) * S],
@@ -99,16 +101,16 @@ export const ROOMS = [
   {
     nameFr: 'Cuisine', nameEn: 'kitchen',
     labelX: (KITCHEN_X0 + KITCHEN_X1) / 2, labelZ: ROOM_D + KITCHEN_DEPTH / 2, labelSize: 15,
-    contains: (x, z) => x >= KITCHEN_X0 && x <= KITCHEN_X1 && z >= ROOM_D && z <= KITCHEN_Z,
-    fills: (tx, tz, S) => [
+    contains: (x: number, z: number) => x >= KITCHEN_X0 && x <= KITCHEN_X1 && z >= ROOM_D && z <= KITCHEN_Z,
+    fills: (tx: CoordFn, tz: CoordFn, S: number) => [
       [tx(KITCHEN_X0), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_X0) * S, (KITCHEN_Z - ROOM_D) * S],
     ],
   },
   {
     nameFr: 'Douche', nameEn: 'shower',
     labelX: 25, labelZ: 635, labelSize: 12,
-    contains: (x, z) => x >= -NICHE_DEPTH && x <= 60 && z >= 600 && z <= 670,
-    fills: (tx, tz, S) => [
+    contains: (x: number, z: number) => x >= -NICHE_DEPTH && x <= 60 && z >= 600 && z <= 670,
+    fills: (tx: CoordFn, tz: CoordFn, S: number) => [
       [tx(-NICHE_DEPTH), tz(600), (60 + NICHE_DEPTH) * S, 70 * S],
     ],
   },
