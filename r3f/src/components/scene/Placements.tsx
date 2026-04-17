@@ -19,7 +19,7 @@ import { MuligRail }     from './items/MuligRail';
 import { Scooter }       from './items/Scooter';
 import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
-import { Sunnersta }     from './items/Sunnersta';
+import { SunnerstaGroup } from './items/SunnerstaGroup';
 import { Dimpa }          from './items/Dimpa';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../utils/sceneItem';
 
@@ -48,8 +48,7 @@ const LAMP_ROT_Y = Math.atan2(ROOM_W / 2 - MEUBLE_T_X, ROOM_D / 2 - MEUBLE_T_Z);
 const MACK_X  = -NICHE_DEPTH + 3.5 + 38.5;
 const MACK_Z  = ROOM_D - kallaxW2 - 16;
 
-const MIRROR_CX        = (130 + 190) / 2;
-const SUNNERSTA_HEAD_TOP = 90 + 8 + 8 + 8.9 * 1.15;
+const MIRROR_CX = (130 + 190) / 2;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // FURNITURE PLACEMENTS  (layers.furniture)
@@ -94,9 +93,6 @@ export function FurniturePlacements() {
       </group>
 
       <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <group position={[282, 90, 271.5]}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
@@ -207,7 +203,7 @@ export function GlbPlacements() {
       <LampOlaPlaced />
 
       <group position={[ROOM_W - 20, 0, 271.5]} rotation-y={Math.PI / 2}>
-        <Sunnersta item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2}>
@@ -218,11 +214,6 @@ export function GlbPlacements() {
       <group position={[297, 144, 173.5]} rotation={[Math.PI / 2, 0, Math.PI / 2]}>
         <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* Cap 2 — tête mannequin Sunnersta */}
-      <group position={[282, SUNNERSTA_HEAD_TOP + 2, 271.5]} rotation-y={Math.PI}>
-        <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
       <SneakersPlaced />
     </>
   );

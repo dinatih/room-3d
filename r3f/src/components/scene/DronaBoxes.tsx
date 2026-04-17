@@ -13,7 +13,7 @@ import * as THREE from 'three';
 import { useDronaGeo } from './items/Drona';
 
 // @ts-ignore
-import { NICHE_DEPTH, KITCHEN_Z, KITCHEN_X0, KITCHEN_X1, DOOR_START } from '@config';
+import { NICHE_DEPTH, KITCHEN_Z, DOOR_START } from '@config';
 
 const redMatFront = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.FrontSide });
 const redMatBack  = new THREE.MeshStandardMaterial({ color: 0x991100, roughness: 0.9, side: THREE.BackSide });
@@ -38,14 +38,6 @@ function buildMatrices(): THREE.Matrix4[] {
   addSingle(DOOR_START - 28, 60 + DF / 2, KITCHEN_Z + 30);
   // 1 sur meuble SDB ouest
   addSingle(-NICHE_DEPTH + 20, 60 + DF / 2, KITCHEN_Z + 30);
-
-  // 3 sur meuble haut cuisine
-  const KIT_W = KITCHEN_X1 - KITCHEN_X0; // 100
-  const gap   = (KIT_W - 3 * DF) / 4;   // 0.25
-  const hcCZ  = KITCHEN_Z - 38 / 2 - 0.5; // 440.5 — gap avec mur cuisine (Z=KITCHEN_Z)
-  for (let i = 0; i < 3; i++) {
-    addSingle(KITCHEN_X0 + gap + DF / 2 + i * (DF + gap), 195 + DF / 2, hcCZ, Math.PI);
-  }
 
   // 1 sur congélateur CHIQ
   addSingle(24.5, 50 + DF / 2, 269.5, Math.PI);

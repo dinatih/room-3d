@@ -20,9 +20,8 @@ import { KallaxNE }      from './items/KallaxNE';
 import { KallaxSE }      from './items/KallaxSE';
 import { KallaxNW }      from './items/KallaxNW';
 import { KallaxCuisine } from './items/KallaxCuisine';
+import { CuisineGroup }  from './items/CuisineGroup';
 import { Freezer } from './items/Freezer';
-import { Fridge } from './items/Fridge';
-import { KitchenCabinet } from './items/KitchenCabinet';
 import { BathroomCabinetWest, BathroomCabinetEast } from './items/BathroomCabinet';
 import { Toilet } from './items/Toilet';
 import { Shower } from './items/Shower';
@@ -43,8 +42,6 @@ const AS: Record<string, boolean> = {};
 // Map furniture-toggle key → actionState key used by item components
 const TOGGLE_MAP: Record<string, string> = {
   freezer:   'freezer-toggle',
-  fridge:    'fridge-toggle',
-  cabinet:   'cabinet-toggle',
   wcLid:     'wc-lid-toggle',
   corrDoors: 'corr-doors-toggle',
   sdbCloset: 'sdb-closet-toggle',
@@ -145,28 +142,12 @@ function FreezerPlaced({ as }: { as: Record<string, boolean> }) {
   );
 }
 
-// ── Meuble sous évier cuisine ─────────────────────────────────────────────────
-// KitchenCabinet: W=40, H=90, D=60
-// X = KITCHEN_X0 + W/2 = 50  |  Z = KITCHEN_Z - D/2 = 430  |  PY = H/2 = 45
+// ── Cuisine (plan de travail + évier + plaques + frigo + meuble bas + meuble haut + 3 Drona) ──
 
-function KitchenCabinetPlaced({ as }: { as: Record<string, boolean> }) {
+function CuisineGroupPlaced() {
   return (
-    <group position={[KITCHEN_X0 + 40 / 2, 90 / 2, KITCHEN_Z - KITCHEN_D / 2]}
-      userData={{ hoverAction: { label: 'Meuble évier', actionId: 'cabinet' } }}>
-      <KitchenCabinet item={stub('kitchen-cabinet')} actionState={as} onSize={noop} />
-    </group>
-  );
-}
-
-// ── Réfrigérateur cuisine ─────────────────────────────────────────────────────
-// Fridge: W=60, H=90, D=60
-// X = KITCHEN_X0 + 40 + W/2 = 100  |  Z = 430  |  PY = H/2 = 45
-
-function FridgePlaced({ as }: { as: Record<string, boolean> }) {
-  return (
-    <group position={[KITCHEN_X0 + 40 + 60 / 2, 90 / 2, KITCHEN_Z - KITCHEN_D / 2]}
-      userData={{ hoverAction: { label: 'Réfrigérateur', actionId: 'fridge' } }}>
-      <Fridge item={stub('fridge')} actionState={as} onSize={noop} />
+    <group position={[KITCHEN_X0, 0, ROOM_D]}>
+      <CuisineGroup item={stub('cuisine-stack')} actionState={{}} onSize={noop} />
     </group>
   );
 }
@@ -293,9 +274,8 @@ export function Furniture() {
       <KallaxSEPlaced />
       <KallaxNWPlaced />
       <FreezerPlaced as={as} />
-      <KitchenCabinetPlaced as={as} />
+      <CuisineGroupPlaced />
       <CorridorClosetPlaced as={as} />
-      <FridgePlaced as={as} />
       <VasqueSdbPlaced />
       <WaterHeaterPlaced />
       <GrassRugPlaced />

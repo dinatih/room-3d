@@ -14,7 +14,6 @@ import { Floor }     from './structure/Floor';
 import { Doors }     from './structure/Doors';
 import { Neighbors } from './structure/Neighbors';
 
-import { Kitchen }   from './structure/Kitchen';
 import { Furniture }   from './Furniture';
 import { Furnishings } from './Furnishings';
 import { FurniturePlacements, GlbPlacements } from './Placements';
@@ -177,9 +176,6 @@ export function Studio() {
 
           {/* Layer 1 : tout le reste — exclu des reflets, visible à la caméra principale */}
           <LayerGroup layer={1}>
-            <group visible={layers.equipment}>
-              <Kitchen />
-            </group>
             <group visible={layers.furniture}>
               <Furniture />
               <Furnishings />

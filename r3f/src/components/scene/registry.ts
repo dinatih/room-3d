@@ -62,6 +62,8 @@ import { SinkBoholmen }                                   from './items/SinkBoho
 import { Stove }                                          from './items/Stove';
 import { Dimpa }                                          from './items/Dimpa';
 import { KallaxCuisine }                                  from './items/KallaxCuisine';
+import { SunnerstaGroup }                                 from './items/SunnerstaGroup';
+import { CuisineGroup }                                   from './items/CuisineGroup';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'dimpa':                   Dimpa,
@@ -110,9 +112,11 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'altappen-rug':            AltappenRug,
   'smorkull-chair':          Smorkull,
   'sunnersta':               Sunnersta,
+  'sunnersta-stack':         SunnerstaGroup,
+  'cuisine-stack':           CuisineGroup,
   'scooter':                 Scooter,
   'lamp-ola':                LampOla,
-  'mackapar-group':          MackaparGroup,
+  'mackapar-stack':          MackaparGroup,
   'mackapar':                Mackapar,
   'salopette':               Salopette,
   'baseball-cap':            BaseballCap,
