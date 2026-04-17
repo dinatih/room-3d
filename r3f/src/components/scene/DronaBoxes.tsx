@@ -1,31 +1,22 @@
 /**
  * DronaBoxes.tsx — boîtes DRONA IKEA (rouge) standalone (hors cases Kallax).
  *
- * Les Drona à l'intérieur des tours Kallax sont gérés par leurs composants :
- *   KallaxNE.tsx (7), KallaxSE.tsx (4), KallaxNW.tsx (4), KallaxCuisine.tsx (6)
+ * Les Drona associés à des groupes sont gérés par leurs composants :
+ *   KallaxNE.tsx (7), KallaxSE.tsx (4), KallaxNW.tsx (4), KallaxCuisine.tsx (6),
+ *   MackaparGroup.tsx (2)
  *
- * Ce fichier contient uniquement les 8 boîtes autonomes :
- *   - 2 sur Mackapär, 2 sur meubles SDB, 3 sur meuble haut cuisine, 1 sur congélateur
+ * Ce fichier contient uniquement les 6 boîtes restantes :
+ *   - 2 sur meubles SDB, 3 sur meuble haut cuisine, 1 sur congélateur
  */
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useDronaGeo } from './items/Drona';
 
 // @ts-ignore
-import { ROOM_W, ROOM_D, NICHE_DEPTH, KALLAX_DEPTH, KITCHEN_Z, KITCHEN_X0, KITCHEN_X1, DOOR_START } from '@config';
-
-// Kallax geometry constants
-const NICHE_W = 33.5;
-const THICK_FRAME = 3.5;
-const THICK_INNER = 1.5;
-
-function kallaxW(cols: number) { return cols * NICHE_W + 2 * THICK_FRAME + (cols - 1) * THICK_INNER; }
+import { NICHE_DEPTH, KITCHEN_Z, KITCHEN_X0, KITCHEN_X1, DOOR_START } from '@config';
 
 const redMatFront = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.FrontSide });
 const redMatBack  = new THREE.MeshStandardMaterial({ color: 0x991100, roughness: 0.9, side: THREE.BackSide });
-const DEPTH = KALLAX_DEPTH; // 39
-
-const w2 = kallaxW(2); // 75.5 — utilisé pour mpCZ (Mackapär)
 
 // Standalone Drona (hors cases Kallax — les Kallax stacks ont leurs propres Drona intégrés)
 function buildMatrices(): THREE.Matrix4[] {
@@ -41,13 +32,7 @@ function buildMatrices(): THREE.Matrix4[] {
 
   const DF = 33;
 
-  // 2 sur Mackapär
-  const mpCX = -NICHE_DEPTH + 3.5 + 77 / 2; // 32
-  const mpCZ = ROOM_D - w2 - 16;             // 308.5
-  addSingle(mpCX - 20, 200 + DF / 2, mpCZ + 0.5, Math.PI / 2);
-  addSingle(mpCX + 20, 200 + DF / 2, mpCZ + 0.5, Math.PI / 2);
-
-  // NE/SE/NW/SW : Drona intégrés dans KallaxNE/SE/NW/Cuisine.tsx
+  // NE/SE/NW/SW/Mackapär : Drona intégrés dans leurs composants respectifs
 
   // 1 sur meuble SDB côté vasque (east cabinet top)
   addSingle(DOOR_START - 28, 60 + DF / 2, KITCHEN_Z + 30);

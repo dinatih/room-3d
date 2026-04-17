@@ -13,10 +13,9 @@ import { BaseballCap }   from './items/BaseballCap';
 import { Fniss }         from './items/Fniss';
 import { LackShelf }     from './items/LackShelf';
 import { LampOla }       from './items/LampOla';
-import { Mackapar }      from './items/Mackapar';
+import { MackaparGroup } from './items/MackaparGroup';
 import { MannequinHead } from './items/MannequinHead';
 import { MuligRail }     from './items/MuligRail';
-import { Salopette }     from './items/Salopette';
 import { Scooter }       from './items/Scooter';
 import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
@@ -48,7 +47,6 @@ const LAMP_ROT_Y = Math.atan2(ROOM_W / 2 - MEUBLE_T_X, ROOM_D / 2 - MEUBLE_T_Z);
 
 const MACK_X  = -NICHE_DEPTH + 3.5 + 38.5;
 const MACK_Z  = ROOM_D - kallaxW2 - 16;
-const RAIL_Y  = 165;
 
 const MIRROR_CX        = (130 + 190) / 2;
 const SUNNERSTA_HEAD_TOP = 90 + 8 + 8 + 8.9 * 1.15;
@@ -213,10 +211,7 @@ export function GlbPlacements() {
       </group>
 
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2}>
-        <Mackapar item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <group position={[MACK_X, RAIL_Y - 120, MACK_Z]} rotation-y={Math.PI / 2}>
-        <Salopette item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Cap 1 — mur B au-dessus du lit */}

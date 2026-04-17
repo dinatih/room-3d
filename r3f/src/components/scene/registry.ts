@@ -34,6 +34,7 @@ import { Smorkull }                                    from './items/Smorkull';
 import { Sunnersta }                                   from './items/Sunnersta';
 import { Scooter }                                     from './items/Scooter';
 import { LampOla }                                     from './items/LampOla';
+import { MackaparGroup }                               from './items/MackaparGroup';
 import { Mackapar }                                    from './items/Mackapar';
 import { Salopette }                                   from './items/Salopette';
 import { BaseballCap }                                 from './items/BaseballCap';
@@ -111,6 +112,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'sunnersta':               Sunnersta,
   'scooter':                 Scooter,
   'lamp-ola':                LampOla,
+  'mackapar-group':          MackaparGroup,
   'mackapar':                Mackapar,
   'salopette':               Salopette,
   'baseball-cap':            BaseballCap,
