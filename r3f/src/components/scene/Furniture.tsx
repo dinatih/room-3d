@@ -16,7 +16,9 @@
 import { useState, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Kallax }         from './items/Kallax';
+import { KallaxNE }      from './items/KallaxNE';
+import { KallaxSE }      from './items/KallaxSE';
+import { KallaxNW }      from './items/KallaxNW';
 import { KallaxCuisine } from './items/KallaxCuisine';
 import { Freezer } from './items/Freezer';
 import { Fridge } from './items/Fridge';
@@ -61,17 +63,13 @@ function stub(id: string): Item {
 
 const TF = 3.5;
 const TI = 1.5;
-const NH = 34;
 const NW_K = 33.5;
 const DEP = 39;
 
 function tw(cols: number) { return cols * NW_K + 2 * TF + (cols - 1) * TI; }
-function th(rows: number) { return rows * NH + 2 * TF + (rows - 1) * TI; }
 
 const w1 = tw(1); // 40.5  (1 colonne)
 const w2 = tw(2); // 75.5  (2 colonnes)
-const h1 = th(1); // 41    (1 rangée)
-const h2 = th(2); // 76.5  (2 rangées)
 
 // ── Constantes scène ──────────────────────────────────────────────────────────
 // Reprises de config.js (via @config) ou calculées depuis les modules JS source.
@@ -89,19 +87,12 @@ const WALL_H      = 250;
 
 // ── Stack NE — mur B (X=300) + mur C (Z=0) ───────────────────────────────────
 // gStack.rotation.y = +π/2 ; gStack.position = (ROOM_W-DEP/2, 0, w2/2)
-// 2×1 (sol) + 2×2 (dessus)
+// Kallax + Drona intégrés dans KallaxNE
 
-function KallaxNE() {
+function KallaxNEPlaced() {
   return (
     <group position={[ROOM_W - DEP / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]}>
-      {/* 2×1 base — PY = h1 */}
-      <group position={[0, h1, 0]}>
-        <Kallax item={stub('kallax-ne-2x1')} actionState={AS} onSize={noop} />
-      </group>
-      {/* 2×2 dessus — PY = h1 + h2 */}
-      <group position={[0, h1 + h2, 0]}>
-        <Kallax item={stub('kallax-ne-2x2')} actionState={AS} onSize={noop} />
-      </group>
+      <KallaxNE item={stub('kallax-ne-stack')} actionState={AS} onSize={noop} />
     </group>
   );
 }
@@ -119,57 +110,24 @@ function KallaxSW() {
 
 // ── Stack SE — mur B, 60cm avant mur D ───────────────────────────────────────
 // gStack.rotation.y = +π/2 ; gStack.position = (ROOM_W-DEP/2, 0, ROOM_D-60-w1/2)
-// 2 × Kallax 2×1 posés sur le côté (rotation.z = π/2)
-//
-// Pour un Kallax 2×1 pivoté (W=w2, H=h1) avec décalage interne [0,-H/2,0] :
-//   Après rotation.z=π/2, le décalage interne devient [+H/2, 0] dans le repère parent.
-//   La géométrie occupe X∈[px, px+H], Y∈[py-W/2, py+W/2].
-//   Pour correspondre au JS (X centré, Y depuis ySE jusqu'à ySE+W) :
-//     px = -h1/2 = -20.5
-//     py = ySE + w2/2  (ySE = 0 pour k1, ySE = w2 pour k2)
+// Kallax + Drona intégrés dans KallaxSE
 
-function KallaxSE() {
-  const px = -h1 / 2; // -20.5
+function KallaxSEPlaced() {
   return (
-    <group
-      position={[ROOM_W - DEP / 2, 0, ROOM_D - 60 - w1 / 2]}
-      rotation={[0, Math.PI / 2, 0]}
-    >
-      {/* k1 — base */}
-      <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={stub('kallax-se-2x1')} actionState={AS} onSize={noop} />
-      </group>
-      {/* k2 — dessus */}
-      <group position={[px, w2 / 2 + w2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={stub('kallax-se-2x1')} actionState={AS} onSize={noop} />
-      </group>
+    <group position={[ROOM_W - DEP / 2, 0, ROOM_D - 60 - w1 / 2]} rotation={[0, Math.PI / 2, 0]}>
+      <KallaxSE item={stub('kallax-se-stack')} actionState={AS} onSize={noop} />
     </group>
   );
 }
 
 // ── Stack NW — mur A (X=0) + mur C (Z=0) ────────────────────────────────────
 // gStack.rotation.y = -π/2 ; gStack.position = (DEP/2, 0, w1/2)
-// 2×1 + 1×1 + 1×1, tous pivotés rotation.z=π/2
-//   nwB(2×1) : ySE=0,        W=w2=75.5 → py = w2/2
-//   nwM(1×1) : ySE=w2,       W=w1=40.5 → py = w2 + w1/2
-//   nwT(1×1) : ySE=w2+w1,    W=w1=40.5 → py = w2 + w1 + w1/2
+// Kallax + Drona intégrés dans KallaxNW
 
-function KallaxNW() {
-  const px = -h1 / 2; // -20.5
+function KallaxNWPlaced() {
   return (
     <group position={[DEP / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]}>
-      {/* nwB 2×1 */}
-      <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={stub('kallax-nw-2x1')} actionState={AS} onSize={noop} />
-      </group>
-      {/* nwM 1×1 */}
-      <group position={[px, w2 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={stub('kallax-nw-1x1-a')} actionState={AS} onSize={noop} />
-      </group>
-      {/* nwT 1×1 */}
-      <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={stub('kallax-nw-1x1-b')} actionState={AS} onSize={noop} />
-      </group>
+      <KallaxNW item={stub('kallax-nw-stack')} actionState={AS} onSize={noop} />
     </group>
   );
 }
@@ -330,10 +288,10 @@ export function Furniture() {
 
   return (
     <>
-      <KallaxNE />
+      <KallaxNEPlaced />
       <KallaxSW />
-      <KallaxSE />
-      <KallaxNW />
+      <KallaxSEPlaced />
+      <KallaxNWPlaced />
       <FreezerPlaced as={as} />
       <KitchenCabinetPlaced as={as} />
       <CorridorClosetPlaced as={as} />

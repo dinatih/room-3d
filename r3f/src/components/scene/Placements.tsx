@@ -15,11 +15,9 @@ import { LackShelf }     from './items/LackShelf';
 import { LampOla }       from './items/LampOla';
 import { Mackapar }      from './items/Mackapar';
 import { MannequinHead } from './items/MannequinHead';
-import { MeubleT }       from './items/MeubleT';
 import { MuligRail }     from './items/MuligRail';
 import { Salopette }     from './items/Salopette';
 import { Scooter }       from './items/Scooter';
-import { ShoeHatRack }   from './items/ShoeHatRack';
 import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
 import { Sunnersta }     from './items/Sunnersta';
@@ -27,7 +25,7 @@ import { Dimpa }          from './items/Dimpa';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../utils/sceneItem';
 
 // @ts-ignore
-import { ROOM_W, ROOM_D, NICHE_Z_START, NICHE_DEPTH, KALLAX_DEPTH } from '@config';
+import { ROOM_W, ROOM_D, NICHE_Z_START, NICHE_DEPTH } from '@config';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
 
@@ -59,16 +57,6 @@ const SUNNERSTA_HEAD_TOP = 90 + 8 + 8 + 8.9 * 1.15;
 // FURNITURE PLACEMENTS  (layers.furniture)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function MeubleTPlaced() {
-  const D  = 27.5;
-  const wx = ROOM_W - D / 2;
-  return (
-    <group position={[wx, KALLAX_SE_TOP, KALLAX_SE_Z]} rotation={[0, -Math.PI / 2, 0]}>
-      <MeubleT item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-    </group>
-  );
-}
-
 function AirPerformerPlaced() {
   return (
     <group position={[287.5, 0, 230]}>
@@ -90,16 +78,6 @@ export function FurniturePlacements() {
   const MUL_RAIL_Y  = 60;
   const mulCZ       = NICHE_Z_START - 110 - 80 / 2;
 
-  const k14Top    = kallaxW2 + kallaxW1 * 2;
-  const k14CX     = KALLAX_DEPTH / 2;
-  const k14CZ     = kallaxW1 / 2;
-  const nwMannRot = Math.atan2(150 - k14CX, 200 - k14CZ) + Math.PI / 2;
-  const nwMannWorld: [number, number, number] = [
-    KALLAX_DEPTH / 2 - k14CZ,
-    k14Top,
-    kallaxW1 / 2 + k14CX,
-  ];
-
   return (
     <>
       <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]}>
@@ -120,19 +98,11 @@ export function FurniturePlacements() {
       <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={nwMannWorld} rotation={[0, nwMannRot, 0]}>
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
       <group position={[282, 90, 271.5]}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      <MeubleTPlaced />
       <AirPerformerPlaced />
-
-      <group position={[300, 0, 340]} rotation={[0, -Math.PI / 2, 0]}>
-        <ShoeHatRack item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
 
       {/* DIMPA — 5 sacs séjour, contre mur C (z=0), rangée 3+2 */}
       {[75, 141, 207].map(x => (

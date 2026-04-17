@@ -49,7 +49,9 @@ import { LackShelf }                                      from './items/LackShel
 import { Fniss }                                          from './items/Fniss';
 import { MannequinHead }                                  from './items/MannequinHead';
 import { SdbCloset }                                      from './items/SdbCloset';
-import { KallaxStack }                                     from './items/KallaxStack';
+import { KallaxNE }                                        from './items/KallaxNE';
+import { KallaxSE }                                        from './items/KallaxSE';
+import { KallaxNW }                                        from './items/KallaxNW';
 import { Backpack }                                        from './items/Backpack';
 import { Mug }                                            from './items/Mug';
 import { NissedalMirror }                                 from './items/NissedalMirror';
@@ -74,10 +76,10 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'door-living':             DoorLiving,
   'door-sdb':                DoorSdb,
   'door-glass':              GlassDoor,
-  'kallax-ne-stack':         KallaxStack,
+  'kallax-ne-stack':         KallaxNE,
   'kallax-sw-stack':         KallaxCuisine,
-  'kallax-se-stack':         KallaxStack,
-  'kallax-nw-stack':         KallaxStack,
+  'kallax-se-stack':         KallaxSE,
+  'kallax-nw-stack':         KallaxNW,
   'kallax-ne-2x1':           Kallax,
   'kallax-ne-2x2':           Kallax,
   'kallax-se-2x1':           Kallax,
