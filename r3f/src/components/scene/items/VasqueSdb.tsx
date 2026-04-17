@@ -127,7 +127,7 @@ export function VasqueSdb({ onSize }: SceneItemProps) {
       </mesh>
 
       {/* ── Robinet ── */}
-      <mesh position={[0, counterTopY + 10, -VANITY_D / 2 + 8]} rotation={[Math.PI / 2, 0, 0]} material={faucetMat}>
+      <mesh position={[0, counterTopY + 10, -VANITY_D / 2 + 8]} material={faucetMat}>
         <cylinderGeometry args={[2, 2, 20, 8]} />
       </mesh>
       <mesh position={[0, counterTopY + 20, -VANITY_D / 2 + 14]} material={faucetMat}>

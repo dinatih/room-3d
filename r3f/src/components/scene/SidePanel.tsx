@@ -246,6 +246,8 @@ export interface LayerState {
   plan:         boolean;
   grid:         boolean;
   dronaLabels:  boolean;
+  skeleton:     boolean;
+  redWalls:     boolean;
 }
 
 export interface SidePanelProps {
@@ -308,6 +310,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('purple', 'Miroirs HD',  'mirrorsHD')}
           {layerBtn('teal',   'Grille',      'grid')}
           {layerBtn('red',    'N° Drona',   'dronaLabels')}
+          {layerBtn('white',  'Squelette',  'skeleton')}
           <button
             style={{ ...btn(COLORS['gold']), opacity: layers.plan ? 1 : 0.45 }}
             onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
@@ -348,6 +351,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
               () => onToggleFurniture('bedSofa'))}
           {b0('light', 'Lit changer position',
               () => onToggleFurniture('bedPosition'))}
+          {layerBtn('red', 'Murs rouges', 'redWalls')}
           {b0('yellow', `Lampe OLA : ${furniture.lampOn ? 'ON' : 'OFF'}`,
               () => onToggleFurniture('lampOn'))}
         </Group>

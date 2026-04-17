@@ -65,10 +65,10 @@ export function SinkBoholmen({ onSize }: SceneItemProps) {
 
       {/* ── Robinet ── */}
       {/* Colonne verticale */}
-      <mesh position={[0, 10, SINK_D / 2 - 3]} rotation={[Math.PI / 2, 0, 0]} material={faucetMat}>
+      <mesh position={[0, 10, SINK_D / 2 - 3]} material={faucetMat}>
         <cylinderGeometry args={[1, 1, 20, 8]} />
       </mesh>
-      {/* Bec horizontal */}
+      {/* Bec horizontal (rotation.x=π/2 → cylindre couché selon Z) */}
       <mesh position={[0, 19, SINK_D / 2 - 9]} rotation={[Math.PI / 2, 0, 0]} material={faucetMat}>
         <cylinderGeometry args={[0.8, 0.8, 12, 8]} />
       </mesh>

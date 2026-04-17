@@ -14,6 +14,7 @@ import { Sunnersta } from './items/Sunnersta';
 import { Mackapar }  from './items/Mackapar';
 import { Salopette } from './items/Salopette';
 import { BaseballCap } from './items/BaseballCap';
+import { PizzaOven }  from './items/PizzaOven';
 
 // @ts-ignore
 import { ROOM_W, ROOM_D, NICHE_DEPTH } from '@config';
@@ -22,7 +23,17 @@ const NOOP_SIZE  = () => {};
 const NOOP_ITEM  = {} as any;
 const NOOP_STATE = {};
 
-const kallaxW2      = 75.5;
+// Kallax constants (mirrored from Furniture.tsx)
+const KALLAX_DEP = 39;
+const KALLAX_TI  = 1.5;
+const kallaxH2   = 76.5;  // th(2)
+const kallaxW2   = 75.5;  // tw(2)
+
+// Pizza oven — Kallax SW spec shelf top
+// shelfTopY = h2 + h2/2 + TI/2 (top surface of the mid-shelf inside the spec 2×2)
+const PIZZA_X = -NICHE_DEPTH + KALLAX_DEP / 2;       // 9.5
+const PIZZA_Z = ROOM_D - kallaxW2 / 2;               // 362.25
+const PIZZA_Y = kallaxH2 + kallaxH2 / 2 + KALLAX_TI / 2; // 115.5
 const KALLAX_SE_Z   = ROOM_D - 60 - 40.5 / 2;  // 319.75
 const KALLAX_SE_TOP = 2 * kallaxW2;             // 151
 const MEUBLE_T_D   = 27.5;
@@ -134,6 +145,17 @@ function BaseballCapsPlaced() {
   );
 }
 
+// ── Four à pizza — Kallax SW spec, étagère supérieure ────────────────────────
+// Fidèle à js/decor/decor.js : position monde (k25CX, shelfTopY, k25CZ)
+
+function PizzaOvenPlaced() {
+  return (
+    <group position={[PIZZA_X, PIZZA_Y, PIZZA_Z]}>
+      <PizzaOven item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+    </group>
+  );
+}
+
 // ── Sneakers (2 paires devant mur D) ─────────────────────────────────────────
 
 const MIRROR_CX = (130 + 190) / 2; // KITCHEN_X1=130, DOOR_START=190
@@ -210,6 +232,7 @@ export function GlbItems() {
       <MackaparGroupPlaced />
       <BaseballCapsPlaced />
       <SneakersPlaced />
+      <PizzaOvenPlaced />
     </>
   );
 }

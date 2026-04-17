@@ -6,8 +6,8 @@
  * - Animation de marche custom (clip quaternion sur les bones)
  * - Cycling de couleur des cheveux pendant la marche
  */
-import { useRef, useLayoutEffect, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useRef, useLayoutEffect, useMemo, useEffect } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
@@ -75,7 +75,7 @@ const HAIR_COLORS  = [HAIR_COLOR_0, HAIR_COLOR_1, HAIR_COLOR_2, HAIR_COLOR_0];
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
-export function Walker() {
+export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
   const { scene } = useGLTF('media/lara_croft__2026_rigged.glb');
   const groupRef  = useRef<THREE.Group>(null!);
   const mixerRef  = useRef<THREE.AnimationMixer | null>(null);
@@ -84,6 +84,14 @@ export function Walker() {
   const activeRef    = useRef(false);
   const hairTRef     = useRef(0);
   const fadeFrames   = useRef(0);
+  const skelHelper   = useMemo(() => new THREE.SkeletonHelper(scene), [scene]);
+  const { scene: threeScene } = useThree();
+
+  useEffect(() => {
+    if (showSkeleton) threeScene.add(skelHelper);
+    else              threeScene.remove(skelHelper);
+    return () => { threeScene.remove(skelHelper); };
+  }, [showSkeleton, skelHelper, threeScene]);
 
   useLayoutEffect(() => {
     // Hair : clone material partagé pour cycling
@@ -192,7 +200,7 @@ const RED_MAT_NAMES  = new Set(['5_Shirt_1.0_0_0', '5_BackPack_1.0_0_0', '5_Shor
 const RED_NODE_NAMES = new Set(['Object_116']);
 const RED_COLOR      = new THREE.Color(0xcc1111);
 
-export function WalkerRed() {
+export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) {
   const { scene: origScene } = useGLTF('media/lara_croft__2026_rigged.glb');
   const clone = useMemo(() => SkeletonUtils.clone(origScene), [origScene]);
 
@@ -201,6 +209,14 @@ export function WalkerRed() {
   const actionRef   = useRef<THREE.AnimationAction | null>(null);
   const activeRef   = useRef(false);
   const fadeFrames  = useRef(0);
+  const skelHelper  = useMemo(() => new THREE.SkeletonHelper(clone), [clone]);
+  const { scene: threeScene } = useThree();
+
+  useEffect(() => {
+    if (showSkeleton) threeScene.add(skelHelper);
+    else              threeScene.remove(skelHelper);
+    return () => { threeScene.remove(skelHelper); };
+  }, [showSkeleton, skelHelper, threeScene]);
 
   useLayoutEffect(() => {
     // Walker (sibling précédent) a déjà mis à l'échelle origScene — on copie

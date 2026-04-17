@@ -24,7 +24,8 @@ import { Walker, WalkerRed } from './Walker';
 import { Backpacks }  from './Backpacks';
 import { Garden, GardenGlb } from './Garden';
 import { DronaBoxes, DronaLabels }  from './DronaBoxes';
-import { XRayLayer }   from './XRayLayer';
+import { XRayLayer }    from './XRayLayer';
+import { RedWallLayer } from './RedWallLayer';
 import { GridLayer }   from './Grid';
 import { HoverRaycaster, HoverOverlay } from './HoverMenu';
 import { DevToolsCollector }            from './DevToolsCollector';
@@ -61,7 +62,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
-    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false,
+    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false, skeleton: false, redWalls: false,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -153,6 +154,7 @@ export function Studio() {
         <HoverRaycaster />
         <DevToolsCollector />
         {layers.xray && <XRayLayer />}
+        {layers.redWalls && <RedWallLayer />}
         {layers.grid && <GridLayer />}
         {layers.dronaLabels && <DronaLabels />}
         {layers.plan && <FloorPlan />}
@@ -169,8 +171,8 @@ export function Studio() {
           <group visible={layers.furniture}>
             <Mirrors />
           </group>
-          <Walker />
-          <WalkerRed />
+          <Walker showSkeleton={layers.skeleton} />
+          <WalkerRed showSkeleton={layers.skeleton} />
 
           {/* Layer 1 : tout le reste — exclu des reflets, visible à la caméra principale */}
           <LayerGroup layer={1}>
