@@ -21,7 +21,6 @@ const GLB_PATHS = [
   'media/xiaomi_electric_scooter_4.glb',
 
   'media/sneaker.glb',
-  'media/mechanic_jumpsuit.glb',
   'media/salopette-noir.glb',
   'media/pizza_oven.glb',
   'media/realistic_human_cloths.glb',
