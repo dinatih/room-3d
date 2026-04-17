@@ -9,7 +9,6 @@
  *   SW : k1(2×2 fillAll)
  */
 import { useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useDronaGeo } from './items/Drona';
 
@@ -173,6 +172,47 @@ function buildMatrices(): THREE.Matrix4[] {
   addSingle(24.5, 50 + DF / 2, 269.5, Math.PI);
 
   return mats;
+}
+
+// ── Label canvas (sprite circulaire blanc + numéro rouge) ─────────────────────
+
+function makeDronaLabel(n: number): THREE.Sprite {
+  const S = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = S; canvas.height = S;
+  const ctx = canvas.getContext('2d')!;
+  ctx.beginPath();
+  ctx.arc(S / 2, S / 2, S / 2 - 3, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(136,0,0,0.6)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.fillStyle = '#880000';
+  ctx.font = `bold ${n > 9 ? 54 : 66}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(n), S / 2, S / 2 + 3);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: new THREE.CanvasTexture(canvas), depthTest: false,
+  }));
+  sp.renderOrder = 10;
+  sp.scale.set(13, 13, 1);
+  return sp;
+}
+
+export function DronaLabels() {
+  const matrices = useMemo(() => buildMatrices(), []);
+  const group = useMemo(() => {
+    const g = new THREE.Group();
+    matrices.forEach((m, i) => {
+      const sp = makeDronaLabel(i + 1);
+      sp.position.setFromMatrixPosition(m);
+      g.add(sp);
+    });
+    return g;
+  }, [matrices]);
+  return <primitive object={group} />;
 }
 
 // ── Composant ─────────────────────────────────────────────────────────────────
