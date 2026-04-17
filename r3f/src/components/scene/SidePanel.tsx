@@ -232,6 +232,7 @@ export interface FurnitureState {
   bedStacked:   boolean;
   bedSofa:      boolean;
   bedPosition:  boolean;
+  smorkullPos:  boolean;
   lampOn:       boolean;
 }
 
@@ -351,6 +352,8 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
               () => onToggleFurniture('bedSofa'))}
           {b0('light', 'Lit changer position',
               () => onToggleFurniture('bedPosition'))}
+          {b0('light', 'Smörkull changer position',
+              () => onToggleFurniture('smorkullPos'))}
           {layerBtn('red', 'Murs rouges', 'redWalls')}
           {b0('yellow', `Lampe OLA : ${furniture.lampOn ? 'ON' : 'OFF'}`,
               () => onToggleFurniture('lampOn'))}

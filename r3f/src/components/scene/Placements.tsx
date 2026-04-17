@@ -148,6 +148,40 @@ export function FurniturePlacements() {
 // GLB PLACEMENTS  (layers.glb)
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// pos 0 : devant bureau 2, face mur B (fenêtre)
+// pos 1 : espace détente, face mur C (nord)
+// pos 2 : séjour milieu
+const SMORKULL_POSITIONS = [
+  { x: 30,  z: 151, ry: Math.PI / 2 },
+  { x: 150, z: 100, ry: Math.PI     },
+  { x: 150, z: 300, ry: Math.PI     },
+];
+
+function SmorkullPlaced() {
+  const [posIdx, setPosIdx] = useState(0);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { key } = (e as CustomEvent).detail as { key: string };
+      if (key === 'smorkull-position' || key === 'smorkullPos')
+        setPosIdx(i => (i + 1) % SMORKULL_POSITIONS.length);
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, []);
+
+  const p = SMORKULL_POSITIONS[posIdx];
+  return (
+    <group
+      position={[p.x, 0, p.z]}
+      rotation-y={p.ry}
+      userData={{ hoverAction: { label: 'Smörkull', actionId: 'smorkull-position' } }}
+    >
+      <Smorkull item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+    </group>
+  );
+}
+
 function LampOlaPlaced() {
   const [lampOn, setLampOn] = useState(false);
 
@@ -195,9 +229,7 @@ export function GlbPlacements() {
         <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      <group position={[30, 0, 151]} rotation-y={Math.PI / 2}>
-        <Smorkull item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
+      <SmorkullPlaced />
 
       <LampOlaPlaced />
 

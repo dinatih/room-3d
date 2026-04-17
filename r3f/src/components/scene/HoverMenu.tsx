@@ -35,6 +35,7 @@ const ACTIONS: Record<string, ActionDef> = {
   'desk1-position':{ btnLabel: 'Changer position',   toggleKey: 'desk1-position'},
   'desk2-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk2-toggle'  },
   'desk2-position':{ btnLabel: 'Changer position',   toggleKey: 'desk2-position'},
+  'smorkull-position': { btnLabel: 'Changer position', toggleKey: 'smorkull-position' },
 };
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
