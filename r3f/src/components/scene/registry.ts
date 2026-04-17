@@ -52,8 +52,14 @@ import { Backpack }                                        from './items/Backpac
 import { Mug }                                            from './items/Mug';
 import { NissedalMirror }                                 from './items/NissedalMirror';
 import { MuligRail }                                      from './items/MuligRail';
+import { Counter }                                        from './items/Counter';
+import { SinkBoholmen }                                   from './items/SinkBoholmen';
+import { Stove }                                          from './items/Stove';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'counter':                 Counter,
+  'sink-boholmen':           SinkBoholmen,
+  'stove':                   Stove,
   'freezer':                 Freezer,
   'fridge':                  Fridge,
   'cabinet-wood':            KitchenCabinet,
