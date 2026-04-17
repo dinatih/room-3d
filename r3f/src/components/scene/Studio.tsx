@@ -17,9 +17,8 @@ import { Neighbors } from './structure/Neighbors';
 import { Kitchen }   from './structure/Kitchen';
 import { Furniture }   from './Furniture';
 import { Furnishings } from './Furnishings';
-import { Decor }       from './Decor';
+import { FurniturePlacements, GlbPlacements } from './Placements';
 import { Mirrors }     from './Mirrors';
-import { GlbItems }   from './GlbItems';
 import { Walker, WalkerRed } from './Walker';
 import { Backpacks }  from './Backpacks';
 import { Garden, GardenGlb } from './Garden';
@@ -182,13 +181,13 @@ export function Studio() {
             <group visible={layers.furniture}>
               <Furniture />
               <Furnishings />
-              <Decor />
+              <FurniturePlacements />
               <Backpacks />
               <DronaBoxes />
               <Garden />
             </group>
             <group visible={layers.glb}>
-              <GlbItems />
+              <GlbPlacements />
               <GardenGlb />
             </group>
             <group visible={layers.neighbors}>

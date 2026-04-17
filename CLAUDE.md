@@ -57,8 +57,9 @@ Studio.tsx          # Canvas R3F : lights, fog, tone mapping, état global UI
 │
 ├── Furniture.tsx       # Meubles procéduraux placés (Kallax, TV, bureaux, lit…)
 ├── Furnishings.tsx     # Meubles avec état (portes, tiroirs, lit empilé/canapé…)
-├── Decor.tsx           # Objets décoratifs procéduraux (LACK, MULIG, Fniss…)
-├── GlbItems.tsx        # Placement monde des objets GLB (scooter, chaise, Sneakers…)
+├── Placements.tsx      # Placement monde de tous les objets décoratifs
+│                       #   FurniturePlacements → layers.furniture (LACK, MULIG, Fniss…)
+│                       #   GlbPlacements       → layers.glb (scooter, chaise, Sneakers…)
 ├── Backpacks.tsx       # Sacs à dos procéduraux
 ├── DronaBoxes.tsx      # Boîtes DRONA + labels
 ├── Garden.tsx          # Mobilier jardin (procédural + GLB)
@@ -118,7 +119,7 @@ Les actions UI passent par des `CustomEvent` `furniture-toggle` :
 document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value } }))
 ```
 
-Les composants concernés (`Furnishings`, `GlbItems`, `Walker`…) écoutent cet événement dans un `useEffect`.
+Les composants concernés (`Furnishings`, `Placements`, `Walker`…) écoutent cet événement dans un `useEffect`.
 
 ### Couches visuelles (layers)
 
