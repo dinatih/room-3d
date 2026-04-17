@@ -3,7 +3,7 @@
  * Les composants items/ gèrent tout le setup GLB (scale, centre, matériaux, shadows).
  * Les fonctions *Placed ici ne font que le positionnement monde via group.
  */
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { removeGlbLines } from '../../utils/glbUtils';
@@ -64,9 +64,25 @@ function SmorkullPlaced() {
 // ── Lampe OLA ─────────────────────────────────────────────────────────────────
 
 function LampOlaPlaced() {
+  const [lampOn, setLampOn] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { key } = (e as CustomEvent).detail as { key: string };
+      if (key === 'lampOn') setLampOn(v => !v);
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, []);
+
   return (
-    <group position={[MEUBLE_T_X, MEUBLE_T_Y + MEUBLE_T_H, MEUBLE_T_Z]} rotation-y={LAMP_ROT_Y}>
+    <group
+      position={[MEUBLE_T_X, MEUBLE_T_Y + MEUBLE_T_H, MEUBLE_T_Z]}
+      rotation-y={LAMP_ROT_Y}
+      userData={{ hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}
+    >
       <LampOla item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      {lampOn && <pointLight color={0xfff5e0} intensity={120000} distance={350} decay={2} position={[0, 96, 0]} />}
     </group>
   );
 }

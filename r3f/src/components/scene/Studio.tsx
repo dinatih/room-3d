@@ -56,6 +56,7 @@ export function Studio() {
     corrDoors: false, sdbCloset: false,
     cbnWest: false, cbnEast: false,
     freezer: false, fridge: false, cabinet: false, wcLid: false,
+    bedStacked: true, bedSofa: false, bedPosition: false, lampOn: false,
   });
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({

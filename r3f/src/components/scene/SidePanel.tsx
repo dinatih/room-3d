@@ -229,6 +229,10 @@ export interface FurnitureState {
   fridge:       boolean;
   cabinet:      boolean;
   wcLid:        boolean;
+  bedStacked:   boolean;
+  bedSofa:      boolean;
+  bedPosition:  boolean;
+  lampOn:       boolean;
 }
 
 export interface LayerState {
@@ -338,6 +342,14 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
               () => onToggleFurniture('cabinet'))}
           {b0('light', `WC abattant : ${furniture.wcLid ? 'OUVERT' : 'FERMÉ'}`,
               () => onToggleFurniture('wcLid'))}
+          {b0('light', `Lit : ${furniture.bedStacked ? 'EMPILÉ' : 'DÉPLIÉ'}`,
+              () => onToggleFurniture('bedStacked'))}
+          {b0('light', `Lit canapé : ${furniture.bedSofa ? 'ON' : 'OFF'}`,
+              () => onToggleFurniture('bedSofa'))}
+          {b0('light', 'Lit changer position',
+              () => onToggleFurniture('bedPosition'))}
+          {b0('yellow', `Lampe OLA : ${furniture.lampOn ? 'ON' : 'OFF'}`,
+              () => onToggleFurniture('lampOn'))}
         </Group>
 
         {/* ── Inventaire ── */}

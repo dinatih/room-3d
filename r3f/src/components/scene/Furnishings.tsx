@@ -124,9 +124,9 @@ function Bed() {
   useEffect(() => {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
-      if (key === 'bed-toggle')   setStacked(v => !v);
-      if (key === 'bed-sofa')     setSofa(v => !v);
-      if (key === 'bed-position') { setSofa(false); setBedPosIdx(i => (i + 1) % 3); }
+      if (key === 'bed-toggle' || key === 'bedStacked')  setStacked(v => !v);
+      if (key === 'bed-sofa'   || key === 'bedSofa')    setSofa(v => !v);
+      if (key === 'bed-position' || key === 'bedPosition') { setSofa(false); setBedPosIdx(i => (i + 1) % 3); }
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
