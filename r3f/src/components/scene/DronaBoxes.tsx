@@ -12,7 +12,6 @@ import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useDronaGeo } from './items/Drona';
 
-// @ts-ignore
 import { NICHE_DEPTH, KITCHEN_Z, DOOR_START } from '@config';
 
 const redMatFront = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.FrontSide });

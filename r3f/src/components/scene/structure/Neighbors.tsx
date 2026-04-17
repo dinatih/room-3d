@@ -5,7 +5,6 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 
-// @ts-ignore
 import {
   ROOM_W, ROOM_D, WALL_H,
   NICHE_DEPTH,

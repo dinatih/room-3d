@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import type { SceneItemProps } from '../../../types';
 
 const W  = 60;    // largeur
-const D  = 27;    // profondeur
+const D  = 26;    // profondeur
 const H  = 154;   // hauteur totale
 const TR = 0.8;   // rayon tube
 

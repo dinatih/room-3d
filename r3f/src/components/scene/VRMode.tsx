@@ -12,7 +12,6 @@ import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import * as THREE from 'three';
 import { cameraState } from './cameraState';
 
-// @ts-ignore
 import { ROOM_W, ROOM_D } from '@config';
 
 const WALK_SPEED = 2;

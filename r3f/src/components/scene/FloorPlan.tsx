@@ -4,7 +4,6 @@
  */
 import { useMemo } from 'react';
 
-// @ts-ignore
 import { buildFloorPlan } from '@data/floorplan';
 
 export function FloorPlan() {

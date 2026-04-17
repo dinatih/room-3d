@@ -7,7 +7,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { cameraState } from './cameraState';
 
-// @ts-ignore
 import {
   ROOM_W, ROOM_D, DOOR_START, DOOR_END,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, KITCHEN_DEPTH,

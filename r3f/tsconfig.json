@@ -15,9 +15,9 @@
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
-      "@config": ["../js/config.js"],
-      "@data/*": ["../js/ui/*"]
+      "@config": ["./src/config.ts"],
+      "@data/*": ["./src/data/*"]
     }
   },
-  "include": ["src", "../js/config.js"]
+  "include": ["src"]
 }

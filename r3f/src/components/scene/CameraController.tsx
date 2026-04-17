@@ -23,7 +23,6 @@ import { OrbitControls, OrthographicCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
-// @ts-ignore
 import { ROOM_W, ROOM_D, WALL_H } from '@config';
 import { cameraState } from './cameraState';
 

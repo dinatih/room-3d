@@ -12,7 +12,6 @@ import { useMemo, useRef, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-// @ts-ignore
 import {
   ROOM_W, ROOM_D, WALL_H,
   NICHE_DEPTH, NICHE_Z_START,
@@ -326,13 +325,13 @@ export function Walls() {
       {/* Milieu (X=130→180) */}
       <P w={DOOR_START - 10 - KITCHEN_X1} h={WALL_H} d={W}
         x={(KITCHEN_X1 + DOOR_START - 10) / 2}                    y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Montants porte séjour */}
+      {/* Montants porte séjour — droite élargie de 8cm pour le décalage +6 de la porte */}
       <P w={10} h={WALL_H} d={W} x={DOOR_START - 5}               y={WALL_H / 2} z={ROOM_D + W / 2} />
-      <P w={10} h={WALL_H} d={W} x={DOOR_END + 5}                 y={WALL_H / 2} z={ROOM_D + W / 2} />
+      <P w={2}  h={WALL_H} d={W} x={DOOR_END + 9}                  y={WALL_H / 2} z={ROOM_D + W / 2} />
       {/* Linteau */}
-      <P w={DOOR_END - DOOR_START} h={WALL_H - DOOR_H} d={W}
-        x={(DOOR_START + DOOR_END) / 2}
-        y={DOOR_H + (WALL_H - DOOR_H) / 2}                                       z={ROOM_D + W / 2} />
+      <P w={DOOR_END - DOOR_START + 8} h={WALL_H - DOOR_H} d={W}
+        x={(DOOR_START + DOOR_END + 8) / 2}
+        y={DOOR_H + (WALL_H - DOOR_H) / 2}                                        z={ROOM_D + W / 2} />
       {/* Droite (X=280→300) */}
       <P w={ROOM_W - DOOR_END - 10} h={WALL_H} d={W}
         x={(DOOR_END + 10 + ROOM_W) / 2}                          y={WALL_H / 2} z={ROOM_D + W / 2} />
@@ -355,13 +354,14 @@ export function Walls() {
         const C_DOOR_END    = C_DOOR_START + C_DOOR_W;
         const C_DOOR_START_ABS = KITCHEN_Z + C_DOOR_START;
         const C_DOOR_END_ABS   = KITCHEN_Z + C_DOOR_END;
+        const E = 2; // élargissement 2cm de chaque côté → évite le z-fighting avec le dormant
         return (
           <>
-            <P w={W} h={WALL_H} d={C_DOOR_START_ABS - KITCHEN_Z} x={WALL_X} y={WALL_H / 2}
-              z={(KITCHEN_Z + C_DOOR_START_ABS) / 2} />
-            <P w={W} h={WALL_H} d={SDB_Z_END - C_DOOR_END_ABS} x={WALL_X} y={WALL_H / 2}
-              z={(C_DOOR_END_ABS + SDB_Z_END) / 2} />
-            <P w={W} h={WALL_H - DOOR_H} d={C_DOOR_W} x={WALL_X}
+            <P w={W} h={WALL_H} d={C_DOOR_START - E} x={WALL_X} y={WALL_H / 2}
+              z={KITCHEN_Z + (C_DOOR_START - E) / 2} />
+            <P w={W} h={WALL_H} d={SDB_Z_END - C_DOOR_END_ABS - E} x={WALL_X} y={WALL_H / 2}
+              z={(C_DOOR_END_ABS + E + SDB_Z_END) / 2} />
+            <P w={W} h={WALL_H - DOOR_H} d={C_DOOR_W + 2 * E} x={WALL_X}
               y={DOOR_H + (WALL_H - DOOR_H) / 2} z={(C_DOOR_START_ABS + C_DOOR_END_ABS) / 2} />
           </>
         );

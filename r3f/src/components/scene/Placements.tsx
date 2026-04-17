@@ -23,7 +23,6 @@ import { SunnerstaGroup } from './items/SunnerstaGroup';
 import { Dimpa }          from './items/Dimpa';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../utils/sceneItem';
 
-// @ts-ignore
 import { ROOM_W, ROOM_D, NICHE_Z_START, NICHE_DEPTH } from '@config';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────

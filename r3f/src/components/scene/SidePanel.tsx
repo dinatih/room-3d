@@ -11,7 +11,6 @@
 import { useState, useCallback } from 'react';
 import { DevToolsGroups } from './DevToolsOverlay';
 
-// @ts-ignore
 import {
   ROOM_W, ROOM_D, WALL_H,
   DOOR_START, NICHE_DEPTH, KITCHEN_Z,

@@ -11,7 +11,7 @@ import { Minimap }          from './Minimap';
 import { SidePanel, type FurnitureState, type LayerState } from './SidePanel';
 import { Walls }     from './structure/Walls';
 import { Floor }     from './structure/Floor';
-import { Doors }     from './structure/Doors';
+import { DoorsPlaced } from './structure/DoorsPlaced';
 import { Neighbors } from './structure/Neighbors';
 
 import { Furniture }   from './Furniture';
@@ -32,7 +32,6 @@ import { VRMode }                       from './VRMode';
 import { ImmersiveMode }               from './ImmersiveMode';
 import { FloorPlan }                    from './FloorPlan';
 
-// @ts-ignore — JS file with no type declarations
 import { ROOM_W, ROOM_D } from '@config';
 
 /**
@@ -166,7 +165,7 @@ export function Studio() {
           <group visible={layers.structure}>
             <Walls />
             <Floor />
-            <Doors />
+            <DoorsPlaced />
           </group>
           <group visible={layers.furniture}>
             <Mirrors />

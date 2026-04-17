@@ -17,7 +17,6 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 import { cameraState } from './cameraState';
 import { NissedalFrame } from './items/NissedalMirror';
 
-// @ts-ignore
 import { ROOM_D, WALL_H, KITCHEN_X1, DOOR_START, KITCHEN_Z } from '@config';
 
 const kallaxW1 = 40.5; // kallaxW(1)

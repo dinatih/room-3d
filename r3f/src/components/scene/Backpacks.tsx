@@ -7,7 +7,6 @@ import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 import { Grejig } from './items/Grejig';
 
-// @ts-ignore
 import { KITCHEN_X1, DOOR_START, ROOM_D } from '@config';
 
 // ── Matériaux ─────────────────────────────────────────────────────────────────

@@ -9,7 +9,6 @@ import { UtakerFrame }    from './items/UtakerFrame';
 import { BollsidanDesk }  from './items/BollsidanDesk';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../utils/sceneItem';
 
-// @ts-ignore
 import { ROOM_W, WALL_H, KALLAX_DEPTH } from '@config';
 
 // ── Constantes partagées ──────────────────────────────────────────────────────

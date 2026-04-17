@@ -13,7 +13,6 @@ import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { cameraState } from './cameraState';
 
-// @ts-ignore
 import { ROOM_W, ROOM_D } from '@config';
 
 // ── Animation de marche (port de buildWalkClip dans lara2026.js) ───────────────

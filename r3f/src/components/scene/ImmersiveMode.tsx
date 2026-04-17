@@ -12,7 +12,6 @@ import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { cameraState } from './cameraState';
 
-// @ts-ignore
 import { ROOM_W, ROOM_D } from '@config';
 
 const WALK_H     = 180;
