@@ -30,6 +30,7 @@ import { HoverRaycaster, HoverOverlay } from './HoverMenu';
 import { DevToolsCollector }            from './DevToolsCollector';
 import { Inventory }                    from './Inventory';
 import { VRMode }                       from './VRMode';
+import { ImmersiveMode }               from './ImmersiveMode';
 import { FloorPlan }                    from './FloorPlan';
 
 // @ts-ignore — JS file with no type declarations
@@ -150,6 +151,7 @@ export function Studio() {
 
         <CameraController />
         <VRMode />
+        <ImmersiveMode />
         <HoverRaycaster />
         <DevToolsCollector />
         {layers.xray && <XRayLayer />}

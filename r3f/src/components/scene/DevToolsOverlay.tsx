@@ -163,7 +163,7 @@ export function DevToolsGroups({ Group }: {
         <canvas
           ref={fpsCanvasRef}
           width={FPS_W} height={FPS_H}
-          style={{ display: 'block', margin: '4px 8px', borderRadius: 3 }}
+          style={{ display: 'block', margin: '0 8px 4px', borderRadius: 3 }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 10px 6px', fontSize: 10 }}>
           <span style={{ color: fpsColor, fontWeight: 700 }}>{curFps} FPS</span>

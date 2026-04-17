@@ -82,6 +82,7 @@ const grpStyle: React.CSSProperties = {
   borderRadius: 8,
   overflow: 'hidden',
   border: '1px solid rgba(255,255,255,0.10)',
+  backdropFilter: 'blur(8px)',
 };
 
 const grpHeaderStyle: React.CSSProperties = {
@@ -97,12 +98,10 @@ const grpHeaderStyle: React.CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   userSelect: 'none',
-  backdropFilter: 'blur(8px)',
 };
 
 const grpBodyStyle: React.CSSProperties = {
   background: 'rgba(0,0,0,0.72)',
-  backdropFilter: 'blur(8px)',
 };
 
 function btn(color: string): React.CSSProperties {
