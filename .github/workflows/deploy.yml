@@ -27,23 +27,17 @@ jobs:
         run: npm run build
         working-directory: r3f
 
-      # media/ est servi à la racine (dinatih.org/media/…).
-      # Le build référence 'media/lara.glb' relatif à r3f/dist/index.html,
-      # donc r3f/dist/media/ doit exister.
-      - name: Copy media into r3f/dist
+      - name: Copy media into dist
         run: cp -r media r3f/dist/media
 
-      - name: Prepare deploy directory
+      - name: Add CNAME and nojekyll
         run: |
-          mkdir -p deploy/r3f
-          cp index.html CNAME lego-room.html deploy/
-          cp -r js media deploy/
-          cp -r r3f/dist deploy/r3f/dist
-          touch deploy/.nojekyll
+          cp CNAME r3f/dist/CNAME
+          touch r3f/dist/.nojekyll
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: deploy
+          publish_dir: r3f/dist
           cname: dinatih.org
