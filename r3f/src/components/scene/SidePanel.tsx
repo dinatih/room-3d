@@ -247,6 +247,7 @@ export interface LayerState {
   dronaLabels:  boolean;
   skeleton:     boolean;
   redWalls:     boolean;
+  lidar:        boolean;
 }
 
 export interface SidePanelProps {
@@ -256,11 +257,15 @@ export interface SidePanelProps {
   onToggleLayer:   (key: keyof LayerState) => void;
 }
 
+export type LidarMode = 0 | 1 | 2 | 3;
+
 export interface SidePanelProps2 extends SidePanelProps {
   onOpenInventory: () => void;
+  lidarMode:       LidarMode;
+  onCycleLidar:    () => void;
 }
 
-export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory }: SidePanelProps2) {
+export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar }: SidePanelProps2) {
   const [showViews, setShowViews] = useState(false);
 
   const b0 = (color: string, label: string, onClick: () => void, first = false) => {
@@ -310,6 +315,10 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('teal',   'Grille',      'grid')}
           {layerBtn('red',    'N° Drona',   'dronaLabels')}
           {layerBtn('white',  'Squelette',  'skeleton')}
+          {layerBtn('cyan',   'LiDAR scan', 'lidar')}
+          {layers.lidar && b0('cyan',
+            ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',
+            onCycleLidar)}
           <button
             style={{ ...btn(COLORS['gold']), opacity: layers.plan ? 1 : 0.45 }}
             onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}

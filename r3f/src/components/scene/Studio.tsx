@@ -8,7 +8,7 @@ import { ACESFilmicToneMapping, PCFSoftShadowMap, FogExp2, Color, PMREMGenerator
 import { CameraController } from './CameraController';
 import { cameraState }      from './cameraState';
 import { Minimap }          from './Minimap';
-import { SidePanel, type FurnitureState, type LayerState } from './SidePanel';
+import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from './SidePanel';
 import { Walls }     from './structure/Walls';
 import { Floor }     from './structure/Floor';
 import { DoorsPlaced } from './structure/DoorsPlaced';
@@ -31,6 +31,7 @@ import { Inventory }                    from './Inventory';
 import { VRMode }                       from './VRMode';
 import { ImmersiveMode }               from './ImmersiveMode';
 import { FloorPlan }                    from './FloorPlan';
+import { LidarScan }                   from './LidarScan';
 
 import { ROOM_W, ROOM_D } from '@config';
 
@@ -60,7 +61,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
-    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false, skeleton: false, redWalls: false,
+    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false, skeleton: false, redWalls: false, lidar: false,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -75,6 +76,12 @@ export function Studio() {
       if (key === 'mirrorsHD') cameraState.mirrorsHD = next.mirrorsHD;
       return next;
     });
+    cameraState.invalidate?.();
+  }, []);
+
+  const [lidarMode, setLidarMode] = useState<LidarMode>(0);
+  const onCycleLidar = useCallback(() => {
+    setLidarMode(m => ((m + 1) % 4) as LidarMode);
     cameraState.invalidate?.();
   }, []);
 
@@ -190,6 +197,7 @@ export function Studio() {
             <group visible={layers.neighbors}>
               <Neighbors />
             </group>
+            {layers.lidar && <LidarScan mode={lidarMode} />}
           </LayerGroup>
 
         </group>
@@ -200,6 +208,7 @@ export function Studio() {
         furniture={furniture} onToggleFurniture={onToggleFurniture}
         layers={layers} onToggleLayer={onToggleLayer}
         onOpenInventory={() => setShowInventory(true)}
+        lidarMode={lidarMode} onCycleLidar={onCycleLidar}
       />
       {showInventory && <Inventory onClose={() => setShowInventory(false)} />}
       <Minimap />
