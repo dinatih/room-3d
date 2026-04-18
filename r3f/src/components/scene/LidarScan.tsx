@@ -32,12 +32,12 @@ function heightColor(y: number): THREE.Color {
   return new THREE.Color().setHSL(0.66 - t * 0.66, 1, 0.5);
 }
 
-function makePhotoMaterials(src: THREE.Material | THREE.Material[]): THREE.Material | THREE.Material[] {
+function makePhotoMaterials(src: THREE.Material | THREE.Material[], opacity: number): THREE.Material | THREE.Material[] {
   const apply = (m: THREE.Material) => {
     const c = (m as THREE.MeshStandardMaterial).clone();
-    c.transparent = true;
-    c.opacity     = 0.55;
-    c.depthWrite  = false;
+    c.transparent = opacity < 1;
+    c.opacity     = opacity;
+    c.depthWrite  = opacity >= 1;
     c.side        = THREE.FrontSide;
     return c;
   };
@@ -82,7 +82,7 @@ function buildPointCloud(scene: THREE.Group): THREE.Points {
 }
 
 // ── Composant ────────────────────────────────────────────────────────────────
-export function LidarScan({ mode }: { mode: LidarMode }) {
+export function LidarScan({ mode, opacity }: { mode: LidarMode; opacity: number }) {
   const { scene } = useGLTF(SCAN_PATH);
 
   // Mode 0 : photo ghost
@@ -90,10 +90,10 @@ export function LidarScan({ mode }: { mode: LidarMode }) {
     const c = scene.clone(true);
     c.traverse(obj => {
       if (obj instanceof THREE.Mesh)
-        obj.material = makePhotoMaterials(obj.material);
+        obj.material = makePhotoMaterials(obj.material, opacity);
     });
     return c;
-  }, [scene]);
+  }, [scene, opacity]);
 
   // Mode 1 : wireframe
   const wireClone = useMemo(() => {
@@ -123,7 +123,6 @@ export function LidarScan({ mode }: { mode: LidarMode }) {
       if (!pos) return;
       const colorData = new Float32Array(pos.count * 3);
       for (let i = 0; i < pos.count; i++) {
-        // Y en cm après scale (appliqué dans la primitive)
         const yWorld = pos.getY(i) * 100 + POS_Y;
         const col = heightColor(yWorld);
         colorData[i * 3]     = col.r;
@@ -135,14 +134,14 @@ export function LidarScan({ mode }: { mode: LidarMode }) {
       obj.geometry = g;
       obj.material = new THREE.MeshBasicMaterial({
         vertexColors: true,
-        transparent:  true,
-        opacity:      0.75,
-        depthWrite:   false,
+        transparent:  opacity < 1,
+        opacity,
+        depthWrite:   opacity >= 1,
         side:         THREE.FrontSide,
       });
     });
     return c;
-  }, [scene]);
+  }, [scene, opacity]);
 
   const sharedProps = {
     scale:      100,

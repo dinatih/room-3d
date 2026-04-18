@@ -85,6 +85,12 @@ export function Studio() {
     cameraState.invalidate?.();
   }, []);
 
+  const [lidarOpacity, setLidarOpacity] = useState(0.55);
+  const onToggleLidarOpacity = useCallback(() => {
+    setLidarOpacity(o => o < 1 ? 1 : 0.55);
+    cameraState.invalidate?.();
+  }, []);
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <Canvas
@@ -197,7 +203,7 @@ export function Studio() {
             <group visible={layers.neighbors}>
               <Neighbors />
             </group>
-            {layers.lidar && <LidarScan mode={lidarMode} />}
+            {layers.lidar && <LidarScan mode={lidarMode} opacity={lidarOpacity} />}
           </LayerGroup>
 
         </group>
@@ -209,6 +215,7 @@ export function Studio() {
         layers={layers} onToggleLayer={onToggleLayer}
         onOpenInventory={() => setShowInventory(true)}
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
+        lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
       />
       {showInventory && <Inventory onClose={() => setShowInventory(false)} />}
       <Minimap />

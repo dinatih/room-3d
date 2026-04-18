@@ -260,12 +260,14 @@ export interface SidePanelProps {
 export type LidarMode = 0 | 1 | 2 | 3;
 
 export interface SidePanelProps2 extends SidePanelProps {
-  onOpenInventory: () => void;
-  lidarMode:       LidarMode;
-  onCycleLidar:    () => void;
+  onOpenInventory:  () => void;
+  lidarMode:        LidarMode;
+  onCycleLidar:     () => void;
+  lidarOpacity:     number;
+  onToggleLidarOpacity: () => void;
 }
 
-export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar }: SidePanelProps2) {
+export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity }: SidePanelProps2) {
   const [showViews, setShowViews] = useState(false);
 
   const b0 = (color: string, label: string, onClick: () => void, first = false) => {
@@ -319,6 +321,9 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layers.lidar && b0('cyan',
             ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',
             onCycleLidar)}
+          {layers.lidar && b0('cyan',
+            `Opacité ${Math.round(lidarOpacity * 100)}%`,
+            onToggleLidarOpacity)}
           <button
             style={{ ...btn(COLORS['gold']), opacity: layers.plan ? 1 : 0.45 }}
             onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
