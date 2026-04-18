@@ -45,10 +45,9 @@ function DronaLayer() {
       [-17.5, cy22 - 17.75, 0], [17.5, cy22 - 17.75, 0],
     ];
 
-    // 1 sur le dessus (world rotY=0 → local rotY=−π/2 ; using rotPI for consistency)
-    // x_local = z_world − stack_z = (w2/2 − 18.75 + 0.5) − w2/2 = −18.25
-    // z_local = stack_x − x_world = (ROOM_W−DEP/2) − (ROOM_W−DEP/2−0.5) = 0.5
-    const top = [[-18.25, h1 + h2 + DF / 2 + 0.2, 0.5]];
+    // 1 sur le dessus — z_local=-1.5 pour éviter z-fighting avec mur est
+    // (face arrière Drona à local z=−1.5+19=17.5, world x=298.0, gap 2cm)
+    const top = [[-18.25, h1 + h2 + DF / 2 + 0.2, -1.5]];
 
     return [...k21, ...k22, ...top].map(([x, y, z]) =>
       rotPI.clone().setPosition(x, y, z),

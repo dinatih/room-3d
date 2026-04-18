@@ -12,11 +12,11 @@ import type { SceneItemProps } from '../../../types';
 const TILE_SIZE = 30;
 const Z0 = -290;
 const Z1 = -160;
-const X_RIGHT = 310;
+const X_RIGHT = 210;
 
 function gardenX0(z: number): number {
-  if (z + 5 >= -140) return -10;
-  return Math.ceil((-10 - 110 * (z + 5 + 140) / 70) / 10) * 10;
+  if (z + 5 >= -140) return -110;
+  return Math.ceil((-110 - 110 * (z + 5 + 140) / 70) / 10) * 10;
 }
 
 // ── Tuile unique (inventaire) ─────────────────────────────────────────────────

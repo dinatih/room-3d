@@ -65,6 +65,7 @@ export function HoverRaycaster() {
 
     function scheduleHide() {
       if (hideTimer) return;
+      if (hoverState.touchActive) return;   // menu tactile : ne pas auto-masquer
       hideTimer = setTimeout(() => {
         hoverState.visible = false;
         hoverState.onUpdate?.();
@@ -110,6 +111,7 @@ export function HoverRaycaster() {
     // ── Souris : hover ────────────────────────────────────────────────────────
     const onMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
+      if (hoverState.touchActive) return;   // menu tactile actif — ignorer la souris
       const now = performance.now();
       if (now - lastMove < 32) return;
       lastMove = now;
@@ -144,19 +146,23 @@ export function HoverRaycaster() {
       const found = raycastAt(t.clientX, t.clientY);
       if (found) {
         // Même objet déjà affiché → toggle off
-        const same = hoverState.visible &&
+        const same = hoverState.visible && hoverState.touchActive &&
           hoverState.actionIds.join(',') === found.actionIds.join(',');
         if (same) {
-          hoverState.visible = false;
+          hoverState.visible     = false;
+          hoverState.touchActive = false;
         } else {
-          hoverState.visible   = true;
-          hoverState.label     = found.label;
-          hoverState.actionIds = found.actionIds;
-          hoverState.x         = t.clientX;
-          hoverState.y         = t.clientY;
+          cancelHide();
+          hoverState.visible     = true;
+          hoverState.touchActive = true;
+          hoverState.label       = found.label;
+          hoverState.actionIds   = found.actionIds;
+          hoverState.x           = t.clientX;
+          hoverState.y           = t.clientY;
         }
       } else {
-        hoverState.visible = false;
+        hoverState.visible     = false;
+        hoverState.touchActive = false;
       }
       hoverState.onUpdate?.();
     };
@@ -247,9 +253,14 @@ export function HoverOverlay() {
       {actions.map((action, i) => (
         <button
           key={i}
-          onClick={() => document.dispatchEvent(new CustomEvent('furniture-toggle', {
-            detail: { key: action.toggleKey },
-          }))}
+          onClick={() => {
+            document.dispatchEvent(new CustomEvent('furniture-toggle', {
+              detail: { key: action.toggleKey },
+            }));
+            hoverState.visible     = false;
+            hoverState.touchActive = false;
+            hoverState.onUpdate?.();
+          }}
           style={BTN_STYLE}
         >
           {action.btnLabel}
