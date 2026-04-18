@@ -32,6 +32,8 @@ import { VRMode }                       from './VRMode';
 import { ImmersiveMode }               from './ImmersiveMode';
 import { FloorPlan }                    from './FloorPlan';
 import { LidarScan }                   from './LidarScan';
+import { BuildAnimation }              from './BuildAnimation';
+import { BuildAnimation2 }             from './BuildAnimation2';
 
 import { ROOM_W, ROOM_D } from '@config';
 
@@ -86,6 +88,8 @@ export function Studio() {
   }, []);
 
   const [lidarOpacity, setLidarOpacity] = useState(0.55);
+  const [buildAnim, setBuildAnim] = useState(false);
+  const [buildAnim2, setBuildAnim2] = useState(false);
   const onToggleLidarOpacity = useCallback(() => {
     setLidarOpacity(o => o < 1 ? 1 : 0.55);
     cameraState.invalidate?.();
@@ -161,6 +165,8 @@ export function Studio() {
         <directionalLight color={0xaabbff} position={[-200, 300, -100]} intensity={0.4} />
 
         <CameraController />
+        {buildAnim && <BuildAnimation onFinish={() => setBuildAnim(false)} />}
+        {buildAnim2 && <BuildAnimation2 onFinish={() => setBuildAnim2(false)} />}
         <VRMode />
         <ImmersiveMode />
         <HoverRaycaster />
@@ -219,6 +225,8 @@ export function Studio() {
         onOpenInventory={() => setShowInventory(true)}
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
         lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
+        buildAnim={buildAnim} onStartBuildAnim={() => { setBuildAnim(false); setTimeout(() => setBuildAnim(true), 50); }}
+        buildAnim2={buildAnim2} onStartBuildAnim2={() => { setBuildAnim2(false); setTimeout(() => setBuildAnim2(true), 50); }}
       />
       {showInventory && <Inventory onClose={() => setShowInventory(false)} />}
       <Minimap />

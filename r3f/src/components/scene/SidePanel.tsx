@@ -266,9 +266,13 @@ export interface SidePanelProps2 extends SidePanelProps {
   onCycleLidar:     () => void;
   lidarOpacity:     number;
   onToggleLidarOpacity: () => void;
+  buildAnim:        boolean;
+  onStartBuildAnim: () => void;
+  buildAnim2:       boolean;
+  onStartBuildAnim2:() => void;
 }
 
-export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity }: SidePanelProps2) {
+export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity, buildAnim, onStartBuildAnim, buildAnim2, onStartBuildAnim2 }: SidePanelProps2) {
   const [showViews, setShowViews] = useState(false);
 
   const b0 = (color: string, label: string, onClick: () => void, first = false) => {
@@ -319,6 +323,18 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('red',    'N° Drona',   'dronaLabels')}
           {layerBtn('white',  'Squelette',  'skeleton')}
           {layerBtn('cyan',   'LiDAR scan', 'lidar')}
+          <button
+            style={{ ...btn(buildAnim ? COLORS['cyan'] : COLORS['teal']), opacity: buildAnim ? 1 : 0.75 }}
+            onClick={onStartBuildAnim}
+          >
+            {buildAnim ? '⏳ Construction…' : '▶ Créer l\'appart'}
+          </button>
+          <button
+            style={{ ...btn(buildAnim2 ? COLORS['cyan'] : COLORS['teal']), opacity: buildAnim2 ? 1 : 0.75 }}
+            onClick={onStartBuildAnim2}
+          >
+            {buildAnim2 ? '⏳ Tombée du ciel…' : '▶ Tombée du ciel'}
+          </button>
           {layers.lidar && b0('cyan',
             ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',
             onCycleLidar)}
