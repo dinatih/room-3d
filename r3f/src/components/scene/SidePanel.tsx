@@ -232,6 +232,7 @@ export interface FurnitureState {
   bedPosition:  boolean;
   smorkullPos:  boolean;
   lampOn:       boolean;
+  laptopModel:  boolean;
 }
 
 export interface LayerState {
@@ -369,6 +370,8 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('red', 'Murs rouges', 'redWalls')}
           {b0('yellow', `Lampe OLA : ${furniture.lampOn ? 'ON' : 'OFF'}`,
               () => onToggleFurniture('lampOn'))}
+          {b0('light', `Laptop : ${furniture.laptopModel ? 'CAD' : 'Procédural'}`,
+              () => onToggleFurniture('laptopModel'))}
         </Group>
 
         {/* ── Inventaire ── */}

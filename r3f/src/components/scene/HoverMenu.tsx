@@ -78,24 +78,17 @@ export function HoverRaycaster() {
     }
     hoverState.cancelHide = cancelHide;
 
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType === 'touch') return;
-      const now = performance.now();
-      if (now - lastMove < 32) return;
-      lastMove = now;
-
+    function raycastAt(clientX: number, clientY: number): { label: string; actionIds: string[] } | null {
       const rect = canvas.getBoundingClientRect();
-      pointer.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
-      pointer.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+      pointer.x =  ((clientX - rect.left) / rect.width)  * 2 - 1;
+      pointer.y = -((clientY - rect.top)  / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(pointer, camera);
       raycaster.layers.enableAll();
       const hits = raycaster.intersectObjects(scene.children, true);
 
-let found: { label: string; actionIds: string[] } | null = null;
       for (const hit of hits) {
         if (!hit.object.visible) continue;
-        // Skip transparent surfaces (ghost material, glass, neighbors)
         const mat = (hit.object as THREE.Mesh).material as THREE.Material & {
           transparent?: boolean; opacity?: number;
         };
@@ -108,34 +101,77 @@ let found: { label: string; actionIds: string[] } | null = null;
         if (hit.object.userData.brickType === 'ground')  continue;
 
         const action = resolveAction(hit.object);
-        if (action && action.actionIds.some(id => ACTIONS[id])) {
-          found = action;
-        }
-        // Solid object hit — stop regardless (occludes everything behind it)
+        if (action && action.actionIds.some(id => ACTIONS[id])) return action;
         break;
       }
+      return null;
+    }
 
+    // ── Souris : hover ────────────────────────────────────────────────────────
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return;
+      const now = performance.now();
+      if (now - lastMove < 32) return;
+      lastMove = now;
+
+      const found = raycastAt(e.clientX, e.clientY);
       if (found) {
         cancelHide();
-        hoverState.visible    = true;
-        hoverState.label      = found.label;
-        hoverState.actionIds  = found.actionIds;
-        hoverState.x          = e.clientX;
-        hoverState.y          = e.clientY;
-        canvas.style.cursor = 'pointer';
+        hoverState.visible   = true;
+        hoverState.label     = found.label;
+        hoverState.actionIds = found.actionIds;
+        hoverState.x         = e.clientX;
+        hoverState.y         = e.clientY;
+        canvas.style.cursor  = 'pointer';
       } else {
         scheduleHide();
+        canvas.style.cursor  = '';
       }
       hoverState.onUpdate?.();
     };
 
     const onLeave = () => { scheduleHide(); };
 
-    canvas.addEventListener('pointermove', onMove);
+    // ── Tactile : tap pour afficher / masquer ─────────────────────────────────
+    let touchMoved = false;
+    const onTouchStart = () => { touchMoved = false; };
+    const onTouchMove  = () => { touchMoved = true; };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (touchMoved) return;           // scroll — ignorer
+      const t = e.changedTouches[0];
+      if (!t) return;
+      const found = raycastAt(t.clientX, t.clientY);
+      if (found) {
+        // Même objet déjà affiché → toggle off
+        const same = hoverState.visible &&
+          hoverState.actionIds.join(',') === found.actionIds.join(',');
+        if (same) {
+          hoverState.visible = false;
+        } else {
+          hoverState.visible   = true;
+          hoverState.label     = found.label;
+          hoverState.actionIds = found.actionIds;
+          hoverState.x         = t.clientX;
+          hoverState.y         = t.clientY;
+        }
+      } else {
+        hoverState.visible = false;
+      }
+      hoverState.onUpdate?.();
+    };
+
+    canvas.addEventListener('pointermove',  onMove);
     canvas.addEventListener('pointerleave', onLeave);
+    canvas.addEventListener('touchstart',   onTouchStart, { passive: true });
+    canvas.addEventListener('touchmove',    onTouchMove,  { passive: true });
+    canvas.addEventListener('touchend',     onTouchEnd);
     return () => {
-      canvas.removeEventListener('pointermove', onMove);
+      canvas.removeEventListener('pointermove',  onMove);
       canvas.removeEventListener('pointerleave', onLeave);
+      canvas.removeEventListener('touchstart',   onTouchStart);
+      canvas.removeEventListener('touchmove',    onTouchMove);
+      canvas.removeEventListener('touchend',     onTouchEnd);
       if (hideTimer) clearTimeout(hideTimer);
       hoverState.cancelHide = null;
     };
@@ -194,6 +230,7 @@ export function HoverOverlay() {
       ref={menuRef}
       onMouseEnter={() => { hoverState.cancelHide?.(); hoverState.visible = true; }}
       onMouseLeave={() => { hoverState.visible = false; hoverState.onUpdate?.(); }}
+      onTouchEnd={e => e.stopPropagation()}
       style={{
         position: 'fixed', left, top, zIndex: 300,
         background: 'rgba(10,10,20,0.45)',

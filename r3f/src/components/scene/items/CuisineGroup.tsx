@@ -111,7 +111,12 @@ const TOGGLE_MAP: Record<string, string> = {
   fridge:  'fridge-toggle',
 };
 
-export function CuisineGroup({ onSize }: SceneItemProps) {
+/** Drona layer seul — pour placement dans un layer séparé (furniture). */
+export function CuisineDrona() {
+  return <DronaLayer />;
+}
+
+export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
   const [as, setAs] = useState<Record<string, boolean>>({});
   const { invalidate } = useThree();
@@ -173,7 +178,7 @@ export function CuisineGroup({ onSize }: SceneItemProps) {
       <UpperCabinet />
 
       {/* 3 boîtes Drona sur le meuble haut */}
-      <DronaLayer />
+      {!noDrona && <DronaLayer />}
     </group>
   );
 }

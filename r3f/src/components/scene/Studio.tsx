@@ -14,7 +14,7 @@ import { Floor }     from './structure/Floor';
 import { DoorsPlaced } from './structure/DoorsPlaced';
 import { Neighbors } from './structure/Neighbors';
 
-import { Furniture }   from './Furniture';
+import { Furniture, Equipment } from './Furniture';
 import { Furnishings } from './Furnishings';
 import { FurniturePlacements, GlbPlacements } from './Placements';
 import { Mirrors }     from './Mirrors';
@@ -56,7 +56,7 @@ export function Studio() {
     corrDoors: false, sdbCloset: false,
     cbnWest: false, cbnEast: false,
     freezer: false, fridge: false, cabinet: false, wcLid: false,
-    bedStacked: true, bedSofa: false, bedPosition: false, smorkullPos: false, lampOn: false,
+    bedStacked: true, bedSofa: false, bedPosition: false, smorkullPos: false, lampOn: false, laptopModel: false,
   });
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
@@ -188,6 +188,9 @@ export function Studio() {
 
           {/* Layer 1 : tout le reste — exclu des reflets, visible à la caméra principale */}
           <LayerGroup layer={1}>
+            <group visible={layers.equipment}>
+              <Equipment />
+            </group>
             <group visible={layers.furniture}>
               <Furniture />
               <Furnishings />

@@ -20,7 +20,7 @@ import { KallaxNE }      from './items/KallaxNE';
 import { KallaxSE }      from './items/KallaxSE';
 import { KallaxNW }      from './items/KallaxNW';
 import { KallaxCuisine } from './items/KallaxCuisine';
-import { CuisineGroup }  from './items/CuisineGroup';
+import { CuisineGroup, CuisineDrona } from './items/CuisineGroup';
 import { Freezer } from './items/Freezer';
 import { BathroomCabinetWest, BathroomCabinetEast } from './items/BathroomCabinet';
 import { Toilet } from './items/Toilet';
@@ -39,15 +39,6 @@ const noop = (_: THREE.Vector3) => {};
 // Empty actionState for items that have no toggleable state (Kallax, BathroomCabinet)
 const AS: Record<string, boolean> = {};
 
-// Map furniture-toggle key → actionState key used by item components
-const TOGGLE_MAP: Record<string, string> = {
-  freezer:   'freezer-toggle',
-  wcLid:     'wc-lid-toggle',
-  corrDoors: 'corr-doors-toggle',
-  sdbCloset: 'sdb-closet-toggle',
-  cbnWest:   'cbn-west-toggle',
-  cbnEast:   'cbn-east-toggle',
-};
 
 function stub(id: string): Item {
   return {
@@ -147,7 +138,15 @@ function FreezerPlaced({ as }: { as: Record<string, boolean> }) {
 function CuisineGroupPlaced() {
   return (
     <group position={[KITCHEN_X0, 0, ROOM_D]}>
-      <CuisineGroup item={stub('cuisine-stack')} actionState={{}} onSize={noop} />
+      <CuisineGroup item={stub('cuisine-stack')} actionState={{}} onSize={noop} noDrona />
+    </group>
+  );
+}
+
+function CuisineDronaPlaced() {
+  return (
+    <group position={[KITCHEN_X0, 0, ROOM_D]}>
+      <CuisineDrona />
     </group>
   );
 }
@@ -249,7 +248,51 @@ function BathroomCabinetsPlaced({ as }: { as: Record<string, boolean> }) {
   );
 }
 
-// ── Export principal ──────────────────────────────────────────────────────────
+// ── Toggles équipements ───────────────────────────────────────────────────────
+
+const EQUIPMENT_TOGGLE_MAP: Record<string, string> = {
+  freezer: 'freezer-toggle',
+  wcLid:   'wc-lid-toggle',
+};
+
+const FURNITURE_TOGGLE_MAP: Record<string, string> = {
+  corrDoors: 'corr-doors-toggle',
+  sdbCloset: 'sdb-closet-toggle',
+  cbnWest:   'cbn-west-toggle',
+  cbnEast:   'cbn-east-toggle',
+};
+
+// ── Équipements (cuisine + sanitaires) ───────────────────────────────────────
+
+export function Equipment() {
+  const [as, setAs] = useState<Record<string, boolean>>({});
+  const { invalidate } = useThree();
+
+  useEffect(() => {
+    const onToggle = (e: Event) => {
+      const { key } = (e as CustomEvent).detail as { key: string };
+      const asKey = EQUIPMENT_TOGGLE_MAP[key];
+      if (!asKey) return;
+      setAs(prev => ({ ...prev, [asKey]: !prev[asKey] }));
+      invalidate();
+    };
+    document.addEventListener('furniture-toggle', onToggle);
+    return () => document.removeEventListener('furniture-toggle', onToggle);
+  }, [invalidate]);
+
+  return (
+    <>
+      <FreezerPlaced as={as} />
+      <CuisineGroupPlaced />
+      <VasqueSdbPlaced />
+      <WaterHeaterPlaced />
+      <ShowerPlaced />
+      <ToiletPlaced as={as} />
+    </>
+  );
+}
+
+// ── Mobilier fixe (rangements) ────────────────────────────────────────────────
 
 export function Furniture() {
   const [as, setAs] = useState<Record<string, boolean>>({});
@@ -258,7 +301,7 @@ export function Furniture() {
   useEffect(() => {
     const onToggle = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
-      const asKey = TOGGLE_MAP[key];
+      const asKey = FURNITURE_TOGGLE_MAP[key];
       if (!asKey) return;
       setAs(prev => ({ ...prev, [asKey]: !prev[asKey] }));
       invalidate();
@@ -273,16 +316,11 @@ export function Furniture() {
       <KallaxSW />
       <KallaxSEPlaced />
       <KallaxNWPlaced />
-      <FreezerPlaced as={as} />
-      <CuisineGroupPlaced />
       <CorridorClosetPlaced as={as} />
-      <VasqueSdbPlaced />
-      <WaterHeaterPlaced />
       <GrassRugPlaced />
-      <ShowerPlaced />
-      <ToiletPlaced as={as} />
       <SdbClosetPlaced as={as} />
       <BathroomCabinetsPlaced as={as} />
+      <CuisineDronaPlaced />
     </>
   );
 }
