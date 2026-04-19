@@ -61,6 +61,7 @@ export function MackaparGroup({ onSize }: SceneItemProps) {
   const ref = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
+    ref.current.userData.animUnit = true; // tombe en bloc dans BuildAnimation2/3
     ref.current.updateMatrixWorld(true);
     onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
   }, []);

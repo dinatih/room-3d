@@ -56,6 +56,9 @@ function hasMesh(o: THREE.Object3D): boolean {
  */
 function isLeafComponent(o: THREE.Object3D): boolean {
   if ((o as THREE.Mesh).isMesh) return true;
+  // userData.animUnit : groupe composite explicitement marqué comme unité d'animation
+  // (ex: MackaparGroup qui mélange instancedMesh + sous-groupes GLB).
+  if (o.userData?.animUnit) return true;
   const direct = hasDirectMesh(o);
   if (!direct) return false;
   // Si un enfant non-mesh contient lui-même des meshes → groupe composite → ne pas capturer
@@ -126,7 +129,7 @@ function collect(scene: THREE.Scene): {
     }
 
     const depth = depthFrom(o, scene);
-    const isRoot = depth >= 2 && depth <= 7 && isLeafComponent(o);
+    const isRoot = depth >= 2 && depth <= 10 && isLeafComponent(o);
 
     if (isRoot) {
       picked.add(o);
