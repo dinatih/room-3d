@@ -1,5 +1,5 @@
 /**
- * BuildAnimation2.tsx — "Tombée du ciel" un par un.
+ * BuildAnimation3.tsx — "Tombée du ciel" variante 2.
  *
  * Chaque objet visible tombe lentement du ciel, l'un après l'autre.
  * Ordre : mobilier / équipement en premier (ordre aléatoire), structure
@@ -35,6 +35,7 @@ type AnimObj = {
   origY:     number;
   startTime: number;  // ms depuis le début
   duration:  number;
+  fromBelow: boolean; // sol : monte d'en bas ; sinon tombe d'en haut
 };
 
 /** Vrai si o possède au moins un Mesh en enfant direct. */
@@ -72,19 +73,52 @@ function depthFrom(o: THREE.Object3D, root: THREE.Object3D): number {
   return d;
 }
 
+const _bbox = new THREE.Box3();
+const _size = new THREE.Vector3();
+
+/** Vérifie récursivement le userData.brickType. */
+function hasBrickType(o: THREE.Object3D, type: string): boolean {
+  if (o.userData?.brickType === type) return true;
+  return o.children.some(c => hasBrickType(c, type));
+}
+
+/**
+ * Détecte le plafond via userData.brickType === 'ceiling'.
+ */
+function isCeilingLike(o: THREE.Object3D): boolean {
+  return hasBrickType(o, 'ceiling');
+}
+
+/**
+ * Détecte le sol : bounding box large (> 200 en X et Z), plate (Y < 30) et basse (centerY < 50).
+ */
+function isFloorLike(o: THREE.Object3D): boolean {
+  _bbox.setFromObject(o);
+  _bbox.getSize(_size);
+  if (_size.y >= 30 || _size.x < 200 || _size.z < 200) return false;
+  const centerY = (_bbox.min.y + _bbox.max.y) / 2;
+  return centerY < 50;
+}
+
 /**
  * Collecte un objet par branche visuelle.
- * Sépare structure (layer 0 pur = murs/sol) du mobilier (layer 1 = LayerGroup).
+ * Sépare : sol (monte d'en bas), mobilier (tombe d'en haut), structure/murs (tombe en dernier).
  */
-function collect(scene: THREE.Scene): { furniture: THREE.Object3D[]; structure: THREE.Object3D[] } {
+function collect(scene: THREE.Scene): {
+  floor:     THREE.Object3D[];
+  furniture: THREE.Object3D[];
+  structure: THREE.Object3D[];
+  ceiling:   THREE.Object3D[];
+} {
+  const floor:     THREE.Object3D[] = [];
   const furniture: THREE.Object3D[] = [];
   const structure: THREE.Object3D[] = [];
+  const ceiling:   THREE.Object3D[] = [];
   const picked = new Set<THREE.Object3D>();
 
   function visit(o: THREE.Object3D): void {
     if (!o.visible || isUtility(o)) return;
 
-    // Ne pas redescendre sous un ancêtre déjà sélectionné
     let cur: THREE.Object3D | null = o.parent;
     while (cur && cur !== scene) {
       if (picked.has(cur)) return;
@@ -92,14 +126,16 @@ function collect(scene: THREE.Scene): { furniture: THREE.Object3D[]; structure: 
     }
 
     const depth = depthFrom(o, scene);
-
     const isRoot = depth >= 2 && depth <= 7 && isLeafComponent(o);
 
     if (isRoot) {
       picked.add(o);
-      // Les objets dans LayerGroup (layer 1 activé) = mobilier ; sinon structure
       if (o.layers.isEnabled(1)) {
         furniture.push(o);
+      } else if (isCeilingLike(o)) {
+        ceiling.push(o);
+      } else if (isFloorLike(o)) {
+        floor.push(o);
       } else {
         structure.push(o);
       }
@@ -109,7 +145,7 @@ function collect(scene: THREE.Scene): { furniture: THREE.Object3D[]; structure: 
   }
 
   scene.children.forEach(visit);
-  return { furniture, structure };
+  return { floor, furniture, structure, ceiling };
 }
 
 /** Fisher-Yates shuffle in place */
@@ -123,29 +159,41 @@ function shuffle<T>(arr: T[]): T[] {
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
-export function BuildAnimation2({ onFinish }: { onFinish: () => void }) {
+export function BuildAnimation3({ onFinish, onDuration }: { onFinish: () => void; onDuration?: (ms: number) => void }) {
   const { scene, invalidate } = useThree();
 
   useEffect(() => {
-    const { furniture, structure } = collect(scene as unknown as THREE.Scene);
+    const { floor, furniture, structure, ceiling } = collect(scene as unknown as THREE.Scene);
 
-    // Mobilier en ordre aléatoire, puis structure (murs / sol) en dernier
-    const ordered = [...shuffle(furniture), ...structure];
+    // Ordre : sol (monte d'en bas) → mobilier aléatoire → murs → plafond en tout dernier (tombe d'en haut)
+    const allOrdered = [
+      ...floor,
+      ...shuffle(furniture),
+      ...structure,
+      ...ceiling,
+    ];
 
-    // Assigner les temps de départ séquentiels
-    const objects: AnimObj[] = ordered.map((obj, i) => ({
+    const floorSet   = new Set(floor);
+    const objects: AnimObj[] = allOrdered.map((obj, i) => ({
       obj,
       origY:     obj.position.y,
       startTime: i * STAGGER_MS,
       duration:  FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN),
+      fromBelow: floorSet.has(obj),
     }));
 
     const totalEnd = objects.length > 0
       ? objects[objects.length - 1].startTime + objects[objects.length - 1].duration + 100
       : 1000;
 
-    // Placer tout en l'air
-    objects.forEach(a => { a.obj.position.y = a.origY + DROP_HEIGHT; });
+    onDuration?.(totalEnd);
+
+    // Positionner : sol en bas, tout le reste en l'air
+    objects.forEach(a => {
+      a.obj.position.y = a.fromBelow
+        ? a.origY - DROP_HEIGHT
+        : a.origY + DROP_HEIGHT;
+    });
     invalidate();
 
     let start: number | null = null;
@@ -159,7 +207,10 @@ export function BuildAnimation2({ onFinish }: { onFinish: () => void }) {
         const raw = (elapsed - a.startTime) / a.duration;
         if (raw <= 0) return;
         const t = Math.min(raw, 1);
-        a.obj.position.y = a.origY + DROP_HEIGHT * (1 - easeOutCubic(t));
+        const offset = DROP_HEIGHT * (1 - easeOutCubic(t));
+        a.obj.position.y = a.fromBelow
+          ? a.origY - offset
+          : a.origY + offset;
       });
 
       invalidate();

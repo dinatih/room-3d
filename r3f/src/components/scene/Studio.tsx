@@ -9,6 +9,7 @@ import { CameraController } from './CameraController';
 import { cameraState }      from './cameraState';
 import { Minimap }          from './Minimap';
 import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from './SidePanel';
+import { AnimationsPanel }  from './AnimationsPanel';
 import { Walls }     from './structure/Walls';
 import { Floor }     from './structure/Floor';
 import { DoorsPlaced } from './structure/DoorsPlaced';
@@ -32,8 +33,7 @@ import { VRMode }                       from './VRMode';
 import { ImmersiveMode }               from './ImmersiveMode';
 import { FloorPlan }                    from './FloorPlan';
 import { LidarScan }                   from './LidarScan';
-import { BuildAnimation }              from './BuildAnimation';
-import { BuildAnimation2 }             from './BuildAnimation2';
+import { BuildAnimation, BuildAnimation2, BuildAnimation3, BuildAnimation4 } from './animations';
 
 import { ROOM_W, ROOM_D } from '@config';
 
@@ -88,12 +88,29 @@ export function Studio() {
   }, []);
 
   const [lidarOpacity, setLidarOpacity] = useState(0.55);
-  const [buildAnim, setBuildAnim] = useState(false);
-  const [buildAnim2, setBuildAnim2] = useState(false);
   const onToggleLidarOpacity = useCallback(() => {
     setLidarOpacity(o => o < 1 ? 1 : 0.55);
     cameraState.invalidate?.();
   }, []);
+
+  const [buildAnim,  setBuildAnim]  = useState(false);
+  const [buildAnim3, setBuildAnim3] = useState(false);
+  const [buildAnim4, setBuildAnim4] = useState(false);
+  const [animDurations, setAnimDurations] = useState<Record<string, number>>({
+    buildAnim: 6000,
+  });
+
+  const stopAll = () => {
+    setBuildAnim(false); setBuildAnim3(false); setBuildAnim4(false);
+  };
+
+  const start = (set: React.Dispatch<React.SetStateAction<boolean>>) => () => {
+    stopAll();
+    setTimeout(() => set(true), 50);
+  };
+
+  const setDuration = (key: string) => (ms: number) =>
+    setAnimDurations(d => ({ ...d, [key]: ms }));
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
@@ -117,11 +134,8 @@ export function Studio() {
           scene.background = new Color(0x2a2a3e);
           scene.fog = new FogExp2(0x2a2a3e, 0.0006);
           gl.shadowMap.enabled = true;
-          // La caméra principale doit voir tous les layers (défaut Three.js = layer 0 seulement).
-          // La caméra miroir garde layers.mask=1 pour n'afficher que la structure.
           camera.layers.enableAll();
 
-          // Environment map PMREM — fidèle à js/scene.js, synchrone avant le premier frame
           const pmrem = new PMREMGenerator(gl);
           const envScene = new Scene();
           envScene.background = new Color(0x889ab5);
@@ -165,8 +179,9 @@ export function Studio() {
         <directionalLight color={0xaabbff} position={[-200, 300, -100]} intensity={0.4} />
 
         <CameraController />
-        {buildAnim && <BuildAnimation onFinish={() => setBuildAnim(false)} />}
-        {buildAnim2 && <BuildAnimation2 onFinish={() => setBuildAnim2(false)} />}
+        {buildAnim  && <BuildAnimation  onFinish={() => setBuildAnim(false)}  />}
+        {buildAnim3 && <BuildAnimation3 onFinish={() => setBuildAnim3(false)} onDuration={setDuration('buildAnim3')} />}
+        {buildAnim4 && <BuildAnimation4 onFinish={() => setBuildAnim4(false)} onDuration={setDuration('buildAnim4')} />}
         <VRMode />
         <ImmersiveMode />
         <HoverRaycaster />
@@ -225,8 +240,13 @@ export function Studio() {
         onOpenInventory={() => setShowInventory(true)}
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
         lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
-        buildAnim={buildAnim} onStartBuildAnim={() => { setBuildAnim(false); setTimeout(() => setBuildAnim(true), 50); }}
-        buildAnim2={buildAnim2} onStartBuildAnim2={() => { setBuildAnim2(false); setTimeout(() => setBuildAnim2(true), 50); }}
+      />
+      <AnimationsPanel
+        buildAnim={buildAnim}   onStartBuildAnim={start(setBuildAnim)}
+        buildAnim3={buildAnim3} onStartBuildAnim3={start(setBuildAnim3)}
+        buildAnim4={buildAnim4} onStartBuildAnim4={start(setBuildAnim4)}
+        onStop={stopAll}
+        durations={animDurations}
       />
       {showInventory && <Inventory onClose={() => setShowInventory(false)} />}
       <Minimap />
