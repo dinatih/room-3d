@@ -153,6 +153,96 @@ function ToggleBtn({ label, onLabel, color, value, onToggle, first = false }: {
   );
 }
 
+// ── Modal raccourcis clavier ──────────────────────────────────────────────────
+
+function ShortcutsModal({ onClose }: { onClose: () => void }) {
+  const overlay: React.CSSProperties = {
+    position: 'fixed', inset: 0,
+    background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(3px)',
+    zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center',
+  };
+  const modal: React.CSSProperties = {
+    background: 'rgba(12,12,24,0.98)', border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 12, padding: '18px 22px', width: 340, maxHeight: '85vh',
+    overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14,
+    scrollbarWidth: 'thin',
+  };
+  const sectionTitle: React.CSSProperties = {
+    color: 'rgba(255,255,255,0.45)', fontSize: 9, fontWeight: 700,
+    letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4,
+  };
+  const row: React.CSSProperties = {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
+  };
+  const desc: React.CSSProperties = { color: 'rgba(255,255,255,0.7)', fontSize: 11 };
+  const keysCell: React.CSSProperties = { display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' };
+  const kbd = (label: string, i = 0) => (
+    <span key={i} style={{
+      background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.22)',
+      borderRadius: 4, padding: '1px 6px', fontSize: 10, fontFamily: 'monospace',
+      color: '#ddd', whiteSpace: 'nowrap',
+    }}>{label}</span>
+  );
+
+  const R = ({ label, keys }: { label: string; keys: string[] }) => (
+    <div style={row}>
+      <span style={desc}>{label}</span>
+      <span style={keysCell}>{keys.map(kbd)}</span>
+    </div>
+  );
+  const Section = ({ title }: { title: string }) => (
+    <div style={sectionTitle}>{title}</div>
+  );
+
+  return (
+    <div style={overlay} onClick={onClose}>
+      <div style={modal} onClick={e => e.stopPropagation()}>
+
+        {/* En-tête */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ color: '#ddd', margin: 0, fontSize: 14 }}>Raccourcis clavier</h3>
+          <button onClick={onClose} style={{
+            background: 'transparent', border: 'none', color: '#aaa',
+            fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: 0,
+          }}>×</button>
+        </div>
+
+        {/* Global */}
+        <div>
+          <Section title="Global" />
+          <R label="Vue perspective (reset)"    keys={['P']} />
+          <R label="Walk mode (entrer/quitter)" keys={['M']} />
+          <R label="Vue top-down (toggle)"      keys={['T']} />
+          <R label="Quitter walk / top-down"    keys={['Échap']} />
+          <R label="Changer de personnage"      keys={['L']} />
+        </div>
+
+        {/* Orbit — style Google Earth */}
+        <div>
+          <Section title="Orbit — style Google Earth" />
+          <R label="Déplacer le walker"         keys={['↑', '↓', '←', '→']} />
+          <R label="Orbiter autour"             keys={['Shift + ↑↓←→']} />
+          <R label="Rotation caméra"            keys={['Ctrl + ↑↓←→']} />
+          <R label="Pan"                        keys={['Alt + ↑↓←→']} />
+          <R label="Pan diagonal"               keys={['Shift+Ctrl + ↑↓←→']} />
+        </div>
+
+        {/* Walk mode */}
+        <div>
+          <Section title="Walk mode" />
+          <R label="Avancer / reculer"          keys={['W', 'S', '↑', '↓']} />
+          <R label="Pivoter gauche / droite"    keys={['A', 'D', '←', '→']} />
+          <R label="Incliner la caméra"         keys={['Ctrl + ↑↓']} />
+          <R label="Monter / descendre"         keys={['Alt + ↑↓']} />
+          <R label="Regarder librement"         keys={['Clic + glisser']} />
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ── Modal vues ────────────────────────────────────────────────────────────────
 
 function ViewsModal({ onClose }: { onClose: () => void }) {
@@ -249,6 +339,7 @@ export interface LayerState {
   skeleton:     boolean;
   redWalls:     boolean;
   lidar:        boolean;
+  lights:       boolean;
 }
 
 export interface SidePanelProps {
@@ -269,7 +360,8 @@ export interface SidePanelProps2 extends SidePanelProps {
 }
 
 export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity }: SidePanelProps2) {
-  const [showViews, setShowViews] = useState(false);
+  const [showViews,     setShowViews]     = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const b0 = (color: string, label: string, onClick: () => void, first = false) => {
     const s = { ...btn(COLORS[color] ?? color) };
@@ -304,6 +396,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {b0('gray',   'Walk M',        () => dispatchKey('m'))}
           {b0('gray',   '2D Dessus T',   () => dispatchKey('t'))}
           {b0('yellow', 'Autres vues…',  () => setShowViews(true))}
+          {b0('teal',   'Raccourcis ⌨',  () => setShowShortcuts(true))}
         </Group>
 
         {/* ── Affichage ── */}
@@ -318,6 +411,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('teal',   'Grille',      'grid')}
           {layerBtn('red',    'N° Drona',   'dronaLabels')}
           {layerBtn('white',  'Squelette',  'skeleton')}
+          {layerBtn('yellow', 'Lumières ☀',  'lights')}
           {layerBtn('cyan',   'LiDAR scan', 'lidar')}
           {layers.lidar && b0('cyan',
             ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',
@@ -390,7 +484,8 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
 
       </div>
 
-      {showViews && <ViewsModal onClose={() => setShowViews(false)} />}
+      {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
+      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
     </>
   );
 }

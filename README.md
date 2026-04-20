@@ -27,19 +27,16 @@ Un outil que j'utilise **vraiment au quotidien** : planifier les positions des m
 
 ```
 room-3d/
-├── r3f/                  # App principale — React Three Fiber
-│   └── src/
-│       ├── types.ts              # SceneItemProps (interface commune items/)
-│       ├── utils/                # useGLTFClone, glbUtils
-│       └── components/scene/
-│           ├── Studio.tsx        # Canvas R3F : lights, état global UI
-│           ├── structure/        # Murs, sol, portes, cuisine…
-│           ├── items/            # ~50 composants autonomes (1 objet = 1 fichier)
-│           ├── registry.ts       # id → composant items/ (preview inventaire)
-│           └── inventoryData.ts  # ~120 items avec dims, catégorie, scenePos…
-├── media/                # Modèles GLB (compressés Draco)
-├── js/                   # Archive vanilla Three.js — voir js/README.md
-└── lego-room.html        # Entrée vanilla (archive)
+├── src/
+│   ├── types.ts              # SceneItemProps (interface commune items/)
+│   ├── utils/                # useGLTFClone, glbUtils
+│   └── components/scene/
+│       ├── Studio.tsx        # Canvas R3F : lights, état global UI
+│       ├── structure/        # Murs, sol, portes, cuisine…
+│       ├── items/            # ~50 composants autonomes (1 objet = 1 fichier)
+│       ├── registry.ts       # id → composant items/ (preview inventaire)
+│       └── inventoryData.ts  # ~120 items avec dims, catégorie, scenePos…
+└── media/                # Modèles GLB (compressés Draco)
 ```
 
 ---
@@ -47,10 +44,7 @@ room-3d/
 ## Lancement
 
 ```bash
-cd r3f && npm install && npm run dev   # http://localhost:5173
-
-# Version vanilla (archive)
-ruby server.rb   # http://localhost:8080/lego-room.html
+npm install && npm run dev   # http://localhost:5173
 ```
 
 ---
@@ -320,7 +314,6 @@ d'un mois, les progrès sont énormes.
 ## Lancement
 
 ```bash
-ruby server.rb        # http://localhost:8080 / https://localhost:8443
 python3 -m http.server 8000
 ```
 

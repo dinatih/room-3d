@@ -2,17 +2,9 @@
 
 Visualisation 3D interactive d'un appartement : navigation walk mode, inventaire, toggles de couches, WebXR.
 
-## Versions
-
-| Version | Dossier | Statut |
-|---------|---------|--------|
-| **React Three Fiber** | `r3f/` | **Active — version principale** |
-| Vanilla Three.js | `js/` | Archive — voir `js/README.md` |
-
-## Lancement R3F
+## Lancement
 
 ```bash
-cd r3f
 npm install
 npm run dev          # http://localhost:5173
 npm run dev:studio   # ouvre /studio.html directement
@@ -35,7 +27,7 @@ Stack : React 18 + Three.js + `@react-three/fiber` + `@react-three/drei` + Vite 
 ### Entrée de scène
 
 ```
-r3f/src/
+src/
 ├── main.tsx              # mount React
 ├── types.ts              # SceneItemProps (interface commune items/)
 └── utils/
@@ -43,7 +35,7 @@ r3f/src/
     └── glbUtils.ts       # removeGlbLines (nettoie les LineSegments des GLBs)
 ```
 
-### Composants scène (`r3f/src/components/scene/`)
+### Composants scène (`src/components/scene/`)
 
 ```
 Studio.tsx          # Canvas R3F : lights, fog, tone mapping, état global UI
@@ -82,7 +74,7 @@ Studio.tsx          # Canvas R3F : lights, fog, tone mapping, état global UI
 └── inventoryData.ts    # INVENTORY : liste de tous les objets avec dims, catégorie…
 ```
 
-### Composants items/ (`r3f/src/components/scene/items/`)
+### Composants items/ (`src/components/scene/items/`)
 
 Chaque item est un composant autonome réutilisable :
 

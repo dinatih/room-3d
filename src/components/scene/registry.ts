@@ -39,9 +39,11 @@ import { Mackapar }                                    from './items/Mackapar';
 import { Salopette }                                   from './items/Salopette';
 import { BaseballCap }                                 from './items/BaseballCap';
 import { Sneakers }                                    from './items/Sneakers';
+import { JordanHexMule }                               from './items/JordanHexMule';
 import { Bathtub }                                     from './items/Bathtub';
 import { ChestBench }                                  from './items/ChestBench';
 import { PottedPalm }                                  from './items/PottedPalm';
+import { PalmLeaf }                                    from './items/PalmLeaf';
 import { Drona }                                         from './items/Drona';
 import { MeubleT }                                       from './items/MeubleT';
 import { UtakerFrame }                                    from './items/UtakerFrame';
@@ -107,6 +109,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'bathtub':                 Bathtub,
   'chest-bench':             ChestBench,
   'potted-palm':             PottedPalm,
+  'palm-leaf':               PalmLeaf,
   'viggja':                  Viggja,
   'jogging-suit':            JoggingSuit,
   'altappen-rug':            AltappenRug,
@@ -121,6 +124,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'salopette':               Salopette,
   'baseball-cap':            BaseballCap,
   'sneaker':                 Sneakers,
+  'jordan-hex-mule':         JordanHexMule,
   'meuble-t':                MeubleT,
   'utaker-lower':            UtakerFrame,
   'utaker-upper':            UtakerFrame,

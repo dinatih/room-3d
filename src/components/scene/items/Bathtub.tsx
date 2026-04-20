@@ -9,7 +9,11 @@ import type { SceneItemProps } from '../../../types';
 
 const TUB_L = 150, TUB_W = 70, TUB_H = 50, T = 4, RC = 35;
 
-const tubMat = new THREE.MeshStandardMaterial({ color: 0xd4b483, roughness: 0.4 });
+const tubMat   = new THREE.MeshStandardMaterial({ color: 0xd4b483, roughness: 0.4 });
+// Intérieur de la cuve : plus sombre pour simuler l'ombre portée des parois.
+// La shadow map (1024px / 1200u ≈ 1.2u/px) ne résout pas les 4u de parois internes,
+// donc la teinte est "pré-ombragée" pour compenser.
+const innerMat  = new THREE.MeshStandardMaterial({ color: 0x7a5830, roughness: 0.85 });
 const waterMat = new THREE.MeshStandardMaterial({
   color: 0x1a6fa8, transparent: true, opacity: 0.80, depthWrite: false,
   roughness: 0.05, metalness: 0.15,
@@ -60,7 +64,7 @@ export function Bathtub({ onSize }: SceneItemProps) {
   return (
     <group>
       <mesh geometry={wallGeo} material={tubMat} castShadow receiveShadow />
-      <mesh geometry={botGeo} material={tubMat} castShadow receiveShadow />
+      <mesh geometry={botGeo} material={innerMat} receiveShadow />
       <mesh geometry={waterGeo} material={waterMat} />
     </group>
   );

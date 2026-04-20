@@ -122,6 +122,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'baseball-cap',     name: 'Casquette baseball',             brand: '',         category: 'clothing',  qty: 3, dims: { w: 25,  d: 20,  h: 15  }, scenePos: { x: 40, z: 300 }, notes: '3 casquettes rouges sur portant', glbPath: 'media/baseball_cap.glb' },
   { id: 'backpack',         name: 'Sac à dos',                      brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 17,  h: 43  }, scenePos: { x: 8,  z: 258 }, notes: 'Rouge procédural, mur A' },
   { id: 'sneaker',          name: 'Sneakers',                       brand: '',         category: 'clothing',  qty: 2, dims: { w: 30,  d: 12,  h: 12  }, scenePos: { x: 5,  z: 240 }, notes: 'Paire, mur A niche', glbPath: 'media/sneaker.glb' },
+  { id: 'jordan-hex-mule', name: 'Jordan Hex Mule SP',             brand: 'Nike/Jordan', category: 'clothing', qty: 1, dims: { w: 20,  d: 28.5, h: 9.4 }, scenePos: { x: 5,  z: 250 }, notes: 'University Red, taille 44.5, FJ0603-600' },
 
   // ── DECOR ─────────────────────────────────────────────────────────────────────
   { id: 'mirror-nissedal-a',name: 'Miroir Nissedal (mur A)',        brand: 'IKEA',     category: 'decor',     qty: 4, dims: { w: 40,  d: 2,   h: 160 }, scenePos: { x: 5,   z: 130 }, notes: '4 miroirs mur A, Reflector' },
@@ -132,6 +133,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'altappen-lantern', name: 'Lanterne ALTAPPEN',              brand: 'IKEA',     category: 'decor',     qty: 1, dims: { w: 22,  d: 22,  h: 35  }, scenePos: { x: 100, z:-125 }, notes: 'Jardin, desserte Viggja', glbPath: 'media/ikea_Altappen_single.glb' },
   { id: 'altappen-rug',     name: 'Dalle terrasse ALTAPPEN',        brand: 'IKEA',     category: 'decor',     qty: 40, dims: { w: 30,  d: 30,  h: 2   }, scenePos: { x: 150, z:-220 }, notes: 'Jardin, dalles assemblées' },
   { id: 'potted-palm',      name: 'Palmier en pot',                 brand: '',         category: 'decor',     qty: 1, dims: { w: 60,  d: 60,  h: 150 }, scenePos: { x: 100, z:-145 }, notes: 'Jardin, entre canapé et desserte', glbPath: 'media/potted_palm.glb' },
+  { id: 'palm-leaf',        name: 'Feuille de palmier artificielle', brand: '',        category: 'decor',     qty: 1, dims: { w: 40,  d: 40,  h: 80  }, scenePos: { x: 150, z:-145 }, notes: 'Plante artificielle Palm_Leaf1', glbPath: 'media/Palm_Leaf1.glb' },
   { id: 'jogging-suit',     name: 'Jogging suit',                   brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 20,  h: 170 }, scenePos: { x: 260, z:-250 }, notes: 'Jardin, près de la baignoire', glbPath: 'media/realistic_human_cloths.glb' },
 
   // ── PORTES ────────────────────────────────────────────────────────────────────

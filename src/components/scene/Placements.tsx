@@ -7,7 +7,7 @@
  * La distinction GLB / procédural est un artefact du port initial :
  * tous les items utilisent maintenant des composants items/ uniformes.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AirPerformer }  from './items/AirPerformer';
 import { BaseballCap }   from './items/BaseballCap';
 import { Fniss }         from './items/Fniss';
@@ -21,9 +21,10 @@ import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
 import { SunnerstaGroup } from './items/SunnerstaGroup';
 import { Dimpa }          from './items/Dimpa';
+import { PalmLeaf }       from './items/PalmLeaf';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../utils/sceneItem';
 
-import { ROOM_W, ROOM_D, NICHE_Z_START, NICHE_DEPTH } from '@config';
+import { ROOM_W, ROOM_D, WALL_H, NICHE_Z_START, NICHE_DEPTH } from '@config';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
 
@@ -190,6 +191,36 @@ function SneakersPlaced() {
   );
 }
 
+// ── Feuilles de palmier au plafond ────────────────────────────────────────────
+// 5 instances tête en bas, positions aléatoires générées une fois au chargement.
+
+const PALM_COUNT = 5;
+const MARGIN_X = 40;   // distance min aux murs latéraux
+const MARGIN_Z = 40;   // distance min aux murs avant/arrière
+
+function CeilingPalmLeaves() {
+  const placements = useMemo(() => (
+    Array.from({ length: PALM_COUNT }, () => ({
+      x:  MARGIN_X + Math.random() * (ROOM_W - 2 * MARGIN_X),
+      z:  MARGIN_Z + Math.random() * (ROOM_D - 2 * MARGIN_Z),
+      ry: Math.random() * Math.PI * 2,
+    }))
+  ), []);
+
+  return (
+    <>
+      {placements.map((p, i) => (
+        // position Y=WALL_H : colle la racine de la plante au plafond
+        // rotation X=π : retourne la plante tête en bas
+        // rotation Y=ry : orientation aléatoire
+        <group key={i} position={[p.x, WALL_H, p.z]} rotation={[Math.PI, p.ry, 0]}>
+          <PalmLeaf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      ))}
+    </>
+  );
+}
+
 export function GlbPlacements() {
   return (
     <>
@@ -214,6 +245,8 @@ export function GlbPlacements() {
         <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <SneakersPlaced />
+
+      <CeilingPalmLeaves />
     </>
   );
 }

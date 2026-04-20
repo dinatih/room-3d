@@ -25,7 +25,8 @@ import { Garden, GardenGlb } from './Garden';
 import { DronaBoxes, DronaLabels }  from './DronaBoxes';
 import { XRayLayer }    from './XRayLayer';
 import { RedWallLayer } from './RedWallLayer';
-import { GridLayer }   from './Grid';
+import { GridLayer }    from './Grid';
+import { LightHelpers } from './LightHelpers';
 import { HoverRaycaster, HoverOverlay } from './HoverMenu';
 import { DevToolsCollector }            from './DevToolsCollector';
 import { Inventory }                    from './Inventory';
@@ -63,7 +64,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
-    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false, skeleton: false, redWalls: false, lidar: false,
+    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false, skeleton: false, redWalls: false, lidar: false, lights: false,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -189,6 +190,7 @@ export function Studio() {
         {layers.xray && <XRayLayer />}
         {layers.redWalls && <RedWallLayer />}
         {layers.grid && <GridLayer />}
+        {layers.lights && <LightHelpers />}
         {layers.dronaLabels && <DronaLabels />}
         {layers.plan && <FloorPlan />}
 
