@@ -15,7 +15,9 @@ import { BathroomCabinetWest, BathroomCabinetEast }  from './items/BathroomCabin
 import { DoorEntry }                                  from './items/DoorEntry';
 import { DoorLiving, DoorSdb }                        from './items/DoorWhite';
 import { GlassDoor }                                  from './items/GlassDoor';
-import { Kallax }                                      from './items/Kallax';
+import { Kallax2x1 }                                    from './items/Kallax2x1';
+import { Kallax2x2 }                                    from './items/Kallax2x2';
+import { Kallax1x1 }                                    from './items/Kallax1x1';
 import { Toilet }                                      from './items/Toilet';
 import { Shower }                                      from './items/Shower';
 import { VasqueSdb }                                   from './items/VasqueSdb';
@@ -85,15 +87,15 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'kallax-sw-stack':         KallaxCuisine,
   'kallax-se-stack':         KallaxSE,
   'kallax-nw-stack':         KallaxNW,
-  'kallax-ne-2x1':           Kallax,
-  'kallax-ne-2x2':           Kallax,
-  'kallax-se-2x1':           Kallax,
-  'kallax-nw-2x1':           Kallax,
-  'kallax-nw-1x1-a':         Kallax,
-  'kallax-nw-1x1-b':         Kallax,
-  'kallax-sw-2x2':           Kallax,
-  'kallax-sw-2x2-spec':      Kallax,
-  'kallax-sw-2x1':           Kallax,
+  'kallax-ne-2x1':           Kallax2x1,
+  'kallax-ne-2x2':           Kallax2x2,
+  'kallax-se-2x1':           Kallax2x1,
+  'kallax-nw-2x1':           Kallax2x1,
+  'kallax-nw-1x1-a':         Kallax1x1,
+  'kallax-nw-1x1-b':         Kallax1x1,
+  'kallax-sw-2x2':           Kallax2x2,
+  'kallax-sw-2x2-spec':      Kallax2x2,
+  'kallax-sw-2x1':           Kallax2x1,
   'toilet':                  Toilet,
   'shower':                  Shower,
   'vasque-sdb':              VasqueSdb,

@@ -1,6 +1,7 @@
 /**
- * Drona.tsx — Boîte de rangement IKEA DRONA (GLB media/ikea_DRONA_black.glb).
- * Coordonnées locales : centré par bbox, Y=0 = sol, profondeur normalisée 38cm, rouge.
+ * Drona.tsx — Boîte de rangement IKEA DRONA (GLB media/DRÖNA.glb).
+ * Coordonnées locales : centré par bbox, Y=0 = sol, rouge.
+ * Le GLB officiel IKEA est en mètres → scale ×100 pour la scène (1 unité = 1 cm).
  *
  * Exports :
  *   Drona       — composant SceneItemProps (instance unique, inventaire)
@@ -14,13 +15,10 @@ import type { SceneItemProps } from '../../../types';
 const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });
 
 export function Drona({ onSize }: SceneItemProps) {
-  const { scene } = useGLTF('media/ikea_DRONA_black.glb');
+  const { scene } = useGLTF('media/DRÖNA.glb');
 
   useLayoutEffect(() => {
-    scene.updateMatrixWorld(true);
-    const rawSize = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3());
-    const s = rawSize.z > 0.01 ? 38 / rawSize.z : 1;
-    scene.scale.setScalar(s);
+    scene.scale.setScalar(100);
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
     scene.position.set(
@@ -46,13 +44,10 @@ export function Drona({ onSize }: SceneItemProps) {
  * prête à l'emploi dans un InstancedMesh.
  */
 export function useDronaGeo(): THREE.BufferGeometry {
-  const { scene } = useGLTF('media/ikea_DRONA_black.glb');
+  const { scene } = useGLTF('media/DRÖNA.glb');
 
   return useMemo(() => {
-    scene.updateMatrixWorld(true);
-    const rawSize = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3());
-    const s = rawSize.z > 0.01 ? 38 / rawSize.z : 1;
-
+    const s = 100;
     let geo: THREE.BufferGeometry | null = null;
     scene.traverse(c => {
       const m = c as THREE.Mesh;
@@ -61,7 +56,7 @@ export function useDronaGeo(): THREE.BufferGeometry {
         geo.applyMatrix4(m.matrixWorld);
       }
     });
-    if (!geo) geo = new THREE.BoxGeometry(33.5, 33.5, 38);
+    if (!geo) geo = new THREE.BoxGeometry(33, 33, 38);
 
     (geo as THREE.BufferGeometry).applyMatrix4(new THREE.Matrix4().makeScale(s, s, s));
     const scaled = new THREE.Box3().setFromBufferAttribute(
@@ -75,4 +70,4 @@ export function useDronaGeo(): THREE.BufferGeometry {
   }, [scene]);
 }
 
-useGLTF.preload('media/ikea_DRONA_black.glb');
+useGLTF.preload('media/DRÖNA.glb');

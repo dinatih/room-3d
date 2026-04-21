@@ -21,6 +21,12 @@ import { ROOM_D, WALL_H, KITCHEN_X1, DOOR_START, KITCHEN_Z } from '@config';
 
 const kallaxW1 = 40.5; // kallaxW(1)
 
+// Compteur global de profondeur de réflexion.
+// Empêche les miroirs perpendiculaires de se rendre mutuellement en boucle infinie :
+// chaque Reflector vérifie la profondeur avant de lancer sa passe — si on est déjà
+// en train de rendre un reflet (depth >= 1), on skippe.
+let _reflectionDepth = 0;
+
 // ── Composant miroir Reflector ────────────────────────────────────────────────
 
 function ReflectorMirror({ w, h, position, rotationY }: {
@@ -40,8 +46,11 @@ function ReflectorMirror({ w, h, position, rotationY }: {
 
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
+      if (_reflectionDepth >= 1) return;
+      _reflectionDepth++;
       mir.camera.layers.mask = cameraState.mirrorsHD ? camera.layers.mask : 1;
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
+      _reflectionDepth--;
     };
 
     return mir;

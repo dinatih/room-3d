@@ -8,7 +8,8 @@
  */
 import { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { Kallax }      from './Kallax';
+import { Kallax2x1 }   from './Kallax2x1';
+import { Kallax2x2 }   from './Kallax2x2';
 import { PizzaOven }   from './PizzaOven';
 import { useDronaGeo } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../../utils/sceneItem';
@@ -93,15 +94,15 @@ export function KallaxCuisine({ onSize }: SceneItemProps) {
     <group ref={ref}>
       {/* 2×2 bas — PY = h2 */}
       <group position={[0, h2, 0]}>
-        <Kallax item={k('kallax-sw-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x2 item={k('kallax-sw-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* 2×2 spec (sans barre haute) — PY = 2×h2 */}
       <group position={[0, h2 + h2, 0]}>
-        <Kallax item={k('kallax-sw-2x2-spec')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x2 item={k('kallax-sw-2x2-spec')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* 2×1 haut — PY = 2×h2 + h1 */}
       <group position={[0, h2 + h2 + h1, 0]}>
-        <Kallax item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* 6 Drona : 4 dans le 2×2 bas + 2 sur le dessus */}
       <DronaLayer />

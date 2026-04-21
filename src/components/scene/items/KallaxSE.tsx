@@ -9,7 +9,7 @@
  */
 import { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { Kallax }       from './Kallax';
+import { Kallax2x1 }    from './Kallax2x1';
 import { MeubleT }      from './MeubleT';
 import { ShoeHatRack }  from './ShoeHatRack';
 import { useDronaGeo }  from './Drona';
@@ -85,11 +85,11 @@ export function KallaxSE({ onSize }: SceneItemProps) {
     <group ref={ref}>
       {/* k1 — premier 2×1 pivoté, Y ∈ [0, w2] */}
       <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* k2 — deuxième 2×1 pivoté, Y ∈ [w2, 2×w2] */}
       <group position={[px, w2 / 2 + w2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <DronaLayer />
 

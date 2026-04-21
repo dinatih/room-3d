@@ -5,7 +5,9 @@
  */
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import { Kallax } from './Kallax';
+import { Kallax2x1 } from './Kallax2x1';
+import { Kallax2x2 } from './Kallax2x2';
+import { Kallax1x1 } from './Kallax1x1';
 import { NOOP_STATE, NOOP_SIZE } from '../../../utils/sceneItem';
 import type { SceneItemProps } from '../../../types';
 
@@ -26,10 +28,10 @@ function StackNE() {
   return (
     <>
       <group position={[0, h1, 0]}>
-        <Kallax item={k('kallax-ne-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 item={k('kallax-ne-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[0, h1 + h2, 0]}>
-        <Kallax item={k('kallax-ne-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x2 item={k('kallax-ne-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
   );
@@ -41,13 +43,13 @@ function StackSW() {
   return (
     <>
       <group position={[0, h2, 0]}>
-        <Kallax item={k('kallax-sw-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x2 item={k('kallax-sw-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[0, h2 + h2, 0]}>
-        <Kallax item={k('kallax-sw-2x2-spec')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x2 item={k('kallax-sw-2x2-spec')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[0, h2 + h2 + h1, 0]}>
-        <Kallax item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
   );
@@ -60,10 +62,10 @@ function StackSE() {
   return (
     <>
       <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[px, w2 / 2 + w2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
   );
@@ -76,13 +78,13 @@ function StackNW() {
   return (
     <>
       <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={k('kallax-nw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 item={k('kallax-nw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[px, w2 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={k('kallax-nw-1x1-a')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax1x1 item={k('kallax-nw-1x1-a')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
   );

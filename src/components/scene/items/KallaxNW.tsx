@@ -9,9 +9,10 @@
  */
 import { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { Kallax }        from './Kallax';
+import { Kallax2x1 }     from './Kallax2x1';
+import { Kallax1x1 }     from './Kallax1x1';
 import { MannequinHead } from './MannequinHead';
-import { useDronaGeo }   from './Drona';
+import { useDronaGeo } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../../utils/sceneItem';
 import type { SceneItemProps } from '../../../types';
 
@@ -37,21 +38,30 @@ function k(id: string) { return { id } as any; }
 const redFront = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.FrontSide });
 const redBack  = new THREE.MeshStandardMaterial({ color: 0x991100, roughness: 0.9, side: THREE.BackSide });
 
+/** Boîte Drona unique (pour les cellules 1×1 — enfant direct du group Kallax). */
+function DroneCell() {
+  const geo = useDronaGeo();
+  return (
+    <>
+      <mesh geometry={geo} material={redFront} castShadow receiveShadow />
+      <mesh geometry={geo} material={redBack} />
+    </>
+  );
+}
+
 function DronaLayer() {
   const geo = useDronaGeo();
 
   const matrices = useMemo(() => {
     const rotPI = new THREE.Matrix4().makeRotationY(Math.PI);
     const positions: [number, number, number][] = [
-      [0, w2 / 2 - 17.5,              0], // nwB cell 0
-      [0, w2 / 2 + 17.5,              0], // nwB cell 1
-      [0, w2 + w1 / 2,                0], // nwM cell
-      [0, w2 + w1 + w1 / 2,           0], // nwT cell
+      [0, w2 / 2 - 17.5, 0], // nwB cell 0
+      [0, w2 / 2 + 17.5, 0], // nwB cell 1
     ];
     return positions.map(([x, y, z]) => rotPI.clone().setPosition(x, y, z));
   }, []);
 
-  const N = matrices.length; // 4
+  const N = matrices.length; // 2
   const apply = (mesh: THREE.InstancedMesh) => {
     matrices.forEach((m, i) => mesh.setMatrixAt(i, m));
     mesh.instanceMatrix.needsUpdate = true;
@@ -80,15 +90,21 @@ export function KallaxNW({ onSize }: SceneItemProps) {
     <group ref={ref}>
       {/* nwB 2×1 pivoté, Y ∈ [0, w2] */}
       <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={k('kallax-nw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x1 item={k('kallax-nw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* nwM 1×1 pivoté, Y ∈ [w2, w2+w1] */}
       <group position={[px, w2 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={k('kallax-nw-1x1-a')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax1x1 item={k('kallax-nw-1x1-a')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <group position={[0, -w1 / 2, 0]}>
+          <DroneCell />
+        </group>
       </group>
       {/* nwT 1×1 pivoté, Y ∈ [w2+w1, w2+2×w1] */}
       <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <group position={[0, -w1 / 2, 0]}>
+          <DroneCell />
+        </group>
       </group>
       <DronaLayer />
 

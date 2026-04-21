@@ -9,7 +9,7 @@ import { devState } from './devState';
 
 const GLB_PATHS = [
   'media/xiaomi_electric_scooter_4.glb',
-  'media/smorkull.glb',
+  'media/SMÖRKULL.glb',
   'media/ikea_lamp_ola.glb',
   'media/sunnersta_trolley_ikea.glb',
   'media/mackapar_ikea.glb',
