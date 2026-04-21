@@ -17,7 +17,7 @@ const GLB_PATHS = [
   'media/baseball_cap.glb',
   'media/sneaker.glb',
   'media/ikea_Altappen_single.glb',
-  'media/ikea_DRONA_black.glb',
+  'media/DRÖNA.glb',
   'media/viggja.glb',
   'media/potted_palm.glb',
   'media/realistic_human_cloths.glb',

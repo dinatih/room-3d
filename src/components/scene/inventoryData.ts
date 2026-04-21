@@ -42,10 +42,10 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'kallax-nw-1x1-b',  name: 'Kallax 1×1 pivotée (NW-haut)',  brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 42, d: 39, h: 41 }, scenePos: { x: 20,   z: 38   }, notes: 'Haut tour NW',   glbPath: 'media/KALLAX etag 42x41 blanc.glb' },
   { id: 'kallax-sw-2x2',    name: 'Kallax 2×2 (niche)',             brand: 'IKEA',     category: 'storage',   qty: 2,  dims: { w: 77, d: 39, h: 77 }, scenePos: { x: -20,  z: 300  }, notes: 'Remplie de Drona',          glbPath: 'media/KALLAX etag 77x77 blanc.glb' },
   { id: 'kallax-sw-2x1',    name: 'Kallax 2×1 (niche, haut)',       brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 77, d: 39, h: 41 }, scenePos: { x: -20,  z: 300  }, notes: 'Haut de la pile cuisine',   glbPath: 'media/KALLAX etag 77x41 blanc.glb' },
-  { id: 'shelf-lack',        name: 'Étagère LACK',                  brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 26,   d: 110,  h: 5    }, scenePos: { x: 13,   z: 225  }, notes: 'Murale, mur A, 110cm le long de Z' },
-  { id: 'basket-fniss',      name: 'Corbeille FNISS',               brand: 'IKEA',     category: 'storage',   qty: 2,  dims: { w: 28,   d: 28,   h: 28   }, scenePos: { x: 110,  z: 500  }, notes: '1 SDB, 1 séjour' },
-  { id: 'dimpa',             name: 'Sac DIMPA',                     brand: 'IKEA',     category: 'storage',   qty: 5,  dims: { w: 65,   d: 22,   h: 65   }, scenePos: { x: 141,  z: 22   }, notes: 'Transparent, 5 sacs séjour mur C' },
-  { id: 'rail-mulig',        name: 'Tringle MULIG',                 brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 26,   d: 80,   h: 3    }, scenePos: { x: 26,   z: 130  }, notes: 'Blanc, 3 pantalons rouges' },
+  { id: 'shelf-lack',        name: 'Étagère LACK',                  brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 110,  d: 26,   h: 5    }, scenePos: { x: 13,   z: 225  }, notes: 'Murale, mur A', glbPath: 'media/LACK étagère murale 110x26 blanc.glb' },
+  { id: 'basket-fniss',      name: 'Corbeille FNISS',               brand: 'IKEA',     category: 'storage',   qty: 2,  dims: { w: 28,   d: 28,   h: 28   }, scenePos: { x: 110,  z: 500  }, notes: '1 SDB, 1 séjour',             glbPath: 'media/FNISS poubelle 10 l blanc.glb' },
+  { id: 'dimpa',             name: 'Sac DIMPA',                     brand: 'IKEA',     category: 'storage',   qty: 5,  dims: { w: 68,   d: 27,   h: 67   }, scenePos: { x: 141,  z: 22   }, notes: '5 sacs séjour mur C',          glbPath: 'media/DIMPA.glb' },
+  { id: 'rail-mulig',        name: 'Tringle MULIG',                 brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 60,   d: 26,   h: 16   }, scenePos: { x: 26,   z: 130  }, notes: 'Blanc',                        glbPath: 'media/MULIG.glb' },
   { id: 'meuble-t',          name: 'Bibliothèque (MeubleT)',         brand: '',         category: 'storage',   qty: 1,  dims: { w: 100,  d: 40,   h: 50   }, scenePos: { x: 240,  z: 30   }, notes: 'Procédural, mur C' },
 
   // ── DRONAS ───────────────────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'cabinet-wood',     name: 'Placard cuisine',                brand: '',         category: 'kitchen',   qty: 1, dims: { w: 40,   d: 60,   h: 90   }, scenePos: { x: 60,  z: 420 }, notes: 'Blanc, porte gris-bleu #607d8b', actions: ['cabinet'] },
   { id: 'fridge',           name: 'Réfrigérateur',                  brand: '',         category: 'kitchen',   qty: 1, dims: { w: 60,   d: 60,   h: 90   }, scenePos: { x: 100, z: 420 }, notes: 'Blanc cassé', actions: ['fridge'] },
   { id: 'sink-boholmen',    name: 'Évier BOHOLMEN 1 bac',          brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 30,   d: 47,   h: 15   }, scenePos: { x: 60,  z: 420 }, notes: 'Inox, avec robinet' },
-  { id: 'stove',            name: 'Plaques de cuisson (double)',    brand: '',         category: 'kitchen',   qty: 1, dims: { w: 50,   d: 40,   h: 1    }, scenePos: { x: 100, z: 420 }, notes: '2 foyers électriques' },
+  { id: 'stove',            name: 'Plaque VÄLBILDAD',               brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 29,   d: 52,   h: 5    }, scenePos: { x: 100, z: 420 }, notes: 'Induction', glbPath: 'media/VÄLBILDAD.glb' },
   { id: 'pizza-oven',       name: 'Four à pizza',                   brand: '',         category: 'kitchen',   qty: 1, dims: { w: 20,   d: 20,   h: 19   }, scenePos: { x: -20, z: 300 }, notes: 'Sur Kallax cuisine', glbPath: 'media/pizza_oven.glb' },
   { id: 'freezer',          name: 'Congélateur CHIQ CSD46D4E',     brand: 'CHIQ',     category: 'kitchen',   qty: 1, dims: { w: 45,   d: 47,   h: 50   }, scenePos: { x: 47,  z: 236 }, notes: 'Noir, niche séjour', actions: ['freezer'] },
 
@@ -125,8 +125,8 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'jordan-hex-mule', name: 'Jordan Hex Mule SP',             brand: 'Nike/Jordan', category: 'clothing', qty: 1, dims: { w: 20,  d: 28.5, h: 9.4 }, scenePos: { x: 5,  z: 250 }, notes: 'University Red, taille 44.5, FJ0603-600' },
 
   // ── DECOR ─────────────────────────────────────────────────────────────────────
-  { id: 'mirror-nissedal-a',name: 'Miroir Nissedal (mur A)',        brand: 'IKEA',     category: 'decor',     qty: 4, dims: { w: 40,  d: 2,   h: 160 }, scenePos: { x: 5,   z: 130 }, notes: '4 miroirs mur A, Reflector' },
-  { id: 'mirror-nissedal-d',name: 'Miroir Nissedal (mur D)',        brand: 'IKEA',     category: 'decor',     qty: 3, dims: { w: 40,  d: 2,   h: 160 }, scenePos: { x: 150, z: 400 }, notes: '3 miroirs mur D, Reflector' },
+  { id: 'mirror-nissedal-a',name: 'Miroir Nissedal 40×150 (mur A)', brand: 'IKEA',     category: 'decor',     qty: 4, dims: { w: 40,  d: 5,   h: 150 }, scenePos: { x: 5,   z: 130 }, notes: 'Mur A, Reflector', glbPath: 'media/NISSEDAL miroir 40x150 noir.glb' },
+  { id: 'mirror-nissedal-d',name: 'Miroir Nissedal 65×65 (mur D)',  brand: 'IKEA',     category: 'decor',     qty: 3, dims: { w: 65,  d: 5,   h: 65  }, scenePos: { x: 150, z: 400 }, notes: 'Mur D, Reflector',  glbPath: 'media/NISSEDAL miroir 65x65 noir.glb' },
   { id: 'mug',              name: 'Mug rouge',                      brand: '',         category: 'decor',     qty: 1, dims: { w: 8,   d: 8,   h: 9.5 }, scenePos: { x: 178, z: 163 }, notes: 'Bureau 2' },
   { id: 'mannequin-head',   name: 'Tête de mannequin',              brand: '',         category: 'decor',     qty: 3, dims: { w: 41,  d: 22,  h: 45  }, scenePos: { x: 150, z: 200 }, notes: '1 Sunnersta, 1 Kallax NW, 1 LACK' },
   { id: 'lamp-ola',         name: 'Lampe OLA',                      brand: 'IKEA',     category: 'decor',     qty: 1, dims: { w: 30,  d: 30,  h: 120 }, scenePos: { x: 286, z: 320 }, notes: 'Sur pied, meuble TV', glbPath: 'media/ikea_lamp_ola.glb' },

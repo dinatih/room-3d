@@ -1,38 +1,38 @@
 /**
- * Fniss.tsx — Corbeille FNISS IKEA (procédural, blanc).
- * Coordonnées locales : centré XZ, Y=0 = base.
+ * Fniss.tsx — Corbeille FNISS IKEA (GLB media/FNISS poubelle 10 l blanc.glb).
+ * Dimensions réelles : 28×28×28 cm (L×H×P) à ×100.
+ * Le GLB officiel IKEA est en mètres → scale ×100 (1 unité = 1 cm).
+ * Coordonnées locales : centré X/Z, Y=0 = sol.
  */
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect } from 'react';
+import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
+import { removeGlbLines } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
-const fnMat      = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
-const fnInnerMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.3, side: THREE.BackSide });
-
-const R_TOP = 14, R_BOT = 9.5, H = 28, T = 0.6;
+const GLB = 'media/FNISS poubelle 10 l blanc.glb';
 
 export function Fniss({ onSize }: SceneItemProps) {
-  const groupRef = useRef<THREE.Group>(null!);
+  const { scene } = useGLTFClone(GLB);
 
   useLayoutEffect(() => {
-    groupRef.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
-  }, []);
+    removeGlbLines(scene);
+    scene.scale.setScalar(100);
+    scene.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(scene);
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+    scene.traverse(c => {
+      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
+    });
+    onSize(new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3()));
+  }, [scene]);
 
-  return (
-    <group ref={groupRef}>
-      <mesh position={[0, H / 2, 0]} castShadow material={fnMat}>
-        <cylinderGeometry args={[R_TOP, R_BOT, H, 24, 1, true]} />
-      </mesh>
-      <mesh position={[0, H / 2, 0]} material={fnInnerMat}>
-        <cylinderGeometry args={[R_TOP - T, R_BOT - T, H, 24, 1, true]} />
-      </mesh>
-      <mesh position={[0, 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]} material={fnMat}>
-        <circleGeometry args={[R_BOT - T, 24]} />
-      </mesh>
-      <mesh position={[0, H, 0]} rotation={[Math.PI / 2, 0, 0]} material={fnMat}>
-        <torusGeometry args={[R_TOP - T / 2, T, 8, 24]} />
-      </mesh>
-    </group>
-  );
+  return <primitive object={scene} />;
 }
+
+useGLTF.preload(GLB);

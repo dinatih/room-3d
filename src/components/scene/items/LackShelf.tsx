@@ -1,26 +1,41 @@
 /**
- * LackShelf.tsx — Étagère LACK IKEA (procédural, blanc).
- * Coordonnées locales : centré XZ, Y=0 = bas de l'étagère.
+ * LackShelf.tsx — Étagère murale LACK IKEA (GLB media/LACK étagère murale 110x26 blanc.glb).
+ * Dimensions réelles : 110×5×26 cm (L×H×P) à ×100.
+ * Le GLB officiel IKEA est en mètres → scale ×100 (1 unité = 1 cm).
+ * Le GLB est orienté depth-en-Y, thickness-en-Z → rotation.x = -π/2 pour
+ * retrouver l'orientation horizontale (depth→Z, thickness→Y).
+ * Coordonnées locales : centré X/Z, Y=0 = dessous de l'étagère.
  */
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect } from 'react';
+import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
+import { removeGlbLines } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
-const lackMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
+const GLB = 'media/LACK étagère murale 110x26 blanc.glb';
 
 export function LackShelf({ onSize }: SceneItemProps) {
-  const groupRef = useRef<THREE.Group>(null!);
+  const { scene } = useGLTFClone(GLB);
 
   useLayoutEffect(() => {
-    groupRef.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
-  }, []);
+    removeGlbLines(scene);
+    scene.scale.setScalar(100);
+    scene.rotation.x = -Math.PI / 2; // depth(Y)→Z, thickness(Z)→Y
+    scene.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(scene);
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+    scene.traverse(c => {
+      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
+    });
+    onSize(new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3()));
+  }, [scene]);
 
-  return (
-    <group ref={groupRef}>
-      <mesh position={[0, 2.5, 0]} castShadow receiveShadow material={lackMat}>
-        <boxGeometry args={[110, 5, 26]} />
-      </mesh>
-    </group>
-  );
+  return <primitive object={scene} />;
 }
+
+useGLTF.preload(GLB);
