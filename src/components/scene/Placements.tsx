@@ -70,7 +70,7 @@ export function FurniturePlacements() {
   const lackTopY = lackY + 5;
   const mannRot  = Math.atan2(150 - lackCX, 200 - lackCZ);
 
-  const MUL_D       = 26;
+  const MUL_D       = 13; // demi-profondeur GLB (26cm/2) → face arrière flush mur A
   const MUL_MOUNT_Y = 230;
   const MUL_RAIL_Y  = 60;
   const mulCZ       = NICHE_Z_START - 110 - 80 / 2;

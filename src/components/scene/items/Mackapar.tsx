@@ -1,21 +1,24 @@
 /**
- * Mackapar.tsx — Portant IKEA MACKAPÄR (GLB media/mackapar_ikea.glb).
- * Coordonnées locales : centré par bbox, Y=0 = sol, scale Y→200cm.
- * Placement scène (avec vêtements) dans GlbItems.tsx.
+ * Mackapar.tsx — Portant IKEA MACKAPÄR (GLB media/MACKAPÄR.glb).
+ * Le GLB officiel IKEA est en mètres → scale ×100 (1 unité = 1 cm).
+ * Coordonnées locales : centré X/Z, Y=0 = sol.
  */
 import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
+import { removeGlbLines } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
+const GLB = 'media/MACKAPÄR.glb';
+
 export function Mackapar({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/mackapar_ikea.glb');
+  const { scene } = useGLTFClone(GLB);
 
   useLayoutEffect(() => {
-    const rawBox = new THREE.Box3().setFromObject(scene);
-    const scaleY = 200 / (rawBox.max.y - rawBox.min.y);
-    scene.scale.set(100, scaleY, 100);
+    removeGlbLines(scene);
+    scene.scale.setScalar(100);
+    scene.rotation.y = -Math.PI / 2;
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
     scene.position.set(
@@ -32,4 +35,4 @@ export function Mackapar({ onSize }: SceneItemProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('media/mackapar_ikea.glb');
+useGLTF.preload(GLB);

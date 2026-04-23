@@ -50,8 +50,56 @@ export function NissedalFrame({ w, h, ft, fd }: { w: number; h: number; ft: numb
 
 // ── Composant inventaire GLB ──────────────────────────────────────────────────
 
-const GLB_40x150 = 'media/NISSEDAL miroir 40x150 noir.glb';
-const GLB_65x65  = 'media/NISSEDAL miroir 65x65 noir.glb';
+export const GLB_40x150 = 'media/NISSEDAL miroir 40x150 noir.glb';
+export const GLB_65x65  = 'media/NISSEDAL miroir 65x65 noir.glb';
+
+/**
+ * Cadre GLB pour la scène (Mirrors.tsx) : charge le GLB et masque la glace.
+ * Coords locales : centré X/Z, Y=0 = bas du cadre.
+ * La glace est détectée par metalness > 0.5 ou roughness < 0.15.
+ */
+export function NissedalGlbFrame({ glb }: { glb: string }) {
+  const { scene } = useGLTFClone(glb);
+
+  useLayoutEffect(() => {
+    removeGlbLines(scene);
+    scene.scale.setScalar(100);
+    scene.rotation.x = -Math.PI / 2; // Z-up GLB : Z(hauteur)→Y, Y(épaisseur)→-Z, glace→-Z
+    scene.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(scene);
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+
+    // Identifier la glace = mesh avec la plus grande surface XY (après rotation)
+    // Le cadre est composé de petites barres ; la glace couvre presque toute la surface.
+    const meshes: THREE.Mesh[] = [];
+    scene.traverse(c => { if ((c as THREE.Mesh).isMesh) meshes.push(c as THREE.Mesh); });
+
+    let glassMesh: THREE.Mesh | null = null;
+    if (meshes.length > 1) {
+      let maxArea = 0;
+      for (const m of meshes) {
+        const s = new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3());
+        const area = s.x * s.y;
+        if (area > maxArea) { maxArea = area; glassMesh = m; }
+      }
+    }
+
+    for (const m of meshes) {
+      if (m === glassMesh) {
+        m.visible = false; // glace masquée — remplacée par Reflector
+      } else {
+        m.castShadow = true;
+        m.receiveShadow = true;
+      }
+    }
+  }, [scene]);
+
+  return <primitive object={scene} />;
+}
 
 function NissedalMirrorGlb({ glb, onSize }: { glb: string; onSize: SceneItemProps['onSize'] }) {
   const { scene } = useGLTFClone(glb);

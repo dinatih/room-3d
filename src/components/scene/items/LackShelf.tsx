@@ -21,7 +21,7 @@ export function LackShelf({ onSize }: SceneItemProps) {
   useLayoutEffect(() => {
     removeGlbLines(scene);
     scene.scale.setScalar(100);
-    scene.rotation.x = -Math.PI / 2; // depth(Y)→Z, thickness(Z)→Y
+    scene.rotation.x = Math.PI / 2; // depth(Y)→Z, thickness(Z)→Y
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
     scene.position.set(

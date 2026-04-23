@@ -15,7 +15,7 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { cameraState } from './cameraState';
-import { NissedalFrame } from './items/NissedalMirror';
+import { NissedalFrame, NissedalGlbFrame, GLB_40x150, GLB_65x65 } from './items/NissedalMirror';
 
 import { ROOM_D, WALL_H, KITCHEN_X1, DOOR_START, KITCHEN_Z } from '@config';
 
@@ -62,8 +62,8 @@ function ReflectorMirror({ w, h, position, rotationY }: {
 // ── 3× Nissedal 60×60 — Mur D ────────────────────────────────────────────────
 
 function MirrorsD() {
-  const W = 60, H = 60;
-  const FT = 2, FD = 1.5;
+  const W = 65, H = 65; // dims réelles GLB NISSEDAL 65×65
+  const FT = 1.8, FD = 1.2;
   const cx  = (KITCHEN_X1 + DOOR_START) / 2;
   const fz  = ROOM_D - 0.2 - FD / 2;
   const mirZ = fz - 0.1;
@@ -79,9 +79,9 @@ function MirrorsD() {
               position={[cx, cy, mirZ]}
               rotationY={Math.PI}
             />
-            {/* cadre — NissedalFrame face +Z, group positionné au bas du cadre */}
+            {/* cadre GLB — Y=0=bas, centré X/Z */}
             <group position={[cx, cy - H / 2, fz]}>
-              <NissedalFrame w={W} h={H} ft={FT} fd={FD} />
+              <NissedalGlbFrame glb={GLB_65x65} />
             </group>
           </group>
         );
@@ -113,9 +113,9 @@ function MirrorsA() {
               position={[mirX, cy, mz]}
               rotationY={Math.PI / 2}
             />
-            {/* cadre — rotationY=π/2 : width local X → world Z, depth local Z → world -X */}
-            <group position={[fx, MA_BOTTOM_Y, mz]} rotation-y={Math.PI / 2}>
-              <NissedalFrame w={MA_W} h={MA_H} ft={FT} fd={FD} />
+            {/* cadre GLB — rotation-y=-π/2 : glace locale -Z → monde +X (face pièce) */}
+            <group position={[fx, MA_BOTTOM_Y, mz]} rotation-y={-Math.PI / 2}>
+              <NissedalGlbFrame glb={GLB_40x150} />
             </group>
           </group>
         );

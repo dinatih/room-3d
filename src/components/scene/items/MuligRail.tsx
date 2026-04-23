@@ -19,6 +19,7 @@ export function MuligRail({ onSize }: SceneItemProps) {
   useLayoutEffect(() => {
     removeGlbLines(scene);
     scene.scale.setScalar(100);
+    scene.rotation.y = Math.PI / 2;
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
     scene.position.set(
