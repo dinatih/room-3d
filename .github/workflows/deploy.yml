@@ -17,27 +17,24 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: r3f/package-lock.json
 
-      - name: Install R3F dependencies
+      - name: Install dependencies
         run: npm ci
-        working-directory: r3f
 
-      - name: Build R3F app
+      - name: Build app
         run: npm run build
-        working-directory: r3f
 
       - name: Copy media into dist
-        run: cp -r media r3f/dist/media
+        run: cp -r media dist/media
 
       - name: Add CNAME and nojekyll
         run: |
-          cp CNAME r3f/dist/CNAME
-          touch r3f/dist/.nojekyll
+          cp CNAME dist/CNAME
+          touch dist/.nojekyll
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: r3f/dist
+          publish_dir: dist
           cname: dinatih.org
