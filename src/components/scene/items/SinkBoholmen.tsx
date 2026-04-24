@@ -1,77 +1,72 @@
 /**
- * Évier BOHOLMEN 1 bac — géométrie fidèle à Kitchen.tsx.
- * Local coords : centré XZ, Y=0=niveau du plan de travail (rim affleurant).
- * Le bac descend vers Y<0 ; le robinet monte vers Y>0.
+ * SinkBoholmen.tsx — Évier BOHOLMEN + mitigeur LAGAN IKEA.
+ * BOHOLMEN Évier 47x30 cm    : media/BOHOLMEN Évier 47x30 cm.glb
+ * LAGAN Mitigeur chromé       : media/LAGAN Mitigeur chromé.glb
+ * GLBs officiels IKEA en mètres → scale ×100 (1 unité = 1 cm).
+ * Coordonnées locales : centré X/Z, Y=0 = surface du plan de travail.
  */
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useRef } from 'react';
+import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
+import { removeGlbLines } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
-const SINK_W    = 30;
-const SINK_D    = 47;
-const HOLE_W    = 28;
-const HOLE_D    = 44.6;
-const BASIN_W   = 23;
-const BASIN_D   = 40;
-const DEPTH     = 15;
-const RIM_T     = 1.2;
-const RIM_ZW    = (SINK_D  - HOLE_D) / 2;
-const RIM_XW    = (SINK_W  - HOLE_W) / 2;
-const WALL_T    = (HOLE_W  - BASIN_W) / 2;
+const GLB_SINK   = 'media/BOHOLMEN Évier 47x30 cm.glb';
+const GLB_FAUCET = 'media/LAGAN Mitigeur chromé.glb';
 
-const inoxMat   = new THREE.MeshStandardMaterial({ color: 0xc8c8c8, metalness: 0.75, roughness: 0.12 });
-const faucetMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.7,  roughness: 0.1  });
+// BOHOLMEN : 46.6×15.7×30 cm à ×100, Y-up (Y=0=fond de vasque)
+const SINK_D = 30; // profondeur Z (cm)
 
 export function SinkBoholmen({ onSize }: SceneItemProps) {
+  const { scene: sinkScene   } = useGLTFClone(GLB_SINK);
+  const { scene: faucetScene } = useGLTFClone(GLB_FAUCET);
+  const groupRef = useRef<THREE.Group>(null!);
+
   useLayoutEffect(() => {
-    // Height = basin depth + faucet height above rim
-    onSize(new THREE.Vector3(SINK_W, DEPTH + 20, SINK_D));
-  }, []);
+    // ── Vasque ──
+    removeGlbLines(sinkScene);
+    sinkScene.scale.setScalar(100);
+    sinkScene.rotation.y = Math.PI / 2;
+    sinkScene.updateMatrixWorld(true);
+    const sinkBox = new THREE.Box3().setFromObject(sinkScene);
+    sinkScene.position.set(
+      -(sinkBox.min.x + sinkBox.max.x) / 2,
+      -sinkBox.min.y,
+      -(sinkBox.min.z + sinkBox.max.z) / 2,
+    );
+    sinkScene.traverse(c => {
+      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
+    });
+
+    // ── Mitigeur — positionné à l'arrière de la vasque ──
+    removeGlbLines(faucetScene);
+    faucetScene.scale.setScalar(100);
+    faucetScene.updateMatrixWorld(true);
+    const fBox = new THREE.Box3().setFromObject(faucetScene);
+    faucetScene.position.set(
+      -(fBox.min.x + fBox.max.x) / 2,
+      -fBox.min.y,
+      -(fBox.min.z + fBox.max.z) / 2,
+    );
+    faucetScene.traverse(c => {
+      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
+    });
+
+    groupRef.current.updateMatrixWorld(true);
+    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
+  }, [sinkScene, faucetScene]);
 
   return (
-    <group>
-      {/* ── Rebord extérieur (4 bandes) ── */}
-      {([
-        [SINK_W, RIM_ZW,  0,                               -(HOLE_D / 2 + RIM_ZW / 2)],
-        [SINK_W, RIM_ZW,  0,                                 HOLE_D / 2 + RIM_ZW / 2 ],
-        [RIM_XW, HOLE_D, -(HOLE_W / 2 + RIM_XW / 2),        0                        ],
-        [RIM_XW, HOLE_D,   HOLE_W / 2 + RIM_XW / 2,         0                        ],
-      ] as [number, number, number, number][]).map(([w, d, px, pz], i) => (
-        <mesh key={i} position={[px, RIM_T / 2, pz]} material={inoxMat}>
-          <boxGeometry args={[w, RIM_T, d]} />
-        </mesh>
-      ))}
-
-      {/* ── Parois du bac (4 côtés) ── */}
-      {([
-        { sx: HOLE_W, sz: WALL_T, px: 0,                        pz: -(BASIN_D + WALL_T) / 2 },
-        { sx: HOLE_W, sz: WALL_T, px: 0,                        pz:  (BASIN_D + WALL_T) / 2 },
-        { sx: WALL_T, sz: HOLE_D, px: -(BASIN_W + WALL_T) / 2, pz: 0                        },
-        { sx: WALL_T, sz: HOLE_D, px:  (BASIN_W + WALL_T) / 2, pz: 0                        },
-      ]).map((s, i) => (
-        <mesh key={i} position={[s.px, -DEPTH / 2, s.pz]} material={inoxMat}>
-          <boxGeometry args={[s.sx, DEPTH, s.sz]} />
-        </mesh>
-      ))}
-
-      {/* Fond */}
-      <mesh position={[0, -DEPTH + 0.25, 0]} material={inoxMat}>
-        <boxGeometry args={[BASIN_W, 0.5, BASIN_D]} />
-      </mesh>
-      {/* Bonde */}
-      <mesh position={[0, -DEPTH + 0.7, 0]} rotation={[Math.PI / 2, 0, 0]} material={inoxMat}>
-        <cylinderGeometry args={[2.5, 2.5, 0.8, 16]} />
-      </mesh>
-
-      {/* ── Robinet ── */}
-      {/* Colonne verticale */}
-      <mesh position={[0, 10, SINK_D / 2 - 3]} material={faucetMat}>
-        <cylinderGeometry args={[1, 1, 20, 8]} />
-      </mesh>
-      {/* Bec horizontal (rotation.x=π/2 → cylindre couché selon Z) */}
-      <mesh position={[0, 19, SINK_D / 2 - 9]} rotation={[Math.PI / 2, 0, 0]} material={faucetMat}>
-        <cylinderGeometry args={[0.8, 0.8, 12, 8]} />
-      </mesh>
+    <group ref={groupRef}>
+      <primitive object={sinkScene} />
+      {/* Mitigeur à 5 cm du fond de niche, rotation 180° */}
+      <group position={[0, 15, 16]} rotation={[0, Math.PI, 0]}>
+        <primitive object={faucetScene} />
+      </group>
     </group>
   );
 }
+
+useGLTF.preload(GLB_SINK);
+useGLTF.preload(GLB_FAUCET);

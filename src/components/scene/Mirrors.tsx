@@ -146,7 +146,7 @@ function MirrorsA() {
 
 function MirrorSDB() {
   const VANITY_W    = 60, VANITY_D = 47, VANITY_Y0 = 30, VANITY_H = 50;
-  const VANITY_CX   = DOOR_START - 78;
+  const VANITY_CX   = DOOR_START - 84;
   const VANITY_CZ   = KITCHEN_Z + 11 + VANITY_D / 2;
   const counterTopY = VANITY_Y0 + VANITY_H + 4;
   const mirrorW     = VANITY_W + 3;

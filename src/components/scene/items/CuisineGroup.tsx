@@ -152,13 +152,13 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
         <Counter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      {/* Évier */}
-      <group position={[CABINET_W / 2, COUNTER_H + COUNTER_SLAB, KIT_D / 2]}>
+      {/* Évier — bord arrière à 10.5 cm du fond de niche (Z=60) */}
+      <group position={[CABINET_W / 2, COUNTER_H + COUNTER_SLAB - 15, 26]}>
         <SinkBoholmen item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Plaques */}
-      <group position={[CABINET_W + FRIDGE_W / 2, COUNTER_H + COUNTER_SLAB, KIT_D / 2]}>
+      <group position={[CABINET_W + FRIDGE_W / 2, COUNTER_H + COUNTER_SLAB - 4.5, KIT_D / 2]} rotation={[0, -Math.PI, 0]}>
         <Stove item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
@@ -169,7 +169,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
       </group>
 
       {/* Réfrigérateur */}
-      <group position={[CABINET_W + FRIDGE_W / 2, 90 / 2, KIT_D / 2]}
+      <group position={[CABINET_W + FRIDGE_W / 2, 0, KIT_D / 2]}
         userData={{ hoverAction: { label: 'Réfrigérateur', actionId: 'fridge' } }}>
         <Fridge item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>

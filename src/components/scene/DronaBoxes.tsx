@@ -34,7 +34,7 @@ function buildMatrices(): THREE.Matrix4[] {
   // NE/SE/NW/SW/Mackapär : Drona intégrés dans leurs composants respectifs
 
   // 1 sur meuble SDB côté vasque (east cabinet top)
-  addSingle(DOOR_START - 28, 60 + DF / 2, KITCHEN_Z + 30);
+  addSingle(DOOR_START - 31, 60 + DF / 2, KITCHEN_Z + 30);
   // 1 sur meuble SDB ouest
   addSingle(-NICHE_DEPTH + 20, 60 + DF / 2, KITCHEN_Z + 30);
 

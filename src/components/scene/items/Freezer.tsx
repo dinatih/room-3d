@@ -1,116 +1,39 @@
 /**
- * Congélateur CHIQ CSD46D4E — géométrie procédurale fidèle à decor.js
- * La porte tourne en Y autour de sa charnière (côté -Z), animée en douceur.
+ * Freezer.tsx — Réfrigérateur compact TILLREDA IKEA.
+ * media/TILLREDA Réfrigérateur indépendant-blanc 43 l.glb
+ * GLB officiel IKEA en mètres → scale ×100 (1 unité = 1 cm).
+ * Coordonnées locales : centré X/Z, Y=0 = sol.
  */
-import { useRef, useLayoutEffect } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useLayoutEffect } from 'react';
+import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
+import { removeGlbLines } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
-const FRZ_W = 45;    // largeur Z
-const FRZ_D = 47;    // profondeur X
-const FRZ_H = 50;    // hauteur Y
-const FRZ_T = 1.5;   // épaisseur parois
-const INNER_H = FRZ_H - FRZ_T * 2;
-const INNER_W = FRZ_W - FRZ_T * 2;
+const GLB = 'media/TILLREDA Réfrigérateur indépendant-blanc 43 l.glb';
 
-export function Freezer({ actionState, onSize }: SceneItemProps) {
-  const doorRef = useRef<THREE.Group>(null!);
-  const isOpen  = actionState['freezer-toggle'] ?? false;
-  const { invalidate } = useThree();
+export function Freezer({ onSize }: SceneItemProps) {
+  const { scene } = useGLTFClone(GLB);
 
-  // Taille en unités scène (1 unit = 1cm ici, comme le reste du projet)
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(FRZ_D, FRZ_H, FRZ_W));
-  }, []);
+    removeGlbLines(scene);
+    scene.scale.setScalar(100);
+    scene.rotation.y = Math.PI / 2;
+    scene.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(scene);
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+    scene.traverse(c => {
+      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
+    });
+    onSize(new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3()));
+  }, [scene]);
 
-  // Animation fluide de la porte
-  useFrame(() => {
-    const target = isOpen ? Math.PI / 2 : 0;
-    const delta = target - doorRef.current.rotation.y;
-    if (Math.abs(delta) > 0.001) {
-      doorRef.current.rotation.y += delta * 0.12;
-      invalidate();
-    } else {
-      doorRef.current.rotation.y = target;
-    }
-  });
-
-  return (
-    // Centré sur X et Z, centré verticalement (décalage -FRZ_H/2)
-    <group position={[0, -FRZ_H / 2, 0]}>
-
-      {/* ── Carcasse ── */}
-
-      {/* Dos */}
-      <Panel sx={FRZ_T}            sy={FRZ_H}  sz={FRZ_W}
-             x={-FRZ_D/2+FRZ_T/2} y={FRZ_H/2} z={0}           col="#1a1a1a" />
-      {/* Dessus */}
-      <Panel sx={FRZ_D}  sy={FRZ_T}             sz={FRZ_W}
-             x={0}       y={FRZ_H-FRZ_T/2}      z={0}           col="#1a1a1a" />
-      {/* Dessous */}
-      <Panel sx={FRZ_D}  sy={FRZ_T}  sz={FRZ_W}
-             x={0}       y={FRZ_T/2} z={0}                       col="#1a1a1a" />
-      {/* Côté gauche (Z-) */}
-      <Panel sx={FRZ_D-FRZ_T} sy={INNER_H}      sz={FRZ_T}
-             x={FRZ_T/2}      y={FRZ_H/2}       z={-FRZ_W/2+FRZ_T/2} col="#1a1a1a" />
-      {/* Côté droit (Z+) */}
-      <Panel sx={FRZ_D-FRZ_T} sy={INNER_H}      sz={FRZ_T}
-             x={FRZ_T/2}      y={FRZ_H/2}       z={ FRZ_W/2-FRZ_T/2} col="#1a1a1a" />
-
-      {/* ── Intérieur ── */}
-
-      {/* Fond */}
-      <Panel sx={0.5}    sy={INNER_H}  sz={INNER_W}
-             x={-FRZ_D/2+FRZ_T+0.25} y={FRZ_H/2} z={0}         col="#dddddd" />
-      {/* Étagère basse */}
-      <Panel sx={FRZ_D-FRZ_T-1} sy={FRZ_T} sz={INNER_W}
-             x={FRZ_T/2-0.5}    y={FRZ_H*0.35}  z={0}           col="#dddddd" />
-      {/* Étagère haute */}
-      <Panel sx={FRZ_D-FRZ_T-1} sy={FRZ_T} sz={INNER_W}
-             x={FRZ_T/2-0.5}    y={FRZ_H*0.60}  z={0}           col="#dddddd" />
-
-      {/* ── Pieds ── */}
-      {([-1, 1] as const).flatMap(dz =>
-        ([-1, 1] as const).map(dx => (
-          <mesh key={`${dx}${dz}`}
-                position={[dx*(FRZ_D/2-3), 1, dz*(FRZ_W/2-3)]}>
-            <cylinderGeometry args={[1.5, 1.5, 2, 8]} />
-            <meshStandardMaterial color="#111111" roughness={0.4} />
-          </mesh>
-        ))
-      )}
-
-      {/* ── Porte (charnière côté -Z) ── */}
-      <group ref={doorRef} position={[FRZ_D/2, 0, -FRZ_W/2]}>
-        {/* Panneau : s'étend depuis la charnière en +Z */}
-        <mesh position={[0, FRZ_H/2, FRZ_W/2]}>
-          <boxGeometry args={[FRZ_T, FRZ_H-2, FRZ_W-FRZ_T]} />
-          <meshStandardMaterial color="#1a1a1a" roughness={0.3} metalness={0.2} />
-        </mesh>
-        {/* Poignée */}
-        <mesh position={[FRZ_T/2+0.9, FRZ_H/2, FRZ_W-7]}>
-          <boxGeometry args={[1.5, 25, 1.5]} />
-          <meshStandardMaterial color="#111111" roughness={0.4} />
-        </mesh>
-      </group>
-
-    </group>
-  );
+  return <primitive object={scene} />;
 }
 
-/** Panneau boîte réutilisable */
-function Panel({
-  sx, sy, sz, x, y, z, col,
-}: {
-  sx: number; sy: number; sz: number;
-  x: number; y: number; z: number;
-  col: string;
-}) {
-  return (
-    <mesh position={[x, y, z]}>
-      <boxGeometry args={[sx, sy, sz]} />
-      <meshStandardMaterial color={col} roughness={0.3} metalness={0.1} />
-    </mesh>
-  );
-}
+useGLTF.preload(GLB);

@@ -3,9 +3,9 @@
  * monde exactes, fidèles aux positions de la scène vanilla Three.js.
  *
  * Conventions d'ancrage (axe Y) :
- *   - Kallax       : geometry spans [PY-H, PY]  → pose au sol : PY = H
- *   - Autres (Freezer, Fridge, KitchenCabinet, BathroomCabinet) :
- *                    corps centré en PY           → pose au sol : PY = H/2
+ *   - Kallax         : geometry spans [PY-H, PY]  → pose au sol : PY = H
+ *   - GLB items      : Y=0 = sol (Freezer, Fridge, BathroomCabinet) → PY = 0
+ *   - KitchenCabinet : procédural centré → PY = H/2
  *
  * Sources :
  *   js/furniture/kallax.js  (positions exactes des 4 stacks)
@@ -122,11 +122,11 @@ function KallaxNWPlaced() {
 
 // ── Congélateur ───────────────────────────────────────────────────────────────
 // js/decor/decor.js : frzX=24.5, frzZ=269.5, frzBaseY=0
-// FRZ_H=50 → PY = FRZ_H/2 = 25
+// GLB Y=0=sol → PY = 0
 
 function FreezerPlaced({ as }: { as: Record<string, boolean> }) {
   return (
-    <group position={[24.5, 25, 269.5]}
+    <group position={[24.5, 0, 269.5]}
       userData={{ hoverAction: { label: 'Congélateur', actionId: 'freezer' } }}>
       <Freezer item={stub('freezer')} actionState={as} onSize={noop} />
     </group>
@@ -167,7 +167,7 @@ function CorridorClosetPlaced({ as }: { as: Record<string, boolean> }) {
 
 function VasqueSdbPlaced() {
   return (
-    <group position={[DOOR_START - 78, 0, KITCHEN_Z + 34.5]}>
+    <group position={[DOOR_START - 84, 14, KITCHEN_Z + 34.5]}>
       <VasqueSdb item={stub('vasque-sdb')} actionState={AS} onSize={noop} />
     </group>
   );
@@ -238,10 +238,10 @@ function BathroomCabinetsPlaced({ as }: { as: Record<string, boolean> }) {
   const cbZ = KITCHEN_Z + 11 + 37 / 2; // 489.5
   return (
     <>
-      <group position={[-NICHE_DEPTH + 40 / 2, 60 / 2, cbZ]}>
+      <group position={[-NICHE_DEPTH + 40 / 2, 0, cbZ]}>
         <BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={noop} />
       </group>
-      <group position={[DOOR_START - 40 / 2 - 8, 60 / 2, cbZ]}>
+      <group position={[DOOR_START - 40 / 2 - 11, 0, cbZ]}>
         <BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={noop} />
       </group>
     </>
