@@ -202,7 +202,6 @@ export function DevToolsGroups({ Group }: {
         </button>
       </Group>
 
-      <GlbSizes Group={Group} />
     </>
   );
 }

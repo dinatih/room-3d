@@ -330,6 +330,7 @@ export interface LayerState {
   equipment: boolean;
   furniture: boolean;
   glb:       boolean;
+
   neighbors:  boolean;
   xray:       boolean;
   mirrorsHD:  boolean;

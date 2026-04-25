@@ -107,8 +107,7 @@ function DronaLayer() {
 // ── Composant principal ───────────────────────────────────────────────────────
 
 const TOGGLE_MAP: Record<string, string> = {
-  cabinet: 'cabinet-toggle',
-  fridge:  'fridge-toggle',
+  fridge: 'fridge-toggle',
 };
 
 /** Drona layer seul — pour placement dans un layer séparé (furniture). */
@@ -163,8 +162,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
       </group>
 
       {/* Meuble sous évier */}
-      <group position={[CABINET_W / 2, 90 / 2, KIT_D / 2]}
-        userData={{ hoverAction: { label: 'Meuble évier', actionId: 'cabinet' } }}>
+      <group position={[CABINET_W / 2, 10, KIT_D / 2]}>
         <KitchenCabinet item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
 

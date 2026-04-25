@@ -218,14 +218,14 @@ export function GlbPlacements() {
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      {/* DIMPA — 5 sacs séjour, contre mur C (z=0), rangée 3+2 */}
-      {[75, 141, 207].map(x => (
-        <group key={x} position={[x, 0, 11]}>
-          <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-      ))}
-      {[108, 174].map(x => (
-        <group key={x} position={[x, 0, 34]}>
+      {/* DIMPA — 1 près du congélateur le long du mur A / miroir */}
+      <group position={[14, 0, 250]} rotation-y={Math.PI / 2}>
+        <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* DIMPA — 4 dans le fond du jardin, contre le mur marron (z≈−400), face +Z */}
+      {[55, 120, 185, 250].map(x => (
+        <group key={x} position={[x, 0, -386]}>
           <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       ))}
@@ -250,10 +250,12 @@ export function GlbPlacements() {
 
       <CeilingPalmLeaves />
 
-      {/* GREJIG étagère à chaussures — entrée, mur D */}
-      <group position={[MIRROR_CX, 0, ROOM_D - 14]}>
-        <Grejig item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
+      {/* GREJIG ×3 empilées — entrée, mur D (H≈18 cm/unité) */}
+      {[0, 18, 36].map(y => (
+        <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]}>
+          <Grejig item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      ))}
     </>
   );
 }

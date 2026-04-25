@@ -170,7 +170,7 @@ function ShowerPlaced() {
 
 function ToiletPlaced({ as }: { as: Record<string, boolean> }) {
   return (
-    <group position={[-NICHE_DEPTH + 60, 0, KITCHEN_Z + 31]}>
+    <group position={[-NICHE_DEPTH + 60, 0, KITCHEN_Z + 46.5]}>
       <Toilet item={stub('toilet')} actionState={as} onSize={noop} />
     </group>
   );

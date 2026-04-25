@@ -93,6 +93,14 @@ export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
   }, [showSkeleton, skelHelper, threeScene]);
 
   useLayoutEffect(() => {
+    // FrontSide only — évite d'afficher l'intérieur du corps en mode walk
+    scene.traverse(c => {
+      const m = c as THREE.Mesh;
+      if (!m.isMesh) return;
+      ([] as THREE.Material[]).concat(m.material as any)
+        .forEach(mat => { if (mat) (mat as THREE.MeshStandardMaterial).side = THREE.FrontSide; });
+    });
+
     // Hair : clone material partagé pour cycling
     let hairMat: THREE.MeshStandardMaterial | null = null;
     scene.traverse(c => {
@@ -221,6 +229,14 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
     // Walker (sibling précédent) a déjà mis à l'échelle origScene — on copie
     clone.scale.copy(origScene.scale);
     clone.position.copy(origScene.position);
+
+    // FrontSide only sur le clone (matériaux propres au clone)
+    clone.traverse(c => {
+      const m = c as THREE.Mesh;
+      if (!m.isMesh) return;
+      ([] as THREE.Material[]).concat(m.material as any)
+        .forEach(mat => { if (mat) (mat as THREE.MeshStandardMaterial).side = THREE.FrontSide; });
+    });
 
     // Tenue rouge
     clone.traverse(c => {
