@@ -1,17 +1,16 @@
 /**
- * Furniture.tsx — Place tous les composants TSX existants à leurs coordonnées
- * monde exactes, fidèles aux positions de la scène vanilla Three.js.
+ * Furniture.tsx — Place tous les composants à leurs coordonnées monde.
+ *
+ * Quatre exports correspondant aux deux layers × deux types :
+ *   EquipmentProc  → Layer 1 (LayerGroup) + layers.equipment
+ *   EquipmentGlb   → Layer 2 (GlbLayerGroup) + layers.equipment
+ *   FurnitureProc  → Layer 1 (LayerGroup) + layers.furniture
+ *   FurnitureGlb   → Layer 2 (GlbLayerGroup) + layers.furniture
  *
  * Conventions d'ancrage (axe Y) :
  *   - Kallax         : geometry spans [PY-H, PY]  → pose au sol : PY = H
  *   - GLB items      : Y=0 = sol (Freezer, Fridge, BathroomCabinet) → PY = 0
- *   - KitchenCabinet : procédural centré → PY = H/2
- *
- * Sources :
- *   js/furniture/kallax.js  (positions exactes des 4 stacks)
- *   js/decor/decor.js       (congélateur)
- *   js/structure/kitchen.js (frigo, meuble évier)
- *   js/structure/bathroom.js (meubles SDB)
+ *   - KitchenCabinet : GLB Y=0=sol → PY = 0
  */
 import { useState, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
@@ -35,10 +34,7 @@ import type { Item } from '../../types';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const noop = (_: THREE.Vector3) => {};
-
-// Empty actionState for items that have no toggleable state (Kallax, BathroomCabinet)
 const AS: Record<string, boolean> = {};
-
 
 function stub(id: string): Item {
   return {
@@ -47,7 +43,7 @@ function stub(id: string): Item {
   };
 }
 
-// ── Constantes Kallax (depuis Kallax.tsx) ─────────────────────────────────────
+// ── Constantes Kallax ─────────────────────────────────────────────────────────
 
 const TF = 3.5;
 const TI = 1.5;
@@ -56,26 +52,23 @@ const DEP = 39;
 
 function tw(cols: number) { return cols * NW_K + 2 * TF + (cols - 1) * TI; }
 
-const w1 = tw(1); // 40.5  (1 colonne)
-const w2 = tw(2); // 75.5  (2 colonnes)
+const w1 = tw(1); // 40.5
+const w2 = tw(2); // 75.5
 
 // ── Constantes scène ──────────────────────────────────────────────────────────
-// Reprises de config.js (via @config) ou calculées depuis les modules JS source.
 
 const ROOM_W      = 300;
 const ROOM_D      = 400;
 const KITCHEN_X1  = 130;
 const NICHE_DEPTH = 10;
 const KITCHEN_X0  = 30;
-const KITCHEN_D   = 60;  // KITCHEN_DEPTH
+const KITCHEN_D   = 60;
 const KITCHEN_Z   = ROOM_D + KITCHEN_D;  // 460
 const SDB_Z_END   = KITCHEN_Z + 140;     // 600
 const DOOR_START  = 190;
 const WALL_H      = 250;
 
-// ── Stack NE — mur B (X=300) + mur C (Z=0) ───────────────────────────────────
-// gStack.rotation.y = +π/2 ; gStack.position = (ROOM_W-DEP/2, 0, w2/2)
-// Kallax + Drona intégrés dans KallaxNE
+// ── Placements ────────────────────────────────────────────────────────────────
 
 function KallaxNEPlaced() {
   return (
@@ -85,20 +78,13 @@ function KallaxNEPlaced() {
   );
 }
 
-// ── Stack SW — niche mur A (X=-NICHE_DEPTH) + mur D (Z=400) ─────────────────
-// Kallax + Drona intégrés dans KallaxCuisine
-
-function KallaxSW() {
+function KallaxSWPlaced() {
   return (
     <group position={[-NICHE_DEPTH + DEP / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
       <KallaxCuisine item={stub('kallax-sw-stack')} actionState={AS} onSize={noop} />
     </group>
   );
 }
-
-// ── Stack SE — mur B, 60cm avant mur D ───────────────────────────────────────
-// gStack.rotation.y = +π/2 ; gStack.position = (ROOM_W-DEP/2, 0, ROOM_D-60-w1/2)
-// Kallax + Drona intégrés dans KallaxSE
 
 function KallaxSEPlaced() {
   return (
@@ -108,10 +94,6 @@ function KallaxSEPlaced() {
   );
 }
 
-// ── Stack NW — mur A (X=0) + mur C (Z=0) ────────────────────────────────────
-// gStack.rotation.y = -π/2 ; gStack.position = (DEP/2, 0, w1/2)
-// Kallax + Drona intégrés dans KallaxNW
-
 function KallaxNWPlaced() {
   return (
     <group position={[DEP / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]}>
@@ -119,10 +101,6 @@ function KallaxNWPlaced() {
     </group>
   );
 }
-
-// ── Congélateur ───────────────────────────────────────────────────────────────
-// js/decor/decor.js : frzX=24.5, frzZ=269.5, frzBaseY=0
-// GLB Y=0=sol → PY = 0
 
 function FreezerPlaced({ as }: { as: Record<string, boolean> }) {
   return (
@@ -132,8 +110,6 @@ function FreezerPlaced({ as }: { as: Record<string, boolean> }) {
     </group>
   );
 }
-
-// ── Cuisine (plan de travail + évier + plaques + frigo + meuble bas + meuble haut + 3 Drona) ──
 
 function CuisineGroupPlaced() {
   return (
@@ -151,9 +127,6 @@ function CuisineDronaPlaced() {
   );
 }
 
-// ── Placard couloir ───────────────────────────────────────────────────────────
-// CX = (KITCHEN_X1 + DOOR_START) / 2 = 160  |  CZ = (ROOM_D+10 + KITCHEN_Z) / 2 = 435
-
 function CorridorClosetPlaced({ as }: { as: Record<string, boolean> }) {
   return (
     <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + 10 + KITCHEN_Z) / 2]}>
@@ -162,9 +135,6 @@ function CorridorClosetPlaced({ as }: { as: Record<string, boolean> }) {
   );
 }
 
-// ── Vasque SDB ────────────────────────────────────────────────────────────────
-// VANITY_CX = DOOR_START - 48 - 60/2 = 112  |  VANITY_CZ = KITCHEN_Z + 11 + 47/2 = 494.5
-
 function VasqueSdbPlaced() {
   return (
     <group position={[DOOR_START - 84, 14, KITCHEN_Z + 34.5]}>
@@ -172,9 +142,6 @@ function VasqueSdbPlaced() {
     </group>
   );
 }
-
-// ── Ballon d'eau chaude ───────────────────────────────────────────────────────
-// HW_R=28, HW_H=65 → center at (-NICHE_DEPTH+HW_R, WALL_H-10-HW_H/2, KITCHEN_Z+20+HW_R)
 
 function WaterHeaterPlaced() {
   const HW_R = 28, HW_H = 65;
@@ -185,9 +152,6 @@ function WaterHeaterPlaced() {
   );
 }
 
-// ── Tapis pelouse synthétique ─────────────────────────────────────────────────
-// rugCX = (-NICHE_DEPTH + DOOR_START) / 2 = 90  |  rugCZ = SDB_Z_END - 53 = 547
-
 function GrassRugPlaced() {
   return (
     <group position={[(-NICHE_DEPTH + DOOR_START) / 2, 0, SDB_Z_END - 53]}>
@@ -195,9 +159,6 @@ function GrassRugPlaced() {
     </group>
   );
 }
-
-// ── Douche ────────────────────────────────────────────────────────────────────
-// showerCX = (-NICHE_DEPTH + SHOWER_W) / 2 = 25  |  SHOWER_Z0 = SDB_Z_END = 600
 
 function ShowerPlaced() {
   return (
@@ -207,19 +168,13 @@ function ShowerPlaced() {
   );
 }
 
-// ── WC ────────────────────────────────────────────────────────────────────────
-// WC_CX = -NICHE_DEPTH + 40 + 20 = 50  |  WC_Z0 = KITCHEN_Z + 11 = 471
-
 function ToiletPlaced({ as }: { as: Record<string, boolean> }) {
   return (
-    <group position={[-NICHE_DEPTH + 60, 0, KITCHEN_Z + 11]}>
+    <group position={[-NICHE_DEPTH + 60, 0, KITCHEN_Z + 31]}>
       <Toilet item={stub('toilet')} actionState={as} onSize={noop} />
     </group>
   );
 }
-
-// ── Placard SDB ───────────────────────────────────────────────────────────────
-// SLIDE_CX = (70+180)/2 = 125  |  SLIDE_Z = SDB_Z_END = 600
 
 function SdbClosetPlaced({ as }: { as: Record<string, boolean> }) {
   return (
@@ -228,11 +183,6 @@ function SdbClosetPlaced({ as }: { as: Record<string, boolean> }) {
     </group>
   );
 }
-
-// ── Meubles SDB ───────────────────────────────────────────────────────────────
-// BathroomCabinet: W=40, H=60, D=37
-// West : X = -NICHE_DEPTH + W/2 = 10  |  Z = KITCHEN_Z+11+37/2 = 489.5  |  PY = H/2 = 30
-// East : X = DOOR_START - W/2 - 8 = 162
 
 function BathroomCabinetsPlaced({ as }: { as: Record<string, boolean> }) {
   const cbZ = KITCHEN_Z + 11 + 37 / 2; // 489.5
@@ -248,30 +198,42 @@ function BathroomCabinetsPlaced({ as }: { as: Record<string, boolean> }) {
   );
 }
 
-// ── Toggles équipements ───────────────────────────────────────────────────────
+// ── Toggle maps ───────────────────────────────────────────────────────────────
 
-const EQUIPMENT_TOGGLE_MAP: Record<string, string> = {
+const EQUIPMENT_GLB_TOGGLE_MAP: Record<string, string> = {
   freezer: 'freezer-toggle',
   wcLid:   'wc-lid-toggle',
 };
 
-const FURNITURE_TOGGLE_MAP: Record<string, string> = {
+const FURNITURE_PROC_TOGGLE_MAP: Record<string, string> = {
   corrDoors: 'corr-doors-toggle',
   sdbCloset: 'sdb-closet-toggle',
-  cbnWest:   'cbn-west-toggle',
-  cbnEast:   'cbn-east-toggle',
 };
 
-// ── Équipements (cuisine + sanitaires) ───────────────────────────────────────
+const FURNITURE_GLB_TOGGLE_MAP: Record<string, string> = {
+  cbnWest: 'cbn-west-toggle',
+  cbnEast: 'cbn-east-toggle',
+};
 
-export function Equipment() {
+// ── Layer 1 (procédural) ──────────────────────────────────────────────────────
+
+/** Équipements procéduraux : chauffe-eau uniquement. */
+export function EquipmentProc() {
+  return <WaterHeaterPlaced />;
+}
+
+/**
+ * Mobilier procédural : placards, tapis.
+ * Écoute corrDoors + sdbCloset.
+ */
+export function FurnitureProc() {
   const [as, setAs] = useState<Record<string, boolean>>({});
   const { invalidate } = useThree();
 
   useEffect(() => {
     const onToggle = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
-      const asKey = EQUIPMENT_TOGGLE_MAP[key];
+      const asKey = FURNITURE_PROC_TOGGLE_MAP[key];
       if (!asKey) return;
       setAs(prev => ({ ...prev, [asKey]: !prev[asKey] }));
       invalidate();
@@ -282,26 +244,69 @@ export function Equipment() {
 
   return (
     <>
-      <FreezerPlaced as={as} />
-      <CuisineGroupPlaced />
-      <VasqueSdbPlaced />
-      <WaterHeaterPlaced />
-      <ShowerPlaced />
-      <ToiletPlaced as={as} />
+      <CorridorClosetPlaced as={as} />
+      <GrassRugPlaced />
+      <SdbClosetPlaced as={as} />
+      <CuisineDronaPlaced />
     </>
   );
 }
 
-// ── Mobilier fixe (rangements) ────────────────────────────────────────────────
+// ── Layer 2 (GLB) ─────────────────────────────────────────────────────────────
 
-export function Furniture() {
+/**
+ * Équipements GLB : congélateur, vasque SDB, douche, WC.
+ * Écoute freezer + wcLid.
+ */
+export function EquipmentGlb() {
   const [as, setAs] = useState<Record<string, boolean>>({});
   const { invalidate } = useThree();
 
   useEffect(() => {
     const onToggle = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
-      const asKey = FURNITURE_TOGGLE_MAP[key];
+      const asKey = EQUIPMENT_GLB_TOGGLE_MAP[key];
+      if (!asKey) return;
+      setAs(prev => ({ ...prev, [asKey]: !prev[asKey] }));
+      invalidate();
+    };
+    document.addEventListener('furniture-toggle', onToggle);
+    return () => document.removeEventListener('furniture-toggle', onToggle);
+  }, [invalidate]);
+
+  return (
+    <>
+      <CuisineGroupPlaced />
+      <FreezerPlaced as={as} />
+      <VasqueSdbPlaced />
+      <ShowerPlaced />
+      <ToiletPlaced as={as} />
+    </>
+  );
+}
+
+/**
+ * Composites furniture : items qui mélangent GLB et enfants procéduraux.
+ * Placés EN DEHORS du <group visible={layers.glb}> dans Studio.tsx ;
+ * chaque composite gère sa visibilité GLB interne via GlbSubGroup / GlbContext.
+ */
+export function FurnitureComposite() {
+  return <KallaxNWPlaced />;
+}
+
+/**
+ * Mobilier GLB pur : Kallax ×3 + meubles SDB METOD.
+ * Écoute cbnWest + cbnEast.
+ * KallaxNW est dans FurnitureComposite (composite GLB + procédural).
+ */
+export function FurnitureGlb() {
+  const [as, setAs] = useState<Record<string, boolean>>({});
+  const { invalidate } = useThree();
+
+  useEffect(() => {
+    const onToggle = (e: Event) => {
+      const { key } = (e as CustomEvent).detail as { key: string };
+      const asKey = FURNITURE_GLB_TOGGLE_MAP[key];
       if (!asKey) return;
       setAs(prev => ({ ...prev, [asKey]: !prev[asKey] }));
       invalidate();
@@ -313,14 +318,9 @@ export function Furniture() {
   return (
     <>
       <KallaxNEPlaced />
-      <KallaxSW />
+      <KallaxSWPlaced />
       <KallaxSEPlaced />
-      <KallaxNWPlaced />
-      <CorridorClosetPlaced as={as} />
-      <GrassRugPlaced />
-      <SdbClosetPlaced as={as} />
       <BathroomCabinetsPlaced as={as} />
-      <CuisineDronaPlaced />
     </>
   );
 }

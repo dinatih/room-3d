@@ -13,6 +13,7 @@ import { Kallax2x1 }     from './Kallax2x1';
 import { Kallax1x1 }     from './Kallax1x1';
 import { MannequinHead } from './MannequinHead';
 import { useDronaGeo } from './Drona';
+import { GlbSubGroup }  from '../GlbContext';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../../utils/sceneItem';
 import type { SceneItemProps } from '../../../types';
 
@@ -88,29 +89,31 @@ export function KallaxNW({ onSize }: SceneItemProps) {
 
   return (
     <group ref={ref}>
-      {/* nwB 2×1 pivoté, Y ∈ [0, w2] */}
-      <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax2x1 item={k('kallax-nw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {/* nwM 1×1 pivoté, Y ∈ [w2, w2+w1] */}
-      <group position={[px, w2 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax1x1 item={k('kallax-nw-1x1-a')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        <group position={[0, -w1 / 2, 0]}>
-          <DroneCell />
+      {/* Sous-groupe GLB — masqué par le toggle GLB, visible par défaut */}
+      <GlbSubGroup>
+        {/* nwB 2×1 pivoté, Y ∈ [0, w2] */}
+        <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <Kallax2x1 item={k('kallax-nw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
-      </group>
-      {/* nwT 1×1 pivoté, Y ∈ [w2+w1, w2+2×w1] */}
-      <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        <group position={[0, -w1 / 2, 0]}>
-          <DroneCell />
+        {/* nwM 1×1 pivoté, Y ∈ [w2, w2+w1] */}
+        <group position={[px, w2 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <Kallax1x1 item={k('kallax-nw-1x1-a')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <group position={[0, -w1 / 2, 0]}>
+            <DroneCell />
+          </group>
         </group>
-      </group>
-      <DronaLayer />
+        {/* nwT 1×1 pivoté, Y ∈ [w2+w1, w2+2×w1] */}
+        <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <group position={[0, -w1 / 2, 0]}>
+            <DroneCell />
+          </group>
+        </group>
+        <DronaLayer />
+      </GlbSubGroup>
 
-      {/* MannequinHead — sur le dessus du stack NW (Y = w2 + 2×w1) */}
-      {/* local: x = z_world − stack_z = DEP/2, z = stack_x − x_world = w1/2  */}
-      {/* rotY_local = atan2(150 − DEP/2, 200 − w1/2) + π  (nwMannRot + π/2) */}
+      {/* Enfant procédural — toujours visible indépendamment du toggle GLB */}
+      {/* world: x=DEP/2+w1/2≈39.75, y=w2+2w1≈156.5, z=w1/2−DEP/2≈0.75 */}
       <group
         position={[DEP / 2, w2 + 2 * w1, w1 / 2]}
         rotation-y={Math.atan2(150 - DEP / 2, 200 - w1 / 2) + Math.PI}

@@ -65,7 +65,7 @@ function PottedPalmPlaced() {
 
 function BathtubPlaced() {
   return (
-    <group position={[120, 0, -250]} rotation={[0, -1, 0]}>
+    <group position={[120, 0, -250]} rotation={[0, 1, 0]}>
       <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
     </group>
   );
@@ -87,7 +87,6 @@ function JoggingSuitPlaced() {
 export function Garden() {
   return (
     <>
-      <AltappenRugField />
       <ArmrestSofaPlaced />
       <ArmlessSofaPlaced />
       <ChestBenchPlaced />
@@ -100,6 +99,7 @@ export function Garden() {
 export function GardenGlb() {
   return (
     <>
+      <AltappenRugField />
       <ViggjaPlaced />
       <PottedPalmPlaced />
       <JoggingSuitPlaced />

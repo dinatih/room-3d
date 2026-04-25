@@ -21,6 +21,7 @@ import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
 import { SunnerstaGroup } from './items/SunnerstaGroup';
 import { Dimpa }          from './items/Dimpa';
+import { Grejig }         from './items/Grejig';
 import { PalmLeaf }       from './items/PalmLeaf';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../utils/sceneItem';
 
@@ -33,6 +34,20 @@ const kallaxW2 = 75.5;
 
 const KALLAX_SE_Z   = ROOM_D - 60 - kallaxW1 / 2;  // 319.75
 const KALLAX_SE_TOP = 2 * kallaxW2;                  // 151
+
+// ── Constantes items procéduraux (partagées FurniturePlacements + GlbPlacements) ──
+
+const lackY  = 187.5;
+const lackCX = 26 / 2;
+const lackCZ = NICHE_Z_START - 110 / 2;
+
+const lackTopY = lackY + 5;
+const mannRot  = Math.atan2(150 - lackCX, 200 - lackCZ);
+
+const MUL_D       = 13;  // demi-profondeur GLB (26cm/2) → face arrière flush mur A
+const MUL_MOUNT_Y = 230;
+const MUL_RAIL_Y  = 60;
+const mulCZ       = NICHE_Z_START - 110 - 80 / 2;
 
 // ── Constantes GlbItems ───────────────────────────────────────────────────────
 
@@ -63,52 +78,13 @@ function AirPerformerPlaced() {
 }
 
 export function FurniturePlacements() {
-  const lackY  = 187.5;
-  const lackCX = 26 / 2;
-  const lackCZ = NICHE_Z_START - 110 / 2;
-
-  const lackTopY = lackY + 5;
-  const mannRot  = Math.atan2(150 - lackCX, 200 - lackCZ);
-
-  const MUL_D       = 13; // demi-profondeur GLB (26cm/2) → face arrière flush mur A
-  const MUL_MOUNT_Y = 230;
-  const MUL_RAIL_Y  = 60;
-  const mulCZ       = NICHE_Z_START - 110 - 80 / 2;
-
   return (
     <>
-      <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]}>
-        <LackShelf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
-      <group position={[MUL_D, MUL_MOUNT_Y - MUL_RAIL_Y, mulCZ]}>
-        <MuligRail item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
-      <group position={[110, 0, 500]}>
-        <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <group position={[286, 0, 202]}>
-        <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
       <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       <AirPerformerPlaced />
-
-      {/* DIMPA — 5 sacs séjour, contre mur C (z=0), rangée 3+2 */}
-      {[75, 141, 207].map(x => (
-        <group key={x} position={[x, 0, 11]}>
-          <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-      ))}
-      {[108, 174].map(x => (
-        <group key={x} position={[x, 0, 34]}>
-          <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-      ))}
     </>
   );
 }
@@ -224,6 +200,36 @@ function CeilingPalmLeaves() {
 export function GlbPlacements() {
   return (
     <>
+      {/* LACK étagère murale */}
+      <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]}>
+        <LackShelf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* MULIG rail */}
+      <group position={[MUL_D, MUL_MOUNT_Y - MUL_RAIL_Y, mulCZ]}>
+        <MuligRail item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* FNISS poubelles */}
+      <group position={[110, 0, 500]}>
+        <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[286, 0, 202]}>
+        <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* DIMPA — 5 sacs séjour, contre mur C (z=0), rangée 3+2 */}
+      {[75, 141, 207].map(x => (
+        <group key={x} position={[x, 0, 11]}>
+          <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      ))}
+      {[108, 174].map(x => (
+        <group key={x} position={[x, 0, 34]}>
+          <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      ))}
+
       <group position={[282, 0, 470]} rotation-y={Math.PI}>
         <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
@@ -231,10 +237,6 @@ export function GlbPlacements() {
       <SmorkullPlaced />
 
       <LampOlaPlaced />
-
-      <group position={[ROOM_W - 20, 0, 271.5]} rotation-y={Math.PI / 2}>
-        <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
 
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2}>
         <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -247,6 +249,31 @@ export function GlbPlacements() {
       <SneakersPlaced />
 
       <CeilingPalmLeaves />
+
+      {/* GREJIG étagère à chaussures — entrée, mur D */}
+      <group position={[MIRROR_CX, 0, ROOM_D - 14]}>
+        <Grejig item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+    </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMPOSITE PLACEMENTS  (hors groupe GLB — gèrent leur visibilité GLB en interne)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Items composites : mélangent un GLB parent et des enfants procéduraux.
+ * Placés directement dans le layer FURNITURE (pas dans <group visible={glb}>).
+ * Le GLB interne répond au toggle via GlbSubGroup / GlbContext.
+ */
+export function CompositePlacements() {
+  return (
+    <>
+      {/* Desserte Sunnersta + tête de mannequin + casquette */}
+      <group position={[ROOM_W - 20, 0, 271.5]} rotation-y={Math.PI / 2}>
+        <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
     </>
   );
 }

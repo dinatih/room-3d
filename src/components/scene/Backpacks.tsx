@@ -5,9 +5,6 @@
 import { useMemo } from 'react';
 import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
-import { Grejig } from './items/Grejig';
-
-import { KITCHEN_X1, DOOR_START, ROOM_D } from '@config';
 
 // ── Matériaux ─────────────────────────────────────────────────────────────────
 
@@ -103,20 +100,6 @@ function Bag({ W, H, D }: { W: number; H: number; D: number }) {
   );
 }
 
-// ── Étagère à chaussures GREJIG ───────────────────────────────────────────────
-
-function GrejigPlaced() {
-  const W = 60, D = 22;
-  const MIRROR_CX = (KITCHEN_X1 + DOOR_START) / 2; // 160
-  const cx = MIRROR_CX + 40 - 50 + 12;              // ≈ 162
-  const px = cx - W / 2, pz = ROOM_D - D;
-  return (
-    <group position={[px, 0, pz]}>
-      <Grejig item={{} as any} actionState={{}} onSize={() => {}} />
-    </group>
-  );
-}
-
 // ── Export principal ──────────────────────────────────────────────────────────
 
 export function Backpacks() {
@@ -134,7 +117,6 @@ export function Backpacks() {
       <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]}>
         <Bag W={32} H={43} D={17} />
       </group>
-      <GrejigPlaced />
     </>
   );
 }
