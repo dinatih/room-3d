@@ -162,7 +162,8 @@ function GrassRugPlaced() {
 
 function ShowerPlaced() {
   return (
-    <group position={[(-NICHE_DEPTH + 70) / 2, 0, SDB_Z_END]}>
+    // Niche douche 70×70cm : X -10→60, Z 600→670. Centre : (25, 635).
+    <group position={[-NICHE_DEPTH + 35, 0, SDB_Z_END + 35]}>
       <Shower item={stub('shower')} actionState={AS} onSize={noop} />
     </group>
   );

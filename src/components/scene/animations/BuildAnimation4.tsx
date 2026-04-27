@@ -99,10 +99,12 @@ function hasBrickType(o: THREE.Object3D, type: string): boolean {
 function isCeilingLike(o: THREE.Object3D): boolean { return hasBrickType(o, 'ceiling'); }
 function isGroundPlane(o: THREE.Object3D): boolean  { return o.userData?.brickType === 'ground'; }
 function isFloorLike(o: THREE.Object3D): boolean {
+  if (hasBrickType(o, 'floor')) return true;
   _bbox.setFromObject(o); _bbox.getSize(_size);
   if (_size.y >= 30 || _size.x < 200 || _size.z < 200) return false;
   return (_bbox.min.y + _bbox.max.y) / 2 < 50;
 }
+function isWallLike(o: THREE.Object3D): boolean { return hasBrickType(o, 'wall'); }
 /** Tout objet large et plat (sol, herbe GrassRug 200×1.5×100, terrasse…) — exclure du wireframe. */
 function isLargeFlat(o: THREE.Object3D): boolean {
   _bbox.setFromObject(o); _bbox.getSize(_size);
@@ -110,27 +112,49 @@ function isLargeFlat(o: THREE.Object3D): boolean {
 }
 
 function collectScene(scene: THREE.Scene) {
-  const floor: THREE.Object3D[] = [], furniture: THREE.Object3D[] = [];
-  const structure: THREE.Object3D[] = [], ceiling: THREE.Object3D[] = [];
+  // moveable  = équipements (layer 1) + mobilier (layer 2) → arrivent en premier
+  // walls     = murs (brickType 'wall')                    → arrivent en dernier (1)
+  // floor     = sols (brickType 'floor' ou heuristique)    → arrivent en dernier (2)
+  // ceiling   = plafond (brickType 'ceiling')              → arrivent en dernier (3)
+  const moveable: THREE.Object3D[] = [], walls: THREE.Object3D[] = [];
+  const floor: THREE.Object3D[] = [], ceiling: THREE.Object3D[] = [];
   const picked = new Set<THREE.Object3D>();
 
   function visit(o: THREE.Object3D): void {
     if (!o.visible || isUtility(o) || isGroundPlane(o)) return;
     let cur: THREE.Object3D | null = o.parent;
     while (cur && cur !== scene) { if (picked.has(cur)) return; cur = cur.parent; }
+
+    // Detect floor/ceiling meshes by brickType BEFORE the depth check.
+    // These live at depth 1 (Floor returns a fragment with no wrapper group,
+    // so its meshes are direct children of the scene root group) and would be
+    // skipped by the depth >= 2 filter below.
+    // Walls are NOT handled here: the Walls group (brickType 'wall', depth 1)
+    // must recurse so that each wall mesh animates individually. Wall meshes
+    // at depth 2 are classified via parentBrick below.
+    const brick = o.userData?.brickType as string | undefined;
+    if (brick && hasMesh(o)) {
+      if      (brick === 'floor')   { picked.add(o); floor.push(o);   return; }
+      else if (brick === 'ceiling') { picked.add(o); ceiling.push(o); return; }
+    }
+
     const depth = depthFrom(o, scene);
     if (depth >= 2 && depth <= 7 && isLeafComponent(o)) {
       picked.add(o);
-      if      (o.layers.isEnabled(1)) furniture.push(o);
-      else if (isCeilingLike(o))      ceiling.push(o);
-      else if (isFloorLike(o))        floor.push(o);
-      else                            structure.push(o);
+      // Also check parent brickType — wall meshes (depth 2) live inside the
+      // Walls group (depth 1) which carries brickType 'wall' on the group.
+      const parentBrick = o.parent?.userData?.brickType as string | undefined;
+      if      (o.layers.isEnabled(1) || o.layers.isEnabled(2)) moveable.push(o);
+      else if (parentBrick === 'ceiling' || isCeilingLike(o))   ceiling.push(o);
+      else if (parentBrick === 'floor'   || isFloorLike(o))     floor.push(o);
+      else if (parentBrick === 'wall'    || isWallLike(o))      walls.push(o);
+      else                                                       moveable.push(o);
     } else {
       o.children.forEach(visit);
     }
   }
   scene.children.forEach(visit);
-  return { floor, furniture, structure, ceiling };
+  return { moveable, walls, floor, ceiling };
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -374,9 +398,10 @@ export function BuildAnimation4({ onFinish, onDuration }: { onFinish: () => void
   const { scene, camera, invalidate } = useThree();
 
   useEffect(() => {
-    const { floor, furniture, structure, ceiling } = collectScene(scene as unknown as THREE.Scene);
+    const { moveable, walls, floor, ceiling } = collectScene(scene as unknown as THREE.Scene);
 
-    const allOrdered = [...floor, ...shuffle(furniture), ...structure, ...ceiling];
+    // Ordre : mobilier en premier (effet "fourmilière"), puis murs, sols et plafond en dernier
+    const allOrdered = [...shuffle(moveable), ...walls, ...floor, ...ceiling];
     const floorSet   = new Set(floor);
 
     const objects: AnimObj[] = allOrdered.map((obj, i) => {

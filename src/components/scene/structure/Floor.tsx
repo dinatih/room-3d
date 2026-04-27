@@ -159,6 +159,7 @@ function Parquet() {
       rotation={[-Math.PI / 2, 0, 0]}
       position={[0, 0, 0]}
       receiveShadow
+      userData={{ brickType: 'floor' }}
     />
   );
 }
@@ -225,12 +226,13 @@ function Tile() {
 
   return (
     <>
-      <mesh geometry={sdbGeo} material={sdbMat} receiveShadow />
+      <mesh geometry={sdbGeo} material={sdbMat} receiveShadow userData={{ brickType: 'floor' }} />
       <mesh
         ref={(m) => { if (m) m.material = closetMat; }}
         rotation={[-Math.PI / 2, 0, 0]}
         position={[KITCHEN_X1 + CLOSET_W / 2, 0, ROOM_D + CLOSET_D / 2]}
         receiveShadow
+        userData={{ brickType: 'floor' }}
       >
         <planeGeometry args={[CLOSET_W, CLOSET_D]} />
       </mesh>
@@ -263,6 +265,7 @@ export function Floor() {
         ref={(m) => { if (m) m.material = new THREE.MeshStandardMaterial({ color: COLORS.floor, roughness: 0.6 }); }}
         position={[BLDG_CX, slabY, BLDG_CZ]}
         receiveShadow
+        userData={{ brickType: 'floor' }}
       >
         <boxGeometry args={[BLDG_W, 10, BLDG_D]} />
       </mesh>
@@ -272,6 +275,7 @@ export function Floor() {
         ref={(m) => { if (m) m.material = gardenMats as any; }}
         position={[BLDG_CX, slabY, (BLDG_Z_MIN + -400) / 2]}
         receiveShadow
+        userData={{ brickType: 'floor' }}
       >
         <boxGeometry args={[BLDG_W, 10, gardenD]} />
       </mesh>

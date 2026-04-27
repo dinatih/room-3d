@@ -266,7 +266,7 @@ export function Walls() {
   }, []);
 
   return (
-    <group>
+    <group userData={{ brickType: 'wall' }}>
 
       {/* ── MUR A (ouest, X=0) ─────────────────────────────────────────────── */}
       {/* A1 : Z=-30 → Z=NICHE_Z_START=280 */}
