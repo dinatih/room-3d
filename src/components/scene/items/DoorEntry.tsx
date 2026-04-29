@@ -45,30 +45,30 @@ export function DoorEntry({ actionState, onSize }: SceneItemProps) {
     <group position={[0, -H / 2, 0]}>
 
       {/* Encadrement extérieur rouge (face -Z) */}
-      <mesh position={[-(W / 2 + FW / 2), H / 2, -(WW / 2 + 0.5)]}>
+      <mesh position={[-(W / 2 + FW / 2), H / 2, -(WW / 2 + 0.5)]} castShadow>
         <boxGeometry args={[FW, H, 1]} />{redMat}
       </mesh>
-      <mesh position={[ (W / 2 + FW / 2), H / 2, -(WW / 2 + 0.5)]}>
+      <mesh position={[ (W / 2 + FW / 2), H / 2, -(WW / 2 + 0.5)]} castShadow>
         <boxGeometry args={[FW, H, 1]} />{redMat}
       </mesh>
-      <mesh position={[0, H + FW / 2, -(WW / 2 + 0.5)]}>
+      <mesh position={[0, H + FW / 2, -(WW / 2 + 0.5)]} castShadow>
         <boxGeometry args={[W + FW * 2, FW, 1]} />{redMat}
       </mesh>
       {/* Encadrement intérieur blanc (face +Z) */}
-      <mesh position={[-(W / 2 + FW / 2), H / 2, WW / 2 + 0.5]}>
+      <mesh position={[-(W / 2 + FW / 2), H / 2, WW / 2 + 0.5]} castShadow>
         <boxGeometry args={[FW, H, 1]} />{whtMat}
       </mesh>
-      <mesh position={[ (W / 2 + FW / 2), H / 2, WW / 2 + 0.5]}>
+      <mesh position={[ (W / 2 + FW / 2), H / 2, WW / 2 + 0.5]} castShadow>
         <boxGeometry args={[FW, H, 1]} />{whtMat}
       </mesh>
-      <mesh position={[0, H + FW / 2, WW / 2 + 0.5]}>
+      <mesh position={[0, H + FW / 2, WW / 2 + 0.5]} castShadow>
         <boxGeometry args={[W + FW * 2, FW, 1]} />{whtMat}
       </mesh>
 
       <group ref={doorRef} position={[-W / 2, 0, 0]}>
 
         {/* Panneau rouge */}
-        <mesh position={[W / 2, H / 2, 0]}>
+        <mesh position={[W / 2, H / 2, 0]} castShadow receiveShadow>
           <boxGeometry args={[W, H, T]} />
           <meshStandardMaterial color="#cc0000" roughness={0.5} metalness={0.1} />
         </mesh>

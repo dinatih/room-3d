@@ -342,6 +342,7 @@ export interface LayerState {
   redWalls:     boolean;
   lidar:        boolean;
   lights:       boolean;
+  shadows:      boolean;
 }
 
 export interface SidePanelProps {
@@ -414,7 +415,8 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('red',    'N° Drona',   'dronaLabels')}
           {layerBtn('white',  'Squelette',  'skeleton')}
           {layerBtn('yellow', 'Lumières ☀',  'lights')}
-          {layerBtn('green', 'Plafond',    'ceiling')}
+          {layerBtn('green',  'Plafond',    'ceiling')}
+          {layerBtn('gray',   'Ombres',     'shadows')}
           {layerBtn('cyan',   'LiDAR scan', 'lidar')}
           {layers.lidar && b0('cyan',
             ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',

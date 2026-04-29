@@ -6,6 +6,8 @@
  *   FurnitureProc / FurnitureGlb / FurnitureComposite — mobilier (Layer 2)
  *   Furnishings — lit, bureaux, TV (avec état animé)
  *   FurniturePlacements / GlbPlacements / CompositePlacements — décoration
+ *   Garden / GardenGlb — jardin (procédural + GLB)
+ *   Backpacks — sacs à dos procéduraux
  */
 import { useState, useEffect, useMemo } from 'react';
 import { useThree } from '@react-three/fiber';
@@ -24,7 +26,6 @@ import { WaterHeater }   from './items/WaterHeater';
 import { GrassRug }      from './items/GrassRug';
 import { CorridorCloset } from './items/CorridorCloset';
 import { SdbCloset }     from './items/SdbCloset';
-import { LaptopDesk }    from './LaptopDesk';
 import { TV, TV_H }      from './items/TV';
 import { UtakerFrame }   from './items/UtakerFrame';
 import { BollsidanDesk } from './items/BollsidanDesk';
@@ -43,6 +44,19 @@ import { SunnerstaGroup } from './items/SunnerstaGroup';
 import { Dimpa }         from './items/Dimpa';
 import { Grejig }        from './items/Grejig';
 import { PalmLeaf }      from './items/PalmLeaf';
+import { Laptop }        from './items/Laptop';
+import { Phone }         from './items/Phone';
+import { Mug }           from './items/Mug';
+import { Bag }           from './items/Bag';
+// Garden items
+import { AltappenRugField } from './items/AltappenRug';
+import { ArmrestSofa }  from './items/ArmrestSofa';
+import { ArmlessSofa }  from './items/ArmlessSofa';
+import { Bathtub }      from './items/Bathtub';
+import { ChestBench }   from './items/ChestBench';
+import { PottedPalm }   from './items/PottedPalm';
+import { Viggja }       from './items/Viggja';
+import { JoggingSuit }  from './items/JoggingSuit';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../utils/sceneItem';
 import type { Item } from '../../types';
 
@@ -299,14 +313,19 @@ function Desks() {
   return (
     <>
       <group position={[p1.x, 0, p1.z]} rotation={[0, p1.ry, 0]}
-        userData={{ hoverAction: { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] } }}>
+        userData={{ animUnit: true, hoverAction: { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] } }}>
         <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} />
       </group>
-      <group position={[p2.x, 0, p2.z]} rotation={[0, p2.ry, 0]}
-        userData={{ hoverAction: { label: 'Bureau 2', actions: ['desk2-toggle', 'desk2-position'] } }}>
+      <group position={[p2.x, 0, p2.z]} rotation={[0, p2.ry, 0]} userData={{ animUnit: true, hoverAction: { label: 'Bureau 2', actions: ['desk2-toggle', 'desk2-position'] } }}>
         <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
         <group position={[0, d2H, 0]} rotation={[0, Math.PI, 0]}>
-          <LaptopDesk />
+          <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
+          <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
+            <Phone item={{} as any} actionState={{}} onSize={() => {}} />
+          </group>
+          <group position={[-22, 0, -7]}>
+            <Mug item={{} as any} actionState={{}} onSize={() => {}} />
+          </group>
         </group>
       </group>
     </>
@@ -375,7 +394,7 @@ function LampOla_() {
   }, []);
   return (
     <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z]} rotation-y={LAMP_ROT_Y}
-      userData={{ hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
+      userData={{ animUnit: true, hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
       <LampOla item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       {lampOn && <pointLight color={0xfff5e0} intensity={120000} distance={350} decay={2} position={[0, 96, 0]} />}
     </group>
@@ -387,10 +406,10 @@ function SneakersPair() {
   const px = MIRROR_CX - 10, pz = ROOM_D - 15;
   return (
     <>
-      <group position={[px, 0, pz]}>
+      <group position={[px, 0, pz]} userData={{ animUnit: true }}>
         <Sneakers item={NOOP_ITEM} actionState={NOOP_STATE} onSize={s => setPairW(s.x)} />
       </group>
-      <group position={[px + pairW + 3, 0, pz]}>
+      <group position={[px + pairW + 3, 0, pz]} userData={{ animUnit: true }}>
         <Sneakers item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
@@ -464,5 +483,67 @@ export function CompositePlacements() {
     <group position={[ROOM_W - 20, 0, 271.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
       <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
     </group>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GARDEN — jardin / terrasse
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Éléments procéduraux du jardin */
+export function Garden() {
+  return (
+    <>
+      <group position={[270, 0, -110]}>
+        <ArmrestSofa item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+      <group position={[100, 0, -80]} rotation={[0, Math.PI, 0]}>
+        <ArmlessSofa item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+      <group position={[40, 0, -90]}>
+        <ChestBench item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+      <group position={[120, 0, -250]} rotation={[0, 1, 0]}>
+        <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+    </>
+  );
+}
+
+/** Éléments GLB du jardin (masqués par le filtre GLB) */
+export function GardenGlb() {
+  return (
+    <>
+      <AltappenRugField />
+      <group position={[100, 0, -178]}>
+        <Viggja item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+      <group position={[100, 0, -145]} userData={{ animUnit: true }}>
+        <PottedPalm item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+      <group position={[260, 0, -250]}>
+        <JoggingSuit item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+    </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BACKPACKS — sacs à dos procéduraux
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export function Backpacks() {
+  return (
+    <>
+      <group position={[300 - 15 / 2, 160, 155]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
+        <Bag W={29} H={39} D={15} />
+      </group>
+      <group position={[300 - 17 / 2, 160, 200]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
+        <Bag W={32} H={43} D={17} />
+      </group>
+      <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
+        <Bag W={32} H={43} D={17} />
+      </group>
+    </>
   );
 }

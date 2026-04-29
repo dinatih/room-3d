@@ -73,7 +73,7 @@ function MirrorsD() {
       {([0, 1, 2] as const).map((i) => {
         const cy = (WALL_H - 3.5) - H / 2 - i * (H + 0.5);
         return (
-          <group key={i}>
+          <group key={i} userData={{ animUnit: true }}>
             <ReflectorMirror
               w={W - FT * 2} h={H - FT * 2}
               position={[cx, cy, mirZ]}
@@ -107,7 +107,7 @@ function MirrorsA() {
         const mz = MA_START_Z + MA_W / 2 + i * MA_W;
         const cy = MA_BOTTOM_Y + MA_H / 2;
         return (
-          <group key={i}>
+          <group key={i} userData={{ animUnit: true }}>
             <ReflectorMirror
               w={MA_W - FT * 2} h={MA_H - FT * 2}
               position={[mirX, cy, mz]}
@@ -126,7 +126,7 @@ function MirrorsA() {
         const mz = MA_START_Z + 3 * MA_W + M4_W / 2;
         const cy = MA_BOTTOM_Y + M4_H / 2;
         return (
-          <group>
+          <group userData={{ animUnit: true }}>
             <ReflectorMirror
               w={M4_W - FT * 2} h={M4_H - FT * 2}
               position={[mirX, cy, mz]}

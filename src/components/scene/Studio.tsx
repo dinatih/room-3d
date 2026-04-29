@@ -1,8 +1,9 @@
 /**
  * Scène principale R3F — remplace lego-room.html + js/scene.js.
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ACESFilmicToneMapping, PCFSoftShadowMap, FogExp2, Color, PMREMGenerator, Scene, AmbientLight, DirectionalLight, Mesh, PlaneGeometry, MeshStandardMaterial } from 'three';
 import { CameraController } from './CameraController';
@@ -22,11 +23,10 @@ import {
   FurnitureProc, FurnitureGlb, FurnitureComposite,
   Furnishings,
   FurniturePlacements, GlbPlacements, CompositePlacements,
+  Backpacks, Garden, GardenGlb,
 } from './Placements';
 import { Mirrors }          from './Mirrors';
 import { Walker, WalkerRed } from './Walker';
-import { Backpacks } from './Backpacks';
-import { Garden, GardenGlb } from './Garden';
 import { DronaBoxes, DronaLabels } from './DronaBoxes';
 import { XRayLayer }        from './XRayLayer';
 import { RedWallLayer }     from './RedWallLayer';
@@ -46,6 +46,30 @@ import {
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NEIGHBORS, LAYER_LIDAR,
 } from '@config';
 
+/** Force le shadow map à se recalculer après le chargement initial des GLBs. */
+function ShadowWarmup() {
+  const { gl, invalidate } = useThree();
+  useEffect(() => {
+    const kick = () => { gl.shadowMap.needsUpdate = true; invalidate(); };
+    const t1 = setTimeout(kick, 500);
+    const t2 = setTimeout(kick, 1500);
+    const t3 = setTimeout(kick, 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [gl, invalidate]);
+  return null;
+}
+
+/** Active/désactive les ombres en réponse au toggle UI. */
+function ShadowController({ enabled }: { enabled: boolean }) {
+  const { gl, invalidate } = useThree();
+  useEffect(() => {
+    gl.shadowMap.enabled = enabled;
+    gl.shadowMap.needsUpdate = true;
+    invalidate();
+  }, [enabled, gl, invalidate]);
+  return null;
+}
+
 export function Studio() {
   const [furniture, setFurniture] = useState<FurnitureState>({
     eastDoor: false, entryDoor: false, livingDoor: false, bathroomDoor: false,
@@ -57,7 +81,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
-    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false, skeleton: false, ceiling: false, redWalls: false, lidar: false, lights: false,
+    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false, skeleton: false, ceiling: false, redWalls: false, lidar: false, lights: false, shadows: true,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -160,21 +184,22 @@ export function Studio() {
           position={[500, 700, 400]}
           intensity={1.8}
           castShadow
-          shadow-mapSize={[1024, 1024]}
+          shadow-mapSize={[2048, 2048]}
           shadow-camera-near={1}
           shadow-camera-far={3000}
-          shadow-camera-left={-600}
-          shadow-camera-right={600}
-          shadow-camera-top={600}
-          shadow-camera-bottom={-600}
-          shadow-bias={-0.003}
-          shadow-normalBias={0.4}
+          shadow-camera-left={-1000}
+          shadow-camera-right={1000}
+          shadow-camera-top={1000}
+          shadow-camera-bottom={-1000}
+          shadow-bias={-0.001}
         />
-        <directionalLight color={0xaabbff} position={[-200, 300, -100]} intensity={0.4} />
+        <directionalLight color={0xaabbff} position={[-200, 300, -100]} intensity={0.1} />
 
         {/* Contrôleur unifié : synchronise camera.layers avec les toggles UI */}
         <SceneLayerController layers={layers} />
 
+        <ShadowWarmup />
+        <ShadowController enabled={layers.shadows} />
         <CameraController />
         {buildAnim  && <BuildAnimation  onFinish={() => setBuildAnim(false)}  />}
         {buildAnim3 && <BuildAnimation3 onFinish={() => setBuildAnim3(false)} onDuration={setDuration('buildAnim3')} />}
