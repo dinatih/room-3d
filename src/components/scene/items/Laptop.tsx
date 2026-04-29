@@ -1,35 +1,72 @@
 /**
  * Laptop.tsx — Framework Laptop 13".
  * Coordonnées locales : X/Z centrés, Y=0 = surface du bureau.
- * Placement monde dans LaptopDesk.tsx.
  *
  * Action 'laptopModel' : bascule entre modèle procédural et GLB CAD OnShape.
+ *
+ * LaptopGlb : charge le GLB Draco (4.3 MB), merge les géométries par matériau
+ * au runtime (3107 → ~5 draw calls) en préservant bezel + cartes d'extension
+ * pour les overrides de matériau et de position.
  */
 import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useTexture, useGLTF } from '@react-three/drei';
-
-useGLTF.setDecoderPath('/draco/');
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '../../../types';
 import { removeGlbLines } from '../../../utils/glbUtils';
+
+useGLTF.setDecoderPath('/draco/');
 
 const BASE_W = 29.7, BASE_D = 22.8, BASE_H = 1.6;
 const SCREEN_W = 29, SCREEN_D = 19.5, SCREEN_H = 0.8;
 const BEZEL = 0.6;
 const PORT_W = 1.2, PORT_H = 0.6, PORT_D = 3;
 
-const GLB_PATH = 'media/Framework 13 Laptop.opt.glb';
+// source CAD : https://cad.onshape.com/documents/b17a72e361e72e3c5b6e7bb7/w/95ca42a57c78f484e8786505/e/db39482865fc64b9783df21f
+const GLB_PATH = 'media/Framework 13 Laptop.draco.glb';
 
-// GLB exporté Y-up (Y = hauteur).
-// POSITION bbox : X -14.83→14.83 cm, Y -10.25→22.90 cm, Z -0.51→1.33 cm
-// Y_min = -10.25 cm → offset +10.25 pour poser sur Y=0
-// Z centré sur 0.41 cm → offset -0.41
+// GLB exporté Y-up. Z centré sur 0.41 cm → offset -0.41
 const GLB_POS: [number, number, number] = [0, 0, -0.41];
 
 const aluMat   = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.6, roughness: 0.35 });
 const bezelMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.4 });
 const kbMat    = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
 const portMat  = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.3, metalness: 0.5 });
+const red      = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.35 });
+
+// ── Nœuds à préserver pour overrides runtime ──────────────────────────────────
+
+const PRESERVED = new Set([
+  'GFW00_3H_NB_ID_BEZEL_1_3',
+  'occurrence of GFW00_3H_NB_ID_BEZEL_1_3',
+  'GFW00_3H_NB_ID_SD_CARD_1',
+  'occurrence of GFW00_3H_NB_ID_SD_CARD_1',
+  'GFW00_3H_NB_ID_HDMI_CARD_1',
+  'occurrence of GFW00_3H_NB_ID_HDMI_CARD_1',
+  'GFW00_3H_NB_ID_USBA_CARD_1',
+  'occurrence of GFW00_3H_NB_ID_USBA_CARD_1',
+  'GFW00_3H_NB_ID_USBC_CARD_1',
+  'occurrence of GFW00_3H_NB_ID_USBC_CARD_1',
+]);
+
+function isInPreserved(obj: THREE.Object3D): boolean {
+  let cur: THREE.Object3D | null = obj;
+  while (cur) {
+    if (PRESERVED.has(cur.name)) return true;
+    cur = cur.parent;
+  }
+  return false;
+}
+
+function moveOcc(root: THREE.Object3D, name: string, tx: number, ty: number, tz: number) {
+  const occ = root.getObjectByName('occurrence of ' + name);
+  if (!occ) return;
+  occ.matrix.decompose(occ.position, occ.quaternion, occ.scale);
+  occ.position.set(tx, ty, tz);
+  occ.matrixAutoUpdate = true;
+}
+
+// ── Modèle procédural ─────────────────────────────────────────────────────────
 
 function LaptopProcedural({ onSize }: { onSize: SceneItemProps['onSize'] }) {
   const screenTex = useTexture('media/omarchy-screen.png');
@@ -102,7 +139,8 @@ function LaptopProcedural({ onSize }: { onSize: SceneItemProps['onSize'] }) {
     </group>
   );
 }
-// source CAD : https://cad.onshape.com/documents/b17a72e361e72e3c5b6e7bb7/w/95ca42a57c78f484e8786505/e/db39482865fc64b9783df21f
+
+// ── Modèle GLB avec merge runtime ─────────────────────────────────────────────
 
 function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
   const { scene } = useGLTF(GLB_PATH);
@@ -110,6 +148,60 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
   const clone = useMemo(() => {
     const c = scene.clone(true);
     removeGlbLines(c);
+
+    // Bezel → rouge
+    c.getObjectByName('GFW00_3H_NB_ID_BEZEL_1_3')?.traverse(child => {
+      if ((child as THREE.Mesh).isMesh) (child as THREE.Mesh).material = red;
+    });
+
+    // SD_CARD (USB-C) → rouge
+    const sdMesh = c.getObjectByName('GFW00_3H_NB_ID_SD_CARD_1') as THREE.Mesh | undefined;
+    if (sdMesh) sdMesh.material = red;
+
+    // Placement cartes d'extension
+    moveOcc(c, 'GFW00_3H_NB_ID_SD_CARD_1',   -0.2522,  0.01055, -0.18198);
+    moveOcc(c, 'GFW00_3H_NB_ID_HDMI_CARD_1',  0.014,   0.01055, -0.07238);
+    moveOcc(c, 'GFW00_3H_NB_ID_USBA_CARD_1',  0.2382,  0.01055, -0.12718);
+
+    // USB-C clone → slot supérieur droit
+    const sdOcc = c.getObjectByName('occurrence of GFW00_3H_NB_ID_SD_CARD_1');
+    if (sdOcc?.parent) {
+      const sdClone = sdOcc.clone(true);
+      sdClone.matrix.decompose(sdClone.position, sdClone.quaternion, sdClone.scale);
+      sdClone.position.set(0.0288, 0.00765, -0.16778);
+      sdClone.matrixAutoUpdate = true;
+      sdOcc.parent.add(sdClone);
+    }
+    const usbcOcc = c.getObjectByName('occurrence of GFW00_3H_NB_ID_USBC_CARD_1');
+    if (usbcOcc) usbcOcc.visible = false;
+
+    // ── Merge géométries non-préservées par matériau+attributs ────────────────
+    c.updateMatrixWorld(true);
+
+    const byKey = new Map<string, { mat: THREE.Material; geos: THREE.BufferGeometry[] }>();
+    const toRemove: THREE.Mesh[] = [];
+
+    c.traverse(child => {
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh || isInPreserved(mesh)) return;
+      const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material as THREE.Material;
+      if (!mat) return;
+      const key = mat.uuid + '|' + Object.keys(mesh.geometry.attributes).sort().join(',');
+      if (!byKey.has(key)) byKey.set(key, { mat, geos: [] });
+      const geo = mesh.geometry.clone();
+      geo.applyMatrix4(mesh.matrixWorld);
+      byKey.get(key)!.geos.push(geo);
+      toRemove.push(mesh);
+    });
+
+    toRemove.forEach(m => m.removeFromParent());
+
+    for (const { mat, geos } of byKey.values()) {
+      const merged = mergeGeometries(geos, false);
+      if (merged) c.add(new THREE.Mesh(merged, mat));
+      geos.forEach(g => g.dispose());
+    }
+
     return c;
   }, [scene]);
 
@@ -119,6 +211,8 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
 
   return <primitive object={clone} scale={100} position={GLB_POS} />;
 }
+
+// ── Export ────────────────────────────────────────────────────────────────────
 
 export function Laptop({ onSize }: SceneItemProps) {
   const [useGltf, setUseGltf] = useState(false);
