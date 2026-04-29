@@ -121,9 +121,11 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
     removeGlbLines(c);
 
     // ── Bezel → rouge ────────────────────────────────────────────────────────
-    for (const name of ['GFW00_3H_NB_ID_BEZEL_1_1', 'GFW00_3H_NB_ID_BEZEL_1_2', 'GFW00_3H_NB_ID_BEZEL_1_3']) {
-      const m = c.getObjectByName(name) as THREE.Mesh | undefined;
-      if (m) m.material = red;
+    // Multi-primitive meshes → Three.js crée un Group, pas un Mesh direct.
+    for (const name of ['GFW00_3H_NB_ID_BEZEL_1_3']) {
+      c.getObjectByName(name)?.traverse(child => {
+        if ((child as THREE.Mesh).isMesh) (child as THREE.Mesh).material = red;
+      });
     }
 
     // ── SD_CARD (USB-C) → rouge ───────────────────────────────────────────────
@@ -176,7 +178,7 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
 useGLTF.preload(GLB_PATH);
 
 export function Laptop({ onSize }: SceneItemProps) {
-  const [useGltf, setUseGltf] = useState(false);
+  const [useGltf, setUseGltf] = useState(true);
 
   useEffect(() => {
     const handler = (e: Event) => {

@@ -219,7 +219,7 @@ export function GlbPlacements() {
       </group>
 
       {/* DIMPA — 1 près du congélateur le long du mur A / miroir */}
-      <group position={[14, 0, 250]} rotation-y={Math.PI / 2}>
+      <group position={[14, 0, 210]} rotation-y={Math.PI / 2}>
         <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
