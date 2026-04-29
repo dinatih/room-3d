@@ -15,11 +15,14 @@ import { Floor }            from './structure/Floor';
 import { DoorsPlaced }      from './structure/DoorsPlaced';
 import { Neighbors }        from './structure/Neighbors';
 
-import { EquipmentProc, EquipmentGlb, FurnitureProc, FurnitureGlb, FurnitureComposite } from './Furniture';
 import { GlbContext } from './GlbContext';
 import { CategoryLayerGroup, SceneLayerController }  from './sceneLayer';
-import { Furnishings }      from './Furnishings';
-import { FurniturePlacements, GlbPlacements, CompositePlacements } from './Placements';
+import {
+  EquipmentProc, EquipmentGlb,
+  FurnitureProc, FurnitureGlb, FurnitureComposite,
+  Furnishings,
+  FurniturePlacements, GlbPlacements, CompositePlacements,
+} from './Placements';
 import { Mirrors }          from './Mirrors';
 import { Walker, WalkerRed } from './Walker';
 import { Backpacks } from './Backpacks';
