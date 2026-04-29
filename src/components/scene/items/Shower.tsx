@@ -4,16 +4,16 @@
  * Toutes les orientations/échelles sont gérées par des wrappers JSX — aucune
  * mutation de géométrie (applyGeomRotX) ni de node-transform (bakeRotXToChildren).
  *
- * GLB tray  : mètres, bbox POSITION = X 0→0.9, Y 0→0.15, Z -0.9→0.
- *             TRAY_CM = 50 → scale = 50/0.9 ≈ 55.6.
- *             Centrage via wrapper JSX : position = (-TRAY_CM/2, 0, +TRAY_CM/2).
+ * GLB tray  : mètres, modifié par script Python (bake matrices, scale 68cm, centré).
+ *             Bbox finale : ±0.34m XZ, Y 0→0.163m → scale=100 → 68×68cm, Y=0 sol.
+ *             setupScene(scale=100) utilisé avec détachement parent temporaire
+ *             (Box3.setFromObject travaille en world-space, parent hors origine).
+ *             Groupe au centre de la niche (world 25,0,635).
  *
  * GLB bar   : mètres, longueur le long de Z. setupScene + wrappers rotation.
  *
- * GLB door  : pouces (scale ×2.54), couchée XZ (Z=hauteur 0→78.74in=200cm,
- *             X=largeur 0→35.43in=90cm, Y=épaisseur ±1.5in≈4cm).
- *             Debout via wrapper rotation-x={-π/2} (Z→Y).
- *             Centrage X (0→90cm) : inner wrapper position-x={-45}.
+ * Porte     : procédurale (vitre + cadre aluminium), pas de GLB.
+ *             DOOR_W × DOOR_H cm, centrée en X sur le bac.
  */
 import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
@@ -26,11 +26,17 @@ import type { SceneItemProps } from '../../../types';
 const GLB_TRAY   = 'media/Shower tray 90x90cm.glb';
 const GLB_BAR    = 'media/VALLAMOSSE Barre avec douchette haut réglable chromé.glb';
 const GLB_FAUCET = 'media/VALLAMOSSE Mitigeur thermostatique pour douche chromé 150 mm.glb';
-const GLB_DOOR   = 'media/Shower door.glb';
 
-// Niche douche : X -10→60 (70cm), Z 600→670 (70cm). Tray 68cm → 1cm marge/côté.
-const TRAY_CM   = 50;
+// Bac GLB recentré (script Python) : bbox ±0.34m → scale=100 → 68×68cm centré à l'origine.
+// Groupe au centre niche (world 25,0,635). TRAY_HALF = demi-étendue = 34cm.
+const TRAY_CM   = 68;
 const TRAY_HALF = TRAY_CM / 2;  // 34
+
+// Porte procédurale
+const DOOR_W = 68;   // largeur cm
+const DOOR_H = 200;  // hauteur cm
+const DOOR_T = 0.8;  // épaisseur vitre cm
+const FRAME  = 2.0;  // section profil aluminium cm
 
 /** Applique une rotation X aux sommets de toutes les géométries (baking). */
 function applyGeomRotX(scene: THREE.Group, angle: number) {
@@ -69,26 +75,73 @@ function setupScene(scene: THREE.Group, scale = 100) {
   });
 }
 
-// Porte : pouces. Bbox POSITION mesurée : X 0→35.43in, Y -1.57→1.18in, Z 0→78.74in.
-// Largeur en cm : 35.43 × 2.54 = 90cm. Pour centrer : offset = -45.
-const DOOR_SCALE  = 2.54;
-const DOOR_X_HALF = (35.4331 * 2.54) / 2;  // ≈ 45 cm
+// Matériaux porte (module-level, partagés entre instances)
+const glassMat = new THREE.MeshPhysicalMaterial({
+  color: 0xd0eaf5,
+  transparent: true,
+  opacity: 0.35,
+  roughness: 0.04,
+  metalness: 0.05,
+  envMapIntensity: 1.2,
+  side: THREE.DoubleSide,
+});
+const frameMat = new THREE.MeshStandardMaterial({
+  color: 0xd8d8d8,
+  metalness: 0.85,
+  roughness: 0.15,
+});
+
+/** Porte de douche procédurale : vitre + cadre alu + poignée. */
+function ShowerDoor() {
+  const hw = DOOR_W / 2;
+  const hf = FRAME / 2;
+  return (
+    <group>
+      {/* Vitre */}
+      <mesh material={glassMat} position={[0, DOOR_H / 2, 0]} castShadow>
+        <boxGeometry args={[DOOR_W - FRAME * 2, DOOR_H - FRAME * 2, DOOR_T]} />
+      </mesh>
+
+      {/* Profil bas */}
+      <mesh material={frameMat} position={[0, hf, 0]} castShadow receiveShadow>
+        <boxGeometry args={[DOOR_W, FRAME, FRAME]} />
+      </mesh>
+      {/* Profil haut */}
+      <mesh material={frameMat} position={[0, DOOR_H - hf, 0]} castShadow>
+        <boxGeometry args={[DOOR_W, FRAME, FRAME]} />
+      </mesh>
+      {/* Profil gauche */}
+      <mesh material={frameMat} position={[-hw + hf, DOOR_H / 2, 0]} castShadow>
+        <boxGeometry args={[FRAME, DOOR_H, FRAME]} />
+      </mesh>
+      {/* Profil droit */}
+      <mesh material={frameMat} position={[hw - hf, DOOR_H / 2, 0]} castShadow>
+        <boxGeometry args={[FRAME, DOOR_H, FRAME]} />
+      </mesh>
+
+      {/* Poignée — barre verticale côté droit, face extérieure */}
+      <mesh material={frameMat} position={[hw - FRAME - 3, DOOR_H / 2, DOOR_T + 1.5]} castShadow>
+        <boxGeometry args={[1.5, 22, 1.5]} />
+      </mesh>
+    </group>
+  );
+}
 
 export function Shower({ onSize }: SceneItemProps) {
   const { scene: tray   } = useGLTFClone(GLB_TRAY);
   const { scene: bar    } = useGLTFClone(GLB_BAR);
   const { scene: faucet } = useGLTFClone(GLB_FAUCET);
-  const { scene: door   } = useGLTFClone(GLB_DOOR);
   const groupRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
-    // Tray : scale seule gérée ici ; position dans le wrapper JSX ci-dessous.
-    // GLB bbox : X 0→0.9m, Y 0→0.15m, Z -0.9→0m. Toutes transformations nœuds = identity.
-    const trayScale = TRAY_CM / 0.9;
-    removeGlbLines(tray);
-    tray.scale.setScalar(trayScale);
-    tray.traverse(c => { if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+    // Tray : setupScene centre la bbox et pose au sol, mais Box3.setFromObject
+    // travaille en world-space. On détache temporairement du parent pour que
+    // world = local lors du calcul → position correcte ensuite.
+    const trayParent = tray.parent;
+    trayParent?.remove(tray);
+    setupScene(tray, 100);
+    trayParent?.add(tray);
 
     // Bar : Z→Y, puis flip sens avant/arrière
     applyGeomRotX(bar, Math.PI / 2);
@@ -97,47 +150,29 @@ export function Shower({ onSize }: SceneItemProps) {
 
     setupScene(faucet);
 
-    // Door : scale uniquement. Orientation et centrage gérés par wrappers JSX.
-    removeGlbLines(door);
-    door.scale.setScalar(DOOR_SCALE);
-    door.traverse(c => {
-      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
-    });
-
     groupRef.current.updateMatrixWorld(true);
     onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
     invalidate();
-  }, [tray, bar, faucet, door, invalidate]);
+  }, [tray, bar, faucet, invalidate]);
 
   return (
     <group ref={groupRef}>
-      {/* Receveur : scale bakée dans useLayoutEffect, position ajustable ici.
-          GLB bbox X 0→0.9m, Z -0.9→0m → coin bas-gauche à l'origine.
-          Décalage (-TRAY_CM/2, 0, +TRAY_CM/2) centre le bac autour de (0,0,0). */}
-      <group position={[-TRAY_CM / 2 + 25, 0, TRAY_CM / 2 - 25]}>
-        <primitive object={tray} />
-      </group>
+      {/* Receveur — setupScene centre et pose au sol (détaché parent pendant calcul). */}
+      <primitive object={tray} />
 
-      {/* Barre douchette — mur arrière (+Z) */}
-      <group position={[-5, 0, TRAY_HALF]}>
+      {/* Barre douchette — mur fond à local Z=+35 (world Z=670) */}
+      <group position={[0, 0, TRAY_HALF - 6]}>
         <primitive object={bar} />
       </group>
 
-      {/* Mitigeur thermostatique */}
-      <group position={[-5, 90, 40]} rotation-x={-Math.PI / 2} rotation-y={Math.PI}>
+      {/* Mitigeur thermostatique — mur fond, hauteur 90cm */}
+      <group position={[0, 90, TRAY_HALF + 1]} rotation-x={-Math.PI / 2} rotation-y={Math.PI}>
         <primitive object={faucet} />
       </group>
 
-      {/*
-       * Porte : GLB couchée, Z=hauteur (0→200cm), X=largeur (0→90cm).
-       * Outer wrapper : rotation-x={-π/2} redresse Z→Y (porte debout).
-       * Inner wrapper : décale X de -DOOR_X_HALF pour centrer la largeur 0→90cm.
-       * Résultat : porte debout, centrée en X, bas à Y=0.
-       */}
-      <group position={[0, 0, -(TRAY_HALF + 2)]} rotation={[-Math.PI / 2, 0, 0]}>
-        <group position={[-DOOR_X_HALF, 0, 0]}>
-          <primitive object={door} />
-        </group>
+      {/* Porte — centrée en X, 2cm devant la face sud du bac (local Z=−TRAY_HALF) */}
+      <group position={[0, 0, -(TRAY_HALF + 2)]}>
+        <ShowerDoor />
       </group>
     </group>
   );
@@ -146,4 +181,3 @@ export function Shower({ onSize }: SceneItemProps) {
 useGLTF.preload(GLB_TRAY);
 useGLTF.preload(GLB_BAR);
 useGLTF.preload(GLB_FAUCET);
-useGLTF.preload(GLB_DOOR);

@@ -163,6 +163,7 @@ function GrassRugPlaced() {
 function ShowerPlaced() {
   return (
     // Niche douche 70×70cm : X -10→60, Z 600→670. Centre : (25, 635).
+    // Bac GLB centré → primitive à [0,0,0] = world X:-9→59, Z:601→669 (1cm marges).
     <group position={[-NICHE_DEPTH + 35, 0, SDB_Z_END + 35]}>
       <Shower item={stub('shower')} actionState={AS} onSize={noop} />
     </group>

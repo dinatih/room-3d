@@ -54,7 +54,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
-    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false, skeleton: false, redWalls: false, lidar: false, lights: false,
+    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false, skeleton: false, ceiling: false, redWalls: false, lidar: false, lights: false,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -198,7 +198,7 @@ export function Studio() {
            * Walker inclus ici → reflété dans les miroirs.
            */}
           <Walls />
-          <Floor />
+          <Floor showCeiling={layers.ceiling} />
           <DoorsPlaced />
           <Walker    showSkeleton={layers.skeleton} />
           <WalkerRed showSkeleton={layers.skeleton} />

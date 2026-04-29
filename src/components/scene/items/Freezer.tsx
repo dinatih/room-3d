@@ -27,8 +27,13 @@ export function Freezer({ onSize }: SceneItemProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
+    const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.4 });
     scene.traverse(c => {
-      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
+      const mesh = c as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      mesh.material = blackMat;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
     });
     onSize(new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3()));
   }, [scene]);

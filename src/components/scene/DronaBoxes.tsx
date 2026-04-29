@@ -39,7 +39,7 @@ function buildMatrices(): THREE.Matrix4[] {
   addSingle(-NICHE_DEPTH + 20, 60 + DF / 2, KITCHEN_Z + 30);
 
   // 1 sur congélateur CHIQ
-  addSingle(24.5, 50 + DF / 2, 269.5, Math.PI);
+  addSingle(24.5, 50 + DF / 2, 269.5, Math.PI / 2);
 
   return mats;
 }

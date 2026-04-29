@@ -52,6 +52,7 @@ function DronaLayer() {
 
   const matrices = useMemo(() => {
     const rotPI = new THREE.Matrix4().makeRotationY(Math.PI);
+    const rot90 = new THREE.Matrix4().makeRotationY(Math.PI / 2);
 
     // 4 cases du premier Kallax 2×2 (centre à [0, h2/2, 0])
     const inside = cells22().map(([cx, cy, cz]) =>
@@ -60,7 +61,7 @@ function DronaLayer() {
 
     // 2 Drona sur le dessus de la tour (local : ±18, TOP+DF/2+0.2, 0)
     const top = [-18, 18].map(x =>
-      rotPI.clone().setPosition(x, TOP + DF / 2 + 0.2, 0),
+      rot90.clone().setPosition(x, TOP + DF / 2 + 0.2, 0),
     );
 
     return [...inside, ...top];

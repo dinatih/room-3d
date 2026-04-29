@@ -75,7 +75,7 @@ function UpperCabinet() {
 // Local (wrapper at (30,0,400)): x=[16.75, 50, 83.25], y=211.7, z=40.5, rotY=π
 
 const DF       = 33;
-const rotPI    = new THREE.Matrix4().makeRotationY(Math.PI);
+const rot90    = new THREE.Matrix4().makeRotationY(Math.PI / 2);
 
 const redFront = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.FrontSide });
 const redBack  = new THREE.MeshStandardMaterial({ color: 0x991100, roughness: 0.9, side: THREE.BackSide });
@@ -85,7 +85,7 @@ const gap        = (KIT_W_FULL - 3 * DF) / 4;  // 0.25
 
 const DRONA_MATRICES = [0, 1, 2].map(i => {
   const x = gap + DF / 2 + i * (DF + gap);      // 16.75, 50, 83.25
-  return rotPI.clone().setPosition(x, 195 + DF / 2 + 0.2, KIT_D - 38 / 2 - 0.5);
+  return rot90.clone().setPosition(x, 195 + DF / 2 + 0.2, KIT_D - 38 / 2 - 0.5);
   //                                                         40.5
 });
 

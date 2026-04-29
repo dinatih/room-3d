@@ -241,7 +241,7 @@ function Tile() {
 }
 
 // ── Composant principal ────────────────────────────────────────────────────────
-export function Floor() {
+export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
   const slabY = FLOOR_Y + 1.75 - 10 / 2;
 
   const grassMat = useMemo(() => new THREE.MeshStandardMaterial({
@@ -280,23 +280,26 @@ export function Floor() {
         <boxGeometry args={[BLDG_W, 10, gardenD]} />
       </mesh>
 
-      {/* Plafond principal */}
-      <mesh
-        ref={(m) => { if (m) m.material = ceilMats as any; }}
-        position={[BLDG_CX, WALL_H - 1 + CEIL_THICK / 2, BLDG_CZ]}
-        userData={{ brickType: 'ceiling' }}
-      >
-        <boxGeometry args={[BLDG_W, CEIL_THICK, BLDG_D]} />
-      </mesh>
+      {/* Plafonds — masquables via toggle "Plafond" */}
+      <group visible={showCeiling}>
+        {/* Plafond principal */}
+        <mesh
+          ref={(m) => { if (m) m.material = ceilMats as any; }}
+          position={[BLDG_CX, WALL_H - 1 + CEIL_THICK / 2, BLDG_CZ]}
+          userData={{ brickType: 'ceiling' }}
+        >
+          <boxGeometry args={[BLDG_W, CEIL_THICK, BLDG_D]} />
+        </mesh>
 
-      {/* Plafond terrasse (235×150cm côté Est) */}
-      <mesh
-        ref={(m) => { if (m) m.material = ceilMats as any; }}
-        position={[300 - 235 / 2, WALL_H - 1 + CEIL_THICK / 2, BLDG_Z_MIN - 75]}
-        userData={{ brickType: 'ceiling' }}
-      >
-        <boxGeometry args={[235, CEIL_THICK, 150]} />
-      </mesh>
+        {/* Plafond terrasse (235×150cm côté Est) */}
+        <mesh
+          ref={(m) => { if (m) m.material = ceilMats as any; }}
+          position={[300 - 235 / 2, WALL_H - 1 + CEIL_THICK / 2, BLDG_Z_MIN - 75]}
+          userData={{ brickType: 'ceiling' }}
+        >
+          <boxGeometry args={[235, CEIL_THICK, 150]} />
+        </mesh>
+      </group>
 
       {/* Sol extérieur */}
       <mesh
