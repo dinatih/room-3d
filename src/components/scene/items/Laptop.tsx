@@ -7,6 +7,8 @@
  */
 import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useTexture, useGLTF } from '@react-three/drei';
+
+useGLTF.setDecoderPath('/draco/');
 import * as THREE from 'three';
 import type { SceneItemProps } from '../../../types';
 import { removeGlbLines } from '../../../utils/glbUtils';
@@ -16,7 +18,7 @@ const SCREEN_W = 29, SCREEN_D = 19.5, SCREEN_H = 0.8;
 const BEZEL = 0.6;
 const PORT_W = 1.2, PORT_H = 0.6, PORT_D = 3;
 
-const GLB_PATH = 'media/Framework 13 Laptop.gltf';
+const GLB_PATH = 'media/Framework 13 Laptop.opt.glb';
 
 // GLB exporté Y-up (Y = hauteur).
 // POSITION bbox : X -14.83→14.83 cm, Y -10.25→22.90 cm, Z -0.51→1.33 cm
@@ -102,63 +104,12 @@ function LaptopProcedural({ onSize }: { onSize: SceneItemProps['onSize'] }) {
 }
 // source CAD : https://cad.onshape.com/documents/b17a72e361e72e3c5b6e7bb7/w/95ca42a57c78f484e8786505/e/db39482865fc64b9783df21f
 
-const red = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.35 });
-
-/** Reposiionne un occurrence-node (tous partagent la même rotation → seul t change). */
-function moveOcc(root: THREE.Object3D, name: string, tx: number, ty: number, tz: number) {
-  const occ = root.getObjectByName('occurrence of ' + name);
-  if (!occ) return;
-  occ.matrix.decompose(occ.position, occ.quaternion, occ.scale);
-  occ.position.set(tx, ty, tz);
-  occ.matrixAutoUpdate = true;
-}
-
 function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
   const { scene } = useGLTF(GLB_PATH);
 
   const clone = useMemo(() => {
     const c = scene.clone(true);
     removeGlbLines(c);
-
-    // ── Bezel → rouge ────────────────────────────────────────────────────────
-    // Multi-primitive meshes → Three.js crée un Group, pas un Mesh direct.
-    for (const name of ['GFW00_3H_NB_ID_BEZEL_1_3']) {
-      c.getObjectByName(name)?.traverse(child => {
-        if ((child as THREE.Mesh).isMesh) (child as THREE.Mesh).material = red;
-      });
-    }
-
-    // ── SD_CARD (USB-C) → rouge ───────────────────────────────────────────────
-    const sdMesh = c.getObjectByName('GFW00_3H_NB_ID_SD_CARD_1') as THREE.Mesh | undefined;
-    if (sdMesh) sdMesh.material = red;
-
-    // ── Placement des cartes d'extension ─────────────────────────────────────
-    // Calcul : new_t = world_target - R * mesh_local_center
-    // R est la même rotation pour tous les occurrence-nodes.
-
-    // USB-C (SD_CARD) → slot supérieur gauche  (world = HDMI courant)
-    moveOcc(c, 'GFW00_3H_NB_ID_SD_CARD_1', -0.2522, 0.01055, -0.18198);
-
-    // HDMI → slot inférieur gauche  (world = USBA courant)
-    moveOcc(c, 'GFW00_3H_NB_ID_HDMI_CARD_1', 0.014, 0.01055, -0.07238);
-
-    // USB-A → slot inférieur droit  (world = SD_CARD courant)
-    moveOcc(c, 'GFW00_3H_NB_ID_USBA_CARD_1', 0.2382, 0.01055, -0.12718);
-
-    // USB-C clone → slot supérieur droit  (world = USBC courant)
-    const sdOcc = c.getObjectByName('occurrence of GFW00_3H_NB_ID_SD_CARD_1');
-    if (sdOcc?.parent) {
-      const sdClone = sdOcc.clone(true);
-      sdClone.matrix.decompose(sdClone.position, sdClone.quaternion, sdClone.scale);
-      sdClone.position.set(0.0288, 0.00765, -0.16778);
-      sdClone.matrixAutoUpdate = true;
-      sdOcc.parent.add(sdClone);
-    }
-
-    // USBC (remplacé par SD_CARD clone) → caché
-    const usbcOcc = c.getObjectByName('occurrence of GFW00_3H_NB_ID_USBC_CARD_1');
-    if (usbcOcc) usbcOcc.visible = false;
-
     return c;
   }, [scene]);
 
@@ -166,13 +117,7 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
     onSize(new THREE.Vector3(BASE_W, BASE_H + SCREEN_D, BASE_D));
   }, []);
 
-  return (
-    <primitive
-      object={clone}
-      scale={100}
-      position={GLB_POS}
-    />
-  );
+  return <primitive object={clone} scale={100} position={GLB_POS} />;
 }
 
 export function Laptop({ onSize }: SceneItemProps) {
