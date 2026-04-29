@@ -13,9 +13,9 @@ const buckMat   = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0
 const silverMat = new THREE.MeshStandardMaterial({ color: 0x9a9a9a, roughness: 0.25, metalness: 0.9 });
 const labelMat  = new THREE.MeshStandardMaterial({ color: 0x0e0e0e, roughness: 0.8 });
 
-const W = 32, H = 43, D = 17;
+const DEFAULT_W = 32, DEFAULT_H = 43, DEFAULT_D = 17;
 
-export function Backpack({ onSize }: SceneItemProps) {
+export function Backpack({ onSize, W = DEFAULT_W, H = DEFAULT_H, D = DEFAULT_D }: SceneItemProps & { W?: number; H?: number; D?: number }) {
   const groupRef = useRef<THREE.Group>(null!);
 
   const FLAP_H = H * 0.21;

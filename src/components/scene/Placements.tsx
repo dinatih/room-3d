@@ -47,7 +47,7 @@ import { PalmLeaf }      from './items/PalmLeaf';
 import { Laptop }        from './items/Laptop';
 import { Phone }         from './items/Phone';
 import { Mug }           from './items/Mug';
-import { Bag }           from './items/Bag';
+import { Backpack }      from './items/Backpack';
 // Garden items
 import { AltappenRugField } from './items/AltappenRug';
 import { ArmrestSofa }  from './items/ArmrestSofa';
@@ -536,13 +536,13 @@ export function Backpacks() {
   return (
     <>
       <group position={[300 - 15 / 2, 160, 155]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
-        <Bag W={29} H={39} D={15} />
+        <Backpack item={{} as any} actionState={{}} onSize={() => {}} W={29} H={39} D={15} />
       </group>
       <group position={[300 - 17 / 2, 160, 200]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
-        <Bag W={32} H={43} D={17} />
+        <Backpack item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
       <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
-        <Bag W={32} H={43} D={17} />
+        <Backpack item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
     </>
   );
