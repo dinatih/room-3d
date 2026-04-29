@@ -175,10 +175,8 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
   );
 }
 
-useGLTF.preload(GLB_PATH);
-
 export function Laptop({ onSize }: SceneItemProps) {
-  const [useGltf, setUseGltf] = useState(true);
+  const [useGltf, setUseGltf] = useState(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
