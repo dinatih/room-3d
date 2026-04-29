@@ -49,7 +49,7 @@ export function ShoeHatRack({ onSize }: SceneItemProps) {
   }, []);
 
   return (
-    <group>
+    <group userData={{ animUnit: true }}>
       {/* ── Montants avant (pleine hauteur) ── */}
       <Tube p1={[TR,   0, TR]}   p2={[TR,   H,      TR]}   />
       <Tube p1={[W-TR, 0, TR]}   p2={[W-TR, H,      TR]}   />

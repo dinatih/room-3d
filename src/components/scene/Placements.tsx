@@ -155,7 +155,7 @@ export function EquipmentGlb() {
         <VasqueSdb item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Niche douche 70×70cm : X -10→60, Z 600→670. Centre : (25, 635). */}
-      <group position={[-NICHE_DEPTH + 35, 0, SDB_Z_END + 35]}>
+      <group position={[-NICHE_DEPTH + 35, 0, SDB_Z_END + 35]} userData={{ animUnit: true }}>
         <Shower item={stub('shower')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[-NICHE_DEPTH + 60, 0, KITCHEN_Z + 46.5]}>
@@ -445,7 +445,7 @@ export function GlbPlacements() {
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2}>
         <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[297, 144, 173.5]} rotation={[Math.PI / 2, 0, Math.PI / 2]}>
+      <group position={[297, 144, 173.5]} rotation={[Math.PI / 2, 0, Math.PI / 2]} userData={{ animUnit: true }}>
         <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <SneakersPair />
@@ -461,7 +461,7 @@ export function GlbPlacements() {
 
 export function CompositePlacements() {
   return (
-    <group position={[ROOM_W - 20, 0, 271.5]} rotation-y={Math.PI / 2}>
+    <group position={[ROOM_W - 20, 0, 271.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
       <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
     </group>
   );

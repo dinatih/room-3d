@@ -106,12 +106,12 @@ export function DronaBoxes() {
   };
 
   return (
-    <>
+    <group userData={{ animUnit: true }}>
       <instancedMesh ref={iFrontRef} args={[geo, redMatFront, matrices.length]}
         castShadow receiveShadow onUpdate={applyMatrices} />
       <instancedMesh ref={iBackRef}  args={[geo, redMatBack,  matrices.length]}
         onUpdate={applyMatrices} />
-    </>
+    </group>
   );
 }
 

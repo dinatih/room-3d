@@ -77,6 +77,7 @@ function hasMesh(o: THREE.Object3D): boolean {
 }
 function isLeafComponent(o: THREE.Object3D): boolean {
   if ((o as THREE.Mesh).isMesh) return true;
+  if (o.userData?.animUnit) return true;
   if (!hasDirectMesh(o)) return false;
   return !o.children.some(c => !(c as THREE.Mesh).isMesh && hasMesh(c));
 }
@@ -139,7 +140,7 @@ function collectScene(scene: THREE.Scene) {
     }
 
     const depth = depthFrom(o, scene);
-    if (depth >= 2 && depth <= 7 && isLeafComponent(o)) {
+    if (depth >= 2 && isLeafComponent(o)) {
       picked.add(o);
       // Also check parent brickType — wall meshes (depth 2) live inside the
       // Walls group (depth 1) which carries brickType 'wall' on the group.

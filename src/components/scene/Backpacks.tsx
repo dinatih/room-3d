@@ -106,15 +106,15 @@ export function Backpacks() {
   return (
     <>
       {/* Sac S : mur B, Y=160 */}
-      <group position={[300 - 15 / 2, 160, 155]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={[300 - 15 / 2, 160, 155]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <Bag W={29} H={39} D={15} />
       </group>
       {/* Sac L : mur B */}
-      <group position={[300 - 17 / 2, 160, 200]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={[300 - 17 / 2, 160, 200]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <Bag W={32} H={43} D={17} />
       </group>
       {/* Sac L : mur A */}
-      <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]}>
+      <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <Bag W={32} H={43} D={17} />
       </group>
     </>
