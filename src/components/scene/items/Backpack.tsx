@@ -1,5 +1,5 @@
 /**
- * Backpack.tsx — Sac à dos procédural rouge.
+ * Backpack.tsx — Sac à dos procédural rouge, grand (32×43×17) et petit (29×39×15).
  * Coordonnées locales : centré XZ, Y=0 = sol.
  */
 import { useLayoutEffect, useRef } from 'react';
@@ -13,11 +13,7 @@ const buckMat   = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0
 const silverMat = new THREE.MeshStandardMaterial({ color: 0x9a9a9a, roughness: 0.25, metalness: 0.9 });
 const labelMat  = new THREE.MeshStandardMaterial({ color: 0x0e0e0e, roughness: 0.8 });
 
-const DEFAULT_W = 32, DEFAULT_H = 43, DEFAULT_D = 17;
-
-export function Backpack({ onSize, W = DEFAULT_W, H = DEFAULT_H, D = DEFAULT_D }: SceneItemProps & { W?: number; H?: number; D?: number }) {
-  const groupRef = useRef<THREE.Group>(null!);
-
+function BackpackGeom({ W, H, D, groupRef }: { W: number; H: number; D: number; groupRef: React.RefObject<THREE.Group> }) {
   const FLAP_H = H * 0.21;
   const BODY_H = H - FLAP_H;
   const PW = W * 0.82, PH = BODY_H * 0.43;
@@ -27,11 +23,6 @@ export function Backpack({ onSize, W = DEFAULT_W, H = DEFAULT_H, D = DEFAULT_D }
   const SW = 3.5, SLEN = FLAP_H * 0.65;
   const SSW = 4.8, SST = 1.8, SSSp = W * 0.22;
   const SS_TOP_Y = H * 0.88, SS_BOT_Y = 2.5;
-
-  useLayoutEffect(() => {
-    groupRef.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
-  }, []);
 
   return (
     <group ref={groupRef}>
@@ -75,4 +66,24 @@ export function Backpack({ onSize, W = DEFAULT_W, H = DEFAULT_H, D = DEFAULT_D }
       })}
     </group>
   );
+}
+
+/** Grand sac à dos — 32×43×17 cm */
+export function Backpack({ onSize }: SceneItemProps) {
+  const groupRef = useRef<THREE.Group>(null!);
+  useLayoutEffect(() => {
+    groupRef.current.updateMatrixWorld(true);
+    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
+  }, []);
+  return <BackpackGeom W={32} H={43} D={17} groupRef={groupRef} />;
+}
+
+/** Petit sac à dos — 29×39×15 cm */
+export function BackpackSmall({ onSize }: SceneItemProps) {
+  const groupRef = useRef<THREE.Group>(null!);
+  useLayoutEffect(() => {
+    groupRef.current.updateMatrixWorld(true);
+    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
+  }, []);
+  return <BackpackGeom W={29} H={39} D={15} groupRef={groupRef} />;
 }
