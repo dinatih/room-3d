@@ -62,7 +62,7 @@ function ReflectorMirror({ w, h, position, rotationY }: {
 // ── 3× Nissedal 60×60 — Mur D ────────────────────────────────────────────────
 
 function MirrorsD() {
-  const W = 65, H = 65; // dims réelles GLB NISSEDAL 65×65
+  const W = 60, H = 60; // temporaire 60×60 — passage ROOM_W 300→314 en cours
   const FT = 1.8, FD = 1.2;
   const cx  = (KITCHEN_X1 + DOOR_START) / 2;
   const fz  = ROOM_D - 0.2 - FD / 2;
@@ -79,9 +79,8 @@ function MirrorsD() {
               position={[cx, cy, mirZ]}
               rotationY={Math.PI}
             />
-            {/* cadre GLB — Y=0=bas, centré X/Z */}
             <group position={[cx, cy - H / 2, fz]}>
-              <NissedalGlbFrame glb={GLB_65x65} />
+              <NissedalFrame w={W} h={H} ft={FT} fd={FD} />
             </group>
           </group>
         );
