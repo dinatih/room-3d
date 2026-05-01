@@ -13,9 +13,7 @@ import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from 
 import { AnimationsPanel }  from '@features/inventory/AnimationsPanel';
 import { Walls }            from './Walls';
 import { Floor }            from './Floor';
-import { DoorsPlaced }      from './DoorsPlaced';
-import { Neighbors }        from './Neighbors';
-
+import { Neighbors }        from './layers/Neighbors';
 import { GlbContext } from './GlbContext';
 import { CategoryLayerGroup, SceneLayerController }  from './layers/sceneLayer';
 import {
@@ -24,6 +22,7 @@ import {
   Furnishings,
   FurniturePlacements, GlbPlacements, CompositePlacements,
   Backpacks, Garden, GardenGlb,
+  DoorsPlaced,
 } from './Placements';
 import { Mirrors }          from './Mirrors';
 import { Walker, WalkerRed } from './Walker';
