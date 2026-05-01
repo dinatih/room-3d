@@ -38,6 +38,7 @@ import { VRMode }                       from '@features/camera/VRMode';
 import { ImmersiveMode }                from '@features/camera/ImmersiveMode';
 import { FloorPlan }                    from '@features/inventory/FloorPlan';
 import { LidarScan }                    from '@features/devtools/LidarScan';
+import { GlbReveal }                    from './layers/GlbReveal';
 import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from './animations';
 
 import {
@@ -219,6 +220,7 @@ export function Studio() {
         <ImmersiveMode />
         <HoverRaycaster />
         <DevToolsCollector />
+        <GlbReveal />
 
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.xray        && <XRayLayer />}

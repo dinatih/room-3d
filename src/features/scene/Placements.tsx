@@ -163,21 +163,21 @@ export function EquipmentGlb() {
   const cbZ = KITCHEN_Z + 11 + 18.5; // 489.5
   return (
     <>
-      <group position={[KITCHEN_X0, 0, ROOM_D]}>
+      <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ animUnit: true }}>
         <CuisineGroup item={stub('cuisine-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
       <group position={[24.5, 0, 269.5]}
-        userData={{ hoverAction: { label: 'Congélateur', actionId: 'freezer' } }}>
+        userData={{ animUnit: true, hoverAction: { label: 'Congélateur', actionId: 'freezer' } }}>
         <Freezer item={stub('freezer')} actionState={as} onSize={NOOP_SIZE} />
       </group>
-      <group position={[DOOR_START - 84, 14, KITCHEN_Z + 34.5]}>
+      <group position={[DOOR_START - 84, 14, KITCHEN_Z + 34.5]} userData={{ animUnit: true }}>
         <VasqueSdb item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Niche douche 70×70cm : X -10→60, Z 600→670. Centre : (25, 635). */}
       <group position={[-NICHE_DEPTH + 35, 0, SDB_Z_END + 35]} userData={{ animUnit: true }}>
         <Shower item={stub('shower')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[-NICHE_DEPTH + 60, 0, KITCHEN_Z + 46.5]}>
+      <group position={[-NICHE_DEPTH + 60, 0, KITCHEN_Z + 46.5]} userData={{ animUnit: true }}>
         <Toilet item={stub('toilet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </>
@@ -221,19 +221,19 @@ export function FurnitureGlb() {
   const cbZ = KITCHEN_Z + 11 + 18.5; // 489.5
   return (
     <>
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]}>
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[-NICHE_DEPTH + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={[-NICHE_DEPTH + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxCuisine item={stub('kallax-sw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, ROOM_D - 60 - w1 / 2]} rotation={[0, Math.PI / 2, 0]}>
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, ROOM_D - 60 - w1 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[-NICHE_DEPTH + 20, 0, cbZ]}>
+      <group position={[-NICHE_DEPTH + 20, 0, cbZ]} userData={{ animUnit: true }}>
         <BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={NOOP_SIZE} />
       </group>
-      <group position={[DOOR_START - 31, 0, cbZ]}>
+      <group position={[DOOR_START - 31, 0, cbZ]} userData={{ animUnit: true }}>
         <BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </>
@@ -382,7 +382,7 @@ function Smorkull_() {
   const p = SMORKULL_POSITIONS[posIdx];
   return (
     <group position={[p.x, 0, p.z]} rotation-y={p.ry}
-      userData={{ hoverAction: { label: 'Smörkull', actionId: 'smorkull-position' } }}>
+      userData={{ animUnit: true, hoverAction: { label: 'Smörkull', actionId: 'smorkull-position' } }}>
       <Smorkull item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
     </group>
   );
@@ -430,7 +430,7 @@ function CeilingPalmLeaves() {
   return (
     <>
       {placements.map((p, i) => (
-        <group key={i} position={[p.x, WALL_H, p.z]} rotation={[Math.PI, p.ry, 0]}>
+        <group key={i} position={[p.x, WALL_H, p.z]} rotation={[Math.PI, p.ry, 0]} userData={{ animUnit: true }}>
           <PalmLeaf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       ))}
@@ -441,32 +441,32 @@ function CeilingPalmLeaves() {
 export function GlbPlacements() {
   return (
     <>
-      <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]}>
+      <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <LackShelf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[MUL_D, 170, mulCZ]}>
+      <group position={[MUL_D, 170, mulCZ]} userData={{ animUnit: true }}>
         <MuligRail item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[110, 0, 500]}>
+      <group position={[110, 1, 500]} userData={{ animUnit: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[286, 0, 202]}>
+      <group position={[286, 1, 202]} userData={{ animUnit: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[14, 0, 210]} rotation-y={Math.PI / 2}>
+      <group position={[14, 0, 210]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
         <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {[55, 120, 185, 250].map(x => (
-        <group key={x} position={[x, 0, -386]}>
+        <group key={x} position={[x, 0, -386]} userData={{ animUnit: true }}>
           <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       ))}
-      <group position={[282, 0, 470]} rotation-y={Math.PI}>
+      <group position={[282, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true }}>
         <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <Smorkull_ />
       <LampOla_ />
-      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2}>
+      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
         <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[297, 144, 173.5]} rotation={[Math.PI / 2, 0, Math.PI / 2]} userData={{ animUnit: true }}>
@@ -475,7 +475,7 @@ export function GlbPlacements() {
       <SneakersPair />
       <CeilingPalmLeaves />
       {[0, 18, 36].map(y => (
-        <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]}>
+        <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ animUnit: true }}>
           <Grejig item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       ))}
@@ -519,14 +519,16 @@ export function Garden() {
 export function GardenGlb() {
   return (
     <>
-      <AltappenRugField />
-      <group position={[100, 0, -178]}>
+      <group userData={{ animUnit: true }}>
+        <AltappenRugField />
+      </group>
+      <group position={[100, 0, -178]} userData={{ animUnit: true }}>
         <Viggja item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
       <group position={[100, 0, -145]} userData={{ animUnit: true }}>
         <PottedPalm item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[260, 0, -250]}>
+      <group position={[260, 0, -250]} userData={{ animUnit: true }}>
         <JoggingSuit item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
     </>
