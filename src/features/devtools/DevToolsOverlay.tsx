@@ -66,6 +66,11 @@ function drawFps(canvas: HTMLCanvasElement, samples: number[]) {
 
 // ── Ligne de stat ─────────────────────────────────────────────────────────────
 
+const sectionHeaderStyle: React.CSSProperties = {
+  color: '#66cccc', fontSize: 9, fontWeight: 600,
+  letterSpacing: '.5px', padding: '0 10px 2px',
+};
+
 function StatRow({ label, value, color }: { label: string; value: string | number; color?: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 10px', fontSize: 10 }}>
@@ -170,38 +175,39 @@ export function DevToolsGroups({ Group }: {
           <span style={{ color: '#444' }}>min:{fpsMin} max:{fpsMax}</span>
         </div>
 
+        {/* RENDU — stats GPU, mises à jour chaque frame */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 4 }}>
-          <div style={{ color: '#66cccc', fontSize: 9, fontWeight: 600, letterSpacing: '.5px', padding: '0 10px 2px' }}>RENDU</div>
+          <div style={sectionHeaderStyle}>RENDU <span style={{ color: '#444', fontWeight: 400 }}>· live</span></div>
           <StatRow label="Draw calls" value={devState.drawCalls.toLocaleString()} color={heatColor(devState.drawCalls, 200, 500)} />
           <StatRow label="Triangles"  value={(devState.triangles / 1000).toFixed(1) + 'k'} color={heatColor(devState.triangles, 1_000_000, 2_000_000)} />
           <StatRow label="Géométries" value={devState.geometries} color="#777" />
           <StatRow label="Textures"   value={devState.textures}   color="#777" />
         </div>
-      </Group>
 
-      <Group emoji="🔷" title="Scène">
-        <div style={{ color: '#66cccc', fontSize: 9, fontWeight: 600, letterSpacing: '.5px', padding: '0 10px 2px' }}>OBJETS</div>
-        <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
-        <StatRow label="Instanced" value={devState.instances} />
-        <StatRow label="Lights"    value={devState.lights} color="#777" />
-        <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#777" />
-        <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#777" />
-        {devState.meshes > 800 && (
-          <div style={{ color: '#ff8866', fontSize: 9, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
-        )}
-        <button
-          onClick={handleRefreshScene}
-          style={{
-            display: 'block', width: '100%', textAlign: 'left',
-            background: 'transparent', border: 'none',
-            borderTop: '1px solid rgba(255,255,255,0.06)',
-            color: '#444', fontSize: 9, padding: '4px 10px', cursor: 'pointer', marginTop: 4,
-          }}
-        >
-          ↺ Refresh
-        </button>
+        {/* SCÈNE — graph total, sur demande (refresh) */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 4, marginTop: 4 }}>
+          <div style={sectionHeaderStyle}>SCÈNE <span style={{ color: '#444', fontWeight: 400 }}>· total</span></div>
+          <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
+          <StatRow label="Instanced" value={devState.instances} />
+          <StatRow label="Lights"    value={devState.lights} color="#777" />
+          <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#777" />
+          <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#777" />
+          {devState.meshes > 800 && (
+            <div style={{ color: '#ff8866', fontSize: 9, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
+          )}
+          <button
+            onClick={handleRefreshScene}
+            style={{
+              display: 'block', width: '100%', textAlign: 'left',
+              background: 'transparent', border: 'none',
+              borderTop: '1px solid rgba(255,255,255,0.06)',
+              color: '#444', fontSize: 9, padding: '4px 10px', cursor: 'pointer', marginTop: 4,
+            }}
+          >
+            ↺ Refresh
+          </button>
+        </div>
       </Group>
-
     </>
   );
 }
