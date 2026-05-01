@@ -9,7 +9,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines } from '../../../utils/glbUtils';
+import { removeGlbLines, glbLocalBBox } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
 const GLB_SINK   = 'media/BOHOLMEN Évier 47x30 cm.glb';
@@ -28,8 +28,7 @@ export function SinkBoholmen({ onSize }: SceneItemProps) {
     removeGlbLines(sinkScene);
     sinkScene.scale.setScalar(100);
     sinkScene.rotation.y = Math.PI / 2;
-    sinkScene.updateMatrixWorld(true);
-    const sinkBox = new THREE.Box3().setFromObject(sinkScene);
+    const sinkBox = glbLocalBBox(sinkScene);
     sinkScene.position.set(
       -(sinkBox.min.x + sinkBox.max.x) / 2,
       -sinkBox.min.y,
@@ -42,8 +41,7 @@ export function SinkBoholmen({ onSize }: SceneItemProps) {
     // ── Mitigeur — positionné à l'arrière de la vasque ──
     removeGlbLines(faucetScene);
     faucetScene.scale.setScalar(100);
-    faucetScene.updateMatrixWorld(true);
-    const fBox = new THREE.Box3().setFromObject(faucetScene);
+    const fBox = glbLocalBBox(faucetScene);
     faucetScene.position.set(
       -(fBox.min.x + fBox.max.x) / 2,
       -fBox.min.y,

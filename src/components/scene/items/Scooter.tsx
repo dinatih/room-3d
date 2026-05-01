@@ -7,17 +7,17 @@ import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines } from '../../../utils/glbUtils';
+import { removeGlbLines, glbLocalBBox } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
 export function Scooter({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone('media/xiaomi_electric_scooter_4.glb');
 
   useLayoutEffect(() => {
-    const raw = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3());
+    scene.scale.set(1, 1, 1);
+    const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
     scene.scale.setScalar(113 / raw.y);
-    scene.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(scene);
+    const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
@@ -27,7 +27,7 @@ export function Scooter({ onSize }: SceneItemProps) {
     scene.traverse(c => {
       if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
     });
-    onSize(new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3()));
+    onSize(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
   return <primitive object={scene} />;

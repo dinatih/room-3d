@@ -8,7 +8,7 @@ import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei'; // preload only
 import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines } from '../../../utils/glbUtils';
+import { removeGlbLines, glbLocalBBox } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
 const TARGET_LENGTH = 28;
@@ -22,8 +22,10 @@ export function Sneakers({ onSize }: SceneItemProps) {
   useLayoutEffect(() => {
     removeGlbLines(left);
     removeGlbLines(right);
+    left.scale.set(1, 1, 1);
+    right.scale.set(1, 1, 1);
 
-    const rawBox  = new THREE.Box3().setFromObject(left);
+    const rawBox  = glbLocalBBox(left);
     const rawSize = rawBox.getSize(new THREE.Vector3());
     const s       = TARGET_LENGTH / Math.max(rawSize.x, rawSize.z);
     const shoeWid = rawSize.z * s;

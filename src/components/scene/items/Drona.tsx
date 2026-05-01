@@ -10,6 +10,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { glbLocalBBox } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
 const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });
@@ -19,8 +20,7 @@ export function Drona({ onSize }: SceneItemProps) {
 
   useLayoutEffect(() => {
     scene.scale.setScalar(100);
-    scene.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(scene);
+    const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
@@ -33,7 +33,7 @@ export function Drona({ onSize }: SceneItemProps) {
         c.receiveShadow = true;
       }
     });
-    onSize(new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3()));
+    onSize(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
   return <primitive object={scene} />;

@@ -4,18 +4,15 @@
  *
  * Action 'laptopModel' : bascule entre modèle procédural et GLB CAD OnShape.
  *
- * LaptopGlb : charge le GLB Draco (4.3 MB), merge les géométries par matériau
- * au runtime (3107 → ~5 draw calls) en préservant bezel + cartes d'extension
- * pour les overrides de matériau et de position.
+ * LaptopGlb : charge le GLB Draco (4.3 MB, ~3107 draw calls).
+ * Overrides : bezel + cartes d'extension rouges, positions des slots.
+ * DRACOLoader configuré en amont dans main.tsx (useGLTF.setDecoderPath).
  */
 import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useTexture, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '../../../types';
 import { removeGlbLines } from '../../../utils/glbUtils';
-
-useGLTF.setDecoderPath('/draco/');
 
 const BASE_W = 29.7, BASE_D = 22.8, BASE_H = 1.6;
 const SCREEN_W = 29, SCREEN_D = 19.5, SCREEN_H = 0.8;
@@ -33,30 +30,6 @@ const bezelMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.
 const kbMat    = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
 const portMat  = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.3, metalness: 0.5 });
 const red      = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.35 });
-
-// ── Nœuds à préserver pour overrides runtime ──────────────────────────────────
-
-const PRESERVED = new Set([
-  'GFW00_3H_NB_ID_BEZEL_1_3',
-  'occurrence of GFW00_3H_NB_ID_BEZEL_1_3',
-  'GFW00_3H_NB_ID_SD_CARD_1',
-  'occurrence of GFW00_3H_NB_ID_SD_CARD_1',
-  'GFW00_3H_NB_ID_HDMI_CARD_1',
-  'occurrence of GFW00_3H_NB_ID_HDMI_CARD_1',
-  'GFW00_3H_NB_ID_USBA_CARD_1',
-  'occurrence of GFW00_3H_NB_ID_USBA_CARD_1',
-  'GFW00_3H_NB_ID_USBC_CARD_1',
-  'occurrence of GFW00_3H_NB_ID_USBC_CARD_1',
-]);
-
-function isInPreserved(obj: THREE.Object3D): boolean {
-  let cur: THREE.Object3D | null = obj;
-  while (cur) {
-    if (PRESERVED.has(cur.name)) return true;
-    cur = cur.parent;
-  }
-  return false;
-}
 
 function moveOcc(root: THREE.Object3D, name: string, tx: number, ty: number, tz: number) {
   const occ = root.getObjectByName('occurrence of ' + name);
@@ -140,7 +113,7 @@ function LaptopProcedural({ onSize }: { onSize: SceneItemProps['onSize'] }) {
   );
 }
 
-// ── Modèle GLB avec merge runtime ─────────────────────────────────────────────
+// ── Modèle GLB ────────────────────────────────────────────────────────────────
 
 function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
   const { scene } = useGLTF(GLB_PATH);
@@ -175,33 +148,6 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
     const usbcOcc = c.getObjectByName('occurrence of GFW00_3H_NB_ID_USBC_CARD_1');
     if (usbcOcc) usbcOcc.visible = false;
 
-    // ── Merge géométries non-préservées par matériau+attributs ────────────────
-    c.updateMatrixWorld(true);
-
-    const byKey = new Map<string, { mat: THREE.Material; geos: THREE.BufferGeometry[] }>();
-    const toRemove: THREE.Mesh[] = [];
-
-    c.traverse(child => {
-      const mesh = child as THREE.Mesh;
-      if (!mesh.isMesh || isInPreserved(mesh)) return;
-      const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material as THREE.Material;
-      if (!mat) return;
-      const key = mat.uuid + '|' + Object.keys(mesh.geometry.attributes).sort().join(',');
-      if (!byKey.has(key)) byKey.set(key, { mat, geos: [] });
-      const geo = mesh.geometry.clone();
-      geo.applyMatrix4(mesh.matrixWorld);
-      byKey.get(key)!.geos.push(geo);
-      toRemove.push(mesh);
-    });
-
-    toRemove.forEach(m => m.removeFromParent());
-
-    for (const { mat, geos } of byKey.values()) {
-      const merged = mergeGeometries(geos, false);
-      if (merged) c.add(new THREE.Mesh(merged, mat));
-      geos.forEach(g => g.dispose());
-    }
-
     return c;
   }, [scene]);
 
@@ -215,7 +161,7 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
 // ── Export ────────────────────────────────────────────────────────────────────
 
 export function Laptop({ onSize }: SceneItemProps) {
-  const [useGltf, setUseGltf] = useState(false);
+  const [useGltf, setUseGltf] = useState(true);
 
   useEffect(() => {
     const handler = (e: Event) => {

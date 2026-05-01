@@ -6,8 +6,7 @@
  *
  * GLB tray  : mètres, modifié par script Python (bake matrices, scale 68cm, centré).
  *             Bbox finale : ±0.34m XZ, Y 0→0.163m → scale=100 → 68×68cm, Y=0 sol.
- *             setupScene(scale=100) utilisé avec détachement parent temporaire
- *             (Box3.setFromObject travaille en world-space, parent hors origine).
+ *             setupScene(scale=100) → glbLocalBBox, immunisé contre parent matrixWorld.
  *             Groupe au centre de la niche (world 25,0,635).
  *
  * GLB bar   : mètres, longueur le long de Z. setupScene + wrappers rotation.
@@ -20,7 +19,7 @@ import { useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines } from '../../../utils/glbUtils';
+import { removeGlbLines, glbLocalBBox } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
 const GLB_TRAY   = 'media/Shower tray 90x90cm.glb';
@@ -63,8 +62,7 @@ function applyGeomRotY(scene: THREE.Group, angle: number) {
 function setupScene(scene: THREE.Group, scale = 100) {
   removeGlbLines(scene);
   scene.scale.setScalar(scale);
-  scene.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(scene);
+  const box = glbLocalBBox(scene);
   scene.position.set(
     -(box.min.x + box.max.x) / 2,
     -box.min.y,
@@ -135,13 +133,7 @@ export function Shower({ onSize }: SceneItemProps) {
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
-    // Tray : setupScene centre la bbox et pose au sol, mais Box3.setFromObject
-    // travaille en world-space. On détache temporairement du parent pour que
-    // world = local lors du calcul → position correcte ensuite.
-    const trayParent = tray.parent;
-    trayParent?.remove(tray);
     setupScene(tray, 100);
-    trayParent?.add(tray);
 
     // Bar : Z→Y, puis flip sens avant/arrière
     applyGeomRotX(bar, Math.PI / 2);

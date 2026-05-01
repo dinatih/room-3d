@@ -7,6 +7,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { glbLocalBBox } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
 const TILE_SIZE = 30;
@@ -25,13 +26,12 @@ export function AltappenRug({ onSize }: SceneItemProps) {
   const { scene } = useGLTF('media/ikea_Altappen_single.glb');
 
   useLayoutEffect(() => {
-    scene.updateMatrixWorld(true);
-    const rawBox = new THREE.Box3().setFromObject(scene);
+    scene.scale.set(1, 1, 1);
+    const rawBox = glbLocalBBox(scene);
     const tileW = rawBox.max.x - rawBox.min.x;
     const scl = TILE_SIZE / tileW;
     scene.scale.setScalar(scl);
-    scene.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(scene);
+    const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
@@ -40,8 +40,7 @@ export function AltappenRug({ onSize }: SceneItemProps) {
     scene.traverse(c => {
       if ((c as THREE.Mesh).isMesh) { c.receiveShadow = true; }
     });
-    const size = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3());
-    onSize(size);
+    onSize(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
   return <primitive object={scene} />;

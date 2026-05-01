@@ -7,7 +7,7 @@ import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '../../../utils/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines } from '../../../utils/glbUtils';
+import { removeGlbLines, glbLocalBBox } from '../../../utils/glbUtils';
 import type { SceneItemProps } from '../../../types';
 
 export function Viggja({ onSize }: SceneItemProps) {
@@ -15,8 +15,7 @@ export function Viggja({ onSize }: SceneItemProps) {
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
-    scene.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(scene);
+    const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
@@ -25,8 +24,7 @@ export function Viggja({ onSize }: SceneItemProps) {
     scene.traverse(c => {
       if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
     });
-    const size = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3());
-    onSize(size);
+    onSize(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
   return <primitive object={scene} />;
