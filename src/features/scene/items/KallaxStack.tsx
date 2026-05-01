@@ -5,9 +5,10 @@
  */
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import { Kallax2x1 } from './Kallax2x1';
-import { Kallax2x2 } from './Kallax2x2';
-import { Kallax1x1 } from './Kallax1x1';
+import { Kallax2x1 }     from './Kallax2x1';
+import { Kallax2x2 }     from './Kallax2x2';
+import { Kallax2x2Spec } from './Kallax2x2Spec';
+import { Kallax1x1 }     from './Kallax1x1';
 import { NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -46,7 +47,7 @@ function StackSW() {
         <Kallax2x2 item={k('kallax-sw-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[0, h2 + h2, 0]}>
-        <Kallax2x2 item={k('kallax-sw-2x2-spec')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Kallax2x2Spec item={k('kallax-sw-2x2-spec')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[0, h2 + h2 + h1, 0]}>
         <Kallax2x1 item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
