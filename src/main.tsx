@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { useGLTF } from '@react-three/drei';
-import { Studio } from './components/scene/Studio';
+import { Studio } from '@features/scene/Studio';
 import './index.css';
 
 useGLTF.setDecoderPath('/draco/');

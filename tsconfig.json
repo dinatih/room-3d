@@ -18,8 +18,7 @@
       "@/*":         ["./src/*"],
       "@features/*": ["./src/features/*"],
       "@shared/*":   ["./src/shared/*"],
-      "@config":     ["./src/shared/config.ts"],
-      "@data/*":     ["./src/data/*"]
+      "@config":     ["./src/shared/config.ts"]
     }
   },
   "include": ["src"]

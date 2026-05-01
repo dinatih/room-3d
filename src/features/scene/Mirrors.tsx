@@ -14,7 +14,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { cameraState } from './cameraState';
+import { cameraState } from '@features/camera/cameraState';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150, GLB_65x65 } from './items/NissedalMirror';
 
 import { ROOM_D, WALL_H, KITCHEN_X1, DOOR_START, KITCHEN_Z } from '@config';

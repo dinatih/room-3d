@@ -6,18 +6,18 @@ import { Canvas } from '@react-three/fiber';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ACESFilmicToneMapping, PCFSoftShadowMap, FogExp2, Color, PMREMGenerator, Scene, AmbientLight, DirectionalLight, Mesh, PlaneGeometry, MeshStandardMaterial } from 'three';
-import { CameraController } from './CameraController';
-import { cameraState }      from './cameraState';
-import { Minimap }          from './Minimap';
-import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from './SidePanel';
-import { AnimationsPanel }  from './AnimationsPanel';
+import { CameraController } from '@features/camera/CameraController';
+import { cameraState }      from '@features/camera/cameraState';
+import { Minimap }          from '@features/inventory/Minimap';
+import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/inventory/SidePanel';
+import { AnimationsPanel }  from '@features/inventory/AnimationsPanel';
 import { Walls }            from './structure/Walls';
 import { Floor }            from './structure/Floor';
 import { DoorsPlaced }      from './structure/DoorsPlaced';
 import { Neighbors }        from './structure/Neighbors';
 
 import { GlbContext } from './GlbContext';
-import { CategoryLayerGroup, SceneLayerController }  from './sceneLayer';
+import { CategoryLayerGroup, SceneLayerController }  from './layers/sceneLayer';
 import {
   EquipmentProc, EquipmentGlb,
   FurnitureProc, FurnitureGlb, FurnitureComposite,
@@ -28,17 +28,17 @@ import {
 import { Mirrors }          from './Mirrors';
 import { Walker, WalkerRed } from './Walker';
 import { DronaBoxes, DronaLabels } from './DronaBoxes';
-import { XRayLayer }        from './XRayLayer';
-import { RedWallLayer }     from './RedWallLayer';
-import { GridLayer }        from './Grid';
-import { LightHelpers }     from './LightHelpers';
-import { HoverRaycaster, HoverOverlay } from './HoverMenu';
-import { DevToolsCollector }            from './DevToolsCollector';
-import { Inventory }                    from './Inventory';
-import { VRMode }                       from './VRMode';
-import { ImmersiveMode }                from './ImmersiveMode';
-import { FloorPlan }                    from './FloorPlan';
-import { LidarScan }                    from './LidarScan';
+import { XRayLayer }        from './layers/XRayLayer';
+import { RedWallLayer }     from './layers/RedWallLayer';
+import { GridLayer }        from './layers/Grid';
+import { LightHelpers }     from '@features/devtools/LightHelpers';
+import { HoverRaycaster, HoverOverlay } from '@features/inventory/HoverMenu';
+import { DevToolsCollector }            from '@features/devtools/DevToolsCollector';
+import { Inventory }                    from '@features/inventory/Inventory';
+import { VRMode }                       from '@features/camera/VRMode';
+import { ImmersiveMode }                from '@features/camera/ImmersiveMode';
+import { FloorPlan }                    from '@features/inventory/FloorPlan';
+import { LidarScan }                    from '@features/devtools/LidarScan';
 import { BuildAnimation, BuildAnimation2, BuildAnimation3, BuildAnimation4 } from './animations';
 
 import {

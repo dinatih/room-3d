@@ -4,7 +4,7 @@
  */
 import { useMemo } from 'react';
 
-import { buildFloorPlan } from '@data/floorplan';
+import { buildFloorPlan } from './floorplan';
 
 export function FloorPlan() {
   const group = useMemo(() => buildFloorPlan(), []);

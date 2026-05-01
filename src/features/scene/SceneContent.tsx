@@ -1,9 +1,9 @@
 import { useState, useMemo, Suspense } from 'react';
 import * as THREE from 'three';
 import { GlbModel }   from './GlbModel';
-import { Spinner }    from './Spinner';
-import { Controller } from './Controller';
-import { SCENE_REGISTRY } from './registry';
+import { Spinner }    from '@features/inventory/Spinner';
+import { Controller } from '@features/camera/Controller';
+import { SCENE_REGISTRY } from '@features/inventory/registry';
 import type { Item } from '@shared/types';
 
 interface Props {
