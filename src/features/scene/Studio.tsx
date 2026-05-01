@@ -1,11 +1,13 @@
 /**
- * Scène principale R3F — remplace lego-room.html + js/scene.js.
+ * Studio.tsx — racine R3F : Canvas, lumières, fog, env map, état UI global.
  */
 import { useState, useCallback, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { useThree } from '@react-three/fiber';
-import * as THREE from 'three';
-import { ACESFilmicToneMapping, PCFSoftShadowMap, FogExp2, Color, PMREMGenerator, Scene, AmbientLight, DirectionalLight, Mesh, PlaneGeometry, MeshStandardMaterial } from 'three';
+import { Canvas, useThree } from '@react-three/fiber';
+import {
+  ACESFilmicToneMapping, PCFSoftShadowMap, FogExp2, Color,
+  PMREMGenerator, Scene, AmbientLight, DirectionalLight,
+  Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
+} from 'three';
 import { CameraController } from '@features/camera/CameraController';
 import { cameraState }      from '@features/camera/cameraState';
 import { Minimap }          from '@features/inventory/Minimap';
@@ -36,12 +38,46 @@ import { VRMode }                       from '@features/camera/VRMode';
 import { ImmersiveMode }                from '@features/camera/ImmersiveMode';
 import { FloorPlan }                    from '@features/inventory/FloorPlan';
 import { LidarScan }                    from '@features/devtools/LidarScan';
-import { BuildAnimation, BuildAnimation2, BuildAnimation3, BuildAnimation4 } from './animations';
+import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from './animations';
 
 import {
   ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NEIGHBORS, LAYER_LIDAR,
 } from '@config';
+
+/**
+ * Génère une env map PMREM à partir d'une scène artificielle (sol/mur/lumières)
+ * et l'attache à la scène principale. Donne aux matériaux PBR un reflet ambiant
+ * crédible sans avoir à charger de HDRI.
+ */
+function setupEnvironment(scene: Scene, gl: WebGLRenderer) {
+  const pmrem    = new PMREMGenerator(gl);
+  const envScene = new Scene();
+  envScene.background = new Color(0x889ab5);
+  envScene.add(new AmbientLight(0xffffff, 1));
+
+  const dir = new DirectionalLight(0xfff8e8, 2);
+  dir.position.set(10, 10, 5);
+  envScene.add(dir);
+
+  const floor = new Mesh(
+    new PlaneGeometry(1000, 1000),
+    new MeshStandardMaterial({ color: 0xc4a060 }),
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -10;
+  envScene.add(floor);
+
+  const wall = new Mesh(
+    new PlaneGeometry(1000, 300),
+    new MeshStandardMaterial({ color: 0xccccbb }),
+  );
+  wall.position.set(0, 100, -100);
+  envScene.add(wall);
+
+  scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+  pmrem.dispose();
+}
 
 /** Force le shadow map à se recalculer après le chargement initial des GLBs. */
 function ShadowWarmup() {
@@ -150,29 +186,7 @@ export function Studio() {
           scene.fog = new FogExp2(0x2a2a3e, 0.0006);
           gl.shadowMap.enabled = true;
           camera.layers.enableAll();
-
-          const pmrem = new PMREMGenerator(gl);
-          const envScene = new Scene();
-          envScene.background = new Color(0x889ab5);
-          envScene.add(new AmbientLight(0xffffff, 1));
-          const envDir = new DirectionalLight(0xfff8e8, 2);
-          envDir.position.set(10, 10, 5);
-          envScene.add(envDir);
-          const envFloor = new Mesh(
-            new PlaneGeometry(1000, 1000),
-            new MeshStandardMaterial({ color: 0xc4a060 }),
-          );
-          envFloor.rotation.x = -Math.PI / 2;
-          envFloor.position.y = -10;
-          envScene.add(envFloor);
-          const envWall = new Mesh(
-            new PlaneGeometry(1000, 300),
-            new MeshStandardMaterial({ color: 0xccccbb }),
-          );
-          envWall.position.set(0, 100, -100);
-          envScene.add(envWall);
-          scene.environment = pmrem.fromScene(envScene, 0.04).texture;
-          pmrem.dispose();
+          setupEnvironment(scene, gl);
         }}
       >
         <ambientLight color={0x8899bb} intensity={0.6} />
