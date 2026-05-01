@@ -1,4 +1,4 @@
-type CoordFn = (n: number) => number;
+export type CoordFn = (n: number) => number;
 
 import {
   ROOM_W, ROOM_D, DOOR_START, DOOR_END,
@@ -20,10 +20,22 @@ export const DIAG_ANGLE  = Math.atan2(DIAG_CZ - DIAG_AZ, DIAG_CX - DIAG_AX);
 
 const diagXat = (z: number): number => DIAG_AX + (z - DIAG_AZ) * (DIAG_CX - DIAG_AX) / (DIAG_CZ - DIAG_AZ);
 
+export interface Room {
+  nameFr: string;
+  nameEn: string;
+  labelX: number;
+  labelZ: number;
+  labelSize: number;
+  labelColor?: string;
+  contains: (x: number, z: number) => boolean;
+  fills: (tx: CoordFn, tz: CoordFn, S: number) => [number, number, number, number][];
+  fillPath?: (ctx: CanvasRenderingContext2D, tx: CoordFn, tz: CoordFn) => void;
+}
+
 // Pièces — source unique pour minimap (hover, clic POV) et floorplan (labels 3D)
 // labelSize / labelColor : utilisés par floorplan.js
 // contains / fills / fillPath : utilisés par minimap.js
-export const ROOMS = [
+export const ROOMS: Room[] = [
   {
     nameFr: 'Jardin', nameEn: 'garden',
     labelX: 140, labelZ: -160, labelSize: 20, labelColor: '#4a9e54',

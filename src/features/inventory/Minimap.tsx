@@ -8,14 +8,13 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { cameraState } from '@features/camera/cameraState';
 
 import {
-  ROOM_W, ROOM_D, DOOR_START, DOOR_END,
-  KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, KITCHEN_DEPTH,
+  ROOM_W, ROOM_D, DOOR_START,
+  KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   NICHE_DEPTH, NICHE_Z_START,
-  GLASS_START, GLASS_END,
-  GARDEN_JC_Z, CORR_DOOR_S, CORR_DOOR_E,
-  SDB_Z_END,
-  DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
+  GARDEN_JC_Z, SDB_Z_END,
+  DIAG_AZ, DIAG_CZ,
 } from '@config';
+import { type Room, ROOMS, FLOOR_SEGMENTS } from './floorData';
 
 // ── Constantes carte ──────────────────────────────────────────────────────────
 
@@ -27,145 +26,6 @@ const Z_MIN   = -350;
 const Z_MAX   = 760;
 const ASPECT  = (Z_MAX - Z_MIN) / (X_MAX - X_MIN);
 
-// ── Géométrie ─────────────────────────────────────────────────────────────────
-
-const _dLen = Math.sqrt((DIAG_CX - DIAG_AX) ** 2 + (DIAG_CZ - DIAG_AZ) ** 2);
-const _dX   = (DIAG_CX - DIAG_AX) / _dLen;
-const _dZ   = (DIAG_CZ - DIAG_AZ) / _dLen;
-const DIAG_DOOR_S = { x: DIAG_AX + 10  * _dX, z: DIAG_AZ + 10  * _dZ };
-const DIAG_DOOR_E = { x: DIAG_AX + 100 * _dX, z: DIAG_AZ + 100 * _dZ };
-const diagXat = (z: number) =>
-  DIAG_AX + (z - DIAG_AZ) * (DIAG_CX - DIAG_AX) / (DIAG_CZ - DIAG_AZ);
-
-type TxFn = (v: number) => number;
-
-interface Room {
-  nameFr: string;
-  nameEn: string;
-  labelX: number;
-  labelZ: number;
-  contains: (x: number, z: number) => boolean;
-  fills: (tx: TxFn, tz: TxFn, S: number) => [number, number, number, number][];
-  fillPath?: (ctx: CanvasRenderingContext2D, tx: TxFn, tz: TxFn) => void;
-}
-
-const ROOMS: Room[] = [
-  {
-    nameFr: 'Jardin', nameEn: 'garden',
-    labelX: 140, labelZ: -160,
-    contains: (x, z) =>
-      x >= -10 && x <= 310 && z <= -10 && z >= -140 - 70 * (x + 10) / 110,
-    fills: () => [],
-    fillPath: (ctx, tx, tz) => {
-      ctx.beginPath();
-      ctx.moveTo(tx(-10),  tz(-10));
-      ctx.lineTo(tx(-10),  tz(-140));
-      ctx.lineTo(tx(310),  tz(GARDEN_JC_Z));
-      ctx.lineTo(tx(310),  tz(-10));
-      ctx.closePath(); ctx.fill();
-    },
-  },
-  {
-    nameFr: 'Entrée', nameEn: 'entry',
-    labelX: (DOOR_START + ROOM_W) / 2, labelZ: ROOM_D + 70,
-    contains: (x, z) => {
-      if (z <= ROOM_D || z > SDB_Z_END) return false;
-      if (x >= KITCHEN_X1 && x <= DOOR_START && z <= KITCHEN_Z) return true;
-      if (x >= DOOR_START && x <= ROOM_W && z <= DIAG_AZ) return true;
-      if (x >= DOOR_START && z <= SDB_Z_END && x <= diagXat(z)) return true;
-      return false;
-    },
-    fills: (tx, tz, S) => [
-      [tx(KITCHEN_X1), tz(ROOM_D + 10), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D - 10) * S],
-      [tx(DOOR_START), tz(ROOM_D + 10), (ROOM_W - DOOR_START) * S,     (DIAG_AZ - ROOM_D - 10) * S],
-    ],
-    fillPath: (ctx, tx, tz) => {
-      ctx.beginPath();
-      ctx.moveTo(tx(DOOR_START), tz(DIAG_AZ));
-      ctx.lineTo(tx(ROOM_W),     tz(DIAG_AZ));
-      ctx.lineTo(tx(DOOR_START), tz(SDB_Z_END));
-      ctx.closePath(); ctx.fill();
-    },
-  },
-  {
-    nameFr: "Salle d'eau", nameEn: 'bathroom',
-    labelX: (DOOR_START - NICHE_DEPTH) / 2, labelZ: 530,
-    contains: (x, z) => {
-      if (x < -NICHE_DEPTH) return false;
-      if (x <= DOOR_START && z >= KITCHEN_Z && z <= SDB_Z_END) return true;
-      return z > SDB_Z_END && z <= DIAG_CZ && x <= diagXat(z);
-    },
-    fills: (tx, tz, S) => [
-      [tx(-NICHE_DEPTH), tz(KITCHEN_Z + 10), (DOOR_START + NICHE_DEPTH) * S, (SDB_Z_END - KITCHEN_Z - 10) * S],
-    ],
-    fillPath: (ctx, tx, tz) => {
-      ctx.beginPath();
-      ctx.moveTo(tx(-NICHE_DEPTH), tz(SDB_Z_END));
-      ctx.lineTo(tx(DOOR_START),   tz(SDB_Z_END));
-      ctx.lineTo(tx(-NICHE_DEPTH), tz(DIAG_CZ));
-      ctx.closePath(); ctx.fill();
-    },
-  },
-  {
-    nameFr: 'Séjour', nameEn: 'living',
-    labelX: ROOM_W / 2, labelZ: ROOM_D / 2,
-    contains: (x, z) =>
-      (x >= 0 && x <= ROOM_W && z >= 0 && z <= ROOM_D) ||
-      (x >= -NICHE_DEPTH && x < 0 && z >= NICHE_Z_START && z <= ROOM_D) ||
-      (x >= KITCHEN_X0 && x <= KITCHEN_X1 && z > ROOM_D && z <= KITCHEN_Z),
-    fills: (tx, tz, S) => [
-      [tx(0), tz(0), ROOM_W * S, ROOM_D * S],
-      [tx(-NICHE_DEPTH), tz(NICHE_Z_START), NICHE_DEPTH * S, (ROOM_D - NICHE_Z_START) * S],
-      [tx(KITCHEN_X0), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_X0) * S, (KITCHEN_Z - ROOM_D) * S],
-    ],
-  },
-  {
-    nameFr: 'Cuisine', nameEn: 'kitchen',
-    labelX: (KITCHEN_X0 + KITCHEN_X1) / 2, labelZ: ROOM_D + KITCHEN_DEPTH / 2,
-    contains: (x, z) => x >= KITCHEN_X0 && x <= KITCHEN_X1 && z >= ROOM_D && z <= KITCHEN_Z,
-    fills: (tx, tz, S) => [
-      [tx(KITCHEN_X0), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_X0) * S, (KITCHEN_Z - ROOM_D) * S],
-    ],
-  },
-  {
-    nameFr: 'Douche', nameEn: 'shower',
-    labelX: 25, labelZ: 635,
-    contains: (x, z) => x >= -NICHE_DEPTH && x <= 60 && z >= 600 && z <= 670,
-    fills: (tx, tz, S) => [[tx(-NICHE_DEPTH), tz(600), (60 + NICHE_DEPTH) * S, 70 * S]],
-  },
-];
-
-type SegType = 'w' | 'd' | 'n';
-const FLOOR_SEGMENTS: { t: SegType; x1: number; z1: number; x2: number; z2: number }[] = [
-  { t: 'w', x1: 0,            z1: 0,             x2: 0,            z2: NICHE_Z_START  },
-  { t: 'w', x1: 0,            z1: NICHE_Z_START,  x2: -NICHE_DEPTH, z2: NICHE_Z_START  },
-  { t: 'w', x1: -NICHE_DEPTH, z1: NICHE_Z_START,  x2: -NICHE_DEPTH, z2: ROOM_D         },
-  { t: 'w', x1: -NICHE_DEPTH, z1: ROOM_D,          x2: -NICHE_DEPTH, z2: KITCHEN_Z      },
-  { t: 'w', x1: ROOM_W, z1: 0,          x2: ROOM_W, z2: ROOM_D + 10   },
-  { t: 'w', x1: 0,           z1: 0, x2: GLASS_START, z2: 0            },
-  { t: 'n', x1: GLASS_START,  z1: 0, x2: GLASS_END,   z2: 0            },
-  { t: 'w', x1: GLASS_END,   z1: 0, x2: ROOM_W,       z2: 0            },
-  { t: 'w', x1: -NICHE_DEPTH, z1: ROOM_D, x2: KITCHEN_X0, z2: ROOM_D  },
-  { t: 'w', x1: KITCHEN_X1,  z1: ROOM_D, x2: DOOR_START,  z2: ROOM_D  },
-  { t: 'd', x1: DOOR_START,  z1: ROOM_D, x2: DOOR_END,    z2: ROOM_D  },
-  { t: 'w', x1: DOOR_END,    z1: ROOM_D, x2: ROOM_W,      z2: ROOM_D  },
-  { t: 'w', x1: KITCHEN_X0, z1: ROOM_D, x2: KITCHEN_X0, z2: KITCHEN_Z },
-  { t: 'w', x1: KITCHEN_X1, z1: ROOM_D, x2: KITCHEN_X1, z2: KITCHEN_Z },
-  { t: 'w', x1: -NICHE_DEPTH, z1: KITCHEN_Z, x2: DOOR_START, z2: KITCHEN_Z },
-  { t: 'd', x1: DOOR_START, z1: ROOM_D + 10,  x2: DOOR_START, z2: KITCHEN_Z  },
-  { t: 'w', x1: DOOR_START, z1: KITCHEN_Z,    x2: DOOR_START, z2: CORR_DOOR_S },
-  { t: 'd', x1: DOOR_START, z1: CORR_DOOR_S,  x2: DOOR_START, z2: CORR_DOOR_E },
-  { t: 'w', x1: DOOR_START, z1: CORR_DOOR_E,  x2: DOOR_START, z2: SDB_Z_END  },
-  { t: 'w', x1: ROOM_W, z1: ROOM_D + 10, x2: ROOM_W, z2: DIAG_AZ      },
-  { t: 'w', x1: -NICHE_DEPTH, z1: KITCHEN_Z, x2: -NICHE_DEPTH, z2: DIAG_CZ },
-  { t: 'n', x1: -NICHE_DEPTH, z1: 600, x2: 60,         z2: 600          },
-  { t: 'd', x1: 60,            z1: 600, x2: DOOR_START, z2: 600          },
-  { t: 'w', x1: 60,            z1: 600, x2: 60,            z2: 670       },
-  { t: 'w', x1: -NICHE_DEPTH,  z1: 670, x2: 60,            z2: 670       },
-  { t: 'w', x1: DIAG_AX,        z1: DIAG_AZ,        x2: DIAG_DOOR_S.x, z2: DIAG_DOOR_S.z },
-  { t: 'd', x1: DIAG_DOOR_S.x,  z1: DIAG_DOOR_S.z,  x2: DIAG_DOOR_E.x, z2: DIAG_DOOR_E.z },
-  { t: 'w', x1: DIAG_DOOR_E.x,  z1: DIAG_DOOR_E.z,  x2: DIAG_CX,       z2: DIAG_CZ       },
-];
 
 // ── Fonction de dessin ────────────────────────────────────────────────────────
 
