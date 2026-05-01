@@ -11,10 +11,10 @@ import { cameraState }      from '@features/camera/cameraState';
 import { Minimap }          from '@features/inventory/Minimap';
 import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/inventory/SidePanel';
 import { AnimationsPanel }  from '@features/inventory/AnimationsPanel';
-import { Walls }            from './structure/Walls';
-import { Floor }            from './structure/Floor';
-import { DoorsPlaced }      from './structure/DoorsPlaced';
-import { Neighbors }        from './structure/Neighbors';
+import { Walls }            from './Walls';
+import { Floor }            from './Floor';
+import { DoorsPlaced }      from './DoorsPlaced';
+import { Neighbors }        from './Neighbors';
 
 import { GlbContext } from './GlbContext';
 import { CategoryLayerGroup, SceneLayerController }  from './layers/sceneLayer';
