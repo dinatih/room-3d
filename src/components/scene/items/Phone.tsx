@@ -5,7 +5,7 @@
  */
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 const W = 7.5, D = 16.2, H = 0.8;
 

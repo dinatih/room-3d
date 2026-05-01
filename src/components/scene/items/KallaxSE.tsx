@@ -13,8 +13,8 @@ import { Kallax2x1 }    from './Kallax2x1';
 import { MeubleT }      from './MeubleT';
 import { ShoeHatRack }  from './ShoeHatRack';
 import { useDronaGeo }  from './Drona';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../../utils/sceneItem';
-import type { SceneItemProps } from '../../../types';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
+import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
 const TF = 3.5, TI = 1.5, NH = 34, NW_K = 33.5;

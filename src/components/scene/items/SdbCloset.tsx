@@ -10,7 +10,7 @@
 import { useRef, useLayoutEffect, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 const W       = 110;   // SLIDE_X1 - SLIDE_X0
 const H       = 250;   // WALL_H

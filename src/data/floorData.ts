@@ -8,7 +8,7 @@ import {
   GARDEN_JC_Z, CORR_DOOR_S, CORR_DOOR_E,
   SDB_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
-} from '../config';
+} from '@config';
 
 // Points sur le mur diagonal pour la porte d'entrée
 const _dLen = Math.sqrt((DIAG_CX - DIAG_AX) ** 2 + (DIAG_CZ - DIAG_AZ) ** 2);

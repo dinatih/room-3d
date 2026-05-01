@@ -6,7 +6,7 @@
 import { useRef, useLayoutEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 const W_TOTAL   = 160;   // largeur totale des deux battants
 const PANEL_W   = W_TOTAL / 2;  // 80cm par battant

@@ -8,7 +8,7 @@
  */
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 const W  = 60;    // largeur
 const D  = 26;    // profondeur

@@ -17,7 +17,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { DoorLiving, DoorSdb } from '../items/DoorWhite';
 import { DoorEntry }            from '../items/DoorEntry';
-import { NOOP_ITEM, NOOP_SIZE } from '../../../utils/sceneItem';
+import { NOOP_ITEM, NOOP_SIZE } from '@shared/utils/sceneItem';
 
 import {
   ROOM_D, DOOR_END, DOOR_START, SDB_Z_END,

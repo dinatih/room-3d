@@ -10,8 +10,8 @@
 import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { glbLocalBBox } from '../../../utils/glbUtils';
-import type { SceneItemProps } from '../../../types';
+import { glbLocalBBox } from '@shared/utils/glbUtils';
+import type { SceneItemProps } from '@shared/types';
 
 const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8 });
 

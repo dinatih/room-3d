@@ -11,10 +11,10 @@
  */
 import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '../../../utils/useGLTFClone';
+import { useGLTFClone } from '@shared/utils/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '../../../utils/glbUtils';
-import type { SceneItemProps } from '../../../types';
+import { removeGlbLines, glbLocalBBox } from '@shared/utils/glbUtils';
+import type { SceneItemProps } from '@shared/types';
 
 const frameMat  = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
 const silverMat = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, roughness: 0.1, metalness: 0.8 });

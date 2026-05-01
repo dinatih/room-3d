@@ -7,8 +7,8 @@
 import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { glbLocalBBox } from '../../../utils/glbUtils';
-import type { SceneItemProps } from '../../../types';
+import { glbLocalBBox } from '@shared/utils/glbUtils';
+import type { SceneItemProps } from '@shared/types';
 
 const TILE_SIZE = 30;
 const Z0 = -290;

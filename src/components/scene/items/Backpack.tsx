@@ -5,7 +5,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 const bagMat    = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.83 });
 const bagDark   = new THREE.MeshStandardMaterial({ color: 0xaa0000, roughness: 0.88 });

@@ -7,7 +7,7 @@
  *   2. L'ajouter ici : 'mon-id': MonObjet
  */
 import type { ComponentType } from 'react';
-import type { SceneItemProps } from '../../types';
+import type { SceneItemProps } from '@shared/types';
 import { Freezer }                                    from './items/Freezer';
 import { Fridge }                                     from './items/Fridge';
 import { KitchenCabinet }                             from './items/KitchenCabinet';

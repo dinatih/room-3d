@@ -8,7 +8,7 @@
 import { useRef, useLayoutEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 const W  = 83;     // DOOR_W
 const H  = 204;    // DOOR_H

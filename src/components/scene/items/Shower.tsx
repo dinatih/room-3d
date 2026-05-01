@@ -17,10 +17,10 @@
 import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
-import { useGLTFClone } from '../../../utils/useGLTFClone';
+import { useGLTFClone } from '@shared/utils/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '../../../utils/glbUtils';
-import type { SceneItemProps } from '../../../types';
+import { removeGlbLines, glbLocalBBox } from '@shared/utils/glbUtils';
+import type { SceneItemProps } from '@shared/types';
 
 const GLB_TRAY   = 'media/Shower tray 90x90cm.glb';
 const GLB_BAR    = 'media/VALLAMOSSE Barre avec douchette haut réglable chromé.glb';

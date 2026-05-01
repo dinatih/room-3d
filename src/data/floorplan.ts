@@ -6,7 +6,7 @@ import {
   GLASS_START, GLASS_END,
   SDB_Z_END,
   DIAG_AZ, DIAG_CZ,
-} from '../config';
+} from '@config';
 import { makeText } from './labels';
 import { FLOOR_SEGMENTS, ROOMS, WALL_LABELS, DIMENSIONS } from './floorData';
 

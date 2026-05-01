@@ -11,7 +11,7 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';
 import { type InventoryItem, type StorageSpace } from './inventoryData';
 import { SCENE_REGISTRY, ACTION_LABELS } from './registry';
-import type { SceneItemProps } from '../../types';
+import type { SceneItemProps } from '@shared/types';
 
 // DRACOLoader partagé (même path que drei)
 const dracoLoader = new DRACOLoader();

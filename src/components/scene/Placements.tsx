@@ -57,8 +57,8 @@ import { ChestBench }   from './items/ChestBench';
 import { PottedPalm }   from './items/PottedPalm';
 import { Viggja }       from './items/Viggja';
 import { JoggingSuit }  from './items/JoggingSuit';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../utils/sceneItem';
-import type { Item } from '../../types';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
+import type { Item } from '@shared/types';
 
 import {
   ROOM_W, ROOM_D, WALL_H,

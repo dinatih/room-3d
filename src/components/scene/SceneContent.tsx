@@ -4,7 +4,7 @@ import { GlbModel }   from './GlbModel';
 import { Spinner }    from './Spinner';
 import { Controller } from './Controller';
 import { SCENE_REGISTRY } from './registry';
-import type { Item } from '../../types';
+import type { Item } from '@shared/types';
 
 interface Props {
   item: Item | null;

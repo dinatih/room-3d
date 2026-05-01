@@ -5,7 +5,7 @@
  */
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 const woodMat       = new THREE.MeshStandardMaterial({ color: 0xc8a46e, roughness: 0.85 });
 const whitePlanMat  = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.85 });

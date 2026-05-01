@@ -7,7 +7,7 @@
 import { useRef, useLayoutEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 const CLOSET_W = 60;   // DOOR_START - KITCHEN_X1  = 190 - 130
 const CLOSET_D = 50;   // KITCHEN_Z  - (ROOM_D + W) = 460 - 410

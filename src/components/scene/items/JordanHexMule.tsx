@@ -10,7 +10,7 @@
  */
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 // Materials
 const matRed  = new THREE.MeshStandardMaterial({ color: 0xb31c1c, roughness: 0.75 });

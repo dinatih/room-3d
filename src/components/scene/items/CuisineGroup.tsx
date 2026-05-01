@@ -15,8 +15,8 @@ import { Stove }          from './Stove';
 import { KitchenCabinet } from './KitchenCabinet';
 import { Fridge }         from './Fridge';
 import { useDronaGeo }    from './Drona';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../../utils/sceneItem';
-import type { SceneItemProps } from '../../../types';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
+import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 // Wrapper world pos: (KITCHEN_X0=30, 0, ROOM_D=400)

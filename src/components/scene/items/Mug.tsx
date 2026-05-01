@@ -4,7 +4,7 @@
  */
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 const mugMat      = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.35 });
 const mugInnerMat = new THREE.MeshStandardMaterial({ color: 0xf0e8dc, roughness: 0.5 });

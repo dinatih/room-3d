@@ -4,7 +4,7 @@
  */
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 const mannMat = new THREE.MeshStandardMaterial({ color: 0xf5f0eb, roughness: 0.5 });
 

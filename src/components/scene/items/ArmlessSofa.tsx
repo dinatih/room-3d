@@ -6,7 +6,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 const W = 100, D = 60, H = 100, SEAT_H = 40, BACK_T = 10, R = 6;
 

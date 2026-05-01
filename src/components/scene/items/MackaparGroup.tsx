@@ -11,8 +11,8 @@ import * as THREE from 'three';
 import { Mackapar }    from './Mackapar';
 import { Salopette }   from './Salopette';
 import { useDronaGeo } from './Drona';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../../utils/sceneItem';
-import type { SceneItemProps } from '../../../types';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
+import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 const RAIL_Y = 165; // hauteur de la barre porte-vêtements

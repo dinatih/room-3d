@@ -12,8 +12,8 @@ import { Sunnersta }     from './Sunnersta';
 import { MannequinHead } from './MannequinHead';
 import { BaseballCap }   from './BaseballCap';
 import { GlbSubGroup }  from '../GlbContext';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '../../../utils/sceneItem';
-import type { SceneItemProps } from '../../../types';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
+import type { SceneItemProps } from '@shared/types';
 
 // Hauteur du plateau supérieur Sunnersta (90 trolley + 8 + 8 + 8.9 × scale)
 const SUNNERSTA_HEAD_TOP = 90 + 8 + 8 + 8.9 * 1.15;

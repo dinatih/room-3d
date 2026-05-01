@@ -4,7 +4,7 @@
  */
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
 const DEFAULT_H = 70;

@@ -11,7 +11,7 @@ export default defineConfig({
       '@features': path.resolve(__dirname, 'src/features'),
       '@shared':   path.resolve(__dirname, 'src/shared'),
       '@data':     path.resolve(__dirname, 'src/data'),
-      '@config':   path.resolve(__dirname, 'src/config.ts'),
+      '@config':   path.resolve(__dirname, 'src/shared/config.ts'),
     },
   },
   server: {

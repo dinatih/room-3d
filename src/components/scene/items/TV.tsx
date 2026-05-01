@@ -6,7 +6,7 @@
 import { useLayoutEffect } from 'react';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 
 export const TV_W = 70, TV_H = 40, TV_D = 1.5;
 

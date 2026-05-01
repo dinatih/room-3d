@@ -5,7 +5,7 @@
  */
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '../../../types';
+import type { SceneItemProps } from '@shared/types';
 import { makeGrassTex } from '../structure/Floor';
 
 const RUG_W = 200;
