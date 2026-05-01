@@ -195,6 +195,19 @@ export function DevToolsGroups({ Group }: {
           {devState.meshes > 800 && (
             <div style={{ color: '#ff8866', fontSize: 9, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
           )}
+
+          {devState.topMeshes.length > 0 && (
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4, paddingTop: 4 }}>
+              <div style={sectionHeaderStyle}>TOP <span style={{ color: '#444', fontWeight: 400 }}>· par groupe</span></div>
+              {devState.topMeshes.map(([name, count]) => (
+                <div key={name} style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 10px', fontSize: 10 }}>
+                  <span style={{ color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }}>{name}</span>
+                  <span style={{ color: '#777', flexShrink: 0, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>{count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <button
             onClick={handleRefreshScene}
             style={{

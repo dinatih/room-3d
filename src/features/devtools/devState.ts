@@ -15,6 +15,8 @@ export const devState = {
   lights:    0,
   verts:     0,
   tris:      0,
+  /** Top contributeurs au mesh count, groupés par ancêtre nommé. */
+  topMeshes: [] as Array<[name: string, count: number]>,
 
   // FPS — tableau glissant de samples (temps entre frames rendus)
   fpsSamples: [] as number[],
