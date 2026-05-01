@@ -97,6 +97,9 @@ export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
     scene.traverse(c => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
+      m.castShadow = true;
+      m.receiveShadow = true;
+      m.frustumCulled = false; // skinned mesh: bounding box repos ≠ pose animée
       ([] as THREE.Material[]).concat(m.material as any)
         .forEach(mat => { if (mat) (mat as THREE.MeshStandardMaterial).side = THREE.FrontSide; });
     });
@@ -234,6 +237,9 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
     clone.traverse(c => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
+      m.castShadow = true;
+      m.receiveShadow = true;
+      m.frustumCulled = false;
       ([] as THREE.Material[]).concat(m.material as any)
         .forEach(mat => { if (mat) (mat as THREE.MeshStandardMaterial).side = THREE.FrontSide; });
     });
