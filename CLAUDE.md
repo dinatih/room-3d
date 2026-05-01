@@ -7,7 +7,6 @@ Visualisation 3D interactive d'un appartement : navigation walk mode, inventaire
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm run dev:studio   # ouvre /studio.html directement
 npm run build
 ```
 
@@ -24,73 +23,105 @@ npm run build
 
 Stack : React 18 + Three.js + `@react-three/fiber` + `@react-three/drei` + Vite + TypeScript.
 
-### Entrée de scène
+Organisation par feature, avec aliases TypeScript/Vite :
+
+- `@shared/*` → `src/shared/*` — code transverse (types, utils, config)
+- `@features/*` → `src/features/*` — domaines fonctionnels
+- `@config` → `src/shared/config.ts` — constantes de la pièce
 
 ```
 src/
-├── main.tsx              # mount React
-├── types.ts              # SceneItemProps (interface commune items/)
-└── utils/
-    ├── useGLTFClone.ts   # hook : clone isolé d'un GLB (évite mutation partagée)
-    └── glbUtils.ts       # removeGlbLines (nettoie les LineSegments des GLBs)
+├── main.tsx                    # mount React
+├── shared/
+│   ├── config.ts               # ROOM_W, ROOM_D, WALL_H, etc.
+│   ├── types.ts                # SceneItemProps (interface commune items/)
+│   └── utils/
+│       ├── useGLTFClone.ts     # hook : clone isolé d'un GLB
+│       ├── glbUtils.ts         # removeGlbLines + glbLocalBBox
+│       └── sceneItem.ts        # NOOP_ITEM, NOOP_STATE, NOOP_SIZE
+└── features/
+    ├── scene/                  # composition 3D
+    ├── inventory/              # UI : panneau, inventaire, registry
+    ├── camera/                 # contrôleurs caméra, walk/POV/VR
+    └── devtools/               # FPS, stats, lidar, helpers
 ```
 
-### Composants scène (`src/components/scene/`)
+### `features/scene/`
 
 ```
-Studio.tsx          # Canvas R3F : lights, fog, tone mapping, état global UI
-│
-├── structure/      # Géométrie architecturale (portée sur LAYER_STRUCTURE)
-│   ├── Walls.tsx       # 4 murs + niche + ouvertures
-│   ├── Floor.tsx       # Parquet, carrelage, dalles, plafond
-│   ├── Doors.tsx       # Panneaux de portes + poignées
-│   ├── Kitchen.tsx     # Plan de travail, frigo, évier, plaques
-│   └── Neighbors.tsx   # Bâtiment voisin extérieur
-│
-├── Furniture.tsx       # Meubles procéduraux placés (Kallax, TV, bureaux, lit…)
-├── Furnishings.tsx     # Meubles avec état (portes, tiroirs, lit empilé/canapé…)
-├── Placements.tsx      # Placement monde de tous les objets décoratifs
-│                       #   FurniturePlacements → layers.furniture (LACK, MULIG, Fniss…)
-│                       #   GlbPlacements       → layers.glb (scooter, chaise, Sneakers…)
-├── Backpacks.tsx       # Sacs à dos procéduraux
-├── DronaBoxes.tsx      # Boîtes DRONA + labels
-├── Garden.tsx          # Mobilier jardin (procédural + GLB)
-├── Mirrors.tsx         # Miroirs Reflector (MirrorSDB, Nissedal)
-├── Walker.tsx          # Personnages animés (Lara, WalkerRed) + SkeletonHelper
-│
-├── XRayLayer.tsx       # Toggle couche X-Ray (matériaux transparents)
-├── RedWallLayer.tsx    # Toggle murs rouges
-├── GridLayer.tsx       # Grille + axes + labels de coordonnées
-├── FloorPlan.tsx       # Plan 2D
-├── Minimap.tsx         # Minimap canvas 2D
-│
-├── SidePanel.tsx       # UI : panneau Mobilier / Affichage / DevTools
-├── HoverMenu.tsx       # Menu contextuel au survol des objets 3D
-├── Inventory.tsx       # Modal inventaire
-├── InventoryPreview.tsx# Prévisualisation 3D dans l'inventaire
-├── CameraController.tsx# Walk mode (WASD + souris) + vues 2D/3D/POV
-│
-├── registry.ts         # SCENE_REGISTRY : id → composant items/ (pour inventaire)
-└── inventoryData.ts    # INVENTORY : liste de tous les objets avec dims, catégorie…
+Studio.tsx               # racine R3F : Canvas + lights + fog + état global UI
+SceneContent.tsx         # variante minimale (utilisée dans Inventory preview)
+Building.tsx             # coque architecturale : Walls + Floor + Mirrors
+Placements.tsx           # placement monde de tous les meubles, items, portes,
+                         #   décoration, jardin, sacs à dos, Drona standalone
+Walker.tsx               # personnages animés (Lara, WalkerRed) + SkeletonHelper
+GlbContext.tsx           # context React pour le toggle GLB
+GlbModel.tsx             # helper de chargement GLB pour InventoryPreview
+items/                   # composants items autonomes (65 fichiers, à plat)
+animations/              # BuildAnimation 1-4 (chutes, montages animés)
+layers/
+    Grid.tsx             # grille + axes + labels de coordonnées
+    XRayLayer.tsx        # toggle X-Ray (matériaux transparents)
+    RedWallLayer.tsx     # toggle murs rouges
+    Neighbors.tsx        # appartements voisins fantômes (mur D et mur A)
+    sceneLayer.tsx       # CategoryLayerGroup + SceneLayerController
 ```
 
-### Composants items/ (`src/components/scene/items/`)
+### `features/inventory/`
 
-Chaque item est un composant autonome réutilisable :
+```
+SidePanel.tsx            # panneau latéral : Mobilier / Affichage / Perf / Scène
+Inventory.tsx            # modal inventaire complet
+InventoryPreview.tsx     # prévisualisation 3D dans l'inventaire
+HoverMenu.tsx            # menu contextuel au survol des objets 3D
+AnimationsPanel.tsx      # panneau animations
+Spinner.tsx              # spinner de chargement
+Minimap.tsx              # minimap canvas 2D
+FloorPlan.tsx            # plan 2D vue de dessus
+inventoryData.ts         # INVENTORY : liste des objets avec dims, catégorie
+registry.ts              # SCENE_REGISTRY : id → composant items/
+floorplan.ts, floorData.ts, labels.ts  # données de plan
+```
+
+### `features/camera/`
+
+```
+CameraController.tsx     # walk mode (WASD + souris) + vues 2D/3D/POV
+Controller.tsx           # contrôleur OrbitControls pour InventoryPreview
+ImmersiveMode.tsx        # mode immersif plein écran
+VRMode.tsx               # WebXR (VR/AR)
+cameraState.ts           # état partagé caméra (camX, camZ, walkYaw, mirrorsHD…)
+hoverState.ts            # état partagé hover (raycaster intersect, label…)
+```
+
+### `features/devtools/`
+
+```
+DevToolsCollector.tsx    # collecte stats Three.js (drawCalls, triangles, FPS)
+DevToolsOverlay.tsx      # rendu HTML du panneau Perf (RENDU + SCÈNE + TOP)
+LightHelpers.tsx         # helpers visuels : DirectionalLightHelper, etc.
+LidarScan.tsx            # affichage point cloud lidar
+devState.ts              # état partagé entre Collector et Overlay
+```
+
+### Composants items/ (`features/scene/items/`)
+
+Chaque item est un composant autonome réutilisable. Interface commune `SceneItemProps` (`@shared/types`) :
 
 ```tsx
-// Interface commune SceneItemProps (types.ts)
 interface SceneItemProps {
-  item:        any;                          // données inventaire
-  actionState: Record<string, boolean>;      // état des actions (ouvert/fermé…)
-  onSize:      (size: THREE.Vector3) => void;// callback dimensions pour le preview
+  item:        Item;                          // données inventaire
+  actionState: Record<string, boolean>;       // état des actions (ouvert/fermé…)
+  onSize:      (size: THREE.Vector3) => void; // callback dimensions pour le preview
 }
 ```
 
-- **Coordonnées locales** : centré X/Z, Y=0 = sol (ou Y=0 = surface d'appui pour les items posés).
+- **Coordonnées locales** : centré X/Z, Y=0 = sol (ou Y=0 = surface d'appui).
 - **GLB** : `useGLTFClone` pour les instances multiples, `useGLTF` + clone manuel dans `useMemo` si nécessaire.
 - **Scale + centre** calculés dans `useLayoutEffect` → `onSize` appelé en fin de setup.
 - Placement monde **toujours dans le composant parent** (wrapper `<group position rotation>`), jamais hardcodé dans l'item lui-même.
+- **Pattern B (scale dynamique)** : pour les items qui calculent leur scale depuis `glbLocalBBox`, **toujours** faire `scene.scale.set(1, 1, 1)` au début de `useLayoutEffect` — protège contre la re-exécution sur Suspense remount où le scene est déjà scalé.
+- **`glbLocalBBox(scene)`** : drop-in replacement de `setFromObject(scene)` qui ignore les transforms du parent. À utiliser systématiquement plutôt que `setFromObject` pour éviter les corruptions sur Suspense remount.
 
 ### État UI et toggles
 
@@ -98,7 +129,7 @@ interface SceneItemProps {
 
 ```ts
 type FurnitureState = {
-  bedStacked, bedSofa, bedPosition, lampOn, ...
+  bedStacked, bedSofa, bedPosition, lampOn, laptopModel, ...
 }
 type LayerState = {
   structure, glb, xray, grid, dronaLabels, skeleton, redWalls, ...
@@ -111,15 +142,16 @@ Les actions UI passent par des `CustomEvent` `furniture-toggle` :
 document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value } }))
 ```
 
-Les composants concernés (`Furnishings`, `Placements`, `Walker`…) écoutent cet événement dans un `useEffect`.
+Les composants concernés (`Placements`, `Walker`, items avec état…) écoutent cet événement dans un `useEffect`. Le helper `useFurnitureToggles({eventKey: 'state-key'})` dans `Placements.tsx` factorise ce pattern.
 
 ### Couches visuelles (layers)
 
 | Layer | Contenu |
 |-------|---------|
-| 0 | Tout (défaut) |
-| LAYER_STRUCTURE | Murs, sol, portes |
-| LAYER_GLB | Objets GLB |
-| LAYER_FURNITURE | Meubles procéduraux |
+| 0 | Défaut (Building, Walker, Mirrors) — visible dans les miroirs |
+| LAYER_EQUIPMENT | Équipements sanitaires + cuisine |
+| LAYER_FURNITURE | Mobilier + décoration |
+| LAYER_NEIGHBORS | Voisins fantômes |
+| LAYER_LIDAR | Point cloud lidar |
 
 `XRayLayer` et `RedWallLayer` traversent la scène (`scene.traverse`) au mount/unmount pour swapper les matériaux, puis restaurent les originaux au cleanup.
