@@ -1,5 +1,5 @@
 /**
- * Apartment.tsx — Coque architecturale fixe : murs, sol/plafond, miroirs.
+ * Building.tsx — Coque architecturale fixe : murs, sol/plafond, miroirs.
  *
  * Regroupe ce qui était dans Walls.tsx, Floor.tsx et Mirrors.tsx — éléments
  * définis en coordonnées monde (pas des items réutilisables).
