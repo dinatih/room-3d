@@ -15,8 +15,11 @@
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
-      "@config": ["./src/config.ts"],
-      "@data/*": ["./src/data/*"]
+      "@/*":         ["./src/*"],
+      "@features/*": ["./src/features/*"],
+      "@shared/*":   ["./src/shared/*"],
+      "@config":     ["./src/config.ts"],
+      "@data/*":     ["./src/data/*"]
     }
   },
   "include": ["src"]
