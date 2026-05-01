@@ -11,7 +11,7 @@ import { cameraState }      from '@features/camera/cameraState';
 import { Minimap }          from '@features/inventory/Minimap';
 import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/inventory/SidePanel';
 import { AnimationsPanel }  from '@features/inventory/AnimationsPanel';
-import { Walls, Floor, Mirrors } from './Apartment';
+import { Walls, Floor, Mirrors } from './Building';
 import { Neighbors }        from './layers/Neighbors';
 import { GlbContext } from './GlbContext';
 import { CategoryLayerGroup, SceneLayerController }  from './layers/sceneLayer';
