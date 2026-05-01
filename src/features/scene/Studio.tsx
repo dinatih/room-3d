@@ -11,8 +11,7 @@ import { cameraState }      from '@features/camera/cameraState';
 import { Minimap }          from '@features/inventory/Minimap';
 import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/inventory/SidePanel';
 import { AnimationsPanel }  from '@features/inventory/AnimationsPanel';
-import { Walls }            from './Walls';
-import { Floor }            from './Floor';
+import { Walls, Floor, Mirrors } from './Apartment';
 import { Neighbors }        from './layers/Neighbors';
 import { GlbContext } from './GlbContext';
 import { CategoryLayerGroup, SceneLayerController }  from './layers/sceneLayer';
@@ -23,10 +22,9 @@ import {
   FurniturePlacements, GlbPlacements, CompositePlacements,
   Backpacks, Garden, GardenGlb,
   DoorsPlaced,
+  DronaBoxes, DronaLabels,
 } from './Placements';
-import { Mirrors }          from './Mirrors';
 import { Walker, WalkerRed } from './Walker';
-import { DronaBoxes, DronaLabels } from './DronaBoxes';
 import { XRayLayer }        from './layers/XRayLayer';
 import { RedWallLayer }     from './layers/RedWallLayer';
 import { GridLayer }        from './layers/Grid';

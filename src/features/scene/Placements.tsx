@@ -9,8 +9,9 @@
  *   Garden / GardenGlb — jardin (procédural + GLB)
  *   Backpacks — sacs à dos procéduraux
  */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 
 import { KallaxNE }      from './items/KallaxNE';
 import { KallaxSE }      from './items/KallaxSE';
@@ -59,6 +60,7 @@ import { Viggja }       from './items/Viggja';
 import { JoggingSuit }  from './items/JoggingSuit';
 import { DoorLiving, DoorSdb } from './items/DoorWhite';
 import { DoorEntry }            from './items/DoorEntry';
+import { useDronaGeo }          from './items/Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
 import type { Item } from '@shared/types';
 
@@ -620,5 +622,90 @@ export function DoorsPlaced() {
         <DoorEntry item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DRONA — boîtes DRONA standalone (hors cases Kallax)
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Les Drona associés à des groupes sont gérés par leurs composants :
+//   KallaxNE (7), KallaxSE (4), KallaxNW (4), KallaxCuisine (6), MackaparGroup (2)
+// Ce bloc gère les 3 boîtes restantes : 2 sur meubles SDB, 1 sur congélateur.
+
+const dronaMatFront = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.FrontSide });
+const dronaMatBack  = new THREE.MeshStandardMaterial({ color: 0x991100, roughness: 0.9, side: THREE.BackSide });
+
+function buildDronaMatrices(): THREE.Matrix4[] {
+  const mats: THREE.Matrix4[] = [];
+  const dummy = new THREE.Object3D();
+  const DF = 33;
+  function addSingle(cx: number, cy: number, cz: number, rotY = 0) {
+    dummy.position.set(cx, cy + 0.2, cz);
+    dummy.rotation.set(0, rotY, 0);
+    dummy.updateMatrix();
+    mats.push(dummy.matrix.clone());
+  }
+  addSingle(DOOR_START - 31,    60 + DF / 2, KITCHEN_Z + 30);                // SDB est
+  addSingle(-NICHE_DEPTH + 20,  60 + DF / 2, KITCHEN_Z + 30);                // SDB ouest
+  addSingle(24.5,               50 + DF / 2, 269.5,         Math.PI / 2);    // congélateur CHIQ
+  return mats;
+}
+
+function makeDronaLabel(n: number): THREE.Sprite {
+  const S = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = S; canvas.height = S;
+  const ctx = canvas.getContext('2d')!;
+  ctx.beginPath();
+  ctx.arc(S / 2, S / 2, S / 2 - 3, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(136,0,0,0.6)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.fillStyle = '#880000';
+  ctx.font = `bold ${n > 9 ? 54 : 66}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(n), S / 2, S / 2 + 3);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: new THREE.CanvasTexture(canvas), depthTest: false,
+  }));
+  sp.renderOrder = 10;
+  sp.scale.set(13, 13, 1);
+  return sp;
+}
+
+export function DronaLabels() {
+  const matrices = useMemo(() => buildDronaMatrices(), []);
+  const group = useMemo(() => {
+    const g = new THREE.Group();
+    matrices.forEach((m, i) => {
+      const sp = makeDronaLabel(i + 1);
+      sp.position.setFromMatrixPosition(m);
+      g.add(sp);
+    });
+    return g;
+  }, [matrices]);
+  return <primitive object={group} />;
+}
+
+export function DronaBoxes() {
+  const geo = useDronaGeo();
+  const matrices = useMemo(() => buildDronaMatrices(), []);
+  const apply = (self: THREE.InstancedMesh) => {
+    matrices.forEach((m, i) => self.setMatrixAt(i, m));
+    self.instanceMatrix.needsUpdate = true;
+  };
+  const iFrontRef = useRef<THREE.InstancedMesh>(null);
+  const iBackRef  = useRef<THREE.InstancedMesh>(null);
+  return (
+    <group userData={{ animUnit: true }}>
+      <instancedMesh ref={iFrontRef} args={[geo, dronaMatFront, matrices.length]}
+        castShadow receiveShadow onUpdate={apply} />
+      <instancedMesh ref={iBackRef}  args={[geo, dronaMatBack,  matrices.length]}
+        onUpdate={apply} />
+    </group>
   );
 }
