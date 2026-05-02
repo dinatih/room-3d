@@ -340,6 +340,7 @@ export interface LayerState {
   skeleton:     boolean;
   ceiling:      boolean;
   redWalls:     boolean;
+  wallEdges:    boolean;
   lidar:        boolean;
   lights:       boolean;
   shadows:      boolean;
@@ -467,6 +468,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {b0('light', 'Smörkull changer position',
               () => onToggleFurniture('smorkullPos'))}
           {layerBtn('red', 'Murs rouges', 'redWalls')}
+          {layerBtn('red', 'Arêtes murs', 'wallEdges')}
           {b0('yellow', `Lampe OLA : ${furniture.lampOn ? 'ON' : 'OFF'}`,
               () => onToggleFurniture('lampOn'))}
           {b0('light', `Laptop : ${furniture.laptopModel ? 'CAD' : 'Procédural'}`,

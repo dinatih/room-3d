@@ -29,6 +29,7 @@ import {
 import { Walker, WalkerRed } from './Walker';
 import { XRayLayer }        from './layers/XRayLayer';
 import { RedWallLayer }     from './layers/RedWallLayer';
+import { WallEdgesLayer }   from './layers/WallEdgesLayer';
 import { GridLayer }        from './layers/Grid';
 import { LightHelpers }     from '@features/devtools/LightHelpers';
 import { HoverRaycaster, HoverOverlay } from '@features/inventory/HoverMenu';
@@ -115,7 +116,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
-    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false, skeleton: false, ceiling: false, redWalls: false, lidar: false, lights: false, shadows: true,
+    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -225,6 +226,7 @@ export function Studio() {
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.xray        && <XRayLayer />}
         {layers.redWalls    && <RedWallLayer />}
+        {layers.wallEdges   && <WallEdgesLayer />}
         {layers.grid        && <GridLayer />}
         {layers.lights      && <LightHelpers />}
         {layers.dronaLabels && <DronaLabels />}

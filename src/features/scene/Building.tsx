@@ -313,19 +313,18 @@ export function Walls() {
         x={(KITCHEN_X0 - W - NICHE_DEPTH) / 2}                    y={WALL_H / 2} z={ROOM_D + W / 2} />
       {/* Pilier cuisine-R (intersection MurD × mur droit cuisine) */}
       <P w={W} h={WALL_H} d={W} x={KITCHEN_X1 + W / 2}           y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Milieu (X=140→180, pilier gère X=130→140) */}
-      <P w={DOOR_START - 10 - KITCHEN_X1 - W} h={WALL_H} d={W}
-        x={(KITCHEN_X1 + W + DOOR_START - 10) / 2}                y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Montants porte séjour — droite élargie de 8cm pour le décalage +6 de la porte */}
-      <P w={10} h={WALL_H} d={W} x={DOOR_START - 5}               y={WALL_H / 2} z={ROOM_D + W / 2} />
-      <P w={2}  h={WALL_H} d={W} x={DOOR_END + 9}                  y={WALL_H / 2} z={ROOM_D + W / 2} />
+      {/* Milieu (X=140→190, prolongé jusqu'à DOOR_START) */}
+      <P w={DOOR_START - KITCHEN_X1 - W} h={WALL_H} d={W}
+        x={(KITCHEN_X1 + W + DOOR_START) / 2}                     y={WALL_H / 2} z={ROOM_D + W / 2} />
       {/* Linteau */}
       <P w={DOOR_END - DOOR_START + 8} h={WALL_H - DOOR_H} d={W}
         x={(DOOR_START + DOOR_END + 8) / 2}
         y={DOOR_H + (WALL_H - DOOR_H) / 2}                                        z={ROOM_D + W / 2} />
-      {/* Droite (X=280→300) */}
-      <P w={ROOM_W - DOOR_END - 10} h={WALL_H} d={W}
-        x={(DOOR_END + 10 + ROOM_W) / 2}                          y={WALL_H / 2} z={ROOM_D + W / 2} />
+      {/* Pilier SE (coin MurB × MurD) */}
+      <P w={W} h={WALL_H} d={W} x={ROOM_W + W / 2} y={WALL_H / 2} z={ROOM_D + W / 2} />
+      {/* Droite (X=278→300, absorbe l'ancien montant droit) */}
+      <P w={ROOM_W - DOOR_END - 8} h={WALL_H} d={W}
+        x={(DOOR_END + 8 + ROOM_W) / 2}                           y={WALL_H / 2} z={ROOM_D + W / 2} />
 
       {/* ── Cuisine (renfoncement) ──────────────────────────────────────────── */}
       {/* Z=410→460 — les piliers cuisine-L/R gèrent Z=400→410 */}
@@ -336,6 +335,8 @@ export function Walls() {
       {/* Mur nord SDB / fond cuisine */}
       <P w={DOOR_START + NICHE_DEPTH} h={WALL_H} d={W}
         x={(DOOR_START - NICHE_DEPTH) / 2} y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
+      {/* Pilier NW SDB (intersection mur nord SDB × MurA2b) */}
+      <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
 
       {/* ── Couloir gauche (X=185, Z=460→600) ─────────────────────────────── */}
       {(() => {
