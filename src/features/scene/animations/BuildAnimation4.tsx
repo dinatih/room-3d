@@ -140,7 +140,7 @@ function collectScene(scene: THREE.Scene) {
     }
 
     const depth = depthFrom(o, scene);
-    if (depth >= 2 && isLeafComponent(o)) {
+    if ((depth >= 2 || o.userData?.animUnit) && isLeafComponent(o)) {
       picked.add(o);
       // Also check parent brickType — wall meshes (depth 2) live inside the
       // Walls group (depth 1) which carries brickType 'wall' on the group.

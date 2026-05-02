@@ -93,23 +93,8 @@ function makeExtrudeGeo(
 // ── Mur C : trapèze nord + baie vitrée ────────────────────────────────────────
 function WallC() {
   const WALL_DEPTH = 30;
-  const NW_EXT = 20, NE_EXT = 10;
   const GLASS_TOP_Y = 210;
   const linteauH = WALL_H - GLASS_TOP_Y; // 40
-
-  const leftGeo   = useMemo(() => makeExtrudeGeo([
-    [0,           0          ],
-    [GLASS_START, 0          ],
-    [GLASS_START, -WALL_DEPTH],
-    [-NW_EXT,     -WALL_DEPTH],
-  ], WALL_H), []);
-
-  const rightGeo  = useMemo(() => makeExtrudeGeo([
-    [GLASS_END,        0          ],
-    [ROOM_W,           0          ],
-    [ROOM_W + NE_EXT,  -WALL_DEPTH],
-    [GLASS_END,        -WALL_DEPTH],
-  ], WALL_H), []);
 
   // Porte-fenêtre : battant gauche (fixe) + battant droit (animé)
   const glassRef  = useRef<THREE.Group>(null!);
@@ -164,8 +149,15 @@ function WallC() {
 
   return (
     <>
-      <mesh geometry={leftGeo}  material={wallMatC} castShadow receiveShadow />
-      <mesh geometry={rightGeo} material={wallMatC} castShadow receiveShadow />
+      {/* Pilier NW (intersection MurA × MurC) */}
+      <P w={20} h={WALL_H} d={WALL_DEPTH} x={-10} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={westMats} />
+      {/* Pilier NE (intersection MurB × MurC) */}
+      <P w={W} h={WALL_H} d={WALL_DEPTH} x={ROOM_W + W / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={eastMats} />
+
+      <P w={GLASS_START} h={WALL_H} d={WALL_DEPTH}
+        x={GLASS_START / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={wallMatC} />
+      <P w={ROOM_W - GLASS_END} h={WALL_H} d={WALL_DEPTH}
+        x={(GLASS_END + ROOM_W) / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={wallMatC} />
 
       {/* Linteau */}
       <P w={GLASS_END - GLASS_START} h={linteauH} d={WALL_DEPTH}
@@ -182,12 +174,13 @@ function WallC() {
         <boxGeometry args={[GLASS_END - GLASS_START, 20, WALL_DEPTH]} />
       </mesh>
 
-      {/* Battant gauche (fixe) */}
-      <DoorPanel cx={GLASS_START + doorW / 2} />
+      <group userData={{ animUnit: true }}>
+        {/* Battant gauche (fixe) */}
+        <DoorPanel cx={GLASS_START + doorW / 2} />
 
-      {/* Battant droit (pivot à GLASS_END) */}
-      <group ref={glassRef} position={[GLASS_END, 0, 0]}
-        userData={{ hoverAction: { label: 'Porte-fenêtre', actionId: 'eastDoor' } }}>
+        {/* Battant droit (pivot à GLASS_END) */}
+        <group ref={glassRef} position={[GLASS_END, 0, 0]}
+          userData={{ hoverAction: { label: 'Porte-fenêtre', actionId: 'eastDoor' } }}>
         <DoorPanel cx={-doorW / 2} />
         {/* Poignée */}
         <mesh ref={(m) => { if (m) m.material = handleMat; }}
@@ -198,6 +191,7 @@ function WallC() {
           position={[-doorW + FRAME + 4, glassBase + glassH * 0.5, Z + FRAME_D / 2 + 4.5]}>
           <boxGeometry args={[1.5, 1.5, 8]} />
         </mesh>
+        </group>
       </group>
     </>
   );
@@ -227,14 +221,9 @@ export function Walls() {
 
     const E_DOOR_START = 10, E_DOOR_W = 90, E_DOOR_END = E_DOOR_START + E_DOOR_W;
 
-    const B_EXT_X    = ROOM_W + W;
-    const d_start_cut = (B_EXT_X - DIAG_AX - DIAG_DEPTH * pX) / sinθ;
-    const A_EXT_X    = -NICHE_DEPTH - W;
-    const d_ext_cut  = (A_EXT_X - DIAG_AX - DIAG_DEPTH * pX) / sinθ;
-
-    // Section NE biseautée (de 0 à E_DOOR_START, face ext de d_start_cut)
+    // Section NE — rectangulaire : épaisseur uniforme, face ext à eP(0)
     const ne = makeExtrudeGeo(
-      [iP(0), iP(E_DOOR_START), eP(E_DOOR_START), eP(d_start_cut)],
+      [iP(0), iP(E_DOOR_START), eP(E_DOOR_START), eP(0)],
       WALL_H,
     );
 
@@ -245,64 +234,54 @@ export function Walls() {
       DOOR_H,
     );
 
-    // Section SW biseautée
+    // Section SW — rectangulaire : épaisseur uniforme, face ext à eP(diagLen)
     const sw = makeExtrudeGeo(
-      [iP(E_DOOR_END), iP(diagLen), eP(d_ext_cut), eP(E_DOOR_END)],
+      [iP(E_DOOR_END), iP(diagLen), eP(diagLen), eP(E_DOOR_END)],
       WALL_H,
     );
 
-    // Triangle prism A2 biseau SW
-    const A2_Z_EXT = DIAG_AZ + d_ext_cut * cosθ + DIAG_DEPTH * pZ;
-    const a2Shape = new THREE.Shape();
-    a2Shape.moveTo(-NICHE_DEPTH, -DIAG_CZ);
-    a2Shape.lineTo(A_EXT_X,     -DIAG_CZ);
-    a2Shape.lineTo(A_EXT_X,     -A2_Z_EXT);
-    a2Shape.closePath();
-    const a2Geo = new THREE.ExtrudeGeometry(a2Shape, { depth: WALL_H, bevelEnabled: false });
-    a2Geo.rotateX(-Math.PI / 2);
-
-    // Triangle SE mur B couloir
-    const Z_se_ext = DIAG_AZ + d_start_cut * cosθ + DIAG_DEPTH * pZ;
-    const bShape = new THREE.Shape();
-    bShape.moveTo(ROOM_W,     -DIAG_AZ);
-    bShape.lineTo(ROOM_W + W, -DIAG_AZ);
-    bShape.lineTo(ROOM_W + W, -Z_se_ext);
-    bShape.closePath();
-    const bGeo = new THREE.ExtrudeGeometry(bShape, { depth: WALL_H, bevelEnabled: false });
-    bGeo.rotateX(-Math.PI / 2);
-
-    return { ne, linteau, sw, a2: a2Geo, bSE: bGeo };
+    return { ne, linteau, sw };
   }, []);
 
   return (
     <group userData={{ brickType: 'wall' }}>
 
       {/* ── MUR A (ouest, X=0) ─────────────────────────────────────────────── */}
-      {/* A1 : Z=-30 → Z=NICHE_Z_START=280 */}
+      {/* A1 : Z=0 → Z=NICHE_Z_START=280 */}
       <mesh
         ref={(m) => { if (m) m.material = westMats as any; }}
-        position={[-W / 2, WALL_H / 2, (-30 + NICHE_Z_START) / 2]}
+        position={[-W / 2, WALL_H / 2, NICHE_Z_START / 2]}
         castShadow receiveShadow
       >
-        <boxGeometry args={[W, WALL_H, 310]} />
+        <boxGeometry args={[W, WALL_H, NICHE_Z_START]} />
       </mesh>
-      {/* A2 : X=-10-W/2, Z=-30 → Z=DIAG_CZ */}
+      {/* Pilier SW (intersection MurA2 × MurD) */}
+      <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={ROOM_D + W / 2} mat={westMats} />
+      {/* A2a : Z=0 → Z=400 */}
       <mesh
         ref={(m) => { if (m) m.material = westMats as any; }}
-        position={[-NICHE_DEPTH - W / 2, WALL_H / 2, (-30 + DIAG_CZ) / 2]}
+        position={[-NICHE_DEPTH - W / 2, WALL_H / 2, ROOM_D / 2]}
         castShadow receiveShadow
       >
-        <boxGeometry args={[W, WALL_H, DIAG_CZ + 30]} />
+        <boxGeometry args={[W, WALL_H, ROOM_D]} />
+      </mesh>
+      {/* A2b : Z=410 → Z=DIAG_CZ */}
+      <mesh
+        ref={(m) => { if (m) m.material = westMats as any; }}
+        position={[-NICHE_DEPTH - W / 2, WALL_H / 2, (ROOM_D + W + DIAG_CZ) / 2]}
+        castShadow receiveShadow
+      >
+        <boxGeometry args={[W, WALL_H, DIAG_CZ - ROOM_D - W]} />
       </mesh>
 
       {/* ── MUR B (est, X=300) ─────────────────────────────────────────────── */}
-      {/* B1 : Z=-30 → Z=410 */}
+      {/* B1 : Z=0 → Z=410 */}
       <mesh
         ref={(m) => { if (m) m.material = eastMats as any; }}
-        position={[ROOM_W + W / 2, WALL_H / 2, (-30 + ROOM_D + 10) / 2]}
+        position={[ROOM_W + W / 2, WALL_H / 2, (ROOM_D + 10) / 2]}
         castShadow receiveShadow
       >
-        <boxGeometry args={[W, WALL_H, ROOM_D + 10 + 30]} />
+        <boxGeometry args={[W, WALL_H, ROOM_D + 10]} />
       </mesh>
       {/* B2 extension jardin : Z=-230 → Z=-30 */}
       <mesh
@@ -327,13 +306,16 @@ export function Walls() {
       <WallC />
 
       {/* ── MUR D (sud, Z=400) ─────────────────────────────────────────────── */}
-      {/* Extension niche côté A */}
-      <P w={NICHE_DEPTH} h={WALL_H} d={W} x={-NICHE_DEPTH / 2}   y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Gauche (X=0→30) */}
-      <P w={KITCHEN_X0}  h={WALL_H} d={W} x={KITCHEN_X0 / 2}     y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Milieu (X=130→180) */}
-      <P w={DOOR_START - 10 - KITCHEN_X1} h={WALL_H} d={W}
-        x={(KITCHEN_X1 + DOOR_START - 10) / 2}                    y={WALL_H / 2} z={ROOM_D + W / 2} />
+      {/* Pilier cuisine-L (intersection MurD × mur gauche cuisine) */}
+      <P w={W} h={WALL_H} d={W} x={KITCHEN_X0 - W / 2}           y={WALL_H / 2} z={ROOM_D + W / 2} />
+      {/* Gauche (X=-10→20) : absorbe l'ancienne extension niche (X=-10→0) */}
+      <P w={KITCHEN_X0 - W + NICHE_DEPTH} h={WALL_H} d={W}
+        x={(KITCHEN_X0 - W - NICHE_DEPTH) / 2}                    y={WALL_H / 2} z={ROOM_D + W / 2} />
+      {/* Pilier cuisine-R (intersection MurD × mur droit cuisine) */}
+      <P w={W} h={WALL_H} d={W} x={KITCHEN_X1 + W / 2}           y={WALL_H / 2} z={ROOM_D + W / 2} />
+      {/* Milieu (X=140→180, pilier gère X=130→140) */}
+      <P w={DOOR_START - 10 - KITCHEN_X1 - W} h={WALL_H} d={W}
+        x={(KITCHEN_X1 + W + DOOR_START - 10) / 2}                y={WALL_H / 2} z={ROOM_D + W / 2} />
       {/* Montants porte séjour — droite élargie de 8cm pour le décalage +6 de la porte */}
       <P w={10} h={WALL_H} d={W} x={DOOR_START - 5}               y={WALL_H / 2} z={ROOM_D + W / 2} />
       <P w={2}  h={WALL_H} d={W} x={DOOR_END + 9}                  y={WALL_H / 2} z={ROOM_D + W / 2} />
@@ -346,10 +328,11 @@ export function Walls() {
         x={(DOOR_END + 10 + ROOM_W) / 2}                          y={WALL_H / 2} z={ROOM_D + W / 2} />
 
       {/* ── Cuisine (renfoncement) ──────────────────────────────────────────── */}
-      <P w={W} h={WALL_H} d={KITCHEN_DEPTH}
-        x={KITCHEN_X0 - W / 2} y={WALL_H / 2} z={ROOM_D + KITCHEN_DEPTH / 2} />
-      <P w={W} h={WALL_H} d={KITCHEN_DEPTH}
-        x={KITCHEN_X1 + W / 2} y={WALL_H / 2} z={ROOM_D + KITCHEN_DEPTH / 2} />
+      {/* Z=410→460 — les piliers cuisine-L/R gèrent Z=400→410 */}
+      <P w={W} h={WALL_H} d={KITCHEN_DEPTH - W}
+        x={KITCHEN_X0 - W / 2} y={WALL_H / 2} z={ROOM_D + W + (KITCHEN_DEPTH - W) / 2} />
+      <P w={W} h={WALL_H} d={KITCHEN_DEPTH - W}
+        x={KITCHEN_X1 + W / 2} y={WALL_H / 2} z={ROOM_D + W + (KITCHEN_DEPTH - W) / 2} />
       {/* Mur nord SDB / fond cuisine */}
       <P w={DOOR_START + NICHE_DEPTH} h={WALL_H} d={W}
         x={(DOOR_START - NICHE_DEPTH) / 2} y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
@@ -397,8 +380,6 @@ export function Walls() {
       <mesh geometry={diagGeos.ne}     material={wallMatDiag} castShadow receiveShadow />
       <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow />
       <mesh geometry={diagGeos.sw}     material={wallMatDiag} castShadow receiveShadow />
-      <mesh geometry={diagGeos.a2}     material={wallMat}     castShadow receiveShadow />
-      <mesh geometry={diagGeos.bSE}    material={wallMat}     castShadow receiveShadow />
 
 
     </group>

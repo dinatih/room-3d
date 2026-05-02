@@ -93,7 +93,7 @@ function collect(scene: THREE.Scene): { furniture: THREE.Object3D[]; structure: 
 
     const depth = depthFrom(o, scene);
 
-    const isRoot = depth >= 2 && depth <= 10 && isLeafComponent(o);
+    const isRoot = (depth >= 2 || o.userData?.animUnit) && depth <= 10 && isLeafComponent(o);
 
     if (isRoot) {
       picked.add(o);

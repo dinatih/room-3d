@@ -129,7 +129,7 @@ function collect(scene: THREE.Scene): {
     }
 
     const depth = depthFrom(o, scene);
-    const isRoot = depth >= 2 && depth <= 10 && isLeafComponent(o);
+    const isRoot = (depth >= 2 || o.userData?.animUnit) && depth <= 10 && isLeafComponent(o);
 
     if (isRoot) {
       picked.add(o);

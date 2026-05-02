@@ -608,19 +608,19 @@ export function DoorsPlaced() {
     <>
       <group
         position={[DOOR_END - DOOR_W_WHITE / 2 + 6, DOOR_HEIGHT / 2, ROOM_D + 4.5]}
-        userData={{ hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
+        userData={{ animUnit: true, hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
         <DoorLiving item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
         position={[SDB_WALL_X, DOOR_HEIGHT / 2, sdbHingeZ - DOOR_W_WHITE / 2]}
         rotation-y={Math.PI / 2}
-        userData={{ hoverAction: { label: 'Porte SDB', actionId: 'bathroomDoor' } }}>
+        userData={{ animUnit: true, hoverAction: { label: 'Porte SDB', actionId: 'bathroomDoor' } }}>
         <DoorSdb item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
         position={[entry.wx, entry.wy, entry.wz]}
         rotation-y={entry.diagRotY}
-        userData={{ hoverAction: { label: 'Porte entrée', actionId: 'entryDoor' } }}>
+        userData={{ animUnit: true, hoverAction: { label: 'Porte entrée', actionId: 'entryDoor' } }}>
         <DoorEntry item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </>
