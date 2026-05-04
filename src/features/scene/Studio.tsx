@@ -206,7 +206,6 @@ export function Studio() {
           shadow-camera-bottom={-1000}
           shadow-bias={-0.001}
         />
-        <directionalLight color={0xaabbff} position={[-200, 300, -100]} intensity={0.1} />
 
         {/* Contrôleur unifié : synchronise camera.layers avec les toggles UI */}
         <SceneLayerController layers={layers} />

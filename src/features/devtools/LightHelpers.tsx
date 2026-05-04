@@ -4,7 +4,6 @@
  *
  * Lumières (miroir de Studio.tsx) :
  *   L1 — DirectionalLight jaune  [500, 700, 400]  intensity=1.8  castShadow
- *   L2 — DirectionalLight bleu   [-200, 300, -100] intensity=0.4
  *   Ambient — 0x8899bb  intensity=0.6
  *
  * Visuels :
@@ -35,14 +34,6 @@ const LIGHTS: LightDef[] = [
     intensity: 1.8,
     label:     'Lumière principale (castShadow)',
     shadow:    true,
-  },
-  {
-    pos:       [-200, 300, -100],
-    target:    [0, 0, 0],
-    color:     0x99bbff,
-    intensity: 0.4,
-    label:     'Fill bleu',
-    shadow:    false,
   },
 ];
 

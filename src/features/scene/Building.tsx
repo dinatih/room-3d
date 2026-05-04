@@ -150,9 +150,9 @@ function WallC() {
   return (
     <>
       {/* Pilier NW (intersection MurA × MurC) */}
-      <P w={20} h={WALL_H} d={WALL_DEPTH} x={-10} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={westMats} />
+      <P w={20} h={WALL_H} d={WALL_DEPTH} x={-10} y={WALL_H / 2} z={-WALL_DEPTH / 2} />
       {/* Pilier NE (intersection MurB × MurC) */}
-      <P w={W} h={WALL_H} d={WALL_DEPTH} x={ROOM_W + W / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={eastMats} />
+      <P w={W} h={WALL_H} d={WALL_DEPTH} x={ROOM_W + W / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} />
 
       <P w={GLASS_START} h={WALL_H} d={WALL_DEPTH}
         x={GLASS_START / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={wallMatC} />
@@ -256,7 +256,7 @@ export function Walls() {
         <boxGeometry args={[W, WALL_H, NICHE_Z_START]} />
       </mesh>
       {/* Pilier SW (intersection MurA2 × MurD) */}
-      <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={ROOM_D + W / 2} mat={westMats} />
+      <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={ROOM_D + W / 2} />
       {/* A2a : Z=0 → Z=400 */}
       <mesh
         ref={(m) => { if (m) m.material = westMats as any; }}
@@ -367,6 +367,8 @@ export function Walls() {
       {/* Mur fond douche (Z=670) */}
       <P w={70} h={WALL_H} d={W}
         x={-NICHE_DEPTH + 35} y={WALL_H / 2} z={SDB_Z_END + 70 + W / 2} />
+      {/* Pilier NW douche (intersection MurA2b × mur fond douche) */}
+      <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={SDB_Z_END + 70 + W / 2} />
 
       {/* ── Couloir droit (X=305, Z=410→530) ──────────────────────────────── */}
       <mesh
