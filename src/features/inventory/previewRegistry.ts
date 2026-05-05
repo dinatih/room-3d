@@ -46,7 +46,6 @@ import { Bathtub }                                     from '@features/scene/ite
 import { ChestBench }                                  from '@features/scene/items/ChestBench';
 import { PottedPalm }                                  from '@features/scene/items/PottedPalm';
 import { PalmLeaf }                                    from '@features/scene/items/PalmLeaf';
-import { Drona }                                         from '@features/scene/items/Drona';
 import { MeubleT }                                       from '@features/scene/items/MeubleT';
 import { UtakerFrame }                                    from '@features/scene/items/UtakerFrame';
 import { BollsidanDesk }                                  from '@features/scene/items/BollsidanDesk';
@@ -141,9 +140,6 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'mirror-nissedal-wide':    NissedalMirror,
   'mirror-nissedal-d':       NissedalMirror,
   'rail-mulig':              MuligRail,
-  ...(Object.fromEntries(
-    Array.from({ length: 29 }, (_, i) => [`drona-${i + 1}`, Drona]),
-  ) as Record<string, ComponentType<SceneItemProps>>),
 };
 
 /**
