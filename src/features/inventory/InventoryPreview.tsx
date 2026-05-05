@@ -86,18 +86,6 @@ function GlbScene({ glbPath }: { glbPath: string }) {
   return <group ref={groupRef} />;
 }
 
-// ── Box scene (fallback) ──────────────────────────────────────────────────────
-
-function BoxScene({ dims }: { dims: { w: number; d: number; h: number } }) {
-  const maxDim = Math.max(dims.w, dims.d, dims.h, 0.001);
-  return (
-    <mesh>
-      <boxGeometry args={[(dims.w / maxDim) * 1.6, (dims.h / maxDim) * 1.6, (dims.d / maxDim) * 1.6]} />
-      <meshStandardMaterial color="#4488ff" roughness={0.6} metalness={0.1} />
-    </mesh>
-  );
-}
-
 // ── Registry scene — composant items/, centré par bbox ───────────────────────
 
 function CenteredItem({
@@ -160,7 +148,6 @@ type PreviewTarget = InventoryItem | StorageSpace | null;
 
 export function InventoryPreview({ item }: { item: PreviewTarget }) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined;
-  const dims    = item?.dims;
 
   const actionKey   = item ? ITEM_ACTIONS[item.id] : undefined;
   const actionState = actionKey ? { [actionKey]: false } : {};  // mis à jour ci-dessous
@@ -218,7 +205,7 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
               ? <RegistryScene item={item as InventoryItem} actionState={liveActionState} />
               : glbPath
                 ? <GlbScene glbPath={glbPath} />
-                : dims ? <BoxScene dims={dims} /> : null
+                : null
             }
           </Canvas>
 
@@ -250,9 +237,9 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
             pointerEvents: 'none',
           }}>
             {item.name}
-            {dims && (
+            {item.dims && (
               <span style={{ color: '#555', marginLeft: 6, fontFamily: 'monospace', fontSize: 10 }}>
-                {dims.w}×{dims.d}×{dims.h} cm
+                {item.dims.w}×{item.dims.d}×{item.dims.h} cm
               </span>
             )}
           </div>
