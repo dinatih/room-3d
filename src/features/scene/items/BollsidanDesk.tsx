@@ -1,13 +1,18 @@
 /**
- * BollsidanDesk.tsx — Bureau réglable IKEA BOLLSIDAN (procédural).
+ * BollsidanDesk.tsx — Bureau réglable IKEA BOLLSIDAN (procédural + GLB).
  * Coordonnées locales : centré XZ, Y=0 = sol, hauteur assis 70cm.
+ *
+ * Action 'deskGlb' : bascule entre modèle procédural et GLB IKEA officiel.
  */
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
+import { removeGlbLines, glbLocalBBox } from '@shared/utils/glbUtils';
 
 const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
 const DEFAULT_H = 70;
+const GLB_PATH = 'media/BOLLSIDAN Table pour ordinateur portable blanc 68x36 cm.glb';
 
 function DeskTop() {
   const geo = useMemo(() => {
@@ -29,7 +34,7 @@ function DeskTop() {
   return <mesh geometry={geo} material={whiteMat} castShadow receiveShadow />;
 }
 
-export function BollsidanDesk({ onSize, height = DEFAULT_H }: SceneItemProps & { height?: number }) {
+function BollsidanProcedural({ onSize, height = DEFAULT_H }: SceneItemProps & { height?: number }) {
   const groupRef = useRef<THREE.Group>(null!);
   const footHgt = 2.5, colSize = 4.2, w = 68;
   const refEastX = w / 2 - 8;
@@ -52,3 +57,52 @@ export function BollsidanDesk({ onSize, height = DEFAULT_H }: SceneItemProps & {
     </group>
   );
 }
+
+function BollsidanGlb({ onSize, height = DEFAULT_H }: { onSize: SceneItemProps['onSize'], height?: number }) {
+  const { scene } = useGLTF(GLB_PATH);
+
+  const clone = useMemo(() => {
+    const c = scene.clone(true);
+    removeGlbLines(c);
+    c.traverse(child => {
+      if ((child as THREE.Mesh).isMesh) { child.castShadow = true; child.receiveShadow = true; }
+    });
+    return c;
+  }, [scene]);
+
+  useLayoutEffect(() => {
+    clone.scale.set(1, 1, 1);
+    clone.scale.setScalar(100);
+    const boxBase = glbLocalBBox(clone);
+    const naturalH = boxBase.max.y - boxBase.min.y;
+    clone.scale.y = (height / naturalH) * 100;
+    const box = glbLocalBBox(clone);
+    clone.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+    onSize(box.getSize(new THREE.Vector3()));
+  }, [clone, height]);
+
+  return <primitive object={clone} />;
+}
+
+export function BollsidanDesk({ onSize, height = DEFAULT_H }: SceneItemProps & { height?: number }) {
+  const [useGlb, setUseGlb] = useState(true);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail?.key !== 'deskGlb') return;
+      setUseGlb(v => !v);
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, []);
+
+  return useGlb
+    ? <BollsidanGlb onSize={onSize} height={height} />
+    : <BollsidanProcedural item={{} as any} actionState={{}} onSize={onSize} height={height} />;
+}
+
+useGLTF.preload(GLB_PATH);

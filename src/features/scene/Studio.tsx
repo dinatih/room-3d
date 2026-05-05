@@ -4,7 +4,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import {
-  ACESFilmicToneMapping, PCFSoftShadowMap, FogExp2, Color,
+  ACESFilmicToneMapping, PCFSoftShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
 } from 'three';
@@ -111,7 +111,7 @@ export function Studio() {
     corrDoors: false, sdbCloset: false,
     cbnWest: false, cbnEast: false,
     freezer: false, fridge: false, cabinet: false, wcLid: false,
-    bedStacked: true, bedSofa: false, bedPosition: false, smorkullPos: false, lampOn: false, laptopModel: true,
+    bedStacked: true, bedSofa: false, bedPosition: false, smorkullPos: false, lampOn: false, laptopModel: true, deskGlb: true,
   });
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
@@ -185,8 +185,7 @@ export function Studio() {
         }}
         onCreated={({ scene, gl, camera }) => {
           scene.background = new Color(0x2a2a3e);
-          scene.fog = new FogExp2(0x2a2a3e, 0.0006);
-          gl.shadowMap.enabled = true;
+gl.shadowMap.enabled = true;
           camera.layers.enableAll();
           setupEnvironment(scene, gl);
         }}
