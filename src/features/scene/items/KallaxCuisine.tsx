@@ -12,7 +12,7 @@ import { Kallax2x1 }     from './Kallax2x1';
 import { Kallax2x2 }     from './Kallax2x2';
 import { Kallax2x2Spec } from './Kallax2x2Spec';
 import { PizzaOven }   from './PizzaOven';
-import { useDronaGeo } from './Drona';
+import { DronaInstances } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -44,48 +44,22 @@ function cells22(): [number, number, number][] {
   return out;
 }
 
-// ── Drona (4 boîtes, mesh instancié) ──────────────────────────────────────────
-const redFront = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.FrontSide });
-const redBack  = new THREE.MeshStandardMaterial({ color: 0x991100, roughness: 0.9, side: THREE.BackSide });
-
-function DronaLayer() {
-  const geo = useDronaGeo();
-
-  const matrices = useMemo(() => {
-    const rotPI = new THREE.Matrix4().makeRotationY(Math.PI);
-    const rot90 = new THREE.Matrix4().makeRotationY(Math.PI / 2);
-
-    // 4 cases du premier Kallax 2×2 (centre à [0, h2/2, 0])
-    const inside = cells22().map(([cx, cy, cz]) =>
-      rotPI.clone().setPosition(cx, h2 / 2 + cy, cz),
-    );
-
-    // 2 Drona sur le dessus de la tour (local : ±18, TOP+DF/2+0.2, 0)
-    const top = [-18, 18].map(x =>
-      rot90.clone().setPosition(x, TOP + DF / 2 + 0.2, 0),
-    );
-
-    return [...inside, ...top];
-  }, []);
-
-  const N     = matrices.length; // 6
-  const apply = (mesh: THREE.InstancedMesh) => {
-    matrices.forEach((m, i) => mesh.setMatrixAt(i, m));
-    mesh.instanceMatrix.needsUpdate = true;
-  };
-
-  return (
-    <>
-      <instancedMesh args={[geo, redFront, N]} castShadow receiveShadow onUpdate={apply} />
-      <instancedMesh args={[geo, redBack,  N]} onUpdate={apply} />
-    </>
-  );
-}
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
 export function KallaxCuisine({ onSize }: SceneItemProps) {
   const ref = useRef<THREE.Group>(null!);
+
+  const dronaMatrices = useMemo(() => {
+    const rot = new THREE.Matrix4().makeRotationY(Math.PI / 2);
+    const inside = cells22().map(([cx, cy, cz]) =>
+      rot.clone().setPosition(cx, h2 / 2 + cy, cz),
+    );
+    const top = [-18, 18].map(x =>
+      rot.clone().setPosition(x, TOP + DF / 2 + 0.2, 0),
+    );
+    return [...inside, ...top];
+  }, []);
 
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
@@ -107,7 +81,7 @@ export function KallaxCuisine({ onSize }: SceneItemProps) {
         <Kallax2x1 item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* 6 Drona : 4 dans le 2×2 bas + 2 sur le dessus */}
-      <DronaLayer />
+      <DronaInstances matrices={dronaMatrices} />
 
       {/* Four à pizza — dans la case basse du 2×2 spec */}
       <group position={[0, PIZZA_Y, 0]} rotation-y={Math.PI / 2}>

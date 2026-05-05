@@ -10,7 +10,7 @@ import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Kallax2x1 }   from './Kallax2x1';
 import { Kallax2x2 }   from './Kallax2x2';
-import { useDronaGeo } from './Drona';
+import { DroneCell } from './Drona';
 import { NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -24,19 +24,6 @@ const DF = 33;    // Drona box size
 function k(id: string) { return { id } as any; }
 
 // ── Drona (7 boîtes) ──────────────────────────────────────────────────────────
-const redFront = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.FrontSide });
-const redBack  = new THREE.MeshStandardMaterial({ color: 0x991100, roughness: 0.9, side: THREE.BackSide });
-
-/** Boîte Drona unique — enfant direct d'un group Kallax. */
-function DroneCell() {
-  const geo = useDronaGeo();
-  return (
-    <>
-      <mesh geometry={geo} material={redFront} castShadow receiveShadow />
-      <mesh geometry={geo} material={redBack} />
-    </>
-  );
-}
 
 
 // ── Composant principal ───────────────────────────────────────────────────────
