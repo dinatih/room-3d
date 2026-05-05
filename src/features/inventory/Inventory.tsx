@@ -9,7 +9,6 @@ import { InventoryPreview } from './InventoryPreview';
 
 function fmt(n: number | undefined) { return Number.isFinite(n) ? n : '—'; }
 function dimsStr(d: { w: number; d: number; h: number }) { return `${fmt(d.w)} × ${fmt(d.d)} × ${fmt(d.h)}`; }
-function posStr(p: { x: number; z: number }) { return `X${fmt(p.x)}  Z${fmt(p.z)}`; }
 
 type PreviewTarget = InventoryItem | StorageSpace | null;
 
@@ -65,7 +64,6 @@ function StorageTable({ spaces, selected, onSelect }: {
         <thead>
           <tr>
             <th style={thStyle}>Nom</th>
-            <th style={{ ...thStyle, textAlign: 'center' }}>Position</th>
             <th style={thStyle}>Description</th>
           </tr>
         </thead>
@@ -77,7 +75,6 @@ function StorageTable({ spaces, selected, onSelect }: {
               style={{ cursor: 'pointer', background: selected && 'id' in selected && selected.id === sp.id ? 'rgba(255,215,0,0.15)' : undefined }}
             >
               <td style={tdStyle}><strong>{sp.name}</strong></td>
-              <td style={{ ...tdStyle, textAlign: 'center', fontFamily: 'monospace', fontSize: 10, color: '#aaa' }}>{posStr(sp.scenePos)}</td>
               <td style={{ ...tdStyle, color: '#aaa', fontSize: 11 }}>{sp.notes ?? ''}</td>
             </tr>
           ))}
@@ -105,7 +102,6 @@ function ItemTable({ items, selected, onSelect }: {
           <th style={{ ...thStyle, whiteSpace: 'nowrap' }}>Marque</th>
           <th style={{ ...thStyle, textAlign: 'center' }}>Qté</th>
           <th style={{ ...thStyle, textAlign: 'center', whiteSpace: 'nowrap' }}>L × P × H</th>
-          <th style={{ ...thStyle, textAlign: 'center' }}>Position</th>
           <th style={thStyle}>Notes</th>
         </tr>
       </thead>
@@ -127,7 +123,6 @@ function ItemTable({ items, selected, onSelect }: {
               <td style={tdStyle}>{item.brand || '—'}</td>
               <td style={{ ...tdStyle, textAlign: 'center' }}>{item.qty}</td>
               <td style={{ ...tdStyle, textAlign: 'center', fontFamily: 'monospace', fontSize: 11 }}>{dimsStr(item.dims)}</td>
-              <td style={{ ...tdStyle, textAlign: 'center', fontFamily: 'monospace', fontSize: 10, color: '#aaa' }}>{posStr(item.scenePos)}</td>
               <td style={{ ...tdStyle, color: '#aaa', fontSize: 11 }}>{item.notes ?? ''}</td>
             </tr>
           );
