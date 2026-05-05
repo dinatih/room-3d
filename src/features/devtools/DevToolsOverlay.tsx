@@ -5,31 +5,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { devState } from './devState';
 
-// ── GLBs déclarés dans la scène ───────────────────────────────────────────────
-
-const GLB_PATHS = [
-  'media/xiaomi_electric_scooter_4.glb',
-  'media/SMÖRKULL.glb',
-  'media/ikea_lamp_ola.glb',
-  'media/sunnersta_trolley_ikea.glb',
-  'media/mackapar_ikea.glb',
-  'media/salopette-noir.glb',
-  'media/baseball_cap.glb',
-  'media/sneaker.glb',
-  'media/ikea_Altappen_single.glb',
-  'media/DRÖNA.glb',
-  'media/viggja.glb',
-  'media/potted_palm.glb',
-  'media/realistic_human_cloths.glb',
-];
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmtBytes(b: number) {
   return b > 1 << 20 ? `${(b / (1 << 20)).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`;
-}
-function glbColor(b: number) {
-  return b > 512 * 1024 ? '#ff8866' : b > 128 * 1024 ? '#ffcc66' : '#88cc88';
 }
 function heatColor(v: number, warn: number, danger: number) {
   return v >= danger ? '#ff4444' : v >= warn ? '#ffcc44' : '#ffd700';
@@ -77,53 +56,6 @@ function StatRow({ label, value, color }: { label: string; value: string | numbe
       <span style={{ color: '#666' }}>{label}</span>
       <span style={{ color: color ?? '#ffd700', fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </div>
-  );
-}
-
-// ── GLB sizes ─────────────────────────────────────────────────────────────────
-
-type GlbEntry = { name: string; bytes: number };
-
-function GlbSizes({ Group }: { Group: React.ComponentType<{ emoji: string; title: string; defaultOpen?: boolean; children: React.ReactNode }> }) {
-  const [entries, setEntries] = useState<GlbEntry[] | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const rows: GlbEntry[] = [];
-      await Promise.all(GLB_PATHS.map(async path => {
-        try {
-          const r = await fetch(path, { method: 'HEAD' });
-          if (!r.ok) return;
-          const bytes = parseInt(r.headers.get('content-length') ?? '0');
-          if (bytes > 0) rows.push({ name: path.split('/').pop()!.replace('.glb', ''), bytes });
-        } catch { /* absent */ }
-      }));
-      if (!cancelled) setEntries(rows.sort((a, b) => b.bytes - a.bytes));
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  return (
-    <Group emoji="📦" title="GLB">
-      {entries === null && (
-        <div style={{ color: '#555', fontSize: 10, padding: '4px 10px' }}>chargement…</div>
-      )}
-      {entries?.length === 0 && (
-        <div style={{ color: '#555', fontSize: 10, padding: '4px 10px' }}>aucun GLB</div>
-      )}
-      {entries?.map(({ name, bytes }) => (
-        <div key={name} style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 10px', fontSize: 10 }}>
-          <span style={{ color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }}>{name}</span>
-          <span style={{ color: glbColor(bytes), flexShrink: 0, marginLeft: 4 }}>{fmtBytes(bytes)}</span>
-        </div>
-      ))}
-      {entries && entries.length > 0 && (
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '3px 10px', fontSize: 10, color: '#555' }}>
-          Total : {fmtBytes(entries.reduce((s, e) => s + e.bytes, 0))}
-        </div>
-      )}
-    </Group>
   );
 }
 
