@@ -10,13 +10,13 @@ import {
 } from 'three';
 import { CameraController } from '@features/camera/CameraController';
 import { cameraState }      from '@features/camera/cameraState';
-import { Minimap }          from '@features/inventory/Minimap';
-import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/inventory/SidePanel';
-import { AnimationsPanel }  from '@features/inventory/AnimationsPanel';
+import { Minimap }          from '@features/floorplan/Minimap';
+import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/ui/SidePanel';
+import { AnimationsPanel }  from '@features/ui/AnimationsPanel';
 import { Walls, Floor, Mirrors } from './Building';
-import { Neighbors }        from './layers/Neighbors';
+import { Neighbors }        from '@features/ui/layers/Neighbors';
 import { GlbContext } from './GlbContext';
-import { CategoryLayerGroup, SceneLayerController }  from './layers/sceneLayer';
+import { CategoryLayerGroup, SceneLayerController }  from '@features/ui/layers/sceneLayer';
 import {
   EquipmentProc, EquipmentGlb,
   FurnitureProc, FurnitureGlb, FurnitureComposite,
@@ -27,20 +27,20 @@ import {
   DronaBoxes, DronaLabels,
 } from './Placements';
 import { Walker, WalkerRed } from './Walker';
-import { XRayLayer }        from './layers/XRayLayer';
-import { RedWallLayer }     from './layers/RedWallLayer';
-import { WallEdgesLayer }   from './layers/WallEdgesLayer';
-import { GridLayer }        from './layers/Grid';
+import { XRayLayer }        from '@features/ui/layers/XRayLayer';
+import { RedWallLayer }     from '@features/ui/layers/RedWallLayer';
+import { WallEdgesLayer }   from '@features/ui/layers/WallEdgesLayer';
+import { GridLayer }        from '@features/ui/layers/Grid';
 import { LightHelpers }     from '@features/devtools/LightHelpers';
-import { HoverRaycaster, HoverOverlay } from '@features/inventory/HoverMenu';
+import { HoverRaycaster, HoverOverlay } from '@features/camera/HoverMenu';
 import { DevToolsCollector }            from '@features/devtools/DevToolsCollector';
 import { Inventory }                    from '@features/inventory/Inventory';
 import { VRMode }                       from '@features/camera/VRMode';
 import { ImmersiveMode }                from '@features/camera/ImmersiveMode';
-import { FloorPlan }                    from '@features/inventory/FloorPlan';
+import { FloorPlan }                    from '@features/floorplan/FloorPlan';
 import { LidarScan }                    from '@features/devtools/LidarScan';
-import { GlbReveal }                    from './layers/GlbReveal';
-import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from './animations';
+import { GlbReveal }                    from '@features/ui/layers/GlbReveal';
+import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/ui/animations';
 
 import {
   ROOM_W,
