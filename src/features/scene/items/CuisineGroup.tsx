@@ -14,7 +14,7 @@ import { SinkBoholmen }   from './SinkBoholmen';
 import { Stove }          from './Stove';
 import { KitchenCabinet } from './KitchenCabinet';
 import { Fridge }         from './Fridge';
-import { useDronaGeo }    from './Drona';
+import { DronaInstances } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -77,9 +77,6 @@ function UpperCabinet() {
 const DF       = 33;
 const rot90    = new THREE.Matrix4().makeRotationY(Math.PI / 2);
 
-const redFront = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.FrontSide });
-const redBack  = new THREE.MeshStandardMaterial({ color: 0x991100, roughness: 0.9, side: THREE.BackSide });
-
 const KIT_W_FULL = 100;
 const gap        = (KIT_W_FULL - 3 * DF) / 4;  // 0.25
 
@@ -89,21 +86,6 @@ const DRONA_MATRICES = [0, 1, 2].map(i => {
   //                                                         40.5
 });
 
-function DronaLayer() {
-  const geo = useDronaGeo();
-  const N   = DRONA_MATRICES.length;
-  const apply = (mesh: THREE.InstancedMesh) => {
-    DRONA_MATRICES.forEach((m, i) => mesh.setMatrixAt(i, m));
-    mesh.instanceMatrix.needsUpdate = true;
-  };
-  return (
-    <>
-      <instancedMesh args={[geo, redFront, N]} castShadow receiveShadow onUpdate={apply} />
-      <instancedMesh args={[geo, redBack,  N]} onUpdate={apply} />
-    </>
-  );
-}
-
 // ── Composant principal ───────────────────────────────────────────────────────
 
 const TOGGLE_MAP: Record<string, string> = {
@@ -112,7 +94,7 @@ const TOGGLE_MAP: Record<string, string> = {
 
 /** Drona layer seul — pour placement dans un layer séparé (furniture). */
 export function CuisineDrona() {
-  return <DronaLayer />;
+  return <DronaInstances matrices={DRONA_MATRICES} />;
 }
 
 export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: boolean }) {
@@ -176,7 +158,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
       <UpperCabinet />
 
       {/* 3 boîtes Drona sur le meuble haut */}
-      {!noDrona && <DronaLayer />}
+      {!noDrona && <DronaInstances matrices={DRONA_MATRICES} />}
     </group>
   );
 }

@@ -60,7 +60,7 @@ import { Viggja }       from './items/Viggja';
 import { JoggingSuit }  from './items/JoggingSuit';
 import { DoorLiving, DoorSdb } from './items/DoorWhite';
 import { DoorEntry }            from './items/DoorEntry';
-import { useDronaGeo }          from './items/Drona';
+import { DronaInstances }       from './items/Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
 import type { Item } from '@shared/types';
 
@@ -635,8 +635,6 @@ export function DoorsPlaced() {
 //   KallaxNE (7), KallaxSE (4), KallaxNW (4), KallaxCuisine (6), MackaparGroup (2)
 // Ce bloc gère les 3 boîtes restantes : 2 sur meubles SDB, 1 sur congélateur.
 
-const dronaMatFront = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.FrontSide });
-const dronaMatBack  = new THREE.MeshStandardMaterial({ color: 0x991100, roughness: 0.9, side: THREE.BackSide });
 
 function buildDronaMatrices(): THREE.Matrix4[] {
   const mats: THREE.Matrix4[] = [];
@@ -694,20 +692,10 @@ export function DronaLabels() {
 }
 
 export function DronaBoxes() {
-  const geo = useDronaGeo();
   const matrices = useMemo(() => buildDronaMatrices(), []);
-  const apply = (self: THREE.InstancedMesh) => {
-    matrices.forEach((m, i) => self.setMatrixAt(i, m));
-    self.instanceMatrix.needsUpdate = true;
-  };
-  const iFrontRef = useRef<THREE.InstancedMesh>(null);
-  const iBackRef  = useRef<THREE.InstancedMesh>(null);
   return (
     <group userData={{ animUnit: true }}>
-      <instancedMesh ref={iFrontRef} args={[geo, dronaMatFront, matrices.length]}
-        castShadow receiveShadow onUpdate={apply} />
-      <instancedMesh ref={iBackRef}  args={[geo, dronaMatBack,  matrices.length]}
-        onUpdate={apply} />
+      <DronaInstances matrices={matrices} />
     </group>
   );
 }
