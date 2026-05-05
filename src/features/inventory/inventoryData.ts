@@ -44,7 +44,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'dimpa',             name: 'Sac DIMPA',                     brand: 'IKEA',     category: 'storage',   qty: 5,  dims: { w: 68,   d: 27,   h: 67   }, notes: '5 sacs séjour mur C',          glbPath: 'media/DIMPA.glb' },
   { id: 'rail-mulig',        name: 'Tringle MULIG',                 brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 60,   d: 26,   h: 16   }, notes: 'Blanc',                        glbPath: 'media/MULIG.glb' },
   { id: 'meuble-t',          name: 'Bibliothèque (MeubleT)',         brand: '',         category: 'storage',   qty: 1,  dims: { w: 100,  d: 40,   h: 50   }, notes: 'Procédural, mur C' },
-  { id: 'drona',             name: 'Boîte DRONA',                   brand: 'IKEA',     category: 'storage',   qty: 29, dims: { w: 33,   d: 38,   h: 33   }, notes: 'Dans les Kallax NE/SE/NW/cuisine, Mackapär, meubles SDB et cuisine' },
+  { id: 'drona',             name: 'Boîte DRONA',                   brand: 'IKEA',     category: 'storage',   qty: 29, dims: { w: 33,   d: 38,   h: 33   }, notes: 'Dans les Kallax NE/SE/NW/cuisine, Mackapär, meubles SDB et cuisine', glbPath: 'media/DRÖNA.glb' },
 
   // ── FURNITURE ────────────────────────────────────────────────────────────────
   { id: 'utaker-lower',     name: 'Utåker - Lit bas',               brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 205,  d: 83,   h: 30   }, notes: 'Empilable, matelas 200×80cm bleu' },
