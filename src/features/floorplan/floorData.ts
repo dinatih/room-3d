@@ -1,4 +1,4 @@
-export type CoordFn = (n: number) => number;
+type CoordFn = (n: number) => number;
 
 import {
   ROOM_W, ROOM_D, DOOR_START, DOOR_END,
@@ -14,9 +14,9 @@ import {
 const _dLen = Math.sqrt((DIAG_CX - DIAG_AX) ** 2 + (DIAG_CZ - DIAG_AZ) ** 2);
 const _dX   = (DIAG_CX - DIAG_AX) / _dLen;
 const _dZ   = (DIAG_CZ - DIAG_AZ) / _dLen;
-export const DIAG_DOOR_S = { x: DIAG_AX + 10  * _dX, z: DIAG_AZ + 10  * _dZ };
-export const DIAG_DOOR_E = { x: DIAG_AX + 100 * _dX, z: DIAG_AZ + 100 * _dZ };
-export const DIAG_ANGLE  = Math.atan2(DIAG_CZ - DIAG_AZ, DIAG_CX - DIAG_AX);
+const DIAG_DOOR_S = { x: DIAG_AX + 10  * _dX, z: DIAG_AZ + 10  * _dZ };
+const DIAG_DOOR_E = { x: DIAG_AX + 100 * _dX, z: DIAG_AZ + 100 * _dZ };
+const DIAG_ANGLE  = Math.atan2(DIAG_CZ - DIAG_AZ, DIAG_CX - DIAG_AX);
 
 const diagXat = (z: number): number => DIAG_AX + (z - DIAG_AZ) * (DIAG_CX - DIAG_AX) / (DIAG_CZ - DIAG_AZ);
 

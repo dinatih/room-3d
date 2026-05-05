@@ -1,8 +1,5 @@
 import * as THREE from 'three';
 
-// No font loading needed — canvas text supports all Unicode
-export async function loadFont() {}
-
 export function makeText(
   scene: THREE.Object3D,
   text: string,

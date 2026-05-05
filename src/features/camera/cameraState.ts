@@ -3,7 +3,7 @@
  * Mis à jour chaque frame par CameraController, lu par MinimapOverlay via RAF.
  */
 
-export type CameraMode = 'orbit' | 'walk' | 'top';
+type CameraMode = 'orbit' | 'walk' | 'top';
 
 export const cameraState = {
   mode: 'orbit' as CameraMode,

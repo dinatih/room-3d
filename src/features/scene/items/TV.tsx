@@ -8,7 +8,9 @@ import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 
-export const TV_W = 70, TV_H = 40, TV_D = 1.5;
+const TV_W = 70;
+export const TV_H = 40;
+const TV_D = 1.5;
 
 const tvBodyMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.4 });
 
