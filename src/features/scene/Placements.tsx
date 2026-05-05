@@ -76,7 +76,7 @@ import {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const stub = (id: string): Item =>
-  ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 }, scenePos: { x: 0, z: 0 } });
+  ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
 
 /**
  * Écoute furniture-toggle et mappe les clés d'événement vers des clés actionState.

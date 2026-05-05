@@ -11,7 +11,6 @@ export interface Item {
   category: string;
   qty: number;
   dims: Dims;
-  scenePos: { x: number; z: number };
   notes?: string;
   glbPath?: string;
   actions?: string[];
