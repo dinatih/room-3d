@@ -199,12 +199,13 @@ export function Studio() {
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-camera-near={1}
-          shadow-camera-far={3000}
-          shadow-camera-left={-1000}
-          shadow-camera-right={1000}
-          shadow-camera-top={1000}
-          shadow-camera-bottom={-1000}
-          shadow-bias={-0.001}
+          shadow-camera-far={2000}
+          shadow-camera-left={-600}
+          shadow-camera-right={600}
+          shadow-camera-top={600}
+          shadow-camera-bottom={-600}
+          shadow-bias={-0.0002}
+          shadow-normalBias={0.04}
         />
 
         {/* Contrôleur unifié : synchronise camera.layers avec les toggles UI */}
