@@ -49,8 +49,7 @@ export const INVENTORY: InventoryItem[] = [
   // ── FURNITURE ────────────────────────────────────────────────────────────────
   { id: 'utaker-lower',     name: 'Utåker - Lit bas',               brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 205,  d: 83,   h: 30   }, notes: 'Empilable, matelas 200×80cm bleu' },
   { id: 'utaker-upper',     name: 'Utåker - Lit haut',              brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 205,  d: 83,   h: 30   }, notes: 'Empilable, matelas 200×80cm blanc' },
-  { id: 'desk-bollsidan-1', name: 'Bureau assis-debout 1',          brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 68,   d: 36,   h: 70   }, notes: 'Bollsidan, surface 68×36cm' },
-  { id: 'desk-bollsidan-2', name: 'Bureau assis-debout 2',          brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 68,   d: 36,   h: 70   }, notes: 'Bollsidan, laptop + téléphone + mug' },
+  { id: 'desk-bollsidan',   name: 'Bollsidan - Bureau assis-debout', brand: 'IKEA',     category: 'furniture', qty: 2, dims: { w: 68,   d: 36,   h: 70   }, notes: 'Surface 68×36cm ; bureau 2 : laptop + téléphone + mug' },
   { id: 'smorkull-chair',   name: 'Chaise de bureau Smörkull',      brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 66,   d: 65,   h: 108  }, notes: 'Rouge', glbPath: 'media/SMÖRKULL.glb' },
   { id: 'sunnersta',        name: 'Desserte SUNNERSTA',             brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 36,   d: 56,   h: 90   }, notes: 'Roulante, têtes de mannequin dessus', glbPath: 'media/sunnersta_trolley_ikea.glb' },
   { id: 'chest-bench',      name: 'Coffre banc YITAHOME 100 Gal',  brand: 'YITAHOME', category: 'furniture', qty: 1, dims: { w: 122,  d: 55,   h: 62   }, notes: 'Gris, jardin derrière canapé ouest' },
