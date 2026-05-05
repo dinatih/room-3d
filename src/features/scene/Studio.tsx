@@ -10,7 +10,7 @@ import {
 } from 'three';
 import { CameraController } from '@features/camera/CameraController';
 import { cameraState }      from '@features/camera/cameraState';
-import { Minimap }          from '@features/floorplan/Minimap';
+import { Minimap }          from '@features/ui/Minimap';
 import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/ui/SidePanel';
 import { AnimationsPanel }  from '@features/ui/AnimationsPanel';
 import { Walls, Floor, Mirrors } from './Building';
@@ -37,7 +37,7 @@ import { DevToolsCollector }            from '@features/devtools/DevToolsCollect
 import { Inventory }                    from '@features/inventory/Inventory';
 import { VRMode }                       from '@features/camera/VRMode';
 import { ImmersiveMode }                from '@features/camera/ImmersiveMode';
-import { FloorPlan }                    from '@features/floorplan/FloorPlan';
+import { FloorPlan }                    from '@features/scene/FloorPlan';
 import { LidarScan }                    from '@features/devtools/LidarScan';
 import { GlbReveal }                    from '@features/ui/layers/GlbReveal';
 import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/ui/animations';

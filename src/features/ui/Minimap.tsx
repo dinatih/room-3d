@@ -14,7 +14,7 @@ import {
   GARDEN_JC_Z, SDB_Z_END,
   DIAG_AZ, DIAG_CZ,
 } from '@config';
-import { type Room, ROOMS, FLOOR_SEGMENTS } from './floorData';
+import { type Room, ROOMS, FLOOR_SEGMENTS } from '@shared/floorData';
 
 // ── Constantes carte ──────────────────────────────────────────────────────────
 

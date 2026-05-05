@@ -8,7 +8,7 @@ import {
   DIAG_AZ, DIAG_CZ,
 } from '@config';
 import { makeText } from './labels';
-import { FLOOR_SEGMENTS, ROOMS, WALL_LABELS, DIMENSIONS } from './floorData';
+import { FLOOR_SEGMENTS, ROOMS, WALL_LABELS, DIMENSIONS } from '@shared/floorData';
 
 export function buildFloorPlan() {
   const group = new THREE.Group();
