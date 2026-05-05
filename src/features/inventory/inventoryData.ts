@@ -31,14 +31,9 @@ export interface Category {
 export const INVENTORY: InventoryItem[] = [
 
   // ── STORAGE ──────────────────────────────────────────────────────────────────
-  { id: 'kallax-ne-2x1',    name: 'Kallax 2×1 (NE)',                brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 77, d: 39, h: 41 }, notes: 'Empilée avec 2×2 au coin C+B',    glbPath: 'media/KALLAX etag 77x41 blanc.glb' },
-  { id: 'kallax-ne-2x2',    name: 'Kallax 2×2 (NE)',                brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 77, d: 39, h: 77 }, notes: 'Sur 2×1 NE, boîtes Drona',        glbPath: 'media/KALLAX etag 77x77 blanc.glb' },
-  { id: 'kallax-se-2x1',    name: 'Kallax 2×1 pivotée (SE)',        brand: 'IKEA',     category: 'storage',   qty: 2,  dims: { w: 77, d: 39, h: 41 }, notes: '2 unités empilées, rotation 90°',  glbPath: 'media/KALLAX etag 77x41 blanc.glb' },
-  { id: 'kallax-nw-2x1',    name: 'Kallax 2×1 pivotée (NW)',        brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 77, d: 39, h: 41 }, notes: 'Base tour NW',                    glbPath: 'media/KALLAX etag 77x41 blanc.glb' },
-  { id: 'kallax-nw-1x1-a',  name: 'Kallax 1×1 pivotée (NW-milieu)',brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 42, d: 39, h: 41 }, notes: 'Milieu tour NW', glbPath: 'media/KALLAX etag 42x41 blanc.glb' },
-  { id: 'kallax-nw-1x1-b',  name: 'Kallax 1×1 pivotée (NW-haut)',  brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 42, d: 39, h: 41 }, notes: 'Haut tour NW',   glbPath: 'media/KALLAX etag 42x41 blanc.glb' },
-  { id: 'kallax-sw-2x2',    name: 'Kallax 2×2 (niche)',             brand: 'IKEA',     category: 'storage',   qty: 2,  dims: { w: 77, d: 39, h: 77 }, notes: 'Remplie de Drona',          glbPath: 'media/KALLAX etag 77x77 blanc.glb' },
-  { id: 'kallax-sw-2x1',    name: 'Kallax 2×1 (niche, haut)',       brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 77, d: 39, h: 41 }, notes: 'Haut de la pile cuisine',   glbPath: 'media/KALLAX etag 77x41 blanc.glb' },
+  { id: 'kallax-2x1',       name: 'Kallax 2×1',                     brand: 'IKEA',     category: 'storage',   qty: 5,  dims: { w: 77, d: 39, h: 41 }, notes: 'NE (1), SE (2 pivotées), NW (1 pivotée), cuisine (1)', glbPath: 'media/KALLAX etag 77x41 blanc.glb' },
+  { id: 'kallax-2x2',       name: 'Kallax 2×2',                     brand: 'IKEA',     category: 'storage',   qty: 3,  dims: { w: 77, d: 39, h: 77 }, notes: 'NE (1), cuisine (2)',                                 glbPath: 'media/KALLAX etag 77x77 blanc.glb' },
+  { id: 'kallax-1x1',       name: 'Kallax 1×1',                     brand: 'IKEA',     category: 'storage',   qty: 2,  dims: { w: 42, d: 39, h: 41 }, notes: 'NW milieu + haut (pivotées)',                         glbPath: 'media/KALLAX etag 42x41 blanc.glb' },
   { id: 'shelf-lack',        name: 'Étagère LACK',                  brand: 'IKEA',     category: 'storage',   qty: 1,  dims: { w: 110,  d: 26,   h: 5    }, notes: 'Murale, mur A', glbPath: 'media/LACK étagère murale 110x26 blanc.glb' },
   { id: 'basket-fniss',      name: 'Corbeille FNISS',               brand: 'IKEA',     category: 'storage',   qty: 2,  dims: { w: 28,   d: 28,   h: 28   }, notes: '1 SDB, 1 séjour',             glbPath: 'media/FNISS poubelle 10 l blanc.glb' },
   { id: 'dimpa',             name: 'Sac DIMPA',                     brand: 'IKEA',     category: 'storage',   qty: 5,  dims: { w: 68,   d: 27,   h: 67   }, notes: '5 sacs séjour mur C',          glbPath: 'media/DIMPA.glb' },
