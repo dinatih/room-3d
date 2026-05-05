@@ -110,8 +110,9 @@ export function Studio() {
     eastDoor: false, entryDoor: false, livingDoor: false, bathroomDoor: false,
     corrDoors: false, sdbCloset: false,
     cbnWest: false, cbnEast: false,
-    freezer: false, fridge: false, cabinet: false, wcLid: false,
+    cabinet: false,
     bedStacked: true, bedSofa: false, bedPosition: false, smorkullPos: false, lampOn: false, laptopModel: true, deskGlb: true, dronaRougeGlb: false,
+    lampSdb: false, lampCouloir: false,
   });
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({

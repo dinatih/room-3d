@@ -45,7 +45,7 @@ function buildWalkClip(root: THREE.Object3D): THREE.AnimationClip {
 
   const N  = new THREE.Quaternion();
   const LA = qz(-90);
-  const RA = qz(90);
+  const RA = qz(120);
   const lad = (deg: number) => LA.clone().multiply(qx(deg));
   const rad = (deg: number) => RA.clone().multiply(qx(deg));
 

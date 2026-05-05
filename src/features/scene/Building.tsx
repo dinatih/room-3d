@@ -37,7 +37,6 @@ const ghostMat = new THREE.MeshStandardMaterial({
   color: 0xe8e4dc, roughness: 0.9,
   transparent: true, opacity: 0.18, depthWrite: false,
 });
-const wallMatC = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
 const wallMatDiag = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
 const panelMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6 });
 const pvcMat     = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
@@ -50,8 +49,10 @@ const handleMat  = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 
 
 // BoxGeometry face order : [+X(0), -X(1), +Y(2), -Y(3), +Z(4), -Z(5)]
 // westMats : face -X (index 1) fantôme ; eastMats : face +X (index 0) fantôme
-const westMats = [wallMat, ghostMat, wallMat, wallMat, wallMat, wallMat];
-const eastMats = [ghostMat, wallMat, wallMat, wallMat, wallMat, wallMat];
+// northMats : face -Z (index 5) fantôme (face extérieure nord, vue de Z<0)
+const westMats  = [wallMat, ghostMat, wallMat, wallMat, wallMat, wallMat];
+const eastMats  = [ghostMat, wallMat, wallMat, wallMat, wallMat, wallMat];
+const northMats = [wallMat, wallMat, wallMat, wallMat, wallMat, ghostMat];
 
 const W = 10; // épaisseur de mur
 
@@ -155,15 +156,16 @@ function WallC() {
       <P w={W} h={WALL_H} d={WALL_DEPTH} x={ROOM_W + W / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} />
 
       <P w={GLASS_START} h={WALL_H} d={WALL_DEPTH}
-        x={GLASS_START / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={wallMatC} />
+        x={GLASS_START / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={northMats} />
       <P w={ROOM_W - GLASS_END} h={WALL_H} d={WALL_DEPTH}
-        x={(GLASS_END + ROOM_W) / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={wallMatC} />
+        x={(GLASS_END + ROOM_W) / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={northMats} />
 
       {/* Linteau */}
       <P w={GLASS_END - GLASS_START} h={linteauH} d={WALL_DEPTH}
         x={(GLASS_START + GLASS_END) / 2}
         y={GLASS_TOP_Y + linteauH / 2}
         z={-WALL_DEPTH / 2}
+        mat={northMats}
       />
 
       {/* Seuil maçonné */}
@@ -677,15 +679,16 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
         </mesh>
       </group>
 
-      {/* Sol extérieur */}
+      {/* Sol extérieur — centré sur le bounding box studio + voisins.
+          X[-400,690] Z[-490,990] → centre [145,250], marges ~50 unités */}
       <mesh
         ref={(m) => { if (m) m.material = new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9 }); }}
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -10, 0]}
+        position={[145, -10, 250]}
         receiveShadow
         userData={{ brickType: 'ground' }}
       >
-        <planeGeometry args={[2000, 2000]} />
+        <planeGeometry args={[1090, 1480]} />
       </mesh>
     </>
   );

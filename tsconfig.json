@@ -17,8 +17,8 @@
     "paths": {
       "@/*":         ["./src/*"],
       "@features/*": ["./src/features/*"],
-      "@shared/*":   ["./src/shared/*"],
-      "@config":     ["./src/shared/config.ts"]
+      "@shared/*":   ["./src/*"],
+      "@config":     ["./src/config.ts"]
     }
   },
   "include": ["src"]

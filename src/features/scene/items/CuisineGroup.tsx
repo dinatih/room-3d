@@ -6,8 +6,7 @@
  *   → position=[KITCHEN_X0, 0, ROOM_D] = [30, 0, 400], sans rotation
  * Utilisé aussi dans l'inventaire via registry.ts.
  */
-import { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Counter }        from './Counter';
 import { SinkBoholmen }   from './SinkBoholmen';
@@ -88,10 +87,6 @@ const DRONA_MATRICES = [0, 1, 2].map(i => {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-const TOGGLE_MAP: Record<string, string> = {
-  fridge: 'fridge-toggle',
-};
-
 /** Drona layer seul — pour placement dans un layer séparé (furniture). */
 export function CuisineDrona() {
   return <DronaInstances matrices={DRONA_MATRICES} />;
@@ -99,25 +94,11 @@ export function CuisineDrona() {
 
 export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
-  const [as, setAs] = useState<Record<string, boolean>>({});
-  const { invalidate } = useThree();
 
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
     onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
   }, []);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { key } = (e as CustomEvent).detail as { key: string };
-      const asKey = TOGGLE_MAP[key];
-      if (!asKey) return;
-      setAs(prev => ({ ...prev, [asKey]: !prev[asKey] }));
-      invalidate();
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, [invalidate]);
 
   // Local positions (wrapper at (KITCHEN_X0=30, 0, ROOM_D=400)):
   //   Counter      : (KIT_W/2, COUNTER_H, KIT_D/2)           = (50, 90, 30)
@@ -145,13 +126,12 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
 
       {/* Meuble sous évier */}
       <group position={[CABINET_W / 2, 10, KIT_D / 2]}>
-        <KitchenCabinet item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+        <KitchenCabinet item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Réfrigérateur */}
-      <group position={[CABINET_W + FRIDGE_W / 2, 0, KIT_D / 2]}
-        userData={{ hoverAction: { label: 'Réfrigérateur', actionId: 'fridge' } }}>
-        <Fridge item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+      <group position={[CABINET_W + FRIDGE_W / 2, 0, KIT_D / 2]}>
+        <Fridge item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Meuble haut */}

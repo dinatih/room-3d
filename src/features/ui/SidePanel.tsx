@@ -325,6 +325,8 @@ export interface FurnitureState {
   laptopModel:    boolean;
   deskGlb:        boolean;
   dronaRougeGlb:  boolean;
+  lampSdb:        boolean;
+  lampCouloir:    boolean;
 }
 
 export interface LayerState {
@@ -421,6 +423,12 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('green',  'Plafond',    'ceiling')}
           {layerBtn('gray',   'Ombres',     'shadows')}
           {layerBtn('cyan',   'LiDAR scan', 'lidar')}
+          {layerBtn('red', 'Murs rouges', 'redWalls')}
+          {layerBtn('red', 'Arêtes murs', 'wallEdges')}
+          {b0('light', `Laptop : ${furniture.laptopModel ? 'CAD' : 'Procédural'}`,
+              () => onToggleFurniture('laptopModel'))}
+          {b0('light', `Bureau : ${furniture.deskGlb ? 'GLB' : 'Procédural'}`,
+              () => onToggleFurniture('deskGlb'))}
           {layers.lidar && b0('cyan',
             ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',
             onCycleLidar)}
@@ -453,14 +461,8 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
               () => onToggleFurniture('cbnWest'))}
           {b0('light', `Meuble SDB est : ${furniture.cbnEast ? 'OUVERT' : 'FERMÉ'}`,
               () => onToggleFurniture('cbnEast'))}
-          {b0('light', `Congélateur : ${furniture.freezer ? 'OUVERT' : 'FERMÉ'}`,
-              () => onToggleFurniture('freezer'))}
-          {b0('light', `Réfrigérateur : ${furniture.fridge ? 'OUVERT' : 'FERMÉ'}`,
-              () => onToggleFurniture('fridge'))}
           {b0('light', `Meuble évier : ${furniture.cabinet ? 'OUVERT' : 'FERMÉ'}`,
               () => onToggleFurniture('cabinet'))}
-          {b0('light', `WC abattant : ${furniture.wcLid ? 'OUVERT' : 'FERMÉ'}`,
-              () => onToggleFurniture('wcLid'))}
           {b0('light', `Lit : ${furniture.bedStacked ? 'EMPILÉ' : 'DÉPLIÉ'}`,
               () => onToggleFurniture('bedStacked'))}
           {b0('light', `Lit canapé : ${furniture.bedSofa ? 'ON' : 'OFF'}`,
@@ -469,14 +471,12 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
               () => onToggleFurniture('bedPosition'))}
           {b0('light', 'Smörkull changer position',
               () => onToggleFurniture('smorkullPos'))}
-          {layerBtn('red', 'Murs rouges', 'redWalls')}
-          {layerBtn('red', 'Arêtes murs', 'wallEdges')}
           {b0('yellow', `Lampe OLA : ${furniture.lampOn ? 'ON' : 'OFF'}`,
               () => onToggleFurniture('lampOn'))}
-          {b0('light', `Laptop : ${furniture.laptopModel ? 'CAD' : 'Procédural'}`,
-              () => onToggleFurniture('laptopModel'))}
-          {b0('light', `Bureau : ${furniture.deskGlb ? 'GLB' : 'Procédural'}`,
-              () => onToggleFurniture('deskGlb'))}
+          {b0('yellow', `Ampoule SDB : ${furniture.lampSdb ? 'ON' : 'OFF'}`,
+              () => onToggleFurniture('lampSdb'))}
+          {b0('yellow', `Ampoule couloir : ${furniture.lampCouloir ? 'ON' : 'OFF'}`,
+              () => onToggleFurniture('lampCouloir'))}
           {b0('red', `Drona : ${furniture.dronaRougeGlb ? 'Rouge GLB' : 'DRÖNA.glb'}`,
               () => onToggleFurniture('dronaRougeGlb'))}
         </Group>

@@ -21,6 +21,7 @@ import { CuisineGroup, CuisineDrona } from './items/CuisineGroup';
 import { Freezer }       from './items/Freezer';
 import { BathroomCabinetWest, BathroomCabinetEast } from './items/BathroomCabinet';
 import { Toilet }        from './items/Toilet';
+import { TradfriBulb }   from './items/TradfriBulb';
 import { Shower }        from './items/Shower';
 import { VasqueSdb }     from './items/VasqueSdb';
 import { WaterHeater }   from './items/WaterHeater';
@@ -159,16 +160,18 @@ export function EquipmentProc() {
 }
 
 export function EquipmentGlb() {
-  const as = useFurnitureToggles({ freezer: 'freezer-toggle', wcLid: 'wc-lid-toggle' });
-  const cbZ = KITCHEN_Z + 11 + 18.5; // 489.5
+  const as = useFurnitureToggles({ lampSdb: 'lamp-sdb-toggle', lampCouloir: 'lamp-couloir-toggle' });
+  const SDB_CX = (-NICHE_DEPTH + DOOR_START) / 2;              // 90
+  const SDB_CZ = (KITCHEN_Z + SDB_Z_END) / 2;                  // 530
+  const CORR_CX = (DOOR_START + ROOM_W) / 2;                   // 245
+  const CORR_CZ = (ROOM_D + KITCHEN_Z) / 2;                    // 430
   return (
     <>
       <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ animUnit: true }}>
         <CuisineGroup item={stub('cuisine-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
-      <group position={[24.5, 0, 269.5]}
-        userData={{ animUnit: true, hoverAction: { label: 'Congélateur', actionId: 'freezer' } }}>
-        <Freezer item={stub('freezer')} actionState={as} onSize={NOOP_SIZE} />
+      <group position={[24.5, 0, 269.5]} userData={{ animUnit: true }}>
+        <Freezer item={stub('freezer')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[DOOR_START - 84, 14, KITCHEN_Z + 34.5]} userData={{ animUnit: true }}>
         <VasqueSdb item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -178,7 +181,27 @@ export function EquipmentGlb() {
         <Shower item={stub('shower')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[-NICHE_DEPTH + 60, 0, KITCHEN_Z + 46.5]} userData={{ animUnit: true }}>
-        <Toilet item={stub('toilet')} actionState={as} onSize={NOOP_SIZE} />
+        <Toilet item={stub('toilet')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* Ampoule SDB — tête en bas, culot à 10 cm du plafond */}
+      <group
+        visible={!!as['lamp-sdb-toggle']}
+        position={[SDB_CX, WALL_H - 10, SDB_CZ]}
+        rotation={[Math.PI, 0, 0]}
+      >
+        <TradfriBulb item={stub('tradfri-bulb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <pointLight intensity={8} distance={250} color={0xffe8b0} />
+      </group>
+
+      {/* Ampoule couloir — tête en bas, culot à 10 cm du plafond */}
+      <group
+        visible={!!as['lamp-couloir-toggle']}
+        position={[CORR_CX, WALL_H - 10, CORR_CZ]}
+        rotation={[Math.PI, 0, 0]}
+      >
+        <TradfriBulb item={stub('tradfri-bulb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <pointLight intensity={8} distance={250} color={0xffe8b0} />
       </group>
     </>
   );
