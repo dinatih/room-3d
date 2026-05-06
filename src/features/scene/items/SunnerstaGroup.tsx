@@ -11,7 +11,6 @@ import * as THREE from 'three';
 import { Sunnersta }     from './Sunnersta';
 import { MannequinHead } from './MannequinHead';
 import { BaseballCap }   from './BaseballCap';
-import { GlbSubGroup }  from '../GlbContext';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -34,14 +33,10 @@ export function SunnerstaGroup({ onSize }: SceneItemProps) {
 
   return (
     <group ref={ref}>
-      {/* Sous-groupe GLB — masqué par le toggle GLB */}
-      <GlbSubGroup>
-        <Sunnersta item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        {/* Casquette : GLB toggle → disparaît avec la desserte */}
-        <group position={[0, SUNNERSTA_HEAD_TOP + 2, -2]} rotation-y={Math.PI / 2}>
-          <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-      </GlbSubGroup>
+      <Sunnersta item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <group position={[0, SUNNERSTA_HEAD_TOP + 2, -2]} rotation-y={Math.PI / 2}>
+        <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
       {/* Tête de mannequin — toujours visible */}
       <group position={[0, 90, -2]} rotation-y={-Math.PI / 2}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />

@@ -333,14 +333,12 @@ export interface LayerState {
   structure: boolean;
   equipment: boolean;
   furniture: boolean;
-  glb:       boolean;
-
   neighbors:  boolean;
   xray:       boolean;
   mirrorsHD:  boolean;
   plan:         boolean;
   grid:         boolean;
-  dronaLabels:  boolean;
+
   skeleton:     boolean;
   ceiling:      boolean;
   redWalls:     boolean;
@@ -412,12 +410,10 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('green',  'Structure',   'structure', true)}
           {layerBtn('peach',  'Équipements', 'equipment')}
           {layerBtn('purple', 'Mobilier',    'furniture')}
-          {layerBtn('gold',   'GLB',         'glb')}
           {layerBtn('blue',   'Voisins',     'neighbors')}
           {layerBtn('cyan',   'X-Ray',       'xray')}
           {layerBtn('purple', 'Miroirs HD',  'mirrorsHD')}
           {layerBtn('teal',   'Grille',      'grid')}
-          {layerBtn('red',    'N° Drona',   'dronaLabels')}
           {layerBtn('white',  'Squelette',  'skeleton')}
           {layerBtn('yellow', 'Lumières ☀',  'lights')}
           {layerBtn('green',  'Plafond',    'ceiling')}

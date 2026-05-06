@@ -15,7 +15,6 @@ import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from 
 import { AnimationsPanel }  from '@features/ui/AnimationsPanel';
 import { Walls, Floor, Mirrors } from './Building';
 import { Neighbors }        from '@features/ui/layers/Neighbors';
-import { GlbContext } from './GlbContext';
 import { CategoryLayerGroup, SceneLayerController }  from '@features/ui/layers/sceneLayer';
 import {
   EquipmentProc, EquipmentGlb,
@@ -24,7 +23,7 @@ import {
   FurniturePlacements, GlbPlacements, CompositePlacements,
   Backpacks, Garden, GardenGlb,
   DoorsPlaced,
-  DronaBoxes, DronaLabels,
+  DronaBoxes,
 } from './Placements';
 import { Walker, WalkerRed } from './Walker';
 import { XRayLayer }        from '@features/ui/layers/XRayLayer';
@@ -117,7 +116,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
-    glb: true, neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, dronaLabels: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true,
+    neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -229,7 +228,6 @@ gl.shadowMap.enabled = true;
         {layers.wallEdges   && <WallEdgesLayer />}
         {layers.grid        && <GridLayer />}
         {layers.lights      && <LightHelpers />}
-        {layers.dronaLabels && <DronaLabels />}
         {layers.plan        && <FloorPlan />}
 
         {/* Contenu 3D — masqué en mode Plan */}
@@ -252,34 +250,23 @@ gl.shadowMap.enabled = true;
            */}
           <CategoryLayerGroup layer={LAYER_EQUIPMENT}>
             <EquipmentProc />
-            <group visible={layers.glb}>
-              <EquipmentGlb />
-            </group>
+            <EquipmentGlb />
           </CategoryLayerGroup>
 
-          {/*
-           * LAYER_FURNITURE (2) — mobilier, décoration, miroirs.
-           * GLB toggle via React visible (indépendant de camera.layers).
-           */}
-          <GlbContext.Provider value={layers.glb}>
-            <CategoryLayerGroup layer={LAYER_FURNITURE}>
-              <Mirrors />
-              <FurnitureProc />
-              <Furnishings />
-              <FurniturePlacements />
-              <Backpacks />
-              <Garden />
-              {/* Composites : GLB + enfants procéduraux — gèrent la visibilité GLB via GlbContext */}
-              <FurnitureComposite />
-              <CompositePlacements />
-              <group visible={layers.glb}>
-                <FurnitureGlb />
-                <GlbPlacements />
-                <GardenGlb />
-                <DronaBoxes />
-              </group>
-            </CategoryLayerGroup>
-          </GlbContext.Provider>
+          <CategoryLayerGroup layer={LAYER_FURNITURE}>
+            <Mirrors />
+            <FurnitureProc />
+            <Furnishings />
+            <FurniturePlacements />
+            <Backpacks />
+            <Garden />
+            <FurnitureComposite />
+            <CompositePlacements />
+            <FurnitureGlb />
+            <GlbPlacements />
+            <GardenGlb />
+            <DronaBoxes />
+          </CategoryLayerGroup>
 
           {/* LAYER_NEIGHBORS (5) — appartements voisins */}
           <CategoryLayerGroup layer={LAYER_NEIGHBORS}>

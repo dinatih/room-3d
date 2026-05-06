@@ -13,7 +13,6 @@ import { Kallax2x1 }      from './Kallax2x1';
 import { Kallax1x1 }      from './Kallax1x1';
 import { MannequinHead }  from './MannequinHead';
 import { DronaInstances } from './Drona';
-import { GlbSubGroup }    from '../GlbContext';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -58,21 +57,19 @@ export function KallaxNW({ onSize }: SceneItemProps) {
   return (
     <group ref={ref}>
       {/* Sous-groupe GLB — masqué par le toggle GLB, visible par défaut */}
-      <GlbSubGroup>
-        {/* nwB 2×1 pivoté, Y ∈ [0, w2] */}
-        <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <Kallax2x1 item={k('kallax-nw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-        {/* nwM 1×1 pivoté, Y ∈ [w2, w2+w1] */}
-        <group position={[px, w2 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <Kallax1x1 item={k('kallax-nw-1x1-a')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-        {/* nwT 1×1 pivoté, Y ∈ [w2+w1, w2+2×w1] */}
-        <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-        <DronaInstances matrices={dronaMatrices} />
-      </GlbSubGroup>
+      {/* nwB 2×1 pivoté, Y ∈ [0, w2] */}
+      <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <Kallax2x1 item={k('kallax-nw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* nwM 1×1 pivoté, Y ∈ [w2, w2+w1] */}
+      <group position={[px, w2 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <Kallax1x1 item={k('kallax-nw-1x1-a')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* nwT 1×1 pivoté, Y ∈ [w2+w1, w2+2×w1] */}
+      <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <DronaInstances matrices={dronaMatrices} />
 
       {/* Enfant procédural — toujours visible indépendamment du toggle GLB */}
       {/* world: x=DEP/2+w1/2≈39.75, y=w2+2w1≈156.5, z=w1/2−DEP/2≈0.75 */}
