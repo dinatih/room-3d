@@ -8,9 +8,9 @@
  */
 import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/utils/useGLTFClone';
+import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/utils/glbUtils';
+import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'media/HAVBÄCK - ORRSJÖN Meuble avec tiroirs-vasque-mitigeur blanc 62x49x69 cm.glb';

@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { Sunnersta }     from './Sunnersta';
 import { MannequinHead } from './MannequinHead';
 import { BaseballCap }   from './BaseballCap';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/utils/sceneItem';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 // Hauteur du plateau supérieur Sunnersta (90 trolley + 8 + 8 + 8.9 × scale)

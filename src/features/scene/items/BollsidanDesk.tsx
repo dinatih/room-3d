@@ -8,7 +8,7 @@ import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/utils/glbUtils';
+import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 
 const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
 const DEFAULT_H = 70;

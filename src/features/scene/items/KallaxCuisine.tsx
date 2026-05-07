@@ -13,7 +13,7 @@ import { Kallax2x2 }     from './Kallax2x2';
 import { Kallax2x2Spec } from './Kallax2x2Spec';
 import { PizzaOven }   from './PizzaOven';
 import { DronaInstances } from './Drona';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/utils/sceneItem';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────

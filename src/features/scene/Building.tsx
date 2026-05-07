@@ -10,7 +10,7 @@ import { useMemo, useRef, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { cameraState } from '@features/scene/camera/cameraState';
+import { cameraState } from '@features/scene/cameraState';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150 } from './items/NissedalMirror';
 
 import {

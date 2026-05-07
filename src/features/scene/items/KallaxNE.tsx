@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { Kallax2x1 }   from './Kallax2x1';
 import { Kallax2x2 }   from './Kallax2x2';
 import { DroneCell } from './Drona';
-import { NOOP_STATE, NOOP_SIZE } from '@features/scene/utils/sceneItem';
+import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────

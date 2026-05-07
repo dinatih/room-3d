@@ -16,7 +16,7 @@ import { useLayoutEffect, useMemo, useEffect, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { glbLocalBBox } from '@features/scene/utils/glbUtils';
+import { glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB_DRONA = 'media/DRÖNA.glb';

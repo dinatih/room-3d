@@ -62,7 +62,7 @@ import { JoggingSuit }  from './items/JoggingSuit';
 import { DoorLiving, DoorSdb } from './items/DoorWhite';
 import { DoorEntry }            from './items/DoorEntry';
 import { DronaInstances }       from './items/Drona';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/utils/sceneItem';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 
 import {

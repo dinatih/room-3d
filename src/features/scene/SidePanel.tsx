@@ -9,7 +9,7 @@
  *   🛋 Mobilier  — toggles portes / meubles (état partagé via props callbacks)
  */
 import { useState, useCallback } from 'react';
-import { DevToolsGroups } from '@features/scene/devtools/DevToolsOverlay';
+import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 
 import {
   ROOM_W, ROOM_D, WALL_H,

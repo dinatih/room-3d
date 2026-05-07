@@ -8,14 +8,14 @@ import {
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
 } from 'three';
-import { CameraController } from '@features/scene/camera/CameraController';
-import { cameraState }      from '@features/scene/camera/cameraState';
-import { Minimap }          from '@features/scene/ui/Minimap';
-import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/scene/ui/SidePanel';
-import { AnimationsPanel }  from '@features/scene/ui/AnimationsPanel';
+import { CameraController } from '@features/scene/CameraController';
+import { cameraState }      from '@features/scene/cameraState';
+import { Minimap }          from '@features/scene/Minimap';
+import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/scene/SidePanel';
+import { AnimationsPanel }  from '@features/scene/AnimationsPanel';
 import { Walls, Floor, Mirrors } from './Building';
-import { Neighbors }        from '@features/scene/ui/layers/Neighbors';
-import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/ui/layers/sceneLayer';
+import { Neighbors }        from '@features/scene/Neighbors';
+import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
 import {
   EquipmentProc, EquipmentGlb,
   FurnitureProc, FurnitureGlb, FurnitureComposite,
@@ -26,20 +26,20 @@ import {
   DronaBoxes,
 } from './Placements';
 import { Walker, WalkerRed } from './Walker';
-import { XRayLayer }        from '@features/scene/ui/layers/XRayLayer';
-import { RedWallLayer }     from '@features/scene/ui/layers/RedWallLayer';
-import { WallEdgesLayer }   from '@features/scene/ui/layers/WallEdgesLayer';
-import { GridLayer }        from '@features/scene/ui/layers/Grid';
-import { LightHelpers }     from '@features/scene/devtools/LightHelpers';
-import { HoverRaycaster, HoverOverlay } from '@features/scene/camera/HoverMenu';
-import { DevToolsCollector }            from '@features/scene/devtools/DevToolsCollector';
+import { XRayLayer }        from '@features/scene/XRayLayer';
+import { RedWallLayer }     from '@features/scene/RedWallLayer';
+import { WallEdgesLayer }   from '@features/scene/WallEdgesLayer';
+import { GridLayer }        from '@features/scene/Grid';
+import { LightHelpers }     from '@features/scene/LightHelpers';
+import { HoverRaycaster, HoverOverlay } from '@features/scene/HoverMenu';
+import { DevToolsCollector }            from '@features/scene/DevToolsCollector';
 import { Inventory }                    from '@features/inventory/Inventory';
-import { VRMode }                       from '@features/scene/camera/VRMode';
-import { ImmersiveMode }                from '@features/scene/camera/ImmersiveMode';
+import { VRMode }                       from '@features/scene/VRMode';
+import { ImmersiveMode }                from '@features/scene/ImmersiveMode';
 import { FloorPlan }                    from '@features/scene/FloorPlan';
-import { LidarScan }                    from '@features/scene/devtools/LidarScan';
-import { GlbReveal }                    from '@features/scene/ui/layers/GlbReveal';
-import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/scene/ui/animations';
+import { LidarScan }                    from '@features/scene/LidarScan';
+import { GlbReveal }                    from '@features/scene/GlbReveal';
+import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/scene/animations';
 
 import {
   ROOM_W,

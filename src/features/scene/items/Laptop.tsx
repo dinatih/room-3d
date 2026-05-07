@@ -12,7 +12,7 @@ import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useTexture, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
-import { removeGlbLines } from '@features/scene/utils/glbUtils';
+import { removeGlbLines } from '@features/scene/glbUtils';
 
 const BASE_W = 29.7, BASE_D = 22.8, BASE_H = 1.6;
 const SCREEN_W = 29, SCREEN_D = 19.5, SCREEN_H = 0.8;
