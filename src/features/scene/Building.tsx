@@ -56,6 +56,13 @@ const northMats = [wallMat, wallMat, wallMat, wallMat, wallMat, ghostMat];
 
 const W = 10; // épaisseur de mur
 
+// Couloir gauche — constantes architecturales (partagées entre piliers et murs)
+const CORR_WALL_X  = DOOR_START - 5;                              // 185
+const C_DOOR_W     = 83;
+const C_DOOR_START = (SDB_Z_END - KITCHEN_Z) - 10 - C_DOOR_W;   // 47
+const C_DOOR_END   = C_DOOR_START + C_DOOR_W;                     // 130
+const CORR_E       = 2; // élargissement anti z-fighting dormant
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 /** Panneau box simple avec matériau optionnel (array ou simple). */
@@ -73,6 +80,24 @@ function P({ w, h, d, x, y, z, mat = wallMat }: {
       <boxGeometry args={[w, h, d]} />
     </mesh>
   );
+}
+
+/** Segment de mur axe Z — span de z1 à z2, centré sur x=xc. */
+function WZ({ xc, z1, z2, t = W, yBase = 0, h = WALL_H, mat = wallMat }: {
+  xc: number; z1: number; z2: number;
+  t?: number; yBase?: number; h?: number;
+  mat?: THREE.Material | THREE.Material[];
+}) {
+  return <P w={t} h={h} d={z2 - z1} x={xc} y={yBase + h / 2} z={(z1 + z2) / 2} mat={mat} />;
+}
+
+/** Segment de mur axe X — span de x1 à x2, centré sur z=zc. */
+function WX({ x1, x2, zc, t = W, yBase = 0, h = WALL_H, mat = wallMat }: {
+  x1: number; x2: number; zc: number;
+  t?: number; yBase?: number; h?: number;
+  mat?: THREE.Material | THREE.Material[];
+}) {
+  return <P w={x2 - x1} h={h} d={t} x={(x1 + x2) / 2} y={yBase + h / 2} z={zc} mat={mat} />;
 }
 
 /** ExtrudeGeometry depuis une liste de points [worldX, worldZ]. */
@@ -325,123 +350,55 @@ export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
       {/* ── Longs murs et parois intérieures — masqués en mode piliers seuls ── */}
       <group visible={!piersOnly}>
 
-        {/* ── MUR A (ouest, X=0) ───────────────────────────────────────────── */}
-        {/* A1 : Z=0 → Z=NICHE_Z_START=280 */}
-        <mesh
-          ref={(m) => { if (m) m.material = westMats as any; }}
-          position={[-W / 2, WALL_H / 2, NICHE_Z_START / 2]}
-          castShadow receiveShadow
-        >
-          <boxGeometry args={[W, WALL_H, NICHE_Z_START]} />
-        </mesh>
-        {/* A2a : Z=0 → Z=400 */}
-        <mesh
-          ref={(m) => { if (m) m.material = westMats as any; }}
-          position={[-NICHE_DEPTH - W / 2, WALL_H / 2, ROOM_D / 2]}
-          castShadow receiveShadow
-        >
-          <boxGeometry args={[W, WALL_H, ROOM_D]} />
-        </mesh>
-        {/* A2b : Z=410 → Z=DIAG_CZ */}
-        <mesh
-          ref={(m) => { if (m) m.material = westMats as any; }}
-          position={[-NICHE_DEPTH - W / 2, WALL_H / 2, (ROOM_D + W + DIAG_CZ) / 2]}
-          castShadow receiveShadow
-        >
-          <boxGeometry args={[W, WALL_H, DIAG_CZ - ROOM_D - W]} />
-        </mesh>
+        {/* ── MUR A (ouest) ───────────────────────────────────────────────── */}
+        {/* A1 : s'arrête à la face sud de la poutre niche */}
+        <WZ xc={-W/2}             z1={0}                            z2={NICHE_Z_START - NICHE_DEPTH/2}  mat={westMats} />
+        {/* A2a : saute la poutre niche (z=275→285) */}
+        <WZ xc={-NICHE_DEPTH-W/2} z1={0}                            z2={NICHE_Z_START - NICHE_DEPTH/2}  mat={westMats} />
+        <WZ xc={-NICHE_DEPTH-W/2} z1={NICHE_Z_START + NICHE_DEPTH/2} z2={ROOM_D}                       mat={westMats} />
+        {/* A2b : saute NW SDB (460→470), poutre douche O (600→610), NW douche (670→680) */}
+        <WZ xc={-NICHE_DEPTH-W/2} z1={ROOM_D + W}   z2={KITCHEN_Z}       mat={westMats} />
+        <WZ xc={-NICHE_DEPTH-W/2} z1={KITCHEN_Z + W} z2={SDB_Z_END}       mat={westMats} />
+        <WZ xc={-NICHE_DEPTH-W/2} z1={SDB_Z_END + W} z2={SDB_Z_END + 70}  mat={westMats} />
+        <WZ xc={-NICHE_DEPTH-W/2} z1={SDB_Z_END + 70 + W} z2={DIAG_CZ}    mat={westMats} />
 
-        {/* ── MUR B (est, X=300) ───────────────────────────────────────────── */}
-        {/* B1 : Z=0 → Z=410 */}
-        <mesh
-          ref={(m) => { if (m) m.material = eastMats as any; }}
-          position={[ROOM_W + W / 2, WALL_H / 2, (ROOM_D + 10) / 2]}
-          castShadow receiveShadow
-        >
-          <boxGeometry args={[W, WALL_H, ROOM_D + 10]} />
-        </mesh>
-        {/* B2 extension jardin : Z=-230 → Z=-30 */}
-        <mesh
-          ref={(m) => { if (m) m.material = eastMats as any; }}
-          position={[ROOM_W + W / 2, WALL_H / 2, (-230 + -30) / 2]}
-          castShadow receiveShadow
-        >
-          <boxGeometry args={[W, WALL_H, 200]} />
-        </mesh>
+        {/* ── MUR B (est) ─────────────────────────────────────────────────── */}
+        {/* B1 : s'arrête à la face sud du pilier SE */}
+        <WZ xc={ROOM_W + W/2} z1={0}    z2={ROOM_D}  mat={eastMats} />
+        <WZ xc={ROOM_W + W/2} z1={-230} z2={-30}     mat={eastMats} />{/* B2 jardin */}
         {/* Panneaux bois occultants 2×90cm */}
         {[0, 1].map((i) => (
-          <P key={i}
-            w={10} h={190} d={90}
-            x={ROOM_W + 5}
-            y={95}
-            z={-230 - i * 90 - 45}
-            mat={panelMat}
-          />
+          <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-230 - i * 90 - 45} mat={panelMat} />
         ))}
 
-        {/* ── MUR D (sud, Z=400) ───────────────────────────────────────────── */}
-        {/* Gauche (X=-10→20) : absorbe l'ancienne extension niche (X=-10→0) */}
-        <P w={KITCHEN_X0 - W + NICHE_DEPTH} h={WALL_H} d={W}
-          x={(KITCHEN_X0 - W - NICHE_DEPTH) / 2}                    y={WALL_H / 2} z={ROOM_D + W / 2} />
-        {/* Milieu (X=140→190, prolongé jusqu'à DOOR_START) */}
-        <P w={DOOR_START - KITCHEN_X1 - W} h={WALL_H} d={W}
-          x={(KITCHEN_X1 + W + DOOR_START) / 2}                     y={WALL_H / 2} z={ROOM_D + W / 2} />
-        {/* Linteau */}
-        <P w={DOOR_END - DOOR_START + 8} h={WALL_H - DOOR_H} d={W}
-          x={(DOOR_START + DOOR_END + 8) / 2}
-          y={DOOR_H + (WALL_H - DOOR_H) / 2}                                        z={ROOM_D + W / 2} />
-        {/* Droite (X=278→300, absorbe l'ancien montant droit) */}
-        <P w={ROOM_W - DOOR_END - 8} h={WALL_H} d={W}
-          x={(DOOR_END + 8 + ROOM_W) / 2}                           y={WALL_H / 2} z={ROOM_D + W / 2} />
+        {/* ── MUR D (sud, Z=400) ──────────────────────────────────────────── */}
+        <WX x1={-NICHE_DEPTH}   x2={KITCHEN_X0 - W} zc={ROOM_D + W/2} />
+        <WX x1={KITCHEN_X1 + W} x2={DOOR_START}      zc={ROOM_D + W/2} />
+        <WX x1={DOOR_START}     x2={DOOR_END + 8}    zc={ROOM_D + W/2} yBase={DOOR_H} h={WALL_H - DOOR_H} />
+        <WX x1={DOOR_END + 8}   x2={ROOM_W}          zc={ROOM_D + W/2} />
 
-        {/* ── Cuisine (renfoncement) ────────────────────────────────────────── */}
-        {/* Z=410→460 — les piliers cuisine-L/R gèrent Z=400→410 */}
-        <P w={W} h={WALL_H} d={KITCHEN_DEPTH - W}
-          x={KITCHEN_X0 - W / 2} y={WALL_H / 2} z={ROOM_D + W + (KITCHEN_DEPTH - W) / 2} />
-        <P w={W} h={WALL_H} d={KITCHEN_DEPTH - W}
-          x={KITCHEN_X1 + W / 2} y={WALL_H / 2} z={ROOM_D + W + (KITCHEN_DEPTH - W) / 2} />
-        {/* Mur nord SDB / fond cuisine */}
-        <P w={DOOR_START + NICHE_DEPTH} h={WALL_H} d={W}
-          x={(DOOR_START - NICHE_DEPTH) / 2} y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
+        {/* ── Cuisine (renfoncement, Z=410→460) ───────────────────────────── */}
+        <WZ xc={KITCHEN_X0 - W/2} z1={ROOM_D + W} z2={KITCHEN_Z} />
+        <WZ xc={KITCHEN_X1 + W/2} z1={ROOM_D + W} z2={KITCHEN_Z} />
+        {/* Nord SDB / fond cuisine : saute cuisine-L nord (20→30), cuisine-R nord (130→140), placard sud (180→190) */}
+        <WX x1={-NICHE_DEPTH}   x2={KITCHEN_X0 - W}    zc={KITCHEN_Z + W/2} />
+        <WX x1={KITCHEN_X0}     x2={KITCHEN_X1}         zc={KITCHEN_Z + W/2} />
+        <WX x1={KITCHEN_X1 + W} x2={CORR_WALL_X - W/2} zc={KITCHEN_Z + W/2} />
 
-        {/* ── Couloir gauche (X=185, Z=460→600) ───────────────────────────── */}
-        {(() => {
-          const WALL_X        = DOOR_START - 5;
-          const LEFT_WALL_LEN = SDB_Z_END - KITCHEN_Z;
-          const C_DOOR_W      = 83;
-          const C_DOOR_START  = LEFT_WALL_LEN - 10 - C_DOOR_W;
-          const C_DOOR_END    = C_DOOR_START + C_DOOR_W;
-          const C_DOOR_START_ABS = KITCHEN_Z + C_DOOR_START;
-          const C_DOOR_END_ABS   = KITCHEN_Z + C_DOOR_END;
-          const E = 2; // élargissement 2cm de chaque côté → évite le z-fighting avec le dormant
-          return (
-            <>
-              <P w={W} h={WALL_H} d={C_DOOR_START - E} x={WALL_X} y={WALL_H / 2}
-                z={KITCHEN_Z + (C_DOOR_START - E) / 2} />
-              <P w={W} h={WALL_H} d={SDB_Z_END - C_DOOR_END_ABS - E} x={WALL_X} y={WALL_H / 2}
-                z={(C_DOOR_END_ABS + E + SDB_Z_END) / 2} />
-              <P w={W} h={WALL_H - DOOR_H} d={C_DOOR_W + 2 * E} x={WALL_X}
-                y={DOOR_H + (WALL_H - DOOR_H) / 2} z={(C_DOOR_START_ABS + C_DOOR_END_ABS) / 2} />
-            </>
-          );
-        })()}
+        {/* ── Couloir gauche (X=185, Z=460→600) ──────────────────────────── */}
+        {/* Section 1 : démarre après le pilier placard sud (460→470) */}
+        <WZ xc={CORR_WALL_X} z1={KITCHEN_Z + W}                    z2={KITCHEN_Z + C_DOOR_START - CORR_E} />
+        <WZ xc={CORR_WALL_X} z1={KITCHEN_Z + C_DOOR_END + CORR_E} z2={SDB_Z_END} />
+        <WZ xc={CORR_WALL_X} z1={KITCHEN_Z + C_DOOR_START - CORR_E} z2={KITCHEN_Z + C_DOOR_END + CORR_E}
+          yBase={DOOR_H} h={WALL_H - DOOR_H} />
 
-        {/* ── Douche (au-delà de SDB_Z_END=600) ───────────────────────────── */}
-        {/* Mur est douche (X=60, Z=600→670) */}
-        <P w={W} h={WALL_H} d={70}
-          x={-NICHE_DEPTH + 70 + W / 2} y={WALL_H / 2} z={SDB_Z_END + 35} />
-        {/* Mur fond douche (Z=670) */}
-        <P w={70} h={WALL_H} d={W}
-          x={-NICHE_DEPTH + 35} y={WALL_H / 2} z={SDB_Z_END + 70 + W / 2} />
+        {/* ── Douche (au-delà de SDB_Z_END=600) ──────────────────────────── */}
+        {/* Mur est douche : démarre après la poutre douche est (600→610) */}
+        <WZ xc={-NICHE_DEPTH + 70 + W/2} z1={SDB_Z_END + W}   z2={SDB_Z_END + 70} />
+        <WX x1={-NICHE_DEPTH}            x2={-NICHE_DEPTH + 70} zc={SDB_Z_END + 70 + W/2} />
 
-        {/* ── Couloir droit (X=305, Z=410→530) ────────────────────────────── */}
-        <mesh
-          ref={(m) => { if (m) m.material = eastMats as any; }}
-          position={[ROOM_W + W / 2, WALL_H / 2, (ROOM_D + W + DIAG_AZ) / 2]}
-          castShadow receiveShadow
-        >
-          <boxGeometry args={[W, WALL_H, DIAG_AZ - ROOM_D - W]} />
-        </mesh>
+        {/* ── Couloir droit (Mur B, Z=410→530) ───────────────────────────── */}
+        <WZ xc={ROOM_W + W/2} z1={ROOM_D + W} z2={DIAG_AZ} mat={eastMats} />
 
         {/* ── Mur diagonal ─────────────────────────────────────────────────── */}
         <mesh geometry={diagGeos.ne}      material={wallMatDiag} castShadow receiveShadow />
