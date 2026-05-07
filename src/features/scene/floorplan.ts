@@ -6,8 +6,7 @@ import {
   SDB_Z_END,
   DIAG_AZ, DIAG_CZ,
 } from '@config';
-import { makeText } from './labels';
-import { FLOOR_SEGMENTS, ROOMS, WALL_LABELS, DIMENSIONS } from './floorData';
+import { SEG_WALLS, SEG_DOORS, SEG_WINDOWS } from './floorData';
 
 export function buildFloorPlan() {
   const group = new THREE.Group();
@@ -74,94 +73,9 @@ export function buildFloorPlan() {
   const CW_Z0 = ROOM_D + 10;
   floorRect(KITCHEN_X1, CW_Z0, DOOR_START - KITCHEN_X1, KITCHEN_Z - CW_Z0); // sol placard
 
-  for (const { t, x1, z1, x2, z2 } of FLOOR_SEGMENTS) {
-    if      (t === 'w') wallLine(x1, z1, x2, z2);
-    else if (t === 'd') door(x1, z1, x2, z2);
-    else if (t === 'n') window_(x1, z1, x2, z2);
-  }
-
-  // === LABELS ===
-  const LY = Y + 5;
-  const WALL_COLOR = '#ffdd44';
-  const DOOR_COLOR = '#ff6666';
-  const WIN_COLOR = '#66aaff';
-  const ROOM_COLOR = '#aaaaaa';
-
-  // Helper : texte à plat sur le sol (lisible du dessus)
-  // rotZ : 0 = texte le long de +X, PI/2 = texte le long de +Z
-  function label(text: string, x: number, z: number, rotZ = 0, color = WALL_COLOR, size = 12) {
-    const mesh = makeText(group, text, { color, size, x, y: LY, z });
-    mesh.rotation.set(-Math.PI / 2, 0, rotZ);
-    return mesh;
-  }
-
-  // --- Noms des pièces (depuis ROOMS, source partagée avec minimap) ---
-  for (const r of ROOMS) {
-    label(r.nameFr, r.labelX, r.labelZ, 0, r.labelColor ?? ROOM_COLOR, r.labelSize);
-  }
-
-  // --- Murs, portes, fenêtres (depuis WALL_LABELS, source partagée avec minimap) ---
-  const colorByType = { w: WALL_COLOR, d: DOOR_COLOR, n: WIN_COLOR };
-  for (const w of WALL_LABELS) {
-    label(w.name, w.x, w.z, w.rotZ, colorByType[w.t as keyof typeof colorByType], w.size);
-  }
-
-  // --- Placard (label de zone, pas un mur) ---
-  label('Placard', (KITCHEN_X1 + DOOR_START) / 2, (CW_Z0 + KITCHEN_Z) / 2, 0, ROOM_COLOR, 10);
-
-  // =============================================
-  // COTATIONS (Dimensions internes / externes)
-  // =============================================
-  const DIM_INT = '#88ffaa';
-  const DIM_EXT = '#aaddff';
-  const dimMatInt = new THREE.LineBasicMaterial({ color: 0x88ffaa, depthTest: false });
-  const dimMatExt = new THREE.LineBasicMaterial({ color: 0xaaddff, depthTest: false });
-
-  function dim(x1: number, z1: number, x2: number, z2: number, offset: number, ext = false) {
-    const dx = x2 - x1, dz = z2 - z1;
-    const len = Math.sqrt(dx * dx + dz * dz);
-    if (len < 0.1) return;
-
-    const px = -dz / len, pz = dx / len;
-    const s = Math.sign(offset);
-
-    const ax = x1 + px * offset, az = z1 + pz * offset;
-    const bx = x2 + px * offset, bz = z2 + pz * offset;
-    const e = s * 5, g = s * 3;
-
-    const positions = new Float32Array([
-      ax, Y, az, bx, Y, bz,
-      x1 + px * g, Y, z1 + pz * g, ax + px * e, Y, az + pz * e,
-      x2 + px * g, Y, z2 + pz * g, bx + px * e, Y, bz + pz * e,
-    ]);
-
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const line = new THREE.LineSegments(geo, ext ? dimMatExt : dimMatInt);
-    line.renderOrder = 998;
-    group.add(line);
-
-    const meters = len / 100;
-    const text = meters >= 1 ? `${meters.toFixed(1)}m` : `${Math.round(meters * 100)}cm`;
-    const mx = (ax + bx) / 2, mz = (az + bz) / 2;
-
-    let angle = -Math.atan2(dz, dx);
-    if (Math.cos(angle) < -0.001 ||
-        (Math.abs(Math.cos(angle)) < 0.001 && Math.sin(angle) < 0)) {
-      angle += Math.PI;
-    }
-
-    const m = makeText(group, text, {
-      color: ext ? DIM_EXT : DIM_INT, size: 6.5,
-      x: mx, y: LY + 1, z: mz,
-    });
-    m.rotation.set(-Math.PI / 2, 0, angle);
-  }
-
-  // --- Cotations (depuis DIMENSIONS, source partagée avec minimap) ---
-  for (const d of DIMENSIONS) {
-    dim(d.x1, d.z1, d.x2, d.z2, d.offset, d.ext ?? false);
-  }
+  for (const [x1, z1, x2, z2] of SEG_WALLS)   wallLine(x1, z1, x2, z2);
+  for (const [x1, z1, x2, z2] of SEG_DOORS)   door(x1, z1, x2, z2);
+  for (const [x1, z1, x2, z2] of SEG_WINDOWS) window_(x1, z1, x2, z2);
 
   return group;
 }

@@ -4,7 +4,7 @@
  * Composant HTML pur rendu HORS du Canvas R3F (dans Studio.tsx).
  * Se synchronise avec la caméra via cameraState.onUpdate.
  */
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { cameraState } from '@features/scene/cameraState';
 
 import {
@@ -14,7 +14,7 @@ import {
   GARDEN_JC_Z, SDB_Z_END,
   DIAG_AZ, DIAG_CZ,
 } from '@config';
-import { type Room, ROOMS, FLOOR_SEGMENTS } from '@features/scene/floorData';
+import { SEG_WALLS, SEG_DOORS, SEG_WINDOWS } from '@features/scene/floorData';
 
 // ── Constantes carte ──────────────────────────────────────────────────────────
 
@@ -31,7 +31,6 @@ const ASPECT  = (Z_MAX - Z_MIN) / (X_MAX - X_MIN);
 
 function drawMinimap(
   canvas: HTMLCanvasElement,
-  hoveredRoom: Room | null,
   camX: number, camZ: number, yaw: number,
 ) {
   const ctx = canvas.getContext('2d');
@@ -61,13 +60,6 @@ function drawMinimap(
   ctx.moveTo(tx(-NICHE_DEPTH), tz(SDB_Z_END)); ctx.lineTo(tx(DOOR_START), tz(SDB_Z_END));
   ctx.lineTo(tx(-NICHE_DEPTH), tz(DIAG_CZ)); ctx.closePath(); ctx.fill();
 
-  // Hover
-  if (hoveredRoom) {
-    ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
-    for (const r of hoveredRoom.fills(tx, tz, S)) ctx.fillRect(...r);
-    hoveredRoom.fillPath?.(ctx, tx, tz);
-  }
-
   // Jardin
   ctx.fillStyle = 'rgba(74, 158, 84, 0.08)';
   ctx.beginPath();
@@ -85,26 +77,19 @@ function drawMinimap(
 
   // Segments
   const wallW = Math.max(S * 8, 1.5);
-  for (const { t, x1, z1, x2, z2 } of FLOOR_SEGMENTS) {
-    if (t === 'w') { ctx.strokeStyle = '#bbb'; ctx.lineWidth = wallW; ctx.setLineDash([]); }
-    else if (t === 'd') { ctx.strokeStyle = '#cc0000'; ctx.lineWidth = Math.max(wallW * 0.5, 1); ctx.setLineDash([2 * scale, 2 * scale]); }
-    else { ctx.strokeStyle = '#4488ff'; ctx.lineWidth = Math.max(wallW * 0.5, 1); ctx.setLineDash([]); }
-    ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke();
-  }
-  ctx.setLineDash([]);
+  ctx.lineCap = 'round';
 
-  // Labels
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  for (const room of ROOMS) {
-    const hov = hoveredRoom === room;
-    ctx.fillStyle = hov ? 'rgba(255,215,0,0.95)' : 'rgba(255,255,255,0.55)';
-    ctx.font = `bold ${Math.round(7 * scale)}px sans-serif`;
-    ctx.fillText(room.nameFr, tx(room.labelX), tz(room.labelZ));
-    ctx.fillStyle = hov ? 'rgba(255,215,0,0.6)' : 'rgba(255,255,255,0.3)';
-    ctx.font = `${Math.round(5 * scale)}px sans-serif`;
-    ctx.fillText(room.nameEn, tx(room.labelX), tz(room.labelZ) + 9 * scale);
-  }
+  ctx.strokeStyle = '#bbb'; ctx.lineWidth = wallW;
+  for (const [x1, z1, x2, z2] of SEG_WALLS)
+    { ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke(); }
+
+  ctx.strokeStyle = '#cc0000'; ctx.lineWidth = Math.max(wallW * 0.5, 1); ctx.setLineDash([2 * scale, 2 * scale]);
+  for (const [x1, z1, x2, z2] of SEG_DOORS)
+    { ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke(); }
+
+  ctx.strokeStyle = '#4488ff'; ctx.lineWidth = Math.max(wallW * 0.5, 1); ctx.setLineDash([]);
+  for (const [x1, z1, x2, z2] of SEG_WINDOWS)
+    { ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke(); }
 
   // Walker (Lara) icon — toujours affiché à sa position
   ctx.save();
@@ -128,8 +113,7 @@ function drawMinimap(
 // ── Composant HTML pur ────────────────────────────────────────────────────────
 
 export function Minimap() {
-  const canvasRef    = useRef<HTMLCanvasElement>(null);
-  const hoveredRoom  = useRef<Room | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [expanded, setExpanded] = useState(false);
 
   const canvasW = expanded
@@ -145,11 +129,7 @@ export function Minimap() {
       if (!canvas) return;
       canvas.width  = canvasW;
       canvas.height = canvasH;
-      drawMinimap(
-        canvas,
-        hoveredRoom.current,
-        cameraState.walkerX, cameraState.walkerZ, cameraState.walkYaw,
-      );
+      drawMinimap(canvas, cameraState.walkerX, cameraState.walkerZ, cameraState.walkYaw);
     };
     // Initial draw
     cameraState.onUpdate();
@@ -163,46 +143,6 @@ export function Minimap() {
     return () => window.removeEventListener('keydown', onKey);
   }, [expanded]);
 
-  const S = () => canvasW / (X_MAX - X_MIN);
-  const fromPx = (px: number) => px / S() + X_MIN;
-  const fromPz = (pz: number) => pz / S() + Z_MIN;
-
-  const onMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const s    = canvas.width / (X_MAX - X_MIN);
-    const px   = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const pz   = (e.clientY - rect.top)  * (canvas.height / rect.height);
-    const x    = px / s + X_MIN;
-    const z    = pz / s + Z_MIN;
-    const room = ROOMS.find(r => r.contains(x, z)) ?? null;
-    if (room !== hoveredRoom.current) {
-      hoveredRoom.current = room;
-      cameraState.onUpdate?.(); // redraw
-    }
-  }, []);
-
-  const onMouseLeave = useCallback(() => {
-    if (hoveredRoom.current) { hoveredRoom.current = null; cameraState.onUpdate?.(); }
-  }, []);
-
-  const onClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const s    = canvas.width / (X_MAX - X_MIN);
-    const px   = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const pz   = (e.clientY - rect.top)  * (canvas.height / rect.height);
-    const x    = px / s + X_MIN;
-    const z    = pz / s + Z_MIN;
-    const room = ROOMS.find(r => r.contains(x, z));
-    if (room) {
-      document.dispatchEvent(new CustomEvent('minimap-pov', {
-        detail: { x: room.labelX, z: room.labelZ },
-      }));
-    }
-  }, []);
 
   const containerStyle: React.CSSProperties = expanded
     ? { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 201 }
@@ -232,9 +172,6 @@ export function Minimap() {
             cursor: 'pointer',
             boxShadow: expanded ? '0 8px 60px rgba(0,0,0,0.9)' : undefined,
           }}
-          onMouseMove={onMouseMove}
-          onMouseLeave={onMouseLeave}
-          onClick={onClick}
         />
         <button
           onClick={(e) => { e.stopPropagation(); setExpanded(v => !v); }}
