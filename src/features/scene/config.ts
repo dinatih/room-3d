@@ -28,10 +28,6 @@ export const GLASS_START = 90; // 300 - 50 - 160 = cm 90
 export const GLASS_END = 250; // 300 - 50 = cm 250
 
 // Kallax dimensions (cm)
-export const KALLAX_CELL = 33.5;   // niche width 33.5cm
-export const KALLAX_CELL_H = 34;   // niche height 34cm
-export const KALLAX_PANEL = 1.5;   // inner divider 1.5cm
-export const KALLAX_FRAME = 3.5;   // outer frame 3.5cm
 export const KALLAX_DEPTH = 39;    // depth 39cm
 
 // Floor plate Y position — parquet surface at Y=0

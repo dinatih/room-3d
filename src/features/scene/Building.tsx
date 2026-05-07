@@ -84,13 +84,28 @@ function P({ w, h, d, x, y, z, mat = wallMat, userData }: {
   );
 }
 
+// Face invisible pour les bouts de segments — BoxGeometry face indices :
+//   0=+X  1=-X  2=+Y  3=-Y  4=+Z  5=-Z
+// WZ : end caps = indices 4 et 5 (faces ⊥ Z)
+// WX : end caps = indices 0 et 1 (faces ⊥ X)
+const noCapMat = new THREE.MeshBasicMaterial({ visible: false });
+
+function caplessZ(mat: THREE.Material | THREE.Material[]): THREE.Material[] {
+  const m = Array.isArray(mat) ? mat : [mat, mat, mat, mat, mat, mat];
+  return [m[0], m[1], m[2], m[3], noCapMat, noCapMat];
+}
+function caplessX(mat: THREE.Material | THREE.Material[]): THREE.Material[] {
+  const m = Array.isArray(mat) ? mat : [mat, mat, mat, mat, mat, mat];
+  return [noCapMat, noCapMat, m[2], m[3], m[4], m[5]];
+}
+
 /** Segment de mur axe Z — span de z1 à z2, centré sur x=xc. */
 function WZ({ xc, z1, z2, t = W, yBase = 0, h = WALL_H, mat = wallMat }: {
   xc: number; z1: number; z2: number;
   t?: number; yBase?: number; h?: number;
   mat?: THREE.Material | THREE.Material[];
 }) {
-  return <P w={t} h={h} d={z2 - z1} x={xc} y={yBase + h / 2} z={(z1 + z2) / 2} mat={mat} />;
+  return <P w={t} h={h} d={z2 - z1} x={xc} y={yBase + h / 2} z={(z1 + z2) / 2} mat={caplessZ(mat)} />;
 }
 
 /** Segment de mur axe X — span de x1 à x2, centré sur z=zc. */
@@ -99,7 +114,7 @@ function WX({ x1, x2, zc, t = W, yBase = 0, h = WALL_H, mat = wallMat }: {
   t?: number; yBase?: number; h?: number;
   mat?: THREE.Material | THREE.Material[];
 }) {
-  return <P w={x2 - x1} h={h} d={t} x={(x1 + x2) / 2} y={yBase + h / 2} z={zc} mat={mat} />;
+  return <P w={x2 - x1} h={h} d={t} x={(x1 + x2) / 2} y={yBase + h / 2} z={zc} mat={caplessX(mat)} />;
 }
 
 /** ExtrudeGeometry depuis une liste de points [worldX, worldZ]. */
@@ -307,6 +322,7 @@ const PILLAR_DEFS: { id: string; x: number; z: number; w?: number; d?: number }[
   { id: 'corr-m',        x: 185,                     z: SDB_Z_END - W / 2 + 10 },
   { id: 'nw-shower',    x: -NICHE_DEPTH - W / 2,   z: SDB_Z_END + 70 + W / 2 },
   { id: 'se-shower',    x: 65,                      z: SDB_Z_END + 70 + W / 2 },
+  { id: 'garden-e',     x: ROOM_W + W / 2,          z: -240 - W / 2 },
 ];
 
 // ── Composant principal ────────────────────────────────────────────────────────
@@ -428,10 +444,10 @@ export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
         {/* ── MUR B (est) ─────────────────────────────────────────────────── */}
         {/* B1 : s'arrête à la face sud du pilier SE */}
         <WZ xc={ROOM_W + W/2} z1={0}    z2={ROOM_D}  mat={eastMats} />
-        <WZ xc={ROOM_W + W/2} z1={-230} z2={-30}     mat={eastMats} />{/* B2 jardin */}
+        <WZ xc={ROOM_W + W/2} z1={-240} z2={-30}     mat={eastMats} />{/* B2 jardin */}
         {/* Panneaux bois occultants 2×90cm */}
         {[0, 1].map((i) => (
-          <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-230 - i * 90 - 45} mat={panelMat} />
+          <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-240 - W - i * 90 - 45} mat={panelMat} />
         ))}
 
         {/* ── MUR D (sud, Z=400) ──────────────────────────────────────────── */}

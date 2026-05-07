@@ -71,7 +71,7 @@ import {
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   SDB_Z_END, DOOR_START, DOOR_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
-  KALLAX_DEPTH, KALLAX_CELL, KALLAX_FRAME, KALLAX_PANEL,
+  KALLAX_DEPTH,
 } from '@config';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -102,9 +102,8 @@ function useFurnitureToggles(map: Record<string, string>): Record<string, boolea
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
-const tw = (cols: number) => cols * KALLAX_CELL + 2 * KALLAX_FRAME + (cols - 1) * KALLAX_PANEL;
-const w1 = tw(1); // 40.5
-const w2 = tw(2); // 75.5
+const w1 = 40.5; // 1×Kallax : 33.5 + 2×3.5
+const w2 = 75.5; // 2×Kallax : 2×33.5 + 2×3.5 + 1.5
 
 const KALLAX_SE_Z   = ROOM_D - 60 - w1 / 2; // 319.75
 const KALLAX_SE_TOP = 2 * w2;                // 151
