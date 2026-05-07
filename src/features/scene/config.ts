@@ -30,9 +30,6 @@ export const GLASS_END = 250; // 300 - 50 = cm 250
 // Kallax dimensions (cm)
 export const KALLAX_DEPTH = 39;    // depth 39cm
 
-// Floor plate Y position — parquet surface at Y=0
-export const FLOOR_Y = -5.25; // surface du parquet à Y=0 (anciennement -PLATE_H * 1.5)
-
 // Corridor / SDB boundaries
 export const CORR_DOOR_S = KITCHEN_Z + 50;
 export const CORR_DOOR_E = KITCHEN_Z + 130;

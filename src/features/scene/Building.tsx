@@ -21,10 +21,11 @@ import {
   KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, KITCHEN_Z,
   SDB_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
-  FLOOR_Y,
   BLDG_X_MIN, BLDG_X_MAX, BLDG_Z_MIN, BLDG_Z_MAX,
   COLORS,
 } from '@config';
+
+const FLOOR_Y = -5.25; // dalle béton : surface parquet à Y=0
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // WALLS — murs de l'appartement (port de js/structure/walls.js)
