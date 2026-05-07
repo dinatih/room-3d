@@ -9,7 +9,7 @@
  *   🛋 Mobilier  — toggles portes / meubles (état partagé via props callbacks)
  */
 import { useState, useCallback } from 'react';
-import { DevToolsGroups } from '@features/devtools/DevToolsOverlay';
+import { DevToolsGroups } from '@features/scene/devtools/DevToolsOverlay';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -313,10 +313,7 @@ export interface FurnitureState {
   sdbCloset:    boolean;
   cbnWest:      boolean;
   cbnEast:      boolean;
-  freezer:      boolean;
-  fridge:       boolean;
   cabinet:      boolean;
-  wcLid:        boolean;
   bedStacked:   boolean;
   bedSofa:      boolean;
   bedPosition:  boolean;
@@ -346,6 +343,7 @@ export interface LayerState {
   lidar:        boolean;
   lights:       boolean;
   shadows:      boolean;
+  piersOnly:    boolean;
 }
 
 export interface SidePanelProps {
@@ -408,6 +406,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
         {/* ── Affichage ── */}
         <Group emoji="👁" title="Affichage">
           {layerBtn('green',  'Structure',   'structure', true)}
+          {layerBtn('gray',   'Piliers seuls', 'piersOnly')}
           {layerBtn('peach',  'Équipements', 'equipment')}
           {layerBtn('purple', 'Mobilier',    'furniture')}
           {layerBtn('blue',   'Voisins',     'neighbors')}

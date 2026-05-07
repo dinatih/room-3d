@@ -5,7 +5,7 @@
  * Se synchronise avec la caméra via cameraState.onUpdate.
  */
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { cameraState } from '@features/camera/cameraState';
+import { cameraState } from '@features/scene/camera/cameraState';
 
 import {
   ROOM_W, ROOM_D, DOOR_START,

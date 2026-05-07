@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { Mackapar }    from './Mackapar';
 import { Salopette }   from './Salopette';
 import { DronaInstances } from './Drona';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@shared/utils/sceneItem';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/utils/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────

@@ -11,9 +11,9 @@
  */
 import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@shared/utils/useGLTFClone';
+import { useGLTFClone } from '@features/scene/utils/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '@shared/utils/glbUtils';
+import { removeGlbLines, glbLocalBBox } from '@features/scene/utils/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const frameMat  = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });

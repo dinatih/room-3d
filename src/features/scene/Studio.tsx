@@ -8,14 +8,14 @@ import {
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
 } from 'three';
-import { CameraController } from '@features/camera/CameraController';
-import { cameraState }      from '@features/camera/cameraState';
-import { Minimap }          from '@features/ui/Minimap';
-import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/ui/SidePanel';
-import { AnimationsPanel }  from '@features/ui/AnimationsPanel';
+import { CameraController } from '@features/scene/camera/CameraController';
+import { cameraState }      from '@features/scene/camera/cameraState';
+import { Minimap }          from '@features/scene/ui/Minimap';
+import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/scene/ui/SidePanel';
+import { AnimationsPanel }  from '@features/scene/ui/AnimationsPanel';
 import { Walls, Floor, Mirrors } from './Building';
-import { Neighbors }        from '@features/ui/layers/Neighbors';
-import { CategoryLayerGroup, SceneLayerController }  from '@features/ui/layers/sceneLayer';
+import { Neighbors }        from '@features/scene/ui/layers/Neighbors';
+import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/ui/layers/sceneLayer';
 import {
   EquipmentProc, EquipmentGlb,
   FurnitureProc, FurnitureGlb, FurnitureComposite,
@@ -26,20 +26,20 @@ import {
   DronaBoxes,
 } from './Placements';
 import { Walker, WalkerRed } from './Walker';
-import { XRayLayer }        from '@features/ui/layers/XRayLayer';
-import { RedWallLayer }     from '@features/ui/layers/RedWallLayer';
-import { WallEdgesLayer }   from '@features/ui/layers/WallEdgesLayer';
-import { GridLayer }        from '@features/ui/layers/Grid';
-import { LightHelpers }     from '@features/devtools/LightHelpers';
-import { HoverRaycaster, HoverOverlay } from '@features/camera/HoverMenu';
-import { DevToolsCollector }            from '@features/devtools/DevToolsCollector';
+import { XRayLayer }        from '@features/scene/ui/layers/XRayLayer';
+import { RedWallLayer }     from '@features/scene/ui/layers/RedWallLayer';
+import { WallEdgesLayer }   from '@features/scene/ui/layers/WallEdgesLayer';
+import { GridLayer }        from '@features/scene/ui/layers/Grid';
+import { LightHelpers }     from '@features/scene/devtools/LightHelpers';
+import { HoverRaycaster, HoverOverlay } from '@features/scene/camera/HoverMenu';
+import { DevToolsCollector }            from '@features/scene/devtools/DevToolsCollector';
 import { Inventory }                    from '@features/inventory/Inventory';
-import { VRMode }                       from '@features/camera/VRMode';
-import { ImmersiveMode }                from '@features/camera/ImmersiveMode';
+import { VRMode }                       from '@features/scene/camera/VRMode';
+import { ImmersiveMode }                from '@features/scene/camera/ImmersiveMode';
 import { FloorPlan }                    from '@features/scene/FloorPlan';
-import { LidarScan }                    from '@features/devtools/LidarScan';
-import { GlbReveal }                    from '@features/ui/layers/GlbReveal';
-import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/ui/animations';
+import { LidarScan }                    from '@features/scene/devtools/LidarScan';
+import { GlbReveal }                    from '@features/scene/ui/layers/GlbReveal';
+import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/scene/ui/animations';
 
 import {
   ROOM_W,
@@ -116,7 +116,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
-    neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true,
+    neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true, piersOnly: false,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -238,7 +238,7 @@ gl.shadowMap.enabled = true;
            * Pas de CategoryLayerGroup : les objets sont sur le layer 0 par défaut.
            * Walker inclus ici → reflété dans les miroirs.
            */}
-          <Walls />
+          <Walls piersOnly={layers.piersOnly} />
           <Floor showCeiling={layers.ceiling} />
           <DoorsPlaced />
           <Walker    showSkeleton={layers.skeleton} />

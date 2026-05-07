@@ -11,7 +11,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { cameraState } from '@features/camera/cameraState';
+import { cameraState } from '@features/scene/camera/cameraState';
 
 import { ROOM_W, ROOM_D } from '@config';
 

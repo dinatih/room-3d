@@ -8,7 +8,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE   from 'three';
-import { hoverState } from '@features/camera/hoverState';
+import { hoverState } from '@features/scene/camera/hoverState';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
 // actionId → { label bouton, clé furniture-toggle }
