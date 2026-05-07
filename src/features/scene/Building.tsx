@@ -10,7 +10,7 @@ import { useMemo, useRef, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { cameraState } from '@features/camera/cameraState';
+import { cameraState } from '@features/scene/camera/cameraState';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150 } from './items/NissedalMirror';
 
 import {
@@ -92,7 +92,7 @@ function makeExtrudeGeo(
 }
 
 // ── Mur C : trapèze nord + baie vitrée ────────────────────────────────────────
-function WallC() {
+function WallC({ piersOnly = false }: { piersOnly?: boolean }) {
   const WALL_DEPTH = 30;
   const GLASS_TOP_Y = 210;
   const linteauH = WALL_H - GLASS_TOP_Y; // 40
@@ -150,49 +150,51 @@ function WallC() {
 
   return (
     <>
-      {/* Pilier NW (intersection MurA × MurC) */}
+      {/* Pilier NW (intersection MurA × MurC) — toujours visible */}
       <P w={20} h={WALL_H} d={WALL_DEPTH} x={-10} y={WALL_H / 2} z={-WALL_DEPTH / 2} />
-      {/* Pilier NE (intersection MurB × MurC) */}
+      {/* Pilier NE (intersection MurB × MurC) — toujours visible */}
       <P w={W} h={WALL_H} d={WALL_DEPTH} x={ROOM_W + W / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} />
 
-      <P w={GLASS_START} h={WALL_H} d={WALL_DEPTH}
-        x={GLASS_START / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={northMats} />
-      <P w={ROOM_W - GLASS_END} h={WALL_H} d={WALL_DEPTH}
-        x={(GLASS_END + ROOM_W) / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={northMats} />
+      <group visible={!piersOnly}>
+        <P w={GLASS_START} h={WALL_H} d={WALL_DEPTH}
+          x={GLASS_START / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={northMats} />
+        <P w={ROOM_W - GLASS_END} h={WALL_H} d={WALL_DEPTH}
+          x={(GLASS_END + ROOM_W) / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={northMats} />
 
-      {/* Linteau */}
-      <P w={GLASS_END - GLASS_START} h={linteauH} d={WALL_DEPTH}
-        x={(GLASS_START + GLASS_END) / 2}
-        y={GLASS_TOP_Y + linteauH / 2}
-        z={-WALL_DEPTH / 2}
-        mat={northMats}
-      />
+        {/* Linteau */}
+        <P w={GLASS_END - GLASS_START} h={linteauH} d={WALL_DEPTH}
+          x={(GLASS_START + GLASS_END) / 2}
+          y={GLASS_TOP_Y + linteauH / 2}
+          z={-WALL_DEPTH / 2}
+          mat={northMats}
+        />
 
-      {/* Seuil maçonné */}
-      <mesh ref={(m) => { if (m) m.material = sillMat; }}
-        position={[(GLASS_START + GLASS_END) / 2, 10, -15]}
-        castShadow receiveShadow
-      >
-        <boxGeometry args={[GLASS_END - GLASS_START, 20, WALL_DEPTH]} />
-      </mesh>
-
-      <group userData={{ animUnit: true }}>
-        {/* Battant gauche (fixe) */}
-        <DoorPanel cx={GLASS_START + doorW / 2} />
-
-        {/* Battant droit (pivot à GLASS_END) */}
-        <group ref={glassRef} position={[GLASS_END, 0, 0]}
-          userData={{ hoverAction: { label: 'Porte-fenêtre', actionId: 'eastDoor' } }}>
-        <DoorPanel cx={-doorW / 2} />
-        {/* Poignée */}
-        <mesh ref={(m) => { if (m) m.material = handleMat; }}
-          position={[-doorW + FRAME + 4, glassBase + glassH * 0.5, Z + FRAME_D / 2 + 0.5]}>
-          <boxGeometry args={[3, 24, 1]} />
+        {/* Seuil maçonné */}
+        <mesh ref={(m) => { if (m) m.material = sillMat; }}
+          position={[(GLASS_START + GLASS_END) / 2, 10, -15]}
+          castShadow receiveShadow
+        >
+          <boxGeometry args={[GLASS_END - GLASS_START, 20, WALL_DEPTH]} />
         </mesh>
-        <mesh ref={(m) => { if (m) m.material = handleMat; }}
-          position={[-doorW + FRAME + 4, glassBase + glassH * 0.5, Z + FRAME_D / 2 + 4.5]}>
-          <boxGeometry args={[1.5, 1.5, 8]} />
-        </mesh>
+
+        <group userData={{ animUnit: true }}>
+          {/* Battant gauche (fixe) */}
+          <DoorPanel cx={GLASS_START + doorW / 2} />
+
+          {/* Battant droit (pivot à GLASS_END) */}
+          <group ref={glassRef} position={[GLASS_END, 0, 0]}
+            userData={{ hoverAction: { label: 'Porte-fenêtre', actionId: 'eastDoor' } }}>
+          <DoorPanel cx={-doorW / 2} />
+          {/* Poignée */}
+          <mesh ref={(m) => { if (m) m.material = handleMat; }}
+            position={[-doorW + FRAME + 4, glassBase + glassH * 0.5, Z + FRAME_D / 2 + 0.5]}>
+            <boxGeometry args={[3, 24, 1]} />
+          </mesh>
+          <mesh ref={(m) => { if (m) m.material = handleMat; }}
+            position={[-doorW + FRAME + 4, glassBase + glassH * 0.5, Z + FRAME_D / 2 + 4.5]}>
+            <boxGeometry args={[1.5, 1.5, 8]} />
+          </mesh>
+          </group>
         </group>
       </group>
     </>
@@ -201,7 +203,7 @@ function WallC() {
 
 
 // ── Composant principal ────────────────────────────────────────────────────────
-export function Walls() {
+export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
   // Géométries complexes via useMemo ──────────────────────────────────────────
 
   // Mur diagonal : constantes dérivées
@@ -242,150 +244,211 @@ export function Walls() {
       WALL_H,
     );
 
-    return { ne, linteau, sw };
+    // Pilier NE (kite) — 4 côtés, angle en C = angle interne de la jonction (~122°).
+    // Face BC ∥ Mur B (direction Z), face CD ∥ mur diagonal (direction sinθ,cosθ).
+    // C = intersection de X=DIAG_AX+W avec la droite ext diagonale passant par eP(0).
+    // eP(0) + t·(sinθ,cosθ) → X = DIAG_AX+W ⟹ t = (W − DIAG_DEPTH·pX) / sinθ
+    const tC = (W - DIAG_DEPTH * pX) / sinθ;           // valeur négative
+    const cX = DIAG_AX + W;
+    const cZ = DIAG_AZ + DIAG_DEPTH * pZ + tC * cosθ;
+    // Ordre CW en XZ : D, C, B, A → normales outward correctes.
+    const diagPillar = makeExtrudeGeo(
+      [
+        [DIAG_AX + DIAG_DEPTH * pX, DIAG_AZ + DIAG_DEPTH * pZ] as [number, number], // D = eP(0)
+        [cX, cZ]                                                 as [number, number], // C = sommet ext
+        [DIAG_AX + W,               DIAG_AZ]                    as [number, number], // B = coin ext Mur B
+        [DIAG_AX,                   DIAG_AZ]                    as [number, number], // A = coin int
+      ],
+      WALL_H,
+    );
+
+    // Pilier SW (kite) — même principe que NE, côté Mur A2b (X = DIAG_CX − W).
+    // Face BC ∥ Mur A2b (direction Z), face CD ∥ mur diagonal.
+    // C = intersection de X=DIAG_CX−W avec la droite ext diagonale par eP(diagLen).
+    // eP(diagLen) + t·(sinθ,cosθ) → X = DIAG_CX−W ⟹ t = (−W − DIAG_DEPTH·pX) / sinθ
+    const tC_sw  = (-W - DIAG_DEPTH * pX) / sinθ;          // valeur positive
+    const cX_sw  = DIAG_CX - W;
+    const cZ_sw  = DIAG_CZ + DIAG_DEPTH * pZ + tC_sw * cosθ;
+    // Ordre CW en XZ : A, B, C, D → normales outward correctes.
+    const diagPillarSW = makeExtrudeGeo(
+      [
+        [DIAG_CX,                        DIAG_CZ]                    as [number, number], // A = coin int
+        [DIAG_CX - W,                    DIAG_CZ]                    as [number, number], // B = coin ext Mur A
+        [cX_sw, cZ_sw]                                               as [number, number], // C = sommet ext
+        [DIAG_CX + DIAG_DEPTH * pX, DIAG_CZ + DIAG_DEPTH * pZ]     as [number, number], // D = eP(diagLen)
+      ],
+      WALL_H,
+    );
+
+    return { ne, linteau, sw, diagPillar, diagPillarSW };
   }, []);
 
   return (
     <group userData={{ brickType: 'wall' }}>
 
-      {/* ── MUR A (ouest, X=0) ─────────────────────────────────────────────── */}
-      {/* A1 : Z=0 → Z=NICHE_Z_START=280 */}
-      <mesh
-        ref={(m) => { if (m) m.material = westMats as any; }}
-        position={[-W / 2, WALL_H / 2, NICHE_Z_START / 2]}
-        castShadow receiveShadow
-      >
-        <boxGeometry args={[W, WALL_H, NICHE_Z_START]} />
-      </mesh>
+      {/* ── Piliers — toujours visibles ─────────────────────────────────────── */}
       {/* Pilier SW (intersection MurA2 × MurD) */}
       <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* A2a : Z=0 → Z=400 */}
-      <mesh
-        ref={(m) => { if (m) m.material = westMats as any; }}
-        position={[-NICHE_DEPTH - W / 2, WALL_H / 2, ROOM_D / 2]}
-        castShadow receiveShadow
-      >
-        <boxGeometry args={[W, WALL_H, ROOM_D]} />
-      </mesh>
-      {/* A2b : Z=410 → Z=DIAG_CZ */}
-      <mesh
-        ref={(m) => { if (m) m.material = westMats as any; }}
-        position={[-NICHE_DEPTH - W / 2, WALL_H / 2, (ROOM_D + W + DIAG_CZ) / 2]}
-        castShadow receiveShadow
-      >
-        <boxGeometry args={[W, WALL_H, DIAG_CZ - ROOM_D - W]} />
-      </mesh>
-
-      {/* ── MUR B (est, X=300) ─────────────────────────────────────────────── */}
-      {/* B1 : Z=0 → Z=410 */}
-      <mesh
-        ref={(m) => { if (m) m.material = eastMats as any; }}
-        position={[ROOM_W + W / 2, WALL_H / 2, (ROOM_D + 10) / 2]}
-        castShadow receiveShadow
-      >
-        <boxGeometry args={[W, WALL_H, ROOM_D + 10]} />
-      </mesh>
-      {/* B2 extension jardin : Z=-230 → Z=-30 */}
-      <mesh
-        ref={(m) => { if (m) m.material = eastMats as any; }}
-        position={[ROOM_W + W / 2, WALL_H / 2, (-230 + -30) / 2]}
-        castShadow receiveShadow
-      >
-        <boxGeometry args={[W, WALL_H, 200]} />
-      </mesh>
-      {/* Panneaux bois occultants 2×90cm */}
-      {[0, 1].map((i) => (
-        <P key={i}
-          w={10} h={190} d={90}
-          x={ROOM_W + 5}
-          y={95}
-          z={-230 - i * 90 - 45}
-          mat={panelMat}
-        />
-      ))}
-
-      {/* ── MUR C (nord, Z=0) ──────────────────────────────────────────────── */}
-      <WallC />
-
-      {/* ── MUR D (sud, Z=400) ─────────────────────────────────────────────── */}
       {/* Pilier cuisine-L (intersection MurD × mur gauche cuisine) */}
-      <P w={W} h={WALL_H} d={W} x={KITCHEN_X0 - W / 2}           y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Gauche (X=-10→20) : absorbe l'ancienne extension niche (X=-10→0) */}
-      <P w={KITCHEN_X0 - W + NICHE_DEPTH} h={WALL_H} d={W}
-        x={(KITCHEN_X0 - W - NICHE_DEPTH) / 2}                    y={WALL_H / 2} z={ROOM_D + W / 2} />
+      <P w={W} h={WALL_H} d={W} x={KITCHEN_X0 - W / 2}   y={WALL_H / 2} z={ROOM_D + W / 2} />
       {/* Pilier cuisine-R (intersection MurD × mur droit cuisine) */}
-      <P w={W} h={WALL_H} d={W} x={KITCHEN_X1 + W / 2}           y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Milieu (X=140→190, prolongé jusqu'à DOOR_START) */}
-      <P w={DOOR_START - KITCHEN_X1 - W} h={WALL_H} d={W}
-        x={(KITCHEN_X1 + W + DOOR_START) / 2}                     y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Linteau */}
-      <P w={DOOR_END - DOOR_START + 8} h={WALL_H - DOOR_H} d={W}
-        x={(DOOR_START + DOOR_END + 8) / 2}
-        y={DOOR_H + (WALL_H - DOOR_H) / 2}                                        z={ROOM_D + W / 2} />
+      <P w={W} h={WALL_H} d={W} x={KITCHEN_X1 + W / 2}   y={WALL_H / 2} z={ROOM_D + W / 2} />
       {/* Pilier SE (coin MurB × MurD) */}
-      <P w={W} h={WALL_H} d={W} x={ROOM_W + W / 2} y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Droite (X=278→300, absorbe l'ancien montant droit) */}
-      <P w={ROOM_W - DOOR_END - 8} h={WALL_H} d={W}
-        x={(DOOR_END + 8 + ROOM_W) / 2}                           y={WALL_H / 2} z={ROOM_D + W / 2} />
-
-      {/* ── Cuisine (renfoncement) ──────────────────────────────────────────── */}
-      {/* Z=410→460 — les piliers cuisine-L/R gèrent Z=400→410 */}
-      <P w={W} h={WALL_H} d={KITCHEN_DEPTH - W}
-        x={KITCHEN_X0 - W / 2} y={WALL_H / 2} z={ROOM_D + W + (KITCHEN_DEPTH - W) / 2} />
-      <P w={W} h={WALL_H} d={KITCHEN_DEPTH - W}
-        x={KITCHEN_X1 + W / 2} y={WALL_H / 2} z={ROOM_D + W + (KITCHEN_DEPTH - W) / 2} />
-      {/* Mur nord SDB / fond cuisine */}
-      <P w={DOOR_START + NICHE_DEPTH} h={WALL_H} d={W}
-        x={(DOOR_START - NICHE_DEPTH) / 2} y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
+      <P w={W} h={WALL_H} d={W} x={ROOM_W + W / 2}        y={WALL_H / 2} z={ROOM_D + W / 2} />
+      {/* Poutre 20×10 — jonction mur A1 × niche (Z=NICHE_Z_START) */}
+      <P w={20} h={WALL_H} d={NICHE_DEPTH} x={-10} y={WALL_H / 2} z={NICHE_Z_START} />
       {/* Pilier NW SDB (intersection mur nord SDB × MurA2b) */}
       <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
-
-      {/* ── Couloir gauche (X=185, Z=460→600) ─────────────────────────────── */}
-      {(() => {
-        const WALL_X        = DOOR_START - 5;
-        const LEFT_WALL_LEN = SDB_Z_END - KITCHEN_Z;
-        const C_DOOR_W      = 83;
-        const C_DOOR_START  = LEFT_WALL_LEN - 10 - C_DOOR_W;
-        const C_DOOR_END    = C_DOOR_START + C_DOOR_W;
-        const C_DOOR_START_ABS = KITCHEN_Z + C_DOOR_START;
-        const C_DOOR_END_ABS   = KITCHEN_Z + C_DOOR_END;
-        const E = 2; // élargissement 2cm de chaque côté → évite le z-fighting avec le dormant
-        return (
-          <>
-            <P w={W} h={WALL_H} d={C_DOOR_START - E} x={WALL_X} y={WALL_H / 2}
-              z={KITCHEN_Z + (C_DOOR_START - E) / 2} />
-            <P w={W} h={WALL_H} d={SDB_Z_END - C_DOOR_END_ABS - E} x={WALL_X} y={WALL_H / 2}
-              z={(C_DOOR_END_ABS + E + SDB_Z_END) / 2} />
-            <P w={W} h={WALL_H - DOOR_H} d={C_DOOR_W + 2 * E} x={WALL_X}
-              y={DOOR_H + (WALL_H - DOOR_H) / 2} z={(C_DOOR_START_ABS + C_DOOR_END_ABS) / 2} />
-          </>
-        );
-      })()}
-
-      {/* ── Douche (au-delà de SDB_Z_END=600) ─────────────────────────────── */}
-      {/* Mur est douche (X=60, Z=600→670) */}
-      <P w={W} h={WALL_H} d={70}
-        x={-NICHE_DEPTH + 70 + W / 2} y={WALL_H / 2} z={SDB_Z_END + 35} />
-      {/* Mur fond douche (Z=670) */}
-      <P w={70} h={WALL_H} d={W}
-        x={-NICHE_DEPTH + 35} y={WALL_H / 2} z={SDB_Z_END + 70 + W / 2} />
+      {/* Pilier cuisine-L nord (intersection mur niche-cuisine ouest × mur nord SDB) */}
+      <P w={W} h={WALL_H} d={W} x={KITCHEN_X0 - W / 2}   y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
+      {/* Pilier cuisine-R nord (intersection mur niche-cuisine est × mur nord SDB) */}
+      <P w={W} h={WALL_H} d={W} x={KITCHEN_X1 + W / 2}   y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
+      {/* Poutres 10×10 — porte douche */}
+      <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={SDB_Z_END - W / 2 + 10} />
+      <P w={W} h={WALL_H} d={W} x={65}                   y={WALL_H / 2} z={SDB_Z_END - W / 2 + 10} />
+      {/* Poutres 10×10 — porte placard couloir */}
+      <P w={W} h={WALL_H} d={W} x={DOOR_START - 5} y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
+      <P w={W} h={WALL_H} d={W} x={185}             y={WALL_H / 2} z={ROOM_D + W / 2} />
+      <P w={W} h={WALL_H} d={W} x={185}             y={WALL_H / 2} z={SDB_Z_END - W / 2 + 10} />
       {/* Pilier NW douche (intersection MurA2b × mur fond douche) */}
       <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={SDB_Z_END + 70 + W / 2} />
+      {/* Pilier SE douche (intersection mur est douche × mur fond douche) */}
+      <P w={W} h={WALL_H} d={W} x={65}                   y={WALL_H / 2} z={SDB_Z_END + 70 + W / 2} />
+      {/* Pilier NE diag (kite — coin entre Mur B ext et mur diag ext) */}
+      <mesh geometry={diagGeos.diagPillar}   material={wallMat} castShadow receiveShadow />
+      {/* Pilier SW diag (kite — coin entre Mur A2b ext et mur diag ext) */}
+      <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow />
 
-      {/* ── Couloir droit (X=305, Z=410→530) ──────────────────────────────── */}
-      <mesh
-        ref={(m) => { if (m) m.material = eastMats as any; }}
-        position={[ROOM_W + W / 2, WALL_H / 2, (ROOM_D + W + DIAG_AZ) / 2]}
-        castShadow receiveShadow
-      >
-        <boxGeometry args={[W, WALL_H, DIAG_AZ - ROOM_D - W]} />
-      </mesh>
+      {/* ── Mur C (piliers NW/NE toujours visibles, panneaux masqués si piersOnly) */}
+      <WallC piersOnly={piersOnly} />
 
-      {/* ── Mur diagonal ────────────────────────────────────────────────────── */}
-      <mesh geometry={diagGeos.ne}     material={wallMatDiag} castShadow receiveShadow />
-      <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow />
-      <mesh geometry={diagGeos.sw}     material={wallMatDiag} castShadow receiveShadow />
+      {/* ── Longs murs et parois intérieures — masqués en mode piliers seuls ── */}
+      <group visible={!piersOnly}>
 
+        {/* ── MUR A (ouest, X=0) ───────────────────────────────────────────── */}
+        {/* A1 : Z=0 → Z=NICHE_Z_START=280 */}
+        <mesh
+          ref={(m) => { if (m) m.material = westMats as any; }}
+          position={[-W / 2, WALL_H / 2, NICHE_Z_START / 2]}
+          castShadow receiveShadow
+        >
+          <boxGeometry args={[W, WALL_H, NICHE_Z_START]} />
+        </mesh>
+        {/* A2a : Z=0 → Z=400 */}
+        <mesh
+          ref={(m) => { if (m) m.material = westMats as any; }}
+          position={[-NICHE_DEPTH - W / 2, WALL_H / 2, ROOM_D / 2]}
+          castShadow receiveShadow
+        >
+          <boxGeometry args={[W, WALL_H, ROOM_D]} />
+        </mesh>
+        {/* A2b : Z=410 → Z=DIAG_CZ */}
+        <mesh
+          ref={(m) => { if (m) m.material = westMats as any; }}
+          position={[-NICHE_DEPTH - W / 2, WALL_H / 2, (ROOM_D + W + DIAG_CZ) / 2]}
+          castShadow receiveShadow
+        >
+          <boxGeometry args={[W, WALL_H, DIAG_CZ - ROOM_D - W]} />
+        </mesh>
+
+        {/* ── MUR B (est, X=300) ───────────────────────────────────────────── */}
+        {/* B1 : Z=0 → Z=410 */}
+        <mesh
+          ref={(m) => { if (m) m.material = eastMats as any; }}
+          position={[ROOM_W + W / 2, WALL_H / 2, (ROOM_D + 10) / 2]}
+          castShadow receiveShadow
+        >
+          <boxGeometry args={[W, WALL_H, ROOM_D + 10]} />
+        </mesh>
+        {/* B2 extension jardin : Z=-230 → Z=-30 */}
+        <mesh
+          ref={(m) => { if (m) m.material = eastMats as any; }}
+          position={[ROOM_W + W / 2, WALL_H / 2, (-230 + -30) / 2]}
+          castShadow receiveShadow
+        >
+          <boxGeometry args={[W, WALL_H, 200]} />
+        </mesh>
+        {/* Panneaux bois occultants 2×90cm */}
+        {[0, 1].map((i) => (
+          <P key={i}
+            w={10} h={190} d={90}
+            x={ROOM_W + 5}
+            y={95}
+            z={-230 - i * 90 - 45}
+            mat={panelMat}
+          />
+        ))}
+
+        {/* ── MUR D (sud, Z=400) ───────────────────────────────────────────── */}
+        {/* Gauche (X=-10→20) : absorbe l'ancienne extension niche (X=-10→0) */}
+        <P w={KITCHEN_X0 - W + NICHE_DEPTH} h={WALL_H} d={W}
+          x={(KITCHEN_X0 - W - NICHE_DEPTH) / 2}                    y={WALL_H / 2} z={ROOM_D + W / 2} />
+        {/* Milieu (X=140→190, prolongé jusqu'à DOOR_START) */}
+        <P w={DOOR_START - KITCHEN_X1 - W} h={WALL_H} d={W}
+          x={(KITCHEN_X1 + W + DOOR_START) / 2}                     y={WALL_H / 2} z={ROOM_D + W / 2} />
+        {/* Linteau */}
+        <P w={DOOR_END - DOOR_START + 8} h={WALL_H - DOOR_H} d={W}
+          x={(DOOR_START + DOOR_END + 8) / 2}
+          y={DOOR_H + (WALL_H - DOOR_H) / 2}                                        z={ROOM_D + W / 2} />
+        {/* Droite (X=278→300, absorbe l'ancien montant droit) */}
+        <P w={ROOM_W - DOOR_END - 8} h={WALL_H} d={W}
+          x={(DOOR_END + 8 + ROOM_W) / 2}                           y={WALL_H / 2} z={ROOM_D + W / 2} />
+
+        {/* ── Cuisine (renfoncement) ────────────────────────────────────────── */}
+        {/* Z=410→460 — les piliers cuisine-L/R gèrent Z=400→410 */}
+        <P w={W} h={WALL_H} d={KITCHEN_DEPTH - W}
+          x={KITCHEN_X0 - W / 2} y={WALL_H / 2} z={ROOM_D + W + (KITCHEN_DEPTH - W) / 2} />
+        <P w={W} h={WALL_H} d={KITCHEN_DEPTH - W}
+          x={KITCHEN_X1 + W / 2} y={WALL_H / 2} z={ROOM_D + W + (KITCHEN_DEPTH - W) / 2} />
+        {/* Mur nord SDB / fond cuisine */}
+        <P w={DOOR_START + NICHE_DEPTH} h={WALL_H} d={W}
+          x={(DOOR_START - NICHE_DEPTH) / 2} y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
+
+        {/* ── Couloir gauche (X=185, Z=460→600) ───────────────────────────── */}
+        {(() => {
+          const WALL_X        = DOOR_START - 5;
+          const LEFT_WALL_LEN = SDB_Z_END - KITCHEN_Z;
+          const C_DOOR_W      = 83;
+          const C_DOOR_START  = LEFT_WALL_LEN - 10 - C_DOOR_W;
+          const C_DOOR_END    = C_DOOR_START + C_DOOR_W;
+          const C_DOOR_START_ABS = KITCHEN_Z + C_DOOR_START;
+          const C_DOOR_END_ABS   = KITCHEN_Z + C_DOOR_END;
+          const E = 2; // élargissement 2cm de chaque côté → évite le z-fighting avec le dormant
+          return (
+            <>
+              <P w={W} h={WALL_H} d={C_DOOR_START - E} x={WALL_X} y={WALL_H / 2}
+                z={KITCHEN_Z + (C_DOOR_START - E) / 2} />
+              <P w={W} h={WALL_H} d={SDB_Z_END - C_DOOR_END_ABS - E} x={WALL_X} y={WALL_H / 2}
+                z={(C_DOOR_END_ABS + E + SDB_Z_END) / 2} />
+              <P w={W} h={WALL_H - DOOR_H} d={C_DOOR_W + 2 * E} x={WALL_X}
+                y={DOOR_H + (WALL_H - DOOR_H) / 2} z={(C_DOOR_START_ABS + C_DOOR_END_ABS) / 2} />
+            </>
+          );
+        })()}
+
+        {/* ── Douche (au-delà de SDB_Z_END=600) ───────────────────────────── */}
+        {/* Mur est douche (X=60, Z=600→670) */}
+        <P w={W} h={WALL_H} d={70}
+          x={-NICHE_DEPTH + 70 + W / 2} y={WALL_H / 2} z={SDB_Z_END + 35} />
+        {/* Mur fond douche (Z=670) */}
+        <P w={70} h={WALL_H} d={W}
+          x={-NICHE_DEPTH + 35} y={WALL_H / 2} z={SDB_Z_END + 70 + W / 2} />
+
+        {/* ── Couloir droit (X=305, Z=410→530) ────────────────────────────── */}
+        <mesh
+          ref={(m) => { if (m) m.material = eastMats as any; }}
+          position={[ROOM_W + W / 2, WALL_H / 2, (ROOM_D + W + DIAG_AZ) / 2]}
+          castShadow receiveShadow
+        >
+          <boxGeometry args={[W, WALL_H, DIAG_AZ - ROOM_D - W]} />
+        </mesh>
+
+        {/* ── Mur diagonal ─────────────────────────────────────────────────── */}
+        <mesh geometry={diagGeos.ne}      material={wallMatDiag} castShadow receiveShadow />
+        <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow />
+        <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow />
+
+      </group>
 
     </group>
   );

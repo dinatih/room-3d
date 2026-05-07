@@ -25,25 +25,18 @@ Stack : React 18 + Three.js + `@react-three/fiber` + `@react-three/drei` + Vite 
 
 Organisation par feature, avec aliases TypeScript/Vite :
 
-- `@shared/*` → `src/shared/*` — code transverse (types, utils, config)
+- `@shared/*` → `src/*` — types et config partagés entre features
 - `@features/*` → `src/features/*` — domaines fonctionnels
-- `@config` → `src/shared/config.ts` — constantes de la pièce
+- `@config` → `src/config.ts` — constantes de la pièce
 
 ```
 src/
 ├── main.tsx                    # mount React
-├── shared/
-│   ├── config.ts               # ROOM_W, ROOM_D, WALL_H, etc.
-│   ├── types.ts                # SceneItemProps (interface commune items/)
-│   └── utils/
-│       ├── useGLTFClone.ts     # hook : clone isolé d'un GLB
-│       ├── glbUtils.ts         # removeGlbLines + glbLocalBBox
-│       └── sceneItem.ts        # NOOP_ITEM, NOOP_STATE, NOOP_SIZE
+├── config.ts                   # ROOM_W, ROOM_D, WALL_H, etc.
+├── types.ts                    # SceneItemProps (interface commune items/)
 └── features/
-    ├── scene/                  # composition 3D
-    ├── inventory/              # UI : panneau, inventaire, registry
-    ├── camera/                 # contrôleurs caméra, walk/POV/VR
-    └── devtools/               # FPS, stats, lidar, helpers
+    ├── scene/                  # tout ce qui est scène 3D
+    └── inventory/              # gestion inventaire (UI + données)
 ```
 
 ### `features/scene/`
@@ -59,49 +52,44 @@ GlbContext.tsx           # context React pour le toggle GLB
 GlbModel.tsx             # helper de chargement GLB pour InventoryPreview
 items/                   # composants items autonomes (65 fichiers, à plat)
 animations/              # BuildAnimation 1-4 (chutes, montages animés)
-layers/
-    Grid.tsx             # grille + axes + labels de coordonnées
-    XRayLayer.tsx        # toggle X-Ray (matériaux transparents)
-    RedWallLayer.tsx     # toggle murs rouges
-    Neighbors.tsx        # appartements voisins fantômes (mur D et mur A)
-    sceneLayer.tsx       # CategoryLayerGroup + SceneLayerController
+utils/                   # utilitaires 3D partagés entre items/
+    useGLTFClone.ts      # hook : clone isolé d'un GLB
+    glbUtils.ts          # removeGlbLines + glbLocalBBox
+    sceneItem.ts         # NOOP_ITEM, NOOP_STATE, NOOP_SIZE
+camera/                  # contrôleurs caméra, walk/POV/VR
+    CameraController.tsx # walk mode (WASD + souris) + vues 2D/3D/POV
+    Controller.tsx       # contrôleur OrbitControls pour InventoryPreview
+    ImmersiveMode.tsx    # mode immersif plein écran
+    VRMode.tsx           # WebXR (VR/AR)
+    cameraState.ts       # état partagé caméra (camX, camZ, walkYaw, mirrorsHD…)
+    hoverState.ts        # état partagé hover (raycaster intersect, label…)
+devtools/                # FPS, stats, lidar, helpers
+    DevToolsCollector.tsx # collecte stats Three.js (drawCalls, triangles, FPS)
+    DevToolsOverlay.tsx  # rendu HTML du panneau Perf (RENDU + SCÈNE + TOP)
+    LightHelpers.tsx     # helpers visuels : DirectionalLightHelper, etc.
+    LidarScan.tsx        # affichage point cloud lidar
+    devState.ts          # état partagé entre Collector et Overlay
+ui/                      # composants UI overlay
+    SidePanel.tsx        # panneau latéral : Mobilier / Affichage / Perf / Scène
+    AnimationsPanel.tsx  # panneau animations
+    Minimap.tsx          # minimap canvas 2D
+    HoverMenu.tsx        # menu contextuel au survol des objets 3D
+    FloorPlan.tsx        # plan 2D vue de dessus
+    layers/
+        Grid.tsx         # grille + axes + labels de coordonnées
+        XRayLayer.tsx    # toggle X-Ray (matériaux transparents)
+        RedWallLayer.tsx # toggle murs rouges
+        Neighbors.tsx    # appartements voisins fantômes (mur D et mur A)
+        sceneLayer.tsx   # CategoryLayerGroup + SceneLayerController
 ```
 
 ### `features/inventory/`
 
 ```
-SidePanel.tsx            # panneau latéral : Mobilier / Affichage / Perf / Scène
 Inventory.tsx            # modal inventaire complet
 InventoryPreview.tsx     # prévisualisation 3D dans l'inventaire
-HoverMenu.tsx            # menu contextuel au survol des objets 3D
-AnimationsPanel.tsx      # panneau animations
-Spinner.tsx              # spinner de chargement
-Minimap.tsx              # minimap canvas 2D
-FloorPlan.tsx            # plan 2D vue de dessus
 inventoryData.ts         # INVENTORY : liste des objets avec dims, catégorie
-registry.ts              # SCENE_REGISTRY : id → composant items/
-floorplan.ts, floorData.ts, labels.ts  # données de plan
-```
-
-### `features/camera/`
-
-```
-CameraController.tsx     # walk mode (WASD + souris) + vues 2D/3D/POV
-Controller.tsx           # contrôleur OrbitControls pour InventoryPreview
-ImmersiveMode.tsx        # mode immersif plein écran
-VRMode.tsx               # WebXR (VR/AR)
-cameraState.ts           # état partagé caméra (camX, camZ, walkYaw, mirrorsHD…)
-hoverState.ts            # état partagé hover (raycaster intersect, label…)
-```
-
-### `features/devtools/`
-
-```
-DevToolsCollector.tsx    # collecte stats Three.js (drawCalls, triangles, FPS)
-DevToolsOverlay.tsx      # rendu HTML du panneau Perf (RENDU + SCÈNE + TOP)
-LightHelpers.tsx         # helpers visuels : DirectionalLightHelper, etc.
-LidarScan.tsx            # affichage point cloud lidar
-devState.ts              # état partagé entre Collector et Overlay
+previewRegistry.ts       # id → composant items/ pour la prévisualisation
 ```
 
 ### Composants items/ (`features/scene/items/`)
@@ -117,7 +105,7 @@ interface SceneItemProps {
 ```
 
 - **Coordonnées locales** : centré X/Z, Y=0 = sol (ou Y=0 = surface d'appui).
-- **GLB** : `useGLTFClone` pour les instances multiples, `useGLTF` + clone manuel dans `useMemo` si nécessaire.
+- **GLB** : `useGLTFClone` (`@features/scene/utils/useGLTFClone`) pour les instances multiples, `useGLTF` + clone manuel dans `useMemo` si nécessaire.
 - **Scale + centre** calculés dans `useLayoutEffect` → `onSize` appelé en fin de setup.
 - Placement monde **toujours dans le composant parent** (wrapper `<group position rotation>`), jamais hardcodé dans l'item lui-même.
 - **Pattern B (scale dynamique)** : pour les items qui calculent leur scale depuis `glbLocalBBox`, **toujours** faire `scene.scale.set(1, 1, 1)` au début de `useLayoutEffect` — protège contre la re-exécution sur Suspense remount où le scene est déjà scalé.
