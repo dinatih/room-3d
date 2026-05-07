@@ -39,7 +39,7 @@ import { ImmersiveMode }                from '@features/scene/ImmersiveMode';
 import { FloorPlan }                    from '@features/scene/FloorPlan';
 import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
-import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/scene/animations';
+import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/scene/BuildAnimations';
 
 import {
   ROOM_W,
