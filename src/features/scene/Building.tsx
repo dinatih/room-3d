@@ -66,15 +66,17 @@ const CORR_E       = 2; // élargissement anti z-fighting dormant
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 /** Panneau box simple avec matériau optionnel (array ou simple). */
-function P({ w, h, d, x, y, z, mat = wallMat }: {
+function P({ w, h, d, x, y, z, mat = wallMat, userData }: {
   w: number; h: number; d: number;
   x: number; y: number; z: number;
   mat?: THREE.Material | THREE.Material[];
+  userData?: Record<string, unknown>;
 }) {
   return (
     <mesh
       ref={(m) => { if (m) m.material = mat as any; }}
       position={[x, y, z]}
+      userData={userData}
       castShadow receiveShadow
     >
       <boxGeometry args={[w, h, d]} />
@@ -176,9 +178,11 @@ function WallC({ piersOnly = false }: { piersOnly?: boolean }) {
   return (
     <>
       {/* Pilier NW (intersection MurA × MurC) — toujours visible */}
-      <P w={20} h={WALL_H} d={WALL_DEPTH} x={-10} y={WALL_H / 2} z={-WALL_DEPTH / 2} />
+      <P w={20} h={WALL_H} d={WALL_DEPTH} x={-10} y={WALL_H / 2} z={-WALL_DEPTH / 2}
+        userData={{ type: 'pillar', id: 'nw' }} />
       {/* Pilier NE (intersection MurB × MurC) — toujours visible */}
-      <P w={W} h={WALL_H} d={WALL_DEPTH} x={ROOM_W + W / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} />
+      <P w={W} h={WALL_H} d={WALL_DEPTH} x={ROOM_W + W / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2}
+        userData={{ type: 'pillar', id: 'ne' }} />
 
       <group visible={!piersOnly}>
         <P w={GLASS_START} h={WALL_H} d={WALL_DEPTH}
@@ -226,6 +230,84 @@ function WallC({ piersOnly = false }: { piersOnly?: boolean }) {
   );
 }
 
+
+// ── Labels piliers (mode piersOnly) ───────────────────────────────────────────
+
+function makeSprite(text: string, color: string, worldSize: number): THREE.Sprite {
+  const PX = 64;
+  const w  = Math.ceil(text.length * PX * 0.58 + PX * 0.6);
+  const h  = Math.ceil(PX * 1.3);
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  ctx.font = `bold ${PX}px sans-serif`;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, w / 2, h / 2);
+  const mat = new THREE.SpriteMaterial({
+    map: new THREE.CanvasTexture(canvas),
+    transparent: true, depthTest: false,
+  });
+  const sp = new THREE.Sprite(mat);
+  sp.scale.set(worldSize * (w / h), worldSize, 1);
+  return sp;
+}
+
+function PillarLabels() {
+  const { scene } = useThree();
+
+  useEffect(() => {
+    const group = new THREE.Group();
+    group.name = 'pillar-labels';
+    const box = new THREE.Box3();
+
+    scene.traverse(obj => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh || mesh.userData?.type !== 'pillar') return;
+      const id = mesh.userData.id as string;
+      box.setFromObject(mesh);
+      const cx = (box.min.x + box.max.x) / 2;
+      const cz = (box.min.z + box.max.z) / 2;
+      const sp = makeSprite(id, '#ffdd44', 14);
+      sp.renderOrder = 999;
+      sp.position.set(cx, WALL_H + 18, cz);
+      group.add(sp);
+    });
+
+    scene.add(group);
+    return () => {
+      scene.remove(group);
+      group.traverse(o => {
+        const sp = o as THREE.Sprite;
+        if (!sp.isSprite) return;
+        sp.material.map?.dispose();
+        sp.material.dispose();
+      });
+    };
+  }, [scene]);
+
+  return null;
+}
+
+// ── Table des piliers box (hors kites diagonaux) ──────────────────────────────
+const PILLAR_DEFS: { id: string; x: number; z: number; w?: number; d?: number }[] = [
+  { id: 'sw',            x: -NICHE_DEPTH - W / 2,  z: ROOM_D + W / 2 },
+  { id: 'kitchen-l',    x: KITCHEN_X0 - W / 2,     z: ROOM_D + W / 2 },
+  { id: 'kitchen-r',    x: KITCHEN_X1 + W / 2,     z: ROOM_D + W / 2 },
+  { id: 'se',            x: ROOM_W + W / 2,          z: ROOM_D + W / 2 },
+  { id: 'beam-niche',   x: -10,                      z: NICHE_Z_START,   w: 20, d: NICHE_DEPTH },
+  { id: 'nw-sdb',       x: -NICHE_DEPTH - W / 2,   z: KITCHEN_Z + W / 2 },
+  { id: 'kitchen-l-n',  x: KITCHEN_X0 - W / 2,     z: KITCHEN_Z + W / 2 },
+  { id: 'kitchen-r-n',  x: KITCHEN_X1 + W / 2,     z: KITCHEN_Z + W / 2 },
+  { id: 'shower-door-w', x: -NICHE_DEPTH - W / 2,  z: SDB_Z_END - W / 2 + 10 },
+  { id: 'shower-door-e', x: 65,                     z: SDB_Z_END - W / 2 + 10 },
+  { id: 'corr-n',        x: DOOR_START - 5,          z: KITCHEN_Z + W / 2 },
+  { id: 'corr-s',        x: 185,                     z: ROOM_D + W / 2 },
+  { id: 'corr-m',        x: 185,                     z: SDB_Z_END - W / 2 + 10 },
+  { id: 'nw-shower',    x: -NICHE_DEPTH - W / 2,   z: SDB_Z_END + 70 + W / 2 },
+  { id: 'se-shower',    x: 65,                      z: SDB_Z_END + 70 + W / 2 },
+];
 
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
@@ -311,38 +393,19 @@ export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
   return (
     <group userData={{ brickType: 'wall' }}>
 
-      {/* ── Piliers — toujours visibles ─────────────────────────────────────── */}
-      {/* Pilier SW (intersection MurA2 × MurD) */}
-      <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Pilier cuisine-L (intersection MurD × mur gauche cuisine) */}
-      <P w={W} h={WALL_H} d={W} x={KITCHEN_X0 - W / 2}   y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Pilier cuisine-R (intersection MurD × mur droit cuisine) */}
-      <P w={W} h={WALL_H} d={W} x={KITCHEN_X1 + W / 2}   y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Pilier SE (coin MurB × MurD) */}
-      <P w={W} h={WALL_H} d={W} x={ROOM_W + W / 2}        y={WALL_H / 2} z={ROOM_D + W / 2} />
-      {/* Poutre 20×10 — jonction mur A1 × niche (Z=NICHE_Z_START) */}
-      <P w={20} h={WALL_H} d={NICHE_DEPTH} x={-10} y={WALL_H / 2} z={NICHE_Z_START} />
-      {/* Pilier NW SDB (intersection mur nord SDB × MurA2b) */}
-      <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
-      {/* Pilier cuisine-L nord (intersection mur niche-cuisine ouest × mur nord SDB) */}
-      <P w={W} h={WALL_H} d={W} x={KITCHEN_X0 - W / 2}   y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
-      {/* Pilier cuisine-R nord (intersection mur niche-cuisine est × mur nord SDB) */}
-      <P w={W} h={WALL_H} d={W} x={KITCHEN_X1 + W / 2}   y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
-      {/* Poutres 10×10 — porte douche */}
-      <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={SDB_Z_END - W / 2 + 10} />
-      <P w={W} h={WALL_H} d={W} x={65}                   y={WALL_H / 2} z={SDB_Z_END - W / 2 + 10} />
-      {/* Poutres 10×10 — porte placard couloir */}
-      <P w={W} h={WALL_H} d={W} x={DOOR_START - 5} y={WALL_H / 2} z={KITCHEN_Z + W / 2} />
-      <P w={W} h={WALL_H} d={W} x={185}             y={WALL_H / 2} z={ROOM_D + W / 2} />
-      <P w={W} h={WALL_H} d={W} x={185}             y={WALL_H / 2} z={SDB_Z_END - W / 2 + 10} />
-      {/* Pilier NW douche (intersection MurA2b × mur fond douche) */}
-      <P w={W} h={WALL_H} d={W} x={-NICHE_DEPTH - W / 2} y={WALL_H / 2} z={SDB_Z_END + 70 + W / 2} />
-      {/* Pilier SE douche (intersection mur est douche × mur fond douche) */}
-      <P w={W} h={WALL_H} d={W} x={65}                   y={WALL_H / 2} z={SDB_Z_END + 70 + W / 2} />
+      {piersOnly && <PillarLabels />}
+
+      {/* ── Piliers box — toujours visibles ─────────────────────────────────── */}
+      {PILLAR_DEFS.map(({ id, x, z, w = W, d = W }) => (
+        <P key={id} w={w} h={WALL_H} d={d} x={x} y={WALL_H / 2} z={z}
+          userData={{ type: 'pillar', id }} />
+      ))}
       {/* Pilier NE diag (kite — coin entre Mur B ext et mur diag ext) */}
-      <mesh geometry={diagGeos.diagPillar}   material={wallMat} castShadow receiveShadow />
+      <mesh geometry={diagGeos.diagPillar}   material={wallMat} castShadow receiveShadow
+        userData={{ type: 'pillar', id: 'ne-diag' }} />
       {/* Pilier SW diag (kite — coin entre Mur A2b ext et mur diag ext) */}
-      <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow />
+      <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
+        userData={{ type: 'pillar', id: 'sw-diag' }} />
 
       {/* ── Mur C (piliers NW/NE toujours visibles, panneaux masqués si piersOnly) */}
       <WallC piersOnly={piersOnly} />
