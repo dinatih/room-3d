@@ -20,7 +20,7 @@ import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes
 import { Walker, WalkerRed } from './Walker';
 import { XRayLayer }        from '@features/scene/XRayLayer';
 import { RedWallLayer }     from '@features/scene/RedWallLayer';
-import { WallEdgesLayer }   from '@features/scene/WallEdgesLayer';
+import { WallEdgesLayer, EdgeHoverRaycaster, EdgeHoverOverlay } from '@features/scene/WallEdgesLayer';
 import { GridLayer }        from '@features/scene/Grid';
 import { LightHelpers }     from '@features/scene/LightHelpers';
 import { HoverRaycaster, HoverOverlay } from '@features/scene/HoverMenu';
@@ -218,6 +218,7 @@ gl.shadowMap.enabled = true;
         {layers.xray        && <XRayLayer />}
         {layers.redWalls    && <RedWallLayer />}
         {layers.wallEdges   && <WallEdgesLayer />}
+        {layers.wallEdges   && <EdgeHoverRaycaster />}
         {layers.grid        && <GridLayer />}
         {layers.lights      && <LightHelpers />}
         {layers.plan        && <FloorPlan />}
@@ -287,6 +288,7 @@ gl.shadowMap.enabled = true;
       {showInventory && <Inventory onClose={() => setShowInventory(false)} />}
       <Minimap />
       <HoverOverlay />
+      {layers.wallEdges && <EdgeHoverOverlay />}
     </div>
   );
 }
