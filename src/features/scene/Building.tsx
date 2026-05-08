@@ -6,12 +6,15 @@
  *
  * makeGrassTex est exporté car GrassRug (items/) le réutilise.
  */
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { cameraState } from '@features/scene/cameraState';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150 } from './items/NissedalMirror';
+import { DoorLiving, DoorSdb } from './items/DoorWhite';
+import { DoorEntry }            from './items/DoorEntry';
+import { NOOP_ITEM, NOOP_SIZE } from './sceneItem';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -929,6 +932,94 @@ export function Mirrors() {
       <MirrorsD />
       <MirrorsA />
       <MirrorSDB />
+    </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DOORS — portes placées en coordonnées monde
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Calcul de placement (wrapper rotY=θ, item pivot local = [px, -H/2, 0]) :
+//   world_hinge = wrapper_pos + R_y(θ) * [px, -H/2, 0]
+//   → wrapper_pos = [hx - px·cosθ, H/2, hz - px·sinθ]
+//
+//   DoorLiving : pivotX=+W/2, θ=0          → wrapper=(DOOR_END − W/2 + 6, H/2, ROOM_D + 4.5)
+//   DoorSdb    : pivotX=−W/2, θ=+π/2       → wrapper=(WALL_X, H/2, hingeZ − W/2)
+//   DoorEntry  : pivotX=−W/2, θ=diagRotY−π/2 (panneau items/ s'étend en +X local,
+//                structure attendue +Z → correction −π/2)
+
+function useFurnitureToggles(map: Record<string, string>): Record<string, boolean> {
+  const [state, setState] = useState<Record<string, boolean>>({});
+  const { invalidate } = useThree();
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { key } = (e as CustomEvent).detail as { key: string };
+      const stateKey = map[key];
+      if (!stateKey) return;
+      setState(prev => ({ ...prev, [stateKey]: !prev[stateKey] }));
+      invalidate();
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, [invalidate]);
+  return state;
+}
+
+const DOOR_W_WHITE = 83;
+const DOOR_W_ENTRY = 90;
+const DOOR_HEIGHT  = 204;
+
+export function DoorsPlaced() {
+  const as = useFurnitureToggles({
+    livingDoor:   'living-door-toggle',
+    bathroomDoor: 'bathroom-door-toggle',
+    entryDoor:    'entry-door-toggle',
+  });
+
+  const sdbHingeZ = SDB_Z_END - 10;
+
+  const entry = useMemo(() => {
+    const diagDX  = DIAG_CX - DIAG_AX;
+    const diagDZ  = DIAG_CZ - DIAG_AZ;
+    const diagLen = Math.sqrt(diagDX * diagDX + diagDZ * diagDZ);
+    const sinθ    = diagDX / diagLen;
+    const cosθ    = diagDZ / diagLen;
+    const originX = DIAG_AX + 5 * cosθ;
+    const originZ = DIAG_AZ - 5 * sinθ;
+    const dR      = Math.atan2(diagDX, diagDZ);
+    const cosR    = Math.cos(dR);
+    const sinR    = Math.sin(dR);
+    const E_DOOR_START = 10;
+    const hingeX  = originX + E_DOOR_START * sinθ;
+    const hingeZ  = originZ + E_DOOR_START * cosθ;
+    return {
+      wx:       hingeX + DOOR_W_ENTRY / 2 * sinR,
+      wy:       DOOR_HEIGHT / 2,
+      wz:       hingeZ + DOOR_W_ENTRY / 2 * cosR,
+      diagRotY: dR - Math.PI / 2,
+    };
+  }, []);
+
+  return (
+    <>
+      <group
+        position={[DOOR_END - DOOR_W_WHITE / 2 + 6, DOOR_HEIGHT / 2, ROOM_D + 4.5]}
+        userData={{ animUnit: true, hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
+        <DoorLiving item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+      </group>
+      <group
+        position={[CORR_WALL_X, DOOR_HEIGHT / 2, sdbHingeZ - DOOR_W_WHITE / 2]}
+        rotation-y={Math.PI / 2}
+        userData={{ animUnit: true, hoverAction: { label: 'Porte SDB', actionId: 'bathroomDoor' } }}>
+        <DoorSdb item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+      </group>
+      <group
+        position={[entry.wx, entry.wy, entry.wz]}
+        rotation-y={entry.diagRotY}
+        userData={{ animUnit: true, hoverAction: { label: 'Porte entrée', actionId: 'entryDoor' } }}>
+        <DoorEntry item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+      </group>
     </>
   );
 }

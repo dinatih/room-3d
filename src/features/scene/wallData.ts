@@ -15,13 +15,14 @@ import {
   NICHE_DEPTH, NICHE_Z_START,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   DOOR_START, DOOR_END, DOOR_H,
-  CORR_DOOR_S, CORR_DOOR_E,
   SDB_Z_END,
   DIAG_AZ, DIAG_CZ,
 } from '@config';
 
 export const W      = 10; // épaisseur de mur (cm)
 const CORR_E = 2;  // anti z-fighting dormant porte couloir
+const CORR_DOOR_S = KITCHEN_Z + 50;
+const CORR_DOOR_E = KITCHEN_Z + 130;
 
 export const CORR_WALL_X = DOOR_START - 5; // 185 — centre du mur couloir gauche
 

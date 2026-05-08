@@ -27,8 +27,6 @@ export const GLASS_START = 90; // 300 - 50 - 160 = cm 90
 export const GLASS_END = 250; // 300 - 50 = cm 250
 
 // Corridor / SDB boundaries
-export const CORR_DOOR_S = KITCHEN_Z + 50;
-export const CORR_DOOR_E = KITCHEN_Z + 130;
 export const SDB_Z_END = KITCHEN_Z + 140;
 // Mur diagonal bâtiment
 // Contrainte : passe exactement par arête SE MCo-O (DOOR_START, SDB_Z_END)
