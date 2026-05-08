@@ -17,11 +17,9 @@ import { Walls, Floor, Mirrors, DoorsPlaced } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
 import {
-  EquipmentProc, EquipmentGlb,
-  FurnitureProc, FurnitureGlb, FurnitureComposite,
-  Furnishings,
-  FurniturePlacements, GlbPlacements, CompositePlacements,
-  Backpacks, Garden, GardenGlb,
+  Equipment,
+  Furniture, Furnishings,
+  Decor, Backpacks, Garden,
   DronaBoxes,
 } from './Placements';
 import { Walker, WalkerRed } from './Walker';
@@ -248,22 +246,16 @@ gl.shadowMap.enabled = true;
            * GLB toggle via React visible (indépendant de camera.layers).
            */}
           <CategoryLayerGroup layer={LAYER_EQUIPMENT}>
-            <EquipmentProc />
-            <EquipmentGlb />
+            <Equipment />
           </CategoryLayerGroup>
 
           <CategoryLayerGroup layer={LAYER_FURNITURE}>
             <Mirrors />
-            <FurnitureProc />
+            <Furniture />
             <Furnishings />
-            <FurniturePlacements />
+            <Decor />
             <Backpacks />
             <Garden />
-            <FurnitureComposite />
-            <CompositePlacements />
-            <FurnitureGlb />
-            <GlbPlacements />
-            <GardenGlb />
             <DronaBoxes />
           </CategoryLayerGroup>
 

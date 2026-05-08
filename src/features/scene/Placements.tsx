@@ -148,23 +148,18 @@ const SMORKULL_POSITIONS = [
 // EQUIPMENT (Layer 1)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function EquipmentProc() {
-  const HW_R = 28, HW_H = 65;
-  return (
-    <group position={[-NICHE_DEPTH + HW_R, WALL_H - 10 - HW_H / 2, KITCHEN_Z + 20 + HW_R]}>
-      <WaterHeater item={stub('water-heater')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-    </group>
-  );
-}
-
-export function EquipmentGlb() {
+export function Equipment() {
   const as = useFurnitureToggles({ lampSdb: 'lamp-sdb-toggle', lampCouloir: 'lamp-couloir-toggle' });
-  const SDB_CX = (-NICHE_DEPTH + DOOR_START) / 2;              // 90
-  const SDB_CZ = (KITCHEN_Z + SDB_Z_END) / 2;                  // 530
-  const CORR_CX = (DOOR_START + ROOM_W) / 2;                   // 245
-  const CORR_CZ = (ROOM_D + KITCHEN_Z) / 2;                    // 430
+  const HW_R = 28, HW_H = 65;
+  const SDB_CX  = (-NICHE_DEPTH + DOOR_START) / 2;
+  const SDB_CZ  = (KITCHEN_Z + SDB_Z_END) / 2;
+  const CORR_CX = (DOOR_START + ROOM_W) / 2;
+  const CORR_CZ = (ROOM_D + KITCHEN_Z) / 2;
   return (
     <>
+      <group position={[-NICHE_DEPTH + HW_R, WALL_H - 10 - HW_H / 2, KITCHEN_Z + 20 + HW_R]}>
+        <WaterHeater item={stub('water-heater')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
       <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ animUnit: true }}>
         <CuisineGroup item={stub('cuisine-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
@@ -181,23 +176,11 @@ export function EquipmentGlb() {
       <group position={[-NICHE_DEPTH + 60, 0, KITCHEN_Z + 46.5]} userData={{ animUnit: true }}>
         <Toilet item={stub('toilet')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-
-      {/* Ampoule SDB — tête en bas, culot à 10 cm du plafond */}
-      <group
-        visible={!!as['lamp-sdb-toggle']}
-        position={[SDB_CX, WALL_H - 10, SDB_CZ]}
-        rotation={[Math.PI, 0, 0]}
-      >
+      <group visible={!!as['lamp-sdb-toggle']} position={[SDB_CX, WALL_H - 10, SDB_CZ]} rotation={[Math.PI, 0, 0]}>
         <TradfriBulb item={stub('tradfri-bulb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         <pointLight intensity={8} distance={250} color={0xffe8b0} />
       </group>
-
-      {/* Ampoule couloir — tête en bas, culot à 10 cm du plafond */}
-      <group
-        visible={!!as['lamp-couloir-toggle']}
-        position={[CORR_CX, WALL_H - 10, CORR_CZ]}
-        rotation={[Math.PI, 0, 0]}
-      >
+      <group visible={!!as['lamp-couloir-toggle']} position={[CORR_CX, WALL_H - 10, CORR_CZ]} rotation={[Math.PI, 0, 0]}>
         <TradfriBulb item={stub('tradfri-bulb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         <pointLight intensity={8} distance={250} color={0xffe8b0} />
       </group>
@@ -209,10 +192,28 @@ export function EquipmentGlb() {
 // FURNITURE (Layer 2)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function FurnitureProc() {
-  const as = useFurnitureToggles({ corrDoors: 'corr-doors-toggle', sdbCloset: 'sdb-closet-toggle' });
+export function Furniture() {
+  const as = useFurnitureToggles({
+    corrDoors: 'corr-doors-toggle',
+    sdbCloset: 'sdb-closet-toggle',
+    cbnWest:   'cbn-west-toggle',
+    cbnEast:   'cbn-east-toggle',
+  });
+  const cbZ = KITCHEN_Z + 11 + 18.5; // 489.5
   return (
     <>
+      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+        <KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
+        <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[-NICHE_DEPTH + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
+        <KallaxCuisine item={stub('kallax-sw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, ROOM_D - 60 - w1 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
+        <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
       <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + 10 + KITCHEN_Z) / 2]}>
         <CorridorCloset item={stub('corridor-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
@@ -224,32 +225,6 @@ export function FurnitureProc() {
       </group>
       <group position={[KITCHEN_X0, 0, ROOM_D]}>
         <CuisineDrona />
-      </group>
-    </>
-  );
-}
-
-export function FurnitureComposite() {
-  return (
-    <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]}>
-      <KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-    </group>
-  );
-}
-
-export function FurnitureGlb() {
-  const as = useFurnitureToggles({ cbnWest: 'cbn-west-toggle', cbnEast: 'cbn-east-toggle' });
-  const cbZ = KITCHEN_Z + 11 + 18.5; // 489.5
-  return (
-    <>
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
-        <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <group position={[-NICHE_DEPTH + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
-        <KallaxCuisine item={stub('kallax-sw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, ROOM_D - 60 - w1 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
-        <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[-NICHE_DEPTH + 20, 0, cbZ]} userData={{ animUnit: true }}>
         <BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={NOOP_SIZE} />
@@ -376,19 +351,6 @@ export function Furnishings() {
 // DECORATIVE PLACEMENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function FurniturePlacements() {
-  return (
-    <>
-      <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <group position={[287.5, 0, 230]}>
-        <AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-    </>
-  );
-}
-
 function Smorkull_() {
   const [posIdx, setPosIdx] = useState(0);
   useEffect(() => {
@@ -459,9 +421,15 @@ function CeilingPalmLeaves() {
   );
 }
 
-export function GlbPlacements() {
+export function Decor() {
   return (
     <>
+      <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
+        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[287.5, 0, 230]}>
+        <AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
       <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <LackShelf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
@@ -500,15 +468,10 @@ export function GlbPlacements() {
           <Grejig item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       ))}
+      <group position={[ROOM_W - 20, 0, 271.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
+        <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
     </>
-  );
-}
-
-export function CompositePlacements() {
-  return (
-    <group position={[ROOM_W - 20, 0, 271.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
-      <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-    </group>
   );
 }
 
@@ -516,7 +479,6 @@ export function CompositePlacements() {
 // GARDEN — jardin / terrasse
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** Éléments procéduraux du jardin */
 export function Garden() {
   return (
     <>
@@ -532,14 +494,6 @@ export function Garden() {
       <group position={[120, 0, -250]} rotation={[0, 1, 0]}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-    </>
-  );
-}
-
-/** Éléments GLB du jardin (masqués par le filtre GLB) */
-export function GardenGlb() {
-  return (
-    <>
       <group userData={{ animUnit: true }}>
         <AltappenRugField />
       </group>
