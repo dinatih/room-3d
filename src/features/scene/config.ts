@@ -28,13 +28,17 @@ export const GLASS_END = 250; // 300 - 50 = cm 250
 
 // Corridor / SDB boundaries
 export const SDB_Z_END = KITCHEN_Z + 140;
-// Mur diagonal bâtiment
-// Contrainte : passe exactement par arête SE MCo-O (DOOR_START, SDB_Z_END)
-// Point A = fin MCo-E, Point C = mur ouest
-export const DIAG_AX = ROOM_W;           // 300
-export const DIAG_AZ = 530;              // Z départ diagonale
-export const DIAG_CX = -NICHE_DEPTH;     // -10
-export const DIAG_CZ = DIAG_AZ + (SDB_Z_END - DIAG_AZ) * (DIAG_AX - DIAG_CX) / (DIAG_AX - DOOR_START); // ≈727.3
+
+// Mur diagonal bâtiment — paramètre physique unique : angle intérieur au coin A
+// (angle entre mur B et le mur diagonal, mesuré à l'intérieur de la pièce)
+// Mesure sur place : 118–120°  |  modèle actuel : 122.5°
+// Formule : DIAG_CZ = DIAG_AZ − (DIAG_AX − DIAG_CX) / tan(α)
+export const DIAG_ANGLE_DEG = 122.5;
+const _diagAngle = DIAG_ANGLE_DEG * (Math.PI / 180);
+export const DIAG_AX = ROOM_W;       // 300 — point A : coin NE (jonction mur B)
+export const DIAG_AZ = 530;          // Z du point A
+export const DIAG_CX = -NICHE_DEPTH; // -10 — point C : côté niche ouest
+export const DIAG_CZ = DIAG_AZ - (DIAG_AX - DIAG_CX) / Math.tan(_diagAngle); // ≈727.5
 
 // Mur diagonal — géométrie dérivée (calculée une fois)
 export const DIAG_DX    = DIAG_CX - DIAG_AX;
