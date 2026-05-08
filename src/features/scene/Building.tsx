@@ -41,7 +41,7 @@ const COLORS = {
   tile:    0xe8e8e8,
 };
 
-import { WALL_DEFS, W, CORR_WALL_X } from './wallData';
+import { WALL_DEFS, PILLAR_DEFS, W, CORR_WALL_X } from './wallData';
 
 const FLOOR_Y = -5.25; // dalle béton : surface parquet à Y=0
 
@@ -138,7 +138,7 @@ function WX({ x1, x2, zc, t = W, yBase = 0, h = WALL_H, mat = wallMat }: {
 }
 
 /** ExtrudeGeometry depuis une liste de points [worldX, worldZ]. */
-function makeExtrudeGeo(
+export function makeExtrudeGeo(
   pts: [number, number][],
   height: number,
   yBase = 0,
@@ -325,25 +325,7 @@ function PillarLabels() {
   return null;
 }
 
-// ── Table des piliers box (hors kites diagonaux) ──────────────────────────────
-const PILLAR_DEFS: { id: string; x: number; z: number; w?: number; d?: number }[] = [
-  { id: 'sw',            x: -NICHE_DEPTH - W / 2,  z: ROOM_D + W / 2 },
-  { id: 'kitchen-l',    x: KITCHEN_X0 - W / 2,     z: ROOM_D + W / 2 },
-  { id: 'kitchen-r',    x: KITCHEN_X1 + W / 2,     z: ROOM_D + W / 2 },
-  { id: 'se',            x: ROOM_W + W / 2,          z: ROOM_D + W / 2 },
-  { id: 'beam-niche',   x: -10,                      z: NICHE_Z_START,   w: 20, d: NICHE_DEPTH },
-  { id: 'nw-sdb',       x: -NICHE_DEPTH - W / 2,   z: KITCHEN_Z + W / 2 },
-  { id: 'kitchen-l-n',  x: KITCHEN_X0 - W / 2,     z: KITCHEN_Z + W / 2 },
-  { id: 'kitchen-r-n',  x: KITCHEN_X1 + W / 2,     z: KITCHEN_Z + W / 2 },
-  { id: 'shower-door-w', x: -NICHE_DEPTH - W / 2,  z: SDB_Z_END - W / 2 + 10 },
-  { id: 'shower-door-e', x: 65,                     z: SDB_Z_END - W / 2 + 10 },
-  { id: 'corr-n',        x: DOOR_START - 5,          z: KITCHEN_Z + W / 2 },
-  { id: 'corr-s',        x: 185,                     z: ROOM_D + W / 2 },
-  { id: 'corr-m',        x: 185,                     z: SDB_Z_END - W / 2 + 10 },
-  { id: 'nw-shower',    x: -NICHE_DEPTH - W / 2,   z: SDB_Z_END + 70 + W / 2 },
-  { id: 'se-shower',    x: 65,                      z: SDB_Z_END + 70 + W / 2 },
-  { id: 'garden-e',     x: ROOM_W + W / 2,          z: -240 - W / 2 },
-];
+// PILLAR_DEFS importé depuis wallData.ts
 
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {

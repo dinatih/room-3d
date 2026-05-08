@@ -1,5 +1,6 @@
 /**
  * wallData.ts — source unique de vérité pour tous les segments de mur axiaux.
+ * wallDefToBoxGeo() permet de convertir un WallDef en BoxGeometry Three.js.
  *
  * Building.tsx consomme WALL_DEFS pour le rendu 3D (WZ / WX).
  * floorData.ts en dérive automatiquement SEG_WALLS / SEG_DOORS / SEG_WINDOWS.
@@ -10,6 +11,7 @@
  *  - segKind 'none'  → 3D seulement (linteaux, paroi arrière niche…)
  *  - skip3d true     → 2D seulement (baie de porte / fenêtre schématique)
  */
+import * as THREE from 'three';
 import {
   ROOM_W, ROOM_D, WALL_H,
   NICHE_DEPTH, NICHE_Z_START,
@@ -40,11 +42,26 @@ export type WallDef = {
   | { axis: 'x'; x1: number; x2: number; zc: number }
 );
 
-/** Segment 2D au centre de la paroi (±5 cm vs face intérieure, invisible à l'échelle minimap). */
+/** Segment 2D au centre de la paroi. */
 export function wallSeg(d: WallDef): [number, number, number, number] {
   return d.axis === 'z'
     ? [d.xc, d.z1, d.xc, d.z2]
     : [d.x1, d.zc, d.x2, d.zc];
+}
+
+/** BoxGeometry Three.js centrée sur la paroi décrite par un WallDef. */
+export function wallDefToBoxGeo(d: WallDef): THREE.BufferGeometry {
+  const h     = d.h     ?? WALL_H;
+  const yBase = d.yBase ?? 0;
+  let g: THREE.BufferGeometry;
+  if (d.axis === 'z') {
+    g = new THREE.BoxGeometry(W, h, d.z2 - d.z1);
+    g.translate(d.xc, yBase + h / 2, (d.z1 + d.z2) / 2);
+  } else {
+    g = new THREE.BoxGeometry(d.x2 - d.x1, h, W);
+    g.translate((d.x1 + d.x2) / 2, yBase + h / 2, d.zc);
+  }
+  return g;
 }
 
 export const WALL_DEFS: WallDef[] = [
@@ -99,4 +116,26 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'z', xc: -NICHE_DEPTH + 70 + W / 2, z1: SDB_Z_END + W,      z2: SDB_Z_END + 70 },
   { axis: 'x', x1: -NICHE_DEPTH,              x2: -NICHE_DEPTH + 70, zc: SDB_Z_END + 70 + W / 2 },
 
+];
+
+// ── Piliers box ───────────────────────────────────────────────────────────────
+export type PillarDef = { id: string; x: number; z: number; w?: number; d?: number };
+
+export const PILLAR_DEFS: PillarDef[] = [
+  { id: 'sw',           x: -NICHE_DEPTH - W / 2,  z: ROOM_D + W / 2 },
+  { id: 'kitchen-l',   x: KITCHEN_X0 - W / 2,     z: ROOM_D + W / 2 },
+  { id: 'kitchen-r',   x: KITCHEN_X1 + W / 2,     z: ROOM_D + W / 2 },
+  { id: 'se',           x: ROOM_W + W / 2,          z: ROOM_D + W / 2 },
+  { id: 'beam-niche',  x: -10,                      z: NICHE_Z_START,   w: 20, d: NICHE_DEPTH },
+  { id: 'nw-sdb',      x: -NICHE_DEPTH - W / 2,   z: KITCHEN_Z + W / 2 },
+  { id: 'kitchen-l-n', x: KITCHEN_X0 - W / 2,     z: KITCHEN_Z + W / 2 },
+  { id: 'kitchen-r-n', x: KITCHEN_X1 + W / 2,     z: KITCHEN_Z + W / 2 },
+  { id: 'shower-door-w', x: -NICHE_DEPTH - W / 2, z: SDB_Z_END - W / 2 + 10 },
+  { id: 'shower-door-e', x: 65,                    z: SDB_Z_END - W / 2 + 10 },
+  { id: 'corr-n',       x: CORR_WALL_X,             z: KITCHEN_Z + W / 2 },
+  { id: 'corr-s',       x: CORR_WALL_X,             z: ROOM_D + W / 2 },
+  { id: 'corr-m',       x: CORR_WALL_X,             z: SDB_Z_END - W / 2 + 10 },
+  { id: 'nw-shower',   x: -NICHE_DEPTH - W / 2,   z: SDB_Z_END + 70 + W / 2 },
+  { id: 'se-shower',   x: 65,                      z: SDB_Z_END + 70 + W / 2 },
+  { id: 'garden-e',    x: ROOM_W + W / 2,           z: -240 - W / 2 },
 ];
