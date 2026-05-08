@@ -100,7 +100,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'door-entry',       name: 'Porte d\'entrée',                brand: '',         category: 'doors',     qty: 1, dims: { w: 90,  d: 4,   h: 204 }, notes: 'Rouge, mur diagonal, poignée L + knob rouge' },
   { id: 'door-living',      name: 'Porte séjour',                   brand: '',         category: 'doors',     qty: 1, dims: { w: 83,  d: 4,   h: 204 }, notes: 'Blanche, mur D, poignée L double face' },
   { id: 'door-sdb',         name: 'Porte SDB',                      brand: '',         category: 'doors',     qty: 1, dims: { w: 4,   d: 83,  h: 204 }, notes: 'Blanche, mur couloir, poignée L double face' },
-  { id: 'door-glass',       name: 'Porte-fenêtre',                  brand: '',         category: 'doors',     qty: 1, dims: { w: 160, d: 5,   h: 190 }, notes: 'Double battant PVC blanc, vitrage, seuil 20cm', actions: ['eastDoor'] },
+  { id: 'door-glass',       name: 'Porte-fenêtre',                  brand: '',         category: 'doors',     qty: 1, dims: { w: 160, d: 5,   h: 190 }, notes: 'Double battant PVC blanc, vitrage, seuil 20cm', actions: ['eastGlassDoor'] },
 ];
 
 export const STORAGE_SPACES: StorageSpace[] = [

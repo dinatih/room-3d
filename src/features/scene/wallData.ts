@@ -81,7 +81,7 @@ export const WALL_DEFS: WallDef[] = [
 
   // ── MUR B (est) ────────────────────────────────────────────────────────────
   { axis: 'z', xc: ROOM_W + W / 2, z1: 0,    z2: ROOM_D,  mat: 'east' }, // B1 séjour
-  { axis: 'z', xc: ROOM_W + W / 2, z1: -240, z2: -30,     mat: 'east' }, // B2 jardin
+  { axis: 'z', xc: ROOM_W + W / 2, z1: -230, z2: -30,     mat: 'east' }, // B2 jardin
   { axis: 'z', xc: ROOM_W + W / 2, z1: ROOM_D + W, z2: DIAG_AZ, mat: 'east' }, // couloir droit
 
   // ── MUR D (sud, Z=400) ────────────────────────────────────────────────────
@@ -137,5 +137,5 @@ export const PILLAR_DEFS: PillarDef[] = [
   { id: 'corr-m',       x: CORR_WALL_X,             z: SDB_Z_END - W / 2 + 10 },
   { id: 'nw-shower',   x: -NICHE_DEPTH - W / 2,   z: SDB_Z_END + 70 + W / 2 },
   { id: 'se-shower',   x: 65,                      z: SDB_Z_END + 70 + W / 2 },
-  { id: 'garden-e',    x: ROOM_W + W / 2,           z: -240 - W / 2 },
+  { id: 'garden-e',    x: ROOM_W + W / 2,           z: -230 - W / 2 },
 ];

@@ -14,6 +14,7 @@ import { cameraState } from '@features/scene/cameraState';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150 } from './items/NissedalMirror';
 import { DoorLiving, DoorSdb } from './items/DoorWhite';
 import { DoorEntry }            from './items/DoorEntry';
+import { GlassDoor }            from './items/GlassDoor';
 import { NOOP_ITEM, NOOP_SIZE } from './sceneItem';
 
 import {
@@ -159,57 +160,6 @@ function WallC({ piersOnly = false }: { piersOnly?: boolean }) {
   const GLASS_TOP_Y = 210;
   const linteauH = WALL_H - GLASS_TOP_Y; // 40
 
-  // Porte-fenêtre : battant gauche (fixe) + battant droit (animé)
-  const glassRef  = useRef<THREE.Group>(null!);
-  const eastOpen  = useRef(false);
-  const { invalidate: invalidateWallC } = useThree();
-  useEffect(() => {
-    const onToggle = (e: Event) => {
-      if ((e as CustomEvent).detail?.key !== 'eastDoor') return;
-      eastOpen.current = !eastOpen.current;
-      if (glassRef.current) glassRef.current.rotation.y = eastOpen.current ? Math.PI / 2 : 0;
-      invalidateWallC();
-    };
-    document.addEventListener('furniture-toggle', onToggle);
-    return () => document.removeEventListener('furniture-toggle', onToggle);
-  }, [invalidateWallC]);
-
-  const doorW     = (GLASS_END - GLASS_START) / 2; // 80
-  const FRAME     = 8, FRAME_D = 5;
-  const glassBase = 20, glassH = GLASS_TOP_Y - glassBase; // 190
-  const innerH    = glassH - FRAME * 2;
-  const Z         = -5;
-
-  function DoorPanel({ cx }: { cx: number }) {
-    return (
-      <group position={[cx, glassBase, 0]}>
-        {/* Traverse haute */}
-        <mesh ref={(m) => { if (m) m.material = pvcMat; }} position={[0, glassH - FRAME / 2, Z]}>
-          <boxGeometry args={[doorW, FRAME, FRAME_D]} />
-        </mesh>
-        {/* Traverse basse */}
-        <mesh ref={(m) => { if (m) m.material = pvcMat; }} position={[0, FRAME / 2, Z]}>
-          <boxGeometry args={[doorW, FRAME, FRAME_D]} />
-        </mesh>
-        {/* Montant gauche */}
-        <mesh ref={(m) => { if (m) m.material = pvcMat; }}
-          position={[-doorW / 2 + FRAME / 2, FRAME + innerH / 2, Z]}>
-          <boxGeometry args={[FRAME, innerH, FRAME_D]} />
-        </mesh>
-        {/* Montant droit */}
-        <mesh ref={(m) => { if (m) m.material = pvcMat; }}
-          position={[doorW / 2 - FRAME / 2, FRAME + innerH / 2, Z]}>
-          <boxGeometry args={[FRAME, innerH, FRAME_D]} />
-        </mesh>
-        {/* Vitrage */}
-        <mesh ref={(m) => { if (m) m.material = glassMat; }}
-          position={[0, FRAME + innerH / 2, Z]}>
-          <planeGeometry args={[doorW - FRAME * 2, innerH]} />
-        </mesh>
-      </group>
-    );
-  }
-
   return (
     <>
       {/* Pilier NW (intersection MurA × MurC) — toujours visible */}
@@ -241,25 +191,6 @@ function WallC({ piersOnly = false }: { piersOnly?: boolean }) {
           <boxGeometry args={[GLASS_END - GLASS_START, 20, WALL_DEPTH]} />
         </mesh>
 
-        <group userData={{ animUnit: true }}>
-          {/* Battant gauche (fixe) */}
-          <DoorPanel cx={GLASS_START + doorW / 2} />
-
-          {/* Battant droit (pivot à GLASS_END) */}
-          <group ref={glassRef} position={[GLASS_END, 0, 0]}
-            userData={{ hoverAction: { label: 'Porte-fenêtre', actionId: 'eastDoor' } }}>
-          <DoorPanel cx={-doorW / 2} />
-          {/* Poignée */}
-          <mesh ref={(m) => { if (m) m.material = handleMat; }}
-            position={[-doorW + FRAME + 4, glassBase + glassH * 0.5, Z + FRAME_D / 2 + 0.5]}>
-            <boxGeometry args={[3, 24, 1]} />
-          </mesh>
-          <mesh ref={(m) => { if (m) m.material = handleMat; }}
-            position={[-doorW + FRAME + 4, glassBase + glassH * 0.5, Z + FRAME_D / 2 + 4.5]}>
-            <boxGeometry args={[1.5, 1.5, 8]} />
-          </mesh>
-          </group>
-        </group>
       </group>
     </>
   );
@@ -326,6 +257,9 @@ function PillarLabels() {
 }
 
 // PILLAR_DEFS importé depuis wallData.ts
+
+/** Ref module-level vers le group Walls — consommé par Neighbors pour clone. */
+export const wallsGroupRef = { current: null as THREE.Group | null };
 
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
@@ -409,7 +343,7 @@ export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
   }, []);
 
   return (
-    <group userData={{ brickType: 'wall' }}>
+    <group ref={(g) => { wallsGroupRef.current = g; }} userData={{ brickType: 'wall' }}>
 
       {piersOnly && <PillarLabels />}
 
@@ -433,7 +367,7 @@ export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
 
         {/* Panneaux bois occultants jardin (mur B2) */}
         {[0, 1].map((i) => (
-          <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-240 - W - i * 90 - 45} mat={panelMat} />
+          <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-230 - W - i * 90 - 45} mat={panelMat} />
         ))}
 
         {/* ── Tous les segments de mur axiaux (dérivés de WALL_DEFS) ─────── */}
@@ -954,6 +888,7 @@ const DOOR_HEIGHT  = 204;
 
 export function DoorsPlaced() {
   const as = useFurnitureToggles({
+    eastGlassDoor:     'east-glass-door-toggle',
     livingDoor:   'living-door-toggle',
     bathroomDoor: 'bathroom-door-toggle',
     entryDoor:    'entry-door-toggle',
@@ -985,6 +920,11 @@ export function DoorsPlaced() {
 
   return (
     <>
+      <group
+        position={[(GLASS_START + GLASS_END) / 2, 105, 0]}
+        userData={{ animUnit: true, hoverAction: { label: 'Porte-fenêtre', actionId: 'eastGlassDoor' } }}>
+        <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+      </group>
       <group
         position={[DOOR_END - DOOR_W_WHITE / 2 + 6, DOOR_HEIGHT / 2, ROOM_D + 4.5]}
         userData={{ animUnit: true, hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>

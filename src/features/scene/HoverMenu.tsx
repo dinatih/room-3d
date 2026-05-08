@@ -15,7 +15,7 @@ import { hoverState } from '@features/scene/hoverState';
 
 interface ActionDef { btnLabel: string; toggleKey: string; }
 const ACTIONS: Record<string, ActionDef> = {
-  eastDoor:       { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'eastDoor'      },
+  eastGlassDoor:       { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'eastGlassDoor'      },
   entryDoor:      { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'entryDoor'     },
   livingDoor:     { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'livingDoor'    },
   bathroomDoor:   { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'bathroomDoor'  },

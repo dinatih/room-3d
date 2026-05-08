@@ -55,7 +55,7 @@ function DoorPanel({ cx, baseY }: { cx: number; baseY: number }) {
 
 export function GlassDoor({ actionState, onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
-  const isOpen  = actionState['door-toggle'] ?? false;
+  const isOpen  = actionState['east-glass-door-toggle'] ?? false;
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
@@ -80,11 +80,6 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
   return (
     <group position={[0, -GLASS_TOP / 2, 0]}>
-
-      {/* Seuil */}
-      <mesh position={[0, SILL_H / 2, -4]}>
-        <boxGeometry args={[W_TOTAL, SILL_H, WW + 4]} />{sillMat}
-      </mesh>
 
       {/* Battant gauche — fixe */}
       <DoorPanel cx={-W_TOTAL / 4} baseY={SILL_H} />

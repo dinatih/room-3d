@@ -104,7 +104,7 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'entry-door-toggle':     ['Ouvrir', 'Fermer'],
   'living-door-toggle':    ['Ouvrir', 'Fermer'],
   'bathroom-door-toggle':  ['Ouvrir', 'Fermer'],
-  'door-toggle':           ['Ouvrir', 'Fermer'],
+  'east-glass-door-toggle':           ['Ouvrir', 'Fermer'],
   'wc-lid-toggle':         ['Ouvrir', 'Fermer'],
   'corr-doors-toggle':     ['Ouvrir', 'Fermer'],
   'sdb-closet-toggle':     ['Ouvrir', 'Fermer'],

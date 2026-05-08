@@ -305,7 +305,7 @@ function ViewsModal({ onClose }: { onClose: () => void }) {
 // ── Composant principal ───────────────────────────────────────────────────────
 
 export interface FurnitureState {
-  eastDoor:     boolean;
+  eastGlassDoor:     boolean;
   entryDoor:    boolean;
   livingDoor:   boolean;
   bathroomDoor: boolean;
@@ -440,8 +440,8 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
 
         {/* ── Mobilier ── */}
         <Group emoji="🛋" title="Mobilier">
-          {b0('light', `Porte-fenêtre : ${furniture.eastDoor ? 'OUVERTE' : 'FERMÉE'}`,
-              () => onToggleFurniture('eastDoor'), true)}
+          {b0('light', `Porte-fenêtre : ${furniture.eastGlassDoor ? 'OUVERTE' : 'FERMÉE'}`,
+              () => onToggleFurniture('eastGlassDoor'), true)}
           {b0('light', `Porte entrée : ${furniture.entryDoor ? 'OUVERTE' : 'FERMÉE'}`,
               () => onToggleFurniture('entryDoor'))}
           {b0('light', `Porte séjour : ${furniture.livingDoor ? 'OUVERTE' : 'FERMÉE'}`,

@@ -28,7 +28,7 @@ const ITEM_ACTIONS: Record<string, string> = {
   'door-entry':             'entry-door-toggle',
   'door-living':            'living-door-toggle',
   'door-sdb':               'bathroom-door-toggle',
-  'door-glass':             'door-toggle',
+  'door-glass':             'east-glass-door-toggle',
   'toilet':                 'wc-lid-toggle',
   'corridor-closet':        'corr-doors-toggle',
 };

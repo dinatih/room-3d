@@ -16,12 +16,7 @@ import { AnimationsPanel }  from '@features/scene/AnimationsPanel';
 import { Walls, Floor, Mirrors, DoorsPlaced } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
-import {
-  Equipment,
-  Furniture, Furnishings,
-  Decor, Backpacks, Garden,
-  DronaBoxes,
-} from './Placements';
+import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes } from './Placements';
 import { Walker, WalkerRed } from './Walker';
 import { XRayLayer }        from '@features/scene/XRayLayer';
 import { RedWallLayer }     from '@features/scene/RedWallLayer';
@@ -103,7 +98,7 @@ function ShadowController({ enabled }: { enabled: boolean }) {
 
 export function Studio() {
   const [furniture, setFurniture] = useState<FurnitureState>({
-    eastDoor: false, entryDoor: false, livingDoor: false, bathroomDoor: false,
+    eastGlassDoor: false, entryDoor: false, livingDoor: false, bathroomDoor: false,
     corrDoors: false, sdbCloset: false,
     cbnWest: false, cbnEast: false,
     cabinet: false,
