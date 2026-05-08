@@ -36,6 +36,19 @@ export const DIAG_AZ = 530;              // Z départ diagonale
 export const DIAG_CX = -NICHE_DEPTH;     // -10
 export const DIAG_CZ = DIAG_AZ + (SDB_Z_END - DIAG_AZ) * (DIAG_AX - DIAG_CX) / (DIAG_AX - DOOR_START); // ≈727.3
 
+// Mur diagonal — géométrie dérivée (calculée une fois)
+export const DIAG_DX    = DIAG_CX - DIAG_AX;
+export const DIAG_DZ    = DIAG_CZ - DIAG_AZ;
+export const DIAG_LEN   = Math.sqrt(DIAG_DX * DIAG_DX + DIAG_DZ * DIAG_DZ);
+export const DIAG_SIN   = DIAG_DX / DIAG_LEN;   // composante X du vecteur directeur normé
+export const DIAG_COS   = DIAG_DZ / DIAG_LEN;   // composante Z du vecteur directeur normé
+export const DIAG_ROT_Y = Math.atan2(DIAG_DX, DIAG_DZ); // rotation Y Three.js du mur diagonal
+
+// Porte d'entrée diagonale — offsets le long du mur diagonal (cm)
+export const DIAG_ENTRY_S = 10;                          // début de la porte
+export const DIAG_ENTRY_W = 90;                          // largeur de la porte
+export const DIAG_ENTRY_E = DIAG_ENTRY_S + DIAG_ENTRY_W; // fin de la porte
+
 // Layers Three.js
 export const LAYER_STRUCTURE  = 0; // Murs, sol, plafond
 export const LAYER_EQUIPMENT  = 1; // WC, douche, évier, chauffe-eau…

@@ -25,6 +25,8 @@ import {
   KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, KITCHEN_Z,
   SDB_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
+  DIAG_LEN, DIAG_SIN, DIAG_COS, DIAG_ROT_Y,
+  DIAG_ENTRY_S, DIAG_ENTRY_E,
 } from '@config';
 
 const BLDG_X_MIN = -100;
@@ -265,15 +267,11 @@ export const wallsGroupRef = { current: null as THREE.Group | null };
 export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
   // Géométries complexes via useMemo ──────────────────────────────────────────
 
-  // Mur diagonal : constantes dérivées
   const diagGeos = useMemo(() => {
-    const diagDX  = DIAG_CX - DIAG_AX;
-    const diagDZ  = DIAG_CZ - DIAG_AZ;
-    const diagLen = Math.sqrt(diagDX * diagDX + diagDZ * diagDZ);
-    const sinθ    = diagDX / diagLen;
-    const cosθ    = diagDZ / diagLen;
-    const pX      = cosθ;
-    const pZ      = -sinθ;
+    const sinθ = DIAG_SIN;
+    const cosθ = DIAG_COS;
+    const pX   = cosθ;
+    const pZ   = -sinθ;
     const DIAG_DEPTH = 10;
 
     const iP = (d: number): [number, number] => [DIAG_AX + d * sinθ, DIAG_AZ + d * cosθ];
@@ -282,24 +280,22 @@ export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
       DIAG_AZ + d * cosθ + DIAG_DEPTH * pZ,
     ];
 
-    const E_DOOR_START = 10, E_DOOR_W = 90, E_DOOR_END = E_DOOR_START + E_DOOR_W;
-
     // Section NE — rectangulaire : épaisseur uniforme, face ext à eP(0)
     const ne = makeExtrudeGeo(
-      [iP(0), iP(E_DOOR_START), eP(E_DOOR_START), eP(0)],
+      [iP(0), iP(DIAG_ENTRY_S), eP(DIAG_ENTRY_S), eP(0)],
       WALL_H,
     );
 
     // Linteau au-dessus de la porte d'entrée
     const linteau = makeExtrudeGeo(
-      [iP(E_DOOR_START), iP(E_DOOR_END), eP(E_DOOR_END), eP(E_DOOR_START)],
+      [iP(DIAG_ENTRY_S), iP(DIAG_ENTRY_E), eP(DIAG_ENTRY_E), eP(DIAG_ENTRY_S)],
       WALL_H - DOOR_H,
       DOOR_H,
     );
 
     // Section SW — rectangulaire : épaisseur uniforme, face ext à eP(diagLen)
     const sw = makeExtrudeGeo(
-      [iP(E_DOOR_END), iP(diagLen), eP(diagLen), eP(E_DOOR_END)],
+      [iP(DIAG_ENTRY_E), iP(DIAG_LEN), eP(DIAG_LEN), eP(DIAG_ENTRY_E)],
       WALL_H,
     );
 
@@ -897,24 +893,15 @@ export function DoorsPlaced() {
   const sdbHingeZ = SDB_Z_END - 10;
 
   const entry = useMemo(() => {
-    const diagDX  = DIAG_CX - DIAG_AX;
-    const diagDZ  = DIAG_CZ - DIAG_AZ;
-    const diagLen = Math.sqrt(diagDX * diagDX + diagDZ * diagDZ);
-    const sinθ    = diagDX / diagLen;
-    const cosθ    = diagDZ / diagLen;
-    const originX = DIAG_AX + 5 * cosθ;
-    const originZ = DIAG_AZ - 5 * sinθ;
-    const dR      = Math.atan2(diagDX, diagDZ);
-    const cosR    = Math.cos(dR);
-    const sinR    = Math.sin(dR);
-    const E_DOOR_START = 10;
-    const hingeX  = originX + E_DOOR_START * sinθ;
-    const hingeZ  = originZ + E_DOOR_START * cosθ;
+    const originX = DIAG_AX + 5 * DIAG_COS;
+    const originZ = DIAG_AZ - 5 * DIAG_SIN;
+    const hingeX  = originX + DIAG_ENTRY_S * DIAG_SIN;
+    const hingeZ  = originZ + DIAG_ENTRY_S * DIAG_COS;
     return {
-      wx:       hingeX + DOOR_W_ENTRY / 2 * sinR,
+      wx:       hingeX + DOOR_W_ENTRY / 2 * DIAG_SIN,
       wy:       DOOR_HEIGHT / 2,
-      wz:       hingeZ + DOOR_W_ENTRY / 2 * cosR,
-      diagRotY: dR - Math.PI / 2,
+      wz:       hingeZ + DOOR_W_ENTRY / 2 * DIAG_COS,
+      diagRotY: DIAG_ROT_Y - Math.PI / 2,
     };
   }, []);
 

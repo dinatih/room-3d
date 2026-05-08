@@ -14,16 +14,14 @@ import {
   DOOR_START,
   SDB_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
+  DIAG_SIN, DIAG_COS, DIAG_ENTRY_S, DIAG_ENTRY_E,
   ROOM_D, ROOM_W, KITCHEN_Z,
 } from '@config';
 import { WALL_DEFS, wallSeg, W } from './wallData';
 
 // Points sur le mur diagonal pour la porte d'entrée
-const _dLen = Math.sqrt((DIAG_CX - DIAG_AX) ** 2 + (DIAG_CZ - DIAG_AZ) ** 2);
-const _dX   = (DIAG_CX - DIAG_AX) / _dLen;
-const _dZ   = (DIAG_CZ - DIAG_AZ) / _dLen;
-const DIAG_DOOR_S = { x: DIAG_AX + 10  * _dX, z: DIAG_AZ + 10  * _dZ };
-const DIAG_DOOR_E = { x: DIAG_AX + 100 * _dX, z: DIAG_AZ + 100 * _dZ };
+const DIAG_DOOR_S = { x: DIAG_AX + DIAG_ENTRY_S * DIAG_SIN, z: DIAG_AZ + DIAG_ENTRY_S * DIAG_COS };
+const DIAG_DOOR_E = { x: DIAG_AX + DIAG_ENTRY_E * DIAG_SIN, z: DIAG_AZ + DIAG_ENTRY_E * DIAG_COS };
 
 export type Seg = [number, number, number, number]; // x1, z1, x2, z2
 
