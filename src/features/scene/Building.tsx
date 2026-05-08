@@ -24,6 +24,7 @@ import {
   BLDG_X_MIN, BLDG_X_MAX, BLDG_Z_MIN, BLDG_Z_MAX,
   COLORS,
 } from '@config';
+import { WALL_DEFS, W, CORR_WALL_X } from './wallData';
 
 const FLOOR_Y = -5.25; // dalle béton : surface parquet à Y=0
 
@@ -55,14 +56,15 @@ const westMats  = [wallMat, ghostMat, wallMat, wallMat, wallMat, wallMat];
 const eastMats  = [ghostMat, wallMat, wallMat, wallMat, wallMat, wallMat];
 const northMats = [wallMat, wallMat, wallMat, wallMat, wallMat, ghostMat];
 
-const W = 10; // épaisseur de mur
+// W et CORR_WALL_X importés depuis wallData.ts
 
-// Couloir gauche — constantes architecturales (partagées entre piliers et murs)
-const CORR_WALL_X  = DOOR_START - 5;                              // 185
-const C_DOOR_W     = 83;
-const C_DOOR_START = (SDB_Z_END - KITCHEN_Z) - 10 - C_DOOR_W;   // 47
-const C_DOOR_END   = C_DOOR_START + C_DOOR_W;                     // 130
-const CORR_E       = 2; // élargissement anti z-fighting dormant
+// Lookup matériau par nom (utilisé lors du rendu WALL_DEFS)
+const MAT_MAP: Record<string, THREE.Material | THREE.Material[]> = {
+  west:    westMats,
+  east:    eastMats,
+  north:   northMats,
+  default: wallMat,
+};
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -430,55 +432,18 @@ export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
       {/* ── Longs murs et parois intérieures — masqués en mode piliers seuls ── */}
       <group visible={!piersOnly}>
 
-        {/* ── MUR A (ouest) ───────────────────────────────────────────────── */}
-        {/* A1 : s'arrête à la face sud de la poutre niche */}
-        <WZ xc={-W/2}             z1={0}                            z2={NICHE_Z_START - NICHE_DEPTH/2}  mat={westMats} />
-        {/* A2a : saute la poutre niche (z=275→285) */}
-        <WZ xc={-NICHE_DEPTH-W/2} z1={0}                            z2={NICHE_Z_START - NICHE_DEPTH/2}  mat={westMats} />
-        <WZ xc={-NICHE_DEPTH-W/2} z1={NICHE_Z_START + NICHE_DEPTH/2} z2={ROOM_D}                       mat={westMats} />
-        {/* A2b : saute NW SDB (460→470), poutre douche O (600→610), NW douche (670→680) */}
-        <WZ xc={-NICHE_DEPTH-W/2} z1={ROOM_D + W}   z2={KITCHEN_Z}       mat={westMats} />
-        <WZ xc={-NICHE_DEPTH-W/2} z1={KITCHEN_Z + W} z2={SDB_Z_END}       mat={westMats} />
-        <WZ xc={-NICHE_DEPTH-W/2} z1={SDB_Z_END + W} z2={SDB_Z_END + 70}  mat={westMats} />
-        <WZ xc={-NICHE_DEPTH-W/2} z1={SDB_Z_END + 70 + W} z2={DIAG_CZ}    mat={westMats} />
-
-        {/* ── MUR B (est) ─────────────────────────────────────────────────── */}
-        {/* B1 : s'arrête à la face sud du pilier SE */}
-        <WZ xc={ROOM_W + W/2} z1={0}    z2={ROOM_D}  mat={eastMats} />
-        <WZ xc={ROOM_W + W/2} z1={-240} z2={-30}     mat={eastMats} />{/* B2 jardin */}
-        {/* Panneaux bois occultants 2×90cm */}
+        {/* Panneaux bois occultants jardin (mur B2) */}
         {[0, 1].map((i) => (
           <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-240 - W - i * 90 - 45} mat={panelMat} />
         ))}
 
-        {/* ── MUR D (sud, Z=400) ──────────────────────────────────────────── */}
-        <WX x1={-NICHE_DEPTH}   x2={KITCHEN_X0 - W} zc={ROOM_D + W/2} />
-        <WX x1={KITCHEN_X1 + W} x2={DOOR_START}      zc={ROOM_D + W/2} />
-        <WX x1={DOOR_START}     x2={DOOR_END + 8}    zc={ROOM_D + W/2} yBase={DOOR_H} h={WALL_H - DOOR_H} />
-        <WX x1={DOOR_END + 8}   x2={ROOM_W}          zc={ROOM_D + W/2} />
-
-        {/* ── Cuisine (renfoncement, Z=410→460) ───────────────────────────── */}
-        <WZ xc={KITCHEN_X0 - W/2} z1={ROOM_D + W} z2={KITCHEN_Z} />
-        <WZ xc={KITCHEN_X1 + W/2} z1={ROOM_D + W} z2={KITCHEN_Z} />
-        {/* Nord SDB / fond cuisine : saute cuisine-L nord (20→30), cuisine-R nord (130→140), placard sud (180→190) */}
-        <WX x1={-NICHE_DEPTH}   x2={KITCHEN_X0 - W}    zc={KITCHEN_Z + W/2} />
-        <WX x1={KITCHEN_X0}     x2={KITCHEN_X1}         zc={KITCHEN_Z + W/2} />
-        <WX x1={KITCHEN_X1 + W} x2={CORR_WALL_X - W/2} zc={KITCHEN_Z + W/2} />
-
-        {/* ── Couloir gauche (X=185, Z=460→600) ──────────────────────────── */}
-        {/* Section 1 : démarre après le pilier placard sud (460→470) */}
-        <WZ xc={CORR_WALL_X} z1={KITCHEN_Z + W}                    z2={KITCHEN_Z + C_DOOR_START - CORR_E} />
-        <WZ xc={CORR_WALL_X} z1={KITCHEN_Z + C_DOOR_END + CORR_E} z2={SDB_Z_END} />
-        <WZ xc={CORR_WALL_X} z1={KITCHEN_Z + C_DOOR_START - CORR_E} z2={KITCHEN_Z + C_DOOR_END + CORR_E}
-          yBase={DOOR_H} h={WALL_H - DOOR_H} />
-
-        {/* ── Douche (au-delà de SDB_Z_END=600) ──────────────────────────── */}
-        {/* Mur est douche : démarre après la poutre douche est (600→610) */}
-        <WZ xc={-NICHE_DEPTH + 70 + W/2} z1={SDB_Z_END + W}   z2={SDB_Z_END + 70} />
-        <WX x1={-NICHE_DEPTH}            x2={-NICHE_DEPTH + 70} zc={SDB_Z_END + 70 + W/2} />
-
-        {/* ── Couloir droit (Mur B, Z=410→530) ───────────────────────────── */}
-        <WZ xc={ROOM_W + W/2} z1={ROOM_D + W} z2={DIAG_AZ} mat={eastMats} />
+        {/* ── Tous les segments de mur axiaux (dérivés de WALL_DEFS) ─────── */}
+        {WALL_DEFS.filter(d => !d.skip3d).map((d, i) => {
+          const mat = MAT_MAP[d.mat ?? 'default'];
+          if (d.axis === 'z')
+            return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} />;
+          return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} />;
+        })}
 
         {/* ── Mur diagonal ─────────────────────────────────────────────────── */}
         <mesh geometry={diagGeos.ne}      material={wallMatDiag} castShadow receiveShadow />
