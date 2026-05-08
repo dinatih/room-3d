@@ -19,16 +19,12 @@ export const KITCHEN_Z = ROOM_D + KITCHEN_DEPTH; // Z=460
 
 // Enfoncement angle D-A : 10cm profond, 1m20 le long du mur A
 export const NICHE_DEPTH = 10; // 10cm (protrusion vers X+)
-export const NICHE_LENGTH = 120; // 1m20 le long de Z
-export const NICHE_Z_START = ROOM_D - NICHE_LENGTH; // Z=280
+export const NICHE_Z_START = ROOM_D - 120; // Z=280
 
 // Baie vitrée double : 160cm large, 190cm haut, 50cm du mur B, sur mur C
 // Muret de 20cm sous la baie (~1 couche = 30cm en LEGO)
 export const GLASS_START = 90; // 300 - 50 - 160 = cm 90
 export const GLASS_END = 250; // 300 - 50 = cm 250
-
-// Kallax dimensions (cm)
-export const KALLAX_DEPTH = 39;    // depth 39cm
 
 // Corridor / SDB boundaries
 export const CORR_DOOR_S = KITCHEN_Z + 50;
@@ -41,18 +37,6 @@ export const DIAG_AX = ROOM_W;           // 300
 export const DIAG_AZ = 530;              // Z départ diagonale
 export const DIAG_CX = -NICHE_DEPTH;     // -10
 export const DIAG_CZ = DIAG_AZ + (SDB_Z_END - DIAG_AZ) * (DIAG_AX - DIAG_CX) / (DIAG_AX - DOOR_START); // ≈727.3
-export const DIAG_END_Z = DIAG_CZ;
-
-// Jardin diagonal endpoint (parallèle à MDiag, pente -7/11)
-export const GARDEN_JC_Z = -140 - (DIAG_CZ - DIAG_AZ) * 320 / (DIAG_AX - DIAG_CX); // ≈-343.6
-
-// Emprise rectangulaire du bâtiment — dalle béton et plafond partagent cette forme
-// NW(-100, 0)  NE(400, 0)
-// SW(-100,800) SE(400,800)
-export const BLDG_X_MIN = -100;
-export const BLDG_X_MAX =  400;
-export const BLDG_Z_MIN =  -30;
-export const BLDG_Z_MAX =  800;
 
 // Layers Three.js
 export const LAYER_STRUCTURE  = 0; // Murs, sol, plafond
@@ -61,13 +45,3 @@ export const LAYER_FURNITURE  = 2; // Lit, tables, chaises, étagères…
 export const LAYER_NETWORKS   = 3; // Tuyauterie, électricité (optionnel)
 export const LAYER_NEIGHBORS  = 4; // Appartements voisins (fantôme)
 export const LAYER_LIDAR      = 5; // Scan LiDAR
-
-export const COLORS = {
-  wall: 0xeeeeee,
-  floor: 0xd4a437,
-  parquet: 0xC19A6B,
-  accent: 0xcc0000,
-  accentS: 0xaa0000,
-  ground: 0x3a7d44,
-  tile: 0xe8e8e8,
-};

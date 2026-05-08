@@ -7,9 +7,12 @@ import {
   ROOM_W, ROOM_D, DOOR_START,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   NICHE_DEPTH, NICHE_Z_START,
-  GARDEN_JC_Z, SDB_Z_END,
-  DIAG_AZ, DIAG_CZ,
+  SDB_Z_END,
+  DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
 } from '@config';
+
+// Jardin diagonal endpoint (parallèle à MDiag)
+const GARDEN_JC_Z = -140 - (DIAG_CZ - DIAG_AZ) * 320 / (DIAG_AX - DIAG_CX);
 import { SEG_WALLS, SEG_DOORS, SEG_WINDOWS } from './floorData';
 
 const PAD = 20;

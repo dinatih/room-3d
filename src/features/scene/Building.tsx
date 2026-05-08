@@ -21,9 +21,23 @@ import {
   KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, KITCHEN_Z,
   SDB_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
-  BLDG_X_MIN, BLDG_X_MAX, BLDG_Z_MIN, BLDG_Z_MAX,
-  COLORS,
 } from '@config';
+
+const BLDG_X_MIN = -100;
+const BLDG_X_MAX =  400;
+const BLDG_Z_MIN =  -30;
+const BLDG_Z_MAX =  800;
+
+const COLORS = {
+  wall:    0xeeeeee,
+  floor:   0xd4a437,
+  parquet: 0xC19A6B,
+  accent:  0xcc0000,
+  accentS: 0xaa0000,
+  ground:  0x3a7d44,
+  tile:    0xe8e8e8,
+};
+
 import { WALL_DEFS, W, CORR_WALL_X } from './wallData';
 
 const FLOOR_Y = -5.25; // dalle béton : surface parquet à Y=0

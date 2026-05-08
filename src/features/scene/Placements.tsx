@@ -71,8 +71,9 @@ import {
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   SDB_Z_END, DOOR_START, DOOR_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
-  KALLAX_DEPTH,
 } from '@config';
+
+const KALLAX_DEPTH = 39;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
