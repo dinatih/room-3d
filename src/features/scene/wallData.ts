@@ -88,8 +88,8 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'x', x1: -NICHE_DEPTH,    x2: KITCHEN_X0 - W, zc: ROOM_D + W / 2 },
   { axis: 'x', x1: KITCHEN_X1 + W,  x2: DOOR_START,     zc: ROOM_D + W / 2 },
   // Linteau au-dessus de la porte principale (3D seulement)
-  { axis: 'x', x1: DOOR_START,      x2: DOOR_END + 8,   zc: ROOM_D + W / 2, yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
-  { axis: 'x', x1: DOOR_END + 8,    x2: ROOM_W,         zc: ROOM_D + W / 2 },
+  { axis: 'x', x1: DOOR_START,      x2: DOOR_END + 4,   zc: ROOM_D + W / 2, yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
+  { axis: 'x', x1: DOOR_END + 4,    x2: ROOM_W,         zc: ROOM_D + W / 2 },
   // Porte principale (2D uniquement)
   { axis: 'x', x1: DOOR_START, x2: DOOR_END, zc: ROOM_D, segKind: 'door', skip3d: true },
 

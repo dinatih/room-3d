@@ -927,7 +927,7 @@ export function DoorsPlaced() {
         <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
-        position={[DOOR_END - DOOR_W_WHITE / 2 + 6, DOOR_HEIGHT / 2, ROOM_D + 4.5]}
+        position={[DOOR_END - DOOR_W_WHITE / 2 + 2, DOOR_HEIGHT / 2, ROOM_D + 4.5]}
         userData={{ animUnit: true, hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
         <DoorLiving item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
