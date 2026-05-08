@@ -344,6 +344,7 @@ export interface LayerState {
   lights:       boolean;
   shadows:      boolean;
   piersOnly:    boolean;
+  roomWAlt:     boolean;
 }
 
 export interface SidePanelProps {
@@ -420,6 +421,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('cyan',   'LiDAR scan', 'lidar')}
           {layerBtn('red', 'Murs rouges', 'redWalls')}
           {layerBtn('red', 'Arêtes murs', 'wallEdges')}
+          {layerBtn('yellow', 'Mur est +16cm', 'roomWAlt')}
           {b0('light', `Laptop : ${furniture.laptopModel ? 'CAD' : 'Procédural'}`,
               () => onToggleFurniture('laptopModel'))}
           {b0('light', `Bureau : ${furniture.deskGlb ? 'GLB' : 'Procédural'}`,

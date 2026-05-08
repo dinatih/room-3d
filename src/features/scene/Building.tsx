@@ -157,25 +157,27 @@ export function makeExtrudeGeo(
 }
 
 // ── Mur C : trapèze nord + baie vitrée ────────────────────────────────────────
-function WallC({ piersOnly = false }: { piersOnly?: boolean }) {
+function WallC({ piersOnly = false, eastDelta = 0 }: { piersOnly?: boolean; eastDelta?: number }) {
   const WALL_DEPTH = 30;
   const GLASS_TOP_Y = 210;
   const linteauH = WALL_H - GLASS_TOP_Y; // 40
+  const rw = ROOM_W + eastDelta; // largeur effective
 
   return (
     <>
       {/* Pilier NW (intersection MurA × MurC) — toujours visible */}
       <P w={20} h={WALL_H} d={WALL_DEPTH} x={-10} y={WALL_H / 2} z={-WALL_DEPTH / 2}
         userData={{ type: 'pillar', id: 'nw' }} />
-      {/* Pilier NE (intersection MurB × MurC) — toujours visible */}
-      <P w={W} h={WALL_H} d={WALL_DEPTH} x={ROOM_W + W / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2}
+      {/* Pilier NE (intersection MurB × MurC) — suit le mur est */}
+      <P w={W} h={WALL_H} d={WALL_DEPTH} x={rw + W / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2}
         userData={{ type: 'pillar', id: 'ne' }} />
 
       <group visible={!piersOnly}>
         <P w={GLASS_START} h={WALL_H} d={WALL_DEPTH}
           x={GLASS_START / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={northMats} />
-        <P w={ROOM_W - GLASS_END} h={WALL_H} d={WALL_DEPTH}
-          x={(GLASS_END + ROOM_W) / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={northMats} />
+        {/* Panneau est : largeur et position dynamiques */}
+        <P w={rw - GLASS_END} h={WALL_H} d={WALL_DEPTH}
+          x={(GLASS_END + rw) / 2} y={WALL_H / 2} z={-WALL_DEPTH / 2} mat={northMats} />
 
         {/* Linteau */}
         <P w={GLASS_END - GLASS_START} h={linteauH} d={WALL_DEPTH}
@@ -264,7 +266,7 @@ function PillarLabels() {
 export const wallsGroupRef = { current: null as THREE.Group | null };
 
 // ── Composant principal ────────────────────────────────────────────────────────
-export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
+export function Walls({ piersOnly = false, roomWDelta = 0 }: { piersOnly?: boolean; roomWDelta?: number }) {
   // Géométries complexes via useMemo ──────────────────────────────────────────
 
   const diagGeos = useMemo(() => {
@@ -343,8 +345,8 @@ export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
 
       {piersOnly && <PillarLabels />}
 
-      {/* ── Piliers box — toujours visibles ─────────────────────────────────── */}
-      {PILLAR_DEFS.map(({ id, x, z, w = W, d = W }) => (
+      {/* ── Piliers non-est — toujours visibles ─────────────────────────────── */}
+      {PILLAR_DEFS.filter(({ id }) => id !== 'se' && id !== 'garden-e').map(({ id, x, z, w = W, d = W }) => (
         <P key={id} w={w} h={WALL_H} d={d} x={x} y={WALL_H / 2} z={z}
           userData={{ type: 'pillar', id }} />
       ))}
@@ -355,19 +357,12 @@ export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
       <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
         userData={{ type: 'pillar', id: 'sw-diag' }} />
 
-      {/* ── Mur C (piliers NW/NE toujours visibles, panneaux masqués si piersOnly) */}
-      <WallC piersOnly={piersOnly} />
+      {/* ── Mur C — pilier NE et panneau est suivent roomWDelta ─────────────── */}
+      <WallC piersOnly={piersOnly} eastDelta={roomWDelta} />
 
-      {/* ── Longs murs et parois intérieures — masqués en mode piliers seuls ── */}
+      {/* ── Murs non-est ─────────────────────────────────────────────────────── */}
       <group visible={!piersOnly}>
-
-        {/* Panneaux bois occultants jardin (mur B2) */}
-        {[0, 1].map((i) => (
-          <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-230 - W - i * 90 - 45} mat={panelMat} />
-        ))}
-
-        {/* ── Tous les segments de mur axiaux (dérivés de WALL_DEFS) ─────── */}
-        {WALL_DEFS.filter(d => !d.skip3d).map((d, i) => {
+        {WALL_DEFS.filter(d => !d.skip3d && d.mat !== 'east').map((d, i) => {
           const mat = MAT_MAP[d.mat ?? 'default'];
           if (d.axis === 'z')
             return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} />;
@@ -378,7 +373,26 @@ export function Walls({ piersOnly = false }: { piersOnly?: boolean }) {
         <mesh geometry={diagGeos.ne}      material={wallMatDiag} castShadow receiveShadow />
         <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow />
         <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow />
+      </group>
 
+      {/* ── Mur EST — groupe décalable (roomWDelta = 0 ou ROOM_W_DELTA) ──────── */}
+      <group position-x={roomWDelta}>
+        {/* Piliers se + garden-e */}
+        {PILLAR_DEFS.filter(({ id }) => id === 'se' || id === 'garden-e').map(({ id, x, z, w = W, d = W }) => (
+          <P key={id} w={w} h={WALL_H} d={d} x={x} y={WALL_H / 2} z={z}
+            userData={{ type: 'pillar', id }} />
+        ))}
+        <group visible={!piersOnly}>
+          {/* Panneaux bois occultants jardin */}
+          {[0, 1].map((i) => (
+            <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-230 - W - i * 90 - 45} mat={panelMat} />
+          ))}
+          {/* Segments mur B (WALL_DEFS mat='east') */}
+          {WALL_DEFS.filter(d => !d.skip3d && d.mat === 'east').map((d, i) => (
+            <WZ key={i} xc={(d as any).xc} z1={(d as any).z1} z2={(d as any).z2}
+              mat={MAT_MAP.east} h={d.h} yBase={d.yBase} />
+          ))}
+        </group>
       </group>
 
     </group>

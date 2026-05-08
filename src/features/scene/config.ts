@@ -2,7 +2,8 @@
 // CONFIG
 // =============================================
 // 1 unit = 1cm
-export const ROOM_W = 300; // 3m
+export const ROOM_W       = 300; // 3m — modèle actuel
+export const ROOM_W_DELTA =  16; // séjour réel = 316 cm
 export const ROOM_D = 400; // 4m
 export const WALL_H = 250; // 2.5m
 
