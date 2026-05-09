@@ -1,13 +1,13 @@
 /**
  * Studio.tsx — racine R3F : Canvas, lumières, fog, env map, état UI global.
  */
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
+import { useProgress } from '@react-three/drei';
 import {
   ACESFilmicToneMapping, PCFSoftShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
-  DefaultLoadingManager,
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
@@ -98,28 +98,22 @@ function ShadowController({ enabled }: { enabled: boolean }) {
 }
 
 function LoadingProgress() {
+  const { progress, active } = useProgress();
+  const doneRef = useRef(false);
+
   useEffect(() => {
     const bar   = document.getElementById('loading-bar');
     const cover = document.getElementById('loading');
-    let done = false;
-
-    DefaultLoadingManager.onProgress = (_url, loaded, total) => {
-      if (bar && total > 0) bar.style.width = `${(loaded / total) * 100}%`;
-    };
-    DefaultLoadingManager.onLoad = () => {
-      if (done) return;
-      done = true;
-      if (bar) bar.style.width = '100%';
+    if (bar) bar.style.width = `${progress}%`;
+    if (!active && progress >= 100 && !doneRef.current) {
+      doneRef.current = true;
       if (cover) {
         cover.classList.add('hidden');
         setTimeout(() => cover.remove(), 450);
       }
-    };
-    return () => {
-      DefaultLoadingManager.onProgress = () => {};
-      DefaultLoadingManager.onLoad    = () => {};
-    };
-  }, []);
+    }
+  }, [progress, active]);
+
   return null;
 }
 
