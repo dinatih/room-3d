@@ -730,7 +730,7 @@ function MirrorsD() {
   const W = 65, H = 65;
   const FT = 1.8, FD = 1.2;
   const cx  = (KITCHEN_X1 + DOOR_START) / 2;
-  const fz  = ROOM_D - 0.2 - FD / 2;
+  const fz  = ROOM_D - 2 - FD / 2;
   const mirZ = fz - 0.1;
 
   return (
@@ -745,7 +745,7 @@ function MirrorsD() {
               rotationY={Math.PI}
             />
             <group position={[cx, cy - H / 2, fz]}>
-              <NissedalGlbFrame glb={GLB_65x65} targetH={H} />
+              <NissedalGlbFrame glb={GLB_65x65} />
             </group>
           </group>
         );
@@ -904,7 +904,7 @@ export function DoorsPlaced() {
         <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
-        position={[DOOR_START + DOOR_W_WHITE / 2, DOOR_HEIGHT / 2, ROOM_D + 4.5]}
+        position={[DOOR_END - DOOR_W_WHITE / 2 + 2, DOOR_HEIGHT / 2, ROOM_D + W / 2]}
         userData={{ animUnit: true, hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
         <DoorLiving item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
