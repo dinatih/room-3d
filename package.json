@@ -13,6 +13,7 @@
     "@react-three/drei": "^9",
     "@react-three/fiber": "^8",
     "@react-three/postprocessing": "^2.19.1",
+    "3d-tiles-renderer": "^0.4.24",
     "react": "^18",
     "react-dom": "^18",
     "three": "^0.170.0"

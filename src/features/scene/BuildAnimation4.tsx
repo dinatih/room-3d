@@ -121,29 +121,33 @@ function collectScene(scene: THREE.Scene) {
   const floor: THREE.Object3D[] = [], ceiling: THREE.Object3D[] = [];
   const picked = new Set<THREE.Object3D>();
 
+  /** Descend dans le sous-arbre d'un groupe mur et collecte chaque mesh un par un. */
+  function visitWallMeshes(o: THREE.Object3D): void {
+    if (!o.visible || isUtility(o)) return;
+    if ((o as THREE.Mesh).isMesh) {
+      picked.add(o);
+      walls.push(o);
+    } else {
+      o.children.forEach(visitWallMeshes);
+    }
+  }
+
   function visit(o: THREE.Object3D): void {
     if (!o.visible || isUtility(o) || isGroundPlane(o)) return;
     let cur: THREE.Object3D | null = o.parent;
     while (cur && cur !== scene) { if (picked.has(cur)) return; cur = cur.parent; }
 
-    // Detect floor/ceiling meshes by brickType BEFORE the depth check.
-    // These live at depth 1 (Floor returns a fragment with no wrapper group,
-    // so its meshes are direct children of the scene root group) and would be
-    // skipped by the depth >= 2 filter below.
-    // Walls are NOT handled here: the Walls group (brickType 'wall', depth 1)
-    // must recurse so that each wall mesh animates individually. Wall meshes
-    // at depth 2 are classified via parentBrick below.
     const brick = o.userData?.brickType as string | undefined;
     if (brick && hasMesh(o)) {
       if      (brick === 'floor')   { picked.add(o); floor.push(o);   return; }
       else if (brick === 'ceiling') { picked.add(o); ceiling.push(o); return; }
+      // Pour les murs : descendre jusqu'aux meshes individuels (pas en bloc)
+      else if (brick === 'wall')    { visitWallMeshes(o);              return; }
     }
 
     const depth = depthFrom(o, scene);
     if ((depth >= 2 || o.userData?.animUnit) && isLeafComponent(o)) {
       picked.add(o);
-      // Also check parent brickType — wall meshes (depth 2) live inside the
-      // Walls group (depth 1) which carries brickType 'wall' on the group.
       const parentBrick = o.parent?.userData?.brickType as string | undefined;
       if      (o.layers.isEnabled(1) || o.layers.isEnabled(2)) moveable.push(o);
       else if (parentBrick === 'ceiling' || isCeilingLike(o))   ceiling.push(o);

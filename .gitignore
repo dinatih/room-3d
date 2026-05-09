@@ -6,3 +6,5 @@ screenshots/
 dist/
 draft.md
 media/*.gltf
+.env.local
+.env.*.local

@@ -32,6 +32,8 @@ import { ImmersiveMode }                from '@features/scene/ImmersiveMode';
 import { FloorPlan }                    from '@features/scene/FloorPlan';
 import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
+import { RealWorldLayer, type WorldProvider } from '@features/scene/RealWorldLayer';
+import { SunLight } from '@features/scene/SunLight';
 import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/scene/BuildAnimations';
 import { RenderStyleLayer, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
 
@@ -130,7 +132,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
-    neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true, piersOnly: false, wallsOnly: false,
+    neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true, piersOnly: false, wallsOnly: false, realWorld: false, realSun: false,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -160,7 +162,8 @@ export function Studio() {
     cameraState.invalidate?.();
   }, []);
 
-  const [renderStyle, setRenderStyle] = useState<RenderStyleKey>('default');
+  const [renderStyle,       setRenderStyle]       = useState<RenderStyleKey>('default');
+  const [realWorldProvider, setRealWorldProvider] = useState<WorldProvider>('cesium');
 
   const [buildAnim,  setBuildAnim]  = useState(false);
   const [buildAnim3, setBuildAnim3] = useState(false);
@@ -208,21 +211,23 @@ gl.shadowMap.enabled = true;
         }}
       >
         <ambientLight color={0x8899bb} intensity={0.6} />
-        <directionalLight
-          color={0xfff5e0}
-          position={[500, 700, 400]}
-          intensity={1.8}
-          castShadow
-          shadow-mapSize={[2048, 2048]}
-          shadow-camera-near={1}
-          shadow-camera-far={2000}
-          shadow-camera-left={-600}
-          shadow-camera-right={600}
-          shadow-camera-top={600}
-          shadow-camera-bottom={-600}
-          shadow-bias={-0.0002}
-          shadow-normalBias={0.04}
-        />
+        {layers.realSun ? <SunLight /> : (
+          <directionalLight
+            color={0xfff5e0}
+            position={[500, 700, 400]}
+            intensity={1.8}
+            castShadow
+            shadow-mapSize={[2048, 2048]}
+            shadow-camera-near={1}
+            shadow-camera-far={2000}
+            shadow-camera-left={-600}
+            shadow-camera-right={600}
+            shadow-camera-top={600}
+            shadow-camera-bottom={-600}
+            shadow-bias={-0.0002}
+            shadow-normalBias={0.04}
+          />
+        )}
 
         {/* Contrôleur unifié : synchronise camera.layers avec les toggles UI */}
         <SceneLayerController layers={layers} />
@@ -239,6 +244,7 @@ gl.shadowMap.enabled = true;
         <DevToolsCollector />
         <GlbReveal />
         {renderStyle !== 'default' && <RenderStyleLayer style={renderStyle} />}
+        {layers.realWorld && <RealWorldLayer provider={realWorldProvider} />}
 
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.xray        && <XRayLayer />}
@@ -304,6 +310,7 @@ gl.shadowMap.enabled = true;
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
         lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
         renderStyle={renderStyle} onSetRenderStyle={setRenderStyle}
+        realWorldProvider={realWorldProvider} onSetRealWorldProvider={setRealWorldProvider}
       />
       <AnimationsPanel
         buildAnim={buildAnim}   onStartBuildAnim={start(setBuildAnim)}
