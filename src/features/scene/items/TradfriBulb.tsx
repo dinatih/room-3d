@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/TRÅDFRI Ampoule LED E27 1055 lumen connecté sans fil à variateur d\'intensité-spectre blanc globe.glb';
+const GLB = 'media/TRÅDFRI Ampoule LED E27 1055 lumen connecté sans fil variateur intensité-spectre blanc globe.glb';
 
 export function TradfriBulb({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
