@@ -2,6 +2,9 @@
  * wallData.ts — source unique de vérité pour tous les segments de mur axiaux.
  * wallDefToBoxGeo() permet de convertir un WallDef en BoxGeometry Three.js.
  *
+ * PILLAR_DEFS est la source primaire pour les jonctions structurelles.
+ * WALL_DEFS décrit surtout les pans entre arêtes de piliers, plus les ouvertures.
+ *
  * Building.tsx consomme WALL_DEFS pour le rendu 3D (WZ / WX).
  * floorData.ts en dérive automatiquement SEG_WALLS / SEG_DOORS / SEG_WINDOWS.
  *
@@ -68,72 +71,10 @@ export function wallDefToBoxGeo(d: WallDef): THREE.BufferGeometry {
   return g;
 }
 
-export const WALL_DEFS: WallDef[] = [
-
-  // ── MUR A (ouest) ──────────────────────────────────────────────────────────
-  // A1 : face intérieure séjour (xc = -W/2)
-  { axis: 'z', xc: -W / 2,              z1: 0,                            z2: NICHE_Z_START - NICHE_DEPTH / 2, mat: 'west' },
-  // A2a-outer : paroi arrière niche (3D uniquement, masquée par A1 en 2D)
-  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: 0,                            z2: NICHE_Z_START - NICHE_DEPTH / 2, mat: 'west', segKind: 'none' },
-  // A2a : face intérieure niche
-  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: NICHE_Z_START + NICHE_DEPTH / 2, z2: ROOM_D,     mat: 'west' },
-  // A2b : SDB + couloir (saute les piliers)
-  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: ROOM_D + W,      z2: KITCHEN_Z,         mat: 'west' },
-  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: KITCHEN_Z + W,   z2: BATH_Z_END,         mat: 'west' },
-  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: BATH_Z_END + W,   z2: BATH_Z_END + 70,    mat: 'west' },
-  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: BATH_Z_END + 70 + W, z2: DIAG_CZ - W,    mat: 'west' },
-
-  // ── MUR B (est) ────────────────────────────────────────────────────────────
-  { axis: 'z', xc: ROOM_W + W / 2, z1: 0,    z2: ROOM_D,  mat: 'east' }, // B1 séjour
-  { axis: 'z', xc: ROOM_W + W / 2, z1: -230, z2: -30,     mat: 'east' }, // B2 jardin
-  { axis: 'z', xc: ROOM_W + W / 2, z1: ROOM_D + W, z2: DIAG_AZ - W, mat: 'east' }, // couloir droit
-
-  // ── MUR D (sud, Z=400) ────────────────────────────────────────────────────
-  { axis: 'x', x1: -NICHE_DEPTH,    x2: KITCHEN_X0 - W, zc: ROOM_D + W / 2 },
-  { axis: 'x', x1: KITCHEN_X1 + W,  x2: CORR_WALL_X - W / 2, zc: ROOM_D + W / 2 },
-  // Linteau au-dessus de la porte principale (3D seulement)
-  { axis: 'x', x1: DOOR_START,      x2: DOOR_END + 4,   zc: ROOM_D + W / 2, yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
-  { axis: 'x', x1: DOOR_END + 4,    x2: ROOM_W,         zc: ROOM_D + W / 2 },
-  // Porte principale (2D uniquement)
-  { axis: 'x', x1: DOOR_START, x2: DOOR_END, zc: ROOM_D, segKind: 'door', skip3d: true },
-
-  // ── Cuisine ────────────────────────────────────────────────────────────────
-  { axis: 'z', xc: KITCHEN_X0 - W / 2, z1: ROOM_D + W, z2: KITCHEN_Z },
-  { axis: 'z', xc: KITCHEN_X1 + W / 2, z1: ROOM_D + W, z2: KITCHEN_Z },
-  // Mur nord SDB / fond cuisine (3 morceaux, saute les piliers)
-  { axis: 'x', x1: -NICHE_DEPTH,    x2: KITCHEN_X0 - W,        zc: KITCHEN_Z + W / 2 },
-  { axis: 'x', x1: KITCHEN_X0,      x2: KITCHEN_X1,             zc: KITCHEN_Z + W / 2 },
-  { axis: 'x', x1: KITCHEN_X1 + W,  x2: CORR_WALL_X - W / 2,   zc: KITCHEN_Z + W / 2 },
-
-  // ── Couloir gauche (X=185, Z=460→600) ────────────────────────────────────
-  // Segment avant porte (avec offset CORR_E pour éviter z-fighting dormant)
-  { axis: 'z', xc: CORR_WALL_X, z1: KITCHEN_Z + W,             z2: CORR_DOOR_S - CORR_E },
-  // Segment après porte
-  { axis: 'z', xc: CORR_WALL_X, z1: CORR_DOOR_E + CORR_E,     z2: BATH_Z_END },
-  // Linteau au-dessus de la porte couloir (3D seulement)
-  { axis: 'z', xc: CORR_WALL_X, z1: CORR_DOOR_S - CORR_E, z2: CORR_DOOR_E + CORR_E,
-    yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
-  // Porte couloir SDB (2D uniquement)
-  { axis: 'z', xc: CORR_WALL_X, z1: CORR_DOOR_S, z2: CORR_DOOR_E, segKind: 'door', skip3d: true },
-
-  // ── Mur C (nord, Z=0) ────────────────────────────────────────────────────────
-  // Panneau ouest (fixe)
-  { axis: 'x', x1: 0,          x2: GLASS_START, zc: -WALL_C_T / 2, t: WALL_C_T, mat: 'north' },
-  // Panneau est — 2D plan uniquement (3D inline dans Walls, skip3d car pas de skip3d pour ROOM_W)
-  { axis: 'x', x1: GLASS_END,  x2: ROOM_W,      zc: -WALL_C_T / 2, t: WALL_C_T, mat: 'north', skip3d: true },
-  // Linteau au-dessus de la baie (3D uniquement)
-  { axis: 'x', x1: GLASS_START, x2: GLASS_END,  zc: -WALL_C_T / 2, t: WALL_C_T, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
-
-  // ── Douche ─────────────────────────────────────────────────────────────────
-  { axis: 'z', xc: -NICHE_DEPTH + 70 + W / 2, z1: BATH_Z_END + W,      z2: BATH_Z_END + 70 },
-  { axis: 'x', x1: -NICHE_DEPTH,              x2: -NICHE_DEPTH + 70, zc: BATH_Z_END + 70 + W / 2 },
-
-];
-
 // ── Piliers box ───────────────────────────────────────────────────────────────
 export type PillarDef = { id: string; x: number; z: number; w?: number; d?: number };
 
-export const PILLAR_DEFS: PillarDef[] = [
+export const PILLAR_DEFS = [
   { id: 'corner-nw',   x: -10,                    z: -WALL_C_T / 2, w: 20, d: WALL_C_T },
   { id: 'corner-ne',   x: ROOM_W + W / 2,         z: -WALL_C_T / 2,        d: WALL_C_T },
   { id: 'corner-sw',   x: -NICHE_DEPTH - W / 2,  z: ROOM_D + W / 2 },
@@ -154,4 +95,91 @@ export const PILLAR_DEFS: PillarDef[] = [
   { id: 'shower-sw',   x: -NICHE_DEPTH - W / 2,   z: BATH_Z_END + 70 + W / 2 },
   { id: 'shower-se',   x: 65,                      z: BATH_Z_END + 70 + W / 2 },
   { id: 'garden-e',    x: ROOM_W + W / 2,           z: -230 - W / 2 },
+] as const satisfies readonly PillarDef[];
+
+type PillarId = typeof PILLAR_DEFS[number]['id'];
+const PILLAR_BY_ID = new Map(PILLAR_DEFS.map(p => [p.id, p] as const));
+
+function pillar(id: PillarId) {
+  const def = PILLAR_BY_ID.get(id);
+  if (!def) throw new Error(`Unknown pillar id: ${id}`);
+  return def;
+}
+
+const pX = (id: PillarId) => pillar(id).x;
+const pZ = (id: PillarId) => pillar(id).z;
+const pW = (id: PillarId) => {
+  const p = pillar(id);
+  return 'w' in p ? p.w : W;
+};
+const pD = (id: PillarId) => {
+  const p = pillar(id);
+  return 'd' in p ? p.d : W;
+};
+
+const pWest  = (id: PillarId) => pX(id) - pW(id) / 2;
+const pEast  = (id: PillarId) => pX(id) + pW(id) / 2;
+const pNorth = (id: PillarId) => pZ(id) - pD(id) / 2;
+const pSouth = (id: PillarId) => pZ(id) + pD(id) / 2;
+
+export const WALL_DEFS: WallDef[] = [
+
+  // ── MUR A (ouest) ──────────────────────────────────────────────────────────
+  // A1 : face intérieure séjour.
+  { axis: 'z', xc: pEast('corner-nw') - W / 2, z1: pSouth('corner-nw'), z2: pNorth('niche-beam'), mat: 'west' },
+  // A2a-outer : paroi arrière niche (3D uniquement, masquée par A1 en 2D)
+  { axis: 'z', xc: pX('corner-sw'), z1: pSouth('corner-nw'), z2: pNorth('niche-beam'), mat: 'west', segKind: 'none' },
+  // A2a : face intérieure niche
+  { axis: 'z', xc: pX('corner-sw'), z1: pSouth('niche-beam'), z2: pNorth('corner-sw'), mat: 'west' },
+  // A2b : SDB + couloir (saute les piliers)
+  { axis: 'z', xc: pX('corner-sw'), z1: pSouth('corner-sw'), z2: pNorth('bath-nw'), mat: 'west' },
+  { axis: 'z', xc: pX('corner-sw'), z1: pSouth('bath-nw'), z2: pNorth('shower-nw'), mat: 'west' },
+  { axis: 'z', xc: pX('corner-sw'), z1: pSouth('shower-nw'), z2: pNorth('shower-sw'), mat: 'west' },
+  { axis: 'z', xc: pX('corner-sw'), z1: pSouth('shower-sw'), z2: pNorth('diag-sw'), mat: 'west' },
+
+  // ── MUR B (est) ────────────────────────────────────────────────────────────
+  { axis: 'z', xc: pX('corner-ne'), z1: pSouth('corner-ne'), z2: pNorth('corner-se'), mat: 'east' }, // B1 séjour
+  { axis: 'z', xc: pX('corner-ne'), z1: pSouth('garden-e'), z2: pNorth('corner-ne'), mat: 'east' }, // B2 jardin
+  { axis: 'z', xc: pX('corner-ne'), z1: pSouth('corner-se'), z2: pNorth('diag-ne'), mat: 'east' }, // couloir droit
+
+  // ── MUR D (sud, Z=400) ────────────────────────────────────────────────────
+  { axis: 'x', x1: pEast('corner-sw'), x2: pWest('kitchen-sw'), zc: pZ('corner-sw') },
+  { axis: 'x', x1: pEast('kitchen-se'), x2: pWest('corr-s'), zc: pZ('corner-sw') },
+  // Linteau au-dessus de la porte principale (3D seulement)
+  { axis: 'x', x1: DOOR_START, x2: DOOR_END + 4, zc: pZ('corner-sw'), yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
+  { axis: 'x', x1: DOOR_END + 4, x2: pWest('corner-se'), zc: pZ('corner-sw') },
+  // Porte principale (2D uniquement)
+  { axis: 'x', x1: DOOR_START, x2: DOOR_END, zc: ROOM_D, segKind: 'door', skip3d: true },
+
+  // ── Cuisine ────────────────────────────────────────────────────────────────
+  { axis: 'z', xc: pX('kitchen-sw'), z1: pSouth('kitchen-sw'), z2: pNorth('kitchen-nw') },
+  { axis: 'z', xc: pX('kitchen-se'), z1: pSouth('kitchen-se'), z2: pNorth('kitchen-ne') },
+  // Mur nord SDB / fond cuisine (3 morceaux, saute les piliers)
+  { axis: 'x', x1: pEast('bath-nw'), x2: pWest('kitchen-nw'), zc: pZ('bath-nw') },
+  { axis: 'x', x1: pEast('kitchen-nw'), x2: pWest('kitchen-ne'), zc: pZ('bath-nw') },
+  { axis: 'x', x1: pEast('kitchen-ne'), x2: pWest('corr-n'), zc: pZ('bath-nw') },
+
+  // ── Couloir gauche (X=185, Z=460→600) ────────────────────────────────────
+  // Segment avant porte (avec offset CORR_E pour éviter z-fighting dormant)
+  { axis: 'z', xc: pX('corr-n'), z1: pSouth('corr-n'), z2: CORR_DOOR_S - CORR_E },
+  // Segment après porte
+  { axis: 'z', xc: pX('corr-n'), z1: CORR_DOOR_E + CORR_E, z2: pNorth('corr-bath') },
+  // Linteau au-dessus de la porte couloir (3D seulement)
+  { axis: 'z', xc: pX('corr-n'), z1: CORR_DOOR_S - CORR_E, z2: CORR_DOOR_E + CORR_E,
+    yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
+  // Porte couloir SDB (2D uniquement)
+  { axis: 'z', xc: pX('corr-n'), z1: CORR_DOOR_S, z2: CORR_DOOR_E, segKind: 'door', skip3d: true },
+
+  // ── Mur C (nord, Z=0) ────────────────────────────────────────────────────────
+  // Panneau ouest (fixe)
+  { axis: 'x', x1: pEast('corner-nw'), x2: GLASS_START, zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north' },
+  // Panneau est — 2D plan uniquement (3D inline dans Walls, skip3d car pas de skip3d pour ROOM_W)
+  { axis: 'x', x1: GLASS_END, x2: pWest('corner-ne'), zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north', skip3d: true },
+  // Linteau au-dessus de la baie (3D uniquement)
+  { axis: 'x', x1: GLASS_START, x2: GLASS_END, zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
+
+  // ── Douche ─────────────────────────────────────────────────────────────────
+  { axis: 'z', xc: pX('shower-ne'), z1: pSouth('shower-ne'), z2: pNorth('shower-se') },
+  { axis: 'x', x1: pEast('shower-sw'), x2: pWest('shower-se'), zc: pZ('shower-sw') },
+
 ];

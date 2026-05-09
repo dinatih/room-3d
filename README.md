@@ -2,7 +2,7 @@
 
 > **TL;DR** — Visualisation 3D en temps réel de mon appartement, construite depuis zéro (~300 commits). Démarré comme un prototype LEGO en fichier unique, évolué vers ES Modules + Three.js, puis migré vers React Three Fiber. Projet personnel et portfolio technique documenté commit par commit.
 
-→ **[Demo live](https://dinatih.github.io/room-3d/lego-room.html)**
+→ **[Demo live](https://dinatih.github.io/room-3d/)**
 
 ---
 
@@ -27,16 +27,35 @@ Un outil que j'utilise **vraiment au quotidien** : planifier les positions des m
 
 ```
 room-3d/
+├── index.html              # Point d'entrée Vite
+├── vite.config.ts          # Config Vite, aliases TS, build
+├── tsconfig.json           # TypeScript strict + paths
 ├── src/
-│   ├── types.ts              # SceneItemProps (interface commune items/)
-│   ├── utils/                # useGLTFClone, glbUtils
-│   └── components/scene/
-│       ├── Studio.tsx        # Canvas R3F : lights, état global UI
-│       ├── structure/        # Murs, sol, portes, cuisine…
-│       ├── items/            # ~50 composants autonomes (1 objet = 1 fichier)
-│       ├── registry.ts       # id → composant items/ (preview inventaire)
-│       └── inventoryData.ts  # ~120 items avec dims, catégorie, scenePos…
-└── media/                # Modèles GLB (compressés Draco)
+│   ├── main.tsx            # Monte <Studio /> et configure Draco
+│   ├── types.ts            # Interfaces communes Item / SceneItemProps
+│   ├── index.css           # Reset global minimal
+│   └── features/
+│       ├── scene/
+│       │   ├── Studio.tsx          # Racine R3F : Canvas, lights, état UI global
+│       │   ├── Building.tsx        # Murs, sol, portes, miroirs
+│       │   ├── Placements.tsx      # Placement des objets dans l'appartement
+│       │   ├── CameraController.tsx
+│       │   ├── Minimap.tsx
+│       │   ├── FloorPlan.tsx
+│       │   ├── HoverMenu.tsx
+│       │   ├── RenderStyleLayer.tsx
+│       │   ├── items/              # Composants autonomes par objet
+│       │   ├── floorData.ts        # Données partagées plan/minimap
+│       │   ├── wallData.ts
+│       │   └── config.ts           # Dimensions, layers, constantes scène
+│       └── inventory/
+│           ├── Inventory.tsx
+│           ├── InventoryPreview.tsx
+│           ├── inventoryData.ts    # Objets, catégories, espaces de rangement
+│           └── previewRegistry.ts  # id → composant de preview
+├── media/                  # Modèles GLB utilisés par la scène
+└── public/
+    └── draco/              # Décodeurs Draco servis statiquement
 ```
 
 ---
@@ -44,7 +63,9 @@ room-3d/
 ## Lancement
 
 ```bash
-npm install && npm run dev   # http://localhost:5173
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # build de production dans dist/
 ```
 
 ---
