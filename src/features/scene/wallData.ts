@@ -81,7 +81,7 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: ROOM_D + W,      z2: KITCHEN_Z,         mat: 'west' },
   { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: KITCHEN_Z + W,   z2: SDB_Z_END,         mat: 'west' },
   { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: SDB_Z_END + W,   z2: SDB_Z_END + 70,    mat: 'west' },
-  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: SDB_Z_END + 70 + W, z2: DIAG_CZ,        mat: 'west' },
+  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: SDB_Z_END + 70 + W, z2: DIAG_CZ - W,    mat: 'west' },
 
   // ── MUR B (est) ────────────────────────────────────────────────────────────
   { axis: 'z', xc: ROOM_W + W / 2, z1: 0,    z2: ROOM_D,  mat: 'east' }, // B1 séjour
@@ -137,7 +137,7 @@ export const PILLAR_DEFS: PillarDef[] = [
   { id: 'nw',           x: -10,                    z: -WALL_C_T / 2, w: 20, d: WALL_C_T },
   { id: 'sw',           x: -NICHE_DEPTH - W / 2,  z: ROOM_D + W / 2 },
   { id: 'ne-diag',     x: ROOM_W + W / 2,          z: DIAG_AZ - W / 2 },
-  { id: 'sw-diag',     x: -NICHE_DEPTH - W / 2,   z: DIAG_CZ },
+  { id: 'sw-diag',     x: -NICHE_DEPTH - W / 2,   z: DIAG_CZ - 5 },
   { id: 'kitchen-l',   x: KITCHEN_X0 - W / 2,     z: ROOM_D + W / 2 },
   { id: 'kitchen-r',   x: KITCHEN_X1 + W / 2,     z: ROOM_D + W / 2 },
   { id: 'se',           x: ROOM_W + W / 2,          z: ROOM_D + W / 2 },

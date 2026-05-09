@@ -188,7 +188,9 @@ function PillarLabels() {
     group.name = 'pillar-labels';
     const box = new THREE.Box3();
 
-    scene.traverse(obj => {
+    // Traverse only the main walls group, not neighbor clones
+    const root = wallsGroupRef.current ?? scene;
+    root.traverse(obj => {
       const mesh = obj as THREE.Mesh;
       if (!mesh.isMesh || mesh.userData?.type !== 'pillar') return;
       const id = mesh.userData.id as string;
@@ -238,9 +240,9 @@ export function Walls({ piersOnly = false, wallsOnly = false, roomWDelta = 0 }: 
       DIAG_AZ + d * cosθ + DIAG_DEPTH * pZ,
     ];
 
-    // Section NE — rectangulaire : épaisseur uniforme, face ext à eP(0)
-    const ne = makeExtrudeGeo(
-      [iP(0), iP(DIAG_ENTRY_S), eP(DIAG_ENTRY_S), eP(0)],
+    // Pilier NE — extrémité NE du mur diagonal (remplace l'ancienne section NE de W cm)
+    const nePillar = makeExtrudeGeo(
+      [iP(0), iP(W), eP(W), eP(0)],
       WALL_H,
     );
 
@@ -251,9 +253,15 @@ export function Walls({ piersOnly = false, wallsOnly = false, roomWDelta = 0 }: 
       DOOR_H,
     );
 
-    // Section SW — rectangulaire : épaisseur uniforme, face ext à eP(diagLen)
+    // Section SW — tronquée de W cm côté SW pour le pilier
     const sw = makeExtrudeGeo(
-      [iP(DIAG_ENTRY_E), iP(DIAG_LEN), eP(DIAG_LEN), eP(DIAG_ENTRY_E)],
+      [iP(DIAG_ENTRY_E), iP(DIAG_LEN - W), eP(DIAG_LEN - W), eP(DIAG_ENTRY_E)],
+      WALL_H,
+    );
+
+    // Pilier SW — extrémité SW du mur diagonal
+    const swPillar = makeExtrudeGeo(
+      [iP(DIAG_LEN - W), iP(DIAG_LEN), eP(DIAG_LEN), eP(DIAG_LEN - W)],
       WALL_H,
     );
 
@@ -293,7 +301,7 @@ export function Walls({ piersOnly = false, wallsOnly = false, roomWDelta = 0 }: 
       WALL_H,
     );
 
-    return { ne, linteau, sw, diagPillar, diagPillarSW };
+    return { nePillar, linteau, sw, swPillar, diagPillar, diagPillarSW };
   }, []);
 
   return (
@@ -311,6 +319,10 @@ export function Walls({ piersOnly = false, wallsOnly = false, roomWDelta = 0 }: 
           userData={{ type: 'pillar', id: 'ne-diag-kite' }} />
         <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
           userData={{ type: 'pillar', id: 'sw-diag-kite' }} />
+        <mesh geometry={diagGeos.nePillar} material={wallMat} castShadow receiveShadow
+          userData={{ type: 'pillar', id: 'ne-diag-end' }} />
+        <mesh geometry={diagGeos.swPillar} material={wallMat} castShadow receiveShadow
+          userData={{ type: 'pillar', id: 'sw-diag-end' }} />
         {/* Mur C NE (suit roomWDelta) */}
         <P w={W} h={WALL_H} d={WALL_C_T}
           x={ROOM_W + roomWDelta + W / 2} y={WALL_H / 2} z={-WALL_C_T / 2}
@@ -334,7 +346,6 @@ export function Walls({ piersOnly = false, wallsOnly = false, roomWDelta = 0 }: 
         </mesh>
 
         {/* ── Mur diagonal ─────────────────────────────────────────────────── */}
-        <mesh geometry={diagGeos.ne}      material={wallMatDiag} castShadow receiveShadow />
         <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow />
         <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow />
       </group>
