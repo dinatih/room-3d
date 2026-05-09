@@ -34,10 +34,10 @@ export const SDB_Z_END = KITCHEN_Z + 150;
 // (angle entre mur B et le mur diagonal, mesuré à l'intérieur de la pièce)
 // Mesure sur place : 118–120°  |  modèle actuel : 122.5°
 // Formule : DIAG_CZ = DIAG_AZ − (DIAG_AX − DIAG_CX) / tan(α)
-export const DIAG_ANGLE_DEG = 122.5;
+export const DIAG_ANGLE_DEG = 120;
 const _diagAngle = DIAG_ANGLE_DEG * (Math.PI / 180);
 export const DIAG_AX = ROOM_W;       // 316 — point A : coin NE (jonction mur B)
-export const DIAG_AZ = 530;          // Z du point A
+export const DIAG_AZ = 542;          // Z du point A
 export const DIAG_CX = -NICHE_DEPTH; // -10 — point C : côté niche ouest
 export const DIAG_CZ = DIAG_AZ - (DIAG_AX - DIAG_CX) / Math.tan(_diagAngle); // ≈727.5
 
