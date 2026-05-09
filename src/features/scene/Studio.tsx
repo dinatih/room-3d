@@ -7,6 +7,7 @@ import {
   ACESFilmicToneMapping, PCFSoftShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
+  DefaultLoadingManager,
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
@@ -96,6 +97,32 @@ function ShadowController({ enabled }: { enabled: boolean }) {
   return null;
 }
 
+function LoadingProgress() {
+  useEffect(() => {
+    const bar   = document.getElementById('loading-bar');
+    const cover = document.getElementById('loading');
+    let done = false;
+
+    DefaultLoadingManager.onProgress = (_url, loaded, total) => {
+      if (bar && total > 0) bar.style.width = `${(loaded / total) * 100}%`;
+    };
+    DefaultLoadingManager.onLoad = () => {
+      if (done) return;
+      done = true;
+      if (bar) bar.style.width = '100%';
+      if (cover) {
+        cover.classList.add('hidden');
+        setTimeout(() => cover.remove(), 450);
+      }
+    };
+    return () => {
+      DefaultLoadingManager.onProgress = () => {};
+      DefaultLoadingManager.onLoad    = () => {};
+    };
+  }, []);
+  return null;
+}
+
 export function Studio() {
   const [furniture, setFurniture] = useState<FurnitureState>({
     eastGlassDoor: false, entryDoor: false, livingDoor: false, bathroomDoor: false,
@@ -159,6 +186,7 @@ export function Studio() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      <LoadingProgress />
       <Canvas
         style={{ width: '100%', height: '100%' }}
         frameloop="demand"
