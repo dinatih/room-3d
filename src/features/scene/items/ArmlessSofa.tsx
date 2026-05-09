@@ -25,7 +25,7 @@ export function ArmlessSofa({ onSize }: SceneItemProps) {
       <mesh geometry={seatGeo} material={redMat}
         position={[0, SEAT_H / 2, 0]} castShadow receiveShadow />
       <mesh geometry={backGeo} material={redMat}
-        position={[D / 2 - BACK_T / 2, H / 2, 0]} castShadow />
+        position={[D / 2 - BACK_T / 2 - 0.5, H / 2, 0]} castShadow />
     </group>
   );
 }

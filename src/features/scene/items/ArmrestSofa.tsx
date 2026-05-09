@@ -26,7 +26,7 @@ export function ArmrestSofa({ onSize }: SceneItemProps) {
       <mesh geometry={seatGeo} material={redMat}
         position={[0, SEAT_H / 2, 0]} castShadow receiveShadow />
       <mesh geometry={backGeo} material={redMat}
-        position={[D / 2 - BACK_T / 2, H / 2, 0]} castShadow />
+        position={[D / 2 - BACK_T / 2 - 0.5, H / 2, 0]} castShadow />
       {([-1, 1] as const).map(s => (
         <mesh key={s} geometry={armGeo} material={redMat}
           position={[0, ARM_H / 2, s * (W / 2 - ARM_W / 2)]} castShadow />
