@@ -3,24 +3,21 @@ import { useThree } from '@react-three/fiber';
 import { EffectComposer, HueSaturation, Pixelation, DotScreen } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import {
-  ACESFilmicToneMapping, ReinhardToneMapping, NoToneMapping, AgXToneMapping,
-  MeshToonMaterial, MeshNormalMaterial,
+  ACESFilmicToneMapping, NoToneMapping,
+  MeshToonMaterial,
   DataTexture, RedFormat, NearestFilter,
   Color, Mesh, type Material,
 } from 'three';
 
 export type RenderStyleKey =
-  | 'default' | 'reinhard' | 'agx' | 'linear'
-  | 'toon'    | 'normal'
+  | 'default' | 'linear'
+  | 'toon'
   | 'grayscale' | 'pixelate' | 'dotscreen';
 
 export const RENDER_STYLES: { key: RenderStyleKey; label: string }[] = [
   { key: 'default',   label: 'ACES Filmic' },
-  { key: 'reinhard',  label: 'Reinhardt'   },
-  { key: 'agx',       label: 'AgX'         },
   { key: 'linear',    label: 'Linéaire'    },
   { key: 'toon',      label: 'Cel (Toon)'  },
-  { key: 'normal',    label: 'Normales'    },
   { key: 'grayscale', label: 'N&B'         },
   { key: 'pixelate',  label: 'Pixels'      },
   { key: 'dotscreen', label: 'Trame'       },
@@ -28,17 +25,14 @@ export const RENDER_STYLES: { key: RenderStyleKey; label: string }[] = [
 
 const TM: Record<RenderStyleKey, THREE.ToneMapping> = {
   default:   ACESFilmicToneMapping,
-  reinhard:  ReinhardToneMapping,
-  agx:       AgXToneMapping,
   linear:    NoToneMapping,
   toon:      ACESFilmicToneMapping,
-  normal:    NoToneMapping,
   grayscale: ACESFilmicToneMapping,
   pixelate:  ACESFilmicToneMapping,
   dotscreen: ACESFilmicToneMapping,
 };
 
-const MAT_SWAP = new Set<RenderStyleKey>(['toon', 'normal']);
+const MAT_SWAP = new Set<RenderStyleKey>(['toon']);
 
 // ── Tone mapping sync ─────────────────────────────────────────────────────────
 
@@ -74,8 +68,6 @@ function MaterialSwap({ style }: { style: RenderStyleKey }) {
   const created = useRef<Material[]>([]);
 
   useEffect(() => {
-    const normalMat = style === 'normal' ? new MeshNormalMaterial() : null;
-
     scene.traverse(obj => {
       if (!(obj instanceof Mesh)) return;
       const orig = Array.isArray(obj.material) ? obj.material[0] : obj.material;
@@ -84,19 +76,14 @@ function MaterialSwap({ style }: { style: RenderStyleKey }) {
 
       saved.current.set(obj, obj.material);
 
-      if (style === 'normal') {
-        obj.material = normalMat!;
-      } else {
-        const color = (orig as any).color
-          ? new Color().copy((orig as any).color)
-          : new Color(0xaabbcc);
-        const m = new MeshToonMaterial({ color, gradientMap: gradMap });
-        created.current.push(m);
-        obj.material = m;
-      }
+      const color = (orig as any).color
+        ? new Color().copy((orig as any).color)
+        : new Color(0xaabbcc);
+      const m = new MeshToonMaterial({ color, gradientMap: gradMap });
+      created.current.push(m);
+      obj.material = m;
     });
 
-    if (normalMat) created.current.push(normalMat);
     invalidate();
 
     return () => {

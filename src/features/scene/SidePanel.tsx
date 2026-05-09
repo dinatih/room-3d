@@ -343,6 +343,7 @@ export interface LayerState {
 
   skeleton:     boolean;
   ceiling:      boolean;
+  doors:        boolean;
   redWalls:     boolean;
   wallEdges:    boolean;
   lidar:        boolean;
@@ -458,6 +459,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
           {layerBtn('gray',   'Murs seuls',    'wallsOnly')}
           {layerBtn('peach',  'Équipements', 'equipment')}
+          {layerBtn('peach',  'Portes',      'doors')}
           {layerBtn('purple', 'Mobilier',    'furniture')}
           {layerBtn('blue',   'Voisins',     'neighbors')}
           {layerBtn('cyan',   'X-Ray',       'xray')}

@@ -131,7 +131,7 @@ export function Studio() {
   });
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
-    structure: true, equipment: true, furniture: true,
+    structure: true, equipment: true, furniture: true, doors: true,
     neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true, pillarsOnly: false, wallsOnly: false, realWorld: false, realSun: false,
   });
 
@@ -264,7 +264,7 @@ gl.shadowMap.enabled = true;
            */}
           <Walls pillarsOnly={layers.pillarsOnly} wallsOnly={layers.wallsOnly} />
           <Floor showCeiling={layers.ceiling} />
-          <DoorsPlaced />
+          <group visible={layers.doors}><DoorsPlaced /></group>
           <Walker    showSkeleton={layers.skeleton} />
           <WalkerRed showSkeleton={layers.skeleton} />
 
