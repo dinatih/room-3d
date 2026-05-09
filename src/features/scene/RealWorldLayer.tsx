@@ -1,10 +1,5 @@
 /**
- * RealWorldLayer.tsx — 3D Tiles géoréférencés autour du studio
- * (what3words ///vegans.leap.camp).
- *
- * Providers supportés (switcher dans Affichage) :
- *   'google'  — Google Photorealistic 3D Tiles (VITE_GOOGLE_MAPS_API_KEY)
- *   'cesium'  — Cesium Ion OSM Buildings (VITE_CESIUM_ION_TOKEN + VITE_CESIUM_ASSET_ID)
+ * RealWorldLayer.tsx — Google Photorealistic 3D Tiles géoréférencés autour du studio.
  *
  * Coordonnées GPS :
  *   VITE_STUDIO_LAT / LNG  — decimal degrees
@@ -18,9 +13,7 @@ import { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { Group, Matrix4, PerspectiveCamera, Color, MathUtils } from 'three';
 import { TilesRenderer, WGS84_ELLIPSOID } from '3d-tiles-renderer/three';
-import { GoogleCloudAuthPlugin, CesiumIonAuthPlugin } from '3d-tiles-renderer/core/plugins';
-
-export type WorldProvider = 'google' | 'cesium';
+import { GoogleCloudAuthPlugin } from '3d-tiles-renderer/core/plugins';
 
 const GOOGLE_TILES_URL = 'https://tile.googleapis.com/v1/3dtiles/root.json';
 const W3W_ADDRESS      = 'vegans.leap.camp';
@@ -68,46 +61,23 @@ function buildTileTransform(lat: number, lng: number, alt: number, azDeg: number
     .multiply(ecefToEnu);
 }
 
-// ── Création du TilesRenderer selon le provider ───────────────────────────────
-
-function createTiles(provider: WorldProvider): TilesRenderer | null {
-  if (provider === 'google') {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
-    if (!apiKey) {
-      console.error('[RealWorldLayer] VITE_GOOGLE_MAPS_API_KEY manquante dans .env.local');
-      return null;
-    }
-    const t = new TilesRenderer(GOOGLE_TILES_URL);
-    t.registerPlugin(new GoogleCloudAuthPlugin({ apiToken: apiKey, autoRefreshToken: true }));
-    return t;
-  }
-
-  // Cesium Ion
-  const token   = import.meta.env.VITE_CESIUM_ION_TOKEN ?? '';
-  const assetId = import.meta.env.VITE_CESIUM_ASSET_ID  ?? '96188';
-  if (!token) {
-    console.error('[RealWorldLayer] VITE_CESIUM_ION_TOKEN manquante dans .env.local');
-    return null;
-  }
-  const endpointUrl = `https://api.cesium.com/v1/assets/${assetId}/endpoint`;
-  const t = new TilesRenderer(endpointUrl);
-  t.registerPlugin(new CesiumIonAuthPlugin({ apiToken: token }));
-  return t;
-}
-
 // ── Composant ─────────────────────────────────────────────────────────────────
 
-interface Props { provider: WorldProvider }
-
-export function RealWorldLayer({ provider }: Props) {
+export function RealWorldLayer() {
   const { gl, camera, scene, invalidate } = useThree();
   const tilesRef = useRef<TilesRenderer | null>(null);
   const groupRef = useRef<Group>(null!);
 
   useEffect(() => {
-    const azDeg  = parseFloat(import.meta.env.VITE_STUDIO_AZ ?? '90');
-    const tiles  = createTiles(provider);
-    if (!tiles) return;
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
+    if (!apiKey) {
+      console.error('[RealWorldLayer] VITE_GOOGLE_MAPS_API_KEY manquante dans .env.local');
+      return;
+    }
+
+    const azDeg = parseFloat(import.meta.env.VITE_STUDIO_AZ ?? '90');
+    const tiles = new TilesRenderer(GOOGLE_TILES_URL);
+    tiles.registerPlugin(new GoogleCloudAuthPlugin({ apiToken: apiKey, autoRefreshToken: true }));
 
     let alive = true;
     const cam     = camera as PerspectiveCamera;
@@ -152,7 +122,7 @@ export function RealWorldLayer({ provider }: Props) {
         tiles.dispose();
       }
     };
-  }, [provider, camera, gl, scene, invalidate]);
+  }, [camera, gl, scene, invalidate]);
 
   useFrame(() => {
     tilesRef.current?.update();

@@ -11,7 +11,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { RENDER_STYLES, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
-import { type WorldProvider } from '@features/scene/RealWorldLayer';
 import { solarPosition } from '@features/scene/SunLight';
 
 const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
@@ -372,11 +371,9 @@ export interface SidePanelProps2 extends SidePanelProps {
   onToggleLidarOpacity:    () => void;
   renderStyle:             RenderStyleKey;
   onSetRenderStyle:        (key: RenderStyleKey) => void;
-  realWorldProvider:       WorldProvider;
-  onSetRealWorldProvider:  (p: WorldProvider) => void;
 }
 
-export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity, renderStyle, onSetRenderStyle, realWorldProvider, onSetRealWorldProvider }: SidePanelProps2) {
+export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity, renderStyle, onSetRenderStyle }: SidePanelProps2) {
   const [showViews,     setShowViews]     = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
@@ -474,25 +471,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('red', 'Murs rouges', 'redWalls')}
           {layerBtn('red', 'Arêtes murs', 'wallEdges')}
           {layerBtn('teal', 'Monde réel 🌍', 'realWorld')}
-          {layers.realWorld && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '4px 8px 5px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ color: '#555', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.4px', flexShrink: 0 }}>Source</span>
-              {(['cesium', 'google'] as const).map(p => {
-                const active = realWorldProvider === p;
-                return (
-                  <button key={p} onClick={() => onSetRealWorldProvider(p)} style={{
-                    background: active ? 'rgba(66,220,220,0.2)' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${active ? 'rgba(66,220,220,0.55)' : 'rgba(255,255,255,0.10)'}`,
-                    borderRadius: 4, padding: '2px 7px',
-                    color: active ? '#44ddcc' : '#666',
-                    fontSize: 10, cursor: 'pointer', whiteSpace: 'nowrap',
-                  }}>
-                    {p === 'google' ? 'Google' : 'Cesium'}
-                  </button>
-                );
-              })}
-            </div>
-          )}
           {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
           {sunInfo && (
             <div style={{ padding: '3px 12px 5px', fontSize: 10, color: '#ffaa44', borderTop: '1px solid rgba(255,255,255,0.06)', opacity: 0.85 }}>

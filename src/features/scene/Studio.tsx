@@ -32,7 +32,7 @@ import { ImmersiveMode }                from '@features/scene/ImmersiveMode';
 import { FloorPlan }                    from '@features/scene/FloorPlan';
 import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
-import { RealWorldLayer, type WorldProvider } from '@features/scene/RealWorldLayer';
+import { RealWorldLayer } from '@features/scene/RealWorldLayer';
 import { SunLight } from '@features/scene/SunLight';
 import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/scene/BuildAnimations';
 import { RenderStyleLayer, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
@@ -162,8 +162,7 @@ export function Studio() {
     cameraState.invalidate?.();
   }, []);
 
-  const [renderStyle,       setRenderStyle]       = useState<RenderStyleKey>('default');
-  const [realWorldProvider, setRealWorldProvider] = useState<WorldProvider>('cesium');
+  const [renderStyle, setRenderStyle] = useState<RenderStyleKey>('default');
 
   const [buildAnim,  setBuildAnim]  = useState(false);
   const [buildAnim3, setBuildAnim3] = useState(false);
@@ -244,7 +243,7 @@ gl.shadowMap.enabled = true;
         <DevToolsCollector />
         <GlbReveal />
         {renderStyle !== 'default' && <RenderStyleLayer style={renderStyle} />}
-        {layers.realWorld && <RealWorldLayer provider={realWorldProvider} />}
+        {layers.realWorld && <RealWorldLayer />}
 
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.xray        && <XRayLayer />}
@@ -310,7 +309,6 @@ gl.shadowMap.enabled = true;
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
         lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
         renderStyle={renderStyle} onSetRenderStyle={setRenderStyle}
-        realWorldProvider={realWorldProvider} onSetRealWorldProvider={setRealWorldProvider}
       />
       <AnimationsPanel
         buildAnim={buildAnim}   onStartBuildAnim={start(setBuildAnim)}
