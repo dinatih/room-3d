@@ -25,10 +25,6 @@ jobs:
         run: npm run build
         env:
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
-          VITE_STUDIO_LAT: ${{ secrets.VITE_STUDIO_LAT }}
-          VITE_STUDIO_LNG: ${{ secrets.VITE_STUDIO_LNG }}
-          VITE_STUDIO_ALT: ${{ secrets.VITE_STUDIO_ALT }}
-          VITE_STUDIO_AZ: ${{ secrets.VITE_STUDIO_AZ }}
 
       - name: Copy media into dist
         run: cp -r media dist/media
