@@ -33,6 +33,7 @@ import { FloorPlan }                    from '@features/scene/FloorPlan';
 import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/scene/BuildAnimations';
+import { RenderStyleLayer, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
 
 import {
   ROOM_W,
@@ -159,6 +160,8 @@ export function Studio() {
     cameraState.invalidate?.();
   }, []);
 
+  const [renderStyle, setRenderStyle] = useState<RenderStyleKey>('default');
+
   const [buildAnim,  setBuildAnim]  = useState(false);
   const [buildAnim3, setBuildAnim3] = useState(false);
   const [buildAnim4, setBuildAnim4] = useState(false);
@@ -235,6 +238,7 @@ gl.shadowMap.enabled = true;
         <HoverRaycaster />
         <DevToolsCollector />
         <GlbReveal />
+        {renderStyle !== 'default' && <RenderStyleLayer style={renderStyle} />}
 
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.xray        && <XRayLayer />}
@@ -299,6 +303,7 @@ gl.shadowMap.enabled = true;
         onOpenInventory={() => setShowInventory(true)}
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
         lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
+        renderStyle={renderStyle} onSetRenderStyle={setRenderStyle}
       />
       <AnimationsPanel
         buildAnim={buildAnim}   onStartBuildAnim={start(setBuildAnim)}

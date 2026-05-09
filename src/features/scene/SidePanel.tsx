@@ -10,6 +10,7 @@
  */
 import { useState, useCallback } from 'react';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
+import { RENDER_STYLES, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -357,14 +358,16 @@ export interface SidePanelProps {
 export type LidarMode = 0 | 1 | 2 | 3;
 
 export interface SidePanelProps2 extends SidePanelProps {
-  onOpenInventory:  () => void;
-  lidarMode:        LidarMode;
-  onCycleLidar:     () => void;
-  lidarOpacity:     number;
+  onOpenInventory:      () => void;
+  lidarMode:            LidarMode;
+  onCycleLidar:         () => void;
+  lidarOpacity:         number;
   onToggleLidarOpacity: () => void;
+  renderStyle:          RenderStyleKey;
+  onSetRenderStyle:     (key: RenderStyleKey) => void;
 }
 
-export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity }: SidePanelProps2) {
+export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity, renderStyle, onSetRenderStyle }: SidePanelProps2) {
   const [showViews,     setShowViews]     = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
 
@@ -406,6 +409,29 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
 
         {/* ── Affichage ── */}
         <Group emoji="👁" title="Affichage">
+          <div style={{ padding: '6px 8px 6px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 5 }}>🎨 Rendu</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+              {RENDER_STYLES.map(({ key, label }) => {
+                const active = renderStyle === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => onSetRenderStyle(key)}
+                    style={{
+                      background: active ? 'rgba(100,150,255,0.25)' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${active ? 'rgba(100,150,255,0.6)' : 'rgba(255,255,255,0.10)'}`,
+                      borderRadius: 4, padding: '3px 6px',
+                      color: active ? '#88aaff' : '#888',
+                      fontSize: 10, cursor: 'pointer', whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           {layerBtn('green',  'Structure',   'structure', true)}
           {layerBtn('gray',   'Piliers seuls', 'piersOnly')}
           {layerBtn('gray',   'Murs seuls',    'wallsOnly')}
