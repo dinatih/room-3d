@@ -319,10 +319,7 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
           userData={{ type: 'pillar', id: 'diag-ne-end' }} />
         <mesh geometry={diagGeos.swPillar} material={wallMat} castShadow receiveShadow
           userData={{ type: 'pillar', id: 'diag-sw-end' }} />
-        {/* Mur C NE */}
-        <P w={W} h={WALL_H} d={WALL_C_T}
-          x={ROOM_W + W / 2} y={WALL_H / 2} z={-WALL_C_T / 2}
-          userData={{ type: 'pillar', id: 'corner-ne' }} />
+
       </group>
 
       {/* ── Murs ─────────────────────────────────────────────────────────────── */}

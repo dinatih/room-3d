@@ -135,6 +135,7 @@ export type PillarDef = { id: string; x: number; z: number; w?: number; d?: numb
 
 export const PILLAR_DEFS: PillarDef[] = [
   { id: 'corner-nw',   x: -10,                    z: -WALL_C_T / 2, w: 20, d: WALL_C_T },
+  { id: 'corner-ne',   x: ROOM_W + W / 2,         z: -WALL_C_T / 2,        d: WALL_C_T },
   { id: 'corner-sw',   x: -NICHE_DEPTH - W / 2,  z: ROOM_D + W / 2 },
   { id: 'diag-ne',     x: ROOM_W + W / 2,          z: DIAG_AZ - W / 2 },
   { id: 'diag-sw',     x: -NICHE_DEPTH - W / 2,   z: DIAG_CZ - 5 },
