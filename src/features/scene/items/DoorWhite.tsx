@@ -3,7 +3,7 @@
  *
  * Variantes :
  *   DoorLiving — charnière droite (+X), ouvre -90° (côté séjour)
- *   DoorSdb    — charnière gauche (-X), ouvre +90° (côté couloir)
+ *   DoorBath    — charnière gauche (-X), ouvre +90° (côté couloir)
  */
 import { useRef, useLayoutEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -120,7 +120,7 @@ export function DoorLiving({ actionState, onSize }: SceneItemProps) {
 }
 
 /** Porte SDB — charnière gauche, ouvre +90° vers la SDB */
-export function DoorSdb({ actionState, onSize }: SceneItemProps) {
+export function DoorBath({ actionState, onSize }: SceneItemProps) {
   return (
     <DoorImpl
       actionKey="bathroom-door-toggle"

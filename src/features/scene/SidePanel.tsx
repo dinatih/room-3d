@@ -348,7 +348,7 @@ export interface LayerState {
   lidar:        boolean;
   lights:       boolean;
   shadows:      boolean;
-  piersOnly:    boolean;
+  pillarsOnly:    boolean;
   wallsOnly:    boolean;
   realWorld:    boolean;
   realSun:      boolean;
@@ -455,7 +455,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
             </div>
           </div>
           {layerBtn('green',  'Structure',   'structure', true)}
-          {layerBtn('gray',   'Piliers seuls', 'piersOnly')}
+          {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
           {layerBtn('gray',   'Murs seuls',    'wallsOnly')}
           {layerBtn('peach',  'Équipements', 'equipment')}
           {layerBtn('purple', 'Mobilier',    'furniture')}

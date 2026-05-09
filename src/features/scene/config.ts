@@ -28,7 +28,7 @@ export const GLASS_END   = 250;   // 300 - 50 = cm 250
 export const GLASS_TOP_Y = 210;   // hauteur allège mur C (baie vitrée)
 
 // Corridor / SDB boundaries
-export const SDB_Z_END = KITCHEN_Z + 150;
+export const BATH_Z_END = KITCHEN_Z + 150;
 
 // Mur diagonal bâtiment — paramètre physique unique : angle intérieur au coin A
 // (angle entre mur B et le mur diagonal, mesuré à l'intérieur de la pièce)

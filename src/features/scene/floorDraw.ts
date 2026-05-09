@@ -7,7 +7,7 @@ import {
   ROOM_W, ROOM_D, DOOR_START,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   NICHE_DEPTH, NICHE_Z_START,
-  SDB_Z_END,
+  BATH_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
 } from '@config';
 
@@ -43,12 +43,12 @@ export function drawFloorPlan(
   ctx.beginPath();
   ctx.moveTo(tx(DOOR_START), tz(DIAG_AZ));
   ctx.lineTo(tx(ROOM_W),     tz(DIAG_AZ));
-  ctx.lineTo(tx(DOOR_START), tz(SDB_Z_END));
+  ctx.lineTo(tx(DOOR_START), tz(BATH_Z_END));
   ctx.closePath(); ctx.fill();
-  ctx.fillRect(tx(-NICHE_DEPTH), tz(KITCHEN_Z), (DOOR_START + NICHE_DEPTH) * S, (SDB_Z_END - KITCHEN_Z) * S);
+  ctx.fillRect(tx(-NICHE_DEPTH), tz(KITCHEN_Z), (DOOR_START + NICHE_DEPTH) * S, (BATH_Z_END - KITCHEN_Z) * S);
   ctx.beginPath();
-  ctx.moveTo(tx(-NICHE_DEPTH), tz(SDB_Z_END));
-  ctx.lineTo(tx(DOOR_START),   tz(SDB_Z_END));
+  ctx.moveTo(tx(-NICHE_DEPTH), tz(BATH_Z_END));
+  ctx.lineTo(tx(DOOR_START),   tz(BATH_Z_END));
   ctx.lineTo(tx(-NICHE_DEPTH), tz(DIAG_CZ));
   ctx.closePath(); ctx.fill();
 

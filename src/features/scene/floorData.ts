@@ -11,7 +11,7 @@ import {
   NICHE_DEPTH, NICHE_Z_START,
   GLASS_START, GLASS_END,
   DOOR_START,
-  SDB_Z_END,
+  BATH_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
   DIAG_SIN, DIAG_COS, DIAG_ENTRY_S, DIAG_ENTRY_E,
   ROOM_D, ROOM_W, KITCHEN_Z,
@@ -55,7 +55,7 @@ export const SEG_DOORS: Seg[] = [
   // Placard couloir (partition schématique)
   [DOOR_START, ROOM_D + 10, DOOR_START, KITCHEN_Z],
   // PC-SDB (porte couloir → salle de bain)
-  [60, SDB_Z_END, DOOR_START, SDB_Z_END],
+  [60, BATH_Z_END, DOOR_START, BATH_Z_END],
   // P3 — porte d'entrée diagonale
   [DIAG_DOOR_S.x, DIAG_DOOR_S.z, DIAG_DOOR_E.x, DIAG_DOOR_E.z],
 ];
@@ -64,5 +64,5 @@ export const SEG_DOORS: Seg[] = [
 
 export const SEG_WINDOWS: Seg[] = [
   [GLASS_START,  0,          GLASS_END,    0],   // baie vitrée (mur C)
-  [-NICHE_DEPTH, SDB_Z_END,  60,           SDB_Z_END], // vitrage douche
+  [-NICHE_DEPTH, BATH_Z_END,  60,           BATH_Z_END], // vitrage douche
 ];

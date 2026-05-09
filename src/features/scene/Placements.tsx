@@ -67,7 +67,7 @@ import {
   ROOM_W, ROOM_D, WALL_H,
   NICHE_DEPTH, NICHE_Z_START,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
-  SDB_Z_END, DOOR_START,
+  BATH_Z_END, DOOR_START,
 } from '@config';
 
 const KALLAX_DEPTH = 39;
@@ -151,7 +151,7 @@ export function Equipment() {
   const as = useFurnitureToggles({ lampSdb: 'lamp-sdb-toggle', lampCouloir: 'lamp-couloir-toggle' });
   const HW_R = 28, HW_H = 65;
   const SDB_CX  = (-NICHE_DEPTH + DOOR_START) / 2;
-  const SDB_CZ  = (KITCHEN_Z + SDB_Z_END) / 2;
+  const SDB_CZ  = (KITCHEN_Z + BATH_Z_END) / 2;
   const CORR_CX = (DOOR_START + ROOM_W) / 2;
   const CORR_CZ = (ROOM_D + KITCHEN_Z) / 2;
   return (
@@ -169,7 +169,7 @@ export function Equipment() {
         <VasqueSdb item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Niche douche 70×70cm : X -10→60, Z 600→670. Centre : (25, 635). */}
-      <group position={[-NICHE_DEPTH + 35, 0, SDB_Z_END + 35]} userData={{ animUnit: true }}>
+      <group position={[-NICHE_DEPTH + 35, 0, BATH_Z_END + 35]} userData={{ animUnit: true }}>
         <Shower item={stub('shower')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[-NICHE_DEPTH + 60, 0, KITCHEN_Z + 46.5]} userData={{ animUnit: true }}>
@@ -216,10 +216,10 @@ export function Furniture() {
       <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + 10 + KITCHEN_Z) / 2]}>
         <CorridorCloset item={stub('corridor-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
-      <group position={[(-NICHE_DEPTH + DOOR_START) / 2, 0, SDB_Z_END - 53]}>
+      <group position={[(-NICHE_DEPTH + DOOR_START) / 2, 0, BATH_Z_END - 53]}>
         <GrassRug item={stub('grass-rug')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[125, 0, SDB_Z_END]}>
+      <group position={[130, 0, BATH_Z_END]}>
         <SdbCloset item={stub('sdb-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group position={[KITCHEN_X0, 0, ROOM_D]}>
@@ -449,7 +449,7 @@ export function Decor() {
           <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       ))}
-      <group position={[282, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true }}>
+      <group position={[298, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true }}>
         <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <Smorkull_ />

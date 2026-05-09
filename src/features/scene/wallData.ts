@@ -18,7 +18,7 @@ import {
   GLASS_START, GLASS_END, GLASS_TOP_Y,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   DOOR_START, DOOR_END, DOOR_H,
-  SDB_Z_END,
+  BATH_Z_END,
   DIAG_AZ, DIAG_CZ,
 } from '@config';
 
@@ -79,9 +79,9 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: NICHE_Z_START + NICHE_DEPTH / 2, z2: ROOM_D,     mat: 'west' },
   // A2b : SDB + couloir (saute les piliers)
   { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: ROOM_D + W,      z2: KITCHEN_Z,         mat: 'west' },
-  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: KITCHEN_Z + W,   z2: SDB_Z_END,         mat: 'west' },
-  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: SDB_Z_END + W,   z2: SDB_Z_END + 70,    mat: 'west' },
-  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: SDB_Z_END + 70 + W, z2: DIAG_CZ - W,    mat: 'west' },
+  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: KITCHEN_Z + W,   z2: BATH_Z_END,         mat: 'west' },
+  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: BATH_Z_END + W,   z2: BATH_Z_END + 70,    mat: 'west' },
+  { axis: 'z', xc: -NICHE_DEPTH - W / 2, z1: BATH_Z_END + 70 + W, z2: DIAG_CZ - W,    mat: 'west' },
 
   // ── MUR B (est) ────────────────────────────────────────────────────────────
   { axis: 'z', xc: ROOM_W + W / 2, z1: 0,    z2: ROOM_D,  mat: 'east' }, // B1 séjour
@@ -109,7 +109,7 @@ export const WALL_DEFS: WallDef[] = [
   // Segment avant porte (avec offset CORR_E pour éviter z-fighting dormant)
   { axis: 'z', xc: CORR_WALL_X, z1: KITCHEN_Z + W,             z2: CORR_DOOR_S - CORR_E },
   // Segment après porte
-  { axis: 'z', xc: CORR_WALL_X, z1: CORR_DOOR_E + CORR_E,     z2: SDB_Z_END },
+  { axis: 'z', xc: CORR_WALL_X, z1: CORR_DOOR_E + CORR_E,     z2: BATH_Z_END },
   // Linteau au-dessus de la porte couloir (3D seulement)
   { axis: 'z', xc: CORR_WALL_X, z1: CORR_DOOR_S - CORR_E, z2: CORR_DOOR_E + CORR_E,
     yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
@@ -125,8 +125,8 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'x', x1: GLASS_START, x2: GLASS_END,  zc: -WALL_C_T / 2, t: WALL_C_T, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
 
   // ── Douche ─────────────────────────────────────────────────────────────────
-  { axis: 'z', xc: -NICHE_DEPTH + 70 + W / 2, z1: SDB_Z_END + W,      z2: SDB_Z_END + 70 },
-  { axis: 'x', x1: -NICHE_DEPTH,              x2: -NICHE_DEPTH + 70, zc: SDB_Z_END + 70 + W / 2 },
+  { axis: 'z', xc: -NICHE_DEPTH + 70 + W / 2, z1: BATH_Z_END + W,      z2: BATH_Z_END + 70 },
+  { axis: 'x', x1: -NICHE_DEPTH,              x2: -NICHE_DEPTH + 70, zc: BATH_Z_END + 70 + W / 2 },
 
 ];
 
@@ -134,23 +134,23 @@ export const WALL_DEFS: WallDef[] = [
 export type PillarDef = { id: string; x: number; z: number; w?: number; d?: number };
 
 export const PILLAR_DEFS: PillarDef[] = [
-  { id: 'nw',           x: -10,                    z: -WALL_C_T / 2, w: 20, d: WALL_C_T },
-  { id: 'sw',           x: -NICHE_DEPTH - W / 2,  z: ROOM_D + W / 2 },
-  { id: 'ne-diag',     x: ROOM_W + W / 2,          z: DIAG_AZ - W / 2 },
-  { id: 'sw-diag',     x: -NICHE_DEPTH - W / 2,   z: DIAG_CZ - 5 },
-  { id: 'kitchen-l',   x: KITCHEN_X0 - W / 2,     z: ROOM_D + W / 2 },
-  { id: 'kitchen-r',   x: KITCHEN_X1 + W / 2,     z: ROOM_D + W / 2 },
-  { id: 'se',           x: ROOM_W + W / 2,          z: ROOM_D + W / 2 },
-  { id: 'beam-niche',  x: -10,                      z: NICHE_Z_START,   w: 20, d: NICHE_DEPTH },
-  { id: 'nw-sdb',      x: -NICHE_DEPTH - W / 2,   z: KITCHEN_Z + W / 2 },
-  { id: 'kitchen-l-n', x: KITCHEN_X0 - W / 2,     z: KITCHEN_Z + W / 2 },
-  { id: 'kitchen-r-n', x: KITCHEN_X1 + W / 2,     z: KITCHEN_Z + W / 2 },
-  { id: 'shower-door-w', x: -NICHE_DEPTH - W / 2, z: SDB_Z_END - W / 2 + 10 },
-  { id: 'shower-door-e', x: 65,                    z: SDB_Z_END - W / 2 + 10 },
-  { id: 'corr-n',       x: CORR_WALL_X,             z: KITCHEN_Z + W / 2 },
-  { id: 'corr-s',       x: CORR_WALL_X,             z: ROOM_D + W / 2 },
-  { id: 'corr-m',       x: CORR_WALL_X,             z: SDB_Z_END - W / 2 + 10 },
-  { id: 'nw-shower',   x: -NICHE_DEPTH - W / 2,   z: SDB_Z_END + 70 + W / 2 },
-  { id: 'se-shower',   x: 65,                      z: SDB_Z_END + 70 + W / 2 },
+  { id: 'corner-nw',   x: -10,                    z: -WALL_C_T / 2, w: 20, d: WALL_C_T },
+  { id: 'corner-sw',   x: -NICHE_DEPTH - W / 2,  z: ROOM_D + W / 2 },
+  { id: 'diag-ne',     x: ROOM_W + W / 2,          z: DIAG_AZ - W / 2 },
+  { id: 'diag-sw',     x: -NICHE_DEPTH - W / 2,   z: DIAG_CZ - 5 },
+  { id: 'kitchen-sw',  x: KITCHEN_X0 - W / 2,     z: ROOM_D + W / 2 },
+  { id: 'kitchen-se',  x: KITCHEN_X1 + W / 2,     z: ROOM_D + W / 2 },
+  { id: 'corner-se',   x: ROOM_W + W / 2,          z: ROOM_D + W / 2 },
+  { id: 'niche-beam',  x: -10,                      z: NICHE_Z_START,   w: 20, d: NICHE_DEPTH },
+  { id: 'bath-nw',     x: -NICHE_DEPTH - W / 2,   z: KITCHEN_Z + W / 2 },
+  { id: 'kitchen-nw',  x: KITCHEN_X0 - W / 2,     z: KITCHEN_Z + W / 2 },
+  { id: 'kitchen-ne',  x: KITCHEN_X1 + W / 2,     z: KITCHEN_Z + W / 2 },
+  { id: 'shower-nw',   x: -NICHE_DEPTH - W / 2,   z: BATH_Z_END - W / 2 + 10 },
+  { id: 'shower-ne',   x: 65,                      z: BATH_Z_END - W / 2 + 10 },
+  { id: 'corr-n',      x: CORR_WALL_X,             z: KITCHEN_Z + W / 2 },
+  { id: 'corr-s',      x: CORR_WALL_X,             z: ROOM_D + W / 2 },
+  { id: 'corr-bath',   x: CORR_WALL_X,             z: BATH_Z_END - W / 2 + 10 },
+  { id: 'shower-sw',   x: -NICHE_DEPTH - W / 2,   z: BATH_Z_END + 70 + W / 2 },
+  { id: 'shower-se',   x: 65,                      z: BATH_Z_END + 70 + W / 2 },
   { id: 'garden-e',    x: ROOM_W + W / 2,           z: -230 - W / 2 },
 ];

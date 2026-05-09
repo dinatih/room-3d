@@ -1,7 +1,7 @@
 /**
  * SdbCloset.tsx — Placard PC-SDB : double porte coulissante + étagère triangulaire.
  * Coordonnées locales : centré XZ, Y=0 = sol, Z=0 = face mur (vers la SDB).
- * Fidèle à js/structure/bathroom.js (SLIDE_X0=70, SLIDE_X1=180, SLIDE_Z=600).
+ * Fidèle à js/structure/bathroom.js (SLIDE_X0=70, SLIDE_X1=190, SLIDE_Z=600).
  *
  * Toggle (boolean) :
  *   false → fermé  (panneaux gauche/droite)
@@ -12,9 +12,9 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 
-const W       = 110;   // SLIDE_X1 - SLIDE_X0
+const W       = 120;   // SLIDE_X1 - SLIDE_X0
 const H       = 250;   // WALL_H
-const PANEL_W = W / 2; // 55
+const PANEL_W = W / 2; // 60
 const PANEL_T = 2.3;
 const SEP_T   = 1;
 const RAIL_D  = 7;

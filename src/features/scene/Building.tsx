@@ -12,7 +12,7 @@ import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { cameraState } from '@features/scene/cameraState';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150, GLB_65x65 } from './items/NissedalMirror';
-import { DoorLiving, DoorSdb } from './items/DoorWhite';
+import { DoorLiving, DoorBath } from './items/DoorWhite';
 import { DoorEntry }            from './items/DoorEntry';
 import { GlassDoor }            from './items/GlassDoor';
 import { NOOP_ITEM, NOOP_SIZE } from './sceneItem';
@@ -23,7 +23,7 @@ import {
   GLASS_START, GLASS_END,
   DOOR_START, DOOR_END, DOOR_H,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, KITCHEN_Z,
-  SDB_Z_END,
+  BATH_Z_END,
   GLASS_TOP_Y,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
   DIAG_LEN, DIAG_SIN, DIAG_COS, DIAG_ROT_Y,
@@ -50,7 +50,7 @@ import { WALL_DEFS, PILLAR_DEFS, W, WALL_C_T, CORR_WALL_X } from './wallData';
 const FLOOR_Y = -5.25; // dalle béton : surface parquet à Y=0
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// WALLS — murs de l'appartement (port de js/structure/walls.js)
+// WALLS — murs de l'appartement
 // ═══════════════════════════════════════════════════════════════════════════════
 
 
@@ -75,8 +75,6 @@ const handleMat  = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 
 const westMats  = [wallMat, ghostMat, wallMat, wallMat, wallMat, wallMat];
 const eastMats  = [ghostMat, wallMat, wallMat, wallMat, wallMat, wallMat];
 const northMats = [wallMat, wallMat, wallMat, wallMat, wallMat, ghostMat];
-
-// W et CORR_WALL_X importés depuis wallData.ts
 
 // Lookup matériau par nom (utilisé lors du rendu WALL_DEFS)
 const MAT_MAP: Record<string, THREE.Material | THREE.Material[]> = {
@@ -157,7 +155,7 @@ export function makeExtrudeGeo(
 }
 
 
-// ── Labels piliers (mode piersOnly) ───────────────────────────────────────────
+// ── Labels piliers (mode pillarsOnly) ─────────────────────────────────────────
 
 function makeSprite(text: string, color: string, worldSize: number): THREE.Sprite {
   const PX = 64;
@@ -218,13 +216,11 @@ function PillarLabels() {
   return null;
 }
 
-// PILLAR_DEFS importé depuis wallData.ts
-
 /** Ref module-level vers le group Walls — consommé par Neighbors pour clone. */
 export const wallsGroupRef = { current: null as THREE.Group | null };
 
 // ── Composant principal ────────────────────────────────────────────────────────
-export function Walls({ piersOnly = false, wallsOnly = false }: { piersOnly?: boolean; wallsOnly?: boolean }) {
+export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?: boolean; wallsOnly?: boolean }) {
   // Géométries complexes via useMemo ──────────────────────────────────────────
 
   const diagGeos = useMemo(() => {
@@ -240,7 +236,7 @@ export function Walls({ piersOnly = false, wallsOnly = false }: { piersOnly?: bo
       DIAG_AZ + d * cosθ + DIAG_DEPTH * pZ,
     ];
 
-    // Pilier NE — extrémité NE du mur diagonal (remplace l'ancienne section NE de W cm)
+    // diag-ne-end — extrémité NE du mur diagonal (remplace l'ancienne section NE de W cm)
     const nePillar = makeExtrudeGeo(
       [iP(0), iP(W), eP(W), eP(0)],
       WALL_H,
@@ -259,13 +255,13 @@ export function Walls({ piersOnly = false, wallsOnly = false }: { piersOnly?: bo
       WALL_H,
     );
 
-    // Pilier SW — extrémité SW du mur diagonal
+    // diag-sw-end — extrémité SW du mur diagonal
     const swPillar = makeExtrudeGeo(
       [iP(DIAG_LEN - W), iP(DIAG_LEN), eP(DIAG_LEN), eP(DIAG_LEN - W)],
       WALL_H,
     );
 
-    // Pilier NE (kite) — 4 côtés, angle en C = angle interne de la jonction (~122°).
+    // diag-ne-kite — 4 côtés, angle en C = angle interne de la jonction (~122°).
     // Face BC ∥ Mur B (direction Z), face CD ∥ mur diagonal (direction sinθ,cosθ).
     // C = intersection de X=DIAG_AX+W avec la droite ext diagonale passant par eP(0).
     // eP(0) + t·(sinθ,cosθ) → X = DIAG_AX+W ⟹ t = (W − DIAG_DEPTH·pX) / sinθ
@@ -283,7 +279,7 @@ export function Walls({ piersOnly = false, wallsOnly = false }: { piersOnly?: bo
       WALL_H,
     );
 
-    // Pilier SW (kite) — même principe que NE, côté Mur A2b (X = DIAG_CX − W).
+    // diag-sw-kite — même principe que NE, côté Mur A2b (X = DIAG_CX − W).
     // Face BC ∥ Mur A2b (direction Z), face CD ∥ mur diagonal.
     // C = intersection de X=DIAG_CX−W avec la droite ext diagonale par eP(diagLen).
     // eP(diagLen) + t·(sinθ,cosθ) → X = DIAG_CX−W ⟹ t = (−W − DIAG_DEPTH·pX) / sinθ
@@ -307,31 +303,31 @@ export function Walls({ piersOnly = false, wallsOnly = false }: { piersOnly?: bo
   return (
     <group ref={(g) => { wallsGroupRef.current = g; }} userData={{ brickType: 'wall' }}>
 
-      {piersOnly && <PillarLabels />}
+      {pillarsOnly && <PillarLabels />}
 
       {/* ── Piliers — masqués en mode wallsOnly ─────────────────────────────── */}
       <group visible={!wallsOnly}>
-        {PILLAR_DEFS.filter(({ id }) => id !== 'se' && id !== 'garden-e').map(({ id, x, z, w = W, d = W }) => (
+        {PILLAR_DEFS.map(({ id, x, z, w = W, d = W }) => (
           <P key={id} w={w} h={WALL_H} d={d} x={x} y={WALL_H / 2} z={z}
             userData={{ type: 'pillar', id }} />
         ))}
         <mesh geometry={diagGeos.diagPillar}   material={wallMat} castShadow receiveShadow
-          userData={{ type: 'pillar', id: 'ne-diag-kite' }} />
+          userData={{ type: 'pillar', id: 'diag-ne-kite' }} />
         <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
-          userData={{ type: 'pillar', id: 'sw-diag-kite' }} />
+          userData={{ type: 'pillar', id: 'diag-sw-kite' }} />
         <mesh geometry={diagGeos.nePillar} material={wallMat} castShadow receiveShadow
-          userData={{ type: 'pillar', id: 'ne-diag-end' }} />
+          userData={{ type: 'pillar', id: 'diag-ne-end' }} />
         <mesh geometry={diagGeos.swPillar} material={wallMat} castShadow receiveShadow
-          userData={{ type: 'pillar', id: 'sw-diag-end' }} />
+          userData={{ type: 'pillar', id: 'diag-sw-end' }} />
         {/* Mur C NE */}
         <P w={W} h={WALL_H} d={WALL_C_T}
           x={ROOM_W + W / 2} y={WALL_H / 2} z={-WALL_C_T / 2}
-          userData={{ type: 'pillar', id: 'ne' }} />
+          userData={{ type: 'pillar', id: 'corner-ne' }} />
       </group>
 
-      {/* ── Murs non-est ─────────────────────────────────────────────────────── */}
-      <group visible={!piersOnly}>
-        {WALL_DEFS.filter(d => !d.skip3d && d.mat !== 'east').map((d, i) => {
+      {/* ── Murs ─────────────────────────────────────────────────────────────── */}
+      <group visible={!pillarsOnly}>
+        {WALL_DEFS.filter(d => !d.skip3d).map((d, i) => {
           const mat = MAT_MAP[d.mat ?? 'default'];
           if (d.axis === 'z')
             return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} />;
@@ -344,32 +340,13 @@ export function Walls({ piersOnly = false, wallsOnly = false }: { piersOnly?: bo
           castShadow receiveShadow>
           <boxGeometry args={[GLASS_END - GLASS_START, 20, WALL_C_T]} />
         </mesh>
-
-        {/* ── Mur diagonal ─────────────────────────────────────────────────── */}
+        {/* Mur diagonal */}
         <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow />
         <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow />
-      </group>
-
-      {/* ── Mur EST ──────────────────────────────────────────────────────────── */}
-      <group>
-        {/* Piliers se + garden-e — masqués en mode wallsOnly */}
-        <group visible={!wallsOnly}>
-          {PILLAR_DEFS.filter(({ id }) => id === 'se' || id === 'garden-e').map(({ id, x, z, w = W, d = W }) => (
-            <P key={id} w={w} h={WALL_H} d={d} x={x} y={WALL_H / 2} z={z}
-              userData={{ type: 'pillar', id }} />
-          ))}
-        </group>
-        <group visible={!piersOnly}>
-          {/* Panneaux bois occultants jardin */}
-          {[0, 1].map((i) => (
-            <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-230 - W - i * 90 - 45} mat={panelMat} />
-          ))}
-          {/* Segments mur B (WALL_DEFS mat='east') */}
-          {WALL_DEFS.filter(d => !d.skip3d && d.mat === 'east').map((d, i) => (
-            <WZ key={i} xc={(d as any).xc} z1={(d as any).z1} z2={(d as any).z2}
-              mat={MAT_MAP.east} h={d.h} yBase={d.yBase} />
-          ))}
-        </group>
+        {/* Panneaux bois occultants jardin */}
+        {[0, 1].map((i) => (
+          <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-230 - W - i * 90 - 45} mat={panelMat} />
+        ))}
       </group>
 
     </group>
@@ -504,7 +481,7 @@ function Parquet() {
       new THREE.Vector2(KITCHEN_X1,  -KITCHEN_Z),
       new THREE.Vector2(KITCHEN_X1,  -ROOM_D),
       new THREE.Vector2(DOOR_START,  -ROOM_D),
-      new THREE.Vector2(DOOR_START,  -SDB_Z_END),
+      new THREE.Vector2(DOOR_START,  -BATH_Z_END),
       new THREE.Vector2(ROOM_W,      -DIAG_AZ),
       new THREE.Vector2(ROOM_W,      0),
     ]);
@@ -527,15 +504,15 @@ function Parquet() {
   );
 }
 
-// ── Carrelage SDB + couloir ────────────────────────────────────────────────────
+// ── Carrelage bath + couloir ───────────────────────────────────────────────────
 function Tile() {
-  const { sdbGeo, sdbMat, closetMat } = useMemo(() => {
+  const { bathGeo, bathMat, closetMat } = useMemo(() => {
     const baseTex = makeTileTex();
 
-    // Trapèze SDB : coins A(-10,460) B(-10,727) C(190,600) D(190,460)
+    // Trapèze bath : coins A(-10,460) B(-10,727) C(200,610) D(200,460)
     const Ax = DIAG_CX, Az = KITCHEN_Z;
     const Bx = DIAG_CX, Bz = DIAG_CZ;
-    const Cx = DOOR_START, Cz = SDB_Z_END;
+    const Cx = DOOR_START, Cz = BATH_Z_END;
     const Dx = DOOR_START, Dz = KITCHEN_Z;
 
     const positions = new Float32Array([
@@ -551,12 +528,12 @@ function Tile() {
     g.setAttribute('uv',       new THREE.BufferAttribute(uvs, 2));
     g.computeVertexNormals();
 
-    const tSdb = baseTex.clone();
-    tSdb.wrapS = tSdb.wrapT = THREE.RepeatWrapping;
-    tSdb.repeat.set(1, 1);
-    tSdb.needsUpdate = true;
-    const mSdb = new THREE.MeshStandardMaterial({
-      map: tSdb, roughness: 0.25, metalness: 0.05,
+    const tBath = baseTex.clone();
+    tBath.wrapS = tBath.wrapT = THREE.RepeatWrapping;
+    tBath.repeat.set(1, 1);
+    tBath.needsUpdate = true;
+    const mBath = new THREE.MeshStandardMaterial({
+      map: tBath, roughness: 0.25, metalness: 0.05,
       polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
     });
 
@@ -581,7 +558,7 @@ function Tile() {
       polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
     });
 
-    return { sdbGeo: g, sdbMat: mSdb, closetMat: mB };
+    return { bathGeo: g, bathMat: mBath, closetMat: mB };
   }, []);
 
   const CLOSET_W = DOOR_START - KITCHEN_X1;
@@ -589,7 +566,7 @@ function Tile() {
 
   return (
     <>
-      <mesh geometry={sdbGeo} material={sdbMat} receiveShadow userData={{ brickType: 'floor' }} />
+      <mesh geometry={bathGeo} material={bathMat} receiveShadow userData={{ brickType: 'floor' }} />
       <mesh
         ref={(m) => { if (m) m.material = closetMat; }}
         rotation={[-Math.PI / 2, 0, 0]}
@@ -620,7 +597,7 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
       {/* Parquet séjour + cuisine */}
       <Parquet />
 
-      {/* Carrelage SDB + couloir */}
+      {/* Carrelage bath + couloir */}
       <Tile />
 
       {/* Dalle béton */}
@@ -806,9 +783,9 @@ function MirrorsA() {
   );
 }
 
-// ── Miroir vasque SDB ─────────────────────────────────────────────────────────
+// ── Miroir vasque bath ────────────────────────────────────────────────────────
 
-function MirrorSDB() {
+function MirrorBath() {
   const VANITY_W    = 60, VANITY_D = 47, VANITY_Y0 = 30, VANITY_H = 50;
   const VANITY_CX   = DOOR_START - 84;
   const VANITY_CZ   = KITCHEN_Z + 11 + VANITY_D / 2;
@@ -834,7 +811,7 @@ export function Mirrors() {
     <>
       <MirrorsD />
       <MirrorsA />
-      <MirrorSDB />
+      <MirrorBath />
     </>
   );
 }
@@ -848,7 +825,7 @@ export function Mirrors() {
 //   → wrapper_pos = [hx - px·cosθ, H/2, hz - px·sinθ]
 //
 //   DoorLiving : pivotX=+W/2, θ=0          → wrapper=(DOOR_START + W/2, H/2, ROOM_D + 4.5) — bord ouest flush DOOR_START
-//   DoorSdb    : pivotX=−W/2, θ=+π/2       → wrapper=(WALL_X, H/2, hingeZ − W/2)
+//   DoorBath    : pivotX=−W/2, θ=+π/2       → wrapper=(WALL_X, H/2, hingeZ − W/2)
 //   DoorEntry  : pivotX=−W/2, θ=diagRotY−π/2 (panneau items/ s'étend en +X local,
 //                structure attendue +Z → correction −π/2)
 
@@ -881,7 +858,7 @@ export function DoorsPlaced() {
     entryDoor:    'entry-door-toggle',
   });
 
-  const sdbHingeZ = SDB_Z_END - 10;
+  const bathHingeZ = BATH_Z_END - 10;
 
   const entry = useMemo(() => {
     const originX = DIAG_AX + 5 * DIAG_COS;
@@ -909,10 +886,10 @@ export function DoorsPlaced() {
         <DoorLiving item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
-        position={[CORR_WALL_X, DOOR_HEIGHT / 2, sdbHingeZ - DOOR_W_WHITE / 2]}
+        position={[CORR_WALL_X, DOOR_HEIGHT / 2, bathHingeZ - DOOR_W_WHITE / 2]}
         rotation-y={Math.PI / 2}
         userData={{ animUnit: true, hoverAction: { label: 'Porte SDB', actionId: 'bathroomDoor' } }}>
-        <DoorSdb item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+        <DoorBath item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
         position={[entry.wx, entry.wy, entry.wz]}
