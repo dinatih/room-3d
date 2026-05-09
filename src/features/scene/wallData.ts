@@ -25,8 +25,8 @@ import {
 export const W        = 10; // épaisseur de mur standard (cm)
 export const WALL_C_T = 30; // épaisseur mur C (nord, baie vitrée)
 const CORR_E = 2;  // anti z-fighting dormant porte couloir
-const CORR_DOOR_S = KITCHEN_Z + 50;
-const CORR_DOOR_E = KITCHEN_Z + 130;
+const CORR_DOOR_S = KITCHEN_Z + 60;
+const CORR_DOOR_E = KITCHEN_Z + 140;
 
 export const CORR_WALL_X = 195; // centre du mur couloir gauche (SDB = 200cm intérieur)
 
