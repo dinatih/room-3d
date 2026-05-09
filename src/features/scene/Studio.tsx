@@ -34,7 +34,7 @@ import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/scene/BuildAnimations';
 
 import {
-  ROOM_W, ROOM_W_DELTA,
+  ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NEIGHBORS, LAYER_LIDAR,
 } from '@config';
 
@@ -108,7 +108,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true,
-    neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true, piersOnly: false, wallsOnly: false, roomWAlt: false,
+    neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true, piersOnly: false, wallsOnly: false,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -231,7 +231,7 @@ gl.shadowMap.enabled = true;
            * Pas de CategoryLayerGroup : les objets sont sur le layer 0 par défaut.
            * Walker inclus ici → reflété dans les miroirs.
            */}
-          <Walls piersOnly={layers.piersOnly} wallsOnly={layers.wallsOnly} roomWDelta={layers.roomWAlt ? ROOM_W_DELTA : 0} />
+          <Walls piersOnly={layers.piersOnly} wallsOnly={layers.wallsOnly} />
           <Floor showCeiling={layers.ceiling} />
           <DoorsPlaced />
           <Walker    showSkeleton={layers.skeleton} />

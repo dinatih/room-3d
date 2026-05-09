@@ -224,7 +224,7 @@ function PillarLabels() {
 export const wallsGroupRef = { current: null as THREE.Group | null };
 
 // ── Composant principal ────────────────────────────────────────────────────────
-export function Walls({ piersOnly = false, wallsOnly = false, roomWDelta = 0 }: { piersOnly?: boolean; wallsOnly?: boolean; roomWDelta?: number }) {
+export function Walls({ piersOnly = false, wallsOnly = false }: { piersOnly?: boolean; wallsOnly?: boolean }) {
   // Géométries complexes via useMemo ──────────────────────────────────────────
 
   const diagGeos = useMemo(() => {
@@ -323,9 +323,9 @@ export function Walls({ piersOnly = false, wallsOnly = false, roomWDelta = 0 }: 
           userData={{ type: 'pillar', id: 'ne-diag-end' }} />
         <mesh geometry={diagGeos.swPillar} material={wallMat} castShadow receiveShadow
           userData={{ type: 'pillar', id: 'sw-diag-end' }} />
-        {/* Mur C NE (suit roomWDelta) */}
+        {/* Mur C NE */}
         <P w={W} h={WALL_H} d={WALL_C_T}
-          x={ROOM_W + roomWDelta + W / 2} y={WALL_H / 2} z={-WALL_C_T / 2}
+          x={ROOM_W + W / 2} y={WALL_H / 2} z={-WALL_C_T / 2}
           userData={{ type: 'pillar', id: 'ne' }} />
       </group>
 
@@ -337,8 +337,8 @@ export function Walls({ piersOnly = false, wallsOnly = false, roomWDelta = 0 }: 
             return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} />;
           return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} />;
         })}
-        {/* Mur C — panneau est + seuil (largeur suit roomWDelta) */}
-        <WX x1={GLASS_END} x2={ROOM_W + roomWDelta} zc={-WALL_C_T / 2} t={WALL_C_T} mat={northMats} />
+        {/* Mur C — panneau est */}
+        <WX x1={GLASS_END} x2={ROOM_W} zc={-WALL_C_T / 2} t={WALL_C_T} mat={northMats} />
         <mesh ref={(m) => { if (m) m.material = wallMat; }}
           position={[(GLASS_START + GLASS_END) / 2, 10, -WALL_C_T / 2]}
           castShadow receiveShadow>
@@ -350,8 +350,8 @@ export function Walls({ piersOnly = false, wallsOnly = false, roomWDelta = 0 }: 
         <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow />
       </group>
 
-      {/* ── Mur EST — groupe décalable (roomWDelta = 0 ou ROOM_W_DELTA) ──────── */}
-      <group position-x={roomWDelta}>
+      {/* ── Mur EST ──────────────────────────────────────────────────────────── */}
+      <group>
         {/* Piliers se + garden-e — masqués en mode wallsOnly */}
         <group visible={!wallsOnly}>
           {PILLAR_DEFS.filter(({ id }) => id === 'se' || id === 'garden-e').map(({ id, x, z, w = W, d = W }) => (
@@ -847,7 +847,7 @@ export function Mirrors() {
 //   world_hinge = wrapper_pos + R_y(θ) * [px, -H/2, 0]
 //   → wrapper_pos = [hx - px·cosθ, H/2, hz - px·sinθ]
 //
-//   DoorLiving : pivotX=+W/2, θ=0          → wrapper=(DOOR_END − W/2 + 6, H/2, ROOM_D + 4.5)
+//   DoorLiving : pivotX=+W/2, θ=0          → wrapper=(DOOR_START + W/2, H/2, ROOM_D + 4.5) — bord ouest flush DOOR_START
 //   DoorSdb    : pivotX=−W/2, θ=+π/2       → wrapper=(WALL_X, H/2, hingeZ − W/2)
 //   DoorEntry  : pivotX=−W/2, θ=diagRotY−π/2 (panneau items/ s'étend en +X local,
 //                structure attendue +Z → correction −π/2)
@@ -904,7 +904,7 @@ export function DoorsPlaced() {
         <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
-        position={[DOOR_END - DOOR_W_WHITE / 2 + 2, DOOR_HEIGHT / 2, ROOM_D + 4.5]}
+        position={[DOOR_START + DOOR_W_WHITE / 2, DOOR_HEIGHT / 2, ROOM_D + 4.5]}
         userData={{ animUnit: true, hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
         <DoorLiving item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>

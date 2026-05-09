@@ -2,14 +2,13 @@
 // CONFIG
 // =============================================
 // 1 unit = 1cm
-export const ROOM_W       = 300; // 3m — modèle actuel
-export const ROOM_W_DELTA =  16; // séjour réel = 316 cm
+export const ROOM_W       = 316; // 3,16m — largeur réelle du séjour
 export const ROOM_D = 400; // 4m
 export const WALL_H = 250; // 2.5m
 
-// Porte : 80cm d'ouverture, 30cm du mur B (X=300)
-export const DOOR_START = 190; // cm 190
-export const DOOR_END = 270; // cm 270
+// Porte : 80cm d'ouverture, alignée après pilier corr-s (X=200)
+export const DOOR_START = 200; // cm 200
+export const DOOR_END = 280; // cm 280
 export const DOOR_H = 204;      // hauteur standard française (panneaux de porte)
 
 // Renfoncement cuisine : 1m large, 60cm profond, à droite de la porte
@@ -37,7 +36,7 @@ export const SDB_Z_END = KITCHEN_Z + 140;
 // Formule : DIAG_CZ = DIAG_AZ − (DIAG_AX − DIAG_CX) / tan(α)
 export const DIAG_ANGLE_DEG = 122.5;
 const _diagAngle = DIAG_ANGLE_DEG * (Math.PI / 180);
-export const DIAG_AX = ROOM_W;       // 300 — point A : coin NE (jonction mur B)
+export const DIAG_AX = ROOM_W;       // 316 — point A : coin NE (jonction mur B)
 export const DIAG_AZ = 530;          // Z du point A
 export const DIAG_CX = -NICHE_DEPTH; // -10 — point C : côté niche ouest
 export const DIAG_CZ = DIAG_AZ - (DIAG_AX - DIAG_CX) / Math.tan(_diagAngle); // ≈727.5

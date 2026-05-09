@@ -28,7 +28,7 @@ const CORR_E = 2;  // anti z-fighting dormant porte couloir
 const CORR_DOOR_S = KITCHEN_Z + 50;
 const CORR_DOOR_E = KITCHEN_Z + 130;
 
-export const CORR_WALL_X = DOOR_START - 5; // 185 — centre du mur couloir gauche
+export const CORR_WALL_X = 195; // centre du mur couloir gauche (SDB = 200cm intérieur)
 
 export type WallMat  = 'west' | 'east' | 'north' | 'default';
 export type SegKind  = 'wall' | 'door' | 'window';
@@ -119,7 +119,7 @@ export const WALL_DEFS: WallDef[] = [
   // ── Mur C (nord, Z=0) ────────────────────────────────────────────────────────
   // Panneau ouest (fixe)
   { axis: 'x', x1: 0,          x2: GLASS_START, zc: -WALL_C_T / 2, t: WALL_C_T, mat: 'north' },
-  // Panneau est — 2D plan uniquement (3D inline dans Walls, largeur suit roomWDelta)
+  // Panneau est — 2D plan uniquement (3D inline dans Walls, skip3d car pas de skip3d pour ROOM_W)
   { axis: 'x', x1: GLASS_END,  x2: ROOM_W,      zc: -WALL_C_T / 2, t: WALL_C_T, mat: 'north', skip3d: true },
   // Linteau au-dessus de la baie (3D uniquement)
   { axis: 'x', x1: GLASS_START, x2: GLASS_END,  zc: -WALL_C_T / 2, t: WALL_C_T, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
