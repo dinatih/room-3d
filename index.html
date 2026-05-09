@@ -2,15 +2,38 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <title>Inventaire 3D</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { background: #0e0e18; overflow: hidden; }
+      #loading {
+        position: fixed; inset: 0; background: #0e0e18;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        z-index: 9999; transition: opacity 0.4s ease;
+      }
+      #loading.hidden { opacity: 0; pointer-events: none; }
+      #loading-label {
+        color: #8899bb; font-family: monospace; font-size: 13px;
+        margin-bottom: 14px; letter-spacing: 0.08em;
+      }
+      #loading-track {
+        width: 200px; height: 3px; background: #1e2030; border-radius: 2px;
+      }
+      #loading-bar {
+        height: 100%; width: 0%; background: #5577cc;
+        border-radius: 2px; transition: width 0.15s ease;
+      }
     </style>
-    <script type="module" crossorigin src="/assets/inventory-BjAOJcti.js"></script>
+    <script type="module" crossorigin src="/assets/inventory-BGyZEW26.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/inventory-CrGzyXHa.css">
   </head>
   <body>
+    <div id="loading">
+      <div id="loading-label">Chargement…</div>
+      <div id="loading-track"><div id="loading-bar"></div></div>
+    </div>
     <div id="root"></div>
   </body>
 </html>
