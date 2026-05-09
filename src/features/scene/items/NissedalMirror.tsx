@@ -51,20 +51,24 @@ export function NissedalFrame({ w, h, ft, fd }: { w: number; h: number; ft: numb
 // ── Composant inventaire GLB ──────────────────────────────────────────────────
 
 export const GLB_40x150 = 'media/NISSEDAL miroir 40x150 noir.glb';
-const GLB_65x65  = 'media/NISSEDAL miroir 65x65 noir.glb';
+export const GLB_65x65  = 'media/NISSEDAL miroir 65x65 noir.glb';
 
 /**
  * Cadre GLB pour la scène (Mirrors.tsx) : charge le GLB et masque la glace.
  * Coords locales : centré X/Z, Y=0 = bas du cadre.
- * La glace est détectée par metalness > 0.5 ou roughness < 0.15.
+ * targetH : si fourni, normalise la hauteur à cette valeur (cm) ; sinon scale×100 (GLB en mètres).
  */
-export function NissedalGlbFrame({ glb }: { glb: string }) {
+export function NissedalGlbFrame({ glb, targetH }: { glb: string; targetH?: number }) {
   const { scene } = useGLTFClone(glb);
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
-    scene.scale.setScalar(100);
+    scene.scale.set(1, 1, 1);
     scene.rotation.x = -Math.PI / 2; // Z-up GLB : Z(hauteur)→Y, Y(épaisseur)→-Z, glace→-Z
+    const rawBox  = glbLocalBBox(scene);
+    const naturalH = rawBox.max.y - rawBox.min.y;
+    const s = targetH !== undefined && naturalH > 0 ? targetH / naturalH : 100;
+    scene.scale.setScalar(s);
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,

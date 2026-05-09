@@ -1,6 +1,5 @@
 /**
  * Porte-fenêtre double battant PVC blanc — 160×210cm total (seuil 20cm).
- * Inclut : seuil maçonné, battant gauche fixe, battant droit animé.
  * Battant gauche fixe, battant droit ouvrant (pivot charnière droite, +90°).
  */
 import { useRef, useLayoutEffect } from 'react';
@@ -75,8 +74,6 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
   const handleMat = <meshStandardMaterial color="#888888" metalness={0.6} roughness={0.3} />;
   const HANDLE_LX = -PANEL_W + FRAME + 4;
-
-  const sillMat = <meshStandardMaterial color="#b0a898" roughness={0.8} />;
 
   return (
     <group position={[0, -GLASS_TOP / 2, 0]}>

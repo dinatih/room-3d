@@ -3,7 +3,6 @@
  *
  * SEG_WALLS / SEG_DOORS sont dérivés automatiquement de WALL_DEFS (wallData.ts).
  * Les segments manuels couvrent les cas non-axiaux :
- *   - mur C (WallC, reste dans Building.tsx)
  *   - coin de niche (connecteur géométrique, non issu d'un WZ/WX)
  *   - mur diagonal + portes spéciales
  *   - fenêtres (baie vitrée, vitrage douche)
@@ -37,10 +36,6 @@ export const SEG_WALLS: Seg[] = [
 
   // Coin de niche : connecteur horizontal entre A1 (xc=-W/2) et A2a (xc=-NICHE_DEPTH-W/2)
   [-W / 2, NICHE_Z_START, -NICHE_DEPTH - W / 2, NICHE_Z_START],
-
-  // Mur C (nord) — panneaux de WallC, non inclus dans WALL_DEFS
-  [0,         0, GLASS_START, 0],
-  [GLASS_END, 0, ROOM_W,      0],
 
   // Mur diagonal bâtiment
   [DIAG_AX,       DIAG_AZ,       DIAG_DOOR_S.x, DIAG_DOOR_S.z],

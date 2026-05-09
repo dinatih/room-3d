@@ -15,13 +15,15 @@ import * as THREE from 'three';
 import {
   ROOM_W, ROOM_D, WALL_H,
   NICHE_DEPTH, NICHE_Z_START,
+  GLASS_START, GLASS_END, GLASS_TOP_Y,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   DOOR_START, DOOR_END, DOOR_H,
   SDB_Z_END,
   DIAG_AZ, DIAG_CZ,
 } from '@config';
 
-export const W      = 10; // épaisseur de mur (cm)
+export const W        = 10; // épaisseur de mur standard (cm)
+export const WALL_C_T = 30; // épaisseur mur C (nord, baie vitrée)
 const CORR_E = 2;  // anti z-fighting dormant porte couloir
 const CORR_DOOR_S = KITCHEN_Z + 50;
 const CORR_DOOR_E = KITCHEN_Z + 130;
@@ -37,6 +39,7 @@ export type WallDef = {
   h?:       number;           // défaut WALL_H
   yBase?:   number;           // défaut 0
   skip3d?:  boolean;          // true → segment 2D uniquement
+  t?:       number;           // épaisseur (défaut W)
 } & (
   | { axis: 'z'; xc: number; z1: number; z2: number }
   | { axis: 'x'; x1: number; x2: number; zc: number }
@@ -54,11 +57,12 @@ export function wallDefToBoxGeo(d: WallDef): THREE.BufferGeometry {
   const h     = d.h     ?? WALL_H;
   const yBase = d.yBase ?? 0;
   let g: THREE.BufferGeometry;
+  const t = d.t ?? W;
   if (d.axis === 'z') {
-    g = new THREE.BoxGeometry(W, h, d.z2 - d.z1);
+    g = new THREE.BoxGeometry(t, h, d.z2 - d.z1);
     g.translate(d.xc, yBase + h / 2, (d.z1 + d.z2) / 2);
   } else {
-    g = new THREE.BoxGeometry(d.x2 - d.x1, h, W);
+    g = new THREE.BoxGeometry(d.x2 - d.x1, h, t);
     g.translate((d.x1 + d.x2) / 2, yBase + h / 2, d.zc);
   }
   return g;
@@ -82,11 +86,11 @@ export const WALL_DEFS: WallDef[] = [
   // ── MUR B (est) ────────────────────────────────────────────────────────────
   { axis: 'z', xc: ROOM_W + W / 2, z1: 0,    z2: ROOM_D,  mat: 'east' }, // B1 séjour
   { axis: 'z', xc: ROOM_W + W / 2, z1: -230, z2: -30,     mat: 'east' }, // B2 jardin
-  { axis: 'z', xc: ROOM_W + W / 2, z1: ROOM_D + W, z2: DIAG_AZ, mat: 'east' }, // couloir droit
+  { axis: 'z', xc: ROOM_W + W / 2, z1: ROOM_D + W, z2: DIAG_AZ - W, mat: 'east' }, // couloir droit
 
   // ── MUR D (sud, Z=400) ────────────────────────────────────────────────────
   { axis: 'x', x1: -NICHE_DEPTH,    x2: KITCHEN_X0 - W, zc: ROOM_D + W / 2 },
-  { axis: 'x', x1: KITCHEN_X1 + W,  x2: DOOR_START,     zc: ROOM_D + W / 2 },
+  { axis: 'x', x1: KITCHEN_X1 + W,  x2: CORR_WALL_X - W / 2, zc: ROOM_D + W / 2 },
   // Linteau au-dessus de la porte principale (3D seulement)
   { axis: 'x', x1: DOOR_START,      x2: DOOR_END + 4,   zc: ROOM_D + W / 2, yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
   { axis: 'x', x1: DOOR_END + 4,    x2: ROOM_W,         zc: ROOM_D + W / 2 },
@@ -112,6 +116,14 @@ export const WALL_DEFS: WallDef[] = [
   // Porte couloir SDB (2D uniquement)
   { axis: 'z', xc: CORR_WALL_X, z1: CORR_DOOR_S, z2: CORR_DOOR_E, segKind: 'door', skip3d: true },
 
+  // ── Mur C (nord, Z=0) ────────────────────────────────────────────────────────
+  // Panneau ouest (fixe)
+  { axis: 'x', x1: 0,          x2: GLASS_START, zc: -WALL_C_T / 2, t: WALL_C_T, mat: 'north' },
+  // Panneau est — 2D plan uniquement (3D inline dans Walls, largeur suit roomWDelta)
+  { axis: 'x', x1: GLASS_END,  x2: ROOM_W,      zc: -WALL_C_T / 2, t: WALL_C_T, mat: 'north', skip3d: true },
+  // Linteau au-dessus de la baie (3D uniquement)
+  { axis: 'x', x1: GLASS_START, x2: GLASS_END,  zc: -WALL_C_T / 2, t: WALL_C_T, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
+
   // ── Douche ─────────────────────────────────────────────────────────────────
   { axis: 'z', xc: -NICHE_DEPTH + 70 + W / 2, z1: SDB_Z_END + W,      z2: SDB_Z_END + 70 },
   { axis: 'x', x1: -NICHE_DEPTH,              x2: -NICHE_DEPTH + 70, zc: SDB_Z_END + 70 + W / 2 },
@@ -122,7 +134,10 @@ export const WALL_DEFS: WallDef[] = [
 export type PillarDef = { id: string; x: number; z: number; w?: number; d?: number };
 
 export const PILLAR_DEFS: PillarDef[] = [
+  { id: 'nw',           x: -10,                    z: -WALL_C_T / 2, w: 20, d: WALL_C_T },
   { id: 'sw',           x: -NICHE_DEPTH - W / 2,  z: ROOM_D + W / 2 },
+  { id: 'ne-diag',     x: ROOM_W + W / 2,          z: DIAG_AZ - W / 2 },
+  { id: 'sw-diag',     x: -NICHE_DEPTH - W / 2,   z: DIAG_CZ },
   { id: 'kitchen-l',   x: KITCHEN_X0 - W / 2,     z: ROOM_D + W / 2 },
   { id: 'kitchen-r',   x: KITCHEN_X1 + W / 2,     z: ROOM_D + W / 2 },
   { id: 'se',           x: ROOM_W + W / 2,          z: ROOM_D + W / 2 },

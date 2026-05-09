@@ -24,8 +24,9 @@ export const NICHE_Z_START = ROOM_D - 120; // Z=280
 
 // Baie vitrée double : 160cm large, 190cm haut, 50cm du mur B, sur mur C
 // Muret de 20cm sous la baie (~1 couche = 30cm en LEGO)
-export const GLASS_START = 90; // 300 - 50 - 160 = cm 90
-export const GLASS_END = 250; // 300 - 50 = cm 250
+export const GLASS_START = 90;    // 300 - 50 - 160 = cm 90
+export const GLASS_END   = 250;   // 300 - 50 = cm 250
+export const GLASS_TOP_Y = 210;   // hauteur allège mur C (baie vitrée)
 
 // Corridor / SDB boundaries
 export const SDB_Z_END = KITCHEN_Z + 140;

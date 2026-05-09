@@ -344,6 +344,7 @@ export interface LayerState {
   lights:       boolean;
   shadows:      boolean;
   piersOnly:    boolean;
+  wallsOnly:    boolean;
   roomWAlt:     boolean;
 }
 
@@ -408,6 +409,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
         <Group emoji="👁" title="Affichage">
           {layerBtn('green',  'Structure',   'structure', true)}
           {layerBtn('gray',   'Piliers seuls', 'piersOnly')}
+          {layerBtn('gray',   'Murs seuls',    'wallsOnly')}
           {layerBtn('peach',  'Équipements', 'equipment')}
           {layerBtn('purple', 'Mobilier',    'furniture')}
           {layerBtn('blue',   'Voisins',     'neighbors')}
