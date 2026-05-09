@@ -1,48 +1,48 @@
 /**
- * Ballon d'eau chaude 100L — géométrie procédurale fidèle à js/structure/bathroom.js.
- * Rendu en coordonnées locales : centre du cylindre à l'origine.
- * Utilisé dans Furniture.tsx (scène) et dans l'inventaire (SCENE_REGISTRY).
+ * Ballon d'eau chaude 100L — GLB media/water heater.glb.
+ * Coordonnées locales : centré XYZ, Y=0 = centre du ballon (suspendu au mur).
+ *
+ * GLB en pouces (ImageToStl, all nodes identity) :
+ *   Y=[0, 32.92] hauteur, X=[0, 13.78] ⌀, Z=[-13.98, 0.05] ⌀
+ * Dimensions réelles du ballon : ⌀56 × H65 cm → scale per-axe.
  */
 import { useLayoutEffect } from 'react';
+import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
+import { removeGlbLines } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const HW_R = 28;
-const HW_H = 65;
+const GLB = 'media/water heater.glb';
 
-// Bracket : la fixation murale est côté -X (mur A).
-// En coordonnées locales, le centre du bracket X = -(HW_R - 5) / 2
-const BRACKET_X = -(HW_R - 5) / 2; // -11.5
+// Vertex bounds measured from GLB (all node transforms identity, units = inches)
+const GLB_SY = 32.919;  // hauteur (Y)
+const GLB_SX = 13.780;  // diamètre X
+const GLB_SZ = 14.021;  // diamètre Z
+const GLB_CX = 6.890;   // centre X
+const GLB_CY = 16.460;  // centre Y
+const GLB_CZ = -6.966;  // centre Z
 
-const hwMat      = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.3 });
-const hwCapMat   = new THREE.MeshStandardMaterial({ color: 0xd0d0d0, roughness: 0.4 });
-const bracketMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6, roughness: 0.3 });
+const HW_R = 28;  // rayon = 28cm (⌀56)
+const HW_H = 65;  // hauteur = 65cm
 
 export function WaterHeater({ onSize }: SceneItemProps) {
-  useLayoutEffect(() => {
-    onSize(new THREE.Vector3(HW_R * 2, HW_H, HW_R * 2));
-  }, []);
+  const { scene } = useGLTFClone(GLB);
 
-  return (
-    <group>
-      {/* Corps cylindrique */}
-      <mesh castShadow receiveShadow material={hwMat}>
-        <cylinderGeometry args={[HW_R, HW_R, HW_H, 16]} />
-      </mesh>
-      {/* Calotte haute */}
-      <mesh position={[0, HW_H / 2 + 1, 0]} material={hwCapMat}>
-        <cylinderGeometry args={[HW_R + 0.5, HW_R + 0.5, 2, 16]} />
-      </mesh>
-      {/* Calotte basse */}
-      <mesh position={[0, -(HW_H / 2 + 1), 0]} material={hwCapMat}>
-        <cylinderGeometry args={[HW_R + 0.5, HW_R + 0.5, 2, 16]} />
-      </mesh>
-      {/* Fixations murales */}
-      {([-20, 20] as const).map((dy) => (
-        <mesh key={dy} position={[BRACKET_X, dy, 0]} material={bracketMat}>
-          <boxGeometry args={[HW_R + 5, 4, 5]} />
-        </mesh>
-      ))}
-    </group>
-  );
+  useLayoutEffect(() => {
+    removeGlbLines(scene);
+    const sx = HW_R * 2 / GLB_SX;
+    const sy = HW_H     / GLB_SY;
+    const sz = HW_R * 2 / GLB_SZ;
+    scene.scale.set(sx, sy, sz);
+    scene.position.set(-GLB_CX * sx, -GLB_CY * sy, -GLB_CZ * sz);
+    scene.traverse(c => {
+      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
+    });
+    onSize(new THREE.Vector3(HW_R * 2, HW_H, HW_R * 2));
+  }, [scene]);
+
+  return <primitive object={scene} />;
 }
+
+useGLTF.preload(GLB);
