@@ -9,14 +9,13 @@
  */
 import {
   NICHE_DEPTH, NICHE_Z_START,
-  GLASS_START, GLASS_END,
   DOOR_START,
   BATH_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
   DIAG_SIN, DIAG_COS, DIAG_ENTRY_S, DIAG_ENTRY_E,
   ROOM_D, ROOM_W, KITCHEN_Z,
 } from '@config';
-import { WALL_DEFS, wallSeg, W } from './wallData';
+import { GLASS_OPENING_X1, GLASS_OPENING_X2, WALL_DEFS, wallSeg, W } from './wallData';
 
 // Points sur le mur diagonal pour la porte d'entrée
 const DIAG_DOOR_S = { x: DIAG_AX + DIAG_ENTRY_S * DIAG_SIN, z: DIAG_AZ + DIAG_ENTRY_S * DIAG_COS };
@@ -45,7 +44,7 @@ export const SEG_WALLS: Seg[] = [
 // ── SEG_DOORS ─────────────────────────────────────────────────────────────────
 
 export const SEG_DOORS: Seg[] = [
-  // Auto-dérivés de WALL_DEFS (segments de kind 'door', skip3d ou non)
+  // Auto-dérivés de WALL_DEFS (segments de kind 'door')
   ...WALL_DEFS
     .filter(d => d.segKind === 'door')
     .map(wallSeg),
@@ -63,6 +62,6 @@ export const SEG_DOORS: Seg[] = [
 // ── SEG_WINDOWS ───────────────────────────────────────────────────────────────
 
 export const SEG_WINDOWS: Seg[] = [
-  [GLASS_START,  0,          GLASS_END,    0],   // baie vitrée (mur C)
+  [GLASS_OPENING_X1, 0, GLASS_OPENING_X2, 0], // baie vitrée (mur C)
   [-NICHE_DEPTH, BATH_Z_END,  60,           BATH_Z_END], // vitrage douche
 ];

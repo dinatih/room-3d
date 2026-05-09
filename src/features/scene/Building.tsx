@@ -20,11 +20,9 @@ import { NOOP_ITEM, NOOP_SIZE } from './sceneItem';
 import {
   ROOM_W, ROOM_D, WALL_H,
   NICHE_DEPTH, NICHE_Z_START,
-  GLASS_START, GLASS_END,
   DOOR_START, DOOR_END, DOOR_H,
-  KITCHEN_X0, KITCHEN_X1, KITCHEN_DEPTH, KITCHEN_Z,
+  KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   BATH_Z_END,
-  GLASS_TOP_Y,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
   DIAG_LEN, DIAG_SIN, DIAG_COS, DIAG_ROT_Y,
   DIAG_ENTRY_S, DIAG_ENTRY_E,
@@ -45,7 +43,7 @@ const COLORS = {
   tile:    0xe8e8e8,
 };
 
-import { WALL_DEFS, PILLAR_DEFS, W, WALL_C_T, CORR_WALL_X } from './wallData';
+import { WALL_DEFS, PILLAR_DEFS, W, CORR_WALL_X, GLASS_DOOR_X } from './wallData';
 
 const FLOOR_Y = -5.25; // dalle béton : surface parquet à Y=0
 
@@ -307,10 +305,13 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
 
       {/* ── Piliers — masqués en mode wallsOnly ─────────────────────────────── */}
       <group visible={!wallsOnly}>
-        {PILLAR_DEFS.map(({ id, x, z, w = W, d = W }) => (
-          <P key={id} w={w} h={WALL_H} d={d} x={x} y={WALL_H / 2} z={z}
-            userData={{ type: 'pillar', id }} />
-        ))}
+        {PILLAR_DEFS.map((p) => {
+          const pp = p as any;
+          return (
+            <P key={pp.id} w={pp.w ?? W} h={WALL_H} d={pp.d ?? W} x={pp.x} y={WALL_H / 2} z={pp.z}
+              userData={{ type: 'pillar', id: pp.id }} />
+          );
+        })}
         <mesh geometry={diagGeos.diagPillar}   material={wallMat} castShadow receiveShadow
           userData={{ type: 'pillar', id: 'diag-ne-kite' }} />
         <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
@@ -324,19 +325,12 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
 
       {/* ── Murs ─────────────────────────────────────────────────────────────── */}
       <group visible={!pillarsOnly}>
-        {WALL_DEFS.filter(d => !d.skip3d).map((d, i) => {
+        {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
           const mat = MAT_MAP[d.mat ?? 'default'];
           if (d.axis === 'z')
             return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} />;
           return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} />;
         })}
-        {/* Mur C — panneau est */}
-        <WX x1={GLASS_END} x2={ROOM_W} zc={-WALL_C_T / 2} t={WALL_C_T} mat={northMats} />
-        <mesh ref={(m) => { if (m) m.material = wallMat; }}
-          position={[(GLASS_START + GLASS_END) / 2, 10, -WALL_C_T / 2]}
-          castShadow receiveShadow>
-          <boxGeometry args={[GLASS_END - GLASS_START, 20, WALL_C_T]} />
-        </mesh>
         {/* Mur diagonal */}
         <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow />
         <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow />
@@ -873,7 +867,7 @@ export function DoorsPlaced() {
   return (
     <>
       <group
-        position={[(GLASS_START + GLASS_END) / 2, 105, 0]}
+        position={[GLASS_DOOR_X, 105, 0]}
         userData={{ animUnit: true, hoverAction: { label: 'Porte-fenêtre', actionId: 'eastGlassDoor' } }}>
         <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>

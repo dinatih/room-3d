@@ -12,13 +12,12 @@
  *  - axe Z (WZ) : xc = centre du mur (horizontal), z1/z2 = étendue
  *  - axe X (WX) : x1/x2 = étendue, zc = centre du mur (vertical)
  *  - segKind 'none'  → 3D seulement (linteaux, paroi arrière niche…)
- *  - skip3d true     → 2D seulement (baie de porte / fenêtre schématique)
+ *  - segKind 'door'  → 2D seulement (ouverture schématique sur le plan)
  */
 import * as THREE from 'three';
 import {
   ROOM_W, ROOM_D, WALL_H,
   NICHE_DEPTH, NICHE_Z_START,
-  GLASS_START, GLASS_END, GLASS_TOP_Y,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   DOOR_START, DOOR_END, DOOR_H,
   BATH_Z_END,
@@ -27,6 +26,9 @@ import {
 
 export const W        = 10; // épaisseur de mur standard (cm)
 export const WALL_C_T = 30; // épaisseur mur C (nord, baie vitrée)
+const GLASS_START = 90;  // début baie vitrée mur C
+const GLASS_END   = 250; // fin baie vitrée mur C
+const GLASS_TOP_Y = 210; // hauteur du linteau de baie vitrée
 const CORR_E = 2;  // anti z-fighting dormant porte couloir
 const CORR_DOOR_S = KITCHEN_Z + 60;
 const CORR_DOOR_E = KITCHEN_Z + 140;
@@ -41,7 +43,6 @@ export type WallDef = {
   mat?:     WallMat;          // défaut 'default'
   h?:       number;           // défaut WALL_H
   yBase?:   number;           // défaut 0
-  skip3d?:  boolean;          // true → segment 2D uniquement
   t?:       number;           // épaisseur (défaut W)
 } & (
   | { axis: 'z'; xc: number; z1: number; z2: number }
@@ -77,6 +78,8 @@ export type PillarDef = { id: string; x: number; z: number; w?: number; d?: numb
 export const PILLAR_DEFS = [
   { id: 'corner-nw',   x: -10,                    z: -WALL_C_T / 2, w: 20, d: WALL_C_T },
   { id: 'corner-ne',   x: ROOM_W + W / 2,         z: -WALL_C_T / 2,        d: WALL_C_T },
+  { id: 'glass-west',  x: GLASS_START - W / 2,    z: -WALL_C_T / 2,        d: WALL_C_T },
+  { id: 'glass-east',  x: GLASS_END + W / 2,      z: -WALL_C_T / 2,        d: WALL_C_T },
   { id: 'corner-sw',   x: -NICHE_DEPTH - W / 2,  z: ROOM_D + W / 2 },
   { id: 'diag-ne',     x: ROOM_W + W / 2,          z: DIAG_AZ - W / 2 },
   { id: 'diag-sw',     x: -NICHE_DEPTH - W / 2,   z: DIAG_CZ - 5 },
@@ -109,18 +112,22 @@ function pillar(id: PillarId) {
 const pX = (id: PillarId) => pillar(id).x;
 const pZ = (id: PillarId) => pillar(id).z;
 const pW = (id: PillarId) => {
-  const p = pillar(id);
-  return 'w' in p ? p.w : W;
+  const p = pillar(id) as any;
+  return p.w ?? W;
 };
 const pD = (id: PillarId) => {
-  const p = pillar(id);
-  return 'd' in p ? p.d : W;
+  const p = pillar(id) as any;
+  return p.d ?? W;
 };
 
 const pWest  = (id: PillarId) => pX(id) - pW(id) / 2;
 const pEast  = (id: PillarId) => pX(id) + pW(id) / 2;
 const pNorth = (id: PillarId) => pZ(id) - pD(id) / 2;
 const pSouth = (id: PillarId) => pZ(id) + pD(id) / 2;
+
+export const GLASS_OPENING_X1 = pEast('glass-west');
+export const GLASS_OPENING_X2 = pWest('glass-east');
+export const GLASS_DOOR_X = (GLASS_OPENING_X1 + GLASS_OPENING_X2) / 2;
 
 export const WALL_DEFS: WallDef[] = [
 
@@ -149,7 +156,7 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'x', x1: DOOR_START, x2: DOOR_END + 4, zc: pZ('corner-sw'), yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
   { axis: 'x', x1: DOOR_END + 4, x2: pWest('corner-se'), zc: pZ('corner-sw') },
   // Porte principale (2D uniquement)
-  { axis: 'x', x1: DOOR_START, x2: DOOR_END, zc: ROOM_D, segKind: 'door', skip3d: true },
+  { axis: 'x', x1: DOOR_START, x2: DOOR_END, zc: ROOM_D, segKind: 'door' },
 
   // ── Cuisine ────────────────────────────────────────────────────────────────
   { axis: 'z', xc: pX('kitchen-sw'), z1: pSouth('kitchen-sw'), z2: pNorth('kitchen-nw') },
@@ -168,15 +175,17 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'z', xc: pX('corr-n'), z1: CORR_DOOR_S - CORR_E, z2: CORR_DOOR_E + CORR_E,
     yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
   // Porte couloir SDB (2D uniquement)
-  { axis: 'z', xc: pX('corr-n'), z1: CORR_DOOR_S, z2: CORR_DOOR_E, segKind: 'door', skip3d: true },
+  { axis: 'z', xc: pX('corr-n'), z1: CORR_DOOR_S, z2: CORR_DOOR_E, segKind: 'door' },
 
   // ── Mur C (nord, Z=0) ────────────────────────────────────────────────────────
   // Panneau ouest (fixe)
-  { axis: 'x', x1: pEast('corner-nw'), x2: GLASS_START, zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north' },
-  // Panneau est — 2D plan uniquement (3D inline dans Walls, skip3d car pas de skip3d pour ROOM_W)
-  { axis: 'x', x1: GLASS_END, x2: pWest('corner-ne'), zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north', skip3d: true },
+  { axis: 'x', x1: pEast('corner-nw'), x2: pWest('glass-west'), zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north' },
+  // Panneau est.
+  { axis: 'x', x1: pEast('glass-east'), x2: pWest('corner-ne'), zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north' },
+  // Muret bas sous la porte-fenêtre (3D uniquement, la baie reste une fenêtre en 2D).
+  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north', h: 20, segKind: 'none' },
   // Linteau au-dessus de la baie (3D uniquement)
-  { axis: 'x', x1: GLASS_START, x2: GLASS_END, zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
+  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
 
   // ── Douche ─────────────────────────────────────────────────────────────────
   { axis: 'z', xc: pX('shower-ne'), z1: pSouth('shower-ne'), z2: pNorth('shower-se') },
