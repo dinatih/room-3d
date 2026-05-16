@@ -2,7 +2,7 @@
 // CONFIG
 // =============================================
 // 1 unit = 1cm
-export const ROOM_W       = 316; // 3,16m — largeur réelle du séjour
+export const ROOM_W = 316; // 3,16m — largeur réelle du séjour
 export const ROOM_D = 400; // 4m
 export const WALL_H = 250; // 2.5m
 
@@ -17,8 +17,8 @@ export const KITCHEN_X1 = 130; // fin (1m = 100cm)
 export const KITCHEN_DEPTH = 60; // 60cm
 export const KITCHEN_Z = ROOM_D + KITCHEN_DEPTH; // Z=460
 
-// Enfoncement angle D-A : 10cm profond, 1m20 le long du mur A
-export const NICHE_DEPTH = 10; // 10cm (protrusion vers X+)
+// Enfoncement angle D-A : point X de la niche ouest (piliers / diagonale).
+export const NICHE_X = -10; // 10cm vers X-
 export const NICHE_Z_START = ROOM_D - 120; // Z=280
 
 // Corridor / SDB boundaries
@@ -32,7 +32,7 @@ export const DIAG_ANGLE_DEG = 120;
 const _diagAngle = DIAG_ANGLE_DEG * (Math.PI / 180);
 export const DIAG_AX = ROOM_W;       // 316 — point A : coin NE (jonction mur B)
 export const DIAG_AZ = 542;          // Z du point A
-export const DIAG_CX = -NICHE_DEPTH; // -10 — point C : côté niche ouest
+export const DIAG_CX = NICHE_X; // point C : côté niche ouest
 export const DIAG_CZ = DIAG_AZ - (DIAG_AX - DIAG_CX) / Math.tan(_diagAngle); // ≈727.5
 
 // Mur diagonal — géométrie dérivée (calculée une fois)

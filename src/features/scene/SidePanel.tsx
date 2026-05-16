@@ -18,7 +18,7 @@ const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
 import {
   ROOM_W, ROOM_D, WALL_H,
-  DOOR_START, NICHE_DEPTH, KITCHEN_Z,
+  DOOR_START, NICHE_X, KITCHEN_Z,
 } from '@config';
 
 // ── Presets caméra (miroir de VIEWS dans cameraManager.js) ───────────────────
@@ -44,7 +44,7 @@ const VIEWS: Record<string, { pos: [number,number,number]; target: [number,numbe
 const POV_ROOMS: Record<string, { x: number; z: number }> = {
   living:   { x: ROOM_W / 2,                      z: ROOM_D / 2 },
   entry:    { x: (DOOR_START + ROOM_W) / 2,        z: ROOM_D + 75 },
-  bathroom: { x: (-NICHE_DEPTH + DOOR_START) / 2,  z: (KITCHEN_Z + 600) / 2 },
+  bathroom: { x: (NICHE_X + DOOR_START) / 2,  z: (KITCHEN_Z + 600) / 2 },
   garden:   { x: 150,                              z: -120 },
 };
 

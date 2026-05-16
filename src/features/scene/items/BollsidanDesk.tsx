@@ -8,7 +8,7 @@ import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 
 const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
 const DEFAULT_H = 70;
@@ -64,9 +64,6 @@ function BollsidanGlb({ onSize, height = DEFAULT_H }: { onSize: SceneItemProps['
   const clone = useMemo(() => {
     const c = scene.clone(true);
     removeGlbLines(c);
-    c.traverse(child => {
-      if ((child as THREE.Mesh).isMesh) { child.castShadow = true; child.receiveShadow = true; }
-    });
     return c;
   }, [scene]);
 
@@ -76,6 +73,7 @@ function BollsidanGlb({ onSize, height = DEFAULT_H }: { onSize: SceneItemProps['
     const boxBase = glbLocalBBox(clone);
     const naturalH = boxBase.max.y - boxBase.min.y;
     clone.scale.y = (height / naturalH) * 100;
+    mergeGlbByMaterial(clone);
     const box = glbLocalBBox(clone);
     clone.position.set(
       -(box.min.x + box.max.x) / 2,

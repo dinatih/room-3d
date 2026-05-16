@@ -9,7 +9,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB_SINK   = 'media/BOHOLMEN Évier 47x30 cm.glb';
@@ -28,28 +28,24 @@ export function SinkBoholmen({ onSize }: SceneItemProps) {
     removeGlbLines(sinkScene);
     sinkScene.scale.setScalar(100);
     sinkScene.rotation.y = Math.PI / 2;
+    mergeGlbByMaterial(sinkScene);
     const sinkBox = glbLocalBBox(sinkScene);
     sinkScene.position.set(
       -(sinkBox.min.x + sinkBox.max.x) / 2,
       -sinkBox.min.y,
       -(sinkBox.min.z + sinkBox.max.z) / 2,
     );
-    sinkScene.traverse(c => {
-      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
-    });
 
     // ── Mitigeur — positionné à l'arrière de la vasque ──
     removeGlbLines(faucetScene);
     faucetScene.scale.setScalar(100);
+    mergeGlbByMaterial(faucetScene);
     const fBox = glbLocalBBox(faucetScene);
     faucetScene.position.set(
       -(fBox.min.x + fBox.max.x) / 2,
       -fBox.min.y,
       -(fBox.min.z + fBox.max.z) / 2,
     );
-    faucetScene.traverse(c => {
-      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
-    });
 
     groupRef.current.updateMatrixWorld(true);
     onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));

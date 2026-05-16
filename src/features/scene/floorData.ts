@@ -8,12 +8,12 @@
  *   - fenêtres (baie vitrée, vitrage douche)
  */
 import {
-  NICHE_DEPTH, NICHE_Z_START,
+  NICHE_X, NICHE_Z_START,
   DOOR_START,
   BATH_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
   DIAG_SIN, DIAG_COS, DIAG_ENTRY_S, DIAG_ENTRY_E,
-  ROOM_D, ROOM_W, KITCHEN_Z,
+  ROOM_D, KITCHEN_Z,
 } from '@config';
 import { GLASS_OPENING_X1, GLASS_OPENING_X2, WALL_DEFS, wallSeg, W } from './wallData';
 
@@ -33,8 +33,8 @@ export const SEG_WALLS: Seg[] = [
 
   // ── Segments manuels ───────────────────────────────────────────────────────
 
-  // Coin de niche : connecteur horizontal entre A1 (xc=-W/2) et A2a (xc=-NICHE_DEPTH-W/2)
-  [-W / 2, NICHE_Z_START, -NICHE_DEPTH - W / 2, NICHE_Z_START],
+  // Coin de niche : connecteur horizontal entre A1 (xc=-W/2) et A2a (xc=NICHE_X-W/2)
+  [-W / 2, NICHE_Z_START, NICHE_X - W / 2, NICHE_Z_START],
 
   // Mur diagonal bâtiment
   [DIAG_AX,       DIAG_AZ,       DIAG_DOOR_S.x, DIAG_DOOR_S.z],
@@ -63,5 +63,5 @@ export const SEG_DOORS: Seg[] = [
 
 export const SEG_WINDOWS: Seg[] = [
   [GLASS_OPENING_X1, 0, GLASS_OPENING_X2, 0], // baie vitrée (mur C)
-  [-NICHE_DEPTH, BATH_Z_END,  60,           BATH_Z_END], // vitrage douche
+  [NICHE_X, BATH_Z_END,  60,           BATH_Z_END], // vitrage douche
 ];

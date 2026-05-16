@@ -8,7 +8,7 @@ import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'media/SMÖRKULL.glb';
@@ -19,15 +19,13 @@ export function Smorkull({ onSize }: SceneItemProps) {
   useLayoutEffect(() => {
     removeGlbLines(scene);
     scene.scale.setScalar(100);
+    mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    scene.traverse(c => {
-      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
-    });
     onSize(box.getSize(new THREE.Vector3()));
   }, [scene]);
 

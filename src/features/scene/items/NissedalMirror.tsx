@@ -13,7 +13,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const frameMat  = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
@@ -69,12 +69,6 @@ export function NissedalGlbFrame({ glb, targetH }: { glb: string; targetH?: numb
     const naturalH = rawBox.max.y - rawBox.min.y;
     const s = targetH !== undefined && naturalH > 0 ? targetH / naturalH : 100;
     scene.scale.setScalar(s);
-    const box = glbLocalBBox(scene);
-    scene.position.set(
-      -(box.min.x + box.max.x) / 2,
-      -box.min.y,
-      -(box.min.z + box.max.z) / 2,
-    );
 
     // Identifier la glace = mesh avec la plus grande surface XY (après rotation)
     // Le cadre est composé de petites barres ; la glace couvre presque toute la surface.
@@ -94,11 +88,16 @@ export function NissedalGlbFrame({ glb, targetH }: { glb: string; targetH?: numb
     for (const m of meshes) {
       if (m === glassMesh) {
         m.visible = false; // glace masquée — remplacée par Reflector
-      } else {
-        m.castShadow = true;
-        m.receiveShadow = true;
       }
     }
+
+    mergeGlbByMaterial(scene);
+    const box = glbLocalBBox(scene);
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
   }, [scene]);
 
   return <primitive object={scene} />;
@@ -111,15 +110,13 @@ function NissedalMirrorGlb({ glb, onSize }: { glb: string; onSize: SceneItemProp
     removeGlbLines(scene);
     scene.scale.setScalar(100);
     scene.rotation.x = -Math.PI / 2; // Z(hauteur)→Y, Y(épaisseur)→-Z
+    mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    scene.traverse(c => {
-      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
-    });
     onSize(box.getSize(new THREE.Vector3()));
   }, [scene]);
 

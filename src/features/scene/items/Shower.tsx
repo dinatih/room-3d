@@ -19,7 +19,7 @@ import { useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB_TRAY   = 'media/Shower tray 90x90cm.glb';
@@ -62,15 +62,13 @@ function applyGeomRotY(scene: THREE.Group, angle: number) {
 function setupScene(scene: THREE.Group, scale = 100) {
   removeGlbLines(scene);
   scene.scale.setScalar(scale);
+  mergeGlbByMaterial(scene);
   const box = glbLocalBBox(scene);
   scene.position.set(
     -(box.min.x + box.max.x) / 2,
     -box.min.y,
     -(box.min.z + box.max.z) / 2,
   );
-  scene.traverse(c => {
-    if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
-  });
 }
 
 // Matériaux porte (module-level, partagés entre instances)

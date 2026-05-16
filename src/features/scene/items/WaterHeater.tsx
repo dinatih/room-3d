@@ -10,7 +10,7 @@ import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines } from '@features/scene/glbUtils';
+import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'media/water heater.glb';
@@ -35,10 +35,8 @@ export function WaterHeater({ onSize }: SceneItemProps) {
     const sy = HW_H     / GLB_SY;
     const sz = HW_R * 2 / GLB_SZ;
     scene.scale.set(sx, sy, sz);
+    mergeGlbByMaterial(scene);
     scene.position.set(-GLB_CX * sx, -GLB_CY * sy, -GLB_CZ * sz);
-    scene.traverse(c => {
-      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
-    });
     onSize(new THREE.Vector3(HW_R * 2, HW_H, HW_R * 2));
   }, [scene]);
 

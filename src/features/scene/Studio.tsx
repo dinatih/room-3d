@@ -3,7 +3,7 @@
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { useProgress } from '@react-three/drei';
+import { useProgress, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
 import {
   ACESFilmicToneMapping, PCFSoftShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
@@ -216,7 +216,7 @@ gl.shadowMap.enabled = true;
             position={[500, 700, 400]}
             intensity={1.8}
             castShadow
-            shadow-mapSize={[2048, 2048]}
+            shadow-mapSize={[1024, 1024]}
             shadow-camera-near={1}
             shadow-camera-far={2000}
             shadow-camera-left={-600}
@@ -231,6 +231,8 @@ gl.shadowMap.enabled = true;
         {/* Contrôleur unifié : synchronise camera.layers avec les toggles UI */}
         <SceneLayerController layers={layers} />
 
+        <AdaptiveDpr pixelated />
+        <PerformanceMonitor />
         <ShadowWarmup />
         <ShadowController enabled={layers.shadows} />
         <CameraController />

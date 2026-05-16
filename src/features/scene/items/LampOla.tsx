@@ -7,7 +7,7 @@ import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 export function LampOla({ onSize }: SceneItemProps) {
@@ -15,6 +15,7 @@ export function LampOla({ onSize }: SceneItemProps) {
 
   useLayoutEffect(() => {
     scene.scale.setScalar(100);
+    removeGlbLines(scene);
     scene.traverse(c => {
       const mesh = c as THREE.Mesh;
       if (!mesh.isMesh) return;
@@ -27,13 +28,13 @@ export function LampOla({ onSize }: SceneItemProps) {
         (mesh.material as THREE.MeshStandardMaterial).color.set(0xffffff);
       }
     });
+    mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    removeGlbLines(scene);
     onSize(box.getSize(new THREE.Vector3()));
   }, [scene]);
 

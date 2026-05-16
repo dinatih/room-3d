@@ -8,7 +8,7 @@ import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei'; // preload only
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const TARGET_LENGTH = 28;
@@ -39,10 +39,9 @@ export function Sneakers({ onSize }: SceneItemProps) {
       shoe.traverse(m => {
         if ((m as THREE.Mesh).isMesh) {
           (m as THREE.Mesh).material = redMat;
-          m.castShadow    = true;
-          m.receiveShadow = true;
         }
       });
+      mergeGlbByMaterial(shoe);
     }
 
     setup(left);

@@ -65,7 +65,7 @@ import type { Item } from '@shared/types';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
-  NICHE_DEPTH, NICHE_Z_START,
+  NICHE_X, NICHE_Z_START,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   BATH_Z_END, DOOR_START,
 } from '@config';
@@ -120,7 +120,7 @@ const MEUBLE_T_Z = KALLAX_SE_Z;
 const MEUBLE_T_Y = KALLAX_SE_TOP + 55; // dessus meuble + lampe
 
 const LAMP_ROT_Y = Math.atan2(ROOM_W / 2 - MEUBLE_T_X, ROOM_D / 2 - MEUBLE_T_Z);
-const MACK_X     = -NICHE_DEPTH + 42;
+const MACK_X     = NICHE_X + 42;
 const MACK_Z     = ROOM_D - w2 - 16;
 const MIRROR_CX  = 160; // (130 + 190) / 2
 
@@ -150,13 +150,13 @@ const SMORKULL_POSITIONS = [
 export function Equipment() {
   const as = useFurnitureToggles({ lampSdb: 'lamp-sdb-toggle', lampCouloir: 'lamp-couloir-toggle' });
   const HW_R = 28, HW_H = 65;
-  const SDB_CX  = (-NICHE_DEPTH + DOOR_START) / 2;
+  const SDB_CX  = (NICHE_X + DOOR_START) / 2;
   const SDB_CZ  = (KITCHEN_Z + BATH_Z_END) / 2;
   const CORR_CX = (DOOR_START + ROOM_W) / 2;
   const CORR_CZ = (ROOM_D + KITCHEN_Z) / 2;
   return (
     <>
-      <group position={[-NICHE_DEPTH + HW_R, WALL_H - 10 - HW_H / 2, KITCHEN_Z + 20 + HW_R]} rotation-y={Math.PI / 2}>
+      <group position={[NICHE_X + HW_R, WALL_H - 10 - HW_H / 2, KITCHEN_Z + 20 + HW_R]} rotation-y={Math.PI / 2}>
         <WaterHeater item={stub('water-heater')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ animUnit: true }}>
@@ -169,10 +169,10 @@ export function Equipment() {
         <VasqueSdb item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Niche douche 70×70cm : X -10→60, Z 600→670. Centre : (25, 635). */}
-      <group position={[-NICHE_DEPTH + 35, 0, BATH_Z_END + 35]} userData={{ animUnit: true }}>
+      <group position={[NICHE_X + 35, 0, BATH_Z_END + 35]} userData={{ animUnit: true }}>
         <Shower item={stub('shower')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[-NICHE_DEPTH + 60, 0, KITCHEN_Z + 46.5]} userData={{ animUnit: true }}>
+      <group position={[NICHE_X + 60, 0, KITCHEN_Z + 46.5]} userData={{ animUnit: true }}>
         <Toilet item={stub('toilet')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group visible={!!as['lamp-sdb-toggle']} position={[SDB_CX, WALL_H - 10, SDB_CZ]} rotation={[Math.PI, 0, 0]}>
@@ -207,7 +207,7 @@ export function Furniture() {
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[-NICHE_DEPTH + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
+      <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxCuisine item={stub('kallax-sw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, ROOM_D - 60 - w1 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
@@ -216,7 +216,7 @@ export function Furniture() {
       <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + 10 + KITCHEN_Z) / 2]}>
         <CorridorCloset item={stub('corridor-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
-      <group position={[(-NICHE_DEPTH + DOOR_START) / 2, 0, BATH_Z_END - 53]}>
+      <group position={[(NICHE_X + DOOR_START) / 2 - 5, 0, BATH_Z_END - 53]}>
         <GrassRug item={stub('grass-rug')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[130, 0, BATH_Z_END]}>
@@ -225,7 +225,7 @@ export function Furniture() {
       <group position={[KITCHEN_X0, 0, ROOM_D]}>
         <CuisineDrona />
       </group>
-      <group position={[-NICHE_DEPTH + 20, 0, cbZ]} userData={{ animUnit: true }}>
+      <group position={[NICHE_X + 20, 0, cbZ]} userData={{ animUnit: true }}>
         <BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group position={[DOOR_START - 31, 0, cbZ]} userData={{ animUnit: true }}>
@@ -549,7 +549,7 @@ function buildDronaMatrices(): THREE.Matrix4[] {
     mats.push(dummy.matrix.clone());
   }
   addSingle(DOOR_START - 31,    60 + DF / 2, KITCHEN_Z + 30);                // SDB est
-  addSingle(-NICHE_DEPTH + 20,  60 + DF / 2, KITCHEN_Z + 30);                // SDB ouest
+  addSingle(NICHE_X + 20,       60 + DF / 2, KITCHEN_Z + 30);                // SDB ouest
   addSingle(24.5,               50 + DF / 2, 269.5,         Math.PI / 2);    // congélateur CHIQ
   return mats;
 }

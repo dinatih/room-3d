@@ -7,7 +7,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { glbLocalBBox } from '@features/scene/glbUtils';
+import { glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const TILE_SIZE = 30;
@@ -31,15 +31,13 @@ export function AltappenRug({ onSize }: SceneItemProps) {
     const tileW = rawBox.max.x - rawBox.min.x;
     const scl = TILE_SIZE / tileW;
     scene.scale.setScalar(scl);
+    mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    scene.traverse(c => {
-      if ((c as THREE.Mesh).isMesh) { c.receiveShadow = true; }
-    });
     onSize(box.getSize(new THREE.Vector3()));
   }, [scene]);
 

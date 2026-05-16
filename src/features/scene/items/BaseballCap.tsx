@@ -6,7 +6,7 @@ import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.65 });
@@ -24,10 +24,10 @@ export function BaseballCap({ onSize }: SceneItemProps) {
     scene.traverse(obj => {
       if ((obj as THREE.Mesh).isMesh) {
         (obj as THREE.Mesh).material = redMat;
-        (obj as THREE.Mesh).castShadow = true;
       }
     });
 
+    mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,

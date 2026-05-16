@@ -19,7 +19,7 @@ import { NOOP_ITEM, NOOP_SIZE } from './sceneItem';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
-  NICHE_DEPTH, NICHE_Z_START,
+  NICHE_X, NICHE_Z_START,
   DOOR_START, DOOR_END, DOOR_H,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   BATH_Z_END,
@@ -464,8 +464,8 @@ function Parquet() {
     const shape = new THREE.Shape([
       new THREE.Vector2(0,           0),
       new THREE.Vector2(0,           -NICHE_Z_START),
-      new THREE.Vector2(-NICHE_DEPTH,-NICHE_Z_START),
-      new THREE.Vector2(-NICHE_DEPTH,-ROOM_D),
+      new THREE.Vector2(NICHE_X,-NICHE_Z_START),
+      new THREE.Vector2(NICHE_X,-ROOM_D),
       new THREE.Vector2(0,           -ROOM_D),
       new THREE.Vector2(KITCHEN_X0,  -ROOM_D),
       new THREE.Vector2(KITCHEN_X0,  -KITCHEN_Z),

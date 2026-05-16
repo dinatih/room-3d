@@ -9,7 +9,7 @@ import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'media/METOD Rangement mural blanc 40x37x60 cm.glb';
@@ -21,15 +21,13 @@ function MetodCabinet({ onSize }: SceneItemProps) {
     removeGlbLines(scene);
     scene.scale.setScalar(100);
     scene.rotation.x = Math.PI / 2; // Z-up GLB → debout
+    mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    scene.traverse(c => {
-      if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true; }
-    });
     onSize(box.getSize(new THREE.Vector3()));
   }, [scene]);
 

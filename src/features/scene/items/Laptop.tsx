@@ -12,7 +12,7 @@ import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useTexture, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
-import { removeGlbLines } from '@features/scene/glbUtils';
+import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
 
 const BASE_W = 29.7, BASE_D = 22.8, BASE_H = 1.6;
 const SCREEN_W = 29, SCREEN_D = 19.5, SCREEN_H = 0.8;
@@ -148,6 +148,7 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
     const usbcOcc = c.getObjectByName('occurrence of GFW00_3H_NB_ID_USBC_CARD_1');
     if (usbcOcc) usbcOcc.visible = false;
 
+    mergeGlbByMaterial(c);
     return c;
   }, [scene]);
 

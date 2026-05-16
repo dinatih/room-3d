@@ -7,7 +7,7 @@ import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const TARGET_H = 170;
@@ -20,17 +20,18 @@ export function JoggingSuit({ onSize }: SceneItemProps) {
     scene.scale.set(1, 1, 1);
     const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
     scene.scale.setScalar(TARGET_H / Math.max(raw.x, raw.y, raw.z));
+    removeGlbLines(scene);
+    scene.traverse(c => {
+      const m = c as THREE.Mesh;
+      if (m.isMesh) { m.material = red; }
+    });
+    mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    removeGlbLines(scene);
-    scene.traverse(c => {
-      const m = c as THREE.Mesh;
-      if (m.isMesh) { m.material = red; m.castShadow = true; m.receiveShadow = true; }
-    });
     onSize(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
