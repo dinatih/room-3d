@@ -15,6 +15,14 @@ import { cameraState } from '@features/scene/cameraState';
 
 import { ROOM_W, ROOM_D } from '@config';
 
+// Three.js PropertyBinding ne supporte pas les espaces dans les noms de bones.
+// Le GLB 2026 utilise des espaces → on les normalise en underscores au chargement.
+function normalizeBoneNames(root: THREE.Object3D): void {
+  root.traverse(c => {
+    if ((c as THREE.Bone).isBone) c.name = c.name.replace(/ /g, '_');
+  });
+}
+
 // ── Animation de marche (port de buildWalkClip dans lara2026.js) ───────────────
 
 function buildWalkClip(root: THREE.Object3D): THREE.AnimationClip {
@@ -44,18 +52,16 @@ function buildWalkClip(root: THREE.Object3D): THREE.AnimationClip {
   }
 
   const N  = new THREE.Quaternion();
-  const LA = qz(-90);
-  const RA = qz(120);
-  const lad = (deg: number) => LA.clone().multiply(qx(deg));
-  const rad = (deg: number) => RA.clone().multiply(qx(deg));
+  const lad = (deg: number) => qz(-90 + deg);
+  const rad = (deg: number) => qz( 90 - deg);
 
   return new THREE.AnimationClip('walk-lara2026', T, [
-    qt('leg_left_thigh_04',        qx(30),   N,        qx(-30),  N,        qx(30)),
-    qt('leg_right_thigh_08',       qx(-30),  N,        qx(30),   N,        qx(-30)),
-    qt('leg_left_knee_05',         qx(8),    qx(30),   qx(60),   qx(30),   qx(8)),
-    qt('leg_right_knee_09',        qx(60),   qx(30),   qx(8),    qx(30),   qx(60)),
-    qt('arm_left_shoulder_2_014',  lad(20),  LA,       lad(-20), LA,       lad(20)),
-    qt('arm_right_shoulder_2_033', rad(-20), RA,       rad(20),  RA,       rad(-20)),
+    qt('leg_left_thigh_04',        qx(30),    N,         qx(-30),   N,         qx(30)),
+    qt('leg_right_thigh_08',       qx(-30),   N,         qx(30),    N,         qx(-30)),
+    qt('leg_left_knee_05',         qx(8),     qx(30),    qx(60),    qx(30),    qx(8)),
+    qt('leg_right_knee_09',        qx(60),    qx(30),    qx(8),     qx(30),    qx(60)),
+    qt('arm_left_shoulder_2_014',  lad(20),   lad(0),    lad(-20),  lad(0),    lad(20)),
+    qt('arm_right_shoulder_2_033', rad(-20),  rad(0),    rad(20),   rad(0),    rad(-20)),
     qt('spine_lower_012',
       new THREE.Quaternion(0, 0,  0.012, 0.99993), N,
       new THREE.Quaternion(0, 0, -0.012, 0.99993), N,
@@ -93,6 +99,7 @@ export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
   }, [showSkeleton, skelHelper, threeScene]);
 
   useLayoutEffect(() => {
+    normalizeBoneNames(scene);
     // FrontSide only — évite d'afficher l'intérieur du corps en mode walk
     scene.traverse(c => {
       const m = c as THREE.Mesh;
@@ -206,8 +213,8 @@ export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
 
 // ── Walker rouge (clone indépendant, position fixe) ───────────────────────────
 
-const RED_MAT_NAMES  = new Set(['5_Shirt_1.0_0_0', '5_BackPack_1.0_0_0', '5_Shorts_1.0_0_0']);
-const RED_NODE_NAMES = new Set(['Object_116']);
+const RED_MAT_NAMES  = new Set(['5_BackPack_1.0_0_0', '5_Shorts_1.0_0_0']);
+const RED_NODE_NAMES = new Set(['Object_113']);
 const RED_COLOR      = new THREE.Color(0xcc1111);
 
 export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) {
@@ -229,6 +236,7 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
   }, [showSkeleton, skelHelper, threeScene]);
 
   useLayoutEffect(() => {
+    normalizeBoneNames(clone);
     // Walker (sibling précédent) a déjà mis à l'échelle origScene — on copie
     clone.scale.copy(origScene.scale);
     clone.position.copy(origScene.position);
