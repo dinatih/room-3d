@@ -107,7 +107,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'door-entry',       name: 'Porte d\'entrée',                brand: '',         category: 'doors',     qty: 1, dims: { w: 90,  d: 4,   h: 204 }, notes: 'Rouge, mur diagonal, poignée L + knob rouge' },
   { id: 'door-living',      name: 'Porte séjour',                   brand: '',         category: 'doors',     qty: 1, dims: { w: 83,  d: 4,   h: 204 }, notes: 'Blanche, mur D, poignée L double face' },
   { id: 'door-sdb',         name: 'Porte SDB',                      brand: '',         category: 'doors',     qty: 1, dims: { w: 4,   d: 83,  h: 204 }, notes: 'Blanche, mur couloir, poignée L double face' },
-  { id: 'door-glass',       name: 'Porte-fenêtre',                  brand: '',         category: 'doors',     qty: 1, dims: { w: 160, d: 5,   h: 190 }, notes: 'Double battant PVC blanc, vitrage, seuil 20cm', actions: ['eastGlassDoor'] },
+  { id: 'door-glass',       name: 'Porte-fenêtre',                  brand: '',         category: 'doors',     qty: 1, dims: { w: 160, d: 5,   h: 190 }, notes: 'Double battant PVC blanc, vitrage, seuil 20cm', actions: ['east-glass-door-toggle'] },
 ];
 
 export const STORAGE_SPACES: StorageSpace[] = [
@@ -118,7 +118,7 @@ export const STORAGE_SPACES: StorageSpace[] = [
   { id: 'mackapar-stack',  name: 'Mackapär',        dims: { w: 77,   d: 32, h: 200 }, notes: 'Portant niche — combinaison + salopette + 2 Drona en haut' },
   { id: 'sunnersta-stack', name: 'Sunnersta',       dims: { w: 36,   d: 56, h: 90  }, notes: 'Desserte roulante — mannequin + casquette' },
   { id: 'cuisine-stack',   name: 'Cuisine',         dims: { w: 100,  d: 60, h: 93  }, notes: 'Plan de travail, évier, plaques, frigo, meuble bas, meuble haut + 3 Drona' },
-  { id: 'corridor-closet', name: 'Placard couloir', dims: { w: 60,   d: 50, h: 250 }, notes: 'Porte pivotante + 3 étagères', actions: ['corrDoors'] },
+  { id: 'corridor-closet', name: 'Placard couloir', dims: { w: 60,   d: 50, h: 250 }, notes: 'Porte pivotante + 3 étagères', actions: ['corr-doors-toggle'] },
   { id: 'sdb-closet',      name: 'Placard SDB',     dims: { w: 110,  d: 60, h: 250 }, notes: 'Double porte coulissante + étagère triangulaire 170cm (X=70→180, Z=600→660)' },
 ];
 

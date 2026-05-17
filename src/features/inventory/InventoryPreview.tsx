@@ -99,30 +99,28 @@ function CenteredItem({
   const outerRef = useRef<THREE.Group>(null!);
   const innerRef = useRef<THREE.Group>(null!);
 
-  const fit = useCallback((size: THREE.Vector3) => {
+  const fit = useCallback((_size: THREE.Vector3) => {
     if (!outerRef.current || !innerRef.current) return;
-    innerRef.current.updateMatrixWorld(true);
+    // Mesure en espace local : annule scale/position outerRef avant setFromObject
+    outerRef.current.scale.set(1, 1, 1);
+    outerRef.current.position.set(0, 0, 0);
+    outerRef.current.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(innerRef.current);
     if (box.isEmpty()) return;
     const center = box.getCenter(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z);
+    const localSize = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(localSize.x, localSize.y, localSize.z);
     if (maxDim === 0) return;
     const s = 1.4 / maxDim;
     outerRef.current.scale.setScalar(s);
     outerRef.current.position.set(-center.x * s, -center.y * s, -center.z * s);
   }, []);
 
-  // Fallback pour les composants procéduraux qui ne passent pas leur taille via onSize.
-  // Re-fit aussi quand actionState change (état multi-action peut modifier la bbox).
-  const actionStateKey = JSON.stringify(actionState);
+  // Fit unique au montage (Canvas key=item.id remount au changement d'objet).
+  // Pas de re-fit sur actionState — évite saut de scale visible quand bbox change.
   useEffect(() => {
-    if (!outerRef.current || !innerRef.current) return;
-    innerRef.current.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(innerRef.current);
-    if (box.isEmpty()) return;
-    const size   = box.getSize(new THREE.Vector3());
-    fit(size);
-  }, [fit, actionStateKey]);
+    fit(new THREE.Vector3());
+  }, [fit]);
 
   return (
     <group ref={outerRef}>
