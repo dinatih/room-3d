@@ -57,22 +57,51 @@ function BollsidanProcedural({ onSize, height = DEFAULT_H }: SceneItemProps & { 
   );
 }
 
+// Y zones (cm, post scale×100). Source: inspection of GLB vertex histogram.
+// Two empty gaps (59→76 cm above lower tube; below table-top chamfer) make these limits non-destructive.
+// Lower tube + base feet (with black screws): fixed.
+// Upper post (attached to table-top): stretches.
+// Table-top: rigid translate (preserves thickness).
+const NATURAL_H = 84.77;
+const LOWER_TOP = 59.4;   // top of lower telescoping tube cap (dense verts 57.2-59.3)
+const TOP_BOT   = 76.0;   // table-top assembly starts (chamfer + slab)
+const TOP_THICK = NATURAL_H - TOP_BOT;
+const NATURAL_COL_H = TOP_BOT - LOWER_TOP;
+
 function BollsidanGlb({ onSize, height = DEFAULT_H }: { onSize: SceneItemProps['onSize'], height?: number }) {
   const { scene } = useGLTF(GLB_PATH);
 
+  // Re-clone on height change so per-vertex stretch starts from natural geometry.
   const clone = useMemo(() => {
     const c = scene.clone(true);
     removeGlbLines(c);
     return c;
-  }, [scene]);
+  }, [scene, height]);
 
   useLayoutEffect(() => {
     clone.scale.set(1, 1, 1);
     clone.scale.setScalar(100);
-    const boxBase = glbLocalBBox(clone);
-    const naturalH = boxBase.max.y - boxBase.min.y;
-    clone.scale.y = (height / naturalH) * 100;
     mergeGlbByMaterial(clone);
+
+    const newColH = Math.max(0.1, height - LOWER_TOP - TOP_THICK);
+    const stretch = newColH / NATURAL_COL_H;
+
+    clone.traverse(node => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const pos = mesh.geometry.attributes.position as THREE.BufferAttribute;
+      const arr = pos.array as Float32Array;
+      for (let i = 1; i < arr.length; i += 3) {
+        const y = arr[i];
+        if (y <= LOWER_TOP)     continue;
+        else if (y >= TOP_BOT)  arr[i] = LOWER_TOP + newColH + (y - TOP_BOT);
+        else                    arr[i] = LOWER_TOP + (y - LOWER_TOP) * stretch;
+      }
+      pos.needsUpdate = true;
+      mesh.geometry.computeBoundingBox();
+      mesh.geometry.computeVertexNormals();
+    });
+
     const box = glbLocalBBox(clone);
     clone.position.set(
       -(box.min.x + box.max.x) / 2,
