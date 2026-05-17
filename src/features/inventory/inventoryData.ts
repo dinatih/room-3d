@@ -72,6 +72,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'freezer',          name: 'Congélateur CHIQ CSD46D4E',     brand: 'CHIQ',     category: 'kitchen',   qty: 1, dims: { w: 45,   d: 47,   h: 50   }, notes: 'Noir, niche séjour', glbPath: 'media/TILLREDA Réfrigérateur indépendant-blanc 43 l.glb' },
 
   // ── BATHROOM ─────────────────────────────────────────────────────────────────
+  { id: 'vathult-350',           name: 'VÅTHULT éclairage LED miroir 350 mm alu', brand: 'IKEA', category: 'bathroom', qty: 1, dims: { w: 35, d: 4, h: 4 }, notes: 'Au-dessus miroir vasque SDB', glbPath: 'media/VÅTHULT éclairage LED élément-miroir 350 mm alu.glb' },
   { id: 'bathroom-cabinet-west', name: 'METOD 40×37×60 + RINGHULT + KALLROR (ouest)', brand: 'IKEA', category: 'bathroom', qty: 1, dims: { w: 40, d: 37, h: 60 }, notes: 'Blanc + porte gris brillant + poignée inox 213mm', glbPath: 'media/METOD Rangement mural blanc 40x37x60 cm.glb' },
   { id: 'bathroom-cabinet-east', name: 'METOD 40×37×60 + RINGHULT + KALLROR (est)',  brand: 'IKEA', category: 'bathroom', qty: 1, dims: { w: 40, d: 37, h: 60 }, notes: 'Blanc + porte gris brillant + poignée inox 213mm', glbPath: 'media/METOD Rangement mural blanc 40x37x60 cm.glb' },
   { id: 'ringhult-door-sdb',    name: 'RINGHULT Porte 40×60 gris brillant', brand: 'IKEA', category: 'bathroom', qty: 2, dims: { w: 40, d: 2, h: 60 }, notes: 'Porte meubles SDB ouest et est', glbPath: 'media/RINGHULT Porte brillant gris clair 40x60 cm.glb' },
