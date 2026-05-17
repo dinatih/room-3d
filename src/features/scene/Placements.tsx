@@ -60,6 +60,7 @@ import { PottedPalm }   from './items/PottedPalm';
 import { Viggja }       from './items/Viggja';
 import { JoggingSuit }  from './items/JoggingSuit';
 import { ShibaInu }    from './items/ShibaInu';
+import { Tisken }        from './items/Tisken';
 import { DronaInstances }       from './items/Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
@@ -168,6 +169,13 @@ export function Equipment() {
       </group>
       <group position={[DOOR_START - 84, 14, KITCHEN_Z + 34.5]} userData={{ animUnit: true }}>
         <VasqueSdb item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* TISKEN sur miroir vasque — mi-hauteur, bord gauche et droit */}
+      <group position={[DOOR_START - 84 - 22, 129, KITCHEN_Z + 12.1]} rotation={[Math.PI / 2, 0, 0]}>
+        <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[DOOR_START - 84 + 22, 129, KITCHEN_Z + 12.1]} rotation={[Math.PI / 2, 0, 0]}>
+        <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Niche douche 70×70cm : X -10→60, Z 600→670. Centre : (25, 635). */}
       <group position={[NICHE_X + 35, 0, BATH_Z_END + 35]} userData={{ animUnit: true }}>
