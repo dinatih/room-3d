@@ -17,9 +17,9 @@ import type { LidarMode } from '@features/scene/SidePanel';
 const SCAN_PATH = 'media/4_7_2026_chevaleret.glb';
 
 // ── Alignement ───────────────────────────────────────────────────────────────
-const POS_X = 150;
+const POS_X = 158;
 const POS_Y = 83;   // −Y_min du scan (−0.83m × 100)
-const POS_Z = 235;
+const POS_Z = 230;
 
 // Y scan après scale×100 : min=−83, max=183 → hauteur totale 266cm
 const Y_MIN_WORLD = -83;
