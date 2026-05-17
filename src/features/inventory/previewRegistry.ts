@@ -34,7 +34,7 @@ import { KallaxSE }                                   from '@features/scene/item
 import { KallaxNW }                                   from '@features/scene/items/KallaxNW';
 import { KallaxCuisine }                              from '@features/scene/items/KallaxCuisine';
 import { MeubleT }                                    from '@features/scene/items/MeubleT';
-import { UtakerFrame }                                from '@features/scene/items/UtakerFrame';
+import { UtakerStack }                                from '@features/scene/items/UtakerStack';
 import { BollsidanDesk }                              from '@features/scene/items/BollsidanDesk';
 import { MannequinHead }                              from '@features/scene/items/MannequinHead';
 import { Backpack }                                   from '@features/scene/items/Backpack';
@@ -73,8 +73,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'altappen-rug':           AltappenRug,
   'jordan-hex-mule':        JordanHexMule,
   'meuble-t':               MeubleT,
-  'utaker-lower':           UtakerFrame,
-  'utaker-upper':           UtakerFrame,
+  'utaker-stack':           UtakerStack,
   'desk-bollsidan':         BollsidanDesk,
   'mannequin-head':         MannequinHead,
   'backpack':               Backpack,
@@ -108,4 +107,6 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'wc-lid-toggle':         ['Ouvrir', 'Fermer'],
   'corr-doors-toggle':     ['Ouvrir', 'Fermer'],
   'sdb-closet-toggle':     ['Ouvrir', 'Fermer'],
+  'bed-toggle':            ['Désempiler', 'Empiler'],
+  'bed-sofa':              ['Canapé', 'Lit'],
 };

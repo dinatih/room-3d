@@ -42,8 +42,9 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'drona',             name: 'Boîte DRONA',                   brand: 'IKEA',     category: 'storage',   qty: 29, dims: { w: 33,   d: 38,   h: 33   }, notes: 'Dans les Kallax NE/SE/NW/cuisine, Mackapär, meubles SDB et cuisine', glbPath: 'media/DRÖNA.glb' },
 
   // ── FURNITURE ────────────────────────────────────────────────────────────────
-  { id: 'utaker-lower',     name: 'Utåker - Lit bas',               brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 205,  d: 83,   h: 30   }, notes: 'Empilable, matelas 200×80cm bleu' },
-  { id: 'utaker-upper',     name: 'Utåker - Lit haut',              brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 205,  d: 83,   h: 30   }, notes: 'Empilable, matelas 200×80cm blanc' },
+  { id: 'utaker-stack',     name: 'Utåker - Lit empilable (paire)', brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 205,  d: 83,   h: 46   }, notes: 'Lit empilable IKEA vendu en pair (bas + haut), 2× matelas 200×80cm', actions: ['bed-toggle', 'bed-sofa'] },
+  { id: 'utaker-lower',     name: 'Utåker - Lit bas',               brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 205,  d: 83,   h: 23   }, notes: 'Empilable, vendu en pair avec lit haut, matelas 200×80cm bleu', glbPath: 'media/UTÅKER lit empilable 80x200 pin (bas).glb' },
+  { id: 'utaker-upper',     name: 'Utåker - Lit haut',              brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 205,  d: 83,   h: 23   }, notes: 'Empilable, vendu en pair avec lit bas, matelas 200×80cm blanc', glbPath: 'media/UTÅKER lit empilable 80x200 pin (haut).glb' },
   { id: 'desk-bollsidan',   name: 'Bollsidan - Bureau assis-debout', brand: 'IKEA',     category: 'furniture', qty: 2, dims: { w: 68,   d: 36,   h: 70   }, notes: 'Surface 68×36cm ; bureau 2 : laptop + téléphone + mug' },
   { id: 'smorkull-chair',   name: 'Chaise de bureau Smörkull',      brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 66,   d: 65,   h: 108  }, notes: 'Rouge', glbPath: 'media/SMÖRKULL.glb' },
   { id: 'sunnersta',        name: 'Desserte SUNNERSTA',             brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 36,   d: 56,   h: 90   }, notes: 'Roulante, têtes de mannequin dessus', glbPath: 'media/sunnersta_trolley_ikea.glb' },

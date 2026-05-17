@@ -1,33 +1,27 @@
 /**
- * UtakerFrame.tsx — Cadre de lit IKEA Utåker (procédural).
- * id 'utaker-lower' → cadre bas (matelas bleu, H=18cm)
- * id 'utaker-upper' → cadre haut (matelas blanc, H=24cm + couette rouge)
- * Coordonnées locales : centré XZ, Y=0 = sol.
+ * UtakerFrame.tsx — Cadre lit IKEA Utåker (GLB) + matelas et housses procéduraux.
+ * id 'utaker-lower' → cadre bas GLB, matelas bleu, H=18 cm
+ * id 'utaker-upper' → cadre haut GLB, matelas blanc, H=24 cm + couette rouge
+ * Coordonnées locales : centré XZ (longueur sur X), Y=0 = sol.
  */
 import { useLayoutEffect, useRef } from 'react';
+import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 
-const woodMat = new THREE.MeshStandardMaterial({ color: 0xe8c39e, roughness: 0.8 });
-const redMat  = new THREE.MeshStandardMaterial({ color: 0xcc2222, roughness: 0.75 });
+const BAS_GLB  = 'media/UTÅKER lit empilable 80x200 pin (bas).glb';
+const HAUT_GLB = 'media/UTÅKER lit empilable 80x200 pin (haut).glb';
 
-function Frame({ matColor, matHeight }: { matColor: number; matHeight: number }) {
+const redMat = new THREE.MeshStandardMaterial({ color: 0xcc2222, roughness: 0.75 });
+
+function Mattress({ matColor, matHeight }: { matColor: number; matHeight: number }) {
   const mat = new THREE.MeshStandardMaterial({ color: matColor, roughness: 0.8 });
   return (
-    <group>
-      <mesh position={[0, 17, 40]}  castShadow receiveShadow material={woodMat}><boxGeometry args={[205, 12, 3]} /></mesh>
-      <mesh position={[0, 17, -40]} castShadow receiveShadow material={woodMat}><boxGeometry args={[205, 12, 3]} /></mesh>
-      <mesh position={[101,  17, 0]} castShadow receiveShadow material={woodMat}><boxGeometry args={[3, 12, 83]} /></mesh>
-      <mesh position={[-101, 17, 0]} castShadow receiveShadow material={woodMat}><boxGeometry args={[3, 12, 83]} /></mesh>
-      {([-98, 98] as const).flatMap(px => ([-38.5, 38.5] as const).map(pz => (
-        <mesh key={`${px}${pz}`} position={[px, 11.5, pz]} castShadow receiveShadow material={woodMat}>
-          <boxGeometry args={[4, 23, 4]} />
-        </mesh>
-      )))}
-      <mesh position={[0, 11 + matHeight / 2, 0]} castShadow receiveShadow material={mat}>
-        <boxGeometry args={[200, matHeight, 80]} />
-      </mesh>
-    </group>
+    <mesh position={[0, 11 + matHeight / 2, 0]} castShadow receiveShadow material={mat}>
+      <boxGeometry args={[200, matHeight, 80]} />
+    </mesh>
   );
 }
 
@@ -51,11 +45,25 @@ function Bedcovers({ matHeight }: { matHeight: number }) {
   );
 }
 
+function Cadre({ glbPath }: { glbPath: string }) {
+  const { scene } = useGLTFClone(glbPath);
+  useLayoutEffect(() => {
+    scene.scale.set(1, 1, 1);
+    scene.rotation.set(0, 0, 0);
+    removeGlbLines(scene);
+    scene.scale.setScalar(100);
+    scene.rotation.y = Math.PI / 2;
+    mergeGlbByMaterial(scene);
+  }, [scene]);
+  return <primitive object={scene} />;
+}
+
 export function UtakerFrame({ item, onSize }: SceneItemProps) {
   const groupRef = useRef<THREE.Group>(null!);
   const isUpper  = item.id === 'utaker-upper';
   const matColor = isUpper ? 0xffffff : 0x87ceeb;
   const matHeight = isUpper ? 24 : 18;
+  const glbPath  = isUpper ? HAUT_GLB : BAS_GLB;
 
   useLayoutEffect(() => {
     groupRef.current.updateMatrixWorld(true);
@@ -64,8 +72,12 @@ export function UtakerFrame({ item, onSize }: SceneItemProps) {
 
   return (
     <group ref={groupRef}>
-      <Frame matColor={matColor} matHeight={matHeight} />
+      <Cadre glbPath={glbPath} />
+      <Mattress matColor={matColor} matHeight={matHeight} />
       {isUpper && <Bedcovers matHeight={matHeight} />}
     </group>
   );
 }
+
+useGLTF.preload(BAS_GLB);
+useGLTF.preload(HAUT_GLB);
