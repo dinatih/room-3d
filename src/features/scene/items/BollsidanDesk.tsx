@@ -2,9 +2,8 @@
  * BollsidanDesk.tsx — Bureau réglable IKEA BOLLSIDAN (procédural + GLB).
  * Coordonnées locales : centré XZ, Y=0 = sol, hauteur assis 70cm.
  *
- * Action 'deskGlb' : bascule entre modèle procédural et GLB IKEA officiel.
  */
-import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
@@ -87,20 +86,7 @@ function BollsidanGlb({ onSize, height = DEFAULT_H }: { onSize: SceneItemProps['
 }
 
 export function BollsidanDesk({ onSize, height = DEFAULT_H }: SceneItemProps & { height?: number }) {
-  const [useGlb, setUseGlb] = useState(true);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      if ((e as CustomEvent).detail?.key !== 'deskGlb') return;
-      setUseGlb(v => !v);
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, []);
-
-  return useGlb
-    ? <BollsidanGlb onSize={onSize} height={height} />
-    : <BollsidanProcedural item={{} as any} actionState={{}} onSize={onSize} height={height} />;
+  return <BollsidanGlb onSize={onSize} height={height} />;
 }
 
 useGLTF.preload(GLB_PATH);

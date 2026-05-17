@@ -324,8 +324,6 @@ export interface FurnitureState {
   bedPosition:  boolean;
   smorkullPos:  boolean;
   lampOn:       boolean;
-  laptopModel:    boolean;
-  deskGlb:        boolean;
   dronaRougeGlb:  boolean;
   lampSdb:        boolean;
   lampCouloir:    boolean;
@@ -485,10 +483,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
               {sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
             </div>
           )}
-          {b0('light', `Laptop : ${furniture.laptopModel ? 'CAD' : 'Procédural'}`,
-              () => onToggleFurniture('laptopModel'))}
-          {b0('light', `Bureau : ${furniture.deskGlb ? 'GLB' : 'Procédural'}`,
-              () => onToggleFurniture('deskGlb'))}
           <button
             style={{ ...btn(COLORS['gold']), opacity: layers.plan ? 1 : 0.45 }}
             onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}

@@ -2,13 +2,11 @@
  * Laptop.tsx — Framework Laptop 13".
  * Coordonnées locales : X/Z centrés, Y=0 = surface du bureau.
  *
- * Action 'laptopModel' : bascule entre modèle procédural et GLB CAD OnShape.
- *
  * LaptopGlb : charge le GLB Draco (4.3 MB, ~3107 draw calls).
  * Overrides : bezel + cartes d'extension rouges, positions des slots.
  * DRACOLoader configuré en amont dans main.tsx (useGLTF.setDecoderPath).
  */
-import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
+import { useLayoutEffect, useMemo } from 'react';
 import { useTexture, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
@@ -162,18 +160,5 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
 // ── Export ────────────────────────────────────────────────────────────────────
 
 export function Laptop({ onSize }: SceneItemProps) {
-  const [useGltf, setUseGltf] = useState(true);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      if ((e as CustomEvent).detail?.key !== 'laptopModel') return;
-      setUseGltf(v => !v);
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, []);
-
-  return useGltf
-    ? <LaptopGlb onSize={onSize} />
-    : <LaptopProcedural onSize={onSize} />;
+  return <LaptopGlb onSize={onSize} />;
 }

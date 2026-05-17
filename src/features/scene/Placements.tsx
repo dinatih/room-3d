@@ -59,6 +59,7 @@ import { ChestBench }   from './items/ChestBench';
 import { PottedPalm }   from './items/PottedPalm';
 import { Viggja }       from './items/Viggja';
 import { JoggingSuit }  from './items/JoggingSuit';
+import { ShibaInu }    from './items/ShibaInu';
 import { DronaInstances }       from './items/Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
@@ -504,6 +505,10 @@ export function Garden() {
       </group>
       <group position={[260, 0, -250]} userData={{ animUnit: true }}>
         <JoggingSuit item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+      <group position={[180, 0, -120]} rotation={[0, -Math.PI / 4, 0]}
+             userData={{ hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
+        <ShibaInu />
       </group>
     </>
   );

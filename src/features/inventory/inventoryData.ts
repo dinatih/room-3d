@@ -62,7 +62,9 @@ export const INVENTORY: InventoryItem[] = [
 
   // ── KITCHEN ──────────────────────────────────────────────────────────────────
   { id: 'counter',          name: 'Plan de travail',                brand: '',         category: 'kitchen',   qty: 1, dims: { w: 100,  d: 60,   h: 3    }, notes: 'Blanc, avec trou évier' },
-  { id: 'cabinet-wood',     name: 'METOD Rangement 40×60×80',       brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 40,   d: 60,   h: 80   }, notes: 'Blanc', glbPath: 'media/METOD Rangement blanc 40x60x80 cm.glb' },
+  { id: 'cabinet-wood',     name: 'METOD 40×60×80 + RINGHULT + KALLROR', brand: 'IKEA', category: 'kitchen', qty: 1, dims: { w: 40, d: 60, h: 80 }, notes: 'Blanc + porte gris brillant + poignée inox 213mm, meuble sous évier', glbPath: 'media/METOD Rangement blanc 40x60x80 cm.glb' },
+  { id: 'ringhult-door',    name: 'RINGHULT Porte 40×80 gris brillant', brand: 'IKEA',  category: 'kitchen',   qty: 1, dims: { w: 40,   d: 2,    h: 80   }, notes: 'Porte placard cuisine sous évier', glbPath: 'media/RINGHULT Porte brillant gris clair 40x80 cm.glb' },
+  { id: 'kallror',          name: 'KALLROR Poignée inox 213 mm',    brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 21.3, d: 3.5,  h: 3.5  }, notes: 'Acier inoxydable, meuble cuisine', glbPath: 'media/KALLROR Poignée acier inoxydable 213 mm.glb' },
   { id: 'fridge',           name: 'LAGAN Réfrigérateur 113 l',      brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 60,   d: 63,   h: 172  }, notes: 'Blanc, comp. congélateur', glbPath: 'media/LAGAN Réfrigérateur av comp congélateur indépendant-blanc 97-16 l.glb' },
   { id: 'sink-boholmen',    name: 'Évier BOHOLMEN 1 bac',          brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 30,   d: 47,   h: 15   }, notes: 'Inox, avec robinet' },
   { id: 'stove',            name: 'Plaque VÄLBILDAD',               brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 29,   d: 52,   h: 5    }, notes: 'Induction', glbPath: 'media/VÄLBILDAD.glb' },
@@ -87,6 +89,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'jordan-hex-mule', name: 'Jordan Hex Mule SP',             brand: 'Nike/Jordan', category: 'clothing', qty: 1, dims: { w: 20,  d: 28.5, h: 9.4 }, notes: 'University Red, taille 44.5, FJ0603-600' },
 
   // ── DECOR ─────────────────────────────────────────────────────────────────────
+  { id: 'lillhavet',        name: 'LILLHAVET',                      brand: 'IKEA',     category: 'decor',     qty: 1, dims: { w: 22,   d: 14,   h: 28   }, notes: 'Meuble haut cuisine, droite', glbPath: 'media/LILLHAVET.glb' },
   { id: 'mirror-nissedal-a',name: 'Miroir Nissedal 40×150 (mur A)', brand: 'IKEA',     category: 'decor',     qty: 4, dims: { w: 40,  d: 5,   h: 150 }, notes: 'Mur A, Reflector', glbPath: 'media/NISSEDAL miroir 40x150 noir.glb' },
   { id: 'mirror-nissedal-d',name: 'Miroir Nissedal 65×65 (mur D)',  brand: 'IKEA',     category: 'decor',     qty: 3, dims: { w: 65,  d: 5,   h: 65  }, notes: 'Mur D, Reflector',  glbPath: 'media/NISSEDAL miroir 65x65 noir.glb' },
   { id: 'mug',              name: 'Mug rouge',                      brand: '',         category: 'decor',     qty: 1, dims: { w: 8,   d: 8,   h: 9.5 }, notes: 'Bureau 2' },

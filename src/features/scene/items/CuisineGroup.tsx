@@ -6,14 +6,18 @@
  *   → position=[KITCHEN_X0, 0, ROOM_D] = [30, 0, 400], sans rotation
  * Utilisé aussi dans l'inventaire via registry.ts.
  */
-import { useRef, useLayoutEffect, useMemo } from 'react';
+import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
+import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import { Counter }        from './Counter';
 import { SinkBoholmen }   from './SinkBoholmen';
 import { Stove }          from './Stove';
 import { KitchenCabinet } from './KitchenCabinet';
 import { Fridge }         from './Fridge';
 import { DronaInstances } from './Drona';
+import { Lillhavet }      from './Lillhavet';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -30,44 +34,49 @@ const FRIDGE_W    = 60;
 
 // ── Meuble haut ───────────────────────────────────────────────────────────────
 
-const hcMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.35 });
+const METOD_WALL_GLB = 'media/METOD Rangement mural blanc 40x37x100 cm.glb';
 
 function UpperCabinet() {
-  const HC_W = KIT_W;
-  const HC_H = 40;
-  const HC_D = 40;
-  const P    = 1.5;
-  // Local coords (wrapper at (30, 0, 400)):
-  //   world cx=80, cz=440  → local cx=50, cz=40
-  const y0  = COUNTER_H + COUNTER_SLAB + 60; // 153
-  const cx  = KIT_W / 2;                      // 50
-  const cz  = KIT_D - HC_D / 2;               // 40
+  const { scene } = useGLTFClone(METOD_WALL_GLB);
+  const groupRef = useRef<THREE.Group>(null!);
+
+  useLayoutEffect(() => {
+    removeGlbLines(scene);
+    scene.scale.set(1, 1, 1);
+    scene.scale.setScalar(100);
+    scene.rotation.set(-Math.PI / 2, 0, 0); // Z-up GLB → debout, -X flip profondeur vers salle
+    mergeGlbByMaterial(scene);
+    const box = glbLocalBBox(scene);
+
+    // Centre le scene debout : X/Z centré à 0, Y bas à 0
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+
+    // Le group wrapper applique Rz(PI/2) → couche le cabinet sur le côté :
+    //   scene X (largeur 40) → group Y (hauteur 40)
+    //   scene Y (hauteur 100) → group -X → centré à KIT_W/2
+    //   scene Z (profondeur 37) → group Z → dos flush fond niche
+    const half_w  = (box.max.x - box.min.x) / 2;
+    const height_h = box.max.y - box.min.y;
+    const half_d  = (box.max.z - box.min.z) / 2;
+    groupRef.current.position.set(
+      KIT_W / 2 + height_h / 2,
+      COUNTER_H + COUNTER_SLAB + 60 + half_w,
+      KIT_D - half_d,
+    );
+  }, [scene]);
 
   return (
-    <group>
-      {/* Dessus */}
-      <mesh position={[cx, y0 + HC_H - P / 2, cz]} castShadow material={hcMat}>
-        <boxGeometry args={[HC_W, P, HC_D]} />
-      </mesh>
-      {/* Dessous */}
-      <mesh position={[cx, y0 + P / 2, cz]} castShadow material={hcMat}>
-        <boxGeometry args={[HC_W, P, HC_D]} />
-      </mesh>
-      {/* Tablette milieu */}
-      <mesh position={[cx, y0 + HC_H / 2, cz]} castShadow material={hcMat}>
-        <boxGeometry args={[HC_W, P, HC_D]} />
-      </mesh>
-      {/* Côté gauche */}
-      <mesh position={[cx - HC_W / 2 + P / 2, y0 + HC_H / 2, cz]} castShadow material={hcMat}>
-        <boxGeometry args={[P, HC_H, HC_D]} />
-      </mesh>
-      {/* Côté droit */}
-      <mesh position={[cx + HC_W / 2 - P / 2, y0 + HC_H / 2, cz]} castShadow material={hcMat}>
-        <boxGeometry args={[P, HC_H, HC_D]} />
-      </mesh>
+    <group ref={groupRef} rotation={[0, 0, Math.PI / 2]}>
+      <primitive object={scene} />
     </group>
   );
 }
+
+useGLTF.preload(METOD_WALL_GLB);
 
 // ── Drona (3 boîtes sur le meuble haut) ──────────────────────────────────────
 // World: x=[46.75, 80, 113.25], y=211.7, z=440.5, rotY=π
@@ -136,6 +145,11 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
 
       {/* Meuble haut */}
       <UpperCabinet />
+
+      {/* LILLHAVET dans meuble haut, droite */}
+      <group position={[75, 155, 41]}>
+        <Lillhavet item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
 
       {/* 3 boîtes Drona sur le meuble haut */}
       {!noDrona && <DronaInstances matrices={DRONA_MATRICES} />}
