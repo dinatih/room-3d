@@ -45,7 +45,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'utaker-stack',     name: 'Utåker - Lit empilable (paire)', brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 205,  d: 83,   h: 46   }, notes: 'Lit empilable IKEA vendu en pair (bas + haut), 2× matelas 200×80cm', actions: ['bed-toggle', 'bed-sofa'] },
   { id: 'utaker-lower',     name: 'Utåker - Lit bas',               brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 205,  d: 83,   h: 23   }, notes: 'Empilable, vendu en pair avec lit haut, matelas 200×80cm bleu', glbPath: 'media/UTÅKER lit empilable 80x200 pin (bas).glb' },
   { id: 'utaker-upper',     name: 'Utåker - Lit haut',              brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 205,  d: 83,   h: 23   }, notes: 'Empilable, vendu en pair avec lit bas, matelas 200×80cm blanc', glbPath: 'media/UTÅKER lit empilable 80x200 pin (haut).glb' },
-  { id: 'desk-bollsidan',   name: 'Bollsidan - Bureau assis-debout', brand: 'IKEA',     category: 'furniture', qty: 2, dims: { w: 68,   d: 36,   h: 70   }, notes: 'Surface 68×36cm ; bureau 2 : laptop + téléphone + mug' },
+  { id: 'desk-bollsidan',   name: 'Bollsidan - Bureau assis-debout', brand: 'IKEA',     category: 'furniture', qty: 2, dims: { w: 68,   d: 36,   h: 70   }, notes: 'Surface 68×36cm ; bureau 2 : laptop + téléphone + mug', actions: ['desk1-toggle', 'desk1-position'] },
   { id: 'smorkull-chair',   name: 'Chaise de bureau Smörkull',      brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 66,   d: 65,   h: 108  }, notes: 'Rouge', glbPath: 'media/SMÖRKULL.glb' },
   { id: 'sunnersta',        name: 'Desserte SUNNERSTA',             brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 36,   d: 56,   h: 90   }, notes: 'Roulante, têtes de mannequin dessus', glbPath: 'media/sunnersta_trolley_ikea.glb' },
   { id: 'chest-bench',      name: 'Coffre banc YITAHOME 100 Gal',  brand: 'YITAHOME', category: 'furniture', qty: 1, dims: { w: 122,  d: 55,   h: 62   }, notes: 'Gris, jardin derrière canapé ouest' },
@@ -62,23 +62,23 @@ export const INVENTORY: InventoryItem[] = [
 
   // ── KITCHEN ──────────────────────────────────────────────────────────────────
   { id: 'counter',          name: 'Plan de travail',                brand: '',         category: 'kitchen',   qty: 1, dims: { w: 100,  d: 60,   h: 3    }, notes: 'Blanc, avec trou évier' },
-  { id: 'cabinet-wood',     name: 'METOD 40×60×80 + RINGHULT + KALLROR', brand: 'IKEA', category: 'kitchen', qty: 1, dims: { w: 40, d: 60, h: 80 }, notes: 'Blanc + porte gris brillant + poignée inox 213mm, meuble sous évier', glbPath: 'media/METOD Rangement blanc 40x60x80 cm.glb' },
+  { id: 'cabinet-wood',     name: 'METOD 40×60×80 + RINGHULT + KALLROR', brand: 'IKEA', category: 'kitchen', qty: 1, dims: { w: 40, d: 60, h: 80 }, notes: 'Blanc + porte gris brillant + poignée inox 213mm, meuble sous évier', glbPath: 'media/METOD Rangement blanc 40x60x80 cm.glb', actions: ['cabinet-toggle'] },
   { id: 'ringhult-door',    name: 'RINGHULT Porte 40×80 gris brillant', brand: 'IKEA',  category: 'kitchen',   qty: 1, dims: { w: 40,   d: 2,    h: 80   }, notes: 'Porte placard cuisine sous évier', glbPath: 'media/RINGHULT Porte brillant gris clair 40x80 cm.glb' },
   { id: 'kallror',          name: 'KALLROR Poignée inox 213 mm',    brand: 'IKEA',     category: 'kitchen',   qty: 3, dims: { w: 21.3, d: 3.5,  h: 3.5  }, notes: 'Acier inoxydable, meubles cuisine + SDB (×3)', glbPath: 'media/KALLROR Poignée acier inoxydable 213 mm.glb' },
-  { id: 'fridge',           name: 'LAGAN Réfrigérateur 113 l',      brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 60,   d: 63,   h: 172  }, notes: 'Blanc, comp. congélateur', glbPath: 'media/LAGAN Réfrigérateur av comp congélateur indépendant-blanc 97-16 l.glb' },
+  { id: 'fridge',           name: 'LAGAN Réfrigérateur 113 l',      brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 60,   d: 63,   h: 172  }, notes: 'Blanc, comp. congélateur', glbPath: 'media/LAGAN Réfrigérateur av comp congélateur indépendant-blanc 97-16 l.glb', actions: ['fridge-toggle'] },
   { id: 'sink-boholmen',    name: 'Évier BOHOLMEN 1 bac',          brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 30,   d: 47,   h: 15   }, notes: 'Inox, avec robinet' },
   { id: 'stove',            name: 'Plaque VÄLBILDAD',               brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 29,   d: 52,   h: 5    }, notes: 'Induction', glbPath: 'media/VÄLBILDAD.glb' },
   { id: 'ninja-sp101',      name: 'Mini four Foodi Flip SP101EU',   brand: 'Ninja',    category: 'kitchen',   qty: 1, dims: { w: 51,   d: 37,   h: 19.5 }, notes: '8-en-1, inox brossé, porte vitrée + flip-back', actions: ['ninja-toggle'] },
-  { id: 'freezer',          name: 'Congélateur CHIQ CSD46D4E',     brand: 'CHIQ',     category: 'kitchen',   qty: 1, dims: { w: 45,   d: 47,   h: 50   }, notes: 'Noir, niche séjour', glbPath: 'media/TILLREDA Réfrigérateur indépendant-blanc 43 l.glb' },
+  { id: 'freezer',          name: 'Congélateur CHIQ CSD46D4E',     brand: 'CHIQ',     category: 'kitchen',   qty: 1, dims: { w: 45,   d: 47,   h: 50   }, notes: 'Noir, niche séjour', glbPath: 'media/TILLREDA Réfrigérateur indépendant-blanc 43 l.glb', actions: ['freezer-toggle'] },
 
   // ── BATHROOM ─────────────────────────────────────────────────────────────────
   { id: 'vathult-350',           name: 'VÅTHULT éclairage LED miroir 350 mm alu', brand: 'IKEA', category: 'bathroom', qty: 1, dims: { w: 35, d: 4, h: 4 }, notes: 'Au-dessus miroir vasque SDB', glbPath: 'media/VÅTHULT éclairage LED élément-miroir 350 mm alu.glb' },
-  { id: 'bathroom-cabinet-west', name: 'METOD 40×37×60 + RINGHULT + KALLROR (ouest)', brand: 'IKEA', category: 'bathroom', qty: 1, dims: { w: 40, d: 37, h: 60 }, notes: 'Blanc + porte gris brillant + poignée inox 213mm', glbPath: 'media/METOD Rangement mural blanc 40x37x60 cm.glb' },
-  { id: 'bathroom-cabinet-east', name: 'METOD 40×37×60 + RINGHULT + KALLROR (est)',  brand: 'IKEA', category: 'bathroom', qty: 1, dims: { w: 40, d: 37, h: 60 }, notes: 'Blanc + porte gris brillant + poignée inox 213mm', glbPath: 'media/METOD Rangement mural blanc 40x37x60 cm.glb' },
+  { id: 'bathroom-cabinet-west', name: 'METOD 40×37×60 + RINGHULT + KALLROR (ouest)', brand: 'IKEA', category: 'bathroom', qty: 1, dims: { w: 40, d: 37, h: 60 }, notes: 'Blanc + porte gris brillant + poignée inox 213mm', glbPath: 'media/METOD Rangement mural blanc 40x37x60 cm.glb', actions: ['cbn-west-toggle'] },
+  { id: 'bathroom-cabinet-east', name: 'METOD 40×37×60 + RINGHULT + KALLROR (est)',  brand: 'IKEA', category: 'bathroom', qty: 1, dims: { w: 40, d: 37, h: 60 }, notes: 'Blanc + porte gris brillant + poignée inox 213mm', glbPath: 'media/METOD Rangement mural blanc 40x37x60 cm.glb', actions: ['cbn-east-toggle'] },
   { id: 'ringhult-door-sdb',    name: 'RINGHULT Porte 40×60 gris brillant', brand: 'IKEA', category: 'bathroom', qty: 2, dims: { w: 40, d: 2, h: 60 }, notes: 'Porte meubles SDB ouest et est', glbPath: 'media/RINGHULT Porte brillant gris clair 40x60 cm.glb' },
   { id: 'tisken-panier',        name: 'TISKEN Panier ventouse blanc',       brand: 'IKEA', category: 'bathroom', qty: 2, dims: { w: 22, d: 10, h: 12 }, notes: 'Sur miroir vasque SDB, mi-hauteur, bord gauche et droit', glbPath: 'media/TISKEN Panier à ventouse blanc.glb' },
   { id: 'shower',           name: 'Receveur de douche 90×90',       brand: '',         category: 'bathroom',  qty: 1, dims: { w: 90,   d: 90,   h: 15   }, notes: 'Shower tray + VALLAMOSSE barre douchette + mitigeur thermostatique', glbPath: 'media/Shower tray 90x90cm.glb' },
-  { id: 'toilet',           name: 'WC President Horizontal Outlet', brand: '',         category: 'bathroom',  qty: 1, dims: { w: 40,   d: 70,   h: 80   }, notes: 'Sortie horizontale', glbPath: 'media/president_toilet_horizontal_outlet.glb' },
+  { id: 'toilet',           name: 'WC President Horizontal Outlet', brand: '',         category: 'bathroom',  qty: 1, dims: { w: 40,   d: 70,   h: 80   }, notes: 'Sortie horizontale', glbPath: 'media/president_toilet_horizontal_outlet.glb', actions: ['wc-lid-toggle'] },
   { id: 'vasque-sdb',       name: 'HAVBÄCK-ORRSJÖN 62×49×69 cm',   brand: 'IKEA',     category: 'bathroom',  qty: 1, dims: { w: 62,   d: 49,   h: 69   }, notes: 'Meuble avec tiroirs, vasque, mitigeur blanc', glbPath: 'media/HAVBÄCK - ORRSJÖN Meuble avec tiroirs-vasque-mitigeur blanc 62x49x69 cm.glb' },
   { id: 'water-heater',     name: 'Ballon eau chaude 100L',         brand: '',         category: 'bathroom',  qty: 1, dims: { w: 40,   d: 40,   h: 80   }, notes: 'Cylindrique, vertical' },
   { id: 'bathtub',          name: 'Baignoire',                      brand: '',         category: 'bathroom',  qty: 1, dims: { w: 150,  d: 70,   h: 50   }, notes: 'Coins arrondis, jardin' },
@@ -104,9 +104,9 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'jogging-suit',     name: 'Jogging suit',                   brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 20,  h: 170 }, notes: 'Jardin, près de la baignoire', glbPath: 'media/realistic_human_cloths.glb' },
 
   // ── PORTES ────────────────────────────────────────────────────────────────────
-  { id: 'door-entry',       name: 'Porte d\'entrée',                brand: '',         category: 'doors',     qty: 1, dims: { w: 90,  d: 4,   h: 204 }, notes: 'Rouge, mur diagonal, poignée L + knob rouge' },
-  { id: 'door-living',      name: 'Porte séjour',                   brand: '',         category: 'doors',     qty: 1, dims: { w: 83,  d: 4,   h: 204 }, notes: 'Blanche, mur D, poignée L double face' },
-  { id: 'door-sdb',         name: 'Porte SDB',                      brand: '',         category: 'doors',     qty: 1, dims: { w: 4,   d: 83,  h: 204 }, notes: 'Blanche, mur couloir, poignée L double face' },
+  { id: 'door-entry',       name: 'Porte d\'entrée',                brand: '',         category: 'doors',     qty: 1, dims: { w: 90,  d: 4,   h: 204 }, notes: 'Rouge, mur diagonal, poignée L + knob rouge', actions: ['entry-door-toggle'] },
+  { id: 'door-living',      name: 'Porte séjour',                   brand: '',         category: 'doors',     qty: 1, dims: { w: 83,  d: 4,   h: 204 }, notes: 'Blanche, mur D, poignée L double face', actions: ['living-door-toggle'] },
+  { id: 'door-sdb',         name: 'Porte SDB',                      brand: '',         category: 'doors',     qty: 1, dims: { w: 4,   d: 83,  h: 204 }, notes: 'Blanche, mur couloir, poignée L double face', actions: ['bathroom-door-toggle'] },
   { id: 'door-glass',       name: 'Porte-fenêtre',                  brand: '',         category: 'doors',     qty: 1, dims: { w: 160, d: 5,   h: 190 }, notes: 'Double battant PVC blanc, vitrage, seuil 20cm', actions: ['east-glass-door-toggle'] },
 ];
 
@@ -119,7 +119,7 @@ export const STORAGE_SPACES: StorageSpace[] = [
   { id: 'sunnersta-stack', name: 'Sunnersta',       dims: { w: 36,   d: 56, h: 90  }, notes: 'Desserte roulante — mannequin + casquette' },
   { id: 'cuisine-stack',   name: 'Cuisine',         dims: { w: 100,  d: 60, h: 93  }, notes: 'Plan de travail, évier, plaques, frigo, meuble bas, meuble haut + 3 Drona' },
   { id: 'corridor-closet', name: 'Placard couloir', dims: { w: 60,   d: 50, h: 250 }, notes: 'Porte pivotante + 3 étagères', actions: ['corr-doors-toggle'] },
-  { id: 'sdb-closet',      name: 'Placard SDB',     dims: { w: 110,  d: 60, h: 250 }, notes: 'Double porte coulissante + étagère triangulaire 170cm (X=70→180, Z=600→660)' },
+  { id: 'sdb-closet',      name: 'Placard SDB',     dims: { w: 110,  d: 60, h: 250 }, notes: 'Double porte coulissante + étagère triangulaire 170cm (X=70→180, Z=600→660)', actions: ['sdb-closet-toggle'] },
 ];
 
 export const CATEGORIES: Category[] = [
@@ -132,6 +132,5 @@ export const CATEGORIES: Category[] = [
   { id: 'bathroom',     label: 'Salle d\'eau' },
   { id: 'clothing',     label: 'Vêtements' },
   { id: 'decor',        label: 'Déco' },
-  { id: 'doors',        label: 'Portes' },
   { id: 'glbs',         label: '🎲 GLBs' },
 ];

@@ -112,4 +112,10 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'ninja-toggle':          ['Ouvrir', 'Fermer'],
   'bed-toggle':            ['Désempiler', 'Empiler'],
   'bed-sofa':              ['Canapé', 'Lit'],
+  'bed-position':          ['Position →', 'Position →'],
+  'desk1-toggle':          ['Debout', 'Assis'],
+  'desk1-position':        ['Position →', 'Position →'],
+  'desk2-toggle':          ['Debout', 'Assis'],
+  'desk2-position':        ['Position →', 'Position →'],
+  'smorkull-position':     ['Position →', 'Position →'],
 };
