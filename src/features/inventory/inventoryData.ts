@@ -68,7 +68,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'fridge',           name: 'LAGAN Réfrigérateur 113 l',      brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 60,   d: 63,   h: 172  }, notes: 'Blanc, comp. congélateur', glbPath: 'media/LAGAN Réfrigérateur av comp congélateur indépendant-blanc 97-16 l.glb' },
   { id: 'sink-boholmen',    name: 'Évier BOHOLMEN 1 bac',          brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 30,   d: 47,   h: 15   }, notes: 'Inox, avec robinet' },
   { id: 'stove',            name: 'Plaque VÄLBILDAD',               brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 29,   d: 52,   h: 5    }, notes: 'Induction', glbPath: 'media/VÄLBILDAD.glb' },
-  { id: 'pizza-oven',       name: 'Four à pizza',                   brand: '',         category: 'kitchen',   qty: 1, dims: { w: 20,   d: 20,   h: 19   }, notes: 'Sur Kallax cuisine', glbPath: 'media/pizza_oven.glb' },
+  { id: 'ninja-sp101',      name: 'Mini four Foodi Flip SP101EU',   brand: 'Ninja',    category: 'kitchen',   qty: 1, dims: { w: 51,   d: 37,   h: 19.5 }, notes: '8-en-1, inox brossé, porte vitrée + flip-back', actions: ['ninja-toggle'] },
   { id: 'freezer',          name: 'Congélateur CHIQ CSD46D4E',     brand: 'CHIQ',     category: 'kitchen',   qty: 1, dims: { w: 45,   d: 47,   h: 50   }, notes: 'Noir, niche séjour', glbPath: 'media/TILLREDA Réfrigérateur indépendant-blanc 43 l.glb' },
 
   // ── BATHROOM ─────────────────────────────────────────────────────────────────

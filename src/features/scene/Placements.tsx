@@ -206,6 +206,7 @@ export function Furniture() {
     sdbCloset: 'sdb-closet-toggle',
     cbnWest:   'cbn-west-toggle',
     cbnEast:   'cbn-east-toggle',
+    ninja:     'ninja-toggle',
   });
   const cbZ = KITCHEN_Z + 11 + 18.5; // 489.5
   return (
@@ -217,7 +218,7 @@ export function Furniture() {
         <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
-        <KallaxCuisine item={stub('kallax-sw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, ROOM_D - 60 - w1 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />

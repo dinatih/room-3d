@@ -25,6 +25,7 @@ const ACTIONS: Record<string, ActionDef> = {
   cbnEast:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'cbnEast'       },
   freezer:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'freezer'       },
   fridge:         { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'fridge'        },
+  ninja:          { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'ninja'         },
   cabinet:        { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'cabinet'       },
   wcLid:          { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'wcLid'         },
   'lamp-toggle':   { btnLabel: 'Allumer / Éteindre', toggleKey: 'lampOn'        },

@@ -42,6 +42,7 @@ import { Mug }                                        from '@features/scene/item
 import { Counter }                                    from '@features/scene/items/Counter';
 import { SinkBoholmen }                               from '@features/scene/items/SinkBoholmen';
 import { NissedalMirror }                             from '@features/scene/items/NissedalMirror';
+import { NinjaSP101 }                                 from '@features/scene/items/NinjaSP101';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
@@ -79,6 +80,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'backpack':               Backpack,
   'mug':                    Mug,
   'mirror-nissedal-wide':   NissedalMirror,
+  'ninja-sp101':            NinjaSP101,
 
   // ── Composites (assemblages multi-pièces) ─────────────────────────────────
   'kallax-ne-stack':        KallaxNE,
@@ -107,6 +109,7 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'wc-lid-toggle':         ['Ouvrir', 'Fermer'],
   'corr-doors-toggle':     ['Ouvrir', 'Fermer'],
   'sdb-closet-toggle':     ['Ouvrir', 'Fermer'],
+  'ninja-toggle':          ['Ouvrir', 'Fermer'],
   'bed-toggle':            ['Désempiler', 'Empiler'],
   'bed-sofa':              ['Canapé', 'Lit'],
 };

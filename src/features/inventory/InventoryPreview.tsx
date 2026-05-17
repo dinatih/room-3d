@@ -31,6 +31,7 @@ const ITEM_ACTIONS: Record<string, string> = {
   'door-glass':             'east-glass-door-toggle',
   'toilet':                 'wc-lid-toggle',
   'corridor-closet':        'corr-doors-toggle',
+  'ninja-sp101':            'ninja-toggle',
 };
 
 // ── Camera fit ────────────────────────────────────────────────────────────────

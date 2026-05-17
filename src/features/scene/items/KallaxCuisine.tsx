@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { Kallax2x1 }     from './Kallax2x1';
 import { Kallax2x2 }     from './Kallax2x2';
 import { Kallax2x2Spec } from './Kallax2x2Spec';
-import { PizzaOven }   from './PizzaOven';
+import { NinjaSP101 } from './NinjaSP101';
 import { DronaInstances } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
@@ -47,7 +47,7 @@ function cells22(): [number, number, number][] {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxCuisine({ onSize }: SceneItemProps) {
+export function KallaxCuisine({ actionState, onSize }: SceneItemProps) {
   const ref = useRef<THREE.Group>(null!);
 
   const dronaMatrices = useMemo(() => {
@@ -83,9 +83,9 @@ export function KallaxCuisine({ onSize }: SceneItemProps) {
       {/* 6 Drona : 4 dans le 2×2 bas + 2 sur le dessus */}
       <DronaInstances matrices={dronaMatrices} />
 
-      {/* Four à pizza — dans la case basse du 2×2 spec */}
-      <group position={[0, PIZZA_Y, 0]} rotation-y={Math.PI / 2}>
-        <PizzaOven item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      {/* Mini four Ninja SP101EU — dans la case basse du 2×2 spec */}
+      <group position={[-8, PIZZA_Y, 0]} rotation-y={Math.PI}>
+        <NinjaSP101 item={NOOP_ITEM} actionState={actionState} onSize={NOOP_SIZE} />
       </group>
     </group>
   );
