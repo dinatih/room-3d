@@ -111,16 +111,17 @@ function CenteredItem({
     outerRef.current.position.set(-center.x * s, -center.y * s, -center.z * s);
   }, []);
 
-  // Fallback pour les composants procéduraux qui ne passent pas leur taille via onSize
+  // Fallback pour les composants procéduraux qui ne passent pas leur taille via onSize.
+  // Re-fit aussi quand actionState change (état multi-action peut modifier la bbox).
+  const actionStateKey = JSON.stringify(actionState);
   useEffect(() => {
     if (!outerRef.current || !innerRef.current) return;
     innerRef.current.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(innerRef.current);
     if (box.isEmpty()) return;
-    const center = box.getCenter(new THREE.Vector3());
     const size   = box.getSize(new THREE.Vector3());
     fit(size);
-  }, [fit]);
+  }, [fit, actionStateKey]);
 
   return (
     <group ref={outerRef}>
@@ -149,14 +150,16 @@ type PreviewTarget = InventoryItem | StorageSpace | null;
 export function InventoryPreview({ item }: { item: PreviewTarget }) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined;
 
-  const actionKey   = item ? ITEM_ACTIONS[item.id] : undefined;
-  const actionState = actionKey ? { [actionKey]: false } : {};  // mis à jour ci-dessous
+  const legacyActionKey = item ? ITEM_ACTIONS[item.id] : undefined;
+  const itemActions     = (item && 'actions' in item ? item.actions : undefined) ?? [];
+  const actionKeys: string[] = itemActions.length > 0
+    ? itemActions
+    : legacyActionKey ? [legacyActionKey] : [];
 
-  const [isOpen, setIsOpen] = useState(false);
-  useEffect(() => { setIsOpen(false); }, [item?.id]);
+  const [actionStates, setActionStates] = useState<Record<string, boolean>>({});
+  useEffect(() => { setActionStates({}); }, [item?.id]);
 
-  const liveActionState = actionKey ? { [actionKey]: isOpen } : {};
-  const labels = actionKey ? (ACTION_LABELS[actionKey] ?? ['Ouvrir', 'Fermer']) : null;
+  const liveActionState = actionStates;
 
   return (
     <div style={{
@@ -197,7 +200,7 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
               autoRotateSpeed={1.2}
               enablePan={false}
               minDistance={0.3}
-              maxDistance={10}
+              maxDistance={50}
               target={[0, 0, 0]}
             />
 
@@ -209,22 +212,33 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
             }
           </Canvas>
 
-          {labels && (
-            <button
-              onClick={() => setIsOpen(o => !o)}
-              style={{
-                position: 'absolute', top: 8, right: 8,
-                padding: '3px 8px',
-                background: 'rgba(0,0,0,0.6)',
-                backdropFilter: 'blur(4px)',
-                border: '1px solid #444',
-                borderRadius: 4,
-                color: '#ccc', fontSize: 11,
-                cursor: 'pointer',
-              }}
-            >
-              {isOpen ? labels[1] : labels[0]}
-            </button>
+          {actionKeys.length > 0 && (
+            <div style={{
+              position: 'absolute', top: 8, right: 8,
+              display: 'flex', flexDirection: 'column', gap: 4,
+            }}>
+              {actionKeys.map(key => {
+                const labels = ACTION_LABELS[key] ?? ['Ouvrir', 'Fermer'];
+                const on = !!actionStates[key];
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setActionStates(s => ({ ...s, [key]: !s[key] }))}
+                    style={{
+                      padding: '3px 8px',
+                      background: 'rgba(0,0,0,0.6)',
+                      backdropFilter: 'blur(4px)',
+                      border: '1px solid #444',
+                      borderRadius: 4,
+                      color: '#ccc', fontSize: 11,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {on ? labels[1] : labels[0]}
+                  </button>
+                );
+              })}
+            </div>
           )}
 
           <div style={{
