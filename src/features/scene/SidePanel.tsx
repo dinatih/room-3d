@@ -470,6 +470,12 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           {layerBtn('green',  'Plafond',    'ceiling')}
           {layerBtn('gray',   'Ombres',     'shadows')}
           {layerBtn('cyan',   'LiDAR scan', 'lidar')}
+          {layers.lidar && b0('cyan',
+            ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',
+            onCycleLidar)}
+          {layers.lidar && b0('cyan',
+            `Opacité ${Math.round(lidarOpacity * 100)}%`,
+            onToggleLidarOpacity)}
           {layerBtn('red', 'Murs rouges', 'redWalls')}
           {layerBtn('red', 'Arêtes murs', 'wallEdges')}
           {layerBtn('teal', 'Monde réel 🌍', 'realWorld')}
@@ -483,12 +489,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
               () => onToggleFurniture('laptopModel'))}
           {b0('light', `Bureau : ${furniture.deskGlb ? 'GLB' : 'Procédural'}`,
               () => onToggleFurniture('deskGlb'))}
-          {layers.lidar && b0('cyan',
-            ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',
-            onCycleLidar)}
-          {layers.lidar && b0('cyan',
-            `Opacité ${Math.round(lidarOpacity * 100)}%`,
-            onToggleLidarOpacity)}
           <button
             style={{ ...btn(COLORS['gold']), opacity: layers.plan ? 1 : 0.45 }}
             onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
