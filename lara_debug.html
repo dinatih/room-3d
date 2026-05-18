@@ -1,0 +1,621 @@
+<!doctype html>
+<!--
+  Lara Croft 2026 rigged - walk-clip debug page
+
+  Standalone test bench for diagnosing the procedural walk clip used in
+  src/features/scene/Walker.tsx. Loads the same GLB, exposes per-bone
+  rotation axis + amplitude sliders, and visualises each tracked bone's
+  local axes so the user can see immediately which axis swings which way.
+
+  Serve from project root, e.g.:
+      npx vite                      -> http://localhost:5173/lara_debug.html
+      python3 -m http.server 8080   -> http://localhost:8080/lara_debug.html
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Lara walk-clip debug</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; background: #1a1a1f; color: #e0e0e8; }
+    #app { display: flex; height: 100vh; }
+    #view { flex: 1; position: relative; }
+    #panel {
+      width: 380px; overflow-y: auto; background: #22232a; padding: 12px 16px;
+      border-left: 1px solid #333; font-size: 12.5px;
+    }
+    h2 { margin: 4px 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #88e; border-bottom: 1px solid #444; padding-bottom: 4px; }
+    h3 { margin: 14px 0 4px; font-size: 12px; color: #cce; }
+    .row { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+    .row label { flex: 0 0 95px; font-size: 11px; color: #aab; }
+    .row input[type="range"] { flex: 1; }
+    .row input[type="number"], .row select { background: #181820; color: #eee; border: 1px solid #444; padding: 1px 4px; font-size: 11px; }
+    .row input[type="number"] { width: 55px; }
+    button { background: #335; color: #fff; border: 1px solid #66a; padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 3px; }
+    button:hover { background: #447; }
+    button.toggle.on { background: #585; border-color: #ada; }
+    .bone-block { background: #1c1d24; padding: 6px 8px; margin: 4px 0; border-left: 3px solid #557; border-radius: 3px; }
+    .bone-block .title { font-weight: bold; font-size: 11.5px; color: #ddf; margin-bottom: 3px; }
+    .bone-block .axes { font-family: monospace; font-size: 10px; color: #998; line-height: 1.35; margin: 2px 0 4px; }
+    .keyframes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; font-size: 10px; }
+    .keyframes input { width: 100%; background: #222; color: #fea; border: 1px solid #333; padding: 1px; text-align: center; }
+    .small { font-size: 10.5px; color: #889; }
+    #hud {
+      position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.55);
+      padding: 6px 10px; font-family: monospace; font-size: 11px; border-radius: 3px;
+      pointer-events: none; line-height: 1.45;
+    }
+    .badge { display: inline-block; padding: 1px 5px; border-radius: 3px; background: #335; color: #aaf; font-size: 10px; margin-left: 4px; }
+    .badge.bad { background: #722; color: #fcc; }
+    .badge.good { background: #272; color: #cfc; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="view">
+      <div id="hud">loading…</div>
+    </div>
+    <div id="panel"></div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader }   from 'three/addons/loaders/DRACOLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ── Scene ────────────────────────────────────────────────────────────────
+    const viewEl = document.getElementById('view');
+    const hud    = document.getElementById('hud');
+    const panel  = document.getElementById('panel');
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    viewEl.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1a1f);
+    scene.fog = new THREE.Fog(0x1a1a1f, 400, 900);
+
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
+    camera.position.set(180, 170, 250);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 90, 0);
+    controls.update();
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.0);
+    sun.position.set(200, 300, 200);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.camera.left = -200; sun.shadow.camera.right = 200;
+    sun.shadow.camera.top  =  200; sun.shadow.camera.bottom = -200;
+    scene.add(sun);
+
+    // Floor + grid
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(800, 800),
+      new THREE.MeshStandardMaterial({ color: 0x2a2a32, roughness: 0.95 }),
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+    const grid = new THREE.GridHelper(800, 40, 0x444460, 0x33333a);
+    grid.position.y = 0.01;
+    scene.add(grid);
+    scene.add(new THREE.AxesHelper(60));
+
+    function resize() {
+      const w = viewEl.clientWidth, h = viewEl.clientHeight;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // ── Tracked bones (mirror of buildWalkClip in Walker.tsx) ────────────────
+    // axis: which LOCAL bone axis to rotate around (one of 'X' | 'Y' | 'Z')
+    // keys: 5 angle values in degrees at t = 0, T/4, T/2, 3T/4, T
+    // Initial values copy the current Walker.tsx clip exactly so the page reproduces the bug.
+    // T = stride period (s). 0.7 = ~86 strides/min, natural walk pace.
+    let T = 0.7;
+
+    // ── V1 = exact copy of Walker.tsx buildWalkClip (for comparison) ─────────
+    const V1_TRACKS = [
+      { bone: 'leg_left_thigh_04',        axis: 'X', keys: [ 30,   0,  -30,   0,  30] },
+      { bone: 'leg_right_thigh_08',       axis: 'X', keys: [-30,   0,   30,   0, -30] },
+      { bone: 'leg_left_knee_05',         axis: 'X', keys: [  8,  30,   60,  30,   8] },
+      { bone: 'leg_right_knee_09',        axis: 'X', keys: [ 60,  30,    8,  30,  60] },
+      { bone: 'arm_left_shoulder_2_014',  axis: 'Z', keys: [ 20,   0,  -20,   0,  20],
+        offsetAxis: 'Z', offsetDeg: -90 },
+      { bone: 'arm_right_shoulder_2_033', axis: 'Z', keys: [-20,   0,   20,   0, -20],
+        offsetAxis: 'Z', offsetDeg:  90 },
+      { bone: 'spine_lower_012',          axis: 'Z', keys: [ 1.4, 0,  -1.4,  0,  1.4] },
+    ];
+
+    // ── V2 = fresh walk cycle, biomechanically grounded ──────────────────────
+    // Phase convention (t=0 baseline):
+    //   - Left leg BACK (toe-off), right leg FORWARD (heel strike)
+    //   - Left arm FORWARD (counter-swing to L leg)
+    // Keyframes at t = 0, T/4, T/2, 3T/4, T (loop).
+    //   t=0    : L back/R fwd     (L toe-off, R heel-strike)
+    //   t=T/4  : L mid-swing      (L knee high, foot clearing ground)
+    //   t=T/2  : L fwd/R back     (mirror of t=0)
+    //   t=3T/4 : R mid-swing
+    //   t=T    : loop = t=0
+    //
+    // Sign convention discovered from rig:
+    //   thigh qx: +X swings tail (leg) toward +Y FBX = BACK of body
+    //   knee qx: +X bends shin toward +Y = knee FLEX (natural)
+    //   ankle qx: +X pitches foot down toward +Y = PLANTARFLEX (toe-off)
+    //   shoulder offset qz(±90) = rest-pose arm-down. Then qy swing rotates
+    //     around (post-offset) vertical-ish axis = forward/back arm swing.
+    //   spine qz: rotation around (near-vertical) up axis = torso twist
+    const V2_TRACKS = [
+      // ─── Legs ────────────────────────────────────────────────────────────
+      // Thigh: smaller asymmetric swing (more fwd, less back is natural).
+      //   back-leg max +24°, fwd-leg max -22°
+      { bone: 'leg_left_thigh_04',  axis: 'X', keys: [+24,   0, -22,   0, +24] },
+      { bone: 'leg_right_thigh_08', axis: 'X', keys: [-22,   0, +24,   0, -22] },
+
+      // Knee: straight at heel-strike, slight bend at mid-stance (shock
+      // absorption), starts bending at toe-off, MAX during mid-swing, then
+      // extends to straight again at next heel-strike.
+      //   L phase:  toe-off(0) , mid-swing(T/4) , heel-strike(T/2) , mid-stance(3T/4)
+      //   angles :  30°        , 65°            , 4°               , 14°
+      { bone: 'leg_left_knee_05',   axis: 'X', keys: [+30, +65,  +4, +14, +30] },
+      { bone: 'leg_right_knee_09',  axis: 'X', keys: [ +4, +14, +30, +65,  +4] },
+
+      // Ankle: dorsiflexion at heel-strike (toes up), neutral mid-stance,
+      // plantarflexion at toe-off (foot pushes), back to dorsiflex during swing.
+      { bone: 'leg_left_ankle_06',  axis: 'X', keys: [+18,  +8, -14,  -4, +18] },
+      { bone: 'leg_right_ankle_010',axis: 'X', keys: [-14,  -4, +18,  +8, -14] },
+
+      // ─── Arms ────────────────────────────────────────────────────────────
+      // Offset qz(±90) drops arm from T-pose to along-the-body.
+      // Swing on local Y (corrected from V1's local Z).
+      // L arm forward at t=0 (counter to L leg back).
+      { bone: 'arm_left_shoulder_2_014',  axis: 'Y', keys: [+28,   0, -28,   0, +28],
+        offsetAxis: 'Z', offsetDeg: -90 },
+      { bone: 'arm_right_shoulder_2_033', axis: 'Y', keys: [-28,   0, +28,   0, -28],
+        offsetAxis: 'Z', offsetDeg:  90 },
+
+      // Elbow: slight constant flex (~30°) + small extra bend on the swinging-forward arm.
+      // Elbow local axes ≈ identity (parent shoulder is twisted but elbow itself isn't).
+      // Bone direction = arm; rotation around X bends elbow naturally for this rig.
+      { bone: 'arm_left_elbow_015', axis: 'X', keys: [+38, +30, +22, +30, +38] },
+      { bone: 'arm_right_elbow_034',axis: 'X', keys: [+22, +30, +38, +30, +22] },
+
+      // ─── Torso ───────────────────────────────────────────────────────────
+      // Spine lower twist around vertical: torso counter-rotates to pelvis.
+      // L leg back at t=0 → pelvis twisted with L hip back → torso compensates
+      // by twisting opposite (L shoulder forward) → +4° at t=0.
+      { bone: 'spine_lower_012',  axis: 'Z', keys: [+4,   0, -4,   0, +4] },
+
+      // Spine upper: small counter-twist on top of lower (head stays more stable).
+      { bone: 'spine_upper_013',  axis: 'Z', keys: [-2,   0, +2,   0, -2] },
+
+      // Subtle head bob / neck stabilisation: counter the torso twist a tiny bit.
+      { bone: 'head_neck_lower_051', axis: 'Z', keys: [-1,   0, +1,   0, -1] },
+    ];
+
+    const DEFAULT_TRACKS = V2_TRACKS;
+
+    // Local-axis labels in parent-space, read from Blender (see chat log).
+    // Helps the user pick the right axis from the dropdown.
+    const AXIS_HINTS = {
+      'leg_left_thigh_04':        '~identity; +X=sideways, +Y=back, +Z=up',
+      'leg_right_thigh_08':       '~identity; +X=sideways, +Y=back, +Z=up',
+      'leg_left_knee_05':         '~identity; +X bends shin back (flex)',
+      'leg_right_knee_09':        '~identity; +X bends shin back (flex)',
+      'leg_left_ankle_06':        'parent=knee; +X pitches foot down (plantarflex)',
+      'leg_right_ankle_010':      'parent=knee; +X pitches foot down (plantarflex)',
+      'arm_left_shoulder_2_014':  'TWISTED: local +X≈+Z world (up), +Y≈+X world (arm), +Z≈+Y world (fwd)',
+      'arm_right_shoulder_2_033': 'TWISTED: local +X≈-Z world (down), +Y≈-X world (arm), +Z≈+Y world (fwd)',
+      'arm_left_elbow_015':       '~identity (parent shoulder twisted); +X bends elbow',
+      'arm_right_elbow_034':      '~identity; +X bends elbow',
+      'spine_lower_012':          'near-identity (small forward tilt); Z = vertical twist',
+      'spine_upper_013':          'tilted ~21° fwd; Z = vertical twist',
+      'head_neck_lower_051':      'tilted ~13°; Z = head twist',
+    };
+    // Walker walk semantics: arm swings forward/back means rotating in the Y-Z (forward/vertical) plane,
+    // i.e. around the world-X axis (body sideways). For the shoulder, world +X ≈ LOCAL +Y. So swinging
+    // on local Y is correct; the current code uses local Z which lies along world +Y (forward) and
+    // therefore swings the arm in the X-Z plane (up/down at the side) instead of forward/back.
+    const AXIS_RECOMMENDATION = {
+      'arm_left_shoulder_2_014':  'Y',
+      'arm_right_shoulder_2_033': 'Y',
+    };
+
+    // ── Quaternion helpers ───────────────────────────────────────────────────
+    function quatAxisDeg(axisChar, deg) {
+      const r = (deg * Math.PI / 180) / 2;
+      const s = Math.sin(r), c = Math.cos(r);
+      if (axisChar === 'X') return new THREE.Quaternion(s, 0, 0, c);
+      if (axisChar === 'Y') return new THREE.Quaternion(0, s, 0, c);
+      if (axisChar === 'Z') return new THREE.Quaternion(0, 0, s, c);
+      return new THREE.Quaternion();
+    }
+
+    function findBone(root, name) {
+      let found = null;
+      root.traverse(c => { if (c.isBone && c.name === name && !found) found = c; });
+      return found;
+    }
+
+    // Three.js PropertyBinding can't index bones with spaces → normalize at load.
+    function normalizeBoneNames(root) {
+      root.traverse(c => { if (c.isBone) c.name = c.name.replace(/ /g, '_'); });
+    }
+
+    // Rebuild the walk clip from current track config + cached rest quats.
+    function buildWalkClip(root, tracks) {
+      const times = [0, T * 0.25, T * 0.5, T * 0.75, T];
+      const clipTracks = [];
+      for (const t of tracks) {
+        const bone = findBone(root, t.bone);
+        if (!bone) { console.warn('bone not found:', t.bone); continue; }
+        const rest = bone.userData.restQuat.clone();
+        const offset = (t.offsetAxis != null && t.offsetDeg != null)
+          ? quatAxisDeg(t.offsetAxis, t.offsetDeg)
+          : null;
+        const base = offset ? rest.clone().multiply(offset) : rest;
+        const flat = [];
+        for (const deg of t.keys) {
+          const delta = quatAxisDeg(t.axis, deg);
+          const q = base.clone().multiply(delta);
+          flat.push(q.x, q.y, q.z, q.w);
+        }
+        clipTracks.push(new THREE.QuaternionKeyframeTrack(t.bone + '.quaternion', times, flat));
+      }
+      return new THREE.AnimationClip('walk-debug', T, clipTracks);
+    }
+
+    // ── Load GLB ─────────────────────────────────────────────────────────────
+    const loader = new GLTFLoader();
+    const draco  = new DRACOLoader();
+    // Draco decoder from same CDN as three.js core (matches version).
+    draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
+    loader.setDRACOLoader(draco);
+    let mixer = null, action = null, skeletonHelper = null;
+    let model = null;
+    let trackedBoneAxes = []; // { bone, helper } - per-bone local axis helpers
+    let tracks = V2_TRACKS.map(t => ({ ...t, keys: [...t.keys] }));
+    let playing = true;
+    let speed = 1.0;
+    let clock = new THREE.Clock();
+
+    let gltfAnimCount = 0;
+    loader.load('media/lara_croft__2026_rigged.glb', gltf => {
+      gltfAnimCount = (gltf.animations || []).length;
+      model = gltf.scene;
+      normalizeBoneNames(model);
+
+      // Scale to ~170 cm (match Walker.tsx)
+      let box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      model.scale.setScalar(170 / size.y);
+      box.setFromObject(model);
+      model.position.set(0, -box.min.y, 0);
+
+      // Shadows + FrontSide
+      model.traverse(c => {
+        if (!c.isMesh) return;
+        c.castShadow = true; c.receiveShadow = true;
+        c.frustumCulled = false;
+        [].concat(c.material).forEach(m => { if (m) m.side = THREE.FrontSide; });
+      });
+
+      // Cache rest quaternion on EVERY bone (clip can be rebuilt with any subset).
+      model.traverse(c => { if (c.isBone) c.userData.restQuat = c.quaternion.clone(); });
+
+      scene.add(model);
+
+      skeletonHelper = new THREE.SkeletonHelper(model);
+      skeletonHelper.material.linewidth = 2;
+      skeletonHelper.visible = true;
+      scene.add(skeletonHelper);
+
+      mixer = new THREE.AnimationMixer(model);
+      refreshBoneAxes();
+      rebuildAction();
+
+      buildPanel();
+      updateHud();
+    }, undefined, err => {
+      hud.textContent = 'GLB load error — see console';
+      console.error(err);
+    });
+
+    function rebuildAction() {
+      if (!model || !mixer) return;
+      if (action) action.stop();
+      mixer.uncacheRoot(model); // clear cached clip so old keyframes don't linger
+      const clip = buildWalkClip(model, tracks);
+      action = mixer.clipAction(clip);
+      action.setLoop(THREE.LoopRepeat, Infinity);
+      action.play();
+      if (!playing) action.paused = true;
+    }
+
+    // Re-attach the per-bone AxesHelpers when track list changes.
+    function refreshBoneAxes() {
+      const wasVisible = trackedBoneAxes.length ? trackedBoneAxes[0].helper.visible : true;
+      for (const { bone, helper } of trackedBoneAxes) bone.remove(helper);
+      trackedBoneAxes = [];
+      for (const t of tracks) {
+        const b = findBone(model, t.bone);
+        if (!b) continue;
+        const axes = new THREE.AxesHelper(0.10);
+        axes.material.depthTest = false;
+        axes.renderOrder = 999;
+        axes.visible = wasVisible;
+        b.add(axes);
+        trackedBoneAxes.push({ bone: b, helper: axes, name: t.bone });
+      }
+    }
+
+    // Reset every tracked bone to its rest pose (used before swapping presets so old
+    // tracks don't leave residual rotation on bones the new preset doesn't touch).
+    function resetTrackedBones() {
+      if (!model) return;
+      model.traverse(c => {
+        if (c.isBone && c.userData.restQuat) c.quaternion.copy(c.userData.restQuat);
+      });
+    }
+
+    function loadPreset(newTracks, newPeriod) {
+      resetTrackedBones();
+      tracks = newTracks.map(t => ({ ...t, keys: [...t.keys] }));
+      if (typeof newPeriod === 'number') T = newPeriod;
+      refreshBoneAxes();
+      rebuildAction();
+      buildPanel();
+    }
+
+    // ── UI ───────────────────────────────────────────────────────────────────
+    function makeRow(label, ...children) {
+      const row = document.createElement('div');
+      row.className = 'row';
+      const lab = document.createElement('label'); lab.textContent = label;
+      row.appendChild(lab);
+      children.forEach(c => row.appendChild(c));
+      return row;
+    }
+
+    function buildPanel() {
+      panel.innerHTML = '';
+
+      // Playback
+      const h1 = document.createElement('h2'); h1.textContent = 'Playback'; panel.appendChild(h1);
+
+      const playBtn = document.createElement('button');
+      playBtn.textContent = playing ? '⏸ Pause' : '▶ Play';
+      playBtn.className = 'toggle ' + (playing ? 'on' : '');
+      playBtn.onclick = () => {
+        playing = !playing;
+        if (action) action.paused = !playing;
+        playBtn.textContent = playing ? '⏸ Pause' : '▶ Play';
+        playBtn.classList.toggle('on', playing);
+      };
+      panel.appendChild(playBtn);
+
+      const speedSl = document.createElement('input');
+      speedSl.type = 'range'; speedSl.min = 0; speedSl.max = 3; speedSl.step = 0.05; speedSl.value = speed;
+      const speedNb = document.createElement('input');
+      speedNb.type = 'number'; speedNb.min = 0; speedNb.max = 3; speedNb.step = 0.05; speedNb.value = speed;
+      speedSl.oninput = () => { speed = +speedSl.value; speedNb.value = speed; };
+      speedNb.oninput = () => { speed = +speedNb.value; speedSl.value = speed; };
+      panel.appendChild(makeRow('Speed', speedSl, speedNb));
+
+      const tBar = document.createElement('input');
+      tBar.type = 'range'; tBar.min = 0; tBar.max = T; tBar.step = 0.01;
+      tBar.value = action ? action.time : 0;
+      tBar.id = 'tBar';
+      tBar.oninput = () => {
+        if (!action) return;
+        action.time = +tBar.value;
+        mixer.update(0);
+      };
+      panel.appendChild(makeRow('t (s)', tBar));
+
+      // Display toggles
+      const h2 = document.createElement('h2'); h2.textContent = 'Display'; panel.appendChild(h2);
+
+      function toggleBtn(label, getter, setter) {
+        const b = document.createElement('button');
+        b.className = 'toggle ' + (getter() ? 'on' : '');
+        b.textContent = label;
+        b.onclick = () => { setter(!getter()); b.classList.toggle('on', getter()); };
+        return b;
+      }
+      const skelBtn = toggleBtn('Skeleton', () => skeletonHelper && skeletonHelper.visible, v => { if (skeletonHelper) skeletonHelper.visible = v; });
+      const axBtn   = toggleBtn('Bone axes', () => trackedBoneAxes.length && trackedBoneAxes[0].helper.visible, v => trackedBoneAxes.forEach(({helper}) => helper.visible = v));
+      const wireBtn = toggleBtn('Wireframe', () => false, v => {
+        model.traverse(c => { if (c.isMesh) [].concat(c.material).forEach(m => { if (m) m.wireframe = v; }); });
+      });
+      const meshBtn = toggleBtn('Hide mesh', () => false, v => {
+        model.traverse(c => { if (c.isMesh) c.visible = !v; });
+      });
+      // Gun meshes identified by dominant bone weight: Object_98 = L hand pistol,
+      // Object_99 = R hand pistol, Object_96 = L hip holster, Object_97 = R hip holster.
+      const HAND_GUNS = ['Object_98', 'Object_99'];
+      const HOLSTERS  = ['Object_96', 'Object_97'];
+      const setVisByName = (names, vis) => model.traverse(c => { if (c.isMesh && names.includes(c.name)) c.visible = vis; });
+      const isVisByName = names => {
+        let v = true; model.traverse(c => { if (c.isMesh && names.includes(c.name)) v = c.visible; }); return v;
+      };
+      const handBtn    = toggleBtn('🔫 Hand pistols',  () => isVisByName(HAND_GUNS), v => setVisByName(HAND_GUNS, v));
+      const holsterBtn = toggleBtn('🎯 Belt holsters', () => isVisByName(HOLSTERS),  v => setVisByName(HOLSTERS, v));
+      const allGunsBtn = toggleBtn('🚫 All weapons off', () => !isVisByName(HAND_GUNS) && !isVisByName(HOLSTERS), v => {
+        setVisByName(HAND_GUNS, !v); setVisByName(HOLSTERS, !v);
+        handBtn.classList.toggle('on', !v); holsterBtn.classList.toggle('on', !v);
+      });
+
+      const wrap = document.createElement('div'); wrap.style.display = 'flex'; wrap.style.gap = '4px'; wrap.style.flexWrap = 'wrap';
+      wrap.appendChild(skelBtn); wrap.appendChild(axBtn); wrap.appendChild(wireBtn); wrap.appendChild(meshBtn);
+      wrap.appendChild(handBtn); wrap.appendChild(holsterBtn); wrap.appendChild(allGunsBtn);
+      panel.appendChild(wrap);
+
+      // Tracks
+      const h3 = document.createElement('h2'); h3.textContent = 'Walk-clip tracks'; panel.appendChild(h3);
+      const note = document.createElement('div');
+      note.className = 'small';
+      note.innerHTML = 'Edit per-bone <b>local-axis</b> + 5 keyframe angles (deg). Click <b>Rebuild</b> after edits.<br>Red badges mark axes that don\'t match recommended axis.';
+      panel.appendChild(note);
+
+      tracks.forEach((t, i) => {
+        const block = document.createElement('div');
+        block.className = 'bone-block';
+
+        const title = document.createElement('div');
+        title.className = 'title';
+        title.textContent = t.bone;
+        const recommended = AXIS_RECOMMENDATION[t.bone];
+        if (recommended) {
+          const badge = document.createElement('span');
+          badge.className = 'badge ' + (t.axis === recommended ? 'good' : 'bad');
+          badge.textContent = t.axis === recommended ? `axis ✓` : `recommend axis: ${recommended}`;
+          title.appendChild(badge);
+        }
+        block.appendChild(title);
+
+        const ax = document.createElement('div'); ax.className = 'axes'; ax.textContent = AXIS_HINTS[t.bone] || ''; block.appendChild(ax);
+
+        const axSel = document.createElement('select');
+        ['X','Y','Z'].forEach(a => {
+          const o = document.createElement('option'); o.value = a; o.textContent = a;
+          if (t.axis === a) o.selected = true;
+          axSel.appendChild(o);
+        });
+        axSel.onchange = () => { t.axis = axSel.value; rebuildAction(); buildPanel(); };
+        block.appendChild(makeRow('Swing axis', axSel));
+
+        if (t.offsetAxis != null) {
+          const oAx = document.createElement('select');
+          ['X','Y','Z'].forEach(a => {
+            const o = document.createElement('option'); o.value = a; o.textContent = a;
+            if (t.offsetAxis === a) o.selected = true;
+            oAx.appendChild(o);
+          });
+          oAx.onchange = () => { t.offsetAxis = oAx.value; rebuildAction(); };
+          const oDeg = document.createElement('input');
+          oDeg.type = 'number'; oDeg.value = t.offsetDeg; oDeg.step = 5; oDeg.style.width = '60px';
+          oDeg.onchange = () => { t.offsetDeg = +oDeg.value; rebuildAction(); };
+          const wrap2 = document.createElement('div'); wrap2.style.display = 'flex'; wrap2.style.gap = '4px';
+          wrap2.appendChild(oAx); wrap2.appendChild(oDeg);
+          block.appendChild(makeRow('Pose offset', wrap2));
+        }
+
+        const kfWrap = document.createElement('div'); kfWrap.className = 'keyframes';
+        t.keys.forEach((v, idx) => {
+          const inp = document.createElement('input');
+          inp.type = 'number'; inp.step = 1; inp.value = v;
+          inp.oninput = () => {
+            t.keys[idx] = +inp.value;
+          };
+          inp.onchange = () => rebuildAction();
+          kfWrap.appendChild(inp);
+        });
+        block.appendChild(makeRow('Keys (deg)', kfWrap));
+
+        panel.appendChild(block);
+      });
+
+      // Action buttons
+      const h4 = document.createElement('h2'); h4.textContent = 'Actions'; panel.appendChild(h4);
+      const rebuildBtn = document.createElement('button');
+      rebuildBtn.textContent = '🔁 Rebuild clip';
+      rebuildBtn.onclick = () => rebuildAction();
+
+      const v2Btn = document.createElement('button');
+      v2Btn.textContent = '✨ Load V2 walk (new)';
+      v2Btn.onclick = () => loadPreset(V2_TRACKS, 0.7);
+
+      const v1Btn = document.createElement('button');
+      v1Btn.textContent = '↺ Load V1 (Walker.tsx)';
+      v1Btn.onclick = () => loadPreset(V1_TRACKS, 0.8);
+
+      const fixBtn = document.createElement('button');
+      fixBtn.textContent = '🩹 V1 + axis fix (shoulders → Y)';
+      fixBtn.onclick = () => {
+        const fixed = V1_TRACKS.map(t => AXIS_RECOMMENDATION[t.bone]
+          ? { ...t, axis: AXIS_RECOMMENDATION[t.bone], keys: [...t.keys] }
+          : t);
+        loadPreset(fixed, 0.8);
+      };
+
+      const exportBtn = document.createElement('button');
+      exportBtn.textContent = '📋 Copy current tracks (JSON)';
+      exportBtn.onclick = () => {
+        navigator.clipboard.writeText(JSON.stringify(tracks, null, 2)).then(
+          () => { exportBtn.textContent = '✅ copied'; setTimeout(() => exportBtn.textContent = '📋 Copy current tracks (JSON)', 1200); },
+        );
+      };
+
+      const wrap3 = document.createElement('div');
+      wrap3.style.display = 'flex'; wrap3.style.gap = '4px'; wrap3.style.flexWrap = 'wrap'; wrap3.style.marginTop = '6px';
+      wrap3.appendChild(rebuildBtn); wrap3.appendChild(v2Btn); wrap3.appendChild(v1Btn); wrap3.appendChild(fixBtn); wrap3.appendChild(exportBtn);
+      panel.appendChild(wrap3);
+
+      // Stride period
+      const tSl = document.createElement('input');
+      tSl.type = 'range'; tSl.min = 0.3; tSl.max = 1.5; tSl.step = 0.05; tSl.value = T;
+      const tNb = document.createElement('input');
+      tNb.type = 'number'; tNb.min = 0.3; tNb.max = 1.5; tNb.step = 0.05; tNb.value = T;
+      tSl.oninput = () => { T = +tSl.value; tNb.value = T; rebuildAction(); };
+      tNb.oninput = () => { T = +tNb.value; tSl.value = T; rebuildAction(); };
+      panel.appendChild(makeRow('Stride T (s)', tSl, tNb));
+
+      // Rig info
+      const h5 = document.createElement('h2'); h5.textContent = 'Rig info'; panel.appendChild(h5);
+      const info = document.createElement('div'); info.className = 'small';
+      let nBones = 0;
+      model.traverse(c => { if (c.isBone) nBones++; });
+      info.innerHTML = `
+        <b>Bones:</b> ${nBones}&nbsp;·&nbsp;<b>GLB anims:</b> ${gltfAnimCount} (procedural)<br>
+        <b>Source:</b> Z-up FBX (Tomb Raider). Front = -Y FBX → +Z three.js after axis conv.<br>
+        <b>V1 bug:</b> shoulder swing on local Z = world fwd axis → arm sweeps X-Z plane (jumping-jack), not forward/back.<br>
+        <b>V2:</b> 11 bones, T=0.7s, shoulder swing on local Y + offset qz(±90) base. Adds ankles, elbow flex, spine_upper counter-twist, head neck stabilisation. Sign convention discovered empirically from rig dump.
+      `;
+      panel.appendChild(info);
+    }
+
+    // ── Render loop ──────────────────────────────────────────────────────────
+    function updateHud() {
+      if (!action) return;
+      hud.innerHTML = `
+        t = ${action.time.toFixed(2)} / ${T.toFixed(2)} s &nbsp; speed=${speed.toFixed(2)}<br>
+        ${playing ? 'playing' : 'paused'} &nbsp; ${trackedBoneAxes.length} tracked bones<br>
+        drag = orbit · wheel = zoom · right-drag = pan
+      `;
+    }
+
+    function tick() {
+      const dt = clock.getDelta();
+      if (mixer && playing) mixer.update(dt * speed);
+      controls.update();
+      renderer.render(scene, camera);
+      const tBar = document.getElementById('tBar');
+      if (tBar && action && playing) tBar.value = action.time;
+      updateHud();
+      requestAnimationFrame(tick);
+    }
+    tick();
+  </script>
+</body>
+</html>
