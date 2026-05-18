@@ -11,7 +11,8 @@ import * as THREE from 'three';
 import { Kallax2x1 }   from './Kallax2x1';
 import { Kallax2x2 }   from './Kallax2x2';
 import { DroneCell } from './Drona';
-import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+import { Variera32x28 } from './Variera32x28';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
@@ -20,6 +21,9 @@ const th = (rows: number) => rows * NH + 2 * TF + (rows - 1) * TI;
 const h1 = th(1); // 41
 const h2 = th(2); // 76.5
 const DF = 33;    // Drona box size
+const W2_HALF = 37.75; // 2×Kallax half-width (w2/2)
+const DEP_HALF = 19.5; // Kallax depth/2
+const VAR2_W = 32, VAR2_D = 28, VAR2_H = 16; // VARIERA 32×28×16 demi-étag
 
 function k(id: string) { return { id } as any; }
 
@@ -60,9 +64,19 @@ export function KallaxNE({ onSize }: SceneItemProps) {
           ))
         )}
       </group>
-      {/* Drona sur le dessus de la tour — z_local=-1.5 évite z-fighting mur est */}
-      <group position={[-18.25, h1 + h2 + DF / 2 + 0.2, -1.5]} rotation-y={Math.PI}>
+      {/* Drona posée sur VARIERA, centrée sur étagère, tournée 90°. */}
+      <group
+        position={[W2_HALF - VAR2_W / 2 - 4, h1 + h2 + VAR2_H + DF / 2, DEP_HALF - VAR2_D / 2 - 10]}
+        rotation-y={-Math.PI / 2}
+      >
         <DroneCell />
+      </group>
+
+      {/* VARIERA 32×28 sur sommet 2×2, coin Nord-Est (local +X=mur Nord, +Z=mur Est).
+          rotY=0 : grand axe (32) le long X (= world Z, parallèle mur Est).
+          Back panel (local +Z) contre mur Est. Opening face pièce (world -X). */}
+      <group position={[W2_HALF - VAR2_W / 2 - 4, h1 + h2, DEP_HALF - VAR2_D / 2 - 10]}>
+        <Variera32x28 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>
   );

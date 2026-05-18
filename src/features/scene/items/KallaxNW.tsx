@@ -13,6 +13,7 @@ import { Kallax2x1 }      from './Kallax2x1';
 import { Kallax1x1 }      from './Kallax1x1';
 import { MannequinHead }  from './MannequinHead';
 import { DronaInstances } from './Drona';
+import { Variera32x13 }   from './Variera32x13';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -24,6 +25,7 @@ const w1 = tw(1); // 40.5
 const w2 = tw(2); // 75.5
 const h1 = th(1); // 41  ← devient la profondeur visuelle une fois pivoté
 const DEP = 39;   // Kallax depth (KALLAX_DEPTH)
+const VAR_W = 32, VAR_D = 13; // VARIERA demi-étag dims (L × P)
 
 // Positions en espace root (rotY=π/2 — même orientation que KallaxNE).
 // nwB (2×1) cells ±17.5 → Y = w2/2 ∓ 17.5
@@ -71,13 +73,23 @@ export function KallaxNW({ onSize }: SceneItemProps) {
       </group>
       <DronaInstances matrices={dronaMatrices} />
 
-      {/* Enfant procédural — toujours visible indépendamment du toggle GLB */}
-      {/* world: x=DEP/2+w1/2≈39.75, y=w2+2w1≈156.5, z=w1/2−DEP/2≈0.75 */}
+      {/* MannequinHead centré sur sommet tour, pivoté 45° vers centre pièce.
+          Head forward = +Z local. rotY=3π/4 → world +X+Z (diagonale corner→centre). */}
       <group
-        position={[DEP / 2, w2 + 2 * w1, w1 / 2]}
-        rotation-y={Math.atan2(150 - DEP / 2, 200 - w1 / 2) + Math.PI}
+        position={[0, w2 + 2 * w1, 6]}
+        rotation-y={(3 * Math.PI) / 4}
       >
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* VARIERA demi-étagère sur sommet tour, longueur plaquée contre mur Nord.
+          rotY=-π/2 : grand axe (32) le long de Z, profondeur (13) le long de X.
+          Back panel contre mur C (Nord) en local -X. Opening face pièce (+Z). */}
+      <group
+        position={[-h1 / 2 + VAR_D / 2, w2 + 2 * w1 + .5, DEP / 2 - VAR_W / 2]}
+        rotation-y={-Math.PI / 2}
+      >
+        <Variera32x13 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>
   );
