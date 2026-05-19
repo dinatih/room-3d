@@ -26,7 +26,10 @@ import {
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
   DIAG_LEN, DIAG_SIN, DIAG_COS, DIAG_ROT_Y,
   DIAG_ENTRY_S, DIAG_ENTRY_E,
+  LAYER_WALKER_DETAIL,
 } from '@config';
+
+const MIRROR_BASE_MASK = (1 << 0) | (1 << LAYER_WALKER_DETAIL);
 
 const BLDG_X_MIN = -100;
 const BLDG_X_MAX =  400;
@@ -675,13 +678,15 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     } as ConstructorParameters<typeof Reflector>[1]);
     mir.position.set(...position);
     mir.rotation.y = rotationY;
-    mir.camera.layers.mask = 1;
+    mir.camera.layers.mask = MIRROR_BASE_MASK;
 
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
       _reflectionDepth++;
-      mir.camera.layers.mask = cameraState.mirrorsHD ? camera.layers.mask : 1;
+      mir.camera.layers.mask = cameraState.mirrorsHD
+        ? camera.layers.mask | (1 << LAYER_WALKER_DETAIL)
+        : MIRROR_BASE_MASK;
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
       _reflectionDepth--;
     };

@@ -55,3 +55,4 @@ export const LAYER_FURNITURE  = 2; // Lit, tables, chaises, étagères…
 export const LAYER_NETWORKS   = 3; // Tuyauterie, électricité (optionnel)
 export const LAYER_NEIGHBORS  = 4; // Appartements voisins (fantôme)
 export const LAYER_LIDAR      = 5; // Scan LiDAR
+export const LAYER_WALKER_DETAIL = 6; // Meshes walker masqués en main camera (FPS) mais visibles dans miroirs (yeux, peau visage)

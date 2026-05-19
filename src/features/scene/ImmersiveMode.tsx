@@ -14,8 +14,15 @@ import { cameraState } from './cameraState';
 
 import { ROOM_W, ROOM_D } from '@config';
 
-const WALK_H     = 180;
-const WALK_SPEED = 2;
+const WALK_HEAD_OFFSET = 10;
+const WALK_SPEED       = 2;
+
+function activeWalkH(): number {
+  const h = cameraState.activeWalkerIdx === 0
+    ? cameraState.walkerHeight0
+    : cameraState.walkerHeight1;
+  return h + WALK_HEAD_OFFSET;
+}
 
 // Portrait → caméra regarde vers l'écran (même transform que DeviceOrientationControls)
 const Q_SCREEN = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
@@ -25,7 +32,7 @@ export function ImmersiveMode() {
 
   const active  = useRef(false);
   const walking = useRef(false);
-  const pos     = useRef(new THREE.Vector3(ROOM_W / 2, WALK_H, ROOM_D / 2));
+  const pos     = useRef(new THREE.Vector3(ROOM_W / 2, activeWalkH(), ROOM_D / 2));
   const orient  = useRef<{ alpha: number; beta: number; gamma: number } | null>(null);
 
   useEffect(() => {
@@ -79,7 +86,7 @@ export function ImmersiveMode() {
     async function enter() {
       active.current   = true;
       cameraState.isXR = true;
-      pos.current.set(cameraState.camX, WALK_H, cameraState.camZ);
+      pos.current.set(cameraState.camX, activeWalkH(), cameraState.camZ);
       orient.current   = null;
       btn.textContent  = '✕ Quitter';
 

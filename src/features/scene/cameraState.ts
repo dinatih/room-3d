@@ -15,11 +15,15 @@ export const cameraState = {
   isWalking: false as boolean,
   isMoving:  false as boolean,
   walkYaw:   0     as number,
+  walkPitch: 0     as number,
   /** Index du walker actif (0 = défaut, 1 = rouge) — touche L pour switcher */
   activeWalkerIdx: 0 as number,
   /** Positions des deux walkers (mis à jour par Walker.tsx) */
   walker0X: 150 as number, walker0Z: 200 as number,
   walker1X: 230 as number, walker1Z: 140 as number,  // ROOM_W/2+80, ROOM_D/2-60
+  /** Hauteurs (cm) des deux walkers — écrites par Walker.tsx, lues par les caméras walk */
+  walkerHeight0: 181 as number,
+  walkerHeight1: 170 as number,
   /** Alias actif — lu par Minimap */
   walkerX: 150 as number,
   walkerZ: 200 as number,

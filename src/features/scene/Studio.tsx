@@ -14,6 +14,7 @@ import { cameraState }      from '@features/scene/cameraState';
 import { Minimap }          from '@features/scene/Minimap';
 import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/scene/SidePanel';
 import { AnimationsPanel }  from '@features/scene/AnimationsPanel';
+import { WalkerMeshDebug }  from '@features/scene/WalkerMeshDebug';
 import { Walls, Floor, Mirrors, DoorsPlaced } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
@@ -42,6 +43,7 @@ import { PaperPlane }                  from '@features/scene/PaperPlane';
 import {
   ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NEIGHBORS, LAYER_LIDAR,
+  LAYER_WALKER_DETAIL,
 } from '@config';
 
 /**
@@ -223,8 +225,10 @@ export function Studio() {
         }}
         onCreated={({ scene, gl, camera }) => {
           scene.background = new Color(0x2a2a3e);
-gl.shadowMap.enabled = true;
+          gl.shadowMap.enabled = true;
           camera.layers.enableAll();
+          // LAYER_WALKER_DETAIL réservé aux miroirs (cf. Walker FPS hide)
+          camera.layers.disable(LAYER_WALKER_DETAIL);
           setupEnvironment(scene, gl);
         }}
       >
@@ -341,6 +345,7 @@ gl.shadowMap.enabled = true;
         onStop={stopAll}
         durations={animDurations}
       />
+      <WalkerMeshDebug />
       {showInventory && <Inventory onClose={() => setShowInventory(false)} />}
       <Minimap />
       <VirtualDPad />

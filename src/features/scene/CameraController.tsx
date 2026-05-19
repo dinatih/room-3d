@@ -31,8 +31,16 @@ import { cameraState } from './cameraState';
 const CX = ROOM_W / 2;
 const CZ = ROOM_D / 2;
 
-const WALK_H      = 180;
-const WALK_SPEED  = 2;
+const EYE_RATIO  = 0.93; // niveau yeux ≈ 93% taille totale
+const WALK_SPEED = 2;
+
+/** Hauteur caméra walk = niveau yeux du walker actif (≈ 93% de sa taille). */
+function activeWalkH(): number {
+  const h = cameraState.activeWalkerIdx === 0
+    ? cameraState.walkerHeight0
+    : cameraState.walkerHeight1;
+  return h * EYE_RATIO;
+}
 const MOUSE_SENS  = 0.002;
 
 const PERSP_POS:    [number, number, number] = [ROOM_W / 2, 1000, -150];
@@ -69,7 +77,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const ctrlRef = useRef<OrbitControlsImpl>(null!);
 
   // Walk state (refs — updated every frame, no re-render needed)
-  const walkPos   = useRef({ x: CX, y: WALK_H, z: CZ });
+  const walkPos   = useRef({ x: CX, y: activeWalkH(), z: CZ });
   const walkYaw   = useRef(0);
   const walkPitch = useRef(0);
   const keys      = useRef(new Set<string>());
@@ -78,6 +86,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // Saved perspective state for top-down → orbit restore
   const savedPerspPos    = useRef(new THREE.Vector3(...PERSP_POS));
   const savedPerspTarget = useRef(new THREE.Vector3(...PERSP_TARGET));
+  // FOV sauvegardé avant entrée walk (restauré à la sortie)
+  const savedFov         = useRef(50);
 
   // ── Walk helpers ────────────────────────────────────────────────────────────
 
@@ -96,7 +106,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   }
 
   function enterWalk(x: number, z: number) {
-    walkPos.current = { x, y: WALK_H, z };
+    walkPos.current = { x, y: activeWalkH(), z };
     walkYaw.current   = 0;
     walkPitch.current = 0;
     const ctrl = ctrlRef.current;
@@ -105,6 +115,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       ctrl.enablePan    = false;
       ctrl.enableZoom   = false;
     }
+    const cam = camera as THREE.PerspectiveCamera;
+    if (cam.isPerspectiveCamera) savedFov.current = cam.fov;
     changeMode('walk');
     invalidate(); // déclenche un frame pour que la minimap affiche l'icône
   }
@@ -117,6 +129,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       ctrl.enableRotate = true;
       ctrl.enablePan    = true;
       ctrl.enableZoom   = true;
+    }
+    const cam = camera as THREE.PerspectiveCamera;
+    if (cam.isPerspectiveCamera) {
+      cam.fov = savedFov.current;
+      cam.updateProjectionMatrix();
     }
     changeMode('orbit');
     invalidate(); // met à jour la minimap (supprime l'icône)
@@ -195,6 +212,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         if (modeRef.current === 'walk') {
           walkPos.current.x = newIdx === 0 ? cameraState.walker0X : cameraState.walker1X;
           walkPos.current.z = newIdx === 0 ? cameraState.walker0Z : cameraState.walker1Z;
+          walkPos.current.y = activeWalkH();
           updateWalkLook();
         }
         invalidate();
@@ -305,14 +323,27 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       updateWalkLook();
       invalidate();
     };
+    // Scroll wheel en walk = FOV (zoom). Range 30°–110°.
+    const onWheel = (e: WheelEvent) => {
+      if (modeRef.current !== 'walk') return;
+      const cam = camera as THREE.PerspectiveCamera;
+      if (!cam.isPerspectiveCamera) return;
+      e.preventDefault();
+      const step = e.deltaY > 0 ? 2 : -2;
+      cam.fov = Math.max(30, Math.min(110, cam.fov + step));
+      cam.updateProjectionMatrix();
+      invalidate();
+    };
 
     canvas.addEventListener('mousedown', onDown);
     document.addEventListener('mouseup',   onUp);
     document.addEventListener('mousemove', onMove);
+    canvas.addEventListener('wheel', onWheel, { passive: false });
     return () => {
       canvas.removeEventListener('mousedown', onDown);
       document.removeEventListener('mouseup',   onUp);
       document.removeEventListener('mousemove', onMove);
+      canvas.removeEventListener('wheel', onWheel);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -333,7 +364,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       || (modeRef.current === 'orbit' && (keys.current.has('ArrowUp') || keys.current.has('ArrowDown')));
     // walkYaw is only synced from walk controls when in walk mode;
     // in orbit mode it is managed by the walker arrow keys below.
-    if (modeRef.current === 'walk') cameraState.walkYaw = walkYaw.current;
+    if (modeRef.current === 'walk') {
+      cameraState.walkYaw   = walkYaw.current;
+      cameraState.walkPitch = walkPitch.current;
+    }
     cameraState.onUpdate?.();
 
     // ── Orbit mode keyboard navigation (Google Earth style) ─────────────────────
