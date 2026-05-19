@@ -13,7 +13,7 @@ import {
 } from './floorDraw';
 
 const SMALL_W_DESKTOP = 150;
-const SMALL_W_MOBILE  = 110;
+const SMALL_W_MOBILE  = 55;
 
 function drawMinimap(
   canvas: HTMLCanvasElement,

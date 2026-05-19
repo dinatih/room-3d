@@ -31,9 +31,16 @@ export function VRMode() {
 
     // ── VRButton ──────────────────────────────────────────────────────────────
     const btn = VRButton.createButton(gl);
-    btn.style.bottom = 'calc(64px + env(safe-area-inset-bottom) + 12px)';
-    btn.style.right  = '12px';
-    btn.style.left   = 'auto';
+    const mobile = window.matchMedia('(max-width: 768px)').matches;
+    if (mobile) {
+      // Mobile : top-right, sous la minimap (55 + 8 + 8 = 71 px)
+      btn.style.bottom = 'auto';
+      btn.style.top    = '74px';
+      btn.style.right  = '8px';
+      btn.style.left   = 'auto';
+    } else {
+      btn.style.bottom = '20px';
+    }
     document.body.appendChild(btn);
 
     // Réduire le bouton si WebXR non supporté

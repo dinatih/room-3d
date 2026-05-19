@@ -30,6 +30,7 @@ import { Inventory }                    from '@features/inventory/Inventory';
 import { VRMode }                       from '@features/scene/VRMode';
 import { ImmersiveMode }                from '@features/scene/ImmersiveMode';
 import { FloorPlan }                    from '@features/scene/FloorPlan';
+import { VirtualDPad }                  from '@features/scene/VirtualDPad';
 import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { RealWorldLayer } from '@features/scene/RealWorldLayer';
@@ -324,6 +325,7 @@ gl.shadowMap.enabled = true;
       />
       {showInventory && <Inventory onClose={() => setShowInventory(false)} />}
       <Minimap />
+      <VirtualDPad />
       <HoverOverlay />
       {layers.wallEdges && <EdgeHoverOverlay />}
     </div>
