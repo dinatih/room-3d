@@ -185,20 +185,29 @@
       { bone: 'leg_left_ankle_06',  axis: 'X', keys: [+18,  +8, -14,  -4, +18] },
       { bone: 'leg_right_ankle_010',axis: 'X', keys: [-14,  -4, +18,  +8, -14] },
 
-      // ─── Arms ────────────────────────────────────────────────────────────
-      // Offset qz(±90) drops arm from T-pose to along-the-body.
-      // Swing on local Y (corrected from V1's local Z).
-      // L arm forward at t=0 (counter to L leg back).
-      { bone: 'arm_left_shoulder_2_014',  axis: 'Y', keys: [+28,   0, -28,   0, +28],
-        offsetAxis: 'Z', offsetDeg: -90 },
-      { bone: 'arm_right_shoulder_2_033', axis: 'Y', keys: [-28,   0, +28,   0, -28],
-        offsetAxis: 'Z', offsetDeg:  90 },
+      // ─── Arms (PARENT-SPACE math) ────────────────────────────────────────
+      // Shoulder bones have twisted rest matrices — local axes don't align
+      // with body axes, so rotations in LOCAL space give wrong arc direction
+      // (the V1 bug: swing on local Z = world fwd axis → jumping-jack).
+      //
+      // Use parent-space (rotation in spine_upper frame ≈ world axes):
+      //   Offset rotZ(±80°) parent → arm drops to side with ~10° abduction
+      //   (pure ±90 jams elbows into ribs, kinks forearm against holsters).
+      //   Swing rotX(±30°) parent → tail sweeps Y-Z plane = forward/back.
+      // Mirrored rest matrices give counter-swing naturally; flip L/R keys
+      // together if arms end up swinging in phase with legs instead of out.
+      { bone: 'arm_left_shoulder_2_014',  space: 'parent',
+        axis: 'X', keys: [+30, 0, -30, 0, +30],
+        offsetAxis: 'Z', offsetDeg: -80 },
+      { bone: 'arm_right_shoulder_2_033', space: 'parent',
+        axis: 'X', keys: [-30, 0, +30, 0, -30],
+        offsetAxis: 'Z', offsetDeg:  80 },
 
-      // Elbow: slight constant flex (~30°) + small extra bend on the swinging-forward arm.
-      // Elbow local axes ≈ identity (parent shoulder is twisted but elbow itself isn't).
-      // Bone direction = arm; rotation around X bends elbow naturally for this rig.
-      { bone: 'arm_left_elbow_015', axis: 'X', keys: [+38, +30, +22, +30, +38] },
-      { bone: 'arm_right_elbow_034',axis: 'X', keys: [+22, +30, +38, +30, +22] },
+      // Elbow: low baseline flex (~15°) instead of 30° — arms stay straighter at
+      // rest so hands naturally land at hip-holster level without the forearm
+      // bending outward to compensate. Still animates ±7° around the baseline.
+      { bone: 'arm_left_elbow_015',  axis: 'X', keys: [+22, +15,  +8, +15, +22] },
+      { bone: 'arm_right_elbow_034', axis: 'X', keys: [ +8, +15, +22, +15,  +8] },
 
       // ─── Torso ───────────────────────────────────────────────────────────
       // Spine lower twist around vertical: torso counter-rotates to pelvis.
@@ -211,6 +220,22 @@
 
       // Subtle head bob / neck stabilisation: counter the torso twist a tiny bit.
       { bone: 'head_neck_lower_051', axis: 'Z', keys: [-1,   0, +1,   0, -1] },
+
+      // ─── Ponytail (gravity drape + whip propagation) ─────────────────────
+      // 6-bone chain (head_neck_upper → pony_1 → … → pony_6). Rest extends
+      // straight back (+Y local = -Z three.js after FBX→Y-up axis conv).
+      // Without anim the chain sticks out horizontally — needs gravity bend.
+      //
+      // Distributed drape: heavier bend at root (gravity load concentrates
+      // there), tapering to tip. Sum ≈ -90° → tip ends near vertical.
+      // Walk-cycle bob: ±2° around base, phase-shifted per segment to
+      // propagate a wave down the chain (whip follow-through).
+      { bone: 'head_hair_ponytail_1_053', axis: 'X', keys: [-28, -30, -32, -30, -28] },
+      { bone: 'head_hair_ponytail_2_054', axis: 'X', keys: [-22, -20, -22, -24, -22] },
+      { bone: 'head_hair_ponytail_3_055', axis: 'X', keys: [-13, -15, -17, -15, -13] },
+      { bone: 'head_hair_ponytail_4_056', axis: 'X', keys: [-10,  -8, -10, -12, -10] },
+      { bone: 'head_hair_ponytail_5_057', axis: 'X', keys: [ -6,  -8, -10,  -8,  -6] },
+      { bone: 'head_hair_ponytail_6_058', axis: 'X', keys: [ -5,  -3,  -5,  -7,  -5] },
     ];
 
     const DEFAULT_TRACKS = V2_TRACKS;
@@ -224,21 +249,24 @@
       'leg_right_knee_09':        '~identity; +X bends shin back (flex)',
       'leg_left_ankle_06':        'parent=knee; +X pitches foot down (plantarflex)',
       'leg_right_ankle_010':      'parent=knee; +X pitches foot down (plantarflex)',
-      'arm_left_shoulder_2_014':  'TWISTED: local +X≈+Z world (up), +Y≈+X world (arm), +Z≈+Y world (fwd)',
-      'arm_right_shoulder_2_033': 'TWISTED: local +X≈-Z world (down), +Y≈-X world (arm), +Z≈+Y world (fwd)',
-      'arm_left_elbow_015':       '~identity (parent shoulder twisted); +X bends elbow',
+      'arm_left_shoulder_2_014':  'parent-space. Offset rotZ(-80) drops arm + 10° abduction; swing rotX = fwd/back',
+      'arm_right_shoulder_2_033': 'mirror of L. Offset rotZ(+80); swing rotX',
+      'arm_left_elbow_015':       '~identity rest; +X bends elbow naturally with arm in down pose',
       'arm_right_elbow_034':      '~identity; +X bends elbow',
       'spine_lower_012':          'near-identity (small forward tilt); Z = vertical twist',
       'spine_upper_013':          'tilted ~21° fwd; Z = vertical twist',
       'head_neck_lower_051':      'tilted ~13°; Z = head twist',
+      'head_hair_ponytail_1_053': '~identity; chain root. +X = gravity bend (droop)',
+      'head_hair_ponytail_2_054': '~identity; chain segment',
+      'head_hair_ponytail_3_055': '~identity; chain segment (whip apex)',
+      'head_hair_ponytail_4_056': '~identity; chain segment',
+      'head_hair_ponytail_5_057': '~identity; chain segment',
+      'head_hair_ponytail_6_058': '~identity; chain tip',
     };
-    // Walker walk semantics: arm swings forward/back means rotating in the Y-Z (forward/vertical) plane,
-    // i.e. around the world-X axis (body sideways). For the shoulder, world +X ≈ LOCAL +Y. So swinging
-    // on local Y is correct; the current code uses local Z which lies along world +Y (forward) and
-    // therefore swings the arm in the X-Z plane (up/down at the side) instead of forward/back.
+    // V1-bug recommendation (only meaningful when track is in 'local' space).
     const AXIS_RECOMMENDATION = {
-      'arm_left_shoulder_2_014':  'Y',
-      'arm_right_shoulder_2_033': 'Y',
+      'arm_left_shoulder_2_014':  'Z',
+      'arm_right_shoulder_2_033': 'Z',
     };
 
     // ── Quaternion helpers ───────────────────────────────────────────────────
@@ -263,21 +291,39 @@
     }
 
     // Rebuild the walk clip from current track config + cached rest quats.
+    //
+    // Rotation composition depends on `space`:
+    //   - 'local'  (default): q = rest * offset * delta   (RIGHT multiply, axes in bone local frame)
+    //   - 'parent':           q = delta * offset * rest   (LEFT multiply, axes in parent frame)
+    //
+    // For bones with twisted rest (shoulders), parent-space is the intuitive choice:
+    // "rotate -90° around parent +Z" maps directly to "drop arm to side" without
+    // needing to chase the conjugated local axis.
     function buildWalkClip(root, tracks) {
       const times = [0, T * 0.25, T * 0.5, T * 0.75, T];
       const clipTracks = [];
       for (const t of tracks) {
         const bone = findBone(root, t.bone);
         if (!bone) { console.warn('bone not found:', t.bone); continue; }
-        const rest = bone.userData.restQuat.clone();
+        const rest   = bone.userData.restQuat.clone();
+        const space  = t.space || 'local';
         const offset = (t.offsetAxis != null && t.offsetDeg != null)
           ? quatAxisDeg(t.offsetAxis, t.offsetDeg)
           : null;
-        const base = offset ? rest.clone().multiply(offset) : rest;
+
+        let base;
+        if (space === 'parent') {
+          base = offset ? offset.clone().multiply(rest) : rest;
+        } else {
+          base = offset ? rest.clone().multiply(offset) : rest;
+        }
+
         const flat = [];
         for (const deg of t.keys) {
           const delta = quatAxisDeg(t.axis, deg);
-          const q = base.clone().multiply(delta);
+          const q = (space === 'parent')
+            ? delta.clone().multiply(base)
+            : base.clone().multiply(delta);
           flat.push(q.x, q.y, q.z, q.w);
         }
         clipTracks.push(new THREE.QuaternionKeyframeTrack(t.bone + '.quaternion', times, flat));
@@ -496,6 +542,16 @@
 
         const ax = document.createElement('div'); ax.className = 'axes'; ax.textContent = AXIS_HINTS[t.bone] || ''; block.appendChild(ax);
 
+        // Space toggle: local (default) vs parent
+        const spSel = document.createElement('select');
+        ['local','parent'].forEach(s => {
+          const o = document.createElement('option'); o.value = s; o.textContent = s;
+          if ((t.space || 'local') === s) o.selected = true;
+          spSel.appendChild(o);
+        });
+        spSel.onchange = () => { t.space = spSel.value; rebuildAction(); };
+        block.appendChild(makeRow('Space', spSel));
+
         const axSel = document.createElement('select');
         ['X','Y','Z'].forEach(a => {
           const o = document.createElement('option'); o.value = a; o.textContent = a;
@@ -589,8 +645,8 @@
       info.innerHTML = `
         <b>Bones:</b> ${nBones}&nbsp;·&nbsp;<b>GLB anims:</b> ${gltfAnimCount} (procedural)<br>
         <b>Source:</b> Z-up FBX (Tomb Raider). Front = -Y FBX → +Z three.js after axis conv.<br>
-        <b>V1 bug:</b> shoulder swing on local Z = world fwd axis → arm sweeps X-Z plane (jumping-jack), not forward/back.<br>
-        <b>V2:</b> 11 bones, T=0.7s, shoulder swing on local Y + offset qz(±90) base. Adds ankles, elbow flex, spine_upper counter-twist, head neck stabilisation. Sign convention discovered empirically from rig dump.
+        <b>V1 bug:</b> shoulder offset+swing in LOCAL space (twisted bone) → wrong axis interpretation, arms drift forward.<br>
+        <b>V2 fix:</b> shoulders in PARENT space. offset rotZ(±90°) parent = exact arm-drop. swing rotX(±30°) parent = forward/back swing in saggital plane. No conjugation, no axis error.
       `;
       panel.appendChild(info);
     }
