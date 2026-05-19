@@ -6,22 +6,25 @@
  */
 import { useRef, useEffect, useState } from 'react';
 import { cameraState } from '@features/scene/cameraState';
+import { useIsMobile } from '@shared/hooks/useIsMobile';
 import {
   drawFloorPlan,
   PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_ASPECT,
 } from './floorDraw';
 
-const SMALL_W = 150;
+const SMALL_W_DESKTOP = 150;
+const SMALL_W_MOBILE  = 110;
 
 function drawMinimap(
   canvas: HTMLCanvasElement,
   camX: number, camZ: number, yaw: number,
+  smallW: number,
 ) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   const W  = canvas.width;
   const S  = W / (PLAN_X_MAX - PLAN_X_MIN);
-  const sc = W / SMALL_W;
+  const sc = W / smallW;
 
   const tx = (x: number) => (x - PLAN_X_MIN) * S;
   const tz = (z: number) => (z - PLAN_Z_MIN) * S;
@@ -55,12 +58,14 @@ function drawMinimap(
 // ── Composant HTML pur ────────────────────────────────────────────────────────
 
 export function Minimap() {
+  const isMobile = useIsMobile();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [expanded, setExpanded] = useState(false);
 
+  const smallW = isMobile ? SMALL_W_MOBILE : SMALL_W_DESKTOP;
   const canvasW = expanded
     ? Math.round(Math.min(window.innerWidth * 0.88, (window.innerHeight * 0.88) / PLAN_ASPECT))
-    : SMALL_W;
+    : smallW;
   const canvasH = Math.round(canvasW * PLAN_ASPECT);
 
   useEffect(() => {
@@ -70,11 +75,11 @@ export function Minimap() {
       if (!canvas) return;
       canvas.width  = canvasW;
       canvas.height = canvasH;
-      drawMinimap(canvas, cameraState.walkerX, cameraState.walkerZ, cameraState.walkYaw);
+      drawMinimap(canvas, cameraState.walkerX, cameraState.walkerZ, cameraState.walkYaw, smallW);
     };
     cameraState.onUpdate();
     return () => { cameraState.onUpdate = prev; };
-  }, [canvasW, canvasH]);
+  }, [canvasW, canvasH, smallW]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && expanded) setExpanded(false); };
@@ -84,7 +89,9 @@ export function Minimap() {
 
   const containerStyle: React.CSSProperties = expanded
     ? { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 201 }
-    : { position: 'fixed', bottom: 16, right: 16, zIndex: 50 };
+    : isMobile
+      ? { position: 'fixed', top: 8, right: 8, zIndex: 50 }
+      : { position: 'fixed', bottom: 16, right: 16, zIndex: 50 };
 
   return (
     <>

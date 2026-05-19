@@ -5,6 +5,7 @@
  * d'exécution, et un bouton Arrêter.
  */
 import React, { useEffect, useRef, useState } from 'react';
+import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 export interface AnimationsPanelProps {
   buildAnim:        boolean; onStartBuildAnim:  () => void;
@@ -41,9 +42,13 @@ function fmtElapsed(ms: number): string {
 }
 
 export function AnimationsPanel(props: AnimationsPanelProps) {
+  const isMobile     = useIsMobile();
   const anyRunning   = ANIMS.some(a => props[a.key] as boolean);
   const activeKey    = ANIMS.find(a => props[a.key] as boolean)?.key ?? null;
   const activeAnim   = ANIMS.find(a => props[a.key] as boolean) ?? null;
+  const [expanded, setExpanded] = useState(false);
+  // Mobile : collapsed par défaut, déplié auto en cours d'animation
+  const showList = !isMobile || expanded || anyRunning;
 
   // Timer
   const [elapsed, setElapsed] = useState(0);
@@ -70,32 +75,43 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
   return (
     <div style={{
       position: 'fixed',
-      top: 16, right: 16,
+      // Mobile : top-left (Minimap occupe top-right, tab bar occupe bas)
+      // Desktop : top-right (inchangé)
+      top: isMobile ? 8 : 16,
+      ...(isMobile ? { left: 8 } : { right: 16 }),
       zIndex: 100,
       display: 'flex',
       flexDirection: 'column',
       gap: 5,
-      width: 170,
+      width: isMobile ? 140 : 170,
       fontFamily: 'inherit',
     }}>
-      {/* Titre */}
-      <div style={{
-        color: 'rgba(255,255,255,0.55)',
-        fontSize: 10,
-        fontWeight: 700,
-        letterSpacing: '0.12em',
-        textTransform: 'uppercase',
-        padding: '4px 8px',
-        background: 'rgba(10,10,20,0.55)',
-        backdropFilter: 'blur(8px)',
-        borderRadius: 6,
-        border: '1px solid rgba(255,255,255,0.08)',
-      }}>
-        Animations
+      {/* Titre — cliquable sur mobile pour collapse/expand */}
+      <div
+        onClick={isMobile && !anyRunning ? () => setExpanded(e => !e) : undefined}
+        style={{
+          color: 'rgba(255,255,255,0.55)',
+          fontSize: 10,
+          fontWeight: 700,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          padding: isMobile ? '8px 10px' : '4px 8px',
+          background: 'rgba(10,10,20,0.55)',
+          backdropFilter: 'blur(8px)',
+          borderRadius: 6,
+          border: '1px solid rgba(255,255,255,0.08)',
+          cursor: isMobile && !anyRunning ? 'pointer' : 'default',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}
+      >
+        <span>🎬 Animations</span>
+        {isMobile && !anyRunning && (
+          <span style={{ fontSize: 9, opacity: 0.7 }}>{expanded ? '▲' : '▼'}</span>
+        )}
       </div>
 
-      {/* Boutons */}
-      {ANIMS.map(a => {
+      {/* Boutons — cachés en mobile collapsed */}
+      {showList && ANIMS.map(a => {
         const isActive = props[a.key] as boolean;
         const dur      = props.durations[a.key];
         return (
@@ -108,8 +124,9 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
               color: isActive ? a.color : 'rgba(255,255,255,0.75)',
               border: `1px solid ${isActive ? a.color + '77' : 'rgba(255,255,255,0.10)'}`,
               borderRadius: 6,
-              padding: '6px 10px',
-              fontSize: 11,
+              padding: isMobile ? '12px 12px' : '6px 10px',
+              fontSize: isMobile ? 13 : 11,
+              minHeight: isMobile ? 44 : undefined,
               fontWeight: 700,
               letterSpacing: '0.04em',
               cursor: anyRunning && !isActive ? 'not-allowed' : 'pointer',

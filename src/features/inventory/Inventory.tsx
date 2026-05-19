@@ -4,6 +4,7 @@
 import React, { useState, useMemo } from 'react';
 import { INVENTORY, CATEGORIES, STORAGE_SPACES, type InventoryItem, type StorageSpace } from './inventoryData';
 import { InventoryPreview } from './InventoryPreview';
+import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -22,16 +23,19 @@ const overlayStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'center',
 };
 
-const modalStyle: React.CSSProperties = {
-  background: 'rgba(14,14,24,0.97)',
-  border: '1px solid #444',
-  borderRadius: 12,
-  padding: '20px 24px',
-  width: 'min(97vw, 1100px)',
-  maxHeight: '88vh',
-  display: 'flex', flexDirection: 'column', gap: 10,
-  overflow: 'hidden',
-};
+function modalStyleFor(mobile: boolean): React.CSSProperties {
+  return {
+    background: 'rgba(14,14,24,0.97)',
+    border: '1px solid #444',
+    borderRadius: mobile ? 0 : 12,
+    padding: mobile ? '10px 10px' : '20px 24px',
+    width: mobile ? '100vw' : 'min(97vw, 1100px)',
+    height: mobile ? '100vh' : undefined,
+    maxHeight: mobile ? '100vh' : '88vh',
+    display: 'flex', flexDirection: 'column', gap: 10,
+    overflow: 'hidden',
+  };
+}
 
 const thStyle: React.CSSProperties = {
   padding: '6px 8px',
@@ -135,6 +139,7 @@ function ItemTable({ items, selected, onSelect }: {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function Inventory({ onClose }: { onClose: () => void }) {
+  const isMobile = useIsMobile();
   const [activeCat, setActiveCat] = useState('all');
   const [search, setSearch]       = useState('');
   const [selected, setSelected]   = useState<PreviewTarget>(null);
@@ -161,29 +166,61 @@ export function Inventory({ onClose }: { onClose: () => void }) {
 
   return (
     <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
+      <div style={{ ...modalStyleFor(isMobile), position: 'relative' }} onClick={e => e.stopPropagation()}>
+
+        {/* Bouton fermer — toujours en haut à droite, surtout pour mobile plein-écran */}
+        <button
+          onClick={onClose}
+          aria-label="Fermer"
+          style={{
+            position: 'absolute',
+            top: isMobile ? 6 : 10,
+            right: isMobile ? 6 : 12,
+            background: isMobile ? 'rgba(255,255,255,0.10)' : 'transparent',
+            border: isMobile ? '1px solid rgba(255,255,255,0.20)' : 'none',
+            borderRadius: isMobile ? '50%' : 4,
+            color: '#ddd',
+            fontSize: isMobile ? 26 : 22,
+            width: isMobile ? 44 : 32,
+            height: isMobile ? 44 : 32,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', lineHeight: 1, padding: 0,
+            zIndex: 10,
+          }}
+        >
+          ×
+        </button>
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <h3 style={{ color: '#ffd700', fontSize: 14, textTransform: 'uppercase', letterSpacing: 1, margin: 0, flex: 1 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          gap: isMobile ? 8 : 12,
+          flexWrap: 'wrap',
+          paddingRight: isMobile ? 56 : 40,
+        }}>
+          <h3 style={{ color: '#ffd700', fontSize: 14, textTransform: 'uppercase', letterSpacing: 1, margin: 0, flex: '0 0 auto' }}>
             📦 Inventaire
           </h3>
-          <span style={{ color: '#888', fontSize: 12 }}>{items.length} objets · {totalQty} pièces</span>
+          {!isMobile && (
+            <span style={{ color: '#888', fontSize: 12 }}>{items.length} objets · {totalQty} pièces</span>
+          )}
           <input
             placeholder="Rechercher…"
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{
               background: 'rgba(255,255,255,0.08)', border: '1px solid #555', borderRadius: 6,
-              color: '#fff', fontSize: 12, padding: '4px 10px', width: 160,
+              color: '#fff',
+              fontSize: isMobile ? 14 : 12,
+              padding: isMobile ? '8px 12px' : '4px 10px',
+              minHeight: isMobile ? 40 : undefined,
+              width: isMobile ? '100%' : 160,
+              flex: isMobile ? '1 1 100%' : '0 0 auto',
             }}
           />
-          <button
-            onClick={onClose}
-            style={{ background: 'none', border: 'none', color: '#888', fontSize: 22, cursor: 'pointer', padding: '2px 8px', lineHeight: 1 }}
-          >
-            ×
-          </button>
+          {isMobile && (
+            <span style={{ color: '#888', fontSize: 11 }}>{items.length} objets · {totalQty} pièces</span>
+          )}
         </div>
 
         {/* Category filters */}
@@ -199,7 +236,10 @@ export function Inventory({ onClose }: { onClose: () => void }) {
                   border: `1px solid ${on ? '#ffd700' : '#444'}`,
                   borderRadius: 6,
                   color: on ? '#ffd700' : '#ccc',
-                  fontSize: 11, padding: '3px 10px', cursor: 'pointer',
+                  fontSize: isMobile ? 13 : 11,
+                  padding: isMobile ? '8px 14px' : '3px 10px',
+                  minHeight: isMobile ? 36 : undefined,
+                  cursor: 'pointer',
                 }}
               >
                 {cat.label}
@@ -208,8 +248,20 @@ export function Inventory({ onClose }: { onClose: () => void }) {
           })}
         </div>
 
-        {/* Body: table (left) + preview (right) */}
-        <div style={{ display: 'flex', gap: 16, overflow: 'hidden', flex: 1, minHeight: 0 }}>
+        {/* Body: table (left) + preview (right) — empilé verticalement sur mobile */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? 8 : 16,
+          overflow: 'hidden', flex: 1, minHeight: 0,
+        }}>
+
+          {/* Preview — affichée en haut sur mobile, à droite sur desktop, seulement si sélection */}
+          {isMobile && selected && (
+            <div style={{ display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+              <InventoryPreview item={selected} />
+            </div>
+          )}
 
           {/* Table */}
           <div style={{ overflowY: 'auto', flex: 1, minWidth: 0 }}>
@@ -219,10 +271,11 @@ export function Inventory({ onClose }: { onClose: () => void }) {
             <ItemTable items={items} selected={selected} onSelect={setSelected} />
           </div>
 
-          {/* Preview */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', paddingTop: 4 }}>
-            <InventoryPreview item={selected} />
-          </div>
+          {!isMobile && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', paddingTop: 4 }}>
+              <InventoryPreview item={selected} />
+            </div>
+          )}
 
         </div>
       </div>

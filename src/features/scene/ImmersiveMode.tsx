@@ -37,16 +37,16 @@ export function ImmersiveMode() {
     btn.textContent = '👁 Immersif';
     Object.assign(btn.style, {
       position: 'fixed',
-      bottom: '16px',
-      left: '16px',
+      bottom: 'calc(64px + env(safe-area-inset-bottom) + 12px)',
+      left: '12px',
       background: 'rgba(10,10,40,0.85)',
       color: '#fff',
       border: '1px solid rgba(255,255,255,0.35)',
       borderRadius: '8px',
-      padding: '10px 20px',
-      fontSize: '14px',
+      padding: '10px 16px',
+      fontSize: '13px',
       cursor: 'pointer',
-      zIndex: '200',
+      zIndex: '110',
       fontFamily: 'sans-serif',
     });
     document.body.appendChild(btn);

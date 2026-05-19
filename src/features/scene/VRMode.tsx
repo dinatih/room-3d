@@ -31,7 +31,9 @@ export function VRMode() {
 
     // ── VRButton ──────────────────────────────────────────────────────────────
     const btn = VRButton.createButton(gl);
-    btn.style.bottom = '60px';
+    btn.style.bottom = 'calc(64px + env(safe-area-inset-bottom) + 12px)';
+    btn.style.right  = '12px';
+    btn.style.left   = 'auto';
     document.body.appendChild(btn);
 
     // Réduire le bouton si WebXR non supporté

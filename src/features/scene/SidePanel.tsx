@@ -1,17 +1,19 @@
 /**
- * SidePanel.tsx — menu latéral, port de lego-room.html + js/ui/events.js.
+ * SidePanel.tsx — menu de contrôle.
  *
- * Composant HTML pur rendu HORS du Canvas R3F.
- * Dispatche des events custom écoutés par CameraController.
+ * Desktop : panneau accordéon à gauche (sections Vues / Affichage / Mobilier
+ *   / Inventaire / DevTools).
+ * Mobile  : tab bar fixe en bas (📷 👁 🛋 📦 📊) qui ouvre un bottom-sheet
+ *   plein-largeur avec touch targets ≥ 44 px.
  *
- * Sections :
- *   📷 Vues      — presets caméra + POV 1.8m
- *   🛋 Mobilier  — toggles portes / meubles (état partagé via props callbacks)
+ * Composant HTML pur rendu HORS du Canvas R3F. Dispatche des events custom
+ * écoutés par CameraController et le reste de la scène.
  */
 import { useState, useCallback, useEffect } from 'react';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { RENDER_STYLES, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
 import { solarPosition } from '@features/scene/SunLight';
+import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
@@ -66,9 +68,19 @@ function dispatchKey(key: string) {
   window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── Styles partagés ───────────────────────────────────────────────────────────
 
-const panelStyle: React.CSSProperties = {
+const COLORS: Record<string, string> = {
+  gray: '#aaa', white: '#fff', light: '#f0f0f0',
+  tan: '#e8c39e', yellow: '#ffd700', green: '#88cc88',
+  blue: '#4488ff', peach: '#ff9966', purple: '#aa88ff',
+  gold: '#ffaa44', teal: '#66cccc', cyan: '#44ddff',
+  red: '#ff6644',
+};
+
+// ── Styles desktop ────────────────────────────────────────────────────────────
+
+const desktopPanelStyle: React.CSSProperties = {
   position: 'fixed',
   top: 16, left: 16,
   width: 188,
@@ -108,25 +120,21 @@ const grpBodyStyle: React.CSSProperties = {
   background: 'rgba(0,0,0,0.72)',
 };
 
-function btn(color: string): React.CSSProperties {
+function btn(color: string, mobile: boolean): React.CSSProperties {
   return {
     background: 'transparent', border: 'none',
     borderTop: '1px solid rgba(255,255,255,0.06)',
-    borderRadius: 0, padding: '6px 12px', cursor: 'pointer',
-    fontSize: 12, width: '100%', textAlign: 'left', display: 'block',
+    borderRadius: 0,
+    padding: mobile ? '14px 16px' : '6px 12px',
+    cursor: 'pointer',
+    fontSize: mobile ? 15 : 12,
+    minHeight: mobile ? 48 : undefined,
+    width: '100%', textAlign: 'left', display: 'block',
     whiteSpace: 'nowrap', color,
   };
 }
 
-const COLORS: Record<string, string> = {
-  gray: '#aaa', white: '#fff', light: '#f0f0f0',
-  tan: '#e8c39e', yellow: '#ffd700', green: '#88cc88',
-  blue: '#4488ff', peach: '#ff9966', purple: '#aa88ff',
-  gold: '#ffaa44', teal: '#66cccc', cyan: '#44ddff',
-  red: '#ff6644',
-};
-
-// ── Groupe accordéon ──────────────────────────────────────────────────────────
+// ── Groupe accordéon (desktop) ────────────────────────────────────────────────
 
 function Group({ emoji, title, defaultOpen = false, children }: {
   emoji: string; title: string; defaultOpen?: boolean; children: React.ReactNode;
@@ -140,21 +148,6 @@ function Group({ emoji, title, defaultOpen = false, children }: {
       </div>
       {open && <div style={grpBodyStyle}>{children}</div>}
     </div>
-  );
-}
-
-// ── Bouton toggle générique ───────────────────────────────────────────────────
-
-function ToggleBtn({ label, onLabel, color, value, onToggle, first = false }: {
-  label: string; onLabel?: string; color: string;
-  value: boolean; onToggle: () => void; first?: boolean;
-}) {
-  const s = { ...btn(COLORS[color] ?? color) };
-  if (first) s.borderTop = 'none';
-  return (
-    <button style={s} onClick={onToggle}>
-      {value ? (onLabel ?? label) : label}
-    </button>
   );
 }
 
@@ -258,28 +251,28 @@ function ViewsModal({ onClose }: { onClose: () => void }) {
   };
   const modal: React.CSSProperties = {
     background: 'rgba(15,15,30,0.98)', border: '1px solid #444',
-    borderRadius: 10, padding: '16px 20px', minWidth: 200,
+    borderRadius: 10, padding: '16px 20px', minWidth: 220,
     display: 'flex', flexDirection: 'column', gap: 6,
   };
-  const mBtn = (label: string, onClick: () => void): React.CSSProperties => ({
+  const mBtn: React.CSSProperties = {
     background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 6, padding: '6px 14px', cursor: 'pointer',
-    color: '#ddd', fontSize: 12, textAlign: 'left',
-  });
+    borderRadius: 6, padding: '10px 14px', cursor: 'pointer',
+    color: '#ddd', fontSize: 13, textAlign: 'left', minHeight: 40,
+  };
   const label: React.CSSProperties = {
     color: '#888', fontSize: 10, textTransform: 'uppercase',
     letterSpacing: '0.5px', marginTop: 6,
   };
   const close: React.CSSProperties = {
     alignSelf: 'flex-end', background: 'transparent', border: 'none',
-    color: '#aaa', fontSize: 18, cursor: 'pointer', lineHeight: 1,
+    color: '#aaa', fontSize: 22, cursor: 'pointer', lineHeight: 1, padding: 4,
   };
 
   const viewBtn = (lbl: string, key: string) => (
-    <button style={mBtn(lbl, () => {})} onClick={() => { dispatchView(key); onClose(); }}>{lbl}</button>
+    <button style={mBtn} onClick={() => { dispatchView(key); onClose(); }}>{lbl}</button>
   );
   const povBtn = (lbl: string, key: string) => (
-    <button style={mBtn(lbl, () => {})} onClick={() => { dispatchPov(key); onClose(); }}>{lbl}</button>
+    <button style={mBtn} onClick={() => { dispatchPov(key); onClose(); }}>{lbl}</button>
   );
 
   return (
@@ -307,7 +300,7 @@ function ViewsModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ── Composant principal ───────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface FurnitureState {
   eastGlassDoor:     boolean;
@@ -372,10 +365,25 @@ export interface SidePanelProps2 extends SidePanelProps {
   onSetRenderStyle:        (key: RenderStyleKey) => void;
 }
 
+// ── Sections (rendu commun desktop & mobile) ──────────────────────────────────
+
+type TabKey = 'views' | 'display' | 'furniture' | 'perf' | null;
+
+const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
+  { key: 'views',     emoji: '📷', label: 'Vues' },
+  { key: 'display',   emoji: '👁',  label: 'Affichage' },
+  { key: 'furniture', emoji: '🛋', label: 'Mobilier' },
+  { key: 'perf',      emoji: '📊', label: 'Perf' },
+];
+
+// ── Composant principal ───────────────────────────────────────────────────────
+
 export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity, renderStyle, onSetRenderStyle }: SidePanelProps2) {
+  const isMobile = useIsMobile();
   const [showViews,     setShowViews]     = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
+  const [activeTab, setActiveTab] = useState<TabKey>(null);
 
   useEffect(() => {
     if (!layers.realSun) { setSunInfo(null); return; }
@@ -392,8 +400,17 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
     return () => clearInterval(id);
   }, [layers.realSun]);
 
+  // Ferme le sheet via Escape sur mobile
+  useEffect(() => {
+    if (!isMobile || !activeTab) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setActiveTab(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isMobile, activeTab]);
+
+  // Helpers de bouton tenant compte de isMobile
   const b0 = (color: string, label: string, onClick: () => void, first = false) => {
-    const s = { ...btn(COLORS[color] ?? color) };
+    const s = { ...btn(COLORS[color] ?? color, isMobile) };
     if (first) s.borderTop = 'none';
     return <button style={s} onClick={onClick}>{label}</button>;
   };
@@ -405,7 +422,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
     first = false,
   ) => {
     const on = layers[key];
-    const s = { ...btn(COLORS[color] ?? color) };
+    const s = { ...btn(COLORS[color] ?? color, isMobile) };
     if (first) s.borderTop = 'none';
     if (!on) s.opacity = 0.45;
     return (
@@ -415,119 +432,254 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
     );
   };
 
-  return (
+  // ── Sections (utilisées dans Group desktop OU sheet mobile) ─────────────────
+
+  const ViewsSection = (
     <>
-      <div style={panelStyle} onWheel={e => e.stopPropagation()}>
+      {b0('gray',   'Perspective P', () => dispatchKey('p'), true)}
+      {b0('gray',   'Walk M',        () => dispatchKey('m'))}
+      {b0('gray',   '2D Dessus T',   () => dispatchKey('t'))}
+      {b0('yellow', 'Autres vues…',  () => setShowViews(true))}
+      {b0('teal',   'Raccourcis ⌨',  () => setShowShortcuts(true))}
+    </>
+  );
 
-        {/* ── Vues ── */}
-        <Group emoji="📷" title="Vues" defaultOpen>
-          {b0('gray',   'Perspective P', () => dispatchKey('p'), true)}
-          {b0('gray',   'Walk M',        () => dispatchKey('m'))}
-          {b0('gray',   '2D Dessus T',   () => dispatchKey('t'))}
-          {b0('yellow', 'Autres vues…',  () => setShowViews(true))}
-          {b0('teal',   'Raccourcis ⌨',  () => setShowShortcuts(true))}
-        </Group>
+  const DisplaySection = (
+    <>
+      <div style={{ padding: '6px 8px 6px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 5 }}>🎨 Rendu</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? 6 : 3 }}>
+          {RENDER_STYLES.map(({ key, label }) => {
+            const active = renderStyle === key;
+            return (
+              <button
+                key={key}
+                onClick={() => onSetRenderStyle(key)}
+                style={{
+                  background: active ? 'rgba(100,150,255,0.25)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${active ? 'rgba(100,150,255,0.6)' : 'rgba(255,255,255,0.10)'}`,
+                  borderRadius: 4,
+                  padding: isMobile ? '8px 12px' : '3px 6px',
+                  color: active ? '#88aaff' : '#888',
+                  fontSize: isMobile ? 13 : 10,
+                  minHeight: isMobile ? 40 : undefined,
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {layerBtn('green',  'Structure',     'structure', true)}
+      {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
+      {layerBtn('gray',   'Murs seuls',    'wallsOnly')}
+      {layerBtn('peach',  'Équipements',   'equipment')}
+      {layerBtn('peach',  'Portes',        'doors')}
+      {layerBtn('purple', 'Mobilier',      'furniture')}
+      {layerBtn('blue',   'Voisins',       'neighbors')}
+      {layerBtn('cyan',   'X-Ray',         'xray')}
+      {layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
+      {layerBtn('teal',   'Grille',        'grid')}
+      {layerBtn('white',  'Squelette',     'skeleton')}
+      {layerBtn('yellow', 'Lumières ☀',    'lights')}
+      {layerBtn('green',  'Plafond',       'ceiling')}
+      {layerBtn('gray',   'Ombres',        'shadows')}
+      {layerBtn('cyan',   'LiDAR scan',    'lidar')}
+      {layers.lidar && b0('cyan',
+        ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',
+        onCycleLidar)}
+      {layers.lidar && b0('cyan',
+        `Opacité ${Math.round(lidarOpacity * 100)}%`,
+        onToggleLidarOpacity)}
+      {layerBtn('red',    'Murs rouges',   'redWalls')}
+      {layerBtn('red',    'Arêtes murs',   'wallEdges')}
+      {layerBtn('teal',   'Monde réel 🌍', 'realWorld')}
+      {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
+      {sunInfo && (
+        <div style={{ padding: '3px 12px 5px', fontSize: 10, color: '#ffaa44', borderTop: '1px solid rgba(255,255,255,0.06)', opacity: 0.85 }}>
+          {sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
+        </div>
+      )}
+      <button
+        style={{ ...btn(COLORS['gold'], isMobile), opacity: layers.plan ? 1 : 0.45 }}
+        onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
+      >
+        Plan : {layers.plan ? 'ON' : 'OFF'}
+      </button>
+    </>
+  );
 
-        {/* ── Affichage ── */}
-        <Group emoji="👁" title="Affichage">
-          <div style={{ padding: '6px 8px 6px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 5 }}>🎨 Rendu</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-              {RENDER_STYLES.map(({ key, label }) => {
-                const active = renderStyle === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => onSetRenderStyle(key)}
-                    style={{
-                      background: active ? 'rgba(100,150,255,0.25)' : 'rgba(255,255,255,0.05)',
-                      border: `1px solid ${active ? 'rgba(100,150,255,0.6)' : 'rgba(255,255,255,0.10)'}`,
-                      borderRadius: 4, padding: '3px 6px',
-                      color: active ? '#88aaff' : '#888',
-                      fontSize: 10, cursor: 'pointer', whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
+  const FurnitureSection = (
+    <>
+      {b0('light', `Porte-fenêtre : ${furniture.eastGlassDoor ? 'OUVERTE' : 'FERMÉE'}`,
+          () => onToggleFurniture('eastGlassDoor'), true)}
+      {b0('light', `Porte entrée : ${furniture.entryDoor ? 'OUVERTE' : 'FERMÉE'}`,
+          () => onToggleFurniture('entryDoor'))}
+      {b0('light', `Porte séjour : ${furniture.livingDoor ? 'OUVERTE' : 'FERMÉE'}`,
+          () => onToggleFurniture('livingDoor'))}
+      {b0('light', `Porte SDB : ${furniture.bathroomDoor ? 'OUVERTE' : 'FERMÉE'}`,
+          () => onToggleFurniture('bathroomDoor'))}
+      {b0('light', `Portes couloir : ${furniture.corrDoors ? 'OUVERTES' : 'FERMÉES'}`,
+          () => onToggleFurniture('corrDoors'))}
+      {b0('light', `Placard SDB : ${furniture.sdbCloset ? 'OUVERT' : 'FERMÉ'}`,
+          () => onToggleFurniture('sdbCloset'))}
+      {b0('light', `Meuble SDB ouest : ${furniture.cbnWest ? 'OUVERT' : 'FERMÉ'}`,
+          () => onToggleFurniture('cbnWest'))}
+      {b0('light', `Meuble SDB est : ${furniture.cbnEast ? 'OUVERT' : 'FERMÉ'}`,
+          () => onToggleFurniture('cbnEast'))}
+      {b0('light', `Meuble évier : ${furniture.cabinet ? 'OUVERT' : 'FERMÉ'}`,
+          () => onToggleFurniture('cabinet'))}
+      {b0('light', `Lit : ${furniture.bedStacked ? 'EMPILÉ' : 'DÉPLIÉ'}`,
+          () => onToggleFurniture('bedStacked'))}
+      {b0('light', `Lit canapé : ${furniture.bedSofa ? 'ON' : 'OFF'}`,
+          () => onToggleFurniture('bedSofa'))}
+      {b0('light', 'Lit changer position',
+          () => onToggleFurniture('bedPosition'))}
+      {b0('light', 'Smörkull changer position',
+          () => onToggleFurniture('smorkullPos'))}
+      {b0('yellow', `Lampe OLA : ${furniture.lampOn ? 'ON' : 'OFF'}`,
+          () => onToggleFurniture('lampOn'))}
+      {b0('yellow', `Ampoule SDB : ${furniture.lampSdb ? 'ON' : 'OFF'}`,
+          () => onToggleFurniture('lampSdb'))}
+      {b0('yellow', `Ampoule couloir : ${furniture.lampCouloir ? 'ON' : 'OFF'}`,
+          () => onToggleFurniture('lampCouloir'))}
+      {b0('red', `Drona : ${furniture.dronaRougeGlb ? 'Rouge GLB' : 'DRÖNA.glb'}`,
+          () => onToggleFurniture('dronaRougeGlb'))}
+    </>
+  );
+
+  // ── Rendu mobile : tab bar bottom + sheet ───────────────────────────────────
+
+  if (isMobile) {
+    const sheetOpen = activeTab !== null;
+    const sheetTitle: Record<Exclude<TabKey, null>, string> = {
+      views: '📷 Vues', display: '👁 Affichage',
+      furniture: '🛋 Mobilier', perf: '📊 Perf',
+    };
+    const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
+      views: ViewsSection,
+      display: DisplaySection,
+      furniture: FurnitureSection,
+      perf: <DevToolsGroups Group={Group} />,
+    };
+
+    return (
+      <>
+        {/* Backdrop sheet */}
+        {sheetOpen && (
+          <div
+            onClick={() => setActiveTab(null)}
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+              backdropFilter: 'blur(2px)', zIndex: 90,
+            }}
+          />
+        )}
+
+        {/* Bottom sheet */}
+        {sheetOpen && activeTab !== null && (
+          <div
+            style={{
+              position: 'fixed', left: 0, right: 0, bottom: 64,
+              maxHeight: 'calc(100vh - 120px)',
+              background: 'rgba(10,10,20,0.96)',
+              borderTop: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: '14px 14px 0 0',
+              zIndex: 95,
+              display: 'flex', flexDirection: 'column',
+              boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
+            }}
+            onWheel={e => e.stopPropagation()}
+          >
+            {/* Sheet header */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '12px 16px',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              color: '#ddd', fontSize: 14, fontWeight: 600,
+            }}>
+              <span>{sheetTitle[activeTab]}</span>
+              <button
+                onClick={() => setActiveTab(null)}
+                style={{
+                  background: 'transparent', border: 'none', color: '#aaa',
+                  fontSize: 26, cursor: 'pointer', lineHeight: 1,
+                  padding: '0 8px', minHeight: 32, minWidth: 32,
+                }}
+              >×</button>
+            </div>
+
+            {/* Sheet body */}
+            <div style={{ overflowY: 'auto', flex: 1, padding: '4px 0' }}>
+              {sheetBody[activeTab]}
             </div>
           </div>
-          {layerBtn('green',  'Structure',   'structure', true)}
-          {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
-          {layerBtn('gray',   'Murs seuls',    'wallsOnly')}
-          {layerBtn('peach',  'Équipements', 'equipment')}
-          {layerBtn('peach',  'Portes',      'doors')}
-          {layerBtn('purple', 'Mobilier',    'furniture')}
-          {layerBtn('blue',   'Voisins',     'neighbors')}
-          {layerBtn('cyan',   'X-Ray',       'xray')}
-          {layerBtn('purple', 'Miroirs HD',  'mirrorsHD')}
-          {layerBtn('teal',   'Grille',      'grid')}
-          {layerBtn('white',  'Squelette',  'skeleton')}
-          {layerBtn('yellow', 'Lumières ☀',  'lights')}
-          {layerBtn('green',  'Plafond',    'ceiling')}
-          {layerBtn('gray',   'Ombres',     'shadows')}
-          {layerBtn('cyan',   'LiDAR scan', 'lidar')}
-          {layers.lidar && b0('cyan',
-            ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',
-            onCycleLidar)}
-          {layers.lidar && b0('cyan',
-            `Opacité ${Math.round(lidarOpacity * 100)}%`,
-            onToggleLidarOpacity)}
-          {layerBtn('red', 'Murs rouges', 'redWalls')}
-          {layerBtn('red', 'Arêtes murs', 'wallEdges')}
-          {layerBtn('teal', 'Monde réel 🌍', 'realWorld')}
-          {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
-          {sunInfo && (
-            <div style={{ padding: '3px 12px 5px', fontSize: 10, color: '#ffaa44', borderTop: '1px solid rgba(255,255,255,0.06)', opacity: 0.85 }}>
-              {sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
-            </div>
-          )}
-          <button
-            style={{ ...btn(COLORS['gold']), opacity: layers.plan ? 1 : 0.45 }}
-            onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
-          >
-            Plan : {layers.plan ? 'ON' : 'OFF'}
-          </button>
-        </Group>
+        )}
 
-        {/* ── Mobilier ── */}
-        <Group emoji="🛋" title="Mobilier">
-          {b0('light', `Porte-fenêtre : ${furniture.eastGlassDoor ? 'OUVERTE' : 'FERMÉE'}`,
-              () => onToggleFurniture('eastGlassDoor'), true)}
-          {b0('light', `Porte entrée : ${furniture.entryDoor ? 'OUVERTE' : 'FERMÉE'}`,
-              () => onToggleFurniture('entryDoor'))}
-          {b0('light', `Porte séjour : ${furniture.livingDoor ? 'OUVERTE' : 'FERMÉE'}`,
-              () => onToggleFurniture('livingDoor'))}
-          {b0('light', `Porte SDB : ${furniture.bathroomDoor ? 'OUVERTE' : 'FERMÉE'}`,
-              () => onToggleFurniture('bathroomDoor'))}
-          {b0('light', `Portes couloir : ${furniture.corrDoors ? 'OUVERTES' : 'FERMÉES'}`,
-              () => onToggleFurniture('corrDoors'))}
-          {b0('light', `Placard SDB : ${furniture.sdbCloset ? 'OUVERT' : 'FERMÉ'}`,
-              () => onToggleFurniture('sdbCloset'))}
-          {b0('light', `Meuble SDB ouest : ${furniture.cbnWest ? 'OUVERT' : 'FERMÉ'}`,
-              () => onToggleFurniture('cbnWest'))}
-          {b0('light', `Meuble SDB est : ${furniture.cbnEast ? 'OUVERT' : 'FERMÉ'}`,
-              () => onToggleFurniture('cbnEast'))}
-          {b0('light', `Meuble évier : ${furniture.cabinet ? 'OUVERT' : 'FERMÉ'}`,
-              () => onToggleFurniture('cabinet'))}
-          {b0('light', `Lit : ${furniture.bedStacked ? 'EMPILÉ' : 'DÉPLIÉ'}`,
-              () => onToggleFurniture('bedStacked'))}
-          {b0('light', `Lit canapé : ${furniture.bedSofa ? 'ON' : 'OFF'}`,
-              () => onToggleFurniture('bedSofa'))}
-          {b0('light', 'Lit changer position',
-              () => onToggleFurniture('bedPosition'))}
-          {b0('light', 'Smörkull changer position',
-              () => onToggleFurniture('smorkullPos'))}
-          {b0('yellow', `Lampe OLA : ${furniture.lampOn ? 'ON' : 'OFF'}`,
-              () => onToggleFurniture('lampOn'))}
-          {b0('yellow', `Ampoule SDB : ${furniture.lampSdb ? 'ON' : 'OFF'}`,
-              () => onToggleFurniture('lampSdb'))}
-          {b0('yellow', `Ampoule couloir : ${furniture.lampCouloir ? 'ON' : 'OFF'}`,
-              () => onToggleFurniture('lampCouloir'))}
-          {b0('red', `Drona : ${furniture.dronaRougeGlb ? 'Rouge GLB' : 'DRÖNA.glb'}`,
-              () => onToggleFurniture('dronaRougeGlb'))}
-        </Group>
+        {/* Tab bar */}
+        <div style={{
+          position: 'fixed', left: 0, right: 0, bottom: 0,
+          height: 64, zIndex: 100,
+          background: 'rgba(10,10,20,0.96)',
+          borderTop: '1px solid rgba(255,255,255,0.12)',
+          display: 'flex',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}>
+          {TABS.map(t => {
+            const active = activeTab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
+                style={{
+                  flex: 1, background: 'transparent',
+                  border: 'none',
+                  borderTop: active ? '2px solid #4488ff' : '2px solid transparent',
+                  color: active ? '#88aaff' : '#aaa',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  gap: 2, cursor: 'pointer', padding: '4px 0',
+                  fontSize: 10,
+                }}
+              >
+                <span style={{ fontSize: 22, lineHeight: 1 }}>{t.emoji}</span>
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
+          {/* Inventaire — ouvre le modal directement */}
+          <button
+            onClick={onOpenInventory}
+            style={{
+              flex: 1, background: 'transparent',
+              border: 'none', borderTop: '2px solid transparent',
+              color: '#aaa',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 2, cursor: 'pointer', padding: '4px 0',
+              fontSize: 10,
+            }}
+          >
+            <span style={{ fontSize: 22, lineHeight: 1 }}>📦</span>
+            <span>Inventaire</span>
+          </button>
+        </div>
+
+        {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
+        {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
+      </>
+    );
+  }
+
+  // ── Rendu desktop : sidebar accordéon (inchangé) ────────────────────────────
+
+  return (
+    <>
+      <div style={desktopPanelStyle} onWheel={e => e.stopPropagation()}>
+
+        <Group emoji="📷" title="Vues" defaultOpen>{ViewsSection}</Group>
+        <Group emoji="👁" title="Affichage">{DisplaySection}</Group>
+        <Group emoji="🛋" title="Mobilier">{FurnitureSection}</Group>
 
         {/* ── Inventaire ── */}
         <div style={grpStyle}>
