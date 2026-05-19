@@ -31,4 +31,6 @@ export const cameraState = {
   isXR: false as boolean,
   /** HD mirrors : reflector camera hérite du mask complet de la caméra principale */
   mirrorsHD: false as boolean,
+  /** Masque le mesh du Walker actif (utilisé en vue première personne pendant la visite guidée) */
+  walkerHidden: false as boolean,
 };

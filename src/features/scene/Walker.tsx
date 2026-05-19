@@ -166,6 +166,7 @@ export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
       groupRef.current.rotation.y = cameraState.walkYaw;
     }
     groupRef.current.position.set(cameraState.walker0X, 0, cameraState.walker0Z);
+    groupRef.current.visible = !(active && cameraState.walkerHidden);
 
     // Animation marche (seulement si walker actif)
     const mixer  = mixerRef.current;

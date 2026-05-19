@@ -112,13 +112,23 @@ const TOUR: Segment[] = [
 
 const TOTAL_MS = TOUR.reduce((a, s) => a + s.walkMs + (s.pauseMs ?? 0), 0);
 
-// Chase camera
-const CAM_HEIGHT  = 175;
-const CAM_BEHIND  = 230;
-const CAM_LOOK_AT = 110;
-const CAM_LOOK_AHEAD = 60;
+// Chase camera (3e personne) — caméra plus haute (>4 m du sol) pour une plongée nette
+const CAM_HEIGHT_3RD  = 420;
+const CAM_BEHIND_3RD  = 190;
+const CAM_LOOK_Y      = 110;
+const CAM_LOOK_AHEAD  = 60;
+
+// Vue première personne — caméra dans la tête de Lara
+const EYE_HEIGHT      = 162;
+const FPV_LOOK_AHEAD  = 100;
+
+// Vue top 2D — caméra plein-ciel orientée nord, suit la position du walker
+const TOP_HEIGHT      = 750;
 
 const YAW_LERP    = 0.18;
+
+type ViewMode = '3rd' | '1st' | 'top';
+const NEXT_VIEW: Record<ViewMode, ViewMode> = { '3rd': '1st', '1st': 'top', 'top': '3rd' };
 
 function wrapAngle(a: number): number {
   return ((a + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
@@ -129,6 +139,7 @@ export function BuildAnimation_VisiteGuidee({
 }: { onFinish: () => void; onDuration?: (ms: number) => void }) {
   const { camera, invalidate } = useThree();
   const finishedRef = useRef(false);
+  const viewModeRef = useRef<ViewMode>('3rd');
 
   useEffect(() => {
     onDuration?.(TOTAL_MS);
@@ -138,6 +149,16 @@ export function BuildAnimation_VisiteGuidee({
     const savedX = cameraState.walker0X, savedZ = cameraState.walker0Z;
     const savedYaw = cameraState.walkYaw;
     const savedCamPos = camera.position.clone();
+    const savedWalkerHidden = cameraState.walkerHidden;
+
+    // Cycle vue : 3e personne → 1re personne → top 2D → 3e personne … (touche V)
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'v' && e.key !== 'V') return;
+      viewModeRef.current = NEXT_VIEW[viewModeRef.current];
+      cameraState.walkerHidden = viewModeRef.current === '1st';
+      invalidate();
+    };
+    window.addEventListener('keydown', onKey);
 
     // Walker en mode "scénarisé"
     cameraState.activeWalkerIdx = 0;
@@ -226,14 +247,23 @@ export function BuildAnimation_VisiteGuidee({
       const lerp = 1 - Math.exp(-YAW_LERP * (dt / 16.67));
       cameraState.walkYaw += wrapAngle(targetYaw - cameraState.walkYaw) * lerp;
 
-      // Chase camera : recule derrière le walker, vise un point un peu en avant
+      // Caméra : 3e personne (chase ~45°) / 1re personne (dans la tête) / top 2D (plein-ciel, nord en haut)
       const yaw = cameraState.walkYaw;
-      const px  = tx - Math.sin(yaw) * CAM_BEHIND;
-      const pz  = tz - Math.cos(yaw) * CAM_BEHIND;
-      const lx  = tx + Math.sin(yaw) * CAM_LOOK_AHEAD;
-      const lz  = tz + Math.cos(yaw) * CAM_LOOK_AHEAD;
+      let camPos:    [number, number, number];
+      let camTarget: [number, number, number];
+      if (viewModeRef.current === '1st') {
+        camPos    = [tx, EYE_HEIGHT, tz];
+        camTarget = [tx + Math.sin(yaw) * FPV_LOOK_AHEAD, EYE_HEIGHT, tz + Math.cos(yaw) * FPV_LOOK_AHEAD];
+      } else if (viewModeRef.current === 'top') {
+        // Léger décalage en Z pour éviter look-vector dégénéré sous up=(0,1,0)
+        camPos    = [tx, TOP_HEIGHT, tz + 0.01];
+        camTarget = [tx, 0, tz];
+      } else {
+        camPos    = [tx - Math.sin(yaw) * CAM_BEHIND_3RD, CAM_HEIGHT_3RD, tz - Math.cos(yaw) * CAM_BEHIND_3RD];
+        camTarget = [tx + Math.sin(yaw) * CAM_LOOK_AHEAD, CAM_LOOK_Y,     tz + Math.cos(yaw) * CAM_LOOK_AHEAD];
+      }
       document.dispatchEvent(new CustomEvent('camera-view', {
-        detail: { pos: [px, CAM_HEIGHT, pz], target: [lx, CAM_LOOK_AT, lz] },
+        detail: { pos: camPos, target: camTarget },
       }));
 
       invalidate();
@@ -244,6 +274,7 @@ export function BuildAnimation_VisiteGuidee({
 
     return () => {
       cancelAnimationFrame(raf);
+      window.removeEventListener('keydown', onKey);
       cameraState.isMoving = false;
       cameraState.activeWalkerIdx = savedActiveIdx;
       cameraState.walker0X = savedX;
@@ -251,6 +282,7 @@ export function BuildAnimation_VisiteGuidee({
       cameraState.walkerX  = savedX;
       cameraState.walkerZ  = savedZ;
       cameraState.walkYaw  = savedYaw;
+      cameraState.walkerHidden = savedWalkerHidden;
       camera.position.copy(savedCamPos);
       invalidate();
     };
