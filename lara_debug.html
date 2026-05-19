@@ -290,6 +290,99 @@
       root.traverse(c => { if (c.isBone) c.name = c.name.replace(/ /g, '_'); });
     }
 
+    // ── Ponytail / braid physics (Verlet chain) ──────────────────────────────
+    // Each frame, after mixer.update:
+    //   1. Read joint world position from parent's matrixWorld
+    //   2. Verlet step tip: next = tip + (tip - prev)*(1-damping) + gravity*dt^2
+    //   3. Pull tip toward rest tip (parent_rest_world_dir * length) by stiffness
+    //   4. Constrain tip to fixed segment length (world units) from joint
+    //   5. Compute parent-local direction (joint→tip), apply setFromUnitVectors
+    //      to drive bone.quaternion. Walk-clip tracks for these bones are filtered.
+    // damping=0 → swings forever; damping=1 → no inertia (snap).
+    // stiffness=0 → pure gravity; stiffness=1 → glued to rest pose.
+    const HAIR_REGEX = /^head_hair_ponytail_/;
+    let hairEnabled = true;
+    let hairStiffness = 0.03;
+    let hairDamping   = 0.08;
+    let hairGravity   = 980; // scene units = cm (model scaled to 170cm), so real-world g ≈ 980
+    const hairChain = [];
+    function initHairChain(root) {
+      hairChain.length = 0;
+      const bones = [];
+      root.traverse(c => { if (c.isBone && HAIR_REGEX.test(c.name)) bones.push(c); });
+      // Process root → tip order so each step has up-to-date parent matrix.
+      root.updateMatrixWorld(true);
+      for (const bone of bones) {
+        let axis = new THREE.Vector3(0, 1, 0);
+        let length = 0.1;
+        const child = bone.children.find(x => x.isBone && HAIR_REGEX.test(x.name));
+        if (child && child.position.lengthSq() > 1e-8) {
+          length = child.position.length();
+          axis = child.position.clone().normalize();
+        }
+        const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+        const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
+        const worldLength = length * worldScale.x;
+        const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
+        const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
+        hairChain.push({
+          bone,
+          restQuat: bone.userData.restQuat.clone(),
+          axis,
+          length,
+          worldLength,
+          tipWorld: tipWorld.clone(),
+          tipPrev: tipWorld.clone(),
+        });
+      }
+    }
+    const _hG          = new THREE.Vector3();
+    const _hJointWorld = new THREE.Vector3();
+    const _hVelocity   = new THREE.Vector3();
+    const _hNext       = new THREE.Vector3();
+    const _hDir        = new THREE.Vector3();
+    const _hRestDir    = new THREE.Vector3();
+    const _hRestTip    = new THREE.Vector3();
+    const _hQParent    = new THREE.Quaternion();
+    const _hQParentInv = new THREE.Quaternion();
+    const _hQTarget    = new THREE.Quaternion();
+    function updateHairPhysics(dt) {
+      // Clamp dt — when tab is backgrounded, dt explodes and Verlet blows up.
+      if (dt > 0.05) dt = 0.05;
+      _hG.set(0, -hairGravity, 0);
+      for (const node of hairChain) {
+        const { bone, restQuat, axis, worldLength } = node;
+        const parent = bone.parent;
+        if (!parent) continue;
+        parent.updateMatrixWorld();
+        // Joint = bone's world position (driven by parent + bone.position).
+        // bone.position is constant; we recompute matrixWorld from parent.
+        bone.updateMatrixWorld();
+        _hJointWorld.setFromMatrixPosition(bone.matrixWorld);
+        // Verlet: next = tip + vel*(1-damping) + g*dt^2
+        _hVelocity.subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - hairDamping);
+        _hNext.copy(node.tipWorld).add(_hVelocity).addScaledVector(_hG, dt * dt);
+        // Rest tip in world (axis rotated by restQuat applied in parent world).
+        parent.getWorldQuaternion(_hQParent);
+        _hRestDir.copy(axis).applyQuaternion(restQuat).applyQuaternion(_hQParent);
+        _hRestTip.copy(_hJointWorld).addScaledVector(_hRestDir, worldLength);
+        // Stiffness pulls tip toward rest tip.
+        _hNext.lerp(_hRestTip, hairStiffness);
+        // Length constraint: project back onto sphere of radius worldLength.
+        _hDir.subVectors(_hNext, _hJointWorld);
+        const len = _hDir.length();
+        if (len < 1e-6) continue;
+        _hDir.multiplyScalar(worldLength / len);
+        node.tipPrev.copy(node.tipWorld);
+        node.tipWorld.copy(_hJointWorld).add(_hDir);
+        // Drive bone.quaternion: in parent-local frame, rotate `axis` → dirParent.
+        _hQParentInv.copy(_hQParent).invert();
+        _hDir.normalize().applyQuaternion(_hQParentInv);
+        _hQTarget.setFromUnitVectors(axis, _hDir);
+        bone.quaternion.copy(_hQTarget);
+      }
+    }
+
     // Rebuild the walk clip from current track config + cached rest quats.
     //
     // Rotation composition depends on `space`:
@@ -303,6 +396,8 @@
       const times = [0, T * 0.25, T * 0.5, T * 0.75, T];
       const clipTracks = [];
       for (const t of tracks) {
+        // Skip ponytail tracks when hair physics is on — the sim drives them.
+        if (hairEnabled && HAIR_REGEX.test(t.bone)) continue;
         const bone = findBone(root, t.bone);
         if (!bone) { console.warn('bone not found:', t.bone); continue; }
         const rest   = bone.userData.restQuat.clone();
@@ -345,8 +440,12 @@
     let speed = 1.0;
     let clock = new THREE.Clock();
 
+    // Walk-clip tracks are tied to Lara's bone names — page is Lara-only.
+    // Cross-rig comparison lives in rigs_compare.html / auto_rig.html.
+    const GLB_FILE = 'lara_croft__2026_rigged.glb';
+
     let gltfAnimCount = 0;
-    loader.load('media/lara_croft__2026_rigged.glb', gltf => {
+    loader.load('media/' + GLB_FILE, gltf => {
       gltfAnimCount = (gltf.animations || []).length;
       model = gltf.scene;
       normalizeBoneNames(model);
@@ -368,6 +467,7 @@
 
       // Cache rest quaternion on EVERY bone (clip can be rebuilt with any subset).
       model.traverse(c => { if (c.isBone) c.userData.restQuat = c.quaternion.clone(); });
+      initHairChain(model);
 
       scene.add(model);
 
@@ -517,6 +617,45 @@
       wrap.appendChild(handBtn); wrap.appendChild(holsterBtn); wrap.appendChild(allGunsBtn);
       panel.appendChild(wrap);
 
+      // Hair physics (Verlet chain for ponytail / braid)
+      const hairWrap = document.createElement('div');
+      hairWrap.style.cssText = 'margin-top:6px;padding:6px 8px;background:#1a1a1a;border-left:3px solid #6fa8ff;';
+      const hairBtn = toggleBtn(`💇 Hair physics (${hairChain.length} bones)`,
+        () => hairEnabled,
+        v => { hairEnabled = v; hairBtn.classList.toggle('on', hairEnabled); rebuildAction(); }
+      );
+      hairWrap.appendChild(hairBtn);
+
+      const stiffSl = document.createElement('input');
+      stiffSl.type = 'range'; stiffSl.min = 0; stiffSl.max = 1; stiffSl.step = 0.01; stiffSl.value = hairStiffness;
+      const stiffNb = document.createElement('input');
+      stiffNb.type = 'number'; stiffNb.min = 0; stiffNb.max = 1; stiffNb.step = 0.01; stiffNb.value = hairStiffness;
+      stiffSl.oninput = () => { hairStiffness = +stiffSl.value; stiffNb.value = hairStiffness; };
+      stiffNb.oninput = () => { hairStiffness = +stiffNb.value; stiffSl.value = hairStiffness; };
+      hairWrap.appendChild(makeRow('Stiffness (0=gravity, 1=rest)', stiffSl, stiffNb));
+
+      const dampSl = document.createElement('input');
+      dampSl.type = 'range'; dampSl.min = 0; dampSl.max = 1; dampSl.step = 0.01; dampSl.value = hairDamping;
+      const dampNb = document.createElement('input');
+      dampNb.type = 'number'; dampNb.min = 0; dampNb.max = 1; dampNb.step = 0.01; dampNb.value = hairDamping;
+      dampSl.oninput = () => { hairDamping = +dampSl.value; dampNb.value = hairDamping; };
+      dampNb.oninput = () => { hairDamping = +dampNb.value; dampSl.value = hairDamping; };
+      hairWrap.appendChild(makeRow('Damping (0=swing forever, 1=no inertia)', dampSl, dampNb));
+
+      const gSl = document.createElement('input');
+      gSl.type = 'range'; gSl.min = 0; gSl.max = 3000; gSl.step = 10; gSl.value = hairGravity;
+      const gNb = document.createElement('input');
+      gNb.type = 'number'; gNb.min = 0; gNb.max = 10000; gNb.step = 10; gNb.value = hairGravity;
+      gSl.oninput = () => { hairGravity = +gSl.value; gNb.value = hairGravity; };
+      gNb.oninput = () => { hairGravity = +gNb.value; gSl.value = Math.min(3000, hairGravity); };
+      hairWrap.appendChild(makeRow('Gravity (scene units/s², cm-world)', gSl, gNb));
+
+      const resetHair = document.createElement('button');
+      resetHair.textContent = '↻ Reset chain state';
+      resetHair.onclick = () => initHairChain(model);
+      hairWrap.appendChild(resetHair);
+      panel.appendChild(hairWrap);
+
       // Tracks
       const h3 = document.createElement('h2'); h3.textContent = 'Walk-clip tracks'; panel.appendChild(h3);
       const note = document.createElement('div');
@@ -664,6 +803,7 @@
     function tick() {
       const dt = clock.getDelta();
       if (mixer && playing) mixer.update(dt * speed);
+      if (hairEnabled && hairChain.length) updateHairPhysics(dt);
       controls.update();
       renderer.render(scene, camera);
       const tBar = document.getElementById('tBar');
