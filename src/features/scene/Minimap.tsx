@@ -53,6 +53,29 @@ function drawMinimap(
   ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   ctx.beginPath(); ctx.rect(-BW / 2, R, BW, BH); ctx.fill(); ctx.stroke();
   ctx.restore();
+
+  // Avion en papier
+  if (cameraState.mode === 'plane') {
+    ctx.save();
+    ctx.translate(tx(cameraState.planeX), tz(cameraState.planeZ));
+    // En 2D top-down : +z écran = +z monde. Yaw=0 doit pointer vers -z monde (haut écran).
+    // Sur canvas, le triangle natif pointe vers -y (haut) → on rotate de -yaw.
+    ctx.rotate(-cameraState.planeYaw);
+    const PL = 10 * sc; // demi-longueur
+    const PW = 9  * sc; // demi-envergure
+    ctx.fillStyle   = 'rgba(120,200,255,0.85)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth   = 0.9 * sc;
+    ctx.beginPath();
+    ctx.moveTo(0, -PL);         // nez (vers le haut écran)
+    ctx.lineTo(-PW, PL);        // aile gauche-arrière
+    ctx.lineTo(0,  PL * 0.4);   // encoche queue
+    ctx.lineTo( PW, PL);        // aile droite-arrière
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 // ── Composant HTML pur ────────────────────────────────────────────────────────

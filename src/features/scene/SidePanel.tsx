@@ -212,8 +212,19 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
           <R label="Vue perspective (reset)"    keys={['P']} />
           <R label="Walk mode (entrer/quitter)" keys={['M']} />
           <R label="Vue top-down (toggle)"      keys={['T']} />
+          <R label="Avion en papier (toggle)"   keys={['F']} />
           <R label="Quitter walk / top-down"    keys={['Échap']} />
           <R label="Changer de personnage"      keys={['L']} />
+        </div>
+
+        {/* Avion en papier */}
+        <div>
+          <Section title="Avion en papier" />
+          <R label="Piquer / cabrer"            keys={['W', 'S', '↑', '↓']} />
+          <R label="Roulis (vire)"              keys={['A', 'D', '←', '→']} />
+          <R label="Accélérer"                  keys={['Espace']} />
+          <R label="Freiner"                    keys={['Shift']} />
+          <R label="Quitter"                    keys={['F', 'Échap']} />
         </div>
 
         {/* Orbit — style Google Earth */}
@@ -439,6 +450,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {b0('gray',   'Perspective P', () => dispatchKey('p'), true)}
       {b0('gray',   'Walk M',        () => dispatchKey('m'))}
       {b0('gray',   '2D Dessus T',   () => dispatchKey('t'))}
+      {b0('cyan',   'Avion papier ✈ F', () => dispatchKey('f'))}
       {b0('yellow', 'Autres vues…',  () => setShowViews(true))}
       {b0('teal',   'Raccourcis ⌨',  () => setShowShortcuts(true))}
     </>

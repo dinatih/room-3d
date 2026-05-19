@@ -3,7 +3,7 @@
  * Mis à jour chaque frame par CameraController, lu par MinimapOverlay via RAF.
  */
 
-type CameraMode = 'orbit' | 'walk' | 'top';
+type CameraMode = 'orbit' | 'walk' | 'top' | 'plane';
 
 export const cameraState = {
   mode: 'orbit' as CameraMode,
@@ -33,4 +33,8 @@ export const cameraState = {
   mirrorsHD: false as boolean,
   /** Masque le mesh du Walker actif (utilisé en vue première personne pendant la visite guidée) */
   walkerHidden: false as boolean,
+  /** Position et yaw de l'avion en papier (lus par la Minimap quand mode='plane') */
+  planeX: 0 as number,
+  planeZ: 0 as number,
+  planeYaw: 0 as number,
 };

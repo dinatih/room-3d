@@ -37,6 +37,7 @@ import { RealWorldLayer } from '@features/scene/RealWorldLayer';
 import { SunLight } from '@features/scene/SunLight';
 import { BuildAnimation, BuildAnimation3, BuildAnimation4, BuildAnimation_VisiteGuidee } from '@features/scene/BuildAnimations';
 import { RenderStyleLayer, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
+import { PaperPlane }                  from '@features/scene/PaperPlane';
 
 import {
   ROOM_W,
@@ -165,6 +166,22 @@ export function Studio() {
 
   const [renderStyle, setRenderStyle] = useState<RenderStyleKey>('default');
 
+  const [planeMode, setPlaneMode] = useState(false);
+
+  // F → toggle mode avion en papier (ignoré quand un input/textarea est focus)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'f' && e.key !== 'F') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && /^(input|textarea|select)$/i.test(t.tagName)) return;
+      setPlaneMode(p => !p);
+      cameraState.invalidate?.();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const [buildAnim,    setBuildAnim]    = useState(false);
   const [buildAnim3,   setBuildAnim3]   = useState(false);
   const [buildAnim4,   setBuildAnim4]   = useState(false);
@@ -237,7 +254,8 @@ gl.shadowMap.enabled = true;
         <PerformanceMonitor />
         <ShadowWarmup />
         <ShadowController enabled={layers.shadows} />
-        <CameraController />
+        <CameraController planeMode={planeMode} />
+        {planeMode    && <PaperPlane                  onExit={() => setPlaneMode(false)} />}
         {buildAnim    && <BuildAnimation              onFinish={() => setBuildAnim(false)} />}
         {buildAnim3   && <BuildAnimation3             onFinish={() => setBuildAnim3(false)}   onDuration={setDuration('buildAnim3')}   />}
         {buildAnim4   && <BuildAnimation4             onFinish={() => setBuildAnim4(false)}   onDuration={setDuration('buildAnim4')}   />}

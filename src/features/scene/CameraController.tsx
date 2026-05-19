@@ -42,7 +42,7 @@ type Mode = 'orbit' | 'walk' | 'top';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
-export function CameraController() {
+export function CameraController({ planeMode = false }: { planeMode?: boolean } = {}) {
   const { camera, size, invalidate } = useThree();
 
   // Register invalidate for use outside Canvas (Studio.tsx layer/furniture toggles)
@@ -52,6 +52,11 @@ export function CameraController() {
   }, [invalidate]);
   const [mode, setMode] = useState<Mode>('orbit');
   const modeRef = useRef<Mode>('orbit');
+
+  // Mirror planeMode in a ref so the keyboard / frame handlers (bound once via
+  // useEffect) can read its latest value without stale-closure issues.
+  const planeModeRef = useRef(planeMode);
+  useEffect(() => { planeModeRef.current = planeMode; }, [planeMode]);
 
   // sync ref with state so event handlers use latest mode without stale closure
   function changeMode(m: Mode) {
@@ -155,6 +160,8 @@ export function CameraController() {
 
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
+      // Plane mode owns input — bail out so arrow/WASD don't move walker or camera.
+      if (planeModeRef.current) return;
       // Global shortcuts
       if (e.key === 'Escape') {
         if (modeRef.current === 'walk') exitWalkMode();
@@ -314,6 +321,7 @@ export function CameraController() {
 
   useFrame((_, delta) => {
     if (cameraState.isXR) return;
+    if (planeModeRef.current) return;
     // Normalize to 60 fps baseline so speed is frame-rate independent
     const dt = Math.min(delta, 0.1) * 60;
     // Sync camera position for minimap + walker
@@ -457,7 +465,8 @@ export function CameraController() {
         enableDamping
         dampingFactor={0.08}
         maxPolarAngle={Math.PI}
-        enableRotate={mode !== 'top'}
+        enabled={!planeMode}
+        enableRotate={!planeMode && mode !== 'top'}
         screenSpacePanning={mode === 'top'}
       />
     </>
