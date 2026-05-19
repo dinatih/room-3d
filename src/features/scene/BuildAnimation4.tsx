@@ -18,6 +18,9 @@ import { ROOM_W, ROOM_D, WALL_H } from '@config';
 
 const DROP_HEIGHT      = 2000;
 const STAGGER_MS       = 250;
+const WALL_PHASE_MS    = 6000;   // budget total pour faire tomber tous les murs
+const WALL_STAGGER_MIN = 25;
+const WALL_STAGGER_MAX = 250;
 const FALL_MS_MIN      = 1400;
 const FALL_MS_MAX      = 2000;
 const MATERIALIZE_T    = 0.80;
@@ -405,18 +408,44 @@ export function BuildAnimation4({ onFinish, onDuration }: { onFinish: () => void
   useEffect(() => {
     const { moveable, walls, floor, ceiling } = collectScene(scene as unknown as THREE.Scene);
 
-    // Ordre : mobilier en premier (effet "fourmilière"), puis murs, sols et plafond en dernier
-    const allOrdered = [...shuffle(moveable), ...walls, ...floor, ...ceiling];
-    const floorSet   = new Set(floor);
+    // Ordre : mobilier en premier (effet "fourmilière"), puis murs, sols et plafond en dernier.
+    // Stagger par groupe : les murs sont compressés sur WALL_PHASE_MS (sinon ~240 meshes
+    // × 250 ms = 60 s de pause visuelle avant que le sol ne remonte).
+    const moveableShuffled = shuffle(moveable);
+    const floorSet         = new Set(floor);
 
-    const objects: AnimObj[] = allOrdered.map((obj, i) => {
+    const wallStagger = walls.length > 0
+      ? Math.min(WALL_STAGGER_MAX, Math.max(WALL_STAGGER_MIN, WALL_PHASE_MS / walls.length))
+      : STAGGER_MS;
+
+    let cursor = 0;
+    const scheduled: Array<{ obj: THREE.Object3D; startTime: number }> = [];
+
+    moveableShuffled.forEach(obj => {
+      scheduled.push({ obj, startTime: cursor });
+      cursor += STAGGER_MS;
+    });
+    walls.forEach(obj => {
+      scheduled.push({ obj, startTime: cursor });
+      cursor += wallStagger;
+    });
+    floor.forEach(obj => {
+      scheduled.push({ obj, startTime: cursor });
+      cursor += STAGGER_MS;
+    });
+    ceiling.forEach(obj => {
+      scheduled.push({ obj, startTime: cursor });
+      cursor += STAGGER_MS;
+    });
+
+    const objects: AnimObj[] = scheduled.map(({ obj, startTime }) => {
       const meshSaves: MeshSave[] = [];
       collectMeshes(obj, meshSaves);
       if (!floorSet.has(obj) && !isLargeFlat(obj)) applyMatrix(meshSaves);  // wireframe vert — sauf sols et grandes surfaces plates
       return {
         obj,
         origY:        obj.position.y,
-        startTime:    i * STAGGER_MS,
+        startTime,
         duration:     FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN),
         fromBelow:    floorSet.has(obj),
         meshSaves,
