@@ -5,8 +5,10 @@
 import { useEffect, useState } from 'react';
 import { walkerMeshList } from './Walker';
 import { cameraState } from './cameraState';
+import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 export function WalkerMeshDebug() {
+  const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [, force] = useState(0);
 
@@ -17,6 +19,7 @@ export function WalkerMeshDebug() {
     return () => clearInterval(id);
   }, [open]);
 
+  if (isMobile) return null;
   const meshes = walkerMeshList;
 
   return (
