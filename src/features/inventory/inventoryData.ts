@@ -89,7 +89,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'baseball-cap',     name: 'Casquette baseball',             brand: '',         category: 'clothing',  qty: 3, dims: { w: 25,  d: 20,  h: 15  }, notes: '3 casquettes rouges sur portant', glbPath: 'media/baseball_cap.glb' },
   { id: 'backpack',         name: 'Sac à dos',                      brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 17,  h: 43  }, notes: 'Rouge procédural, mur A' },
   { id: 'sneaker',          name: 'Sneakers',                       brand: '',         category: 'clothing',  qty: 2, dims: { w: 30,  d: 12,  h: 12  }, notes: 'Paire, mur A niche', glbPath: 'media/sneaker.glb' },
-  { id: 'jordan-hex-mule', name: 'Jordan Hex Mule SP',             brand: 'Nike/Jordan', category: 'clothing', qty: 1, dims: { w: 20,  d: 28.5, h: 9.4 }, notes: 'University Red, taille 44.5, FJ0603-600' },
+  { id: 'jordan-hex-mule', name: 'Jordan Hex Mule SP',             brand: 'Nike/Jordan', category: 'clothing', qty: 2, dims: { w: 20.4, d: 28.5, h: 4.8 }, notes: 'Paire, University Red, taille 44.5, FJ0603-600' },
 
   // ── DECOR ─────────────────────────────────────────────────────────────────────
   { id: 'lillhavet',        name: 'LILLHAVET',                      brand: 'IKEA',     category: 'decor',     qty: 1, dims: { w: 22,   d: 14,   h: 28   }, notes: 'Meuble haut cuisine, droite', glbPath: 'media/LILLHAVET.glb' },
