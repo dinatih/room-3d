@@ -38,6 +38,7 @@ import { LackShelf }     from './items/LackShelf';
 import { LampOla }       from './items/LampOla';
 import { MackaparGroup } from './items/MackaparGroup';
 import { MannequinHead } from './items/MannequinHead';
+import { GoogleNestMini } from './items/GoogleNestMini';
 import { MuligRail }     from './items/MuligRail';
 import { Scooter }       from './items/Scooter';
 import { Smorkull }      from './items/Smorkull';
@@ -443,6 +444,10 @@ export function Decor() {
       </group>
       <group position={[287.5, 0, 230]}>
         <AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* Google Nest Mini — mur EST (B) en son centre, à plat contre le mur */}
+      <group position={[ROOM_W - 5, WALL_H / 2, ROOM_D / 2]} rotation={[0, 0, Math.PI / 2]}>
+        <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <LackShelf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />

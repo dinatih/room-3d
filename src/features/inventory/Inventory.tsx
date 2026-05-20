@@ -93,20 +93,40 @@ function StorageTable({ spaces, selected, onSelect }: {
 
 // ── Item table ────────────────────────────────────────────────────────────────
 
-function ItemTable({ items, selected, onSelect }: {
+const FREQ_LABEL: Record<string, string> = {
+  hebdo: '📅 Hebdo',
+  mensuel: '📅 Mensuel',
+  trimestriel: '📅 Trimestre',
+  annuel: '📅 Annuel',
+};
+
+function ItemTable({ items, selected, onSelect, consumableView }: {
   items: InventoryItem[];
   selected: PreviewTarget;
   onSelect: (item: InventoryItem) => void;
+  consumableView?: boolean;
 }) {
   return (
     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: '#ddd' }}>
       <thead>
         <tr>
           <th style={thStyle}>Nom</th>
-          <th style={{ ...thStyle, whiteSpace: 'nowrap' }}>Marque</th>
-          <th style={{ ...thStyle, textAlign: 'center' }}>Qté</th>
-          <th style={{ ...thStyle, textAlign: 'center', whiteSpace: 'nowrap' }}>L × P × H</th>
-          <th style={thStyle}>Notes</th>
+          {consumableView ? (
+            <>
+              <th style={{ ...thStyle, textAlign: 'center', whiteSpace: 'nowrap' }}>Stock</th>
+              <th style={{ ...thStyle, whiteSpace: 'nowrap' }}>Fréquence</th>
+              <th style={thStyle}>Stockage</th>
+              <th style={{ ...thStyle, textAlign: 'center', whiteSpace: 'nowrap' }}>L × P × H</th>
+              <th style={thStyle}>Notes</th>
+            </>
+          ) : (
+            <>
+              <th style={{ ...thStyle, whiteSpace: 'nowrap' }}>Marque</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Qté</th>
+              <th style={{ ...thStyle, textAlign: 'center', whiteSpace: 'nowrap' }}>L × P × H</th>
+              <th style={thStyle}>Notes</th>
+            </>
+          )}
         </tr>
       </thead>
       <tbody>
@@ -124,10 +144,22 @@ function ItemTable({ items, selected, onSelect }: {
               }}
             >
               <td style={tdStyle}>{item.name}</td>
-              <td style={tdStyle}>{item.brand || '—'}</td>
-              <td style={{ ...tdStyle, textAlign: 'center' }}>{item.qty}</td>
-              <td style={{ ...tdStyle, textAlign: 'center', fontFamily: 'monospace', fontSize: 11 }}>{dimsStr(item.dims)}</td>
-              <td style={{ ...tdStyle, color: '#aaa', fontSize: 11 }}>{item.notes ?? ''}</td>
+              {consumableView ? (
+                <>
+                  <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold' }}>{item.stock ?? '—'}</td>
+                  <td style={{ ...tdStyle, fontSize: 11 }}>{item.frequency ? FREQ_LABEL[item.frequency] : '—'}</td>
+                  <td style={{ ...tdStyle, color: '#aaa', fontSize: 11 }}>{item.location ?? '—'}</td>
+                  <td style={{ ...tdStyle, textAlign: 'center', fontFamily: 'monospace', fontSize: 11 }}>{dimsStr(item.dims)}</td>
+                  <td style={{ ...tdStyle, color: '#aaa', fontSize: 11 }}>{item.notes ?? ''}</td>
+                </>
+              ) : (
+                <>
+                  <td style={tdStyle}>{item.brand || '—'}</td>
+                  <td style={{ ...tdStyle, textAlign: 'center' }}>{item.qty}</td>
+                  <td style={{ ...tdStyle, textAlign: 'center', fontFamily: 'monospace', fontSize: 11 }}>{dimsStr(item.dims)}</td>
+                  <td style={{ ...tdStyle, color: '#aaa', fontSize: 11 }}>{item.notes ?? ''}</td>
+                </>
+              )}
             </tr>
           );
         })}
@@ -268,7 +300,7 @@ export function Inventory({ onClose }: { onClose: () => void }) {
             {showSpaces && spaces.length > 0 && (
               <StorageTable spaces={spaces} selected={selected} onSelect={setSelected} />
             )}
-            <ItemTable items={items} selected={selected} onSelect={setSelected} />
+            <ItemTable items={items} selected={selected} onSelect={setSelected} consumableView={activeCat === 'consumable'} />
           </div>
 
           {!isMobile && (

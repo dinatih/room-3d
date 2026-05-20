@@ -331,6 +331,7 @@ export interface FurnitureState {
   dronaRougeGlb:  boolean;
   lampSdb:        boolean;
   lampCouloir:    boolean;
+  freezerOpen:    boolean;
 }
 
 export interface LayerState {
@@ -559,6 +560,8 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           () => onToggleFurniture('lampCouloir'))}
       {b0('red', `Drona : ${furniture.dronaRougeGlb ? 'Rouge GLB' : 'DRÖNA.glb'}`,
           () => onToggleFurniture('dronaRougeGlb'))}
+      {b0('light', `Frigo : ${furniture.freezerOpen ? 'OUVERT' : 'FERMÉ'}`,
+          () => onToggleFurniture('freezerOpen'))}
     </>
   );
 

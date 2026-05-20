@@ -131,7 +131,7 @@ export function Studio() {
     cbnWest: false, cbnEast: false,
     cabinet: false,
     bedStacked: true, bedSofa: false, bedPosition: false, smorkullPos: false, lampOn: false, dronaRougeGlb: false,
-    lampSdb: false, lampCouloir: false,
+    lampSdb: false, lampCouloir: false, freezerOpen: false,
   });
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({

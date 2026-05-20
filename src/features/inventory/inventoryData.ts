@@ -3,6 +3,8 @@
 // dims: { w, d, h } en cm (w=X, d=Z, h=Y)
 // =============================================
 
+export type ConsumableFrequency = 'hebdo' | 'mensuel' | 'trimestriel' | 'annuel';
+
 export interface InventoryItem {
   id: string;
   name: string;
@@ -13,6 +15,10 @@ export interface InventoryItem {
   notes?: string;
   glbPath?: string;
   actions?: string[];
+  // Consumable-specific
+  frequency?: ConsumableFrequency;
+  stock?: number;
+  location?: string;
 }
 
 export interface StorageSpace {
@@ -71,6 +77,14 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'ninja-sp101',      name: 'Mini four Foodi Flip SP101EU',   brand: 'Ninja',    category: 'kitchen',   qty: 1, dims: { w: 51,   d: 37,   h: 19.5 }, notes: '8-en-1, inox brossé, porte vitrée + flip-back', actions: ['ninja-toggle'] },
   { id: 'freezer',          name: 'Congélateur CHIQ CSD46D4E',     brand: 'CHIQ',     category: 'kitchen',   qty: 1, dims: { w: 45,   d: 47,   h: 50   }, notes: 'Noir, niche séjour', glbPath: 'media/TILLREDA Réfrigérateur indépendant-blanc 43 l.glb', actions: ['freezer-toggle'] },
 
+  // Vaisselle / couverts
+  { id: 'fourchette',       name: 'Fourchette',                     brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 2.5,  d: 20,   h: 1.2  }, notes: 'Tiroir cuisine' },
+  { id: 'couteau',          name: 'Couteau de table',               brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 1.8,  d: 23,   h: 1.2  }, notes: 'Tiroir cuisine' },
+  { id: 'grande-cuillere',  name: 'Grande cuillère',                brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 3.5,  d: 20,   h: 1.5  }, notes: 'Tiroir cuisine — cuillère à soupe' },
+  { id: 'petite-cuillere',  name: 'Petite cuillère',                brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 2.5,  d: 13,   h: 1.0  }, notes: 'Tiroir cuisine — cuillère à café' },
+  { id: 'assiette',         name: 'Assiette',                       brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 26,   d: 26,   h: 2    }, notes: 'Placard cuisine — plate plate Ø 26 cm' },
+  { id: 'mug-set',          name: 'Mug',                            brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 9,    d: 12,   h: 9.5  }, notes: 'Placard cuisine — anse incluse' },
+
   // ── BATHROOM ─────────────────────────────────────────────────────────────────
   { id: 'vathult-350',           name: 'VÅTHULT éclairage LED miroir 350 mm alu', brand: 'IKEA', category: 'bathroom', qty: 1, dims: { w: 35, d: 4, h: 4 }, notes: 'Au-dessus miroir vasque SDB', glbPath: 'media/VÅTHULT éclairage LED élément-miroir 350 mm alu.glb' },
   { id: 'bathroom-cabinet-west', name: 'METOD 40×37×60 + RINGHULT + KALLROR (ouest)', brand: 'IKEA', category: 'bathroom', qty: 1, dims: { w: 40, d: 37, h: 60 }, notes: 'Blanc + porte gris brillant + poignée inox 213mm', glbPath: 'media/METOD Rangement mural blanc 40x37x60 cm.glb', actions: ['cbn-west-toggle'] },
@@ -103,6 +117,45 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'palm-leaf',        name: 'Feuille de palmier artificielle', brand: '',        category: 'decor',     qty: 1, dims: { w: 40,  d: 40,  h: 80  }, notes: 'Plante artificielle Palm_Leaf1', glbPath: 'media/Palm_Leaf1.glb' },
   { id: 'jogging-suit',     name: 'Jogging suit',                   brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 20,  h: 170 }, notes: 'Jardin, près de la baignoire', glbPath: 'media/realistic_human_cloths.glb' },
 
+  // ── CONSOMABLES ───────────────────────────────────────────────────────────────
+  // Produits du quotidien rachetés régulièrement (1×/an minimum)
+  { id: 'cons-papier-toilette', name: 'Papier toilette (pack 12)',  brand: '',         category: 'consumable', qty: 1, dims: { w: 40, d: 20, h: 22 }, frequency: 'mensuel',    stock: 8,  location: 'Placard SDB',     notes: 'Pack de 12 rouleaux' },
+  { id: 'cons-sopalin',         name: 'Sopalin (pack 4)',           brand: '',         category: 'consumable', qty: 1, dims: { w: 40, d: 22, h: 25 }, frequency: 'mensuel',    stock: 3,  location: 'Placard cuisine', notes: 'Essuie-tout pack 4 rouleaux' },
+  { id: 'cons-mouchoirs',       name: 'Mouchoirs (étui 10)',        brand: '',         category: 'consumable', qty: 1, dims: { w: 22, d: 12, h: 8  }, frequency: 'mensuel',    stock: 5,  location: 'Placard SDB',     notes: 'Étui 10 paquets' },
+  { id: 'cons-dentifrice',      name: 'Dentifrice 75 ml',           brand: 'Signal',   category: 'consumable', qty: 1, dims: { w: 18, d: 5,  h: 4  }, frequency: 'mensuel',    stock: 2,  location: 'SDB vasque',      notes: 'Tube' },
+  { id: 'cons-tete-brosse-elec', name: 'Tête de brosse à dents électrique', brand: '', category: 'consumable', qty: 1, dims: { w: 2.5, d: 2.5, h: 8.5 }, frequency: 'trimestriel', stock: 4, location: 'SDB vasque',      notes: 'Recharge brosse à dents électrique — changer tous les 3 mois' },
+  { id: 'cons-savon',           name: 'Savon liquide 250 ml',       brand: '',         category: 'consumable', qty: 1, dims: { w: 6,  d: 6,  h: 18 }, frequency: 'mensuel',    stock: 1,  location: 'SDB vasque',      notes: 'Distributeur TACKAN' },
+  { id: 'cons-shampoing',       name: 'Shampoing 400 ml',           brand: '',         category: 'consumable', qty: 1, dims: { w: 7,  d: 7,  h: 22 }, frequency: 'mensuel',    stock: 1,  location: 'SDB douche',      notes: 'Flacon' },
+  { id: 'cons-creme-peau',      name: 'Crème pour la peau',         brand: '',         category: 'consumable', qty: 1, dims: { w: 7,  d: 4,  h: 15 }, frequency: 'mensuel',    stock: 1,  location: 'SDB vasque',      notes: 'Hydratante visage/corps' },
+  { id: 'cons-lessive',         name: 'Lessive 3 L',                brand: '',         category: 'consumable', qty: 1, dims: { w: 24, d: 14, h: 28 }, frequency: 'trimestriel', stock: 1, location: 'Placard SDB',     notes: 'Bidon liquide' },
+  { id: 'cons-liquide-vaisselle', name: 'Liquide vaisselle 1 L',    brand: '',         category: 'consumable', qty: 1, dims: { w: 8,  d: 6,  h: 28 }, frequency: 'mensuel',    stock: 1,  location: 'Cuisine évier',   notes: 'Flacon' },
+  { id: 'cons-pizza',           name: 'Pizza surgelée',             brand: '',         category: 'consumable', qty: 4, dims: { w: 30, d: 30, h: 3  }, frequency: 'hebdo',      stock: 4,  location: 'Congélateur',     notes: 'Pizza 4 fromages / margherita' },
+  { id: 'cons-pates',           name: 'Pâtes 500 g',                brand: '',         category: 'consumable', qty: 3, dims: { w: 8,  d: 6,  h: 25 }, frequency: 'hebdo',      stock: 3,  location: 'Placard cuisine', notes: 'Penne / spaghetti / fusilli' },
+  { id: 'cons-riz',             name: 'Riz 1 kg',                   brand: '',         category: 'consumable', qty: 1, dims: { w: 14, d: 8,  h: 22 }, frequency: 'mensuel',    stock: 1,  location: 'Placard cuisine', notes: 'Basmati / long grain' },
+  { id: 'cons-lait',            name: 'Lait 1 L',                   brand: '',         category: 'consumable', qty: 2, dims: { w: 7,  d: 7,  h: 23 }, frequency: 'hebdo',      stock: 2,  location: 'Frigo',           notes: 'Brique UHT demi-écrémé' },
+  { id: 'cons-beurre',          name: 'Beurre 250 g',               brand: '',         category: 'consumable', qty: 1, dims: { w: 11, d: 7,  h: 5  }, frequency: 'mensuel',    stock: 1,  location: 'Frigo',           notes: 'Plaquette demi-sel' },
+  { id: 'cons-oeufs',           name: 'Œufs (boîte 6)',             brand: '',         category: 'consumable', qty: 1, dims: { w: 17, d: 11, h: 8  }, frequency: 'hebdo',      stock: 1,  location: 'Frigo',           notes: 'Bio plein air' },
+  { id: 'cons-fromage',         name: 'Fromage râpé 200 g',         brand: '',         category: 'consumable', qty: 1, dims: { w: 18, d: 12, h: 4  }, frequency: 'hebdo',      stock: 1,  location: 'Frigo',           notes: 'Emmental / gruyère' },
+  { id: 'cons-pain',            name: 'Pain (baguette)',            brand: '',         category: 'consumable', qty: 1, dims: { w: 65, d: 6,  h: 6  }, frequency: 'hebdo',      stock: 1,  location: 'Cuisine plan',    notes: 'Tradition' },
+  { id: 'cons-cafe',            name: 'Café moulu 250 g',           brand: '',         category: 'consumable', qty: 1, dims: { w: 11, d: 6,  h: 16 }, frequency: 'mensuel',    stock: 1,  location: 'Placard cuisine', notes: 'Arabica' },
+  { id: 'cons-huile',           name: "Huile d'olive 1 L",          brand: '',         category: 'consumable', qty: 1, dims: { w: 9,  d: 9,  h: 30 }, frequency: 'mensuel',    stock: 1,  location: 'Placard cuisine', notes: 'Vierge extra' },
+  { id: 'cons-sel',             name: 'Sel 1 kg',                   brand: '',         category: 'consumable', qty: 1, dims: { w: 12, d: 6,  h: 18 }, frequency: 'annuel',     stock: 1,  location: 'Placard cuisine', notes: 'Fin / gros' },
+  { id: 'cons-poivre',          name: 'Poivre (moulin)',            brand: '',         category: 'consumable', qty: 1, dims: { w: 5,  d: 5,  h: 15 }, frequency: 'annuel',     stock: 1,  location: 'Placard cuisine', notes: 'Moulin réutilisable' },
+  { id: 'cons-sucre',           name: 'Sucre 1 kg',                 brand: '',         category: 'consumable', qty: 1, dims: { w: 14, d: 8,  h: 18 }, frequency: 'trimestriel', stock: 1, location: 'Placard cuisine', notes: 'Blanc en poudre' },
+  { id: 'cons-farine',          name: 'Farine 1 kg',                brand: '',         category: 'consumable', qty: 1, dims: { w: 16, d: 10, h: 22 }, frequency: 'trimestriel', stock: 1, location: 'Placard cuisine', notes: 'T55' },
+  { id: 'cons-nutella',         name: 'Nutella 400 g',              brand: 'Ferrero',  category: 'consumable', qty: 1, dims: { w: 9,  d: 9,  h: 12 }, frequency: 'mensuel',    stock: 1,  location: 'Placard cuisine', notes: 'Pot' },
+  { id: 'cons-chocolat',        name: 'Chocolat (tablette)',        brand: '',         category: 'consumable', qty: 2, dims: { w: 17, d: 8,  h: 1  }, frequency: 'hebdo',      stock: 2,  location: 'Placard cuisine', notes: 'Noir 70%' },
+  { id: 'cons-herbes-provence', name: 'Herbes de Provence',         brand: '',         category: 'consumable', qty: 1, dims: { w: 5,  d: 5,  h: 10 }, frequency: 'annuel',     stock: 1,  location: 'Placard cuisine', notes: 'Pot mélange séché' },
+  { id: 'cons-ketchup',         name: 'Ketchup 560 g',              brand: 'Heinz',    category: 'consumable', qty: 1, dims: { w: 7,  d: 7,  h: 23 }, frequency: 'mensuel',    stock: 1,  location: 'Frigo',           notes: 'Bouteille squeeze' },
+  { id: 'cons-mayo',            name: 'Mayonnaise 470 ml',          brand: '',         category: 'consumable', qty: 1, dims: { w: 7,  d: 7,  h: 20 }, frequency: 'mensuel',    stock: 1,  location: 'Frigo',           notes: 'Bouteille squeeze' },
+  { id: 'cons-olives',          name: 'Olives sans noyau 200 g',    brand: '',         category: 'consumable', qty: 1, dims: { w: 8,  d: 8,  h: 10 }, frequency: 'mensuel',    stock: 1,  location: 'Placard cuisine', notes: 'Bocal vert ou noir' },
+  { id: 'cons-saucisson',       name: 'Saucisson sec',              brand: '',         category: 'consumable', qty: 1, dims: { w: 6,  d: 6,  h: 25 }, frequency: 'mensuel',    stock: 1,  location: 'Placard cuisine', notes: 'Pièce sèche' },
+  { id: 'cons-desperado',       name: 'Desperados 33 cl',           brand: 'Desperados', category: 'consumable', qty: 6, dims: { w: 6,  d: 6,  h: 23 }, frequency: 'hebdo',    stock: 6,  location: 'Frigo',           notes: 'Bouteille bière tequila' },
+  { id: 'cons-vodka',           name: 'Vodka 70 cl',                brand: '',         category: 'consumable', qty: 1, dims: { w: 8,  d: 8,  h: 30 }, frequency: 'trimestriel', stock: 1, location: 'Placard cuisine', notes: 'Bouteille' },
+  { id: 'cons-redbull',         name: 'Redbull 25 cl',              brand: 'Red Bull', category: 'consumable', qty: 4, dims: { w: 5,  d: 5,  h: 14 }, frequency: 'hebdo',      stock: 4,  location: 'Frigo',           notes: 'Canette' },
+  { id: 'cons-sirop',           name: 'Sirop 75 cl',                brand: '',         category: 'consumable', qty: 1, dims: { w: 8,  d: 8,  h: 28 }, frequency: 'trimestriel', stock: 1, location: 'Placard cuisine', notes: 'Bouteille — menthe / grenadine' },
+  { id: 'cons-coca',            name: 'Coca-Cola 1,5 L',            brand: 'Coca-Cola', category: 'consumable', qty: 2, dims: { w: 9,  d: 9,  h: 33 }, frequency: 'hebdo',      stock: 2,  location: 'Frigo',           notes: 'Bouteille PET' },
+
   // ── PORTES ────────────────────────────────────────────────────────────────────
   { id: 'door-entry',       name: 'Porte d\'entrée',                brand: '',         category: 'doors',     qty: 1, dims: { w: 90,  d: 4,   h: 204 }, notes: 'Rouge, mur diagonal, poignée L + knob rouge', actions: ['entry-door-toggle'] },
   { id: 'door-living',      name: 'Porte séjour',                   brand: '',         category: 'doors',     qty: 1, dims: { w: 83,  d: 4,   h: 204 }, notes: 'Blanche, mur D, poignée L double face', actions: ['living-door-toggle'] },
@@ -132,5 +185,6 @@ export const CATEGORIES: Category[] = [
   { id: 'bathroom',     label: 'Salle d\'eau' },
   { id: 'clothing',     label: 'Vêtements' },
   { id: 'decor',        label: 'Déco' },
+  { id: 'consumable',   label: '🛒 Consomables' },
   { id: 'glbs',         label: '🎲 GLBs' },
 ];

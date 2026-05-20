@@ -13,8 +13,8 @@ import { useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-export function useGLTFClone(path: string): { scene: THREE.Group } {
+export function useGLTFClone(path: string): { scene: THREE.Group; animations: THREE.AnimationClip[] } {
   const gltf = useGLTF(path);
   const scene = useMemo(() => gltf.scene.clone(true), [gltf.scene]);
-  return { scene };
+  return { scene, animations: gltf.animations };
 }

@@ -1,42 +1,34 @@
 /**
- * MannequinHead.tsx — Tête de mannequin (procédural).
- * Coordonnées locales : centré XZ, Y=0 = base épaules.
+ * MannequinHead.tsx — Tête de mannequin (GLB media/wig_mannequin.glb).
+ * Coordonnées locales : centré XZ, Y=0 = base épaules. Scale par hauteur (45 cm).
  */
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect } from 'react';
+import { useGLTF } from '@react-three/drei';
+import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
+import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const mannMat = new THREE.MeshStandardMaterial({ color: 0xf5f0eb, roughness: 0.5 });
+const TARGET_H = 45;
 
 export function MannequinHead({ onSize }: SceneItemProps) {
-  const groupRef = useRef<THREE.Group>(null!);
-
-  const SHOULDER_W = 41, SHOULDER_H = 8, SHOULDER_D = 22;
-  const NECK_R = 4, NECK_H = 8;
-  const HEAD_R = 8.9;
+  const { scene } = useGLTFClone('media/wig_mannequin.glb');
 
   useLayoutEffect(() => {
-    groupRef.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
-  }, []);
+    removeGlbLines(scene);
+    scene.scale.set(1, 1, 1);
+    const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
+    scene.scale.setScalar(TARGET_H / raw.y);
+    const box = glbLocalBBox(scene);
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+    onSize(box.getSize(new THREE.Vector3()));
+  }, [scene]);
 
-  return (
-    <group ref={groupRef}>
-      <mesh position={[0, SHOULDER_H / 2, 0]} castShadow material={mannMat}
-        scale={[SHOULDER_W / 2, SHOULDER_H / 2, SHOULDER_D / 2]}>
-        <sphereGeometry args={[1, 16, 8]} />
-      </mesh>
-      <mesh position={[0, SHOULDER_H + NECK_H / 2, 0]} castShadow material={mannMat}>
-        <cylinderGeometry args={[NECK_R, NECK_R * 1.1, NECK_H, 12]} />
-      </mesh>
-      <mesh position={[0, SHOULDER_H + NECK_H + HEAD_R, 0]} castShadow material={mannMat}
-        scale={[1, 1.15, 1]}>
-        <sphereGeometry args={[HEAD_R, 16, 12]} />
-      </mesh>
-      <mesh position={[0, SHOULDER_H + NECK_H + HEAD_R, HEAD_R + 0.5]}
-        rotation={[-Math.PI / 2, 0, 0]} material={mannMat}>
-        <coneGeometry args={[1.2, 2.5, 6]} />
-      </mesh>
-    </group>
-  );
+  return <primitive object={scene} />;
 }
+
+useGLTF.preload('media/wig_mannequin.glb');
