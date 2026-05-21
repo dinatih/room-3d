@@ -222,6 +222,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       const k = e.key;
       const isArrow = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(k);
 
+      // Orbit-mode zoom (PageUp/PageDown)
+      if (modeRef.current === 'orbit' && (k === 'PageUp' || k === 'PageDown')) {
+        keys.current.add(k);
+        e.preventDefault();
+        invalidate();
+        return;
+      }
+
       // Orbit-mode arrow keys (Google Earth style)
       if (modeRef.current === 'orbit' && isArrow) {
         if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
@@ -377,8 +385,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       invalidate();
 
       // Plain arrows — move active walker
-      if (k.has('ArrowLeft'))  cameraState.walkYaw += 0.06 * dt;
-      if (k.has('ArrowRight')) cameraState.walkYaw -= 0.06 * dt;
+      if (k.has('ArrowLeft'))  cameraState.walkYaw += 0.03 * dt;
+      if (k.has('ArrowRight')) cameraState.walkYaw -= 0.03 * dt;
       const wYaw = cameraState.walkYaw;
       const ws   = WALK_SPEED * dt;
       if (cameraState.activeWalkerIdx === 0) {
@@ -394,10 +402,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         if (k.has('ShiftArrowLeft') || k.has('ShiftArrowRight') || k.has('ShiftArrowUp') || k.has('ShiftArrowDown')) {
           const offset = new THREE.Vector3().subVectors(camera.position, ctrl.target);
           const sph    = new THREE.Spherical().setFromVector3(offset);
-          if (k.has('ShiftArrowLeft'))  sph.theta += 0.06 * dt;
-          if (k.has('ShiftArrowRight')) sph.theta -= 0.06 * dt;
-          if (k.has('ShiftArrowUp'))    sph.phi   -= 0.06 * dt;
-          if (k.has('ShiftArrowDown'))  sph.phi   += 0.06 * dt;
+          if (k.has('ShiftArrowLeft'))  sph.theta += 0.015 * dt;
+          if (k.has('ShiftArrowRight')) sph.theta -= 0.015 * dt;
+          if (k.has('ShiftArrowUp'))    sph.phi   -= 0.015 * dt;
+          if (k.has('ShiftArrowDown'))  sph.phi   += 0.015 * dt;
           sph.makeSafe();
           camera.position.setFromSpherical(sph).add(ctrl.target);
           ctrl.update();
@@ -407,11 +415,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         if (k.has('CtrlArrowLeft') || k.has('CtrlArrowRight') || k.has('CtrlArrowUp') || k.has('CtrlArrowDown')) {
           const toTarget = new THREE.Vector3().subVectors(ctrl.target, camera.position);
           const up       = new THREE.Vector3(0, 1, 0);
-          if (k.has('CtrlArrowLeft'))  toTarget.applyAxisAngle(up,  0.06 * dt);
-          if (k.has('CtrlArrowRight')) toTarget.applyAxisAngle(up, -0.06 * dt);
+          if (k.has('CtrlArrowLeft'))  toTarget.applyAxisAngle(up,  0.015 * dt);
+          if (k.has('CtrlArrowRight')) toTarget.applyAxisAngle(up, -0.015 * dt);
           const camRight = new THREE.Vector3().crossVectors(toTarget.clone().normalize(), up).normalize();
-          if (k.has('CtrlArrowUp'))   toTarget.applyAxisAngle(camRight,  0.06 * dt);
-          if (k.has('CtrlArrowDown')) toTarget.applyAxisAngle(camRight, -0.06 * dt);
+          if (k.has('CtrlArrowUp'))   toTarget.applyAxisAngle(camRight,  0.015 * dt);
+          if (k.has('CtrlArrowDown')) toTarget.applyAxisAngle(camRight, -0.015 * dt);
           ctrl.target.copy(camera.position).add(toTarget);
           ctrl.update();
         }
@@ -423,7 +431,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           const camDir   = new THREE.Vector3();
           camera.getWorldDirection(camDir);
           const camRight = new THREE.Vector3(-camDir.z, 0, camDir.x).normalize();
-          const panStep  = ctrl.target.distanceTo(camera.position) * 0.003;
+          const panStep  = ctrl.target.distanceTo(camera.position) * 0.0015;
           const panDelta = new THREE.Vector3();
           const isPan = (a: string) => k.has('Alt'+a) || k.has('ShiftCtrl'+a);
           const camForward = new THREE.Vector3();
@@ -438,6 +446,17 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           ctrl.target.add(panDelta);
           ctrl.update();
         }
+      }
+
+      // PageUp/PageDown — zoom (dolly le long de l'axe caméra→cible)
+      if (ctrl && (k.has('PageUp') || k.has('PageDown'))) {
+        const dir  = new THREE.Vector3().subVectors(ctrl.target, camera.position);
+        const dist = dir.length();
+        dir.normalize();
+        const step = dist * 0.01 * dt;
+        if (k.has('PageUp'))   camera.position.addScaledVector(dir,  step);
+        if (k.has('PageDown')) camera.position.addScaledVector(dir, -step);
+        ctrl.update();
       }
     }
 
