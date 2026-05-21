@@ -1,17 +1,15 @@
 /**
- * HoverMenu.tsx — port de js/ui/hoverMenu.js
+ * HoverMenu.tsx
  *
- * Deux exports :
  *   HoverRaycaster  — composant R3F (dans Canvas) : détecte l'objet survolé
- *   HoverOverlay    — composant HTML (hors Canvas) : affiche le popup
+ *   HoverOverlay    — composant HTML (hors Canvas) : dot sur hover, modal sur clic
  */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE   from 'three';
 import { hoverState } from '@features/scene/hoverState';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
-// actionId → { label bouton, clé furniture-toggle }
 
 interface ActionDef { btnLabel: string; toggleKey: string; }
 const ACTIONS: Record<string, ActionDef> = {
@@ -67,7 +65,8 @@ export function HoverRaycaster() {
 
     function scheduleHide() {
       if (hideTimer) return;
-      if (hoverState.touchActive) return;   // menu tactile : ne pas auto-masquer
+      if (hoverState.touchActive) return;
+      if (hoverState.locked) return;
       hideTimer = setTimeout(() => {
         hoverState.visible = false;
         hoverState.onUpdate?.();
@@ -110,10 +109,10 @@ export function HoverRaycaster() {
       return null;
     }
 
-    // ── Souris : hover ────────────────────────────────────────────────────────
+    // ── Souris : hover → dot ──────────────────────────────────────────────────
     const onMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
-      if (hoverState.touchActive) return;   // menu tactile actif — ignorer la souris
+      if (hoverState.touchActive) return;
       const now = performance.now();
       if (now - lastMove < 32) return;
       lastMove = now;
@@ -136,34 +135,64 @@ export function HoverRaycaster() {
 
     const onLeave = () => { scheduleHide(); };
 
+    // ── Clic : épingle / ferme le modal ──────────────────────────────────────
+    const onClick = (e: MouseEvent) => {
+      if (hoverState.touchActive) return;
+      const found = raycastAt(e.clientX, e.clientY);
+      if (found) {
+        const sameObject = hoverState.locked &&
+          hoverState.lockedActionIds.join(',') === found.actionIds.join(',');
+        if (sameObject) {
+          hoverState.locked = false;
+        } else {
+          cancelHide();
+          hoverState.locked           = true;
+          hoverState.lockedLabel      = found.label;
+          hoverState.lockedActionIds  = found.actionIds;
+          hoverState.lockedX          = e.clientX;
+          hoverState.lockedY          = e.clientY;
+        }
+      } else {
+        hoverState.locked = false;
+      }
+      hoverState.onUpdate?.();
+    };
+
+    // ── Echap : ferme le modal ────────────────────────────────────────────────
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && hoverState.locked) {
+        hoverState.locked = false;
+        hoverState.onUpdate?.();
+      }
+    };
+
     // ── Tactile : tap pour afficher / masquer ─────────────────────────────────
     let touchMoved = false;
     const onTouchStart = () => { touchMoved = false; };
     const onTouchMove  = () => { touchMoved = true; };
 
     const onTouchEnd = (e: TouchEvent) => {
-      if (touchMoved) return;           // scroll — ignorer
+      if (touchMoved) return;
       const t = e.changedTouches[0];
       if (!t) return;
       const found = raycastAt(t.clientX, t.clientY);
       if (found) {
-        // Même objet déjà affiché → toggle off
-        const same = hoverState.visible && hoverState.touchActive &&
-          hoverState.actionIds.join(',') === found.actionIds.join(',');
+        const same = hoverState.touchActive &&
+          hoverState.lockedActionIds.join(',') === found.actionIds.join(',');
         if (same) {
-          hoverState.visible     = false;
+          hoverState.locked      = false;
           hoverState.touchActive = false;
         } else {
           cancelHide();
-          hoverState.visible     = true;
-          hoverState.touchActive = true;
-          hoverState.label       = found.label;
-          hoverState.actionIds   = found.actionIds;
-          hoverState.x           = t.clientX;
-          hoverState.y           = t.clientY;
+          hoverState.locked           = true;
+          hoverState.touchActive      = true;
+          hoverState.lockedLabel      = found.label;
+          hoverState.lockedActionIds  = found.actionIds;
+          hoverState.lockedX          = t.clientX;
+          hoverState.lockedY          = t.clientY;
         }
       } else {
-        hoverState.visible     = false;
+        hoverState.locked      = false;
         hoverState.touchActive = false;
       }
       hoverState.onUpdate?.();
@@ -171,12 +200,16 @@ export function HoverRaycaster() {
 
     canvas.addEventListener('pointermove',  onMove);
     canvas.addEventListener('pointerleave', onLeave);
+    canvas.addEventListener('click',        onClick);
+    window.addEventListener('keydown',      onKeyDown);
     canvas.addEventListener('touchstart',   onTouchStart, { passive: true });
     canvas.addEventListener('touchmove',    onTouchMove,  { passive: true });
     canvas.addEventListener('touchend',     onTouchEnd);
     return () => {
       canvas.removeEventListener('pointermove',  onMove);
       canvas.removeEventListener('pointerleave', onLeave);
+      canvas.removeEventListener('click',        onClick);
+      window.removeEventListener('keydown',      onKeyDown);
       canvas.removeEventListener('touchstart',   onTouchStart);
       canvas.removeEventListener('touchmove',    onTouchMove);
       canvas.removeEventListener('touchend',     onTouchEnd);
@@ -202,72 +235,121 @@ const BTN_STYLE: React.CSSProperties = {
   fontFamily: 'inherit',
 };
 
+// Injecte l'animation pulse une seule fois dans le document
+let pulseInjected = false;
+function injectPulse() {
+  if (pulseInjected) return;
+  pulseInjected = true;
+  const s = document.createElement('style');
+  s.textContent = `
+    @keyframes hover-dot-pulse {
+      0%,100% { transform: scale(1);    opacity: 0.85; }
+      50%      { transform: scale(1.25); opacity: 1;    }
+    }
+    .hover-dot-indicator { animation: hover-dot-pulse 1.1s ease-in-out infinite; }
+  `;
+  document.head.appendChild(s);
+}
+
 export function HoverOverlay() {
-  const [state, setState] = useState({ visible: false, label: '', actionIds: [] as string[], x: 0, y: 0 });
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [state, setState] = useState({
+    visible: false, label: '', actionIds: [] as string[], x: 0, y: 0,
+    locked: false, lockedLabel: '', lockedActionIds: [] as string[], lockedX: 0, lockedY: 0,
+  });
 
   useEffect(() => {
+    injectPulse();
     hoverState.onUpdate = () => {
       setState({
-        visible:    hoverState.visible,
-        label:      hoverState.label,
-        actionIds:  hoverState.actionIds,
-        x:          hoverState.x,
-        y:          hoverState.y,
+        visible:         hoverState.visible,
+        label:           hoverState.label,
+        actionIds:       hoverState.actionIds,
+        x:               hoverState.x,
+        y:               hoverState.y,
+        locked:          hoverState.locked,
+        lockedLabel:     hoverState.lockedLabel,
+        lockedActionIds: hoverState.lockedActionIds,
+        lockedX:         hoverState.lockedX,
+        lockedY:         hoverState.lockedY,
       });
     };
     return () => { hoverState.onUpdate = null; };
   }, []);
 
-  if (!state.visible) return null;
+  const showDot   = state.visible && !state.locked;
+  const showModal = state.locked;
 
-  const actions = state.actionIds.map(id => ACTIONS[id]).filter(Boolean);
-  if (!actions.length) return null;
+  const lockedActions = showModal
+    ? state.lockedActionIds.map(id => ACTIONS[id]).filter(Boolean)
+    : [];
 
-  const GAP = 14;
-  const approxW = 160;
-  const approxH = 44 + actions.length * 38;
-  let left = state.x + GAP;
-  let top  = state.y - approxH / 2;
-  if (left + approxW > window.innerWidth  - 8) left = state.x - approxW - GAP;
-  if (top < 8)                                  top  = 8;
-  if (top + approxH > window.innerHeight  - 8) top  = window.innerHeight - approxH - 8;
+  let modalLeft = 0, modalTop = 0;
+  if (showModal) {
+    const GAP = 14, approxW = 160, approxH = 44 + lockedActions.length * 38;
+    modalLeft = state.lockedX + GAP;
+    modalTop  = state.lockedY - approxH / 2;
+    if (modalLeft + approxW > window.innerWidth  - 8) modalLeft = state.lockedX - approxW - GAP;
+    if (modalTop < 8)                                 modalTop  = 8;
+    if (modalTop + approxH > window.innerHeight  - 8) modalTop  = window.innerHeight - approxH - 8;
+  }
 
   return (
-    <div
-      ref={menuRef}
-      onMouseEnter={() => { hoverState.cancelHide?.(); hoverState.visible = true; }}
-      onMouseLeave={() => { hoverState.visible = false; hoverState.onUpdate?.(); }}
-      onTouchEnd={e => e.stopPropagation()}
-      style={{
-        position: 'fixed', left, top, zIndex: 300,
-        background: 'rgba(10,10,20,0.45)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.10)',
-        borderRadius: 10,
-        padding: '10px 14px',
-        display: 'flex', flexDirection: 'column', gap: 8,
-        pointerEvents: 'all',
-        minWidth: 140,
-      }}
-    >
-      <div style={{ color: '#ddd', fontSize: 12, fontWeight: 600 }}>{state.label}</div>
-      {actions.map((action, i) => (
-        <button
-          key={i}
-          onClick={() => {
-            document.dispatchEvent(new CustomEvent('furniture-toggle', {
-              detail: { key: action.toggleKey },
-            }));
-            hoverState.visible     = false;
-            hoverState.touchActive = false;
-            hoverState.onUpdate?.();
+    <>
+      {/* ── Indicateur circulaire de survol ── */}
+      {showDot && (
+        <div
+          className="hover-dot-indicator"
+          style={{
+            position: 'fixed',
+            left: state.x + 10,
+            top:  state.y - 20,
+            width: 14, height: 14,
+            borderRadius: '50%',
+            background: 'rgba(255,215,0,0.55)',
+            border: '2px solid #ffd700',
+            boxShadow: '0 0 10px rgba(255,215,0,0.55)',
+            pointerEvents: 'none',
+            zIndex: 300,
           }}
-          style={BTN_STYLE}
+        />
+      )}
+
+      {/* ── Modal épinglé au clic ── */}
+      {showModal && lockedActions.length > 0 && (
+        <div
+          onMouseEnter={() => { hoverState.cancelHide?.(); }}
+          onTouchEnd={e => e.stopPropagation()}
+          style={{
+            position: 'fixed', left: modalLeft, top: modalTop, zIndex: 300,
+            background: 'rgba(10,10,20,0.45)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.10)',
+            borderRadius: 10,
+            padding: '10px 14px',
+            display: 'flex', flexDirection: 'column', gap: 8,
+            pointerEvents: 'all',
+            minWidth: 140,
+          }}
         >
-          {action.btnLabel}
-        </button>
-      ))}
-    </div>
+          <div style={{ color: '#ddd', fontSize: 12, fontWeight: 600 }}>{state.lockedLabel}</div>
+          {lockedActions.map((action, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                document.dispatchEvent(new CustomEvent('furniture-toggle', {
+                  detail: { key: action.toggleKey },
+                }));
+                hoverState.locked      = false;
+                hoverState.touchActive = false;
+                hoverState.onUpdate?.();
+              }}
+              style={BTN_STYLE}
+            >
+              {action.btnLabel}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
   );
 }

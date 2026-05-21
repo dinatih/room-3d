@@ -41,6 +41,7 @@ export function Freezer({ actionState, onSize }: SceneItemProps) {
       -(box.min.z + box.max.z) / 2,
     );
     onSize(box.getSize(new THREE.Vector3()));
+    scene.userData.hoverAction = { label: 'Congélateur CHIQ', actionId: 'freezer' };
 
     const mixer = new THREE.AnimationMixer(scene);
     mixer.addEventListener('finished', () => { animatingRef.current = false; });
@@ -82,7 +83,7 @@ export function Freezer({ actionState, onSize }: SceneItemProps) {
   useEffect(() => {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent<{ key: string }>).detail;
-      if (key === 'freezerOpen') playDoor(!openRef.current);
+      if (key === 'freezer') playDoor(!openRef.current);
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);

@@ -3,15 +3,20 @@
  * et HoverOverlay (hors Canvas).
  */
 export const hoverState = {
+  // Hover dot — follows cursor when over actionable object
   visible:   false,
   label:     '',
   actionIds: [] as string[],
   x:         0,
   y:         0,
-  /** Vrai quand le menu a été ouvert par un tap (touch) — bloque l'auto-masquage souris. */
+  // Locked modal — pinned until dismissed (click / Escape)
+  locked:          false,
+  lockedLabel:     '',
+  lockedActionIds: [] as string[],
+  lockedX:         0,
+  lockedY:         0,
+  /** True when modal was opened by touch tap. */
   touchActive: false,
-  /** Appelé par HoverRaycaster quand l'état change ; HoverOverlay s'y abonne. */
   onUpdate:    null as (() => void) | null,
-  /** Enregistré par HoverRaycaster ; appelé par HoverOverlay.onMouseEnter. */
   cancelHide:  null as (() => void) | null,
 };
