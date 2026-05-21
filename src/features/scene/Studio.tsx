@@ -38,7 +38,9 @@ import { RealWorldLayer } from '@features/scene/RealWorldLayer';
 import { SunLight } from '@features/scene/SunLight';
 import { BuildAnimation, BuildAnimation3, BuildAnimation4, BuildAnimation_VisiteGuidee } from '@features/scene/BuildAnimations';
 import { RenderStyleLayer, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
-import { PaperPlane }                  from '@features/scene/PaperPlane';
+import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
+import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
+import { LandingStrips }              from '@features/scene/LandingStrips';
 
 import {
   ROOM_W,
@@ -131,12 +133,12 @@ export function Studio() {
     cbnWest: false, cbnEast: false,
     cabinet: false,
     bedStacked: true, bedSofa: false, bedPosition: false, smorkullPos: false, lampOn: false, dronaRougeGlb: false,
-    lampSdb: false, lampCouloir: false, freezerOpen: false,
+    lampSdb: false, lampCouloir: false, freezerOpen: false, fridge: false, tvOn: false,
   });
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true, doors: true,
-    neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true, pillarsOnly: false, wallsOnly: false, realWorld: false, realSun: false,
+    neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, gridDepth: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true, pillarsOnly: false, wallsOnly: false, realWorld: false, realSun: false,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -168,16 +170,24 @@ export function Studio() {
 
   const [renderStyle, setRenderStyle] = useState<RenderStyleKey>('default');
 
-  const [planeMode, setPlaneMode] = useState(false);
+  const [planeMode,          setPlaneMode]          = useState(false);
+  const [planeModel,         setPlaneModel]         = useState<PlaneModelKey>('paper');
+  const [autopilotVisible,   setAutopilotVisible]   = useState(false);
+  const [showLandingStrips,  setShowLandingStrips]  = useState(false);
+  const [planeViewMode,      setPlaneViewMode]      = useState<PlaneViewMode>('prelaunch');
+  const [planeLaunched,      setPlaneLaunched]      = useState(false);
 
-  // F → toggle mode avion en papier (ignoré quand un input/textarea est focus)
+  // F → toggle mode avion (ignoré quand un input/textarea est focus)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'f' && e.key !== 'F') return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const t = e.target as HTMLElement | null;
       if (t && /^(input|textarea|select)$/i.test(t.tagName)) return;
-      setPlaneMode(p => !p);
+      setPlaneMode(p => {
+        if (!p) { setPlaneViewMode('prelaunch'); setPlaneLaunched(false); }
+        return !p;
+      });
       cameraState.invalidate?.();
     };
     window.addEventListener('keydown', onKey);
@@ -259,7 +269,16 @@ export function Studio() {
         <ShadowWarmup />
         <ShadowController enabled={layers.shadows} />
         <CameraController planeMode={planeMode} />
-        {planeMode    && <PaperPlane                  onExit={() => setPlaneMode(false)} />}
+        {planeMode    && <PaperPlane
+                           onExit={() => setPlaneMode(false)}
+                           model={planeModel}
+                           onViewModeChange={(vm, launched) => {
+                             setPlaneViewMode(vm);
+                             if (launched) setPlaneLaunched(true);
+                           }}
+                         />}
+        {autopilotVisible && <AutopilotPlane model={planeModel} />}
+        {showLandingStrips && <LandingStrips />}
         {buildAnim    && <BuildAnimation              onFinish={() => setBuildAnim(false)} />}
         {buildAnim3   && <BuildAnimation3             onFinish={() => setBuildAnim3(false)}   onDuration={setDuration('buildAnim3')}   />}
         {buildAnim4   && <BuildAnimation4             onFinish={() => setBuildAnim4(false)}   onDuration={setDuration('buildAnim4')}   />}
@@ -277,7 +296,7 @@ export function Studio() {
         {layers.redWalls    && <RedWallLayer />}
         {layers.wallEdges   && <WallEdgesLayer />}
         {layers.wallEdges   && <EdgeHoverRaycaster />}
-        {layers.grid        && <GridLayer />}
+        {layers.grid        && <GridLayer depthTest={layers.gridDepth} />}
         {layers.lights      && <LightHelpers />}
         {layers.plan        && <FloorPlan />}
 
@@ -336,7 +355,34 @@ export function Studio() {
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
         lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
         renderStyle={renderStyle} onSetRenderStyle={setRenderStyle}
+        planeModel={planeModel} onSetPlaneModel={setPlaneModel}
+        autopilotVisible={autopilotVisible} onToggleAutopilot={() => setAutopilotVisible(v => !v)}
+        showLandingStrips={showLandingStrips} onToggleLandingStrips={() => {
+          setShowLandingStrips(v => {
+            cameraState.landingStripsVisible = !v;
+            return !v;
+          });
+        }}
       />
+      {planeMode && (
+        <div style={{
+          position: 'absolute', bottom: 72, left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(0,0,0,0.6)', borderRadius: 8,
+          padding: '6px 16px', color: '#ddd', fontSize: 12,
+          pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
+          backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)',
+        }}>
+          {!planeLaunched
+            ? '✈ Espace / C → décoller   |   F / Échap → quitter'
+            : planeViewMode === 'landing'
+              ? '⬇ Atterrissage automatique…'
+              : planeViewMode === 'landed'
+                ? '🛬 Atterri — orbite   |   F / Échap = quitter'
+                : `Vue: ${planeViewMode}   |   C = changer vue   |   F / Échap = quitter`
+          }
+        </div>
+      )}
       <AnimationsPanel
         buildAnim={buildAnim}       onStartBuildAnim={start(setBuildAnim)}
         buildAnim3={buildAnim3}     onStartBuildAnim3={start(setBuildAnim3)}

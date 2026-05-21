@@ -11,9 +11,36 @@ import {
   drawFloorPlan,
   PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_ASPECT,
 } from './floorDraw';
+import { LANDING_STRIPS } from './LandingStrips';
 
 const SMALL_W_DESKTOP = 150;
 const SMALL_W_MOBILE  = 55;
+
+// ── Icône avion (plan 2D) ─────────────────────────────────────────────────────
+function drawPlaneIcon(
+  ctx: CanvasRenderingContext2D,
+  px: number, pz: number, yaw: number,
+  sc: number,
+  fillColor: string, strokeColor: string,
+  tx: (x: number) => number, tz: (z: number) => number,
+) {
+  ctx.save();
+  ctx.translate(tx(px), tz(pz));
+  ctx.rotate(-yaw);
+  const PL = 10 * sc, PW = 9 * sc;
+  ctx.fillStyle   = fillColor;
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth   = 0.9 * sc;
+  ctx.beginPath();
+  ctx.moveTo(0, -PL);
+  ctx.lineTo(-PW, PL);
+  ctx.lineTo(0,  PL * 0.4);
+  ctx.lineTo( PW, PL);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
 
 function drawMinimap(
   canvas: HTMLCanvasElement,
@@ -33,10 +60,41 @@ function drawMinimap(
   ctx.fillStyle = '#111122';
   ctx.fillRect(0, 0, W, canvas.height);
 
+  // ── Pistes d'atterrissage (seulement si activées) ─────────────────────────
+  if (!cameraState.landingStripsVisible) { /* skip */ }
+  else for (const strip of LANDING_STRIPS) {
+    const sw = strip.width  * S;
+    const sl = strip.length * S;
+    ctx.save();
+    ctx.translate(tx(strip.cx), tz(strip.cz));
+    // angleY=0 → longueur le long de Z monde = Y canvas → pas de rotation supplémentaire.
+    // angleY=π/2 → longueur le long de X monde = X canvas → rotation -π/2.
+    ctx.rotate(-strip.angleY);
+    // Base sombre
+    ctx.fillStyle = 'rgba(40,40,40,0.80)';
+    ctx.fillRect(-sw / 2, -sl / 2, sw, sl);
+    // Ligne centrale jaune
+    ctx.fillStyle = 'rgba(220,210,0,0.9)';
+    ctx.fillRect(-1.2 * S, -sl / 2 * 0.85, 2.4 * S, sl * 0.85);
+    // Seuils blancs
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    for (const side of [-1, 1] as const) {
+      for (const xOff of [-1.5, -0.5, 0.5, 1.5]) {
+        const bw = sw * 0.14, bh = sl * 0.055;
+        ctx.fillRect(
+          xOff * sw * 0.22 - bw / 2,
+          side * sl * 0.44 - bh / 2,
+          bw, bh,
+        );
+      }
+    }
+    ctx.restore();
+  }
+
   // Plan partagé (même code que FloorPlan 3D)
   drawFloorPlan(ctx, W, canvas.height);
 
-  // Walker icon
+  // ── Walker icon ─────────────────────────────────────────────────────────────
   ctx.save();
   ctx.translate(tx(camX), tz(camZ));
   ctx.rotate(-yaw);
@@ -54,27 +112,22 @@ function drawMinimap(
   ctx.beginPath(); ctx.rect(-BW / 2, R, BW, BH); ctx.fill(); ctx.stroke();
   ctx.restore();
 
-  // Avion en papier
+  // ── Avion joueur ────────────────────────────────────────────────────────────
   if (cameraState.mode === 'plane') {
-    ctx.save();
-    ctx.translate(tx(cameraState.planeX), tz(cameraState.planeZ));
-    // En 2D top-down : +z écran = +z monde. Yaw=0 doit pointer vers -z monde (haut écran).
-    // Sur canvas, le triangle natif pointe vers -y (haut) → on rotate de -yaw.
-    ctx.rotate(-cameraState.planeYaw);
-    const PL = 10 * sc; // demi-longueur
-    const PW = 9  * sc; // demi-envergure
-    ctx.fillStyle   = 'rgba(120,200,255,0.85)';
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-    ctx.lineWidth   = 0.9 * sc;
-    ctx.beginPath();
-    ctx.moveTo(0, -PL);         // nez (vers le haut écran)
-    ctx.lineTo(-PW, PL);        // aile gauche-arrière
-    ctx.lineTo(0,  PL * 0.4);   // encoche queue
-    ctx.lineTo( PW, PL);        // aile droite-arrière
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
+    drawPlaneIcon(
+      ctx, cameraState.planeX, cameraState.planeZ, cameraState.planeYaw,
+      sc, 'rgba(120,200,255,0.9)', 'rgba(255,255,255,0.9)',
+      tx, tz,
+    );
+  }
+
+  // ── Avion autopilote ────────────────────────────────────────────────────────
+  if (cameraState.autopilotActive) {
+    drawPlaneIcon(
+      ctx, cameraState.autopilotX, cameraState.autopilotZ, cameraState.autopilotYaw,
+      sc, 'rgba(100,255,150,0.9)', 'rgba(255,255,255,0.9)',
+      tx, tz,
+    );
   }
 }
 

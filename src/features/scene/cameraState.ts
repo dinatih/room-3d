@@ -41,4 +41,15 @@ export const cameraState = {
   planeX: 0 as number,
   planeZ: 0 as number,
   planeYaw: 0 as number,
+  /** Vue courante dans le mode avion */
+  planeViewMode: 'prelaunch' as 'prelaunch' | 'follow' | 'cockpit' | 'walker' | 'landing' | 'landed',
+  /** Vrai après le décollage (prelaunch terminé) */
+  planeLaunched: false as boolean,
+  /** Pistes d'atterrissage visibles (minimap + 3D) */
+  landingStripsVisible: false as boolean,
+  /** Avion autopilote (position minimap) */
+  autopilotActive: false as boolean,
+  autopilotX: 150 as number,
+  autopilotZ: 200 as number,
+  autopilotYaw: 0 as number,
 };

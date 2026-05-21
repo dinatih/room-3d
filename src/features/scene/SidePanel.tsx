@@ -219,7 +219,9 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
 
         {/* Avion en papier */}
         <div>
-          <Section title="Avion en papier" />
+          <Section title="Avion (mode vol)" />
+          <R label="Décoller (pré-vol)"         keys={['Espace', 'C']} />
+          <R label="Changer de vue"             keys={['C']} />
           <R label="Piquer / cabrer"            keys={['W', 'S', '↑', '↓']} />
           <R label="Roulis (vire)"              keys={['A', 'D', '←', '→']} />
           <R label="Accélérer"                  keys={['Espace']} />
@@ -332,6 +334,8 @@ export interface FurnitureState {
   lampSdb:        boolean;
   lampCouloir:    boolean;
   freezerOpen:    boolean;
+  fridge:         boolean;
+  tvOn:           boolean;
 }
 
 export interface LayerState {
@@ -343,6 +347,7 @@ export interface LayerState {
   mirrorsHD:  boolean;
   plan:         boolean;
   grid:         boolean;
+  gridDepth:    boolean;
 
   skeleton:     boolean;
   ceiling:      boolean;
@@ -367,6 +372,8 @@ export interface SidePanelProps {
 
 export type LidarMode = 0 | 1 | 2 | 3;
 
+import type { PlaneModelKey } from '@features/scene/PaperPlane';
+
 export interface SidePanelProps2 extends SidePanelProps {
   onOpenInventory:         () => void;
   lidarMode:               LidarMode;
@@ -375,6 +382,13 @@ export interface SidePanelProps2 extends SidePanelProps {
   onToggleLidarOpacity:    () => void;
   renderStyle:             RenderStyleKey;
   onSetRenderStyle:        (key: RenderStyleKey) => void;
+  // Avion
+  planeModel:              PlaneModelKey;
+  onSetPlaneModel:         (m: PlaneModelKey) => void;
+  autopilotVisible:        boolean;
+  onToggleAutopilot:       () => void;
+  showLandingStrips:       boolean;
+  onToggleLandingStrips:   () => void;
 }
 
 // ── Sections (rendu commun desktop & mobile) ──────────────────────────────────
@@ -390,7 +404,7 @@ const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> 
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity, renderStyle, onSetRenderStyle }: SidePanelProps2) {
+export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity, renderStyle, onSetRenderStyle, planeModel, onSetPlaneModel, autopilotVisible, onToggleAutopilot, showLandingStrips, onToggleLandingStrips }: SidePanelProps2) {
   const isMobile = useIsMobile();
   const [showViews,     setShowViews]     = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -451,7 +465,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {b0('gray',   'Perspective P', () => dispatchKey('p'), true)}
       {b0('gray',   'Walk M',        () => dispatchKey('m'))}
       {b0('gray',   '2D Dessus T',   () => dispatchKey('t'))}
-      {b0('cyan',   'Avion papier ✈ F', () => dispatchKey('f'))}
+      {b0('cyan',   'Avion ✈ F',        () => dispatchKey('f'))}
       {b0('yellow', 'Autres vues…',  () => setShowViews(true))}
       {b0('teal',   'Raccourcis ⌨',  () => setShowShortcuts(true))}
     </>
@@ -495,6 +509,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('cyan',   'X-Ray',         'xray')}
       {layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
       {layerBtn('teal',   'Grille',        'grid')}
+      {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
       {layerBtn('white',  'Squelette',     'skeleton')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('green',  'Plafond',       'ceiling')}
@@ -560,8 +575,69 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           () => onToggleFurniture('lampCouloir'))}
       {b0('red', `Drona : ${furniture.dronaRougeGlb ? 'Rouge GLB' : 'DRÖNA.glb'}`,
           () => onToggleFurniture('dronaRougeGlb'))}
-      {b0('light', `Frigo : ${furniture.freezerOpen ? 'OUVERT' : 'FERMÉ'}`,
+      {b0('light', `Frigo compact : ${furniture.freezerOpen ? 'OUVERT' : 'FERMÉ'}`,
           () => onToggleFurniture('freezerOpen'))}
+      {b0('light', `Frigo LAGAN : ${furniture.fridge ? 'OUVERT' : 'FERMÉ'}`,
+          () => onToggleFurniture('fridge'))}
+      {b0('yellow', `TV : ${furniture.tvOn ? 'ON' : 'OFF'}`,
+          () => onToggleFurniture('tvOn'))}
+    </>
+  );
+
+  // ── Section Avion ─────────────────────────────────────────────────────────────
+
+  const modelBtnStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1,
+    background: active ? 'rgba(68,136,255,0.25)' : 'rgba(255,255,255,0.06)',
+    border: `1px solid ${active ? 'rgba(68,136,255,0.6)' : 'rgba(255,255,255,0.12)'}`,
+    borderRadius: 4,
+    padding: isMobile ? '8px 4px' : '4px 6px',
+    color: active ? '#88aaff' : '#aaa',
+    fontSize: isMobile ? 12 : 10,
+    minHeight: isMobile ? 40 : undefined,
+    cursor: 'pointer',
+  });
+
+  const AvionSection = (
+    <>
+      {/* Lancer / quitter */}
+      {b0('cyan', 'Avion ✈ F — lancer / quitter', () => dispatchKey('f'), true)}
+
+      {/* Sélecteur de modèle */}
+      <div style={{ padding: '6px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+          Modèle
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button style={modelBtnStyle(planeModel === 'paper')}  onClick={() => onSetPlaneModel('paper')}>Papier</button>
+          <button style={modelBtnStyle(planeModel === 'rocket')} onClick={() => onSetPlaneModel('rocket')}>Fusée</button>
+          <button style={modelBtnStyle(planeModel === 'comet')}  onClick={() => onSetPlaneModel('comet')}>Comète</button>
+        </div>
+      </div>
+
+      {/* Pilote automatique */}
+      <button
+        style={{ ...btn(COLORS['purple'], isMobile), opacity: autopilotVisible ? 1 : 0.5 }}
+        onClick={onToggleAutopilot}
+      >
+        Pilote auto ∞ : {autopilotVisible ? 'ON' : 'OFF'}
+      </button>
+
+      {/* Pistes d'atterrissage */}
+      <button
+        style={{ ...btn(COLORS['gold'], isMobile), opacity: showLandingStrips ? 1 : 0.5 }}
+        onClick={onToggleLandingStrips}
+      >
+        Pistes 🛬 : {showLandingStrips ? 'ON' : 'OFF'}
+      </button>
+
+      {/* Info vue */}
+      <div style={{
+        padding: '4px 10px', fontSize: 10, color: '#666',
+        borderTop: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        [C] changer vue (cockpit / suivre / walker) pendant le vol
+      </div>
     </>
   );
 
@@ -693,6 +769,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       <div style={desktopPanelStyle} onWheel={e => e.stopPropagation()}>
 
         <Group emoji="📷" title="Vues" defaultOpen>{ViewsSection}</Group>
+        <Group emoji="✈" title="Avion">{AvionSection}</Group>
         <Group emoji="👁" title="Affichage">{DisplaySection}</Group>
         <Group emoji="🛋" title="Mobilier">{FurnitureSection}</Group>
 
