@@ -53,7 +53,7 @@ export function GoogleNestMini({ onSize }: SceneItemProps) {
 
     // Positionne le groupe LEDs sur la face supérieure du device
     const topY = (box.max.y - box.min.y) / 2;
-    dotsGroupRef.current.position.set(0, topY + 0.1, 0);
+    dotsGroupRef.current.position.set(0, topY + DOT_R + 0.2, 0);
   }, [scene]);
 
   useEffect(() => {
@@ -103,6 +103,7 @@ export function GoogleNestMini({ onSize }: SceneItemProps) {
               emissiveIntensity={0}
               roughness={0.3}
               metalness={0}
+              depthTest={false}
             />
           </mesh>
         ))}

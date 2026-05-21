@@ -442,11 +442,11 @@ export function Decor() {
       <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[287.5, 0, 230]}>
+      <group position={[300, 0, 230]}>
         <AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Google Nest Mini — mur EST (B) en son centre, à plat contre le mur */}
-      <group position={[ROOM_W - 5, WALL_H / 2, ROOM_D / 2]} rotation={[0, 0, Math.PI / 2]}>
+      <group position={[ROOM_W - 5, WALL_H / 2, ROOM_D / 2]} rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
         <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
@@ -458,7 +458,7 @@ export function Decor() {
       <group position={[110, 1, 500]} userData={{ animUnit: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[286, 1, 202]} userData={{ animUnit: true }}>
+      <group position={[300, 1, 202]} userData={{ animUnit: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[14, 0, 210]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
