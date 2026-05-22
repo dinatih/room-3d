@@ -639,6 +639,9 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
   const gardenMats = useMemo(() => [
     gardenSideMat, gardenSideMat, grassMat, gardenSideMat, gardenSideMat, gardenSideMat
   ], [grassMat]);
+  const gardenMatsWithGrass3D = useMemo(() => [
+    gardenSideMat, gardenSideMat, gardenSideMat, gardenSideMat, gardenSideMat, gardenSideMat
+  ], []);
 
   const gardenD = Math.abs(-400 - BLDG_Z_MIN); // BLDG_Z_MIN + 400
 
@@ -662,13 +665,14 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
 
       {/* Dalle jardin herbe */}
       <mesh
-        ref={(m) => { if (m) m.material = gardenMats as any; }}
+        ref={(m) => { if (m) m.material = (layers.grass ? gardenMatsWithGrass3D : gardenMats) as any; }}
         position={[BLDG_CX, slabY, (BLDG_Z_MIN + -400) / 2]}
         receiveShadow
         userData={{ brickType: 'floor' }}
       >
         <boxGeometry args={[BLDG_W, 10, gardenD]} />
       </mesh>
+      {layers.grass && <GrassGround yPos={slabY + 5.02} />}
 
       {/* Plafonds — masquables via toggle "Plafond" */}
       <group visible={showCeiling}>
@@ -692,19 +696,15 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
       </group>
 
       {/* Sol extérieur — correspond aux bornes de la grille X[-400,700] × Z[-600,1000] */}
-      {layers.grass ? (
-        <GrassGround />
-      ) : (
-        <mesh
-          ref={(m) => { if (m) m.material = groundExteriorMat; }}
-          rotation={[-Math.PI / 2, 0, 0]}
-          position={[150, -10, 200]}
-          receiveShadow
-          userData={{ brickType: 'ground' }}
-        >
-          <planeGeometry args={[1100, 1600]} />
-        </mesh>
-      )}
+      <mesh
+        ref={(m) => { if (m) m.material = groundExteriorMat; }}
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[150, -10, 200]}
+        receiveShadow
+        userData={{ brickType: 'ground' }}
+      >
+        <planeGeometry args={[1100, 1600]} />
+      </mesh>
 
       {/* Colliders physiques (Rapier) */}
       <RigidBody type="fixed" colliders={false}>

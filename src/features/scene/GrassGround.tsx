@@ -2,7 +2,11 @@ import { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 
-export function GrassGround() {
+interface GrassGroundProps {
+  yPos?: number;
+}
+
+export function GrassGround({ yPos = 1.77 }: GrassGroundProps) {
   const { scene } = useGLTF('media/patch_of_grass_joined.glb');
 
   // Trouver les meshes correspondants à l'herbe et au sol
@@ -24,21 +28,33 @@ export function GrassGround() {
 
   if (!grassMesh || !soilMesh) return null;
 
-  return <GrassInstances grassMesh={grassMesh} soilMesh={soilMesh} />;
+  return <GrassInstances grassMesh={grassMesh} soilMesh={soilMesh} yPos={yPos} />;
 }
 
-function GrassInstances({ grassMesh, soilMesh }: { grassMesh: THREE.Mesh; soilMesh: THREE.Mesh }) {
+function GrassInstances({
+  grassMesh,
+  soilMesh,
+  yPos,
+}: {
+  grassMesh: THREE.Mesh;
+  soilMesh: THREE.Mesh;
+  yPos: number;
+}) {
   const grassRef = useRef<THREE.InstancedMesh>(null);
   const soilRef = useRef<THREE.InstancedMesh>(null);
 
-  // Bornes de la grille : X[-400, 700] × Z[-600, 1000]
-  // Le patch d'herbe d'origine fait 200x200 cm (2x2 mètres).
-  // Pour paver uniformément la zone :
-  // X: -300, -100, 100, 300, 500, 700 (6 colonnes)
-  // Z: -500, -300, -100, 100, 300, 500, 700, 900 (8 lignes)
-  const columns = [-300, -100, 100, 300, 500, 700];
-  const rows = [-500, -300, -100, 100, 300, 500, 700, 900];
+  // Pavage pour la dalle jardin : X[-100, 400] × Z[-400, -30] (largeur 500, profondeur 370)
+  // Le patch d'herbe d'origine fait 200x200 cm.
+  // 3 instances en X (de largeur 166.67 cm chacune) -> échelle X = 166.67 / 200 = 0.833333
+  // Centres en X : -16.67, 150, 316.67
+  // 2 instances en Z (de profondeur 185 cm chacune) -> échelle Z = 185 / 200 = 0.925
+  // Centres en Z : -307.5, -122.5
+  const columns = [-16.67, 150, 316.67];
+  const rows = [-307.5, -122.5];
   const count = columns.length * rows.length;
+
+  const scaleX = 166.67 / 200;
+  const scaleZ = 185 / 200;
 
   useEffect(() => {
     if (!grassRef.current || !soilRef.current) return;
@@ -50,13 +66,22 @@ function GrassInstances({ grassMesh, soilMesh }: { grassMesh: THREE.Mesh; soilMe
     const mGrass = grassMesh.matrix.clone();
     const mSoil = soilMesh.matrix.clone();
 
+    // Matrice d'échelle supplémentaire
+    const scaleMat = new THREE.Matrix4().makeScale(scaleX, 1, scaleZ);
+
     let idx = 0;
 
     for (const z of rows) {
       for (const x of columns) {
-        // Translation vers la position de l'instance (à Y = -10 pour s'aligner avec le sol extérieur)
-        const tMatGrass = new THREE.Matrix4().makeTranslation(x, -10, z).multiply(mGrass);
-        const tMatSoil = new THREE.Matrix4().makeTranslation(x, -10, z).multiply(mSoil);
+        // Translation + Échelle + Matrice locale d'origine
+        const tMatGrass = new THREE.Matrix4()
+          .makeTranslation(x, yPos, z)
+          .multiply(scaleMat)
+          .multiply(mGrass);
+        const tMatSoil = new THREE.Matrix4()
+          .makeTranslation(x, yPos, z)
+          .multiply(scaleMat)
+          .multiply(mSoil);
 
         grassRef.current.setMatrixAt(idx, tMatGrass);
         soilRef.current.setMatrixAt(idx, tMatSoil);
@@ -67,7 +92,7 @@ function GrassInstances({ grassMesh, soilMesh }: { grassMesh: THREE.Mesh; soilMe
 
     grassRef.current.instanceMatrix.needsUpdate = true;
     soilRef.current.instanceMatrix.needsUpdate = true;
-  }, [grassMesh, soilMesh, columns, rows]);
+  }, [grassMesh, soilMesh, columns, rows, scaleX, scaleZ, yPos]);
 
   return (
     <group>
