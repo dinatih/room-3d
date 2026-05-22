@@ -44,6 +44,7 @@ const ACTIONS: Record<string, ActionDef> = {
   airPerformerPower:   { btnLabel: 'Allumer / Éteindre', toggleKey: 'airPerformerPower' },
   airPerformerMode:    { btnLabel: 'Changer Mode',       toggleKey: 'airPerformerMode'  },
   airPerformerSpeed:   { btnLabel: 'Vitesse +/-',        toggleKey: 'airPerformerSpeed' },
+  'walker-meshes':     { btnLabel: 'Meshes',             toggleKey: 'walker-meshes'     },
 };
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {

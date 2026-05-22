@@ -64,6 +64,7 @@ const initialExtraStates: Record<string, boolean> = {
   ninja: false,
   'bin-toggle': false,
   wcLid: false,
+  'walker-meshes': false,
 };
 
 function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 'transient'; name: string } {
@@ -178,3 +179,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
     }
   },
 }));
+
+if (typeof window !== 'undefined') {
+  (window as any).useSceneStore = useSceneStore;
+}
+

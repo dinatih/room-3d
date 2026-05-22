@@ -455,7 +455,7 @@ export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
   });
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} userData={{ hoverAction: { label: 'Lara Croft', actionId: 'walker-meshes' } }}>
       <primitive object={scene} />
     </group>
   );
