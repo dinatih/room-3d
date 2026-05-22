@@ -57,6 +57,7 @@ const initialLayers: LayerState = {
   realWorld: false,
   realSun: false,
   physics: false,
+  collisions: false,
 };
 
 const initialExtraStates: Record<string, boolean> = {
@@ -144,6 +145,9 @@ export const useSceneStore = create<SceneStore>((set) => ({
       }
       if (key === 'physics') {
         document.dispatchEvent(new CustomEvent('physics-toggle', { detail: { enabled: nextLayers.physics } }));
+      }
+      if (key === 'collisions') {
+        document.dispatchEvent(new CustomEvent('collisions-toggle', { detail: { enabled: nextLayers.collisions } }));
       }
       cameraState.invalidate?.();
       return { layers: nextLayers };

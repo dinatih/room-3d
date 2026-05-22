@@ -362,6 +362,7 @@ export interface LayerState {
   realWorld:    boolean;
   realSun:      boolean;
   physics:      boolean;
+  collisions:   boolean;
 }
 
 export interface SidePanelProps {
@@ -477,6 +478,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('teal',   'Grille',        'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
       {layerBtn('peach',  'Physique',      'physics')}
+      {layerBtn('peach',  'Collision objets', 'collisions')}
       {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('green',  'Structure',     'structure', true)}
       {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}

@@ -46,6 +46,10 @@ import { NinjaSP101 }                                 from '@features/scene/item
 import { MllseG2Pro }                                 from '@features/scene/items/MllseG2Pro';
 import { JblCharge3 }                                 from '@features/scene/items/JblCharge3';
 import { TrashBin }                                   from '@features/scene/items/TrashBin';
+import { VacuumCleaner }                              from '@features/scene/items/VacuumCleaner';
+import { OralBRouge }                                 from '@features/scene/items/OralBRouge';
+import { OralBBleu }                                  from '@features/scene/items/OralBBleu';
+import { TeteDeBrosse }                               from '@features/scene/items/TeteDeBrosse';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
@@ -87,6 +91,10 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'mini-pc':                MllseG2Pro,
   'jbl-charge3':            JblCharge3,
   'trash-bin':              TrashBin,
+  'vacuum-cleaner':         VacuumCleaner,
+  'oral-b-rouge':           OralBRouge,
+  'oral-b-bleu':            OralBBleu,
+  'tete-de-brosse':         TeteDeBrosse,
 
   // ── Composites (assemblages multi-pièces) ─────────────────────────────────
   'kallax-ne-stack':        KallaxNE,

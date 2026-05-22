@@ -67,6 +67,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'phone',            name: 'Téléphone OnePlus Nord 4',       brand: 'OnePlus',   category: 'tech',     qty: 1, dims: { w: 7.5,  d: 16.2, h: 0.8  }, notes: 'Coque rouge, bureau 2' },
   { id: 'scooter',          name: 'Trottinette Xiaomi 4',           brand: 'Xiaomi',    category: 'tech',     qty: 1, dims: { w: 50,   d: 50,   h: 113  }, notes: 'Guidon déplié, couloir', glbPath: 'media/xiaomi_electric_scooter_4.glb' },
   { id: 'air-performer',    name: 'Air Performer AMF870/15',        brand: 'Philips',   category: 'tech',     qty: 1, dims: { w: 32.5, d: 32.5, h: 106.4 }, notes: 'Purificateur/ventilateur bladeless, 70 m², Wi-Fi' },
+  { id: 'vacuum-cleaner',   name: 'Aspirateur balai X-Force Flex RH2079WO', brand: 'Rowenta', category: 'tech', qty: 1, dims: { w: 24.8, d: 23.4, h: 112 }, notes: 'Sans fil 18V, 100 AW, 30 min autonomie, rouge | Acheté le 14/02/2026 — garantie 2 ans (jusqu\'au 14/02/2028)', glbPath: 'media/toon_-_vacuum_cleaner.glb' },
 
   // ── KITCHEN ──────────────────────────────────────────────────────────────────
   { id: 'counter',          name: 'Plan de travail',                brand: '',         category: 'kitchen',   qty: 1, dims: { w: 100,  d: 60,   h: 3    }, notes: 'Blanc, avec trou évier' },
@@ -77,6 +78,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'sink-boholmen',    name: 'Évier BOHOLMEN 1 bac',          brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 30,   d: 47,   h: 15   }, notes: 'Inox, avec robinet' },
   { id: 'stove',            name: 'Plaque VÄLBILDAD',               brand: 'IKEA',     category: 'kitchen',   qty: 1, dims: { w: 29,   d: 52,   h: 5    }, notes: 'Induction', glbPath: 'media/VÄLBILDAD.glb' },
   { id: 'ninja-sp101',      name: 'Mini four Foodi Flip SP101EU',   brand: 'Ninja',    category: 'kitchen',   qty: 1, dims: { w: 51,   d: 37,   h: 19.5 }, notes: '8-en-1, inox brossé, porte vitrée + flip-back', actions: ['ninja-toggle'] },
+  { id: 'moules-airfryer',  name: 'Moules jetables papier air fryer ×120', brand: 'Kitchen Cook', category: 'kitchen', qty: 120, dims: { w: 20, d: 20, h: 15 }, notes: 'Papier cuisson pour air fryer | Acheté le 14/02/2026' },
   { id: 'freezer',          name: 'Congélateur CHIQ CSD46D4E',     brand: 'CHIQ',     category: 'kitchen',   qty: 1, dims: { w: 45,   d: 47,   h: 50   }, notes: 'Noir, niche séjour', glbPath: 'media/TILLREDA Réfrigérateur indépendant-blanc 43 l.glb', actions: ['freezer-toggle'] },
 
   // Vaisselle / couverts
@@ -98,6 +100,9 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'toilet',           name: 'WC President Horizontal Outlet', brand: '',         category: 'bathroom',  qty: 1, dims: { w: 40,   d: 70,   h: 80   }, notes: 'Sortie horizontale', glbPath: 'media/president_toilet_horizontal_outlet.glb', actions: ['wc-lid-toggle'] },
   { id: 'vasque-sdb',       name: 'HAVBÄCK-ORRSJÖN 62×49×69 cm',   brand: 'IKEA',     category: 'bathroom',  qty: 1, dims: { w: 62,   d: 49,   h: 69   }, notes: 'Meuble avec tiroirs, vasque, mitigeur blanc', glbPath: 'media/HAVBÄCK - ORRSJÖN Meuble avec tiroirs-vasque-mitigeur blanc 62x49x69 cm.glb' },
   { id: 'water-heater',     name: 'Ballon eau chaude 100L',         brand: '',         category: 'bathroom',  qty: 1, dims: { w: 40,   d: 40,   h: 80   }, notes: 'Cylindrique, vertical' },
+  { id: 'oral-b-rouge',    name: 'Brosse à dents Oral-B iO Rouge', brand: 'Oral-B',   category: 'bathroom',  qty: 1, dims: { w: 3,    d: 3,    h: 24   }, notes: 'SDB vasque', glbPath: 'media/oral-b-rouge.glb' },
+  { id: 'oral-b-bleu',     name: 'Brosse à dents Oral-B MD20 Bleu', brand: 'Oral-B', category: 'bathroom',  qty: 1, dims: { w: 3,    d: 3,    h: 24   }, notes: 'SDB vasque', glbPath: 'media/oral-b-bleu.glb' },
+  { id: 'tete-de-brosse',  name: 'Tête de brosse à dents',         brand: 'Oral-B',   category: 'bathroom',  qty: 4, dims: { w: 2.5,  d: 2.5,  h: 5.5  }, notes: 'Recharge iO compatible', glbPath: 'media/tete-de-brosse.glb' },
   { id: 'bathtub',          name: 'Baignoire',                      brand: '',         category: 'bathroom',  qty: 1, dims: { w: 150,  d: 70,   h: 50   }, notes: 'Coins arrondis, jardin' },
 
   // ── CLOTHING ─────────────────────────────────────────────────────────────────
@@ -163,6 +168,10 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'cons-sirop',           name: 'Sirop 75 cl',                brand: '',         category: 'consumable', qty: 1, dims: { w: 8,  d: 8,  h: 28 }, frequency: 'trimestriel', stock: 1, location: 'Placard cuisine', notes: 'Bouteille — menthe / grenadine' },
   { id: 'cons-coca',            name: 'Coca-Cola 1,5 L',            brand: 'Coca-Cola', category: 'consumable', qty: 2, dims: { w: 9,  d: 9,  h: 33 }, frequency: 'hebdo',      stock: 2,  location: 'Frigo',           notes: 'Bouteille PET' },
   { id: 'cons-javel-cif',       name: 'Javel 5 en 1 Cif',           brand: 'Cif',       category: 'consumable', qty: 1, dims: { w: 8,  d: 8,  h: 28 }, frequency: 'mensuel',    stock: 1,  location: 'Placard SDB',     notes: 'Spray nettoyant multi-surfaces' },
+  { id: 'cons-nett-canalisation', name: 'Nettoyant Canalisation',    brand: '',          category: 'consumable', qty: 1, dims: { w: 8,  d: 8,  h: 25 }, frequency: 'mensuel',    stock: 1,  location: 'Placard SDB',     notes: 'Déboucheur / entretien canalisations' },
+  { id: 'cons-gel-wc',           name: 'Gel WC',                     brand: '',          category: 'consumable', qty: 1, dims: { w: 8,  d: 8,  h: 22 }, frequency: 'mensuel',    stock: 1,  location: 'WC',              notes: 'Gel nettoyant WC' },
+  { id: 'cons-anticalcaire',     name: 'Produit Anticalcaire',        brand: '',          category: 'consumable', qty: 1, dims: { w: 8,  d: 8,  h: 22 }, frequency: 'mensuel',    stock: 1,  location: 'Placard SDB',     notes: 'Détartrant' },
+  { id: 'cons-javel-pur',        name: 'Javel Pur',                   brand: '',          category: 'consumable', qty: 1, dims: { w: 8,  d: 8,  h: 28 }, frequency: 'mensuel',    stock: 1,  location: 'Placard SDB',     notes: 'Eau de javel concentrée' },
   { id: 'cons-desodo-gaz',      name: 'Désodorisant spray gaz',      brand: '',          category: 'consumable', qty: 1, dims: { w: 6,  d: 6,  h: 17 }, frequency: 'mensuel',    stock: 1,  location: 'WC',              notes: 'Aérosol' },
   { id: 'cons-desodo-liquide',  name: 'Désodorisant liquide',        brand: '',          category: 'consumable', qty: 1, dims: { w: 5,  d: 5,  h: 12 }, frequency: 'mensuel',    stock: 1,  location: 'WC',              notes: 'Diffuseur flacon' },
   { id: 'cons-nems',            name: 'Nems surgelés',               brand: '',          category: 'consumable', qty: 4, dims: { w: 25, d: 15, h: 5  }, frequency: 'hebdo',      stock: 4,  location: 'Congélateur',     notes: 'Sachet' },
@@ -177,6 +186,8 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'cons-chewing-gum',     name: 'Chewing-gum',                 brand: '',          category: 'consumable', qty: 1, dims: { w: 6,  d: 3,  h: 9  }, frequency: 'hebdo',      stock: 1,  location: 'Placard cuisine', notes: 'Paquet' },
   { id: 'cons-tondeuse-philips', name: 'Tondeuse Philips blade',      brand: 'Philips',   category: 'consumable', qty: 1, dims: { w: 12, d: 8,  h: 5  }, frequency: 'annuel',     stock: 1,  location: 'SDB vasque',      notes: 'Tête de remplacement tondeuse' },
   { id: 'cons-compote-pomme',    name: 'Compote pomme allégée (pack ×4)', brand: 'Vergers Gourmands', category: 'consumable', qty: 4, dims: { w: 19, d: 10, h: 9 }, frequency: 'hebdo', stock: 4, location: 'Placard cuisine', notes: 'Lidl — 0,99 € le pack, allégée en sucre' },
+  { id: 'cons-cappuccino-choco', name: 'Cappuccino goût chocolat',     brand: 'Bellarom',  category: 'consumable', qty: 1, dims: { w: 14, d: 7,  h: 19 }, frequency: 'mensuel',    stock: 1,  location: 'Placard cuisine', notes: 'Lidl — sachets instantanés' },
+  { id: 'cons-okoia-k04017',    name: 'Nettoyant têtes de rasoirs K04017', brand: 'Okoia', category: 'consumable', qty: 2, dims: { w: 6,  d: 6,  h: 10 }, frequency: 'mensuel',    stock: 2,  location: 'SDB vasque',      notes: 'Spray nettoyant têtes rasoir électrique — Acheté le 14/02/2026' },
 
   // ── PORTES ────────────────────────────────────────────────────────────────────
   { id: 'door-entry',       name: 'Porte d\'entrée',                brand: '',         category: 'doors',     qty: 1, dims: { w: 90,  d: 4,   h: 204 }, notes: 'Rouge, mur diagonal, poignée L + knob rouge', actions: ['entry-door-toggle'] },

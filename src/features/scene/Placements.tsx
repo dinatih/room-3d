@@ -145,7 +145,7 @@ export function Equipment() {
   const CORR_CZ = (ROOM_D + KITCHEN_Z) / 2;
   return (
     <>
-      <group position={[NICHE_X + HW_R, WALL_H - 10 - HW_H / 2, KITCHEN_Z + 20 + HW_R]} rotation-y={Math.PI / 2}>
+      <group position={[NICHE_X + HW_R, WALL_H - 10 - HW_H / 2, KITCHEN_Z + 20 + HW_R]} rotation-y={Math.PI / 2} userData={{ side: 'west' }}>
         <WaterHeater item={stub('water-heater')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ animUnit: true }}>

@@ -9,6 +9,7 @@ import { useThree } from '@react-three/fiber';
 import * as THREE   from 'three';
 import { hoverState } from '@features/scene/hoverState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
+import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ export function HoverRaycaster() {
       pointer.y = -((clientY - rect.top)  / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(pointer, camera);
-      raycaster.layers.enableAll();
+      raycaster.layers.mask = camera.layers.mask & ~(1 << LAYER_NEIGHBORS) & ~(1 << LAYER_LIDAR);
       const hits = raycaster.intersectObjects(scene.children, true);
 
       for (const hit of hits) {
@@ -108,6 +109,18 @@ export function HoverRaycaster() {
         if (isTransparent) continue;
         if (hit.object.userData.brickType === 'ceiling') continue;
         if (hit.object.userData.brickType === 'ground')  continue;
+
+        // Traverse up the parent chain to find if any ancestor has side defined
+        let side = null;
+        let cur: THREE.Object3D | null = hit.object;
+        while (cur) {
+          if (cur.userData?.side) {
+            side = cur.userData.side;
+            break;
+          }
+          cur = cur.parent;
+        }
+        if (side === 'west' || side === 'east' || side === 'north' || side === 'both') continue;
 
         const action = resolveAction(hit.object);
         if (action && action.actionIds.some(id => ACTIONS[id])) return action;

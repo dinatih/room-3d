@@ -128,21 +128,23 @@ function caplessX(mat: THREE.Material | THREE.Material[]): THREE.Material[] {
 }
 
 /** Segment de mur axe Z — span de z1 à z2, centré sur x=xc. */
-function WZ({ xc, z1, z2, t = W, yBase = 0, h = WALL_H, mat = wallMat }: {
+function WZ({ xc, z1, z2, t = W, yBase = 0, h = WALL_H, mat = wallMat, userData }: {
   xc: number; z1: number; z2: number;
   t?: number; yBase?: number; h?: number;
   mat?: THREE.Material | THREE.Material[];
+  userData?: Record<string, unknown>;
 }) {
-  return <P w={t} h={h} d={z2 - z1} x={xc} y={yBase + h / 2} z={(z1 + z2) / 2} mat={caplessZ(mat)} />;
+  return <P w={t} h={h} d={z2 - z1} x={xc} y={yBase + h / 2} z={(z1 + z2) / 2} mat={caplessZ(mat)} userData={userData} />;
 }
 
 /** Segment de mur axe X — span de x1 à x2, centré sur z=zc. */
-function WX({ x1, x2, zc, t = W, yBase = 0, h = WALL_H, mat = wallMat }: {
+function WX({ x1, x2, zc, t = W, yBase = 0, h = WALL_H, mat = wallMat, userData }: {
   x1: number; x2: number; zc: number;
   t?: number; yBase?: number; h?: number;
   mat?: THREE.Material | THREE.Material[];
+  userData?: Record<string, unknown>;
 }) {
-  return <P w={x2 - x1} h={h} d={t} x={(x1 + x2) / 2} y={yBase + h / 2} z={zc} mat={caplessX(mat)} />;
+  return <P w={x2 - x1} h={h} d={t} x={(x1 + x2) / 2} y={yBase + h / 2} z={zc} mat={caplessX(mat)} userData={userData} />;
 }
 
 /** ExtrudeGeometry depuis une liste de points [worldX, worldZ]. */
@@ -367,9 +369,10 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
       <group visible={!pillarsOnly}>
         {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
           const mat = MAT_MAP[d.mat ?? 'default'];
+          const uData = { brickType: 'wall', side: d.mat };
           if (d.axis === 'z')
-            return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} />;
-          return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} />;
+            return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
+          return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
         })}
         {/* Mur diagonal */}
         <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow />

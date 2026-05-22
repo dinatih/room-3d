@@ -85,10 +85,16 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const charBodyRef       = useRef<RapierRigidBody | null>(null);
   const charCtrlRef       = useRef<any>(null);
   const physicsEnabledRef = useRef(false);
+  const collisionsEnabledRef = useRef(false);
   useEffect(() => {
-    const handler = (e: Event) => { physicsEnabledRef.current = (e as CustomEvent).detail.enabled as boolean; };
-    document.addEventListener('physics-toggle', handler);
-    return () => document.removeEventListener('physics-toggle', handler);
+    const pHandler = (e: Event) => { physicsEnabledRef.current = (e as CustomEvent).detail.enabled as boolean; };
+    const cHandler = (e: Event) => { collisionsEnabledRef.current = (e as CustomEvent).detail.enabled as boolean; };
+    document.addEventListener('physics-toggle', pHandler);
+    document.addEventListener('collisions-toggle', cHandler);
+    return () => {
+      document.removeEventListener('physics-toggle', pHandler);
+      document.removeEventListener('collisions-toggle', cHandler);
+    };
   }, []);
 
   // OrbitControls imperative ref
@@ -212,7 +218,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   // Helper : téléporte body à (curX, curZ), query collision, retourne pos corrigée
   function collideMove(curX: number, curZ: number, dx: number, dz: number): { x: number; z: number } {
-    if (!physicsEnabledRef.current) return { x: curX + dx, z: curZ + dz };
+    if (!collisionsEnabledRef.current) return { x: curX + dx, z: curZ + dz };
     const phys = charCtrlRef.current;
     const body = charBodyRef.current;
     if (!phys || !body || body.numColliders() === 0) {
