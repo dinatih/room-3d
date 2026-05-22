@@ -397,10 +397,10 @@ export interface SidePanelProps2 extends SidePanelProps {
 type TabKey = 'views' | 'display' | 'furniture' | 'perf' | null;
 
 const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
+  { key: 'perf',      emoji: '📊', label: 'Perf' },
   { key: 'views',     emoji: '📷', label: 'Vues' },
   { key: 'display',   emoji: '👁',  label: 'Affichage' },
   { key: 'furniture', emoji: '🛋', label: 'Mobilier' },
-  { key: 'perf',      emoji: '📊', label: 'Perf' },
 ];
 
 // ── Composant principal ───────────────────────────────────────────────────────
@@ -720,6 +720,21 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           display: 'flex',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}>
+          {/* Inventaire — ouvre le modal directement */}
+          <button
+            onClick={onOpenInventory}
+            style={{
+              flex: 1, background: 'transparent',
+              border: 'none', borderTop: '2px solid transparent',
+              color: '#aaa',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 2, cursor: 'pointer', padding: '4px 0',
+              fontSize: 10,
+            }}
+          >
+            <span style={{ fontSize: 22, lineHeight: 1 }}>📦</span>
+            <span>Inventaire</span>
+          </button>
           {TABS.map(t => {
             const active = activeTab === t.key;
             return (
@@ -741,21 +756,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
               </button>
             );
           })}
-          {/* Inventaire — ouvre le modal directement */}
-          <button
-            onClick={onOpenInventory}
-            style={{
-              flex: 1, background: 'transparent',
-              border: 'none', borderTop: '2px solid transparent',
-              color: '#aaa',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 2, cursor: 'pointer', padding: '4px 0',
-              fontSize: 10,
-            }}
-          >
-            <span style={{ fontSize: 22, lineHeight: 1 }}>📦</span>
-            <span>Inventaire</span>
-          </button>
         </div>
 
         {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
@@ -770,11 +770,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
     <>
       <div style={desktopPanelStyle} onWheel={e => e.stopPropagation()}>
 
-        <Group emoji="📷" title="Vues">{ViewsSection}</Group>
-        <Group emoji="✈" title="Avion">{AvionSection}</Group>
-        <Group emoji="👁" title="Affichage">{DisplaySection}</Group>
-        <Group emoji="🛋" title="Mobilier">{FurnitureSection}</Group>
-
         {/* ── Inventaire ── */}
         <div style={grpStyle}>
           <button
@@ -786,8 +781,13 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           </button>
         </div>
 
-        {/* ── Dev Tools ── */}
+        {/* ── Dev Tools / Perf ── */}
         <DevToolsGroups Group={Group} />
+
+        <Group emoji="📷" title="Vues">{ViewsSection}</Group>
+        <Group emoji="✈" title="Avion">{AvionSection}</Group>
+        <Group emoji="👁" title="Affichage">{DisplaySection}</Group>
+        <Group emoji="🛋" title="Mobilier">{FurnitureSection}</Group>
 
       </div>
 

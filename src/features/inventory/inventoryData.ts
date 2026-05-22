@@ -66,7 +66,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'laptop',           name: 'Framework Laptop 13"',           brand: 'Framework', category: 'tech',     qty: 1, dims: { w: 29.7, d: 22.8, h: 1.55 }, notes: 'AMD Ryzen AI 5 340, 2256×1504 13", bureau 2' },
   { id: 'phone',            name: 'Téléphone OnePlus Nord 4',       brand: 'OnePlus',   category: 'tech',     qty: 1, dims: { w: 7.5,  d: 16.2, h: 0.8  }, notes: 'Coque rouge, bureau 2' },
   { id: 'scooter',          name: 'Trottinette Xiaomi 4',           brand: 'Xiaomi',    category: 'tech',     qty: 1, dims: { w: 50,   d: 50,   h: 113  }, notes: 'Guidon déplié, couloir', glbPath: 'media/xiaomi_electric_scooter_4.glb' },
-  { id: 'air-performer',    name: 'Air Performer',                  brand: 'Philips',   category: 'tech',     qty: 1, dims: { w: 20,   d: 20,   h: 100  }, notes: 'Ventilateur/purificateur' },
+  { id: 'air-performer',    name: 'Air Performer AMF870/15',        brand: 'Philips',   category: 'tech',     qty: 1, dims: { w: 32.5, d: 32.5, h: 106.4 }, notes: 'Purificateur/ventilateur bladeless, 70 m², Wi-Fi' },
 
   // ── KITCHEN ──────────────────────────────────────────────────────────────────
   { id: 'counter',          name: 'Plan de travail',                brand: '',         category: 'kitchen',   qty: 1, dims: { w: 100,  d: 60,   h: 3    }, notes: 'Blanc, avec trou évier' },
@@ -86,6 +86,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'petite-cuillere',  name: 'Petite cuillère',                brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 2.5,  d: 13,   h: 1.0  }, notes: 'Tiroir cuisine — cuillère à café' },
   { id: 'assiette',         name: 'Assiette',                       brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 26,   d: 26,   h: 2    }, notes: 'Placard cuisine — plate plate Ø 26 cm' },
   { id: 'mug-set',          name: 'Mug',                            brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 9,    d: 12,   h: 9.5  }, notes: 'Placard cuisine — anse incluse' },
+  { id: 'trash-bin',        name: 'Poubelle TATAY Smart Deco 25L',  brand: 'TATAY',    category: 'kitchen',   qty: 1,  dims: { w: 26,   d: 36,   h: 47   }, notes: 'Effet bois, pédale, B0BJQS1P6C', actions: ['bin-toggle'] },
 
   // ── BATHROOM ─────────────────────────────────────────────────────────────────
   { id: 'vathult-350',           name: 'VÅTHULT éclairage LED miroir 350 mm alu', brand: 'IKEA', category: 'bathroom', qty: 1, dims: { w: 35, d: 4, h: 4 }, notes: 'Au-dessus miroir vasque SDB', glbPath: 'media/VÅTHULT éclairage LED élément-miroir 350 mm alu.glb' },
@@ -175,6 +176,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'cons-cure-dents',      name: 'Cure-dents (boîte)',           brand: '',          category: 'consumable', qty: 1, dims: { w: 8,  d: 3,  h: 10 }, frequency: 'trimestriel', stock: 1, location: 'Placard cuisine', notes: 'Boîte bois' },
   { id: 'cons-chewing-gum',     name: 'Chewing-gum',                 brand: '',          category: 'consumable', qty: 1, dims: { w: 6,  d: 3,  h: 9  }, frequency: 'hebdo',      stock: 1,  location: 'Placard cuisine', notes: 'Paquet' },
   { id: 'cons-tondeuse-philips', name: 'Tondeuse Philips blade',      brand: 'Philips',   category: 'consumable', qty: 1, dims: { w: 12, d: 8,  h: 5  }, frequency: 'annuel',     stock: 1,  location: 'SDB vasque',      notes: 'Tête de remplacement tondeuse' },
+  { id: 'cons-compote-pomme',    name: 'Compote pomme allégée (pack ×4)', brand: 'Vergers Gourmands', category: 'consumable', qty: 4, dims: { w: 19, d: 10, h: 9 }, frequency: 'hebdo', stock: 4, location: 'Placard cuisine', notes: 'Lidl — 0,99 € le pack, allégée en sucre' },
 
   // ── PORTES ────────────────────────────────────────────────────────────────────
   { id: 'door-entry',       name: 'Porte d\'entrée',                brand: '',         category: 'doors',     qty: 1, dims: { w: 90,  d: 4,   h: 204 }, notes: 'Rouge, mur diagonal, poignée L + knob rouge', actions: ['entry-door-toggle'] },

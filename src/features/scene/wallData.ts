@@ -97,7 +97,7 @@ export const PILLAR_DEFS = [
   { id: 'corr-bath',   x: CORR_WALL_X,             z: BATH_Z_END - W / 2 + 10 },
   { id: 'shower-sw',   x: NICHE_X - W / 2,        z: BATH_Z_END + 70 + W / 2 },
   { id: 'shower-se',   x: 65,                      z: BATH_Z_END + 70 + W / 2 },
-  { id: 'garden-e',    x: ROOM_W + W / 2,           z: -230 - W / 2 },
+  { id: 'garden-e',    x: ROOM_W + W / 2,           z: -220 - W / 2 },
 ] as const satisfies readonly PillarDef[];
 
 type PillarId = typeof PILLAR_DEFS[number]['id'];

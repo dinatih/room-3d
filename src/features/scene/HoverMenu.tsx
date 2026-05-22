@@ -38,6 +38,10 @@ const ACTIONS: Record<string, ActionDef> = {
   'shiba-replay':      { btnLabel: 'Rejouer',           toggleKey: 'shiba-replay'      },
   'nestMini':          { btnLabel: 'Ok Google',         toggleKey: 'nestMini'          },
   'tv':                { btnLabel: 'Allumer / Éteindre', toggleKey: 'tvOn'             },
+  'bin':               { btnLabel: 'Ouvrir / Fermer',   toggleKey: 'bin-toggle'       },
+  airPerformerPower:   { btnLabel: 'Allumer / Éteindre', toggleKey: 'airPerformerPower' },
+  airPerformerMode:    { btnLabel: 'Changer Mode',       toggleKey: 'airPerformerMode'  },
+  airPerformerSpeed:   { btnLabel: 'Vitesse +/-',        toggleKey: 'airPerformerSpeed' },
 };
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {

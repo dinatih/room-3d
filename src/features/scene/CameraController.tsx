@@ -590,6 +590,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         enabled={!planeMode}
         enableRotate={!planeMode && mode !== 'top'}
         screenSpacePanning={mode === 'top'}
+        mouseButtons={mode === 'top' ? {
+          LEFT:   THREE.MOUSE.PAN,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT:  THREE.MOUSE.ROTATE,
+        } : undefined}
       />
 
       <RigidBody

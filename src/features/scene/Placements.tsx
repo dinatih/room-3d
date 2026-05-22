@@ -35,6 +35,7 @@ import { JblCharge3 }   from './items/JblCharge3';
 import { UtakerFrame }   from './items/UtakerFrame';
 import { BollsidanDesk } from './items/BollsidanDesk';
 import { AirPerformer }  from './items/AirPerformer';
+import { TrashBin }      from './items/TrashBin';
 import { BaseballCap }   from './items/BaseballCap';
 import { Fniss }         from './items/Fniss';
 import { LackShelf }     from './items/LackShelf';
@@ -211,11 +212,12 @@ export function Equipment() {
 
 export function Furniture() {
   const as = useFurnitureToggles({
-    corrDoors: 'corr-doors-toggle',
-    sdbCloset: 'sdb-closet-toggle',
-    cbnWest:   'cbn-west-toggle',
-    cbnEast:   'cbn-east-toggle',
-    ninja:     'ninja-toggle',
+    corrDoors:     'corr-doors-toggle',
+    sdbCloset:     'sdb-closet-toggle',
+    cbnWest:       'cbn-west-toggle',
+    cbnEast:       'cbn-east-toggle',
+    ninja:         'ninja-toggle',
+    'bin-toggle':  'bin-toggle',
   });
   const cbZ = KITCHEN_Z + 11 + 18.5; // 489.5
   return (
@@ -232,6 +234,10 @@ export function Furniture() {
       </group>
       <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} />
+      </group>
+      {/* Poubelle TATAY — angle KallaxCuisine × Mackapar */}
+      <group position={[NICHE_X + KALLAX_DEPTH + 18, 0, MACK_Z + w2 / 2 - 6]} rotation-y={Math.PI / 2}>
+        <TrashBin item={stub('trash-bin')} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, ROOM_D - 60 - w1 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />

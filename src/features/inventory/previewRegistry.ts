@@ -45,6 +45,7 @@ import { NissedalMirror }                             from '@features/scene/item
 import { NinjaSP101 }                                 from '@features/scene/items/NinjaSP101';
 import { MllseG2Pro }                                 from '@features/scene/items/MllseG2Pro';
 import { JblCharge3 }                                 from '@features/scene/items/JblCharge3';
+import { TrashBin }                                   from '@features/scene/items/TrashBin';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
@@ -85,6 +86,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'ninja-sp101':            NinjaSP101,
   'mini-pc':                MllseG2Pro,
   'jbl-charge3':            JblCharge3,
+  'trash-bin':              TrashBin,
 
   // ── Composites (assemblages multi-pièces) ─────────────────────────────────
   'kallax-ne-stack':        KallaxNE,
@@ -115,6 +117,7 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'sdb-closet-toggle':     ['Ouvrir', 'Fermer'],
   'ninja-toggle':          ['Ouvrir', 'Fermer'],
   'tv-toggle':             ['Allumer', 'Éteindre'],
+  'bin-toggle':            ['Ouvrir', 'Fermer'],
   'bed-toggle':            ['Désempiler', 'Empiler'],
   'bed-sofa':              ['Canapé', 'Lit'],
   'bed-position':          ['Position →', 'Position →'],

@@ -371,7 +371,7 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
         <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow />
         {/* Panneaux bois occultants jardin */}
         {[0, 1].map((i) => (
-          <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-230 - W - i * 90 - 45} mat={panelMat} />
+          <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-220 - W - i * 90 - 45} mat={panelMat} />
         ))}
       </group>
 
