@@ -17,6 +17,7 @@ import { DoorLiving, DoorBath } from './items/DoorWhite';
 import { DoorEntry }            from './items/DoorEntry';
 import { GlassDoor }            from './items/GlassDoor';
 import { NOOP_ITEM, NOOP_SIZE } from './sceneItem';
+import { useFurnitureToggles } from './utils/useFurnitureToggles';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -876,22 +877,6 @@ export function Mirrors() {
 //   DoorEntry  : pivotX=−W/2, θ=diagRotY−π/2 (panneau items/ s'étend en +X local,
 //                structure attendue +Z → correction −π/2)
 
-function useFurnitureToggles(map: Record<string, string>): Record<string, boolean> {
-  const [state, setState] = useState<Record<string, boolean>>({});
-  const { invalidate } = useThree();
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { key } = (e as CustomEvent).detail as { key: string };
-      const stateKey = map[key];
-      if (!stateKey) return;
-      setState(prev => ({ ...prev, [stateKey]: !prev[stateKey] }));
-      invalidate();
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, [invalidate]);
-  return state;
-}
 
 const DOOR_W_WHITE = 83;
 const DOOR_W_ENTRY = 90;

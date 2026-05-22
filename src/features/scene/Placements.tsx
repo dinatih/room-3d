@@ -70,6 +70,7 @@ import { Vathult }       from './items/Vathult';
 import { DronaInstances, DroneCell } from './items/Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
+import { useFurnitureToggles } from './utils/useFurnitureToggles';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -85,26 +86,6 @@ const KALLAX_DEPTH = 39;
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
 
-/**
- * Écoute furniture-toggle et mappe les clés d'événement vers des clés actionState.
- * Remplace le pattern useState+useEffect+useThree répété dans chaque composant.
- */
-function useFurnitureToggles(map: Record<string, string>): Record<string, boolean> {
-  const [state, setState] = useState<Record<string, boolean>>({});
-  const { invalidate } = useThree();
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { key } = (e as CustomEvent).detail as { key: string };
-      const stateKey = map[key];
-      if (!stateKey) return;
-      setState(prev => ({ ...prev, [stateKey]: !prev[stateKey] }));
-      invalidate();
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, [invalidate]);
-  return state;
-}
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
