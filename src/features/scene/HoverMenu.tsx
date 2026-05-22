@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE   from 'three';
 import { hoverState } from '@features/scene/hoverState';
+import { useSceneStore } from '@features/scene/store/useSceneStore';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
 
@@ -342,9 +343,7 @@ export function HoverOverlay() {
             <button
               key={i}
               onClick={() => {
-                document.dispatchEvent(new CustomEvent('furniture-toggle', {
-                  detail: { key: action.toggleKey },
-                }));
+                useSceneStore.getState().triggerAction(action.toggleKey);
                 hoverState.locked      = false;
                 hoverState.touchActive = false;
                 hoverState.onUpdate?.();

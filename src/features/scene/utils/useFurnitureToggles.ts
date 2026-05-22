@@ -1,30 +1,31 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
+import { useSceneStore } from '../store/useSceneStore';
 
 /**
- * Écoute l'événement personnalisé 'furniture-toggle' et mappe les clés d'événement
- * vers les états réactifs correspondants.
- * Évite les duplications de listeners d'événements dans le mobilier et la scène 3D.
+ * Écoute l'état réactif centralisé dans le store Zustand et mappe les clés
+ * vers les états réactifs correspondants pour le mobilier et la scène 3D.
  */
 export function useFurnitureToggles(map: Record<string, string>): Record<string, boolean> {
-  const [state, setState] = useState<Record<string, boolean>>({});
   const { invalidate } = useThree();
+  const furniture = useSceneStore(state => state.furniture);
+  const extraStates = useSceneStore(state => state.extraStates);
 
-  const mapRef = useRef(map);
-  mapRef.current = map;
+  const state: Record<string, boolean> = {};
+  for (const [storeKey, uiKey] of Object.entries(map)) {
+    const val = (furniture as any)[storeKey] ?? (extraStates as any)[storeKey];
+    if (val !== undefined) {
+      state[uiKey] = !!val;
+    }
+  }
 
+  // Force le rafraîchissement du Canvas R3F quand une valeur change
+  const valuesHash = Object.values(state).join(',');
   useEffect(() => {
-    const handler = (e: Event) => {
-      const { key } = (e as CustomEvent).detail as { key: string };
-      const stateKey = mapRef.current[key];
-      if (!stateKey) return;
-      setState(prev => ({ ...prev, [stateKey]: !prev[stateKey] }));
-      invalidate();
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, [invalidate]);
+    invalidate();
+  }, [valuesHash, invalidate]);
 
   return state;
 }
+
 

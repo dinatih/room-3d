@@ -42,6 +42,7 @@ import { RenderStyleLayer, type RenderStyleKey } from '@features/scene/RenderSty
 import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
+import { useSceneStore }              from '@features/scene/store/useSceneStore';
 
 import {
   ROOM_W,
@@ -128,35 +129,12 @@ function LoadingProgress() {
 }
 
 export function Studio() {
-  const [furniture, setFurniture] = useState<FurnitureState>({
-    eastGlassDoor: false, entryDoor: false, livingDoor: false, bathroomDoor: false,
-    corrDoors: false, sdbCloset: false,
-    cbnWest: false, cbnEast: false,
-    cabinet: false,
-    bedStacked: true, bedSofa: false, bedPosition: false, smorkullPos: false, lampOn: false, dronaRougeGlb: false,
-    lampSdb: false, lampCouloir: false, freezerOpen: false, fridge: false, tvOn: false,
-  });
+  const furniture = useSceneStore(state => state.furniture);
+  const layers = useSceneStore(state => state.layers);
+  const onToggleFurniture = useSceneStore(state => state.toggleFurniture);
+  const onToggleLayer = useSceneStore(state => state.toggleLayer);
+
   const [showInventory, setShowInventory] = useState(false);
-  const [layers, setLayers] = useState<LayerState>({
-    structure: true, equipment: true, furniture: true, doors: true,
-    neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, gridDepth: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true, pillarsOnly: false, wallsOnly: false, realWorld: false, realSun: false, physics: false,
-  });
-
-  const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
-    setFurniture(s => ({ ...s, [key]: !s[key] }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key } }));
-    cameraState.invalidate?.();
-  }, []);
-
-  const onToggleLayer = useCallback((key: keyof LayerState) => {
-    setLayers(s => {
-      const next = { ...s, [key]: !s[key] };
-      if (key === 'mirrorsHD') cameraState.mirrorsHD = next.mirrorsHD;
-      if (key === 'physics') document.dispatchEvent(new CustomEvent('physics-toggle', { detail: { enabled: next.physics } }));
-      return next;
-    });
-    cameraState.invalidate?.();
-  }, []);
 
   const [lidarMode, setLidarMode] = useState<LidarMode>(0);
   const onCycleLidar = useCallback(() => {
