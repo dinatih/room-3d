@@ -361,6 +361,7 @@ export interface LayerState {
   wallsOnly:    boolean;
   realWorld:    boolean;
   realSun:      boolean;
+  physics:      boolean;
 }
 
 export interface SidePanelProps {
@@ -473,7 +474,34 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
 
   const DisplaySection = (
     <>
-      <div style={{ padding: '6px 8px 6px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      {layerBtn('teal',   'Grille',        'grid')}
+      {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
+      {layerBtn('peach',  'Physique',      'physics')}
+      {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
+      {layerBtn('green',  'Structure',     'structure', true)}
+      {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
+      {layerBtn('gray',   'Murs seuls',    'wallsOnly')}
+      {layerBtn('peach',  'Équipements',   'equipment')}
+      {layerBtn('peach',  'Portes',        'doors')}
+      {layerBtn('purple', 'Mobilier',      'furniture')}
+      {layerBtn('blue',   'Voisins',       'neighbors')}
+      {layerBtn('cyan',   'X-Ray',         'xray')}
+      {layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
+      {layerBtn('white',  'Squelette',     'skeleton')}
+      {layerBtn('yellow', 'Lumières ☀',    'lights')}
+      {layerBtn('green',  'Plafond',       'ceiling')}
+      {layerBtn('gray',   'Ombres',        'shadows')}
+      {layerBtn('cyan',   'LiDAR scan',    'lidar')}
+      {layers.lidar && b0('cyan',
+        ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',
+        onCycleLidar)}
+      {layers.lidar && b0('cyan',
+        `Opacité ${Math.round(lidarOpacity * 100)}%`,
+        onToggleLidarOpacity)}
+      {layerBtn('red',    'Murs rouges',   'redWalls')}
+      {layerBtn('teal',   'Monde réel 🌍', 'realWorld')}
+      {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
+      <div style={{ padding: '6px 8px 6px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 5 }}>🎨 Rendu</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? 6 : 3 }}>
           {RENDER_STYLES.map(({ key, label }) => {
@@ -499,32 +527,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           })}
         </div>
       </div>
-      {layerBtn('green',  'Structure',     'structure', true)}
-      {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
-      {layerBtn('gray',   'Murs seuls',    'wallsOnly')}
-      {layerBtn('peach',  'Équipements',   'equipment')}
-      {layerBtn('peach',  'Portes',        'doors')}
-      {layerBtn('purple', 'Mobilier',      'furniture')}
-      {layerBtn('blue',   'Voisins',       'neighbors')}
-      {layerBtn('cyan',   'X-Ray',         'xray')}
-      {layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
-      {layerBtn('teal',   'Grille',        'grid')}
-      {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
-      {layerBtn('white',  'Squelette',     'skeleton')}
-      {layerBtn('yellow', 'Lumières ☀',    'lights')}
-      {layerBtn('green',  'Plafond',       'ceiling')}
-      {layerBtn('gray',   'Ombres',        'shadows')}
-      {layerBtn('cyan',   'LiDAR scan',    'lidar')}
-      {layers.lidar && b0('cyan',
-        ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',
-        onCycleLidar)}
-      {layers.lidar && b0('cyan',
-        `Opacité ${Math.round(lidarOpacity * 100)}%`,
-        onToggleLidarOpacity)}
-      {layerBtn('red',    'Murs rouges',   'redWalls')}
-      {layerBtn('red',    'Arêtes murs',   'wallEdges')}
-      {layerBtn('teal',   'Monde réel 🌍', 'realWorld')}
-      {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
       {sunInfo && (
         <div style={{ padding: '3px 12px 5px', fontSize: 10, color: '#ffaa44', borderTop: '1px solid rgba(255,255,255,0.06)', opacity: 0.85 }}>
           {sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
@@ -768,7 +770,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
     <>
       <div style={desktopPanelStyle} onWheel={e => e.stopPropagation()}>
 
-        <Group emoji="📷" title="Vues" defaultOpen>{ViewsSection}</Group>
+        <Group emoji="📷" title="Vues">{ViewsSection}</Group>
         <Group emoji="✈" title="Avion">{AvionSection}</Group>
         <Group emoji="👁" title="Affichage">{DisplaySection}</Group>
         <Group emoji="🛋" title="Mobilier">{FurnitureSection}</Group>

@@ -106,6 +106,10 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'backpack',         name: 'Sac à dos',                      brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 17,  h: 43  }, notes: 'Rouge procédural, mur A' },
   { id: 'sneaker',          name: 'Sneakers',                       brand: '',         category: 'clothing',  qty: 2, dims: { w: 30,  d: 12,  h: 12  }, notes: 'Paire, mur A niche', glbPath: 'media/sneaker.glb' },
   { id: 'jordan-hex-mule', name: 'Jordan Hex Mule SP',             brand: 'Nike/Jordan', category: 'clothing', qty: 2, dims: { w: 20.4, d: 28.5, h: 4.8 }, notes: 'Paire, University Red, taille 44.5, FJ0603-600' },
+  { id: 'tshirt-noir-L',   name: 'T-shirt noir (pack ×6) taille L', brand: 'Temu',       category: 'clothing', qty: 6, dims: { w: 30, d: 20, h: 12 }, notes: 'Pack 6 t-shirts noirs, L — goods_id 601100392589571' },
+  { id: 'tshirt-noir-XL',  name: 'T-shirt noir (pack ×6) taille XL', brand: 'Temu',      category: 'clothing', qty: 6, dims: { w: 30, d: 20, h: 12 }, notes: 'Pack 6 t-shirts noirs, XL — goods_id 601100392589571' },
+  { id: 'calecon-rouge',   name: 'Caleçon rouge',                   brand: '',            category: 'clothing', qty: 20, dims: { w: 20, d: 15, h: 2  }, notes: '20 caleçons rouges' },
+  { id: 'chaussette-rouge', name: 'Chaussettes fines rouges',       brand: '',            category: 'clothing', qty: 10, dims: { w: 10, d: 8,  h: 2  }, notes: '10 paires, chaussettes fines' },
 
   // ── DECOR ─────────────────────────────────────────────────────────────────────
   { id: 'lillhavet',        name: 'LILLHAVET',                      brand: 'IKEA',     category: 'decor',     qty: 1, dims: { w: 22,   d: 14,   h: 28   }, notes: 'Meuble haut cuisine, droite', glbPath: 'media/LILLHAVET.glb' },

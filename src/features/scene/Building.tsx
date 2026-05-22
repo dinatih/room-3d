@@ -9,6 +9,7 @@
 import { useMemo, useRef, useEffect, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { RigidBody, CuboidCollider, ConvexHullCollider } from '@react-three/rapier';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { cameraState } from '@features/scene/cameraState';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150, GLB_65x65 } from './items/NissedalMirror';
@@ -220,6 +221,37 @@ function PillarLabels() {
 /** Ref module-level vers le group Walls — consommé par Neighbors pour clone. */
 export const wallsGroupRef = { current: null as THREE.Group | null };
 
+function WallColliders() {
+  return (
+    <RigidBody type="fixed" colliders={false}>
+      {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
+        const t = d.t ?? W;
+        const h = d.h ?? WALL_H;
+        const yBase = d.yBase ?? 0;
+        if (d.axis === 'z') {
+          const len = d.z2 - d.z1;
+          return <CuboidCollider key={i} args={[t / 2, h / 2, len / 2]} position={[d.xc, yBase + h / 2, (d.z1 + d.z2) / 2]} />;
+        }
+        const len = d.x2 - d.x1;
+        return <CuboidCollider key={i} args={[len / 2, h / 2, t / 2]} position={[(d.x1 + d.x2) / 2, yBase + h / 2, d.zc]} />;
+      })}
+    </RigidBody>
+  );
+}
+
+function PillarColliders() {
+  return (
+    <RigidBody type="fixed" colliders={false}>
+      {PILLAR_DEFS.map((p) => {
+        const pp = p as any;
+        const pw = pp.w ?? W;
+        const pd = pp.d ?? W;
+        return <CuboidCollider key={pp.id} args={[pw / 2, WALL_H / 2, pd / 2]} position={[pp.x, WALL_H / 2, pp.z]} />;
+      })}
+    </RigidBody>
+  );
+}
+
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?: boolean; wallsOnly?: boolean }) {
   // Géométries complexes via useMemo ──────────────────────────────────────────
@@ -342,6 +374,18 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
           <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-230 - W - i * 90 - 45} mat={panelMat} />
         ))}
       </group>
+
+      {/* ── Colliders physiques (Rapier) ─────────────────────────────────────── */}
+      <WallColliders />
+      <PillarColliders />
+      <RigidBody type="fixed" colliders={false}>
+        <ConvexHullCollider args={[diagGeos.sw.attributes.position.array as Float32Array]} />
+        <ConvexHullCollider args={[diagGeos.linteau.attributes.position.array as Float32Array]} />
+        <ConvexHullCollider args={[diagGeos.nePillar.attributes.position.array as Float32Array]} />
+        <ConvexHullCollider args={[diagGeos.swPillar.attributes.position.array as Float32Array]} />
+        <ConvexHullCollider args={[diagGeos.diagPillar.attributes.position.array as Float32Array]} />
+        <ConvexHullCollider args={[diagGeos.diagPillarSW.attributes.position.array as Float32Array]} />
+      </RigidBody>
 
     </group>
   );
@@ -635,17 +679,24 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
         </mesh>
       </group>
 
-      {/* Sol extérieur — centré sur le bounding box studio + voisins.
-          X[-400,690] Z[-490,990] → centre [145,250], marges ~50 unités */}
+      {/* Sol extérieur — correspond aux bornes de la grille X[-400,700] × Z[-600,1000] */}
       <mesh
         ref={(m) => { if (m) m.material = new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9 }); }}
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[145, -10, 250]}
+        position={[150, -10, 200]}
         receiveShadow
         userData={{ brickType: 'ground' }}
       >
-        <planeGeometry args={[1090, 1480]} />
+        <planeGeometry args={[1100, 1600]} />
       </mesh>
+
+      {/* Colliders physiques (Rapier) */}
+      <RigidBody type="fixed" colliders={false}>
+        {/* Sol — centre à Y=-5 pour que la surface supérieure soit à Y=0 (niveau parquet) */}
+        <CuboidCollider args={[BLDG_W / 2, 5, BLDG_D / 2]} position={[BLDG_CX, -5, BLDG_CZ]} />
+        {/* Plafond */}
+        <CuboidCollider args={[BLDG_W / 2, CEIL_THICK / 2, BLDG_D / 2]} position={[BLDG_CX, WALL_H - 1 + CEIL_THICK / 2, BLDG_CZ]} />
+      </RigidBody>
     </>
   );
 }

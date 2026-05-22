@@ -10,20 +10,13 @@ import { ROOM_W, ROOM_D, WALL_H } from '@config';
 
 const GRID_X_MIN = -400;
 const GRID_X_MAX =  700;
-const GRID_Z_MIN = -400;
-const GRID_Z_MAX =  800;
+const GRID_Z_MIN = -600;
+const GRID_Z_MAX = 1000;
 const GRID_Y     = 0.5;
-
-const majorMat = new THREE.LineBasicMaterial({
-  color: 0xffffff, transparent: true, opacity: 0.4, depthTest: false,
-});
-const minorMat = new THREE.LineBasicMaterial({
-  color: 0xaaaaaa, transparent: true, opacity: 0.2, depthTest: false,
-});
 
 // ── Sprite texte (canvas, billboardé, sans dépendance CDN) ────────────────────
 
-function makeSprite(text: string, color: string, worldSize: number): THREE.Sprite {
+function makeSprite(text: string, color: string, worldSize: number, depthTest = false): THREE.Sprite {
   const PX = 64;
   const w  = Math.ceil(text.length * PX * 0.58 + PX * 0.6);
   const h  = Math.ceil(PX * 1.3);
@@ -37,21 +30,30 @@ function makeSprite(text: string, color: string, worldSize: number): THREE.Sprit
   ctx.fillText(text, w / 2, h / 2);
   const mat = new THREE.SpriteMaterial({
     map: new THREE.CanvasTexture(canvas),
-    transparent: true, depthTest: false,
+    transparent: true, depthTest,
   });
   const sp = new THREE.Sprite(mat);
   sp.scale.set(worldSize * (w / h), worldSize, 1);
   return sp;
 }
 
-// ── Groupe impératif (construit une seule fois) ───────────────────────────────
+// ── Groupe impératif ─────────────────────────────────────────────────────────
 
-function buildGroup(): THREE.Group {
+function buildGroup(depthTest: boolean): THREE.Group {
+  const ro = depthTest ? 0 : 999;
+  const majorMat = new THREE.LineBasicMaterial({
+    color: 0xffffff, transparent: true, opacity: 0.4, depthTest,
+  });
+  const minorMat = new THREE.LineBasicMaterial({
+    color: 0xaaaaaa, transparent: true, opacity: 0.2, depthTest,
+  });
+
   const g = new THREE.Group();
 
   // ── Axes ──────────────────────────────────────────────────────────────────
   const axes = new THREE.AxesHelper(150);
   axes.position.set(-30, 0, -30);
+  axes.traverse(obj => { if ((obj as any).material) (obj as any).material.depthTest = depthTest; });
   g.add(axes);
 
   // Libellés axes
@@ -61,7 +63,7 @@ function buildGroup(): THREE.Group {
     ['Y', '#44ff44', -30, axesSize + 15,  -30],
     ['Z', '#4488ff', -30, 5, -30 + axesSize + 15],
   ] as [string, string, number, number, number][]) {
-    const sp = makeSprite(txt, color, 15);
+    const sp = makeSprite(txt, color, 15, depthTest);
     sp.position.set(px, py, pz);
     g.add(sp);
   }
@@ -78,14 +80,14 @@ function buildGroup(): THREE.Group {
   }
   const majSeg = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(maj), majorMat);
   const minSeg = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(min), minorMat);
-  majSeg.renderOrder = minSeg.renderOrder = 999;
+  majSeg.renderOrder = minSeg.renderOrder = ro;
   g.add(majSeg, minSeg);
 
   // ── Ticks X ───────────────────────────────────────────────────────────────
-  const tickMatX = new THREE.LineBasicMaterial({ color: 0xff6666 });
-  const tickMatZ = new THREE.LineBasicMaterial({ color: 0x6688ff });
+  const tickMatX = new THREE.LineBasicMaterial({ color: 0xff6666, depthTest });
+  const tickMatZ = new THREE.LineBasicMaterial({ color: 0x6688ff, depthTest });
   for (let x = GRID_X_MIN; x <= GRID_X_MAX; x += 50) {
-    const sp = makeSprite(`${x}`, '#ff8888', 8);
+    const sp = makeSprite(`${x}`, '#ff8888', 8, depthTest);
     sp.position.set(x, 3, -25);
     g.add(sp);
     const tGeo = new THREE.BufferGeometry().setFromPoints([
@@ -96,7 +98,7 @@ function buildGroup(): THREE.Group {
 
   // ── Ticks Z ───────────────────────────────────────────────────────────────
   for (let z = GRID_Z_MIN; z <= GRID_Z_MAX; z += 50) {
-    const sp = makeSprite(`${z}`, '#6688ff', 8);
+    const sp = makeSprite(`${z}`, '#6688ff', 8, depthTest);
     sp.position.set(-25, 3, z);
     g.add(sp);
     const tGeo = new THREE.BufferGeometry().setFromPoints([
@@ -113,7 +115,7 @@ function buildGroup(): THREE.Group {
     [`MUR C  Z=0`,    ROOM_W / 2, labelY, -30],
     [`MUR D  Z=${ROOM_D}`, ROOM_W / 2, labelY, ROOM_D + 30],
   ] as [string, number, number, number][]) {
-    const sp = makeSprite(txt, '#dddddd', 12);
+    const sp = makeSprite(txt, '#dddddd', 12, depthTest);
     sp.position.set(px, py, pz);
     g.add(sp);
   }
@@ -121,7 +123,7 @@ function buildGroup(): THREE.Group {
   // ── Coordonnées sur la grille (tous les 100cm) ────────────────────────────
   for (let x = GRID_X_MIN; x <= GRID_X_MAX; x += 100) {
     for (let z = GRID_Z_MIN; z <= GRID_Z_MAX; z += 100) {
-      const sp = makeSprite(`${x},${z}`, '#ffffff', 6);
+      const sp = makeSprite(`${x},${z}`, '#ffffff', 6, depthTest);
       sp.position.set(x + 5, GRID_Y + 3, z + 5);
       g.add(sp);
     }
@@ -132,7 +134,7 @@ function buildGroup(): THREE.Group {
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
-export function GridLayer() {
-  const group = useMemo(buildGroup, []);
+export function GridLayer({ depthTest = false }: { depthTest?: boolean }) {
+  const group = useMemo(() => buildGroup(depthTest), [depthTest]);
   return <primitive object={group} />;
 }

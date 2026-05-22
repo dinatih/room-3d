@@ -1,7 +1,7 @@
 /**
  * Inventory.tsx — port de js/ui/inventory.js
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { INVENTORY, CATEGORIES, STORAGE_SPACES, type InventoryItem, type StorageSpace } from './inventoryData';
 import { InventoryPreview } from './InventoryPreview';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -54,10 +54,11 @@ const tdStyle: React.CSSProperties = {
 
 // ── Storage table ─────────────────────────────────────────────────────────────
 
-function StorageTable({ spaces, selected, onSelect }: {
+function StorageTable({ spaces, selected, onSelect, focusedId }: {
   spaces: StorageSpace[];
   selected: PreviewTarget;
   onSelect: (sp: StorageSpace) => void;
+  focusedId: string | null;
 }) {
   return (
     <>
@@ -72,16 +73,26 @@ function StorageTable({ spaces, selected, onSelect }: {
           </tr>
         </thead>
         <tbody>
-          {spaces.map(sp => (
-            <tr
-              key={sp.id}
-              onClick={() => onSelect(sp)}
-              style={{ cursor: 'pointer', background: selected && 'id' in selected && selected.id === sp.id ? 'rgba(255,215,0,0.15)' : undefined }}
-            >
-              <td style={tdStyle}><strong>{sp.name}</strong></td>
-              <td style={{ ...tdStyle, color: '#aaa', fontSize: 11 }}>{sp.notes ?? ''}</td>
-            </tr>
-          ))}
+          {spaces.map(sp => {
+            const isSelected = selected && 'id' in selected && selected.id === sp.id;
+            const isFocused  = focusedId === sp.id;
+            return (
+              <tr
+                key={sp.id}
+                data-item-id={sp.id}
+                onClick={() => onSelect(sp)}
+                style={{
+                  cursor: 'pointer',
+                  background: isSelected ? 'rgba(255,215,0,0.15)' : undefined,
+                  outline: isFocused ? '1px solid rgba(255,215,0,0.6)' : undefined,
+                  outlineOffset: isFocused ? '-1px' : undefined,
+                }}
+              >
+                <td style={tdStyle}><strong>{sp.name}</strong></td>
+                <td style={{ ...tdStyle, color: '#aaa', fontSize: 11 }}>{sp.notes ?? ''}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       <div style={{ fontSize: 11, color: '#ffd700', textTransform: 'uppercase', letterSpacing: 1, padding: '4px 0 6px', fontWeight: 'bold' }}>
@@ -100,11 +111,12 @@ const FREQ_LABEL: Record<string, string> = {
   annuel: '📅 Annuel',
 };
 
-function ItemTable({ items, selected, onSelect, consumableView }: {
+function ItemTable({ items, selected, onSelect, consumableView, focusedId }: {
   items: InventoryItem[];
   selected: PreviewTarget;
   onSelect: (item: InventoryItem) => void;
   consumableView?: boolean;
+  focusedId: string | null;
 }) {
   return (
     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: '#ddd' }}>
@@ -132,15 +144,19 @@ function ItemTable({ items, selected, onSelect, consumableView }: {
       <tbody>
         {items.map((item, i) => {
           const isSelected = selected && 'id' in selected && selected.id === item.id;
+          const isFocused  = focusedId === item.id;
           return (
             <tr
               key={item.id}
+              data-item-id={item.id}
               onClick={() => onSelect(item)}
               style={{
                 cursor: 'pointer',
                 background: isSelected
                   ? 'rgba(255,215,0,0.15)'
                   : i % 2 === 1 ? 'rgba(255,255,255,0.03)' : undefined,
+                outline: isFocused ? '1px solid rgba(255,215,0,0.6)' : undefined,
+                outlineOffset: isFocused ? '-1px' : undefined,
               }}
             >
               <td style={tdStyle}>{item.name}</td>
@@ -172,9 +188,11 @@ function ItemTable({ items, selected, onSelect, consumableView }: {
 
 export function Inventory({ onClose }: { onClose: () => void }) {
   const isMobile = useIsMobile();
-  const [activeCat, setActiveCat] = useState('all');
-  const [search, setSearch]       = useState('');
-  const [selected, setSelected]   = useState<PreviewTarget>(null);
+  const [activeCat, setActiveCat]     = useState('all');
+  const [search, setSearch]           = useState('');
+  const [selected, setSelected]       = useState<PreviewTarget>(null);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const tableContainerRef             = useRef<HTMLDivElement>(null);
 
   const items = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -195,6 +213,43 @@ export function Inventory({ onClose }: { onClose: () => void }) {
   const spaces = activeCat === 'actionnable'
     ? STORAGE_SPACES.filter(sp => sp.actions?.length)
     : STORAGE_SPACES;
+
+  // Unified nav list: spaces first, then items
+  const navList = useMemo<PreviewTarget[]>(() => [
+    ...(showSpaces ? spaces : []),
+    ...items,
+  ], [showSpaces, spaces, items]);
+
+  // Reset focus when list changes
+  useEffect(() => { setFocusedIndex(-1); }, [navList]);
+
+  // Scroll focused row into view
+  const focusedId = focusedIndex >= 0 ? (navList[focusedIndex] as any)?.id ?? null : null;
+  useEffect(() => {
+    if (!focusedId || !tableContainerRef.current) return;
+    const tr = tableContainerRef.current.querySelector(`tr[data-item-id="${focusedId}"]`);
+    tr?.scrollIntoView({ block: 'nearest' });
+  }, [focusedId]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setFocusedIndex(i => Math.min(i + 1, navList.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setFocusedIndex(i => Math.max(i - 1, 0));
+      } else if (e.key === 'Enter' && focusedIndex >= 0) {
+        const target = navList[focusedIndex];
+        if (target) setSelected(target);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [navList, focusedIndex]);
 
   return (
     <div style={overlayStyle} onClick={onClose}>
@@ -296,11 +351,11 @@ export function Inventory({ onClose }: { onClose: () => void }) {
           )}
 
           {/* Table */}
-          <div style={{ overflowY: 'auto', flex: 1, minWidth: 0 }}>
+          <div ref={tableContainerRef} style={{ overflowY: 'auto', flex: 1, minWidth: 0 }}>
             {showSpaces && spaces.length > 0 && (
-              <StorageTable spaces={spaces} selected={selected} onSelect={setSelected} />
+              <StorageTable spaces={spaces} selected={selected} onSelect={setSelected} focusedId={focusedId} />
             )}
-            <ItemTable items={items} selected={selected} onSelect={setSelected} consumableView={activeCat === 'consumable'} />
+            <ItemTable items={items} selected={selected} onSelect={setSelected} consumableView={activeCat === 'consumable'} focusedId={focusedId} />
           </div>
 
           {!isMobile && (

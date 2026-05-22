@@ -13,33 +13,31 @@ import { useProgress } from '@react-three/drei';
 
 export function GlbReveal() {
   const { scene } = useThree();
-  const { active } = useProgress();
   const hiddenRef   = useRef(false);
   const revealedRef = useRef(false);
 
-  // Dès que le chargement démarre : masquer tous les animUnit existants.
-  // (Les wrappers animUnit sont déjà dans la scène avant que leurs GLB chargent.)
+  // Souscription store Zustand (hors render) — évite warning setState-in-render
+  // quand useProgress fluctue pendant qu'un composant (LaptopGlb, TV…) rend.
   useEffect(() => {
-    if (active && !hiddenRef.current) {
-      hiddenRef.current = true;
-      scene.traverse(obj => {
-        if (obj.userData?.animUnit) obj.visible = false;
-      });
-    }
-  }, [active, scene]);
-
-  // Quand le chargement se termine : révéler tous les animUnit d'un coup.
-  // requestAnimationFrame garantit que React a commité les derniers GLBs chargés.
-  useEffect(() => {
-    if (!active && hiddenRef.current && !revealedRef.current) {
-      revealedRef.current = true;
-      requestAnimationFrame(() => {
+    const handle = (active: boolean) => {
+      if (active && !hiddenRef.current) {
+        hiddenRef.current = true;
         scene.traverse(obj => {
-          if (obj.userData?.animUnit) obj.visible = true;
+          if (obj.userData?.animUnit) obj.visible = false;
         });
-      });
-    }
-  }, [active, scene]);
+      }
+      if (!active && hiddenRef.current && !revealedRef.current) {
+        revealedRef.current = true;
+        requestAnimationFrame(() => {
+          scene.traverse(obj => {
+            if (obj.userData?.animUnit) obj.visible = true;
+          });
+        });
+      }
+    };
+    handle(useProgress.getState().active);
+    return useProgress.subscribe(s => handle(s.active));
+  }, [scene]);
 
   return null;
 }

@@ -22,6 +22,8 @@ import { useThree, useFrame }          from '@react-three/fiber';
 import { OrbitControls, OrthographicCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
+import { useRapier, RigidBody, CapsuleCollider } from '@react-three/rapier';
+import type { RapierRigidBody } from '@react-three/rapier';
 
 import { ROOM_W, ROOM_D, WALL_H } from '@config';
 import { cameraState } from './cameraState';
@@ -45,6 +47,11 @@ const MOUSE_SENS  = 0.002;
 
 const PERSP_POS:    [number, number, number] = [ROOM_W / 2, 1000, -150];
 const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, WALL_H / 3, ROOM_D / 2];
+
+// Character capsule dimensions (cm): center at CHAR_CY above ground
+const CHAR_RADIUS = 15;
+const CHAR_HALF_H = 65;
+const CHAR_CY     = CHAR_HALF_H + CHAR_RADIUS; // 80cm — capsule spans Y=[0,160]
 
 type Mode = 'orbit' | 'walk' | 'top';
 
@@ -72,6 +79,17 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     cameraState.mode = m;
     setMode(m);
   }
+
+  // Rapier physics
+  const { world } = useRapier();
+  const charBodyRef       = useRef<RapierRigidBody | null>(null);
+  const charCtrlRef       = useRef<any>(null);
+  const physicsEnabledRef = useRef(false);
+  useEffect(() => {
+    const handler = (e: Event) => { physicsEnabledRef.current = (e as CustomEvent).detail.enabled as boolean; };
+    document.addEventListener('physics-toggle', handler);
+    return () => document.removeEventListener('physics-toggle', handler);
+  }, []);
 
   // OrbitControls imperative ref
   const ctrlRef = useRef<OrbitControlsImpl>(null!);
@@ -172,6 +190,43 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
+
+  // ── Character controller (Rapier) ─────────────────────────────────────────
+
+  useEffect(() => {
+    const ctrl = world.createCharacterController(2);
+    ctrl.setUp({ x: 0, y: 1, z: 0 });
+    ctrl.setMaxSlopeClimbAngle(45 * Math.PI / 180);
+    ctrl.setMinSlopeSlideAngle(30 * Math.PI / 180);
+    ctrl.enableAutostep(25, 10, true);
+    ctrl.enableSnapToGround(5);
+    ctrl.setApplyImpulsesToDynamicBodies(true);
+    ctrl.setSlideEnabled(true);
+    charCtrlRef.current = ctrl;
+    return () => {
+      world.removeCharacterController(ctrl);
+      charCtrlRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Helper : téléporte body à (curX, curZ), query collision, retourne pos corrigée
+  function collideMove(curX: number, curZ: number, dx: number, dz: number): { x: number; z: number } {
+    if (!physicsEnabledRef.current) return { x: curX + dx, z: curZ + dz };
+    const phys = charCtrlRef.current;
+    const body = charBodyRef.current;
+    if (!phys || !body || body.numColliders() === 0) {
+      return { x: curX + dx, z: curZ + dz };
+    }
+    body.setTranslation({ x: curX, y: CHAR_CY, z: curZ }, false);
+    try {
+      phys.computeColliderMovement(body.collider(0), { x: dx, y: -2, z: dz });
+      const mv = phys.computedMovement();
+      return { x: curX + mv.x, z: curZ + mv.z };
+    } catch {
+      return { x: curX + dx, z: curZ + dz };
+    }
+  }
 
   // ── Keyboard ────────────────────────────────────────────────────────────────
 
@@ -389,12 +444,19 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       if (k.has('ArrowRight')) cameraState.walkYaw -= 0.03 * dt;
       const wYaw = cameraState.walkYaw;
       const ws   = WALK_SPEED * dt;
-      if (cameraState.activeWalkerIdx === 0) {
-        if (k.has('ArrowUp'))   { cameraState.walker0X += Math.sin(wYaw)*ws; cameraState.walker0Z += Math.cos(wYaw)*ws; }
-        if (k.has('ArrowDown')) { cameraState.walker0X -= Math.sin(wYaw)*ws; cameraState.walker0Z -= Math.cos(wYaw)*ws; }
-      } else {
-        if (k.has('ArrowUp'))   { cameraState.walker1X += Math.sin(wYaw)*ws; cameraState.walker1Z += Math.cos(wYaw)*ws; }
-        if (k.has('ArrowDown')) { cameraState.walker1X -= Math.sin(wYaw)*ws; cameraState.walker1Z -= Math.cos(wYaw)*ws; }
+      {
+        let wdx = 0, wdz = 0;
+        if (k.has('ArrowUp'))   { wdx += Math.sin(wYaw)*ws; wdz += Math.cos(wYaw)*ws; }
+        if (k.has('ArrowDown')) { wdx -= Math.sin(wYaw)*ws; wdz -= Math.cos(wYaw)*ws; }
+        if (wdx !== 0 || wdz !== 0) {
+          if (cameraState.activeWalkerIdx === 0) {
+            const c = collideMove(cameraState.walker0X, cameraState.walker0Z, wdx, wdz);
+            cameraState.walker0X = c.x; cameraState.walker0Z = c.z;
+          } else {
+            const c = collideMove(cameraState.walker1X, cameraState.walker1Z, wdx, wdz);
+            cameraState.walker1X = c.x; cameraState.walker1Z = c.z;
+          }
+        }
       }
 
       if (ctrl) {
@@ -483,10 +545,17 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (k.has('AltArrowDown')) walkPos.current.y -= sp;
 
     const noMod = !k.has('CtrlArrowUp') && !k.has('CtrlArrowDown') && !k.has('AltArrowUp') && !k.has('AltArrowDown');
-    if (noMod && (k.has('ArrowUp')   || k.has('w'))) { walkPos.current.x += fwdX; walkPos.current.z += fwdZ; }
-    if (noMod && (k.has('ArrowDown') || k.has('s'))) { walkPos.current.x -= fwdX; walkPos.current.z -= fwdZ; }
-    if (k.has('a')) { walkPos.current.x -= rgtX; walkPos.current.z -= rgtZ; }
-    if (k.has('d')) { walkPos.current.x += rgtX; walkPos.current.z += rgtZ; }
+
+    let dx = 0, dz = 0;
+    if (noMod && (k.has('ArrowUp')   || k.has('w'))) { dx += fwdX; dz += fwdZ; }
+    if (noMod && (k.has('ArrowDown') || k.has('s'))) { dx -= fwdX; dz -= fwdZ; }
+    if (k.has('a')) { dx -= rgtX; dz -= rgtZ; }
+    if (k.has('d')) { dx += rgtX; dz += rgtZ; }
+    if (dx !== 0 || dz !== 0) {
+      const c = collideMove(walkPos.current.x, walkPos.current.z, dx, dz);
+      walkPos.current.x = c.x;
+      walkPos.current.z = c.z;
+    }
 
     updateWalkLook();
   });
@@ -522,6 +591,15 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         enableRotate={!planeMode && mode !== 'top'}
         screenSpacePanning={mode === 'top'}
       />
+
+      <RigidBody
+        ref={charBodyRef}
+        type="kinematicPosition"
+        colliders={false}
+        position={[CX, CHAR_CY, CZ]}
+      >
+        <CapsuleCollider args={[CHAR_HALF_H, CHAR_RADIUS]} />
+      </RigidBody>
     </>
   );
 }

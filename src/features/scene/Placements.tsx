@@ -12,6 +12,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { RigidBody, CuboidCollider } from '@react-three/rapier';
 
 import { KallaxNE }      from './items/KallaxNE';
 import { KallaxSE }      from './items/KallaxSE';
@@ -65,7 +66,7 @@ import { JoggingSuit }  from './items/JoggingSuit';
 import { ShibaInu }    from './items/ShibaInu';
 import { Tisken }        from './items/Tisken';
 import { Vathult }       from './items/Vathult';
-import { DronaInstances }       from './items/Drona';
+import { DronaInstances, DroneCell } from './items/Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 
@@ -253,6 +254,12 @@ export function Furniture() {
       <group position={[DOOR_START - 31, 0, cbZ]} userData={{ animUnit: true }}>
         <BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} />
       </group>
+      {/* Surfaces fixes pour les boîtes Drona — METOD 40×37×60cm et congélateur ~60×57×50cm */}
+      <RigidBody type="fixed" colliders={false}>
+        <CuboidCollider args={[20, 30, 18.5]} position={[NICHE_X + 20, 30, cbZ]} />
+        <CuboidCollider args={[20, 30, 18.5]} position={[DOOR_START - 31, 30, cbZ]} />
+        <CuboidCollider args={[27.5, 25, 28.5]} position={[24.5, 25, 269.5]} />
+      </RigidBody>
     </>
   );
 }
@@ -573,27 +580,33 @@ export function Backpacks() {
 // Ce bloc gère les 3 boîtes restantes : 2 sur meubles SDB, 1 sur congélateur.
 
 
-function buildDronaMatrices(): THREE.Matrix4[] {
-  const mats: THREE.Matrix4[] = [];
-  const dummy = new THREE.Object3D();
-  const DF = 33;
-  function addSingle(cx: number, cy: number, cz: number, rotY = 0) {
-    dummy.position.set(cx, cy + 0.2, cz);
-    dummy.rotation.set(0, rotY, 0);
-    dummy.updateMatrix();
-    mats.push(dummy.matrix.clone());
-  }
-  addSingle(DOOR_START - 31,    60 + DF / 2, KITCHEN_Z + 30);                // SDB est
-  addSingle(NICHE_X + 20,       60 + DF / 2, KITCHEN_Z + 30);                // SDB ouest
-  addSingle(24.5,               50 + DF / 2, 269.5,         Math.PI / 2);    // congélateur CHIQ
-  return mats;
-}
+const DF = 33;
+const DRONA_STANDALONE = [
+  { cx: DOOR_START - 31, cy: 60 + DF / 2 + 0.2, cz: KITCHEN_Z + 30, rotY: 0 },
+  { cx: NICHE_X + 20,    cy: 60 + DF / 2 + 0.2, cz: KITCHEN_Z + 30, rotY: 0 },
+  { cx: 24.5,            cy: 50 + DF / 2 + 0.2, cz: 269.5,           rotY: Math.PI / 2 },
+];
 
 export function DronaBoxes() {
-  const matrices = useMemo(() => buildDronaMatrices(), []);
+  const [physicsEnabled, setPhysicsEnabled] = useState(false);
+  useEffect(() => {
+    const handler = (e: Event) => setPhysicsEnabled((e as CustomEvent).detail.enabled as boolean);
+    document.addEventListener('physics-toggle', handler);
+    return () => document.removeEventListener('physics-toggle', handler);
+  }, []);
+
   return (
     <group userData={{ animUnit: true }}>
-      <DronaInstances matrices={matrices} />
+      {DRONA_STANDALONE.map((p, i) => (
+        <RigidBody key={i} type={physicsEnabled ? 'dynamic' : 'fixed'} colliders={false}
+          position={[p.cx, p.cy, p.cz]}
+          rotation={[0, p.rotY, 0]}
+          restitution={0.2} friction={0.8}
+        >
+          <CuboidCollider args={[DF / 2, DF / 2, 19]} />
+          <DroneCell />
+        </RigidBody>
+      ))}
     </group>
   );
 }

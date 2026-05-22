@@ -1,8 +1,9 @@
 /**
  * Studio.tsx — racine R3F : Canvas, lumières, fog, env map, état UI global.
  */
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
+import { Physics } from '@react-three/rapier';
 import { useProgress, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
 import {
   ACESFilmicToneMapping, PCFSoftShadowMap, Color,
@@ -138,7 +139,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
   const [layers, setLayers] = useState<LayerState>({
     structure: true, equipment: true, furniture: true, doors: true,
-    neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, gridDepth: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true, pillarsOnly: false, wallsOnly: false, realWorld: false, realSun: false,
+    neighbors: false, xray: false, mirrorsHD: false, plan: false, grid: false, gridDepth: false, skeleton: false, ceiling: false, redWalls: false, wallEdges: false, lidar: false, lights: false, shadows: true, pillarsOnly: false, wallsOnly: false, realWorld: false, realSun: false, physics: false,
   });
 
   const onToggleFurniture = useCallback((key: keyof FurnitureState) => {
@@ -151,6 +152,7 @@ export function Studio() {
     setLayers(s => {
       const next = { ...s, [key]: !s[key] };
       if (key === 'mirrorsHD') cameraState.mirrorsHD = next.mirrorsHD;
+      if (key === 'physics') document.dispatchEvent(new CustomEvent('physics-toggle', { detail: { enabled: next.physics } }));
       return next;
     });
     cameraState.invalidate?.();
@@ -219,7 +221,7 @@ export function Studio() {
       <LoadingProgress />
       <Canvas
         style={{ width: '100%', height: '100%' }}
-        frameloop="demand"
+        frameloop={layers.physics ? 'always' : 'demand'}
         camera={{
           fov:  50,
           near: 1,
@@ -268,7 +270,6 @@ export function Studio() {
         <PerformanceMonitor />
         <ShadowWarmup />
         <ShadowController enabled={layers.shadows} />
-        <CameraController planeMode={planeMode} />
         {planeMode    && <PaperPlane
                            onExit={() => setPlaneMode(false)}
                            model={planeModel}
@@ -301,6 +302,9 @@ export function Studio() {
         {layers.plan        && <FloorPlan />}
 
         {/* Contenu 3D — masqué en mode Plan */}
+        <Suspense fallback={null}>
+        <Physics gravity={[0, -980, 0]} timeStep="vary">
+        <CameraController planeMode={planeMode} />
         <group visible={!layers.plan}>
 
           {/*
@@ -345,6 +349,8 @@ export function Studio() {
           )}
 
         </group>
+        </Physics>
+        </Suspense>
       </Canvas>
 
       {/* HTML overlays */}

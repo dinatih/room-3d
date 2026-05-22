@@ -37,6 +37,7 @@ const ACTIONS: Record<string, ActionDef> = {
   'smorkull-position': { btnLabel: 'Changer position', toggleKey: 'smorkull-position' },
   'shiba-replay':      { btnLabel: 'Rejouer',           toggleKey: 'shiba-replay'      },
   'nestMini':          { btnLabel: 'Ok Google',         toggleKey: 'nestMini'          },
+  'tv':                { btnLabel: 'Allumer / Éteindre', toggleKey: 'tvOn'             },
 };
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
