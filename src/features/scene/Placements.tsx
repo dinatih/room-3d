@@ -29,6 +29,8 @@ import { GrassRug }      from './items/GrassRug';
 import { CorridorCloset } from './items/CorridorCloset';
 import { SdbCloset }     from './items/SdbCloset';
 import { TV, TV_H }      from './items/TV';
+import { MllseG2Pro }    from './items/MllseG2Pro';
+import { JblCharge3 }   from './items/JblCharge3';
 import { UtakerFrame }   from './items/UtakerFrame';
 import { BollsidanDesk } from './items/BollsidanDesk';
 import { AirPerformer }  from './items/AirPerformer';
@@ -223,6 +225,10 @@ export function Furniture() {
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
+      {/* JBL Charge 3 — debout sur le dessus du KallaxNE (h1+h2+Variera=133.5), côté lit */}
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 118, w2 - 11]}>
+        <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
       <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} />
       </group>
@@ -350,13 +356,18 @@ function Desks() {
 
 export function Furnishings() {
   const TV_Y = WALL_H - 10 - TV_H / 2;
+  const as = useFurnitureToggles({ tvOn: 'tv-toggle' });
   return (
     <>
       <Bed />
       <Desks />
-      <group position={[ROOM_W - 25, TV_Y, 25]} rotation-order="YXZ"
+      <group position={[ROOM_W - 30, TV_Y, 30]} rotation-order="YXZ"
         rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]}>
-        <TV item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+      </group>
+      {/* Mini PC MLLSE G2 Pro — sur le bureau 2 */}
+      <group position={[ROOM_W - 25, 40, 30]}>
+        <MllseG2Pro item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
   );

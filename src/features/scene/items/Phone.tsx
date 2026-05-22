@@ -1,34 +1,55 @@
 /**
- * Phone.tsx — Téléphone OnePlus Nord 4.
+ * Phone.tsx — Xiaomi 17 Pro Max (media/free_xiaomi_17_pro_max.glb).
  * Coordonnées locales : X/Z centrés, Y=0 = surface du bureau.
- * Placement monde dans LaptopDesk.tsx.
  */
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useMemo } from 'react';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const W = 7.5, D = 16.2, H = 0.8;
+const TARGET_D = 16.2; // longueur du téléphone (cm)
 
-const caseMat     = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.4 });
-const phoneScrMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.05, metalness: 0.3, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
-const camMat      = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.6, roughness: 0.2 });
+const redPhoneMat = new THREE.MeshStandardMaterial({ color: 0xcc1500, roughness: 0.3, metalness: 0.15 });
 
 export function Phone({ onSize }: SceneItemProps) {
+  const { scene: gltfScene } = useGLTF('media/free_xiaomi_17_pro_max.glb');
+  const scene = useMemo(() => gltfScene.clone(true), [gltfScene]);
+
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W, H, D));
-  }, []);
+    removeGlbLines(scene);
+    // Peindre uniquement la coque (matériau 'Main', couleur verte d'origine)
+    scene.traverse(obj => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+      if ((mat as THREE.Material)?.name === 'Main') mesh.material = redPhoneMat;
+    });
+    scene.scale.set(1, 1, 1);
+    scene.rotation.set(0, 0, 0);
+    const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
+    // Si debout (Y long), coucher à plat d'abord
+    if (raw.y >= raw.x && raw.y >= raw.z) {
+      scene.rotation.set(-Math.PI / 2, 0, 0);
+    }
+    // Scale sur la dimension la plus longue = TARGET_D
+    const longest = Math.max(raw.x, raw.y, raw.z);
+    scene.scale.setScalar(TARGET_D / longest);
+    const box = glbLocalBBox(scene);
+    const size = box.getSize(new THREE.Vector3());
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+    onSize(size);
+  }, [scene]);
 
   return (
-    <group>
-      <mesh position={[0, H / 2, 0]} castShadow material={caseMat}>
-        <boxGeometry args={[W, H, D]} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, H + 0.01, 0]} material={phoneScrMat}>
-        <planeGeometry args={[W - 0.6, D - 0.8]} />
-      </mesh>
-      <mesh position={[0, -0.01, -D / 2 + 3]} material={camMat}>
-        <boxGeometry args={[3, 0.2, 3.5]} />
-      </mesh>
+    <group userData={{ hoverAction: { label: 'Xiaomi 17 Pro Max' } }}>
+      <primitive object={scene} />
     </group>
   );
 }
+
+useGLTF.preload('media/free_xiaomi_17_pro_max.glb');

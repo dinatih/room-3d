@@ -163,9 +163,9 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
   return (
     <div style={{
       width: 260, minWidth: 260, height: 320,
-      background: '#0d0d18',
+      background: '#ffffff',
       borderRadius: 8,
-      border: '1px solid #2a2a40',
+      border: '1px solid #dde0e8',
       overflow: 'hidden',
       position: 'relative',
       flexShrink: 0,
@@ -187,7 +187,7 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
             frameloop="always"
             camera={{ fov: 45, near: 0.01, far: 100, position: [1.4, 0.9, 1.8] }}
             gl={{ antialias: true, alpha: false }}
-            onCreated={({ scene }) => { scene.background = new THREE.Color(0x0d0d18); }}
+            onCreated={({ scene }) => { scene.background = new THREE.Color(0xffffff); }}
           >
             <ambientLight intensity={0.8} />
             <directionalLight position={[3, 5, 3]} intensity={1.5} />

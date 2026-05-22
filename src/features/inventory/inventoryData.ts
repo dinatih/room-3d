@@ -60,7 +60,9 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'armless-sofa',     name: 'Canapé de jardin (petit)',       brand: '',         category: 'furniture', qty: 1, dims: { w: 60,   d: 100,  h: 100  }, notes: 'Rouge, sans accoudoirs' },
 
   // ── TECH ─────────────────────────────────────────────────────────────────────
-  { id: 'tv',               name: 'Télévision murale',              brand: '',          category: 'tech',     qty: 1, dims: { w: 70,   d: 2,    h: 40   }, notes: '70×40cm, orientée vers le séjour' },
+  { id: 'tv',               name: 'Télévision CHiQ L32H7A',         brand: 'CHiQ',      category: 'tech',     qty: 1, dims: { w: 73,   d: 8,    h: 45   }, notes: '32" (80cm diag) — Android 9 Smart TV, HD, WiFi, BT, Google Assistant, Netflix, Prime Video, 2×HDMI, USB — Classe F — murale, orientée séjour', actions: ['tv-toggle'] },
+  { id: 'mini-pc',          name: 'Mini PC MLLSE G2 Pro',            brand: 'MLLSE',     category: 'tech',     qty: 1, dims: { w: 8.7,  d: 8.7,  h: 3.9  }, notes: 'Intel Twin Lake N150, LPDDR5 12 Go, 512 Go SSD, Wi-Fi 5, BT 5.0 — bleu nuit, bouton rouge' },
+  { id: 'jbl-charge3',      name: 'Enceinte JBL Charge 3',           brand: 'JBL',       category: 'tech',     qty: 1, dims: { w: 8.7,  d: 8.7,  h: 17.5 }, notes: 'Enceinte Bluetooth portable, IPX7, autonomie 20h — KallaxNE côté lit', glbPath: 'media/jbl_charge_3_speaker.glb' },
   { id: 'laptop',           name: 'Framework Laptop 13"',           brand: 'Framework', category: 'tech',     qty: 1, dims: { w: 29.7, d: 22.8, h: 1.55 }, notes: 'AMD Ryzen AI 5 340, 2256×1504 13", bureau 2' },
   { id: 'phone',            name: 'Téléphone OnePlus Nord 4',       brand: 'OnePlus',   category: 'tech',     qty: 1, dims: { w: 7.5,  d: 16.2, h: 0.8  }, notes: 'Coque rouge, bureau 2' },
   { id: 'scooter',          name: 'Trottinette Xiaomi 4',           brand: 'Xiaomi',    category: 'tech',     qty: 1, dims: { w: 50,   d: 50,   h: 113  }, notes: 'Guidon déplié, couloir', glbPath: 'media/xiaomi_electric_scooter_4.glb' },
