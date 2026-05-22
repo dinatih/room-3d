@@ -363,6 +363,7 @@ export interface LayerState {
   realSun:      boolean;
   physics:      boolean;
   collisions:   boolean;
+  grass:        boolean;
 }
 
 export interface SidePanelProps {
@@ -492,6 +493,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('white',  'Squelette',     'skeleton')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('green',  'Plafond',       'ceiling')}
+      {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('cyan',   'LiDAR scan',    'lidar')}
       {layers.lidar && b0('cyan',

@@ -18,6 +18,8 @@ import { DoorEntry }            from './items/DoorEntry';
 import { GlassDoor }            from './items/GlassDoor';
 import { NOOP_ITEM, NOOP_SIZE } from './sceneItem';
 import { useFurnitureToggles } from './utils/useFurnitureToggles';
+import { useSceneStore } from './store/useSceneStore';
+import { GrassGround } from './GrassGround';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -628,6 +630,7 @@ function Tile() {
 
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
+  const layers = useSceneStore(state => state.layers);
   const slabY = FLOOR_Y + 1.75 - 10 / 2;
 
   const grassMat = useMemo(() => new THREE.MeshStandardMaterial({
@@ -689,15 +692,19 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
       </group>
 
       {/* Sol extérieur — correspond aux bornes de la grille X[-400,700] × Z[-600,1000] */}
-      <mesh
-        ref={(m) => { if (m) m.material = groundExteriorMat; }}
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[150, -10, 200]}
-        receiveShadow
-        userData={{ brickType: 'ground' }}
-      >
-        <planeGeometry args={[1100, 1600]} />
-      </mesh>
+      {layers.grass ? (
+        <GrassGround />
+      ) : (
+        <mesh
+          ref={(m) => { if (m) m.material = groundExteriorMat; }}
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[150, -10, 200]}
+          receiveShadow
+          userData={{ brickType: 'ground' }}
+        >
+          <planeGeometry args={[1100, 1600]} />
+        </mesh>
+      )}
 
       {/* Colliders physiques (Rapier) */}
       <RigidBody type="fixed" colliders={false}>
