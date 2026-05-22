@@ -100,9 +100,8 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'toilet',           name: 'WC President Horizontal Outlet', brand: '',         category: 'bathroom',  qty: 1, dims: { w: 40,   d: 70,   h: 80   }, notes: 'Sortie horizontale', glbPath: 'media/president_toilet_horizontal_outlet.glb', actions: ['wc-lid-toggle'] },
   { id: 'vasque-sdb',       name: 'HAVBÄCK-ORRSJÖN 62×49×69 cm',   brand: 'IKEA',     category: 'bathroom',  qty: 1, dims: { w: 62,   d: 49,   h: 69   }, notes: 'Meuble avec tiroirs, vasque, mitigeur blanc', glbPath: 'media/HAVBÄCK - ORRSJÖN Meuble avec tiroirs-vasque-mitigeur blanc 62x49x69 cm.glb' },
   { id: 'water-heater',     name: 'Ballon eau chaude 100L',         brand: '',         category: 'bathroom',  qty: 1, dims: { w: 40,   d: 40,   h: 80   }, notes: 'Cylindrique, vertical' },
-  { id: 'oral-b-rouge',    name: 'Brosse à dents Oral-B iO Rouge', brand: 'Oral-B',   category: 'bathroom',  qty: 1, dims: { w: 3,    d: 3,    h: 24   }, notes: 'SDB vasque', glbPath: 'media/oral-b-rouge.glb' },
-  { id: 'oral-b-bleu',     name: 'Brosse à dents Oral-B MD20 Bleu', brand: 'Oral-B', category: 'bathroom',  qty: 1, dims: { w: 3,    d: 3,    h: 24   }, notes: 'SDB vasque', glbPath: 'media/oral-b-bleu.glb' },
-  { id: 'tete-de-brosse',  name: 'Tête de brosse à dents',         brand: 'Oral-B',   category: 'bathroom',  qty: 4, dims: { w: 2.5,  d: 2.5,  h: 5.5  }, notes: 'Recharge iO compatible', glbPath: 'media/tete-de-brosse.glb' },
+  { id: 'oral-b-toothbrush',      name: 'Brosse à dents électrique Oral-B', brand: 'Oral-B', category: 'bathroom', qty: 2, dims: { w: 3, d: 3, h: 24 }, notes: 'Brosse rechargeable avec socle chargeur, SDB vasque', glbPath: 'media/oral-b_electric_toothbrush.glb' },
+  { id: 'oral-b-toothbrush-head', name: 'Tête de brosse à dents Oral-B',    brand: 'Oral-B', category: 'bathroom', qty: 6, dims: { w: 1.6, d: 2.1, h: 7.2 }, notes: 'Recharge brosse électrique', glbPath: 'media/oral-b_toothbrush_head.glb' },
   { id: 'bathtub',          name: 'Baignoire',                      brand: '',         category: 'bathroom',  qty: 1, dims: { w: 150,  d: 70,   h: 50   }, notes: 'Coins arrondis, jardin' },
 
   // ── CLOTHING ─────────────────────────────────────────────────────────────────
