@@ -48,6 +48,12 @@ document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, valu
 - Pour écouter ces états de manière factorisée, utiliser le hook `useFurnitureToggles` dans `Placements.tsx`.
 - Pour les animations R3F (`useFrame`), synchroniser l'état réactif dans des refs locales (ex. `const isPowerOnRef = useRef(false)`) afin d'éviter les closures obsolètes dans la boucle d'animation.
 
+## Signatures des Commits Git
+
+Pour différencier l'origine des commits (IDE vs CLI/agy), toujours ajouter le co-auteur correspondant en pied de message de commit :
+- **IDE (Desktop App)** : `Co-authored-by: Antigravity Agent (IDE) <antigravity-agent-ide@deepmind.google>`
+- **CLI (Terminal / antigravity-cli / agy)** : `Co-authored-by: Antigravity Agent (CLI) <antigravity-agent-cli@deepmind.google>`
+
 ## Directives de communication avec l'utilisateur
 
 - **Pas de LaTeX** : Ne jamais utiliser les symboles de dollars (`$`) ou d'expressions mathématiques de type LaTeX dans les réponses de chat, car elles provoquent des bugs d'affichage dans l'interface utilisateur. Écrire les formules et les unités en texte brut (ex: "1 unité = 1 cm").
