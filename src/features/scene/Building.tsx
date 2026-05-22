@@ -72,6 +72,10 @@ const glassMat   = new THREE.MeshPhysicalMaterial({
 });
 const handleMat  = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.15 });
 
+const slabConcreteMat = new THREE.MeshStandardMaterial({ color: COLORS.floor, roughness: 0.6 });
+const groundExteriorMat = new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9 });
+const gardenSideMat = new THREE.MeshStandardMaterial({ color: 0x1e4022, roughness: 0.9 });
+
 // BoxGeometry face order : [+X(0), -X(1), +Y(2), -Y(3), +Z(4), -Z(5)]
 // westMats : face -X (index 1) fantôme ; eastMats : face +X (index 0) fantôme
 // northMats : face -Z (index 5) fantôme (face extérieure nord, vue de Z<0)
@@ -626,8 +630,9 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
   const grassMat = useMemo(() => new THREE.MeshStandardMaterial({
     map: makeGrassTex(), roughness: 0.85, color: 0xffffff,
   }), []);
-  const sideMat = new THREE.MeshStandardMaterial({ color: 0x1e4022, roughness: 0.9 });
-  const gardenMats = [sideMat, sideMat, grassMat, sideMat, sideMat, sideMat];
+  const gardenMats = useMemo(() => [
+    gardenSideMat, gardenSideMat, grassMat, gardenSideMat, gardenSideMat, gardenSideMat
+  ], [grassMat]);
 
   const gardenD = Math.abs(-400 - BLDG_Z_MIN); // BLDG_Z_MIN + 400
 
@@ -641,7 +646,7 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
 
       {/* Dalle béton */}
       <mesh
-        ref={(m) => { if (m) m.material = new THREE.MeshStandardMaterial({ color: COLORS.floor, roughness: 0.6 }); }}
+        ref={(m) => { if (m) m.material = slabConcreteMat; }}
         position={[BLDG_CX, slabY, BLDG_CZ]}
         receiveShadow
         userData={{ brickType: 'floor' }}
@@ -682,7 +687,7 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
 
       {/* Sol extérieur — correspond aux bornes de la grille X[-400,700] × Z[-600,1000] */}
       <mesh
-        ref={(m) => { if (m) m.material = new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9 }); }}
+        ref={(m) => { if (m) m.material = groundExteriorMat; }}
         rotation={[-Math.PI / 2, 0, 0]}
         position={[150, -10, 200]}
         receiveShadow
