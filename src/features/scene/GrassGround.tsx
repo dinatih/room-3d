@@ -6,7 +6,7 @@ interface GrassGroundProps {
   yPos?: number;
 }
 
-export function GrassGround({ yPos = 1.77 }: GrassGroundProps) {
+export function GrassGround({ yPos = -3.48 }: GrassGroundProps) {
   const { scene } = useGLTF('media/patch_of_grass_joined.glb');
 
   // Trouver les meshes correspondants à l'herbe et au sol
@@ -43,7 +43,7 @@ function GrassInstances({
   const grassRef = useRef<THREE.InstancedMesh>(null);
   const soilRef = useRef<THREE.InstancedMesh>(null);
 
-  // Pavage pour la dalle jardin : X[-100, 400] × Z[-400, -30] (largeur 500, profondeur 370)
+  // Pavage ciblé pour le jardin privatif : X[-100, 400] × Z[-400, -30] (largeur 500, profondeur 370)
   // Le patch d'herbe d'origine fait 200x200 cm.
   // 3 instances en X (de largeur 166.67 cm chacune) -> échelle X = 166.67 / 200 = 0.833333
   // Centres en X : -16.67, 150, 316.67
@@ -66,7 +66,7 @@ function GrassInstances({
     const mGrass = grassMesh.matrix.clone();
     const mSoil = soilMesh.matrix.clone();
 
-    // Matrice d'échelle supplémentaire
+    // Matrice d'échelle supplémentaire pour adapter le patch
     const scaleMat = new THREE.Matrix4().makeScale(scaleX, 1, scaleZ);
 
     let idx = 0;

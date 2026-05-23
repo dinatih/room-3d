@@ -76,7 +76,6 @@ const handleMat  = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 
 
 const slabConcreteMat = new THREE.MeshStandardMaterial({ color: COLORS.floor, roughness: 0.6 });
 const groundExteriorMat = new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9 });
-const gardenSideMat = new THREE.MeshStandardMaterial({ color: 0x1e4022, roughness: 0.9 });
 
 // BoxGeometry face order : [+X(0), -X(1), +Y(2), -Y(3), +Z(4), -Z(5)]
 // westMats : face -X (index 1) fantôme ; eastMats : face +X (index 0) fantôme
@@ -412,6 +411,24 @@ const BLDG_CX = (BLDG_X_MIN + BLDG_X_MAX) / 2;
 const BLDG_CZ = (BLDG_Z_MIN + BLDG_Z_MAX) / 2;
 const CEIL_THICK = 20;
 
+// ── Faces intérieures pour l'alignement précis des sols ─────────────────────────
+const W_HALF = W / 2; // 5 cm
+
+// X intérieur
+const INT_X_WEST = 0; // face intérieure mur A1 (Ouest)
+const INT_X_NICHE = NICHE_X; // face intérieure mur A2 (niche/SDB) = -10
+const INT_X_KITCHEN_L = KITCHEN_X0 + W_HALF; // 30 + 5 = 35
+const INT_X_KITCHEN_R = KITCHEN_X1 - W_HALF; // 130 - 5 = 125
+const INT_X_DOOR_S = DOOR_START; // 200 (porte)
+const INT_X_EAST = ROOM_W; // 316
+
+// Z intérieur
+const INT_Z_NORTH = 0; // face intérieure mur C (Nord)
+const INT_Z_NICHE_S = NICHE_Z_START + W_HALF; // 280 + 5 = 285
+const INT_Z_ROOM_S = ROOM_D - W_HALF; // 400 - 5 = 395
+const INT_Z_KITCHEN_B = KITCHEN_Z - W_HALF; // 460 - 5 = 455
+const INT_Z_BATH_E = BATH_Z_END - W_HALF; // 610 - 5 = 605
+
 // ── Matériaux plafond (module-level) ─────────────────────────────────────────
 const ceilBottom = new THREE.MeshStandardMaterial({
   color: COLORS.wall, roughness: 0.35, envMapIntensity: 0.15,
@@ -515,29 +532,30 @@ export function makeGrassTex(): THREE.CanvasTexture {
   return tex;
 }
 
-// ── Parquet ────────────────────────────────────────────────────────────────────
 function Parquet() {
   const { geo, mat } = useMemo(() => {
+    const diagSlope = (DIAG_CZ - DIAG_AZ) / (DIAG_CX - DIAG_AX);
+    const parquetDiagZ = DIAG_AZ + (INT_X_DOOR_S - DIAG_AX) * diagSlope;
+
     const shape = new THREE.Shape([
-      new THREE.Vector2(0,           0),
-      new THREE.Vector2(0,           -NICHE_Z_START),
-      new THREE.Vector2(NICHE_X,-NICHE_Z_START),
-      new THREE.Vector2(NICHE_X,-ROOM_D),
-      new THREE.Vector2(0,           -ROOM_D),
-      new THREE.Vector2(KITCHEN_X0,  -ROOM_D),
-      new THREE.Vector2(KITCHEN_X0,  -KITCHEN_Z),
-      new THREE.Vector2(KITCHEN_X1,  -KITCHEN_Z),
-      new THREE.Vector2(KITCHEN_X1,  -ROOM_D),
-      new THREE.Vector2(DOOR_START,  -ROOM_D),
-      new THREE.Vector2(DOOR_START,  -BATH_Z_END),
-      new THREE.Vector2(ROOM_W,      -DIAG_AZ),
-      new THREE.Vector2(ROOM_W,      0),
+      new THREE.Vector2(INT_X_WEST,      -INT_Z_NORTH),
+      new THREE.Vector2(INT_X_WEST,      -INT_Z_NICHE_S),
+      new THREE.Vector2(INT_X_NICHE,     -INT_Z_NICHE_S),
+      new THREE.Vector2(INT_X_NICHE,     -INT_Z_ROOM_S),
+      new THREE.Vector2(INT_X_WEST,      -INT_Z_ROOM_S),
+      new THREE.Vector2(INT_X_KITCHEN_L, -INT_Z_ROOM_S),
+      new THREE.Vector2(INT_X_KITCHEN_L, -INT_Z_KITCHEN_B),
+      new THREE.Vector2(INT_X_KITCHEN_R, -INT_Z_KITCHEN_B),
+      new THREE.Vector2(INT_X_KITCHEN_R, -INT_Z_ROOM_S),
+      new THREE.Vector2(INT_X_DOOR_S,    -INT_Z_ROOM_S),
+      new THREE.Vector2(INT_X_DOOR_S,    -parquetDiagZ),
+      new THREE.Vector2(INT_X_EAST,      -DIAG_AZ),
+      new THREE.Vector2(INT_X_EAST,      -INT_Z_NORTH),
     ]);
     const g = new THREE.ShapeGeometry(shape);
     const tex = makeParquetTex();
     const m = new THREE.MeshStandardMaterial({
       map: tex, roughness: 0.45,
-      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
     });
     return { geo: g, mat: m };
   }, []);
@@ -554,14 +572,22 @@ function Parquet() {
 
 // ── Carrelage bath + couloir ───────────────────────────────────────────────────
 function Tile() {
+  const CLOSET_W_REAL = (CORR_WALL_X - W_HALF) - (KITCHEN_X1 + W_HALF); // 55
+  const CLOSET_D_REAL = (KITCHEN_Z - W_HALF) - (ROOM_D + W_HALF); // 50
+  const CLOSET_X_REAL = ((KITCHEN_X1 + W_HALF) + (CORR_WALL_X - W_HALF)) / 2; // 162.5
+  const CLOSET_Z_REAL = ((ROOM_D + W_HALF) + (KITCHEN_Z - W_HALF)) / 2; // 430
+
   const { bathGeo, bathMat, closetMat } = useMemo(() => {
     const baseTex = makeTileTex();
 
-    // Trapèze bath : coins A(-10,460) B(-10,727) C(200,610) D(200,460)
-    const Ax = DIAG_CX, Az = KITCHEN_Z;
-    const Bx = DIAG_CX, Bz = DIAG_CZ;
-    const Cx = DOOR_START, Cz = BATH_Z_END;
-    const Dx = DOOR_START, Dz = KITCHEN_Z;
+    // Pente et équation de la face intérieure du mur diagonal
+    const diagSlope = (DIAG_CZ - DIAG_AZ) / (DIAG_CX - DIAG_AX);
+
+    // Trapèze bath : coins alignés sur les faces intérieures
+    const Ax = INT_X_NICHE,  Az = INT_Z_KITCHEN_B;
+    const Bx = INT_X_NICHE,  Bz = DIAG_AZ + (INT_X_NICHE - DIAG_AX) * diagSlope;
+    const Cx = INT_X_DOOR_S, Cz = DIAG_AZ + (INT_X_DOOR_S - DIAG_AX) * diagSlope;
+    const Dx = INT_X_DOOR_S, Dz = INT_Z_KITCHEN_B;
 
     const positions = new Float32Array([
       Ax, 0, Az,  Bx, 0, Bz,  Cx, 0, Cz,
@@ -582,7 +608,6 @@ function Tile() {
     tBath.needsUpdate = true;
     const mBath = new THREE.MeshStandardMaterial({
       map: tBath, roughness: 0.25, metalness: 0.05,
-      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
     });
 
     // Carrelage marron placard couloir
@@ -596,21 +621,15 @@ function Tile() {
     const brownTex = new THREE.CanvasTexture(brownCanvas);
     brownTex.wrapS = brownTex.wrapT = THREE.RepeatWrapping;
 
-    const CLOSET_W = DOOR_START - KITCHEN_X1;
-    const CLOSET_D = KITCHEN_Z - ROOM_D;
     const tB = brownTex.clone();
-    tB.repeat.set(CLOSET_W / 20, CLOSET_D / 20);
+    tB.repeat.set(CLOSET_W_REAL / 20, CLOSET_D_REAL / 20);
     tB.needsUpdate = true;
     const mB = new THREE.MeshStandardMaterial({
       map: tB, roughness: 0.25, metalness: 0.05,
-      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
     });
 
     return { bathGeo: g, bathMat: mBath, closetMat: mB };
-  }, []);
-
-  const CLOSET_W = DOOR_START - KITCHEN_X1;
-  const CLOSET_D = KITCHEN_Z - ROOM_D;
+  }, [CLOSET_W_REAL, CLOSET_D_REAL]);
 
   return (
     <>
@@ -618,11 +637,11 @@ function Tile() {
       <mesh
         ref={(m) => { if (m) m.material = closetMat; }}
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[KITCHEN_X1 + CLOSET_W / 2, 0, ROOM_D + CLOSET_D / 2]}
+        position={[CLOSET_X_REAL, 0, CLOSET_Z_REAL]}
         receiveShadow
         userData={{ brickType: 'floor' }}
       >
-        <planeGeometry args={[CLOSET_W, CLOSET_D]} />
+        <planeGeometry args={[CLOSET_W_REAL, CLOSET_D_REAL]} />
       </mesh>
     </>
   );
@@ -631,20 +650,6 @@ function Tile() {
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
   const layers = useSceneStore(state => state.layers);
-  const slabY = FLOOR_Y + 1.75 - 10 / 2;
-
-  const grassMat = useMemo(() => new THREE.MeshStandardMaterial({
-    map: makeGrassTex(), roughness: 0.85, color: 0xffffff,
-  }), []);
-  const gardenMats = useMemo(() => [
-    gardenSideMat, gardenSideMat, grassMat, gardenSideMat, gardenSideMat, gardenSideMat
-  ], [grassMat]);
-  const gardenMatsWithGrass3D = useMemo(() => [
-    gardenSideMat, gardenSideMat, gardenSideMat, gardenSideMat, gardenSideMat, gardenSideMat
-  ], []);
-
-  const gardenD = Math.abs(-400 - BLDG_Z_MIN); // BLDG_Z_MIN + 400
-
   return (
     <>
       {/* Parquet séjour + cuisine */}
@@ -653,26 +658,53 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
       {/* Carrelage bath + couloir */}
       <Tile />
 
-      {/* Dalle béton */}
-      <mesh
-        ref={(m) => { if (m) m.material = slabConcreteMat; }}
-        position={[BLDG_CX, slabY, BLDG_CZ]}
-        receiveShadow
-        userData={{ brickType: 'floor' }}
-      >
-        <boxGeometry args={[BLDG_W, 10, BLDG_D]} />
-      </mesh>
+      {/* Dalle béton sous l'appartement (principale + voisins en épi) */}
+      {(() => {
+        const slabConcreteGeo = useMemo(() => {
+          const shape = new THREE.Shape([
+            new THREE.Vector2(-20, 30),
+            new THREE.Vector2(316, 30),
+            new THREE.Vector2(316, 220),
+            new THREE.Vector2(326, 220),
+            new THREE.Vector2(326, -548),
+            new THREE.Vector2(-20, -748),
+          ]);
+          const geo = new THREE.ExtrudeGeometry(shape, { depth: 10, bevelEnabled: false });
+          geo.rotateX(-Math.PI / 2);
+          geo.translate(0, -10, 0);
+          return geo;
+        }, []);
 
-      {/* Dalle jardin herbe */}
-      <mesh
-        ref={(m) => { if (m) m.material = (layers.grass ? gardenMatsWithGrass3D : gardenMats) as any; }}
-        position={[BLDG_CX, slabY, (BLDG_Z_MIN + -400) / 2]}
-        receiveShadow
-        userData={{ brickType: 'floor' }}
-      >
-        <boxGeometry args={[BLDG_W, 10, gardenD]} />
-      </mesh>
-      {layers.grass && <GrassGround yPos={slabY + 5.02} />}
+        return (
+          <>
+            {/* Dalle principale */}
+            <mesh
+              geometry={slabConcreteGeo}
+              material={slabConcreteMat}
+              position={[0, -3.5, 0]}
+              receiveShadow
+              userData={{ brickType: 'floor' }}
+            />
+            {/* Dalle voisin de droite */}
+            <mesh
+              geometry={slabConcreteGeo}
+              material={slabConcreteMat}
+              position={[346.5, -3.5, -200]}
+              receiveShadow
+              userData={{ brickType: 'floor' }}
+            />
+            {/* Dalle voisin de gauche */}
+            <mesh
+              geometry={slabConcreteGeo}
+              material={slabConcreteMat}
+              position={[-346.5, -3.5, 200]}
+              receiveShadow
+              userData={{ brickType: 'floor' }}
+            />
+          </>
+        );
+      })()}
+
 
       {/* Plafonds — masquables via toggle "Plafond" */}
       <group visible={showCeiling}>
@@ -705,6 +737,9 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
       >
         <planeGeometry args={[1100, 1600]} />
       </mesh>
+
+      {/* Gazon 3D HD ciblé uniquement sur le jardin privatif */}
+      {layers.grass && <GrassGround yPos={-3.48} />}
 
       {/* Colliders physiques (Rapier) */}
       <RigidBody type="fixed" colliders={false}>
