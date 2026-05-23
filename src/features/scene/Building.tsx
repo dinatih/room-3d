@@ -695,7 +695,7 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
               <mesh
                 geometry={slabConcreteGeo}
                 material={slabConcreteMat}
-                position={[346.5, -3.5, -200]}
+                position={[346, -3.5, -199.76]}
                 receiveShadow
                 userData={{ brickType: 'floor' }}
               />
@@ -705,7 +705,7 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
               <mesh
                 geometry={slabConcreteGeo}
                 material={slabConcreteMat}
-                position={[-346.5, -3.5, 200]}
+                position={[-346, -3.5, 199.76]}
                 receiveShadow
                 userData={{ brickType: 'floor' }}
               />

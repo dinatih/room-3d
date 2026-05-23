@@ -42,8 +42,8 @@ function NeighborApartment({ offsetX, offsetZ }: { offsetX: number; offsetZ: num
 export function Neighbors() {
   return (
     <>
-      <NeighborApartment offsetX={-ROOM_W - 30.5} offsetZ={200} />
-      <NeighborApartment offsetX={ROOM_W + 30.5}  offsetZ={-200} />
+      <NeighborApartment offsetX={-346} offsetZ={199.76} />
+      <NeighborApartment offsetX={346}  offsetZ={-199.76} />
     </>
   );
 }
