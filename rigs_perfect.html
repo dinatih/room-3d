@@ -736,7 +736,7 @@
               <button id="btn-toggle-mesh">👁 Hide Meshes</button>
             </div>
             <div class="btn-grid" style="grid-template-columns: 1fr; margin-top: 8px;">
-              <button id="btn-toggle-ybot">🤖 Show Y-Bot (Mixamo Ref)</button>
+              <button id="btn-toggle-ybot" class="active">🤖 Show Y-Bot (Mixamo Ref)</button>
             </div>
           </div>
         </div>
@@ -854,7 +854,7 @@
       showAxes: false,
       wireframe: false,
       hideMesh: false,
-      showYbot: false,
+      showYbot: true,
       
       models: {
         ref: null,     // Reference Lara
@@ -1089,7 +1089,7 @@
       showLoader("Loading Mixamo Y-Bot Reference...");
       const ybotGltf = await loadModel(YBOT_FILE);
       state.models.ybot = ybotGltf.scene;
-      state.models.ybot.scale.setScalar(0.01);
+      state.models.ybot.scale.setScalar(1.0);
       state.models.ybot.traverse(c => { 
         if (c.isMesh) {
           c.castShadow = c.receiveShadow = true;
@@ -1124,6 +1124,7 @@
       // Attach Axes Helpers to bones (scale-aware)
       setupAxesHelpers(state.models.ref);
       setupAxesHelpers(state.models.perfect);
+      setupAxesHelpers(state.models.ybot);
 
       updatePositionsAndVisibility();
       populateStatsTable();
@@ -1492,7 +1493,7 @@
 
           let hipsTranslationRatio = 1.0;
           if (modelHips && animHipsY !== null) {
-            const isModelMetric = (modelHips.getWorldPosition(new THREE.Vector3()).y < 5.0 || modelHips.position.y < 5.0);
+            const isModelMetric = (modelHips.position.y < 5.0);
             const isAnimMetric = (Math.abs(animHipsY) < 5.0);
             
             if (isModelMetric && !isAnimMetric) {
