@@ -159,7 +159,14 @@ function ItemTable({ items, selected, onSelect, consumableView, focusedId }: {
                 outlineOffset: isFocused ? '-1px' : undefined,
               }}
             >
-              <td style={tdStyle}>{item.name}</td>
+              <td style={tdStyle}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {item.photos?.[0] && (
+                    <img src={item.photos[0]} style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 3, flexShrink: 0, background: '#eee' }} />
+                  )}
+                  {item.name}
+                </div>
+              </td>
               {consumableView ? (
                 <>
                   <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold' }}>{item.stock ?? '—'}</td>

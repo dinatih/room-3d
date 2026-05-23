@@ -26,9 +26,9 @@ import {
 
 export const W        = 10; // épaisseur de mur standard (cm)
 export const WALL_C_T = 30; // épaisseur mur C (nord, baie vitrée)
-const GLASS_START = 90;  // début baie vitrée mur C
-const GLASS_END   = 250; // fin baie vitrée mur C
-const GLASS_TOP_Y = 210; // hauteur du linteau de baie vitrée
+const GLASS_START = 100;  // début baie vitrée mur C (aligné à 95cm + 5cm latte)
+const GLASS_END   = 260; // fin baie vitrée mur C (aligné à 316 - 51cm - 5cm latte)
+const GLASS_TOP_Y = 225; // hauteur du linteau de baie vitrée
 const CORR_E = 2;  // anti z-fighting dormant porte couloir
 const CORR_DOOR_S = KITCHEN_Z + 60;
 const CORR_DOOR_E = KITCHEN_Z + 140;
@@ -183,7 +183,7 @@ export const WALL_DEFS: WallDef[] = [
   // Panneau est.
   { axis: 'x', x1: pEast('glass-east'), x2: pWest('corner-ne'), zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north' },
   // Muret bas sous la porte-fenêtre (3D uniquement, la baie reste une fenêtre en 2D).
-  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north', h: 20, segKind: 'none' },
+  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north', h: 25, segKind: 'none' },
   // Linteau au-dessus de la baie (3D uniquement)
   { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
 

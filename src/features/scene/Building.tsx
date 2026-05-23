@@ -988,10 +988,13 @@ const DOOR_HEIGHT  = 204;
 
 export function DoorsPlaced() {
   const as = useFurnitureToggles({
-    eastGlassDoor:     'east-glass-door-toggle',
-    livingDoor:   'living-door-toggle',
-    bathroomDoor: 'bathroom-door-toggle',
-    entryDoor:    'entry-door-toggle',
+    eastGlassDoor:         'east-glass-door-toggle',
+    livingDoor:            'living-door-toggle',
+    bathroomDoor:          'bathroom-door-toggle',
+    entryDoor:             'entry-door-toggle',
+    glassDoorV2:           'glass-door-v2',
+    glassDoorV2LeftOpen:   'glass-door-v2-left-open',
+    glassDoorV2ShutterPos: 'glass-door-v2-shutter-pos',
   });
 
   const bathHingeZ = BATH_Z_END - 10;
@@ -1013,7 +1016,13 @@ export function DoorsPlaced() {
     <>
       <group
         position={[GLASS_DOOR_X, 105, 0]}
-        userData={{ animUnit: true, hoverAction: { label: 'Porte-fenêtre', actionId: 'eastGlassDoor' } }}>
+        userData={{
+          animUnit: true,
+          hoverAction: {
+            label: 'Porte-fenêtre',
+            actions: as['glass-door-v2'] ? ['eastGlassDoor', 'glassDoorLeftOpen', 'glassDoorShutter'] : ['eastGlassDoor']
+          }
+        }}>
         <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group

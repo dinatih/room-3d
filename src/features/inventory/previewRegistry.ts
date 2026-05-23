@@ -88,7 +88,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'mirror-nissedal-wide':   NissedalMirror,
   'ninja-sp101':            NinjaSP101,
   'mini-pc':                MllseG2Pro,
-  'jbl-charge3':            JblCharge3,
+  'sony-srs-xb33':          JblCharge3,
   'trash-bin':              TrashBin,
   'vacuum-cleaner':         VacuumCleaner,
   'tent-quechua-2sec':      Tent,

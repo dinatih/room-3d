@@ -93,7 +93,7 @@ function CenteredItem({
   Component, actionState, item,
 }: {
   Component: React.ComponentType<SceneItemProps>;
-  actionState: Record<string, boolean>;
+  actionState: Record<string, any>;
   item?: any;
 }) {
   const outerRef = useRef<THREE.Group>(null!);
@@ -135,11 +135,40 @@ function RegistryScene({
   item, actionState,
 }: {
   item: InventoryItem;
-  actionState: Record<string, boolean>;
+  actionState: Record<string, any>;
 }) {
   const Component = SCENE_REGISTRY[item.id];
   if (!Component) return null;
   return <CenteredItem Component={Component} actionState={actionState} item={item} />;
+}
+
+// ── Photo gallery ─────────────────────────────────────────────────────────────
+
+function PhotoGallery({ photos }: { photos: string[] }) {
+  const [idx, setIdx] = useState(0);
+  return (
+    <div style={{ position: 'absolute', inset: 0, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <img
+        src={photos[idx]}
+        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
+      />
+      {photos.length > 1 && (
+        <>
+          <button
+            onClick={() => setIdx(i => (i - 1 + photos.length) % photos.length)}
+            style={{ position: 'absolute', left: 4, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.45)', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', padding: '6px 9px', fontSize: 16, lineHeight: 1 }}
+          >‹</button>
+          <button
+            onClick={() => setIdx(i => (i + 1) % photos.length)}
+            style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.45)', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', padding: '6px 9px', fontSize: 16, lineHeight: 1 }}
+          >›</button>
+          <div style={{ position: 'absolute', bottom: 30, left: 0, right: 0, textAlign: 'center', fontSize: 10, color: '#666', pointerEvents: 'none' }}>
+            {idx + 1} / {photos.length}
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -147,7 +176,12 @@ function RegistryScene({
 type PreviewTarget = InventoryItem | StorageSpace | null;
 
 export function InventoryPreview({ item }: { item: PreviewTarget }) {
-  const glbPath = item && 'glbPath' in item ? item.glbPath : undefined;
+  const glbPath   = item && 'glbPath' in item ? item.glbPath   : undefined;
+  const photos    = item && 'photos'  in item ? (item as InventoryItem).photos : undefined;
+
+  const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false;
+  const has3D       = hasRegistry || !!glbPath;
+  const hasPhotos   = !!photos?.length;
 
   const legacyActionKey = item ? ITEM_ACTIONS[item.id] : undefined;
   const itemActions     = (item && 'actions' in item ? item.actions : undefined) ?? [];
@@ -155,10 +189,12 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
     ? itemActions
     : legacyActionKey ? [legacyActionKey] : [];
 
-  const [actionStates, setActionStates] = useState<Record<string, boolean>>({});
-  useEffect(() => { setActionStates({}); }, [item?.id]);
+  const [actionStates, setActionStates] = useState<Record<string, any>>({});
+  const [viewMode, setViewMode]         = useState<'3d' | 'photos'>('3d');
+  useEffect(() => { setActionStates({}); setViewMode('3d'); }, [item?.id]);
 
-  const liveActionState = actionStates;
+  const showing3D     = has3D && (!hasPhotos || viewMode === '3d');
+  const showingPhotos = hasPhotos && (!has3D   || viewMode === 'photos');
 
   return (
     <div style={{
@@ -182,36 +218,61 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
 
       {item && (
         <>
-          <Canvas
-            key={item.id}
-            frameloop="always"
-            camera={{ fov: 45, near: 0.01, far: 100, position: [1.4, 0.9, 1.8] }}
-            gl={{ antialias: true, alpha: false }}
-            onCreated={({ scene }) => { scene.background = new THREE.Color(0xffffff); }}
-          >
-            <ambientLight intensity={0.8} />
-            <directionalLight position={[3, 5, 3]} intensity={1.5} />
-            <directionalLight position={[-2, 1, -2]} intensity={0.4} color="#aabbff" />
+          {/* Tab bar — only when both 3D and photos exist */}
+          {has3D && hasPhotos && (
+            <div style={{
+              position: 'absolute', top: 8, left: 8, zIndex: 3,
+              display: 'flex', gap: 3,
+            }}>
+              {(['3d', 'photos'] as const).map(mode => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  style={{
+                    padding: '2px 7px', fontSize: 10,
+                    background: viewMode === mode ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.35)',
+                    border: viewMode === mode ? '1px solid #aaa' : '1px solid transparent',
+                    borderRadius: 4, color: '#eee', cursor: 'pointer',
+                  }}
+                >
+                  {mode === '3d' ? '3D' : `📷 ${photos!.length}`}
+                </button>
+              ))}
+            </div>
+          )}
 
-            <FitCamera />
-            <OrbitControls
-              autoRotate
-              autoRotateSpeed={1.2}
-              enablePan={false}
-              minDistance={0.3}
-              maxDistance={50}
-              target={[0, 0, 0]}
-            />
+          {showing3D ? (
+            <Canvas
+              key={item.id}
+              frameloop="always"
+              camera={{ fov: 45, near: 0.01, far: 100, position: [1.4, 0.9, 1.8] }}
+              gl={{ antialias: true, alpha: false }}
+              onCreated={({ scene }) => { scene.background = new THREE.Color(0xffffff); }}
+            >
+              <ambientLight intensity={0.8} />
+              <directionalLight position={[3, 5, 3]} intensity={1.5} />
+              <directionalLight position={[-2, 1, -2]} intensity={0.4} color="#aabbff" />
 
-            {SCENE_REGISTRY[item.id]
-              ? <RegistryScene item={item as InventoryItem} actionState={liveActionState} />
-              : glbPath
-                ? <GlbScene glbPath={glbPath} />
-                : null
-            }
-          </Canvas>
+              <FitCamera />
+              <OrbitControls
+                autoRotate
+                autoRotateSpeed={1.2}
+                enablePan={false}
+                minDistance={0.3}
+                maxDistance={50}
+                target={[0, 0, 0]}
+              />
 
-          {actionKeys.length > 0 && (
+              {hasRegistry
+                ? <RegistryScene item={item as InventoryItem} actionState={actionStates} />
+                : <GlbScene glbPath={glbPath!} />
+              }
+            </Canvas>
+          ) : showingPhotos ? (
+            <PhotoGallery key={item.id + '-photos'} photos={photos!} />
+          ) : null}
+
+          {showing3D && actionKeys.length > 0 && (
             <div style={{
               position: 'absolute', top: 8, right: 8,
               display: 'flex', flexDirection: 'column', gap: 4,

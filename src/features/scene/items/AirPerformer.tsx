@@ -660,7 +660,7 @@ export function AirPerformer({ onSize }: SceneItemProps) {
           label: power
             ? `Air Performer (ON - Mode ${mode.toUpperCase()} - PM2.5: ${pm25State} µg/m³)`
             : 'Air Performer (Éteint)',
-          actions: ['airPerformerPower', 'airPerformerMode', 'airPerformerSpeed']
+          actions: ['airPerformerPower', 'airPerformerMode', 'airPerformerSpeed', 'airperformer-position']
         }
       }}
     >

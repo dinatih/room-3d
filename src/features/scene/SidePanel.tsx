@@ -336,6 +336,9 @@ export interface FurnitureState {
   freezerOpen:    boolean;
   fridge:         boolean;
   tvOn:           boolean;
+  glassDoorV2:    boolean;
+  glassDoorV2LeftOpen: boolean;
+  glassDoorV2ShutterPos: number;
 }
 
 export interface LayerState {
@@ -547,8 +550,21 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
 
   const FurnitureSection = (
     <>
-      {b0('light', `Porte-fenêtre : ${furniture.eastGlassDoor ? 'OUVERTE' : 'FERMÉE'}`,
-          () => onToggleFurniture('eastGlassDoor'), true)}
+      {b0('red', `Porte-fenêtre : ${furniture.glassDoorV2 ? 'V2 (DÉTAILLÉE)' : 'V1 (SIMPLIFIÉE)'}`,
+          () => onToggleFurniture('glassDoorV2'), true)}
+      {!furniture.glassDoorV2 ? (
+        b0('light', `Ouverture : ${furniture.eastGlassDoor ? 'OUVERTE' : 'FERMÉE'}`,
+            () => onToggleFurniture('eastGlassDoor'))
+      ) : (
+        <>
+          {b0('light', `Battant droit : ${furniture.eastGlassDoor ? 'OUVERT' : 'FERMÉ'}`,
+              () => onToggleFurniture('eastGlassDoor'))}
+          {b0('light', `Battant gauche : ${furniture.glassDoorV2LeftOpen && furniture.eastGlassDoor ? 'OUVERT' : 'FERMÉ'}`,
+              () => onToggleFurniture('glassDoorV2LeftOpen'))}
+          {b0('light', `Volet : ${furniture.glassDoorV2ShutterPos === 0 ? 'OUVERT' : furniture.glassDoorV2ShutterPos === 100 ? 'FERMÉ' : furniture.glassDoorV2ShutterPos + '% FERMÉ'}`,
+              () => onToggleFurniture('glassDoorV2ShutterPos'))}
+        </>
+      )}
       {b0('light', `Porte entrée : ${furniture.entryDoor ? 'OUVERTE' : 'FERMÉE'}`,
           () => onToggleFurniture('entryDoor'))}
       {b0('light', `Porte séjour : ${furniture.livingDoor ? 'OUVERTE' : 'FERMÉE'}`,

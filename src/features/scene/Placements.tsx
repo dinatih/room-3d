@@ -68,11 +68,14 @@ import { Viggja }       from './items/Viggja';
 import { JoggingSuit }  from './items/JoggingSuit';
 import { ShibaInu }    from './items/ShibaInu';
 import { Tisken }        from './items/Tisken';
+import { Tackan }        from './items/Tackan';
 import { Vathult }       from './items/Vathult';
 import { DronaInstances, DroneCell } from './items/Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 import { useFurnitureToggles } from './utils/useFurnitureToggles';
+import { positionState } from '@features/scene/positionState';
+import { PositionTransition } from './utils/PositionTransition';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -121,6 +124,7 @@ const STAND_H = 103;
 const DESK1_POSITIONS = [
   { x: 22,   z: 74.5, ry: Math.PI / 2 },
   { x: 73.5, z: 18,   ry: 0           },
+  { x: 40,  z: 60,  ry: Math.PI     },
 ] as const;
 
 const DESK2_POSITIONS = [
@@ -129,9 +133,22 @@ const DESK2_POSITIONS = [
 ] as const;
 
 const SMORKULL_POSITIONS = [
-  { x: 30,  z: 151, ry: Math.PI / 2 },
-  { x: 150, z: 100, ry: Math.PI     },
-  { x: 150, z: 300, ry: Math.PI     },
+  { x: 30,  z: 151, ry: Math.PI / 2  },
+  { x: 150, z: 100, ry: Math.PI      },
+  { x: 150, z: 300, ry: Math.PI      },
+  { x: 240, z: 38,  ry: -Math.PI / 2 }, // devant KallaxNE
+];
+
+const AIRPERFORMER_POSITIONS = [
+  { x: 300, z: 230,    ry: 0 },
+  { x: 261, z: w2 / 2, ry: 0 }, // devant KallaxNE (face x=277, centre z=37.75)
+  { x: 200, z: 100,    ry: 0 },
+];
+
+const SUNNERSTA_POSITIONS = [
+  { x: ROOM_W - 20, z: 271.5,       ry: Math.PI / 2 },
+  { x: 258,          z: KALLAX_SE_Z, ry: Math.PI / 2 }, // devant KallaxSE (face x=277)
+  { x: 100,           z: MACK_Z,     ry: Math.PI / 2 }, // devant MacKapar
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -173,6 +190,18 @@ export function Equipment() {
       {/* Niche douche 70×70cm : X -10→60, Z 600→670. Centre : (25, 635). */}
       <group position={[NICHE_X + 35, 0, BATH_Z_END + 35]} userData={{ animUnit: true }}>
         <Shower item={stub('shower')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* TACKAN douche — mur fond niche, à côté du mitigeur (y=90) */}
+      <group position={[NICHE_X + 40, 80, BATH_Z_END + 69]}>
+        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* TACKAN lavabo — plan vasque (y=83), côté droit du mitigeur */}
+      <group position={[DOOR_START - 84 + 15, 83, KITCHEN_Z + 34.5]}>
+        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* TACKAN évier — plan cuisine (y=93), à droite de l'évier */}
+      <group position={[KITCHEN_X0 + 35, 93, ROOM_D + 30]}>
+        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[NICHE_X + 60, 0, KITCHEN_Z + 46.5]} userData={{ animUnit: true }}>
         <Toilet item={stub('toilet')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -288,6 +317,7 @@ function Bed() {
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
   }, []);
+  useEffect(() => { positionState['bed-position'] = { idx: bedPosIdx, total: 3 }; }, [bedPosIdx]);
 
   const p   = bedPositions[bedPosIdx];
   const pos: [number, number, number] = sofa ? [ROOM_W - 83 / 2, 0, 190] : [p.x, 0, p.z];
@@ -297,13 +327,14 @@ function Bed() {
     : [0, stacked ? 23 : 0, stacked ? 0 : -83];
 
   return (
-    <group position={pos} rotation={[0, ry, 0]}
-      userData={{ hoverAction: { label: 'Lit Utåker', actions: ['bed-toggle', 'bed-position', 'bed-sofa'] } }}>
-      <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      <group position={b2}>
-        <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+    <PositionTransition x={pos[0]} z={pos[2]} ry={ry}>
+      <group userData={{ hoverAction: { label: 'Lit Utåker', actions: ['bed-toggle', 'bed-position', 'bed-sofa'] } }}>
+        <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <group position={b2}>
+          <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
       </group>
-    </group>
+    </PositionTransition>
   );
 }
 
@@ -325,27 +356,33 @@ function Desks() {
     return () => document.removeEventListener('furniture-toggle', handler);
   }, []);
 
+  useEffect(() => { positionState['desk1-position'] = { idx: d1Pos, total: DESK1_POSITIONS.length }; }, [d1Pos]);
+  useEffect(() => { positionState['desk2-position'] = { idx: d2Pos, total: DESK2_POSITIONS.length }; }, [d2Pos]);
+
   const p1 = DESK1_POSITIONS[d1Pos];
   const p2 = DESK2_POSITIONS[d2Pos];
 
   return (
     <>
-      <group position={[p1.x, 0, p1.z]} rotation={[0, p1.ry, 0]}
-        userData={{ animUnit: true, hoverAction: { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] } }}>
-        <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} />
-      </group>
-      <group position={[p2.x, 0, p2.z]} rotation={[0, p2.ry, 0]} userData={{ animUnit: true, hoverAction: { label: 'Bureau 2', actions: ['desk2-toggle', 'desk2-position'] } }}>
-        <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
-        <group position={[0, d2H, 0]} rotation={[0, Math.PI, 0]}>
-          <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
-          <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
-            <Phone item={{} as any} actionState={{}} onSize={() => {}} />
-          </group>
-          <group position={[-22, 0, -7]}>
-            <Mug item={{} as any} actionState={{}} onSize={() => {}} />
+      <PositionTransition x={p1.x} z={p1.z} ry={p1.ry}>
+        <group userData={{ animUnit: true, hoverAction: { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] } }}>
+          <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} />
+        </group>
+      </PositionTransition>
+      <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
+        <group userData={{ animUnit: true, hoverAction: { label: 'Bureau 2', actions: ['desk2-toggle', 'desk2-position'] } }}>
+          <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
+          <group position={[0, d2H, 0]} rotation={[0, Math.PI, 0]}>
+            <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
+            <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
+              <Phone item={{} as any} actionState={{}} onSize={() => {}} />
+            </group>
+            <group position={[-22, 0, -7]}>
+              <Mug item={{} as any} actionState={{}} onSize={() => {}} />
+            </group>
           </group>
         </group>
-      </group>
+      </PositionTransition>
     </>
   );
 }
@@ -384,12 +421,56 @@ function Smorkull_() {
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
   }, []);
+  useEffect(() => { positionState['smorkull-position'] = { idx: posIdx, total: SMORKULL_POSITIONS.length }; }, [posIdx]);
   const p = SMORKULL_POSITIONS[posIdx];
   return (
-    <group position={[p.x, 0, p.z]} rotation-y={p.ry}
-      userData={{ animUnit: true, hoverAction: { label: 'Smörkull', actionId: 'smorkull-position' } }}>
-      <Smorkull item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-    </group>
+    <PositionTransition x={p.x} z={p.z} ry={p.ry}>
+      <group userData={{ animUnit: true, hoverAction: { label: 'Smörkull', actionId: 'smorkull-position' } }}>
+        <Smorkull item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+    </PositionTransition>
+  );
+}
+
+function AirPerformer_() {
+  const [posIdx, setPosIdx] = useState(0);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { key } = (e as CustomEvent).detail as { key: string };
+      if (key === 'airperformer-position') setPosIdx(i => (i + 1) % AIRPERFORMER_POSITIONS.length);
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, []);
+  useEffect(() => { positionState['airperformer-position'] = { idx: posIdx, total: AIRPERFORMER_POSITIONS.length }; }, [posIdx]);
+  const p = AIRPERFORMER_POSITIONS[posIdx];
+  return (
+    <PositionTransition x={p.x} z={p.z} ry={p.ry}>
+      <group userData={{ animUnit: true }}>
+        <AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+    </PositionTransition>
+  );
+}
+
+function Sunnersta_() {
+  const [posIdx, setPosIdx] = useState(0);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { key } = (e as CustomEvent).detail as { key: string };
+      if (key === 'sunnersta-position') setPosIdx(i => (i + 1) % SUNNERSTA_POSITIONS.length);
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, []);
+  useEffect(() => { positionState['sunnersta-position'] = { idx: posIdx, total: SUNNERSTA_POSITIONS.length }; }, [posIdx]);
+  const p = SUNNERSTA_POSITIONS[posIdx];
+  return (
+    <PositionTransition x={p.x} z={p.z} ry={p.ry}>
+      <group userData={{ animUnit: true, hoverAction: { label: 'Sunnersta', actions: ['sunnersta-position'] } }}>
+        <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+    </PositionTransition>
   );
 }
 
@@ -449,9 +530,7 @@ export function Decor() {
       <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[300, 0, 230]}>
-        <AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
+      <AirPerformer_ />
       {/* Google Nest Mini — mur EST (B) en son centre, à plat contre le mur */}
       <group position={[ROOM_W - 5, WALL_H / 2, ROOM_D / 2]} rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
         <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -494,9 +573,7 @@ export function Decor() {
           <Grejig item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       ))}
-      <group position={[ROOM_W - 20, 0, 271.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
-        <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
+      <Sunnersta_ />
     </>
   );
 }

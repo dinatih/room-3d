@@ -9,13 +9,28 @@ import { useThree } from '@react-three/fiber';
 import * as THREE   from 'three';
 import { hoverState } from '@features/scene/hoverState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
+import { positionState } from '@features/scene/positionState';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
 
-interface ActionDef { btnLabel: string; toggleKey: string; }
+interface ActionDef { btnLabel: string | (() => string); toggleKey: string; }
 const ACTIONS: Record<string, ActionDef> = {
-  eastGlassDoor:       { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'eastGlassDoor'      },
+  eastGlassDoor: {
+    btnLabel: () => {
+      const isV2 = useSceneStore.getState().furniture.glassDoorV2;
+      return isV2 ? 'Ouvrir / Fermer Droit' : 'Ouvrir / Fermer';
+    },
+    toggleKey: 'eastGlassDoor'
+  },
+  glassDoorLeftOpen: { btnLabel: 'Ouvrir / Fermer Gauche', toggleKey: 'glassDoorV2LeftOpen' },
+  glassDoorShutter: {
+    btnLabel: () => {
+      const pos = useSceneStore.getState().furniture.glassDoorV2ShutterPos;
+      return pos === 0 ? 'Volet : OUVERT' : pos === 100 ? 'Volet : FERMÉ' : `Volet : ${pos}% FERMÉ`;
+    },
+    toggleKey: 'glassDoorV2ShutterPos'
+  },
   entryDoor:      { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'entryDoor'     },
   livingDoor:     { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'livingDoor'    },
   bathroomDoor:   { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'bathroomDoor'  },
@@ -30,21 +45,23 @@ const ACTIONS: Record<string, ActionDef> = {
   wcLid:          { btnLabel: 'Ouvrir / Fermer',    toggleKey: 'wcLid'         },
   'lamp-toggle':   { btnLabel: 'Allumer / Éteindre', toggleKey: 'lampOn'        },
   'bed-toggle':    { btnLabel: 'Empiler / Déplier',  toggleKey: 'bed-toggle'    },
-  'bed-position':  { btnLabel: 'Changer position',   toggleKey: 'bed-position'  },
+  'bed-position':  { btnLabel: () => { const p = positionState['bed-position'];      return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'bed-position'  },
   'bed-sofa':      { btnLabel: 'Mode canapé',        toggleKey: 'bed-sofa'      },
   'desk1-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk1-toggle'  },
-  'desk1-position':{ btnLabel: 'Changer position',   toggleKey: 'desk1-position'},
+  'desk1-position':{ btnLabel: () => { const p = positionState['desk1-position'];   return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'desk1-position'},
   'desk2-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk2-toggle'  },
-  'desk2-position':{ btnLabel: 'Changer position',   toggleKey: 'desk2-position'},
-  'smorkull-position': { btnLabel: 'Changer position', toggleKey: 'smorkull-position' },
+  'desk2-position':{ btnLabel: () => { const p = positionState['desk2-position'];   return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'desk2-position'},
+  'smorkull-position': { btnLabel: () => { const p = positionState['smorkull-position']; return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'smorkull-position' },
   'shiba-replay':      { btnLabel: 'Rejouer',           toggleKey: 'shiba-replay'      },
   'nestMini':          { btnLabel: 'Ok Google',         toggleKey: 'nestMini'          },
   'tv':                { btnLabel: 'Allumer / Éteindre', toggleKey: 'tvOn'             },
   'bin':               { btnLabel: 'Ouvrir / Fermer',   toggleKey: 'bin-toggle'       },
-  airPerformerPower:   { btnLabel: 'Allumer / Éteindre', toggleKey: 'airPerformerPower' },
-  airPerformerMode:    { btnLabel: 'Changer Mode',       toggleKey: 'airPerformerMode'  },
-  airPerformerSpeed:   { btnLabel: 'Vitesse +/-',        toggleKey: 'airPerformerSpeed' },
-  'walker-meshes':     { btnLabel: 'Meshes',             toggleKey: 'walker-meshes'     },
+  airPerformerPower:       { btnLabel: 'Allumer / Éteindre', toggleKey: 'airPerformerPower' },
+  airPerformerMode:        { btnLabel: 'Changer Mode',       toggleKey: 'airPerformerMode'  },
+  airPerformerSpeed:       { btnLabel: 'Vitesse +/-',        toggleKey: 'airPerformerSpeed' },
+  'airperformer-position': { btnLabel: () => { const p = positionState['airperformer-position']; return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'airperformer-position' },
+  'sunnersta-position':    { btnLabel: () => { const p = positionState['sunnersta-position'];    return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'sunnersta-position'    },
+  'walker-meshes':         { btnLabel: 'Meshes',             toggleKey: 'walker-meshes'     },
 };
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
@@ -364,7 +381,7 @@ export function HoverOverlay() {
               }}
               style={BTN_STYLE}
             >
-              {action.btnLabel}
+              {typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel}
             </button>
           ))}
         </div>

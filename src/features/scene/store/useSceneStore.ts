@@ -32,6 +32,9 @@ const initialFurniture: FurnitureState = {
   freezerOpen: false,
   fridge: false,
   tvOn: false,
+  glassDoorV2: true,
+  glassDoorV2LeftOpen: false,
+  glassDoorV2ShutterPos: 0,
 };
 
 const initialLayers: LayerState = {
@@ -112,10 +115,28 @@ export const useSceneStore = create<SceneStore>((set) => ({
 
   toggleFurniture: (key) => {
     set((state) => {
-      const nextFurniture = { ...state.furniture, [key]: !state.furniture[key] };
-
-      // Dispatch event for backward compatibility with components listening to custom events
-      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key } }));
+      let nextFurniture: FurnitureState;
+      if (key === 'glassDoorV2ShutterPos') {
+        const cur = state.furniture.glassDoorV2ShutterPos;
+        const next = cur === 0 ? 70 : cur === 70 ? 90 : cur === 90 ? 100 : 0;
+        nextFurniture = { ...state.furniture, glassDoorV2ShutterPos: next };
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: next } }));
+      } else if (key === 'glassDoorV2LeftOpen') {
+        const nextLeft = !state.furniture.glassDoorV2LeftOpen;
+        const nextRight = nextLeft ? true : state.furniture.eastGlassDoor;
+        nextFurniture = {
+          ...state.furniture,
+          glassDoorV2LeftOpen: nextLeft,
+          eastGlassDoor: nextRight
+        };
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'glassDoorV2LeftOpen', value: nextLeft } }));
+        if (nextRight !== state.furniture.eastGlassDoor) {
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'eastGlassDoor', value: nextRight } }));
+        }
+      } else {
+        nextFurniture = { ...state.furniture, [key]: !state.furniture[key] as any };
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: nextFurniture[key] } }));
+      }
 
       // Map special keys for legacy components
       if (key === 'freezerOpen') {
@@ -161,7 +182,27 @@ export const useSceneStore = create<SceneStore>((set) => ({
     if (resolved.type === 'furniture') {
       const fKey = resolved.name as keyof FurnitureState;
       set((state) => {
-        const nextFurniture = { ...state.furniture, [fKey]: !state.furniture[fKey] };
+        let nextFurniture: FurnitureState;
+        if (fKey === 'glassDoorV2ShutterPos') {
+          const cur = state.furniture.glassDoorV2ShutterPos;
+          const next = cur === 0 ? 70 : cur === 70 ? 90 : cur === 90 ? 100 : 0;
+          nextFurniture = { ...state.furniture, glassDoorV2ShutterPos: next };
+        } else if (fKey === 'glassDoorV2LeftOpen') {
+          const nextLeft = !state.furniture.glassDoorV2LeftOpen;
+          const nextRight = nextLeft ? true : state.furniture.eastGlassDoor;
+          nextFurniture = {
+            ...state.furniture,
+            glassDoorV2LeftOpen: nextLeft,
+            eastGlassDoor: nextRight
+          };
+          if (nextRight !== state.furniture.eastGlassDoor) {
+            setTimeout(() => {
+              document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'eastGlassDoor', value: nextRight } }));
+            }, 0);
+          }
+        } else {
+          nextFurniture = { ...state.furniture, [fKey]: !state.furniture[fKey] as any };
+        }
         cameraState.invalidate?.();
         return { furniture: nextFurniture };
       });
