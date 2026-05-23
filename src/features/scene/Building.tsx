@@ -433,6 +433,10 @@ const INT_Z_BATH_E = BATH_Z_END - W_HALF; // 610 - 5 = 605
 const ceilBottom = new THREE.MeshStandardMaterial({
   color: COLORS.wall, roughness: 0.35, envMapIntensity: 0.15,
 });
+const ceilBottomBack = new THREE.MeshStandardMaterial({
+  color: COLORS.wall, roughness: 0.35, envMapIntensity: 0.15,
+  side: THREE.BackSide,
+});
 const ceilTop = new THREE.MeshStandardMaterial({
   color: COLORS.wall, roughness: 0.35,
   transparent: true, opacity: 0.18, depthWrite: false,
@@ -664,7 +668,8 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
           const shape = new THREE.Shape([
             new THREE.Vector2(-20, 30),
             new THREE.Vector2(316, 30),
-            new THREE.Vector2(316, 220),
+            new THREE.Vector2(316, 230),   // étendu à 230 pour couvrir pilier garden-e (z=-225±5)
+            new THREE.Vector2(326, 230),
             new THREE.Vector2(326, 220),
             new THREE.Vector2(326, -547.77),
             new THREE.Vector2(-20, -747.53),
@@ -712,14 +717,59 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
 
       {/* Plafonds — masquables via toggle "Plafond" */}
       <group visible={showCeiling}>
-        {/* Plafond principal */}
-        <mesh
-          ref={(m) => { if (m) m.material = ceilMats as any; }}
-          position={[BLDG_CX, WALL_H - 1 + CEIL_THICK / 2, BLDG_CZ]}
-          userData={{ brickType: 'ceiling' }}
-        >
-          <boxGeometry args={[BLDG_W, CEIL_THICK, BLDG_D]} />
-        </mesh>
+        {/* Plafond principal avec la même forme que la dalle en béton */}
+        {(() => {
+          const ceilShape = useMemo(() => {
+            return new THREE.Shape([
+              new THREE.Vector2(-20, 30),
+              new THREE.Vector2(316, 30),
+              new THREE.Vector2(316, 230),
+              new THREE.Vector2(326, 230),
+              new THREE.Vector2(326, 220),
+              new THREE.Vector2(326, -547.77),
+              new THREE.Vector2(-20, -747.53),
+            ]);
+          }, []);
+
+          const ceilBottomGeo = useMemo(() => {
+            const geo = new THREE.ShapeGeometry(ceilShape);
+            geo.rotateX(-Math.PI / 2);
+            return geo;
+          }, [ceilShape]);
+
+          const ceilExtrudeGeo = useMemo(() => {
+            const geo = new THREE.ExtrudeGeometry(ceilShape, { depth: CEIL_THICK, bevelEnabled: false });
+            geo.rotateX(-Math.PI / 2);
+            return geo;
+          }, [ceilShape]);
+
+          return (
+            <group position={[0, WALL_H - 1, 0]}>
+              {/* Dessous opaque (visible d'en bas) */}
+              <mesh
+                geometry={ceilBottomGeo}
+                material={ceilBottomBack}
+                receiveShadow
+                userData={{ brickType: 'ceiling' }}
+              />
+              {/* Dessus semi-transparent (visible d'en haut) */}
+              <mesh
+                geometry={ceilBottomGeo}
+                material={ceilTop}
+                position={[0, CEIL_THICK, 0]}
+                receiveShadow
+                userData={{ brickType: 'ceiling' }}
+              />
+              {/* Côtés verticaux opaques */}
+              <mesh
+                geometry={ceilExtrudeGeo}
+                material={[noCapMat, ceilSide]}
+                receiveShadow
+                userData={{ brickType: 'ceiling' }}
+              />
+            </group>
+          );
+        })()}
 
         {/* Plafond terrasse (235×150cm côté Est) */}
         <mesh
