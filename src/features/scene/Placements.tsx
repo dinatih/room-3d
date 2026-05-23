@@ -56,6 +56,8 @@ import { Phone }         from './items/Phone';
 import { Mug }           from './items/Mug';
 import { Backpack, BackpackSmall } from './items/Backpack';
 // Garden items
+import { Tent }          from './items/Tent';
+import { Vihals }        from './items/Vihals';
 import { AltappenRugField } from './items/AltappenRug';
 import { ArmrestSofa }  from './items/ArmrestSofa';
 import { ArmlessSofa }  from './items/ArmlessSofa';
@@ -533,6 +535,13 @@ export function Garden() {
       <group position={[180, 0, -120]} rotation={[0, -Math.PI / 4, 0]}
              userData={{ hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
         <ShibaInu />
+      </group>
+      <group position={[250, 0, -330]} rotation={[0, Math.PI, 0]}
+             userData={{ hoverAction: { label: 'Tente Quechua 2 Seconds 2P' } }}>
+        <Tent item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+      <group position={[160, 0, -260]} rotation={[0, -Math.PI / 2, 0]}>
+        <Vihals item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
     </>
   );

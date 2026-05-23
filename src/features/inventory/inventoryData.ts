@@ -58,6 +58,8 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'viggja',           name: 'Desserte VIGGJA',                brand: 'IKEA',     category: 'furniture', qty: 1, dims: { w: 37,   d: 50,   h: 74   }, notes: 'Jardin, à côté canapé ouest', glbPath: 'media/viggja.glb' },
   { id: 'armrest-sofa',     name: 'Canapé de jardin (grand)',       brand: '',         category: 'furniture', qty: 1, dims: { w: 60,   d: 160,  h: 90   }, notes: 'Rouge, côté est, avec accoudoirs' },
   { id: 'armless-sofa',     name: 'Canapé de jardin (petit)',       brand: '',         category: 'furniture', qty: 1, dims: { w: 60,   d: 100,  h: 100  }, notes: 'Rouge, sans accoudoirs' },
+  { id: 'tent-quechua-2sec', name: 'Tente Quechua 2 Seconds Easy 2P', brand: 'Quechua', category: 'furniture', qty: 1, dims: { w: 140,  d: 200,  h: 100  }, notes: 'Pop-up dôme 2 places, version compacte verte (réf 8784754) — procédural' },
+  { id: 'vihals-chair',     name: 'Chaise pliante VIHALS',          brand: 'IKEA',    category: 'furniture', qty: 1, dims: { w: 43,   d: 47,   h: 80   }, notes: 'Rouge, pliable (réf 70592744). Action plier/déplier (open=GLB, folded=procédural).', glbPath: 'media/vihals.glb', actions: ['vihals-toggle'] },
 
   // ── TECH ─────────────────────────────────────────────────────────────────────
   { id: 'tv',               name: 'Télévision CHiQ L32H7A',         brand: 'CHiQ',      category: 'tech',     qty: 1, dims: { w: 73,   d: 8,    h: 45   }, notes: '32" (80cm diag) — Android 9 Smart TV, HD, WiFi, BT, Google Assistant, Netflix, Prime Video, 2×HDMI, USB — Classe F — murale, orientée séjour', actions: ['tv-toggle'] },

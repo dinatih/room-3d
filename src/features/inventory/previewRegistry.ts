@@ -47,6 +47,8 @@ import { MllseG2Pro }                                 from '@features/scene/item
 import { JblCharge3 }                                 from '@features/scene/items/JblCharge3';
 import { TrashBin }                                   from '@features/scene/items/TrashBin';
 import { VacuumCleaner }                              from '@features/scene/items/VacuumCleaner';
+import { Tent }                                       from '@features/scene/items/Tent';
+import { Vihals }                                     from '@features/scene/items/Vihals';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
@@ -89,6 +91,8 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'jbl-charge3':            JblCharge3,
   'trash-bin':              TrashBin,
   'vacuum-cleaner':         VacuumCleaner,
+  'tent-quechua-2sec':      Tent,
+  'vihals-chair':           Vihals,
 
   // ── Composites (assemblages multi-pièces) ─────────────────────────────────
   'kallax-ne-stack':        KallaxNE,
@@ -128,4 +132,5 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'desk2-toggle':          ['Debout', 'Assis'],
   'desk2-position':        ['Position →', 'Position →'],
   'smorkull-position':     ['Position →', 'Position →'],
+  'vihals-toggle':         ['Plier', 'Déplier'],
 };
