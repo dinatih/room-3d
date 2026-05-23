@@ -666,8 +666,8 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
             new THREE.Vector2(316, 30),
             new THREE.Vector2(316, 220),
             new THREE.Vector2(326, 220),
-            new THREE.Vector2(326, -548),
-            new THREE.Vector2(-20, -748),
+            new THREE.Vector2(326, -547.77),
+            new THREE.Vector2(-20, -747.53),
           ]);
           const geo = new THREE.ExtrudeGeometry(shape, { depth: 10, bevelEnabled: false });
           geo.rotateX(-Math.PI / 2);
@@ -686,21 +686,25 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
               userData={{ brickType: 'floor' }}
             />
             {/* Dalle voisin de droite */}
-            <mesh
-              geometry={slabConcreteGeo}
-              material={slabConcreteMat}
-              position={[346.5, -3.5, -200]}
-              receiveShadow
-              userData={{ brickType: 'floor' }}
-            />
+            {layers.neighbors && (
+              <mesh
+                geometry={slabConcreteGeo}
+                material={slabConcreteMat}
+                position={[346.5, -3.5, -200]}
+                receiveShadow
+                userData={{ brickType: 'floor' }}
+              />
+            )}
             {/* Dalle voisin de gauche */}
-            <mesh
-              geometry={slabConcreteGeo}
-              material={slabConcreteMat}
-              position={[-346.5, -3.5, 200]}
-              receiveShadow
-              userData={{ brickType: 'floor' }}
-            />
+            {layers.neighbors && (
+              <mesh
+                geometry={slabConcreteGeo}
+                material={slabConcreteMat}
+                position={[-346.5, -3.5, 200]}
+                receiveShadow
+                userData={{ brickType: 'floor' }}
+              />
+            )}
           </>
         );
       })()}
