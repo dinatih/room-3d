@@ -446,39 +446,168 @@ const ceilSide = new THREE.MeshStandardMaterial({ color: COLORS.wall, roughness:
 const ceilMats = [ceilSide, ceilSide, ceilTop, ceilBottom, ceilSide, ceilSide];
 
 // ── Texture parquet ────────────────────────────────────────────────────────────
+// Light oak laminate inspired by real reference photo: warm beige planks,
+// flowing grain, occasional knots, subtle per-plank color variation, satin sheen.
 function makeParquetTex(): THREE.CanvasTexture {
-  const CW = 128, CH = 512, PW = CW / 2, PH = CH / 2;
+  const CW = 256, CH = 1024, PW = CW / 2;
   const canvas = document.createElement('canvas');
   canvas.width = CW; canvas.height = CH;
   const ctx = canvas.getContext('2d')!;
 
-  ctx.fillStyle = 'rgb(122, 74, 30)';
+  // seeded PRNG for stable look across reloads
+  let seed = 0xC0FFEE;
+  const rng = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 0xffffffff;
+  };
+
+  // base background = subtle gap line color (faint, blends with plank avg)
+  ctx.fillStyle = 'rgb(175, 142, 105)';
   ctx.fillRect(0, 0, CW, CH);
 
-  const PLANK_COLOR = 'rgb(122, 74, 30)';
-  function drawPlank(x0: number, y0: number, w: number, h: number, skipTop = false) {
-    ctx.fillStyle = PLANK_COLOR;
+  function drawPlank(x0: number, y0: number, w: number, h: number) {
+    // per-plank hue + luminance variation — reference shows wide spread
+    const hueShift = (rng() - 0.5) * 18;
+    const lumShift = (rng() - 0.5) * 38;
+    const baseR = Math.max(150, Math.min(235, 205 + lumShift + hueShift * 0.4));
+    const baseG = Math.max(120, Math.min(200, 170 + lumShift * 0.95));
+    const baseB = Math.max(85,  Math.min(170, 130 + lumShift * 0.7 - hueShift * 0.5));
+
+    // fill (leave 1px gap on all sides)
+    ctx.fillStyle = `rgb(${baseR | 0},${baseG | 0},${baseB | 0})`;
     ctx.fillRect(x0 + 1, y0 + 1, w - 2, h - 2);
-    for (let i = 0; i < 10; i++) {
-      const lx = x0 + 2 + Math.random() * (w - 4);
-      ctx.strokeStyle = `rgba(0,0,0,${0.04 + Math.random() * 0.06})`;
-      ctx.lineWidth = 0.5 + Math.random() * 0.8;
-      ctx.beginPath(); ctx.moveTo(lx, y0 + 1); ctx.lineTo(lx, y0 + h - 1); ctx.stroke();
+
+    // subtle cross-plank gradient for satin sheen
+    const grad = ctx.createLinearGradient(x0, y0, x0 + w, y0);
+    grad.addColorStop(0,    `rgba(255,240,210,${0.04 + rng() * 0.04})`);
+    grad.addColorStop(0.5,  'rgba(0,0,0,0)');
+    grad.addColorStop(1,    `rgba(50,28,10,${0.04 + rng() * 0.05})`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(x0 + 1, y0 + 1, w - 2, h - 2);
+
+    // base wood grain — many fine wavy lines along length
+    const grainCount = 70 + Math.floor(rng() * 40);
+    for (let i = 0; i < grainCount; i++) {
+      const lx = x0 + 2 + rng() * (w - 4);
+      const wave = 0.6 + rng() * 1.8;
+      const waveFreq = 0.015 + rng() * 0.035;
+      const phase = rng() * Math.PI * 2;
+      const alpha = 0.04 + rng() * 0.10;
+      const dark = rng() < 0.5;
+      ctx.strokeStyle = dark
+        ? `rgba(80,50,22,${alpha})`
+        : `rgba(245,220,180,${alpha * 0.55})`;
+      ctx.lineWidth = 0.4 + rng() * 0.8;
+      ctx.beginPath();
+      ctx.moveTo(lx + Math.sin(phase) * wave, y0 + 1);
+      const steps = 36;
+      for (let s = 1; s <= steps; s++) {
+        const t = s / steps;
+        const ly = y0 + 1 + t * (h - 2);
+        const ox = Math.sin(phase + ly * waveFreq) * wave;
+        ctx.lineTo(lx + ox, ly);
+      }
+      ctx.stroke();
     }
-    ctx.fillStyle = 'rgba(0,0,0,0.28)';
-    ctx.fillRect(x0, y0, 1, h);
-    ctx.fillRect(x0 + w - 1, y0, 1, h);
-    if (!skipTop) ctx.fillRect(x0, y0, w, 1);
+
+    // clip all subsequent drawing to plank rect (keeps arcs/knots inside)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x0 + 1, y0 + 1, w - 2, h - 2);
+    ctx.clip();
+
+    // cathedral grain — 0-2 soft arcs (subtle, not stacked rings)
+    const cathedralCount = rng() < 0.6 ? 1 + Math.floor(rng() * 2) : 0;
+    for (let c = 0; c < cathedralCount; c++) {
+      const cx = x0 + 4 + rng() * (w - 8);
+      const cy = y0 + 8 + rng() * (h - 16);
+      const baseW = 16 + rng() * 30;
+      const baseH = 40 + rng() * 100;
+      const rings = 2 + Math.floor(rng() * 3);
+      const dir = rng() < 0.5 ? 1 : -1;
+      for (let r = 0; r < rings; r++) {
+        const rw = baseW * (1 - r * 0.18);
+        const rh = baseH * (1 - r * 0.12);
+        const alpha = 0.03 + (1 - r / rings) * 0.05;
+        ctx.strokeStyle = `rgba(80,50,22,${alpha})`;
+        ctx.lineWidth = 0.5 + rng() * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(cx - rw / 2, cy);
+        ctx.bezierCurveTo(
+          cx - rw / 2, cy + dir * rh * 0.6,
+          cx + rw / 2, cy + dir * rh * 0.6,
+          cx + rw / 2, cy,
+        );
+        ctx.stroke();
+      }
+    }
+
+    // sparse knots — 0-2, smaller, occasional
+    const knots = rng() < 0.5 ? Math.floor(rng() * 3) : 0;
+    for (let k = 0; k < knots; k++) {
+      const kx = x0 + 8 + rng() * (w - 16);
+      const ky = y0 + 16 + rng() * (h - 32);
+      const krx = 1.5 + rng() * 3;
+      const kry = krx * (0.6 + rng() * 0.5);
+      const rot = rng() * Math.PI;
+      ctx.save();
+      ctx.translate(kx, ky); ctx.rotate(rot);
+      for (let r = kry; r > 0.5; r -= 0.6) {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r * (krx / kry), r, 0, 0, Math.PI * 2);
+        const alpha = 0.08 + (r / kry) * 0.15;
+        ctx.strokeStyle = `rgba(55,32,12,${alpha})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.ellipse(0, 0, krx * 0.35, kry * 0.35, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(40,22,8,0.5)';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.restore(); // end plank clip
+
+    // fine speckle noise
+    const img = ctx.getImageData(x0 + 1, y0 + 1, w - 2, h - 2);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const n = (rng() - 0.5) * 12;
+      d[i]     = Math.max(0, Math.min(255, d[i]     + n));
+      d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + n));
+      d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + n));
+    }
+    ctx.putImageData(img, x0 + 1, y0 + 1);
   }
 
-  drawPlank(0,  0,   PW, PH);
-  drawPlank(0,  PH,  PW, PH);
-  drawPlank(PW, 0,             PW, PH / 2, true);
-  drawPlank(PW, PH / 2,        PW, PH);
-  drawPlank(PW, PH + PH / 2,   PW, PH / 2);
+  // brick-pattern layout: 2 plank columns, staggered offsets per column
+  // column A (left): planks of varying length
+  const colALens = [320, 460, 220, 380, 280];
+  const colBLens = [400, 240, 350, 300, 420];
+
+  function layoutColumn(x0: number, lens: number[], offset: number) {
+    let y = -offset;
+    while (y < CH) {
+      const remaining = CH - y;
+      // pick next length, wrapping list
+      const idx = Math.floor(((y + offset) / 200)) % lens.length;
+      const len = Math.min(lens[idx], remaining);
+      drawPlank(x0, y, PW, len);
+      y += len;
+    }
+    // also draw the wrapped piece at top if first plank started below 0
+    if (offset > 0) drawPlank(x0, -offset, PW, offset);
+  }
+
+  layoutColumn(0,  colALens, 0);
+  layoutColumn(PW, colBLens, 180); // stagger second column
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 8;
+  // canvas X (256px) = 40cm world width  → 2 planks × 20cm wide
+  // canvas Y (1024px) = 260cm world length → average plank ~110cm long
   tex.repeat.set(1 / 40, 1 / 260);
   return tex;
 }
@@ -559,7 +688,10 @@ function Parquet() {
     const g = new THREE.ShapeGeometry(shape);
     const tex = makeParquetTex();
     const m = new THREE.MeshStandardMaterial({
-      map: tex, roughness: 0.45,
+      map: tex,
+      roughness: 0.55,
+      metalness: 0.04,
+      envMapIntensity: 0.6,
     });
     return { geo: g, mat: m };
   }, []);
@@ -652,7 +784,7 @@ function Tile() {
 }
 
 // ── Composant principal ────────────────────────────────────────────────────────
-export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
+export function Floor() {
   const layers = useSceneStore(state => state.layers);
   return (
     <>
@@ -715,8 +847,8 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
       })()}
 
 
-      {/* Plafonds — masquables via toggle "Plafond" */}
-      <group visible={showCeiling}>
+      {/* Plafonds */}
+      <group>
         {/* Plafond principal avec la même forme que la dalle en béton */}
         {(() => {
           const ceilShape = useMemo(() => {
