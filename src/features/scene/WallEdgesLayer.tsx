@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { useSceneStore } from './store/useSceneStore';
 
 const lineMat      = new THREE.LineBasicMaterial({ color: 0xff2200 });
 const highlightMat = new THREE.LineBasicMaterial({ color: 0xffee00, depthTest: false });
@@ -32,16 +33,28 @@ export const edgeHoverState = {
 // ── WallEdgesLayer (R3F, inside Canvas) ───────────────────────────────────────
 
 export function WallEdgesLayer() {
-  const { scene } = useThree();
+  const { scene, camera } = useThree();
+  const layers = useSceneStore(state => state.layers);
 
   useEffect(() => {
     scene.updateMatrixWorld(true);
     const geos: THREE.BufferGeometry[] = [];
 
+    // Helper récursif pour vérifier la visibilité de l'objet
+    const isVisible = (obj: THREE.Object3D): boolean => {
+      let cur: THREE.Object3D | null = obj;
+      while (cur) {
+        if (!cur.visible) return false;
+        cur = cur.parent;
+      }
+      return true;
+    };
+
     scene.traverse(obj => {
       const mesh = obj as THREE.Mesh;
       if (!mesh.isMesh || (mesh as any).isSkinnedMesh) return;
       if (!isWallMesh(mesh)) return;
+      if (!mesh.visible || !isVisible(mesh) || !camera.layers.test(mesh.layers)) return;
 
       const src = mesh.geometry;
       const tmp = new THREE.BufferGeometry();
@@ -79,7 +92,7 @@ export function WallEdgesLayer() {
       edgeData.line      = null;
       edgeData.positions = null;
     };
-  }, [scene]);
+  }, [scene, camera, layers]);
 
   return null;
 }
