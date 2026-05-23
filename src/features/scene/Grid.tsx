@@ -110,10 +110,10 @@ function buildGroup(depthTest: boolean): THREE.Group {
   // ── Labels murs ───────────────────────────────────────────────────────────
   const labelY = WALL_H * 0.6;
   for (const [txt, px, py, pz] of [
-    [`MUR A  X=0`,    -30,        labelY, ROOM_D / 2],
-    [`MUR B  X=${ROOM_W}`, ROOM_W + 30, labelY, ROOM_D / 2],
-    [`MUR C  Z=0`,    ROOM_W / 2, labelY, -30],
-    [`MUR D  Z=${ROOM_D}`, ROOM_W / 2, labelY, ROOM_D + 30],
+    [`MUR OUEST  X=0`,    -30,        labelY, ROOM_D / 2],
+    [`MUR EST    X=${ROOM_W}`, ROOM_W + 30, labelY, ROOM_D / 2],
+    [`MUR NORD   Z=0`,    ROOM_W / 2, labelY, -30],
+    [`MUR SUD    Z=${ROOM_D}`, ROOM_W / 2, labelY, ROOM_D + 30],
   ] as [string, number, number, number][]) {
     const sp = makeSprite(txt, '#dddddd', 12, depthTest);
     sp.position.set(px, py, pz);

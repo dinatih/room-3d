@@ -1,5 +1,5 @@
 /**
- * KallaxCuisine.tsx — Tour Kallax cuisine (niche mur D, coin mur A).
+ * KallaxCuisine.tsx — Tour Kallax cuisine (niche mur Sud, coin mur Ouest).
  * Composant auto-contenu : 3 Kallax empilés + 4 boîtes Drona dans le bas.
  *
  * Coordonnées locales : Y=0 = sol, centré XZ.

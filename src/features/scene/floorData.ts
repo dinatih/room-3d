@@ -33,7 +33,7 @@ export const SEG_WALLS: Seg[] = [
 
   // ── Segments manuels ───────────────────────────────────────────────────────
 
-  // Coin de niche : connecteur horizontal entre A1 (xc=-W/2) et A2a (xc=NICHE_X-W/2)
+  // Coin de niche : connecteur horizontal entre Ouest 1 (xc=-W/2) et Ouest Niche (xc=NICHE_X-W/2)
   [-W / 2, NICHE_Z_START, NICHE_X - W / 2, NICHE_Z_START],
 
   // Mur diagonal bâtiment

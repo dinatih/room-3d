@@ -303,7 +303,7 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
     );
 
     // diag-ne-kite — 4 côtés, angle en C = angle interne de la jonction (~122°).
-    // Face BC ∥ Mur B (direction Z), face CD ∥ mur diagonal (direction sinθ,cosθ).
+    // Face BC ∥ Mur Est (direction Z), face CD ∥ mur diagonal (direction sinθ,cosθ).
     // C = intersection de X=DIAG_AX+W avec la droite ext diagonale passant par eP(0).
     // eP(0) + t·(sinθ,cosθ) → X = DIAG_AX+W ⟹ t = (W − DIAG_DEPTH·pX) / sinθ
     const tC = (W - DIAG_DEPTH * pX) / sinθ;           // valeur négative
@@ -314,14 +314,14 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
       [
         [DIAG_AX + DIAG_DEPTH * pX, DIAG_AZ + DIAG_DEPTH * pZ] as [number, number], // D = eP(0)
         [cX, cZ]                                                 as [number, number], // C = sommet ext
-        [DIAG_AX + W,               DIAG_AZ]                    as [number, number], // B = coin ext Mur B
+        [DIAG_AX + W,               DIAG_AZ]                    as [number, number], // B = coin ext Mur Est
         [DIAG_AX,                   DIAG_AZ]                    as [number, number], // A = coin int
       ],
       WALL_H,
     );
 
-    // diag-sw-kite — même principe que NE, côté Mur A2b (X = DIAG_CX − W).
-    // Face BC ∥ Mur A2b (direction Z), face CD ∥ mur diagonal.
+    // diag-sw-kite — même principe que NE, côté Mur Ouest (X = DIAG_CX − W).
+    // Face BC ∥ Mur Ouest (direction Z), face CD ∥ mur diagonal.
     // C = intersection de X=DIAG_CX−W avec la droite ext diagonale par eP(diagLen).
     // eP(diagLen) + t·(sinθ,cosθ) → X = DIAG_CX−W ⟹ t = (−W − DIAG_DEPTH·pX) / sinθ
     const tC_sw  = (-W - DIAG_DEPTH * pX) / sinθ;          // valeur positive
@@ -331,7 +331,7 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
     const diagPillarSW = makeExtrudeGeo(
       [
         [DIAG_CX,                        DIAG_CZ]                    as [number, number], // A = coin int
-        [DIAG_CX - W,                    DIAG_CZ]                    as [number, number], // B = coin ext Mur A
+        [DIAG_CX - W,                    DIAG_CZ]                    as [number, number], // B = coin ext Mur Ouest
         [cX_sw, cZ_sw]                                               as [number, number], // C = sommet ext
         [DIAG_CX + DIAG_DEPTH * pX, DIAG_CZ + DIAG_DEPTH * pZ]     as [number, number], // D = eP(diagLen)
       ],
@@ -415,15 +415,15 @@ const CEIL_THICK = 20;
 const W_HALF = W / 2; // 5 cm
 
 // X intérieur
-const INT_X_WEST = 0; // face intérieure mur A1 (Ouest)
-const INT_X_NICHE = NICHE_X; // face intérieure mur A2 (niche/SDB) = -10
+const INT_X_WEST = 0; // face intérieure mur Ouest (séjour)
+const INT_X_NICHE = NICHE_X; // face intérieure mur Ouest (niche/SDB) = -10
 const INT_X_KITCHEN_L = KITCHEN_X0 + W_HALF; // 30 + 5 = 35
 const INT_X_KITCHEN_R = KITCHEN_X1 - W_HALF; // 130 - 5 = 125
 const INT_X_DOOR_S = DOOR_START; // 200 (porte)
 const INT_X_EAST = ROOM_W; // 316
 
 // Z intérieur
-const INT_Z_NORTH = 0; // face intérieure mur C (Nord)
+const INT_Z_NORTH = 0; // face intérieure mur Nord
 const INT_Z_NICHE_S = NICHE_Z_START + W_HALF; // 280 + 5 = 285
 const INT_Z_ROOM_S = ROOM_D - W_HALF; // 400 - 5 = 395
 const INT_Z_KITCHEN_B = KITCHEN_Z - W_HALF; // 460 - 5 = 455
@@ -853,7 +853,7 @@ function ReflectorMirror({ w, h, position, rotationY }: {
   return <primitive object={reflector} />;
 }
 
-// ── 3× Nissedal 60×60 — Mur D ────────────────────────────────────────────────
+// ── 3× Nissedal 60×60 — Mur Sud ────────────────────────────────────────────────
 
 function MirrorsD() {
   const W = 65, H = 65;
@@ -883,7 +883,7 @@ function MirrorsD() {
   );
 }
 
-// ── 3× Nissedal 40×150 + 1× 70×160 — Mur A ──────────────────────────────────
+// ── 3× Nissedal 40×150 + 1× 70×160 — Mur Ouest ──────────────────────────────────
 
 function MirrorsA() {
   const MA_W = 40, MA_H = 150;

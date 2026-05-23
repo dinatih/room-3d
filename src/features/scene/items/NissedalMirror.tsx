@@ -22,8 +22,8 @@ const silverMat = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, roughness: 0
 // ── Cadre réutilisable ────────────────────────────────────────────────────────
 // Coords locales : centré XZ, Y=0 = bas, face vers +Z.
 // Pour orienter sur un mur : envelopper dans un <group rotation-y={...}>.
-//   Mur D (face -Z) : rotationY = 0         (NissedalFrame face +Z = dos au mur)
-//   Mur A (face +X) : rotationY = Math.PI/2
+//   Mur Sud (face -Z) : rotationY = 0         (NissedalFrame face +Z = dos au mur)
+//   Mur Ouest (face +X) : rotationY = Math.PI/2
 
 export function NissedalFrame({ w, h, ft, fd }: { w: number; h: number; ft: number; fd: number }) {
   return (

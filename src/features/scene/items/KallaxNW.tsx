@@ -1,5 +1,5 @@
 /**
- * KallaxNW.tsx — Tour Kallax nord-ouest (mur A + mur C).
+ * KallaxNW.tsx — Tour Kallax nord-ouest (mur Ouest + mur Nord).
  * Composant auto-contenu : 2×1 + 1×1 + 1×1 pivotés + 4 boîtes Drona.
  *
  * Les Kallax sont pivotés rotZ=π/2 (largeur devient hauteur).
@@ -84,7 +84,7 @@ export function KallaxNW({ onSize }: SceneItemProps) {
 
       {/* VARIERA demi-étagère sur sommet tour, longueur plaquée contre mur Nord.
           rotY=-π/2 : grand axe (32) le long de Z, profondeur (13) le long de X.
-          Back panel contre mur C (Nord) en local -X. Opening face pièce (+Z). */}
+          Back panel contre mur Nord en local -X. Opening face pièce (+Z). */}
       <group
         position={[-h1 / 2 + VAR_D / 2, w2 + 2 * w1 + .5, DEP / 2 - VAR_W / 2]}
         rotation-y={-Math.PI / 2}

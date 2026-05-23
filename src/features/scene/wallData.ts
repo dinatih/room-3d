@@ -131,25 +131,25 @@ export const GLASS_DOOR_X = (GLASS_OPENING_X1 + GLASS_OPENING_X2) / 2;
 
 export const WALL_DEFS: WallDef[] = [
 
-  // ── MUR A (ouest) ──────────────────────────────────────────────────────────
-  // A1 : face intérieure séjour.
+  // ── MUR OUEST ──────────────────────────────────────────────────────────────
+  // Ouest 1 : face intérieure séjour.
   { axis: 'z', xc: pEast('corner-nw') - W / 2, z1: pSouth('corner-nw'), z2: pNorth('niche-beam'), mat: 'west' },
-  // A2a-outer : paroi arrière niche (3D uniquement, masquée par A1 en 2D)
+  // Ouest Niche (extérieur) : paroi arrière niche (3D uniquement, masquée par Ouest 1 en 2D)
   { axis: 'z', xc: pX('corner-sw'), z1: pSouth('corner-nw'), z2: pNorth('niche-beam'), mat: 'west', segKind: 'none' },
-  // A2a : face intérieure niche
+  // Ouest Niche (intérieur) : face intérieure niche
   { axis: 'z', xc: pX('corner-sw'), z1: pSouth('niche-beam'), z2: pNorth('corner-sw'), mat: 'west' },
-  // A2b : SDB + couloir (saute les piliers)
+  // Ouest SDB + couloir (saute les piliers)
   { axis: 'z', xc: pX('corner-sw'), z1: pSouth('corner-sw'), z2: pNorth('bath-nw'), mat: 'west' },
   { axis: 'z', xc: pX('corner-sw'), z1: pSouth('bath-nw'), z2: pNorth('shower-nw'), mat: 'west' },
   { axis: 'z', xc: pX('corner-sw'), z1: pSouth('shower-nw'), z2: pNorth('shower-sw'), mat: 'west' },
   { axis: 'z', xc: pX('corner-sw'), z1: pSouth('shower-sw'), z2: pNorth('diag-sw'), mat: 'west' },
 
-  // ── MUR B (est) ────────────────────────────────────────────────────────────
-  { axis: 'z', xc: pX('corner-ne'), z1: pSouth('corner-ne'), z2: pNorth('corner-se'), mat: 'east' }, // B1 séjour
-  { axis: 'z', xc: pX('corner-ne'), z1: pSouth('garden-e'), z2: pNorth('corner-ne'), mat: 'east' }, // B2 jardin
-  { axis: 'z', xc: pX('corner-ne'), z1: pSouth('corner-se'), z2: pNorth('diag-ne'), mat: 'east' }, // couloir droit
+  // ── MUR EST ────────────────────────────────────────────────────────────────
+  { axis: 'z', xc: pX('corner-ne'), z1: pSouth('corner-ne'), z2: pNorth('corner-se'), mat: 'east' }, // Est 1 (séjour)
+  { axis: 'z', xc: pX('corner-ne'), z1: pSouth('garden-e'), z2: pNorth('corner-ne'), mat: 'east' }, // Est 2 (jardin / brique)
+  { axis: 'z', xc: pX('corner-ne'), z1: pSouth('corner-se'), z2: pNorth('diag-ne'), mat: 'east' }, // Est 3 (couloir droit)
 
-  // ── MUR D (sud, Z=400) ────────────────────────────────────────────────────
+  // ── MUR SUD (Z=400) ────────────────────────────────────────────────────────
   { axis: 'x', x1: pEast('corner-sw'), x2: pWest('kitchen-sw'), zc: pZ('corner-sw') },
   { axis: 'x', x1: pEast('kitchen-se'), x2: pWest('corr-s'), zc: pZ('corner-sw') },
   // Linteau au-dessus de la porte principale (3D seulement)
@@ -177,7 +177,7 @@ export const WALL_DEFS: WallDef[] = [
   // Porte couloir SDB (2D uniquement)
   { axis: 'z', xc: pX('corr-n'), z1: CORR_DOOR_S, z2: CORR_DOOR_E, segKind: 'door' },
 
-  // ── Mur C (nord, Z=0) ────────────────────────────────────────────────────────
+  // ── MUR NORD (Z=0) ──────────────────────────────────────────────────────────
   // Panneau ouest (fixe)
   { axis: 'x', x1: pEast('corner-nw'), x2: pWest('glass-west'), zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north' },
   // Panneau est.
