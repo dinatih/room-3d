@@ -133,4 +133,6 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'desk2-position':        ['Position →', 'Position →'],
   'smorkull-position':     ['Position →', 'Position →'],
   'vihals-toggle':         ['Plier', 'Déplier'],
+  'sofa-arm-left':         ['Mettre à plat G', 'Relever G'],
+  'sofa-arm-right':        ['Mettre à plat D', 'Relever D'],
 };

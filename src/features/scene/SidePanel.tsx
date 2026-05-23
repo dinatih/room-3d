@@ -336,6 +336,8 @@ export interface FurnitureState {
   freezerOpen:    boolean;
   fridge:         boolean;
   tvOn:           boolean;
+  sofaArmLeft:    boolean;
+  sofaArmRight:   boolean;
   glassDoorV2:    boolean;
   glassDoorV2LeftOpen: boolean;
   glassDoorV2ShutterPos: number;
@@ -603,6 +605,10 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           () => onToggleFurniture('fridge'))}
       {b0('yellow', `TV : ${furniture.tvOn ? 'ON' : 'OFF'}`,
           () => onToggleFurniture('tvOn'))}
+      {b0('light', `Sofa accoudoir gauche : ${furniture.sofaArmLeft ? 'À PLAT' : 'LEVÉ'}`,
+          () => onToggleFurniture('sofaArmLeft'))}
+      {b0('light', `Sofa accoudoir droit : ${furniture.sofaArmRight ? 'À PLAT' : 'LEVÉ'}`,
+          () => onToggleFurniture('sofaArmRight'))}
     </>
   );
 

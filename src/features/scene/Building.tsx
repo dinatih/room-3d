@@ -774,7 +774,7 @@ export function Floor({ showCeiling = true }: { showCeiling?: boolean }) {
         {/* Plafond terrasse (235×150cm côté Est) */}
         <mesh
           ref={(m) => { if (m) m.material = ceilMats as any; }}
-          position={[300 - 235 / 2, WALL_H - 1 + CEIL_THICK / 2, BLDG_Z_MIN - 75]}
+          position={[300 - 235 / 2 + 16, WALL_H - 1 + CEIL_THICK / 2, BLDG_Z_MIN - 75]}
           userData={{ brickType: 'ceiling' }}
         >
           <boxGeometry args={[235, CEIL_THICK, 150]} />

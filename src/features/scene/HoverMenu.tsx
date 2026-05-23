@@ -62,6 +62,8 @@ const ACTIONS: Record<string, ActionDef> = {
   'airperformer-position': { btnLabel: () => { const p = positionState['airperformer-position']; return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'airperformer-position' },
   'sunnersta-position':    { btnLabel: () => { const p = positionState['sunnersta-position'];    return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'sunnersta-position'    },
   'walker-meshes':         { btnLabel: 'Meshes',             toggleKey: 'walker-meshes'     },
+  'sofa-arm-left':         { btnLabel: 'Accoudoir Gauche',  toggleKey: 'sofaArmLeft'       },
+  'sofa-arm-right':        { btnLabel: 'Accoudoir Droit',   toggleKey: 'sofaArmRight'      },
 };
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {

@@ -10,7 +10,7 @@
 
 import { useRef, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
-import { DirectionalLight, Color, MathUtils } from 'three';
+import { DirectionalLight, Mesh, MeshBasicMaterial, Color, MathUtils } from 'three';
 
 const LAT    = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const LNG    = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
@@ -113,5 +113,57 @@ export function SunLight() {
       shadow-bias={-0.0002}
       shadow-normalBias={0.04}
     />
+  );
+}
+
+// ── Disque solaire visible ────────────────────────────────────────────────────
+
+const SPHERE_D = 4000; // cm depuis le centre de la pièce
+const SPHERE_R = 130;  // rayon apparent
+
+function sunDir(azimuth: number, elevation: number) {
+  const azR  = MathUtils.degToRad(azimuth);
+  const elR  = MathUtils.degToRad(Math.max(0, elevation));
+  const east  = Math.sin(azR) * Math.cos(elR);
+  const north = Math.cos(azR) * Math.cos(elR);
+  const up    = Math.sin(elR);
+  const stAz  = MathUtils.degToRad(AZ_DEG);
+  const sinSt = Math.sin(stAz);
+  const cosSt = Math.cos(stAz);
+  return {
+    x: 150 + (sinSt * east + cosSt * north) * SPHERE_D,
+    y: up * SPHERE_D,
+    z: 200 + (cosSt * east - sinSt * north) * SPHERE_D,
+  };
+}
+
+export function SunSphere() {
+  const meshRef = useRef<Mesh>(null!);
+  const matRef  = useRef<MeshBasicMaterial>(null!);
+  const { invalidate } = useThree();
+
+  useEffect(() => {
+    function update() {
+      if (!meshRef.current || !matRef.current) return;
+      const { azimuth, elevation } = solarPosition(LAT, LNG, new Date());
+      meshRef.current.visible = elevation > 0;
+      if (elevation > 0) {
+        const { x, y, z } = sunDir(azimuth, elevation);
+        meshRef.current.position.set(x, y, z);
+        const { color } = sunParams(elevation);
+        matRef.current.color.copy(color);
+      }
+      invalidate();
+    }
+    update();
+    const id = setInterval(update, 60_000);
+    return () => clearInterval(id);
+  }, [invalidate]);
+
+  return (
+    <mesh ref={meshRef}>
+      <sphereGeometry args={[SPHERE_R, 16, 8]} />
+      <meshBasicMaterial ref={matRef} />
+    </mesh>
   );
 }

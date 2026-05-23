@@ -35,6 +35,8 @@ const initialFurniture: FurnitureState = {
   glassDoorV2: true,
   glassDoorV2LeftOpen: false,
   glassDoorV2ShutterPos: 0,
+  sofaArmLeft: false,
+  sofaArmRight: false,
 };
 
 const initialLayers: LayerState = {
@@ -90,6 +92,8 @@ function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 'transien
     'bin-toggle': 'bin-toggle',
     ninja: 'ninja',
     'ninja-toggle': 'ninja',
+    'sofa-arm-left': 'sofaArmLeft',
+    'sofa-arm-right': 'sofaArmRight',
   };
 
   if (key in map) {

@@ -583,10 +583,14 @@ export function Decor() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function Garden() {
+  const as = useFurnitureToggles({
+    sofaArmLeft: 'sofa-arm-left',
+    sofaArmRight: 'sofa-arm-right',
+  });
   return (
     <>
-      <group position={[270, 0, -110]}>
-        <ArmrestSofa item={{} as any} actionState={{}} onSize={() => {}} />
+      <group position={[270, 0, -110]} userData={{ hoverAction: { label: 'Canapé de jardin', actions: ['sofa-arm-left', 'sofa-arm-right'] } }}>
+        <ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} />
       </group>
       <group position={[100, 0, -80]} rotation={[0, Math.PI, 0]}>
         <ArmlessSofa item={{} as any} actionState={{}} onSize={() => {}} />

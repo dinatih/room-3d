@@ -36,7 +36,7 @@ import { VirtualDPad }                  from '@features/scene/VirtualDPad';
 import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { RealWorldLayer } from '@features/scene/RealWorldLayer';
-import { SunLight } from '@features/scene/SunLight';
+import { SunLight, SunSphere } from '@features/scene/SunLight';
 import { BuildAnimation, BuildAnimation3, BuildAnimation4, BuildAnimation_VisiteGuidee } from '@features/scene/BuildAnimations';
 import { RenderStyleLayer, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
 import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
@@ -223,7 +223,7 @@ export function Studio() {
         }}
       >
         <ambientLight color={0x8899bb} intensity={0.6} />
-        {layers.realSun ? <SunLight /> : (
+        {layers.realSun ? <><SunLight /><SunSphere /></> : (
           <directionalLight
             color={0xfff5e0}
             position={[500, 700, 400]}

@@ -386,17 +386,17 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
         </mesh>
       </group>
 
-      {/* ── LATTES DE FINITION / CHAMBRANLES (5cm de large, épaisseur 1.2cm, calées sur la face intérieure Z=15) ── */}
+      {/* ── LATTES DE FINITION / CHAMBRANLES (5cm de large, épaisseur 1.2cm, calées sur la face intérieure Z=0) ── */}
       {/* Latte gauche */}
-      <mesh position={[-W_TOTAL / 2 - 2.5, 25 + 200 / 2, 15 + 0.6]}>
+      <mesh position={[-W_TOTAL / 2 - 2.5, 25 + 200 / 2, 0.6]}>
         <boxGeometry args={[5, 200, 1.2]} />{pvcMat}
       </mesh>
       {/* Latte droite */}
-      <mesh position={[W_TOTAL / 2 + 2.5, 25 + 200 / 2, 15 + 0.6]}>
+      <mesh position={[W_TOTAL / 2 + 2.5, 25 + 200 / 2, 0.6]}>
         <boxGeometry args={[5, 200, 1.2]} />{pvcMat}
       </mesh>
       {/* Latte haute */}
-      <mesh position={[0, 225 + 2.5, 15 + 0.6]}>
+      <mesh position={[0, 225 + 2.5, 0.6]}>
         <boxGeometry args={[W_TOTAL + 10, 5, 1.2]} />{pvcMat}
       </mesh>
     </group>
