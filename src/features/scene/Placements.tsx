@@ -143,10 +143,12 @@ const AIRPERFORMER_POSITIONS = [
   { x: 300, z: 230,    ry: 0 },
   { x: 261, z: w2 / 2, ry: 0 }, // devant KallaxNE (face x=277, centre z=37.75)
   { x: 200, z: 100,    ry: 0 },
+  { x: ROOM_W - 16, z: w2 + 16, ry: 0 }, // angle KallaxNE / Mur Est
 ];
 
 const SUNNERSTA_POSITIONS = [
   { x: ROOM_W - 20, z: 271.5,       ry: Math.PI / 2 },
+  { x: ROOM_W - 26, z: 280,       ry: Math.PI },
   { x: 258,          z: KALLAX_SE_Z, ry: Math.PI / 2 }, // devant KallaxSE (face x=277)
   { x: 100,           z: MACK_Z,     ry: Math.PI / 2 }, // devant MacKapar
 ];
@@ -453,22 +455,27 @@ function AirPerformer_() {
   );
 }
 
+const SUNNERSTA_VARIANTS = 3; // 0 Sunnersta, 1 RÅSKOG grande, 2 RÅSKOG petite
+
 function Sunnersta_() {
   const [posIdx, setPosIdx] = useState(0);
+  const [variant, setVariant] = useState(0);
   useEffect(() => {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
       if (key === 'sunnersta-position') setPosIdx(i => (i + 1) % SUNNERSTA_POSITIONS.length);
+      if (key === 'sunnersta-variant')  setVariant(i => (i + 1) % SUNNERSTA_VARIANTS);
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
   }, []);
   useEffect(() => { positionState['sunnersta-position'] = { idx: posIdx, total: SUNNERSTA_POSITIONS.length }; }, [posIdx]);
+  useEffect(() => { positionState['sunnersta-variant'] = { idx: variant, total: SUNNERSTA_VARIANTS }; }, [variant]);
   const p = SUNNERSTA_POSITIONS[posIdx];
   return (
     <PositionTransition x={p.x} z={p.z} ry={p.ry}>
-      <group userData={{ animUnit: true, hoverAction: { label: 'Sunnersta', actions: ['sunnersta-position'] } }}>
-        <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <group userData={{ animUnit: true, hoverAction: { label: 'Sunnersta', actions: ['sunnersta-position', 'sunnersta-variant'] } }}>
+        <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} variant={variant} />
       </group>
     </PositionTransition>
   );
@@ -584,12 +591,12 @@ export function Decor() {
 
 export function Garden() {
   const as = useFurnitureToggles({
-    sofaArmLeft: 'sofa-arm-left',
-    sofaArmRight: 'sofa-arm-right',
+    sofaArmLeft: 'sofa-arm-right',
+    sofaArmRight: 'sofa-arm-left',
   });
   return (
     <>
-      <group position={[270, 0, -110]} userData={{ hoverAction: { label: 'Canapé de jardin', actions: ['sofa-arm-left', 'sofa-arm-right'] } }}>
+      <group position={[270, 0, -110]} rotation={[0, Math.PI, 0]}>
         <ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} />
       </group>
       <group position={[100, 0, -80]} rotation={[0, Math.PI, 0]}>

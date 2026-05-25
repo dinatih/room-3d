@@ -1,44 +1,49 @@
 /**
- * SunnerstaGroup.tsx — desserte Sunnersta + tête de mannequin + casquette.
+ * SunnerstaGroup.tsx — desserte (Sunnersta ou RÅSKOG) + tête de mannequin + casquette.
+ *
+ * `variant` : 0 = Sunnersta (90cm), 1 = RÅSKOG grande (77cm), 2 = RÅSKOG petite (61cm).
+ * La tête de mannequin et la casquette se repositionnent sur le plateau du modèle choisi.
  *
  * Coordonnées locales : Y=0 = sol, centré XZ.
- * Placement monde : wrapper group dans Placements.tsx (GlbPlacements)
- *   → position=[ROOM_W − 20, 0, 271.5], rotation-y={Math.PI / 2}
- * Utilisé aussi dans l'inventaire via registry.ts.
+ * Placement monde : wrapper group dans Placements.tsx (Sunnersta_)
+ *   → position SUNNERSTA_POSITIONS, rotation-y={Math.PI / 2}
+ * Utilisé aussi dans l'inventaire via registry.ts (variant 0 par défaut).
  */
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Sunnersta }     from './Sunnersta';
+import { RaskogLarge, RaskogSmall } from './Raskog';
 import { MannequinHead } from './MannequinHead';
 import { BaseballCap }   from './BaseballCap';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
-// Hauteur du plateau supérieur Sunnersta (90 trolley + 8 + 8 + 8.9 × scale)
-const SUNNERSTA_HEAD_TOP = 90 + 8 + 8 + 8.9 * 1.15;
+// Hauteur tête (base → sommet) : 8 + 8 + 8.9 × scale 1.15
+const HEAD_HEIGHT = 8 + 8 + 8.9 * 1.15;
 
-// ── Composant ─────────────────────────────────────────────────────────────────
-// Composite : GLB (Sunnersta + casquette) + procédural (MannequinHead toujours visible).
-// Positions locales (wrapper rotY=+π/2 → x_local = dz, z_local = −dx) :
-//   MannequinHead  world (282, 90, 271.5)     → local (0, 90, −2), rotY=−π/2
-//   BaseballCap    world (282, HEAD_TOP+2, …) → local (0, HEAD_TOP+2, −2), rotY=+π/2
+// Plateau supérieur par variant + composant desserte associé
+const DESSERTE_TOP = [90, 77, 61];
+const DESSERTE_EL  = [Sunnersta, RaskogLarge, RaskogSmall];
 
-export function SunnerstaGroup({ onSize }: SceneItemProps) {
+export function SunnerstaGroup({ onSize, variant = 0 }: SceneItemProps & { variant?: number }) {
   const ref = useRef<THREE.Group>(null!);
+  const v = variant % DESSERTE_EL.length;
+  const Desserte = DESSERTE_EL[v];
+  const top = DESSERTE_TOP[v];
 
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
     onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
-  }, []);
+  }, [variant]);
 
   return (
     <group ref={ref}>
-      <Sunnersta item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      <group position={[0, SUNNERSTA_HEAD_TOP + 2, -2]} rotation-y={Math.PI / 2}>
+      <Desserte item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <group position={[0, top + HEAD_HEIGHT + 2, -2]} rotation-y={Math.PI / 2}>
         <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Tête de mannequin — toujours visible */}
-      <group position={[0, 90, -2]} rotation-y={-Math.PI / 2}>
+      <group position={[0, top, -2]} rotation-y={-Math.PI / 2}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>

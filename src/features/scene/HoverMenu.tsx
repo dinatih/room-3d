@@ -61,6 +61,7 @@ const ACTIONS: Record<string, ActionDef> = {
   airPerformerSpeed:       { btnLabel: 'Vitesse +/-',        toggleKey: 'airPerformerSpeed' },
   'airperformer-position': { btnLabel: () => { const p = positionState['airperformer-position']; return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'airperformer-position' },
   'sunnersta-position':    { btnLabel: () => { const p = positionState['sunnersta-position'];    return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'sunnersta-position'    },
+  'sunnersta-variant':     { btnLabel: () => { const m = ['Sunnersta', 'RÅSKOG grande', 'RÅSKOG petite']; const p = positionState['sunnersta-variant']; return p ? `Modèle : ${m[p.idx]}` : 'Changer modèle'; }, toggleKey: 'sunnersta-variant' },
   'walker-meshes':         { btnLabel: 'Meshes',             toggleKey: 'walker-meshes'     },
   'sofa-arm-left':         { btnLabel: 'Accoudoir Gauche',  toggleKey: 'sofaArmLeft'       },
   'sofa-arm-right':        { btnLabel: 'Accoudoir Droit',   toggleKey: 'sofaArmRight'      },
