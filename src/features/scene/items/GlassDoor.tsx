@@ -396,7 +396,11 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
         <boxGeometry args={[5, 200, 1.2]} />{pvcMat}
       </mesh>
       {/* Latte haute */}
-      <mesh position={[0, 225 + 2.5, 0.6]}>
+      <mesh position={[0, 225 + 2, 0.6]}>
+        <boxGeometry args={[W_TOTAL + 10, 4, 1.2]} />{pvcMat}
+      </mesh>
+      {/* Latte basse (pour fermer le tour symétrique de 5cm) */}
+      <mesh position={[0, 25 - 2.5, 0.6]}>
         <boxGeometry args={[W_TOTAL + 10, 5, 1.2]} />{pvcMat}
       </mesh>
     </group>

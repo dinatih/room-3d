@@ -64,6 +64,7 @@ const initialLayers: LayerState = {
   physics: false,
   collisions: false,
   grass: false,
+  surface: false,
 };
 
 const initialExtraStates: Record<string, boolean> = {

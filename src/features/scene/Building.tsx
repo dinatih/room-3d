@@ -462,16 +462,16 @@ function makeParquetTex(): THREE.CanvasTexture {
   };
 
   // base background = subtle gap line color (faint, blends with plank avg)
-  ctx.fillStyle = 'rgb(175, 142, 105)';
+  ctx.fillStyle = 'rgb(135, 105, 78)';
   ctx.fillRect(0, 0, CW, CH);
 
   function drawPlank(x0: number, y0: number, w: number, h: number) {
-    // per-plank hue + luminance variation — reference shows wide spread
-    const hueShift = (rng() - 0.5) * 18;
-    const lumShift = (rng() - 0.5) * 38;
-    const baseR = Math.max(150, Math.min(235, 205 + lumShift + hueShift * 0.4));
-    const baseG = Math.max(120, Math.min(200, 170 + lumShift * 0.95));
-    const baseB = Math.max(85,  Math.min(170, 130 + lumShift * 0.7 - hueShift * 0.5));
+    // per-plank hue + luminance variation — warm brown, not grey
+    const hueShift = (rng() - 0.5) * 14;
+    const lumShift = (rng() - 0.5) * 26;
+    const baseR = Math.max(155, Math.min(225, 190 + lumShift + hueShift * 0.5));
+    const baseG = Math.max(120, Math.min(180, 155 + lumShift * 0.85));
+    const baseB = Math.max(80,  Math.min(145, 118 + lumShift * 0.6 - hueShift * 0.6));
 
     // fill (leave 1px gap on all sides)
     ctx.fillStyle = `rgb(${baseR | 0},${baseG | 0},${baseB | 0})`;

@@ -43,6 +43,7 @@ import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/sc
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
+import { SurfaceLayer }              from '@features/scene/SurfaceLayer';
 
 import {
   ROOM_W,
@@ -278,6 +279,7 @@ export function Studio() {
         {layers.grid        && <GridLayer depthTest={layers.gridDepth} />}
         {layers.lights      && <LightHelpers />}
         {layers.plan        && <FloorPlan />}
+        {layers.surface     && <SurfaceLayer />}
 
         {/* Contenu 3D — masqué en mode Plan */}
         <Suspense fallback={null}>
@@ -291,7 +293,7 @@ export function Studio() {
            * Walker inclus ici → reflété dans les miroirs.
            */}
           <Walls pillarsOnly={layers.pillarsOnly} wallsOnly={layers.wallsOnly} />
-          <Floor showCeiling={layers.ceiling} />
+          <Floor />
           <group visible={layers.doors}><DoorsPlaced /></group>
           <Walker    showSkeleton={layers.skeleton} />
           <WalkerRed showSkeleton={layers.skeleton} />

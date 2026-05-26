@@ -355,7 +355,6 @@ export interface LayerState {
   gridDepth:    boolean;
 
   skeleton:     boolean;
-  ceiling:      boolean;
   doors:        boolean;
   redWalls:     boolean;
   wallEdges:    boolean;
@@ -369,6 +368,7 @@ export interface LayerState {
   physics:      boolean;
   collisions:   boolean;
   grass:        boolean;
+  surface:      boolean;
 }
 
 export interface SidePanelProps {
@@ -497,7 +497,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
       {layerBtn('white',  'Squelette',     'skeleton')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
-      {layerBtn('green',  'Plafond',       'ceiling')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('cyan',   'LiDAR scan',    'lidar')}
@@ -510,6 +509,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('red',    'Murs rouges',   'redWalls')}
       {layerBtn('teal',   'Monde réel 🌍', 'realWorld')}
       {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
+      {layerBtn('green',  'Surfaces m²',   'surface')}
       <div style={{ padding: '6px 8px 6px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 5 }}>🎨 Rendu</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? 6 : 3 }}>
