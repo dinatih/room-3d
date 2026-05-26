@@ -624,11 +624,11 @@ export function Garden() {
              userData={{ hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
         <ShibaInu />
       </group>
-      <group position={[250, 0, -330]} rotation={[0, Math.PI, 0]}
+      <group position={[250, 0, -330]} rotation={[0, 0, 0]}
              userData={{ hoverAction: { label: 'Tente Quechua 2 Seconds 2P' } }}>
         <Tent item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[160, 0, -260]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={[160, 0, 260]} rotation={[0, -Math.PI / 2, 0]}>
         <Vihals item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
     </>

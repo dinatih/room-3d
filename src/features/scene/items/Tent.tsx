@@ -1,7 +1,7 @@
 /**
  * Tent.tsx — Tente Quechua 2 Seconds Easy 2P (ref 8784754) procédurale, dépliée.
- * Encombrement compact : 140×200×100cm (vestibule +Z inclus). Toile verte.
- * Coordonnées locales : X/Z centrés, Y=0 = sol. Vestibule côté +Z, porte côté +Z.
+ * Encombrement : 140×200×100cm. Toile verte.
+ * Coordonnées locales : X/Z centrés, Y=0 = sol. Porte côté +Z.
  * Placement monde dans Placements.tsx (Garden).
  */
 import { useLayoutEffect, useMemo } from 'react';
@@ -9,32 +9,16 @@ import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 
 // ── Dimensions ───────────────────────────────────────────────────────────────
-const W        = 140;            // largeur X (totale)
-const D_SLEEP  = 170;            // profondeur couchage Z
-const VEST     = 30;             // vestibule avant (Z+)
-const D_TOTAL  = D_SLEEP + VEST; // 200
-const H        = 100;            // hauteur Y
+const W        = 140;  // largeur X
+const D        = 200;  // profondeur Z
+const H        = 100;  // hauteur Y
 const FLOOR_T  = 1.2;
-
-// Décalage : on centre l'emprise totale en (0,0). Le dôme principal est donc
-// décalé en Z de -VEST/2, et le vestibule est devant (Z+).
-const DOME_CZ  = -VEST / 2;
-const VEST_CZ  =  D_SLEEP / 2 + DOME_CZ; // = D_SLEEP/2 - VEST/2
 
 // ── Couleurs / matériaux Quechua ─────────────────────────────────────────────
 const matFly = new THREE.MeshStandardMaterial({
   color: 0x2f6b32, roughness: 0.82, metalness: 0.04, side: THREE.DoubleSide,
 });
-const matFlyVest = new THREE.MeshStandardMaterial({
-  color: 0x255627, roughness: 0.82, metalness: 0.04, side: THREE.DoubleSide,
-});
-const matFloor = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.95 });
 const matPole  = new THREE.MeshStandardMaterial({ color: 0xe2e2e2, roughness: 0.4, metalness: 0.55 });
-const matMesh  = new THREE.MeshStandardMaterial({
-  color: 0x202428, roughness: 0.9, transparent: true, opacity: 0.55, side: THREE.DoubleSide,
-});
-const matZip   = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5, metalness: 0.7 });
-const matLogo  = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 });
 
 // ── Géométrie : superellipsoïde aplati (dôme Quechua) ────────────────────────
 function buildSuperdome(
@@ -91,77 +75,36 @@ function buildArchTube(
 export function Tent({ onSize }: SceneItemProps) {
   const geos = useMemo(() => {
     // Dôme principal (couchage)
-    const dome = buildSuperdome(W, D_SLEEP, H, 2.15, 28, 36);
-    dome.translate(0, FLOOR_T, DOME_CZ);
-
-    // Vestibule : petit dôme aplati à l'avant. Sa moitié arrière s'enfonce
-    // dans le dôme principal — masquée par occlusion.
-    const vest = buildSuperdome(W * 0.82, VEST * 2.4, H * 0.62, 2.4, 18, 22);
-    vest.translate(0, FLOOR_T, VEST_CZ);
-
-    // Floor / tapis de sol (couchage uniquement)
-    const floor = new THREE.BoxGeometry(W - 4, FLOOR_T, D_SLEEP - 4);
+    const dome = buildSuperdome(W, D, H, 2.15, 28, 36);
+    dome.translate(0, FLOOR_T, 0);
 
     // Arches : deux mâts croisés en X, coin à coin du couchage
-    const cNW = new THREE.Vector3(-W / 2 + 4, FLOOR_T, DOME_CZ - D_SLEEP / 2 + 4);
-    const cNE = new THREE.Vector3( W / 2 - 4, FLOOR_T, DOME_CZ - D_SLEEP / 2 + 4);
-    const cSW = new THREE.Vector3(-W / 2 + 4, FLOOR_T, DOME_CZ + D_SLEEP / 2 - 4);
-    const cSE = new THREE.Vector3( W / 2 - 4, FLOOR_T, DOME_CZ + D_SLEEP / 2 - 4);
+    const cNW = new THREE.Vector3(-W / 2 + 4, FLOOR_T, -D / 2 + 4);
+    const cNE = new THREE.Vector3( W / 2 - 4, FLOOR_T, -D / 2 + 4);
+    const cSW = new THREE.Vector3(-W / 2 + 4, FLOOR_T,  D / 2 - 4);
+    const cSE = new THREE.Vector3( W / 2 - 4, FLOOR_T,  D / 2 - 4);
     const apex = H + 1.5;
     const arch1 = buildArchTube(cNW, cSE, apex);
     const arch2 = buildArchTube(cNE, cSW, apex);
 
-    // Porte arc (panneau moustiquaire) — face avant du dôme couchage
-    const doorShape = new THREE.Shape();
-    const dW = W * 0.42, dH = H * 0.78;
-    doorShape.moveTo(-dW / 2, 0);
-    doorShape.lineTo(-dW / 2, dH * 0.45);
-    doorShape.bezierCurveTo(-dW / 2, dH, dW / 2, dH, dW / 2, dH * 0.45);
-    doorShape.lineTo(dW / 2, 0);
-    doorShape.lineTo(-dW / 2, 0);
-    const door = new THREE.ShapeGeometry(doorShape, 24);
-    // plaquée juste devant la face avant du dôme couchage
-    door.translate(0, FLOOR_T + 0.2, DOME_CZ + D_SLEEP / 2 - 1.5);
-
-    // Fermeture éclair (zip) : 2 segments verticaux sur l'arc porte
-    const zipL = new THREE.BoxGeometry(0.6, dH * 0.9, 0.15);
-    zipL.translate(-1.2, FLOOR_T + dH * 0.45, DOME_CZ + D_SLEEP / 2 - 1.0);
-    const zipR = new THREE.BoxGeometry(0.6, dH * 0.9, 0.15);
-    zipR.translate(1.2, FLOOR_T + dH * 0.45, DOME_CZ + D_SLEEP / 2 - 1.0);
-
-    // Logo Quechua patch (petit rectangle blanc)
-    const logo = new THREE.BoxGeometry(14, 4, 0.1);
-    logo.translate(0, H * 0.75, DOME_CZ + D_SLEEP / 2 - 2.5);
-
     return {
-      dome, vest, floor, arch1, arch2,
-      door, zipL, zipR, logo,
+      dome, arch1, arch2
     };
   }, []);
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W, H, D_TOTAL));
+    onSize(new THREE.Vector3(W, H, D));
   }, []);
 
   return (
     <group>
-      {/* Tapis de sol */}
-      <mesh geometry={geos.floor} material={matFloor} receiveShadow
-            position={[0, FLOOR_T / 2, DOME_CZ]} />
-
-      {/* Toile principale + vestibule */}
+      {/* Toile principale */}
       <mesh geometry={geos.dome} material={matFly} castShadow receiveShadow />
-      <mesh geometry={geos.vest} material={matFlyVest} castShadow receiveShadow />
 
       {/* Arches croisées (mâts) — surfaces externes des poteaux */}
       <mesh geometry={geos.arch1} material={matPole} castShadow />
       <mesh geometry={geos.arch2} material={matPole} castShadow />
 
-      {/* Panneau porte moustiquaire + zip + logo */}
-      <mesh geometry={geos.door} material={matMesh} />
-      <mesh geometry={geos.zipL} material={matZip} />
-      <mesh geometry={geos.zipR} material={matZip} />
-      <mesh geometry={geos.logo} material={matLogo} />
     </group>
   );
 }
