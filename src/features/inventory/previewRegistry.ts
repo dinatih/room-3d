@@ -49,6 +49,7 @@ import { TrashBin }                                   from '@features/scene/item
 import { VacuumCleaner }                              from '@features/scene/items/VacuumCleaner';
 import { Tent }                                       from '@features/scene/items/Tent';
 import { Vihals }                                     from '@features/scene/items/Vihals';
+import { Rebound }                                    from '@features/scene/items/Rebound';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
@@ -93,6 +94,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'vacuum-cleaner':         VacuumCleaner,
   'tent-quechua-2sec':      Tent,
   'vihals-chair':           Vihals,
+  'tyco-rebound':           Rebound,
 
   // ── Composites (assemblages multi-pièces) ─────────────────────────────────
   'kallax-ne-stack':        KallaxNE,

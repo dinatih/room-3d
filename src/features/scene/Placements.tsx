@@ -58,6 +58,7 @@ import { Backpack, BackpackSmall } from './items/Backpack';
 // Garden items
 import { Tent }          from './items/Tent';
 import { Vihals }        from './items/Vihals';
+import { Rebound }       from './items/Rebound';
 import { AltappenRugField } from './items/AltappenRug';
 import { ArmrestSofa }  from './items/ArmrestSofa';
 import { ArmlessSofa }  from './items/ArmlessSofa';
@@ -396,7 +397,7 @@ export function Furnishings() {
     <>
       <Bed />
       <Desks />
-      <group position={[ROOM_W - 30, TV_Y, 30]} rotation-order="YXZ"
+      <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
         rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]}>
         <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
@@ -617,7 +618,7 @@ export function Garden() {
       <group position={[100, 0, -145]} userData={{ animUnit: true }}>
         <PottedPalm item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[260, 0, -250]} userData={{ animUnit: true }}>
+      <group position={[240, 0, -200]} userData={{ animUnit: true }}>
         <JoggingSuit item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
       <group position={[180, 0, -120]} rotation={[0, -Math.PI / 4, 0]}
@@ -630,6 +631,9 @@ export function Garden() {
       </group>
       <group position={[160, 0, 260]} rotation={[0, -Math.PI / 2, 0]}>
         <Vihals item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+      <group position={[210, 0, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true }}>
+        <Rebound item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
     </>
   );
