@@ -1,0 +1,2100 @@
+<!doctype html>
+  <!--
+  Perfect Rig Retargeting & Verification Studio (lara_croft.glb)
+  
+  Serves at http://localhost:8080/rigs_perfect_croft.html
+  -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Perfect Rig Retargeting Studio (lara_croft.glb)</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #090a0f;
+      --bg-panel: rgba(18, 20, 29, 0.75);
+      --bg-panel-solid: #12141d;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-color-glow: rgba(140, 100, 255, 0.25);
+      --text-main: #f0f1f5;
+      --text-muted: #9ba1b6;
+      --color-primary: #8c64ff;
+      --color-primary-hover: #a382ff;
+      --color-primary-glow: rgba(140, 100, 255, 0.15);
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-ref: #3b82f6;
+      --color-mixamo: #eab308;
+      --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* Layout structure */
+    #app {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    #view-container {
+      flex: 1;
+      position: relative;
+      height: 100%;
+      min-width: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Sidebar Panel - Glassmorphic */
+    #panel {
+      width: 440px;
+      height: 100%;
+      background: var(--bg-panel);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .panel-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(9, 10, 15, 0.4);
+    }
+
+    .panel-header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-header h1 span {
+      background: linear-gradient(135deg, #a382ff, #8c64ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .panel-header p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    h2 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    h2::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+      margin-left: 12px;
+    }
+
+    /* Form Elements & Inputs */
+    .control-group {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      background: #14151e;
+      color: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    select:focus, input[type="text"]:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-primary-glow);
+    }
+
+    /* Grid layout for stats/toggles */
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    button {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    button.active {
+      background: var(--color-primary-glow);
+      border-color: var(--color-primary);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(140, 100, 255, 0.2);
+    }
+
+    button.accent {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    button.accent:hover {
+      background: var(--color-primary-hover);
+      border-color: var(--color-primary-hover);
+      box-shadow: 0 0 12px rgba(140, 100, 255, 0.3);
+    }
+
+    /* Model Selection Cards */
+    .model-selector-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .model-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.25s;
+    }
+
+    .model-card:hover {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .model-card.active {
+      background: rgba(140, 100, 255, 0.04);
+      border-color: var(--color-primary);
+      box-shadow: inset 0 0 8px rgba(140, 100, 255, 0.05);
+    }
+
+    .model-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .model-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .model-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    .model-card.active .status-dot {
+      background: var(--color-primary);
+      box-shadow: 0 0 8px var(--color-primary);
+    }
+
+    /* Comparison Table */
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .stats-table th, .stats-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .stats-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    .stats-table td.label-cell {
+      color: var(--text-muted);
+    }
+
+    .stats-table td.mono-cell {
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .stats-table tr:hover td {
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .diff-badge {
+      display: inline-block;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    
+    .diff-badge.match {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--color-success);
+    }
+    
+    .diff-badge.diff {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--color-warning);
+    }
+
+    /* Tree View */
+    .tree-container {
+      max-height: 280px;
+      overflow-y: auto;
+      background: #14151e;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .tree-node {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.6;
+      cursor: pointer;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      padding: 1px 4px;
+      border-radius: 4px;
+      user-select: none;
+    }
+
+    .tree-node:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #fff;
+    }
+
+    .tree-node.selected {
+      background: var(--color-primary-glow);
+      color: var(--color-primary-hover);
+      font-weight: 600;
+    }
+
+    .tree-indent {
+      display: inline-block;
+      width: 14px;
+      height: 100%;
+    }
+
+    /* HUD overlay */
+    #hud-overlay {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .glass-card {
+      background: rgba(9, 10, 15, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 18px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .hud-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hud-stat {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    /* Animation bar at the bottom center */
+    #animation-bar {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      right: 464px; /* leaves room for sidebar */
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 5;
+    }
+
+    .timeline-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .time-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      min-width: 45px;
+    }
+
+    .slider-track-wrap {
+      flex: 1;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .slider-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slider-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--color-primary), #b9a0ff);
+      border-radius: 3px;
+    }
+
+    .slider-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(140, 100, 255, 0.6);
+      position: absolute;
+      left: 0%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      transition: transform 0.1s;
+    }
+
+    .slider-track-wrap:hover .slider-thumb {
+      transform: translateX(-50%) scale(1.2);
+    }
+
+    .media-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .media-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .media-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .speed-select {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 3px 6px;
+      outline: none;
+    }
+
+    /* Joint detail popup */
+    #joint-inspector {
+      position: absolute;
+      top: 24px;
+      right: 464px;
+      width: 320px;
+      display: none;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .inspector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+
+    .inspector-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .inspector-close {
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 16px;
+      transition: color 0.2s;
+    }
+
+    .inspector-close:hover {
+      color: #fff;
+    }
+
+    .inspector-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      margin: 4px 0;
+    }
+
+    .inspector-k {
+      color: var(--text-muted);
+    }
+
+    .inspector-v {
+      font-family: var(--font-mono);
+      color: var(--text-main);
+    }
+
+    .inspector-diff {
+      color: var(--color-warning);
+    }
+
+    .color-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* Loader Indicator */
+    #loading-indicator {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    #loading-indicator.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(140, 100, 255, 0.1);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 1s infinite linear;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+  <div id="error-overlay" style="position: absolute; top: 0; left: 0; right: 0; background: #ef4444; color: #fff; padding: 15px; font-family: monospace; font-size: 13px; z-index: 10000; display: none; white-space: pre-wrap; box-shadow: 0 4px 10px rgba(0,0,0,0.5);"></div>
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      const div = document.getElementById('error-overlay');
+      div.style.display = 'block';
+      div.textContent += `\nError: ${message} at ${source}:${lineno}:${colno}`;
+      console.error(message, error);
+      return false;
+    };
+    window.onunhandledrejection = function(event) {
+      const div = document.getElementById('error-overlay');
+      div.style.display = 'block';
+      div.textContent += `\nUnhandled Rejection: ${event.reason}`;
+      console.error(event.reason);
+    };
+  </script>
+  <div id="app">
+    <div id="view-container">
+      <div id="hud-overlay">
+        <div class="glass-card">
+          <div class="hud-title">
+            <div class="status-dot" style="background: var(--color-primary); box-shadow: 0 0 8px var(--color-primary);"></div>
+            Perfect Rig Retargeting Studio
+          </div>
+          <div class="hud-stat" id="hud-model-stats">
+            Lara Croft: Reference Rig vs Our Perfect Rig
+          </div>
+        </div>
+      </div>
+
+      <!-- Joint Inspector -->
+      <div id="joint-inspector" class="glass-card">
+        <div class="inspector-header">
+          <span class="inspector-title" id="insp-joint-name">Bone Name</span>
+          <span class="inspector-close" id="insp-close">&times;</span>
+        </div>
+        <div id="inspector-body">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Media Controller -->
+      <div id="animation-bar" class="glass-card">
+        <div class="timeline-container">
+          <span class="time-label" id="time-current">0.00s</span>
+          <div class="slider-track-wrap" id="scrubber-wrap">
+            <div class="slider-track">
+              <div class="slider-fill" id="scrubber-fill"></div>
+            </div>
+            <div class="slider-thumb" id="scrubber-thumb"></div>
+          </div>
+          <span class="time-label" id="time-duration">0.00s</span>
+        </div>
+        
+        <div class="media-controls">
+          <div class="media-left">
+            <button id="btn-play" class="accent" style="width: 80px;">⏸ Pause</button>
+            <button id="btn-restart">⟲ Restart</button>
+            <div style="width: 1px; height: 16px; background: var(--border-color); margin: 0 4px;"></div>
+            <span style="font-size: 11px; color: var(--text-muted)">Animation:</span>
+            <select id="anim-select" style="width: 240px; background: rgba(0,0,0,0.4)">
+              <!-- Loaded dynamically -->
+            </select>
+          </div>
+          
+          <div class="media-right">
+            <span style="font-size: 11px; color: var(--text-muted)">Speed:</span>
+            <select id="speed-select" class="speed-select">
+              <option value="0.25">0.25x</option>
+              <option value="0.5">0.5x</option>
+              <option value="1.0" selected>1.0x</option>
+              <option value="2.0">2.0x</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spinner -->
+      <div id="loading-indicator">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">Loading Model...</div>
+      </div>
+    </div>
+
+    <!-- Sidebar Panel -->
+    <div id="panel">
+      <div class="panel-header">
+        <h1><span>Rig Alignment</span> Studio</h1>
+        <p>Dynamic joint-matching & roll preservation comparison</p>
+      </div>
+
+      <div class="panel-content">
+        <!-- View Layout Configuration -->
+        <div>
+          <h2>Comparison Layout</h2>
+          <div class="model-selector-container">
+            <div class="model-card active" data-layout="side-by-side">
+              <div class="model-info">
+                <span class="model-name">Side-by-Side</span>
+                <span class="model-desc">Reference Lara (Left) vs Perfect Mixamo Rig (Right)</span>
+              </div>
+              <div class="status-dot"></div>
+            </div>
+            <div class="model-card" data-layout="overlay">
+              <div class="model-info">
+                <span class="model-name">Superimposed Overlay</span>
+                <span class="model-desc">Compare alignments directly in the center</span>
+              </div>
+              <div class="status-dot"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Render Controls -->
+        <div>
+          <h2>Display Settings</h2>
+          <div class="control-group">
+            <div class="btn-grid">
+              <button id="btn-toggle-skeleton" class="active">🦴 Skeletons</button>
+              <button id="btn-toggle-axes">📍 Joint Axes</button>
+              <button id="btn-toggle-wire">🕸 Wireframe</button>
+              <button id="btn-toggle-mesh">👁 Hide Meshes</button>
+            </div>
+            <div class="btn-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 8px;">
+              <button id="btn-toggle-ref" class="active">📐 Show Ref Lara</button>
+              <button id="btn-toggle-ybot" class="active">🤖 Show Y-Bot</button>
+              <button id="btn-toggle-char" class="active">🧍 Show Character</button>
+            </div>
+            <div class="btn-grid" style="grid-template-columns: 1fr; gap: 6px; margin-top: 6px;">
+              <button id="btn-toggle-guns" class="active">🔫 Show Guns & Holsters</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytics -->
+        <div>
+          <h2>Rig Statistics</h2>
+          <div class="control-group" style="padding: 6px;">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>Reference</th>
+                  <th>Mixamo Rig</th>
+                  <th>Match</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="label-cell">Total Bones</td>
+                  <td id="stat-ref-bones" class="mono-cell">—</td>
+                  <td id="stat-mix-bones" class="mono-cell">—</td>
+                  <td><span id="badge-bones" class="diff-badge">—</span></td>
+                </tr>
+                <tr>
+                  <td class="label-cell">Skinned Meshes</td>
+                  <td id="stat-ref-meshes" class="mono-cell">—</td>
+                  <td id="stat-mix-meshes" class="mono-cell">—</td>
+                  <td><span id="badge-meshes" class="diff-badge">—</span></td>
+                </tr>
+                <tr>
+                  <td class="label-cell">Total Vertices</td>
+                  <td id="stat-ref-verts" class="mono-cell">—</td>
+                  <td id="stat-mix-verts" class="mono-cell">—</td>
+                  <td><span id="badge-verts" class="diff-badge">—</span></td>
+                </tr>
+                <tr>
+                  <td class="label-cell">Bounding Box Y</td>
+                  <td id="stat-ref-bbox" class="mono-cell">—</td>
+                  <td id="stat-mix-bbox" class="mono-cell">—</td>
+                  <td><span id="badge-bbox" class="diff-badge">—</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Bone Hierarchy Inspector -->
+        <div>
+          <h2>Bone Hierarchy Tree (Click to Inspect)</h2>
+          <div class="tree-container" id="hierarchy-tree">
+            <!-- Loaded dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three":           "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/":   "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE        from 'three';
+    import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader }   from 'three/addons/loaders/DRACOLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ── Configuration ────────────────────────────────────────────────────────
+    const REF_FILE = 'lara_croft__2026_rigged.glb';
+    const PERFECT_FILE = 'lara_croft.glb';
+    const YBOT_FILE = 'y_bot_from_mixamo.glb';
+    const CHAR_FILE = 'character.glb';
+    const LAYOUT_OFFSET = 0.9; // meters side-by-side offset
+
+    const ANIM_FILES = [
+      { name: 'Idle (Mixamo Standard)', file: 'idle_mixamo.glb' },
+      { name: 'Walk (Mixamo Standard)', file: 'walk_mixamo.glb' },
+      { name: 'Run (Mixamo Standard)', file: 'run_mixamo.glb' },
+      { name: 'Backflip (Mixamo Jump)', file: 'backflip_mixamo.glb' },
+      { name: 'Dance (Mixamo Hip Hop)', file: 'dance_mixamo.glb' }
+    ];
+
+    // Bone mapping from Mixamo name to Lara prefix name for joint comparison
+    const MIX_TO_LARA_PREFIX = {
+      "mixamorig:Hips": "pelvis",
+      "mixamorig:Spine": "spine lower",
+      "mixamorig:Spine2": "spine upper",
+      "mixamorig:Neck": "head neck lower",
+      "mixamorig:Head": "head neck upper",
+      "mixamorig:LeftShoulder": "arm left shoulder 1",
+      "mixamorig:LeftArm": "arm left shoulder 2",
+      "mixamorig:LeftForeArm": "arm left elbow",
+      "mixamorig:LeftHand": "arm left wrist",
+      "mixamorig:LeftUpLeg": "leg left thigh",
+      "mixamorig:LeftLeg": "leg left knee",
+      "mixamorig:LeftFoot": "leg left ankle",
+      "mixamorig:LeftToeBase": "leg left toes",
+      "mixamorig:RightShoulder": "arm right shoulder 1",
+      "mixamorig:RightArm": "arm right shoulder 2",
+      "mixamorig:RightForeArm": "arm right elbow",
+      "mixamorig:RightHand": "arm right wrist",
+      "mixamorig:RightUpLeg": "leg right thigh",
+      "mixamorig:RightLeg": "leg right knee",
+      "mixamorig:RightFoot": "leg right ankle",
+      "mixamorig:RightToeBase": "leg right toes"
+    };
+
+    // ── Application State ────────────────────────────────────────────────────
+    const state = {
+      layout: 'side-by-side', // 'side-by-side' | 'overlay'
+      showSkeleton: true,
+      showAxes: false,
+      wireframe: false,
+      hideMesh: false,
+      showRef: true,
+      showYbot: true,
+      showChar: true,
+      showGuns: true,
+      
+      models: {
+        ref: null,     // Reference Lara
+        perfect: null, // Our Perfect Mixamo Rig Lara
+        ybot: null,     // Y-Bot Ref
+        char: null     // Comparison FBX
+      },
+      wrappers: {
+        ref: null,
+        perfect: null,
+        ybot: null,
+        char: null
+      },
+      skeletons: {
+        ref: null,
+        perfect: null,
+        ybot: null,
+        char: null
+      },
+      stats: {
+        ref: null,
+        perfect: null
+      },
+      boneAxesHelpers: [],
+      
+      animation: {
+        selected: 'idle_mixamo.glb',
+        mixerRef: null,
+        mixerPerfect: null,
+        mixerYbot: null,
+        mixerChar: null,
+        actionRef: null,
+        actionPerfect: null,
+        actionYbot: null,
+        actionChar: null,
+        clip: null,
+        paused: false,
+        speed: 1.0,
+        duration: 0.0
+      },
+      
+      inspector: {
+        selectedBoneName: null,
+        marker: null, // alias for compatibility
+        markerPerfect: null,
+        markerRef: null,
+        markerYbot: null,
+        markerChar: null
+      }
+    };
+
+    const animClock = new THREE.Clock();
+
+    // ── Init Three.js Scene ──────────────────────────────────────────────────
+    const viewContainer = document.getElementById('view-container');
+    const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    viewContainer.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x090a0f);
+    scene.fog = new THREE.FogExp2(0x090a0f, 0.12);
+
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 20);
+    camera.position.set(0, 1.6, 2.8);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.02; // allow looking slightly under floor
+    controls.target.set(0, 0.85, 0);
+
+    // Lights
+    const ambient = new THREE.AmbientLight(0xffffff, 0.25);
+    scene.add(ambient);
+
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    mainLight.position.set(1.2, 2.4, 1.5);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 2048;
+    mainLight.shadow.mapSize.height = 2048;
+    mainLight.shadow.bias = -0.00005;
+    mainLight.shadow.camera.near = 0.1;
+    mainLight.shadow.camera.far = 8.0;
+    mainLight.shadow.camera.left = -1.5;
+    mainLight.shadow.camera.right = 1.5;
+    mainLight.shadow.camera.top = 1.5;
+    mainLight.shadow.camera.bottom = -1.5;
+    scene.add(mainLight);
+
+    const fillLight = new THREE.DirectionalLight(0x8a92ff, 0.4);
+    fillLight.position.set(-1.2, 1.0, -1.5);
+    scene.add(fillLight);
+
+    const floorGeo = new THREE.PlaneGeometry(20, 20);
+    const floorMat = new THREE.MeshStandardMaterial({
+      color: 0x0f1015,
+      roughness: 0.85,
+      metalness: 0.1
+    });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const grid = new THREE.GridHelper(10, 50, 0x1f2438, 0x111320);
+    grid.position.y = 0.001;
+    scene.add(grid);
+
+    // Joint inspector spheres
+    const markerGeo = new THREE.SphereGeometry(0.018, 16, 16);
+    
+    // Perfect Lara (Purple)
+    const markerMatPerf = new THREE.MeshBasicMaterial({
+      color: 0x8c64ff,
+      transparent: true,
+      opacity: 0.8,
+      depthTest: false
+    });
+    state.inspector.markerPerfect = new THREE.Mesh(markerGeo, markerMatPerf);
+    state.inspector.markerPerfect.visible = false;
+    state.inspector.markerPerfect.renderOrder = 1000;
+    scene.add(state.inspector.markerPerfect);
+    state.inspector.marker = state.inspector.markerPerfect; // keep reference for compatibility
+    
+    // Reference Lara (Red)
+    const markerMatRef = new THREE.MeshBasicMaterial({
+      color: 0xef4444,
+      transparent: true,
+      opacity: 0.8,
+      depthTest: false
+    });
+    state.inspector.markerRef = new THREE.Mesh(markerGeo, markerMatRef);
+    state.inspector.markerRef.visible = false;
+    state.inspector.markerRef.renderOrder = 1000;
+    scene.add(state.inspector.markerRef);
+
+    // Y-Bot (Cyan)
+    const markerMatYbot = new THREE.MeshBasicMaterial({
+      color: 0x06b6d4,
+      transparent: true,
+      opacity: 0.8,
+      depthTest: false
+    });
+    state.inspector.markerYbot = new THREE.Mesh(markerGeo, markerMatYbot);
+    state.inspector.markerYbot.visible = false;
+    state.inspector.markerYbot.renderOrder = 1000;
+    scene.add(state.inspector.markerYbot);
+
+    // Character (Orange)
+    const markerMatChar = new THREE.MeshBasicMaterial({
+      color: 0xf59e0b,
+      transparent: true,
+      opacity: 0.8,
+      depthTest: false
+    });
+    state.inspector.markerChar = new THREE.Mesh(markerGeo, markerMatChar);
+    state.inspector.markerChar.visible = false;
+    state.inspector.markerChar.renderOrder = 1000;
+    scene.add(state.inspector.markerChar);
+
+    // Create wrapper groups to insulate model coordinates from animation root translations
+    state.wrappers.ref = new THREE.Group();
+    state.wrappers.perfect = new THREE.Group();
+    state.wrappers.ybot = new THREE.Group();
+    state.wrappers.char = new THREE.Group();
+    scene.add(state.wrappers.ref);
+    scene.add(state.wrappers.perfect);
+    scene.add(state.wrappers.ybot);
+    scene.add(state.wrappers.char);
+
+    // ── Loaders ──────────────────────────────────────────────────────────────
+    const gltfLoader = new GLTFLoader();
+    const draco = new DRACOLoader();
+    draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
+    gltfLoader.setDRACOLoader(draco);
+
+    // ── Helper functions ─────────────────────────────────────────────────────
+    function showLoader(text) {
+      const el = document.getElementById('loading-indicator');
+      document.getElementById('loading-text').textContent = text;
+      el.style.display = 'flex';
+      el.offsetHeight; // force reflow
+      el.classList.add('show');
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('loading-indicator');
+      el.classList.remove('show');
+      el.style.display = 'none';
+    }
+
+    function resize() {
+      const w = viewContainer.clientWidth;
+      const h = viewContainer.clientHeight;
+      console.log(`[Viewport Resize] Client dimensions: ${w}x${h}`);
+      renderer.setSize(w, h);
+      
+      const aspect = w / h;
+      camera.aspect = aspect;
+      
+      // Maintain constant horizontal FOV for narrow viewports
+      const targetAspect = 1.6; // reference aspect ratio (16:10 landscape)
+      const targetFovV = 45; // reference vertical FOV
+      const fovH = 2 * Math.atan(Math.tan(targetFovV * Math.PI / 360) * targetAspect);
+      
+      if (aspect < targetAspect) {
+        camera.fov = 2 * Math.atan(Math.tan(fovH / 2) / aspect) * (180 / Math.PI);
+      } else {
+        camera.fov = targetFovV;
+      }
+      
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Analyze Rig details
+    function analyzeRig(root) {
+      const bones = [];
+      const meshes = [];
+      let verts = 0;
+      
+      root.traverse(c => {
+        if (c.isBone) bones.push(c);
+        if (c.isMesh) {
+          meshes.push(c);
+          if (c.geometry && c.geometry.attributes.position) {
+            verts += c.geometry.attributes.position.count;
+          }
+        }
+      });
+
+      const box = new THREE.Box3().setFromObject(root);
+      const size = box.getSize(new THREE.Vector3());
+
+      return {
+        boneCount: bones.length,
+        bones,
+        meshCount: meshes.length,
+        verts,
+        bboxHeight: size.y
+      };
+    }
+
+    // ── Load and Setup Models ────────────────────────────────────────────────
+    async function loadModel(filename) {
+      return new Promise((resolve, reject) => {
+        gltfLoader.load('public/media/glb/' + filename + '?t=' + Date.now(), gltf => {
+          resolve(gltf);
+        }, undefined, reject);
+      });
+    }
+
+    async function setupAllModels() {
+      showLoader("Loading Reference Lara Croft...");
+      const refGltf = await loadModel(REF_FILE);
+      state.models.ref = refGltf.scene;
+      
+      state.models.ref.traverse(c => { 
+        if (c.isMesh) {
+          c.castShadow = c.receiveShadow = true;
+          c.frustumCulled = false;
+        } 
+      });
+      state.wrappers.ref.add(state.models.ref);
+
+      showLoader("Loading Re-Rigged Lara Croft...");
+      const perfectGltf = await loadModel(PERFECT_FILE);
+      state.models.perfect = perfectGltf.scene;
+      state.models.perfect.traverse(c => { 
+        if (c.isMesh) {
+          c.castShadow = c.receiveShadow = true;
+          c.frustumCulled = false;
+        } 
+      });
+      state.wrappers.perfect.add(state.models.perfect);
+
+      showLoader("Loading Mixamo Y-Bot Reference...");
+      const ybotGltf = await loadModel(YBOT_FILE);
+      state.models.ybot = ybotGltf.scene;
+      state.models.ybot.scale.setScalar(1.0);
+      state.models.ybot.traverse(c => { 
+        if (c.isMesh) {
+          c.castShadow = c.receiveShadow = true;
+          c.frustumCulled = false;
+        } 
+      });
+      state.wrappers.ybot.add(state.models.ybot);
+
+      showLoader("Loading Comparison FBX...");
+      const charGltf = await loadModel(CHAR_FILE);
+      state.models.char = charGltf.scene;
+      const charBox = new THREE.Box3().setFromObject(state.models.char);
+      const charSize = charBox.getSize(new THREE.Vector3());
+      console.log("Comparison FBX size:", charSize.toArray());
+      if (charSize.y > 10.0) {
+        state.models.char.scale.setScalar(0.01);
+      } else {
+        state.models.char.scale.setScalar(1.0);
+      }
+      state.models.char.traverse(c => { 
+        if (c.isMesh) {
+          c.castShadow = c.receiveShadow = true;
+          c.frustumCulled = false;
+        } 
+      });
+      state.wrappers.char.add(state.models.char);
+
+      // Create skeleton helpers
+      state.skeletons.ref = new THREE.SkeletonHelper(state.models.ref);
+      state.skeletons.ref.material.linewidth = 2;
+      state.skeletons.ref.material.depthTest = false;
+      state.skeletons.ref.renderOrder = 999;
+      scene.add(state.skeletons.ref);
+
+      state.skeletons.perfect = new THREE.SkeletonHelper(state.models.perfect);
+      state.skeletons.perfect.material.linewidth = 2;
+      state.skeletons.perfect.material.depthTest = false;
+      state.skeletons.perfect.renderOrder = 999;
+      scene.add(state.skeletons.perfect);
+
+      state.skeletons.ybot = new THREE.SkeletonHelper(state.models.ybot);
+      state.skeletons.ybot.material.linewidth = 2;
+      state.skeletons.ybot.material.depthTest = false;
+      state.skeletons.ybot.renderOrder = 999;
+      scene.add(state.skeletons.ybot);
+
+      state.skeletons.char = new THREE.SkeletonHelper(state.models.char);
+      state.skeletons.char.material.linewidth = 2;
+      state.skeletons.char.material.depthTest = false;
+      state.skeletons.char.renderOrder = 999;
+      scene.add(state.skeletons.char);
+
+      // Analyze and store stats
+      state.stats.ref = analyzeRig(state.models.ref);
+      state.stats.perfect = analyzeRig(state.models.perfect);
+
+      // Attach Axes Helpers to bones (scale-aware)
+      setupAxesHelpers(state.models.ref);
+      setupAxesHelpers(state.models.perfect);
+      setupAxesHelpers(state.models.ybot);
+      setupAxesHelpers(state.models.char);
+
+      updatePositionsAndVisibility();
+      populateStatsTable();
+      buildHierarchyTree();
+      
+      console.log("=== DIAGNOSTICS: setupAllModels ===");
+      console.log("Reference Lara scale:", state.models.ref.scale.x);
+      console.log("Perfect Lara scale:", state.models.perfect.scale.x);
+      if (state.models.ybot) console.log("Y-Bot scale:", state.models.ybot.scale.x);
+
+      const refHips = (() => {
+        let found = null;
+        state.models.ref.traverse(c => {
+          if (c.isBone && (c.name.toLowerCase().includes("pelvis") || c.name.toLowerCase().includes("hips"))) found = c;
+        });
+        return found;
+      })();
+      const perfHips = state.models.perfect.getObjectByName("mixamorigHips") || state.models.perfect.getObjectByName("mixamorig:Hips");
+      
+      if (refHips) {
+        const refHipsPos = new THREE.Vector3();
+        refHips.getWorldPosition(refHipsPos);
+        console.log("Reference hips (pelvis) local pos:", refHips.position.toArray(), "world pos:", refHipsPos.toArray());
+      }
+      
+      if (perfHips) {
+        const perfHipsPos = new THREE.Vector3();
+        perfHips.getWorldPosition(perfHipsPos);
+        console.log("Perfect hips local pos:", perfHips.position.toArray(), "world pos:", perfHipsPos.toArray());
+      }
+      console.log("===================================");
+
+      hideLoader();
+    }
+
+    function setupAxesHelpers(model) {
+      model.traverse(c => {
+        if (c.isBone) {
+          const helper = new THREE.AxesHelper(0.06);
+          helper.material.depthTest = false;
+          helper.renderOrder = 1000;
+          helper.visible = state.showAxes;
+          c.add(helper);
+          state.boneAxesHelpers.push(helper);
+        }
+      });
+    }
+
+    function updatePositionsAndVisibility() {
+      // Offset values in meters
+      const offset = LAYOUT_OFFSET;
+      
+      if (state.wrappers.ref) { state.wrappers.ref.position.y = 0; state.wrappers.ref.updateMatrixWorld(true); }
+      if (state.wrappers.perfect) { state.wrappers.perfect.position.y = 0; state.wrappers.perfect.updateMatrixWorld(true); }
+      if (state.wrappers.ybot) { state.wrappers.ybot.position.y = 0; state.wrappers.ybot.updateMatrixWorld(true); }
+      if (state.wrappers.char) { state.wrappers.char.position.y = 0; state.wrappers.char.updateMatrixWorld(true); }
+
+      if (state.layout === 'side-by-side') {
+        state.wrappers.ref.position.set(-1.5 * offset, 0, 0);
+        state.models.ref.position.set(0, 0, 0);
+        state.wrappers.ref.visible = state.showRef;
+        if (state.skeletons.ref) state.skeletons.ref.visible = state.showRef && state.showSkeleton;
+        
+        if (state.models.ybot) {
+          state.wrappers.ybot.position.set(-0.5 * offset, 0, 0);
+          state.models.ybot.position.set(0, 0, 0);
+          state.wrappers.ybot.visible = state.showYbot;
+          if (state.skeletons.ybot) state.skeletons.ybot.visible = state.showYbot && state.showSkeleton;
+        }
+
+        state.wrappers.perfect.position.set(0.5 * offset, 0, 0);
+        state.models.perfect.position.set(0, 0, 0);
+
+        if (state.models.char) {
+          state.wrappers.char.position.set(1.5 * offset, 0, 0);
+          state.models.char.position.set(0, 0, 0);
+          state.wrappers.char.visible = state.showChar;
+          if (state.skeletons.char) state.skeletons.char.visible = state.showChar && state.showSkeleton;
+        }
+      } else {
+        state.wrappers.ref.position.set(0, 0, 0);
+        state.models.ref.position.set(0, 0, 0);
+        state.wrappers.ref.visible = state.showRef;
+        if (state.skeletons.ref) state.skeletons.ref.visible = state.showRef && state.showSkeleton;
+        
+        state.wrappers.perfect.position.set(0, 0, 0);
+        state.models.perfect.position.set(0, 0, 0);
+
+        if (state.models.ybot) {
+          state.wrappers.ybot.position.set(0, 0, 0);
+          state.models.ybot.position.set(0, 0, 0);
+          state.wrappers.ybot.visible = state.showYbot;
+          if (state.skeletons.ybot) state.skeletons.ybot.visible = state.showYbot && state.showSkeleton;
+        }
+
+        if (state.models.char) {
+          state.wrappers.char.position.set(0, 0, 0);
+          state.models.char.position.set(0, 0, 0);
+          state.wrappers.char.visible = state.showChar;
+          if (state.skeletons.char) state.skeletons.char.visible = state.showChar && state.showSkeleton;
+        }
+      }
+
+      // Display options
+      if (state.skeletons.ref) state.skeletons.ref.visible = state.showSkeleton && state.showRef;
+      if (state.skeletons.perfect) state.skeletons.perfect.visible = state.showSkeleton;
+      if (state.skeletons.ybot) state.skeletons.ybot.visible = state.showSkeleton && state.showYbot;
+      if (state.skeletons.char) state.skeletons.char.visible = state.showSkeleton && state.showChar;
+
+      state.boneAxesHelpers.forEach(h => {
+        h.visible = state.showAxes;
+      });
+
+      // Show/Hide meshes & wireframe
+      const checkIsGun = (node) => {
+        let temp = node;
+        while (temp) {
+          if (temp.name) {
+            const n = temp.name.toLowerCase();
+            if (n.includes('holster') || n.includes('handgun') || n.includes('gun') || n.includes('pistol')) {
+              return true;
+            }
+          }
+          if (temp.userData && temp.userData.name) {
+            const n = temp.userData.name.toLowerCase();
+            if (n.includes('holster') || n.includes('handgun') || n.includes('gun') || n.includes('pistol')) {
+              return true;
+            }
+          }
+          if (temp.geometry && temp.geometry.name) {
+            const n = temp.geometry.name.toLowerCase();
+            if (n.includes('holster') || n.includes('handgun') || n.includes('gun') || n.includes('pistol')) {
+              return true;
+            }
+          }
+          if (temp.material) {
+            const checkMatName = (m) => {
+              if (m && m.name) {
+                const n = m.name.toLowerCase();
+                if (n.includes('holster') || n.includes('handgun') || n.includes('gun') || n.includes('pistol')) {
+                  return true;
+                }
+              }
+              return false;
+            };
+            if (Array.isArray(temp.material)) {
+              if (temp.material.some(checkMatName)) return true;
+            } else {
+              if (checkMatName(temp.material)) return true;
+            }
+          }
+          temp = temp.parent;
+        }
+        return false;
+      };
+
+      state.models.ref.traverse(c => {
+        if (c.isMesh) {
+          const isGun = checkIsGun(c);
+          c.visible = !state.hideMesh && state.showRef && (!isGun || state.showGuns);
+          c.material.wireframe = state.wireframe;
+        }
+      });
+      state.models.perfect.traverse(c => {
+        if (c.isMesh) {
+          const isGun = checkIsGun(c);
+          c.visible = !state.hideMesh && (!isGun || state.showGuns);
+          c.material.wireframe = state.wireframe;
+        }
+      });
+      if (state.models.ybot) {
+        state.models.ybot.traverse(c => {
+          if (c.isMesh) {
+            c.visible = !state.hideMesh && state.showYbot;
+            c.material.wireframe = state.wireframe;
+          }
+        });
+      }
+      if (state.models.char) {
+        state.models.char.traverse(c => {
+          if (c.isMesh) {
+            c.visible = !state.hideMesh && state.showChar;
+            c.material.wireframe = state.wireframe;
+          }
+        });
+      }
+    }
+
+    function populateStatsTable() {
+      const ref = state.stats.ref;
+      const mix = state.stats.perfect;
+
+      document.getElementById('stat-ref-bones').textContent = ref.boneCount;
+      document.getElementById('stat-mix-bones').textContent = mix.boneCount;
+      const bBadge = document.getElementById('badge-bones');
+      bBadge.textContent = 'Mixamo Ref';
+      bBadge.className = 'diff-badge diff';
+
+      document.getElementById('stat-ref-meshes').textContent = ref.meshCount;
+      document.getElementById('stat-mix-meshes').textContent = mix.meshCount;
+      const mBadge = document.getElementById('badge-meshes');
+      mBadge.textContent = ref.meshCount === mix.meshCount ? 'MATCH' : 'DIFF';
+      mBadge.className = ref.meshCount === mix.meshCount ? 'diff-badge match' : 'diff-badge diff';
+
+      document.getElementById('stat-ref-verts').textContent = ref.verts.toLocaleString();
+      document.getElementById('stat-mix-verts').textContent = mix.verts.toLocaleString();
+      const vBadge = document.getElementById('badge-verts');
+      vBadge.textContent = ref.verts === mix.verts ? 'MATCH' : 'DIFF';
+      vBadge.className = ref.verts === mix.verts ? 'diff-badge match' : 'diff-badge diff';
+
+      // Height in cm
+      document.getElementById('stat-ref-bbox').textContent = (ref.bboxHeight * 100).toFixed(1) + ' cm';
+      document.getElementById('stat-mix-bbox').textContent = (mix.bboxHeight * 100).toFixed(1) + ' cm';
+      const bbBadge = document.getElementById('badge-bbox');
+      bbBadge.textContent = 'MATCH';
+      bbBadge.className = 'diff-badge match';
+    }
+
+    // ── Build hierarchy tree ─────────────────────────────────────────────────
+    function buildHierarchyTree() {
+      const container = document.getElementById('hierarchy-tree');
+      container.innerHTML = '';
+
+      const bones = state.stats.perfect.bones;
+      const roots = bones.filter(b => !b.parent || !b.parent.isBone);
+
+      function renderNode(bone, depth) {
+        const row = document.createElement('div');
+        row.className = 'tree-node';
+        row.dataset.boneName = bone.name;
+
+        // Indentation
+        for (let i = 0; i < depth; i++) {
+          const indent = document.createElement('span');
+          indent.className = 'tree-indent';
+          row.appendChild(indent);
+        }
+
+        // Label
+        const label = document.createElement('span');
+        label.textContent = '🦴 ' + bone.name.replace('mixamorig:', '');
+        row.appendChild(label);
+
+        // Click handler
+        row.onclick = (e) => {
+          e.stopPropagation();
+          selectBone(bone.name);
+        };
+
+        container.appendChild(row);
+
+        for (const child of bone.children) {
+          if (child.isBone) renderNode(child, depth + 1);
+        }
+      }
+
+      for (const r of roots) renderNode(r, 0);
+    }
+
+    function findBone(model, mixName) {
+      if (!model) return null;
+      let found = model.getObjectByName(mixName);
+      if (!found) {
+        const shortName = mixName.replace(/^mixamorig\s*:\s*/i, '');
+        found = model.getObjectByName(shortName);
+      }
+      if (!found) {
+        model.traverse(c => {
+          if (c.isBone) {
+            const nameNorm = c.name.toLowerCase().replace(/^mixamorig\s*:\s*/i, '');
+            const targetNorm = mixName.toLowerCase().replace(/^mixamorig\s*:\s*/i, '');
+            if (nameNorm === targetNorm) found = c;
+          }
+        });
+      }
+      return found;
+    }
+
+    function selectBone(boneName) {
+      const nodes = document.querySelectorAll('.tree-node');
+      nodes.forEach(n => {
+        if (n.dataset.boneName === boneName) n.classList.add('selected');
+        else n.classList.remove('selected');
+      });
+
+      state.inspector.selectedBoneName = boneName;
+
+      let perfBone = null;
+      state.models.perfect.traverse(c => {
+        if (c.isBone && c.name === boneName) perfBone = c;
+      });
+
+      const laraPref = MIX_TO_LARA_PREFIX[boneName];
+      let refBone = null;
+      if (laraPref) {
+        state.models.ref.traverse(c => {
+          if (c.isBone && c.name.startsWith(laraPref)) refBone = c;
+        });
+      }
+
+      const inspector = document.getElementById('joint-inspector');
+      if (!perfBone) {
+        inspector.style.display = 'none';
+        if (state.inspector.markerPerfect) state.inspector.markerPerfect.visible = false;
+        if (state.inspector.markerRef) state.inspector.markerRef.visible = false;
+        if (state.inspector.markerYbot) state.inspector.markerYbot.visible = false;
+        if (state.inspector.markerChar) state.inspector.markerChar.visible = false;
+        return;
+      }
+
+      inspector.style.display = 'block';
+      document.getElementById('insp-joint-name').textContent = boneName.replace('mixamorig:', '');
+
+      const perfWPos = new THREE.Vector3();
+      perfBone.getWorldPosition(perfWPos);
+
+      if (state.inspector.markerPerfect) {
+        state.inspector.markerPerfect.position.copy(perfWPos);
+        state.inspector.markerPerfect.visible = true;
+      }
+
+      const body = document.getElementById('inspector-body');
+      body.innerHTML = '';
+
+      function addRow(k, v, isDiff = false, dotColor = null) {
+        const r = document.createElement('div');
+        r.className = 'inspector-row';
+        let dotHtml = '';
+        if (dotColor) {
+          dotHtml = `<span class="color-dot" style="background-color: ${dotColor}"></span>`;
+        }
+        r.innerHTML = `<span class="inspector-k">${dotHtml}${k}</span><span class="inspector-v ${isDiff ? 'inspector-diff' : ''}">${v}</span>`;
+        body.appendChild(r);
+      }
+
+      addRow('Bone length (native)', (perfBone.position.length() * 1000).toFixed(1) + ' mm');
+      addRow('Perfect World X', (perfWPos.x * 100).toFixed(1) + ' cm', false, '#8c64ff');
+      addRow('Perfect World Y', (perfWPos.y * 100).toFixed(1) + ' cm', false, '#8c64ff');
+      addRow('Perfect World Z', (perfWPos.z * 100).toFixed(1) + ' cm', false, '#8c64ff');
+
+      // 1. Reference Lara Comparison
+      const refWPos = new THREE.Vector3();
+      if (refBone) {
+        refBone.getWorldPosition(refWPos);
+        
+        const refWPosAdjusted = refWPos.clone();
+        if (state.layout === 'side-by-side') {
+          // perfect is at 0.5 * offset, ref is at -1.5 * offset.
+          // Diff is 2 * offset
+          refWPosAdjusted.x += 2 * LAYOUT_OFFSET; 
+        }
+        
+        const dist = perfWPos.distanceTo(refWPosAdjusted);
+        
+        addRow('Lara Ref Bone', refBone.name, false, '#ef4444');
+        addRow('Ref World Y', (refWPos.y * 100).toFixed(1) + ' cm', false, '#ef4444');
+        addRow('Ref alignment diff', (dist * 1000).toFixed(1) + ' mm', dist > 0.005, '#ef4444');
+
+        if (state.inspector.markerRef) {
+          state.inspector.markerRef.position.copy(refWPos);
+          state.inspector.markerRef.visible = state.showRef && state.wrappers.ref.visible;
+        }
+      } else {
+        addRow('Lara Ref Bone', '— (collarbone helper)', true, '#ef4444');
+        if (state.inspector.markerRef) state.inspector.markerRef.visible = false;
+      }
+
+      // 2. Y-Bot Reference Comparison
+      const ybotWPos = new THREE.Vector3();
+      const ybotBone = findBone(state.models.ybot, boneName);
+      if (ybotBone) {
+        ybotBone.getWorldPosition(ybotWPos);
+        
+        const ybotWPosAdjusted = ybotWPos.clone();
+        if (state.layout === 'side-by-side') {
+          // perfect is at 0.5 * offset, ybot is at -0.5 * offset.
+          // Diff is 1 * offset
+          ybotWPosAdjusted.x += LAYOUT_OFFSET;
+        }
+        
+        const dist = perfWPos.distanceTo(ybotWPosAdjusted);
+        
+        addRow('Y-Bot Bone', ybotBone.name, false, '#06b6d4');
+        addRow('Y-Bot World Y', (ybotWPos.y * 100).toFixed(1) + ' cm', false, '#06b6d4');
+        addRow('Y-Bot alignment diff', (dist * 1000).toFixed(1) + ' mm', dist > 0.005, '#06b6d4');
+
+        if (state.inspector.markerYbot) {
+          state.inspector.markerYbot.position.copy(ybotWPos);
+          state.inspector.markerYbot.visible = state.showYbot && state.wrappers.ybot.visible;
+        }
+      } else {
+        addRow('Y-Bot Bone', '— (not found)', true, '#06b6d4');
+        if (state.inspector.markerYbot) state.inspector.markerYbot.visible = false;
+      }
+
+      // 3. Comparison Character Model Comparison
+      const charWPos = new THREE.Vector3();
+      const charBone = findBone(state.models.char, boneName);
+      if (charBone) {
+        charBone.getWorldPosition(charWPos);
+        
+        const charWPosAdjusted = charWPos.clone();
+        if (state.layout === 'side-by-side') {
+          // perfect is at 0.5 * offset, char is at 1.5 * offset.
+          // Diff is -1 * offset
+          charWPosAdjusted.x -= LAYOUT_OFFSET;
+        }
+        
+        const dist = perfWPos.distanceTo(charWPosAdjusted);
+        
+        addRow('Character Bone', charBone.name, false, '#f59e0b');
+        addRow('Character World Y', (charWPos.y * 100).toFixed(1) + ' cm', false, '#f59e0b');
+        addRow('Char alignment diff', (dist * 1000).toFixed(1) + ' mm', dist > 0.005, '#f59e0b');
+
+        if (state.inspector.markerChar) {
+          state.inspector.markerChar.position.copy(charWPos);
+          state.inspector.markerChar.visible = state.showChar && state.wrappers.char.visible;
+        }
+      } else {
+        addRow('Character Bone', '— (not found)', true, '#f59e0b');
+        if (state.inspector.markerChar) state.inspector.markerChar.visible = false;
+      }
+    }
+
+    document.getElementById('insp-close').onclick = () => {
+      document.getElementById('joint-inspector').style.display = 'none';
+      if (state.inspector.markerPerfect) state.inspector.markerPerfect.visible = false;
+      if (state.inspector.markerRef) state.inspector.markerRef.visible = false;
+      if (state.inspector.markerYbot) state.inspector.markerYbot.visible = false;
+      if (state.inspector.markerChar) state.inspector.markerChar.visible = false;
+      state.inspector.selectedBoneName = null;
+      document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('selected'));
+    };
+
+    // ── Animation Playback Engine ────────────────────────────────────────────
+    function stopAnimation() {
+      if (state.animation.actionRef) { state.animation.actionRef.stop(); state.animation.actionRef = null; }
+      if (state.animation.actionPerfect) { state.animation.actionPerfect.stop(); state.animation.actionPerfect = null; }
+      if (state.animation.actionYbot) { state.animation.actionYbot.stop(); state.animation.actionYbot = null; }
+      if (state.animation.actionChar) { state.animation.actionChar.stop(); state.animation.actionChar = null; }
+      state.animation.mixerRef = null;
+      state.animation.mixerPerfect = null;
+      state.animation.mixerYbot = null;
+      state.animation.mixerChar = null;
+    }
+
+    async function loadSelectedAnimation(filename) {
+      showLoader("Loading Animation...");
+      stopAnimation();
+      
+      try {
+        const animGltf = await loadModel(filename);
+        if (!animGltf.animations || animGltf.animations.length === 0) {
+          console.warn(`${filename} has no animations`);
+          hideLoader();
+          return;
+        }
+
+        // Just take the first animation clip directly since they are clean Mixamo GLBs
+        const rawClip = animGltf.animations[0];
+
+        state.animation.clip = rawClip;
+        state.animation.duration = rawClip.duration;
+        document.getElementById('time-duration').textContent = rawClip.duration.toFixed(2) + 's';
+
+        function createCleanedClip(rawClip, model) {
+          const tgtByKey = new Map();
+          
+          // Robust normalized names helper
+          const norm = s => {
+            let res = s.replace(/_\d+$/, '').toLowerCase();
+            res = res.replace(/^mixamorig\s*:\s*/, ''); // strip mixamorig:
+            res = res.replace(/^mixamorig/, ''); // strip mixamorig
+            res = res.replace(/[^a-z0-9]/g, '');
+            return res;
+          };
+
+          // Determine if model is the original Lara (no mixamo bones)
+          let isOriginalLara = true;
+          model.traverse(c => {
+            if (c.isBone && c.name.toLowerCase().includes('mixamo')) {
+              isOriginalLara = false;
+            }
+          });
+
+          if (isOriginalLara) {
+            // Original Lara is not retargeted to Mixamo animations to avoid deforming her skeleton
+            // due to incompatible bone rolls. We return an empty clip so she remains in her static bind pose.
+            return new THREE.AnimationClip(rawClip.name + '_' + model.uuid, rawClip.duration, []);
+          }
+
+          // Build mapping from normalized name in animation to model bone name
+          let modelHips = null;
+          
+          if (false) {
+            // For original Lara, we map using MIX_TO_LARA_PREFIX
+            const normMixToLara = new Map();
+            for (const [mixKey, laraPrefix] of Object.entries(MIX_TO_LARA_PREFIX)) {
+              normMixToLara.set(norm(mixKey), norm(laraPrefix));
+            }
+            
+            model.traverse(c => {
+              if (c.isBone) {
+                const nameNorm = norm(c.name);
+                for (const [normMix, normLara] of normMixToLara.entries()) {
+                  if (nameNorm.startsWith(normLara)) {
+                    tgtByKey.set(normMix, c.name);
+                  }
+                }
+                if (nameNorm.includes('pelvis') || nameNorm.includes('hips')) {
+                  modelHips = c;
+                }
+              }
+            });
+          } else {
+            // For standard Mixamo / Y-Bot, map by direct normalized name
+            model.traverse(c => {
+              if (c.isBone) {
+                const nameNorm = norm(c.name);
+                tgtByKey.set(nameNorm, c.name);
+                if (nameNorm.includes('hips') || nameNorm.includes('pelvis')) {
+                  modelHips = c;
+                }
+              }
+            });
+          }
+
+          let animHipsY = null;
+          const rawHipsPosTrack = rawClip.tracks.find(t => {
+            const [bn, prop] = t.name.split('.');
+            return prop === 'position' && (norm(bn).includes('hips') || norm(bn).includes('pelvis'));
+          });
+          
+          if (rawHipsPosTrack && rawHipsPosTrack.values && rawHipsPosTrack.values.length > 1) {
+            animHipsY = rawHipsPosTrack.values[1];
+          }
+
+          let hipsTranslationRatio = 1.0;
+          if (modelHips && animHipsY !== null) {
+            const isModelMetric = (modelHips.position.y < 5.0);
+            const isAnimMetric = (Math.abs(animHipsY) < 5.0);
+            
+            if (isModelMetric && !isAnimMetric) {
+              hipsTranslationRatio = 0.01;
+            } else if (!isModelMetric && isAnimMetric) {
+              hipsTranslationRatio = 100.0;
+            } else {
+              hipsTranslationRatio = 1.0;
+            }
+            console.log(`[Clip Mapping] Model Hips Y: ${modelHips.position.y.toFixed(4)}, Anim Hips Y: ${animHipsY.toFixed(4)}, Ratio: ${hipsTranslationRatio}`);
+          }
+
+          const renamedTracks = [];
+          for (const track of rawClip.tracks) {
+            const [boneName, prop] = track.name.split('.');
+            const targetBone = tgtByKey.get(norm(boneName));
+            if (targetBone) {
+              if (prop === 'scale') continue;
+              if (prop === 'position' && !norm(boneName).includes('hips') && !norm(boneName).includes('pelvis')) continue;
+              if (model !== state.models.ybot && model !== state.models.char && norm(boneName).includes('shoulder')) continue;
+              
+              const clonedTrack = track.clone();
+              clonedTrack.name = targetBone + '.' + prop;
+              
+              if (prop === 'position' && (norm(boneName).includes('hips') || norm(boneName).includes('pelvis'))) {
+                for (let i = 0; i < clonedTrack.values.length; i++) {
+                  clonedTrack.values[i] *= hipsTranslationRatio;
+                }
+              }
+              
+              renamedTracks.push(clonedTrack);
+            }
+          }
+          return new THREE.AnimationClip(rawClip.name + '_' + model.uuid, rawClip.duration, renamedTracks);
+        }
+
+        const refClip = createCleanedClip(rawClip, state.models.ref);
+        const perfectClip = createCleanedClip(rawClip, state.models.perfect);
+        const ybotClip = createCleanedClip(rawClip, state.models.ybot);
+        const charClip = createCleanedClip(rawClip, state.models.char);
+
+        console.log("=== DIAGNOSTICS: loadSelectedAnimation ===");
+        console.log("rawClip track count:", rawClip.tracks.length);
+        console.log("refClip track count:", refClip.tracks.length);
+        console.log("perfectClip track count:", perfectClip.tracks.length);
+        console.log("ybotClip track count:", ybotClip.tracks.length);
+        console.log("charClip track count:", charClip.tracks.length);
+
+        // Mixers: one per model for clean binding and to eliminate scene-wide warnings
+        state.animation.mixerRef = new THREE.AnimationMixer(state.models.ref);
+        state.animation.mixerPerfect = new THREE.AnimationMixer(state.models.perfect);
+        state.animation.mixerYbot = new THREE.AnimationMixer(state.models.ybot);
+        state.animation.mixerChar = new THREE.AnimationMixer(state.models.char);
+        
+        // Actions
+        state.animation.actionRef = state.animation.mixerRef.clipAction(refClip);
+        state.animation.actionPerfect = state.animation.mixerPerfect.clipAction(perfectClip);
+        state.animation.actionYbot = state.animation.mixerYbot.clipAction(ybotClip);
+        state.animation.actionChar = state.animation.mixerChar.clipAction(charClip);
+
+        // Play
+        state.animation.actionRef.setLoop(THREE.LoopRepeat, Infinity);
+        state.animation.actionRef.play();
+        
+        state.animation.actionPerfect.setLoop(THREE.LoopRepeat, Infinity);
+        state.animation.actionPerfect.play();
+        
+        state.animation.actionYbot.setLoop(THREE.LoopRepeat, Infinity);
+        state.animation.actionYbot.play();
+
+        state.animation.actionChar.setLoop(THREE.LoopRepeat, Infinity);
+        state.animation.actionChar.play();
+
+        state.animation.paused = false;
+        document.getElementById('btn-play').textContent = '⏸ Pause';
+        document.getElementById('btn-play').className = 'accent';
+
+      } catch (e) {
+        console.error("animation load error:", e);
+      }
+      
+      hideLoader();
+    }
+
+    // ── Setup UI Event Listeners ─────────────────────────────────────────────
+    function setupToggleBtn(id, stateKey, updateFn) {
+      const btn = document.getElementById(id);
+      btn.onclick = () => {
+        state[stateKey] = !state[stateKey];
+        if (state[stateKey]) btn.classList.add('active');
+        else btn.classList.remove('active');
+        if (updateFn) updateFn();
+      };
+    }
+
+    setupToggleBtn('btn-toggle-skeleton', 'showSkeleton', updatePositionsAndVisibility);
+    setupToggleBtn('btn-toggle-axes', 'showAxes', updatePositionsAndVisibility);
+    setupToggleBtn('btn-toggle-wire', 'wireframe', updatePositionsAndVisibility);
+    setupToggleBtn('btn-toggle-mesh', 'hideMesh', updatePositionsAndVisibility);
+
+    const btnRef = document.getElementById('btn-toggle-ref');
+    btnRef.onclick = () => {
+      state.showRef = !state.showRef;
+      if (state.showRef) btnRef.classList.add('active');
+      else btnRef.classList.remove('active');
+      updatePositionsAndVisibility();
+    };
+
+    const btnYbot = document.getElementById('btn-toggle-ybot');
+    btnYbot.onclick = () => {
+      state.showYbot = !state.showYbot;
+      if (state.showYbot) btnYbot.classList.add('active');
+      else btnYbot.classList.remove('active');
+      updatePositionsAndVisibility();
+    };
+
+    const btnChar = document.getElementById('btn-toggle-char');
+    btnChar.onclick = () => {
+      state.showChar = !state.showChar;
+      if (state.showChar) btnChar.classList.add('active');
+      else btnChar.classList.remove('active');
+      updatePositionsAndVisibility();
+    };
+
+    setupToggleBtn('btn-toggle-guns', 'showGuns', updatePositionsAndVisibility);
+
+    const layoutCards = document.querySelectorAll('.model-card');
+    layoutCards.forEach(card => {
+      card.onclick = () => {
+        layoutCards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        state.layout = card.dataset.layout;
+        updatePositionsAndVisibility();
+        if (state.inspector.selectedBoneName) {
+          selectBone(state.inspector.selectedBoneName);
+        }
+      };
+    });
+
+    const animSelect = document.getElementById('anim-select');
+    ANIM_FILES.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.file;
+      opt.textContent = a.name;
+      animSelect.appendChild(opt);
+    });
+
+    animSelect.onchange = () => {
+      state.animation.selected = animSelect.value;
+      loadSelectedAnimation(state.animation.selected);
+    };
+
+    const speedSelect = document.getElementById('speed-select');
+    speedSelect.onchange = () => {
+      const s = parseFloat(speedSelect.value);
+      state.animation.speed = s;
+      if (state.animation.mixerRef) state.animation.mixerRef.timeScale = s;
+      if (state.animation.mixerPerfect) state.animation.mixerPerfect.timeScale = s;
+      if (state.animation.mixerYbot) state.animation.mixerYbot.timeScale = s;
+      if (state.animation.mixerChar) state.animation.mixerChar.timeScale = s;
+    };
+
+    // Media Controls
+    const btnPlay = document.getElementById('btn-play');
+    btnPlay.onclick = () => {
+      if (!state.animation.actionPerfect) return;
+      state.animation.paused = !state.animation.paused;
+      
+      state.animation.actionRef.paused = state.animation.paused;
+      state.animation.actionPerfect.paused = state.animation.paused;
+      state.animation.actionYbot.paused = state.animation.paused;
+      if (state.animation.actionChar) state.animation.actionChar.paused = state.animation.paused;
+
+      if (state.animation.paused) {
+        btnPlay.textContent = '▶ Play';
+        btnPlay.className = '';
+      } else {
+        btnPlay.textContent = '⏸ Pause';
+        btnPlay.className = 'accent';
+      }
+    };
+
+    document.getElementById('btn-restart').onclick = () => {
+      if (!state.animation.actionPerfect) return;
+      state.animation.actionRef.reset();
+      state.animation.actionPerfect.reset();
+      state.animation.actionYbot.reset();
+      if (state.animation.actionChar) state.animation.actionChar.reset();
+      state.animation.paused = false;
+      btnPlay.textContent = '⏸ Pause';
+      btnPlay.className = 'accent';
+    };
+
+    // Timeline Scrubber
+    const scrubberWrap = document.getElementById('scrubber-wrap');
+    const scrubberFill = document.getElementById('scrubber-fill');
+    const scrubberThumb = document.getElementById('scrubber-thumb');
+    let isScrubbing = false;
+
+    function handleScrubber(e) {
+      if (!state.animation.clip) return;
+      const rect = scrubberWrap.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const pct = Math.max(0, Math.min(1, x / rect.width));
+      
+      const time = pct * state.animation.duration;
+      
+      scrubberFill.style.width = (pct * 100) + '%';
+      scrubberThumb.style.left = (pct * 100) + '%';
+      document.getElementById('time-current').textContent = time.toFixed(2) + 's';
+
+      if (state.animation.actionRef) state.animation.actionRef.time = time;
+      if (state.animation.actionPerfect) state.animation.actionPerfect.time = time;
+      if (state.animation.actionYbot) state.animation.actionYbot.time = time;
+      if (state.animation.actionChar) state.animation.actionChar.time = time;
+      
+      if (state.animation.mixerRef) state.animation.mixerRef.update(0);
+      if (state.animation.mixerPerfect) state.animation.mixerPerfect.update(0);
+      if (state.animation.mixerYbot) state.animation.mixerYbot.update(0);
+      if (state.animation.mixerChar) state.animation.mixerChar.update(0);
+    }
+
+    scrubberWrap.addEventListener('mousedown', (e) => {
+      isScrubbing = true;
+      if (state.animation.actionPerfect) {
+        state.animation.actionRef.paused = true;
+        state.animation.actionPerfect.paused = true;
+        state.animation.actionYbot.paused = true;
+        if (state.animation.actionChar) state.animation.actionChar.paused = true;
+      }
+      handleScrubber(e);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (isScrubbing) {
+        handleScrubber(e);
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isScrubbing) {
+        isScrubbing = false;
+        if (!state.animation.paused && state.animation.actionPerfect) {
+          state.animation.actionRef.paused = false;
+          state.animation.actionPerfect.paused = false;
+          state.animation.actionYbot.paused = false;
+          if (state.animation.actionChar) state.animation.actionChar.paused = false;
+        }
+      }
+    });
+
+    // ── Main Render Loop ─────────────────────────────────────────────────────
+    (function tick() {
+      requestAnimationFrame(tick);
+      
+      const dt = animClock.getDelta();
+      
+      if (state.animation.actionPerfect && !state.animation.paused && !isScrubbing) {
+        if (state.animation.mixerRef) state.animation.mixerRef.update(dt);
+        if (state.animation.mixerPerfect) state.animation.mixerPerfect.update(dt);
+        if (state.animation.mixerYbot) state.animation.mixerYbot.update(dt);
+        if (state.animation.mixerChar) state.animation.mixerChar.update(dt);
+        
+        // Update Scrubber UI
+        const time = state.animation.actionPerfect.time;
+        const pct = (time / state.animation.duration) * 100;
+        scrubberFill.style.width = pct + '%';
+        scrubberThumb.style.left = pct + '%';
+        document.getElementById('time-current').textContent = time.toFixed(2) + 's';
+      }
+
+      controls.update();
+
+      if (state.inspector.selectedBoneName && state.inspector.markerPerfect && state.inspector.markerPerfect.visible) {
+        // Perfect Lara
+        let perfBone = null;
+        state.models.perfect.traverse(c => {
+          if (c.isBone && c.name === state.inspector.selectedBoneName) perfBone = c;
+        });
+        if (perfBone) {
+          const wp = new THREE.Vector3();
+          perfBone.getWorldPosition(wp);
+          state.inspector.markerPerfect.position.copy(wp);
+        }
+
+        // Reference Lara
+        const laraPref = MIX_TO_LARA_PREFIX[state.inspector.selectedBoneName];
+        let refBone = null;
+        if (laraPref) {
+          state.models.ref.traverse(c => {
+            if (c.isBone && c.name.startsWith(laraPref)) refBone = c;
+          });
+        }
+        if (refBone && state.inspector.markerRef) {
+          const wp = new THREE.Vector3();
+          refBone.getWorldPosition(wp);
+          state.inspector.markerRef.position.copy(wp);
+          state.inspector.markerRef.visible = state.showRef && state.wrappers.ref.visible;
+        } else if (state.inspector.markerRef) {
+          state.inspector.markerRef.visible = false;
+        }
+
+        // Y-Bot
+        const ybotBone = findBone(state.models.ybot, state.inspector.selectedBoneName);
+        if (ybotBone && state.inspector.markerYbot) {
+          const wp = new THREE.Vector3();
+          ybotBone.getWorldPosition(wp);
+          state.inspector.markerYbot.position.copy(wp);
+          state.inspector.markerYbot.visible = state.showYbot && state.wrappers.ybot.visible;
+        } else if (state.inspector.markerYbot) {
+          state.inspector.markerYbot.visible = false;
+        }
+
+        // Character
+        const charBone = findBone(state.models.char, state.inspector.selectedBoneName);
+        if (charBone && state.inspector.markerChar) {
+          const wp = new THREE.Vector3();
+          charBone.getWorldPosition(wp);
+          state.inspector.markerChar.position.copy(wp);
+          state.inspector.markerChar.visible = state.showChar && state.wrappers.char.visible;
+        } else if (state.inspector.markerChar) {
+          state.inspector.markerChar.visible = false;
+        }
+      }
+
+      renderer.render(scene, camera);
+    })();
+
+    // ── Initial Setup ────────────────────────────────────────────────────────
+    setupAllModels().then(() => {
+      loadSelectedAnimation('idle_mixamo.glb');
+    });
+
+  </script>
+
+</body>
+</html>
