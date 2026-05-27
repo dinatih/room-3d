@@ -744,7 +744,8 @@
               <button id="btn-toggle-wire">🕸 Wireframe</button>
               <button id="btn-toggle-mesh">👁 Hide Meshes</button>
             </div>
-            <div class="btn-grid" style="grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;">
+            <div class="btn-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 8px;">
+              <button id="btn-toggle-ref" class="active">📐 Show Ref Lara</button>
               <button id="btn-toggle-ybot" class="active">🤖 Show Y-Bot</button>
               <button id="btn-toggle-char" class="active">🧍 Show Character</button>
             </div>
@@ -870,6 +871,7 @@
       showAxes: false,
       wireframe: false,
       hideMesh: false,
+      showRef: true,
       showYbot: true,
       showChar: true,
       showGuns: true,
@@ -1279,6 +1281,8 @@
       if (state.layout === 'side-by-side') {
         state.wrappers.ref.position.set(-1.5 * offset, 0, 0);
         state.models.ref.position.set(0, 0, 0);
+        state.wrappers.ref.visible = state.showRef;
+        if (state.skeletons.ref) state.skeletons.ref.visible = state.showRef && state.showSkeleton;
         
         if (state.models.ybot) {
           state.wrappers.ybot.position.set(-0.5 * offset, 0, 0);
@@ -1299,6 +1303,8 @@
       } else {
         state.wrappers.ref.position.set(0, 0, 0);
         state.models.ref.position.set(0, 0, 0);
+        state.wrappers.ref.visible = state.showRef;
+        if (state.skeletons.ref) state.skeletons.ref.visible = state.showRef && state.showSkeleton;
         
         state.wrappers.perfect.position.set(0, 0, 0);
         state.models.perfect.position.set(0, 0, 0);
@@ -1319,7 +1325,7 @@
       }
 
       // Display options
-      if (state.skeletons.ref) state.skeletons.ref.visible = state.showSkeleton;
+      if (state.skeletons.ref) state.skeletons.ref.visible = state.showSkeleton && state.showRef;
       if (state.skeletons.perfect) state.skeletons.perfect.visible = state.showSkeleton;
       if (state.skeletons.ybot) state.skeletons.ybot.visible = state.showSkeleton && state.showYbot;
       if (state.skeletons.char) state.skeletons.char.visible = state.showSkeleton && state.showChar;
@@ -1329,16 +1335,58 @@
       });
 
       // Show/Hide meshes & wireframe
+      const checkIsGun = (node) => {
+        let temp = node;
+        while (temp) {
+          if (temp.name) {
+            const n = temp.name.toLowerCase();
+            if (n.includes('holster') || n.includes('handgun') || n.includes('gun') || n.includes('pistol')) {
+              return true;
+            }
+          }
+          if (temp.userData && temp.userData.name) {
+            const n = temp.userData.name.toLowerCase();
+            if (n.includes('holster') || n.includes('handgun') || n.includes('gun') || n.includes('pistol')) {
+              return true;
+            }
+          }
+          if (temp.geometry && temp.geometry.name) {
+            const n = temp.geometry.name.toLowerCase();
+            if (n.includes('holster') || n.includes('handgun') || n.includes('gun') || n.includes('pistol')) {
+              return true;
+            }
+          }
+          if (temp.material) {
+            const checkMatName = (m) => {
+              if (m && m.name) {
+                const n = m.name.toLowerCase();
+                if (n.includes('holster') || n.includes('handgun') || n.includes('gun') || n.includes('pistol')) {
+                  return true;
+                }
+              }
+              return false;
+            };
+            if (Array.isArray(temp.material)) {
+              if (temp.material.some(checkMatName)) return true;
+            } else {
+              if (checkMatName(temp.material)) return true;
+            }
+          }
+          temp = temp.parent;
+        }
+        return false;
+      };
+
       state.models.ref.traverse(c => {
         if (c.isMesh) {
-          const isGun = c.name.toLowerCase().includes('holster') || c.name.toLowerCase().includes('handgun') || c.name.toLowerCase().includes('gun') || c.name.toLowerCase().includes('pistol');
-          c.visible = !state.hideMesh && (!isGun || state.showGuns);
+          const isGun = checkIsGun(c);
+          c.visible = !state.hideMesh && state.showRef && (!isGun || state.showGuns);
           c.material.wireframe = state.wireframe;
         }
       });
       state.models.perfect.traverse(c => {
         if (c.isMesh) {
-          const isGun = c.name.toLowerCase().includes('holster') || c.name.toLowerCase().includes('handgun') || c.name.toLowerCase().includes('gun') || c.name.toLowerCase().includes('pistol');
+          const isGun = checkIsGun(c);
           c.visible = !state.hideMesh && (!isGun || state.showGuns);
           c.material.wireframe = state.wireframe;
         }
@@ -1533,7 +1581,7 @@
 
         if (state.inspector.markerRef) {
           state.inspector.markerRef.position.copy(refWPos);
-          state.inspector.markerRef.visible = state.wrappers.ref.visible;
+          state.inspector.markerRef.visible = state.showRef && state.wrappers.ref.visible;
         }
       } else {
         addRow('Lara Ref Bone', '— (collarbone helper)', true, '#ef4444');
@@ -1813,6 +1861,14 @@
     setupToggleBtn('btn-toggle-wire', 'wireframe', updatePositionsAndVisibility);
     setupToggleBtn('btn-toggle-mesh', 'hideMesh', updatePositionsAndVisibility);
 
+    const btnRef = document.getElementById('btn-toggle-ref');
+    btnRef.onclick = () => {
+      state.showRef = !state.showRef;
+      if (state.showRef) btnRef.classList.add('active');
+      else btnRef.classList.remove('active');
+      updatePositionsAndVisibility();
+    };
+
     const btnYbot = document.getElementById('btn-toggle-ybot');
     btnYbot.onclick = () => {
       state.showYbot = !state.showYbot;
@@ -2002,7 +2058,7 @@
           const wp = new THREE.Vector3();
           refBone.getWorldPosition(wp);
           state.inspector.markerRef.position.copy(wp);
-          state.inspector.markerRef.visible = state.wrappers.ref.visible;
+          state.inspector.markerRef.visible = state.showRef && state.wrappers.ref.visible;
         } else if (state.inspector.markerRef) {
           state.inspector.markerRef.visible = false;
         }
