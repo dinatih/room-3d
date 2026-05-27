@@ -26,9 +26,6 @@ jobs:
         env:
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
 
-      - name: Copy media into dist
-        run: cp -r media dist/media
-
       - name: Add CNAME and nojekyll
         run: |
           cp CNAME dist/CNAME
