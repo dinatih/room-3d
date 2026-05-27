@@ -14,6 +14,7 @@ import {
 // Jardin diagonal endpoint (parallèle à MDiag)
 const GARDEN_JC_Z = -140 - (DIAG_CZ - DIAG_AZ) * 320 / (DIAG_AX - DIAG_CX);
 import { SEG_WALLS, SEG_DOORS, SEG_WINDOWS } from './floorData';
+import { GARDEN_PANEL_DEFS } from './wallData';
 
 const PAD = 20;
 export const PLAN_X_MIN = NICHE_X - PAD;
@@ -92,5 +93,40 @@ export function drawFloorPlan(
   ctx.setLineDash([]);
   for (const [x1, z1, x2, z2] of SEG_WINDOWS) {
     ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke();
+  }
+
+  // ── Palissade bois (panneaux occultants jardin, côté est) ───────────────────
+  // Clip aux panneaux dont l'emprise Z reste dans la fenêtre du plan.
+  ctx.fillStyle   = '#8B6914';
+  ctx.strokeStyle = '#5a4209';
+  ctx.lineWidth   = Math.max(S * 1, 0.5);
+  let lastDrawnNorth = Infinity;     // plus petit cz - d/2 dessiné
+  let lastDrawnCx    = 0;
+  let clipped        = false;
+  for (const p of GARDEN_PANEL_DEFS) {
+    if (p.cz - p.d / 2 < PLAN_Z_MIN) { clipped = true; continue; }
+    const x = tx(p.cx - p.w / 2);
+    const z = tz(p.cz - p.d / 2);
+    const ww = p.w * S;
+    const dh = p.d * S;
+    ctx.fillRect(x, z, ww, dh);
+    ctx.strokeRect(x, z, ww, dh);
+    if (p.cz - p.d / 2 < lastDrawnNorth) {
+      lastDrawnNorth = p.cz - p.d / 2;
+      lastDrawnCx    = p.cx;
+    }
+  }
+  // Points de continuation si palissade clippée (2 points vers le nord).
+  if (clipped && isFinite(lastDrawnNorth)) {
+    ctx.fillStyle = '#8B6914';
+    const r = Math.max(S * 2, 1.5);
+    const stepZ = 8; // cm world units between dots
+    for (let i = 1; i <= 2; i++) {
+      const cz = lastDrawnNorth - i * stepZ;
+      if (cz < PLAN_Z_MIN) break;
+      ctx.beginPath();
+      ctx.arc(tx(lastDrawnCx), tz(cz), r, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }

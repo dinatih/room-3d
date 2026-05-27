@@ -20,7 +20,7 @@ export const cameraState = {
   activeWalkerIdx: 0 as number,
   /** Positions des deux walkers (mis à jour par Walker.tsx) */
   walker0X: 150 as number, walker0Z: 200 as number,
-  walker1X: 230 as number, walker1Z: 140 as number,  // ROOM_W/2+80, ROOM_D/2-60
+  walker1X: 100 as number, walker1Z: 100 as number,
   /** Hauteurs (cm) des deux walkers — écrites par Walker.tsx, lues par les caméras walk */
   walkerHeight0: 181 as number,
   walkerHeight1: 170 as number,

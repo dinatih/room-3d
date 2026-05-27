@@ -37,24 +37,18 @@ export function WallEdgesLayer() {
   const layers = useSceneStore(state => state.layers);
 
   useEffect(() => {
+    // Force update même si group parent .visible=false (mode plan masque les murs
+    // mais l'utilisateur veut quand même voir les arêtes rouges).
     scene.updateMatrixWorld(true);
     const geos: THREE.BufferGeometry[] = [];
-
-    // Helper récursif pour vérifier la visibilité de l'objet
-    const isVisible = (obj: THREE.Object3D): boolean => {
-      let cur: THREE.Object3D | null = obj;
-      while (cur) {
-        if (!cur.visible) return false;
-        cur = cur.parent;
-      }
-      return true;
-    };
 
     scene.traverse(obj => {
       const mesh = obj as THREE.Mesh;
       if (!mesh.isMesh || (mesh as any).isSkinnedMesh) return;
       if (!isWallMesh(mesh)) return;
-      if (!mesh.visible || !isVisible(mesh) || !camera.layers.test(mesh.layers)) return;
+      // On ignore mesh.visible / parent.visible : les arêtes doivent rester visibles
+      // en mode plan où le groupe 3D entier est masqué.
+      if (!camera.layers.test(mesh.layers)) return;
 
       const src = mesh.geometry;
       const tmp = new THREE.BufferGeometry();

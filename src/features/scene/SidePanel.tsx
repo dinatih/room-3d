@@ -489,8 +489,8 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('green',  'Structure',     'structure', true)}
       {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
       {layerBtn('gray',   'Murs seuls',    'wallsOnly')}
-      {layerBtn('peach',  'Équipements',   'equipment')}
       {layerBtn('peach',  'Portes',        'doors')}
+      {layerBtn('peach',  'Équipements',   'equipment')}
       {layerBtn('purple', 'Mobilier',      'furniture')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
       {layerBtn('cyan',   'X-Ray',         'xray')}

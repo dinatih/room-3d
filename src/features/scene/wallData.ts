@@ -100,6 +100,18 @@ export const PILLAR_DEFS = [
   { id: 'garden-e',    x: ROOM_W + W / 2,           z: -220 - W / 2 },
 ] as const satisfies readonly PillarDef[];
 
+// Panneaux bois occultants jardin (côté est, devant pilier garden-e).
+// Consommés par Building.tsx (rendu 3D) et floorDraw.ts (rendu 2D minimap/plan).
+export type GardenPanelDef = { cx: number; cy: number; cz: number; w: number; h: number; d: number };
+export const GARDEN_PANEL_DEFS: readonly GardenPanelDef[] = [0, 1].map(i => ({
+  cx: ROOM_W + 5,
+  cy: 95,
+  cz: -220 - W - i * 90 - 45,
+  w: 10,
+  h: 190,
+  d: 90,
+}));
+
 type PillarId = typeof PILLAR_DEFS[number]['id'];
 const PILLAR_BY_ID = new Map(PILLAR_DEFS.map(p => [p.id, p] as const));
 

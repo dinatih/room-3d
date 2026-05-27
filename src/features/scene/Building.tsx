@@ -50,7 +50,7 @@ const COLORS = {
   tile:    0xe8e8e8,
 };
 
-import { WALL_DEFS, PILLAR_DEFS, W, CORR_WALL_X, GLASS_DOOR_X } from './wallData';
+import { WALL_DEFS, PILLAR_DEFS, W, CORR_WALL_X, GLASS_DOOR_X, GARDEN_PANEL_DEFS } from './wallData';
 
 const FLOOR_Y = -5.25; // dalle béton : surface parquet à Y=0
 
@@ -67,14 +67,24 @@ const ghostMat = new THREE.MeshStandardMaterial({
 });
 const wallMatDiag = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
 const panelMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6 });
-const pvcMat     = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
+const pvcMat        = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
+const skirtingMat   = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.4 });
 const glassMat   = new THREE.MeshPhysicalMaterial({
   color: 0x88ccff, transparent: true, opacity: 0.25,
   roughness: 0.05, metalness: 0.1, side: THREE.DoubleSide,
 });
 const handleMat  = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.15 });
 
-const slabConcreteMat = new THREE.MeshStandardMaterial({ color: COLORS.floor, roughness: 0.6 });
+// Matériaux dalle béton décomposés (même principe que le plafond) :
+//   - dessus (visible d'en haut)    = opaque
+//   - dessous (visible d'en bas)    = absent → see-through depuis dessous
+//   - côtés                          = opaques
+const slabConcreteTop = new THREE.MeshStandardMaterial({
+  color: COLORS.floor, roughness: 0.6, side: THREE.FrontSide,
+});
+const slabConcreteSide = new THREE.MeshStandardMaterial({
+  color: COLORS.floor, roughness: 0.6,
+});
 const groundExteriorMat = new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9 });
 
 // BoxGeometry face order : [+X(0), -X(1), +Y(2), -Y(3), +Z(4), -Z(5)]
@@ -379,9 +389,35 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
         <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow />
         <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow />
         {/* Panneaux bois occultants jardin */}
-        {[0, 1].map((i) => (
-          <P key={i} w={10} h={190} d={90} x={ROOM_W + 5} y={95} z={-220 - W - i * 90 - 45} mat={panelMat} />
+        {GARDEN_PANEL_DEFS.map((p, i) => (
+          <P key={i} w={p.w} h={p.h} d={p.d} x={p.cx} y={p.cy} z={p.cz} mat={panelMat} />
         ))}
+
+        {/* Jambages portes — couvre les caps invisibles (caplessX/Z) aux ouvertures.
+            Plane perpendiculaire au mur, taille = épaisseur du mur × hauteur. */}
+        {/* Porte séjour — jambage est (cap ouest du mur SE) */}
+        <mesh
+          position={[DOOR_END + 4, WALL_H / 2, ROOM_D + W / 2]}
+          rotation-y={-Math.PI / 2}
+          ref={(m) => { if (m) m.material = wallMat; }}
+          receiveShadow>
+          <planeGeometry args={[W, WALL_H]} />
+        </mesh>
+        {/* Porte SDB couloir — jambage nord (cap sud du segment nord) */}
+        <mesh
+          position={[CORR_WALL_X, WALL_H / 2, 518]}
+          ref={(m) => { if (m) m.material = wallMat; }}
+          receiveShadow>
+          <planeGeometry args={[W, WALL_H]} />
+        </mesh>
+        {/* Porte SDB couloir — jambage sud (cap nord du segment sud) */}
+        <mesh
+          position={[CORR_WALL_X, WALL_H / 2, 602]}
+          rotation-y={Math.PI}
+          ref={(m) => { if (m) m.material = wallMat; }}
+          receiveShadow>
+          <planeGeometry args={[W, WALL_H]} />
+        </mesh>
       </group>
 
       {/* ── Colliders physiques (Rapier) ─────────────────────────────────────── */}
@@ -412,22 +448,26 @@ const BLDG_CZ = (BLDG_Z_MIN + BLDG_Z_MAX) / 2;
 const CEIL_THICK = 20;
 
 // ── Faces intérieures pour l'alignement précis des sols ─────────────────────────
+// Convention : KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, ROOM_D, NICHE_X = faces intérieures
+// (les piliers sont placés à pos±W/2, donc la face interne du mur = la constante).
+// Exception : NICHE_Z_START = centre du linteau niche-beam (pas une face).
 const W_HALF = W / 2; // 5 cm
 
 // X intérieur
 const INT_X_WEST = 0; // face intérieure mur Ouest (séjour)
 const INT_X_NICHE = NICHE_X; // face intérieure mur Ouest (niche/SDB) = -10
-const INT_X_KITCHEN_L = KITCHEN_X0 + W_HALF; // 30 + 5 = 35
-const INT_X_KITCHEN_R = KITCHEN_X1 - W_HALF; // 130 - 5 = 125
+const INT_X_KITCHEN_L = KITCHEN_X0; // 30 — face est mur ouest cuisine
+const INT_X_KITCHEN_R = KITCHEN_X1; // 130 — face ouest mur est cuisine
 const INT_X_DOOR_S = DOOR_START; // 200 (porte)
 const INT_X_EAST = ROOM_W; // 316
 
 // Z intérieur
 const INT_Z_NORTH = 0; // face intérieure mur Nord
-const INT_Z_NICHE_S = NICHE_Z_START + W_HALF; // 280 + 5 = 285
-const INT_Z_ROOM_S = ROOM_D - W_HALF; // 400 - 5 = 395
-const INT_Z_KITCHEN_B = KITCHEN_Z - W_HALF; // 460 - 5 = 455
-const INT_Z_BATH_E = BATH_Z_END - W_HALF; // 610 - 5 = 605
+const INT_Z_NICHE_S = NICHE_Z_START + W_HALF; // 285 — face sud du linteau niche-beam (centré sur NICHE_Z_START)
+const INT_Z_ROOM_S = ROOM_D; // 400 — face nord du mur sud
+const INT_Z_KITCHEN_B = KITCHEN_Z; // 460 — face nord du mur SDB (sud cuisine)
+const INT_Z_BATH_N = KITCHEN_Z + W; // 470 — face sud du mur SDB (nord SDB)
+const INT_Z_BATH_E = BATH_Z_END; // 610
 
 // ── Matériaux plafond (module-level) ─────────────────────────────────────────
 const ceilBottom = new THREE.MeshStandardMaterial({
@@ -670,6 +710,10 @@ function Parquet() {
     const diagSlope = (DIAG_CZ - DIAG_AZ) / (DIAG_CX - DIAG_AX);
     const parquetDiagZ = DIAG_AZ + (INT_X_DOOR_S - DIAG_AX) * diagSlope;
 
+    // Découpe : exclut le rectangle sous le mur sud-est (segment 3, x=DOOR_END+4→ROOM_W, z=ROOM_D→ROOM_D+W).
+    const WALL_SE_W = DOOR_END + 4;    // 284 — face ouest du mur SE
+    const WALL_SOUTH_FACE = ROOM_D + W; // 410 — face sud du mur sud
+
     const shape = new THREE.Shape([
       new THREE.Vector2(INT_X_WEST,      -INT_Z_NORTH),
       new THREE.Vector2(INT_X_WEST,      -INT_Z_NICHE_S),
@@ -683,6 +727,10 @@ function Parquet() {
       new THREE.Vector2(INT_X_DOOR_S,    -INT_Z_ROOM_S),
       new THREE.Vector2(INT_X_DOOR_S,    -parquetDiagZ),
       new THREE.Vector2(INT_X_EAST,      -DIAG_AZ),
+      new THREE.Vector2(INT_X_EAST,      -WALL_SOUTH_FACE),
+      new THREE.Vector2(WALL_SE_W,       -WALL_SOUTH_FACE),
+      new THREE.Vector2(WALL_SE_W,       -INT_Z_ROOM_S),
+      new THREE.Vector2(INT_X_EAST,      -INT_Z_ROOM_S),
       new THREE.Vector2(INT_X_EAST,      -INT_Z_NORTH),
     ]);
     const g = new THREE.ShapeGeometry(shape);
@@ -708,10 +756,14 @@ function Parquet() {
 
 // ── Carrelage bath + couloir ───────────────────────────────────────────────────
 function Tile() {
-  const CLOSET_W_REAL = (CORR_WALL_X - W_HALF) - (KITCHEN_X1 + W_HALF); // 55
-  const CLOSET_D_REAL = (KITCHEN_Z - W_HALF) - (ROOM_D + W_HALF); // 50
-  const CLOSET_X_REAL = ((KITCHEN_X1 + W_HALF) + (CORR_WALL_X - W_HALF)) / 2; // 162.5
-  const CLOSET_Z_REAL = ((ROOM_D + W_HALF) + (KITCHEN_Z - W_HALF)) / 2; // 430
+  // Placard couloir : tuile s'étend sous les murs jusqu'aux bords du parquet —
+  // x: KITCHEN_X1(130) → DOOR_START(200), z: ROOM_D(400) → KITCHEN_Z(460).
+  // Les murs au-dessus masquent le débordement en vue normale ; aligne le bord
+  // visible avec le parquet en X-ray ou vue plongeante.
+  const CLOSET_W_REAL = DOOR_START - KITCHEN_X1; // 70
+  const CLOSET_D_REAL = KITCHEN_Z - ROOM_D; // 60
+  const CLOSET_X_REAL = (KITCHEN_X1 + DOOR_START) / 2; // 165
+  const CLOSET_Z_REAL = (ROOM_D + KITCHEN_Z) / 2; // 430
 
   const { bathGeo, bathMat, closetMat } = useMemo(() => {
     const baseTex = makeTileTex();
@@ -720,10 +772,10 @@ function Tile() {
     const diagSlope = (DIAG_CZ - DIAG_AZ) / (DIAG_CX - DIAG_AX);
 
     // Trapèze bath : coins alignés sur les faces intérieures
-    const Ax = INT_X_NICHE,  Az = INT_Z_KITCHEN_B;
+    const Ax = INT_X_NICHE,  Az = INT_Z_BATH_N;
     const Bx = INT_X_NICHE,  Bz = DIAG_AZ + (INT_X_NICHE - DIAG_AX) * diagSlope;
     const Cx = INT_X_DOOR_S, Cz = DIAG_AZ + (INT_X_DOOR_S - DIAG_AX) * diagSlope;
-    const Dx = INT_X_DOOR_S, Dz = INT_Z_KITCHEN_B;
+    const Dx = INT_X_DOOR_S, Dz = INT_Z_BATH_N;
 
     const positions = new Float32Array([
       Ax, 0, Az,  Bx, 0, Bz,  Cx, 0, Cz,
@@ -783,6 +835,136 @@ function Tile() {
   );
 }
 
+// ── Plinthes — 6 cm h × 1 cm prof autour du parquet ──────────────────────────
+function Baseboards() {
+  const SH = 6;
+  const SD = 1;
+  const y  = SH / 2;
+
+  const slope        = (DIAG_CZ - DIAG_AZ) / (DIAG_CX - DIAG_AX);
+  const parquetDiagZ = DIAG_AZ + (DOOR_START - ROOM_W) * slope;
+  // Longueur de parquet le long du mur diagonal (offset 0 au coin NE).
+  const diagParquetLen = Math.sqrt((ROOM_W - DOOR_START) ** 2 + (DIAG_AZ - parquetDiagZ) ** 2);
+  // Plinthe diagonale fractionnée autour de la porte d'entrée (DIAG_ENTRY_S → DIAG_ENTRY_E).
+  // Inward normal vers séjour : (-DIAG_COS, DIAG_SIN) en (X, Z).
+  const diagSeg = (d1: number, d2: number) => {
+    const dm = (d1 + d2) / 2;
+    return {
+      x: DIAG_AX + dm * DIAG_SIN - DIAG_COS * SD / 2,
+      z: DIAG_AZ + dm * DIAG_COS + DIAG_SIN * SD / 2,
+      len: d2 - d1,
+    };
+  };
+  const diagSegA = diagSeg(0, DIAG_ENTRY_S);
+  const diagSegB = diagSeg(DIAG_ENTRY_E, diagParquetLen);
+
+  return (
+    <group userData={{ brickType: 'skirting' }}>
+      {/* North wall Z=0, X: 0→316 */}
+      <P w={INT_X_EAST - INT_X_WEST} h={SH} d={SD}
+         x={(INT_X_WEST + INT_X_EAST) / 2} y={y} z={INT_Z_NORTH + SD / 2}
+         mat={skirtingMat} />
+
+      {/* East wall (north) X=316, Z: 0→ROOM_D */}
+      <P w={SD} h={SH} d={INT_Z_ROOM_S - INT_Z_NORTH}
+         x={INT_X_EAST - SD / 2} y={y} z={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
+         mat={skirtingMat} />
+
+      {/* East wall (sud, après mur SE) X=316, Z: ROOM_D+W→DIAG_AZ */}
+      <P w={SD} h={SH} d={DIAG_AZ - (ROOM_D + W)}
+         x={INT_X_EAST - SD / 2} y={y} z={((ROOM_D + W) + DIAG_AZ) / 2}
+         mat={skirtingMat} />
+
+      {/* Mur SE — face nord (séjour) X: DOOR_END+4→316, Z=ROOM_D */}
+      <P w={INT_X_EAST - (DOOR_END + 4)} h={SH} d={SD}
+         x={((DOOR_END + 4) + INT_X_EAST) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
+         mat={skirtingMat} />
+
+      {/* Mur SE — face ouest (couloir/seuil) X=DOOR_END+4, Z: ROOM_D→ROOM_D+W */}
+      <P w={SD} h={SH} d={W}
+         x={(DOOR_END + 4) - SD / 2} y={y} z={ROOM_D + W / 2}
+         mat={skirtingMat} />
+
+      {/* Mur SE — face sud (corridor droit) X: DOOR_END+4→316, Z=ROOM_D+W */}
+      <P w={INT_X_EAST - (DOOR_END + 4)} h={SH} d={SD}
+         x={((DOOR_END + 4) + INT_X_EAST) / 2} y={y} z={(ROOM_D + W) + SD / 2}
+         mat={skirtingMat} />
+
+      {/* Mur diagonal — segment A : NE → début porte d'entrée */}
+      <mesh position={[diagSegA.x, y, diagSegA.z]} rotation-y={DIAG_ROT_Y}
+            ref={(m) => { if (m) m.material = skirtingMat as any; }}
+            castShadow receiveShadow>
+        <boxGeometry args={[SD, SH, diagSegA.len]} />
+      </mesh>
+      {/* Mur diagonal — segment B : fin porte d'entrée → coin parquet SW */}
+      <mesh position={[diagSegB.x, y, diagSegB.z]} rotation-y={DIAG_ROT_Y}
+            ref={(m) => { if (m) m.material = skirtingMat as any; }}
+            castShadow receiveShadow>
+        <boxGeometry args={[SD, SH, diagSegB.len]} />
+      </mesh>
+
+      {/* Corridor — face est du mur couloir, fractionnée pour éviter les ouvertures :
+          placard (z=410→460) et porte SDB couloir (z=CORR_DOOR_S→CORR_DOOR_E). */}
+      {(() => {
+        const CLOSET_N = ROOM_D + W;          // 410
+        const CLOSET_S = KITCHEN_Z;           // 460
+        const CORR_DOOR_S = KITCHEN_Z + 60;   // 520
+        const CORR_DOOR_E = KITCHEN_Z + 140;  // 600
+        const segs: [number, number][] = [
+          [INT_Z_ROOM_S, CLOSET_N],
+          [CLOSET_S,     CORR_DOOR_S],
+          [CORR_DOOR_E,  parquetDiagZ],
+        ];
+        return segs.map(([z1, z2], i) => (
+          <P key={i} w={SD} h={SH} d={z2 - z1}
+             x={INT_X_DOOR_S - SD / 2} y={y} z={(z1 + z2) / 2}
+             mat={skirtingMat} />
+        ));
+      })()}
+
+      {/* South wall segment 2: X: 125→200, Z=395 */}
+      <P w={INT_X_DOOR_S - INT_X_KITCHEN_R} h={SH} d={SD}
+         x={(INT_X_KITCHEN_R + INT_X_DOOR_S) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
+         mat={skirtingMat} />
+
+      {/* Kitchen east wall X=125, Z: 395→455 */}
+      <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
+         x={INT_X_KITCHEN_R - SD / 2} y={y} z={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
+         mat={skirtingMat} />
+
+      {/* Kitchen south wall Z=455, X: 35→125 */}
+      <P w={INT_X_KITCHEN_R - INT_X_KITCHEN_L} h={SH} d={SD}
+         x={(INT_X_KITCHEN_L + INT_X_KITCHEN_R) / 2} y={y} z={INT_Z_KITCHEN_B - SD / 2}
+         mat={skirtingMat} />
+
+      {/* Kitchen west wall X=35, Z: 395→455 */}
+      <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
+         x={INT_X_KITCHEN_L + SD / 2} y={y} z={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
+         mat={skirtingMat} />
+
+      {/* South wall segment 1: X: -10→35, Z=395 */}
+      <P w={INT_X_KITCHEN_L - INT_X_NICHE} h={SH} d={SD}
+         x={(INT_X_NICHE + INT_X_KITCHEN_L) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
+         mat={skirtingMat} />
+
+      {/* Niche west wall X=-10, Z: 285→395 */}
+      <P w={SD} h={SH} d={INT_Z_ROOM_S - INT_Z_NICHE_S}
+         x={INT_X_NICHE + SD / 2} y={y} z={(INT_Z_NICHE_S + INT_Z_ROOM_S) / 2}
+         mat={skirtingMat} />
+
+      {/* Niche north face Z=285, X: -10→0 */}
+      <P w={INT_X_WEST - INT_X_NICHE} h={SH} d={SD}
+         x={(INT_X_NICHE + INT_X_WEST) / 2} y={y} z={INT_Z_NICHE_S + SD / 2}
+         mat={skirtingMat} />
+
+      {/* West wall X=0, Z: 0→285 */}
+      <P w={SD} h={SH} d={INT_Z_NICHE_S - INT_Z_NORTH}
+         x={INT_X_WEST + SD / 2} y={y} z={(INT_Z_NORTH + INT_Z_NICHE_S) / 2}
+         mat={skirtingMat} />
+    </group>
+  );
+}
+
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Floor() {
   const layers = useSceneStore(state => state.layers);
@@ -794,54 +976,60 @@ export function Floor() {
       {/* Carrelage bath + couloir */}
       <Tile />
 
+      {/* Plinthes parquet */}
+      <Baseboards />
+
       {/* Dalle béton sous l'appartement (principale + voisins en épi) */}
       {(() => {
-        const slabConcreteGeo = useMemo(() => {
-          const shape = new THREE.Shape([
-            new THREE.Vector2(-20, 30),
-            new THREE.Vector2(316, 30),
-            new THREE.Vector2(316, 230),   // étendu à 230 pour couvrir pilier garden-e (z=-225±5)
-            new THREE.Vector2(326, 230),
-            new THREE.Vector2(326, 220),
-            new THREE.Vector2(326, -547.77),
-            new THREE.Vector2(-20, -747.53),
-          ]);
-          const geo = new THREE.ExtrudeGeometry(shape, { depth: 10, bevelEnabled: false });
-          geo.rotateX(-Math.PI / 2);
-          geo.translate(0, -10, 0);
-          return geo;
-        }, []);
+        const slabShape = useMemo(() => new THREE.Shape([
+          new THREE.Vector2(-20, 30),
+          new THREE.Vector2(316, 30),
+          new THREE.Vector2(316, 230),   // étendu à 230 pour couvrir pilier garden-e (z=-225±5)
+          new THREE.Vector2(326, 230),
+          new THREE.Vector2(326, 220),
+          new THREE.Vector2(326, -547.77),
+          new THREE.Vector2(-20, -747.53),
+        ]), []);
 
-        return (
-          <>
-            {/* Dalle principale */}
+        // Plan top : ShapeGeometry plate, normale +Y, visible d'en haut.
+        const slabTopGeo = useMemo(() => {
+          const g = new THREE.ShapeGeometry(slabShape);
+          g.rotateX(-Math.PI / 2);
+          return g;
+        }, [slabShape]);
+
+        // Côtés : ExtrudeGeometry caps masqués (noCapMat).
+        const slabSideGeo = useMemo(() => {
+          const g = new THREE.ExtrudeGeometry(slabShape, { depth: 10, bevelEnabled: false });
+          g.rotateX(-Math.PI / 2);
+          g.translate(0, -10, 0);
+          return g;
+        }, [slabShape]);
+
+        const SlabUnit = ({ x, z }: { x: number; z: number }) => (
+          <group position={[x, -3.5, z]}>
+            {/* Dessus opaque (visible d'en haut) */}
             <mesh
-              geometry={slabConcreteGeo}
-              material={slabConcreteMat}
-              position={[0, -3.5, 0]}
+              geometry={slabTopGeo}
+              material={slabConcreteTop}
               receiveShadow
               userData={{ brickType: 'floor' }}
             />
-            {/* Dalle voisin de droite */}
-            {layers.neighbors && (
-              <mesh
-                geometry={slabConcreteGeo}
-                material={slabConcreteMat}
-                position={[346, -3.5, -199.76]}
-                receiveShadow
-                userData={{ brickType: 'floor' }}
-              />
-            )}
-            {/* Dalle voisin de gauche */}
-            {layers.neighbors && (
-              <mesh
-                geometry={slabConcreteGeo}
-                material={slabConcreteMat}
-                position={[-346, -3.5, 199.76]}
-                receiveShadow
-                userData={{ brickType: 'floor' }}
-              />
-            )}
+            {/* Côtés opaques, dessous absent (see-through depuis dessous) */}
+            <mesh
+              geometry={slabSideGeo}
+              material={[noCapMat, slabConcreteSide]}
+              receiveShadow
+              userData={{ brickType: 'floor' }}
+            />
+          </group>
+        );
+
+        return (
+          <>
+            <SlabUnit x={0} z={0} />
+            {layers.neighbors && <SlabUnit x={ 346} z={-199.76} />}
+            {layers.neighbors && <SlabUnit x={-346} z={ 199.76} />}
           </>
         );
       })()}

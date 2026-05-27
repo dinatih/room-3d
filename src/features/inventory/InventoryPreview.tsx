@@ -5,7 +5,7 @@
  */
 import { useRef, useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls, Html, Line } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';
@@ -33,6 +33,84 @@ const ITEM_ACTIONS: Record<string, string> = {
   'corridor-closet':        'corr-doors-toggle',
   'ninja-sp101':            'ninja-toggle',
 };
+
+// ── Dimensions overlay (style IKEA) ───────────────────────────────────────────
+
+function Dimensions({ dims }: { dims: { w: number; d: number; h: number } }) {
+  const max = Math.max(dims.w, dims.d, dims.h);
+  const s   = 1.4 / max;
+  const hx  = (dims.w / 2) * s;
+  const hy  = (dims.h / 2) * s;
+  const hz  = (dims.d / 2) * s;
+  const off = 0.08;
+
+  const LC = '#0058a3'; // IKEA blue
+
+  const pill: React.CSSProperties = {
+    background: '#fff',
+    color: LC,
+    border: `1px solid ${LC}`,
+    borderRadius: 999,
+    padding: '2px 8px',
+    fontSize: 11,
+    fontFamily: 'sans-serif',
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+    pointerEvents: 'none',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+    transform: 'translate(-50%, -50%)',
+  };
+
+  const axisLen = Math.max(hx, hy, hz) * 1.15;
+  const axisLabel: React.CSSProperties = {
+    fontSize: 10, fontFamily: 'sans-serif', fontWeight: 700,
+    whiteSpace: 'nowrap', pointerEvents: 'none',
+    transform: 'translate(-50%, -50%)',
+    textShadow: '0 0 2px #fff, 0 0 2px #fff',
+  };
+
+  return (
+    <>
+      {/* Axes origine — XYZ rouge/vert/bleu */}
+      <Line points={[[0, 0, 0], [axisLen, 0, 0]]} color="#e63946" lineWidth={2} />
+      <Line points={[[0, 0, 0], [0, axisLen, 0]]} color="#2a9d3a" lineWidth={2} />
+      <Line points={[[0, 0, 0], [0, 0, axisLen]]} color="#3a6dd6" lineWidth={2} />
+      <Html position={[axisLen, 0, 0]} center zIndexRange={[100, 0]}>
+        <div style={{ ...axisLabel, color: '#e63946' }}>X</div>
+      </Html>
+      <Html position={[0, axisLen, 0]} center zIndexRange={[100, 0]}>
+        <div style={{ ...axisLabel, color: '#2a9d3a' }}>Y</div>
+      </Html>
+      <Html position={[0, 0, axisLen]} center zIndexRange={[100, 0]}>
+        <div style={{ ...axisLabel, color: '#3a6dd6' }}>Z</div>
+      </Html>
+
+      {/* Largeur (X) — bord avant-bas */}
+      <Line points={[[-hx, -hy, hz], [-hx, -hy - off, hz + off]]} color={LC} lineWidth={1} />
+      <Line points={[[ hx, -hy, hz], [ hx, -hy - off, hz + off]]} color={LC} lineWidth={1} />
+      <Line points={[[-hx, -hy - off, hz + off], [ hx, -hy - off, hz + off]]} color={LC} lineWidth={1} />
+      <Html position={[0, -hy - off, hz + off]} center zIndexRange={[100, 0]}>
+        <div style={pill}>{dims.w} cm</div>
+      </Html>
+
+      {/* Hauteur (Y) — bord avant-gauche */}
+      <Line points={[[-hx, -hy, hz], [-hx - off, -hy, hz + off]]} color={LC} lineWidth={1} />
+      <Line points={[[-hx,  hy, hz], [-hx - off,  hy, hz + off]]} color={LC} lineWidth={1} />
+      <Line points={[[-hx - off, -hy, hz + off], [-hx - off,  hy, hz + off]]} color={LC} lineWidth={1} />
+      <Html position={[-hx - off, 0, hz + off]} center zIndexRange={[100, 0]}>
+        <div style={pill}>{dims.h} cm</div>
+      </Html>
+
+      {/* Profondeur (Z) — bord arrière haut-gauche */}
+      <Line points={[[-hx, hy,  hz], [-hx - off, hy + off,  hz]]} color={LC} lineWidth={1} />
+      <Line points={[[-hx, hy, -hz], [-hx - off, hy + off, -hz]]} color={LC} lineWidth={1} />
+      <Line points={[[-hx - off, hy + off, hz], [-hx - off, hy + off, -hz]]} color={LC} lineWidth={1} />
+      <Html position={[-hx - off, hy + off, 0]} center zIndexRange={[100, 0]}>
+        <div style={pill}>{dims.d} cm</div>
+      </Html>
+    </>
+  );
+}
 
 // ── Camera fit ────────────────────────────────────────────────────────────────
 
@@ -191,6 +269,7 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
 
   const [actionStates, setActionStates] = useState<Record<string, any>>({});
   const [viewMode, setViewMode]         = useState<'3d' | 'photos'>('3d');
+  const [showDims, setShowDims]         = useState(true);
   useEffect(() => { setActionStates({}); setViewMode('3d'); }, [item?.id]);
 
   const showing3D     = has3D && (!hasPhotos || viewMode === '3d');
@@ -267,10 +346,29 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
                 ? <RegistryScene item={item as InventoryItem} actionState={actionStates} />
                 : <GlbScene glbPath={glbPath!} />
               }
+
+              {showDims && item.dims && <Dimensions dims={item.dims} />}
             </Canvas>
           ) : showingPhotos ? (
             <PhotoGallery key={item.id + '-photos'} photos={photos!} />
           ) : null}
+
+          {showing3D && (
+            <button
+              onClick={() => setShowDims(v => !v)}
+              title={showDims ? 'Masquer dimensions' : 'Afficher dimensions'}
+              style={{
+                position: 'absolute', bottom: 30, left: 8, zIndex: 3,
+                padding: '3px 8px', fontSize: 11,
+                background: showDims ? '#0058a3' : 'rgba(0,0,0,0.5)',
+                border: '1px solid ' + (showDims ? '#0058a3' : '#444'),
+                borderRadius: 4, color: '#fff', cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              📐
+            </button>
+          )}
 
           {showing3D && actionKeys.length > 0 && (
             <div style={{
