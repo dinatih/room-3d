@@ -4,8 +4,8 @@ import re
 from mathutils import Vector, Matrix
 
 LARA_FBX = "/home/dinatih/Projects/room-3d/scratch/lara_source/C1S1UIP9N1UQPLO2U787FMDUD.fbx"
-YBOT_GLB = "/home/dinatih/Projects/room-3d/media/y_bot_from_mixamo.glb"
-OUT_GLB  = "/home/dinatih/Projects/room-3d/media/lara_mixamo.glb"
+YBOT_GLB = "/home/dinatih/Projects/room-3d/public/media/glb/y_bot_from_mixamo.glb"
+OUT_GLB  = "/home/dinatih/Projects/room-3d/public/media/glb/lara_mixamo.glb"
 
 def log(msg):
     print(f"[rig-perfect] {msg}", flush=True)
@@ -66,6 +66,7 @@ LARA_TO_MIXAMO = {
     "head neck upper": "mixamorig:Head",
     
     # Left arm/leg
+    "arm left shoulder 1": "mixamorig:LeftShoulder",
     "arm left shoulder 2": "mixamorig:LeftArm",
     "arm left elbow": "mixamorig:LeftForeArm",
     "arm left wrist": "mixamorig:LeftHand",
@@ -75,6 +76,7 @@ LARA_TO_MIXAMO = {
     "leg left toes": "mixamorig:LeftToeBase",
     
     # Right arm/leg
+    "arm right shoulder 1": "mixamorig:RightShoulder",
     "arm right shoulder 2": "mixamorig:RightArm",
     "arm right elbow": "mixamorig:RightForeArm",
     "arm right wrist": "mixamorig:RightHand",
@@ -250,8 +252,14 @@ log("Renaming vertex groups on Lara meshes...")
 
 for mesh in lara_meshes:
     for vg in mesh.vertex_groups:
-        if vg.name in rename_map:
-            vg.name = rename_map[vg.name]
+        matched = False
+        for lara_pref in sorted(LARA_TO_MIXAMO.keys(), key=len, reverse=True):
+            if vg.name.startswith(lara_pref):
+                vg.name = LARA_TO_MIXAMO[lara_pref]
+                matched = True
+                break
+        if not matched and vg.name.startswith("pelvis"):
+            vg.name = "mixamorig:Hips"
             
     for mod in list(mesh.modifiers):
         if mod.type == "ARMATURE":

@@ -567,6 +567,15 @@
       color: var(--color-warning);
     }
 
+    .color-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
     /* Loader Indicator */
     #loading-indicator {
       position: absolute;
@@ -735,8 +744,9 @@
               <button id="btn-toggle-wire">🕸 Wireframe</button>
               <button id="btn-toggle-mesh">👁 Hide Meshes</button>
             </div>
-            <div class="btn-grid" style="grid-template-columns: 1fr; margin-top: 8px;">
+            <div class="btn-grid" style="grid-template-columns: 1fr; gap: 6px; margin-top: 8px;">
               <button id="btn-toggle-ybot" class="active">🤖 Show Y-Bot (Mixamo Ref)</button>
+              <button id="btn-toggle-char" class="active">🧍 Show Comparison FBX</button>
             </div>
           </div>
         </div>
@@ -814,7 +824,8 @@
     const REF_FILE = 'lara_croft__2026_rigged.glb';
     const PERFECT_FILE = 'lara_mixamo.glb';
     const YBOT_FILE = 'y_bot_from_mixamo.glb';
-    const LAYOUT_OFFSET = 0.45; // meters side-by-side offset
+    const CHAR_FILE = 'character.glb';
+    const LAYOUT_OFFSET = 0.9; // meters side-by-side offset
 
     const ANIM_FILES = [
       { name: 'Idle (Mixamo Standard)', file: 'idle_mixamo.glb' },
@@ -831,16 +842,16 @@
       "mixamorig:Spine2": "spine upper",
       "mixamorig:Neck": "head neck lower",
       "mixamorig:Head": "head neck upper",
-      "mixamorig:LeftShoulder": "arm left shoulder 2",
-      "mixamorig:LeftArm": "arm left upper",
+      "mixamorig:LeftShoulder": "arm left shoulder 1",
+      "mixamorig:LeftArm": "arm left shoulder 2",
       "mixamorig:LeftForeArm": "arm left elbow",
       "mixamorig:LeftHand": "arm left wrist",
       "mixamorig:LeftUpLeg": "leg left thigh",
       "mixamorig:LeftLeg": "leg left knee",
       "mixamorig:LeftFoot": "leg left ankle",
       "mixamorig:LeftToeBase": "leg left toes",
-      "mixamorig:RightShoulder": "arm right shoulder 2",
-      "mixamorig:RightArm": "arm right upper",
+      "mixamorig:RightShoulder": "arm right shoulder 1",
+      "mixamorig:RightArm": "arm right shoulder 2",
       "mixamorig:RightForeArm": "arm right elbow",
       "mixamorig:RightHand": "arm right wrist",
       "mixamorig:RightUpLeg": "leg right thigh",
@@ -857,21 +868,25 @@
       wireframe: false,
       hideMesh: false,
       showYbot: true,
+      showChar: true,
       
       models: {
         ref: null,     // Reference Lara
         perfect: null, // Our Perfect Mixamo Rig Lara
-        ybot: null     // Y-Bot Ref
+        ybot: null,     // Y-Bot Ref
+        char: null     // Comparison FBX
       },
       wrappers: {
         ref: null,
         perfect: null,
-        ybot: null
+        ybot: null,
+        char: null
       },
       skeletons: {
         ref: null,
         perfect: null,
-        ybot: null
+        ybot: null,
+        char: null
       },
       stats: {
         ref: null,
@@ -884,9 +899,11 @@
         mixerRef: null,
         mixerPerfect: null,
         mixerYbot: null,
+        mixerChar: null,
         actionRef: null,
         actionPerfect: null,
         actionYbot: null,
+        actionChar: null,
         clip: null,
         paused: false,
         speed: 1.0,
@@ -895,7 +912,11 @@
       
       inspector: {
         selectedBoneName: null,
-        marker: null // glowing sphere in scene
+        marker: null, // alias for compatibility
+        markerPerfect: null,
+        markerRef: null,
+        markerYbot: null,
+        markerChar: null
       }
     };
 
@@ -960,26 +981,67 @@
     grid.position.y = 0.001;
     scene.add(grid);
 
-    // Joint inspector sphere
+    // Joint inspector spheres
     const markerGeo = new THREE.SphereGeometry(0.018, 16, 16);
-    const markerMat = new THREE.MeshBasicMaterial({
+    
+    // Perfect Lara (Purple)
+    const markerMatPerf = new THREE.MeshBasicMaterial({
       color: 0x8c64ff,
       transparent: true,
       opacity: 0.8,
       depthTest: false
     });
-    state.inspector.marker = new THREE.Mesh(markerGeo, markerMat);
-    state.inspector.marker.visible = false;
-    state.inspector.marker.renderOrder = 1000;
-    scene.add(state.inspector.marker);
+    state.inspector.markerPerfect = new THREE.Mesh(markerGeo, markerMatPerf);
+    state.inspector.markerPerfect.visible = false;
+    state.inspector.markerPerfect.renderOrder = 1000;
+    scene.add(state.inspector.markerPerfect);
+    state.inspector.marker = state.inspector.markerPerfect; // keep reference for compatibility
+    
+    // Reference Lara (Red)
+    const markerMatRef = new THREE.MeshBasicMaterial({
+      color: 0xef4444,
+      transparent: true,
+      opacity: 0.8,
+      depthTest: false
+    });
+    state.inspector.markerRef = new THREE.Mesh(markerGeo, markerMatRef);
+    state.inspector.markerRef.visible = false;
+    state.inspector.markerRef.renderOrder = 1000;
+    scene.add(state.inspector.markerRef);
+
+    // Y-Bot (Cyan)
+    const markerMatYbot = new THREE.MeshBasicMaterial({
+      color: 0x06b6d4,
+      transparent: true,
+      opacity: 0.8,
+      depthTest: false
+    });
+    state.inspector.markerYbot = new THREE.Mesh(markerGeo, markerMatYbot);
+    state.inspector.markerYbot.visible = false;
+    state.inspector.markerYbot.renderOrder = 1000;
+    scene.add(state.inspector.markerYbot);
+
+    // Character (Orange)
+    const markerMatChar = new THREE.MeshBasicMaterial({
+      color: 0xf59e0b,
+      transparent: true,
+      opacity: 0.8,
+      depthTest: false
+    });
+    state.inspector.markerChar = new THREE.Mesh(markerGeo, markerMatChar);
+    state.inspector.markerChar.visible = false;
+    state.inspector.markerChar.renderOrder = 1000;
+    scene.add(state.inspector.markerChar);
 
     // Create wrapper groups to insulate model coordinates from animation root translations
     state.wrappers.ref = new THREE.Group();
     state.wrappers.perfect = new THREE.Group();
     state.wrappers.ybot = new THREE.Group();
+    state.wrappers.char = new THREE.Group();
     scene.add(state.wrappers.ref);
     scene.add(state.wrappers.perfect);
     scene.add(state.wrappers.ybot);
+    scene.add(state.wrappers.char);
 
     // ── Loaders ──────────────────────────────────────────────────────────────
     const gltfLoader = new GLTFLoader();
@@ -1058,7 +1120,7 @@
     // ── Load and Setup Models ────────────────────────────────────────────────
     async function loadModel(filename) {
       return new Promise((resolve, reject) => {
-        gltfLoader.load('media/' + filename, gltf => {
+        gltfLoader.load('public/media/glb/' + filename + '?t=' + Date.now(), gltf => {
           resolve(gltf);
         }, undefined, reject);
       });
@@ -1100,6 +1162,25 @@
       });
       state.wrappers.ybot.add(state.models.ybot);
 
+      showLoader("Loading Comparison FBX...");
+      const charGltf = await loadModel(CHAR_FILE);
+      state.models.char = charGltf.scene;
+      const charBox = new THREE.Box3().setFromObject(state.models.char);
+      const charSize = charBox.getSize(new THREE.Vector3());
+      console.log("Comparison FBX size:", charSize.toArray());
+      if (charSize.y > 10.0) {
+        state.models.char.scale.setScalar(0.01);
+      } else {
+        state.models.char.scale.setScalar(1.0);
+      }
+      state.models.char.traverse(c => { 
+        if (c.isMesh) {
+          c.castShadow = c.receiveShadow = true;
+          c.frustumCulled = false;
+        } 
+      });
+      state.wrappers.char.add(state.models.char);
+
       // Create skeleton helpers
       state.skeletons.ref = new THREE.SkeletonHelper(state.models.ref);
       state.skeletons.ref.material.linewidth = 2;
@@ -1119,6 +1200,12 @@
       state.skeletons.ybot.renderOrder = 999;
       scene.add(state.skeletons.ybot);
 
+      state.skeletons.char = new THREE.SkeletonHelper(state.models.char);
+      state.skeletons.char.material.linewidth = 2;
+      state.skeletons.char.material.depthTest = false;
+      state.skeletons.char.renderOrder = 999;
+      scene.add(state.skeletons.char);
+
       // Analyze and store stats
       state.stats.ref = analyzeRig(state.models.ref);
       state.stats.perfect = analyzeRig(state.models.perfect);
@@ -1127,6 +1214,7 @@
       setupAxesHelpers(state.models.ref);
       setupAxesHelpers(state.models.perfect);
       setupAxesHelpers(state.models.ybot);
+      setupAxesHelpers(state.models.char);
 
       updatePositionsAndVisibility();
       populateStatsTable();
@@ -1182,19 +1270,27 @@
       if (state.wrappers.ref) { state.wrappers.ref.position.y = 0; state.wrappers.ref.updateMatrixWorld(true); }
       if (state.wrappers.perfect) { state.wrappers.perfect.position.y = 0; state.wrappers.perfect.updateMatrixWorld(true); }
       if (state.wrappers.ybot) { state.wrappers.ybot.position.y = 0; state.wrappers.ybot.updateMatrixWorld(true); }
+      if (state.wrappers.char) { state.wrappers.char.position.y = 0; state.wrappers.char.updateMatrixWorld(true); }
 
       if (state.layout === 'side-by-side') {
-        state.wrappers.ref.position.set(-offset, 0, 0);
+        state.wrappers.ref.position.set(-1.5 * offset, 0, 0);
         state.models.ref.position.set(0, 0, 0);
         
-        state.wrappers.perfect.position.set(offset, 0, 0);
-        state.models.perfect.position.set(0, 0, 0);
-
         if (state.models.ybot) {
-          state.wrappers.ybot.position.set(0, 0, 0);
+          state.wrappers.ybot.position.set(-0.5 * offset, 0, 0);
           state.models.ybot.position.set(0, 0, 0);
           state.wrappers.ybot.visible = state.showYbot;
           if (state.skeletons.ybot) state.skeletons.ybot.visible = state.showYbot && state.showSkeleton;
+        }
+
+        state.wrappers.perfect.position.set(0.5 * offset, 0, 0);
+        state.models.perfect.position.set(0, 0, 0);
+
+        if (state.models.char) {
+          state.wrappers.char.position.set(1.5 * offset, 0, 0);
+          state.models.char.position.set(0, 0, 0);
+          state.wrappers.char.visible = state.showChar;
+          if (state.skeletons.char) state.skeletons.char.visible = state.showChar && state.showSkeleton;
         }
       } else {
         state.wrappers.ref.position.set(0, 0, 0);
@@ -1209,12 +1305,20 @@
           state.wrappers.ybot.visible = state.showYbot;
           if (state.skeletons.ybot) state.skeletons.ybot.visible = state.showYbot && state.showSkeleton;
         }
+
+        if (state.models.char) {
+          state.wrappers.char.position.set(0, 0, 0);
+          state.models.char.position.set(0, 0, 0);
+          state.wrappers.char.visible = state.showChar;
+          if (state.skeletons.char) state.skeletons.char.visible = state.showChar && state.showSkeleton;
+        }
       }
 
       // Display options
       if (state.skeletons.ref) state.skeletons.ref.visible = state.showSkeleton;
       if (state.skeletons.perfect) state.skeletons.perfect.visible = state.showSkeleton;
       if (state.skeletons.ybot) state.skeletons.ybot.visible = state.showSkeleton && state.showYbot;
+      if (state.skeletons.char) state.skeletons.char.visible = state.showSkeleton && state.showChar;
 
       state.boneAxesHelpers.forEach(h => {
         h.visible = state.showAxes;
@@ -1237,6 +1341,14 @@
         state.models.ybot.traverse(c => {
           if (c.isMesh) {
             c.visible = !state.hideMesh && state.showYbot;
+            c.material.wireframe = state.wireframe;
+          }
+        });
+      }
+      if (state.models.char) {
+        state.models.char.traverse(c => {
+          if (c.isMesh) {
+            c.visible = !state.hideMesh && state.showChar;
             c.material.wireframe = state.wireframe;
           }
         });
@@ -1314,6 +1426,25 @@
       for (const r of roots) renderNode(r, 0);
     }
 
+    function findBone(model, mixName) {
+      if (!model) return null;
+      let found = model.getObjectByName(mixName);
+      if (!found) {
+        const shortName = mixName.replace(/^mixamorig\s*:\s*/i, '');
+        found = model.getObjectByName(shortName);
+      }
+      if (!found) {
+        model.traverse(c => {
+          if (c.isBone) {
+            const nameNorm = c.name.toLowerCase().replace(/^mixamorig\s*:\s*/i, '');
+            const targetNorm = mixName.toLowerCase().replace(/^mixamorig\s*:\s*/i, '');
+            if (nameNorm === targetNorm) found = c;
+          }
+        });
+      }
+      return found;
+    }
+
     function selectBone(boneName) {
       const nodes = document.querySelectorAll('.tree-node');
       nodes.forEach(n => {
@@ -1339,7 +1470,10 @@
       const inspector = document.getElementById('joint-inspector');
       if (!perfBone) {
         inspector.style.display = 'none';
-        state.inspector.marker.visible = false;
+        if (state.inspector.markerPerfect) state.inspector.markerPerfect.visible = false;
+        if (state.inspector.markerRef) state.inspector.markerRef.visible = false;
+        if (state.inspector.markerYbot) state.inspector.markerYbot.visible = false;
+        if (state.inspector.markerChar) state.inspector.markerChar.visible = false;
         return;
       }
 
@@ -1349,46 +1483,121 @@
       const perfWPos = new THREE.Vector3();
       perfBone.getWorldPosition(perfWPos);
 
-      state.inspector.marker.position.copy(perfWPos);
-      state.inspector.marker.visible = true;
+      if (state.inspector.markerPerfect) {
+        state.inspector.markerPerfect.position.copy(perfWPos);
+        state.inspector.markerPerfect.visible = true;
+      }
 
       const body = document.getElementById('inspector-body');
       body.innerHTML = '';
 
-      function addRow(k, v, isDiff = false) {
+      function addRow(k, v, isDiff = false, dotColor = null) {
         const r = document.createElement('div');
         r.className = 'inspector-row';
-        r.innerHTML = `<span class="inspector-k">${k}</span><span class="inspector-v ${isDiff ? 'inspector-diff' : ''}">${v}</span>`;
+        let dotHtml = '';
+        if (dotColor) {
+          dotHtml = `<span class="color-dot" style="background-color: ${dotColor}"></span>`;
+        }
+        r.innerHTML = `<span class="inspector-k">${dotHtml}${k}</span><span class="inspector-v ${isDiff ? 'inspector-diff' : ''}">${v}</span>`;
         body.appendChild(r);
       }
 
       addRow('Bone length (native)', (perfBone.position.length() * 1000).toFixed(1) + ' mm');
-      addRow('Perfect World X', (perfWPos.x * 100).toFixed(1) + ' cm');
-      addRow('Perfect World Y', (perfWPos.y * 100).toFixed(1) + ' cm');
-      addRow('Perfect World Z', (perfWPos.z * 100).toFixed(1) + ' cm');
+      addRow('Perfect World X', (perfWPos.x * 100).toFixed(1) + ' cm', false, '#8c64ff');
+      addRow('Perfect World Y', (perfWPos.y * 100).toFixed(1) + ' cm', false, '#8c64ff');
+      addRow('Perfect World Z', (perfWPos.z * 100).toFixed(1) + ' cm', false, '#8c64ff');
 
+      // 1. Reference Lara Comparison
+      const refWPos = new THREE.Vector3();
       if (refBone) {
-        const refWPos = new THREE.Vector3();
         refBone.getWorldPosition(refWPos);
         
         const refWPosAdjusted = refWPos.clone();
         if (state.layout === 'side-by-side') {
+          // perfect is at 0.5 * offset, ref is at -1.5 * offset.
+          // Diff is 2 * offset
           refWPosAdjusted.x += 2 * LAYOUT_OFFSET; 
         }
         
         const dist = perfWPos.distanceTo(refWPosAdjusted);
         
-        addRow('Lara Ref Bone', refBone.name);
-        addRow('Ref World Y', (refWPos.y * 100).toFixed(1) + ' cm');
-        addRow('Joint alignment diff', (dist * 1000).toFixed(1) + ' mm', dist > 0.005);
+        addRow('Lara Ref Bone', refBone.name, false, '#ef4444');
+        addRow('Ref World Y', (refWPos.y * 100).toFixed(1) + ' cm', false, '#ef4444');
+        addRow('Ref alignment diff', (dist * 1000).toFixed(1) + ' mm', dist > 0.005, '#ef4444');
+
+        if (state.inspector.markerRef) {
+          state.inspector.markerRef.position.copy(refWPos);
+          state.inspector.markerRef.visible = state.wrappers.ref.visible;
+        }
       } else {
-        addRow('Lara Ref Bone', '— (collarbone helper)', true);
+        addRow('Lara Ref Bone', '— (collarbone helper)', true, '#ef4444');
+        if (state.inspector.markerRef) state.inspector.markerRef.visible = false;
+      }
+
+      // 2. Y-Bot Reference Comparison
+      const ybotWPos = new THREE.Vector3();
+      const ybotBone = findBone(state.models.ybot, boneName);
+      if (ybotBone) {
+        ybotBone.getWorldPosition(ybotWPos);
+        
+        const ybotWPosAdjusted = ybotWPos.clone();
+        if (state.layout === 'side-by-side') {
+          // perfect is at 0.5 * offset, ybot is at -0.5 * offset.
+          // Diff is 1 * offset
+          ybotWPosAdjusted.x += LAYOUT_OFFSET;
+        }
+        
+        const dist = perfWPos.distanceTo(ybotWPosAdjusted);
+        
+        addRow('Y-Bot Bone', ybotBone.name, false, '#06b6d4');
+        addRow('Y-Bot World Y', (ybotWPos.y * 100).toFixed(1) + ' cm', false, '#06b6d4');
+        addRow('Y-Bot alignment diff', (dist * 1000).toFixed(1) + ' mm', dist > 0.005, '#06b6d4');
+
+        if (state.inspector.markerYbot) {
+          state.inspector.markerYbot.position.copy(ybotWPos);
+          state.inspector.markerYbot.visible = state.showYbot && state.wrappers.ybot.visible;
+        }
+      } else {
+        addRow('Y-Bot Bone', '— (not found)', true, '#06b6d4');
+        if (state.inspector.markerYbot) state.inspector.markerYbot.visible = false;
+      }
+
+      // 3. Comparison Character Model Comparison
+      const charWPos = new THREE.Vector3();
+      const charBone = findBone(state.models.char, boneName);
+      if (charBone) {
+        charBone.getWorldPosition(charWPos);
+        
+        const charWPosAdjusted = charWPos.clone();
+        if (state.layout === 'side-by-side') {
+          // perfect is at 0.5 * offset, char is at 1.5 * offset.
+          // Diff is -1 * offset
+          charWPosAdjusted.x -= LAYOUT_OFFSET;
+        }
+        
+        const dist = perfWPos.distanceTo(charWPosAdjusted);
+        
+        addRow('Character Bone', charBone.name, false, '#f59e0b');
+        addRow('Character World Y', (charWPos.y * 100).toFixed(1) + ' cm', false, '#f59e0b');
+        addRow('Char alignment diff', (dist * 1000).toFixed(1) + ' mm', dist > 0.005, '#f59e0b');
+
+        if (state.inspector.markerChar) {
+          state.inspector.markerChar.position.copy(charWPos);
+          state.inspector.markerChar.visible = state.showChar && state.wrappers.char.visible;
+        }
+      } else {
+        addRow('Character Bone', '— (not found)', true, '#f59e0b');
+        if (state.inspector.markerChar) state.inspector.markerChar.visible = false;
       }
     }
 
     document.getElementById('insp-close').onclick = () => {
       document.getElementById('joint-inspector').style.display = 'none';
-      state.inspector.marker.visible = false;
+      if (state.inspector.markerPerfect) state.inspector.markerPerfect.visible = false;
+      if (state.inspector.markerRef) state.inspector.markerRef.visible = false;
+      if (state.inspector.markerYbot) state.inspector.markerYbot.visible = false;
+      if (state.inspector.markerChar) state.inspector.markerChar.visible = false;
+      state.inspector.selectedBoneName = null;
       document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('selected'));
     };
 
@@ -1397,9 +1606,11 @@
       if (state.animation.actionRef) { state.animation.actionRef.stop(); state.animation.actionRef = null; }
       if (state.animation.actionPerfect) { state.animation.actionPerfect.stop(); state.animation.actionPerfect = null; }
       if (state.animation.actionYbot) { state.animation.actionYbot.stop(); state.animation.actionYbot = null; }
+      if (state.animation.actionChar) { state.animation.actionChar.stop(); state.animation.actionChar = null; }
       state.animation.mixerRef = null;
       state.animation.mixerPerfect = null;
       state.animation.mixerYbot = null;
+      state.animation.mixerChar = null;
     }
 
     async function loadSelectedAnimation(filename) {
@@ -1515,6 +1726,7 @@
             if (targetBone) {
               if (prop === 'scale') continue;
               if (prop === 'position' && !norm(boneName).includes('hips') && !norm(boneName).includes('pelvis')) continue;
+              if (model !== state.models.ybot && model !== state.models.char && norm(boneName).includes('shoulder')) continue;
               
               const clonedTrack = track.clone();
               clonedTrack.name = targetBone + '.' + prop;
@@ -1534,22 +1746,26 @@
         const refClip = createCleanedClip(rawClip, state.models.ref);
         const perfectClip = createCleanedClip(rawClip, state.models.perfect);
         const ybotClip = createCleanedClip(rawClip, state.models.ybot);
+        const charClip = createCleanedClip(rawClip, state.models.char);
 
         console.log("=== DIAGNOSTICS: loadSelectedAnimation ===");
         console.log("rawClip track count:", rawClip.tracks.length);
         console.log("refClip track count:", refClip.tracks.length);
         console.log("perfectClip track count:", perfectClip.tracks.length);
         console.log("ybotClip track count:", ybotClip.tracks.length);
+        console.log("charClip track count:", charClip.tracks.length);
 
         // Mixers: one per model for clean binding and to eliminate scene-wide warnings
         state.animation.mixerRef = new THREE.AnimationMixer(state.models.ref);
         state.animation.mixerPerfect = new THREE.AnimationMixer(state.models.perfect);
         state.animation.mixerYbot = new THREE.AnimationMixer(state.models.ybot);
+        state.animation.mixerChar = new THREE.AnimationMixer(state.models.char);
         
         // Actions
         state.animation.actionRef = state.animation.mixerRef.clipAction(refClip);
         state.animation.actionPerfect = state.animation.mixerPerfect.clipAction(perfectClip);
         state.animation.actionYbot = state.animation.mixerYbot.clipAction(ybotClip);
+        state.animation.actionChar = state.animation.mixerChar.clipAction(charClip);
 
         // Play
         state.animation.actionRef.setLoop(THREE.LoopRepeat, Infinity);
@@ -1560,6 +1776,9 @@
         
         state.animation.actionYbot.setLoop(THREE.LoopRepeat, Infinity);
         state.animation.actionYbot.play();
+
+        state.animation.actionChar.setLoop(THREE.LoopRepeat, Infinity);
+        state.animation.actionChar.play();
 
         state.animation.paused = false;
         document.getElementById('btn-play').textContent = '⏸ Pause';
@@ -1596,6 +1815,14 @@
       updatePositionsAndVisibility();
     };
 
+    const btnChar = document.getElementById('btn-toggle-char');
+    btnChar.onclick = () => {
+      state.showChar = !state.showChar;
+      if (state.showChar) btnChar.classList.add('active');
+      else btnChar.classList.remove('active');
+      updatePositionsAndVisibility();
+    };
+
     const layoutCards = document.querySelectorAll('.model-card');
     layoutCards.forEach(card => {
       card.onclick = () => {
@@ -1629,6 +1856,7 @@
       if (state.animation.mixerRef) state.animation.mixerRef.timeScale = s;
       if (state.animation.mixerPerfect) state.animation.mixerPerfect.timeScale = s;
       if (state.animation.mixerYbot) state.animation.mixerYbot.timeScale = s;
+      if (state.animation.mixerChar) state.animation.mixerChar.timeScale = s;
     };
 
     // Media Controls
@@ -1640,6 +1868,7 @@
       state.animation.actionRef.paused = state.animation.paused;
       state.animation.actionPerfect.paused = state.animation.paused;
       state.animation.actionYbot.paused = state.animation.paused;
+      if (state.animation.actionChar) state.animation.actionChar.paused = state.animation.paused;
 
       if (state.animation.paused) {
         btnPlay.textContent = '▶ Play';
@@ -1655,6 +1884,7 @@
       state.animation.actionRef.reset();
       state.animation.actionPerfect.reset();
       state.animation.actionYbot.reset();
+      if (state.animation.actionChar) state.animation.actionChar.reset();
       state.animation.paused = false;
       btnPlay.textContent = '⏸ Pause';
       btnPlay.className = 'accent';
@@ -1681,10 +1911,12 @@
       if (state.animation.actionRef) state.animation.actionRef.time = time;
       if (state.animation.actionPerfect) state.animation.actionPerfect.time = time;
       if (state.animation.actionYbot) state.animation.actionYbot.time = time;
+      if (state.animation.actionChar) state.animation.actionChar.time = time;
       
       if (state.animation.mixerRef) state.animation.mixerRef.update(0);
       if (state.animation.mixerPerfect) state.animation.mixerPerfect.update(0);
       if (state.animation.mixerYbot) state.animation.mixerYbot.update(0);
+      if (state.animation.mixerChar) state.animation.mixerChar.update(0);
     }
 
     scrubberWrap.addEventListener('mousedown', (e) => {
@@ -1693,6 +1925,7 @@
         state.animation.actionRef.paused = true;
         state.animation.actionPerfect.paused = true;
         state.animation.actionYbot.paused = true;
+        if (state.animation.actionChar) state.animation.actionChar.paused = true;
       }
       handleScrubber(e);
     });
@@ -1710,6 +1943,7 @@
           state.animation.actionRef.paused = false;
           state.animation.actionPerfect.paused = false;
           state.animation.actionYbot.paused = false;
+          if (state.animation.actionChar) state.animation.actionChar.paused = false;
         }
       }
     });
@@ -1724,6 +1958,7 @@
         if (state.animation.mixerRef) state.animation.mixerRef.update(dt);
         if (state.animation.mixerPerfect) state.animation.mixerPerfect.update(dt);
         if (state.animation.mixerYbot) state.animation.mixerYbot.update(dt);
+        if (state.animation.mixerChar) state.animation.mixerChar.update(dt);
         
         // Update Scrubber UI
         const time = state.animation.actionPerfect.time;
@@ -1735,7 +1970,8 @@
 
       controls.update();
 
-      if (state.inspector.selectedBoneName && state.inspector.marker.visible) {
+      if (state.inspector.selectedBoneName && state.inspector.markerPerfect && state.inspector.markerPerfect.visible) {
+        // Perfect Lara
         let perfBone = null;
         state.models.perfect.traverse(c => {
           if (c.isBone && c.name === state.inspector.selectedBoneName) perfBone = c;
@@ -1743,7 +1979,46 @@
         if (perfBone) {
           const wp = new THREE.Vector3();
           perfBone.getWorldPosition(wp);
-          state.inspector.marker.position.copy(wp);
+          state.inspector.markerPerfect.position.copy(wp);
+        }
+
+        // Reference Lara
+        const laraPref = MIX_TO_LARA_PREFIX[state.inspector.selectedBoneName];
+        let refBone = null;
+        if (laraPref) {
+          state.models.ref.traverse(c => {
+            if (c.isBone && c.name.startsWith(laraPref)) refBone = c;
+          });
+        }
+        if (refBone && state.inspector.markerRef) {
+          const wp = new THREE.Vector3();
+          refBone.getWorldPosition(wp);
+          state.inspector.markerRef.position.copy(wp);
+          state.inspector.markerRef.visible = state.wrappers.ref.visible;
+        } else if (state.inspector.markerRef) {
+          state.inspector.markerRef.visible = false;
+        }
+
+        // Y-Bot
+        const ybotBone = findBone(state.models.ybot, state.inspector.selectedBoneName);
+        if (ybotBone && state.inspector.markerYbot) {
+          const wp = new THREE.Vector3();
+          ybotBone.getWorldPosition(wp);
+          state.inspector.markerYbot.position.copy(wp);
+          state.inspector.markerYbot.visible = state.showYbot && state.wrappers.ybot.visible;
+        } else if (state.inspector.markerYbot) {
+          state.inspector.markerYbot.visible = false;
+        }
+
+        // Character
+        const charBone = findBone(state.models.char, state.inspector.selectedBoneName);
+        if (charBone && state.inspector.markerChar) {
+          const wp = new THREE.Vector3();
+          charBone.getWorldPosition(wp);
+          state.inspector.markerChar.position.copy(wp);
+          state.inspector.markerChar.visible = state.showChar && state.wrappers.char.visible;
+        } else if (state.inspector.markerChar) {
+          state.inspector.markerChar.visible = false;
         }
       }
 
