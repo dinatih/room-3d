@@ -744,9 +744,12 @@
               <button id="btn-toggle-wire">🕸 Wireframe</button>
               <button id="btn-toggle-mesh">👁 Hide Meshes</button>
             </div>
-            <div class="btn-grid" style="grid-template-columns: 1fr; gap: 6px; margin-top: 8px;">
-              <button id="btn-toggle-ybot" class="active">🤖 Show Y-Bot (Mixamo Ref)</button>
-              <button id="btn-toggle-char" class="active">🧍 Show Comparison FBX</button>
+            <div class="btn-grid" style="grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;">
+              <button id="btn-toggle-ybot" class="active">🤖 Show Y-Bot</button>
+              <button id="btn-toggle-char" class="active">🧍 Show Character</button>
+            </div>
+            <div class="btn-grid" style="grid-template-columns: 1fr; gap: 6px; margin-top: 6px;">
+              <button id="btn-toggle-guns" class="active">🔫 Show Guns & Holsters</button>
             </div>
           </div>
         </div>
@@ -869,6 +872,7 @@
       hideMesh: false,
       showYbot: true,
       showChar: true,
+      showGuns: true,
       
       models: {
         ref: null,     // Reference Lara
@@ -1327,13 +1331,15 @@
       // Show/Hide meshes & wireframe
       state.models.ref.traverse(c => {
         if (c.isMesh) {
-          c.visible = !state.hideMesh;
+          const isGun = c.name.toLowerCase().includes('holster') || c.name.toLowerCase().includes('handgun') || c.name.toLowerCase().includes('gun') || c.name.toLowerCase().includes('pistol');
+          c.visible = !state.hideMesh && (!isGun || state.showGuns);
           c.material.wireframe = state.wireframe;
         }
       });
       state.models.perfect.traverse(c => {
         if (c.isMesh) {
-          c.visible = !state.hideMesh;
+          const isGun = c.name.toLowerCase().includes('holster') || c.name.toLowerCase().includes('handgun') || c.name.toLowerCase().includes('gun') || c.name.toLowerCase().includes('pistol');
+          c.visible = !state.hideMesh && (!isGun || state.showGuns);
           c.material.wireframe = state.wireframe;
         }
       });
@@ -1822,6 +1828,8 @@
       else btnChar.classList.remove('active');
       updatePositionsAndVisibility();
     };
+
+    setupToggleBtn('btn-toggle-guns', 'showGuns', updatePositionsAndVisibility);
 
     const layoutCards = document.querySelectorAll('.model-card');
     layoutCards.forEach(card => {
