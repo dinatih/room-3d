@@ -44,6 +44,7 @@ import { SinkBoholmen }                               from '@features/scene/item
 import { NissedalMirror }                             from '@features/scene/items/NissedalMirror';
 import { NinjaSP101 }                                 from '@features/scene/items/NinjaSP101';
 import { MllseG2Pro }                                 from '@features/scene/items/MllseG2Pro';
+import { MatterHub }                                  from '@features/scene/items/MatterHub';
 import { JblCharge3 }                                 from '@features/scene/items/JblCharge3';
 import { TrashBin }                                   from '@features/scene/items/TrashBin';
 import { VacuumCleaner }                              from '@features/scene/items/VacuumCleaner';
@@ -89,6 +90,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'mirror-nissedal-wide':   NissedalMirror,
   'ninja-sp101':            NinjaSP101,
   'mini-pc':                MllseG2Pro,
+  'matter-hub':             MatterHub,
   'sony-srs-xb33':          JblCharge3,
   'trash-bin':              TrashBin,
   'vacuum-cleaner':         VacuumCleaner,
