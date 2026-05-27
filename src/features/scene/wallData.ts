@@ -21,7 +21,8 @@ import {
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   DOOR_START, DOOR_END, DOOR_H,
   BATH_Z_END,
-  DIAG_AZ, DIAG_CZ,
+  DIAG_AX, DIAG_AZ, DIAG_CZ, DIAG_SIN, DIAG_COS, DIAG_ROT_Y,
+  DIAG_ENTRY_S, DIAG_ENTRY_E,
 } from '@config';
 
 export const W        = 10; // épaisseur de mur standard (cm)
@@ -73,7 +74,7 @@ export function wallDefToBoxGeo(d: WallDef): THREE.BufferGeometry {
 }
 
 // ── Piliers box ───────────────────────────────────────────────────────────────
-export type PillarDef = { id: string; x: number; z: number; w?: number; d?: number };
+export type PillarDef = { id: string; x: number; z: number; w?: number; d?: number; rot?: number };
 
 export const PILLAR_DEFS = [
   { id: 'corner-nw',   x: -10,                    z: -WALL_C_T / 2, w: 20, d: WALL_C_T },
@@ -92,12 +93,31 @@ export const PILLAR_DEFS = [
   { id: 'kitchen-ne',  x: KITCHEN_X1 + W / 2,     z: KITCHEN_Z + W / 2 },
   { id: 'shower-nw',   x: NICHE_X - W / 2,        z: BATH_Z_END - W / 2 + 10 },
   { id: 'shower-ne',   x: 65,                      z: BATH_Z_END - W / 2 + 10 },
-  { id: 'corr-n',      x: CORR_WALL_X,             z: KITCHEN_Z + W / 2 },
+  { id: 'bath-ne',      x: CORR_WALL_X,             z: KITCHEN_Z + W / 2 },
   { id: 'corr-s',      x: CORR_WALL_X,             z: ROOM_D + W / 2 },
-  { id: 'corr-bath',   x: CORR_WALL_X,             z: BATH_Z_END - W / 2 + 10 },
+  { id: 'bath-se',   x: CORR_WALL_X,             z: BATH_Z_END - W / 2 + 10 },
   { id: 'shower-sw',   x: NICHE_X - W / 2,        z: BATH_Z_END + 70 + W / 2 },
   { id: 'shower-se',   x: 65,                      z: BATH_Z_END + 70 + W / 2 },
   { id: 'garden-e',    x: ROOM_W + W / 2,           z: -220 - W / 2 },
+
+  // ── Jambes des 3 portes (10×10, motif identique aux glass-west/east) ────
+  // Porte séjour principale (mur sud z=400, x=200→280)
+  { id: 'door-living-w', x: DOOR_START - W / 2,     z: ROOM_D + W / 2 },           // (195, 405)
+  { id: 'door-living-e', x: DOOR_END   + W / 2,     z: ROOM_D + W / 2 },           // (285, 405)
+  // Porte couloir-SDB (mur couloir x=195, z=520→600)
+  { id: 'door-bath-n',   x: CORR_WALL_X,             z: CORR_DOOR_S - W / 2 },     // (195, 515)
+  { id: 'door-bath-s',   x: CORR_WALL_X,             z: CORR_DOOR_E + W / 2 },     // (195, 605)
+  // Porte d'entrée diagonale (mur diagonal, d=DIAG_ENTRY_S→DIAG_ENTRY_E).
+  // Centre = face intérieure + W/2 le long de la normale sortante (DIAG_COS, -DIAG_SIN).
+  // Rot Y = DIAG_ROT_Y pour aligner le pilier avec l'axe du mur diagonal.
+  { id: 'door-entry-s',
+    x: DIAG_AX + (DIAG_ENTRY_S - W / 2) * DIAG_SIN + (W / 2) * DIAG_COS,
+    z: DIAG_AZ + (DIAG_ENTRY_S - W / 2) * DIAG_COS - (W / 2) * DIAG_SIN,
+    rot: DIAG_ROT_Y },
+  { id: 'door-entry-e',
+    x: DIAG_AX + (DIAG_ENTRY_E + W / 2) * DIAG_SIN + (W / 2) * DIAG_COS,
+    z: DIAG_AZ + (DIAG_ENTRY_E + W / 2) * DIAG_COS - (W / 2) * DIAG_SIN,
+    rot: DIAG_ROT_Y },
 ] as const satisfies readonly PillarDef[];
 
 // Panneaux bois occultants jardin (côté est, devant pilier garden-e).
@@ -176,18 +196,18 @@ export const WALL_DEFS: WallDef[] = [
   // Mur nord SDB / fond cuisine (3 morceaux, saute les piliers)
   { axis: 'x', x1: pEast('bath-nw'), x2: pWest('kitchen-nw'), zc: pZ('bath-nw') },
   { axis: 'x', x1: pEast('kitchen-nw'), x2: pWest('kitchen-ne'), zc: pZ('bath-nw') },
-  { axis: 'x', x1: pEast('kitchen-ne'), x2: pWest('corr-n'), zc: pZ('bath-nw') },
+  { axis: 'x', x1: pEast('kitchen-ne'), x2: pWest('bath-ne'), zc: pZ('bath-nw') },
 
   // ── Couloir gauche (X=185, Z=460→600) ────────────────────────────────────
   // Segment avant porte (avec offset CORR_E pour éviter z-fighting dormant)
-  { axis: 'z', xc: pX('corr-n'), z1: pSouth('corr-n'), z2: CORR_DOOR_S - CORR_E },
+  { axis: 'z', xc: pX('bath-ne'), z1: pSouth('bath-ne'), z2: CORR_DOOR_S - CORR_E },
   // Segment après porte
-  { axis: 'z', xc: pX('corr-n'), z1: CORR_DOOR_E + CORR_E, z2: pNorth('corr-bath') },
+  { axis: 'z', xc: pX('bath-ne'), z1: CORR_DOOR_E + CORR_E, z2: pNorth('bath-se') },
   // Linteau au-dessus de la porte couloir (3D seulement)
-  { axis: 'z', xc: pX('corr-n'), z1: CORR_DOOR_S - CORR_E, z2: CORR_DOOR_E + CORR_E,
+  { axis: 'z', xc: pX('bath-ne'), z1: CORR_DOOR_S - CORR_E, z2: CORR_DOOR_E + CORR_E,
     yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
   // Porte couloir SDB (2D uniquement)
-  { axis: 'z', xc: pX('corr-n'), z1: CORR_DOOR_S, z2: CORR_DOOR_E, segKind: 'door' },
+  { axis: 'z', xc: pX('bath-ne'), z1: CORR_DOOR_S, z2: CORR_DOOR_E, segKind: 'door' },
 
   // ── MUR NORD (Z=0) ──────────────────────────────────────────────────────────
   // Panneau ouest (fixe)

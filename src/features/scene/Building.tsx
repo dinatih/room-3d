@@ -138,6 +138,46 @@ function caplessX(mat: THREE.Material | THREE.Material[]): THREE.Material[] {
   return [noCapMat, noCapMat, m[2], m[3], m[4], m[5]];
 }
 
+// ── Quart de rond — moulure 1,8 cm devant chaque plinthe ───────────────────
+// Section : disque quart en local (X,Y), corner à (0,0), rayon R_QR.
+// Extrusion le long de local Z (depth=1, scale-z à appliquer = longueur du segment).
+const R_QR = 1.8;
+const qrGeo = (() => {
+  const s = new THREE.Shape();
+  s.moveTo(0, 0);
+  s.lineTo(R_QR, 0);
+  s.absarc(0, 0, R_QR, 0, Math.PI / 2, false);
+  s.lineTo(0, 0);
+  const g = new THREE.ExtrudeGeometry(s, { depth: 1, bevelEnabled: false, curveSegments: 8 });
+  g.translate(0, 0, -0.5); // centré sur axe extrusion
+  return g;
+})();
+
+// QR : moulure axis-alignée. (cx, cz) = coin du quart (face plinthe au sol),
+// centre du segment le long de l'axe de longueur. `dir` = direction de la
+// face plinthe (où le quart-de-rond saille dans la pièce).
+function QR({ cx, cz, len, dir, mat }: {
+  cx: number; cz: number;
+  len: number;
+  dir: '+X' | '-X' | '+Z' | '-Z';
+  mat: THREE.Material;
+}) {
+  const ry = dir === '+X' ? 0
+           : dir === '-Z' ? Math.PI / 2
+           : dir === '-X' ? Math.PI
+           : -Math.PI / 2; // '+Z'
+  return (
+    <mesh
+      geometry={qrGeo}
+      material={mat}
+      position={[cx, 0, cz]}
+      rotation-y={ry}
+      scale-z={len}
+      castShadow receiveShadow
+    />
+  );
+}
+
 /** Segment de mur axe Z — span de z1 à z2, centré sur x=xc. */
 function WZ({ xc, z1, z2, t = W, yBase = 0, h = WALL_H, mat = wallMat, userData }: {
   xc: number; z1: number; z2: number;
@@ -184,10 +224,18 @@ function makeSprite(text: string, color: string, worldSize: number): THREE.Sprit
   const canvas = document.createElement('canvas');
   canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext('2d')!;
+  // Fond semi-opaque pour contraste lisible sur n'importe quel mur
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+  const pad = PX * 0.18;
+  ctx.fillRect(0, h / 2 - PX * 0.55, w, PX * 1.1);
   ctx.font = `bold ${PX}px sans-serif`;
-  ctx.fillStyle = color;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  // Stroke noir pour outline supplémentaire
+  ctx.lineWidth = PX * 0.18;
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+  ctx.strokeText(text, w / 2, h / 2);
+  ctx.fillStyle = color;
   ctx.fillText(text, w / 2, h / 2);
   const mat = new THREE.SpriteMaterial({
     map: new THREE.CanvasTexture(canvas),
@@ -264,7 +312,15 @@ function PillarColliders() {
         const pp = p as any;
         const pw = pp.w ?? W;
         const pd = pp.d ?? W;
-        return <CuboidCollider key={pp.id} args={[pw / 2, WALL_H / 2, pd / 2]} position={[pp.x, WALL_H / 2, pp.z]} />;
+        const rot = pp.rot ?? 0;
+        return (
+          <CuboidCollider
+            key={pp.id}
+            args={[pw / 2, WALL_H / 2, pd / 2]}
+            position={[pp.x, WALL_H / 2, pp.z]}
+            rotation={[0, rot, 0]}
+          />
+        );
       })}
     </RigidBody>
   );
@@ -360,8 +416,20 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
       <group visible={!wallsOnly}>
         {PILLAR_DEFS.map((p) => {
           const pp = p as any;
+          const pw = pp.w ?? W;
+          const pd = pp.d ?? W;
+          const rot = pp.rot ?? 0;
+          if (rot) {
+            return (
+              <mesh key={pp.id} position={[pp.x, WALL_H / 2, pp.z]} rotation-y={rot}
+                    material={wallMat} castShadow receiveShadow
+                    userData={{ type: 'pillar', id: pp.id }}>
+                <boxGeometry args={[pw, WALL_H, pd]} />
+              </mesh>
+            );
+          }
           return (
-            <P key={pp.id} w={pp.w ?? W} h={WALL_H} d={pp.d ?? W} x={pp.x} y={WALL_H / 2} z={pp.z}
+            <P key={pp.id} w={pw} h={WALL_H} d={pd} x={pp.x} y={WALL_H / 2} z={pp.z}
               userData={{ type: 'pillar', id: pp.id }} />
           );
         })}
@@ -756,14 +824,13 @@ function Parquet() {
 
 // ── Carrelage bath + couloir ───────────────────────────────────────────────────
 function Tile() {
-  // Placard couloir : tuile s'étend sous les murs jusqu'aux bords du parquet —
-  // x: KITCHEN_X1(130) → DOOR_START(200), z: ROOM_D(400) → KITCHEN_Z(460).
-  // Les murs au-dessus masquent le débordement en vue normale ; aligne le bord
-  // visible avec le parquet en X-ray ou vue plongeante.
-  const CLOSET_W_REAL = DOOR_START - KITCHEN_X1; // 70
-  const CLOSET_D_REAL = KITCHEN_Z - ROOM_D; // 60
-  const CLOSET_X_REAL = (KITCHEN_X1 + DOOR_START) / 2; // 165
-  const CLOSET_Z_REAL = (ROOM_D + KITCHEN_Z) / 2; // 430
+  // Placard couloir : tuile démarre APRÈS les murs sud séjour (kitchen-se → corr-s)
+  // et est cuisine (kitchen-ne → kitchen-se), pour ne pas déborder sous les murs.
+  // Bornes : x: KITCHEN_X1+W(140) → DOOR_START(200), z: ROOM_D+W(410) → KITCHEN_Z(460).
+  const CLOSET_W_REAL = DOOR_START - (KITCHEN_X1 + W);            // 60
+  const CLOSET_D_REAL = KITCHEN_Z - (ROOM_D + W);                 // 50
+  const CLOSET_X_REAL = ((KITCHEN_X1 + W) + DOOR_START) / 2;      // 170
+  const CLOSET_Z_REAL = ((ROOM_D + W) + KITCHEN_Z) / 2;           // 435
 
   const { bathGeo, bathMat, closetMat } = useMemo(() => {
     const baseTex = makeTileTex();
@@ -858,37 +925,62 @@ function Baseboards() {
   const diagSegA = diagSeg(0, DIAG_ENTRY_S);
   const diagSegB = diagSeg(DIAG_ENTRY_E, diagParquetLen);
 
+  // Quart-de-rond diagonal — corner offset = SD (face plinthe), pas SD/2.
+  const diagQR = (d1: number, d2: number) => {
+    const dm = (d1 + d2) / 2;
+    return {
+      x: DIAG_AX + dm * DIAG_SIN - DIAG_COS * SD,
+      z: DIAG_AZ + dm * DIAG_COS + DIAG_SIN * SD,
+      len: d2 - d1,
+    };
+  };
+  const diagQRA = diagQR(0, DIAG_ENTRY_S);
+  const diagQRB = diagQR(DIAG_ENTRY_E, diagParquetLen);
+  const diagQR_ry = DIAG_ROT_Y + Math.PI;
+
   return (
     <group userData={{ brickType: 'skirting' }}>
       {/* North wall Z=0, X: 0→316 */}
       <P w={INT_X_EAST - INT_X_WEST} h={SH} d={SD}
          x={(INT_X_WEST + INT_X_EAST) / 2} y={y} z={INT_Z_NORTH + SD / 2}
          mat={skirtingMat} />
+      <QR cx={(INT_X_WEST + INT_X_EAST) / 2} cz={INT_Z_NORTH + SD}
+          len={INT_X_EAST - INT_X_WEST} dir="+Z" mat={skirtingMat} />
 
       {/* East wall (north) X=316, Z: 0→ROOM_D */}
       <P w={SD} h={SH} d={INT_Z_ROOM_S - INT_Z_NORTH}
          x={INT_X_EAST - SD / 2} y={y} z={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
          mat={skirtingMat} />
+      <QR cx={INT_X_EAST - SD} cz={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
+          len={INT_Z_ROOM_S - INT_Z_NORTH} dir="-X" mat={skirtingMat} />
 
       {/* East wall (sud, après mur SE) X=316, Z: ROOM_D+W→DIAG_AZ */}
       <P w={SD} h={SH} d={DIAG_AZ - (ROOM_D + W)}
          x={INT_X_EAST - SD / 2} y={y} z={((ROOM_D + W) + DIAG_AZ) / 2}
          mat={skirtingMat} />
+      <QR cx={INT_X_EAST - SD} cz={((ROOM_D + W) + DIAG_AZ) / 2}
+          len={DIAG_AZ - (ROOM_D + W)} dir="-X" mat={skirtingMat} />
 
       {/* Mur SE — face nord (séjour) X: DOOR_END+4→316, Z=ROOM_D */}
       <P w={INT_X_EAST - (DOOR_END + 4)} h={SH} d={SD}
          x={((DOOR_END + 4) + INT_X_EAST) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
          mat={skirtingMat} />
+      <QR cx={((DOOR_END + 4) + INT_X_EAST) / 2} cz={INT_Z_ROOM_S - SD}
+          len={INT_X_EAST - (DOOR_END + 4)} dir="-Z" mat={skirtingMat} />
 
       {/* Mur SE — face ouest (couloir/seuil) X=DOOR_END+4, Z: ROOM_D→ROOM_D+W */}
       <P w={SD} h={SH} d={W}
          x={(DOOR_END + 4) - SD / 2} y={y} z={ROOM_D + W / 2}
          mat={skirtingMat} />
+      <QR cx={(DOOR_END + 4) - SD} cz={ROOM_D + W / 2}
+          len={W} dir="-X" mat={skirtingMat} />
 
       {/* Mur SE — face sud (corridor droit) X: DOOR_END+4→316, Z=ROOM_D+W */}
       <P w={INT_X_EAST - (DOOR_END + 4)} h={SH} d={SD}
          x={((DOOR_END + 4) + INT_X_EAST) / 2} y={y} z={(ROOM_D + W) + SD / 2}
          mat={skirtingMat} />
+      <QR cx={((DOOR_END + 4) + INT_X_EAST) / 2} cz={(ROOM_D + W) + SD}
+          len={INT_X_EAST - (DOOR_END + 4)} dir="+Z" mat={skirtingMat} />
 
       {/* Mur diagonal — segment A : NE → début porte d'entrée */}
       <mesh position={[diagSegA.x, y, diagSegA.z]} rotation-y={DIAG_ROT_Y}
@@ -896,15 +988,23 @@ function Baseboards() {
             castShadow receiveShadow>
         <boxGeometry args={[SD, SH, diagSegA.len]} />
       </mesh>
+      <mesh geometry={qrGeo} material={skirtingMat}
+            position={[diagQRA.x, 0, diagQRA.z]} rotation-y={diagQR_ry}
+            scale-z={diagQRA.len} castShadow receiveShadow />
       {/* Mur diagonal — segment B : fin porte d'entrée → coin parquet SW */}
       <mesh position={[diagSegB.x, y, diagSegB.z]} rotation-y={DIAG_ROT_Y}
             ref={(m) => { if (m) m.material = skirtingMat as any; }}
             castShadow receiveShadow>
         <boxGeometry args={[SD, SH, diagSegB.len]} />
       </mesh>
+      <mesh geometry={qrGeo} material={skirtingMat}
+            position={[diagQRB.x, 0, diagQRB.z]} rotation-y={diagQR_ry}
+            scale-z={diagQRB.len} castShadow receiveShadow />
 
-      {/* Corridor — face est du mur couloir, fractionnée pour éviter les ouvertures :
-          placard (z=410→460) et porte SDB couloir (z=CORR_DOOR_S→CORR_DOOR_E). */}
+      {/* Corridor — face est du mur couloir (côté corridor, x = INT_X_DOOR_S+SD/2).
+          Fractionnée pour éviter les ouvertures : placard (z=410→460) et porte
+          SDB couloir (z=CORR_DOOR_S→CORR_DOOR_E). Côté ouest du même mur :
+          plinthe carrelage SDB (cf BathSkirting). */}
       {(() => {
         const CLOSET_N = ROOM_D + W;          // 410
         const CLOSET_S = KITCHEN_Z;           // 460
@@ -915,52 +1015,198 @@ function Baseboards() {
           [CLOSET_S,     CORR_DOOR_S],
           [CORR_DOOR_E,  parquetDiagZ],
         ];
-        return segs.map(([z1, z2], i) => (
-          <P key={i} w={SD} h={SH} d={z2 - z1}
-             x={INT_X_DOOR_S - SD / 2} y={y} z={(z1 + z2) / 2}
-             mat={skirtingMat} />
-        ));
+        return segs.flatMap(([z1, z2], i) => [
+          <P key={`p${i}`} w={SD} h={SH} d={z2 - z1}
+             x={INT_X_DOOR_S + SD / 2} y={y} z={(z1 + z2) / 2}
+             mat={skirtingMat} />,
+          <QR key={`qr${i}`} cx={INT_X_DOOR_S + SD} cz={(z1 + z2) / 2}
+              len={z2 - z1} dir="+X" mat={skirtingMat} />,
+        ]);
+      })()}
+
+      {/* Placard couloir — plinthes bois 3 côtés autour du carrelage placard.
+          Tile spans x: KITCHEN_X1+W(140) → DOOR_START(200), z: ROOM_D+W(410) → KITCHEN_Z(460). */}
+      {(() => {
+        const CL_N = ROOM_D + W;            // 410 (face sud mur sud séjour)
+        const CL_S = KITCHEN_Z;             // 460 (face nord mur sud SDB)
+        const CL_W = KITCHEN_X1 + W;        // 140 (face est mur est cuisine)
+        const CL_E = INT_X_DOOR_S;          // 200 (ouvert sur couloir, pas de plinthe est)
+        const xCenter = (CL_W + CL_E) / 2;
+        const zCenter = (CL_N + CL_S) / 2;
+        const W_LEN = CL_E - CL_W;
+        const D_LEN = CL_S - CL_N;
+        return (
+          <>
+            {/* Nord placard — face +Z (plinthe contre face sud séjour) */}
+            <P w={W_LEN} h={SH} d={SD}
+               x={xCenter} y={y} z={CL_N + SD / 2}
+               mat={skirtingMat} />
+            <QR cx={xCenter} cz={CL_N + SD}
+                len={W_LEN} dir="+Z" mat={skirtingMat} />
+
+            {/* Sud placard — face -Z (plinthe contre face nord SDB) */}
+            <P w={W_LEN} h={SH} d={SD}
+               x={xCenter} y={y} z={CL_S - SD / 2}
+               mat={skirtingMat} />
+            <QR cx={xCenter} cz={CL_S - SD}
+                len={W_LEN} dir="-Z" mat={skirtingMat} />
+
+            {/* Ouest placard — face +X (plinthe contre face est cuisine) */}
+            <P w={SD} h={SH} d={D_LEN}
+               x={CL_W + SD / 2} y={y} z={zCenter}
+               mat={skirtingMat} />
+            <QR cx={CL_W + SD} cz={zCenter}
+                len={D_LEN} dir="+X" mat={skirtingMat} />
+          </>
+        );
       })()}
 
       {/* South wall segment 2: X: 125→200, Z=395 */}
       <P w={INT_X_DOOR_S - INT_X_KITCHEN_R} h={SH} d={SD}
          x={(INT_X_KITCHEN_R + INT_X_DOOR_S) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
          mat={skirtingMat} />
+      <QR cx={(INT_X_KITCHEN_R + INT_X_DOOR_S) / 2} cz={INT_Z_ROOM_S - SD}
+          len={INT_X_DOOR_S - INT_X_KITCHEN_R} dir="-Z" mat={skirtingMat} />
 
       {/* Kitchen east wall X=125, Z: 395→455 */}
       <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
          x={INT_X_KITCHEN_R - SD / 2} y={y} z={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
          mat={skirtingMat} />
+      <QR cx={INT_X_KITCHEN_R - SD} cz={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
+          len={INT_Z_KITCHEN_B - INT_Z_ROOM_S} dir="-X" mat={skirtingMat} />
 
       {/* Kitchen south wall Z=455, X: 35→125 */}
       <P w={INT_X_KITCHEN_R - INT_X_KITCHEN_L} h={SH} d={SD}
          x={(INT_X_KITCHEN_L + INT_X_KITCHEN_R) / 2} y={y} z={INT_Z_KITCHEN_B - SD / 2}
          mat={skirtingMat} />
+      <QR cx={(INT_X_KITCHEN_L + INT_X_KITCHEN_R) / 2} cz={INT_Z_KITCHEN_B - SD}
+          len={INT_X_KITCHEN_R - INT_X_KITCHEN_L} dir="-Z" mat={skirtingMat} />
 
       {/* Kitchen west wall X=35, Z: 395→455 */}
       <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
          x={INT_X_KITCHEN_L + SD / 2} y={y} z={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
          mat={skirtingMat} />
+      <QR cx={INT_X_KITCHEN_L + SD} cz={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
+          len={INT_Z_KITCHEN_B - INT_Z_ROOM_S} dir="+X" mat={skirtingMat} />
 
       {/* South wall segment 1: X: -10→35, Z=395 */}
       <P w={INT_X_KITCHEN_L - INT_X_NICHE} h={SH} d={SD}
          x={(INT_X_NICHE + INT_X_KITCHEN_L) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
          mat={skirtingMat} />
+      <QR cx={(INT_X_NICHE + INT_X_KITCHEN_L) / 2} cz={INT_Z_ROOM_S - SD}
+          len={INT_X_KITCHEN_L - INT_X_NICHE} dir="-Z" mat={skirtingMat} />
 
       {/* Niche west wall X=-10, Z: 285→395 */}
       <P w={SD} h={SH} d={INT_Z_ROOM_S - INT_Z_NICHE_S}
          x={INT_X_NICHE + SD / 2} y={y} z={(INT_Z_NICHE_S + INT_Z_ROOM_S) / 2}
          mat={skirtingMat} />
+      <QR cx={INT_X_NICHE + SD} cz={(INT_Z_NICHE_S + INT_Z_ROOM_S) / 2}
+          len={INT_Z_ROOM_S - INT_Z_NICHE_S} dir="+X" mat={skirtingMat} />
 
       {/* Niche north face Z=285, X: -10→0 */}
       <P w={INT_X_WEST - INT_X_NICHE} h={SH} d={SD}
          x={(INT_X_NICHE + INT_X_WEST) / 2} y={y} z={INT_Z_NICHE_S + SD / 2}
          mat={skirtingMat} />
+      <QR cx={(INT_X_NICHE + INT_X_WEST) / 2} cz={INT_Z_NICHE_S + SD}
+          len={INT_X_WEST - INT_X_NICHE} dir="+Z" mat={skirtingMat} />
 
       {/* West wall X=0, Z: 0→285 */}
       <P w={SD} h={SH} d={INT_Z_NICHE_S - INT_Z_NORTH}
          x={INT_X_WEST + SD / 2} y={y} z={(INT_Z_NORTH + INT_Z_NICHE_S) / 2}
          mat={skirtingMat} />
+      <QR cx={INT_X_WEST + SD} cz={(INT_Z_NORTH + INT_Z_NICHE_S) / 2}
+          len={INT_Z_NICHE_S - INT_Z_NORTH} dir="+X" mat={skirtingMat} />
+    </group>
+  );
+}
+
+// ── Plinthes carrelage SDB — H=10, D=1 cm sur tout le périmètre ────────────
+function BathSkirting() {
+  const SH_T = 10;
+  const SD_T = 1;
+  const y = SH_T / 2;
+
+  const tileMat = useMemo(() => {
+    const tex = makeTileTex();
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(0.5, 1); // un carreau ~20cm horizontal × 10cm vertical
+    tex.needsUpdate = true;
+    return new THREE.MeshStandardMaterial({
+      map: tex, roughness: 0.25, metalness: 0.05,
+    });
+  }, []);
+
+  // Faces intérieures SDB
+  const BATH_E_FACE  = CORR_WALL_X - W / 2;        // 190 — face ouest du mur couloir = est de la SDB
+  const BATH_S_FACE  = BATH_Z_END;                  // 610 — face nord des piliers shower-ne / bath-se
+  const SHOWER_E_X   = 65 + W / 2;                  // 70 — face est du mur shower-ne/se (côté SDB main)
+
+  // Coins SDB (cf Tile())
+  const diagSlope = (DIAG_CZ - DIAG_AZ) / (DIAG_CX - DIAG_AX);
+  const Bz = DIAG_AZ + (INT_X_NICHE  - DIAG_AX) * diagSlope; // ≈ 727.5
+  const Cz = DIAG_AZ + (INT_X_DOOR_S - DIAG_AX) * diagSlope; // ≈ 608
+
+  // Porte SDB sur mur est (CORR_WALL_X), même Z que la porte couloir
+  const CORR_DOOR_S = KITCHEN_Z + 60;  // 520
+  const CORR_DOOR_E = KITCHEN_Z + 140; // 600
+
+  // Mur shower-ne/se (WALL_DEFS l.203) : z1=pSouth('shower-ne')=620, z2=pNorth('shower-se')=680.
+  const showerWallZ1 = BATH_Z_END + W;       // 620
+  const showerWallZ2 = BATH_Z_END + 70;      // 680
+
+  // Segment diagonal SDB : de C (d=dC) à B (d=dB)
+  const dC = Math.sqrt((INT_X_DOOR_S - DIAG_AX) ** 2 + (Cz - DIAG_AZ) ** 2);
+  const dB = Math.sqrt((INT_X_NICHE  - DIAG_AX) ** 2 + (Bz - DIAG_AZ) ** 2);
+  const dm = (dC + dB) / 2;
+  const diagX = DIAG_AX + dm * DIAG_SIN - DIAG_COS * SD_T / 2;
+  const diagZ = DIAG_AZ + dm * DIAG_COS + DIAG_SIN * SD_T / 2;
+  const diagLen = dB - dC;
+
+  return (
+    <group userData={{ brickType: 'skirting' }}>
+      {/* Mur nord SDB — Z=470, X: -10→200, face +Z */}
+      <P w={INT_X_DOOR_S - INT_X_NICHE} h={SH_T} d={SD_T}
+         x={(INT_X_NICHE + INT_X_DOOR_S) / 2} y={y} z={INT_Z_BATH_N + SD_T / 2}
+         mat={tileMat} />
+
+      {/* Mur ouest SDB — X=-10, Z: 470→Bz, face +X */}
+      <P w={SD_T} h={SH_T} d={Bz - INT_Z_BATH_N}
+         x={INT_X_NICHE + SD_T / 2} y={y} z={(INT_Z_BATH_N + Bz) / 2}
+         mat={tileMat} />
+
+      {/* Mur est SDB — segment nord (Z: 470→520), face -X */}
+      <P w={SD_T} h={SH_T} d={CORR_DOOR_S - INT_Z_BATH_N}
+         x={BATH_E_FACE - SD_T / 2} y={y} z={(INT_Z_BATH_N + CORR_DOOR_S) / 2}
+         mat={tileMat} />
+      {/* Mur est SDB — segment sud (Z: 600→BATH_S_FACE), face -X */}
+      <P w={SD_T} h={SH_T} d={BATH_S_FACE - CORR_DOOR_E}
+         x={BATH_E_FACE - SD_T / 2} y={y} z={(CORR_DOOR_E + BATH_S_FACE) / 2}
+         mat={tileMat} />
+
+      {/* Mur sud SDB (entre shower-ne et bath-se) : pas de plinthe — rail
+          du placard SDB coulissant occupe l'espace. */}
+
+      {/* Pilier shower-ne — face nord (z=610, x=60→70, face -Z) */}
+      <P w={W} h={SH_T} d={SD_T}
+         x={65} y={y} z={BATH_Z_END - SD_T / 2}
+         mat={tileMat} />
+
+      {/* Pilier shower-ne — face est (x=70, z=610→620, face +X) */}
+      <P w={SD_T} h={SH_T} d={W}
+         x={65 + W / 2 + SD_T / 2} y={y} z={BATH_Z_END + W / 2}
+         mat={tileMat} />
+
+      {/* Mur est de la douche (x=65, z=620→680), côté SDB main (face +X) */}
+      <P w={SD_T} h={SH_T} d={showerWallZ2 - showerWallZ1}
+         x={SHOWER_E_X + SD_T / 2} y={y} z={(showerWallZ1 + showerWallZ2) / 2}
+         mat={tileMat} />
+
+      {/* Mur diagonal SDB — de C(200, Cz) à B(-10, Bz) */}
+      <mesh position={[diagX, y, diagZ]} rotation-y={DIAG_ROT_Y}
+            ref={(m) => { if (m) m.material = tileMat as any; }}
+            castShadow receiveShadow>
+        <boxGeometry args={[SD_T, SH_T, diagLen]} />
+      </mesh>
     </group>
   );
 }
@@ -978,6 +1224,9 @@ export function Floor() {
 
       {/* Plinthes parquet */}
       <Baseboards />
+
+      {/* Plinthes carrelage SDB */}
+      <BathSkirting />
 
       {/* Dalle béton sous l'appartement (principale + voisins en épi) */}
       {(() => {
