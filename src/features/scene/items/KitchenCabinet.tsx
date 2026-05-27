@@ -17,9 +17,9 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB        = 'media/METOD Rangement blanc 40x60x80 cm.glb';
-const DOOR_GLB   = 'media/RINGHULT Porte brillant gris clair 40x80 cm.glb';
-const HANDLE_GLB = 'media/KALLROR Poignée acier inoxydable 213 mm.glb';
+const GLB        = 'media/glb/METOD Rangement blanc 40x60x80 cm.glb';
+const DOOR_GLB   = 'media/glb/RINGHULT Porte brillant gris clair 40x80 cm.glb';
+const HANDLE_GLB = 'media/glb/KALLROR Poignée acier inoxydable 213 mm.glb';
 
 export function KitchenCabinet({ actionState, onSize }: SceneItemProps) {
   const { scene }         = useGLTFClone(GLB);

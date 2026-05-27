@@ -1,6 +1,6 @@
 /**
  * VasqueSdb.tsx — Meuble-vasque HAVBÄCK - ORRSJÖN IKEA.
- * media/HAVBÄCK - ORRSJÖN Meuble avec tiroirs-vasque-mitigeur blanc 62x49x69 cm.glb
+ * media/glb/HAVBÄCK - ORRSJÖN Meuble avec tiroirs-vasque-mitigeur blanc 62x49x69 cm.glb
  * GLB officiel IKEA en mètres → scale ×100 (1 unité = 1 cm).
  * Coordonnées locales : centré X/Z, Y=0 = sol.
  *
@@ -13,7 +13,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/HAVBÄCK - ORRSJÖN Meuble avec tiroirs-vasque-mitigeur blanc 62x49x69 cm.glb';
+const GLB = 'media/glb/HAVBÄCK - ORRSJÖN Meuble avec tiroirs-vasque-mitigeur blanc 62x49x69 cm.glb';
 
 // Lampe LED au-dessus du miroir (coords locales)
 const LAMP_Y = 176;

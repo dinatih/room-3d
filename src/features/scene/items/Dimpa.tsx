@@ -1,5 +1,5 @@
 /**
- * Dimpa.tsx — Sac de rangement IKEA DIMPA (GLB media/DIMPA.glb).
+ * Dimpa.tsx — Sac de rangement IKEA DIMPA (GLB media/glb/DIMPA.glb).
  * Dimensions réelles : 68×67×27 cm (L×H×P) à ×100.
  * Le GLB officiel IKEA est en mètres → scale ×100 (1 unité = 1 cm).
  * Coordonnées locales : centré X/Z, Y=0 = sol.
@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/DIMPA.glb';
+const GLB = 'media/glb/DIMPA.glb';
 
 export function Dimpa({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

@@ -19,8 +19,8 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB_DRONA = 'media/DRÖNA.glb';
-const GLB_ROUGE = 'media/DRÖNA rouge.glb';
+const GLB_DRONA = 'media/glb/DRÖNA.glb';
+const GLB_ROUGE = 'media/glb/DRÖNA rouge.glb';
 
 const dronaMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.DoubleSide });
 

@@ -1,7 +1,7 @@
 /**
  * SinkBoholmen.tsx — Évier BOHOLMEN + mitigeur LAGAN IKEA.
- * BOHOLMEN Évier 47x30 cm    : media/BOHOLMEN Évier 47x30 cm.glb
- * LAGAN Mitigeur chromé       : media/LAGAN Mitigeur chromé.glb
+ * BOHOLMEN Évier 47x30 cm    : media/glb/BOHOLMEN Évier 47x30 cm.glb
+ * LAGAN Mitigeur chromé       : media/glb/LAGAN Mitigeur chromé.glb
  * GLBs officiels IKEA en mètres → scale ×100 (1 unité = 1 cm).
  * Coordonnées locales : centré X/Z, Y=0 = surface du plan de travail.
  */
@@ -12,8 +12,8 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB_SINK   = 'media/BOHOLMEN Évier 47x30 cm.glb';
-const GLB_FAUCET = 'media/LAGAN Mitigeur chromé.glb';
+const GLB_SINK   = 'media/glb/BOHOLMEN Évier 47x30 cm.glb';
+const GLB_FAUCET = 'media/glb/LAGAN Mitigeur chromé.glb';
 
 // BOHOLMEN : 46.6×15.7×30 cm à ×100, Y-up (Y=0=fond de vasque)
 const SINK_D = 30; // profondeur Z (cm)

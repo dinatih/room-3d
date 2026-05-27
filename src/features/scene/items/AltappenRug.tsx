@@ -23,7 +23,7 @@ function gardenX0(z: number): number {
 // ── Tuile unique (inventaire) ─────────────────────────────────────────────────
 
 export function AltappenRug({ onSize }: SceneItemProps) {
-  const { scene } = useGLTF('media/ikea_Altappen_single.glb');
+  const { scene } = useGLTF('media/glb/ikea_Altappen_single.glb');
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
@@ -47,7 +47,7 @@ export function AltappenRug({ onSize }: SceneItemProps) {
 // ── Champ de dalles (scène) ───────────────────────────────────────────────────
 
 export function AltappenRugField() {
-  const { scene } = useGLTF('media/ikea_Altappen_single.glb');
+  const { scene } = useGLTF('media/glb/ikea_Altappen_single.glb');
 
   const { geo, mat } = useMemo(() => {
     let mesh: THREE.Mesh | null = null;
@@ -99,4 +99,4 @@ export function AltappenRugField() {
   );
 }
 
-useGLTF.preload('media/ikea_Altappen_single.glb');
+useGLTF.preload('media/glb/ikea_Altappen_single.glb');

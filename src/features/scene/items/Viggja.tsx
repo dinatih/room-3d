@@ -1,5 +1,5 @@
 /**
- * Viggja.tsx — Desserte IKEA VIGGJA (GLB media/viggja.glb, déjà en cm).
+ * Viggja.tsx — Desserte IKEA VIGGJA (GLB media/glb/viggja.glb, déjà en cm).
  * Coordonnées locales : centré par bbox, Y=0 = sol.
  * Placement monde dans Garden.tsx.
  */
@@ -11,7 +11,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 
 export function Viggja({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/viggja.glb');
+  const { scene } = useGLTFClone('media/glb/viggja.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -28,4 +28,4 @@ export function Viggja({ onSize }: SceneItemProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('media/viggja.glb');
+useGLTF.preload('media/glb/viggja.glb');

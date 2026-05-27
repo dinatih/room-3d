@@ -1,5 +1,5 @@
 /**
- * Sunnersta.tsx — Desserte roulante IKEA SUNNERSTA (GLB media/sunnersta_trolley_ikea.glb).
+ * Sunnersta.tsx — Desserte roulante IKEA SUNNERSTA (GLB media/glb/sunnersta_trolley_ikea.glb).
  * Coordonnées locales : centré par bbox, Y=0 = sol, normalisé 90cm max dim.
  * Placement monde dans GlbItems.tsx.
  */
@@ -11,7 +11,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 
 export function Sunnersta({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/sunnersta_trolley_ikea.glb');
+  const { scene } = useGLTFClone('media/glb/sunnersta_trolley_ikea.glb');
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
@@ -31,4 +31,4 @@ export function Sunnersta({ onSize }: SceneItemProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('media/sunnersta_trolley_ikea.glb');
+useGLTF.preload('media/glb/sunnersta_trolley_ikea.glb');

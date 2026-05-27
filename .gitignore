@@ -5,6 +5,6 @@ node_modules/
 screenshots/
 dist/
 draft.md
-media/*.gltf
+public/media/glb/*.gltf
 .env.local
 .env.*.local

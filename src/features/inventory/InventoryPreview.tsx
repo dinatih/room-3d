@@ -414,6 +414,17 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
                 {item.dims.w}×{item.dims.d}×{item.dims.h} cm
               </span>
             )}
+            {'url' in item && item.url && (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={item.url}
+                style={{ marginLeft: 8, color: '#7ab8ff', textDecoration: 'none', pointerEvents: 'auto' }}
+              >
+                🔗
+              </a>
+            )}
           </div>
         </>
       )}

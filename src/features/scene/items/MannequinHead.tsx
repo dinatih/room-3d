@@ -1,5 +1,5 @@
 /**
- * MannequinHead.tsx — Tête de mannequin (GLB media/wig_mannequin.glb).
+ * MannequinHead.tsx — Tête de mannequin (GLB media/glb/wig_mannequin.glb).
  * Coordonnées locales : centré XZ, Y=0 = base épaules. Scale par hauteur (45 cm).
  */
 import { useLayoutEffect } from 'react';
@@ -12,7 +12,7 @@ import type { SceneItemProps } from '@shared/types';
 const TARGET_H = 45;
 
 export function MannequinHead({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/wig_mannequin.glb');
+  const { scene } = useGLTFClone('media/glb/wig_mannequin.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -31,4 +31,4 @@ export function MannequinHead({ onSize }: SceneItemProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('media/wig_mannequin.glb');
+useGLTF.preload('media/glb/wig_mannequin.glb');

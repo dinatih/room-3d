@@ -1,6 +1,6 @@
 /**
  * Freezer.tsx — Réfrigérateur compact TILLREDA IKEA.
- * media/TILLREDA_anim.glb — body + door avec animation "door_open".
+ * media/glb/TILLREDA_anim.glb — body + door avec animation "door_open".
  * Coordonnées locales : centré X/Z, Y=0 = sol.
  *
  * Deux chemins pour déclencher l'anim :
@@ -15,7 +15,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/TILLREDA_anim.glb';
+const GLB = 'media/glb/TILLREDA_anim.glb';
 
 export function Freezer({ actionState, onSize }: SceneItemProps) {
   const { scene, animations } = useGLTFClone(GLB);

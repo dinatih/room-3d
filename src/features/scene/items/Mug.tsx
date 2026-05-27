@@ -9,7 +9,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 
 export function Mug({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/KEJSERLIG tasse.glb');
+  const { scene } = useGLTFClone('media/glb/KEJSERLIG tasse.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -27,4 +27,4 @@ export function Mug({ onSize }: SceneItemProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('media/KEJSERLIG tasse.glb');
+useGLTF.preload('media/glb/KEJSERLIG tasse.glb');

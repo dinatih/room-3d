@@ -1,5 +1,5 @@
 /**
- * JoggingSuit.tsx — Jogging suit (GLB media/realistic_human_cloths.glb).
+ * JoggingSuit.tsx — Jogging suit (GLB media/glb/realistic_human_cloths.glb).
  * Coordonnées locales : centré par bbox, Y=0 = sol, hauteur normalisée 170cm.
  * Placement monde dans Garden.tsx.
  */
@@ -14,7 +14,7 @@ const TARGET_H = 170;
 const red = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
 
 export function JoggingSuit({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/realistic_human_cloths.glb');
+  const { scene } = useGLTFClone('media/glb/realistic_human_cloths.glb');
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
@@ -38,4 +38,4 @@ export function JoggingSuit({ onSize }: SceneItemProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('media/realistic_human_cloths.glb');
+useGLTF.preload('media/glb/realistic_human_cloths.glb');

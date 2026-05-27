@@ -1,5 +1,5 @@
 /**
- * JblCharge3.tsx — Enceinte JBL Charge 3 (media/jbl_charge_3_speaker.glb).
+ * JblCharge3.tsx — Enceinte JBL Charge 3 (media/glb/jbl_charge_3_speaker.glb).
  * Ø 8.7 cm × 17.5 cm. Orientée à la verticale par défaut.
  */
 import { useLayoutEffect, useMemo } from 'react';
@@ -13,7 +13,7 @@ const TARGET_H = 17.5; // hauteur debout (cm)
 const redMat = new THREE.MeshStandardMaterial({ color: 0xcc1500, roughness: 0.35, metalness: 0.1 });
 
 export function JblCharge3({ onSize }: SceneItemProps) {
-  const { scene: gltfScene } = useGLTF('media/jbl_charge_3_speaker.glb');
+  const { scene: gltfScene } = useGLTF('media/glb/jbl_charge_3_speaker.glb');
   const scene = useMemo(() => gltfScene.clone(true), [gltfScene]);
 
   useLayoutEffect(() => {
@@ -53,4 +53,4 @@ export function JblCharge3({ onSize }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('media/jbl_charge_3_speaker.glb');
+useGLTF.preload('media/glb/jbl_charge_3_speaker.glb');

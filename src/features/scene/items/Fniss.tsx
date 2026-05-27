@@ -1,5 +1,5 @@
 /**
- * Fniss.tsx — Corbeille FNISS IKEA (GLB media/FNISS poubelle 10 l blanc.glb).
+ * Fniss.tsx — Corbeille FNISS IKEA (GLB media/glb/FNISS poubelle 10 l blanc.glb).
  * Dimensions réelles : 28×28×28 cm (L×H×P) à ×100.
  * Le GLB officiel IKEA est en mètres → scale ×100 (1 unité = 1 cm).
  * Coordonnées locales : centré X/Z, Y=0 = sol.
@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/FNISS poubelle 10 l blanc.glb';
+const GLB = 'media/glb/FNISS poubelle 10 l blanc.glb';
 
 export function Fniss({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

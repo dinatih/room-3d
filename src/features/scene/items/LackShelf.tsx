@@ -1,5 +1,5 @@
 /**
- * LackShelf.tsx — Étagère murale LACK IKEA (GLB media/LACK étagère murale 110x26 blanc.glb).
+ * LackShelf.tsx — Étagère murale LACK IKEA (GLB media/glb/LACK étagère murale 110x26 blanc.glb).
  * Dimensions réelles : 110×5×26 cm (L×H×P) à ×100.
  * Le GLB officiel IKEA est en mètres → scale ×100 (1 unité = 1 cm).
  * Le GLB est orienté depth-en-Y, thickness-en-Z → rotation.x = -π/2 pour
@@ -13,7 +13,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/LACK étagère murale 110x26 blanc.glb';
+const GLB = 'media/glb/LACK étagère murale 110x26 blanc.glb';
 
 export function LackShelf({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

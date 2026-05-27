@@ -1,5 +1,5 @@
 /**
- * TV.tsx — CHiQ L32H7A 32" (media/flat-screen_tv.glb).
+ * TV.tsx — CHiQ L32H7A 32" (media/glb/flat-screen_tv.glb).
  * Scaled to TV_W=73 cm. Action 'tv-toggle' : écran ON/OFF.
  */
 import { useLayoutEffect, useMemo, useState } from 'react';
@@ -14,9 +14,9 @@ export const TV_H = 41;
 const ACTION_KEY = 'tv-toggle';
 
 export function TV({ actionState, onSize }: SceneItemProps) {
-  const { scene: gltfScene } = useGLTF('media/flat-screen_tv.glb');
+  const { scene: gltfScene } = useGLTF('media/glb/flat-screen_tv.glb');
   const scene = useMemo(() => gltfScene.clone(true), [gltfScene]);
-  const screenTex = useTexture('media/omarchy-screen.png');
+  const screenTex = useTexture('media/photos/omarchy-screen.png');
   screenTex.colorSpace = THREE.SRGBColorSpace;
 
   const isOn = actionState[ACTION_KEY] ?? false;
@@ -60,4 +60,4 @@ export function TV({ actionState, onSize }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('media/flat-screen_tv.glb');
+useGLTF.preload('media/glb/flat-screen_tv.glb');

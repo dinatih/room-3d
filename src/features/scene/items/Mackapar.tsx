@@ -1,5 +1,5 @@
 /**
- * Mackapar.tsx — Portant IKEA MACKAPÄR (GLB media/MACKAPÄR.glb).
+ * Mackapar.tsx — Portant IKEA MACKAPÄR (GLB media/glb/MACKAPÄR.glb).
  * Le GLB officiel IKEA est en mètres → scale ×100 (1 unité = 1 cm).
  * Coordonnées locales : centré X/Z, Y=0 = sol.
  */
@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/MACKAPÄR.glb';
+const GLB = 'media/glb/MACKAPÄR.glb';
 
 export function Mackapar({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

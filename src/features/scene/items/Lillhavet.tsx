@@ -1,5 +1,5 @@
 /**
- * Lillhavet.tsx — IKEA LILLHAVET (GLB media/LILLHAVET.glb).
+ * Lillhavet.tsx — IKEA LILLHAVET (GLB media/glb/LILLHAVET.glb).
  * GLB officiel IKEA en mètres → scale ×100 (1 unité = 1 cm).
  * Coordonnées locales : centré X/Z, Y=0 = base.
  */
@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/LILLHAVET.glb';
+const GLB = 'media/glb/LILLHAVET.glb';
 
 export function Lillhavet({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

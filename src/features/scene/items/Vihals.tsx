@@ -1,6 +1,6 @@
 /**
  * Vihals.tsx — Chaise pliante IKEA VIHALS rouge (réf 70592744).
- * Dépliée : GLB media/vihals.glb, 43×47×80cm.
+ * Dépliée : GLB media/glb/vihals.glb, 43×47×80cm.
  * Pliée   : procédural FoldedVihals, 44×88×9cm (debout, fine tranche verticale).
  * Action 'vihals-toggle' bascule entre les deux représentations (snap).
  */
@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/vihals.glb';
+const GLB = 'media/glb/vihals.glb';
 
 // ── Open : GLB IKEA ───────────────────────────────────────────────────────────
 function OpenVihals({ onSize }: { onSize: (v: THREE.Vector3) => void }) {

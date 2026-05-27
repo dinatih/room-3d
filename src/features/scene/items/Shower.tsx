@@ -22,9 +22,9 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB_TRAY   = 'media/Shower tray 90x90cm.glb';
-const GLB_BAR    = 'media/VALLAMOSSE Barre avec douchette haut réglable chromé.glb';
-const GLB_FAUCET = 'media/VALLAMOSSE Mitigeur thermostatique pour douche chromé 150 mm.glb';
+const GLB_TRAY   = 'media/glb/Shower tray 90x90cm.glb';
+const GLB_BAR    = 'media/glb/VALLAMOSSE Barre avec douchette haut réglable chromé.glb';
+const GLB_FAUCET = 'media/glb/VALLAMOSSE Mitigeur thermostatique pour douche chromé 150 mm.glb';
 
 // Bac GLB recentré (script Python) : bbox ±0.34m → scale=100 → 68×68cm centré à l'origine.
 // Groupe au centre niche (world 25,0,635). TRAY_HALF = demi-étendue = 34cm.

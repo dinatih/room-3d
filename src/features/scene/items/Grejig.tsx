@@ -1,5 +1,5 @@
 /**
- * Grejig.tsx — Étagère à chaussures IKEA GREJIG (GLB media/GREJIG_gris.glb).
+ * Grejig.tsx — Étagère à chaussures IKEA GREJIG (GLB media/glb/GREJIG_gris.glb).
  * Dimensions réelles : 58×18×27 cm (L×H×P) à ×100.
  * Le GLB officiel IKEA est en mètres → scale ×100 (1 unité = 1 cm).
  * Coordonnées locales : centré X/Z, Y=0 = sol.
@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/GREJIG_gris.glb';
+const GLB = 'media/glb/GREJIG_gris.glb';
 
 export function Grejig({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

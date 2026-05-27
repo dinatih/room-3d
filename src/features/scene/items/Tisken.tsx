@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/TISKEN Panier à ventouse blanc.glb';
+const GLB = 'media/glb/TISKEN Panier à ventouse blanc.glb';
 
 export function Tisken({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

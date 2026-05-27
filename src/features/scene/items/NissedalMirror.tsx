@@ -50,8 +50,8 @@ export function NissedalFrame({ w, h, ft, fd }: { w: number; h: number; ft: numb
 
 // ── Composant inventaire GLB ──────────────────────────────────────────────────
 
-export const GLB_40x150 = 'media/NISSEDAL miroir 40x150 noir.glb';
-export const GLB_65x65  = 'media/NISSEDAL miroir 65x65 noir.glb';
+export const GLB_40x150 = 'media/glb/NISSEDAL miroir 40x150 noir.glb';
+export const GLB_65x65  = 'media/glb/NISSEDAL miroir 65x65 noir.glb';
 
 /**
  * Cadre GLB pour la scène (Mirrors.tsx) : charge le GLB et masque la glace.

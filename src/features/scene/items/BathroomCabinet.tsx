@@ -18,9 +18,9 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB        = 'media/METOD Rangement mural blanc 40x37x60 cm.glb';
-const DOOR_GLB   = 'media/RINGHULT Porte brillant gris clair 40x60 cm.glb';
-const HANDLE_GLB = 'media/KALLROR Poignée acier inoxydable 213 mm.glb';
+const GLB        = 'media/glb/METOD Rangement mural blanc 40x37x60 cm.glb';
+const DOOR_GLB   = 'media/glb/RINGHULT Porte brillant gris clair 40x60 cm.glb';
+const HANDLE_GLB = 'media/glb/KALLROR Poignée acier inoxydable 213 mm.glb';
 
 function MetodCabinet({ actionState, onSize, mirrorHandle = false, openKey, hoverLabel, hoverActionId }:
   SceneItemProps & { mirrorHandle?: boolean; openKey?: string; hoverLabel?: string; hoverActionId?: string }) {

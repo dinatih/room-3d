@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/VÅTHULT éclairage LED élément-miroir 350 mm alu.glb';
+const GLB = 'media/glb/VÅTHULT éclairage LED élément-miroir 350 mm alu.glb';
 
 export function Vathult({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

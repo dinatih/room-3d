@@ -4,7 +4,7 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 export function ShibaInu() {
-  const { scene, animations } = useGLTF('media/animated_dog_shiba_inu.glb');
+  const { scene, animations } = useGLTF('media/glb/animated_dog_shiba_inu.glb');
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
   const actionRef  = useRef<THREE.AnimationAction | null>(null);
@@ -63,4 +63,4 @@ export function ShibaInu() {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('media/animated_dog_shiba_inu.glb');
+useGLTF.preload('media/glb/animated_dog_shiba_inu.glb');

@@ -287,7 +287,7 @@ const HAIR_COLORS  = [HAIR_COLOR_0, HAIR_COLOR_1, HAIR_COLOR_2, HAIR_COLOR_0];
 // ── Composant ─────────────────────────────────────────────────────────────────
 
 export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
-  const { scene } = useGLTF('media/lara_croft__2026_rigged.glb');
+  const { scene } = useGLTF('media/glb/lara_croft__2026_rigged.glb');
   const groupRef  = useRef<THREE.Group>(null!);
   const mixerRef  = useRef<THREE.AnimationMixer | null>(null);
   const actionRef = useRef<THREE.AnimationAction | null>(null);
@@ -468,7 +468,7 @@ const RED_NODE_NAMES = new Set(['Object_113']);
 const RED_COLOR      = new THREE.Color(0xcc1111);
 
 export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) {
-  const { scene: origScene } = useGLTF('media/lara_croft__2026_rigged.glb');
+  const { scene: origScene } = useGLTF('media/glb/lara_croft__2026_rigged.glb');
   const clone = useMemo(() => SkeletonUtils.clone(origScene), [origScene]);
 
   const groupRef    = useRef<THREE.Group>(null!);
@@ -600,4 +600,4 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
   );
 }
 
-useGLTF.preload('media/lara_croft__2026_rigged.glb');
+useGLTF.preload('media/glb/lara_croft__2026_rigged.glb');

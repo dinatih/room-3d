@@ -34,7 +34,7 @@ const FRIDGE_W    = 60;
 
 // ── Meuble haut ───────────────────────────────────────────────────────────────
 
-const METOD_WALL_GLB = 'media/METOD Rangement mural blanc 40x37x100 cm.glb';
+const METOD_WALL_GLB = 'media/glb/METOD Rangement mural blanc 40x37x100 cm.glb';
 
 function UpperCabinet() {
   const { scene } = useGLTFClone(METOD_WALL_GLB);

@@ -1,5 +1,5 @@
 /**
- * Phone.tsx — Xiaomi 17 Pro Max (media/free_xiaomi_17_pro_max.glb).
+ * Phone.tsx — Xiaomi 17 Pro Max (media/glb/free_xiaomi_17_pro_max.glb).
  * Coordonnées locales : X/Z centrés, Y=0 = surface du bureau.
  */
 import { useLayoutEffect, useMemo } from 'react';
@@ -13,7 +13,7 @@ const TARGET_D = 16.2; // longueur du téléphone (cm)
 const redPhoneMat = new THREE.MeshStandardMaterial({ color: 0xcc1500, roughness: 0.3, metalness: 0.15 });
 
 export function Phone({ onSize }: SceneItemProps) {
-  const { scene: gltfScene } = useGLTF('media/free_xiaomi_17_pro_max.glb');
+  const { scene: gltfScene } = useGLTF('media/glb/free_xiaomi_17_pro_max.glb');
   const scene = useMemo(() => gltfScene.clone(true), [gltfScene]);
 
   useLayoutEffect(() => {
@@ -52,4 +52,4 @@ export function Phone({ onSize }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('media/free_xiaomi_17_pro_max.glb');
+useGLTF.preload('media/glb/free_xiaomi_17_pro_max.glb');

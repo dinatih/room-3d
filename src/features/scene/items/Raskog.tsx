@@ -10,8 +10,8 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const RASKOG_LARGE = 'media/RÅSKOG desserte 35x45x77 blanc.glb';
-const RASKOG_SMALL = 'media/RÅSKOG Desserte blanc 28x38x61 cm.glb';
+const RASKOG_LARGE = 'media/glb/RÅSKOG desserte 35x45x77 blanc.glb';
+const RASKOG_SMALL = 'media/glb/RÅSKOG Desserte blanc 28x38x61 cm.glb';
 
 function RaskogBase({ glbPath, targetH, onSize }: SceneItemProps & { glbPath: string; targetH: number }) {
   const { scene } = useGLTFClone(glbPath);

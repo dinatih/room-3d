@@ -1,5 +1,5 @@
 /**
- * Salopette.tsx — Salopette noire (GLB media/salopette-noir.glb).
+ * Salopette.tsx — Salopette noire (GLB media/glb/salopette-noir.glb).
  * Coordonnées locales : centré par bbox, Y=0 = sol, hauteur normalisée 150cm.
  * Placement scène (sur portant MACKAPÄR) dans GlbItems.tsx.
  */
@@ -11,7 +11,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 
 export function Salopette({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/salopette-noir.glb');
+  const { scene } = useGLTFClone('media/glb/salopette-noir.glb');
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
@@ -31,4 +31,4 @@ export function Salopette({ onSize }: SceneItemProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('media/salopette-noir.glb');
+useGLTF.preload('media/glb/salopette-noir.glb');

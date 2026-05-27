@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/TACKAN distributeur savon blanc.glb';
+const GLB = 'media/glb/TACKAN distributeur savon blanc.glb';
 
 export function Tackan({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

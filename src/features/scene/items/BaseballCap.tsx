@@ -1,5 +1,5 @@
 /**
- * BaseballCap.tsx — Casquette baseball (GLB media/baseball_cap.glb).
+ * BaseballCap.tsx — Casquette baseball (GLB media/glb/baseball_cap.glb).
  * Coordonnées locales : centré par bbox, Y=0 = sol, largeur normalisée 20cm, rouge.
  */
 import { useLayoutEffect } from 'react';
@@ -12,7 +12,7 @@ import type { SceneItemProps } from '@shared/types';
 const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.65 });
 
 export function BaseballCap({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/baseball_cap.glb');
+  const { scene } = useGLTFClone('media/glb/baseball_cap.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -41,4 +41,4 @@ export function BaseballCap({ onSize }: SceneItemProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('media/baseball_cap.glb');
+useGLTF.preload('media/glb/baseball_cap.glb');
