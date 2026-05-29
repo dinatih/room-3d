@@ -7,14 +7,13 @@
  * - Cycling de couleur des cheveux pendant la marche
  */
 import { useRef, useLayoutEffect, useMemo, useEffect } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame, useThree, useLoader } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { cameraState } from '@features/scene/cameraState';
 import { LAYER_WALKER_DETAIL } from '@config';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
-import { ROOM_W, ROOM_D } from '@config';
 
 // Three.js PropertyBinding ne supporte pas les espaces dans les noms de bones.
 // Le GLB 2026 utilise des espaces → on les normalise en underscores au chargement.
@@ -259,12 +258,18 @@ const ALWAYS_HIDE_NAMES = new Set(['Object_117', 'Object_118']);
 
 function collectFpsHide(root: THREE.Object3D): THREE.Object3D[] {
   const list: THREE.Object3D[] = [];
-  root.traverse(c => { if (FPS_LAYER_HIDE.has(c.name)) list.push(c); });
+  root.traverse(c => {
+    const cleanName = c.name.startsWith('LARA_') ? c.name.substring(5) : c.name;
+    if (FPS_LAYER_HIDE.has(cleanName)) list.push(c);
+  });
   return list;
 }
 
 function hideAlways(root: THREE.Object3D): void {
-  root.traverse(c => { if (ALWAYS_HIDE_NAMES.has(c.name)) c.visible = false; });
+  root.traverse(c => {
+    const cleanName = c.name.startsWith('LARA_') ? c.name.substring(5) : c.name;
+    if (ALWAYS_HIDE_NAMES.has(cleanName)) c.visible = false;
+  });
 }
 
 /** Tourne le head bone d'un walker pour matcher walkPitch (radians). Hochement avant/arrière. */
@@ -461,26 +466,83 @@ export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
   );
 }
 
-// ── Walker rouge (clone indépendant, position fixe) ───────────────────────────
+// ── Walker « lara_mixamo » (rig Mixamo, modèle indépendant) ───────────────────
+//
+// Utilise lara_mixamo.glb (mesh Lara re-skinné sur squelette Mixamo Y Bot).
+// Animation de marche chargée depuis Female Walk.fbx (Mixamo).
+// Les bones utilisent les noms Mixamo (mixamorig:Hips, etc.).
+// Les « : » et espaces sont remplacés par « _ » pour la compatibilité PropertyBinding.
 
+const MIXAMO_GLB      = 'media/glb/lara_mixamo.glb';
+const MIXAMO_WALK_FBX = 'media/fbx/female_walk.fbx';
+
+/** Normalise les noms de bones Mixamo : remplace espaces ET deux-points par _. */
+function normalizeMixamoBoneNames(root: THREE.Object3D): void {
+  root.traverse(c => {
+    if ((c as THREE.Bone).isBone) c.name = c.name.replace(/[ :]/g, '_');
+  });
+}
+
+const MIXAMO_HEAD_BONE = 'mixamorig_Head';
+
+// Tenue rouge — mêmes noms de matériaux/meshes que dans lara_croft__2026_rigged.glb
+// (les meshes Lara sont conservés tels quels dans lara_mixamo.glb).
 const RED_MAT_NAMES  = new Set(['5_BackPack_1.0_0_0', '5_Shorts_1.0_0_0']);
 const RED_NODE_NAMES = new Set(['Object_113']);
 const RED_COLOR      = new THREE.Color(0xcc1111);
 
-export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) {
-  const { scene: origScene } = useGLTF('media/glb/lara_croft__2026_rigged.glb');
-  const clone = useMemo(() => SkeletonUtils.clone(origScene), [origScene]);
+/**
+ * Retarget un AnimationClip FBX Mixamo sur le squelette lara_mixamo :
+ * - Supprime le préfixe de chemin de nœud FBX (ex: "mixamorig:Hips" au lieu de "Armature/mixamorig:Hips")
+ * - Normalise les « : » et espaces en « _ » pour matcher les noms normalisés du GLB
+ * - Supprime les tracks de position (on ne veut que les rotations pour éviter le root motion)
+ *   sauf pour Hips (position de base).
+ */
+function retargetMixamoClip(clip: THREE.AnimationClip): THREE.AnimationClip {
+  const retargeted: THREE.KeyframeTrack[] = [];
+  for (const track of clip.tracks) {
+    // track.name = "Armature|mixamorig:Hips.quaternion" ou "mixamorig:Hips.position"
+    // PropertyBinding parse : objectName.property
+    let name = track.name;
 
-  const groupRef    = useRef<THREE.Group>(null!);
-  const mixerRef    = useRef<THREE.AnimationMixer | null>(null);
-  const actionRef   = useRef<THREE.AnimationAction | null>(null);
-  const hairChainRef = useRef<HairNode[]>([]);
-  const headBoneRef  = useRef<THREE.Bone | null>(null);
-  const fpsHideRef   = useRef<THREE.Object3D[]>([]);
+    // Supprime le préfixe d'objet racine (avant le slash ou pipe)
+    // FBX exporte souvent "RootNode/mixamorig:Hips.quaternion"
+    const slashIdx = name.lastIndexOf('/');
+    if (slashIdx >= 0) name = name.substring(slashIdx + 1);
+
+    // Normalise les deux-points et espaces → underscores
+    // Mais préserve le « .property » final (quaternion, position, scale)
+    const dotIdx = name.lastIndexOf('.');
+    const bonePart = name.substring(0, dotIdx).replace(/[ :]/g, '_');
+    const propPart = name.substring(dotIdx); // ".quaternion" etc.
+    name = bonePart + propPart;
+
+    // Filtre : on garde quaternion pour tous les bones, position pour Hips uniquement
+    if (propPart === '.position' && bonePart !== 'mixamorig_Hips') continue;
+    // Filtre : pas de scale tracks
+    if (propPart === '.scale') continue;
+
+    const cloned = track.clone();
+    cloned.name = name;
+    retargeted.push(cloned);
+  }
+  return new THREE.AnimationClip(clip.name || 'walk-mixamo', clip.duration, retargeted);
+}
+
+export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) {
+  const { scene } = useGLTF(MIXAMO_GLB);
+  const fbx = useLoader(FBXLoader, MIXAMO_WALK_FBX);
+
+  const groupRef        = useRef<THREE.Group>(null!);
+  const mixerRef        = useRef<THREE.AnimationMixer | null>(null);
+  const actionRef       = useRef<THREE.AnimationAction | null>(null);
+  const hairChainRef    = useRef<HairNode[]>([]);
+  const headBoneRef     = useRef<THREE.Bone | null>(null);
+  const fpsHideRef      = useRef<THREE.Object3D[]>([]);
   const fpsCollapsedRef = useRef(false);
-  const activeRef   = useRef(false);
-  const fadeFrames  = useRef(0);
-  const skelHelper  = useMemo(() => new THREE.SkeletonHelper(clone), [clone]);
+  const activeRef       = useRef(false);
+  const fadeFrames      = useRef(0);
+  const skelHelper      = useMemo(() => new THREE.SkeletonHelper(scene), [scene]);
   const { scene: threeScene } = useThree();
 
   useEffect(() => {
@@ -490,17 +552,11 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
   }, [showSkeleton, skelHelper, threeScene]);
 
   useLayoutEffect(() => {
-    normalizeBoneNames(clone);
-    // Walker (rendu avant) a scalé origScene à 181/raw. WalkerRed = 170 cm
-    // → applique ratio 170/181 pour rester indépendant en taille.
-    const redH  = 170;
-    const ratio = redH / 181;
-    clone.scale.copy(origScene.scale).multiplyScalar(ratio);
-    clone.position.copy(origScene.position).multiplyScalar(ratio);
-    cameraState.walkerHeight1 = redH;
+    // Normalise les noms Mixamo : « : » et espaces → « _ »
+    normalizeMixamoBoneNames(scene);
 
-    // FrontSide only sur le clone (matériaux propres au clone)
-    clone.traverse(c => {
+    // FrontSide only, ombres, frustumCulled off pour skinned meshes
+    scene.traverse(c => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
       m.castShadow = true;
@@ -511,33 +567,49 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
     });
 
     // Tenue rouge
-    clone.traverse(c => {
+    scene.traverse(c => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
       const mat = m.material as THREE.MeshStandardMaterial;
-      if (RED_MAT_NAMES.has(mat.name) || RED_NODE_NAMES.has(c.name)) {
+      const cleanName = c.name.startsWith('LARA_') ? c.name.substring(5) : c.name;
+      if (RED_MAT_NAMES.has(mat?.name) || RED_NODE_NAMES.has(cleanName)) {
         m.material = mat.clone();
         (m.material as THREE.MeshStandardMaterial).color.copy(RED_COLOR);
         (m.material as THREE.MeshStandardMaterial).map = null;
       }
     });
 
-    // Cache restQuat sur tous les bones avant build clip + chaîne hair
-    cacheRestQuats(clone);
+    // Taille — WalkerRed = 170 cm
+    const redH = 170;
+    scene.rotation.y = 0;
+    scene.scale.set(1, 1, 1);
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = box.getSize(new THREE.Vector3());
+    scene.scale.setScalar(redH / size.y);
+    box.setFromObject(scene);
+    scene.position.set(0, -box.min.y, 0);
+    cameraState.walkerHeight1 = redH;
 
-    // Animation de marche V2
-    const mixer  = new THREE.AnimationMixer(clone);
-    const action = mixer.clipAction(buildWalkClip(clone));
-    action.setLoop(THREE.LoopRepeat, Infinity);
-    mixerRef.current  = mixer;
-    actionRef.current = action;
+    // Cache restQuat AVANT build clip + chaîne hair
+    cacheRestQuats(scene);
 
-    // Chaîne ponytail Verlet
-    hairChainRef.current = initHairChain(clone);
-    headBoneRef.current  = findBone(clone, HEAD_BONE);
-    fpsHideRef.current   = collectFpsHide(clone);
-    hideAlways(clone);
-  }, [clone]);
+    // Animation de marche Mixamo depuis FBX
+    const mixer = new THREE.AnimationMixer(scene);
+    const rawClip = fbx.animations?.[0];
+    if (rawClip) {
+      const clip   = retargetMixamoClip(rawClip);
+      const action = mixer.clipAction(clip);
+      action.setLoop(THREE.LoopRepeat, Infinity);
+      actionRef.current = action;
+    }
+    mixerRef.current = mixer;
+
+    // Chaîne ponytail Verlet (les bones auxiliaires head_hair_ponytail_* existent)
+    hairChainRef.current = initHairChain(scene);
+    headBoneRef.current  = findBone(scene, MIXAMO_HEAD_BONE);
+    fpsHideRef.current   = collectFpsHide(scene);
+    hideAlways(scene);
+  }, [scene, fbx]);
 
   useFrame(({ invalidate }, delta) => {
     if (!groupRef.current) return;
@@ -587,6 +659,7 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
     }
     if (activeRef.current || fadeFrames.current > 0) {
       mixer.update(delta);
+      // Verlet hair physics — appelé après mixer.update pour que les bones tête soient à jour
       if (hairChainRef.current.length > 0) updateHairPhysics(hairChainRef.current, delta);
       if (!activeRef.current && fadeFrames.current > 0) fadeFrames.current--;
       invalidate();
@@ -595,9 +668,10 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
 
   return (
     <group ref={groupRef}>
-      <primitive object={clone} />
+      <primitive object={scene} />
     </group>
   );
 }
 
 useGLTF.preload('media/glb/lara_croft__2026_rigged.glb');
+useGLTF.preload(MIXAMO_GLB);
