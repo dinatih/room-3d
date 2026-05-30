@@ -291,7 +291,7 @@ const HAIR_COLORS  = [HAIR_COLOR_0, HAIR_COLOR_1, HAIR_COLOR_2, HAIR_COLOR_0];
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
-export function Walker({ showSkeleton = false, isPreview = false }: { showSkeleton?: boolean, isPreview?: boolean }) {
+export function Walker({ showSkeleton = false, isPreview = false, walkerAnim, isPaused }: { showSkeleton?: boolean, isPreview?: boolean, walkerAnim?: string, isPaused?: boolean }) {
   const { scene } = useGLTF('media/glb/lara_croft__2026_rigged.glb');
   const groupRef  = useRef<THREE.Group>(null!);
   const mixerRef  = useRef<THREE.AnimationMixer | null>(null);
@@ -342,15 +342,19 @@ export function Walker({ showSkeleton = false, isPreview = false }: { showSkelet
     (hairMat as THREE.MeshStandardMaterial).emissiveIntensity = 1;
     hairMatRef.current = hairMat;
 
-    // Taille et position au sol — main Lara = 181 cm (taille utilisateur)
+    // Taille — Walker = 181 cm
     scene.rotation.y = 0;
     scene.scale.set(1, 1, 1);
+    scene.position.set(0, 0, 0);
     const box  = new THREE.Box3().setFromObject(scene);
     const size = box.getSize(new THREE.Vector3());
     const targetH = 181;
     scene.scale.setScalar(targetH / size.y);
+    
+    // Recenter bounding box to origin X/Z, and ground to Y=0
     box.setFromObject(scene);
-    scene.position.set(0, -box.min.y, 0);
+    const center = box.getCenter(new THREE.Vector3());
+    scene.position.set(-center.x, -box.min.y, -center.z);
     cameraState.walkerHeight0 = targetH;
 
     // Position initiale : centre de la pièce (si pas en preview)
@@ -365,10 +369,25 @@ export function Walker({ showSkeleton = false, isPreview = false }: { showSkelet
 
     // Mixer + clip custom V2
     const mixer  = new THREE.AnimationMixer(scene);
-    const action = mixer.clipAction(buildWalkClip(scene));
-    action.setLoop(THREE.LoopRepeat, Infinity);
-    mixerRef.current  = mixer;
-    actionRef.current = action;
+    mixerRef.current = mixer;
+    
+    if (walkerAnim !== 'tpose') {
+      const action = mixer.clipAction(buildWalkClip(scene));
+      action.setLoop(THREE.LoopRepeat, Infinity);
+      actionRef.current = action;
+      if (isPreview && !isPaused) {
+        action.play();
+        activeRef.current = true;
+      }
+    } else {
+      actionRef.current = null;
+      scene.traverse(c => {
+        if ((c as THREE.Bone).isBone && c.userData.restQuat) {
+           c.quaternion.copy(c.userData.restQuat);
+        }
+      });
+      activeRef.current = false;
+    }
 
     // Chaîne ponytail Verlet (initialisée après pose de repos)
     hairChainRef.current = initHairChain(scene);
@@ -382,7 +401,7 @@ export function Walker({ showSkeleton = false, isPreview = false }: { showSkelet
       if ((c as THREE.Mesh).isMesh) walkerMeshList.push(c as THREE.Mesh);
     });
     walkerMeshList.sort((a, b) => a.name.localeCompare(b.name));
-  }, [scene, isPreview]);
+  }, [scene, isPreview, walkerAnim, isPaused]);
 
   useFrame(({ invalidate }, delta) => {
     if (!groupRef.current) return;
@@ -395,10 +414,21 @@ export function Walker({ showSkeleton = false, isPreview = false }: { showSkelet
         if (isWalking) {
           cameraState.walker0X = cameraState.camX;
           cameraState.walker0Z = cameraState.camZ;
+          cameraState.walker0Yaw = cameraState.walkYaw;
+        } else {
+           // Si on vient de switcher sur ce perso, il faut réaligner la caméra
+           // sur sa rotation sauvegardée, sinon il snap à la rotation de l'ancien perso.
+           // Mais en fait le CameraController pilote walkYaw.
+           // => C'est le CameraController qui doit faire le snap.
+           // Ici on se contente de lire la rotation.
+           cameraState.walker0Yaw = cameraState.walkYaw;
         }
         cameraState.walkerX = cameraState.walker0X;
         cameraState.walkerZ = cameraState.walker0Z;
         groupRef.current.rotation.y = cameraState.walkYaw;
+      } else {
+        // En inactif, il garde sa propre rotation
+        groupRef.current.rotation.y = cameraState.walker0Yaw;
       }
       groupRef.current.position.set(cameraState.walker0X, 0, cameraState.walker0Z);
       groupRef.current.visible = !(active && cameraState.walkerHidden);
@@ -425,10 +455,22 @@ export function Walker({ showSkeleton = false, isPreview = false }: { showSkelet
       applyHeadPitch(headBoneRef.current, 0);
     }
 
-    // Animation marche (seulement si walker actif)
     const mixer  = mixerRef.current;
     const action = actionRef.current;
-    const shouldMove = (isMoving && active) || isPreview;
+
+    if (isPreview) {
+      if (mixer && action && walkerAnim !== 'tpose') {
+        if (!isPaused) {
+          mixer.update(delta);
+          if (hairChainRef.current.length > 0) updateHairPhysics(hairChainRef.current, delta);
+          invalidate();
+        }
+      }
+      return;
+    }
+
+    // Animation marche (seulement si walker actif)
+    const shouldMove = (isMoving && active);
     if (mixer && action) {
       if (shouldMove && !activeRef.current) {
         action.reset().fadeIn(0.15).play();
@@ -502,51 +544,56 @@ const RED_COLOR      = new THREE.Color(0xcc1111);
  * - Supprime les tracks de position (on ne veut que les rotations pour éviter le root motion)
  *   sauf pour Hips (position de base).
  */
-function retargetMixamoClip(clip: THREE.AnimationClip): THREE.AnimationClip {
+function retargetMixamoClip(clip: THREE.AnimationClip, hipsRestPos?: THREE.Vector3): THREE.AnimationClip {
   const retargeted: THREE.KeyframeTrack[] = [];
   for (const track of clip.tracks) {
     let name = track.name;
 
-    // Normalise les deux-points et espaces → underscores
-    // Mais préserve le « .property » final (quaternion, position, scale)
+    // Supprime le préfixe d'objet racine (ex: "Armature/mixamorig:Hips.position" -> "mixamorig:Hips.position")
+    const slashIdx = name.lastIndexOf('/');
+    if (slashIdx >= 0) name = name.substring(slashIdx + 1);
+
     const dotIdx = name.lastIndexOf('.');
     if (dotIdx < 0) continue;
     
     const bonePart = name.substring(0, dotIdx).replace(/[ :]/g, '_');
-    const propPart = name.substring(dotIdx); // ".quaternion" etc.
+    const propPart = name.substring(dotIdx);
     name = bonePart + propPart;
 
-    // Remove position tracks for everything except Hips.
+    if (!clip.userData) clip.userData = {};
+
+    if (!clip.userData.loggedTracks) {
+       console.log(`[retargetMixamoClip] original: ${track.name} -> normalized: ${name}`);
+    }
+
+    // Completely ignore root joint animation to prevent unwanted global offset/root motion
+    if (bonePart === '_rootJoint') continue;
+
     if (propPart === '.position' && !bonePart.includes('Hips')) continue;
-    // Remove scale tracks.
     if (propPart === '.scale') continue;
 
     const cloned = track.clone();
     cloned.name = name;
 
-    // Force absolute horizontal centering for Hips to prevent any side-to-side drift/swing
     if (name === 'mixamorig_Hips.position') {
       const vals = cloned.values;
+      const refX = hipsRestPos ? hipsRestPos.x : 0;
+      const refZ = hipsRestPos ? hipsRestPos.z : 0;
       for (let i = 0; i < vals.length; i += 3) {
-        vals[i]     = 0; // Force X to center
-        // vals[i+1] is vertical Y (keep bounce)
-        vals[i+2]   = 0; // Force Z to center
+        vals[i]     = refX; 
+        vals[i+2]   = refZ; 
       }
     }
 
-    // Dampen/Remove Hips side-sway rotation (Roll around Z and Yaw around Y in Mixamo)
     if (name === 'mixamorig_Hips.quaternion') {
       const vals = cloned.values;
       const q = new THREE.Quaternion();
       const e = new THREE.Euler();
       for (let i = 0; i < vals.length; i += 4) {
         q.set(vals[i], vals[i+1], vals[i+2], vals[i+3]);
-        e.setFromQuaternion(q, 'YXZ'); // Mixamo Hips: Y is Up, Z is Forward
-        
-        // Zero out Roll (Z) and heavily dampen Yaw (Y)
+        e.setFromQuaternion(q, 'YXZ');
         e.z = 0;
-        e.y *= 0.1; // Keep just a hint of twist for natural feel
-        
+        e.y *= 0.1;
         q.setFromEuler(e);
         vals[i]   = q.x;
         vals[i+1] = q.y;
@@ -557,12 +604,22 @@ function retargetMixamoClip(clip: THREE.AnimationClip): THREE.AnimationClip {
 
     retargeted.push(cloned);
   }
+  clip.userData.loggedTracks = true;
   return new THREE.AnimationClip(clip.name || 'walk-mixamo', clip.duration, retargeted);
 }
 
-export function WalkerRed({ showSkeleton = false, isPreview = false }: { showSkeleton?: boolean, isPreview?: boolean }) {
+export function WalkerRed({ showSkeleton = false, isPreview = false, walkerAnim, isPaused }: { showSkeleton?: boolean, isPreview?: boolean, walkerAnim?: string, isPaused?: boolean }) {
   const { scene } = useGLTF(MIXAMO_GLB);
-  const animGltf = useGLTF(MIXAMO_WALK_GLB);
+  
+  // Resolve animation path dynamically
+  const animPath = useMemo(() => {
+    if (!walkerAnim || walkerAnim === 'tpose') return null;
+    return `media/glb-animations/${walkerAnim}`;
+  }, [walkerAnim]);
+
+  // Load animation dynamically. Note: This will suspend the component when changing,
+  // which is fine because InventoryPreview wraps it in <Suspense>.
+  const animGltf = useGLTF(animPath || MIXAMO_WALK_GLB);
 
   const groupRef        = useRef<THREE.Group>(null!);
   const mixerRef        = useRef<THREE.AnimationMixer | null>(null);
@@ -613,11 +670,15 @@ export function WalkerRed({ showSkeleton = false, isPreview = false }: { showSke
     const redH = 173.4;
     scene.rotation.y = 0;
     scene.scale.set(1, 1, 1);
+    scene.position.set(0, 0, 0);
     const box = new THREE.Box3().setFromObject(scene);
     const size = box.getSize(new THREE.Vector3());
     scene.scale.setScalar(redH / size.y);
+    
+    // Recenter bounding box to origin X/Z, and ground to Y=0
     box.setFromObject(scene);
-    scene.position.set(0, -box.min.y, 0);
+    const center = box.getCenter(new THREE.Vector3());
+    scene.position.set(-center.x, -box.min.y, -center.z);
     cameraState.walkerHeight1 = redH;
 
     // Cache restQuat AVANT build clip + chaîne hair
@@ -625,21 +686,43 @@ export function WalkerRed({ showSkeleton = false, isPreview = false }: { showSke
 
     // Animation de marche Mixamo depuis GLB
     const mixer = new THREE.AnimationMixer(scene);
-    const rawClip = animGltf.animations?.[0];
-    if (rawClip) {
-      const clip   = retargetMixamoClip(rawClip);
-      const action = mixer.clipAction(clip);
-      action.setLoop(THREE.LoopRepeat, Infinity);
-      actionRef.current = action;
-    }
     mixerRef.current = mixer;
+    actionRef.current = null;
+
+    if (walkerAnim !== 'tpose') {
+      const rawClip = animGltf?.animations?.[0];
+      if (rawClip) {
+        // Find hips rest position
+        const hipsBone = findBone(scene, 'mixamorig_Hips');
+        const hipsPos = hipsBone ? hipsBone.position.clone() : undefined;
+        
+        const clip   = retargetMixamoClip(rawClip, hipsPos);
+        const action = mixer.clipAction(clip);
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        actionRef.current = action;
+        
+        // Auto-play in preview mode if not paused
+        if (isPreview && !isPaused) {
+          action.play();
+          activeRef.current = true;
+        }
+      }
+    } else {
+      // If T-Pose, reset to rest pose
+      scene.traverse(c => {
+        if ((c as THREE.Bone).isBone && c.userData.restQuat) {
+           c.quaternion.copy(c.userData.restQuat);
+        }
+      });
+      activeRef.current = false;
+    }
 
     // Chaîne ponytail Verlet (les bones auxiliaires head_hair_ponytail_* existent)
     hairChainRef.current = initHairChain(scene);
     headBoneRef.current  = findBone(scene, MIXAMO_HEAD_BONE);
     fpsHideRef.current   = collectFpsHide(scene);
     hideAlways(scene);
-  }, [scene, animGltf]);
+  }, [scene, animPath, animGltf, walkerAnim, isPreview]); // Re-run when animation changes
 
   useFrame(({ invalidate }, delta) => {
     if (!groupRef.current) return;
@@ -653,10 +736,15 @@ export function WalkerRed({ showSkeleton = false, isPreview = false }: { showSke
         if (cameraState.isWalking) {
           cameraState.walker1X = cameraState.camX;
           cameraState.walker1Z = cameraState.camZ;
+          cameraState.walker1Yaw = cameraState.walkYaw;
+        } else {
+          cameraState.walker1Yaw = cameraState.walkYaw;
         }
         cameraState.walkerX = cameraState.walker1X;
         cameraState.walkerZ = cameraState.walker1Z;
         groupRef.current.rotation.y = cameraState.walkYaw;
+      } else {
+        groupRef.current.rotation.y = cameraState.walker1Yaw;
       }
       groupRef.current.position.set(cameraState.walker1X, 0, cameraState.walker1Z);
     } else {
@@ -680,7 +768,18 @@ export function WalkerRed({ showSkeleton = false, isPreview = false }: { showSke
       applyHeadPitch(headBoneRef.current, 0);
     }
 
-    const shouldMove = (isMoving && active) || isPreview;
+    if (isPreview) {
+      if (mixer && action && walkerAnim !== 'tpose') {
+        if (!isPaused) {
+          mixer.update(delta);
+          if (hairChainRef.current.length > 0) updateHairPhysics(hairChainRef.current, delta);
+          invalidate();
+        }
+      }
+      return;
+    }
+
+    const shouldMove = (isMoving && active);
     if (!mixer || !action) return;
     if (shouldMove && !activeRef.current) {
       action.reset().fadeIn(0.15).play();

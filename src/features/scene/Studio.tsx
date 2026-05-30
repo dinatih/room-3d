@@ -137,6 +137,17 @@ export function Studio() {
 
   const [showInventory, setShowInventory] = useState(false);
 
+  useEffect(() => {
+    // Analytics tracking (disabled in dev to prevent 404s)
+    /*
+    fetch('/api/visits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: window.location.pathname }),
+    }).catch(() => {});
+    */
+  }, []);
+
   const [lidarMode, setLidarMode] = useState<LidarMode>(0);
   const onCycleLidar = useCallback(() => {
     setLidarMode(m => ((m + 1) % 4) as LidarMode);

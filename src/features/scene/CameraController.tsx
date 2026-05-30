@@ -268,8 +268,15 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         return;
       }
       if (e.key === 'l' || e.key === 'L') {
-        const newIdx = (cameraState.activeWalkerIdx + 1) % 2;
+        const oldIdx = cameraState.activeWalkerIdx;
+        const newIdx = (oldIdx + 1) % 2;
         cameraState.activeWalkerIdx = newIdx;
+        
+        // Restore independent orientation for the newly active walker
+        const targetYaw = newIdx === 0 ? cameraState.walker0Yaw : cameraState.walker1Yaw;
+        walkYaw.current = targetYaw;
+        cameraState.walkYaw = targetYaw;
+
         if (modeRef.current === 'walk') {
           walkPos.current.x = newIdx === 0 ? cameraState.walker0X : cameraState.walker1X;
           walkPos.current.z = newIdx === 0 ? cameraState.walker0Z : cameraState.walker1Z;
