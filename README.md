@@ -52,7 +52,7 @@ room-3d/
 │           ├── Inventory.tsx
 │           ├── InventoryPreview.tsx
 │           ├── inventoryData.ts    # Objets, catégories, espaces de rangement
-│           └── previewRegistry.ts  # id → composant de preview
+│           └── previewRegistry.tsx  # id → composant de preview
 ├── media/                  # Modèles GLB utilisés par la scène
 └── public/
     └── draco/              # Décodeurs Draco servis statiquement

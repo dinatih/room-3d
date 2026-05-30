@@ -59,6 +59,8 @@ import { Backpack, BackpackSmall } from './items/Backpack';
 import { Tent }          from './items/Tent';
 import { Vihals }        from './items/Vihals';
 import { Rebound }       from './items/Rebound';
+import { Linky }         from './items/Linky';
+import { LaserDistanceMaster } from './items/LaserDistanceMaster';
 import { AltappenRugField } from './items/AltappenRug';
 import { ArmrestSofa }  from './items/ArmrestSofa';
 import { ArmlessSofa }  from './items/ArmlessSofa';
@@ -221,6 +223,36 @@ export function Equipment() {
   );
 }
 
+// ─── LinkyGaine ─────────────────────────────────────────────────────────────
+// Coffrage plastique vertical 25.5×6.5×WALL_H, contre mur est du couloir,
+// début Z=ROOM_D+5 (5 cm du mur nord du couloir = mur sud séjour).
+// Linky Enedis monté en façade à ~130 cm du sol.
+const LINKY_GAINE_W   = 6.5;            // X — profondeur (depuis mur est)
+const LINKY_GAINE_L   = 25.5;           // Z — largeur le long du mur
+const LINKY_GAINE_Z0  = ROOM_D + 10 + 6; // 416 — 6 cm de la face couloir du mur sud séjour (Z=ROOM_D+W=410)
+const LINKY_GAINE_X1  = ROOM_W;         // colle au mur est (X=316)
+const LINKY_GAINE_X0  = ROOM_W - LINKY_GAINE_W;
+const LINKY_GAINE_CX  = (LINKY_GAINE_X0 + LINKY_GAINE_X1) / 2; // 312.75
+const LINKY_GAINE_CZ  = LINKY_GAINE_Z0 + LINKY_GAINE_L / 2;    // 512.75
+const LINKY_MOUNT_Y   = 170;            // hauteur base du Linky (bas du compteur)
+const linkyGaineMat   = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.7, metalness: 0.05 });
+
+function LinkyGaine() {
+  return (
+    <>
+      {/* Coffrage plastique sol→plafond */}
+      <mesh position={[LINKY_GAINE_CX, WALL_H / 2, LINKY_GAINE_CZ]} castShadow receiveShadow material={linkyGaineMat}>
+        <boxGeometry args={[LINKY_GAINE_W, WALL_H, LINKY_GAINE_L]} />
+      </mesh>
+      {/* Linky face -X (vers le couloir). GLB front +Z → rotation-y = -π/2.
+          Profondeur GLB ≈ 7.1 cm → recule Linky pour que son dos affleure la gaine. */}
+      <group position={[LINKY_GAINE_X0 - 7.1 / 2, LINKY_MOUNT_Y, LINKY_GAINE_CZ]} rotation={[0, -Math.PI / 2, 0]}>
+        <Linky item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+    </>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // FURNITURE (Layer 2)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -249,6 +281,10 @@ export function Furniture() {
       </group>
       <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} />
+        {/* Télémètre Laserliner couché à plat dans la Drona bas-droite du 2×2 bas */}
+        <group position={[17.5, 6.25, -5]} rotation={[Math.PI / 2, 0, 0]}>
+          <LaserDistanceMaster item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
       </group>
       {/* Poubelle TATAY — angle KallaxCuisine × Mackapar */}
       <group position={[NICHE_X + KALLAX_DEPTH + 18, 0, MACK_Z + w2 / 2 - 6]} rotation-y={Math.PI / 2}>
@@ -275,6 +311,9 @@ export function Furniture() {
       <group position={[DOOR_START - 31, 0, cbZ]} userData={{ animUnit: true }}>
         <BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} />
       </group>
+      {/* Gaine plastique couloir mur est — 25.5×6.5 cm, sol au plafond,
+          début Z=500 (5m du nord). Linky Enedis monté en façade. */}
+      <LinkyGaine />
       {/* Surfaces fixes pour les boîtes Drona — METOD 40×37×60cm et congélateur ~60×57×50cm */}
       <RigidBody type="fixed" colliders={false}>
         <CuboidCollider args={[20, 30, 18.5]} position={[NICHE_X + 20, 30, cbZ]} />
@@ -555,14 +594,14 @@ export function Decor() {
       <group position={[300, 1, 202]} userData={{ animUnit: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[14, 0, 210]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
+      {/*<group position={[14, 0, 210]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
         <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {[55, 120, 185, 250].map(x => (
+      </group>*/}
+      {/*{[55, 120, 185, 250].map(x => (
         <group key={x} position={[x, 0, -386]} userData={{ animUnit: true }}>
           <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
-      ))}
+      ))}*/}
       <group position={[298, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true }}>
         <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
@@ -609,9 +648,9 @@ export function Garden() {
       <group position={[120, 0, -250]} rotation={[0, 1, 0]}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group userData={{ animUnit: true }}>
+      {/*<group userData={{ animUnit: true }}>
         <AltappenRugField />
-      </group>
+      </group>*/}
       <group position={[100, 0, -178]} userData={{ animUnit: true }}>
         <Viggja item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
@@ -625,10 +664,10 @@ export function Garden() {
              userData={{ hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
         <ShibaInu />
       </group>
-      <group position={[250, 0, -330]} rotation={[0, 0, 0]}
+      {/*<group position={[250, 0, -330]} rotation={[0, 0, 0]}
              userData={{ hoverAction: { label: 'Tente Quechua 2 Seconds 2P' } }}>
         <Tent item={{} as any} actionState={{}} onSize={() => {}} />
-      </group>
+      </group>*/}
       <group position={[160, 0, 260]} rotation={[0, -Math.PI / 2, 0]}>
         <Vihals item={{} as any} actionState={{}} onSize={() => {}} />
       </group>

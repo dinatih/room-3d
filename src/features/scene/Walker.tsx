@@ -291,7 +291,7 @@ const HAIR_COLORS  = [HAIR_COLOR_0, HAIR_COLOR_1, HAIR_COLOR_2, HAIR_COLOR_0];
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
-export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
+export function Walker({ showSkeleton = false, isPreview = false }: { showSkeleton?: boolean, isPreview?: boolean }) {
   const { scene } = useGLTF('media/glb/lara_croft__2026_rigged.glb');
   const groupRef  = useRef<THREE.Group>(null!);
   const mixerRef  = useRef<THREE.AnimationMixer | null>(null);
@@ -353,8 +353,8 @@ export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
     scene.position.set(0, -box.min.y, 0);
     cameraState.walkerHeight0 = targetH;
 
-    // Position initiale : centre de la pièce
-    if (groupRef.current) {
+    // Position initiale : centre de la pièce (si pas en preview)
+    if (groupRef.current && !isPreview) {
       groupRef.current.position.set(cameraState.camX, 0, cameraState.camZ);
       cameraState.walker0X = cameraState.camX;
       cameraState.walker0Z = cameraState.camZ;
@@ -382,28 +382,33 @@ export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
       if ((c as THREE.Mesh).isMesh) walkerMeshList.push(c as THREE.Mesh);
     });
     walkerMeshList.sort((a, b) => a.name.localeCompare(b.name));
-  }, [scene]);
+  }, [scene, isPreview]);
 
   useFrame(({ invalidate }, delta) => {
     if (!groupRef.current) return;
     const isWalking = cameraState.isWalking;
     const isMoving  = cameraState.isMoving;
-    const active    = cameraState.activeWalkerIdx === 0;
+    const active    = isPreview ? true : cameraState.activeWalkerIdx === 0;
 
-    if (active) {
-      if (isWalking) {
-        cameraState.walker0X = cameraState.camX;
-        cameraState.walker0Z = cameraState.camZ;
+    if (!isPreview) {
+      if (active) {
+        if (isWalking) {
+          cameraState.walker0X = cameraState.camX;
+          cameraState.walker0Z = cameraState.camZ;
+        }
+        cameraState.walkerX = cameraState.walker0X;
+        cameraState.walkerZ = cameraState.walker0Z;
+        groupRef.current.rotation.y = cameraState.walkYaw;
       }
-      cameraState.walkerX = cameraState.walker0X;
-      cameraState.walkerZ = cameraState.walker0Z;
-      groupRef.current.rotation.y = cameraState.walkYaw;
+      groupRef.current.position.set(cameraState.walker0X, 0, cameraState.walker0Z);
+      groupRef.current.visible = !(active && cameraState.walkerHidden);
+    } else {
+      groupRef.current.position.set(0, 0, 0); // Center for preview
+      groupRef.current.visible = true;
     }
-    groupRef.current.position.set(cameraState.walker0X, 0, cameraState.walker0Z);
-    groupRef.current.visible = !(active && cameraState.walkerHidden);
 
     // FPS : masque eyes/lashes + effondre paupières/narines/lèvres
-    const hideFps = active && isWalking;
+    const hideFps = active && isWalking && !isPreview;
     if (hideFps !== fpsCollapsedRef.current) {
       for (const m of fpsHideRef.current) {
         m.layers.set(hideFps ? LAYER_WALKER_DETAIL : 0);
@@ -414,7 +419,7 @@ export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
 
     // Head pitch — suit walkPitch caméra pour FPS (sans invalidate : la caméra
     // déclenche déjà un frame quand walkPitch change via la souris).
-    if (active && isWalking) {
+    if (active && isWalking && !isPreview) {
       applyHeadPitch(headBoneRef.current, cameraState.walkPitch);
     } else if (headBoneRef.current?.userData.restQuat) {
       applyHeadPitch(headBoneRef.current, 0);
@@ -423,7 +428,7 @@ export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
     // Animation marche (seulement si walker actif)
     const mixer  = mixerRef.current;
     const action = actionRef.current;
-    const shouldMove = isMoving && active;
+    const shouldMove = (isMoving && active) || isPreview;
     if (mixer && action) {
       if (shouldMove && !activeRef.current) {
         action.reset().fadeIn(0.15).play();
@@ -511,19 +516,51 @@ function retargetMixamoClip(clip: THREE.AnimationClip): THREE.AnimationClip {
     const propPart = name.substring(dotIdx); // ".quaternion" etc.
     name = bonePart + propPart;
 
-    // Filtre : on garde quaternion pour tous les bones, position pour Hips uniquement
+    // Remove position tracks for everything except Hips.
     if (propPart === '.position' && !bonePart.includes('Hips')) continue;
-    // Filtre : pas de scale tracks
+    // Remove scale tracks.
     if (propPart === '.scale') continue;
 
     const cloned = track.clone();
     cloned.name = name;
+
+    // Force absolute horizontal centering for Hips to prevent any side-to-side drift/swing
+    if (name === 'mixamorig_Hips.position') {
+      const vals = cloned.values;
+      for (let i = 0; i < vals.length; i += 3) {
+        vals[i]     = 0; // Force X to center
+        // vals[i+1] is vertical Y (keep bounce)
+        vals[i+2]   = 0; // Force Z to center
+      }
+    }
+
+    // Dampen/Remove Hips side-sway rotation (Roll around Z and Yaw around Y in Mixamo)
+    if (name === 'mixamorig_Hips.quaternion') {
+      const vals = cloned.values;
+      const q = new THREE.Quaternion();
+      const e = new THREE.Euler();
+      for (let i = 0; i < vals.length; i += 4) {
+        q.set(vals[i], vals[i+1], vals[i+2], vals[i+3]);
+        e.setFromQuaternion(q, 'YXZ'); // Mixamo Hips: Y is Up, Z is Forward
+        
+        // Zero out Roll (Z) and heavily dampen Yaw (Y)
+        e.z = 0;
+        e.y *= 0.1; // Keep just a hint of twist for natural feel
+        
+        q.setFromEuler(e);
+        vals[i]   = q.x;
+        vals[i+1] = q.y;
+        vals[i+2] = q.z;
+        vals[i+3] = q.w;
+      }
+    }
+
     retargeted.push(cloned);
   }
   return new THREE.AnimationClip(clip.name || 'walk-mixamo', clip.duration, retargeted);
 }
 
-export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) {
+export function WalkerRed({ showSkeleton = false, isPreview = false }: { showSkeleton?: boolean, isPreview?: boolean }) {
   const { scene } = useGLTF(MIXAMO_GLB);
   const animGltf = useGLTF(MIXAMO_WALK_GLB);
 
@@ -607,23 +644,27 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
   useFrame(({ invalidate }, delta) => {
     if (!groupRef.current) return;
     const isMoving = cameraState.isMoving;
-    const active   = cameraState.activeWalkerIdx === 1;
+    const active   = isPreview ? true : cameraState.activeWalkerIdx === 1;
     const mixer    = mixerRef.current;
     const action   = actionRef.current;
 
-    if (active) {
-      if (cameraState.isWalking) {
-        cameraState.walker1X = cameraState.camX;
-        cameraState.walker1Z = cameraState.camZ;
+    if (!isPreview) {
+      if (active) {
+        if (cameraState.isWalking) {
+          cameraState.walker1X = cameraState.camX;
+          cameraState.walker1Z = cameraState.camZ;
+        }
+        cameraState.walkerX = cameraState.walker1X;
+        cameraState.walkerZ = cameraState.walker1Z;
+        groupRef.current.rotation.y = cameraState.walkYaw;
       }
-      cameraState.walkerX = cameraState.walker1X;
-      cameraState.walkerZ = cameraState.walker1Z;
-      groupRef.current.rotation.y = cameraState.walkYaw;
+      groupRef.current.position.set(cameraState.walker1X, 0, cameraState.walker1Z);
+    } else {
+      groupRef.current.position.set(0, 0, 0);
     }
-    groupRef.current.position.set(cameraState.walker1X, 0, cameraState.walker1Z);
 
     // FPS : masque eyes/lashes + effondre paupières/narines/lèvres
-    const hideFps = active && cameraState.isWalking;
+    const hideFps = active && cameraState.isWalking && !isPreview;
     if (hideFps !== fpsCollapsedRef.current) {
       for (const m of fpsHideRef.current) {
         m.layers.set(hideFps ? LAYER_WALKER_DETAIL : 0);
@@ -633,13 +674,13 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
     }
 
     // Head pitch — suit walkPitch (pas d'invalidate : caméra l'appelle déjà)
-    if (active && cameraState.isWalking) {
+    if (active && cameraState.isWalking && !isPreview) {
       applyHeadPitch(headBoneRef.current, cameraState.walkPitch);
     } else if (headBoneRef.current?.userData.restQuat) {
       applyHeadPitch(headBoneRef.current, 0);
     }
 
-    const shouldMove = isMoving && active;
+    const shouldMove = (isMoving && active) || isPreview;
     if (!mixer || !action) return;
     if (shouldMove && !activeRef.current) {
       action.reset().fadeIn(0.15).play();

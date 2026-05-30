@@ -89,7 +89,7 @@ ui/                      # composants UI overlay
 Inventory.tsx            # modal inventaire complet
 InventoryPreview.tsx     # prévisualisation 3D dans l'inventaire
 inventoryData.ts         # INVENTORY : liste des objets avec dims, catégorie
-previewRegistry.ts       # id → composant items/ pour la prévisualisation
+previewRegistry.tsx       # id → composant items/ pour la prévisualisation
 ```
 
 ### Composants items/ (`features/scene/items/`)
