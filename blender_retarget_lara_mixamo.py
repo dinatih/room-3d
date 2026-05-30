@@ -252,16 +252,36 @@ def main():
         targets["mixamorig:Spine1"] = (spine1_head.copy(), spine2_chest_head.copy())
         targets["mixamorig:Spine2"] = (spine2_chest_head.copy(), neck_head.copy())
         
-    # 4.2b) Adjust Head bone tail to point straight up to the top of the skull
-    head_bone = find_lara_bone_by_prefix("head neck upper")
-    if head_bone:
-        head_head = lara_world[head_bone][0]
-        # Make the head bone point straight up along Z axis with a length of 17.5 cm (reaching 1.68m)
-        new_head_tail = head_head.copy()
-        new_head_tail.z = head_head.z + 0.175
-        new_head_tail.y = head_head.y
-        new_head_tail.x = head_head.x
+    # 4.2b) Adjust Head and Neck bones to match Mixamo Character standard tilt and proportions
+    if neck:
+        # Reference values from Character model (rel to hips or absolute normalized)
+        # Char Neck Len: 0.0906, Head Len: 0.2161
+        # Char Neck Head Z: ~1.40, Head Head Z: ~1.49, Top Tail Z: ~1.90
+        
+        neck_head = lara_world[neck][0].copy()
+        
+        # Match Character Neck Head Z (~1.40) and Y (~0.03)
+        # (Lara is already close to 1.40 at normalized scale)
+        neck_head.y += 0.03
+        
+        # Mixamo Character standard tilt: Dir(0, 0.1215, 0.9926)
+        tilt_dir = Vector((0, 0.1215, 0.9926))
+        
+        # Set Neck length to match Character (9 cm)
+        new_neck_tail = neck_head + tilt_dir * 0.09
+        targets["mixamorig:Neck"] = (neck_head, new_neck_tail)
+        
+        # Head starts at corrected Neck tail
+        head_head = new_neck_tail
+        # Set Head length to match Character (21.6 cm)
+        new_head_tail = head_head + tilt_dir * 0.216
         targets["mixamorig:Head"] = (head_head.copy(), new_head_tail)
+        
+        # HeadTop_End follows the same tilt
+        top_head = new_head_tail
+        # Set Top length to match Character (approx 21.6 cm or same as head)
+        new_top_tail = top_head + tilt_dir * 0.216
+        targets["mixamorig:HeadTop_End"] = (top_head.copy(), new_top_tail)
         
     # 4.2c) Adjust foot and toe bones to lie flat/forward to prevent curling and reduce toe_End length
     for side in ["Left", "Right"]:
@@ -310,6 +330,30 @@ def main():
         targets["mixamorig:LeftHand"] = (lara_world[left_wrist][0].copy(), lara_world[left_middle1][0].copy())
     if right_wrist and right_middle1:
         targets["mixamorig:RightHand"] = (lara_world[right_wrist][0].copy(), lara_world[right_middle1][0].copy())
+
+    # 4.5) Force perfect T-pose for arms (horizontal alignment)
+    for side in ["Left", "Right"]:
+        sh_name = f"mixamorig:{side}Shoulder"
+        if sh_name in targets:
+            # Use Shoulder head as reference height and depth
+            ref_height = targets[sh_name][0].z
+            ref_depth = targets[sh_name][0].y
+            
+            arm_chain = [
+                f"mixamorig:{side}Shoulder",
+                f"mixamorig:{side}Arm",
+                f"mixamorig:{side}ForeArm",
+                f"mixamorig:{side}Hand"
+            ]
+            
+            for b_name in arm_chain:
+                if b_name in targets:
+                    h, t = targets[b_name]
+                    h.z = ref_height
+                    h.y = ref_depth
+                    t.z = ref_height
+                    t.y = ref_depth
+                    targets[b_name] = (h, t)
 
     # 5) Perform bone snapping & roll alignment in Edit Mode
     select_only(ybot_arm)

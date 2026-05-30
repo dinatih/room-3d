@@ -300,19 +300,31 @@ for mesh in lara_meshes:
     mesh.select_set(True)
 
 log(f"Exporting final clean model to {OUT_GLB}...")
-# Scale settings must be kept at 1.0 (do not modify meshes scale)
-for o in bpy.context.scene.objects:
-    if o.select_get():
-        o.scale = (1.0, 1.0, 1.0)
+
+# Reset pose to rest before export
+bpy.context.view_layer.objects.active = ybot_arm
+bpy.ops.object.mode_set(mode='POSE')
+bpy.ops.pose.transforms_clear()
+bpy.ops.object.mode_set(mode='OBJECT')
+
+# Clear any animation data that might have come with Y-Bot
+if ybot_arm.animation_data:
+    ybot_arm.animation_data_clear()
+
+# Ensure meshes have no transforms (they should be at origin)
+for mesh in lara_meshes:
+    mesh.location = (0,0,0)
+    mesh.rotation_euler = (0,0,0)
+    mesh.scale = (1,1,1)
 
 bpy.ops.export_scene.gltf(
     filepath=OUT_GLB,
     export_format="GLB",
     use_selection=True,
-    export_apply=True,
+    export_apply=False, # IMPORTANT: Do not bake the pose/modifiers into the mesh!
     export_animations=False,
     export_yup=True,
     export_def_bones=False,
-    export_rest_position_armature=True,
+    export_rest_position_armature=False, # Use Edit Mode as rest pose
 )
 log("Rigging and skinning retargeting completed with absolute skinning safety and correct scale!")

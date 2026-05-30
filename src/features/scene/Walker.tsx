@@ -474,7 +474,7 @@ export function Walker({ showSkeleton = false }: { showSkeleton?: boolean }) {
 // Les « : » et espaces sont remplacés par « _ » pour la compatibilité PropertyBinding.
 
 const MIXAMO_GLB      = 'media/glb/lara_mixamo.glb';
-const MIXAMO_WALK_FBX = 'media/fbx/female_walk.fbx';
+const MIXAMO_WALK_GLB = 'media/glb-animations/walking.glb';
 
 /** Normalise les noms de bones Mixamo : remplace espaces ET deux-points par _. */
 function normalizeMixamoBoneNames(root: THREE.Object3D): void {
@@ -488,12 +488,11 @@ const MIXAMO_HEAD_BONE = 'mixamorig_Head';
 // Tenue rouge — mêmes noms de matériaux/meshes que dans lara_croft__2026_rigged.glb
 // (les meshes Lara sont conservés tels quels dans lara_mixamo.glb).
 const RED_MAT_NAMES  = new Set(['5_BackPack_1.0_0_0', '5_Shorts_1.0_0_0']);
-const RED_NODE_NAMES = new Set(['Object_113']);
+const RED_NODE_NAMES = new Set(['LARA_Object_113']); // Use LARA_Object prefix for new rig
 const RED_COLOR      = new THREE.Color(0xcc1111);
 
 /**
- * Retarget un AnimationClip FBX Mixamo sur le squelette lara_mixamo :
- * - Supprime le préfixe de chemin de nœud FBX (ex: "mixamorig:Hips" au lieu de "Armature/mixamorig:Hips")
+ * Retarget un AnimationClip Mixamo sur le squelette lara_mixamo :
  * - Normalise les « : » et espaces en « _ » pour matcher les noms normalisés du GLB
  * - Supprime les tracks de position (on ne veut que les rotations pour éviter le root motion)
  *   sauf pour Hips (position de base).
@@ -501,24 +500,19 @@ const RED_COLOR      = new THREE.Color(0xcc1111);
 function retargetMixamoClip(clip: THREE.AnimationClip): THREE.AnimationClip {
   const retargeted: THREE.KeyframeTrack[] = [];
   for (const track of clip.tracks) {
-    // track.name = "Armature|mixamorig:Hips.quaternion" ou "mixamorig:Hips.position"
-    // PropertyBinding parse : objectName.property
     let name = track.name;
-
-    // Supprime le préfixe d'objet racine (avant le slash ou pipe)
-    // FBX exporte souvent "RootNode/mixamorig:Hips.quaternion"
-    const slashIdx = name.lastIndexOf('/');
-    if (slashIdx >= 0) name = name.substring(slashIdx + 1);
 
     // Normalise les deux-points et espaces → underscores
     // Mais préserve le « .property » final (quaternion, position, scale)
     const dotIdx = name.lastIndexOf('.');
+    if (dotIdx < 0) continue;
+    
     const bonePart = name.substring(0, dotIdx).replace(/[ :]/g, '_');
     const propPart = name.substring(dotIdx); // ".quaternion" etc.
     name = bonePart + propPart;
 
     // Filtre : on garde quaternion pour tous les bones, position pour Hips uniquement
-    if (propPart === '.position' && bonePart !== 'mixamorig_Hips') continue;
+    if (propPart === '.position' && !bonePart.includes('Hips')) continue;
     // Filtre : pas de scale tracks
     if (propPart === '.scale') continue;
 
@@ -531,7 +525,7 @@ function retargetMixamoClip(clip: THREE.AnimationClip): THREE.AnimationClip {
 
 export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) {
   const { scene } = useGLTF(MIXAMO_GLB);
-  const fbx = useLoader(FBXLoader, MIXAMO_WALK_FBX);
+  const animGltf = useGLTF(MIXAMO_WALK_GLB);
 
   const groupRef        = useRef<THREE.Group>(null!);
   const mixerRef        = useRef<THREE.AnimationMixer | null>(null);
@@ -571,16 +565,15 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
       const mat = m.material as THREE.MeshStandardMaterial;
-      const cleanName = c.name.startsWith('LARA_') ? c.name.substring(5) : c.name;
-      if (RED_MAT_NAMES.has(mat?.name) || RED_NODE_NAMES.has(cleanName)) {
+      if (RED_MAT_NAMES.has(mat?.name) || RED_NODE_NAMES.has(c.name)) {
         m.material = mat.clone();
         (m.material as THREE.MeshStandardMaterial).color.copy(RED_COLOR);
         (m.material as THREE.MeshStandardMaterial).map = null;
       }
     });
 
-    // Taille — WalkerRed = 170 cm
-    const redH = 170;
+    // Taille — WalkerRed = 173.4 cm (match studios)
+    const redH = 173.4;
     scene.rotation.y = 0;
     scene.scale.set(1, 1, 1);
     const box = new THREE.Box3().setFromObject(scene);
@@ -593,9 +586,9 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
     // Cache restQuat AVANT build clip + chaîne hair
     cacheRestQuats(scene);
 
-    // Animation de marche Mixamo depuis FBX
+    // Animation de marche Mixamo depuis GLB
     const mixer = new THREE.AnimationMixer(scene);
-    const rawClip = fbx.animations?.[0];
+    const rawClip = animGltf.animations?.[0];
     if (rawClip) {
       const clip   = retargetMixamoClip(rawClip);
       const action = mixer.clipAction(clip);
@@ -609,7 +602,7 @@ export function WalkerRed({ showSkeleton = false }: { showSkeleton?: boolean }) 
     headBoneRef.current  = findBone(scene, MIXAMO_HEAD_BONE);
     fpsHideRef.current   = collectFpsHide(scene);
     hideAlways(scene);
-  }, [scene, fbx]);
+  }, [scene, animGltf]);
 
   useFrame(({ invalidate }, delta) => {
     if (!groupRef.current) return;

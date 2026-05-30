@@ -751,9 +751,18 @@
             </div>
             <div class="btn-grid" style="grid-template-columns: 1fr; gap: 6px; margin-top: 6px;">
               <button id="btn-toggle-guns" class="active">🔫 Show Guns & Holsters</button>
+              <button id="btn-toggle-ortho">📐 2D / Ortho</button>
+              <button id="btn-reset-tpose">📐 Reset T-Pose</button>
             </div>
-          </div>
-        </div>
+            <div class="btn-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 6px;">
+              <button id="btn-view-front">Front</button>
+              <button id="btn-view-back">Back</button>
+              <button id="btn-view-top">Top</button>
+              <button id="btn-view-left">Left</button>
+              <button id="btn-view-right">Right</button>
+            </div>
+            </div>
+            </div>
 
         <!-- Analytics -->
         <div>
@@ -832,11 +841,72 @@
     const LAYOUT_OFFSET = 0.9; // meters side-by-side offset
 
     const ANIM_FILES = [
-      { name: 'Idle (Mixamo Standard)', file: 'idle_mixamo.glb' },
-      { name: 'Walk (Mixamo Standard)', file: 'walk_mixamo.glb' },
-      { name: 'Run (Mixamo Standard)', file: 'run_mixamo.glb' },
-      { name: 'Backflip (Mixamo Jump)', file: 'backflip_mixamo.glb' },
-      { name: 'Dance (Mixamo Hip Hop)', file: 'dance_mixamo.glb' }
+      { name: "📐 Static T-Pose (Rest Pose)", file: "tpose" },
+      { name: "Angry Gesture", file: "angry_gesture.glb" },
+      { name: "Ascending Stairs", file: "ascending_stairs.glb" },
+      { name: "Asking Question", file: "asking_question.glb" },
+      { name: "Beckoning", file: "beckoning.glb" },
+      { name: "Catwalk Sequence 01", file: "catwalk_sequence_01.glb" },
+      { name: "Catwalk Sequence 02", file: "catwalk_sequence_02.glb" },
+      { name: "Catwalk Sequence 03", file: "catwalk_sequence_03.glb" },
+      { name: "Catwalk Sequence 04", file: "catwalk_sequence_04.glb" },
+      { name: "Catwalk Sequence 05", file: "catwalk_sequence_05.glb" },
+      { name: "Cheering While Sitting", file: "cheering_while_sitting.glb" },
+      { name: "Clapping", file: "clapping.glb" },
+      { name: "Closing", file: "closing.glb" },
+      { name: "Crawl Backwards In Prone", file: "crawl_backwards_in_prone.glb" },
+      { name: "Descending Stairs", file: "descending_stairs.glb" },
+      { name: "Dig And Plant Seeds", file: "dig_and_plant_seeds.glb" },
+      { name: "Disappointed", file: "disappointed.glb" },
+      { name: "Double Leg Takedown - Attacker", file: "double_leg_takedown_-_attacker.glb" },
+      { name: "Drinking Fountain", file: "drinking_fountain.glb" },
+      { name: "Finding", file: "finding.glb" },
+      { name: "Gaming", file: "gaming.glb" },
+      { name: "Hanging Idle", file: "hanging_idle.glb" },
+      { name: "Having A Meeting, Female", file: "having_a_meeting,_female.glb" },
+      { name: "Having A Meeting, Male", file: "having_a_meeting,_male.glb" },
+      { name: "Jumping Jacks", file: "jumping_jacks.glb" },
+      { name: "Laying Seizure", file: "laying_seizure.glb" },
+      { name: "Laying Severe Cough", file: "laying_severe_cough.glb" },
+      { name: "Left Turn", file: "left_turn.glb" },
+      { name: "Looking Through Files Low", file: "looking_through_files_low.glb" },
+      { name: "Martelo Do Chau Sem Mao", file: "martelo_do_chau_sem_mao.glb" },
+      { name: "One Shoulder Lean", file: "one_shoulder_lean.glb" },
+      { name: "Pick Fruit", file: "pick_fruit.glb" },
+      { name: "Plant A Plant", file: "plant_a_plant.glb" },
+      { name: "Plant Tree", file: "plant_tree.glb" },
+      { name: "Pointing", file: "pointing.glb" },
+      { name: "Pull Pilot From Seat", file: "pull_pilot_from_seat.glb" },
+      { name: "Pull Plant", file: "pull_plant.glb" },
+      { name: "Pulled From Seat", file: "pulled_from_seat.glb" },
+      { name: "Rapping", file: "rapping.glb" },
+      { name: "Right Turn", file: "right_turn.glb" },
+      { name: "Rummaging", file: "rummaging.glb" },
+      { name: "Scared", file: "scared.glb" },
+      { name: "Searching Pockets", file: "searching_pockets.glb" },
+      { name: "Seated Idle", file: "seated_idle.glb" },
+      { name: "Sitting Drinking", file: "sitting_drinking.glb" },
+      { name: "Sitting Talking", file: "sitting_talking.glb" },
+      { name: "Skinning Test", file: "skinning_test.glb" },
+      { name: "Stand Up", file: "stand_up.glb" },
+      { name: "Standing Arguing", file: "standing_arguing.glb" },
+      { name: "Surprised", file: "surprised.glb" },
+      { name: "Swing Into Wall", file: "swing_into_wall.glb" },
+      { name: "T-Pose", file: "t-pose.glb" },
+      { name: "Talking", file: "talking.glb" },
+      { name: "Talking At Watercooler", file: "talking_at_watercooler.glb" },
+      { name: "Talking On A Cell Phone", file: "talking_on_a_cell_phone.glb" },
+      { name: "Talking On Phone", file: "talking_on_phone.glb" },
+      { name: "Telling A Secret", file: "telling_a_secret.glb" },
+      { name: "Tonic Seizure", file: "tonic_seizure.glb" },
+      { name: "Tripping", file: "tripping.glb" },
+      { name: "Victory", file: "victory.glb" },
+      { name: "Walking", file: "walking.glb" },
+      { name: "Watering", file: "watering.glb" },
+      { name: "Wheelbarrow Walk Turn", file: "wheelbarrow_walk_turn.glb" },
+      { name: "Wheelchair", file: "wheelchair.glb" },
+      { name: "Writing", file: "writing.glb" },
+      { name: "Yelling", file: "yelling.glb" },
     ];
 
     // Bone mapping from Mixamo name to Lara prefix name for joint comparison
@@ -941,8 +1011,13 @@
     scene.background = new THREE.Color(0x090a0f);
     scene.fog = new THREE.FogExp2(0x090a0f, 0.12);
 
-    const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 20);
-    camera.position.set(0, 1.6, 2.8);
+    const persCamera = new THREE.PerspectiveCamera(45, 1, 0.01, 20);
+    persCamera.position.set(0, 1.6, 2.8);
+
+    const orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 20);
+    orthoCamera.position.set(0, 1.6, 2.8);
+
+    let camera = persCamera;
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -1077,20 +1152,19 @@
       renderer.setSize(w, h);
       
       const aspect = w / h;
-      camera.aspect = aspect;
+      persCamera.aspect = aspect;
+      persCamera.updateProjectionMatrix();
+
+      // For ortho camera, we use the distance from target to set the frustum size
+      const dist = camera.position.distanceTo(controls.target);
+      const height = dist * Math.tan(THREE.MathUtils.degToRad(persCamera.fov / 2));
+      const width = height * aspect;
       
-      // Maintain constant horizontal FOV for narrow viewports
-      const targetAspect = 1.6; // reference aspect ratio (16:10 landscape)
-      const targetFovV = 45; // reference vertical FOV
-      const fovH = 2 * Math.atan(Math.tan(targetFovV * Math.PI / 360) * targetAspect);
-      
-      if (aspect < targetAspect) {
-        camera.fov = 2 * Math.atan(Math.tan(fovH / 2) / aspect) * (180 / Math.PI);
-      } else {
-        camera.fov = targetFovV;
-      }
-      
-      camera.updateProjectionMatrix();
+      orthoCamera.left = -width;
+      orthoCamera.right = width;
+      orthoCamera.top = height;
+      orthoCamera.bottom = -height;
+      orthoCamera.updateProjectionMatrix();
     }
     window.addEventListener('resize', resize);
     resize();
@@ -1126,18 +1200,63 @@
     // ── Load and Setup Models ────────────────────────────────────────────────
     async function loadModel(filename) {
       return new Promise((resolve, reject) => {
-        gltfLoader.load('public/media/glb/' + filename + '?t=' + Date.now(), gltf => {
+        // Try animations folder first, then glb folder
+        const path = filename === 'tpose' ? '' : 
+                     (filename.endsWith('.glb') && !filename.includes('lara') && !filename.includes('y_bot') && !filename.includes('character') ? 'public/media/glb-animations/' : 'public/media/glb/');
+        
+        if (filename === 'tpose') {
+           resolve({ scene: null, animations: [] });
+           return;
+        }
+
+        gltfLoader.load(path + filename + '?t=' + Date.now(), gltf => {
           resolve(gltf);
-        }, undefined, reject);
+        }, undefined, (err) => {
+          // Fallback to glb if not in animations
+          if (path.includes('glb-animations')) {
+             gltfLoader.load('public/media/glb/' + filename + '?t=' + Date.now(), gltf => {
+                resolve(gltf);
+             }, undefined, reject);
+          } else {
+             reject(err);
+          }
+        });
       });
     }
 
     async function setupAllModels() {
+      function normalizeHeight(model, targetHeight = 1.734) {
+        // Reset scale before measuring to avoid cumulative errors if re-run
+        model.scale.set(1,1,1);
+        model.position.set(0,0,0);
+        model.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        if (size.y > 0) {
+          const factor = targetHeight / size.y;
+          model.scale.setScalar(factor);
+          
+          // Align bottom of bbox to Y=0
+          model.updateMatrixWorld(true);
+          const newBox = new THREE.Box3().setFromObject(model);
+          model.position.y = -newBox.min.y;
+          model.updateMatrixWorld(true);
+          
+          console.log(`Normalized model height to ${targetHeight}. Scale factor: ${factor}. Y-offset: ${model.position.y}`);
+        }
+      }
+
       showLoader("Loading Reference Lara Croft...");
       const refGltf = await loadModel(REF_FILE);
       state.models.ref = refGltf.scene;
+      normalizeHeight(state.models.ref);
       
       state.models.ref.traverse(c => { 
+        if (c.isBone) {
+          c.defaultPosition = c.position.clone();
+          c.defaultRotation = c.rotation.clone();
+          c.defaultScale = c.scale.clone();
+        }
         if (c.isMesh) {
           c.castShadow = c.receiveShadow = true;
           c.frustumCulled = false;
@@ -1148,7 +1267,14 @@
       showLoader("Loading Re-Rigged Lara Croft...");
       const perfectGltf = await loadModel(PERFECT_FILE);
       state.models.perfect = perfectGltf.scene;
+      normalizeHeight(state.models.perfect);
+
       state.models.perfect.traverse(c => { 
+        if (c.isBone) {
+          c.defaultPosition = c.position.clone();
+          c.defaultRotation = c.rotation.clone();
+          c.defaultScale = c.scale.clone();
+        }
         if (c.isMesh) {
           c.castShadow = c.receiveShadow = true;
           c.frustumCulled = false;
@@ -1159,8 +1285,14 @@
       showLoader("Loading Mixamo Y-Bot Reference...");
       const ybotGltf = await loadModel(YBOT_FILE);
       state.models.ybot = ybotGltf.scene;
-      state.models.ybot.scale.setScalar(1.0);
+      normalizeHeight(state.models.ybot);
+
       state.models.ybot.traverse(c => { 
+        if (c.isBone) {
+          c.defaultPosition = c.position.clone();
+          c.defaultRotation = c.rotation.clone();
+          c.defaultScale = c.scale.clone();
+        }
         if (c.isMesh) {
           c.castShadow = c.receiveShadow = true;
           c.frustumCulled = false;
@@ -1171,15 +1303,14 @@
       showLoader("Loading Comparison FBX...");
       const charGltf = await loadModel(CHAR_FILE);
       state.models.char = charGltf.scene;
-      const charBox = new THREE.Box3().setFromObject(state.models.char);
-      const charSize = charBox.getSize(new THREE.Vector3());
-      console.log("Comparison FBX size:", charSize.toArray());
-      if (charSize.y > 10.0) {
-        state.models.char.scale.setScalar(0.01);
-      } else {
-        state.models.char.scale.setScalar(1.0);
-      }
+      normalizeHeight(state.models.char);
+
       state.models.char.traverse(c => { 
+        if (c.isBone) {
+          c.defaultPosition = c.position.clone();
+          c.defaultRotation = c.rotation.clone();
+          c.defaultScale = c.scale.clone();
+        }
         if (c.isMesh) {
           c.castShadow = c.receiveShadow = true;
           c.frustumCulled = false;
@@ -1191,24 +1322,28 @@
       state.skeletons.ref = new THREE.SkeletonHelper(state.models.ref);
       state.skeletons.ref.material.linewidth = 2;
       state.skeletons.ref.material.depthTest = false;
+      state.skeletons.ref.material.color.set(0x0066ff); // Electric Blue for Reference Lara
       state.skeletons.ref.renderOrder = 999;
       scene.add(state.skeletons.ref);
 
       state.skeletons.perfect = new THREE.SkeletonHelper(state.models.perfect);
       state.skeletons.perfect.material.linewidth = 2;
       state.skeletons.perfect.material.depthTest = false;
+      state.skeletons.perfect.material.color.set(0xff00ff); // Magenta for our Perfect Rig
       state.skeletons.perfect.renderOrder = 999;
       scene.add(state.skeletons.perfect);
 
       state.skeletons.ybot = new THREE.SkeletonHelper(state.models.ybot);
       state.skeletons.ybot.material.linewidth = 2;
       state.skeletons.ybot.material.depthTest = false;
+      state.skeletons.ybot.material.color.set(0x00ffff); // Cyan for Y-Bot
       state.skeletons.ybot.renderOrder = 999;
       scene.add(state.skeletons.ybot);
 
       state.skeletons.char = new THREE.SkeletonHelper(state.models.char);
       state.skeletons.char.material.linewidth = 2;
       state.skeletons.char.material.depthTest = false;
+      state.skeletons.char.material.color.set(0xff3333); // Bright, lighter red for Character
       state.skeletons.char.renderOrder = 999;
       scene.add(state.skeletons.char);
 
@@ -1432,8 +1567,8 @@
       vBadge.className = ref.verts === mix.verts ? 'diff-badge match' : 'diff-badge diff';
 
       // Height in cm
-      document.getElementById('stat-ref-bbox').textContent = (ref.bboxHeight * 100).toFixed(1) + ' cm';
-      document.getElementById('stat-mix-bbox').textContent = (mix.bboxHeight * 100).toFixed(1) + ' cm';
+      document.getElementById('stat-ref-bbox').textContent = ref.bboxHeight.toFixed(1) + ' cm';
+      document.getElementById('stat-mix-bbox').textContent = mix.bboxHeight.toFixed(1) + ' cm';
       const bbBadge = document.getElementById('badge-bbox');
       bbBadge.textContent = 'MATCH';
       bbBadge.className = 'diff-badge match';
@@ -1672,15 +1807,86 @@
       stopAnimation();
       
       try {
-        const animGltf = await loadModel(filename);
-        if (!animGltf.animations || animGltf.animations.length === 0) {
-          console.warn(`${filename} has no animations`);
-          hideLoader();
-          return;
-        }
+        let rawClip;
+        let armatureRotation = null;
+        let isAnimZUp = false;
+        if (filename === 'tpose') {
+          // Reset bones to their default rest positions
+          [state.models.ref, state.models.perfect, state.models.ybot, state.models.char].forEach(model => {
+            if (model) {
+              model.traverse(c => {
+                if (c.isBone && c.defaultPosition) {
+                  c.position.copy(c.defaultPosition);
+                  c.rotation.copy(c.defaultRotation);
+                  c.scale.copy(c.defaultScale);
+                }
+              });
+            }
+          });
+          
+          rawClip = new THREE.AnimationClip('tpose', 1.0, []);
+        } else {
+          const animGltf = await loadModel(filename);
+          if (!animGltf.animations || animGltf.animations.length === 0) {
+            console.warn(`${filename} has no animations`);
+            hideLoader();
+            return;
+          }
+          rawClip = animGltf.animations[0];
+          
+          // Auto-detect if animation tracks are Z-up vs Y-up based on Hips translation
+          const detectNorm = s => {
+            let res = s.replace(/_\d+$/, '').toLowerCase();
+            res = res.replace(/^mixamorig\s*:\s*/, '');
+            res = res.replace(/^mixamorig/, '');
+            res = res.replace(/[^a-z0-9]/g, '');
+            return res;
+          };
+          const rawHipsPosTrack = rawClip.tracks.find(t => {
+            const [bn, prop] = t.name.split('.');
+            return prop === 'position' && (detectNorm(bn).includes('hips') || detectNorm(bn).includes('pelvis'));
+          });
 
-        // Just take the first animation clip directly since they are clean Mixamo GLBs
-        const rawClip = animGltf.animations[0];
+          if (rawHipsPosTrack && rawHipsPosTrack.values && rawHipsPosTrack.values.length >= 3) {
+            const yVal = Math.abs(rawHipsPosTrack.values[1]);
+            const zVal = Math.abs(rawHipsPosTrack.values[2]);
+            if (zVal > yVal && zVal > 0.3) {
+              isAnimZUp = true;
+            }
+            console.log(`[Clip Mapping] Auto-detected axis orientation: ${isAnimZUp ? 'Z-up' : 'Y-up'} (Hips first frame Y: ${yVal.toFixed(4)}, Z: ${zVal.toFixed(4)})`);
+          }
+
+          if (isAnimZUp) {
+            // Find Armature node robustly
+            let armatureNode = null;
+            if (animGltf.scene) {
+              animGltf.scene.traverse(c => {
+                if (c.isBone && (c.name.toLowerCase().includes('hips') || c.name.toLowerCase().includes('pelvis'))) {
+                  armatureNode = c.parent;
+                }
+              });
+              if (!armatureNode) {
+                armatureNode = animGltf.scene.getObjectByName('Armature');
+              }
+            }
+
+            if (armatureNode && (
+              Math.abs(armatureNode.quaternion.x) > 0.001 ||
+              Math.abs(armatureNode.quaternion.y) > 0.001 ||
+              Math.abs(armatureNode.quaternion.z) > 0.001
+            )) {
+              // Use the armature's rotation directly (NOT inverted) to align Z-up with Y-up
+              armatureRotation = armatureNode.quaternion.clone();
+              console.log(`[Clip Mapping] Z-up detected. Found rotated Armature: ${armatureNode.name}. Using its rotation:`, armatureRotation.toArray());
+            } else {
+              // Fallback to -90 degrees around X axis
+              armatureRotation = new THREE.Quaternion(-0.7071068, 0, 0, 0.7071068);
+              console.log(`[Clip Mapping] Z-up detected but Armature is unrotated or not found. Using fallback -90-deg X rotation.`);
+            }
+          } else {
+            console.log(`[Clip Mapping] Y-up detected. No armature rotation correction needed.`);
+          }
+        }
 
         state.animation.clip = rawClip;
         state.animation.duration = rawClip.duration;
@@ -1698,25 +1904,24 @@
             return res;
           };
 
-          // Determine if model is the original Lara (no mixamo bones)
-          let isOriginalLara = true;
+          // Determine if model has Mixamo bones
+          let hasMixamoBones = false;
           model.traverse(c => {
             if (c.isBone && c.name.toLowerCase().includes('mixamo')) {
-              isOriginalLara = false;
+              hasMixamoBones = true;
             }
           });
 
-          if (isOriginalLara) {
-            // Original Lara is not retargeted to Mixamo animations to avoid deforming her skeleton
-            // due to incompatible bone rolls. We return an empty clip so she remains in her static bind pose.
+          // Only keep the reference model static if it's original Lara (to compare against T-pose)
+          if (model === state.models.ref && !hasMixamoBones) {
             return new THREE.AnimationClip(rawClip.name + '_' + model.uuid, rawClip.duration, []);
           }
 
           // Build mapping from normalized name in animation to model bone name
           let modelHips = null;
           
-          if (false) {
-            // For original Lara, we map using MIX_TO_LARA_PREFIX
+          if (!hasMixamoBones) {
+            // For original Lara skeleton (like lara_croft.glb), map using MIX_TO_LARA_PREFIX
             const normMixToLara = new Map();
             for (const [mixKey, laraPrefix] of Object.entries(MIX_TO_LARA_PREFIX)) {
               normMixToLara.set(norm(mixKey), norm(laraPrefix));
@@ -1759,9 +1964,15 @@
           }
 
           let hipsTranslationRatio = 1.0;
-          if (modelHips && animHipsY !== null) {
+          if (modelHips) {
             const isModelMetric = (modelHips.position.y < 5.0);
-            const isAnimMetric = (Math.abs(animHipsY) < 5.0);
+            let isAnimMetric = true;
+            
+            if (rawHipsPosTrack && rawHipsPosTrack.values && rawHipsPosTrack.values.length >= 3) {
+              const heightVal = isAnimZUp ? Math.abs(rawHipsPosTrack.values[2]) : Math.abs(rawHipsPosTrack.values[1]);
+              isAnimMetric = (heightVal < 30.0);
+              console.log(`[Clip Mapping] Hips translation height component value: ${heightVal.toFixed(4)} (isAnimZUp: ${isAnimZUp}) -> isAnimMetric: ${isAnimMetric}`);
+            }
             
             if (isModelMetric && !isAnimMetric) {
               hipsTranslationRatio = 0.01;
@@ -1770,7 +1981,7 @@
             } else {
               hipsTranslationRatio = 1.0;
             }
-            console.log(`[Clip Mapping] Model Hips Y: ${modelHips.position.y.toFixed(4)}, Anim Hips Y: ${animHipsY.toFixed(4)}, Ratio: ${hipsTranslationRatio}`);
+            console.log(`[Clip Mapping] Model Hips Y: ${modelHips.position.y.toFixed(4)}, Anim Hips Y (raw Y component): ${animHipsY !== null ? animHipsY.toFixed(4) : 'null'}, Ratio: ${hipsTranslationRatio}`);
           }
 
           const renamedTracks = [];
@@ -1788,6 +1999,29 @@
               if (prop === 'position' && (norm(boneName).includes('hips') || norm(boneName).includes('pelvis'))) {
                 for (let i = 0; i < clonedTrack.values.length; i++) {
                   clonedTrack.values[i] *= hipsTranslationRatio;
+                }
+              }
+
+              if (armatureRotation && (norm(boneName).includes('hips') || norm(boneName).includes('pelvis'))) {
+                if (prop === 'position') {
+                  const v = new THREE.Vector3();
+                  for (let i = 0; i < clonedTrack.values.length; i += 3) {
+                    v.set(clonedTrack.values[i], clonedTrack.values[i + 1], clonedTrack.values[i + 2]);
+                    v.applyQuaternion(armatureRotation);
+                    clonedTrack.values[i] = v.x;
+                    clonedTrack.values[i + 1] = v.y;
+                    clonedTrack.values[i + 2] = v.z;
+                  }
+                } else if (prop === 'quaternion') {
+                  const q = new THREE.Quaternion();
+                  for (let i = 0; i < clonedTrack.values.length; i += 4) {
+                    q.set(clonedTrack.values[i], clonedTrack.values[i + 1], clonedTrack.values[i + 2], clonedTrack.values[i + 3]);
+                    q.premultiply(armatureRotation);
+                    clonedTrack.values[i] = q.x;
+                    clonedTrack.values[i + 1] = q.y;
+                    clonedTrack.values[i + 2] = q.z;
+                    clonedTrack.values[i + 3] = q.w;
+                  }
                 }
               }
               
@@ -1886,6 +2120,53 @@
     };
 
     setupToggleBtn('btn-toggle-guns', 'showGuns', updatePositionsAndVisibility);
+
+    const btnOrtho = document.getElementById('btn-toggle-ortho');
+    btnOrtho.onclick = () => {
+      const isOrtho = camera === orthoCamera;
+      if (isOrtho) {
+        camera = persCamera;
+        btnOrtho.classList.remove('active');
+      } else {
+        camera = orthoCamera;
+        btnOrtho.classList.add('active');
+      }
+      
+      // Sync positions and target
+      camera.position.copy(controls.object.position);
+      controls.object = camera;
+      resize(); // Update ortho frustum
+      controls.update();
+    };
+
+    const setView = (view) => {
+      const dist = 3.0;
+      const targetY = 0.85;
+      
+      switch(view) {
+        case 'front': camera.position.set(0, targetY, dist); break;
+        case 'back':  camera.position.set(0, targetY, -dist); break;
+        case 'top':   camera.position.set(0, targetY + dist, 0.001); break; // slightly offset to keep up vector
+        case 'left':  camera.position.set(-dist, targetY, 0); break;
+        case 'right': camera.position.set(dist, targetY, 0); break;
+      }
+      
+      controls.target.set(0, targetY, 0);
+      controls.update();
+      if (camera === orthoCamera) resize(); 
+    };
+
+    document.getElementById('btn-view-front').onclick = () => setView('front');
+    document.getElementById('btn-view-back').onclick  = () => setView('back');
+    document.getElementById('btn-view-top').onclick   = () => setView('top');
+    document.getElementById('btn-view-left').onclick  = () => setView('left');
+    document.getElementById('btn-view-right').onclick = () => setView('right');
+
+    document.getElementById('btn-reset-tpose').onclick = () => {
+      animSelect.value = 'tpose';
+      state.animation.selected = 'tpose';
+      loadSelectedAnimation('tpose');
+    };
 
     const layoutCards = document.querySelectorAll('.model-card');
     layoutCards.forEach(card => {
@@ -2091,10 +2372,12 @@
 
     // ── Initial Setup ────────────────────────────────────────────────────────
     setupAllModels().then(() => {
-      loadSelectedAnimation('idle_mixamo.glb');
+      loadSelectedAnimation('tpose');
     });
 
   </script>
 
+</body>
+</html>
 </body>
 </html>
