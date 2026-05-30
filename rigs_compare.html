@@ -285,9 +285,9 @@
 
     function loadModel(filename) {
       return new Promise((resolve, reject) => {
-        let path = 'public/media/glb/';
+        let path = 'media/glb/';
         if (ANIM_FILES.includes(filename) && filename !== '(none)') {
-          path = 'public/media/glb-animations/';
+          path = 'media/glb-animations/';
         }
         
         const fullPath = path + filename;

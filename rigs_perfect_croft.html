@@ -1190,7 +1190,7 @@
       return new Promise((resolve, reject) => {
         // Try animations folder first, then glb folder
         const path = filename === 'tpose' ? '' : 
-                     (filename.endsWith('.glb') && !filename.includes('lara') && !filename.includes('y_bot') && !filename.includes('character') ? 'public/media/glb-animations/' : 'public/media/glb/');
+                     (filename.endsWith('.glb') && !filename.includes('lara') && !filename.includes('y_bot') && !filename.includes('character') ? 'media/glb-animations/' : 'media/glb/');
         
         if (filename === 'tpose') {
            resolve({ scene: null, animations: [] });
@@ -1202,7 +1202,7 @@
         }, undefined, (err) => {
           // Fallback to glb if not in animations
           if (path.includes('glb-animations')) {
-             gltfLoader.load('public/media/glb/' + filename + '?t=' + Date.now(), gltf => {
+             gltfLoader.load('media/glb/' + filename + '?t=' + Date.now(), gltf => {
                 resolve(gltf);
              }, undefined, reject);
           } else {
