@@ -1,71 +1,109 @@
 import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo, type ComponentType } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html, Line, Grid } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';
 import { type InventoryItem, type StorageSpace } from './inventoryData';
 import { SCENE_REGISTRY, ACTION_LABELS } from './previewRegistry';
-import type { SceneItemProps } from '@shared/types';
 
-function GlbScene({ glbPath }: { glbPath: string }) {
+import { glbLocalBBox } from '@features/scene/glbUtils';
+
+function GlbScene({ glbPath, onSize }: { glbPath: string; onSize?: (dims: { w: number, d: number, h: number }) => void; }) {
   const [scene, setScene] = useState<THREE.Group | null>(null);
   useEffect(() => {
     const draco = new DRACOLoader(); draco.setDecoderPath('/draco/');
     const loader = new GLTFLoader(); loader.setDRACOLoader(draco);
-    loader.load(glbPath, gltf => setScene(gltf.scene));
-  }, [glbPath]);
+    loader.load(glbPath, gltf => {
+      setScene(gltf.scene);
+      const box = glbLocalBBox(gltf.scene);
+      const s = box.getSize(new THREE.Vector3());
+      onSize?.({ w: s.x, d: s.z, h: s.y });
+    });
+  }, [glbPath, onSize]);
   if (!scene) return null; return <primitive object={scene} />;
 }
 
-function Dimensions({ dims }: { dims: { w: number, d: number, h: number } }) {
-  const max = Math.max(dims.w, dims.h, dims.d) || 1, s = 1.4 / max, hx = (dims.w / 2) * s, hy = (dims.h / 2) * s, hz = (dims.d / 2) * s, off = 0.08, LC = '#0058a3';
-  const pill: React.CSSProperties = { background: 'rgba(255, 255, 255, 0.4)', border: 'none', borderRadius: 4, padding: '1px 3px', color: LC, fontSize: 8, whiteSpace: 'nowrap', pointerEvents: 'none', backdropFilter: 'blur(2px)' };
-  const axes = useMemo(() => new THREE.AxesHelper(0.3), []);
+function Dimensions({ dims, s, grounded = false }: { dims: { w: number, d: number, h: number }; s: number; grounded?: boolean; }) {
+  const hx = (dims.w / 2) * s, hy = (dims.h / 2) * s, hz = (dims.d / 2) * s, off = 0.08, LC = '#0058a3';
+  const pill: React.CSSProperties = { background: 'rgba(255, 255, 255, 0.25)', padding: '1px 3px', color: LC, fontSize: 7, whiteSpace: 'nowrap', pointerEvents: 'none', backdropFilter: 'blur(2px)', borderRadius: 2 };
+  
+  const axes = useMemo(() => {
+    const h = new THREE.AxesHelper(0.5);
+    h.renderOrder = 999; (h.material as THREE.Material).depthTest = false;
+    return h;
+  }, []);
+
+  // For grounded items, model base is at 0. GroupY=0. 
+  // For others, model is centered vertically. GroupY=-hy.
+  const groupY = grounded ? 0 : -hy;
+
   return (
-    <group>
-      {/* 3 colored axes (X:Red, Y:Green, Z:Blue) */}
-      <primitive object={axes} position={[0, -hy, 0]} />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -hy, 0]}>
+    <group position={[0, groupY, 0]}>
+      <primitive object={axes} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.015, 0.02, 32]} />
-        <meshBasicMaterial color={LC} transparent opacity={0.4} />
+        <meshBasicMaterial color={LC} transparent opacity={0.3} />
       </mesh>
 
-      <Line points={[[hx + off, -hy, hz], [hx + off, hy, hz]]} color={LC} lineWidth={1} />
-      <Html position={[hx + off, 0, hz]} center distanceFactor={20}><div style={pill}>{dims.h} cm</div></Html>
-      <Line points={[[-hx, -hy, hz], [-hx, -hy - off, hz + off]]} color={LC} lineWidth={1} />
-      <Line points={[[ hx, -hy, hz], [ hx, -hy - off, hz + off]]} color={LC} lineWidth={1} />
-      <Line points={[[-hx, -hy - off, hz + off], [hx, -hy - off, hz + off]]} color={LC} lineWidth={1} />
-      <Html position={[0, -hy - off, hz + off]} center distanceFactor={20}><div style={pill}>{dims.w} cm</div></Html>
-      <Line points={[[hx, -hy, -hz], [hx + off, -hy, -hz - off]]} color={LC} lineWidth={1} />
-      <Line points={[[hx, -hy,  hz], [hx + off, -hy,  hz + off]]} color={LC} lineWidth={1} />
-      <Line points={[[hx + off, -hy, -hz - off], [hx + off, -hy, hz + off]]} color={LC} lineWidth={1} />
-      <Html position={[hx + off, -hy, 0]} center distanceFactor={20} rotation={[0, Math.PI / 2, 0]}><div style={pill}>{dims.d} cm</div></Html>
+      {/* Height */}
+      <Line points={[[hx + off, 0, hz], [hx + off, hy * 2, hz]]} color={LC} lineWidth={1} />
+      <Html position={[hx + off, hy, hz]} center distanceFactor={2}><div style={pill}>{dims.h} cm</div></Html>
+      
+      {/* Width */}
+      <Line points={[[-hx, 0, hz], [-hx, -off, hz + off]]} color={LC} lineWidth={1} />
+      <Line points={[[ hx, 0, hz], [ hx, -off, hz + off]]} color={LC} lineWidth={1} />
+      <Line points={[[-hx, -off, hz + off], [hx, -off, hz + off]]} color={LC} lineWidth={1} />
+      <Html position={[0, -off, hz + off]} center distanceFactor={2}><div style={pill}>{dims.w} cm</div></Html>
+      
+      {/* Depth */}
+      <Line points={[[hx, 0, -hz], [hx + off, 0, -hz - off]]} color={LC} lineWidth={1} />
+      <Line points={[[hx, 0,  hz], [hx + off, 0,  hz + off]]} color={LC} lineWidth={1} />
+      <Line points={[[hx + off, 0, -hz - off], [hx + off, 0, hz + off]]} color={LC} lineWidth={1} />
+      <Html position={[hx + off, 0, 0]} center distanceFactor={2} rotation={[0, Math.PI / 2, 0]}><div style={pill}>{dims.d} cm</div></Html>
     </group>
   );
 }
 
 function FitCamera() { const { camera } = useThree(); useLayoutEffect(() => { camera.lookAt(0, 0, 0); }, [camera]); return null; }
 
-function CenteredItem({ Component, actionState, item, grounded = false }: { Component: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; }) {
-  const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!);
+function CenteredItem({ Component, actionState, item, grounded = false, showDims = false, glbPath }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; showDims?: boolean; glbPath?: string; }) {
+  const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!), [scale, setScale] = useState(1);
   const fit = useCallback(() => {
     if (!outerRef.current || !innerRef.current) return;
     outerRef.current.scale.set(1, 1, 1); outerRef.current.position.set(0, 0, 0); outerRef.current.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(innerRef.current); if (box.isEmpty()) return;
+    
+    // Temporarily hide helpers/GroundPoint to get true model dimensions
+    const hidden: THREE.Object3D[] = [];
+    innerRef.current.traverse(o => { 
+      if (o.visible && (o.type.includes('Helper') || o.name === 'GroundPoint')) { 
+        o.visible = false; hidden.push(o); 
+      } 
+    });
+    
+    const box = glbLocalBBox(innerRef.current);
+    hidden.forEach(o => o.visible = true);
+
+    if (box.isEmpty()) return;
     const center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()), max = Math.max(size.x, size.y, size.z), s = 1.4 / max;
-    outerRef.current.scale.setScalar(s);
+    setScale(s); outerRef.current.scale.setScalar(s);
     if (grounded) outerRef.current.position.set(-center.x * s, -box.min.y * s, -center.z * s);
     else outerRef.current.position.set(-center.x * s, -center.y * s, -center.z * s);
   }, [grounded]);
-  useEffect(() => { fit(); }, [fit, item?.id]);
-  return <group ref={outerRef}><group ref={innerRef}><Component item={item ?? {} as any} actionState={actionState} onSize={fit} /></group></group>;
+  useEffect(() => { fit(); }, [fit, item?.id, glbPath]);
+  return (
+    <group ref={outerRef}>
+      <group ref={innerRef}>
+        {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} />}
+      </group>
+      {showDims && item?.dims && <Dimensions dims={item.dims} s={scale} grounded={grounded} />}
+    </group>
+  );
 }
 
-function RegistryScene({ item, actionState }: { item: InventoryItem; actionState: Record<string, any>; }) {
-  const Component = SCENE_REGISTRY[item.id]; if (!Component) return null;
-  const isWalker = item.category === 'walkers';
-  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={isWalker} />;
+function RegistryScene({ item, actionState, showDims }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; }) {
+  const Component = SCENE_REGISTRY[item.id], isWalker = item.category === 'walkers';
+  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={isWalker} showDims={showDims} glbPath={item.glbPath} />;
 }
 
 function PhotoGallery({ photos }: { photos: string[] }) {
@@ -114,8 +152,7 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
               <FitCamera />
               <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={false} minDistance={0.3} maxDistance={50} target={[0, 0, 0]} onStart={() => setAutoRotate(false)} />
               <Grid infiniteGrid fadeDistance={15} cellColor="#999999" sectionColor="#666666" cellSize={0.2} sectionSize={1} position={[0, -0.01, 0]} />
-              <Suspense fallback={null}>{hasRegistry ? <RegistryScene item={item as InventoryItem} actionState={actionStates} /> : <GlbScene glbPath={glbPath!} />}</Suspense>
-              {showDims && item.dims && <Dimensions dims={item.dims} />}
+              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} /></Suspense>
             </Canvas>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} /> : null}
           <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -143,8 +180,8 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
             <div style={{ flex: 1 }}><div style={{ fontWeight: 'bold', fontSize: 12 }}>{item.name}</div><div style={{ opacity: 0.8 }}>{item.dims.w}×{item.dims.d}×{item.dims.h} cm</div></div>
             {item && 'url' in item && (item as InventoryItem).url && <a href={(item as InventoryItem).url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} title={(item as InventoryItem).url} style={{ marginLeft: 8, color: '#7ab8ff', textDecoration: 'none', pointerEvents: 'auto' }}>🔗</a>}
           </div>
-          </>
-          )}
-          </div>
-          );
-          }
+        </>
+      )}
+    </div>
+  );
+}

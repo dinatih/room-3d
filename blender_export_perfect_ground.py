@@ -40,6 +40,13 @@ def main():
         log("Error: No armature found")
         return
 
+    # 1.5) Scale to cm (Mixamo meters to project cm)
+    armature.scale = Vector((100, 100, 100))
+    bpy.ops.object.select_all(action="DESELECT")
+    armature.select_set(True)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    log("Scaled model 100x to project units (cm).")
+
     # 1) Find Hips bone to determine horizontal offset
     # In Lara Mixamo, it's 'mixamorig:Hips'
     hips = armature.data.bones.get('mixamorig:Hips')

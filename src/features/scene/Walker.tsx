@@ -9,6 +9,8 @@ import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
 import { LAYER_WALKER_DETAIL } from '@config';
 
+import { type SceneItemProps } from '@shared/types';
+
 // ── Constants & Config ───────────────────────────────────────────────────────
 
 const WALK_PERIOD = 0.7;
@@ -189,7 +191,7 @@ function SkeletonView({ root, visible }: { root: THREE.Object3D, visible: boolea
 
 function GroundPoint() {
   return (
-    <group position={[0, 0.05, 0]}>
+    <group position={[0, 0.05, 0]} name="GroundPoint">
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[4, 5, 32]} />
         <meshBasicMaterial color="#0058a3" transparent opacity={0.6} />
@@ -357,7 +359,7 @@ function InternalWalkerXBot({ showSkeleton = false, isPreview = false, walkerAni
 
 export function WalkerXBot(props: WalkerProps) { return <Suspense fallback={null}><InternalWalkerXBot {...props} /></Suspense>; }
 
-function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walkerAnim, isPaused }: WalkerProps) {
+function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walkerAnim, isPaused, onSize }: WalkerProps & { onSize?: (dims: { w: number, d: number, h: number }) => void }) {
   const { scene } = useGLTFClone('media/glb/lara_perfect.glb'), animPath = useMemo(() => (!walkerAnim || walkerAnim === 'tpose') ? null : `media/glb-animations/${walkerAnim}`, [walkerAnim]), animGltf = useGLTF(animPath || MIXAMO_WALK_GLB);
   const groupRef = useRef<THREE.Group>(null!), mixerRef = useRef<THREE.AnimationMixer | null>(null), actionRef = useRef<THREE.AnimationAction | null>(null), activeRef = useRef(false);
   const { invalidate } = useThree();
@@ -374,7 +376,12 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
         if (isPreview && !isPaused) { action.play(); activeRef.current = true; }
       }
     }
-  }, [scene, animGltf, isPreview, walkerAnim]);
+    if (onSize) {
+      scene.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(scene), s = box.getSize(new THREE.Vector3());
+      onSize({ w: s.x, d: s.z, h: s.y });
+    }
+  }, [scene, animGltf, isPreview, walkerAnim, onSize]);
   useFrame((_, delta) => {
     if (!groupRef.current) return;
     if (isPreview) { groupRef.current.position.set(0, 0, 0); groupRef.current.visible = true; }
@@ -383,7 +390,7 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
   return <group ref={groupRef}><primitive object={scene} /><GroundPoint /><SkeletonView root={scene} visible={showSkeleton} /></group>;
 }
 
-export function WalkerPerfect(props: WalkerProps) { return <Suspense fallback={null}><InternalWalkerPerfect {...props} /></Suspense>; }
+export function WalkerPerfect(props: WalkerProps & { onSize?: (dims: { w: number, d: number, h: number }) => void }) { return <Suspense fallback={null}><InternalWalkerPerfect {...props} /></Suspense>; }
 
 useGLTF.preload('media/glb/lara_perfect.glb');
 useGLTF.preload('media/glb/lara_croft__2026_rigged.glb');
