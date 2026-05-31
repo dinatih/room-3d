@@ -1,8 +1,7 @@
 """Export Lara Mixamo with Perfect Ground Point Alignment.
 
-Takes the Lara Mixamo model, surgically aligns the Hips bone horizontally (X/Z) 
-above the origin, sits the lowest point of the mesh on the ground (Y=0), 
-and exports a production-ready GLB.
+Surgically aligns model horizontally (X/Z) above origin and sits it on ground (Y=0).
+Scales 100x for project cm units.
 """
 import math
 import sys
@@ -40,19 +39,26 @@ def main():
         log("Error: No armature found")
         return
 
-    # 1.5) Scale to cm (Mixamo meters to project cm)
+    # 1) Scale to cm (Mixamo meters to project cm)
+    # We apply scale but AVOID applying rotation to prevent bone corruption
+    select_only(armature)
     armature.scale = Vector((100, 100, 100))
-    bpy.ops.object.select_all(action="DESELECT")
-    armature.select_set(True)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     log("Scaled model 100x to project units (cm).")
 
-    # 1) Find Hips bone to determine horizontal offset
-    # In Lara Mixamo, it's 'mixamorig:Hips'
+    # 2) Find horizontal pivot (Hips)
     hips = armature.data.bones.get('mixamorig:Hips')
-    if not hips:
-        log("Warning: 'mixamorig:Hips' not found, falling back to bounding box center")
-        # Calc geometric center of all meshes
+    offset_x = 0.0
+    offset_z = 0.0
+    if hips:
+        # Get world position of hips head
+        # We need to account for armature's world matrix
+        world_matrix = armature.matrix_world
+        hips_world_head = world_matrix @ hips.head_local
+        offset_x = hips_world_head.x
+        offset_z = hips_world_head.z
+    else:
+        # Fallback to bbox center
         meshes = [o for o in objs if o.type == 'MESH']
         center = Vector((0,0,0))
         for m in meshes:
@@ -60,61 +66,50 @@ def main():
         center /= len(meshes)
         offset_x = center.x
         offset_z = center.z
-    else:
-        # We want the head of the hips bone to be at (0,0) horizontally
-        hips_world_head = armature.matrix_world @ hips.head_local
-        offset_x = hips_world_head.x
-        offset_z = hips_world_head.z
 
-    log(f"Detected horizontal offset: X={offset_x:.4f}, Z={offset_z:.4f}")
-
-    # 2) Sit on ground (Y=0)
-    # Find global min Y across all meshes
+    # 3) Find vertical base (lowest point)
     min_y = 9999.0
     meshes = [o for o in objs if o.type == 'MESH']
     for m in meshes:
+        # Update mesh world matrix just in case
+        m.update_tag()
+        world_matrix = m.matrix_world
         for corner in m.bound_box:
-            world_corner = m.matrix_world @ Vector(corner)
+            world_corner = world_matrix @ Vector(corner)
             if world_corner.y < min_y:
                 min_y = world_corner.y
-    
-    log(f"Detected ground offset: Y={min_y:.4f}")
 
-    # 3) Apply global correction to everything
-    # We move everything so that:
-    # NewX = OldX - offset_x
-    # NewZ = OldZ - offset_z
-    # NewY = OldY - min_y
-    
+    log(f"Detected offsets: X={offset_x:.4f}, Y={min_y:.4f}, Z={offset_z:.4f}")
+
+    # 4) Apply Translation
+    # We shift the armature root. Meshes follow if parented.
+    # New horizontal origin will be exactly under the Hips.
+    # New vertical origin will be at the floor.
     correction = Vector((-offset_x, -min_y, -offset_z))
-    
-    # We apply this to the armature object specifically if it's the root
-    # But usually, it's safer to just shift the armature and the meshes follow if parented
     armature.location += correction
     
-    # Check for unparented meshes (rare but possible)
+    # Also move any unparented meshes
     for o in objs:
         if o.type == 'MESH' and o.parent != armature:
              o.location += correction
 
-    # 4) Final Freeze / Apply Transforms
-    # We want the origin of the exported GLB to be exactly (0,0,0)
-    # where (0,0,0) is Ground Point between feet.
+    # 5) Apply Location (Fix current location as the new (0,0,0))
     bpy.ops.object.select_all(action="DESELECT")
     for o in objs:
         o.select_set(True)
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    bpy.ops.object.transform_apply(location=True, rotation=False, scale=False)
     
-    log("Transforms applied. Model is now Ground-Point centered at (0,0,0).")
+    log("Transforms applied. Model is now Ground-Point centered.")
 
-    # 5) Export
+    # 6) Export
     log(f"Exporting to: {OUTPUT_GLB}")
+    # Force Y-UP to ensure it matches Three.js standard
     bpy.ops.export_scene.gltf(
         filepath=OUTPUT_GLB,
         export_format="GLB",
         use_selection=True,
         export_apply=True,
-        export_animations=True, # Keep animations for testing
+        export_animations=True,
         export_yup=True,
         export_def_bones=False,
         export_rest_position_armature=True,

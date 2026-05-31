@@ -11,15 +11,27 @@ export function WoodenFencePanel({ w, h, d }: { w: number, h: number, d: number 
   
   const clone = useMemo(() => {
     const c = scene.clone(true);
-    // Le modèle original semble être en mètres et orienté différemment.
-    // On calcule le scale pour matcher les dimensions cibles (w, h, d).
+    c.position.set(0, 0, 0); c.scale.set(1, 1, 1); c.rotation.set(0, 0, 0);
+    c.updateMatrixWorld(true);
+    
     const box = new THREE.Box3().setFromObject(c);
     const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+
+    // On centre le modèle localement
+    c.position.x = -center.x;
+    c.position.z = -center.z;
+    c.position.y = -box.min.y;
     
-    // Scale pour matcher w (X), h (Y), d (Z)
-    // On suppose que le panneau est orienté vers l'avant (Z) ou le côté (X)
-    // D'après wallData: w=10 (épaisseur), h=190 (hauteur), d=90 (largeur le long de Z)
-    c.scale.set(w / size.x, h / size.y, d / size.z);
+    // Si le modèle est plus large en X qu'en Z, on le pivote de 90°
+    // car dans le projet, la largeur du panneau est portée par l'axe Z (profondeur).
+    if (size.x > size.z) {
+      c.rotation.y = Math.PI / 2;
+      // Après rotation 90°, les dimensions X et Z sont inversées pour le scale
+      c.scale.set(w / size.z, h / size.y, d / size.x);
+    } else {
+      c.scale.set(w / size.x, h / size.y, d / size.z);
+    }
     
     c.traverse(o => {
       if ((o as THREE.Mesh).isMesh) {
