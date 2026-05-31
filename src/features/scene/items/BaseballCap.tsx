@@ -1,11 +1,44 @@
+/**
+ * BaseballCap.tsx — Casquette baseball (GLB media/glb/baseball_cap.glb).
+ * Coordonnées locales : centré par bbox, Y=0 = sol, largeur normalisée 20cm, rouge.
+ */
+import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { GlbBridge } from '@features/scene/GlbBridge';
+import { useGLTFClone } from '@features/scene/useGLTFClone';
+import * as THREE from 'three';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/glb/baseball_cap.glb';
+const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.65 });
 
-export function BaseballCap(props: SceneItemProps) {
-  return <GlbBridge glbPath={GLB} {...props} />;
+export function BaseballCap({ onSize }: SceneItemProps) {
+  const { scene } = useGLTFClone('media/glb/baseball_cap.glb');
+
+  useLayoutEffect(() => {
+    removeGlbLines(scene);
+    scene.scale.set(1, 1, 1);
+
+    const rawSize = glbLocalBBox(scene).getSize(new THREE.Vector3());
+    scene.scale.setScalar(20 / rawSize.x);
+
+    scene.traverse(obj => {
+      if ((obj as THREE.Mesh).isMesh) {
+        (obj as THREE.Mesh).material = redMat;
+      }
+    });
+
+    mergeGlbByMaterial(scene);
+    const box = glbLocalBBox(scene);
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+
+    onSize(box.getSize(new THREE.Vector3()));
+  }, [scene]);
+
+  return <primitive object={scene} />;
 }
 
-useGLTF.preload(GLB);
+useGLTF.preload('media/glb/baseball_cap.glb');

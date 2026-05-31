@@ -15,7 +15,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/glb/LAGAN_anim.glb';
+const GLB = 'media/glb/ikea-official/LAGAN_anim.glb';
 
 export function Fridge({ actionState, onSize }: SceneItemProps) {
   const { scene, animations } = useGLTFClone(GLB);

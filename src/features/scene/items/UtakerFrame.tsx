@@ -11,8 +11,8 @@ import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 
-const BAS_GLB  = 'media/glb/UTÅKER lit empilable 80x200 pin (bas).glb';
-const HAUT_GLB = 'media/glb/UTÅKER lit empilable 80x200 pin (haut).glb';
+const BAS_GLB  = 'media/glb/ikea-official/UTÅKER lit empilable 80x200 pin (bas).glb';
+const HAUT_GLB = 'media/glb/ikea-official/UTÅKER lit empilable 80x200 pin (haut).glb';
 
 const redMat = new THREE.MeshStandardMaterial({ color: 0xcc2222, roughness: 0.75 });
 

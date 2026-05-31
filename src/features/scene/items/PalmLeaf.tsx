@@ -1,11 +1,36 @@
+/**
+ * PalmLeaf.tsx — Plante artificielle feuille de palmier (GLB media/glb/Palm_Leaf1.glb).
+ * Coordonnées locales : X/Z centrés, Y=0 = sol.
+ */
+import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { GlbBridge } from '@features/scene/GlbBridge';
+import { useGLTFClone } from '@features/scene/useGLTFClone';
+import * as THREE from 'three';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/glb/Palm_Leaf1.glb';
+const TARGET_H = 80; // cm — ajuster si trop grand/petit
 
-export function PalmLeaf(props: SceneItemProps) {
-  return <GlbBridge glbPath={GLB} {...props} />;
+export function PalmLeaf({ onSize }: SceneItemProps) {
+  const { scene } = useGLTFClone('media/glb/Palm_Leaf1.glb');
+
+  useLayoutEffect(() => {
+    removeGlbLines(scene);
+    scene.scale.set(1, 1, 1);
+    const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
+    const s = TARGET_H / Math.max(raw.x, raw.y, raw.z);
+    scene.scale.setScalar(s);
+    mergeGlbByMaterial(scene);
+    const box = glbLocalBBox(scene);
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+    onSize(box.getSize(new THREE.Vector3()));
+  }, [scene]);
+
+  return <primitive object={scene} />;
 }
 
-useGLTF.preload(GLB);
+useGLTF.preload('media/glb/Palm_Leaf1.glb');

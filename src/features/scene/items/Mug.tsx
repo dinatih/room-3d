@@ -1,11 +1,30 @@
+/**
+ * Mug.tsx — Tasse IKEA KEJSERLIG (GLB). Coordonnées locales : centré XZ, Y=0 = base.
+ */
+import { useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { GlbBridge } from '@features/scene/GlbBridge';
+import { useGLTFClone } from '@features/scene/useGLTFClone';
+import * as THREE from 'three';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/glb/KEJSERLIG tasse.glb';
+export function Mug({ onSize }: SceneItemProps) {
+  const { scene } = useGLTFClone('media/glb/ikea-official/KEJSERLIG tasse.glb');
 
-export function Mug(props: SceneItemProps) {
-  return <GlbBridge glbPath={GLB} {...props} />;
+  useLayoutEffect(() => {
+    removeGlbLines(scene);
+    scene.scale.setScalar(100);
+    mergeGlbByMaterial(scene);
+    const box = glbLocalBBox(scene);
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
+    onSize(box.getSize(new THREE.Vector3()));
+  }, [scene]);
+
+  return <primitive object={scene} />;
 }
 
-useGLTF.preload(GLB);
+useGLTF.preload('media/glb/ikea-official/KEJSERLIG tasse.glb');

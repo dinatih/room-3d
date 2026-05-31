@@ -20,17 +20,20 @@ function gardenX0(z: number): number {
   return Math.ceil((-110 - 110 * (z + 5 + 190) / 70) / 10) * 10;
 }
 
+const GLB = 'media/glb/ikea-official/ALTAPPEN Caillebotis, gris clair, 0.81 m².glb';
+
 // ── Tuile unique (inventaire) ─────────────────────────────────────────────────
 
 export function AltappenRug({ onSize }: SceneItemProps) {
-  const { scene } = useGLTF('media/glb/ikea_Altappen_single.glb');
+  const { scene } = useGLTF(GLB);
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
     const rawBox = glbLocalBBox(scene);
     const tileW = rawBox.max.x - rawBox.min.x;
-    const scl = TILE_SIZE / tileW;
-    scene.scale.setScalar(scl);
+    // Modèle IKEA en mètres (~0.3m), cible 30cm
+    const scl = 30 / (tileW * 100); 
+    scene.scale.setScalar(scl * 100);
     mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
@@ -47,7 +50,7 @@ export function AltappenRug({ onSize }: SceneItemProps) {
 // ── Champ de dalles (scène) ───────────────────────────────────────────────────
 
 export function AltappenRugField() {
-  const { scene } = useGLTF('media/glb/ikea_Altappen_single.glb');
+  const { scene } = useGLTF(GLB);
 
   const { geo, mat } = useMemo(() => {
     let mesh: THREE.Mesh | null = null;
@@ -56,15 +59,15 @@ export function AltappenRugField() {
 
     const rawBox = new THREE.Box3().setFromObject(scene);
     const tileW = rawBox.max.x - rawBox.min.x;
-    const scl = TILE_SIZE / tileW;
+    const scl = TILE_SIZE / (tileW * 100);
     const cx = (rawBox.min.x + rawBox.max.x) / 2;
     const cz = (rawBox.min.z + rawBox.max.z) / 2;
     const cy = rawBox.min.y;
 
     const clonedGeo = (mesh as THREE.Mesh).geometry.clone();
     const bake = new THREE.Matrix4()
-      .makeTranslation(-cx * scl, -cy * scl, -cz * scl)
-      .multiply(new THREE.Matrix4().makeScale(scl, scl, scl));
+      .makeTranslation(-cx * scl * 100, -cy * scl * 100, -cz * scl * 100)
+      .multiply(new THREE.Matrix4().makeScale(scl * 100, scl * 100, scl * 100));
     clonedGeo.applyMatrix4(bake);
     clonedGeo.computeBoundingSphere();
 
@@ -99,4 +102,4 @@ export function AltappenRugField() {
   );
 }
 
-useGLTF.preload('media/glb/ikea_Altappen_single.glb');
+useGLTF.preload(GLB);
