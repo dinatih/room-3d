@@ -102,8 +102,8 @@ function CenteredItem({ Component, actionState, item, grounded = false, showDims
 }
 
 function RegistryScene({ item, actionState, showDims }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; }) {
-  const Component = SCENE_REGISTRY[item.id], isWalker = item.category === 'walkers';
-  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={isWalker} showDims={showDims} glbPath={item.glbPath} />;
+  const Component = SCENE_REGISTRY[item.id];
+  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} showDims={showDims} glbPath={item.glbPath} />;
 }
 
 function PhotoGallery({ photos }: { photos: string[] }) {
