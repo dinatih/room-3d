@@ -560,7 +560,7 @@ function makeParquetTex(): THREE.CanvasTexture {
   const CW = 256, CH = 1024, PW = CW / 2;
   const canvas = document.createElement('canvas');
   canvas.width = CW; canvas.height = CH;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
 
   // seeded PRNG for stable look across reloads
   let seed = 0xC0FFEE;
@@ -868,7 +868,7 @@ function Tile() {
     // Carrelage marron placard couloir
     const brownCanvas = document.createElement('canvas');
     brownCanvas.width = 128; brownCanvas.height = 128;
-    const ctx = brownCanvas.getContext('2d')!;
+    const ctx = brownCanvas.getContext('2d', { willReadFrequently: true })!;
     ctx.fillStyle = '#7a5030'; ctx.fillRect(0, 0, 128, 128);
     ctx.fillStyle = '#4a3020';
     ctx.fillRect(0, 0, 128, 3); ctx.fillRect(0, 125, 128, 3);

@@ -1,20 +1,22 @@
 /**
- * useGLTFClone — useGLTF + clone(true) par instance.
+ * useGLTFClone — useGLTF + SkeletonUtils.clone() par instance.
  *
- * useGLTF retourne le même Object3D partagé entre tous les consommateurs
- * d'un même GLB. Quand deux canvases (scène principale + inventaire) rendent
- * le même composant simultanément, l'objet est "volé" de l'un vers l'autre
- * (un Object3D ne peut avoir qu'un seul parent en Three.js).
+ * useGLTF retourne le même Object3D partagé entre tous les consommateurs.
+ * Pour les modèles riggés (SkinnedMesh), un .clone() standard ne suffit pas :
+ * les os sont clonés mais le mesh reste lié aux os d'origine.
  *
- * Ce hook crée un clone indépendant par instance de composant, éliminant
- * le conflit sans modifier le cache useGLTF.
+ * SkeletonUtils.clone() s'assure que les SkinnedMesh du clone pointent vers
+ * les os clonés correspondants.
  */
 import { useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import * as THREE from 'three';
 
 export function useGLTFClone(path: string): { scene: THREE.Group; animations: THREE.AnimationClip[] } {
   const gltf = useGLTF(path);
-  const scene = useMemo(() => gltf.scene.clone(true), [gltf.scene]);
+  const scene = useMemo(() => {
+    return SkeletonUtils.clone(gltf.scene) as THREE.Group;
+  }, [gltf.scene]);
   return { scene, animations: gltf.animations };
 }

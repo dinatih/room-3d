@@ -44,7 +44,6 @@ function drawPlaneIcon(
 
 function drawMinimap(
   canvas: HTMLCanvasElement,
-  camX: number, camZ: number, yaw: number,
   smallW: number,
 ) {
   const ctx = canvas.getContext('2d');
@@ -61,56 +60,71 @@ function drawMinimap(
   ctx.fillRect(0, 0, W, canvas.height);
 
   // ── Pistes d'atterrissage (seulement si activées) ─────────────────────────
-  if (!cameraState.landingStripsVisible) { /* skip */ }
-  else for (const strip of LANDING_STRIPS) {
-    const sw = strip.width  * S;
-    const sl = strip.length * S;
-    ctx.save();
-    ctx.translate(tx(strip.cx), tz(strip.cz));
-    // angleY=0 → longueur le long de Z monde = Y canvas → pas de rotation supplémentaire.
-    // angleY=π/2 → longueur le long de X monde = X canvas → rotation -π/2.
-    ctx.rotate(-strip.angleY);
-    // Base sombre
-    ctx.fillStyle = 'rgba(40,40,40,0.80)';
-    ctx.fillRect(-sw / 2, -sl / 2, sw, sl);
-    // Ligne centrale jaune
-    ctx.fillStyle = 'rgba(220,210,0,0.9)';
-    ctx.fillRect(-1.2 * S, -sl / 2 * 0.85, 2.4 * S, sl * 0.85);
-    // Seuils blancs
-    ctx.fillStyle = 'rgba(255,255,255,0.75)';
-    for (const side of [-1, 1] as const) {
-      for (const xOff of [-1.5, -0.5, 0.5, 1.5]) {
-        const bw = sw * 0.14, bh = sl * 0.055;
-        ctx.fillRect(
-          xOff * sw * 0.22 - bw / 2,
-          side * sl * 0.44 - bh / 2,
-          bw, bh,
-        );
+  // ... (rest of landing strips logic)
+  if (cameraState.landingStripsVisible) {
+    for (const strip of LANDING_STRIPS) {
+      const sw = strip.width  * S;
+      const sl = strip.length * S;
+      ctx.save();
+      ctx.translate(tx(strip.cx), tz(strip.cz));
+      ctx.rotate(-strip.angleY);
+      ctx.fillStyle = 'rgba(40,40,40,0.80)';
+      ctx.fillRect(-sw / 2, -sl / 2, sw, sl);
+      ctx.fillStyle = 'rgba(220,210,0,0.9)';
+      ctx.fillRect(-1.2 * S, -sl / 2 * 0.85, 2.4 * S, sl * 0.85);
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      for (const side of [-1, 1] as const) {
+        for (const xOff of [-1.5, -0.5, 0.5, 1.5]) {
+          const bw = sw * 0.14, bh = sl * 0.055;
+          ctx.fillRect(xOff * sw * 0.22 - bw / 2, side * sl * 0.44 - bh / 2, bw, bh);
+        }
       }
+      ctx.restore();
     }
-    ctx.restore();
   }
 
-  // Plan partagé (même code que FloorPlan 3D)
+  // Plan partagé
   drawFloorPlan(ctx, W, canvas.height);
 
-  // ── Walker icon ─────────────────────────────────────────────────────────────
-  ctx.save();
-  ctx.translate(tx(camX), tz(camZ));
-  ctx.rotate(-yaw);
-  const V    = 50 * Math.PI / 180;
-  const hFov = 2 * Math.atan(Math.tan(V / 2) * (window.innerWidth / window.innerHeight));
-  const fovR = 120 * S;
-  ctx.beginPath(); ctx.moveTo(0, 0);
-  ctx.arc(0, 0, fovR, Math.PI / 2 - hFov / 2, Math.PI / 2 + hFov / 2);
-  ctx.closePath();
-  ctx.fillStyle   = 'rgba(255,221,0,0.18)'; ctx.fill();
-  ctx.strokeStyle = 'rgba(255,221,0,0.55)'; ctx.lineWidth = 0.7 * sc; ctx.stroke();
-  const R = 5 * sc, BW = 8 * sc, BH = 4 * sc;
-  ctx.fillStyle = '#ff4444'; ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 0.8 * sc;
-  ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.rect(-BW / 2, R, BW, BH); ctx.fill(); ctx.stroke();
-  ctx.restore();
+  // ── Walkers icons ──────────────────────────────────────────────────────────
+  const walkers = [
+    { x: cameraState.walker0X, z: cameraState.walker0Z, yaw: cameraState.walker0Yaw, color: '#0066ff' }, // Ref: Blue
+    { x: cameraState.walker1X, z: cameraState.walker1Z, yaw: cameraState.walker1Yaw, color: '#ff00ff' }, // Red: Magenta
+    { x: cameraState.walker2X, z: cameraState.walker2Z, yaw: cameraState.walker2Yaw, color: '#00ffff' }, // X-Bot: Cyan
+  ];
+
+  walkers.forEach((w, idx) => {
+    const isActive = cameraState.activeWalkerIdx === idx;
+    ctx.save();
+    ctx.translate(tx(w.x), tz(w.z));
+    ctx.rotate(-w.yaw);
+
+    if (isActive) {
+      // FOV arc only for active
+      const V    = 50 * Math.PI / 180;
+      const hFov = 2 * Math.atan(Math.tan(V / 2) * (window.innerWidth / window.innerHeight));
+      const fovR = 120 * S;
+      ctx.beginPath(); ctx.moveTo(0, 0);
+      ctx.arc(0, 0, fovR, Math.PI / 2 - hFov / 2, Math.PI / 2 + hFov / 2);
+      ctx.closePath();
+      ctx.fillStyle   = 'rgba(255,221,0,0.15)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,221,0,0.40)'; ctx.lineWidth = 0.5 * sc; ctx.stroke();
+    }
+
+    const R = (isActive ? 5 : 4) * sc;
+    const BW = 8 * sc, BH = 4 * sc;
+    
+    ctx.fillStyle   = w.color;
+    ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+    ctx.lineWidth   = 0.8 * sc;
+    
+    // Body circle
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // Shoulder bar (indicates direction)
+    ctx.beginPath(); ctx.rect(-BW / 2, R, BW, BH); ctx.fill(); ctx.stroke();
+    
+    ctx.restore();
+  });
 
   // ── Avion joueur ────────────────────────────────────────────────────────────
   if (cameraState.mode === 'plane') {
@@ -151,7 +165,7 @@ export function Minimap() {
       if (!canvas) return;
       canvas.width  = canvasW;
       canvas.height = canvasH;
-      drawMinimap(canvas, cameraState.walkerX, cameraState.walkerZ, cameraState.walkYaw, smallW);
+      drawMinimap(canvas, smallW);
     };
     cameraState.onUpdate();
     return () => { cameraState.onUpdate = prev; };

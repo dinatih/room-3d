@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, type ComponentType } from 'react';
+import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo, type ComponentType } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, Line, Grid } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -20,19 +20,27 @@ function GlbScene({ glbPath }: { glbPath: string }) {
 
 function Dimensions({ dims }: { dims: { w: number, d: number, h: number } }) {
   const max = Math.max(dims.w, dims.h, dims.d) || 1, s = 1.4 / max, hx = (dims.w / 2) * s, hy = (dims.h / 2) * s, hz = (dims.d / 2) * s, off = 0.08, LC = '#0058a3';
-  const pill: React.CSSProperties = { background: '#fff', border: `1px solid ${LC}`, borderRadius: 12, padding: '2px 8px', color: LC, fontSize: 10, fontWeight: 'bold', whiteSpace: 'nowrap', pointerEvents: 'none' };
+  const pill: React.CSSProperties = { background: 'rgba(255, 255, 255, 0.3)', border: `1px solid ${LC}`, borderRadius: 4, padding: '1px 3px', color: LC, fontSize: 8, whiteSpace: 'nowrap', pointerEvents: 'none', backdropFilter: 'blur(2px)' };
+  const axes = useMemo(() => new THREE.AxesHelper(0.25), []);
   return (
     <group>
+      {/* Ground Point (Origin) with 3 colored axes */}
+      <primitive object={axes} position={[0, -hy, 0]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -hy, 0]}>
+        <ringGeometry args={[0.02, 0.025, 32]} />
+        <meshBasicMaterial color={LC} transparent opacity={0.4} />
+      </mesh>
+
       <Line points={[[hx + off, -hy, hz], [hx + off, hy, hz]]} color={LC} lineWidth={1} />
-      <Html position={[hx + off, 0, hz]} center distanceFactor={10}><div style={pill}>{dims.h} cm</div></Html>
+      <Html position={[hx + off, 0, hz]} center distanceFactor={20}><div style={pill}>{dims.h} cm</div></Html>
       <Line points={[[-hx, -hy, hz], [-hx, -hy - off, hz + off]]} color={LC} lineWidth={1} />
       <Line points={[[ hx, -hy, hz], [ hx, -hy - off, hz + off]]} color={LC} lineWidth={1} />
       <Line points={[[-hx, -hy - off, hz + off], [hx, -hy - off, hz + off]]} color={LC} lineWidth={1} />
-      <Html position={[0, -hy - off, hz + off]} center distanceFactor={10}><div style={pill}>{dims.w} cm</div></Html>
+      <Html position={[0, -hy - off, hz + off]} center distanceFactor={20}><div style={pill}>{dims.w} cm</div></Html>
       <Line points={[[hx, -hy, -hz], [hx + off, -hy, -hz - off]]} color={LC} lineWidth={1} />
       <Line points={[[hx, -hy,  hz], [hx + off, -hy,  hz + off]]} color={LC} lineWidth={1} />
       <Line points={[[hx + off, -hy, -hz - off], [hx + off, -hy, hz + off]]} color={LC} lineWidth={1} />
-      <Html position={[hx + off, -hy, 0]} center distanceFactor={10} rotation={[0, Math.PI / 2, 0]}><div style={pill}>{dims.d} cm</div></Html>
+      <Html position={[hx + off, -hy, 0]} center distanceFactor={20} rotation={[0, Math.PI / 2, 0]}><div style={pill}>{dims.d} cm</div></Html>
     </group>
   );
 }

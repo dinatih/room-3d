@@ -369,6 +369,7 @@ export interface LayerState {
   collisions:   boolean;
   grass:        boolean;
   surface:      boolean;
+  ceiling:      boolean;
 }
 
 export interface SidePanelProps {

@@ -38,9 +38,10 @@ const WALK_SPEED = 2;
 
 /** Hauteur caméra walk = niveau yeux du walker actif (≈ 93% de sa taille). */
 function activeWalkH(): number {
-  const h = cameraState.activeWalkerIdx === 0
-    ? cameraState.walkerHeight0
-    : cameraState.walkerHeight1;
+  const idx = cameraState.activeWalkerIdx;
+  const h = idx === 0 ? cameraState.walkerHeight0 :
+            idx === 1 ? cameraState.walkerHeight1 :
+                        cameraState.walkerHeight2;
   return h * EYE_RATIO;
 }
 const MOUSE_SENS  = 0.002;
@@ -269,17 +270,23 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
       if (e.key === 'l' || e.key === 'L') {
         const oldIdx = cameraState.activeWalkerIdx;
-        const newIdx = (oldIdx + 1) % 2;
+        const newIdx = (oldIdx + 1) % 3;
         cameraState.activeWalkerIdx = newIdx;
         
         // Restore independent orientation for the newly active walker
-        const targetYaw = newIdx === 0 ? cameraState.walker0Yaw : cameraState.walker1Yaw;
+        const targetYaw = newIdx === 0 ? cameraState.walker0Yaw : 
+                         newIdx === 1 ? cameraState.walker1Yaw :
+                                        cameraState.walker2Yaw;
         walkYaw.current = targetYaw;
         cameraState.walkYaw = targetYaw;
 
         if (modeRef.current === 'walk') {
-          walkPos.current.x = newIdx === 0 ? cameraState.walker0X : cameraState.walker1X;
-          walkPos.current.z = newIdx === 0 ? cameraState.walker0Z : cameraState.walker1Z;
+          walkPos.current.x = newIdx === 0 ? cameraState.walker0X : 
+                              newIdx === 1 ? cameraState.walker1X :
+                                             cameraState.walker2X;
+          walkPos.current.z = newIdx === 0 ? cameraState.walker0Z : 
+                              newIdx === 1 ? cameraState.walker1Z :
+                                             cameraState.walker2Z;
           walkPos.current.y = activeWalkH();
           updateWalkLook();
         }
@@ -465,9 +472,12 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           if (cameraState.activeWalkerIdx === 0) {
             const c = collideMove(cameraState.walker0X, cameraState.walker0Z, wdx, wdz);
             cameraState.walker0X = c.x; cameraState.walker0Z = c.z;
-          } else {
+          } else if (cameraState.activeWalkerIdx === 1) {
             const c = collideMove(cameraState.walker1X, cameraState.walker1Z, wdx, wdz);
             cameraState.walker1X = c.x; cameraState.walker1Z = c.z;
+          } else {
+            const c = collideMove(cameraState.walker2X, cameraState.walker2Z, wdx, wdz);
+            cameraState.walker2X = c.x; cameraState.walker2Z = c.z;
           }
         }
       }
