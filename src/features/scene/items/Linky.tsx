@@ -2,9 +2,9 @@ import { useGLTF } from '@react-three/drei';
 import { GlbBridge } from '@features/scene/GlbBridge';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/glb/jbl_charge_3_speaker.glb';
+const GLB = 'media/glb/Compteur Linky.glb';
 
-export function JblCharge3(props: SceneItemProps) {
+export function Linky(props: SceneItemProps) {
   return <GlbBridge glbPath={GLB} {...props} />;
 }
 
