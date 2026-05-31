@@ -357,6 +357,35 @@ function InternalWalkerXBot({ showSkeleton = false, isPreview = false, walkerAni
 
 export function WalkerXBot(props: WalkerProps) { return <Suspense fallback={null}><InternalWalkerXBot {...props} /></Suspense>; }
 
+function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walkerAnim, isPaused }: WalkerProps) {
+  const { scene } = useGLTFClone('media/glb/lara_perfect.glb'), animPath = useMemo(() => (!walkerAnim || walkerAnim === 'tpose') ? null : `media/glb-animations/${walkerAnim}`, [walkerAnim]), animGltf = useGLTF(animPath || MIXAMO_WALK_GLB);
+  const groupRef = useRef<THREE.Group>(null!), mixerRef = useRef<THREE.AnimationMixer | null>(null), actionRef = useRef<THREE.AnimationAction | null>(null), activeRef = useRef(false);
+  const { invalidate } = useThree();
+  useLayoutEffect(() => {
+    // Le modèle est déjà centré par Blender, on applique juste le scale technique et les réglages de base
+    scene.traverse(c => { c.layers.set(0); if ((c as THREE.Mesh).isMesh) { (c as THREE.Mesh).castShadow = (c as THREE.Mesh).receiveShadow = true; (c as THREE.Mesh).frustumCulled = false; } });
+    mixerRef.current = new THREE.AnimationMixer(scene);
+    if (walkerAnim !== 'tpose') {
+      const raw = animGltf?.animations?.[0];
+      if (raw) {
+        // Pas besoin de retargeting complexe X/Z, Blender a déjà réglé le pivot
+        const action = mixerRef.current.clipAction(raw);
+        action.setLoop(THREE.LoopRepeat, Infinity); actionRef.current = action;
+        if (isPreview && !isPaused) { action.play(); activeRef.current = true; }
+      }
+    }
+  }, [scene, animGltf, isPreview, walkerAnim]);
+  useFrame((_, delta) => {
+    if (!groupRef.current) return;
+    if (isPreview) { groupRef.current.position.set(0, 0, 0); groupRef.current.visible = true; }
+    if (mixerRef.current && isPreview && !isPaused) { mixerRef.current.update(delta); invalidate(); }
+  });
+  return <group ref={groupRef}><primitive object={scene} /><GroundPoint /><SkeletonView root={scene} visible={showSkeleton} /></group>;
+}
+
+export function WalkerPerfect(props: WalkerProps) { return <Suspense fallback={null}><InternalWalkerPerfect {...props} /></Suspense>; }
+
+useGLTF.preload('media/glb/lara_perfect.glb');
 useGLTF.preload('media/glb/lara_croft__2026_rigged.glb');
 useGLTF.preload(MIXAMO_GLB);
 useGLTF.preload(XBOT_GLB);
