@@ -51,6 +51,7 @@ const COLORS = {
 };
 
 import { WALL_DEFS, PILLAR_DEFS, W, CORR_WALL_X, GLASS_DOOR_X, GARDEN_PANEL_DEFS } from './wallData';
+import { WoodenFencePanel } from './items/WoodenFencePanel';
 
 const FLOOR_Y = -5.25; // dalle béton : surface parquet à Y=0
 
@@ -458,7 +459,9 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
         <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow />
         {/* Panneaux bois occultants jardin */}
         {GARDEN_PANEL_DEFS.map((p, i) => (
-          <P key={i} w={p.w} h={p.h} d={p.d} x={p.cx} y={p.cy} z={p.cz} mat={panelMat} />
+          <group key={i} position={[p.cx, p.cy, p.cz]}>
+            <WoodenFencePanel w={p.w} h={p.h} d={p.d} />
+          </group>
         ))}
 
         {/* Jambages portes — couvre les caps invisibles (caplessX/Z) aux ouvertures.
