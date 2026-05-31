@@ -449,9 +449,15 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
 
     } else if (vm === 'walker') {
       const idx = cameraState.activeWalkerIdx;
-      const wx  = idx === 0 ? cameraState.walker0X : cameraState.walker1X;
-      const wz  = idx === 0 ? cameraState.walker0Z : cameraState.walker1Z;
-      const wh  = (idx === 0 ? cameraState.walkerHeight0 : cameraState.walkerHeight1) * 0.93;
+      const wx  = idx === 0 ? cameraState.walker0X : 
+                  idx === 1 ? cameraState.walker1X : 
+                              cameraState.walker2X;
+      const wz  = idx === 0 ? cameraState.walker0Z : 
+                  idx === 1 ? cameraState.walker1Z : 
+                              cameraState.walker2Z;
+      const wh  = (idx === 0 ? cameraState.walkerHeight0 : 
+                   idx === 1 ? cameraState.walkerHeight1 :
+                               cameraState.walkerHeight2) * 0.93;
       _va.current.set(wx, wh, wz);
       camera.position.lerp(_va.current, 0.08);
       camera.lookAt(s.pos);

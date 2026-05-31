@@ -53,10 +53,9 @@ import { VacuumCleaner }                              from '@features/scene/item
 import { Tent }                                       from '@features/scene/items/Tent';
 import { Vihals }                                     from '@features/scene/items/Vihals';
 import { Rebound }                                    from '@features/scene/items/Rebound';
-import { AtlasRobot }                                 from '@features/scene/items/AtlasRobot';
 import { Linky }                                      from '@features/scene/items/Linky';
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
-import { Walker, WalkerRed }                          from '@features/scene/Walker';
+import { Walker, WalkerRed, WalkerXBot }               from '@features/scene/Walker';
 
 // Wrappers for preview
 function PreviewWalkerLara({ actionState }: { actionState?: any }) { 
@@ -64,6 +63,9 @@ function PreviewWalkerLara({ actionState }: { actionState?: any }) {
 }
 function PreviewWalkerRed({ actionState }: { actionState?: any }) { 
   return <WalkerRed isPreview={true} showSkeleton={actionState?.showBones} walkerAnim={actionState?.walkerAnim} isPaused={actionState?.isPaused} />; 
+}
+function PreviewWalkerXBot({ actionState }: { actionState?: any }) { 
+  return <WalkerXBot isPreview={true} showSkeleton={actionState?.showBones} walkerAnim={actionState?.walkerAnim} isPaused={actionState?.isPaused} />; 
 }
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
@@ -84,6 +86,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Procéduraux (pas de glbPath) ──────────────────────────────────────────
   'walker-lara':            PreviewWalkerLara as any,
   'walker-red':             PreviewWalkerRed as any,
+  'walker-xbot':            PreviewWalkerXBot as any,
   'counter':                Counter,
   'sink-boholmen':          SinkBoholmen,
   'water-heater':           WaterHeater,

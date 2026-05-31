@@ -671,12 +671,12 @@ export function Garden() {
       <group position={[160, 0, 260]} rotation={[0, -Math.PI / 2, 0]}>
         <Vihals item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[210, 0, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true }}>
+      <group position={[210, -3.48, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true }}>
         <Rebound item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-    </>
-  );
-}
+      </>
+      );
+      }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // BACKPACKS — sacs à dos procéduraux
@@ -701,11 +701,6 @@ export function Backpacks() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // DRONA — boîtes DRONA standalone (hors cases Kallax)
 // ═══════════════════════════════════════════════════════════════════════════════
-//
-// Les Drona associés à des groupes sont gérés par leurs composants :
-//   KallaxNE (7), KallaxSE (4), KallaxNW (4), KallaxCuisine (6), MackaparGroup (2)
-// Ce bloc gère les 3 boîtes restantes : 2 sur meubles SDB, 1 sur congélateur.
-
 
 const DF = 33;
 const DRONA_STANDALONE = [
@@ -737,3 +732,4 @@ export function DronaBoxes() {
     </group>
   );
 }
+
