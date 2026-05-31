@@ -20,14 +20,14 @@ function GlbScene({ glbPath }: { glbPath: string }) {
 
 function Dimensions({ dims }: { dims: { w: number, d: number, h: number } }) {
   const max = Math.max(dims.w, dims.h, dims.d) || 1, s = 1.4 / max, hx = (dims.w / 2) * s, hy = (dims.h / 2) * s, hz = (dims.d / 2) * s, off = 0.08, LC = '#0058a3';
-  const pill: React.CSSProperties = { background: 'rgba(255, 255, 255, 0.3)', border: `1px solid ${LC}`, borderRadius: 4, padding: '1px 3px', color: LC, fontSize: 8, whiteSpace: 'nowrap', pointerEvents: 'none', backdropFilter: 'blur(2px)' };
-  const axes = useMemo(() => new THREE.AxesHelper(0.25), []);
+  const pill: React.CSSProperties = { background: 'rgba(255, 255, 255, 0.4)', border: 'none', borderRadius: 4, padding: '1px 3px', color: LC, fontSize: 8, whiteSpace: 'nowrap', pointerEvents: 'none', backdropFilter: 'blur(2px)' };
+  const axes = useMemo(() => new THREE.AxesHelper(0.3), []);
   return (
     <group>
-      {/* Ground Point (Origin) with 3 colored axes */}
+      {/* 3 colored axes (X:Red, Y:Green, Z:Blue) */}
       <primitive object={axes} position={[0, -hy, 0]} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -hy, 0]}>
-        <ringGeometry args={[0.02, 0.025, 32]} />
+        <ringGeometry args={[0.015, 0.02, 32]} />
         <meshBasicMaterial color={LC} transparent opacity={0.4} />
       </mesh>
 

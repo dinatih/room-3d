@@ -74,7 +74,6 @@ function retargetMixamoClip(clip: THREE.AnimationClip, restPos?: THREE.Vector3):
     if (name === 'mixamorig_Hips.position') {
       const vals = cloned.values, rx = restPos?.x ?? 0, rz = restPos?.z ?? 0;
       for (let i = 0; i < vals.length; i += 3) {
-        // On force X et Z à la position de repos pour verrouiller le pivot.
         vals[i] = rx;
         vals[i + 2] = rz;
       }
@@ -129,18 +128,45 @@ function buildWalkClip(root: THREE.Object3D): THREE.AnimationClip {
 
 // ── Centering Logic ──────────────────────────────────────────────────────────
 
+/**
+ * Centrage chirurgical : aligne le point milieu entre les deux chevilles (ou HIPS en fallback)
+ * exactement au dessus du point [0, 0, 0] local du parent.
+ */
 function setupCentering(scene: THREE.Object3D, height: number, hipsName: string) {
   scene.position.set(0, 0, 0); scene.scale.set(1, 1, 1); scene.rotation.set(0, 0, 0);
   scene.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(scene), size = box.getSize(new THREE.Vector3()), factor = size.y > 0.001 ? height / size.y : 1;
+
+  // 1. Calcul du scale pour atteindre la hauteur demandée
+  const box = new THREE.Box3().setFromObject(scene), size = box.getSize(new THREE.Vector3());
+  const factor = size.y > 0.001 ? height / size.y : 1;
   scene.scale.setScalar(factor);
   scene.updateMatrixWorld(true);
-  const hips = findBone(scene, hipsName), offset = new THREE.Vector3();
-  if (hips) { hips.getWorldPosition(offset); scene.worldToLocal(offset); }
-  else { box.setFromObject(scene); box.getCenter(offset); scene.worldToLocal(offset); }
-  scene.position.x = -offset.x; scene.position.z = -offset.z;
+
+  // 2. Recherche du pivot horizontal (Chevilles ou Hanches)
+  const lAnkle = findBone(scene, 'leg_left_ankle_06') || findBone(scene, 'mixamorig_LeftFoot');
+  const rAnkle = findBone(scene, 'leg_right_ankle_010') || findBone(scene, 'mixamorig_RightFoot');
+  const hips = findBone(scene, hipsName);
+
+  const pivotW = new THREE.Vector3();
+  if (lAnkle && rAnkle) {
+    const p1 = new THREE.Vector3(), p2 = new THREE.Vector3();
+    lAnkle.getWorldPosition(p1); rAnkle.getWorldPosition(p2);
+    pivotW.addVectors(p1, p2).multiplyScalar(0.5);
+  } else if (hips) {
+    hips.getWorldPosition(pivotW);
+  } else {
+    box.setFromObject(scene); box.getCenter(pivotW);
+  }
+
+  // On décentre le modèle pour que le pivot calculé tombe sur 0,0 en X/Z
+  const scenePosW = new THREE.Vector3(); scene.getWorldPosition(scenePosW);
+  scene.position.x = -(pivotW.x - scenePosW.x);
+  scene.position.z = -(pivotW.z - scenePosW.z);
+
+  // 3. Calage au sol
   scene.updateMatrixWorld(true);
-  scene.position.y = -new THREE.Box3().setFromObject(scene).min.y;
+  const finalBox = new THREE.Box3().setFromObject(scene);
+  scene.position.y = -finalBox.min.y;
 }
 
 // ── Components ───────────────────────────────────────────────────────────────
