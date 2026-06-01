@@ -313,6 +313,7 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
   const { invalidate } = useThree();
   useLayoutEffect(() => {
     normalizeMixamoBoneNames(scene);
+    setupCentering(scene, 173.4, 'mixamorig_Hips');
     scene.traverse(c => { c.layers.set(0); if ((c as THREE.Mesh).isMesh) { (c as THREE.Mesh).castShadow = (c as THREE.Mesh).receiveShadow = true; (c as THREE.Mesh).frustumCulled = false; } });
     cacheRestStates(scene);
     mixerRef.current = new THREE.AnimationMixer(scene);
