@@ -16,7 +16,7 @@ export const cameraState = {
   isMoving:  false as boolean,
   walkYaw:   0     as number,
   walkPitch: 0     as number,
-  /** Index du walker actif (0 = défaut, 1 = rouge, 2 = X-Bot) — touche L pour switcher */
+  /** Index du walker actif (0 = défaut, 1 = rouge, 2 = Perfect) — touche L pour switcher */
   activeWalkerIdx: 0 as number,
   /** Positions et orientations des trois walkers (mis à jour par Walker.tsx) */
   walker0X: 150 as number, walker0Z: 200 as number, walker0Yaw: 0 as number,

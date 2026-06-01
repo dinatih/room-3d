@@ -1,5 +1,5 @@
 /**
- * Walker.tsx — Personnages animés (Lara, WalkerRed, X-Bot).
+ * Walker.tsx — Personnages animés (Lara, WalkerRed, WalkerPerfect).
  */
 import { useRef, useLayoutEffect, useMemo, useEffect, Suspense } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -18,7 +18,6 @@ const HEAD_BONE = 'head_neck_upper_052';
 const MIXAMO_HEAD_BONE = 'mixamorig_Head';
 const MIXAMO_GLB = 'media/glb/lara_mixamo.glb';
 const MIXAMO_WALK_GLB = 'media/glb-animations/happy_walk.glb';
-const XBOT_GLB = 'media/glb/character.glb';
 
 const RED_MAT_NAMES = new Set(['5_BackPack_1.0_0_0', '5_Shorts_1.0_0_0']);
 const RED_NODE_NAMES = new Set(['LARA_Object_113']);
@@ -308,57 +307,6 @@ function InternalWalkerRed({ showSkeleton = false, isPreview = false, walkerAnim
 
 export function WalkerRed(props: WalkerProps) { return <Suspense fallback={null}><InternalWalkerRed {...props} /></Suspense>; }
 
-function InternalWalkerXBot({ showSkeleton = false, isPreview = false, walkerAnim, isPaused }: WalkerProps) {
-  const { scene } = useGLTFClone(XBOT_GLB), animPath = useMemo(() => (!walkerAnim || walkerAnim === 'tpose') ? null : `media/glb-animations/${walkerAnim}`, [walkerAnim]), animGltf = useGLTF(animPath || MIXAMO_WALK_GLB);
-  const groupRef = useRef<THREE.Group>(null!), mixerRef = useRef<THREE.AnimationMixer | null>(null), actionRef = useRef<THREE.AnimationAction | null>(null), activeRef = useRef(false), fadeFrames = useRef(0);
-  const { invalidate } = useThree();
-
-  useLayoutEffect(() => {
-    normalizeMixamoBoneNames(scene); setupCentering(scene, 173.4, 'mixamorig_Hips');
-    scene.traverse(c => { c.layers.set(0); if ((c as THREE.Mesh).isMesh) { (c as THREE.Mesh).castShadow = (c as THREE.Mesh).receiveShadow = true; (c as THREE.Mesh).frustumCulled = false; } });
-    cacheRestStates(scene); mixerRef.current = new THREE.AnimationMixer(scene);
-    if (walkerAnim !== 'tpose') {
-      const raw = animGltf?.animations?.[0];
-      if (raw) {
-        const hBone = findBone(scene, 'mixamorig_Hips');
-        const clip = retargetMixamoClip(raw, hBone?.userData.restPos), action = mixerRef.current.clipAction(clip);
-        action.setLoop(THREE.LoopRepeat, Infinity); actionRef.current = action;
-        if (isPreview && !isPaused) { action.play(); activeRef.current = true; }
-      }
-    }
-  }, [scene, animGltf, isPreview, walkerAnim]);
-
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    const active = isPreview ? true : cameraState.activeWalkerIdx === 2;
-    if (!isPreview) {
-      if (active) {
-        if (cameraState.isWalking) { cameraState.walker2X = cameraState.camX; cameraState.walker2Z = cameraState.camZ; cameraState.walker2Yaw = cameraState.walkYaw; }
-        else { cameraState.walker2Yaw = cameraState.walkYaw; }
-        cameraState.walkerX = cameraState.walker2X; cameraState.walkerZ = cameraState.walker2Z; groupRef.current.rotation.y = cameraState.walkYaw;
-      } else { groupRef.current.rotation.y = cameraState.walker2Yaw; }
-      groupRef.current.position.set(cameraState.walker2X, 0, cameraState.walker2Z);
-      groupRef.current.visible = !(active && cameraState.walkerHidden);
-    } else { groupRef.current.position.set(0, 0, 0); groupRef.current.rotation.y = 0; groupRef.current.visible = true; }
-    
-    const mixer = mixerRef.current, action = actionRef.current, move = cameraState.isMoving && active;
-    if (mixer && action) {
-      if (isPreview) { if (!isPaused && walkerAnim !== 'tpose') { mixer.update(delta); invalidate(); } }
-      else {
-        if (move && !activeRef.current) { action.reset().fadeIn(0.15).play(); activeRef.current = true; }
-        else if (!move && activeRef.current) { action.fadeOut(0.2); action.fadeOut(0.2); activeRef.current = false; fadeFrames.current = 15; }
-        if (activeRef.current || fadeFrames.current > 0) {
-          mixer.update(delta); if (!activeRef.current && fadeFrames.current > 0) fadeFrames.current--; invalidate();
-        }
-      }
-    }
-  });
-
-  return <group ref={groupRef}><primitive object={scene} /><GroundPoint /><SkeletonView root={scene} visible={showSkeleton} /></group>;
-}
-
-export function WalkerXBot(props: WalkerProps) { return <Suspense fallback={null}><InternalWalkerXBot {...props} /></Suspense>; }
-
 function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walkerAnim, isPaused, onSize }: WalkerProps & { onSize?: (dims: { w: number, d: number, h: number }) => void }) {
   const { scene } = useGLTFClone('media/glb/lara_perfect.glb'), animPath = useMemo(() => (!walkerAnim || walkerAnim === 'tpose') ? null : `media/glb-animations/${walkerAnim}`, [walkerAnim]), animGltf = useGLTF(animPath || MIXAMO_WALK_GLB);
   const groupRef = useRef<THREE.Group>(null!), mixerRef = useRef<THREE.AnimationMixer | null>(null), actionRef = useRef<THREE.AnimationAction | null>(null), activeRef = useRef(false), fadeFrames = useRef(0);
@@ -387,14 +335,14 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
   
   useFrame((_, delta) => {
     if (!groupRef.current) return;
-    const active = isPreview ? true : (cameraState.activeWalkerIdx === 0 || cameraState.activeWalkerIdx === 3);
+    const active = isPreview ? true : cameraState.activeWalkerIdx === 2;
     if (!isPreview) {
       if (active) {
-        if (cameraState.isWalking) { cameraState.walker0X = cameraState.camX; cameraState.walker0Z = cameraState.camZ; cameraState.walker0Yaw = cameraState.walkYaw; }
-        else { cameraState.walker0Yaw = cameraState.walkYaw; }
-        cameraState.walkerX = cameraState.walker0X; cameraState.walkerZ = cameraState.walker0Z; groupRef.current.rotation.y = cameraState.walkYaw;
-      } else { groupRef.current.rotation.y = cameraState.walker0Yaw; }
-      groupRef.current.position.set(cameraState.walker0X, 0, cameraState.walker0Z);
+        if (cameraState.isWalking) { cameraState.walker2X = cameraState.camX; cameraState.walker2Z = cameraState.camZ; cameraState.walker2Yaw = cameraState.walkYaw; }
+        else { cameraState.walker2Yaw = cameraState.walkYaw; }
+        cameraState.walkerX = cameraState.walker2X; cameraState.walkerZ = cameraState.walker2Z; groupRef.current.rotation.y = cameraState.walkYaw;
+      } else { groupRef.current.rotation.y = cameraState.walker2Yaw; }
+      groupRef.current.position.set(cameraState.walker2X, 0, cameraState.walker2Z);
       groupRef.current.visible = !(active && cameraState.walkerHidden);
     } else { groupRef.current.position.set(0, 0, 0); groupRef.current.rotation.y = 0; groupRef.current.visible = true; }
     
@@ -419,4 +367,3 @@ export function WalkerPerfect(props: WalkerProps & { onSize?: (dims: { w: number
 useGLTF.preload('media/glb/lara_perfect.glb');
 useGLTF.preload('media/glb/lara_croft__2026_rigged.glb');
 useGLTF.preload(MIXAMO_GLB);
-useGLTF.preload(XBOT_GLB);

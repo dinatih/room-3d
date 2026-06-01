@@ -57,17 +57,13 @@ import { Vihals }                                     from '@features/scene/item
 import { Rebound }                                    from '@features/scene/items/Rebound';
 import { Linky }                                      from '@features/scene/items/Linky';
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
-import { Walker, WalkerRed, WalkerXBot, WalkerPerfect }               from '@features/scene/Walker';
+import { Walker, WalkerRed, WalkerPerfect }               from '@features/scene/Walker';
 
-// Wrappers for preview
 function PreviewWalkerLara({ actionState }: { actionState?: any }) { 
   return <Walker isPreview={true} showSkeleton={actionState?.showBones} walkerAnim={actionState?.walkerAnim} isPaused={actionState?.isPaused} />; 
 }
 function PreviewWalkerRed({ actionState }: { actionState?: any }) { 
   return <WalkerRed isPreview={true} showSkeleton={actionState?.showBones} walkerAnim={actionState?.walkerAnim} isPaused={actionState?.isPaused} />; 
-}
-function PreviewWalkerXBot({ actionState }: { actionState?: any }) { 
-  return <WalkerXBot isPreview={true} showSkeleton={actionState?.showBones} walkerAnim={actionState?.walkerAnim} isPaused={actionState?.isPaused} />; 
 }
 function PreviewWalkerPerfect({ actionState }: { actionState?: any }) { 
   return <WalkerPerfect isPreview={true} showSkeleton={actionState?.showBones} walkerAnim={actionState?.walkerAnim} isPaused={actionState?.isPaused} />; 
@@ -91,7 +87,6 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Procéduraux (pas de glbPath) ──────────────────────────────────────────
   'walker-lara':            PreviewWalkerLara as any,
   'walker-red':             PreviewWalkerRed as any,
-  'walker-xbot':            PreviewWalkerXBot as any,
   'walker-lara-perfect':    PreviewWalkerPerfect as any,
   'counter':                Counter,
   'sink-boholmen':          SinkBoholmen,

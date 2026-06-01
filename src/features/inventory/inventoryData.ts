@@ -215,7 +215,6 @@ export const INVENTORY: InventoryItem[] = [
   // ── WALKERS ───────────────────────────────────────────────────────────────────
   { id: 'walker-lara',      name: 'Lara Croft (Référence)',         brand: 'Mixamo',   category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 181 }, notes: 'Modèle de référence original avec rig natif.' },
   { id: 'walker-red',       name: 'Lara Croft (Rouge)',             brand: 'Mixamo',   category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 173.4 }, notes: 'Tenue rouge, rig Mixamo retargeté, anim GLB.' },
-  { id: 'walker-xbot',      name: 'Lara Croft (X-Bot)',             brand: 'Mixamo',   category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 173.4 }, notes: 'Modèle X-Bot (sans rootJoint), rig Mixamo, anim GLB.' },
   { id: 'walker-lara-perfect', name: 'Lara Croft (Perfect)',         brand: 'Mixamo',   category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 173.4 }, notes: 'Modèle optimisé Blender avec Ground Point.' },
 ];
 
