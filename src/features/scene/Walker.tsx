@@ -314,8 +314,12 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
   useLayoutEffect(() => {
     normalizeMixamoBoneNames(scene);
     
-    // Auto-center and auto-scale to exact target height
-    setupCentering(scene, 173.4, 'mixamorig_Hips');
+    // Manual centering to perfectly ground her (Y=105.23) and shift forward on Z (Z=6)
+    // because her ponytail shifts the global bounding box backward.
+    scene.position.set(0, 105.2352, 6);
+    scene.scale.setScalar(1);
+    scene.rotation.set(0, 0, 0);
+    scene.updateMatrixWorld(true);
 
     scene.traverse(c => { c.layers.set(0); if ((c as THREE.Mesh).isMesh) { (c as THREE.Mesh).castShadow = (c as THREE.Mesh).receiveShadow = true; (c as THREE.Mesh).frustumCulled = false; } });
     cacheRestStates(scene);
