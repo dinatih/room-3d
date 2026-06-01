@@ -9,22 +9,24 @@ import { SCENE_REGISTRY, ACTION_LABELS } from './previewRegistry';
 
 import { glbLocalBBox } from '@features/scene/glbUtils';
 
-function GlbScene({ glbPath, onSize }: { glbPath: string; onSize?: (dims: { w: number, d: number, h: number }) => void; }) {
+function GlbScene({ glbPath, onSize }: { glbPath: string; onSize?: () => void; }) {
   const [scene, setScene] = useState<THREE.Group | null>(null);
   useEffect(() => {
     const draco = new DRACOLoader(); draco.setDecoderPath('/draco/');
     const loader = new GLTFLoader(); loader.setDRACOLoader(draco);
     loader.load(glbPath, gltf => {
       setScene(gltf.scene);
-      const box = glbLocalBBox(gltf.scene);
-      const s = box.getSize(new THREE.Vector3());
-      onSize?.({ w: s.x, d: s.z, h: s.y });
     });
-  }, [glbPath, onSize]);
+  }, [glbPath]);
+
+  useLayoutEffect(() => {
+    if (scene) onSize?.();
+  }, [scene, onSize]);
+
   if (!scene) return null; return <primitive object={scene} />;
 }
 
-function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, d: number, h: number }; worldSize: THREE.Vector3; grounded?: boolean; }) {
+function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, d: number, h: number }; worldSize: { x: number; y: number; z: number }; grounded?: boolean; }) {
   const hx = worldSize.x / 2, hy = worldSize.y / 2, hz = worldSize.z / 2, off = 0.08, LC = '#0058a3';
   const pill: React.CSSProperties = { background: 'rgba(255, 255, 255, 0.25)', padding: '1px 3px', color: LC, fontSize: 7, whiteSpace: 'nowrap', pointerEvents: 'none', backdropFilter: 'blur(2px)', borderRadius: 2 };
   
@@ -67,7 +69,7 @@ function FitCamera() { const { camera } = useThree(); useLayoutEffect(() => { ca
 
 function CenteredItem({ Component, actionState, item, grounded = false, showDims = false, glbPath }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; showDims?: boolean; glbPath?: string; }) {
   const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!), [scale, setScale] = useState(1);
-  const [worldSize, setWorldSize] = useState(new THREE.Vector3());
+  const [worldSize, setWorldSize] = useState<{ x: number; y: number; z: number } | null>(null);
 
   const fit = useCallback(() => {
     if (!outerRef.current || !innerRef.current) return;
@@ -87,7 +89,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, showDims
     if (box.isEmpty()) return;
     const center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()), max = Math.max(size.x, size.y, size.z), s = 1.4 / max;
     setScale(s); 
-    setWorldSize(size.clone().multiplyScalar(s));
+    setWorldSize({ x: size.x * s, y: size.y * s, z: size.z * s });
     outerRef.current.scale.setScalar(s);
     if (grounded) outerRef.current.position.set(-center.x * s, -box.min.y * s, -center.z * s);
     else outerRef.current.position.set(-center.x * s, -center.y * s, -center.z * s);
@@ -102,7 +104,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, showDims
           {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} />}
         </group>
       </group>
-      {showDims && item?.dims && worldSize.length() > 0 && <Dimensions dims={item.dims} worldSize={worldSize} grounded={grounded} />}
+      {showDims && item?.dims && worldSize && <Dimensions dims={item.dims} worldSize={worldSize} grounded={grounded} />}
     </group>
   );
 }
@@ -157,7 +159,7 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
               <directionalLight position={[-2, 1, -2]} intensity={0.5} color="#aabbff" />
               <FitCamera />
               <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={false} minDistance={0.3} maxDistance={50} target={[0, 0, 0]} onStart={() => setAutoRotate(false)} />
-              <Grid infiniteGrid fadeDistance={15} cellColor="#999999" sectionColor="#666666" cellSize={0.2} sectionSize={1} position={[0, -0.01, 0]} />
+              <Grid infiniteGrid fadeDistance={15} cellColor="#999999" sectionColor="#666666" cellSize={0.2} sectionSize={1} position={[0, -0.001, 0]} />
               <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} /></Suspense>
             </Canvas>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} /> : null}
