@@ -67,7 +67,7 @@ function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, 
 
 function FitCamera() { const { camera } = useThree(); useLayoutEffect(() => { camera.lookAt(0, 0, 0); }, [camera]); return null; }
 
-function CenteredItem({ Component, actionState, item, grounded = false, showDims = false, glbPath }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; showDims?: boolean; glbPath?: string; }) {
+function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, glbPath }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; glbPath?: string; }) {
   const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!), [scale, setScale] = useState(1);
   const [worldSize, setWorldSize] = useState<{ x: number; y: number; z: number } | null>(null);
 
@@ -91,9 +91,13 @@ function CenteredItem({ Component, actionState, item, grounded = false, showDims
     setScale(s); 
     setWorldSize({ x: size.x * s, y: size.y * s, z: size.z * s });
     outerRef.current.scale.setScalar(s);
-    if (grounded) outerRef.current.position.set(-center.x * s, -box.min.y * s, -center.z * s);
-    else outerRef.current.position.set(-center.x * s, -center.y * s, -center.z * s);
-  }, [grounded]);
+    
+    const px = preserveOriginXZ ? 0 : -center.x * s;
+    const pz = preserveOriginXZ ? 0 : -center.z * s;
+
+    if (grounded) outerRef.current.position.set(px, -box.min.y * s, pz);
+    else outerRef.current.position.set(px, -center.y * s, pz);
+  }, [grounded, preserveOriginXZ]);
 
   useEffect(() => { fit(); }, [fit, item?.id, glbPath]);
 
@@ -110,8 +114,8 @@ function CenteredItem({ Component, actionState, item, grounded = false, showDims
 }
 
 function RegistryScene({ item, actionState, showDims }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; }) {
-  const Component = SCENE_REGISTRY[item.id];
-  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} showDims={showDims} glbPath={item.glbPath} />;
+  const Component = SCENE_REGISTRY[item.id], isWalker = item.category === 'walkers';
+  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isWalker} showDims={showDims} glbPath={item.glbPath} />;
 }
 
 function PhotoGallery({ photos }: { photos: string[] }) {
@@ -171,8 +175,8 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
               <button onClick={() => setActionStates(s => ({ ...s, showBones: !s.showBones }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.showBones ? '#0058a3' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}</button>
               <button onClick={() => setActionStates(s => ({ ...s, isPaused: !s.isPaused }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.isPaused ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.isPaused ? '▶️ Play' : '⏸️ Pause'}</button>
               <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📐 T-Pose</button>
-              <select value={actionStates.walkerAnim || 'walking.glb'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
-                <option value="tpose">T-Pose</option><option value="walking.glb">Walking</option><option value="angry_gesture.glb">Angry Gesture</option><option value="ascending_stairs.glb">Ascending Stairs</option><option value="asking_question.glb">Asking Question</option><option value="beckoning.glb">Beckoning</option><option value="cheering_while_sitting.glb">Cheering While Sitting</option><option value="clapping.glb">Clapping</option><option value="disappointed.glb">Disappointed</option><option value="double_leg_takedown_-_attacker.glb">Double Leg Takedown</option><option value="jumping_jacks.glb">Jumping Jacks</option><option value="running.glb">Running</option><option value="scared.glb">Scared</option><option value="seated_idle.glb">Seated Idle</option><option value="stand_up.glb">Stand Up</option><option value="surprised.glb">Surprised</option><option value="telling_a_secret.glb">Telling A Secret</option><option value="tripping.glb">Tripping</option><option value="victory.glb">Victory</option><option value="yelling.glb">Yelling</option>
+              <select value={actionStates.walkerAnim || 'happy_walk.glb'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
+                <option value="tpose">T-Pose</option><option value="happy_walk.glb">Walking</option><option value="angry_gesture.glb">Angry Gesture</option><option value="ascending_stairs.glb">Ascending Stairs</option><option value="asking_question.glb">Asking Question</option><option value="beckoning.glb">Beckoning</option><option value="cheering_while_sitting.glb">Cheering While Sitting</option><option value="clapping.glb">Clapping</option><option value="disappointed.glb">Disappointed</option><option value="double_leg_takedown_-_attacker.glb">Double Leg Takedown</option><option value="jumping_jacks.glb">Jumping Jacks</option><option value="running.glb">Running</option><option value="scared.glb">Scared</option><option value="seated_idle.glb">Seated Idle</option><option value="stand_up.glb">Stand Up</option><option value="surprised.glb">Surprised</option><option value="telling_a_secret.glb">Telling A Secret</option><option value="tripping.glb">Tripping</option><option value="victory.glb">Victory</option><option value="yelling.glb">Yelling</option>
               </select>
             </div>
           )}

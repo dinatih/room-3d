@@ -17,7 +17,7 @@ const WALK_PERIOD = 0.7;
 const HEAD_BONE = 'head_neck_upper_052';
 const MIXAMO_HEAD_BONE = 'mixamorig_Head';
 const MIXAMO_GLB = 'media/glb/lara_mixamo.glb';
-const MIXAMO_WALK_GLB = 'media/glb-animations/walking.glb';
+const MIXAMO_WALK_GLB = 'media/glb-animations/happy_walk.glb';
 const XBOT_GLB = 'media/glb/character.glb';
 
 const RED_MAT_NAMES = new Set(['5_BackPack_1.0_0_0', '5_Shorts_1.0_0_0']);
