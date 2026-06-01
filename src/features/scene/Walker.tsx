@@ -74,8 +74,11 @@ function retargetMixamoClip(clip: THREE.AnimationClip, restPos?: THREE.Vector3):
     const cloned = track.clone(); cloned.name = name;
     if (name === 'mixamorig_Hips.position') {
       const vals = cloned.values, rx = restPos?.x ?? 0, rz = restPos?.z ?? 0;
+      const initialY = vals.length > 1 ? vals[1] : 0;
+      const ryOffset = restPos ? restPos.y - initialY : 0;
       for (let i = 0; i < vals.length; i += 3) {
         vals[i] = rx;
+        vals[i + 1] += ryOffset;
         vals[i + 2] = rz;
       }
     }
@@ -313,7 +316,6 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
   const { invalidate } = useThree();
   useLayoutEffect(() => {
     normalizeMixamoBoneNames(scene);
-    setupCentering(scene, 173.4, 'mixamorig_Hips');
     scene.traverse(c => { c.layers.set(0); if ((c as THREE.Mesh).isMesh) { (c as THREE.Mesh).castShadow = (c as THREE.Mesh).receiveShadow = true; (c as THREE.Mesh).frustumCulled = false; } });
     cacheRestStates(scene);
     mixerRef.current = new THREE.AnimationMixer(scene);
