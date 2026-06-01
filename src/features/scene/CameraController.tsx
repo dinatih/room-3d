@@ -113,6 +113,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const savedPerspTarget = useRef(new THREE.Vector3(...PERSP_TARGET));
   // FOV sauvegardé avant entrée walk (restauré à la sortie)
   const savedFov         = useRef(50);
+  const minimapThrottle  = useRef(0); // accumulateur pour throttler drawMinimap (~15fps)
 
   // ── Walk helpers ────────────────────────────────────────────────────────────
 
@@ -451,7 +452,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       cameraState.walkYaw   = walkYaw.current;
       cameraState.walkPitch = walkPitch.current;
     }
-    cameraState.onUpdate?.();
+
+    // Throttle minimap redraw à ~15fps (67ms) — drawFloorPlan est coûteux
+    minimapThrottle.current += delta;
+    if (minimapThrottle.current >= 0.067) {
+      minimapThrottle.current = 0;
+      cameraState.onUpdate?.();
+    }
 
     // ── Orbit mode keyboard navigation (Google Earth style) ─────────────────────
     if (modeRef.current === 'orbit' && keys.current.size > 0) {

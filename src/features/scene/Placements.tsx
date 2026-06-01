@@ -577,7 +577,7 @@ export function Decor() {
       <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <AirPerformer_ />
+      {/* <AirPerformer_ /> */}{/* PERF TEST — remettre pour réactiver */}
       {/* Google Nest Mini — mur EST (B) en son centre, à plat contre le mur */}
       <group position={[ROOM_W - 5, WALL_H / 2, ROOM_D / 2]} rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
         <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />

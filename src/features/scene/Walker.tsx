@@ -308,7 +308,7 @@ function InternalWalkerRed({ showSkeleton = false, isPreview = false, walkerAnim
 export function WalkerRed(props: WalkerProps) { return <Suspense fallback={null}><InternalWalkerRed {...props} /></Suspense>; }
 
 function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walkerAnim, isPaused, onSize }: WalkerProps & { onSize?: (dims: { w: number, d: number, h: number }) => void }) {
-  const { scene } = useGLTFClone('media/glb/lara_perfect.glb'), animPath = useMemo(() => (!walkerAnim || walkerAnim === 'tpose') ? null : `media/glb-animations/${walkerAnim}`, [walkerAnim]), animGltf = useGLTF(animPath || MIXAMO_WALK_GLB);
+  const { scene } = useGLTFClone(MIXAMO_GLB), animPath = useMemo(() => (!walkerAnim || walkerAnim === 'tpose') ? null : `media/glb-animations/${walkerAnim}`, [walkerAnim]), animGltf = useGLTF(animPath || MIXAMO_WALK_GLB);
   const groupRef = useRef<THREE.Group>(null!), mixerRef = useRef<THREE.AnimationMixer | null>(null), actionRef = useRef<THREE.AnimationAction | null>(null), activeRef = useRef(false), fadeFrames = useRef(0);
   const { invalidate } = useThree();
   useLayoutEffect(() => {
