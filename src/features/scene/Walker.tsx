@@ -76,6 +76,7 @@ function retargetMixamoClip(clip: THREE.AnimationClip, restPos?: THREE.Vector3):
       const vals = cloned.values, rx = restPos?.x ?? 0, rz = restPos?.z ?? 0;
       const initialY = vals.length > 1 ? vals[1] : 0;
       const ryOffset = restPos ? restPos.y - initialY : 0;
+      console.log('retargetMixamoClip hips Y: initialY=' + initialY + ', restPosY=' + restPos?.y + ', ryOffset=' + ryOffset);
       for (let i = 0; i < vals.length; i += 3) {
         vals[i] = rx;
         vals[i + 1] += ryOffset;
@@ -316,6 +317,14 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
   const { invalidate } = useThree();
   useLayoutEffect(() => {
     normalizeMixamoBoneNames(scene);
+    
+    // lara_perfect.glb was exported with a Z shift that puts its feet at -105.23 local Y in Three.js
+    // We must shift it up by exactly that amount to place her feet on the ground.
+    scene.position.set(0, 105.2352, 0);
+    scene.scale.setScalar(1);
+    scene.rotation.set(0, 0, 0);
+    scene.updateMatrixWorld(true);
+
     scene.traverse(c => { c.layers.set(0); if ((c as THREE.Mesh).isMesh) { (c as THREE.Mesh).castShadow = (c as THREE.Mesh).receiveShadow = true; (c as THREE.Mesh).frustumCulled = false; } });
     cacheRestStates(scene);
     mixerRef.current = new THREE.AnimationMixer(scene);
@@ -367,6 +376,5 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
 
 export function WalkerPerfect(props: WalkerProps & { onSize?: (dims: { w: number, d: number, h: number }) => void }) { return <Suspense fallback={null}><InternalWalkerPerfect {...props} /></Suspense>; }
 
-useGLTF.preload('media/glb/lara_perfect.glb');
 useGLTF.preload('media/glb/lara_croft__2026_rigged.glb');
 useGLTF.preload(MIXAMO_GLB);

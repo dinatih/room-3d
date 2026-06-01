@@ -27,7 +27,8 @@ function ancestorKey(obj: THREE.Object3D): string {
 
 export function DevToolsCollector() {
   const { gl, scene } = useThree();
-  const lastFrameTime = useRef(performance.now());
+  const lastFrameTime   = useRef(performance.now());
+  const sinceLastUpdate = useRef(0); // accumulateur pour throttle UI (en ms)
 
   useEffect(() => {
     devState.refreshScene = () => {
@@ -65,7 +66,7 @@ export function DevToolsCollector() {
   }, [scene]);
 
   useFrame(() => {
-    // Renderer stats
+    // Renderer stats — mis à jour dans devState à chaque frame (pas de React)
     const info = gl.info;
     devState.drawCalls  = info.render.calls;
     devState.triangles  = info.render.triangles;
@@ -81,7 +82,12 @@ export function DevToolsCollector() {
       if (devState.fpsSamples.length > FPS_SAMPLES) devState.fpsSamples.shift();
     }
 
-    devState.onUpdate?.();
+    // Throttle : ne déclencher le re-render React que toutes les 250ms
+    sinceLastUpdate.current += dt;
+    if (sinceLastUpdate.current >= 250) {
+      sinceLastUpdate.current = 0;
+      devState.onUpdate?.();
+    }
   });
 
   return null;
