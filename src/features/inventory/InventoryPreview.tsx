@@ -24,8 +24,8 @@ function GlbScene({ glbPath, onSize }: { glbPath: string; onSize?: (dims: { w: n
   if (!scene) return null; return <primitive object={scene} />;
 }
 
-function Dimensions({ dims, s, grounded = false }: { dims: { w: number, d: number, h: number }; s: number; grounded?: boolean; }) {
-  const hx = (dims.w / 2) * s, hy = (dims.h / 2) * s, hz = (dims.d / 2) * s, off = 0.08, LC = '#0058a3';
+function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, d: number, h: number }; worldSize: THREE.Vector3; grounded?: boolean; }) {
+  const hx = worldSize.x / 2, hy = worldSize.y / 2, hz = worldSize.z / 2, off = 0.08, LC = '#0058a3';
   const pill: React.CSSProperties = { background: 'rgba(255, 255, 255, 0.25)', padding: '1px 3px', color: LC, fontSize: 7, whiteSpace: 'nowrap', pointerEvents: 'none', backdropFilter: 'blur(2px)', borderRadius: 2 };
   
   const axes = useMemo(() => {
@@ -34,8 +34,6 @@ function Dimensions({ dims, s, grounded = false }: { dims: { w: number, d: numbe
     return h;
   }, []);
 
-  // For grounded items, model base is at 0. GroupY=0. 
-  // For others, model is centered vertically. GroupY=-hy.
   const groupY = grounded ? 0 : -hy;
 
   return (
@@ -69,6 +67,8 @@ function FitCamera() { const { camera } = useThree(); useLayoutEffect(() => { ca
 
 function CenteredItem({ Component, actionState, item, grounded = false, showDims = false, glbPath }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; showDims?: boolean; glbPath?: string; }) {
   const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!), [scale, setScale] = useState(1);
+  const [worldSize, setWorldSize] = useState(new THREE.Vector3());
+
   const fit = useCallback(() => {
     if (!outerRef.current || !innerRef.current) return;
     outerRef.current.scale.set(1, 1, 1); outerRef.current.position.set(0, 0, 0); outerRef.current.updateMatrixWorld(true);
@@ -86,17 +86,23 @@ function CenteredItem({ Component, actionState, item, grounded = false, showDims
 
     if (box.isEmpty()) return;
     const center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()), max = Math.max(size.x, size.y, size.z), s = 1.4 / max;
-    setScale(s); outerRef.current.scale.setScalar(s);
+    setScale(s); 
+    setWorldSize(size.clone().multiplyScalar(s));
+    outerRef.current.scale.setScalar(s);
     if (grounded) outerRef.current.position.set(-center.x * s, -box.min.y * s, -center.z * s);
     else outerRef.current.position.set(-center.x * s, -center.y * s, -center.z * s);
   }, [grounded]);
+
   useEffect(() => { fit(); }, [fit, item?.id, glbPath]);
+
   return (
-    <group ref={outerRef}>
-      <group ref={innerRef}>
-        {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} />}
+    <group>
+      <group ref={outerRef}>
+        <group ref={innerRef}>
+          {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} />}
+        </group>
       </group>
-      {showDims && item?.dims && <Dimensions dims={item.dims} s={scale} grounded={grounded} />}
+      {showDims && item?.dims && worldSize.length() > 0 && <Dimensions dims={item.dims} worldSize={worldSize} grounded={grounded} />}
     </group>
   );
 }

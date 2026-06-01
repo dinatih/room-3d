@@ -28,6 +28,7 @@ import { AltappenRug }                                from '@features/scene/item
 import { JordanHexMule }                              from '@features/scene/items/JordanHexMule';
 import { SummerOutdoorBoot }                           from '@features/scene/items/SummerOutdoorBoot';
 import { WinterOutdoorBoot }                           from '@features/scene/items/WinterOutdoorBoot';
+import { Sneakers }                                   from '@features/scene/items/Sneakers';
 import { MackaparGroup }                              from '@features/scene/items/MackaparGroup';
 import { SunnerstaGroup }                             from '@features/scene/items/SunnerstaGroup';
 import { CuisineGroup }                               from '@features/scene/items/CuisineGroup';
@@ -40,6 +41,7 @@ import { UtakerStack }                                from '@features/scene/item
 import { BollsidanDesk }                              from '@features/scene/items/BollsidanDesk';
 import { MannequinHead }                              from '@features/scene/items/MannequinHead';
 import { Backpack }                                   from '@features/scene/items/Backpack';
+import { BaseballCap }                                from '@features/scene/items/BaseballCap';
 import { Mug }                                        from '@features/scene/items/Mug';
 import { Counter }                                    from '@features/scene/items/Counter';
 import { SinkBoholmen }                               from '@features/scene/items/SinkBoholmen';
@@ -106,11 +108,13 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'jordan-hex-mule':        JordanHexMule,
   'summer-outdoor-boot':    SummerOutdoorBoot,
   'winter-outdoor-boot':    WinterOutdoorBoot,
+  'sneaker':                Sneakers,
   'meuble-t':               MeubleT,
   'utaker-stack':           UtakerStack,
   'desk-bollsidan':         BollsidanDesk,
   'mannequin-head':         MannequinHead,
   'backpack':               Backpack,
+  'baseball-cap':           BaseballCap,
   'mug':                    Mug,
   'mirror-nissedal-wide':   NissedalMirror,
   'ninja-sp101':            NinjaSP101,

@@ -1,5 +1,5 @@
 """Export Lara Mixamo with Ground Point Alignment.
-Simple version: Move the armature and export without applying complex transforms that break rigs.
+Refined version: Clean translation and scale, no rotation.
 """
 import bpy
 from mathutils import Vector
@@ -23,51 +23,56 @@ def main():
         log("Error: No armature found")
         return
 
-    # 1) Scale 100x (Mixamo meters to cm)
-    # Instead of applying scale (which can break bone lengths in some Blender versions), 
-    # we just set the object scale. The GLTF exporter will handle it.
-    armature.scale = Vector((100, 100, 100))
-    
-    # 2) Calculate Pivot (Hips)
-    # We want the horizontal center to be the Hips
+    # 1) Scale to cm (100x)
+    # We select EVERYTHING and scale, then apply scale.
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.transform.resize(value=(100, 100, 100))
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    log("Applied 100x scale to everything.")
+
+    # 2) Pivot calculation (Hips)
+    # We want the horizontal center (X/Z) to be the Hips bone head.
     hips = armature.data.bones.get('mixamorig:Hips')
     if hips:
-        # head_local is relative to armature origin (0,0,0)
-        # Since armature is at 0,0,0 and scale 100, hips world pos is head_local * 100
-        pivot_x = hips.head_local.x * 100
-        pivot_z = hips.head_local.z * 100
+        # head_local is relative to armature origin in meters (before our scale? No, we applied scale).
+        # Actually, let's get world position to be absolutely sure.
+        bpy.context.view_layer.update()
+        pivot_x = (armature.matrix_world @ hips.head_local).x
+        pivot_z = (armature.matrix_world @ hips.head_local).z
     else:
         pivot_x = 0
         pivot_z = 0
 
-    # 3) Calculate Ground (Min Y)
-    # Find min Y of all meshes after scaling
+    # 3) Ground calculation (Min Y)
+    # Find global min Y of all meshes.
     min_y = 9999.0
     for o in bpy.context.scene.objects:
         if o.type == 'MESH':
-            # world_matrix includes the 100x scale
             for corner in o.bound_box:
                 world_corner = o.matrix_world @ Vector(corner)
                 if world_corner.y < min_y:
                     min_y = world_corner.y
 
-    log(f"Pivot: {pivot_x}, {pivot_z} | Ground: {min_y}")
+    log(f"Calculated offsets: X={pivot_x:.4f}, Z={pivot_z:.4f}, Y={min_y:.4f}")
 
     # 4) Shift everything
-    # We move the armature object so that the desired pivot point ends up at (0,0,0)
-    armature.location.x -= pivot_x
-    armature.location.z -= pivot_z
-    armature.location.y -= min_y
+    # We shift the objects in the scene so (pivot_x, min_y, pivot_z) moves to (0,0,0)
+    offset = Vector((-pivot_x, -min_y, -pivot_z))
+    for o in bpy.context.scene.objects:
+        if not o.parent: # Only move roots
+            o.location += offset
+    
+    # 5) Apply location to lock (0,0,0) as the new origin
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.transform_apply(location=True, rotation=False, scale=False)
+    log("Applied location to everything.")
 
-    # 5) Export
-    # IMPORTANT: We do NOT apply transforms (transform_apply) as it often breaks skinning weights
-    # if the meshes and armature are not handled perfectly.
-    # The GLTF exporter with 'export_apply=True' (default for some settings) will bake the object transforms.
+    # 6) Export
     log(f"Exporting to: {OUTPUT_GLB}")
     bpy.ops.export_scene.gltf(
         filepath=OUTPUT_GLB,
         export_format="GLB",
-        use_selection=False, # Export everything
+        use_selection=False,
         export_apply=True,
         export_yup=True,
         export_animations=True,
