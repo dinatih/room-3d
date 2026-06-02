@@ -1,9 +1,9 @@
 /**
  * Walker.tsx — Lara Perfect (Personnage animé unique).
  */
-import { useRef, useLayoutEffect, useMemo, Suspense, useEffect } from 'react';
+import { useRef, useLayoutEffect, useMemo, Suspense, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, useHelper } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
@@ -14,30 +14,6 @@ const MIXAMO_WALK_GLB = 'media/glb-animations/happy_walk.glb';
 interface WalkerProps { showSkeleton?: boolean; isPreview?: boolean; walkerAnim?: string; isPaused?: boolean; }
 
 // --- Internal Components ---
-function SkeletonView({ root, visible }: { root: THREE.Object3D, visible: boolean }) {
-  const helper = useMemo(() => {
-    if (!visible) return null;
-    const h = new THREE.SkeletonHelper(root);
-    h.matrixAutoUpdate = false;
-    h.matrix.identity();
-    // Ensure helper is visible through the mesh
-    if (h.material instanceof THREE.LineBasicMaterial) {
-      h.material.depthTest = false;
-      h.material.transparent = true;
-      h.material.opacity = 0.8;
-    }
-    h.renderOrder = 999;
-    return h;
-  }, [root, visible]);
-
-  useFrame(() => {
-    if (helper) helper.update();
-  });
-
-  if (!helper) return null;
-  return <primitive object={helper} />;
-}
-
 function GroundPoint() {
   return (
     <group position={[0, 0.05, 0]} name="GroundPoint">
@@ -57,8 +33,24 @@ export const walkerMeshList: THREE.Mesh[] = [];
 
 function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walkerAnim, isPaused, onSize }: WalkerProps & { onSize?: (dims: { w: number, d: number, h: number }) => void }) {
   const { scene } = useGLTFClone('media/glb/lara_perfect_v2.glb'), animPath = useMemo(() => (!walkerAnim || walkerAnim === 'tpose') ? null : `media/glb-animations/${walkerAnim}`, [walkerAnim]), animGltf = useGLTF(animPath || MIXAMO_WALK_GLB);
-  const groupRef = useRef<THREE.Group>(null!), mixerRef = useRef<THREE.AnimationMixer | null>(null), actionRef = useRef<THREE.AnimationAction | null>(null), activeRef = useRef(false), fadeFrames = useRef(0);
+  const groupRef = useRef<THREE.Group>(null!);
+  const sceneRef = useRef<THREE.Object3D>(null!);
+  const mixerRef = useRef<THREE.AnimationMixer | null>(null), actionRef = useRef<THREE.AnimationAction | null>(null), activeRef = useRef(false), fadeFrames = useRef(0);
   const { invalidate } = useThree();
+
+  // Official helper hook attached directly to character scene
+  const helper = useHelper(showSkeleton ? sceneRef : null, THREE.SkeletonHelper);
+
+  useEffect(() => {
+    if (helper && helper.material instanceof THREE.LineBasicMaterial) {
+      helper.material.depthTest = false;
+      helper.material.transparent = true;
+      helper.material.opacity = 1;
+      helper.material.color.set(0x00ff00);
+      helper.renderOrder = 2000;
+    }
+  }, [helper]);
+
   useLayoutEffect(() => {
     normalizeMixamoBoneNames(scene);
     
@@ -117,13 +109,10 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
   });
 
   return (
-    <>
-      <group ref={groupRef}>
-        <primitive object={scene} />
-        <GroundPoint />
-      </group>
-      <SkeletonView root={scene} visible={showSkeleton} />
-    </>
+    <group ref={groupRef}>
+      <primitive ref={sceneRef} object={scene} />
+      <GroundPoint />
+    </group>
   );
 }
 
