@@ -89,8 +89,6 @@ function drawMinimap(
   // ── Walkers icons ──────────────────────────────────────────────────────────
   const walkers = [
     { x: cameraState.walker0X, z: cameraState.walker0Z, yaw: cameraState.walker0Yaw, color: '#0066ff' }, // Ref: Blue
-    { x: cameraState.walker1X, z: cameraState.walker1Z, yaw: cameraState.walker1Yaw, color: '#ff00ff' }, // Red: Magenta
-    { x: cameraState.walker2X, z: cameraState.walker2Z, yaw: cameraState.walker2Yaw, color: '#00ffff' }, // Perfect: Cyan
   ];
 
   walkers.forEach((w, idx) => {
