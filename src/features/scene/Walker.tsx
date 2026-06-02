@@ -43,6 +43,8 @@ function GroundPoint() {
   );
 }
 
+export const walkerMeshList: THREE.Mesh[] = [];
+
 function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walkerAnim, isPaused, onSize }: WalkerProps & { onSize?: (dims: { w: number, d: number, h: number }) => void }) {
   const { scene } = useGLTFClone('media/glb/lara_perfect_v2.glb'), animPath = useMemo(() => (!walkerAnim || walkerAnim === 'tpose') ? null : `media/glb-animations/${walkerAnim}`, [walkerAnim]), animGltf = useGLTF(animPath || MIXAMO_WALK_GLB);
   const groupRef = useRef<THREE.Group>(null!), mixerRef = useRef<THREE.AnimationMixer | null>(null), actionRef = useRef<THREE.AnimationAction | null>(null), activeRef = useRef(false), fadeFrames = useRef(0);
@@ -65,6 +67,12 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
         if (isPreview && !isPaused) { action.play(); activeRef.current = true; }
       }
     }
+    
+    // Populate debug list
+    walkerMeshList.length = 0;
+    scene.traverse(c => { if ((c as THREE.Mesh).isMesh) walkerMeshList.push(c as THREE.Mesh); });
+    walkerMeshList.sort((a, b) => a.name.localeCompare(b.name));
+
     if (onSize) {
       scene.updateMatrixWorld(true);
       const box = new THREE.Box3().setFromObject(scene), s = box.getSize(new THREE.Vector3());
