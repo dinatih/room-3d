@@ -15,17 +15,27 @@ interface WalkerProps { showSkeleton?: boolean; isPreview?: boolean; walkerAnim?
 
 // --- Internal Components ---
 function SkeletonView({ root, visible }: { root: THREE.Object3D, visible: boolean }) {
-  const { scene: worldScene } = useThree();
-  const helperRef = useRef<THREE.SkeletonHelper | null>(null);
-  useEffect(() => {
-    if (!visible) return;
-    const helper = new THREE.SkeletonHelper(root);
-    helper.matrixAutoUpdate = false; helper.matrix.identity();
-    worldScene.add(helper); helperRef.current = helper;
-    return () => { worldScene.remove(helper); helperRef.current = null; };
-  }, [root, visible, worldScene]);
-  useFrame(() => { if (helperRef.current) helperRef.current.update(); });
-  return null;
+  const helper = useMemo(() => {
+    if (!visible) return null;
+    const h = new THREE.SkeletonHelper(root);
+    h.matrixAutoUpdate = false;
+    h.matrix.identity();
+    // Ensure helper is visible through the mesh
+    if (h.material instanceof THREE.LineBasicMaterial) {
+      h.material.depthTest = false;
+      h.material.transparent = true;
+      h.material.opacity = 0.8;
+    }
+    h.renderOrder = 999;
+    return h;
+  }, [root, visible]);
+
+  useFrame(() => {
+    if (helper) helper.update();
+  });
+
+  if (!helper) return null;
+  return <primitive object={helper} />;
 }
 
 function GroundPoint() {
@@ -106,7 +116,15 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
     }
   });
 
-  return <group ref={groupRef}><primitive object={scene} /><GroundPoint /><SkeletonView root={scene} visible={showSkeleton} /></group>;
+  return (
+    <>
+      <group ref={groupRef}>
+        <primitive object={scene} />
+        <GroundPoint />
+      </group>
+      <SkeletonView root={scene} visible={showSkeleton} />
+    </>
+  );
 }
 
 export function Walker(props: WalkerProps & { onSize?: (dims: { w: number, d: number, h: number }) => void }) { return <Suspense fallback={null}><InternalWalkerPerfect {...props} /></Suspense>; }
