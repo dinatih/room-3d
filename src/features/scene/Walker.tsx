@@ -80,6 +80,13 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
       const box = new THREE.Box3().setFromObject(scene), s = box.getSize(new THREE.Vector3());
       onSize({ w: s.x, d: s.z, h: s.y });
     }
+    
+    // Hard-bake grounding in R3F
+    scene.updateMatrixWorld(true);
+    const b = new THREE.Box3().setFromObject(scene);
+    console.log(`LARA GROUNDING: min.y=${b.min.y.toFixed(2)}, max.y=${b.max.y.toFixed(2)}, h=${(b.max.y - b.min.y).toFixed(2)}`);
+    scene.position.y = -b.min.y;
+    
   }, [scene, animGltf, isPreview, walkerAnim, onSize]);
   
   useFrame((_, delta) => {
