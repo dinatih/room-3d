@@ -306,9 +306,7 @@ export function Studio() {
           <Walls pillarsOnly={layers.pillarsOnly} wallsOnly={layers.wallsOnly} />
           <Floor />
           <group visible={layers.doors}><DoorsPlaced /></group>
-          <Walker    showSkeleton={layers.skeleton} />
-          <WalkerRed showSkeleton={layers.skeleton} />
-          <WalkerPerfect showSkeleton={layers.skeleton} />
+          <Walker showSkeleton={layers.skeleton} />
 
           {/*
            * LAYER_EQUIPMENT (1) — équipements sanitaires et cuisine.
