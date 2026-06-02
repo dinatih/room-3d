@@ -76,3 +76,4 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
 export function Walker(props: WalkerProps & { onSize?: (dims: { w: number, d: number, h: number }) => void }) { return <Suspense fallback={null}><InternalWalkerPerfect {...props} /></Suspense>; }
 
 useGLTF.preload('media/glb/lara_perfect_v2.glb');
+EOF
