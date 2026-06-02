@@ -1,19 +1,47 @@
 /**
  * Walker.tsx — Lara Perfect (Personnage animé unique).
  */
-import { useRef, useLayoutEffect, useMemo, Suspense } from 'react';
+import { useRef, useLayoutEffect, useMemo, Suspense, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
 import { retargetMixamoClip, normalizeMixamoBoneNames, findBone, cacheRestStates } from './WalkerUtils';
-import { GroundPoint } from './GroundPoint';
-import { SkeletonView } from './SkeletonView';
 
 const MIXAMO_WALK_GLB = 'media/glb-animations/happy_walk.glb';
 
 interface WalkerProps { showSkeleton?: boolean; isPreview?: boolean; walkerAnim?: string; isPaused?: boolean; }
+
+// --- Internal Components ---
+function SkeletonView({ root, visible }: { root: THREE.Object3D, visible: boolean }) {
+  const { scene: worldScene } = useThree();
+  const helperRef = useRef<THREE.SkeletonHelper | null>(null);
+  useEffect(() => {
+    if (!visible) return;
+    const helper = new THREE.SkeletonHelper(root);
+    helper.matrixAutoUpdate = false; helper.matrix.identity();
+    worldScene.add(helper); helperRef.current = helper;
+    return () => { worldScene.remove(helper); helperRef.current = null; };
+  }, [root, visible, worldScene]);
+  useFrame(() => { if (helperRef.current) helperRef.current.update(); });
+  return null;
+}
+
+function GroundPoint() {
+  return (
+    <group position={[0, 0.05, 0]} name="GroundPoint">
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[4, 5, 32]} />
+        <meshBasicMaterial color="#0058a3" transparent opacity={0.6} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[1, 16]} />
+        <meshBasicMaterial color="#0058a3" />
+      </mesh>
+    </group>
+  );
+}
 
 function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walkerAnim, isPaused, onSize }: WalkerProps & { onSize?: (dims: { w: number, d: number, h: number }) => void }) {
   const { scene } = useGLTFClone('media/glb/lara_perfect_v2.glb'), animPath = useMemo(() => (!walkerAnim || walkerAnim === 'tpose') ? null : `media/glb-animations/${walkerAnim}`, [walkerAnim]), animGltf = useGLTF(animPath || MIXAMO_WALK_GLB);
@@ -74,6 +102,6 @@ function InternalWalkerPerfect({ showSkeleton = false, isPreview = false, walker
 }
 
 export function Walker(props: WalkerProps & { onSize?: (dims: { w: number, d: number, h: number }) => void }) { return <Suspense fallback={null}><InternalWalkerPerfect {...props} /></Suspense>; }
+export function WalkerPerfect(props: WalkerProps & { onSize?: (dims: { w: number, d: number, h: number }) => void }) { return <Walker {...props} />; }
 
 useGLTF.preload('media/glb/lara_perfect_v2.glb');
-EOF
