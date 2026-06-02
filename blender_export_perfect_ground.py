@@ -4,7 +4,7 @@ Refined version: Clean translation and scale, no rotation.
 import bpy
 from mathutils import Vector
 
-INPUT_GLB = "/home/dinatih/Projects/room-3d/public/media/glb/lara_mixamo.glb"
+INPUT_GLB = "/home/dinatih/Projects/room-3d/public/media/glb/lara_croft_mixamo.glb"
 OUTPUT_GLB = "/home/dinatih/Projects/room-3d/public/media/glb/lara_perfect.glb"
 
 def log(msg):

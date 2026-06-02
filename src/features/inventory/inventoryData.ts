@@ -213,8 +213,6 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'door-glass',       name: 'Porte-fenêtre',                  brand: '',         category: 'doors',     qty: 1, dims: { w: 160, d: 5,   h: 190 }, notes: 'Double battant PVC blanc, vitrage, seuil 20cm', actions: ['east-glass-door-toggle'] },
 
   // ── WALKERS ───────────────────────────────────────────────────────────────────
-  { id: 'walker-lara',      name: 'Lara Croft (Référence)',         brand: 'Mixamo',   category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 181 }, notes: 'Modèle de référence original avec rig natif.' },
-  { id: 'walker-red',       name: 'Lara Croft (Rouge)',             brand: 'Mixamo',   category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 173.4 }, notes: 'Tenue rouge, rig Mixamo retargeté, anim GLB.' },
   { id: 'walker-lara-perfect', name: 'Lara Croft (Perfect)',         brand: 'Mixamo',   category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 173.4 }, notes: 'Modèle optimisé Blender avec Ground Point.' },
 ];
 
