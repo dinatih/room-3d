@@ -96,7 +96,7 @@ export function DevToolsGroups({ Group }: {
 
   return (
     <>
-      <Group emoji="📊" title="Perf">
+      <Group emoji="📊" title="Perf" defaultOpen>
         <canvas
           ref={fpsCanvasRef}
           width={FPS_W} height={FPS_H}
