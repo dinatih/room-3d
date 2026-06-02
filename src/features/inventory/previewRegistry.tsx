@@ -63,6 +63,10 @@ function PreviewWalkerPerfect({ actionState }: { actionState?: any }) {
   return <Walker isPreview={true} showSkeleton={actionState?.showBones} walkerAnim={actionState?.walkerAnim} isPaused={actionState?.isPaused} />; 
 }
 
+function PreviewXBot({ actionState }: { actionState?: any }) { 
+  return <Walker isPreview={true} glbPath="media/glb/x_bot.glb" showSkeleton={actionState?.showBones} walkerAnim={actionState?.walkerAnim} isPaused={actionState?.isPaused} />; 
+}
+
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
   'freezer':                Freezer,
@@ -80,6 +84,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
 
   // ── Procéduraux (pas de glbPath) ──────────────────────────────────────────
   'walker-lara-perfect':    PreviewWalkerPerfect as any,
+  'walker-x-bot':           PreviewXBot as any,
   'counter':                Counter,
   'sink-boholmen':          SinkBoholmen,
   'water-heater':           WaterHeater,

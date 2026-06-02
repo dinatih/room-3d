@@ -73,7 +73,7 @@ export function removeGlbLines(root: THREE.Object3D) {
 export function glbLocalBBox(root: THREE.Object3D): THREE.Box3 {
   const innerBox = new THREE.Box3();
   const m = new THREE.Matrix4();
-  root.traverseVisible(node => {
+  root.traverse(node => {
     const mesh = node as THREE.Mesh;
     if (!mesh.isMesh) return;
     if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();

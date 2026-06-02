@@ -83,23 +83,40 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
       } 
     });
     
-    const box = glbLocalBBox(innerRef.current);
+    const box = new THREE.Box3().setFromObject(innerRef.current);
     hidden.forEach(o => o.visible = true);
 
     if (box.isEmpty()) return;
-    const center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()), max = Math.max(size.x, size.y, size.z), s = 1.4 / max;
+    
+    // Calculate sizing based on the actual world-space box of the scaled model
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const max = Math.max(size.x, size.y, size.z);
+    
+    // We want the item to fit comfortably in the preview scene
+    const s = 1.0 / max;
     setScale(s); 
     setWorldSize({ x: size.x * s, y: size.y * s, z: size.z * s });
     outerRef.current.scale.setScalar(s);
     
+    // Offset outer group to center the item
     const px = preserveOriginXZ ? 0 : -center.x * s;
     const pz = preserveOriginXZ ? 0 : -center.z * s;
 
-    if (grounded) outerRef.current.position.set(px, -box.min.y * s, pz);
-    else outerRef.current.position.set(px, -center.y * s, pz);
+    if (grounded) {
+      // Position the root so that the lowest point of the mesh (box.min.y) is at Y=0
+      outerRef.current.position.set(px, -box.min.y * s, pz);
+    } else {
+      // Center vertically in view
+      outerRef.current.position.set(px, -center.y * s, pz);
+    }
   }, [grounded, preserveOriginXZ]);
 
-  useEffect(() => { fit(); }, [fit, item?.id, glbPath]);
+  useLayoutEffect(() => {
+    // Small delay to ensure skeleton/skinning matrices are computed
+    const timer = setTimeout(fit, 50);
+    return () => clearTimeout(timer);
+  }, [fit, item?.id, glbPath, actionState]);
 
   return (
     <group>

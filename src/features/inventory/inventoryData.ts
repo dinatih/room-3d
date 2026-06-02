@@ -214,6 +214,7 @@ export const INVENTORY: InventoryItem[] = [
 
   // ── WALKERS ───────────────────────────────────────────────────────────────────
   { id: 'walker-lara-perfect', name: 'Lara Croft (Perfect)',         brand: 'Mixamo',   category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 173.4 }, notes: 'Modèle optimisé Blender avec Ground Point.' },
+  { id: 'walker-x-bot',        name: 'X Bot (Official)',             brand: 'Mixamo',   category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 180 },   notes: 'Personnage officiel Mixamo pour calibration.' },
 ];
 
 export const STORAGE_SPACES: StorageSpace[] = [
