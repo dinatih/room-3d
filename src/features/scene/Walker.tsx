@@ -2,9 +2,9 @@
  * Walker.tsx — Personnage unique (Xbot Officiel).
  * Gère le chargement, les animations natives et le positionnement.
  */
-import { useRef, useLayoutEffect, Suspense, useMemo, useEffect } from 'react';
+import { useRef, useLayoutEffect, Suspense, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, useHelper } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
@@ -42,33 +42,33 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
   const actionsRef = useRef<Record<string, THREE.AnimationAction>>({});
   const activeActionName = useRef<string>('');
   
-  const { invalidate, scene: globalScene } = useThree();
+  const { invalidate } = useThree();
 
-  // 1. SETUP MODEL & MIXER (One-time or on model change)
   useLayoutEffect(() => {
-    console.log(`WALKER_DEBUG: Setting up model ${MODEL_PATH}`);
-    
-    // Scale 100x (Official Xbot is in meters)
+    // 1. Scale & Setup
     scene.scale.set(100, 100, 100);
-    
-    // Reset and Center
     scene.position.set(0, 0, 0);
+    scene.rotation.set(0, 0, 0);
+
+    // Center the character locally
     scene.updateMatrixWorld(true);
     const hips = scene.getObjectByName('mixamorig:Hips');
     if (hips) {
         const worldPos = new THREE.Vector3();
         hips.getWorldPosition(worldPos);
-        // We want worldPos.x/z to be 0.
         scene.position.x -= worldPos.x;
         scene.position.z -= worldPos.z;
-        console.log(`WALKER_DEBUG: Centered Hips at ${worldPos.x.toFixed(2)}, ${worldPos.z.toFixed(2)}`);
     }
 
     scene.traverse(o => {
       if ((o as THREE.Mesh).isMesh) {
         o.castShadow = o.receiveShadow = true;
         o.frustumCulled = false;
-        if ((o as THREE.Mesh).material) (o as THREE.Mesh).material.alphaMode = "OPAQUE";
+        if ((o as THREE.Mesh).material) {
+            (o as THREE.Mesh).material.alphaMode = "OPAQUE";
+            // Ensure the mesh doesn't block raycasting if it's a helper
+            (o as THREE.Mesh).raycast = () => {}; 
+        }
       }
       if ((o as THREE.Bone).isBone) {
         const b = o as THREE.Bone;
@@ -97,26 +97,31 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
     };
   }, [scene, animations]);
 
-  // 2. SKELETON HELPER (Separate Effect to avoid re-initializing mixer)
+  // Use the standard hook for skeleton helper - much safer
+  const skeletonRef = useHelper(showSkeleton ? modelRef : null, THREE.SkeletonHelper);
+
   useEffect(() => {
-    let helper: THREE.SkeletonHelper | null = null;
-    if (showSkeleton) {
-        helper = new THREE.SkeletonHelper(scene);
-        (helper.material as THREE.LineBasicMaterial).color.set(0x00ffff);
-        (helper.material as THREE.LineBasicMaterial).depthTest = false;
-        helper.renderOrder = 9999;
-        globalScene.add(helper);
+    if (skeletonRef.current) {
+        const helper = skeletonRef.current;
+        const mat = helper.material as THREE.LineBasicMaterial;
+        mat.color.set(0x00ffff);
+        mat.depthTest = false;
+        helper.renderOrder = 99999;
+        // CRITICAL: Prevent skeleton from blocking OrbitControls/Raycasting
+        helper.raycast = () => {}; 
+        helper.traverse(c => { c.raycast = () => {}; });
     }
-    return () => {
-        if (helper) globalScene.remove(helper);
-    };
-  }, [scene, showSkeleton, globalScene]);
+  }, [skeletonRef, showSkeleton]);
 
   useFrame((_, delta) => {
     if (!groupRef.current || !mixerRef.current) return;
 
-    // 1. Update Position (World)
-    if (!isPreview) {
+    // 1. Update Transform
+    if (isPreview) {
+      groupRef.current.position.set(0, 0, 0);
+      groupRef.current.rotation.y = 0;
+      groupRef.current.visible = true;
+    } else {
       if (cameraState.isWalking) {
         cameraState.walker0X = cameraState.camX;
         cameraState.walker0Z = cameraState.camZ;
@@ -124,26 +129,17 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
       }
       cameraState.walkerX = cameraState.walker0X;
       cameraState.walkerZ = cameraState.walker0Z;
-      
       groupRef.current.position.set(cameraState.walker0X, 0, cameraState.walker0Z);
       groupRef.current.rotation.y = cameraState.walkYaw;
       groupRef.current.visible = !cameraState.walkerHidden;
-    } else {
-      groupRef.current.position.set(0, 0, 0);
-      groupRef.current.rotation.y = 0;
-      groupRef.current.visible = true;
     }
 
     // 2. Animation Logic
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
-    
-    let targetAction = walkerAnim;
-    if (!isPreview) {
-        targetAction = cameraState.isMoving ? 'walk' : 'idle';
-    }
+    let target = isPreview ? (walkerAnim || 'idle') : (cameraState.isMoving ? 'walk' : 'idle');
 
-    if (targetAction === 'tpose') {
+    if (target === 'tpose') {
         if (activeActionName.current !== 'tpose') {
             mixer.stopAllAction();
             scene.traverse(o => {
@@ -156,19 +152,20 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
             activeActionName.current = 'tpose';
         }
     } else {
-        const to = actions[targetAction];
-        if (to && activeActionName.current !== targetAction) {
-            const from = activeActionName.current !== 'tpose' ? actions[activeActionName.current] : null;
+        const to = actions[target];
+        if (to && activeActionName.current !== target) {
+            const from = (activeActionName.current && activeActionName.current !== 'tpose') ? actions[activeActionName.current] : null;
             if (from) from.fadeOut(0.2);
             to.reset().fadeIn(0.2).play();
             to.setEffectiveWeight(1);
-            activeActionName.current = targetAction;
+            activeActionName.current = target;
         }
     }
 
     if (activeActionName.current !== 'tpose' && !isPaused) {
         mixer.update(delta);
     }
+
     invalidate();
   });
 
