@@ -62,12 +62,20 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
 
     scene.traverse(o => {
       if ((o as THREE.Mesh).isMesh) {
-        o.castShadow = o.receiveShadow = true;
-        o.frustumCulled = false;
-        if ((o as THREE.Mesh).material) {
-            (o as THREE.Mesh).material.alphaMode = "OPAQUE";
+        const m = o as THREE.Mesh;
+        m.castShadow = m.receiveShadow = true;
+        m.frustumCulled = false;
+        if (m.material) {
+            // Material might be an array or a single material
+            const materials = Array.isArray(m.material) ? m.material : [m.material];
+            materials.forEach(mat => {
+                // alphaMode is GLTF-specific, for Three.js we usually use .transparent and .opacity
+                // but if we want to force opaque:
+                mat.transparent = false;
+                mat.depthWrite = true;
+            });
             // Ensure the mesh doesn't block raycasting if it's a helper
-            (o as THREE.Mesh).raycast = () => {}; 
+            m.raycast = () => {}; 
         }
       }
       if ((o as THREE.Bone).isBone) {
@@ -102,7 +110,7 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
 
   useEffect(() => {
     if (skeletonRef.current) {
-        const helper = skeletonRef.current;
+        const helper = skeletonRef.current as THREE.SkeletonHelper;
         const mat = helper.material as THREE.LineBasicMaterial;
         mat.color.set(0x00ffff);
         mat.depthTest = false;
@@ -118,10 +126,12 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
 
     // 1. Update Transform
     if (isPreview) {
+      // Logic for preview instance: keep at origin, handle rotation via OrbitControls
       groupRef.current.position.set(0, 0, 0);
       groupRef.current.rotation.y = 0;
       groupRef.current.visible = true;
     } else {
+      // Logic for scene instance: sync with cameraState
       if (cameraState.isWalking) {
         cameraState.walker0X = cameraState.camX;
         cameraState.walker0Z = cameraState.camZ;
@@ -137,6 +147,8 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
     // 2. Animation Logic
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
+    
+    // Decouple animation target
     let target = isPreview ? (walkerAnim || 'idle') : (cameraState.isMoving ? 'walk' : 'idle');
 
     if (target === 'tpose') {

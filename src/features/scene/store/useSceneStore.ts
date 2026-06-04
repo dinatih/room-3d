@@ -42,7 +42,7 @@ const initialFurniture: FurnitureState = {
 const initialLayers: LayerState = {
   structure: true,
   equipment: true,
-  furniture: true,
+  furniture: false,
   doors: true,
   neighbors: false,
   xray: false,

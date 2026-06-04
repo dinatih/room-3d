@@ -59,8 +59,8 @@ import { Linky }                                      from '@features/scene/item
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
 import { Walker }                                     from '@features/scene/Walker';
 
-function PreviewWalker({ actionState }: { actionState?: any }) { 
-  return <Walker showSkeleton={actionState?.showBones} />; 
+function PreviewWalker({ actionState }: { actionState?: any }) {
+  return <Walker isPreview={true} showSkeleton={actionState?.showBones} isPaused={actionState?.isPaused} walkerAnim={actionState?.walkerAnim} />;
 }
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
