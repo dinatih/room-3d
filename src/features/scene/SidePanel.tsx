@@ -370,6 +370,7 @@ export interface LayerState {
   grass:        boolean;
   surface:      boolean;
   ceiling:      boolean;
+  walker:       boolean;
 }
 
 export interface SidePanelProps {
@@ -496,6 +497,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('blue',   'Voisins',       'neighbors')}
       {layerBtn('cyan',   'X-Ray',         'xray')}
       {layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
+      {layerBtn('light',  'Walker',        'walker')}
       {layerBtn('white',  'Squelette',     'skeleton')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}

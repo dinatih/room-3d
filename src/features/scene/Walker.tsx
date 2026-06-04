@@ -41,6 +41,7 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const actionsRef = useRef<Record<string, THREE.AnimationAction>>({});
   const activeActionName = useRef<string>('');
+  const idleTimerRef = useRef<number>(0);
   
   const { invalidate } = useThree();
 
@@ -151,6 +152,16 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
     // Decouple animation target
     let target = isPreview ? (walkerAnim || 'idle') : (cameraState.isMoving ? 'walk' : 'idle');
 
+    // Idle timer logic: if target is 'idle' and not in preview (or specifically idle in preview)
+    // increment timer. If > 10s, stop updating mixer to save perf.
+    if (target === 'idle' && !isPaused) {
+        idleTimerRef.current += delta;
+    } else {
+        idleTimerRef.current = 0;
+    }
+
+    const isIdleTimeout = idleTimerRef.current > 10;
+
     if (target === 'tpose') {
         if (activeActionName.current !== 'tpose') {
             mixer.stopAllAction();
@@ -171,14 +182,19 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
             to.reset().fadeIn(0.2).play();
             to.setEffectiveWeight(1);
             activeActionName.current = target;
+            idleTimerRef.current = 0; // Reset timer on animation change
         }
     }
 
-    if (activeActionName.current !== 'tpose' && !isPaused) {
+    if (activeActionName.current !== 'tpose' && !isPaused && !isIdleTimeout) {
         mixer.update(delta);
     }
 
-    invalidate();
+    // Only invalidate if we are actually animating or moving
+    // If idle timeout reached, we stop calling invalidate() to allow the renderer to sleep
+    if (!isIdleTimeout || cameraState.isMoving || isPreview) {
+        invalidate();
+    }
   });
 
   return (

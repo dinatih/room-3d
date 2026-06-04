@@ -65,6 +65,7 @@ const initialLayers: LayerState = {
   collisions: false,
   grass: false,
   surface: false,
+  walker: true,
 };
 
 const initialExtraStates: Record<string, boolean> = {
@@ -176,6 +177,9 @@ export const useSceneStore = create<SceneStore>((set) => ({
       }
       if (key === 'collisions') {
         document.dispatchEvent(new CustomEvent('collisions-toggle', { detail: { enabled: nextLayers.collisions } }));
+      }
+      if (key === 'walker') {
+        cameraState.walkerHidden = !nextLayers.walker;
       }
       cameraState.invalidate?.();
       return { layers: nextLayers };
