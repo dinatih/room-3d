@@ -213,8 +213,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'door-glass',       name: 'Porte-fenêtre',                  brand: '',         category: 'doors',     qty: 1, dims: { w: 160, d: 5,   h: 190 }, notes: 'Double battant PVC blanc, vitrage, seuil 20cm', actions: ['east-glass-door-toggle'] },
 
   // ── WALKERS ───────────────────────────────────────────────────────────────────
-  { id: 'walker-lara-perfect', name: 'Lara Croft (Perfect)',         brand: 'Mixamo',   category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 173.4 }, notes: 'Modèle optimisé Blender avec Ground Point.' },
-  { id: 'walker-x-bot',        name: 'X Bot (Official)',             brand: 'Mixamo',   category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 180 },   notes: 'Personnage officiel Mixamo pour calibration.' },
+  { id: 'walker-x-bot',        name: 'X Bot (Official)',             brand: 'Three.js / Mixamo', category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 180 },   notes: 'Personnage officiel Mixamo pour la navigation.' },
 ];
 
 export const STORAGE_SPACES: StorageSpace[] = [

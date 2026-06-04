@@ -15,7 +15,6 @@ import { cameraState }      from '@features/scene/cameraState';
 import { Minimap }          from '@features/scene/Minimap';
 import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/scene/SidePanel';
 import { AnimationsPanel }  from '@features/scene/AnimationsPanel';
-import { WalkerMeshDebug }  from '@features/scene/WalkerMeshDebug';
 import { Walls, Floor, Mirrors, DoorsPlaced } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
@@ -387,7 +386,6 @@ export function Studio() {
         onStop={stopAll}
         durations={animDurations}
       />
-      <WalkerMeshDebug />
       {showInventory && <Inventory onClose={() => setShowInventory(false)} />}
       <Minimap />
       <VirtualDPad />

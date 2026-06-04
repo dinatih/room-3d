@@ -59,12 +59,8 @@ import { Linky }                                      from '@features/scene/item
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
 import { Walker }                                     from '@features/scene/Walker';
 
-function PreviewWalkerPerfect({ actionState }: { actionState?: any }) { 
-  return <Walker isPreview={true} showSkeleton={actionState?.showBones} walkerAnim={actionState?.walkerAnim} isPaused={actionState?.isPaused} />; 
-}
-
-function PreviewXBot({ actionState }: { actionState?: any }) { 
-  return <Walker isPreview={true} glbPath="media/glb/x_bot.glb" showSkeleton={actionState?.showBones} walkerAnim={actionState?.walkerAnim} isPaused={actionState?.isPaused} />; 
+function PreviewWalker({ actionState }: { actionState?: any }) { 
+  return <Walker showSkeleton={actionState?.showBones} />; 
 }
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
@@ -83,8 +79,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'sdb-closet':             SdbCloset,
 
   // ── Procéduraux (pas de glbPath) ──────────────────────────────────────────
-  'walker-lara-perfect':    PreviewWalkerPerfect as any,
-  'walker-x-bot':           PreviewXBot as any,
+  'walker-x-bot':           PreviewWalker as any,
   'counter':                Counter,
   'sink-boholmen':          SinkBoholmen,
   'water-heater':           WaterHeater,
