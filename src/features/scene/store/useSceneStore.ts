@@ -41,12 +41,12 @@ const initialFurniture: FurnitureState = {
 
 const initialLayers: LayerState = {
   structure: true,
-  equipment: true,
+  equipment: false,
   furniture: false,
   doors: true,
   neighbors: false,
   xray: false,
-  mirrors: true,
+  mirrors: false,
   mirrorsHD: false,
   plan: false,
   grid: false,
@@ -57,7 +57,7 @@ const initialLayers: LayerState = {
   wallEdges: false,
   lidar: false,
   lights: false,
-  shadows: true,
+  shadows: false,
   pillarsOnly: false,
   wallsOnly: false,
   realWorld: false,
