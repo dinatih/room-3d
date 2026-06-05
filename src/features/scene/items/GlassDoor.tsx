@@ -114,7 +114,6 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
   const rightDoorRef = useRef<THREE.Group>(null);
   const leftDoorRef = useRef<THREE.Group>(null);
   const handleRef = useRef<THREE.Group>(null);
-  const shutterRef = useRef<THREE.Group>(null);
 
   // Valeurs d'animation persistantes
   const rightRotRef = useRef(0);
@@ -213,13 +212,10 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
     }
 
     // Masquage dynamique des lames du volet
-    if (shutterRef.current) {
+    if (instancedShutterRef.current) {
       const currentHeight = (200 * shutterPercentRef.current) / 100;
-      const children = shutterRef.current.children;
-      const visibleCount = Math.ceil(currentHeight / 4);
-      for (let i = 0; i < children.length; i++) {
-        children[i].visible = i < visibleCount;
-      }
+      const visibleCount = Math.max(0, Math.min(50, Math.ceil(currentHeight / 4)));
+      instancedShutterRef.current.count = visibleCount;
     }
 
     if (moved) {
@@ -260,16 +256,21 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
     );
   }
 
-  // Lames de volet (50 lames de H=4cm, Z=-4cm pour couvrir Y=25 à Y=225)
-  const slats = [];
-  for (let i = 0; i < 50; i++) {
-    slats.push(
-      <mesh key={i} position={[0, 25 + 200 - i * 4 - 2, -4]}>
-        <boxGeometry args={[W_INNER + 2, 3.8, 1.2]} />
-        <meshStandardMaterial color="#dcdcdc" roughness={0.4} metalness={0.1} />
-      </mesh>
-    );
-  }
+  // ── TABLIER DE LAMES DU VOLET ROULANT (InstancedMesh) ──
+  const instancedShutterRef = useRef<THREE.InstancedMesh>(null);
+  
+  // Initialisation des matrices pour les 50 lames
+  useLayoutEffect(() => {
+    if (instancedShutterRef.current) {
+      const dummy = new THREE.Object3D();
+      for (let i = 0; i < 50; i++) {
+        dummy.position.set(0, 25 + 200 - i * 4 - 2, -4);
+        dummy.updateMatrix();
+        instancedShutterRef.current.setMatrixAt(i, dummy.matrix);
+      }
+      instancedShutterRef.current.instanceMatrix.needsUpdate = true;
+    }
+  }, []);
 
   // Rendu de la version 2 (Détaillée procédurale)
   return (
@@ -367,9 +368,10 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
       </mesh>
 
       {/* ── TABLIER DE LAMES DU VOLET ROULANT ── */}
-      <group ref={shutterRef}>
-        {slats}
-      </group>
+      <instancedMesh ref={instancedShutterRef} args={[undefined as any, undefined as any, 50]}>
+        <boxGeometry args={[W_INNER + 2, 3.8, 1.2]} />
+        <meshStandardMaterial color="#dcdcdc" roughness={0.4} metalness={0.1} />
+      </instancedMesh>
 
       {/* ── COFFRAGE SUPÉRIEUR DU VOLET (H=22, P=15) ── */}
       {/* Placé de Y=225 à Y=247, soit exactement 3 cm sous le plafond à Y=250 */}

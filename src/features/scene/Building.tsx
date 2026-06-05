@@ -10,6 +10,7 @@ import { useMemo, useRef, useEffect, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { RigidBody, CuboidCollider, ConvexHullCollider } from '@react-three/rapier';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { cameraState } from '@features/scene/cameraState';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150, GLB_65x65 } from './items/NissedalMirror';
@@ -327,6 +328,100 @@ function PillarColliders() {
   );
 }
 
+// ── MergedStaticGroup ──────────────────────────────────────────────────────────
+function MergedStaticGroup({ children }: { children: React.ReactNode }) {
+  const sourceRef = useRef<THREE.Group>(null!);
+  const mergedRef = useRef<THREE.Group>(null!);
+
+  useEffect(() => {
+    if (!sourceRef.current || !mergedRef.current) return;
+    const src = sourceRef.current;
+    const dst = mergedRef.current;
+    
+    dst.clear();
+    const groups = new Map<string, { geos: THREE.BufferGeometry[]; mat: THREE.Material; userData: any }>();
+    
+    src.updateMatrixWorld(true);
+
+    src.traverse(node => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      
+      let cur: THREE.Object3D | null = node;
+      let skip = false;
+      while (cur && cur !== src) {
+        if (cur.userData?.skipMerge) { skip = true; break; }
+        cur = cur.parent;
+      }
+      if (skip) return;
+
+      mesh.visible = false;
+      
+      const geom = mesh.geometry;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const worldMat = mesh.matrixWorld;
+      const udStr = JSON.stringify(mesh.userData || {});
+
+      if (!geom.groups || geom.groups.length === 0 || mats.length === 1) {
+        const mat = mats[0];
+        if (!mat || (mat as any).visible === false) return;
+        
+        let clone = geom.clone();
+        clone = clone.index ? clone.toNonIndexed() : clone;
+        clone.applyMatrix4(worldMat);
+        
+        const key = `${mat.uuid}|${udStr}`;
+        if (!groups.has(key)) groups.set(key, { geos: [], mat, userData: mesh.userData });
+        groups.get(key)!.geos.push(clone);
+      } else {
+        for (const group of geom.groups) {
+          const mat = mats[group.materialIndex || 0] || mats[0];
+          if (!mat || (mat as any).visible === false) continue;
+          
+          let clone = geom.clone();
+          if (geom.index) {
+            const newIndex = geom.index.array.slice(group.start, group.start + group.count);
+            clone.setIndex(new THREE.BufferAttribute(newIndex, 1));
+          }
+          clone.groups = [];
+          clone = clone.index ? clone.toNonIndexed() : clone;
+          clone.applyMatrix4(worldMat);
+          
+          const key = `${mat.uuid}|${udStr}`;
+          if (!groups.has(key)) groups.set(key, { geos: [], mat, userData: mesh.userData });
+          groups.get(key)!.geos.push(clone);
+        }
+      }
+    });
+
+    for (const { geos, mat, userData } of groups.values()) {
+      const allAttrs = new Set<string>();
+      geos.forEach(g => Object.keys(g.attributes).forEach(k => allAttrs.add(k)));
+      for (const a of allAttrs) {
+        if (!geos.every(g => g.hasAttribute(a))) geos.forEach(g => g.deleteAttribute(a));
+      }
+      
+      const merged = mergeGeometries(geos, false);
+      if (!merged) {
+        console.warn('MergedStaticGroup: mergeGeometries failed for', mat);
+        continue;
+      }
+      const m = new THREE.Mesh(merged, mat);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      m.userData = userData; // Restore userData for Raycaster and WallEdgesLayer
+      dst.add(m);
+    }
+  }, [children]);
+
+  return (
+    <group>
+      <group ref={sourceRef}>{children}</group>
+      <group ref={mergedRef} />
+    </group>
+  );
+}
+
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?: boolean; wallsOnly?: boolean }) {
   // Géométries complexes via useMemo ──────────────────────────────────────────
@@ -409,101 +504,103 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
   }, []);
 
   return (
-    <group ref={(g) => { wallsGroupRef.current = g; }} userData={{ brickType: 'wall' }}>
+    <MergedStaticGroup>
+      <group ref={(g) => { wallsGroupRef.current = g; }} userData={{ brickType: 'wall' }}>
 
-      {pillarsOnly && <PillarLabels />}
+        {pillarsOnly && <PillarLabels />}
 
-      {/* ── Piliers — masqués en mode wallsOnly ─────────────────────────────── */}
-      <group visible={!wallsOnly}>
-        {PILLAR_DEFS.map((p) => {
-          const pp = p as any;
-          const pw = pp.w ?? W;
-          const pd = pp.d ?? W;
-          const rot = pp.rot ?? 0;
-          if (rot) {
+        {/* ── Piliers — masqués en mode wallsOnly ─────────────────────────────── */}
+        <group visible={!wallsOnly}>
+          {PILLAR_DEFS.map((p) => {
+            const pp = p as any;
+            const pw = pp.w ?? W;
+            const pd = pp.d ?? W;
+            const rot = pp.rot ?? 0;
+            if (rot) {
+              return (
+                <mesh key={pp.id} position={[pp.x, WALL_H / 2, pp.z]} rotation-y={rot}
+                      material={wallMat} castShadow receiveShadow
+                      userData={{ type: 'pillar', id: pp.id }}>
+                  <boxGeometry args={[pw, WALL_H, pd]} />
+                </mesh>
+              );
+            }
             return (
-              <mesh key={pp.id} position={[pp.x, WALL_H / 2, pp.z]} rotation-y={rot}
-                    material={wallMat} castShadow receiveShadow
-                    userData={{ type: 'pillar', id: pp.id }}>
-                <boxGeometry args={[pw, WALL_H, pd]} />
-              </mesh>
+              <P key={pp.id} w={pw} h={WALL_H} d={pd} x={pp.x} y={WALL_H / 2} z={pp.z}
+                userData={{ type: 'pillar', id: pp.id }} />
             );
-          }
-          return (
-            <P key={pp.id} w={pw} h={WALL_H} d={pd} x={pp.x} y={WALL_H / 2} z={pp.z}
-              userData={{ type: 'pillar', id: pp.id }} />
-          );
-        })}
-        <mesh geometry={diagGeos.diagPillar}   material={wallMat} castShadow receiveShadow
-          userData={{ type: 'pillar', id: 'diag-ne-kite' }} />
-        <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
-          userData={{ type: 'pillar', id: 'diag-sw-kite' }} />
-        <mesh geometry={diagGeos.nePillar} material={wallMat} castShadow receiveShadow
-          userData={{ type: 'pillar', id: 'diag-ne-end' }} />
-        <mesh geometry={diagGeos.swPillar} material={wallMat} castShadow receiveShadow
-          userData={{ type: 'pillar', id: 'diag-sw-end' }} />
+          })}
+          <mesh geometry={diagGeos.diagPillar}   material={wallMat} castShadow receiveShadow
+            userData={{ type: 'pillar', id: 'diag-ne-kite' }} />
+          <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
+            userData={{ type: 'pillar', id: 'diag-sw-kite' }} />
+          <mesh geometry={diagGeos.nePillar} material={wallMat} castShadow receiveShadow
+            userData={{ type: 'pillar', id: 'diag-ne-end' }} />
+          <mesh geometry={diagGeos.swPillar} material={wallMat} castShadow receiveShadow
+            userData={{ type: 'pillar', id: 'diag-sw-end' }} />
+
+        </group>
+
+        {/* ── Murs ─────────────────────────────────────────────────────────────── */}
+        <group visible={!pillarsOnly}>
+          {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
+            const mat = MAT_MAP[d.mat ?? 'default'];
+            const uData = { brickType: 'wall', side: d.mat };
+            if (d.axis === 'z')
+              return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
+            return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
+          })}
+          {/* Mur diagonal */}
+          <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow />
+          <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow />
+          {/* Panneaux bois occultants jardin */}
+          {GARDEN_PANEL_DEFS.map((p, i) => (
+            <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ skipMerge: true }}>
+              <WoodenFencePanel w={p.w} h={p.h} d={p.d} />
+            </group>
+          ))}
+
+          {/* Jambages portes — couvre les caps invisibles (caplessX/Z) aux ouvertures.
+              Plane perpendiculaire au mur, taille = épaisseur du mur × hauteur. */}
+          {/* Porte séjour — jambage est (cap ouest du mur SE) */}
+          <mesh
+            position={[DOOR_END + 4, WALL_H / 2, ROOM_D + W / 2]}
+            rotation-y={-Math.PI / 2}
+            ref={(m) => { if (m) m.material = wallMat; }}
+            receiveShadow>
+            <planeGeometry args={[W, WALL_H]} />
+          </mesh>
+          {/* Porte SDB couloir — jambage nord (cap sud du segment nord) */}
+          <mesh
+            position={[CORR_WALL_X, WALL_H / 2, 518]}
+            ref={(m) => { if (m) m.material = wallMat; }}
+            receiveShadow>
+            <planeGeometry args={[W, WALL_H]} />
+          </mesh>
+          {/* Porte SDB couloir — jambage sud (cap nord du segment sud) */}
+          <mesh
+            position={[CORR_WALL_X, WALL_H / 2, 602]}
+            rotation-y={Math.PI}
+            ref={(m) => { if (m) m.material = wallMat; }}
+            receiveShadow>
+            <planeGeometry args={[W, WALL_H]} />
+          </mesh>
+        </group>
+
+        {/* ── Colliders physiques (Rapier) ─────────────────────────────────────── */}
+        <WallColliders />
+        <PillarColliders />
+        <RigidBody type="fixed" colliders={false}>
+          <ConvexHullCollider args={[diagGeos.sw.attributes.position.array as Float32Array]} />
+          <ConvexHullCollider args={[diagGeos.linteau.attributes.position.array as Float32Array]} />
+          <ConvexHullCollider args={[diagGeos.nePillar.attributes.position.array as Float32Array]} />
+          <ConvexHullCollider args={[diagGeos.swPillar.attributes.position.array as Float32Array]} />
+          <ConvexHullCollider args={[diagGeos.diagPillar.attributes.position.array as Float32Array]} />
+          <ConvexHullCollider args={[diagGeos.diagPillarSW.attributes.position.array as Float32Array]} />
+        </RigidBody>
 
       </group>
-
-      {/* ── Murs ─────────────────────────────────────────────────────────────── */}
-      <group visible={!pillarsOnly}>
-        {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
-          const mat = MAT_MAP[d.mat ?? 'default'];
-          const uData = { brickType: 'wall', side: d.mat };
-          if (d.axis === 'z')
-            return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
-          return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
-        })}
-        {/* Mur diagonal */}
-        <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow />
-        <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow />
-        {/* Panneaux bois occultants jardin */}
-        {GARDEN_PANEL_DEFS.map((p, i) => (
-          <group key={i} position={[p.cx, p.cy, p.cz]}>
-            <WoodenFencePanel w={p.w} h={p.h} d={p.d} />
-          </group>
-        ))}
-
-        {/* Jambages portes — couvre les caps invisibles (caplessX/Z) aux ouvertures.
-            Plane perpendiculaire au mur, taille = épaisseur du mur × hauteur. */}
-        {/* Porte séjour — jambage est (cap ouest du mur SE) */}
-        <mesh
-          position={[DOOR_END + 4, WALL_H / 2, ROOM_D + W / 2]}
-          rotation-y={-Math.PI / 2}
-          ref={(m) => { if (m) m.material = wallMat; }}
-          receiveShadow>
-          <planeGeometry args={[W, WALL_H]} />
-        </mesh>
-        {/* Porte SDB couloir — jambage nord (cap sud du segment nord) */}
-        <mesh
-          position={[CORR_WALL_X, WALL_H / 2, 518]}
-          ref={(m) => { if (m) m.material = wallMat; }}
-          receiveShadow>
-          <planeGeometry args={[W, WALL_H]} />
-        </mesh>
-        {/* Porte SDB couloir — jambage sud (cap nord du segment sud) */}
-        <mesh
-          position={[CORR_WALL_X, WALL_H / 2, 602]}
-          rotation-y={Math.PI}
-          ref={(m) => { if (m) m.material = wallMat; }}
-          receiveShadow>
-          <planeGeometry args={[W, WALL_H]} />
-        </mesh>
-      </group>
-
-      {/* ── Colliders physiques (Rapier) ─────────────────────────────────────── */}
-      <WallColliders />
-      <PillarColliders />
-      <RigidBody type="fixed" colliders={false}>
-        <ConvexHullCollider args={[diagGeos.sw.attributes.position.array as Float32Array]} />
-        <ConvexHullCollider args={[diagGeos.linteau.attributes.position.array as Float32Array]} />
-        <ConvexHullCollider args={[diagGeos.nePillar.attributes.position.array as Float32Array]} />
-        <ConvexHullCollider args={[diagGeos.swPillar.attributes.position.array as Float32Array]} />
-        <ConvexHullCollider args={[diagGeos.diagPillar.attributes.position.array as Float32Array]} />
-        <ConvexHullCollider args={[diagGeos.diagPillarSW.attributes.position.array as Float32Array]} />
-      </RigidBody>
-
-    </group>
+    </MergedStaticGroup>
   );
 }
 
@@ -942,184 +1039,186 @@ function Baseboards() {
   const diagQR_ry = DIAG_ROT_Y + Math.PI;
 
   return (
-    <group userData={{ brickType: 'skirting' }}>
-      {/* North wall Z=0, X: 0→316 */}
-      <P w={INT_X_EAST - INT_X_WEST} h={SH} d={SD}
-         x={(INT_X_WEST + INT_X_EAST) / 2} y={y} z={INT_Z_NORTH + SD / 2}
-         mat={skirtingMat} />
-      <QR cx={(INT_X_WEST + INT_X_EAST) / 2} cz={INT_Z_NORTH + SD}
-          len={INT_X_EAST - INT_X_WEST} dir="+Z" mat={skirtingMat} />
+    <MergedStaticGroup>
+      <group userData={{ brickType: 'skirting' }}>
+        {/* North wall Z=0, X: 0→316 */}
+        <P w={INT_X_EAST - INT_X_WEST} h={SH} d={SD}
+           x={(INT_X_WEST + INT_X_EAST) / 2} y={y} z={INT_Z_NORTH + SD / 2}
+           mat={skirtingMat} />
+        <QR cx={(INT_X_WEST + INT_X_EAST) / 2} cz={INT_Z_NORTH + SD}
+            len={INT_X_EAST - INT_X_WEST} dir="+Z" mat={skirtingMat} />
 
-      {/* East wall (north) X=316, Z: 0→ROOM_D */}
-      <P w={SD} h={SH} d={INT_Z_ROOM_S - INT_Z_NORTH}
-         x={INT_X_EAST - SD / 2} y={y} z={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
-         mat={skirtingMat} />
-      <QR cx={INT_X_EAST - SD} cz={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
-          len={INT_Z_ROOM_S - INT_Z_NORTH} dir="-X" mat={skirtingMat} />
+        {/* East wall (north) X=316, Z: 0→ROOM_D */}
+        <P w={SD} h={SH} d={INT_Z_ROOM_S - INT_Z_NORTH}
+           x={INT_X_EAST - SD / 2} y={y} z={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
+           mat={skirtingMat} />
+        <QR cx={INT_X_EAST - SD} cz={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
+            len={INT_Z_ROOM_S - INT_Z_NORTH} dir="-X" mat={skirtingMat} />
 
-      {/* East wall (sud, après mur SE) X=316, Z: ROOM_D+W→DIAG_AZ */}
-      <P w={SD} h={SH} d={DIAG_AZ - (ROOM_D + W)}
-         x={INT_X_EAST - SD / 2} y={y} z={((ROOM_D + W) + DIAG_AZ) / 2}
-         mat={skirtingMat} />
-      <QR cx={INT_X_EAST - SD} cz={((ROOM_D + W) + DIAG_AZ) / 2}
-          len={DIAG_AZ - (ROOM_D + W)} dir="-X" mat={skirtingMat} />
+        {/* East wall (sud, après mur SE) X=316, Z: ROOM_D+W→DIAG_AZ */}
+        <P w={SD} h={SH} d={DIAG_AZ - (ROOM_D + W)}
+           x={INT_X_EAST - SD / 2} y={y} z={((ROOM_D + W) + DIAG_AZ) / 2}
+           mat={skirtingMat} />
+        <QR cx={INT_X_EAST - SD} cz={((ROOM_D + W) + DIAG_AZ) / 2}
+            len={DIAG_AZ - (ROOM_D + W)} dir="-X" mat={skirtingMat} />
 
-      {/* Mur SE — face nord (séjour) X: DOOR_END+4→316, Z=ROOM_D */}
-      <P w={INT_X_EAST - (DOOR_END + 4)} h={SH} d={SD}
-         x={((DOOR_END + 4) + INT_X_EAST) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
-         mat={skirtingMat} />
-      <QR cx={((DOOR_END + 4) + INT_X_EAST) / 2} cz={INT_Z_ROOM_S - SD}
-          len={INT_X_EAST - (DOOR_END + 4)} dir="-Z" mat={skirtingMat} />
+        {/* Mur SE — face nord (séjour) X: DOOR_END+4→316, Z=ROOM_D */}
+        <P w={INT_X_EAST - (DOOR_END + 4)} h={SH} d={SD}
+           x={((DOOR_END + 4) + INT_X_EAST) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
+           mat={skirtingMat} />
+        <QR cx={((DOOR_END + 4) + INT_X_EAST) / 2} cz={INT_Z_ROOM_S - SD}
+            len={INT_X_EAST - (DOOR_END + 4)} dir="-Z" mat={skirtingMat} />
 
-      {/* Mur SE — face ouest (couloir/seuil) X=DOOR_END+4, Z: ROOM_D→ROOM_D+W */}
-      <P w={SD} h={SH} d={W}
-         x={(DOOR_END + 4) - SD / 2} y={y} z={ROOM_D + W / 2}
-         mat={skirtingMat} />
-      <QR cx={(DOOR_END + 4) - SD} cz={ROOM_D + W / 2}
-          len={W} dir="-X" mat={skirtingMat} />
+        {/* Mur SE — face ouest (couloir/seuil) X=DOOR_END+4, Z: ROOM_D→ROOM_D+W */}
+        <P w={SD} h={SH} d={W}
+           x={(DOOR_END + 4) - SD / 2} y={y} z={ROOM_D + W / 2}
+           mat={skirtingMat} />
+        <QR cx={(DOOR_END + 4) - SD} cz={ROOM_D + W / 2}
+            len={W} dir="-X" mat={skirtingMat} />
 
-      {/* Mur SE — face sud (corridor droit) X: DOOR_END+4→316, Z=ROOM_D+W */}
-      <P w={INT_X_EAST - (DOOR_END + 4)} h={SH} d={SD}
-         x={((DOOR_END + 4) + INT_X_EAST) / 2} y={y} z={(ROOM_D + W) + SD / 2}
-         mat={skirtingMat} />
-      <QR cx={((DOOR_END + 4) + INT_X_EAST) / 2} cz={(ROOM_D + W) + SD}
-          len={INT_X_EAST - (DOOR_END + 4)} dir="+Z" mat={skirtingMat} />
+        {/* Mur SE — face sud (corridor droit) X: DOOR_END+4→316, Z=ROOM_D+W */}
+        <P w={INT_X_EAST - (DOOR_END + 4)} h={SH} d={SD}
+           x={((DOOR_END + 4) + INT_X_EAST) / 2} y={y} z={(ROOM_D + W) + SD / 2}
+           mat={skirtingMat} />
+        <QR cx={((DOOR_END + 4) + INT_X_EAST) / 2} cz={(ROOM_D + W) + SD}
+            len={INT_X_EAST - (DOOR_END + 4)} dir="+Z" mat={skirtingMat} />
 
-      {/* Mur diagonal — segment A : NE → début porte d'entrée */}
-      <mesh position={[diagSegA.x, y, diagSegA.z]} rotation-y={DIAG_ROT_Y}
-            ref={(m) => { if (m) m.material = skirtingMat as any; }}
-            castShadow receiveShadow>
-        <boxGeometry args={[SD, SH, diagSegA.len]} />
-      </mesh>
-      <mesh geometry={qrGeo} material={skirtingMat}
-            position={[diagQRA.x, 0, diagQRA.z]} rotation-y={diagQR_ry}
-            scale-z={diagQRA.len} castShadow receiveShadow />
-      {/* Mur diagonal — segment B : fin porte d'entrée → coin parquet SW */}
-      <mesh position={[diagSegB.x, y, diagSegB.z]} rotation-y={DIAG_ROT_Y}
-            ref={(m) => { if (m) m.material = skirtingMat as any; }}
-            castShadow receiveShadow>
-        <boxGeometry args={[SD, SH, diagSegB.len]} />
-      </mesh>
-      <mesh geometry={qrGeo} material={skirtingMat}
-            position={[diagQRB.x, 0, diagQRB.z]} rotation-y={diagQR_ry}
-            scale-z={diagQRB.len} castShadow receiveShadow />
+        {/* Mur diagonal — segment A : NE → début porte d'entrée */}
+        <mesh position={[diagSegA.x, y, diagSegA.z]} rotation-y={DIAG_ROT_Y}
+              ref={(m) => { if (m) m.material = skirtingMat as any; }}
+              castShadow receiveShadow>
+          <boxGeometry args={[SD, SH, diagSegA.len]} />
+        </mesh>
+        <mesh geometry={qrGeo} material={skirtingMat}
+              position={[diagQRA.x, 0, diagQRA.z]} rotation-y={diagQR_ry}
+              scale-z={diagQRA.len} castShadow receiveShadow />
+        {/* Mur diagonal — segment B : fin porte d'entrée → coin parquet SW */}
+        <mesh position={[diagSegB.x, y, diagSegB.z]} rotation-y={DIAG_ROT_Y}
+              ref={(m) => { if (m) m.material = skirtingMat as any; }}
+              castShadow receiveShadow>
+          <boxGeometry args={[SD, SH, diagSegB.len]} />
+        </mesh>
+        <mesh geometry={qrGeo} material={skirtingMat}
+              position={[diagQRB.x, 0, diagQRB.z]} rotation-y={diagQR_ry}
+              scale-z={diagQRB.len} castShadow receiveShadow />
 
-      {/* Corridor — face est du mur couloir (côté corridor, x = INT_X_DOOR_S+SD/2).
-          Fractionnée pour éviter les ouvertures : placard (z=410→460) et porte
-          SDB couloir (z=CORR_DOOR_S→CORR_DOOR_E). Côté ouest du même mur :
-          plinthe carrelage SDB (cf BathSkirting). */}
-      {(() => {
-        const CLOSET_N = ROOM_D + W;          // 410
-        const CLOSET_S = KITCHEN_Z;           // 460
-        const CORR_DOOR_S = KITCHEN_Z + 60;   // 520
-        const CORR_DOOR_E = KITCHEN_Z + 140;  // 600
-        const segs: [number, number][] = [
-          [INT_Z_ROOM_S, CLOSET_N],
-          [CLOSET_S,     CORR_DOOR_S],
-          [CORR_DOOR_E,  parquetDiagZ],
-        ];
-        return segs.flatMap(([z1, z2], i) => [
-          <P key={`p${i}`} w={SD} h={SH} d={z2 - z1}
-             x={INT_X_DOOR_S + SD / 2} y={y} z={(z1 + z2) / 2}
-             mat={skirtingMat} />,
-          <QR key={`qr${i}`} cx={INT_X_DOOR_S + SD} cz={(z1 + z2) / 2}
-              len={z2 - z1} dir="+X" mat={skirtingMat} />,
-        ]);
-      })()}
+        {/* Corridor — face est du mur couloir (côté corridor, x = INT_X_DOOR_S+SD/2).
+            Fractionnée pour éviter les ouvertures : placard (z=410→460) et porte
+            SDB couloir (z=CORR_DOOR_S→CORR_DOOR_E). Côté ouest du même mur :
+            plinthe carrelage SDB (cf BathSkirting). */}
+        {(() => {
+          const CLOSET_N = ROOM_D + W;          // 410
+          const CLOSET_S = KITCHEN_Z;           // 460
+          const CORR_DOOR_S = KITCHEN_Z + 60;   // 520
+          const CORR_DOOR_E = KITCHEN_Z + 140;  // 600
+          const segs: [number, number][] = [
+            [INT_Z_ROOM_S, CLOSET_N],
+            [CLOSET_S,     CORR_DOOR_S],
+            [CORR_DOOR_E,  parquetDiagZ],
+          ];
+          return segs.flatMap(([z1, z2], i) => [
+            <P key={`p${i}`} w={SD} h={SH} d={z2 - z1}
+               x={INT_X_DOOR_S + SD / 2} y={y} z={(z1 + z2) / 2}
+               mat={skirtingMat} />,
+            <QR key={`qr${i}`} cx={INT_X_DOOR_S + SD} cz={(z1 + z2) / 2}
+                len={z2 - z1} dir="+X" mat={skirtingMat} />,
+          ]);
+        })()}
 
-      {/* Placard couloir — plinthes bois 3 côtés autour du carrelage placard.
-          Tile spans x: KITCHEN_X1+W(140) → DOOR_START(200), z: ROOM_D+W(410) → KITCHEN_Z(460). */}
-      {(() => {
-        const CL_N = ROOM_D + W;            // 410 (face sud mur sud séjour)
-        const CL_S = KITCHEN_Z;             // 460 (face nord mur sud SDB)
-        const CL_W = KITCHEN_X1 + W;        // 140 (face est mur est cuisine)
-        const CL_E = INT_X_DOOR_S;          // 200 (ouvert sur couloir, pas de plinthe est)
-        const xCenter = (CL_W + CL_E) / 2;
-        const zCenter = (CL_N + CL_S) / 2;
-        const W_LEN = CL_E - CL_W;
-        const D_LEN = CL_S - CL_N;
-        return (
-          <>
-            {/* Nord placard — face +Z (plinthe contre face sud séjour) */}
-            <P w={W_LEN} h={SH} d={SD}
-               x={xCenter} y={y} z={CL_N + SD / 2}
-               mat={skirtingMat} />
-            <QR cx={xCenter} cz={CL_N + SD}
-                len={W_LEN} dir="+Z" mat={skirtingMat} />
+        {/* Placard couloir — plinthes bois 3 côtés autour du carrelage placard.
+            Tile spans x: KITCHEN_X1+W(140) → DOOR_START(200), z: ROOM_D+W(410) → KITCHEN_Z(460). */}
+        {(() => {
+          const CL_N = ROOM_D + W;            // 410 (face sud mur sud séjour)
+          const CL_S = KITCHEN_Z;             // 460 (face nord mur sud SDB)
+          const CL_W = KITCHEN_X1 + W;        // 140 (face est mur est cuisine)
+          const CL_E = INT_X_DOOR_S;          // 200 (ouvert sur couloir, pas de plinthe est)
+          const xCenter = (CL_W + CL_E) / 2;
+          const zCenter = (CL_N + CL_S) / 2;
+          const W_LEN = CL_E - CL_W;
+          const D_LEN = CL_S - CL_N;
+          return (
+            <>
+              {/* Nord placard — face +Z (plinthe contre face sud séjour) */}
+              <P w={W_LEN} h={SH} d={SD}
+                 x={xCenter} y={y} z={CL_N + SD / 2}
+                 mat={skirtingMat} />
+              <QR cx={xCenter} cz={CL_N + SD}
+                  len={W_LEN} dir="+Z" mat={skirtingMat} />
 
-            {/* Sud placard — face -Z (plinthe contre face nord SDB) */}
-            <P w={W_LEN} h={SH} d={SD}
-               x={xCenter} y={y} z={CL_S - SD / 2}
-               mat={skirtingMat} />
-            <QR cx={xCenter} cz={CL_S - SD}
-                len={W_LEN} dir="-Z" mat={skirtingMat} />
+              {/* Sud placard — face -Z (plinthe contre face nord SDB) */}
+              <P w={W_LEN} h={SH} d={SD}
+                 x={xCenter} y={y} z={CL_S - SD / 2}
+                 mat={skirtingMat} />
+              <QR cx={xCenter} cz={CL_S - SD}
+                  len={W_LEN} dir="-Z" mat={skirtingMat} />
 
-            {/* Ouest placard — face +X (plinthe contre face est cuisine) */}
-            <P w={SD} h={SH} d={D_LEN}
-               x={CL_W + SD / 2} y={y} z={zCenter}
-               mat={skirtingMat} />
-            <QR cx={CL_W + SD} cz={zCenter}
-                len={D_LEN} dir="+X" mat={skirtingMat} />
-          </>
-        );
-      })()}
+              {/* Ouest placard — face +X (plinthe contre face est cuisine) */}
+              <P w={SD} h={SH} d={D_LEN}
+                 x={CL_W + SD / 2} y={y} z={zCenter}
+                 mat={skirtingMat} />
+              <QR cx={CL_W + SD} cz={zCenter}
+                  len={D_LEN} dir="+X" mat={skirtingMat} />
+            </>
+          );
+        })()}
 
-      {/* South wall segment 2: X: 125→200, Z=395 */}
-      <P w={INT_X_DOOR_S - INT_X_KITCHEN_R} h={SH} d={SD}
-         x={(INT_X_KITCHEN_R + INT_X_DOOR_S) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
-         mat={skirtingMat} />
-      <QR cx={(INT_X_KITCHEN_R + INT_X_DOOR_S) / 2} cz={INT_Z_ROOM_S - SD}
-          len={INT_X_DOOR_S - INT_X_KITCHEN_R} dir="-Z" mat={skirtingMat} />
+        {/* South wall segment 2: X: 125→200, Z=395 */}
+        <P w={INT_X_DOOR_S - INT_X_KITCHEN_R} h={SH} d={SD}
+           x={(INT_X_KITCHEN_R + INT_X_DOOR_S) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
+           mat={skirtingMat} />
+        <QR cx={(INT_X_KITCHEN_R + INT_X_DOOR_S) / 2} cz={INT_Z_ROOM_S - SD}
+            len={INT_X_DOOR_S - INT_X_KITCHEN_R} dir="-Z" mat={skirtingMat} />
 
-      {/* Kitchen east wall X=125, Z: 395→455 */}
-      <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
-         x={INT_X_KITCHEN_R - SD / 2} y={y} z={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
-         mat={skirtingMat} />
-      <QR cx={INT_X_KITCHEN_R - SD} cz={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
-          len={INT_Z_KITCHEN_B - INT_Z_ROOM_S} dir="-X" mat={skirtingMat} />
+        {/* Kitchen east wall X=125, Z: 395→455 */}
+        <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
+           x={INT_X_KITCHEN_R - SD / 2} y={y} z={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
+           mat={skirtingMat} />
+        <QR cx={INT_X_KITCHEN_R - SD} cz={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
+            len={INT_Z_KITCHEN_B - INT_Z_ROOM_S} dir="-X" mat={skirtingMat} />
 
-      {/* Kitchen south wall Z=455, X: 35→125 */}
-      <P w={INT_X_KITCHEN_R - INT_X_KITCHEN_L} h={SH} d={SD}
-         x={(INT_X_KITCHEN_L + INT_X_KITCHEN_R) / 2} y={y} z={INT_Z_KITCHEN_B - SD / 2}
-         mat={skirtingMat} />
-      <QR cx={(INT_X_KITCHEN_L + INT_X_KITCHEN_R) / 2} cz={INT_Z_KITCHEN_B - SD}
-          len={INT_X_KITCHEN_R - INT_X_KITCHEN_L} dir="-Z" mat={skirtingMat} />
+        {/* Kitchen south wall Z=455, X: 35→125 */}
+        <P w={INT_X_KITCHEN_R - INT_X_KITCHEN_L} h={SH} d={SD}
+           x={(INT_X_KITCHEN_L + INT_X_KITCHEN_R) / 2} y={y} z={INT_Z_KITCHEN_B - SD / 2}
+           mat={skirtingMat} />
+        <QR cx={(INT_X_KITCHEN_L + INT_X_KITCHEN_R) / 2} cz={INT_Z_KITCHEN_B - SD}
+            len={INT_X_KITCHEN_R - INT_X_KITCHEN_L} dir="-Z" mat={skirtingMat} />
 
-      {/* Kitchen west wall X=35, Z: 395→455 */}
-      <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
-         x={INT_X_KITCHEN_L + SD / 2} y={y} z={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
-         mat={skirtingMat} />
-      <QR cx={INT_X_KITCHEN_L + SD} cz={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
-          len={INT_Z_KITCHEN_B - INT_Z_ROOM_S} dir="+X" mat={skirtingMat} />
+        {/* Kitchen west wall X=35, Z: 395→455 */}
+        <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
+           x={INT_X_KITCHEN_L + SD / 2} y={y} z={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
+           mat={skirtingMat} />
+        <QR cx={INT_X_KITCHEN_L + SD} cz={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
+            len={INT_Z_KITCHEN_B - INT_Z_ROOM_S} dir="+X" mat={skirtingMat} />
 
-      {/* South wall segment 1: X: -10→35, Z=395 */}
-      <P w={INT_X_KITCHEN_L - INT_X_NICHE} h={SH} d={SD}
-         x={(INT_X_NICHE + INT_X_KITCHEN_L) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
-         mat={skirtingMat} />
-      <QR cx={(INT_X_NICHE + INT_X_KITCHEN_L) / 2} cz={INT_Z_ROOM_S - SD}
-          len={INT_X_KITCHEN_L - INT_X_NICHE} dir="-Z" mat={skirtingMat} />
+        {/* South wall segment 1: X: -10→35, Z=395 */}
+        <P w={INT_X_KITCHEN_L - INT_X_NICHE} h={SH} d={SD}
+           x={(INT_X_NICHE + INT_X_KITCHEN_L) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
+           mat={skirtingMat} />
+        <QR cx={(INT_X_NICHE + INT_X_KITCHEN_L) / 2} cz={INT_Z_ROOM_S - SD}
+            len={INT_X_KITCHEN_L - INT_X_NICHE} dir="-Z" mat={skirtingMat} />
 
-      {/* Niche west wall X=-10, Z: 285→395 */}
-      <P w={SD} h={SH} d={INT_Z_ROOM_S - INT_Z_NICHE_S}
-         x={INT_X_NICHE + SD / 2} y={y} z={(INT_Z_NICHE_S + INT_Z_ROOM_S) / 2}
-         mat={skirtingMat} />
-      <QR cx={INT_X_NICHE + SD} cz={(INT_Z_NICHE_S + INT_Z_ROOM_S) / 2}
-          len={INT_Z_ROOM_S - INT_Z_NICHE_S} dir="+X" mat={skirtingMat} />
+        {/* Niche west wall X=-10, Z: 285→395 */}
+        <P w={SD} h={SH} d={INT_Z_ROOM_S - INT_Z_NICHE_S}
+           x={INT_X_NICHE + SD / 2} y={y} z={(INT_Z_NICHE_S + INT_Z_ROOM_S) / 2}
+           mat={skirtingMat} />
+        <QR cx={INT_X_NICHE + SD} cz={(INT_Z_NICHE_S + INT_Z_ROOM_S) / 2}
+            len={INT_Z_ROOM_S - INT_Z_NICHE_S} dir="+X" mat={skirtingMat} />
 
-      {/* Niche north face Z=285, X: -10→0 */}
-      <P w={INT_X_WEST - INT_X_NICHE} h={SH} d={SD}
-         x={(INT_X_NICHE + INT_X_WEST) / 2} y={y} z={INT_Z_NICHE_S + SD / 2}
-         mat={skirtingMat} />
-      <QR cx={(INT_X_NICHE + INT_X_WEST) / 2} cz={INT_Z_NICHE_S + SD}
-          len={INT_X_WEST - INT_X_NICHE} dir="+Z" mat={skirtingMat} />
+        {/* Niche north face Z=285, X: -10→0 */}
+        <P w={INT_X_WEST - INT_X_NICHE} h={SH} d={SD}
+           x={(INT_X_NICHE + INT_X_WEST) / 2} y={y} z={INT_Z_NICHE_S + SD / 2}
+           mat={skirtingMat} />
+        <QR cx={(INT_X_NICHE + INT_X_WEST) / 2} cz={INT_Z_NICHE_S + SD}
+            len={INT_X_WEST - INT_X_NICHE} dir="+Z" mat={skirtingMat} />
 
-      {/* West wall X=0, Z: 0→285 */}
-      <P w={SD} h={SH} d={INT_Z_NICHE_S - INT_Z_NORTH}
-         x={INT_X_WEST + SD / 2} y={y} z={(INT_Z_NORTH + INT_Z_NICHE_S) / 2}
-         mat={skirtingMat} />
-      <QR cx={INT_X_WEST + SD} cz={(INT_Z_NORTH + INT_Z_NICHE_S) / 2}
-          len={INT_Z_NICHE_S - INT_Z_NORTH} dir="+X" mat={skirtingMat} />
-    </group>
+        {/* West wall X=0, Z: 0→285 */}
+        <P w={SD} h={SH} d={INT_Z_NICHE_S - INT_Z_NORTH}
+           x={INT_X_WEST + SD / 2} y={y} z={(INT_Z_NORTH + INT_Z_NICHE_S) / 2}
+           mat={skirtingMat} />
+        <QR cx={INT_X_WEST + SD} cz={(INT_Z_NORTH + INT_Z_NICHE_S) / 2}
+            len={INT_Z_NICHE_S - INT_Z_NORTH} dir="+X" mat={skirtingMat} />
+      </group>
+    </MergedStaticGroup>
   );
 }
 
@@ -1166,51 +1265,53 @@ function BathSkirting() {
   const diagLen = dB - dC;
 
   return (
-    <group userData={{ brickType: 'skirting' }}>
-      {/* Mur nord SDB — Z=470, X: -10→200, face +Z */}
-      <P w={INT_X_DOOR_S - INT_X_NICHE} h={SH_T} d={SD_T}
-         x={(INT_X_NICHE + INT_X_DOOR_S) / 2} y={y} z={INT_Z_BATH_N + SD_T / 2}
-         mat={tileMat} />
+    <MergedStaticGroup>
+      <group userData={{ brickType: 'skirting' }}>
+        {/* Mur nord SDB — Z=470, X: -10→200, face +Z */}
+        <P w={INT_X_DOOR_S - INT_X_NICHE} h={SH_T} d={SD_T}
+           x={(INT_X_NICHE + INT_X_DOOR_S) / 2} y={y} z={INT_Z_BATH_N + SD_T / 2}
+           mat={tileMat} />
 
-      {/* Mur ouest SDB — X=-10, Z: 470→Bz, face +X */}
-      <P w={SD_T} h={SH_T} d={Bz - INT_Z_BATH_N}
-         x={INT_X_NICHE + SD_T / 2} y={y} z={(INT_Z_BATH_N + Bz) / 2}
-         mat={tileMat} />
+        {/* Mur ouest SDB — X=-10, Z: 470→Bz, face +X */}
+        <P w={SD_T} h={SH_T} d={Bz - INT_Z_BATH_N}
+           x={INT_X_NICHE + SD_T / 2} y={y} z={(INT_Z_BATH_N + Bz) / 2}
+           mat={tileMat} />
 
-      {/* Mur est SDB — segment nord (Z: 470→520), face -X */}
-      <P w={SD_T} h={SH_T} d={CORR_DOOR_S - INT_Z_BATH_N}
-         x={BATH_E_FACE - SD_T / 2} y={y} z={(INT_Z_BATH_N + CORR_DOOR_S) / 2}
-         mat={tileMat} />
-      {/* Mur est SDB — segment sud (Z: 600→BATH_S_FACE), face -X */}
-      <P w={SD_T} h={SH_T} d={BATH_S_FACE - CORR_DOOR_E}
-         x={BATH_E_FACE - SD_T / 2} y={y} z={(CORR_DOOR_E + BATH_S_FACE) / 2}
-         mat={tileMat} />
+        {/* Mur est SDB — segment nord (Z: 470→520), face -X */}
+        <P w={SD_T} h={SH_T} d={CORR_DOOR_S - INT_Z_BATH_N}
+           x={BATH_E_FACE - SD_T / 2} y={y} z={(INT_Z_BATH_N + CORR_DOOR_S) / 2}
+           mat={tileMat} />
+        {/* Mur est SDB — segment sud (Z: 600→BATH_S_FACE), face -X */}
+        <P w={SD_T} h={SH_T} d={BATH_S_FACE - CORR_DOOR_E}
+           x={BATH_E_FACE - SD_T / 2} y={y} z={(CORR_DOOR_E + BATH_S_FACE) / 2}
+           mat={tileMat} />
 
-      {/* Mur sud SDB (entre shower-ne et bath-se) : pas de plinthe — rail
-          du placard SDB coulissant occupe l'espace. */}
+        {/* Mur sud SDB (entre shower-ne et bath-se) : pas de plinthe — rail
+            du placard SDB coulissant occupe l'espace. */}
 
-      {/* Pilier shower-ne — face nord (z=610, x=60→70, face -Z) */}
-      <P w={W} h={SH_T} d={SD_T}
-         x={65} y={y} z={BATH_Z_END - SD_T / 2}
-         mat={tileMat} />
+        {/* Pilier shower-ne — face nord (z=610, x=60→70, face -Z) */}
+        <P w={W} h={SH_T} d={SD_T}
+           x={65} y={y} z={BATH_Z_END - SD_T / 2}
+           mat={tileMat} />
 
-      {/* Pilier shower-ne — face est (x=70, z=610→620, face +X) */}
-      <P w={SD_T} h={SH_T} d={W}
-         x={65 + W / 2 + SD_T / 2} y={y} z={BATH_Z_END + W / 2}
-         mat={tileMat} />
+        {/* Pilier shower-ne — face est (x=70, z=610→620, face +X) */}
+        <P w={SD_T} h={SH_T} d={W}
+           x={65 + W / 2 + SD_T / 2} y={y} z={BATH_Z_END + W / 2}
+           mat={tileMat} />
 
-      {/* Mur est de la douche (x=65, z=620→680), côté SDB main (face +X) */}
-      <P w={SD_T} h={SH_T} d={showerWallZ2 - showerWallZ1}
-         x={SHOWER_E_X + SD_T / 2} y={y} z={(showerWallZ1 + showerWallZ2) / 2}
-         mat={tileMat} />
+        {/* Mur est de la douche (x=65, z=620→680), côté SDB main (face +X) */}
+        <P w={SD_T} h={SH_T} d={showerWallZ2 - showerWallZ1}
+           x={SHOWER_E_X + SD_T / 2} y={y} z={(showerWallZ1 + showerWallZ2) / 2}
+           mat={tileMat} />
 
-      {/* Mur diagonal SDB — de C(200, Cz) à B(-10, Bz) */}
-      <mesh position={[diagX, y, diagZ]} rotation-y={DIAG_ROT_Y}
-            ref={(m) => { if (m) m.material = tileMat as any; }}
-            castShadow receiveShadow>
-        <boxGeometry args={[SD_T, SH_T, diagLen]} />
-      </mesh>
-    </group>
+        {/* Mur diagonal SDB — de C(200, Cz) à B(-10, Bz) */}
+        <mesh position={[diagX, y, diagZ]} rotation-y={DIAG_ROT_Y}
+              ref={(m) => { if (m) m.material = tileMat as any; }}
+              castShadow receiveShadow>
+          <boxGeometry args={[SD_T, SH_T, diagLen]} />
+        </mesh>
+      </group>
+    </MergedStaticGroup>
   );
 }
 
