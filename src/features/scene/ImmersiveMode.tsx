@@ -18,9 +18,7 @@ const WALK_HEAD_OFFSET = 10;
 const WALK_SPEED       = 2;
 
 function activeWalkH(): number {
-  const h = cameraState.activeWalkerIdx === 0
-    ? cameraState.walkerHeight0
-    : cameraState.walkerHeight1;
+  const h = cameraState.walkerHeight;
   return h + WALK_HEAD_OFFSET;
 }
 

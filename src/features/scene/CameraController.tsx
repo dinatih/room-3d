@@ -36,13 +36,9 @@ const CZ = ROOM_D / 2;
 const EYE_RATIO  = 0.93; // niveau yeux ≈ 93% taille totale
 const WALK_SPEED = 2;
 
-/** Hauteur caméra walk = niveau yeux du walker actif (≈ 93% de sa taille). */
+/** Hauteur caméra walk = niveau yeux du walker (≈ 93% de sa taille). */
 function activeWalkH(): number {
-  const idx = cameraState.activeWalkerIdx;
-  const h = idx === 0 ? cameraState.walkerHeight0 :
-            idx === 1 ? cameraState.walkerHeight1 :
-                        cameraState.walkerHeight2;
-  return h * EYE_RATIO;
+  return cameraState.walkerHeight * EYE_RATIO;
 }
 const MOUSE_SENS  = 0.002;
 
@@ -269,31 +265,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         modeRef.current === 'top' ? exitTop() : enterTop();
         return;
       }
-      if (e.key === 'l' || e.key === 'L') {
-        const oldIdx = cameraState.activeWalkerIdx;
-        const newIdx = (oldIdx + 1) % 3;
-        cameraState.activeWalkerIdx = newIdx;
-        
-        // Restore independent orientation for the newly active walker
-        const targetYaw = newIdx === 0 ? cameraState.walker0Yaw : 
-                         newIdx === 1 ? cameraState.walker1Yaw :
-                                        cameraState.walker2Yaw;
-        walkYaw.current = targetYaw;
-        cameraState.walkYaw = targetYaw;
-
-        if (modeRef.current === 'walk') {
-          walkPos.current.x = newIdx === 0 ? cameraState.walker0X : 
-                              newIdx === 1 ? cameraState.walker1X :
-                                             cameraState.walker2X;
-          walkPos.current.z = newIdx === 0 ? cameraState.walker0Z : 
-                              newIdx === 1 ? cameraState.walker1Z :
-                                             cameraState.walker2Z;
-          walkPos.current.y = activeWalkH();
-          updateWalkLook();
-        }
-        invalidate();
-        return;
-      }
 
       const k = e.key;
       const isArrow = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(k);
@@ -439,19 +410,24 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (planeModeRef.current) return;
     // Normalize to 60 fps baseline so speed is frame-rate independent
     const dt = Math.min(delta, 0.1) * 60;
-    // Sync camera position for minimap + walker
+
     cameraState.camX     = camera.position.x;
     cameraState.camZ     = camera.position.z;
-    cameraState.camRY    = camera.rotation.y;
     cameraState.isWalking = modeRef.current === 'walk';
     cameraState.isMoving  = (modeRef.current === 'walk' && keys.current.size > 0)
       || (modeRef.current === 'orbit' && (keys.current.has('ArrowUp') || keys.current.has('ArrowDown')));
-    // walkYaw is only synced from walk controls when in walk mode;
-    // in orbit mode it is managed by the walker arrow keys below.
+    
     if (modeRef.current === 'walk') {
       cameraState.walkYaw   = walkYaw.current;
       cameraState.walkPitch = walkPitch.current;
+      
+      // Sync walker position for minimap in walk mode
+      cameraState.walkerX = walkPos.current.x;
+      cameraState.walkerZ = walkPos.current.z;
     }
+
+    // Sync walker yaw for minimap before onUpdate call
+    cameraState.walkerYaw = cameraState.walkYaw;
 
     // Throttle minimap redraw à ~15fps (67ms) — drawFloorPlan est coûteux
     minimapThrottle.current += delta;
@@ -476,16 +452,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         if (k.has('ArrowUp'))   { wdx += Math.sin(wYaw)*ws; wdz += Math.cos(wYaw)*ws; }
         if (k.has('ArrowDown')) { wdx -= Math.sin(wYaw)*ws; wdz -= Math.cos(wYaw)*ws; }
         if (wdx !== 0 || wdz !== 0) {
-          if (cameraState.activeWalkerIdx === 0) {
-            const c = collideMove(cameraState.walker0X, cameraState.walker0Z, wdx, wdz);
-            cameraState.walker0X = c.x; cameraState.walker0Z = c.z;
-          } else if (cameraState.activeWalkerIdx === 1) {
-            const c = collideMove(cameraState.walker1X, cameraState.walker1Z, wdx, wdz);
-            cameraState.walker1X = c.x; cameraState.walker1Z = c.z;
-          } else {
-            const c = collideMove(cameraState.walker2X, cameraState.walker2Z, wdx, wdz);
-            cameraState.walker2X = c.x; cameraState.walker2Z = c.z;
-          }
+          const c = collideMove(cameraState.walkerX, cameraState.walkerZ, wdx, wdz);
+          cameraState.walkerX = c.x; cameraState.walkerZ = c.z;
+          // Sync walkPos for potential entry into walk mode
+          walkPos.current.x = c.x;
+          walkPos.current.z = c.z;
         }
       }
 

@@ -132,15 +132,8 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
       groupRef.current.rotation.y = 0;
       groupRef.current.visible = true;
     } else {
-      // Logic for scene instance: sync with cameraState
-      if (cameraState.isWalking) {
-        cameraState.walker0X = cameraState.camX;
-        cameraState.walker0Z = cameraState.camZ;
-        cameraState.walker0Yaw = cameraState.walkYaw;
-      }
-      cameraState.walkerX = cameraState.walker0X;
-      cameraState.walkerZ = cameraState.walker0Z;
-      groupRef.current.position.set(cameraState.walker0X, 0, cameraState.walker0Z);
+      // Logic for scene instance: follow walker position from cameraState
+      groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
       groupRef.current.rotation.y = cameraState.walkYaw;
       groupRef.current.visible = !cameraState.walkerHidden;
     }

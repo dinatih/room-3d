@@ -86,43 +86,37 @@ function drawMinimap(
   // Plan partagé
   drawFloorPlan(ctx, W, canvas.height);
 
-  // ── Walkers icons ──────────────────────────────────────────────────────────
-  const walkers = [
-    { x: cameraState.walker0X, z: cameraState.walker0Z, yaw: cameraState.walker0Yaw, color: '#0066ff' }, // Ref: Blue
-  ];
+  // ── Walker icon ────────────────────────────────────────────────────────────
+  const w = { x: cameraState.walkerX, z: cameraState.walkerZ, yaw: cameraState.walkerYaw };
+  
+  ctx.save();
+  ctx.translate(tx(w.x), tz(w.z));
+  ctx.rotate(-w.yaw);
 
-  walkers.forEach((w, idx) => {
-    const isActive = cameraState.activeWalkerIdx === idx;
-    ctx.save();
-    ctx.translate(tx(w.x), tz(w.z));
-    ctx.rotate(-w.yaw);
+  // FOV arc — follows WALKER facing
+  const V    = 50 * Math.PI / 180;
+  const hFov = 2 * Math.atan(Math.tan(V / 2) * (window.innerWidth / window.innerHeight));
+  const fovR = 120 * S;
+  ctx.beginPath(); ctx.moveTo(0, 0);
+  ctx.arc(0, 0, fovR, Math.PI / 2 - hFov / 2, Math.PI / 2 + hFov / 2);
+  ctx.closePath();
+  ctx.fillStyle   = 'rgba(255,221,0,0.15)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,221,0,0.40)'; ctx.lineWidth = 0.5 * sc; ctx.stroke();
 
-    if (isActive) {
-      // FOV arc only for active
-      const V    = 50 * Math.PI / 180;
-      const hFov = 2 * Math.atan(Math.tan(V / 2) * (window.innerWidth / window.innerHeight));
-      const fovR = 120 * S;
-      ctx.beginPath(); ctx.moveTo(0, 0);
-      ctx.arc(0, 0, fovR, Math.PI / 2 - hFov / 2, Math.PI / 2 + hFov / 2);
-      ctx.closePath();
-      ctx.fillStyle   = 'rgba(255,221,0,0.15)'; ctx.fill();
-      ctx.strokeStyle = 'rgba(255,221,0,0.40)'; ctx.lineWidth = 0.5 * sc; ctx.stroke();
-    }
-
-    const R = (isActive ? 5 : 4) * sc;
-    const BW = 8 * sc, BH = 4 * sc;
-    
-    ctx.fillStyle   = w.color;
-    ctx.strokeStyle = 'rgba(255,255,255,0.75)';
-    ctx.lineWidth   = 0.8 * sc;
-    
-    // Body circle
-    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    // Shoulder bar (indicates direction)
-    ctx.beginPath(); ctx.rect(-BW / 2, R, BW, BH); ctx.fill(); ctx.stroke();
-    
-    ctx.restore();
-  });
+  // Body icon
+  const R  = 5 * sc;
+  const BW = 8 * sc, BH = 4 * sc;
+  
+  ctx.fillStyle   = '#0066ff'; // Default Blue
+  ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+  ctx.lineWidth   = 0.8 * sc;
+  
+  // Body circle
+  ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  // Shoulder bar (indicates direction)
+  ctx.beginPath(); ctx.rect(-BW / 2, R, BW, BH); ctx.fill(); ctx.stroke();
+  
+  ctx.restore();
 
   // ── Avion joueur ────────────────────────────────────────────────────────────
   if (cameraState.mode === 'plane') {

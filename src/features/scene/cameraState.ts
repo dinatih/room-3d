@@ -16,19 +16,12 @@ export const cameraState = {
   isMoving:  false as boolean,
   walkYaw:   0     as number,
   walkPitch: 0     as number,
-  /** Index du walker actif (0 = défaut, 1 = rouge, 2 = Perfect) — touche L pour switcher */
-  activeWalkerIdx: 0 as number,
-  /** Positions et orientations des trois walkers (mis à jour par Walker.tsx) */
-  walker0X: 150 as number, walker0Z: 200 as number, walker0Yaw: 0 as number,
-  walker1X: 100 as number, walker1Z: 100 as number, walker1Yaw: 0 as number,
-  walker2X: 200 as number, walker2Z: 150 as number, walker2Yaw: 0 as number,
-  /** Hauteurs (cm) des walkers — écrites par Walker.tsx, lues par les caméras walk */
-  walkerHeight0: 181 as number,
-  walkerHeight1: 173.4 as number,
-  walkerHeight2: 173.4 as number,
-  /** Alias actif — lu par Minimap */
-  walkerX: 150 as number,
-  walkerZ: 200 as number,
+  /** Position et orientation du walker unique (mis à jour par CameraController) */
+  walkerX: 150 as number, 
+  walkerZ: 200 as number, 
+  walkerYaw: 0 as number,
+  /** Hauteur (cm) du walker — écrit par Walker.tsx, lue par les caméras walk */
+  walkerHeight: 181 as number,
   /** Déclenché par CameraController chaque frame — la minimap s'y abonne */
   onUpdate:   null as (() => void) | null,
   /** Enregistré par CameraController ; appeler pour forcer un frame R3F. */

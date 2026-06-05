@@ -7,7 +7,7 @@
  * porte-fenêtre vers le jardin, passage le long de la baignoire et regard
  * final vers le studio.
  *
- * Walker piloté via `cameraState.walker0X/Z`, `walkYaw`, `isMoving`.
+ * Walker piloté via `cameraState.walkerX/Z`, `walkYaw`, `isMoving`.
  * Portes déclenchées via `furniture-toggle` (mêmes clés que HoverMenu).
  * Caméra : chase cam dispatchée chaque frame en `camera-view`
  * (handler dans CameraController.onView).
@@ -145,8 +145,7 @@ export function BuildAnimation_VisiteGuidee({
     onDuration?.(TOTAL_MS);
 
     // Sauvegarde de l'état caméra/walker pour restauration en cleanup
-    const savedActiveIdx = cameraState.activeWalkerIdx;
-    const savedX = cameraState.walker0X, savedZ = cameraState.walker0Z;
+    const savedX = cameraState.walkerX, savedZ = cameraState.walkerZ;
     const savedYaw = cameraState.walkYaw;
     const savedCamPos = camera.position.clone();
     const savedWalkerHidden = cameraState.walkerHidden;
@@ -161,15 +160,12 @@ export function BuildAnimation_VisiteGuidee({
     window.addEventListener('keydown', onKey);
 
     // Walker en mode "scénarisé"
-    cameraState.activeWalkerIdx = 0;
     cameraState.isWalking = false;
     cameraState.isMoving  = false;
-    cameraState.walker0X = START_POS[0];
-    cameraState.walker0Z = START_POS[1];
-    cameraState.walkYaw  = Math.atan2(TOUR[0].to[0] - START_POS[0],
-                                      TOUR[0].to[1] - START_POS[1]);
-    cameraState.walkerX = cameraState.walker0X;
-    cameraState.walkerZ = cameraState.walker0Z;
+    cameraState.walkerX = START_POS[0];
+    cameraState.walkerZ = START_POS[1];
+    cameraState.walkYaw = Math.atan2(TOUR[0].to[0] - START_POS[0],
+                                     TOUR[0].to[1] - START_POS[1]);
 
     const startedActions = new Set<number>();
     const endedActions   = new Set<number>();
@@ -231,8 +227,6 @@ export function BuildAnimation_VisiteGuidee({
         }
       }
 
-      cameraState.walker0X = tx;
-      cameraState.walker0Z = tz;
       cameraState.walkerX  = tx;
       cameraState.walkerZ  = tz;
       cameraState.isMoving = moving;
@@ -276,9 +270,6 @@ export function BuildAnimation_VisiteGuidee({
       cancelAnimationFrame(raf);
       window.removeEventListener('keydown', onKey);
       cameraState.isMoving = false;
-      cameraState.activeWalkerIdx = savedActiveIdx;
-      cameraState.walker0X = savedX;
-      cameraState.walker0Z = savedZ;
       cameraState.walkerX  = savedX;
       cameraState.walkerZ  = savedZ;
       cameraState.walkYaw  = savedYaw;
