@@ -1531,6 +1531,9 @@ function MirrorBath() {
 // ── Export principal ──────────────────────────────────────────────────────────
 
 export function Mirrors() {
+  const showMirrors = useSceneStore(state => state.layers.mirrors);
+  if (!showMirrors) return null;
+
   return (
     <>
       <MirrorsD />

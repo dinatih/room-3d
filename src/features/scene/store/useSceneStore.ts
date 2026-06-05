@@ -46,6 +46,7 @@ const initialLayers: LayerState = {
   doors: true,
   neighbors: false,
   xray: false,
+  mirrors: true,
   mirrorsHD: false,
   plan: false,
   grid: false,

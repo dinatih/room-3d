@@ -349,6 +349,7 @@ export interface LayerState {
   furniture: boolean;
   neighbors:  boolean;
   xray:       boolean;
+  mirrors:       boolean;
   mirrorsHD:  boolean;
   plan:         boolean;
   grid:         boolean;
@@ -496,7 +497,8 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('purple', 'Mobilier',      'furniture')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
       {layerBtn('cyan',   'X-Ray',         'xray')}
-      {layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
+      {layerBtn('purple', 'Miroirs',       'mirrors')}
+      {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
       {layerBtn('light',  'Walker',        'walker')}
       {layerBtn('white',  'Squelette',     'skeleton')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
