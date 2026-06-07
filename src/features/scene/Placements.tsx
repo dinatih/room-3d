@@ -685,12 +685,6 @@ export function Garden() {
 export function Backpacks() {
   return (
     <>
-      <group position={[300 - 15 / 2, 160, 155]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
-        <BackpackSmall item={{} as any} actionState={{}} onSize={() => {}} />
-      </group>
-      <group position={[300 - 17 / 2, 160, 200]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
-        <Backpack item={{} as any} actionState={{}} onSize={() => {}} />
-      </group>
       <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <Backpack item={{} as any} actionState={{}} onSize={() => {}} />
       </group>

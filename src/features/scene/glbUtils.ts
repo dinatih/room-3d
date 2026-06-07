@@ -2,12 +2,37 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 /**
+ * Convertit les matériaux transparents (avec texture) en matériaux opaque + alphaTest.
+ * Indispensable pour les plantes (feuilles) afin d'éviter l'overdraw massif et les
+ * problèmes de tri qui écrasent le FPS.
+ */
+export function optimizeMaterials(root: THREE.Object3D) {
+  root.traverse(node => {
+    const mesh = node as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const mat of mats) {
+      if (!mat) continue;
+      // Si c'est transparent et qu'il y a une texture alpha (cas typique des feuilles)
+      if ((mat as any).transparent && ((mat as any).map || (mat as any).alphaMap)) {
+        (mat as any).transparent = false;
+        (mat as any).alphaTest = 0.5;
+        mat.needsUpdate = true;
+      }
+    }
+  });
+}
+
+/**
  * Fusionne les meshes d'un GLB par matériau en un seul mesh par groupe.
  * Réduit massivement les draw calls sur les GLBs IKEA multi-submesh.
  * Appeler après avoir set la scale finale sur root, avant de calculer la bbox.
  * La scale/rotation de root est bakée dans la géométrie ; root.scale reset à 1.
  */
 export function mergeGlbByMaterial(root: THREE.Object3D): void {
+  // On optimise d'abord les matériaux (transparence -> alphaTest)
+  optimizeMaterials(root);
+
   const groups = new Map<string, { geos: THREE.BufferGeometry[]; mat: THREE.Material }>();
 
   root.updateMatrix();

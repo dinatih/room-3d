@@ -183,10 +183,10 @@ export const WALL_DEFS: WallDef[] = [
 
   // ── MUR SUD (Z=400) ────────────────────────────────────────────────────────
   { axis: 'x', x1: pEast('corner-sw'), x2: pWest('kitchen-sw'), zc: pZ('corner-sw') },
-  { axis: 'x', x1: pEast('kitchen-se'), x2: pWest('corr-s'), zc: pZ('corner-sw') },
+  { axis: 'x', x1: pEast('kitchen-se'), x2: pWest('door-living-w'), zc: pZ('corner-sw') },
   // Linteau au-dessus de la porte principale (3D seulement)
-  { axis: 'x', x1: DOOR_START, x2: DOOR_END + 4, zc: pZ('corner-sw'), yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
-  { axis: 'x', x1: DOOR_END + 4, x2: pWest('corner-se'), zc: pZ('corner-sw') },
+  { axis: 'x', x1: DOOR_START, x2: DOOR_END, zc: pZ('corner-sw'), yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
+  { axis: 'x', x1: pEast('door-living-e'), x2: pWest('corner-se'), zc: pZ('corner-sw') },
   // Porte principale (2D uniquement)
   { axis: 'x', x1: DOOR_START, x2: DOOR_END, zc: ROOM_D, segKind: 'door' },
 
@@ -199,12 +199,12 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'x', x1: pEast('kitchen-ne'), x2: pWest('bath-ne'), zc: pZ('bath-nw') },
 
   // ── Couloir gauche (X=185, Z=460→600) ────────────────────────────────────
-  // Segment avant porte (avec offset CORR_E pour éviter z-fighting dormant)
-  { axis: 'z', xc: pX('bath-ne'), z1: pSouth('bath-ne'), z2: CORR_DOOR_S - CORR_E },
+  // Segment avant porte
+  { axis: 'z', xc: pX('bath-ne'), z1: pSouth('bath-ne'), z2: pNorth('door-bath-n') },
   // Segment après porte
-  { axis: 'z', xc: pX('bath-ne'), z1: CORR_DOOR_E + CORR_E, z2: pNorth('bath-se') },
+  { axis: 'z', xc: pX('bath-ne'), z1: pSouth('door-bath-s'), z2: pNorth('bath-se') },
   // Linteau au-dessus de la porte couloir (3D seulement)
-  { axis: 'z', xc: pX('bath-ne'), z1: CORR_DOOR_S - CORR_E, z2: CORR_DOOR_E + CORR_E,
+  { axis: 'z', xc: pX('bath-ne'), z1: CORR_DOOR_S, z2: CORR_DOOR_E,
     yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
   // Porte couloir SDB (2D uniquement)
   { axis: 'z', xc: pX('bath-ne'), z1: CORR_DOOR_S, z2: CORR_DOOR_E, segKind: 'door' },

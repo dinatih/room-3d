@@ -24,7 +24,7 @@ import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import {
   LAYER_STRUCTURE, LAYER_EQUIPMENT, LAYER_FURNITURE,
-  LAYER_NEIGHBORS, LAYER_LIDAR,
+  LAYER_NEIGHBORS, LAYER_LIDAR, LAYER_MIRRORS,
 } from '@config';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -36,6 +36,7 @@ interface SceneLayers {
   furniture:  boolean;
   neighbors:  boolean;
   lidar:      boolean;
+  mirrors:    boolean;
 }
 
 // ── CategoryLayerGroup ────────────────────────────────────────────────────────
@@ -54,6 +55,10 @@ export function CategoryLayerGroup({
   const ref = useRef<THREE.Group>(null!);
   useLayoutEffect(() => {
     ref.current.traverse(obj => {
+      const isDefault = (obj.layers.mask & 1) !== 0;
+      const isTarget = (obj.layers.mask & (1 << layer)) !== 0;
+      if (!isDefault && isTarget) return;
+
       obj.layers.disable(0);
       obj.layers.enable(layer);
     });
@@ -81,6 +86,7 @@ export function SceneLayerController({ layers }: { layers: SceneLayers }) {
       [LAYER_FURNITURE, layers.furniture],
       [LAYER_NEIGHBORS, layers.neighbors],
       [LAYER_LIDAR,     layers.lidar],
+      [LAYER_MIRRORS,   layers.mirrors],
     ];
     toggles.forEach(([l, visible]) => {
       if (visible) camera.layers.enable(l);

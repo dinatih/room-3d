@@ -7,6 +7,7 @@
  */
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
+import { MergedStaticGroup } from '../Building';
 import type { SceneItemProps } from '@shared/types';
 
 // ── Dimensions globales (cm) ───────────────────────────────────────────────
@@ -279,24 +280,26 @@ export function Rebound({ onSize }: SceneItemProps) {
 
   return (
     <group userData={{ hoverAction: { label: 'Tyco R/C Rebound 4×4 Jet Turbo 6.0V' } }}>
-      {/* corps : à l'axe central. Dessus rouge, dessous blanc inversé Z (capot sur coffre) */}
-      <group position={[0, AXLE_Y, 0]}>
-        <HalfShell flipY={false} flipZ={false} bodyMat={matRed}   decalTex={decalTex} />
-        <HalfShell flipY={true}  flipZ={true}  bodyMat={matWhite} decalTex={decalTex} />
-        {/* essieux noirs reliant les roues */}
-        <mesh rotation={[0, 0, Math.PI / 2]} position={[0, 0, WB / 2]} material={matBlack}>
-          <cylinderGeometry args={[0.5, 0.5, TRACK + 1, 12]} />
-        </mesh>
-        <mesh rotation={[0, 0, Math.PI / 2]} position={[0, 0, -WB / 2]} material={matBlack}>
-          <cylinderGeometry args={[0.5, 0.5, TRACK + 1, 12]} />
-        </mesh>
-      </group>
+      <MergedStaticGroup name="merged-rebound">
+        {/* corps : à l'axe central. Dessus rouge, dessous blanc inversé Z (capot sur coffre) */}
+        <group position={[0, AXLE_Y, 0]}>
+          <HalfShell flipY={false} flipZ={false} bodyMat={matRed}   decalTex={decalTex} />
+          <HalfShell flipY={true}  flipZ={true}  bodyMat={matWhite} decalTex={decalTex} />
+          {/* essieux noirs reliant les roues */}
+          <mesh rotation={[0, 0, Math.PI / 2]} position={[0, 0, WB / 2]} material={matBlack}>
+            <cylinderGeometry args={[0.5, 0.5, TRACK + 1, 12]} />
+          </mesh>
+          <mesh rotation={[0, 0, Math.PI / 2]} position={[0, 0, -WB / 2]} material={matBlack}>
+            <cylinderGeometry args={[0.5, 0.5, TRACK + 1, 12]} />
+          </mesh>
+        </group>
 
-      {/* 4 roues */}
-      <Wheel x={ TRACK / 2} z={ WB / 2} mirrorTread={false} />
-      <Wheel x={-TRACK / 2} z={ WB / 2} mirrorTread={true}  />
-      <Wheel x={ TRACK / 2} z={-WB / 2} mirrorTread={false} />
-      <Wheel x={-TRACK / 2} z={-WB / 2} mirrorTread={true}  />
+        {/* 4 roues */}
+        <Wheel x={ TRACK / 2} z={ WB / 2} mirrorTread={false} />
+        <Wheel x={-TRACK / 2} z={ WB / 2} mirrorTread={true}  />
+        <Wheel x={ TRACK / 2} z={-WB / 2} mirrorTread={false} />
+        <Wheel x={-TRACK / 2} z={-WB / 2} mirrorTread={true}  />
+      </MergedStaticGroup>
     </group>
   );
 }

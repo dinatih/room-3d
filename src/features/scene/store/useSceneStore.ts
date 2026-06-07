@@ -46,7 +46,7 @@ const initialLayers: LayerState = {
   doors: true,
   neighbors: false,
   xray: false,
-  mirrors: false,
+  mirrors: true,
   mirrorsHD: false,
   plan: false,
   grid: false,
@@ -170,6 +170,10 @@ export const useSceneStore = create<SceneStore>((set) => ({
   toggleLayer: (key) => {
     set((state) => {
       const nextLayers = { ...state.layers, [key]: !state.layers[key] };
+      if (key === 'mirrors') {
+        // Force l'invalidation pour que SceneLayerController mette à jour le mask camera
+        cameraState.invalidate?.();
+      }
       if (key === 'mirrorsHD') {
         cameraState.mirrorsHD = nextLayers.mirrorsHD;
       }

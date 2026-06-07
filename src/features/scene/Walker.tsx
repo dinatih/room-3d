@@ -8,6 +8,7 @@ import { useGLTF, useHelper } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
+import { LAYER_WALKER_DETAIL } from '@config';
 
 const MODEL_PATH = 'media/sandbox/Xbot_official.glb';
 
@@ -70,10 +71,9 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
             // Material might be an array or a single material
             const materials = Array.isArray(m.material) ? m.material : [m.material];
             materials.forEach(mat => {
-                // alphaMode is GLTF-specific, for Three.js we usually use .transparent and .opacity
-                // but if we want to force opaque:
                 mat.transparent = false;
                 mat.depthWrite = true;
+                mat.side = THREE.FrontSide;
             });
             // Ensure the mesh doesn't block raycasting if it's a helper
             m.raycast = () => {}; 
@@ -136,6 +136,17 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
       groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
       groupRef.current.rotation.y = cameraState.walkYaw;
       groupRef.current.visible = !cameraState.walkerHidden;
+
+      // HIDE WALKER FROM MAIN CAMERA IN WALK MODE (First Person)
+      // We use LAYER_WALKER_DETAIL which is disabled on the main camera
+      // but enabled on mirror cameras. This prevents the head from blocking
+      // the view while keeping the character visible in reflections.
+      const isFirstPerson = cameraState.mode === 'walk';
+      scene.traverse(o => {
+        if ((o as THREE.Mesh).isMesh) {
+          o.layers.set(isFirstPerson ? LAYER_WALKER_DETAIL : 0);
+        }
+      });
     }
 
     // 2. Animation Logic

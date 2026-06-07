@@ -7,6 +7,7 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { MergedStaticGroup } from '../Building';
 import type { SceneItemProps } from '@shared/types';
 
 const ACTION_KEY = 'ninja-toggle';
@@ -117,42 +118,119 @@ export function NinjaSP101({ actionState, onSize }: SceneItemProps) {
 
   return (
     <group userData={{ hoverAction: { label: 'Mini four Ninja SP101EU', actionId: 'ninja' } }}>
-      {/* Coque inox brossée (côtés + dessus + arrière) */}
-      <mesh geometry={shellGeo} material={stainless} castShadow receiveShadow />
+      <MergedStaticGroup name="merged-ninja">
+        {/* Coque inox brossée (côtés + dessus + arrière) */}
+        <mesh geometry={shellGeo} material={stainless} castShadow receiveShadow />
 
-      {/* Intérieur sombre (cavité visible via vitre) */}
-      <mesh position={[DOOR_X, H / 2, 0]}>
-        <boxGeometry args={[DOOR_W - 2, H - 3, D - 3]} />
-        <meshStandardMaterial color={0x1c1c1e} metalness={0.3} roughness={0.7} side={THREE.BackSide} />
-      </mesh>
-
-      {/* Tube quartz chauffant haut (visible via vitre) */}
-      <mesh position={[DOOR_X, H - 2.2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.45, 0.45, DOOR_W - 4, 16]} />
-        <primitive object={quartzTube} attach="material" />
-      </mesh>
-      {/* Reflecteur sous tube */}
-      <mesh position={[DOOR_X, H - 1.4, 0]}>
-        <boxGeometry args={[DOOR_W - 3, 0.1, D - 6]} />
-        <primitive object={stainlessDark} attach="material" />
-      </mesh>
-
-      {/* Grille porte-aliments (mi-hauteur) */}
-      {[-D / 2 + 5, 0, D / 2 - 5].map((z, i) => (
-        <mesh key={`rack-${i}`} position={[DOOR_X, H / 2 - 1, z]} rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.18, 0.18, DOOR_W - 4, 8]} />
-          <primitive object={rackMat} attach="material" />
+        {/* Intérieur sombre (cavité visible via vitre) */}
+        <mesh position={[DOOR_X, H / 2, 0]}>
+          <boxGeometry args={[DOOR_W - 2, H - 3, D - 3]} />
+          <meshStandardMaterial color={0x1c1c1e} metalness={0.3} roughness={0.7} side={THREE.BackSide} />
         </mesh>
-      ))}
-      {Array.from({ length: 7 }, (_, i) => i).map(i => {
-        const z = -D / 2 + 5 + (i * (D - 10)) / 6;
-        return (
-          <mesh key={`rack-x-${i}`} position={[DOOR_X, H / 2 - 1, z]}>
-            <boxGeometry args={[DOOR_W - 4, 0.3, 0.3]} />
+
+        {/* Tube quartz chauffant haut (visible via vitre) */}
+        <mesh position={[DOOR_X, H - 2.2, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.45, 0.45, DOOR_W - 4, 16]} />
+          <primitive object={quartzTube} attach="material" />
+        </mesh>
+        {/* Reflecteur sous tube */}
+        <mesh position={[DOOR_X, H - 1.4, 0]}>
+          <boxGeometry args={[DOOR_W - 3, 0.1, D - 6]} />
+          <primitive object={stainlessDark} attach="material" />
+        </mesh>
+
+        {/* Grille porte-aliments (mi-hauteur) */}
+        {[-D / 2 + 5, 0, D / 2 - 5].map((z, i) => (
+          <mesh key={`rack-${i}`} position={[DOOR_X, H / 2 - 1, z]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.18, 0.18, DOOR_W - 4, 8]} />
             <primitive object={rackMat} attach="material" />
           </mesh>
-        );
-      })}
+        ))}
+        {Array.from({ length: 7 }, (_, i) => i).map(i => {
+          const z = -D / 2 + 5 + (i * (D - 10)) / 6;
+          return (
+            <mesh key={`rack-x-${i}`} position={[DOOR_X, H / 2 - 1, z]}>
+              <boxGeometry args={[DOOR_W - 4, 0.3, 0.3]} />
+              <primitive object={rackMat} attach="material" />
+            </mesh>
+          );
+        })}
+
+        {/* Panneau de commande (droite) */}
+        <group position={[PANEL_X, H / 2, FRONT_Z + 0.05]}>
+          {/* Fond noir */}
+          <mesh>
+            <boxGeometry args={[PANEL_W, H, 0.6]} />
+            <primitive object={blackPlastic} attach="material" />
+          </mesh>
+          {/* Recess (cadre légèrement enfoncé) */}
+          <mesh position={[0, 0, 0.31]}>
+            <boxGeometry args={[PANEL_W - 1.4, H - 1.4, 0.15]} />
+            <primitive object={blackMatte} attach="material" />
+          </mesh>
+          {/* LCD display */}
+          <mesh position={[0, H / 2 - 3.3, 0.4]}>
+            <boxGeometry args={[PANEL_W - 3, 3.0, 0.1]} />
+            <primitive object={displayMat} attach="material" />
+          </mesh>
+          {/* Bordure display */}
+          <mesh position={[0, H / 2 - 3.3, 0.38]}>
+            <boxGeometry args={[PANEL_W - 2.4, 3.4, 0.08]} />
+            <primitive object={blackPlastic} attach="material" />
+          </mesh>
+          {/* Cadran rotatif central (Ø 2 cm) */}
+          <mesh position={[0, 0.5, 0.45]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[1.0, 1.1, 1.0, 32]} />
+            <primitive object={dialMat} attach="material" />
+          </mesh>
+          {/* Indicateur cadran */}
+          <mesh position={[0, 1.25, 0.55]}>
+            <boxGeometry args={[0.2, 0.5, 0.15]} />
+            <primitive object={dialIndicator} attach="material" />
+          </mesh>
+          {/* Knurl pourtour cadran (16 stries) */}
+          {Array.from({ length: 16 }, (_, i) => i).map(i => {
+            const a = (i / 16) * Math.PI * 2;
+            return (
+              <mesh
+                key={`knurl-${i}`}
+                position={[Math.sin(a) * 1.05, 0.5 + Math.cos(a) * 1.05, 0.45]}
+                rotation={[0, 0, -a]}
+              >
+                <boxGeometry args={[0.08, 0.25, 0.9]} />
+                <primitive object={blackPlastic} attach="material" />
+              </mesh>
+            );
+          })}
+          {/* 4 boutons en bas (TEMP / TIME / POWER / LIGHT) */}
+          {[-2.7, -0.9, 0.9, 2.7].map((x, i) => (
+            <mesh key={`btn-${i}`} position={[x, -H / 2 + 1.5, 0.5]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.55, 0.55, 0.5, 16]} />
+              <primitive object={dialMat} attach="material" />
+            </mesh>
+          ))}
+        </group>
+
+        {/* Fentes d'aération dessus arrière */}
+        {ventOffsets.map((x, i) => (
+          <mesh key={`vt-${i}`} position={[x, H + 0.01, -D / 2 + 4]} geometry={ventGeometry()}>
+            <primitive object={blackMatte} attach="material" />
+          </mesh>
+        ))}
+
+        {/* 4 pieds antidérapants */}
+        {[
+          [-W / 2 + 3,  D / 2 - 3],
+          [ W / 2 - 3,  D / 2 - 3],
+          [-W / 2 + 3, -D / 2 + 3],
+          [ W / 2 - 3, -D / 2 + 3],
+        ].map(([x, z], i) => (
+          <mesh key={`ft-${i}`} position={[x, -0.4, z]}>
+            <cylinderGeometry args={[1.0, 1.2, 0.8, 16]} />
+            <primitive object={rubberMat} attach="material" />
+          </mesh>
+        ))}
+      </MergedStaticGroup>
 
       {/* Cadre de porte (inox) — pivot bas-avant pour ouverture flip-down */}
       <group ref={doorRef} position={[DOOR_X, 0.6, FRONT_Z + 0.45]}>
@@ -201,82 +279,6 @@ export function NinjaSP101({ actionState, onSize }: SceneItemProps) {
         </mesh>
        </group>
       </group>
-
-      {/* Panneau de commande (droite) */}
-      <group position={[PANEL_X, H / 2, FRONT_Z + 0.05]}>
-        {/* Fond noir */}
-        <mesh>
-          <boxGeometry args={[PANEL_W, H, 0.6]} />
-          <primitive object={blackPlastic} attach="material" />
-        </mesh>
-        {/* Recess (cadre légèrement enfoncé) */}
-        <mesh position={[0, 0, 0.31]}>
-          <boxGeometry args={[PANEL_W - 1.4, H - 1.4, 0.15]} />
-          <primitive object={blackMatte} attach="material" />
-        </mesh>
-        {/* LCD display */}
-        <mesh position={[0, H / 2 - 3.3, 0.4]}>
-          <boxGeometry args={[PANEL_W - 3, 3.0, 0.1]} />
-          <primitive object={displayMat} attach="material" />
-        </mesh>
-        {/* Bordure display */}
-        <mesh position={[0, H / 2 - 3.3, 0.38]}>
-          <boxGeometry args={[PANEL_W - 2.4, 3.4, 0.08]} />
-          <primitive object={blackPlastic} attach="material" />
-        </mesh>
-        {/* Cadran rotatif central (Ø 2 cm) */}
-        <mesh position={[0, 0.5, 0.45]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[1.0, 1.1, 1.0, 32]} />
-          <primitive object={dialMat} attach="material" />
-        </mesh>
-        {/* Indicateur cadran */}
-        <mesh position={[0, 1.25, 0.55]}>
-          <boxGeometry args={[0.2, 0.5, 0.15]} />
-          <primitive object={dialIndicator} attach="material" />
-        </mesh>
-        {/* Knurl pourtour cadran (16 stries) */}
-        {Array.from({ length: 16 }, (_, i) => i).map(i => {
-          const a = (i / 16) * Math.PI * 2;
-          return (
-            <mesh
-              key={`knurl-${i}`}
-              position={[Math.sin(a) * 1.05, 0.5 + Math.cos(a) * 1.05, 0.45]}
-              rotation={[0, 0, -a]}
-            >
-              <boxGeometry args={[0.08, 0.25, 0.9]} />
-              <primitive object={blackPlastic} attach="material" />
-            </mesh>
-          );
-        })}
-        {/* 4 boutons en bas (TEMP / TIME / POWER / LIGHT) */}
-        {[-2.7, -0.9, 0.9, 2.7].map((x, i) => (
-          <mesh key={`btn-${i}`} position={[x, -H / 2 + 1.5, 0.5]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.55, 0.55, 0.5, 16]} />
-            <primitive object={dialMat} attach="material" />
-          </mesh>
-        ))}
-      </group>
-
-      {/* Fentes d'aération dessus arrière */}
-      {ventOffsets.map((x, i) => (
-        <mesh key={`vt-${i}`} position={[x, H + 0.01, -D / 2 + 4]} geometry={ventGeometry()}>
-          <primitive object={blackMatte} attach="material" />
-        </mesh>
-      ))}
-
-      {/* 4 pieds antidérapants */}
-      {[
-        [-W / 2 + 3,  D / 2 - 3],
-        [ W / 2 - 3,  D / 2 - 3],
-        [-W / 2 + 3, -D / 2 + 3],
-        [ W / 2 - 3, -D / 2 + 3],
-      ].map(([x, z], i) => (
-        <mesh key={`ft-${i}`} position={[x, -0.4, z]}>
-          <cylinderGeometry args={[1.0, 1.2, 0.8, 16]} />
-          <primitive object={rubberMat} attach="material" />
-        </mesh>
-      ))}
-
     </group>
   );
 }

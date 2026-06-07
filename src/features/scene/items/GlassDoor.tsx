@@ -39,19 +39,19 @@ function DoorPanelV1({ cx, baseY }: { cx: number; baseY: number }) {
   const PANE_W = PANEL_W - frameW * 2;
   return (
     <>
-      <mesh position={[cx, baseY + GLASS_H - frameW / 2, 0]}>
+      <mesh position={[cx, baseY + GLASS_H - frameW / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[PANEL_W, frameW, FRAME_D_V1]} />{pvc}
       </mesh>
-      <mesh position={[cx, baseY + frameW / 2, 0]}>
+      <mesh position={[cx, baseY + frameW / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[PANEL_W, frameW, FRAME_D_V1]} />{pvc}
       </mesh>
-      <mesh position={[cx - PANEL_W / 2 + frameW / 2, baseY + frameW + PANE_H / 2, 0]}>
+      <mesh position={[cx - PANEL_W / 2 + frameW / 2, baseY + frameW + PANE_H / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[frameW, PANE_H, FRAME_D_V1]} />{pvc}
       </mesh>
-      <mesh position={[cx + PANEL_W / 2 - frameW / 2, baseY + frameW + PANE_H / 2, 0]}>
+      <mesh position={[cx + PANEL_W / 2 - frameW / 2, baseY + frameW + PANE_H / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[frameW, PANE_H, FRAME_D_V1]} />{pvc}
       </mesh>
-      <mesh position={[cx, baseY + frameW + PANE_H / 2, 0]}>
+      <mesh position={[cx, baseY + frameW + PANE_H / 2, 0]} castShadow receiveShadow>
         <planeGeometry args={[PANE_W, PANE_H]} />{glass}
       </mesh>
     </>
@@ -85,20 +85,20 @@ function DoorPanelV2({ width, height, baseY, pvcColor = "#ffffff", glassColor = 
   return (
     <group position={[0, baseY + height / 2, 0]}>
       {/* Cadre du battant */}
-      <mesh position={[0, height / 2 - frameW / 2, 0]}>
+      <mesh position={[0, height / 2 - frameW / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[width, frameW, frameD]} />{pvc}
       </mesh>
-      <mesh position={[0, -height / 2 + frameW / 2, 0]}>
+      <mesh position={[0, -height / 2 + frameW / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[width, frameW, frameD]} />{pvc}
       </mesh>
-      <mesh position={[-width / 2 + frameW / 2, 0, 0]}>
+      <mesh position={[-width / 2 + frameW / 2, 0, 0]} castShadow receiveShadow>
         <boxGeometry args={[frameW, height - frameW * 2, frameD]} />{pvc}
       </mesh>
-      <mesh position={[width / 2 - frameW / 2, 0, 0]}>
+      <mesh position={[width / 2 - frameW / 2, 0, 0]} castShadow receiveShadow>
         <boxGeometry args={[frameW, height - frameW * 2, frameD]} />{pvc}
       </mesh>
       {/* Vitrage double épaisseur */}
-      <mesh position={[0, 0, 0]}>
+      <mesh position={[0, 0, 0]} castShadow receiveShadow>
         <boxGeometry args={[gw, gh, 0.8]} />{glass}
       </mesh>
     </group>
@@ -277,19 +277,19 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
     <group position={[0, -GLASS_TOP / 2, 0]}>
       {/* ── CADRE DORMANT FIXE (Y=25 à Y=225, mitered 5cm) ── */}
       {/* Montant gauche */}
-      <mesh position={[-W_TOTAL / 2 + FRAME / 2, 25 + 200 / 2, 0]}>
+      <mesh position={[-W_TOTAL / 2 + FRAME / 2, 25 + 200 / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[FRAME, 200, FRAME_D_V2]} />{pvcMat}
       </mesh>
       {/* Montant droit */}
-      <mesh position={[W_TOTAL / 2 - FRAME / 2, 25 + 200 / 2, 0]}>
+      <mesh position={[W_TOTAL / 2 - FRAME / 2, 25 + 200 / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[FRAME, 200, FRAME_D_V2]} />{pvcMat}
       </mesh>
       {/* Traverse haute (s'emboîte entre les montants) */}
-      <mesh position={[0, 225 - FRAME / 2, 0]}>
+      <mesh position={[0, 225 - FRAME / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[W_INNER, FRAME, FRAME_D_V2]} />{pvcMat}
       </mesh>
       {/* Traverse basse (s'emboîte entre les montants) */}
-      <mesh position={[0, 25 + FRAME / 2, 0]}>
+      <mesh position={[0, 25 + FRAME / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[W_INNER, FRAME, FRAME_D_V2]} />{pvcMat}
       </mesh>
 
@@ -300,19 +300,19 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
         </group>
         
         {/* Profilé de recouvrement central (battement) monté sur la tranche du battant gauche */}
-        <mesh position={[PANEL_W_V2 + 0.5, 30 + 190 / 2, 0.5]}>
+        <mesh position={[PANEL_W_V2 + 0.5, 30 + 190 / 2, 0.5]} castShadow receiveShadow>
           <boxGeometry args={[2.5, 190, FRAME_D_V2 + 0.4]} />{pvcMat}
         </mesh>
 
         {/* Charnières gauche */}
         <group position={[0, 0, 0]}>
-          <mesh position={[0, 60, 0]} rotation-x={Math.PI / 2}>
+          <mesh position={[0, 60, 0]} rotation-x={Math.PI / 2} castShadow receiveShadow>
             <cylinderGeometry args={[0.7, 0.7, 3, 8]} />{metalMat}
           </mesh>
-          <mesh position={[0, 125, 0]} rotation-x={Math.PI / 2}>
+          <mesh position={[0, 125, 0]} rotation-x={Math.PI / 2} castShadow receiveShadow>
             <cylinderGeometry args={[0.7, 0.7, 3, 8]} />{metalMat}
           </mesh>
-          <mesh position={[0, 190, 0]} rotation-x={Math.PI / 2}>
+          <mesh position={[0, 190, 0]} rotation-x={Math.PI / 2} castShadow receiveShadow>
             <cylinderGeometry args={[0.7, 0.7, 3, 8]} />{metalMat}
           </mesh>
         </group>
@@ -326,13 +326,13 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
         {/* Charnières droite */}
         <group position={[0, 0, 0]}>
-          <mesh position={[0, 60, 0]} rotation-x={Math.PI / 2}>
+          <mesh position={[0, 60, 0]} rotation-x={Math.PI / 2} castShadow receiveShadow>
             <cylinderGeometry args={[0.7, 0.7, 3, 8]} />{metalMat}
           </mesh>
-          <mesh position={[0, 125, 0]} rotation-x={Math.PI / 2}>
+          <mesh position={[0, 125, 0]} rotation-x={Math.PI / 2} castShadow receiveShadow>
             <cylinderGeometry args={[0.7, 0.7, 3, 8]} />{metalMat}
           </mesh>
-          <mesh position={[0, 190, 0]} rotation-x={Math.PI / 2}>
+          <mesh position={[0, 190, 0]} rotation-x={Math.PI / 2} castShadow receiveShadow>
             <cylinderGeometry args={[0.7, 0.7, 3, 8]} />{metalMat}
           </mesh>
         </group>
@@ -341,17 +341,17 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
         {/* Position local X relative au pivot : -PANEL_W_V2 + 6 = -69 */}
         <group position={[-PANEL_W_V2 + 6, 125, FRAME_D_V2 / 2 + 0.1]}>
           {/* Platine de poignée (Rosette) */}
-          <mesh position={[0, 0, 0.1]}>
+          <mesh position={[0, 0, 0.1]} castShadow receiveShadow>
             <boxGeometry args={[2.5, 4.5, 0.2]} />{metalMat}
           </mesh>
           {/* Axe rotatif horizontal */}
-          <mesh position={[0, 0, 0.4]} rotation-x={Math.PI / 2}>
+          <mesh position={[0, 0, 0.4]} rotation-x={Math.PI / 2} castShadow receiveShadow>
             <cylinderGeometry args={[0.4, 0.4, 0.6, 8]} />{metalMat}
           </mesh>
           {/* Levier de poignée pivotant */}
           <group ref={handleRef} position={[0, 0, 0.7]}>
             {/* Le bras s'étend horizontalement vers la droite (+X) */}
-            <mesh position={[4.5, 0, 0.1]}>
+            <mesh position={[4.5, 0, 0.1]} castShadow receiveShadow>
               <boxGeometry args={[9, 0.9, 0.5]} />{metalMat}
             </mesh>
           </group>
@@ -360,15 +360,15 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
       {/* ── COULISSES LATÉRALES DE VOLET ROULANT ── */}
       {/* Glissières le long des montants extérieurs (Z = -4) jusqu'au bas du coffrage (Y = 225) */}
-      <mesh position={[-W_INNER / 2 - 0.5, 25 + 200 / 2, -4]}>
+      <mesh position={[-W_INNER / 2 - 0.5, 25 + 200 / 2, -4]} castShadow receiveShadow>
         <boxGeometry args={[1.5, 200, 1.5]} />{darkMetalMat}
       </mesh>
-      <mesh position={[W_INNER / 2 + 0.5, 25 + 200 / 2, -4]}>
+      <mesh position={[W_INNER / 2 + 0.5, 25 + 200 / 2, -4]} castShadow receiveShadow>
         <boxGeometry args={[1.5, 200, 1.5]} />{darkMetalMat}
       </mesh>
 
       {/* ── TABLIER DE LAMES DU VOLET ROULANT ── */}
-      <instancedMesh ref={instancedShutterRef} args={[undefined as any, undefined as any, 50]}>
+      <instancedMesh ref={instancedShutterRef} args={[undefined as any, undefined as any, 50]} castShadow receiveShadow>
         <boxGeometry args={[W_INNER + 2, 3.8, 1.2]} />
         <meshStandardMaterial color="#dcdcdc" roughness={0.4} metalness={0.1} />
       </instancedMesh>
@@ -377,12 +377,12 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
       {/* Placé de Y=225 à Y=247, soit exactement 3 cm sous le plafond à Y=250 */}
       <group position={[0, 225 + BOX_H / 2, BOX_D / 2]}>
         {/* Corps principal du coffrage */}
-        <mesh position={[0, 0, 0]}>
+        <mesh position={[0, 0, 0]} castShadow receiveShadow>
           <boxGeometry args={[BOX_W, BOX_H, BOX_D]} />
           <meshStandardMaterial color="#f7f7f7" roughness={0.4} metalness={0.0} />
         </mesh>
         {/* Baguette décorative / Jointure de la trappe de visite */}
-        <mesh position={[0, -BOX_H / 2 + 0.5, BOX_D / 2 + 0.05]}>
+        <mesh position={[0, -BOX_H / 2 + 0.5, BOX_D / 2 + 0.05]} castShadow receiveShadow>
           <boxGeometry args={[BOX_W - 2, 0.2, 0.1]} />
           <meshStandardMaterial color="#dddddd" roughness={0.3} />
         </mesh>
@@ -390,19 +390,19 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
       {/* ── LATTES DE FINITION / CHAMBRANLES (5cm de large, épaisseur 1.2cm, calées sur la face intérieure Z=0) ── */}
       {/* Latte gauche */}
-      <mesh position={[-W_TOTAL / 2 - 2.5, 25 + 200 / 2, 0.6]}>
+      <mesh position={[-W_TOTAL / 2 - 2.5, 25 + 200 / 2, 0.6]} castShadow receiveShadow>
         <boxGeometry args={[5, 200, 1.2]} />{pvcMat}
       </mesh>
       {/* Latte droite */}
-      <mesh position={[W_TOTAL / 2 + 2.5, 25 + 200 / 2, 0.6]}>
+      <mesh position={[W_TOTAL / 2 + 2.5, 25 + 200 / 2, 0.6]} castShadow receiveShadow>
         <boxGeometry args={[5, 200, 1.2]} />{pvcMat}
       </mesh>
       {/* Latte haute */}
-      <mesh position={[0, 225 + 2, 0.6]}>
+      <mesh position={[0, 225 + 2, 0.6]} castShadow receiveShadow>
         <boxGeometry args={[W_TOTAL + 10, 4, 1.2]} />{pvcMat}
       </mesh>
       {/* Latte basse (pour fermer le tour symétrique de 5cm) */}
-      <mesh position={[0, 25 - 2.5, 0.6]}>
+      <mesh position={[0, 25 - 2.5, 0.6]} castShadow receiveShadow>
         <boxGeometry args={[W_TOTAL + 10, 5, 1.2]} />{pvcMat}
       </mesh>
     </group>

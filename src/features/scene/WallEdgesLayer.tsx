@@ -8,7 +8,7 @@ const lineMat      = new THREE.LineBasicMaterial({ color: 0xff2200 });
 const highlightMat = new THREE.LineBasicMaterial({ color: 0xffee00, depthTest: false });
 
 function isWallMesh(obj: THREE.Object3D): boolean {
-  let cur: THREE.Object3D | null = obj.parent;
+  let cur: THREE.Object3D | null = obj;
   while (cur) {
     if (cur.userData?.brickType === 'wall') return true;
     cur = cur.parent;
@@ -37,52 +37,67 @@ export function WallEdgesLayer() {
   const layers = useSceneStore(state => state.layers);
 
   useEffect(() => {
-    // Force update même si group parent .visible=false (mode plan masque les murs
-    // mais l'utilisateur veut quand même voir les arêtes rouges).
-    scene.updateMatrixWorld(true);
-    const geos: THREE.BufferGeometry[] = [];
+    let timeout: any;
+    
+    const compute = () => {
+      // Force update même si group parent .visible=false
+      scene.updateMatrixWorld(true);
+      const geos: THREE.BufferGeometry[] = [];
 
-    scene.traverse(obj => {
-      const mesh = obj as THREE.Mesh;
-      if (!mesh.isMesh || (mesh as any).isSkinnedMesh) return;
-      if (!isWallMesh(mesh)) return;
-      // On ignore mesh.visible / parent.visible : les arêtes doivent rester visibles
-      // en mode plan où le groupe 3D entier est masqué.
-      if (!camera.layers.test(mesh.layers)) return;
+      scene.traverse(obj => {
+        const mesh = obj as THREE.Mesh;
+        if (!mesh.isMesh || (mesh as any).isSkinnedMesh) return;
+        if (!isWallMesh(mesh)) return;
+        
+        // On respecte la visibilité effective.
+        if (!mesh.visible) return;
 
-      const src = mesh.geometry;
-      const tmp = new THREE.BufferGeometry();
-      tmp.setAttribute('position', src.getAttribute('position').clone());
-      if (src.index) tmp.setIndex(src.index.clone());
+        if (!camera.layers.test(mesh.layers)) return;
 
-      const geo = tmp.index ? tmp.toNonIndexed() : tmp;
-      if (geo !== tmp) tmp.dispose();
+        const src = mesh.geometry;
+        const tmp = new THREE.BufferGeometry();
+        tmp.setAttribute('position', src.getAttribute('position').clone());
+        if (src.index) tmp.setIndex(src.index.clone());
 
-      geo.applyMatrix4(mesh.matrixWorld);
-      geos.push(geo);
-    });
+        const geo = tmp.index ? tmp.toNonIndexed() : tmp;
+        if (geo !== tmp) tmp.dispose();
 
-    if (geos.length === 0) return;
+        geo.applyMatrix4(mesh.matrixWorld);
+        geos.push(geo);
+      });
 
-    const merged = mergeGeometries(geos);
-    geos.forEach(g => g.dispose());
-    if (!merged) return;
+      if (geos.length === 0) {
+        // Si rien trouvé, on réessaie dans 200ms (attente de la fusion)
+        timeout = setTimeout(compute, 200);
+        return;
+      }
 
-    const deduped = mergeVertices(merged, 0.01);
-    merged.dispose();
+      const merged = mergeGeometries(geos);
+      geos.forEach(g => g.dispose());
+      if (!merged) return;
 
-    const edges = new THREE.EdgesGeometry(deduped, 5);
-    deduped.dispose();
+      const deduped = mergeVertices(merged, 0.1);
+      merged.dispose();
 
-    const line = new THREE.LineSegments(edges, lineMat);
-    scene.add(line);
+      const edges = new THREE.EdgesGeometry(deduped, 5);
+      deduped.dispose();
 
-    edgeData.line      = line;
-    edgeData.positions = edges.attributes.position.array as Float32Array;
+      const line = new THREE.LineSegments(edges, lineMat);
+      scene.add(line);
+
+      edgeData.line      = line;
+      edgeData.positions = edges.attributes.position.array as Float32Array;
+    };
+
+    // Premier essai rapide, puis retours si nécessaire
+    timeout = setTimeout(compute, 100);
 
     return () => {
-      scene.remove(line);
-      edges.dispose();
+      clearTimeout(timeout);
+      if (edgeData.line) {
+        scene.remove(edgeData.line);
+        edgeData.line.geometry.dispose();
+      }
       edgeData.line      = null;
       edgeData.positions = null;
     };

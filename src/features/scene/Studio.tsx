@@ -47,7 +47,7 @@ import { SurfaceLayer }              from '@features/scene/SurfaceLayer';
 import {
   ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NEIGHBORS, LAYER_LIDAR,
-  LAYER_WALKER_DETAIL,
+  LAYER_WALKER_DETAIL, LAYER_MIRRORS,
 } from '@config';
 
 /**
@@ -99,12 +99,27 @@ function ShadowWarmup() {
 
 /** Active/désactive les ombres en réponse au toggle UI. */
 function ShadowController({ enabled }: { enabled: boolean }) {
-  const { gl, invalidate } = useThree();
+  const { gl, scene, invalidate } = useThree();
   useEffect(() => {
     gl.shadowMap.enabled = enabled;
+    scene.traverse(obj => {
+      if ((obj as any).isLight || (obj as any).isMesh) {
+        if (obj.userData?.skipShadowToggle) return;
+        // On ne touche qu'aux objets qui ont déjà un réglage d'ombre,
+        // pour ne pas activer des ombres là où il n'y en avait pas.
+        if (enabled) {
+          if (obj.userData?.wasCastingShadow) obj.castShadow = true;
+        } else {
+          if (obj.castShadow) {
+            obj.userData.wasCastingShadow = true;
+            obj.castShadow = false;
+          }
+        }
+      }
+    });
     gl.shadowMap.needsUpdate = true;
     invalidate();
-  }, [enabled, gl, invalidate]);
+  }, [enabled, gl, scene, invalidate]);
   return null;
 }
 
@@ -304,7 +319,6 @@ export function Studio() {
            */}
           <Walls pillarsOnly={layers.pillarsOnly} wallsOnly={layers.wallsOnly} />
           <Floor />
-          <group visible={layers.doors}><DoorsPlaced /></group>
           <Walker showSkeleton={layers.skeleton} />
 
           {/*
@@ -316,13 +330,17 @@ export function Studio() {
           </CategoryLayerGroup>
 
           <CategoryLayerGroup layer={LAYER_FURNITURE}>
-            <Mirrors />
             <Furniture />
             <Furnishings />
             <Decor />
             <Backpacks />
             <Garden />
             <DronaBoxes />
+          </CategoryLayerGroup>
+
+          {/* LAYER_MIRRORS (7) — miroirs Reflector */}
+          <CategoryLayerGroup layer={LAYER_MIRRORS}>
+            <Mirrors />
           </CategoryLayerGroup>
 
           {/* LAYER_NEIGHBORS (5) — appartements voisins */}

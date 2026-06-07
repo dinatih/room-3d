@@ -84,19 +84,19 @@ function DoorImpl({
     <group position={[0, -H / 2, 0]}>
 
       {/* Dormant (contour fixe) */}
-      <mesh position={[-(W / 2 + DT / 2), H / 2, 0]}>
+      <mesh position={[-(W / 2 + DT / 2), H / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[DT, H, WW]} />{dormMat}
       </mesh>
-      <mesh position={[ (W / 2 + DT / 2), H / 2, 0]}>
+      <mesh position={[ (W / 2 + DT / 2), H / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[DT, H, WW]} />{dormMat}
       </mesh>
-      <mesh position={[0, H + DT / 2, 0]}>
+      <mesh position={[0, H + DT / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[W, DT, WW]} />{dormMat}
       </mesh>
 
       <group ref={doorRef} position={[pivotX, 0, 0]}>
         {/* Panneau */}
-        <mesh position={[panelX, H / 2, 0]}>
+        <mesh position={[panelX, H / 2, 0]} castShadow receiveShadow>
           <boxGeometry args={[W, H, T]} />
           <meshStandardMaterial color="#f5f5f5" roughness={0.4} />
         </mesh>
