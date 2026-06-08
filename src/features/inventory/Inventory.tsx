@@ -259,8 +259,13 @@ export function Inventory({ onClose }: { onClose: () => void }) {
   }, [navList, focusedIndex]);
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={{ ...modalStyleFor(isMobile), position: 'relative' }} onClick={e => e.stopPropagation()}>
+    <div
+      style={overlayStyle}
+      onClick={onClose}
+      onKeyDown={(e) => e.stopPropagation()}
+    >
+      <div
+        style={{ ...modalStyleFor(isMobile), position: 'relative' }} onClick={e => e.stopPropagation()}>
 
         {/* Bouton fermer — toujours en haut à droite, surtout pour mobile plein-écran */}
         <button

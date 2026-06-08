@@ -151,6 +151,9 @@ export function HoverRaycaster() {
     }
 
     // ── Souris : hover → dot ──────────────────────────────────────────────────
+    let showTimer: ReturnType<typeof setTimeout> | null = null;
+    let currentHoverObject: string | null = null;
+
     const onMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
       if (hoverState.touchActive) return;
@@ -159,22 +162,46 @@ export function HoverRaycaster() {
       lastMove = now;
 
       const found = raycastAt(e.clientX, e.clientY);
+      const newHoverId = found ? found.actionIds.join(',') : null;
+
       if (found) {
         cancelHide();
-        hoverState.visible   = true;
-        hoverState.label     = found.label;
-        hoverState.actionIds = found.actionIds;
-        hoverState.x         = e.clientX;
-        hoverState.y         = e.clientY;
-        canvas.style.cursor  = 'pointer';
+        
+        // Si on survole le même objet, on met à jour la position
+        if (currentHoverObject === newHoverId) {
+          hoverState.x = e.clientX;
+          hoverState.y = e.clientY;
+          hoverState.onUpdate?.();
+        } 
+        // Si c'est un nouvel objet interactif
+        else {
+          currentHoverObject = newHoverId;
+          hoverState.visible = false;
+          hoverState.onUpdate?.();
+          
+          if (showTimer) clearTimeout(showTimer);
+          showTimer = setTimeout(() => {
+            hoverState.visible   = true;
+            hoverState.label     = found.label;
+            hoverState.actionIds = found.actionIds;
+            canvas.style.cursor  = 'pointer';
+            hoverState.onUpdate?.();
+          }, 2000);
+        }
       } else {
+        // Plus d'objet interactif sous la souris
+        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+        currentHoverObject = null;
         scheduleHide();
         canvas.style.cursor  = '';
       }
-      hoverState.onUpdate?.();
     };
 
-    const onLeave = () => { scheduleHide(); };
+    const onLeave = () => { 
+      if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+      currentHoverObject = null;
+      scheduleHide(); 
+    };
 
     // ── Clic : épingle / ferme le modal ──────────────────────────────────────
     const onClick = (e: MouseEvent) => {
@@ -293,25 +320,40 @@ function injectPulse() {
 }
 
 export function HoverOverlay() {
+  const dotRef = React.useRef<HTMLDivElement>(null);
   const [state, setState] = useState({
-    visible: false, label: '', actionIds: [] as string[], x: 0, y: 0,
+    visible: false, label: '', actionIds: [] as string[],
     locked: false, lockedLabel: '', lockedActionIds: [] as string[], lockedX: 0, lockedY: 0,
   });
 
   useEffect(() => {
     injectPulse();
     hoverState.onUpdate = () => {
-      setState({
-        visible:         hoverState.visible,
-        label:           hoverState.label,
-        actionIds:       hoverState.actionIds,
-        x:               hoverState.x,
-        y:               hoverState.y,
-        locked:          hoverState.locked,
-        lockedLabel:     hoverState.lockedLabel,
-        lockedActionIds: hoverState.lockedActionIds,
-        lockedX:         hoverState.lockedX,
-        lockedY:         hoverState.lockedY,
+      // Direct DOM update for tracking (zero lag)
+      if (dotRef.current) {
+        dotRef.current.style.left = `${hoverState.x + 10}px`;
+        dotRef.current.style.top  = `${hoverState.y - 20}px`;
+      }
+
+      setState(prev => {
+        // Only trigger React state update if visible/locked state changes, not just coordinates
+        if (prev.visible !== hoverState.visible || 
+            prev.locked !== hoverState.locked || 
+            prev.lockedX !== hoverState.lockedX || 
+            prev.lockedY !== hoverState.lockedY ||
+            prev.actionIds.join(',') !== hoverState.actionIds.join(',')) {
+          return {
+            visible:         hoverState.visible,
+            label:           hoverState.label,
+            actionIds:       hoverState.actionIds,
+            locked:          hoverState.locked,
+            lockedLabel:     hoverState.lockedLabel,
+            lockedActionIds: hoverState.lockedActionIds,
+            lockedX:         hoverState.lockedX,
+            lockedY:         hoverState.lockedY,
+          };
+        }
+        return prev;
       });
     };
     return () => { hoverState.onUpdate = null; };
@@ -337,23 +379,23 @@ export function HoverOverlay() {
   return (
     <>
       {/* ── Indicateur circulaire de survol ── */}
-      {showDot && (
-        <div
-          className="hover-dot-indicator"
-          style={{
-            position: 'fixed',
-            left: state.x + 10,
-            top:  state.y - 20,
-            width: 14, height: 14,
-            borderRadius: '50%',
-            background: 'rgba(255,215,0,0.55)',
-            border: '2px solid #ffd700',
-            boxShadow: '0 0 10px rgba(255,215,0,0.55)',
-            pointerEvents: 'none',
-            zIndex: 300,
-          }}
-        />
-      )}
+      <div
+        ref={dotRef}
+        className="hover-dot-indicator"
+        style={{
+          position: 'fixed',
+          display: showDot ? 'block' : 'none',
+          left: hoverState.x + 10,
+          top:  hoverState.y - 20,
+          width: 14, height: 14,
+          borderRadius: '50%',
+          background: 'rgba(255,215,0,0.55)',
+          border: '2px solid #ffd700',
+          boxShadow: '0 0 10px rgba(255,215,0,0.55)',
+          pointerEvents: 'none',
+          zIndex: 300,
+        }}
+      />
 
       {/* ── Modal épinglé au clic ── */}
       {showModal && lockedActions.length > 0 && (

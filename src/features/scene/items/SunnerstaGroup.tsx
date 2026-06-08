@@ -19,7 +19,7 @@ import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 // Hauteur tête (base → sommet) : 8 + 8 + 8.9 × scale 1.15
-const HEAD_HEIGHT = 8 + 8 + 8.9 * 1.15;
+const HEAD_HEIGHT = 45;
 
 // Plateau supérieur par variant + composant desserte associé
 const DESSERTE_TOP = [90, 77, 61];
@@ -29,7 +29,7 @@ export function SunnerstaGroup({ onSize, variant = 0 }: SceneItemProps & { varia
   const ref = useRef<THREE.Group>(null!);
   const v = variant % DESSERTE_EL.length;
   const Desserte = DESSERTE_EL[v];
-  const top = DESSERTE_TOP[v];
+  const top = DESSERTE_TOP[v] - 8;
 
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
@@ -39,11 +39,11 @@ export function SunnerstaGroup({ onSize, variant = 0 }: SceneItemProps & { varia
   return (
     <group ref={ref}>
       <Desserte item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      <group position={[0, top + HEAD_HEIGHT + 2, -2]} rotation-y={Math.PI / 2}>
+      <group position={[5, top + HEAD_HEIGHT - 9, -2]} rotation={[0.15, Math.PI / 2, 0]}>
         <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Tête de mannequin — toujours visible */}
-      <group position={[0, top, -2]} rotation-y={-Math.PI / 2}>
+      <group position={[0, top, -2]} rotation-y={Math.PI / 2}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>

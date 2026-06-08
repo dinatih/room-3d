@@ -200,8 +200,8 @@ export function Equipment() {
       <group position={[NICHE_X + 40, 80, BATH_Z_END + 69]}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* TACKAN lavabo — plan vasque (y=83), côté droit du mitigeur */}
-      <group position={[DOOR_START - 84 + 15, 83, KITCHEN_Z + 34.5]}>
+      {/* TACKAN lavabo — plan vasque (y=83), contre le miroir */}
+      <group position={[DOOR_START - 84 + 15, 83, KITCHEN_Z + 15]}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}

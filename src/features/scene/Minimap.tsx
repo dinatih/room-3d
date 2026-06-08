@@ -151,16 +151,36 @@ export function Minimap() {
   const canvasH = Math.round(canvasW * PLAN_ASPECT);
 
   useEffect(() => {
-    const prev = cameraState.onUpdate;
-    cameraState.onUpdate = () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      canvas.width  = canvasW;
-      canvas.height = canvasH;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    // Set size only once per dimension change to avoid buffer reallocation lag
+    canvas.width  = canvasW;
+    canvas.height = canvasH;
+
+    let raf: number | null = null;
+    let pending = false;
+
+    const draw = () => {
+      pending = false;
       drawMinimap(canvas, smallW);
     };
-    cameraState.onUpdate();
-    return () => { cameraState.onUpdate = prev; };
+
+    const prev = cameraState.onUpdate;
+    cameraState.onUpdate = () => {
+      if (!pending) {
+        pending = true;
+        raf = requestAnimationFrame(draw);
+      }
+    };
+    
+    // Initial draw
+    draw();
+
+    return () => {
+      cameraState.onUpdate = prev;
+      if (raf !== null) cancelAnimationFrame(raf);
+    };
   }, [canvasW, canvasH, smallW]);
 
   useEffect(() => {
