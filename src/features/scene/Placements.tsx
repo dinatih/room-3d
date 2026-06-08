@@ -204,8 +204,8 @@ export function Equipment() {
       <group position={[DOOR_START - 84 + 15, 83, KITCHEN_Z + 34.5]}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* TACKAN évier — plan cuisine (y=93), à droite de l'évier */}
-      <group position={[KITCHEN_X0 + 35, 93, ROOM_D + 30]}>
+      {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
+      <group position={[KITCHEN_X0 + 5, 93, KITCHEN_Z - 5]}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[NICHE_X + 60, 0, KITCHEN_Z + 46.5]} userData={{ animUnit: true }}>

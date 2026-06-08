@@ -1489,9 +1489,11 @@ function ReflectorMirror({ w, h, position, rotationY }: {
   rotationY: number;
 }) {
   const reflector = useMemo(() => {
+    // Résolution de base basse pour sauver les FPS. Le mode HD est géré via cameraState.
+    const res = cameraState.mirrorsHD ? 512 : 256;
     const mir = new Reflector(new THREE.PlaneGeometry(w, h), {
-      textureWidth:  512,
-      textureHeight: 512,
+      textureWidth:  res,
+      textureHeight: res,
       color: 0xbbbbbb,
     } as ConstructorParameters<typeof Reflector>[1]);
     mir.position.set(...position);
@@ -1502,9 +1504,16 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
       _reflectionDepth++;
-      // On force les miroirs à ne voir QUE la structure et le walker detail.
-      // Cela évite de recalculer tout le mobilier (plusieurs millions de polys).
-      mir.camera.layers.mask = MIRROR_BASE_MASK;
+      
+      // Adaptation dynamique (résolution / layer mask)
+      const targetRes = cameraState.mirrorsHD ? 512 : 256;
+      const renderTarget = (mir as any).getRenderTarget();
+      if (renderTarget && renderTarget.width !== targetRes) {
+        renderTarget.setSize(targetRes, targetRes);
+      }
+      
+      // En mode HD, on prend tout ce que voit la caméra principale + le Walker Detail
+      mir.camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
       _reflectionDepth--;
     };
