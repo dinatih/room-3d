@@ -6,7 +6,7 @@ export const ROOM_W = 316; // 3,16m — largeur réelle du séjour
 export const ROOM_D = 400; // 4m
 export const WALL_H = 250; // 2.5m
 
-// Porte : 80cm d'ouverture, alignée après pilier corr-s (X=200)
+// Porte : 80cm d'ouverture, alignée après mur couloir (X=200)
 export const DOOR_START = 200; // cm 200
 export const DOOR_END = 280; // cm 280
 export const DOOR_H = 204;      // hauteur standard française (panneaux de porte)
@@ -34,6 +34,8 @@ export const DIAG_AX = ROOM_W;       // 316 — point A (Est) : coin NE (jonctio
 export const DIAG_AZ = 542;          // Z du point A (Est)
 export const DIAG_CX = NICHE_X; // point C (Ouest) : côté niche ouest
 export const DIAG_CZ = DIAG_AZ - (DIAG_AX - DIAG_CX) / Math.tan(_diagAngle); // ≈727.5
+
+export const DIAG_DEPTH = 10; // épaisseur du mur diagonal (cm)
 
 // Mur diagonal — géométrie dérivée (calculée une fois)
 export const DIAG_DX    = DIAG_CX - DIAG_AX;

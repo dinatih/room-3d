@@ -22,7 +22,7 @@ import {
   DOOR_START, DOOR_END, DOOR_H,
   BATH_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CZ, DIAG_SIN, DIAG_COS, DIAG_ROT_Y,
-  DIAG_ENTRY_S, DIAG_ENTRY_E,
+  DIAG_ENTRY_S, DIAG_ENTRY_E, DIAG_LEN, DIAG_DEPTH,
 } from '@config';
 
 export const W        = 10; // épaisseur de mur standard (cm)
@@ -94,11 +94,20 @@ export const PILLAR_DEFS = [
   { id: 'shower-nw',   x: NICHE_X - W / 2,        z: BATH_Z_END - W / 2 + 10 },
   { id: 'shower-ne',   x: 65,                      z: BATH_Z_END - W / 2 + 10 },
   { id: 'bath-ne',      x: CORR_WALL_X,             z: KITCHEN_Z + W / 2 },
-  { id: 'corr-s',      x: CORR_WALL_X,             z: ROOM_D + W / 2 },
   { id: 'bath-se',   x: CORR_WALL_X,             z: BATH_Z_END - W / 2 + 10 },
   { id: 'shower-sw',   x: NICHE_X - W / 2,        z: BATH_Z_END + 70 + W / 2 },
   { id: 'shower-se',   x: 65,                      z: BATH_Z_END + 70 + W / 2 },
   { id: 'garden-e',    x: ROOM_W + W / 2,           z: -220 - W / 2 },
+
+  // ── Extrémités mur diagonal (BoxGeometry pour éviter les artefacts d'extrusion) ────
+  { id: 'diag-ne-end',
+    x: DIAG_AX + (W / 2) * DIAG_SIN + (DIAG_DEPTH / 2) * DIAG_COS,
+    z: DIAG_AZ + (W / 2) * DIAG_COS - (DIAG_DEPTH / 2) * DIAG_SIN,
+    w: W, d: DIAG_DEPTH, rot: DIAG_ROT_Y },
+  { id: 'diag-sw-end',
+    x: DIAG_AX + (DIAG_LEN - W / 2) * DIAG_SIN + (DIAG_DEPTH / 2) * DIAG_COS,
+    z: DIAG_AZ + (DIAG_LEN - W / 2) * DIAG_COS - (DIAG_DEPTH / 2) * DIAG_SIN,
+    w: W, d: DIAG_DEPTH, rot: DIAG_ROT_Y },
 
   // ── Jambes des 3 portes (10×10, motif identique aux glass-west/east) ────
   // Porte séjour principale (mur sud z=400, x=200→280)
@@ -110,10 +119,6 @@ export const PILLAR_DEFS = [
   // Porte d'entrée diagonale (mur diagonal, d=DIAG_ENTRY_S→DIAG_ENTRY_E).
   // Centre = face intérieure + W/2 le long de la normale sortante (DIAG_COS, -DIAG_SIN).
   // Rot Y = DIAG_ROT_Y pour aligner le pilier avec l'axe du mur diagonal.
-  { id: 'door-entry-s',
-    x: DIAG_AX + (DIAG_ENTRY_S - W / 2) * DIAG_SIN + (W / 2) * DIAG_COS,
-    z: DIAG_AZ + (DIAG_ENTRY_S - W / 2) * DIAG_COS - (W / 2) * DIAG_SIN,
-    rot: DIAG_ROT_Y },
   { id: 'door-entry-e',
     x: DIAG_AX + (DIAG_ENTRY_E + W / 2) * DIAG_SIN + (W / 2) * DIAG_COS,
     z: DIAG_AZ + (DIAG_ENTRY_E + W / 2) * DIAG_COS - (W / 2) * DIAG_SIN,

@@ -30,7 +30,7 @@ import {
   BATH_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
   DIAG_LEN, DIAG_SIN, DIAG_COS, DIAG_ROT_Y,
-  DIAG_ENTRY_S, DIAG_ENTRY_E,
+  DIAG_ENTRY_S, DIAG_ENTRY_E, DIAG_DEPTH,
   LAYER_WALKER_DETAIL,
 } from '@config';
 
@@ -454,19 +454,12 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
     const cosθ = DIAG_COS;
     const pX   = cosθ;
     const pZ   = -sinθ;
-    const DIAG_DEPTH = 10;
 
     const iP = (d: number): [number, number] => [DIAG_AX + d * sinθ, DIAG_AZ + d * cosθ];
     const eP = (d: number): [number, number] => [
       DIAG_AX + d * sinθ + DIAG_DEPTH * pX,
       DIAG_AZ + d * cosθ + DIAG_DEPTH * pZ,
     ];
-
-    // diag-ne-end — extrémité NE du mur diagonal (remplace l'ancienne section NE de W cm)
-    const nePillar = makeExtrudeGeo(
-      [iP(0), iP(W), eP(W), eP(0)],
-      WALL_H,
-    );
 
     // Linteau au-dessus de la porte d'entrée
     const linteau = makeExtrudeGeo(
@@ -478,12 +471,6 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
     // Section SW — tronquée de W cm côté SW pour le pilier
     const sw = makeExtrudeGeo(
       [iP(DIAG_ENTRY_E), iP(DIAG_LEN - W), eP(DIAG_LEN - W), eP(DIAG_ENTRY_E)],
-      WALL_H,
-    );
-
-    // diag-sw-end — extrémité SW du mur diagonal
-    const swPillar = makeExtrudeGeo(
-      [iP(DIAG_LEN - W), iP(DIAG_LEN), eP(DIAG_LEN), eP(DIAG_LEN - W)],
       WALL_H,
     );
 
@@ -523,7 +510,7 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
       WALL_H,
     );
 
-    return { nePillar, linteau, sw, swPillar, diagPillar, diagPillarSW };
+    return { linteau, sw, diagPillar, diagPillarSW };
   }, []);
 
   return (
@@ -561,10 +548,6 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
                 userData={{ brickType: 'wall', type: 'pillar', id: 'diag-ne-kite' }} />
               <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
                 userData={{ brickType: 'wall', type: 'pillar', id: 'diag-sw-kite' }} />
-              <mesh geometry={diagGeos.nePillar} material={wallMat} castShadow receiveShadow
-                userData={{ brickType: 'wall', type: 'pillar', id: 'diag-ne-end' }} />
-              <mesh geometry={diagGeos.swPillar} material={wallMat} castShadow receiveShadow
-                userData={{ brickType: 'wall', type: 'pillar', id: 'diag-sw-end' }} />
             </group>
           )}
 
@@ -599,8 +582,6 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
       <RigidBody type="fixed" colliders={false}>
         <ConvexHullCollider args={[diagGeos.sw.attributes.position.array as Float32Array]} />
         <ConvexHullCollider args={[diagGeos.linteau.attributes.position.array as Float32Array]} />
-        <ConvexHullCollider args={[diagGeos.nePillar.attributes.position.array as Float32Array]} />
-        <ConvexHullCollider args={[diagGeos.swPillar.attributes.position.array as Float32Array]} />
         <ConvexHullCollider args={[diagGeos.diagPillar.attributes.position.array as Float32Array]} />
         <ConvexHullCollider args={[diagGeos.diagPillarSW.attributes.position.array as Float32Array]} />
       </RigidBody>
@@ -928,7 +909,7 @@ function Parquet() {
 
 // ── Carrelage bath + couloir ───────────────────────────────────────────────────
 function Tile() {
-  // Placard couloir : tuile démarre APRÈS les murs sud séjour (kitchen-se → corr-s)
+  // Placard couloir : tuile démarre APRÈS les murs sud séjour (kitchen-se → door-living-w)
   // et est cuisine (kitchen-ne → kitchen-se), pour ne pas déborder sous les murs.
   // Bornes : x: KITCHEN_X1+W(140) → DOOR_START(200), z: ROOM_D+W(410) → KITCHEN_Z(460).
   const CLOSET_W_REAL = DOOR_START - (KITCHEN_X1 + W);            // 60
