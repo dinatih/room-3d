@@ -18,7 +18,7 @@ import { KallaxNE }      from './items/KallaxNE';
 import { KallaxSE }      from './items/KallaxSE';
 import { KallaxNW }      from './items/KallaxNW';
 import { KallaxCuisine } from './items/KallaxCuisine';
-import { CuisineGroup, CuisineDrona } from './items/CuisineGroup';
+import { CuisineGroup, CuisineDrona, CuisineLillhavet } from './items/CuisineGroup';
 import { Freezer }       from './items/Freezer';
 import { BathroomCabinetWest, BathroomCabinetEast } from './items/BathroomCabinet';
 import { Toilet }        from './items/Toilet';
@@ -181,21 +181,6 @@ export function Equipment() {
       <group position={[DOOR_START - 84, 14, KITCHEN_Z + 34.5]} userData={{ animUnit: true }}>
         <VasqueSdb item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* TISKEN sur miroir vasque — mi-hauteur, bord gauche et droit */}
-      <group position={[DOOR_START - 84 - 22, 129, KITCHEN_Z + 12.1]} rotation={[Math.PI / 2, 0, 0]}>
-        <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <group position={[DOOR_START - 84 + 22, 129, KITCHEN_Z + 12.1]} rotation={[Math.PI / 2, 0, 0]}>
-        <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {/* VÅTHULT — bandeau LED 35 cm au-dessus du miroir vasque (top miroir = 174) */}
-      <group position={[DOOR_START - 84, 176, KITCHEN_Z + 12.1]}>
-        <Vathult item={stub('vathult-350')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {/* Niche douche 70×70cm : X -10→60, Z 600→670. Centre : (25, 635). */}
-      <group position={[NICHE_X + 35, 0, BATH_Z_END + 35]} userData={{ animUnit: true }}>
-        <Shower item={stub('shower')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
       <group position={[NICHE_X + 60, 0, KITCHEN_Z + 46.5]} userData={{ animUnit: true }}>
         <Toilet item={stub('toilet')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
@@ -206,6 +191,23 @@ export function Equipment() {
       <group visible={!!as['lamp-couloir-toggle']} position={[CORR_CX, WALL_H - 10, CORR_CZ]} rotation={[Math.PI, 0, 0]}>
         <TradfriBulb item={stub('tradfri-bulb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         <pointLight intensity={8} distance={250} color={0xffe8b0} />
+      </group>
+      {/* VÅTHULT — bandeau LED 35 cm au-dessus du miroir vasque (top miroir = 174) */}
+      <group position={[DOOR_START - 84, 176, KITCHEN_Z + 12.1]}>
+        <Vathult item={stub('vathult-350')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* Niche douche 70×70cm : X -10→60, Z 600→670. Centre : (25, 635). */}
+      <group position={[NICHE_X + 35, 0, BATH_Z_END + 35]} userData={{ animUnit: true }}>
+        <Shower item={stub('shower')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* Gaine plastique couloir mur est — 25.5×6.5 cm, sol au plafond,
+          début Z=500 (5m du nord). Linky Enedis monté en façade. */}
+      <LinkyGaine />
+      <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + 10 + KITCHEN_Z) / 2]}>
+        <CorridorCloset item={stub('corridor-closet')} actionState={as} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[130, 0, BATH_Z_END]}>
+        <SdbCloset item={stub('sdb-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </>
   );
@@ -281,14 +283,8 @@ export function Furniture() {
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, ROOM_D - 60 - w1 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + 10 + KITCHEN_Z) / 2]}>
-        <CorridorCloset item={stub('corridor-closet')} actionState={as} onSize={NOOP_SIZE} />
-      </group>
       <group position={[(NICHE_X + DOOR_START) / 2 - 5, 0, BATH_Z_END - 53]}>
         <GrassRug item={stub('grass-rug')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <group position={[130, 0, BATH_Z_END]}>
-        <SdbCloset item={stub('sdb-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group position={[KITCHEN_X0, 0, ROOM_D]}>
         <CuisineDrona />
@@ -299,9 +295,6 @@ export function Furniture() {
       <group position={[DOOR_START - 31, 0, cbZ]} userData={{ animUnit: true }}>
         <BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} />
       </group>
-      {/* Gaine plastique couloir mur est — 25.5×6.5 cm, sol au plafond,
-          début Z=500 (5m du nord). Linky Enedis monté en façade. */}
-      <LinkyGaine />
       {/* Surfaces fixes pour les boîtes Drona — METOD 40×37×60cm et congélateur ~60×57×50cm */}
       <RigidBody type="fixed" colliders={false}>
         <CuboidCollider args={[20, 30, 18.5]} position={[NICHE_X + 20, 30, cbZ]} />
@@ -440,9 +433,20 @@ export function Furnishings() {
       <group position={[KITCHEN_X0 + 5, 93, KITCHEN_Z - 5]}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
+      {/* LILLHAVET — égouttoir dans le meuble haut cuisine */}
+      <group position={[KITCHEN_X0, 0, ROOM_D]}>
+        <CuisineLillhavet />
+      </group>
       {/* Mini PC MLLSE G2 Pro — sur le bureau 2 */}
       <group position={[ROOM_W - 25, 40, 30]}>
         <MllseG2Pro item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* TISKEN sur miroir vasque — mi-hauteur, bord gauche et droit */}
+      <group position={[DOOR_START - 84 - 22, 129, KITCHEN_Z + 12.1]} rotation={[Math.PI / 2, 0, 0]}>
+        <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[DOOR_START - 84 + 22, 129, KITCHEN_Z + 12.1]} rotation={[Math.PI / 2, 0, 0]}>
+        <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
   );

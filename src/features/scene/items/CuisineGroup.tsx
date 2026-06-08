@@ -101,6 +101,14 @@ export function CuisineDrona() {
   return <DronaInstances matrices={DRONA_MATRICES} />;
 }
 
+export function CuisineLillhavet() {
+  return (
+    <group position={[75, 155, 41]}>
+      <Lillhavet item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+    </group>
+  );
+}
+
 export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
 
@@ -145,11 +153,6 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
 
       {/* Meuble haut */}
       <UpperCabinet />
-
-      {/* LILLHAVET dans meuble haut, droite */}
-      <group position={[75, 155, 41]}>
-        <Lillhavet item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
 
       {/* 3 boîtes Drona sur le meuble haut */}
       {!noDrona && <DronaInstances matrices={DRONA_MATRICES} />}
