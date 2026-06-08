@@ -196,18 +196,6 @@ export function Equipment() {
       <group position={[NICHE_X + 35, 0, BATH_Z_END + 35]} userData={{ animUnit: true }}>
         <Shower item={stub('shower')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* TACKAN douche — mur fond niche, à côté du mitigeur (y=90) */}
-      <group position={[NICHE_X + 40, 80, BATH_Z_END + 69]}>
-        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {/* TACKAN lavabo — plan vasque (y=83), contre le miroir */}
-      <group position={[DOOR_START - 84 + 15, 83, KITCHEN_Z + 15]}>
-        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
-      <group position={[KITCHEN_X0 + 5, 93, KITCHEN_Z - 5]}>
-        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
       <group position={[NICHE_X + 60, 0, KITCHEN_Z + 46.5]} userData={{ animUnit: true }}>
         <Toilet item={stub('toilet')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
@@ -439,6 +427,18 @@ export function Furnishings() {
       <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
         rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]}>
         <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+      </group>
+      {/* TACKAN douche — mur fond niche, à côté du mitigeur (y=90) */}
+      <group position={[NICHE_X + 40, 80, BATH_Z_END + 69]}>
+        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* TACKAN lavabo — plan vasque (y=83), contre le miroir */}
+      <group position={[DOOR_START - 84 + 15, 83, KITCHEN_Z + 15]}>
+        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
+      <group position={[KITCHEN_X0 + 5, 93, KITCHEN_Z - 5]}>
+        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Mini PC MLLSE G2 Pro — sur le bureau 2 */}
       <group position={[ROOM_W - 25, 40, 30]}>

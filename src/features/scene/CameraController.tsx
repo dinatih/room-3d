@@ -585,7 +585,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       <OrbitControls
         ref={ctrlRef}
         target={PERSP_TARGET}
-        enableDamping
+        enableDamping={mode !== 'walk'}
         dampingFactor={0.08}
         maxPolarAngle={Math.PI}
         enabled={!planeMode}
