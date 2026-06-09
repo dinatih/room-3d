@@ -372,6 +372,7 @@ export interface LayerState {
   surface:      boolean;
   ceiling:      boolean;
   walker:       boolean;
+  kira:         boolean;
 }
 
 export interface SidePanelProps {
@@ -500,6 +501,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('purple', 'Miroirs',       'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
       {layerBtn('light',  'Walker',        'walker')}
+      {layerBtn('cyan',   'Kira-IK',       'kira')}
       {layerBtn('white',  'Squelette',     'skeleton')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}

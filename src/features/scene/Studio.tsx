@@ -326,16 +326,16 @@ export function Studio() {
            * GLB toggle via React visible (indépendant de camera.layers).
            */}
           <CategoryLayerGroup layer={LAYER_EQUIPMENT}>
-            <Equipment />
+            <Equipment layers={layers} />
           </CategoryLayerGroup>
 
           <CategoryLayerGroup layer={LAYER_FURNITURE}>
-            <Furniture />
-            <Furnishings />
-            <Decor />
-            <Backpacks />
-            <Garden />
-            <DronaBoxes />
+            <Furniture layers={layers} />
+            <Furnishings layers={layers} />
+            <Decor layers={layers} />
+            <Backpacks layers={layers} />
+            <Garden layers={layers} />
+            <DronaBoxes layers={layers} />
           </CategoryLayerGroup>
 
           {/* LAYER_MIRRORS (7) — miroirs Reflector */}

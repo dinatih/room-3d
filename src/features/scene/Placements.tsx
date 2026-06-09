@@ -73,9 +73,11 @@ import { ShibaInu }    from './items/ShibaInu';
 import { Tisken }        from './items/Tisken';
 import { Tackan }        from './items/Tackan';
 import { Vathult }       from './items/Vathult';
+import { KiraIK }        from './items/KiraIK';
 import { DronaInstances, DroneCell } from './items/Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
+import type { LayerState } from './SidePanel';
 import { useFurnitureToggles } from './utils/useFurnitureToggles';
 import { positionState } from '@features/scene/positionState';
 import { PositionTransition } from './utils/PositionTransition';
@@ -160,7 +162,7 @@ const SUNNERSTA_POSITIONS = [
 // EQUIPMENT (Layer 1)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function Equipment() {
+export function Equipment({ layers }: { layers: LayerState }) {
   const as = useFurnitureToggles({ lampSdb: 'lamp-sdb-toggle', lampCouloir: 'lamp-couloir-toggle' });
   const HW_R = 28, HW_H = 65;
   const SDB_CX  = (NICHE_X + DOOR_START) / 2;
@@ -247,7 +249,7 @@ function LinkyGaine() {
 // FURNITURE (Layer 2)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function Furniture() {
+export function Furniture({ layers }: { layers: LayerState }) {
   const as = useFurnitureToggles({
     corrDoors:     'corr-doors-toggle',
     sdbCloset:     'sdb-closet-toggle',
@@ -309,7 +311,7 @@ export function Furniture() {
 // FURNISHINGS — meubles avec état animé (lit, bureaux, TV)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function Bed() {
+function Bed({ kiraMode }: { kiraMode: boolean }) {
   const bedPositions = useMemo(() => {
     const PAD = 3, halfL = 102.5, halfW = 41.5;
     const dxK = KALLAX_DEPTH;
@@ -361,7 +363,7 @@ function Bed() {
   );
 }
 
-function Desks() {
+function Desks({ kiraMode }: { kiraMode: boolean }) {
   const [d1H,   setD1H]   = useState(SIT_H);
   const [d2H,   setD2H]   = useState(SIT_H);
   const [d1Pos, setD1Pos] = useState(0);
@@ -410,44 +412,46 @@ function Desks() {
   );
 }
 
-export function Furnishings() {
+export function Furnishings({ layers }: { layers: LayerState }) {
   const TV_Y = WALL_H - 10 - TV_H / 2;
   const as = useFurnitureToggles({ tvOn: 'tv-toggle' });
   return (
     <>
-      <Bed />
-      <Desks />
-      <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
-        rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]}>
-        <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
-      </group>
-      {/* TACKAN douche — mur fond niche, à côté du mitigeur (y=90) */}
-      <group position={[NICHE_X + 40, 80, BATH_Z_END + 69]}>
-        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {/* TACKAN lavabo — plan vasque (y=83), contre le miroir */}
-      <group position={[DOOR_START - 84 + 15, 83, KITCHEN_Z + 15]}>
-        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
-      <group position={[KITCHEN_X0 + 5, 93, KITCHEN_Z - 5]}>
-        <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {/* LILLHAVET — égouttoir dans le meuble haut cuisine */}
-      <group position={[KITCHEN_X0, 0, ROOM_D]}>
-        <CuisineLillhavet />
-      </group>
-      {/* Mini PC MLLSE G2 Pro — sur le bureau 2 */}
-      <group position={[ROOM_W - 25, 40, 30]}>
-        <MllseG2Pro item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {/* TISKEN sur miroir vasque — mi-hauteur, bord gauche et droit */}
-      <group position={[DOOR_START - 84 - 22, 129, KITCHEN_Z + 12.1]} rotation={[Math.PI / 2, 0, 0]}>
-        <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <group position={[DOOR_START - 84 + 22, 129, KITCHEN_Z + 12.1]} rotation={[Math.PI / 2, 0, 0]}>
-        <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
+      <Bed kiraMode={layers.kira} />
+      <Desks kiraMode={layers.kira} />
+      <>
+        <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
+          rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]}>
+          <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+        </group>
+        {/* TACKAN douche — mur fond niche, à côté du mitigeur (y=90) */}
+        <group position={[NICHE_X + 40, 80, BATH_Z_END + 69]}>
+          <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+        {/* TACKAN lavabo — plan vasque (y=83), contre le miroir */}
+        <group position={[DOOR_START - 84 + 15, 83, KITCHEN_Z + 15]}>
+          <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+        {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
+        <group position={[KITCHEN_X0 + 5, 93, KITCHEN_Z - 5]}>
+          <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+        {/* LILLHAVET — égouttoir dans le meuble haut cuisine */}
+        <group position={[KITCHEN_X0, 0, ROOM_D]}>
+          <CuisineLillhavet />
+        </group>
+        {/* Mini PC MLLSE G2 Pro — sur le bureau 2 */}
+        <group position={[ROOM_W - 25, 40, 30]}>
+          <MllseG2Pro item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+        {/* TISKEN sur miroir vasque — mi-hauteur, bord gauche et droit */}
+        <group position={[DOOR_START - 84 - 22, 129, KITCHEN_Z + 12.1]} rotation={[Math.PI / 2, 0, 0]}>
+          <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+        <group position={[DOOR_START - 84 + 22, 129, KITCHEN_Z + 12.1]} rotation={[Math.PI / 2, 0, 0]}>
+          <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      </>
     </>
   );
 }
@@ -456,7 +460,7 @@ export function Furnishings() {
 // DECORATIVE PLACEMENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function Smorkull_() {
+function Smorkull_({ kiraMode }: { kiraMode: boolean }) {
   const [posIdx, setPosIdx] = useState(0);
   useEffect(() => {
     const handler = (e: Event) => {
@@ -478,7 +482,7 @@ function Smorkull_() {
   );
 }
 
-function AirPerformer_() {
+function AirPerformer_({ kiraMode }: { kiraMode: boolean }) {
   const [posIdx, setPosIdx] = useState(0);
   useEffect(() => {
     const handler = (e: Event) => {
@@ -501,7 +505,7 @@ function AirPerformer_() {
 
 const SUNNERSTA_VARIANTS = 3; // 0 Sunnersta, 1 RÅSKOG grande, 2 RÅSKOG petite
 
-function Sunnersta_() {
+function Sunnersta_({ kiraMode }: { kiraMode: boolean }) {
   const [posIdx, setPosIdx] = useState(0);
   const [variant, setVariant] = useState(0);
   useEffect(() => {
@@ -525,7 +529,7 @@ function Sunnersta_() {
   );
 }
 
-function LampOla_() {
+function LampOla_({ kiraMode }: { kiraMode: boolean }) {
   const [lampOn, setLampOn] = useState(false);
   useEffect(() => {
     const handler = (e: Event) => {
@@ -543,7 +547,7 @@ function LampOla_() {
   );
 }
 
-function SneakersPair() {
+function SneakersPair({ kiraMode }: { kiraMode: boolean }) {
   const [pairW, setPairW] = useState(0);
   const px = MIRROR_CX - 10, pz = ROOM_D - 15;
   return (
@@ -558,7 +562,7 @@ function SneakersPair() {
   );
 }
 
-function CeilingPalmLeaves() {
+function CeilingPalmLeaves({ kiraMode }: { kiraMode: boolean }) {
   const placements = useMemo(() => Array.from({ length: 5 }, () => ({
     x:  40 + Math.random() * (ROOM_W - 80),
     z:  40 + Math.random() * (ROOM_D - 80),
@@ -575,13 +579,14 @@ function CeilingPalmLeaves() {
   );
 }
 
-export function Decor() {
+export function Decor({ layers }: { layers: LayerState }) {
+  const km = layers.kira;
   return (
     <>
       <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* <AirPerformer_ /> */}{/* PERF TEST — remettre pour réactiver */}
+      {/* <AirPerformer_ kiraMode={km} /> */}{/* PERF TEST — remettre pour réactiver */}
       {/* Google Nest Mini — mur EST (B) en son centre, à plat contre le mur */}
       <group position={[ROOM_W - 5, WALL_H / 2, ROOM_D / 2]} rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
         <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -609,22 +614,25 @@ export function Decor() {
       <group position={[298, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true }}>
         <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <Smorkull_ />
-      <LampOla_ />
+      <Smorkull_ kiraMode={km} />
+      <LampOla_ kiraMode={km} />
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
         <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[297, 144, 173.5]} rotation={[Math.PI / 2, 0, Math.PI / 2]} userData={{ animUnit: true }}>
         <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <SneakersPair />
-      <CeilingPalmLeaves />
-      {[0, 18, 36].map(y => (
-        <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ animUnit: true }}>
-          <Grejig item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-      ))}
-      <Sunnersta_ />
+      <SneakersPair kiraMode={km} />
+      <CeilingPalmLeaves kiraMode={km} />
+      <>
+        {[0, 18, 36].map(y => (
+          <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ animUnit: true }}>
+            <Grejig item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          </group>
+        ))}
+      </>
+      {layers.kira && <KiraIK />}
+      <Sunnersta_ kiraMode={km} />
     </>
   );
 }
@@ -633,11 +641,12 @@ export function Decor() {
 // GARDEN — jardin / terrasse
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function Garden() {
+export function Garden({ layers }: { layers: LayerState }) {
   const as = useFurnitureToggles({
     sofaArmLeft: 'sofa-arm-right',
     sofaArmRight: 'sofa-arm-left',
   });
+  const km = layers.kira;
   return (
     <>
       <group position={[270, 0, -110]} rotation={[0, Math.PI, 0]}>
@@ -678,15 +687,15 @@ export function Garden() {
       <group position={[210, -3.48, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true }}>
         <Rebound item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      </>
-      );
-      }
+    </>
+  );
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // BACKPACKS — sacs à dos procéduraux
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function Backpacks() {
+export function Backpacks({ layers }: { layers: LayerState }) {
   return (
     <>
       <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
@@ -707,7 +716,7 @@ const DRONA_STANDALONE = [
   { cx: 24.5,            cy: 50 + DF / 2 + 0.2, cz: 269.5,           rotY: Math.PI / 2 },
 ];
 
-export function DronaBoxes() {
+export function DronaBoxes({ layers }: { layers: LayerState }) {
   const [physicsEnabled, setPhysicsEnabled] = useState(false);
   useEffect(() => {
     const handler = (e: Event) => setPhysicsEnabled((e as CustomEvent).detail.enabled as boolean);
@@ -730,4 +739,5 @@ export function DronaBoxes() {
     </group>
   );
 }
+
 
