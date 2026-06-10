@@ -238,6 +238,7 @@ export function Studio() {
           toneMappingExposure: 1,
         }}
         onCreated={({ scene, gl, camera }) => {
+          (window as any).threeScene = scene;
           scene.background = new Color(0x2a2a3e);
           gl.shadowMap.enabled = true;
           camera.layers.enableAll();

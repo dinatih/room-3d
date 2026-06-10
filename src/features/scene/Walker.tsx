@@ -1,6 +1,6 @@
 /**
- * Walker.tsx — Personnage unique (Xbot Officiel).
- * Gère le chargement, les animations natives et le positionnement.
+ * Walker.tsx — Personnage unique (Xbot Officiel / Lara Native).
+ * Gère le chargement, les animations natives, le retargeting et le positionnement.
  */
 import { useRef, useLayoutEffect, Suspense, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -12,6 +12,188 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { LAYER_WALKER_DETAIL } from '@config';
 
 const XBOT_PATH = 'media/sandbox/Xbot_official.glb';
+const LARA_PATH = 'media/sandbox/lara_native.glb';
+
+const BONE_MAP: Record<string, string> = {
+  "mixamorig:Hips": "mixamorig_root_hips",
+  "mixamorig:Spine": "mixamorig_spine_lower",
+  "mixamorig:Spine2": "mixamorig_spine_upper",
+  "mixamorig:Neck": "mixamorig_head_neck_lower",
+  "mixamorig:Head": "mixamorig_head_neck_upper",
+  "mixamorig:LeftShoulder": "",
+  "mixamorig:LeftArm": "mixamorig_arm_left_shoulder_2",
+  "mixamorig:LeftForeArm": "mixamorig_arm_left_elbow",
+  "mixamorig:LeftHand": "mixamorig_arm_left_wrist",
+  "mixamorig:LeftUpLeg": "mixamorig_leg_left_thigh",
+  "mixamorig:LeftLeg": "mixamorig_leg_left_knee",
+  "mixamorig:LeftFoot": "mixamorig_leg_left_ankle",
+  "mixamorig:LeftToeBase": "mixamorig_leg_left_toes",
+  "mixamorig:RightShoulder": "",
+  "mixamorig:RightArm": "mixamorig_arm_right_shoulder_2",
+  "mixamorig:RightForeArm": "mixamorig_arm_right_elbow",
+  "mixamorig:RightHand": "mixamorig_arm_right_wrist",
+  "mixamorig:RightUpLeg": "mixamorig_leg_right_thigh",
+  "mixamorig:RightLeg": "mixamorig_leg_right_knee",
+  "mixamorig:RightFoot": "mixamorig_leg_right_ankle",
+  "mixamorig:RightToeBase": "mixamorig_leg_right_toes"
+};
+
+function getFingerLaraName(mixName: string): string {
+  const match = mixName.match(/mixamorig:(Left|Right)Hand(Thumb|Index|Middle|Ring|Pinky)(\d)/i);
+  if (match) {
+    const side = match[1].toLowerCase();
+    const type = match[2];
+    const seg = match[3];
+    
+    const typeIdx: Record<string, number> = { "Thumb": 1, "Index": 2, "Middle": 3, "Ring": 4, "Pinky": 5 };
+    const segLet: Record<string, string> = { "1": "a", "2": "b", "3": "c" };
+    
+    const fIdx = typeIdx[type];
+    const sLet = segLet[seg];
+    
+    if (fIdx && sLet) {
+      return `mixamorig_arm_${side}_finger_${fIdx}_${sLet}`;
+    }
+  }
+  return "";
+}
+
+function retargetClipForLara(rawClip: THREE.AnimationClip, laraInstance: THREE.Object3D, xbotInstance: THREE.Object3D): THREE.AnimationClip {
+  const tracks: THREE.KeyframeTrack[] = [];
+
+  let hipsRatio = 100.0;
+  const hipsPos = rawClip.tracks.find(t => t.name.includes('Hips.position') || t.name.includes('Hips_position') || t.name.includes('hips.position'));
+  if (hipsPos && hipsPos.values.length >= 3) {
+    const height = Math.abs(hipsPos.values[1]);
+    if (height > 40.0) {
+      hipsRatio = 1.0;
+    }
+  }
+
+  for (const tr of rawClip.tracks) {
+    const [boneFull, prop] = tr.name.split('.');
+    
+    const match = boneFull.match(/mixamorig[:_]?(.+)/i);
+    if (!match) continue;
+    const baseName = match[1];
+
+    const keyName = `mixamorig:${baseName}`;
+    let targetBoneName = BONE_MAP[keyName] || getFingerLaraName(keyName);
+
+    if (keyName === 'mixamorig:Hips') {
+      targetBoneName = 'mixamorig_root_hips';
+    }
+
+    if (!targetBoneName) continue;
+
+    // Skip scale tracks to avoid bone crushing
+    if (prop === 'scale') continue;
+
+    // Only translate hips
+    const isHips = targetBoneName.toLowerCase().endsWith('hips');
+    if (prop === 'position' && !isHips) continue;
+
+    const clone = tr.clone();
+    clone.name = `${targetBoneName}.${prop}`;
+
+    // Retarget Hips translation
+    if (prop === 'position' && isHips) {
+      const bone = laraInstance.getObjectByName(targetBoneName) as any;
+      if (bone && bone.defaultPosition) {
+        const srcBone = xbotInstance.getObjectByName('mixamorig:' + baseName) as any;
+        const P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
+          ? srcBone.parent.restWorldQuaternion
+          : new THREE.Quaternion();
+        const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
+          ? bone.parent.restWorldQuaternion
+          : new THREE.Quaternion();
+        const P_tgt_inv = P_tgt.clone().invert();
+        
+        const restX = clone.values[0];
+        const restY = clone.values[1];
+        const restZ = clone.values[2];
+        
+        for (let j = 0; j < clone.values.length / 3; j++) {
+          const dx = (clone.values[3*j] - restX) * hipsRatio;
+          const dy = (clone.values[3*j+1] - restY) * hipsRatio;
+          const dz = (clone.values[3*j+2] - restZ) * hipsRatio;
+          
+          const dP = new THREE.Vector3(dx, dy, dz)
+            .applyQuaternion(P_src)
+            .applyQuaternion(P_tgt_inv);
+          const resPos = bone.defaultPosition.clone().add(dP);
+          
+          clone.values[3*j] = resPos.x;
+          clone.values[3*j+1] = resPos.y;
+          clone.values[3*j+2] = resPos.z;
+        }
+      }
+    }
+
+    // Retarget rotations
+    if (prop === 'quaternion') {
+      if (targetBoneName.includes('shoulder_1')) continue;
+
+      const bone = laraInstance.getObjectByName(targetBoneName) as any;
+      if (bone && bone.restLocalQuaternion && bone.restWorldQuaternion) {
+        const srcBone = xbotInstance.getObjectByName('mixamorig:' + baseName) as any;
+        let B_src = srcBone ? srcBone.restWorldQuaternion : null;
+        let P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
+          ? srcBone.parent.restWorldQuaternion
+          : new THREE.Quaternion();
+
+        if (B_src && P_src) {
+          const B_tgt = bone.restWorldQuaternion;
+          const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
+            ? bone.parent.restWorldQuaternion
+            : new THREE.Quaternion();
+          
+          const P_tgt_inv = P_tgt.clone().invert();
+          const B_src_inv = B_src.clone().invert();
+
+          for (let i = 0; i < clone.values.length; i += 4) {
+            const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
+            
+            const resQ = P_tgt_inv.clone()
+              .multiply(P_src)
+              .multiply(q)
+              .multiply(B_src_inv)
+              .multiply(B_tgt);
+
+            clone.values[i] = resQ.x;
+            clone.values[i+1] = resQ.y;
+            clone.values[i+2] = resQ.z;
+            clone.values[i+3] = resQ.w;
+          }
+        } else {
+          const parentRestWorldQ = (bone.parent && bone.parent.restWorldQuaternion)
+            ? bone.parent.restWorldQuaternion
+            : new THREE.Quaternion();
+          const parentInv = parentRestWorldQ.clone().invert();
+          const boneRestLocalQ = bone.restLocalQuaternion.clone();
+
+          for (let i = 0; i < clone.values.length; i += 4) {
+            const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
+            
+            const resQ = parentInv.clone()
+              .multiply(q)
+              .multiply(parentRestWorldQ)
+              .multiply(boneRestLocalQ);
+
+            clone.values[i] = resQ.x;
+            clone.values[i+1] = resQ.y;
+            clone.values[i+2] = resQ.z;
+            clone.values[i+3] = resQ.w;
+          }
+        }
+      }
+    }
+
+    tracks.push(clone);
+  }
+
+  return new THREE.AnimationClip(`${rawClip.name}_lara`, rawClip.duration, tracks);
+}
 
 interface WalkerProps { 
   showSkeleton?: boolean; 
@@ -36,7 +218,10 @@ function GroundPoint() {
 }
 
 function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 'idle', isPaused = false }: WalkerProps) {
-  const { scene } = useGLTFClone(XBOT_PATH);
+  const isLara = useSceneStore(state => state.extraStates['walker-lara']);
+  const activeModelPath = isLara ? LARA_PATH : XBOT_PATH;
+  
+  const { scene } = useGLTFClone(activeModelPath);
   const xbotGltf = useGLTF(XBOT_PATH);
   const animations = xbotGltf.animations;
   
@@ -50,42 +235,70 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
-    // 1. Scale & Setup
-    scene.scale.set(100, 100, 100);
+    // 1. Reset scale to measure properly
+    scene.scale.set(1, 1, 1);
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
-
-    // Center the character locally
     scene.updateMatrixWorld(true);
-    const hips = scene.getObjectByName('mixamorig:Hips');
+
+    const box = new THREE.Box3().setFromObject(scene);
+    const rawSize = box.getSize(new THREE.Vector3());
+
+    const targetHeight = isLara ? 173.4 : 181.0;
+    const fallbackScale = 100.0;
+    const scaleFactor = rawSize.y > 0 ? (targetHeight / rawSize.y) : fallbackScale;
+
+    scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+    // Center character locally relative to the parent group
+    scene.updateMatrixWorld(true);
+    const hipsName = isLara ? 'mixamorig_root_hips' : 'mixamorig:Hips';
+    const hips = scene.getObjectByName(hipsName);
     if (hips) {
-        const worldPos = new THREE.Vector3();
-        hips.getWorldPosition(worldPos);
-        scene.position.x -= worldPos.x;
-        scene.position.z -= worldPos.z;
+        const parent = scene.parent || scene;
+        const hipsWorld = new THREE.Vector3();
+        hips.getWorldPosition(hipsWorld);
+        const hipsLocal = parent.worldToLocal(hipsWorld);
+        scene.position.x -= hipsLocal.x;
+        scene.position.z -= hipsLocal.z;
     }
 
+    // Traverse active scene to setup rest poses
     scene.traverse(o => {
-      if ((o as THREE.Mesh).isMesh) {
-        const m = o as THREE.Mesh;
-        m.castShadow = m.receiveShadow = true;
-        m.frustumCulled = false;
-        if (m.material) {
-            // Material might be an array or a single material
-            const materials = Array.isArray(m.material) ? m.material : [m.material];
-            materials.forEach(mat => {
+      const c = o as any;
+      if (c.isMesh) {
+        c.castShadow = c.receiveShadow = true;
+        c.frustumCulled = false;
+        if (c.material) {
+            const materials = Array.isArray(c.material) ? c.material : [c.material];
+            materials.forEach((mat: any) => {
                 mat.transparent = false;
                 mat.depthWrite = true;
                 mat.side = THREE.FrontSide;
             });
-            // Ensure the mesh doesn't block raycasting if it's a helper
-            m.raycast = () => {}; 
+            c.raycast = () => {}; 
         }
       }
-      if ((o as THREE.Bone).isBone) {
-        const b = o as THREE.Bone;
-        b.userData.restPos = b.position.clone();
-        b.userData.restQuat = b.quaternion.clone();
+      c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
+      if (c.isBone) {
+        c.defaultPosition = c.position.clone();
+        c.restLocalQuaternion = c.quaternion.clone();
+        
+        c.userData.restPos = c.position.clone();
+        c.userData.restQuat = c.quaternion.clone();
+      }
+    });
+
+    // Populate source rest poses on X-Bot template
+    xbotGltf.scene.updateMatrixWorld(true);
+    xbotGltf.scene.traverse(o => {
+      const c = o as any;
+      if (!c.restWorldQuaternion) {
+        c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
+      }
+      if (c.isBone && !c.restLocalQuaternion) {
+        c.defaultPosition = c.position.clone();
+        c.restLocalQuaternion = c.quaternion.clone();
       }
     });
 
@@ -94,7 +307,16 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
     actionsRef.current = {};
 
     animations.forEach(clip => {
-      const action = mixer.clipAction(clip);
+      let finalClip = clip;
+      if (isLara) {
+        finalClip = retargetClipForLara(clip, scene, xbotGltf.scene);
+      } else {
+        // Just strip scale tracks for X-Bot to be safe
+        const cleanTracks = clip.tracks.filter(track => !track.name.endsWith('.scale'));
+        finalClip = new THREE.AnimationClip(clip.name, clip.duration, cleanTracks);
+      }
+
+      const action = mixer.clipAction(finalClip);
       actionsRef.current[clip.name] = action;
       action.enabled = true;
       action.play();
@@ -107,9 +329,9 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
         mixer.stopAllAction();
         mixer.uncacheRoot(scene);
     };
-  }, [scene, animations]);
+  }, [scene, animations, isLara, xbotGltf]);
 
-  // Use the standard hook for skeleton helper - much safer
+  // Use the standard hook for skeleton helper
   const skeletonRef = useHelper(showSkeleton ? modelRef : null, THREE.SkeletonHelper);
 
   useEffect(() => {
@@ -119,7 +341,6 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
         mat.color.set(0x00ffff);
         mat.depthTest = false;
         helper.renderOrder = 99999;
-        // CRITICAL: Prevent skeleton from blocking OrbitControls/Raycasting
         helper.raycast = () => {}; 
         helper.traverse(c => { c.raycast = () => {}; });
     }
@@ -128,22 +349,15 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
   useFrame((_, delta) => {
     if (!groupRef.current || !mixerRef.current) return;
 
-    // 1. Update Transform
     if (isPreview) {
-      // Logic for preview instance: keep at origin, handle rotation via OrbitControls
       groupRef.current.position.set(0, 0, 0);
       groupRef.current.rotation.y = 0;
       groupRef.current.visible = true;
     } else {
-      // Logic for scene instance: follow walker position from cameraState
       groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
       groupRef.current.rotation.y = cameraState.walkYaw;
       groupRef.current.visible = !cameraState.walkerHidden;
 
-      // HIDE WALKER FROM MAIN CAMERA IN WALK MODE (First Person)
-      // We use LAYER_WALKER_DETAIL which is disabled on the main camera
-      // but enabled on mirror cameras. This prevents the head from blocking
-      // the view while keeping the character visible in reflections.
       const isFirstPerson = cameraState.mode === 'walk';
       scene.traverse(o => {
         if ((o as THREE.Mesh).isMesh) {
@@ -152,15 +366,11 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
       });
     }
 
-    // 2. Animation Logic
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
     
-    // Decouple animation target
     let target = isPreview ? (walkerAnim || 'idle') : (cameraState.isMoving ? 'walk' : 'idle');
 
-    // Idle timer logic: if target is 'idle' and not in preview (or specifically idle in preview)
-    // increment timer. If > 10s, stop updating mixer to save perf.
     if (target === 'idle' && !isPaused) {
         idleTimerRef.current += delta;
     } else {
@@ -189,7 +399,7 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
             to.reset().fadeIn(0.2).play();
             to.setEffectiveWeight(1);
             activeActionName.current = target;
-            idleTimerRef.current = 0; // Reset timer on animation change
+            idleTimerRef.current = 0;
         }
     }
 
@@ -197,8 +407,6 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
         mixer.update(delta);
     }
 
-    // Only invalidate if we are actually animating or moving
-    // If idle timeout reached, we stop calling invalidate() to allow the renderer to sleep
     if (!isIdleTimeout || cameraState.isMoving || isPreview) {
         invalidate();
     }
@@ -221,3 +429,4 @@ export function Walker(props: WalkerProps) {
 }
 
 useGLTF.preload(XBOT_PATH);
+useGLTF.preload(LARA_PATH);
