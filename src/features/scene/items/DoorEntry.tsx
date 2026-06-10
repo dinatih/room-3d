@@ -2,9 +2,10 @@
  * Porte d'entrée rouge — 90×204cm, charnière gauche, ouvre à -120°.
  * Encadrement rouge (extérieur) + blanc (intérieur).
  */
-import { useRef, useLayoutEffect } from 'react';
+import { useRef, useLayoutEffect, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 
 const W  = 90;    // ENTRY_DOOR_W
@@ -15,10 +16,68 @@ const R  = 1.3;
 const FW = 3;     // largeur encadrement (chambranle)
 const WW = 10;    // épaisseur du panneau (profondeur Z)
 
+function useEntryFrameGeo() {
+  return useMemo(() => {
+    const redGeos: THREE.BufferGeometry[] = [];
+    const whtGeos: THREE.BufferGeometry[] = [];
+    const addBox = (geos: THREE.BufferGeometry[], w: number, h: number, d: number, x: number, y: number, z: number) => {
+      const geo = new THREE.BoxGeometry(w, h, d);
+      geo.translate(x, y, z);
+      geos.push(geo);
+    };
+
+    // Encadrement extérieur rouge (face -Z)
+    const zRed = -(WW / 2 + 0.5);
+    addBox(redGeos, FW, H, 1, -(W / 2 + FW / 2), H / 2, zRed);
+    addBox(redGeos, FW, H, 1,  (W / 2 + FW / 2), H / 2, zRed);
+    addBox(redGeos, W + FW * 2, FW, 1, 0, H + FW / 2, zRed);
+
+    // Encadrement intérieur blanc (face +Z)
+    const zWht = WW / 2 + 0.5;
+    addBox(whtGeos, FW, H, 1, -(W / 2 + FW / 2), H / 2, zWht);
+    addBox(whtGeos, FW, H, 1,  (W / 2 + FW / 2), H / 2, zWht);
+    addBox(whtGeos, W + FW * 2, FW, 1, 0, H + FW / 2, zWht);
+
+    const red = mergeGeometries(redGeos, false);
+    const wht = mergeGeometries(whtGeos, false);
+    redGeos.forEach(g => g.dispose());
+    whtGeos.forEach(g => g.dispose());
+    return { red, wht };
+  }, []);
+}
+
+function useHandleGeo() {
+  return useMemo(() => {
+    const geos: THREE.BufferGeometry[] = [];
+    const addGeo = (geo: THREE.BufferGeometry, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) => {
+      if (rx) geo.rotateX(rx);
+      if (ry) geo.rotateY(ry);
+      if (rz) geo.rotateZ(rz);
+      geo.translate(x, y, z);
+      geos.push(geo);
+    };
+
+    const fZ = T / 2;
+    // Poignée intérieure
+    addGeo(new THREE.CylinderGeometry(3, 3, 1, 12), 0, 0, fZ + 0.5, Math.PI / 2);
+    addGeo(new THREE.CylinderGeometry(R, R, 5, 8),  0, 0, fZ + 3.5, Math.PI / 2);
+    addGeo(new THREE.CylinderGeometry(R, R, 14, 8), -7, 0, fZ + 6, 0, 0, Math.PI / 2);
+    addGeo(new THREE.SphereGeometry(R, 8, 6), 0, 0, fZ + 6);
+    addGeo(new THREE.SphereGeometry(R, 8, 6), -14, 0, fZ + 6);
+
+    const merged = mergeGeometries(geos, false);
+    geos.forEach(g => g.dispose());
+    return merged;
+  }, []);
+}
+
 export function DoorEntry({ actionState, onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
   const isOpen  = actionState['entry-door-toggle'] ?? false;
   const { invalidate } = useThree();
+
+  const frames = useEntryFrameGeo();
+  const handle = useHandleGeo();
 
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(W + FW * 2, H + FW, WW));
@@ -35,35 +94,14 @@ export function DoorEntry({ actionState, onSize }: SceneItemProps) {
     }
   });
 
-  // Handle L : 70cm depuis charnière (gauche = -W/2)
-  const hz = 70, hy = 100;
-  const fZ = T / 2; // face intérieure (vers camera)
-  const redMat  = <meshStandardMaterial color="#cc0000" roughness={0.5} />;
-  const whtMat  = <meshStandardMaterial color="#f5f5f0" roughness={0.3} />;
+  const redMat = <meshStandardMaterial color="#cc0000" roughness={0.5} />;
+  const whtMat = <meshStandardMaterial color="#f5f5f0" roughness={0.3} />;
 
   return (
     <group position={[0, -H / 2, 0]}>
 
-      {/* Encadrement extérieur rouge (face -Z) */}
-      <mesh position={[-(W / 2 + FW / 2), H / 2, -(WW / 2 + 0.5)]} castShadow>
-        <boxGeometry args={[FW, H, 1]} />{redMat}
-      </mesh>
-      <mesh position={[ (W / 2 + FW / 2), H / 2, -(WW / 2 + 0.5)]} castShadow>
-        <boxGeometry args={[FW, H, 1]} />{redMat}
-      </mesh>
-      <mesh position={[0, H + FW / 2, -(WW / 2 + 0.5)]} castShadow>
-        <boxGeometry args={[W + FW * 2, FW, 1]} />{redMat}
-      </mesh>
-      {/* Encadrement intérieur blanc (face +Z) */}
-      <mesh position={[-(W / 2 + FW / 2), H / 2, WW / 2 + 0.5]} castShadow>
-        <boxGeometry args={[FW, H, 1]} />{whtMat}
-      </mesh>
-      <mesh position={[ (W / 2 + FW / 2), H / 2, WW / 2 + 0.5]} castShadow>
-        <boxGeometry args={[FW, H, 1]} />{whtMat}
-      </mesh>
-      <mesh position={[0, H + FW / 2, WW / 2 + 0.5]} castShadow>
-        <boxGeometry args={[W + FW * 2, FW, 1]} />{whtMat}
-      </mesh>
+      <mesh geometry={frames.red} castShadow>{redMat}</mesh>
+      <mesh geometry={frames.wht} castShadow>{whtMat}</mesh>
 
       <group ref={doorRef} position={[-W / 2, 0, 0]}>
 
@@ -73,25 +111,10 @@ export function DoorEntry({ actionState, onSize }: SceneItemProps) {
           <meshStandardMaterial color="#cc0000" roughness={0.5} metalness={0.1} />
         </mesh>
 
-        {/* ── Poignée intérieure L (face +Z) ── */}
-        <mesh position={[hz, hy, fZ + 0.5]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[3, 3, 1, 12]} />
+        {/* Poignée intérieure */}
+        <mesh position={[70, 100, 0]} geometry={handle}>
           <meshStandardMaterial color="#999999" metalness={0.85} roughness={0.15} />
         </mesh>
-        <mesh position={[hz, hy, fZ + 3.5]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[R, R, 5, 8]} />
-          <meshStandardMaterial color="#999999" metalness={0.85} roughness={0.15} />
-        </mesh>
-        <mesh position={[hz - 7, hy, fZ + 6]} rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[R, R, 14, 8]} />
-          <meshStandardMaterial color="#999999" metalness={0.85} roughness={0.15} />
-        </mesh>
-        {([hz, hz - 14] as const).map((bx, i) => (
-          <mesh key={i} position={[bx, hy, fZ + 6]}>
-            <sphereGeometry args={[R, 8, 6]} />
-            <meshStandardMaterial color="#999999" metalness={0.85} roughness={0.15} />
-          </mesh>
-        ))}
 
         {/* Knob rouge extérieur (face -Z) */}
         <mesh position={[W / 2, H / 2, -T / 2 - 5]}>

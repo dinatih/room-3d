@@ -36,18 +36,26 @@ export function DevToolsCollector() {
 
       scene.traverse(obj => {
         const m = obj as THREE.Mesh;
+        if (!m.isMesh) {
+          if ((obj as THREE.Light).isLight) lights++;
+          return;
+        }
+
         const isInst = (obj as THREE.InstancedMesh).isInstancedMesh;
         if (isInst) instances++;
-        else if (m.isMesh) meshes++;
-        else if ((obj as THREE.Light).isLight) lights++;
-        if (m.isMesh && !isInst && m.geometry) {
+        else meshes++;
+
+        if (m.geometry) {
           const pos = m.geometry.attributes?.position;
           if (pos) {
-            verts += pos.count;
-            tris  += m.geometry.index ? m.geometry.index.count / 3 : pos.count / 3;
+            const count = m.geometry.index ? m.geometry.index.count : pos.count;
+            const t = count / 3;
+            const factor = isInst ? (obj as THREE.InstancedMesh).count : 1;
+            verts += pos.count * factor;
+            tris  += t * factor;
           }
           const key = ancestorKey(obj);
-          buckets.set(key, (buckets.get(key) ?? 0) + 1);
+          buckets.set(key, (buckets.get(key) ?? 0) + (isInst ? (obj as THREE.InstancedMesh).count : 1));
         }
       });
 
@@ -58,10 +66,13 @@ export function DevToolsCollector() {
       devState.tris      = Math.round(tris);
       devState.topMeshes = Array.from(buckets.entries())
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 10);
+        .slice(0, 15);
       devState.onUpdate?.();
     };
-    return () => { devState.refreshScene = null; };
+
+    // Auto-refresh stats every 2s
+    const id = setInterval(() => devState.refreshScene?.(), 2000);
+    return () => { devState.refreshScene = null; clearInterval(id); };
   }, [scene]);
 
   useFrame(() => {
