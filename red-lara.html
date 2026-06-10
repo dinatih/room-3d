@@ -97,36 +97,57 @@
           // RED-IFICATION
           if (!isNative) {
             const isTop = matName.includes('top') || matName.includes('shirt') || matName.includes('tank') || meshName.includes('shirt');
-            const isOtherClothing = matName.includes('short') || matName.includes('pant') || matName.includes('boot') || 
+            const isShorts = matName.includes('short') || matName.includes('pant') || meshName.includes('short');
+            const isOtherClothing = matName.includes('boot') || 
                                     matName.includes('gear') || matName.includes('holster') || matName.includes('belt') ||
-                                    matName.includes('vest') || matName.includes('glove') || meshName.includes('short');
+                                    matName.includes('vest') || matName.includes('glove');
 
-            // Rosanna only colors the top
-            const shouldColor = isRosanna ? isTop : (isTop || isOtherClothing || isHair || (!isSkin && !isEye && !isMouth));
+            // Rosanna: red top + blue jean shorts
+            const isRosannaColor = isRosanna && (isTop || isShorts);
+            const shouldColor = isRosanna ? isRosannaColor : (isTop || isShorts || isOtherClothing || isHair || (!isSkin && !isEye && !isMouth));
 
             if (shouldColor) {
-              const redColor = isVivid ? 0xff0000 : 0xaa0000;
-              const gearColor = isVivid ? 0x990000 : 0x660000;
-              const isGear = matName.includes('gear') || matName.includes('holster') || matName.includes('boot');
-              const color = isGear ? gearColor : redColor;
+              let color = 0xcc0000; // Brighter default red
+              
+              if (isRosanna && isShorts) {
+                color = 0xa2c4d9; // Very light, washed blue jean denim (from photo)
+              } else if (isRosanna && isTop) {
+                color = 0xff2222; // Slightly lighter than pure red to avoid ultra-dark shadows
+              } else {
+                const redColor = isVivid ? 0xff0000 : 0xaa0000;
+                const gearColor = isVivid ? 0x990000 : 0x660000;
+                const isGear = matName.includes('gear') || matName.includes('holster') || matName.includes('boot');
+                color = isGear ? gearColor : redColor;
+              }
 
-              if (mat.map) {
+              if (mat.map && !(isRosanna && isShorts)) {
                  mat.color.setHex(color);
                  if (isVivid) {
                    mat.emissive = new THREE.Color(color);
                    mat.emissiveIntensity = 0.35;
                  }
+                 if (isRosanna) {
+                    mat.roughness = 0.5; // Good balance for fabric highlights
+                    mat.metalness = 0.0;
+                    if (isTop) {
+                      mat.emissive = new THREE.Color(0xff0000);
+                      mat.emissiveIntensity = 0.08; // Lower intensity to allow natural shadows/AO to show
+                    } else {
+                      mat.emissiveIntensity = 0;
+                    }
+                 }
               } else {
+                // If it's the Rosanna shorts, we replace the material to ensure NO greenish tint from original texture
                 node.material = new THREE.MeshStandardMaterial({
                   color: color,
                   emissive: isVivid ? new THREE.Color(color) : new THREE.Color(0,0,0),
                   emissiveIntensity: isVivid ? 0.5 : 0,
-                  roughness: isVivid ? 0.1 : 0.4,
-                  metalness: isVivid ? 0.3 : 0.1,
+                  roughness: isRosanna ? 0.9 : (isVivid ? 0.1 : 0.25), // Rosanna tout mat
+                  metalness: isRosanna ? 0.0 : (isVivid ? 0.3 : 0.1),
                   transparent: isHair,
                   alphaTest: isHair ? 0.5 : 0,
                   depthWrite: true,
-                  name: isVivid ? 'VividRedStyle' : 'RedStyle'
+                  name: isRosanna && isShorts ? 'RosannaJean' : (isVivid ? 'VividRedStyle' : 'RedStyle')
                 });
               }
             }
