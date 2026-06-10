@@ -21,7 +21,6 @@ import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/scene
 import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes } from './Placements';
 import { Walker } from './Walker';
 import { XRayLayer }        from '@features/scene/XRayLayer';
-import { RedWallLayer }     from '@features/scene/RedWallLayer';
 import { WallEdgesLayer, EdgeHoverRaycaster, EdgeHoverOverlay } from '@features/scene/WallEdgesLayer';
 import { GridLayer }        from '@features/scene/Grid';
 import { LightHelpers }     from '@features/scene/LightHelpers';
@@ -298,7 +297,6 @@ export function Studio() {
 
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.xray        && <XRayLayer />}
-        {layers.redWalls    && <RedWallLayer />}
         {layers.wallEdges   && <WallEdgesLayer />}
         {layers.wallEdges   && <EdgeHoverRaycaster />}
         {layers.grid        && <GridLayer depthTest={layers.gridDepth} />}

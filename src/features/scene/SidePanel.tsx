@@ -357,7 +357,6 @@ export interface LayerState {
 
   skeleton:     boolean;
   doors:        boolean;
-  redWalls:     boolean;
   wallEdges:    boolean;
   lidar:        boolean;
   lights:       boolean;
@@ -513,7 +512,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layers.lidar && b0('cyan',
         `Opacité ${Math.round(lidarOpacity * 100)}%`,
         onToggleLidarOpacity)}
-      {layerBtn('red',    'Murs rouges',   'redWalls')}
       {layerBtn('teal',   'Monde réel 🌍', 'realWorld')}
       {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
       {layerBtn('green',  'Surfaces m²',   'surface')}

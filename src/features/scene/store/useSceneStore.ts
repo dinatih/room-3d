@@ -53,7 +53,6 @@ const initialLayers: LayerState = {
   gridDepth: false,
   skeleton: false,
   ceiling: false,
-  redWalls: false,
   wallEdges: false,
   lidar: false,
   lights: false,

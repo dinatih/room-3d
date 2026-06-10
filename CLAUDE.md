@@ -78,7 +78,6 @@ ui/                      # composants UI overlay
     layers/
         Grid.tsx         # grille + axes + labels de coordonnées
         XRayLayer.tsx    # toggle X-Ray (matériaux transparents)
-        RedWallLayer.tsx # toggle murs rouges
         Neighbors.tsx    # appartements voisins fantômes (mur D et mur A)
         sceneLayer.tsx   # CategoryLayerGroup + SceneLayerController
 ```
@@ -120,7 +119,7 @@ type FurnitureState = {
   bedStacked, bedSofa, bedPosition, lampOn, laptopModel, ...
 }
 type LayerState = {
-  structure, glb, xray, grid, dronaLabels, skeleton, redWalls, ...
+  structure, glb, xray, grid, dronaLabels, skeleton, wallEdges, ...
 }
 ```
 
@@ -142,4 +141,4 @@ Les composants concernés (`Placements`, `Walker`, items avec état…) écouten
 | LAYER_NEIGHBORS | Voisins fantômes |
 | LAYER_LIDAR | Point cloud lidar |
 
-`XRayLayer` et `RedWallLayer` traversent la scène (`scene.traverse`) au mount/unmount pour swapper les matériaux, puis restaurent les originaux au cleanup.
+`XRayLayer` traverse la scène (`scene.traverse`) au mount/unmount pour swapper les matériaux, puis restaure les originaux au cleanup.

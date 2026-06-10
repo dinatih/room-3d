@@ -563,7 +563,7 @@ function SneakersPair({ kiraMode }: { kiraMode: boolean }) {
 }
 
 function CeilingPalmLeaves({ kiraMode }: { kiraMode: boolean }) {
-  const placements = useMemo(() => Array.from({ length: 5 }, () => ({
+  const placements = useMemo(() => Array.from({ length: 1 }, () => ({
     x:  40 + Math.random() * (ROOM_W - 80),
     z:  40 + Math.random() * (ROOM_D - 80),
     ry: Math.random() * Math.PI * 2,

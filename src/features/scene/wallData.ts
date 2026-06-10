@@ -77,17 +77,21 @@ export function wallDefToBoxGeo(d: WallDef): THREE.BufferGeometry {
 export type PillarDef = { id: string; x: number; z: number; w?: number; d?: number; rot?: number };
 
 export const PILLAR_DEFS = [
-  { id: 'corner-nw',   x: -10,                    z: -WALL_C_T / 2, w: 20, d: WALL_C_T },
-  { id: 'corner-ne',   x: ROOM_W + W / 2,         z: -WALL_C_T / 2,        d: WALL_C_T },
-  { id: 'glass-west',  x: GLASS_START - W / 2,    z: -WALL_C_T / 2,        d: WALL_C_T },
-  { id: 'glass-east',  x: GLASS_END + W / 2,      z: -WALL_C_T / 2,        d: WALL_C_T },
+  { id: 'corner-nw',     x: -5,                     z: -5 },
+  { id: 'corner-nw-ext', x: -15,                    z: -20,           w: 10, d: 20 },
+  { id: 'corner-ne',     x: ROOM_W + W / 2,         z: -5 },
+  { id: 'corner-ne-ext', x: ROOM_W + W / 2,         z: -20,           w: 10, d: 20 },
+  { id: 'glass-west',  x: GLASS_START - W / 2,    z: -5 },
+  { id: 'glass-west-ext', x: GLASS_START - W / 2,   z: -20,           w: 10, d: 20 },
+  { id: 'glass-east',  x: GLASS_END + W / 2,      z: -5 },
+  { id: 'glass-east-ext', x: GLASS_END + W / 2,     z: -20,           w: 10, d: 20 },
   { id: 'corner-sw',   x: NICHE_X - W / 2,        z: ROOM_D + W / 2 },
   { id: 'diag-ne',     x: ROOM_W + W / 2,          z: DIAG_AZ - W / 2 },
   { id: 'diag-sw',     x: NICHE_X - W / 2,        z: DIAG_CZ - 5 },
   { id: 'kitchen-sw',  x: KITCHEN_X0 - W / 2,     z: ROOM_D + W / 2 },
   { id: 'kitchen-se',  x: KITCHEN_X1 + W / 2,     z: ROOM_D + W / 2 },
   { id: 'corner-se',   x: ROOM_W + W / 2,          z: ROOM_D + W / 2 },
-  { id: 'niche-beam',  x: NICHE_X,                 z: NICHE_Z_START,   w: 20, d: 10 },
+  { id: 'niche-beam',  x: -5,                       z: NICHE_Z_START },
   { id: 'bath-nw',     x: NICHE_X - W / 2,         z: KITCHEN_Z + W / 2 },
   { id: 'kitchen-nw',  x: KITCHEN_X0 - W / 2,     z: KITCHEN_Z + W / 2 },
   { id: 'kitchen-ne',  x: KITCHEN_X1 + W / 2,     z: KITCHEN_Z + W / 2 },
@@ -169,12 +173,11 @@ export const GLASS_DOOR_X = (GLASS_OPENING_X1 + GLASS_OPENING_X2) / 2;
 export const WALL_DEFS: WallDef[] = [
 
   // ── MUR OUEST ──────────────────────────────────────────────────────────────
-  // Ouest 1 : face intérieure séjour.
+  // Ouest 1 (Extérieur/Continu) : face arrière de la niche.
+  { axis: 'z', xc: pEast('corner-nw') - 1.5 * W, z1: pNorth('corner-nw-ext'), z2: pNorth('corner-sw'), mat: 'west' },
+  // Ouest 2 (Intérieur) : face avant (séjour), s'arrête à la niche.
   { axis: 'z', xc: pEast('corner-nw') - W / 2, z1: pSouth('corner-nw'), z2: pNorth('niche-beam'), mat: 'west' },
-  // Ouest Niche (extérieur) : paroi arrière niche (3D uniquement, masquée par Ouest 1 en 2D)
-  { axis: 'z', xc: pX('corner-sw'), z1: pSouth('corner-nw'), z2: pNorth('niche-beam'), mat: 'west', segKind: 'none' },
-  // Ouest Niche (intérieur) : face intérieure niche
-  { axis: 'z', xc: pX('corner-sw'), z1: pSouth('niche-beam'), z2: pNorth('corner-sw'), mat: 'west' },
+
   // Ouest SDB + couloir (saute les piliers)
   { axis: 'z', xc: pX('corner-sw'), z1: pSouth('corner-sw'), z2: pNorth('bath-nw'), mat: 'west' },
   { axis: 'z', xc: pX('corner-sw'), z1: pSouth('bath-nw'), z2: pNorth('shower-nw'), mat: 'west' },
@@ -215,14 +218,25 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'z', xc: pX('bath-ne'), z1: CORR_DOOR_S, z2: CORR_DOOR_E, segKind: 'door' },
 
   // ── MUR NORD (Z=0) ──────────────────────────────────────────────────────────
-  // Panneau ouest (fixe)
-  { axis: 'x', x1: pEast('corner-nw'), x2: pWest('glass-west'), zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north' },
-  // Panneau est.
-  { axis: 'x', x1: pEast('glass-east'), x2: pWest('corner-ne'), zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north' },
-  // Muret bas sous la porte-fenêtre (3D uniquement, la baie reste une fenêtre en 2D).
-  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north', h: 25, segKind: 'none' },
-  // Linteau au-dessus de la baie (3D uniquement)
-  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: pZ('corner-nw'), t: WALL_C_T, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
+  // Panneau ouest intérieur (placo)
+  { axis: 'x', x1: pEast('corner-nw'), x2: pWest('glass-west'), zc: pZ('corner-nw'), mat: 'north' },
+  // Panneau ouest extérieur (béton)
+  { axis: 'x', x1: pEast('corner-nw-ext'), x2: pWest('glass-west-ext'), zc: pZ('corner-nw-ext'), t: 20, mat: 'north' },
+
+  // Panneau est intérieur (placo)
+  { axis: 'x', x1: pEast('glass-east'), x2: pWest('corner-ne'), zc: pZ('corner-ne'), mat: 'north' },
+  // Panneau est extérieur (béton)
+  { axis: 'x', x1: pEast('glass-east-ext'), x2: pWest('corner-ne-ext'), zc: pZ('corner-ne-ext'), t: 20, mat: 'north' },
+
+  // Baie vitrée — couches dissociées
+  // Muret bas (Intérieur)
+  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: -5, mat: 'north', h: 25, segKind: 'none' },
+  // Muret bas (Extérieur)
+  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: -20, t: 20, mat: 'north', h: 25, segKind: 'none' },
+  // Linteau (Intérieur)
+  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: -5, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
+  // Linteau (Extérieur)
+  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: -20, t: 20, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
 
   // ── Douche ─────────────────────────────────────────────────────────────────
   { axis: 'z', xc: pX('shower-ne'), z1: pSouth('shower-ne'), z2: pNorth('shower-se') },
