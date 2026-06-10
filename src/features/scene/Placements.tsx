@@ -157,6 +157,8 @@ const SUNNERSTA_POSITIONS = [
   { x: 100,           z: MACK_Z,     ry: Math.PI / 2 }, // devant MacKapar
 ];
 
+import { MergedStaticGroup } from './Building';
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // EQUIPMENT (Layer 1)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -259,7 +261,7 @@ export function Furniture({ layers }: { layers: LayerState }) {
   });
   const cbZ = KITCHEN_Z + 11 + 18.5; // 489.5
   return (
-    <>
+    <MergedStaticGroup name="merged-furniture">
       <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]}>
         <KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
@@ -302,7 +304,7 @@ export function Furniture({ layers }: { layers: LayerState }) {
         <CuboidCollider args={[20, 30, 18.5]} position={[DOOR_START - 31, 30, cbZ]} />
         <CuboidCollider args={[27.5, 25, 28.5]} position={[24.5, 25, 269.5]} />
       </RigidBody>
-    </>
+    </MergedStaticGroup>
   );
 }
 
@@ -580,7 +582,7 @@ function CeilingPalmLeaves() {
 
 export function Decor({ layers }: { layers: LayerState }) {
   return (
-    <>
+    <MergedStaticGroup name="merged-decor">
       <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
@@ -601,14 +603,6 @@ export function Decor({ layers }: { layers: LayerState }) {
       <group position={[300, 1, 202]} userData={{ animUnit: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/*<group position={[14, 0, 210]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
-        <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>*/}
-      {/*{[55, 120, 185, 250].map(x => (
-        <group key={x} position={[x, 0, -386]} userData={{ animUnit: true }}>
-          <Dimpa item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-      ))}*/}
       <group position={[298, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true }}>
         <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
@@ -630,7 +624,7 @@ export function Decor({ layers }: { layers: LayerState }) {
         ))}
       </>
       <Sunnersta_ />
-    </>
+    </MergedStaticGroup>
   );
 }
 
@@ -644,7 +638,7 @@ export function Garden({ layers }: { layers: LayerState }) {
     sofaArmRight: 'sofa-arm-left',
   });
   return (
-    <>
+    <MergedStaticGroup name="merged-garden">
       <group position={[270, 0, -110]} rotation={[0, Math.PI, 0]}>
         <ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} />
       </group>
@@ -657,9 +651,6 @@ export function Garden({ layers }: { layers: LayerState }) {
       <group position={[120, 0, -250]} rotation={[0, 1, 0]}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      {/*<group userData={{ animUnit: true }}>
-        <AltappenRugField />
-      </group>*/}
       <group position={[100, 0, -178]} userData={{ animUnit: true }}>
         <Viggja item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
@@ -673,17 +664,13 @@ export function Garden({ layers }: { layers: LayerState }) {
              userData={{ hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
         <ShibaInu />
       </group>
-      {/*<group position={[250, 0, -330]} rotation={[0, 0, 0]}
-             userData={{ hoverAction: { label: 'Tente Quechua 2 Seconds 2P' } }}>
-        <Tent item={{} as any} actionState={{}} onSize={() => {}} />
-      </group>*/}
       <group position={[160, 0, 260]} rotation={[0, -Math.PI / 2, 0]}>
         <Vihals item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
       <group position={[210, -3.48, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true }}>
         <Rebound item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-    </>
+    </MergedStaticGroup>
   );
 }
 

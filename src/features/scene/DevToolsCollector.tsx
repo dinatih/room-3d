@@ -41,6 +41,9 @@ export function DevToolsCollector() {
           return;
         }
 
+        // Ignore hidden meshes (originals before merge, or toggled off)
+        if (!m.visible) return;
+
         const isInst = (obj as THREE.InstancedMesh).isInstancedMesh;
         if (isInst) instances++;
         else meshes++;
