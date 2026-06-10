@@ -69,39 +69,63 @@
     loader.load('media/sandbox/red_lara_native.glb', (gltf) => {
       const model = gltf.scene;
       scene.add(model);
-      
-      hud.innerHTML = '<h3>Red Lara <span class="red">Active</span></h3><p>Materials processed. Everything red except skin/hair.</p>';
+
+      hud.innerHTML = '<h3>Red Lara <span class="red">Active</span></h3><p>Materials processed. Preserving skin/face details.</p>';
 
       model.traverse(node => {
         if (node.isMesh) {
-          console.log('Mesh:', node.name, 'Material:', node.material.name);
-          
-          // Target clothing: top, shorts, boots, gear
-          // Note: Material names depend on the GLB source. 
-          // We apply a heuristic: anything not looking like skin/eyes/hair/mouth becomes red.
-          const matName = node.material.name.toLowerCase();
+          const mat = node.material;
+          const matName = mat.name.toLowerCase();
           const meshName = node.name.toLowerCase();
-          
-          const isSkin = matName.includes('skin') || matName.includes('body') || matName.includes('head') || matName.includes('face') || meshName.includes('body') || meshName.includes('head');
+
+          console.log('Mesh:', node.name, '| Mat:', mat.name);
+
+          // Heuristic: identify skin and face parts to EXCLUDE from red-ification
+          // 'body' in this model often refers to the skin mesh, while clothes have specific names.
+          const isSkin = matName.includes('skin') || matName.includes('face') || matName.includes('head') || matName.includes('body') || matName.includes('arm') || matName.includes('leg');
           const isHair = matName.includes('hair') || meshName.includes('hair');
-          const isEye = matName.includes('eye') || meshName.includes('lens');
-          
-          if (!isSkin && !isHair && !isEye) {
-            node.material = new THREE.MeshStandardMaterial({
-              color: 0xaa0000,
-              roughness: 0.3,
-              metalness: 0.1,
-              name: 'RedClothing'
-            });
+          const isEye  = matName.includes('eye') || matName.includes('lens') || matName.includes('lash');
+          const isMouth = matName.includes('mouth') || matName.includes('teeth') || matName.includes('tongue');
+
+          // Targets for red
+          const isClothing = matName.includes('top') || matName.includes('shirt') || matName.includes('tank') || 
+                             matName.includes('short') || matName.includes('pant') || matName.includes('boot') || 
+                             matName.includes('gear') || matName.includes('holster') || matName.includes('belt') ||
+                             matName.includes('vest') || matName.includes('glove');
+
+          if (isClothing || (!isSkin && !isHair && !isEye && !isMouth)) {
+            // Use a bright red for clothes, darker for gear
+            const color = (matName.includes('gear') || matName.includes('holster') || matName.includes('boot')) ? 0x660000 : 0xaa0000;
+
+            // Optimization: instead of replacing, we TINT if there's a texture, or replace if not.
+            // If we replace, we MUST copy the transparency if it was there (e.g. for some clothing trims)
+            if (mat.map) {
+               mat.color.setHex(color);
+            } else {
+              node.material = new THREE.MeshStandardMaterial({
+                color: color,
+                roughness: 0.4,
+                metalness: 0.1,
+                transparent: mat.transparent,
+                opacity: mat.opacity,
+                alphaTest: mat.alphaTest,
+                name: 'RedClothing'
+              });
+            }
           }
-          
-          // Force a dark red for gear/holsters if identified
-          if (matName.includes('gear') || matName.includes('boot') || matName.includes('holster')) {
-            node.material.color.setHex(0x660000);
+
+          // Fix for the "scary face": ensure head meshes don't have depth/alpha issues
+          if (isSkin || isEye || isMouth) {
+            if (mat.transparent) {
+               // Often eyelashes or mouth parts
+               mat.depthWrite = true;
+               mat.alphaTest = 0.5;
+            }
           }
         }
       });
     });
+
 
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
