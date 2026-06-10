@@ -27,28 +27,41 @@ export const BATH_Z_END = KITCHEN_Z + 150;
 // Mur diagonal bâtiment — paramètre physique unique : angle intérieur au coin Est (NE)
 // (angle entre mur Est et le mur diagonal, mesuré à l'intérieur de la pièce)
 // Mesure sur place : 118–120°  |  modèle actuel : 122.5°
-// Formule : DIAG_CZ = DIAG_AZ − (DIAG_AX − DIAG_CX) / tan(α)
 export const DIAG_ANGLE_DEG = 120;
 const _diagAngle = DIAG_ANGLE_DEG * (Math.PI / 180);
-export const DIAG_AX = ROOM_W;       // 316 — point A (Est) : coin NE (jonction mur Est)
-export const DIAG_AZ = 542;          // Z du point A (Est)
-export const DIAG_CX = NICHE_X; // point C (Ouest) : côté niche ouest
-export const DIAG_CZ = DIAG_AZ - (DIAG_AX - DIAG_CX) / Math.tan(_diagAngle); // ≈727.5
+const _AX = ROOM_W;
+const _AZ = 542;
+const _CX = NICHE_X;
+const _CZ = _AZ - (_AX - _CX) / Math.tan(_diagAngle);
+const _DX = _CX - _AX;
+const _DZ = _CZ - _AZ;
+const _LEN = Math.sqrt(_DX * _DX + _DZ * _DZ);
+const _SIN = _DX / _LEN;
+const _COS = _DZ / _LEN;
 
-export const DIAG_DEPTH = 10; // épaisseur du mur diagonal (cm)
-
-// Mur diagonal — géométrie dérivée (calculée une fois)
-export const DIAG_DX    = DIAG_CX - DIAG_AX;
-export const DIAG_DZ    = DIAG_CZ - DIAG_AZ;
-export const DIAG_LEN   = Math.sqrt(DIAG_DX * DIAG_DX + DIAG_DZ * DIAG_DZ);
-export const DIAG_SIN   = DIAG_DX / DIAG_LEN;   // composante X du vecteur directeur normé
-export const DIAG_COS   = DIAG_DZ / DIAG_LEN;   // composante Z du vecteur directeur normé
-export const DIAG_ROT_Y = Math.atan2(DIAG_DX, DIAG_DZ); // rotation Y Three.js du mur diagonal
-
-// Porte d'entrée diagonale — offsets le long du mur diagonal (cm)
-export const DIAG_ENTRY_S = 10;                          // début de la porte
-export const DIAG_ENTRY_W = 90;                          // largeur de la porte
-export const DIAG_ENTRY_E = DIAG_ENTRY_S + DIAG_ENTRY_W; // fin de la porte
+/** Centralise la logique du mur diagonal (trigonométrie, positions, porte). */
+export const DiagWall = {
+  A: { x: _AX, z: _AZ },
+  C: { x: _CX, z: _CZ },
+  depth: 10,
+  len: _LEN,
+  sin: _SIN,
+  cos: _COS,
+  rotY: Math.atan2(_DX, _DZ),
+  slope: (_CZ - _AZ) / (_CX - _AX),
+  door: { start: 10, width: 90, end: 10 + 90 },
+  /** 
+   * Calcule un point (x, z) le long du mur diagonal.
+   * @param d Distance depuis le point A (Est) vers C (Ouest)
+   * @param off Offset perpendiculaire. Positif = extérieur, Négatif = intérieur.
+   */
+  p(d: number, off: number = 0) {
+    return {
+      x: _AX + d * _SIN + off * _COS,
+      z: _AZ + d * _COS - off * _SIN
+    };
+  }
+};
 
 // Layers Three.js
 export const LAYER_STRUCTURE  = 0; // Murs, sol, plafond

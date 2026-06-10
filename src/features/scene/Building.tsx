@@ -28,9 +28,7 @@ import {
   DOOR_START, DOOR_END, DOOR_H,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   BATH_Z_END,
-  DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
-  DIAG_LEN, DIAG_SIN, DIAG_COS, DIAG_ROT_Y,
-  DIAG_ENTRY_S, DIAG_ENTRY_E, DIAG_DEPTH,
+  DiagWall,
   LAYER_WALKER_DETAIL,
 } from '@config';
 
@@ -450,62 +448,59 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
   // Géométries complexes via useMemo ──────────────────────────────────────────
 
   const diagGeos = useMemo(() => {
-    const sinθ = DIAG_SIN;
-    const cosθ = DIAG_COS;
-    const pX   = cosθ;
-    const pZ   = -sinθ;
-
-    const iP = (d: number): [number, number] => [DIAG_AX + d * sinθ, DIAG_AZ + d * cosθ];
-    const eP = (d: number): [number, number] => [
-      DIAG_AX + d * sinθ + DIAG_DEPTH * pX,
-      DIAG_AZ + d * cosθ + DIAG_DEPTH * pZ,
-    ];
-
     // Linteau au-dessus de la porte d'entrée
     const linteau = makeExtrudeGeo(
-      [iP(DIAG_ENTRY_S), iP(DIAG_ENTRY_E), eP(DIAG_ENTRY_E), eP(DIAG_ENTRY_S)],
+      [
+        DiagWall.p(DiagWall.door.start),
+        DiagWall.p(DiagWall.door.end),
+        DiagWall.p(DiagWall.door.end, DiagWall.depth),
+        DiagWall.p(DiagWall.door.start, DiagWall.depth)
+      ].map(p => [p.x, p.z]),
       WALL_H - DOOR_H,
       DOOR_H,
     );
 
     // Section SW — tronquée de W cm côté SW pour le pilier
     const sw = makeExtrudeGeo(
-      [iP(DIAG_ENTRY_E), iP(DIAG_LEN - W), eP(DIAG_LEN - W), eP(DIAG_ENTRY_E)],
+      [
+        DiagWall.p(DiagWall.door.end),
+        DiagWall.p(DiagWall.len - W),
+        DiagWall.p(DiagWall.len - W, DiagWall.depth),
+        DiagWall.p(DiagWall.door.end, DiagWall.depth)
+      ].map(p => [p.x, p.z]),
       WALL_H,
     );
 
-    // diag-ne-kite — 4 côtés, angle en C = angle interne de la jonction (~122°).
-    // Face BC ∥ Mur Est (direction Z), face CD ∥ mur diagonal (direction sinθ,cosθ).
-    // C = intersection de X=DIAG_AX+W avec la droite ext diagonale passant par eP(0).
-    // eP(0) + t·(sinθ,cosθ) → X = DIAG_AX+W ⟹ t = (W − DIAG_DEPTH·pX) / sinθ
-    const tC = (W - DIAG_DEPTH * pX) / sinθ;           // valeur négative
-    const cX = DIAG_AX + W;
-    const cZ = DIAG_AZ + DIAG_DEPTH * pZ + tC * cosθ;
-    // Ordre CW en XZ : D, C, B, A → normales outward correctes.
+    // diag-ne-kite — 4 côtés, angle en C = angle interne de la jonction (~120°).
+    // C = intersection de X=DiagWall.A.x+W avec la droite ext diagonale passant par eP(0).
+    const eP0 = DiagWall.p(0, DiagWall.depth);
+    const tC = (W - (eP0.x - DiagWall.A.x)) / DiagWall.sin;
+    const cX = DiagWall.A.x + W;
+    const cZ = eP0.z + tC * DiagWall.cos;
+
     const diagPillar = makeExtrudeGeo(
       [
-        [DIAG_AX + DIAG_DEPTH * pX, DIAG_AZ + DIAG_DEPTH * pZ] as [number, number], // D = eP(0)
-        [cX, cZ]                                                 as [number, number], // C = sommet ext
-        [DIAG_AX + W,               DIAG_AZ]                    as [number, number], // B = coin ext Mur Est
-        [DIAG_AX,                   DIAG_AZ]                    as [number, number], // A = coin int
+        [eP0.x,          eP0.z],         // D = eP(0)
+        [cX,             cZ],            // C = sommet ext
+        [DiagWall.A.x + W, DiagWall.A.z],  // B = coin ext Mur Est
+        [DiagWall.A.x,     DiagWall.A.z],  // A = coin int
       ],
       WALL_H,
     );
 
-    // diag-sw-kite — même principe que NE, côté Mur Ouest (X = DIAG_CX − W).
-    // Face BC ∥ Mur Ouest (direction Z), face CD ∥ mur diagonal.
-    // C = intersection de X=DIAG_CX−W avec la droite ext diagonale par eP(diagLen).
-    // eP(diagLen) + t·(sinθ,cosθ) → X = DIAG_CX−W ⟹ t = (−W − DIAG_DEPTH·pX) / sinθ
-    const tC_sw  = (-W - DIAG_DEPTH * pX) / sinθ;          // valeur positive
-    const cX_sw  = DIAG_CX - W;
-    const cZ_sw  = DIAG_CZ + DIAG_DEPTH * pZ + tC_sw * cosθ;
-    // Ordre CW en XZ : A, B, C, D → normales outward correctes.
+    // diag-sw-kite — même principe que NE, côté Mur Ouest (X = DiagWall.C.x − W).
+    // C = intersection de X=DiagWall.C.x−W avec la droite ext diagonale par eP(diagLen).
+    const ePLen = DiagWall.p(DiagWall.len, DiagWall.depth);
+    const tC_sw  = ((DiagWall.C.x - W) - ePLen.x) / DiagWall.sin;
+    const cX_sw  = DiagWall.C.x - W;
+    const cZ_sw  = ePLen.z + tC_sw * DiagWall.cos;
+
     const diagPillarSW = makeExtrudeGeo(
       [
-        [DIAG_CX,                        DIAG_CZ]                    as [number, number], // A = coin int
-        [DIAG_CX - W,                    DIAG_CZ]                    as [number, number], // B = coin ext Mur Ouest
-        [cX_sw, cZ_sw]                                               as [number, number], // C = sommet ext
-        [DIAG_CX + DIAG_DEPTH * pX, DIAG_CZ + DIAG_DEPTH * pZ]     as [number, number], // D = eP(diagLen)
+        [DiagWall.C.x,     DiagWall.C.z],  // A = coin int
+        [DiagWall.C.x - W, DiagWall.C.z],  // B = coin ext Mur Ouest
+        [cX_sw,            cZ_sw],         // C = sommet ext
+        [ePLen.x,          ePLen.z],       // D = eP(diagLen)
       ],
       WALL_H,
     );
@@ -860,8 +855,7 @@ export function makeGrassTex(): THREE.CanvasTexture {
 
 function Parquet() {
   const { geo, mat } = useMemo(() => {
-    const diagSlope = (DIAG_CZ - DIAG_AZ) / (DIAG_CX - DIAG_AX);
-    const parquetDiagZ = DIAG_AZ + (INT_X_DOOR_S - DIAG_AX) * diagSlope;
+    const parquetDiagZ = DiagWall.A.z + (INT_X_DOOR_S - DiagWall.A.x) * DiagWall.slope;
 
     // Découpe : exclut le rectangle sous le mur sud-est (segment 3, x=DOOR_END→ROOM_W, z=ROOM_D→ROOM_D+W).
     const WALL_SE_W = DOOR_END;    // 280 — face ouest du pilier/mur SE
@@ -879,7 +873,7 @@ function Parquet() {
       new THREE.Vector2(INT_X_KITCHEN_R, -INT_Z_ROOM_S),
       new THREE.Vector2(INT_X_DOOR_S,    -INT_Z_ROOM_S),
       new THREE.Vector2(INT_X_DOOR_S,    -parquetDiagZ),
-      new THREE.Vector2(INT_X_EAST,      -DIAG_AZ),
+      new THREE.Vector2(INT_X_EAST,      -DiagWall.A.z),
       new THREE.Vector2(INT_X_EAST,      -WALL_SOUTH_FACE),
       new THREE.Vector2(WALL_SE_W,       -WALL_SOUTH_FACE),
       new THREE.Vector2(WALL_SE_W,       -INT_Z_ROOM_S),
@@ -920,13 +914,10 @@ function Tile() {
   const { bathGeo, bathMat, closetMat } = useMemo(() => {
     const baseTex = makeTileTex();
 
-    // Pente et équation de la face intérieure du mur diagonal
-    const diagSlope = (DIAG_CZ - DIAG_AZ) / (DIAG_CX - DIAG_AX);
-
     // Trapèze bath : coins alignés sur les faces intérieures
     const Ax = INT_X_NICHE,  Az = INT_Z_BATH_N;
-    const Bx = INT_X_NICHE,  Bz = DIAG_AZ + (INT_X_NICHE - DIAG_AX) * diagSlope;
-    const Cx = INT_X_DOOR_S, Cz = DIAG_AZ + (INT_X_DOOR_S - DIAG_AX) * diagSlope;
+    const Bx = INT_X_NICHE,  Bz = DiagWall.A.z + (INT_X_NICHE - DiagWall.A.x) * DiagWall.slope;
+    const Cx = INT_X_DOOR_S, Cz = DiagWall.A.z + (INT_X_DOOR_S - DiagWall.A.x) * DiagWall.slope;
     const Dx = INT_X_DOOR_S, Dz = INT_Z_BATH_N;
 
     const positions = new Float32Array([
@@ -993,45 +984,23 @@ function Baseboards() {
   const SD = 1;
   const y  = SH / 2;
 
-  const slope        = (DIAG_CZ - DIAG_AZ) / (DIAG_CX - DIAG_AX);
-  const parquetDiagZ = DIAG_AZ + (DOOR_START - ROOM_W) * slope;
+  const parquetDiagZ = DiagWall.A.z + (DOOR_START - DiagWall.A.x) * DiagWall.slope;
   // Longueur de parquet le long du mur diagonal (offset 0 au coin NE).
-  const diagParquetLen = Math.sqrt((ROOM_W - DOOR_START) ** 2 + (DIAG_AZ - parquetDiagZ) ** 2);
-  // Plinthe diagonale fractionnée autour de la porte d'entrée (DIAG_ENTRY_S → DIAG_ENTRY_E).
-  // Inward normal vers séjour : (-DIAG_COS, DIAG_SIN) en (X, Z).
-  const diagSeg = (d1: number, d2: number) => {
-    const dm = (d1 + d2) / 2;
-    return {
-      x: DIAG_AX + dm * DIAG_SIN - DIAG_COS * SD / 2,
-      z: DIAG_AZ + dm * DIAG_COS + DIAG_SIN * SD / 2,
-      len: d2 - d1,
-    };
-  };
+  const diagParquetLen = Math.sqrt((ROOM_W - DOOR_START) ** 2 + (DiagWall.A.z - parquetDiagZ) ** 2);
+
   const CW_ENTRY = 5.5; // largeur chambranle porte entrée + marge
-  const diagSegA = diagSeg(0, Math.max(0, DIAG_ENTRY_S - CW_ENTRY));
-  const diagSegB = diagSeg(DIAG_ENTRY_E + CW_ENTRY, diagParquetLen);
+  const diagSegA = { ...DiagWall.p((0 + Math.max(0, DiagWall.door.start - CW_ENTRY)) / 2, -SD / 2), len: Math.max(0, DiagWall.door.start - CW_ENTRY) };
+  const diagSegB = { ...DiagWall.p((DiagWall.door.end + CW_ENTRY + diagParquetLen) / 2, -SD / 2), len: diagParquetLen - (DiagWall.door.end + CW_ENTRY) };
 
   // Plinthe diagonale corridor (de X=200 à X=140)
   const corridorXEnd = INT_X_KITCHEN_R + W; // 140
-  const corridorZEnd = DIAG_AZ + (corridorXEnd - DIAG_AX) * slope;
-  const diagCorridorTotalLen = Math.sqrt((DIAG_AX - corridorXEnd) ** 2 + (DIAG_AZ - corridorZEnd) ** 2);
-  const diagSegC = diagSeg(diagParquetLen, diagCorridorTotalLen);
+  const corridorZEnd = DiagWall.A.z + (corridorXEnd - DiagWall.A.x) * DiagWall.slope;
+  const diagCorridorTotalLen = Math.sqrt((DiagWall.A.x - corridorXEnd) ** 2 + (DiagWall.A.z - corridorZEnd) ** 2);
+  const diagSegC = { ...DiagWall.p((diagParquetLen + diagCorridorTotalLen) / 2, -SD / 2), len: diagCorridorTotalLen - diagParquetLen };
 
-  // Correction calcul positions QR diag
-  const cosθ = DIAG_COS;
-  const sinθ = DIAG_SIN;
-  const diagQR_pos = (d1: number, d2: number) => {
-    const dm = (d1 + d2) / 2;
-    return {
-      x: DIAG_AX + dm * sinθ - cosθ * SD,
-      z: DIAG_AZ + dm * cosθ + sinθ * SD,
-      len: d2 - d1,
-    };
-  };
-
-  const diagQRA = diagQR_pos(0, Math.max(0, DIAG_ENTRY_S - CW_ENTRY));
-  const diagQRB = diagQR_pos(DIAG_ENTRY_E + CW_ENTRY, diagParquetLen);
-  const diagQRC = diagQR_pos(diagParquetLen, diagCorridorTotalLen);
+  const diagQRA = { ...DiagWall.p((0 + Math.max(0, DiagWall.door.start - CW_ENTRY)) / 2, -SD), len: Math.max(0, DiagWall.door.start - CW_ENTRY) };
+  const diagQRB = { ...DiagWall.p((DiagWall.door.end + CW_ENTRY + diagParquetLen) / 2, -SD), len: diagParquetLen - (DiagWall.door.end + CW_ENTRY) };
+  const diagQRC = { ...DiagWall.p((diagParquetLen + diagCorridorTotalLen) / 2, -SD), len: diagCorridorTotalLen - diagParquetLen };
 
   return (
     <MergedStaticGroup name="merged-skirting">
@@ -1050,12 +1019,12 @@ function Baseboards() {
         <QR cx={INT_X_EAST - SD} cz={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
             len={INT_Z_ROOM_S - INT_Z_NORTH} dir="-X" mat={skirtingMat} />
 
-        {/* East wall (sud, après mur SE) X=316, Z: ROOM_D+W→DIAG_AZ */}
-        <P w={SD} h={SH} d={DIAG_AZ - (ROOM_D + W)}
-           x={INT_X_EAST - SD / 2} y={y} z={((ROOM_D + W) + DIAG_AZ) / 2}
+        {/* East wall (sud, après mur SE) X=316, Z: ROOM_D+W→DiagWall.A.z */}
+        <P w={SD} h={SH} d={DiagWall.A.z - (ROOM_D + W)}
+           x={INT_X_EAST - SD / 2} y={y} z={((ROOM_D + W) + DiagWall.A.z) / 2}
            mat={skirtingMat} />
-        <QR cx={INT_X_EAST - SD} cz={((ROOM_D + W) + DIAG_AZ) / 2}
-            len={DIAG_AZ - (ROOM_D + W)} dir="-X" mat={skirtingMat} />
+        <QR cx={INT_X_EAST - SD} cz={((ROOM_D + W) + DiagWall.A.z) / 2}
+            len={DiagWall.A.z - (ROOM_D + W)} dir="-X" mat={skirtingMat} />
 
         {/* Mur SE — face nord (séjour) X: DOOR_END-SD→316, Z=ROOM_D */}
         <P w={INT_X_EAST - (DOOR_END - SD)} h={SH} d={SD}
@@ -1080,13 +1049,13 @@ function Baseboards() {
 
         {/* Mur diagonal (fractionné autour de la porte d'entrée) + Corridor */}
         {[diagSegA, diagSegB, diagSegC].map((s, i) => (
-          <mesh key={`ds${i}`} position={[s.x, y, s.z]} rotation-y={DIAG_ROT_Y} castShadow receiveShadow
+          <mesh key={`ds${i}`} position={[s.x, y, s.z]} rotation-y={DiagWall.rotY} castShadow receiveShadow
                 material={skirtingMat}>
             <boxGeometry args={[SD, SH, s.len]} />
           </mesh>
         ))}
         {[diagQRA, diagQRB, diagQRC].map((s, i) => (
-          <mesh key={`dqr${i}`} position={[s.x, y, s.z]} rotation-y={DIAG_ROT_Y} castShadow receiveShadow
+          <mesh key={`dqr${i}`} position={[s.x, y, s.z]} rotation-y={DiagWall.rotY} castShadow receiveShadow
                 material={skirtingMat} scale={[1, 1, s.len]} geometry={qrGeo} />
         ))}
 
@@ -1232,10 +1201,9 @@ function BathSkirting() {
   const SHOWER_E_X   = 65 + W / 2;                  // 70 — face est du mur shower-ne/se (côté SDB main)
 
   // Coins SDB (cf Tile())
-  const diagSlope = (DIAG_CZ - DIAG_AZ) / (DIAG_CX - DIAG_AX);
-  const Bz = DIAG_AZ + (INT_X_NICHE  - DIAG_AX) * diagSlope; // ≈ 727.5
+  const Bz = DiagWall.A.z + (INT_X_NICHE  - DiagWall.A.x) * DiagWall.slope; // ≈ 727.5
   const corridorXEnd = KITCHEN_X1 + W; // 140
-  const Cz = DIAG_AZ + (corridorXEnd - DIAG_AX) * diagSlope; // ≈ 642.1 (Z à X=140)
+  const Cz = DiagWall.A.z + (corridorXEnd - DiagWall.A.x) * DiagWall.slope; // ≈ 642.1 (Z à X=140)
 
   // Porte SDB sur mur est (CORR_WALL_X), même Z que la porte couloir
   const CORR_DOOR_S = KITCHEN_Z + 60;  // 520
@@ -1246,11 +1214,10 @@ function BathSkirting() {
   const showerWallZ2 = BATH_Z_END + 70;      // 680
 
   // Segment diagonal SDB : de C (d=dC) à B (d=dB)
-  const dC = Math.sqrt((corridorXEnd - DIAG_AX) ** 2 + (Cz - DIAG_AZ) ** 2);
-  const dB = Math.sqrt((INT_X_NICHE  - DIAG_AX) ** 2 + (Bz - DIAG_AZ) ** 2);
+  const dC = Math.sqrt((corridorXEnd - DiagWall.A.x) ** 2 + (Cz - DiagWall.A.z) ** 2);
+  const dB = Math.sqrt((INT_X_NICHE  - DiagWall.A.x) ** 2 + (Bz - DiagWall.A.z) ** 2);
   const dm = (dC + dB) / 2;
-  const diagX = DIAG_AX + dm * DIAG_SIN - DIAG_COS * SD_T / 2;
-  const diagZ = DIAG_AZ + dm * DIAG_COS + DIAG_SIN * SD_T / 2;
+  const { x: diagX, z: diagZ } = DiagWall.p(dm, SD_T / 2);
   const diagLen = dB - dC;
 
   return (
@@ -1294,7 +1261,7 @@ function BathSkirting() {
            mat={tileMat} />
 
         {/* Mur diagonal SDB — de C(140, Cz) à B(-10, Bz) */}
-        <mesh position={[diagX, y, diagZ]} rotation-y={DIAG_ROT_Y}
+        <mesh position={[diagX, y, diagZ]} rotation-y={DiagWall.rotY}
               ref={(m) => { if (m) m.material = tileMat as any; }}
               castShadow receiveShadow>
           <boxGeometry args={[SD_T, SH_T, diagLen]} />
@@ -1677,15 +1644,15 @@ export function DoorsPlaced() {
   const bathHingeZ = BATH_Z_END - 10;
 
   const entry = useMemo(() => {
-    const originX = DIAG_AX + 5 * DIAG_COS;
-    const originZ = DIAG_AZ - 5 * DIAG_SIN;
-    const hingeX  = originX + DIAG_ENTRY_S * DIAG_SIN;
-    const hingeZ  = originZ + DIAG_ENTRY_S * DIAG_COS;
+    // origin = point A avec un offset de 5cm vers l'extérieur (off=5)
+    const hinge = DiagWall.p(DiagWall.door.start, 5);
+    const center = DiagWall.p(DiagWall.door.start + DOOR_W_ENTRY / 2, 5);
+
     return {
-      wx:       hingeX + DOOR_W_ENTRY / 2 * DIAG_SIN,
+      wx:       center.x,
       wy:       DOOR_HEIGHT / 2,
-      wz:       hingeZ + DOOR_W_ENTRY / 2 * DIAG_COS,
-      diagRotY: DIAG_ROT_Y - Math.PI / 2,
+      wz:       center.z,
+      diagRotY: DiagWall.rotY - Math.PI / 2,
     };
   }, []);
 

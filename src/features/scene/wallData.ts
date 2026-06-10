@@ -21,8 +21,7 @@ import {
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   DOOR_START, DOOR_END, DOOR_H,
   BATH_Z_END,
-  DIAG_AX, DIAG_AZ, DIAG_CZ, DIAG_SIN, DIAG_COS, DIAG_ROT_Y,
-  DIAG_ENTRY_E, DIAG_LEN, DIAG_DEPTH,
+  DiagWall,
 } from '@config';
 
 export const W        = 10; // épaisseur de mur standard (cm)
@@ -32,15 +31,7 @@ const GLASS_TOP_Y = 225; // hauteur du linteau de baie vitrée
 
 export const CORR_WALL_X = 195; // centre du mur couloir gauche (SDB = 200cm interior)
 
-/**
- * Calcule une position (x, z) le long du mur diagonal.
- * @param d Distance depuis le point A (Est) le long du mur.
- * @param off Offset perpendiculaire au mur (positif vers l'extérieur).
- */
-export const pDiag = (d: number, off: number = W / 2) => ({
-  x: DIAG_AX + d * DIAG_SIN + off * DIAG_COS,
-  z: DIAG_AZ + d * DIAG_COS - off * DIAG_SIN,
-});
+// pDiag est maintenant centralisé dans DiagWall.p(d, off)
 
 export type WallMat  = 'west' | 'east' | 'north' | 'default';
 export type SegKind  = 'wall' | 'door' | 'window';
@@ -116,14 +107,14 @@ export const PILLAR_DEFS = [
   { id: 'shower-se',     x: 65,                      z: BATH_Z_END + 70 + W / 2 },
 
   // ── Extrémités mur diagonal (BoxGeometry) ──────────────────────────────────
-  { id: 'diag-ne',       x: ROOM_W + W / 2,          z: DIAG_AZ - W / 2 },
-  { id: 'diag-sw',       x: NICHE_X - W / 2,        z: DIAG_CZ - 5 },
+  { id: 'diag-ne',       x: ROOM_W + W / 2,          z: DiagWall.A.z - W / 2 },
+  { id: 'diag-sw',       x: NICHE_X - W / 2,        z: DiagWall.C.z - 5 },
   { id: 'diag-ne-end',
-    ...pDiag(W / 2, DIAG_DEPTH / 2),
-    w: W, d: DIAG_DEPTH, rot: DIAG_ROT_Y },
+    ...DiagWall.p(W / 2, DiagWall.depth / 2),
+    w: W, d: DiagWall.depth, rot: DiagWall.rotY },
   { id: 'diag-sw-end',
-    ...pDiag(DIAG_LEN - W / 2, DIAG_DEPTH / 2),
-    w: W, d: DIAG_DEPTH, rot: DIAG_ROT_Y },
+    ...DiagWall.p(DiagWall.len - W / 2, DiagWall.depth / 2),
+    w: W, d: DiagWall.depth, rot: DiagWall.rotY },
 
   // ── Extérieurs & Jardin ────────────────────────────────────────────────────
   { id: 'garden-e',      x: ROOM_W + W / 2,           z: -220 - W / 2 },
@@ -133,9 +124,9 @@ export const PILLAR_DEFS = [
   { id: 'door-living-e', x: DOOR_END   + W / 2,     z: ROOM_D + W / 2 },
   { id: 'door-bath-n',   x: CORR_WALL_X,             z: 515 },
   { id: 'door-bath-s',   x: CORR_WALL_X,             z: 605 },
-  { id: 'door-entry-e',
-    ...pDiag(DIAG_ENTRY_E + W / 2),
-    rot: DIAG_ROT_Y },
+  { id: 'door-entry-w',
+    ...DiagWall.p(DiagWall.door.end + W / 2, DiagWall.depth / 2),
+    rot: DiagWall.rotY },
 ] as const satisfies readonly PillarDef[];
 
 // Panneaux bois occultants jardin (côté est, devant pilier garden-e).

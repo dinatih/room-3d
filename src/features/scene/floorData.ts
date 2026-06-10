@@ -11,15 +11,14 @@ import {
   NICHE_X, NICHE_Z_START,
   DOOR_START,
   BATH_Z_END,
-  DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
-  DIAG_SIN, DIAG_COS, DIAG_ENTRY_S, DIAG_ENTRY_E,
+  DiagWall,
   ROOM_D, KITCHEN_Z,
 } from '@config';
 import { pEast, pWest, WALL_DEFS, wallSeg, W } from './wallData';
 
 // Points sur le mur diagonal pour la porte d'entrée
-const DIAG_DOOR_S = { x: DIAG_AX + DIAG_ENTRY_S * DIAG_SIN, z: DIAG_AZ + DIAG_ENTRY_S * DIAG_COS };
-const DIAG_DOOR_E = { x: DIAG_AX + DIAG_ENTRY_E * DIAG_SIN, z: DIAG_AZ + DIAG_ENTRY_E * DIAG_COS };
+const DIAG_DOOR_S = DiagWall.p(DiagWall.door.start);
+const DIAG_DOOR_E = DiagWall.p(DiagWall.door.end);
 
 export type Seg = [number, number, number, number]; // x1, z1, x2, z2
 
@@ -37,8 +36,8 @@ export const SEG_WALLS: Seg[] = [
   [-W / 2, NICHE_Z_START, NICHE_X - W / 2, NICHE_Z_START],
 
   // Mur diagonal bâtiment
-  [DIAG_AX,       DIAG_AZ,       DIAG_DOOR_S.x, DIAG_DOOR_S.z],
-  [DIAG_DOOR_E.x, DIAG_DOOR_E.z, DIAG_CX,       DIAG_CZ      ],
+  [DiagWall.A.x,  DiagWall.A.z,  DIAG_DOOR_S.x, DIAG_DOOR_S.z],
+  [DIAG_DOOR_E.x, DIAG_DOOR_E.z, DiagWall.C.x,  DiagWall.C.z],
 ];
 
 // ── SEG_DOORS ─────────────────────────────────────────────────────────────────

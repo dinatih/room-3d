@@ -9,13 +9,14 @@ import {
   NICHE_X, NICHE_Z_START,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   DOOR_START,
-  DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
+  DiagWall,
 } from '@config';
 import { W, CORR_WALL_X } from './wallData';
 
 const W2 = W / 2;
-const diagSlope = (DIAG_CZ - DIAG_AZ) / (DIAG_CX - DIAG_AX);
-const diagAtX = (x: number) => DIAG_AZ + (x - DIAG_AX) * diagSlope;
+// diagAtX calcule le Z sur la face intérieure du mur diagonal pour un X donné.
+// Formule simplifiée utilisant DiagWall.slope.
+const diagAtX = (x: number) => DiagWall.A.z + (x - DiagWall.A.x) * DiagWall.slope;
 
 function polyArea(pts: [number, number][]): number {
   let a = 0;
@@ -97,7 +98,7 @@ function buildGroup(): THREE.Group {
   const sejourArea = (ROOM_W * IZ_ROOM_S + (-NICHE_X) * (IZ_ROOM_S - (NICHE_Z_START + W2))) / 10000;
   const cuisineArea = (KITCHEN_X1 - W2 - KITCHEN_X0 - W2) * (IZ_KITCH_B - IZ_ROOM_S) / 10000;
   const coulPts:   [number, number][] = [
-    [IX_DOOR, IZ_ROOM_S], [ROOM_W, IZ_ROOM_S], [ROOM_W, DIAG_AZ], [IX_DOOR, diagAtX(IX_DOOR)],
+    [IX_DOOR, IZ_ROOM_S], [ROOM_W, IZ_ROOM_S], [ROOM_W, DiagWall.A.z], [IX_DOOR, diagAtX(IX_DOOR)],
   ];
   const coulArea = polyArea(coulPts);
   const placardW = IX_CORR - (KITCHEN_X1 + W2);
@@ -129,7 +130,7 @@ function buildGroup(): THREE.Group {
       ],
     },
     {
-      label: 'Couloir', area: coulArea, cx: (IX_DOOR + ROOM_W) / 2, cz: (IZ_ROOM_S + DIAG_AZ) / 2,
+      label: 'Couloir', area: coulArea, cx: (IX_DOOR + ROOM_W) / 2, cz: (IZ_ROOM_S + DiagWall.A.z) / 2,
       color: '#cccccc', floorColor: 0x888888,
       floorPts: coulPts,
     },

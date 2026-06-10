@@ -8,11 +8,11 @@ import {
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   NICHE_X, NICHE_Z_START,
   BATH_Z_END,
-  DIAG_AX, DIAG_AZ, DIAG_CX, DIAG_CZ,
+  DiagWall,
 } from '@config';
 
 // Jardin diagonal endpoint (parallèle à MDiag)
-const GARDEN_JC_Z = -140 - (DIAG_CZ - DIAG_AZ) * 320 / (DIAG_AX - DIAG_CX);
+const GARDEN_JC_Z = -140 + DiagWall.slope * 320;
 import { SEG_WALLS, SEG_DOORS, SEG_WINDOWS } from './floorData';
 import { GARDEN_PANEL_DEFS } from './wallData';
 
@@ -40,17 +40,17 @@ export function drawFloorPlan(
   ctx.fillRect(tx(NICHE_X), tz(NICHE_Z_START), -NICHE_X * S, (ROOM_D - NICHE_Z_START) * S);
   ctx.fillRect(tx(KITCHEN_X0), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_X0) * S, (KITCHEN_Z - ROOM_D) * S);
   ctx.fillRect(tx(KITCHEN_X1), tz(ROOM_D), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D) * S);
-  ctx.fillRect(tx(DOOR_START), tz(ROOM_D), (ROOM_W - DOOR_START) * S, (DIAG_AZ - ROOM_D) * S);
+  ctx.fillRect(tx(DOOR_START), tz(ROOM_D), (ROOM_W - DOOR_START) * S, (DiagWall.A.z - ROOM_D) * S);
   ctx.beginPath();
-  ctx.moveTo(tx(DOOR_START), tz(DIAG_AZ));
-  ctx.lineTo(tx(ROOM_W),     tz(DIAG_AZ));
+  ctx.moveTo(tx(DOOR_START), tz(DiagWall.A.z));
+  ctx.lineTo(tx(ROOM_W),     tz(DiagWall.A.z));
   ctx.lineTo(tx(DOOR_START), tz(BATH_Z_END));
   ctx.closePath(); ctx.fill();
   ctx.fillRect(tx(NICHE_X), tz(KITCHEN_Z), (DOOR_START - NICHE_X) * S, (BATH_Z_END - KITCHEN_Z) * S);
   ctx.beginPath();
   ctx.moveTo(tx(NICHE_X), tz(BATH_Z_END));
   ctx.lineTo(tx(DOOR_START),   tz(BATH_Z_END));
-  ctx.lineTo(tx(NICHE_X), tz(DIAG_CZ));
+  ctx.lineTo(tx(NICHE_X), tz(DiagWall.C.z));
   ctx.closePath(); ctx.fill();
 
   // ── Jardin ──────────────────────────────────────────────────────────────────
