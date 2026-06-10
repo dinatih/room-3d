@@ -73,7 +73,6 @@ import { ShibaInu }    from './items/ShibaInu';
 import { Tisken }        from './items/Tisken';
 import { Tackan }        from './items/Tackan';
 import { Vathult }       from './items/Vathult';
-import { KiraIK }        from './items/KiraIK';
 import { DronaInstances, DroneCell } from './items/Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
@@ -311,7 +310,7 @@ export function Furniture({ layers }: { layers: LayerState }) {
 // FURNISHINGS — meubles avec état animé (lit, bureaux, TV)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function Bed({ kiraMode }: { kiraMode: boolean }) {
+function Bed() {
   const bedPositions = useMemo(() => {
     const PAD = 3, halfL = 102.5, halfW = 41.5;
     const dxK = KALLAX_DEPTH;
@@ -363,7 +362,7 @@ function Bed({ kiraMode }: { kiraMode: boolean }) {
   );
 }
 
-function Desks({ kiraMode }: { kiraMode: boolean }) {
+function Desks() {
   const [d1H,   setD1H]   = useState(SIT_H);
   const [d2H,   setD2H]   = useState(SIT_H);
   const [d1Pos, setD1Pos] = useState(0);
@@ -417,8 +416,8 @@ export function Furnishings({ layers }: { layers: LayerState }) {
   const as = useFurnitureToggles({ tvOn: 'tv-toggle' });
   return (
     <>
-      <Bed kiraMode={layers.kira} />
-      <Desks kiraMode={layers.kira} />
+      <Bed />
+      <Desks />
       <>
         <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
           rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]}>
@@ -460,7 +459,7 @@ export function Furnishings({ layers }: { layers: LayerState }) {
 // DECORATIVE PLACEMENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function Smorkull_({ kiraMode }: { kiraMode: boolean }) {
+function Smorkull_() {
   const [posIdx, setPosIdx] = useState(0);
   useEffect(() => {
     const handler = (e: Event) => {
@@ -482,7 +481,7 @@ function Smorkull_({ kiraMode }: { kiraMode: boolean }) {
   );
 }
 
-function AirPerformer_({ kiraMode }: { kiraMode: boolean }) {
+function AirPerformer_() {
   const [posIdx, setPosIdx] = useState(0);
   useEffect(() => {
     const handler = (e: Event) => {
@@ -505,7 +504,7 @@ function AirPerformer_({ kiraMode }: { kiraMode: boolean }) {
 
 const SUNNERSTA_VARIANTS = 3; // 0 Sunnersta, 1 RÅSKOG grande, 2 RÅSKOG petite
 
-function Sunnersta_({ kiraMode }: { kiraMode: boolean }) {
+function Sunnersta_() {
   const [posIdx, setPosIdx] = useState(0);
   const [variant, setVariant] = useState(0);
   useEffect(() => {
@@ -529,7 +528,7 @@ function Sunnersta_({ kiraMode }: { kiraMode: boolean }) {
   );
 }
 
-function LampOla_({ kiraMode }: { kiraMode: boolean }) {
+function LampOla_() {
   const [lampOn, setLampOn] = useState(false);
   useEffect(() => {
     const handler = (e: Event) => {
@@ -547,7 +546,7 @@ function LampOla_({ kiraMode }: { kiraMode: boolean }) {
   );
 }
 
-function SneakersPair({ kiraMode }: { kiraMode: boolean }) {
+function SneakersPair() {
   const [pairW, setPairW] = useState(0);
   const px = MIRROR_CX - 10, pz = ROOM_D - 15;
   return (
@@ -562,7 +561,7 @@ function SneakersPair({ kiraMode }: { kiraMode: boolean }) {
   );
 }
 
-function CeilingPalmLeaves({ kiraMode }: { kiraMode: boolean }) {
+function CeilingPalmLeaves() {
   const placements = useMemo(() => Array.from({ length: 1 }, () => ({
     x:  40 + Math.random() * (ROOM_W - 80),
     z:  40 + Math.random() * (ROOM_D - 80),
@@ -580,13 +579,12 @@ function CeilingPalmLeaves({ kiraMode }: { kiraMode: boolean }) {
 }
 
 export function Decor({ layers }: { layers: LayerState }) {
-  const km = layers.kira;
   return (
     <>
       <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* <AirPerformer_ kiraMode={km} /> */}{/* PERF TEST — remettre pour réactiver */}
+      {/* <AirPerformer_ /> */}{/* PERF TEST — remettre pour réactiver */}
       {/* Google Nest Mini — mur EST (B) en son centre, à plat contre le mur */}
       <group position={[ROOM_W - 5, WALL_H / 2, ROOM_D / 2]} rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
         <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -614,16 +612,16 @@ export function Decor({ layers }: { layers: LayerState }) {
       <group position={[298, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true }}>
         <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <Smorkull_ kiraMode={km} />
-      <LampOla_ kiraMode={km} />
+      <Smorkull_ />
+      <LampOla_ />
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
         <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[297, 144, 173.5]} rotation={[Math.PI / 2, 0, Math.PI / 2]} userData={{ animUnit: true }}>
         <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <SneakersPair kiraMode={km} />
-      <CeilingPalmLeaves kiraMode={km} />
+      <SneakersPair />
+      <CeilingPalmLeaves />
       <>
         {[0, 18, 36].map(y => (
           <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ animUnit: true }}>
@@ -631,8 +629,7 @@ export function Decor({ layers }: { layers: LayerState }) {
           </group>
         ))}
       </>
-      {layers.kira && <KiraIK />}
-      <Sunnersta_ kiraMode={km} />
+      <Sunnersta_ />
     </>
   );
 }
@@ -646,7 +643,6 @@ export function Garden({ layers }: { layers: LayerState }) {
     sofaArmLeft: 'sofa-arm-right',
     sofaArmRight: 'sofa-arm-left',
   });
-  const km = layers.kira;
   return (
     <>
       <group position={[270, 0, -110]} rotation={[0, Math.PI, 0]}>

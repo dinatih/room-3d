@@ -66,7 +66,6 @@ const initialLayers: LayerState = {
   grass: false,
   surface: false,
   walker: true,
-  kira: false,
 };
 
 const initialExtraStates: Record<string, boolean> = {

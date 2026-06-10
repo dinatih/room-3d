@@ -358,6 +358,7 @@ export interface LayerState {
   gridDepth:    boolean;
 
   skeleton:     boolean;
+  ceiling:      boolean;
   doors:        boolean;
   wallEdges:    boolean;
   lidar:        boolean;
@@ -371,10 +372,9 @@ export interface LayerState {
   collisions:   boolean;
   grass:        boolean;
   surface:      boolean;
-  ceiling:      boolean;
   walker:       boolean;
-  kira:         boolean;
 }
+
 
 export interface SidePanelProps {
   furniture:       FurnitureState;
@@ -507,9 +507,9 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layers.walker && b0('light',
         isLara ? 'Peau : Lara 👩' : 'Peau : X-Bot 🤖',
         () => useSceneStore.getState().triggerAction('walker-lara')
-      )}
-      {layerBtn('cyan',   'Kira-IK',       'kira')}
-      {layerBtn('white',  'Squelette',     'skeleton')}
+        )}
+        {layerBtn('white',  'Squelette',     'skeleton')}
+
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
       {layerBtn('gray',   'Ombres',        'shadows')}
