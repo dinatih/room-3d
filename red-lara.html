@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Red Lara Test</title>
+  <title>Red Lara Comparison</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; background: #1a1a1f; color: #e0e0e8; }
     #view { width: 100vw; height: 100vh; }
@@ -12,14 +12,15 @@
       pointer-events: none; border: 1px solid #444;
     }
     .red { color: #ff4444; font-weight: bold; }
+    .vivid { color: #ff0000; text-shadow: 0 0 5px #f00; font-weight: bold; }
   </style>
 </head>
 <body>
   <div id="view"></div>
   <div id="hud">
-    <h3>Red Lara <span class="red">Material Test</span></h3>
-    <p>Loading <b>red_lara_native.glb</b>...</p>
-    <p>Targeting clothing materials for a full red style.</p>
+    <h3>Lara <span class="red">Quad Comparison</span></h3>
+    <p>1: Native | 2: <span class="red">Rosanna (Top)</span> | 3: Standard Red | 4: <span class="vivid">Vivid Red</span></p>
+    <p>Comparing partial vs full red styles.</p>
   </div>
 
   <script type="importmap">
@@ -38,7 +39,6 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     const viewEl = document.getElementById('view');
-    const hud = document.getElementById('hud');
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -49,15 +49,15 @@
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a1f);
 
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 120, 250);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 4000);
+    camera.position.set(0, 200, 700);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 90, 0);
+    controls.target.set(0, 100, 0);
     controls.update();
 
-    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-    const sun = new THREE.DirectionalLight(0xffffff, 2.0);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.5);
     sun.position.set(100, 200, 100);
     scene.add(sun);
 
@@ -66,11 +66,10 @@
     const loader = new GLTFLoader();
     loader.setDRACOLoader(dracoLoader);
 
-    loader.load('media/sandbox/red_lara_native.glb', (gltf) => {
-      const model = gltf.scene;
-      scene.add(model);
-
-      hud.innerHTML = '<h3>Red Lara <span class="red">Active</span></h3><p>Materials processed. Preserving skin/face details.</p>';
+    function processModel(model, style) {
+      const isVivid = style === 'vivid';
+      const isNative = style === 'native';
+      const isRosanna = style === 'rosanna';
 
       model.traverse(node => {
         if (node.isMesh) {
@@ -78,54 +77,97 @@
           const matName = mat.name.toLowerCase();
           const meshName = node.name.toLowerCase();
 
-          console.log('Mesh:', node.name, '| Mat:', mat.name);
-
-          // Heuristic: identify skin and face parts to EXCLUDE from red-ification
-          // 'body' in this model often refers to the skin mesh, while clothes have specific names.
-          const isSkin = matName.includes('skin') || matName.includes('face') || matName.includes('head') || matName.includes('body') || matName.includes('arm') || matName.includes('leg');
-          const isHair = matName.includes('hair') || meshName.includes('hair');
+          const isHand = matName.includes('hand') || matName.includes('finger') || meshName.includes('hand') || meshName.includes('finger');
+          const isSkin = matName.includes('skin') || matName.includes('face') || matName.includes('head') || matName.includes('body') || matName.includes('arm') || matName.includes('leg') || isHand;
+          const isHair = matName.includes('hair') || matName.includes('pony') || meshName.includes('hair') || meshName.includes('pony');
           const isEye  = matName.includes('eye') || matName.includes('lens') || matName.includes('lash');
           const isMouth = matName.includes('mouth') || matName.includes('teeth') || matName.includes('tongue');
 
-          // Targets for red
-          const isClothing = matName.includes('top') || matName.includes('shirt') || matName.includes('tank') || 
-                             matName.includes('short') || matName.includes('pant') || matName.includes('boot') || 
-                             matName.includes('gear') || matName.includes('holster') || matName.includes('belt') ||
-                             matName.includes('vest') || matName.includes('glove');
+          // UNIVERSAL FIX: Force OPAQUE by default
+          mat.transparent = false;
+          mat.depthWrite = true;
+          mat.alphaTest = 0;
 
-          if (isClothing || (!isSkin && !isHair && !isEye && !isMouth)) {
-            // Use a bright red for clothes, darker for gear
-            const color = (matName.includes('gear') || matName.includes('holster') || matName.includes('boot')) ? 0x660000 : 0xaa0000;
-
-            // Optimization: instead of replacing, we TINT if there's a texture, or replace if not.
-            // If we replace, we MUST copy the transparency if it was there (e.g. for some clothing trims)
-            if (mat.map) {
-               mat.color.setHex(color);
-            } else {
-              node.material = new THREE.MeshStandardMaterial({
-                color: color,
-                roughness: 0.4,
-                metalness: 0.1,
-                transparent: mat.transparent,
-                opacity: mat.opacity,
-                alphaTest: mat.alphaTest,
-                name: 'RedClothing'
-              });
-            }
+          if (isHair || matName.includes('lash') || matName.includes('trans')) {
+            mat.transparent = true;
+            mat.alphaTest = 0.5;
+            mat.side = THREE.DoubleSide;
           }
 
-          // Fix for the "scary face": ensure head meshes don't have depth/alpha issues
-          if (isSkin || isEye || isMouth) {
-            if (mat.transparent) {
-               // Often eyelashes or mouth parts
-               mat.depthWrite = true;
-               mat.alphaTest = 0.5;
+          // RED-IFICATION
+          if (!isNative) {
+            const isTop = matName.includes('top') || matName.includes('shirt') || matName.includes('tank') || meshName.includes('shirt');
+            const isOtherClothing = matName.includes('short') || matName.includes('pant') || matName.includes('boot') || 
+                                    matName.includes('gear') || matName.includes('holster') || matName.includes('belt') ||
+                                    matName.includes('vest') || matName.includes('glove') || meshName.includes('short');
+
+            // Rosanna only colors the top
+            const shouldColor = isRosanna ? isTop : (isTop || isOtherClothing || isHair || (!isSkin && !isEye && !isMouth));
+
+            if (shouldColor) {
+              const redColor = isVivid ? 0xff0000 : 0xaa0000;
+              const gearColor = isVivid ? 0x990000 : 0x660000;
+              const isGear = matName.includes('gear') || matName.includes('holster') || matName.includes('boot');
+              const color = isGear ? gearColor : redColor;
+
+              if (mat.map) {
+                 mat.color.setHex(color);
+                 if (isVivid) {
+                   mat.emissive = new THREE.Color(color);
+                   mat.emissiveIntensity = 0.35;
+                 }
+              } else {
+                node.material = new THREE.MeshStandardMaterial({
+                  color: color,
+                  emissive: isVivid ? new THREE.Color(color) : new THREE.Color(0,0,0),
+                  emissiveIntensity: isVivid ? 0.5 : 0,
+                  roughness: isVivid ? 0.1 : 0.4,
+                  metalness: isVivid ? 0.3 : 0.1,
+                  transparent: isHair,
+                  alphaTest: isHair ? 0.5 : 0,
+                  depthWrite: true,
+                  name: isVivid ? 'VividRedStyle' : 'RedStyle'
+                });
+              }
             }
           }
         }
       });
+    }
+
+    const SPACING = 140;
+
+    // 1: Native (-1.5 * SPACING)
+    loader.load('media/sandbox/lara_native.glb', (gltf) => {
+      const model = gltf.scene;
+      model.position.x = -1.5 * SPACING;
+      scene.add(model);
+      processModel(model, 'native');
     });
 
+    // 2: Rosanna (-0.5 * SPACING)
+    loader.load('media/sandbox/rosanna_lara_native.glb', (gltf) => {
+      const model = gltf.scene;
+      model.position.x = -0.5 * SPACING;
+      scene.add(model);
+      processModel(model, 'rosanna');
+    });
+
+    // 3: Standard Red (0.5 * SPACING)
+    loader.load('media/sandbox/red_lara_native.glb', (gltf) => {
+      const model = gltf.scene;
+      model.position.x = 0.5 * SPACING;
+      scene.add(model);
+      processModel(model, 'standard');
+    });
+
+    // 4: Vivid Red (1.5 * SPACING)
+    loader.load('media/sandbox/vivid_red_lara_native.glb', (gltf) => {
+      const model = gltf.scene;
+      model.position.x = 1.5 * SPACING;
+      scene.add(model);
+      processModel(model, 'vivid');
+    });
 
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
