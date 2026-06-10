@@ -1,23 +1,22 @@
 /**
- * Porte blanche intérieure — 83×204cm, poignée L double face.
- *
- * Variantes :
- *   DoorLiving — charnière droite (+X), ouvre -90° (côté séjour)
- *   DoorBath    — charnière gauche (-X), ouvre +90° (côté couloir)
+ * Porte blanche intérieure — Refondue pour s'adapter aux ouvertures de 80cm.
+ * 75cm (panneau) + 2.5cm * 2 (dormant) = 80cm total.
  */
 import { useRef, useLayoutEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 
-const W  = 83;     // DOOR_W
-const H  = 204;    // DOOR_H
-const T  = 4;      // épaisseur panneau
-const R  = 1.3;    // rayon poignée
+const W  = 75;     // Largeur panneau (ajusté pour trou de 80cm)
+const H  = 204;    // Hauteur standard
+const T  = 4;      // Épaisseur panneau
+const R  = 1.3;    // Rayon poignée
 
-const DT = 2.5;    // épaisseur des montants du dormant
-const WW = 10;     // épaisseur du dormant (profondeur Z)
-
+const DT = 2.5;    // Épaisseur dormant
+const WW = 10.0;   // Profondeur dormant (épaisseur mur)
+const CW = 4.0;    // Largeur chambranle (casing)
+const CT = 1.0;    // Épaisseur chambranle
+const GAP = 0.1;   // Petit jeu pour éviter le z-fighting (1mm)
 
 /** Poignée L double face (±Z) */
 function LHandle({ handleX, mancheDir }: { handleX: number; mancheDir: 1 | -1 }) {
@@ -27,15 +26,12 @@ function LHandle({ handleX, mancheDir }: { handleX: number; mancheDir: 1 | -1 })
     <>
       {([-1, 1] as const).map(sign => (
         <group key={sign}>
-          {/* Rose */}
           <mesh position={[handleX, hy, sign * (T / 2 + 0.5)]} rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[3, 3, 1, 12]} />{hMat}
           </mesh>
-          {/* Tige */}
           <mesh position={[handleX, hy, sign * (T / 2 + 3.5)]} rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[R, R, 5, 8]} />{hMat}
           </mesh>
-          {/* Manche (vers charnière) */}
           <mesh position={[handleX + mancheDir * 7, hy, sign * (T / 2 + 6)]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[R, R, 14, 8]} />{hMat}
           </mesh>
@@ -64,6 +60,7 @@ function DoorImpl({
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
+    // Dimension totale pour l'inventaire/minimap (80cm de large hors chambranles)
     onSize(new THREE.Vector3(W + DT * 2, H + DT, WW));
   }, []);
 
@@ -83,19 +80,36 @@ function DoorImpl({
   return (
     <group position={[0, -H / 2, 0]}>
 
-      {/* Dormant (contour fixe) */}
+      {/* ── Dormant (fixe dans le mur) ── */}
       <mesh position={[-(W / 2 + DT / 2), H / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[DT, H, WW]} />{dormMat}
+        <boxGeometry args={[DT, H, WW - 0.02]} />{dormMat}
       </mesh>
       <mesh position={[ (W / 2 + DT / 2), H / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[DT, H, WW]} />{dormMat}
+        <boxGeometry args={[DT, H, WW - 0.02]} />{dormMat}
       </mesh>
       <mesh position={[0, H + DT / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[W, DT, WW]} />{dormMat}
+        <boxGeometry args={[W, DT, WW - 0.02]} />{dormMat}
       </mesh>
 
+      {/* ── Chambranles (habillage des deux côtés) ── */}
+      {([-1, 1] as const).map(sign => (
+        <group key={sign} position={[0, 0, sign * (WW / 2 + CT / 2 + GAP)]}>
+          {/* Montants verticaux */}
+          <mesh position={[-(W / 2 + DT + CW / 2 - 1), (H + DT) / 2, 0]} castShadow>
+            <boxGeometry args={[CW, H + DT, CT]} />{dormMat}
+          </mesh>
+          <mesh position={[ (W / 2 + DT + CW / 2 - 1), (H + DT) / 2, 0]} castShadow>
+            <boxGeometry args={[CW, H + DT, CT]} />{dormMat}
+          </mesh>
+          {/* Traverse haute */}
+          <mesh position={[0, H + DT + CW / 2, 0]} castShadow>
+            <boxGeometry args={[W + (DT + CW) * 2 - 2, CW, CT]} />{dormMat}
+          </mesh>
+        </group>
+      ))}
+
       <group ref={doorRef} position={[pivotX, 0, 0]}>
-        {/* Panneau */}
+        {/* Panneau mobile */}
         <mesh position={[panelX, H / 2, 0]} castShadow receiveShadow>
           <boxGeometry args={[W, H, T]} />
           <meshStandardMaterial color="#f5f5f5" roughness={0.4} />
@@ -107,7 +121,6 @@ function DoorImpl({
   );
 }
 
-/** Porte séjour — charnière droite, ouvre -90° vers le séjour */
 export function DoorLiving({ actionState, onSize }: SceneItemProps) {
   return (
     <DoorImpl
@@ -119,7 +132,6 @@ export function DoorLiving({ actionState, onSize }: SceneItemProps) {
   );
 }
 
-/** Porte SDB — charnière gauche, ouvre +90° vers la SDB */
 export function DoorBath({ actionState, onSize }: SceneItemProps) {
   return (
     <DoorImpl
