@@ -3,7 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <title>Red Lara Comparison</title>
+  <link href="https://fonts.googleapis.com/css2?family=Graduate&display=swap" rel="stylesheet">
   <style>
+    /* Force font loading */
+    .font-loader { font-family: 'Graduate'; position: absolute; visibility: hidden; }
     html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; background: #1a1a1f; color: #e0e0e8; }
     #view { width: 100vw; height: 100vh; }
     #hud {
@@ -16,6 +19,7 @@
   </style>
 </head>
 <body>
+  <div class="font-loader">BULLS 66</div>
   <div id="view"></div>
   <div id="hud">
     <h3>Lara <span class="red">Quad Comparison</span></h3>
@@ -131,7 +135,7 @@
                     mat.metalness = 0.0;
                     if (isTop) {
                       mat.emissive = new THREE.Color(0xff0000);
-                      mat.emissiveIntensity = 0.08; // Lower intensity to allow natural shadows/AO to show
+                      mat.emissiveIntensity = 0.01; // Extremely low to prevent tinting black text red, while keeping a hint of vibrancy
 
                       // Add BULLS 66 Text
                       const canvas = document.createElement('canvas');
@@ -146,13 +150,11 @@
                       ctx.fillStyle = 'black';
                       ctx.textAlign = 'center';
                       
-                      // Position based on UV map provided by user
-                      // X = 768 (center of front island)
-                      // Y = 750 (chest area)
-                      ctx.font = '900 130px "Arial Black", sans-serif';
-                      ctx.fillText('BULLS', 768, 740);
-                      ctx.font = '900 240px "Arial Black", sans-serif';
-                      ctx.fillText('66', 768, 920);
+                      // X=700 comme demandé
+                      ctx.font = '900 80px Graduate';
+                      ctx.fillText('BULLS', 700, 750);
+                      ctx.font = '900 150px Graduate';
+                      ctx.fillText('66', 700, 870);
                       
                       const newTex = new THREE.CanvasTexture(canvas);
                       newTex.flipY = false; // Match glTF standard
@@ -185,36 +187,38 @@
 
     const SPACING = 140;
 
-    // 1: Native (-1.5 * SPACING)
-    loader.load('media/sandbox/lara_native.glb', (gltf) => {
-      const model = gltf.scene;
-      model.position.x = -1.5 * SPACING;
-      scene.add(model);
-      processModel(model, 'native');
-    });
+    document.fonts.ready.then(() => {
+      // 1: Native (-1.5 * SPACING)
+      loader.load('media/sandbox/lara_native.glb', (gltf) => {
+        const model = gltf.scene;
+        model.position.x = -1.5 * SPACING;
+        scene.add(model);
+        processModel(model, 'native');
+      });
 
-    // 2: Rosanna (-0.5 * SPACING)
-    loader.load('media/sandbox/rosanna_lara_native.glb', (gltf) => {
-      const model = gltf.scene;
-      model.position.x = -0.5 * SPACING;
-      scene.add(model);
-      processModel(model, 'rosanna');
-    });
+      // 2: Rosanna (-0.5 * SPACING)
+      loader.load('media/sandbox/rosanna_lara_native.glb', (gltf) => {
+        const model = gltf.scene;
+        model.position.x = -0.5 * SPACING;
+        scene.add(model);
+        processModel(model, 'rosanna');
+      });
 
-    // 3: Standard Red (0.5 * SPACING)
-    loader.load('media/sandbox/red_lara_native.glb', (gltf) => {
-      const model = gltf.scene;
-      model.position.x = 0.5 * SPACING;
-      scene.add(model);
-      processModel(model, 'standard');
-    });
+      // 3: Standard Red (0.5 * SPACING)
+      loader.load('media/sandbox/red_lara_native.glb', (gltf) => {
+        const model = gltf.scene;
+        model.position.x = 0.5 * SPACING;
+        scene.add(model);
+        processModel(model, 'standard');
+      });
 
-    // 4: Vivid Red (1.5 * SPACING)
-    loader.load('media/sandbox/vivid_red_lara_native.glb', (gltf) => {
-      const model = gltf.scene;
-      model.position.x = 1.5 * SPACING;
-      scene.add(model);
-      processModel(model, 'vivid');
+      // 4: Vivid Red (1.5 * SPACING)
+      loader.load('media/sandbox/vivid_red_lara_native.glb', (gltf) => {
+        const model = gltf.scene;
+        model.position.x = 1.5 * SPACING;
+        scene.add(model);
+        processModel(model, 'vivid');
+      });
     });
 
     window.addEventListener('resize', () => {
