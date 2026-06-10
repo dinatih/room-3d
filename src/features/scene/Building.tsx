@@ -1493,27 +1493,75 @@ function ReflectorMirror({ w, h, position, rotationY }: {
   return <primitive object={reflector} />;
 }
 
+function MergedReflector({ planes, position, rotationY }: {
+  planes: { w: number; h: number; x: number; y: number }[];
+  position: [number, number, number];
+  rotationY: number;
+}) {
+  const reflector = useMemo(() => {
+    const geos = planes.map(p => {
+      const geo = new THREE.PlaneGeometry(p.w, p.h);
+      geo.translate(p.x, p.y, 0);
+      return geo;
+    });
+    const mergedGeo = mergeGeometries(geos, false);
+    
+    const res = cameraState.mirrorsHD ? 512 : 256;
+    const mir = new Reflector(mergedGeo, {
+      textureWidth:  res,
+      textureHeight: res,
+      color: 0xbbbbbb,
+    } as ConstructorParameters<typeof Reflector>[1]);
+    mir.position.set(...position);
+    mir.rotation.y = rotationY;
+    mir.camera.layers.mask = MIRROR_BASE_MASK;
+
+    const origOnBeforeRender = mir.onBeforeRender.bind(mir);
+    mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
+      if (_reflectionDepth >= 1) return;
+      _reflectionDepth++;
+      
+      const targetRes = cameraState.mirrorsHD ? 512 : 256;
+      const renderTarget = (mir as any).getRenderTarget();
+      if (renderTarget && renderTarget.width !== targetRes) {
+        renderTarget.setSize(targetRes, targetRes);
+      }
+      
+      mir.camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+      origOnBeforeRender(renderer, scene, camera, geometry, material, group);
+      _reflectionDepth--;
+    };
+
+    return mir;
+  }, [planes]);
+
+  return <primitive object={reflector} />;
+}
+
 // ── 3× Nissedal 60×60 — Mur Sud ────────────────────────────────────────────────
 
 function MirrorsD() {
-  const W = 65, H = 65;
+  const W_M = 65, H_M = 65;
   const FT = 1.8, FD = 1.2;
   const cx  = (KITCHEN_X1 + DOOR_START) / 2;
   const fz  = ROOM_D - 2 - FD / 2;
   const mirZ = fz - 0.1;
 
+  const planes = useMemo(() => [0, 1, 2].map(i => {
+    const cy = (WALL_H - 3.5) - H_M / 2 - i * (H_M + 0.5);
+    // rotationY = Math.PI -> local X = World -X.
+    // worldX = cx -> localX = -cx
+    return { w: W_M - FT * 2, h: H_M - FT * 2, x: -cx, y: cy };
+  }), []);
+
   return (
     <>
+      <MergedReflector planes={planes} position={[0, 0, mirZ]} rotationY={Math.PI} />
       {([0, 1, 2] as const).map((i) => {
-        const cy = (WALL_H - 3.5) - H / 2 - i * (H + 0.5);
+        const cy = (WALL_H - 3.5) - H_M / 2 - i * (H_M + 0.5);
         return (
           <group key={i} userData={{ animUnit: true }}>
-            <ReflectorMirror
-              w={W - FT * 2} h={H - FT * 2}
-              position={[cx, cy, mirZ]}
-              rotationY={Math.PI}
-            />
-            <group position={[cx, cy - H / 2, fz]}>
+            <group position={[cx, cy - H_M / 2, fz]}>
               <NissedalGlbFrame glb={GLB_65x65} />
             </group>
           </group>
@@ -1534,18 +1582,32 @@ function MirrorsA() {
   const fx  = FD / 2; // centré pour être flush au mur à X=0
   const mirX = FD - 0.5; // glace à 0.5cm du bord avant
 
+  const planes = useMemo(() => {
+    const p: { w: number; h: number; x: number; y: number }[] = [];
+    // 3 petits miroirs
+    for (let i = 0; i < 3; i++) {
+      const mz = MA_START_Z + MA_W / 2 + i * MA_W;
+      const cy = MA_BOTTOM_Y + MA_H / 2;
+      // rotationY = Math.PI/2 -> local X = World -Z.
+      // worldZ = mz -> localX = -mz
+      p.push({ w: MA_W - FT * 2, h: MA_H - FT * 2, x: -mz, y: cy });
+    }
+    // 4e grand miroir
+    const mz4 = MA_START_Z + 3 * MA_W + M4_W / 2;
+    const cy4 = MA_BOTTOM_Y + M4_H / 2;
+    p.push({ w: M4_W - FT * 2, h: M4_H - FT * 2, x: -mz4, y: cy4 });
+    return p;
+  }, []);
+
   return (
     <>
+      <MergedReflector planes={planes} position={[mirX, 0, 0]} rotationY={Math.PI / 2} />
+
       {([0, 1, 2] as const).map((i) => {
         const mz = MA_START_Z + MA_W / 2 + i * MA_W;
         const cy = MA_BOTTOM_Y + MA_H / 2;
         return (
           <group key={i} userData={{ animUnit: true }}>
-            <ReflectorMirror
-              w={MA_W - FT * 2} h={MA_H - FT * 2}
-              position={[mirX, cy, mz]}
-              rotationY={Math.PI / 2}
-            />
             {/* cadre GLB — rotation-y=-π/2 : glace locale -Z → monde +X (face pièce) */}
             <group position={[fx, MA_BOTTOM_Y, mz]} rotation-y={-Math.PI / 2}>
               <NissedalGlbFrame glb={GLB_40x150} />
@@ -1560,11 +1622,6 @@ function MirrorsA() {
         const cy = MA_BOTTOM_Y + M4_H / 2;
         return (
           <group userData={{ animUnit: true }}>
-            <ReflectorMirror
-              w={M4_W - FT * 2} h={M4_H - FT * 2}
-              position={[mirX, cy, mz]}
-              rotationY={Math.PI / 2}
-            />
             <group position={[fx, MA_BOTTOM_Y, mz]} rotation-y={Math.PI / 2}>
               <NissedalFrame w={M4_W} h={M4_H} ft={FT} fd={FD} />
             </group>
@@ -1603,11 +1660,11 @@ export function Mirrors() {
   if (!showMirrors) return null;
 
   return (
-    <>
+    <MergedStaticGroup name="merged-mirror-frames">
       <MirrorsD />
       <MirrorsA />
       <MirrorBath />
-    </>
+    </MergedStaticGroup>
   );
 }
 
