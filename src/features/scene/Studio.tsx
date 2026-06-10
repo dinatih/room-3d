@@ -313,7 +313,7 @@ export function Studio() {
            * Pas de CategoryLayerGroup : les objets sont sur le layer 0 par défaut.
            * Walker inclus ici → reflété dans les miroirs.
            */}
-          <Walls pillarsOnly={layers.pillarsOnly} wallsOnly={layers.wallsOnly} />
+          <Walls pillarsOnly={layers.pillarsOnly} />
           <Floor />
           <Walker showSkeleton={layers.skeleton} />
 

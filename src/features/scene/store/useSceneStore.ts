@@ -58,7 +58,6 @@ const initialLayers: LayerState = {
   lights: false,
   shadows: false,
   pillarsOnly: false,
-  wallsOnly: false,
   realWorld: false,
   realSun: false,
   physics: false,

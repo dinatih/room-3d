@@ -365,7 +365,6 @@ export interface LayerState {
   lights:       boolean;
   shadows:      boolean;
   pillarsOnly:    boolean;
-  wallsOnly:    boolean;
   realWorld:    boolean;
   realSun:      boolean;
   physics:      boolean;
@@ -493,7 +492,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('green',  'Structure',     'structure', true)}
       {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
-      {layerBtn('gray',   'Murs seuls',    'wallsOnly')}
       {layerBtn('peach',  'Portes',        'doors')}
       {layerBtn('peach',  'Équipements',   'equipment')}
       {layerBtn('purple', 'Mobilier',      'furniture')}

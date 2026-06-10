@@ -444,7 +444,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
 }
 
 // ── Composant principal ────────────────────────────────────────────────────────
-export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?: boolean; wallsOnly?: boolean }) {
+export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
   // Géométries complexes via useMemo ──────────────────────────────────────────
 
   const diagGeos = useMemo(() => {
@@ -518,7 +518,7 @@ export function Walls({ pillarsOnly = false, wallsOnly = false }: { pillarsOnly?
           {pillarsOnly && <PillarLabels />}
 
           {/* ── Piliers ────────────────────────────────────────────────────────── */}
-          {!wallsOnly && (
+          {(
             <group>
               {PILLAR_DEFS.map((p) => {
                 const pp = p as any;
