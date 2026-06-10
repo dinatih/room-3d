@@ -76,15 +76,15 @@ export type PillarDef = { id: string; x: number; z: number; w?: number; d?: numb
 export const PILLAR_DEFS = [
   // ── Coin Nord-Ouest (Béton 20cm + Placo 10cm) ──────────────────────────────
   { id: 'corner-nw',     x: -5,                     z: -5 },
-  { id: 'corner-nw-ext', x: -15,                    z: -20,           w: 10, d: 20 },
+  { id: 'corner-nw-ext', x: -15,                    z: -20,           d: 20 },
   { id: 'glass-west',    x: GLASS_START - W / 2,    z: -5 },
-  { id: 'glass-west-ext', x: GLASS_START - W / 2,   z: -20,           w: 10, d: 20 },
+  { id: 'glass-west-ext', x: GLASS_START - W / 2,   z: -20,           d: 20 },
 
   // ── Coin Nord-Est (Béton 20cm + Placo 10cm) ────────────────────────────────
   { id: 'corner-ne',     x: ROOM_W + W / 2,         z: -5 },
-  { id: 'corner-ne-ext', x: ROOM_W + W / 2,         z: -20,           w: 10, d: 20 },
+  { id: 'corner-ne-ext', x: ROOM_W + W / 2,         z: -20,           d: 20 },
   { id: 'glass-east',    x: GLASS_END + W / 2,      z: -5 },
-  { id: 'glass-east-ext', x: GLASS_END + W / 2,     z: -20,           w: 10, d: 20 },
+  { id: 'glass-east-ext', x: GLASS_END + W / 2,     z: -20,           d: 20 },
 
   // ── Séjour & Niche ─────────────────────────────────────────────────────────
   { id: 'corner-sw',     x: NICHE_X - W / 2,        z: ROOM_D + W / 2 },
@@ -111,10 +111,10 @@ export const PILLAR_DEFS = [
   { id: 'diag-sw',       x: NICHE_X - W / 2,        z: DiagWall.C.z - 5 },
   { id: 'diag-ne-end',
     ...DiagWall.p(W / 2, DiagWall.depth / 2),
-    w: W, d: DiagWall.depth, rot: DiagWall.rotY },
+    d: DiagWall.depth, rot: DiagWall.rotY },
   { id: 'diag-sw-end',
     ...DiagWall.p(DiagWall.len - W / 2, DiagWall.depth / 2),
-    w: W, d: DiagWall.depth, rot: DiagWall.rotY },
+    d: DiagWall.depth, rot: DiagWall.rotY },
 
   // ── Extérieurs & Jardin ────────────────────────────────────────────────────
   { id: 'garden-e',      x: ROOM_W + W / 2,           z: -220 - W / 2 },
