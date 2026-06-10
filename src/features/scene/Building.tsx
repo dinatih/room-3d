@@ -1528,11 +1528,11 @@ function MirrorsD() {
 function MirrorsA() {
   const MA_W = 40, MA_H = 150;
   const M4_W = 70, M4_H = 160;
-  const FT = 1.8, FD = 1.2;
+  const FT = 1.8, FD = 5.0; // épaisseur standard Nissedal 5cm
   const MA_START_Z  = kallaxW1 + 10;
   const MA_BOTTOM_Y = 6;
-  const fx  = 0.2 + FD / 2;
-  const mirX = fx + 0.1;
+  const fx  = FD / 2; // centré pour être flush au mur à X=0
+  const mirX = FD - 0.5; // glace à 0.5cm du bord avant
 
   return (
     <>
@@ -1554,7 +1554,7 @@ function MirrorsA() {
         );
       })}
 
-      {/* 4e miroir 70×160 */}
+      {/* 4e miroir 70×160 (procédural) */}
       {(() => {
         const mz = MA_START_Z + 3 * MA_W + M4_W / 2;
         const cy = MA_BOTTOM_Y + M4_H / 2;
