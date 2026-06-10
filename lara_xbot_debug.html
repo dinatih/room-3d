@@ -590,32 +590,6 @@
             </div>
           </div>
         </div>
-        <!-- SECTION 4: Filtres de Mouvement (Anti-Skate / Anti-Swing) -->
-        <div>
-          <div class="section-title">Filtres de Mouvement</div>
-          <div class="card">
-            <div class="row">
-              <label>Sur place (In-Place Walk)</label>
-              <label class="switch">
-                <input type="checkbox" id="toggle-inplace" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
-            <p style="font-size:10px; color:var(--text-muted); margin-top:2px; margin-bottom:12px; line-height:1.4;">
-              Verrouille les translations horizontales X et Z pour éliminer le glissement (skating) en marche.
-            </p>
-            <div class="row">
-              <label>Amortir le Sway (Anti-swing)</label>
-              <label class="switch">
-                <input type="checkbox" id="toggle-sway" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
-            <p style="font-size:10px; color:var(--text-muted); margin-top:2px; line-height:1.4;">
-              Annule le roulis (Roll) et divise par 10 le lacet (Yaw) du bassin pour stabiliser la rotation logique.
-            </p>
-          </div>
-        </div>
 
       </div>
     </div>
@@ -841,15 +815,12 @@
       playbackSpeed: 1.0,
       showSkeletons: true,
       showAxes: false,
-      showGrid: true,
-      inplace: true,
-      dampSway: true
+      showGrid: true
     };
 
     let scene, camera, renderer, clock;
     let controls;
     let loadedClips = {}; // Cache of animation clips
-    window.loadedClips = loadedClips;
     const animSkeletons = {}; // Cache of skeleton bones for standalone animations
     const gltfLoader = new GLTFLoader();
 
@@ -859,7 +830,6 @@
 
     window.MODELS_META = MODELS_META;
     window.THREE = THREE;
-    window.state = state;
 
     init();
 
@@ -997,7 +967,6 @@
             c.defaultScale = c.scale.clone();
             
             c.restLocalQuaternion = c.quaternion.clone();
-            c.userData.animatedQuat = c.quaternion.clone();
           }
         });
 
@@ -1149,61 +1118,22 @@
     function getCleanRetargetedClip(rawClip, modelKey, animKey) {
       if (!rawClip) return null;
 
-      // 1. Determine the source model key
-      let sourceModelKey = 'xbot'; // default fallback for external Mixamo animations
-      if (animKey) {
-        if (animKey.startsWith('embedded_lara_')) {
-          sourceModelKey = 'lara';
-        } else if (animKey.startsWith('embedded_xbot_')) {
-          sourceModelKey = 'xbot';
-        } else if (animKey.startsWith('embedded_ybot_')) {
-          sourceModelKey = 'ybot';
-        }
-      }
-
-      const isNative = animKey && animKey.startsWith('embedded_') && (modelKey === sourceModelKey);
-
       if (modelKey === 'lara') {
         console.log(`WALKER_DEBUG: rawClip name: ${rawClip.name}, tracks:`, rawClip.tracks.map(t => t.name));
       }
 
       const tracks = [];
 
-      // 2. Determine height translations scale multiplier (sourceInCm)
-      // Check both Y and Z axes to support Z-up and Y-up source animations
-      let sourceInCm = false;
+      // Determine height translations scale multiplier
+      hipsRatio = 100.0; // default multiplier
       const hipsPos = rawClip.tracks.find(t => t.name.includes('Hips.position') || t.name.includes('Hips_position') || t.name.includes('hips.position'));
       if (hipsPos && hipsPos.values.length >= 3) {
-        const height = Math.max(Math.abs(hipsPos.values[1]), Math.abs(hipsPos.values[2]));
+        const height = Math.abs(hipsPos.values[1]);
         if (height > 40.0) {
-          sourceInCm = true;
+          hipsRatio = 1.0; // Already in centimeters!
         }
       }
-
-      // Determine if the target model is in centimeters or meters (targetInCm)
-      let targetInCm = false;
-      const targetHipsName = modelKey === 'lara' ? 'mixamorig_root_hips' : (modelKey === 'xbot' ? 'mixamorigHips' : 'mixamorig_Hips');
-      const targetModelMeta = MODELS_META[modelKey];
-      if (targetModelMeta && targetModelMeta.instance) {
-        const hipsBone = targetModelMeta.instance.getObjectByName(targetHipsName);
-        if (hipsBone && hipsBone.defaultPosition) {
-          const height = Math.max(Math.abs(hipsBone.defaultPosition.y), Math.abs(hipsBone.defaultPosition.z));
-          if (height > 40.0) {
-            targetInCm = true;
-          }
-        }
-      }
-
-      // Compute local hipsRatio
-      let localHipsRatio = 1.0;
-      if (sourceInCm) {
-        localHipsRatio = targetInCm ? 1.0 : 0.01;
-      } else {
-        localHipsRatio = targetInCm ? 100.0 : 1.0;
-      }
-      hipsRatio = localHipsRatio; // update global hipsRatio
-
-      document.getElementById('hud-hips-scale').innerText = `${hipsRatio.toFixed(1)}x`;
+      document.getElementById('hud-hips-scale').innerText = `${hipsRatio.toFixed(0)}x`;
 
       for (const tr of rawClip.tracks) {
         const [boneFull, prop] = tr.name.split('.');
@@ -1216,10 +1146,13 @@
         let targetBoneName = null;
 
         if (modelKey === 'xbot') {
+          // X-Bot uses mixamorigName format (no separator)
           targetBoneName = `mixamorig${baseName}`;
         } else if (modelKey === 'ybot') {
+          // Y-Bot uses mixamorig_Name format
           targetBoneName = `mixamorig_${baseName}`;
         } else if (modelKey === 'lara') {
+          // Lara uses BONE_MAP lookup or finger helper
           const keyName = `mixamorig:${baseName}`;
           
           // Check if bone mapping is enabled in the checklist
@@ -1227,6 +1160,7 @@
 
           targetBoneName = BONE_MAP[keyName] || getFingerLaraName(keyName);
 
+          // Mixamo Hips maps directly to mixamorig_root_hips (both position and quaternion)
           if (keyName === 'mixamorig:Hips') {
             targetBoneName = 'mixamorig_root_hips';
           }
@@ -1247,73 +1181,38 @@
           if (prop === 'position' && isHips) {
             const bone = MODELS_META[modelKey].instance ? MODELS_META[modelKey].instance.getObjectByName(targetBoneName) : null;
             if (bone && bone.defaultPosition) {
-              if (isNative) {
-                const restX = clone.values[0];
-                const restY = clone.values[1];
-                const restZ = clone.values[2];
-                for (let j = 0; j < clone.values.length / 3; j++) {
-                  const dx = (clone.values[3*j] - restX) * hipsRatio;
-                  const dy = (clone.values[3*j+1] - restY) * hipsRatio;
-                  const dz = (clone.values[3*j+2] - restZ) * hipsRatio;
-                  clone.values[3*j] = bone.defaultPosition.x + dx;
-                  clone.values[3*j+1] = bone.defaultPosition.y + dy;
-                  clone.values[3*j+2] = bone.defaultPosition.z + dz;
-                }
+              let P_src = null;
+              if (animKey && animSkeletons[animKey] && animSkeletons[animKey][baseName]) {
+                P_src = animSkeletons[animKey][baseName].parentRestWorldQuaternion;
               } else {
-                const restX = clone.values[0];
-                const restZ = clone.values[2];
-
-                const srcModel = MODELS_META[sourceModelKey] || MODELS_META.xbot;
-                let sourceHipsDefaultY = 104.0;
-                const srcHipsName = sourceModelKey === 'lara' ? 'mixamorig_root_hips' : (sourceModelKey === 'xbot' ? 'mixamorigHips' : 'mixamorig_Hips');
-                const srcHipsBone = srcModel.instance ? srcModel.instance.getObjectByName(srcHipsName) : null;
-                if (srcHipsBone && srcHipsBone.defaultPosition) {
-                  sourceHipsDefaultY = srcHipsBone.defaultPosition.y;
-                }
-
-                let P_src = null;
-                if (animKey && animSkeletons[animKey] && animSkeletons[animKey][baseName]) {
-                  P_src = animSkeletons[animKey][baseName].parentRestWorldQuaternion;
-                } else {
-                  let srcBoneName = null;
-                  if (sourceModelKey === 'xbot') {
-                    srcBoneName = `mixamorig${baseName}`;
-                  } else if (sourceModelKey === 'ybot') {
-                    srcBoneName = `mixamorig_${baseName}`;
-                  } else if (sourceModelKey === 'lara') {
-                    srcBoneName = BONE_MAP[`mixamorig:${baseName}`] || getFingerLaraName(`mixamorig:${baseName}`);
-                    if (baseName === 'Hips') srcBoneName = 'mixamorig_root_hips';
-                  }
-                  const srcBone = srcModel.instance ? srcModel.instance.getObjectByName(srcBoneName) : null;
-                  P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
-                    ? srcBone.parent.restWorldQuaternion
-                    : new THREE.Quaternion();
-                }
-
-                const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
-                  ? bone.parent.restWorldQuaternion
+                const srcBone = MODELS_META.xbot.instance ? MODELS_META.xbot.instance.getObjectByName('mixamorig' + baseName) : null;
+                P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
+                  ? srcBone.parent.restWorldQuaternion
                   : new THREE.Quaternion();
-                const P_tgt_inv = P_tgt.clone().invert();
-
-                for (let j = 0; j < clone.values.length / 3; j++) {
-                  const dx_raw = clone.values[3*j] - restX;
-                  const dy_raw = clone.values[3*j+1] - sourceHipsDefaultY;
-                  const dz_raw = clone.values[3*j+2] - restZ;
-
-                  const dx = dx_raw * hipsRatio;
-                  const dy = dy_raw * hipsRatio;
-                  const dz = dz_raw * hipsRatio;
-
-                  // Rotate displacement from source parent world to target parent local: P_tgt_inv * P_src * dP
-                  const dP = new THREE.Vector3(dx, dy, dz)
-                    .applyQuaternion(P_src)
-                    .applyQuaternion(P_tgt_inv);
-                  const resPos = bone.defaultPosition.clone().add(dP);
-
-                  clone.values[3*j] = resPos.x;
-                  clone.values[3*j+1] = resPos.y;
-                  clone.values[3*j+2] = resPos.z;
-                }
+              }
+              const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
+                ? bone.parent.restWorldQuaternion
+                : new THREE.Quaternion();
+              const P_tgt_inv = P_tgt.clone().invert();
+              
+              const restX = clone.values[0];
+              const restY = clone.values[1];
+              const restZ = clone.values[2];
+              
+              for (let j = 0; j < clone.values.length / 3; j++) {
+                const dx = (clone.values[3*j] - restX) * hipsRatio;
+                const dy = (clone.values[3*j+1] - restY) * hipsRatio;
+                const dz = (clone.values[3*j+2] - restZ) * hipsRatio;
+                
+                // Rotate displacement from source parent world to target parent local: P_tgt_inv * P_src * dP
+                const dP = new THREE.Vector3(dx, dy, dz)
+                  .applyQuaternion(P_src)
+                  .applyQuaternion(P_tgt_inv);
+                const resPos = bone.defaultPosition.clone().add(dP);
+                
+                clone.values[3*j] = resPos.x;
+                clone.values[3*j+1] = resPos.y;
+                clone.values[3*j+2] = resPos.z;
               }
             }
           }
@@ -1325,63 +1224,41 @@
 
             const bone = MODELS_META[modelKey].instance ? MODELS_META[modelKey].instance.getObjectByName(targetBoneName) : null;
             if (bone) {
-              for (let i = 0; i < clone.values.length; i += 4) {
-                const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
+              if (bone.restLocalQuaternion && bone.restWorldQuaternion) {
+                let B_src = null;
+                let P_src = null;
                 
-                if (state.dampSway && isHips) {
-                  const euler = new THREE.Euler().setFromQuaternion(q, 'YXZ');
-                  euler.z = 0;
-                  euler.y = euler.y / 10;
-                  q.setFromEuler(euler);
-                }
-
-                if (isNative) {
-                  // No rotation retargeting needed if native
-                  clone.values[i] = q.x;
-                  clone.values[i+1] = q.y;
-                  clone.values[i+2] = q.z;
-                  clone.values[i+3] = q.w;
+                if (animKey && animSkeletons[animKey] && animSkeletons[animKey][baseName]) {
+                  const cached = animSkeletons[animKey][baseName];
+                  B_src = cached.restWorldQuaternion;
+                  P_src = cached.parentRestWorldQuaternion;
                 } else {
-                  let B_src = null;
-                  let P_src = null;
-                  
-                  if (animKey && animSkeletons[animKey] && animSkeletons[animKey][baseName]) {
-                    const cached = animSkeletons[animKey][baseName];
-                    B_src = cached.restWorldQuaternion;
-                    P_src = cached.parentRestWorldQuaternion;
-                  } else {
-                    const srcModel = MODELS_META[sourceModelKey] || MODELS_META.xbot;
-                    let srcBoneName = null;
-                    if (sourceModelKey === 'xbot') {
-                      srcBoneName = `mixamorig${baseName}`;
-                    } else if (sourceModelKey === 'ybot') {
-                      srcBoneName = `mixamorig_${baseName}`;
-                    } else if (sourceModelKey === 'lara') {
-                      srcBoneName = BONE_MAP[`mixamorig:${baseName}`] || getFingerLaraName(`mixamorig:${baseName}`);
-                      if (baseName === 'Hips') srcBoneName = 'mixamorig_root_hips';
-                    }
-                    const srcBone = srcModel.instance ? srcModel.instance.getObjectByName(srcBoneName) : null;
-                    if (srcBone) {
-                      B_src = srcBone.restWorldQuaternion;
-                      P_src = (srcBone.parent && srcBone.parent.restWorldQuaternion)
-                        ? srcBone.parent.restWorldQuaternion
-                        : new THREE.Quaternion();
-                    }
-                  }
-                  
-                  if (B_src && P_src && bone.restLocalQuaternion && bone.restWorldQuaternion) {
-                    const B_tgt = bone.restWorldQuaternion;
-                    const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
-                      ? bone.parent.restWorldQuaternion
+                  const srcBone = MODELS_META.xbot.instance ? MODELS_META.xbot.instance.getObjectByName('mixamorig' + baseName) : null;
+                  if (srcBone) {
+                    B_src = srcBone.restWorldQuaternion;
+                    P_src = (srcBone.parent && srcBone.parent.restWorldQuaternion)
+                      ? srcBone.parent.restWorldQuaternion
                       : new THREE.Quaternion();
+                  }
+                }
+                
+                if (B_src && P_src) {
+                  const B_tgt = bone.restWorldQuaternion;
+                  const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
+                    ? bone.parent.restWorldQuaternion
+                    : new THREE.Quaternion();
+                  
+                  const P_tgt_inv = P_tgt.clone().invert();
+                  const B_src_inv = B_src.clone().invert();
+
+                  if (modelKey === 'lara' && targetBoneName === 'mixamorig_leg_left_thigh') {
+                    console.log(`WALKER_DEBUG: Left thigh using src. B_src: [${B_src.x.toFixed(4)}, ${B_src.y.toFixed(4)}, ${B_src.z.toFixed(4)}, ${B_src.w.toFixed(4)}], P_src: [${P_src.x.toFixed(4)}, ${P_src.y.toFixed(4)}, ${P_src.z.toFixed(4)}, ${P_src.w.toFixed(4)}], B_tgt: [${B_tgt.x.toFixed(4)}, ${B_tgt.y.toFixed(4)}, ${B_tgt.z.toFixed(4)}, ${B_tgt.w.toFixed(4)}], P_tgt: [${P_tgt.x.toFixed(4)}, ${P_tgt.y.toFixed(4)}, ${P_tgt.z.toFixed(4)}, ${P_tgt.w.toFixed(4)}]`);
+                  }
+
+                  for (let i = 0; i < clone.values.length; i += 4) {
+                    const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
                     
-                    const P_tgt_inv = P_tgt.clone().invert();
-                    const B_src_inv = B_src.clone().invert();
-
-                    if (modelKey === 'lara' && targetBoneName === 'mixamorig_leg_left_thigh') {
-                      console.log(`WALKER_DEBUG: Left thigh using src. B_src: [${B_src.x.toFixed(4)}, ${B_src.y.toFixed(4)}, ${B_src.z.toFixed(4)}, ${B_src.w.toFixed(4)}], P_src: [${P_src.x.toFixed(4)}, ${P_src.y.toFixed(4)}, ${P_src.z.toFixed(4)}, ${P_src.w.toFixed(4)}], B_tgt: [${B_tgt.x.toFixed(4)}, ${B_tgt.y.toFixed(4)}, ${B_tgt.z.toFixed(4)}, ${B_tgt.w.toFixed(4)}], P_tgt: [${P_tgt.x.toFixed(4)}, ${P_tgt.y.toFixed(4)}, ${P_tgt.z.toFixed(4)}, ${P_tgt.w.toFixed(4)}]`);
-                    }
-
+                    // Compute exact local rotation: P_tgt_inv * P_src * q * B_src_inv * B_tgt
                     const resQ = P_tgt_inv.clone()
                       .multiply(P_src)
                       .multiply(q)
@@ -1396,14 +1273,19 @@
                     if (modelKey === 'lara' && i === 0 && (targetBoneName === 'mixamorig_root_hips' || targetBoneName === 'mixamorig_spine_lower' || targetBoneName === 'mixamorig_leg_left_thigh' || targetBoneName === 'mixamorig_leg_right_thigh')) {
                       console.log(`WALKER_DEBUG: Retargeted ${targetBoneName} firstKeyframeQ result: ` + JSON.stringify([clone.values[0], clone.values[1], clone.values[2], clone.values[3]]));
                     }
-                  } else {
-                    // Fallback to simpler method if source bone is not found
-                    const parentRestWorldQ = (bone.parent && bone.parent.restWorldQuaternion)
-                      ? bone.parent.restWorldQuaternion
-                      : new THREE.Quaternion();
-                    const parentInv = parentRestWorldQ.clone().invert();
-                    const boneRestLocalQ = bone.restLocalQuaternion.clone();
+                  }
+                } else {
+                  // Fallback to simpler method if source bone is not found
+                  const parentRestWorldQ = (bone.parent && bone.parent.restWorldQuaternion)
+                    ? bone.parent.restWorldQuaternion
+                    : new THREE.Quaternion();
+                  const parentInv = parentRestWorldQ.clone().invert();
+                  const boneRestLocalQ = bone.restLocalQuaternion.clone();
 
+                  for (let i = 0; i < clone.values.length; i += 4) {
+                    const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
+                    
+                    // Compute exact local rotation: parentInv * q * parentRestWorldQ * boneRestLocalQ
                     const resQ = parentInv.clone()
                       .multiply(q)
                       .multiply(parentRestWorldQ)
@@ -1415,7 +1297,11 @@
                     clone.values[i+3] = resQ.w;
                   }
                 }
+              } else {
+                console.warn(`WALKER_DEBUG: Bone ${targetBoneName} in ${modelKey} is missing restLocalQuaternion or restWorldQuaternion!`);
               }
+            } else {
+              console.warn(`WALKER_DEBUG: Bone ${targetBoneName} not found in ${modelKey} instance!`);
             }
           }
 
@@ -1423,7 +1309,7 @@
         }
       }
 
-      console.log(`WALKER_DEBUG: Finished retargeting clip for ${modelKey}. Tracks count: ${tracks.length}`);
+      console.log(`WALKER_DEBUG: Finished retargeting clip for Lara. Tracks count: ${tracks.length}`);
       return new THREE.AnimationClip(`${rawClip.name}_${modelKey}`, rawClip.duration, tracks);
     }
 
@@ -1484,10 +1370,6 @@
       for (const [boneName, euler] of Object.entries(boneOffsets)) {
         const bone = lara.getObjectByName(boneName);
         if (bone) {
-          // Reset to cached animated value first to prevent accumulation drift!
-          if (bone.userData.animatedQuat) {
-            bone.quaternion.copy(bone.userData.animatedQuat);
-          }
           // Multiply the offset quaternion on top of the animation rotation
           const offsetQuat = new THREE.Quaternion().setFromEuler(euler);
           bone.quaternion.multiply(offsetQuat);
@@ -1577,16 +1459,6 @@
         state.gridHelper.visible = state.showGrid;
       });
 
-      document.getElementById('toggle-inplace').addEventListener('change', (e) => {
-        state.inplace = e.target.checked;
-        playSelectedAnimation();
-      });
-
-      document.getElementById('toggle-sway').addEventListener('change', (e) => {
-        state.dampSway = e.target.checked;
-        playSelectedAnimation();
-      });
-
       // Animation select dropdown
       document.getElementById('select-anim').addEventListener('change', (e) => {
         state.selectedAnimKey = e.target.value;
@@ -1610,14 +1482,6 @@
             const duration = meta.activeAction.getClip().duration;
             meta.activeAction.time = duration * pct;
             meta.mixer.update(0); // Force layout update
-            
-            // Re-cache scrubbed rotations to prevent offsets drift
-            meta.instance.traverse(c => {
-              if (c.isBone) {
-                if (!c.userData.animatedQuat) c.userData.animatedQuat = new THREE.Quaternion();
-                c.userData.animatedQuat.copy(c.quaternion);
-              }
-            });
           }
         }
       });
@@ -1655,33 +1519,15 @@
         playBtn.innerText = "Play";
         playBtn.classList.remove('active');
 
-        for (const [key, meta] of Object.entries(MODELS_META)) {
-          meta.prevFootName = ''; // Clear foot tracking cache
-          if (meta.wrapper) {
-            let layoutX = 0;
-            const offset = 100;
-            if (state.layout === 'side-by-side') {
-              if (key === 'lara') layoutX = -offset;
-              if (key === 'ybot') layoutX = offset;
-            }
-            meta.wrapper.position.set(layoutX, 0, 0);
-          }
-
+        for (const meta of Object.values(MODELS_META)) {
           meta.mixer.stopAllAction();
           meta.instance.traverse(c => {
             if (c.isBone) {
               if (c.defaultPosition) c.position.copy(c.defaultPosition);
-              if (c.defaultRotation) {
-                c.rotation.copy(c.defaultRotation);
-                c.userData.animatedQuat = new THREE.Quaternion().setFromEuler(c.defaultRotation);
-              }
+              if (c.defaultRotation) c.rotation.copy(c.defaultRotation);
               if (c.defaultScale) c.scale.copy(c.defaultScale);
             }
           });
-        }
-        
-        if (state.gridHelper) {
-          state.gridHelper.position.set(0, -0.1, 0);
         }
       });
 
@@ -1696,7 +1542,7 @@
           
           // Populate value label
           let valId = "";
-          if (boneName === 'mixamorig_root_hips' || boneName === 'mixamorig_pelvis') valId = `off-hips-${axis}-val`;
+          if (boneName === 'mixamorig_pelvis') valId = `off-hips-${axis}-val`;
           if (boneName === 'mixamorig_arm_left_shoulder_2') valId = `off-larm-${axis}-val`;
           if (boneName === 'mixamorig_arm_right_shoulder_2') valId = `off-rarm-${axis}-val`;
 
@@ -1716,9 +1562,9 @@
       document.getElementById('btn-copy-offsets').addEventListener('click', () => {
         const code = `// Offsets de rotation pour corriger Lara Croft 2026 natif:
 const BONE_OFFSETS = {
-  "mixamorig_root_hips": { x: ${(boneOffsets["mixamorig_root_hips"]?.x * 180 / Math.PI || 0).toFixed(1)}, y: ${(boneOffsets["mixamorig_root_hips"]?.y * 180 / Math.PI || 0).toFixed(1)}, z: ${(boneOffsets["mixamorig_root_hips"]?.z * 180 / Math.PI || 0).toFixed(1)} },
-  "mixamorig_arm_left_shoulder_2": { x: ${(boneOffsets["mixamorig_arm_left_shoulder_2"]?.x * 180 / Math.PI || 0).toFixed(1)}, y: ${(boneOffsets["mixamorig_arm_left_shoulder_2"]?.y * 180 / Math.PI || 0).toFixed(1)}, z: ${(boneOffsets["mixamorig_arm_left_shoulder_2"]?.z * 180 / Math.PI || 0).toFixed(1)} },
-  "mixamorig_arm_right_shoulder_2": { x: ${(boneOffsets["mixamorig_arm_right_shoulder_2"]?.x * 180 / Math.PI || 0).toFixed(1)}, y: ${(boneOffsets["mixamorig_arm_right_shoulder_2"]?.y * 180 / Math.PI || 0).toFixed(1)}, z: ${(boneOffsets["mixamorig_arm_right_shoulder_2"]?.z * 180 / Math.PI || 0).toFixed(1)} }
+  "mixamorig_pelvis": { x: ${(boneOffsets["mixamorig_pelvis"].x * 180 / Math.PI).toFixed(1)}, y: ${(boneOffsets["mixamorig_pelvis"].y * 180 / Math.PI).toFixed(1)}, z: ${(boneOffsets["mixamorig_pelvis"].z * 180 / Math.PI).toFixed(1)} },
+  "mixamorig_arm_left_shoulder_2": { x: ${(boneOffsets["mixamorig_arm_left_shoulder_2"].x * 180 / Math.PI).toFixed(1)}, y: ${(boneOffsets["mixamorig_arm_left_shoulder_2"].y * 180 / Math.PI).toFixed(1)}, z: ${(boneOffsets["mixamorig_arm_left_shoulder_2"].z * 180 / Math.PI).toFixed(1)} },
+  "mixamorig_arm_right_shoulder_2": { x: ${(boneOffsets["mixamorig_arm_right_shoulder_2"].x * 180 / Math.PI).toFixed(1)}, y: ${(boneOffsets["mixamorig_arm_right_shoulder_2"].y * 180 / Math.PI).toFixed(1)}, z: ${(boneOffsets["mixamorig_arm_right_shoulder_2"].z * 180 / Math.PI).toFixed(1)} }
 };`;
         navigator.clipboard.writeText(code).then(() => {
           alert("Code copié dans le presse-papier !");
@@ -1788,105 +1634,14 @@ const BONE_OFFSETS = {
       const delta = clock.getDelta();
 
       // 1. Update mixers
-      for (const [key, meta] of Object.entries(MODELS_META)) {
+      for (const meta of Object.values(MODELS_META)) {
         if (meta.mixer && state.isPlaying) {
           meta.mixer.update(delta);
-          
-          // Cache the updated animated quaternion to prevent drift when paused
-          meta.instance.traverse(c => {
-            if (c.isBone) {
-              if (!c.userData.animatedQuat) {
-                c.userData.animatedQuat = new THREE.Quaternion();
-              }
-              c.userData.animatedQuat.copy(c.quaternion);
-            }
-          });
         }
       }
 
       // 2. APPLY LIVE BONE ROTATION OFFSETS (after mixer is done)
       applyBoneOffsets();
-
-      // Update wrapper positions and grid helper using foot-driven locomotion (anti-skate)
-      for (const [key, meta] of Object.entries(MODELS_META)) {
-        if (!meta.wrapper || !meta.wrapper.visible || !meta.instance) continue;
-        
-        let leftFootName = '';
-        let rightFootName = '';
-        if (key === 'lara') {
-          leftFootName = 'mixamorig_leg_left_ankle';
-          rightFootName = 'mixamorig_leg_right_ankle';
-        } else if (key === 'xbot') {
-          leftFootName = 'mixamorigLeftFoot';
-          rightFootName = 'mixamorigRightFoot';
-        } else if (key === 'ybot') {
-          leftFootName = 'mixamorig_LeftFoot';
-          rightFootName = 'mixamorig_RightFoot';
-        }
-        
-        const leftFoot = meta.instance.getObjectByName(leftFootName);
-        const rightFoot = meta.instance.getObjectByName(rightFootName);
-        
-        if (leftFoot && rightFoot) {
-          // Initialize tracking cache on the metadata if not present
-          if (!meta.prevFootPos) {
-            meta.prevFootPos = new THREE.Vector3();
-            meta.prevFootName = '';
-          }
-
-          const leftW = new THREE.Vector3();
-          const rightW = new THREE.Vector3();
-          leftFoot.getWorldPosition(leftW);
-          rightFoot.getWorldPosition(rightW);
-          
-          // Identify which foot is currently contacting the ground (stance foot)
-          const stanceFoot = leftW.y < rightW.y ? leftFoot : rightFoot;
-          const stanceName = stanceFoot.name;
-          
-          const currentFootPos = new THREE.Vector3();
-          stanceFoot.getWorldPosition(currentFootPos);
-          // Get local coordinates relative to the wrapper
-          currentFootPos.sub(meta.wrapper.position);
-          
-          let dX = 0;
-          let dZ = 0;
-          
-          if (meta.prevFootName === stanceName) {
-            dX = currentFootPos.x - meta.prevFootPos.x;
-            dZ = currentFootPos.z - meta.prevFootPos.z;
-          }
-          
-          meta.prevFootPos.copy(currentFootPos);
-          meta.prevFootName = stanceName;
-          
-          let layoutX = 0;
-          const offset = 100;
-          if (state.layout === 'side-by-side') {
-            if (key === 'lara') layoutX = -offset;
-            if (key === 'ybot') layoutX = offset;
-          }
-          
-          if (state.inplace) {
-            // Keep wrapper centered at layout position
-            meta.wrapper.position.set(layoutX, 0, 0);
-            
-            // Apply treadmill effect on grid (follow first visible model, e.g. Lara)
-            if (state.gridHelper && (key === 'lara' || (key === 'xbot' && !MODELS_META.lara.wrapper.visible))) {
-              state.gridHelper.position.x = (state.gridHelper.position.x + dX) % 10;
-              state.gridHelper.position.z = (state.gridHelper.position.z + dZ) % 10;
-            }
-          } else {
-            // Translate wrapper forward
-            meta.wrapper.position.x -= dX;
-            meta.wrapper.position.z -= dZ;
-            
-            // Keep grid static
-            if (state.gridHelper) {
-              state.gridHelper.position.set(0, -0.1, 0);
-            }
-          }
-        }
-      }
 
       // 3. Update timeline slider if animation is playing
       const activeLara = MODELS_META.lara.activeAction;
@@ -1923,11 +1678,11 @@ const BONE_OFFSETS = {
             const xHipsQ = xHips.getWorldQuaternion(new THREE.Quaternion());
             const xThighQ = xThigh.getWorldQuaternion(new THREE.Quaternion());
 
-            console.log(`WALKER_POS_DEBUG: X-Bot Hips:${xHipsW.x.toFixed(1)},${xHipsW.y.toFixed(1)},${xHipsW.z.toFixed(1)} Knee:${xKneeW.x.toFixed(1)},${xKneeW.y.toFixed(1)},${xKneeW.z.toFixed(1)} Foot:${xFootW.x.toFixed(1)},${xFootW.y.toFixed(1)},${xFootW.z.toFixed(1)}`);
+            console.log(`WALKER_POS_DEBUG: X-Bot Hips Y:${xHipsW.y.toFixed(1)} Knee Y:${xKneeW.y.toFixed(1)} Foot Y:${xFootW.y.toFixed(1)}`);
             console.log(`WALKER_POS_DEBUG: X-Bot Hips world Q: [${xHipsQ.x.toFixed(4)}, ${xHipsQ.y.toFixed(4)}, ${xHipsQ.z.toFixed(4)}, ${xHipsQ.w.toFixed(4)}]`);
             console.log(`WALKER_POS_DEBUG: X-Bot Left thigh world Q: [${xThighQ.x.toFixed(4)}, ${xThighQ.y.toFixed(4)}, ${xThighQ.z.toFixed(4)}, ${xThighQ.w.toFixed(4)}]`);
             console.log(`WALKER_POS_DEBUG: X-Bot Left knee local position: [${xKnee.position.x.toFixed(3)}, ${xKnee.position.y.toFixed(3)}, ${xKnee.position.z.toFixed(3)}]`);
-            console.log(`WALKER_POS_DEBUG: Lara Hips:${lHipsW.x.toFixed(1)},${lHipsW.y.toFixed(1)},${lHipsW.z.toFixed(1)} Knee:${lKneeW.x.toFixed(1)},${lKneeW.y.toFixed(1)},${lKneeW.z.toFixed(1)} Foot:${lFootW.x.toFixed(1)},${lFootW.y.toFixed(1)},${lFootW.z.toFixed(1)}`);
+            console.log(`WALKER_POS_DEBUG: Lara Hips Y:${lHipsW.y.toFixed(1)} Knee Y:${lKneeW.y.toFixed(1)} Foot Y:${lFootW.y.toFixed(1)}`);
           }
         }
       }
