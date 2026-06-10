@@ -27,6 +27,7 @@ import type { RapierRigidBody } from '@react-three/rapier';
 
 import { ROOM_W, ROOM_D, WALL_H } from '@config';
 import { cameraState } from './cameraState';
+import { useSceneStore } from './store/useSceneStore';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
@@ -259,6 +260,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
       if ((e.key === 'm' || e.key === 'M') && modeRef.current !== 'walk') {
         enterWalk(walkPos.current.x, walkPos.current.z);
+        return;
+      }
+      if (e.key === 'l' || e.key === 'L') {
+        useSceneStore.getState().triggerAction('walker-lara');
         return;
       }
       if (e.key === 't' || e.key === 'T') {

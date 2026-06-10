@@ -405,11 +405,12 @@ export interface SidePanelProps2 extends SidePanelProps {
 
 // ── Sections (rendu commun desktop & mobile) ──────────────────────────────────
 
-type TabKey = 'views' | 'display' | 'furniture' | 'perf' | null;
+type TabKey = 'views' | 'layers' | 'display' | 'furniture' | 'perf' | null;
 
 const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
   { key: 'perf',      emoji: '📊', label: 'Perf' },
   { key: 'views',     emoji: '📷', label: 'Vues' },
+  { key: 'layers',    emoji: '📑', label: 'Calques' },
   { key: 'display',   emoji: '👁',  label: 'Affichage' },
   { key: 'furniture', emoji: '🛋', label: 'Mobilier' },
 ];
@@ -422,6 +423,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>(null);
+  const isLara = useSceneStore(state => state.extraStates['walker-lara']);
 
   useEffect(() => {
     if (!layers.realSun) { setSunInfo(null); return; }
@@ -483,24 +485,33 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
     </>
   );
 
-  const DisplaySection = (
+  const LayersSection = (
     <>
-      {layerBtn('teal',   'Grille',        'grid')}
-      {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
-      {layerBtn('peach',  'Physique',      'physics')}
-      {layerBtn('peach',  'Collision objets', 'collisions')}
-      {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('green',  'Structure',     'structure', true)}
       {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
       {layerBtn('peach',  'Portes',        'doors')}
       {layerBtn('peach',  'Équipements',   'equipment')}
       {layerBtn('purple', 'Mobilier',      'furniture')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
+      {layerBtn('light',  'Walker',        'walker')}
+      {layers.walker && b0('light',
+        isLara ? 'Peau : Lara 👩' : 'Peau : X-Bot 🤖',
+        () => useSceneStore.getState().triggerAction('walker-lara')
+      )}
+    </>
+  );
+
+  const DisplaySection = (
+    <>
+      {layerBtn('teal',   'Grille',        'grid', true)}
+      {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
+      {layerBtn('peach',  'Physique',      'physics')}
+      {layerBtn('peach',  'Collision objets', 'collisions')}
+      {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('cyan',   'X-Ray',         'xray')}
       {layerBtn('purple', 'Miroirs',       'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
-      {layerBtn('light',  'Walker',        'walker')}
-       {layerBtn('white',  'Squelette',     'skeleton')}
+      {layerBtn('white',  'Squelette',     'skeleton')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
       {layerBtn('gray',   'Ombres',        'shadows')}
@@ -678,11 +689,12 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
   if (isMobile) {
     const sheetOpen = activeTab !== null;
     const sheetTitle: Record<Exclude<TabKey, null>, string> = {
-      views: '📷 Vues', display: '👁 Affichage',
+      views: '📷 Vues', layers: '📑 Calques', display: '👁 Affichage',
       furniture: '🛋 Mobilier', perf: '📊 Perf',
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
       views: ViewsSection,
+      layers: LayersSection,
       display: DisplaySection,
       furniture: FurnitureSection,
       perf: <DevToolsGroups Group={Group} />,
@@ -816,6 +828,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
 
         <Group emoji="📷" title="Vues">{ViewsSection}</Group>
         <Group emoji="✈" title="Avion">{AvionSection}</Group>
+        <Group emoji="📑" title="Calques">{LayersSection}</Group>
         <Group emoji="👁" title="Affichage">{DisplaySection}</Group>
         <Group emoji="🛋" title="Mobilier">{FurnitureSection}</Group>
 
