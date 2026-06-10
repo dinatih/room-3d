@@ -12,7 +12,6 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { LAYER_WALKER_DETAIL } from '@config';
 
 const XBOT_PATH = 'media/sandbox/Xbot_official.glb';
-const LARA_PATH = 'media/glb/lara_mixamo_final.glb';
 
 interface WalkerProps { 
   showSkeleton?: boolean; 
@@ -37,10 +36,7 @@ function GroundPoint() {
 }
 
 function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 'idle', isPaused = false }: WalkerProps) {
-  const isLara = useSceneStore(state => state.extraStates['walker-lara']);
-  const activeModelPath = isLara ? LARA_PATH : XBOT_PATH;
-
-  const { scene } = useGLTFClone(activeModelPath);
+  const { scene } = useGLTFClone(XBOT_PATH);
   const xbotGltf = useGLTF(XBOT_PATH);
   const animations = xbotGltf.animations;
   
@@ -225,4 +221,3 @@ export function Walker(props: WalkerProps) {
 }
 
 useGLTF.preload(XBOT_PATH);
-useGLTF.preload(LARA_PATH);

@@ -424,8 +424,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>(null);
 
-  const isLara = useSceneStore(state => state.extraStates['walker-lara']);
-
   useEffect(() => {
     if (!layers.realSun) { setSunInfo(null); return; }
     const update = () => {
@@ -504,12 +502,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('purple', 'Miroirs',       'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
       {layerBtn('light',  'Walker',        'walker')}
-      {layers.walker && b0('light',
-        isLara ? 'Peau : Lara 👩' : 'Peau : X-Bot 🤖',
-        () => useSceneStore.getState().triggerAction('walker-lara')
-        )}
-        {layerBtn('white',  'Squelette',     'skeleton')}
-
+       {layerBtn('white',  'Squelette',     'skeleton')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
       {layerBtn('gray',   'Ombres',        'shadows')}
