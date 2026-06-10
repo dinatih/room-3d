@@ -1,0 +1,1950 @@
+<!doctype html>
+<!--
+  Lara & X-Bot Studio Animation Debugging Bench
+  
+  A dedicated debugging page to test, analyze, and fix compatibility issues when
+  applying X-Bot Studio native animations (walk, idle, etc.) on Lara Croft.
+  
+  Provides real-time bone roll rotation offsets, track mapping toggles,
+  frame-by-frame timeline scrubbing, and visual skeletal alignment helpers.
+-->
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Lara & X-Bot Studio — Animation Debugger</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #07070b;
+      --bg-panel: rgba(13, 15, 24, 0.8);
+      --bg-panel-solid: #0d0f18;
+      --border-color: rgba(255, 255, 255, 0.06);
+      --border-glow: rgba(139, 92, 246, 0.2);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --color-primary: #8b5cf6;
+      --color-primary-hover: #a78bfa;
+      --color-primary-glow: rgba(139, 92, 246, 0.15);
+      --color-original: #ef4444; /* Lara Red */
+      --color-xbot: #3b82f6;     /* X-Bot Blue */
+      --color-ybot: #eab308;     /* Y-Bot Yellow */
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+
+    #app {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* Left Sidebar: Controls */
+    #sidebar-left {
+      width: 380px;
+      height: 100%;
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Right Sidebar: Bone Debugger & Sliders */
+    #sidebar-right {
+      width: 400px;
+      height: 100%;
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Center: Viewport */
+    #viewport-container {
+      flex: 1;
+      position: relative;
+      height: 100%;
+      min-width: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Headers */
+    .sidebar-header {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(7, 7, 11, 0.4);
+    }
+
+    .sidebar-header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+
+    .sidebar-header h1 span {
+      background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sidebar-header p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .sidebar-scrollable {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Tabs for right panel */
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(0,0,0,0.2);
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      padding: 12px 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 0;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: white;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .tab-btn.active {
+      color: var(--color-primary-hover);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* General Styling */
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-primary-hover);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 13px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .row:last-child {
+      margin-bottom: 0;
+    }
+
+    .row label {
+      color: var(--text-muted);
+    }
+
+    /* Slider styling with values */
+    .slider-row {
+      margin-bottom: 14px;
+    }
+
+    .slider-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .slider-label { color: var(--text-muted); }
+    .slider-val { font-family: var(--font-mono); color: white; }
+
+    /* Form selectors */
+    select, button, input[type="text"] {
+      background: rgba(7, 7, 11, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      padding: 6px 10px;
+      outline: none;
+    }
+
+    select {
+      cursor: pointer;
+      width: 100%;
+    }
+
+    /* Buttons */
+    button {
+      cursor: pointer;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button:hover {
+      border-color: var(--color-primary);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    button.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: white;
+    }
+
+    /* Switch toggle */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 34px;
+      height: 18px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.08);
+      transition: .2s;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 10px;
+      width: 10px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--text-muted);
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--color-primary-glow);
+      border-color: var(--color-primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(16px);
+      background-color: var(--color-primary-hover);
+    }
+
+    /* Ranges */
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    /* Model Active Cards */
+    .model-card {
+      background: rgba(255,255,255,0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+
+    .model-title {
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .model-title.lara { color: var(--color-original); }
+    .model-title.xbot { color: var(--color-xbot); }
+    .model-title.ybot { color: var(--color-ybot); }
+
+    /* Info tables */
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      font-family: var(--font-mono);
+    }
+
+    .info-table td {
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    }
+
+    .info-table td.val {
+      text-align: right;
+      color: var(--text-main);
+    }
+
+    .info-table td.lbl {
+      color: var(--text-muted);
+    }
+
+    /* Bone checklist item */
+    .bone-chk-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.01);
+      margin-bottom: 4px;
+      cursor: pointer;
+    }
+
+    .bone-chk-item:hover {
+      background: rgba(255,255,255,0.03);
+    }
+
+    /* Loader */
+    #loading-screen {
+      position: absolute;
+      inset: 0;
+      background: var(--bg-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      transition: opacity 0.5s ease;
+    }
+
+    .loader-spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(139, 92, 246, 0.08);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    #hud-panel {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(7, 7, 11, 0.75);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loading-screen">
+    <div class="loader-spinner"></div>
+    <div id="loading-label" style="font-size:14px;">Initialisation de l'analyseur...</div>
+  </div>
+
+  <div id="app">
+    
+    <!-- LEFT SIDEBAR: Scene Controls -->
+    <div id="sidebar-left">
+      <div class="sidebar-header">
+        <h1><span>Skeletal Retargeting</span> Debugger</h1>
+        <p>Analyse de la compatibilité des animations natives X-Bot sur le rig Lara Croft</p>
+      </div>
+
+      <div class="sidebar-scrollable">
+        
+        <!-- SECTION 1: Models & Spacings -->
+        <div>
+          <div class="section-title">Modèles 3D</div>
+          
+          <!-- Lara Croft -->
+          <div class="model-card">
+            <div class="model-title lara">
+              <span>Lara Croft Native</span>
+              <label class="switch">
+                <input type="checkbox" id="visible-lara" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="slider-row">
+              <div class="slider-header">
+                <span class="slider-label">Opacité</span>
+                <span id="opacity-lara-val" class="slider-val">1.0</span>
+              </div>
+              <input type="range" id="slider-opacity-lara" min="0" max="1" step="0.05" value="1.0">
+            </div>
+          </div>
+
+          <!-- X-Bot Studio -->
+          <div class="model-card">
+            <div class="model-title xbot">
+              <span>X-Bot Studio (Source)</span>
+              <label class="switch">
+                <input type="checkbox" id="visible-xbot" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="slider-row">
+              <div class="slider-header">
+                <span class="slider-label">Opacité</span>
+                <span id="opacity-xbot-val" class="slider-val">0.7</span>
+              </div>
+              <input type="range" id="slider-opacity-xbot" min="0" max="1" step="0.05" value="0.7">
+            </div>
+          </div>
+
+          <!-- Y-Bot Reference -->
+          <div class="model-card">
+            <div class="model-title ybot">
+              <span>Y-Bot Reference</span>
+              <label class="switch">
+                <input type="checkbox" id="visible-ybot" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="slider-row">
+              <div class="slider-header">
+                <span class="slider-label">Opacité</span>
+                <span id="opacity-ybot-val" class="slider-val">0.0</span>
+              </div>
+              <input type="range" id="slider-opacity-ybot" min="0" max="1" step="0.05" value="0.0">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: Layout & Helpers -->
+        <div>
+          <div class="section-title">Visualisation</div>
+          <div class="card">
+            <div class="row">
+              <label>Disposition</label>
+              <select id="select-layout">
+                <option value="overlay">Superposé (Overlay direct)</option>
+                <option value="side-by-side">Côte à côte (100 cm d'écart)</option>
+              </select>
+            </div>
+            <div class="row" style="margin-top:12px;">
+              <label>Squelettes (Wireframe)</label>
+              <label class="switch">
+                <input type="checkbox" id="toggle-skeletons" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="row" style="margin-top:12px;">
+              <label>Axes de rotations locaux</label>
+              <label class="switch">
+                <input type="checkbox" id="toggle-axes">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="row" style="margin-top:12px;">
+              <label>Grille du sol</label>
+              <label class="switch">
+                <input type="checkbox" id="toggle-grid" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: Animations & Playback -->
+        <div>
+          <div class="section-title">Animations du Studio</div>
+          <div class="card">
+            <div class="row">
+              <label>Source d'Animation</label>
+            </div>
+            <select id="select-anim" style="margin-bottom:12px;">
+              <!-- Dynamic -->
+            </select>
+
+            <div class="row">
+              <label>Timeline (Scrubbing)</label>
+              <span id="timeline-label" style="font-family:var(--font-mono); font-size:11px;">0%</span>
+            </div>
+            <input type="range" id="slider-timeline" min="0" max="100" value="0" style="margin-bottom:14px;">
+
+            <div class="row">
+              <label>Vitesse</label>
+              <span id="speed-label" style="font-family:var(--font-mono); font-size:11px;">1.0x</span>
+            </div>
+            <input type="range" id="slider-speed" min="0" max="1.5" step="0.05" value="1.0" style="margin-bottom:14px;">
+
+            <div style="display:flex; gap:8px;">
+              <button id="btn-play-pause" class="active" style="flex:1;">Pause</button>
+              <button id="btn-reset-pose" style="flex:1;">T-Pose</button>
+            </div>
+          </div>
+        </div>
+        <!-- SECTION 4: Filtres de Mouvement (Anti-Skate / Anti-Swing) -->
+        <div>
+          <div class="section-title">Filtres de Mouvement</div>
+          <div class="card">
+            <div class="row">
+              <label>Sur place (In-Place Walk)</label>
+              <label class="switch">
+                <input type="checkbox" id="toggle-inplace" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <p style="font-size:10px; color:var(--text-muted); margin-top:2px; margin-bottom:12px; line-height:1.4;">
+              Verrouille les translations horizontales X et Z pour éliminer le glissement (skating) en marche.
+            </p>
+            <div class="row">
+              <label>Amortir le Sway (Anti-swing)</label>
+              <label class="switch">
+                <input type="checkbox" id="toggle-sway" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <p style="font-size:10px; color:var(--text-muted); margin-top:2px; line-height:1.4;">
+              Annule le roulis (Roll) et divise par 10 le lacet (Yaw) du bassin pour stabiliser la rotation logique.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CENTER VIEWPORT -->
+    <div id="viewport-container">
+      <div id="hud-panel">
+        <div style="display:flex; gap:12px;">
+          <span>FPS: <strong id="hud-fps" style="color:var(--color-primary-hover)">--</strong></span>
+          <span>Draws: <strong id="hud-calls" style="color:var(--color-primary-hover)">--</strong></span>
+          <span>Hips Scaling: <strong id="hud-hips-scale" style="color:var(--color-primary-hover)">--</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR: Bone Roll Offsets & Track Inspector -->
+    <div id="sidebar-right">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="offsets">Offsets de Pose</button>
+        <button class="tab-btn" data-tab="mapping">Mapping d'Os</button>
+      </div>
+
+      <!-- TAB 1: Real-time Euler Rotation Offsets -->
+      <div id="tab-offsets" class="tab-content">
+        <div class="sidebar-header" style="padding:0 0 10px; border:none; background:transparent;">
+          <h2 style="font-size:13px; color:white;">Compensation de Pose (Bake en direct)</h2>
+          <p style="font-size:11px; margin-top:2px;">Ajoutez des rotations aux articulations de Lara après l'application de l'animation pour corriger les torsions d'os.</p>
+        </div>
+
+        <!-- Joint offset control sliders -->
+        <div class="card" style="display:flex; flex-direction:column; gap:16px;">
+          
+          <!-- HIPS -->
+          <div>
+            <div style="font-weight:bold; font-size:12px; margin-bottom:8px; color:var(--color-primary-hover);">Hips / Pelvis (Bassin)</div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Rotation X</span><span id="off-hips-x-val" class="slider-val">0°</span></div>
+              <input type="range" class="offset-slider" data-bone="mixamorig_root_hips" data-axis="x" min="-90" max="90" value="0">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Rotation Y</span><span id="off-hips-y-val" class="slider-val">0°</span></div>
+              <input type="range" class="offset-slider" data-bone="mixamorig_root_hips" data-axis="y" min="-90" max="90" value="0">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Rotation Z</span><span id="off-hips-z-val" class="slider-val">0°</span></div>
+              <input type="range" class="offset-slider" data-bone="mixamorig_root_hips" data-axis="z" min="-90" max="90" value="0">
+            </div>
+          </div>
+
+          <!-- LEFT ARM -->
+          <div style="border-top:1px solid rgba(255,255,255,0.03); padding-top:12px;">
+            <div style="font-weight:bold; font-size:12px; margin-bottom:8px; color:var(--color-primary-hover);">Left Arm (Épaule Gauche)</div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Rotation X</span><span id="off-larm-x-val" class="slider-val">0°</span></div>
+              <input type="range" class="offset-slider" data-bone="mixamorig_arm_left_shoulder_2" data-axis="x" min="-180" max="180" value="0">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Rotation Y</span><span id="off-larm-y-val" class="slider-val">0°</span></div>
+              <input type="range" class="offset-slider" data-bone="mixamorig_arm_left_shoulder_2" data-axis="y" min="-180" max="180" value="0">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Rotation Z</span><span id="off-larm-z-val" class="slider-val">0°</span></div>
+              <input type="range" class="offset-slider" data-bone="mixamorig_arm_left_shoulder_2" data-axis="z" min="-180" max="180" value="0">
+            </div>
+          </div>
+
+          <!-- RIGHT ARM -->
+          <div style="border-top:1px solid rgba(255,255,255,0.03); padding-top:12px;">
+            <div style="font-weight:bold; font-size:12px; margin-bottom:8px; color:var(--color-primary-hover);">Right Arm (Épaule Droite)</div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Rotation X</span><span id="off-rarm-x-val" class="slider-val">0°</span></div>
+              <input type="range" class="offset-slider" data-bone="mixamorig_arm_right_shoulder_2" data-axis="x" min="-180" max="180" value="0">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Rotation Y</span><span id="off-rarm-y-val" class="slider-val">0°</span></div>
+              <input type="range" class="offset-slider" data-bone="mixamorig_arm_right_shoulder_2" data-axis="y" min="-180" max="180" value="0">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Rotation Z</span><span id="off-rarm-z-val" class="slider-val">0°</span></div>
+              <input type="range" class="offset-slider" data-bone="mixamorig_arm_right_shoulder_2" data-axis="z" min="-180" max="180" value="0">
+            </div>
+          </div>
+
+          <!-- CODES COPIER -->
+          <button id="btn-copy-offsets" style="width:100%; font-size:12px; padding:8px 0; margin-top:8px;">
+            Copier les angles de correction
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 2: Dynamic Bone Remapping Toggles -->
+      <div id="tab-mapping" class="tab-content" style="display:none;">
+        <div class="sidebar-header" style="padding:0 0 10px; border:none; background:transparent;">
+          <h2 style="font-size:13px; color:white;">Filtre dynamique de Retargeting</h2>
+          <p style="font-size:11px; margin-top:2px;">Cochez/décochez les correspondances d'os pour isoler quelle piste d'animation provoque une déformation.</p>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <button id="btn-map-all" style="font-size:10px; padding:3px 8px;">Tout cocher</button>
+          <button id="btn-map-none" style="font-size:10px; padding:3px 8px;">Tout décocher</button>
+        </div>
+        
+        <!-- Checklist of bones -->
+        <div style="flex:1; overflow-y:auto;" id="mapping-checklist">
+          <!-- Dynamic checklist populated by script -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Import map for Three.js -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <!-- Script logic -->
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ── DATA AND CONFIG ──
+    const MODELS_META = {
+      lara: {
+        path: 'media/sandbox/lara_native.glb',
+        label: 'Lara Croft Native',
+        color: 0xef4444,
+        scale: 100, // scaled to match centimeters (Centimeters rig)
+        instance: null,
+        wrapper: null,
+        skeletonHelper: null,
+        mixer: null,
+        activeAction: null,
+        axesHelpers: []
+      },
+      xbot: {
+        path: 'media/sandbox/Xbot_official.glb',
+        label: 'X-Bot Studio',
+        color: 0x3b82f6,
+        scale: 100, // scaled to match centimeters
+        instance: null,
+        wrapper: null,
+        skeletonHelper: null,
+        mixer: null,
+        activeAction: null,
+        axesHelpers: []
+      },
+      ybot: {
+        path: 'media/sandbox/y_bot.glb',
+        label: 'Y-Bot Reference',
+        color: 0xeab308,
+        scale: 100, // scaled to match centimeters
+        instance: null,
+        wrapper: null,
+        skeletonHelper: null,
+        mixer: null,
+        activeAction: null,
+        axesHelpers: []
+      }
+    };
+
+    // Standard list of Mixamo animations
+    const ANIM_LIST = [
+      { name: "Animations du X-Bot (Marche/Idle embarquées)", file: "embedded" },
+      { name: "Marche Studio (anim_walking.glb)", file: "media/sandbox/anim_walking.glb" },
+      { name: "Marche Joyeuse (anim_happy_walk.glb)", file: "media/sandbox/anim_happy_walk.glb" },
+      { name: "T-Pose de Test (anim_t_pose.glb)", file: "media/sandbox/anim_t_pose.glb" },
+      { name: "Colère (anim_angry_gesture.glb)", file: "media/sandbox/anim_angry_gesture.glb" },
+      { name: "Monter escalier (anim_ascending_stairs.glb)", file: "media/sandbox/anim_ascending_stairs.glb" },
+      { name: "Tourner Gauche (anim_left_turn.glb)", file: "media/sandbox/anim_left_turn.glb" },
+      { name: "Tourner Droite (anim_right_turn.glb)", file: "media/sandbox/anim_right_turn.glb" }
+    ];
+
+    // Bone mapping from Mixamo name to Lara Native bone name
+    const BONE_MAP = {
+      "mixamorig:Hips": "mixamorig_root_hips",
+      "mixamorig:Spine": "mixamorig_spine_lower",
+      "mixamorig:Spine2": "mixamorig_spine_upper",
+      "mixamorig:Neck": "mixamorig_head_neck_lower",
+      "mixamorig:Head": "mixamorig_head_neck_upper",
+      "mixamorig:LeftShoulder": "",
+      "mixamorig:LeftArm": "mixamorig_arm_left_shoulder_2",
+      "mixamorig:LeftForeArm": "mixamorig_arm_left_elbow",
+      "mixamorig:LeftHand": "mixamorig_arm_left_wrist",
+      "mixamorig:LeftUpLeg": "mixamorig_leg_left_thigh",
+      "mixamorig:LeftLeg": "mixamorig_leg_left_knee",
+      "mixamorig:LeftFoot": "mixamorig_leg_left_ankle",
+      "mixamorig:LeftToeBase": "mixamorig_leg_left_toes",
+      "mixamorig:RightShoulder": "",
+      "mixamorig:RightArm": "mixamorig_arm_right_shoulder_2",
+      "mixamorig:RightForeArm": "mixamorig_arm_right_elbow",
+      "mixamorig:RightHand": "mixamorig_arm_right_wrist",
+      "mixamorig:RightUpLeg": "mixamorig_leg_right_thigh",
+      "mixamorig:RightLeg": "mixamorig_leg_right_knee",
+      "mixamorig:RightFoot": "mixamorig_leg_right_ankle",
+      "mixamorig:RightToeBase": "mixamorig_leg_right_toes"
+    };
+
+    // Bone dynamic active states for debugging individual joints
+    const mappingActive = {};
+    for (const key of Object.keys(BONE_MAP)) {
+      mappingActive[key] = true; // Enabled by default
+    }
+
+    // Bone offset rotation states (Euler degrees, applied after mixer)
+    const boneOffsets = {
+      "mixamorig_root_hips": new THREE.Euler(0, 0, 0),
+      "mixamorig_arm_left_shoulder_2": new THREE.Euler(0, 0, 0),
+      "mixamorig_arm_right_shoulder_2": new THREE.Euler(0, 0, 0)
+    };
+
+    // ── APPLICATION STATE ──
+    const state = {
+      layout: 'overlay', // overlay | side-by-side
+      selectedAnimKey: '', // Key of selected animation clip
+      isPlaying: true,
+      timelineValue: 0,
+      playbackSpeed: 1.0,
+      showSkeletons: true,
+      showAxes: false,
+      showGrid: true,
+      inplace: true,
+      dampSway: true
+    };
+
+    let scene, camera, renderer, clock;
+    let controls;
+    let loadedClips = {}; // Cache of animation clips
+    window.loadedClips = loadedClips;
+    const animSkeletons = {}; // Cache of skeleton bones for standalone animations
+    const gltfLoader = new GLTFLoader();
+
+    // Stats
+    let fpsFrames = 0, lastFpsTime = 0;
+    let hipsRatio = 100.0; // Dynamic hips scale modifier
+
+    window.MODELS_META = MODELS_META;
+    window.THREE = THREE;
+    window.state = state;
+
+    init();
+
+    // ── INITIALIZATION ──
+    async function init() {
+      const container = document.getElementById('viewport-container');
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x050508);
+      scene.fog = new THREE.Fog(0x050508, 300, 1000);
+
+      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 1000);
+      camera.position.set(0, 150, 280);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      container.appendChild(renderer.domElement);
+
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.target.set(0, 85, 0);
+      controls.maxPolarAngle = Math.PI / 2 + 0.05;
+      controls.update();
+
+      clock = new THREE.Clock();
+
+      // Lights
+      scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x333333, 0.9));
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      dirLight.position.set(50, 150, 50);
+      dirLight.castShadow = true;
+      scene.add(dirLight);
+
+      const purpleBackLight = new THREE.DirectionalLight(0x8b5cf6, 0.6);
+      purpleBackLight.position.set(-60, 100, -60);
+      scene.add(purpleBackLight);
+
+      // Grid
+      const grid = new THREE.GridHelper(800, 80, 0x334155, 0x111827);
+      grid.position.y = -0.1;
+      grid.material.opacity = 0.45;
+      grid.material.transparent = true;
+      scene.add(grid);
+      state.gridHelper = grid;
+
+      // Sequentially Load Everything
+      try {
+        await loadModels();
+        await loadAnimations();
+        
+        setupUI();
+        updateLayout();
+        
+        // Select first animation
+        if (Object.keys(loadedClips).length > 0) {
+          state.selectedAnimKey = Object.keys(loadedClips)[0];
+          document.getElementById('select-anim').value = state.selectedAnimKey;
+          playSelectedAnimation();
+        }
+
+        document.getElementById('loading-screen').style.opacity = 0;
+        setTimeout(() => document.getElementById('loading-screen').remove(), 500);
+
+        animate();
+      } catch (err) {
+        console.error("Critical loader crash:", err);
+        document.getElementById('loading-label').innerText = "Erreur de chargement. Vérifiez la console.";
+        document.getElementById('loading-label').style.color = "var(--color-original)";
+      }
+    }
+
+    // ── LOAD GLTF MODELS ──
+    async function loadModels() {
+      for (const [key, meta] of Object.entries(MODELS_META)) {
+        document.getElementById('loading-label').innerText = `Chargement de ${meta.label}...`;
+
+        const gltf = await new Promise((res, rej) => {
+          gltfLoader.load(meta.path, res, undefined, rej);
+        });
+
+        const instance = gltf.scene;
+        
+        // Material overrides to inspect joint overlaps
+        instance.traverse(c => {
+          if (c.isMesh) {
+            c.castShadow = c.receiveShadow = true;
+            c.frustumCulled = false;
+            
+            if (c.material) {
+              const mats = Array.isArray(c.material) ? c.material : [c.material];
+              mats.forEach(mat => {
+                mat.depthWrite = true;
+                mat.transparent = true;
+                // Base opacities from slider defaults
+                if (key === 'lara') mat.opacity = 1.0;
+                if (key === 'xbot') mat.opacity = 0.7;
+                if (key === 'ybot') mat.opacity = 0.0;
+              });
+            }
+          }
+        });
+
+        // Set scaling to match (173.4 cm target)
+        const box = new THREE.Box3().setFromObject(instance);
+        const size = box.getSize(new THREE.Vector3());
+        
+        const targetHeight = 173.4;
+        let scaleFactor = targetHeight / size.y;
+        
+        if (size.y > 1000) {
+          scaleFactor = targetHeight / (size.y / 100);
+        }
+
+        instance.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+        // Align pivot bottom to ground (Y=0)
+        instance.updateMatrixWorld(true);
+        const reBox = new THREE.Box3().setFromObject(instance);
+        instance.position.y = -reBox.min.y;
+        instance.updateMatrixWorld(true);
+
+        // Store defaults and rest pose quaternions
+        instance.traverse(c => {
+          c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
+          if (c.isBone) {
+            c.defaultPosition = c.position.clone();
+            c.defaultRotation = c.rotation.clone();
+            c.defaultScale = c.scale.clone();
+            
+            c.restLocalQuaternion = c.quaternion.clone();
+            c.userData.animatedQuat = c.quaternion.clone();
+          }
+        });
+
+        // Add skeleton helper
+        const helper = new THREE.SkeletonHelper(instance);
+        helper.material.linewidth = 2;
+        helper.visible = state.showSkeletons;
+        helper.raycast = () => {};
+        scene.add(helper);
+
+        // Add axes helpers to each bone
+        instance.traverse(c => {
+          if (c.isBone) {
+            const axes = new THREE.AxesHelper(10);
+            axes.visible = state.showAxes;
+            axes.raycast = () => {};
+            c.add(axes);
+            meta.axesHelpers.push(axes);
+          }
+        });
+
+        // Mixer
+        const mixer = new THREE.AnimationMixer(instance);
+
+        // Wrapper
+        const wrapper = new THREE.Group();
+        wrapper.add(instance);
+        scene.add(wrapper);
+
+        // Save
+        meta.instance = instance;
+        meta.wrapper = wrapper;
+        meta.skeletonHelper = helper;
+        meta.mixer = mixer;
+
+        const boneNames = [];
+        instance.traverse(c => { if (c.isBone) boneNames.push(c.name); });
+        console.log(`WALKER_DEBUG: Loaded ${key} bones: ${JSON.stringify(boneNames)}`);
+
+        if (key === 'lara' || key === 'xbot') {
+          function dumpBoneTree(bone, indent = '') {
+            let str = `${indent}${bone.name}\n`;
+            for (const child of bone.children) {
+              if (child.isBone) {
+                str += dumpBoneTree(child, indent + '  ');
+              }
+            }
+            return str;
+          }
+          // Find root bone
+          let rootBone = null;
+          instance.traverse(c => {
+            if (c.isBone && (c.name === 'mixamorig_root_ground' || c.name === 'mixamorigHips')) {
+              rootBone = c;
+            }
+          });
+          if (rootBone && key === 'lara') {
+            console.log("WALKER_DEBUG: Lara Skeleton Tree:\n" + dumpBoneTree(rootBone));
+          }
+          
+          // Print default rotations of key bones
+          const keyBones = key === 'lara' 
+            ? ['mixamorig_root_hips', 'mixamorig_pelvis', 'mixamorig_spine_lower', 'mixamorig_leg_left_thigh', 'mixamorig_leg_right_thigh']
+            : ['mixamorigHips', 'mixamorigSpine', 'mixamorigLeftUpLeg', 'mixamorigRightUpLeg'];
+            
+          keyBones.forEach(bName => {
+            const b = instance.getObjectByName(bName);
+            if (b) {
+              console.log(`WALKER_DEBUG: Bone ${key}:${bName} defaultPosition: Vector3(x:${b.position.x.toFixed(3)}, y:${b.position.y.toFixed(3)}, z:${b.position.z.toFixed(3)}) defaultRotation: Euler(x:${b.rotation.x.toFixed(3)}, y:${b.rotation.y.toFixed(3)}, z:${b.rotation.z.toFixed(3)})`);
+            }
+          });
+        }
+
+        // Dynamic extract embedded animations
+        if (gltf.animations && gltf.animations.length > 0) {
+          gltf.animations.forEach((clip, index) => {
+            const clipName = clip.name || `anim_${index}`;
+            const clipKey = `embedded_${key}_${clipName}`;
+            loadedClips[clipKey] = clip;
+            
+            // Add to select list
+            const select = document.getElementById('select-anim');
+            const opt = document.createElement('option');
+            opt.value = clipKey;
+            opt.innerText = `Studio Embedded: ${clipName} (${meta.label})`;
+            select.appendChild(opt);
+          });
+        }
+      }
+    }
+
+    async function loadAnimations() {
+      for (const anim of ANIM_LIST) {
+        if (anim.file === 'embedded') continue;
+        
+        document.getElementById('loading-label').innerText = `Chargement de ${anim.name}...`;
+        
+        try {
+          const gltf = await new Promise((res, rej) => {
+            gltfLoader.load(anim.file, res, undefined, rej);
+          });
+          
+          if (gltf.animations && gltf.animations.length > 0) {
+            loadedClips[anim.file] = gltf.animations[0];
+            
+            // Extract and store rest pose quaternions from the animation's skeleton!
+            const animBones = {};
+            const sceneRoot = gltf.scene;
+            
+            // Make sure matrix world is updated
+            sceneRoot.updateMatrixWorld(true);
+            
+            sceneRoot.traverse(c => {
+              if (c.isBone) {
+                // Extract base name without prefix to match standard naming
+                const match = c.name.match(/mixamorig[:_]?(.+)/i);
+                if (match) {
+                  const baseName = match[1];
+                  animBones[baseName] = {
+                    restWorldQuaternion: c.getWorldQuaternion(new THREE.Quaternion()),
+                    restLocalQuaternion: c.quaternion.clone(),
+                    parentRestWorldQuaternion: c.parent
+                      ? c.parent.getWorldQuaternion(new THREE.Quaternion())
+                      : new THREE.Quaternion()
+                  };
+                }
+              }
+            });
+            
+            animSkeletons[anim.file] = animBones;
+            console.log(`WALKER_DEBUG: Extracted skeleton from ${anim.file}. Bone count: ${Object.keys(animBones).length}`);
+            
+            // Add to dropdown list
+            const select = document.getElementById('select-anim');
+            const opt = document.createElement('option');
+            opt.value = anim.file;
+            opt.innerText = anim.name;
+            select.appendChild(opt);
+          }
+        } catch (e) {
+          console.warn(`Failed to load standalone animation: ${anim.file}`, e);
+        }
+      }
+    }
+
+    // ── DYNAMIC RETARGETING CLIP MAKER ──
+    // Maps standard mixamo tracks to Lara native rig bones.
+    // Respects mappingActive checklist state.
+    function getCleanRetargetedClip(rawClip, modelKey, animKey) {
+      if (!rawClip) return null;
+
+      // 1. Determine the source model key
+      let sourceModelKey = 'xbot'; // default fallback for external Mixamo animations
+      if (animKey) {
+        if (animKey.startsWith('embedded_lara_')) {
+          sourceModelKey = 'lara';
+        } else if (animKey.startsWith('embedded_xbot_')) {
+          sourceModelKey = 'xbot';
+        } else if (animKey.startsWith('embedded_ybot_')) {
+          sourceModelKey = 'ybot';
+        }
+      }
+
+      const isNative = animKey && animKey.startsWith('embedded_') && (modelKey === sourceModelKey);
+
+      if (modelKey === 'lara') {
+        console.log(`WALKER_DEBUG: rawClip name: ${rawClip.name}, tracks:`, rawClip.tracks.map(t => t.name));
+      }
+
+      const tracks = [];
+
+      // 2. Determine height translations scale multiplier (sourceInCm)
+      // Check both Y and Z axes to support Z-up and Y-up source animations
+      let sourceInCm = false;
+      const hipsPos = rawClip.tracks.find(t => t.name.includes('Hips.position') || t.name.includes('Hips_position') || t.name.includes('hips.position'));
+      if (hipsPos && hipsPos.values.length >= 3) {
+        const height = Math.max(Math.abs(hipsPos.values[1]), Math.abs(hipsPos.values[2]));
+        if (height > 40.0) {
+          sourceInCm = true;
+        }
+      }
+
+      // Determine if the target model is in centimeters or meters (targetInCm)
+      let targetInCm = false;
+      const targetHipsName = modelKey === 'lara' ? 'mixamorig_root_hips' : (modelKey === 'xbot' ? 'mixamorigHips' : 'mixamorig_Hips');
+      const targetModelMeta = MODELS_META[modelKey];
+      if (targetModelMeta && targetModelMeta.instance) {
+        const hipsBone = targetModelMeta.instance.getObjectByName(targetHipsName);
+        if (hipsBone && hipsBone.defaultPosition) {
+          const height = Math.max(Math.abs(hipsBone.defaultPosition.y), Math.abs(hipsBone.defaultPosition.z));
+          if (height > 40.0) {
+            targetInCm = true;
+          }
+        }
+      }
+
+      // Compute local hipsRatio
+      let localHipsRatio = 1.0;
+      if (sourceInCm) {
+        localHipsRatio = targetInCm ? 1.0 : 0.01;
+      } else {
+        localHipsRatio = targetInCm ? 100.0 : 1.0;
+      }
+      hipsRatio = localHipsRatio; // update global hipsRatio
+
+      document.getElementById('hud-hips-scale').innerText = `${hipsRatio.toFixed(1)}x`;
+
+      for (const tr of rawClip.tracks) {
+        const [boneFull, prop] = tr.name.split('.');
+        
+        // Extract the base bone name without prefix
+        const match = boneFull.match(/mixamorig[:_]?(.+)/i);
+        if (!match) continue; // Skip if it doesn't look like a mixamo bone
+        const baseName = match[1];
+
+        let targetBoneName = null;
+
+        if (modelKey === 'xbot') {
+          targetBoneName = `mixamorig${baseName}`;
+        } else if (modelKey === 'ybot') {
+          targetBoneName = `mixamorig_${baseName}`;
+        } else if (modelKey === 'lara') {
+          const keyName = `mixamorig:${baseName}`;
+          
+          // Check if bone mapping is enabled in the checklist
+          if (mappingActive[keyName] === false) continue;
+
+          targetBoneName = BONE_MAP[keyName] || getFingerLaraName(keyName);
+
+          if (keyName === 'mixamorig:Hips') {
+            targetBoneName = 'mixamorig_root_hips';
+          }
+        }
+
+        if (targetBoneName) {
+          // Skip scale tracks for all models to avoid distortion
+          if (prop === 'scale') continue;
+
+          // Only translate the hips position to avoid dismemberment
+          const isHips = targetBoneName.toLowerCase().endsWith('hips');
+          if (prop === 'position' && !isHips) continue;
+
+          const clone = tr.clone();
+          clone.name = `${targetBoneName}.${prop}`;
+
+          // Retarget position for hips
+          if (prop === 'position' && isHips) {
+            const bone = MODELS_META[modelKey].instance ? MODELS_META[modelKey].instance.getObjectByName(targetBoneName) : null;
+            if (bone && bone.defaultPosition) {
+              if (isNative) {
+                const restX = clone.values[0];
+                const restY = clone.values[1];
+                const restZ = clone.values[2];
+                for (let j = 0; j < clone.values.length / 3; j++) {
+                  const dx = (clone.values[3*j] - restX) * hipsRatio;
+                  const dy = (clone.values[3*j+1] - restY) * hipsRatio;
+                  const dz = (clone.values[3*j+2] - restZ) * hipsRatio;
+                  clone.values[3*j] = bone.defaultPosition.x + dx;
+                  clone.values[3*j+1] = bone.defaultPosition.y + dy;
+                  clone.values[3*j+2] = bone.defaultPosition.z + dz;
+                }
+              } else {
+                const restX = clone.values[0];
+                const restZ = clone.values[2];
+
+                const srcModel = MODELS_META[sourceModelKey] || MODELS_META.xbot;
+                let sourceHipsDefaultY = 104.0;
+                const srcHipsName = sourceModelKey === 'lara' ? 'mixamorig_root_hips' : (sourceModelKey === 'xbot' ? 'mixamorigHips' : 'mixamorig_Hips');
+                const srcHipsBone = srcModel.instance ? srcModel.instance.getObjectByName(srcHipsName) : null;
+                if (srcHipsBone && srcHipsBone.defaultPosition) {
+                  sourceHipsDefaultY = srcHipsBone.defaultPosition.y;
+                }
+
+                let P_src = null;
+                if (animKey && animSkeletons[animKey] && animSkeletons[animKey][baseName]) {
+                  P_src = animSkeletons[animKey][baseName].parentRestWorldQuaternion;
+                } else {
+                  let srcBoneName = null;
+                  if (sourceModelKey === 'xbot') {
+                    srcBoneName = `mixamorig${baseName}`;
+                  } else if (sourceModelKey === 'ybot') {
+                    srcBoneName = `mixamorig_${baseName}`;
+                  } else if (sourceModelKey === 'lara') {
+                    srcBoneName = BONE_MAP[`mixamorig:${baseName}`] || getFingerLaraName(`mixamorig:${baseName}`);
+                    if (baseName === 'Hips') srcBoneName = 'mixamorig_root_hips';
+                  }
+                  const srcBone = srcModel.instance ? srcModel.instance.getObjectByName(srcBoneName) : null;
+                  P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
+                    ? srcBone.parent.restWorldQuaternion
+                    : new THREE.Quaternion();
+                }
+
+                const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
+                  ? bone.parent.restWorldQuaternion
+                  : new THREE.Quaternion();
+                const P_tgt_inv = P_tgt.clone().invert();
+
+                for (let j = 0; j < clone.values.length / 3; j++) {
+                  const dx_raw = clone.values[3*j] - restX;
+                  const dy_raw = clone.values[3*j+1] - sourceHipsDefaultY;
+                  const dz_raw = clone.values[3*j+2] - restZ;
+
+                  const dx = dx_raw * hipsRatio;
+                  const dy = dy_raw * hipsRatio;
+                  const dz = dz_raw * hipsRatio;
+
+                  // Rotate displacement from source parent world to target parent local: P_tgt_inv * P_src * dP
+                  const dP = new THREE.Vector3(dx, dy, dz)
+                    .applyQuaternion(P_src)
+                    .applyQuaternion(P_tgt_inv);
+                  const resPos = bone.defaultPosition.clone().add(dP);
+
+                  clone.values[3*j] = resPos.x;
+                  clone.values[3*j+1] = resPos.y;
+                  clone.values[3*j+2] = resPos.z;
+                }
+              }
+            }
+          }
+
+          // Retarget rotations (quaternions) for all bones to account for coordinate swaps/bone rolls
+          if (prop === 'quaternion') {
+            // Disable shoulder rotations on native rig to avoid weird bone lengths
+            if (modelKey === 'lara' && targetBoneName.includes('shoulder_1')) continue;
+
+            const bone = MODELS_META[modelKey].instance ? MODELS_META[modelKey].instance.getObjectByName(targetBoneName) : null;
+            if (bone) {
+              for (let i = 0; i < clone.values.length; i += 4) {
+                const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
+                
+                if (state.dampSway && isHips) {
+                  const euler = new THREE.Euler().setFromQuaternion(q, 'YXZ');
+                  euler.z = 0;
+                  euler.y = euler.y / 10;
+                  q.setFromEuler(euler);
+                }
+
+                if (isNative) {
+                  // No rotation retargeting needed if native
+                  clone.values[i] = q.x;
+                  clone.values[i+1] = q.y;
+                  clone.values[i+2] = q.z;
+                  clone.values[i+3] = q.w;
+                } else {
+                  let B_src = null;
+                  let P_src = null;
+                  
+                  if (animKey && animSkeletons[animKey] && animSkeletons[animKey][baseName]) {
+                    const cached = animSkeletons[animKey][baseName];
+                    B_src = cached.restWorldQuaternion;
+                    P_src = cached.parentRestWorldQuaternion;
+                  } else {
+                    const srcModel = MODELS_META[sourceModelKey] || MODELS_META.xbot;
+                    let srcBoneName = null;
+                    if (sourceModelKey === 'xbot') {
+                      srcBoneName = `mixamorig${baseName}`;
+                    } else if (sourceModelKey === 'ybot') {
+                      srcBoneName = `mixamorig_${baseName}`;
+                    } else if (sourceModelKey === 'lara') {
+                      srcBoneName = BONE_MAP[`mixamorig:${baseName}`] || getFingerLaraName(`mixamorig:${baseName}`);
+                      if (baseName === 'Hips') srcBoneName = 'mixamorig_root_hips';
+                    }
+                    const srcBone = srcModel.instance ? srcModel.instance.getObjectByName(srcBoneName) : null;
+                    if (srcBone) {
+                      B_src = srcBone.restWorldQuaternion;
+                      P_src = (srcBone.parent && srcBone.parent.restWorldQuaternion)
+                        ? srcBone.parent.restWorldQuaternion
+                        : new THREE.Quaternion();
+                    }
+                  }
+                  
+                  if (B_src && P_src && bone.restLocalQuaternion && bone.restWorldQuaternion) {
+                    const B_tgt = bone.restWorldQuaternion;
+                    const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
+                      ? bone.parent.restWorldQuaternion
+                      : new THREE.Quaternion();
+                    
+                    const P_tgt_inv = P_tgt.clone().invert();
+                    const B_src_inv = B_src.clone().invert();
+
+                    if (modelKey === 'lara' && targetBoneName === 'mixamorig_leg_left_thigh') {
+                      console.log(`WALKER_DEBUG: Left thigh using src. B_src: [${B_src.x.toFixed(4)}, ${B_src.y.toFixed(4)}, ${B_src.z.toFixed(4)}, ${B_src.w.toFixed(4)}], P_src: [${P_src.x.toFixed(4)}, ${P_src.y.toFixed(4)}, ${P_src.z.toFixed(4)}, ${P_src.w.toFixed(4)}], B_tgt: [${B_tgt.x.toFixed(4)}, ${B_tgt.y.toFixed(4)}, ${B_tgt.z.toFixed(4)}, ${B_tgt.w.toFixed(4)}], P_tgt: [${P_tgt.x.toFixed(4)}, ${P_tgt.y.toFixed(4)}, ${P_tgt.z.toFixed(4)}, ${P_tgt.w.toFixed(4)}]`);
+                    }
+
+                    const resQ = P_tgt_inv.clone()
+                      .multiply(P_src)
+                      .multiply(q)
+                      .multiply(B_src_inv)
+                      .multiply(B_tgt);
+
+                    clone.values[i] = resQ.x;
+                    clone.values[i+1] = resQ.y;
+                    clone.values[i+2] = resQ.z;
+                    clone.values[i+3] = resQ.w;
+
+                    if (modelKey === 'lara' && i === 0 && (targetBoneName === 'mixamorig_root_hips' || targetBoneName === 'mixamorig_spine_lower' || targetBoneName === 'mixamorig_leg_left_thigh' || targetBoneName === 'mixamorig_leg_right_thigh')) {
+                      console.log(`WALKER_DEBUG: Retargeted ${targetBoneName} firstKeyframeQ result: ` + JSON.stringify([clone.values[0], clone.values[1], clone.values[2], clone.values[3]]));
+                    }
+                  } else {
+                    // Fallback to simpler method if source bone is not found
+                    const parentRestWorldQ = (bone.parent && bone.parent.restWorldQuaternion)
+                      ? bone.parent.restWorldQuaternion
+                      : new THREE.Quaternion();
+                    const parentInv = parentRestWorldQ.clone().invert();
+                    const boneRestLocalQ = bone.restLocalQuaternion.clone();
+
+                    const resQ = parentInv.clone()
+                      .multiply(q)
+                      .multiply(parentRestWorldQ)
+                      .multiply(boneRestLocalQ);
+
+                    clone.values[i] = resQ.x;
+                    clone.values[i+1] = resQ.y;
+                    clone.values[i+2] = resQ.z;
+                    clone.values[i+3] = resQ.w;
+                  }
+                }
+              }
+            }
+          }
+
+          tracks.push(clone);
+        }
+      }
+
+      console.log(`WALKER_DEBUG: Finished retargeting clip for ${modelKey}. Tracks count: ${tracks.length}`);
+      return new THREE.AnimationClip(`${rawClip.name}_${modelKey}`, rawClip.duration, tracks);
+    }
+
+    // Finger parsing
+    function getFingerLaraName(mixName) {
+      const match = mixName.match(/mixamorig:(Left|Right)Hand(Thumb|Index|Middle|Ring|Pinky)(\d)/i);
+      if (match) {
+        const side = match[1].toLowerCase();
+        const type = match[2];
+        const seg = match[3];
+        
+        const typeIdx = { "Thumb": 1, "Index": 2, "Middle": 3, "Ring": 4, "Pinky": 5 };
+        const segLet = { "1": "a", "2": "b", "3": "c" };
+        
+        const fIdx = typeIdx[type];
+        const sLet = segLet[seg];
+        
+        if (fIdx && sLet) {
+          return `mixamorig_arm_${side}_finger_${fIdx}${sLet}`;
+        }
+      }
+      return null;
+    }
+
+    // ── PLAYBACK ──
+    function playSelectedAnimation() {
+      const rawClip = loadedClips[state.selectedAnimKey];
+      if (!rawClip) return;
+
+      for (const [key, meta] of Object.entries(MODELS_META)) {
+        if (!meta.mixer) continue;
+        
+        meta.mixer.stopAllAction();
+
+        const clip = getCleanRetargetedClip(rawClip, key, state.selectedAnimKey);
+        if (clip) {
+          const action = meta.mixer.clipAction(clip);
+          action.setEffectiveWeight(1.0);
+          action.setEffectiveTimeScale(state.playbackSpeed);
+          action.play();
+          
+          if (!state.isPlaying) {
+            action.paused = true;
+            meta.mixer.update(0);
+          }
+          
+          meta.activeAction = action;
+        }
+      }
+    }
+
+    // ── APPLY BONE ROTATION OFFSETS ──
+    // Expose Euler rotation offset modifications to Lara's bones *after* the mixer runs
+    function applyBoneOffsets() {
+      const lara = MODELS_META.lara.instance;
+      if (!lara) return;
+
+      for (const [boneName, euler] of Object.entries(boneOffsets)) {
+        const bone = lara.getObjectByName(boneName);
+        if (bone) {
+          // Reset to cached animated value first to prevent accumulation drift!
+          if (bone.userData.animatedQuat) {
+            bone.quaternion.copy(bone.userData.animatedQuat);
+          }
+          // Multiply the offset quaternion on top of the animation rotation
+          const offsetQuat = new THREE.Quaternion().setFromEuler(euler);
+          bone.quaternion.multiply(offsetQuat);
+        }
+      }
+    }
+
+    // ── UPDATE LAYOUT ──
+    function updateLayout() {
+      const offset = 100; // cm side-by-side spacing
+
+      if (state.layout === 'side-by-side') {
+        MODELS_META.lara.wrapper.position.set(-offset, 0, 0);
+        MODELS_META.xbot.wrapper.position.set(0, 0, 0);
+        MODELS_META.ybot.wrapper.position.set(offset, 0, 0);
+      } else {
+        // Overlay all on origin
+        MODELS_META.lara.wrapper.position.set(0, 0, 0);
+        MODELS_META.xbot.wrapper.position.set(0, 0, 0);
+        MODELS_META.ybot.wrapper.position.set(0, 0, 0);
+      }
+    }
+
+    // ── UI SETUP ──
+    function setupUI() {
+      // Setup Tab Buttons
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          const tab = btn.getAttribute('data-tab');
+          document.getElementById('tab-offsets').style.display = tab === 'offsets' ? 'flex' : 'none';
+          document.getElementById('tab-mapping').style.display = tab === 'mapping' ? 'flex' : 'none';
+        });
+      });
+
+      // Opacity sliders
+      for (const key of ['lara', 'xbot', 'ybot']) {
+        const slider = document.getElementById(`slider-opacity-${key}`);
+        const label = document.getElementById(`opacity-${key}-val`);
+        const toggle = document.getElementById(`visible-${key}`);
+
+        slider.addEventListener('input', (e) => {
+          const val = parseFloat(e.target.value);
+          label.innerText = val.toFixed(1);
+          
+          MODELS_META[key].instance.traverse(c => {
+            if (c.isMesh && c.material) {
+              const mats = Array.isArray(c.material) ? c.material : [c.material];
+              mats.forEach(m => m.opacity = val);
+            }
+          });
+        });
+
+        toggle.addEventListener('change', (e) => {
+          const vis = e.target.checked;
+          MODELS_META[key].wrapper.visible = vis;
+          MODELS_META[key].skeletonHelper.visible = vis && state.showSkeletons;
+        });
+      }
+
+      // Layout Selector
+      document.getElementById('select-layout').addEventListener('change', (e) => {
+        state.layout = e.target.value;
+        updateLayout();
+      });
+
+      // Skeleton & Axes Toggles
+      document.getElementById('toggle-skeletons').addEventListener('change', (e) => {
+        state.showSkeletons = e.target.checked;
+        for (const [key, meta] of Object.entries(MODELS_META)) {
+          meta.skeletonHelper.visible = state.showSkeletons && meta.wrapper.visible;
+        }
+      });
+
+      document.getElementById('toggle-axes').addEventListener('change', (e) => {
+        state.showAxes = e.target.checked;
+        for (const meta of Object.values(MODELS_META)) {
+          meta.axesHelpers.forEach(a => a.visible = state.showAxes);
+        }
+      });
+
+      document.getElementById('toggle-grid').addEventListener('change', (e) => {
+        state.showGrid = e.target.checked;
+        state.gridHelper.visible = state.showGrid;
+      });
+
+      document.getElementById('toggle-inplace').addEventListener('change', (e) => {
+        state.inplace = e.target.checked;
+        playSelectedAnimation();
+      });
+
+      document.getElementById('toggle-sway').addEventListener('change', (e) => {
+        state.dampSway = e.target.checked;
+        playSelectedAnimation();
+      });
+
+      // Animation select dropdown
+      document.getElementById('select-anim').addEventListener('change', (e) => {
+        state.selectedAnimKey = e.target.value;
+        playSelectedAnimation();
+      });
+
+      // Timeline Scrubber Slider
+      const timelineSlider = document.getElementById('slider-timeline');
+      timelineSlider.addEventListener('input', (e) => {
+        const pct = parseFloat(e.target.value) / 100;
+        document.getElementById('timeline-label').innerText = `${Math.round(pct * 100)}%`;
+        
+        state.isPlaying = false;
+        document.getElementById('btn-play-pause').innerText = "Play";
+        document.getElementById('btn-play-pause').classList.remove('active');
+
+        // Scrub mixer actions to specific time ratio
+        for (const meta of Object.values(MODELS_META)) {
+          if (meta.activeAction) {
+            meta.activeAction.paused = true;
+            const duration = meta.activeAction.getClip().duration;
+            meta.activeAction.time = duration * pct;
+            meta.mixer.update(0); // Force layout update
+            
+            // Re-cache scrubbed rotations to prevent offsets drift
+            meta.instance.traverse(c => {
+              if (c.isBone) {
+                if (!c.userData.animatedQuat) c.userData.animatedQuat = new THREE.Quaternion();
+                c.userData.animatedQuat.copy(c.quaternion);
+              }
+            });
+          }
+        }
+      });
+
+      // Speed Slider
+      const speedSlider = document.getElementById('slider-speed');
+      speedSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        state.playbackSpeed = val;
+        document.getElementById('speed-label').innerText = `${val.toFixed(1)}x`;
+        for (const meta of Object.values(MODELS_META)) {
+          if (meta.activeAction) {
+            meta.activeAction.setEffectiveTimeScale(val);
+          }
+        }
+      });
+
+      // Play/Pause button
+      const playBtn = document.getElementById('btn-play-pause');
+      playBtn.addEventListener('click', () => {
+        state.isPlaying = !state.isPlaying;
+        playBtn.innerText = state.isPlaying ? "Pause" : "Play";
+        playBtn.classList.toggle('active', state.isPlaying);
+
+        for (const meta of Object.values(MODELS_META)) {
+          if (meta.activeAction) {
+            meta.activeAction.paused = !state.isPlaying;
+          }
+        }
+      });
+
+      // Reset Pose (T-Pose) button
+      document.getElementById('btn-reset-pose').addEventListener('click', () => {
+        state.isPlaying = false;
+        playBtn.innerText = "Play";
+        playBtn.classList.remove('active');
+
+        for (const [key, meta] of Object.entries(MODELS_META)) {
+          meta.prevFootName = ''; // Clear foot tracking cache
+          if (meta.wrapper) {
+            let layoutX = 0;
+            const offset = 100;
+            if (state.layout === 'side-by-side') {
+              if (key === 'lara') layoutX = -offset;
+              if (key === 'ybot') layoutX = offset;
+            }
+            meta.wrapper.position.set(layoutX, 0, 0);
+          }
+
+          meta.mixer.stopAllAction();
+          meta.instance.traverse(c => {
+            if (c.isBone) {
+              if (c.defaultPosition) c.position.copy(c.defaultPosition);
+              if (c.defaultRotation) {
+                c.rotation.copy(c.defaultRotation);
+                c.userData.animatedQuat = new THREE.Quaternion().setFromEuler(c.defaultRotation);
+              }
+              if (c.defaultScale) c.scale.copy(c.defaultScale);
+            }
+          });
+        }
+        
+        if (state.gridHelper) {
+          state.gridHelper.position.set(0, -0.1, 0);
+        }
+      });
+
+      // Offset sliders (Realtime Bone Euler offsets)
+      const offsetSliders = document.querySelectorAll('.offset-slider');
+      offsetSliders.forEach(slider => {
+        slider.addEventListener('input', (e) => {
+          const boneName = slider.getAttribute('data-bone');
+          const axis = slider.getAttribute('data-axis');
+          const deg = parseFloat(e.target.value);
+          const rad = deg * Math.PI / 180;
+          
+          // Populate value label
+          let valId = "";
+          if (boneName === 'mixamorig_root_hips' || boneName === 'mixamorig_pelvis') valId = `off-hips-${axis}-val`;
+          if (boneName === 'mixamorig_arm_left_shoulder_2') valId = `off-larm-${axis}-val`;
+          if (boneName === 'mixamorig_arm_right_shoulder_2') valId = `off-rarm-${axis}-val`;
+
+          if (valId) {
+            document.getElementById(valId).innerText = `${deg}°`;
+          }
+
+          // Update offset Euler angle
+          if (!boneOffsets[boneName]) {
+            boneOffsets[boneName] = new THREE.Euler(0, 0, 0);
+          }
+          boneOffsets[boneName][axis] = rad;
+        });
+      });
+
+      // Copy offsets button (Copies JS code snippet to clipboard)
+      document.getElementById('btn-copy-offsets').addEventListener('click', () => {
+        const code = `// Offsets de rotation pour corriger Lara Croft 2026 natif:
+const BONE_OFFSETS = {
+  "mixamorig_root_hips": { x: ${(boneOffsets["mixamorig_root_hips"]?.x * 180 / Math.PI || 0).toFixed(1)}, y: ${(boneOffsets["mixamorig_root_hips"]?.y * 180 / Math.PI || 0).toFixed(1)}, z: ${(boneOffsets["mixamorig_root_hips"]?.z * 180 / Math.PI || 0).toFixed(1)} },
+  "mixamorig_arm_left_shoulder_2": { x: ${(boneOffsets["mixamorig_arm_left_shoulder_2"]?.x * 180 / Math.PI || 0).toFixed(1)}, y: ${(boneOffsets["mixamorig_arm_left_shoulder_2"]?.y * 180 / Math.PI || 0).toFixed(1)}, z: ${(boneOffsets["mixamorig_arm_left_shoulder_2"]?.z * 180 / Math.PI || 0).toFixed(1)} },
+  "mixamorig_arm_right_shoulder_2": { x: ${(boneOffsets["mixamorig_arm_right_shoulder_2"]?.x * 180 / Math.PI || 0).toFixed(1)}, y: ${(boneOffsets["mixamorig_arm_right_shoulder_2"]?.y * 180 / Math.PI || 0).toFixed(1)}, z: ${(boneOffsets["mixamorig_arm_right_shoulder_2"]?.z * 180 / Math.PI || 0).toFixed(1)} }
+};`;
+        navigator.clipboard.writeText(code).then(() => {
+          alert("Code copié dans le presse-papier !");
+        });
+      });
+
+      // Populate Bone Remapping Checklist
+      buildRemapChecklist();
+    }
+
+    // ── BUILD REMAP CHECKLIST ──
+    function buildRemapChecklist() {
+      const container = document.getElementById('mapping-checklist');
+      container.innerHTML = '';
+
+      Object.entries(BONE_MAP).forEach(([mixName, laraName]) => {
+        const item = document.createElement('div');
+        item.className = 'bone-chk-item';
+        
+        const label = document.createElement('span');
+        label.innerText = `${mixName.replace('mixamorig:', '')} ⇄ ${laraName}`;
+        item.appendChild(label);
+
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.checked = true;
+        chk.addEventListener('change', (e) => {
+          mappingActive[mixName] = e.target.checked;
+          // Re-trigger animation play to rebuild clip track indices
+          playSelectedAnimation();
+        });
+        
+        item.appendChild(chk);
+        container.appendChild(item);
+      });
+
+      document.getElementById('btn-map-all').addEventListener('click', () => {
+        const checks = container.querySelectorAll('input[type="checkbox"]');
+        checks.forEach(c => { c.checked = true; });
+        for (const k of Object.keys(mappingActive)) mappingActive[k] = true;
+        playSelectedAnimation();
+      });
+
+      document.getElementById('btn-map-none').addEventListener('click', () => {
+        const checks = container.querySelectorAll('input[type="checkbox"]');
+        checks.forEach(c => { c.checked = false; });
+        for (const k of Object.keys(mappingActive)) mappingActive[k] = false;
+        playSelectedAnimation();
+      });
+    }
+
+    // Window Resize
+    function onWindowResize() {
+      const container = document.getElementById('viewport-container');
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    // ── ANIMATION LOOP ──
+    let frames = 0, lastTime = 0;
+    let logCounter = 0;
+    
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = clock.getDelta();
+
+      // 1. Update mixers
+      for (const [key, meta] of Object.entries(MODELS_META)) {
+        if (meta.mixer && state.isPlaying) {
+          meta.mixer.update(delta);
+          
+          // Cache the updated animated quaternion to prevent drift when paused
+          meta.instance.traverse(c => {
+            if (c.isBone) {
+              if (!c.userData.animatedQuat) {
+                c.userData.animatedQuat = new THREE.Quaternion();
+              }
+              c.userData.animatedQuat.copy(c.quaternion);
+            }
+          });
+        }
+      }
+
+      // 2. APPLY LIVE BONE ROTATION OFFSETS (after mixer is done)
+      applyBoneOffsets();
+
+      // Update wrapper positions and grid helper using foot-driven locomotion (anti-skate)
+      for (const [key, meta] of Object.entries(MODELS_META)) {
+        if (!meta.wrapper || !meta.wrapper.visible || !meta.instance) continue;
+        
+        let leftFootName = '';
+        let rightFootName = '';
+        if (key === 'lara') {
+          leftFootName = 'mixamorig_leg_left_ankle';
+          rightFootName = 'mixamorig_leg_right_ankle';
+        } else if (key === 'xbot') {
+          leftFootName = 'mixamorigLeftFoot';
+          rightFootName = 'mixamorigRightFoot';
+        } else if (key === 'ybot') {
+          leftFootName = 'mixamorig_LeftFoot';
+          rightFootName = 'mixamorig_RightFoot';
+        }
+        
+        const leftFoot = meta.instance.getObjectByName(leftFootName);
+        const rightFoot = meta.instance.getObjectByName(rightFootName);
+        
+        if (leftFoot && rightFoot) {
+          // Initialize tracking cache on the metadata if not present
+          if (!meta.prevFootPos) {
+            meta.prevFootPos = new THREE.Vector3();
+            meta.prevFootName = '';
+          }
+
+          const leftW = new THREE.Vector3();
+          const rightW = new THREE.Vector3();
+          leftFoot.getWorldPosition(leftW);
+          rightFoot.getWorldPosition(rightW);
+          
+          // Identify which foot is currently contacting the ground (stance foot)
+          const stanceFoot = leftW.y < rightW.y ? leftFoot : rightFoot;
+          const stanceName = stanceFoot.name;
+          
+          const currentFootPos = new THREE.Vector3();
+          stanceFoot.getWorldPosition(currentFootPos);
+          // Get local coordinates relative to the wrapper
+          currentFootPos.sub(meta.wrapper.position);
+          
+          let dX = 0;
+          let dZ = 0;
+          
+          if (meta.prevFootName === stanceName) {
+            dX = currentFootPos.x - meta.prevFootPos.x;
+            dZ = currentFootPos.z - meta.prevFootPos.z;
+          }
+          
+          meta.prevFootPos.copy(currentFootPos);
+          meta.prevFootName = stanceName;
+          
+          let layoutX = 0;
+          const offset = 100;
+          if (state.layout === 'side-by-side') {
+            if (key === 'lara') layoutX = -offset;
+            if (key === 'ybot') layoutX = offset;
+          }
+          
+          if (state.inplace) {
+            // Keep wrapper centered at layout position
+            meta.wrapper.position.set(layoutX, 0, 0);
+            
+            // Apply treadmill effect on grid (follow first visible model, e.g. Lara)
+            if (state.gridHelper && (key === 'lara' || (key === 'xbot' && !MODELS_META.lara.wrapper.visible))) {
+              state.gridHelper.position.x = (state.gridHelper.position.x + dX) % 10;
+              state.gridHelper.position.z = (state.gridHelper.position.z + dZ) % 10;
+            }
+          } else {
+            // Translate wrapper forward
+            meta.wrapper.position.x -= dX;
+            meta.wrapper.position.z -= dZ;
+            
+            // Keep grid static
+            if (state.gridHelper) {
+              state.gridHelper.position.set(0, -0.1, 0);
+            }
+          }
+        }
+      }
+
+      // 3. Update timeline slider if animation is playing
+      const activeLara = MODELS_META.lara.activeAction;
+      if (activeLara && state.isPlaying) {
+        const pct = (activeLara.time / activeLara.getClip().duration) * 100;
+        document.getElementById('slider-timeline').value = pct;
+        document.getElementById('timeline-label').innerText = `${Math.round(pct)}%`;
+      }
+
+      // 4. Log X-Bot and Lara positions periodically to see if they are folded
+      logCounter++;
+      if (logCounter % 10 === 0) {
+        const xbot = MODELS_META.xbot.instance;
+        const lara = MODELS_META.lara.instance;
+        if (xbot && lara) {
+          const xHips = xbot.getObjectByName('mixamorigHips');
+          const xKnee = xbot.getObjectByName('mixamorigLeftLeg');
+          const xFoot = xbot.getObjectByName('mixamorigLeftFoot');
+          const xThigh = xbot.getObjectByName('mixamorigLeftUpLeg');
+          
+          const lHips = lara.getObjectByName('mixamorig_root_hips');
+          const lKnee = lara.getObjectByName('mixamorig_leg_left_knee');
+          const lFoot = lara.getObjectByName('mixamorig_leg_left_ankle');
+
+          if (xHips && xKnee && xFoot && xThigh && lHips && lKnee && lFoot) {
+            const xHipsW = xHips.getWorldPosition(new THREE.Vector3());
+            const xKneeW = xKnee.getWorldPosition(new THREE.Vector3());
+            const xFootW = xFoot.getWorldPosition(new THREE.Vector3());
+
+            const lHipsW = lHips.getWorldPosition(new THREE.Vector3());
+            const lKneeW = lKnee.getWorldPosition(new THREE.Vector3());
+            const lFootW = lFoot.getWorldPosition(new THREE.Vector3());
+
+            const xHipsQ = xHips.getWorldQuaternion(new THREE.Quaternion());
+            const xThighQ = xThigh.getWorldQuaternion(new THREE.Quaternion());
+
+            console.log(`WALKER_POS_DEBUG: X-Bot Hips:${xHipsW.x.toFixed(1)},${xHipsW.y.toFixed(1)},${xHipsW.z.toFixed(1)} Knee:${xKneeW.x.toFixed(1)},${xKneeW.y.toFixed(1)},${xKneeW.z.toFixed(1)} Foot:${xFootW.x.toFixed(1)},${xFootW.y.toFixed(1)},${xFootW.z.toFixed(1)}`);
+            console.log(`WALKER_POS_DEBUG: X-Bot Hips world Q: [${xHipsQ.x.toFixed(4)}, ${xHipsQ.y.toFixed(4)}, ${xHipsQ.z.toFixed(4)}, ${xHipsQ.w.toFixed(4)}]`);
+            console.log(`WALKER_POS_DEBUG: X-Bot Left thigh world Q: [${xThighQ.x.toFixed(4)}, ${xThighQ.y.toFixed(4)}, ${xThighQ.z.toFixed(4)}, ${xThighQ.w.toFixed(4)}]`);
+            console.log(`WALKER_POS_DEBUG: X-Bot Left knee local position: [${xKnee.position.x.toFixed(3)}, ${xKnee.position.y.toFixed(3)}, ${xKnee.position.z.toFixed(3)}]`);
+            console.log(`WALKER_POS_DEBUG: Lara Hips:${lHipsW.x.toFixed(1)},${lHipsW.y.toFixed(1)},${lHipsW.z.toFixed(1)} Knee:${lKneeW.x.toFixed(1)},${lKneeW.y.toFixed(1)},${lKneeW.z.toFixed(1)} Foot:${lFootW.x.toFixed(1)},${lFootW.y.toFixed(1)},${lFootW.z.toFixed(1)}`);
+          }
+        }
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+
+      // Performance stats
+      frames++;
+      const time = performance.now();
+      if (time >= lastTime + 1000) {
+        document.getElementById('hud-fps').innerText = Math.round(frames * 1000 / (time - lastTime));
+        document.getElementById('hud-calls').innerText = renderer.info.render.calls;
+        frames = 0;
+        lastTime = time;
+      }
+    }
+  </script>
+</body>
+</html>
