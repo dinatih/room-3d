@@ -15,7 +15,7 @@ import {
   DIAG_SIN, DIAG_COS, DIAG_ENTRY_S, DIAG_ENTRY_E,
   ROOM_D, KITCHEN_Z,
 } from '@config';
-import { GLASS_OPENING_X1, GLASS_OPENING_X2, WALL_DEFS, wallSeg, W } from './wallData';
+import { pEast, pWest, WALL_DEFS, wallSeg, W } from './wallData';
 
 // Points sur le mur diagonal pour la porte d'entrée
 const DIAG_DOOR_S = { x: DIAG_AX + DIAG_ENTRY_S * DIAG_SIN, z: DIAG_AZ + DIAG_ENTRY_S * DIAG_COS };
@@ -62,6 +62,6 @@ export const SEG_DOORS: Seg[] = [
 // ── SEG_WINDOWS ───────────────────────────────────────────────────────────────
 
 export const SEG_WINDOWS: Seg[] = [
-  [GLASS_OPENING_X1, 0, GLASS_OPENING_X2, 0], // baie vitrée (mur C)
+  [pEast('glass-west'), 0, pWest('glass-east'), 0], // baie vitrée (mur C)
   [NICHE_X, BATH_Z_END,  60,           BATH_Z_END], // vitrage douche
 ];

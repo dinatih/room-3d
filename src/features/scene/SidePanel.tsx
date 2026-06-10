@@ -18,6 +18,8 @@ import { useIsMobile } from '@shared/hooks/useIsMobile';
 const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
+import { useSceneStore } from './store/useSceneStore';
+
 import {
   ROOM_W, ROOM_D, WALL_H,
   DOOR_START, NICHE_X, KITCHEN_Z,
@@ -422,6 +424,8 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>(null);
 
+  const isLara = useSceneStore(state => state.extraStates['walker-lara']);
+
   useEffect(() => {
     if (!layers.realSun) { setSunInfo(null); return; }
     const update = () => {
@@ -500,6 +504,10 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('purple', 'Miroirs',       'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
       {layerBtn('light',  'Walker',        'walker')}
+      {layers.walker && b0('light',
+        isLara ? 'Peau : Lara 👩' : 'Peau : X-Bot 🤖',
+        () => useSceneStore.getState().triggerAction('walker-lara')
+      )}
       {layerBtn('cyan',   'Kira-IK',       'kira')}
       {layerBtn('white',  'Squelette',     'skeleton')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}

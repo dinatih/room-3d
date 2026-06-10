@@ -8,9 +8,11 @@ import { useGLTF, useHelper } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
+import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { LAYER_WALKER_DETAIL } from '@config';
 
-const MODEL_PATH = 'media/sandbox/Xbot_official.glb';
+const XBOT_PATH = 'media/sandbox/Xbot_official.glb';
+const LARA_PATH = 'media/glb/lara_mixamo_final.glb';
 
 interface WalkerProps { 
   showSkeleton?: boolean; 
@@ -35,7 +37,12 @@ function GroundPoint() {
 }
 
 function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 'idle', isPaused = false }: WalkerProps) {
-  const { scene, animations } = useGLTFClone(MODEL_PATH);
+  const isLara = useSceneStore(state => state.extraStates['walker-lara']);
+  const activeModelPath = isLara ? LARA_PATH : XBOT_PATH;
+
+  const { scene } = useGLTFClone(activeModelPath);
+  const xbotGltf = useGLTF(XBOT_PATH);
+  const animations = xbotGltf.animations;
   
   const groupRef = useRef<THREE.Group>(null!);
   const modelRef = useRef<THREE.Object3D>(null!);
@@ -217,4 +224,5 @@ export function Walker(props: WalkerProps) {
   );
 }
 
-useGLTF.preload(MODEL_PATH);
+useGLTF.preload(XBOT_PATH);
+useGLTF.preload(LARA_PATH);

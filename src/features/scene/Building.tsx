@@ -49,7 +49,7 @@ const COLORS = {
   tile:    0xe8e8e8,
 };
 
-import { WALL_DEFS, PILLAR_DEFS, W, CORR_WALL_X, GLASS_DOOR_X, GARDEN_PANEL_DEFS } from './wallData';
+import { WALL_DEFS, PILLAR_DEFS, W, CORR_WALL_X, pEast, pWest, GARDEN_PANEL_DEFS } from './wallData';
 import { WoodenFencePanel } from './items/WoodenFencePanel';
 
 const FLOOR_Y = -5.25; // dalle béton : surface parquet à Y=0
@@ -1671,7 +1671,7 @@ export function DoorsPlaced() {
   return (
     <group visible={layers.doors}>
       <group
-        position={[GLASS_DOOR_X, 105, 0]}
+        position={[(pEast('glass-west') + pWest('glass-east')) / 2, 105, 0]}
         userData={{
           animUnit: true,
           hoverAction: {

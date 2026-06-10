@@ -22,17 +22,13 @@ import {
   DOOR_START, DOOR_END, DOOR_H,
   BATH_Z_END,
   DIAG_AX, DIAG_AZ, DIAG_CZ, DIAG_SIN, DIAG_COS, DIAG_ROT_Y,
-  DIAG_ENTRY_S, DIAG_ENTRY_E, DIAG_LEN, DIAG_DEPTH,
+  DIAG_ENTRY_E, DIAG_LEN, DIAG_DEPTH,
 } from '@config';
 
 export const W        = 10; // épaisseur de mur standard (cm)
-export const WALL_C_T = 30; // épaisseur mur C (nord, baie vitrée)
 const GLASS_START = 100;  // début baie vitrée mur C (aligné à 95cm + 5cm latte)
 const GLASS_END   = 260; // fin baie vitrée mur C (aligné à 316 - 51cm - 5cm latte)
 const GLASS_TOP_Y = 225; // hauteur du linteau de baie vitrée
-const CORR_E = 2;  // anti z-fighting dormant porte couloir
-const CORR_DOOR_S = KITCHEN_Z + 60;
-const CORR_DOOR_E = KITCHEN_Z + 140;
 
 export const CORR_WALL_X = 195; // centre du mur couloir gauche (SDB = 200cm intérieur)
 
@@ -77,33 +73,41 @@ export function wallDefToBoxGeo(d: WallDef): THREE.BufferGeometry {
 export type PillarDef = { id: string; x: number; z: number; w?: number; d?: number; rot?: number };
 
 export const PILLAR_DEFS = [
+  // ── Coin Nord-Ouest (Béton 20cm + Placo 10cm) ──────────────────────────────
   { id: 'corner-nw',     x: -5,                     z: -5 },
   { id: 'corner-nw-ext', x: -15,                    z: -20,           w: 10, d: 20 },
+  { id: 'glass-west',    x: GLASS_START - W / 2,    z: -5 },
+  { id: 'glass-west-ext', x: GLASS_START - W / 2,   z: -20,           w: 10, d: 20 },
+
+  // ── Coin Nord-Est (Béton 20cm + Placo 10cm) ────────────────────────────────
   { id: 'corner-ne',     x: ROOM_W + W / 2,         z: -5 },
   { id: 'corner-ne-ext', x: ROOM_W + W / 2,         z: -20,           w: 10, d: 20 },
-  { id: 'glass-west',  x: GLASS_START - W / 2,    z: -5 },
-  { id: 'glass-west-ext', x: GLASS_START - W / 2,   z: -20,           w: 10, d: 20 },
-  { id: 'glass-east',  x: GLASS_END + W / 2,      z: -5 },
+  { id: 'glass-east',    x: GLASS_END + W / 2,      z: -5 },
   { id: 'glass-east-ext', x: GLASS_END + W / 2,     z: -20,           w: 10, d: 20 },
-  { id: 'corner-sw',   x: NICHE_X - W / 2,        z: ROOM_D + W / 2 },
-  { id: 'diag-ne',     x: ROOM_W + W / 2,          z: DIAG_AZ - W / 2 },
-  { id: 'diag-sw',     x: NICHE_X - W / 2,        z: DIAG_CZ - 5 },
-  { id: 'kitchen-sw',  x: KITCHEN_X0 - W / 2,     z: ROOM_D + W / 2 },
-  { id: 'kitchen-se',  x: KITCHEN_X1 + W / 2,     z: ROOM_D + W / 2 },
-  { id: 'corner-se',   x: ROOM_W + W / 2,          z: ROOM_D + W / 2 },
-  { id: 'niche-beam',  x: -5,                       z: NICHE_Z_START },
-  { id: 'bath-nw',     x: NICHE_X - W / 2,         z: KITCHEN_Z + W / 2 },
-  { id: 'kitchen-nw',  x: KITCHEN_X0 - W / 2,     z: KITCHEN_Z + W / 2 },
-  { id: 'kitchen-ne',  x: KITCHEN_X1 + W / 2,     z: KITCHEN_Z + W / 2 },
-  { id: 'shower-nw',   x: NICHE_X - W / 2,        z: BATH_Z_END - W / 2 + 10 },
-  { id: 'shower-ne',   x: 65,                      z: BATH_Z_END - W / 2 + 10 },
-  { id: 'bath-ne',      x: CORR_WALL_X,             z: KITCHEN_Z + W / 2 },
-  { id: 'bath-se',   x: CORR_WALL_X,             z: BATH_Z_END - W / 2 + 10 },
-  { id: 'shower-sw',   x: NICHE_X - W / 2,        z: BATH_Z_END + 70 + W / 2 },
-  { id: 'shower-se',   x: 65,                      z: BATH_Z_END + 70 + W / 2 },
-  { id: 'garden-e',    x: ROOM_W + W / 2,           z: -220 - W / 2 },
 
-  // ── Extrémités mur diagonal (BoxGeometry pour éviter les artefacts d'extrusion) ────
+  // ── Séjour & Niche ─────────────────────────────────────────────────────────
+  { id: 'corner-sw',     x: NICHE_X - W / 2,        z: ROOM_D + W / 2 },
+  { id: 'niche-beam',    x: -5,                     z: NICHE_Z_START },
+  { id: 'corner-se',     x: ROOM_W + W / 2,          z: ROOM_D + W / 2 },
+
+  // ── Cuisine ────────────────────────────────────────────────────────────────
+  { id: 'kitchen-sw',    x: KITCHEN_X0 - W / 2,     z: ROOM_D + W / 2 },
+  { id: 'kitchen-se',    x: KITCHEN_X1 + W / 2,     z: ROOM_D + W / 2 },
+  { id: 'kitchen-nw',    x: KITCHEN_X0 - W / 2,     z: KITCHEN_Z + W / 2 },
+  { id: 'kitchen-ne',    x: KITCHEN_X1 + W / 2,     z: KITCHEN_Z + W / 2 },
+
+  // ── Salle de Bain & Douche ────────────────────────────────────────────────
+  { id: 'bath-nw',       x: NICHE_X - W / 2,         z: KITCHEN_Z + W / 2 },
+  { id: 'bath-ne',       x: CORR_WALL_X,             z: KITCHEN_Z + W / 2 },
+  { id: 'bath-se',       x: CORR_WALL_X,             z: BATH_Z_END - W / 2 + 10 },
+  { id: 'shower-nw',     x: NICHE_X - W / 2,        z: BATH_Z_END - W / 2 + 10 },
+  { id: 'shower-ne',     x: 65,                      z: BATH_Z_END - W / 2 + 10 },
+  { id: 'shower-sw',     x: NICHE_X - W / 2,        z: BATH_Z_END + 70 + W / 2 },
+  { id: 'shower-se',     x: 65,                      z: BATH_Z_END + 70 + W / 2 },
+
+  // ── Extrémités mur diagonal (BoxGeometry) ──────────────────────────────────
+  { id: 'diag-ne',       x: ROOM_W + W / 2,          z: DIAG_AZ - W / 2 },
+  { id: 'diag-sw',       x: NICHE_X - W / 2,        z: DIAG_CZ - 5 },
   { id: 'diag-ne-end',
     x: DIAG_AX + (W / 2) * DIAG_SIN + (DIAG_DEPTH / 2) * DIAG_COS,
     z: DIAG_AZ + (W / 2) * DIAG_COS - (DIAG_DEPTH / 2) * DIAG_SIN,
@@ -113,16 +117,14 @@ export const PILLAR_DEFS = [
     z: DIAG_AZ + (DIAG_LEN - W / 2) * DIAG_COS - (DIAG_DEPTH / 2) * DIAG_SIN,
     w: W, d: DIAG_DEPTH, rot: DIAG_ROT_Y },
 
-  // ── Jambes des 3 portes (10×10, motif identique aux glass-west/east) ────
-  // Porte séjour principale (mur sud z=400, x=200→280)
-  { id: 'door-living-w', x: DOOR_START - W / 2,     z: ROOM_D + W / 2 },           // (195, 405)
-  { id: 'door-living-e', x: DOOR_END   + W / 2,     z: ROOM_D + W / 2 },           // (285, 405)
-  // Porte couloir-SDB (mur couloir x=195, z=520→600)
-  { id: 'door-bath-n',   x: CORR_WALL_X,             z: CORR_DOOR_S - W / 2 },     // (195, 515)
-  { id: 'door-bath-s',   x: CORR_WALL_X,             z: CORR_DOOR_E + W / 2 },     // (195, 605)
-  // Porte d'entrée diagonale (mur diagonal, d=DIAG_ENTRY_S→DIAG_ENTRY_E).
-  // Centre = face intérieure + W/2 le long de la normale sortante (DIAG_COS, -DIAG_SIN).
-  // Rot Y = DIAG_ROT_Y pour aligner le pilier avec l'axe du mur diagonal.
+  // ── Extérieurs & Jardin ────────────────────────────────────────────────────
+  { id: 'garden-e',      x: ROOM_W + W / 2,           z: -220 - W / 2 },
+
+  // ── Jambes de portes (10×10) ───────────────────────────────────────────────
+  { id: 'door-living-w', x: DOOR_START - W / 2,     z: ROOM_D + W / 2 },
+  { id: 'door-living-e', x: DOOR_END   + W / 2,     z: ROOM_D + W / 2 },
+  { id: 'door-bath-n',   x: CORR_WALL_X,             z: 515 },
+  { id: 'door-bath-s',   x: CORR_WALL_X,             z: 605 },
   { id: 'door-entry-e',
     x: DIAG_AX + (DIAG_ENTRY_E + W / 2) * DIAG_SIN + (W / 2) * DIAG_COS,
     z: DIAG_AZ + (DIAG_ENTRY_E + W / 2) * DIAG_COS - (W / 2) * DIAG_SIN,
@@ -141,7 +143,7 @@ export const GARDEN_PANEL_DEFS: readonly GardenPanelDef[] = [0, 1].map(i => ({
   d: 90,
 }));
 
-type PillarId = typeof PILLAR_DEFS[number]['id'];
+export type PillarId = typeof PILLAR_DEFS[number]['id'];
 const PILLAR_BY_ID = new Map(PILLAR_DEFS.map(p => [p.id, p] as const));
 
 function pillar(id: PillarId) {
@@ -150,25 +152,21 @@ function pillar(id: PillarId) {
   return def;
 }
 
-const pX = (id: PillarId) => pillar(id).x;
-const pZ = (id: PillarId) => pillar(id).z;
-const pW = (id: PillarId) => {
+export const pX = (id: PillarId) => pillar(id).x;
+export const pZ = (id: PillarId) => pillar(id).z;
+export const pW = (id: PillarId) => {
   const p = pillar(id) as any;
   return p.w ?? W;
 };
-const pD = (id: PillarId) => {
+export const pD = (id: PillarId) => {
   const p = pillar(id) as any;
   return p.d ?? W;
 };
 
-const pWest  = (id: PillarId) => pX(id) - pW(id) / 2;
-const pEast  = (id: PillarId) => pX(id) + pW(id) / 2;
-const pNorth = (id: PillarId) => pZ(id) - pD(id) / 2;
-const pSouth = (id: PillarId) => pZ(id) + pD(id) / 2;
-
-export const GLASS_OPENING_X1 = pEast('glass-west');
-export const GLASS_OPENING_X2 = pWest('glass-east');
-export const GLASS_DOOR_X = (GLASS_OPENING_X1 + GLASS_OPENING_X2) / 2;
+export const pWest  = (id: PillarId) => pX(id) - pW(id) / 2;
+export const pEast  = (id: PillarId) => pX(id) + pW(id) / 2;
+export const pNorth = (id: PillarId) => pZ(id) - pD(id) / 2;
+export const pSouth = (id: PillarId) => pZ(id) + pD(id) / 2;
 
 export const WALL_DEFS: WallDef[] = [
 
@@ -193,10 +191,10 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'x', x1: pEast('corner-sw'), x2: pWest('kitchen-sw'), zc: pZ('corner-sw') },
   { axis: 'x', x1: pEast('kitchen-se'), x2: pWest('door-living-w'), zc: pZ('corner-sw') },
   // Linteau au-dessus de la porte principale (3D seulement)
-  { axis: 'x', x1: DOOR_START, x2: DOOR_END, zc: pZ('corner-sw'), yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
+  { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: pZ('corner-sw'), yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
   { axis: 'x', x1: pEast('door-living-e'), x2: pWest('corner-se'), zc: pZ('corner-sw') },
   // Porte principale (2D uniquement)
-  { axis: 'x', x1: DOOR_START, x2: DOOR_END, zc: ROOM_D, segKind: 'door' },
+  { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: ROOM_D, segKind: 'door' },
 
   // ── Cuisine ────────────────────────────────────────────────────────────────
   { axis: 'z', xc: pX('kitchen-sw'), z1: pSouth('kitchen-sw'), z2: pNorth('kitchen-nw') },
@@ -212,10 +210,10 @@ export const WALL_DEFS: WallDef[] = [
   // Segment après porte
   { axis: 'z', xc: pX('bath-ne'), z1: pSouth('door-bath-s'), z2: pNorth('bath-se') },
   // Linteau au-dessus de la porte couloir (3D seulement)
-  { axis: 'z', xc: pX('bath-ne'), z1: CORR_DOOR_S, z2: CORR_DOOR_E,
+  { axis: 'z', xc: pX('bath-ne'), z1: pNorth('door-bath-n'), z2: pNorth('door-bath-s'),
     yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
   // Porte couloir SDB (2D uniquement)
-  { axis: 'z', xc: pX('bath-ne'), z1: CORR_DOOR_S, z2: CORR_DOOR_E, segKind: 'door' },
+  { axis: 'z', xc: pX('bath-ne'), z1: pNorth('door-bath-n'), z2: pNorth('door-bath-s'), segKind: 'door' },
 
   // ── MUR NORD (Z=0) ──────────────────────────────────────────────────────────
   // Panneau ouest intérieur (placo)
@@ -230,13 +228,13 @@ export const WALL_DEFS: WallDef[] = [
 
   // Baie vitrée — couches dissociées
   // Muret bas (Intérieur)
-  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: -5, mat: 'north', h: 25, segKind: 'none' },
+  { axis: 'x', x1: pEast('glass-west'), x2: pWest('glass-east'), zc: -5, mat: 'north', h: 25, segKind: 'none' },
   // Muret bas (Extérieur)
-  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: -20, t: 20, mat: 'north', h: 25, segKind: 'none' },
+  { axis: 'x', x1: pEast('glass-west-ext'), x2: pWest('glass-east-ext'), zc: -20, t: 20, mat: 'north', h: 25, segKind: 'none' },
   // Linteau (Intérieur)
-  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: -5, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
+  { axis: 'x', x1: pEast('glass-west'), x2: pWest('glass-east'), zc: -5, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
   // Linteau (Extérieur)
-  { axis: 'x', x1: GLASS_OPENING_X1, x2: GLASS_OPENING_X2, zc: -20, t: 20, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
+  { axis: 'x', x1: pEast('glass-west-ext'), x2: pWest('glass-east-ext'), zc: -20, t: 20, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
 
   // ── Douche ─────────────────────────────────────────────────────────────────
   { axis: 'z', xc: pX('shower-ne'), z1: pSouth('shower-ne'), z2: pNorth('shower-se') },
