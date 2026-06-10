@@ -30,7 +30,17 @@ const GLASS_START = 100;  // début baie vitrée mur C (aligné à 95cm + 5cm la
 const GLASS_END   = 260; // fin baie vitrée mur C (aligné à 316 - 51cm - 5cm latte)
 const GLASS_TOP_Y = 225; // hauteur du linteau de baie vitrée
 
-export const CORR_WALL_X = 195; // centre du mur couloir gauche (SDB = 200cm intérieur)
+export const CORR_WALL_X = 195; // centre du mur couloir gauche (SDB = 200cm interior)
+
+/**
+ * Calcule une position (x, z) le long du mur diagonal.
+ * @param d Distance depuis le point A (Est) le long du mur.
+ * @param off Offset perpendiculaire au mur (positif vers l'extérieur).
+ */
+export const pDiag = (d: number, off: number = W / 2) => ({
+  x: DIAG_AX + d * DIAG_SIN + off * DIAG_COS,
+  z: DIAG_AZ + d * DIAG_COS - off * DIAG_SIN,
+});
 
 export type WallMat  = 'west' | 'east' | 'north' | 'default';
 export type SegKind  = 'wall' | 'door' | 'window';
@@ -109,12 +119,10 @@ export const PILLAR_DEFS = [
   { id: 'diag-ne',       x: ROOM_W + W / 2,          z: DIAG_AZ - W / 2 },
   { id: 'diag-sw',       x: NICHE_X - W / 2,        z: DIAG_CZ - 5 },
   { id: 'diag-ne-end',
-    x: DIAG_AX + (W / 2) * DIAG_SIN + (DIAG_DEPTH / 2) * DIAG_COS,
-    z: DIAG_AZ + (W / 2) * DIAG_COS - (DIAG_DEPTH / 2) * DIAG_SIN,
+    ...pDiag(W / 2, DIAG_DEPTH / 2),
     w: W, d: DIAG_DEPTH, rot: DIAG_ROT_Y },
   { id: 'diag-sw-end',
-    x: DIAG_AX + (DIAG_LEN - W / 2) * DIAG_SIN + (DIAG_DEPTH / 2) * DIAG_COS,
-    z: DIAG_AZ + (DIAG_LEN - W / 2) * DIAG_COS - (DIAG_DEPTH / 2) * DIAG_SIN,
+    ...pDiag(DIAG_LEN - W / 2, DIAG_DEPTH / 2),
     w: W, d: DIAG_DEPTH, rot: DIAG_ROT_Y },
 
   // ── Extérieurs & Jardin ────────────────────────────────────────────────────
@@ -126,8 +134,7 @@ export const PILLAR_DEFS = [
   { id: 'door-bath-n',   x: CORR_WALL_X,             z: 515 },
   { id: 'door-bath-s',   x: CORR_WALL_X,             z: 605 },
   { id: 'door-entry-e',
-    x: DIAG_AX + (DIAG_ENTRY_E + W / 2) * DIAG_SIN + (W / 2) * DIAG_COS,
-    z: DIAG_AZ + (DIAG_ENTRY_E + W / 2) * DIAG_COS - (W / 2) * DIAG_SIN,
+    ...pDiag(DIAG_ENTRY_E + W / 2),
     rot: DIAG_ROT_Y },
 ] as const satisfies readonly PillarDef[];
 

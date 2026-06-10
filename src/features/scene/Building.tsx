@@ -1007,21 +1007,31 @@ function Baseboards() {
       len: d2 - d1,
     };
   };
-  const diagSegA = diagSeg(0, DIAG_ENTRY_S);
-  const diagSegB = diagSeg(DIAG_ENTRY_E, diagParquetLen);
+  const CW_ENTRY = 5.5; // largeur chambranle porte entrée + marge
+  const diagSegA = diagSeg(0, Math.max(0, DIAG_ENTRY_S - CW_ENTRY));
+  const diagSegB = diagSeg(DIAG_ENTRY_E + CW_ENTRY, diagParquetLen);
 
-  // Quart-de-rond diagonal — corner offset = SD (face plinthe), pas SD/2.
-  const diagQR = (d1: number, d2: number) => {
+  // Plinthe diagonale corridor (de X=200 à X=140)
+  const corridorXEnd = INT_X_KITCHEN_R + W; // 140
+  const corridorZEnd = DIAG_AZ + (corridorXEnd - DIAG_AX) * slope;
+  const diagCorridorTotalLen = Math.sqrt((DIAG_AX - corridorXEnd) ** 2 + (DIAG_AZ - corridorZEnd) ** 2);
+  const diagSegC = diagSeg(diagParquetLen, diagCorridorTotalLen);
+
+  // Correction calcul positions QR diag
+  const cosθ = DIAG_COS;
+  const sinθ = DIAG_SIN;
+  const diagQR_pos = (d1: number, d2: number) => {
     const dm = (d1 + d2) / 2;
     return {
-      x: DIAG_AX + dm * DIAG_SIN - DIAG_COS * SD,
-      z: DIAG_AZ + dm * DIAG_COS + DIAG_SIN * SD,
+      x: DIAG_AX + dm * sinθ - cosθ * SD,
+      z: DIAG_AZ + dm * cosθ + sinθ * SD,
       len: d2 - d1,
     };
   };
-  const diagQRA = diagQR(0, DIAG_ENTRY_S);
-  const diagQRB = diagQR(DIAG_ENTRY_E, diagParquetLen);
-  const diagQR_ry = DIAG_ROT_Y + Math.PI;
+
+  const diagQRA = diagQR_pos(0, Math.max(0, DIAG_ENTRY_S - CW_ENTRY));
+  const diagQRB = diagQR_pos(DIAG_ENTRY_E + CW_ENTRY, diagParquetLen);
+  const diagQRC = diagQR_pos(diagParquetLen, diagCorridorTotalLen);
 
   return (
     <MergedStaticGroup name="merged-skirting">
@@ -1068,7 +1078,17 @@ function Baseboards() {
         <QR cx={(DOOR_END - SD + INT_X_EAST) / 2} cz={(ROOM_D + W) + SD}
             len={INT_X_EAST - (DOOR_END - SD)} dir="+Z" mat={skirtingMat} />
 
-        {/* ... (skipping some code) ... */}
+        {/* Mur diagonal (fractionné autour de la porte d'entrée) + Corridor */}
+        {[diagSegA, diagSegB, diagSegC].map((s, i) => (
+          <mesh key={`ds${i}`} position={[s.x, y, s.z]} rotation-y={DIAG_ROT_Y} castShadow receiveShadow
+                material={skirtingMat}>
+            <boxGeometry args={[SD, SH, s.len]} />
+          </mesh>
+        ))}
+        {[diagQRA, diagQRB, diagQRC].map((s, i) => (
+          <mesh key={`dqr${i}`} position={[s.x, y, s.z]} rotation-y={DIAG_ROT_Y} castShadow receiveShadow
+                material={skirtingMat} scale={[1, 1, s.len]} geometry={qrGeo} />
+        ))}
 
         {/* Corridor — face est du mur couloir (côté corridor, x = INT_X_DOOR_S+SD/2).
             Fractionnée pour éviter les ouvertures : placard (z=410→460) et porte
@@ -1214,7 +1234,8 @@ function BathSkirting() {
   // Coins SDB (cf Tile())
   const diagSlope = (DIAG_CZ - DIAG_AZ) / (DIAG_CX - DIAG_AX);
   const Bz = DIAG_AZ + (INT_X_NICHE  - DIAG_AX) * diagSlope; // ≈ 727.5
-  const Cz = DIAG_AZ + (INT_X_DOOR_S - DIAG_AX) * diagSlope; // ≈ 608
+  const corridorXEnd = KITCHEN_X1 + W; // 140
+  const Cz = DIAG_AZ + (corridorXEnd - DIAG_AX) * diagSlope; // ≈ 642.1 (Z à X=140)
 
   // Porte SDB sur mur est (CORR_WALL_X), même Z que la porte couloir
   const CORR_DOOR_S = KITCHEN_Z + 60;  // 520
@@ -1225,7 +1246,7 @@ function BathSkirting() {
   const showerWallZ2 = BATH_Z_END + 70;      // 680
 
   // Segment diagonal SDB : de C (d=dC) à B (d=dB)
-  const dC = Math.sqrt((INT_X_DOOR_S - DIAG_AX) ** 2 + (Cz - DIAG_AZ) ** 2);
+  const dC = Math.sqrt((corridorXEnd - DIAG_AX) ** 2 + (Cz - DIAG_AZ) ** 2);
   const dB = Math.sqrt((INT_X_NICHE  - DIAG_AX) ** 2 + (Bz - DIAG_AZ) ** 2);
   const dm = (dC + dB) / 2;
   const diagX = DIAG_AX + dm * DIAG_SIN - DIAG_COS * SD_T / 2;
@@ -1272,7 +1293,7 @@ function BathSkirting() {
            x={SHOWER_E_X + SD_T / 2} y={y} z={(showerWallZ1 + showerWallZ2) / 2}
            mat={tileMat} />
 
-        {/* Mur diagonal SDB — de C(200, Cz) à B(-10, Bz) */}
+        {/* Mur diagonal SDB — de C(140, Cz) à B(-10, Bz) */}
         <mesh position={[diagX, y, diagZ]} rotation-y={DIAG_ROT_Y}
               ref={(m) => { if (m) m.material = tileMat as any; }}
               castShadow receiveShadow>
