@@ -71,6 +71,34 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const planeModeRef = useRef(planeMode);
   useEffect(() => { planeModeRef.current = planeMode; }, [planeMode]);
 
+  const isLara = useSceneStore(state => state.extraStates['walker-lara']);
+  const prevIsLara = useRef(isLara);
+
+  useEffect(() => {
+    if (isLara !== prevIsLara.current) {
+        // Swap positions!
+        const tx = cameraState.walkerX;
+        const tz = cameraState.walkerZ;
+        const ty = cameraState.walkerYaw;
+
+        cameraState.walkerX = cameraState.passiveX;
+        cameraState.walkerZ = cameraState.passiveZ;
+        cameraState.walkerYaw = cameraState.passiveYaw;
+
+        cameraState.passiveX = tx;
+        cameraState.passiveZ = tz;
+        cameraState.passiveYaw = ty;
+
+        walkPos.current.x = cameraState.walkerX;
+        walkPos.current.z = cameraState.walkerZ;
+        walkYaw.current = cameraState.walkerYaw;
+        cameraState.walkerHeight = isLara ? 173.4 : 181.0;
+        
+        invalidate();
+    }
+    prevIsLara.current = isLara;
+  }, [isLara, invalidate]);
+
   // sync ref with state so event handlers use latest mode without stale closure
   function changeMode(m: Mode) {
     modeRef.current = m;
@@ -564,6 +592,27 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
 
     updateWalkLook();
+
+    // ── Passive Walker (Follower) logic ──────────────────────────────────────
+    if (modeRef.current !== 'walk') {
+      const followDist = 100;
+      const targetPX = cameraState.walkerX - Math.sin(cameraState.walkerYaw) * followDist;
+      const targetPZ = cameraState.walkerZ - Math.cos(cameraState.walkerYaw) * followDist;
+      
+      const prevPX = cameraState.passiveX;
+      const prevPZ = cameraState.passiveZ;
+
+      const lerpFactor = 0.05 * dt;
+      cameraState.passiveX += (targetPX - cameraState.passiveX) * lerpFactor;
+      cameraState.passiveZ += (targetPZ - cameraState.passiveZ) * lerpFactor;
+      cameraState.passiveYaw = cameraState.walkerYaw;
+
+      const pdx = cameraState.passiveX - prevPX;
+      const pdz = cameraState.passiveZ - prevPZ;
+      (cameraState as any).isPassiveMoving = (pdx * pdx + pdz * pdz) > 0.01;
+    } else {
+      (cameraState as any).isPassiveMoving = false;
+    }
   });
 
   // ── Top-down orthographic frustum ──────────────────────────────────────────

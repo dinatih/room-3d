@@ -217,13 +217,26 @@ function GroundPoint() {
   );
 }
 
-function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 'idle', isPaused = false }: WalkerProps) {
-  const isLara = useSceneStore(state => state.extraStates['walker-lara']);
-  const activeModelPath = isLara ? LARA_PATH : XBOT_PATH;
-  
-  const { scene } = useGLTFClone(activeModelPath);
-  const xbotGltf = useGLTF(XBOT_PATH);
-  const animations = xbotGltf.animations;
+interface SingleCharacterProps extends WalkerProps {
+  modelPath: string;
+  isLara: boolean;
+  isActive: boolean;
+  animations: THREE.AnimationClip[];
+  xbotScene: THREE.Group;
+}
+
+function SingleCharacter({ 
+  modelPath, 
+  isLara, 
+  isActive, 
+  showSkeleton = false, 
+  isPreview = false, 
+  walkerAnim = 'idle', 
+  isPaused = false,
+  animations,
+  xbotScene
+}: SingleCharacterProps) {
+  const { scene } = useGLTFClone(modelPath);
   
   const groupRef = useRef<THREE.Group>(null!);
   const modelRef = useRef<THREE.Object3D>(null!);
@@ -235,7 +248,6 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
-    // 1. Reset scale to measure properly
     scene.scale.set(1, 1, 1);
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
@@ -250,7 +262,6 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
 
     scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
-    // Center character locally relative to the parent group
     scene.updateMatrixWorld(true);
     const hipsName = isLara ? 'mixamorig_root_hips' : 'mixamorig:Hips';
     const hips = scene.getObjectByName(hipsName);
@@ -263,7 +274,6 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
         scene.position.z -= hipsLocal.z;
     }
 
-    // Traverse active scene to setup rest poses
     scene.traverse(o => {
       const c = o as any;
       if (c.isMesh) {
@@ -283,22 +293,8 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
       if (c.isBone) {
         c.defaultPosition = c.position.clone();
         c.restLocalQuaternion = c.quaternion.clone();
-        
         c.userData.restPos = c.position.clone();
         c.userData.restQuat = c.quaternion.clone();
-      }
-    });
-
-    // Populate source rest poses on X-Bot template
-    xbotGltf.scene.updateMatrixWorld(true);
-    xbotGltf.scene.traverse(o => {
-      const c = o as any;
-      if (!c.restWorldQuaternion) {
-        c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
-      }
-      if (c.isBone && !c.restLocalQuaternion) {
-        c.defaultPosition = c.position.clone();
-        c.restLocalQuaternion = c.quaternion.clone();
       }
     });
 
@@ -309,9 +305,8 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
     animations.forEach(clip => {
       let finalClip = clip;
       if (isLara) {
-        finalClip = retargetClipForLara(clip, scene, xbotGltf.scene);
+        finalClip = retargetClipForLara(clip, scene, xbotScene);
       } else {
-        // Just strip scale tracks for X-Bot to be safe
         const cleanTracks = clip.tracks.filter(track => !track.name.endsWith('.scale'));
         finalClip = new THREE.AnimationClip(clip.name, clip.duration, cleanTracks);
       }
@@ -329,9 +324,8 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
         mixer.stopAllAction();
         mixer.uncacheRoot(scene);
     };
-  }, [scene, animations, isLara, xbotGltf]);
+  }, [scene, animations, isLara, xbotScene]);
 
-  // Use the standard hook for skeleton helper
   const skeletonRef = useHelper(showSkeleton ? modelRef : null, THREE.SkeletonHelper);
 
   useEffect(() => {
@@ -354,11 +348,17 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
       groupRef.current.rotation.y = 0;
       groupRef.current.visible = true;
     } else {
-      groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
-      groupRef.current.rotation.y = cameraState.walkYaw;
-      groupRef.current.visible = !cameraState.walkerHidden;
+      if (isActive) {
+        groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
+        groupRef.current.rotation.y = cameraState.walkYaw;
+        groupRef.current.visible = !cameraState.walkerHidden;
+      } else {
+        groupRef.current.position.set(cameraState.passiveX, 0, cameraState.passiveZ);
+        groupRef.current.rotation.y = cameraState.passiveYaw;
+        groupRef.current.visible = true;
+      }
 
-      const isFirstPerson = cameraState.mode === 'walk';
+      const isFirstPerson = isActive && cameraState.mode === 'walk';
       scene.traverse(o => {
         if ((o as THREE.Mesh).isMesh) {
           o.layers.set(isFirstPerson ? LAYER_WALKER_DETAIL : 0);
@@ -369,7 +369,8 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
     
-    let target = isPreview ? (walkerAnim || 'idle') : (cameraState.isMoving ? 'walk' : 'idle');
+    let isMoving = isActive ? cameraState.isMoving : (cameraState as any).isPassiveMoving;
+    let target = isPreview ? (walkerAnim || 'idle') : (isMoving ? 'walk' : 'idle');
 
     if (target === 'idle' && !isPaused) {
         idleTimerRef.current += delta;
@@ -377,6 +378,7 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
         idleTimerRef.current = 0;
     }
 
+    // Both characters time out after 10s of inactivity to save CPU
     const isIdleTimeout = idleTimerRef.current > 10;
 
     if (target === 'tpose') {
@@ -407,7 +409,7 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
         mixer.update(delta);
     }
 
-    if (!isIdleTimeout || cameraState.isMoving || isPreview) {
+    if (!isIdleTimeout || isMoving || isPreview) {
         invalidate();
     }
   });
@@ -415,8 +417,34 @@ function InternalWalker({ showSkeleton = false, isPreview = false, walkerAnim = 
   return (
     <group ref={groupRef}>
       <primitive ref={modelRef} object={scene} />
-      {!isPreview && <GroundPoint />}
+      {!isPreview && isActive && <GroundPoint />}
     </group>
+  );
+}
+
+function InternalWalker(props: WalkerProps) {
+  const isLaraActive = useSceneStore(state => state.extraStates['walker-lara']);
+  const xbotGltf = useGLTF(XBOT_PATH);
+  
+  return (
+    <>
+      <SingleCharacter 
+        {...props} 
+        modelPath={XBOT_PATH} 
+        isLara={false} 
+        isActive={!isLaraActive}
+        animations={xbotGltf.animations}
+        xbotScene={xbotGltf.scene}
+      />
+      <SingleCharacter 
+        {...props} 
+        modelPath={LARA_PATH} 
+        isLara={true} 
+        isActive={isLaraActive}
+        animations={xbotGltf.animations}
+        xbotScene={xbotGltf.scene}
+      />
+    </>
   );
 }
 

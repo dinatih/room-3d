@@ -20,6 +20,10 @@ export const cameraState = {
   walkerX: 150 as number, 
   walkerZ: 200 as number, 
   walkerYaw: 0 as number,
+  /** Position du second walker (suiveur) */
+  passiveX: 150 as number,
+  passiveZ: 100 as number,
+  passiveYaw: 0 as number,
   /** Hauteur (cm) du walker — écrit par Walker.tsx, lue par les caméras walk */
   walkerHeight: 181 as number,
   /** Déclenché par CameraController chaque frame — la minimap s'y abonne */

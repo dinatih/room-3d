@@ -86,6 +86,20 @@ function drawMinimap(
   // Plan partagé
   drawFloorPlan(ctx, W, canvas.height);
 
+  const R  = 5 * sc;
+  const BW = 8 * sc, BH = 4 * sc;
+
+  // ── Passive Walker icon ────────────────────────────────────────────────────
+  const pw = { x: cameraState.passiveX, z: cameraState.passiveZ, yaw: cameraState.passiveYaw };
+  ctx.save();
+  ctx.translate(tx(pw.x), tz(pw.z));
+  ctx.rotate(-pw.yaw);
+  ctx.fillStyle   = 'rgba(0, 102, 255, 0.4)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth   = 0.6 * sc;
+  ctx.beginPath(); ctx.arc(0, 0, R * 0.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.restore();
+
   // ── Walker icon ────────────────────────────────────────────────────────────
   const w = { x: cameraState.walkerX, z: cameraState.walkerZ, yaw: cameraState.walkerYaw };
   
@@ -104,9 +118,6 @@ function drawMinimap(
   ctx.strokeStyle = 'rgba(255,221,0,0.40)'; ctx.lineWidth = 0.5 * sc; ctx.stroke();
 
   // Body icon
-  const R  = 5 * sc;
-  const BW = 8 * sc, BH = 4 * sc;
-  
   ctx.fillStyle   = '#0066ff'; // Default Blue
   ctx.strokeStyle = 'rgba(255,255,255,0.75)';
   ctx.lineWidth   = 0.8 * sc;
