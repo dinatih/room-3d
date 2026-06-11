@@ -72,6 +72,13 @@ Lors de l'import d'animations depuis Mixamo, la structure des pistes (`Animation
 * **Unités** : Souvent exportées en **mètres** (les valeurs de position en Y des hanches sont proches de `1.0`).
 * **Pistes d'échelle** : Incluses pour chaque os, ce qui force le maillage cible à adopter la stature de l'armature Mixamo d'origine si elles ne sont pas filtrées.
 
+### C. La syntaxe des propriétés (`Hips_position` vs `Hips.position`)
+Selon le convertisseur ou l'outil d'export (par exemple, le pont de conversion FBX vers GLTF), les séparateurs standards de Three.js utilisant un point (`.`) sont parfois convertis en underscores (`_`).
+* **Format Standard** : `nom_de_l_os.propriete` (ex : `mixamorig:Hips.position`).
+* **Format Mixamo Externe Aplatit** : `nom_de_l_os_propriete` (ex : `mixamorig_Hips_position` ou `mixamorig_Hips_quaternion`).
+* **Impact** : Cela empêche les découpages classiques basés sur le caractère point (ex : `track.name.split('.')`) de fonctionner, car la propriété et le nom de l'os sont fusionnés dans une seule chaîne de caractères.
+* **Solution** : L'algorithme doit être capable d'identifier la propriété via des méthodes plus flexibles (comme `.includes('position')` ou `.includes('_position')`) pour router correctement les pistes de translation et de rotation.
+
 ---
 
 ## 5. Algorithme de Retargeting en Temps Réel (`Walker.tsx`)
