@@ -26,12 +26,14 @@ Le projet intègre deux personnages avec des structures de squelette et des orig
 
 ### A. X-Bot (Modèle Référence)
 * **Source** : Three.js Official Examples (`Xbot_official.glb`). **Attention :** Ce modèle ne doit pas être confondu avec l'X-Bot FBX brut directly issu de Mixamo, qui possède des spécificités d'échelle distinctes.
+* **Nombre de bones** : 67 joints.
 * **Nomenclature** : Mixamo standard avec des deux-points (`:`) comme séparateur (ex: `mixamorig:Hips`, `mixamorig:LeftArm`).
 * **Animations** : Embarquées directement à l'intérieur du fichier GLB (Marche, Pose neutre, etc.).
 * **Échelle** : Déjà configurée en centimètres (les Hips sont à Y = ~104 cm).
 
 ### B. Lara Croft (Modèle Personnalisé)
 * **Source** : Modèle Sketchfab converti (`lara_native.glb`).
+* **Nombre de bones** : 88 joints (incluant le visage, la queue de cheval, les pistolets, etc.).
 * **Nomenclature** : Noms d'os personnalisés utilisant des underscores (`_`) (ex: `mixamorig_root_hips`, `mixamorig_arm_left_shoulder_2`).
 * **Structure hiérarchique** : Dispose d'un os parent supplémentaire au niveau du sol nommé `mixamorig_root_ground`, qui sert de point d'attache au sol sous les hanches `mixamorig_root_hips`.
 * **Échelle** : Hauteur de repos configurée en centimètres (les Hips sont à Y = ~99 cm).
@@ -123,3 +125,77 @@ const hipsLocal = parent.worldToLocal(hipsWorld);
 scene.position.x -= hipsLocal.x;
 scene.position.z -= hipsLocal.z;
 ```
+
+---
+
+## 6. Liste Complète des Os (Bones) de l'X-Bot Official
+
+Le modèle de référence `Xbot_official.glb` contient **67 articulations** (joints) configurées avec la nomenclature suivante :
+
+1. `mixamorig:Hips` (Os racine du squelette)
+2. `mixamorig:Spine`
+3. `mixamorig:Spine1`
+4. `mixamorig:Spine2`
+5. `mixamorig:Neck`
+6. `mixamorig:Head`
+7. `mixamorig:HeadTop_End`
+8. `mixamorig:LeftEye`
+9. `mixamorig:RightEye`
+10. `mixamorig:LeftShoulder`
+11. `mixamorig:LeftArm`
+12. `mixamorig:LeftForeArm`
+13. `mixamorig:LeftHand`
+14. `mixamorig:LeftHandThumb1`
+15. `mixamorig:LeftHandThumb2`
+16. `mixamorig:LeftHandThumb3`
+17. `mixamorig:LeftHandThumb4`
+18. `mixamorig:LeftHandIndex1`
+19. `mixamorig:LeftHandIndex2`
+20. `mixamorig:LeftHandIndex3`
+21. `mixamorig:LeftHandIndex4`
+22. `mixamorig:LeftHandMiddle1`
+23. `mixamorig:LeftHandMiddle2`
+24. `mixamorig:LeftHandMiddle3`
+25. `mixamorig:LeftHandMiddle4`
+26. `mixamorig:LeftHandRing1`
+27. `mixamorig:LeftHandRing2`
+28. `mixamorig:LeftHandRing3`
+29. `mixamorig:LeftHandRing4`
+30. `mixamorig:LeftHandPinky1`
+31. `mixamorig:LeftHandPinky2`
+32. `mixamorig:LeftHandPinky3`
+33. `mixamorig:LeftHandPinky4`
+34. `mixamorig:RightShoulder`
+35. `mixamorig:RightArm`
+36. `mixamorig:RightForeArm`
+37. `mixamorig:RightHand`
+38. `mixamorig:RightHandPinky1`
+39. `mixamorig:RightHandPinky2`
+40. `mixamorig:RightHandPinky3`
+41. `mixamorig:RightHandPinky4`
+42. `mixamorig:RightHandRing1`
+43. `mixamorig:RightHandRing2`
+44. `mixamorig:RightHandRing3`
+45. `mixamorig:RightHandRing4`
+46. `mixamorig:RightHandMiddle1`
+47. `mixamorig:RightHandMiddle2`
+48. `mixamorig:RightHandMiddle3`
+49. `mixamorig:RightHandMiddle4`
+50. `mixamorig:RightHandIndex1`
+51. `mixamorig:RightHandIndex2`
+52. `mixamorig:RightHandIndex3`
+53. `mixamorig:RightHandIndex4`
+54. `mixamorig:RightHandThumb1`
+55. `mixamorig:RightHandThumb2`
+56. `mixamorig:RightHandThumb3`
+57. `mixamorig:RightHandThumb4`
+58. `mixamorig:LeftUpLeg`
+59. `mixamorig:LeftLeg`
+60. `mixamorig:LeftFoot`
+61. `mixamorig:LeftToeBase`
+62. `mixamorig:LeftToe_End`
+63. `mixamorig:RightUpLeg`
+64. `mixamorig:RightLeg`
+65. `mixamorig:RightFoot`
+66. `mixamorig:RightToeBase`
+67. `mixamorig:RightToe_End`
