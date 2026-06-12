@@ -1,6 +1,11 @@
 # Pipeline de Conversion d'Animations dans Blender (FBX vers GLB)
 
-Ce document décrit la méthode la plus propre et performante pour traiter et convertir des fichiers d'animation sources FBX (Mixamo) en fichiers GLB prêts pour l'intégration dans le projet **room3d**, en ciblant les rigs de l'**X-Bot** (Mixamo) et de **Lara Croft**.
+> [!IMPORTANT]
+> **Modèle de Référence de l'Application :**
+> Le modèle de référence utilisé et parfaitement fonctionnel dans le projet room3d est `public/media/sandbox/Xbot_official.glb` (issu des exemples officiels de Three.js).
+> **Ne pas le confondre avec le modèle X-Bot FBX brut de Mixamo.** Le squelette cible pour l'application doit correspondre à celui de `Xbot_official.glb` qui sert de calibrateur et d'échelle de référence.
+
+Ce document décrit la méthode la plus propre et performante pour traiter et convertir des fichiers d'animation sources FBX (Mixamo) en fichiers GLB prêts pour l'intégration dans le projet **room3d**, en ciblant les rigs de l'**X-Bot** (Three.js `Xbot_official.glb`) et de **Lara Croft** (`lara_native.glb`).
 
 ---
 

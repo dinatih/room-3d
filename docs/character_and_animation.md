@@ -1,5 +1,10 @@
 # Pipeline d'Importation, Rigs et Retargeting d'Animation
 
+> [!IMPORTANT]
+> **Modèle de Référence de l'Application :**
+> Le modèle de référence utilisé et parfaitement fonctionnel dans le projet room3d est `public/media/sandbox/Xbot_official.glb` (issu des exemples officiels de Three.js).
+> **Ne pas le confondre avec le modèle X-Bot FBX brut de Mixamo.** Le fichier `Xbot_official.glb` de Three.js sert de modèle de calibration d'échelle et de squelette de référence pour l'application.
+
 Ce document détaille la structure des personnages, le pipeline d'importation des modèles sources (FBX, GLB/GLTF) issus de Mixamo ou de Sketchfab, ainsi que le fonctionnement technique de notre système de retargeting d'animation en temps réel.
 
 ---
@@ -20,7 +25,7 @@ Un rig compatible doit respecter les contraintes suivantes :
 Le projet intègre deux personnages avec des structures de squelette et des origines différentes :
 
 ### A. X-Bot (Modèle Référence)
-* **Source** : Three.js Official Examples (`Xbot_official.glb`).
+* **Source** : Three.js Official Examples (`Xbot_official.glb`). **Attention :** Ce modèle ne doit pas être confondu avec l'X-Bot FBX brut directly issu de Mixamo, qui possède des spécificités d'échelle distinctes.
 * **Nomenclature** : Mixamo standard avec des deux-points (`:`) comme séparateur (ex: `mixamorig:Hips`, `mixamorig:LeftArm`).
 * **Animations** : Embarquées directement à l'intérieur du fichier GLB (Marche, Pose neutre, etc.).
 * **Échelle** : Déjà configurée en centimètres (les Hips sont à Y = ~104 cm).
