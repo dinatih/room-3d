@@ -445,8 +445,8 @@ function SingleCharacter({
     animations.forEach(clip => {
       let finalClip = clip;
       if (isLara) {
-        const isSitting = clip.name === 'media/sandbox/anim_sitting_idle.glb';
-        finalClip = retargetClip(clip, scene, xbotScene, isSitting ? sittingScene : undefined, isLara);
+        const isExternal = clip.name.endsWith('.glb');
+        finalClip = retargetClip(clip, scene, xbotScene, isExternal ? sittingScene : undefined, isLara);
       } else {
         const cleanTracks = clip.tracks.filter(track => !track.name.endsWith('.scale'));
         finalClip = new THREE.AnimationClip(clip.name, clip.duration, cleanTracks);
@@ -666,7 +666,7 @@ function InternalWalker(props: WalkerProps) {
       {/* 6 NPC Laras placed randomly around Studio and Garden */}
       <SingleCharacter {...props} modelPath={ROSANNA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="rosanna" isNPC={true} npcPosition={[220, 0, -20]} npcRotationY={-Math.PI / 4} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="marissa" isNPC={true} npcPosition={[180, 0, 160]} npcRotationY={Math.PI / 2} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={delphinaAnims} xbotScene={xbotGltf.scene} variant="delphina" isNPC={true} npcPosition={[60, 0, 560]} npcRotationY={0} sittingScene={dynamicGltf.scene} />
+      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={delphinaAnims} xbotScene={xbotGltf.scene} variant="delphina" isNPC={true} npcPosition={[110, 0, 530]} npcRotationY={0} sittingScene={dynamicGltf.scene} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="sara" isNPC={true} npcPosition={[250, 0, 300]} npcRotationY={Math.PI} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={chaAnims} xbotScene={xbotGltf.scene} variant="cha" isNPC={true} npcPosition={[30, 0, 151]} npcRotationY={Math.PI / 2} sittingScene={sittingGltf.scene} />
       <SingleCharacter {...props} modelPath={VIVID_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="vivid" isNPC={true} npcPosition={[150, 0, 50]} npcRotationY={Math.PI / 4} />
