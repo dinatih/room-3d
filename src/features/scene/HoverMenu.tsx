@@ -191,7 +191,7 @@ export function HoverRaycaster() {
 
         const action = resolveAction(hit.object);
         if (action && action.actionIds.some(id => ACTIONS[id])) return action;
-        break;
+        continue;
       }
       return null;
     }
