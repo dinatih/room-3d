@@ -54,6 +54,21 @@ Le fichier FBX d'origine (`sources_backup/X Bot.fbx`) exporté de Mixamo présen
   * **X-Bot Official (Three.js)** : Tous les rolls locaux des os de repos ont été remis à `0.0 rad (0°)` dans le squelette de calibration. Les axes locaux sont donc parfaitement alignés de façon neutre.
   * **Conséquence directe** : Appliquer les coordonnées de rotation (quaternions) brutes d'une animation FBX externe sur `Xbot_official.glb` sans compenser ces différences de rolls locaux provoque des torsions et des distorsions géométriques extrêmes (membres tordus à 90° ou 180°). C'est pourquoi la formule de retargeting ($resQ$) doit réaligner les quaternions en utilisant la pose de repos.
 
+### D. Différences entre Lara Croft FBX (Source) et Lara Croft GLB (Converti)
+
+Le modèle Lara Croft source au format FBX (`sources_backup/lara-croft-2026-rigged/source/.../C1S1UIP9N1UQPLO2U787FMDUD.fbx`) a été converti en `public/media/sandbox/lara_native.glb` à l'aide de notre script de nettoyage [definitive_lara_fix.py](file:///home/dinatih/Projects/room-3d/definitive_lara_fix.py). Les modifications clés apportées par le script incluent :
+
+* **Nomenclature des Os (Bones Names)** :
+  * **Lara FBX d'origine** : Les articulations sont nommées en anglais brut en utilisant des espaces comme séparateurs, sans aucun préfixe (ex: `root ground`, `root hips`, `spine lower`, `leg left thigh`, `arm left elbow`).
+  * **Lara GLB converti** : Pour des raisons de compatibilité et de routage automatisé des pistes d'animation dans room3d, les espaces ont été remplacés par des underscores et toutes les articulations ont été préfixées avec `mixamorig_` (ex: `mixamorig_root_ground`, `mixamorig_root_hips`, `mixamorig_spine_lower`, `mixamorig_leg_left_thigh`, `mixamorig_arm_left_elbow`).
+* **Unités et Échelle (Scale)** :
+  * **Lara FBX d'origine** : Conçu en **mètres** (la hauteur des hanches `root hips` est d'environ `0.98` m de hauteur, et la longueur des os est de l'ordre de `0.10` à `0.40` m).
+  * **Lara GLB converti** : Rescalé de façon uniforme en **centimètres** par un facteur de multiplication de 100 (la hauteur des hanches `mixamorig_root_hips` passe à `99.3` cm, la hauteur totale du maillage est calibrée à `173.4` cm pour correspondre à l'échelle du projet de 1 unité = 1 cm).
+* **Orientations Locales et Rolls** :
+  * Contrairement au modèle X-Bot Mixamo FBX (qui contient des rolls locaux non nuls de 90° ou 180°), le modèle original Lara FBX possédait déjà des rolls de repos locaux nuls (`0.0 rad` ou `0.0°`) pour les os principaux. Les rolls locaux de `0.0 rad` ont donc été conservés à l'identique dans le fichier GLB converti.
+* **Modifications de Hiérarchie et d'Attaches (Rigging/Skinning)** :
+  * Le script [definitive_lara_fix.py](file:///home/dinatih/Projects/room-3d/definitive_lara_fix.py) a également recalculé les vertex groups des maillages pour correspondre aux nouveaux noms d'os, ajouté des os d'extrémités (`_End`), et lié des accessoires rigides (pistolets `mixamorig_weapon_left`/`right`, lunettes `mixamorig_glasses`, sac `mixamorig_spine_upper`) aux os parents correspondants pour éliminer les déformations géométriques indésirables lors des mouvements.
+
 ---
 
 ## 3. Différences entre Personnages (Squelettes et Hiérarchies)
