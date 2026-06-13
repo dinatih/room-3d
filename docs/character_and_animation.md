@@ -38,6 +38,22 @@ Le projet intègre deux personnages avec des structures de squelette et des orig
 * **Structure hiérarchique** : Dispose d'un os parent supplémentaire au niveau du sol nommé `mixamorig_root_ground`, qui sert de point d'attache au sol sous les hanches `mixamorig_root_hips`.
 * **Échelle** : Hauteur de repos configurée en centimètres (les Hips sont à Y = ~99 cm).
 
+### C. Différences entre X-Bot FBX (Mixamo) et X-Bot Official (Three.js)
+
+Le fichier FBX d'origine (`sources_backup/X Bot.fbx`) exporté de Mixamo présente des différences structurelles et mathématiques majeures avec le fichier `Xbot_official.glb` utilisé dans Three.js et room3d :
+
+* **Nombre de Bones (Joints)** :
+  * **X-Bot FBX (Mixamo)** : Contient **65 os**.
+  * **X-Bot Official (Three.js)** : Contient **67 os**. Les yeux (`mixamorig:LeftEye` et `mixamorig:RightEye`) ont été insérés en tant qu'os enfants de la tête (`mixamorig:Head`) dans le modèle Three.js.
+* **Orientation Globale de l'Armature (Axes)** :
+  * **X-Bot FBX (Mixamo)** : Possède une rotation d'objet armature de `90°` sur l'axe X (`(1.5708, 0, 0)`) pour réorienter le modèle dans l'espace Y-up lors de l'export. Le repère physique interne des coordonnées dans le fichier reste orienté en Y-up (Hips à Y = ~104 cm).
+  * **X-Bot Official (Three.js)** : Possède une rotation d'objet armature nulle `(0, 0, 0)`. Toutes les transformations d'axes et orientations globales ont été directement appliquées ("baked") sur la géométrie et les articulations lors du passage au format GLTF.
+* **Orientation Locale des Os (Rolls de repos)** :
+  * C'est la différence la plus critique pour le calcul d'animations en temps réel.
+  * **X-Bot FBX (Mixamo)** : Les os ont des rolls de repos (torsion locale de l'os par rapport à son parent) non nuls pour s'aligner le long des membres selon les spécifications d'origine de Mixamo/FBX (ex: roll de `90°` ou `1.5708 rad` pour les bras et les mains, roll de `180°` ou `3.1416 rad` pour les cuisses).
+  * **X-Bot Official (Three.js)** : Tous les rolls locaux des os de repos ont été remis à `0.0 rad (0°)` dans le squelette de calibration. Les axes locaux sont donc parfaitement alignés de façon neutre.
+  * **Conséquence directe** : Appliquer les coordonnées de rotation (quaternions) brutes d'une animation FBX externe sur `Xbot_official.glb` sans compenser ces différences de rolls locaux provoque des torsions et des distorsions géométriques extrêmes (membres tordus à 90° ou 180°). C'est pourquoi la formule de retargeting ($resQ$) doit réaligner les quaternions en utilisant la pose de repos.
+
 ---
 
 ## 3. Différences entre Personnages (Squelettes et Hiérarchies)
