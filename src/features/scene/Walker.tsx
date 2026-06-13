@@ -10,10 +10,13 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
-import { LAYER_WALKER_DETAIL } from '@config';
+import { LAYER_WALKER_DETAIL, LAYER_WALKER } from '@config';
+import { applyLaraVariantStyles, type LaraVariant } from './LaraVariants';
 
 const XBOT_PATH = 'media/sandbox/Xbot_official.glb';
 const LARA_PATH = 'media/sandbox/lara_native.glb';
+const ROSANNA_PATH = 'media/sandbox/rosanna_lara_native.glb';
+const VIVID_PATH = 'media/sandbox/vivid_red_lara_native.glb';
 
 const BONE_MAP: Record<string, string> = {
   "mixamorig:Hips": "mixamorig_root_hips",
@@ -330,6 +333,10 @@ interface SingleCharacterProps extends WalkerProps {
   isActive: boolean;
   animations: THREE.AnimationClip[];
   xbotScene: THREE.Group;
+  variant?: LaraVariant;
+  isNPC?: boolean;
+  npcPosition?: [number, number, number];
+  npcRotationY?: number;
 }
 
 function SingleCharacter({ 
@@ -341,7 +348,11 @@ function SingleCharacter({
   walkerAnim = 'idle', 
   isPaused = false,
   animations,
-  xbotScene
+  xbotScene,
+  variant,
+  isNPC = false,
+  npcPosition = [0, 0, 0],
+  npcRotationY = 0
 }: SingleCharacterProps) {
   const { scene } = useGLTFClone(modelPath);
   
@@ -395,7 +406,8 @@ function SingleCharacter({
                 mat.side = THREE.FrontSide;
             });
             delete c.raycast;
-            c.userData.hoverAction = { label: isLara ? 'Lara' : 'X-Bot', actionId: isLara ? 'walker-anim-lara' : 'walker-anim-xbot' };
+            const labelStr = variant ? variant.charAt(0).toUpperCase() + variant.slice(1) : (isLara ? 'Lara' : 'X-Bot');
+            c.userData.hoverAction = { label: labelStr, actionId: isLara ? 'walker-anim-lara' : 'walker-anim-xbot' };
         }
       }
       c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
@@ -406,6 +418,10 @@ function SingleCharacter({
         c.userData.restQuat = c.quaternion.clone();
       }
     });
+
+    if (variant) {
+        applyLaraVariantStyles(scene, variant);
+    }
 
     // Populate source rest poses on X-Bot template
     xbotScene.updateMatrixWorld(true);
@@ -523,6 +539,10 @@ function SingleCharacter({
         groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
         groupRef.current.rotation.y = cameraState.walkYaw;
         groupRef.current.visible = !cameraState.walkerHidden;
+      } else if (isNPC) {
+        groupRef.current.position.set(npcPosition[0], npcPosition[1], npcPosition[2]);
+        groupRef.current.rotation.y = npcRotationY;
+        groupRef.current.visible = true;
       } else {
         // Inactive character stays at its last 'other' position
         groupRef.current.position.set(cameraState.otherX, 0, cameraState.otherZ);
@@ -533,7 +553,7 @@ function SingleCharacter({
       const isFirstPerson = isActive && cameraState.mode === 'walk';
       scene.traverse(o => {
         if ((o as THREE.Mesh).isMesh) {
-          o.layers.set(isFirstPerson ? LAYER_WALKER_DETAIL : 0);
+          o.layers.set(isFirstPerson ? LAYER_WALKER_DETAIL : LAYER_WALKER);
         }
       });
     }
@@ -622,6 +642,14 @@ function InternalWalker(props: WalkerProps) {
         animations={xbotGltf.animations}
         xbotScene={xbotGltf.scene}
       />
+      
+      {/* 6 NPC Laras placed randomly around Studio and Garden */}
+      <SingleCharacter {...props} modelPath={ROSANNA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="rosanna" isNPC={true} npcPosition={[220, 0, -20]} npcRotationY={-Math.PI / 4} />
+      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="marissa" isNPC={true} npcPosition={[180, 0, 160]} npcRotationY={Math.PI / 2} />
+      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="delphina" isNPC={true} npcPosition={[50, 0, 320]} npcRotationY={Math.PI} />
+      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="sara" isNPC={true} npcPosition={[120, 0, 480]} npcRotationY={0} />
+      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="standard" isNPC={true} npcPosition={[280, 0, 380]} npcRotationY={-Math.PI / 2} />
+      <SingleCharacter {...props} modelPath={VIVID_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="vivid" isNPC={true} npcPosition={[150, 0, 50]} npcRotationY={Math.PI / 4} />
     </>
   );
 }
@@ -636,3 +664,5 @@ export function Walker(props: WalkerProps) {
 
 useGLTF.preload(XBOT_PATH);
 useGLTF.preload(LARA_PATH);
+useGLTF.preload(ROSANNA_PATH);
+useGLTF.preload(VIVID_PATH);
