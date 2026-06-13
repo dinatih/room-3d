@@ -64,7 +64,7 @@ function retargetClipForLara(rawClip: THREE.AnimationClip, laraInstance: THREE.O
   let hipsRatio = 100.0;
   const hipsPos = rawClip.tracks.find(t => t.name.includes('Hips.position') || t.name.includes('Hips_position') || t.name.includes('hips.position'));
   if (hipsPos && hipsPos.values.length >= 3) {
-    const height = Math.abs(hipsPos.values[1]);
+    const height = Math.max(Math.abs(hipsPos.values[1]), Math.abs(hipsPos.values[2]));
     if (height > 40.0) {
       hipsRatio = 1.0;
     }
@@ -144,11 +144,11 @@ function retargetClipForLara(rawClip: THREE.AnimationClip, laraInstance: THREE.O
             
             const phase = (t / duration) * 2.0 * Math.PI;
             
-            // Procedural Y bobbing (vertical displacement twice per cycle)
-            // and X sway (horizontal side-to-side weight shift once per cycle)
-            const dx = 0.8 * Math.cos(phase); // sway side-to-side (0.8 cm)
-            const dy = -1.6 * Math.sin(phase * 2.0); // bob up-and-down (1.6 cm)
-            const dz = 0.0; // In-place, no forward translation
+            // Procedural height bobbing (Z in Blender's space)
+            // and lateral sway (X in Blender's space)
+            const dx = 0.8 * Math.cos(phase); // sway side-to-side (0.8 cm, X)
+            const dy = 0.0; // forward progress cancelled (0.0 cm, Y)
+            const dz = -1.6 * Math.sin(phase * 2.0); // bob up-and-down (1.6 cm, Z)
             
             const dP = new THREE.Vector3(dx, dy, dz)
               .applyQuaternion(P_src)
@@ -164,10 +164,10 @@ function retargetClipForLara(rawClip: THREE.AnimationClip, laraInstance: THREE.O
           clone.values = newValues;
         } else {
           for (let j = 0; j < clone.values.length / 3; j++) {
+            // In Blender's space: X is sway, Y is forward progress, Z is vertical bobbing/height
             const dx = (clone.values[3*j] - restX) * hipsRatio;
-            const dy = (clone.values[3*j+1] - restY) * hipsRatio;
-            // Cancel forward progress (Z) for walk/run animations to keep them in-place, while keeping vertical bobbing (Y) and side sway (X)
-            const dz = isWalk ? 0.0 : (clone.values[3*j+2] - restZ) * hipsRatio;
+            const dy = isWalk ? 0.0 : (clone.values[3*j+1] - restY) * hipsRatio;
+            const dz = (clone.values[3*j+2] - restZ) * hipsRatio;
             
             const dP = new THREE.Vector3(dx, dy, dz)
               .applyQuaternion(P_src)
