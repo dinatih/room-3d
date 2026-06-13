@@ -763,13 +763,37 @@
       { name: "Happy Walk (not in place) (anim_happy_walk_not_in_place.glb)", file: "media/sandbox/anim_happy_walk_not_in_place.glb" },
       { name: "Sitting Idle (anim_sitting_idle.glb)", file: "media/sandbox/anim_sitting_idle.glb" },
       { name: "Sitting Angry (anim_sitting_angry.glb)", file: "media/sandbox/anim_sitting_angry.glb" },
-      { name: "Marche Studio (anim_walking.glb)", file: "media/sandbox/anim_walking.glb" },
-      { name: "Marche Joyeuse (anim_happy_walk.glb)", file: "media/sandbox/anim_happy_walk.glb" },
       { name: "T-Pose de Test (anim_t_pose.glb)", file: "media/sandbox/anim_t_pose.glb" },
-      { name: "Colère (anim_angry_gesture.glb)", file: "media/sandbox/anim_angry_gesture.glb" },
-      { name: "Monter escalier (anim_ascending_stairs.glb)", file: "media/sandbox/anim_ascending_stairs.glb" },
-      { name: "Tourner Gauche (anim_left_turn.glb)", file: "media/sandbox/anim_left_turn.glb" },
-      { name: "Tourner Droite (anim_right_turn.glb)", file: "media/sandbox/anim_right_turn.glb" }
+      { name: "Saut (anim_jump.glb)", file: "media/sandbox/anim_jump.glb" },
+      { name: "Dormir (anim_sleeping_idle.glb)", file: "media/sandbox/anim_sleeping_idle.glb" },
+      { name: "Laying Idle (anim_laying_idle.glb)", file: "media/sandbox/anim_laying_idle.glb" },
+      { name: "Skinning Test (anim_skinning_test.glb)", file: "media/sandbox/anim_skinning_test.glb" },
+      { name: "Samba Dancing (anim_samba_dancing.glb)", file: "media/sandbox/anim_samba_dancing.glb" },
+      { name: "Back Flip to Uppercut (anim_back_flip_to_uppercut.glb)", file: "media/sandbox/anim_back_flip_to_uppercut.glb" },
+      { name: "Left Strafe Walking (anim_left_strafe_walking.glb)", file: "media/sandbox/anim_left_strafe_walking.glb" },
+      { name: "Right Strafe Walking (anim_right_strafe_walking.glb)", file: "media/sandbox/anim_right_strafe_walking.glb" },
+      { name: "Idle (anim_idle.glb)", file: "media/sandbox/anim_idle.glb" },
+      { name: "Walking (anim_walking.glb)", file: "media/sandbox/anim_walking.glb" },
+      { name: "Right Turn 90 (anim_right_turn_90.glb)", file: "media/sandbox/anim_right_turn_90.glb" },
+      { name: "Left Turn 90 (anim_left_turn_90.glb)", file: "media/sandbox/anim_left_turn_90.glb" },
+      { name: "Gangnam Style (anim_gangnam_style.glb)", file: "media/sandbox/anim_gangnam_style.glb" },
+      { name: "Drinking Fountain (anim_drinking_fountain.glb)", file: "media/sandbox/anim_drinking_fountain.glb" },
+      { name: "Martelo Do Chau Sem Mao (anim_martelo_do_chau_sem_mao.glb)", file: "media/sandbox/anim_martelo_do_chau_sem_mao.glb" },
+      { name: "Female Dynamic Pose (anim_female_dynamic_pose.glb)", file: "media/sandbox/anim_female_dynamic_pose.glb" },
+      { name: "Female Laying Pose (anim_female_laying_pose.glb)", file: "media/sandbox/anim_female_laying_pose.glb" },
+      { name: "Female Laying Pose 1 (anim_female_laying_pose_1.glb)", file: "media/sandbox/anim_female_laying_pose_1.glb" },
+      { name: "Female Laying Pose 2 (anim_female_laying_pose_2.glb)", file: "media/sandbox/anim_female_laying_pose_2.glb" },
+      { name: "Female Laying Pose 3 (anim_female_laying_pose_3.glb)", file: "media/sandbox/anim_female_laying_pose_3.glb" },
+      { name: "Tender Placement (anim_tender_placement.glb)", file: "media/sandbox/anim_tender_placement.glb" },
+      { name: "Left Strafe (anim_left_strafe.glb)", file: "media/sandbox/anim_left_strafe.glb" },
+      { name: "Right Strafe (anim_right_strafe.glb)", file: "media/sandbox/anim_right_strafe.glb" },
+      { name: "Running (anim_running.glb)", file: "media/sandbox/anim_running.glb" },
+      { name: "Left Strafe Walk (anim_left_strafe_walk.glb)", file: "media/sandbox/anim_left_strafe_walk.glb" },
+      { name: "Right Strafe Walk (anim_right_strafe_walk.glb)", file: "media/sandbox/anim_right_strafe_walk.glb" },
+      { name: "Left Turn (anim_left_turn.glb)", file: "media/sandbox/anim_left_turn.glb" },
+      { name: "Right Turn (anim_right_turn.glb)", file: "media/sandbox/anim_right_turn.glb" },
+      { name: "Left Turn 2 (anim_left_turn_2.glb)", file: "media/sandbox/anim_left_turn_2.glb" },
+      { name: "Right Turn 2 (anim_right_turn_2.glb)", file: "media/sandbox/anim_right_turn_2.glb" }
     ];
 
     // Bone mapping from Mixamo name to Lara Native bone name
@@ -1150,15 +1174,8 @@
 
       const tracks = [];
 
-       // Determine height translations scale multiplier
-      hipsRatio = 100.0; // default multiplier
-      const hipsPos = rawClip.tracks.find(t => t.name.includes('Hips.position') || t.name.includes('Hips_position') || t.name.includes('hips.position'));
-      if (hipsPos && hipsPos.values.length >= 3) {
-        const height = Math.max(Math.abs(hipsPos.values[1]), Math.abs(hipsPos.values[2]));
-        if (height > 40.0) {
-          hipsRatio = 1.0; // Already in centimeters!
-        }
-      }
+      // Determine height translations scale multiplier
+      hipsRatio = (!animKey || animKey === 'embedded') ? 100.0 : 1.0;
       document.getElementById('hud-hips-scale').innerText = `${hipsRatio.toFixed(0)}x`;
 
       for (const tr of rawClip.tracks) {
