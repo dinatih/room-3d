@@ -109,6 +109,8 @@ function retargetClipForLara(rawClip: THREE.AnimationClip, laraInstance: THREE.O
           : new THREE.Quaternion();
         const P_tgt_inv = P_tgt.clone().invert();
         
+        const srcRestPos = srcBone && srcBone.defaultPosition ? srcBone.defaultPosition : new THREE.Vector3(0, 99.1, 0);
+        
         const restX = clone.values[0];
         const restY = clone.values[1];
         const restZ = clone.values[2];
@@ -165,9 +167,9 @@ function retargetClipForLara(rawClip: THREE.AnimationClip, laraInstance: THREE.O
         } else {
           for (let j = 0; j < clone.values.length / 3; j++) {
             // In Blender's space: X is sway, Y is forward progress, Z is vertical bobbing/height
-            const dx = (clone.values[3*j] - restX) * hipsRatio;
-            const dy = isWalk ? 0.0 : (clone.values[3*j+1] - restY) * hipsRatio;
-            const dz = (clone.values[3*j+2] - restZ) * hipsRatio;
+            const dx = (clone.values[3*j] - srcRestPos.x) * hipsRatio;
+            const dy = isWalk ? 0.0 : (clone.values[3*j+1] - srcRestPos.y) * hipsRatio;
+            const dz = (clone.values[3*j+2] - srcRestPos.z) * hipsRatio;
             
             const dP = new THREE.Vector3(dx, dy, dz)
               .applyQuaternion(P_src)

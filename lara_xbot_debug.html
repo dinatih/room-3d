@@ -761,6 +761,8 @@
       { name: "Animations du X-Bot (Marche/Idle embarquées)", file: "embedded" },
       { name: "Catwalk Walking (not in place) (anim_catwalk_walking_not_in_place.glb)", file: "media/sandbox/anim_catwalk_walking_not_in_place.glb" },
       { name: "Happy Walk (not in place) (anim_happy_walk_not_in_place.glb)", file: "media/sandbox/anim_happy_walk_not_in_place.glb" },
+      { name: "Sitting Idle (anim_sitting_idle.glb)", file: "media/sandbox/anim_sitting_idle.glb" },
+      { name: "Sitting Angry (anim_sitting_angry.glb)", file: "media/sandbox/anim_sitting_angry.glb" },
       { name: "Marche Studio (anim_walking.glb)", file: "media/sandbox/anim_walking.glb" },
       { name: "Marche Joyeuse (anim_happy_walk.glb)", file: "media/sandbox/anim_happy_walk.glb" },
       { name: "T-Pose de Test (anim_t_pose.glb)", file: "media/sandbox/anim_t_pose.glb" },
@@ -1062,7 +1064,8 @@
                     restLocalQuaternion: c.quaternion.clone(),
                     parentRestWorldQuaternion: c.parent
                       ? c.parent.getWorldQuaternion(new THREE.Quaternion())
-                      : new THREE.Quaternion()
+                      : new THREE.Quaternion(),
+                    defaultPosition: c.position.clone()
                   };
                 }
               }
@@ -1112,7 +1115,8 @@
                     restLocalQuaternion: c.quaternion.clone(),
                     parentRestWorldQuaternion: c.parent
                       ? c.parent.getWorldQuaternion(new THREE.Quaternion())
-                      : new THREE.Quaternion()
+                      : new THREE.Quaternion(),
+                    defaultPosition: c.position.clone()
                   };
                 }
               }
@@ -1217,6 +1221,14 @@
                 : new THREE.Quaternion();
               const P_tgt_inv = P_tgt.clone().invert();
               
+              let srcRestPos = null;
+              if (animKey && animSkeletons[animKey] && animSkeletons[animKey][baseName] && animSkeletons[animKey][baseName].defaultPosition) {
+                srcRestPos = animSkeletons[animKey][baseName].defaultPosition;
+              } else {
+                const srcBone = MODELS_META.xbot.instance ? MODELS_META.xbot.instance.getObjectByName('mixamorig' + baseName) : null;
+                srcRestPos = srcBone && srcBone.defaultPosition ? srcBone.defaultPosition : new THREE.Vector3(0, 99.1, 0);
+              }
+              
               const restX = clone.values[0];
               const restY = clone.values[1];
               const restZ = clone.values[2];
@@ -1273,9 +1285,9 @@
               } else {
                 for (let j = 0; j < clone.values.length / 3; j++) {
                   // In Blender's space: X is sway, Y is forward progress, Z is vertical bobbing/height
-                  const dx = (clone.values[3*j] - restX) * hipsRatio;
-                  const dy = isWalk ? 0.0 : (clone.values[3*j+1] - restY) * hipsRatio;
-                  const dz = (clone.values[3*j+2] - restZ) * hipsRatio;
+                  const dx = (clone.values[3*j] - srcRestPos.x) * hipsRatio;
+                  const dy = isWalk ? 0.0 : (clone.values[3*j+1] - srcRestPos.y) * hipsRatio;
+                  const dz = (clone.values[3*j+2] - srcRestPos.z) * hipsRatio;
                   
                   // Rotate displacement from source parent world to target parent local: P_tgt_inv * P_src * dP
                   const dP = new THREE.Vector3(dx, dy, dz)
