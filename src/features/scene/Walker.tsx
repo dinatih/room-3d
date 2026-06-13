@@ -101,7 +101,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         targetBoneName = 'mixamorig_root_hips';
       }
     } else {
-      targetBoneName = `mixamorig${baseName}`;
+      targetBoneName = `mixamorig:${baseName}`;
     }
 
     if (!targetBoneName) continue;
@@ -124,7 +124,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         if (animBones[baseName]) {
           P_src = animBones[baseName].parentRestWorldQuaternion;
         } else {
-          const srcBone = xbotInstance.getObjectByName('mixamorig' + baseName) as any;
+          const srcBone = xbotInstance.getObjectByName('mixamorig:' + baseName) as any;
           P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
             ? srcBone.parent.restWorldQuaternion
             : new THREE.Quaternion();
@@ -139,7 +139,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         if (animBones[baseName]) {
           srcRestPos = animBones[baseName].defaultPosition;
         } else {
-          const srcBone = xbotInstance.getObjectByName('mixamorig' + baseName) as any;
+          const srcBone = xbotInstance.getObjectByName('mixamorig:' + baseName) as any;
           srcRestPos = srcBone && srcBone.defaultPosition ? srcBone.defaultPosition : new THREE.Vector3(0, 99.1, 0);
         }
         
@@ -228,7 +228,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           B_src = animBones[baseName].restWorldQuaternion;
           P_src = animBones[baseName].parentRestWorldQuaternion;
         } else {
-          const srcBone = xbotInstance.getObjectByName('mixamorig' + baseName) as any;
+          const srcBone = xbotInstance.getObjectByName('mixamorig:' + baseName) as any;
           B_src = srcBone ? srcBone.restWorldQuaternion : null;
           P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
             ? srcBone.parent.restWorldQuaternion
@@ -444,9 +444,11 @@ function SingleCharacter({
 
     animations.forEach(clip => {
       let finalClip = clip;
+      const isExternal = clip.name.endsWith('.glb');
       if (isLara) {
-        const isExternal = clip.name.endsWith('.glb');
-        finalClip = retargetClip(clip, scene, xbotScene, isExternal ? sittingScene : undefined, isLara);
+        finalClip = retargetClip(clip, scene, xbotScene, isExternal ? sittingScene : undefined, true);
+      } else if (isExternal) {
+        finalClip = retargetClip(clip, scene, xbotScene, sittingScene, false);
       } else {
         const cleanTracks = clip.tracks.filter(track => !track.name.endsWith('.scale'));
         finalClip = new THREE.AnimationClip(clip.name, clip.duration, cleanTracks);
@@ -687,7 +689,7 @@ function InternalWalker(props: WalkerProps) {
       />
       
       {/* 6 NPC Laras placed randomly around Studio and Garden */}
-      <SingleCharacter {...props} modelPath={ROSANNA_PATH} isLara={true} isActive={false} animations={rosannaAnims} xbotScene={xbotGltf.scene} variant="rosanna" isNPC={true} npcPosition={[251, 23, 178]} npcRotationY={1.325} sittingScene={pushUpGltf.scene} />
+      <SingleCharacter {...props} modelPath={ROSANNA_PATH} isLara={true} isActive={false} animations={rosannaAnims} xbotScene={xbotGltf.scene} variant="rosanna" isNPC={true} npcPosition={[251, 75, 178]} npcRotationY={1.325 + Math.PI / 2} sittingScene={pushUpGltf.scene} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="marissa" isNPC={true} npcPosition={[180, 0, 160]} npcRotationY={Math.PI / 2} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={delphinaAnims} xbotScene={xbotGltf.scene} variant="delphina" isNPC={true} npcPosition={[110, 0, 570]} npcRotationY={0} sittingScene={dynamicGltf.scene} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="sara" isNPC={true} npcPosition={[250, 0, 300]} npcRotationY={Math.PI} />

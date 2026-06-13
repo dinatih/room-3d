@@ -17,13 +17,13 @@ export const cameraState = {
   walkYaw:   0     as number,
   walkPitch: 0     as number,
   /** Position et orientation du walker unique (mis à jour par CameraController) */
-  walkerX: 150 as number, 
-  walkerZ: 200 as number, 
-  walkerYaw: 0 as number,
+  walkerX: 251 as number, 
+  walkerZ: 178 as number, 
+  walkerYaw: 1.325 + Math.PI / 2 as number,
   /** Position du second modèle immobile */
   otherX: 251 as number,
   otherZ: 178 as number,
-  otherYaw: 1.325 as number,
+  otherYaw: 1.325 + Math.PI / 2 as number,
   /** Hauteur (cm) du walker — écrit par Walker.tsx, lue par les caméras walk */
   walkerHeight: 181 as number,
   /** Déclenché par CameraController chaque frame — la minimap s'y abonne */
