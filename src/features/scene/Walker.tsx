@@ -527,7 +527,8 @@ function SingleCharacter({
     return () => document.removeEventListener('furniture-toggle', onToggle);
   }, [isActive, isLara, scene, xbotScene]);
 
-  useFrame((_, delta) => {
+  useFrame((_, rawDelta) => {
+    const delta = Math.min(rawDelta, 0.1);
     if (!groupRef.current || !mixerRef.current) return;
 
     if (isPreview) {
