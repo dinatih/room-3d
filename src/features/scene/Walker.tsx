@@ -7,6 +7,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { LAYER_WALKER_DETAIL } from '@config';
@@ -52,14 +53,32 @@ function getFingerLaraName(mixName: string): string {
     const sLet = segLet[seg];
     
     if (fIdx && sLet) {
-      return `mixamorig_arm_${side}_finger_${fIdx}_${sLet}`;
+      return `mixamorig_arm_${side}_finger_${fIdx}${sLet}`;
     }
   }
   return "";
 }
 
-function retargetClipForLara(rawClip: THREE.AnimationClip, laraInstance: THREE.Object3D, xbotInstance: THREE.Object3D): THREE.AnimationClip {
+function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, xbotInstance: THREE.Object3D, animScene: THREE.Object3D | undefined, isLara: boolean): THREE.AnimationClip {
   const tracks: THREE.KeyframeTrack[] = [];
+
+  const animBones: Record<string, any> = {};
+  if (animScene) {
+    animScene.updateMatrixWorld(true);
+    animScene.traverse((c: any) => {
+      if (c.isBone) {
+        const match = c.name.match(/mixamorig[:_]?(.+)/i);
+        if (match) {
+          animBones[match[1]] = {
+            restWorldQuaternion: c.getWorldQuaternion(new THREE.Quaternion()),
+            restLocalQuaternion: c.quaternion.clone(),
+            parentRestWorldQuaternion: c.parent ? c.parent.getWorldQuaternion(new THREE.Quaternion()) : new THREE.Quaternion(),
+            defaultPosition: c.position.clone()
+          };
+        }
+      }
+    });
+  }
 
   let hipsRatio = 100.0;
   const hipsPos = rawClip.tracks.find(t => t.name.includes('Hips.position') || t.name.includes('Hips_position') || t.name.includes('hips.position'));
@@ -77,11 +96,16 @@ function retargetClipForLara(rawClip: THREE.AnimationClip, laraInstance: THREE.O
     if (!match) continue;
     const baseName = match[1];
 
-    const keyName = `mixamorig:${baseName}`;
-    let targetBoneName = BONE_MAP[keyName] || getFingerLaraName(keyName);
-
-    if (keyName === 'mixamorig:Hips') {
-      targetBoneName = 'mixamorig_root_hips';
+    let targetBoneName = '';
+    
+    if (isLara) {
+      const keyName = `mixamorig:${baseName}`;
+      targetBoneName = BONE_MAP[keyName] || getFingerLaraName(keyName);
+      if (keyName === 'mixamorig:Hips') {
+        targetBoneName = 'mixamorig_root_hips';
+      }
+    } else {
+      targetBoneName = `mixamorig${baseName}`;
     }
 
     if (!targetBoneName) continue;
@@ -98,18 +122,30 @@ function retargetClipForLara(rawClip: THREE.AnimationClip, laraInstance: THREE.O
 
     // Retarget Hips translation
     if (prop === 'position' && isHips) {
-      const bone = laraInstance.getObjectByName(targetBoneName) as any;
+      const bone = targetInstance.getObjectByName(targetBoneName) as any;
       if (bone && bone.defaultPosition) {
-        const srcBone = xbotInstance.getObjectByName('mixamorig:' + baseName) as any;
-        const P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
-          ? srcBone.parent.restWorldQuaternion
-          : new THREE.Quaternion();
+        let P_src = null;
+        if (animBones[baseName]) {
+          P_src = animBones[baseName].parentRestWorldQuaternion;
+        } else {
+          const srcBone = xbotInstance.getObjectByName('mixamorig' + baseName) as any;
+          P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
+            ? srcBone.parent.restWorldQuaternion
+            : new THREE.Quaternion();
+        }
+        
         const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
           ? bone.parent.restWorldQuaternion
           : new THREE.Quaternion();
         const P_tgt_inv = P_tgt.clone().invert();
         
-        const srcRestPos = srcBone && srcBone.defaultPosition ? srcBone.defaultPosition : new THREE.Vector3(0, 99.1, 0);
+        let srcRestPos = null;
+        if (animBones[baseName]) {
+          srcRestPos = animBones[baseName].defaultPosition;
+        } else {
+          const srcBone = xbotInstance.getObjectByName('mixamorig' + baseName) as any;
+          srcRestPos = srcBone && srcBone.defaultPosition ? srcBone.defaultPosition : new THREE.Vector3(0, 99.1, 0);
+        }
         
         const restX = clone.values[0];
         const restY = clone.values[1];
@@ -188,36 +224,53 @@ function retargetClipForLara(rawClip: THREE.AnimationClip, laraInstance: THREE.O
     if (prop === 'quaternion') {
       if (targetBoneName.includes('shoulder_1')) continue;
 
-      const bone = laraInstance.getObjectByName(targetBoneName) as any;
+      const bone = targetInstance.getObjectByName(targetBoneName) as any;
       if (bone && bone.restLocalQuaternion && bone.restWorldQuaternion) {
-        const srcBone = xbotInstance.getObjectByName('mixamorig:' + baseName) as any;
-        let B_src = srcBone ? srcBone.restWorldQuaternion : null;
-        let P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
-          ? srcBone.parent.restWorldQuaternion
-          : new THREE.Quaternion();
+        let B_src = null;
+        let P_src = null;
+        if (animBones[baseName]) {
+          B_src = animBones[baseName].restWorldQuaternion;
+          P_src = animBones[baseName].parentRestWorldQuaternion;
+        } else {
+          const srcBone = xbotInstance.getObjectByName('mixamorig' + baseName) as any;
+          B_src = srcBone ? srcBone.restWorldQuaternion : null;
+          P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
+            ? srcBone.parent.restWorldQuaternion
+            : new THREE.Quaternion();
+        }
 
         if (B_src && P_src) {
           const B_tgt = bone.restWorldQuaternion;
           const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
             ? bone.parent.restWorldQuaternion
             : new THREE.Quaternion();
-          
           const P_tgt_inv = P_tgt.clone().invert();
           const B_src_inv = B_src.clone().invert();
 
-          for (let i = 0; i < clone.values.length; i += 4) {
-            const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
-            
-            const resQ = P_tgt_inv.clone()
-              .multiply(P_src)
-              .multiply(q)
-              .multiply(B_src_inv)
-              .multiply(B_tgt);
+          for (let j = 0; j < clone.values.length / 4; j++) {
+            const srcLocalQ = new THREE.Quaternion(
+              clone.values[4*j],
+              clone.values[4*j+1],
+              clone.values[4*j+2],
+              clone.values[4*j+3]
+            );
 
-            clone.values[i] = resQ.x;
-            clone.values[i+1] = resQ.y;
-            clone.values[i+2] = resQ.z;
-            clone.values[i+3] = resQ.w;
+            // Calculate animated world quaternion of source bone
+            const animWorldQ = P_src.clone().multiply(srcLocalQ);
+
+            // Compute delta from source's world rest pose
+            const deltaQ = animWorldQ.clone().multiply(B_src_inv);
+
+            // Apply delta to target's world rest pose
+            const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
+
+            // Convert back to target's local space
+            const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
+
+            clone.values[4*j]   = tgtLocalQ.x;
+            clone.values[4*j+1] = tgtLocalQ.y;
+            clone.values[4*j+2] = tgtLocalQ.z;
+            clone.values[4*j+3] = tgtLocalQ.w;
           }
         } else {
           const parentRestWorldQ = (bone.parent && bone.parent.restWorldQuaternion)
@@ -298,6 +351,7 @@ function SingleCharacter({
   const actionsRef = useRef<Record<string, THREE.AnimationAction>>({});
   const activeActionName = useRef<string>('');
   const idleTimerRef = useRef<number>(0);
+  const customAnimName = useRef<string | null>(null);
   
   const { invalidate } = useThree();
 
@@ -340,7 +394,8 @@ function SingleCharacter({
                 mat.depthWrite = true;
                 mat.side = THREE.FrontSide;
             });
-            c.raycast = () => {}; 
+            delete c.raycast;
+            c.userData.hoverAction = { label: isLara ? 'Lara' : 'X-Bot', actionId: isLara ? 'walker-anim-lara' : 'walker-anim-xbot' };
         }
       }
       c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
@@ -367,12 +422,19 @@ function SingleCharacter({
 
     const mixer = new THREE.AnimationMixer(scene);
     mixerRef.current = mixer;
+    
+    mixer.addEventListener('finished', (e) => {
+      if (customAnimName.current && actionsRef.current[customAnimName.current] === e.action) {
+        customAnimName.current = null;
+      }
+    });
+
     actionsRef.current = {};
 
     animations.forEach(clip => {
       let finalClip = clip;
       if (isLara) {
-        finalClip = retargetClipForLara(clip, scene, xbotScene);
+        finalClip = retargetClip(clip, scene, xbotScene, undefined, isLara);
       } else {
         const cleanTracks = clip.tracks.filter(track => !track.name.endsWith('.scale'));
         finalClip = new THREE.AnimationClip(clip.name, clip.duration, cleanTracks);
@@ -407,6 +469,47 @@ function SingleCharacter({
     }
   }, [skeletonRef, showSkeleton]);
 
+  useEffect(() => {
+    const onToggle = (e: any) => {
+      const expectedKey = isLara ? 'walker-anim-lara' : 'walker-anim-xbot';
+      if (e.detail.key === expectedKey) {
+        const path = e.detail.value;
+        if (!path || path === 'idle') {
+          customAnimName.current = null;
+          return;
+        }
+
+        const loader = new GLTFLoader();
+        loader.load(path, (gltf: any) => {
+          const clip = gltf.animations[0];
+          if (clip) {
+            let finalClip = clip;
+            finalClip = retargetClip(clip, scene, xbotScene, gltf.scene, isLara);
+            finalClip.name = path;
+
+            const mixer = mixerRef.current;
+            if (!mixer) return;
+
+            let action = actionsRef.current[path];
+            if (!action) {
+              action = mixer.clipAction(finalClip);
+              actionsRef.current[path] = action;
+            }
+
+            // The user wants it to play exactly 2 times and return to idle
+            action.setLoop(THREE.LoopRepeat, 2);
+            action.clampWhenFinished = true;
+            
+            customAnimName.current = path;
+          }
+        });
+      }
+    };
+    
+    document.addEventListener('furniture-toggle', onToggle);
+    return () => document.removeEventListener('furniture-toggle', onToggle);
+  }, [isActive, isLara, scene, xbotScene]);
+
   useFrame((_, delta) => {
     if (!groupRef.current || !mixerRef.current) return;
 
@@ -440,6 +543,11 @@ function SingleCharacter({
     // Inactive model is always stationary
     let isMoving = isActive ? cameraState.isMoving : false;
     let target = isPreview ? (walkerAnim || 'idle') : (isMoving ? 'walk' : 'idle');
+
+    if (customAnimName.current) {
+      target = customAnimName.current;
+      idleTimerRef.current = 0;
+    }
 
     if (target === 'idle' && !isPaused) {
         idleTimerRef.current += delta;

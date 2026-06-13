@@ -14,7 +14,51 @@ import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
 
-interface ActionDef { btnLabel: string | (() => string); toggleKey: string; }
+interface ActionDef { 
+  btnLabel?: string | (() => string); 
+  toggleKey: string;
+  type?: 'button' | 'select';
+  options?: { value: string; label: string }[];
+}
+
+const WALKER_ANIM_OPTIONS = [
+  { value: "idle", label: "Idle / Return to Default" },
+  { value: "media/sandbox/anim_catwalk_walking_not_in_place.glb", label: "Catwalk Walking" },
+  { value: "media/sandbox/anim_happy_walk_not_in_place.glb", label: "Happy Walk" },
+  { value: "media/sandbox/anim_sitting_idle.glb", label: "Sitting Idle" },
+  { value: "media/sandbox/anim_sitting_angry.glb", label: "Sitting Angry" },
+  { value: "media/sandbox/anim_t_pose.glb", label: "T-Pose de Test" },
+  { value: "media/sandbox/anim_jump.glb", label: "Saut" },
+  { value: "media/sandbox/anim_sleeping_idle.glb", label: "Dormir" },
+  { value: "media/sandbox/anim_laying_idle.glb", label: "Laying Idle" },
+  { value: "media/sandbox/anim_skinning_test.glb", label: "Skinning Test" },
+  { value: "media/sandbox/anim_samba_dancing.glb", label: "Samba Dancing" },
+  { value: "media/sandbox/anim_back_flip_to_uppercut.glb", label: "Back Flip to Uppercut" },
+  { value: "media/sandbox/anim_left_strafe_walking.glb", label: "Left Strafe Walking" },
+  { value: "media/sandbox/anim_right_strafe_walking.glb", label: "Right Strafe Walking" },
+  { value: "media/sandbox/anim_idle.glb", label: "Idle" },
+  { value: "media/sandbox/anim_walking.glb", label: "Walking" },
+  { value: "media/sandbox/anim_right_turn_90.glb", label: "Right Turn 90" },
+  { value: "media/sandbox/anim_left_turn_90.glb", label: "Left Turn 90" },
+  { value: "media/sandbox/anim_gangnam_style.glb", label: "Gangnam Style" },
+  { value: "media/sandbox/anim_drinking_fountain.glb", label: "Drinking Fountain" },
+  { value: "media/sandbox/anim_martelo_do_chau_sem_mao.glb", label: "Martelo Do Chau Sem Mao" },
+  { value: "media/sandbox/anim_female_laying_pose.glb", label: "Female Laying Pose" },
+  { value: "media/sandbox/anim_female_laying_pose_1.glb", label: "Female Laying Pose 1" },
+  { value: "media/sandbox/anim_female_laying_pose_2.glb", label: "Female Laying Pose 2" },
+  { value: "media/sandbox/anim_female_laying_pose_3.glb", label: "Female Laying Pose 3" },
+  { value: "media/sandbox/anim_tender_placement.glb", label: "Tender Placement" },
+  { value: "media/sandbox/anim_left_strafe.glb", label: "Left Strafe" },
+  { value: "media/sandbox/anim_right_strafe.glb", label: "Right Strafe" },
+  { value: "media/sandbox/anim_running.glb", label: "Running" },
+  { value: "media/sandbox/anim_left_strafe_walk.glb", label: "Left Strafe Walk" },
+  { value: "media/sandbox/anim_right_strafe_walk.glb", label: "Right Strafe Walk" },
+  { value: "media/sandbox/anim_left_turn.glb", label: "Left Turn" },
+  { value: "media/sandbox/anim_right_turn.glb", label: "Right Turn" },
+  { value: "media/sandbox/anim_left_turn_2.glb", label: "Left Turn 2" },
+  { value: "media/sandbox/anim_right_turn_2.glb", label: "Right Turn 2" }
+];
+
 const ACTIONS: Record<string, ActionDef> = {
   eastGlassDoor: {
     btnLabel: () => {
@@ -65,6 +109,8 @@ const ACTIONS: Record<string, ActionDef> = {
   'walker-meshes':         { btnLabel: 'Meshes',             toggleKey: 'walker-meshes'     },
   'sofa-arm-left':         { btnLabel: 'Accoudoir Gauche',  toggleKey: 'sofaArmLeft'       },
   'sofa-arm-right':        { btnLabel: 'Accoudoir Droit',   toggleKey: 'sofaArmRight'      },
+  'walker-anim-lara':      { btnLabel: 'Jouer une animation', toggleKey: 'walker-anim-lara', type: 'select', options: WALKER_ANIM_OPTIONS },
+  'walker-anim-xbot':      { btnLabel: 'Jouer une animation', toggleKey: 'walker-anim-xbot', type: 'select', options: WALKER_ANIM_OPTIONS },
 };
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
@@ -415,20 +461,41 @@ export function HoverOverlay() {
           }}
         >
           <div style={{ color: '#ddd', fontSize: 12, fontWeight: 600 }}>{state.lockedLabel}</div>
-          {lockedActions.map((action, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                useSceneStore.getState().triggerAction(action.toggleKey);
-                hoverState.locked      = false;
-                hoverState.touchActive = false;
-                hoverState.onUpdate?.();
-              }}
-              style={BTN_STYLE}
-            >
-              {typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel}
-            </button>
-          ))}
+          {lockedActions.map((action, i) => {
+            if (action.type === 'select') {
+              return (
+                <select
+                  key={i}
+                  style={BTN_STYLE}
+                  onChange={(e) => {
+                    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: action.toggleKey, value: e.target.value } }));
+                    // Don't close hover overlay on select change
+                    hoverState.onUpdate?.();
+                  }}
+                  defaultValue=""
+                >
+                  <option value="" disabled>{action.btnLabel ? (typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel) : "Choisir une animation..."}</option>
+                  {action.options?.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              );
+            }
+            return (
+              <button
+                key={i}
+                onClick={() => {
+                  useSceneStore.getState().triggerAction(action.toggleKey);
+                  hoverState.locked      = false;
+                  hoverState.touchActive = false;
+                  hoverState.onUpdate?.();
+                }}
+                style={BTN_STYLE}
+              >
+                {typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel}
+              </button>
+            );
+          })}
         </div>
       )}
     </>
