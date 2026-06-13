@@ -113,19 +113,70 @@ function retargetClipForLara(rawClip: THREE.AnimationClip, laraInstance: THREE.O
         const restY = clone.values[1];
         const restZ = clone.values[2];
         
-        for (let j = 0; j < clone.values.length / 3; j++) {
-          const dx = (clone.values[3*j] - restX) * hipsRatio;
-          const dy = (clone.values[3*j+1] - restY) * hipsRatio;
-          const dz = (clone.values[3*j+2] - restZ) * hipsRatio;
+        let isFlat = true;
+        for (let j = 1; j < clone.values.length / 3; j++) {
+          if (Math.abs(clone.values[3*j] - restX) > 0.001 ||
+              Math.abs(clone.values[3*j+1] - restY) > 0.001 ||
+              Math.abs(clone.values[3*j+2] - restZ) > 0.001) {
+            isFlat = false;
+            break;
+          }
+        }
+
+        const animNameLower = rawClip.name.toLowerCase();
+        const isWalk = animNameLower.includes('walk') || 
+                       animNameLower.includes('run') || 
+                       animNameLower.includes('step') || 
+                       animNameLower.includes('stairs') || 
+                       animNameLower.includes('layer0');
+
+        if (isFlat && isWalk) {
+          // Reconstruct with 30fps keyframes to inject procedural hips movement
+          const duration = rawClip.duration;
+          const fps = 30;
+          const numFrames = Math.ceil(duration * fps) + 1;
+          const newTimes = new Float32Array(numFrames);
+          const newValues = new Float32Array(numFrames * 3);
           
-          const dP = new THREE.Vector3(dx, dy, dz)
-            .applyQuaternion(P_src)
-            .applyQuaternion(P_tgt_inv);
-          const resPos = bone.defaultPosition.clone().add(dP);
+          for (let f = 0; f < numFrames; f++) {
+            const t = Math.min(f / fps, duration);
+            newTimes[f] = t;
+            
+            const phase = (t / duration) * 2.0 * Math.PI;
+            
+            // Procedural Y bobbing (vertical displacement twice per cycle)
+            // and X sway (horizontal side-to-side weight shift once per cycle)
+            const dx = 0.8 * Math.cos(phase); // sway side-to-side (0.8 cm)
+            const dy = -1.6 * Math.sin(phase * 2.0); // bob up-and-down (1.6 cm)
+            const dz = 0.0; // In-place, no forward translation
+            
+            const dP = new THREE.Vector3(dx, dy, dz)
+              .applyQuaternion(P_src)
+              .applyQuaternion(P_tgt_inv);
+            const resPos = bone.defaultPosition.clone().add(dP);
+            
+            newValues[3*f] = resPos.x;
+            newValues[3*f+1] = resPos.y;
+            newValues[3*f+2] = resPos.z;
+          }
           
-          clone.values[3*j] = resPos.x;
-          clone.values[3*j+1] = resPos.y;
-          clone.values[3*j+2] = resPos.z;
+          clone.times = newTimes;
+          clone.values = newValues;
+        } else {
+          for (let j = 0; j < clone.values.length / 3; j++) {
+            const dx = (clone.values[3*j] - restX) * hipsRatio;
+            const dy = (clone.values[3*j+1] - restY) * hipsRatio;
+            const dz = (clone.values[3*j+2] - restZ) * hipsRatio;
+            
+            const dP = new THREE.Vector3(dx, dy, dz)
+              .applyQuaternion(P_src)
+              .applyQuaternion(P_tgt_inv);
+            const resPos = bone.defaultPosition.clone().add(dP);
+            
+            clone.values[3*j] = resPos.x;
+            clone.values[3*j+1] = resPos.y;
+            clone.values[3*j+2] = resPos.z;
+          }
         }
       }
     }
@@ -298,6 +349,19 @@ function SingleCharacter({
       }
     });
 
+    // Populate source rest poses on X-Bot template
+    xbotScene.updateMatrixWorld(true);
+    xbotScene.traverse(o => {
+      const c = o as any;
+      if (!c.restWorldQuaternion) {
+        c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
+      }
+      if (c.isBone && !c.restLocalQuaternion) {
+        c.defaultPosition = c.position.clone();
+        c.restLocalQuaternion = c.quaternion.clone();
+      }
+    });
+
     const mixer = new THREE.AnimationMixer(scene);
     mixerRef.current = mixer;
     actionsRef.current = {};
@@ -353,9 +417,10 @@ function SingleCharacter({
         groupRef.current.rotation.y = cameraState.walkYaw;
         groupRef.current.visible = !cameraState.walkerHidden;
       } else {
-        groupRef.current.position.set(cameraState.passiveX, 0, cameraState.passiveZ);
-        groupRef.current.rotation.y = cameraState.passiveYaw;
-        groupRef.current.visible = true;
+        // Inactive character stays at its last 'other' position
+        groupRef.current.position.set(cameraState.otherX, 0, cameraState.otherZ);
+        groupRef.current.rotation.y = cameraState.otherYaw;
+        groupRef.current.visible = true; 
       }
 
       const isFirstPerson = isActive && cameraState.mode === 'walk';
@@ -369,7 +434,8 @@ function SingleCharacter({
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
     
-    let isMoving = isActive ? cameraState.isMoving : (cameraState as any).isPassiveMoving;
+    // Inactive model is always stationary
+    let isMoving = isActive ? cameraState.isMoving : false;
     let target = isPreview ? (walkerAnim || 'idle') : (isMoving ? 'walk' : 'idle');
 
     if (target === 'idle' && !isPaused) {
