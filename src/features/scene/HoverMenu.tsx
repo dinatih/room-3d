@@ -47,6 +47,7 @@ const WALKER_ANIM_OPTIONS = [
   { value: "media/sandbox/anim_push_up.glb", label: "Push Up" },
   { value: "media/sandbox/anim_laying_idle_1.glb", label: "Laying Idle 1" },
   { value: "media/sandbox/anim_swimming_to_edge.glb", label: "Swimming to Edge" },
+  { value: "media/sandbox/anim_dancing_maraschino_step.glb", label: "Dancing Maraschino Step" },
   { value: "media/sandbox/anim_female_laying_pose.glb", label: "Female Laying Pose" },
   { value: "media/sandbox/anim_female_laying_pose_1.glb", label: "Female Laying Pose 1" },
   { value: "media/sandbox/anim_female_laying_pose_2.glb", label: "Female Laying Pose 2" },

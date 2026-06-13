@@ -26,3 +26,4 @@ if __name__ == "__main__":
     export_animation("/home/dinatih/Projects/room-3d/sources_backup/Push Up.fbx", "push_up")
     export_animation("/home/dinatih/Projects/room-3d/sources_backup/Laying Idle (1).fbx", "laying_idle_1")
     export_animation("/home/dinatih/Projects/room-3d/sources_backup/Swimming To Edge.fbx", "swimming_to_edge")
+    export_animation("/home/dinatih/Projects/room-3d/sources_backup/Dancing Maraschino Step.fbx", "dancing_maraschino_step")

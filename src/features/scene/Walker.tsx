@@ -158,11 +158,11 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         }
 
         const animNameLower = rawClip.name.toLowerCase();
-        const isWalk = animNameLower.includes('walk') || 
-                       animNameLower.includes('run') || 
-                       animNameLower.includes('step') || 
-                       animNameLower.includes('stairs') || 
-                       animNameLower.includes('layer0');
+        const isWalk = (animNameLower.includes('walk') || 
+                        animNameLower.includes('run') || 
+                        animNameLower.includes('step') || 
+                        animNameLower.includes('stairs')) && 
+                       !animNameLower.includes('dance');
 
         if (isFlat && isWalk) {
           // Reconstruct with 30fps keyframes to inject procedural hips movement
@@ -570,6 +570,9 @@ function SingleCharacter({
     if (isNPC && variant === 'delphina' && target === 'idle') {
       target = 'media/sandbox/anim_swimming_to_edge.glb';
     }
+    if (isNPC && variant === 'marissa' && target === 'idle') {
+      target = 'media/sandbox/anim_dancing_maraschino_step.glb';
+    }
     if (isNPC && variant === 'rosanna' && target === 'idle') {
       target = 'media/sandbox/anim_push_up.glb';
     }
@@ -637,6 +640,7 @@ function InternalWalker(props: WalkerProps) {
   const xbotGltf = useGLTF(XBOT_PATH);
   const sittingGltf = useGLTF('media/sandbox/anim_sitting_idle.glb');
   const swimmingGltf = useGLTF('media/sandbox/anim_swimming_to_edge.glb');
+  const marissaGltf = useGLTF('media/sandbox/anim_dancing_maraschino_step.glb');
   const pushUpGltf = useGLTF('media/sandbox/anim_push_up.glb');
   const laying1Gltf = useGLTF('media/sandbox/anim_laying_idle_1.glb');
 
@@ -653,6 +657,13 @@ function InternalWalker(props: WalkerProps) {
     swimmingClip.name = 'media/sandbox/anim_swimming_to_edge.glb';
     return [...xbotGltf.animations, swimmingClip];
   }, [xbotGltf.animations, swimmingGltf.animations]);
+
+  const marissaAnims = useMemo(() => {
+    if (!marissaGltf.animations[0]) return xbotGltf.animations;
+    const clip = marissaGltf.animations[0].clone();
+    clip.name = 'media/sandbox/anim_dancing_maraschino_step.glb';
+    return [...xbotGltf.animations, clip];
+  }, [xbotGltf.animations, marissaGltf.animations]);
 
   const rosannaAnims = useMemo(() => {
     if (!pushUpGltf.animations[0]) return xbotGltf.animations;
@@ -690,7 +701,7 @@ function InternalWalker(props: WalkerProps) {
       
       {/* 6 NPC Laras placed randomly around Studio and Garden */}
       <SingleCharacter {...props} modelPath={ROSANNA_PATH} isLara={true} isActive={false} animations={rosannaAnims} xbotScene={xbotGltf.scene} variant="rosanna" isNPC={true} npcPosition={[251, 75, 178]} npcRotationY={1.325 + Math.PI / 2} sittingScene={pushUpGltf.scene} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="marissa" isNPC={true} npcPosition={[180, 0, 160]} npcRotationY={Math.PI / 2} />
+      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={marissaAnims} xbotScene={xbotGltf.scene} variant="marissa" isNPC={true} npcPosition={[200, 0, -240]} npcRotationY={0} sittingScene={marissaGltf.scene} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={delphinaAnims} xbotScene={xbotGltf.scene} variant="delphina" isNPC={true} npcPosition={[120, 35, -250]} npcRotationY={1} sittingScene={swimmingGltf.scene} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="sara" isNPC={true} npcPosition={[250, 0, 300]} npcRotationY={Math.PI} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={chaAnims} xbotScene={xbotGltf.scene} variant="cha" isNPC={true} npcPosition={[30, 0, 151]} npcRotationY={Math.PI / 2} sittingScene={sittingGltf.scene} />
@@ -713,5 +724,6 @@ useGLTF.preload(ROSANNA_PATH);
 useGLTF.preload(VIVID_PATH);
 useGLTF.preload('media/sandbox/anim_sitting_idle.glb');
 useGLTF.preload('media/sandbox/anim_swimming_to_edge.glb');
+useGLTF.preload('media/sandbox/anim_dancing_maraschino_step.glb');
 useGLTF.preload('media/sandbox/anim_push_up.glb');
 useGLTF.preload('media/sandbox/anim_laying_idle_1.glb');
