@@ -1048,6 +1048,26 @@
             const clipKey = `embedded_${key}_${clipName}`;
             loadedClips[clipKey] = clip;
             
+            // Extract and store rest pose quaternions from the model's skeleton!
+            const animBones = {};
+            instance.updateMatrixWorld(true);
+            instance.traverse(c => {
+              if (c.isBone) {
+                const match = c.name.match(/mixamorig[:_]?(.+)/i);
+                if (match) {
+                  const baseName = match[1];
+                  animBones[baseName] = {
+                    restWorldQuaternion: c.getWorldQuaternion(new THREE.Quaternion()),
+                    restLocalQuaternion: c.quaternion.clone(),
+                    parentRestWorldQuaternion: c.parent
+                      ? c.parent.getWorldQuaternion(new THREE.Quaternion())
+                      : new THREE.Quaternion()
+                  };
+                }
+              }
+            });
+            animSkeletons[clipKey] = animBones;
+            
             // Add to select list
             const select = document.getElementById('select-anim');
             const opt = document.createElement('option');
