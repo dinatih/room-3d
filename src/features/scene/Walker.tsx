@@ -568,6 +568,12 @@ function SingleCharacter({
     if (isNPC && variant === 'delphina' && target === 'idle') {
       target = 'media/sandbox/anim_female_dynamic_pose.glb';
     }
+    if (isNPC && variant === 'rosanna' && target === 'idle') {
+      target = 'media/sandbox/anim_push_up.glb';
+    }
+    if (!isActive && !isNPC && !isLara && target === 'idle') {
+      target = 'media/sandbox/anim_laying_idle_1.glb';
+    }
 
     if (customAnimName.current) {
       target = customAnimName.current;
@@ -629,6 +635,8 @@ function InternalWalker(props: WalkerProps) {
   const xbotGltf = useGLTF(XBOT_PATH);
   const sittingGltf = useGLTF('media/sandbox/anim_sitting_idle.glb');
   const dynamicGltf = useGLTF('media/sandbox/anim_female_dynamic_pose.glb');
+  const pushUpGltf = useGLTF('media/sandbox/anim_push_up.glb');
+  const laying1Gltf = useGLTF('media/sandbox/anim_laying_idle_1.glb');
 
   const chaAnims = useMemo(() => {
     if (!sittingGltf.animations[0]) return xbotGltf.animations;
@@ -643,6 +651,20 @@ function InternalWalker(props: WalkerProps) {
     dynamicClip.name = 'media/sandbox/anim_female_dynamic_pose.glb';
     return [...xbotGltf.animations, dynamicClip];
   }, [xbotGltf.animations, dynamicGltf.animations]);
+
+  const rosannaAnims = useMemo(() => {
+    if (!pushUpGltf.animations[0]) return xbotGltf.animations;
+    const clip = pushUpGltf.animations[0].clone();
+    clip.name = 'media/sandbox/anim_push_up.glb';
+    return [...xbotGltf.animations, clip];
+  }, [xbotGltf.animations, pushUpGltf.animations]);
+
+  const xbotAnims = useMemo(() => {
+    if (!laying1Gltf.animations[0]) return xbotGltf.animations;
+    const clip = laying1Gltf.animations[0].clone();
+    clip.name = 'media/sandbox/anim_laying_idle_1.glb';
+    return [...xbotGltf.animations, clip];
+  }, [xbotGltf.animations, laying1Gltf.animations]);
   
   return (
     <>
@@ -651,8 +673,9 @@ function InternalWalker(props: WalkerProps) {
         modelPath={XBOT_PATH} 
         isLara={false} 
         isActive={!isLaraActive}
-        animations={xbotGltf.animations}
+        animations={xbotAnims}
         xbotScene={xbotGltf.scene}
+        sittingScene={laying1Gltf.scene}
       />
       <SingleCharacter 
         {...props} 
@@ -664,9 +687,9 @@ function InternalWalker(props: WalkerProps) {
       />
       
       {/* 6 NPC Laras placed randomly around Studio and Garden */}
-      <SingleCharacter {...props} modelPath={ROSANNA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="rosanna" isNPC={true} npcPosition={[220, 0, -20]} npcRotationY={-Math.PI / 4} />
+      <SingleCharacter {...props} modelPath={ROSANNA_PATH} isLara={true} isActive={false} animations={rosannaAnims} xbotScene={xbotGltf.scene} variant="rosanna" isNPC={true} npcPosition={[251, 23, 178]} npcRotationY={1.325} sittingScene={pushUpGltf.scene} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="marissa" isNPC={true} npcPosition={[180, 0, 160]} npcRotationY={Math.PI / 2} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={delphinaAnims} xbotScene={xbotGltf.scene} variant="delphina" isNPC={true} npcPosition={[110, 0, 530]} npcRotationY={0} sittingScene={dynamicGltf.scene} />
+      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={delphinaAnims} xbotScene={xbotGltf.scene} variant="delphina" isNPC={true} npcPosition={[110, 0, 570]} npcRotationY={0} sittingScene={dynamicGltf.scene} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="sara" isNPC={true} npcPosition={[250, 0, 300]} npcRotationY={Math.PI} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={chaAnims} xbotScene={xbotGltf.scene} variant="cha" isNPC={true} npcPosition={[30, 0, 151]} npcRotationY={Math.PI / 2} sittingScene={sittingGltf.scene} />
       <SingleCharacter {...props} modelPath={VIVID_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="vivid" isNPC={true} npcPosition={[150, 0, 50]} npcRotationY={Math.PI / 4} />
@@ -688,3 +711,5 @@ useGLTF.preload(ROSANNA_PATH);
 useGLTF.preload(VIVID_PATH);
 useGLTF.preload('media/sandbox/anim_sitting_idle.glb');
 useGLTF.preload('media/sandbox/anim_female_dynamic_pose.glb');
+useGLTF.preload('media/sandbox/anim_push_up.glb');
+useGLTF.preload('media/sandbox/anim_laying_idle_1.glb');

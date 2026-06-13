@@ -44,6 +44,8 @@ const WALKER_ANIM_OPTIONS = [
   { value: "media/sandbox/anim_drinking_fountain.glb", label: "Drinking Fountain" },
   { value: "media/sandbox/anim_martelo_do_chau_sem_mao.glb", label: "Martelo Do Chau Sem Mao" },
   { value: "media/sandbox/anim_female_dynamic_pose.glb", label: "Female Dynamic Pose" },
+  { value: "media/sandbox/anim_push_up.glb", label: "Push Up" },
+  { value: "media/sandbox/anim_laying_idle_1.glb", label: "Laying Idle 1" },
   { value: "media/sandbox/anim_female_laying_pose.glb", label: "Female Laying Pose" },
   { value: "media/sandbox/anim_female_laying_pose_1.glb", label: "Female Laying Pose 1" },
   { value: "media/sandbox/anim_female_laying_pose_2.glb", label: "Female Laying Pose 2" },
