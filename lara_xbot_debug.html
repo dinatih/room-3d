@@ -759,6 +759,7 @@
     // Standard list of Mixamo animations
     const ANIM_LIST = [
       { name: "Animations du X-Bot (Marche/Idle embarquées)", file: "embedded" },
+      { name: "Catwalk Walking (not in place) (anim_catwalk_walking_not_in_place.glb)", file: "media/sandbox/anim_catwalk_walking_not_in_place.glb" },
       { name: "Marche Studio (anim_walking.glb)", file: "media/sandbox/anim_walking.glb" },
       { name: "Marche Joyeuse (anim_happy_walk.glb)", file: "media/sandbox/anim_happy_walk.glb" },
       { name: "T-Pose de Test (anim_t_pose.glb)", file: "media/sandbox/anim_t_pose.glb" },
@@ -1252,7 +1253,8 @@
                 for (let j = 0; j < clone.values.length / 3; j++) {
                   const dx = (clone.values[3*j] - restX) * hipsRatio;
                   const dy = (clone.values[3*j+1] - restY) * hipsRatio;
-                  const dz = (clone.values[3*j+2] - restZ) * hipsRatio;
+                  // Cancel forward progress (Z) for walk/run animations to keep them in-place, while keeping vertical bobbing (Y) and side sway (X)
+                  const dz = isWalk ? 0.0 : (clone.values[3*j+2] - restZ) * hipsRatio;
                   
                   // Rotate displacement from source parent world to target parent local: P_tgt_inv * P_src * dP
                   const dP = new THREE.Vector3(dx, dy, dz)

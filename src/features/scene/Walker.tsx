@@ -166,7 +166,8 @@ function retargetClipForLara(rawClip: THREE.AnimationClip, laraInstance: THREE.O
           for (let j = 0; j < clone.values.length / 3; j++) {
             const dx = (clone.values[3*j] - restX) * hipsRatio;
             const dy = (clone.values[3*j+1] - restY) * hipsRatio;
-            const dz = (clone.values[3*j+2] - restZ) * hipsRatio;
+            // Cancel forward progress (Z) for walk/run animations to keep them in-place, while keeping vertical bobbing (Y) and side sway (X)
+            const dz = isWalk ? 0.0 : (clone.values[3*j+2] - restZ) * hipsRatio;
             
             const dP = new THREE.Vector3(dx, dy, dz)
               .applyQuaternion(P_src)

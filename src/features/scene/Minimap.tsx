@@ -89,11 +89,11 @@ function drawMinimap(
   const R  = 5 * sc;
   const BW = 8 * sc, BH = 4 * sc;
 
-  // ── Passive Walker icon ────────────────────────────────────────────────────
-  const pw = { x: cameraState.passiveX, z: cameraState.passiveZ, yaw: cameraState.passiveYaw };
+  // ── Other character icon ───────────────────────────────────────────────────
+  const ow = { x: cameraState.otherX, z: cameraState.otherZ, yaw: cameraState.otherYaw };
   ctx.save();
-  ctx.translate(tx(pw.x), tz(pw.z));
-  ctx.rotate(-pw.yaw);
+  ctx.translate(tx(ow.x), tz(ow.z));
+  ctx.rotate(-ow.yaw);
   ctx.fillStyle   = 'rgba(0, 102, 255, 0.4)';
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';
   ctx.lineWidth   = 0.6 * sc;
