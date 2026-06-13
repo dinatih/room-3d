@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'standard' | 'vivid';
+export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivid';
 
 export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant) {
   const isVivid = style === 'vivid';
@@ -9,7 +9,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
   const isMarissa = style === 'marissa';
   const isDelphina = style === 'delphina';
   const isSara = style === 'sara';
-  const isRed = style === 'standard';
+  const isCha = style === 'cha';
 
   model.traverse(node => {
     if ((node as THREE.Mesh).isMesh) {
@@ -63,9 +63,18 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
              mat.color.setHex(0xffe08a); 
              mat.emissive.setHex(0xffe08a);
              mat.emissiveIntensity = 0.2;
-          } else if (isSara || isVivid || isRed) {
-             mat.color.setHex(0xaa0000); // Red
+          } else if (isVivid) {
+             mat.color.setHex(0xff0000);
+             mat.emissive.setHex(0xff0000);
+             mat.emissiveIntensity = 0.1;
+          } else if (isSara) {
+             mat.color.setHex(0xaa0000); // Dark Red
              mat.emissiveIntensity = 0;
+          } else if (isCha) {
+             mat.map = null; // Kill dark texture to see blonde-chatain
+             mat.color.setHex(0xbc9c74); // Blonde-chatain
+             mat.emissive.setHex(0xbc9c74);
+             mat.emissiveIntensity = 0.05;
           }
         }
 
@@ -78,7 +87,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
                                   matName.includes('gear') || matName.includes('holster') || matName.includes('belt') ||
                                   matName.includes('vest') || matName.includes('glove') || isBackpack;
 
-          const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair;
+          const isBuckle = matName.includes('buckle');
+          const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair && !isBuckle;
 
           if (shouldColor) {
             let color = 0xcc0000; // Brighter default red
@@ -104,10 +114,21 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
             } else if (isSara) {
                color = 0x050505; // Deep black
                forceProcedural = true; // Avoid texture details for pure black look
+            } else if (isCha) {
+               if (isShorts) {
+                 color = 0x151515; // Black jean
+                 forceProcedural = true;
+               } else if (isTop) {
+                 color = 0x0044cc; // Superman blue
+                 forceProcedural = true;
+               } else {
+                 color = 0x151515; // Black boots / gear
+                 forceProcedural = true;
+               }
             } else {
-              // Standard / Vivid Red
-              const redColor = isVivid ? 0xff0000 : 0xaa0000;
-              const gearColor = isVivid ? 0x990000 : 0x660000;
+              // Vivid Red
+              const redColor = 0xff0000;
+              const gearColor = 0x990000;
               const isGear = matName.includes('gear') || matName.includes('holster') || matName.includes('boot');
               color = isGear ? gearColor : redColor;
             }

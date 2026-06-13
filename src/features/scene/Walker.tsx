@@ -2,7 +2,7 @@
  * Walker.tsx — Personnage unique (Xbot Officiel / Lara Native).
  * Gère le chargement, les animations natives, le retargeting et le positionnement.
  */
-import { useRef, useLayoutEffect, Suspense, useEffect } from 'react';
+import { useRef, useLayoutEffect, Suspense, useEffect, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
@@ -330,6 +330,7 @@ interface SingleCharacterProps extends WalkerProps {
   isNPC?: boolean;
   npcPosition?: [number, number, number];
   npcRotationY?: number;
+  sittingScene?: THREE.Group;
 }
 
 function SingleCharacter({ 
@@ -345,7 +346,8 @@ function SingleCharacter({
   variant,
   isNPC = false,
   npcPosition = [0, 0, 0],
-  npcRotationY = 0
+  npcRotationY = 0,
+  sittingScene
 }: SingleCharacterProps) {
   const { scene } = useGLTFClone(modelPath);
   
@@ -443,7 +445,8 @@ function SingleCharacter({
     animations.forEach(clip => {
       let finalClip = clip;
       if (isLara) {
-        finalClip = retargetClip(clip, scene, xbotScene, undefined, isLara);
+        const isSitting = clip.name === 'media/sandbox/anim_sitting_idle.glb';
+        finalClip = retargetClip(clip, scene, xbotScene, isSitting ? sittingScene : undefined, isLara);
       } else {
         const cleanTracks = clip.tracks.filter(track => !track.name.endsWith('.scale'));
         finalClip = new THREE.AnimationClip(clip.name, clip.duration, cleanTracks);
@@ -559,6 +562,10 @@ function SingleCharacter({
     let isMoving = isActive ? cameraState.isMoving : false;
     let target = isPreview ? (walkerAnim || 'idle') : (isMoving ? 'walk' : 'idle');
 
+    if (isNPC && variant === 'cha' && target === 'idle') {
+      target = 'media/sandbox/anim_sitting_idle.glb';
+    }
+
     if (customAnimName.current) {
       target = customAnimName.current;
       idleTimerRef.current = 0;
@@ -617,6 +624,14 @@ function SingleCharacter({
 function InternalWalker(props: WalkerProps) {
   const isLaraActive = useSceneStore(state => state.extraStates['walker-lara']);
   const xbotGltf = useGLTF(XBOT_PATH);
+  const sittingGltf = useGLTF('media/sandbox/anim_sitting_idle.glb');
+
+  const chaAnims = useMemo(() => {
+    if (!sittingGltf.animations[0]) return xbotGltf.animations;
+    const sittingClip = sittingGltf.animations[0].clone();
+    sittingClip.name = 'media/sandbox/anim_sitting_idle.glb';
+    return [...xbotGltf.animations, sittingClip];
+  }, [xbotGltf.animations, sittingGltf.animations]);
   
   return (
     <>
@@ -642,7 +657,7 @@ function InternalWalker(props: WalkerProps) {
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="marissa" isNPC={true} npcPosition={[180, 0, 160]} npcRotationY={Math.PI / 2} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="delphina" isNPC={true} npcPosition={[50, 0, 320]} npcRotationY={Math.PI} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="sara" isNPC={true} npcPosition={[120, 0, 480]} npcRotationY={0} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="standard" isNPC={true} npcPosition={[280, 0, 380]} npcRotationY={-Math.PI / 2} />
+      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={chaAnims} xbotScene={xbotGltf.scene} variant="cha" isNPC={true} npcPosition={[30, 0, 151]} npcRotationY={Math.PI / 2} sittingScene={sittingGltf.scene} />
       <SingleCharacter {...props} modelPath={VIVID_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="vivid" isNPC={true} npcPosition={[150, 0, 50]} npcRotationY={Math.PI / 4} />
     </>
   );
@@ -660,3 +675,4 @@ useGLTF.preload(XBOT_PATH);
 useGLTF.preload(LARA_PATH);
 useGLTF.preload(ROSANNA_PATH);
 useGLTF.preload(VIVID_PATH);
+useGLTF.preload('media/sandbox/anim_sitting_idle.glb');
