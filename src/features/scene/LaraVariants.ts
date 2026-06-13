@@ -51,7 +51,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
         mat.alphaTest = 0;
 
         if (isHair || isLash || matName.includes('trans')) {
-          mat.transparent = true;
+          mat.transparent = false; // Force opaque cutout to avoid glass sorting issues
           mat.alphaTest = 0.5;
           mat.side = THREE.DoubleSide;
         }
@@ -155,7 +155,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
                 emissiveIntensity: isVivid ? 0.5 : ((isRosanna && isTop) ? 0.05 : 0),
                 roughness: (isRosanna || isMarissa || isDelphina || isSara) ? 0.9 : (isVivid ? 0.1 : 0.25),
                 metalness: (isRosanna || isMarissa || isDelphina || isSara) ? 0.0 : (isVivid ? 0.3 : 0.1),
-                transparent: isHair,
+                transparent: false,
                 alphaTest: isHair ? 0.5 : 0,
                 depthWrite: true,
                 name: style + 'Material',
