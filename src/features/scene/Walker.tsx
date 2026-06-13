@@ -83,14 +83,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
     });
   }
 
-  let hipsRatio = 100.0;
-  const hipsPos = rawClip.tracks.find(t => t.name.includes('Hips.position') || t.name.includes('Hips_position') || t.name.includes('hips.position'));
-  if (hipsPos && hipsPos.values.length >= 3) {
-    const height = Math.max(Math.abs(hipsPos.values[1]), Math.abs(hipsPos.values[2]));
-    if (height > 40.0) {
-      hipsRatio = 1.0;
-    }
-  }
+  const hipsRatio = 1.0;
 
   for (const tr of rawClip.tracks) {
     const [boneFull, prop] = tr.name.split('.');
