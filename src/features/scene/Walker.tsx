@@ -90,7 +90,19 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
     
     const match = boneFull.match(/mixamorig[:_]?(.+)/i);
     if (!match) continue;
-    const baseName = match[1];
+    let baseName = match[1];
+
+    const hasRootTranslation = rawClip.tracks.some(t => t.name.toLowerCase().includes('rootjoint') && t.name.endsWith('.position'));
+
+    if (prop === 'position' && baseName.toLowerCase() === 'hips' && hasRootTranslation) {
+      continue;
+    }
+
+    let isRootJointTranslation = false;
+    if (prop === 'position' && baseName.toLowerCase().includes('rootjoint')) {
+      baseName = 'Hips';
+      isRootJointTranslation = true;
+    }
 
     let targetBoneName = '';
     
@@ -121,7 +133,9 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
       const bone = targetInstance.getObjectByName(targetBoneName) as any;
       if (bone && bone.defaultPosition) {
         let P_src = null;
-        if (animBones[baseName]) {
+        if (isRootJointTranslation) {
+          P_src = new THREE.Quaternion();
+        } else if (animBones[baseName]) {
           P_src = animBones[baseName].parentRestWorldQuaternion;
         } else {
           const srcBone = xbotInstance.getObjectByName('mixamorig:' + baseName) as any;
@@ -136,7 +150,9 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         const P_tgt_inv = P_tgt.clone().invert();
         
         let srcRestPos = null;
-        if (animBones[baseName]) {
+        if (isRootJointTranslation) {
+          srcRestPos = new THREE.Vector3(0, 0, 0);
+        } else if (animBones[baseName]) {
           srcRestPos = animBones[baseName].defaultPosition;
         } else {
           const srcBone = xbotInstance.getObjectByName('mixamorig:' + baseName) as any;
