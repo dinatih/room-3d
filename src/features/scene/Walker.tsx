@@ -501,6 +501,7 @@ function SingleCharacter({
             action.clampWhenFinished = true;
             
             customAnimName.current = path;
+            invalidate();
           }
         });
       }
