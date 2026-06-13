@@ -30,6 +30,7 @@ import {
   BATH_Z_END,
   DiagWall,
   LAYER_WALKER_DETAIL,
+  LAYER_WALKER,
 } from '@config';
 
 const BLDG_X_MIN = -100;
@@ -1442,7 +1443,7 @@ export function Floor() {
 
 const kallaxW1 = 40.5; // kallaxW(1)
 
-const MIRROR_BASE_MASK = (1 << 0) | (1 << LAYER_WALKER_DETAIL);
+const MIRROR_BASE_MASK = (1 << 0) | (1 << LAYER_WALKER_DETAIL) | (1 << LAYER_WALKER);
 
 // Compteur global de profondeur de réflexion.
 // Empêche les miroirs perpendiculaires de se rendre mutuellement en boucle infinie :

@@ -46,7 +46,7 @@ import { SurfaceLayer }              from '@features/scene/SurfaceLayer';
 import {
   ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NEIGHBORS, LAYER_LIDAR,
-  LAYER_WALKER_DETAIL, LAYER_MIRRORS,
+  LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER,
 } from '@config';
 
 /**
@@ -316,8 +316,10 @@ export function Studio() {
            */}
           <Walls pillarsOnly={layers.pillarsOnly} />
           <Floor />
-          <Walker showSkeleton={layers.skeleton} />
-
+          {/* LAYER_WALKER (8) — Personnages 3D */}
+          <CategoryLayerGroup layer={LAYER_WALKER}>
+            <Walker showSkeleton={layers.skeleton} />
+          </CategoryLayerGroup>
           {/*
            * LAYER_EQUIPMENT (1) — équipements sanitaires et cuisine.
            * GLB toggle via React visible (indépendant de camera.layers).

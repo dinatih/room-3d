@@ -72,3 +72,4 @@ export const LAYER_NEIGHBORS  = 4; // Appartements voisins (fantôme)
 export const LAYER_LIDAR      = 5; // Scan LiDAR
 export const LAYER_WALKER_DETAIL = 6; // Meshes walker masqués en main camera (FPS) mais visibles dans miroirs (yeux, peau visage)
 export const LAYER_MIRRORS       = 7; // Miroirs NISSEDAL / Reflector
+export const LAYER_WALKER        = 8; // Personnages 3D
