@@ -798,7 +798,11 @@
       { name: "Right Turn (anim_right_turn.glb)", file: "media/sandbox/anim_right_turn.glb" },
       { name: "Left Turn 2 (anim_left_turn_2.glb)", file: "media/sandbox/anim_left_turn_2.glb" },
       { name: "Right Turn 2 (anim_right_turn_2.glb)", file: "media/sandbox/anim_right_turn_2.glb" }
-    ];
+    ].sort((a, b) => {
+      if (a.file === "embedded") return -1;
+      if (b.file === "embedded") return 1;
+      return a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
+    });
 
     // Bone mapping from Mixamo name to Lara Native bone name
     const BONE_MAP = {

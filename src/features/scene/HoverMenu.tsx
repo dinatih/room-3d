@@ -62,7 +62,11 @@ const WALKER_ANIM_OPTIONS = [
   { value: "media/sandbox/anim_right_turn.glb", label: "Right Turn" },
   { value: "media/sandbox/anim_left_turn_2.glb", label: "Left Turn 2" },
   { value: "media/sandbox/anim_right_turn_2.glb", label: "Right Turn 2" }
-];
+].sort((a, b) => {
+  if (a.value === "idle") return -1;
+  if (b.value === "idle") return 1;
+  return a.label.localeCompare(b.label, 'fr', { sensitivity: 'base' });
+});
 
 const ACTIONS: Record<string, ActionDef> = {
   eastGlassDoor: {

@@ -717,7 +717,7 @@ function SingleCharacter({
       target = 'media/sandbox/anim_swimming_to_edge.glb';
     }
     if (isNPC && variant === 'marissa' && target === 'idle') {
-      target = 'media/sandbox/anim_dancing_maraschino_step.glb';
+      target = 'media/sandbox/anim_gangnam_style.glb';
     }
     if (isNPC && variant === 'rosanna' && target === 'idle') {
       target = 'media/sandbox/anim_push_up.glb';
@@ -786,7 +786,7 @@ function InternalWalker(props: WalkerProps) {
   const xbotGltf = useGLTF(XBOT_PATH);
   const sittingGltf = useGLTF('media/sandbox/anim_sitting_idle.glb');
   const swimmingGltf = useGLTF('media/sandbox/anim_swimming_to_edge.glb');
-  const marissaGltf = useGLTF('media/sandbox/anim_dancing_maraschino_step.glb');
+  const marissaGltf = useGLTF('media/sandbox/anim_gangnam_style.glb');
   const pushUpGltf = useGLTF('media/sandbox/anim_push_up.glb');
   const laying1Gltf = useGLTF('media/sandbox/anim_laying_idle_1.glb');
 
@@ -807,7 +807,7 @@ function InternalWalker(props: WalkerProps) {
   const marissaAnims = useMemo(() => {
     if (!marissaGltf.animations[0]) return xbotGltf.animations;
     const clip = marissaGltf.animations[0].clone();
-    clip.name = 'media/sandbox/anim_dancing_maraschino_step.glb';
+    clip.name = 'media/sandbox/anim_gangnam_style.glb';
     return [...xbotGltf.animations, clip];
   }, [xbotGltf.animations, marissaGltf.animations]);
 
@@ -870,6 +870,6 @@ useGLTF.preload(ROSANNA_PATH);
 useGLTF.preload(VIVID_PATH);
 useGLTF.preload('media/sandbox/anim_sitting_idle.glb');
 useGLTF.preload('media/sandbox/anim_swimming_to_edge.glb');
-useGLTF.preload('media/sandbox/anim_dancing_maraschino_step.glb');
+useGLTF.preload('media/sandbox/anim_gangnam_style.glb');
 useGLTF.preload('media/sandbox/anim_push_up.glb');
 useGLTF.preload('media/sandbox/anim_laying_idle_1.glb');
