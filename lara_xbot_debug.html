@@ -782,6 +782,8 @@
       { name: "Female Dynamic Pose (anim_female_dynamic_pose.glb)", file: "media/sandbox/anim_female_dynamic_pose.glb" },
       { name: "Push Up (anim_push_up.glb)", file: "media/sandbox/anim_push_up.glb" },
       { name: "Laying Idle 1 (anim_laying_idle_1.glb)", file: "media/sandbox/anim_laying_idle_1.glb" },
+      { name: "Swimming to Edge (anim_swimming_to_edge.glb)", file: "media/sandbox/anim_swimming_to_edge.glb" },
+      { name: "Dancing Maraschino Step (anim_dancing_maraschino_step.glb)", file: "media/sandbox/anim_dancing_maraschino_step.glb" },
       { name: "Female Laying Pose (anim_female_laying_pose.glb)", file: "media/sandbox/anim_female_laying_pose.glb" },
       { name: "Female Laying Pose 1 (anim_female_laying_pose_1.glb)", file: "media/sandbox/anim_female_laying_pose_1.glb" },
       { name: "Female Laying Pose 2 (anim_female_laying_pose_2.glb)", file: "media/sandbox/anim_female_laying_pose_2.glb" },
@@ -1170,28 +1172,173 @@
     function getCleanRetargetedClip(rawClip, modelKey, animKey) {
       if (!rawClip) return null;
 
+      // Deep manual clone of rawClip to avoid shared Float32Array references across calls
+      const clonedTracks = [];
+      for (const track of rawClip.tracks) {
+        const cl = track.clone();
+        cl.times = new Float32Array(track.times);
+        cl.values = new Float32Array(track.values);
+        clonedTracks.push(cl);
+      }
+      const workingClip = new THREE.AnimationClip(rawClip.name, rawClip.duration, clonedTracks);
+
+      // Detect if translation tracks are in centimeters and scale to meters if needed
+      for (const track of workingClip.tracks) {
+        if (track.name.endsWith('.position')) {
+          const firstVal = new THREE.Vector3(track.values[0], track.values[1], track.values[2]);
+          if (firstVal.length() > 5.0) {
+            console.log(`WALKER_DEBUG: Detected centimeters scale for track ${track.name} (length: ${firstVal.length().toFixed(2)}). Scaling to meters...`);
+            for (let i = 0; i < track.values.length; i++) {
+              track.values[i] *= 0.01;
+            }
+          }
+        }
+      }
+
+      // Find rootjoint and hips rotation tracks
+      const rootRotTrackIndex = workingClip.tracks.findIndex(t => t.name.toLowerCase().includes('rootjoint') && t.name.endsWith('.quaternion'));
+      const hipsRotTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('hips') || t.name.toLowerCase().endsWith('hips.quaternion')) && t.name.endsWith('.quaternion') && !t.name.toLowerCase().includes('rootjoint'));
+
+      console.log(`WALKER_DEBUG: [${modelKey}] rawClip name: ${rawClip.name}, tracks count: ${rawClip.tracks.length}, rootRotTrackIndex: ${rootRotTrackIndex}, hipsRotTrackIndex: ${hipsRotTrackIndex}`);
+
+      if (rootRotTrackIndex !== -1) {
+        const rootRotTrack = workingClip.tracks[rootRotTrackIndex];
+        
+        if (hipsRotTrackIndex !== -1) {
+          const hipsRotTrack = workingClip.tracks[hipsRotTrackIndex];
+          
+          // Combine both tracks
+          const timesSet = new Set([...rootRotTrack.times, ...hipsRotTrack.times]);
+          const times = Array.from(timesSet).sort((a, b) => a - b);
+          
+          const values = new Float32Array(times.length * 4);
+          
+          function evaluateQuaternionTrack(track, t) {
+            const trackTimes = track.times;
+            const trackValues = track.values;
+            if (t <= trackTimes[0]) {
+              return new THREE.Quaternion(trackValues[0], trackValues[1], trackValues[2], trackValues[3]);
+            }
+            if (t >= trackTimes[trackTimes.length - 1]) {
+              const idx = (trackTimes.length - 1) * 4;
+              return new THREE.Quaternion(trackValues[idx], trackValues[idx+1], trackValues[idx+2], trackValues[idx+3]);
+            }
+            let i = 0;
+            while (i < trackTimes.length - 1 && trackTimes[i+1] < t) {
+              i++;
+            }
+            const t0 = trackTimes[i];
+            const t1 = trackTimes[i+1];
+            const alpha = (t - t0) / (t1 - t0);
+            
+            const q0 = new THREE.Quaternion(trackValues[4*i], trackValues[4*i+1], trackValues[4*i+2], trackValues[4*i+3]);
+            const q1 = new THREE.Quaternion(trackValues[4*(i+1)], trackValues[4*(i+1)+1], trackValues[4*(i+1)+2], trackValues[4*(i+1)+3]);
+            return q0.slerp(q1, alpha);
+          }
+
+          for (let i = 0; i < times.length; i++) {
+            const t = times[i];
+            const qRoot = evaluateQuaternionTrack(rootRotTrack, t);
+            const qHips = evaluateQuaternionTrack(hipsRotTrack, t);
+            
+            // Global rotation = qRoot * qHips
+            const qCombined = qRoot.multiply(qHips);
+            
+            values[4*i] = qCombined.x;
+            values[4*i+1] = qCombined.y;
+            values[4*i+2] = qCombined.z;
+            values[4*i+3] = qCombined.w;
+          }
+          
+          hipsRotTrack.times = new Float32Array(times);
+          hipsRotTrack.values = values;
+          
+          // Remove the rootjoint rotation track so it doesn't get processed separately
+          workingClip.tracks.splice(rootRotTrackIndex, 1);
+        } else {
+          // If no hips rotation track exists, just rename rootjoint rotation track to match Hips naming
+          const hipsPosTrack = workingClip.tracks.find(t => t.name.toLowerCase().includes('hips') && !t.name.toLowerCase().includes('rootjoint'));
+          let hipsName = 'mixamorig:Hips.quaternion';
+          if (hipsPosTrack) {
+            hipsName = hipsPosTrack.name.split('.')[0] + '.quaternion';
+          }
+          rootRotTrack.name = hipsName;
+        }
+      }
+
       if (modelKey === 'lara') {
-        console.log(`WALKER_DEBUG: rawClip name: ${rawClip.name}, tracks:`, rawClip.tracks.map(t => t.name));
+        console.log(`WALKER_DEBUG: workingClip name: ${workingClip.name}, first 10 tracks: ` + JSON.stringify(workingClip.tracks.slice(0, 10).map(t => t.name)));
       }
 
       const tracks = [];
 
-      // Determine height translations scale multiplier
-      hipsRatio = (!animKey || animKey === 'embedded') ? 100.0 : 1.0;
+      // Determine height translations scale multiplier dynamically
+      let srcHipsDefaultY = 0.991;
+      for (const tr of workingClip.tracks) {
+        const [boneFull, prop] = tr.name.split('.');
+        const match = boneFull.match(/mixamorig[:_]?(.+)/i);
+        if (match) {
+          const baseName = match[1];
+          if (prop === 'position' && baseName.toLowerCase() === 'hips') {
+            const bone = MODELS_META[modelKey].instance ? MODELS_META[modelKey].instance.getObjectByName(
+              modelKey === 'lara' ? 'mixamorig_root_hips' :
+              modelKey === 'ybot' ? 'mixamorig_Hips' : 'mixamorigHips'
+            ) : null;
+            let refSrcY = 0.991;
+            if (animKey && animSkeletons[animKey] && animSkeletons[animKey][baseName]) {
+              refSrcY = animSkeletons[animKey][baseName].defaultPosition.y;
+            } else {
+              const srcBone = MODELS_META.xbot.instance ? MODELS_META.xbot.instance.getObjectByName('mixamorigHips') : null;
+              if (srcBone && srcBone.defaultPosition) {
+                refSrcY = srcBone.defaultPosition.y;
+              }
+            }
+            // Normalize source hips Y to meters
+            if (refSrcY > 5.0) {
+              refSrcY *= 0.01;
+            }
+            srcHipsDefaultY = refSrcY;
+            
+            let targetHipsHeight = 99.1;
+            if (bone && bone.defaultPosition) {
+              targetHipsHeight = (modelKey === 'lara') ? bone.defaultPosition.z : bone.defaultPosition.y;
+            }
+            
+            if (refSrcY > 0) {
+              hipsRatio = targetHipsHeight / refSrcY;
+            } else {
+              hipsRatio = 100.0;
+            }
+          }
+        }
+      }
+      if (!hipsRatio || hipsRatio < 0.1) hipsRatio = 100.0;
       document.getElementById('hud-hips-scale').innerText = `${hipsRatio.toFixed(0)}x`;
 
-      for (const tr of rawClip.tracks) {
+      const hasRootTranslation = workingClip.tracks.some(t => t.name.toLowerCase().includes('rootjoint') && t.name.endsWith('.position'));
+
+      for (const tr of workingClip.tracks) {
         const [boneFull, prop] = tr.name.split('.');
         
         // Extract the base bone name without prefix
         const match = boneFull.match(/mixamorig[:_]?(.+)/i);
         if (!match) continue; // Skip if it doesn't look like a mixamo bone
-        const baseName = match[1];
+        let baseName = match[1];
+
+        if (prop === 'position' && baseName.toLowerCase() === 'hips' && hasRootTranslation) {
+          continue;
+        }
+
+        let isRootJointTranslation = false;
+        if (prop === 'position' && baseName.toLowerCase().includes('rootjoint')) {
+          baseName = 'Hips';
+          isRootJointTranslation = true;
+        }
 
         let targetBoneName = null;
 
         if (modelKey === 'xbot') {
-          // X-Bot uses mixamorigName format (no separator)
+          // X-Bot uses mixamorigName format
           targetBoneName = `mixamorig${baseName}`;
         } else if (modelKey === 'ybot') {
           // Y-Bot uses mixamorig_Name format
@@ -1227,7 +1374,9 @@
             const bone = MODELS_META[modelKey].instance ? MODELS_META[modelKey].instance.getObjectByName(targetBoneName) : null;
             if (bone && bone.defaultPosition) {
               let P_src = null;
-              if (animKey && animSkeletons[animKey] && animSkeletons[animKey][baseName]) {
+              if (isRootJointTranslation) {
+                P_src = new THREE.Quaternion();
+              } else if (animKey && animSkeletons[animKey] && animSkeletons[animKey][baseName]) {
                 P_src = animSkeletons[animKey][baseName].parentRestWorldQuaternion;
               } else {
                 const srcBone = MODELS_META.xbot.instance ? MODELS_META.xbot.instance.getObjectByName('mixamorig' + baseName) : null;
@@ -1241,11 +1390,19 @@
               const P_tgt_inv = P_tgt.clone().invert();
               
               let srcRestPos = null;
-              if (animKey && animSkeletons[animKey] && animSkeletons[animKey][baseName] && animSkeletons[animKey][baseName].defaultPosition) {
-                srcRestPos = animSkeletons[animKey][baseName].defaultPosition;
+              if (isRootJointTranslation) {
+                srcRestPos = new THREE.Vector3(0, srcHipsDefaultY, 0);
+              } else if (animKey && animSkeletons[animKey] && animSkeletons[animKey][baseName] && animSkeletons[animKey][baseName].defaultPosition) {
+                srcRestPos = animSkeletons[animKey][baseName].defaultPosition.clone();
+                if (srcRestPos.length() > 5.0) {
+                  srcRestPos.multiplyScalar(0.01);
+                }
               } else {
                 const srcBone = MODELS_META.xbot.instance ? MODELS_META.xbot.instance.getObjectByName('mixamorig' + baseName) : null;
-                srcRestPos = srcBone && srcBone.defaultPosition ? srcBone.defaultPosition : new THREE.Vector3(0, 99.1, 0);
+                srcRestPos = srcBone && srcBone.defaultPosition ? srcBone.defaultPosition.clone() : new THREE.Vector3(0, srcHipsDefaultY * 100, 0);
+                if (srcRestPos.length() > 5.0) {
+                  srcRestPos.multiplyScalar(0.01);
+                }
               }
               
               const restX = clone.values[0];
@@ -1262,16 +1419,16 @@
                 }
               }
 
-              const animNameLower = (animKey || rawClip.name || "").toLowerCase();
-              const isWalk = animNameLower.includes('walk') || 
-                             animNameLower.includes('run') || 
-                             animNameLower.includes('step') || 
-                             animNameLower.includes('stairs') || 
-                             animNameLower.includes('layer0');
+              const animNameLower = (animKey || workingClip.name || "").toLowerCase();
+              const isWalk = (animNameLower.includes('walk') || 
+                              animNameLower.includes('run') || 
+                              animNameLower.includes('step') || 
+                              animNameLower.includes('stairs')) &&
+                             !animNameLower.includes('dance');
 
               if (isFlat && isWalk) {
                 // Reconstruct with 30fps keyframes to inject procedural hips movement
-                const duration = rawClip.duration;
+                const duration = workingClip.duration;
                 const fps = 30;
                 const numFrames = Math.ceil(duration * fps) + 1;
                 const newTimes = new Float32Array(numFrames);
@@ -1304,8 +1461,12 @@
               } else {
                 for (let j = 0; j < clone.values.length / 3; j++) {
                   // In Blender's space: X is sway, Y is forward progress, Z is vertical bobbing/height
+                  let yVal = clone.values[3*j+1];
+                  if (isRootJointTranslation && (animNameLower.includes('laying') || animNameLower.includes('sleeping'))) {
+                    yVal = 0.12; // Force to ground level (in meters)
+                  }
                   const dx = (clone.values[3*j] - srcRestPos.x) * hipsRatio;
-                  const dy = isWalk ? 0.0 : (clone.values[3*j+1] - srcRestPos.y) * hipsRatio;
+                  const dy = isWalk ? 0.0 : (yVal - srcRestPos.y) * hipsRatio;
                   const dz = (clone.values[3*j+2] - srcRestPos.z) * hipsRatio;
                   
                   // Rotate displacement from source parent world to target parent local: P_tgt_inv * P_src * dP
@@ -1375,9 +1536,7 @@
                     clone.values[i+2] = resQ.z;
                     clone.values[i+3] = resQ.w;
 
-                    if (modelKey === 'lara' && i === 0 && (targetBoneName === 'mixamorig_root_hips' || targetBoneName === 'mixamorig_spine_lower' || targetBoneName === 'mixamorig_leg_left_thigh' || targetBoneName === 'mixamorig_leg_right_thigh')) {
-                      console.log(`WALKER_DEBUG: Retargeted ${targetBoneName} firstKeyframeQ result: ` + JSON.stringify([clone.values[0], clone.values[1], clone.values[2], clone.values[3]]));
-                    }
+
                   }
                 } else {
                   // Fallback to simpler method if source bone is not found
@@ -1415,7 +1574,7 @@
       }
 
       console.log(`WALKER_DEBUG: Finished retargeting clip for Lara. Tracks count: ${tracks.length}`);
-      return new THREE.AnimationClip(`${rawClip.name}_${modelKey}`, rawClip.duration, tracks);
+      return new THREE.AnimationClip(`${workingClip.name}_${modelKey}`, workingClip.duration, tracks);
     }
 
     // Finger parsing
