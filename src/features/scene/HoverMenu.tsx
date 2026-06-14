@@ -61,7 +61,15 @@ const WALKER_ANIM_OPTIONS = [
   { value: "media/sandbox/anim_left_turn.glb", label: "Left Turn" },
   { value: "media/sandbox/anim_right_turn.glb", label: "Right Turn" },
   { value: "media/sandbox/anim_left_turn_2.glb", label: "Left Turn 2" },
-  { value: "media/sandbox/anim_right_turn_2.glb", label: "Right Turn 2" }
+  { value: "media/sandbox/anim_right_turn_2.glb", label: "Right Turn 2" },
+  { value: "media/sandbox/anim_blow_a_kiss.glb", label: "Blow A Kiss" },
+  { value: "media/sandbox/anim_climbing.glb", label: "Climbing" },
+  { value: "media/sandbox/anim_kiss_1.glb", label: "Kiss 1" },
+  { value: "media/sandbox/anim_kiss_from_man.glb", label: "Kiss From Man" },
+  { value: "media/sandbox/anim_kiss_from_woman.glb", label: "Kiss From Woman" },
+  { value: "media/sandbox/anim_kiss.glb", label: "Kiss" },
+  { value: "media/sandbox/anim_macarena_dance.glb", label: "Macarena Dance" },
+  { value: "media/sandbox/anim_taken_hostage_villain.glb", label: "Taken Hostage - Villain" }
 ].sort((a, b) => {
   if (a.value === "idle") return -1;
   if (b.value === "idle") return 1;
