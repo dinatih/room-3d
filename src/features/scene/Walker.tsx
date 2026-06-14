@@ -482,6 +482,31 @@ function SingleCharacter({
   
   const { invalidate } = useThree();
 
+  useEffect(() => {
+    const handleActivity = () => {
+      if (idleTimerRef.current > 10) {
+        invalidate();
+      }
+      idleTimerRef.current = 0;
+    };
+
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('mousedown', handleActivity);
+    window.addEventListener('wheel', handleActivity, { passive: true });
+    window.addEventListener('touchstart', handleActivity, { passive: true });
+    window.addEventListener('touchmove', handleActivity, { passive: true });
+
+    return () => {
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('mousedown', handleActivity);
+      window.removeEventListener('wheel', handleActivity);
+      window.removeEventListener('touchstart', handleActivity);
+      window.removeEventListener('touchmove', handleActivity);
+    };
+  }, [invalidate]);
+
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
     scene.position.set(0, 0, 0);
@@ -706,7 +731,7 @@ function SingleCharacter({
       idleTimerRef.current = 0;
     }
 
-    if (target === 'idle' && !isPaused) {
+    if (!isPaused && !isMoving && !isPreview) {
         idleTimerRef.current += delta;
     } else {
         idleTimerRef.current = 0;
