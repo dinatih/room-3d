@@ -657,7 +657,7 @@ export function Garden({ layers }: { layers: LayerState }) {
       <group position={[100, 0, -145]} userData={{ animUnit: true }}>
         <PottedPalm item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[240, 0, -200]} userData={{ animUnit: true }}>
+      <group position={[240, 0, -400]} userData={{ animUnit: true }}>
         <JoggingSuit item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
       <group position={[180, 0, -120]} rotation={[0, -Math.PI / 4, 0]}
