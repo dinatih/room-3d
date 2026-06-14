@@ -345,7 +345,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
 
     src.traverse(node => {
       const mesh = node as THREE.Mesh;
-      if (!mesh.isMesh || mesh.type !== 'Mesh' || mesh.userData?.isMergedStatic || mesh.userData?.skipMerge) return;
+      if (!mesh.isMesh || mesh.type !== 'Mesh' || (mesh as any).isInstancedMesh || mesh.userData?.isMergedStatic || mesh.userData?.skipMerge) return;
       if (processedMeshes.has(mesh)) return;
       
       // On cache l'original
