@@ -665,7 +665,7 @@ export function Garden({ layers }: { layers: LayerState }) {
              userData={{ hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
         <ShibaInu />
       </group>
-      <group position={[160, 0, 260]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={[30, 0, 210]} rotation={[0, Math.PI / 2, 0]}>
         <Vihals item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
       <group position={[210, -3.48, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true }}>
@@ -723,5 +723,3 @@ export function DronaBoxes({ layers }: { layers: LayerState }) {
     </group>
   );
 }
-
-
