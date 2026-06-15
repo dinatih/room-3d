@@ -82,6 +82,16 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
           }
         }
 
+        // EYE COLORING
+        const isEyesMaterial = matName.includes('eyes') && !matName.includes('lash');
+        if (isEyesMaterial && isDelphina) {
+           const loader = new THREE.TextureLoader();
+           const blueTex = loader.load('media/textures/8003_blue.png');
+           blueTex.flipY = false;
+           blueTex.colorSpace = THREE.SRGBColorSpace;
+           mat.map = blueTex;
+           mat.needsUpdate = true;
+        }
 
         // CLOTHING COLOR-IFICATION
         if (!isNative) {
