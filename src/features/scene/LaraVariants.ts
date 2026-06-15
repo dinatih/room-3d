@@ -68,8 +68,12 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
              mat.emissive.setHex(0xff0000);
              mat.emissiveIntensity = 0.1;
           } else if (isSara) {
-             mat.color.setHex(0xaa0000); // Dark Red
-             mat.emissiveIntensity = 0;
+             if (matName.includes('hair.classic')) {
+                mat.map = null; // Kill dark texture to see red
+                mat.color.setHex(0xff0000); // Red
+                mat.emissive.setHex(0xff0000);
+                mat.emissiveIntensity = 0.05;
+             }
           } else if (isCha) {
              mat.map = null; // Kill dark texture to see blonde-chatain
              mat.color.setHex(0xbc9c74); // Blonde-chatain

@@ -48,13 +48,13 @@ function getFingerLaraName(mixName: string): string {
     const side = match[1].toLowerCase();
     const type = match[2];
     const seg = match[3];
-    
+
     const typeIdx: Record<string, number> = { "Thumb": 1, "Index": 2, "Middle": 3, "Ring": 4, "Pinky": 5 };
     const segLet: Record<string, string> = { "1": "a", "2": "b", "3": "c" };
-    
+
     const fIdx = typeIdx[type];
     const sLet = segLet[seg];
-    
+
     if (fIdx && sLet) {
       return `mixamorig_arm_${side}_finger_${fIdx}${sLet}`;
     }
@@ -278,7 +278,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         const restX = clone.values[0];
         const restY = clone.values[1];
         const restZ = clone.values[2];
-        
+
         let isFlat = true;
         for (let j = 1; j < clone.values.length / 3; j++) {
           if (Math.abs(clone.values[3*j] - restX) > 0.001 ||
@@ -290,10 +290,10 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         }
 
         const animNameLower = rawClip.name.toLowerCase();
-        const isWalk = (animNameLower.includes('walk') || 
-                        animNameLower.includes('run') || 
-                        animNameLower.includes('step') || 
-                        animNameLower.includes('stairs')) && 
+        const isWalk = (animNameLower.includes('walk') ||
+                        animNameLower.includes('run') ||
+                        animNameLower.includes('step') ||
+                        animNameLower.includes('stairs')) &&
                        !animNameLower.includes('dance');
 
         if (isFlat && isWalk) {
@@ -302,7 +302,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           const numFrames = Math.ceil(duration * fps) + 1;
           const newTimes = new Float32Array(numFrames);
           const newValues = new Float32Array(numFrames * 3);
-          
+
           for (let f = 0; f < numFrames; f++) {
             const t = Math.min(f / fps, duration);
             newTimes[f] = t;
@@ -310,12 +310,12 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
             const dx = 0.8 * Math.cos(phase);
             const dy = 0.0;
             const dz = -1.6 * Math.sin(phase * 2.0);
-            
+
             const dP = new THREE.Vector3(dx, dy, dz)
               .applyQuaternion(P_src)
               .applyQuaternion(P_tgt_inv);
             const resPos = bone.defaultPosition.clone().add(dP);
-            
+
             newValues[3*f] = resPos.x;
             newValues[3*f+1] = resPos.y;
             newValues[3*f+2] = resPos.z;
@@ -331,12 +331,12 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
             const dx = (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
             const dy = isWalk ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
             const dz = (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
-            
+
             const dP = new THREE.Vector3(dx, dy, dz)
               .applyQuaternion(P_src)
               .applyQuaternion(P_tgt_inv);
             const resPos = bone.defaultPosition.clone().add(dP);
-            
+
             clone.values[3*j] = resPos.x;
             clone.values[3*j+1] = resPos.y;
             clone.values[3*j+2] = resPos.z;
@@ -419,8 +419,8 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
   return new THREE.AnimationClip(`${workingClip.name}_retargeted`, workingClip.duration, tracks);
 }
 
-interface WalkerProps { 
-  showSkeleton?: boolean; 
+interface WalkerProps {
+  showSkeleton?: boolean;
   isPreview?: boolean;
   walkerAnim?: string;
   isPaused?: boolean;
@@ -454,13 +454,13 @@ interface SingleCharacterProps extends WalkerProps {
   sittingScene?: THREE.Group;
 }
 
-function SingleCharacter({ 
-  modelPath, 
-  isLara, 
-  isActive, 
-  showSkeleton = false, 
-  isPreview = false, 
-  walkerAnim = 'idle', 
+function SingleCharacter({
+  modelPath,
+  isLara,
+  isActive,
+  showSkeleton = false,
+  isPreview = false,
+  walkerAnim = 'idle',
   isPaused = false,
   animations,
   xbotScene,
@@ -471,7 +471,7 @@ function SingleCharacter({
   sittingScene
 }: SingleCharacterProps) {
   const { scene } = useGLTFClone(modelPath);
-  
+
   const groupRef = useRef<THREE.Group>(null!);
   const modelRef = useRef<THREE.Object3D>(null!);
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
@@ -479,7 +479,7 @@ function SingleCharacter({
   const activeActionName = useRef<string>('');
   const idleTimerRef = useRef<number>(0);
   const customAnimName = useRef<string | null>(null);
-  
+
   const { invalidate } = useThree();
 
   useEffect(() => {
@@ -579,7 +579,7 @@ function SingleCharacter({
 
     const mixer = new THREE.AnimationMixer(scene);
     mixerRef.current = mixer;
-    
+
     mixer.addEventListener('finished', (e) => {
       if (customAnimName.current && actionsRef.current[customAnimName.current] === e.action) {
         customAnimName.current = null;
@@ -624,7 +624,7 @@ function SingleCharacter({
         mat.color.set(0x00ffff);
         mat.depthTest = false;
         helper.renderOrder = 99999;
-        helper.raycast = () => {}; 
+        helper.raycast = () => {};
         helper.traverse(c => { c.raycast = () => {}; });
     }
   }, [skeletonRef, showSkeleton]);
@@ -659,14 +659,14 @@ function SingleCharacter({
             // The user wants it to play exactly 2 times and return to idle
             action.setLoop(THREE.LoopRepeat, 2);
             action.clampWhenFinished = true;
-            
+
             customAnimName.current = path;
             invalidate();
           }
         });
       }
     };
-    
+
     document.addEventListener('furniture-toggle', onToggle);
     return () => document.removeEventListener('furniture-toggle', onToggle);
   }, [isActive, isLara, scene, xbotScene]);
@@ -692,7 +692,7 @@ function SingleCharacter({
         // Inactive character stays at its last 'other' position
         groupRef.current.position.set(cameraState.otherX, 0, cameraState.otherZ);
         groupRef.current.rotation.y = cameraState.otherYaw;
-        groupRef.current.visible = true; 
+        groupRef.current.visible = true;
       }
 
       const isFirstPerson = isActive && cameraState.mode === 'walk';
@@ -705,7 +705,7 @@ function SingleCharacter({
 
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
-    
+
     // Inactive model is always stationary
     let isMoving = isActive ? cameraState.isMoving : false;
     let target = isPreview ? (walkerAnim || 'idle') : (isMoving ? 'walk' : 'idle');
@@ -835,39 +835,39 @@ function InternalWalker(props: WalkerProps) {
     clip.name = 'media/sandbox/anim_laying_idle_1.glb';
     return [...xbotGltf.animations, clip];
   }, [xbotGltf.animations, laying1Gltf.animations]);
-  
+
   return (
     <>
-      <SingleCharacter 
-        {...props} 
-        modelPath={XBOT_PATH} 
-        isLara={false} 
+      <SingleCharacter
+        {...props}
+        modelPath={XBOT_PATH}
+        isLara={false}
         isActive={!isLaraActive}
         animations={xbotAnims}
         xbotScene={xbotGltf.scene}
         sittingScene={laying1Gltf.scene}
       />
-      <SingleCharacter 
-        {...props} 
-        modelPath={LARA_PATH} 
-        isLara={true} 
+      <SingleCharacter
+        {...props}
+        modelPath={LARA_PATH}
+        isLara={true}
         isActive={isLaraActive}
         animations={xbotGltf.animations}
         xbotScene={xbotGltf.scene}
       />
-      
+
       {/* 6 NPC Laras placed randomly around Studio and Garden */}
       <SingleCharacter {...props} modelPath={ROSANNA_PATH} isLara={true} isActive={false} animations={rosannaAnims} xbotScene={xbotGltf.scene} variant="rosanna" isNPC={true} npcPosition={[251, 75, 178]} npcRotationY={1.325 + Math.PI / 2} sittingScene={pushUpGltf.scene} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={marissaAnims} xbotScene={xbotGltf.scene} variant="marissa" isNPC={true} npcPosition={[200, 0, -240]} npcRotationY={0} sittingScene={marissaGltf.scene} />
+      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={marissaAnims} xbotScene={xbotGltf.scene} variant="marissa" isNPC={true} npcPosition={[160, 0, -340]} npcRotationY={0} sittingScene={marissaGltf.scene} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={delphinaAnims} xbotScene={xbotGltf.scene} variant="delphina" isNPC={true} npcPosition={[120, 35, -250]} npcRotationY={1} sittingScene={swimmingGltf.scene} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={saraAnims} xbotScene={xbotGltf.scene} variant="sara" isNPC={true} npcPosition={[296, 40, -310]} npcRotationY={-Math.PI / 2} sittingScene={climbingGltf.scene} />
+      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={saraAnims} xbotScene={xbotGltf.scene} variant="sara" isNPC={true} npcPosition={[340, -40, -310]} npcRotationY={-Math.PI / 2} sittingScene={climbingGltf.scene} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={chaAnims} xbotScene={xbotGltf.scene} variant="cha" isNPC={true} npcPosition={[30, 0, 151]} npcRotationY={Math.PI / 2} sittingScene={sittingGltf.scene} />
       <SingleCharacter {...props} modelPath={VIVID_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="vivid" isNPC={true} npcPosition={[150, 0, 50]} npcRotationY={Math.PI / 4} />
     </>
   );
 }
 
-export function Walker(props: WalkerProps) { 
+export function Walker(props: WalkerProps) {
   return (
     <Suspense fallback={null}>
       <InternalWalker {...props} />
