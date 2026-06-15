@@ -82,6 +82,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
           }
         }
 
+
         // CLOTHING COLOR-IFICATION
         if (!isNative) {
           const isTop = matName.includes('top') || matName.includes('shirt') || matName.includes('tank') || meshName.includes('shirt');
