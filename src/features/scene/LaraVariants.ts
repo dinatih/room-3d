@@ -37,12 +37,12 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
         const isLash = matName.includes('lash');
         const isEye  = matName.includes('eye') && !isLash;
         const isClothing = matName.includes('top') || matName.includes('shirt') || matName.includes('short') || matName.includes('pant') || matName.includes('boot') || matName.includes('gear') || matName.includes('bag') || matName.includes('pack') || matName.includes('belt') || matName.includes('holster');
-        const isGlasses = matName.includes('lens') || meshName.includes('lens') || matName.includes('glass') || meshName.includes('glass') || matName.includes('frame') || meshName.includes('frame');
+        const isGlasses = matName.includes('lens') || matName.includes('glass') || matName.includes('frame');
         const isMouth = matName.includes('mouth') || matName.includes('teeth') || matName.includes('tongue');
 
         // HIDE GLASSES for Delphina and Marissa
-        if ((isDelphina || isMarissa) && isGlasses && !isClothing && !isSkin && !isHair && !isEye && !isLash) {
-           mesh.visible = false;
+        if ((isDelphina || isMarissa) && isGlasses) {
+           mat.visible = false;
         }
 
         // UNIVERSAL FIX: Force OPAQUE by default
