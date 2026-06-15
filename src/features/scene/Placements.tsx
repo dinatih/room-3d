@@ -476,7 +476,7 @@ function Smorkull_() {
   const p = SMORKULL_POSITIONS[posIdx];
   return (
     <PositionTransition x={p.x} z={p.z} ry={p.ry}>
-      <group userData={{ animUnit: true, hoverAction: { label: 'Smörkull', actionId: 'smorkull-position' } }}>
+      <group userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Smörkull', actionId: 'smorkull-position' } }}>
         <Smorkull item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </PositionTransition>
@@ -523,7 +523,7 @@ function Sunnersta_() {
   const p = SUNNERSTA_POSITIONS[posIdx];
   return (
     <PositionTransition x={p.x} z={p.z} ry={p.ry}>
-      <group userData={{ animUnit: true, hoverAction: { label: 'Sunnersta', actions: ['sunnersta-position', 'sunnersta-variant'] } }}>
+      <group userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Sunnersta', actions: ['sunnersta-position', 'sunnersta-variant'] } }}>
         <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} variant={variant} />
       </group>
     </PositionTransition>
@@ -541,7 +541,7 @@ function LampOla_() {
   }, []);
   return (
     <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z]} rotation-y={LAMP_ROT_Y}
-      userData={{ animUnit: true, hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
+      userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
       <LampOla item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       {lampOn && <pointLight color={0xfff5e0} intensity={120000} distance={350} decay={2} position={[0, 96, 0]} />}
     </group>
@@ -639,7 +639,8 @@ export function Garden({ layers }: { layers: LayerState }) {
   });
   return (
     <MergedStaticGroup name="merged-garden">
-      <group position={[270, 0, -110]} rotation={[0, Math.PI, 0]}>
+      <group position={[270, 0, -110]} rotation={[0, Math.PI, 0]}
+             userData={{ skipMerge: true, hoverAction: { label: 'Canapé de jardin', actions: ['sofa-arm-left', 'sofa-arm-right'] } }}>
         <ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} />
       </group>
       <group position={[100, 0, -80]} rotation={[0, Math.PI, 0]}>
