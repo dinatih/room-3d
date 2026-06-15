@@ -40,8 +40,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
         const isGlasses = matName.includes('lens') || matName.includes('glass') || matName.includes('frame');
         const isMouth = matName.includes('mouth') || matName.includes('teeth') || matName.includes('tongue');
 
-        // HIDE GLASSES for Delphina and Marissa
-        if ((isDelphina || isMarissa) && isGlasses) {
+        // HIDE GLASSES for Delphina, Marissa and Cha
+        if ((isDelphina || isMarissa || isCha) && isGlasses) {
            mat.visible = false;
         }
 
@@ -84,13 +84,22 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
 
         // EYE COLORING
         const isEyesMaterial = matName.includes('eyes') && !matName.includes('lash');
-        if (isEyesMaterial && isDelphina) {
-           const loader = new THREE.TextureLoader();
-           const blueTex = loader.load('media/textures/8003_blue.png');
-           blueTex.flipY = false;
-           blueTex.colorSpace = THREE.SRGBColorSpace;
-           mat.map = blueTex;
-           mat.needsUpdate = true;
+        if (isEyesMaterial) {
+           if (isDelphina) {
+              const loader = new THREE.TextureLoader();
+              const blueTex = loader.load('media/textures/8003_blue.png');
+              blueTex.flipY = false;
+              blueTex.colorSpace = THREE.SRGBColorSpace;
+              mat.map = blueTex;
+              mat.needsUpdate = true;
+           } else if (isCha) {
+              const loader = new THREE.TextureLoader();
+              const greenTex = loader.load('media/textures/8003_green.png');
+              greenTex.flipY = false;
+              greenTex.colorSpace = THREE.SRGBColorSpace;
+              mat.map = greenTex;
+              mat.needsUpdate = true;
+           }
         }
 
         // CLOTHING COLOR-IFICATION
