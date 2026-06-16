@@ -231,6 +231,11 @@
                   mat.color.setHex(0xff0000); // Red
                   mat.emissive.setHex(0xff0000);
                   mat.emissiveIntensity = 0.05;
+                } else {
+                  mat.map = null;
+                  mat.color.setHex(0x0a0a0a); // Deep black
+                  mat.emissive.setHex(0x000000);
+                  mat.emissiveIntensity = 0;
                 }
             } else if (isCha) {
                mat.map = null; // Kill dark texture to see blonde-chatain
@@ -260,16 +265,47 @@
              }
           }
 
+          // TEXTURE REPLACEMENTS FOR CHA (SUPERMAN TOP, RED BOOTS, GOLDEN SOCKS)
+          const isShirt = matName.toLowerCase().includes('shirt');
+          const isBoot = matName.toLowerCase().includes('boot');
+          if (isCha) {
+             console.log("Cha Material:", matName, "isBoot:", isBoot, "isShirt:", isShirt);
+             if (isShirt) {
+                const loader = new THREE.TextureLoader();
+                const shirtTex = loader.load('media/textures/8019_cha.png?t=' + Date.now(), (tex) => {
+                   console.log("VITE LOADED SHIRT TEX SUCCESS:", tex.image.src);
+                }, undefined, (err) => {
+                   console.error("VITE LOADED SHIRT TEX ERROR:", err);
+                });
+                shirtTex.flipY = false;
+                shirtTex.colorSpace = THREE.SRGBColorSpace;
+                mat.map = shirtTex;
+                mat.needsUpdate = true;
+             }
+             if (isBoot) {
+                const loader = new THREE.TextureLoader();
+                const bootsTex = loader.load('media/textures/8016_cha.png?t=' + Date.now(), (tex) => {
+                   console.log("VITE LOADED BOOTS TEX SUCCESS:", tex.image.src);
+                }, undefined, (err) => {
+                   console.error("VITE LOADED BOOTS TEX ERROR:", err);
+                });
+                bootsTex.flipY = false;
+                bootsTex.colorSpace = THREE.SRGBColorSpace;
+                mat.map = bootsTex;
+                mat.needsUpdate = true;
+             }
+          }
+
           // CLOTHING COLOR-IFICATION
           if (!isNative) {
-            const isTop = matName.includes('top') || matName.includes('shirt') || matName.includes('tank') || meshName.includes('shirt');
-            const isShorts = matName.includes('short') || matName.includes('pant') || meshName.includes('short');
-            const isBackpack = matName.includes('backpack') || matName.includes('bag') || matName.includes('pack');
-            const isOtherClothing = matName.includes('boot') || 
-                                    matName.includes('gear') || matName.includes('holster') || matName.includes('belt') ||
-                                    matName.includes('vest') || matName.includes('glove') || isBackpack;
+            const isTop = matName.toLowerCase().includes('top') || matName.toLowerCase().includes('shirt') || matName.toLowerCase().includes('tank') || meshName.toLowerCase().includes('shirt');
+            const isShorts = matName.toLowerCase().includes('short') || matName.toLowerCase().includes('pant') || meshName.toLowerCase().includes('short');
+            const isBackpack = matName.toLowerCase().includes('backpack') || matName.toLowerCase().includes('bag') || matName.toLowerCase().includes('pack');
+            const isOtherClothing = matName.toLowerCase().includes('boot') || 
+                                    matName.toLowerCase().includes('gear') || matName.toLowerCase().includes('holster') || matName.toLowerCase().includes('belt') ||
+                                    matName.toLowerCase().includes('vest') || matName.toLowerCase().includes('glove') || isBackpack;
 
-            const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair;
+            const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair && !(isCha && (isShirt || isBoot));
 
             if (shouldColor) {
               let color = 0xcc0000; // Brighter default red
@@ -297,7 +333,7 @@
                  forceProcedural = true; // Avoid texture details for pure black look
               } else if (isCha) {
                  if (isShorts) {
-                   color = 0x151515; // Black jean
+                   color = 0xff0000; // Vivid red
                    forceProcedural = true;
                  } else if (isTop) {
                    color = 0x0044cc; // Superman blue
