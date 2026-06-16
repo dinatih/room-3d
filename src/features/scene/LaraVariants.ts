@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivid';
+export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivid' | 'sabira' | 'safa' | 'rajaa';
 
 export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant) {
   const isVivid = style === 'vivid';
@@ -10,6 +10,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
   const isDelphina = style === 'delphina';
   const isSara = style === 'sara';
   const isCha = style === 'cha';
+  const isSabira = style === 'sabira';
+  const isSafa = style === 'safa';
+  const isRajaa = style === 'rajaa';
 
   model.traverse(node => {
     if ((node as THREE.Mesh).isMesh) {
@@ -107,9 +110,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
            }
         }
 
-        // TEXTURE REPLACEMENTS FOR CHA (SUPERMAN TOP, RED BOOTS, GOLDEN SOCKS)
+        // TEXTURE REPLACEMENTS FOR CHA (SUPERMAN TOP, RED BOOTS, GOLDEN SOCKS) & RAJAA (CAMOUFLAGE)
         const isShirt = matName.toLowerCase().includes('shirt');
         const isBoot = matName.toLowerCase().includes('boot');
+        const isShorts = matName.toLowerCase().includes('short') || matName.toLowerCase().includes('pant') || meshName.toLowerCase().includes('short');
         if (isCha) {
            if (isShirt) {
               const loader = new THREE.TextureLoader();
@@ -128,18 +132,38 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
               mat.needsUpdate = true;
            }
         }
+        if (isRajaa) {
+           if (isShirt) {
+              const loader = new THREE.TextureLoader();
+              const shirtTex = loader.load('media/textures/8019_rajaa.png');
+              shirtTex.flipY = false;
+              shirtTex.colorSpace = THREE.SRGBColorSpace;
+              mat.map = shirtTex;
+              mat.needsUpdate = true;
+           }
+           if (isShorts) {
+              const loader = new THREE.TextureLoader();
+              const shortsTex = loader.load('media/textures/8031_rajaa.png');
+              shortsTex.flipY = false;
+              shortsTex.colorSpace = THREE.SRGBColorSpace;
+              mat.map = shortsTex;
+              mat.needsUpdate = true;
+           }
+        }
 
         // CLOTHING COLOR-IFICATION
         if (!isNative) {
           const isTop = matName.toLowerCase().includes('top') || matName.toLowerCase().includes('shirt') || matName.toLowerCase().includes('tank') || meshName.toLowerCase().includes('shirt');
-          const isShorts = matName.toLowerCase().includes('short') || matName.toLowerCase().includes('pant') || meshName.toLowerCase().includes('short');
           const isBackpack = matName.toLowerCase().includes('backpack') || matName.toLowerCase().includes('bag') || matName.toLowerCase().includes('pack');
           const isOtherClothing = matName.toLowerCase().includes('boot') || 
                                   matName.toLowerCase().includes('gear') || matName.toLowerCase().includes('holster') || matName.toLowerCase().includes('belt') ||
                                   matName.toLowerCase().includes('vest') || matName.toLowerCase().includes('glove') || isBackpack;
 
           const isBuckle = matName.toLowerCase().includes('buckle');
-          const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair && !isBuckle && !(isCha && (isShirt || isBoot));
+          const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair && !isBuckle && 
+                              !(isCha && (isShirt || isBoot)) && 
+                              !(isSabira && !isTop) && 
+                              !isRajaa;
 
           if (shouldColor) {
             let color = 0xcc0000; // Brighter default red
@@ -176,6 +200,14 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
                  color = 0x151515; // Black boots / gear
                  forceProcedural = true;
                }
+            } else if (isSabira) {
+               if (isTop) {
+                 color = 0xffd700; // Yellow top
+                 forceProcedural = true;
+               }
+            } else if (isSafa) {
+               color = 0xe2d6bd; // Beige
+               forceProcedural = true;
             } else {
               // Vivid Red
               const redColor = 0xff0000;
@@ -220,13 +252,13 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant
                   }
                }
             } else {
-              // Procedural material for jeans, white, black
+              // Procedural material for jeans, white, black, beige, yellow
               const newMat = new THREE.MeshStandardMaterial({
                 color: color,
                 emissive: (isVivid || (isRosanna && isTop)) ? new THREE.Color(color === 0x050505 ? 0 : color) : new THREE.Color(0,0,0),
                 emissiveIntensity: isVivid ? 0.5 : ((isRosanna && isTop) ? 0.05 : 0),
-                roughness: (isRosanna || isMarissa || isDelphina || isSara) ? 0.9 : (isVivid ? 0.1 : 0.25),
-                metalness: (isRosanna || isMarissa || isDelphina || isSara) ? 0.0 : (isVivid ? 0.3 : 0.1),
+                roughness: (isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.9 : (isVivid ? 0.1 : 0.25),
+                metalness: (isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.0 : (isVivid ? 0.3 : 0.1),
                 transparent: false,
                 alphaTest: isHair ? 0.5 : 0,
                 depthWrite: true,
