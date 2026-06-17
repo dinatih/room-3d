@@ -1,0 +1,1097 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Lara Croft - Just Don't Stare Test Bench</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: radial-gradient(circle at center, #1e1e24 0%, #111115 100%);
+      color: #e0e0e8;
+    }
+    
+    #app-container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    #view {
+      flex: 1;
+      height: 100%;
+      position: relative;
+    }
+
+    /* Glassmorphic Control Panel */
+    #panel {
+      width: 380px;
+      height: calc(100vh - 40px);
+      margin: 20px;
+      background: rgba(18, 18, 24, 0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 24px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.5);
+      z-index: 10;
+      overflow-y: auto;
+    }
+
+    /* Custom Scrollbar for panel */
+    #panel::-webkit-scrollbar {
+      width: 6px;
+    }
+    #panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #panel::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+    #panel::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      font-size: 13px;
+      color: #8a8a98;
+      line-height: 1.4;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #ff8e8e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Controls */
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #eee;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 142, 142, 0.2));
+      border-color: rgba(255, 107, 107, 0.4);
+      color: #ff8e8e;
+    }
+
+    button.primary:hover {
+      background: linear-gradient(135deg, rgba(255, 107, 107, 0.35), rgba(255, 142, 142, 0.35));
+      border-color: rgba(255, 107, 107, 0.6);
+      box-shadow: 0 0 12px rgba(255, 107, 107, 0.2);
+    }
+
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #a0a0b0;
+    }
+
+    .slider-val {
+      font-weight: 600;
+      color: #ff8e8e;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+      accent-color: #ff6b6b;
+      margin: 4px 0;
+    }
+
+    /* List styling for meshes and anims */
+    .scroll-list {
+      max-height: 180px;
+      overflow-y: auto;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.15);
+      padding: 6px;
+    }
+
+    .scroll-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .scroll-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+    }
+
+    .list-item {
+      padding: 8px 10px;
+      margin-bottom: 4px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      transition: all 0.2s ease;
+    }
+
+    .list-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    .list-item.active {
+      background: rgba(255, 107, 107, 0.08);
+      border-color: rgba(255, 107, 107, 0.25);
+      color: #ff8e8e;
+      font-weight: 600;
+    }
+
+    .mesh-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 12px;
+      padding: 6px 8px;
+      border-radius: 6px;
+    }
+    .mesh-toggle:hover {
+      background: rgba(255,255,255,0.03);
+    }
+    .mesh-toggle input {
+      cursor: pointer;
+      accent-color: #ff6b6b;
+    }
+
+    /* HUD overlay */
+    #hud {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(18, 18, 24, 0.65);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-family: monospace;
+      color: #a0a0b0;
+      line-height: 1.6;
+      pointer-events: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    
+    #loading-screen {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #111115;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      transition: opacity 0.5s ease;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255, 107, 107, 0.1);
+      border-top-color: #ff6b6b;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading-screen">
+    <div class="spinner"></div>
+    <div style="font-weight: 600; font-size: 15px; color: #ff8e8e;">Loading Just Don't Stare model...</div>
+  </div>
+
+  <div id="app-container">
+    <!-- 3D Canvas Container -->
+    <div id="view">
+      <div id="hud">
+        MODEL: Just Don't Stare<br/>
+        STATUS: Standing upright (Y-up)<br/>
+        DECOR: Deleted & clean
+      </div>
+    </div>
+
+    <!-- Side Panel -->
+    <div id="panel">
+      <div>
+        <h1>Lara Croft Test Bench</h1>
+        <div class="subtitle">Showcase & Debug page for the <i>"Just don't stare"</i> custom Sketchfab model. Background decor meshes have been completely deleted, and skeletal coordinate maps aligned to stand upright.</div>
+      </div>
+
+      <!-- Animation controls -->
+      <div class="section">
+        <h2>Animations</h2>
+        <div class="btn-group">
+          <button id="btn-play-pause" class="primary">Pause</button>
+          <button id="btn-stop">Stop</button>
+        </div>
+        <div class="slider-row">
+          <div class="slider-header">
+            <span>Speed</span>
+            <span id="speed-val" class="slider-val">1.0x</span>
+          </div>
+          <input type="range" id="speed-slider" min="0.1" max="2.0" step="0.1" value="1.0">
+        </div>
+        <div class="scroll-list" id="anim-list"></div>
+      </div>
+
+      <!-- Mesh controls -->
+      <div class="section" style="flex: 1; display: flex; flex-direction: column; min-height: 200px;">
+        <h2>Model Meshes</h2>
+        <div style="font-size: 11px; color: #8a8a98; margin-bottom: 4px;">Toggle visibility of individual parts:</div>
+        <div class="scroll-list" id="mesh-list" style="flex: 1; max-height: none;"></div>
+      </div>
+
+      <!-- Extra settings -->
+      <div class="section">
+        <h2>Debug Visualizers</h2>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label class="mesh-toggle">
+            <input type="checkbox" id="chk-skeleton">
+            <span>Show Skeleton Helper</span>
+          </label>
+          <label class="mesh-toggle">
+            <input type="checkbox" id="chk-grid" checked>
+            <span>Show Floor Grid & Axes</span>
+          </label>
+          <button id="btn-reset-cam" style="margin-top: 4px;">Recenter Camera</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader }   from 'three/addons/loaders/DRACOLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // Lists of animations available
+    const ANIMATION_FILES = [
+      "happy_walk.glb",
+      "walking.glb",
+      "victory.glb",
+      "t-pose.glb",
+      "angry_gesture.glb",
+      "ascending_stairs.glb",
+      "asking_question.glb",
+      "beckoning.glb",
+      "catwalk_sequence_01.glb",
+      "catwalk_sequence_02.glb",
+      "cheering_while_sitting.glb",
+      "clapping.glb",
+      "crawl_backwards_in_prone.glb",
+      "descending_stairs.glb",
+      "disappointed.glb",
+      "having_a_meeting,_female.glb",
+      "laying_seizure.glb",
+      "laying_severe_cough.glb",
+      "seated_idle.glb",
+      "sitting_drinking.glb",
+      "sitting_talking.glb",
+      "stand_up.glb",
+      "standing_arguing.glb",
+      "talking.glb"
+    ];
+
+    // Bone Synonyms dictionary for retargeting
+    const BONE_SYNONYMS = {
+      'Hips': ['hips', 'pelvis', 'cog', 'roothips', 'rootground'],
+      'Spine': ['spine01', 'spinelower', 'spine0', 'spine1', 'spine'],
+      'Spine2': ['spine02', 'spineupper', 'spine2', 'spine03', 'spine'],
+      'Neck': ['neck', 'headnecklower'],
+      'Head': ['head', 'headneckupper'],
+      'LeftShoulder': ['leftshoulder', 'shoulderl', 'claviclel', 'armleftshoulder', 'larmclavicle'],
+      'LeftArm': ['armleftshoulder2', 'upperarml', 'larmhumerus', 'upperarm.l', 'upper_arm.l', 'leftarm', 'armleftelbow', 'arm.l'],
+      'LeftForeArm': ['lowerarml', 'larmradius', 'forearm.l', 'forearm_l', 'leftforearm', 'armleftelbow', 'armleftwrist'],
+      'LeftHand': ['handl', 'larmwrist', 'hand.l', 'hand_l', 'wrist.l', 'wrist_l', 'lefthand', 'armleftwrist'],
+      'RightShoulder': ['rightshoulder', 'shoulderr', 'clavicler', 'armrightshoulder', 'rarmclavicle'],
+      'RightArm': ['armrightshoulder2', 'upperarmr', 'armrightelbow', 'rarmhumerus', 'upperarm.r', 'upper_arm.r', 'arm.r'],
+      'RightForeArm': ['lowerarmr', 'rarmradius', 'forearm.r', 'forearm_r', 'rightforearm', 'armrightelbow', 'armrightwrist'],
+      'RightHand': ['handr', 'rarmwrist', 'hand.r', 'hand_r', 'wrist.r', 'wrist_r', 'righthand', 'armrightwrist'],
+      'LeftUpLeg': ['legleftthigh', 'thighl', 'llegfemur', 'thigh.l', 'thigh_l', 'leftupleg'],
+      'LeftLeg': ['legleftknee', 'calfl', 'shinl', 'llegankle', 'foot.l', 'foot_l', 'ankle.l', 'ankle_l', 'leftleg'],
+      'LeftFoot': ['legleftankle', 'footl', 'llegankle', 'foot.l', 'foot_l', 'ankle.l', 'ankle_l', 'leftfoot'],
+      'LeftToeBase': ['leglefttoes', 'balll', 'toel', 'llegball', 'toe.l', 'toe_l', 'ball.l', 'ball_l', 'lefttoebase'],
+      'RightUpLeg': ['legrightthigh', 'thighr', 'rlegfemur', 'thigh.r', 'thigh_r', 'rightupleg'],
+      'RightLeg': ['legrightknee', 'calfr', 'shinr', 'rlegtibia', 'shin.r', 'shin_r', 'calf.r', 'calf_r', 'rightleg'],
+      'RightFoot': ['legrightankle', 'footr', 'rlegankle', 'foot.r', 'foot_r', 'ankle.r', 'ankle_r', 'rightfoot'],
+      'RightToeBase': ['legrighttoes', 'ballr', 'toer', 'rlegball', 'toe.r', 'toe_r', 'ball.r', 'ball_r', 'righttoebase']
+    };
+
+    const viewEl = document.getElementById('view');
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(viewEl.clientWidth, viewEl.clientHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = true;
+    viewEl.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x131317);
+
+    const camera = new THREE.PerspectiveCamera(45, viewEl.clientWidth / viewEl.clientHeight, 1, 1000);
+    camera.position.set(0, 120, 320);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 90, 0);
+    controls.update();
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const sun1 = new THREE.DirectionalLight(0xffffff, 1.5);
+    sun1.position.set(100, 200, 100);
+    sun1.castShadow = true;
+    sun1.shadow.mapSize.width = 2048;
+    sun1.shadow.mapSize.height = 2048;
+    sun1.shadow.bias = -0.001;
+    scene.add(sun1);
+
+    const sun2 = new THREE.DirectionalLight(0xffffff, 0.4);
+    sun2.position.set(-100, 150, -100);
+    scene.add(sun2);
+
+    // Floor Platform
+    const floorGeo = new THREE.PlaneGeometry(600, 600);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x18181c, roughness: 0.85 });
+    const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.receiveShadow = true;
+    scene.add(floorMesh);
+
+    const gridHelper = new THREE.GridHelper(600, 50, 0xff6b6b, 0x2e2e35);
+    gridHelper.position.y = 0.1;
+    scene.add(gridHelper);
+
+    const axesHelper = new THREE.AxesHelper(50);
+    axesHelper.position.y = 0.2;
+    scene.add(axesHelper);
+
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+    const loader = new GLTFLoader();
+    loader.setDRACOLoader(dracoLoader);
+
+    let mainModel = null;
+    let modelMixer = null;
+    let rawAnimClip = null;
+    let animScene = null;
+    let activeAction = null;
+    let skeletonHelper = null;
+
+    let isPaused = false;
+    let playbackSpeed = 1.0;
+    let currentAnimFile = '';
+
+    // Functions to find target bones
+    function resolveTargetFingerBoneName(targetInstance, side, type, segment) {
+      const sideChar = side.charAt(0).toLowerCase();
+      const segmentIndex = parseInt(segment) - 1;
+      const segmentLetter = ['a', 'b', 'c'][segmentIndex] || 'a';
+      
+      const candidates = [
+        new RegExp(`arm.*${side}.*finger.*${type === 'thumb' ? 1 : type === 'index' ? 2 : type === 'middle' ? 3 : type === 'ring' ? 4 : 5}${segmentLetter}`, 'i'),
+        new RegExp(`${type}_0${segment}_${sideChar}`, 'i'),
+        new RegExp(`${type === 'thumb' ? 'thumb' : 'f_' + type}\\.0${segment}\\.${sideChar}`, 'i'),
+        new RegExp(`${sideChar}.*hand.*${type}.*${segmentIndex}`, 'i'),
+        new RegExp(`mixamorig.*${side}.*hand.*${type}.*${segment}`, 'i'),
+        new RegExp(`mixamorig_${side}_hand_${type}_${segment}`, 'i'),
+        new RegExp(`${side}_hand_${type}_${segment}`, 'i')
+      ];
+
+      let foundName = null;
+      targetInstance.traverse(node => {
+        if (node.isBone && !foundName) {
+          for (const rx of candidates) {
+            if (rx.test(node.name)) {
+              foundName = node.name;
+              break;
+            }
+          }
+        }
+      });
+      return foundName;
+    }
+
+    function resolveTargetBoneName(targetInstance, baseName) {
+      const fingerMatch = baseName.match(/Hand(Thumb|Index|Middle|Ring|Pinky)(\d)/i);
+      if (fingerMatch) {
+        const side = baseName.toLowerCase().includes('left') ? 'left' : 'right';
+        const type = fingerMatch[1].toLowerCase();
+        const segment = fingerMatch[2];
+        const resolvedFinger = resolveTargetFingerBoneName(targetInstance, side, type, segment);
+        if (resolvedFinger) return resolvedFinger;
+      }
+
+      const synonyms = BONE_SYNONYMS[baseName];
+      if (synonyms) {
+        for (const syn of synonyms) {
+          let foundName = null;
+          targetInstance.traverse(node => {
+            if (node.isBone && !foundName) {
+              const nameNormalized = node.name.toLowerCase().replace(/[:_ .\-]/g, '');
+              if (nameNormalized === syn || nameNormalized.includes(syn)) {
+                if (!nameNormalized.includes('twist') && !nameNormalized.includes('muscle') && !nameNormalized.includes('offset')) {
+                  foundName = node.name;
+                }
+              }
+            }
+          });
+          if (foundName) return foundName;
+        }
+      }
+
+      const candidates = [
+        'mixamorig:' + baseName,
+        'mixamorig_' + baseName,
+        'mixamorig' + baseName,
+        baseName
+      ];
+
+      for (const cand of candidates) {
+        if (targetInstance.getObjectByName(cand)) {
+          return cand;
+        }
+      }
+      return null;
+    }
+
+    // Retargeting algorithm
+    function retargetMixamoClip(rawClip, targetInstance, animScene) {
+      if (!rawClip || !targetInstance) return null;
+
+      const animBones = {};
+      if (animScene) {
+        animScene.updateMatrixWorld(true);
+        animScene.traverse(c => {
+          if (c.isBone) {
+            const match = c.name.match(/mixamorig[:_]?(.+)/i);
+            if (match) {
+              animBones[match[1]] = {
+                restWorldQuaternion: c.getWorldQuaternion(new THREE.Quaternion()),
+                restLocalQuaternion: c.quaternion.clone(),
+                parentRestWorldQuaternion: c.parent ? c.parent.getWorldQuaternion(new THREE.Quaternion()) : new THREE.Quaternion(),
+                defaultPosition: c.position.clone()
+              };
+            }
+          }
+        });
+      }
+
+      const clonedTracks = [];
+      for (const track of rawClip.tracks) {
+        const cl = track.clone();
+        cl.times = new Float32Array(track.times);
+        cl.values = new Float32Array(track.values);
+        clonedTracks.push(cl);
+      }
+      const workingClip = new THREE.AnimationClip(rawClip.name, rawClip.duration, clonedTracks);
+
+      for (const track of workingClip.tracks) {
+        if (track.name.endsWith('.position')) {
+          const firstVal = new THREE.Vector3(track.values[0], track.values[1], track.values[2]);
+          if (firstVal.length() > 5.0) {
+            for (let i = 0; i < track.values.length; i++) {
+              track.values[i] *= 0.01;
+            }
+          }
+        }
+      }
+
+      const rootRotTrackIndex = workingClip.tracks.findIndex(t => t.name.toLowerCase().includes('rootjoint') && t.name.endsWith('.quaternion'));
+      const hipsRotTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('hips') || t.name.toLowerCase().endsWith('hips.quaternion')) && t.name.endsWith('.quaternion') && !t.name.toLowerCase().includes('rootjoint'));
+
+      if (rootRotTrackIndex !== -1) {
+        const rootRotTrack = workingClip.tracks[rootRotTrackIndex];
+        if (hipsRotTrackIndex !== -1) {
+          const hipsRotTrack = workingClip.tracks[hipsRotTrackIndex];
+          const timesSet = new Set([...rootRotTrack.times, ...hipsRotTrack.times]);
+          const times = Array.from(timesSet).sort((a, b) => a - b);
+          
+          const values = new Float32Array(times.length * 4);
+          
+          function evaluateQuaternionTrack(track, t) {
+            const trackTimes = track.times;
+            const trackValues = track.values;
+            if (t <= trackTimes[0]) {
+              return new THREE.Quaternion(trackValues[0], trackValues[1], trackValues[2], trackValues[3]);
+            }
+            if (t >= trackTimes[trackTimes.length - 1]) {
+              const idx = (trackTimes.length - 1) * 4;
+              return new THREE.Quaternion(trackValues[idx], trackValues[idx+1], trackValues[idx+2], trackValues[idx+3]);
+            }
+            let i = 0;
+            while (i < trackTimes.length - 1 && trackTimes[i+1] < t) {
+              i++;
+            }
+            const t0 = trackTimes[i];
+            const t1 = trackTimes[i+1];
+            const alpha = (t - t0) / (t1 - t0);
+            
+            const q0 = new THREE.Quaternion(trackValues[4*i], trackValues[4*i+1], trackValues[4*i+2], trackValues[4*i+3]);
+            const q1 = new THREE.Quaternion(trackValues[4*(i+1)], trackValues[4*(i+1)+1], trackValues[4*(i+1)+2], trackValues[4*(i+1)+3]);
+            return q0.slerp(q1, alpha);
+          }
+
+          for (let i = 0; i < times.length; i++) {
+            const t = times[i];
+            const qRoot = evaluateQuaternionTrack(rootRotTrack, t);
+            const qHips = evaluateQuaternionTrack(hipsRotTrack, t);
+            const qCombined = qRoot.multiply(qHips);
+            
+            values[4*i] = qCombined.x;
+            values[4*i+1] = qCombined.y;
+            values[4*i+2] = qCombined.z;
+            values[4*i+3] = qCombined.w;
+          }
+          
+          hipsRotTrack.times = new Float32Array(times);
+          hipsRotTrack.values = values;
+          workingClip.tracks.splice(rootRotTrackIndex, 1);
+        } else {
+          const hipsPosTrack = workingClip.tracks.find(t => t.name.toLowerCase().includes('hips') && !t.name.toLowerCase().includes('rootjoint'));
+          let hipsName = 'mixamorig:Hips.quaternion';
+          if (hipsPosTrack) {
+            hipsName = hipsPosTrack.name.split('.')[0] + '.quaternion';
+          }
+          rootRotTrack.name = hipsName;
+        }
+      }
+
+      let srcHipsDefaultY = 0.991;
+      let computedHipsRatio = 1.0; 
+      
+      const hipsBone = targetInstance.getObjectByName(resolveTargetBoneName(targetInstance, 'Hips'));
+      
+      for (const tr of workingClip.tracks) {
+        const [boneFull, prop] = tr.name.split('.');
+        const match = boneFull.match(/mixamorig[:_]?(.+)/i);
+        if (match) {
+          const baseName = match[1];
+          if (prop === 'position' && baseName.toLowerCase() === 'hips') {
+            let refSrcY = 0.991;
+            if (animBones[baseName]) {
+              refSrcY = animBones[baseName].defaultPosition.y;
+            }
+            if (refSrcY > 5.0) {
+              refSrcY *= 0.01;
+            }
+            srcHipsDefaultY = refSrcY;
+            
+            let targetHipsHeight = 0.991;
+            if (hipsBone && hipsBone.defaultPosition) {
+              targetHipsHeight = hipsBone.defaultPosition.y;
+            }
+            
+            if (refSrcY > 0) {
+              computedHipsRatio = targetHipsHeight / refSrcY;
+            }
+          }
+        }
+      }
+
+      const hasRootTranslation = workingClip.tracks.some(t => t.name.toLowerCase().includes('rootjoint') && t.name.endsWith('.position'));
+      const tracks = [];
+
+      for (const tr of workingClip.tracks) {
+        const [boneFull, prop] = tr.name.split('.');
+        const match = boneFull.match(/mixamorig[:_]?(.+)/i);
+        if (!match) continue;
+        let baseName = match[1];
+
+        if (prop === 'position' && baseName.toLowerCase() === 'hips' && hasRootTranslation) {
+          continue;
+        }
+
+        let isRootJointTranslation = false;
+        if (prop === 'position' && baseName.toLowerCase().includes('rootjoint')) {
+          baseName = 'Hips';
+          isRootJointTranslation = true;
+        }
+
+        const targetBoneName = resolveTargetBoneName(targetInstance, baseName);
+        if (targetBoneName) {
+          if (prop === 'scale') continue;
+
+          const isHips = targetBoneName.toLowerCase().endsWith('hips') || targetBoneName.toLowerCase().includes('hips');
+          if (prop === 'position' && !isHips) continue;
+
+          const clone = tr.clone();
+          clone.name = `${targetBoneName}.${prop}`;
+
+          if (prop === 'position' && isHips) {
+            const bone = targetInstance.getObjectByName(targetBoneName);
+            if (bone && bone.defaultPosition) {
+              let P_src = null;
+              if (isRootJointTranslation) {
+                P_src = new THREE.Quaternion();
+              } else if (animBones[baseName]) {
+                P_src = animBones[baseName].parentRestWorldQuaternion;
+              } else {
+                P_src = new THREE.Quaternion();
+              }
+              const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
+                ? bone.parent.restWorldQuaternion
+                : new THREE.Quaternion();
+              const P_tgt_inv = P_tgt.clone().invert();
+              
+              let srcRestPos = null;
+              if (isRootJointTranslation) {
+                srcRestPos = new THREE.Vector3(0, 0, 0);
+              } else if (animBones[baseName]) {
+                srcRestPos = animBones[baseName].defaultPosition.clone();
+                if (srcRestPos.length() > 5.0) {
+                  srcRestPos.multiplyScalar(0.01);
+                }
+              } else {
+                srcRestPos = new THREE.Vector3(0, srcHipsDefaultY, 0);
+              }
+
+              const animNameLower = (rawClip.name || "").toLowerCase();
+              const isWalk = (animNameLower.includes('walk') || 
+                              animNameLower.includes('run') || 
+                              animNameLower.includes('step') || 
+                              animNameLower.includes('stairs')) &&
+                             !animNameLower.includes('dance');
+
+              if (isWalk) {
+                for (let j = 0; j < clone.values.length / 3; j++) {
+                  let yVal = clone.values[3*j+1];
+                  const dx = (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
+                  const dy = 0.0; // walking in-place
+                  const dz = (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
+                  
+                  const dP = new THREE.Vector3(dx, dy, dz)
+                    .applyQuaternion(P_src)
+                    .applyQuaternion(P_tgt_inv);
+                  const resPos = bone.defaultPosition.clone().add(dP);
+                  
+                  clone.values[3*j] = resPos.x;
+                  clone.values[3*j+1] = resPos.y;
+                  clone.values[3*j+2] = resPos.z;
+                }
+              } else {
+                for (let j = 0; j < clone.values.length / 3; j++) {
+                  let yVal = clone.values[3*j+1];
+                  if (isRootJointTranslation && (animNameLower.includes('laying') || animNameLower.includes('sleeping'))) {
+                    yVal = 0.12; 
+                  }
+                  const dx = (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
+                  const dy = (yVal - srcRestPos.y) * computedHipsRatio;
+                  const dz = (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
+                  
+                  const dP = new THREE.Vector3(dx, dy, dz)
+                    .applyQuaternion(P_src)
+                    .applyQuaternion(P_tgt_inv);
+                  const resPos = bone.defaultPosition.clone().add(dP);
+                  
+                  clone.values[3*j] = resPos.x;
+                  clone.values[3*j+1] = resPos.y;
+                  clone.values[3*j+2] = resPos.z;
+                }
+              }
+            }
+          }
+
+          if (prop === 'quaternion') {
+            if (targetBoneName.includes('shoulder_1') || targetBoneName.includes('Shoulder1')) continue;
+
+            const bone = targetInstance.getObjectByName(targetBoneName);
+            if (bone) {
+              if (bone.restLocalQuaternion && bone.restWorldQuaternion) {
+                let B_src = null;
+                let P_src = null;
+                
+                if (animBones[baseName]) {
+                  const cached = animBones[baseName];
+                  B_src = cached.restWorldQuaternion;
+                  P_src = cached.parentRestWorldQuaternion;
+                } else {
+                  B_src = new THREE.Quaternion();
+                  P_src = new THREE.Quaternion();
+                }
+                
+                if (B_src && P_src) {
+                  const B_tgt = bone.restWorldQuaternion;
+                  const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
+                    ? bone.parent.restWorldQuaternion
+                    : new THREE.Quaternion();
+                  
+                  const P_tgt_inv = P_tgt.clone().invert();
+                  const B_src_inv = B_src.clone().invert();
+
+                  for (let i = 0; i < clone.values.length; i += 4) {
+                    const srcLocalQ = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
+                    const animWorldQ = P_src.clone().multiply(srcLocalQ);
+                    const deltaQ = animWorldQ.clone().multiply(B_src_inv);
+                    const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
+                    const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
+
+                    clone.values[i] = tgtLocalQ.x;
+                    clone.values[i+1] = tgtLocalQ.y;
+                    clone.values[i+2] = tgtLocalQ.z;
+                    clone.values[i+3] = tgtLocalQ.w;
+                  }
+                } else {
+                  // Fallback
+                  const parentRestWorldQ = (bone.parent && bone.parent.restWorldQuaternion)
+                    ? bone.parent.restWorldQuaternion
+                    : new THREE.Quaternion();
+                  const parentInv = parentRestWorldQ.clone().invert();
+                  const boneRestLocalQ = bone.restLocalQuaternion.clone();
+
+                  for (let i = 0; i < clone.values.length; i += 4) {
+                    const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
+                    const resQ = parentInv.clone()
+                      .multiply(q)
+                      .multiply(parentRestWorldQ)
+                      .multiply(boneRestLocalQ);
+
+                    clone.values[i] = resQ.x;
+                    clone.values[i+1] = resQ.y;
+                    clone.values[i+2] = resQ.z;
+                    clone.values[i+3] = resQ.w;
+                  }
+                }
+              }
+            }
+          }
+
+          tracks.push(clone);
+        }
+      }
+
+      return new THREE.AnimationClip(`${workingClip.name}_retargeted`, workingClip.duration, tracks);
+    }
+
+    // Height Normalization
+    function normalizeHeight(model, targetHeight = 175) {
+      model.scale.set(1, 1, 1);
+      model.position.set(0, 0, 0);
+      model.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      if (size.y > 0) {
+        const factor = targetHeight / size.y;
+        model.scale.setScalar(factor);
+        
+        model.updateMatrixWorld(true);
+        const newBox = new THREE.Box3().setFromObject(model);
+        model.position.y = -newBox.min.y;
+        model.updateMatrixWorld(true);
+        console.log(`Normalized height to ${targetHeight}. Factor: ${factor}. Y-offset: ${model.position.y}`);
+      }
+    }
+
+    // Load Model
+    function loadModel() {
+      const path = 'media/all_lara/lara_croft_just_dont_stare_into_the_eyes.glb';
+      loader.load(path, (gltf) => {
+        mainModel = gltf.scene;
+        mainModel.name = "Just Don't Stare";
+        
+        mainModel.updateMatrixWorld(true);
+        mainModel.traverse(c => {
+          c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
+          if (c.isBone) {
+            c.defaultPosition = c.position.clone();
+            c.defaultRotation = c.rotation.clone();
+            c.defaultScale = c.scale.clone();
+            c.restLocalQuaternion = c.quaternion.clone();
+          }
+          
+          if (c.isMesh) {
+            c.castShadow = true;
+            c.receiveShadow = true;
+            c.material = c.material.clone();
+          }
+        });
+
+        // Normalize model height to 175cm
+        normalizeHeight(mainModel, 175);
+
+        // Center on XZ
+        const hips = mainModel.getObjectByName(resolveTargetBoneName(mainModel, 'Hips'));
+        if (hips) {
+          const worldHips = new THREE.Vector3();
+          hips.getWorldPosition(worldHips);
+          mainModel.position.x = -worldHips.x;
+          mainModel.position.z = -worldHips.z;
+        }
+
+        scene.add(mainModel);
+
+        // Build UI list of meshes
+        const meshListEl = document.getElementById('mesh-list');
+        meshListEl.innerHTML = '';
+        
+        mainModel.traverse(c => {
+          if (c.isMesh) {
+            const toggleRow = document.createElement('label');
+            toggleRow.className = 'mesh-toggle';
+            
+            const chk = document.createElement('input');
+            chk.type = 'checkbox';
+            chk.checked = c.visible;
+            chk.onchange = (e) => {
+              c.visible = e.target.checked;
+            };
+            
+            const label = document.createElement('span');
+            label.textContent = c.material ? `${c.name} (${c.material.name})` : c.name;
+            
+            toggleRow.appendChild(chk);
+            toggleRow.appendChild(label);
+            meshListEl.appendChild(toggleRow);
+          }
+        });
+
+        modelMixer = new THREE.AnimationMixer(mainModel);
+        
+        // Hide loading screen
+        const loaderScreen = document.getElementById('loading-screen');
+        loaderScreen.style.opacity = 0;
+        setTimeout(() => loaderScreen.style.display = 'none', 500);
+
+        // Play default animation
+        loadAndPlayAnimation("happy_walk.glb");
+      }, undefined, (err) => {
+        console.error("Error loading model", err);
+      });
+    }
+
+    // Load and play Mixamo animation GLB
+    function loadAndPlayAnimation(file) {
+      currentAnimFile = file;
+      
+      // Update UI active state
+      document.querySelectorAll('.list-item').forEach(item => {
+        if (item.dataset.file === file) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+
+      loader.load('media/glb-animations/' + file, (gltf) => {
+        console.log("GLB animation loaded:", file);
+        if (gltf.animations && gltf.animations.length > 0) {
+          rawAnimClip = gltf.animations[0];
+          animScene = gltf.scene;
+          
+          if (modelMixer && mainModel) {
+            modelMixer.stopAllAction();
+            const retargeted = retargetMixamoClip(rawAnimClip, mainModel, animScene);
+            if (retargeted) {
+              activeAction = modelMixer.clipAction(retargeted);
+              activeAction.setEffectiveWeight(1.0);
+              activeAction.play();
+              if (isPaused) activeAction.paused = true;
+            }
+          }
+        }
+      }, undefined, (err) => {
+        console.error("Failed to load animation", file, err);
+      });
+    }
+
+    // Build Anim UI list
+    function createAnimListUI() {
+      const animListEl = document.getElementById('anim-list');
+      animListEl.innerHTML = '';
+      
+      ANIMATION_FILES.forEach(file => {
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.dataset.file = file;
+        
+        let labelName = file.replace('.glb', '').replace(/_/g, ' ');
+        labelName = labelName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        
+        item.textContent = labelName;
+        item.onclick = () => loadAndPlayAnimation(file);
+        
+        animListEl.appendChild(item);
+      });
+    }
+
+    // Recenter camera
+    function recenterCamera() {
+      controls.target.set(0, 90, 0);
+      camera.position.set(0, 120, 320);
+      controls.update();
+    }
+
+    // Init UI elements
+    createAnimListUI();
+    loadModel();
+
+    document.getElementById('btn-play-pause').onclick = (e) => {
+      isPaused = !isPaused;
+      e.target.textContent = isPaused ? 'Resume' : 'Pause';
+      e.target.classList.toggle('primary', !isPaused);
+      if (activeAction) {
+        activeAction.paused = isPaused;
+      }
+    };
+
+    document.getElementById('btn-stop').onclick = () => {
+      if (modelMixer) {
+        modelMixer.stopAllAction();
+        activeAction = null;
+      }
+      document.querySelectorAll('.list-item').forEach(item => item.classList.remove('active'));
+    };
+
+    document.getElementById('speed-slider').oninput = (e) => {
+      playbackSpeed = parseFloat(e.target.value);
+      document.getElementById('speed-val').textContent = playbackSpeed.toFixed(1) + 'x';
+    };
+
+    document.getElementById('chk-skeleton').onchange = (e) => {
+      if (e.target.checked) {
+        if (mainModel) {
+          skeletonHelper = new THREE.SkeletonHelper(mainModel);
+          skeletonHelper.material.depthTest = false;
+          skeletonHelper.renderOrder = 9999;
+          scene.add(skeletonHelper);
+        }
+      } else {
+        if (skeletonHelper) {
+          scene.remove(skeletonHelper);
+          skeletonHelper = null;
+        }
+      }
+    };
+
+    document.getElementById('chk-grid').onchange = (e) => {
+      gridHelper.visible = e.target.checked;
+      axesHelper.visible = e.target.checked;
+      floorMesh.visible = e.target.checked;
+    };
+
+    document.getElementById('btn-reset-cam').onclick = recenterCamera;
+
+    // Resize handler
+    window.addEventListener('resize', () => {
+      camera.aspect = viewEl.clientWidth / viewEl.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(viewEl.clientWidth, viewEl.clientHeight);
+    });
+
+    // Main animation loop
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      const delta = clock.getDelta() * playbackSpeed;
+      if (!isPaused && modelMixer) {
+        modelMixer.update(delta);
+      }
+      
+      if (skeletonHelper) {
+        skeletonHelper.update();
+      }
+      
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
