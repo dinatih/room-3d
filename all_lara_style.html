@@ -941,7 +941,7 @@
 
           if (v.id === 'lara_croft_just_dont_stare_into_the_eyes') {
             const rootJoint = model.getObjectByName('GLTF_created_0_rootJoint');
-            const hips = model.getObjectByName('rig:Hips_64');
+            const hips = model.getObjectByName('rigHips_64') || model.getObjectByName('rig:Hips_64');
             if (rootJoint && hips) {
               const box = new THREE.Box3().setFromObject(model);
               const lowestY = box.min.y;
