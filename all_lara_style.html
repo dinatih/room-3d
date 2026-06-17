@@ -280,7 +280,7 @@
       'LeftForeArm': ['lowerarml', 'larmradius', 'forearm.l', 'forearm_l', 'leftforearm', 'armleftelbow', 'armleftwrist'],
       'LeftHand': ['handl', 'larmwrist', 'hand.l', 'hand_l', 'wrist.l', 'wrist_l', 'lefthand', 'armleftwrist'],
       'RightShoulder': ['rightshoulder', 'shoulderr', 'clavicler', 'armrightshoulder', 'rarmclavicle'],
-      'RightArm': ['armrightshoulder2', 'upperarmr', 'armrightelbow', 'rarmhumerus', 'upperarm.r', 'upper_arm.r', 'arm.r'],
+      'RightArm': ['rightarm', 'armrightshoulder2', 'upperarmr', 'armrightelbow', 'rarmhumerus', 'upperarm.r', 'upper_arm.r', 'arm.r'],
       'RightForeArm': ['lowerarmr', 'rarmradius', 'forearm.r', 'forearm_r', 'rightforearm', 'armrightelbow', 'armrightwrist'],
       'RightHand': ['handr', 'rarmwrist', 'hand.r', 'hand_r', 'wrist.r', 'wrist_r', 'righthand', 'armrightwrist'],
       'LeftUpLeg': ['legleftthigh', 'thighl', 'llegfemur', 'thigh.l', 'thigh_l', 'leftupleg'],
@@ -938,6 +938,36 @@
           model.name = v.label;
           
           model.updateMatrixWorld(true);
+
+          if (v.id === 'lara_croft_just_dont_stare_into_the_eyes') {
+            const rootJoint = model.getObjectByName('GLTF_created_0_rootJoint');
+            const hips = model.getObjectByName('rig:Hips_64');
+            if (rootJoint && hips) {
+              const box = new THREE.Box3().setFromObject(model);
+              const lowestY = box.min.y;
+
+              const old_pP = rootJoint.position.clone();
+              const old_qP = rootJoint.quaternion.clone();
+              const old_pC = hips.position.clone();
+              const old_qC = hips.quaternion.clone();
+
+              const hipsWorldPos = old_pP.clone().add(old_pC.clone().applyQuaternion(old_qP));
+              const hipsWorldRot = old_qP.clone().multiply(old_qC);
+
+              const new_pP = new THREE.Vector3(old_pP.x, lowestY, old_pP.z);
+              const new_qP = new THREE.Quaternion(0, 0, 0, 1);
+
+              hips.position.copy(hipsWorldPos).sub(new_pP);
+              hips.quaternion.copy(new_qP).invert().multiply(hipsWorldRot);
+
+              rootJoint.position.copy(new_pP);
+              rootJoint.quaternion.copy(new_qP);
+              rootJoint.scale.set(1, 1, 1);
+              
+              model.updateMatrixWorld(true);
+            }
+          }
+
           model.traverse(c => {
             c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
             if (c.isBone) {

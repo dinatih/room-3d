@@ -296,6 +296,7 @@
         STATUS: Standing upright (Y-up)<br/>
         DECOR: Deleted & clean
       </div>
+      <div id="joint-labels-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 5;"></div>
     </div>
 
     <!-- Side Panel -->
@@ -336,6 +337,10 @@
           <label class="mesh-toggle">
             <input type="checkbox" id="chk-skeleton">
             <span>Show Skeleton Helper</span>
+          </label>
+          <label class="mesh-toggle">
+            <input type="checkbox" id="chk-joint-names">
+            <span>Show Joint Names</span>
           </label>
           <label class="mesh-toggle">
             <input type="checkbox" id="chk-grid" checked>
@@ -402,7 +407,7 @@
       'LeftForeArm': ['lowerarml', 'larmradius', 'forearm.l', 'forearm_l', 'leftforearm', 'armleftelbow', 'armleftwrist'],
       'LeftHand': ['handl', 'larmwrist', 'hand.l', 'hand_l', 'wrist.l', 'wrist_l', 'lefthand', 'armleftwrist'],
       'RightShoulder': ['rightshoulder', 'shoulderr', 'clavicler', 'armrightshoulder', 'rarmclavicle'],
-      'RightArm': ['armrightshoulder2', 'upperarmr', 'armrightelbow', 'rarmhumerus', 'upperarm.r', 'upper_arm.r', 'arm.r'],
+      'RightArm': ['rightarm', 'armrightshoulder2', 'upperarmr', 'armrightelbow', 'rarmhumerus', 'upperarm.r', 'upper_arm.r', 'arm.r'],
       'RightForeArm': ['lowerarmr', 'rarmradius', 'forearm.r', 'forearm_r', 'rightforearm', 'armrightelbow', 'armrightwrist'],
       'RightHand': ['handr', 'rarmwrist', 'hand.r', 'hand_r', 'wrist.r', 'wrist_r', 'righthand', 'armrightwrist'],
       'LeftUpLeg': ['legleftthigh', 'thighl', 'llegfemur', 'thigh.l', 'thigh_l', 'leftupleg'],
@@ -895,6 +900,35 @@
         mainModel.name = "Just Don't Stare";
         
         mainModel.updateMatrixWorld(true);
+
+        // Adjust root joint to ground and compensate hips
+        const rootJoint = mainModel.getObjectByName('GLTF_created_0_rootJoint');
+        const hips = mainModel.getObjectByName('rig:Hips_64');
+        if (rootJoint && hips) {
+          const box = new THREE.Box3().setFromObject(mainModel);
+          const lowestY = box.min.y;
+
+          const old_pP = rootJoint.position.clone();
+          const old_qP = rootJoint.quaternion.clone();
+          const old_pC = hips.position.clone();
+          const old_qC = hips.quaternion.clone();
+
+          const hipsWorldPos = old_pP.clone().add(old_pC.clone().applyQuaternion(old_qP));
+          const hipsWorldRot = old_qP.clone().multiply(old_qC);
+
+          const new_pP = new THREE.Vector3(old_pP.x, lowestY, old_pP.z);
+          const new_qP = new THREE.Quaternion(0, 0, 0, 1);
+
+          hips.position.copy(hipsWorldPos).sub(new_pP);
+          hips.quaternion.copy(new_qP).invert().multiply(hipsWorldRot);
+
+          rootJoint.position.copy(new_pP);
+          rootJoint.quaternion.copy(new_qP);
+          rootJoint.scale.set(1, 1, 1);
+          
+          mainModel.updateMatrixWorld(true);
+        }
+
         mainModel.traverse(c => {
           c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
           if (c.isBone) {
@@ -915,10 +949,10 @@
         normalizeHeight(mainModel, 175);
 
         // Center on XZ
-        const hips = mainModel.getObjectByName(resolveTargetBoneName(mainModel, 'Hips'));
-        if (hips) {
+        const hipsForCentering = mainModel.getObjectByName(resolveTargetBoneName(mainModel, 'Hips'));
+        if (hipsForCentering) {
           const worldHips = new THREE.Vector3();
-          hips.getWorldPosition(worldHips);
+          hipsForCentering.getWorldPosition(worldHips);
           mainModel.position.x = -worldHips.x;
           mainModel.position.z = -worldHips.z;
         }
@@ -1083,6 +1117,80 @@
       renderer.setSize(viewEl.clientWidth, viewEl.clientHeight);
     });
 
+    document.getElementById('chk-joint-names').onchange = (e) => {
+      if (!e.target.checked) {
+        jointLabelsContainer.innerHTML = '';
+        labelElements.length = 0;
+      }
+    };
+
+    // Joint labels projection logic
+    const jointLabelsContainer = document.getElementById('joint-labels-container');
+    const labelElements = [];
+
+    function updateJointLabels() {
+      const chkJoints = document.getElementById('chk-joint-names');
+      if (!chkJoints || !chkJoints.checked || !mainModel) {
+        jointLabelsContainer.innerHTML = '';
+        labelElements.length = 0;
+        return;
+      }
+
+      const bones = [];
+      mainModel.traverse(c => {
+        if (c.isBone) {
+          bones.push(c);
+        }
+      });
+
+      while (labelElements.length < bones.length) {
+        const el = document.createElement('div');
+        el.style.position = 'absolute';
+        el.style.background = 'rgba(18, 18, 24, 0.85)';
+        el.style.border = '1px solid rgba(255, 142, 142, 0.25)';
+        el.style.color = '#ff8e8e';
+        el.style.padding = '2px 6px';
+        el.style.borderRadius = '4px';
+        el.style.fontSize = '9px';
+        el.style.fontFamily = 'monospace';
+        el.style.whiteSpace = 'nowrap';
+        el.style.pointerEvents = 'none';
+        el.style.transform = 'translate(-50%, -50%)';
+        el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+        jointLabelsContainer.appendChild(el);
+        labelElements.push(el);
+      }
+
+      for (let i = bones.length; i < labelElements.length; i++) {
+        labelElements[i].style.display = 'none';
+      }
+
+      const tempV = new THREE.Vector3();
+      const width = viewEl.clientWidth;
+      const height = viewEl.clientHeight;
+
+      bones.forEach((bone, idx) => {
+        const el = labelElements[idx];
+        el.style.display = 'block';
+        
+        bone.getWorldPosition(tempV);
+        tempV.project(camera);
+        
+        const x = (tempV.x * 0.5 + 0.5) * width;
+        const y = (tempV.y * -0.5 + 0.5) * height;
+        
+        if (tempV.z < 1 && x >= 0 && x <= width && y >= 0 && y <= height) {
+          el.style.left = `${x}px`;
+          el.style.top = `${y}px`;
+          el.style.opacity = '1';
+          const cleanName = bone.name.replace('mixamorig:', '').replace('rig:', '');
+          el.textContent = cleanName;
+        } else {
+          el.style.opacity = '0';
+        }
+      });
+    }
+
     // Main animation loop
     const clock = new THREE.Clock();
     function animate() {
@@ -1092,6 +1200,8 @@
       if (!isPaused && modelMixer) {
         modelMixer.update(delta);
       }
+      
+      updateJointLabels();
       
       renderer.render(scene, camera);
     }
