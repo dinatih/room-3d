@@ -115,7 +115,7 @@
   <div id="view"></div>
   <div id="hud">
     <h3>Lara Croft <span class="red">Style Comparison</span></h3>
-    <p>Comparing 19 variations side-by-side. Pan horizontally using the mouse.</p>
+    <p>Comparing 21 variations side-by-side. Pan horizontally using the mouse.</p>
     <p id="loading-status">Loading models...</p>
   </div>
   <div id="mesh-control" class="control-panel">
@@ -900,7 +900,9 @@
         { id: 'lara_croft_suit', label: 'Suit', file: 'media/all_lara/lara_croft_suit.glb', offset: 6, color: '#edf2f4' },
         { id: 'lara_croft_swim_gear', label: 'Swim Gear', file: 'media/all_lara/lara_croft_swim_gear.glb', offset: 7, color: '#00b4d8' },
         { id: 'lara_croft_swim_gear_1', label: 'Swim Gear 1', file: 'media/all_lara/lara_croft_swim_gear_1.glb', offset: 8, color: '#90e0ef' },
-        { id: 'lara_croft_swim_gear_243', label: 'Swim Gear 243', file: 'media/all_lara/lara_croft_swim_gear_243.glb', offset: 9, color: '#0077b6' }
+        { id: 'lara_croft_swim_gear_243', label: 'Swim Gear 243', file: 'media/all_lara/lara_croft_swim_gear_243.glb', offset: 9, color: '#0077b6' },
+        { id: 'lara_croft_black_tank_top', label: 'Black Tank Top', file: 'media/all_lara/lara_croft_black_tank_top.glb', offset: 10, color: '#4a4a4a' },
+        { id: 'lara_croft_4259', label: 'Lara 4259', file: 'media/all_lara/lara_croft_4259.glb', offset: 11, color: '#d2a23c' }
       ];
       function normalizeHeight(model, targetHeight = 175) {
         model.scale.set(1, 1, 1);
@@ -962,9 +964,9 @@
           scene.add(label);
 
           loadedCount++;
-          document.getElementById('loading-status').innerText = `Loaded ${loadedCount} / 19 models`;
+          document.getElementById('loading-status').innerText = `Loaded ${loadedCount} / 21 models`;
 
-          if (loadedCount === 19) {
+          if (loadedCount === 21) {
             document.getElementById('loading-status').style.display = 'none';
             loadAndPlayAnimation("happy_walk.glb");
           } else if (rawAnimClip && animScene) {
@@ -980,7 +982,7 @@
         }, undefined, (err) => {
           console.error("Failed to load model:", v.label, err);
           loadedCount++;
-          document.getElementById('loading-status').innerText = `Error loading ${v.label} (${loadedCount}/19)`;
+          document.getElementById('loading-status').innerText = `Error loading ${v.label} (${loadedCount}/21)`;
         });
       });
     });
