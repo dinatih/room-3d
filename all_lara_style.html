@@ -607,7 +607,15 @@
           }
 
           if (prop === 'quaternion') {
-            if (targetBoneName.includes('shoulder_1') || targetBoneName.includes('Shoulder1')) continue;
+            const tgtLower = targetBoneName.toLowerCase();
+            const isClavicle = tgtLower.includes('clavicle') || 
+                               tgtLower.includes('shoulder_1') || 
+                               tgtLower.includes('shoulder1') || 
+                               (tgtLower.includes('shoulder') && 
+                                !tgtLower.includes('shoulder_2') && 
+                                !tgtLower.includes('shoulder2') && 
+                                !tgtLower.includes('shoulder 2'));
+            if (isClavicle) continue;
 
             const bone = targetInstance.getObjectByName(targetBoneName);
             if (bone) {
