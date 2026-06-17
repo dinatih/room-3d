@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Xbot Hierarchy Check</title>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/examples/jsm/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body style="margin: 0; background: #222; color: #fff; font-family: monospace; font-size: 11px;">
+    <div id="info">Loading...</div>
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+        const info = document.getElementById('info');
+        const log = (msg) => { info.innerText += '\n' + msg; console.log(msg); };
+
+        async function init() {
+            const loader = new GLTFLoader();
+            const modelGltf = await loader.loadAsync('/public/media/sandbox/Xbot_official.glb');
+            const model = modelGltf.scene;
+            
+            model.traverse(o => {
+                log(`${o.name} [${o.type}] Scale: ${o.scale.x.toFixed(3)}`);
+            });
+        }
+        init().catch(e => log(e.message));
+    </script>
+</body>
+</html>

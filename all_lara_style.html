@@ -115,7 +115,7 @@
   <div id="view"></div>
   <div id="hud">
     <h3>Lara Croft <span class="red">Style Comparison</span></h3>
-    <p>Comparing 21 variations side-by-side. Pan horizontally using the mouse.</p>
+    <p>Comparing 20 variations side-by-side. Pan horizontally using the mouse.</p>
     <p id="loading-status">Loading models...</p>
   </div>
   <div id="mesh-control" class="control-panel">
@@ -892,25 +892,23 @@
       const variants = [
         { id: 'fortnite_lara_croft', label: 'Fortnite', file: 'media/all_lara/fortnite_lara_croft.glb', offset: -9, color: '#30ddff' },
         { id: 'goth_aesthetic_girl', label: 'Goth Aesthetic', file: 'media/all_lara/goth_aesthetic_girl.glb', offset: -8, color: '#9e59ff' },
-        { id: 'jill_valentine_2026_rigged', label: 'Jill Valentine', file: 'media/all_lara/jill_valentine_2026_rigged.glb', offset: -7, color: '#2c60ff' },
-        { id: 'lara', label: 'Lara Classic', file: 'media/all_lara/lara.glb', offset: -6, color: '#00d6aa' },
-        { id: 'lara_croft', label: 'Lara Croft', file: 'media/all_lara/lara_croft.glb', offset: -5, color: '#ffc000' },
-        { id: 'lara_croft_324_rigged', label: 'Lara 324 Rigged', file: 'media/all_lara/lara_croft_324_rigged.glb', offset: -4, color: '#ff6600' },
-        { id: 'lara_croft_3212', label: 'Lara 3212', file: 'media/all_lara/lara_croft_3212.glb', offset: -3, color: '#ff44aa' },
-        { id: 'lara_croft_4543', label: 'Lara 4543', file: 'media/all_lara/lara_croft_4543.glb', offset: -2, color: '#aa77ff' },
-        { id: 'lara_croft_43254_rigged', label: 'Lara 43254 Rigged', file: 'media/all_lara/lara_croft_43254_rigged.glb', offset: -1, color: '#33bb66' },
-        { id: 'lara_croft_brown_jacket', label: 'Brown Jacket', file: 'media/all_lara/lara_croft_brown_jacket.glb', offset: 0, color: '#d4a373' },
-        { id: 'lara_croft_dress_345', label: 'Dress 345', file: 'media/all_lara/lara_croft_dress_345.glb', offset: 1, color: '#e07a5f' },
-        { id: 'lara_croft_just_dont_stare_into_the_eyes', label: 'Just Don\'t Stare', file: 'media/all_lara/lara_croft_just_dont_stare_into_the_eyes.glb', offset: 2, color: '#e0aaff' },
-        { id: 'lara_croft_motorcycle_gear', label: 'Motorcycle Gear', file: 'media/all_lara/lara_croft_motorcycle_gear.glb', offset: 3, color: '#8d99ae' },
-        { id: 'lara_croft_red_dress', label: 'Red Dress', file: 'media/all_lara/lara_croft_red_dress.glb', offset: 4, color: '#ff4d6d' },
-        { id: 'lara_croft_spy_gear', label: 'Spy Gear', file: 'media/all_lara/lara_croft_spy_gear.glb', offset: 5, color: '#3d5a80' },
-        { id: 'lara_croft_suit', label: 'Suit', file: 'media/all_lara/lara_croft_suit.glb', offset: 6, color: '#edf2f4' },
-        { id: 'lara_croft_swim_gear', label: 'Swim Gear', file: 'media/all_lara/lara_croft_swim_gear.glb', offset: 7, color: '#00b4d8' },
-        { id: 'lara_croft_swim_gear_1', label: 'Swim Gear 1', file: 'media/all_lara/lara_croft_swim_gear_1.glb', offset: 8, color: '#90e0ef' },
-        { id: 'lara_croft_swim_gear_243', label: 'Swim Gear 243', file: 'media/all_lara/lara_croft_swim_gear_243.glb', offset: 9, color: '#0077b6' },
-        { id: 'lara_croft_black_tank_top', label: 'Black Tank Top', file: 'media/all_lara/lara_croft_black_tank_top.glb', offset: 10, color: '#4a4a4a' },
-        { id: 'lara_croft_4259', label: 'Lara 4259', file: 'media/all_lara/lara_croft_4259.glb', offset: 11, color: '#d2a23c' }
+        { id: 'lara', label: 'Lara Classic', file: 'media/all_lara/lara.glb', offset: -7, color: '#00d6aa' },
+        { id: 'lara_croft_324_rigged', label: 'Lara 324 Rigged', file: 'media/all_lara/lara_croft_324_rigged.glb', offset: -6, color: '#ff6600' },
+        { id: 'lara_croft_3212', label: 'Lara 3212', file: 'media/all_lara/lara_croft_3212.glb', offset: -5, color: '#ff44aa' },
+        { id: 'lara_croft_4543', label: 'Lara 4543', file: 'media/all_lara/lara_croft_4543.glb', offset: -4, color: '#aa77ff' },
+        { id: 'lara_croft_43254_rigged', label: 'Lara 43254 Rigged', file: 'media/all_lara/lara_croft_43254_rigged.glb', offset: -3, color: '#33bb66' },
+        { id: 'lara_croft_brown_jacket', label: 'Brown Jacket', file: 'media/all_lara/lara_croft_brown_jacket.glb', offset: -2, color: '#d4a373' },
+        { id: 'lara_croft_dress_345', label: 'Dress 345', file: 'media/all_lara/lara_croft_dress_345.glb', offset: -1, color: '#e07a5f' },
+        { id: 'lara_hair', label: 'Lara Hair', file: 'media/all_lara/lara_hair.glb', offset: 0, color: '#ffd166' },
+        { id: 'lara_croft_motorcycle_gear', label: 'Motorcycle Gear', file: 'media/all_lara/lara_croft_motorcycle_gear.glb', offset: 1, color: '#8d99ae' },
+        { id: 'lara_croft_red_dress', label: 'Red Dress', file: 'media/all_lara/lara_croft_red_dress.glb', offset: 2, color: '#ff4d6d' },
+        { id: 'lara_croft_spy_gear', label: 'Spy Gear', file: 'media/all_lara/lara_croft_spy_gear.glb', offset: 3, color: '#3d5a80' },
+        { id: 'lara_croft_suit', label: 'Suit', file: 'media/all_lara/lara_croft_suit.glb', offset: 4, color: '#edf2f4' },
+        { id: 'lara_croft_swim_gear', label: 'Swim Gear', file: 'media/all_lara/lara_croft_swim_gear.glb', offset: 5, color: '#00b4d8' },
+        { id: 'lara_croft_swim_gear_1', label: 'Swim Gear 1', file: 'media/all_lara/lara_croft_swim_gear_1.glb', offset: 6, color: '#90e0ef' },
+        { id: 'lara_croft_swim_gear_243', label: 'Swim Gear 243', file: 'media/all_lara/lara_croft_swim_gear_243.glb', offset: 7, color: '#0077b6' },
+        { id: 'lara_croft_black_tank_top', label: 'Black Tank Top', file: 'media/all_lara/lara_croft_black_tank_top.glb', offset: 8, color: '#4a4a4a' },
+        { id: 'lara_croft_4259', label: 'Lara 4259', file: 'media/all_lara/lara_croft_4259.glb', offset: 9, color: '#d2a23c' }
       ];
       function normalizeHeight(model, targetHeight = 175) {
         model.scale.set(1, 1, 1);
@@ -938,36 +936,6 @@
           model.name = v.label;
           
           model.updateMatrixWorld(true);
-
-          if (v.id === 'lara_croft_just_dont_stare_into_the_eyes') {
-            const rootJoint = model.getObjectByName('GLTF_created_0_rootJoint');
-            const hips = model.getObjectByName('rigHips_64') || model.getObjectByName('rig:Hips_64');
-            if (rootJoint && hips) {
-              const box = new THREE.Box3().setFromObject(model);
-              const lowestY = box.min.y;
-
-              const old_pP = rootJoint.position.clone();
-              const old_qP = rootJoint.quaternion.clone();
-              const old_pC = hips.position.clone();
-              const old_qC = hips.quaternion.clone();
-
-              const hipsWorldPos = old_pP.clone().add(old_pC.clone().applyQuaternion(old_qP));
-              const hipsWorldRot = old_qP.clone().multiply(old_qC);
-
-              const new_pP = new THREE.Vector3(old_pP.x, lowestY, old_pP.z);
-              const new_qP = new THREE.Quaternion(0, 0, 0, 1);
-
-              hips.position.copy(hipsWorldPos).sub(new_pP);
-              hips.quaternion.copy(new_qP).invert().multiply(hipsWorldRot);
-
-              rootJoint.position.copy(new_pP);
-              rootJoint.quaternion.copy(new_qP);
-              rootJoint.scale.set(1, 1, 1);
-              
-              model.updateMatrixWorld(true);
-            }
-          }
-
           model.traverse(c => {
             c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
             if (c.isBone) {
@@ -1002,17 +970,17 @@
           scene.add(label);
 
           loadedCount++;
-          document.getElementById('loading-status').innerText = `Loaded ${loadedCount} / 21 models`;
+          document.getElementById('loading-status').innerText = `Loaded ${loadedCount} / 20 models`;
 
-          if (loadedCount === 21) {
+          if (loadedCount === 20) {
             document.getElementById('loading-status').style.display = 'none';
             loadAndPlayAnimation("happy_walk.glb");
           } else if (rawAnimClip && animScene) {
-            if (!model.userData.retargetedClips) {
-              model.userData.retargetedClips = {};
-            }
             const retargeted = retargetMixamoClip(rawAnimClip, model, animScene);
             if (retargeted) {
+              if (!model.userData.retargetedClips) {
+                model.userData.retargetedClips = {};
+              }
               model.userData.retargetedClips[currentAnimFile] = retargeted;
               playAnimationOnModel(model, retargeted);
             }
@@ -1020,7 +988,7 @@
         }, undefined, (err) => {
           console.error("Failed to load model:", v.label, err);
           loadedCount++;
-          document.getElementById('loading-status').innerText = `Error loading ${v.label} (${loadedCount}/21)`;
+          document.getElementById('loading-status').innerText = `Error loading ${v.label} (${loadedCount}/20)`;
         });
       });
     });

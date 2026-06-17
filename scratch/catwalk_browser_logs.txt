@@ -1,0 +1,189 @@
+[vite] connecting...
+[vite] connected.
+[GroupMarkerNotSet(crbug.com/242999)!:3184002920A0]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.
+[.WebGL-0x37cc00176000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+WALKER_DEBUG: Loaded lara bones: ["mixamorig_root_ground","mixamorig_root_hips","mixamorig_pelvis","mixamorig_leg_left_thigh","mixamorig_leg_left_knee","mixamorig_leg_left_ankle","mixamorig_leg_left_toes","mixamorig_leg_right_thigh","mixamorig_leg_right_knee","mixamorig_leg_right_ankle","mixamorig_leg_right_toes","mixamorig_spine_lower","mixamorig_spine_upper","mixamorig_arm_left_shoulder_2","mixamorig_arm_left_elbow","mixamorig_arm_left_wrist","mixamorig_weapon_left","mixamorig_arm_left_finger_2a","mixamorig_arm_left_finger_2b","mixamorig_arm_left_finger_2c","mixamorig_arm_left_finger_3a","mixamorig_arm_left_finger_3b","mixamorig_arm_left_finger_3c","mixamorig_arm_left_finger_4a","mixamorig_arm_left_finger_4b","mixamorig_arm_left_finger_4c","mixamorig_arm_left_finger_5a","mixamorig_arm_left_finger_5b","mixamorig_arm_left_finger_5c","mixamorig_arm_left_finger_1a","mixamorig_arm_left_finger_1b","mixamorig_arm_left_finger_1c","mixamorig_arm_right_shoulder_2","mixamorig_arm_right_elbow","mixamorig_arm_right_wrist","mixamorig_arm_right_finger_2a","mixamorig_arm_right_finger_2b","mixamorig_arm_right_finger_2c","mixamorig_arm_right_finger_3a","mixamorig_arm_right_finger_3b","mixamorig_arm_right_finger_3c","mixamorig_arm_right_finger_4a","mixamorig_arm_right_finger_4b","mixamorig_arm_right_finger_4c","mixamorig_arm_right_finger_5a","mixamorig_arm_right_finger_5b","mixamorig_arm_right_finger_5c","mixamorig_arm_right_finger_1a","mixamorig_arm_right_finger_1b","mixamorig_arm_right_finger_1c","mixamorig_weapon_right","mixamorig_head_neck_lower","mixamorig_head_neck_upper","mixamorig_head_hair_ponytail_1","mixamorig_head_hair_ponytail_2","mixamorig_head_hair_ponytail_3","mixamorig_head_hair_ponytail_4","mixamorig_head_hair_ponytail_5","mixamorig_head_hair_ponytail_6","mixamorig_head_lip_upper_left_2","mixamorig_head_nostril_right","mixamorig_head_nostril_left","mixamorig_head_lip_upper_right_2","mixamorig_head_lip_upper_middle","mixamorig_head_lip_upper_left_1","mixamorig_head_lip_upper_right_1","mixamorig_head_eyebrow_right_1","mixamorig_head_eyebrow_right_2","mixamorig_head_eyebrow_right_3","mixamorig_head_eyebrow_left_1","mixamorig_head_eyebrow_left_2","mixamorig_head_eyebrow_left_3","mixamorig_head_eyeball_left","mixamorig_head_eyeball_right","mixamorig_head_cheek_right","mixamorig_head_cheek_left","mixamorig_head_eyelid_left_upper","mixamorig_head_eyelid_left_lower","mixamorig_head_eyelid_right_upper","mixamorig_head_eyelid_right_lower","mixamorig_head_jaw","mixamorig_head_lip_lower_left_2","mixamorig_head_lip_lower_right_2","mixamorig_head_lip_lower_middle","mixamorig_head_lip_lower_left_1","mixamorig_head_lip_lower_right_1","mixamorig_head_tongue","mixamorig_glasses"]
+WALKER_DEBUG: Lara Skeleton Tree:
+mixamorig_root_ground
+  mixamorig_root_hips
+    mixamorig_pelvis
+      mixamorig_leg_left_thigh
+        mixamorig_leg_left_knee
+          mixamorig_leg_left_ankle
+            mixamorig_leg_left_toes
+      mixamorig_leg_right_thigh
+        mixamorig_leg_right_knee
+          mixamorig_leg_right_ankle
+            mixamorig_leg_right_toes
+    mixamorig_spine_lower
+      mixamorig_spine_upper
+        mixamorig_arm_left_shoulder_2
+          mixamorig_arm_left_elbow
+            mixamorig_arm_left_wrist
+              mixamorig_weapon_left
+              mixamorig_arm_left_finger_2a
+                mixamorig_arm_left_finger_2b
+                  mixamorig_arm_left_finger_2c
+              mixamorig_arm_left_finger_3a
+                mixamorig_arm_left_finger_3b
+                  mixamorig_arm_left_finger_3c
+              mixamorig_arm_left_finger_4a
+                mixamorig_arm_left_finger_4b
+                  mixamorig_arm_left_finger_4c
+              mixamorig_arm_left_finger_5a
+                mixamorig_arm_left_finger_5b
+                  mixamorig_arm_left_finger_5c
+              mixamorig_arm_left_finger_1a
+                mixamorig_arm_left_finger_1b
+                  mixamorig_arm_left_finger_1c
+        mixamorig_arm_right_shoulder_2
+          mixamorig_arm_right_elbow
+            mixamorig_arm_right_wrist
+              mixamorig_arm_right_finger_2a
+                mixamorig_arm_right_finger_2b
+                  mixamorig_arm_right_finger_2c
+              mixamorig_arm_right_finger_3a
+                mixamorig_arm_right_finger_3b
+                  mixamorig_arm_right_finger_3c
+              mixamorig_arm_right_finger_4a
+                mixamorig_arm_right_finger_4b
+                  mixamorig_arm_right_finger_4c
+              mixamorig_arm_right_finger_5a
+                mixamorig_arm_right_finger_5b
+                  mixamorig_arm_right_finger_5c
+              mixamorig_arm_right_finger_1a
+                mixamorig_arm_right_finger_1b
+                  mixamorig_arm_right_finger_1c
+              mixamorig_weapon_right
+        mixamorig_head_neck_lower
+          mixamorig_head_neck_upper
+            mixamorig_head_hair_ponytail_1
+              mixamorig_head_hair_ponytail_2
+                mixamorig_head_hair_ponytail_3
+                  mixamorig_head_hair_ponytail_4
+                    mixamorig_head_hair_ponytail_5
+                      mixamorig_head_hair_ponytail_6
+            mixamorig_head_lip_upper_left_2
+            mixamorig_head_nostril_right
+            mixamorig_head_nostril_left
+            mixamorig_head_lip_upper_right_2
+            mixamorig_head_lip_upper_middle
+              mixamorig_head_lip_upper_left_1
+              mixamorig_head_lip_upper_right_1
+            mixamorig_head_eyebrow_right_1
+            mixamorig_head_eyebrow_right_2
+            mixamorig_head_eyebrow_right_3
+            mixamorig_head_eyebrow_left_1
+            mixamorig_head_eyebrow_left_2
+            mixamorig_head_eyebrow_left_3
+            mixamorig_head_eyeball_left
+            mixamorig_head_eyeball_right
+            mixamorig_head_cheek_right
+            mixamorig_head_cheek_left
+            mixamorig_head_eyelid_left_upper
+            mixamorig_head_eyelid_left_lower
+            mixamorig_head_eyelid_right_upper
+            mixamorig_head_eyelid_right_lower
+            mixamorig_head_jaw
+              mixamorig_head_lip_lower_left_2
+              mixamorig_head_lip_lower_right_2
+              mixamorig_head_lip_lower_middle
+                mixamorig_head_lip_lower_left_1
+                mixamorig_head_lip_lower_right_1
+              mixamorig_head_tongue
+            mixamorig_glasses
+
+WALKER_DEBUG: Bone lara:mixamorig_root_hips defaultPosition: Vector3(x:0.000, y:-0.000, z:98.603) defaultRotation: Euler(x:-1.745, y:0.022, z:3.123)
+WALKER_DEBUG: Bone lara:mixamorig_pelvis defaultPosition: Vector3(x:0.000, y:5.967, z:0.000) defaultRotation: Euler(x:3.017, y:-0.030, z:-0.010)
+WALKER_DEBUG: Bone lara:mixamorig_spine_lower defaultPosition: Vector3(x:-0.000, y:11.934, z:0.000) defaultRotation: Euler(x:-0.017, y:0.019, z:0.016)
+WALKER_DEBUG: Bone lara:mixamorig_leg_left_thigh defaultPosition: Vector3(x:8.595, y:9.820, z:-0.090) defaultRotation: Euler(x:-0.061, y:-0.032, z:0.033)
+WALKER_DEBUG: Bone lara:mixamorig_leg_right_thigh defaultPosition: Vector3(x:-8.595, y:10.009, z:0.090) defaultRotation: Euler(x:-0.061, y:0.054, z:-0.053)
+WALKER_DEBUG: Loaded xbot bones: ["mixamorigHips","mixamorigSpine","mixamorigSpine1","mixamorigSpine2","mixamorigNeck","mixamorigHead","mixamorigHeadTop_End","mixamorigLeftEye","mixamorigRightEye","mixamorigLeftShoulder","mixamorigLeftArm","mixamorigLeftForeArm","mixamorigLeftHand","mixamorigLeftHandThumb1","mixamorigLeftHandThumb2","mixamorigLeftHandThumb3","mixamorigLeftHandThumb4","mixamorigLeftHandIndex1","mixamorigLeftHandIndex2","mixamorigLeftHandIndex3","mixamorigLeftHandIndex4","mixamorigLeftHandMiddle1","mixamorigLeftHandMiddle2","mixamorigLeftHandMiddle3","mixamorigLeftHandMiddle4","mixamorigLeftHandRing1","mixamorigLeftHandRing2","mixamorigLeftHandRing3","mixamorigLeftHandRing4","mixamorigLeftHandPinky1","mixamorigLeftHandPinky2","mixamorigLeftHandPinky3","mixamorigLeftHandPinky4","mixamorigRightShoulder","mixamorigRightArm","mixamorigRightForeArm","mixamorigRightHand","mixamorigRightHandPinky1","mixamorigRightHandPinky2","mixamorigRightHandPinky3","mixamorigRightHandPinky4","mixamorigRightHandRing1","mixamorigRightHandRing2","mixamorigRightHandRing3","mixamorigRightHandRing4","mixamorigRightHandMiddle1","mixamorigRightHandMiddle2","mixamorigRightHandMiddle3","mixamorigRightHandMiddle4","mixamorigRightHandIndex1","mixamorigRightHandIndex2","mixamorigRightHandIndex3","mixamorigRightHandIndex4","mixamorigRightHandThumb1","mixamorigRightHandThumb2","mixamorigRightHandThumb3","mixamorigRightHandThumb4","mixamorigLeftUpLeg","mixamorigLeftLeg","mixamorigLeftFoot","mixamorigLeftToeBase","mixamorigLeftToe_End","mixamorigRightUpLeg","mixamorigRightLeg","mixamorigRightFoot","mixamorigRightToeBase","mixamorigRightToe_End"]
+WALKER_DEBUG: Bone xbot:mixamorigHips defaultPosition: Vector3(x:0.000, y:103.991, z:2.076) defaultRotation: Euler(x:0.000, y:0.000, z:0.000)
+WALKER_DEBUG: Bone xbot:mixamorigSpine defaultPosition: Vector3(x:0.000, y:10.182, z:0.132) defaultRotation: Euler(x:0.000, y:0.000, z:0.000)
+WALKER_DEBUG: Bone xbot:mixamorigLeftUpLeg defaultPosition: Vector3(x:8.208, y:-6.752, z:-1.600) defaultRotation: Euler(x:0.000, y:0.000, z:0.000)
+WALKER_DEBUG: Bone xbot:mixamorigRightUpLeg defaultPosition: Vector3(x:-8.208, y:-6.752, z:-1.600) defaultRotation: Euler(x:0.000, y:0.000, z:0.000)
+WALKER_DEBUG: Loaded ybot bones: ["mixamorig_Hips","mixamorig_Spine","mixamorig_Spine1","mixamorig_Spine2","mixamorig_Neck","mixamorig_Head","mixamorig_HeadTop_End","mixamorig_LeftShoulder","mixamorig_LeftArm","mixamorig_LeftForeArm","mixamorig_LeftHand","mixamorig_LeftHandThumb1","mixamorig_LeftHandThumb2","mixamorig_LeftHandThumb3","mixamorig_LeftHandThumb4","mixamorig_LeftHandIndex1","mixamorig_LeftHandIndex2","mixamorig_LeftHandIndex3","mixamorig_LeftHandIndex4","mixamorig_LeftHandMiddle1","mixamorig_LeftHandMiddle2","mixamorig_LeftHandMiddle3","mixamorig_LeftHandMiddle4","mixamorig_LeftHandRing1","mixamorig_LeftHandRing2","mixamorig_LeftHandRing3","mixamorig_LeftHandRing4","mixamorig_LeftHandPinky1","mixamorig_LeftHandPinky2","mixamorig_LeftHandPinky3","mixamorig_LeftHandPinky4","mixamorig_RightShoulder","mixamorig_RightArm","mixamorig_RightForeArm","mixamorig_RightHand","mixamorig_RightHandThumb1","mixamorig_RightHandThumb2","mixamorig_RightHandThumb3","mixamorig_RightHandThumb4","mixamorig_RightHandIndex1","mixamorig_RightHandIndex2","mixamorig_RightHandIndex3","mixamorig_RightHandIndex4","mixamorig_RightHandMiddle1","mixamorig_RightHandMiddle2","mixamorig_RightHandMiddle3","mixamorig_RightHandMiddle4","mixamorig_RightHandRing1","mixamorig_RightHandRing2","mixamorig_RightHandRing3","mixamorig_RightHandRing4","mixamorig_RightHandPinky1","mixamorig_RightHandPinky2","mixamorig_RightHandPinky3","mixamorig_RightHandPinky4","mixamorig_LeftUpLeg","mixamorig_LeftLeg","mixamorig_LeftFoot","mixamorig_LeftToeBase","mixamorig_LeftToe_End","mixamorig_RightUpLeg","mixamorig_RightLeg","mixamorig_RightFoot","mixamorig_RightToeBase","mixamorig_RightToe_End"]
+WALKER_DEBUG: Rest position of Hips bone in media/sandbox/anim_catwalk_walking_not_in_place.glb: [0.000, 0.000, -104.275]
+WALKER_DEBUG: Extracted skeleton from media/sandbox/anim_catwalk_walking_not_in_place.glb. Bone count: 65
+WALKER_DEBUG: Rest position of Hips bone in media/sandbox/anim_happy_walk_not_in_place.glb: [0.000, 0.000, -104.275]
+WALKER_DEBUG: Extracted skeleton from media/sandbox/anim_happy_walk_not_in_place.glb. Bone count: 65
+WALKER_DEBUG: Rest position of Hips bone in media/sandbox/anim_sitting_idle.glb: [0.000, 0.000, -104.275]
+WALKER_DEBUG: Extracted skeleton from media/sandbox/anim_sitting_idle.glb. Bone count: 65
+WALKER_DEBUG: Rest position of Hips bone in media/sandbox/anim_sitting_angry.glb: [0.000, 0.000, -104.275]
+WALKER_DEBUG: Extracted skeleton from media/sandbox/anim_sitting_angry.glb. Bone count: 65
+WALKER_DEBUG: Rest position of Hips bone in media/sandbox/anim_walking.glb: [0.001, 1.045, 0.010]
+WALKER_DEBUG: Extracted skeleton from media/sandbox/anim_walking.glb. Bone count: 66
+WALKER_DEBUG: Rest position of Hips bone in media/sandbox/anim_happy_walk.glb: [0.001, 1.045, 0.010]
+WALKER_DEBUG: Extracted skeleton from media/sandbox/anim_happy_walk.glb. Bone count: 66
+WALKER_DEBUG: Rest position of Hips bone in media/sandbox/anim_t_pose.glb: [0.001, 1.045, 0.010]
+WALKER_DEBUG: Extracted skeleton from media/sandbox/anim_t_pose.glb. Bone count: 66
+WALKER_DEBUG: Rest position of Hips bone in media/sandbox/anim_angry_gesture.glb: [0.001, 1.045, 0.010]
+WALKER_DEBUG: Extracted skeleton from media/sandbox/anim_angry_gesture.glb. Bone count: 66
+WALKER_DEBUG: Rest position of Hips bone in media/sandbox/anim_ascending_stairs.glb: [0.001, 1.045, 0.010]
+WALKER_DEBUG: Extracted skeleton from media/sandbox/anim_ascending_stairs.glb. Bone count: 66
+WALKER_DEBUG: Rest position of Hips bone in media/sandbox/anim_left_turn.glb: [0.001, 1.045, 0.010]
+WALKER_DEBUG: Extracted skeleton from media/sandbox/anim_left_turn.glb. Bone count: 66
+WALKER_DEBUG: Rest position of Hips bone in media/sandbox/anim_right_turn.glb: [0.001, 1.045, 0.010]
+WALKER_DEBUG: Extracted skeleton from media/sandbox/anim_right_turn.glb. Bone count: 66
+WALKER_DEBUG: rawClip name: agree, tracks: [array Array]
+WALKER_DEBUG: Raw Hips position track for embedded_xbot_agree: [0.14365562796592712,103.39946746826172,1.4227923154830933,0.11250822246074677,103.3420181274414,1.4700473546981812,0.0705174058675766,103.2739486694336,1.5467058420181274,0.019750267267227173,103.21063995361328,1.6498088836669922,-0.03620311617851257,103.1618881225586,1.7615512609481812]
+WALKER_DEBUG: Retargeted mixamorig_root_hips firstKeyframeQ result: [-0.015971018001437187,-0.7436962127685547,-0.6648545265197754,-0.06803936511278152]
+WALKER_DEBUG: Retargeted mixamorig_spine_lower firstKeyframeQ result: [0.02067258395254612,0.026343878358602524,0.02955506555736065,0.9990020990371704]
+WALKER_DEBUG: Left thigh using src. B_src: [0.0000, 0.0000, 0.0000, 1.0000], P_src: [0.0000, 0.0000, 0.0000, 1.0000], B_tgt: [0.9995, -0.0216, -0.0216, 0.0062], P_tgt: [0.9997, -0.0054, -0.0054, -0.0247]
+WALKER_DEBUG: Retargeted mixamorig_leg_left_thigh firstKeyframeQ result: [-0.11737436056137085,-0.1500568687915802,-0.05568773299455643,0.9801046848297119]
+WALKER_DEBUG: Retargeted mixamorig_leg_right_thigh firstKeyframeQ result: [-0.028838634490966797,0.11640387028455734,-0.058928050100803375,0.9910327792167664]
+WALKER_DEBUG: Finished retargeting clip for Lara. Tracks count: 50
+WALKER_DEBUG: Raw Hips position track for embedded_xbot_agree: [0.14365562796592712,103.39946746826172,1.4227923154830933,0.11250822246074677,103.3420181274414,1.4700473546981812,0.0705174058675766,103.2739486694336,1.5467058420181274,0.019750267267227173,103.21063995361328,1.6498088836669922,-0.03620311617851257,103.1618881225586,1.7615512609481812]
+WALKER_DEBUG: Finished retargeting clip for Lara. Tracks count: 68
+WALKER_DEBUG: Raw Hips position track for embedded_xbot_agree: [0.14365562796592712,103.39946746826172,1.4227923154830933,0.11250822246074677,103.3420181274414,1.4700473546981812,0.0705174058675766,103.2739486694336,1.5467058420181274,0.019750267267227173,103.21063995361328,1.6498088836669922,-0.03620311617851257,103.1618881225586,1.7615512609481812]
+WALKER_DEBUG: Bone mixamorig_LeftEye not found in ybot instance!
+WALKER_DEBUG: Bone mixamorig_RightEye not found in ybot instance!
+WALKER_DEBUG: Finished retargeting clip for Lara. Tracks count: 68
+THREE.PropertyBinding: No target node found for track: mixamorig_LeftEye.quaternion.
+THREE.PropertyBinding: No target node found for track: mixamorig_RightEye.quaternion.
+[.WebGL-0x37cc00176000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[.WebGL-0x37cc00176000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[.WebGL-0x37cc00176000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)
+WALKER_POS_DEBUG: X-Bot Hips Y:98.6 Knee Y:50.9 Foot Y:8.8
+WALKER_POS_DEBUG: X-Bot Hips world Q: [-0.0201, -0.0347, -0.0478, 0.9980]
+WALKER_POS_DEBUG: X-Bot Left thigh world Q: [-0.1438, 0.1116, 0.0472, 0.9822]
+WALKER_POS_DEBUG: X-Bot Left knee local position: [-0.000, -44.370, 0.285]
+WALKER_POS_DEBUG: Lara Hips Y:97.9 Knee Y:54.5 Foot Y:13.4
+WALKER_POS_DEBUG: X-Bot Hips Y:98.8 Knee Y:50.9 Foot Y:8.8
+WALKER_POS_DEBUG: X-Bot Hips world Q: [-0.0213, -0.0371, -0.0447, 0.9981]
+WALKER_POS_DEBUG: X-Bot Left thigh world Q: [-0.1380, 0.1082, 0.0459, 0.9834]
+WALKER_POS_DEBUG: X-Bot Left knee local position: [-0.000, -44.370, 0.285]
+WALKER_POS_DEBUG: Lara Hips Y:98.1 Knee Y:54.5 Foot Y:13.4
+WALKER_POS_DEBUG: X-Bot Hips Y:99.0 Knee Y:50.9 Foot Y:8.8
+WALKER_POS_DEBUG: X-Bot Hips world Q: [-0.0274, -0.0394, -0.0390, 0.9981]
+WALKER_POS_DEBUG: X-Bot Left thigh world Q: [-0.1286, 0.1043, 0.0439, 0.9852]
+WALKER_POS_DEBUG: X-Bot Left knee local position: [-0.000, -44.370, 0.285]
+WALKER_POS_DEBUG: Lara Hips Y:98.3 Knee Y:54.6 Foot Y:13.5
+WALKER_DEBUG: rawClip name: Armature|mixamo.com|Layer0, tracks: [array Array]
+WALKER_DEBUG: Raw Hips position track for media/sandbox/anim_sitting_idle.glb: [-0.020267531275749207,3.5410633087158203,-61.6662712097168,-0.021242931485176086,3.5368692874908447,-61.67081069946289,-0.021563291549682617,3.5366876125335693,-61.67221450805664,-0.02213212102651596,3.5373966693878174,-61.672359466552734,-0.022842802107334137,3.5370359420776367,-61.672420501708984]
+WALKER_DEBUG: Retargeted mixamorig_root_hips firstKeyframeQ result: [-0.004145524464547634,-0.7666879296302795,-0.6419749855995178,-0.006369207054376602]
+WALKER_DEBUG: Retargeted mixamorig_spine_lower firstKeyframeQ result: [0.0822589173913002,0.008999032899737358,-0.006842363625764847,0.9965468645095825]
+WALKER_DEBUG: Retargeted mixamorig_leg_right_thigh firstKeyframeQ result: [-0.7087371945381165,0.014518392272293568,0.05719079077243805,0.7030007243156433]
+WALKER_DEBUG: Left thigh using src. B_src: [-0.0000, 0.0039, 1.0000, -0.0000], P_src: [0.0065, 0.0000, 0.0000, 1.0000], B_tgt: [0.9995, -0.0216, -0.0216, 0.0062], P_tgt: [0.9997, -0.0054, -0.0054, -0.0247]
+WALKER_DEBUG: Retargeted mixamorig_leg_left_thigh firstKeyframeQ result: [0.7052892446517944,0.030922995880246162,0.06966105848550797,-0.7048107385635376]
+WALKER_DEBUG: Finished retargeting clip for Lara. Tracks count: 50
+WALKER_DEBUG: Raw Hips position track for media/sandbox/anim_sitting_idle.glb: [-0.020267531275749207,3.5410633087158203,-61.6662712097168,-0.021242931485176086,3.5368692874908447,-61.67081069946289,-0.021563291549682617,3.5366876125335693,-61.67221450805664,-0.02213212102651596,3.5373966693878174,-61.672359466552734,-0.022842802107334137,3.5370359420776367,-61.672420501708984]
+WALKER_DEBUG: Finished retargeting clip for Lara. Tracks count: 66
+WALKER_DEBUG: Raw Hips position track for media/sandbox/anim_sitting_idle.glb: [-0.020267531275749207,3.5410633087158203,-61.6662712097168,-0.021242931485176086,3.5368692874908447,-61.67081069946289,-0.021563291549682617,3.5366876125335693,-61.67221450805664,-0.02213212102651596,3.5373966693878174,-61.672359466552734,-0.022842802107334137,3.5370359420776367,-61.672420501708984]
+WALKER_DEBUG: Finished retargeting clip for Lara. Tracks count: 66
+WALKER_POS_DEBUG: X-Bot Hips Y:59.1 Knee Y:50.8 Foot Y:8.4
+WALKER_POS_DEBUG: X-Bot Hips world Q: [-0.0034, 0.0026, 0.0078, 1.0000]
+WALKER_POS_DEBUG: X-Bot Left thigh world Q: [-0.6800, 0.0335, 0.1075, 0.7245]
+WALKER_POS_DEBUG: X-Bot Left knee local position: [-0.000, -44.370, 0.285]
+WALKER_POS_DEBUG: Lara Hips Y:56.7 Knee Y:51.0 Foot Y:9.8
+WALKER_POS_DEBUG: X-Bot Hips Y:59.1 Knee Y:50.8 Foot Y:8.4
+WALKER_POS_DEBUG: X-Bot Hips world Q: [0.0010, 0.0013, 0.0095, 1.0000]
+WALKER_POS_DEBUG: X-Bot Left thigh world Q: [-0.6791, 0.0306, 0.1079, 0.7255]
+WALKER_POS_DEBUG: X-Bot Left knee local position: [-0.000, -44.370, 0.285]
+WALKER_POS_DEBUG: Lara Hips Y:56.7 Knee Y:51.0 Foot Y:9.8
+WALKER_POS_DEBUG: X-Bot Hips Y:59.0 Knee Y:50.8 Foot Y:8.4
+WALKER_POS_DEBUG: X-Bot Hips world Q: [-0.0015, 0.0023, 0.0080, 1.0000]
+WALKER_POS_DEBUG: X-Bot Left thigh world Q: [-0.6803, 0.0330, 0.1077, 0.7243]
+WALKER_POS_DEBUG: X-Bot Left knee local position: [-0.000, -44.370, 0.285]
+WALKER_POS_DEBUG: Lara Hips Y:56.6 Knee Y:51.0 Foot Y:9.8
