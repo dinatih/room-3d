@@ -80,6 +80,37 @@
       border-color: rgba(255, 68, 68, 0.6);
       color: #ff8888;
     }
+    
+    /* Collapsible Panels */
+    .control-panel {
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s ease;
+    }
+    .control-panel.collapsed {
+      max-height: 40px !important;
+      padding-top: 10px !important;
+      padding-bottom: 0 !important;
+      overflow: hidden;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      margin: 0 !important;
+      padding-bottom: 5px;
+    }
+    .panel-toggle-btn {
+      color: #ff6666;
+      font-size: 10px;
+      transition: transform 0.35s ease;
+      transform: rotate(0deg);
+      display: inline-block;
+      line-height: 1;
+    }
+    .control-panel.collapsed .panel-toggle-btn {
+      transform: rotate(-180deg);
+    }
   </style>
 </head>
 <body>
@@ -90,12 +121,18 @@
     <p>1: Native | 2: <span class="red">Rosanna</span> | 3: <span class="white">Marissa</span> | 4: <span class="gold">Delphina</span> | 5: Sara | 6: <span style="color: #bc9c74">Cha</span> | 7: <span class="vivid">Vivid</span> | 8: <span style="color: #ffd700">Sabira</span> | 9: <span style="color: #e2d6bd">Safa</span> | 10: <span style="color: #5f6e4b">Rajaa</span></p>
     <p>Comparing 10 custom variations.</p>
   </div>
-  <div id="mesh-control">
-    <h4>Meshes Visibility</h4>
+  <div id="mesh-control" class="control-panel">
+    <h4 class="panel-header" onclick="togglePanel('mesh-control')">
+      <span>Meshes Visibility</span>
+      <span class="panel-toggle-btn">▼</span>
+    </h4>
     <div id="mesh-list"></div>
   </div>
-  <div id="anim-control">
-    <h4>Animations</h4>
+  <div id="anim-control" class="control-panel">
+    <h4 class="panel-header" onclick="togglePanel('anim-control')">
+      <span>Animations</span>
+      <span class="panel-toggle-btn">▼</span>
+    </h4>
     <div style="display: flex; gap: 6px; margin-bottom: 10px;">
       <button id="btn-play-pause" class="anim-btn anim-btn-primary">Pause</button>
       <button id="btn-stop" class="anim-btn">Stop</button>
@@ -125,6 +162,11 @@
     import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
     import { DRACOLoader }   from 'three/addons/loaders/DRACOLoader.js';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    
+    window.togglePanel = function(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('collapsed');
+    };
 
     const viewEl = document.getElementById('view');
 
