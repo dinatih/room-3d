@@ -118,7 +118,7 @@
   <div id="view"></div>
   <div id="hud">
     <h3>Lara Croft <span class="red">Style Comparison</span></h3>
-    <p>Comparing 19 variations side-by-side. Pan horizontally using the mouse.</p>
+    <p>Comparing 18 variations side-by-side. Pan horizontally using the mouse.</p>
     <p id="loading-status">Loading models...</p>
   </div>
   <div id="mesh-control" class="control-panel">
@@ -895,7 +895,6 @@
       const variants = [
         { id: 'fortnite_lara_croft', label: 'Fortnite', file: 'media/all_lara/fortnite_lara_croft.glb', offset: -9, color: '#30ddff' },
         { id: 'goth_aesthetic_girl', label: 'Goth Aesthetic', file: 'media/all_lara/goth_aesthetic_girl.glb', offset: -8, color: '#9e59ff' },
-        { id: 'lara', label: 'Lara Classic', file: 'media/all_lara/lara.glb', offset: -7, color: '#00d6aa' },
         { id: 'lara_croft_324_rigged', label: 'Lara 324 Rigged', file: 'media/all_lara/lara_croft_324_rigged.glb', offset: -6, color: '#ff6600' },
         { id: 'lara_croft_4543', label: 'Lara 4543', file: 'media/all_lara/lara_croft_4543.glb', offset: -5, color: '#aa77ff' },
         { id: 'lara_croft_43254_rigged', label: 'Lara 43254 Rigged', file: 'media/all_lara/lara_croft_43254_rigged.glb', offset: -4, color: '#33bb66' },
@@ -984,9 +983,9 @@
           }
 
           loadedCount++;
-          document.getElementById('loading-status').innerText = `Loaded ${loadedCount} / 19 models`;
+          document.getElementById('loading-status').innerText = `Loaded ${loadedCount} / 18 models`;
 
-          if (loadedCount === 19) {
+          if (loadedCount === 18) {
             document.getElementById('loading-screen').style.display = 'none';
             loadAndPlayAnimation("happy_walk.glb");
           } else if (rawAnimClip && animScene) {
@@ -1002,7 +1001,7 @@
         }, undefined, (err) => {
           console.error("Failed to load model:", v.label, err);
           loadedCount++;
-          document.getElementById('loading-status').innerText = `Error loading ${v.label} (${loadedCount}/19)`;
+          document.getElementById('loading-status').innerText = `Error loading ${v.label} (${loadedCount}/18)`;
         });
       });
     });
