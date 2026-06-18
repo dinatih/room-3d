@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <title>Cyber Sekes — Duo Animation Debug</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #06060c;
+      --panel: rgba(10,10,20,0.82);
+      --border: rgba(255,255,255,0.06);
+      --accent: #c084fc;
+      --accent2: #67e8f9;
+      --red: #f87171;
+      --green: #34d399;
+      --muted: #6b7280;
+      --font: 'Outfit', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: #f3f4f6;
+      font-family: var(--font);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── TOP BAR ── */
+    #topbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 20px;
+      background: var(--panel);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    #topbar h1 {
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    #topbar h1 span { color: var(--accent); }
+
+    .sep { width: 1px; height: 24px; background: var(--border); }
+
+    /* Status pills */
+    .pill {
+      font-size: 11px;
+      font-family: var(--mono);
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .pill.ok { border-color: var(--green); color: var(--green); }
+    .pill.loading { border-color: var(--accent); color: var(--accent); animation: pulse 1.2s ease infinite; }
+    .pill.err { border-color: var(--red); color: var(--red); }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── CONTROLS ── */
+    #controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .ctrl-label { font-size: 11px; color: var(--muted); }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 90px; height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.1);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+
+    button {
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: #e5e7eb;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    button:hover { background: rgba(192,132,252,0.12); border-color: var(--accent); }
+    button.active { background: var(--accent); border-color: var(--accent); color: #0a0a14; }
+
+    /* ── TIMELINE ── */
+    #timeline-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 20px;
+      background: rgba(10,10,20,0.6);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    #timeline-bar input[type="range"] { width: 100%; flex: 1; }
+    #time-label { font-family: var(--mono); font-size: 11px; color: var(--accent2); white-space: nowrap; }
+
+    /* ── VIEWPORT ── */
+    #viewport {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+    }
+    #viewport canvas { width: 100% !important; height: 100% !important; display: block; }
+
+    /* ── LOADING OVERLAY ── */
+    #loading {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 100;
+      transition: opacity 0.5s;
+    }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(192,132,252,0.12);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading-msg { font-size: 14px; color: var(--muted); }
+    #loading-bar-wrap {
+      width: 260px;
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    #loading-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+
+    /* ── CHAR LABELS ── */
+    .char-label {
+      position: absolute;
+      bottom: 20px;
+      font-size: 11px;
+      font-family: var(--mono);
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(10,10,20,0.8);
+      border: 1px solid var(--border);
+      pointer-events: none;
+      transform: translateX(-50%);
+    }
+
+    /* ── HUD ── */
+    #hud {
+      position: absolute;
+      top: 12px; left: 12px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      pointer-events: none;
+      line-height: 1.7;
+    }
+    #hud strong { color: var(--accent); }
+
+    /* ── VISIBILITY PANEL ── */
+    #vis-panel {
+      position: absolute;
+      top: 12px; right: 12px;
+      background: var(--panel);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      min-width: 180px;
+      font-size: 12px;
+    }
+    #vis-panel .title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 10px; }
+    .vis-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .vis-row:last-child { margin-bottom: 0; }
+    .vis-row label { color: #d1d5db; }
+
+    /* Toggle switch */
+    .sw { position: relative; display: inline-block; width: 32px; height: 17px; }
+    .sw input { opacity:0; width:0; height:0; }
+    .sw-track {
+      position: absolute; inset:0;
+      background: rgba(255,255,255,0.07);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      transition: .2s;
+      cursor: pointer;
+    }
+    .sw-track::before {
+      content: '';
+      position: absolute;
+      width: 10px; height: 10px;
+      left: 3px; bottom: 3px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: .2s;
+    }
+    .sw input:checked + .sw-track { background: rgba(192,132,252,0.18); border-color: var(--accent); }
+    .sw input:checked + .sw-track::before { transform: translateX(15px); background: var(--accent); }
+
+    .opacity-mini {
+      display: flex; align-items: center; gap: 6px; margin-top: 4px;
+    }
+    .opacity-mini input { width: 60px; height: 3px; }
+    .opacity-mini span { font-family: var(--mono); font-size: 10px; color: var(--accent2); }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <h1>Cyber Sekes <span>Duo Animation</span></h1>
+    <div class="sep"></div>
+    <div id="pill-a" class="pill loading">Char A …</div>
+    <div id="pill-b" class="pill loading">Char B …</div>
+    <div class="sep"></div>
+    <div id="controls">
+      <span class="ctrl-label">Vitesse</span>
+      <input type="range" id="sl-speed" min="0" max="2" step="0.05" value="1">
+      <span id="speed-val" style="font-family:var(--mono);font-size:11px;color:var(--accent2)">1.0×</span>
+      <div class="sep"></div>
+      <button id="btn-play" class="active">⏸ Pause</button>
+      <button id="btn-reset">T-Pose</button>
+      <button id="btn-layout" title="Overlay / Côte à côte">⇆ Layout</button>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div id="timeline-bar">
+    <span class="ctrl-label" style="white-space:nowrap">Timeline</span>
+    <input type="range" id="sl-time" min="0" max="100" value="0" step="0.1">
+    <span id="time-label">0.0 s</span>
+  </div>
+
+  <!-- 3D VIEWPORT -->
+  <div id="viewport">
+
+    <!-- Loading overlay -->
+    <div id="loading">
+      <div class="spinner"></div>
+      <div id="loading-msg">Chargement des modèles…</div>
+      <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div>FPS: <strong id="hud-fps">--</strong></div>
+      <div>Anim: <strong id="hud-anim">Cyber sex</strong></div>
+      <div>Durée: <strong id="hud-dur">4.3 s</strong></div>
+    </div>
+
+    <!-- Visibility panel -->
+    <div id="vis-panel">
+      <div class="title">Visibilité</div>
+      <div class="vis-row">
+        <label>Char A (femme)</label>
+        <label class="sw"><input type="checkbox" id="vis-a" checked><span class="sw-track"></span></label>
+      </div>
+      <div class="opacity-mini">
+        <input type="range" id="op-a" min="0" max="1" step="0.05" value="1">
+        <span id="op-a-val">1.0</span>
+      </div>
+      <div class="vis-row" style="margin-top:10px">
+        <label>Char B (homme)</label>
+        <label class="sw"><input type="checkbox" id="vis-b" checked><span class="sw-track"></span></label>
+      </div>
+      <div class="opacity-mini">
+        <input type="range" id="op-b" min="0" max="1" step="0.05" value="1">
+        <span id="op-b-val">1.0</span>
+      </div>
+      <div class="vis-row" style="margin-top:10px">
+        <label>Squelettes</label>
+        <label class="sw"><input type="checkbox" id="vis-skel"><span class="sw-track"></span></label>
+      </div>
+      <div class="vis-row">
+        <label>Grille</label>
+        <label class="sw"><input type="checkbox" id="vis-grid" checked><span class="sw-track"></span></label>
+      </div>
+    </div>
+
+  </div><!-- /viewport -->
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ── CONFIG ──────────────────────────────────────────────────────────────
+    const CHAR_A = 'media/sandbox/cyber_char_a.glb';
+    const CHAR_B = 'media/sandbox/cyber_char_b.glb';
+    const ANIM_NAME = 'Cyber sex';
+    const TARGET_H = 170; // normalize height to 170 units
+
+    // ── SCENE ───────────────────────────────────────────────────────────────
+    const container = document.getElementById('viewport');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x06060c);
+    scene.fog = new THREE.FogExp2(0x06060c, 0.0018);
+
+    const W = container.clientWidth, H = container.clientHeight;
+    const camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 3000);
+    camera.position.set(0, 120, 350);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(W, H);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.target.set(0, 90, 0);
+    controls.maxPolarAngle = Math.PI / 2 + 0.1;
+    controls.update();
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    scene.add(new THREE.HemisphereLight(0xd4b8ff, 0x223344, 0.8));
+
+    const sun = new THREE.DirectionalLight(0xfff5e0, 1.6);
+    sun.position.set(60, 200, 80);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 600;
+    sun.shadow.camera.left = sun.shadow.camera.bottom = -200;
+    sun.shadow.camera.right = sun.shadow.camera.top = 200;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x8b5cf6, 0.7);
+    fill.position.set(-80, 80, -80);
+    scene.add(fill);
+
+    const rim = new THREE.PointLight(0x67e8f9, 1.2, 600);
+    rim.position.set(0, 200, -150);
+    scene.add(rim);
+
+    // Floor
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(600, 600),
+      new THREE.MeshStandardMaterial({ color: 0x0a0a14, roughness: 0.9, metalness: 0.1 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const grid = new THREE.GridHelper(600, 60, 0x1e1b4b, 0x0f0d2a);
+    grid.material.opacity = 0.5;
+    grid.material.transparent = true;
+    scene.add(grid);
+
+    // ── STATE ───────────────────────────────────────────────────────────────
+    let isPlaying = true;
+    let playbackSpeed = 1.0;
+    let layout = 'overlay'; // 'overlay' | 'side'
+    const clock = new THREE.Clock();
+    let animDuration = 0;
+    let currentTime = 0;
+
+    const models = { a: null, b: null };
+    const mixers = { a: null, b: null };
+    const actions = { a: null, b: null };
+    const skels   = { a: null, b: null };
+    const wrappers = { a: null, b: null };
+
+    // ── LOAD ────────────────────────────────────────────────────────────────
+    function setLoadMsg(msg, pct) {
+      document.getElementById('loading-msg').textContent = msg;
+      document.getElementById('loading-bar').style.width = pct + '%';
+    }
+
+    function normalizeHeight(model, target = TARGET_H) {
+      model.scale.set(1, 1, 1);
+      model.position.set(0, 0, 0);
+      model.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(model);
+      const h = box.getSize(new THREE.Vector3()).y;
+      if (h > 0) {
+        model.scale.setScalar(target / h);
+        model.updateMatrixWorld(true);
+        const b2 = new THREE.Box3().setFromObject(model);
+        model.position.y = -b2.min.y;
+      }
+    }
+
+    async function loadChar(key, path, label, pill) {
+      const loader = new GLTFLoader();
+      setLoadMsg(`Chargement de ${label}…`, key === 'a' ? 20 : 60);
+      const gltf = await new Promise((res, rej) => loader.load(path, res, undefined, rej));
+      const model = gltf.scene;
+      model.name = label;
+
+      model.traverse(c => {
+        if (c.isMesh) {
+          c.castShadow = c.receiveShadow = true;
+          c.frustumCulled = false;
+        }
+      });
+
+      normalizeHeight(model);
+
+      const wrapper = new THREE.Group();
+      wrapper.add(model);
+      scene.add(wrapper);
+
+      const skel = new THREE.SkeletonHelper(model);
+      skel.visible = false;
+      scene.add(skel);
+
+      const mixer = new THREE.AnimationMixer(model);
+      let action = null;
+
+      if (gltf.animations.length > 0) {
+        // Find the correct clip
+        let clip = gltf.animations.find(a => a.name === ANIM_NAME) || gltf.animations[0];
+        animDuration = Math.max(animDuration, clip.duration);
+        action = mixer.clipAction(clip);
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.clampWhenFinished = false;
+        if (isPlaying) action.play();
+        console.log(`[${key}] clip=${clip.name!}  dur=${clip.duration.toFixed(2)}s`);
+      }
+
+      models[key]  = model;
+      mixers[key]  = mixer;
+      actions[key] = action;
+      skels[key]   = skel;
+      wrappers[key] = wrapper;
+
+      pill.textContent = `${label} ✓`;
+      pill.className = 'pill ok';
+      setLoadMsg(`${label} chargé`, key === 'a' ? 55 : 95);
+    }
+
+    async function init() {
+      try {
+        await loadChar('a', CHAR_A, 'Char A',
+          document.getElementById('pill-a'));
+        await loadChar('b', CHAR_B, 'Char B',
+          document.getElementById('pill-b'));
+
+        setLoadMsg('Prêt !', 100);
+        document.getElementById('hud-dur').textContent = animDuration.toFixed(1) + ' s';
+        applyLayout();
+        setTimeout(() => {
+          document.getElementById('loading').style.opacity = '0';
+          setTimeout(() => document.getElementById('loading').remove(), 500);
+        }, 300);
+      } catch(e) {
+        console.error(e);
+        document.getElementById('loading-msg').textContent = 'Erreur : ' + e.message;
+      }
+    }
+
+    // ── LAYOUT ──────────────────────────────────────────────────────────────
+    function applyLayout() {
+      if (!wrappers.a || !wrappers.b) return;
+      if (layout === 'overlay') {
+        wrappers.a.position.x = 0;
+        wrappers.b.position.x = 0;
+        controls.target.set(0, 90, 0);
+      } else {
+        wrappers.a.position.x = -80;
+        wrappers.b.position.x =  80;
+        controls.target.set(0, 90, 0);
+      }
+      controls.update();
+    }
+
+    // ── UI ──────────────────────────────────────────────────────────────────
+    const btnPlay = document.getElementById('btn-play');
+    btnPlay.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      btnPlay.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+      btnPlay.classList.toggle('active', isPlaying);
+      ['a','b'].forEach(k => {
+        if (!actions[k]) return;
+        if (isPlaying) actions[k].play();
+        else actions[k].paused = true;
+      });
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      ['a','b'].forEach(k => {
+        if (!actions[k]) return;
+        actions[k].stop();
+        if (isPlaying) actions[k].play();
+      });
+      currentTime = 0;
+    });
+
+    document.getElementById('btn-layout').addEventListener('click', () => {
+      layout = layout === 'overlay' ? 'side' : 'overlay';
+      applyLayout();
+    });
+
+    const slSpeed = document.getElementById('sl-speed');
+    const speedVal = document.getElementById('speed-val');
+    slSpeed.addEventListener('input', () => {
+      playbackSpeed = parseFloat(slSpeed.value);
+      speedVal.textContent = playbackSpeed.toFixed(2) + '×';
+      ['a','b'].forEach(k => { if (actions[k]) actions[k].timeScale = playbackSpeed; });
+    });
+
+    // Timeline scrubbing
+    const slTime = document.getElementById('sl-time');
+    const timeLabel = document.getElementById('time-label');
+    let scrubbing = false;
+    slTime.addEventListener('mousedown', () => { scrubbing = true; });
+    slTime.addEventListener('mouseup',   () => { scrubbing = false; });
+    slTime.addEventListener('input', () => {
+      const t = (parseFloat(slTime.value) / 100) * animDuration;
+      ['a','b'].forEach(k => {
+        if (!actions[k]) return;
+        actions[k].time = t;
+        if (mixers[k]) mixers[k].update(0);
+      });
+      timeLabel.textContent = t.toFixed(2) + ' s';
+    });
+
+    // Visibility + opacity
+    ['a','b'].forEach(k => {
+      document.getElementById(`vis-${k}`).addEventListener('change', e => {
+        if (wrappers[k]) wrappers[k].visible = e.target.checked;
+        if (skels[k]) skels[k].visible = e.target.checked && document.getElementById('vis-skel').checked;
+      });
+      document.getElementById(`op-${k}`).addEventListener('input', e => {
+        const v = parseFloat(e.target.value);
+        document.getElementById(`op-${k}-val`).textContent = v.toFixed(2);
+        if (!models[k]) return;
+        models[k].traverse(c => {
+          if (c.isMesh && c.material) {
+            const mats = Array.isArray(c.material) ? c.material : [c.material];
+            mats.forEach(m => { m.transparent = v < 1; m.opacity = v; });
+          }
+        });
+      });
+    });
+
+    document.getElementById('vis-skel').addEventListener('change', e => {
+      ['a','b'].forEach(k => {
+        if (skels[k]) skels[k].visible = e.target.checked && wrappers[k]?.visible;
+      });
+    });
+    document.getElementById('vis-grid').addEventListener('change', e => {
+      grid.visible = e.target.checked;
+    });
+
+    // ── RENDER LOOP ─────────────────────────────────────────────────────────
+    let fpsFrames = 0, lastFps = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = clock.getDelta();
+
+      if (isPlaying) {
+        ['a','b'].forEach(k => { if (mixers[k]) mixers[k].update(dt); });
+
+        // sync timeline slider (from action time)
+        if (!scrubbing && actions.a && animDuration > 0) {
+          currentTime = actions.a.time % animDuration;
+          const pct = (currentTime / animDuration) * 100;
+          slTime.value = pct;
+          timeLabel.textContent = currentTime.toFixed(2) + ' s';
+        }
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+
+      // FPS
+      fpsFrames++;
+      const now = performance.now();
+      if (now - lastFps >= 1000) {
+        document.getElementById('hud-fps').textContent = fpsFrames;
+        fpsFrames = 0;
+        lastFps = now;
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      const w = container.clientWidth, h = container.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+
+    init().then(animate);
+  </script>
+
+</body>
+</html>
