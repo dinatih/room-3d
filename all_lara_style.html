@@ -118,7 +118,7 @@
   <div id="view"></div>
   <div id="hud">
     <h3>Lara Croft <span class="red">Style Comparison</span></h3>
-    <p>Comparing 18 variations side-by-side. Pan horizontally using the mouse.</p>
+    <p>Comparing 15 variations side-by-side. Pan horizontally using the mouse.</p>
     <p id="loading-status">Loading models...</p>
   </div>
   <div id="mesh-control" class="control-panel">
@@ -893,16 +893,14 @@
       };
 
       const variants = [
-        { id: 'fortnite_lara_croft', label: 'Fortnite', file: 'media/all_lara/fortnite_lara_croft.glb', offset: -8, color: '#30ddff' },
-        { id: 'goth_aesthetic_girl', label: 'Goth Aesthetic', file: 'media/all_lara/goth_aesthetic_girl.glb', offset: -7, color: '#9e59ff' },
-        { id: 'lara_croft_324_rigged', label: 'Lara 324 Rigged', file: 'media/all_lara/lara_croft_324_rigged.glb', offset: -6, color: '#ff6600' },
-        { id: 'lara_croft_4543', label: 'Lara 4543', file: 'media/all_lara/lara_croft_4543.glb', offset: -5, color: '#aa77ff' },
-        { id: 'lara_croft_43254_rigged', label: 'Lara 43254 Rigged', file: 'media/all_lara/lara_croft_43254_rigged.glb', offset: -4, color: '#33bb66' },
-        { id: 'lara_croft_brown_jacket', label: 'Brown Jacket', file: 'media/all_lara/lara_croft_brown_jacket.glb', offset: -3, color: '#d4a373' },
-        { id: 'lara_croft_dress_345', label: 'Dress 345', file: 'media/all_lara/lara_croft_dress_345.glb', offset: -2, color: '#e07a5f' },
+        { id: 'lara_croft_324_rigged', label: 'Lara 324 Rigged', file: 'media/all_lara/lara_croft_324_rigged.glb', offset: -7, color: '#ff6600' },
+        { id: 'lara_croft_4543', label: 'Lara 4543', file: 'media/all_lara/lara_croft_4543.glb', offset: -6, color: '#aa77ff' },
+        { id: 'lara_croft_43254_rigged', label: 'Lara 43254 Rigged', file: 'media/all_lara/lara_croft_43254_rigged.glb', offset: -5, color: '#33bb66' },
+        { id: 'lara_croft_brown_jacket', label: 'Brown Jacket', file: 'media/all_lara/lara_croft_brown_jacket.glb', offset: -4, color: '#d4a373' },
+        { id: 'lara_croft_dress_345', label: 'Dress 345', file: 'media/all_lara/lara_croft_dress_345.glb', offset: -3, color: '#e07a5f' },
         { id: 'lara_croft_motorcycle_gear', label: 'Motorcycle Gear', file: 'media/all_lara/lara_croft_motorcycle_gear.glb', offset: -1, color: '#8d99ae' },
-        { id: 'lara_croft_red_dress', label: 'Red Dress', file: 'media/all_lara/lara_croft_red_dress.glb', offset: 0, color: '#ff4d6d' },
-        { id: 'lara_hair', label: 'Lara Hair', file: 'media/all_lara/lara_hair.glb', offset: 0, color: '#ffd166', noLabel: true },
+        { id: 'lara_croft_red_dress', label: 'Red Dress', file: 'media/all_lara/lara_croft_red_dress.glb', offset: 0, color: '#ff4d6d', hideHairMeshes: true },
+        { id: 'lara_hair', label: 'Lara Hair', file: 'media/all_lara/lara_hair.glb', offset: 0, color: '#ffd166', noLabel: true, alignToModel: 'lara_croft_red_dress' },
         { id: 'lara_croft_spy_gear', label: 'Spy Gear', file: 'media/all_lara/lara_croft_spy_gear.glb', offset: 1, color: '#3d5a80' },
         { id: 'lara_croft_suit', label: 'Suit', file: 'media/all_lara/lara_croft_suit.glb', offset: 2, color: '#edf2f4' },
         { id: 'lara_croft_swim_gear', label: 'Swim Gear', file: 'media/all_lara/lara_croft_swim_gear.glb', offset: 3, color: '#00b4d8' },
@@ -911,6 +909,26 @@
         { id: 'lara_croft_black_tank_top', label: 'Black Tank Top', file: 'media/all_lara/lara_croft_black_tank_top.glb', offset: 6, color: '#4a4a4a', fixOpaque: true },
         { id: 'lara_croft_4259', label: 'Lara 4259', file: 'media/all_lara/lara_croft_4259.glb', offset: 7, color: '#d2a23c', fixOpaque: true }
       ];
+
+      // Track loaded models by id for post-load alignment
+      const modelsMap = {};
+
+      // Find the world-space Y of the head bone (ignoring face detail bones)
+      function getHeadBoneWorldY(model) {
+        model.updateMatrixWorld(true);
+        const skipPat = /jaw|tongue|lip|eyelid|eyebrow|brow\.?[0-9]|lash|tooth|teeth|ear|cheek|chin/i;
+        const headPat  = /mixamorig.*:head$|head neck upper|^head$/i;
+        let best = null;
+        model.traverse(c => {
+          if (!c.isBone || best) return;
+          if (skipPat.test(c.name)) return;
+          if (headPat.test(c.name)) best = c;
+        });
+        if (!best) return null;
+        const pos = new THREE.Vector3();
+        best.getWorldPosition(pos);
+        return pos.y;
+      }
       function normalizeHeight(model, targetHeight = 175) {
         model.scale.set(1, 1, 1);
         model.position.set(0, 0, 0);
@@ -963,6 +981,15 @@
                   m.needsUpdate = true;
                 });
               }
+              // Hide native hair meshes on Red Dress (replaced by Lara Hair overlay)
+              if (v.hideHairMeshes) {
+                const geoName = c.geometry?.name || '';
+                const matName = (Array.isArray(c.material) ? c.material[0]?.name : c.material?.name) || '';
+                if (/hair/i.test(geoName) || /hair/i.test(matName)) {
+                  c.visible = false;
+                  meshVisibility.set(c.name, { label: getCleanName(matName || geoName), visible: false });
+                }
+              }
             }
           });
 
@@ -972,9 +999,33 @@
           model.userData.mixer = mixer;
           
           allModels.push(model);
+          modelsMap[v.id] = model;
           const x = v.offset * SPACING;
           model.position.x = x;
           scene.add(model);
+
+          // Align Lara Hair onto Red Dress head bone after both are loaded
+          if (v.alignToModel) {
+            const target = modelsMap[v.alignToModel];
+            if (target) {
+              const targetY = getHeadBoneWorldY(target);
+              const hairY   = getHeadBoneWorldY(model);
+              if (targetY !== null && hairY !== null) {
+                model.position.y += (targetY - hairY);
+                console.log(`[Lara Hair] head Y aligned: delta=${(targetY - hairY).toFixed(1)}`);
+              }
+            }
+          }
+          // If Red Dress loaded before hair, re-trigger alignment on hair side
+          if (v.id === 'lara_croft_red_dress' && modelsMap['lara_hair']) {
+            const hair = modelsMap['lara_hair'];
+            const targetY = getHeadBoneWorldY(model);
+            const hairY   = getHeadBoneWorldY(hair);
+            if (targetY !== null && hairY !== null) {
+              hair.position.y += (targetY - hairY);
+              console.log(`[Lara Hair] head Y re-aligned: delta=${(targetY - hairY).toFixed(1)}`);
+            }
+          }
 
           if (!v.noLabel) {
             const label = createNameLabel(v.label, v.color);
@@ -983,9 +1034,9 @@
           }
 
           loadedCount++;
-          document.getElementById('loading-status').innerText = `Loaded ${loadedCount} / 18 models`;
+          document.getElementById('loading-status').innerText = `Loaded ${loadedCount} / 15 models`;
 
-          if (loadedCount === 18) {
+          if (loadedCount === 15) {
             document.getElementById('loading-screen').style.display = 'none';
             loadAndPlayAnimation("happy_walk.glb");
           } else if (rawAnimClip && animScene) {
@@ -1001,7 +1052,7 @@
         }, undefined, (err) => {
           console.error("Failed to load model:", v.label, err);
           loadedCount++;
-          document.getElementById('loading-status').innerText = `Error loading ${v.label} (${loadedCount}/18)`;
+          document.getElementById('loading-status').innerText = `Error loading ${v.label} (${loadedCount}/15)`;
         });
       });
     });
