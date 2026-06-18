@@ -15,6 +15,7 @@
       --accent2: #67e8f9;
       --red: #f87171;
       --green: #34d399;
+      --orange: #fb923c;
       --muted: #6b7280;
       --font: 'Outfit', sans-serif;
       --mono: 'JetBrains Mono', monospace;
@@ -64,6 +65,7 @@
       white-space: nowrap;
     }
     .pill.ok { border-color: var(--green); color: var(--green); }
+    .pill.ok-ref { border-color: var(--orange); color: var(--orange); }
     .pill.loading { border-color: var(--accent); color: var(--accent); animation: pulse 1.2s ease infinite; }
     .pill.err { border-color: var(--red); color: var(--red); }
 
@@ -163,20 +165,6 @@
     }
     #loading-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
 
-    /* ── CHAR LABELS ── */
-    .char-label {
-      position: absolute;
-      bottom: 20px;
-      font-size: 11px;
-      font-family: var(--mono);
-      padding: 4px 10px;
-      border-radius: 20px;
-      background: rgba(10,10,20,0.8);
-      border: 1px solid var(--border);
-      pointer-events: none;
-      transform: translateX(-50%);
-    }
-
     /* ── HUD ── */
     #hud {
       position: absolute;
@@ -198,10 +186,11 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 12px 14px;
-      min-width: 180px;
+      min-width: 200px;
       font-size: 12px;
     }
     #vis-panel .title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 10px; }
+    #vis-panel .section-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--orange); margin: 10px 0 6px; padding-top: 8px; border-top: 1px solid var(--border); }
     .vis-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .vis-row:last-child { margin-bottom: 0; }
     .vis-row label { color: #d1d5db; }
@@ -228,22 +217,35 @@
     }
     .sw input:checked + .sw-track { background: rgba(192,132,252,0.18); border-color: var(--accent); }
     .sw input:checked + .sw-track::before { transform: translateX(15px); background: var(--accent); }
+    /* Orange toggle for CC refs */
+    .sw.orange input:checked + .sw-track { background: rgba(251,146,60,0.18); border-color: var(--orange); }
+    .sw.orange input:checked + .sw-track::before { background: var(--orange); }
 
     .opacity-mini {
       display: flex; align-items: center; gap: 6px; margin-top: 4px;
     }
     .opacity-mini input { width: 60px; height: 3px; }
     .opacity-mini span { font-family: var(--mono); font-size: 10px; color: var(--accent2); }
+
+    /* Legend dots */
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+    .dot-purple { background: var(--accent); }
+    .dot-orange { background: var(--orange); }
   </style>
 </head>
 <body>
 
   <!-- TOP BAR -->
   <div id="topbar">
-    <h1>Cyber Sekes <span>Duo Animation</span> — Lara</h1>
+    <h1>Cyber Sekes <span>Duo Anim</span> — Comparaison</h1>
     <div class="sep"></div>
+    <!-- Lara pills (purple) -->
     <div id="pill-a" class="pill loading">Lara A …</div>
     <div id="pill-b" class="pill loading">Lara B …</div>
+    <div class="sep"></div>
+    <!-- CC ref pills (orange) -->
+    <div id="pill-ra" class="pill loading">CC Femme …</div>
+    <div id="pill-rb" class="pill loading">CC Homme …</div>
     <div class="sep"></div>
     <div id="controls">
       <span class="ctrl-label">Vitesse</span>
@@ -251,7 +253,7 @@
       <span id="speed-val" style="font-family:var(--mono);font-size:11px;color:var(--accent2)">1.0×</span>
       <div class="sep"></div>
       <button id="btn-play" class="active">⏸ Pause</button>
-      <button id="btn-reset">T-Pose</button>
+      <button id="btn-reset">Reset</button>
       <button id="btn-layout" title="Overlay / Côte à côte">⇆ Layout</button>
     </div>
   </div>
@@ -278,13 +280,17 @@
       <div>FPS: <strong id="hud-fps">--</strong></div>
       <div>Anim: <strong id="hud-anim">Cyber sex</strong></div>
       <div>Durée: <strong id="hud-dur">4.3 s</strong></div>
+      <div style="margin-top:6px"><span class="dot dot-purple"></span>Lara retargetée</div>
+      <div><span class="dot dot-orange"></span>CC original (référence)</div>
     </div>
 
     <!-- Visibility panel -->
     <div id="vis-panel">
       <div class="title">Visibilité</div>
+
+      <!-- Laras -->
       <div class="vis-row">
-        <label>Lara A (femme)</label>
+        <label><span class="dot dot-purple"></span>Lara A (femme)</label>
         <label class="sw"><input type="checkbox" id="vis-a" checked><span class="sw-track"></span></label>
       </div>
       <div class="opacity-mini">
@@ -292,14 +298,36 @@
         <span id="op-a-val">1.0</span>
       </div>
       <div class="vis-row" style="margin-top:10px">
-        <label>Lara B (homme)</label>
+        <label><span class="dot dot-purple"></span>Lara B (homme)</label>
         <label class="sw"><input type="checkbox" id="vis-b" checked><span class="sw-track"></span></label>
       </div>
       <div class="opacity-mini">
         <input type="range" id="op-b" min="0" max="1" step="0.05" value="1">
         <span id="op-b-val">1.0</span>
       </div>
+
+      <!-- CC Originals -->
+      <div class="section-title">Références CC (original)</div>
+      <div class="vis-row">
+        <label><span class="dot dot-orange"></span>CC Femme</label>
+        <label class="sw orange"><input type="checkbox" id="vis-ra" checked><span class="sw-track"></span></label>
+      </div>
+      <div class="opacity-mini">
+        <input type="range" id="op-ra" min="0" max="1" step="0.05" value="0.35">
+        <span id="op-ra-val">0.35</span>
+      </div>
       <div class="vis-row" style="margin-top:10px">
+        <label><span class="dot dot-orange"></span>CC Homme</label>
+        <label class="sw orange"><input type="checkbox" id="vis-rb" checked><span class="sw-track"></span></label>
+      </div>
+      <div class="opacity-mini">
+        <input type="range" id="op-rb" min="0" max="1" step="0.05" value="0.35">
+        <span id="op-rb-val">0.35</span>
+      </div>
+
+      <!-- Misc -->
+      <div class="section-title" style="color:var(--muted)">Divers</div>
+      <div class="vis-row">
         <label>Squelettes</label>
         <label class="sw"><input type="checkbox" id="vis-skel"><span class="sw-track"></span></label>
       </div>
@@ -326,11 +354,16 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     // ── CONFIG ──────────────────────────────────────────────────────────────
-    const CHAR_A = 'media/sandbox/lara_cyber_a.glb';
-    const CHAR_B = 'media/sandbox/lara_cyber_b.glb';
+    // Lara retargetées (résultat du retargeting CC→Mixamo)
+    const CHAR_A      = 'media/sandbox/lara_cyber_a.glb';
+    const CHAR_B      = 'media/sandbox/lara_cyber_b.glb';
+    // CC originaux extraits du zip (anim native, en arrière-plan)
+    const CC_REF_A    = 'media/sandbox/cyber_char_a.glb';   // femme CC
+    const CC_REF_B    = 'media/sandbox/cyber_char_b.glb';   // homme CC
+
     const ANIM_NAME_A = 'Cyber sex A';
     const ANIM_NAME_B = 'Cyber sex B';
-    const TARGET_H = 173; // normalize height to ~173 cm (Lara)
+    const TARGET_H    = 173; // normaliser hauteur à ~173 cm
 
     // ── SCENE ───────────────────────────────────────────────────────────────
     const container = document.getElementById('viewport');
@@ -340,7 +373,7 @@
 
     const W = container.clientWidth, H = container.clientHeight;
     const camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 3000);
-    camera.position.set(0, 120, 350);
+    camera.position.set(0, 120, 380);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -398,18 +431,26 @@
     // ── STATE ───────────────────────────────────────────────────────────────
     let isPlaying = true;
     let playbackSpeed = 1.0;
-    let layout = 'overlay'; // 'overlay' | 'side'
+    let layout = 'side'; // 'overlay' | 'side'
     const clock = new THREE.Clock();
     let animDuration = 0;
     let currentTime = 0;
 
-    const models = { a: null, b: null };
-    const mixers = { a: null, b: null };
-    const actions = { a: null, b: null };
-    const skels   = { a: null, b: null };
+    // Lara retargetées (a, b)
+    const models   = { a: null, b: null };
+    const mixers   = { a: null, b: null };
+    const actions  = { a: null, b: null };
+    const skels    = { a: null, b: null };
     const wrappers = { a: null, b: null };
 
-    // ── LOAD ────────────────────────────────────────────────────────────────
+    // CC originaux en référence (ra, rb)
+    const refModels   = { ra: null, rb: null };
+    const refMixers   = { ra: null, rb: null };
+    const refActions  = { ra: null, rb: null };
+    const refSkels    = { ra: null, rb: null };
+    const refWrappers = { ra: null, rb: null };
+
+    // ── UTILS ───────────────────────────────────────────────────────────────
     function setLoadMsg(msg, pct) {
       document.getElementById('loading-msg').textContent = msg;
       document.getElementById('loading-bar').style.width = pct + '%';
@@ -429,9 +470,23 @@
       }
     }
 
+    function setMeshOpacity(model, opacity) {
+      model.traverse(c => {
+        if (c.isMesh && c.material) {
+          const mats = Array.isArray(c.material) ? c.material : [c.material];
+          mats.forEach(m => {
+            m.transparent = opacity < 1;
+            m.opacity = opacity;
+            m.depthWrite = opacity >= 0.99; // disable depthWrite for semi-transparent to avoid Z fighting
+          });
+        }
+      });
+    }
+
+    // ── LOAD LARA (retargetée) ───────────────────────────────────────────────
     async function loadChar(key, path, label, pill) {
       const loader = new GLTFLoader();
-      setLoadMsg(`Chargement de ${label}…`, key === 'a' ? 20 : 60);
+      setLoadMsg(`Chargement de ${label}…`, key === 'a' ? 15 : 45);
       const gltf = await new Promise((res, rej) => loader.load(path, res, undefined, rej));
       const model = gltf.scene;
       model.name = label;
@@ -440,6 +495,16 @@
         if (c.isMesh) {
           c.castShadow = c.receiveShadow = true;
           c.frustumCulled = false;
+          const mats = Array.isArray(c.material) ? c.material : [c.material];
+          mats.forEach(m => {
+            if (m) {
+              m.depthWrite = true;
+              m.depthTest  = true;
+              if (m.transparent && m.opacity >= 0.99) {
+                m.transparent = false;
+              }
+            }
+          });
         }
       });
 
@@ -456,8 +521,9 @@
       const mixer = new THREE.AnimationMixer(model);
       let action = null;
 
+      console.log(`[${key}] animations disponibles:`, gltf.animations.map(a => a.name));
+
       if (gltf.animations.length > 0) {
-        // Find the correct clip by name (A or B)
         const animName = key === 'a' ? ANIM_NAME_A : ANIM_NAME_B;
         let clip = gltf.animations.find(a => a.name === animName) || gltf.animations[0];
         animDuration = Math.max(animDuration, clip.duration);
@@ -465,7 +531,9 @@
         action.setLoop(THREE.LoopRepeat, Infinity);
         action.clampWhenFinished = false;
         if (isPlaying) action.play();
-        console.log(`[${key}] clip=${clip.name}  dur=${clip.duration.toFixed(2)}s`);
+        console.log(`[${key}] clip=${clip.name}  dur=${clip.duration.toFixed(2)}s  tracks=${clip.tracks.length}`);
+      } else {
+        console.warn(`[${key}] AUCUNE animation dans le GLB !`);
       }
 
       models[key]  = model;
@@ -476,15 +544,81 @@
 
       pill.textContent = `${label} ✓`;
       pill.className = 'pill ok';
-      setLoadMsg(`${label} chargé`, key === 'a' ? 55 : 95);
     }
 
+    // ── LOAD CC REF (modèle original) ───────────────────────────────────────
+    async function loadRef(key, path, label, pill) {
+      const loader = new GLTFLoader();
+      setLoadMsg(`Chargement référence ${label}…`, key === 'ra' ? 60 : 80);
+      const gltf = await new Promise((res, rej) => loader.load(path, res, undefined, rej));
+      const model = gltf.scene;
+      model.name = label;
+
+      // Appliquer semi-transparence par défaut (0.35)
+      model.traverse(c => {
+        if (c.isMesh) {
+          c.frustumCulled = false;
+          c.castShadow = false;
+          c.receiveShadow = false;
+          const mats = Array.isArray(c.material) ? c.material : [c.material];
+          mats.forEach(m => {
+            if (m) {
+              m.depthWrite = false; // semi-transparent → pas de depthWrite
+              m.depthTest  = true;
+              m.transparent = true;
+              m.opacity = 0.35;
+            }
+          });
+        }
+      });
+
+      normalizeHeight(model);
+
+      const wrapper = new THREE.Group();
+      wrapper.add(model);
+      // Placer les CC légèrement en arrière (Z décalé) pour éviter Z-fighting
+      wrapper.position.z = -30;
+      scene.add(wrapper);
+
+      const skel = new THREE.SkeletonHelper(model);
+      skel.visible = false;
+      scene.add(skel);
+
+      const mixer = new THREE.AnimationMixer(model);
+      let action = null;
+
+      console.log(`[${key}] CC ref animations:`, gltf.animations.map(a => a.name));
+
+      if (gltf.animations.length > 0) {
+        // Prendre la première (et unique) animation du CC exporté
+        const clip = gltf.animations[0];
+        animDuration = Math.max(animDuration, clip.duration);
+        action = mixer.clipAction(clip);
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.clampWhenFinished = false;
+        if (isPlaying) action.play();
+        console.log(`[${key}] CC clip=${clip.name}  dur=${clip.duration.toFixed(2)}s  tracks=${clip.tracks.length}`);
+      } else {
+        console.warn(`[${key}] CC ref : AUCUNE animation !`);
+      }
+
+      refModels[key]   = model;
+      refMixers[key]   = mixer;
+      refActions[key]  = action;
+      refSkels[key]    = skel;
+      refWrappers[key] = wrapper;
+
+      pill.textContent = `${label} ✓`;
+      pill.className = 'pill ok-ref';
+    }
+
+    // ── INIT ────────────────────────────────────────────────────────────────
     async function init() {
       try {
-        await loadChar('a', CHAR_A, 'Char A',
-          document.getElementById('pill-a'));
-        await loadChar('b', CHAR_B, 'Char B',
-          document.getElementById('pill-b'));
+        await loadChar('a', CHAR_A, 'Lara A', document.getElementById('pill-a'));
+        await loadChar('b', CHAR_B, 'Lara B', document.getElementById('pill-b'));
+        await loadRef('ra', CC_REF_A, 'CC Femme', document.getElementById('pill-ra'));
+        await loadRef('rb', CC_REF_B, 'CC Homme', document.getElementById('pill-rb'));
 
         setLoadMsg('Prêt !', 100);
         document.getElementById('hud-dur').textContent = animDuration.toFixed(1) + ' s';
@@ -502,14 +636,23 @@
     // ── LAYOUT ──────────────────────────────────────────────────────────────
     function applyLayout() {
       if (!wrappers.a || !wrappers.b) return;
+
       if (layout === 'overlay') {
-        wrappers.a.position.x = 0;
-        wrappers.b.position.x = 0;
+        // Tout au centre, CC légèrement en arrière
+        wrappers.a.position.x    = 0;
+        wrappers.b.position.x    = 0;
+        if (refWrappers.ra) { refWrappers.ra.position.x = 0; refWrappers.ra.position.z = -30; }
+        if (refWrappers.rb) { refWrappers.rb.position.x = 0; refWrappers.rb.position.z = -30; }
         controls.target.set(0, 90, 0);
+        camera.position.set(0, 120, 320);
       } else {
-        wrappers.a.position.x = -80;
-        wrappers.b.position.x =  80;
+        // Côte à côte : Lara A gauche, CC Femme derrière elle ; Lara B droite, CC Homme derrière lui
+        wrappers.a.position.x    = -70;
+        wrappers.b.position.x    =  70;
+        if (refWrappers.ra) { refWrappers.ra.position.x = -70; refWrappers.ra.position.z = -30; }
+        if (refWrappers.rb) { refWrappers.rb.position.x =  70; refWrappers.rb.position.z = -30; }
         controls.target.set(0, 90, 0);
+        camera.position.set(0, 120, 420);
       }
       controls.update();
     }
@@ -522,8 +665,13 @@
       btnPlay.classList.toggle('active', isPlaying);
       ['a','b'].forEach(k => {
         if (!actions[k]) return;
-        if (isPlaying) actions[k].play();
+        if (isPlaying) { actions[k].paused = false; actions[k].play(); }
         else actions[k].paused = true;
+      });
+      ['ra','rb'].forEach(k => {
+        if (!refActions[k]) return;
+        if (isPlaying) { refActions[k].paused = false; refActions[k].play(); }
+        else refActions[k].paused = true;
       });
     });
 
@@ -531,7 +679,12 @@
       ['a','b'].forEach(k => {
         if (!actions[k]) return;
         actions[k].stop();
-        if (isPlaying) actions[k].play();
+        actions[k].play();
+      });
+      ['ra','rb'].forEach(k => {
+        if (!refActions[k]) return;
+        refActions[k].stop();
+        refActions[k].play();
       });
       currentTime = 0;
     });
@@ -547,6 +700,7 @@
       playbackSpeed = parseFloat(slSpeed.value);
       speedVal.textContent = playbackSpeed.toFixed(2) + '×';
       ['a','b'].forEach(k => { if (actions[k]) actions[k].timeScale = playbackSpeed; });
+      ['ra','rb'].forEach(k => { if (refActions[k]) refActions[k].timeScale = playbackSpeed; });
     });
 
     // Timeline scrubbing
@@ -557,15 +711,20 @@
     slTime.addEventListener('mouseup',   () => { scrubbing = false; });
     slTime.addEventListener('input', () => {
       const t = (parseFloat(slTime.value) / 100) * animDuration;
-      ['a','b'].forEach(k => {
+      [...['a','b']].forEach(k => {
         if (!actions[k]) return;
         actions[k].time = t;
         if (mixers[k]) mixers[k].update(0);
       });
+      ['ra','rb'].forEach(k => {
+        if (!refActions[k]) return;
+        refActions[k].time = t;
+        if (refMixers[k]) refMixers[k].update(0);
+      });
       timeLabel.textContent = t.toFixed(2) + ' s';
     });
 
-    // Visibility + opacity
+    // Lara visibility + opacity
     ['a','b'].forEach(k => {
       document.getElementById(`vis-${k}`).addEventListener('change', e => {
         if (wrappers[k]) wrappers[k].visible = e.target.checked;
@@ -574,19 +733,29 @@
       document.getElementById(`op-${k}`).addEventListener('input', e => {
         const v = parseFloat(e.target.value);
         document.getElementById(`op-${k}-val`).textContent = v.toFixed(2);
-        if (!models[k]) return;
-        models[k].traverse(c => {
-          if (c.isMesh && c.material) {
-            const mats = Array.isArray(c.material) ? c.material : [c.material];
-            mats.forEach(m => { m.transparent = v < 1; m.opacity = v; });
-          }
-        });
+        if (models[k]) setMeshOpacity(models[k], v);
+      });
+    });
+
+    // CC ref visibility + opacity
+    ['ra','rb'].forEach(k => {
+      document.getElementById(`vis-${k}`).addEventListener('change', e => {
+        if (refWrappers[k]) refWrappers[k].visible = e.target.checked;
+        if (refSkels[k]) refSkels[k].visible = e.target.checked && document.getElementById('vis-skel').checked;
+      });
+      document.getElementById(`op-${k}`).addEventListener('input', e => {
+        const v = parseFloat(e.target.value);
+        document.getElementById(`op-${k}-val`).textContent = v.toFixed(2);
+        if (refModels[k]) setMeshOpacity(refModels[k], v);
       });
     });
 
     document.getElementById('vis-skel').addEventListener('change', e => {
       ['a','b'].forEach(k => {
         if (skels[k]) skels[k].visible = e.target.checked && wrappers[k]?.visible;
+      });
+      ['ra','rb'].forEach(k => {
+        if (refSkels[k]) refSkels[k].visible = e.target.checked && refWrappers[k]?.visible;
       });
     });
     document.getElementById('vis-grid').addEventListener('change', e => {
@@ -602,20 +771,23 @@
 
       if (isPlaying) {
         ['a','b'].forEach(k => { if (mixers[k]) mixers[k].update(dt); });
+        ['ra','rb'].forEach(k => { if (refMixers[k]) refMixers[k].update(dt); });
 
-        // sync timeline slider (from action time)
-        if (!scrubbing && actions.a && animDuration > 0) {
-          currentTime = actions.a.time % animDuration;
-          const pct = (currentTime / animDuration) * 100;
-          slTime.value = pct;
-          timeLabel.textContent = currentTime.toFixed(2) + ' s';
+        // sync timeline slider
+        if (!scrubbing && animDuration > 0) {
+          const ref = actions.a || refActions.ra;
+          if (ref) {
+            currentTime = ref.time % animDuration;
+            const pct = (currentTime / animDuration) * 100;
+            slTime.value = pct;
+            timeLabel.textContent = currentTime.toFixed(2) + ' s';
+          }
         }
       }
 
       controls.update();
       renderer.render(scene, camera);
 
-      // FPS
       fpsFrames++;
       const now = performance.now();
       if (now - lastFps >= 1000) {
