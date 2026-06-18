@@ -39,7 +39,7 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       padding: 15px; border-radius: 12px; font-size: 12px; max-height: calc(100vh - 210px);
-      overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.1); color: #ccc; width: 230px;
+       overflow-y: auto; overflow-x: hidden; border: 1px solid rgba(255, 255, 255, 0.1); color: #ccc; width: 230px;
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
       display: flex;
       flex-direction: column;
@@ -48,9 +48,12 @@
     .anim-item { 
       display: block; padding: 8px 12px; margin-bottom: 6px; cursor: pointer; border-radius: 6px; 
       border: 1px solid rgba(255,255,255,0.03); background: rgba(255,255,255,0.01); 
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+      transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  padding-left 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  color 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
     }
-    .anim-item:hover { color: #fff; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); transform: translateX(2px); }
+    .anim-item:hover { color: #fff; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); padding-left: 16px; }
     .anim-item.active { 
       background: linear-gradient(135deg, rgba(255, 68, 68, 0.25) 0%, rgba(255, 68, 68, 0.1) 100%); 
       border-color: rgba(255, 68, 68, 0.5); color: #ff6666; font-weight: bold; 
