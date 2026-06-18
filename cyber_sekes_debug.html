@@ -240,10 +240,10 @@
 
   <!-- TOP BAR -->
   <div id="topbar">
-    <h1>Cyber Sekes <span>Duo Animation</span></h1>
+    <h1>Cyber Sekes <span>Duo Animation</span> — Lara</h1>
     <div class="sep"></div>
-    <div id="pill-a" class="pill loading">Char A …</div>
-    <div id="pill-b" class="pill loading">Char B …</div>
+    <div id="pill-a" class="pill loading">Lara A …</div>
+    <div id="pill-b" class="pill loading">Lara B …</div>
     <div class="sep"></div>
     <div id="controls">
       <span class="ctrl-label">Vitesse</span>
@@ -284,7 +284,7 @@
     <div id="vis-panel">
       <div class="title">Visibilité</div>
       <div class="vis-row">
-        <label>Char A (femme)</label>
+        <label>Lara A (femme)</label>
         <label class="sw"><input type="checkbox" id="vis-a" checked><span class="sw-track"></span></label>
       </div>
       <div class="opacity-mini">
@@ -292,7 +292,7 @@
         <span id="op-a-val">1.0</span>
       </div>
       <div class="vis-row" style="margin-top:10px">
-        <label>Char B (homme)</label>
+        <label>Lara B (homme)</label>
         <label class="sw"><input type="checkbox" id="vis-b" checked><span class="sw-track"></span></label>
       </div>
       <div class="opacity-mini">
@@ -326,10 +326,11 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     // ── CONFIG ──────────────────────────────────────────────────────────────
-    const CHAR_A = 'media/sandbox/cyber_char_a.glb';
-    const CHAR_B = 'media/sandbox/cyber_char_b.glb';
-    const ANIM_NAME = 'Cyber sex';
-    const TARGET_H = 170; // normalize height to 170 units
+    const CHAR_A = 'media/sandbox/lara_cyber_a.glb';
+    const CHAR_B = 'media/sandbox/lara_cyber_b.glb';
+    const ANIM_NAME_A = 'Cyber sex A';
+    const ANIM_NAME_B = 'Cyber sex B';
+    const TARGET_H = 173; // normalize height to ~173 cm (Lara)
 
     // ── SCENE ───────────────────────────────────────────────────────────────
     const container = document.getElementById('viewport');
@@ -456,8 +457,9 @@
       let action = null;
 
       if (gltf.animations.length > 0) {
-        // Find the correct clip
-        let clip = gltf.animations.find(a => a.name === ANIM_NAME) || gltf.animations[0];
+        // Find the correct clip by name (A or B)
+        const animName = key === 'a' ? ANIM_NAME_A : ANIM_NAME_B;
+        let clip = gltf.animations.find(a => a.name === animName) || gltf.animations[0];
         animDuration = Math.max(animDuration, clip.duration);
         action = mixer.clipAction(clip);
         action.setLoop(THREE.LoopRepeat, Infinity);
