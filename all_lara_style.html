@@ -898,9 +898,9 @@
         { id: 'lara_croft_43254_rigged', label: 'Lara 43254 Rigged', file: 'media/all_lara/lara_croft_43254_rigged.glb', offset: -5, color: '#33bb66' },
         { id: 'lara_croft_brown_jacket', label: 'Brown Jacket', file: 'media/all_lara/lara_croft_brown_jacket.glb', offset: -4, color: '#d4a373' },
         { id: 'lara_croft_dress_345', label: 'Dress 345', file: 'media/all_lara/lara_croft_dress_345.glb', offset: -3, color: '#e07a5f' },
-        { id: 'lara_croft_motorcycle_gear', label: 'Motorcycle Gear', file: 'media/all_lara/lara_croft_motorcycle_gear.glb', offset: -1, color: '#8d99ae' },
+        { id: 'lara_croft_motorcycle_gear', label: 'Motorcycle Gear', file: 'media/all_lara/lara_croft_motorcycle_gear.glb', offset: -2, color: '#8d99ae' },
         { id: 'lara_croft_red_dress', label: 'Red Dress', file: 'media/all_lara/lara_croft_red_dress.glb', offset: 0, color: '#ff4d6d', hideHairMeshes: true },
-        { id: 'lara_hair', label: 'Lara Hair', file: 'media/all_lara/lara_hair.glb', offset: 0, color: '#ffd166', noLabel: true, alignToModel: 'lara_croft_red_dress' },
+        { id: 'lara_hair', label: 'Lara Hair', file: 'media/all_lara/lara_hair.glb', offset: 0, color: '#ffd166', noLabel: true, alignToModel: 'lara_croft_red_dress', skipNormalize: true },
         { id: 'lara_croft_spy_gear', label: 'Spy Gear', file: 'media/all_lara/lara_croft_spy_gear.glb', offset: 1, color: '#3d5a80' },
         { id: 'lara_croft_suit', label: 'Suit', file: 'media/all_lara/lara_croft_suit.glb', offset: 2, color: '#edf2f4' },
         { id: 'lara_croft_swim_gear', label: 'Swim Gear', file: 'media/all_lara/lara_croft_swim_gear.glb', offset: 3, color: '#00b4d8' },
@@ -929,6 +929,33 @@
         best.getWorldPosition(pos);
         return pos.y;
       }
+
+      // Scale Lara Hair to match target's proportions, then align head bones in Y
+      function applyHairToTarget(hairModel, targetModel) {
+        // 1. Copy target scale so hair skeleton has the same unit size
+        const ts = targetModel.scale.x;
+        hairModel.scale.setScalar(ts);
+        hairModel.updateMatrixWorld(true);
+
+        // 2. Ground the hair (lift so its lowest vertex is at Y=0)
+        const box = new THREE.Box3().setFromObject(hairModel);
+        hairModel.position.y = -box.min.y;
+        hairModel.updateMatrixWorld(true);
+
+        // 3. Match head bone world-Y
+        const targetHeadY = getHeadBoneWorldY(targetModel);
+        const hairHeadY   = getHeadBoneWorldY(hairModel);
+        if (targetHeadY !== null && hairHeadY !== null) {
+          hairModel.position.y += (targetHeadY - hairHeadY);
+          hairModel.updateMatrixWorld(true);
+          console.log(`[Lara Hair] scale=${ts.toFixed(3)}, head delta Y=${(targetHeadY - hairHeadY).toFixed(1)}`);
+        }
+
+        // 4. Same X as target (Red Dress)
+        hairModel.position.x = targetModel.position.x;
+        hairModel.updateMatrixWorld(true);
+      }
+
       function normalizeHeight(model, targetHeight = 175) {
         model.scale.set(1, 1, 1);
         model.position.set(0, 0, 0);
@@ -993,7 +1020,7 @@
             }
           });
 
-          normalizeHeight(model, 175);
+          if (!v.skipNormalize) normalizeHeight(model, 175);
 
           const mixer = new THREE.AnimationMixer(model);
           model.userData.mixer = mixer;
@@ -1004,27 +1031,14 @@
           model.position.x = x;
           scene.add(model);
 
-          // Align Lara Hair onto Red Dress head bone after both are loaded
+          // Align + scale Lara Hair to match Red Dress proportions
           if (v.alignToModel) {
             const target = modelsMap[v.alignToModel];
-            if (target) {
-              const targetY = getHeadBoneWorldY(target);
-              const hairY   = getHeadBoneWorldY(model);
-              if (targetY !== null && hairY !== null) {
-                model.position.y += (targetY - hairY);
-                console.log(`[Lara Hair] head Y aligned: delta=${(targetY - hairY).toFixed(1)}`);
-              }
-            }
+            if (target) applyHairToTarget(model, target);
           }
-          // If Red Dress loaded before hair, re-trigger alignment on hair side
+          // If Red Dress loads FIRST, re-trigger alignment on already-loaded hair
           if (v.id === 'lara_croft_red_dress' && modelsMap['lara_hair']) {
-            const hair = modelsMap['lara_hair'];
-            const targetY = getHeadBoneWorldY(model);
-            const hairY   = getHeadBoneWorldY(hair);
-            if (targetY !== null && hairY !== null) {
-              hair.position.y += (targetY - hairY);
-              console.log(`[Lara Hair] head Y re-aligned: delta=${(targetY - hairY).toFixed(1)}`);
-            }
+            applyHairToTarget(modelsMap['lara_hair'], model);
           }
 
           if (!v.noLabel) {
