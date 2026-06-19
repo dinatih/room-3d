@@ -684,7 +684,12 @@
                 if (m) {
                   m.depthWrite = true;
                   m.depthTest = true;
-                  if (m.transparent && m.opacity >= 0.99) m.transparent = false;
+                  if (m.name && m.name.toLowerCase().includes('lashes')) {
+                    m.transparent = true;
+                    m.alphaTest = 0.5;
+                  } else {
+                    m.transparent = false;
+                  }
                 }
               });
             }
@@ -769,6 +774,24 @@
               .multiply(q)
               .multiply(B_src_inv)
               .multiply(B_tgt);
+
+            // Apply offsets for hands/forearms
+            const boneNormalized = normalize(targetBoneName);
+            if (targetGender === 'female') {
+              if (boneNormalized.includes('wrist')) {
+                // Rotate Lara's hands by 90 degrees around local Y axis (longitudinal)
+                const isLeft = boneNormalized.includes('left');
+                const angle = isLeft ? Math.PI / 2 : -Math.PI / 2;
+                const offset = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+                resultQ.multiply(offset);
+              }
+            } else if (targetGender === 'male') {
+              if (boneNormalized.includes('hand') || boneNormalized.includes('forearm')) {
+                // Rotate X-Bot's hands and forearms by 180 degrees around local X axis (longitudinal)
+                const offset = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
+                resultQ.multiply(offset);
+              }
+            }
 
             if (isNaN(resultQ.x) || isNaN(resultQ.y) || isNaN(resultQ.z) || isNaN(resultQ.w)) {
               console.error(`NaN detected in rotation for track ${clone.name}`);
@@ -1079,12 +1102,12 @@
       if (!wrappers.targetF || !wrappers.targetM) return;
 
       if (layout === 'side') {
-        // Female models at x = -70, Male models at x = 70
-        wrappers.targetF.position.set(-75, 0, 0);
-        wrappers.refF.position.set(-75, 0, -35); // offset reference slightly back to overlay visually
+        // Female models at x = 75 (right), Male models at x = -75 (left)
+        wrappers.targetF.position.set(75, 0, 0);
+        wrappers.refF.position.set(75, 0, -35); // offset reference slightly back to overlay visually
 
-        wrappers.targetM.position.set(75, 0, 0);
-        wrappers.refM.position.set(75, 0, -35);
+        wrappers.targetM.position.set(-75, 0, 0);
+        wrappers.refM.position.set(-75, 0, -35);
 
         orbit.target.set(0, 70, 0);
         camera.position.set(0, 110, 380);
