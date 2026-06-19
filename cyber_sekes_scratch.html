@@ -442,6 +442,10 @@
           <label class="sw"><input type="checkbox" id="vis-axes"><span class="sw-slider"></span></label>
         </div>
         <div class="control-row" style="margin-top:6px">
+          <label>Vue des meshes (Fil de fer)</label>
+          <label class="sw"><input type="checkbox" id="vis-wireframe"><span class="sw-slider"></span></label>
+        </div>
+        <div class="control-row" style="margin-top:6px">
           <label>Grille au sol</label>
           <label class="sw"><input type="checkbox" id="vis-grid" checked><span class="sw-slider"></span></label>
         </div>
@@ -697,6 +701,19 @@
       });
     }
 
+    function toggleWireframe(enabled) {
+      scene.traverse(c => {
+        if (c.isMesh) {
+          const mats = Array.isArray(c.material) ? c.material : [c.material];
+          mats.forEach(m => {
+            if (m) {
+              m.wireframe = enabled;
+            }
+          });
+        }
+      });
+    }
+
     // ── LOADING MODELS ──────────────────────────────────────────────────────
     const loader = new GLTFLoader();
 
@@ -887,6 +904,13 @@
         alignToFloor(refs.female);
         setOpacity(refs.female, 0.35);
 
+        // Supprimer l'image de background (les meshes statiques 5.001 et 6.001)
+        refs.female.traverse(c => {
+          if (c.isMesh && (c.name.includes('5') || c.name.includes('6'))) {
+            c.visible = false;
+          }
+        });
+
         updateProgress('Chargement de CC Homme...', 60);
         const cchData = await loadModel(PATH_CC_HOMME, 'CC Homme');
         refs.male = cchData.model;
@@ -940,6 +964,30 @@
           const size = box.getSize(new THREE.Vector3());
           console.log(`${item.name} scale: ${item.model.scale.x.toFixed(4)}, world height: ${size.y.toFixed(2)}, min.y: ${box.min.y.toFixed(2)}, max.y: ${box.max.y.toFixed(2)}`);
         });
+
+        // Dynamically scale X-Bot to match CC Homme height
+        const getBoneWorldY = (model, boneNameSearch) => {
+          if (!model) return null;
+          let foundY = null;
+          model.traverse(c => {
+            if (c.isBone && c.name.toLowerCase().includes(boneNameSearch.toLowerCase()) && !c.name.includes('scaleCompensation')) {
+              const pos = new THREE.Vector3();
+              c.getWorldPosition(pos);
+              foundY = pos.y;
+            }
+          });
+          return foundY;
+        };
+
+        const ccHommeHeadY = getBoneWorldY(refs.male, 'head');
+        const xbotHeadY = getBoneWorldY(targets.male, 'head');
+        if (ccHommeHeadY && xbotHeadY) {
+          const ratio = ccHommeHeadY / xbotHeadY;
+          targets.male.scale.multiplyScalar(ratio);
+          targets.male.updateMatrixWorld(true);
+          alignToFloor(targets.male);
+          console.log(`[X-Bot Scale Adjust] scaled by ratio ${ratio.toFixed(4)} to match CC Homme height. New scale: ${targets.male.scale.x.toFixed(2)}`);
+        }
 
         // 3. Load animation assets & retarget
         updateProgress('Chargement animation Femme...', 75);
@@ -1271,6 +1319,11 @@
       axesHelpers.forEach(h => {
         h.visible = visAxes.checked;
       });
+    });
+
+    const visWireframe = document.getElementById('vis-wireframe');
+    visWireframe.addEventListener('change', () => {
+      toggleWireframe(visWireframe.checked);
     });
 
     document.getElementById('vis-grid').addEventListener('change', e => {
