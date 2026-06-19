@@ -353,10 +353,10 @@
         <span id="speed-display" style="font-family:var(--mono);font-size:11px;color:var(--accent-male)">1.00×</span>
       </div>
       <div class="sep"></div>
-      <button id="play-btn" class="active">⏸ Pause</button>
+      <button id="play-btn">▶ Play</button>
       <button id="reset-btn">Reset</button>
       <button id="layout-btn">⇆ Layout</button>
-      <button id="tpose-btn">🧍 Pose-T</button>
+      <button id="tpose-btn" class="active">🧍 Pose-T</button>
     </div>
   </header>
 
@@ -481,19 +481,59 @@
       <!-- Mapping des Os -->
       <div class="panel-section" style="border-top: 1px solid var(--border); padding-top: 12px">
         <div class="panel-title" style="color:var(--accent-male)">Mapping des Os</div>
-        <button id="toggle-mapping-btn" style="width:100%; text-align:left; display:flex; justify-content:space-between; align-items:center;">
-          <span>Afficher les Mappings</span>
-          <span>▼</span>
+        <button id="open-mapping-btn" style="width:100%; text-align:left; display:flex; justify-content:space-between; align-items:center; background:rgba(103,232,249,0.05); border:1px solid rgba(103,232,249,0.2); color:var(--accent-male); padding:8px 12px; border-radius:8px; cursor:pointer;">
+          <span>Afficher les Mappings (Grand)</span>
+          <span>↗</span>
         </button>
-        <div id="mappings-panel" style="display:none; max-height:160px; overflow-y:auto; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:8px; padding:8px; margin-top:8px;">
-          <div style="font-weight:700; color:var(--accent-female); margin-bottom:4px; font-size:10px;">CC Femme → Lara :</div>
-          <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:9px; color:var(--muted); margin-bottom:12px;">
-            <tbody id="mapping-lara-tbody"></tbody>
-          </table>
-          <div style="font-weight:700; color:var(--accent-male); margin-bottom:4px; font-size:10px;">CC Homme → X-Bot :</div>
-          <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:9px; color:var(--muted)">
-            <tbody id="mapping-xbot-tbody"></tbody>
-          </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Bone Mappings -->
+  <div id="mappings-modal" style="display:none; position:fixed; inset:0; background:rgba(7,7,14,0.85); backdrop-filter:blur(16px); z-index:1000; align-items:center; justify-content:center; padding:40px;">
+    <div style="background:rgba(20,20,35,0.95); border:1px solid rgba(255,255,255,0.1); border-radius:16px; width:100%; max-width:960px; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 24px 48px rgba(0,0,0,0.8); overflow:hidden;">
+      <!-- Modal Header -->
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 24px; border-bottom:1px solid var(--border);">
+        <h2 style="font-size:18px; font-weight:700; color:#fff;">Mappings d'Os entre Modèles</h2>
+        <button id="close-mapping-btn" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; font-size:12px; padding:6px 12px; cursor:pointer; color:#fff; transition:all 0.2s;">Fermer ✕</button>
+      </div>
+      <!-- Modal Body (Split view) -->
+      <div style="flex:1; overflow-y:auto; padding:24px; display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+        <!-- CC Femme -> Lara -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="font-size:13px; font-weight:700; color:var(--accent-female); border-bottom:2px solid var(--accent-female); padding-bottom:6px; display:flex; justify-content:space-between;">
+            <span>CC Femme</span>
+            <span>➔ Lara A (Femme)</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:11px; text-align:left;">
+              <thead>
+                <tr>
+                  <th style="padding:8px; border-bottom:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:600;">Os Source (CC)</th>
+                  <th style="padding:8px; border-bottom:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:600;">Os Cible (Lara)</th>
+                </tr>
+              </thead>
+              <tbody id="mapping-lara-tbody-modal"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- CC Homme -> X-Bot -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="font-size:13px; font-weight:700; color:var(--accent-male); border-bottom:2px solid var(--accent-male); padding-bottom:6px; display:flex; justify-content:space-between;">
+            <span>CC Homme</span>
+            <span>➔ X-Bot (Homme)</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:11px; text-align:left;">
+              <thead>
+                <tr>
+                  <th style="padding:8px; border-bottom:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:600;">Os Source (CC)</th>
+                  <th style="padding:8px; border-bottom:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:600;">Os Cible (X-Bot)</th>
+                </tr>
+              </thead>
+              <tbody id="mapping-xbot-tbody-modal"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -642,8 +682,8 @@
     scene.add(gridHelper);
 
     // ── APPLICATION STATE ───────────────────────────────────────────────────
-    let isPlaying = true;
-    let isTPose = false;
+    let isPlaying = false;
+    let isTPose = true;
     let timeScale = 1.0;
     let layout = 'side'; // 'side' | 'overlay'
     let duration = 0;
@@ -1111,6 +1151,12 @@
           actions.refM = actRM;
         }
 
+        if (isTPose) {
+          Object.keys(actions).forEach(k => {
+            if (actions[k]) actions[k].paused = true;
+          });
+        }
+
         // Clean up loaded helper animation structures
         ccfAnimData.model.traverse(c => { if (c.dispose) c.dispose(); });
         cchAnimData.model.traverse(c => { if (c.dispose) c.dispose(); });
@@ -1166,14 +1212,20 @@
           const targetWorldQ = new THREE.Quaternion();
           targetBone.getWorldQuaternion(targetWorldQ);
 
-          const B_src = c.restWorldQ || new THREE.Quaternion();
-          const B_tgt = targetBone.restWorldQ || new THREE.Quaternion();
+          let worldQ_src;
+          const isLeg = baseName.includes('Thigh') || baseName.includes('Calf') || baseName.includes('Foot') || baseName.includes('Toe');
 
-          // Mathematically exact retargeting alignment:
-          // worldQ_src = targetWorldQ * B_tgt_inv * B_src
-          const worldQ_src = targetWorldQ.clone()
-            .multiply(B_tgt.clone().invert())
-            .multiply(B_src);
+          if (isLeg) {
+            const B_src = c.restWorldQ || new THREE.Quaternion();
+            const B_tgt = targetBone.restWorldQ || new THREE.Quaternion();
+            // Retargeting formula for legs to handle axis inversions natively
+            worldQ_src = targetWorldQ.clone()
+              .multiply(B_tgt.clone().invert())
+              .multiply(B_src);
+          } else {
+            // Direct copy for arms/torso/head to force T-pose alignment
+            worldQ_src = targetWorldQ;
+          }
 
           if (c.parent) {
             const parentWorldQ = new THREE.Quaternion();
@@ -1183,6 +1235,15 @@
             c.quaternion.copy(worldQ_src);
           }
 
+          // Apply correction rotations to match coordinate systems and avoid twists
+          const gender = getCharacterGenderFromBoneName(c.name);
+          if (gender === 'female') {
+            if (baseName === 'CC_Base_Waist') {
+              const twist = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
+              c.quaternion.multiply(twist);
+            }
+          }
+
           c.updateMatrix();
           c.updateMatrixWorld(true);
         }
@@ -1190,7 +1251,7 @@
     }
 
     function applyTPose() {
-      [targets.female, targets.male].forEach(model => {
+      [targets.female, targets.male, refs.female, refs.male].forEach(model => {
         if (!model) return;
         model.traverse(c => {
           if (c.isBone) {
@@ -1572,27 +1633,47 @@
 
     charSelect.addEventListener('change', rebuildJointsList);
 
-    // Populate mappings tables
-    const laraTbody = document.getElementById('mapping-lara-tbody');
+    // Populate mappings tables in modal
+    const laraTbodyModal = document.getElementById('mapping-lara-tbody-modal');
     Object.keys(CC_TO_LARA).forEach(cc => {
       const row = document.createElement('tr');
-      row.innerHTML = `<td style="color:#fff; padding:2px 4px; border-bottom:1px solid rgba(255,255,255,0.03);">${cc}</td><td style="color:var(--accent-female); padding:2px 4px; border-bottom:1px solid rgba(255,255,255,0.03);">${CC_TO_LARA[cc]}</td>`;
-      laraTbody.appendChild(row);
+      row.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+      row.innerHTML = `
+        <td style="color:#fff; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.03);">${cc}</td>
+        <td style="color:var(--accent-female); padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.03);">${CC_TO_LARA[cc]}</td>
+      `;
+      laraTbodyModal.appendChild(row);
     });
 
-    const xbotTbody = document.getElementById('mapping-xbot-tbody');
+    const xbotTbodyModal = document.getElementById('mapping-xbot-tbody-modal');
     Object.keys(CC_TO_XBOT).forEach(cc => {
       const row = document.createElement('tr');
-      row.innerHTML = `<td style="color:#fff; padding:2px 4px; border-bottom:1px solid rgba(255,255,255,0.03);">${cc}</td><td style="color:var(--accent-male); padding:2px 4px; border-bottom:1px solid rgba(255,255,255,0.03);">${CC_TO_XBOT[cc]}</td>`;
-      xbotTbody.appendChild(row);
+      row.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+      row.innerHTML = `
+        <td style="color:#fff; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.03);">${cc}</td>
+        <td style="color:var(--accent-male); padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.03);">${CC_TO_XBOT[cc]}</td>
+      `;
+      xbotTbodyModal.appendChild(row);
     });
 
-    const toggleMappingBtn = document.getElementById('toggle-mapping-btn');
-    const mappingsPanel = document.getElementById('mappings-panel');
-    toggleMappingBtn.addEventListener('click', () => {
-      const isHidden = mappingsPanel.style.display === 'none';
-      mappingsPanel.style.display = isHidden ? 'block' : 'none';
-      toggleMappingBtn.querySelector('span:last-child').textContent = isHidden ? '▲' : '▼';
+    // Modal interaction
+    const mappingsModal = document.getElementById('mappings-modal');
+    const openMappingBtn = document.getElementById('open-mapping-btn');
+    const closeMappingBtn = document.getElementById('close-mapping-btn');
+
+    openMappingBtn.addEventListener('click', () => {
+      mappingsModal.style.display = 'flex';
+    });
+
+    closeMappingBtn.addEventListener('click', () => {
+      mappingsModal.style.display = 'none';
+    });
+
+    // Close when clicking outside content
+    mappingsModal.addEventListener('click', (e) => {
+      if (e.target === mappingsModal) {
+        mappingsModal.style.display = 'none';
+      }
     });
 
     // Window resize
