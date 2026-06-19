@@ -450,6 +450,20 @@
           <label class="sw"><input type="checkbox" id="vis-grid" checked><span class="sw-slider"></span></label>
         </div>
       </div>
+
+      <!-- Liste des Joints -->
+      <div class="panel-section" style="border-top: 1px solid var(--border); padding-top: 12px">
+        <div class="panel-title">Joints de Débogage</div>
+        <select id="joint-char-select" style="font-family:var(--font);font-size:12px;padding:6px;background:rgba(255,255,255,0.05);color:#fff;border:1px solid var(--border);border-radius:8px;outline:none;cursor:pointer;width:100%;">
+          <option value="none">-- Choisir un perso --</option>
+          <option value="female">Lara A (Femme)</option>
+          <option value="male">X-Bot (Homme)</option>
+          <option value="ref-female">CC Femme (Ref)</option>
+          <option value="ref-male">CC Homme (Ref)</option>
+        </select>
+        <div id="joints-list-container" style="max-height: 180px; overflow-y: auto; font-family:var(--mono); font-size:10px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:8px; padding:8px; display:none; margin-top:8px;">
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1110,12 +1124,18 @@
 
           const gender = getCharacterGenderFromBoneName(c.name);
 
-          // Apply 180-degree twist correction for leg bones (only CC Homme legs need this)
-          if (baseName.includes('Thigh') || baseName.includes('Calf') || baseName.includes('Foot') || baseName.includes('ToeBase')) {
-            if (gender === 'male') {
+          // Apply 180-degree twist correction for hip bone (only CC Femme hip needs this to align with thighs)
+          if (baseName === 'CC_Base_Hip') {
+            if (gender === 'female') {
               const twistCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
               c.quaternion.multiply(twistCorrection);
             }
+          }
+
+          // Apply 180-degree twist correction for leg bones (both genders need this to align with parent pelvis/hip coordinate space)
+          if (baseName.includes('Thigh') || baseName.includes('Calf') || baseName.includes('Foot') || baseName.includes('ToeBase')) {
+            const twistCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
+            c.quaternion.multiply(twistCorrection);
           }
 
           // Apply 90-degree twist correction for arm bones (mirrored: Left +90, Right -90)
@@ -1355,6 +1375,7 @@
 
       orbit.update();
       renderer.render(scene, camera);
+      updateJointsValues();
 
       frames++;
       const time = performance.now();
@@ -1364,6 +1385,96 @@
         lastTime = time;
       }
     }
+
+    // ── JOINTS LIST DEBUGGER ────────────────────────────────────────────────
+    const charSelect = document.getElementById('joint-char-select');
+    const jointsContainer = document.getElementById('joints-list-container');
+    const jointEls = [];
+
+    function rebuildJointsList() {
+      const char = charSelect.value;
+      jointsContainer.innerHTML = '';
+      jointEls.length = 0;
+
+      if (char === 'none') {
+        jointsContainer.style.display = 'none';
+        return;
+      }
+
+      let model = null;
+      if (char === 'female') model = targets.female;
+      else if (char === 'male') model = targets.male;
+      else if (char === 'ref-female') model = refs.female;
+      else if (char === 'ref-male') model = refs.male;
+
+      if (!model) {
+        jointsContainer.style.display = 'block';
+        jointsContainer.innerHTML = '<span style="color:var(--red)">Modèle non chargé</span>';
+        return;
+      }
+
+      jointsContainer.style.display = 'block';
+
+      const header = document.createElement('div');
+      header.style.cssText = 'font-weight:700; color:var(--accent-female); margin-bottom:6px;';
+      header.textContent = `Bones (${model.name}):`;
+      jointsContainer.appendChild(header);
+
+      const listContainer = document.createElement('div');
+      listContainer.style.cssText = 'display:flex; flex-direction:column; gap:4px;';
+      jointsContainer.appendChild(listContainer);
+
+      model.traverse(c => {
+        if (c.isBone) {
+          const row = document.createElement('div');
+          row.style.cssText = 'padding:6px; background:rgba(255,255,255,0.02); border-radius:6px; cursor:pointer; font-size:10px; margin-bottom:2px; border:1px solid rgba(255,255,255,0.03);';
+          row.setAttribute('title', 'Cliquez pour afficher les détails complets');
+          
+          const nameSpan = document.createElement('div');
+          nameSpan.style.cssText = 'color:#e5e7eb; font-weight:600;';
+          nameSpan.textContent = c.name;
+          row.appendChild(nameSpan);
+
+          const rotSpan = document.createElement('div');
+          rotSpan.style.cssText = 'color:var(--muted); font-size:9px; font-family:var(--mono); margin-top:2px;';
+          row.appendChild(rotSpan);
+
+          row.addEventListener('click', () => {
+            const worldPos = new THREE.Vector3();
+            c.getWorldPosition(worldPos);
+            const worldRot = new THREE.Quaternion();
+            c.getWorldQuaternion(worldRot);
+            console.log(`[BONE DEBUG] Name: "${c.name}"`, {
+              bone: c,
+              localPosition: c.position.clone(),
+              localQuaternion: c.quaternion.clone(),
+              worldPosition: worldPos,
+              worldQuaternion: worldRot
+            });
+            alert(`DÉTAILS DU JOINT : "${c.name}"\n\n` +
+                  `Local Position: [${c.position.x.toFixed(3)}, ${c.position.y.toFixed(3)}, ${c.position.z.toFixed(3)}]\n` +
+                  `Local Quaternion: [${c.quaternion.x.toFixed(3)}, ${c.quaternion.y.toFixed(3)}, ${c.quaternion.z.toFixed(3)}, ${c.quaternion.w.toFixed(3)}]\n` +
+                  `World Position: [${worldPos.x.toFixed(3)}, ${worldPos.y.toFixed(3)}, ${worldPos.z.toFixed(3)}]\n` +
+                  `World Quaternion: [${worldRot.x.toFixed(3)}, ${worldRot.y.toFixed(3)}, ${worldRot.z.toFixed(3)}, ${worldRot.w.toFixed(3)}]`);
+          });
+
+          listContainer.appendChild(row);
+          jointEls.push({ bone: c, rotSpan });
+        }
+      });
+
+      updateJointsValues();
+    }
+
+    function updateJointsValues() {
+      if (charSelect.value === 'none') return;
+      jointEls.forEach(item => {
+        const q = item.bone.quaternion;
+        item.rotSpan.textContent = `q: [${q.x.toFixed(3)}, ${q.y.toFixed(3)}, ${q.z.toFixed(3)}, ${q.w.toFixed(3)}]`;
+      });
+    }
+
+    charSelect.addEventListener('change', rebuildJointsList);
 
     // Window resize
     window.addEventListener('resize', () => {
