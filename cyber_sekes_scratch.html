@@ -438,6 +438,10 @@
           <label class="sw"><input type="checkbox" id="vis-skel"><span class="sw-slider"></span></label>
         </div>
         <div class="control-row" style="margin-top:6px">
+          <label>Axes des joints</label>
+          <label class="sw"><input type="checkbox" id="vis-axes"><span class="sw-slider"></span></label>
+        </div>
+        <div class="control-row" style="margin-top:6px">
           <label>Grille au sol</label>
           <label class="sw"><input type="checkbox" id="vis-grid" checked><span class="sw-slider"></span></label>
         </div>
@@ -604,6 +608,7 @@
     const mixers = [];
     const actions = { targetF: null, targetM: null, refF: null, refM: null };
     const skels = [];
+    const axesHelpers = [];
 
     // Helper functions
     function updateProgress(msg, percent) {
@@ -663,6 +668,31 @@
               m.depthWrite = opacity >= 0.99;
             }
           });
+        }
+      });
+    }
+
+    function attachAxesHelpers(model, size = 10) {
+      if (!model) return;
+      model.traverse(c => {
+        if (c.isBone) {
+          let localSize = size;
+          let p = c;
+          let scaleFactor = 1;
+          while (p) {
+            if (p.scale) scaleFactor *= p.scale.x;
+            p = p.parent;
+          }
+          if (scaleFactor > 0) {
+            localSize = size / scaleFactor;
+          }
+          const axesHelper = new THREE.AxesHelper(localSize);
+          axesHelper.visible = false;
+          axesHelper.material.depthTest = false;
+          axesHelper.material.depthWrite = false;
+          axesHelper.renderOrder = 999;
+          c.add(axesHelper);
+          axesHelpers.push(axesHelper);
         }
       });
     }
@@ -891,6 +921,11 @@
         cacheRestPose(refs.female);
         cacheRestPose(refs.male);
 
+        attachAxesHelpers(targets.female, 10);
+        attachAxesHelpers(targets.male, 10);
+        attachAxesHelpers(refs.female, 10);
+        attachAxesHelpers(refs.male, 10);
+
         // Put everyone in T-pose initially to measure correct heights and capture T-pose joint quaternions for retargeting
         applyTPose();
 
@@ -1025,15 +1060,21 @@
             c.quaternion.copy(targetWorldQ);
           }
 
-          // Apply 180-degree twist correction for leg bones to match reference rest-pose twist alignment
+          const gender = getCharacterGenderFromBoneName(c.name);
+
+          // Apply 180-degree twist correction for leg bones (only CC Homme legs need this)
           if (baseName.includes('Thigh') || baseName.includes('Calf') || baseName.includes('Foot') || baseName.includes('ToeBase')) {
-            const twistCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
-            c.quaternion.multiply(twistCorrection);
+            if (gender === 'male') {
+              const twistCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
+              c.quaternion.multiply(twistCorrection);
+            }
           }
 
-          // Apply 90-degree twist correction for arm bones
+          // Apply 90-degree twist correction for arm bones (mirrored: Left +90, Right -90)
           if (baseName.includes('Upperarm') || baseName.includes('Forearm') || baseName.includes('Hand')) {
-            const twistCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+            const isLeft = baseName.includes('L_') || baseName.toLowerCase().includes('left');
+            const angle = isLeft ? Math.PI / 2 : -Math.PI / 2;
+            const twistCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
             c.quaternion.multiply(twistCorrection);
           }
 
@@ -1222,6 +1263,13 @@
     visSkel.addEventListener('change', () => {
       skels.forEach(s => {
         s.visible = visSkel.checked;
+      });
+    });
+
+    const visAxes = document.getElementById('vis-axes');
+    visAxes.addEventListener('change', () => {
+      axesHelpers.forEach(h => {
+        h.visible = visAxes.checked;
       });
     });
 
