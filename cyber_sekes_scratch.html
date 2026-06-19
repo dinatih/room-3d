@@ -1,0 +1,1255 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <title>Cyber Sekes — Dynamic Retargeting Sandbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070e;
+      --panel: rgba(13,13,25,0.85);
+      --border: rgba(255,255,255,0.07);
+      --accent-female: #c084fc;
+      --accent-male: #67e8f9;
+      --accent-ref: #f97316;
+      --red: #f87171;
+      --green: #34d399;
+      --muted: #8e9bb0;
+      --font: 'Outfit', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: #f3f4f6;
+      font-family: var(--font);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 24px;
+      background: var(--panel);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      z-index: 20;
+      flex-shrink: 0;
+    }
+    header h1 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    header h1 span { color: var(--accent-female); }
+    header h1 b { color: var(--accent-male); font-weight: 700; }
+
+    .sep { width: 1px; height: 24px; background: var(--border); }
+
+    /* Control Bar */
+    #controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-left: auto;
+    }
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ctrl-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100px; height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.08);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--accent-female);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    button {
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: #e5e7eb;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    button:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+    }
+    button.active {
+      background: var(--accent-female);
+      border-color: var(--accent-female);
+      color: #07070e;
+    }
+
+    /* ── TIMELINE ── */
+    #timeline-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 24px;
+      background: rgba(7, 7, 14, 0.4);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    #timeline-container input[type="range"] {
+      flex: 1;
+    }
+    #time-display {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent-male);
+      min-width: 60px;
+      text-align: right;
+    }
+
+    /* ── MAIN VIEWPORT ── */
+    #viewport-container {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+    }
+    #canvas3d {
+      width: 100%; height: 100%;
+      display: block;
+    }
+
+    /* Loading overlay */
+    #loader {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      z-index: 100;
+      transition: opacity 0.5s ease, visibility 0.5s;
+    }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(192,132,252,0.08);
+      border-top-color: var(--accent-female);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loader-status {
+      font-size: 13px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+    #progress-bar-wrap {
+      width: 280px; height: 4px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-female), var(--accent-male));
+      transition: width 0.2s;
+    }
+
+    /* ── LEFT HUD ── */
+    #hud {
+      position: absolute;
+      top: 20px; left: 20px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      pointer-events: none;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      line-height: 1.5;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+    #hud strong { color: #ffffff; }
+    .hud-title {
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-female);
+      margin-bottom: 4px;
+    }
+    .hud-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+    .dot-female { background: var(--accent-female); }
+    .dot-male { background: var(--accent-male); }
+    .dot-ref { background: var(--accent-ref); }
+
+    /* ── RIGHT PANEL ── */
+    #sidebar {
+      position: absolute;
+      top: 20px; right: 20px;
+      width: 240px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .panel-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .control-row label {
+      font-size: 12px;
+      color: #e5e7eb;
+    }
+    .sw {
+      position: relative;
+      display: inline-block;
+      width: 34px; height: 18px;
+    }
+    .sw input { opacity: 0; width: 0; height: 0; }
+    .sw-slider {
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .sw-slider::before {
+      content: "";
+      position: absolute;
+      width: 10px; height: 10px;
+      left: 3px; bottom: 3px;
+      border-radius: 50%;
+      background: #9ca3af;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .sw input:checked + .sw-slider {
+      background: rgba(192,132,252,0.15);
+      border-color: var(--accent-female);
+    }
+    .sw input:checked + .sw-slider::before {
+      transform: translateX(16px);
+      background: var(--accent-female);
+    }
+    .sw.blue input:checked + .sw-slider {
+      background: rgba(103,232,249,0.15);
+      border-color: var(--accent-male);
+    }
+    .sw.blue input:checked + .sw-slider::before {
+      background: var(--accent-male);
+    }
+    .sw.orange input:checked + .sw-slider {
+      background: rgba(249,115,22,0.15);
+      border-color: var(--accent-ref);
+    }
+    .sw.orange input:checked + .sw-slider::before {
+      background: var(--accent-ref);
+    }
+
+    .opacity-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: -4px;
+    }
+    .opacity-wrap input {
+      flex: 1;
+      height: 2px;
+    }
+    .opacity-val {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--accent-male);
+      width: 24px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <h1>Cyber Sekes — <span>Lara</span> & <b>X-Bot</b></h1>
+    <div class="sep"></div>
+    <div class="pill" style="font-family:var(--mono);font-size:11px;color:var(--muted)">Assets séparés GLTF</div>
+    <div id="controls">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Vitesse</span>
+        <input type="range" id="speed-slider" min="0" max="2" step="0.05" value="1">
+        <span id="speed-display" style="font-family:var(--mono);font-size:11px;color:var(--accent-male)">1.00×</span>
+      </div>
+      <div class="sep"></div>
+      <button id="play-btn" class="active">⏸ Pause</button>
+      <button id="reset-btn">Reset</button>
+      <button id="layout-btn">⇆ Layout</button>
+      <button id="tpose-btn">🧍 Pose-T</button>
+    </div>
+  </header>
+
+  <!-- TIMELINE -->
+  <div id="timeline-container">
+    <span class="ctrl-label">Temps</span>
+    <input type="range" id="time-slider" min="0" max="100" value="0" step="0.1">
+    <span id="time-display">0.00 / 0.00 s</span>
+  </div>
+
+  <!-- MAIN VIEWPORT CONTAINER -->
+  <div id="viewport-container">
+    <!-- WebGL Canvas -->
+    <canvas id="canvas3d"></canvas>
+
+    <!-- Headless/Loading status overlay -->
+    <div id="loader">
+      <div class="spinner"></div>
+      <div id="loader-status">Initialisation...</div>
+      <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div class="hud-title">Sandbox Debug</div>
+      <div>FPS: <strong id="fps-val">--</strong></div>
+      <div>Animation: <strong>Cyber sex duo</strong></div>
+      <div class="hud-indicator"><span class="dot dot-female"></span>Lara A (Cible Femme)</div>
+      <div class="hud-indicator"><span class="dot dot-male"></span>X-Bot (Cible Homme)</div>
+      <div class="hud-indicator"><span class="dot dot-ref"></span>CC Ref (Originals)</div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <!-- Cibles -->
+      <div class="panel-section">
+        <div class="panel-title">Modèles Cibles</div>
+        <!-- Lara -->
+        <div class="control-row">
+          <label>Lara A (Femme)</label>
+          <label class="sw"><input type="checkbox" id="vis-target-f" checked><span class="sw-slider"></span></label>
+        </div>
+        <div class="opacity-wrap">
+          <input type="range" id="op-target-f" min="0" max="1" step="0.05" value="1">
+          <span class="opacity-val" id="op-val-target-f">1.0</span>
+        </div>
+        <!-- X-Bot -->
+        <div class="control-row" style="margin-top:6px">
+          <label>X-Bot (Homme)</label>
+          <label class="sw blue"><input type="checkbox" id="vis-target-m" checked><span class="sw-slider"></span></label>
+        </div>
+        <div class="opacity-wrap">
+          <input type="range" id="op-target-m" min="0" max="1" step="0.05" value="1">
+          <span class="opacity-val" id="op-val-target-m">1.0</span>
+        </div>
+      </div>
+
+      <!-- Références -->
+      <div class="panel-section" style="border-top: 1px solid var(--border); padding-top: 12px">
+        <div class="panel-title" style="color:var(--accent-ref)">Références CC</div>
+        <!-- Femme CC -->
+        <div class="control-row">
+          <label>CC Femme (Mesh)</label>
+          <label class="sw orange"><input type="checkbox" id="vis-ref-f" checked><span class="sw-slider"></span></label>
+        </div>
+        <div class="opacity-wrap">
+          <input type="range" id="op-ref-f" min="0" max="1" step="0.05" value="0.35">
+          <span class="opacity-val" id="op-val-ref-f">0.35</span>
+        </div>
+        <!-- Homme CC -->
+        <div class="control-row" style="margin-top:6px">
+          <label>CC Homme (Mesh)</label>
+          <label class="sw orange"><input type="checkbox" id="vis-ref-m" checked><span class="sw-slider"></span></label>
+        </div>
+        <div class="opacity-wrap">
+          <input type="range" id="op-ref-m" min="0" max="1" step="0.05" value="0.35">
+          <span class="opacity-val" id="op-val-ref-m">0.35</span>
+        </div>
+      </div>
+
+      <!-- Helpers -->
+      <div class="panel-section" style="border-top: 1px solid var(--border); padding-top: 12px">
+        <div class="panel-title">Guides</div>
+        <div class="control-row">
+          <label>Squelettes</label>
+          <label class="sw"><input type="checkbox" id="vis-skel"><span class="sw-slider"></span></label>
+        </div>
+        <div class="control-row" style="margin-top:6px">
+          <label>Grille au sol</label>
+          <label class="sw"><input type="checkbox" id="vis-grid" checked><span class="sw-slider"></span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    window.THREE = THREE;
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ── PATHS & SETTINGS ────────────────────────────────────────────────────
+    const PATH_LARA      = 'media/sandbox/lara_native.glb';
+    const PATH_XBOT      = 'media/sandbox/Xbot_official.glb';
+    const PATH_CC_FEMME  = 'media/sandbox/CCFemme.glb';
+    const PATH_CC_HOMME  = 'media/sandbox/CChomme.glb';
+    const PATH_CCF_ANIM  = 'media/sandbox/CCFemme_anim.glb';
+    const PATH_CCH_ANIM  = 'media/sandbox/CCHomme_anim.glb';
+
+    const TARGET_HEIGHT  = 173; // scale models to ~173cm
+
+    // Bone mapping between CC bones and Target skeletons
+    const CC_TO_LARA = {
+      'CC_Base_Hip':        'mixamorig_root_hips',
+      'CC_Base_Waist':      'mixamorig_spine_lower',
+      'CC_Base_Spine01':    'mixamorig_spine_upper',
+      'CC_Base_Spine02':    'mixamorig_spine_upper',
+      'CC_Base_Head':       'mixamorig_head_neck_upper',
+      'CC_Base_NeckTwist01': 'mixamorig_head_neck_lower',
+      'CC_Base_NeckTwist02': 'mixamorig_head_neck_upper',
+      'CC_Base_L_Thigh':    'mixamorig_leg_left_thigh',
+      'CC_Base_L_Calf':     'mixamorig_leg_left_knee',
+      'CC_Base_L_Foot':     'mixamorig_leg_left_ankle',
+      'CC_Base_L_ToeBase':  'mixamorig_leg_left_toes',
+      'CC_Base_R_Thigh':    'mixamorig_leg_right_thigh',
+      'CC_Base_R_Calf':     'mixamorig_leg_right_knee',
+      'CC_Base_R_Foot':     'mixamorig_leg_right_ankle',
+      'CC_Base_R_ToeBase':  'mixamorig_leg_right_toes',
+      'CC_Base_L_Clavicle': 'mixamorig_arm_left_shoulder_1',
+      'CC_Base_L_Upperarm': 'mixamorig_arm_left_shoulder_2',
+      'CC_Base_L_Forearm':  'mixamorig_arm_left_elbow',
+      'CC_Base_L_Hand':     'mixamorig_arm_left_wrist',
+      'CC_Base_R_Clavicle': 'mixamorig_arm_right_shoulder_1',
+      'CC_Base_R_Upperarm': 'mixamorig_arm_right_shoulder_2',
+      'CC_Base_R_Forearm':  'mixamorig_arm_right_elbow',
+      'CC_Base_R_Hand':     'mixamorig_arm_right_wrist',
+    };
+
+    const CC_TO_XBOT = {
+      'CC_Base_Hip':        'mixamorigHips',
+      'CC_Base_Waist':      'mixamorigSpine',
+      'CC_Base_Spine01':    'mixamorigSpine1',
+      'CC_Base_Spine02':    'mixamorigSpine2',
+      'CC_Base_Head':       'mixamorigHead',
+      'CC_Base_NeckTwist01': 'mixamorigNeck',
+      'CC_Base_NeckTwist02': 'mixamorigHead',
+      'CC_Base_L_Thigh':    'mixamorigLeftUpLeg',
+      'CC_Base_L_Calf':     'mixamorigLeftLeg',
+      'CC_Base_L_Foot':     'mixamorigLeftFoot',
+      'CC_Base_L_ToeBase':  'mixamorigLeftToeBase',
+      'CC_Base_R_Thigh':    'mixamorigRightUpLeg',
+      'CC_Base_R_Calf':     'mixamorigRightLeg',
+      'CC_Base_R_Foot':     'mixamorigRightFoot',
+      'CC_Base_R_ToeBase':  'mixamorigRightToeBase',
+      'CC_Base_L_Clavicle': 'mixamorigLeftShoulder',
+      'CC_Base_L_Upperarm': 'mixamorigLeftArm',
+      'CC_Base_L_Forearm':  'mixamorigLeftForeArm',
+      'CC_Base_L_Hand':     'mixamorigLeftHand',
+      'CC_Base_R_Clavicle': 'mixamorigRightShoulder',
+      'CC_Base_R_Upperarm': 'mixamorigRightArm',
+      'CC_Base_R_Forearm':  'mixamorigRightForeArm',
+      'CC_Base_R_Hand':     'mixamorigRightHand',
+    };
+
+    // ── SCENE SETUP ─────────────────────────────────────────────────────────
+    const canvas = document.getElementById('canvas3d');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x07070e);
+    scene.fog = new THREE.FogExp2(0x07070e, 0.0002);
+
+    const aspect = canvas.clientWidth / canvas.clientHeight;
+    const camera = new THREE.PerspectiveCamera(40, aspect, 0.1, 10000);
+    camera.position.set(0, 110, 360);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+
+    const orbit = new OrbitControls(camera, renderer.domElement);
+    orbit.enableDamping = true;
+    orbit.dampingFactor = 0.05;
+    orbit.target.set(0, 80, 0);
+    orbit.maxPolarAngle = Math.PI / 2 + 0.05;
+    orbit.update();
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+    scene.add(new THREE.HemisphereLight(0xdcd5ff, 0x18182b, 0.8));
+
+    const lightDirect = new THREE.DirectionalLight(0xfffaed, 1.5);
+    lightDirect.position.set(80, 220, 90);
+    lightDirect.castShadow = true;
+    lightDirect.shadow.mapSize.set(2048, 2048);
+    lightDirect.shadow.camera.near = 10;
+    lightDirect.shadow.camera.far = 500;
+    lightDirect.shadow.camera.left = -150;
+    lightDirect.shadow.camera.bottom = -150;
+    lightDirect.shadow.camera.right = 150;
+    lightDirect.shadow.camera.top = 150;
+    scene.add(lightDirect);
+
+    const lightBack = new THREE.DirectionalLight(0x818cf8, 0.65);
+    lightBack.position.set(-80, 100, -100);
+    scene.add(lightBack);
+
+    const rimLight = new THREE.PointLight(0x22d3ee, 1.0, 500);
+    rimLight.position.set(0, 180, -120);
+    scene.add(rimLight);
+
+    // Grid and floor
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(600, 600),
+      new THREE.MeshStandardMaterial({ color: 0x0c0c17, roughness: 0.85, metalness: 0.15 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const gridHelper = new THREE.GridHelper(600, 60, 0x1e1b4b, 0x0f0d2a);
+    gridHelper.material.opacity = 0.4;
+    gridHelper.material.transparent = true;
+    scene.add(gridHelper);
+
+    // ── APPLICATION STATE ───────────────────────────────────────────────────
+    let isPlaying = true;
+    let isTPose = false;
+    let timeScale = 1.0;
+    let layout = 'side'; // 'side' | 'overlay'
+    let duration = 0;
+    let currentTime = 0;
+    let scrubbing = false;
+    const clock = new THREE.Clock();
+
+    // Models container
+    const targets = { female: null, male: null };
+    const refs = { female: null, male: null };
+    const wrappers = { targetF: null, targetM: null, refF: null, refM: null };
+    const mixers = [];
+    const actions = { targetF: null, targetM: null, refF: null, refM: null };
+    const skels = [];
+
+    // Helper functions
+    function updateProgress(msg, percent) {
+      document.getElementById('loader-status').textContent = msg;
+      document.getElementById('progress-bar').style.width = percent + '%';
+    }
+
+    function getCharacterGenderFromBoneName(name) {
+      const match = name.match(/_0?(\d+)/);
+      if (match) {
+        const val = parseInt(match[1], 10);
+        return val >= 100 ? 'male' : 'female';
+      }
+      return null;
+    }
+
+    // Mathematical bind pose world quaternion extraction in rest pose
+    function getBoneBindWorldQuaternion(bone) {
+      const q = new THREE.Quaternion();
+      if (bone.getWorldQuaternion && bone.matrixWorld) {
+        bone.getWorldQuaternion(q);
+      } else {
+        q.copy(bone.quaternion);
+      }
+      return q;
+    }
+
+    // Align model's feet to floor based on bone world positions
+    function alignToFloor(model) {
+      model.updateMatrixWorld(true);
+      let minY = Infinity;
+      model.traverse(c => {
+        if (c.isBone) {
+          const worldPos = new THREE.Vector3();
+          c.getWorldPosition(worldPos);
+          if (worldPos.y < minY) {
+            minY = worldPos.y;
+          }
+        }
+      });
+      if (minY !== Infinity) {
+        // Align lowest bone to y=8.3 cm (matching Lara's ankle height)
+        model.position.y += (8.3 - minY);
+        model.updateMatrixWorld(true);
+      }
+    }
+
+
+    function setOpacity(model, opacity) {
+      model.traverse(c => {
+        if (c.isMesh) {
+          const mats = Array.isArray(c.material) ? c.material : [c.material];
+          mats.forEach(m => {
+            if (m) {
+              m.transparent = opacity < 1;
+              m.opacity = opacity;
+              m.depthWrite = opacity >= 0.99;
+            }
+          });
+        }
+      });
+    }
+
+    // ── LOADING MODELS ──────────────────────────────────────────────────────
+    const loader = new GLTFLoader();
+
+    async function loadModel(path, name) {
+      return new Promise((resolve, reject) => {
+        loader.load(path, gltf => {
+          const model = gltf.scene;
+          model.name = name;
+          model.traverse(c => {
+            if (c.isMesh) {
+              c.castShadow = c.receiveShadow = true;
+              c.frustumCulled = false;
+              const mats = Array.isArray(c.material) ? c.material : [c.material];
+              mats.forEach(m => {
+                if (m) {
+                  m.depthWrite = true;
+                  m.depthTest = true;
+                  if (m.transparent && m.opacity >= 0.99) m.transparent = false;
+                }
+              });
+            }
+          });
+          resolve({ model, animations: gltf.animations });
+        }, undefined, reject);
+      });
+    }
+
+    // ── DYNAMIC RETARGETING FUNCTION ────────────────────────────────────────
+    function retargetClip(ccClip, ccModel, targetModel, boneMap, hipsTargetBone, targetGender) {
+      const tracks = [];
+      const stripCCPrefixSuffix = name => name.replace(/_\d+$/, '');
+
+      // Read rest/bind quaternions of bones
+      const ccBones = {};
+      ccModel.traverse(c => {
+        if (c.isBone) {
+          const base = stripCCPrefixSuffix(c.name);
+          const gender = getCharacterGenderFromBoneName(c.name);
+          if (gender !== targetGender) return;
+
+          ccBones[base] = {
+            bone: c,
+            restWorldQ: getBoneBindWorldQuaternion(c),
+            parentWorldQ: c.parent 
+              ? getBoneBindWorldQuaternion(c.parent) 
+              : new THREE.Quaternion()
+          };
+        }
+      });
+
+      const targetBones = {};
+      const normalize = name => name.toLowerCase().replace(/[:_\s]/g, '');
+
+      targetModel.traverse(c => {
+        if (c.isBone) {
+          targetBones[normalize(c.name)] = {
+            bone: c,
+            restWorldQ: getBoneBindWorldQuaternion(c),
+            parentWorldQ: c.parent 
+              ? getBoneBindWorldQuaternion(c.parent) 
+              : new THREE.Quaternion()
+          };
+        }
+      });
+
+      // Transform animation tracks
+      for (const track of ccClip.tracks) {
+        const [boneNameFull, prop] = track.name.split('.');
+        if (prop !== 'quaternion' && prop !== 'position') continue;
+
+        const gender = getCharacterGenderFromBoneName(boneNameFull);
+        if (gender !== targetGender) continue;
+
+        const baseName = stripCCPrefixSuffix(boneNameFull);
+        const targetBoneName = boneMap[baseName];
+        if (!targetBoneName) continue;
+
+        const srcMeta = ccBones[baseName];
+        const tgtMeta = targetBones[normalize(targetBoneName)];
+        if (!srcMeta || !tgtMeta) continue;
+
+        const clone = track.clone();
+        clone.name = `${targetBoneName}.${prop}`;
+
+        if (prop === 'quaternion') {
+          const B_src = srcMeta.restWorldQ;
+          const P_src = srcMeta.parentWorldQ;
+          const B_tgt = tgtMeta.restWorldQ;
+          const P_tgt = tgtMeta.parentWorldQ;
+
+          const P_tgt_inv = P_tgt.clone().invert();
+          const B_src_inv = B_src.clone().invert();
+
+          for (let i = 0; i < clone.values.length; i += 4) {
+            const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
+            
+            // Formula: P_tgt_inv * P_src * q * B_src_inv * B_tgt
+            const resultQ = P_tgt_inv.clone()
+              .multiply(P_src)
+              .multiply(q)
+              .multiply(B_src_inv)
+              .multiply(B_tgt);
+
+            if (isNaN(resultQ.x) || isNaN(resultQ.y) || isNaN(resultQ.z) || isNaN(resultQ.w)) {
+              console.error(`NaN detected in rotation for track ${clone.name}`);
+            }
+
+            clone.values[i] = resultQ.x;
+            clone.values[i+1] = resultQ.y;
+            clone.values[i+2] = resultQ.z;
+            clone.values[i+3] = resultQ.w;
+          }
+          tracks.push(clone);
+        } else if (prop === 'position' && normalize(targetBoneName) === normalize(hipsTargetBone)) {
+          const parentSrcMatrix = srcMeta.bone.parent 
+            ? srcMeta.bone.parent.matrixWorld.clone() 
+            : new THREE.Matrix4();
+
+          const parentTgtMatrixInv = tgtMeta.bone.parent 
+            ? tgtMeta.bone.parent.matrixWorld.clone().invert() 
+            : new THREE.Matrix4();
+
+          for (let i = 0; i < clone.values.length; i += 3) {
+            const pos = new THREE.Vector3(clone.values[i], clone.values[i+1], clone.values[i+2]);
+            const worldPos = pos.clone().applyMatrix4(parentSrcMatrix);
+            const localTgtPos = worldPos.clone().applyMatrix4(parentTgtMatrixInv);
+
+            if (isNaN(localTgtPos.x) || isNaN(localTgtPos.y) || isNaN(localTgtPos.z)) {
+              console.error(`NaN detected in position for track ${clone.name}`);
+            }
+            
+            clone.values[i]   = localTgtPos.x;
+            clone.values[i+1] = localTgtPos.y;
+            clone.values[i+2] = localTgtPos.z;
+          }
+          tracks.push(clone);
+        }
+      }
+
+      // Add a default position track for hips if none is present to keep target off the ground
+      const hasHipsPos = tracks.some(t => t.name === `${hipsTargetBone}.position`);
+      if (!hasHipsPos && ccBones['CC_Base_Hip'] && targetBones[hipsTargetBone]) {
+        const srcHips = ccBones['CC_Base_Hip'].bone;
+        const parentSrcMatrix = srcHips.parent 
+          ? srcHips.parent.matrixWorld.clone() 
+          : new THREE.Matrix4();
+
+        const parentTgtMatrixInv = targetBones[hipsTargetBone].bone.parent 
+          ? targetBones[hipsTargetBone].bone.parent.matrixWorld.clone().invert() 
+          : new THREE.Matrix4();
+
+        const pos = srcHips.position.clone().applyMatrix4(parentSrcMatrix).applyMatrix4(parentTgtMatrixInv);
+        const times = new Float32Array([0, ccClip.duration]);
+        const values = new Float32Array([pos.x, pos.y, pos.z, pos.x, pos.y, pos.z]);
+        const posTrack = new THREE.VectorKeyframeTrack(`${hipsTargetBone}.position`, times, values);
+        tracks.push(posTrack);
+      }
+
+      return new THREE.AnimationClip(`${ccClip.name}_retargeted`, ccClip.duration, tracks);
+    }
+
+    // ── INIT FUNCTION ───────────────────────────────────────────────────────
+    async function init() {
+      try {
+        // 1. Load targets
+        updateProgress('Chargement de Lara A...', 15);
+        const laraData = await loadModel(PATH_LARA, 'Lara A');
+        targets.female = laraData.model;
+        targets.female.scale.set(1, 1, 1);
+        alignToFloor(targets.female);
+
+        updateProgress('Chargement de X-Bot...', 30);
+        const xbotData = await loadModel(PATH_XBOT, 'X-Bot');
+        targets.male = xbotData.model;
+        targets.male.scale.set(100, 100, 100);
+        alignToFloor(targets.male);
+
+        // 2. Load references (rest pose only)
+        updateProgress('Chargement de CC Femme...', 45);
+        const ccfData = await loadModel(PATH_CC_FEMME, 'CC Femme');
+        refs.female = ccfData.model;
+        refs.female.scale.setScalar(60.74567);
+        alignToFloor(refs.female);
+        setOpacity(refs.female, 0.35);
+
+        updateProgress('Chargement de CC Homme...', 60);
+        const cchData = await loadModel(PATH_CC_HOMME, 'CC Homme');
+        refs.male = cchData.model;
+        refs.male.scale.setScalar(60.74567);
+        alignToFloor(refs.male);
+        setOpacity(refs.male, 0.35);
+
+        // Add wrappers for placement
+        const wrapTF = new THREE.Group(); wrapTF.add(targets.female); scene.add(wrapTF); wrappers.targetF = wrapTF;
+        const wrapTM = new THREE.Group(); wrapTM.add(targets.male); scene.add(wrapTM); wrappers.targetM = wrapTM;
+        const wrapRF = new THREE.Group(); wrapRF.add(refs.female); scene.add(wrapRF); wrappers.refF = wrapRF;
+        const wrapRM = new THREE.Group(); wrapRM.add(refs.male); scene.add(wrapRM); wrappers.refM = wrapRM;
+
+        // Add skeleton helpers
+        const skelTF = new THREE.SkeletonHelper(targets.female); skelTF.visible = false; scene.add(skelTF); skels.push(skelTF);
+        const skelTM = new THREE.SkeletonHelper(targets.male); skelTM.visible = false; scene.add(skelTM); skels.push(skelTM);
+        const skelRF = new THREE.SkeletonHelper(refs.female); skelRF.visible = false; scene.add(skelRF); skels.push(skelRF);
+        const skelRM = new THREE.SkeletonHelper(refs.male); skelRM.visible = false; scene.add(skelRM); skels.push(skelRM);
+
+        // Cache rest pose for T-pose toggle
+        const cacheRestPose = (model) => {
+          if (!model) return;
+          model.traverse(c => {
+            if (c.isBone) {
+              c.restLocalQ = c.quaternion.clone();
+              c.restLocalPos = c.position.clone();
+            }
+          });
+        };
+        cacheRestPose(targets.female);
+        cacheRestPose(targets.male);
+        cacheRestPose(refs.female);
+        cacheRestPose(refs.male);
+
+        // Put everyone in T-pose initially to measure correct heights and capture T-pose joint quaternions for retargeting
+        applyTPose();
+
+        console.log("=== Model Heights (rest pose) ===");
+        [
+          { name: 'Lara', model: targets.female },
+          { name: 'X-Bot', model: targets.male },
+          { name: 'CC Femme', model: refs.female },
+          { name: 'CC Homme', model: refs.male }
+        ].forEach(item => {
+          const box = new THREE.Box3().setFromObject(item.model);
+          const size = box.getSize(new THREE.Vector3());
+          console.log(`${item.name} scale: ${item.model.scale.x.toFixed(4)}, world height: ${size.y.toFixed(2)}, min.y: ${box.min.y.toFixed(2)}, max.y: ${box.max.y.toFixed(2)}`);
+        });
+
+        // 3. Load animation assets & retarget
+        updateProgress('Chargement animation Femme...', 75);
+        const ccfAnimData = await loadModel(PATH_CCF_ANIM, 'CC Femme Anim');
+        
+        updateProgress('Chargement animation Homme...', 90);
+        const cchAnimData = await loadModel(PATH_CCH_ANIM, 'CC Homme Anim');
+
+        // Update scene matrices to capture correct rest-pose positions/scales/rotations for retargeting
+        scene.updateMatrixWorld(true);
+
+        // Retarget Female animation
+        if (ccfAnimData.animations.length > 0) {
+          const clip = ccfAnimData.animations[0];
+          duration = Math.max(duration, clip.duration);
+
+          // Target Lara
+          const retargetedFemale = retargetClip(clip, refs.female, targets.female, CC_TO_LARA, 'mixamorig_root_hips', 'female');
+          const targetMixerF = new THREE.AnimationMixer(targets.female);
+          const actTF = targetMixerF.clipAction(retargetedFemale);
+          actTF.setLoop(THREE.LoopRepeat, Infinity);
+          actTF.play();
+          mixers.push(targetMixerF);
+          actions.targetF = actTF;
+
+          // Reference CC Femme (play original animation directly)
+          const refMixerF = new THREE.AnimationMixer(refs.female);
+          const actRF = refMixerF.clipAction(clip);
+          actRF.setLoop(THREE.LoopRepeat, Infinity);
+          actRF.play();
+          mixers.push(refMixerF);
+          actions.refF = actRF;
+        }
+
+        // Retarget Male animation
+        if (cchAnimData.animations.length > 0) {
+          const clip = cchAnimData.animations[0];
+          duration = Math.max(duration, clip.duration);
+
+          // Target X-Bot
+          const retargetedMale = retargetClip(clip, refs.male, targets.male, CC_TO_XBOT, 'mixamorigHips', 'male');
+          const targetMixerM = new THREE.AnimationMixer(targets.male);
+          const actTM = targetMixerM.clipAction(retargetedMale);
+          actTM.setLoop(THREE.LoopRepeat, Infinity);
+          actTM.play();
+          mixers.push(targetMixerM);
+          actions.targetM = actTM;
+
+          // Reference CC Homme (play original animation directly)
+          const refMixerM = new THREE.AnimationMixer(refs.male);
+          const actRM = refMixerM.clipAction(clip);
+          actRM.setLoop(THREE.LoopRepeat, Infinity);
+          actRM.play();
+          mixers.push(refMixerM);
+          actions.refM = actRM;
+        }
+
+        // Clean up loaded helper animation structures
+        ccfAnimData.model.traverse(c => { if (c.dispose) c.dispose(); });
+        cchAnimData.model.traverse(c => { if (c.dispose) c.dispose(); });
+
+        window.scene = scene;
+        window.models = targets;
+        window.refModels = refs;
+        window.actions = actions;
+        window.mixers = mixers;
+
+        updateProgress('Sandbox Prêt !', 100);
+        applyLayout();
+        document.getElementById('time-display').textContent = `0.00 / ${duration.toFixed(2)} s`;
+
+        setTimeout(() => {
+          const loaderScreen = document.getElementById('loader');
+          loaderScreen.style.opacity = '0';
+          setTimeout(() => loaderScreen.remove(), 500);
+        }, 400);
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('loader-status').innerHTML = 'Erreur: ' + err.message + '<br><pre style="font-size:10px;text-align:left;max-height:200px;overflow:auto;color:#ef4444;margin-top:10px;">' + err.stack + '</pre>';
+      }
+    }
+
+    function matchWorldRotations(ccModel, targetModel, boneMap) {
+      if (!ccModel || !targetModel) return;
+      
+      const targetBones = {};
+      const normalize = name => name.toLowerCase().replace(/[:_\s]/g, '');
+      targetModel.traverse(c => {
+        if (c.isBone) {
+          targetBones[c.name] = c;
+          targetBones[normalize(c.name)] = c;
+        }
+      });
+
+      targetModel.updateMatrixWorld(true);
+      ccModel.updateMatrixWorld(true);
+
+      const stripCCPrefixSuffix = name => name.replace(/_\d+$/, '');
+
+      ccModel.traverse(c => {
+        if (c.isBone) {
+          const baseName = stripCCPrefixSuffix(c.name);
+          const targetBoneName = boneMap[baseName];
+          if (!targetBoneName) return;
+
+          const targetBone = targetBones[targetBoneName] || targetBones[normalize(targetBoneName)];
+          if (!targetBone) return;
+
+          const targetWorldQ = new THREE.Quaternion();
+          targetBone.getWorldQuaternion(targetWorldQ);
+
+          if (c.parent) {
+            const parentWorldQ = new THREE.Quaternion();
+            c.parent.getWorldQuaternion(parentWorldQ);
+            c.quaternion.copy(parentWorldQ.clone().invert().multiply(targetWorldQ));
+          } else {
+            c.quaternion.copy(targetWorldQ);
+          }
+          c.updateMatrix();
+          c.updateMatrixWorld(true);
+        }
+      });
+    }
+
+    function applyTPose() {
+      [targets.female, targets.male].forEach(model => {
+        if (!model) return;
+        model.traverse(c => {
+          if (c.isBone) {
+            if (c.restLocalQ) c.quaternion.copy(c.restLocalQ);
+            if (c.restLocalPos) c.position.copy(c.restLocalPos);
+            c.scale.set(1, 1, 1);
+            c.updateMatrix();
+          }
+        });
+        model.updateMatrixWorld(true);
+      });
+
+      if (refs.female && targets.female) {
+        matchWorldRotations(refs.female, targets.female, CC_TO_LARA);
+      }
+      if (refs.male && targets.female) {
+        matchWorldRotations(refs.male, targets.female, CC_TO_LARA);
+      }
+
+      [targets.female, targets.male, refs.female, refs.male].forEach(model => {
+        if (model) alignToFloor(model);
+      });
+    }
+
+
+    const tposeBtn = document.getElementById('tpose-btn');
+    tposeBtn.addEventListener('click', () => {
+      isTPose = !isTPose;
+      tposeBtn.classList.toggle('active', isTPose);
+      if (isTPose) {
+        isPlaying = false;
+        playBtn.textContent = '▶ Play';
+        playBtn.classList.remove('active');
+        Object.keys(actions).forEach(k => {
+          if (actions[k]) actions[k].paused = true;
+        });
+        applyTPose();
+      } else {
+        isPlaying = true;
+        playBtn.textContent = '⏸ Pause';
+        playBtn.classList.add('active');
+        Object.keys(actions).forEach(k => {
+          if (actions[k]) actions[k].paused = false;
+        });
+      }
+    });
+
+    // ── LAYOUT & UI FUNCTIONS ───────────────────────────────────────────────
+    function applyLayout() {
+      if (!wrappers.targetF || !wrappers.targetM) return;
+
+      if (layout === 'side') {
+        // Female models at x = -70, Male models at x = 70
+        wrappers.targetF.position.set(-75, 0, 0);
+        wrappers.refF.position.set(-75, 0, -35); // offset reference slightly back to overlay visually
+
+        wrappers.targetM.position.set(75, 0, 0);
+        wrappers.refM.position.set(75, 0, -35);
+
+        orbit.target.set(0, 70, 0);
+        camera.position.set(0, 110, 380);
+      } else {
+        // Overlay layout: overlap at origin
+        wrappers.targetF.position.set(0, 0, 0);
+        wrappers.refF.position.set(0, 0, -35);
+
+        wrappers.targetM.position.set(0, 0, 0);
+        wrappers.refM.position.set(0, 0, -35);
+
+        orbit.target.set(0, 70, 0);
+        camera.position.set(0, 110, 310);
+      }
+      orbit.update();
+    }
+
+    // Play/Pause
+    const playBtn = document.getElementById('play-btn');
+    playBtn.addEventListener('click', () => {
+      if (isTPose) {
+        isTPose = false;
+        tposeBtn.classList.remove('active');
+      }
+      isPlaying = !isPlaying;
+      playBtn.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+      playBtn.classList.toggle('active', isPlaying);
+      
+      Object.keys(actions).forEach(k => {
+        if (actions[k]) actions[k].paused = !isPlaying;
+      });
+    });
+
+    // Reset
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      Object.keys(actions).forEach(k => {
+        if (actions[k]) {
+          actions[k].reset();
+          actions[k].play();
+        }
+      });
+      currentTime = 0;
+      document.getElementById('time-slider').value = 0;
+    });
+
+    // Layout
+    document.getElementById('layout-btn').addEventListener('click', () => {
+      layout = layout === 'side' ? 'overlay' : 'side';
+      applyLayout();
+    });
+
+    // Speed
+    const speedSlider = document.getElementById('speed-slider');
+    const speedDisplay = document.getElementById('speed-display');
+    speedSlider.addEventListener('input', () => {
+      timeScale = parseFloat(speedSlider.value);
+      speedDisplay.textContent = timeScale.toFixed(2) + '×';
+      Object.keys(actions).forEach(k => {
+        if (actions[k]) actions[k].timeScale = timeScale;
+      });
+    });
+
+    // Timeline
+    const timeSlider = document.getElementById('time-slider');
+    const timeDisplay = document.getElementById('time-display');
+    timeSlider.addEventListener('mousedown', () => { scrubbing = true; });
+    timeSlider.addEventListener('mouseup', () => { scrubbing = false; });
+    timeSlider.addEventListener('input', () => {
+      if (isTPose) {
+        isTPose = false;
+        tposeBtn.classList.remove('active');
+      }
+      const targetTime = (parseFloat(timeSlider.value) / 100) * duration;
+      Object.keys(actions).forEach(k => {
+        if (actions[k]) {
+          actions[k].time = targetTime;
+        }
+      });
+      mixers.forEach(m => m.update(0));
+      timeDisplay.textContent = `${targetTime.toFixed(2)} / ${duration.toFixed(2)} s`;
+    });
+
+    // Sidebar Visibility Checkboxes and Opacity Sliders
+    const bindings = [
+      { visId: 'vis-target-f', opId: 'op-target-f', opValId: 'op-val-target-f', modelKey: 'female', isRef: false, wrapKey: 'targetF' },
+      { visId: 'vis-target-m', opId: 'op-target-m', opValId: 'op-val-target-m', modelKey: 'male', isRef: false, wrapKey: 'targetM' },
+      { visId: 'vis-ref-f', opId: 'op-ref-f', opValId: 'op-val-ref-f', modelKey: 'female', isRef: true, wrapKey: 'refF' },
+      { visId: 'vis-ref-m', opId: 'op-ref-m', opValId: 'op-val-ref-m', modelKey: 'male', isRef: true, wrapKey: 'refM' }
+    ];
+
+    bindings.forEach(b => {
+      const checkbox = document.getElementById(b.visId);
+      const slider = document.getElementById(b.opId);
+      const display = document.getElementById(b.opValId);
+
+      checkbox.addEventListener('change', () => {
+        const wrap = wrappers[b.wrapKey];
+        if (wrap) wrap.visible = checkbox.checked;
+      });
+
+      slider.addEventListener('input', () => {
+        const val = parseFloat(slider.value);
+        display.textContent = val.toFixed(2);
+        const model = b.isRef ? refs[b.modelKey] : targets[b.modelKey];
+        if (model) setOpacity(model, val);
+      });
+    });
+
+    // Guide helpers
+    const visSkel = document.getElementById('vis-skel');
+    visSkel.addEventListener('change', () => {
+      skels.forEach(s => {
+        s.visible = visSkel.checked;
+      });
+    });
+
+    document.getElementById('vis-grid').addEventListener('change', e => {
+      gridHelper.visible = e.target.checked;
+    });
+
+    // ── ANIMATION LOOP ──────────────────────────────────────────────────────
+    let frames = 0, lastTime = performance.now();
+    const fpsVal = document.getElementById('fps-val');
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const dt = clock.getDelta();
+
+      if (isPlaying && !scrubbing && !isTPose) {
+        mixers.forEach(m => m.update(dt));
+
+        // Synchronize timeline slider
+        if (duration > 0 && actions.targetF) {
+          currentTime = actions.targetF.time % duration;
+          const percent = (currentTime / duration) * 100;
+          timeSlider.value = percent;
+          timeDisplay.textContent = `${currentTime.toFixed(2)} / ${duration.toFixed(2)} s`;
+        }
+      } else if (isTPose) {
+        applyTPose();
+      }
+
+      orbit.update();
+      renderer.render(scene, camera);
+
+      frames++;
+      const time = performance.now();
+      if (time - lastTime >= 1000) {
+        fpsVal.textContent = frames;
+        frames = 0;
+        lastTime = time;
+      }
+    }
+
+    // Window resize
+    window.addEventListener('resize', () => {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+
+    // Start
+    init().then(animate);
+  </script>
+</body>
+</html>
