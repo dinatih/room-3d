@@ -1042,6 +1042,13 @@
           } else {
             c.quaternion.copy(targetWorldQ);
           }
+
+          // Apply 180-degree twist correction for leg bones to match reference rest-pose twist alignment
+          if (baseName.includes('Thigh') || baseName.includes('Calf') || baseName.includes('Foot') || baseName.includes('ToeBase')) {
+            const twistCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
+            c.quaternion.multiply(twistCorrection);
+          }
+
           c.updateMatrix();
           c.updateMatrixWorld(true);
         }
