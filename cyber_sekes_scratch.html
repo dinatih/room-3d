@@ -330,6 +330,13 @@
       width: 24px;
       text-align: right;
     }
+    #labels-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
   </style>
 </head>
 <body>
@@ -364,6 +371,8 @@
   <div id="viewport-container">
     <!-- WebGL Canvas -->
     <canvas id="canvas3d"></canvas>
+    <!-- Canvas for Joint Labels -->
+    <canvas id="labels-canvas"></canvas>
 
     <!-- Headless/Loading status overlay -->
     <div id="loader">
@@ -446,6 +455,10 @@
           <label class="sw"><input type="checkbox" id="vis-wireframe"><span class="sw-slider"></span></label>
         </div>
         <div class="control-row" style="margin-top:6px">
+          <label>Noms des joints (3D)</label>
+          <label class="sw"><input type="checkbox" id="vis-joint-labels"><span class="sw-slider"></span></label>
+        </div>
+        <div class="control-row" style="margin-top:6px">
           <label>Grille au sol</label>
           <label class="sw"><input type="checkbox" id="vis-grid" checked><span class="sw-slider"></span></label>
         </div>
@@ -462,6 +475,25 @@
           <option value="ref-male">CC Homme (Ref)</option>
         </select>
         <div id="joints-list-container" style="max-height: 180px; overflow-y: auto; font-family:var(--mono); font-size:10px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:8px; padding:8px; display:none; margin-top:8px;">
+        </div>
+      </div>
+
+      <!-- Mapping des Os -->
+      <div class="panel-section" style="border-top: 1px solid var(--border); padding-top: 12px">
+        <div class="panel-title" style="color:var(--accent-male)">Mapping des Os</div>
+        <button id="toggle-mapping-btn" style="width:100%; text-align:left; display:flex; justify-content:space-between; align-items:center;">
+          <span>Afficher les Mappings</span>
+          <span>▼</span>
+        </button>
+        <div id="mappings-panel" style="display:none; max-height:160px; overflow-y:auto; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:8px; padding:8px; margin-top:8px;">
+          <div style="font-weight:700; color:var(--accent-female); margin-bottom:4px; font-size:10px;">CC Femme → Lara :</div>
+          <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:9px; color:var(--muted); margin-bottom:12px;">
+            <tbody id="mapping-lara-tbody"></tbody>
+          </table>
+          <div style="font-weight:700; color:var(--accent-male); margin-bottom:4px; font-size:10px;">CC Homme → X-Bot :</div>
+          <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:9px; color:var(--muted)">
+            <tbody id="mapping-xbot-tbody"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -944,6 +976,10 @@
         const skelRF = new THREE.SkeletonHelper(refs.female); skelRF.visible = false; scene.add(skelRF); skels.push(skelRF);
         const skelRM = new THREE.SkeletonHelper(refs.male); skelRM.visible = false; scene.add(skelRM); skels.push(skelRM);
 
+        // Rotate reference models to face forward (aligning with targets)
+        refs.female.rotation.y = Math.PI;
+        refs.male.rotation.y = Math.PI;
+
         // Cache rest pose for T-pose toggle
         const cacheRestPose = (model) => {
           if (!model) return;
@@ -958,6 +994,22 @@
         cacheRestPose(targets.male);
         cacheRestPose(refs.female);
         cacheRestPose(refs.male);
+
+        // Cache rest pose world quaternions (needed for exact world rotation matching)
+        const cacheRestWorldPose = (model) => {
+          if (!model) return;
+          model.updateMatrixWorld(true);
+          model.traverse(c => {
+            if (c.isBone) {
+              c.restWorldQ = new THREE.Quaternion();
+              c.getWorldQuaternion(c.restWorldQ);
+            }
+          });
+        };
+        cacheRestWorldPose(targets.female);
+        cacheRestWorldPose(targets.male);
+        cacheRestWorldPose(refs.female);
+        cacheRestWorldPose(refs.male);
 
         attachAxesHelpers(targets.female, 10);
         attachAxesHelpers(targets.male, 10);
@@ -1114,42 +1166,21 @@
           const targetWorldQ = new THREE.Quaternion();
           targetBone.getWorldQuaternion(targetWorldQ);
 
+          const B_src = c.restWorldQ || new THREE.Quaternion();
+          const B_tgt = targetBone.restWorldQ || new THREE.Quaternion();
+
+          // Mathematically exact retargeting alignment:
+          // worldQ_src = targetWorldQ * B_tgt_inv * B_src
+          const worldQ_src = targetWorldQ.clone()
+            .multiply(B_tgt.clone().invert())
+            .multiply(B_src);
+
           if (c.parent) {
             const parentWorldQ = new THREE.Quaternion();
             c.parent.getWorldQuaternion(parentWorldQ);
-            c.quaternion.copy(parentWorldQ.clone().invert().multiply(targetWorldQ));
+            c.quaternion.copy(parentWorldQ.clone().invert().multiply(worldQ_src));
           } else {
-            c.quaternion.copy(targetWorldQ);
-          }
-
-          const gender = getCharacterGenderFromBoneName(c.name);
-
-          // Apply 180-degree twist correction for hip bone (only CC Femme hip needs this to align with thighs)
-          if (baseName === 'CC_Base_Hip') {
-            if (gender === 'female') {
-              const twistCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
-              c.quaternion.multiply(twistCorrection);
-            }
-          }
-
-          // Apply 180-degree twist correction for leg bones (both genders need this to align with parent pelvis/hip coordinate space)
-          if (baseName.includes('Thigh') || baseName.includes('Calf') || baseName.includes('Foot') || baseName.includes('ToeBase')) {
-            const twistCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
-            c.quaternion.multiply(twistCorrection);
-          }
-
-          // Apply 90-degree twist correction for arm bones (mirrored: Left +90, Right -90)
-          if (baseName.includes('Upperarm') || baseName.includes('Forearm') || baseName.includes('Hand')) {
-            const isLeft = baseName.includes('L_') || baseName.toLowerCase().includes('left');
-            const angle = isLeft ? Math.PI / 2 : -Math.PI / 2;
-            const twistCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
-            c.quaternion.multiply(twistCorrection);
-          }
-
-          // Apply 45-degree pitch correction for head to tilt it up (reduce downward tilt)
-          if (baseName.includes('Head')) {
-            const headCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 4);
-            c.quaternion.multiply(headCorrection);
+            c.quaternion.copy(worldQ_src);
           }
 
           c.updateMatrix();
@@ -1175,8 +1206,8 @@
       if (refs.female && targets.female) {
         matchWorldRotations(refs.female, targets.female, CC_TO_LARA);
       }
-      if (refs.male && targets.female) {
-        matchWorldRotations(refs.male, targets.female, CC_TO_LARA);
+      if (refs.male && targets.male) {
+        matchWorldRotations(refs.male, targets.male, CC_TO_XBOT);
       }
 
       [targets.female, targets.male, refs.female, refs.male].forEach(model => {
@@ -1466,15 +1497,103 @@
       updateJointsValues();
     }
 
-    function updateJointsValues() {
-      if (charSelect.value === 'none') return;
-      jointEls.forEach(item => {
-        const q = item.bone.quaternion;
-        item.rotSpan.textContent = `q: [${q.x.toFixed(3)}, ${q.y.toFixed(3)}, ${q.z.toFixed(3)}, ${q.w.toFixed(3)}]`;
+    const labelsCanvas = document.getElementById('labels-canvas');
+    const labelsCtx = labelsCanvas.getContext('2d');
+
+    function resizeLabelsCanvas() {
+      if (labelsCanvas) {
+        labelsCanvas.width = canvas.clientWidth;
+        labelsCanvas.height = canvas.clientHeight;
+      }
+    }
+
+    function drawModelJointLabels(model, color) {
+      if (!model) return;
+      model.traverse(c => {
+        if (c.isBone) {
+          const pos = new THREE.Vector3();
+          c.getWorldPosition(pos);
+          pos.project(camera);
+
+          if (pos.z <= 1) {
+            const x = (pos.x * 0.5 + 0.5) * labelsCanvas.width;
+            const y = (-(pos.y * 0.5) + 0.5) * labelsCanvas.height;
+
+            labelsCtx.fillStyle = 'rgba(7, 7, 14, 0.85)';
+            labelsCtx.strokeStyle = color;
+            labelsCtx.lineWidth = 1;
+
+            const text = c.name.replace(/_\d+$/, '');
+            labelsCtx.font = 'bold 9px var(--mono)';
+            const textWidth = labelsCtx.measureText(text).width;
+
+            labelsCtx.beginPath();
+            labelsCtx.roundRect(x - textWidth/2 - 4, y - 6, textWidth + 8, 12, 4);
+            labelsCtx.fill();
+            labelsCtx.stroke();
+
+            labelsCtx.fillStyle = '#fff';
+            labelsCtx.textAlign = 'center';
+            labelsCtx.textBaseline = 'middle';
+            labelsCtx.fillText(text, x, y);
+          }
+        }
       });
     }
 
+    function updateJointsValues() {
+      if (labelsCanvas.width === 0) resizeLabelsCanvas();
+      labelsCtx.clearRect(0, 0, labelsCanvas.width, labelsCanvas.height);
+
+      const char = charSelect.value;
+      if (char !== 'none') {
+        jointEls.forEach(item => {
+          const q = item.bone.quaternion;
+          item.rotSpan.textContent = `q: [${q.x.toFixed(3)}, ${q.y.toFixed(3)}, ${q.z.toFixed(3)}, ${q.w.toFixed(3)}]`;
+        });
+      }
+
+      const showLabels = document.getElementById('vis-joint-labels').checked;
+      if (showLabels) {
+        if (document.getElementById('vis-target-f').checked && targets.female) {
+          drawModelJointLabels(targets.female, '#c084fc');
+        }
+        if (document.getElementById('vis-target-m').checked && targets.male) {
+          drawModelJointLabels(targets.male, '#67e8f9');
+        }
+        if (document.getElementById('vis-ref-f').checked && refs.female) {
+          drawModelJointLabels(refs.female, '#f97316');
+        }
+        if (document.getElementById('vis-ref-m').checked && refs.male) {
+          drawModelJointLabels(refs.male, '#f97316');
+        }
+      }
+    }
+
     charSelect.addEventListener('change', rebuildJointsList);
+
+    // Populate mappings tables
+    const laraTbody = document.getElementById('mapping-lara-tbody');
+    Object.keys(CC_TO_LARA).forEach(cc => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td style="color:#fff; padding:2px 4px; border-bottom:1px solid rgba(255,255,255,0.03);">${cc}</td><td style="color:var(--accent-female); padding:2px 4px; border-bottom:1px solid rgba(255,255,255,0.03);">${CC_TO_LARA[cc]}</td>`;
+      laraTbody.appendChild(row);
+    });
+
+    const xbotTbody = document.getElementById('mapping-xbot-tbody');
+    Object.keys(CC_TO_XBOT).forEach(cc => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td style="color:#fff; padding:2px 4px; border-bottom:1px solid rgba(255,255,255,0.03);">${cc}</td><td style="color:var(--accent-male); padding:2px 4px; border-bottom:1px solid rgba(255,255,255,0.03);">${CC_TO_XBOT[cc]}</td>`;
+      xbotTbody.appendChild(row);
+    });
+
+    const toggleMappingBtn = document.getElementById('toggle-mapping-btn');
+    const mappingsPanel = document.getElementById('mappings-panel');
+    toggleMappingBtn.addEventListener('click', () => {
+      const isHidden = mappingsPanel.style.display === 'none';
+      mappingsPanel.style.display = isHidden ? 'block' : 'none';
+      toggleMappingBtn.querySelector('span:last-child').textContent = isHidden ? '▲' : '▼';
+    });
 
     // Window resize
     window.addEventListener('resize', () => {
@@ -1482,10 +1601,14 @@
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      resizeLabelsCanvas();
     });
 
     // Start
-    init().then(animate);
+    init().then(() => {
+      resizeLabelsCanvas();
+      animate();
+    });
   </script>
 </body>
 </html>
