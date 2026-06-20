@@ -1377,11 +1377,7 @@
 
     window.addEventListener('mousedown', (e) => { 
       isMouseDown = true; 
-      const isClickInsideTooltip = tooltipEl && tooltipEl.contains(e.target);
-      const isClickInsideControls = (document.getElementById('mesh-control')?.contains(e.target)) || 
-                                   (document.getElementById('anim-control')?.contains(e.target)) || 
-                                   (document.getElementById('hud')?.contains(e.target));
-      if (!isClickInsideTooltip && !isClickInsideControls) {
+      if (e.target === renderer.domElement) {
         hideTooltip(); 
       }
     });
@@ -1730,6 +1726,8 @@
     });
 
     window.addEventListener('mouseup', (e) => {
+      if (e.target !== renderer.domElement) return;
+
       const diffX = Math.abs(e.clientX - startX);
       const diffY = Math.abs(e.clientY - startY);
       
@@ -1776,6 +1774,9 @@
 
     // Mousemove contrôle uniquement le pointeur visuel
     window.addEventListener('mousemove', (e) => {
+      if (e.target !== renderer.domElement) {
+        return;
+      }
       if (e.buttons !== 0 || allModels.length === 0) {
         return;
       }
@@ -1799,9 +1800,9 @@
       }
       
       if (foundModel) {
-        document.body.style.cursor = 'pointer';
+        renderer.domElement.style.cursor = 'pointer';
       } else {
-        document.body.style.cursor = 'default';
+        renderer.domElement.style.cursor = 'default';
       }
     });
 
