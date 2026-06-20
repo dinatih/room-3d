@@ -747,15 +747,27 @@
     }
 
 
+    function isMaterialNativelyTransparent(m) {
+      if (!m) return false;
+      const name = (m.name || '').toLowerCase();
+      return name.includes('lashes') || 
+             name.includes('hair') || 
+             name.includes('cornea') || 
+             name.includes('eye') || 
+             name.includes('glass') || 
+             name.includes('trans');
+    }
+
     function setOpacity(model, opacity) {
       model.traverse(c => {
         if (c.isMesh) {
           const mats = Array.isArray(c.material) ? c.material : [c.material];
           mats.forEach(m => {
             if (m) {
-              m.transparent = opacity < 1;
+              const isNativeTrans = m.userData.nativeTransparent || isMaterialNativelyTransparent(m);
+              m.transparent = opacity < 0.99 || isNativeTrans;
               m.opacity = opacity;
-              m.depthWrite = opacity >= 0.99;
+              m.depthWrite = (opacity >= 0.99) && !isNativeTrans;
             }
           });
         }
@@ -817,11 +829,12 @@
                 if (m) {
                   m.depthWrite = true;
                   m.depthTest = true;
-                  if (m.name && m.name.toLowerCase().includes('lashes')) {
-                    m.transparent = true;
+                  
+                  const isTrans = isMaterialNativelyTransparent(m);
+                  m.userData.nativeTransparent = isTrans;
+                  m.transparent = isTrans;
+                  if (isTrans) {
                     m.alphaTest = 0.5;
-                  } else {
-                    m.transparent = false;
                   }
                 }
               });
@@ -1035,6 +1048,13 @@
         cacheRestPose(refs.female);
         cacheRestPose(refs.male);
 
+        console.log("=== DIAGNOSTIC STEP 1 (after cacheRestPose) ===");
+        const bone1 = refs.male.getObjectByName('CC_Base_L_Upperarm_0155');
+        if (bone1) {
+          console.log("  quaternion: " + JSON.stringify(bone1.quaternion.toArray()));
+          console.log("  restLocalQ: " + (bone1.restLocalQ ? JSON.stringify(bone1.restLocalQ.toArray()) : "null"));
+        }
+
         // Cache rest pose world quaternions (needed for exact world rotation matching)
         const cacheRestWorldPose = (model) => {
           if (!model) return;
@@ -1157,6 +1177,116 @@
           });
         }
 
+        const resetToRestPose = (model) => {
+          if (!model) return;
+          model.traverse(c => {
+            if (c.isBone) {
+              if (c.restLocalQ) c.quaternion.copy(c.restLocalQ);
+              if (c.restLocalPos) c.position.copy(c.restLocalPos);
+            }
+          });
+          model.updateMatrixWorld(true);
+        };
+
+        // Reset models to native rest poses before copying or caching,
+        // because retargeting animations frame evaluations during loadModel/retargetClip
+        // leaves their bones in the final animated frame pose.
+        resetToRestPose(refs.female);
+        resetToRestPose(refs.male);
+
+        // Adjust refs.male rotations to establish a clean, standing T-pose
+        const adjustMaleBonesToTpose = () => {
+          const lUpperArm = refs.male.getObjectByName('CC_Base_L_Upperarm_0155');
+          const rUpperArm = refs.male.getObjectByName('CC_Base_R_Upperarm_0184');
+          const lHand = refs.male.getObjectByName('CC_Base_L_Hand_0160');
+          const rHand = refs.male.getObjectByName('CC_Base_R_Hand_0189');
+
+          if (lUpperArm) {
+            const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), 53.4 * Math.PI / 180);
+            lUpperArm.quaternion.multiply(q);
+          }
+          if (rUpperArm) {
+            const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -53.4 * Math.PI / 180);
+            rUpperArm.quaternion.multiply(q);
+          }
+          if (lHand) {
+            const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -90 * Math.PI / 180);
+            lHand.quaternion.multiply(q);
+          }
+          if (rHand) {
+            const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), 90 * Math.PI / 180);
+            rHand.quaternion.multiply(q);
+          }
+        };
+        adjustMaleBonesToTpose();
+
+        console.log("=== DIAGNOSTIC STEP 2 (after resetToRestPose) ===");
+        const bone2 = refs.male.getObjectByName('CC_Base_L_Upperarm_0155');
+        if (bone2) {
+          console.log("  quaternion: " + JSON.stringify(bone2.quaternion.toArray()));
+          console.log("  restLocalQ: " + (bone2.restLocalQ ? JSON.stringify(bone2.restLocalQ.toArray()) : "null"));
+        }
+
+        // Force CC Femme to stand up natively in rest pose by copying the entire
+        // skeletal posture (rotation, position, scale) of CC Homme.
+        // This elevates her hips to standing height and aligns her knee/ankle offsets
+        // straight down, allowing her mesh to deform and stretch into a correct vertical standing stance.
+        const overrideFemmePoseWithHomme = () => {
+          const maleBones = {};
+          refs.male.traverse(c => {
+            if (c.isBone) {
+              const base = c.name.replace(/_\d+/, '');
+              maleBones[base] = c;
+            }
+          });
+
+          refs.female.traverse(c => {
+            if (c.isBone) {
+              const base = c.name.replace(/_\d+/, '');
+              const maleBone = maleBones[base];
+              if (maleBone) {
+                c.quaternion.copy(maleBone.quaternion);
+                c.position.copy(maleBone.position);
+                c.scale.copy(maleBone.scale);
+              }
+            }
+          });
+          refs.female.updateMatrixWorld(true);
+        };
+        overrideFemmePoseWithHomme();
+        alignToFloor(refs.female);
+        alignToFloor(refs.male);
+
+        console.log("=== DIAGNOSTIC STEP 3 (after overrideFemmePoseWithHomme) ===");
+        const bone3 = refs.male.getObjectByName('CC_Base_L_Upperarm_0155');
+        if (bone3) {
+          console.log("  quaternion: " + JSON.stringify(bone3.quaternion.toArray()));
+          console.log("  restLocalQ: " + (bone3.restLocalQ ? JSON.stringify(bone3.restLocalQ.toArray()) : "null"));
+        }
+
+        // Cache the newly aligned standing T-pose as the rest pose for T-pose mode
+        const cacheTposeRest = (model) => {
+          if (!model) return;
+          model.updateMatrixWorld(true);
+          model.traverse(c => {
+            if (c.isBone) {
+              c.restLocalQ = c.quaternion.clone();
+              c.restLocalPos = c.position.clone();
+              c.restWorldQ = new THREE.Quaternion();
+              c.getWorldQuaternion(c.restWorldQ);
+            }
+          });
+        };
+        cacheTposeRest(refs.female);
+        cacheTposeRest(refs.male);
+
+        console.log("=== DIAGNOSTIC STEP 4 (after cacheTposeRest) ===");
+        const bone4 = refs.male.getObjectByName('CC_Base_L_Upperarm_0155');
+        if (bone4) {
+          console.log("  quaternion: " + JSON.stringify(bone4.quaternion.toArray()));
+          console.log("  restLocalQ: " + (bone4.restLocalQ ? JSON.stringify(bone4.restLocalQ.toArray()) : "null"));
+        }
+
         // Clean up loaded helper animation structures
         ccfAnimData.model.traverse(c => { if (c.dispose) c.dispose(); });
         cchAnimData.model.traverse(c => { if (c.dispose) c.dispose(); });
@@ -1198,7 +1328,7 @@
       targetModel.updateMatrixWorld(true);
       ccModel.updateMatrixWorld(true);
 
-      const stripCCPrefixSuffix = name => name.replace(/_\d+$/, '');
+      const stripCCPrefixSuffix = name => name.replace(/_\d+/, '');
 
       ccModel.traverse(c => {
         if (c.isBone) {
@@ -1212,36 +1342,21 @@
           const targetWorldQ = new THREE.Quaternion();
           targetBone.getWorldQuaternion(targetWorldQ);
 
-          let worldQ_src;
-          const isLeg = baseName.includes('Thigh') || baseName.includes('Calf') || baseName.includes('Foot') || baseName.includes('Toe');
+          const B_src = c.restWorldQ || new THREE.Quaternion();
+          const B_tgt = targetBone.restWorldQ || new THREE.Quaternion();
 
-          if (isLeg) {
-            const B_src = c.restWorldQ || new THREE.Quaternion();
-            const B_tgt = targetBone.restWorldQ || new THREE.Quaternion();
-            // Retargeting formula for legs to handle axis inversions natively
-            worldQ_src = targetWorldQ.clone()
-              .multiply(B_tgt.clone().invert())
-              .multiply(B_src);
-          } else {
-            // Direct copy for arms/torso/head to force T-pose alignment
-            worldQ_src = targetWorldQ;
-          }
+          // Mathematically exact retargeting formula for all bones
+          const worldQ_src = targetWorldQ.clone()
+            .multiply(B_tgt.clone().invert())
+            .multiply(B_src);
 
           if (c.parent) {
+            c.parent.updateMatrixWorld(true);
             const parentWorldQ = new THREE.Quaternion();
             c.parent.getWorldQuaternion(parentWorldQ);
             c.quaternion.copy(parentWorldQ.clone().invert().multiply(worldQ_src));
           } else {
             c.quaternion.copy(worldQ_src);
-          }
-
-          // Apply correction rotations to match coordinate systems and avoid twists
-          const gender = getCharacterGenderFromBoneName(c.name);
-          if (gender === 'female') {
-            if (baseName === 'CC_Base_Waist') {
-              const twist = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
-              c.quaternion.multiply(twist);
-            }
           }
 
           c.updateMatrix();
