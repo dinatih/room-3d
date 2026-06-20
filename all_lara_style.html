@@ -1186,47 +1186,82 @@
             if (c.isMesh) {
               let newName = c.name;
               const meshNameLower = (c.name || '').toLowerCase();
-              if (meshNameLower.includes('handgun_left') || meshNameLower === 'handgun_left') {
-                newName = 'handgun_left';
-              } else if (meshNameLower.includes('handgun_right') || meshNameLower === 'handgun_right') {
-                newName = 'handgun_right';
-              } else if (meshNameLower.includes('mp5') && !meshNameLower.includes('ammo')) {
-                newName = 'mp5';
-              } else if (meshNameLower.includes('mp5') && meshNameLower.includes('ammo')) {
-                newName = 'mp5_ammo';
-              } else if (meshNameLower.includes('backpack')) {
-                if (meshNameLower.includes('backpack1') || meshNameLower.includes('backpack_1')) {
+              
+              const matName = Array.isArray(c.material) ? (c.material[0] ? c.material[0].name : '') : (c.material ? c.material.name : '');
+              const matNameLower = (matName || '').toLowerCase();
+              const cleanLower = matName ? getCleanName(matName).toLowerCase() : '';
+              
+              let matched = false;
+              
+              // 1. Check material name (raw lowercase) for gear
+              if (matNameLower.includes('backpack') || matNameLower.includes('bag_low')) {
+                matched = true;
+                if (matNameLower.includes('backpack1') || matNameLower.includes('backpack_1')) {
                   newName = 'backpack_1';
-                } else if (meshNameLower.includes('backpack2') || meshNameLower.includes('backpack_2')) {
+                } else if (matNameLower.includes('backpack2') || matNameLower.includes('backpack_2')) {
                   newName = 'backpack_2';
                 } else {
                   newName = 'backpack';
                 }
-              } else if (c.material) {
-                const matName = Array.isArray(c.material) ? (c.material[0] ? c.material[0].name : '') : c.material.name;
-                if (matName) {
-                  const cleanLower = getCleanName(matName).toLowerCase();
-                  if ((cleanLower.includes('handgun left') || cleanLower.includes('hhl2') || cleanLower.includes('.hhl')) && !cleanLower.includes('holster')) {
-                    newName = 'handgun_left';
-                  } else if ((cleanLower.includes('handgun right') || cleanLower.includes('hhr2') || cleanLower.includes('.hhr')) && !cleanLower.includes('holster')) {
-                    newName = 'handgun_right';
-                  } else if (cleanLower.includes('mp5') && !cleanLower.includes('ammo') && !cleanLower.includes('holster')) {
-                    newName = 'mp5';
-                  } else if (cleanLower.includes('mp5') && cleanLower.includes('ammo') && !cleanLower.includes('holster')) {
-                    newName = 'mp5_ammo';
-                  } else if (cleanLower.includes('backpack')) {
-                    if (cleanLower.includes('backpack1') || cleanLower.includes('backpack_1')) {
-                      newName = 'backpack_1';
-                    } else if (cleanLower.includes('backpack2') || cleanLower.includes('backpack_2')) {
-                      newName = 'backpack_2';
-                    } else {
-                      newName = 'backpack';
-                    }
-                  } else {
-                    newName = getCleanName(matName);
-                  }
+              } else if (matNameLower.includes('pda')) {
+                newName = 'pda';
+                matched = true;
+              } else if (matNameLower.includes('grenade')) {
+                newName = 'grenades';
+                matched = true;
+              } else if (matNameLower.includes('holster') || matNameLower.includes('kabura')) {
+                newName = 'holsters';
+                matched = true;
+              }
+              // 2. Check material clean name for weapons
+              else if (cleanLower) {
+                if ((cleanLower.includes('handgun left') || cleanLower.includes('hhl2') || cleanLower.includes('.hhl')) && !cleanLower.includes('holster')) {
+                  newName = 'handgun_left';
+                  matched = true;
+                } else if ((cleanLower.includes('handgun right') || cleanLower.includes('hhr2') || cleanLower.includes('.hhr')) && !cleanLower.includes('holster')) {
+                  newName = 'handgun_right';
+                  matched = true;
+                } else if (cleanLower.includes('mp5') && !cleanLower.includes('ammo') && !cleanLower.includes('holster')) {
+                  newName = 'mp5';
+                  matched = true;
+                } else if (cleanLower.includes('mp5') && cleanLower.includes('ammo') && !cleanLower.includes('holster')) {
+                  newName = 'mp5_ammo';
+                  matched = true;
                 }
               }
+              
+              // 3. Fall back to mesh name check, only if no match yet and mesh name does not contain '|'
+              if (!matched && !meshNameLower.includes('|')) {
+                if (meshNameLower.includes('handgun_left') || meshNameLower === 'handgun_left') {
+                  newName = 'handgun_left';
+                } else if (meshNameLower.includes('handgun_right') || meshNameLower === 'handgun_right') {
+                  newName = 'handgun_right';
+                } else if (meshNameLower.includes('mp5') && !meshNameLower.includes('ammo')) {
+                  newName = 'mp5';
+                } else if (meshNameLower.includes('mp5') && meshNameLower.includes('ammo')) {
+                  newName = 'mp5_ammo';
+                } else if (meshNameLower.includes('backpack') || meshNameLower.includes('bag_low')) {
+                  if (meshNameLower.includes('backpack1') || meshNameLower.includes('backpack_1')) {
+                    newName = 'backpack_1';
+                  } else if (meshNameLower.includes('backpack2') || meshNameLower.includes('backpack_2')) {
+                    newName = 'backpack_2';
+                  } else {
+                    newName = 'backpack';
+                  }
+                } else if (meshNameLower.includes('pda')) {
+                  newName = 'pda';
+                } else if (meshNameLower.includes('grenade')) {
+                  newName = 'grenades';
+                } else if (meshNameLower.includes('holster') || meshNameLower.includes('kabura')) {
+                  newName = 'holsters';
+                }
+              }
+              
+              // 4. Default fallback: clean material name if no match from steps 1-3
+              if (newName === c.name && matName) {
+                newName = getCleanName(matName);
+              }
+              
               if (newName) {
                 c.name = newName;
               }
