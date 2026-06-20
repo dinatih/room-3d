@@ -370,7 +370,8 @@
       'handgun_left', 'handgun_right', 'mp5', 'mp5_ammo',
       'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster',
       'shoes', 'goggles', 'face', 'personal_light',
-      'buckle', 'ribbon', 'headset', 'eyes'
+      'buckle', 'ribbon', 'headset', 'eyes',
+      'outfit_body', 'outfit_up', 'outfit_down'
     ]);
 
     function updateMeshListUI() {
@@ -1362,6 +1363,15 @@
                 } else if (matNameLower.includes('buckle')) {
                   newName = 'buckle';
                   matched = true;
+                } else if (matNameLower.includes('catsuit') || matNameLower.includes('swimsuit') || matNameLower.includes('swim') || matNameLower.includes('dress') || matNameLower.includes('bikini') || matNameLower.includes('combi')) {
+                  newName = 'outfit_body';
+                  matched = true;
+                } else if (matNameLower.includes('shirt') || matNameLower.includes('jacket') || matNameLower.includes('bodyu') || matNameLower.includes('upperbody') || matNameLower.includes('upper_body')) {
+                  newName = 'outfit_up';
+                  matched = true;
+                } else if (matNameLower.includes('pants') || matNameLower.includes('shorts') || matNameLower.includes('bodyl') || matNameLower.includes('lowerbody') || matNameLower.includes('lower_body')) {
+                  newName = 'outfit_down';
+                  matched = true;
                 } else if (matNameLower.includes('boot') || matNameLower.includes('shoes') || matNameLower.includes('feet') || matNameLower.includes('socks')) {
                   newName = 'shoes';
                   matched = true;
@@ -1458,6 +1468,15 @@
                   matched = true;
                 } else if (cleanMeshLower.includes('buckle')) {
                   newName = 'buckle';
+                  matched = true;
+                } else if (cleanMeshLower.includes('catsuit') || cleanMeshLower.includes('swimsuit') || cleanMeshLower.includes('swim') || cleanMeshLower.includes('dress') || cleanMeshLower.includes('bikini') || cleanMeshLower.includes('combi')) {
+                  newName = 'outfit_body';
+                  matched = true;
+                } else if (cleanMeshLower.includes('shirt') || cleanMeshLower.includes('jacket') || cleanMeshLower.includes('bodyu') || cleanMeshLower.includes('upperbody') || cleanMeshLower.includes('upper_body')) {
+                  newName = 'outfit_up';
+                  matched = true;
+                } else if (cleanMeshLower.includes('pants') || cleanMeshLower.includes('shorts') || cleanMeshLower.includes('bodyl') || cleanMeshLower.includes('lowerbody') || cleanMeshLower.includes('lower_body')) {
+                  newName = 'outfit_down';
                   matched = true;
                 } else if (cleanMeshLower.includes('boot') || cleanMeshLower.includes('shoes') || cleanMeshLower.includes('feet') || cleanMeshLower.includes('socks')) {
                   newName = 'shoes';
