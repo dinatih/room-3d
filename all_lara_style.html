@@ -54,6 +54,14 @@
                   color 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
     }
     .anim-item:hover { color: #fff; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); padding-left: 16px; }
+    .anim-item:focus-visible { 
+      outline: none;
+      color: #fff; 
+      background: rgba(255,255,255,0.08); 
+      border-color: #ff4444; 
+      padding-left: 16px;
+      box-shadow: 0 0 0 2px rgba(255, 68, 68, 0.4);
+    }
     .anim-item.active { 
       background: linear-gradient(135deg, rgba(255, 68, 68, 0.25) 0%, rgba(255, 68, 68, 0.1) 100%); 
       border-color: rgba(255, 68, 68, 0.5); color: #ff6666; font-weight: bold; 
@@ -111,6 +119,16 @@
     .control-panel.collapsed .panel-toggle-btn {
       transform: rotate(-180deg);
     }
+    .hierarchy-node-clickable:hover {
+      background: rgba(255, 255, 255, 0.1) !important;
+      color: #fff !important;
+    }
+    .hierarchy-node-selected {
+      background: rgba(255, 51, 102, 0.25) !important;
+      border: 1px solid rgba(255, 51, 102, 0.5);
+      color: #ff3366 !important;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -118,10 +136,24 @@
   <div id="view"></div>
   <div id="hud">
     <h3>Lara Croft <span class="red">Style Comparison</span></h3>
-    <p>Comparing 15 variations side-by-side. Pan horizontally using the mouse.</p>
+    <p>Comparing <span id="model-count-text">15</span> variations side-by-side. Pan horizontally using the mouse.</p>
     <p id="loading-status">Loading models...</p>
+    <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; pointer-events: auto;">
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
+        <input type="checkbox" id="toggle-skeletons" style="cursor: pointer; accent-color: #ff4444;">
+        <span>Afficher les Squelettes</span>
+      </label>
+    </div>
   </div>
-  <div id="mesh-control" class="control-panel">
+
+  <div id="hierarchy-tooltip" style="position: fixed; display: none; background: rgba(18, 18, 24, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 20px 15px 15px 15px; font-size: 11px; max-height: calc(100vh - 40px); overflow-y: auto; pointer-events: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.5); z-index: 99999; color: #ddd; width: 320px; right: 20px; top: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; margin-bottom: 10px;">
+      <span style="font-weight: bold; color: #fff; font-size: 13px;" id="tooltip-model-name">Model Name</span>
+      <span style="cursor: pointer; color: #ff6666; font-size: 18px; font-weight: bold; padding: 0 4px; user-select: none; line-height: 1;" onclick="hideTooltip()">&times;</span>
+    </div>
+    <div id="tooltip-content"></div>
+  </div>
+  <div id="mesh-control" class="control-panel collapsed">
     <h4 class="panel-header" onclick="togglePanel('mesh-control')">
       <span>Meshes Visibility</span>
       <span class="panel-toggle-btn">▼</span>
@@ -163,6 +195,23 @@
     import { DRACOLoader }   from 'three/addons/loaders/DRACOLoader.js';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+    // Global error diagnostic display
+    window.addEventListener('error', (e) => {
+      const errDiv = document.createElement('div');
+      errDiv.style.position = 'fixed';
+      errDiv.style.top = '0';
+      errDiv.style.left = '0';
+      errDiv.style.width = '100%';
+      errDiv.style.background = 'rgba(255,0,0,0.9)';
+      errDiv.style.color = '#fff';
+      errDiv.style.padding = '10px';
+      errDiv.style.zIndex = '999999';
+      errDiv.style.fontFamily = 'monospace';
+      errDiv.style.fontSize = '12px';
+      errDiv.textContent = `[JS Error] ${e.message} at ${e.filename}:${e.lineno}`;
+      document.body.appendChild(errDiv);
+    });
+
     window.togglePanel = function(id) {
       const el = document.getElementById(id);
       if (el) el.classList.toggle('collapsed');
@@ -184,6 +233,7 @@
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 100, 0);
+    controls.maxPolarAngle = Math.PI; // Allow rotating below the floor/models
     controls.update();
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.8));
@@ -204,6 +254,47 @@
     const meshVisibility = new Map(); // name -> boolean
     const allModels = [];
     window.allModels = allModels;
+
+    const variants = [
+      // Groupe 1 : 89 os (suffixes numériques bas)
+      { id: 'lara_croft_324_rigged', label: 'Lara 324 Rigged', file: 'media/all_lara/lara_croft_324_rigged.glb', color: '#ff6600' },
+      
+      // Groupe 2 : 98 os (suffixes numériques en _085)
+      { id: 'lara_croft_43254_rigged', label: 'Lara 43254 Rigged', file: 'media/all_lara/lara_croft_43254_rigged.glb', color: '#33bb66' },
+      { id: 'lara_croft_4543', label: 'Lara 4543', file: 'media/all_lara/lara_croft_4543.glb', color: '#aa77ff' },
+      { id: 'lara_croft_motorcycle_gear', label: 'Motorcycle Gear', file: 'media/all_lara/lara_croft_motorcycle_gear.glb', color: '#8d99ae' },
+      { id: 'lara_croft_spy_gear', label: 'Spy Gear', file: 'media/all_lara/lara_croft_spy_gear.glb', color: '#3d5a80' },
+      { id: 'lara_croft_suit', label: 'Suit', file: 'media/all_lara/lara_croft_suit.glb', color: '#edf2f4' },
+      
+      // Groupe 3 : 92 os (suffixes numériques bas)
+      { id: 'lara_croft_brown_jacket', label: 'Brown Jacket', file: 'media/all_lara/lara_croft_brown_jacket.glb', color: '#d4a373' },
+      { id: 'lara_croft_swim_gear', label: 'Swim Gear', file: 'media/all_lara/lara_croft_swim_gear.glb', color: '#00b4d8' },
+      { id: 'lara_croft_swim_gear_1', label: 'Swim Gear 1', file: 'media/all_lara/lara_croft_swim_gear_1.glb', color: '#90e0ef' },
+      
+      // Groupe 4 : 87 os (suffixes intermédiaires _076)
+      { id: 'lara_croft_dress_345', label: 'Dress 345', file: 'media/all_lara/lara_croft_dress_345.glb', color: '#e07a5f' },
+      
+      // Groupe 5 : 136 os (robe rouge, squelette complexe)
+      { id: 'lara_croft_red_dress', label: 'Red Dress', file: 'media/all_lara/lara_croft_red_dress.glb', color: '#ff4d6d' },
+      
+      // Groupe 6 : 93 os (squelette d'accessoire spécifique)
+      { id: 'lara_croft_swim_gear_243', label: 'Swim Gear 243', file: 'media/all_lara/lara_croft_swim_gear_243.glb', color: '#0077b6' },
+      
+      // Groupe 7 : 88-97 os (sans suffixe numérique)
+      { id: 'lara_croft_black_tank_top', label: 'Black Tank Top', file: 'media/all_lara/lara_croft_black_tank_top.glb', color: '#4a4a4a', fixOpaque: true },
+      { id: 'lara_croft_4259', label: 'Lara 4259', file: 'media/all_lara/lara_croft_4259.glb', color: '#d2a23c', fixOpaque: true },
+      { id: 'lara_croft_3254_rigged', label: 'Lara 3254 Rigged', file: 'media/all_lara/lara_croft_3254_rigged.glb', color: '#99cc33', fixOpaque: true },
+      { id: 'lara_croft_gold_shades', label: 'Gold Shades', file: 'media/all_lara/lara_croft_gold_shades.glb', color: '#ffd700', fixOpaque: true },
+      
+      // Groupe 8 : 88 os (préfixe mixamorig_)
+      { id: 'lara_officiel', label: 'Lara Officiel', file: 'media/sandbox/lara_native.glb', color: '#ff0055', fixOpaque: true },
+      
+      // Groupe 9 : 91 os (sans suffixe, variante zip)
+      { id: 'lara_croft_zip', label: 'Swim', file: 'media/all_lara/lara_croft_zip.glb', color: '#cc99ff', fixOpaque: true },
+
+      // Groupe 10 : 63 os (majuscules, squelette ultra-simplifié)
+      { id: 'lara_croft_543i', label: 'Lara 543i', file: 'media/all_lara/lara_croft_543i.glb', color: '#00ffcc', fixOpaque: true }
+    ];
 
     function getCleanName(name) {
       if (!name) return "Unnamed";
@@ -273,19 +364,19 @@
 
     // Bone mapping dictionary between Mixamo and Lara 2026 Native
     const BONE_SYNONYMS = {
-      'Hips': ['hips', 'pelvis', 'cog', 'roothips', 'rootground'],
+      'Hips': ['hips', 'pelvis', 'cog', 'roothips', 'rootground', 'hip'],
       'Spine': ['spine01', 'spinelower', 'spine0', 'spine1', 'spine'],
       'Spine2': ['spine02', 'spineupper', 'spine2', 'spine03', 'spine'],
       'Neck': ['neck', 'headnecklower'],
       'Head': ['head', 'headneckupper'],
-      'LeftShoulder': ['leftshoulder', 'shoulderl', 'claviclel', 'armleftshoulder', 'larmclavicle'],
-      'LeftArm': ['armleftshoulder2', 'upperarml', 'larmhumerus', 'upperarm.l', 'upper_arm.l', 'leftarm', 'armleftelbow', 'arm.l'],
-      'LeftForeArm': ['lowerarml', 'larmradius', 'forearm.l', 'forearm_l', 'leftforearm', 'armleftelbow', 'armleftwrist'],
-      'LeftHand': ['handl', 'larmwrist', 'hand.l', 'hand_l', 'wrist.l', 'wrist_l', 'lefthand', 'armleftwrist'],
-      'RightShoulder': ['rightshoulder', 'shoulderr', 'clavicler', 'armrightshoulder', 'rarmclavicle'],
-      'RightArm': ['rightarm', 'armrightshoulder2', 'upperarmr', 'armrightelbow', 'rarmhumerus', 'upperarm.r', 'upper_arm.r', 'arm.r'],
-      'RightForeArm': ['lowerarmr', 'rarmradius', 'forearm.r', 'forearm_r', 'rightforearm', 'armrightelbow', 'armrightwrist'],
-      'RightHand': ['handr', 'rarmwrist', 'hand.r', 'hand_r', 'wrist.r', 'wrist_r', 'righthand', 'armrightwrist'],
+      'LeftShoulder': ['leftshoulder', 'shoulderl', 'claviclel', 'armleftshoulder', 'larmclavicle', 'shlderl'],
+      'LeftArm': ['armleftshoulder2', 'upperarml', 'larmhumerus', 'upperarm.l', 'upper_arm.l', 'leftarm', 'armleftelbow', 'arm.l', 'bicepl'],
+      'LeftForeArm': ['lowerarml', 'larmradius', 'forearm.l', 'forearm_l', 'leftforearm', 'armleftelbow', 'armleftwrist', 'forarml', 'forearml'],
+      'LeftHand': ['handl', 'larmwrist', 'hand.l', 'hand_l', 'wrist.l', 'wrist_l', 'lefthand', 'armleftwrist', 'palml'],
+      'RightShoulder': ['rightshoulder', 'shoulderr', 'clavicler', 'armrightshoulder', 'rarmclavicle', 'shlderr'],
+      'RightArm': ['rightarm', 'armrightshoulder2', 'upperarmr', 'armrightelbow', 'rarmhumerus', 'upperarm.r', 'upper_arm.r', 'arm.r', 'bicepr'],
+      'RightForeArm': ['lowerarmr', 'rarmradius', 'forearm.r', 'forearm_r', 'rightforearm', 'armrightelbow', 'armrightwrist', 'forarmr', 'forearmr'],
+      'RightHand': ['handr', 'rarmwrist', 'hand.r', 'hand_r', 'wrist.r', 'wrist_r', 'righthand', 'armrightwrist', 'palmr'],
       'LeftUpLeg': ['legleftthigh', 'thighl', 'llegfemur', 'thigh.l', 'thigh_l', 'leftupleg'],
       'LeftLeg': ['legleftknee', 'calfl', 'shinl', 'llegtibia', 'shin.l', 'shin_l', 'calf.l', 'calf_l', 'leftleg'],
       'LeftFoot': ['legleftankle', 'footl', 'llegankle', 'foot.l', 'foot_l', 'ankle.l', 'ankle_l', 'leftfoot'],
@@ -302,6 +393,7 @@
       const segmentLetter = ['a', 'b', 'c'][segmentIndex] || 'a';
       
       const candidates = [
+        new RegExp(`^${type}${segment}_${sideChar}$`, 'i'),
         new RegExp(`arm.*${side}.*finger.*${type === 'thumb' ? 1 : type === 'index' ? 2 : type === 'middle' ? 3 : type === 'ring' ? 4 : 5}${segmentLetter}`, 'i'),
         new RegExp(`${type}_0${segment}_${sideChar}`, 'i'),
         new RegExp(`${type === 'thumb' ? 'thumb' : 'f_' + type}\\.0${segment}\\.${sideChar}`, 'i'),
@@ -694,6 +786,7 @@
     }
 
     const ANIMATION_FILES = [
+      "idle.glb",
       "walking.glb",
       "happy_walk.glb",
       "victory.glb",
@@ -819,12 +912,16 @@
         }
       });
 
-      const hudP = document.querySelector('#hud p:last-child');
-      const originalText = hudP.textContent;
-      hudP.innerHTML = `Loading animation <span style="color:#ff4444">${formatName(file)}</span>...`;
+      const hudP = document.getElementById('loading-status');
+      const originalText = hudP ? hudP.textContent : '';
+      if (hudP) {
+        hudP.innerHTML = `Loading animation <span style="color:#ff4444">${formatName(file)}</span>...`;
+      }
 
       loader.load('media/glb-animations/' + file, (gltf) => {
-        hudP.textContent = originalText;
+        if (hudP) {
+          hudP.textContent = originalText;
+        }
         console.log("GLB animation loaded:", file, "Animations count:", gltf.animations ? gltf.animations.length : 0);
         if (gltf.animations && gltf.animations.length > 0) {
           rawAnimClip = gltf.animations[0];
@@ -856,9 +953,16 @@
         div.className = 'anim-item';
         div.dataset.file = file;
         div.textContent = formatName(file);
-        div.onclick = () => {
+        div.tabIndex = 0;
+        div.addEventListener('click', () => {
           loadAndPlayAnimation(file);
-        };
+        });
+        div.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.keyCode === 13 || e.key === ' ' || e.keyCode === 32) {
+            e.preventDefault();
+            loadAndPlayAnimation(file);
+          }
+        });
         animListEl.appendChild(div);
       });
     }
@@ -892,68 +996,93 @@
         speedVal.textContent = playbackSpeed.toFixed(1) + 'x';
       };
 
-      const variants = [
-        { id: 'lara_croft_324_rigged', label: 'Lara 324 Rigged', file: 'media/all_lara/lara_croft_324_rigged.glb', offset: -7, color: '#ff6600' },
-        { id: 'lara_croft_4543', label: 'Lara 4543', file: 'media/all_lara/lara_croft_4543.glb', offset: -6, color: '#aa77ff' },
-        { id: 'lara_croft_43254_rigged', label: 'Lara 43254 Rigged', file: 'media/all_lara/lara_croft_43254_rigged.glb', offset: -5, color: '#33bb66' },
-        { id: 'lara_croft_brown_jacket', label: 'Brown Jacket', file: 'media/all_lara/lara_croft_brown_jacket.glb', offset: -4, color: '#d4a373' },
-        { id: 'lara_croft_dress_345', label: 'Dress 345', file: 'media/all_lara/lara_croft_dress_345.glb', offset: -3, color: '#e07a5f' },
-        { id: 'lara_croft_motorcycle_gear', label: 'Motorcycle Gear', file: 'media/all_lara/lara_croft_motorcycle_gear.glb', offset: -2, color: '#8d99ae' },
-        { id: 'lara_croft_red_dress', label: 'Red Dress', file: 'media/all_lara/lara_croft_red_dress.glb', offset: 0, color: '#ff4d6d', hideHairMeshes: true },
-        { id: 'lara_hair', label: 'Lara Hair', file: 'media/all_lara/lara_hair.glb', offset: 0, color: '#ffd166', noLabel: true, alignToModel: 'lara_croft_red_dress', skipNormalize: true },
-        { id: 'lara_croft_spy_gear', label: 'Spy Gear', file: 'media/all_lara/lara_croft_spy_gear.glb', offset: 1, color: '#3d5a80' },
-        { id: 'lara_croft_suit', label: 'Suit', file: 'media/all_lara/lara_croft_suit.glb', offset: 2, color: '#edf2f4' },
-        { id: 'lara_croft_swim_gear', label: 'Swim Gear', file: 'media/all_lara/lara_croft_swim_gear.glb', offset: 3, color: '#00b4d8' },
-        { id: 'lara_croft_swim_gear_1', label: 'Swim Gear 1', file: 'media/all_lara/lara_croft_swim_gear_1.glb', offset: 4, color: '#90e0ef' },
-        { id: 'lara_croft_swim_gear_243', label: 'Swim Gear 243', file: 'media/all_lara/lara_croft_swim_gear_243.glb', offset: 5, color: '#0077b6' },
-        { id: 'lara_croft_black_tank_top', label: 'Black Tank Top', file: 'media/all_lara/lara_croft_black_tank_top.glb', offset: 6, color: '#4a4a4a', fixOpaque: true },
-        { id: 'lara_croft_4259', label: 'Lara 4259', file: 'media/all_lara/lara_croft_4259.glb', offset: 7, color: '#d2a23c', fixOpaque: true }
-      ];
+      document.getElementById('model-count-text').textContent = variants.length;
 
       // Track loaded models by id for post-load alignment
       const modelsMap = {};
 
-      // Find the world-space Y of the head bone (ignoring face detail bones)
-      function getHeadBoneWorldY(model) {
-        model.updateMatrixWorld(true);
-        const skipPat = /jaw|tongue|lip|eyelid|eyebrow|brow\.?[0-9]|lash|tooth|teeth|ear|cheek|chin/i;
-        const headPat  = /mixamorig.*:head$|head neck upper|^head$/i;
+      // Find head bone
+      function getHeadBone(model) {
+        const skipPat = /jaw|tongue|lip|eyelid|eyebrow|brow\.?[0-9]|lash|tooth|teeth|ear|cheek|chin|hair|eyeball|^eye|top_end/i;
         let best = null;
         model.traverse(c => {
           if (!c.isBone || best) return;
           if (skipPat.test(c.name)) return;
-          if (headPat.test(c.name)) best = c;
+          const name = c.name.toLowerCase();
+          if (name.includes('head') && !name.includes('neck lower') && !name.includes('neck_lower')) {
+            best = c;
+          }
         });
-        if (!best) return null;
+        return best;
+      }
+
+      // Find the world-space Y of the head bone (ignoring face detail bones)
+      function getHeadBoneWorldY(model) {
+        const bone = getHeadBone(model);
+        if (!bone) return null;
+        model.updateMatrixWorld(true);
         const pos = new THREE.Vector3();
-        best.getWorldPosition(pos);
+        bone.getWorldPosition(pos);
         return pos.y;
       }
 
-      // Scale Lara Hair to match target's proportions, then align head bones in Y
+      // Scale Lara Hair to match target's proportions, then align head bones in X, Y, Z
       function applyHairToTarget(hairModel, targetModel) {
-        // 1. Copy target scale so hair skeleton has the same unit size
-        const ts = targetModel.scale.x;
-        hairModel.scale.setScalar(ts);
-        hairModel.updateMatrixWorld(true);
+        const targetHeadBone = getHeadBone(targetModel);
+        const hairHeadBone = getHeadBone(hairModel);
 
-        // 2. Ground the hair (lift so its lowest vertex is at Y=0)
-        const box = new THREE.Box3().setFromObject(hairModel);
-        hairModel.position.y = -box.min.y;
-        hairModel.updateMatrixWorld(true);
-
-        // 3. Match head bone world-Y
-        const targetHeadY = getHeadBoneWorldY(targetModel);
-        const hairHeadY   = getHeadBoneWorldY(hairModel);
-        if (targetHeadY !== null && hairHeadY !== null) {
-          hairModel.position.y += (targetHeadY - hairHeadY);
+        if (targetHeadBone && hairHeadBone) {
+          // 1. Reset scale and position to base to measure world scale cleanly
+          hairModel.scale.set(1, 1, 1);
+          hairModel.position.set(0, 0, 0);
           hairModel.updateMatrixWorld(true);
-          console.log(`[Lara Hair] scale=${ts.toFixed(3)}, head delta Y=${(targetHeadY - hairHeadY).toFixed(1)}`);
-        }
 
-        // 4. Same X as target (Red Dress)
-        hairModel.position.x = targetModel.position.x;
-        hairModel.updateMatrixWorld(true);
+          // Get target head bone world scale
+          const targetScale = new THREE.Vector3();
+          targetHeadBone.getWorldScale(targetScale);
+
+          // Get hair head bone world scale
+          const hairScale = new THREE.Vector3();
+          hairHeadBone.getWorldScale(hairScale);
+
+          // Calculate scale factor matching the head bone scale (scaled down to 38% to fit the head proportions)
+          const scaleFactor = (targetScale.y / hairScale.y) * 0.38;
+          hairModel.scale.setScalar(scaleFactor);
+          hairModel.updateMatrixWorld(true);
+
+          // 2. Align head bones in 3D (X, Y, Z)
+          const targetHeadPos = new THREE.Vector3();
+          targetHeadBone.getWorldPosition(targetHeadPos);
+
+          const hairHeadPos = new THREE.Vector3();
+          hairHeadBone.getWorldPosition(hairHeadPos);
+
+          // Position hair model so its head bone aligns exactly with the target's head bone (moved back by 3cm)
+          hairModel.position.x += (targetHeadPos.x - hairHeadPos.x);
+          hairModel.position.y += (targetHeadPos.y - hairHeadPos.y);
+          hairModel.position.z += (targetHeadPos.z - hairHeadPos.z) - 3;
+          hairModel.updateMatrixWorld(true);
+
+          console.log(`[Lara Hair] scaled by factor ${scaleFactor.toFixed(3)} to match head bone, aligned in 3D`);
+        } else {
+          // Fallback to simple scaling and Y alignment
+          const ts = targetModel.scale.x;
+          hairModel.scale.setScalar(ts);
+          hairModel.updateMatrixWorld(true);
+
+          const box = new THREE.Box3().setFromObject(hairModel);
+          hairModel.position.y = -box.min.y;
+          hairModel.updateMatrixWorld(true);
+
+          const targetHeadY = getHeadBoneWorldY(targetModel);
+          const hairHeadY   = getHeadBoneWorldY(hairModel);
+          if (targetHeadY !== null && hairHeadY !== null) {
+            hairModel.position.y += (targetHeadY - hairHeadY);
+            hairModel.updateMatrixWorld(true);
+          }
+          hairModel.position.x = targetModel.position.x;
+          hairModel.updateMatrixWorld(true);
+        }
       }
 
       function normalizeHeight(model, targetHeight = 175) {
@@ -976,7 +1105,7 @@
 
       let loadedCount = 0;
 
-      variants.forEach(v => {
+      variants.forEach((v, index) => {
         loader.load(v.file, (gltf) => {
           const model = gltf.scene;
           model.name = v.label;
@@ -1002,9 +1131,14 @@
               if (v.fixOpaque) {
                 const mats = Array.isArray(c.material) ? c.material : [c.material];
                 mats.forEach(m => {
+                  const mName = (m.name || '').toLowerCase();
+                  const meshName = (c.name || '').toLowerCase();
+                  const isHairOrLash = mName.includes('hair') || mName.includes('lash') || mName.includes('trans') || 
+                                       meshName.includes('hair') || meshName.includes('lash');
                   m.transparent = false;
-                  m.alphaTest = 0;
+                  m.alphaTest = isHairOrLash ? 0.1 : 0;
                   m.depthWrite = true;
+                  if (isHairOrLash) m.side = THREE.DoubleSide;
                   m.needsUpdate = true;
                 });
               }
@@ -1025,21 +1159,20 @@
           const mixer = new THREE.AnimationMixer(model);
           model.userData.mixer = mixer;
           
+          model.name = v.id;
+
+          const skeletonHelper = new THREE.SkeletonHelper(model);
+          const showSkeletons = document.getElementById('toggle-skeletons')?.checked || false;
+          skeletonHelper.visible = showSkeletons;
+          scene.add(skeletonHelper);
+          model.userData.skeletonHelper = skeletonHelper;
+
           allModels.push(model);
           modelsMap[v.id] = model;
-          const x = v.offset * SPACING;
+          const offset = index - Math.floor(variants.length / 2);
+          const x = offset * SPACING;
           model.position.x = x;
           scene.add(model);
-
-          // Align + scale Lara Hair to match Red Dress proportions
-          if (v.alignToModel) {
-            const target = modelsMap[v.alignToModel];
-            if (target) applyHairToTarget(model, target);
-          }
-          // If Red Dress loads FIRST, re-trigger alignment on already-loaded hair
-          if (v.id === 'lara_croft_red_dress' && modelsMap['lara_hair']) {
-            applyHairToTarget(modelsMap['lara_hair'], model);
-          }
 
           if (!v.noLabel) {
             const label = createNameLabel(v.label, v.color);
@@ -1048,10 +1181,11 @@
           }
 
           loadedCount++;
-          document.getElementById('loading-status').innerText = `Loaded ${loadedCount} / 15 models`;
+          document.getElementById('loading-status').innerText = `Loaded ${loadedCount} / ${variants.length} models`;
 
-          if (loadedCount === 15) {
-            document.getElementById('loading-screen').style.display = 'none';
+          if (loadedCount === variants.length) {
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) loadingScreen.style.display = 'none';
             loadAndPlayAnimation("happy_walk.glb");
           } else if (rawAnimClip && animScene) {
             const retargeted = retargetMixamoClip(rawAnimClip, model, animScene);
@@ -1066,7 +1200,12 @@
         }, undefined, (err) => {
           console.error("Failed to load model:", v.label, err);
           loadedCount++;
-          document.getElementById('loading-status').innerText = `Error loading ${v.label} (${loadedCount}/15)`;
+          document.getElementById('loading-status').innerText = `Error loading ${v.label} (${loadedCount}/${variants.length})`;
+          if (loadedCount === variants.length) {
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) loadingScreen.style.display = 'none';
+            loadAndPlayAnimation("happy_walk.glb");
+          }
         });
       });
     });
@@ -1075,6 +1214,264 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Toggle skeletons checkbox handler
+    const toggleSkeletonsCheckbox = document.getElementById('toggle-skeletons');
+    if (toggleSkeletonsCheckbox) {
+      toggleSkeletonsCheckbox.addEventListener('change', (e) => {
+        const show = e.target.checked;
+        allModels.forEach(model => {
+          if (model.userData.skeletonHelper) {
+            model.userData.skeletonHelper.visible = show;
+          }
+        });
+      });
+    }
+
+    // Hover tooltip for Object3D hierarchy
+    const tooltipEl = document.getElementById('hierarchy-tooltip');
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let hoveredModel = null;
+    let isMouseDown = false;
+    const hierarchyCache = new Map();
+
+    window.addEventListener('mousedown', (e) => { 
+      isMouseDown = true; 
+      const isClickInsideTooltip = tooltipEl && tooltipEl.contains(e.target);
+      const isClickInsideControls = (document.getElementById('mesh-control')?.contains(e.target)) || 
+                                   (document.getElementById('anim-control')?.contains(e.target)) || 
+                                   (document.getElementById('hud')?.contains(e.target));
+      if (!isClickInsideTooltip && !isClickInsideControls) {
+        hideTooltip(); 
+      }
+    });
+    window.addEventListener('mouseup', () => { isMouseDown = false; });
+
+    function getHierarchyHTML(model) {
+      if (hierarchyCache.has(model.uuid)) {
+        return hierarchyCache.get(model.uuid);
+      }
+      
+      let html = '';
+      let boneCount = 0;
+      let meshCount = 0;
+      let otherCount = 0;
+      
+      function traverseNode(node, depth = 0) {
+        const indent = '&nbsp;'.repeat(depth * 2);
+        let typeIcon = '⚪';
+        let color = '#a1a1aa';
+        
+        if (node.isBone) {
+          typeIcon = '🦴';
+          color = '#71717a';
+          boneCount++;
+        } else if (node.isSkinnedMesh) {
+          typeIcon = '👗';
+          color = '#ff6b6b';
+          meshCount++;
+        } else if (node.isMesh) {
+          typeIcon = '📦';
+          color = '#51cf66';
+          meshCount++;
+        } else if (node.isGroup) {
+          typeIcon = '📁';
+          color = '#339af0';
+          otherCount++;
+        } else {
+          otherCount++;
+        }
+        
+        const label = node.name || 'Unnamed';
+        if (node.isSkinnedMesh) {
+          html += `<div id="node-${node.uuid}" class="hierarchy-node-clickable" onclick="window.highlightMesh('${model.uuid}', '${node.uuid}', event)" style="color: ${color}; font-family: monospace; white-space: nowrap; line-height: 1.4; display: block; margin: 1px 0; border-radius: 4px; padding: 2px 4px; cursor: pointer;">${indent}${typeIcon} <strong>${label}</strong> <span style="font-size: 9px; opacity: 0.5;">(${node.type})</span></div>`;
+        } else {
+          html += `<div style="color: ${color}; font-family: monospace; white-space: nowrap; line-height: 1.4; padding: 2px 4px;">${indent}${typeIcon} <strong>${label}</strong> <span style="font-size: 9px; opacity: 0.5;">(${node.type})</span></div>`;
+        }
+        
+        for (let i = 0; i < node.children.length; i++) {
+          traverseNode(node.children[i], depth + 1);
+        }
+      }
+      
+      traverseNode(model, 0);
+      
+      const header = `<div style="font-size: 10px; color: #ff4d6d; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">Stats: ${meshCount} meshes, ${boneCount} bones, ${otherCount} groups</div>`;
+      const finalHTML = header + html;
+      hierarchyCache.set(model.uuid, finalHTML);
+      return finalHTML;
+    }
+
+    let activeHighlightedMesh = null;
+    let originalMeshMaterials = null;
+
+    window.highlightMesh = function(modelUuid, meshUuid, event) {
+      if (event) {
+        event.stopPropagation();
+      }
+      
+      const model = allModels.find(m => m.uuid === modelUuid);
+      if (!model) return;
+      
+      let targetMesh = null;
+      model.traverse(c => {
+        if (c.uuid === meshUuid) {
+          targetMesh = c;
+        }
+      });
+      
+      if (!targetMesh) return;
+      
+      // Toggle if already active
+      if (activeHighlightedMesh === targetMesh) {
+        window.clearHighlight();
+        return;
+      }
+      
+      window.clearHighlight();
+      
+      activeHighlightedMesh = targetMesh;
+      originalMeshMaterials = targetMesh.material;
+      
+      // Glowing highlight material
+      const highlightMat = new THREE.MeshStandardMaterial({
+        color: 0xff3366,
+        emissive: 0xff1133,
+        roughness: 0.2,
+        metalness: 0.8,
+        transparent: true,
+        opacity: 0.85,
+        side: THREE.DoubleSide
+      });
+      
+      targetMesh.material = highlightMat;
+      
+      // Clear selection styling and highlight in HTML tree
+      const selectedNodes = document.querySelectorAll('.hierarchy-node-selected');
+      selectedNodes.forEach(el => el.classList.remove('hierarchy-node-selected'));
+      
+      const nodeEl = document.getElementById(`node-${meshUuid}`);
+      if (nodeEl) {
+        nodeEl.classList.add('hierarchy-node-selected');
+      }
+    };
+
+    window.clearHighlight = function() {
+      if (activeHighlightedMesh && originalMeshMaterials !== null) {
+        activeHighlightedMesh.material = originalMeshMaterials;
+      }
+      activeHighlightedMesh = null;
+      originalMeshMaterials = null;
+      
+      const selectedNodes = document.querySelectorAll('.hierarchy-node-selected');
+      selectedNodes.forEach(el => {
+        el.classList.remove('hierarchy-node-selected');
+      });
+    };
+
+    function showTooltip(model) {
+      if (!tooltipEl) return;
+      window.clearHighlight();
+      
+      const variant = variants.find(v => v.id === model.name);
+      const label = variant ? variant.label : model.name;
+      
+      document.getElementById('tooltip-model-name').textContent = label;
+      document.getElementById('tooltip-content').innerHTML = getHierarchyHTML(model);
+      tooltipEl.style.display = 'block';
+    }
+
+    function hideTooltip() {
+      if (tooltipEl) tooltipEl.style.display = 'none';
+      hoveredModel = null;
+      window.clearHighlight();
+    }
+    
+    window.hideTooltip = hideTooltip;
+
+    // Detect click vs drag on models
+    let startX = 0;
+    let startY = 0;
+
+    window.addEventListener('mousedown', (e) => {
+      startX = e.clientX;
+      startY = e.clientY;
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      const diffX = Math.abs(e.clientX - startX);
+      const diffY = Math.abs(e.clientY - startY);
+      
+      // If client moved less than 5px, it's a click selection
+      if (diffX < 5 && diffY < 5) {
+        if (allModels.length === 0) return;
+        
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(allModels, true);
+        
+        if (intersects.length > 0) {
+          let obj = intersects[0].object;
+          let rootModel = null;
+          while (obj && obj !== scene) {
+            if (allModels.includes(obj)) {
+              rootModel = obj;
+              break;
+            }
+            obj = obj.parent;
+          }
+          
+          if (rootModel) {
+            showTooltip(rootModel);
+            return;
+          }
+        }
+        
+        // Hide panel if click is outside of controls and tooltip
+        const isClickInsideTooltip = tooltipEl && tooltipEl.contains(e.target);
+        const isClickInsideControls = (document.getElementById('mesh-control')?.contains(e.target)) || 
+                                     (document.getElementById('anim-control')?.contains(e.target)) || 
+                                     (document.getElementById('hud')?.contains(e.target));
+                                     
+        if (!isClickInsideTooltip && !isClickInsideControls) {
+          hideTooltip();
+        }
+      }
+    });
+
+    // Mousemove only controls pointer visual feedback
+    window.addEventListener('mousemove', (e) => {
+      if (e.buttons !== 0 || allModels.length === 0) {
+        return;
+      }
+      
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(allModels, true);
+      
+      let foundModel = false;
+      if (intersects.length > 0) {
+        let obj = intersects[0].object;
+        while (obj && obj !== scene) {
+          if (allModels.includes(obj)) {
+            foundModel = true;
+            break;
+          }
+          obj = obj.parent;
+        }
+      }
+      
+      if (foundModel) {
+        document.body.style.cursor = 'pointer';
+      } else {
+        document.body.style.cursor = 'default';
+      }
     });
 
     const clock = new THREE.Clock();
