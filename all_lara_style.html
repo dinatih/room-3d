@@ -1184,11 +1184,38 @@
             }
             
             if (c.isMesh) {
+              let newName = c.name;
+              if (c.material) {
+                const matName = Array.isArray(c.material) ? (c.material[0] ? c.material[0].name : '') : c.material.name;
+                if (matName) {
+                  const nameLower = matName.toLowerCase();
+                  if ((nameLower.includes('handgun left') || nameLower.includes('hhl2') || nameLower.includes('.hhl')) && !nameLower.includes('holster')) {
+                    newName = 'handgun_left';
+                  } else if ((nameLower.includes('handgun right') || nameLower.includes('hhr2') || nameLower.includes('.hhr')) && !nameLower.includes('holster')) {
+                    newName = 'handgun_right';
+                  } else if (nameLower.includes('mp5') && !nameLower.includes('ammo') && !nameLower.includes('holster')) {
+                    newName = 'mp5';
+                  } else if (nameLower.includes('mp5') && nameLower.includes('ammo') && !nameLower.includes('holster')) {
+                    newName = 'mp5_ammo';
+                  } else if (nameLower.includes('backpack')) {
+                    if (nameLower.includes('backpack1') || nameLower.includes('backpack_1')) {
+                      newName = 'backpack_1';
+                    } else if (nameLower.includes('backpack2') || nameLower.includes('backpack_2')) {
+                      newName = 'backpack_2';
+                    } else {
+                      newName = 'backpack';
+                    }
+                  } else {
+                    newName = getCleanName(matName);
+                  }
+                }
+              }
+              if (newName) {
+                c.name = newName;
+              }
+
               if (!meshVisibility.has(c.name)) {
-                const isGeneric = !c.name || /^(mesh|object|node|primitive)[_.]?\d*$/i.test(c.name.trim());
-                const rawName = (!isGeneric) ? c.name : (c.material ? c.material.name : c.name);
-                const labelName = getCleanName(rawName);
-                meshVisibility.set(c.name, { label: labelName, visible: true });
+                meshVisibility.set(c.name, { label: c.name, visible: true });
                 updateMeshListUI();
               }
               c.material = c.material.clone();
