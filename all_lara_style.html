@@ -1356,7 +1356,7 @@
                 } else if (matNameLower.includes('headset')) {
                   newName = 'headset';
                   matched = true;
-                } else if (matNameLower.includes('ribbon')) {
+                } else if (matNameLower.includes('ribbon') || ((cleanLower === 'accs' || cleanMeshLower === 'accs') && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear'))) {
                   newName = 'ribbon';
                   matched = true;
                 } else if (matNameLower.includes('buckle')) {
@@ -1453,7 +1453,7 @@
                 } else if (cleanMeshLower.includes('headset')) {
                   newName = 'headset';
                   matched = true;
-                } else if (cleanMeshLower.includes('ribbon')) {
+                } else if (cleanMeshLower.includes('ribbon') || ((cleanLower === 'accs' || cleanMeshLower === 'accs') && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear'))) {
                   newName = 'ribbon';
                   matched = true;
                 } else if (cleanMeshLower.includes('buckle')) {
