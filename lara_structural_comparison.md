@@ -423,3 +423,19 @@ Un nouveau modèle provenant du fichier `lara-croft-gold-shades-2739-rigged.zip`
   * Un seul `SkinnedMesh` d'origine divisé en plusieurs primitives géométriques distinctes au runtime.
 * **Process de Standardisation pour Gold Shades** :
   * Grâce à l'absence d'indexation numérique sur ses os et à ses noms propres standardisés, sa structure est compatible avec le Groupe 7 et le Master Rig. Il nécessite uniquement un alignement de pose T de référence dans Blender avant l'exportation.
+
+## 8. Modèle de Studio Ajouté : X-Bot (Studio)
+
+Le modèle de référence officiel X-Bot du studio a été ajouté au comparateur :
+* **ID** : `xbot_studio`
+* **Fichier GLB produit** : `public/media/all_lara/xbot_studio.glb`
+* **Analyse du Rig (Master Rig)** :
+  * **Nombre d'os** : 67.
+  * **Convention de nommage** : Noms propres normalisés du Master Rig (ex: `pelvis`, `spine_1`, `spine_2`, `spine_3`, `arm_left_shoulder_1`, `leg_left_thigh`, etc.).
+* **Process de Standardisation** :
+  * Les préfixes d'origine `mixamorig:` ont été retirés et tous les noms d'os ont été normalisés pour correspondre à l'armature de référence du Master Rig.
+
+## 9. Corrections Appliquées
+
+* **Lara 543i** : Correction de la hiérarchie de la colonne vertébrale où une erreur de fusion d'index avait renommé deux os différents en `spine_1`. Les correspondances ont été corrigées pour renommer `spine_1_1` / `SPINE_2` en `spine_2` et `thorax` / `THORAX` en `spine_3`.
+
