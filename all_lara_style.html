@@ -1303,6 +1303,25 @@
               
               let matched = false;
               const cleanMeshLower = c.name ? getCleanName(c.name).toLowerCase() : '';
+
+              if (v.id === 'lara_croft_543i') {
+                if (matNameLower.includes('lara.material01')) {
+                  newName = 'outfit_up';
+                  matched = true;
+                } else if (matNameLower.includes('lara.material05')) {
+                  newName = 'holster';
+                  matched = true;
+                } else if (matNameLower.includes('lara.material06')) {
+                  newName = 'backpack';
+                  matched = true;
+                } else if (matNameLower.includes('lara.material10')) {
+                  newName = 'eyes';
+                  matched = true;
+                } else if (matNameLower.includes('lara.material11')) {
+                  newName = 'face';
+                  matched = true;
+                }
+              }
               
               // 1. High priority: check mesh name for backpack first to avoid gear/harness material mismatch on single-mesh models
               if (cleanMeshLower.includes('backpack') || cleanMeshLower.includes('bag_low')) {
@@ -1357,13 +1376,13 @@
                 } else if (matNameLower.includes('headset')) {
                   newName = 'headset';
                   matched = true;
-                } else if (matNameLower.includes('ribbon') || ((cleanLower === 'accs' || cleanMeshLower === 'accs') && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear'))) {
+                } else if (matNameLower.includes('ribbon') || ((cleanLower === 'accs' || cleanMeshLower === 'accs') && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip'))) {
                   newName = 'ribbon';
                   matched = true;
                 } else if (matNameLower.includes('buckle')) {
                   newName = 'buckle';
                   matched = true;
-                } else if (matNameLower.includes('catsuit') || matNameLower.includes('swimsuit') || matNameLower.includes('swim') || matNameLower.includes('dress') || matNameLower.includes('bikini') || matNameLower.includes('combi')) {
+                } else if (matNameLower.includes('catsuit') || matNameLower.includes('swimsuit') || matNameLower.includes('swim') || matNameLower.includes('dress') || matNameLower.includes('bikini') || matNameLower.includes('combi') || matNameLower.includes('clothing')) {
                   newName = 'outfit_body';
                   matched = true;
                 } else if (matNameLower.includes('shirt') || matNameLower.includes('jacket') || matNameLower.includes('bodyu') || matNameLower.includes('upperbody') || matNameLower.includes('upper_body')) {
@@ -1463,13 +1482,13 @@
                 } else if (cleanMeshLower.includes('headset')) {
                   newName = 'headset';
                   matched = true;
-                } else if (cleanMeshLower.includes('ribbon') || ((cleanLower === 'accs' || cleanMeshLower === 'accs') && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear'))) {
+                } else if (cleanMeshLower.includes('ribbon') || ((cleanLower === 'accs' || cleanMeshLower === 'accs') && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip'))) {
                   newName = 'ribbon';
                   matched = true;
                 } else if (cleanMeshLower.includes('buckle')) {
                   newName = 'buckle';
                   matched = true;
-                } else if (cleanMeshLower.includes('catsuit') || cleanMeshLower.includes('swimsuit') || cleanMeshLower.includes('swim') || cleanMeshLower.includes('dress') || cleanMeshLower.includes('bikini') || cleanMeshLower.includes('combi')) {
+                } else if (cleanMeshLower.includes('catsuit') || cleanMeshLower.includes('swimsuit') || cleanMeshLower.includes('swim') || cleanMeshLower.includes('dress') || cleanMeshLower.includes('bikini') || cleanMeshLower.includes('combi') || cleanMeshLower.includes('clothing')) {
                   newName = 'outfit_body';
                   matched = true;
                 } else if (cleanMeshLower.includes('shirt') || cleanMeshLower.includes('jacket') || cleanMeshLower.includes('bodyu') || cleanMeshLower.includes('upperbody') || cleanMeshLower.includes('upper_body')) {
