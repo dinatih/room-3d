@@ -1030,8 +1030,10 @@
         const skelRM = new THREE.SkeletonHelper(refs.male); skelRM.visible = false; scene.add(skelRM); skels.push(skelRM);
 
         // Rotate reference models to face forward (aligning with targets)
-        refs.female.rotation.y = Math.PI;
-        refs.male.rotation.y = Math.PI;
+        // CC Femme is natively rotated -90 around Y (local), and CC Homme is natively rotated -180 around Y.
+        // To align them to face forward along the negative Z axis (matching targets):
+        refs.female.rotation.y = Math.PI / 2;
+        refs.male.rotation.y = 0;
 
         // Cache rest pose for T-pose toggle
         const cacheRestPose = (model) => {
@@ -1091,7 +1093,7 @@
           console.log(`${item.name} scale: ${item.model.scale.x.toFixed(4)}, world height: ${size.y.toFixed(2)}, min.y: ${box.min.y.toFixed(2)}, max.y: ${box.max.y.toFixed(2)}`);
         });
 
-        // Dynamically scale X-Bot to match CC Homme height
+        // Dynamically scale X-Bot to match CC Homme height, and Lara A to match CC Femme height
         const getBoneWorldY = (model, boneNameSearch) => {
           if (!model) return null;
           let foundY = null;
@@ -1105,14 +1107,24 @@
           return foundY;
         };
 
-        const ccHommeHeadY = getBoneWorldY(refs.male, 'head');
-        const xbotHeadY = getBoneWorldY(targets.male, 'head');
+        const ccHommeHeadY = getBoneWorldY(refs.male, 'CC_Base_Head_0143');
+        const xbotHeadY = getBoneWorldY(targets.male, 'mixamorigHead');
         if (ccHommeHeadY && xbotHeadY) {
           const ratio = ccHommeHeadY / xbotHeadY;
           targets.male.scale.multiplyScalar(ratio);
           targets.male.updateMatrixWorld(true);
           alignToFloor(targets.male);
           console.log(`[X-Bot Scale Adjust] scaled by ratio ${ratio.toFixed(4)} to match CC Homme height. New scale: ${targets.male.scale.x.toFixed(2)}`);
+        }
+
+        const ccFemmeHeadY = getBoneWorldY(refs.female, 'CC_Base_Head_01');
+        const laraHeadY = getBoneWorldY(targets.female, 'mixamorig_head_neck_upper');
+        if (ccFemmeHeadY && laraHeadY) {
+          const ratio = ccFemmeHeadY / laraHeadY;
+          targets.female.scale.multiplyScalar(ratio);
+          targets.female.updateMatrixWorld(true);
+          alignToFloor(targets.female);
+          console.log(`[Lara A Scale Adjust] scaled by ratio ${ratio.toFixed(4)} to match CC Femme height. New scale: ${targets.female.scale.x.toFixed(2)}`);
         }
 
         // 3. Load animation assets & retarget
