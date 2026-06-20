@@ -369,7 +369,7 @@
       'pda', 'grenades', 'grapple', 'binoculars', 'camera',
       'handgun_left', 'handgun_right', 'mp5', 'mp5_ammo',
       'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster',
-      'shoes', 'goggles', 'face'
+      'shoes', 'goggles', 'face', 'personal_light'
     ]);
 
     function updateMeshListUI() {
@@ -1343,6 +1343,9 @@
                 } else if (matNameLower.includes('goggles') || matNameLower.includes('rebreather') || matNameLower.includes('glasses') || matNameLower.includes('shades') || matNameLower.includes('lens')) {
                   newName = 'goggles';
                   matched = true;
+                } else if (matNameLower.includes('light') || matNameLower.includes('flashlight')) {
+                  newName = 'personal_light';
+                  matched = true;
                 } else if (matNameLower.includes('face') || matNameLower.includes('lips') || matNameLower.includes('mouth') || matNameLower.includes('lashes') || matNameLower.includes('eyelash') || matNameLower.includes('eyes') || matNameLower.includes('eyeball') || matNameLower.includes('teeth')) {
                   newName = 'face';
                   matched = true;
@@ -1421,6 +1424,9 @@
                   matched = true;
                 } else if (cleanMeshLower.includes('camera') || cleanMeshLower.includes('lens')) {
                   newName = 'camera';
+                  matched = true;
+                } else if (cleanMeshLower.includes('light') || cleanMeshLower.includes('flashlight')) {
+                  newName = 'personal_light';
                   matched = true;
                 } else if (cleanMeshLower.includes('goggles') || cleanMeshLower.includes('rebreather') || cleanMeshLower.includes('glasses') || cleanMeshLower.includes('shades')) {
                   newName = 'goggles';
