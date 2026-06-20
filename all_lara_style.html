@@ -1267,46 +1267,62 @@
               const cleanLower = matName ? getCleanName(matName).toLowerCase() : '';
               
               let matched = false;
+              const cleanMeshLower = c.name ? getCleanName(c.name).toLowerCase() : '';
               
-              // 1. Check material name (clean lowercase) for gear to avoid false matching from scale suffixes like _1.0_0_0
-              if (cleanLower.includes('backpack') || cleanLower.includes('bag_low')) {
+              // 1. High priority: check mesh name for backpack first to avoid gear/harness material mismatch on single-mesh models
+              if (cleanMeshLower.includes('backpack') || cleanMeshLower.includes('bag_low')) {
                 matched = true;
-                if (cleanLower.includes('backpack1') || cleanLower.includes('backpack_1')) {
+                if (cleanMeshLower.includes('backpack1') || cleanMeshLower.includes('backpack_1')) {
                   newName = 'backpack_1';
-                } else if (cleanLower.includes('backpack2') || cleanLower.includes('backpack_2')) {
+                } else if (cleanMeshLower.includes('backpack2') || cleanMeshLower.includes('backpack_2')) {
                   newName = 'backpack_2';
                 } else {
                   newName = 'backpack';
                 }
-              } else if (matNameLower.includes('pda')) {
-                newName = 'pda';
-                matched = true;
-              } else if (matNameLower.includes('grenade')) {
-                newName = 'grenades';
-                matched = true;
-              } else if (matNameLower.includes('grapple')) {
-                newName = 'grapple';
-                matched = true;
-              } else if (matNameLower.includes('binocular')) {
-                newName = 'binoculars';
-                matched = true;
-              } else if (matNameLower.includes('camera') || matNameLower.includes('lens')) {
-                newName = 'camera';
-                matched = true;
-              } else if (matNameLower.includes('holster') || matNameLower.includes('kabura') || matNameLower.includes('gear')) {
-                matched = true;
-                if (matNameLower.includes('left') || matNameLower.includes('hhl')) {
-                  newName = 'handgun_left_holster';
-                } else if (matNameLower.includes('right') || matNameLower.includes('hhr')) {
-                  newName = 'handgun_right_holster';
-                } else if (matNameLower.includes('mp5')) {
-                  newName = 'mp5_holster';
-                } else {
-                  newName = 'holster';
+              }
+              
+              // 2. Check material name (clean lowercase) for gear to avoid false matching from scale suffixes like _1.0_0_0
+              if (!matched) {
+                if (cleanLower.includes('backpack') || cleanLower.includes('bag_low')) {
+                  matched = true;
+                  if (cleanLower.includes('backpack1') || cleanLower.includes('backpack_1')) {
+                    newName = 'backpack_1';
+                  } else if (cleanLower.includes('backpack2') || cleanLower.includes('backpack_2')) {
+                    newName = 'backpack_2';
+                  } else {
+                    newName = 'backpack';
+                  }
+                } else if (matNameLower.includes('pda')) {
+                  newName = 'pda';
+                  matched = true;
+                } else if (matNameLower.includes('grenade')) {
+                  newName = 'grenades';
+                  matched = true;
+                } else if (matNameLower.includes('grapple')) {
+                  newName = 'grapple';
+                  matched = true;
+                } else if (matNameLower.includes('binocular')) {
+                  newName = 'binoculars';
+                  matched = true;
+                } else if (matNameLower.includes('camera') || matNameLower.includes('lens')) {
+                  newName = 'camera';
+                  matched = true;
+                } else if (matNameLower.includes('holster') || matNameLower.includes('kabura') || matNameLower.includes('gear')) {
+                  matched = true;
+                  if (matNameLower.includes('left') || matNameLower.includes('hhl')) {
+                    newName = 'handgun_left_holster';
+                  } else if (matNameLower.includes('right') || matNameLower.includes('hhr')) {
+                    newName = 'handgun_right_holster';
+                  } else if (matNameLower.includes('mp5')) {
+                    newName = 'mp5_holster';
+                  } else {
+                    newName = 'holster';
+                  }
                 }
               }
-              // 2. Check material clean name for weapons
-              else if (cleanLower) {
+              
+              // 3. Check material clean name for weapons
+              if (!matched && cleanLower) {
                 if ((cleanLower.includes('handgun left') || cleanLower.includes('hhl2') || cleanLower.includes('.hhl')) && !cleanLower.includes('holster')) {
                   newName = 'handgun_left';
                   matched = true;
@@ -1322,9 +1338,8 @@
                 }
               }
               
-              // 3. Fall back to mesh name check, only if no match yet and mesh name does not contain '|'
+              // 4. Fall back to mesh name check, only if no match yet and mesh name does not contain '|'
               if (!matched && !meshNameLower.includes('|')) {
-                const cleanMeshLower = c.name ? getCleanName(c.name).toLowerCase() : '';
                 if ((cleanMeshLower.includes('handgun_left') || cleanMeshLower === 'handgun_left') && !cleanMeshLower.includes('holster')) {
                   newName = 'handgun_left';
                   matched = true;
@@ -1375,7 +1390,7 @@
                 }
               }
               
-              // 4. Default fallback: clean material name if no match from steps 1-3
+              // 5. Default fallback: clean material name if no match from steps 1-4
               if (!matched && matName) {
                 newName = getCleanName(matName);
               }
