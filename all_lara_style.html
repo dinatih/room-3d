@@ -476,7 +476,35 @@
       return foundName;
     }
 
-    function resolveTargetBoneName(targetInstance, baseName) {
+    function getDepth(node) {
+      let depth = 0;
+      let curr = node;
+      while (curr && curr.parent) {
+        depth++;
+        curr = curr.parent;
+      }
+      return depth;
+    }
+
+    function resolveTargetBoneName(targetInstance, baseName, sourceHairMap = null) {
+      const baseNameLower = baseName.toLowerCase();
+      if (baseNameLower.includes('hair') || baseNameLower.includes('ponytail')) {
+        if (sourceHairMap && sourceHairMap.has(baseNameLower)) {
+          const targetName = sourceHairMap.get(baseNameLower);
+          if (targetInstance.getObjectByName(targetName)) {
+            return targetName;
+          }
+        }
+        const numMatch = baseName.match(/(\d+)/);
+        if (numMatch) {
+          const N = numMatch[1];
+          const targetName = `hair_${N}`;
+          if (targetInstance.getObjectByName(targetName)) {
+            return targetName;
+          }
+        }
+      }
+
       const fingerMatch = baseName.match(/Hand(Thumb|Index|Middle|Ring|Pinky)(\d)/i);
       if (fingerMatch) {
         const side = baseName.toLowerCase().includes('left') ? 'left' : 'right';
@@ -531,8 +559,26 @@
       if (!rawClip || !targetInstance) return null;
 
       const animBones = {};
+      const sourceHairMap = new Map();
       if (animScene) {
         animScene.updateMatrixWorld(true);
+
+        const sourceHairBones = [];
+        animScene.traverse(c => {
+          if (c.isBone) {
+            const nameLower = (c.name || '').toLowerCase();
+            if (nameLower.includes('hair') || nameLower.includes('ponytail')) {
+              const match = c.name.match(/mixamorig[:_]?(.+)/i);
+              const base = match ? match[1] : c.name;
+              sourceHairBones.push({ bone: c, baseName: base, depth: getDepth(c) });
+            }
+          }
+        });
+        sourceHairBones.sort((a, b) => a.depth - b.depth);
+        sourceHairBones.forEach((hb, idx) => {
+          sourceHairMap.set(hb.baseName.toLowerCase(), `hair_${idx + 1}`);
+        });
+
         animScene.traverse(c => {
           if (c.isBone) {
             const match = c.name.match(/mixamorig[:_]?(.+)/i);
@@ -631,7 +677,7 @@
       let srcHipsDefaultY = 0.991;
       let computedHipsRatio = 1.0; 
       
-      const hipsBone = targetInstance.getObjectByName(resolveTargetBoneName(targetInstance, 'Hips'));
+      const hipsBone = targetInstance.getObjectByName(resolveTargetBoneName(targetInstance, 'Hips', sourceHairMap));
       
       for (const tr of workingClip.tracks) {
         const [boneFull, prop] = tr.name.split('.');
@@ -680,7 +726,7 @@
           isRootJointTranslation = true;
         }
 
-        const targetBoneName = resolveTargetBoneName(targetInstance, baseName);
+        const targetBoneName = resolveTargetBoneName(targetInstance, baseName, sourceHairMap);
         if (targetBoneName) {
           if (prop === 'scale') continue;
 
@@ -844,7 +890,7 @@
       if (trackSample) {
         console.log(`[TrackSample] model="${targetInstance.name}" name="${trackSample.name}" valuesSample="${Array.from(trackSample.values.slice(0, 8)).map(n => n.toFixed(4)).join(', ')}"`);
       }
-      console.log(`[Retarget] model="${targetInstance.name}" rawTracks=${workingClip.tracks.length} retargetedTracks=${tracks.length} sampleHips="${resolveTargetBoneName(targetInstance, 'Hips')}" sampleLeftArm="${resolveTargetBoneName(targetInstance, 'LeftArm')}"`);
+      console.log(`[Retarget] model="${targetInstance.name}" rawTracks=${workingClip.tracks.length} retargetedTracks=${tracks.length} sampleHips="${resolveTargetBoneName(targetInstance, 'Hips', sourceHairMap)}" sampleLeftArm="${resolveTargetBoneName(targetInstance, 'LeftArm', sourceHairMap)}"`);
       return new THREE.AnimationClip(`${workingClip.name}_retargeted`, workingClip.duration, tracks);
     }
 
@@ -1174,6 +1220,22 @@
           model.name = v.label;
           
           model.updateMatrixWorld(true);
+          
+          // Rename all hair bones sequentially from base to tip
+          const targetHairBones = [];
+          model.traverse(c => {
+            if (c.isBone) {
+              const nameLower = (c.name || '').toLowerCase();
+              if (nameLower.includes('hair') || nameLower.includes('ponytail')) {
+                targetHairBones.push({ bone: c, depth: getDepth(c) });
+              }
+            }
+          });
+          targetHairBones.sort((a, b) => a.depth - b.depth);
+          targetHairBones.forEach((hb, idx) => {
+            hb.bone.name = `hair_${idx + 1}`;
+          });
+
           model.traverse(c => {
             c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
             if (c.isBone) {
@@ -1193,12 +1255,12 @@
               
               let matched = false;
               
-              // 1. Check material name (raw lowercase) for gear
-              if (matNameLower.includes('backpack') || matNameLower.includes('bag_low')) {
+              // 1. Check material name (clean lowercase) for gear to avoid false matching from scale suffixes like _1.0_0_0
+              if (cleanLower.includes('backpack') || cleanLower.includes('bag_low')) {
                 matched = true;
-                if (matNameLower.includes('backpack1') || matNameLower.includes('backpack_1')) {
+                if (cleanLower.includes('backpack1') || cleanLower.includes('backpack_1')) {
                   newName = 'backpack_1';
-                } else if (matNameLower.includes('backpack2') || matNameLower.includes('backpack_2')) {
+                } else if (cleanLower.includes('backpack2') || cleanLower.includes('backpack_2')) {
                   newName = 'backpack_2';
                 } else {
                   newName = 'backpack';
@@ -1232,33 +1294,42 @@
               
               // 3. Fall back to mesh name check, only if no match yet and mesh name does not contain '|'
               if (!matched && !meshNameLower.includes('|')) {
-                if (meshNameLower.includes('handgun_left') || meshNameLower === 'handgun_left') {
+                const cleanMeshLower = c.name ? getCleanName(c.name).toLowerCase() : '';
+                if (cleanMeshLower.includes('handgun_left') || cleanMeshLower === 'handgun_left') {
                   newName = 'handgun_left';
-                } else if (meshNameLower.includes('handgun_right') || meshNameLower === 'handgun_right') {
+                  matched = true;
+                } else if (cleanMeshLower.includes('handgun_right') || cleanMeshLower === 'handgun_right') {
                   newName = 'handgun_right';
-                } else if (meshNameLower.includes('mp5') && !meshNameLower.includes('ammo')) {
+                  matched = true;
+                } else if (cleanMeshLower.includes('mp5') && !cleanMeshLower.includes('ammo')) {
                   newName = 'mp5';
-                } else if (meshNameLower.includes('mp5') && meshNameLower.includes('ammo')) {
+                  matched = true;
+                } else if (cleanMeshLower.includes('mp5') && cleanMeshLower.includes('ammo')) {
                   newName = 'mp5_ammo';
-                } else if (meshNameLower.includes('backpack') || meshNameLower.includes('bag_low')) {
-                  if (meshNameLower.includes('backpack1') || meshNameLower.includes('backpack_1')) {
+                  matched = true;
+                } else if (cleanMeshLower.includes('backpack') || cleanMeshLower.includes('bag_low')) {
+                  matched = true;
+                  if (cleanMeshLower.includes('backpack1') || cleanMeshLower.includes('backpack_1')) {
                     newName = 'backpack_1';
-                  } else if (meshNameLower.includes('backpack2') || meshNameLower.includes('backpack_2')) {
+                  } else if (cleanMeshLower.includes('backpack2') || cleanMeshLower.includes('backpack_2')) {
                     newName = 'backpack_2';
                   } else {
                     newName = 'backpack';
                   }
-                } else if (meshNameLower.includes('pda')) {
+                } else if (cleanMeshLower.includes('pda')) {
                   newName = 'pda';
-                } else if (meshNameLower.includes('grenade')) {
+                  matched = true;
+                } else if (cleanMeshLower.includes('grenade')) {
                   newName = 'grenades';
-                } else if (meshNameLower.includes('holster') || meshNameLower.includes('kabura')) {
+                  matched = true;
+                } else if (cleanMeshLower.includes('holster') || cleanMeshLower.includes('kabura')) {
                   newName = 'holsters';
+                  matched = true;
                 }
               }
               
               // 4. Default fallback: clean material name if no match from steps 1-3
-              if (newName === c.name && matName) {
+              if (!matched && matName) {
                 newName = getCleanName(matName);
               }
               
