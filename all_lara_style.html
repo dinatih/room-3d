@@ -364,8 +364,21 @@
       return clean || name;
     }
 
+    const STANDARDIZED_GEAR_NAMES = new Set([
+      'backpack', 'backpack_1', 'backpack_2',
+      'pda', 'grenades', 'grapple', 'binoculars', 'camera',
+      'handgun_left', 'handgun_right', 'mp5', 'mp5_ammo',
+      'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster'
+    ]);
+
     function updateMeshListUI() {
-      const sortedEntries = Array.from(meshVisibility.entries()).sort((a, b) => a[1].label.localeCompare(b[1].label));
+      const sortedEntries = Array.from(meshVisibility.entries()).sort((a, b) => {
+        const aIsStd = STANDARDIZED_GEAR_NAMES.has(a[0]);
+        const bIsStd = STANDARDIZED_GEAR_NAMES.has(b[0]);
+        if (aIsStd && !bIsStd) return -1;
+        if (!aIsStd && bIsStd) return 1;
+        return a[1].label.localeCompare(b[1].label);
+      });
       meshListEl.innerHTML = '';
       sortedEntries.forEach(([key, info]) => {
         const div = document.createElement('div');
@@ -1280,7 +1293,7 @@
               } else if (matNameLower.includes('camera') || matNameLower.includes('lens')) {
                 newName = 'camera';
                 matched = true;
-              } else if (matNameLower.includes('holster') || matNameLower.includes('kabura')) {
+              } else if (matNameLower.includes('holster') || matNameLower.includes('kabura') || matNameLower.includes('gear')) {
                 matched = true;
                 if (matNameLower.includes('left') || matNameLower.includes('hhl')) {
                   newName = 'handgun_left_holster';
@@ -1348,7 +1361,7 @@
                 } else if (cleanMeshLower.includes('camera') || cleanMeshLower.includes('lens')) {
                   newName = 'camera';
                   matched = true;
-                } else if (cleanMeshLower.includes('holster') || cleanMeshLower.includes('kabura')) {
+                } else if (cleanMeshLower.includes('holster') || cleanMeshLower.includes('kabura') || cleanMeshLower.includes('gear')) {
                   matched = true;
                   if (cleanMeshLower.includes('left') || cleanMeshLower.includes('hhl')) {
                     newName = 'handgun_left_holster';
