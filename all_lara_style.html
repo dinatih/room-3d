@@ -1185,7 +1185,24 @@
             
             if (c.isMesh) {
               let newName = c.name;
-              if (c.material) {
+              const meshNameLower = (c.name || '').toLowerCase();
+              if (meshNameLower.includes('handgun_left') || meshNameLower === 'handgun_left') {
+                newName = 'handgun_left';
+              } else if (meshNameLower.includes('handgun_right') || meshNameLower === 'handgun_right') {
+                newName = 'handgun_right';
+              } else if (meshNameLower.includes('mp5') && !meshNameLower.includes('ammo')) {
+                newName = 'mp5';
+              } else if (meshNameLower.includes('mp5') && meshNameLower.includes('ammo')) {
+                newName = 'mp5_ammo';
+              } else if (meshNameLower.includes('backpack')) {
+                if (meshNameLower.includes('backpack1') || meshNameLower.includes('backpack_1')) {
+                  newName = 'backpack_1';
+                } else if (meshNameLower.includes('backpack2') || meshNameLower.includes('backpack_2')) {
+                  newName = 'backpack_2';
+                } else {
+                  newName = 'backpack';
+                }
+              } else if (c.material) {
                 const matName = Array.isArray(c.material) ? (c.material[0] ? c.material[0].name : '') : c.material.name;
                 if (matName) {
                   const cleanLower = getCleanName(matName).toLowerCase();
