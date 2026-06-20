@@ -371,7 +371,7 @@
       'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster',
       'shoes', 'goggles', 'face', 'personal_light',
       'buckle', 'ribbon', 'headset', 'eyes',
-      'outfit_body', 'outfit_up', 'outfit_down'
+      'outfit_body', 'outfit_up', 'outfit_down', 'gloves'
     ]);
 
     function updateMeshListUI() {
@@ -1308,6 +1308,9 @@
                 if (matNameLower.includes('lara.material01')) {
                   newName = 'outfit_up';
                   matched = true;
+                } else if (matNameLower.includes('lara.material03')) {
+                  newName = 'gloves';
+                  matched = true;
                 } else if (matNameLower.includes('lara.material05')) {
                   newName = 'holster';
                   matched = true;
@@ -1319,6 +1322,9 @@
                   matched = true;
                 } else if (matNameLower.includes('lara.material11')) {
                   newName = 'face';
+                  matched = true;
+                } else if (cleanLower === 'lara') {
+                  newName = 'outfit_down';
                   matched = true;
                 }
               }
@@ -1376,11 +1382,14 @@
                 } else if (matNameLower.includes('headset')) {
                   newName = 'headset';
                   matched = true;
-                } else if (matNameLower.includes('ribbon') || ((cleanLower === 'accs' || cleanMeshLower === 'accs') && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip'))) {
+                } else if (matNameLower.includes('ribbon') || (cleanLower === 'accs' && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip'))) {
                   newName = 'ribbon';
                   matched = true;
                 } else if (matNameLower.includes('buckle')) {
                   newName = 'buckle';
+                  matched = true;
+                } else if (matNameLower.includes('glove') || matNameLower.includes('gloves')) {
+                  newName = 'gloves';
                   matched = true;
                 } else if (matNameLower.includes('catsuit') || matNameLower.includes('swimsuit') || matNameLower.includes('swim') || matNameLower.includes('dress') || matNameLower.includes('bikini') || matNameLower.includes('combi') || matNameLower.includes('clothing')) {
                   newName = 'outfit_body';
@@ -1482,11 +1491,14 @@
                 } else if (cleanMeshLower.includes('headset')) {
                   newName = 'headset';
                   matched = true;
-                } else if (cleanMeshLower.includes('ribbon') || ((cleanLower === 'accs' || cleanMeshLower === 'accs') && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip'))) {
+                } else if (cleanMeshLower.includes('ribbon') || (cleanLower === 'accs' && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip'))) {
                   newName = 'ribbon';
                   matched = true;
                 } else if (cleanMeshLower.includes('buckle')) {
                   newName = 'buckle';
+                  matched = true;
+                } else if (cleanMeshLower.includes('glove') || cleanMeshLower.includes('gloves')) {
+                  newName = 'gloves';
                   matched = true;
                 } else if (cleanMeshLower.includes('catsuit') || cleanMeshLower.includes('swimsuit') || cleanMeshLower.includes('swim') || cleanMeshLower.includes('dress') || cleanMeshLower.includes('bikini') || cleanMeshLower.includes('combi') || cleanMeshLower.includes('clothing')) {
                   newName = 'outfit_body';
