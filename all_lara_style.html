@@ -1188,19 +1188,19 @@
               if (c.material) {
                 const matName = Array.isArray(c.material) ? (c.material[0] ? c.material[0].name : '') : c.material.name;
                 if (matName) {
-                  const nameLower = matName.toLowerCase();
-                  if ((nameLower.includes('handgun left') || nameLower.includes('hhl2') || nameLower.includes('.hhl')) && !nameLower.includes('holster')) {
+                  const cleanLower = getCleanName(matName).toLowerCase();
+                  if ((cleanLower.includes('handgun left') || cleanLower.includes('hhl2') || cleanLower.includes('.hhl')) && !cleanLower.includes('holster')) {
                     newName = 'handgun_left';
-                  } else if ((nameLower.includes('handgun right') || nameLower.includes('hhr2') || nameLower.includes('.hhr')) && !nameLower.includes('holster')) {
+                  } else if ((cleanLower.includes('handgun right') || cleanLower.includes('hhr2') || cleanLower.includes('.hhr')) && !cleanLower.includes('holster')) {
                     newName = 'handgun_right';
-                  } else if (nameLower.includes('mp5') && !nameLower.includes('ammo') && !nameLower.includes('holster')) {
+                  } else if (cleanLower.includes('mp5') && !cleanLower.includes('ammo') && !cleanLower.includes('holster')) {
                     newName = 'mp5';
-                  } else if (nameLower.includes('mp5') && nameLower.includes('ammo') && !nameLower.includes('holster')) {
+                  } else if (cleanLower.includes('mp5') && cleanLower.includes('ammo') && !cleanLower.includes('holster')) {
                     newName = 'mp5_ammo';
-                  } else if (nameLower.includes('backpack')) {
-                    if (nameLower.includes('backpack1') || nameLower.includes('backpack_1')) {
+                  } else if (cleanLower.includes('backpack')) {
+                    if (cleanLower.includes('backpack1') || cleanLower.includes('backpack_1')) {
                       newName = 'backpack_1';
-                    } else if (nameLower.includes('backpack2') || nameLower.includes('backpack_2')) {
+                    } else if (cleanLower.includes('backpack2') || cleanLower.includes('backpack_2')) {
                       newName = 'backpack_2';
                     } else {
                       newName = 'backpack';
