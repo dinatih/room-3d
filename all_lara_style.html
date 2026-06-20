@@ -188,12 +188,31 @@
     </div>
   </div>
 
+  <div id="joint-3d-label" style="position: absolute; display: none; background: rgba(255, 51, 102, 0.9); color: white; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; font-weight: bold; pointer-events: none; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transform: translate(-50%, -100%); margin-top: -10px; white-space: nowrap; border: 1px solid rgba(255, 255, 255, 0.25);"></div>
+
   <div id="hierarchy-tooltip" style="position: fixed; display: none; background: rgba(18, 18, 24, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 20px 15px 15px 15px; font-size: 11px; max-height: calc(100vh - 40px); overflow-y: auto; pointer-events: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.5); z-index: 99999; color: #ddd; width: 320px; right: 20px; top: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; margin-bottom: 10px;">
       <span style="font-weight: bold; color: #fff; font-size: 13px;" id="tooltip-model-name">Model Name</span>
       <span style="cursor: pointer; color: #ff6666; font-size: 18px; font-weight: bold; padding: 0 4px; user-select: none; line-height: 1;" onclick="hideTooltip()">&times;</span>
     </div>
-    <div id="tooltip-content"></div>
+    
+    <!-- Navigation par Onglets -->
+    <div style="display: flex; gap: 4px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;">
+      <button id="tab-joints" class="anim-btn anim-btn-primary" style="padding: 6px 12px; font-size: 10px; flex: 1;" onclick="switchTooltipTab('joints')">🦴 Squelette (Joints)</button>
+      <button id="tab-meshes" class="anim-btn" style="padding: 6px 12px; font-size: 10px; flex: 1;" onclick="switchTooltipTab('meshes')">👗 Meshes</button>
+    </div>
+
+    <!-- Conteneur Joints -->
+    <div id="tooltip-joints-container">
+      <div id="tooltip-joints-stats" style="font-size: 10px; color: #ff4d6d; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;"></div>
+      <div id="tooltip-joints-content" style="max-height: calc(100vh - 180px); overflow-y: auto; padding-right: 5px;"></div>
+    </div>
+    
+    <!-- Conteneur Meshes -->
+    <div id="tooltip-meshes-container" style="display: none;">
+      <div id="tooltip-meshes-stats" style="font-size: 10px; color: #51cf66; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;"></div>
+      <div id="tooltip-meshes-content" style="max-height: calc(100vh - 180px); overflow-y: auto; padding-right: 5px;"></div>
+    </div>
   </div>
   <div id="mesh-control" class="control-panel collapsed">
     <h4 class="panel-header" onclick="togglePanel('mesh-control')">
@@ -268,6 +287,19 @@
     const sun2 = new THREE.DirectionalLight(0xffffff, 0.5);
     sun2.position.set(-200, 400, -300);
     scene.add(sun2);
+
+    // marqueur de joint 3D sélectionné
+    const markerGeo = new THREE.SphereGeometry(3, 16, 16);
+    const markerMat = new THREE.MeshBasicMaterial({
+      color: 0xff3366,
+      transparent: true,
+      opacity: 0.85,
+      depthTest: false // rendu par-dessus tout pour rester visible
+    });
+    const selectedBoneMarker = new THREE.Mesh(markerGeo, markerMat);
+    selectedBoneMarker.visible = false;
+    selectedBoneMarker.renderOrder = 999;
+    scene.add(selectedBoneMarker);
 
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
@@ -1302,59 +1334,171 @@
     });
     window.addEventListener('mouseup', () => { isMouseDown = false; });
 
-    function getHierarchyHTML(model) {
-      if (hierarchyCache.has(model.uuid)) {
-        return hierarchyCache.get(model.uuid);
+    let selectedModel = null;
+    let selectedBone = null;
+    let activeTab = 'joints'; // 'joints' ou 'meshes'
+
+    window.switchTooltipTab = function(tab) {
+      activeTab = tab;
+      const tabJointsBtn = document.getElementById('tab-joints');
+      const tabMeshesBtn = document.getElementById('tab-meshes');
+      const jointsContainer = document.getElementById('tooltip-joints-container');
+      const meshesContainer = document.getElementById('tooltip-meshes-container');
+      
+      if (!tabJointsBtn || !tabMeshesBtn || !jointsContainer || !meshesContainer) return;
+
+      if (tab === 'joints') {
+        tabJointsBtn.classList.add('anim-btn-primary');
+        tabMeshesBtn.classList.remove('anim-btn-primary');
+        jointsContainer.style.display = 'block';
+        meshesContainer.style.display = 'none';
+      } else {
+        tabJointsBtn.classList.remove('anim-btn-primary');
+        tabMeshesBtn.classList.add('anim-btn-primary');
+        jointsContainer.style.display = 'none';
+        meshesContainer.style.display = 'block';
+      }
+    };
+
+    window.selectBone = function(modelUuid, boneUuid, event) {
+      if (event) {
+        event.stopPropagation();
       }
       
+      if (!selectedModel || selectedModel.uuid !== modelUuid) {
+        selectedModel = allModels.find(m => m.uuid === modelUuid);
+      }
+      if (!selectedModel) return;
+      
+      let targetBone = null;
+      selectedModel.traverse(c => {
+        if (c.isBone && c.uuid === boneUuid) {
+          targetBone = c;
+        }
+      });
+      
+      if (!targetBone) return;
+      
+      selectedBone = targetBone;
+      
+      // Mettre à jour le marqueur 3D et le label
+      updateSelectedBoneMarker();
+      
+      // Mettre à jour le style de la liste HTML
+      const selectedBones = document.querySelectorAll('.hierarchy-node-selected');
+      selectedBones.forEach(el => el.classList.remove('hierarchy-node-selected'));
+      
+      const nodeEl = document.getElementById(`bone-${boneUuid}`);
+      if (nodeEl) {
+        nodeEl.classList.add('hierarchy-node-selected');
+      }
+    };
+
+    function findClosestBone(model, worldPoint) {
+      let closestBone = null;
+      let minDistance = Infinity;
+      const tempPos = new THREE.Vector3();
+      
+      model.traverse(node => {
+        if (node.isBone) {
+          node.getWorldPosition(tempPos);
+          const dist = tempPos.distanceTo(worldPoint);
+          if (dist < minDistance) {
+            minDistance = dist;
+            closestBone = node;
+          }
+        }
+      });
+      
+      return closestBone;
+    }
+
+    const tempBonePos = new THREE.Vector3();
+    function updateSelectedBoneMarker() {
+      if (!selectedBone || !selectedBoneMarker) {
+        if (selectedBoneMarker) selectedBoneMarker.visible = false;
+        const labelEl = document.getElementById('joint-3d-label');
+        if (labelEl) labelEl.style.display = 'none';
+        return;
+      }
+      
+      selectedBone.getWorldPosition(tempBonePos);
+      
+      selectedBoneMarker.position.copy(tempBonePos);
+      selectedBoneMarker.visible = true;
+      
+      const labelEl = document.getElementById('joint-3d-label');
+      if (labelEl) {
+        labelEl.textContent = selectedBone.name;
+        
+        const proj = tempBonePos.clone().project(camera);
+        // Si le joint est derrière la caméra, on cache le label
+        if (proj.z > 1) {
+          labelEl.style.display = 'none';
+        } else {
+          labelEl.style.display = 'block';
+          const x = (proj.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (proj.y * -0.5 + 0.5) * window.innerHeight;
+          labelEl.style.left = `${x}px`;
+          labelEl.style.top = `${y}px`;
+        }
+      }
+    }
+
+    function getMeshTreeHTML(model) {
       let html = '';
-      let boneCount = 0;
       let meshCount = 0;
-      let otherCount = 0;
       
       function traverseNode(node, depth = 0) {
-        const indent = '&nbsp;'.repeat(depth * 2);
-        let typeIcon = '⚪';
-        let color = '#a1a1aa';
-        
         if (node.isBone) {
-          typeIcon = '🦴';
-          color = '#71717a';
-          boneCount++;
-        } else if (node.isSkinnedMesh) {
+          // On n'affiche pas les bones dans l'onglet des meshes, mais on traverse leurs enfants
+          for (let i = 0; i < node.children.length; i++) {
+            traverseNode(node.children[i], depth);
+          }
+          return;
+        }
+        
+        let shouldRender = false;
+        let typeIcon = '📁';
+        let color = '#339af0';
+        let isClickable = false;
+        
+        if (node.isSkinnedMesh) {
           typeIcon = '👗';
           color = '#ff6b6b';
           meshCount++;
+          isClickable = true;
+          shouldRender = true;
         } else if (node.isMesh) {
           typeIcon = '📦';
           color = '#51cf66';
           meshCount++;
-        } else if (node.isGroup) {
-          typeIcon = '📁';
-          color = '#339af0';
-          otherCount++;
-        } else {
-          otherCount++;
+          isClickable = true;
+          shouldRender = true;
+        } else if (node.isGroup && node.name) {
+          shouldRender = true;
         }
         
-        const label = node.name || 'Unnamed';
-        if (node.isSkinnedMesh) {
-          html += `<div id="node-${node.uuid}" class="hierarchy-node-clickable" onclick="window.highlightMesh('${model.uuid}', '${node.uuid}', event)" style="color: ${color}; font-family: monospace; white-space: nowrap; line-height: 1.4; display: block; margin: 1px 0; border-radius: 4px; padding: 2px 4px; cursor: pointer;">${indent}${typeIcon} <strong>${label}</strong> <span style="font-size: 9px; opacity: 0.5;">(${node.type})</span></div>`;
-        } else {
-          html += `<div style="color: ${color}; font-family: monospace; white-space: nowrap; line-height: 1.4; padding: 2px 4px;">${indent}${typeIcon} <strong>${label}</strong> <span style="font-size: 9px; opacity: 0.5;">(${node.type})</span></div>`;
+        if (shouldRender && node !== model) {
+          const indent = '&nbsp;'.repeat(depth * 2);
+          const label = node.name || 'Unnamed';
+          if (isClickable) {
+            const isSelected = activeHighlightedMesh && activeHighlightedMesh.uuid === node.uuid;
+            const highlightClass = isSelected ? 'hierarchy-node-selected' : '';
+            html += `<div id="node-${node.uuid}" class="hierarchy-node-clickable ${highlightClass}" onclick="window.highlightMesh('${model.uuid}', '${node.uuid}', event)" style="color: ${color}; font-family: monospace; white-space: nowrap; line-height: 1.4; display: block; margin: 1px 0; border-radius: 4px; padding: 2px 4px; cursor: pointer;">${indent}${typeIcon} <strong>${label}</strong> <span style="font-size: 9px; opacity: 0.5;">(${node.type})</span></div>`;
+          } else {
+            html += `<div style="color: ${color}; font-family: monospace; white-space: nowrap; line-height: 1.4; padding: 2px 4px;">${indent}${typeIcon} <strong>${label}</strong> <span style="font-size: 9px; opacity: 0.5;">(${node.type})</span></div>`;
+          }
         }
         
+        const nextDepth = shouldRender && node !== model ? depth + 1 : depth;
         for (let i = 0; i < node.children.length; i++) {
-          traverseNode(node.children[i], depth + 1);
+          traverseNode(node.children[i], nextDepth);
         }
       }
       
       traverseNode(model, 0);
-      
-      const header = `<div style="font-size: 10px; color: #ff4d6d; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">Stats: ${meshCount} meshes, ${boneCount} bones, ${otherCount} groups</div>`;
-      const finalHTML = header + html;
-      hierarchyCache.set(model.uuid, finalHTML);
-      return finalHTML;
+      return { html, meshCount };
     }
 
     let activeHighlightedMesh = null;
@@ -1424,27 +1568,106 @@
       });
     };
 
-    function showTooltip(model) {
+    function showTooltip(model, initialBone = null) {
       if (!tooltipEl) return;
       window.clearHighlight();
+      
+      selectedModel = model;
       
       const variant = variants.find(v => v.id === model.name);
       const label = variant ? variant.label : model.name;
       
       document.getElementById('tooltip-model-name').textContent = label;
-      document.getElementById('tooltip-content').innerHTML = getHierarchyHTML(model);
+      
+      // Construire la liste du Squelette (Joints)
+      let jointsHTML = '';
+      let boneCount = 0;
+      
+      const rootBones = [];
+      model.traverse(node => {
+        if (node.isBone) {
+          if (!node.parent || !node.parent.isBone) {
+            rootBones.push(node);
+          }
+        }
+      });
+      
+      function traverseBone(bone, depth = 0) {
+        const indent = '&nbsp;'.repeat(depth * 2);
+        boneCount++;
+        
+        const isSelected = selectedBone && selectedBone.uuid === bone.uuid;
+        const highlightClass = isSelected ? 'hierarchy-node-selected' : '';
+        
+        jointsHTML += `<div id="bone-${bone.uuid}" class="hierarchy-node-clickable ${highlightClass}" onclick="window.selectBone('${model.uuid}', '${bone.uuid}', event)" style="color: #a1a1aa; font-family: monospace; white-space: nowrap; line-height: 1.4; display: block; margin: 1px 0; border-radius: 4px; padding: 2px 4px; cursor: pointer;">${indent}🦴 <strong>${bone.name}</strong></div>`;
+        
+        for (let i = 0; i < bone.children.length; i++) {
+          const child = bone.children[i];
+          if (child.isBone) {
+            traverseBone(child, depth + 1);
+          }
+        }
+      }
+      
+      // Si on clique sur un modèle, on définit le joint initialement sélectionné
+      if (initialBone) {
+        selectedBone = initialBone;
+      } else if (!selectedBone || !model.getObjectByProperty('uuid', selectedBone.uuid)) {
+        // Par défaut le premier os racine si rien n'est sélectionné
+        selectedBone = rootBones[0] || null;
+      }
+      
+      rootBones.forEach(rb => traverseBone(rb, 0));
+      
+      // Construire la liste des Meshes
+      const { html: meshesHTML, meshCount } = getMeshTreeHTML(model);
+      
+      // Mettre à jour les éléments HTML
+      const jointsStatsEl = document.getElementById('tooltip-joints-stats');
+      const jointsContentEl = document.getElementById('tooltip-joints-content');
+      const meshesStatsEl = document.getElementById('tooltip-meshes-stats');
+      const meshesContentEl = document.getElementById('tooltip-meshes-content');
+      
+      if (jointsStatsEl) jointsStatsEl.textContent = `Total: ${boneCount} joints / squelette`;
+      if (jointsContentEl) jointsContentEl.innerHTML = jointsHTML;
+      
+      if (meshesStatsEl) meshesStatsEl.textContent = `Total: ${meshCount} meshes`;
+      if (meshesContentEl) meshesContentEl.innerHTML = meshesHTML;
+      
+      // Afficher le tooltip
       tooltipEl.style.display = 'block';
+      
+      // Forcer l'affichage de l'onglet actif
+      window.switchTooltipTab(activeTab);
+      
+      // Mettre à jour le marqueur 3D
+      updateSelectedBoneMarker();
+      
+      // Faire défiler jusqu'au joint sélectionné
+      if (selectedBone) {
+        setTimeout(() => {
+          const boneEl = document.getElementById(`bone-${selectedBone.uuid}`);
+          if (boneEl) {
+            boneEl.scrollIntoView({ block: 'nearest' });
+          }
+        }, 50);
+      }
     }
 
     function hideTooltip() {
       if (tooltipEl) tooltipEl.style.display = 'none';
       hoveredModel = null;
+      selectedModel = null;
+      selectedBone = null;
+      if (selectedBoneMarker) selectedBoneMarker.visible = false;
+      const labelEl = document.getElementById('joint-3d-label');
+      if (labelEl) labelEl.style.display = 'none';
       window.clearHighlight();
     }
     
     window.hideTooltip = hideTooltip;
 
-    // Detect click vs drag on models
+    // Détecter clic vs drag sur les modèles
     let startX = 0;
     let startY = 0;
 
@@ -1457,7 +1680,7 @@
       const diffX = Math.abs(e.clientX - startX);
       const diffY = Math.abs(e.clientY - startY);
       
-      // If client moved less than 5px, it's a click selection
+      // Si le client a bougé de moins de 5px, c'est une sélection par clic
       if (diffX < 5 && diffY < 5) {
         if (allModels.length === 0) return;
         
@@ -1479,12 +1702,14 @@
           }
           
           if (rootModel) {
-            showTooltip(rootModel);
+            const intersectPoint = intersects[0].point;
+            const closestBone = findClosestBone(rootModel, intersectPoint);
+            showTooltip(rootModel, closestBone);
             return;
           }
         }
         
-        // Hide panel if click is outside of controls and tooltip
+        // Cacher le panneau si on clique en dehors
         const isClickInsideTooltip = tooltipEl && tooltipEl.contains(e.target);
         const isClickInsideControls = (document.getElementById('mesh-control')?.contains(e.target)) || 
                                      (document.getElementById('anim-control')?.contains(e.target)) || 
@@ -1496,7 +1721,7 @@
       }
     });
 
-    // Mousemove only controls pointer visual feedback
+    // Mousemove contrôle uniquement le pointeur visuel
     window.addEventListener('mousemove', (e) => {
       if (e.buttons !== 0 || allModels.length === 0) {
         return;
@@ -1540,6 +1765,9 @@
           }
         });
       }
+      
+      // Mettre à jour le marqueur 3D et la position du label 2D à chaque frame (pour l'animation)
+      updateSelectedBoneMarker();
       
       renderer.render(scene, camera);
     }
