@@ -360,7 +360,7 @@
       let clean = name;
       if (clean.includes('|')) clean = clean.split('|').pop();
       clean = clean.replace(/^[0-9_+ -]+/, ''); 
-      clean = clean.replace(/_[0-9._]+$/, '');  
+      clean = clean.replace(/_[0-9.]+(?:_[0-9.]+){2,}$/, '');  
       return clean || name;
     }
 
@@ -1254,7 +1254,7 @@
           if (loadedCount === variants.length) {
             const loadingScreen = document.getElementById('loading-screen');
             if (loadingScreen) loadingScreen.style.display = 'none';
-            loadAndPlayAnimation("happy_walk.glb");
+            loadAndPlayAnimation("idle.glb");
           } else if (rawAnimClip && animScene) {
             const retargeted = retargetMixamoClip(rawAnimClip, model, animScene);
             if (retargeted) {
@@ -1272,7 +1272,7 @@
           if (loadedCount === variants.length) {
             const loadingScreen = document.getElementById('loading-screen');
             if (loadingScreen) loadingScreen.style.display = 'none';
-            loadAndPlayAnimation("happy_walk.glb");
+            loadAndPlayAnimation("idle.glb");
           }
         });
       });
