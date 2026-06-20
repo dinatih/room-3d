@@ -8,15 +8,28 @@
     .font-loader { font-family: 'Graduate'; position: absolute; visibility: hidden; }
     html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: system-ui, sans-serif; background: #151518; color: #e0e0e8; }
     #view { width: 100vw; height: 100vh; }
+    #left-sidebar {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      bottom: 10px;
+      width: 250px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+      z-index: 10;
+    }
     #hud {
-      position: absolute; top: 10px; left: 10px; 
       background: rgba(18, 18, 24, 0.75);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       padding: 15px; border-radius: 12px; font-size: 13px; line-height: 1.5;
-      pointer-events: none; border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-      max-width: 450px;
+      width: 100%;
+      box-sizing: border-box;
+      pointer-events: auto;
     }
     .red { color: #ff4444; font-weight: bold; }
     #mesh-control {
@@ -32,17 +45,21 @@
     .mesh-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; cursor: pointer; }
     .mesh-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
     .mesh-item input { cursor: pointer; }
-
+ 
     #anim-control {
-      position: absolute; top: 180px; left: 10px; 
       background: rgba(18, 18, 24, 0.75);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      padding: 15px; border-radius: 12px; font-size: 12px; max-height: calc(100vh - 210px);
-       overflow-y: auto; overflow-x: hidden; border: 1px solid rgba(255, 255, 255, 0.1); color: #ccc; width: 230px;
+      padding: 15px; border-radius: 12px; font-size: 12px;
+      overflow-y: auto; overflow-x: hidden; border: 1px solid rgba(255, 255, 255, 0.1); color: #ccc;
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
       display: flex;
       flex-direction: column;
+      width: 100%;
+      box-sizing: border-box;
+      pointer-events: auto;
+      flex: 1;
+      min-height: 0;
     }
     #anim-control h4 { margin: 0 0 12px; color: #fff; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 6px; font-size: 14px; }
     .anim-item { 
@@ -134,19 +151,40 @@
 <body>
   <div class="font-loader">BULLS 66</div>
   <div id="view"></div>
-  <div id="hud">
-    <h3>Lara Croft <span class="red">Style Comparison</span></h3>
-    <p>Comparing <span id="model-count-text">15</span> variations side-by-side. Pan horizontally using the mouse.</p>
-    <p id="loading-status">Loading models...</p>
-    <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; pointer-events: auto;">
-      <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
-        <input type="checkbox" id="toggle-skeletons" style="cursor: pointer; accent-color: #ff4444;">
-        <span>Afficher les Squelettes</span>
-      </label>
-      <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
-        <input type="checkbox" id="toggle-superposition" style="cursor: pointer; accent-color: #ff4444;">
-        <span>Superposer les modèles (X = 0)</span>
-      </label>
+  <div id="left-sidebar">
+    <div id="hud">
+      <h3>Lara Croft <span class="red">Style Comparison</span></h3>
+      <p>Comparing <span id="model-count-text">16</span> variations side-by-side. Pan horizontally using the mouse.</p>
+      <p id="loading-status">Loading models...</p>
+      <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; pointer-events: auto;">
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
+          <input type="checkbox" id="toggle-skeletons" style="cursor: pointer; accent-color: #ff4444;">
+          <span>Afficher les Squelettes</span>
+        </label>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
+          <input type="checkbox" id="toggle-superposition" style="cursor: pointer; accent-color: #ff4444;">
+          <span>Superposer les modèles (X = 0)</span>
+        </label>
+      </div>
+    </div>
+
+    <div id="anim-control" class="control-panel">
+      <h4 class="panel-header" onclick="togglePanel('anim-control')">
+        <span>Animations</span>
+        <span class="panel-toggle-btn">▼</span>
+      </h4>
+      <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+        <button id="btn-play-pause" class="anim-btn anim-btn-primary">Pause</button>
+        <button id="btn-stop" class="anim-btn">Stop</button>
+      </div>
+      <div style="margin-bottom: 12px; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 500;">
+          <span>Vitesse:</span>
+          <span id="speed-val" style="color: #ff6666; font-weight: bold;">1.0x</span>
+        </div>
+        <input type="range" id="speed-slider" min="0.1" max="2.0" step="0.1" value="1.0" style="width: 100%; cursor: pointer; accent-color: #ff4444; margin: 0; display: block;">
+      </div>
+      <div id="anim-list" style="overflow-y: auto; flex: 1;"></div>
     </div>
   </div>
 
@@ -163,24 +201,6 @@
       <span class="panel-toggle-btn">▼</span>
     </h4>
     <div id="mesh-list"></div>
-  </div>
-  <div id="anim-control" class="control-panel">
-    <h4 class="panel-header" onclick="togglePanel('anim-control')">
-      <span>Animations</span>
-      <span class="panel-toggle-btn">▼</span>
-    </h4>
-    <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-      <button id="btn-play-pause" class="anim-btn anim-btn-primary">Pause</button>
-      <button id="btn-stop" class="anim-btn">Stop</button>
-    </div>
-    <div style="margin-bottom: 12px; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 500;">
-        <span>Vitesse:</span>
-        <span id="speed-val" style="color: #ff6666; font-weight: bold;">1.0x</span>
-      </div>
-      <input type="range" id="speed-slider" min="0.1" max="2.0" step="0.1" value="1.0" style="width: 100%; cursor: pointer; accent-color: #ff4444; margin: 0; display: block;">
-    </div>
-    <div id="anim-list" style="overflow-y: auto; flex: 1;"></div>
   </div>
 
   <script type="importmap">
@@ -1237,9 +1257,7 @@
           model.userData.label.position.x = targetX;
           model.userData.label.visible = !superpose;
         }
-        if (model.userData.skeletonHelper) {
-          model.userData.skeletonHelper.update();
-        }
+
       });
     }
 
