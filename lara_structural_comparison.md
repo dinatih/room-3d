@@ -189,7 +189,37 @@ Pour obtenir des fichiers propres, le travail doit être réalisé en amont dans
 ### Étape 1 : Définir l'Armature de Référence (Master Rig)
 Le squelette de référence choisi pour standardiser tous les modèles est :
 * **Choix Technique** : La structure de **Lara Officiel (88 os)**, mais **sans les préfixes `mixamorig_`** (ex: `mixamorig_pelvis` devient `pelvis`, `mixamorig_arm_left_elbow` devient `arm_left_elbow`). Cela permet de disposer d'une base d'animation standard de 88 os propres et lisibles.
+* **Justification du Naming** : Nous conservons délibérément les conventions de nommage de Lara Officiel (sans préfixe) plutôt que les noms standard de Mixamo. En effet, la nomenclature officielle fait référence aux **articulations** précises plutôt qu'aux membres généraux, ce qui est plus explicite et clair (ex: `leg_right_ankle` au lieu de `RightFoot` ou `leg_left_thigh` au lieu de `LeftUpLeg`).
 * Ce squelette de référence doit être placé en pose de repos par défaut (T-Pose) avec toutes les transformations appliquées (`Ctrl + A` -> `All Transforms`).
+
+#### Table de Correspondance des Rigs : Mixamo Standard vs Master Rig (Lara Officiel Propre)
+
+Le tableau suivant présente la correspondance entre les os du squelette standard de Mixamo (utilisé par les fichiers d'animation `.glb` externes) et les os du Master Rig nettoyé, en indiquant les os manquants du standard (comme les clavicules et la troisième vertèbre de la colonne) :
+
+| Os Standard Mixamo | Correspondance Master Rig (Lara Officiel Propre) | Type d'os / Note |
+| :--- | :--- | :--- |
+| `Hips` | `root_hips` | Articulation du bassin |
+| `Spine` | `spine_lower` | Bas du dos |
+| `Spine1` (ou `Spin3` manquant) | *(Manquant)* | Vertèbre intermédiaire manquante |
+| `Spine2` | `spine_upper` | Haut du dos / Thorax |
+| `Neck` | `head_neck_lower` | Cou (bas) |
+| `Head` | `head_neck_upper` | Tête (haut du cou) |
+| `LeftShoulder` | *(Manquant)* | Clavicule gauche manquante |
+| `LeftArm` | `arm_left_shoulder_2` | Épaule / Haut du bras gauche |
+| `LeftForeArm` | `arm_left_elbow` | Coude / Avant-bras gauche |
+| `LeftHand` | `arm_left_wrist` | Poignet / Main gauche |
+| `LeftUpLeg` | `leg_left_thigh` | Cuisse gauche |
+| `LeftLeg` | `leg_left_knee` | Genou / Mollet gauche |
+| `LeftFoot` | `leg_left_ankle` | Cheville / Pied gauche |
+| `LeftToeBase` | `leg_left_toes` | Orteils gauche |
+| `RightShoulder` | *(Manquant)* | Clavicule droite manquante |
+| `RightArm` | `arm_right_shoulder_2` | Épaule / Haut du bras droit |
+| `RightForeArm` | `arm_right_elbow` | Coude / Avant-bras droit |
+| `RightHand` | `arm_right_wrist` | Poignet / Main droite |
+| `RightUpLeg` | `leg_right_thigh` | Cuisse droite |
+| `RightLeg` | `leg_right_knee` | Genou / Mollet droit |
+| `RightFoot` | `leg_right_ankle` | Cheville / Pied droit |
+| `RightToeBase` | `leg_right_toes` | Orteils droit |
 
 ### Étape 2 : Créer le "Super-Rig" (Union des Os)
 Certains vêtements nécessitent des os supplémentaires (comme les os de la jupe de la Robe Rouge ou des accessoires de ceinture).
