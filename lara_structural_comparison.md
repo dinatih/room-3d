@@ -184,8 +184,8 @@ Actuellement, les 16 variations de Lara souffrent de divergences structurelles q
 Pour obtenir des fichiers propres, le travail doit être réalisé en amont dans Blender en suivant ce protocole strict :
 
 ### Étape 1 : Définir l'Armature de Référence (Master Rig)
-Choisissez un squelette unique qui servira de référence pour tous les modèles.
-* **Recommandation** : Utiliser la structure à **91 os propres** (sans préfixes Mixamo et sans suffixes numériques).
+Le squelette de référence choisi pour standardiser tous les modèles est :
+* **Choix Technique** : La structure de **Lara Officiel (88 os)**, mais **sans les préfixes `mixamorig_`** (ex: `mixamorig_pelvis` devient `pelvis`, `mixamorig_arm_left_elbow` devient `arm_left_elbow`). Cela permet de disposer d'une base d'animation standard de 88 os propres et lisibles.
 * Ce squelette de référence doit être placé en pose de repos par défaut (T-Pose) avec toutes les transformations appliquées (`Ctrl + A` -> `All Transforms`).
 
 ### Étape 2 : Créer le "Super-Rig" (Union des Os)
