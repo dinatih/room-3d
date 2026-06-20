@@ -371,7 +371,16 @@
       'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster',
       'shoes', 'goggles', 'face', 'personal_light',
       'buckle', 'ribbon', 'headset', 'eyes',
-      'outfit_body', 'outfit_up', 'outfit_down', 'gloves'
+      'outfit_body', 'outfit_up', 'outfit_down', 'gloves',
+      'eyebrows', 'eyelashes'
+    ]);
+
+    const DEFAULT_HIDDEN_MESHES = new Set([
+      'backpack', 'backpack_1', 'backpack_2',
+      'binoculars', 'buckle', 'camera', 'goggles', 'grapple',
+      'handgun_left', 'handgun_right', 'mp5', 'mp5_ammo',
+      'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster',
+      'headset', 'pda', 'personal_light', 'ribbon'
     ]);
 
     function updateMeshListUI() {
@@ -1373,8 +1382,14 @@
                 } else if (matNameLower.includes('light') || matNameLower.includes('flashlight')) {
                   newName = 'personal_light';
                   matched = true;
-                } else if (matNameLower.includes('face') || matNameLower.includes('lips') || matNameLower.includes('mouth') || matNameLower.includes('lashes') || matNameLower.includes('eyelash') || matNameLower.includes('teeth')) {
+                } else if (matNameLower.includes('face') || matNameLower.includes('lips') || matNameLower.includes('mouth') || matNameLower.includes('teeth')) {
                   newName = 'face';
+                  matched = true;
+                } else if (matNameLower.includes('eyebrow') || matNameLower.includes('eyebrows')) {
+                  newName = 'eyebrows';
+                  matched = true;
+                } else if (matNameLower.includes('lashes') || matNameLower.includes('eyelash') || matNameLower.includes('eyelashes')) {
+                  newName = 'eyelashes';
                   matched = true;
                 } else if (matNameLower.includes('eyes') || matNameLower.includes('eyeball') || matNameLower.includes('eye2') || (matNameLower.includes('eye') && !matNameLower.includes('eyebrow') && !matNameLower.includes('eyelash'))) {
                   newName = 'eyes';
@@ -1482,8 +1497,14 @@
                 } else if (cleanMeshLower.includes('goggles') || cleanMeshLower.includes('rebreather') || cleanMeshLower.includes('glasses') || cleanMeshLower.includes('shades')) {
                   newName = 'goggles';
                   matched = true;
-                } else if (cleanMeshLower.includes('face') || cleanMeshLower.includes('lips') || cleanMeshLower.includes('mouth') || cleanMeshLower.includes('lashes') || cleanMeshLower.includes('eyelash') || cleanMeshLower.includes('teeth')) {
+                } else if (cleanMeshLower.includes('face') || cleanMeshLower.includes('lips') || cleanMeshLower.includes('mouth') || cleanMeshLower.includes('teeth')) {
                   newName = 'face';
+                  matched = true;
+                } else if (cleanMeshLower.includes('eyebrow') || cleanMeshLower.includes('eyebrows')) {
+                  newName = 'eyebrows';
+                  matched = true;
+                } else if (cleanMeshLower.includes('lashes') || cleanMeshLower.includes('eyelash') || cleanMeshLower.includes('eyelashes')) {
+                  newName = 'eyelashes';
                   matched = true;
                 } else if (cleanMeshLower.includes('eyes') || cleanMeshLower.includes('eyeball') || cleanMeshLower.includes('eye2') || (cleanMeshLower.includes('eye') && !cleanMeshLower.includes('eyebrow') && !cleanMeshLower.includes('eyelash'))) {
                   newName = 'eyes';
@@ -1539,10 +1560,12 @@
                 c.name = newName;
               }
 
+              const isDefaultHidden = DEFAULT_HIDDEN_MESHES.has(c.name);
               if (!meshVisibility.has(c.name)) {
-                meshVisibility.set(c.name, { label: c.name, visible: true });
+                meshVisibility.set(c.name, { label: c.name, visible: !isDefaultHidden });
                 updateMeshListUI();
               }
+              c.visible = meshVisibility.get(c.name).visible;
               c.material = c.material.clone();
               // Fix transparent materials for models flagged with fixOpaque
               if (v.fixOpaque) {
