@@ -29,6 +29,9 @@ Bien que tous les modèles proviennent du même créateur d'origine, ils sont st
 2. **Le squelette de la Robe Rouge** (`lara_croft_red_dress`) : Il possède **136 os** au total. Les os supplémentaires (près de 40) sont dédiés à l'animation de la jupe/robe (`acc_skirt ...`).
 3. **Le cas standardisé Mixamo** (`lara_officiel`) : C'est le seul modèle basé sur une convention standard Mixamo avec le préfixe `mixamorig_` (ex: `mixamorig_pelvis`).
 4. **Les rigs simplifiés** (ex: `black_tank_top`) : Ils possèdent 91 os nommés de manière propre et descriptive (ex: `pelvis`), ce qui constitue la base la plus saine pour le nettoyage des noms.
+5. **Divergences de Lara Officiel par rapport au Standard Mixamo** : Bien que le modèle `lara_officiel` utilise le préfixe `mixamorig_`, il lui manque **3 os corporels standards** présents dans les squelettes Mixamo classiques :
+   * **`Spine1`** (L'os intermédiaire de la colonne) : La colonne de Lara Officiel ne possède que 2 os (`spine_lower` et `spine_upper`) au lieu de 3.
+   * **`LeftShoulder` et `RightShoulder`** (Les clavicules gauche et droite) : Les os du haut des bras (`arm_left_shoulder_2` et `arm_right_shoulder_2`) sont connectés directement au thorax (`spine_upper`) sans articulation de clavicule intermédiaire.
 
 ---
 
