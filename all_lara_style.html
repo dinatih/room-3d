@@ -372,7 +372,8 @@
       'shoes', 'goggles', 'face', 'personal_light',
       'buckle', 'ribbon', 'headset', 'eyes',
       'outfit_body', 'outfit_up', 'outfit_down', 'gloves',
-      'eyebrows', 'eyelashes'
+      'eyebrows', 'eyelashes', 'finger_nails', 'purse',
+      'accessories', 'skin', 'handgun_part', 'hair'
     ]);
 
     const DEFAULT_HIDDEN_MESHES = new Set([
@@ -380,7 +381,8 @@
       'binoculars', 'buckle', 'camera', 'goggles', 'grapple',
       'handgun_left', 'handgun_right', 'mp5', 'mp5_ammo',
       'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster',
-      'headset', 'pda', 'personal_light', 'ribbon'
+      'headset', 'pda', 'personal_light', 'ribbon', 'purse',
+      'grenades', 'accessories', 'handgun_part'
     ]);
 
     function updateMeshListUI() {
@@ -403,7 +405,10 @@
           applyMeshVisibility(key, e.target.checked);
         };
         const label = document.createElement('span');
-        label.textContent = info.label;
+        const origSuffix = (info.originalNames && info.originalNames.size > 0)
+          ? ` (${Array.from(info.originalNames).sort().join(', ')})`
+          : '';
+        label.textContent = info.label + origSuffix;
         label.title = key; 
         label.style.opacity = info.visible ? '1' : '0.5';
         div.onclick = () => checkbox.click();
@@ -1250,23 +1255,31 @@
         const vertexCount = skinIndexAttr.count;
         const itemSize = skinIndexAttr.itemSize;
         
+        let footVertexCount = 0;
         for (let i = 0; i < vertexCount; i++) {
+          let hasFootBone = false;
           for (let j = 0; j < itemSize; j++) {
             const idx = i * itemSize + j;
             const boneIdx = skinIndexAttr.array[idx];
             const weight = skinWeightAttr.array[idx];
-            if (weight > 0.01) {
+            if (weight > 0.1) {
               const bone = skeleton.bones[boneIdx];
               if (bone && bone.name) {
                 const boneNameLower = bone.name.toLowerCase();
                 if (footKeywords.some(kw => boneNameLower.includes(kw))) {
-                  return true;
+                  hasFootBone = true;
+                  break;
                 }
               }
             }
           }
+          if (hasFootBone) {
+            footVertexCount++;
+          }
         }
-        return false;
+        
+        // Require at least 10% of the vertices to be weighted to foot bones
+        return (footVertexCount / vertexCount) > 0.10;
       }
 
       let loadedCount = 0;
@@ -1403,8 +1416,34 @@
                 } else if (matNameLower.includes('buckle')) {
                   newName = 'buckle';
                   matched = true;
-                } else if (matNameLower.includes('glove') || matNameLower.includes('gloves')) {
+                } else if (matNameLower.includes('ribbon') || 
+                           (cleanLower === 'accs' && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip' || v.id === 'lara_croft_swim_gear'))) {
+                  newName = 'ribbon';
+                  matched = true;
+                } else if (matNameLower === 'accs' || matNameLower.includes('accessories')) {
+                  newName = 'accessories';
+                  matched = true;
+                } else if (matNameLower.includes('hair') || matNameLower.includes('braid') || matNameLower.includes('material07')) {
+                  newName = 'hair';
+                  matched = true;
+                } else if (matNameLower.includes('buckle')) {
+                  newName = 'buckle';
+                  matched = true;
+                } else if (matNameLower.includes('glove') || matNameLower.includes('gloves') || 
+                           (matNameLower.includes('hands') && (v.id === 'lara_croft_black_tank_top' || v.id === 'lara_croft_4259'))) {
                   newName = 'gloves';
+                  matched = true;
+                } else if (matNameLower.includes('nail') || matNameLower.includes('nails')) {
+                  newName = 'finger_nails';
+                  matched = true;
+                } else if (matNameLower.includes('metal') || matNameLower.includes('metals')) {
+                  newName = 'holster';
+                  matched = true;
+                } else if (matNameLower.includes('zipper')) {
+                  newName = 'outfit_down';
+                  matched = true;
+                } else if (matNameLower.includes('purse')) {
+                  newName = 'purse';
                   matched = true;
                 } else if (matNameLower.includes('catsuit') || matNameLower.includes('swimsuit') || matNameLower.includes('swim') || matNameLower.includes('dress') || matNameLower.includes('bikini') || matNameLower.includes('combi') || matNameLower.includes('clothing')) {
                   newName = 'outfit_body';
@@ -1417,6 +1456,27 @@
                   matched = true;
                 } else if (matNameLower.includes('boot') || matNameLower.includes('shoes') || matNameLower.includes('feet') || matNameLower.includes('socks')) {
                   newName = 'shoes';
+                  matched = true;
+                } else if ((matNameLower.includes('hands') || matNameLower === 'hand') && !matNameLower.includes('handgun') && !matNameLower.includes('holster') && !matNameLower.includes('glove')) {
+                  newName = 'skin';
+                  matched = true;
+                } else if (matNameLower.includes('finger') || matNameLower.includes('fingers')) {
+                  newName = 'skin';
+                  matched = true;
+                } else if (matNameLower.includes('body') && !matNameLower.includes('outfit') && !matNameLower.includes('upper') && !matNameLower.includes('lower') && !matNameLower.includes('bodyu') && !matNameLower.includes('bodyl')) {
+                  newName = 'skin';
+                  matched = true;
+                } else if (matNameLower.includes('neck')) {
+                  newName = 'skin';
+                  matched = true;
+                } else if (matNameLower.includes('legsarms') || matNameLower.includes('legs') || matNameLower.includes('armslegs') || matNameLower.includes('arms') || (matNameLower.includes('arm') && !matNameLower.includes('handgun') && !matNameLower.includes('holster') && !matNameLower.includes('glove') && !matNameLower.includes('alarm') && !matNameLower.includes('camera'))) {
+                  newName = 'skin';
+                  matched = true;
+                } else if (matNameLower.includes('material02') || matNameLower.includes('material04')) {
+                  newName = 'skin';
+                  matched = true;
+                } else if (matNameLower.includes('material08') || matNameLower.includes('material09')) {
+                  newName = 'handgun_part';
                   matched = true;
                 } else if (matNameLower.includes('holster') || matNameLower.includes('kabura') || matNameLower.includes('gear')) {
                   if (isFootwearMesh(c)) {
@@ -1518,8 +1578,34 @@
                 } else if (cleanMeshLower.includes('buckle')) {
                   newName = 'buckle';
                   matched = true;
-                } else if (cleanMeshLower.includes('glove') || cleanMeshLower.includes('gloves')) {
+                } else if (cleanMeshLower.includes('ribbon') || 
+                           (cleanLower === 'accs' && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip' || v.id === 'lara_croft_swim_gear'))) {
+                  newName = 'ribbon';
+                  matched = true;
+                } else if (cleanLower === 'accs' || cleanMeshLower === 'accs' || cleanMeshLower.includes('accessories')) {
+                  newName = 'accessories';
+                  matched = true;
+                } else if (cleanMeshLower.includes('hair') || cleanMeshLower.includes('braid') || cleanMeshLower.includes('material07')) {
+                  newName = 'hair';
+                  matched = true;
+                } else if (cleanMeshLower.includes('buckle')) {
+                  newName = 'buckle';
+                  matched = true;
+                } else if (cleanMeshLower.includes('glove') || cleanMeshLower.includes('gloves') || 
+                           (cleanMeshLower.includes('hands') && (v.id === 'lara_croft_black_tank_top' || v.id === 'lara_croft_4259'))) {
                   newName = 'gloves';
+                  matched = true;
+                } else if (cleanMeshLower.includes('nail') || cleanMeshLower.includes('nails')) {
+                  newName = 'finger_nails';
+                  matched = true;
+                } else if (cleanMeshLower.includes('metal') || cleanMeshLower.includes('metals')) {
+                  newName = 'holster';
+                  matched = true;
+                } else if (cleanMeshLower.includes('zipper')) {
+                  newName = 'outfit_down';
+                  matched = true;
+                } else if (cleanMeshLower.includes('purse')) {
+                  newName = 'purse';
                   matched = true;
                 } else if (cleanMeshLower.includes('catsuit') || cleanMeshLower.includes('swimsuit') || cleanMeshLower.includes('swim') || cleanMeshLower.includes('dress') || cleanMeshLower.includes('bikini') || cleanMeshLower.includes('combi') || cleanMeshLower.includes('clothing')) {
                   newName = 'outfit_body';
@@ -1532,6 +1618,27 @@
                   matched = true;
                 } else if (cleanMeshLower.includes('boot') || cleanMeshLower.includes('shoes') || cleanMeshLower.includes('feet') || cleanMeshLower.includes('socks')) {
                   newName = 'shoes';
+                  matched = true;
+                } else if ((cleanMeshLower.includes('hands') || cleanMeshLower === 'hand') && !cleanMeshLower.includes('handgun') && !cleanMeshLower.includes('holster') && !cleanMeshLower.includes('glove')) {
+                  newName = 'skin';
+                  matched = true;
+                } else if (cleanMeshLower.includes('finger') || cleanMeshLower.includes('fingers')) {
+                  newName = 'skin';
+                  matched = true;
+                } else if (cleanMeshLower.includes('body') && !cleanMeshLower.includes('outfit') && !cleanMeshLower.includes('upper') && !cleanMeshLower.includes('lower') && !cleanMeshLower.includes('bodyu') && !cleanMeshLower.includes('bodyl')) {
+                  newName = 'skin';
+                  matched = true;
+                } else if (cleanMeshLower.includes('neck')) {
+                  newName = 'skin';
+                  matched = true;
+                } else if (cleanMeshLower.includes('legsarms') || cleanMeshLower.includes('legs') || cleanMeshLower.includes('armslegs') || cleanMeshLower.includes('arms') || (cleanMeshLower.includes('arm') && !cleanMeshLower.includes('handgun') && !cleanMeshLower.includes('holster') && !cleanMeshLower.includes('glove') && !cleanMeshLower.includes('alarm') && !cleanMeshLower.includes('camera'))) {
+                  newName = 'skin';
+                  matched = true;
+                } else if (cleanMeshLower.includes('material02') || cleanMeshLower.includes('material04')) {
+                  newName = 'skin';
+                  matched = true;
+                } else if (cleanMeshLower.includes('material08') || cleanMeshLower.includes('material09')) {
+                  newName = 'handgun_part';
                   matched = true;
                 } else if (cleanMeshLower.includes('holster') || cleanMeshLower.includes('kabura') || cleanMeshLower.includes('gear')) {
                   if (isFootwearMesh(c)) {
@@ -1556,13 +1663,22 @@
                 newName = getCleanName(matName);
               }
               
+              const originalNameClean = getCleanName(c.name || "Unknown");
               if (newName) {
                 c.name = newName;
               }
 
               const isDefaultHidden = DEFAULT_HIDDEN_MESHES.has(c.name);
               if (!meshVisibility.has(c.name)) {
-                meshVisibility.set(c.name, { label: c.name, visible: !isDefaultHidden });
+                meshVisibility.set(c.name, { 
+                  label: c.name, 
+                  visible: !isDefaultHidden, 
+                  originalNames: new Set() 
+                });
+                updateMeshListUI();
+              }
+              if (originalNameClean && originalNameClean.toLowerCase() !== c.name.toLowerCase()) {
+                meshVisibility.get(c.name).originalNames.add(originalNameClean);
                 updateMeshListUI();
               }
               c.visible = meshVisibility.get(c.name).visible;
@@ -1588,7 +1704,7 @@
                 const matName = (Array.isArray(c.material) ? c.material[0]?.name : c.material?.name) || '';
                 if (/hair/i.test(geoName) || /hair/i.test(matName)) {
                   c.visible = false;
-                  meshVisibility.set(c.name, { label: getCleanName(matName || geoName), visible: false });
+                  meshVisibility.set(c.name, { label: getCleanName(matName || geoName), visible: false, originalNames: new Set() });
                 }
               }
             }
