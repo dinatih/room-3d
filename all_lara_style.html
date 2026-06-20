@@ -1185,7 +1185,9 @@
             
             if (c.isMesh) {
               if (!meshVisibility.has(c.name)) {
-                const labelName = getCleanName(c.material ? c.material.name : c.name);
+                const isGeneric = !c.name || /^(mesh|object|node|primitive)[_.]?\d*$/i.test(c.name.trim());
+                const rawName = (!isGeneric) ? c.name : (c.material ? c.material.name : c.name);
+                const labelName = getCleanName(rawName);
                 meshVisibility.set(c.name, { label: labelName, visible: true });
                 updateMeshListUI();
               }
