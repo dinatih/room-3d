@@ -11,6 +11,10 @@ function normalizeBoneName(name) {
   if (rawLower === 'spine_2') return 'spine_2';
   if (rawLower === 'spine_1') return 'spine_1';
   if (rawLower === 'spine_3') return 'spine_3';
+  if (rawLower === 'arm_left_shoulder_1' || rawLower === 'armleftshoulder1') return 'arm_left_shoulder_1';
+  if (rawLower === 'arm_left_shoulder_2' || rawLower === 'armleftshoulder2') return 'arm_left_shoulder_2';
+  if (rawLower === 'arm_right_shoulder_1' || rawLower === 'armrightshoulder1') return 'arm_right_shoulder_1';
+  if (rawLower === 'arm_right_shoulder_2' || rawLower === 'armrightshoulder2') return 'arm_right_shoulder_2';
 
   let clean = name;
   
@@ -19,7 +23,7 @@ function normalizeBoneName(name) {
   clean = clean.replace(/^mixamorig:/i, '');
   
   // Clean index suffixes like _03, _085, _087 or .001
-  clean = clean.replace(/[_-]\d+$/g, '');
+  clean = clean.replace(/[_-](0\d*|\d{2,})$/g, '');
   clean = clean.replace(/\.\d+$/g, '');
   
   // Clean space or multiple dashes/underscores to single underscore

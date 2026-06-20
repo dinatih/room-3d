@@ -493,7 +493,11 @@
           targetInstance.traverse(node => {
             if (node.isBone && !foundName) {
               const nameNormalized = node.name.toLowerCase().replace(/[:_ .\-]/g, '');
-              if (nameNormalized === syn || nameNormalized.includes(syn)) {
+              if (nameNormalized === syn || (nameNormalized.includes(syn) && 
+                  !nameNormalized.includes(syn + '1') && 
+                  !nameNormalized.includes(syn + '2') && 
+                  !nameNormalized.includes(syn + '3') && 
+                  !nameNormalized.includes(syn + '4'))) {
                 if (!nameNormalized.includes('twist') && !nameNormalized.includes('muscle') && !nameNormalized.includes('offset')) {
                   foundName = node.name;
                 }
