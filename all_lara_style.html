@@ -1765,58 +1765,51 @@
     }
 
     function getMeshTreeHTML(model) {
-      let html = '';
       let meshCount = 0;
+      const meshesList = [];
+      const groupsList = [];
       
-      function traverseNode(node, depth = 0) {
-        if (node.isBone) {
-          // On n'affiche pas les bones dans l'onglet des meshes, mais on traverse leurs enfants
-          for (let i = 0; i < node.children.length; i++) {
-            traverseNode(node.children[i], depth);
-          }
-          return;
-        }
-        
-        let shouldRender = false;
-        let typeIcon = '📁';
-        let color = '#339af0';
-        let isClickable = false;
-        
-        if (node.isSkinnedMesh) {
-          typeIcon = '👗';
-          color = '#ff6b6b';
+      model.traverse(node => {
+        if (node.isSkinnedMesh || node.isMesh) {
+          meshesList.push(node);
           meshCount++;
-          isClickable = true;
-          shouldRender = true;
-        } else if (node.isMesh) {
-          typeIcon = '📦';
-          color = '#51cf66';
-          meshCount++;
-          isClickable = true;
-          shouldRender = true;
-        } else if (node.isGroup && node.name) {
-          shouldRender = true;
+        } else if (node.isGroup && node.name && node !== model) {
+          groupsList.push(node);
         }
-        
-        if (shouldRender && node !== model) {
-          const indent = '&nbsp;'.repeat(depth * 2);
+      });
+      
+      // Sort meshes: standardized gear names first, then others alphabetically
+      meshesList.sort((a, b) => {
+        const aName = (a.name || '').toLowerCase();
+        const bName = (b.name || '').toLowerCase();
+        const aIsStd = STANDARDIZED_GEAR_NAMES.has(aName);
+        const bIsStd = STANDARDIZED_GEAR_NAMES.has(bName);
+        if (aIsStd && !bIsStd) return -1;
+        if (!aIsStd && bIsStd) return 1;
+        return aName.localeCompare(bName);
+      });
+      
+      let html = '';
+      
+      // Render standardized and sorted meshes
+      meshesList.forEach(node => {
+        const typeIcon = node.isSkinnedMesh ? '👗' : '📦';
+        const color = node.isSkinnedMesh ? '#ff6b6b' : '#51cf66';
+        const label = node.name || 'Unnamed';
+        const isSelected = activeHighlightedMesh && activeHighlightedMesh.uuid === node.uuid;
+        const highlightClass = isSelected ? 'hierarchy-node-selected' : '';
+        html += `<div id="node-${node.uuid}" class="hierarchy-node-clickable ${highlightClass}" onclick="window.highlightMesh('${model.uuid}', '${node.uuid}', event)" style="color: ${color}; font-family: monospace; white-space: nowrap; line-height: 1.4; display: block; margin: 1px 0; border-radius: 4px; padding: 2px 4px; cursor: pointer;">${typeIcon} <strong>${label}</strong> <span style="font-size: 9px; opacity: 0.5;">(${node.type})</span></div>`;
+      });
+      
+      // Render empty folders/groups at the end
+      if (groupsList.length > 0) {
+        html += `<div style="margin: 8px 0 4px 0; border-top: 1px dashed rgba(255,255,255,0.15); padding-top: 6px; color: #888; font-size: 10px; font-weight: bold; font-family: sans-serif;">CONTAINERS (GROUPS)</div>`;
+        groupsList.forEach(node => {
           const label = node.name || 'Unnamed';
-          if (isClickable) {
-            const isSelected = activeHighlightedMesh && activeHighlightedMesh.uuid === node.uuid;
-            const highlightClass = isSelected ? 'hierarchy-node-selected' : '';
-            html += `<div id="node-${node.uuid}" class="hierarchy-node-clickable ${highlightClass}" onclick="window.highlightMesh('${model.uuid}', '${node.uuid}', event)" style="color: ${color}; font-family: monospace; white-space: nowrap; line-height: 1.4; display: block; margin: 1px 0; border-radius: 4px; padding: 2px 4px; cursor: pointer;">${indent}${typeIcon} <strong>${label}</strong> <span style="font-size: 9px; opacity: 0.5;">(${node.type})</span></div>`;
-          } else {
-            html += `<div style="color: ${color}; font-family: monospace; white-space: nowrap; line-height: 1.4; padding: 2px 4px;">${indent}${typeIcon} <strong>${label}</strong> <span style="font-size: 9px; opacity: 0.5;">(${node.type})</span></div>`;
-          }
-        }
-        
-        const nextDepth = shouldRender && node !== model ? depth + 1 : depth;
-        for (let i = 0; i < node.children.length; i++) {
-          traverseNode(node.children[i], nextDepth);
-        }
+          html += `<div style="color: #339af0; font-family: monospace; white-space: nowrap; line-height: 1.4; padding: 2px 4px;">📁 <strong>${label}</strong> <span style="font-size: 9px; opacity: 0.5;">(${node.type})</span></div>`;
+        });
       }
       
-      traverseNode(model, 0);
       return { html, meshCount };
     }
 
