@@ -138,10 +138,14 @@
     <h3>Lara Croft <span class="red">Style Comparison</span></h3>
     <p>Comparing <span id="model-count-text">15</span> variations side-by-side. Pan horizontally using the mouse.</p>
     <p id="loading-status">Loading models...</p>
-    <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; pointer-events: auto;">
+    <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; pointer-events: auto;">
       <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
         <input type="checkbox" id="toggle-skeletons" style="cursor: pointer; accent-color: #ff4444;">
         <span>Afficher les Squelettes</span>
+      </label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
+        <input type="checkbox" id="toggle-superposition" style="cursor: pointer; accent-color: #ff4444;">
+        <span>Superposer les modèles (X = 0)</span>
       </label>
     </div>
   </div>
@@ -1169,15 +1173,18 @@
 
           allModels.push(model);
           modelsMap[v.id] = model;
+          const superpose = document.getElementById('toggle-superposition')?.checked || false;
           const offset = index - Math.floor(variants.length / 2);
-          const x = offset * SPACING;
+          const x = superpose ? 0 : offset * SPACING;
           model.position.x = x;
           scene.add(model);
 
           if (!v.noLabel) {
             const label = createNameLabel(v.label, v.color);
             label.position.set(x, 215, 0);
+            label.visible = !superpose;
             scene.add(label);
+            model.userData.label = label;
           }
 
           loadedCount++;
@@ -1216,6 +1223,26 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
+    // Layout update function to toggle between side-by-side and superposition
+    function updateLayout() {
+      const superpose = document.getElementById('toggle-superposition')?.checked || false;
+      allModels.forEach((model, index) => {
+        const variantIndex = variants.findIndex(v => v.id === model.name);
+        const idx = variantIndex !== -1 ? variantIndex : index;
+        const offset = idx - Math.floor(variants.length / 2);
+        const targetX = superpose ? 0 : offset * SPACING;
+        
+        model.position.x = targetX;
+        if (model.userData.label) {
+          model.userData.label.position.x = targetX;
+          model.userData.label.visible = !superpose;
+        }
+        if (model.userData.skeletonHelper) {
+          model.userData.skeletonHelper.update();
+        }
+      });
+    }
+
     // Toggle skeletons checkbox handler
     const toggleSkeletonsCheckbox = document.getElementById('toggle-skeletons');
     if (toggleSkeletonsCheckbox) {
@@ -1226,6 +1253,14 @@
             model.userData.skeletonHelper.visible = show;
           }
         });
+      });
+    }
+
+    // Toggle superposition checkbox handler
+    const toggleSuperpositionCheckbox = document.getElementById('toggle-superposition');
+    if (toggleSuperpositionCheckbox) {
+      toggleSuperpositionCheckbox.addEventListener('change', () => {
+        updateLayout();
       });
     }
 
