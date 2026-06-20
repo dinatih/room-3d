@@ -310,8 +310,8 @@
       { id: 'lara_croft_3254_rigged', label: 'Lara 3254 Rigged', file: 'media/all_lara/lara_croft_3254_rigged.glb', color: '#99cc33', fixOpaque: true },
       { id: 'lara_croft_gold_shades', label: 'Gold Shades', file: 'media/all_lara/lara_croft_gold_shades.glb', color: '#ffd700', fixOpaque: true },
       
-      // Groupe 8 : 88 os (préfixe mixamorig_)
-      { id: 'lara_officiel', label: 'Lara Officiel', file: 'media/sandbox/lara_native.glb', color: '#ff0055', fixOpaque: true },
+      // Groupe 8 : 88 os (préfixe mixamorig_ retiré)
+      { id: 'lara_officiel', label: 'Lara Officiel', file: 'media/all_lara/lara_original_88_bones.glb', color: '#ff0055', fixOpaque: true },
       
       // Groupe 9 : 91 os (sans suffixe, variante zip)
       { id: 'lara_croft_zip', label: 'Swim', file: 'media/all_lara/lara_croft_zip.glb', color: '#cc99ff', fixOpaque: true },
@@ -390,14 +390,14 @@
     const BONE_SYNONYMS = {
       'Hips': ['hips', 'pelvis', 'cog', 'roothips', 'rootground', 'hip'],
       'Spine': ['spine01', 'spinelower', 'spine0', 'spine1', 'spine'],
-      'Spine2': ['spine02', 'spineupper', 'spine2', 'spine03', 'spine'],
+      'Spine2': ['spine02', 'spineupper', 'spine2', 'spine03', 'spine', 'spine3'],
       'Neck': ['neck', 'headnecklower'],
       'Head': ['head', 'headneckupper'],
-      'LeftShoulder': ['leftshoulder', 'shoulderl', 'claviclel', 'armleftshoulder', 'larmclavicle', 'shlderl'],
+      'LeftShoulder': ['leftshoulder', 'shoulderl', 'claviclel', 'armleftshoulder', 'larmclavicle', 'shlderl', 'armleftshoulder1'],
       'LeftArm': ['armleftshoulder2', 'upperarml', 'larmhumerus', 'upperarm.l', 'upper_arm.l', 'leftarm', 'armleftelbow', 'arm.l', 'bicepl'],
       'LeftForeArm': ['lowerarml', 'larmradius', 'forearm.l', 'forearm_l', 'leftforearm', 'armleftelbow', 'armleftwrist', 'forarml', 'forearml'],
       'LeftHand': ['handl', 'larmwrist', 'hand.l', 'hand_l', 'wrist.l', 'wrist_l', 'lefthand', 'armleftwrist', 'palml'],
-      'RightShoulder': ['rightshoulder', 'shoulderr', 'clavicler', 'armrightshoulder', 'rarmclavicle', 'shlderr'],
+      'RightShoulder': ['rightshoulder', 'shoulderr', 'clavicler', 'armrightshoulder', 'rarmclavicle', 'shlderr', 'armrightshoulder1'],
       'RightArm': ['rightarm', 'armrightshoulder2', 'upperarmr', 'armrightelbow', 'rarmhumerus', 'upperarm.r', 'upper_arm.r', 'arm.r', 'bicepr'],
       'RightForeArm': ['lowerarmr', 'rarmradius', 'forearm.r', 'forearm_r', 'rightforearm', 'armrightelbow', 'armrightwrist', 'forarmr', 'forearmr'],
       'RightHand': ['handr', 'rarmwrist', 'hand.r', 'hand_r', 'wrist.r', 'wrist_r', 'righthand', 'armrightwrist', 'palmr'],
