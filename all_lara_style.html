@@ -1271,9 +1271,26 @@
               } else if (matNameLower.includes('grenade')) {
                 newName = 'grenades';
                 matched = true;
-              } else if (matNameLower.includes('holster') || matNameLower.includes('kabura')) {
-                newName = 'holsters';
+              } else if (matNameLower.includes('grapple')) {
+                newName = 'grapple';
                 matched = true;
+              } else if (matNameLower.includes('binocular')) {
+                newName = 'binoculars';
+                matched = true;
+              } else if (matNameLower.includes('camera') || matNameLower.includes('lens')) {
+                newName = 'camera';
+                matched = true;
+              } else if (matNameLower.includes('holster') || matNameLower.includes('kabura')) {
+                matched = true;
+                if (matNameLower.includes('left') || matNameLower.includes('hhl')) {
+                  newName = 'handgun_left_holster';
+                } else if (matNameLower.includes('right') || matNameLower.includes('hhr')) {
+                  newName = 'handgun_right_holster';
+                } else if (matNameLower.includes('mp5')) {
+                  newName = 'mp5_holster';
+                } else {
+                  newName = 'holster';
+                }
               }
               // 2. Check material clean name for weapons
               else if (cleanLower) {
@@ -1295,16 +1312,16 @@
               // 3. Fall back to mesh name check, only if no match yet and mesh name does not contain '|'
               if (!matched && !meshNameLower.includes('|')) {
                 const cleanMeshLower = c.name ? getCleanName(c.name).toLowerCase() : '';
-                if (cleanMeshLower.includes('handgun_left') || cleanMeshLower === 'handgun_left') {
+                if ((cleanMeshLower.includes('handgun_left') || cleanMeshLower === 'handgun_left') && !cleanMeshLower.includes('holster')) {
                   newName = 'handgun_left';
                   matched = true;
-                } else if (cleanMeshLower.includes('handgun_right') || cleanMeshLower === 'handgun_right') {
+                } else if ((cleanMeshLower.includes('handgun_right') || cleanMeshLower === 'handgun_right') && !cleanMeshLower.includes('holster')) {
                   newName = 'handgun_right';
                   matched = true;
-                } else if (cleanMeshLower.includes('mp5') && !cleanMeshLower.includes('ammo')) {
+                } else if (cleanMeshLower.includes('mp5') && !cleanMeshLower.includes('ammo') && !cleanMeshLower.includes('holster')) {
                   newName = 'mp5';
                   matched = true;
-                } else if (cleanMeshLower.includes('mp5') && cleanMeshLower.includes('ammo')) {
+                } else if (cleanMeshLower.includes('mp5') && cleanMeshLower.includes('ammo') && !cleanMeshLower.includes('holster')) {
                   newName = 'mp5_ammo';
                   matched = true;
                 } else if (cleanMeshLower.includes('backpack') || cleanMeshLower.includes('bag_low')) {
@@ -1322,9 +1339,26 @@
                 } else if (cleanMeshLower.includes('grenade')) {
                   newName = 'grenades';
                   matched = true;
-                } else if (cleanMeshLower.includes('holster') || cleanMeshLower.includes('kabura')) {
-                  newName = 'holsters';
+                } else if (cleanMeshLower.includes('grapple')) {
+                  newName = 'grapple';
                   matched = true;
+                } else if (cleanMeshLower.includes('binocular')) {
+                  newName = 'binoculars';
+                  matched = true;
+                } else if (cleanMeshLower.includes('camera') || cleanMeshLower.includes('lens')) {
+                  newName = 'camera';
+                  matched = true;
+                } else if (cleanMeshLower.includes('holster') || cleanMeshLower.includes('kabura')) {
+                  matched = true;
+                  if (cleanMeshLower.includes('left') || cleanMeshLower.includes('hhl')) {
+                    newName = 'handgun_left_holster';
+                  } else if (cleanMeshLower.includes('right') || cleanMeshLower.includes('hhr')) {
+                    newName = 'handgun_right_holster';
+                  } else if (cleanMeshLower.includes('mp5')) {
+                    newName = 'mp5_holster';
+                  } else {
+                    newName = 'holster';
+                  }
                 }
               }
               
