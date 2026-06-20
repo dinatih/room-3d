@@ -368,7 +368,8 @@
       'backpack', 'backpack_1', 'backpack_2',
       'pda', 'grenades', 'grapple', 'binoculars', 'camera',
       'handgun_left', 'handgun_right', 'mp5', 'mp5_ammo',
-      'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster'
+      'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster',
+      'shoes', 'goggles', 'face'
     ]);
 
     function updateMeshListUI() {
@@ -1225,6 +1226,38 @@
         }
       }
 
+      function isFootwearMesh(node) {
+        if (!node.isSkinnedMesh || !node.geometry || !node.geometry.attributes.skinIndex) {
+          return false;
+        }
+        const skinIndexAttr = node.geometry.attributes.skinIndex;
+        const skinWeightAttr = node.geometry.attributes.skinWeight;
+        const skeleton = node.skeleton;
+        if (!skeleton || !skeleton.bones) return false;
+        
+        const footKeywords = ['foot', 'toe', 'ankle'];
+        const vertexCount = skinIndexAttr.count;
+        const itemSize = skinIndexAttr.itemSize;
+        
+        for (let i = 0; i < vertexCount; i++) {
+          for (let j = 0; j < itemSize; j++) {
+            const idx = i * itemSize + j;
+            const boneIdx = skinIndexAttr.array[idx];
+            const weight = skinWeightAttr.array[idx];
+            if (weight > 0.01) {
+              const bone = skeleton.bones[boneIdx];
+              if (bone && bone.name) {
+                const boneNameLower = bone.name.toLowerCase();
+                if (footKeywords.some(kw => boneNameLower.includes(kw))) {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+        return false;
+      }
+
       let loadedCount = 0;
 
       variants.forEach((v, index) => {
@@ -1281,7 +1314,7 @@
                 }
               }
               
-              // 2. Check material name (clean lowercase) for gear to avoid false matching from scale suffixes like _1.0_0_0
+              // 2. Check material name (clean lowercase) for gear, weapons, footwear, goggles, face
               if (!matched) {
                 if (cleanLower.includes('backpack') || cleanLower.includes('bag_low')) {
                   matched = true;
@@ -1304,20 +1337,33 @@
                 } else if (matNameLower.includes('binocular')) {
                   newName = 'binoculars';
                   matched = true;
-                } else if (matNameLower.includes('camera') || matNameLower.includes('lens')) {
+                } else if (matNameLower.includes('camera') || (matNameLower.includes('lens') && matNameLower.includes('cam'))) {
                   newName = 'camera';
                   matched = true;
-                } else if (matNameLower.includes('holster') || matNameLower.includes('kabura') || matNameLower.includes('gear')) {
+                } else if (matNameLower.includes('goggles') || matNameLower.includes('rebreather') || matNameLower.includes('glasses') || matNameLower.includes('shades') || matNameLower.includes('lens')) {
+                  newName = 'goggles';
                   matched = true;
-                  if (matNameLower.includes('left') || matNameLower.includes('hhl')) {
-                    newName = 'handgun_left_holster';
-                  } else if (matNameLower.includes('right') || matNameLower.includes('hhr')) {
-                    newName = 'handgun_right_holster';
-                  } else if (matNameLower.includes('mp5')) {
-                    newName = 'mp5_holster';
+                } else if (matNameLower.includes('face') || matNameLower.includes('lips') || matNameLower.includes('mouth') || matNameLower.includes('lashes') || matNameLower.includes('eyelash') || matNameLower.includes('eyes') || matNameLower.includes('eyeball') || matNameLower.includes('teeth')) {
+                  newName = 'face';
+                  matched = true;
+                } else if (matNameLower.includes('boot') || matNameLower.includes('shoes') || matNameLower.includes('feet') || matNameLower.includes('socks')) {
+                  newName = 'shoes';
+                  matched = true;
+                } else if (matNameLower.includes('holster') || matNameLower.includes('kabura') || matNameLower.includes('gear')) {
+                  if (isFootwearMesh(c)) {
+                    newName = 'shoes';
                   } else {
-                    newName = 'holster';
+                    if (matNameLower.includes('left') || matNameLower.includes('hhl')) {
+                      newName = 'handgun_left_holster';
+                    } else if (matNameLower.includes('right') || matNameLower.includes('hhr')) {
+                      newName = 'handgun_right_holster';
+                    } else if (matNameLower.includes('mp5')) {
+                      newName = 'mp5_holster';
+                    } else {
+                      newName = 'holster';
+                    }
                   }
+                  matched = true;
                 }
               }
               
@@ -1376,17 +1422,30 @@
                 } else if (cleanMeshLower.includes('camera') || cleanMeshLower.includes('lens')) {
                   newName = 'camera';
                   matched = true;
-                } else if (cleanMeshLower.includes('holster') || cleanMeshLower.includes('kabura') || cleanMeshLower.includes('gear')) {
+                } else if (cleanMeshLower.includes('goggles') || cleanMeshLower.includes('rebreather') || cleanMeshLower.includes('glasses') || cleanMeshLower.includes('shades')) {
+                  newName = 'goggles';
                   matched = true;
-                  if (cleanMeshLower.includes('left') || cleanMeshLower.includes('hhl')) {
-                    newName = 'handgun_left_holster';
-                  } else if (cleanMeshLower.includes('right') || cleanMeshLower.includes('hhr')) {
-                    newName = 'handgun_right_holster';
-                  } else if (cleanMeshLower.includes('mp5')) {
-                    newName = 'mp5_holster';
+                } else if (cleanMeshLower.includes('face') || cleanMeshLower.includes('lips') || cleanMeshLower.includes('mouth') || cleanMeshLower.includes('lashes') || cleanMeshLower.includes('eyelash') || cleanMeshLower.includes('eyes') || cleanMeshLower.includes('eyeball') || cleanMeshLower.includes('teeth')) {
+                  newName = 'face';
+                  matched = true;
+                } else if (cleanMeshLower.includes('boot') || cleanMeshLower.includes('shoes') || cleanMeshLower.includes('feet') || cleanMeshLower.includes('socks')) {
+                  newName = 'shoes';
+                  matched = true;
+                } else if (cleanMeshLower.includes('holster') || cleanMeshLower.includes('kabura') || cleanMeshLower.includes('gear')) {
+                  if (isFootwearMesh(c)) {
+                    newName = 'shoes';
                   } else {
-                    newName = 'holster';
+                    if (cleanMeshLower.includes('left') || cleanMeshLower.includes('hhl')) {
+                      newName = 'handgun_left_holster';
+                    } else if (cleanMeshLower.includes('right') || cleanMeshLower.includes('hhr')) {
+                      newName = 'handgun_right_holster';
+                    } else if (cleanMeshLower.includes('mp5')) {
+                      newName = 'mp5_holster';
+                    } else {
+                      newName = 'holster';
+                    }
                   }
+                  matched = true;
                 }
               }
               
@@ -1488,6 +1547,18 @@
           }
         });
       });
+    });
+
+    // Prevent events from bubbling from HTML UI overlays to the 3D scene to avoid unintended selection or OrbitControls rotation
+    ['left-sidebar', 'mesh-control', 'hierarchy-tooltip', 'joint-3d-label'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        ['mousedown', 'mouseup', 'click', 'pointerdown', 'pointerup'].forEach(evtType => {
+          el.addEventListener(evtType, (e) => {
+            e.stopPropagation();
+          });
+        });
+      }
     });
 
     window.addEventListener('resize', () => {
