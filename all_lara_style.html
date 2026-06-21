@@ -339,7 +339,7 @@
       { id: '18_wetsuit', label: '18 Wetsuit', file: 'media/all_lara/18_wetsuit.glb', color: '#0077b6' },
       
       // Groupe 7 : 88-97 os (sans suffixe numérique)
-      { id: '11', label: '11', file: 'media/all_lara/11.glb', color: '#4a4a4a', fixOpaque: true },
+      { id: '11_tank_top_pants', label: '11 Tank top - Pants', file: 'media/all_lara/11_tank_top_pants.glb', color: '#4a4a4a', fixOpaque: true },
       { id: '05_crop_top_shorts', label: '05 Crop top - Shorts', file: 'media/all_lara/05_crop_top_shorts.glb', color: '#d2a23c', fixOpaque: true },
       { id: '08_crew_neck_bodysuit_shorts', label: '08 Crew neck bodysuit - Shorts', file: 'media/all_lara/08_crew_neck_bodysuit_shorts.glb', color: '#99cc33', fixOpaque: true },
       { id: '17_catsuit', label: '17 Catsuit', file: 'media/all_lara/17_catsuit.glb', color: '#ffd700', fixOpaque: true },
@@ -1572,7 +1572,7 @@
                   newName = 'buckle';
                   matched = true;
                 } else if (matNameLower.includes('glove') || matNameLower.includes('gloves') || 
-                           (matNameLower.includes('hands') && !matNameLower.includes('handgun') && (v.id === '11' || v.id === '05_crop_top_shorts'))) {
+                           (matNameLower.includes('hands') && !matNameLower.includes('handgun') && (v.id === '11_tank_top_pants' || v.id === '05_crop_top_shorts'))) {
                   newName = 'gloves';
                   matched = true;
                 } else if (matNameLower.includes('nail') || matNameLower.includes('nails') ||
@@ -1734,7 +1734,7 @@
                   newName = 'buckle';
                   matched = true;
                 } else if (cleanMeshLower.includes('glove') || cleanMeshLower.includes('gloves') || 
-                           (cleanMeshLower.includes('hands') && !cleanMeshLower.includes('handgun') && (v.id === '11' || v.id === '05_crop_top_shorts'))) {
+                           (cleanMeshLower.includes('hands') && !cleanMeshLower.includes('handgun') && (v.id === '11_tank_top_pants' || v.id === '05_crop_top_shorts'))) {
                   newName = 'gloves';
                   matched = true;
                 } else if (cleanMeshLower.includes('nail') || cleanMeshLower.includes('nails') ||

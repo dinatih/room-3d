@@ -797,7 +797,7 @@ const ALL_LARA_NPC_DEFS = [
   { path: 'media/all_lara/03_dress.glb', pos: [40, 0, -180], rot: 3.0 },
   { path: 'media/all_lara/02_double_slit_dress.glb', pos: [170, 0, 120], rot: -0.2 },
   { path: 'media/all_lara/18_wetsuit.glb', pos: [130, 0, -280], rot: 0.9 },
-  { path: 'media/all_lara/11.glb', pos: [280, 0, 210], rot: -1.8 },
+  { path: 'media/all_lara/11_tank_top_pants.glb', pos: [280, 0, 210], rot: -1.8 },
   { path: 'media/all_lara/05_crop_top_shorts.glb', pos: [50, 0, 40], rot: 0.4 },
   { path: 'media/all_lara/08_crew_neck_bodysuit_shorts.glb', pos: [210, 0, -80], rot: 2.7 },
   { path: 'media/all_lara/17_catsuit.glb', pos: [90, 0, 190], rot: -0.9 },
