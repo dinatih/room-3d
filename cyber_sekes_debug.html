@@ -239,9 +239,9 @@
   <div id="topbar">
     <h1>Cyber Sekes <span>Duo Anim</span> — Comparaison</h1>
     <div class="sep"></div>
-    <!-- Lara pills (purple) -->
+    <!-- Target pills (purple) -->
     <div id="pill-a" class="pill loading">Lara A …</div>
-    <div id="pill-b" class="pill loading">Lara B …</div>
+    <div id="pill-b" class="pill loading">X-Bot …</div>
     <div class="sep"></div>
     <!-- CC ref pills (orange) -->
     <div id="pill-ra" class="pill loading">CC Femme …</div>
@@ -280,7 +280,7 @@
       <div>FPS: <strong id="hud-fps">--</strong></div>
       <div>Anim: <strong id="hud-anim">Cyber sex</strong></div>
       <div>Durée: <strong id="hud-dur">4.3 s</strong></div>
-      <div style="margin-top:6px"><span class="dot dot-purple"></span>Lara retargetée</div>
+      <div style="margin-top:6px"><span class="dot dot-purple"></span>Retargeté (Lara/X-Bot)</div>
       <div><span class="dot dot-orange"></span>CC original (référence)</div>
     </div>
 
@@ -288,7 +288,7 @@
     <div id="vis-panel">
       <div class="title">Visibilité</div>
 
-      <!-- Laras -->
+      <!-- Characters -->
       <div class="vis-row">
         <label><span class="dot dot-purple"></span>Lara A (femme)</label>
         <label class="sw"><input type="checkbox" id="vis-a" checked><span class="sw-track"></span></label>
@@ -298,7 +298,7 @@
         <span id="op-a-val">1.0</span>
       </div>
       <div class="vis-row" style="margin-top:10px">
-        <label><span class="dot dot-purple"></span>Lara B (homme)</label>
+        <label><span class="dot dot-purple"></span>X-Bot (homme)</label>
         <label class="sw"><input type="checkbox" id="vis-b" checked><span class="sw-track"></span></label>
       </div>
       <div class="opacity-mini">
@@ -354,9 +354,9 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     // ── CONFIG ──────────────────────────────────────────────────────────────
-    // Lara retargetées (résultat du retargeting CC→Mixamo)
-    const CHAR_A      = 'media/sandbox/lara_cyber_a.glb';
-    const CHAR_B      = 'media/sandbox/lara_cyber_b.glb';
+    // Lara & X-Bot models
+    const CHAR_A      = 'media/sandbox/lara_native.glb';
+    const CHAR_B      = 'media/sandbox/Xbot_official.glb';
     // CC originaux extraits du zip (anim native, en arrière-plan)
     const CC_REF_A    = 'media/sandbox/cyber_char_a.glb';   // femme CC
     const CC_REF_B    = 'media/sandbox/cyber_char_b.glb';   // homme CC
@@ -449,6 +449,7 @@
     const refActions  = { ra: null, rb: null };
     const refSkels    = { ra: null, rb: null };
     const refWrappers = { ra: null, rb: null };
+    const rawClips    = { ra: null, rb: null };
 
     // ── UTILS ───────────────────────────────────────────────────────────────
     function setLoadMsg(msg, pct) {
@@ -481,6 +482,45 @@
           });
         }
       });
+    }
+
+    function getCharacterGenderFromBoneName(name) {
+      // Suffixes under _100 (e.g. _07, _09, _034) are female. Suffixes starting at _0100 (e.g. _0106) are male.
+      const match = name.match(/_0?(\d+)/);
+      if (match) {
+        const val = parseInt(match[1], 10);
+        return val >= 100 ? 'male' : 'female';
+      }
+      return null;
+    }
+
+    function getBoneBindWorldQuaternion(bone, model) {
+      let skinnedMesh = null;
+      model.traverse(c => {
+        if (!skinnedMesh && c.isSkinnedMesh && c.skeleton) {
+          if (c.skeleton.bones.indexOf(bone) !== -1) {
+            skinnedMesh = c;
+          }
+        }
+      });
+
+      if (skinnedMesh) {
+        const idx = skinnedMesh.skeleton.bones.indexOf(bone);
+        const invBind = skinnedMesh.skeleton.boneInverses[idx];
+        const bindMatrix = invBind.clone().invert();
+        
+        if (skinnedMesh.bindMatrix) {
+          bindMatrix.premultiply(skinnedMesh.bindMatrix);
+        }
+        
+        const q = new THREE.Quaternion();
+        const pos = new THREE.Vector3();
+        const scale = new THREE.Vector3();
+        bindMatrix.decompose(pos, q, scale);
+        return q;
+      }
+      
+      return bone.getWorldQuaternion(new THREE.Quaternion());
     }
 
     // ── LOAD LARA (retargetée) ───────────────────────────────────────────────
@@ -518,27 +558,24 @@
       skel.visible = false;
       scene.add(skel);
 
+      // Cache rest pose properties
+      model.updateMatrixWorld(true);
+      model.traverse(c => {
+        if (c.isBone) {
+          c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
+          c.restLocalQuaternion = c.quaternion.clone();
+          c.parentRestWorldQuaternion = c.parent && c.parent.isBone
+            ? c.parent.getWorldQuaternion(new THREE.Quaternion())
+            : new THREE.Quaternion();
+          c.defaultPosition = c.position.clone();
+        }
+      });
+
       const mixer = new THREE.AnimationMixer(model);
-      let action = null;
-
-      console.log(`[${key}] animations disponibles:`, gltf.animations.map(a => a.name));
-
-      if (gltf.animations.length > 0) {
-        const animName = key === 'a' ? ANIM_NAME_A : ANIM_NAME_B;
-        let clip = gltf.animations.find(a => a.name === animName) || gltf.animations[0];
-        animDuration = Math.max(animDuration, clip.duration);
-        action = mixer.clipAction(clip);
-        action.setLoop(THREE.LoopRepeat, Infinity);
-        action.clampWhenFinished = false;
-        if (isPlaying) action.play();
-        console.log(`[${key}] clip=${clip.name}  dur=${clip.duration.toFixed(2)}s  tracks=${clip.tracks.length}`);
-      } else {
-        console.warn(`[${key}] AUCUNE animation dans le GLB !`);
-      }
 
       models[key]  = model;
       mixers[key]  = mixer;
-      actions[key] = action;
+      actions[key] = null; // will be created via retargeting
       skels[key]   = skel;
       wrappers[key] = wrapper;
 
@@ -572,6 +609,27 @@
         }
       });
 
+      // Hide meshes of the opposite gender
+      model.traverse(c => {
+        if (c.isSkinnedMesh) {
+          let hasMaleBones = false;
+          let hasFemaleBones = false;
+          if (c.skeleton && c.skeleton.bones) {
+            for (const bone of c.skeleton.bones) {
+              const gender = getCharacterGenderFromBoneName(bone.name);
+              if (gender === 'male') hasMaleBones = true;
+              if (gender === 'female') hasFemaleBones = true;
+            }
+          }
+          if (key === 'ra' && hasMaleBones && !hasFemaleBones) {
+            c.visible = false;
+          }
+          if (key === 'rb' && hasFemaleBones && !hasMaleBones) {
+            c.visible = false;
+          }
+        }
+      });
+
       normalizeHeight(model);
 
       const wrapper = new THREE.Group();
@@ -584,6 +642,19 @@
       skel.visible = false;
       scene.add(skel);
 
+      // Cache rest pose properties
+      model.updateMatrixWorld(true);
+      model.traverse(c => {
+        if (c.isBone) {
+          c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
+          c.restLocalQuaternion = c.quaternion.clone();
+          c.parentRestWorldQuaternion = c.parent && c.parent.isBone
+            ? c.parent.getWorldQuaternion(new THREE.Quaternion())
+            : new THREE.Quaternion();
+          c.defaultPosition = c.position.clone();
+        }
+      });
+
       const mixer = new THREE.AnimationMixer(model);
       let action = null;
 
@@ -592,6 +663,7 @@
       if (gltf.animations.length > 0) {
         // Prendre la première (et unique) animation du CC exporté
         const clip = gltf.animations[0];
+        rawClips[key] = clip; // Store raw clip for dynamic retargeting
         animDuration = Math.max(animDuration, clip.duration);
         action = mixer.clipAction(clip);
         action.setLoop(THREE.LoopRepeat, Infinity);
@@ -612,13 +684,197 @@
       pill.className = 'pill ok-ref';
     }
 
+    // ── DYNAMIC RETARGETING ──────────────────────────────────────────────────
+    // ── DYNAMIC RETARGETING ──────────────────────────────────────────────────
+    const CC_TO_LARA = {
+      'CC_Base_Hip':        'mixamorig_root_hips',
+      'CC_Base_Waist':      'mixamorig_spine_lower',
+      'CC_Base_Spine01':    'mixamorig_spine_upper',
+      'CC_Base_Spine02':    'mixamorig_spine_upper',
+      'CC_Base_Head':       'mixamorig_head_neck_upper',
+      'CC_Base_NeckTwist01': 'mixamorig_head_neck_lower',
+      'CC_Base_NeckTwist02': 'mixamorig_head_neck_upper',
+      'CC_Base_L_Thigh':    'mixamorig_leg_left_thigh',
+      'CC_Base_L_Calf':     'mixamorig_leg_left_knee',
+      'CC_Base_L_Foot':     'mixamorig_leg_left_ankle',
+      'CC_Base_L_ToeBase':  'mixamorig_leg_left_toes',
+      'CC_Base_R_Thigh':    'mixamorig_leg_right_thigh',
+      'CC_Base_R_Calf':     'mixamorig_leg_right_knee',
+      'CC_Base_R_Foot':     'mixamorig_leg_right_ankle',
+      'CC_Base_R_ToeBase':  'mixamorig_leg_right_toes',
+      'CC_Base_L_Clavicle': 'mixamorig_arm_left_shoulder_1',
+      'CC_Base_L_Upperarm': 'mixamorig_arm_left_shoulder_2',
+      'CC_Base_L_Forearm':  'mixamorig_arm_left_elbow',
+      'CC_Base_L_Hand':     'mixamorig_arm_left_wrist',
+      'CC_Base_R_Clavicle': 'mixamorig_arm_right_shoulder_1',
+      'CC_Base_R_Upperarm': 'mixamorig_arm_right_shoulder_2',
+      'CC_Base_R_Forearm':  'mixamorig_arm_right_elbow',
+      'CC_Base_R_Hand':     'mixamorig_arm_right_wrist',
+    };
+
+    const CC_TO_XBOT = {
+      'CC_Base_Hip':        'mixamorigHips',
+      'CC_Base_Waist':      'mixamorigSpine',
+      'CC_Base_Spine01':    'mixamorigSpine1',
+      'CC_Base_Spine02':    'mixamorigSpine2',
+      'CC_Base_Head':       'mixamorigHead',
+      'CC_Base_NeckTwist01': 'mixamorigNeck',
+      'CC_Base_NeckTwist02': 'mixamorigHead',
+      'CC_Base_L_Thigh':    'mixamorigLeftUpLeg',
+      'CC_Base_L_Calf':     'mixamorigLeftLeg',
+      'CC_Base_L_Foot':     'mixamorigLeftFoot',
+      'CC_Base_L_ToeBase':  'mixamorigLeftToeBase',
+      'CC_Base_R_Thigh':    'mixamorigRightUpLeg',
+      'CC_Base_R_Calf':     'mixamorigRightLeg',
+      'CC_Base_R_Foot':     'mixamorigRightFoot',
+      'CC_Base_R_ToeBase':  'mixamorigRightToeBase',
+      'CC_Base_L_Clavicle': 'mixamorigLeftShoulder',
+      'CC_Base_L_Upperarm': 'mixamorigLeftArm',
+      'CC_Base_L_Forearm':  'mixamorigLeftForeArm',
+      'CC_Base_L_Hand':     'mixamorigLeftHand',
+      'CC_Base_R_Clavicle': 'mixamorigRightShoulder',
+      'CC_Base_R_Upperarm': 'mixamorigRightArm',
+      'CC_Base_R_Forearm':  'mixamorigRightForeArm',
+      'CC_Base_R_Hand':     'mixamorigRightHand',
+    };
+
+    function retargetCCClipToTarget(ccClip, ccModel, targetModel, boneMap, hipsTargetBoneName, targetGender) {
+      const tracks = [];
+
+      function stripCCPrefixSuffix(name) {
+        return name.replace(/_\d+$/, '');
+      }
+
+      // Read the world quaternions of all bones in true bind pose
+      const ccBones = {};
+      ccModel.traverse(c => {
+        if (c.isBone) {
+          const base = stripCCPrefixSuffix(c.name);
+          const gender = getCharacterGenderFromBoneName(c.name);
+          if (gender !== targetGender) return;
+
+          ccBones[base] = {
+            bone: c,
+            restWorldQ: getBoneBindWorldQuaternion(c, ccModel),
+            parentWorldQ: c.parent && c.parent.isBone 
+              ? getBoneBindWorldQuaternion(c.parent, ccModel) 
+              : new THREE.Quaternion()
+          };
+        }
+      });
+
+      const targetBones = {};
+      targetModel.traverse(c => {
+        if (c.isBone) {
+          targetBones[c.name] = {
+            bone: c,
+            restWorldQ: getBoneBindWorldQuaternion(c, targetModel),
+            parentWorldQ: c.parent && c.parent.isBone 
+              ? getBoneBindWorldQuaternion(c.parent, targetModel) 
+              : new THREE.Quaternion()
+          };
+        }
+      });
+
+      // Retarget tracks
+      for (const track of ccClip.tracks) {
+        const [boneFull, prop] = track.name.split('.');
+        if (prop !== 'quaternion' && prop !== 'position') continue;
+
+        const gender = getCharacterGenderFromBoneName(boneFull);
+        if (gender !== targetGender) continue;
+
+        const baseName = stripCCPrefixSuffix(boneFull);
+        const targetBoneName = boneMap[baseName];
+        if (!targetBoneName) continue;
+
+        const srcMeta = ccBones[baseName];
+        const tgtMeta = targetBones[targetBoneName];
+        if (!srcMeta || !tgtMeta) continue;
+
+        const clone = track.clone();
+        clone.name = `${targetBoneName}.${prop}`;
+
+        if (prop === 'quaternion') {
+          const B_src = srcMeta.restWorldQ;
+          const P_src = srcMeta.parentWorldQ;
+          const B_tgt = tgtMeta.restWorldQ;
+          const P_tgt = tgtMeta.parentWorldQ;
+
+          const P_tgt_inv = P_tgt.clone().invert();
+          const B_src_inv = B_src.clone().invert();
+
+          for (let i = 0; i < clone.values.length; i += 4) {
+            const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
+            
+            // P_tgt_inv * P_src * q * B_src_inv * B_tgt
+            const resQ = P_tgt_inv.clone()
+              .multiply(P_src)
+              .multiply(q)
+              .multiply(B_src_inv)
+              .multiply(B_tgt);
+
+            clone.values[i] = resQ.x;
+            clone.values[i+1] = resQ.y;
+            clone.values[i+2] = resQ.z;
+            clone.values[i+3] = resQ.w;
+          }
+          tracks.push(clone);
+        } else if (prop === 'position' && targetBoneName === hipsTargetBoneName) {
+          const scaleFactor = ccModel.scale.x / targetModel.scale.x;
+          for (let i = 0; i < clone.values.length; i += 3) {
+            clone.values[i]   *= scaleFactor;
+            clone.values[i+1] *= scaleFactor;
+            clone.values[i+2] *= scaleFactor;
+          }
+          tracks.push(clone);
+        }
+      }
+
+      // If no hips position track was created, add a constant one to match height
+      const hasHipsPos = tracks.some(t => t.name === `${hipsTargetBoneName}.position`);
+      if (!hasHipsPos && ccBones['CC_Base_Hip'] && targetBones[hipsTargetBoneName]) {
+        const srcHips = ccBones['CC_Base_Hip'].bone;
+        const scaleFactor = ccModel.scale.x / targetModel.scale.x;
+        const pos = srcHips.position.clone().multiplyScalar(scaleFactor);
+        const times = new Float32Array([0, ccClip.duration]);
+        const values = new Float32Array([pos.x, pos.y, pos.z, pos.x, pos.y, pos.z]);
+        const posTrack = new THREE.VectorKeyframeTrack(`${hipsTargetBoneName}.position`, times, values);
+        tracks.push(posTrack);
+        console.log(`[retarget] Created constant position track for hips:`, pos);
+      }
+
+      return new THREE.AnimationClip(`${ccClip.name}_retargeted`, ccClip.duration, tracks);
+    }
+
     // ── INIT ────────────────────────────────────────────────────────────────
     async function init() {
       try {
         await loadChar('a', CHAR_A, 'Lara A', document.getElementById('pill-a'));
-        await loadChar('b', CHAR_B, 'Lara B', document.getElementById('pill-b'));
+        await loadChar('b', CHAR_B, 'X-Bot', document.getElementById('pill-b'));
         await loadRef('ra', CC_REF_A, 'CC Femme', document.getElementById('pill-ra'));
         await loadRef('rb', CC_REF_B, 'CC Homme', document.getElementById('pill-rb'));
+
+        // Retarget animations dynamically
+        if (rawClips.ra && refModels.ra && models.a) {
+          const retargetedA = retargetCCClipToTarget(rawClips.ra, refModels.ra, models.a, CC_TO_LARA, 'mixamorig_root_hips', 'female');
+          const actionA = mixers.a.clipAction(retargetedA);
+          actionA.setLoop(THREE.LoopRepeat, Infinity);
+          actionA.clampWhenFinished = false;
+          if (isPlaying) actionA.play();
+          actions.a = actionA;
+          console.log("Retargeted Lara A animation successfully!", retargetedA);
+        }
+        
+        if (rawClips.rb && refModels.rb && models.b) {
+          const retargetedB = retargetCCClipToTarget(rawClips.rb, refModels.rb, models.b, CC_TO_XBOT, 'mixamorigHips', 'male');
+          const actionB = mixers.b.clipAction(retargetedB);
+          actionB.setLoop(THREE.LoopRepeat, Infinity);
+          actionB.clampWhenFinished = false;
+          if (isPlaying) actionB.play();
+          actions.b = actionB;
+          console.log("Retargeted X-Bot animation successfully!", retargetedB);
+        }
 
         setLoadMsg('Prêt !', 100);
         document.getElementById('hud-dur').textContent = animDuration.toFixed(1) + ' s';
@@ -627,6 +883,11 @@
           document.getElementById('loading').style.opacity = '0';
           setTimeout(() => document.getElementById('loading').remove(), 500);
         }, 300);
+        window.mixers = mixers;
+        window.actions = actions;
+        window.models = models;
+        window.scene = scene;
+        window.refModels = refModels;
       } catch(e) {
         console.error(e);
         document.getElementById('loading-msg').textContent = 'Erreur : ' + e.message;
@@ -646,7 +907,7 @@
         controls.target.set(0, 90, 0);
         camera.position.set(0, 120, 320);
       } else {
-        // Côte à côte : Lara A gauche, CC Femme derrière elle ; Lara B droite, CC Homme derrière lui
+        // Côte à côte : Lara A gauche, CC Femme derrière elle ; X-Bot droite, CC Homme derrière lui
         wrappers.a.position.x    = -70;
         wrappers.b.position.x    =  70;
         if (refWrappers.ra) { refWrappers.ra.position.x = -70; refWrappers.ra.position.z = -30; }

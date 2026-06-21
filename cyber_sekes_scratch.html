@@ -1119,6 +1119,7 @@
 
         const ccFemmeHeadY = getBoneWorldY(refs.female, 'CC_Base_Head_01');
         const laraHeadY = getBoneWorldY(targets.female, 'mixamorig_head_neck_upper');
+        console.log("DIAGNOSTIC - ccFemmeHeadY: " + ccFemmeHeadY + ", laraHeadY: " + laraHeadY);
         if (ccFemmeHeadY && laraHeadY) {
           const ratio = ccFemmeHeadY / laraHeadY;
           targets.female.scale.multiplyScalar(ratio);
