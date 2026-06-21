@@ -1240,102 +1240,108 @@
       }
 
       function splitMeshByFingerBones(node, parent) {
-        if (!node.isSkinnedMesh || !node.geometry || !node.geometry.attributes.position || !node.geometry.attributes.skinIndex) {
-          return;
-        }
-        
-        const skeleton = node.skeleton;
-        if (!skeleton || !skeleton.bones) return;
-        
-        const positionAttr = node.geometry.attributes.position;
-        const skinIndexAttr = node.geometry.attributes.skinIndex;
-        const skinWeightAttr = node.geometry.attributes.skinWeight;
-        const indexAttr = node.geometry.index;
-        
-        const vertexCount = positionAttr.count;
-        const itemSize = skinIndexAttr.itemSize;
-        
-        const fingerKeywords = ['finger', 'thumb', 'index', 'middle', 'ring', 'pinky', 'hand'];
-        
-        // Step 1: Classify each vertex
-        const isFingerVertex = new Uint8Array(vertexCount);
-        for (let i = 0; i < vertexCount; i++) {
-          let hasFingerWeight = false;
-          for (let j = 0; j < itemSize; j++) {
-            const idx = i * itemSize + j;
-            const boneIdx = skinIndexAttr.array[idx];
-            const weight = skinWeightAttr.array[idx];
-            if (weight > 0.05) {
-              const bone = skeleton.bones[boneIdx];
-              if (bone && bone.name) {
-                const boneNameLower = bone.name.toLowerCase();
-                if (fingerKeywords.some(kw => boneNameLower.includes(kw))) {
-                  hasFingerWeight = true;
-                  break;
+        try {
+          if (!node.isSkinnedMesh || !node.geometry || !node.geometry.attributes.position || !node.geometry.attributes.skinIndex || !node.geometry.attributes.skinWeight) {
+            return;
+          }
+          
+          const skeleton = node.skeleton;
+          if (!skeleton || !skeleton.bones) return;
+          
+          const positionAttr = node.geometry.attributes.position;
+          const skinIndexAttr = node.geometry.attributes.skinIndex;
+          const skinWeightAttr = node.geometry.attributes.skinWeight;
+          const indexAttr = node.geometry.index;
+          
+          const vertexCount = positionAttr.count;
+          const itemSize = skinIndexAttr.itemSize;
+          
+          const fingerKeywords = ['finger', 'thumb', 'index', 'middle', 'ring', 'pinky', 'hand'];
+          
+          // Step 1: Classify each vertex
+          const isFingerVertex = new Uint8Array(vertexCount);
+          for (let i = 0; i < vertexCount; i++) {
+            let hasFingerWeight = false;
+            for (let j = 0; j < itemSize; j++) {
+              const idx = i * itemSize + j;
+              const boneIdx = skinIndexAttr.array[idx];
+              const weight = skinWeightAttr.array[idx];
+              if (weight > 0.05) {
+                const bone = skeleton.bones[boneIdx];
+                if (bone && bone.name) {
+                  const boneNameLower = bone.name.toLowerCase();
+                  if (fingerKeywords.some(kw => boneNameLower.includes(kw))) {
+                    hasFingerWeight = true;
+                    break;
+                  }
                 }
               }
             }
+            isFingerVertex[i] = hasFingerWeight ? 1 : 0;
           }
-          isFingerVertex[i] = hasFingerWeight ? 1 : 0;
-        }
-        
-        // Check if there are vertices of both types. If not, no need to split!
-        let fingerVerts = 0;
-        for (let i = 0; i < vertexCount; i++) {
-          if (isFingerVertex[i]) fingerVerts++;
-        }
-        if (fingerVerts === 0 || fingerVerts === vertexCount) {
-          return;
-        }
-        
-        console.log(`[splitMesh] Splitting mesh ${node.name} (${vertexCount} vertices) into finger_nails (${fingerVerts} verts) and accessories (${vertexCount - fingerVerts} verts)`);
-        
-        if (!indexAttr) return;
-        
-        const indexArray = indexAttr.array;
-        const faceCount = indexArray.length / 3;
-        
-        const fingerIndices = [];
-        const otherIndices = [];
-        
-        for (let i = 0; i < faceCount; i++) {
-          const idx0 = indexArray[i * 3];
-          const idx1 = indexArray[i * 3 + 1];
-          const idx2 = indexArray[i * 3 + 2];
           
-          const isFingerFace = isFingerVertex[idx0] || isFingerVertex[idx1] || isFingerVertex[idx2];
-          
-          if (isFingerFace) {
-            fingerIndices.push(idx0, idx1, idx2);
-          } else {
-            otherIndices.push(idx0, idx1, idx2);
+          // Check if there are vertices of both types. If not, no need to split!
+          let fingerVerts = 0;
+          for (let i = 0; i < vertexCount; i++) {
+            if (isFingerVertex[i]) fingerVerts++;
           }
+          if (fingerVerts === 0 || fingerVerts === vertexCount) {
+            return;
+          }
+          
+          console.log(`[splitMesh] Splitting mesh ${node.name} (${vertexCount} vertices) into finger_nails (${fingerVerts} verts) and accessories (${vertexCount - fingerVerts} verts)`);
+          
+          if (!indexAttr) return;
+          
+          const indexArray = indexAttr.array;
+          const faceCount = indexArray.length / 3;
+          
+          const fingerIndices = [];
+          const otherIndices = [];
+          
+          for (let i = 0; i < faceCount; i++) {
+            const idx0 = indexArray[i * 3];
+            const idx1 = indexArray[i * 3 + 1];
+            const idx2 = indexArray[i * 3 + 2];
+            
+            const isFingerFace = isFingerVertex[idx0] || isFingerVertex[idx1] || isFingerVertex[idx2];
+            
+            if (isFingerFace) {
+              fingerIndices.push(idx0, idx1, idx2);
+            } else {
+              otherIndices.push(idx0, idx1, idx2);
+            }
+          }
+          
+          // Create the finger nails mesh
+          const fingerGeom = node.geometry.clone();
+          fingerGeom.setIndex(new THREE.BufferAttribute(new (indexArray.constructor)(fingerIndices), 1));
+          fingerGeom.groups = [];
+          const fingerMesh = new THREE.SkinnedMesh(fingerGeom, node.material);
+          fingerMesh.name = 'finger_nails';
+          fingerMesh.bind(skeleton, node.bindMatrix);
+          
+          // Create the other (ribbon/accessories) mesh
+          const otherGeom = node.geometry.clone();
+          otherGeom.setIndex(new THREE.BufferAttribute(new (indexArray.constructor)(otherIndices), 1));
+          otherGeom.groups = [];
+          const otherMesh = new THREE.SkinnedMesh(otherGeom, node.material);
+          otherMesh.name = node.name;
+          otherMesh.bind(skeleton, node.bindMatrix);
+          
+          // Add them to the parent and remove the original node
+          parent.add(fingerMesh);
+          parent.add(otherMesh);
+          
+          // Mark the original node for removal
+          node.userData.toBeRemoved = true;
+        } catch (err) {
+          console.error("Error in splitMeshByFingerBones for node:", node.name, err);
         }
-        
-        // Create the finger nails mesh
-        const fingerGeom = node.geometry.clone();
-        fingerGeom.setIndex(new THREE.BufferAttribute(new (indexArray.constructor)(fingerIndices), 1));
-        const fingerMesh = new THREE.SkinnedMesh(fingerGeom, node.material.clone());
-        fingerMesh.name = 'finger_nails';
-        fingerMesh.bind(skeleton, node.bindMatrix);
-        
-        // Create the other (ribbon/accessories) mesh
-        const otherGeom = node.geometry.clone();
-        otherGeom.setIndex(new THREE.BufferAttribute(new (indexArray.constructor)(otherIndices), 1));
-        const otherMesh = new THREE.SkinnedMesh(otherGeom, node.material.clone());
-        otherMesh.name = node.name;
-        otherMesh.bind(skeleton, node.bindMatrix);
-        
-        // Add them to the parent and remove the original node
-        parent.add(fingerMesh);
-        parent.add(otherMesh);
-        
-        // Mark the original node for removal
-        node.userData.toBeRemoved = true;
       }
 
       function isFootwearMesh(node) {
-        if (!node.isSkinnedMesh || !node.geometry || !node.geometry.attributes.skinIndex) {
+        if (!node.isSkinnedMesh || !node.geometry || !node.geometry.attributes.skinIndex || !node.geometry.attributes.skinWeight) {
           return false;
         }
         const skinIndexAttr = node.geometry.attributes.skinIndex;
@@ -1384,25 +1390,33 @@
           model.updateMatrixWorld(true);
           
           // Pre-process: split combined accessories/ribbon/finger_nails meshes
-          if (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_3254_rigged') {
-            const meshesToSplit = [];
-            model.traverse(c => {
-              if (c.isSkinnedMesh) {
-                const cNameLower = (c.name || '').toLowerCase();
-                if (cNameLower.includes('object_108') || cNameLower.includes('grenade.002') || cNameLower.includes('grenade')) {
-                  meshesToSplit.push({ node: c, parent: c.parent });
+          try {
+            if (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_3254_rigged') {
+              const meshesToSplit = [];
+              model.traverse(c => {
+                if (c.isSkinnedMesh) {
+                  const cNameLower = (c.name || '').toLowerCase();
+                  if (cNameLower.includes('object_108') || cNameLower.includes('grenade.002') || cNameLower.includes('grenade')) {
+                    meshesToSplit.push({ node: c, parent: c.parent });
+                  }
                 }
-              }
-            });
-            meshesToSplit.forEach(item => {
-              splitMeshByFingerBones(item.node, item.parent);
-            });
-            // Remove original nodes that were split
-            model.traverse(c => {
-              if (c.userData.toBeRemoved) {
-                c.parent.remove(c);
-              }
-            });
+              });
+              meshesToSplit.forEach(item => {
+                splitMeshByFingerBones(item.node, item.parent);
+              });
+              // Remove original nodes that were split (collecting first to avoid mutating loop children)
+              const toRemove = [];
+              model.traverse(c => {
+                if (c.userData.toBeRemoved) {
+                  toRemove.push(c);
+                }
+              });
+              toRemove.forEach(c => {
+                if (c.parent) c.parent.remove(c);
+              });
+            }
+          } catch (err) {
+            console.error("Error preprocessing/splitting mesh for", v.label, err);
           }
           
           // Rename all hair bones sequentially from base to tip

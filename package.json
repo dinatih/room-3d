@@ -7,7 +7,8 @@
     "dev": "vite",
     "dev:studio": "vite --open /studio.html",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test-bone": "node scratch/run_test.cjs"
   },
   "dependencies": {
     "@react-three/drei": "^9",
