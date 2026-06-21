@@ -272,10 +272,10 @@
     scene.background = new THREE.Color(0x111115);
 
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
-    camera.position.set(0, 180, 1200);
+    camera.position.set(0, 420, 1300);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 100, 0);
+    controls.target.set(0, 420, 0);
     controls.maxPolarAngle = Math.PI; // Allow rotating below the floor/models
     controls.update();
 
@@ -1875,7 +1875,7 @@
 
           if (!v.noLabel) {
             const label = createNameLabel(v.label, v.color);
-            label.position.set(targetX, targetY + 215, targetZ);
+            label.position.set(targetX, targetY - 25, targetZ);
             label.visible = !superpose;
             scene.add(label);
             model.userData.label = label;
@@ -1944,7 +1944,7 @@
         const baseY = model.userData.baseNormalizedY !== undefined ? model.userData.baseNormalizedY : 0;
         model.position.set(targetX, baseY + targetY, targetZ);
         if (model.userData.label) {
-          model.userData.label.position.set(targetX, targetY + 215, targetZ);
+          model.userData.label.position.set(targetX, targetY - 25, targetZ);
           model.userData.label.visible = !superpose;
         }
       });
