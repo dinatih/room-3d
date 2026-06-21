@@ -785,25 +785,25 @@ function SingleCharacter({
 }
 
 const ALL_LARA_NPC_DEFS = [
-  { path: 'media/all_lara/17_catsuit_mp5.glb', pos: [120, 0, 250], rot: 0.5 },
+  { path: 'media/all_lara/01_bikini.glb', pos: [140, 0, 30], rot: 1.9 },
+  { path: 'media/all_lara/02_double_slit_dress.glb', pos: [170, 0, 120], rot: -0.2 },
+  { path: 'media/all_lara/03_dress.glb', pos: [40, 0, -180], rot: 3.0 },
+  { path: 'media/all_lara/04_baywatch.glb', pos: [260, 0, -220], rot: 1.1 },
+  { path: 'media/all_lara/05_crop_top_shorts.glb', pos: [50, 0, 40], rot: 0.4 },
   { path: 'media/all_lara/06_cap_sleeve_crop_top_shorts.glb', pos: [220, 0, 180], rot: 2.1 },
+  { path: 'media/all_lara/07_scoop_bodysuit_shorts.glb', pos: [230, 0, 340], rot: 0.1 },
+  { path: 'media/all_lara/08_crew_neck_bodysuit_shorts.glb', pos: [210, 0, -80], rot: 2.7 },
+  { path: 'media/all_lara/09_cap_sleeve_biketard.glb', pos: [70, 0, -110], rot: -2.5 },
+  { path: 'media/all_lara/10_long_sleeve_surfsuit.glb', pos: [110, 0, -150], rot: -2.3 },
+  { path: 'media/all_lara/11_tank_top_pants.glb', pos: [280, 0, 210], rot: -1.8 },
   { path: 'media/all_lara/12_bodysuit_jeans.glb', pos: [80, 0, 310], rot: -1.2 },
-  { path: 'media/all_lara/15_motorcycle.glb', pos: [150, 0, -50], rot: 0 },
   { path: 'media/all_lara/13_3_4_sleeve_catsuit.glb', pos: [60, 0, 110], rot: 1.5 },
   { path: 'media/all_lara/14_business_suit.glb', pos: [240, 0, 50], rot: -0.5 },
+  { path: 'media/all_lara/15_motorcycle.glb', pos: [150, 0, -50], rot: 0 },
   { path: 'media/all_lara/16_jacket_pants.glb', pos: [190, 0, 290], rot: 0.8 },
-  { path: 'media/all_lara/10_long_sleeve_surfsuit.glb', pos: [110, 0, -150], rot: -2.3 },
-  { path: 'media/all_lara/04_baywatch.glb', pos: [260, 0, -220], rot: 1.1 },
-  { path: 'media/all_lara/03_dress.glb', pos: [40, 0, -180], rot: 3.0 },
-  { path: 'media/all_lara/02_double_slit_dress.glb', pos: [170, 0, 120], rot: -0.2 },
-  { path: 'media/all_lara/18_wetsuit.glb', pos: [130, 0, -280], rot: 0.9 },
-  { path: 'media/all_lara/11_tank_top_pants.glb', pos: [280, 0, 210], rot: -1.8 },
-  { path: 'media/all_lara/05_crop_top_shorts.glb', pos: [50, 0, 40], rot: 0.4 },
-  { path: 'media/all_lara/08_crew_neck_bodysuit_shorts.glb', pos: [210, 0, -80], rot: 2.7 },
   { path: 'media/all_lara/17_catsuit.glb', pos: [90, 0, 190], rot: -0.9 },
-  { path: 'media/all_lara/07_scoop_bodysuit_shorts.glb', pos: [230, 0, 340], rot: 0.1 },
-  { path: 'media/all_lara/01_bikini.glb', pos: [140, 0, 30], rot: 1.9 },
-  { path: 'media/all_lara/09_cap_sleeve_biketard.glb', pos: [70, 0, -110], rot: -2.5 },
+  { path: 'media/all_lara/17_catsuit_mp5.glb', pos: [120, 0, 250], rot: 0.5 },
+  { path: 'media/all_lara/18_wetsuit.glb', pos: [130, 0, -280], rot: 0.9 },
   { path: 'media/all_lara/xbot_studio.glb', pos: [180, 0, -200], rot: 1.4 }
 ];
 
