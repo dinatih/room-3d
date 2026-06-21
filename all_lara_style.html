@@ -405,10 +405,7 @@
           applyMeshVisibility(key, e.target.checked);
         };
         const label = document.createElement('span');
-        const origSuffix = (info.originalNames && info.originalNames.size > 0)
-          ? ` (${Array.from(info.originalNames).sort().join(', ')})`
-          : '';
-        label.textContent = info.label + origSuffix;
+        label.textContent = info.label;
         label.title = key; 
         label.style.opacity = info.visible ? '1' : '0.5';
         div.onclick = () => checkbox.click();
@@ -1664,21 +1661,14 @@
               }
               
               const originalNameClean = getCleanName(c.name || "Unknown");
+              c.userData.originalName = originalNameClean;
               if (newName) {
                 c.name = newName;
               }
 
               const isDefaultHidden = DEFAULT_HIDDEN_MESHES.has(c.name);
               if (!meshVisibility.has(c.name)) {
-                meshVisibility.set(c.name, { 
-                  label: c.name, 
-                  visible: !isDefaultHidden, 
-                  originalNames: new Set() 
-                });
-                updateMeshListUI();
-              }
-              if (originalNameClean && originalNameClean.toLowerCase() !== c.name.toLowerCase()) {
-                meshVisibility.get(c.name).originalNames.add(originalNameClean);
+                meshVisibility.set(c.name, { label: c.name, visible: !isDefaultHidden });
                 updateMeshListUI();
               }
               c.visible = meshVisibility.get(c.name).visible;
@@ -1704,7 +1694,7 @@
                 const matName = (Array.isArray(c.material) ? c.material[0]?.name : c.material?.name) || '';
                 if (/hair/i.test(geoName) || /hair/i.test(matName)) {
                   c.visible = false;
-                  meshVisibility.set(c.name, { label: getCleanName(matName || geoName), visible: false, originalNames: new Set() });
+                  meshVisibility.set(c.name, { label: getCleanName(matName || geoName), visible: false });
                 }
               }
             }
@@ -1985,9 +1975,13 @@
         const typeIcon = node.isSkinnedMesh ? '👗' : '📦';
         const color = node.isSkinnedMesh ? '#ff6b6b' : '#51cf66';
         const label = node.name || 'Unnamed';
+        const origName = node.userData.originalName || '';
+        const origSuffix = (origName && origName.toLowerCase() !== label.toLowerCase())
+          ? ` (${origName})`
+          : '';
         const isSelected = activeHighlightedMesh && activeHighlightedMesh.uuid === node.uuid;
         const highlightClass = isSelected ? 'hierarchy-node-selected' : '';
-        html += `<div id="node-${node.uuid}" class="hierarchy-node-clickable ${highlightClass}" onclick="window.highlightMesh('${model.uuid}', '${node.uuid}', event)" style="color: ${color}; font-family: monospace; white-space: nowrap; line-height: 1.4; display: block; margin: 1px 0; border-radius: 4px; padding: 2px 4px; cursor: pointer;">${typeIcon} <strong>${label}</strong> <span style="font-size: 9px; opacity: 0.5;">(${node.type})</span></div>`;
+        html += `<div id="node-${node.uuid}" class="hierarchy-node-clickable ${highlightClass}" onclick="window.highlightMesh('${model.uuid}', '${node.uuid}', event)" style="color: ${color}; font-family: monospace; white-space: nowrap; line-height: 1.4; display: block; margin: 1px 0; border-radius: 4px; padding: 2px 4px; cursor: pointer;">${typeIcon} <strong>${label}${origSuffix}</strong> <span style="font-size: 9px; opacity: 0.5;">(${node.type})</span></div>`;
       });
       
       // Render empty folders/groups at the end
