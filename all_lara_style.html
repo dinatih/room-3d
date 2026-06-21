@@ -1104,7 +1104,7 @@
     }
 
     const SPACING = 120;
-    const ROW_SPACING = 180;
+    const ROW_SPACING = 220;
 
     document.fonts.ready.then(() => {
       createAnimListUI();
@@ -1235,6 +1235,7 @@
           model.updateMatrixWorld(true);
           const newBox = new THREE.Box3().setFromObject(model);
           model.position.y = -newBox.min.y;
+          model.userData.baseNormalizedY = model.position.y;
           model.updateMatrixWorld(true);
           console.log(`Normalized model ${model.name} height to ${targetHeight}. Scale factor: ${factor}. Y-offset: ${model.position.y}`);
         }
@@ -1866,13 +1867,15 @@
           const row = Math.floor(index / 5);
           const col = index % 5;
           const targetX = superpose ? 0 : (col - 2) * SPACING;
-          const targetZ = superpose ? 0 : (row - 1.5) * ROW_SPACING;
-          model.position.set(targetX, model.position.y, targetZ);
+          const targetY = superpose ? 0 : row * ROW_SPACING;
+          const targetZ = 0;
+          const baseY = model.userData.baseNormalizedY !== undefined ? model.userData.baseNormalizedY : model.position.y;
+          model.position.set(targetX, baseY + targetY, targetZ);
           scene.add(model);
 
           if (!v.noLabel) {
             const label = createNameLabel(v.label, v.color);
-            label.position.set(targetX, 215, targetZ);
+            label.position.set(targetX, targetY + 215, targetZ);
             label.visible = !superpose;
             scene.add(label);
             model.userData.label = label;
@@ -1935,12 +1938,13 @@
         const row = Math.floor(idx / 5);
         const col = idx % 5;
         const targetX = superpose ? 0 : (col - 2) * SPACING;
-        const targetZ = superpose ? 0 : (row - 1.5) * ROW_SPACING;
+        const targetY = superpose ? 0 : row * ROW_SPACING;
+        const targetZ = 0;
         
-        model.position.x = targetX;
-        model.position.z = targetZ;
+        const baseY = model.userData.baseNormalizedY !== undefined ? model.userData.baseNormalizedY : 0;
+        model.position.set(targetX, baseY + targetY, targetZ);
         if (model.userData.label) {
-          model.userData.label.position.set(targetX, 215, targetZ);
+          model.userData.label.position.set(targetX, targetY + 215, targetZ);
           model.userData.label.visible = !superpose;
         }
       });
