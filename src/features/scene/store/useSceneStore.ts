@@ -73,6 +73,7 @@ const initialExtraStates: Record<string, boolean> = {
   wcLid: false,
   'walker-meshes': false,
   'walker-lara': false,
+  'walker-all-lara': false,
 };
 
 function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 'transient'; name: string } {

@@ -784,8 +784,32 @@ function SingleCharacter({
   );
 }
 
+const ALL_LARA_NPC_DEFS = [
+  { path: 'media/all_lara/lara_croft_324_rigged.glb', pos: [120, 0, 250], rot: 0.5 },
+  { path: 'media/all_lara/lara_croft_43254_rigged.glb', pos: [220, 0, 180], rot: 2.1 },
+  { path: 'media/all_lara/lara_croft_4543.glb', pos: [80, 0, 310], rot: -1.2 },
+  { path: 'media/all_lara/lara_croft_motorcycle_gear.glb', pos: [150, 0, -50], rot: 0 },
+  { path: 'media/all_lara/lara_croft_spy_gear.glb', pos: [60, 0, 110], rot: 1.5 },
+  { path: 'media/all_lara/lara_croft_suit.glb', pos: [240, 0, 50], rot: -0.5 },
+  { path: 'media/all_lara/lara_croft_brown_jacket.glb', pos: [190, 0, 290], rot: 0.8 },
+  { path: 'media/all_lara/lara_croft_swim_gear.glb', pos: [110, 0, -150], rot: -2.3 },
+  { path: 'media/all_lara/lara_croft_swim_gear_1.glb', pos: [260, 0, -220], rot: 1.1 },
+  { path: 'media/all_lara/lara_croft_dress_345.glb', pos: [40, 0, -180], rot: 3.0 },
+  { path: 'media/all_lara/lara_croft_red_dress.glb', pos: [170, 0, 120], rot: -0.2 },
+  { path: 'media/all_lara/lara_croft_swim_gear_243.glb', pos: [130, 0, -280], rot: 0.9 },
+  { path: 'media/all_lara/lara_croft_black_tank_top.glb', pos: [280, 0, 210], rot: -1.8 },
+  { path: 'media/all_lara/lara_croft_4259.glb', pos: [50, 0, 40], rot: 0.4 },
+  { path: 'media/all_lara/lara_croft_3254_rigged.glb', pos: [210, 0, -80], rot: 2.7 },
+  { path: 'media/all_lara/lara_croft_gold_shades.glb', pos: [90, 0, 190], rot: -0.9 },
+  { path: 'media/all_lara/lara_original_88_bones.glb', pos: [230, 0, 340], rot: 0.1 },
+  { path: 'media/all_lara/lara_croft_zip.glb', pos: [140, 0, 30], rot: 1.9 },
+  { path: 'media/all_lara/lara_croft_543i.glb', pos: [70, 0, -110], rot: -2.5 },
+  { path: 'media/all_lara/xbot_studio.glb', pos: [180, 0, -200], rot: 1.4 }
+];
+
 function InternalWalker(props: WalkerProps) {
   const isLaraActive = useSceneStore(state => state.extraStates['walker-lara']);
+  const showAllLaraNPCs = useSceneStore(state => state.extraStates['walker-all-lara']);
   const xbotGltf = useGLTF(XBOT_PATH);
   const sittingGltf = useGLTF('media/sandbox/anim_sitting_idle.glb');
   const swimmingGltf = useGLTF('media/sandbox/anim_swimming_to_edge.glb');
@@ -866,6 +890,21 @@ function InternalWalker(props: WalkerProps) {
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="sabira" isNPC={true} npcPosition={[200, 0, -20]} npcRotationY={Math.PI} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="safa" isNPC={true} npcPosition={[250, 0, 320]} npcRotationY={0} />
       <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="rajaa" isNPC={true} npcPosition={[80, 0, -320]} npcRotationY={Math.PI / 4} />
+
+      {showAllLaraNPCs && ALL_LARA_NPC_DEFS.map((npc, idx) => (
+        <SingleCharacter
+          {...props}
+          key={`all-lara-npc-${idx}`}
+          modelPath={npc.path}
+          isLara={true}
+          isActive={false}
+          animations={xbotGltf.animations}
+          xbotScene={xbotGltf.scene}
+          isNPC={true}
+          npcPosition={npc.pos as [number, number, number]}
+          npcRotationY={npc.rot}
+        />
+      ))}
     </>
   );
 }

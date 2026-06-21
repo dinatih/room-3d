@@ -165,6 +165,10 @@
           <input type="checkbox" id="toggle-superposition" style="cursor: pointer; accent-color: #ff4444;">
           <span>Superposer les modèles (X = 0)</span>
         </label>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
+          <input type="checkbox" id="toggle-red-outfits" style="cursor: pointer; accent-color: #ff4444;">
+          <span>Colorer les tenues en rouge (Red Dress)</span>
+        </label>
       </div>
     </div>
 
@@ -1821,9 +1825,26 @@
               }
               c.visible = meshVisibility.get(c.name).visible;
               c.material = c.material.clone();
+              const mats = Array.isArray(c.material) ? c.material : [c.material];
+              mats.forEach(m => {
+                m.userData.originalMap = m.map;
+                m.userData.originalColor = m.color ? m.color.clone() : null;
+              });
+
+              // Apply Red Dress red if toggle is active
+              const isRedActive = document.getElementById('toggle-red-outfits')?.checked || false;
+              if (isRedActive && c.name && /^outfit(_.*)?$/.test(c.name)) {
+                mats.forEach(m => {
+                  if (m.color) {
+                    m.map = null;
+                    m.color.set('#ff4d6d');
+                    m.needsUpdate = true;
+                  }
+                });
+              }
+
               // Fix transparent materials for models flagged with fixOpaque
               if (v.fixOpaque) {
-                const mats = Array.isArray(c.material) ? c.material : [c.material];
                 mats.forEach(m => {
                   const mName = (m.name || '').toLowerCase();
                   const meshName = (c.name || '').toLowerCase();
@@ -1968,6 +1989,39 @@
     if (toggleSuperpositionCheckbox) {
       toggleSuperpositionCheckbox.addEventListener('change', () => {
         updateLayout();
+      });
+    }
+
+    function applyRedOutfitsColor(isRed) {
+      allModels.forEach(model => {
+        model.traverse(c => {
+          if (c.isMesh && c.name && /^outfit(_.*)?$/.test(c.name)) {
+            const mats = Array.isArray(c.material) ? c.material : [c.material];
+            mats.forEach(m => {
+              if (isRed) {
+                if (m.color) {
+                  m.map = null;
+                  m.color.set('#ff4d6d');
+                  m.needsUpdate = true;
+                }
+              } else {
+                if (m.userData.originalColor) {
+                  m.map = m.userData.originalMap;
+                  m.color.copy(m.userData.originalColor);
+                  m.needsUpdate = true;
+                }
+              }
+            });
+          }
+        });
+      });
+    }
+
+    // Toggle red outfits checkbox handler
+    const toggleRedOutfitsCheckbox = document.getElementById('toggle-red-outfits');
+    if (toggleRedOutfitsCheckbox) {
+      toggleRedOutfitsCheckbox.addEventListener('change', (e) => {
+        applyRedOutfitsColor(e.target.checked);
       });
     }
 

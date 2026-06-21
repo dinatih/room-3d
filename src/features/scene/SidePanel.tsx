@@ -424,6 +424,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>(null);
   const isLara = useSceneStore(state => state.extraStates['walker-lara']);
+  const showAllLaras = useSceneStore(state => state.extraStates['walker-all-lara']);
 
   useEffect(() => {
     if (!layers.realSun) { setSunInfo(null); return; }
@@ -525,6 +526,10 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('teal',   'Monde réel 🌍', 'realWorld')}
       {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
       {layerBtn('green',  'Surfaces m²',   'surface')}
+      {b0('light',
+        showAllLaras ? 'NPCs 20 Laras : ON 👩' : 'NPCs 20 Laras : OFF 👩',
+        () => useSceneStore.getState().triggerAction('walker-all-lara')
+      )}
       <div style={{ padding: '6px 8px 6px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 5 }}>🎨 Rendu</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? 6 : 3 }}>
