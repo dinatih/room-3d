@@ -1867,7 +1867,7 @@
           const row = Math.floor(index / 5);
           const col = index % 5;
           const targetX = superpose ? 0 : (col - 2) * SPACING;
-          const targetY = superpose ? 0 : row * ROW_SPACING;
+          const targetY = superpose ? 0 : (3 - row) * ROW_SPACING;
           const targetZ = 0;
           const baseY = model.userData.baseNormalizedY !== undefined ? model.userData.baseNormalizedY : model.position.y;
           model.position.set(targetX, baseY + targetY, targetZ);
@@ -1938,7 +1938,7 @@
         const row = Math.floor(idx / 5);
         const col = idx % 5;
         const targetX = superpose ? 0 : (col - 2) * SPACING;
-        const targetY = superpose ? 0 : row * ROW_SPACING;
+        const targetY = superpose ? 0 : (3 - row) * ROW_SPACING;
         const targetZ = 0;
         
         const baseY = model.userData.baseNormalizedY !== undefined ? model.userData.baseNormalizedY : 0;
