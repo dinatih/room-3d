@@ -1104,6 +1104,7 @@
     }
 
     const SPACING = 120;
+    const ROW_SPACING = 180;
 
     document.fonts.ready.then(() => {
       createAnimListUI();
@@ -1453,6 +1454,25 @@
               
               let matched = false;
               const cleanMeshLower = c.name ? getCleanName(c.name).toLowerCase() : '';
+
+              // User overrides
+              if (v.id === 'lara_croft_zip' && matNameLower.includes('feet')) {
+                newName = 'skin';
+                matched = true;
+              } else if (v.id === 'lara_croft_3254_rigged' && (matNameLower.includes('shortboot') || matNameLower.includes('short_boot'))) {
+                newName = 'outfit_down';
+                matched = true;
+              } else if (v.id === 'lara_croft_gold_shades' && matNameLower.includes('arms')) {
+                newName = 'outfit_up';
+                matched = true;
+              } else if ((v.id === 'lara_croft_swim_gear' && meshNameLower.includes('object_113')) ||
+                         (v.id === 'lara_croft_swim_gear_243' && meshNameLower.includes('object_114'))) {
+                newName = 'outfit_up';
+                matched = true;
+              } else if (v.id === 'lara_croft_324_rigged' && meshNameLower.includes('object_104')) {
+                newName = 'outfit_up';
+                matched = true;
+              }
 
               if (v.id === 'lara_croft_543i') {
                 if (matNameLower.includes('lara.material01')) {
@@ -1843,14 +1863,16 @@
           allModels.push(model);
           modelsMap[v.id] = model;
           const superpose = document.getElementById('toggle-superposition')?.checked || false;
-          const offset = index - Math.floor(variants.length / 2);
-          const x = superpose ? 0 : offset * SPACING;
-          model.position.x = x;
+          const row = Math.floor(index / 5);
+          const col = index % 5;
+          const targetX = superpose ? 0 : (col - 2) * SPACING;
+          const targetZ = superpose ? 0 : (row - 1.5) * ROW_SPACING;
+          model.position.set(targetX, model.position.y, targetZ);
           scene.add(model);
 
           if (!v.noLabel) {
             const label = createNameLabel(v.label, v.color);
-            label.position.set(x, 215, 0);
+            label.position.set(targetX, 215, targetZ);
             label.visible = !superpose;
             scene.add(label);
             model.userData.label = label;
@@ -1910,15 +1932,17 @@
       allModels.forEach((model, index) => {
         const variantIndex = variants.findIndex(v => v.id === model.name);
         const idx = variantIndex !== -1 ? variantIndex : index;
-        const offset = idx - Math.floor(variants.length / 2);
-        const targetX = superpose ? 0 : offset * SPACING;
+        const row = Math.floor(idx / 5);
+        const col = idx % 5;
+        const targetX = superpose ? 0 : (col - 2) * SPACING;
+        const targetZ = superpose ? 0 : (row - 1.5) * ROW_SPACING;
         
         model.position.x = targetX;
+        model.position.z = targetZ;
         if (model.userData.label) {
-          model.userData.label.position.x = targetX;
+          model.userData.label.position.set(targetX, 215, targetZ);
           model.userData.label.visible = !superpose;
         }
-
       });
     }
 
