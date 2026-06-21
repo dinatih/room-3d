@@ -313,50 +313,49 @@
     const meshListEl = document.getElementById('mesh-list');
     const meshVisibility = new Map(); // name -> boolean
     const allModels = [];
-    window.allModels = allModels;
-
-    const variants = [
+    window.allModels =    const variants = [
       // Groupe 1 : 89 os (suffixes numériques bas)
-      { id: 'lara_croft_324_rigged', label: 'Lara 324 Rigged', file: 'media/all_lara/lara_croft_324_rigged.glb', color: '#ff6600' },
+      { id: '17_catsuit_mp5', label: '17 Catsuit (mp5)', file: 'media/all_lara/17_catsuit_mp5.glb', color: '#ff6600' },
       
       // Groupe 2 : 98 os (suffixes numériques en _085)
-      { id: 'lara_croft_43254_rigged', label: 'Lara 43254 Rigged', file: 'media/all_lara/lara_croft_43254_rigged.glb', color: '#33bb66' },
-      { id: 'lara_croft_4543', label: 'Lara 4543', file: 'media/all_lara/lara_croft_4543.glb', color: '#aa77ff' },
-      { id: 'lara_croft_motorcycle_gear', label: 'Motorcycle Gear', file: 'media/all_lara/lara_croft_motorcycle_gear.glb', color: '#8d99ae' },
-      { id: 'lara_croft_spy_gear', label: 'Spy Gear', file: 'media/all_lara/lara_croft_spy_gear.glb', color: '#3d5a80' },
-      { id: 'lara_croft_suit', label: 'Suit', file: 'media/all_lara/lara_croft_suit.glb', color: '#edf2f4' },
+      { id: '06_cap_sleeve_crop_top_shorts', label: '06 Cap sleeve crop top - Shorts', file: 'media/all_lara/06_cap_sleeve_crop_top_shorts.glb', color: '#33bb66' },
+      { id: '12_bodysuit_jeans', label: '12 Bodysuit - Jeans', file: 'media/all_lara/12_bodysuit_jeans.glb', color: '#aa77ff' },
+      { id: '15_motorcycle', label: '15 Motorcycle', file: 'media/all_lara/15_motorcycle.glb', color: '#8d99ae' },
+      { id: '13_3_4_sleeve_catsuit', label: '13 3/4 sleeve catsuit', file: 'media/all_lara/13_3_4_sleeve_catsuit.glb', color: '#3d5a80' },
+      { id: '14_business_suit', label: '14 Business suit', file: 'media/all_lara/14_business_suit.glb', color: '#edf2f4' },
       
       // Groupe 3 : 92 os (suffixes numériques bas)
-      { id: 'lara_croft_brown_jacket', label: 'Brown Jacket', file: 'media/all_lara/lara_croft_brown_jacket.glb', color: '#d4a373' },
-      { id: 'lara_croft_swim_gear', label: 'Swim Gear', file: 'media/all_lara/lara_croft_swim_gear.glb', color: '#00b4d8' },
-      { id: 'lara_croft_swim_gear_1', label: 'Swim Gear 1', file: 'media/all_lara/lara_croft_swim_gear_1.glb', color: '#90e0ef' },
+      { id: '16_jacket_pants', label: '16 Jacket - Pants', file: 'media/all_lara/16_jacket_pants.glb', color: '#d4a373' },
+      { id: '10_long_sleeve_surfsuit', label: '10 Long sleeve surfsuit', file: 'media/all_lara/10_long_sleeve_surfsuit.glb', color: '#00b4d8' },
+      { id: '04_baywatch', label: '04 Baywatch', file: 'media/all_lara/04_baywatch.glb', color: '#90e0ef' },
       
       // Groupe 4 : 87 os (suffixes intermédiaires _076)
-      { id: 'lara_croft_dress_345', label: 'Dress 345', file: 'media/all_lara/lara_croft_dress_345.glb', color: '#e07a5f' },
+      { id: '03_dress', label: '03 Dress', file: 'media/all_lara/03_dress.glb', color: '#e07a5f' },
       
       // Groupe 5 : 136 os (robe rouge, squelette complexe)
-      { id: 'lara_croft_red_dress', label: 'Red Dress', file: 'media/all_lara/lara_croft_red_dress.glb', color: '#9c2829' },
+      { id: '02_double_slit_dress', label: '02 Double slit dress', file: 'media/all_lara/02_double_slit_dress.glb', color: '#9c2829' },
       
       // Groupe 6 : 93 os (squelette d'accessoire spécifique)
-      { id: 'lara_croft_swim_gear_243', label: 'Swim Gear 243', file: 'media/all_lara/lara_croft_swim_gear_243.glb', color: '#0077b6' },
+      { id: '18_wetsuit', label: '18 Wetsuit', file: 'media/all_lara/18_wetsuit.glb', color: '#0077b6' },
       
       // Groupe 7 : 88-97 os (sans suffixe numérique)
-      { id: 'lara_croft_black_tank_top', label: 'Black Tank Top', file: 'media/all_lara/lara_croft_black_tank_top.glb', color: '#4a4a4a', fixOpaque: true },
-      { id: 'lara_croft_4259', label: 'Lara 4259', file: 'media/all_lara/lara_croft_4259.glb', color: '#d2a23c', fixOpaque: true },
-      { id: 'lara_croft_3254_rigged', label: 'Lara 3254 Rigged', file: 'media/all_lara/lara_croft_3254_rigged.glb', color: '#99cc33', fixOpaque: true },
-      { id: 'lara_croft_gold_shades', label: 'Gold Shades', file: 'media/all_lara/lara_croft_gold_shades.glb', color: '#ffd700', fixOpaque: true },
+      { id: '11', label: '11', file: 'media/all_lara/11.glb', color: '#4a4a4a', fixOpaque: true },
+      { id: '05_crop_top_shorts', label: '05 Crop top - Shorts', file: 'media/all_lara/05_crop_top_shorts.glb', color: '#d2a23c', fixOpaque: true },
+      { id: '08_crew_neck_bodysuit_shorts', label: '08 Crew neck bodysuit - Shorts', file: 'media/all_lara/08_crew_neck_bodysuit_shorts.glb', color: '#99cc33', fixOpaque: true },
+      { id: '17_catsuit', label: '17 Catsuit', file: 'media/all_lara/17_catsuit.glb', color: '#ffd700', fixOpaque: true },
       
       // Groupe 8 : 88 os (préfixe mixamorig_ retiré)
-      { id: 'lara_officiel', label: 'Lara Officiel', file: 'media/all_lara/lara_original_88_bones.glb', color: '#ff0055', fixOpaque: true },
+      { id: '07_scoop_bodysuit_shorts', label: '07 Scoop bodysuit - Shorts', file: 'media/all_lara/07_scoop_bodysuit_shorts.glb', color: '#ff0055', fixOpaque: true },
       
       // Groupe 9 : 91 os (sans suffixe, variante zip)
-      { id: 'lara_croft_zip', label: 'Swim', file: 'media/all_lara/lara_croft_zip.glb', color: '#cc99ff', fixOpaque: true },
-
+      { id: '01_bikini', label: '01 Bikini', file: 'media/all_lara/01_bikini.glb', color: '#cc99ff', fixOpaque: true },
+ 
       // Groupe 10 : 63 os (majuscules, squelette ultra-simplifié)
-      { id: 'lara_croft_543i', label: 'Lara 543i', file: 'media/all_lara/lara_croft_543i.glb', color: '#00ffcc', fixOpaque: true },
-
+      { id: '09_cap_sleeve_biketard', label: '09 Cap sleeve biketard', file: 'media/all_lara/09_cap_sleeve_biketard.glb', color: '#00ffcc', fixOpaque: true },
+ 
       // X-Bot du Studio
       { id: 'xbot_studio', label: 'X-Bot (Studio)', file: 'media/all_lara/xbot_studio.glb', color: '#3b82f6', fixOpaque: true }
+    ];xOpaque: true }
     ];
 
     function getCleanName(name) {
@@ -1397,7 +1396,7 @@
           
           // Pre-process: split combined accessories/ribbon/finger_nails meshes
           try {
-            if (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_3254_rigged') {
+            if (v.id === '13_3_4_sleeve_catsuit' || v.id === '15_motorcycle' || v.id === '08_crew_neck_bodysuit_shorts') {
               const meshesToSplit = [];
               model.traverse(c => {
                 if (c.isSkinnedMesh) {
@@ -1461,25 +1460,25 @@
               const cleanMeshLower = c.name ? getCleanName(c.name).toLowerCase() : '';
 
               // User overrides
-              if (v.id === 'lara_croft_zip' && matNameLower.includes('feet')) {
+              if (v.id === '01_bikini' && matNameLower.includes('feet')) {
                 newName = 'skin';
                 matched = true;
-              } else if (v.id === 'lara_croft_3254_rigged' && (matNameLower.includes('shortboot') || matNameLower.includes('short_boot'))) {
+              } else if (v.id === '08_crew_neck_bodysuit_shorts' && (matNameLower.includes('shortboot') || matNameLower.includes('short_boot'))) {
                 newName = 'outfit_down';
                 matched = true;
-              } else if (v.id === 'lara_croft_gold_shades' && matNameLower.includes('arms')) {
+              } else if (v.id === '17_catsuit' && matNameLower.includes('arms')) {
                 newName = 'outfit_up';
                 matched = true;
-              } else if ((v.id === 'lara_croft_swim_gear' && meshNameLower.includes('object_113')) ||
-                         (v.id === 'lara_croft_swim_gear_243' && meshNameLower.includes('object_114'))) {
+              } else if ((v.id === '10_long_sleeve_surfsuit' && meshNameLower.includes('object_113')) ||
+                         (v.id === '18_wetsuit' && meshNameLower.includes('object_114'))) {
                 newName = 'outfit_up';
                 matched = true;
-              } else if (v.id === 'lara_croft_324_rigged' && meshNameLower.includes('object_104')) {
+              } else if (v.id === '17_catsuit_mp5' && meshNameLower.includes('object_104')) {
                 newName = 'outfit_up';
                 matched = true;
               }
 
-              if (v.id === 'lara_croft_543i') {
+              if (v.id === '09_cap_sleeve_biketard') {
                 if (matNameLower.includes('lara.material01')) {
                   newName = 'outfit_up';
                   matched = true;
@@ -1560,7 +1559,7 @@
                   newName = 'headset';
                   matched = true;
                 } else if (matNameLower.includes('ribbon') || 
-                           (cleanLower === 'accs' && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip' || v.id === 'lara_croft_swim_gear'))) {
+                           (cleanLower === 'accs' && (v.id === '13_3_4_sleeve_catsuit' || v.id === '15_motorcycle' || v.id === '01_bikini' || v.id === '10_long_sleeve_surfsuit'))) {
                   newName = 'ribbon';
                   matched = true;
                 } else if (matNameLower === 'accs' || matNameLower.includes('accessories')) {
@@ -1573,12 +1572,12 @@
                   newName = 'buckle';
                   matched = true;
                 } else if (matNameLower.includes('glove') || matNameLower.includes('gloves') || 
-                           (matNameLower.includes('hands') && !matNameLower.includes('handgun') && (v.id === 'lara_croft_black_tank_top' || v.id === 'lara_croft_4259'))) {
+                           (matNameLower.includes('hands') && !matNameLower.includes('handgun') && (v.id === '11' || v.id === '05_crop_top_shorts'))) {
                   newName = 'gloves';
                   matched = true;
                 } else if (matNameLower.includes('nail') || matNameLower.includes('nails') ||
                            ((matNameLower.includes('finger') || matNameLower.includes('fingers')) && 
-                            (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_3254_rigged'))) {
+                            (v.id === '13_3_4_sleeve_catsuit' || v.id === '15_motorcycle' || v.id === '08_crew_neck_bodysuit_shorts'))) {
                   newName = 'finger_nails';
                   matched = true;
                 } else if (matNameLower.includes('metal') || matNameLower.includes('metals')) {
@@ -1600,7 +1599,7 @@
                   newName = 'outfit_up';
                   matched = true;
                 } else if (matNameLower.includes('pants') || matNameLower.includes('shorts') || matNameLower.includes('bodyl') || matNameLower.includes('lowerbody') || matNameLower.includes('lower_body')) {
-                  newName = (v.id === 'lara_croft_swim_gear' || v.id === 'lara_croft_swim_gear_1') ? 'skin' : 'outfit_down';
+                  newName = (v.id === '10_long_sleeve_surfsuit' || v.id === '04_baywatch') ? 'skin' : 'outfit_down';
                   matched = true;
                 } else if (matNameLower.includes('boot') || matNameLower.includes('shoes') || matNameLower.includes('feet') || matNameLower.includes('socks')) {
                   newName = 'shoes';
@@ -1609,7 +1608,7 @@
                   newName = 'skin';
                   matched = true;
                 } else if ((matNameLower.includes('finger') || matNameLower.includes('fingers')) && 
-                           v.id !== 'lara_croft_spy_gear' && v.id !== 'lara_croft_motorcycle_gear' && v.id !== 'lara_croft_3254_rigged') {
+                           v.id !== '13_3_4_sleeve_catsuit' && v.id !== '15_motorcycle' && v.id !== '08_crew_neck_bodysuit_shorts') {
                   newName = 'skin';
                   matched = true;
                 } else if (matNameLower.includes('body') && !matNameLower.includes('outfit') && !matNameLower.includes('upper') && !matNameLower.includes('lower') && !matNameLower.includes('bodyu') && !matNameLower.includes('bodyl')) {
@@ -1722,7 +1721,7 @@
                   newName = 'headset';
                   matched = true;
                 } else if (cleanMeshLower.includes('ribbon') || 
-                           (cleanLower === 'accs' && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip' || v.id === 'lara_croft_swim_gear'))) {
+                           (cleanLower === 'accs' && (v.id === '13_3_4_sleeve_catsuit' || v.id === '15_motorcycle' || v.id === '01_bikini' || v.id === '10_long_sleeve_surfsuit'))) {
                   newName = 'ribbon';
                   matched = true;
                 } else if (cleanLower === 'accs' || cleanMeshLower === 'accs' || cleanMeshLower.includes('accessories')) {
@@ -1735,12 +1734,12 @@
                   newName = 'buckle';
                   matched = true;
                 } else if (cleanMeshLower.includes('glove') || cleanMeshLower.includes('gloves') || 
-                           (cleanMeshLower.includes('hands') && !cleanMeshLower.includes('handgun') && (v.id === 'lara_croft_black_tank_top' || v.id === 'lara_croft_4259'))) {
+                           (cleanMeshLower.includes('hands') && !cleanMeshLower.includes('handgun') && (v.id === '11' || v.id === '05_crop_top_shorts'))) {
                   newName = 'gloves';
                   matched = true;
                 } else if (cleanMeshLower.includes('nail') || cleanMeshLower.includes('nails') ||
                            ((cleanMeshLower.includes('finger') || cleanMeshLower.includes('fingers')) && 
-                            (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_3254_rigged'))) {
+                            (v.id === '13_3_4_sleeve_catsuit' || v.id === '15_motorcycle' || v.id === '08_crew_neck_bodysuit_shorts'))) {
                   newName = 'finger_nails';
                   matched = true;
                 } else if (cleanMeshLower.includes('metal') || cleanMeshLower.includes('metals')) {
@@ -1762,7 +1761,7 @@
                   newName = 'outfit_up';
                   matched = true;
                 } else if (cleanMeshLower.includes('pants') || cleanMeshLower.includes('shorts') || cleanMeshLower.includes('bodyl') || cleanMeshLower.includes('lowerbody') || cleanMeshLower.includes('lower_body')) {
-                  newName = (v.id === 'lara_croft_swim_gear' || v.id === 'lara_croft_swim_gear_1') ? 'skin' : 'outfit_down';
+                  newName = (v.id === '10_long_sleeve_surfsuit' || v.id === '04_baywatch') ? 'skin' : 'outfit_down';
                   matched = true;
                 } else if (cleanMeshLower.includes('boot') || cleanMeshLower.includes('shoes') || cleanMeshLower.includes('feet') || cleanMeshLower.includes('socks')) {
                   newName = 'shoes';
@@ -1771,7 +1770,7 @@
                   newName = 'skin';
                   matched = true;
                 } else if ((cleanMeshLower.includes('finger') || cleanMeshLower.includes('fingers')) && 
-                           v.id !== 'lara_croft_spy_gear' && v.id !== 'lara_croft_motorcycle_gear' && v.id !== 'lara_croft_3254_rigged') {
+                           v.id !== '13_3_4_sleeve_catsuit' && v.id !== '15_motorcycle' && v.id !== '08_crew_neck_bodysuit_shorts') {
                   newName = 'skin';
                   matched = true;
                 } else if (cleanMeshLower.includes('body') && !cleanMeshLower.includes('outfit') && !cleanMeshLower.includes('upper') && !cleanMeshLower.includes('lower') && !cleanMeshLower.includes('bodyu') && !cleanMeshLower.includes('bodyl')) {
