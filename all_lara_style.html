@@ -365,7 +365,7 @@
     }
 
     const STANDARDIZED_GEAR_NAMES = new Set([
-      'backpack', 'backpack_1', 'backpack_2',
+      'backpack', 'oxygen',
       'pda', 'grenades', 'grapple', 'binoculars', 'camera',
       'handgun_left', 'handgun_right', 'mp5', 'mp5_ammo',
       'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster',
@@ -377,7 +377,7 @@
     ]);
 
     const DEFAULT_HIDDEN_MESHES = new Set([
-      'backpack', 'backpack_1', 'backpack_2',
+      'backpack', 'oxygen',
       'binoculars', 'buckle', 'camera', 'goggles', 'grapple',
       'handgun_left', 'handgun_right', 'mp5', 'mp5_ammo',
       'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster',
@@ -1239,6 +1239,101 @@
         }
       }
 
+      function splitMeshByFingerBones(node, parent) {
+        if (!node.isSkinnedMesh || !node.geometry || !node.geometry.attributes.position || !node.geometry.attributes.skinIndex) {
+          return;
+        }
+        
+        const skeleton = node.skeleton;
+        if (!skeleton || !skeleton.bones) return;
+        
+        const positionAttr = node.geometry.attributes.position;
+        const skinIndexAttr = node.geometry.attributes.skinIndex;
+        const skinWeightAttr = node.geometry.attributes.skinWeight;
+        const indexAttr = node.geometry.index;
+        
+        const vertexCount = positionAttr.count;
+        const itemSize = skinIndexAttr.itemSize;
+        
+        const fingerKeywords = ['finger', 'thumb', 'index', 'middle', 'ring', 'pinky', 'hand'];
+        
+        // Step 1: Classify each vertex
+        const isFingerVertex = new Uint8Array(vertexCount);
+        for (let i = 0; i < vertexCount; i++) {
+          let hasFingerWeight = false;
+          for (let j = 0; j < itemSize; j++) {
+            const idx = i * itemSize + j;
+            const boneIdx = skinIndexAttr.array[idx];
+            const weight = skinWeightAttr.array[idx];
+            if (weight > 0.05) {
+              const bone = skeleton.bones[boneIdx];
+              if (bone && bone.name) {
+                const boneNameLower = bone.name.toLowerCase();
+                if (fingerKeywords.some(kw => boneNameLower.includes(kw))) {
+                  hasFingerWeight = true;
+                  break;
+                }
+              }
+            }
+          }
+          isFingerVertex[i] = hasFingerWeight ? 1 : 0;
+        }
+        
+        // Check if there are vertices of both types. If not, no need to split!
+        let fingerVerts = 0;
+        for (let i = 0; i < vertexCount; i++) {
+          if (isFingerVertex[i]) fingerVerts++;
+        }
+        if (fingerVerts === 0 || fingerVerts === vertexCount) {
+          return;
+        }
+        
+        console.log(`[splitMesh] Splitting mesh ${node.name} (${vertexCount} vertices) into finger_nails (${fingerVerts} verts) and accessories (${vertexCount - fingerVerts} verts)`);
+        
+        if (!indexAttr) return;
+        
+        const indexArray = indexAttr.array;
+        const faceCount = indexArray.length / 3;
+        
+        const fingerIndices = [];
+        const otherIndices = [];
+        
+        for (let i = 0; i < faceCount; i++) {
+          const idx0 = indexArray[i * 3];
+          const idx1 = indexArray[i * 3 + 1];
+          const idx2 = indexArray[i * 3 + 2];
+          
+          const isFingerFace = isFingerVertex[idx0] || isFingerVertex[idx1] || isFingerVertex[idx2];
+          
+          if (isFingerFace) {
+            fingerIndices.push(idx0, idx1, idx2);
+          } else {
+            otherIndices.push(idx0, idx1, idx2);
+          }
+        }
+        
+        // Create the finger nails mesh
+        const fingerGeom = node.geometry.clone();
+        fingerGeom.setIndex(new THREE.BufferAttribute(new (indexArray.constructor)(fingerIndices), 1));
+        const fingerMesh = new THREE.SkinnedMesh(fingerGeom, node.material.clone());
+        fingerMesh.name = 'finger_nails';
+        fingerMesh.bind(skeleton, node.bindMatrix);
+        
+        // Create the other (ribbon/accessories) mesh
+        const otherGeom = node.geometry.clone();
+        otherGeom.setIndex(new THREE.BufferAttribute(new (indexArray.constructor)(otherIndices), 1));
+        const otherMesh = new THREE.SkinnedMesh(otherGeom, node.material.clone());
+        otherMesh.name = node.name;
+        otherMesh.bind(skeleton, node.bindMatrix);
+        
+        // Add them to the parent and remove the original node
+        parent.add(fingerMesh);
+        parent.add(otherMesh);
+        
+        // Mark the original node for removal
+        node.userData.toBeRemoved = true;
+      }
+
       function isFootwearMesh(node) {
         if (!node.isSkinnedMesh || !node.geometry || !node.geometry.attributes.skinIndex) {
           return false;
@@ -1287,6 +1382,28 @@
           model.name = v.label;
           
           model.updateMatrixWorld(true);
+          
+          // Pre-process: split combined accessories/ribbon/finger_nails meshes
+          if (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_3254_rigged') {
+            const meshesToSplit = [];
+            model.traverse(c => {
+              if (c.isSkinnedMesh) {
+                const cNameLower = (c.name || '').toLowerCase();
+                if (cNameLower.includes('object_108') || cNameLower.includes('grenade.002') || cNameLower.includes('grenade')) {
+                  meshesToSplit.push({ node: c, parent: c.parent });
+                }
+              }
+            });
+            meshesToSplit.forEach(item => {
+              splitMeshByFingerBones(item.node, item.parent);
+            });
+            // Remove original nodes that were split
+            model.traverse(c => {
+              if (c.userData.toBeRemoved) {
+                c.parent.remove(c);
+              }
+            });
+          }
           
           // Rename all hair bones sequentially from base to tip
           const targetHairBones = [];
@@ -1351,10 +1468,8 @@
               // 1. High priority: check mesh name for backpack first to avoid gear/harness material mismatch on single-mesh models
               if (cleanMeshLower.includes('backpack') || cleanMeshLower.includes('bag_low')) {
                 matched = true;
-                if (cleanMeshLower.includes('backpack1') || cleanMeshLower.includes('backpack_1')) {
-                  newName = 'backpack_1';
-                } else if (cleanMeshLower.includes('backpack2') || cleanMeshLower.includes('backpack_2')) {
-                  newName = 'backpack_2';
+                if (cleanMeshLower.includes('backpack2') || cleanMeshLower.includes('backpack_2') || cleanMeshLower.includes('oxygen')) {
+                  newName = 'oxygen';
                 } else {
                   newName = 'backpack';
                 }
@@ -1364,10 +1479,8 @@
               if (!matched) {
                 if (cleanLower.includes('backpack') || cleanLower.includes('bag_low')) {
                   matched = true;
-                  if (cleanLower.includes('backpack1') || cleanLower.includes('backpack_1')) {
-                    newName = 'backpack_1';
-                  } else if (cleanLower.includes('backpack2') || cleanLower.includes('backpack_2')) {
-                    newName = 'backpack_2';
+                  if (cleanLower.includes('backpack2') || cleanLower.includes('backpack_2') || cleanLower.includes('oxygen')) {
+                    newName = 'oxygen';
                   } else {
                     newName = 'backpack';
                   }
@@ -1407,12 +1520,6 @@
                 } else if (matNameLower.includes('headset')) {
                   newName = 'headset';
                   matched = true;
-                } else if (matNameLower.includes('ribbon') || (cleanLower === 'accs' && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip'))) {
-                  newName = 'ribbon';
-                  matched = true;
-                } else if (matNameLower.includes('buckle')) {
-                  newName = 'buckle';
-                  matched = true;
                 } else if (matNameLower.includes('ribbon') || 
                            (cleanLower === 'accs' && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip' || v.id === 'lara_croft_swim_gear'))) {
                   newName = 'ribbon';
@@ -1427,10 +1534,12 @@
                   newName = 'buckle';
                   matched = true;
                 } else if (matNameLower.includes('glove') || matNameLower.includes('gloves') || 
-                           (matNameLower.includes('hands') && (v.id === 'lara_croft_black_tank_top' || v.id === 'lara_croft_4259'))) {
+                           (matNameLower.includes('hands') && !matNameLower.includes('handgun') && (v.id === 'lara_croft_black_tank_top' || v.id === 'lara_croft_4259'))) {
                   newName = 'gloves';
                   matched = true;
-                } else if (matNameLower.includes('nail') || matNameLower.includes('nails')) {
+                } else if (matNameLower.includes('nail') || matNameLower.includes('nails') ||
+                           ((matNameLower.includes('finger') || matNameLower.includes('fingers')) && 
+                            (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_3254_rigged'))) {
                   newName = 'finger_nails';
                   matched = true;
                 } else if (matNameLower.includes('metal') || matNameLower.includes('metals')) {
@@ -1442,6 +1551,9 @@
                 } else if (matNameLower.includes('purse')) {
                   newName = 'purse';
                   matched = true;
+                } else if (matNameLower.includes('oxygen')) {
+                  newName = 'oxygen';
+                  matched = true;
                 } else if (matNameLower.includes('catsuit') || matNameLower.includes('swimsuit') || matNameLower.includes('swim') || matNameLower.includes('dress') || matNameLower.includes('bikini') || matNameLower.includes('combi') || matNameLower.includes('clothing')) {
                   newName = 'outfit_body';
                   matched = true;
@@ -1449,7 +1561,7 @@
                   newName = 'outfit_up';
                   matched = true;
                 } else if (matNameLower.includes('pants') || matNameLower.includes('shorts') || matNameLower.includes('bodyl') || matNameLower.includes('lowerbody') || matNameLower.includes('lower_body')) {
-                  newName = 'outfit_down';
+                  newName = (v.id === 'lara_croft_swim_gear' || v.id === 'lara_croft_swim_gear_1') ? 'skin' : 'outfit_down';
                   matched = true;
                 } else if (matNameLower.includes('boot') || matNameLower.includes('shoes') || matNameLower.includes('feet') || matNameLower.includes('socks')) {
                   newName = 'shoes';
@@ -1457,7 +1569,8 @@
                 } else if ((matNameLower.includes('hands') || matNameLower === 'hand') && !matNameLower.includes('handgun') && !matNameLower.includes('holster') && !matNameLower.includes('glove')) {
                   newName = 'skin';
                   matched = true;
-                } else if (matNameLower.includes('finger') || matNameLower.includes('fingers')) {
+                } else if ((matNameLower.includes('finger') || matNameLower.includes('fingers')) && 
+                           v.id !== 'lara_croft_spy_gear' && v.id !== 'lara_croft_motorcycle_gear' && v.id !== 'lara_croft_3254_rigged') {
                   newName = 'skin';
                   matched = true;
                 } else if (matNameLower.includes('body') && !matNameLower.includes('outfit') && !matNameLower.includes('upper') && !matNameLower.includes('lower') && !matNameLower.includes('bodyu') && !matNameLower.includes('bodyl')) {
@@ -1569,12 +1682,6 @@
                 } else if (cleanMeshLower.includes('headset')) {
                   newName = 'headset';
                   matched = true;
-                } else if (cleanMeshLower.includes('ribbon') || (cleanLower === 'accs' && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip'))) {
-                  newName = 'ribbon';
-                  matched = true;
-                } else if (cleanMeshLower.includes('buckle')) {
-                  newName = 'buckle';
-                  matched = true;
                 } else if (cleanMeshLower.includes('ribbon') || 
                            (cleanLower === 'accs' && (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_zip' || v.id === 'lara_croft_swim_gear'))) {
                   newName = 'ribbon';
@@ -1589,10 +1696,12 @@
                   newName = 'buckle';
                   matched = true;
                 } else if (cleanMeshLower.includes('glove') || cleanMeshLower.includes('gloves') || 
-                           (cleanMeshLower.includes('hands') && (v.id === 'lara_croft_black_tank_top' || v.id === 'lara_croft_4259'))) {
+                           (cleanMeshLower.includes('hands') && !cleanMeshLower.includes('handgun') && (v.id === 'lara_croft_black_tank_top' || v.id === 'lara_croft_4259'))) {
                   newName = 'gloves';
                   matched = true;
-                } else if (cleanMeshLower.includes('nail') || cleanMeshLower.includes('nails')) {
+                } else if (cleanMeshLower.includes('nail') || cleanMeshLower.includes('nails') ||
+                           ((cleanMeshLower.includes('finger') || cleanMeshLower.includes('fingers')) && 
+                            (v.id === 'lara_croft_spy_gear' || v.id === 'lara_croft_motorcycle_gear' || v.id === 'lara_croft_3254_rigged'))) {
                   newName = 'finger_nails';
                   matched = true;
                 } else if (cleanMeshLower.includes('metal') || cleanMeshLower.includes('metals')) {
@@ -1604,6 +1713,9 @@
                 } else if (cleanMeshLower.includes('purse')) {
                   newName = 'purse';
                   matched = true;
+                } else if (cleanMeshLower.includes('oxygen')) {
+                  newName = 'oxygen';
+                  matched = true;
                 } else if (cleanMeshLower.includes('catsuit') || cleanMeshLower.includes('swimsuit') || cleanMeshLower.includes('swim') || cleanMeshLower.includes('dress') || cleanMeshLower.includes('bikini') || cleanMeshLower.includes('combi') || cleanMeshLower.includes('clothing')) {
                   newName = 'outfit_body';
                   matched = true;
@@ -1611,7 +1723,7 @@
                   newName = 'outfit_up';
                   matched = true;
                 } else if (cleanMeshLower.includes('pants') || cleanMeshLower.includes('shorts') || cleanMeshLower.includes('bodyl') || cleanMeshLower.includes('lowerbody') || cleanMeshLower.includes('lower_body')) {
-                  newName = 'outfit_down';
+                  newName = (v.id === 'lara_croft_swim_gear' || v.id === 'lara_croft_swim_gear_1') ? 'skin' : 'outfit_down';
                   matched = true;
                 } else if (cleanMeshLower.includes('boot') || cleanMeshLower.includes('shoes') || cleanMeshLower.includes('feet') || cleanMeshLower.includes('socks')) {
                   newName = 'shoes';
@@ -1619,7 +1731,8 @@
                 } else if ((cleanMeshLower.includes('hands') || cleanMeshLower === 'hand') && !cleanMeshLower.includes('handgun') && !cleanMeshLower.includes('holster') && !cleanMeshLower.includes('glove')) {
                   newName = 'skin';
                   matched = true;
-                } else if (cleanMeshLower.includes('finger') || cleanMeshLower.includes('fingers')) {
+                } else if ((cleanMeshLower.includes('finger') || cleanMeshLower.includes('fingers')) && 
+                           v.id !== 'lara_croft_spy_gear' && v.id !== 'lara_croft_motorcycle_gear' && v.id !== 'lara_croft_3254_rigged') {
                   newName = 'skin';
                   matched = true;
                 } else if (cleanMeshLower.includes('body') && !cleanMeshLower.includes('outfit') && !cleanMeshLower.includes('upper') && !cleanMeshLower.includes('lower') && !cleanMeshLower.includes('bodyu') && !cleanMeshLower.includes('bodyl')) {
