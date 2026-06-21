@@ -798,11 +798,11 @@ const ALL_LARA_NPC_DEFS = [
   { path: 'media/all_lara/11_tank_top_pants.glb', pos: [280, 0, 210], rot: -1.8 },
   { path: 'media/all_lara/12_bodysuit_jeans.glb', pos: [80, 0, 310], rot: -1.2 },
   { path: 'media/all_lara/13_3_4_sleeve_catsuit.glb', pos: [60, 0, 110], rot: 1.5 },
-  { path: 'media/all_lara/14_business_suit.glb', pos: [240, 0, 50], rot: -0.5 },
-  { path: 'media/all_lara/15_motorcycle.glb', pos: [150, 0, -50], rot: 0 },
-  { path: 'media/all_lara/16_jacket_pants.glb', pos: [190, 0, 290], rot: 0.8 },
-  { path: 'media/all_lara/17_catsuit.glb', pos: [90, 0, 190], rot: -0.9 },
-  { path: 'media/all_lara/17_catsuit_mp5.glb', pos: [120, 0, 250], rot: 0.5 },
+  { path: 'media/all_lara/14_catsuit.glb', pos: [90, 0, 190], rot: -0.9 },
+  { path: 'media/all_lara/14_catsuit_mp5.glb', pos: [120, 0, 250], rot: 0.5 },
+  { path: 'media/all_lara/15_business_suit.glb', pos: [240, 0, 50], rot: -0.5 },
+  { path: 'media/all_lara/16_motorcycle.glb', pos: [150, 0, -50], rot: 0 },
+  { path: 'media/all_lara/17_jacket_pants.glb', pos: [190, 0, 290], rot: 0.8 },
   { path: 'media/all_lara/18_wetsuit.glb', pos: [130, 0, -280], rot: 0.9 },
   { path: 'media/all_lara/xbot_studio.glb', pos: [180, 0, -200], rot: 1.4 }
 ];
