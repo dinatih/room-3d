@@ -1,8 +1,9 @@
 /**
  * AnimationsPanel.tsx — Panneau latéral des animations de construction.
- * Toujours ouvert, positionné à droite de l'écran.
+ * Toujours ouvert, positionné à droite de l'écran (ou à gauche sur mobile).
  * Affiche la durée approximative de chaque animation, un timer en cours
  * d'exécution, et un bouton Arrêter.
+ * Styled using Bootstrap 5.3 and the project red theme accent.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -54,57 +55,11 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
   const isMobile     = useIsMobile();
   const [planeOpen, setPlaneOpen] = useState(false);
 
-  const grpStyle: React.CSSProperties = {
-    borderRadius: 6,
-    overflow: 'hidden',
-    border: '1px solid rgba(255,255,255,0.10)',
-    backdropFilter: 'blur(8px)',
-    marginTop: 4,
-  };
-  const grpHeaderStyle: React.CSSProperties = {
-    background: 'rgba(10,10,20,0.55)',
-    color: 'rgba(255,255,255,0.85)',
-    padding: isMobile ? '12px 14px' : '6px 10px',
-    cursor: 'pointer',
-    fontSize: isMobile ? 13 : 11,
-    fontWeight: 700,
-    letterSpacing: '0.5px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    userSelect: 'none',
-  };
-  const grpBodyStyle: React.CSSProperties = {
-    background: 'rgba(0,0,0,0.72)',
-  };
-  const btnStyle = (color: string) => ({
-    background: 'transparent',
-    border: 'none',
-    borderTop: '1px solid rgba(255,255,255,0.06)',
-    padding: isMobile ? '12px 14px' : '6px 10px',
-    cursor: 'pointer',
-    fontSize: isMobile ? 13 : 11,
-    width: '100%',
-    textAlign: 'left' as const,
-    display: 'block',
-    color,
-    fontFamily: 'inherit',
-  });
-  const modelBtnStyle = (active: boolean) => ({
-    flex: 1,
-    background: active ? 'rgba(68,136,255,0.25)' : 'rgba(255,255,255,0.06)',
-    border: `1px solid ${active ? 'rgba(68,136,255,0.6)' : 'rgba(255,255,255,0.12)'}`,
-    borderRadius: 4,
-    padding: '4px 2px',
-    color: active ? '#88aaff' : '#aaa',
-    fontSize: 9,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-  });
   const anyRunning   = ANIMS.some(a => props[a.key] as boolean);
   const activeKey    = ANIMS.find(a => props[a.key] as boolean)?.key ?? null;
   const activeAnim   = ANIMS.find(a => props[a.key] as boolean) ?? null;
   const [expanded, setExpanded] = useState(false);
+  
   // Mobile : collapsed par défaut, déplié auto en cours d'animation
   const showList = !isMobile || expanded || anyRunning;
 
@@ -131,44 +86,34 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
   const progress   = totalMs > 0 ? Math.min(elapsed / totalMs, 1) : 0;
 
   return (
-    <div style={{
-      position: 'fixed',
-      // Mobile : top-left (Minimap occupe top-right, tab bar occupe bas)
-      // Desktop : top-right (inchangé)
-      top: isMobile ? 8 : 16,
-      ...(isMobile ? { left: 8 } : { right: 16 }),
-      zIndex: 100,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 5,
-      width: isMobile ? 140 : 170,
-      fontFamily: 'inherit',
-    }}>
+    <div 
+      className="position-fixed d-flex flex-column gap-2"
+      style={{
+        top: isMobile ? 8 : 16,
+        ...(isMobile ? { left: 8 } : { right: 16 }),
+        zIndex: 100,
+        width: isMobile ? 140 : 170,
+      }}
+    >
       {/* Titre — cliquable sur mobile pour collapse/expand */}
       <div
         onClick={isMobile && !anyRunning ? () => setExpanded(e => !e) : undefined}
+        className="card shadow-sm border border-light-subtle bg-white text-dark py-2 px-3 fw-bold d-flex justify-content-between align-items-center"
         style={{
-          color: 'rgba(255,255,255,0.55)',
-          fontSize: 10,
-          fontWeight: 700,
-          letterSpacing: '0.12em',
+          fontSize: '10px',
           textTransform: 'uppercase',
-          padding: isMobile ? '8px 10px' : '4px 8px',
-          background: 'rgba(10,10,20,0.55)',
-          backdropFilter: 'blur(8px)',
-          borderRadius: 6,
-          border: '1px solid rgba(255,255,255,0.08)',
+          letterSpacing: '0.06em',
           cursor: isMobile && !anyRunning ? 'pointer' : 'default',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          userSelect: 'none',
         }}
       >
         <span>🎬 Animations</span>
         {isMobile && !anyRunning && (
-          <span style={{ fontSize: 9, opacity: 0.7 }}>{expanded ? '▲' : '▼'}</span>
+          <span style={{ fontSize: '8px', color: 'var(--muted)' }}>{expanded ? '▲' : '▼'}</span>
         )}
       </div>
 
-      {/* Boutons — cachés en mobile collapsed */}
+      {/* Boutons d'animations */}
       {showList && ANIMS.map(a => {
         const isActive = props[a.key] as boolean;
         const dur      = props.durations[a.key];
@@ -177,29 +122,16 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
             key={a.key}
             disabled={anyRunning && !isActive}
             onClick={() => (props[a.start] as () => void)()}
+            className={`btn w-100 text-start rounded-3 py-2 px-3 fw-bold border d-flex justify-content-between align-items-center ${isActive ? 'btn-danger text-white border-danger shadow-sm' : 'btn-light text-dark border-light-subtle bg-white'}`}
             style={{
-              background: isActive ? `${a.color}22` : 'rgba(10,10,20,0.55)',
-              color: isActive ? a.color : 'rgba(255,255,255,0.75)',
-              border: `1px solid ${isActive ? a.color + '77' : 'rgba(255,255,255,0.10)'}`,
-              borderRadius: 6,
-              padding: isMobile ? '12px 12px' : '6px 10px',
-              fontSize: isMobile ? 13 : 11,
-              minHeight: isMobile ? 44 : undefined,
-              fontWeight: 700,
-              letterSpacing: '0.04em',
-              cursor: anyRunning && !isActive ? 'not-allowed' : 'pointer',
-              opacity: anyRunning && !isActive ? 0.3 : 1,
-              backdropFilter: 'blur(8px)',
-              textAlign: 'left',
-              fontFamily: 'inherit',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 6,
+              fontSize: isMobile ? '13px' : '11px',
+              minHeight: isMobile ? '44px' : undefined,
+              letterSpacing: '0.02em',
+              opacity: anyRunning && !isActive ? 0.35 : 1,
             }}
           >
             <span>{isActive ? `▶ ${a.label}` : `▶ ${a.label}`}</span>
-            <span style={{ opacity: 0.6, fontSize: 10, fontWeight: 400 }}>
+            <span className="small fw-normal opacity-75">
               {dur ? fmtMs(dur) : ''}
             </span>
           </button>
@@ -208,123 +140,132 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
 
       {/* Zone active : timer + barre de progression + Arrêter */}
       {anyRunning && activeAnim && (
-        <div style={{
-          background: 'rgba(10,10,20,0.70)',
-          backdropFilter: 'blur(8px)',
-          border: `1px solid ${activeAnim.color}55`,
-          borderRadius: 6,
-          padding: '8px 10px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 6,
-        }}>
+        <div className="card border border-danger-subtle p-2 d-flex flex-column gap-2 bg-danger-subtle bg-opacity-10 text-dark shadow-sm">
           {/* Timer */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            fontSize: 11,
-            color: activeAnim.color,
-            fontWeight: 600,
-          }}>
+          <div className="d-flex justify-content-between small fw-bold text-danger" style={{ fontSize: '10px' }}>
             <span>{fmtElapsed(elapsed)}</span>
-            {totalMs > 0 && <span style={{ opacity: 0.6 }}>{fmtMs(totalMs)}</span>}
+            {totalMs > 0 && <span className="text-muted">{fmtMs(totalMs)}</span>}
           </div>
 
           {/* Barre de progression */}
           {totalMs > 0 && (
-            <div style={{
-              height: 3,
-              borderRadius: 2,
-              background: 'rgba(255,255,255,0.12)',
-              overflow: 'hidden',
-            }}>
-              <div style={{
-                height: '100%',
-                width: `${progress * 100}%`,
-                background: activeAnim.color,
-                borderRadius: 2,
-                transition: 'width 0.2s linear',
-              }} />
+            <div className="progress" style={{ height: '3px', background: 'rgba(0,0,0,0.08)' }}>
+              <div 
+                className="progress-bar bg-danger" 
+                role="progressbar" 
+                style={{ width: `${progress * 100}%`, transition: 'width 0.2s linear' }}
+              />
             </div>
           )}
 
           {/* Bouton stop */}
           <button
             onClick={props.onStop}
-            style={{
-              background: 'rgba(255,60,60,0.15)',
-              color: '#ff6060',
-              border: '1px solid rgba(255,60,60,0.35)',
-              borderRadius: 5,
-              padding: '5px 0',
-              fontSize: 11,
-              fontWeight: 700,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              letterSpacing: '0.05em',
-            }}
+            className="btn btn-danger btn-sm w-100 fw-bold py-1 border-0"
+            style={{ fontSize: '10px', letterSpacing: '0.04em' }}
           >
             ■ Arrêter
           </button>
         </div>
       )}
 
+      {/* XP Interactive Group */}
       {showList && (
-        <>
-          <div style={{
-            color: 'rgba(255,255,255,0.45)',
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            padding: '12px 8px 4px 8px',
-            borderTop: '1px solid rgba(255,255,255,0.08)',
-            marginTop: 8,
-          }}>
-            Xp Interactive
-          </div>
-          <div style={grpStyle}>
-            <div style={grpHeaderStyle} onClick={() => setPlaneOpen(o => !o)}>
+        <div className="card shadow-sm border border-light-subtle overflow-hidden mt-1">
+          <div className="card-header p-0 border-0 bg-white">
+            <button
+              className="btn w-100 text-start py-2 px-3 fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none"
+              onClick={() => setPlaneOpen(o => !o)}
+              style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}
+            >
               <span>✈ Avion</span>
-              <span style={{ fontSize: 9, transform: planeOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }}>▶</span>
-            </div>
-            {planeOpen && (
-              <div style={grpBodyStyle}>
-                <button
-                  style={{ ...btnStyle('#00e5ff'), borderTop: 'none' }}
-                  onClick={() => dispatchKey('f')}
-                >
-                  ✈ Lancer / Quitter [F]
-                </button>
-                <div style={{ padding: '6px 8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
-                    Modèle
-                  </div>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <button style={modelBtnStyle(props.planeModel === 'paper')}  onClick={() => props.onSetPlaneModel('paper')}>Papier</button>
-                    <button style={modelBtnStyle(props.planeModel === 'rocket')} onClick={() => props.onSetPlaneModel('rocket')}>Fusée</button>
-                    <button style={modelBtnStyle(props.planeModel === 'comet')}  onClick={() => props.onSetPlaneModel('comet')}>Comète</button>
-                  </div>
+              <span 
+                style={{ 
+                  fontSize: '8px', 
+                  color: 'var(--muted)',
+                  transform: planeOpen ? 'rotate(90deg)' : 'none', 
+                  transition: 'transform 0.18s' 
+                }}
+              >
+                ▶
+              </span>
+            </button>
+          </div>
+          {planeOpen && (
+            <div className="card-body p-0 bg-white d-flex flex-column border-top border-light-subtle">
+              <button
+                className="btn btn-outline-danger w-100 text-start rounded-0 border-0 border-bottom py-2 px-3"
+                onClick={() => dispatchKey('f')}
+                style={{ fontSize: isMobile ? '13px' : '10px' }}
+              >
+                ✈ Lancer / Quitter [F]
+              </button>
+              
+              <div className="p-2 border-bottom">
+                <div className="text-muted fw-semibold mb-1" style={{ fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Modèle
                 </div>
-                <button
-                  style={{ ...btnStyle('#b088ff'), opacity: props.autopilotVisible ? 1 : 0.5 }}
-                  onClick={props.onToggleAutopilot}
-                >
-                  Pilote auto ∞ : {props.autopilotVisible ? 'ON' : 'OFF'}
-                </button>
-                <button
-                  style={{ ...btnStyle('#ffd700'), opacity: props.showLandingStrips ? 1 : 0.5 }}
-                  onClick={props.onToggleLandingStrips}
-                >
-                  Pistes 🛬 : {props.showLandingStrips ? 'ON' : 'OFF'}
-                </button>
-                <div style={{ padding: '4px 8px', fontSize: 9, color: '#555', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                  [C] changer vue en vol
+                <div className="d-flex gap-1">
+                  <button 
+                    className={`btn btn-sm flex-grow-1 p-1 ${props.planeModel === 'paper' ? 'btn-danger' : 'btn-outline-secondary'}`}
+                    onClick={() => props.onSetPlaneModel('paper')}
+                    style={{ fontSize: '9px' }}
+                  >
+                    Papier
+                  </button>
+                  <button 
+                    className={`btn btn-sm flex-grow-1 p-1 ${props.planeModel === 'rocket' ? 'btn-danger' : 'btn-outline-secondary'}`}
+                    onClick={() => props.onSetPlaneModel('rocket')}
+                    style={{ fontSize: '9px' }}
+                  >
+                    Fusée
+                  </button>
+                  <button 
+                    className={`btn btn-sm flex-grow-1 p-1 ${props.planeModel === 'comet' ? 'btn-danger' : 'btn-outline-secondary'}`}
+                    onClick={() => props.onSetPlaneModel('comet')}
+                    style={{ fontSize: '9px' }}
+                  >
+                    Comète
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
-        </>
+              
+              <button
+                className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+                onClick={props.onToggleAutopilot}
+                style={{ 
+                  fontSize: isMobile ? '13px' : '10px', 
+                  background: 'white',
+                  opacity: props.autopilotVisible ? 1 : 0.55,
+                }}
+              >
+                <span>Pilote auto ∞</span>
+                <span className={`badge ${props.autopilotVisible ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+                  {props.autopilotVisible ? 'ON' : 'OFF'}
+                </span>
+              </button>
+              
+              <button
+                className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+                onClick={props.onToggleLandingStrips}
+                style={{ 
+                  fontSize: isMobile ? '13px' : '10px', 
+                  background: 'white',
+                  opacity: props.showLandingStrips ? 1 : 0.55,
+                }}
+              >
+                <span>Pistes 🛬</span>
+                <span className={`badge ${props.showLandingStrips ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+                  {props.showLandingStrips ? 'ON' : 'OFF'}
+                </span>
+              </button>
+              
+              <div className="p-2 text-muted" style={{ fontSize: '9px' }}>
+                [C] changer vue en vol
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
