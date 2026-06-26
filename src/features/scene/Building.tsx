@@ -38,13 +38,15 @@ const BLDG_X_MAX =  400;
 const BLDG_Z_MIN =  -30;
 const BLDG_Z_MAX =  800;
 
+export const GROUND_COLOR = 0x3a7d44;
+
 const COLORS = {
   wall:    0xeeeeee,
   floor:   0xd4a437,
   parquet: 0xC19A6B,
   accent:  0xcc0000,
   accentS: 0xaa0000,
-  ground:  0x3a7d44,
+  ground:  GROUND_COLOR,
   tile:    0xe8e8e8,
 };
 
@@ -60,38 +62,38 @@ const FLOOR_Y = -5.25; // dalle béton : surface parquet à Y=0
 
 // ── Matériaux (module-level, instances uniques) ───────────────────────────────
 const wallMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
-const ghostMat = new THREE.MeshStandardMaterial({
-  color: 0xe8e4dc, roughness: 0.9,
-  transparent: true, opacity: 0.18, depthWrite: false,
-});
+const noCapMat = new THREE.MeshBasicMaterial({ visible: false });
 const wallMatDiag = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
-const panelMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6 });
-const pvcMat        = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
 const skirtingMat   = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.4 });
-const glassMat   = new THREE.MeshPhysicalMaterial({
-  color: 0x88ccff, transparent: true, opacity: 0.25,
-  roughness: 0.05, metalness: 0.1, side: THREE.DoubleSide,
-});
-const handleMat  = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.15 });
+
+// BoxGeometry face order : [+X(0), -X(1), +Y(2), -Y(3), +Z(4), -Z(5)]
+type BoxFace = '+x' | '-x' | '+y' | '-y' | '+z' | '-z';
+const BOX_FACE_ORDER: BoxFace[] = ['+x', '-x', '+y', '-y', '+z', '-z'];
+
+function boxFaceMats(
+  visibleFaces: Partial<Record<BoxFace, THREE.Material>>,
+  fallback: THREE.Material = noCapMat,
+): THREE.Material[] {
+  return BOX_FACE_ORDER.map(face => visibleFaces[face] ?? fallback);
+}
 
 // Matériaux dalle béton décomposés (même principe que le plafond) :
 //   - dessus (visible d'en haut)    = opaque
 //   - dessous (visible d'en bas)    = absent → see-through depuis dessous
 //   - côtés                          = opaques
 const slabConcreteTop = new THREE.MeshStandardMaterial({
-  color: COLORS.floor, roughness: 0.6, side: THREE.FrontSide,
+  color: COLORS.floor, roughness: 0.6,
 });
 const slabConcreteSide = new THREE.MeshStandardMaterial({
-  color: COLORS.floor, roughness: 0.6,
+  color: COLORS.floor, roughness: 0.6, side: THREE.FrontSide,
 });
 const groundExteriorMat = new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9 });
 
-// BoxGeometry face order : [+X(0), -X(1), +Y(2), -Y(3), +Z(4), -Z(5)]
-// westMats : face -X (index 1) fantôme ; eastMats : face +X (index 0) fantôme
-// northMats : face -Z (index 5) fantôme (face extérieure nord, vue de Z<0)
-const westMats  = [wallMat, ghostMat, wallMat, wallMat, wallMat, wallMat];
-const eastMats  = [ghostMat, wallMat, wallMat, wallMat, wallMat, wallMat];
-const northMats = [wallMat, wallMat, wallMat, wallMat, wallMat, ghostMat];
+// westMats : face -X (index 1) invisible ; eastMats : face +X (index 0) invisible
+// northMats : face -Z (index 5) invisible (face extérieure nord, vue de Z<0)
+const westMats  = boxFaceMats({ '+x': wallMat, '+y': wallMat, '-y': wallMat, '+z': wallMat, '-z': wallMat });
+const eastMats  = boxFaceMats({ '-x': wallMat, '+y': wallMat, '-y': wallMat, '+z': wallMat, '-z': wallMat });
+const northMats = boxFaceMats({ '+x': wallMat, '-x': wallMat, '+y': wallMat, '-y': wallMat, '+z': wallMat });
 
 // Lookup matériau par nom (utilisé lors du rendu WALL_DEFS)
 const MAT_MAP: Record<string, THREE.Material | THREE.Material[]> = {
@@ -126,8 +128,6 @@ function P({ w, h, d, x, y, z, mat = wallMat, userData }: {
 //   0=+X  1=-X  2=+Y  3=-Y  4=+Z  5=-Z
 // WZ : end caps = indices 4 et 5 (faces ⊥ Z)
 // WX : end caps = indices 0 et 1 (faces ⊥ X)
-const noCapMat = new THREE.MeshBasicMaterial({ visible: false });
-
 function caplessZ(mat: THREE.Material | THREE.Material[]): THREE.Material[] {
   const m = Array.isArray(mat) ? mat : [mat, mat, mat, mat, mat, mat];
   return [m[0], m[1], m[2], m[3], noCapMat, noCapMat];
@@ -334,10 +334,10 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
     if (!sourceRef.current || !mergedRef.current) return;
     const src = sourceRef.current;
     const dst = mergedRef.current;
-    
+
     dst.clear();
     const groups = new Map<string, { geos: THREE.BufferGeometry[]; mat: THREE.Material; userData: any }>();
-    
+
     src.updateMatrixWorld(true);
     const invWorldMat = src.matrixWorld.clone().invert();
 
@@ -346,7 +346,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
     src.traverse(node => {
       const mesh = node as THREE.Mesh;
       if (!mesh.isMesh || mesh.type !== 'Mesh' || (mesh as any).isInstancedMesh || mesh.userData?.isMergedStatic || mesh.userData?.skipMerge) return;
-      
+
       // Skip merging if any ancestor has skipMerge: true
       let parent = mesh.parent;
       let skip = false;
@@ -360,28 +360,28 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
       if (skip) return;
 
       if (processedMeshes.has(mesh)) return;
-      
+
       // On cache l'original
       mesh.visible = false;
       mesh.userData.wasMerged = true;
       processedMeshes.add(mesh);
-      
+
       const geom = mesh.geometry;
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      
+
       // Transformation RELATIVE au groupe source (évite le double transform)
       const relMat = mesh.matrixWorld.clone().premultiply(invWorldMat);
-      
+
       const udKey = JSON.stringify({ brickType: mesh.userData?.brickType });
 
       if (!geom.groups || geom.groups.length === 0 || mats.length === 1) {
         const mat = mats[0];
         if (!mat || (mat as any).visible === false) return;
-        
+
         let clone = geom.clone();
         clone = clone.index ? clone.toNonIndexed() : clone;
         clone.applyMatrix4(relMat);
-        
+
         const key = `${mat.uuid}|${udKey}`;
         if (!groups.has(key)) groups.set(key, { geos: [], mat, userData: { brickType: mesh.userData?.brickType } });
         groups.get(key)!.geos.push(clone);
@@ -389,7 +389,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
         for (const group of geom.groups) {
           const mat = mats[group.materialIndex || 0] || mats[0];
           if (!mat || (mat as any).visible === false) continue;
-          
+
           let clone = geom.clone();
           if (geom.index) {
             const newIndex = geom.index.array.slice(group.start, group.start + group.count);
@@ -398,7 +398,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
           clone.groups = [];
           clone = clone.index ? clone.toNonIndexed() : clone;
           clone.applyMatrix4(relMat);
-          
+
           const key = `${mat.uuid}|${udKey}`;
           if (!groups.has(key)) groups.set(key, { geos: [], mat, userData: { brickType: mesh.userData?.brickType } });
           groups.get(key)!.geos.push(clone);
@@ -412,17 +412,17 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
       for (const a of allAttrs) {
         if (!geos.every(g => g.hasAttribute(a))) geos.forEach(g => g.deleteAttribute(a));
       }
-      
+
       const merged = mergeGeometries(geos, false);
       geos.forEach(g => g.dispose());
       if (!merged) continue;
-      
+
       const m = new THREE.Mesh(merged, mat);
       m.name = name;
       m.castShadow = true;
       m.receiveShadow = true;
       m.userData = { ...userData, isMergedStatic: true };
-      
+
       // Héritage automatique du layer mask depuis le premier mesh source correspondant
       src.traverse(node => {
         if (m.layers.mask !== 1) return;
@@ -573,7 +573,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
               {/* Mur diagonal */}
               <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow userData={{ brickType: 'wall' }} />
               <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow userData={{ brickType: 'wall' }} />
-              
+
               {/* Panneaux bois occultants jardin */}
               {GARDEN_PANEL_DEFS.map((p, i) => (
                 <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ skipMerge: true }}>
@@ -639,13 +639,7 @@ const ceilBottomBack = new THREE.MeshStandardMaterial({
   color: COLORS.wall, roughness: 0.35, envMapIntensity: 0.15,
   side: THREE.BackSide,
 });
-const ceilTop = new THREE.MeshStandardMaterial({
-  color: COLORS.wall, roughness: 0.35,
-  transparent: true, opacity: 0.18, depthWrite: false,
-});
-const ceilSide = new THREE.MeshStandardMaterial({ color: COLORS.wall, roughness: 0.35 });
-// BoxGeometry face order: [+X, -X, +Y(top), -Y(bot), +Z, -Z]
-const ceilMats = [ceilTop, ceilTop, ceilTop, ceilBottom, ceilTop, ceilTop];
+const ceilMats = boxFaceMats({ '-y': ceilBottom });
 
 // ── Texture parquet ────────────────────────────────────────────────────────────
 // Light oak laminate inspired by real reference photo: warm beige planks,
@@ -1287,7 +1281,7 @@ function BathSkirting() {
 
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Floor() {
-  const layers = useSceneStore(state => state.layers);
+  const showGrass = useSceneStore(state => state.layers.grass);
   return (
     <>
       {/* Parquet séjour + cuisine */}
@@ -1351,8 +1345,8 @@ export function Floor() {
         return (
           <>
             <SlabUnit x={0} z={0} />
-            {layers.neighbors && <SlabUnit x={ 346} z={-199.76} />}
-            {layers.neighbors && <SlabUnit x={-346} z={ 199.76} />}
+            <SlabUnit x={ 346} z={-199.76} />
+            <SlabUnit x={-346} z={ 199.76} />
           </>
         );
       })()}
@@ -1380,33 +1374,12 @@ export function Floor() {
             return geo;
           }, [ceilShape]);
 
-          const ceilExtrudeGeo = useMemo(() => {
-            const geo = new THREE.ExtrudeGeometry(ceilShape, { depth: CEIL_THICK, bevelEnabled: false });
-            geo.rotateX(-Math.PI / 2);
-            return geo;
-          }, [ceilShape]);
-
           return (
             <group position={[0, WALL_H - 1, 0]}>
               {/* Dessous opaque (visible d'en bas) */}
               <mesh
                 geometry={ceilBottomGeo}
                 material={ceilBottomBack}
-                receiveShadow
-                userData={{ brickType: 'ceiling' }}
-              />
-              {/* Dessus semi-transparent (visible d'en haut) */}
-              <mesh
-                geometry={ceilBottomGeo}
-                material={ceilTop}
-                position={[0, CEIL_THICK, 0]}
-                receiveShadow
-                userData={{ brickType: 'ceiling' }}
-              />
-              {/* Côtés verticaux semi-transparents (comme le dessus) */}
-              <mesh
-                geometry={ceilExtrudeGeo}
-                material={[noCapMat, ceilTop]}
                 receiveShadow
                 userData={{ brickType: 'ceiling' }}
               />
@@ -1436,7 +1409,7 @@ export function Floor() {
       </mesh>
 
       {/* Gazon 3D HD ciblé uniquement sur le jardin privatif */}
-      {layers.grass && <GrassGround yPos={-3.48} />}
+      {showGrass && <GrassGround yPos={-3.48} />}
 
       {/* Colliders physiques (Rapier) */}
       <RigidBody type="fixed" colliders={false}>
@@ -1487,14 +1460,14 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
       _reflectionDepth++;
-      
+
       // Adaptation dynamique (résolution / layer mask)
       const targetRes = cameraState.mirrorsHD ? 512 : 256;
       const renderTarget = (mir as any).getRenderTarget();
       if (renderTarget && renderTarget.width !== targetRes) {
         renderTarget.setSize(targetRes, targetRes);
       }
-      
+
       // En mode HD, on prend tout ce que voit la caméra principale + le Walker Detail
       mir.camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
@@ -1519,7 +1492,7 @@ function MergedReflector({ planes, position, rotationY }: {
       return geo;
     });
     const mergedGeo = mergeGeometries(geos, false);
-    
+
     const res = cameraState.mirrorsHD ? 512 : 256;
     const mir = new Reflector(mergedGeo, {
       textureWidth:  res,
@@ -1534,13 +1507,13 @@ function MergedReflector({ planes, position, rotationY }: {
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
       _reflectionDepth++;
-      
+
       const targetRes = cameraState.mirrorsHD ? 512 : 256;
       const renderTarget = (mir as any).getRenderTarget();
       if (renderTarget && renderTarget.width !== targetRes) {
         renderTarget.setSize(targetRes, targetRes);
       }
-      
+
       mir.camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
       _reflectionDepth--;

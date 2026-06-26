@@ -15,7 +15,7 @@ import { cameraState }      from '@features/scene/cameraState';
 import { Minimap }          from '@features/scene/Minimap';
 import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/scene/SidePanel';
 import { AnimationsPanel }  from '@features/scene/AnimationsPanel';
-import { Walls, Floor, Mirrors, DoorsPlaced } from './Building';
+import { Walls, Floor, Mirrors, DoorsPlaced, GROUND_COLOR } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
 import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes } from './Placements';
@@ -239,7 +239,7 @@ export function Studio() {
         }}
         onCreated={({ scene, gl, camera }) => {
           (window as any).threeScene = scene;
-          scene.background = new Color(0x2a2a3e);
+          scene.background = new Color(GROUND_COLOR);
           gl.shadowMap.enabled = true;
           camera.layers.enableAll();
           // LAYER_WALKER_DETAIL réservé aux miroirs (cf. Walker FPS hide)
