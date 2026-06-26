@@ -11,6 +11,7 @@ import { KitchenCabinet }                             from '@features/scene/item
 import { BathroomCabinetWest, BathroomCabinetEast }  from '@features/scene/items/BathroomCabinet';
 import { DoorEntry }                                  from '@features/scene/items/DoorEntry';
 import { DoorLiving, DoorBath }                        from '@features/scene/items/DoorWhite';
+import { DoorFrame }                                  from '@features/scene/items/DoorFrame';
 import { GlassDoor }                                  from '@features/scene/items/GlassDoor';
 import { Toilet }                                     from '@features/scene/items/Toilet';
 import { WaterHeater }                                from '@features/scene/items/WaterHeater';
@@ -74,6 +75,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'door-living':            DoorLiving,
   'door-sdb':               DoorBath,
   'door-glass':             GlassDoor,
+  'door-frame':             DoorFrame,
   'toilet':                 Toilet,
   'corridor-closet':        CorridorCloset,
   'sdb-closet':             SdbCloset,
