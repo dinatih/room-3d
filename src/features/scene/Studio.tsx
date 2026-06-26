@@ -42,6 +42,7 @@ import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
 import { SurfaceLayer }              from '@features/scene/SurfaceLayer';
+import { MeasurementTool }            from './MeasurementTool';
 
 import {
   ROOM_W,
@@ -145,6 +146,7 @@ function LoadingProgress() {
 export function Studio() {
   const furniture = useSceneStore(state => state.furniture);
   const layers = useSceneStore(state => state.layers);
+  const measurementActive = useSceneStore(state => state.measurementActive);
   const onToggleFurniture = useSceneStore(state => state.toggleFurniture);
   const onToggleLayer = useSceneStore(state => state.toggleLayer);
 
@@ -223,7 +225,7 @@ export function Studio() {
       <LoadingProgress />
       <Canvas
         style={{ width: '100%', height: '100%' }}
-        frameloop={layers.physics ? 'always' : 'demand'}
+        frameloop={showInventory ? 'never' : (layers.physics ? 'always' : 'demand')}
         camera={{
           fov:  50,
           near: 1,
@@ -301,6 +303,7 @@ export function Studio() {
         {layers.grid        && <GridLayer depthTest={layers.gridDepth} />}
         {layers.lights      && <LightHelpers />}
         {layers.plan        && <FloorPlan />}
+        {layers.plan && measurementActive && <MeasurementTool />}
         {layers.surface     && <SurfaceLayer />}
 
         {/* Contenu 3D — masqué en mode Plan */}
@@ -367,14 +370,6 @@ export function Studio() {
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
         lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
         renderStyle={renderStyle} onSetRenderStyle={setRenderStyle}
-        planeModel={planeModel} onSetPlaneModel={setPlaneModel}
-        autopilotVisible={autopilotVisible} onToggleAutopilot={() => setAutopilotVisible(v => !v)}
-        showLandingStrips={showLandingStrips} onToggleLandingStrips={() => {
-          setShowLandingStrips(v => {
-            cameraState.landingStripsVisible = !v;
-            return !v;
-          });
-        }}
       />
       {planeMode && (
         <div style={{
@@ -401,6 +396,17 @@ export function Studio() {
         buildAnim4={buildAnim4}     onStartBuildAnim4={start(setBuildAnim4)}
         onStop={stopAll}
         durations={animDurations}
+        planeModel={planeModel}
+        onSetPlaneModel={setPlaneModel}
+        autopilotVisible={autopilotVisible}
+        onToggleAutopilot={() => setAutopilotVisible(v => !v)}
+        showLandingStrips={showLandingStrips}
+        onToggleLandingStrips={() => {
+          setShowLandingStrips(v => {
+            cameraState.landingStripsVisible = !v;
+            return !v;
+          });
+        }}
       />
       {showInventory && <Inventory onClose={() => setShowInventory(false)} />}
       <Minimap />

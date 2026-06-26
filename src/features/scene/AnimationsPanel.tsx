@@ -6,6 +6,7 @@
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
+import type { PlaneModelKey } from './PaperPlane';
 
 export interface AnimationsPanelProps {
   buildAnim:        boolean; onStartBuildAnim:  () => void;
@@ -13,6 +14,12 @@ export interface AnimationsPanelProps {
   buildAnim4:       boolean; onStartBuildAnim4: () => void;
   onStop:           () => void;
   durations:        Record<string, number>; // ms par animation
+  planeModel:       PlaneModelKey;
+  onSetPlaneModel:  (m: PlaneModelKey) => void;
+  autopilotVisible: boolean;
+  onToggleAutopilot: () => void;
+  showLandingStrips: boolean;
+  onToggleLandingStrips: () => void;
 }
 
 const ANIMS: Array<{
@@ -39,8 +46,61 @@ function fmtElapsed(ms: number): string {
   return m > 0 ? `${m}:${String(r).padStart(2, '0')}` : `0:${String(r).padStart(2, '0')}`;
 }
 
+function dispatchKey(key: string) {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+}
+
 export function AnimationsPanel(props: AnimationsPanelProps) {
   const isMobile     = useIsMobile();
+  const [planeOpen, setPlaneOpen] = useState(false);
+
+  const grpStyle: React.CSSProperties = {
+    borderRadius: 6,
+    overflow: 'hidden',
+    border: '1px solid rgba(255,255,255,0.10)',
+    backdropFilter: 'blur(8px)',
+    marginTop: 4,
+  };
+  const grpHeaderStyle: React.CSSProperties = {
+    background: 'rgba(10,10,20,0.55)',
+    color: 'rgba(255,255,255,0.85)',
+    padding: isMobile ? '12px 14px' : '6px 10px',
+    cursor: 'pointer',
+    fontSize: isMobile ? 13 : 11,
+    fontWeight: 700,
+    letterSpacing: '0.5px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    userSelect: 'none',
+  };
+  const grpBodyStyle: React.CSSProperties = {
+    background: 'rgba(0,0,0,0.72)',
+  };
+  const btnStyle = (color: string) => ({
+    background: 'transparent',
+    border: 'none',
+    borderTop: '1px solid rgba(255,255,255,0.06)',
+    padding: isMobile ? '12px 14px' : '6px 10px',
+    cursor: 'pointer',
+    fontSize: isMobile ? 13 : 11,
+    width: '100%',
+    textAlign: 'left' as const,
+    display: 'block',
+    color,
+    fontFamily: 'inherit',
+  });
+  const modelBtnStyle = (active: boolean) => ({
+    flex: 1,
+    background: active ? 'rgba(68,136,255,0.25)' : 'rgba(255,255,255,0.06)',
+    border: `1px solid ${active ? 'rgba(68,136,255,0.6)' : 'rgba(255,255,255,0.12)'}`,
+    borderRadius: 4,
+    padding: '4px 2px',
+    color: active ? '#88aaff' : '#aaa',
+    fontSize: 9,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  });
   const anyRunning   = ANIMS.some(a => props[a.key] as boolean);
   const activeKey    = ANIMS.find(a => props[a.key] as boolean)?.key ?? null;
   const activeAnim   = ANIMS.find(a => props[a.key] as boolean) ?? null;
@@ -207,6 +267,64 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
             ■ Arrêter
           </button>
         </div>
+      )}
+
+      {showList && (
+        <>
+          <div style={{
+            color: 'rgba(255,255,255,0.45)',
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            padding: '12px 8px 4px 8px',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            marginTop: 8,
+          }}>
+            Xp Interactive
+          </div>
+          <div style={grpStyle}>
+            <div style={grpHeaderStyle} onClick={() => setPlaneOpen(o => !o)}>
+              <span>✈ Avion</span>
+              <span style={{ fontSize: 9, transform: planeOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }}>▶</span>
+            </div>
+            {planeOpen && (
+              <div style={grpBodyStyle}>
+                <button
+                  style={{ ...btnStyle('#00e5ff'), borderTop: 'none' }}
+                  onClick={() => dispatchKey('f')}
+                >
+                  ✈ Lancer / Quitter [F]
+                </button>
+                <div style={{ padding: '6px 8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+                    Modèle
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button style={modelBtnStyle(props.planeModel === 'paper')}  onClick={() => props.onSetPlaneModel('paper')}>Papier</button>
+                    <button style={modelBtnStyle(props.planeModel === 'rocket')} onClick={() => props.onSetPlaneModel('rocket')}>Fusée</button>
+                    <button style={modelBtnStyle(props.planeModel === 'comet')}  onClick={() => props.onSetPlaneModel('comet')}>Comète</button>
+                  </div>
+                </div>
+                <button
+                  style={{ ...btnStyle('#b088ff'), opacity: props.autopilotVisible ? 1 : 0.5 }}
+                  onClick={props.onToggleAutopilot}
+                >
+                  Pilote auto ∞ : {props.autopilotVisible ? 'ON' : 'OFF'}
+                </button>
+                <button
+                  style={{ ...btnStyle('#ffd700'), opacity: props.showLandingStrips ? 1 : 0.5 }}
+                  onClick={props.onToggleLandingStrips}
+                >
+                  Pistes 🛬 : {props.showLandingStrips ? 'ON' : 'OFF'}
+                </button>
+                <div style={{ padding: '4px 8px', fontSize: 9, color: '#555', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  [C] changer vue en vol
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

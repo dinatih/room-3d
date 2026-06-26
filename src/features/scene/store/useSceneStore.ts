@@ -6,6 +6,8 @@ interface SceneStore {
   furniture: FurnitureState;
   layers: LayerState;
   extraStates: Record<string, boolean>;
+  measurementActive: boolean;
+  setMeasurementActive: (active: boolean) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
   toggleLayer: (key: keyof LayerState) => void;
   triggerAction: (key: string) => void;
@@ -119,6 +121,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
   furniture: initialFurniture,
   layers: initialLayers,
   extraStates: initialExtraStates,
+  measurementActive: false,
+  setMeasurementActive: (active: boolean) => {
+    set({ measurementActive: active });
+    cameraState.invalidate?.();
+  },
 
   toggleFurniture: (key) => {
     set((state) => {

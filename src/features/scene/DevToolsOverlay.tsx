@@ -69,6 +69,8 @@ export function DevToolsGroups({ Group }: {
   Group: React.ComponentType<{ emoji: string; title: string; defaultOpen?: boolean; children: React.ReactNode }>;
 }) {
   const [, setTick] = useState(0);
+  const [showScene, setShowScene] = useState(false);
+  const [showTop, setShowTop] = useState(false);
   const fpsCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -118,20 +120,36 @@ export function DevToolsGroups({ Group }: {
 
         {/* SCÈNE — graph total, sur demande (refresh) */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 4, marginTop: 4 }}>
-          <div style={sectionHeaderStyle}>SCÈNE <span style={{ color: '#444', fontWeight: 400 }}>· total</span></div>
-          <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
-          <StatRow label="Instanced" value={devState.instances} />
-          <StatRow label="Lights"    value={devState.lights} color="#777" />
-          <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#777" />
-          <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#777" />
-          {devState.meshes > 800 && (
-            <div style={{ color: '#ff8866', fontSize: 9, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
+          <div
+            onClick={() => setShowScene(!showScene)}
+            style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+          >
+            <span>SCÈNE <span style={{ color: '#444', fontWeight: 400 }}>· total</span></span>
+            <span style={{ fontSize: 8 }}>{showScene ? '▼' : '▶'}</span>
+          </div>
+          {showScene && (
+            <>
+              <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
+              <StatRow label="Instanced" value={devState.instances} />
+              <StatRow label="Lights"    value={devState.lights} color="#777" />
+              <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#777" />
+              <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#777" />
+              {devState.meshes > 800 && (
+                <div style={{ color: '#ff8866', fontSize: 9, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
+              )}
+            </>
           )}
 
           {devState.topMeshes.length > 0 && (
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4, paddingTop: 4 }}>
-              <div style={sectionHeaderStyle}>TOP <span style={{ color: '#444', fontWeight: 400 }}>· par groupe</span></div>
-              {devState.topMeshes.map(([name, count]) => (
+              <div
+                onClick={() => setShowTop(!showTop)}
+                style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <span>TOP <span style={{ color: '#444', fontWeight: 400 }}>· par groupe</span></span>
+                <span style={{ fontSize: 8 }}>{showTop ? '▼' : '▶'}</span>
+              </div>
+              {showTop && devState.topMeshes.map(([name, count]) => (
                 <div key={name} style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 10px', fontSize: 10 }}>
                   <span style={{ color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }}>{name}</span>
                   <span style={{ color: '#777', flexShrink: 0, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>{count}</span>

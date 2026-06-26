@@ -144,10 +144,10 @@ const SMORKULL_POSITIONS = [
 ];
 
 const AIRPERFORMER_POSITIONS = [
-  { x: 300, z: 230,    ry: 0 },
+  { x: 297, z: 230,    ry: 0 },
   { x: 261, z: w2 / 2, ry: 0 }, // devant KallaxNE (face x=277, centre z=37.75)
   { x: 200, z: 100,    ry: 0 },
-  { x: ROOM_W - 16, z: w2 + 16, ry: 0 }, // angle KallaxNE / Mur Est
+  { x: 297, z: w2 + 16, ry: 0 }, // angle KallaxNE / Mur Est
 ];
 
 const SUNNERSTA_POSITIONS = [
@@ -594,13 +594,13 @@ export function Decor({ layers }: { layers: LayerState }) {
       <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <LackShelf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[MUL_D, 170, mulCZ]} userData={{ animUnit: true }}>
+      <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true }}>
         <MuligRail item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[110, 1, 500]} userData={{ animUnit: true }}>
+      <group position={[110, 0.5, 500]} userData={{ animUnit: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[300, 1, 202]} userData={{ animUnit: true }}>
+      <group position={[30, 0.5, 202]} userData={{ animUnit: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[298, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true }}>

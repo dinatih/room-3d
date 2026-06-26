@@ -394,13 +394,6 @@ export interface SidePanelProps2 extends SidePanelProps {
   onToggleLidarOpacity:    () => void;
   renderStyle:             RenderStyleKey;
   onSetRenderStyle:        (key: RenderStyleKey) => void;
-  // Avion
-  planeModel:              PlaneModelKey;
-  onSetPlaneModel:         (m: PlaneModelKey) => void;
-  autopilotVisible:        boolean;
-  onToggleAutopilot:       () => void;
-  showLandingStrips:       boolean;
-  onToggleLandingStrips:   () => void;
 }
 
 // ── Sections (rendu commun desktop & mobile) ──────────────────────────────────
@@ -417,7 +410,9 @@ const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> 
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity, renderStyle, onSetRenderStyle, planeModel, onSetPlaneModel, autopilotVisible, onToggleAutopilot, showLandingStrips, onToggleLandingStrips }: SidePanelProps2) {
+export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity, renderStyle, onSetRenderStyle }: SidePanelProps2) {
+  const measurementActive = useSceneStore(state => state.measurementActive);
+  const setMeasurementActive = useSceneStore(state => state.setMeasurementActive);
   const isMobile = useIsMobile();
   const [showViews,     setShowViews]     = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -563,10 +558,25 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       )}
       <button
         style={{ ...btn(COLORS['gold'], isMobile), opacity: layers.plan ? 1 : 0.45 }}
-        onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
+        onClick={() => {
+          if (!layers.plan) {
+            dispatchKey('t');
+          } else {
+            if (measurementActive) setMeasurementActive(false);
+          }
+          onToggleLayer('plan');
+        }}
       >
         Plan : {layers.plan ? 'ON' : 'OFF'}
       </button>
+      {layers.plan && (
+        <button
+          style={{ ...btn(measurementActive ? COLORS['cyan'] : COLORS['gray'], isMobile) }}
+          onClick={() => setMeasurementActive(!measurementActive)}
+        >
+          📏 Prise de mesure : {measurementActive ? 'ACTIVE' : 'DÉSACTIVÉE'}
+        </button>
+      )}
     </>
   );
 
@@ -632,62 +642,7 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
     </>
   );
 
-  // ── Section Avion ─────────────────────────────────────────────────────────────
 
-  const modelBtnStyle = (active: boolean): React.CSSProperties => ({
-    flex: 1,
-    background: active ? 'rgba(68,136,255,0.25)' : 'rgba(255,255,255,0.06)',
-    border: `1px solid ${active ? 'rgba(68,136,255,0.6)' : 'rgba(255,255,255,0.12)'}`,
-    borderRadius: 4,
-    padding: isMobile ? '8px 4px' : '4px 6px',
-    color: active ? '#88aaff' : '#aaa',
-    fontSize: isMobile ? 12 : 10,
-    minHeight: isMobile ? 40 : undefined,
-    cursor: 'pointer',
-  });
-
-  const AvionSection = (
-    <>
-      {/* Lancer / quitter */}
-      {b0('cyan', 'Avion ✈ F — lancer / quitter', () => dispatchKey('f'), true)}
-
-      {/* Sélecteur de modèle */}
-      <div style={{ padding: '6px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
-          Modèle
-        </div>
-        <div style={{ display: 'flex', gap: 4 }}>
-          <button style={modelBtnStyle(planeModel === 'paper')}  onClick={() => onSetPlaneModel('paper')}>Papier</button>
-          <button style={modelBtnStyle(planeModel === 'rocket')} onClick={() => onSetPlaneModel('rocket')}>Fusée</button>
-          <button style={modelBtnStyle(planeModel === 'comet')}  onClick={() => onSetPlaneModel('comet')}>Comète</button>
-        </div>
-      </div>
-
-      {/* Pilote automatique */}
-      <button
-        style={{ ...btn(COLORS['purple'], isMobile), opacity: autopilotVisible ? 1 : 0.5 }}
-        onClick={onToggleAutopilot}
-      >
-        Pilote auto ∞ : {autopilotVisible ? 'ON' : 'OFF'}
-      </button>
-
-      {/* Pistes d'atterrissage */}
-      <button
-        style={{ ...btn(COLORS['gold'], isMobile), opacity: showLandingStrips ? 1 : 0.5 }}
-        onClick={onToggleLandingStrips}
-      >
-        Pistes 🛬 : {showLandingStrips ? 'ON' : 'OFF'}
-      </button>
-
-      {/* Info vue */}
-      <div style={{
-        padding: '4px 10px', fontSize: 10, color: '#666',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
-      }}>
-        [C] changer vue (cockpit / suivre / walker) pendant le vol
-      </div>
-    </>
-  );
 
   // ── Rendu mobile : tab bar bottom + sheet ───────────────────────────────────
 
@@ -832,7 +787,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
         <DevToolsGroups Group={Group} />
 
         <Group emoji="📷" title="Vues">{ViewsSection}</Group>
-        <Group emoji="✈" title="Avion">{AvionSection}</Group>
         <Group emoji="📑" title="Calques">{LayersSection}</Group>
         <Group emoji="👁" title="Affichage">{DisplaySection}</Group>
         <Group emoji="🛋" title="Mobilier">{FurnitureSection}</Group>
