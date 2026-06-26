@@ -8,7 +8,7 @@
  *
  * Composant HTML pur rendu HORS du Canvas R3F. Dispatche des events custom
  * écoutés par CameraController et le reste de la scène.
- * Styled using Bootstrap 5.3 and the project red theme accent.
+ * Styled using Bootstrap 5.3 and glassmorphism.
  */
 import { useState, useCallback, useEffect } from 'react';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
@@ -71,15 +71,15 @@ function dispatchKey(key: string) {
   window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
 }
 
-// ── Accordion Group Component (Bootstrap Card style) ──────────────────────────
+// ── Accordion Group Component (Bootstrap Glass Card style) ────────────────────
 
 function Group({ emoji, title, defaultOpen = false, children }: {
   emoji: string; title: string; defaultOpen?: boolean; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="card shadow-sm border border-light-subtle overflow-hidden">
-      <div className="card-header p-0 border-0 bg-white">
+    <div className="card shadow-sm glass-card overflow-hidden">
+      <div className="card-header p-0 border-0 bg-transparent">
         <button
           className="btn w-100 text-start py-2 px-3 fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none"
           onClick={() => setOpen(!open)}
@@ -99,7 +99,7 @@ function Group({ emoji, title, defaultOpen = false, children }: {
         </button>
       </div>
       {open && (
-        <div className="card-body p-0 bg-white d-flex flex-column border-top border-light-subtle">
+        <div className="card-body p-0 bg-transparent d-flex flex-column border-top border-light-subtle">
           {children}
         </div>
       )}
@@ -107,7 +107,7 @@ function Group({ emoji, title, defaultOpen = false, children }: {
   );
 }
 
-// ── Modal Raccourcis Clavier (Bootstrap Modal style) ──────────────────────────
+// ── Modal Raccourcis Clavier (Bootstrap Modal Glass style) ────────────────────
 
 function ShortcutsModal({ onClose }: { onClose: () => void }) {
   const kbd = (label: string, i = 0) => (
@@ -128,8 +128,8 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="modal fade show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
       <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable" style={{ maxWidth: '360px' }}>
-        <div className="modal-content text-dark">
-          <div className="modal-header">
+        <div className="modal-content text-dark glass-card">
+          <div className="modal-header border-bottom-0">
             <h5 className="modal-title fs-6 fw-bold">⌨️ Raccourcis clavier</h5>
             <button type="button" className="btn-close" onClick={onClose}></button>
           </div>
@@ -173,7 +173,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Regarder librement"         keys={['Clic + glisser']} />
             </div>
           </div>
-          <div className="modal-footer p-2">
+          <div className="modal-footer border-top-0 p-2">
             <button type="button" className="btn btn-secondary btn-sm" onClick={onClose}>Fermer</button>
           </div>
         </div>
@@ -182,7 +182,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ── Modal Vues Caméra (Bootstrap Modal style) ─────────────────────────────────
+// ── Modal Vues Caméra (Bootstrap Modal Glass style) ───────────────────────────
 
 function ViewsModal({ onClose }: { onClose: () => void }) {
   const viewBtn = (lbl: string, key: string) => (
@@ -205,8 +205,8 @@ function ViewsModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="modal fade show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
       <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable" style={{ maxWidth: '280px' }}>
-        <div className="modal-content text-dark">
-          <div className="modal-header">
+        <div className="modal-content text-dark glass-card">
+          <div className="modal-header border-bottom-0">
             <h5 className="modal-title fs-6 fw-bold">📷 Sélection de Vue</h5>
             <button type="button" className="btn-close" onClick={onClose}></button>
           </div>
@@ -232,7 +232,7 @@ function ViewsModal({ onClose }: { onClose: () => void }) {
               {povBtn('Jardin',       'garden')}
             </div>
           </div>
-          <div className="modal-footer p-2">
+          <div className="modal-footer border-top-0 p-2">
             <button type="button" className="btn btn-secondary btn-sm" onClick={onClose}>Fermer</button>
           </div>
         </div>
@@ -293,8 +293,6 @@ export interface LayerState {
   pillarsOnly:    boolean;
   realWorld:    boolean;
   realSun:      boolean;
-  physics:      boolean;
-  collisions:   boolean;
   grass:        boolean;
   surface:      boolean;
   walker:       boolean;
@@ -379,11 +377,11 @@ export function SidePanel({
     return () => window.removeEventListener('keydown', onKey);
   }, [isMobile, activeTab]);
 
-  // Helpers de boutons (Bootstrap style)
+  // Helpers de boutons (Bootstrap style, transparent backgrounds for glass card inheritance)
   const b0 = (color: string, label: string, onClick: () => void) => {
     return (
       <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark bg-white"
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark bg-transparent"
         onClick={onClick}
         style={{ 
           fontSize: isMobile ? '14px' : '11px',
@@ -408,7 +406,7 @@ export function SidePanel({
         style={{ 
           fontSize: isMobile ? '14px' : '11px',
           minHeight: isMobile ? '48px' : undefined,
-          background: 'white',
+          background: 'transparent',
           opacity: on ? 1 : 0.55,
         }}
       >
@@ -431,7 +429,7 @@ export function SidePanel({
         <button
           className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
           onClick={() => setMeasurementActive(!measurementActive)}
-          style={{ fontSize: isMobile ? '14px' : '11px', background: 'white' }}
+          style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent' }}
         >
           <span>📏 Prise de mesure</span>
           <span className={`badge ${measurementActive ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
@@ -458,7 +456,7 @@ export function SidePanel({
         <button 
           className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark"
           onClick={() => useSceneStore.getState().triggerAction('walker-lara')}
-          style={{ fontSize: isMobile ? '14px' : '11px', background: 'white' }}
+          style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent' }}
         >
           Peau : {isLara ? 'Lara 👩' : 'X-Bot 🤖'}
         </button>
@@ -470,8 +468,6 @@ export function SidePanel({
     <>
       {layerBtn('teal',   'Grille',        'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
-      {layerBtn('peach',  'Physique',      'physics')}
-      {layerBtn('peach',  'Collision objets', 'collisions')}
       {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('cyan',   'X-Ray',         'xray')}
       {layerBtn('purple', 'Miroirs',       'mirrors')}
@@ -489,7 +485,7 @@ export function SidePanel({
       <button 
         className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
         onClick={() => useSceneStore.getState().triggerAction('walker-all-lara')}
-        style={{ fontSize: isMobile ? '14px' : '11px', background: 'white', opacity: showAllLaras ? 1 : 0.55 }}
+        style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent', opacity: showAllLaras ? 1 : 0.55 }}
       >
         <span>NPCs 20 Laras</span>
         <span className={`badge ${showAllLaras ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
@@ -497,7 +493,7 @@ export function SidePanel({
         </span>
       </button>
       
-      <div className="p-2 border-bottom bg-white">
+      <div className="p-2 border-bottom bg-transparent">
         <div className="text-muted fw-semibold mb-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🎨 Rendu</div>
         <div className="d-flex flex-wrap gap-1">
           {RENDER_STYLES.map(({ key, label }) => {
@@ -521,14 +517,14 @@ export function SidePanel({
       </div>
 
       {sunInfo && (
-        <div className="p-2 border-bottom text-muted" style={{ fontSize: '9px', background: 'white' }}>
+        <div className="p-2 border-bottom text-muted" style={{ fontSize: '9px', background: 'transparent' }}>
           ☀️ {sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
         </div>
       )}
       <button 
         className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
         onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
-        style={{ fontSize: isMobile ? '14px' : '11px', background: 'white', opacity: layers.plan ? 1 : 0.55 }}
+        style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent', opacity: layers.plan ? 1 : 0.55 }}
       >
         <span>Plan</span>
         <span className={`badge ${layers.plan ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
@@ -543,7 +539,7 @@ export function SidePanel({
       <button 
         className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
         onClick={() => onToggleFurniture('glassDoorV2')}
-        style={{ fontSize: isMobile ? '14px' : '11px', background: 'white' }}
+        style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent' }}
       >
         <span>Porte-fenêtre</span>
         <span className="badge bg-danger" style={{ fontSize: '9px' }}>
@@ -703,7 +699,7 @@ export function SidePanel({
     );
   }
 
-  // ── Rendu desktop : sidebar accordéon Bootstrap ─────────────────────────────
+  // ── Rendu desktop : sidebar accordéon Bootstrap Glassmorphic ────────────────
 
   return (
     <>
@@ -719,8 +715,8 @@ export function SidePanel({
         }}
         onWheel={e => e.stopPropagation()}
       >
-        {/* ── Inventaire card ── */}
-        <div className="card shadow-sm border border-light-subtle overflow-hidden">
+        {/* ── Inventaire card (glass style) ── */}
+        <div className="card shadow-sm glass-card overflow-hidden">
           <button
             className="btn btn-danger w-100 rounded-0 py-2 px-3 fw-bold text-start text-uppercase d-flex align-items-center justify-content-between border-0"
             onClick={onOpenInventory}

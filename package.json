@@ -14,7 +14,6 @@
     "@react-three/drei": "^9",
     "@react-three/fiber": "^8",
     "@react-three/postprocessing": "^2.19.1",
-    "@react-three/rapier": "^1.5.0",
     "3d-tiles-renderer": "^0.4.24",
     "bootstrap": "^5.3.3",
     "react": "^18",

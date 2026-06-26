@@ -3,7 +3,7 @@
  */
 import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { Physics } from '@react-three/rapier';
+
 import { useProgress, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
 import {
   ACESFilmicToneMapping, PCFSoftShadowMap, Color,
@@ -226,7 +226,7 @@ export function Studio() {
       <LoadingProgress />
       <Canvas
         style={{ width: '100%', height: '100%' }}
-        frameloop={showInventory ? 'never' : (layers.physics ? 'always' : 'demand')}
+        frameloop={showInventory ? 'never' : 'demand'}
         camera={{
           fov:  50,
           near: 1,
@@ -309,7 +309,6 @@ export function Studio() {
 
         {/* Contenu 3D — masqué en mode Plan */}
         <Suspense fallback={null}>
-        <Physics gravity={[0, -980, 0]} timeStep="vary">
         <CameraController planeMode={planeMode} />
         <group visible={!layers.plan}>
 
@@ -359,7 +358,6 @@ export function Studio() {
           )}
 
         </group>
-        </Physics>
         </Suspense>
       </Canvas>
 

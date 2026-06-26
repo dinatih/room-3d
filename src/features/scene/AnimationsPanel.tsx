@@ -3,7 +3,7 @@
  * Toujours ouvert, positionné à droite de l'écran (ou à gauche sur mobile).
  * Affiche la durée approximative de chaque animation, un timer en cours
  * d'exécution, et un bouton Arrêter.
- * Styled using Bootstrap 5.3 and the project red theme accent.
+ * Styled using Bootstrap 5.3, glassmorphism, and the project red theme accent.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -98,7 +98,7 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
       {/* Titre — cliquable sur mobile pour collapse/expand */}
       <div
         onClick={isMobile && !anyRunning ? () => setExpanded(e => !e) : undefined}
-        className="card shadow-sm border border-light-subtle bg-white text-dark py-2 px-3 fw-bold d-flex justify-content-between align-items-center"
+        className="card shadow-sm glass-card text-dark py-2 px-3 fw-bold d-flex justify-content-between align-items-center"
         style={{
           fontSize: '10px',
           textTransform: 'uppercase',
@@ -122,7 +122,7 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
             key={a.key}
             disabled={anyRunning && !isActive}
             onClick={() => (props[a.start] as () => void)()}
-            className={`btn w-100 text-start rounded-3 py-2 px-3 fw-bold border d-flex justify-content-between align-items-center ${isActive ? 'btn-danger text-white border-danger shadow-sm' : 'btn-light text-dark border-light-subtle bg-white'}`}
+            className={`btn w-100 text-start rounded-3 py-2 px-3 fw-bold d-flex justify-content-between align-items-center ${isActive ? 'btn-danger text-white border-danger shadow-sm' : 'glass-card text-dark shadow-sm'}`}
             style={{
               fontSize: isMobile ? '13px' : '11px',
               minHeight: isMobile ? '44px' : undefined,
@@ -140,7 +140,10 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
 
       {/* Zone active : timer + barre de progression + Arrêter */}
       {anyRunning && activeAnim && (
-        <div className="card border border-danger-subtle p-2 d-flex flex-column gap-2 bg-danger-subtle bg-opacity-10 text-dark shadow-sm">
+        <div 
+          className="card border border-danger-subtle p-2 d-flex flex-column gap-2 bg-danger-subtle bg-opacity-10 text-dark shadow-sm"
+          style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+        >
           {/* Timer */}
           <div className="d-flex justify-content-between small fw-bold text-danger" style={{ fontSize: '10px' }}>
             <span>{fmtElapsed(elapsed)}</span>
@@ -171,8 +174,8 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
 
       {/* XP Interactive Group */}
       {showList && (
-        <div className="card shadow-sm border border-light-subtle overflow-hidden mt-1">
-          <div className="card-header p-0 border-0 bg-white">
+        <div className="card shadow-sm glass-card overflow-hidden mt-1">
+          <div className="card-header p-0 border-0 bg-transparent">
             <button
               className="btn w-100 text-start py-2 px-3 fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none"
               onClick={() => setPlaneOpen(o => !o)}
@@ -192,7 +195,7 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
             </button>
           </div>
           {planeOpen && (
-            <div className="card-body p-0 bg-white d-flex flex-column border-top border-light-subtle">
+            <div className="card-body p-0 bg-transparent d-flex flex-column border-top border-light-subtle">
               <button
                 className="btn btn-outline-danger w-100 text-start rounded-0 border-0 border-bottom py-2 px-3"
                 onClick={() => dispatchKey('f')}
@@ -201,7 +204,7 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
                 ✈ Lancer / Quitter [F]
               </button>
               
-              <div className="p-2 border-bottom">
+              <div className="p-2 border-bottom" style={{ borderColor: 'rgba(0,0,0,0.08) !important' }}>
                 <div className="text-muted fw-semibold mb-1" style={{ fontSize: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Modèle
                 </div>
@@ -235,7 +238,7 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
                 onClick={props.onToggleAutopilot}
                 style={{ 
                   fontSize: isMobile ? '13px' : '10px', 
-                  background: 'white',
+                  background: 'transparent',
                   opacity: props.autopilotVisible ? 1 : 0.55,
                 }}
               >
@@ -250,7 +253,7 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
                 onClick={props.onToggleLandingStrips}
                 style={{ 
                   fontSize: isMobile ? '13px' : '10px', 
-                  background: 'white',
+                  background: 'transparent',
                   opacity: props.showLandingStrips ? 1 : 0.55,
                 }}
               >

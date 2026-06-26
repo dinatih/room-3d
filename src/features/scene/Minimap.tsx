@@ -57,7 +57,8 @@ function drawMinimap(
   const tz = (z: number) => (z - PLAN_Z_MIN) * S;
 
   // Fond
-  ctx.fillStyle = '#111122';
+  ctx.clearRect(0, 0, W, canvas.height);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
   ctx.fillRect(0, 0, W, canvas.height);
 
   // ── Pistes d'atterrissage (seulement si activées) ─────────────────────────
@@ -219,7 +220,7 @@ export function Minimap() {
       {expanded ? (
         /* EXPANDED VIEW: Styled inside a Bootstrap Card */
         <div 
-          className="card shadow-lg border border-light-subtle p-2 position-fixed"
+          className="card glass-card shadow-lg p-2 position-fixed"
           style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 201 }}
         >
           <div className="card-header border-0 bg-transparent p-0 d-flex justify-content-between align-items-center mb-2">
@@ -232,14 +233,14 @@ export function Minimap() {
             <canvas 
               ref={canvasRef} 
               className="rounded" 
-              style={{ display: 'block', background: '#111122' }} 
+              style={{ display: 'block', background: 'transparent' }} 
             />
           </div>
         </div>
       ) : (
         /* SMALL VIEW: Floating photo-frame card */
         <div 
-          className="shadow-sm border border-light-subtle bg-white p-1 rounded-3"
+          className="glass-card shadow-sm p-1 rounded-3"
           style={containerStyle}
         >
           <canvas
@@ -247,7 +248,7 @@ export function Minimap() {
             className="rounded-2"
             style={{
               display: 'block',
-              background: '#111122',
+              background: 'transparent',
               opacity: 0.88,
               cursor: 'pointer',
             }}

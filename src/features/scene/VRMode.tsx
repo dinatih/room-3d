@@ -30,26 +30,80 @@ export function VRMode() {
     scene.add(rig);
 
     // ── VRButton ──────────────────────────────────────────────────────────────
-    const btn = VRButton.createButton(gl);
-    const mobile = window.matchMedia('(max-width: 768px)').matches;
-    if (mobile) {
-      // Mobile : top-right, sous la minimap (55 + 8 + 8 = 71 px)
-      btn.style.bottom = 'auto';
-      btn.style.top    = '74px';
-      btn.style.right  = '8px';
-      btn.style.left   = 'auto';
-    } else {
-      btn.style.bottom = '20px';
+    // ── Shared Container ───────────────────────────────────────────────────────
+    let container = document.getElementById('vr-immersive-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'vr-immersive-container';
+      Object.assign(container.style, {
+        position: 'fixed',
+        bottom: 'calc(64px + env(safe-area-inset-bottom) + 12px)',
+        left: '12px',
+        zIndex: '110',
+        display: 'flex',
+        gap: '8px',
+        pointerEvents: 'none',
+      });
+      document.body.appendChild(container);
     }
-    document.body.appendChild(btn);
 
-    // Réduire le bouton si WebXR non supporté
+    // ── VRButton ──────────────────────────────────────────────────────────────
+    const btn = VRButton.createButton(gl);
+    
+    // Custom styling to match Immersive glassmorphic button
+    Object.assign(btn.style, {
+      position: 'static',
+      width: 'auto',
+      height: 'auto',
+      background: 'rgba(255, 255, 255, 0.74)',
+      color: '#212529',
+      border: '1px solid rgba(255, 255, 255, 0.25)',
+      borderRadius: '8px',
+      padding: '10px 16px',
+      fontSize: '13px',
+      cursor: 'pointer',
+      fontFamily: 'sans-serif',
+      backdropFilter: 'blur(14px)',
+      webkitBackdropFilter: 'blur(14px)',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+      pointerEvents: 'auto',
+      opacity: '1',
+      bottom: 'auto',
+      left: 'auto',
+      right: 'auto',
+      top: 'auto',
+      display: 'none', // hidden initially until support is confirmed
+    });
+
+    container.appendChild(btn);
+
+    // MutationObserver to customize label and hide when VR is not supported
     const obs = new MutationObserver(() => {
-      if (btn.textContent?.includes('NOT SUPPORTED')) {
-        Object.assign(btn.style, { fontSize: '10px', padding: '4px 8px' });
+      const txt = btn.textContent || '';
+      if (txt.includes('NOT SUPPORTED') || txt.includes('NOT ALLOWED')) {
+        btn.style.display = 'none';
+      } else if (txt === 'ENTER VR') {
+        obs.disconnect();
+        btn.textContent = 'VR';
+        btn.style.display = '';
+        obs.observe(btn, { childList: true, characterData: true, subtree: true });
+      } else if (txt === 'EXIT VR') {
+        obs.disconnect();
+        btn.textContent = '✕ VR';
+        btn.style.display = '';
+        obs.observe(btn, { childList: true, characterData: true, subtree: true });
       }
     });
     obs.observe(btn, { childList: true, characterData: true, subtree: true });
+
+    // Initial check (force observer update check)
+    const initialText = btn.textContent || '';
+    if (initialText.includes('NOT SUPPORTED')) {
+      btn.style.display = 'none';
+    } else if (initialText === 'ENTER VR') {
+      btn.textContent = 'VR';
+      btn.style.display = '';
+    }
 
     // ── Controller (tap Cardboard = avancer) ──────────────────────────────────
     const ctrl = gl.xr.getController(0);
@@ -87,6 +141,10 @@ export function VRMode() {
     return () => {
       obs.disconnect();
       btn.remove();
+      const container = document.getElementById('vr-immersive-container');
+      if (container && container.childNodes.length === 0) {
+        container.remove();
+      }
       gl.xr.enabled = false;
       gl.xr.removeEventListener('sessionstart', onSessionStart);
       gl.xr.removeEventListener('sessionend',   onSessionEnd);

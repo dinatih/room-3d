@@ -37,24 +37,41 @@ export function ImmersiveMode() {
     // Desktop : rien à faire
     if (!('ontouchstart' in window)) return;
 
+    // ── Shared Container ───────────────────────────────────────────────────────
+    let container = document.getElementById('vr-immersive-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'vr-immersive-container';
+      Object.assign(container.style, {
+        position: 'fixed',
+        bottom: 'calc(64px + env(safe-area-inset-bottom) + 12px)',
+        left: '12px',
+        zIndex: '110',
+        display: 'flex',
+        gap: '8px',
+        pointerEvents: 'none',
+      });
+      document.body.appendChild(container);
+    }
+
     // ── Bouton ─────────────────────────────────────────────────────────────────
     const btn = document.createElement('button');
     btn.textContent = '👁 Immersif';
     Object.assign(btn.style, {
-      position: 'fixed',
-      bottom: 'calc(64px + env(safe-area-inset-bottom) + 12px)',
-      left: '12px',
-      background: 'rgba(10,10,40,0.85)',
-      color: '#fff',
-      border: '1px solid rgba(255,255,255,0.35)',
+      background: 'rgba(255, 255, 255, 0.74)',
+      color: '#212529',
+      border: '1px solid rgba(255, 255, 255, 0.25)',
       borderRadius: '8px',
       padding: '10px 16px',
       fontSize: '13px',
       cursor: 'pointer',
-      zIndex: '110',
       fontFamily: 'sans-serif',
+      backdropFilter: 'blur(14px)',
+      webkitBackdropFilter: 'blur(14px)',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+      pointerEvents: 'auto',
     });
-    document.body.appendChild(btn);
+    container.appendChild(btn);
 
     // ── DeviceOrientation ──────────────────────────────────────────────────────
     const onOrient = (e: DeviceOrientationEvent) => {
@@ -127,6 +144,10 @@ export function ImmersiveMode() {
     return () => {
       if (active.current) exit();
       btn.remove();
+      const container = document.getElementById('vr-immersive-container');
+      if (container && container.childNodes.length === 0) {
+        container.remove();
+      }
       gl.domElement.removeEventListener('touchstart',  onTouchStart);
       gl.domElement.removeEventListener('touchend',    onTouchEnd);
       document.removeEventListener('fullscreenchange', onFsChange);

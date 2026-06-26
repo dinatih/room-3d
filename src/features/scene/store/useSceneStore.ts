@@ -64,8 +64,6 @@ const initialLayers: LayerState = {
   pillarsOnly: false,
   realWorld: false,
   realSun: false,
-  physics: false,
-  collisions: false,
   grass: false,
   surface: false,
   walker: true,
@@ -189,12 +187,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
       }
       if (key === 'mirrorsHD') {
         cameraState.mirrorsHD = nextLayers.mirrorsHD;
-      }
-      if (key === 'physics') {
-        document.dispatchEvent(new CustomEvent('physics-toggle', { detail: { enabled: nextLayers.physics } }));
-      }
-      if (key === 'collisions') {
-        document.dispatchEvent(new CustomEvent('collisions-toggle', { detail: { enabled: nextLayers.collisions } }));
       }
       if (key === 'walker') {
         cameraState.walkerHidden = !nextLayers.walker;

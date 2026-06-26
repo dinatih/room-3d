@@ -9,7 +9,7 @@
 import { useMemo, useRef, useEffect, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { RigidBody, CuboidCollider, ConvexHullCollider } from '@react-three/rapier';
+
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { cameraState } from '@features/scene/cameraState';
@@ -286,44 +286,7 @@ function PillarLabels() {
 /** Ref module-level vers le group Walls — consommé par Neighbors pour clone. */
 export const wallsGroupRef = { current: null as THREE.Group | null };
 
-function WallColliders() {
-  return (
-    <RigidBody type="fixed" colliders={false}>
-      {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
-        const t = d.t ?? W;
-        const h = d.h ?? WALL_H;
-        const yBase = d.yBase ?? 0;
-        if (d.axis === 'z') {
-          const len = d.z2 - d.z1;
-          return <CuboidCollider key={i} args={[t / 2, h / 2, len / 2]} position={[d.xc, yBase + h / 2, (d.z1 + d.z2) / 2]} />;
-        }
-        const len = d.x2 - d.x1;
-        return <CuboidCollider key={i} args={[len / 2, h / 2, t / 2]} position={[(d.x1 + d.x2) / 2, yBase + h / 2, d.zc]} />;
-      })}
-    </RigidBody>
-  );
-}
 
-function PillarColliders() {
-  return (
-    <RigidBody type="fixed" colliders={false}>
-      {PILLAR_DEFS.map((p) => {
-        const pp = p as any;
-        const pw = pp.w ?? W;
-        const pd = pp.d ?? W;
-        const rot = pp.rot ?? 0;
-        return (
-          <CuboidCollider
-            key={pp.id}
-            args={[pw / 2, WALL_H / 2, pd / 2]}
-            position={[pp.x, WALL_H / 2, pp.z]}
-            rotation={[0, rot, 0]}
-          />
-        );
-      })}
-    </RigidBody>
-  );
-}
 
 // ── MergedStaticGroup ──────────────────────────────────────────────────────────
 export function MergedStaticGroup({ children, name = 'merged-static', userData }: { children: React.ReactNode; name?: string; userData?: Record<string, any> }) {
@@ -585,15 +548,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
         </group>
       </MergedStaticGroup>
 
-      {/* ── Colliders physiques (Rapier) ─────────────────────────────────────── */}
-      <WallColliders />
-      <PillarColliders />
-      <RigidBody type="fixed" colliders={false}>
-        <ConvexHullCollider args={[diagGeos.sw.attributes.position.array as Float32Array]} />
-        <ConvexHullCollider args={[diagGeos.linteau.attributes.position.array as Float32Array]} />
-        <ConvexHullCollider args={[diagGeos.diagPillar.attributes.position.array as Float32Array]} />
-        <ConvexHullCollider args={[diagGeos.diagPillarSW.attributes.position.array as Float32Array]} />
-      </RigidBody>
+
     </>
   );
 }
@@ -1411,13 +1366,7 @@ export function Floor() {
       {/* Gazon 3D HD ciblé uniquement sur le jardin privatif */}
       {showGrass && <GrassGround yPos={-3.48} />}
 
-      {/* Colliders physiques (Rapier) */}
-      <RigidBody type="fixed" colliders={false}>
-        {/* Sol — centre à Y=-5 pour que la surface supérieure soit à Y=0 (niveau parquet) */}
-        <CuboidCollider args={[BLDG_W / 2, 5, BLDG_D / 2]} position={[BLDG_CX, -5, BLDG_CZ]} />
-        {/* Plafond */}
-        <CuboidCollider args={[BLDG_W / 2, CEIL_THICK / 2, BLDG_D / 2]} position={[BLDG_CX, WALL_H - 1 + CEIL_THICK / 2, BLDG_CZ]} />
-      </RigidBody>
+
     </>
   );
 }

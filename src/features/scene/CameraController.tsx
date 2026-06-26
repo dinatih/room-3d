@@ -22,8 +22,7 @@ import { useThree, useFrame }          from '@react-three/fiber';
 import { OrbitControls, OrthographicCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import { useRapier, RigidBody, CapsuleCollider } from '@react-three/rapier';
-import type { RapierRigidBody } from '@react-three/rapier';
+
 
 import { ROOM_W, ROOM_D, WALL_H } from '@config';
 import { cameraState } from './cameraState';
@@ -107,22 +106,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     setMode(m);
   }
 
-  // Rapier physics
-  const { world } = useRapier();
-  const charBodyRef       = useRef<RapierRigidBody | null>(null);
-  const charCtrlRef       = useRef<any>(null);
-  const physicsEnabledRef = useRef(false);
-  const collisionsEnabledRef = useRef(false);
-  useEffect(() => {
-    const pHandler = (e: Event) => { physicsEnabledRef.current = (e as CustomEvent).detail.enabled as boolean; };
-    const cHandler = (e: Event) => { collisionsEnabledRef.current = (e as CustomEvent).detail.enabled as boolean; };
-    document.addEventListener('physics-toggle', pHandler);
-    document.addEventListener('collisions-toggle', cHandler);
-    return () => {
-      document.removeEventListener('physics-toggle', pHandler);
-      document.removeEventListener('collisions-toggle', cHandler);
-    };
-  }, []);
+
 
   // OrbitControls imperative ref
   const ctrlRef = useRef<OrbitControlsImpl>(null!);
@@ -233,41 +217,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
-  // ── Character controller (Rapier) ─────────────────────────────────────────
 
-  useEffect(() => {
-    const ctrl = world.createCharacterController(2);
-    ctrl.setUp({ x: 0, y: 1, z: 0 });
-    ctrl.setMaxSlopeClimbAngle(45 * Math.PI / 180);
-    ctrl.setMinSlopeSlideAngle(30 * Math.PI / 180);
-    ctrl.enableAutostep(25, 10, true);
-    ctrl.enableSnapToGround(5);
-    ctrl.setApplyImpulsesToDynamicBodies(true);
-    ctrl.setSlideEnabled(true);
-    charCtrlRef.current = ctrl;
-    return () => {
-      world.removeCharacterController(ctrl);
-      charCtrlRef.current = null;
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  // Helper : téléporte body à (curX, curZ), query collision, retourne pos corrigée
   function collideMove(curX: number, curZ: number, dx: number, dz: number): { x: number; z: number } {
-    if (!collisionsEnabledRef.current) return { x: curX + dx, z: curZ + dz };
-    const phys = charCtrlRef.current;
-    const body = charBodyRef.current;
-    if (!phys || !body || body.numColliders() === 0) {
-      return { x: curX + dx, z: curZ + dz };
-    }
-    body.setTranslation({ x: curX, y: CHAR_CY, z: curZ }, false);
-    try {
-      phys.computeColliderMovement(body.collider(0), { x: dx, y: -2, z: dz });
-      const mv = phys.computedMovement();
-      return { x: curX + mv.x, z: curZ + mv.z };
-    } catch {
-      return { x: curX + dx, z: curZ + dz };
-    }
+    return { x: curX + dx, z: curZ + dz };
   }
 
   // ── Keyboard ────────────────────────────────────────────────────────────────
@@ -640,14 +593,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         } : undefined}
       />
 
-      <RigidBody
-        ref={charBodyRef}
-        type="kinematicPosition"
-        colliders={false}
-        position={[CX, CHAR_CY, CZ]}
-      >
-        <CapsuleCollider args={[CHAR_HALF_H, CHAR_RADIUS]} />
-      </RigidBody>
+
     </>
   );
 }

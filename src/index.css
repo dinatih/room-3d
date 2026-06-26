@@ -20,43 +20,77 @@
   --thumb: 48px;
 }
 
+body {
+  background: #0e0e18;
+}
+
 button, input, select, textarea {
   font-family: inherit;
   font-size: inherit;
+}
+
+/* ── GLASSMORPHISM UTILITIES ── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.74) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Make standard buttons inside glass cards transparent with frosted hover */
+.glass-card .btn-light,
+.glass-card button:not(.btn-danger):not(.btn-outline-danger):not(.btn-outline-secondary):not(.btn-close):not(.btn-sm) {
+  background: transparent !important;
+  color: var(--text) !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+.glass-card .btn-light:hover,
+.glass-card button:not(.btn-danger):not(.btn-outline-danger):not(.btn-outline-secondary):not(.btn-close):not(.btn-sm):hover {
+  background: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Support badges layout inside glass cards */
+.glass-card .badge {
+  font-weight: 600;
 }
 
 /* ── INVENTORY OVERLAY ── */
 .inventory-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.72);
+  background: rgba(0, 0, 0, 0.65);
   z-index: 500;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* ── INVENTORY MODAL WINDOW ── */
+/* ── INVENTORY MODAL WINDOW (Glassmorphic) ── */
 .inventory-modal {
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   width: min(97vw, 1100px);
   height: 88vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
   position: relative;
 }
 
 /* ── TOPBAR ── */
 .inventory-topbar {
   height: 56px;
-  background: var(--white);
-  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   padding: 0 1.25rem;
@@ -90,18 +124,19 @@ button, input, select, textarea {
 .inventory-topbar-search input {
   width: 100%;
   height: 34px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 8px;
   padding: 0 12px 0 34px;
   font-size: 13px;
   color: var(--text);
-  background: var(--surface);
+  background: rgba(0, 0, 0, 0.03);
   outline: none;
   transition: border-color .15s, box-shadow .15s;
 }
 .inventory-topbar-search input:focus {
   border-color: var(--red);
-  box-shadow: 0 0 0 3px rgba(211, 47, 47, .1);
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, .15);
+  background: rgba(255, 255, 255, 0.8);
 }
 .inventory-topbar-search svg {
   position: absolute;
@@ -137,7 +172,7 @@ button, input, select, textarea {
   justify-content: center;
 }
 .inventory-btn-close:hover {
-  background: var(--surface);
+  background: rgba(0, 0, 0, 0.05);
   color: var(--red);
 }
 
@@ -151,16 +186,16 @@ button, input, select, textarea {
 .inventory-pane-list {
   width: 380px;
   flex-shrink: 0;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
   overflow-y: auto;
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.35);
   display: flex;
   flex-direction: column;
 }
 .inventory-pane-detail {
   flex: 1;
   overflow-y: auto;
-  background: var(--surface);
+  background: rgba(248, 249, 250, 0.45);
 }
 
 /* ── LIST ITEMS ── */
@@ -171,8 +206,8 @@ button, input, select, textarea {
   justify-content: justify-content;
   flex-wrap: wrap;
   gap: 8px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
 }
 .inventory-list-header-title {
   font-size: 11px;
@@ -203,7 +238,7 @@ button, input, select, textarea {
   transition: background .12s, color .12s;
 }
 .inventory-ftab:hover {
-  background: var(--surface);
+  background: rgba(0, 0, 0, 0.04);
   color: var(--text);
 }
 .inventory-ftab.active {
@@ -221,12 +256,13 @@ button, input, select, textarea {
   gap: 10px;
   padding: 10px 14px;
   cursor: pointer;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   transition: background .1s;
   position: relative;
+  background: rgba(255, 255, 255, 0.2);
 }
 .inventory-item-row:hover {
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.5);
 }
 .inventory-item-row.active {
   background: var(--red-light);
@@ -239,8 +275,8 @@ button, input, select, textarea {
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -285,8 +321,8 @@ button, input, select, textarea {
   font-size: 10px;
   padding: 1px 6px;
   border-radius: 20px;
-  background: #f0f0f0;
-  color: #555;
+  background: rgba(0, 0, 0, 0.05);
+  color: #444;
   font-weight: 500;
 }
 .inventory-badge-virt {
@@ -361,8 +397,8 @@ button, input, select, textarea {
   margin-bottom: 14px;
 }
 .inventory-spec-card {
-  background: var(--white);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 10px;
   padding: 10px 12px;
 }
@@ -391,8 +427,8 @@ button, input, select, textarea {
   margin-bottom: 6px;
 }
 .inventory-detail-notes {
-  background: var(--white);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 13px;
@@ -420,9 +456,9 @@ button, input, select, textarea {
   background: var(--red-dark);
 }
 .inventory-btn-delete {
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.5);
   color: var(--muted);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 8px;
   padding: 9px 18px;
   font-size: 13px;
@@ -436,7 +472,7 @@ button, input, select, textarea {
 }
 .inventory-detail-divider {
   border: none;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
   margin: 14px 0;
 }
 
@@ -446,6 +482,7 @@ button, input, select, textarea {
     width: 100vw;
     height: 100vh;
     border-radius: 0;
+    background: rgba(255, 255, 255, 0.94);
   }
   .inventory-layout {
     height: calc(100% - 56px);
@@ -457,7 +494,7 @@ button, input, select, textarea {
     flex: 1;
   }
   .inventory-pane-detail {
-    display: none; /* detail is shown inside the mobile modal instead! */
+    display: none;
   }
 }
 
@@ -468,6 +505,6 @@ button, input, select, textarea {
 }
 .inventory-pane-list::-webkit-scrollbar-thumb, 
 .inventory-pane-detail::-webkit-scrollbar-thumb {
-  background: #ddd;
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 4px;
 }

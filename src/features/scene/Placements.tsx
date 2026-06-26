@@ -12,7 +12,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { RigidBody, CuboidCollider } from '@react-three/rapier';
+
 
 import { KallaxNE }      from './items/KallaxNE';
 import { KallaxSE }      from './items/KallaxSE';
@@ -298,12 +298,7 @@ export function Furniture({ layers }: { layers: LayerState }) {
       <group position={[DOOR_START - 31, 0, cbZ]} userData={{ animUnit: true }}>
         <BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} />
       </group>
-      {/* Surfaces fixes pour les boîtes Drona — METOD 40×37×60cm et congélateur ~60×57×50cm */}
-      <RigidBody type="fixed" colliders={false}>
-        <CuboidCollider args={[20, 30, 18.5]} position={[NICHE_X + 20, 30, cbZ]} />
-        <CuboidCollider args={[20, 30, 18.5]} position={[DOOR_START - 31, 30, cbZ]} />
-        <CuboidCollider args={[27.5, 25, 28.5]} position={[24.5, 25, 269.5]} />
-      </RigidBody>
+
     </MergedStaticGroup>
   );
 }
@@ -701,24 +696,12 @@ const DRONA_STANDALONE = [
 ];
 
 export function DronaBoxes({ layers }: { layers: LayerState }) {
-  const [physicsEnabled, setPhysicsEnabled] = useState(false);
-  useEffect(() => {
-    const handler = (e: Event) => setPhysicsEnabled((e as CustomEvent).detail.enabled as boolean);
-    document.addEventListener('physics-toggle', handler);
-    return () => document.removeEventListener('physics-toggle', handler);
-  }, []);
-
   return (
     <group userData={{ animUnit: true }}>
       {DRONA_STANDALONE.map((p, i) => (
-        <RigidBody key={i} type={physicsEnabled ? 'dynamic' : 'fixed'} colliders={false}
-          position={[p.cx, p.cy, p.cz]}
-          rotation={[0, p.rotY, 0]}
-          restitution={0.2} friction={0.8}
-        >
-          <CuboidCollider args={[DF / 2, DF / 2, 19]} />
+        <group key={i} position={[p.cx, p.cy, p.cz]} rotation={[0, p.rotY, 0]}>
           <DroneCell />
-        </RigidBody>
+        </group>
       ))}
     </group>
   );
