@@ -1,206 +1,169 @@
 /**
  * Inventory.tsx — port de js/ui/inventory.js
+ * Styled using Bootstrap 5.3, custom red theme variables and fully responsive.
  */
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { INVENTORY, CATEGORIES, STORAGE_SPACES, type InventoryItem, type StorageSpace } from './inventoryData';
 import { InventoryPreview } from './InventoryPreview';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function fmt(n: number | undefined) { return Number.isFinite(n) ? n : '—'; }
-function dimsStr(d: { w: number; d: number; h: number }) { return `${fmt(d.w)} × ${fmt(d.d)} × ${fmt(d.h)}`; }
-
 type PreviewTarget = InventoryItem | StorageSpace | null;
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed', inset: 0,
-  background: 'rgba(0,0,0,0.72)',
-  zIndex: 500,
-  backdropFilter: 'blur(4px)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-};
-
-function modalStyleFor(mobile: boolean): React.CSSProperties {
-  return {
-    background: 'rgba(14,14,24,0.97)',
-    border: '1px solid #444',
-    borderRadius: mobile ? 0 : 12,
-    padding: mobile ? '10px 10px' : '20px 24px',
-    width: mobile ? '100vw' : 'min(97vw, 1100px)',
-    height: mobile ? '100vh' : undefined,
-    maxHeight: mobile ? '100vh' : '88vh',
-    display: 'flex', flexDirection: 'column', gap: 10,
-    overflow: 'hidden',
-  };
+// Helper to determine the category icon/emoji
+function getCategoryEmoji(cat: string): string {
+  switch (cat) {
+    case 'storage': return '📦';
+    case 'furniture': return '🛋️';
+    case 'tech': return '💻';
+    case 'kitchen': return '🍳';
+    case 'bathroom': return '🛁';
+    case 'clothing': return '👕';
+    case 'decor': return '🪴';
+    case 'consumable': return '🛒';
+    case 'walkers': return '🚶';
+    case 'doors': return '🚪';
+    case 'glbs': return '🎲';
+    default: return '📦';
+  }
 }
 
-const thStyle: React.CSSProperties = {
-  padding: '6px 8px',
-  background: 'rgba(255,255,255,0.05)',
-  textAlign: 'left',
-  fontSize: 11, color: '#aaa',
-  textTransform: 'uppercase',
-  position: 'sticky', top: 0, zIndex: 1,
-  whiteSpace: 'nowrap',
-};
+// ── Detail Pane Content Component ─────────────────────────────────────────────
 
-const tdStyle: React.CSSProperties = {
-  padding: '5px 8px',
-  borderBottom: '1px solid rgba(255,255,255,0.05)',
-};
+function ItemDetailContent({ item }: { item: PreviewTarget }) {
+  if (!item) return null;
 
-// ── Storage table ─────────────────────────────────────────────────────────────
+  const isStorage = !('category' in item); // Storage spaces don't have a category field
 
-function StorageTable({ spaces, selected, onSelect, focusedId }: {
-  spaces: StorageSpace[];
-  selected: PreviewTarget;
-  onSelect: (sp: StorageSpace) => void;
-  focusedId: string | null;
-}) {
+  const catLabel = !isStorage 
+    ? CATEGORIES.find(c => c.id === (item as InventoryItem).category)?.label ?? (item as InventoryItem).category 
+    : 'Rangement';
+
+  const dimsStr = `${item.dims.w} × ${item.dims.d} × ${item.dims.h} cm`;
+
   return (
-    <>
-      <div style={{ fontSize: 11, color: '#ffd700', textTransform: 'uppercase', letterSpacing: 1, padding: '8px 0 6px', fontWeight: 'bold' }}>
-        Espaces de rangement
+    <div className="inventory-detail-wrap">
+      {/* 3D Preview Canvas / Photo Gallery as Hero */}
+      <div className="inventory-detail-hero">
+        <InventoryPreview item={item} height={300} hideFooter={true} />
       </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: '#ddd', marginBottom: 16 }}>
-        <thead>
-          <tr>
-            <th style={thStyle}>Nom</th>
-            <th style={thStyle}>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {spaces.map(sp => {
-            const isSelected = selected && 'id' in selected && selected.id === sp.id;
-            const isFocused  = focusedId === sp.id;
-            return (
-              <tr
-                key={sp.id}
-                data-item-id={sp.id}
-                onClick={() => onSelect(sp)}
-                style={{
-                  cursor: 'pointer',
-                  background: isSelected ? 'rgba(255,215,0,0.15)' : undefined,
-                  outline: isFocused ? '1px solid rgba(255,215,0,0.6)' : undefined,
-                  outlineOffset: isFocused ? '-1px' : undefined,
-                }}
-              >
-                <td style={tdStyle}><strong>{sp.name}</strong></td>
-                <td style={{ ...tdStyle, color: '#aaa', fontSize: 11 }}>{sp.notes ?? ''}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <div style={{ fontSize: 11, color: '#ffd700', textTransform: 'uppercase', letterSpacing: 1, padding: '4px 0 6px', fontWeight: 'bold' }}>
-        Objets
-      </div>
-    </>
-  );
-}
 
-// ── Item table ────────────────────────────────────────────────────────────────
+      <div className="inventory-detail-body">
+        <h2 className="inventory-detail-title">{item.name}</h2>
+        <p className="inventory-detail-brand">
+          {!isStorage && (item as InventoryItem).brand ? `${(item as InventoryItem).brand} — ` : ''}
+          {isStorage ? 'Espace de rangement' : catLabel}
+        </p>
 
-const FREQ_LABEL: Record<string, string> = {
-  hebdo: '📅 Hebdo',
-  mensuel: '📅 Mensuel',
-  trimestriel: '📅 Trimestre',
-  annuel: '📅 Annuel',
-};
-
-function ItemTable({ items, selected, onSelect, consumableView, focusedId }: {
-  items: InventoryItem[];
-  selected: PreviewTarget;
-  onSelect: (item: InventoryItem) => void;
-  consumableView?: boolean;
-  focusedId: string | null;
-}) {
-  return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, color: '#ddd' }}>
-      <thead>
-        <tr>
-          <th style={thStyle}>Nom</th>
-          {consumableView ? (
-            <>
-              <th style={{ ...thStyle, textAlign: 'center', whiteSpace: 'nowrap' }}>Stock</th>
-              <th style={{ ...thStyle, whiteSpace: 'nowrap' }}>Fréquence</th>
-              <th style={thStyle}>Stockage</th>
-              <th style={{ ...thStyle, textAlign: 'center', whiteSpace: 'nowrap' }}>L × P × H</th>
-              <th style={thStyle}>Notes</th>
-            </>
+        <div className="inventory-detail-badges">
+          {isStorage ? (
+            <span className="inventory-badge-tag inventory-badge-virt" style={{ fontSize: 11, padding: '3px 9px' }}>
+              🗄️ Rangement
+            </span>
+          ) : (item as InventoryItem).category === 'walkers' ? (
+            <span className="inventory-badge-tag inventory-badge-virt" style={{ fontSize: 11, padding: '3px 9px' }}>
+              🔵 Virtuel
+            </span>
           ) : (
+            <span className="inventory-badge-tag" style={{ fontSize: 11, padding: '3px 9px', background: '#e8f5e9', color: '#2e7d32' }}>
+              🟢 Physique
+            </span>
+          )}
+
+          {!isStorage && (item as InventoryItem).actions && (item as InventoryItem).actions!.length > 0 && (
+            <span className="inventory-badge-tag" style={{ fontSize: 11, padding: '3px 9px', background: '#fff3cd', color: '#856404' }}>
+              ⚡ Actionnable
+            </span>
+          )}
+
+          {!isStorage && (
+            <span className="inventory-badge-tag inventory-badge-red" style={{ fontSize: 11, padding: '3px 9px' }}>
+              {catLabel}
+            </span>
+          )}
+        </div>
+
+        <div className="inventory-spec-grid">
+          <div className="inventory-spec-card">
+            <div className="inventory-spec-label">
+              {!isStorage && (item as InventoryItem).category === 'consumable' ? 'Stock restant' : 'Quantité'}
+            </div>
+            <div className="inventory-spec-value inventory-spec-value-accent" style={{ color: 'var(--red)', fontWeight: 'bold' }}>
+              {!isStorage && (item as InventoryItem).category === 'consumable' 
+                ? `${(item as InventoryItem).stock ?? 0} pièces` 
+                : isStorage 
+                  ? '1 espace' 
+                  : `×${(item as InventoryItem).qty}`}
+            </div>
+          </div>
+          <div className="inventory-spec-card">
+            <div className="inventory-spec-label">Dimensions (L×P×H)</div>
+            <div className="inventory-spec-value">
+              {dimsStr}
+            </div>
+          </div>
+
+          {!isStorage && (item as InventoryItem).category === 'consumable' && (
             <>
-              <th style={{ ...thStyle, whiteSpace: 'nowrap' }}>Marque</th>
-              <th style={{ ...thStyle, textAlign: 'center' }}>Qté</th>
-              <th style={{ ...thStyle, textAlign: 'center', whiteSpace: 'nowrap' }}>L × P × H</th>
-              <th style={thStyle}>Notes</th>
+              <div className="inventory-spec-card">
+                <div className="inventory-spec-label">Fréquence de rachat</div>
+                <div className="inventory-spec-value" style={{ textTransform: 'capitalize' }}>
+                  {(item as InventoryItem).frequency ?? '—'}
+                </div>
+              </div>
+              <div className="inventory-spec-card">
+                <div className="inventory-spec-label">Lieu de stockage</div>
+                <div className="inventory-spec-value">
+                  {(item as InventoryItem).location ?? '—'}
+                </div>
+              </div>
             </>
           )}
-        </tr>
-      </thead>
-      <tbody>
-        {items.map((item, i) => {
-          const isSelected = selected && 'id' in selected && selected.id === item.id;
-          const isFocused  = focusedId === item.id;
-          return (
-            <tr
-              key={item.id}
-              data-item-id={item.id}
-              onClick={() => onSelect(item)}
-              style={{
-                cursor: 'pointer',
-                background: isSelected
-                  ? 'rgba(255,215,0,0.15)'
-                  : i % 2 === 1 ? 'rgba(255,255,255,0.03)' : undefined,
-                outline: isFocused ? '1px solid rgba(255,215,0,0.6)' : undefined,
-                outlineOffset: isFocused ? '-1px' : undefined,
-              }}
-            >
-              <td style={tdStyle}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {item.photos?.[0] && (
-                    <img src={item.photos[0]} style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 3, flexShrink: 0, background: '#eee' }} />
-                  )}
-                  {item.name}
-                </div>
-              </td>
-              {consumableView ? (
-                <>
-                  <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 'bold' }}>{item.stock ?? '—'}</td>
-                  <td style={{ ...tdStyle, fontSize: 11 }}>{item.frequency ? FREQ_LABEL[item.frequency] : '—'}</td>
-                  <td style={{ ...tdStyle, color: '#aaa', fontSize: 11 }}>{item.location ?? '—'}</td>
-                  <td style={{ ...tdStyle, textAlign: 'center', fontFamily: 'monospace', fontSize: 11 }}>{dimsStr(item.dims)}</td>
-                  <td style={{ ...tdStyle, color: '#aaa', fontSize: 11 }}>{item.notes ?? ''}</td>
-                </>
-              ) : (
-                <>
-                  <td style={tdStyle}>{item.brand || '—'}</td>
-                  <td style={{ ...tdStyle, textAlign: 'center' }}>{item.qty}</td>
-                  <td style={{ ...tdStyle, textAlign: 'center', fontFamily: 'monospace', fontSize: 11 }}>{dimsStr(item.dims)}</td>
-                  <td style={{ ...tdStyle, color: '#aaa', fontSize: 11 }}>{item.notes ?? ''}</td>
-                </>
-              )}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+
+          {!isStorage && (item as InventoryItem).url && (
+            <div className="inventory-spec-card" style={{ gridColumn: '1 / -1' }}>
+              <div className="inventory-spec-label">Lien Produit</div>
+              <div className="inventory-spec-value">
+                <a 
+                  href={(item as InventoryItem).url} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  onClick={e => e.stopPropagation()}
+                  style={{ color: 'var(--red)', textDecoration: 'none' }}
+                >
+                  🔗 Ouvrir la fiche produit
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <hr className="inventory-detail-divider" />
+        <div className="inventory-detail-section-label">Notes & Description</div>
+        <div className="inventory-detail-notes">
+          {item.notes || "Aucune note descriptive disponible pour cet élément."}
+        </div>
+
+        <div className="inventory-detail-actions mt-3">
+          <button className="inventory-btn-edit" onClick={() => alert(`Modifier : ${item.name}`)}>✏️ Modifier</button>
+          <button className="inventory-btn-delete" onClick={() => { if(confirm(`Supprimer ${item.name} ?`)) alert('Supprimé (démo)'); }}>🗑 Supprimer</button>
+        </div>
+      </div>
+    </div>
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ── Main Inventory Component ──────────────────────────────────────────────────
 
 export function Inventory({ onClose }: { onClose: () => void }) {
   const isMobile = useIsMobile();
-  const [activeCat, setActiveCat]     = useState('all');
-  const [search, setSearch]           = useState('');
-  const [selected, setSelected]       = useState<PreviewTarget>(null);
-  const [focusedIndex, setFocusedIndex] = useState(-1);
-  const tableContainerRef             = useRef<HTMLDivElement>(null);
+  const [activeCat, setActiveCat]         = useState('all');
+  const [search, setSearch]               = useState('');
+  const [selected, setSelected]           = useState<PreviewTarget>(null);
+  const [focusedIndex, setFocusedIndex]   = useState(-1);
+  const [showMobileModal, setShowMobileModal] = useState(false);
+  const tableContainerRef                 = useRef<HTMLDivElement>(null);
 
+  // Filter items list
   const items = useMemo(() => {
     const q = search.trim().toLowerCase();
     return INVENTORY.filter(i => {
@@ -214,28 +177,33 @@ export function Inventory({ onClose }: { onClose: () => void }) {
     });
   }, [activeCat, search]);
 
-  const totalQty = items.reduce((s, i) => s + i.qty, 0);
-
   const showSpaces = activeCat === 'storage' || activeCat === 'actionnable';
   const spaces = activeCat === 'actionnable'
     ? STORAGE_SPACES.filter(sp => sp.actions?.length)
     : STORAGE_SPACES;
 
-  // Unified nav list: spaces first, then items
+  // Unified list: storage spaces first, then items
   const navList = useMemo<PreviewTarget[]>(() => [
     ...(showSpaces ? spaces : []),
     ...items,
   ], [showSpaces, spaces, items]);
 
-  // Reset focus when list changes
+  // Reset focus on list update
   useEffect(() => { setFocusedIndex(-1); }, [navList]);
+
+  // Auto-select first item on desktop startup
+  useEffect(() => {
+    if (!isMobile && !selected && navList.length > 0) {
+      setSelected(navList[0]);
+    }
+  }, [isMobile, navList, selected]);
 
   // Scroll focused row into view
   const focusedId = focusedIndex >= 0 ? (navList[focusedIndex] as any)?.id ?? null : null;
   useEffect(() => {
     if (!focusedId || !tableContainerRef.current) return;
-    const tr = tableContainerRef.current.querySelector(`tr[data-item-id="${focusedId}"]`);
-    tr?.scrollIntoView({ block: 'nearest' });
+    const rowEl = tableContainerRef.current.querySelector(`div[data-item-id="${focusedId}"]`);
+    rowEl?.scrollIntoView({ block: 'nearest' });
   }, [focusedId]);
 
   // Keyboard navigation
@@ -251,133 +219,198 @@ export function Inventory({ onClose }: { onClose: () => void }) {
         setFocusedIndex(i => Math.max(i - 1, 0));
       } else if (e.key === 'Enter' && focusedIndex >= 0) {
         const target = navList[focusedIndex];
-        if (target) setSelected(target);
+        if (target) {
+          setSelected(target);
+          if (isMobile) {
+            setShowMobileModal(true);
+          }
+        }
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [navList, focusedIndex]);
+  }, [navList, focusedIndex, isMobile]);
 
   return (
     <div
-      style={overlayStyle}
+      className="inventory-overlay"
       onClick={onClose}
       onKeyDown={(e) => e.stopPropagation()}
     >
       <div
-        style={{ ...modalStyleFor(isMobile), position: 'relative' }} onClick={e => e.stopPropagation()}>
-
-        {/* Bouton fermer — toujours en haut à droite, surtout pour mobile plein-écran */}
-        <button
-          onClick={onClose}
-          aria-label="Fermer"
-          style={{
-            position: 'absolute',
-            top: isMobile ? 6 : 10,
-            right: isMobile ? 6 : 12,
-            background: isMobile ? 'rgba(255,255,255,0.10)' : 'transparent',
-            border: isMobile ? '1px solid rgba(255,255,255,0.20)' : 'none',
-            borderRadius: isMobile ? '50%' : 4,
-            color: '#ddd',
-            fontSize: isMobile ? 26 : 22,
-            width: isMobile ? 44 : 32,
-            height: isMobile ? 44 : 32,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', lineHeight: 1, padding: 0,
-            zIndex: 10,
-          }}
-        >
-          ×
-        </button>
-
-        {/* Header */}
-        <div style={{
-          display: 'flex', alignItems: 'center',
-          gap: isMobile ? 8 : 12,
-          flexWrap: 'wrap',
-          paddingRight: isMobile ? 56 : 40,
-        }}>
-          <h3 style={{ color: '#ffd700', fontSize: 14, textTransform: 'uppercase', letterSpacing: 1, margin: 0, flex: '0 0 auto' }}>
-            📦 Inventaire
-          </h3>
-          {!isMobile && (
-            <span style={{ color: '#888', fontSize: 12 }}>{items.length} objets · {totalQty} pièces</span>
-          )}
-          <input
-            placeholder="Rechercher…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{
-              background: 'rgba(255,255,255,0.08)', border: '1px solid #555', borderRadius: 6,
-              color: '#fff',
-              fontSize: isMobile ? 14 : 12,
-              padding: isMobile ? '8px 12px' : '4px 10px',
-              minHeight: isMobile ? 40 : undefined,
-              width: isMobile ? '100%' : 160,
-              flex: isMobile ? '1 1 100%' : '0 0 auto',
-            }}
-          />
-          {isMobile && (
-            <span style={{ color: '#888', fontSize: 11 }}>{items.length} objets · {totalQty} pièces</span>
-          )}
+        className="inventory-modal"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* TOPBAR */}
+        <div className="inventory-topbar">
+          <div className="inventory-topbar-brand">
+            <div className="inventory-brand-dot"></div>
+            Inventaire
+          </div>
+          <div className="inventory-topbar-search">
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Rechercher un item…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="inventory-topbar-actions">
+            <span className="inventory-topbar-count">
+              {navList.length} item{navList.length > 1 ? 's' : ''}
+            </span>
+            <button className="inventory-btn-close" onClick={onClose} aria-label="Fermer">
+              ×
+            </button>
+          </div>
         </div>
 
-        {/* Category filters */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {CATEGORIES.map(cat => {
-            const on = cat.id === activeCat;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCat(cat.id)}
-                style={{
-                  background: on ? 'rgba(255,215,0,0.18)' : 'rgba(255,255,255,0.06)',
-                  border: `1px solid ${on ? '#ffd700' : '#444'}`,
-                  borderRadius: 6,
-                  color: on ? '#ffd700' : '#ccc',
-                  fontSize: isMobile ? 13 : 11,
-                  padding: isMobile ? '8px 14px' : '3px 10px',
-                  minHeight: isMobile ? 36 : undefined,
-                  cursor: 'pointer',
-                }}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Body: table (left) + preview (right) — empilé verticalement sur mobile */}
-        <div style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: isMobile ? 8 : 16,
-          overflow: 'hidden', flex: 1, minHeight: 0,
-        }}>
-
-          {/* Preview — affichée en haut sur mobile, à droite sur desktop, seulement si sélection */}
-          {isMobile && selected && (
-            <div style={{ display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
-              <InventoryPreview item={selected} />
+        {/* LAYOUT SPLIT */}
+        <div className="inventory-layout">
+          {/* LIST PANE */}
+          <div className="inventory-pane-list">
+            <div className="inventory-list-header">
+              <span className="inventory-list-header-title">Tous les items</span>
+              <div className="inventory-filter-tabs">
+                {CATEGORIES.map(cat => {
+                  const isActive = cat.id === activeCat;
+                  return (
+                    <button
+                      key={cat.id}
+                      className={`inventory-ftab${isActive ? ' active' : ''}`}
+                      onClick={() => setActiveCat(cat.id)}
+                    >
+                      {cat.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          )}
 
-          {/* Table */}
-          <div ref={tableContainerRef} style={{ overflowY: 'auto', flex: 1, minWidth: 0 }}>
-            {showSpaces && spaces.length > 0 && (
-              <StorageTable spaces={spaces} selected={selected} onSelect={setSelected} focusedId={focusedId} />
-            )}
-            <ItemTable items={items} selected={selected} onSelect={setSelected} consumableView={activeCat === 'consumable'} focusedId={focusedId} />
+            <div ref={tableContainerRef} className="inventory-list-content">
+              {navList.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
+                  Aucun item trouvé.
+                </div>
+              ) : (
+                navList.map(target => {
+                  if (!target) return null;
+                  const isStorage = !('category' in target);
+                  const id = target.id;
+                  const isSelected = selected && selected.id === id;
+                  const isFocused  = focusedId === id;
+
+                  const catLabel = !isStorage 
+                    ? CATEGORIES.find(c => c.id === (target as InventoryItem).category)?.label ?? (target as InventoryItem).category 
+                    : 'Rangement';
+
+                  const thumbPhoto = !isStorage ? (target as InventoryItem).photos?.[0] : undefined;
+                  const emoji = getCategoryEmoji(isStorage ? 'storage' : (target as InventoryItem).category);
+
+                  return (
+                    <div
+                      key={id}
+                      data-item-id={id}
+                      className={`inventory-item-row${isSelected ? ' active' : ''}`}
+                      onClick={() => {
+                        setSelected(target);
+                        if (isMobile) {
+                          setShowMobileModal(true);
+                        }
+                      }}
+                      style={{
+                        outline: isFocused ? '1px solid var(--red)' : undefined,
+                        outlineOffset: '-1px',
+                      }}
+                    >
+                      <div className="inventory-item-thumb">
+                        {thumbPhoto ? (
+                          <img src={thumbPhoto} alt={target.name} />
+                        ) : (
+                          <span className="thumb-icon">{emoji}</span>
+                        )}
+                      </div>
+                      <div className="inventory-item-meta">
+                        <div className="inventory-item-name">{target.name}</div>
+                        <div className="inventory-item-sub">
+                          {!isStorage && (target as InventoryItem).brand && (
+                            <>
+                              <span>{(target as InventoryItem).brand}</span>
+                              <span style={{ color: 'var(--border)' }}>·</span>
+                            </>
+                          )}
+                          <span>{target.dims.w}×{target.dims.d}×{target.dims.h} cm</span>
+                        </div>
+                        <div className="inventory-item-badges">
+                          {isStorage ? (
+                            <span className="inventory-badge-tag inventory-badge-virt">Rangement</span>
+                          ) : (target as InventoryItem).category === 'walkers' ? (
+                            <span className="inventory-badge-tag inventory-badge-virt">Virtuel</span>
+                          ) : (
+                            <span className="inventory-badge-tag inventory-badge-red">{catLabel}</span>
+                          )}
+                          {!isStorage && (target as InventoryItem).actions && (target as InventoryItem).actions!.length > 0 && (
+                            <span className="inventory-badge-tag" style={{ background: '#fff3cd', color: '#856404' }}>⚡ Action</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="inventory-item-qty">
+                        {!isStorage && (target as InventoryItem).category === 'consumable' ? (
+                          `×${(target as InventoryItem).stock ?? 0}`
+                        ) : isStorage ? (
+                          ''
+                        ) : (
+                          `×${(target as InventoryItem).qty}`
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
 
-          {!isMobile && (
-            <div style={{ display: 'flex', alignItems: 'flex-start', paddingTop: 4 }}>
-              <InventoryPreview item={selected} />
-            </div>
-          )}
-
+          {/* DETAIL PANE (desktop) */}
+          <div className="inventory-pane-detail">
+            {!selected ? (
+              <div className="inventory-detail-empty">
+                <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="18" height="18" rx="3" />
+                  <path d="M3 9h18M9 21V9" />
+                </svg>
+                <p>Sélectionnez un item<br />pour afficher son détail</p>
+              </div>
+            ) : (
+              <ItemDetailContent item={selected} />
+            )}
+          </div>
         </div>
       </div>
+
+      {/* MODAL DETAIL (mobile) */}
+      {showMobileModal && selected && (
+        <div className="modal fade show d-block" tabIndex={-1} role="dialog" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+          <div className="modal-dialog modal-fullscreen-sm-down modal-dialog-scrollable" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">{selected.name}</h5>
+                <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowMobileModal(false)}></button>
+              </div>
+              <div className="modal-body p-0" style={{ overflowY: 'auto' }}>
+                <ItemDetailContent item={selected} />
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowMobileModal(false)}>Fermer</button>
+                <button type="button" className="btn btn-danger" onClick={() => alert(`Modifier : ${selected.name}`)}>✏️ Modifier</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

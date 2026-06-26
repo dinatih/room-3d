@@ -153,7 +153,17 @@ function PhotoGallery({ photos }: { photos: string[] }) {
 
 type PreviewTarget = InventoryItem | StorageSpace | null;
 
-export function InventoryPreview({ item }: { item: PreviewTarget }) {
+export function InventoryPreview({
+  item,
+  width = '100%',
+  height = 300,
+  hideFooter = false
+}: {
+  item: PreviewTarget;
+  width?: string | number;
+  height?: string | number;
+  hideFooter?: boolean;
+}) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
   const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = !!photos && photos.length > 0;
   const actionKeys = item && 'category' in item && (item as InventoryItem).category === 'walkers' ? [] : (item as any)?.actions?.[0] ? [(item as any).actions[0]] : [];
@@ -162,7 +172,7 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
   return (
-    <div style={{ width: 520, minWidth: 520, height: 640, background: '#d2d2d2', borderRadius: 8, border: '1px solid #dde0e8', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
+    <div style={{ width, height, background: '#d2d2d2', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
       {!item && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444', fontSize: 12, pointerEvents: 'none' }}>Sélectionner un objet</div>}
       {item && (
         <>
@@ -212,10 +222,12 @@ export function InventoryPreview({ item }: { item: PreviewTarget }) {
               })}
             </div>
           )}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '6px 10px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center', borderBottomLeftRadius: 8, borderBottomRightRadius: 8 }}>
-            <div style={{ flex: 1 }}><div style={{ fontWeight: 'bold', fontSize: 12 }}>{item.name}</div><div style={{ opacity: 0.8 }}>{item.dims.w}×{item.dims.d}×{item.dims.h} cm</div></div>
-            {item && 'url' in item && (item as InventoryItem).url && <a href={(item as InventoryItem).url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} title={(item as InventoryItem).url} style={{ marginLeft: 8, color: '#7ab8ff', textDecoration: 'none', pointerEvents: 'auto' }}>🔗</a>}
-          </div>
+          {!hideFooter && (
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '6px 10px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center' }}>
+              <div style={{ flex: 1 }}><div style={{ fontWeight: 'bold', fontSize: 12 }}>{item.name}</div><div style={{ opacity: 0.8 }}>{item.dims.w}×{item.dims.d}×{item.dims.h} cm</div></div>
+              {item && 'url' in item && (item as InventoryItem).url && <a href={(item as InventoryItem).url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} title={(item as InventoryItem).url} style={{ marginLeft: 8, color: '#7ab8ff', textDecoration: 'none', pointerEvents: 'auto' }}>🔗</a>}
+            </div>
+          )}
         </>
       )}
     </div>
