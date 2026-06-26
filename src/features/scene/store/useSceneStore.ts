@@ -7,7 +7,9 @@ interface SceneStore {
   layers: LayerState;
   extraStates: Record<string, boolean>;
   measurementActive: boolean;
+  cameraMode: 'orbit' | 'walk' | 'top' | 'plane';
   setMeasurementActive: (active: boolean) => void;
+  setCameraMode: (mode: 'orbit' | 'walk' | 'top' | 'plane') => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
   toggleLayer: (key: keyof LayerState) => void;
   triggerAction: (key: string) => void;
@@ -122,9 +124,13 @@ export const useSceneStore = create<SceneStore>((set) => ({
   layers: initialLayers,
   extraStates: initialExtraStates,
   measurementActive: false,
+  cameraMode: 'orbit',
   setMeasurementActive: (active: boolean) => {
     set({ measurementActive: active });
     cameraState.invalidate?.();
+  },
+  setCameraMode: (mode) => {
+    set({ cameraMode: mode });
   },
 
   toggleFurniture: (key) => {

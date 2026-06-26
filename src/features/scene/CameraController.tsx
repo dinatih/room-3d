@@ -216,6 +216,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
+  // Sync mode state with useSceneStore
+  useEffect(() => {
+    useSceneStore.setState({ cameraMode: mode });
+    if (mode !== 'top') {
+      useSceneStore.getState().setMeasurementActive(false);
+    }
+  }, [mode]);
+
   // Apply walk look after entering walk (mode ref is set, state follows)
   useEffect(() => {
     if (mode === 'walk') {

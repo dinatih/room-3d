@@ -147,6 +147,7 @@ export function Studio() {
   const furniture = useSceneStore(state => state.furniture);
   const layers = useSceneStore(state => state.layers);
   const measurementActive = useSceneStore(state => state.measurementActive);
+  const cameraMode = useSceneStore(state => state.cameraMode);
   const onToggleFurniture = useSceneStore(state => state.toggleFurniture);
   const onToggleLayer = useSceneStore(state => state.toggleLayer);
 
@@ -303,7 +304,7 @@ export function Studio() {
         {layers.grid        && <GridLayer depthTest={layers.gridDepth} />}
         {layers.lights      && <LightHelpers />}
         {layers.plan        && <FloorPlan />}
-        {layers.plan && measurementActive && <MeasurementTool />}
+        {cameraMode === 'top' && measurementActive && <MeasurementTool />}
         {layers.surface     && <SurfaceLayer />}
 
         {/* Contenu 3D — masqué en mode Plan */}

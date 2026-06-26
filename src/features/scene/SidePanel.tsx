@@ -413,6 +413,7 @@ const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> 
 export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity, renderStyle, onSetRenderStyle }: SidePanelProps2) {
   const measurementActive = useSceneStore(state => state.measurementActive);
   const setMeasurementActive = useSceneStore(state => state.setMeasurementActive);
+  const cameraMode = useSceneStore(state => state.cameraMode);
   const isMobile = useIsMobile();
   const [showViews,     setShowViews]     = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -475,6 +476,14 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {b0('gray',   'Perspective P', () => dispatchKey('p'), true)}
       {b0('gray',   'Walk M',        () => dispatchKey('m'))}
       {b0('gray',   '2D Dessus T',   () => dispatchKey('t'))}
+      {cameraMode === 'top' && (
+        <button
+          style={{ ...btn(measurementActive ? COLORS['cyan'] : COLORS['gray'], isMobile), width: '100%', marginBottom: 6 }}
+          onClick={() => setMeasurementActive(!measurementActive)}
+        >
+          📏 Prise de mesure : {measurementActive ? 'ACTIVE' : 'DÉSACTIVÉE'}
+        </button>
+      )}
       {b0('cyan',   'Avion ✈ F',        () => dispatchKey('f'))}
       {b0('yellow', 'Autres vues…',  () => setShowViews(true))}
       {b0('teal',   'Raccourcis ⌨',  () => setShowShortcuts(true))}
@@ -558,25 +567,10 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       )}
       <button
         style={{ ...btn(COLORS['gold'], isMobile), opacity: layers.plan ? 1 : 0.45 }}
-        onClick={() => {
-          if (!layers.plan) {
-            dispatchKey('t');
-          } else {
-            if (measurementActive) setMeasurementActive(false);
-          }
-          onToggleLayer('plan');
-        }}
+        onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
       >
         Plan : {layers.plan ? 'ON' : 'OFF'}
       </button>
-      {layers.plan && (
-        <button
-          style={{ ...btn(measurementActive ? COLORS['cyan'] : COLORS['gray'], isMobile) }}
-          onClick={() => setMeasurementActive(!measurementActive)}
-        >
-          📏 Prise de mesure : {measurementActive ? 'ACTIVE' : 'DÉSACTIVÉE'}
-        </button>
-      )}
     </>
   );
 
