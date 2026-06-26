@@ -3,6 +3,7 @@
  *
  * Composant HTML pur rendu HORS du Canvas R3F (dans Studio.tsx).
  * Se synchronise avec la caméra via cameraState.onUpdate.
+ * Styled using Bootstrap 5.3 and the red theme accent.
  */
 import { useRef, useEffect, useState } from 'react';
 import { cameraState } from '@features/scene/cameraState';
@@ -60,7 +61,6 @@ function drawMinimap(
   ctx.fillRect(0, 0, W, canvas.height);
 
   // ── Pistes d'atterrissage (seulement si activées) ─────────────────────────
-  // ... (rest of landing strips logic)
   if (cameraState.landingStripsVisible) {
     for (const strip of LANDING_STRIPS) {
       const sw = strip.width  * S;
@@ -118,8 +118,8 @@ function drawMinimap(
   ctx.strokeStyle = 'rgba(255,221,0,0.40)'; ctx.lineWidth = 0.5 * sc; ctx.stroke();
 
   // Body icon
-  ctx.fillStyle   = '#0066ff'; // Default Blue
-  ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+  ctx.fillStyle   = '#d32f2f'; // Red Theme Accent instead of '#0066ff'
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
   ctx.lineWidth   = 0.8 * sc;
   
   // Body circle
@@ -148,7 +148,7 @@ function drawMinimap(
   }
 }
 
-// ── Composant HTML pur ────────────────────────────────────────────────────────
+// ── Composant HTML principal ──────────────────────────────────────────────────
 
 export function Minimap() {
   const isMobile = useIsMobile();
@@ -200,51 +200,78 @@ export function Minimap() {
     return () => window.removeEventListener('keydown', onKey);
   }, [expanded]);
 
-  const containerStyle: React.CSSProperties = expanded
-    ? { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 201 }
-    : isMobile
-      ? { position: 'fixed', top: 8, right: 8, zIndex: 50 }
-      : { position: 'fixed', bottom: 16, right: 16, zIndex: 50 };
+  // Position relative depending on desktop/mobile
+  const containerStyle: React.CSSProperties = isMobile
+    ? { position: 'fixed', top: 8, right: 8, zIndex: 50 }
+    : { position: 'fixed', bottom: 16, right: 16, zIndex: 50 };
 
   return (
     <>
+      {/* Dimmed backdrop when expanded */}
       {expanded && (
         <div
           onClick={() => setExpanded(false)}
-          style={{
-            position: 'fixed', inset: 0,
-            background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)', zIndex: 200,
-          }}
+          className="position-fixed inset-0 bg-dark bg-opacity-50"
+          style={{ backdropFilter: 'blur(4px)', zIndex: 200 }}
         />
       )}
-      <div style={containerStyle}>
-        <canvas
-          ref={canvasRef}
-          width={canvasW} height={canvasH}
-          style={{
-            display: 'block',
-            borderRadius: expanded ? 8 : 6,
-            border: `1px solid ${expanded ? '#888' : '#555'}`,
-            background: '#111122',
-            opacity: expanded ? 1 : 0.85,
-            cursor: 'pointer',
-            boxShadow: expanded ? '0 8px 60px rgba(0,0,0,0.9)' : undefined,
-          }}
-        />
-        <button
-          onClick={(e) => { e.stopPropagation(); setExpanded(v => !v); }}
-          title={expanded ? 'Réduire' : 'Agrandir'}
-          style={{
-            position: 'absolute', top: 6, left: 6,
-            background: 'rgba(0,0,0,0.55)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            color: '#ccc', fontSize: 12, lineHeight: 1,
-            cursor: 'pointer', padding: '3px 5px', borderRadius: 4, zIndex: 1,
-          }}
+
+      {expanded ? (
+        /* EXPANDED VIEW: Styled inside a Bootstrap Card */
+        <div 
+          className="card shadow-lg border border-light-subtle p-2 position-fixed"
+          style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 201 }}
         >
-          {expanded ? '✕' : '⛶'}
-        </button>
-      </div>
+          <div className="card-header border-0 bg-transparent p-0 d-flex justify-content-between align-items-center mb-2">
+            <span className="fw-semibold text-muted text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.06em', color: 'var(--text) !important' }}>
+              📍 Plan 2D de la pièce
+            </span>
+            <button type="button" className="btn-close" aria-label="Close" onClick={() => setExpanded(false)}></button>
+          </div>
+          <div className="position-relative">
+            <canvas 
+              ref={canvasRef} 
+              className="rounded" 
+              style={{ display: 'block', background: '#111122' }} 
+            />
+          </div>
+        </div>
+      ) : (
+        /* SMALL VIEW: Floating photo-frame card */
+        <div 
+          className="shadow-sm border border-light-subtle bg-white p-1 rounded-3"
+          style={containerStyle}
+        >
+          <canvas
+            ref={canvasRef}
+            className="rounded-2"
+            style={{
+              display: 'block',
+              background: '#111122',
+              opacity: 0.88,
+              cursor: 'pointer',
+            }}
+            onClick={() => setExpanded(true)}
+          />
+          <button
+            onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+            title="Agrandir le plan"
+            className="btn btn-dark btn-sm position-absolute d-flex align-items-center justify-content-center"
+            style={{
+              top: 8,
+              left: 8,
+              width: 22,
+              height: 22,
+              padding: 0,
+              fontSize: '10px',
+              opacity: 0.75,
+              borderRadius: '4px',
+            }}
+          >
+            ⛶
+          </button>
+        </div>
+      )}
     </>
   );
 }

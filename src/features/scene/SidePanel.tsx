@@ -8,6 +8,7 @@
  *
  * Composant HTML pur rendu HORS du Canvas R3F. Dispatche des events custom
  * écoutés par CameraController et le reste de la scène.
+ * Styled using Bootstrap 5.3 and the project red theme accent.
  */
 import { useState, useCallback, useEffect } from 'react';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
@@ -70,246 +71,171 @@ function dispatchKey(key: string) {
   window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
 }
 
-// ── Styles partagés ───────────────────────────────────────────────────────────
-
-const COLORS: Record<string, string> = {
-  gray: '#aaa', white: '#fff', light: '#f0f0f0',
-  tan: '#e8c39e', yellow: '#ffd700', green: '#88cc88',
-  blue: '#4488ff', peach: '#ff9966', purple: '#aa88ff',
-  gold: '#ffaa44', teal: '#66cccc', cyan: '#44ddff',
-  red: '#ff6644',
-};
-
-// ── Styles desktop ────────────────────────────────────────────────────────────
-
-const desktopPanelStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: 16, left: 16,
-  width: 188,
-  maxHeight: 'calc(100vh - 32px)',
-  overflowY: 'auto',
-  overflowX: 'hidden',
-  zIndex: 100,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 4,
-  scrollbarWidth: 'thin',
-};
-
-const grpStyle: React.CSSProperties = {
-  borderRadius: 8,
-  overflow: 'hidden',
-  border: '1px solid rgba(255,255,255,0.10)',
-  backdropFilter: 'blur(8px)',
-};
-
-const grpHeaderStyle: React.CSSProperties = {
-  background: 'rgba(10,10,20,0.92)',
-  color: '#ddd',
-  padding: '6px 10px',
-  cursor: 'pointer',
-  fontSize: 11,
-  fontWeight: 600,
-  letterSpacing: '0.5px',
-  textTransform: 'uppercase',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  userSelect: 'none',
-};
-
-const grpBodyStyle: React.CSSProperties = {
-  background: 'rgba(0,0,0,0.72)',
-};
-
-function btn(color: string, mobile: boolean): React.CSSProperties {
-  return {
-    background: 'transparent', border: 'none',
-    borderTop: '1px solid rgba(255,255,255,0.06)',
-    borderRadius: 0,
-    padding: mobile ? '14px 16px' : '6px 12px',
-    cursor: 'pointer',
-    fontSize: mobile ? 15 : 12,
-    minHeight: mobile ? 48 : undefined,
-    width: '100%', textAlign: 'left', display: 'block',
-    whiteSpace: 'nowrap', color,
-  };
-}
-
-// ── Groupe accordéon (desktop) ────────────────────────────────────────────────
+// ── Accordion Group Component (Bootstrap Card style) ──────────────────────────
 
 function Group({ emoji, title, defaultOpen = false, children }: {
   emoji: string; title: string; defaultOpen?: boolean; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={grpStyle}>
-      <div style={grpHeaderStyle} onClick={() => setOpen(o => !o)}>
-        <span>{emoji} {title}</span>
-        <span style={{ fontSize: 9, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }}>▶</span>
+    <div className="card shadow-sm border border-light-subtle overflow-hidden">
+      <div className="card-header p-0 border-0 bg-white">
+        <button
+          className="btn w-100 text-start py-2 px-3 fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none"
+          onClick={() => setOpen(!open)}
+          style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em' }}
+        >
+          <span>{emoji} {title}</span>
+          <span 
+            style={{ 
+              fontSize: '8px', 
+              color: 'var(--muted)',
+              transform: open ? 'rotate(90deg)' : 'none', 
+              transition: 'transform 0.18s' 
+            }}
+          >
+            ▶
+          </span>
+        </button>
       </div>
-      {open && <div style={grpBodyStyle}>{children}</div>}
+      {open && (
+        <div className="card-body p-0 bg-white d-flex flex-column border-top border-light-subtle">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Modal raccourcis clavier ──────────────────────────────────────────────────
+// ── Modal Raccourcis Clavier (Bootstrap Modal style) ──────────────────────────
 
 function ShortcutsModal({ onClose }: { onClose: () => void }) {
-  const overlay: React.CSSProperties = {
-    position: 'fixed', inset: 0,
-    background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(3px)',
-    zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center',
-  };
-  const modal: React.CSSProperties = {
-    background: 'rgba(12,12,24,0.98)', border: '1px solid rgba(255,255,255,0.15)',
-    borderRadius: 12, padding: '18px 22px', width: 340, maxHeight: '85vh',
-    overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14,
-    scrollbarWidth: 'thin',
-  };
-  const sectionTitle: React.CSSProperties = {
-    color: 'rgba(255,255,255,0.45)', fontSize: 9, fontWeight: 700,
-    letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4,
-  };
-  const row: React.CSSProperties = {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
-  };
-  const desc: React.CSSProperties = { color: 'rgba(255,255,255,0.7)', fontSize: 11 };
-  const keysCell: React.CSSProperties = { display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' };
   const kbd = (label: string, i = 0) => (
-    <span key={i} style={{
-      background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.22)',
-      borderRadius: 4, padding: '1px 6px', fontSize: 10, fontFamily: 'monospace',
-      color: '#ddd', whiteSpace: 'nowrap',
-    }}>{label}</span>
+    <kbd key={i} className="bg-secondary text-white mx-1" style={{ fontSize: '10px' }}>{label}</kbd>
   );
 
   const R = ({ label, keys }: { label: string; keys: string[] }) => (
-    <div style={row}>
-      <span style={desc}>{label}</span>
-      <span style={keysCell}>{keys.map(kbd)}</span>
+    <div className="d-flex justify-content-between align-items-center py-2 border-bottom">
+      <span className="text-secondary small">{label}</span>
+      <span className="d-flex gap-1 flex-wrap justify-content-end">{keys.map(kbd)}</span>
     </div>
   );
+
   const Section = ({ title }: { title: string }) => (
-    <div style={sectionTitle}>{title}</div>
+    <div className="text-muted fw-bold text-uppercase mt-3 mb-1" style={{ fontSize: '9px', letterSpacing: '0.06em' }}>{title}</div>
   );
 
   return (
-    <div style={overlay} onClick={onClose}>
-      <div style={modal} onClick={e => e.stopPropagation()}>
+    <div className="modal fade show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+      <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable" style={{ maxWidth: '360px' }}>
+        <div className="modal-content text-dark">
+          <div className="modal-header">
+            <h5 className="modal-title fs-6 fw-bold">⌨️ Raccourcis clavier</h5>
+            <button type="button" className="btn-close" onClick={onClose}></button>
+          </div>
+          <div className="modal-body py-1">
+            <div>
+              <Section title="Global" />
+              <R label="Vue perspective (reset)"    keys={['P']} />
+              <R label="Walk mode (entrer/quitter)" keys={['M']} />
+              <R label="Vue top-down (toggle)"      keys={['T']} />
+              <R label="Avion en papier (toggle)"   keys={['F']} />
+              <R label="Quitter walk / top-down"    keys={['Échap']} />
+              <R label="Changer de personnage"      keys={['L']} />
+            </div>
 
-        {/* En-tête */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ color: '#ddd', margin: 0, fontSize: 14 }}>Raccourcis clavier</h3>
-          <button onClick={onClose} style={{
-            background: 'transparent', border: 'none', color: '#aaa',
-            fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: 0,
-          }}>×</button>
+            <div>
+              <Section title="Avion (mode vol)" />
+              <R label="Décoller (pré-vol)"         keys={['Espace', 'C']} />
+              <R label="Changer de vue"             keys={['C']} />
+              <R label="Piquer / cabrer"            keys={['W', 'S', '↑', '↓']} />
+              <R label="Roulis (vire)"              keys={['A', 'D', '←', '→']} />
+              <R label="Accélérer"                  keys={['Espace']} />
+              <R label="Freiner"                    keys={['Shift']} />
+              <R label="Quitter"                    keys={['F', 'Échap']} />
+            </div>
+
+            <div>
+              <Section title="Orbit — style Google Earth" />
+              <R label="Déplacer le walker"         keys={['↑', '↓', '←', '→']} />
+              <R label="Orbiter autour"             keys={['Shift + ↑↓←→']} />
+              <R label="Rotation caméra"            keys={['Ctrl + ↑↓←→']} />
+              <R label="Pan"                        keys={['Alt + ↑↓←→']} />
+              <R label="Pan diagonal"               keys={['Shift+Ctrl + ↑↓←→']} />
+            </div>
+
+            <div>
+              <Section title="Walk mode" />
+              <R label="Avancer / reculer"          keys={['W', 'S', '↑', '↓']} />
+              <R label="Pivoter gauche / droite"    keys={['A', 'D', '←', '→']} />
+              <R label="Incliner la caméra"         keys={['Ctrl + ↑↓']} />
+              <R label="Monter / descendre"         keys={['Alt + ↑↓']} />
+              <R label="Regarder librement"         keys={['Clic + glisser']} />
+            </div>
+          </div>
+          <div className="modal-footer p-2">
+            <button type="button" className="btn btn-secondary btn-sm" onClick={onClose}>Fermer</button>
+          </div>
         </div>
-
-        {/* Global */}
-        <div>
-          <Section title="Global" />
-          <R label="Vue perspective (reset)"    keys={['P']} />
-          <R label="Walk mode (entrer/quitter)" keys={['M']} />
-          <R label="Vue top-down (toggle)"      keys={['T']} />
-          <R label="Avion en papier (toggle)"   keys={['F']} />
-          <R label="Quitter walk / top-down"    keys={['Échap']} />
-          <R label="Changer de personnage"      keys={['L']} />
-        </div>
-
-        {/* Avion en papier */}
-        <div>
-          <Section title="Avion (mode vol)" />
-          <R label="Décoller (pré-vol)"         keys={['Espace', 'C']} />
-          <R label="Changer de vue"             keys={['C']} />
-          <R label="Piquer / cabrer"            keys={['W', 'S', '↑', '↓']} />
-          <R label="Roulis (vire)"              keys={['A', 'D', '←', '→']} />
-          <R label="Accélérer"                  keys={['Espace']} />
-          <R label="Freiner"                    keys={['Shift']} />
-          <R label="Quitter"                    keys={['F', 'Échap']} />
-        </div>
-
-        {/* Orbit — style Google Earth */}
-        <div>
-          <Section title="Orbit — style Google Earth" />
-          <R label="Déplacer le walker"         keys={['↑', '↓', '←', '→']} />
-          <R label="Orbiter autour"             keys={['Shift + ↑↓←→']} />
-          <R label="Rotation caméra"            keys={['Ctrl + ↑↓←→']} />
-          <R label="Pan"                        keys={['Alt + ↑↓←→']} />
-          <R label="Pan diagonal"               keys={['Shift+Ctrl + ↑↓←→']} />
-        </div>
-
-        {/* Walk mode */}
-        <div>
-          <Section title="Walk mode" />
-          <R label="Avancer / reculer"          keys={['W', 'S', '↑', '↓']} />
-          <R label="Pivoter gauche / droite"    keys={['A', 'D', '←', '→']} />
-          <R label="Incliner la caméra"         keys={['Ctrl + ↑↓']} />
-          <R label="Monter / descendre"         keys={['Alt + ↑↓']} />
-          <R label="Regarder librement"         keys={['Clic + glisser']} />
-        </div>
-
       </div>
     </div>
   );
 }
 
-// ── Modal vues ────────────────────────────────────────────────────────────────
+// ── Modal Vues Caméra (Bootstrap Modal style) ─────────────────────────────────
 
 function ViewsModal({ onClose }: { onClose: () => void }) {
-  const overlay: React.CSSProperties = {
-    position: 'fixed', inset: 0,
-    background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)',
-    zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center',
-  };
-  const modal: React.CSSProperties = {
-    background: 'rgba(15,15,30,0.98)', border: '1px solid #444',
-    borderRadius: 10, padding: '16px 20px', minWidth: 220,
-    display: 'flex', flexDirection: 'column', gap: 6,
-  };
-  const mBtn: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 6, padding: '10px 14px', cursor: 'pointer',
-    color: '#ddd', fontSize: 13, textAlign: 'left', minHeight: 40,
-  };
-  const label: React.CSSProperties = {
-    color: '#888', fontSize: 10, textTransform: 'uppercase',
-    letterSpacing: '0.5px', marginTop: 6,
-  };
-  const close: React.CSSProperties = {
-    alignSelf: 'flex-end', background: 'transparent', border: 'none',
-    color: '#aaa', fontSize: 22, cursor: 'pointer', lineHeight: 1, padding: 4,
-  };
-
   const viewBtn = (lbl: string, key: string) => (
-    <button style={mBtn} onClick={() => { dispatchView(key); onClose(); }}>{lbl}</button>
+    <button 
+      className="btn btn-outline-secondary btn-sm text-start w-100" 
+      onClick={() => { dispatchView(key); onClose(); }}
+    >
+      {lbl}
+    </button>
   );
   const povBtn = (lbl: string, key: string) => (
-    <button style={mBtn} onClick={() => { dispatchPov(key); onClose(); }}>{lbl}</button>
+    <button 
+      className="btn btn-outline-danger btn-sm text-start w-100" 
+      onClick={() => { dispatchPov(key); onClose(); }}
+    >
+      {lbl}
+    </button>
   );
 
   return (
-    <div style={overlay} onClick={onClose}>
-      <div style={modal} onClick={e => e.stopPropagation()}>
-        <button style={close} onClick={onClose}>×</button>
-        <h3 style={{ color: '#ddd', margin: 0, fontSize: 14 }}>Vues</h3>
-        <div style={label}>Caméra</div>
-        {viewBtn('Perspective',  'perspective')}
-        {viewBtn('Dessus 3D',    'top3d')}
-        {viewBtn('Face (D)',     'front')}
-        {viewBtn('Arrière (C)',  'back')}
-        {viewBtn('Gauche (A)',   'left')}
-        {viewBtn('Droite (B)',   'right')}
-        {viewBtn('Dessous',      'bottom')}
-        {viewBtn('Iso Sud-Est',  'iso-se')}
-        {viewBtn('Iso Nord-Ouest','iso-nw')}
-        <div style={label}>POV 1.8m</div>
-        {povBtn('Séjour',       'living')}
-        {povBtn('Entrée',       'entry')}
-        {povBtn("Salle d'eau",  'bathroom')}
-        {povBtn('Jardin',       'garden')}
+    <div className="modal fade show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+      <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable" style={{ maxWidth: '280px' }}>
+        <div className="modal-content text-dark">
+          <div className="modal-header">
+            <h5 className="modal-title fs-6 fw-bold">📷 Sélection de Vue</h5>
+            <button type="button" className="btn-close" onClick={onClose}></button>
+          </div>
+          <div className="modal-body d-flex flex-column gap-2 py-3">
+            <div className="text-muted fw-bold text-uppercase" style={{ fontSize: '9px', letterSpacing: '0.06em' }}>Caméra</div>
+            <div className="d-flex flex-column gap-1">
+              {viewBtn('Perspective',  'perspective')}
+              {viewBtn('Dessus 3D',    'top3d')}
+              {viewBtn('Face (D)',     'front')}
+              {viewBtn('Arrière (C)',  'back')}
+              {viewBtn('Gauche (A)',   'left')}
+              {viewBtn('Droite (B)',   'right')}
+              {viewBtn('Dessus/Dessous', 'bottom')}
+              {viewBtn('Iso Sud-Est',  'iso-se')}
+              {viewBtn('Iso Nord-Ouest','iso-nw')}
+            </div>
+            
+            <div className="text-muted fw-bold text-uppercase mt-2" style={{ fontSize: '9px', letterSpacing: '0.06em' }}>POV 1.8m</div>
+            <div className="d-flex flex-column gap-1">
+              {povBtn('Séjour',       'living')}
+              {povBtn('Entrée',       'entry')}
+              {povBtn("Salle d'eau",  'bathroom')}
+              {povBtn('Jardin',       'garden')}
+            </div>
+          </div>
+          <div className="modal-footer p-2">
+            <button type="button" className="btn btn-secondary btn-sm" onClick={onClose}>Fermer</button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -374,7 +300,6 @@ export interface LayerState {
   walker:       boolean;
 }
 
-
 export interface SidePanelProps {
   furniture:       FurnitureState;
   onToggleFurniture: (key: keyof FurnitureState) => void;
@@ -383,8 +308,6 @@ export interface SidePanelProps {
 }
 
 export type LidarMode = 0 | 1 | 2 | 3;
-
-import type { PlaneModelKey } from '@features/scene/PaperPlane';
 
 export interface SidePanelProps2 extends SidePanelProps {
   onOpenInventory:         () => void;
@@ -395,8 +318,6 @@ export interface SidePanelProps2 extends SidePanelProps {
   renderStyle:             RenderStyleKey;
   onSetRenderStyle:        (key: RenderStyleKey) => void;
 }
-
-// ── Sections (rendu commun desktop & mobile) ──────────────────────────────────
 
 type TabKey = 'views' | 'layers' | 'display' | 'furniture' | 'perf' | null;
 
@@ -410,7 +331,20 @@ const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> 
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer, onOpenInventory, lidarMode, onCycleLidar, lidarOpacity, onToggleLidarOpacity, renderStyle, onSetRenderStyle }: SidePanelProps2) {
+export function SidePanel({ 
+  furniture, 
+  onToggleFurniture, 
+  layers, 
+  onToggleLayer, 
+  onOpenInventory, 
+  lidarMode, 
+  onCycleLidar, 
+  lidarOpacity, 
+  onToggleLidarOpacity, 
+  renderStyle, 
+  onSetRenderStyle 
+}: SidePanelProps2) {
+  
   const measurementActive = useSceneStore(state => state.measurementActive);
   const setMeasurementActive = useSceneStore(state => state.setMeasurementActive);
   const cameraMode = useSceneStore(state => state.cameraMode);
@@ -445,26 +379,43 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
     return () => window.removeEventListener('keydown', onKey);
   }, [isMobile, activeTab]);
 
-  // Helpers de bouton tenant compte de isMobile
-  const b0 = (color: string, label: string, onClick: () => void, first = false) => {
-    const s = { ...btn(COLORS[color] ?? color, isMobile) };
-    if (first) s.borderTop = 'none';
-    return <button style={s} onClick={onClick}>{label}</button>;
+  // Helpers de boutons (Bootstrap style)
+  const b0 = (color: string, label: string, onClick: () => void) => {
+    return (
+      <button 
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark bg-white"
+        onClick={onClick}
+        style={{ 
+          fontSize: isMobile ? '14px' : '11px',
+          minHeight: isMobile ? '48px' : undefined,
+        }}
+      >
+        {label}
+      </button>
+    );
   };
 
   const layerBtn = (
     color: string,
     label: string,
-    key: keyof LayerState,
-    first = false,
+    key: keyof LayerState
   ) => {
     const on = layers[key];
-    const s = { ...btn(COLORS[color] ?? color, isMobile) };
-    if (first) s.borderTop = 'none';
-    if (!on) s.opacity = 0.45;
     return (
-      <button style={s} onClick={() => onToggleLayer(key)}>
-        {label} : {on ? 'ON' : 'OFF'}
+      <button 
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        onClick={() => onToggleLayer(key)}
+        style={{ 
+          fontSize: isMobile ? '14px' : '11px',
+          minHeight: isMobile ? '48px' : undefined,
+          background: 'white',
+          opacity: on ? 1 : 0.55,
+        }}
+      >
+        <span>{label}</span>
+        <span className={`badge ${on ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+          {on ? 'ON' : 'OFF'}
+        </span>
       </button>
     );
   };
@@ -473,42 +424,51 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
 
   const ViewsSection = (
     <>
-      {b0('gray',   'Perspective P', () => dispatchKey('p'), true)}
-      {b0('gray',   'Walk M',        () => dispatchKey('m'))}
-      {b0('gray',   '2D Dessus T',   () => dispatchKey('t'))}
+      {b0('gray',   'Perspective (Raccourci P)', () => dispatchKey('p'))}
+      {b0('gray',   'Walk (Raccourci M)',        () => dispatchKey('m'))}
+      {b0('gray',   '2D Dessus (Raccourci T)',   () => dispatchKey('t'))}
       {cameraMode === 'top' && (
         <button
-          style={{ ...btn(measurementActive ? COLORS['cyan'] : COLORS['gray'], isMobile), width: '100%', marginBottom: 6 }}
+          className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
           onClick={() => setMeasurementActive(!measurementActive)}
+          style={{ fontSize: isMobile ? '14px' : '11px', background: 'white' }}
         >
-          📏 Prise de mesure : {measurementActive ? 'ACTIVE' : 'DÉSACTIVÉE'}
+          <span>📏 Prise de mesure</span>
+          <span className={`badge ${measurementActive ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+            {measurementActive ? 'ACTIVE' : 'DÉSACTIVÉE'}
+          </span>
         </button>
       )}
-      {b0('cyan',   'Avion ✈ F',        () => dispatchKey('f'))}
+      {b0('cyan',   'Avion ✈ (Raccourci F)',        () => dispatchKey('f'))}
       {b0('yellow', 'Autres vues…',  () => setShowViews(true))}
-      {b0('teal',   'Raccourcis ⌨',  () => setShowShortcuts(true))}
+      {b0('teal',   'Raccourcis clavier ⌨',  () => setShowShortcuts(true))}
     </>
   );
 
   const LayersSection = (
     <>
-      {layerBtn('green',  'Structure',     'structure', true)}
+      {layerBtn('green',  'Structure',     'structure')}
       {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
       {layerBtn('peach',  'Portes',        'doors')}
       {layerBtn('peach',  'Équipements',   'equipment')}
       {layerBtn('purple', 'Mobilier',      'furniture')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
       {layerBtn('light',  'Walker',        'walker')}
-      {layers.walker && b0('light',
-        isLara ? 'Peau : Lara 👩' : 'Peau : X-Bot 🤖',
-        () => useSceneStore.getState().triggerAction('walker-lara')
+      {layers.walker && (
+        <button 
+          className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark"
+          onClick={() => useSceneStore.getState().triggerAction('walker-lara')}
+          style={{ fontSize: isMobile ? '14px' : '11px', background: 'white' }}
+        >
+          Peau : {isLara ? 'Lara 👩' : 'X-Bot 🤖'}
+        </button>
       )}
     </>
   );
 
   const DisplaySection = (
     <>
-      {layerBtn('teal',   'Grille',        'grid', true)}
+      {layerBtn('teal',   'Grille',        'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
       {layerBtn('peach',  'Physique',      'physics')}
       {layerBtn('peach',  'Collision objets', 'collisions')}
@@ -521,37 +481,36 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('cyan',   'LiDAR scan',    'lidar')}
-      {layers.lidar && b0('cyan',
-        ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →',
-        onCycleLidar)}
-      {layers.lidar && b0('cyan',
-        `Opacité ${Math.round(lidarOpacity * 100)}%`,
-        onToggleLidarOpacity)}
+      {layers.lidar && b0('cyan', ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}
+      {layers.lidar && b0('cyan', `Opacité ${Math.round(lidarOpacity * 100)}%`, onToggleLidarOpacity)}
       {layerBtn('teal',   'Monde réel 🌍', 'realWorld')}
       {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
       {layerBtn('green',  'Surfaces m²',   'surface')}
-      {b0('light',
-        showAllLaras ? 'NPCs 20 Laras : ON 👩' : 'NPCs 20 Laras : OFF 👩',
-        () => useSceneStore.getState().triggerAction('walker-all-lara')
-      )}
-      <div style={{ padding: '6px 8px 6px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 5 }}>🎨 Rendu</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? 6 : 3 }}>
+      <button 
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        onClick={() => useSceneStore.getState().triggerAction('walker-all-lara')}
+        style={{ fontSize: isMobile ? '14px' : '11px', background: 'white', opacity: showAllLaras ? 1 : 0.55 }}
+      >
+        <span>NPCs 20 Laras</span>
+        <span className={`badge ${showAllLaras ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+          {showAllLaras ? 'ON' : 'OFF'}
+        </span>
+      </button>
+      
+      <div className="p-2 border-bottom bg-white">
+        <div className="text-muted fw-semibold mb-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🎨 Rendu</div>
+        <div className="d-flex flex-wrap gap-1">
           {RENDER_STYLES.map(({ key, label }) => {
             const active = renderStyle === key;
             return (
               <button
                 key={key}
                 onClick={() => onSetRenderStyle(key)}
+                className={`btn btn-sm ${active ? 'btn-danger' : 'btn-outline-secondary'}`}
                 style={{
-                  background: active ? 'rgba(100,150,255,0.25)' : 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${active ? 'rgba(100,150,255,0.6)' : 'rgba(255,255,255,0.10)'}`,
-                  borderRadius: 4,
-                  padding: isMobile ? '8px 12px' : '3px 6px',
-                  color: active ? '#88aaff' : '#888',
-                  fontSize: isMobile ? 13 : 10,
-                  minHeight: isMobile ? 40 : undefined,
-                  cursor: 'pointer', whiteSpace: 'nowrap',
+                  fontSize: isMobile ? '12px' : '9px',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
                 }}
               >
                 {label}
@@ -560,24 +519,37 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
           })}
         </div>
       </div>
+
       {sunInfo && (
-        <div style={{ padding: '3px 12px 5px', fontSize: 10, color: '#ffaa44', borderTop: '1px solid rgba(255,255,255,0.06)', opacity: 0.85 }}>
-          {sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
+        <div className="p-2 border-bottom text-muted" style={{ fontSize: '9px', background: 'white' }}>
+          ☀️ {sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
         </div>
       )}
-      <button
-        style={{ ...btn(COLORS['gold'], isMobile), opacity: layers.plan ? 1 : 0.45 }}
+      <button 
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
         onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
+        style={{ fontSize: isMobile ? '14px' : '11px', background: 'white', opacity: layers.plan ? 1 : 0.55 }}
       >
-        Plan : {layers.plan ? 'ON' : 'OFF'}
+        <span>Plan</span>
+        <span className={`badge ${layers.plan ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+          {layers.plan ? 'ON' : 'OFF'}
+        </span>
       </button>
     </>
   );
 
   const FurnitureSection = (
     <>
-      {b0('red', `Porte-fenêtre : ${furniture.glassDoorV2 ? 'V2 (DÉTAILLÉE)' : 'V1 (SIMPLIFIÉE)'}`,
-          () => onToggleFurniture('glassDoorV2'), true)}
+      <button 
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        onClick={() => onToggleFurniture('glassDoorV2')}
+        style={{ fontSize: isMobile ? '14px' : '11px', background: 'white' }}
+      >
+        <span>Porte-fenêtre</span>
+        <span className="badge bg-danger" style={{ fontSize: '9px' }}>
+          {furniture.glassDoorV2 ? 'V2' : 'V1'}
+        </span>
+      </button>
       {!furniture.glassDoorV2 ? (
         b0('light', `Ouverture : ${furniture.eastGlassDoor ? 'OUVERTE' : 'FERMÉE'}`,
             () => onToggleFurniture('eastGlassDoor'))
@@ -636,8 +608,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
     </>
   );
 
-
-
   // ── Rendu mobile : tab bar bottom + sheet ───────────────────────────────────
 
   if (isMobile) {
@@ -660,95 +630,68 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
         {sheetOpen && (
           <div
             onClick={() => setActiveTab(null)}
-            style={{
-              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
-              backdropFilter: 'blur(2px)', zIndex: 90,
-            }}
+            className="position-fixed inset-0 bg-dark bg-opacity-50"
+            style={{ backdropFilter: 'blur(2px)', zIndex: 90 }}
           />
         )}
 
         {/* Bottom sheet */}
         {sheetOpen && activeTab !== null && (
           <div
+            className="position-fixed start-0 end-0 bg-white border-top shadow-lg z-index-95 d-flex flex-column rounded-top-4"
             style={{
-              position: 'fixed', left: 0, right: 0, bottom: 64,
+              bottom: 64,
               maxHeight: 'calc(100vh - 120px)',
-              background: 'rgba(10,10,20,0.96)',
-              borderTop: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: '14px 14px 0 0',
               zIndex: 95,
-              display: 'flex', flexDirection: 'column',
-              boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
             }}
             onWheel={e => e.stopPropagation()}
           >
             {/* Sheet header */}
-            <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '12px 16px',
-              borderBottom: '1px solid rgba(255,255,255,0.08)',
-              color: '#ddd', fontSize: 14, fontWeight: 600,
-            }}>
-              <span>{sheetTitle[activeTab]}</span>
+            <div className="d-flex justify-content-between align-items-center p-3 border-bottom text-dark">
+              <span className="fw-bold">{sheetTitle[activeTab]}</span>
               <button
+                type="button"
+                className="btn-close"
+                aria-label="Close"
                 onClick={() => setActiveTab(null)}
-                style={{
-                  background: 'transparent', border: 'none', color: '#aaa',
-                  fontSize: 26, cursor: 'pointer', lineHeight: 1,
-                  padding: '0 8px', minHeight: 32, minWidth: 32,
-                }}
-              >×</button>
+              />
             </div>
 
             {/* Sheet body */}
-            <div style={{ overflowY: 'auto', flex: 1, padding: '4px 0' }}>
-              {sheetBody[activeTab]}
+            <div className="overflow-auto p-2" style={{ flex: 1 }}>
+              <div className="d-flex flex-column bg-white">
+                {sheetBody[activeTab]}
+              </div>
             </div>
           </div>
         )}
 
         {/* Tab bar */}
-        <div style={{
-          position: 'fixed', left: 0, right: 0, bottom: 0,
-          height: 64, zIndex: 100,
-          background: 'rgba(10,10,20,0.96)',
-          borderTop: '1px solid rgba(255,255,255,0.12)',
-          display: 'flex',
-          paddingBottom: 'env(safe-area-inset-bottom)',
-        }}>
+        <div 
+          className="position-fixed bottom-0 start-0 end-0 bg-white border-top shadow-lg d-flex justify-content-around align-items-center"
+          style={{ height: '64px', zIndex: 100, paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
           {/* Inventaire — ouvre le modal directement */}
           <button
             onClick={onOpenInventory}
-            style={{
-              flex: 1, background: 'transparent',
-              border: 'none', borderTop: '2px solid transparent',
-              color: '#aaa',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 2, cursor: 'pointer', padding: '4px 0',
-              fontSize: 10,
-            }}
+            className="btn border-0 d-flex flex-column align-items-center justify-content-center py-1 text-secondary"
+            style={{ fontSize: '10px', flex: 1 }}
           >
-            <span style={{ fontSize: 22, lineHeight: 1 }}>📦</span>
-            <span>Inventaire</span>
+            <span style={{ fontSize: '20px', lineHeight: 1 }}>📦</span>
+            <span className="fw-semibold">Inventaire</span>
           </button>
+          
           {TABS.map(t => {
             const active = activeTab === t.key;
             return (
               <button
                 key={t.key}
                 onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
-                style={{
-                  flex: 1, background: 'transparent',
-                  border: 'none',
-                  borderTop: active ? '2px solid #4488ff' : '2px solid transparent',
-                  color: active ? '#88aaff' : '#aaa',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 2, cursor: 'pointer', padding: '4px 0',
-                  fontSize: 10,
-                }}
+                className={`btn border-0 d-flex flex-column align-items-center justify-content-center py-1 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
+                style={{ fontSize: '10px', flex: 1 }}
               >
-                <span style={{ fontSize: 22, lineHeight: 1 }}>{t.emoji}</span>
-                <span>{t.label}</span>
+                <span style={{ fontSize: '20px', lineHeight: 1 }}>{t.emoji}</span>
+                <span className="fw-semibold">{t.label}</span>
               </button>
             );
           })}
@@ -760,20 +703,31 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
     );
   }
 
-  // ── Rendu desktop : sidebar accordéon (inchangé) ────────────────────────────
+  // ── Rendu desktop : sidebar accordéon Bootstrap ─────────────────────────────
 
   return (
     <>
-      <div style={desktopPanelStyle} onWheel={e => e.stopPropagation()}>
-
-        {/* ── Inventaire ── */}
-        <div style={grpStyle}>
+      <div 
+        className="position-fixed overflow-auto d-flex flex-column gap-2"
+        style={{
+          top: 16,
+          left: 16,
+          width: 220,
+          maxHeight: 'calc(100vh - 32px)',
+          zIndex: 100,
+          scrollbarWidth: 'none',
+        }}
+        onWheel={e => e.stopPropagation()}
+      >
+        {/* ── Inventaire card ── */}
+        <div className="card shadow-sm border border-light-subtle overflow-hidden">
           <button
-            style={{ ...grpHeaderStyle, width: '100%', border: 'none', cursor: 'pointer' }}
+            className="btn btn-danger w-100 rounded-0 py-2 px-3 fw-bold text-start text-uppercase d-flex align-items-center justify-content-between border-0"
             onClick={onOpenInventory}
+            style={{ fontSize: '11px', letterSpacing: '0.06em' }}
           >
             <span>📦 Inventaire</span>
-            <span style={{ fontSize: 9 }}>▶</span>
+            <span style={{ fontSize: '9px' }}>▶</span>
           </button>
         </div>
 
@@ -784,7 +738,6 @@ export function SidePanel({ furniture, onToggleFurniture, layers, onToggleLayer,
         <Group emoji="📑" title="Calques">{LayersSection}</Group>
         <Group emoji="👁" title="Affichage">{DisplaySection}</Group>
         <Group emoji="🛋" title="Mobilier">{FurnitureSection}</Group>
-
       </div>
 
       {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
