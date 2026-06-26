@@ -5,6 +5,18 @@ import { Html, Line } from '@react-three/drei';
 import { useSceneStore } from './store/useSceneStore';
 import { PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_Z_MAX } from './floorDraw';
 
+function constrainPoint(start: THREE.Vector3, current: THREE.Vector3): THREE.Vector3 {
+  const constrained = current.clone();
+  const dx = Math.abs(current.x - start.x);
+  const dz = Math.abs(current.z - start.z);
+  if (dx > dz) {
+    constrained.z = start.z;
+  } else {
+    constrained.x = start.x;
+  }
+  return constrained;
+}
+
 export function MeasurementTool() {
   const [pointA, setPointA] = useState<THREE.Vector3 | null>(null);
   const [pointB, setPointB] = useState<THREE.Vector3 | null>(null);
@@ -48,7 +60,8 @@ export function MeasurementTool() {
       setHoverPoint(hitPoint);
       setPointB(null);
     } else if (!pointB) {
-      setPointB(hitPoint);
+      const constrained = constrainPoint(pointA, hitPoint);
+      setPointB(constrained);
       setHoverPoint(null);
     } else {
       // Third click restarts measurement
@@ -64,7 +77,8 @@ export function MeasurementTool() {
       e.stopPropagation();
       const hitPoint = e.point.clone();
       hitPoint.y = 3.2;
-      setHoverPoint(hitPoint);
+      const constrained = constrainPoint(pointA, hitPoint);
+      setHoverPoint(constrained);
       invalidate();
     }
   };

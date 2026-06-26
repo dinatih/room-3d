@@ -8,7 +8,7 @@ export const WALL_H = 250; // 2.5m
 
 // Porte : 80cm d'ouverture, alignée après mur couloir (X=200)
 export const DOOR_START = 200; // cm 200
-export const DOOR_END = 280; // cm 280
+export const DOOR_END = 288; // cm 288
 export const DOOR_H = 204;      // hauteur standard française (panneaux de porte)
 
 // Renfoncement cuisine : 1m large, 60cm profond, à droite de la porte

@@ -1714,12 +1714,12 @@ export function DoorsPlaced() {
         <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
-        position={[DOOR_END - DOOR_W_WHITE / 2 + 2, DOOR_HEIGHT / 2, ROOM_D + W / 2]}
+        position={[(DOOR_START + DOOR_END) / 2, DOOR_HEIGHT / 2, ROOM_D + W / 2]}
         userData={{ animUnit: true, hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
         <DoorLiving item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
-        position={[CORR_WALL_X, DOOR_HEIGHT / 2, bathHingeZ - DOOR_W_WHITE / 2]}
+        position={[CORR_WALL_X, DOOR_HEIGHT / 2, 560]}
         rotation-y={Math.PI / 2}
         userData={{ animUnit: true, hoverAction: { label: 'Porte SDB', actionId: 'bathroomDoor' } }}>
         <DoorBath item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />

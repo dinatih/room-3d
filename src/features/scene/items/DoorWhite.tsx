@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 
-const W  = 75;     // Largeur panneau (ajusté pour trou de 80cm)
+const W  = 83;     // Largeur panneau (ouvrant de 83 cm)
 const H  = 204;    // Hauteur standard
 const T  = 4;      // Épaisseur panneau
 const R  = 1.3;    // Rayon poignée
