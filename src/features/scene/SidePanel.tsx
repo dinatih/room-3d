@@ -20,6 +20,7 @@ const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
 import { useSceneStore } from './store/useSceneStore';
+import { CHARACTERS } from './Walker';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -349,8 +350,7 @@ export function SidePanel({
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>(null);
-  const isLara = useSceneStore(state => state.extraStates['walker-lara']);
-  const showAllLaras = useSceneStore(state => state.extraStates['walker-all-lara']);
+  const activeWalkerId = useSceneStore(state => state.activeWalkerId);
 
   useEffect(() => {
     if (!layers.realSun) { setSunInfo(null); return; }
@@ -451,13 +451,21 @@ export function SidePanel({
       {layerBtn('blue',   'Voisins',       'neighbors')}
       {layerBtn('light',  'Walker',        'walker')}
       {layers.walker && (
-        <button 
-          className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark"
-          onClick={() => useSceneStore.getState().triggerAction('walker-lara')}
-          style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent' }}
-        >
-          Peau : {isLara ? 'Lara 👩' : 'X-Bot 🤖'}
-        </button>
+        <div className="p-2 border-bottom bg-transparent">
+          <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>👤 Personnage</div>
+          <select
+            className="form-select form-select-sm bg-transparent text-dark border-secondary"
+            style={{ fontSize: isMobile ? '14px' : '11px' }}
+            value={activeWalkerId}
+            onChange={(e) => useSceneStore.getState().setActiveWalkerId(e.target.value)}
+          >
+            {CHARACTERS.map(c => (
+              <option key={c.id} value={c.id} className="bg-light text-dark">
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
       )}
     </>
   );
@@ -480,16 +488,7 @@ export function SidePanel({
       {layerBtn('teal',   'Monde réel 🌍', 'realWorld')}
       {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
       {layerBtn('green',  'Surfaces m²',   'surface')}
-      <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
-        onClick={() => useSceneStore.getState().triggerAction('walker-all-lara')}
-        style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent', opacity: showAllLaras ? 1 : 0.55 }}
-      >
-        <span>NPCs 20 Laras</span>
-        <span className={`badge ${showAllLaras ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
-          {showAllLaras ? 'ON' : 'OFF'}
-        </span>
-      </button>
+
       
       <div className="p-2 border-bottom bg-transparent">
         <div className="text-muted fw-semibold mb-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🎨 Rendu</div>

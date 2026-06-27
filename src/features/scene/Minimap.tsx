@@ -13,6 +13,8 @@ import {
   PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_ASPECT,
 } from './floorDraw';
 import { LANDING_STRIPS } from './LandingStrips';
+import { CHARACTERS } from './Walker';
+import { useSceneStore } from './store/useSceneStore';
 
 const SMALL_W_DESKTOP = 150;
 const SMALL_W_MOBILE  = 55;
@@ -90,15 +92,24 @@ function drawMinimap(
   const R  = 5 * sc;
   const BW = 8 * sc, BH = 4 * sc;
 
-  // ── Other character icon ───────────────────────────────────────────────────
-  const ow = { x: cameraState.otherX, z: cameraState.otherZ, yaw: cameraState.otherYaw };
+  // ── Other characters (NPCs) icons ───────────────────────────────────────────
+  const activeWalkerId = useSceneStore.getState().activeWalkerId;
   ctx.save();
-  ctx.translate(tx(ow.x), tz(ow.z));
-  ctx.rotate(-ow.yaw);
   ctx.fillStyle   = 'rgba(0, 102, 255, 0.4)';
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';
   ctx.lineWidth   = 0.6 * sc;
-  ctx.beginPath(); ctx.arc(0, 0, R * 0.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  
+  CHARACTERS.forEach(char => {
+    if (char.id !== activeWalkerId) {
+      ctx.save();
+      ctx.translate(tx(char.pos[0]), tz(char.pos[2]));
+      ctx.beginPath(); 
+      ctx.arc(0, 0, R * 0.7, 0, Math.PI * 2); 
+      ctx.fill(); 
+      ctx.stroke();
+      ctx.restore();
+    }
+  });
   ctx.restore();
 
   // ── Walker icon ────────────────────────────────────────────────────────────

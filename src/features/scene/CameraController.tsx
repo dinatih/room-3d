@@ -27,6 +27,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { ROOM_W, ROOM_D, WALL_H } from '@config';
 import { cameraState } from './cameraState';
 import { useSceneStore } from './store/useSceneStore';
+import { CHARACTERS } from './Walker';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
@@ -70,34 +71,29 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const planeModeRef = useRef(planeMode);
   useEffect(() => { planeModeRef.current = planeMode; }, [planeMode]);
 
-  const isLara = useSceneStore(state => state.extraStates['walker-lara']);
-  const prevIsLara = useRef(isLara);
+  const activeWalkerId = useSceneStore(state => state.activeWalkerId);
+  const prevWalkerId = useRef(activeWalkerId);
 
   useEffect(() => {
-    if (isLara !== prevIsLara.current) {
-        // Physical Swap: save current pos to 'other' and load new pos from 'other'
-        const tx = cameraState.walkerX;
-        const tz = cameraState.walkerZ;
-        const ty = cameraState.walkerYaw;
+    if (activeWalkerId !== prevWalkerId.current) {
+        const config = CHARACTERS.find(c => c.id === activeWalkerId);
+        if (config) {
+          cameraState.walkerX = config.pos[0];
+          cameraState.walkerZ = config.pos[2];
+          cameraState.walkerYaw = config.rot;
+          cameraState.walkerHeight = config.height;
 
-        cameraState.walkerX = cameraState.otherX;
-        cameraState.walkerZ = cameraState.otherZ;
-        cameraState.walkerYaw = cameraState.otherYaw;
+          // Sync movement refs
+          walkPos.current.x = cameraState.walkerX;
+          walkPos.current.z = cameraState.walkerZ;
+          walkYaw.current = cameraState.walkerYaw;
+          walkPos.current.y = activeWalkH();
 
-        cameraState.otherX = tx;
-        cameraState.otherZ = tz;
-        cameraState.otherYaw = ty;
-
-        // Sync movement refs
-        walkPos.current.x = cameraState.walkerX;
-        walkPos.current.z = cameraState.walkerZ;
-        walkYaw.current = cameraState.walkerYaw;
-
-        cameraState.walkerHeight = isLara ? 173.4 : 181.0;
-        invalidate();
+          invalidate();
+        }
     }
-    prevIsLara.current = isLara;
-  }, [isLara, invalidate]);
+    prevWalkerId.current = activeWalkerId;
+  }, [activeWalkerId, invalidate]);
 
   // sync ref with state so event handlers use latest mode without stale closure
   function changeMode(m: Mode) {
@@ -106,14 +102,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     setMode(m);
   }
 
-
-
   // OrbitControls imperative ref
   const ctrlRef = useRef<OrbitControlsImpl>(null!);
 
   // Walk state (refs — updated every frame, no re-render needed)
-  const walkPos   = useRef({ x: CX, y: activeWalkH(), z: CZ });
-  const walkYaw   = useRef(0);
+  const initialWalker = CHARACTERS.find(c => c.id === '01_bikini') || CHARACTERS[0];
+  const walkPos   = useRef({ x: initialWalker.pos[0], y: initialWalker.height * EYE_RATIO, z: initialWalker.pos[2] });
+  const walkYaw   = useRef(initialWalker.rot);
   const walkPitch = useRef(0);
   const keys      = useRef(new Set<string>());
   const dragging  = useRef(false);
@@ -253,7 +248,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         return;
       }
       if (e.key === 'l' || e.key === 'L') {
-        useSceneStore.getState().triggerAction('walker-lara');
+        const store = useSceneStore.getState();
+        const currentIndex = CHARACTERS.findIndex(c => c.id === store.activeWalkerId);
+        const nextIndex = (currentIndex + 1) % CHARACTERS.length;
+        store.setActiveWalkerId(CHARACTERS[nextIndex].id);
         return;
       }
       if (e.key === 't' || e.key === 'T') {

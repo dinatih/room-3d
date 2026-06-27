@@ -303,7 +303,7 @@ export function Furniture({ layers }: { layers: LayerState }) {
     </MergedStaticGroup>
 
       {/* Desserte RÅSKOG (petite) devant le congélateur */}
-      <group position={[24.5, 0, 222]} userData={{ animUnit: true }}>
+      <group position={[62, 0, 18]} userData={{ animUnit: true }}>
         <RaskogSmall item={stub('raskog-small')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>

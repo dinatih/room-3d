@@ -6,6 +6,7 @@ interface SceneStore {
   furniture: FurnitureState;
   layers: LayerState;
   extraStates: Record<string, boolean>;
+  activeWalkerId: string;
   measurementActive: boolean;
   cameraMode: 'orbit' | 'walk' | 'top' | 'plane';
   setMeasurementActive: (active: boolean) => void;
@@ -13,6 +14,7 @@ interface SceneStore {
   toggleFurniture: (key: keyof FurnitureState) => void;
   toggleLayer: (key: keyof LayerState) => void;
   triggerAction: (key: string) => void;
+  setActiveWalkerId: (id: string) => void;
 }
 
 const initialFurniture: FurnitureState = {
@@ -72,8 +74,6 @@ const initialExtraStates: Record<string, boolean> = {
   'bin-toggle': false,
   wcLid: false,
   'walker-meshes': false,
-  'walker-lara': false,
-  'walker-all-lara': false,
 };
 
 function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 'transient'; name: string } {
@@ -119,6 +119,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   furniture: initialFurniture,
   layers: initialLayers,
   extraStates: initialExtraStates,
+  activeWalkerId: '01_bikini',
   measurementActive: false,
   cameraMode: 'orbit',
   setMeasurementActive: (active: boolean) => {
@@ -236,6 +237,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
     if (resolved.type === 'furniture' && resolved.name !== key) {
       document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: resolved.name } }));
     }
+  },
+
+  setActiveWalkerId: (id) => {
+    set({ activeWalkerId: id });
+    cameraState.invalidate?.();
   },
 }));
 

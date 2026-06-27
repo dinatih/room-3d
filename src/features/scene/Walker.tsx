@@ -1,6 +1,6 @@
 /**
- * Walker.tsx — Personnage unique (Xbot Officiel / Lara Native).
- * Gère le chargement, les animations natives, le retargeting et le positionnement.
+ * Walker.tsx — Personnages (Walkers & NPCs).
+ * Gère le chargement, les animations, le retargeting et le positionnement dynamique.
  */
 import { useRef, useLayoutEffect, Suspense, useEffect, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -18,54 +18,209 @@ const LARA_PATH = 'media/sandbox/lara_native.glb';
 const ROSANNA_PATH = 'media/sandbox/rosanna_lara_native.glb';
 const VIVID_PATH = 'media/sandbox/vivid_red_lara_native.glb';
 
-const BONE_MAP: Record<string, string> = {
-  "mixamorig:Hips": "mixamorig_root_hips",
-  "mixamorig:Spine": "mixamorig_spine_lower",
-  "mixamorig:Spine2": "mixamorig_spine_upper",
-  "mixamorig:Neck": "mixamorig_head_neck_lower",
-  "mixamorig:Head": "mixamorig_head_neck_upper",
-  "mixamorig:LeftShoulder": "",
-  "mixamorig:LeftArm": "mixamorig_arm_left_shoulder_2",
-  "mixamorig:LeftForeArm": "mixamorig_arm_left_elbow",
-  "mixamorig:LeftHand": "mixamorig_arm_left_wrist",
-  "mixamorig:LeftUpLeg": "mixamorig_leg_left_thigh",
-  "mixamorig:LeftLeg": "mixamorig_leg_left_knee",
-  "mixamorig:LeftFoot": "mixamorig_leg_left_ankle",
-  "mixamorig:LeftToeBase": "mixamorig_leg_left_toes",
-  "mixamorig:RightShoulder": "",
-  "mixamorig:RightArm": "mixamorig_arm_right_shoulder_2",
-  "mixamorig:RightForeArm": "mixamorig_arm_right_elbow",
-  "mixamorig:RightHand": "mixamorig_arm_right_wrist",
-  "mixamorig:RightUpLeg": "mixamorig_leg_right_thigh",
-  "mixamorig:RightLeg": "mixamorig_leg_right_knee",
-  "mixamorig:RightFoot": "mixamorig_leg_right_ankle",
-  "mixamorig:RightToeBase": "mixamorig_leg_right_toes"
-};
-
-function getFingerLaraName(mixName: string): string {
-  const match = mixName.match(/mixamorig:(Left|Right)Hand(Thumb|Index|Middle|Ring|Pinky)(\d)/i);
-  if (match) {
-    const side = match[1].toLowerCase();
-    const type = match[2];
-    const seg = match[3];
-
-    const typeIdx: Record<string, number> = { "Thumb": 1, "Index": 2, "Middle": 3, "Ring": 4, "Pinky": 5 };
-    const segLet: Record<string, string> = { "1": "a", "2": "b", "3": "c" };
-
-    const fIdx = typeIdx[type];
-    const sLet = segLet[seg];
-
-    if (fIdx && sLet) {
-      return `mixamorig_arm_${side}_finger_${fIdx}${sLet}`;
-    }
-  }
-  return "";
+export interface CharacterConfig {
+  id: string;
+  name: string;
+  path: string;
+  pos: [number, number, number];
+  rot: number;
+  variant?: LaraVariant;
+  height: number;
+  sittingScenePath?: string;
+  customIdleAnimPath?: string;
 }
 
-function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, xbotInstance: THREE.Object3D, animScene: THREE.Object3D | undefined, isLara: boolean): THREE.AnimationClip {
+export const CHARACTERS: CharacterConfig[] = [
+  // 20 new characters from all_lara_style
+  { id: '01_bikini', name: '01 Bikini', path: 'media/all_lara/01_bikini.glb', pos: [140, 0, 30], rot: 1.9, height: 173.4 },
+  { id: '02_double_slit_dress', name: '02 Double slit dress', path: 'media/all_lara/02_double_slit_dress.glb', pos: [170, 0, 120], rot: -0.2, height: 173.4 },
+  { id: '03_dress', name: '03 Dress', path: 'media/all_lara/03_dress.glb', pos: [40, 0, -180], rot: 3.0, height: 173.4 },
+  { id: '04_baywatch', name: '04 Baywatch', path: 'media/all_lara/04_baywatch.glb', pos: [260, 0, -220], rot: 1.1, height: 173.4 },
+  { id: '05_crop_top_shorts', name: '05 Crop top - Shorts', path: 'media/all_lara/05_crop_top_shorts.glb', pos: [50, 0, 40], rot: 0.4, height: 173.4 },
+  { id: '06_cap_sleeve_crop_top_shorts', name: '06 Cap sleeve crop top - Shorts', path: 'media/all_lara/06_cap_sleeve_crop_top_shorts.glb', pos: [220, 0, 180], rot: 2.1, height: 173.4 },
+  { id: '07_scoop_bodysuit_shorts', name: '07 Scoop bodysuit - Shorts', path: 'media/all_lara/07_scoop_bodysuit_shorts.glb', pos: [230, 0, 340], rot: 0.1, height: 173.4 },
+  { id: '08_crew_neck_bodysuit_shorts', name: '08 Crew neck bodysuit - Shorts', path: 'media/all_lara/08_crew_neck_bodysuit_shorts.glb', pos: [210, 0, -80], rot: 2.7, height: 173.4 },
+  { id: '09_cap_sleeve_biketard', name: '09 Cap sleeve biketard', path: 'media/all_lara/09_cap_sleeve_biketard.glb', pos: [70, 0, -110], rot: -2.5, height: 173.4 },
+  { id: '10_long_sleeve_surfsuit', name: '10 Long sleeve surfsuit', path: 'media/all_lara/10_long_sleeve_surfsuit.glb', pos: [110, 0, -150], rot: -2.3, height: 173.4 },
+  { id: '11_tank_top_pants', name: '11 Tank top - Pants', path: 'media/all_lara/11_tank_top_pants.glb', pos: [280, 0, 210], rot: -1.8, height: 173.4 },
+  { id: '12_bodysuit_jeans', name: '12 Bodysuit - Jeans', path: 'media/all_lara/12_bodysuit_jeans.glb', pos: [80, 0, 310], rot: -1.2, height: 173.4 },
+  { id: '13_3_4_sleeve_catsuit', name: '13 3/4 sleeve catsuit', path: 'media/all_lara/13_3_4_sleeve_catsuit.glb', pos: [60, 0, 110], rot: 1.5, height: 173.4 },
+  { id: '14_catsuit', name: '14 Catsuit', path: 'media/all_lara/14_catsuit.glb', pos: [90, 0, 190], rot: -0.9, height: 173.4 },
+  { id: '14_catsuit_mp5', name: '14 Catsuit (mp5)', path: 'media/all_lara/14_catsuit_mp5.glb', pos: [120, 0, 250], rot: 0.5, height: 173.4 },
+  { id: '15_business_suit', name: '15 Business suit', path: 'media/all_lara/15_business_suit.glb', pos: [240, 0, 50], rot: -0.5, height: 173.4 },
+  { id: '16_motorcycle', name: '16 Motorcycle', path: 'media/all_lara/16_motorcycle.glb', pos: [150, 0, -50], rot: 0, height: 173.4 },
+  { id: '17_jacket_pants', name: '17 Jacket - Pants', path: 'media/all_lara/17_jacket_pants.glb', pos: [190, 0, 290], rot: 0.8, height: 173.4 },
+  { id: '18_wetsuit', name: '18 Wetsuit', path: 'media/all_lara/18_wetsuit.glb', pos: [130, 0, -280], rot: 0.9, height: 173.4 },
+  { id: 'xbot_studio', name: 'X-Bot (Studio)', path: 'media/all_lara/xbot_studio.glb', pos: [180, 0, -200], rot: 1.4, height: 181.0 },
+
+  // 9 stylized default Laras
+  { id: 'rosanna', name: 'Rosanna', path: 'media/sandbox/rosanna_lara_native.glb', pos: [251, 75, 178], rot: 1.325 + Math.PI / 2, variant: 'rosanna', height: 173.4, sittingScenePath: 'media/sandbox/anim_push_up.glb', customIdleAnimPath: 'media/sandbox/anim_push_up.glb' },
+  { id: 'marissa', name: 'Marissa', path: 'media/sandbox/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4, sittingScenePath: 'media/sandbox/anim_gangnam_style.glb', customIdleAnimPath: 'media/sandbox/anim_gangnam_style.glb' },
+  { id: 'delphina', name: 'Delphina', path: 'media/sandbox/lara_native.glb', pos: [120, 35, -250], rot: 1, variant: 'delphina', height: 173.4, sittingScenePath: 'media/sandbox/anim_swimming_to_edge.glb', customIdleAnimPath: 'media/sandbox/anim_swimming_to_edge.glb' },
+  { id: 'sara', name: 'Sara', path: 'media/sandbox/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'media/sandbox/anim_climbing.glb', customIdleAnimPath: 'media/sandbox/anim_climbing.glb' },
+  { id: 'cha', name: 'Cha', path: 'media/sandbox/lara_native.glb', pos: [30, 0, 151], rot: Math.PI / 2, variant: 'cha', height: 173.4, sittingScenePath: 'media/sandbox/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anim_sitting_idle.glb' },
+  { id: 'vivid', name: 'Vivid', path: 'media/sandbox/vivid_red_lara_native.glb', pos: [30, 0, 210], rot: Math.PI / 2, variant: 'vivid', height: 173.4, sittingScenePath: 'media/sandbox/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anim_sitting_idle.glb' },
+  { id: 'sabira', name: 'Sabira', path: 'media/sandbox/lara_native.glb', pos: [200, 0, -20], rot: Math.PI, variant: 'sabira', height: 173.4 },
+  { id: 'safa', name: 'Safa', path: 'media/sandbox/lara_native.glb', pos: [250, 0, 320], rot: 0, variant: 'safa', height: 173.4 },
+  { id: 'rajaa', name: 'Rajaa', path: 'media/sandbox/lara_native.glb', pos: [80, 0, -320], rot: Math.PI / 4, variant: 'rajaa', height: 173.4 },
+];
+
+const BONE_SYNONYMS: Record<string, string[]> = {
+  'Hips': ['hips', 'pelvis', 'cog', 'roothips', 'rootground', 'hip'],
+  'Spine': ['spine01', 'spinelower', 'spine0', 'spine1', 'spine'],
+  'Spine2': ['spine02', 'spineupper', 'spine2', 'spine03', 'spine', 'spine3'],
+  'Neck': ['neck', 'headnecklower'],
+  'Head': ['head', 'headneckupper'],
+  'LeftShoulder': ['leftshoulder', 'shoulderl', 'claviclel', 'armleftshoulder', 'larmclavicle', 'shlderl', 'armleftshoulder1'],
+  'LeftArm': ['armleftshoulder2', 'upperarml', 'larmhumerus', 'upperarm.l', 'upper_arm.l', 'leftarm', 'armleftelbow', 'arm.l', 'bicepl'],
+  'LeftForeArm': ['lowerarml', 'larmradius', 'forearm.l', 'forearm_l', 'leftforearm', 'armleftelbow', 'armleftwrist', 'forarml', 'forearml'],
+  'LeftHand': ['handl', 'larmwrist', 'hand.l', 'hand_l', 'wrist.l', 'wrist_l', 'lefthand', 'armleftwrist', 'palml'],
+  'RightShoulder': ['rightshoulder', 'shoulderr', 'clavicler', 'armrightshoulder', 'rarmclavicle', 'shlderr', 'armrightshoulder1'],
+  'RightArm': ['rightarm', 'armrightshoulder2', 'upperarmr', 'armrightelbow', 'rarmhumerus', 'upperarm.r', 'upper_arm.r', 'arm.r', 'bicepr'],
+  'RightForeArm': ['lowerarmr', 'rarmradius', 'forearm.r', 'forearm_r', 'rightforearm', 'armrightelbow', 'armrightwrist', 'forarmr', 'forearmr'],
+  'RightHand': ['handr', 'rarmwrist', 'hand.r', 'hand_r', 'wrist.r', 'wrist_r', 'righthand', 'armrightwrist', 'palmr'],
+  'LeftUpLeg': ['legleftthigh', 'thighl', 'llegfemur', 'thigh.l', 'thigh_l', 'leftupleg'],
+  'LeftLeg': ['legleftknee', 'calfl', 'shinl', 'llegtibia', 'shin.l', 'shin_l', 'calf.l', 'calf_l', 'leftleg'],
+  'LeftFoot': ['legleftankle', 'footl', 'llegankle', 'foot.l', 'foot_l', 'ankle.l', 'ankle_l', 'leftfoot'],
+  'LeftToeBase': ['leglefttoes', 'balll', 'toel', 'llegball', 'toe.l', 'toe_l', 'ball.l', 'ball_l', 'lefttoebase'],
+  'RightUpLeg': ['legrightthigh', 'thighr', 'rlegfemur', 'thigh.r', 'thigh_r', 'rightupleg'],
+  'RightLeg': ['legrightknee', 'calfr', 'shinr', 'rlegtibia', 'shin.r', 'shin_r', 'calf.r', 'calf_r', 'rightleg'],
+  'RightFoot': ['legrightankle', 'footr', 'rlegankle', 'foot.r', 'foot_r', 'ankle.r', 'ankle_r', 'rightfoot'],
+  'RightToeBase': ['legrighttoes', 'ballr', 'toer', 'rlegball', 'toe.r', 'toe_r', 'ball.r', 'ball_r', 'righttoebase']
+};
+
+function resolveTargetFingerBoneName(targetInstance: THREE.Object3D, side: string, type: string, segment: string): string | null {
+  const sideChar = side.charAt(0).toLowerCase();
+  const segmentIndex = parseInt(segment) - 1;
+  const segmentLetter = ['a', 'b', 'c'][segmentIndex] || 'a';
+  
+  const candidates = [
+    new RegExp(`^${type}${segment}_${sideChar}$`, 'i'),
+    new RegExp(`arm.*${side}.*finger.*${type === 'thumb' ? 1 : type === 'index' ? 2 : type === 'middle' ? 3 : type === 'ring' ? 4 : 5}${segmentLetter}`, 'i'),
+    new RegExp(`${type}_0${segment}_${sideChar}`, 'i'),
+    new RegExp(`${type === 'thumb' ? 'thumb' : 'f_' + type}\\.0${segment}\\.${sideChar}`, 'i'),
+    new RegExp(`${sideChar}.*hand.*${type}.*${segmentIndex}`, 'i'),
+    new RegExp(`mixamorig.*${side}.*hand.*${type}.*${segment}`, 'i'),
+    new RegExp(`mixamorig_${side}_hand_${type}_${segment}`, 'i'),
+    new RegExp(`${side}_hand_${type}_${segment}`, 'i')
+  ];
+
+  let foundName: string | null = null;
+  targetInstance.traverse(node => {
+    if ((node as any).isBone && !foundName) {
+      for (const rx of candidates) {
+        if (rx.test(node.name)) {
+          foundName = node.name;
+          break;
+        }
+      }
+    }
+  });
+  return foundName;
+}
+
+function getDepth(node: THREE.Object3D): number {
+  let depth = 0;
+  let curr: THREE.Object3D | null = node;
+  while (curr && curr.parent) {
+    depth++;
+    curr = curr.parent;
+  }
+  return depth;
+}
+
+function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: string, sourceHairMap: Map<string, string> | null = null): string | null {
+  const baseNameLower = baseName.toLowerCase();
+  if (baseNameLower.includes('hair') || baseNameLower.includes('ponytail')) {
+    if (sourceHairMap && sourceHairMap.has(baseNameLower)) {
+      const targetName = sourceHairMap.get(baseNameLower);
+      if (targetName && targetInstance.getObjectByName(targetName)) {
+        return targetName;
+      }
+    }
+    const numMatch = baseName.match(/(\d+)/);
+    if (numMatch) {
+      const N = numMatch[1];
+      const targetName = `hair_${N}`;
+      if (targetInstance.getObjectByName(targetName)) {
+        return targetName;
+      }
+    }
+  }
+
+  const fingerMatch = baseName.match(/Hand(Thumb|Index|Middle|Ring|Pinky)(\d)/i);
+  if (fingerMatch) {
+    const side = baseName.toLowerCase().includes('left') ? 'left' : 'right';
+    const type = fingerMatch[1].toLowerCase();
+    const segment = fingerMatch[2];
+    const resolvedFinger = resolveTargetFingerBoneName(targetInstance, side, type, segment);
+    if (resolvedFinger) return resolvedFinger;
+  }
+
+  const synonyms = BONE_SYNONYMS[baseName];
+  if (synonyms) {
+    for (const syn of synonyms) {
+      let foundName: string | null = null;
+      targetInstance.traverse(node => {
+        if ((node as any).isBone && !foundName) {
+          const nameNormalized = node.name.toLowerCase().replace(/[:_ .\-]/g, '');
+          if (nameNormalized === syn || (nameNormalized.includes(syn) && 
+              !nameNormalized.includes(syn + '1') && 
+              !nameNormalized.includes(syn + '2') && 
+              !nameNormalized.includes(syn + '3') && 
+              !nameNormalized.includes(syn + '4'))) {
+            if (!nameNormalized.includes('twist') && !nameNormalized.includes('muscle') && !nameNormalized.includes('offset')) {
+              foundName = node.name;
+            }
+          }
+        }
+      });
+      if (foundName) return foundName;
+    }
+  }
+
+  const candidates = [
+    'mixamorig:' + baseName,
+    'mixamorig_' + baseName,
+    'mixamorig' + baseName,
+    baseName,
+    'mixamorig:' + baseName.charAt(0).toLowerCase() + baseName.slice(1),
+    'mixamorig_' + baseName.charAt(0).toLowerCase() + baseName.slice(1),
+    'mixamorig' + baseName.charAt(0).toLowerCase() + baseName.slice(1),
+    baseName.charAt(0).toLowerCase() + baseName.slice(1)
+  ];
+
+  for (const cand of candidates) {
+    if (targetInstance.getObjectByName(cand)) {
+      return cand;
+    }
+  }
+  return null;
+}
+
+function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, xbotInstance: THREE.Object3D, animScene: THREE.Object3D | undefined): THREE.AnimationClip {
   const animBones: Record<string, any> = {};
+  const sourceHairMap = new Map<string, string>();
+  
   if (animScene) {
     animScene.updateMatrixWorld(true);
+
+    const sourceHairBones: Array<{ bone: THREE.Object3D; baseName: string; depth: number }> = [];
+    animScene.traverse(c => {
+      if ((c as any).isBone) {
+        const nameLower = (c.name || '').toLowerCase();
+        if (nameLower.includes('hair') || nameLower.includes('ponytail')) {
+          const match = c.name.match(/mixamorig[:_]?(.+)/i);
+          const base = match ? match[1] : c.name;
+          sourceHairBones.push({ bone: c, baseName: base, depth: getDepth(c) });
+        }
+      }
+    });
+    sourceHairBones.sort((a, b) => a.depth - b.depth);
+    sourceHairBones.forEach((hb, idx) => {
+      sourceHairMap.set(hb.baseName.toLowerCase(), `hair_${idx + 1}`);
+    });
+
     animScene.traverse((c: any) => {
       if (c.isBone) {
         const match = c.name.match(/mixamorig[:_]?(.+)/i);
@@ -169,10 +324,8 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
     if (match) {
       const baseName = match[1];
       if (prop === 'position' && baseName.toLowerCase() === 'hips') {
-        const bone = targetInstance.getObjectByName(
-          isLara ? 'mixamorig_root_hips' :
-          targetInstance.name.toLowerCase().includes('ybot') ? 'mixamorig_Hips' : 'mixamorigHips'
-        ) as any;
+        const resolvedHipsName = resolveTargetBoneName(targetInstance, 'Hips', sourceHairMap);
+        const bone = resolvedHipsName ? targetInstance.getObjectByName(resolvedHipsName) as any : null;
         let refSrcY = 0.991;
         if (animBones[baseName]) {
           refSrcY = animBones[baseName].defaultPosition.y;
@@ -189,7 +342,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
 
         let targetHipsHeight = 99.1;
         if (bone && bone.defaultPosition) {
-          targetHipsHeight = isLara ? bone.defaultPosition.z : bone.defaultPosition.y;
+          targetHipsHeight = bone.name.toLowerCase().includes('root_hips') ? bone.defaultPosition.z : bone.defaultPosition.y;
         }
         if (refSrcY > 0) {
           computedHipsRatio = targetHipsHeight / refSrcY;
@@ -217,22 +370,11 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
       isRootJointTranslation = true;
     }
 
-    let targetBoneName = '';
-    if (isLara) {
-      const keyName = `mixamorig:${baseName}`;
-      targetBoneName = BONE_MAP[keyName] || getFingerLaraName(keyName);
-      if (keyName === 'mixamorig:Hips') {
-        targetBoneName = 'mixamorig_root_hips';
-      }
-    } else {
-      const targetHasUnderscore = targetInstance.getObjectByName(`mixamorig_${baseName}`) !== undefined;
-      targetBoneName = targetHasUnderscore ? `mixamorig_${baseName}` : `mixamorig${baseName}`;
-    }
-
+    const targetBoneName = resolveTargetBoneName(targetInstance, baseName, sourceHairMap);
     if (!targetBoneName) continue;
 
     if (prop === 'scale') continue;
-    const isHips = targetBoneName.toLowerCase().endsWith('hips');
+    const isHips = targetBoneName.toLowerCase().endsWith('hips') || targetBoneName.toLowerCase().includes('pelvis');
     if (prop === 'position' && !isHips) continue;
 
     const clone = tr.clone();
@@ -350,64 +492,66 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
       if (targetBoneName.includes('shoulder_1')) continue;
 
       const bone = targetInstance.getObjectByName(targetBoneName) as any;
-      if (bone && bone.restLocalQuaternion && bone.restWorldQuaternion) {
-        let B_src = null;
-        let P_src = null;
-        if (animBones[baseName]) {
-          B_src = animBones[baseName].restWorldQuaternion;
-          P_src = animBones[baseName].parentRestWorldQuaternion;
-        } else {
-          const srcBone = xbotInstance.getObjectByName('mixamorig:' + baseName) as any;
-          B_src = srcBone ? srcBone.restWorldQuaternion : null;
-          P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
-            ? srcBone.parent.restWorldQuaternion
-            : new THREE.Quaternion();
-        }
-
-        if (B_src && P_src) {
-          const B_tgt = bone.restWorldQuaternion;
-          const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
-            ? bone.parent.restWorldQuaternion
-            : new THREE.Quaternion();
-          const P_tgt_inv = P_tgt.clone().invert();
-          const B_src_inv = B_src.clone().invert();
-
-          for (let j = 0; j < clone.values.length / 4; j++) {
-            const srcLocalQ = new THREE.Quaternion(
-              clone.values[4*j],
-              clone.values[4*j+1],
-              clone.values[4*j+2],
-              clone.values[4*j+3]
-            );
-
-            const animWorldQ = P_src.clone().multiply(srcLocalQ);
-            const deltaQ = animWorldQ.clone().multiply(B_src_inv);
-            const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
-            const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
-
-            clone.values[4*j]   = tgtLocalQ.x;
-            clone.values[4*j+1] = tgtLocalQ.y;
-            clone.values[4*j+2] = tgtLocalQ.z;
-            clone.values[4*j+3] = tgtLocalQ.w;
+      if (bone) {
+        if (bone.restLocalQuaternion && bone.restWorldQuaternion) {
+          let B_src = null;
+          let P_src = null;
+          if (animBones[baseName]) {
+            B_src = animBones[baseName].restWorldQuaternion;
+            P_src = animBones[baseName].parentRestWorldQuaternion;
+          } else {
+            const srcBone = xbotInstance.getObjectByName('mixamorig:' + baseName) as any;
+            B_src = srcBone ? srcBone.restWorldQuaternion : null;
+            P_src = (srcBone && srcBone.parent && srcBone.parent.restWorldQuaternion)
+              ? srcBone.parent.restWorldQuaternion
+              : new THREE.Quaternion();
           }
-        } else {
-          const parentRestWorldQ = (bone.parent && bone.parent.restWorldQuaternion)
-            ? bone.parent.restWorldQuaternion
-            : new THREE.Quaternion();
-          const parentInv = parentRestWorldQ.clone().invert();
-          const boneRestLocalQ = bone.restLocalQuaternion.clone();
 
-          for (let i = 0; i < clone.values.length; i += 4) {
-            const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
-            const resQ = parentInv.clone()
-              .multiply(q)
-              .multiply(parentRestWorldQ)
-              .multiply(boneRestLocalQ);
+          if (B_src && P_src) {
+            const B_tgt = bone.restWorldQuaternion;
+            const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
+              ? bone.parent.restWorldQuaternion
+              : new THREE.Quaternion();
+            const P_tgt_inv = P_tgt.clone().invert();
+            const B_src_inv = B_src.clone().invert();
 
-            clone.values[i] = resQ.x;
-            clone.values[i+1] = resQ.y;
-            clone.values[i+2] = resQ.z;
-            clone.values[i+3] = resQ.w;
+            for (let j = 0; j < clone.values.length / 4; j++) {
+              const srcLocalQ = new THREE.Quaternion(
+                clone.values[4*j],
+                clone.values[4*j+1],
+                clone.values[4*j+2],
+                clone.values[4*j+3]
+              );
+
+              const animWorldQ = P_src.clone().multiply(srcLocalQ);
+              const deltaQ = animWorldQ.clone().multiply(B_src_inv);
+              const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
+              const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
+
+              clone.values[4*j]   = tgtLocalQ.x;
+              clone.values[4*j+1] = tgtLocalQ.y;
+              clone.values[4*j+2] = tgtLocalQ.z;
+              clone.values[4*j+3] = tgtLocalQ.w;
+            }
+          } else {
+            const parentRestWorldQ = (bone.parent && bone.parent.restWorldQuaternion)
+              ? bone.parent.restWorldQuaternion
+              : new THREE.Quaternion();
+            const parentInv = parentRestWorldQ.clone().invert();
+            const boneRestLocalQ = bone.restLocalQuaternion.clone();
+
+            for (let i = 0; i < clone.values.length; i += 4) {
+              const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
+              const resQ = parentInv.clone()
+                .multiply(q)
+                .multiply(parentRestWorldQ)
+                .multiply(boneRestLocalQ);
+
+              clone.values[i] = resQ.x;
+              clone.values[i+1] = resQ.y;
+              clone.values[i+2] = resQ.z;
+              clone.values[i+3] = resQ.w;
+            }
           }
         }
       }
@@ -444,6 +588,7 @@ function GroundPoint() {
 interface SingleCharacterProps extends WalkerProps {
   modelPath: string;
   isLara: boolean;
+  targetHeight: number;
   isActive: boolean;
   animations: THREE.AnimationClip[];
   xbotScene: THREE.Group;
@@ -452,11 +597,13 @@ interface SingleCharacterProps extends WalkerProps {
   npcPosition?: [number, number, number];
   npcRotationY?: number;
   sittingScene?: THREE.Group;
+  customIdleAnimPath?: string;
 }
 
 function SingleCharacter({
   modelPath,
   isLara,
+  targetHeight,
   isActive,
   showSkeleton = false,
   isPreview = false,
@@ -468,7 +615,8 @@ function SingleCharacter({
   isNPC = false,
   npcPosition = [0, 0, 0],
   npcRotationY = 0,
-  sittingScene
+  sittingScene,
+  customIdleAnimPath
 }: SingleCharacterProps) {
   const { scene } = useGLTFClone(modelPath);
 
@@ -516,15 +664,15 @@ function SingleCharacter({
     const box = new THREE.Box3().setFromObject(scene);
     const rawSize = box.getSize(new THREE.Vector3());
 
-    const targetHeight = isLara ? 173.4 : 181.0;
     const fallbackScale = 100.0;
     const scaleFactor = rawSize.y > 0 ? (targetHeight / rawSize.y) : fallbackScale;
 
     scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
     scene.updateMatrixWorld(true);
-    const hipsName = isLara ? 'mixamorig_root_hips' : 'mixamorig:Hips';
-    const hips = scene.getObjectByName(hipsName);
+    
+    const resolvedHipsName = resolveTargetBoneName(scene, 'Hips');
+    const hips = resolvedHipsName ? scene.getObjectByName(resolvedHipsName) : null;
     if (hips) {
         const parent = scene.parent || scene;
         const hipsWorld = new THREE.Vector3();
@@ -591,10 +739,8 @@ function SingleCharacter({
     animations.forEach(clip => {
       let finalClip = clip;
       const isExternal = clip.name.endsWith('.glb');
-      if (isLara) {
-        finalClip = retargetClip(clip, scene, xbotScene, isExternal ? sittingScene : undefined, true);
-      } else if (isExternal) {
-        finalClip = retargetClip(clip, scene, xbotScene, sittingScene, false);
+      if (isLara || isExternal) {
+        finalClip = retargetClip(clip, scene, xbotScene, isExternal ? sittingScene : undefined);
       } else {
         const cleanTracks = clip.tracks.filter(track => !track.name.endsWith('.scale'));
         finalClip = new THREE.AnimationClip(clip.name, clip.duration, cleanTracks);
@@ -613,7 +759,7 @@ function SingleCharacter({
         mixer.stopAllAction();
         mixer.uncacheRoot(scene);
     };
-  }, [scene, animations, isLara, xbotScene]);
+  }, [scene, animations, isLara, xbotScene, targetHeight, variant, sittingScene]);
 
   const skeletonRef = useHelper(showSkeleton ? modelRef : null, THREE.SkeletonHelper);
 
@@ -644,7 +790,7 @@ function SingleCharacter({
           const clip = gltf.animations[0];
           if (clip) {
             let finalClip = clip;
-            finalClip = retargetClip(clip, scene, xbotScene, gltf.scene, isLara);
+            finalClip = retargetClip(clip, scene, xbotScene, gltf.scene);
             finalClip.name = path;
 
             const mixer = mixerRef.current;
@@ -669,7 +815,7 @@ function SingleCharacter({
 
     document.addEventListener('furniture-toggle', onToggle);
     return () => document.removeEventListener('furniture-toggle', onToggle);
-  }, [isActive, isLara, scene, xbotScene]);
+  }, [isActive, isLara, scene, xbotScene, invalidate]);
 
   useFrame((_, rawDelta) => {
     const delta = Math.min(rawDelta, 0.1);
@@ -687,12 +833,9 @@ function SingleCharacter({
       } else if (isNPC) {
         groupRef.current.position.set(npcPosition[0], npcPosition[1], npcPosition[2]);
         groupRef.current.rotation.y = npcRotationY;
-        groupRef.current.visible = true;
+        groupRef.current.visible = !cameraState.walkerHidden;
       } else {
-        // Inactive character stays at its last 'other' position
-        groupRef.current.position.set(cameraState.otherX, 0, cameraState.otherZ);
-        groupRef.current.rotation.y = cameraState.otherYaw;
-        groupRef.current.visible = true;
+        groupRef.current.visible = false;
       }
 
       const isFirstPerson = isActive && cameraState.mode === 'walk';
@@ -710,23 +853,8 @@ function SingleCharacter({
     let isMoving = isActive ? cameraState.isMoving : false;
     let target = isPreview ? (walkerAnim || 'idle') : (isMoving ? 'walk' : 'idle');
 
-    if (isNPC && (variant === 'cha' || variant === 'vivid') && target === 'idle') {
-      target = 'media/sandbox/anim_sitting_idle.glb';
-    }
-    if (isNPC && variant === 'delphina' && target === 'idle') {
-      target = 'media/sandbox/anim_swimming_to_edge.glb';
-    }
-    if (isNPC && variant === 'marissa' && target === 'idle') {
-      target = 'media/sandbox/anim_gangnam_style.glb';
-    }
-    if (isNPC && variant === 'rosanna' && target === 'idle') {
-      target = 'media/sandbox/anim_push_up.glb';
-    }
-    if (isNPC && variant === 'sara' && target === 'idle') {
-      target = 'media/sandbox/anim_climbing.glb';
-    }
-    if (!isActive && !isNPC && !isLara && target === 'idle') {
-      target = 'media/sandbox/anim_laying_idle_1.glb';
+    if (isNPC && customIdleAnimPath && target === 'idle') {
+      target = customIdleAnimPath;
     }
 
     if (customAnimName.current) {
@@ -784,33 +912,11 @@ function SingleCharacter({
   );
 }
 
-const ALL_LARA_NPC_DEFS = [
-  { path: 'media/all_lara/01_bikini.glb', pos: [140, 0, 30], rot: 1.9 },
-  { path: 'media/all_lara/02_double_slit_dress.glb', pos: [170, 0, 120], rot: -0.2 },
-  { path: 'media/all_lara/03_dress.glb', pos: [40, 0, -180], rot: 3.0 },
-  { path: 'media/all_lara/04_baywatch.glb', pos: [260, 0, -220], rot: 1.1 },
-  { path: 'media/all_lara/05_crop_top_shorts.glb', pos: [50, 0, 40], rot: 0.4 },
-  { path: 'media/all_lara/06_cap_sleeve_crop_top_shorts.glb', pos: [220, 0, 180], rot: 2.1 },
-  { path: 'media/all_lara/07_scoop_bodysuit_shorts.glb', pos: [230, 0, 340], rot: 0.1 },
-  { path: 'media/all_lara/08_crew_neck_bodysuit_shorts.glb', pos: [210, 0, -80], rot: 2.7 },
-  { path: 'media/all_lara/09_cap_sleeve_biketard.glb', pos: [70, 0, -110], rot: -2.5 },
-  { path: 'media/all_lara/10_long_sleeve_surfsuit.glb', pos: [110, 0, -150], rot: -2.3 },
-  { path: 'media/all_lara/11_tank_top_pants.glb', pos: [280, 0, 210], rot: -1.8 },
-  { path: 'media/all_lara/12_bodysuit_jeans.glb', pos: [80, 0, 310], rot: -1.2 },
-  { path: 'media/all_lara/13_3_4_sleeve_catsuit.glb', pos: [60, 0, 110], rot: 1.5 },
-  { path: 'media/all_lara/14_catsuit.glb', pos: [90, 0, 190], rot: -0.9 },
-  { path: 'media/all_lara/14_catsuit_mp5.glb', pos: [120, 0, 250], rot: 0.5 },
-  { path: 'media/all_lara/15_business_suit.glb', pos: [240, 0, 50], rot: -0.5 },
-  { path: 'media/all_lara/16_motorcycle.glb', pos: [150, 0, -50], rot: 0 },
-  { path: 'media/all_lara/17_jacket_pants.glb', pos: [190, 0, 290], rot: 0.8 },
-  { path: 'media/all_lara/18_wetsuit.glb', pos: [130, 0, -280], rot: 0.9 },
-  { path: 'media/all_lara/xbot_studio.glb', pos: [180, 0, -200], rot: 1.4 }
-];
-
 function InternalWalker(props: WalkerProps) {
-  const isLaraActive = useSceneStore(state => state.extraStates['walker-lara']);
-  const showAllLaraNPCs = useSceneStore(state => state.extraStates['walker-all-lara']);
+  const activeWalkerId = useSceneStore(state => state.activeWalkerId);
   const xbotGltf = useGLTF(XBOT_PATH);
+
+  // Preloaded anim paths
   const sittingGltf = useGLTF('media/sandbox/anim_sitting_idle.glb');
   const swimmingGltf = useGLTF('media/sandbox/anim_swimming_to_edge.glb');
   const marissaGltf = useGLTF('media/sandbox/anim_gangnam_style.glb');
@@ -818,93 +924,51 @@ function InternalWalker(props: WalkerProps) {
   const laying1Gltf = useGLTF('media/sandbox/anim_laying_idle_1.glb');
   const climbingGltf = useGLTF('media/sandbox/anim_climbing.glb');
 
-  const chaAnims = useMemo(() => {
-    if (!sittingGltf.animations[0]) return xbotGltf.animations;
-    const sittingClip = sittingGltf.animations[0].clone();
-    sittingClip.name = 'media/sandbox/anim_sitting_idle.glb';
-    return [...xbotGltf.animations, sittingClip];
-  }, [xbotGltf.animations, sittingGltf.animations]);
-
-  const delphinaAnims = useMemo(() => {
-    if (!swimmingGltf.animations[0]) return xbotGltf.animations;
-    const swimmingClip = swimmingGltf.animations[0].clone();
-    swimmingClip.name = 'media/sandbox/anim_swimming_to_edge.glb';
-    return [...xbotGltf.animations, swimmingClip];
-  }, [xbotGltf.animations, swimmingGltf.animations]);
-
-  const marissaAnims = useMemo(() => {
-    if (!marissaGltf.animations[0]) return xbotGltf.animations;
-    const clip = marissaGltf.animations[0].clone();
-    clip.name = 'media/sandbox/anim_gangnam_style.glb';
-    return [...xbotGltf.animations, clip];
-  }, [xbotGltf.animations, marissaGltf.animations]);
-
-  const rosannaAnims = useMemo(() => {
-    if (!pushUpGltf.animations[0]) return xbotGltf.animations;
-    const clip = pushUpGltf.animations[0].clone();
-    clip.name = 'media/sandbox/anim_push_up.glb';
-    return [...xbotGltf.animations, clip];
-  }, [xbotGltf.animations, pushUpGltf.animations]);
-
-  const saraAnims = useMemo(() => {
-    if (!climbingGltf.animations[0]) return xbotGltf.animations;
-    const clip = climbingGltf.animations[0].clone();
-    clip.name = 'media/sandbox/anim_climbing.glb';
-    return [...xbotGltf.animations, clip];
-  }, [xbotGltf.animations, climbingGltf.animations]);
-
-  const xbotAnims = useMemo(() => {
-    if (!laying1Gltf.animations[0]) return xbotGltf.animations;
-    const clip = laying1Gltf.animations[0].clone();
-    clip.name = 'media/sandbox/anim_laying_idle_1.glb';
-    return [...xbotGltf.animations, clip];
-  }, [xbotGltf.animations, laying1Gltf.animations]);
+  const animGltfs: Record<string, any> = {
+    'media/sandbox/anim_sitting_idle.glb': sittingGltf,
+    'media/sandbox/anim_swimming_to_edge.glb': swimmingGltf,
+    'media/sandbox/anim_gangnam_style.glb': marissaGltf,
+    'media/sandbox/anim_push_up.glb': pushUpGltf,
+    'media/sandbox/anim_climbing.glb': climbingGltf,
+    'media/sandbox/anim_laying_idle_1.glb': laying1Gltf,
+  };
 
   return (
     <>
-      <SingleCharacter
-        {...props}
-        modelPath={XBOT_PATH}
-        isLara={false}
-        isActive={!isLaraActive}
-        animations={xbotAnims}
-        xbotScene={xbotGltf.scene}
-        sittingScene={laying1Gltf.scene}
-      />
-      <SingleCharacter
-        {...props}
-        modelPath={LARA_PATH}
-        isLara={true}
-        isActive={isLaraActive}
-        animations={xbotGltf.animations}
-        xbotScene={xbotGltf.scene}
-      />
+      {CHARACTERS.map((char) => {
+        const isActive = char.id === activeWalkerId;
+        const isLara = char.id !== 'xbot_studio';
 
-      {/* 9 NPC Laras placed randomly around Studio and Garden */}
-      <SingleCharacter {...props} modelPath={ROSANNA_PATH} isLara={true} isActive={false} animations={rosannaAnims} xbotScene={xbotGltf.scene} variant="rosanna" isNPC={true} npcPosition={[251, 75, 178]} npcRotationY={1.325 + Math.PI / 2} sittingScene={pushUpGltf.scene} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={marissaAnims} xbotScene={xbotGltf.scene} variant="marissa" isNPC={true} npcPosition={[160, 0, -440]} npcRotationY={0} sittingScene={marissaGltf.scene} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={delphinaAnims} xbotScene={xbotGltf.scene} variant="delphina" isNPC={true} npcPosition={[120, 35, -250]} npcRotationY={1} sittingScene={swimmingGltf.scene} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={saraAnims} xbotScene={xbotGltf.scene} variant="sara" isNPC={true} npcPosition={[340, -40, -310]} npcRotationY={-Math.PI / 2} sittingScene={climbingGltf.scene} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={chaAnims} xbotScene={xbotGltf.scene} variant="cha" isNPC={true} npcPosition={[30, 0, 151]} npcRotationY={Math.PI / 2} sittingScene={sittingGltf.scene} />
-      <SingleCharacter {...props} modelPath={VIVID_PATH} isLara={true} isActive={false} animations={chaAnims} xbotScene={xbotGltf.scene} variant="vivid" isNPC={true} npcPosition={[30, 0, 210]} npcRotationY={Math.PI / 2} sittingScene={sittingGltf.scene} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="sabira" isNPC={true} npcPosition={[200, 0, -20]} npcRotationY={Math.PI} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="safa" isNPC={true} npcPosition={[250, 0, 320]} npcRotationY={0} />
-      <SingleCharacter {...props} modelPath={LARA_PATH} isLara={true} isActive={false} animations={xbotGltf.animations} xbotScene={xbotGltf.scene} variant="rajaa" isNPC={true} npcPosition={[80, 0, -320]} npcRotationY={Math.PI / 4} />
+        // Resolve animations for this character
+        const charAnims = [
+          ...xbotGltf.animations,
+          ...(char.customIdleAnimPath && animGltfs[char.customIdleAnimPath]?.animations[0]
+            ? [Object.assign(animGltfs[char.customIdleAnimPath].animations[0].clone(), { name: char.customIdleAnimPath })]
+            : [])
+        ];
 
-      {showAllLaraNPCs && ALL_LARA_NPC_DEFS.map((npc, idx) => (
-        <SingleCharacter
-          {...props}
-          key={`all-lara-npc-${idx}`}
-          modelPath={npc.path}
-          isLara={true}
-          isActive={false}
-          animations={xbotGltf.animations}
-          xbotScene={xbotGltf.scene}
-          isNPC={true}
-          npcPosition={npc.pos as [number, number, number]}
-          npcRotationY={npc.rot}
-        />
-      ))}
+        const sittingScene = char.sittingScenePath && animGltfs[char.sittingScenePath]?.scene;
+
+        return (
+          <SingleCharacter
+            {...props}
+            key={char.id}
+            modelPath={char.path}
+            isLara={isLara}
+            targetHeight={char.height}
+            isActive={isActive}
+            animations={charAnims}
+            xbotScene={xbotGltf.scene}
+            variant={char.variant}
+            isNPC={!isActive}
+            npcPosition={char.pos}
+            npcRotationY={char.rot}
+            sittingScene={sittingScene}
+            walkerAnim={props.walkerAnim}
+            customIdleAnimPath={char.customIdleAnimPath}
+          />
+        );
+      })}
     </>
   );
 }
@@ -917,6 +981,7 @@ export function Walker(props: WalkerProps) {
   );
 }
 
+// Preloads
 useGLTF.preload(XBOT_PATH);
 useGLTF.preload(LARA_PATH);
 useGLTF.preload(ROSANNA_PATH);
@@ -927,3 +992,7 @@ useGLTF.preload('media/sandbox/anim_gangnam_style.glb');
 useGLTF.preload('media/sandbox/anim_climbing.glb');
 useGLTF.preload('media/sandbox/anim_push_up.glb');
 useGLTF.preload('media/sandbox/anim_laying_idle_1.glb');
+
+CHARACTERS.forEach(char => {
+  useGLTF.preload(char.path);
+});
