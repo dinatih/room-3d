@@ -67,7 +67,7 @@ import { ArmlessSofa }  from './items/ArmlessSofa';
 import { Bathtub }      from './items/Bathtub';
 import { ChestBench }   from './items/ChestBench';
 import { PottedPalm }   from './items/PottedPalm';
-import { Viggja }       from './items/Viggja';
+import { RaskogSmall }  from './items/Raskog';
 import { JoggingSuit }  from './items/JoggingSuit';
 import { ShibaInu }    from './items/ShibaInu';
 import { Tisken }        from './items/Tisken';
@@ -261,7 +261,8 @@ export function Furniture({ layers }: { layers: LayerState }) {
   });
   const cbZ = KITCHEN_Z + 11 + 18.5; // 489.5
   return (
-    <MergedStaticGroup name="merged-furniture">
+    <>
+      <MergedStaticGroup name="merged-furniture">
       <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]}>
         <KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
@@ -300,6 +301,12 @@ export function Furniture({ layers }: { layers: LayerState }) {
       </group>
 
     </MergedStaticGroup>
+
+      {/* Desserte RÅSKOG (petite) devant le congélateur */}
+      <group position={[24.5, 0, 222]} userData={{ animUnit: true }}>
+        <RaskogSmall item={stub('raskog-small')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+    </>
   );
 }
 
@@ -647,9 +654,7 @@ export function Garden({ layers }: { layers: LayerState }) {
       <group position={[120, 0, -250]} rotation={[0, 1, 0]}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[100, 0, -178]} userData={{ animUnit: true }}>
-        <Viggja item={{} as any} actionState={{}} onSize={() => {}} />
-      </group>
+
       <group position={[100, 0, -145]} userData={{ animUnit: true }}>
         <PottedPalm item={{} as any} actionState={{}} onSize={() => {}} />
       </group>

@@ -258,7 +258,6 @@ export interface FurnitureState {
   bedPosition:  boolean;
   smorkullPos:  boolean;
   lampOn:       boolean;
-  dronaRougeGlb:  boolean;
   lampSdb:        boolean;
   lampCouloir:    boolean;
   freezerOpen:    boolean;
@@ -266,7 +265,6 @@ export interface FurnitureState {
   tvOn:           boolean;
   sofaArmLeft:    boolean;
   sofaArmRight:   boolean;
-  glassDoorV2:    boolean;
   glassDoorV2LeftOpen: boolean;
   glassDoorV2ShutterPos: number;
 }
@@ -536,29 +534,15 @@ export function SidePanel({
 
   const FurnitureSection = (
     <>
-      <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
-        onClick={() => onToggleFurniture('glassDoorV2')}
-        style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent' }}
-      >
-        <span>Porte-fenêtre</span>
-        <span className="badge bg-danger" style={{ fontSize: '9px' }}>
-          {furniture.glassDoorV2 ? 'V2' : 'V1'}
-        </span>
-      </button>
-      {!furniture.glassDoorV2 ? (
-        b0('light', `Ouverture : ${furniture.eastGlassDoor ? 'OUVERTE' : 'FERMÉE'}`,
-            () => onToggleFurniture('eastGlassDoor'))
-      ) : (
-        <>
-          {b0('light', `Battant droit : ${furniture.eastGlassDoor ? 'OUVERT' : 'FERMÉ'}`,
-              () => onToggleFurniture('eastGlassDoor'))}
-          {b0('light', `Battant gauche : ${furniture.glassDoorV2LeftOpen && furniture.eastGlassDoor ? 'OUVERT' : 'FERMÉ'}`,
-              () => onToggleFurniture('glassDoorV2LeftOpen'))}
-          {b0('light', `Volet : ${furniture.glassDoorV2ShutterPos === 0 ? 'OUVERT' : furniture.glassDoorV2ShutterPos === 100 ? 'FERMÉ' : furniture.glassDoorV2ShutterPos + '% FERMÉ'}`,
-              () => onToggleFurniture('glassDoorV2ShutterPos'))}
-        </>
-      )}
+      <div className="p-2 border-bottom bg-transparent fw-semibold text-muted text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.06em' }}>
+        Porte-fenêtre
+      </div>
+      {b0('light', `Battant droit : ${furniture.eastGlassDoor ? 'OUVERT' : 'FERMÉ'}`,
+          () => onToggleFurniture('eastGlassDoor'))}
+      {b0('light', `Battant gauche : ${furniture.glassDoorV2LeftOpen && furniture.eastGlassDoor ? 'OUVERT' : 'FERMÉ'}`,
+          () => onToggleFurniture('glassDoorV2LeftOpen'))}
+      {b0('light', `Volet : ${furniture.glassDoorV2ShutterPos === 0 ? 'OUVERT' : furniture.glassDoorV2ShutterPos === 100 ? 'FERMÉ' : furniture.glassDoorV2ShutterPos + '% FERMÉ'}`,
+          () => onToggleFurniture('glassDoorV2ShutterPos'))}
       {b0('light', `Porte entrée : ${furniture.entryDoor ? 'OUVERTE' : 'FERMÉE'}`,
           () => onToggleFurniture('entryDoor'))}
       {b0('light', `Porte séjour : ${furniture.livingDoor ? 'OUVERTE' : 'FERMÉE'}`,
@@ -589,8 +573,7 @@ export function SidePanel({
           () => onToggleFurniture('lampSdb'))}
       {b0('yellow', `Ampoule couloir : ${furniture.lampCouloir ? 'ON' : 'OFF'}`,
           () => onToggleFurniture('lampCouloir'))}
-      {b0('red', `Drona : ${furniture.dronaRougeGlb ? 'Rouge GLB' : 'DRÖNA.glb'}`,
-          () => onToggleFurniture('dronaRougeGlb'))}
+
       {b0('light', `Frigo compact : ${furniture.freezerOpen ? 'OUVERT' : 'FERMÉ'}`,
           () => onToggleFurniture('freezerOpen'))}
       {b0('light', `Frigo LAGAN : ${furniture.fridge ? 'OUVERT' : 'FERMÉ'}`,

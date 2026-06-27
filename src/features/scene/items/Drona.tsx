@@ -3,16 +3,13 @@
  * Coordonnées locales : centré par bbox, Y=0 = sol, rouge.
  * Le GLB officiel IKEA est en mètres → scale ×100 pour la scène (1 unité = 1 cm).
  *
- * Toggle "dronaRougeGlb" : bascule la géométrie entre DRÖNA.glb (qualité) et
- * DRÖNA rouge.glb (comparaison).
- *
  * Exports :
  *   Drona          — composant SceneItemProps (instance unique, inventaire)
- *   useDronaGeo    — hook retournant la géométrie active selon le toggle
+ *   useDronaGeo    — hook retournant la géométrie active
  *   DroneCell      — boîte unique pour groupes positionnés
  *   DronaInstances — N boîtes via InstancedMesh, prend un tableau de Matrix4
  */
-import { useLayoutEffect, useMemo, useEffect, useState } from 'react';
+import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -20,22 +17,8 @@ import { glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB_DRONA = 'media/glb/ikea-official/DRÖNA.glb';
-const GLB_ROUGE = 'media/glb/ikea-official/DRÖNA rouge.glb';
 
 const dronaMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.DoubleSide });
-
-function useDronaToggle(): boolean {
-  const [useRouge, setUseRouge] = useState(false);
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { key } = (e as CustomEvent).detail;
-      if (key === 'dronaRougeGlb') setUseRouge(v => !v);
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, []);
-  return useRouge;
-}
 
 function extractGeo(scene: THREE.Object3D, scale: number): THREE.BufferGeometry {
   scene.updateMatrixWorld(true);
@@ -67,7 +50,7 @@ function extractGeo(scene: THREE.Object3D, scale: number): THREE.BufferGeometry 
   return geo;
 }
 
-function useDronaGeoFrom(glb: typeof GLB_DRONA | typeof GLB_ROUGE): THREE.BufferGeometry {
+function useDronaGeoFrom(glb: typeof GLB_DRONA): THREE.BufferGeometry {
   const { scene } = useGLTF(glb);
   return useMemo(() => extractGeo(scene, 100), [scene]);
 }
@@ -77,18 +60,11 @@ function useDronaGeoFrom(glb: typeof GLB_DRONA | typeof GLB_ROUGE): THREE.Buffer
  * prête à l'emploi dans un InstancedMesh.
  */
 export function useDronaGeo(): THREE.BufferGeometry {
-  const geoNormal = useDronaGeoFrom(GLB_DRONA);
-  const geoRouge  = useDronaGeoFrom(GLB_ROUGE);
-  const useRouge  = useDronaToggle();
-  return useRouge ? geoRouge : geoNormal;
+  return useDronaGeoFrom(GLB_DRONA);
 }
 
 export function Drona({ onSize }: SceneItemProps) {
-  const useRouge = useDronaToggle();
-  const { scene: sceneDrona } = useGLTF(GLB_DRONA);
-  const { scene: sceneRouge } = useGLTF(GLB_ROUGE);
-
-  const scene = useRouge ? sceneRouge : sceneDrona;
+  const { scene } = useGLTF(GLB_DRONA);
 
   useLayoutEffect(() => {
     scene.scale.setScalar(100);
@@ -113,19 +89,13 @@ export function Drona({ onSize }: SceneItemProps) {
 
 /** Boîte Drona unique — à placer dans un <group position rotation>. */
 export function DroneCell() {
-  const geoNormal = useDronaGeoFrom(GLB_DRONA);
-  const geoRouge  = useDronaGeoFrom(GLB_ROUGE);
-  const useRouge  = useDronaToggle();
-  const geo = useRouge ? geoRouge : geoNormal;
+  const geo = useDronaGeoFrom(GLB_DRONA);
   return <mesh geometry={geo} material={dronaMat} castShadow receiveShadow />;
 }
 
 /** N boîtes Drona via InstancedMesh. Chaque Matrix4 encode position + rotation. */
 export function DronaInstances({ matrices }: { matrices: THREE.Matrix4[] }) {
-  const geoNormal = useDronaGeoFrom(GLB_DRONA);
-  const geoRouge  = useDronaGeoFrom(GLB_ROUGE);
-  const useRouge  = useDronaToggle();
-  const geo = useRouge ? geoRouge : geoNormal;
+  const geo = useDronaGeoFrom(GLB_DRONA);
   const N = matrices.length;
   const apply = (mesh: THREE.InstancedMesh) => {
     matrices.forEach((m, i) => mesh.setMatrixAt(i, m));
@@ -135,4 +105,3 @@ export function DronaInstances({ matrices }: { matrices: THREE.Matrix4[] }) {
 }
 
 useGLTF.preload(GLB_DRONA);
-useGLTF.preload(GLB_ROUGE);

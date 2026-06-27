@@ -78,10 +78,7 @@ const WALKER_ANIM_OPTIONS = [
 
 const ACTIONS: Record<string, ActionDef> = {
   eastGlassDoor: {
-    btnLabel: () => {
-      const isV2 = useSceneStore.getState().furniture.glassDoorV2;
-      return isV2 ? 'Ouvrir / Fermer Droit' : 'Ouvrir / Fermer';
-    },
+    btnLabel: 'Ouvrir / Fermer Droit',
     toggleKey: 'eastGlassDoor'
   },
   glassDoorLeftOpen: { btnLabel: 'Ouvrir / Fermer Gauche', toggleKey: 'glassDoorV2LeftOpen' },

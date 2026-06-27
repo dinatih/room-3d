@@ -1629,7 +1629,6 @@ export function DoorsPlaced() {
     livingDoor:            'living-door-toggle',
     bathroomDoor:          'bathroom-door-toggle',
     entryDoor:             'entry-door-toggle',
-    glassDoorV2:           'glass-door-v2',
     glassDoorV2LeftOpen:   'glass-door-v2-left-open',
     glassDoorV2ShutterPos: 'glass-door-v2-shutter-pos',
   });
@@ -1657,7 +1656,7 @@ export function DoorsPlaced() {
           animUnit: true,
           hoverAction: {
             label: 'Porte-fenêtre',
-            actions: as['glass-door-v2'] ? ['eastGlassDoor', 'glassDoorLeftOpen', 'glassDoorShutter'] : ['eastGlassDoor']
+            actions: ['eastGlassDoor', 'glassDoorLeftOpen', 'glassDoorShutter']
           }
         }}>
         <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
