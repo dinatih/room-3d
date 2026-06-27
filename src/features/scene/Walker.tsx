@@ -327,12 +327,12 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         const resolvedHipsName = resolveTargetBoneName(targetInstance, 'Hips', sourceHairMap);
         const bone = resolvedHipsName ? targetInstance.getObjectByName(resolvedHipsName) as any : null;
         let refSrcY = 0.991;
-        if (animBones[baseName]) {
-          refSrcY = animBones[baseName].defaultPosition.y;
+        if (animBones[baseName] && animBones[baseName].defaultPosition) {
+          refSrcY = animBones[baseName].defaultPosition.length();
         } else {
           const srcBone = xbotInstance.getObjectByName('mixamorig:Hips') as any;
           if (srcBone && srcBone.defaultPosition) {
-            refSrcY = srcBone.defaultPosition.y;
+            refSrcY = srcBone.defaultPosition.length();
           }
         }
         if (refSrcY > 5.0) {
@@ -342,7 +342,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
 
         let targetHipsHeight = 99.1;
         if (bone && bone.defaultPosition) {
-          targetHipsHeight = bone.name.toLowerCase().includes('root_hips') ? bone.defaultPosition.z : bone.defaultPosition.y;
+          targetHipsHeight = bone.defaultPosition.length();
         }
         if (refSrcY > 0) {
           computedHipsRatio = targetHipsHeight / refSrcY;
@@ -1036,9 +1036,10 @@ function SingleCharacter({
             
             const parentQuatInv = parentQuat.clone().invert();
             const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
-            const qTarget = new THREE.Quaternion().setFromUnitVectors(axis, localTargetDir);
             
-            bone.quaternion.copy(qTarget);
+            const restDirParent = axis.clone().applyQuaternion(restQuat);
+            const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
+            bone.quaternion.copy(qDelta).multiply(restQuat);
           }
         }
 
@@ -1080,9 +1081,10 @@ function SingleCharacter({
             
             const parentQuatInv = parentQuat.clone().invert();
             const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
-            const qTarget = new THREE.Quaternion().setFromUnitVectors(axis, localTargetDir);
             
-            bone.quaternion.copy(qTarget);
+            const restDirParent = axis.clone().applyQuaternion(restQuat);
+            const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
+            bone.quaternion.copy(qDelta).multiply(restQuat);
           }
         }
     }
