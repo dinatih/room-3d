@@ -281,6 +281,7 @@ export interface LayerState {
   plan:         boolean;
   grid:         boolean;
   gridDepth:    boolean;
+  laraGrid:     boolean;
 
   skeleton:     boolean;
   ceiling:      boolean;
@@ -474,6 +475,7 @@ export function SidePanel({
     <>
       {layerBtn('teal',   'Grille',        'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
+      {layerBtn('teal',   'Grille Lara 👥', 'laraGrid')}
       {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('cyan',   'X-Ray',         'xray')}
       {layerBtn('purple', 'Miroirs',       'mirrors')}

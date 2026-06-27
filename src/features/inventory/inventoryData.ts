@@ -213,9 +213,24 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'door-glass',       name: 'Porte-fenêtre',                  brand: '',         category: 'doors',     qty: 1, dims: { w: 160, d: 5,   h: 190 }, notes: 'Double battant PVC blanc, vitrage, seuil 20cm', actions: ['east-glass-door-toggle'] },
   { id: 'door-frame',       name: 'Dormant de porte',               brand: 'Standard', category: 'doors',     qty: 1, dims: { w: 88,  d: 9.2, h: 205 }, notes: 'Dormant/huisserie standard pour mur de 7.2 cm d\'épaisseur. Largeur totale 9.2 cm, recouvrement de 1 cm des deux côtés avec lèvres symétriques (3 cm de hauteur). Passage utile de 83 cm avec butée de 1.8 cm.' },
 
-  // ── WALKERS ───────────────────────────────────────────────────────────────────
-  { id: 'walker-x-bot',        name: 'X Bot (Official)',             brand: 'Three.js / Mixamo', category: 'walkers',   qty: 1, dims: { w: 45, d: 25, h: 180 },   notes: 'Personnage officiel Mixamo pour la navigation.' },
 ];
+
+import { CHARACTERS } from '@features/scene/Walker';
+
+CHARACTERS.forEach(char => {
+  if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
+    INVENTORY.push({
+      id: char.id,
+      name: char.name,
+      brand: char.id === 'xbot_studio' ? 'Mixamo' : 'Lara Croft Style',
+      category: 'walkers',
+      qty: 1,
+      dims: { w: 45, d: 25, h: char.height },
+      glbPath: char.path,
+      notes: `Personnage : ${char.name}.`
+    });
+  }
+});
 
 export const STORAGE_SPACES: StorageSpace[] = [
   { id: 'kallax-ne-stack', name: 'Kallax NE',       dims: { w: 75.5, d: 39, h: 222 }, notes: 'Coin mur C+B — 2×1 bas + 2×2 haut empilés, 6 Drona + 1 dessus' },
@@ -240,6 +255,6 @@ export const CATEGORIES: Category[] = [
   { id: 'clothing',     label: 'Vêtements' },
   { id: 'decor',        label: 'Déco' },
   { id: 'consumable',   label: '🛒 Consomables' },
-  { id: 'walkers',      label: '🚶 Walkers' },
+  { id: 'walkers',      label: '👥 Personnages' },
   { id: 'glbs',         label: '🎲 GLBs' },
 ];

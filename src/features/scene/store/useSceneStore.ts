@@ -55,6 +55,7 @@ const initialLayers: LayerState = {
   plan: false,
   grid: false,
   gridDepth: false,
+  laraGrid: false,
   skeleton: false,
   ceiling: false,
   wallEdges: false,

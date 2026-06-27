@@ -566,6 +566,8 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
 interface WalkerProps {
   showSkeleton?: boolean;
   isPreview?: boolean;
+  previewCharacterId?: string;
+  characterIndex?: number;
   walkerAnim?: string;
   isPaused?: boolean;
 }
@@ -609,6 +611,7 @@ function SingleCharacter({
   isActive,
   showSkeleton = false,
   isPreview = false,
+  characterIndex = 0,
   walkerAnim = 'idle',
   isPaused = false,
   animations,
@@ -620,6 +623,7 @@ function SingleCharacter({
   sittingScene,
   customIdleAnimPath
 }: SingleCharacterProps) {
+  const laraGrid = useSceneStore(state => state.layers.laraGrid);
   const { scene } = useGLTFClone(modelPath);
 
   const groupRef = useRef<THREE.Group>(null!);
@@ -925,6 +929,15 @@ function SingleCharacter({
       groupRef.current.position.set(0, 0, 0);
       groupRef.current.rotation.y = 0;
       groupRef.current.visible = true;
+    } else if (laraGrid) {
+      const row = Math.floor(characterIndex / 5);
+      const col = characterIndex % 5;
+      const targetX = 150 + (col - 2) * 120;
+      const targetY = 400 + row * 220;
+      const targetZ = 200;
+      groupRef.current.position.set(targetX, targetY, targetZ);
+      groupRef.current.rotation.y = 0;
+      groupRef.current.visible = !cameraState.walkerHidden;
     } else {
       if (isActive) {
         groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
@@ -1144,8 +1157,14 @@ function InternalWalker(props: WalkerProps) {
 
   return (
     <>
-      {charactersWithAnims.map((char) => {
-        const isActive = char.id === activeWalkerId;
+      {charactersWithAnims.map((char, index) => {
+        const isActive = props.isPreview
+          ? char.id === props.previewCharacterId
+          : char.id === activeWalkerId;
+
+        if (props.isPreview && char.id !== props.previewCharacterId) {
+          return null;
+        }
 
         return (
           <SingleCharacter
@@ -1165,6 +1184,7 @@ function InternalWalker(props: WalkerProps) {
             sittingScene={char.sittingScene}
             walkerAnim={props.walkerAnim}
             customIdleAnimPath={char.customIdleAnimPath}
+            characterIndex={index}
           />
         );
       })}

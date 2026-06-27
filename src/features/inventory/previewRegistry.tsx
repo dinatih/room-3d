@@ -58,7 +58,7 @@ import { Vihals }                                     from '@features/scene/item
 import { Rebound }                                    from '@features/scene/items/Rebound';
 import { Linky }                                      from '@features/scene/items/Linky';
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
-import { Walker }                                     from '@features/scene/Walker';
+import { Walker, CHARACTERS }                         from '@features/scene/Walker';
 
 function PreviewWalker({ actionState }: { actionState?: any }) {
   return <Walker isPreview={true} showSkeleton={actionState?.showBones} isPaused={actionState?.isPaused} walkerAnim={actionState?.walkerAnim} />;
@@ -81,7 +81,6 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'sdb-closet':             SdbCloset,
 
   // ── Procéduraux (pas de glbPath) ──────────────────────────────────────────
-  'walker-x-bot':           PreviewWalker as any,
   'counter':                Counter,
   'sink-boholmen':          SinkBoholmen,
   'water-heater':           WaterHeater,
@@ -160,3 +159,9 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'sofa-arm-left':         ['Mettre à plat G', 'Relever G'],
   'sofa-arm-right':        ['Mettre à plat D', 'Relever D'],
 };
+
+CHARACTERS.forEach(char => {
+  SCENE_REGISTRY[char.id] = function DynamicPreview({ actionState }: { actionState?: any }) {
+    return <Walker isPreview={true} previewCharacterId={char.id} showSkeleton={actionState?.showBones} isPaused={actionState?.isPaused} walkerAnim={actionState?.walkerAnim} />;
+  } as any;
+});
