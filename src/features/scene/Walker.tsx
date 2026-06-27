@@ -699,12 +699,22 @@ function SingleCharacter({
             c.userData.hoverAction = { label: labelStr, actionId: isLara ? 'walker-anim-lara' : 'walker-anim-xbot' };
         }
       }
-      c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
+      if (!c.restWorldQuaternion) {
+        c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
+      }
       if (c.isBone) {
-        c.defaultPosition = c.position.clone();
-        c.restLocalQuaternion = c.quaternion.clone();
-        c.userData.restPos = c.position.clone();
-        c.userData.restQuat = c.quaternion.clone();
+        if (!c.defaultPosition) {
+          c.defaultPosition = c.position.clone();
+        }
+        if (!c.restLocalQuaternion) {
+          c.restLocalQuaternion = c.quaternion.clone();
+        }
+        if (!c.userData.restPos) {
+          c.userData.restPos = c.position.clone();
+        }
+        if (!c.userData.restQuat) {
+          c.userData.restQuat = c.quaternion.clone();
+        }
       }
     });
 
@@ -924,46 +934,54 @@ function InternalWalker(props: WalkerProps) {
   const laying1Gltf = useGLTF('media/sandbox/anim_laying_idle_1.glb');
   const climbingGltf = useGLTF('media/sandbox/anim_climbing.glb');
 
-  const animGltfs: Record<string, any> = {
+  const animGltfs: Record<string, any> = useMemo(() => ({
     'media/sandbox/anim_sitting_idle.glb': sittingGltf,
     'media/sandbox/anim_swimming_to_edge.glb': swimmingGltf,
     'media/sandbox/anim_gangnam_style.glb': marissaGltf,
     'media/sandbox/anim_push_up.glb': pushUpGltf,
     'media/sandbox/anim_climbing.glb': climbingGltf,
     'media/sandbox/anim_laying_idle_1.glb': laying1Gltf,
-  };
+  }), [sittingGltf, swimmingGltf, marissaGltf, pushUpGltf, climbingGltf, laying1Gltf]);
+
+  const charactersWithAnims = useMemo(() => {
+    return CHARACTERS.map(char => {
+      const isLara = char.id !== 'xbot_studio';
+      const charAnims = [
+        ...xbotGltf.animations,
+        ...(char.customIdleAnimPath && animGltfs[char.customIdleAnimPath]?.animations[0]
+          ? [Object.assign(animGltfs[char.customIdleAnimPath].animations[0].clone(), { name: char.customIdleAnimPath })]
+          : [])
+      ];
+      const sittingScene = char.sittingScenePath && animGltfs[char.sittingScenePath]?.scene;
+      return {
+        ...char,
+        isLara,
+        charAnims,
+        sittingScene
+      };
+    });
+  }, [xbotGltf.animations, animGltfs]);
 
   return (
     <>
-      {CHARACTERS.map((char) => {
+      {charactersWithAnims.map((char) => {
         const isActive = char.id === activeWalkerId;
-        const isLara = char.id !== 'xbot_studio';
-
-        // Resolve animations for this character
-        const charAnims = [
-          ...xbotGltf.animations,
-          ...(char.customIdleAnimPath && animGltfs[char.customIdleAnimPath]?.animations[0]
-            ? [Object.assign(animGltfs[char.customIdleAnimPath].animations[0].clone(), { name: char.customIdleAnimPath })]
-            : [])
-        ];
-
-        const sittingScene = char.sittingScenePath && animGltfs[char.sittingScenePath]?.scene;
 
         return (
           <SingleCharacter
             {...props}
             key={char.id}
             modelPath={char.path}
-            isLara={isLara}
+            isLara={char.isLara}
             targetHeight={char.height}
             isActive={isActive}
-            animations={charAnims}
+            animations={char.charAnims}
             xbotScene={xbotGltf.scene}
             variant={char.variant}
             isNPC={!isActive}
             npcPosition={char.pos}
             npcRotationY={char.rot}
-            sittingScene={sittingScene}
+            sittingScene={char.sittingScene}
             walkerAnim={props.walkerAnim}
             customIdleAnimPath={char.customIdleAnimPath}
           />
