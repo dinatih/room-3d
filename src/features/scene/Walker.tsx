@@ -31,29 +31,14 @@ export interface CharacterConfig {
 }
 
 export const CHARACTERS: CharacterConfig[] = [
-  // 20 new characters from all_lara_style
-  { id: '01_bikini', name: '01 Bikini', path: 'media/all_lara/01_bikini.glb', pos: [140, 0, 30], rot: 1.9, height: 173.4 },
-  { id: '02_double_slit_dress', name: '02 Double slit dress', path: 'media/all_lara/02_double_slit_dress.glb', pos: [170, 0, 120], rot: -0.2, height: 173.4 },
-  { id: '03_dress', name: '03 Dress', path: 'media/all_lara/03_dress.glb', pos: [40, 0, -180], rot: 3.0, height: 173.4 },
+  // Remaining valid characters
   { id: '04_baywatch', name: '04 Baywatch', path: 'media/all_lara/04_baywatch.glb', pos: [260, 0, -220], rot: 1.1, height: 173.4 },
   { id: '05_crop_top_shorts', name: '05 Crop top - Shorts', path: 'media/all_lara/05_crop_top_shorts.glb', pos: [50, 0, 40], rot: 0.4, height: 173.4 },
-  { id: '06_cap_sleeve_crop_top_shorts', name: '06 Cap sleeve crop top - Shorts', path: 'media/all_lara/06_cap_sleeve_crop_top_shorts.glb', pos: [220, 0, 180], rot: 2.1, height: 173.4 },
   { id: '07_scoop_bodysuit_shorts', name: '07 Scoop bodysuit - Shorts', path: 'media/all_lara/07_scoop_bodysuit_shorts.glb', pos: [230, 0, 340], rot: 0.1, height: 173.4 },
-  { id: '08_crew_neck_bodysuit_shorts', name: '08 Crew neck bodysuit - Shorts', path: 'media/all_lara/08_crew_neck_bodysuit_shorts.glb', pos: [210, 0, -80], rot: 2.7, height: 173.4 },
-  { id: '09_cap_sleeve_biketard', name: '09 Cap sleeve biketard', path: 'media/all_lara/09_cap_sleeve_biketard.glb', pos: [70, 0, -110], rot: -2.5, height: 173.4 },
-  { id: '10_long_sleeve_surfsuit', name: '10 Long sleeve surfsuit', path: 'media/all_lara/10_long_sleeve_surfsuit.glb', pos: [110, 0, -150], rot: -2.3, height: 173.4 },
-  { id: '11_tank_top_pants', name: '11 Tank top - Pants', path: 'media/all_lara/11_tank_top_pants.glb', pos: [280, 0, 210], rot: -1.8, height: 173.4 },
-  { id: '12_bodysuit_jeans', name: '12 Bodysuit - Jeans', path: 'media/all_lara/12_bodysuit_jeans.glb', pos: [80, 0, 310], rot: -1.2, height: 173.4 },
-  { id: '13_3_4_sleeve_catsuit', name: '13 3/4 sleeve catsuit', path: 'media/all_lara/13_3_4_sleeve_catsuit.glb', pos: [60, 0, 110], rot: 1.5, height: 173.4 },
   { id: '14_catsuit', name: '14 Catsuit', path: 'media/all_lara/14_catsuit.glb', pos: [90, 0, 190], rot: -0.9, height: 173.4 },
-  { id: '14_catsuit_mp5', name: '14 Catsuit (mp5)', path: 'media/all_lara/14_catsuit_mp5.glb', pos: [120, 0, 250], rot: 0.5, height: 173.4 },
-  { id: '15_business_suit', name: '15 Business suit', path: 'media/all_lara/15_business_suit.glb', pos: [240, 0, 50], rot: -0.5, height: 173.4 },
-  { id: '16_motorcycle', name: '16 Motorcycle', path: 'media/all_lara/16_motorcycle.glb', pos: [150, 0, -50], rot: 0, height: 173.4 },
-  { id: '17_jacket_pants', name: '17 Jacket - Pants', path: 'media/all_lara/17_jacket_pants.glb', pos: [190, 0, 290], rot: 0.8, height: 173.4 },
-  { id: '18_wetsuit', name: '18 Wetsuit', path: 'media/all_lara/18_wetsuit.glb', pos: [130, 0, -280], rot: 0.9, height: 173.4 },
   { id: 'xbot_studio', name: 'X-Bot (Studio)', path: 'media/all_lara/xbot_studio.glb', pos: [180, 0, -200], rot: 1.4, height: 181.0 },
 
-  // 9 stylized default Laras
+  // 9 stylized default Laras (based on Scoop)
   { id: 'rosanna', name: 'Rosanna', path: 'media/sandbox/rosanna_lara_native.glb', pos: [251, 75, 178], rot: 1.325 + Math.PI / 2, variant: 'rosanna', height: 173.4, sittingScenePath: 'media/sandbox/anim_push_up.glb', customIdleAnimPath: 'media/sandbox/anim_push_up.glb' },
   { id: 'marissa', name: 'Marissa', path: 'media/sandbox/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4, sittingScenePath: 'media/sandbox/anim_gangnam_style.glb', customIdleAnimPath: 'media/sandbox/anim_gangnam_style.glb' },
   { id: 'delphina', name: 'Delphina', path: 'media/sandbox/lara_native.glb', pos: [120, 35, -250], rot: 1, variant: 'delphina', height: 173.4, sittingScenePath: 'media/sandbox/anim_swimming_to_edge.glb', customIdleAnimPath: 'media/sandbox/anim_swimming_to_edge.glb' },
@@ -88,6 +73,15 @@ const BONE_SYNONYMS: Record<string, string[]> = {
   'RightFoot': ['legrightankle', 'footr', 'rlegankle', 'foot.r', 'foot_r', 'ankle.r', 'ankle_r', 'rightfoot'],
   'RightToeBase': ['legrighttoes', 'ballr', 'toer', 'rlegball', 'toe.r', 'toe_r', 'ball.r', 'ball_r', 'righttoebase']
 };
+
+const ACCESSORIES_MESH_NAMES = new Set([
+  'backpack', 'oxygen',
+  'binoculars', 'buckle', 'camera', 'goggles', 'grapple',
+  'handgun_left', 'handgun_right', 'mp5', 'mp5_ammo',
+  'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster',
+  'headset', 'pda', 'personal_light', 'ribbon', 'purse',
+  'grenades', 'accessories', 'handgun_part'
+]);
 
 function resolveTargetFingerBoneName(targetInstance: THREE.Object3D, side: string, type: string, segment: string): string | null {
   const sideChar = side.charAt(0).toLowerCase();
@@ -588,6 +582,7 @@ function GroundPoint() {
 }
 
 interface SingleCharacterProps extends WalkerProps {
+  id: string;
   name: string;
   modelPath: string;
   isLara: boolean;
@@ -604,6 +599,7 @@ interface SingleCharacterProps extends WalkerProps {
 }
 
 function SingleCharacter({
+  id,
   name,
   modelPath,
   isLara,
@@ -624,6 +620,8 @@ function SingleCharacter({
   customIdleAnimPath
 }: SingleCharacterProps) {
   const laraGrid = useSceneStore(state => state.layers.laraGrid);
+  const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
+  const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const { scene } = useGLTFClone(modelPath);
 
   const groupRef = useRef<THREE.Group>(null!);
@@ -665,12 +663,33 @@ function SingleCharacter({
   }, [invalidate]);
 
   useLayoutEffect(() => {
+    scene.traverse(node => {
+      if ((node as THREE.Mesh).isMesh) {
+        const mesh = node as THREE.Mesh;
+        const nameLower = (mesh.name || '').toLowerCase();
+        
+        let isAccessory = false;
+        for (const accName of ACCESSORIES_MESH_NAMES) {
+          if (nameLower.includes(accName)) {
+            isAccessory = true;
+            break;
+          }
+        }
+        
+        if (isAccessory) {
+          mesh.visible = showAccessories;
+        }
+      }
+    });
+  }, [scene, showAccessories]);
+
+  useLayoutEffect(() => {
     // Rename all hair bones sequentially from base to tip
     const targetHairBones: Array<{ bone: THREE.Object3D; depth: number }> = [];
     scene.traverse(c => {
       if ((c as any).isBone) {
         const nameLower = (c.name || '').toLowerCase();
-        if (nameLower.includes('hair') || nameLower.includes('ponytail') || nameLower.includes('braid')) {
+        if (nameLower.includes('hair') || nameLower.includes('ponytail') || nameLower.includes('braid') || nameLower.includes('pony')) {
           targetHairBones.push({ bone: c, depth: getDepth(c) });
         }
       }
@@ -764,40 +783,59 @@ function SingleCharacter({
 
     // Initialize Hair Chain (Verlet)
     const hairChain: any[] = [];
-    const hairBones: THREE.Bone[] = [];
-    scene.traverse(c => {
-      if ((c as any).isBone && c.name.startsWith('hair_')) {
-        hairBones.push(c as THREE.Bone);
-      }
-    });
-    hairBones.sort((a, b) => getDepth(a) - getDepth(b));
+    const nameLower = (name || '').toLowerCase();
+    const isScoopOrClone = false;
 
-    for (const bone of hairBones) {
-      let axis = new THREE.Vector3(0, -1, 0); // Mixamo default hair direction points down along Y
-      let length = 8.0;
-      const child = bone.children.find(x => (x as any).isBone && x.name.startsWith('hair_'));
-      if (child && child.position.lengthSq() > 1e-8) {
-        length = child.position.length();
-        axis = child.position.clone().normalize();
-      }
-      bone.updateMatrixWorld(true);
-      const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-      const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
-      const worldLength = length * worldScale.y;
-      const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
-      const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
-      
-      hairChain.push({
-        bone,
-        restQuat: bone.quaternion.clone(),
-        axis,
-        length,
-        worldLength,
-        tipWorld: tipWorld.clone(),
-        tipPrev: tipWorld.clone(),
+    if (isScoopOrClone) {
+      const hairBones: THREE.Bone[] = [];
+      scene.traverse(c => {
+        if ((c as any).isBone && c.name.startsWith('hair_')) {
+          hairBones.push(c as THREE.Bone);
+        }
       });
+      hairBones.sort((a, b) => getDepth(a) - getDepth(b));
+
+      if (hairBones.length > 0) {
+        const baseParent = hairBones[0].parent;
+        if (baseParent) {
+          baseParent.updateMatrixWorld(true);
+          const baseParentRestQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
+
+          let prevAxis = new THREE.Vector3(0, -1, 0);
+          for (const bone of hairBones) {
+            let axis = prevAxis.clone();
+            let length = 8.0;
+            const child = bone.children.find(x => (x as any).isBone && x.name.startsWith('hair_'));
+            if (child && child.position.lengthSq() > 1e-8) {
+              length = child.position.length();
+              axis = child.position.clone().normalize();
+            }
+            prevAxis = axis.clone();
+            bone.updateMatrixWorld(true);
+            const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+            const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
+            const worldLength = length * worldScale.y;
+            const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
+            const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
+            
+            const boneRestQuat = bone.getWorldQuaternion(new THREE.Quaternion());
+            const relQuat = baseParentRestQuat.clone().invert().multiply(boneRestQuat);
+
+            hairChain.push({
+              bone,
+              restQuat: bone.quaternion.clone(),
+              relQuat,
+              axis,
+              length,
+              worldLength,
+              tipWorld: tipWorld.clone(),
+              tipPrev: tipWorld.clone(),
+            });
+          }
+        }
+      }
     }
-    hairChainRef.current = hairChain;
+  hairChainRef.current = hairChain;
 
     // Initialize Breast Chain (Verlet)
     const breastChain: any[] = [];
@@ -937,7 +975,8 @@ function SingleCharacter({
       const targetZ = 200;
       groupRef.current.position.set(targetX, targetY, targetZ);
       groupRef.current.rotation.y = 0;
-      groupRef.current.visible = !cameraState.walkerHidden;
+      const isNumbered = /^\d/.test(id);
+      groupRef.current.visible = !cameraState.walkerHidden && (showAllLaraStyles || !isNumbered);
     } else {
       if (isActive) {
         groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
@@ -946,7 +985,8 @@ function SingleCharacter({
       } else if (isNPC) {
         groupRef.current.position.set(npcPosition[0], npcPosition[1], npcPosition[2]);
         groupRef.current.rotation.y = npcRotationY;
-        groupRef.current.visible = !cameraState.walkerHidden;
+        const isNumbered = /^\d/.test(id);
+        groupRef.current.visible = !cameraState.walkerHidden && (showAllLaraStyles || !isNumbered);
       } else {
         groupRef.current.visible = false;
       }
@@ -1011,13 +1051,88 @@ function SingleCharacter({
     if (activeActionName.current !== 'tpose' && !isPaused && !isIdleTimeout) {
         mixer.update(delta);
 
+        // Lock hair bones to their rest local transforms to completely freeze ponytail movement
+        scene.traverse(c => {
+          if ((c as any).isBone) {
+            const nLower = (c.name || '').toLowerCase();
+            if (nLower.includes('hair') || nLower.includes('ponytail') || nLower.includes('braid') || nLower.includes('pony') || nLower.startsWith('hair_')) {
+              if ((c as any).restLocalQuaternion) {
+                (c as any).quaternion.copy((c as any).restLocalQuaternion);
+              }
+              if ((c as any).defaultPosition) {
+                (c as any).position.copy((c as any).defaultPosition);
+              }
+            }
+          }
+        });
+
         // Ponytail physics simulation (Verlet)
         if (hairChainRef.current.length > 0) {
+          const firstNode = hairChainRef.current[0];
+          const baseParent = firstNode.bone.parent;
+          if (baseParent) {
+            baseParent.updateMatrixWorld(true);
+            const baseParentQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
+            let simDt = delta;
+            if (simDt > 0.05) simDt = 0.05;
+            const g = new THREE.Vector3(0, -981, 0); // standard gravity (cm/s^2)
+            
+            for (const node of hairChainRef.current) {
+              const { bone, restQuat, relQuat, axis, worldLength } = node;
+              const parent = bone.parent;
+              if (!parent) continue;
+              
+              parent.updateMatrixWorld(true);
+              bone.updateMatrixWorld(true);
+              
+              const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+              
+              // Rest dir based on baseParent to break feedback loop of deformed parent bones
+              const restQuatWorld = baseParentQuat.clone().multiply(relQuat);
+              const restDir = axis.clone().applyQuaternion(restQuatWorld).normalize();
+              const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
+              
+              // Teleportation safety reset
+              const dist = jointWorld.distanceTo(node.tipWorld);
+              if (dist > worldLength * 3) {
+                node.tipWorld.copy(restTip);
+                node.tipPrev.copy(restTip);
+              }
+              
+              const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.30); // damping = 0.30
+              const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
+              
+              next.lerp(restTip, 0.25); // stiffness = 0.25
+              
+              const dir = new THREE.Vector3().subVectors(next, jointWorld);
+              const currentLen = dir.length();
+              if (currentLen > 1e-6) {
+                dir.multiplyScalar(worldLength / currentLen);
+              } else {
+                dir.copy(restDir).multiplyScalar(worldLength);
+              }
+              
+              node.tipPrev.copy(node.tipWorld);
+              node.tipWorld.copy(jointWorld).add(dir);
+              
+              const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
+              const parentQuatInv = parentQuat.clone().invert();
+              const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
+              
+              const restDirParent = axis.clone().applyQuaternion(restQuat);
+              const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
+              bone.quaternion.copy(qDelta).multiply(restQuat);
+            }
+          }
+        }
+
+        // Breast physics simulation (Verlet)
+        if (breastChainRef.current.length > 0) {
           let simDt = delta;
           if (simDt > 0.05) simDt = 0.05;
-          const g = new THREE.Vector3(0, -981, 0); // standard gravity (cm/s^2)
+          const g = new THREE.Vector3(0, -700, 0); // moderate gravity for breasts to allow bouncy feel
           
-          for (const node of hairChainRef.current) {
+          for (const node of breastChainRef.current) {
             const { bone, restQuat, axis, worldLength } = node;
             const parent = bone.parent;
             if (!parent) continue;
@@ -1027,7 +1142,17 @@ function SingleCharacter({
             
             const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
             
-            const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.06); // damping = 0.06
+            // Teleportation safety reset
+            const dist = jointWorld.distanceTo(node.tipWorld);
+            if (dist > worldLength * 3) {
+              const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
+              const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
+              const tipW = jointWorld.clone().addScaledVector(restDir, worldLength);
+              node.tipWorld.copy(tipW);
+              node.tipPrev.copy(tipW);
+            }
+            
+            const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.12); // damping = 0.12
             const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
             
             const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
@@ -1052,52 +1177,22 @@ function SingleCharacter({
             
             const restDirParent = axis.clone().applyQuaternion(restQuat);
             const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
-            bone.quaternion.copy(qDelta).multiply(restQuat);
-          }
-        }
-
-        // Breast physics simulation (Verlet)
-        if (breastChainRef.current.length > 0) {
-          let simDt = delta;
-          if (simDt > 0.05) simDt = 0.05;
-          const g = new THREE.Vector3(0, -400, 0); // lower gravity for breasts
-          
-          for (const node of breastChainRef.current) {
-            const { bone, restQuat, axis, worldLength } = node;
-            const parent = bone.parent;
-            if (!parent) continue;
             
-            parent.updateMatrixWorld(true);
-            bone.updateMatrixWorld(true);
-            
-            const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-            
-            const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.15); // damping = 0.15
-            const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
-            
-            const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
-            const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
-            const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
-            
-            next.lerp(restTip, 0.4); // stiffness = 0.4
-            
-            const dir = new THREE.Vector3().subVectors(next, jointWorld);
-            const currentLen = dir.length();
-            if (currentLen > 1e-6) {
-              dir.multiplyScalar(worldLength / currentLen);
-            } else {
-              dir.copy(restDir).multiplyScalar(worldLength);
+            let scaledQ = qDelta;
+            const breastIntensity = 10.0;
+            const w = Math.min(1, Math.max(-1, qDelta.w));
+            const angle = 2 * Math.acos(w);
+            if (Math.abs(angle) > 1e-5) {
+              const sinHalf = Math.sqrt(1 - w * w);
+              const rotAxis = new THREE.Vector3();
+              if (sinHalf > 1e-5) {
+                rotAxis.set(qDelta.x / sinHalf, qDelta.y / sinHalf, qDelta.z / sinHalf).normalize();
+              } else {
+                rotAxis.set(0, 0, 1);
+              }
+              scaledQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, angle * breastIntensity);
             }
-            
-            node.tipPrev.copy(node.tipWorld);
-            node.tipWorld.copy(jointWorld).add(dir);
-            
-            const parentQuatInv = parentQuat.clone().invert();
-            const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
-            
-            const restDirParent = axis.clone().applyQuaternion(restQuat);
-            const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
-            bone.quaternion.copy(qDelta).multiply(restQuat);
+            bone.quaternion.copy(scaledQ).multiply(restQuat);
           }
         }
     }
@@ -1170,6 +1265,7 @@ function InternalWalker(props: WalkerProps) {
           <SingleCharacter
             {...props}
             key={char.id}
+            id={char.id}
             name={char.name}
             modelPath={char.path}
             isLara={char.isLara}
@@ -1211,6 +1307,8 @@ useGLTF.preload('media/sandbox/anim_gangnam_style.glb');
 useGLTF.preload('media/sandbox/anim_climbing.glb');
 useGLTF.preload('media/sandbox/anim_push_up.glb');
 useGLTF.preload('media/sandbox/anim_laying_idle_1.glb');
+useGLTF.preload('media/sandbox/anim_woman-solo.glb');
+useGLTF.preload('media/sandbox/anim_knee-push-up.glb');
 
 CHARACTERS.forEach(char => {
   useGLTF.preload(char.path);

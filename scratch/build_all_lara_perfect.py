@@ -212,6 +212,30 @@ def build_model_perfect(target_zip_path, ref_zip_path, out_glb_path, is_referenc
                                     
                 log("Vertex weight transfer completed successfully!")
                 
+                # 5.2) Flatten backpack strap slits in the back of the Scoop bodysuit (Zip 07)
+                if "07 Scoop" in target_zip_path:
+                    log("Flattening backpack strap slits in the Scoop bodysuit...")
+                    shirt_idx = -1
+                    for i, slot in enumerate(tgt_body_mesh.material_slots):
+                        if "shirt" in slot.name.lower():
+                            shirt_idx = i
+                            break
+                    if shirt_idx != -1:
+                        flattened_count = 0
+                        for poly in tgt_body_mesh.data.polygons:
+                            if poly.material_index == shirt_idx:
+                                for v_idx in poly.vertices:
+                                    v = tgt_body_mesh.data.vertices[v_idx]
+                                    # Left slit region
+                                    if 0.04 <= v.co.x <= 0.105 and -0.11 <= v.co.y <= -0.07 and 1.20 <= v.co.z <= 1.28:
+                                        v.co.y = -0.114
+                                        flattened_count += 1
+                                    # Right slit region
+                                    elif -0.105 <= v.co.x <= -0.04 and -0.11 <= v.co.y <= -0.07 and 1.20 <= v.co.z <= 1.28:
+                                        v.co.y = -0.114
+                                        flattened_count += 1
+                        log(f"Successfully flattened {flattened_count} slit vertices on the back.")
+                
                 # Delete the temporary duplicate mesh
                 bpy.ops.object.select_all(action='DESELECT')
                 tmp_mesh.select_set(True)
@@ -245,25 +269,10 @@ if __name__ == "__main__":
     ref_zip = os.path.join(src_dir, "01 Bikini.zip")
     
     all_zips = [
-        ("01 Bikini.zip", "01_bikini.glb", True),
-        ("02 Double slit dress.zip", "02_double_slit_dress.glb", False),
-        ("03 Dress.zip", "03_dress.glb", False),
         ("04 Baywatch.zip", "04_baywatch.glb", False),
         ("05 Crop top - Shorts.zip", "05_crop_top_shorts.glb", False),
-        ("06 Cap sleeve crop top - Shorts.zip", "06_cap_sleeve_crop_top_shorts.glb", False),
         ("07 Scoop bodysuit - Shorts.zip", "07_scoop_bodysuit_shorts.glb", False),
-        ("08 Crew neck bodysuit - Shorts.zip", "08_crew_neck_bodysuit_shorts.glb", False),
-        ("09 Cap sleeve biketard.zip", "09_cap_sleeve_biketard.glb", False),
-        ("10 Long sleeve surfsuit.zip", "10_long_sleeve_surfsuit.glb", False),
-        ("11 Tank top - Pants.zip", "11_tank_top_pants.glb", False),
-        ("12 Bodysuit - Jeans.zip", "12_bodysuit_jeans.glb", False),
-        ("13 3-4 sleeve catsuit.zip", "13_3_4_sleeve_catsuit.glb", False),
         ("14 Catsuit.zip", "14_catsuit.glb", False),
-        ("14 Catsuit (mp5).zip", "14_catsuit_mp5.glb", False),
-        ("15 Business suit.zip", "15_business_suit.glb", False),
-        ("16 Motorcycle.zip", "16_motorcycle.glb", False),
-        ("17 Jacket - Pants.zip", "17_jacket_pants.glb", False),
-        ("18 Wetsuit.zip", "18_wetsuit.glb", False),
     ]
     
     for zip_name, glb_name, is_ref in all_zips:

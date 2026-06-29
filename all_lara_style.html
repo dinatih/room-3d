@@ -173,12 +173,16 @@
           <input type="checkbox" id="toggle-breast-physics" checked style="cursor: pointer; accent-color: #ff4444;">
           <span>Activer la physique de la poitrine</span>
         </label>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
+          <input type="checkbox" id="toggle-wireframe" style="cursor: pointer; accent-color: #ff4444;">
+          <span>Afficher Wireframe</span>
+        </label>
         <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
           <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 500;">
             <span>Intensité poitrine:</span>
-            <span id="breast-intensity-val" style="color: #ff6666; font-weight: bold;">1.0x</span>
+            <span id="breast-intensity-val" style="color: #ff6666; font-weight: bold;">10.0x</span>
           </div>
-          <input type="range" id="breast-intensity-slider" min="0.0" max="15.0" step="0.1" value="1.0" style="width: 100%; cursor: pointer; accent-color: #ff4444; margin: 0;">
+          <input type="range" id="breast-intensity-slider" min="0.0" max="15.0" step="0.1" value="10.0" style="width: 100%; cursor: pointer; accent-color: #ff4444; margin: 0;">
         </div>
       </div>
     </div>
@@ -327,23 +331,13 @@
     window.allModels = allModels;
 
     const variants = [
-      { id: '01_bikini', label: '01 Bikini', file: 'media/all_lara/01_bikini.glb', color: '#cc99ff', fixOpaque: true },
-      { id: '02_double_slit_dress', label: '02 Double slit dress', file: 'media/all_lara/02_double_slit_dress.glb', color: '#9c2829' },
-      { id: '03_dress', label: '03 Dress', file: 'media/all_lara/03_dress.glb', color: '#e07a5f' },
       { id: '04_baywatch', label: '04 Baywatch', file: 'media/all_lara/04_baywatch.glb', color: '#90e0ef' },
       { id: '05_crop_top_shorts', label: '05 Crop top - Shorts', file: 'media/all_lara/05_crop_top_shorts.glb', color: '#d2a23c', fixOpaque: true },
-      { id: '06_cap_sleeve_crop_top_shorts', label: '06 Cap sleeve crop top - Shorts', file: 'media/all_lara/06_cap_sleeve_crop_top_shorts.glb', color: '#33bb66' },
       { id: '07_scoop_bodysuit_shorts', label: '07 Scoop bodysuit - Shorts', file: 'media/all_lara/07_scoop_bodysuit_shorts.glb', color: '#ff0055', fixOpaque: true },
-      { id: '08_crew_neck_bodysuit_shorts', label: '08 Crew neck bodysuit - Shorts', file: 'media/all_lara/08_crew_neck_bodysuit_shorts.glb', color: '#99cc33', fixOpaque: true },
-      { id: '09_cap_sleeve_biketard', label: '09 Cap sleeve biketard', file: 'media/all_lara/09_cap_sleeve_biketard.glb', color: '#00ffcc', fixOpaque: true },
       { id: '10_long_sleeve_surfsuit', label: '10 Long sleeve surfsuit', file: 'media/all_lara/10_long_sleeve_surfsuit.glb', color: '#00b4d8' },
       { id: '11_tank_top_pants', label: '11 Tank top - Pants', file: 'media/all_lara/11_tank_top_pants.glb', color: '#4a4a4a', fixOpaque: true },
-      { id: '12_bodysuit_jeans', label: '12 Bodysuit - Jeans', file: 'media/all_lara/12_bodysuit_jeans.glb', color: '#aa77ff' },
-      { id: '13_3_4_sleeve_catsuit', label: '13 3/4 sleeve catsuit', file: 'media/all_lara/13_3_4_sleeve_catsuit.glb', color: '#3d5a80' },
       { id: '14_catsuit', label: '14 Catsuit', file: 'media/all_lara/14_catsuit.glb', color: '#ffd700', fixOpaque: true },
       { id: '14_catsuit_mp5', label: '14 Catsuit (mp5)', file: 'media/all_lara/14_catsuit_mp5.glb', color: '#ff6600' },
-      { id: '15_business_suit', label: '15 Business suit', file: 'media/all_lara/15_business_suit.glb', color: '#edf2f4' },
-      { id: '16_motorcycle', label: '16 Motorcycle', file: 'media/all_lara/16_motorcycle.glb', color: '#8d99ae' },
       { id: '17_jacket_pants', label: '17 Jacket - Pants', file: 'media/all_lara/17_jacket_pants.glb', color: '#d4a373' },
       { id: '18_wetsuit', label: '18 Wetsuit', file: 'media/all_lara/18_wetsuit.glb', color: '#0077b6' },
       { id: 'xbot_studio', label: 'X-Bot (Studio)', file: 'media/all_lara/xbot_studio.glb', color: '#3b82f6', fixOpaque: true },
@@ -1396,7 +1390,7 @@
       let loadedCount = 0;
 
       variants.forEach((v, index) => {
-        loader.load(v.file, (gltf) => {
+        loader.load(v.file + '?v=' + Date.now(), (gltf) => {
           const model = gltf.scene;
           model.name = v.label;
           
@@ -1893,6 +1887,18 @@
           model.userData.skeletonHelper = skeletonHelper;
 
           initPhysicsChains(model, v.id);
+
+          const showWireframe = document.getElementById('toggle-wireframe')?.checked || false;
+          model.traverse(c => {
+            if (c.isMesh) {
+              if (Array.isArray(c.material)) {
+                c.material.forEach(m => { m.wireframe = showWireframe; });
+              } else if (c.material) {
+                c.material.wireframe = showWireframe;
+              }
+            }
+          });
+
           allModels.push(model);
           modelsMap[v.id] = model;
           const superpose = document.getElementById('toggle-superposition')?.checked || false;
@@ -2033,6 +2039,25 @@
     if (toggleRedOutfitsCheckbox) {
       toggleRedOutfitsCheckbox.addEventListener('change', (e) => {
         applyRedOutfitsColor(e.target.checked);
+      });
+    }
+
+    // Toggle wireframe checkbox handler
+    const toggleWireframeCheckbox = document.getElementById('toggle-wireframe');
+    if (toggleWireframeCheckbox) {
+      toggleWireframeCheckbox.addEventListener('change', (e) => {
+        const showWireframe = e.target.checked;
+        allModels.forEach(model => {
+          model.traverse(c => {
+            if (c.isMesh) {
+              if (Array.isArray(c.material)) {
+                c.material.forEach(m => { m.wireframe = showWireframe; });
+              } else if (c.material) {
+                c.material.wireframe = showWireframe;
+              }
+            }
+          });
+        });
       });
     }
 
@@ -2842,6 +2867,17 @@
             model.userData.mixer.update(delta);
           }
 
+          // Lock hair bones to their rest local transforms to completely freeze ponytail movement
+          model.traverse(c => {
+            if (c.isBone) {
+              const nLower = (c.name || '').toLowerCase();
+              if (nLower.includes('hair') || nLower.includes('ponytail') || nLower.includes('braid') || nLower.includes('pony') || nLower.startsWith('hair_')) {
+                if (c.restLocalQuaternion) c.quaternion.copy(c.restLocalQuaternion);
+                if (c.defaultPosition) c.position.copy(c.defaultPosition);
+              }
+            }
+          });
+
           let simDt = delta;
           if (simDt > 0.05) simDt = 0.05;
 
@@ -2875,10 +2911,10 @@
                   node.tipPrev.copy(restTip);
                 }
 
-                const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.08);
+                const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.30);
                 const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
 
-                next.lerp(restTip, 0.05);
+                next.lerp(restTip, 0.25);
 
                 const dir = new THREE.Vector3().subVectors(next, jointWorld);
                 const currentLen = dir.length();
@@ -2904,7 +2940,7 @@
 
           const breastChain = model.userData.breastChain;
           const enableBreasts = document.getElementById('toggle-breast-physics')?.checked ?? true;
-          const breastIntensity = parseFloat(document.getElementById('breast-intensity-slider')?.value ?? '1.0');
+          const breastIntensity = parseFloat(document.getElementById('breast-intensity-slider')?.value ?? '10.0');
           if (breastChain && breastChain.length > 0) {
             if (enableBreasts) {
               const g = new THREE.Vector3(0, -700, 0); // moderate gravity for breasts to allow bouncy feel
