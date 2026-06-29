@@ -169,6 +169,17 @@
           <input type="checkbox" id="toggle-red-outfits" style="cursor: pointer; accent-color: #ff4444;">
           <span>Colorer les tenues en rouge (Red Dress)</span>
         </label>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
+          <input type="checkbox" id="toggle-breast-physics" checked style="cursor: pointer; accent-color: #ff4444;">
+          <span>Activer la physique de la poitrine</span>
+        </label>
+        <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 500;">
+            <span>Intensité poitrine:</span>
+            <span id="breast-intensity-val" style="color: #ff6666; font-weight: bold;">1.0x</span>
+          </div>
+          <input type="range" id="breast-intensity-slider" min="0.0" max="15.0" step="0.1" value="1.0" style="width: 100%; cursor: pointer; accent-color: #ff4444; margin: 0;">
+        </div>
       </div>
     </div>
 
@@ -273,7 +284,7 @@
     viewEl.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x111115);
+    scene.background = new THREE.Color(0xd2d2d2);
 
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
     camera.position.set(0, 420, 1300);
@@ -335,7 +346,17 @@
       { id: '16_motorcycle', label: '16 Motorcycle', file: 'media/all_lara/16_motorcycle.glb', color: '#8d99ae' },
       { id: '17_jacket_pants', label: '17 Jacket - Pants', file: 'media/all_lara/17_jacket_pants.glb', color: '#d4a373' },
       { id: '18_wetsuit', label: '18 Wetsuit', file: 'media/all_lara/18_wetsuit.glb', color: '#0077b6' },
-      { id: 'xbot_studio', label: 'X-Bot (Studio)', file: 'media/all_lara/xbot_studio.glb', color: '#3b82f6', fixOpaque: true }
+      { id: 'xbot_studio', label: 'X-Bot (Studio)', file: 'media/all_lara/xbot_studio.glb', color: '#3b82f6', fixOpaque: true },
+      { id: 'rosanna', label: 'Rosanna', file: 'media/sandbox/rosanna_lara_native.glb', color: '#ff2222', variant: 'rosanna' },
+      { id: 'marissa', label: 'Marissa', file: 'media/sandbox/lara_native.glb', color: '#ffffff', variant: 'marissa' },
+      { id: 'delphina', label: 'Delphina', file: 'media/sandbox/lara_native.glb', color: '#ffe08a', variant: 'delphina' },
+      { id: 'sara', label: 'Sara', file: 'media/sandbox/lara_native.glb', color: '#050505', variant: 'sara' },
+      { id: 'cha', label: 'Cha', file: 'media/sandbox/lara_native.glb', color: '#0044cc', variant: 'cha' },
+      { id: 'vivid', label: 'Vivid', file: 'media/sandbox/vivid_red_lara_native.glb', color: '#ff0000', variant: 'vivid' },
+      { id: 'sabira', label: 'Sabira', file: 'media/sandbox/lara_native.glb', color: '#ffd700', variant: 'sabira' },
+      { id: 'safa', label: 'Safa', file: 'media/sandbox/lara_native.glb', color: '#e2d6bd', variant: 'safa' },
+      { id: 'rajaa', label: 'Rajaa', file: 'media/sandbox/lara_native.glb', color: '#77cc33', variant: 'rajaa' },
+      { id: 'lara-military', label: 'Lara Military', file: 'media/all_lara/lara-military.glb', color: '#556b2f', fixOpaque: true }
     ];
 
     function getCleanName(name) {
@@ -412,22 +433,22 @@
     function createNameLabel(text, color = '#ffffff') {
       const canvas = document.createElement('canvas');
       canvas.width = 512;
-      canvas.height = 128;
+      canvas.height = 70;
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = 'rgba(18,18,24,0.85)';
-      if (ctx.roundRect) ctx.roundRect(0, 0, 512, 128, 20);
-      else ctx.rect(0, 0, 512, 128);
+      if (ctx.roundRect) ctx.roundRect(0, 0, 512, 70, 15);
+      else ctx.rect(0, 0, 512, 70);
       ctx.fill();
-      ctx.font = 'bold 50px system-ui';
+      ctx.font = 'bold 34px system-ui';
       ctx.fillStyle = color;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(text, 256, 64);
+      ctx.fillText(text, 256, 35);
       
       const tex = new THREE.CanvasTexture(canvas);
       const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
       const sprite = new THREE.Sprite(mat);
-      sprite.scale.set(120, 30, 1);
+      sprite.scale.set(120, 16.4, 1);
       return sprite;
     }
 
@@ -498,7 +519,7 @@
 
     function resolveTargetBoneName(targetInstance, baseName, sourceHairMap = null) {
       const baseNameLower = baseName.toLowerCase();
-      if (baseNameLower.includes('hair') || baseNameLower.includes('ponytail')) {
+      if (baseNameLower.includes('hair') || baseNameLower.includes('ponytail') || baseNameLower.includes('braid')) {
         if (sourceHairMap && sourceHairMap.has(baseNameLower)) {
           const targetName = sourceHairMap.get(baseNameLower);
           if (targetInstance.getObjectByName(targetName)) {
@@ -577,7 +598,7 @@
         animScene.traverse(c => {
           if (c.isBone) {
             const nameLower = (c.name || '').toLowerCase();
-            if (nameLower.includes('hair') || nameLower.includes('ponytail')) {
+            if (nameLower.includes('hair') || nameLower.includes('ponytail') || nameLower.includes('braid')) {
               const match = c.name.match(/mixamorig[:_]?(.+)/i);
               const base = match ? match[1] : c.name;
               sourceHairBones.push({ bone: c, baseName: base, depth: getDepth(c) });
@@ -970,8 +991,9 @@
       "watering.glb",
       "wheelbarrow_walk_turn.glb",
       "wheelchair.glb",
-      "writing.glb",
-      "yelling.glb"
+      "yelling.glb",
+      "woman-solo.glb",
+      "knee-push-up.glb"
     ];
 
     function formatName(fileName) {
@@ -1114,6 +1136,12 @@
       speedSlider.oninput = (e) => {
         playbackSpeed = parseFloat(e.target.value);
         speedVal.textContent = playbackSpeed.toFixed(1) + 'x';
+      };
+
+      const breastIntensitySlider = document.getElementById('breast-intensity-slider');
+      const breastIntensityVal = document.getElementById('breast-intensity-val');
+      breastIntensitySlider.oninput = (e) => {
+        breastIntensityVal.textContent = parseFloat(e.target.value).toFixed(1) + 'x';
       };
 
       document.getElementById('model-count-text').textContent = variants.length;
@@ -1409,7 +1437,7 @@
           model.traverse(c => {
             if (c.isBone) {
               const nameLower = (c.name || '').toLowerCase();
-              if (nameLower.includes('hair') || nameLower.includes('ponytail')) {
+              if (nameLower.includes('hair') || nameLower.includes('ponytail') || nameLower.includes('braid') || nameLower.includes('pony')) {
                 targetHairBones.push({ bone: c, depth: getDepth(c) });
               }
             }
@@ -1822,20 +1850,19 @@
                 });
               }
 
-              // Fix transparent materials for models flagged with fixOpaque
-              if (v.fixOpaque) {
-                mats.forEach(m => {
-                  const mName = (m.name || '').toLowerCase();
-                  const meshName = (c.name || '').toLowerCase();
-                  const isHairOrLash = mName.includes('hair') || mName.includes('lash') || mName.includes('trans') || 
-                                       meshName.includes('hair') || meshName.includes('lash');
-                  m.transparent = false;
-                  m.alphaTest = isHairOrLash ? 0.1 : 0;
-                  m.depthWrite = true;
-                  if (isHairOrLash) m.side = THREE.DoubleSide;
-                  m.needsUpdate = true;
-                });
-              }
+              // Fix transparent materials for all models (resets opacity and forces double side for hair)
+              mats.forEach(m => {
+                const mName = (m.name || '').toLowerCase();
+                const meshName = (c.name || '').toLowerCase();
+                const isHairOrLash = mName.includes('hair') || mName.includes('lash') || mName.includes('trans') || 
+                                     meshName.includes('hair') || meshName.includes('lash');
+                m.transparent = false;
+                m.opacity = 1.0;
+                m.alphaTest = isHairOrLash ? 0.1 : 0;
+                m.depthWrite = true;
+                if (isHairOrLash) m.side = THREE.DoubleSide;
+                m.needsUpdate = true;
+              });
               // Hide native hair meshes on Red Dress (replaced by Lara Hair overlay)
               if (v.hideHairMeshes) {
                 const geoName = c.geometry?.name || '';
@@ -1850,6 +1877,10 @@
 
           if (!v.skipNormalize) normalizeHeight(model, 175);
 
+          if (v.variant) {
+            applyLaraVariantStyles(model, v.variant);
+          }
+
           const mixer = new THREE.AnimationMixer(model);
           model.userData.mixer = mixer;
           
@@ -1861,6 +1892,7 @@
           scene.add(skeletonHelper);
           model.userData.skeletonHelper = skeletonHelper;
 
+          initPhysicsChains(model, v.id);
           allModels.push(model);
           modelsMap[v.id] = model;
           const superpose = document.getElementById('toggle-superposition')?.checked || false;
@@ -2440,6 +2472,364 @@
       }
     });
 
+    function applyLaraVariantStyles(model, style) {
+      if (!style) return;
+      const isVivid = style === 'vivid';
+      const isNative = style === 'native';
+      const isRosanna = style === 'rosanna';
+      const isMarissa = style === 'marissa';
+      const isDelphina = style === 'delphina';
+      const isSara = style === 'sara';
+      const isCha = style === 'cha';
+      const isSabira = style === 'sabira';
+      const isSafa = style === 'safa';
+      const isRajaa = style === 'rajaa';
+
+      model.traverse(node => {
+        if (node.isMesh) {
+          const mesh = node;
+          const originalMat = mesh.material;
+          const matArray = Array.isArray(originalMat) ? originalMat : [originalMat];
+          const meshName = mesh.name.toLowerCase();
+
+          // HIDE eye2 by default
+          const isEye2 = meshName.includes('eye2');
+          if (isEye2) {
+            mesh.visible = false;
+          }
+
+          // Clone materials to avoid sharing
+          const clonedMats = matArray.map(m => m.clone());
+          mesh.material = clonedMats.length === 1 ? clonedMats[0] : clonedMats;
+
+          clonedMats.forEach((mat, idx) => {
+            const matName = mat.name ? mat.name.toLowerCase() : "";
+
+            const isHand = matName.includes('hand') || matName.includes('finger') || meshName.includes('hand') || meshName.includes('finger');
+            const isSkin = matName.includes('skin') || matName.includes('face') || matName.includes('head') || matName.includes('body') || matName.includes('arm') || matName.includes('leg') || isHand;
+            const isHair = matName.includes('hair') || matName.includes('pony') || matName.includes('braid') || meshName.includes('hair') || meshName.includes('pony') || meshName.includes('braid');
+            const isLash = matName.includes('lash');
+            const isEye  = matName.includes('eye') && !isLash;
+            const isClothing = matName.includes('top') || matName.includes('shirt') || matName.includes('short') || matName.includes('pant') || matName.includes('boot') || matName.includes('gear') || matName.includes('bag') || matName.includes('pack') || matName.includes('belt') || matName.includes('holster');
+            const isGlasses = matName.includes('lens') || matName.includes('glass') || matName.includes('frame');
+            const isMouth = matName.includes('mouth') || matName.includes('teeth') || matName.includes('tongue');
+
+            // HIDE GLASSES for Delphina, Marissa and Cha
+            if ((isDelphina || isMarissa || isCha) && isGlasses) {
+               mat.visible = false;
+            }
+
+            // UNIVERSAL FIX: Force OPAQUE by default
+            mat.transparent = false;
+            mat.depthWrite = true;
+            mat.alphaTest = 0;
+
+            if (isHair || isLash || matName.includes('trans')) {
+              mat.transparent = false; // Force opaque cutout to avoid glass sorting issues
+              mat.alphaTest = 0.5;
+              mat.side = THREE.DoubleSide;
+            }
+
+            // HAIR COLORING
+            if (isHair) {
+              if (isDelphina) {
+                 mat.map = null; // Kill dark texture to see blonde
+                 mat.color.setHex(0xffe08a); 
+                 mat.emissive.setHex(0xffe08a);
+                 mat.emissiveIntensity = 0.2;
+              } else if (isVivid) {
+                 mat.color.setHex(0xff0000);
+                 mat.emissive.setHex(0xff0000);
+                 mat.emissiveIntensity = 0.1;
+              } else if (isSara) {
+                 if (matName.includes('hair.classic')) {
+                    mat.map = null; // Kill dark texture to see red
+                    mat.color.setHex(0xff0000); // Red
+                    mat.emissive.setHex(0xff0000);
+                    mat.emissiveIntensity = 0.05;
+                 } else {
+                    mat.map = null;
+                    mat.color.setHex(0x0a0a0a); // Deep black
+                    mat.emissive.setHex(0x000000);
+                    mat.emissiveIntensity = 0;
+                 }
+              } else if (isCha) {
+                 mat.map = null; // Kill dark texture to see blonde-chatain
+                 mat.color.setHex(0xbc9c74); // Blonde-chatain
+                 mat.emissive.setHex(0xbc9c74);
+                 mat.emissiveIntensity = 0.05;
+              }
+            }
+
+            // EYE COLORING
+            const isEyesMaterial = matName.includes('eyes') && !matName.includes('lash');
+            if (isEyesMaterial) {
+               if (isDelphina) {
+                  const loader = new THREE.TextureLoader();
+                  const blueTex = loader.load('media/textures/8003_blue.png');
+                  blueTex.flipY = false;
+                  blueTex.colorSpace = THREE.SRGBColorSpace;
+                  mat.map = blueTex;
+                  mat.needsUpdate = true;
+               } else if (isCha) {
+                  const loader = new THREE.TextureLoader();
+                  const greenTex = loader.load('media/textures/8003_green.png');
+                  greenTex.flipY = false;
+                  greenTex.colorSpace = THREE.SRGBColorSpace;
+                  mat.map = greenTex;
+                  mat.needsUpdate = true;
+               }
+            }
+
+            // TEXTURE REPLACEMENTS FOR CHA (SUPERMAN TOP, RED BOOTS, GOLDEN SOCKS) & RAJAA (CAMOUFLAGE)
+            const isShirt = matName.includes('shirt');
+            const isBoot = matName.includes('boot');
+            const isShorts = matName.includes('short') || matName.includes('pant') || meshName.includes('short');
+            if (isCha) {
+               if (isShirt) {
+                  const loader = new THREE.TextureLoader();
+                  const shirtTex = loader.load('media/textures/8019_cha.png');
+                  shirtTex.flipY = false;
+                  shirtTex.colorSpace = THREE.SRGBColorSpace;
+                  mat.map = shirtTex;
+                  mat.needsUpdate = true;
+               }
+               if (isBoot) {
+                  const loader = new THREE.TextureLoader();
+                  const bootsTex = loader.load('media/textures/8016_cha.png');
+                  bootsTex.flipY = false;
+                  bootsTex.colorSpace = THREE.SRGBColorSpace;
+                  mat.map = bootsTex;
+                  mat.needsUpdate = true;
+               }
+            }
+            if (isRajaa) {
+               if (isShirt) {
+                  const loader = new THREE.TextureLoader();
+                  const shirtTex = loader.load('media/textures/8019_rajaa.png');
+                  shirtTex.flipY = false;
+                  shirtTex.colorSpace = THREE.SRGBColorSpace;
+                  mat.map = shirtTex;
+                  mat.needsUpdate = true;
+               }
+               if (isShorts) {
+                  const loader = new THREE.TextureLoader();
+                  const shortsTex = loader.load('media/textures/8031_rajaa.png');
+                  shortsTex.flipY = false;
+                  shortsTex.colorSpace = THREE.SRGBColorSpace;
+                  mat.map = shortsTex;
+                  mat.needsUpdate = true;
+               }
+            }
+
+            // CLOTHING COLOR-IFICATION
+            if (!isNative) {
+              const isTop = matName.includes('top') || matName.includes('shirt') || matName.includes('tank') || meshName.includes('shirt');
+              const isBackpack = matName.includes('backpack') || matName.includes('bag') || matName.includes('pack');
+              const isBuckle = matName.includes('buckle');
+              const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair && !isBuckle && 
+                                  !(isCha && (isShirt || isBoot)) && 
+                                  !(isSabira && !isTop) && 
+                                  !isRajaa;
+
+              if (shouldColor) {
+                let color = 0xcc0000; // Brighter default red
+                let forceProcedural = false;
+                
+                if (isRosanna) {
+                   if (isShorts) {
+                     color = 0xa2c4d9; // Blue jean
+                     forceProcedural = true;
+                   }
+                   else if (isTop || isBackpack) color = 0xff2222; // Red
+                } else if (isMarissa) {
+                   if (isShorts) {
+                     color = 0xa2c4d9; 
+                     forceProcedural = true;
+                   } else {
+                     color = 0xffffff; 
+                     forceProcedural = true; // Force procedural white to ignore teal texture
+                   }
+                } else if (isDelphina) {
+                   color = 0xffffff; 
+                   forceProcedural = true; // Force all-white
+                } else if (isSara) {
+                   color = 0x050505; // Deep black
+                   forceProcedural = true; // Avoid texture details for pure black look
+                } else if (isCha) {
+                   if (isShorts) {
+                     color = 0xff0000; // Vivid red
+                     forceProcedural = true;
+                   } else if (isTop) {
+                     color = 0x0044cc; // Superman blue
+                     forceProcedural = true;
+                   } else {
+                     color = 0x151515; // Black boots / gear
+                     forceProcedural = true;
+                   }
+                } else if (isSabira) {
+                   if (isTop) {
+                     color = 0xffd700; // Yellow top
+                     forceProcedural = true;
+                   }
+                } else if (isSafa) {
+                   color = 0xe2d6bd; // Beige
+                   forceProcedural = true;
+                } else {
+                  // Vivid Red
+                  const redColor = 0xff0000;
+                  const gearColor = 0x990000;
+                  const isGear = matName.includes('gear') || matName.includes('holster') || matName.includes('boot');
+                  color = isGear ? gearColor : redColor;
+                }
+
+                const useMap = mat.map && !forceProcedural;
+
+                if (useMap) {
+                   mat.color.setHex(color);
+                   if (isVivid) {
+                     mat.emissive = new THREE.Color(color);
+                     mat.emissiveIntensity = 0.35;
+                   }
+                   if (isRosanna && isTop) {
+                      mat.roughness = 0.5;
+                      mat.metalness = 0.0;
+                      mat.emissive = new THREE.Color(0xff0000);
+                      mat.emissiveIntensity = 0.01;
+
+                      // BULLS 66 Text
+                      const canvas = document.createElement('canvas');
+                      canvas.width = 1024; canvas.height = 1024;
+                      const ctx = canvas.getContext('2d');
+                      if (ctx && mat.map && mat.map.image) {
+                        ctx.drawImage(mat.map.image, 0, 0, 1024, 1024);
+                        ctx.fillStyle = 'black'; ctx.textAlign = 'center';
+                        ctx.font = '900 80px Graduate';
+                        ctx.fillText('BULLS', 700, 750);
+                        ctx.font = '900 150px Graduate';
+                        ctx.fillText('66', 700, 870);
+                        
+                        const newTex = new THREE.CanvasTexture(canvas);
+                        newTex.flipY = false;
+                        newTex.colorSpace = THREE.SRGBColorSpace;
+                        mat.map = newTex;
+                        mat.needsUpdate = true;
+                      }
+                   }
+                } else {
+                  // Procedural material
+                  const newMat = new THREE.MeshStandardMaterial({
+                    color: color,
+                    emissive: (isVivid || (isRosanna && isTop)) ? new THREE.Color(color === 0x050505 ? 0 : color) : new THREE.Color(0,0,0),
+                    emissiveIntensity: isVivid ? 0.5 : ((isRosanna && isTop) ? 0.05 : 0),
+                    roughness: (isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.9 : (isVivid ? 0.1 : 0.25),
+                    metalness: (isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.0 : (isVivid ? 0.3 : 0.1),
+                    transparent: false,
+                    alphaTest: isHair ? 0.5 : 0,
+                    depthWrite: true,
+                    name: style + 'Material',
+                    side: THREE.FrontSide
+                  });
+                  
+                  if (clonedMats.length === 1) {
+                      mesh.material = newMat;
+                  } else {
+                      clonedMats[idx] = newMat;
+                      mesh.material = clonedMats;
+                  }
+                }
+              }
+            }
+          });
+        }
+      });
+    }
+
+    function initPhysicsChains(model, id) {
+      const hairChain = [];
+      const isScoop = false;
+      if (isScoop) {
+        const hairBones = [];
+        model.traverse(c => {
+          if (c.isBone && c.name.startsWith('hair_')) {
+            hairBones.push(c);
+          }
+        });
+        hairBones.sort((a, b) => getDepth(a) - getDepth(b));
+
+        if (hairBones.length > 0) {
+          const baseParent = hairBones[0].parent;
+          if (baseParent) {
+            baseParent.updateMatrixWorld(true);
+            const baseParentRestQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
+
+            let prevAxis = new THREE.Vector3(0, -1, 0);
+            for (const bone of hairBones) {
+              let axis = prevAxis.clone();
+              let length = 8.0;
+              const child = bone.children.find(x => x.isBone && x.name.startsWith('hair_'));
+              if (child && child.position.lengthSq() > 1e-8) {
+                length = child.position.length();
+                axis = child.position.clone().normalize();
+              }
+              prevAxis = axis.clone();
+              bone.updateMatrixWorld(true);
+              const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+              const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
+              const worldLength = length * worldScale.y;
+              const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
+              const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
+
+              const boneRestQuat = bone.getWorldQuaternion(new THREE.Quaternion());
+              const relQuat = baseParentRestQuat.clone().invert().multiply(boneRestQuat);
+
+              hairChain.push({
+                bone,
+                restQuat: bone.quaternion.clone(),
+                relQuat,
+                axis,
+                length,
+                worldLength,
+                tipWorld: tipWorld.clone(),
+                tipPrev: tipWorld.clone(),
+              });
+            }
+          }
+        }
+      }
+      model.userData.hairChain = hairChain;
+
+      const breastChain = [];
+      const breastBones = [];
+      model.traverse(c => {
+        if (c.isBone && (c.name === 'breast_left_base' || c.name === 'breast_right_base')) {
+          breastBones.push(c);
+        }
+      });
+
+      for (const bone of breastBones) {
+        let axis = new THREE.Vector3(0, 0, 1);
+        let length = 4.0;
+        bone.updateMatrixWorld(true);
+        const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+        const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
+        const worldLength = length * worldScale.z;
+        const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
+        const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
+
+        breastChain.push({
+          bone,
+          restQuat: bone.quaternion.clone(),
+          axis,
+          length,
+          worldLength,
+          tipWorld: tipWorld.clone(),
+          tipPrev: tipWorld.clone(),
+        });
+      }
+      model.userData.breastChain = breastChain;
+    }
+
     const clock = new THREE.Clock();
 
     function animate() {
@@ -2450,6 +2840,142 @@
         allModels.forEach(model => {
           if (model.userData.mixer) {
             model.userData.mixer.update(delta);
+          }
+
+          let simDt = delta;
+          if (simDt > 0.05) simDt = 0.05;
+
+          const hairChain = model.userData.hairChain;
+          if (hairChain && hairChain.length > 0) {
+            const firstNode = hairChain[0];
+            const baseParent = firstNode.bone.parent;
+            if (baseParent) {
+              baseParent.updateMatrixWorld(true);
+              const baseParentQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
+              const g = new THREE.Vector3(0, -981, 0);
+              
+              for (const node of hairChain) {
+                const { bone, restQuat, relQuat, axis, worldLength } = node;
+                const parent = bone.parent;
+                if (!parent) continue;
+
+                parent.updateMatrixWorld(true);
+                bone.updateMatrixWorld(true);
+
+                const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+
+                // Rest dir based on baseParent to break deformed parent feedback loops
+                const restQuatWorld = baseParentQuat.clone().multiply(relQuat);
+                const restDir = axis.clone().applyQuaternion(restQuatWorld).normalize();
+                const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
+
+                const dist = jointWorld.distanceTo(node.tipWorld);
+                if (dist > worldLength * 3) {
+                  node.tipWorld.copy(restTip);
+                  node.tipPrev.copy(restTip);
+                }
+
+                const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.08);
+                const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
+
+                next.lerp(restTip, 0.05);
+
+                const dir = new THREE.Vector3().subVectors(next, jointWorld);
+                const currentLen = dir.length();
+                if (currentLen > 1e-6) {
+                  dir.multiplyScalar(worldLength / currentLen);
+                } else {
+                  dir.copy(restDir).multiplyScalar(worldLength);
+                }
+
+                node.tipPrev.copy(node.tipWorld);
+                node.tipWorld.copy(jointWorld).add(dir);
+
+                const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
+                const parentQuatInv = parentQuat.clone().invert();
+                const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
+
+                const restDirParent = axis.clone().applyQuaternion(restQuat);
+                const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
+                bone.quaternion.copy(qDelta).multiply(restQuat);
+              }
+            }
+          }
+
+          const breastChain = model.userData.breastChain;
+          const enableBreasts = document.getElementById('toggle-breast-physics')?.checked ?? true;
+          const breastIntensity = parseFloat(document.getElementById('breast-intensity-slider')?.value ?? '1.0');
+          if (breastChain && breastChain.length > 0) {
+            if (enableBreasts) {
+              const g = new THREE.Vector3(0, -700, 0); // moderate gravity for breasts to allow bouncy feel
+              for (const node of breastChain) {
+                const { bone, restQuat, axis, worldLength } = node;
+                const parent = bone.parent;
+                if (!parent) continue;
+
+                parent.updateMatrixWorld(true);
+                bone.updateMatrixWorld(true);
+
+                const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+
+                const dist = jointWorld.distanceTo(node.tipWorld);
+                if (dist > worldLength * 3) {
+                  const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
+                  const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
+                  const tipW = jointWorld.clone().addScaledVector(restDir, worldLength);
+                  node.tipWorld.copy(tipW);
+                  node.tipPrev.copy(tipW);
+                }
+
+                const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.12); // damping = 0.12
+                const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
+
+                const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
+                const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
+                const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
+
+                next.lerp(restTip, 0.15); // stiffness = 0.15
+
+                const dir = new THREE.Vector3().subVectors(next, jointWorld);
+                const currentLen = dir.length();
+                if (currentLen > 1e-6) {
+                  dir.multiplyScalar(worldLength / currentLen);
+                } else {
+                  dir.copy(restDir).multiplyScalar(worldLength);
+                }
+
+                node.tipPrev.copy(node.tipWorld);
+                node.tipWorld.copy(jointWorld).add(dir);
+
+                const parentQuatInv = parentQuat.clone().invert();
+                const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
+
+                const restDirParent = axis.clone().applyQuaternion(restQuat);
+                const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
+                
+                let scaledQ = qDelta;
+                if (breastIntensity !== 1.0) {
+                  const w = Math.min(1, Math.max(-1, qDelta.w));
+                  const angle = 2 * Math.acos(w);
+                  if (Math.abs(angle) > 1e-5) {
+                    const sinHalf = Math.sqrt(1 - w * w);
+                    const rotAxis = new THREE.Vector3();
+                    if (sinHalf > 1e-5) {
+                      rotAxis.set(qDelta.x / sinHalf, qDelta.y / sinHalf, qDelta.z / sinHalf).normalize();
+                    } else {
+                      rotAxis.set(0, 0, 1);
+                    }
+                    scaledQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, angle * breastIntensity);
+                  }
+                }
+                bone.quaternion.copy(scaledQ).multiply(restQuat);
+              }
+            } else {
+              // Reset to rest pose
+              for (const node of breastChain) {
+                node.bone.quaternion.copy(node.restQuat);
+              }
+            }
           }
         });
       }
