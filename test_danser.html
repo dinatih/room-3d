@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anya Dance Retargeting Studio</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #111115;
+      color: #e2e8f0;
+    }
+    
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* Modern control panel styled with Glassmorphism */
+    .control-panel {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 320px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0 0 4px 0;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff4e50, #f9d423);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: #94a3b8;
+      margin: 0;
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      width: 100%;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      border: none;
+      color: white;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(3, 105, 161, 0.2);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(3, 105, 161, 0.35);
+      filter: brightness(1.1);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+      box-shadow: none;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: none;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      color: #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .value-display {
+      font-family: monospace;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+      margin: 8px 0;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 13px;
+    }
+
+    .checkbox-group input {
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+      accent-color: #38bdf8;
+      margin: 0;
+    }
+
+    /* Loading overlay */
+    #loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #111115;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: opacity 0.5s ease;
+      gap: 20px;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(56, 189, 248, 0.1);
+      border-top: 3px solid #38bdf8;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-status {
+      font-size: 14px;
+      color: #94a3b8;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .legend-panel {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 12px 16px;
+      z-index: 10;
+      display: flex;
+      gap: 24px;
+      font-size: 11px;
+      color: #cbd5e1;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-status" id="loading-text">Chargement des modèles 3D...</div>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <div class="control-panel">
+    <div>
+      <h1>Anya Dance Studio</h1>
+      <p class="subtitle">Retargeting dynamique de l'animation A-pose vers T-pose</p>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="checkbox-group">
+      <input type="checkbox" id="retarget-enable" checked>
+      <label for="retarget-enable" style="cursor: pointer; display: inline;">Activer le Retargeting intelligent</label>
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="wireframe-enable">
+      <label for="wireframe-enable" style="cursor: pointer; display: inline;">Mode Fil de Fer (Wireframe)</label>
+    </div>
+
+    <div class="divider"></div>
+
+    <p class="section-title">Contrôles Temporels</p>
+    
+    <div style="display: flex; gap: 10px;">
+      <button id="btn-play-pause" class="btn" style="flex: 1;">Pause</button>
+      <button id="btn-reset" class="btn btn-secondary">Reset</button>
+    </div>
+
+    <div class="control-group">
+      <label>Vitesse d'animation <span class="value-display" id="speed-val">1.0x</span></label>
+      <input type="range" id="speed-slider" min="0" max="2" step="0.05" value="1">
+    </div>
+
+    <div class="divider"></div>
+
+    <p class="section-title">Calibration Manuelle (A-pose offset)</p>
+    <p class="subtitle" style="margin-top:-8px;">Ajustement de l'angle des épaules et bras (en degrés)</p>
+
+    <div class="control-group">
+      <label>Angle bras gauche (Z-axis) <span class="value-display" id="offset-left-val">0°</span></label>
+      <input type="range" id="offset-left-slider" min="-60" max="60" step="1" value="0">
+    </div>
+
+    <div class="control-group">
+      <label>Angle bras droit (Z-axis) <span class="value-display" id="offset-right-val">0°</span></label>
+      <input type="range" id="offset-right-slider" min="-60" max="60" step="1" value="0">
+    </div>
+  </div>
+
+  <div class="legend-panel">
+    <div class="legend-item">
+      <div class="color-dot" style="background: #38bdf8;"></div>
+      <span>Anya Pilot (Danseuse source, A-pose)</span>
+    </div>
+    <div class="legend-item">
+      <div class="color-dot" style="background: #ec4899;"></div>
+      <span>Lara Scoop (Target, T-pose)</span>
+    </div>
+    <div class="legend-item">
+      <div class="color-dot" style="background: #f59e0b;"></div>
+      <span>X-Bot (Target, T-pose)</span>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // Global variables
+    let scene, camera, renderer, controls;
+    let clock = new THREE.Clock();
+    let mixer;
+    let activeAction = null;
+    let anyaModel = null;
+    let laraModel = null;
+    let xbotModel = null;
+    
+    // Skeleton and bind pose registry
+    const sourceBones = [];
+    const laraBones = [];
+    const xbotBones = [];
+
+    const sourceBindRot = {};
+    const sourceBindPos = {};
+    const laraBindRot = {};
+    const laraBindPos = {};
+    const xbotBindRot = {};
+    const xbotBindPos = {};
+
+    // Sliders & offsets
+    let retargetingEnabled = true;
+    let leftArmManualOffset = 0; // in radians
+    let rightArmManualOffset = 0; // in radians
+    let playbackSpeed = 1.0;
+    let isPaused = false;
+
+    // Bone mapping synonyms (Normalizer maps keys to lowercase, alphanumeric values)
+    function normalizeName(name) {
+      return name.toLowerCase()
+                 .replace(/^mixamorig_?/, '')
+                 .replace(/^mixamorig:/, '')
+                 .replace(/[\s_\:\.]/g, '');
+    }
+
+    const BONE_MAPPING = {
+      'hips': 'hips',
+      'spine': 'spine',
+      'spine1': 'spine1',
+      'spine2': 'spine2',
+      'neck': 'neck',
+      'head': 'head',
+      'leftshoulder': 'leftshoulder',
+      'leftuparm': 'leftuparm',
+      'leftforearm': 'leftforearm',
+      'lefthand': 'lefthand',
+      'rightshoulder': 'rightshoulder',
+      'rightuparm': 'rightuparm',
+      'rightforearm': 'rightforearm',
+      'righthand': 'righthand',
+      'leftupleg': 'leftupleg',
+      'leftleg': 'leftleg',
+      'leftfoot': 'leftfoot',
+      'lefttoebase': 'lefttoebase',
+      'rightupleg': 'rightupleg',
+      'rightleg': 'rightleg',
+      'rightfoot': 'rightfoot',
+      'righttoebase': 'righttoebase'
+    };
+
+    function initScene() {
+      const container = document.getElementById('canvas-container');
+      
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color('#111115');
+      scene.fog = new THREE.FogExp2('#111115', 0.015);
+
+      camera = new THREE.Camera();
+      // Orbit camera setup
+      const fov = 45;
+      const aspect = window.innerWidth / window.innerHeight;
+      const near = 1;
+      const far = 1000;
+      const perspectiveCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+      perspectiveCamera.position.set(0, 160, 320);
+      camera = perspectiveCamera;
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.target.set(0, 100, 0);
+      controls.maxPolarAngle = Math.PI / 2 + 0.05; // prevent going below floor
+
+      // Lights
+      const ambientLight = new THREE.AmbientLight('#ffffff', 0.8);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight('#ffffff', 1.5);
+      dirLight.position.set(100, 200, 50);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 2048;
+      dirLight.shadow.mapSize.height = 2048;
+      dirLight.shadow.bias = -0.0005;
+      scene.add(dirLight);
+
+      const floorGeo = new THREE.PlaneGeometry(1000, 1000);
+      const floorMat = new THREE.MeshStandardMaterial({
+        color: '#1a1a24',
+        roughness: 0.8,
+        metalness: 0.1
+      });
+      const floor = new THREE.Mesh(floorGeo, floorMat);
+      floor.rotation.x = -Math.PI / 2;
+      floor.receiveShadow = true;
+      scene.add(floor);
+
+      const grid = new THREE.GridHelper(500, 50, '#2e2e38', '#1a1a24');
+      grid.position.y = 0.2;
+      scene.add(grid);
+
+      window.addEventListener('resize', onWindowResize);
+      setupUI();
+      loadModels();
+    }
+
+    function setupUI() {
+      // Play/Pause button
+      const playBtn = document.getElementById('btn-play-pause');
+      playBtn.addEventListener('click', () => {
+        isPaused = !isPaused;
+        playBtn.textContent = isPaused ? 'Reprendre' : 'Pause';
+      });
+
+      // Reset button
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        if (activeAction) {
+          activeAction.reset();
+        }
+        clock.getDelta();
+      });
+
+      // Speed slider
+      const speedSlider = document.getElementById('speed-slider');
+      const speedVal = document.getElementById('speed-val');
+      speedSlider.addEventListener('input', (e) => {
+        playbackSpeed = parseFloat(e.target.value);
+        speedVal.textContent = playbackSpeed.toFixed(1) + 'x';
+      });
+
+      // Retarget checkbox
+      const retargetCheckbox = document.getElementById('retarget-enable');
+      retargetCheckbox.addEventListener('change', (e) => {
+        retargetingEnabled = e.target.checked;
+      });
+
+      // Wireframe checkbox
+      const wireframeCheckbox = document.getElementById('wireframe-enable');
+      wireframeCheckbox.addEventListener('change', (e) => {
+        const wf = e.target.checked;
+        [anyaModel, laraModel, xbotModel].forEach(m => {
+          if (!m) return;
+          m.traverse(c => {
+            if (c.isMesh) {
+              if (Array.isArray(c.material)) {
+                c.material.forEach(mat => mat.wireframe = wf);
+              } else if (c.material) {
+                c.material.wireframe = wf;
+              }
+            }
+          });
+        });
+      });
+
+      // Left Arm Offset Slider
+      const offsetLeftSlider = document.getElementById('offset-left-slider');
+      const offsetLeftVal = document.getElementById('offset-left-val');
+      offsetLeftSlider.addEventListener('input', (e) => {
+        leftArmManualOffset = THREE.MathUtils.degToRad(parseInt(e.target.value));
+        offsetLeftVal.textContent = e.target.value + '°';
+      });
+
+      // Right Arm Offset Slider
+      const offsetRightSlider = document.getElementById('offset-right-slider');
+      const offsetRightVal = document.getElementById('offset-right-val');
+      offsetRightSlider.addEventListener('input', (e) => {
+        rightArmManualOffset = THREE.MathUtils.degToRad(parseInt(e.target.value));
+        offsetRightVal.textContent = e.target.value + '°';
+      });
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function loadModels() {
+      const loader = new GLTFLoader();
+      const loaderText = document.getElementById('loading-text');
+      
+      let loadedCount = 0;
+      const totalToLoad = 3;
+
+      function checkAllLoaded() {
+        loadedCount++;
+        if (loadedCount === totalToLoad) {
+          // Animate transition out
+          const overlay = document.getElementById('loading-overlay');
+          overlay.style.opacity = 0;
+          setTimeout(() => overlay.style.display = 'none', 500);
+          
+          // Start render loop
+          animate();
+        }
+      }
+
+      // 1) Load Anya Pilot (Dancer source, A-pose)
+      loaderText.textContent = "Chargement d'Anya Pilot (FBX)...";
+      loader.load('media/all_lara/anya_dance.glb', (gltf) => {
+        anyaModel = gltf.scene;
+        anyaModel.position.set(-60, 0, 0);
+        anyaModel.scale.set(90, 90, 90); // normalize size
+        anyaModel.name = "anya";
+        
+        anyaModel.traverse(c => {
+          if (c.isMesh) {
+            c.castShadow = true;
+            c.receiveShadow = true;
+          }
+          if (c.isBone) {
+            sourceBones.push(c);
+            // Cache bind pose
+            sourceBindRot[c.name] = c.quaternion.clone();
+            sourceBindPos[c.name] = c.position.clone();
+          }
+        });
+
+        // Setup animation mixer for Anya
+        mixer = new THREE.AnimationMixer(anyaModel);
+        if (gltf.animations && gltf.animations.length > 0) {
+          // Play the main dance animation
+          const anim = gltf.animations.find(a => a.name.includes('Anya_Pilot') || a.name.includes('Clip')) || gltf.animations[0];
+          activeAction = mixer.clipAction(anim);
+          activeAction.play();
+        }
+
+        scene.add(anyaModel);
+        checkAllLoaded();
+      });
+
+      // 2) Load Lara Scoop (T-pose target)
+      loaderText.textContent = "Chargement de Lara Scoop (T-pose)...";
+      loader.load('media/all_lara/07_scoop_bodysuit_shorts.glb', (gltf) => {
+        laraModel = gltf.scene;
+        laraModel.position.set(0, 0, 0);
+        laraModel.name = "lara";
+
+        laraModel.traverse(c => {
+          if (c.isMesh) {
+            c.castShadow = true;
+            c.receiveShadow = true;
+          }
+          if (c.isBone) {
+            laraBones.push(c);
+            // Cache bind pose
+            laraBindRot[c.name] = c.quaternion.clone();
+            laraBindPos[c.name] = c.position.clone();
+          }
+        });
+
+        scene.add(laraModel);
+        checkAllLoaded();
+      });
+
+      // 3) Load X-Bot (T-pose target)
+      loaderText.textContent = "Chargement de X-Bot Studio (T-pose)...";
+      loader.load('media/all_lara/xbot_studio.glb', (gltf) => {
+        xbotModel = gltf.scene;
+        xbotModel.position.set(60, 0, 0);
+        xbotModel.scale.set(92, 92, 92); // normalize size
+        xbotModel.name = "xbot";
+
+        xbotModel.traverse(c => {
+          if (c.isMesh) {
+            c.castShadow = true;
+            c.receiveShadow = true;
+          }
+          if (c.isBone) {
+            xbotBones.push(c);
+            // Cache bind pose
+            xbotBindRot[c.name] = c.quaternion.clone();
+            xbotBindPos[c.name] = c.position.clone();
+          }
+        });
+
+        scene.add(xbotModel);
+        checkAllLoaded();
+      });
+    }
+
+    // Dynamic bone-to-bone retargeting loop
+    function retargetAnimation(targetBones, targetBindRot, targetBindPos, scaleFactor = 1.0) {
+      if (!anyaModel) return;
+
+      for (const tBone of targetBones) {
+        const tNorm = normalizeName(tBone.name);
+        
+        // Find corresponding source bone in Anya's armature
+        const sBone = sourceBones.find(sb => normalizeName(sb.name) === tNorm);
+        if (!sBone) continue;
+
+        // Cache positions & orientations in rest pose
+        const sBindRot = sourceBindRot[sBone.name];
+        const sBindPos = sourceBindPos[sBone.name];
+        const tBindRot = targetBindRot[tBone.name];
+        const tBindPos = targetBindPos[tBone.name];
+
+        if (!sBindRot || !tBindRot) continue;
+
+        // 1) Translate Pelvis / Hips position
+        if (tNorm === 'hips') {
+          const deltaPos = new THREE.Vector3().subVectors(sBone.position, sBindPos);
+          // Scale hip height movement to fit target dimensions
+          tBone.position.copy(tBindPos).addScaledVector(deltaPos, scaleFactor);
+        }
+
+        // 2) Retarget Joint Rotations using Bind-Pose Delta Orientation
+        if (retargetingEnabled) {
+          // Delta rotation = sBindRotInv * sBone.quaternion (source rotation relative to its own bind pose)
+          const qDelta = new THREE.Quaternion().copy(sBindRot).invert().multiply(sBone.quaternion);
+          
+          // Target rotation = tBindRot * qDelta (applying the same delta rotation starting from the target's bind pose)
+          tBone.quaternion.copy(tBindRot).multiply(qDelta);
+
+          // Apply manual rotation calibration for A-pose shoulders if necessary
+          // (Since source Anya is in an A-pose, her shoulder joints are rotated downward in bind pose relative to the target's horizontal T-pose shoulders)
+          if (tNorm === 'leftuparm') {
+            // Apply compensation offset along Z axis
+            // Anya's arms are tilted downward in A-pose. We rotate the target arm upward/downward based on offsets.
+            const offsetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), 0.55 + leftArmManualOffset);
+            tBone.quaternion.multiply(offsetQ);
+          } else if (tNorm === 'rightuparm') {
+            const offsetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -0.55 + rightArmManualOffset);
+            tBone.quaternion.multiply(offsetQ);
+          }
+        } else {
+          // Direct Copy mode (no retargeting, just copies rotations directly, which shows the broken A-pose/T-pose distortion)
+          tBone.quaternion.copy(sBone.quaternion);
+        }
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = clock.getDelta();
+      
+      if (mixer && !isPaused) {
+        mixer.update(delta * playbackSpeed);
+      }
+
+      // Update SkinnedMesh matrices in source
+      if (anyaModel) {
+        anyaModel.updateMatrixWorld(true);
+      }
+
+      // Retarget animation onto Lara Scoop and X-Bot skeletons
+      if (laraModel && laraBones.length > 0) {
+        retargetAnimation(laraBones, laraBindRot, laraBindPos, 1.0);
+      }
+      
+      if (xbotModel && xbotBones.length > 0) {
+        // X-Bot scale factor is slightly larger
+        retargetAnimation(xbotBones, xbotBindRot, xbotBindPos, 0.92);
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // Run startup
+    initScene();
+  </script>
+</body>
+</html>
