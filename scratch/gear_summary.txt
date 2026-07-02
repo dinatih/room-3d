@@ -1,0 +1,182 @@
+=== SCANNING FOR PDA, GRENADES, HOLSTERS ===
+
+Model: fortnite_lara_croft.glb
+  (None found)
+
+Model: goth_aesthetic_girl.glb
+  (None found)
+
+Model: lara_croft.glb
+  (None found)
+
+Model: lara_hair.glb
+  (None found)
+
+Model: lara_original_88_bones.glb
+  - Mesh: "5_+Head|Glasses_1.0_0_0" | Materials: ["5_+Head|Glasses_1.0_0_0","5_+Holster|Handgun Left.HHL_1.0_0_0","5_+Holster|Handgun Right.HHR_1.0_0_0","5_-Hand|Handgun Left.HHL2_1.0_0_0","5_-Hand|Handgun Right.HHR2_1.0_0_0","5_Arms_1.0_0_0","5_BackPack_1.0_0_0","5_Body_1.0_0_0","5_Boots_1.0_0_0","5_Braid_1.0_0_0","5_Buckle_1.0_0_0","5_Eyes_1.0_0_0","5_Face_1.0_0_0","5_Fingers_1.0_0_0","5_Gear_1.0_0_0","5_Gloves_1.0_0_0","5_Hair2_1.0_0_0","5_Metal_1.0_0_0","5_Shirt_1.0_0_0","5_Shorts_1.0_0_0","7_+Head|Hair.Classic_1.0_0_0","7_-Head|Hair.FMV_1.0_0_0","7_Eye2_1.0_0_0","7_Lashes_1.0_0_0"] | Matched: holster, handgun
+
+Model: xbot_studio.glb
+  (None found)
+
+Model: lara_croft_4259.glb
+  - Mesh: "5_+Gear|Camera.CameraPC_1.0_0_0" | Materials: ["5_+Gear|Camera.CameraPC_1.0_0_0","5_+Gear|Grapple.GrapplePC_1.0_0_0","5_+Gear|Grenade.GrenadePC_1.0_0_0","5_+Gear|PDA.PDAPC2_1.0_0_0","5_+Gear|PDA.PDAPC_1.0_0_0","5_+Holster|Handgun Left.Hgun_1.0_0_0","5_+Holster|Handgun Right.Hgun_1.0_0_0","5_-Hands|Handgun Left.Hgun_1.0_0_0","5_-Hands|Handgun Right.Hgun_1.0_0_0","5_Backpack_1.0_0_0","5_Body_1.0_0_0.001","5_Boots_1.0_0_0.001","5_Eyes_1.0_0_0.001","5_Face_1.0_0_0.001","5_Fingers_1.0_0_0.001","5_Gear_1.0_0_0.001","5_Hair2_1.0_0_0.001","5_Hands_1.0_0_0","5_Legs_1.0_0_0","5_Mouth_1.0_0_0","5_Ribbon_1.0_0_0","5_Shirt1_1.0_0_0","5_Shirt2_1.0_0_0","5_Shorts_1.0_0_0.001","5_Teeth_1.0_0_0","7_+Gear|Camera.Lens_1.0_0_0","7_Gear2_1.0_0_0","7_Gear3_1.0_0_0","7_Hair1_1.0_0_0","7_Lashes_1.0_0_0.001"] | Matched: grenade, pda, holster, hgun, handgun
+
+Model: lara_croft_black_tank_top.glb
+  - Mesh: "5_+Gear|Camera.CameraPC_1.0_0_0.002" | Materials: ["5_+Gear|Camera.CameraPC_1.0_0_0.002","5_+Gear|Grapple.GrapplePC_1.0_0_0.002","5_+Gear|Grenade.GrenadePC_1.0_0_0.002","5_+Gear|PDA.PDAPC2_1.0_0_0.002","5_+Gear|PDA.PDAPC_1.0_0_0.002","5_+Holster|Handgun Left.Hgun_1.0_0_0.002","5_+Holster|Handgun Right.Hgun_1.0_0_0.002","5_-Hands|Handgun Left.Hgun_1.0_0_0.002","5_-Hands|Handgun Right.Hgun_1.0_0_0.002","5_Backpack_1.0_0_0.001","5_Body_1.0_0_0.002","5_Boots_1.0_0_0.002","5_Eyes_1.0_0_0.002","5_Face_1.0_0_0.002","5_Fingers_1.0_0_0.002","5_Gear_1.0_0_0.002","5_Hair2_1.0_0_0.002","5_Hands_1.0_0_0.001","5_Mouth_1.0_0_0.002","5_Pants_1.0_0_0.001","5_Ribbon_1.0_0_0.002","5_Shirt1_1.0_0_0.001","5_Shirt2_1.0_0_0.001","5_Teeth_1.0_0_0.002","7_+Gear|Camera.Lens_1.0_0_0.001","7_Gear2_1.0_0_0.001","7_Gear3_1.0_0_0.001","7_Hair1_1.0_0_0.002","7_Lashes_1.0_0_0.002"] | Matched: grenade, pda, holster, hgun, handgun
+
+Model: lara_croft_dress_345.glb
+  (None found)
+
+Model: lara_croft_gold_shades.glb
+  - Mesh: "5_+Head|Glasses.Glasses_1.0_0_0" | Materials: ["5_+Head|Glasses.Glasses_1.0_0_0","5_+Head|Headset.Headset_1.0_0_0","5_+Holster|Handgun Left.HHL_1.0_0_0.001","5_+Holster|Handgun Right.HHR_1.0_0_0.001","5_-Hand|Handgun Left.HHL2_1.0_0_0.001","5_-Hand|Handgun Right.HHR2_1.0_0_0.001","5_Arms_1.0_0_0.001","5_BackPack_1.0_0_0.001","5_Body_1.0_0_0.003","5_Boots_1.0_0_0.003","5_Braid_1.0_0_0.001","5_Buckle_1.0_0_0.001","5_Catsuit_1.0_0_0","5_Eyes_1.0_0_0.003","5_Face_1.0_0_0.003","5_Fingers_1.0_0_0.003","5_Gear_1.0_0_0.003","5_Gloves_1.0_0_0.001","5_Hair2_1.0_0_0.003","5_Metal_1.0_0_0.001","5_Zipper_1.0_0_0","7_+Head|Glasses.Lens2_1.0_0_0","7_+Head|Hair.Classic_1.0_0_0.001","7_-Head|Hair.FMV_1.0_0_0.001","7_Eye2_1.0_0_0.001","7_Lashes_1.0_0_0.003"] | Matched: holster, handgun
+
+Model: lara_croft_just_dont_stare_into_the_eyes.glb
+  (None found)
+
+Model: lara_croft_spy_gear.glb
+  - Mesh: "handgun_left" | Materials: ["5_-HandsHandgun_Left.Hgun_1.0_0_0"] | Matched: hgun, handgun
+  - Mesh: "handgun_right" | Materials: ["5_-HandsHandgun_Right.Hgun_1.0_0_0"] | Matched: hgun, handgun
+  - Mesh: "Object_104" | Materials: ["24_Grenades1.Grenade.002_1.0_0_0"] | Matched: grenade
+  - Mesh: "Object_105" | Materials: ["24_Grenades2.Grenade.002_1.0_0_0"] | Matched: grenade
+  - Mesh: "Object_106" | Materials: ["24_Grenades3.Grenade.002_1.0_0_0"] | Matched: grenade
+  - Mesh: "Object_107" | Materials: ["24_Grenades4.Grenade.002_1.0_0_0"] | Matched: grenade
+  - Mesh: "Object_127" | Materials: ["5_BeltPDA.PDA_1.0_0_0"] | Matched: pda
+  - Mesh: "Object_129" | Materials: ["5_HolsterHandgun_Left.Hgun_1.0_0_0"] | Matched: holster, hgun, handgun
+  - Mesh: "Object_130" | Materials: ["5_HolsterHandgun_Right.Hgun_1.0_0_0"] | Matched: holster, hgun, handgun
+
+Model: lara_croft_zip.glb
+  (None found)
+
+Model: lara_croft_324_rigged.glb
+  - Mesh: "handgun_left" | Materials: ["5_-HandHandgun_Left.HHL2_1.0_0_0"] | Matched: handgun
+  - Mesh: "handgun_right" | Materials: ["5_-HandHandgun_Right.HHR2_1.0_0_0"] | Matched: handgun
+  - Mesh: "Object_98" | Materials: ["5_HolsterMP5.HAmmo_1.0_0_0"] | Matched: holster
+  - Mesh: "Object_99" | Materials: ["5_HolsterMP5.HMP5_1.0_0_0"] | Matched: holster
+
+Model: lara_croft_brown_jacket.glb
+  - Mesh: "handgun_left" | Materials: ["5_-HandsHandgun_Left.Hgun_1.0_0_0.001"] | Matched: hgun, handgun
+  - Mesh: "handgun_right" | Materials: ["5_-HandsHandgun_Right.Hgun_1.0_0_0.001"] | Matched: hgun, handgun
+  - Mesh: "Object_100" | Materials: ["5_GearGrenade.GrenadePC_1.0_0_0"] | Matched: grenade
+  - Mesh: "Object_101" | Materials: ["5_GearPDA.PDAPC2_1.0_0_0"] | Matched: pda
+  - Mesh: "Object_102" | Materials: ["5_GearPDA.PDAPC_1.0_0_0"] | Matched: pda
+  - Mesh: "Object_103" | Materials: ["5_HolsterHandgun_Left.Hgun_1.0_0_0.001"] | Matched: holster, hgun, handgun
+  - Mesh: "Object_104" | Materials: ["5_HolsterHandgun_Right.Hgun_1.0_0_0.001"] | Matched: holster, hgun, handgun
+
+Model: lara_croft_swim_gear.glb
+  - Mesh: "handgun_left" | Materials: ["5_-HandsHandgun_Left.Hgun_1.0_0_0.002"] | Matched: hgun, handgun
+  - Mesh: "handgun_right" | Materials: ["5_-HandsHandgun_Right.Hgun_1.0_0_0.002"] | Matched: hgun, handgun
+  - Mesh: "Object_100" | Materials: ["5_GearGrenade.GrenadePC_1.0_0_0.001"] | Matched: grenade
+  - Mesh: "Object_101" | Materials: ["5_GearPDA.PDAPC2_1.0_0_0.001"] | Matched: pda
+  - Mesh: "Object_102" | Materials: ["5_GearPDA.PDAPC_1.0_0_0.001"] | Matched: pda
+  - Mesh: "Object_106" | Materials: ["5_HolsterHandgun_Left.Hgun_1.0_0_0.002"] | Matched: holster, hgun, handgun
+  - Mesh: "Object_107" | Materials: ["5_HolsterHandgun_Right.Hgun_1.0_0_0.002"] | Matched: holster, hgun, handgun
+
+Model: lara_croft_swim_gear_1.glb
+  - Mesh: "handgun_left" | Materials: ["5_-HandsHandgun_Left.Hgun_1.0_0_0.003"] | Matched: hgun, handgun
+  - Mesh: "handgun_right" | Materials: ["5_-HandsHandgun_Right.Hgun_1.0_0_0.003"] | Matched: hgun, handgun
+  - Mesh: "Object_100" | Materials: ["5_GearGrenade.GrenadePC_1.0_0_0.002"] | Matched: grenade
+  - Mesh: "Object_101" | Materials: ["5_GearPDA.PDAPC2_1.0_0_0.002"] | Matched: pda
+  - Mesh: "Object_102" | Materials: ["5_GearPDA.PDAPC_1.0_0_0.002"] | Matched: pda
+  - Mesh: "Object_106" | Materials: ["5_HolsterHandgun_Left.Hgun_1.0_0_0.003"] | Matched: holster, hgun, handgun
+  - Mesh: "Object_107" | Materials: ["5_HolsterHandgun_Right.Hgun_1.0_0_0.003"] | Matched: holster, hgun, handgun
+
+Model: lara_croft_swim_gear_243.glb
+  - Mesh: "handgun_left" | Materials: ["5_-HandsHandgun_Left.Hgun_1.0_0_0.004"] | Matched: hgun, handgun
+  - Mesh: "handgun_right" | Materials: ["5_-HandsHandgun_Right.Hgun_1.0_0_0.004"] | Matched: hgun, handgun
+  - Mesh: "Object_101" | Materials: ["5_GearGrenade.GrenadePC_1.0_0_0.003"] | Matched: grenade
+  - Mesh: "Object_102" | Materials: ["5_GearPDA.PDAPC2_1.0_0_0.003"] | Matched: pda
+  - Mesh: "Object_103" | Materials: ["5_GearPDA.PDAPC_1.0_0_0.003"] | Matched: pda
+  - Mesh: "Object_107" | Materials: ["5_HolsterHandgun_Left.Hgun_1.0_0_0.004"] | Matched: holster, hgun, handgun
+  - Mesh: "Object_108" | Materials: ["5_HolsterHandgun_Right.Hgun_1.0_0_0.004"] | Matched: holster, hgun, handgun
+
+Model: lara_croft_motorcycle_gear.glb
+  - Mesh: "handgun_left" | Materials: ["5_-HandsHandgun_Left.Hgun_1.0_0_0.005"] | Matched: hgun, handgun
+  - Mesh: "handgun_right" | Materials: ["5_-HandsHandgun_Right.Hgun_1.0_0_0.005"] | Matched: hgun, handgun
+  - Mesh: "Object_109" | Materials: ["24_Grenades1.Grenade.002_1.0_0_0.001"] | Matched: grenade
+  - Mesh: "Object_110" | Materials: ["24_Grenades2.Grenade.002_1.0_0_0.001"] | Matched: grenade
+  - Mesh: "Object_111" | Materials: ["24_Grenades3.Grenade.002_1.0_0_0.001"] | Matched: grenade
+  - Mesh: "Object_112" | Materials: ["24_Grenades4.Grenade.002_1.0_0_0.001"] | Matched: grenade
+  - Mesh: "Object_129" | Materials: ["5_BeltPDA.PDA_1.0_0_0.001"] | Matched: pda
+  - Mesh: "Object_130" | Materials: ["5_HolsterHandgun_Left.Hgun_1.0_0_0.005"] | Matched: holster, hgun, handgun
+  - Mesh: "Object_131" | Materials: ["5_HolsterHandgun_Right.Hgun_1.0_0_0.005"] | Matched: holster, hgun, handgun
+
+Model: lara_croft_3254_rigged.glb
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0" | Materials: ["7_Lashes_1.0_0_0.012"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.001" | Materials: ["24_+Grenades|1.Grenade.002_1.0_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.002" | Materials: ["24_+Grenades|2.Grenade.002_1.0_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.003" | Materials: ["24_+Grenades|3.Grenade.002_1.0_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.004" | Materials: ["24_+Grenades|4.Grenade.002_1.0_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.005" | Materials: ["24_+Hair|Braid.Hair_0.1_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.006" | Materials: ["24_-Hair|Braid.HairPony_0.1_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.007" | Materials: ["24_ArmLegs_0.1_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.008" | Materials: ["24_Body_0.1_0_0.003"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.009" | Materials: ["24_Face_0.1_0_0.004"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.010" | Materials: ["24_Fingers_0.1_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.011" | Materials: ["24_Gear_0.1_0_0.002"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.012" | Materials: ["24_Lips_0.5_0_0.004"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.013" | Materials: ["24_Neck_0.1_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.014" | Materials: ["24_Shirt_0.1_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.015" | Materials: ["24_ShortBoots_0.1_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.016" | Materials: ["25_+Hair|Braid.Braid_1.0_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.017" | Materials: ["25_+Hair|Braid.Hair2_1.0_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.018" | Materials: ["25_+Hair|Braid.Ribbon_1.0_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.019" | Materials: ["25_-Hair|Braid.Hair2Pony_1.0_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.020" | Materials: ["25_-Hair|Braid.RibbonPony_1.0_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.021" | Materials: ["2_Eyes_1.0_0_0.003"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.022" | Materials: ["5_+Belt|Binoculars.-Binoculars2_1.0_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.023" | Materials: ["5_+Belt|Binoculars.Binoculars1_1.0_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.024" | Materials: ["5_+Belt|Grapple_1.0_0_0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.025" | Materials: ["5_+Belt|PDA.PDA_1.0_0_0"] | Matched: grenade, pda
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.026" | Materials: ["5_+Holster|Handgun Left.Hgun_1.0_0_0.001"] | Matched: grenade, holster, hgun, handgun
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.027" | Materials: ["5_+Holster|Handgun Right.Hgun_1.0_0_0.001"] | Matched: grenade, holster, hgun, handgun
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.028" | Materials: ["5_+Light.Light_0.1_16.0_16.0"] | Matched: grenade
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.029" | Materials: ["5_-Hands|Handgun Left.Hgun_1.0_0_0.001"] | Matched: grenade, hgun, handgun
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.030" | Materials: ["5_-Hands|Handgun Right.Hgun_1.0_0_0.001"] | Matched: grenade, hgun, handgun
+  - Mesh: "24_+Grenades|1.Grenade.002_1.0_0_0.031" | Materials: ["7_BackHair_1.0_0_0.003"] | Matched: grenade
+
+Model: lara_croft_43254_rigged.glb
+  - Mesh: "handgun_left" | Materials: ["5_-HandsHandgun_Left.Hgun_1.0_0_0.006"] | Matched: hgun, handgun
+  - Mesh: "handgun_right" | Materials: ["5_-HandsHandgun_Right.Hgun_1.0_0_0.006"] | Matched: hgun, handgun
+  - Mesh: "Object_104" | Materials: ["24_Grenades1.Grenade.002_1.0_0_0.002"] | Matched: grenade
+  - Mesh: "Object_105" | Materials: ["24_Grenades2.Grenade.002_1.0_0_0.002"] | Matched: grenade
+  - Mesh: "Object_106" | Materials: ["24_Grenades3.Grenade.002_1.0_0_0.002"] | Matched: grenade
+  - Mesh: "Object_107" | Materials: ["24_Grenades4.Grenade.002_1.0_0_0.002"] | Matched: grenade
+  - Mesh: "Object_123" | Materials: ["5_BeltPDA.PDA_1.0_0_0.002"] | Matched: pda
+  - Mesh: "Object_124" | Materials: ["5_HolsterHandgun_Left.Hgun_1.0_0_0.006"] | Matched: holster, hgun, handgun
+  - Mesh: "Object_125" | Materials: ["5_HolsterHandgun_Right.Hgun_1.0_0_0.006"] | Matched: holster, hgun, handgun
+
+Model: lara_croft_4543.glb
+  - Mesh: "handgun_left" | Materials: ["5_-HandsHandgun_Left.Hgun_1.0_0_0.007"] | Matched: hgun, handgun
+  - Mesh: "handgun_right" | Materials: ["5_-HandsHandgun_Right.Hgun_1.0_0_0.007"] | Matched: hgun, handgun
+  - Mesh: "Object_104" | Materials: ["24_Grenades1.Grenade.002_1.0_0_0.003"] | Matched: grenade
+  - Mesh: "Object_105" | Materials: ["24_Grenades2.Grenade.002_1.0_0_0.003"] | Matched: grenade
+  - Mesh: "Object_106" | Materials: ["24_Grenades3.Grenade.002_1.0_0_0.003"] | Matched: grenade
+  - Mesh: "Object_107" | Materials: ["24_Grenades4.Grenade.002_1.0_0_0.003"] | Matched: grenade
+  - Mesh: "Object_124" | Materials: ["5_BeltPDA.PDA_1.0_0_0.003"] | Matched: pda
+  - Mesh: "Object_125" | Materials: ["5_HolsterHandgun_Left.Hgun_1.0_0_0.007"] | Matched: holster, hgun, handgun
+  - Mesh: "Object_126" | Materials: ["5_HolsterHandgun_Right.Hgun_1.0_0_0.007"] | Matched: holster, hgun, handgun
+
+Model: lara_croft_543i.glb
+  (None found)
+
+Model: lara_croft_red_dress.glb
+  - Mesh: "handgun_left" | Materials: ["5_-HandsHandgun_Left.Hgun_1.0_0_0.008"] | Matched: hgun, handgun
+  - Mesh: "handgun_right" | Materials: ["5_-HandsHandgun_Right.Hgun_1.0_0_0.008"] | Matched: hgun, handgun
+  - Mesh: "Object_142" | Materials: ["24_Grenades1.Grenade.002_1.0_0_0.004"] | Matched: grenade
+  - Mesh: "Object_143" | Materials: ["24_Grenades2.Grenade.002_1.0_0_0.004"] | Matched: grenade
+  - Mesh: "Object_144" | Materials: ["24_Grenades3.Grenade.002_1.0_0_0.004"] | Matched: grenade
+  - Mesh: "Object_145" | Materials: ["24_Grenades4.Grenade.002_1.0_0_0.004"] | Matched: grenade
+  - Mesh: "Object_164" | Materials: ["5_BeltPDA.PDA_1.0_0_0.004"] | Matched: pda
+  - Mesh: "Object_165" | Materials: ["5_HolsterHandgun_Left.Hgun_1.0_0_0.008"] | Matched: holster, hgun, handgun
+  - Mesh: "Object_166" | Materials: ["5_HolsterHandgun_Right.Hgun_1.0_0_0.008"] | Matched: holster, hgun, handgun
+
+Model: lara_croft_suit.glb
+  - Mesh: "handgun_left" | Materials: ["5_-HandsHandgun_Left.Hgun_1.0_0_0.009"] | Matched: hgun, handgun
+  - Mesh: "handgun_right" | Materials: ["5_-HandsHandgun_Right.Hgun_1.0_0_0.009"] | Matched: hgun, handgun
+  - Mesh: "Object_104" | Materials: ["24_Grenades1.Grenade.002_1.0_0_0.005"] | Matched: grenade
+  - Mesh: "Object_105" | Materials: ["24_Grenades2.Grenade.002_1.0_0_0.005"] | Matched: grenade
+  - Mesh: "Object_106" | Materials: ["24_Grenades3.Grenade.002_1.0_0_0.005"] | Matched: grenade
+  - Mesh: "Object_107" | Materials: ["24_Grenades4.Grenade.002_1.0_0_0.005"] | Matched: grenade
+  - Mesh: "Object_122" | Materials: ["5_BeltPDA.PDA_1.0_0_0.005"] | Matched: pda
+  - Mesh: "Object_123" | Materials: ["5_HolsterHandgun_Left.Hgun_1.0_0_0.009"] | Matched: holster, hgun, handgun
+  - Mesh: "Object_124" | Materials: ["5_HolsterHandgun_Right.Hgun_1.0_0_0.009"] | Matched: holster, hgun, handgun

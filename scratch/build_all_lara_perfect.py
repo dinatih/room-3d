@@ -134,15 +134,16 @@ def build_model_perfect(target_zip_path, ref_zip_path, out_glb_path, is_referenc
                 tgt_arm.data.edit_bones.remove(eb)
 
         # Create edit bones in target (centered, forward, slightly up from chest bone head)
+        # Shifted head (pivot) forward to Y = -7.5 to make it rotate closer to the breast tips
         eb_l = tgt_arm.data.edit_bones.new("breast_left_base")
-        eb_l.head = parent_bone.head + Vector((5.4, -5.0, 3.0)) * scale_fac
-        eb_l.tail = parent_bone.head + Vector((12.0, -11.0, 2.5)) * scale_fac
+        eb_l.head = parent_bone.head + Vector((6.5, -7.5, 3.0)) * scale_fac
+        eb_l.tail = parent_bone.head + Vector((11.0, -12.0, 2.5)) * scale_fac
         eb_l.roll = 0.0
         eb_l.parent = parent_bone
 
         eb_r = tgt_arm.data.edit_bones.new("breast_right_base")
-        eb_r.head = parent_bone.head + Vector((-5.4, -5.0, 3.0)) * scale_fac
-        eb_r.tail = parent_bone.head + Vector((-12.0, -11.0, 2.5)) * scale_fac
+        eb_r.head = parent_bone.head + Vector((-6.5, -7.5, 3.0)) * scale_fac
+        eb_r.tail = parent_bone.head + Vector((-11.0, -12.0, 2.5)) * scale_fac
         eb_r.roll = 0.0
         eb_r.parent = parent_bone
 
@@ -206,35 +207,49 @@ def build_model_perfect(target_zip_path, ref_zip_path, out_glb_path, is_referenc
                         for v in tmp_mesh.data.vertices:
                             for g in v.groups:
                                 if g.group == tmp_vg.index:
-                                    # Boost weights by 3x (capped at 1.0) to make the mesh highly responsive
-                                    boosted_weight = min(1.0, g.weight * 3.0)
-                                    tgt_vg.add([v.index], boosted_weight, 'REPLACE')
+                                    # Spatial filter to prevent upper thorax movement
+                                    # Height (Z) fade out from 1.25 to 1.28 meters
+                                    z_factor = max(0.0, min(1.0, (1.28 - v.co.z) / 0.03))
+                                    # Depth (Y) fade out from -0.05 to -0.03 meters
+                                    y_factor = max(0.0, min(1.0, (-0.03 - v.co.y) / 0.02))
+                                    
+                                    spatial_factor = z_factor * y_factor
+                                    
+                                    # Additional side check to avoid crossing over the midline
+                                    if bname == "breast_left_base" and v.co.x < 0.01:
+                                        spatial_factor = 0.0
+                                    elif bname == "breast_right_base" and v.co.x > -0.01:
+                                        spatial_factor = 0.0
+                                        
+                                    boosted_weight = min(1.0, g.weight * 3.0) * spatial_factor
+                                    if boosted_weight > 0.001:
+                                        tgt_vg.add([v.index], boosted_weight, 'REPLACE')
                                     
                 log("Vertex weight transfer completed successfully!")
                 
-                # 5.2) Flatten backpack strap slits in the back of the Scoop bodysuit (Zip 07)
-                if "07 Scoop" in target_zip_path:
-                    log("Flattening backpack strap slits in the Scoop bodysuit...")
-                    shirt_idx = -1
-                    for i, slot in enumerate(tgt_body_mesh.material_slots):
-                        if "shirt" in slot.name.lower():
-                            shirt_idx = i
-                            break
-                    if shirt_idx != -1:
-                        flattened_count = 0
-                        for poly in tgt_body_mesh.data.polygons:
-                            if poly.material_index == shirt_idx:
-                                for v_idx in poly.vertices:
-                                    v = tgt_body_mesh.data.vertices[v_idx]
-                                    # Left slit region
-                                    if 0.04 <= v.co.x <= 0.105 and -0.11 <= v.co.y <= -0.07 and 1.20 <= v.co.z <= 1.28:
-                                        v.co.y = -0.114
-                                        flattened_count += 1
-                                    # Right slit region
-                                    elif -0.105 <= v.co.x <= -0.04 and -0.11 <= v.co.y <= -0.07 and 1.20 <= v.co.z <= 1.28:
-                                        v.co.y = -0.114
-                                        flattened_count += 1
-                        log(f"Successfully flattened {flattened_count} slit vertices on the back.")
+                # # 5.2) Flatten backpack strap slits in the back of the Scoop bodysuit (Zip 07)
+                # if "07 Scoop" in target_zip_path:
+                #     log("Flattening backpack strap slits in the Scoop bodysuit...")
+                #     shirt_idx = -1
+                #     for i, slot in enumerate(tgt_body_mesh.material_slots):
+                #         if "shirt" in slot.name.lower():
+                #             shirt_idx = i
+                #             break
+                #     if shirt_idx != -1:
+                #         flattened_count = 0
+                #         for poly in tgt_body_mesh.data.polygons:
+                #             if poly.material_index == shirt_idx:
+                #                 for v_idx in poly.vertices:
+                #                     v = tgt_body_mesh.data.vertices[v_idx]
+                #                     # Left slit region
+                #                     if 0.04 <= v.co.x <= 0.105 and -0.11 <= v.co.y <= -0.07 and 1.20 <= v.co.z <= 1.28:
+                #                         v.co.y = -0.114
+                #                         flattened_count += 1
+                #                     # Right slit region
+                #                     elif -0.105 <= v.co.x <= -0.04 and -0.11 <= v.co.y <= -0.07 and 1.20 <= v.co.z <= 1.28:
+                #                         v.co.y = -0.114
+                #                         flattened_count += 1
+                #         log(f"Successfully flattened {flattened_count} slit vertices on the back.")
                 
                 # Delete the temporary duplicate mesh
                 bpy.ops.object.select_all(action='DESELECT')

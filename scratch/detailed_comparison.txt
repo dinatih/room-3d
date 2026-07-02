@@ -1,0 +1,2186 @@
+# Detailed Structural Comparison
+
+## Model: lara_croft_324_rigged
+- **Bones count**: 89
+- **Skinned meshes count**: 26
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+_rootJoint
+root ground_01
+root hips_02
+pelvis_03
+leg left thigh_04
+leg left knee_05
+leg left ankle_06
+leg left toes_07
+leg right thigh_08
+leg right knee_09
+leg right ankle_010
+leg right toes_011
+spine lower_012
+spine upper_013
+arm left shoulder 2_014
+arm left elbow_015
+arm left wrist_016
+weapon left_017
+arm left finger 2a_018
+arm left finger 2b_019
+arm left finger 2c_020
+arm left finger 3a_021
+arm left finger 3b_022
+arm left finger 3c_023
+arm left finger 4a_024
+arm left finger 4b_025
+arm left finger 4c_026
+arm left finger 5a_027
+arm left finger 5b_028
+arm left finger 5c_029
+arm left finger 1a_030
+arm left finger 1b_031
+arm left finger 1c_032
+arm right shoulder 2_033
+arm right elbow_034
+arm right wrist_035
+arm right finger 2a_00
+arm right finger 2b_036
+arm right finger 2c_037
+arm right finger 3a_038
+arm right finger 3b_039
+arm right finger 3c_040
+arm right finger 4a_041
+arm right finger 4b_042
+arm right finger 4c_043
+arm right finger 5a_044
+arm right finger 5b_045
+arm right finger 5c_046
+arm right finger 1a_047
+arm right finger 1b_048
+arm right finger 1c_049
+weapon right_050
+head neck lower_051
+head neck upper_052
+head hair ponytail 1_053
+head hair ponytail 2_054
+head hair ponytail 3_055
+head hair ponytail 4_056
+head hair ponytail 5_057
+head hair ponytail 6_058
+head lip upper left 2_059
+head nostril right_060
+head nostril left_061
+head lip upper right 2_062
+head lip upper middle_063
+head lip upper left 1_064
+head lip upper right 1_065
+head eyebrow right 1_066
+head eyebrow right 2_067
+head eyebrow right 3_068
+head eyebrow left 1_069
+head eyebrow left 2_070
+head eyebrow left 3_071
+head eyeball left_072
+head eyeball right_073
+head cheek right_074
+head cheek left_075
+head eyelid left upper_076
+head eyelid left lower_077
+head eyelid right upper_078
+head eyelid right lower_079
+head jaw_080
+head lip lower left 2_081
+head lip lower right 2_082
+head lip lower middle_083
+head lip lower left 1_084
+head lip lower right 1_085
+head tongue_086
+glasses_087
+```
+
+### Skinned Meshes:
+```
+5_+Head|Glasses.Glasses_1.0_0_0_5_+Head|Glasses.Glasses_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_+Head|Glasses.Lens1_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_+Head|Headset.Headset_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_+Holster|MP5.HAmmo_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_+Holster|MP5.HMP5_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_-Hand|Handgun Left.HHL2_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_-Hand|Handgun Right.HHR2_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_-Hand|MP5.Ammo_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_-Hand|MP5.MP5_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_Arms_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_BackPack_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_Body_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_Boots_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_Braid_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_Catsuit_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_Eyes_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_Face_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_Fingers_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_Gloves_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_Hair2_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_Metal_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_5_Zipper_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_7_+Head|Hair.Classic_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_7_-Head|Hair.FMV_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_7_Eye2_1.0_0_0_0
+5_+Head|Glasses.Glasses_1.0_0_0_7_Lashes_1.0_0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_4543
+- **Bones count**: 98
+- **Skinned meshes count**: 28
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+_rootJoint
+root ground_01
+root hips_02
+spine lower_03
+spine upper_04
+head neck lower_05
+head neck upper_06
+head jaw_07
+head tongue 1_08
+head tongue 2_09
+head lip lower middle_010
+head lip lower right_011
+head lip lower left_012
+head eyelid left lower_013
+head eyebrow left 3_014
+head eyebrow left 2_015
+head eyebrow left 1_016
+head eyebrow right 1_017
+head eyebrow right 2_018
+head eyebrow right 3_019
+head eyeball left_020
+head eyelid left upper_021
+head eyeball right_022
+head eyelid right upper_023
+head eyelid right lower_024
+head nose_025
+head lip upper right_026
+head lip corner right_00
+head lip upper middle_027
+head lip upper left_028
+head lip corner left_029
+head hair ponytail 1_030
+head hair ponytail 2_031
+head hair ponytail 3_032
+head hair ponytail 4_033
+head hair ponytail 5_034
+head hair ponytail 6_035
+head hair ponytail 7_036
+head hair ponytail 8_037
+head hair ponytail 9_038
+head cheek left_039
+head cheek right_040
+head hair_041
+breast left base_042
+breast right base_043
+arm left shoulder 1_044
+arm left shoulder 2_045
+arm left elbow_046
+arm left wrist_047
+arm left finger 2a_048
+arm left finger 2b_049
+arm left finger 2c_050
+arm left finger 3a_051
+arm left finger 3b_052
+arm left finger 3c_053
+arm left finger 4a_054
+arm left finger 4b_055
+arm left finger 4c_056
+arm left finger 5a_057
+arm left finger 5b_058
+arm left finger 5c_059
+arm left finger 1b_060
+arm left finger 1c_061
+weapon left_062
+arm left fix forearm 1_063
+Personal Light_064
+arm right shoulder 1_065
+arm right shoulder 2_066
+arm right elbow_067
+arm right wrist_068
+arm right finger 2a_069
+arm right finger 2b_070
+arm right finger 2c_071
+arm right finger 3a_072
+arm right finger 3b_073
+arm right finger 3c_074
+arm right finger 4a_075
+arm right finger 4b_076
+arm right finger 4c_077
+arm right finger 5a_078
+arm right finger 5b_079
+arm right finger 5c_080
+arm right finger 1b_081
+arm right finger 1c_082
+weapon right_083
+arm right fix forearm 1_084
+pelvis_085
+leg left thigh_086
+leg left knee_087
+leg left ankle_088
+leg left toes_089
+leg right thigh_090
+leg right knee_091
+leg right ankle_092
+leg right toes_093
+Grapple_094
+Binoculars_095
+PDA_096
+```
+
+### Skinned Meshes:
+```
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|1.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|2.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|3.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|4.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Accs_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Arm_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Face_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Fingers_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Gear_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Hair_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Lips_0.5_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Neck_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Pants_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Shirt_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Shoes_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_25_Hair2_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_2_Eyes_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Binoculars.-Binoculars2_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Binoculars.Binoculars1_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Grapple_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|PDA.PDA_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Holster|Handgun Left.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Holster|Handgun Right.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Light.Light_0.1_16.0_16.0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_-Hands|Handgun Left.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_-Hands|Handgun Right.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_7_BackHair_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_7_Lashes_1.0_0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_43254_rigged
+- **Bones count**: 98
+- **Skinned meshes count**: 27
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+_rootJoint
+root ground_01
+root hips_02
+spine lower_03
+spine upper_04
+head neck lower_05
+head neck upper_06
+head jaw_07
+head tongue 1_08
+head tongue 2_09
+head lip lower middle_010
+head lip lower right_011
+head lip lower left_012
+head eyelid left lower_013
+head eyebrow left 3_014
+head eyebrow left 2_015
+head eyebrow left 1_016
+head eyebrow right 1_017
+head eyebrow right 2_018
+head eyebrow right 3_019
+head eyeball left_020
+head eyelid left upper_021
+head eyeball right_022
+head eyelid right upper_023
+head eyelid right lower_024
+head nose_025
+head lip upper right_026
+head lip corner right_00
+head lip upper middle_027
+head lip upper left_028
+head lip corner left_029
+head hair ponytail 1_030
+head hair ponytail 2_031
+head hair ponytail 3_032
+head hair ponytail 4_033
+head hair ponytail 5_034
+head hair ponytail 6_035
+head hair ponytail 7_036
+head hair ponytail 8_037
+head hair ponytail 9_038
+head cheek left_039
+head cheek right_040
+head hair_041
+breast left base_042
+breast right base_043
+arm left shoulder 1_044
+arm left shoulder 2_045
+arm left elbow_046
+arm left wrist_047
+arm left finger 2a_048
+arm left finger 2b_049
+arm left finger 2c_050
+arm left finger 3a_051
+arm left finger 3b_052
+arm left finger 3c_053
+arm left finger 4a_054
+arm left finger 4b_055
+arm left finger 4c_056
+arm left finger 5a_057
+arm left finger 5b_058
+arm left finger 5c_059
+arm left finger 1b_060
+arm left finger 1c_061
+weapon left_062
+arm left fix forearm 1_063
+Personal Light_064
+arm right shoulder 1_065
+arm right shoulder 2_066
+arm right elbow_067
+arm right wrist_068
+arm right finger 2a_069
+arm right finger 2b_070
+arm right finger 2c_071
+arm right finger 3a_072
+arm right finger 3b_073
+arm right finger 3c_074
+arm right finger 4a_075
+arm right finger 4b_076
+arm right finger 4c_077
+arm right finger 5a_078
+arm right finger 5b_079
+arm right finger 5c_080
+arm right finger 1b_081
+arm right finger 1c_082
+weapon right_083
+arm right fix forearm 1_084
+pelvis_085
+leg left thigh_086
+leg left knee_087
+leg left ankle_088
+leg left toes_089
+leg right thigh_090
+leg right knee_091
+leg right ankle_092
+leg right toes_093
+Grapple_094
+Binoculars_095
+PDA_096
+```
+
+### Skinned Meshes:
+```
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|1.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|2.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|3.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|4.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Accs_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Body_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Clothing_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Face_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Fingers_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Gear_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_HairInside_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Hair_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_LegsArms_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Lips_0.5_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_25_Hair2_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_2_Eyes_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Binoculars.-Binoculars2_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Binoculars.Binoculars1_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Grapple_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|PDA.PDA_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Holster|Handgun Left.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Holster|Handgun Right.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Light.Light_0.1_16.0_16.0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_-Hands|Handgun Left.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_-Hands|Handgun Right.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_7_BackHair_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_7_Lashes_1.0_0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_brown_jacket
+- **Bones count**: 92
+- **Skinned meshes count**: 26
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+_rootJoint
+root ground_01
+root hips_02
+pelvis_03
+leg left thigh_04
+leg left knee_05
+leg left ankle_06
+leg left toes_07
+leg right thigh_08
+leg right knee_09
+leg right ankle_010
+leg right toes_011
+Camera_012
+Camera Lens_013
+Grapple_014
+PDA_015
+Grenade_016
+spine lower_017
+spine upper_018
+head neck lower_019
+head neck upper_020
+head jaw_021
+head lip lower right_022
+head lip lower middle_023
+head lip lower left_024
+head eyeball left_025
+head eyeball right_026
+head eyelid right upper_027
+head eyelid right lower_028
+head eyelid left upper_029
+head eyelid left lower_030
+head eyebrow left 1_031
+head eyebrow left 2_032
+head eyebrow left 3_00
+head lip corner right_033
+head lip upper right_034
+head lip upper middle_035
+head lip upper left_036
+head lip corner left_037
+head eyebrow right 1_038
+head eyebrow right 2_039
+head eyebrow right 3_040
+head hair ponytail 1_041
+head hair ponytail 2_042
+head hair ponytail 3_043
+head hair ponytail 4_044
+head hair ponytail 5_045
+head hair ponytail 6_046
+head hair ponytail 7_047
+head hair ponytail 8_048
+arm left shoulder 1_049
+arm left shoulder 2_050
+arm left elbow_051
+arm left wrist_052
+arm left finger 1a_053
+arm left finger 1b_054
+arm left finger 1c_055
+arm left finger 2a_056
+arm left finger 2b_057
+arm left finger 2c_058
+arm left finger 3a_059
+arm left finger 3b_060
+arm left finger 3c_061
+arm left finger 4a_062
+arm left finger 4b_063
+arm left finger 4c_064
+arm left finger 5a_065
+arm left finger 5b_066
+arm left finger 5c_067
+weapon left_068
+arm left fix forearm 1_069
+arm right shoulder 1_070
+arm right shoulder 2_071
+arm right elbow_072
+arm right wrist_073
+arm right finger 1a_074
+arm right finger 1b_075
+arm right finger 1c_076
+arm right finger 2a_077
+arm right finger 2b_078
+arm right finger 2c_079
+arm right finger 3a_080
+arm right finger 3b_081
+arm right finger 3c_082
+arm right finger 4a_083
+arm right finger 4b_084
+arm right finger 4c_085
+arm right finger 5a_086
+arm right finger 5b_087
+arm right finger 5c_088
+weapon right_089
+arm right fix forearm 1_090
+```
+
+### Skinned Meshes:
+```
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|Camera.CameraPC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|Grapple.GrapplePC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|Grenade.GrenadePC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|PDA.PDAPC2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|PDA.PDAPC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Holster|Handgun Left.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Holster|Handgun Right.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Hands|Handgun Left.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Hands|Handgun Right.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BackPack_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Body_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Boots_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Eyes_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Face_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Gear_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Hair2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Hands_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Mouth_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Pants_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Ribbon_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Shirt_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Teeth_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_+Gear|Camera.Lens_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_Gear2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_Hair1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_Lashes_1.0_0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_dress_345
+- **Bones count**: 87
+- **Skinned meshes count**: 15
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+_rootJoint
+root ground_01
+root hips_02
+spine lower_03
+spine upper_04
+breast right base_05
+breast left base_06
+head neck lower_07
+head neck upper_08
+head jaw_09
+head tongue 1_010
+head tongue 2_011
+head lip lower middle_012
+head lip lower right_013
+head lip lower left_014
+head eyelid left lower_015
+head eyebrow left 3_016
+head eyebrow left 2_017
+head eyebrow left 1_018
+head eyebrow right 1_019
+head eyebrow right 2_020
+head eyebrow right 3_021
+head eyeball left_022
+head eyelid left upper_023
+head eyeball right_024
+head eyelid right upper_025
+head eyelid right lower_026
+head nose_027
+head lip upper right_028
+head lip corner right_029
+head lip upper middle_030
+head lip upper left_031
+head lip corner left_032
+head hair 1_033
+head hair 2_034
+head hair 3_035
+head hair 4_036
+head cheek left_037
+head cheek right_00
+arm left shoulder 1_038
+arm left shoulder 2_039
+arm left elbow_040
+arm left wrist_041
+arm left finger 2a_042
+arm left finger 2b_043
+arm left finger 2c_044
+arm left finger 3a_045
+arm left finger 3b_046
+arm left finger 3c_047
+arm left finger 4a_048
+arm left finger 4b_049
+arm left finger 4c_050
+arm left finger 5a_051
+arm left finger 5b_052
+arm left finger 5c_053
+arm left finger 1b_054
+arm left finger 1c_055
+arm left fix forearm 1_056
+arm right shoulder 1_057
+arm right shoulder 2_058
+arm right elbow_059
+arm right wrist_060
+arm right finger 2a_061
+arm right finger 2b_062
+arm right finger 2c_063
+arm right finger 3a_064
+arm right finger 3b_065
+arm right finger 3c_066
+arm right finger 4a_067
+arm right finger 4b_068
+arm right finger 4c_069
+arm right finger 5a_070
+arm right finger 5b_071
+arm right finger 5c_072
+arm right finger 1b_073
+arm right finger 1c_074
+arm right fix forearm 1_075
+pelvis_076
+leg left thigh_077
+leg left knee_078
+leg left ankle_079
+leg left toes_080
+leg right thigh_081
+leg right knee_082
+leg right ankle_083
+leg right toes_084
+acc bag_085
+```
+
+### Skinned Meshes:
+```
+24_-Headset_1_0_0_24_-Headset_1_0_0_0
+24_-Headset_1_0_0_24_Accs_0.1_0_0_0
+24_-Headset_1_0_0_24_Arm_0.1_0_0_0
+24_-Headset_1_0_0_24_Body_0.1_0_0_0
+24_-Headset_1_0_0_24_Dress_0.5_0_0_0
+24_-Headset_1_0_0_24_Face_0.1_0_0_0
+24_-Headset_1_0_0_24_Hair_0.1_0_0_0
+24_-Headset_1_0_0_24_Hands_0.1_0_0_0
+24_-Headset_1_0_0_24_Legs_0.1_0_0_0
+24_-Headset_1_0_0_24_Lips_0.5_0_0_0
+24_-Headset_1_0_0_24_Nails_1_0_0_0
+24_-Headset_1_0_0_24_Purse_0.1_0_0_0
+24_-Headset_1_0_0_25_Hair2_1_0_0_0
+24_-Headset_1_0_0_2_Eyes_1_0_0_0
+24_-Headset_1_0_0_7_Lashes_1_0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_motorcycle_gear
+- **Bones count**: 98
+- **Skinned meshes count**: 33
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+_rootJoint
+root ground_01
+root hips_02
+spine lower_03
+spine upper_04
+head neck lower_05
+head neck upper_06
+head jaw_07
+head tongue 1_08
+head tongue 2_09
+head lip lower middle_010
+head lip lower right_011
+head lip lower left_012
+head eyelid left lower_013
+head eyebrow left 3_014
+head eyebrow left 2_015
+head eyebrow left 1_016
+head eyebrow right 1_017
+head eyebrow right 2_018
+head eyebrow right 3_019
+head eyeball left_020
+head eyelid left upper_021
+head eyeball right_022
+head eyelid right upper_023
+head eyelid right lower_024
+head nose_025
+head lip upper right_026
+head lip corner right_00
+head lip upper middle_027
+head lip upper left_028
+head lip corner left_029
+head hair ponytail 1_030
+head hair ponytail 2_031
+head hair ponytail 3_032
+head hair ponytail 4_033
+head hair ponytail 5_034
+head hair ponytail 6_035
+head hair ponytail 7_036
+head hair ponytail 8_037
+head hair ponytail 9_038
+head cheek left_039
+head cheek right_040
+head hair_041
+breast left base_042
+breast right base_043
+arm left shoulder 1_044
+arm left shoulder 2_045
+arm left elbow_046
+arm left wrist_047
+arm left finger 2a_048
+arm left finger 2b_049
+arm left finger 2c_050
+arm left finger 3a_051
+arm left finger 3b_052
+arm left finger 3c_053
+arm left finger 4a_054
+arm left finger 4b_055
+arm left finger 4c_056
+arm left finger 5a_057
+arm left finger 5b_058
+arm left finger 5c_059
+arm left finger 1b_060
+arm left finger 1c_061
+weapon left_062
+arm left fix forearm 1_063
+Personal Light_064
+arm right shoulder 1_065
+arm right shoulder 2_066
+arm right elbow_067
+arm right wrist_068
+arm right finger 2a_069
+arm right finger 2b_070
+arm right finger 2c_071
+arm right finger 3a_072
+arm right finger 3b_073
+arm right finger 3c_074
+arm right finger 4a_075
+arm right finger 4b_076
+arm right finger 4c_077
+arm right finger 5a_078
+arm right finger 5b_079
+arm right finger 5c_080
+arm right finger 1b_081
+arm right finger 1c_082
+weapon right_083
+arm right fix forearm 1_084
+pelvis_085
+leg left thigh_086
+leg left knee_087
+leg left ankle_088
+leg left toes_089
+leg right thigh_090
+leg right knee_091
+leg right ankle_092
+leg right toes_093
+Grapple_094
+Binoculars_095
+PDA_096
+```
+
+### Skinned Meshes:
+```
+24_+Body|Jacket.BackPack_0.1_0_0_24_+Body|Jacket.BackPack_0.1_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_+Body|Jacket.Jacket2_0.5_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_+Body|Jacket.Jacket3_0.5_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_+Body|Jacket.Jacket_0.5_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_+Body|Jacket.Shirt_0.1_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_+Grenades|1.Grenade.002_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_+Grenades|2.Grenade.002_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_+Grenades|3.Grenade.002_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_+Grenades|4.Grenade.002_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_-Body|Jacket.BackPack_0.1_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_-Body|Jacket.ShirtFull_0.1_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_-Body|Jacket.Skin_0.1_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_Accs_0.1_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_Body_0.1_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_Face_0.1_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_Gear_0.1_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_Hair_0.1_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_Hands_0.1_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_Lips_0.5_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_24_PantsBoots_0.5_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_25_Hair2_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_2_Eyes_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_5_+Belt|Binoculars.-Binoculars2_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_5_+Belt|Binoculars.Binoculars1_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_5_+Belt|Grapple_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_5_+Belt|PDA.PDA_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_5_+Holster|Handgun Left.Hgun_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_5_+Holster|Handgun Right.Hgun_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_5_+Light.Light_0.1_16.0_16.0_0
+24_+Body|Jacket.BackPack_0.1_0_0_5_-Hands|Handgun Left.Hgun_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_5_-Hands|Handgun Right.Hgun_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_7_BackHair_1.0_0_0_0
+24_+Body|Jacket.BackPack_0.1_0_0_7_Lashes_1.0_0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_red_dress
+- **Bones count**: 136
+- **Skinned meshes count**: 30
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+_rootJoint
+root ground_02
+root hips_03
+spine lower_04
+spine upper_05
+head neck lower_06
+head neck upper_07
+head jaw_08
+head tongue 1_09
+head tongue 2_010
+head lip lower middle_011
+head lip lower right_012
+head lip lower left_013
+head eyelid left lower_014
+head eyebrow left 3_015
+head eyebrow left 2_016
+head eyebrow left 1_017
+head eyebrow right 1_018
+head eyebrow right 2_019
+head eyebrow right 3_020
+head eyeball left_021
+head eyelid left upper_022
+head eyeball right_023
+head eyelid right upper_024
+head eyelid right lower_025
+head nose_026
+head lip upper right_027
+head lip corner right_028
+head lip upper middle_029
+head lip upper left_030
+head lip corner left_031
+head hair ponytail 1_032
+head hair ponytail 2_033
+head hair ponytail 3_034
+head hair ponytail 4_035
+head hair ponytail 5_036
+head hair ponytail 6_037
+head hair ponytail 7_038
+head hair ponytail 8_039
+head hair ponytail 9_040
+head cheek left_041
+head cheek right_042
+head hair_043
+breast left base_044
+breast right base_045
+arm left shoulder 1_046
+arm left shoulder 2_047
+arm left elbow_048
+arm left wrist_049
+arm left finger 2a_050
+arm left finger 2b_051
+arm left finger 2c_052
+arm left finger 3a_053
+arm left finger 3b_054
+arm left finger 3c_055
+arm left finger 4a_056
+arm left finger 4b_057
+arm left finger 4c_058
+arm left finger 5a_059
+arm left finger 5b_060
+arm left finger 5c_061
+arm left finger 1b_062
+arm left finger 1c_063
+weapon left_064
+arm left fix forearm 1_065
+Personal Light_066
+arm right shoulder 1_067
+arm right shoulder 2_068
+arm right elbow_069
+arm right wrist_070
+arm right finger 2a_071
+arm right finger 2b_072
+arm right finger 2c_073
+arm right finger 3a_074
+arm right finger 3b_075
+arm right finger 3c_076
+arm right finger 4a_077
+arm right finger 4b_078
+arm right finger 4c_079
+arm right finger 5a_080
+arm right finger 5b_081
+arm right finger 5c_082
+arm right finger 1b_083
+arm right finger 1c_084
+weapon right_085
+arm right fix forearm 1_086
+pelvis_087
+acc_skirt front left 1a_088
+acc_skirt front left 1b_089
+acc_skirt front left 1c_090
+acc_skirt front left 1d_091
+acc_skirt front left 1e_092
+acc_skirt front left 2a_093
+acc_skirt front left 2b_094
+acc_skirt front left 2c_095
+acc_skirt front left 2d_096
+acc_skirt back left 2a_097
+acc_skirt back left 2b_098
+acc_skirt back left 2c_099
+acc_skirt back left 2d_0100
+acc_skirt back left 2e_0101
+acc_skirt back left 1a_0102
+acc_skirt back left 1b_0103
+acc_skirt back left 1c_0104
+acc_skirt back left 1d_0105
+acc_skirt back left 1e_0106
+acc_skirt front right 1a_0107
+acc_skirt front right 1b_0108
+acc_skirt front right 1c_0109
+acc_skirt front right 1d_0110
+acc_skirt front right 1e_0111
+acc_skirt front right 2a_0112
+acc_skirt front right 2b_0113
+acc_skirt front right 2c_0114
+acc_skirt front right 2d_0115
+acc_skirt back right 1a_0116
+acc_skirt back right 1b_0117
+acc_skirt back right 1c_00
+acc_skirt back right 1d_01
+acc_skirt back right 1e_0118
+acc_skirt back right 2a_0119
+acc_skirt back right 2b_0120
+acc_skirt back right 2c_0121
+acc_skirt back right 2d_0122
+acc_skirt back right 2e_0123
+leg left thigh_0124
+leg left knee_0125
+leg left ankle_0126
+leg left toes_0127
+leg right thigh_0128
+leg right knee_0129
+leg right ankle_0130
+leg right toes_0131
+Grapple_0132
+Binoculars_0133
+PDA_0134
+```
+
+### Skinned Meshes:
+```
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|1.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|2.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|3.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|4.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Accs2_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Accs_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_ArmLegs_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Body_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Dress_0.5_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Face_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Gear2_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Gear_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Hair_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Hands_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Legs_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Lips_0.5_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Nails_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_25_Hair2_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_2_Eyes_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Binoculars.-Binoculars2_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Binoculars.Binoculars1_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Grapple_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|PDA.PDA_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Holster|Handgun Left.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Holster|Handgun Right.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Light.Light_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_-Hands|Handgun Left.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_-Hands|Handgun Right.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_7_BackHair_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_7_Lashes_1.0_0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_spy_gear
+- **Bones count**: 98
+- **Skinned meshes count**: 32
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+_rootJoint
+root ground_01
+root hips_02
+spine lower_03
+spine upper_04
+head neck lower_05
+head neck upper_06
+head jaw_07
+head tongue 1_08
+head tongue 2_09
+head lip lower middle_010
+head lip lower right_011
+head lip lower left_012
+head eyelid left lower_013
+head eyebrow left 3_014
+head eyebrow left 2_015
+head eyebrow left 1_016
+head eyebrow right 1_017
+head eyebrow right 2_018
+head eyebrow right 3_019
+head eyeball left_020
+head eyelid left upper_021
+head eyeball right_022
+head eyelid right upper_023
+head eyelid right lower_024
+head nose_025
+head lip upper right_026
+head lip corner right_00
+head lip upper middle_027
+head lip upper left_028
+head lip corner left_029
+head hair ponytail 1_030
+head hair ponytail 2_031
+head hair ponytail 3_032
+head hair ponytail 4_033
+head hair ponytail 5_034
+head hair ponytail 6_035
+head hair ponytail 7_036
+head hair ponytail 8_037
+head hair ponytail 9_038
+head cheek left_039
+head cheek right_040
+head hair_041
+breast left base_042
+breast right base_043
+arm left shoulder 1_044
+arm left shoulder 2_045
+arm left elbow_046
+arm left wrist_047
+arm left finger 2a_048
+arm left finger 2b_049
+arm left finger 2c_050
+arm left finger 3a_051
+arm left finger 3b_052
+arm left finger 3c_053
+arm left finger 4a_054
+arm left finger 4b_055
+arm left finger 4c_056
+arm left finger 5a_057
+arm left finger 5b_058
+arm left finger 5c_059
+arm left finger 1b_060
+arm left finger 1c_061
+weapon left_062
+arm left fix forearm 1_063
+Personal Light_064
+arm right shoulder 1_065
+arm right shoulder 2_066
+arm right elbow_067
+arm right wrist_068
+arm right finger 2a_069
+arm right finger 2b_070
+arm right finger 2c_071
+arm right finger 3a_072
+arm right finger 3b_073
+arm right finger 3c_074
+arm right finger 4a_075
+arm right finger 4b_076
+arm right finger 4c_077
+arm right finger 5a_078
+arm right finger 5b_079
+arm right finger 5c_080
+arm right finger 1b_081
+arm right finger 1c_082
+weapon right_083
+arm right fix forearm 1_084
+pelvis_085
+leg left thigh_086
+leg left knee_087
+leg left ankle_088
+leg left toes_089
+leg right thigh_090
+leg right knee_091
+leg right ankle_092
+leg right toes_093
+Grapple_094
+Binoculars_095
+PDA_096
+```
+
+### Skinned Meshes:
+```
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|1.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|2.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|3.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|4.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Accs_0.1_0_0.001_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Arms_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Boots_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Buckle_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Face_0.1_0_0.001_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Fingers_0.1_0_0.001_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Gear_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Hair_0.1_0_0.001_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Lips_0.5_0_0.001_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Neck_0.1_0_0.001_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Socks_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_25_Hair2_1.0_0_0.001_0
+24_+Grenades|1.Grenade.002_1.0_0_0_28_CatsuitArms_0.4_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_28_CatsuitBody_0.4_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_29_+Face|Glasses.glasses_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_2_Eyes_1.0_0_0.001_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Binoculars.-Binoculars2_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Binoculars.Binoculars1_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Grapple_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|PDA.PDA_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Face|Glasses.glasses2_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Holster|Handgun Left.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Holster|Handgun Right.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Light.Light_0.1_16.0_16.0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_-Hands|Handgun Left.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_-Hands|Handgun Right.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_7_BackHair_1.0_0_0.001_0
+24_+Grenades|1.Grenade.002_1.0_0_0_7_Lashes_1.0_0_0.001_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_suit
+- **Bones count**: 98
+- **Skinned meshes count**: 26
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+_rootJoint
+root ground_01
+root hips_02
+spine lower_03
+spine upper_04
+head neck lower_05
+head neck upper_06
+head jaw_07
+head tongue 1_08
+head tongue 2_09
+head lip lower middle_010
+head lip lower right_011
+head lip lower left_012
+head eyelid left lower_013
+head eyebrow left 3_014
+head eyebrow left 2_015
+head eyebrow left 1_016
+head eyebrow right 1_017
+head eyebrow right 2_018
+head eyebrow right 3_019
+head eyeball left_020
+head eyelid left upper_021
+head eyeball right_022
+head eyelid right upper_023
+head eyelid right lower_024
+head nose_025
+head lip upper right_026
+head lip corner right_00
+head lip upper middle_027
+head lip upper left_028
+head lip corner left_029
+head hair ponytail 1_030
+head hair ponytail 2_031
+head hair ponytail 3_032
+head hair ponytail 4_033
+head hair ponytail 5_034
+head hair ponytail 6_035
+head hair ponytail 7_036
+head hair ponytail 8_037
+head hair ponytail 9_038
+head cheek left_039
+head cheek right_040
+head hair_041
+breast left base_042
+breast right base_043
+arm left shoulder 1_044
+arm left shoulder 2_045
+arm left elbow_046
+arm left wrist_047
+arm left finger 2a_048
+arm left finger 2b_049
+arm left finger 2c_050
+arm left finger 3a_051
+arm left finger 3b_052
+arm left finger 3c_053
+arm left finger 4a_054
+arm left finger 4b_055
+arm left finger 4c_056
+arm left finger 5a_057
+arm left finger 5b_058
+arm left finger 5c_059
+arm left finger 1b_060
+arm left finger 1c_061
+weapon left_062
+arm left fix forearm 1_063
+Personal Light_064
+arm right shoulder 1_065
+arm right shoulder 2_066
+arm right elbow_067
+arm right wrist_068
+arm right finger 2a_069
+arm right finger 2b_070
+arm right finger 2c_071
+arm right finger 3a_072
+arm right finger 3b_073
+arm right finger 3c_074
+arm right finger 4a_075
+arm right finger 4b_076
+arm right finger 4c_077
+arm right finger 5a_078
+arm right finger 5b_079
+arm right finger 5c_080
+arm right finger 1b_081
+arm right finger 1c_082
+weapon right_083
+arm right fix forearm 1_084
+pelvis_085
+leg left thigh_086
+leg left knee_087
+leg left ankle_088
+leg left toes_089
+leg right thigh_090
+leg right knee_091
+leg right ankle_092
+leg right toes_093
+Grapple_094
+Binoculars_095
+PDA_096
+```
+
+### Skinned Meshes:
+```
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|1.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|2.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|3.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_+Grenades|4.Grenade.002_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Accs_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Body_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Face_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Fingers_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Gear_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Hair_0.1_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_Lips_0.5_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_LowerBody_0.3_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_24_UpperBody_0.3_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_25_Hair2_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_2_Eyes_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Binoculars.-Binoculars2_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Binoculars.Binoculars1_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|Grapple_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Belt|PDA.PDA_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Holster|Handgun Left.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Holster|Handgun Right.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_+Light.Light_0.1_16.0_16.0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_-Hands|Handgun Left.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_5_-Hands|Handgun Right.Hgun_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_7_BackHair_1.0_0_0_0
+24_+Grenades|1.Grenade.002_1.0_0_0_7_Lashes_1.0_0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_swim_gear
+- **Bones count**: 92
+- **Skinned meshes count**: 34
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+_rootJoint
+root ground_01
+root hips_02
+pelvis_03
+leg left thigh_04
+leg left knee_05
+leg left ankle_06
+leg left toes_07
+leg right thigh_08
+leg right knee_09
+leg right ankle_010
+leg right toes_011
+Camera_012
+Camera Lens_013
+Grapple_014
+PDA_015
+Grenade_016
+spine lower_017
+spine upper_018
+head neck lower_019
+head neck upper_020
+head jaw_021
+head lip lower right_022
+head lip lower middle_023
+head lip lower left_024
+head eyeball left_025
+head eyeball right_026
+head eyelid right upper_027
+head eyelid right lower_028
+head eyelid left upper_029
+head eyelid left lower_030
+head eyebrow left 1_031
+head eyebrow left 2_032
+head eyebrow left 3_00
+head lip corner right_033
+head lip upper right_034
+head lip upper middle_035
+head lip upper left_036
+head lip corner left_037
+head eyebrow right 1_038
+head eyebrow right 2_039
+head eyebrow right 3_040
+head hair ponytail 1_041
+head hair ponytail 2_042
+head hair ponytail 3_043
+head hair ponytail 4_044
+head hair ponytail 5_045
+head hair ponytail 6_046
+head hair ponytail 7_047
+head hair ponytail 8_048
+arm left shoulder 1_049
+arm left shoulder 2_050
+arm left elbow_051
+arm left wrist_052
+arm left finger 1a_053
+arm left finger 1b_054
+arm left finger 1c_055
+arm left finger 2a_056
+arm left finger 2b_057
+arm left finger 2c_058
+arm left finger 3a_059
+arm left finger 3b_060
+arm left finger 3c_061
+arm left finger 4a_062
+arm left finger 4b_063
+arm left finger 4c_064
+arm left finger 5a_065
+arm left finger 5b_066
+arm left finger 5c_067
+weapon left_068
+arm left fix forearm 1_069
+arm right shoulder 1_070
+arm right shoulder 2_071
+arm right elbow_072
+arm right wrist_073
+arm right finger 1a_074
+arm right finger 1b_075
+arm right finger 1c_076
+arm right finger 2a_077
+arm right finger 2b_078
+arm right finger 2c_079
+arm right finger 3a_080
+arm right finger 3b_081
+arm right finger 3c_082
+arm right finger 4a_083
+arm right finger 4b_084
+arm right finger 4c_085
+arm right finger 5a_086
+arm right finger 5b_087
+arm right finger 5c_088
+weapon right_089
+arm right fix forearm 1_090
+```
+
+### Skinned Meshes:
+```
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|Camera.CameraPC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|Grapple.GrapplePC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|Grenade.GrenadePC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|PDA.PDAPC2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|PDA.PDAPC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Head|Goggles.On1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Head|Goggles.On3_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Head|Rebreather.On_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Holster|Handgun Left.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Holster|Handgun Right.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Hands|Handgun Left.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Hands|Handgun Right.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Head|Goggles.Off1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Head|Goggles.Off3_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Head|Rebreather.Off_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Arms_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BackPack1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BackPack2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BodyL_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BodyU_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Body_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Eyes_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Face_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Gear_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Hair2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Hands_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Mouth_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Ribbon_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Teeth_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_+Gear|Camera.Lens_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_+Head|Goggles.On2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_-Head|Goggles.Off2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_Hair1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_Lashes_1.0_0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_swim_gear_1
+- **Bones count**: 92
+- **Skinned meshes count**: 32
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+_rootJoint
+root ground_01
+root hips_02
+pelvis_03
+leg left thigh_04
+leg left knee_05
+leg left ankle_06
+leg left toes_07
+leg right thigh_08
+leg right knee_09
+leg right ankle_010
+leg right toes_011
+Camera_012
+Camera Lens_013
+Grapple_014
+PDA_015
+Grenade_016
+spine lower_017
+spine upper_018
+head neck lower_019
+head neck upper_020
+head jaw_021
+head lip lower right_022
+head lip lower middle_023
+head lip lower left_024
+head eyeball left_025
+head eyeball right_026
+head eyelid right upper_027
+head eyelid right lower_028
+head eyelid left upper_029
+head eyelid left lower_030
+head eyebrow left 1_031
+head eyebrow left 2_032
+head eyebrow left 3_00
+head lip corner right_033
+head lip upper right_034
+head lip upper middle_035
+head lip upper left_036
+head lip corner left_037
+head eyebrow right 1_038
+head eyebrow right 2_039
+head eyebrow right 3_040
+head hair ponytail 1_041
+head hair ponytail 2_042
+head hair ponytail 3_043
+head hair ponytail 4_044
+head hair ponytail 5_045
+head hair ponytail 6_046
+head hair ponytail 7_047
+head hair ponytail 8_048
+arm left shoulder 1_049
+arm left shoulder 2_050
+arm left elbow_051
+arm left wrist_052
+arm left finger 1a_053
+arm left finger 1b_054
+arm left finger 1c_055
+arm left finger 2a_056
+arm left finger 2b_057
+arm left finger 2c_058
+arm left finger 3a_059
+arm left finger 3b_060
+arm left finger 3c_061
+arm left finger 4a_062
+arm left finger 4b_063
+arm left finger 4c_064
+arm left finger 5a_065
+arm left finger 5b_066
+arm left finger 5c_067
+weapon left_068
+arm left fix forearm 1_069
+arm right shoulder 1_070
+arm right shoulder 2_071
+arm right elbow_072
+arm right wrist_073
+arm right finger 1a_074
+arm right finger 1b_075
+arm right finger 1c_076
+arm right finger 2a_077
+arm right finger 2b_078
+arm right finger 2c_079
+arm right finger 3a_080
+arm right finger 3b_081
+arm right finger 3c_082
+arm right finger 4a_083
+arm right finger 4b_084
+arm right finger 4c_085
+arm right finger 5a_086
+arm right finger 5b_087
+arm right finger 5c_088
+weapon right_089
+arm right fix forearm 1_090
+```
+
+### Skinned Meshes:
+```
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|Camera.CameraPC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|Grapple.GrapplePC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|Grenade.GrenadePC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|PDA.PDAPC2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|PDA.PDAPC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Head|Goggles.On1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Head|Goggles.On3_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Head|Rebreather.On_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Holster|Handgun Left.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Holster|Handgun Right.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Hands|Handgun Left.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Hands|Handgun Right.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Head|Goggles.Off1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Head|Goggles.Off3_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Head|Rebreather.Off_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Arms_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BackPack1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BackPack2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BodyL_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BodyU_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Body_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Eyes_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Face_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Gear_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Hair2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Mouth_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Ribbon_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Teeth_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_+Head|Goggles.On2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_-Head|Goggles.Off2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_Hair1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_Lashes_1.0_0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_swim_gear_243
+- **Bones count**: 93
+- **Skinned meshes count**: 35
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+_rootJoint
+root ground_01
+root hips_02
+pelvis_03
+leg left thigh_04
+leg left knee_05
+leg left ankle_06
+leg left toes_07
+leg right thigh_08
+leg right knee_09
+leg right ankle_010
+leg right toes_011
+Camera_012
+Camera Lens_013
+Grapple_014
+PDA_015
+Grenade_016
+spine lower_017
+spine upper_018
+head neck lower_019
+head neck upper_020
+head jaw_021
+head lip lower right_022
+head lip lower middle_023
+head lip lower left_024
+head eyeball left_025
+head eyeball right_026
+head eyelid right upper_027
+head eyelid right lower_028
+head eyelid left upper_029
+head eyelid left lower_030
+head eyebrow left 1_031
+head eyebrow left 2_00
+head eyebrow left 3_032
+head lip corner right_033
+head lip upper right_034
+head lip upper middle_035
+head lip upper left_036
+head lip corner left_037
+head eyebrow right 1_038
+head eyebrow right 2_039
+head eyebrow right 3_040
+head hair ponytail 1_041
+head hair ponytail 2_042
+head hair ponytail 3_043
+head hair ponytail 4_044
+head hair ponytail 5_045
+head hair ponytail 6_046
+head hair ponytail 7_047
+head hair ponytail 8_048
+arm left shoulder 1_049
+arm left shoulder 2_050
+arm left elbow_051
+arm left wrist_052
+arm left finger 1a_053
+arm left finger 1b_054
+arm left finger 1c_055
+arm left finger 2a_056
+arm left finger 2b_057
+arm left finger 2c_058
+arm left finger 3a_059
+arm left finger 3b_060
+arm left finger 3c_061
+arm left finger 4a_062
+arm left finger 4b_063
+arm left finger 4c_064
+arm left finger 5a_065
+arm left finger 5b_066
+arm left finger 5c_067
+weapon left_068
+arm left fix forearm 1_069
+arm right shoulder 1_070
+arm right shoulder 2_071
+arm right elbow_072
+arm right wrist_073
+arm right finger 1a_074
+arm right finger 1b_075
+arm right finger 1c_076
+arm right finger 2a_077
+arm right finger 2b_078
+arm right finger 2c_079
+arm right finger 3a_080
+arm right finger 3b_081
+arm right finger 3c_082
+arm right finger 4a_083
+arm right finger 4b_084
+arm right finger 4c_085
+arm right finger 5a_086
+arm right finger 5b_087
+arm right finger 5c_088
+weapon right_089
+arm right fix forearm 1_090
+head neck lower fix_091
+```
+
+### Skinned Meshes:
+```
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|Camera.CameraPC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|Grapple.GrapplePC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|Grenade.GrenadePC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|PDA.PDAPC2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Gear|PDA.PDAPC_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Head|Goggles.On1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Head|Goggles.On3_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Head|Rebreather.On_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Holster|Handgun Left.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_+Holster|Handgun Right.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Hands|Handgun Left.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Hands|Handgun Right.Hgun_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Head|Goggles.Off1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Head|Goggles.Off3_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_-Head|Rebreather.Off_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Arms_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BackPack1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BackPack2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BodyL_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_BodyU_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Body_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Boots_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Eyes_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Face_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Gear_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Hair2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Hands_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Mouth_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Ribbon_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_5_Teeth_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_+Gear|Camera.Lens_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_+Head|Goggles.On2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_-Head|Goggles.Off2_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_Hair1_1.0_0_0_0
+5_+Gear|Camera.CameraPC_1.0_0_0_7_Lashes_1.0_0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_black_tank_top
+- **Bones count**: 91
+- **Skinned meshes count**: 1
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+leg left toes
+leg left ankle
+leg left knee
+leg left thigh
+leg right toes
+leg right ankle
+leg right knee
+leg right thigh
+Camera Lens
+Camera
+Grapple
+PDA
+Grenade
+pelvis
+head lip lower right
+head lip lower middle
+head lip lower left
+head jaw
+head eyeball left
+head eyeball right
+head eyelid right upper
+head eyelid right lower
+head eyelid left upper
+head eyelid left lower
+head eyebrow left 1
+head eyebrow left 2
+head eyebrow left 3
+head lip corner right
+head lip upper right
+head lip upper middle
+head lip upper left
+head lip corner left
+head eyebrow right 1
+head eyebrow right 2
+head eyebrow right 3
+head hair ponytail 8
+head hair ponytail 7
+head hair ponytail 6
+head hair ponytail 5
+head hair ponytail 4
+head hair ponytail 3
+head hair ponytail 2
+head hair ponytail 1
+head neck upper
+head neck lower
+arm left finger 1c
+arm left finger 1b
+arm left finger 1a
+arm left finger 2c
+arm left finger 2b
+arm left finger 2a
+arm left finger 3c
+arm left finger 3b
+arm left finger 3a
+arm left finger 4c
+arm left finger 4b
+arm left finger 4a
+arm left finger 5c
+arm left finger 5b
+arm left finger 5a
+weapon left
+arm left wrist
+arm left fix forearm 1
+arm left elbow
+arm left shoulder 2
+arm left shoulder 1
+arm right finger 1c
+arm right finger 1b
+arm right finger 1a
+arm right finger 2c
+arm right finger 2b
+arm right finger 2a
+arm right finger 3c
+arm right finger 3b
+arm right finger 3a
+arm right finger 4c
+arm right finger 4b
+arm right finger 4a
+arm right finger 5c
+arm right finger 5b
+arm right finger 5a
+weapon right
+arm right wrist
+arm right fix forearm 1
+arm right elbow
+arm right shoulder 2
+arm right shoulder 1
+spine upper
+spine lower
+root hips
+root ground
+```
+
+### Skinned Meshes:
+```
+5_+Gear|Camera.CameraPC_1.0_0_0.002
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_4259
+- **Bones count**: 91
+- **Skinned meshes count**: 1
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+leg left toes
+leg left ankle
+leg left knee
+leg left thigh
+leg right toes
+leg right ankle
+leg right knee
+leg right thigh
+Camera Lens
+Camera
+Grapple
+PDA
+Grenade
+pelvis
+head lip lower right
+head lip lower middle
+head lip lower left
+head jaw
+head eyeball left
+head eyeball right
+head eyelid right upper
+head eyelid right lower
+head eyelid left upper
+head eyelid left lower
+head eyebrow left 1
+head eyebrow left 2
+head eyebrow left 3
+head lip corner right
+head lip upper right
+head lip upper middle
+head lip upper left
+head lip corner left
+head eyebrow right 1
+head eyebrow right 2
+head eyebrow right 3
+head hair ponytail 8
+head hair ponytail 7
+head hair ponytail 6
+head hair ponytail 5
+head hair ponytail 4
+head hair ponytail 3
+head hair ponytail 2
+head hair ponytail 1
+head neck upper
+head neck lower
+arm left finger 1c
+arm left finger 1b
+arm left finger 1a
+arm left finger 2c
+arm left finger 2b
+arm left finger 2a
+arm left finger 3c
+arm left finger 3b
+arm left finger 3a
+arm left finger 4c
+arm left finger 4b
+arm left finger 4a
+arm left finger 5c
+arm left finger 5b
+arm left finger 5a
+weapon left
+arm left wrist
+arm left fix forearm 1
+arm left elbow
+arm left shoulder 2
+arm left shoulder 1
+arm right finger 1c
+arm right finger 1b
+arm right finger 1a
+arm right finger 2c
+arm right finger 2b
+arm right finger 2a
+arm right finger 3c
+arm right finger 3b
+arm right finger 3a
+arm right finger 4c
+arm right finger 4b
+arm right finger 4a
+arm right finger 5c
+arm right finger 5b
+arm right finger 5a
+weapon right
+arm right wrist
+arm right fix forearm 1
+arm right elbow
+arm right shoulder 2
+arm right shoulder 1
+spine upper
+spine lower
+root hips
+root ground
+```
+
+### Skinned Meshes:
+```
+5_+Gear|Camera.CameraPC_1.0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_officiel
+- **Bones count**: 88
+- **Skinned meshes count**: 1
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+mixamorig_leg_left_toes
+mixamorig_leg_left_ankle
+mixamorig_leg_left_knee
+mixamorig_leg_left_thigh
+mixamorig_leg_right_toes
+mixamorig_leg_right_ankle
+mixamorig_leg_right_knee
+mixamorig_leg_right_thigh
+mixamorig_pelvis
+mixamorig_weapon_left
+mixamorig_arm_left_finger_2c
+mixamorig_arm_left_finger_2b
+mixamorig_arm_left_finger_2a
+mixamorig_arm_left_finger_3c
+mixamorig_arm_left_finger_3b
+mixamorig_arm_left_finger_3a
+mixamorig_arm_left_finger_4c
+mixamorig_arm_left_finger_4b
+mixamorig_arm_left_finger_4a
+mixamorig_arm_left_finger_5c
+mixamorig_arm_left_finger_5b
+mixamorig_arm_left_finger_5a
+mixamorig_arm_left_finger_1c
+mixamorig_arm_left_finger_1b
+mixamorig_arm_left_finger_1a
+mixamorig_arm_left_wrist
+mixamorig_arm_left_elbow
+mixamorig_arm_left_shoulder_2
+mixamorig_arm_right_finger_2c
+mixamorig_arm_right_finger_2b
+mixamorig_arm_right_finger_2a
+mixamorig_arm_right_finger_3c
+mixamorig_arm_right_finger_3b
+mixamorig_arm_right_finger_3a
+mixamorig_arm_right_finger_4c
+mixamorig_arm_right_finger_4b
+mixamorig_arm_right_finger_4a
+mixamorig_arm_right_finger_5c
+mixamorig_arm_right_finger_5b
+mixamorig_arm_right_finger_5a
+mixamorig_arm_right_finger_1c
+mixamorig_arm_right_finger_1b
+mixamorig_arm_right_finger_1a
+mixamorig_weapon_right
+mixamorig_arm_right_wrist
+mixamorig_arm_right_elbow
+mixamorig_arm_right_shoulder_2
+mixamorig_head_hair_ponytail_6
+mixamorig_head_hair_ponytail_5
+mixamorig_head_hair_ponytail_4
+mixamorig_head_hair_ponytail_3
+mixamorig_head_hair_ponytail_2
+mixamorig_head_hair_ponytail_1
+mixamorig_head_lip_upper_left_2
+mixamorig_head_nostril_right
+mixamorig_head_nostril_left
+mixamorig_head_lip_upper_right_2
+mixamorig_head_lip_upper_left_1
+mixamorig_head_lip_upper_right_1
+mixamorig_head_lip_upper_middle
+mixamorig_head_eyebrow_right_1
+mixamorig_head_eyebrow_right_2
+mixamorig_head_eyebrow_right_3
+mixamorig_head_eyebrow_left_1
+mixamorig_head_eyebrow_left_2
+mixamorig_head_eyebrow_left_3
+mixamorig_head_eyeball_left
+mixamorig_head_eyeball_right
+mixamorig_head_cheek_right
+mixamorig_head_cheek_left
+mixamorig_head_eyelid_left_upper
+mixamorig_head_eyelid_left_lower
+mixamorig_head_eyelid_right_upper
+mixamorig_head_eyelid_right_lower
+mixamorig_head_lip_lower_left_2
+mixamorig_head_lip_lower_right_2
+mixamorig_head_lip_lower_left_1
+mixamorig_head_lip_lower_right_1
+mixamorig_head_lip_lower_middle
+mixamorig_head_tongue
+mixamorig_head_jaw
+mixamorig_glasses
+mixamorig_head_neck_upper
+mixamorig_head_neck_lower
+mixamorig_spine_upper
+mixamorig_spine_lower
+mixamorig_root_hips
+mixamorig_root_ground
+```
+
+### Skinned Meshes:
+```
+5_+Head|Glasses_1.0_0_0
+```
+
+### Static Meshes:
+None
+
+---
+
+## Model: lara_croft_zip
+- **Bones count**: 91
+- **Skinned meshes count**: 1
+- **Static meshes count**: 0
+- **Skins**: 1
+
+### Bones:
+```
+head tongue 2
+head tongue 1
+head lip lower middle
+head lip lower right
+head lip lower left
+head jaw
+head eyelid left lower
+head eyebrow left 3
+head eyebrow left 2
+head eyebrow left 1
+head eyebrow right 1
+head eyebrow right 2
+head eyebrow right 3
+head eyeball left
+head eyelid left upper
+head eyeball right
+head eyelid right upper
+head eyelid right lower
+head nose
+head lip upper right
+head lip corner right
+head lip upper middle
+head lip upper left
+head lip corner left
+head hair ponytail 9
+head hair ponytail 8
+head hair ponytail 7
+head hair ponytail 6
+head hair ponytail 5
+head hair ponytail 4
+head hair ponytail 3
+head hair ponytail 2
+head hair ponytail 1
+head cheek left
+head cheek right
+head hair
+head neck upper
+head neck lower
+breast left base
+breast right base
+arm left finger 2c
+arm left finger 2b
+arm left finger 2a
+arm left finger 3c
+arm left finger 3b
+arm left finger 3a
+arm left finger 4c
+arm left finger 4b
+arm left finger 4a
+arm left finger 5c
+arm left finger 5b
+arm left finger 5a
+arm left finger 1c
+arm left finger 1b
+arm left wrist
+arm left fix forearm 1
+arm left elbow
+arm left shoulder 2
+arm left shoulder 1
+arm right finger 2c
+arm right finger 2b
+arm right finger 2a
+arm right finger 3c
+arm right finger 3b
+arm right finger 3a
+arm right finger 4c
+arm right finger 4b
+arm right finger 4a
+arm right finger 5c
+arm right finger 5b
+arm right finger 5a
+arm right finger 1c
+arm right finger 1b
+arm right wrist
+arm right fix forearm 1
+arm right elbow
+arm right shoulder 2
+arm right shoulder 1
+spine upper
+spine lower
+leg left toes
+leg left ankle
+leg left knee
+leg left thigh
+leg right toes
+leg right ankle
+leg right knee
+leg right thigh
+pelvis
+root hips
+root ground
+```
+
+### Skinned Meshes:
+```
+24_Accs_0.1_0_0
+```
+
+### Static Meshes:
+None
+
+---
+

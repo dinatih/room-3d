@@ -177,6 +177,10 @@
           <input type="checkbox" id="toggle-wireframe" style="cursor: pointer; accent-color: #ff4444;">
           <span>Afficher Wireframe</span>
         </label>
+        <label id="wireframe-opaque-label" style="display: none; cursor: pointer; align-items: center; gap: 6px; font-weight: 500; font-size: 11px; user-select: none; padding-left: 18px; color: #aaa;">
+          <input type="checkbox" id="toggle-wireframe-opaque" checked style="cursor: pointer; accent-color: #ff4444;">
+          <span>Rendu Opaque (Solide + Lignes)</span>
+        </label>
         <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
           <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 500;">
             <span>Intensité poitrine:</span>
@@ -241,6 +245,15 @@
     <div id="mesh-list"></div>
   </div>
 
+  <!-- FPS Monitor Widget -->
+  <div id="fps-monitor" style="position: absolute; top: 10px; right: 245px; background: rgba(18, 18, 24, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px; z-index: 10; display: flex; flex-direction: column; gap: 4px; pointer-events: none; width: 100px; height: 55px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); box-sizing: border-box;">
+    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #cbd5e1; font-weight: bold; font-family: sans-serif;">
+      <span>FPS</span>
+      <span id="fps-val" style="color: #10b981; font-family: monospace;">0</span>
+    </div>
+    <canvas id="fps-canvas" width="80" height="20" style="width: 80px; height: 20px; display: block; margin: 0 auto;"></canvas>
+  </div>
+
   <script type="importmap">
     {
       "imports": {
@@ -298,6 +311,16 @@
     controls.maxPolarAngle = Math.PI; // Allow rotating below the floor/models
     controls.update();
 
+    let needsRender = true;
+    window.triggerRender = function() {
+      needsRender = true;
+    };
+    controls.addEventListener('change', window.triggerRender);
+    window.addEventListener('resize', window.triggerRender);
+    document.addEventListener('input', window.triggerRender);
+    document.addEventListener('change', window.triggerRender);
+    document.addEventListener('click', window.triggerRender);
+
     scene.add(new THREE.AmbientLight(0xffffff, 0.8));
     const sun1 = new THREE.DirectionalLight(0xffffff, 1.5);
     sun1.position.set(200, 400, 300);
@@ -334,12 +357,7 @@
       { id: '04_baywatch', label: '04 Baywatch', file: 'media/all_lara/04_baywatch.glb', color: '#90e0ef' },
       { id: '05_crop_top_shorts', label: '05 Crop top - Shorts', file: 'media/all_lara/05_crop_top_shorts.glb', color: '#d2a23c', fixOpaque: true },
       { id: '07_scoop_bodysuit_shorts', label: '07 Scoop bodysuit - Shorts', file: 'media/all_lara/07_scoop_bodysuit_shorts.glb', color: '#ff0055', fixOpaque: true },
-      { id: '10_long_sleeve_surfsuit', label: '10 Long sleeve surfsuit', file: 'media/all_lara/10_long_sleeve_surfsuit.glb', color: '#00b4d8' },
-      { id: '11_tank_top_pants', label: '11 Tank top - Pants', file: 'media/all_lara/11_tank_top_pants.glb', color: '#4a4a4a', fixOpaque: true },
       { id: '14_catsuit', label: '14 Catsuit', file: 'media/all_lara/14_catsuit.glb', color: '#ffd700', fixOpaque: true },
-      { id: '14_catsuit_mp5', label: '14 Catsuit (mp5)', file: 'media/all_lara/14_catsuit_mp5.glb', color: '#ff6600' },
-      { id: '17_jacket_pants', label: '17 Jacket - Pants', file: 'media/all_lara/17_jacket_pants.glb', color: '#d4a373' },
-      { id: '18_wetsuit', label: '18 Wetsuit', file: 'media/all_lara/18_wetsuit.glb', color: '#0077b6' },
       { id: 'xbot_studio', label: 'X-Bot (Studio)', file: 'media/all_lara/xbot_studio.glb', color: '#3b82f6', fixOpaque: true },
       { id: 'rosanna', label: 'Rosanna', file: 'media/sandbox/rosanna_lara_native.glb', color: '#ff2222', variant: 'rosanna' },
       { id: 'marissa', label: 'Marissa', file: 'media/sandbox/lara_native.glb', color: '#ffffff', variant: 'marissa' },
@@ -349,8 +367,7 @@
       { id: 'vivid', label: 'Vivid', file: 'media/sandbox/vivid_red_lara_native.glb', color: '#ff0000', variant: 'vivid' },
       { id: 'sabira', label: 'Sabira', file: 'media/sandbox/lara_native.glb', color: '#ffd700', variant: 'sabira' },
       { id: 'safa', label: 'Safa', file: 'media/sandbox/lara_native.glb', color: '#e2d6bd', variant: 'safa' },
-      { id: 'rajaa', label: 'Rajaa', file: 'media/sandbox/lara_native.glb', color: '#77cc33', variant: 'rajaa' },
-      { id: 'lara-military', label: 'Lara Military', file: 'media/all_lara/lara-military.glb', color: '#556b2f', fixOpaque: true }
+      { id: 'rajaa', label: 'Rajaa', file: 'media/sandbox/lara_native.glb', color: '#77cc33', variant: 'rajaa' }
     ];
 
     function getCleanName(name) {
@@ -921,6 +938,7 @@
 
     const ANIMATION_FILES = [
       "idle.glb",
+      "anim_back_flip_to_uppercut.glb",
       "walking.glb",
       "happy_walk.glb",
       "victory.glb",
@@ -1888,16 +1906,9 @@
 
           initPhysicsChains(model, v.id);
 
-          const showWireframe = document.getElementById('toggle-wireframe')?.checked || false;
-          model.traverse(c => {
-            if (c.isMesh) {
-              if (Array.isArray(c.material)) {
-                c.material.forEach(m => { m.wireframe = showWireframe; });
-              } else if (c.material) {
-                c.material.wireframe = showWireframe;
-              }
-            }
-          });
+           const showWireframe = document.getElementById('toggle-wireframe')?.checked || false;
+           const opaqueWireframe = document.getElementById('toggle-wireframe-opaque')?.checked || false;
+           window.updateWireframeStateForModel(model, showWireframe, opaqueWireframe);
 
           allModels.push(model);
           modelsMap[v.id] = model;
@@ -2042,23 +2053,96 @@
       });
     }
 
-    // Toggle wireframe checkbox handler
-    const toggleWireframeCheckbox = document.getElementById('toggle-wireframe');
-    if (toggleWireframeCheckbox) {
-      toggleWireframeCheckbox.addEventListener('change', (e) => {
-        const showWireframe = e.target.checked;
-        allModels.forEach(model => {
-          model.traverse(c => {
-            if (c.isMesh) {
+    window.updateWireframeStateForModel = function(model, show, opaque) {
+      if (!model) return;
+      
+      // Remove any existing cloned wireframe meshes
+      const toRemove = [];
+      model.traverse(c => {
+        if (c.userData && c.userData.isWireframeClone) {
+          toRemove.push(c);
+        }
+      });
+      toRemove.forEach(c => {
+        if (c.parent) c.parent.remove(c);
+        if (c.geometry) c.geometry.dispose();
+        if (c.material) {
+          if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+          else c.material.dispose();
+        }
+      });
+
+      // Set wireframe states on original meshes
+      model.traverse(c => {
+        if (c.isMesh && (!c.userData || !c.userData.isWireframeClone)) {
+          // Restore original material wireframe state
+          if (Array.isArray(c.material)) {
+            c.material.forEach(m => m.wireframe = false);
+          } else if (c.material) {
+            c.material.wireframe = false;
+          }
+
+          if (show) {
+            if (opaque) {
+              // Duplicate mesh for wireframe overlay
+              const wireMesh = c.clone();
+              wireMesh.userData = { isWireframeClone: true };
+              
+              // Use a basic material for the wireframe lines
+              const wireMat = new THREE.MeshBasicMaterial({
+                color: 0x00ffbb,
+                wireframe: true,
+                depthTest: true,
+                depthWrite: true
+              });
+              
+              wireMesh.material = wireMat;
+              if (c.isSkinnedMesh) {
+                wireMesh.bind(c.skeleton, c.bindMatrix);
+              }
+              c.parent.add(wireMesh);
+            } else {
+              // Standard transparent wireframe
               if (Array.isArray(c.material)) {
-                c.material.forEach(m => { m.wireframe = showWireframe; });
+                c.material.forEach(m => m.wireframe = true);
               } else if (c.material) {
-                c.material.wireframe = showWireframe;
+                c.material.wireframe = true;
               }
             }
-          });
-        });
+          }
+        }
       });
+      if (window.triggerRender) window.triggerRender();
+    };
+
+    window.updateWireframeState = function(show, opaque) {
+      allModels.forEach(model => {
+        window.updateWireframeStateForModel(model, show, opaque);
+      });
+      if (window.triggerRender) window.triggerRender();
+    };
+
+    // Toggle wireframe checkbox handler
+    const toggleWireframeCheckbox = document.getElementById('toggle-wireframe');
+    const toggleWireframeOpaqueCheckbox = document.getElementById('toggle-wireframe-opaque');
+    const wireframeOpaqueLabel = document.getElementById('wireframe-opaque-label');
+
+    function updateWireframe() {
+      const show = toggleWireframeCheckbox?.checked || false;
+      const opaque = toggleWireframeOpaqueCheckbox?.checked || false;
+
+      if (wireframeOpaqueLabel) {
+        wireframeOpaqueLabel.style.display = show ? 'flex' : 'none';
+      }
+
+      window.updateWireframeState(show, opaque);
+    }
+
+    if (toggleWireframeCheckbox) {
+      toggleWireframeCheckbox.addEventListener('change', updateWireframe);
+    }
+    if (toggleWireframeOpaqueCheckbox) {
+      toggleWireframeOpaqueCheckbox.addEventListener('change', updateWireframe);
     }
 
     // Hover tooltip for Object3D hierarchy
@@ -2860,167 +2944,247 @@
     function animate() {
       requestAnimationFrame(animate);
       
-      const delta = clock.getDelta() * playbackSpeed;
-      if (!isPaused) {
-        allModels.forEach(model => {
-          if (model.userData.mixer) {
-            model.userData.mixer.update(delta);
-          }
+      let shouldRender = needsRender;
+      if (!isPaused && currentAnimFile) {
+        shouldRender = true;
+      }
+      
+      if (shouldRender) {
+        const delta = clock.getDelta() * playbackSpeed;
+        if (!isPaused) {
+          allModels.forEach(model => {
+            if (model.userData.mixer) {
+              model.userData.mixer.update(delta);
+            }
+            
+            // Lock hair bones to their rest local transforms to completely freeze ponytail movement
+            model.traverse(c => {
+              if (c.isBone) {
+                const nLower = (c.name || '').toLowerCase();
+                if (nLower.includes('hair') || nLower.includes('ponytail') || nLower.includes('braid') || nLower.includes('pony') || nLower.startsWith('hair_')) {
+                  if (c.restLocalQuaternion) c.quaternion.copy(c.restLocalQuaternion);
+                  if (c.defaultPosition) c.position.copy(c.defaultPosition);
+                }
+              }
+            });
 
-          // Lock hair bones to their rest local transforms to completely freeze ponytail movement
-          model.traverse(c => {
-            if (c.isBone) {
-              const nLower = (c.name || '').toLowerCase();
-              if (nLower.includes('hair') || nLower.includes('ponytail') || nLower.includes('braid') || nLower.includes('pony') || nLower.startsWith('hair_')) {
-                if (c.restLocalQuaternion) c.quaternion.copy(c.restLocalQuaternion);
-                if (c.defaultPosition) c.position.copy(c.defaultPosition);
+            let simDt = delta;
+            if (simDt > 0.05) simDt = 0.05;
+
+            const hairChain = model.userData.hairChain;
+            if (hairChain && hairChain.length > 0) {
+              const firstNode = hairChain[0];
+              const baseParent = firstNode.bone.parent;
+              if (baseParent) {
+                baseParent.updateMatrixWorld(true);
+                const baseParentQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
+                const g = new THREE.Vector3(0, -981, 0);
+                
+                for (const node of hairChain) {
+                  const { bone, restQuat, relQuat, axis, worldLength } = node;
+                  const parent = bone.parent;
+                  if (!parent) continue;
+
+                  parent.updateMatrixWorld(true);
+                  bone.updateMatrixWorld(true);
+
+                  const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+
+                  // Rest dir based on baseParent to break deformed parent feedback loops
+                  const restQuatWorld = baseParentQuat.clone().multiply(relQuat);
+                  const restDir = axis.clone().applyQuaternion(restQuatWorld).normalize();
+                  const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
+
+                  const dist = jointWorld.distanceTo(node.tipWorld);
+                  if (dist > worldLength * 3) {
+                    node.tipWorld.copy(restTip);
+                    node.tipPrev.copy(restTip);
+                  }
+
+                  const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.30);
+                  const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
+
+                  next.lerp(restTip, 0.25);
+
+                  const dir = new THREE.Vector3().subVectors(next, jointWorld);
+                  const currentLen = dir.length();
+                  if (currentLen > 1e-6) {
+                    dir.multiplyScalar(worldLength / currentLen);
+                  } else {
+                    dir.copy(restDir).multiplyScalar(worldLength);
+                  }
+
+                  node.tipPrev.copy(node.tipWorld);
+                  node.tipWorld.copy(jointWorld).add(dir);
+
+                  const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
+                  const parentQuatInv = parentQuat.clone().invert();
+                  const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
+
+                  const restDirParent = axis.clone().applyQuaternion(restQuat);
+                  const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
+                  bone.quaternion.copy(qDelta).multiply(restQuat);
+                }
+              }
+            }
+
+            const breastChain = model.userData.breastChain;
+            const enableBreasts = document.getElementById('toggle-breast-physics')?.checked ?? true;
+            const breastIntensity = parseFloat(document.getElementById('breast-intensity-slider')?.value ?? '10.0');
+            if (breastChain && breastChain.length > 0) {
+              if (enableBreasts) {
+                const g = new THREE.Vector3(0, -700, 0); // moderate gravity for breasts to allow bouncy feel
+                for (const node of breastChain) {
+                  const { bone, restQuat, axis, worldLength } = node;
+                  const parent = bone.parent;
+                  if (!parent) continue;
+
+                  parent.updateMatrixWorld(true);
+                  bone.updateMatrixWorld(true);
+
+                  const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+
+                  const dist = jointWorld.distanceTo(node.tipWorld);
+                  if (dist > worldLength * 3) {
+                    const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
+                    const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
+                    const tipW = jointWorld.clone().addScaledVector(restDir, worldLength);
+                    node.tipWorld.copy(tipW);
+                    node.tipPrev.copy(tipW);
+                  }
+
+                  const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.12); // damping = 0.12
+                  const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
+
+                  const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
+                  const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
+                  const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
+
+                  next.lerp(restTip, 0.15); // stiffness = 0.15
+
+                  const dir = new THREE.Vector3().subVectors(next, jointWorld);
+                  const currentLen = dir.length();
+                  if (currentLen > 1e-6) {
+                    dir.multiplyScalar(worldLength / currentLen);
+                  } else {
+                    dir.copy(restDir).multiplyScalar(worldLength);
+                  }
+
+                  node.tipPrev.copy(node.tipWorld);
+                  node.tipWorld.copy(jointWorld).add(dir);
+
+                  const parentQuatInv = parentQuat.clone().invert();
+                  const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
+
+                  const restDirParent = axis.clone().applyQuaternion(restQuat);
+                  const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
+                  
+                  let scaledQ = qDelta;
+                  if (breastIntensity !== 1.0) {
+                    const w = Math.min(1, Math.max(-1, qDelta.w));
+                    const angle = 2 * Math.acos(w);
+                    if (Math.abs(angle) > 1e-5) {
+                      const sinHalf = Math.sqrt(1 - w * w);
+                      const rotAxis = new THREE.Vector3();
+                      if (sinHalf > 1e-5) {
+                        rotAxis.set(qDelta.x / sinHalf, qDelta.y / sinHalf, qDelta.z / sinHalf).normalize();
+                      } else {
+                        rotAxis.set(0, 0, 1);
+                      }
+                      scaledQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, angle * breastIntensity);
+                    }
+                  }
+                  bone.quaternion.copy(scaledQ).multiply(restQuat);
+                }
+              } else {
+                // Reset to rest pose
+                for (const node of breastChain) {
+                  node.bone.quaternion.copy(node.restQuat);
+                }
               }
             }
           });
-
-          let simDt = delta;
-          if (simDt > 0.05) simDt = 0.05;
-
-          const hairChain = model.userData.hairChain;
-          if (hairChain && hairChain.length > 0) {
-            const firstNode = hairChain[0];
-            const baseParent = firstNode.bone.parent;
-            if (baseParent) {
-              baseParent.updateMatrixWorld(true);
-              const baseParentQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
-              const g = new THREE.Vector3(0, -981, 0);
-              
-              for (const node of hairChain) {
-                const { bone, restQuat, relQuat, axis, worldLength } = node;
-                const parent = bone.parent;
-                if (!parent) continue;
-
-                parent.updateMatrixWorld(true);
-                bone.updateMatrixWorld(true);
-
-                const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-
-                // Rest dir based on baseParent to break deformed parent feedback loops
-                const restQuatWorld = baseParentQuat.clone().multiply(relQuat);
-                const restDir = axis.clone().applyQuaternion(restQuatWorld).normalize();
-                const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
-
-                const dist = jointWorld.distanceTo(node.tipWorld);
-                if (dist > worldLength * 3) {
-                  node.tipWorld.copy(restTip);
-                  node.tipPrev.copy(restTip);
-                }
-
-                const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.30);
-                const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
-
-                next.lerp(restTip, 0.25);
-
-                const dir = new THREE.Vector3().subVectors(next, jointWorld);
-                const currentLen = dir.length();
-                if (currentLen > 1e-6) {
-                  dir.multiplyScalar(worldLength / currentLen);
-                } else {
-                  dir.copy(restDir).multiplyScalar(worldLength);
-                }
-
-                node.tipPrev.copy(node.tipWorld);
-                node.tipWorld.copy(jointWorld).add(dir);
-
-                const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
-                const parentQuatInv = parentQuat.clone().invert();
-                const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
-
-                const restDirParent = axis.clone().applyQuaternion(restQuat);
-                const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
-                bone.quaternion.copy(qDelta).multiply(restQuat);
-              }
-            }
-          }
-
-          const breastChain = model.userData.breastChain;
-          const enableBreasts = document.getElementById('toggle-breast-physics')?.checked ?? true;
-          const breastIntensity = parseFloat(document.getElementById('breast-intensity-slider')?.value ?? '10.0');
-          if (breastChain && breastChain.length > 0) {
-            if (enableBreasts) {
-              const g = new THREE.Vector3(0, -700, 0); // moderate gravity for breasts to allow bouncy feel
-              for (const node of breastChain) {
-                const { bone, restQuat, axis, worldLength } = node;
-                const parent = bone.parent;
-                if (!parent) continue;
-
-                parent.updateMatrixWorld(true);
-                bone.updateMatrixWorld(true);
-
-                const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-
-                const dist = jointWorld.distanceTo(node.tipWorld);
-                if (dist > worldLength * 3) {
-                  const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
-                  const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
-                  const tipW = jointWorld.clone().addScaledVector(restDir, worldLength);
-                  node.tipWorld.copy(tipW);
-                  node.tipPrev.copy(tipW);
-                }
-
-                const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.12); // damping = 0.12
-                const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
-
-                const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
-                const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
-                const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
-
-                next.lerp(restTip, 0.15); // stiffness = 0.15
-
-                const dir = new THREE.Vector3().subVectors(next, jointWorld);
-                const currentLen = dir.length();
-                if (currentLen > 1e-6) {
-                  dir.multiplyScalar(worldLength / currentLen);
-                } else {
-                  dir.copy(restDir).multiplyScalar(worldLength);
-                }
-
-                node.tipPrev.copy(node.tipWorld);
-                node.tipWorld.copy(jointWorld).add(dir);
-
-                const parentQuatInv = parentQuat.clone().invert();
-                const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
-
-                const restDirParent = axis.clone().applyQuaternion(restQuat);
-                const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
-                
-                let scaledQ = qDelta;
-                if (breastIntensity !== 1.0) {
-                  const w = Math.min(1, Math.max(-1, qDelta.w));
-                  const angle = 2 * Math.acos(w);
-                  if (Math.abs(angle) > 1e-5) {
-                    const sinHalf = Math.sqrt(1 - w * w);
-                    const rotAxis = new THREE.Vector3();
-                    if (sinHalf > 1e-5) {
-                      rotAxis.set(qDelta.x / sinHalf, qDelta.y / sinHalf, qDelta.z / sinHalf).normalize();
-                    } else {
-                      rotAxis.set(0, 0, 1);
-                    }
-                    scaledQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, angle * breastIntensity);
-                  }
-                }
-                bone.quaternion.copy(scaledQ).multiply(restQuat);
-              }
-            } else {
-              // Reset to rest pose
-              for (const node of breastChain) {
-                node.bone.quaternion.copy(node.restQuat);
-              }
-            }
-          }
-        });
+        }
+        
+        // Mettre à jour le marqueur 3D et la position du label 2D à chaque frame (pour l'animation)
+        updateSelectedBoneMarker();
+        
+        renderer.render(scene, camera);
+        updateFPS();
+        
+        needsRender = false;
+      } else {
+        clock.getDelta();
       }
-      
-      // Mettre à jour le marqueur 3D et la position du label 2D à chaque frame (pour l'animation)
-      updateSelectedBoneMarker();
-      
-      renderer.render(scene, camera);
     }
+
+    // FPS Monitor variables
+    const fpsDisplay = document.getElementById('fps-val');
+    const fpsCanvas = document.getElementById('fps-canvas');
+    const fpsCtx = fpsCanvas ? fpsCanvas.getContext('2d') : null;
+    const frameTimes = [];
+    let frameCount = 0;
+    let fpsLastUpdate = performance.now();
+
+    function updateFPS() {
+      const now = performance.now();
+      frameCount++;
+      
+      // Update text every 500ms
+      if (now - fpsLastUpdate >= 500) {
+        const fps = Math.round((frameCount * 1000) / (now - fpsLastUpdate));
+        if (fpsDisplay) {
+          fpsDisplay.textContent = fps;
+          if (fps >= 50) fpsDisplay.style.color = '#10b981'; // Green
+          else if (fps >= 30) fpsDisplay.style.color = '#f59e0b'; // Amber
+          else fpsDisplay.style.color = '#ef4444'; // Red
+        }
+        
+        // Add to history list for graph (max 80 points)
+        frameTimes.push(fps);
+        if (frameTimes.length > 80) {
+          frameTimes.shift();
+        }
+        
+        // Render canvas graph
+        if (fpsCtx && fpsCanvas) {
+          fpsCtx.clearRect(0, 0, fpsCanvas.width, fpsCanvas.height);
+          
+          // Draw grid line at 60fps (y=8)
+          fpsCtx.strokeStyle = 'rgba(255,255,255,0.06)';
+          fpsCtx.lineWidth = 1;
+          fpsCtx.beginPath();
+          fpsCtx.moveTo(0, 8);
+          fpsCtx.lineTo(80, 8);
+          fpsCtx.stroke();
+          
+          // Draw FPS graph line
+          fpsCtx.beginPath();
+          fpsCtx.strokeStyle = '#ff4444'; // red graph line
+          fpsCtx.lineWidth = 1.2;
+          for (let i = 0; i < frameTimes.length; i++) {
+            const x = i * (80 / 80);
+            // Map FPS from 0-100 to canvas height (20-0)
+            const y = 20 - (frameTimes[i] / 100) * 20;
+            if (i === 0) fpsCtx.moveTo(x, y);
+            else fpsCtx.lineTo(x, y);
+          }
+          fpsCtx.stroke();
+          
+          // Fill area under the curve
+          if (frameTimes.length > 0) {
+            fpsCtx.lineTo((frameTimes.length - 1) * (80 / 80), 20);
+            fpsCtx.lineTo(0, 20);
+            fpsCtx.fillStyle = 'rgba(255, 68, 68, 0.08)';
+            fpsCtx.fill();
+          }
+        }
+        
+        frameCount = 0;
+        fpsLastUpdate = now;
+      }
+    }
+
     animate();
   </script>
 </body>

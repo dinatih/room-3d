@@ -1,33 +1,26 @@
+import bpy
 import json
-import struct
 
-def inspect_glb(path):
-    print(f"\n--- INSPECTING {path} ---")
-    with open(path, 'rb') as f:
-        data = f.read()
-    
-    jlen = struct.unpack('<I', data[12:16])[0]
-    js = json.loads(data[20:20+jlen])
-    
-    # Bones
-    nodes = js.get('nodes', [])
-    skin_indices = set()
-    for skin in js.get('skins', []):
-        skin_indices.update(skin.get('joints', []))
-    
-    bone_names = [nodes[i].get('name') for i in skin_indices if i < len(nodes)]
-    print(f"Joint Nodes ({len(bone_names)}): {sorted(bone_names)}")
-    
-    # Animations
-    for anim in js.get('animations', []):
-        print(f"Animation: {anim.get('name')}")
-        channels = anim.get('channels', [])
-        targets = set()
-        for chan in channels:
-            target_node_idx = chan.get('target', {}).get('node')
-            if target_node_idx is not None:
-                targets.add(nodes[target_node_idx].get('name'))
-        print(f"Track Targets ({len(targets)}): {sorted(list(targets))[:10]}")
+bpy.ops.wm.read_factory_settings(use_empty=True)
+bpy.ops.import_scene.gltf(filepath="/home/dinatih/Projects/room-3d/public/media/glb-animations/knee-push-up.glb")
+bpy.ops.export_scene.gltf(filepath="/tmp/inspect.gltf", export_format='GLTF_SEPARATE')
 
-inspect_glb('public/media/sandbox/Xbot_official.glb')
-inspect_glb('public/media/sandbox/lara_native.glb')
+with open("/tmp/inspect.gltf", "r") as f:
+    data = json.load(f)
+
+print("Animations count in exported GLB:", len(data.get("animations", [])))
+for anim in data.get("animations", []):
+    print(f"Animation name: {anim.get('name')}")
+    channels = anim.get("channels", [])
+    print(f"Channels count: {len(channels)}")
+    
+    counts = []
+    for ch in channels:
+        sampler = anim["samplers"][ch["sampler"]]
+        input_acc = data["accessors"][sampler["input"]]
+        counts.append(input_acc.get("count"))
+    
+    print(f"  Min frames in a channel: {min(counts)}")
+    print(f"  Max frames in a channel: {max(counts)}")
+    print(f"  Channels with > 2 frames: {len([c for c in counts if c > 2])}")
+
