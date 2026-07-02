@@ -56,6 +56,7 @@ const initialLayers: LayerState = {
   grid: false,
   gridDepth: false,
   laraGrid: false,
+  showAllLaraStyles: false,
   skeleton: false,
   ceiling: false,
   wallEdges: false,
@@ -68,6 +69,7 @@ const initialLayers: LayerState = {
   grass: false,
   surface: false,
   walker: true,
+  accessories: true,
 };
 
 const initialExtraStates: Record<string, boolean> = {
@@ -120,7 +122,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   furniture: initialFurniture,
   layers: initialLayers,
   extraStates: initialExtraStates,
-  activeWalkerId: '01_bikini',
+  activeWalkerId: 'rosanna',
   measurementActive: false,
   cameraMode: 'orbit',
   setMeasurementActive: (active: boolean) => {

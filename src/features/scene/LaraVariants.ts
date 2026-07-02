@@ -2,7 +2,8 @@ import * as THREE from 'three';
 
 export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivid' | 'sabira' | 'safa' | 'rajaa';
 
-export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant) {
+export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVariant) {
+  if (!style) return;
   const isVivid = style === 'vivid';
   const isNative = style === 'native';
   const isRosanna = style === 'rosanna';

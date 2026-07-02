@@ -296,6 +296,8 @@ export interface LayerState {
   grass:        boolean;
   surface:      boolean;
   walker:       boolean;
+  accessories:  boolean;
+  showAllLaraStyles: boolean;
 }
 
 export interface SidePanelProps {
@@ -451,6 +453,8 @@ export function SidePanel({
       {layerBtn('purple', 'Mobilier',      'furniture')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
       {layerBtn('light',  'Walker',        'walker')}
+      {layerBtn('light',  'Accessoires Lara', 'accessories')}
+      {layers.walker && layerBtn('light',  'Toutes les Lara 👥', 'showAllLaraStyles')}
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent">
           <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>👤 Personnage</div>
@@ -460,7 +464,7 @@ export function SidePanel({
             value={activeWalkerId}
             onChange={(e) => useSceneStore.getState().setActiveWalkerId(e.target.value)}
           >
-            {CHARACTERS.map(c => (
+            {CHARACTERS.filter(c => layers.showAllLaraStyles || !/^\d/.test(c.id) || c.id === activeWalkerId).map(c => (
               <option key={c.id} value={c.id} className="bg-light text-dark">
                 {c.name}
               </option>

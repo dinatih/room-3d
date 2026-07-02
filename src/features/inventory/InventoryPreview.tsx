@@ -65,9 +65,15 @@ function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, 
   );
 }
 
-function FitCamera() { const { camera } = useThree(); useLayoutEffect(() => { camera.lookAt(0, 0, 0); }, [camera]); return null; }
+function FitCamera({ target = [0, 0, 0] }: { target?: [number, number, number] }) {
+  const { camera } = useThree();
+  useLayoutEffect(() => {
+    camera.lookAt(new THREE.Vector3(...target));
+  }, [camera, target]);
+  return null;
+}
 
-function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, glbPath }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; glbPath?: string; }) {
+function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, glbPath, onTargetChange }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; }) {
   const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!), [scale, setScale] = useState(1);
   const [worldSize, setWorldSize] = useState<{ x: number; y: number; z: number } | null>(null);
 
@@ -110,7 +116,15 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
       // Center vertically in view
       outerRef.current.position.set(px, -center.y * s, pz);
     }
-  }, [grounded, preserveOriginXZ]);
+
+    if (onTargetChange) {
+      if (grounded) {
+        onTargetChange([0, (size.y * s) / 2, 0]);
+      } else {
+        onTargetChange([0, 0, 0]);
+      }
+    }
+  }, [grounded, preserveOriginXZ, onTargetChange]);
 
   useLayoutEffect(() => {
     // Small delay to ensure skeleton/skinning matrices are computed
@@ -130,9 +144,9 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
   );
 }
 
-function RegistryScene({ item, actionState, showDims }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; }) {
+function RegistryScene({ item, actionState, showDims, onTargetChange }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; onTargetChange?: (t: [number, number, number]) => void; }) {
   const Component = SCENE_REGISTRY[item.id], isWalker = item.category === 'walkers';
-  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isWalker} showDims={showDims} glbPath={item.glbPath} />;
+  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isWalker} showDims={showDims} glbPath={item.glbPath} onTargetChange={onTargetChange} />;
 }
 
 function PhotoGallery({ photos }: { photos: string[] }) {
@@ -168,7 +182,8 @@ export function InventoryPreview({
   const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = !!photos && photos.length > 0;
   const actionKeys = item && 'category' in item && (item as InventoryItem).category === 'walkers' ? [] : (item as any)?.actions?.[0] ? [(item as any).actions[0]] : [];
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(true), [autoRotate, setAutoRotate] = useState(true);
-  useEffect(() => { setActionStates({}); setViewMode('3d'); setAutoRotate(true); }, [item?.id]);
+  const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
+  useEffect(() => { setActionStates({}); setViewMode('3d'); setAutoRotate(true); setTarget([0, 0, 0]); }, [item?.id]);
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
   return (
@@ -188,10 +203,10 @@ export function InventoryPreview({
               <ambientLight intensity={1.2} />
               <directionalLight position={[3, 5, 3]} intensity={1.5} />
               <directionalLight position={[-2, 1, -2]} intensity={0.5} color="#aabbff" />
-              <FitCamera />
-              <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={false} minDistance={0.3} maxDistance={50} target={[0, 0, 0]} onStart={() => setAutoRotate(false)} />
+              <FitCamera target={target} />
+              <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={false} minDistance={0.3} maxDistance={50} target={target} onStart={() => setAutoRotate(false)} />
               <Grid infiniteGrid fadeDistance={15} cellColor="#999999" sectionColor="#666666" cellSize={0.2} sectionSize={1} position={[0, -0.001, 0]} />
-              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} /></Suspense>
+              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} /></Suspense>
             </Canvas>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} /> : null}
           <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -211,6 +226,8 @@ export function InventoryPreview({
                 <option value="headShake">Head Shake</option>
                 <option value="sad_pose">Sad Pose</option>
                 <option value="sneak_pose">Sneak Pose</option>
+                <option value="media/sandbox/anim_woman-solo.glb">Woman Solo</option>
+                <option value="media/sandbox/anim_knee-push-up.glb">Knee Push Up</option>
               </select>
             </div>
           )}

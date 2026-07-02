@@ -106,7 +106,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const ctrlRef = useRef<OrbitControlsImpl>(null!);
 
   // Walk state (refs — updated every frame, no re-render needed)
-  const initialWalker = CHARACTERS.find(c => c.id === '01_bikini') || CHARACTERS[0];
+  const initialWalker = CHARACTERS.find(c => c.id === 'rosanna') || CHARACTERS[0];
   const walkPos   = useRef({ x: initialWalker.pos[0], y: initialWalker.height * EYE_RATIO, z: initialWalker.pos[2] });
   const walkYaw   = useRef(initialWalker.rot);
   const walkPitch = useRef(0);
@@ -583,7 +583,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         maxPolarAngle={Math.PI}
         enabled={!planeMode}
         enableRotate={!planeMode && mode !== 'top'}
-        screenSpacePanning={mode === 'top'}
+        screenSpacePanning={mode !== 'walk'}
         mouseButtons={mode === 'top' ? {
           LEFT:   THREE.MOUSE.PAN,
           MIDDLE: THREE.MOUSE.DOLLY,

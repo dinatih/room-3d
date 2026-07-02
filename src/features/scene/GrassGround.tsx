@@ -47,10 +47,10 @@ function GrassInstances({
   // Le patch d'herbe d'origine fait 200x200 cm.
   // 3 instances en X (de largeur 166.67 cm chacune) -> échelle X = 166.67 / 200 = 0.833333
   // Centres en X : -16.67, 150, 316.67
-  // 2 instances en Z (de profondeur 185 cm chacune) -> échelle Z = 185 / 200 = 0.925
-  // Centres en Z : -307.5, -122.5
+  // 5 instances en Z (de profondeur 185 cm chacune) -> échelle Z = 185 / 200 = 0.925
+  // Centres en Z : -862.5, -677.5, -492.5, -307.5, -122.5 (couvre Z jusqu'à -955)
   const columns = [-16.67, 150, 316.67];
-  const rows = [-307.5, -122.5];
+  const rows = [-862.5, -677.5, -492.5, -307.5, -122.5];
   const count = columns.length * rows.length;
 
   const scaleX = 166.67 / 200;

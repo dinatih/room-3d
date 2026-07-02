@@ -94,6 +94,7 @@ function drawMinimap(
 
   // ── Other characters (NPCs) icons ───────────────────────────────────────────
   const activeWalkerId = useSceneStore.getState().activeWalkerId;
+  const showAllLaraStyles = useSceneStore.getState().layers.showAllLaraStyles;
   ctx.save();
   ctx.fillStyle   = 'rgba(0, 102, 255, 0.4)';
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';
@@ -101,6 +102,8 @@ function drawMinimap(
   
   CHARACTERS.forEach(char => {
     if (char.id !== activeWalkerId) {
+      const isNumbered = /^\d/.test(char.id);
+      if (!showAllLaraStyles && isNumbered) return;
       ctx.save();
       ctx.translate(tx(char.pos[0]), tz(char.pos[2]));
       ctx.beginPath(); 

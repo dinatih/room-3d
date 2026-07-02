@@ -14,7 +14,7 @@ import {
   DiagWall,
   ROOM_D, KITCHEN_Z,
 } from '@config';
-import { pEast, pWest, WALL_DEFS, wallSeg, W } from './wallData';
+import { pEast, pWest, WALL_DEFS, wallSeg, WALL_THICKNESS } from './wallData';
 
 // Points sur le mur diagonal pour la porte d'entrée
 const DIAG_DOOR_S = DiagWall.p(DiagWall.door.start);
@@ -33,11 +33,14 @@ export const SEG_WALLS: Seg[] = [
   // ── Segments manuels ───────────────────────────────────────────────────────
 
   // Coin de niche : connecteur horizontal entre Ouest 1 (xc=-W/2) et Ouest Niche (xc=NICHE_X-W/2)
-  [-W / 2, NICHE_Z_START, NICHE_X - W / 2, NICHE_Z_START],
+  [-WALL_THICKNESS / 2, NICHE_Z_START, NICHE_X - WALL_THICKNESS / 2, NICHE_Z_START],
 
   // Mur diagonal bâtiment
   [DiagWall.A.x,  DiagWall.A.z,  DIAG_DOOR_S.x, DIAG_DOOR_S.z],
   [DIAG_DOOR_E.x, DIAG_DOOR_E.z, DiagWall.C.x,  DiagWall.C.z],
+
+  // Mur en face du jardin (parallèle au Mur diag)
+  [-100, -641.992, 400, -930.667],
 ];
 
 // ── SEG_DOORS ─────────────────────────────────────────────────────────────────
@@ -51,7 +54,7 @@ export const SEG_DOORS: Seg[] = [
   // ── Segments manuels ───────────────────────────────────────────────────────
 
   // Placard couloir (partition schématique)
-  [DOOR_START, ROOM_D + 10, DOOR_START, KITCHEN_Z],
+  [DOOR_START, ROOM_D + WALL_THICKNESS, DOOR_START, KITCHEN_Z],
   // PC-SDB (porte couloir → salle de bain)
   [60, BATH_Z_END, DOOR_START, BATH_Z_END],
   // P3 — porte d'entrée diagonale

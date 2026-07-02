@@ -11,9 +11,10 @@ import {
   DOOR_START,
   DiagWall,
 } from '@config';
-import { W, CORR_WALL_X } from './wallData';
+import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X } from './wallData';
 
-const W2 = W / 2;
+const W2 = WALL_THICKNESS / 2;
+const WC2 = PARTITION_THICKNESS / 2;
 // diagAtX calcule le Z sur la face intérieure du mur diagonal pour un X donné.
 // Formule simplifiée utilisant DiagWall.slope.
 const diagAtX = (x: number) => DiagWall.A.z + (x - DiagWall.A.x) * DiagWall.slope;
@@ -91,17 +92,17 @@ function makeFloorMesh(pts: [number, number][], color: number): THREE.Mesh {
 
 function buildGroup(): THREE.Group {
   const IZ_ROOM_S  = ROOM_D - W2;       // 395
-  const IZ_KITCH_B = KITCHEN_Z - W2;    // 455
+  const IZ_KITCH_B = KITCHEN_Z - WC2;   // 456.4
   const IX_DOOR    = DOOR_START;         // 200
-  const IX_CORR    = CORR_WALL_X - W2;  // 190
+  const IX_CORR    = CORR_WALL_X - WC2;  // 190
 
   const sejourArea = (ROOM_W * IZ_ROOM_S + (-NICHE_X) * (IZ_ROOM_S - (NICHE_Z_START + W2))) / 10000;
-  const cuisineArea = (KITCHEN_X1 - W2 - KITCHEN_X0 - W2) * (IZ_KITCH_B - IZ_ROOM_S) / 10000;
+  const cuisineArea = (KITCHEN_X1 - KITCHEN_X0) * (IZ_KITCH_B - IZ_ROOM_S) / 10000;
   const coulPts:   [number, number][] = [
     [IX_DOOR, IZ_ROOM_S], [ROOM_W, IZ_ROOM_S], [ROOM_W, DiagWall.A.z], [IX_DOOR, diagAtX(IX_DOOR)],
   ];
   const coulArea = polyArea(coulPts);
-  const placardW = IX_CORR - (KITCHEN_X1 + W2);
+  const placardW = IX_CORR - (KITCHEN_X1 + PARTITION_THICKNESS);
   const placardD = IZ_KITCH_B - IZ_ROOM_S;
   const placardArea = placardW * placardD / 10000;
   const sdbPts: [number, number][] = [
@@ -125,8 +126,8 @@ function buildGroup(): THREE.Group {
       label: 'Cuisine', area: cuisineArea, cx: (KITCHEN_X0 + KITCHEN_X1) / 2, cz: (ROOM_D + KITCHEN_Z) / 2,
       color: '#ffcc88', floorColor: 0xff9900,
       floorPts: [
-        [KITCHEN_X0 + W2, IZ_ROOM_S], [KITCHEN_X1 - W2, IZ_ROOM_S],
-        [KITCHEN_X1 - W2, IZ_KITCH_B], [KITCHEN_X0 + W2, IZ_KITCH_B],
+        [KITCHEN_X0, IZ_ROOM_S], [KITCHEN_X1, IZ_ROOM_S],
+        [KITCHEN_X1, IZ_KITCH_B], [KITCHEN_X0, IZ_KITCH_B],
       ],
     },
     {
@@ -135,11 +136,11 @@ function buildGroup(): THREE.Group {
       floorPts: coulPts,
     },
     {
-      label: 'Placard', area: placardArea, cx: (KITCHEN_X1 + W2 + IX_CORR) / 2, cz: (IZ_ROOM_S + IZ_KITCH_B) / 2,
+      label: 'Placard', area: placardArea, cx: (KITCHEN_X1 + PARTITION_THICKNESS + IX_CORR) / 2, cz: (IZ_ROOM_S + IZ_KITCH_B) / 2,
       color: '#cc9966', floorColor: 0x996633,
       floorPts: [
-        [KITCHEN_X1 + W2, IZ_ROOM_S], [IX_CORR, IZ_ROOM_S],
-        [IX_CORR, IZ_KITCH_B], [KITCHEN_X1 + W2, IZ_KITCH_B],
+        [KITCHEN_X1 + PARTITION_THICKNESS, IZ_ROOM_S], [IX_CORR, IZ_ROOM_S],
+        [IX_CORR, IZ_KITCH_B], [KITCHEN_X1 + PARTITION_THICKNESS, IZ_KITCH_B],
       ],
     },
     {
