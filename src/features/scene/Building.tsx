@@ -1001,26 +1001,21 @@ function Baseboards() {
         <QR cx={INT_X_EAST - SD} cz={((ROOM_D + WALL_THICKNESS) + DiagWall.A.z) / 2}
             len={DiagWall.A.z - (ROOM_D + WALL_THICKNESS)} dir="-X" mat={skirtingMat} />
 
-        {/* Mur SE — face nord (séjour) X: DOOR_END-SD→316, Z=ROOM_D */}
-        <P w={INT_X_EAST - (DOOR_END - SD)} h={SH} d={SD}
-           x={(DOOR_END - SD + INT_X_EAST) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
+        {/* Mur SE — face nord (séjour) X: 287.5→316 (s'arrête à 1.5cm du bord du trou x=286), Z=ROOM_D */}
+        <P w={28.5} h={SH} d={SD}
+           x={301.75} y={y} z={INT_Z_ROOM_S - SD / 2}
            mat={skirtingMat} />
-        <QR cx={(DOOR_END - SD + INT_X_EAST) / 2} cz={INT_Z_ROOM_S - SD}
-            len={INT_X_EAST - (DOOR_END - SD)} dir="-Z" mat={skirtingMat} />
+        <QR cx={301.75} cz={INT_Z_ROOM_S - SD}
+            len={28.5} dir="-Z" mat={skirtingMat} />
 
-        {/* Mur SE — face ouest (couloir/seuil) X=DOOR_END, Z: ROOM_D-SD→ROOM_D+WALL_THICKNESS */}
-        <P w={SD} h={SH} d={WALL_THICKNESS + SD}
-           x={DOOR_END - SD / 2} y={y} z={(ROOM_D - SD + ROOM_D + WALL_THICKNESS) / 2}
-           mat={skirtingMat} />
-        <QR cx={DOOR_END - SD} cz={(ROOM_D - SD + ROOM_D + WALL_THICKNESS) / 2}
-            len={WALL_THICKNESS + SD} dir="-X" mat={skirtingMat} />
+        {/* Mur SE — face ouest (couloir/seuil) : pas de plinthe sur la face interne de l'ouverture */}
 
-        {/* Mur SE — face sud (corridor droit) X: DOOR_END-SD→316, Z=ROOM_D+WALL_THICKNESS */}
-        <P w={INT_X_EAST - (DOOR_END - SD)} h={SH} d={SD}
-           x={(DOOR_END - SD + INT_X_EAST) / 2} y={y} z={(ROOM_D + WALL_THICKNESS) + SD / 2}
+        {/* Mur SE — face sud (corridor droit) X: 287.5→316 (s'arrête à 1.5cm du bord du trou x=286), Z=ROOM_D+WALL_THICKNESS */}
+        <P w={28.5} h={SH} d={SD}
+           x={301.75} y={y} z={(ROOM_D + WALL_THICKNESS) + SD / 2}
            mat={skirtingMat} />
-        <QR cx={(DOOR_END - SD + INT_X_EAST) / 2} cz={(ROOM_D + WALL_THICKNESS) + SD}
-            len={INT_X_EAST - (DOOR_END - SD)} dir="+Z" mat={skirtingMat} />
+        <QR cx={301.75} cz={(ROOM_D + WALL_THICKNESS) + SD}
+            len={28.5} dir="+Z" mat={skirtingMat} />
 
         {/* Mur diagonal (fractionné autour de la porte d'entrée) + Corridor */}
         {[diagSegA, diagSegB, diagSegC].map((s, i) => (
@@ -1034,25 +1029,25 @@ function Baseboards() {
                 material={skirtingMat} scale={[1, 1, s.len]} geometry={qrGeo} />
         ))}
 
-        {/* Corridor — face est du mur couloir (côté corridor, x = INT_X_DOOR_S+SD/2).
+        {/* Corridor — face est du mur couloir (côté corridor, x = CORR_WALL_EAST + SD/2).
             Fractionnée pour éviter les ouvertures : placard (z=410→460) et porte
-            SDB couloir (z=CORR_DOOR_S→CORR_DOOR_E). Côté ouest du même mur :
-            plinthe carrelage SDB (cf BathSkirting). */}
+            SDB couloir (z=CORR_DOOR_S→CORR_DOOR_E), s'arrêtant à 1.5cm des bords de l'ouverture. */}
         {(() => {
+          const CORR_WALL_EAST = CORR_WALL_X + PARTITION_THICKNESS / 2; // 199.2
           const CLOSET_N = ROOM_D + WALL_THICKNESS;          // 410
           const CLOSET_S = KITCHEN_Z;                        // 460
           const CORR_DOOR_S = 517;                           // 517
           const CORR_DOOR_E = 603;                           // 603
           const segs: [number, number][] = [
             [INT_Z_ROOM_S - SD, CLOSET_N + SD],
-            [CLOSET_S,          CORR_DOOR_S],
-            [CORR_DOOR_E,       parquetDiagZ],
+            [CLOSET_S,          CORR_DOOR_S - 1.5],
+            [CORR_DOOR_E + 1.5, parquetDiagZ],
           ];
           return segs.flatMap(([z1, z2], i) => [
             <P key={`p${i}`} w={SD} h={SH} d={z2 - z1}
-               x={INT_X_DOOR_S + SD / 2} y={y} z={(z1 + z2) / 2}
+               x={CORR_WALL_EAST + SD / 2} y={y} z={(z1 + z2) / 2}
                mat={skirtingMat} />,
-            <QR key={`qr${i}`} cx={INT_X_DOOR_S + SD} cz={(z1 + z2) / 2}
+            <QR key={`qr${i}`} cx={CORR_WALL_EAST + SD} cz={(z1 + z2) / 2}
                 len={z2 - z1} dir="+X" mat={skirtingMat} />,
           ]);
         })()}
@@ -1094,12 +1089,12 @@ function Baseboards() {
           );
         })()}
 
-        {/* South wall segment 2: X: 125→200, Z=395 */}
-        <P w={INT_X_DOOR_S + SD - INT_X_KITCHEN_R} h={SH} d={SD}
-           x={(INT_X_KITCHEN_R + INT_X_DOOR_S + SD) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
+        {/* South wall segment 2: X: 125→198.5 (s'arrête à 1.5cm du bord du trou x=200), Z=395 */}
+        <P w={73.5} h={SH} d={SD}
+           x={161.75} y={y} z={INT_Z_ROOM_S - SD / 2}
            mat={skirtingMat} />
-        <QR cx={(INT_X_KITCHEN_R + INT_X_DOOR_S + SD) / 2} cz={INT_Z_ROOM_S - SD}
-            len={INT_X_DOOR_S + SD - INT_X_KITCHEN_R} dir="-Z" mat={skirtingMat} />
+        <QR cx={161.75} cz={INT_Z_ROOM_S - SD}
+            len={73.5} dir="-Z" mat={skirtingMat} />
 
         {/* Kitchen east wall X=125, Z: 395→455 */}
         <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
@@ -1208,13 +1203,13 @@ function BathSkirting() {
            x={INT_X_NICHE + SD_T / 2} y={y} z={(INT_Z_BATH_N + Bz) / 2}
            mat={tileMat} />
 
-        {/* Mur est SDB — segment nord (Z: 467.2→517), face -X */}
-        <P w={SD_T} h={SH_T} d={CORR_DOOR_S - INT_Z_BATH_N}
-           x={BATH_E_FACE - SD_T / 2} y={y} z={(INT_Z_BATH_N + CORR_DOOR_S) / 2}
+        {/* Mur est SDB — segment nord (Z: 467.2→515.5, s'arrête à 1.5cm du bord du trou z=517), face -X */}
+        <P w={SD_T} h={SH_T} d={(CORR_DOOR_S - 1.5) - INT_Z_BATH_N}
+           x={BATH_E_FACE - SD_T / 2} y={y} z={(INT_Z_BATH_N + (CORR_DOOR_S - 1.5)) / 2}
            mat={tileMat} />
-        {/* Mur est SDB — segment sud (Z: 603→BATH_S_FACE), face -X */}
-        <P w={SD_T} h={SH_T} d={BATH_S_FACE - CORR_DOOR_E}
-           x={BATH_E_FACE - SD_T / 2} y={y} z={(CORR_DOOR_E + BATH_S_FACE) / 2}
+        {/* Mur est SDB — segment sud (Z: 604.5→610, s'arrête à 1.5cm du bord du trou z=603), face -X */}
+        <P w={SD_T} h={SH_T} d={BATH_S_FACE - (CORR_DOOR_E + 1.5)}
+           x={BATH_E_FACE - SD_T / 2} y={y} z={((CORR_DOOR_E + 1.5) + BATH_S_FACE) / 2}
            mat={tileMat} />
 
         {/* Mur sud SDB (entre shower-ne et bath-se) : pas de plinthe — rail
