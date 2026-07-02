@@ -31,7 +31,7 @@ import { SummerOutdoorBoot }                           from '@features/scene/ite
 import { WinterOutdoorBoot }                           from '@features/scene/items/WinterOutdoorBoot';
 import { Sneakers }                                   from '@features/scene/items/Sneakers';
 import { MackaparGroup }                              from '@features/scene/items/MackaparGroup';
-import { SunnerstaGroup }                             from '@features/scene/items/SunnerstaGroup';
+import { RaskogLargeGroup }                             from '@features/scene/items/RaskogLargeGroup';
 import { CuisineGroup }                               from '@features/scene/items/CuisineGroup';
 import { KallaxNE }                                   from '@features/scene/items/KallaxNE';
 import { KallaxSE }                                   from '@features/scene/items/KallaxSE';
@@ -123,7 +123,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'kallax-se-stack':        KallaxSE,
   'kallax-nw-stack':        KallaxNW,
   'mackapar-stack':         MackaparGroup,
-  'sunnersta-stack':        SunnerstaGroup,
+  'raskog-large-stack':        RaskogLargeGroup,
   'cuisine-stack':          CuisineGroup,
 };
 

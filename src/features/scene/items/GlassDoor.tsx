@@ -213,7 +213,7 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
           <mesh position={[0, 30 + 190 / 2, 0]} geometry={panelFrameGeo} castShadow>{pvcMat}</mesh>
           <mesh position={[0, 30 + 190 / 2, 0]}><boxGeometry args={[gw, gh, 0.8]} />{glass}</mesh>
           
-          <group position={[-PANEL_W + 6, 125, FRAME_D_V2 / 2 + 0.1]}>
+          <group position={[-PANEL_W / 2 + 6, 125, FRAME_D_V2 / 2 + 0.1]}>
             <mesh position={[0, 0, 0.1]}><boxGeometry args={[2.5, 4.5, 0.2]} />{metalMat}</mesh>
             <mesh position={[0, 0, 0.4]} rotation-x={Math.PI / 2}><cylinderGeometry args={[0.4, 0.4, 0.6, 8]} />{metalMat}</mesh>
             <group ref={handleRef} position={[0, 0, 0.7]}>

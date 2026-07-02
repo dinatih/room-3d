@@ -47,7 +47,7 @@ import { MuligRail }     from './items/MuligRail';
 import { Scooter }       from './items/Scooter';
 import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
-import { SunnerstaGroup } from './items/SunnerstaGroup';
+import { RaskogLargeGroup } from './items/RaskogLargeGroup';
 import { Dimpa }         from './items/Dimpa';
 import { Grejig }        from './items/Grejig';
 import { PalmLeaf }      from './items/PalmLeaf';
@@ -150,7 +150,7 @@ const AIRPERFORMER_POSITIONS = [
   { x: 297, z: w2 + 16, ry: 0 }, // angle KallaxNE / Mur Est
 ];
 
-const SUNNERSTA_POSITIONS = [
+const RASKOG_LARGE_POSITIONS = [
   { x: ROOM_W - 20, z: 271.5,       ry: Math.PI / 2 },
   { x: ROOM_W - 26, z: 280,       ry: Math.PI },
   { x: 258,          z: KALLAX_SE_Z, ry: Math.PI / 2 }, // devant KallaxSE (face x=277)
@@ -318,8 +318,8 @@ function Bed() {
   const bedPositions = useMemo(() => {
     const PAD = 3, halfL = 102.5, halfW = 41.5;
     const dxK = KALLAX_DEPTH;
-    const dxS = ROOM_W - (ROOM_W - 36) + PAD; // SUNNERSTA_NW_X = ROOM_W-36
-    const dzT = 243.5 - (w2 + PAD);            // SUNNERSTA_NW_Z = 243.5
+    const dxS = ROOM_W - (ROOM_W - 35) + PAD; // RASKOG_LARGE_NW_X = ROOM_W-35
+    const dzT = 243.5 - (w2 + PAD);            // RASKOG_LARGE_NW_Z = 243.5
     const u    = (dzT - Math.sqrt(dzT * dzT - 4 * dxK * dxS)) / 2;
     const NE_Z = w2 + PAD + u;
     const alpha = Math.atan2(dxK, u);
@@ -506,27 +506,22 @@ function AirPerformer_() {
   );
 }
 
-const SUNNERSTA_VARIANTS = 3; // 0 Sunnersta, 1 RÅSKOG grande, 2 RÅSKOG petite
-
-function Sunnersta_() {
+function RaskogLarge_() {
   const [posIdx, setPosIdx] = useState(0);
-  const [variant, setVariant] = useState(0);
   useEffect(() => {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
-      if (key === 'sunnersta-position') setPosIdx(i => (i + 1) % SUNNERSTA_POSITIONS.length);
-      if (key === 'sunnersta-variant')  setVariant(i => (i + 1) % SUNNERSTA_VARIANTS);
+      if (key === 'raskog-large-position') setPosIdx(i => (i + 1) % RASKOG_LARGE_POSITIONS.length);
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
   }, []);
-  useEffect(() => { positionState['sunnersta-position'] = { idx: posIdx, total: SUNNERSTA_POSITIONS.length }; }, [posIdx]);
-  useEffect(() => { positionState['sunnersta-variant'] = { idx: variant, total: SUNNERSTA_VARIANTS }; }, [variant]);
-  const p = SUNNERSTA_POSITIONS[posIdx];
+  useEffect(() => { positionState['raskog-large-position'] = { idx: posIdx, total: RASKOG_LARGE_POSITIONS.length }; }, [posIdx]);
+  const p = RASKOG_LARGE_POSITIONS[posIdx];
   return (
     <PositionTransition x={p.x} z={p.z} ry={p.ry}>
-      <group userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Sunnersta', actions: ['sunnersta-position', 'sunnersta-variant'] } }}>
-        <SunnerstaGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} variant={variant} />
+      <group userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'RÅSKOG grande', actions: ['raskog-large-position'] } }}>
+        <RaskogLargeGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </PositionTransition>
   );
@@ -625,7 +620,7 @@ export function Decor({ layers }: { layers: LayerState }) {
           </group>
         ))}
       </>
-      <Sunnersta_ />
+      <RaskogLarge_ />
     </MergedStaticGroup>
   );
 }

@@ -1,5 +1,5 @@
 /**
- * Raskog.tsx — Dessertes roulantes IKEA RÅSKOG (alternatives à Sunnersta).
+ * Raskog.tsx — Dessertes roulantes IKEA RÅSKOG.
  * RaskogLarge : 35×45×77 cm. RaskogSmall : 28×38×61 cm.
  * Coordonnées locales : centré XZ, Y=0 = sol, normalisé sur la hauteur réelle.
  */

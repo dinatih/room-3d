@@ -50,41 +50,38 @@ function useDoorFrameGeo(wallThickness: number = 10.0) {
 function useHandleGeo(mancheDir: number = 1) {
   return useMemo(() => {
     const geos: THREE.BufferGeometry[] = [];
-    const addRotatedCylinder = (
-      r: number, h: number,
-      x: number, y: number, z: number,
-      rx: number, ry: number, rz: number
-    ) => {
-      const geo = new THREE.CylinderGeometry(r, r, h, 16);
-      geo.rotateX(rx);
-      geo.rotateY(ry);
-      geo.rotateZ(rz);
+    const addGeo = (geo: THREE.BufferGeometry, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) => {
+      if (rx) geo.rotateX(rx);
+      if (ry) geo.rotateY(ry);
+      if (rz) geo.rotateZ(rz);
       geo.translate(x, y, z);
       geos.push(geo);
     };
 
-    // Tige passant à travers la porte
-    addRotatedCylinder(R, 8, 0, 0, 0, Math.PI / 2, 0, 0);
+    const halfT = T / 2;
 
-    // Placas de propreté (carrées de 5x5)
     for (const sign of [-1, 1]) {
-      const pz = sign * 2.2;
-      const plaque = new THREE.BoxGeometry(4.5, 4.5, 0.2);
-      plaque.translate(0, 0, pz);
-      geos.push(plaque);
+      const zBase = sign * (halfT + 0.5);
+      const zMid  = sign * (halfT + 3.5);
+      const zEnd  = sign * (halfT + 6);
+
+      // Rose (circular plate)
+      addGeo(new THREE.CylinderGeometry(3, 3, 1, 12), 0, 0, zBase, Math.PI / 2, 0, 0);
+      
+      // Tige
+      addGeo(new THREE.CylinderGeometry(R, R, 5, 8), 0, 0, zMid, Math.PI / 2, 0, 0);
+
+      // Manche (horizontal lever)
+      addGeo(new THREE.CylinderGeometry(R, R, 14, 8), mancheDir * 7, 0, zEnd, 0, 0, Math.PI / 2);
+
+      // Spheres (rounded ends)
+      addGeo(new THREE.SphereGeometry(R, 8, 6), 0, 0, zEnd);
+      addGeo(new THREE.SphereGeometry(R, 8, 6), mancheDir * 14, 0, zEnd);
     }
 
-    // Béquilles (poignées de 11cm de long)
-    for (const sign of [-1, 1]) {
-      const pz = sign * 4.0;
-      // axe de rotation (cylindre court vers l'extérieur)
-      addRotatedCylinder(R * 0.9, 3, 0, 0, pz - sign * 1.5, Math.PI / 2, 0, 0);
-      // poignée horizontale
-      const px = -mancheDir * 5.5;
-      addRotatedCylinder(R * 0.95, 11, px, 0, pz, 0, 0, Math.PI / 2);
-    }
-
-    return mergeGeometries(geos, false);
+    const merged = mergeGeometries(geos, false);
+    geos.forEach(g => g.dispose());
+    return merged;
   }, [mancheDir]);
 }
 
