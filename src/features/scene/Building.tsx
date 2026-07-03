@@ -1039,7 +1039,6 @@ function Baseboards() {
           const CORR_DOOR_S = 517;                           // 517
           const CORR_DOOR_E = 603;                           // 603
           const segs: [number, number][] = [
-            [INT_Z_ROOM_S - SD, CLOSET_N + SD],
             [CLOSET_S,          CORR_DOOR_S - 1.5],
             [CORR_DOOR_E + 1.5, parquetDiagZ],
           ];
@@ -1058,7 +1057,7 @@ function Baseboards() {
           const CL_N = ROOM_D + WALL_THICKNESS;            // 410 (face sud mur sud séjour)
           const CL_S = KITCHEN_Z;                          // 460 (face nord mur sud SDB)
           const CL_W = KITCHEN_X1 + PARTITION_THICKNESS;   // 137.2 (face est mur est cuisine)
-          const CL_E = INT_X_DOOR_S;                       // 200 (ouvert sur couloir, pas de plinthe est)
+          const CL_E = CORR_WALL_X - PARTITION_THICKNESS / 2; // 192 (ouvert sur couloir, la plinthe s'arrête au bord ouest du mur du couloir à 192)
           const xCenter = (CL_W + CL_E + SD) / 2;
           const zCenter = (CL_N + CL_S) / 2;
           const W_LEN = CL_E + SD - CL_W;
