@@ -319,14 +319,13 @@ export interface SidePanelProps2 extends SidePanelProps {
   onSetRenderStyle:        (key: RenderStyleKey) => void;
 }
 
-type TabKey = 'views' | 'layers' | 'display' | 'furniture' | 'perf' | null;
+type TabKey = 'views' | 'layers' | 'display' | 'perf' | null;
 
 const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
   { key: 'perf',      emoji: '📊', label: 'Perf' },
   { key: 'views',     emoji: '📷', label: 'Vues' },
   { key: 'layers',    emoji: '📑', label: 'Calques' },
   { key: 'display',   emoji: '👁',  label: 'Affichage' },
-  { key: 'furniture', emoji: '🛋', label: 'Mobilier' },
 ];
 
 // ── Composant principal ───────────────────────────────────────────────────────
@@ -598,13 +597,12 @@ export function SidePanel({
     const sheetOpen = activeTab !== null;
     const sheetTitle: Record<Exclude<TabKey, null>, string> = {
       views: '📷 Vues', layers: '📑 Calques', display: '👁 Affichage',
-      furniture: '🛋 Mobilier', perf: '📊 Perf',
+      perf: '📊 Perf',
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
       views: ViewsSection,
       layers: LayersSection,
       display: DisplaySection,
-      furniture: FurnitureSection,
       perf: <DevToolsGroups Group={Group} />,
     };
 
@@ -721,7 +719,6 @@ export function SidePanel({
         <Group emoji="📷" title="Vues">{ViewsSection}</Group>
         <Group emoji="📑" title="Calques">{LayersSection}</Group>
         <Group emoji="👁" title="Affichage">{DisplaySection}</Group>
-        <Group emoji="🛋" title="Mobilier">{FurnitureSection}</Group>
       </div>
 
       {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}

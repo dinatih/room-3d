@@ -31,11 +31,6 @@ export interface CharacterConfig {
 }
 
 export const CHARACTERS: CharacterConfig[] = [
-  // Remaining valid characters
-  { id: '04_baywatch', name: '04 Baywatch', path: 'media/all_lara/04_baywatch.glb', pos: [260, 0, -220], rot: 1.1, height: 173.4 },
-  { id: '05_crop_top_shorts', name: '05 Crop top - Shorts', path: 'media/all_lara/05_crop_top_shorts.glb', pos: [50, 0, 40], rot: 0.4, height: 173.4 },
-  { id: '07_scoop_bodysuit_shorts', name: '07 Scoop bodysuit - Shorts', path: 'media/all_lara/07_scoop_bodysuit_shorts.glb', pos: [230, 0, 340], rot: 0.1, height: 173.4 },
-  { id: '14_catsuit', name: '14 Catsuit', path: 'media/all_lara/14_catsuit.glb', pos: [90, 0, 190], rot: -0.9, height: 173.4 },
   { id: 'xbot_studio', name: 'X-Bot (Studio)', path: 'media/all_lara/xbot_studio.glb', pos: [180, 0, -200], rot: 1.4, height: 181.0 },
 
   // 9 stylized default Laras (based on Scoop)

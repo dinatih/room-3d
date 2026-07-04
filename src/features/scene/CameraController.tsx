@@ -198,6 +198,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // Sync mode state with useSceneStore
   useEffect(() => {
     useSceneStore.setState({ cameraMode: mode });
+    if (mode === 'top') {
+      useSceneStore.setState(state => ({
+        layers: { ...state.layers, wallEdges: true }
+      }));
+    }
     if (mode !== 'top') {
       useSceneStore.getState().setMeasurementActive(false);
     }

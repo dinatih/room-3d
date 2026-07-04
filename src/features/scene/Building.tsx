@@ -262,9 +262,9 @@ function PillarLabels() {
       box.setFromObject(mesh);
       const cx = (box.min.x + box.max.x) / 2;
       const cz = (box.min.z + box.max.z) / 2;
-      const sp = makeSprite(id, '#ffdd44', 14);
+      const sp = makeSprite(id, '#ffdd44', 14 / 3);
       sp.renderOrder = 999;
-      sp.position.set(cx, WALL_H + 18, cz);
+      sp.position.set(cx, WALL_H + 8, cz);
       group.add(sp);
     });
 
@@ -422,6 +422,8 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
 
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
+  const wallEdges = useSceneStore(state => state.layers.wallEdges);
+  const showLabels = pillarsOnly || wallEdges;
   // Géométries complexes via useMemo ──────────────────────────────────────────
 
   const diagGeos = useMemo(() => {
@@ -492,7 +494,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
       <MergedStaticGroup name="merged-walls">
         <group ref={(g) => { wallsGroupRef.current = g; }}>
 
-          {pillarsOnly && <PillarLabels />}
+          {showLabels && <PillarLabels />}
 
           {/* ── Piliers ────────────────────────────────────────────────────────── */}
           {(
@@ -834,7 +836,7 @@ function Parquet() {
 
     // Découpe : exclut le rectangle sous le mur sud-est (segment 3, x=DOOR_END→ROOM_W, z=ROOM_D→ROOM_D+WALL_THICKNESS).
     const WALL_SE_W = DOOR_END;    // 280 — face ouest du pilier/mur SE
-    const WALL_SOUTH_FACE = ROOM_D + WALL_THICKNESS; // 410 — face sud du mur sud
+    const WALL_SOUTH_FACE = ROOM_D + PARTITION_THICKNESS; // 407.2 — face sud du mur sud
 
     const shape = new THREE.Shape([
       new THREE.Vector2(INT_X_WEST,      -INT_Z_NORTH),
@@ -880,11 +882,11 @@ function Parquet() {
 function Tile() {
   // Placard couloir : tuile démarre APRÈS les murs sud séjour (kitchen-se → door-living-w)
   // et est cuisine (kitchen-ne → kitchen-se), pour ne pas déborder sous les murs.
-  // Bornes : x: KITCHEN_X1+PARTITION_THICKNESS(137.2) → DOOR_START(200), z: ROOM_D+WALL_THICKNESS(410) → KITCHEN_Z(460).
+  // Bornes : x: KITCHEN_X1+PARTITION_THICKNESS(137.2) → DOOR_START(200), z: ROOM_D+PARTITION_THICKNESS(407.2) → KITCHEN_Z(460).
   const CLOSET_W_REAL = DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS); // 62.8
-  const CLOSET_D_REAL = KITCHEN_Z - (ROOM_D + WALL_THICKNESS);          // 50
+  const CLOSET_D_REAL = KITCHEN_Z - (ROOM_D + PARTITION_THICKNESS);      // 52.8
   const CLOSET_X_REAL = ((KITCHEN_X1 + PARTITION_THICKNESS) + DOOR_START) / 2;
-  const CLOSET_Z_REAL = ((ROOM_D + WALL_THICKNESS) + KITCHEN_Z) / 2;
+  const CLOSET_Z_REAL = ((ROOM_D + PARTITION_THICKNESS) + KITCHEN_Z) / 2;
 
   const { bathGeo, bathMat, closetMat } = useMemo(() => {
     const baseTex = makeTileTex();
@@ -994,12 +996,12 @@ function Baseboards() {
         <QR cx={INT_X_EAST - SD} cz={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
             len={INT_Z_ROOM_S - INT_Z_NORTH} dir="-X" mat={skirtingMat} />
 
-        {/* East wall (sud, après mur SE) X=316, Z: ROOM_D+WALL_THICKNESS→DiagWall.A.z */}
-        <P w={SD} h={SH} d={DiagWall.A.z - (ROOM_D + WALL_THICKNESS)}
-           x={INT_X_EAST - SD / 2} y={y} z={((ROOM_D + WALL_THICKNESS) + DiagWall.A.z) / 2}
+        {/* East wall (sud, après mur SE) X=316, Z: ROOM_D+PARTITION_THICKNESS→DiagWall.A.z */}
+        <P w={SD} h={SH} d={DiagWall.A.z - (ROOM_D + PARTITION_THICKNESS)}
+           x={INT_X_EAST - SD / 2} y={y} z={((ROOM_D + PARTITION_THICKNESS) + DiagWall.A.z) / 2}
            mat={skirtingMat} />
-        <QR cx={INT_X_EAST - SD} cz={((ROOM_D + WALL_THICKNESS) + DiagWall.A.z) / 2}
-            len={DiagWall.A.z - (ROOM_D + WALL_THICKNESS)} dir="-X" mat={skirtingMat} />
+        <QR cx={INT_X_EAST - SD} cz={((ROOM_D + PARTITION_THICKNESS) + DiagWall.A.z) / 2}
+            len={DiagWall.A.z - (ROOM_D + PARTITION_THICKNESS)} dir="-X" mat={skirtingMat} />
 
         {/* Mur SE — face nord (séjour) X: 287.5→316 (s'arrête à 1.5cm du bord du trou x=286), Z=ROOM_D */}
         <P w={28.5} h={SH} d={SD}
@@ -1010,11 +1012,11 @@ function Baseboards() {
 
         {/* Mur SE — face ouest (couloir/seuil) : pas de plinthe sur la face interne de l'ouverture */}
 
-        {/* Mur SE — face sud (corridor droit) X: 287.5→316 (s'arrête à 1.5cm du bord du trou x=286), Z=ROOM_D+WALL_THICKNESS */}
+        {/* Mur SE — face sud (corridor droit) X: 287.5→316 (s'arrête à 1.5cm du bord du trou x=286), Z=ROOM_D+PARTITION_THICKNESS */}
         <P w={28.5} h={SH} d={SD}
-           x={301.75} y={y} z={(ROOM_D + WALL_THICKNESS) + SD / 2}
+           x={301.75} y={y} z={(ROOM_D + PARTITION_THICKNESS) + SD / 2}
            mat={skirtingMat} />
-        <QR cx={301.75} cz={(ROOM_D + WALL_THICKNESS) + SD}
+        <QR cx={301.75} cz={(ROOM_D + PARTITION_THICKNESS) + SD}
             len={28.5} dir="+Z" mat={skirtingMat} />
 
         {/* Mur diagonal (fractionné autour de la porte d'entrée) + Corridor */}
@@ -1034,7 +1036,7 @@ function Baseboards() {
             SDB couloir (z=CORR_DOOR_S→CORR_DOOR_E), s'arrêtant à 1.5cm des bords de l'ouverture. */}
         {(() => {
           const CORR_WALL_EAST = CORR_WALL_X + PARTITION_THICKNESS / 2; // 199.2
-          const CLOSET_N = ROOM_D + WALL_THICKNESS;          // 410
+          const CLOSET_N = ROOM_D + PARTITION_THICKNESS;      // 407.2
           const CLOSET_S = KITCHEN_Z;                        // 460
           const CORR_DOOR_S = 517;                           // 517
           const CORR_DOOR_E = 603;                           // 603
@@ -1052,9 +1054,9 @@ function Baseboards() {
         })()}
 
         {/* Placard couloir — plinthes bois 3 côtés autour du carrelage placard.
-            Tile spans x: KITCHEN_X1+PARTITION_THICKNESS(137.2) → DOOR_START(200), z: ROOM_D+WALL_THICKNESS(410) → KITCHEN_Z(460). */}
+            Tile spans x: KITCHEN_X1+PARTITION_THICKNESS(137.2) → DOOR_START(200), z: ROOM_D+PARTITION_THICKNESS(407.2) → KITCHEN_Z(460). */}
         {(() => {
-          const CL_N = ROOM_D + WALL_THICKNESS;            // 410 (face sud mur sud séjour)
+          const CL_N = ROOM_D + PARTITION_THICKNESS;        // 407.2 (face sud mur sud séjour)
           const CL_S = KITCHEN_Z;                          // 460 (face nord mur sud SDB)
           const CL_W = KITCHEN_X1 + PARTITION_THICKNESS;   // 137.2 (face est mur est cuisine)
           const CL_E = CORR_WALL_X - PARTITION_THICKNESS / 2; // 192 (ouvert sur couloir, la plinthe s'arrête au bord ouest du mur du couloir à 192)
@@ -1178,9 +1180,10 @@ function BathSkirting() {
   const CORR_DOOR_S = 517;  // 517
   const CORR_DOOR_E = 603;  // 603
 
-  // Mur shower-ne/se (WALL_DEFS l.203) : z1=pSouth('shower-ne')=620, z2=pNorth('shower-se')=680.
-  const showerWallZ1 = BATH_Z_END + 10;      // 620
-  const showerWallZ2 = BATH_Z_END + 70;      // 680
+  const showerWallZCenter1 = KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2;
+  const showerWallZCenter2 = showerWallZCenter1 + 70;
+  const showerWallZ1 = showerWallZCenter1 + PARTITION_THICKNESS / 2;
+  const showerWallZ2 = showerWallZCenter2 - PARTITION_THICKNESS / 2;
 
   // Segment diagonal SDB : de C (d=dC) à B (d=dB)
   const dC = Math.sqrt((corridorXEnd - DiagWall.A.x) ** 2 + (Cz - DiagWall.A.z) ** 2);
@@ -1214,14 +1217,14 @@ function BathSkirting() {
         {/* Mur sud SDB (entre shower-ne et bath-se) : pas de plinthe — rail
             du placard SDB coulissant occupe l'espace. */}
 
-        {/* Pilier shower-ne — face nord (z=612.8, x=61.4→68.6, face -Z) */}
+        {/* Pilier shower-ne — face nord (face -Z) */}
         <P w={PARTITION_THICKNESS} h={SH_T} d={SD_T}
-           x={65} y={y} z={BATH_Z_END - PARTITION_THICKNESS + 10 - SD_T / 2}
+           x={65} y={y} z={showerWallZCenter1 - PARTITION_THICKNESS / 2 - SD_T / 2}
            mat={tileMat} />
 
-        {/* Pilier shower-ne — face est (x=68.6, z=612.8→620, face +X) */}
+        {/* Pilier shower-ne — face est (face +X) */}
         <P w={SD_T} h={SH_T} d={PARTITION_THICKNESS}
-           x={65 + PARTITION_THICKNESS / 2 + SD_T / 2} y={y} z={BATH_Z_END - PARTITION_THICKNESS / 2 + 10}
+           x={65 + PARTITION_THICKNESS / 2 + SD_T / 2} y={y} z={showerWallZCenter1}
            mat={tileMat} />
 
         {/* Mur est de la douche (x=65, z=620→680), côté SDB main (face +X) */}
@@ -1668,7 +1671,7 @@ export function DoorsPlaced() {
         <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
-        position={[(DOOR_START + DOOR_END) / 2, DOOR_HEIGHT / 2, ROOM_D + WALL_THICKNESS / 2]}
+        position={[(DOOR_START + DOOR_END) / 2, DOOR_HEIGHT / 2, ROOM_D + PARTITION_THICKNESS / 2]}
         userData={{ animUnit: true, hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
         <DoorLiving item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>

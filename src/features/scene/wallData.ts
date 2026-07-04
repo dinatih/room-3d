@@ -88,24 +88,24 @@ export const PILLAR_DEFS = [
   { id: 'glass-east-ext', x: GLASS_END + WALL_THICKNESS / 2,     z: -20,           d: 20 },
 
   // ── Séjour & Niche ─────────────────────────────────────────────────────────
-  { id: 'corner-sw',     x: NICHE_X - WALL_THICKNESS / 2,        z: ROOM_D + WALL_THICKNESS / 2 },
+  { id: 'corner-sw',     x: NICHE_X - WALL_THICKNESS / 2,        z: ROOM_D + PARTITION_THICKNESS / 2, w: WALL_THICKNESS, d: PARTITION_THICKNESS },
   { id: 'niche-beam',    x: -5,                     z: NICHE_Z_START },
-  { id: 'corner-se',     x: ROOM_W + WALL_THICKNESS / 2,          z: ROOM_D + WALL_THICKNESS / 2 },
+  { id: 'corner-se',     x: ROOM_W + WALL_THICKNESS / 2,          z: ROOM_D + PARTITION_THICKNESS / 2, w: WALL_THICKNESS, d: PARTITION_THICKNESS },
 
   // ── Cuisine ────────────────────────────────────────────────────────────────
-  { id: 'kitchen-sw',    x: KITCHEN_X0 - PARTITION_THICKNESS / 2,    z: ROOM_D + WALL_THICKNESS / 2,        w: PARTITION_THICKNESS, d: WALL_THICKNESS },
-  { id: 'kitchen-se',    x: KITCHEN_X1 + PARTITION_THICKNESS / 2,    z: ROOM_D + WALL_THICKNESS / 2,        w: PARTITION_THICKNESS, d: WALL_THICKNESS },
+  { id: 'kitchen-sw',    x: KITCHEN_X0 - PARTITION_THICKNESS / 2,    z: ROOM_D + PARTITION_THICKNESS / 2,        w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
+  { id: 'kitchen-se',    x: KITCHEN_X1 + PARTITION_THICKNESS / 2,    z: ROOM_D + PARTITION_THICKNESS / 2,        w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
   { id: 'kitchen-nw',    x: KITCHEN_X0 - PARTITION_THICKNESS / 2,    z: KITCHEN_Z + PARTITION_THICKNESS / 2,    w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
   { id: 'kitchen-ne',    x: KITCHEN_X1 + PARTITION_THICKNESS / 2,    z: KITCHEN_Z + PARTITION_THICKNESS / 2,    w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
 
   // ── Salle de Bain & Douche ────────────────────────────────────────────────
   { id: 'bath-nw',       x: NICHE_X - WALL_THICKNESS / 2,        z: KITCHEN_Z + PARTITION_THICKNESS / 2,    w: WALL_THICKNESS,  d: PARTITION_THICKNESS },
   { id: 'bath-ne',       x: CORR_WALL_X,            z: KITCHEN_Z + PARTITION_THICKNESS / 2,    w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
-  { id: 'bath-se',       x: CORR_WALL_X,            z: BATH_Z_END - PARTITION_THICKNESS / 2 + 10, w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
-  { id: 'shower-nw',     x: NICHE_X - WALL_THICKNESS / 2,        z: BATH_Z_END - PARTITION_THICKNESS / 2 + 10, w: WALL_THICKNESS,  d: PARTITION_THICKNESS },
-  { id: 'shower-ne',     x: 65,                     z: BATH_Z_END - PARTITION_THICKNESS / 2 + 10,  w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
-  { id: 'shower-sw',     x: NICHE_X - WALL_THICKNESS / 2,        z: BATH_Z_END + 70 + PARTITION_THICKNESS / 2, w: WALL_THICKNESS,  d: PARTITION_THICKNESS },
-  { id: 'shower-se',     x: 65,                     z: BATH_Z_END + 70 + PARTITION_THICKNESS / 2,  w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
+  { id: 'bath-se',       x: CORR_WALL_X,            z: BATH_Z_END + PARTITION_THICKNESS / 2, w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
+  { id: 'shower-nw',     x: NICHE_X - WALL_THICKNESS / 2,        z: KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2, w: WALL_THICKNESS,  d: PARTITION_THICKNESS },
+  { id: 'shower-ne',     x: 65,                     z: KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2, w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
+  { id: 'shower-sw',     x: NICHE_X - WALL_THICKNESS / 2,        z: KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 70, w: WALL_THICKNESS,  d: PARTITION_THICKNESS },
+  { id: 'shower-se',     x: 65,                     z: KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 70, w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
 
   // ── Extrémités mur diagonal (BoxGeometry) ──────────────────────────────────
   { id: 'diag-ne',       x: ROOM_W + WALL_THICKNESS / 2,          z: DiagWall.A.z - WALL_THICKNESS / 2 },
@@ -121,8 +121,8 @@ export const PILLAR_DEFS = [
   { id: 'garden-e',      x: ROOM_W + WALL_THICKNESS / 2,           z: -220 - WALL_THICKNESS / 2 },
 
   // ── Jambes de portes (10×10) ───────────────────────────────────────────────
-  { id: 'door-living-w', x: DOOR_START - WALL_THICKNESS / 2,     z: ROOM_D + WALL_THICKNESS / 2 },
-  { id: 'door-living-e', x: DOOR_END   + WALL_THICKNESS / 2,     z: ROOM_D + WALL_THICKNESS / 2 },
+  { id: 'door-living-w', x: DOOR_START - PARTITION_THICKNESS / 2, z: ROOM_D + PARTITION_THICKNESS / 2, w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
+  { id: 'door-living-e', x: DOOR_END   + PARTITION_THICKNESS / 2, z: ROOM_D + PARTITION_THICKNESS / 2, w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
   { id: 'door-bath-n',   x: CORR_WALL_X,            z: 513.4,                 w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
   { id: 'door-bath-s',   x: CORR_WALL_X,            z: 606.6,                 w: PARTITION_THICKNESS, d: PARTITION_THICKNESS },
   { id: 'door-entry-w',
@@ -187,13 +187,13 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'z', xc: pX('corner-ne'), z1: pSouth('corner-se'), z2: pNorth('diag-ne'), mat: 'east' }, // Est 3 (couloir droit)
 
   // ── MUR SUD (Z=400) ────────────────────────────────────────────────────────
-  { axis: 'x', x1: pEast('corner-sw'), x2: pWest('kitchen-sw'), zc: pZ('corner-sw') },
-  { axis: 'x', x1: pEast('kitchen-se'), x2: pWest('door-living-w'), zc: pZ('corner-sw') },
+  { axis: 'x', x1: pEast('corner-sw'), x2: pWest('kitchen-sw'), zc: pZ('corner-sw'), t: PARTITION_THICKNESS },
+  { axis: 'x', x1: pEast('kitchen-se'), x2: pWest('door-living-w'), zc: pZ('corner-sw'), t: PARTITION_THICKNESS },
   // Linteau au-dessus de la porte principale (3D seulement)
-  { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: pZ('corner-sw'), yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none' },
-  { axis: 'x', x1: pEast('door-living-e'), x2: pWest('corner-se'), zc: pZ('corner-sw') },
+  { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: pZ('corner-sw'), yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none', t: PARTITION_THICKNESS },
+  { axis: 'x', x1: pEast('door-living-e'), x2: pWest('corner-se'), zc: pZ('corner-sw'), t: PARTITION_THICKNESS },
   // Porte principale (2D uniquement)
-  { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: ROOM_D, segKind: 'door' },
+  { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: ROOM_D, segKind: 'door', t: PARTITION_THICKNESS },
 
   // ── Cuisine ────────────────────────────────────────────────────────────────
   { axis: 'z', xc: pX('kitchen-sw'), z1: pSouth('kitchen-sw'), z2: pNorth('kitchen-nw'), t: PARTITION_THICKNESS },

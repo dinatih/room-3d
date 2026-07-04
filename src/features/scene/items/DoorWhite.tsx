@@ -20,29 +20,72 @@ const CW = 4.0;    // Largeur chambranle (casing)
 const CT = 1.0;    // Épaisseur chambranle
 const GAP = 0.1;   // Petit jeu pour éviter le z-fighting (1mm)
 
+function makeLeftFrameShape(wallThickness: number) {
+  const halfWT = wallThickness / 2;
+  const shape = new THREE.Shape();
+  shape.moveTo(-(halfWT + 1.0), 3.0);
+  shape.lineTo(-halfWT, 3.0);
+  shape.lineTo(-halfWT, 0);
+  shape.lineTo(halfWT, 0);
+  shape.lineTo(halfWT, 3.0);
+  shape.lineTo(halfWT + 1.0, 3.0);
+  shape.lineTo(halfWT + 1.0, -1.0);
+  shape.lineTo(-0.2, -1.0);
+  shape.lineTo(-0.2, -2.8);
+  shape.lineTo(-2.0, -2.8);
+  shape.lineTo(-2.0, -1.0);
+  shape.lineTo(-(halfWT + 1.0), -1.0);
+  shape.closePath();
+  return shape;
+}
+
+function makeRightFrameShape(wallThickness: number) {
+  const halfWT = wallThickness / 2;
+  const shape = new THREE.Shape();
+  shape.moveTo(halfWT + 1.0, 3.0);
+  shape.lineTo(halfWT + 1.0, -1.0);
+  shape.lineTo(2.0, -1.0);
+  shape.lineTo(2.0, -2.8);
+  shape.lineTo(0.2, -2.8);
+  shape.lineTo(0.2, -1.0);
+  shape.lineTo(-(halfWT + 1.0), -1.0);
+  shape.lineTo(-(halfWT + 1.0), 3.0);
+  shape.lineTo(-halfWT, 3.0);
+  shape.lineTo(-halfWT, 0);
+  shape.lineTo(halfWT, 0);
+  shape.lineTo(halfWT, 3.0);
+  shape.closePath();
+  return shape;
+}
+
 function useDoorFrameGeo(wallThickness: number = 10.0) {
   return useMemo(() => {
     const geos: THREE.BufferGeometry[] = [];
-    const addBox = (w: number, h: number, d: number, x: number, y: number, z: number) => {
-      const geo = new THREE.BoxGeometry(w, h, d);
-      geo.translate(x, y, z);
-      geos.push(geo);
-    };
 
-    // ── Dormant ──
-    addBox(DT, H, wallThickness - 0.02, -(W / 2 + DT / 2), H / 2, 0);
-    addBox(DT, H, wallThickness - 0.02,  (W / 2 + DT / 2), H / 2, 0);
-    addBox(W, DT, wallThickness - 0.02, 0, H + DT / 2, 0);
+    const leftShape = makeLeftFrameShape(wallThickness);
+    const rightShape = makeRightFrameShape(wallThickness);
 
-    // ── Chambranles ──
-    for (const sign of [-1, 1]) {
-      const z = sign * (wallThickness / 2 + CT / 2 + GAP);
-      addBox(CW, H + DT, CT, -(W / 2 + DT + CW / 2 - 1), (H + DT) / 2, z);
-      addBox(CW, H + DT, CT,  (W / 2 + DT + CW / 2 - 1), (H + DT) / 2, z);
-      addBox(W + DT * 2 + CW - 2, CW, CT, 0, H + DT + CW / 2 - 1, z);
-    }
+    // Left Jamb
+    const leftGeo = new THREE.ExtrudeGeometry(leftShape, { depth: H, bevelEnabled: false });
+    leftGeo.applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, Math.PI / 2, 'XYZ')));
+    leftGeo.translate(-W / 2, 0, 0);
+    geos.push(leftGeo);
+
+    // Right Jamb
+    const rightGeo = new THREE.ExtrudeGeometry(rightShape, { depth: H, bevelEnabled: false });
+    rightGeo.applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, Math.PI / 2, 'XYZ')));
+    rightGeo.applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0, 'XYZ')));
+    rightGeo.translate(W / 2, 0, 0);
+    geos.push(rightGeo);
+
+    // Header
+    const headerGeo = new THREE.ExtrudeGeometry(leftShape, { depth: W, bevelEnabled: false });
+    headerGeo.applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI / 2, 0, 'XYZ')));
+    headerGeo.translate(-W / 2, H, 0);
+    geos.push(headerGeo);
 
     const merged = mergeGeometries(geos, false);
+    geos.forEach(g => g.dispose());
     return merged;
   }, [wallThickness]);
 }
@@ -116,8 +159,8 @@ function DoorImpl({
   const handleGeo = useHandleGeo(mancheDir);
 
   useLayoutEffect(() => {
-    // Dimension totale pour l'inventaire/minimap (80cm de large hors chambranles)
-    onSize(new THREE.Vector3(W + DT * 2, H + DT, wallThickness));
+    // Dimension totale pour l'inventaire/minimap (Largeur 89 cm, Hauteur 205 cm)
+    onSize(new THREE.Vector3(W + 6, H + 1, wallThickness + 2));
   }, [wallThickness]);
 
   useFrame(() => {
@@ -164,6 +207,7 @@ export function DoorLiving({ actionState, onSize }: SceneItemProps) {
       pivotX={W / 2}   panelX={-W / 2}   handleX={-W + 15}   mancheDir={1}
       openAngle={-Math.PI / 2}
       actionState={actionState} onSize={onSize}
+      wallThickness={PARTITION_THICKNESS}
     />
   );
 }

@@ -200,8 +200,8 @@ export function Equipment({ layers }: { layers: LayerState }) {
       <group position={[DOOR_START - 84, 176, KITCHEN_Z + PARTITION_THICKNESS + 2.1]}>
         <Vathult item={stub('vathult-350')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* Niche douche 70×70cm : X -10→60, Z 600→670. Centre : (25, 635). */}
-      <group position={[NICHE_X + 35, 0, BATH_Z_END + 35]} userData={{ animUnit: true }}>
+      {/* Niche douche 70×70cm : Centre : KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35 */}
+      <group position={[NICHE_X + 35, 0, KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35]} userData={{ animUnit: true }}>
         <Shower item={stub('shower')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Gaine plastique couloir mur est — 25.5×6.5 cm, sol au plafond,
@@ -690,16 +690,17 @@ export function Backpacks({ layers }: { layers: LayerState }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const DF = 33;
-const DRONA_STANDALONE = [
-  { cx: DOOR_START - 31, cy: 60 + DF / 2 + 0.2, cz: KITCHEN_Z + 30, rotY: 0 },
-  { cx: NICHE_X + 20,    cy: 60 + DF / 2 + 0.2, cz: KITCHEN_Z + 30, rotY: 0 },
-  { cx: 24.5,            cy: 50 + DF / 2 + 0.2, cz: 269.5,           rotY: Math.PI / 2 },
-];
 
 export function DronaBoxes({ layers }: { layers: LayerState }) {
+  const cbZ = KITCHEN_Z + PARTITION_THICKNESS + 1 + 18.5; // 486.7
+  const standalone = [
+    { cx: DOOR_START - 31, cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },
+    { cx: NICHE_X + 20,    cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },
+    { cx: 24.5,            cy: 50 + DF / 2 + 0.2, cz: 269.5,           rotY: Math.PI / 2 },
+  ];
   return (
     <group userData={{ animUnit: true }}>
-      {DRONA_STANDALONE.map((p, i) => (
+      {standalone.map((p, i) => (
         <group key={i} position={[p.cx, p.cy, p.cz]} rotation={[0, p.rotY, 0]}>
           <DroneCell />
         </group>
