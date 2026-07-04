@@ -87,6 +87,7 @@ import {
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   BATH_Z_END, DOOR_START,
 } from '@config';
+import { PARTITION_THICKNESS } from './wallData';
 
 const KALLAX_DEPTH = 39;
 
@@ -167,7 +168,7 @@ export function Equipment({ layers }: { layers: LayerState }) {
   const as = useFurnitureToggles({ lampSdb: 'lamp-sdb-toggle', lampCouloir: 'lamp-couloir-toggle' });
   const HW_R = 28, HW_H = 65;
   const SDB_CX  = (NICHE_X + DOOR_START) / 2;
-  const SDB_CZ  = (KITCHEN_Z + BATH_Z_END) / 2;
+  const SDB_CZ  = (KITCHEN_Z + PARTITION_THICKNESS + BATH_Z_END) / 2;
   const CORR_CX = (DOOR_START + ROOM_W) / 2;
   const CORR_CZ = (ROOM_D + KITCHEN_Z) / 2;
   return (
@@ -181,10 +182,10 @@ export function Equipment({ layers }: { layers: LayerState }) {
       <group position={[24.5, 0, 269.5]} userData={{ animUnit: true }}>
         <Freezer item={stub('freezer')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[DOOR_START - 84, 14, KITCHEN_Z + 34.5]} userData={{ animUnit: true }}>
+      <group position={[DOOR_START - 84, 14, KITCHEN_Z + PARTITION_THICKNESS + 24.5]} userData={{ animUnit: true }}>
         <VasqueSdb item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[NICHE_X + 60, 0, KITCHEN_Z + 46.5]} userData={{ animUnit: true }}>
+      <group position={[NICHE_X + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5]} userData={{ animUnit: true }}>
         <Toilet item={stub('toilet')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group visible={!!as['lamp-sdb-toggle']} position={[SDB_CX, WALL_H - 10, SDB_CZ]} rotation={[Math.PI, 0, 0]}>
@@ -196,7 +197,7 @@ export function Equipment({ layers }: { layers: LayerState }) {
         <pointLight intensity={8} distance={250} color={0xffe8b0} />
       </group>
       {/* VÅTHULT — bandeau LED 35 cm au-dessus du miroir vasque (top miroir = 174) */}
-      <group position={[DOOR_START - 84, 176, KITCHEN_Z + 12.1]}>
+      <group position={[DOOR_START - 84, 176, KITCHEN_Z + PARTITION_THICKNESS + 2.1]}>
         <Vathult item={stub('vathult-350')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Niche douche 70×70cm : X -10→60, Z 600→670. Centre : (25, 635). */}
@@ -259,7 +260,7 @@ export function Furniture({ layers }: { layers: LayerState }) {
     ninja:         'ninja-toggle',
     'bin-toggle':  'bin-toggle',
   });
-  const cbZ = KITCHEN_Z + 11 + 18.5; // 489.5
+  const cbZ = KITCHEN_Z + PARTITION_THICKNESS + 1 + 18.5; // 486.7
   return (
     <>
       <MergedStaticGroup name="merged-furniture">
@@ -432,7 +433,7 @@ export function Furnishings({ layers }: { layers: LayerState }) {
           <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
         {/* TACKAN lavabo — plan vasque (y=83), contre le miroir */}
-        <group position={[DOOR_START - 84 + 15, 83, KITCHEN_Z + 15]}>
+        <group position={[DOOR_START - 84 + 15, 83, KITCHEN_Z + PARTITION_THICKNESS + 5]}>
           <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
         {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
@@ -448,10 +449,10 @@ export function Furnishings({ layers }: { layers: LayerState }) {
           <MllseG2Pro item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
         {/* TISKEN sur miroir vasque — mi-hauteur, bord gauche et droit */}
-        <group position={[DOOR_START - 84 - 22, 129, KITCHEN_Z + 12.1]} rotation={[Math.PI / 2, 0, 0]}>
+        <group position={[DOOR_START - 84 - 22, 129, KITCHEN_Z + PARTITION_THICKNESS + 2.1]} rotation={[Math.PI / 2, 0, 0]}>
           <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
-        <group position={[DOOR_START - 84 + 22, 129, KITCHEN_Z + 12.1]} rotation={[Math.PI / 2, 0, 0]}>
+        <group position={[DOOR_START - 84 + 22, 129, KITCHEN_Z + PARTITION_THICKNESS + 2.1]} rotation={[Math.PI / 2, 0, 0]}>
           <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </>
