@@ -30,6 +30,7 @@
 
     let camera, scene, renderer, clock, mixer;
     let laraModel, skeletonHelper;
+    let gui;
     let guiOptions = {
       showSkeleton: true,
       wireframe: false,
@@ -155,7 +156,7 @@
 
 
     function setupGUI() {
-      const gui = new GUI();
+      gui = new GUI();
       gui.add(guiOptions, 'showSkeleton').name('Afficher Squelette').onChange(v => {
         if (skeletonHelper) skeletonHelper.visible = v;
       });
@@ -172,9 +173,6 @@
             }
           });
         }
-      });
-      gui.add(guiOptions, 'animation', ['walking', 'idle', 'happy_walk', 't-pose']).name('Animation').onChange(v => {
-        playAnimation(v);
       });
     }
 
@@ -200,10 +198,76 @@
 
         // Load animations
         const animsToLoad = [
-          { name: 'walking', url: './media/glb-animations/walking.glb' },
-          { name: 'idle', url: './media/glb-animations/idle.glb' },
+          { name: 'angry_gesture', url: './media/glb-animations/angry_gesture.glb' },
+          { name: 'anim_back_flip_to_uppercut', url: './media/glb-animations/anim_back_flip_to_uppercut.glb' },
+          { name: 'ascending_stairs', url: './media/glb-animations/ascending_stairs.glb' },
+          { name: 'asking_question', url: './media/glb-animations/asking_question.glb' },
+          { name: 'beckoning', url: './media/glb-animations/beckoning.glb' },
+          { name: 'catwalk_sequence_01', url: './media/glb-animations/catwalk_sequence_01.glb' },
+          { name: 'catwalk_sequence_02', url: './media/glb-animations/catwalk_sequence_02.glb' },
+          { name: 'catwalk_sequence_03', url: './media/glb-animations/catwalk_sequence_03.glb' },
+          { name: 'catwalk_sequence_04', url: './media/glb-animations/catwalk_sequence_04.glb' },
+          { name: 'catwalk_sequence_05', url: './media/glb-animations/catwalk_sequence_05.glb' },
+          { name: 'cheering_while_sitting', url: './media/glb-animations/cheering_while_sitting.glb' },
+          { name: 'clapping', url: './media/glb-animations/clapping.glb' },
+          { name: 'closing', url: './media/glb-animations/closing.glb' },
+          { name: 'crawl_backwards_in_prone', url: './media/glb-animations/crawl_backwards_in_prone.glb' },
+          { name: 'descending_stairs', url: './media/glb-animations/descending_stairs.glb' },
+          { name: 'dig_and_plant_seeds', url: './media/glb-animations/dig_and_plant_seeds.glb' },
+          { name: 'disappointed', url: './media/glb-animations/disappointed.glb' },
+          { name: 'double_leg_takedown_-_attacker', url: './media/glb-animations/double_leg_takedown_-_attacker.glb' },
+          { name: 'drinking_fountain', url: './media/glb-animations/drinking_fountain.glb' },
+          { name: 'finding', url: './media/glb-animations/finding.glb' },
+          { name: 'gaming', url: './media/glb-animations/gaming.glb' },
+          { name: 'hanging_idle', url: './media/glb-animations/hanging_idle.glb' },
           { name: 'happy_walk', url: './media/glb-animations/happy_walk.glb' },
-          { name: 't-pose', url: './media/glb-animations/t-pose.glb' }
+          { name: 'having_a_meeting,_female', url: './media/glb-animations/having_a_meeting,_female.glb' },
+          { name: 'having_a_meeting,_male', url: './media/glb-animations/having_a_meeting,_male.glb' },
+          { name: 'idle', url: './media/glb-animations/idle.glb' },
+          { name: 'jumping_jacks', url: './media/glb-animations/jumping_jacks.glb' },
+          { name: 'knee-push-up', url: './media/glb-animations/knee-push-up.glb' },
+          { name: 'laying_seizure', url: './media/glb-animations/laying_seizure.glb' },
+          { name: 'laying_severe_cough', url: './media/glb-animations/laying_severe_cough.glb' },
+          { name: 'left_turn', url: './media/glb-animations/left_turn.glb' },
+          { name: 'looking_through_files_low', url: './media/glb-animations/looking_through_files_low.glb' },
+          { name: 'martelo_do_chau_sem_mao', url: './media/glb-animations/martelo_do_chau_sem_mao.glb' },
+          { name: 'one_shoulder_lean', url: './media/glb-animations/one_shoulder_lean.glb' },
+          { name: 'pick_fruit', url: './media/glb-animations/pick_fruit.glb' },
+          { name: 'plant_a_plant', url: './media/glb-animations/plant_a_plant.glb' },
+          { name: 'plant_tree', url: './media/glb-animations/plant_tree.glb' },
+          { name: 'pointing', url: './media/glb-animations/pointing.glb' },
+          { name: 'pull_pilot_from_seat', url: './media/glb-animations/pull_pilot_from_seat.glb' },
+          { name: 'pull_plant', url: './media/glb-animations/pull_plant.glb' },
+          { name: 'pulled_from_seat', url: './media/glb-animations/pulled_from_seat.glb' },
+          { name: 'rapping', url: './media/glb-animations/rapping.glb' },
+          { name: 'right_turn', url: './media/glb-animations/right_turn.glb' },
+          { name: 'rummaging', url: './media/glb-animations/rummaging.glb' },
+          { name: 'scared', url: './media/glb-animations/scared.glb' },
+          { name: 'searching_pockets', url: './media/glb-animations/searching_pockets.glb' },
+          { name: 'seated_idle', url: './media/glb-animations/seated_idle.glb' },
+          { name: 'sitting_drinking', url: './media/glb-animations/sitting_drinking.glb' },
+          { name: 'sitting_talking', url: './media/glb-animations/sitting_talking.glb' },
+          { name: 'skinning_test', url: './media/glb-animations/skinning_test.glb' },
+          { name: 'stand_up', url: './media/glb-animations/stand_up.glb' },
+          { name: 'standing_arguing', url: './media/glb-animations/standing_arguing.glb' },
+          { name: 'surprised', url: './media/glb-animations/surprised.glb' },
+          { name: 'swing_into_wall', url: './media/glb-animations/swing_into_wall.glb' },
+          { name: 't-pose', url: './media/glb-animations/t-pose.glb' },
+          { name: 'talking', url: './media/glb-animations/talking.glb' },
+          { name: 'talking_at_watercooler', url: './media/glb-animations/talking_at_watercooler.glb' },
+          { name: 'talking_on_a_cell_phone', url: './media/glb-animations/talking_on_a_cell_phone.glb' },
+          { name: 'talking_on_phone', url: './media/glb-animations/talking_on_phone.glb' },
+          { name: 'telling_a_secret', url: './media/glb-animations/telling_a_secret.glb' },
+          { name: 'tonic_seizure', url: './media/glb-animations/tonic_seizure.glb' },
+          { name: 'tripping', url: './media/glb-animations/tripping.glb' },
+          { name: 'victory', url: './media/glb-animations/victory.glb' },
+          { name: 'walking', url: './media/glb-animations/walking.glb' },
+          { name: 'watering', url: './media/glb-animations/watering.glb' },
+          { name: 'wheelbarrow_walk_turn', url: './media/glb-animations/wheelbarrow_walk_turn.glb' },
+          { name: 'wheelchair', url: './media/glb-animations/wheelchair.glb' },
+          { name: 'woman-solo', url: './media/glb-animations/woman-solo.glb' },
+          { name: 'writing', url: './media/glb-animations/writing.glb' },
+          { name: 'yelling', url: './media/glb-animations/yelling.glb' },
         ];
 
         let loadedCount = 0;
@@ -221,6 +285,9 @@
             
             loadedCount++;
             if (loadedCount === animsToLoad.length) {
+              gui.add(guiOptions, 'animation', Object.keys(loadedClips).sort()).name('Animation').onChange(v => {
+                playAnimation(v);
+              });
               guiOptions.animation = 't-pose';
               playAnimation('t-pose');
               animate();

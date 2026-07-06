@@ -17,6 +17,19 @@ if not metarig:
     print("FATAL: metarig not found")
     sys.exit(1)
 
+# Create a single 'root' bone
+bpy.context.view_layer.objects.active = metarig
+bpy.ops.object.mode_set(mode='EDIT')
+root_bone = metarig.data.edit_bones.new('root')
+root_bone.head = (0, 0, 0)
+root_bone.tail = (0, 0.1, 0)
+
+for b in metarig.data.edit_bones:
+    if not b.parent and b.name != 'root':
+        b.parent = root_bone
+
+bpy.ops.object.mode_set(mode='OBJECT')
+
 # Ensure metarig is the only armature
 bpy.context.view_layer.objects.active = metarig
 
