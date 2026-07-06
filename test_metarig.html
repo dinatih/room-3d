@@ -436,7 +436,10 @@
             
             loadedCount++;
             if (loadedCount === animsToLoad.length) {
-              gui.add(guiOptions, 'animation', Object.keys(loadedClips).sort()).name('Animation').onChange(v => {
+              const animOptions = Object.keys(loadedClips).sort();
+              animOptions.unshift('None');
+              
+              gui.add(guiOptions, 'animation', animOptions).name('Animation').onChange(v => {
                 playAnimation(v);
               });
               guiOptions.animation = 't-pose';
@@ -449,8 +452,8 @@
     }
 
     function playAnimation(name) {
-      if (!loadedClips[name]) return;
       if (currentAction) currentAction.stop();
+      if (name === 'None' || !loadedClips[name]) return;
       currentAction = mixer.clipAction(loadedClips[name]);
       currentAction.play();
     }
@@ -493,10 +496,13 @@
             if (node.parent) {
               node.parent.getWorldQuaternion(parentRestWorldQ);
             }
-            
+            const restWorldP = new THREE.Vector3();
+            node.getWorldPosition(restWorldP);
+
             animBones[baseName] = {
               restWorldQuaternion: restWorldQ,
-              parentRestWorldQuaternion: parentRestWorldQ
+              parentRestWorldQuaternion: parentRestWorldQ,
+              restWorldPosition: restWorldP
             };
           }
         }
@@ -538,10 +544,11 @@
             : new THREE.Quaternion();
           const P_tgt_inv = P_tgt.clone().invert();
 
+          // Get the rest Y from the first frame of the animation
+          // Mixamo tracks are [x0, y0, z0, x1, y1, z1, ...]
+          const mixamoRestY = clone.values[1];
+
           for (let i = 0; i < clone.values.length; i += 3) {
-            // Mixamo T-pose Hips is roughly at Y=1.044
-            const mixamoRestY = 1.044;
-            
             // Mixamo world-space delta
             const deltaWorld = new THREE.Vector3(
               clone.values[i],
