@@ -17,9 +17,17 @@ if not metarig:
     print("FATAL: metarig not found")
     sys.exit(1)
 
-# Create a single 'root' bone
+# Delete XPS face bones, but keep ponytail
 bpy.context.view_layer.objects.active = metarig
 bpy.ops.object.mode_set(mode='EDIT')
+deleted_xps_bones = []
+for eb in metarig.data.edit_bones:
+    name_lower = eb.name.lower()
+    if name_lower == 'glasses' or (name_lower.startswith('head ') and not name_lower.startswith('head hair ponytail')):
+        deleted_xps_bones.append(eb.name)
+        metarig.data.edit_bones.remove(eb)
+
+# Create a single 'root' bone
 root_bone = metarig.data.edit_bones.new('root')
 root_bone.head = (0, 0, 0)
 root_bone.tail = (0, 0.1, 0)
@@ -32,6 +40,20 @@ bpy.ops.object.mode_set(mode='OBJECT')
 
 # Ensure metarig is the only armature
 bpy.context.view_layer.objects.active = metarig
+
+vg_mapping = {
+    'pelvis': 'spine',
+    'spine lower': 'spine.001',
+    'spine upper': 'spine.002',
+    'head neck lower': 'spine.004',
+    'head neck upper': 'spine.006',
+    'hand left': 'hand.L',
+    'hand right': 'hand.R'
+}
+
+# Add deleted XPS face bones to mapping so they fall back to the head (spine.005)
+for xps_bone in deleted_xps_bones:
+    vg_mapping[xps_bone] = 'spine.005'
 
 # Rename vertex groups to remove 'DEF-' prefix so they match metarig bones
 for obj in bpy.context.scene.objects:
@@ -53,14 +75,6 @@ for obj in bpy.context.scene.objects:
         # GLTF requires the mesh to be parented to the armature
         obj.parent = metarig
         
-        vg_mapping = {
-            'pelvis': 'spine',
-            'spine lower': 'spine.001',
-            'spine upper': 'spine.002',
-            'head neck lower': 'spine.004',
-            'head neck upper': 'spine.006'
-        }
-
         # Rename vertex groups
         for vg in obj.vertex_groups:
             if vg.name.startswith('DEF-'):

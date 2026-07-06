@@ -158,43 +158,100 @@
     }
 
     const raycaster = new THREE.Raycaster();
+    raycaster.params.Line.threshold = 2; // Make it easier to click skeleton lines
     const mouse = new THREE.Vector2();
 
+    let selectedBone = null;
+
+    function buildBoneHierarchy(bone) {
+      if (!bone.isBone && bone !== laraModel) {
+        // If it's a node but not a bone, just traverse children (to find the root bone)
+        let html = '';
+        bone.children.forEach(c => { html += buildBoneHierarchy(c); });
+        return html;
+      }
+      
+      let html = '';
+      if (bone.isBone) {
+        html += `<li id="li-bone-${bone.name}" style="cursor:pointer;" onclick="selectBoneByName('${bone.name}', event)">${bone.name}</li>`;
+      }
+      
+      if (bone.children && bone.children.length > 0) {
+        const childHtml = bone.children.map(c => buildBoneHierarchy(c)).join('');
+        if (childHtml) {
+          if (bone.isBone) {
+            html = html.replace('</li>', `<ul>${childHtml}</ul></li>`);
+          } else {
+            html += childHtml;
+          }
+        }
+      }
+      return html;
+    }
+
+    window.selectBoneByName = function(name, event) {
+      if (event) event.stopPropagation();
+      if (selectedBone) {
+        const oldLi = document.getElementById('li-bone-' + selectedBone.name);
+        if (oldLi) oldLi.style.color = 'white';
+      }
+      const bone = laraModel.getObjectByName(name);
+      if (bone) {
+        selectedBone = bone;
+        const li = document.getElementById('li-bone-' + name);
+        if (li) {
+          li.style.color = '#ffaa00';
+          li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        console.log("Selected Bone:", name);
+      }
+    };
+
+    function updateBoneUI() {
+      let infoDiv = document.getElementById('bone-info');
+      if (!infoDiv) {
+        infoDiv = document.createElement('div');
+        infoDiv.id = 'bone-info';
+        infoDiv.style.position = 'absolute';
+        infoDiv.style.bottom = '10px';
+        infoDiv.style.left = '10px';
+        infoDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
+        infoDiv.style.color = 'white';
+        infoDiv.style.padding = '10px';
+        infoDiv.style.maxHeight = '400px';
+        infoDiv.style.width = '300px';
+        infoDiv.style.overflowY = 'auto';
+        infoDiv.style.fontFamily = 'monospace';
+        infoDiv.style.fontSize = '12px';
+        
+        const style = document.createElement('style');
+        style.innerHTML = '#bone-info ul { padding-left: 15px; margin: 2px 0; } #bone-info li { list-style-type: none; margin: 2px 0; } #bone-info li:hover { background-color: rgba(255,255,255,0.2); }';
+        document.head.appendChild(style);
+        document.body.appendChild(infoDiv);
+      }
+      infoDiv.innerHTML = `<strong>Bone Hierarchy:</strong><ul>${buildBoneHierarchy(laraModel)}</ul>`;
+    }
+
     function onPointerDown(event) {
+      // Don't intercept clicks on the UI
+      if (event.target.tagName === 'LI' || event.target.closest('#bone-info') || event.target.closest('.lil-gui')) {
+        return;
+      }
+      
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
 
       if (laraModel && skeletonHelper && skeletonHelper.visible) {
-        // Find bones as small spheres/boxes or just list all bones if clicking model
-        const intersects = raycaster.intersectObject(laraModel, true);
+        const intersects = raycaster.intersectObjects([laraModel, skeletonHelper], true);
         if (intersects.length > 0) {
-          console.log("Clicked mesh part:", intersects[0].object.name);
-          // Let's log all bones
-          const allBones = [];
-          laraModel.traverse(n => {
-            if (n.isBone) allBones.push(n.name);
-          });
-          console.log("Complete list of bones:");
-          console.log(allBones.join(', '));
-          
-          let infoDiv = document.getElementById('bone-info');
-          if (!infoDiv) {
-            infoDiv = document.createElement('div');
-            infoDiv.id = 'bone-info';
-            infoDiv.style.position = 'absolute';
-            infoDiv.style.bottom = '10px';
-            infoDiv.style.left = '10px';
-            infoDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
-            infoDiv.style.color = 'white';
-            infoDiv.style.padding = '10px';
-            infoDiv.style.maxHeight = '300px';
-            infoDiv.style.overflowY = 'auto';
-            infoDiv.style.fontFamily = 'monospace';
-            document.body.appendChild(infoDiv);
+          const clickedObj = intersects[0].object;
+          if (clickedObj.isBone) {
+            selectBoneByName(clickedObj.name);
+          } else {
+            console.log("Clicked mesh part:", clickedObj.name);
           }
-          infoDiv.innerHTML = `<strong>Bones (${allBones.length}):</strong><br>` + allBones.join('<br>');
         }
       }
     }
@@ -241,6 +298,7 @@
         
         // Setup Rest Pose Math
         setupLaraModel(laraModel);
+        updateBoneUI();
 
         skeletonHelper = new THREE.SkeletonHelper(laraModel);
         scene.add(skeletonHelper);
