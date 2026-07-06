@@ -543,7 +543,7 @@
         }
 
         if (prop === 'quaternion') {
-          if (targetBoneName.toLowerCase().includes('shoulder')) return;
+          const isShoulder = targetBoneName.toLowerCase().includes('shoulder');
 
           const mixamoBone = animBones[baseName];
           if (!mixamoBone) return;
@@ -562,7 +562,14 @@
             const srcLocalQ = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
             const animWorldQ = P_src.clone().multiply(srcLocalQ);
             const deltaQ = animWorldQ.clone().multiply(Q_src_inv);
-            const tgtAnimWorldQ = deltaQ.clone().multiply(Q_tgt);
+            
+            let finalDeltaQ = deltaQ;
+            if (isShoulder) {
+              // Dampen the world-space rotation for clavicles to prevent extreme Mixamo swings
+              // from distorting the Rigify mesh, while still letting it move enough to keep arms attached.
+              finalDeltaQ = new THREE.Quaternion().identity().slerp(deltaQ, 0.4);
+            }
+            const tgtAnimWorldQ = finalDeltaQ.clone().multiply(Q_tgt);
             const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
 
             clone.values[i] = tgtLocalQ.x;
