@@ -142,7 +142,7 @@
       // Selected bone marker
       selectedBoneMarker = new THREE.Mesh(
         new THREE.SphereGeometry(2, 16, 16),
-        new THREE.MeshBasicMaterial({ color: 0xffaa00, depthTest: false, transparent: true, opacity: 0.8 })
+        new THREE.MeshBasicMaterial({ color: 0x88ccff, depthTest: false, transparent: true, opacity: 0.8 })
       );
       selectedBoneMarker.renderOrder = 999;
       selectedBoneMarker.visible = false;
@@ -249,12 +249,30 @@
           #bone-info ul { padding-left: 15px; margin: 2px 0; border-left: 1px dashed #555; }
           #bone-info li { list-style-type: none; margin: 2px 0; cursor: pointer; padding: 2px 4px; border-radius: 3px; }
           #bone-info li:hover { background-color: #3a3a3a; }
-          #bone-info li.selected { background-color: #5a3a00; color: #ffaa00; font-weight: bold; border-left: 2px solid #ffaa00; }
+          #bone-info li.selected { background-color: rgba(255,255,255,0.15); color: #88ccff; font-weight: bold; border-left: 2px solid #88ccff; }
         `;
         document.head.appendChild(style);
         document.body.appendChild(infoDiv);
       }
       infoDiv.innerHTML = `<strong style="color:white;">Bone Hierarchy:</strong><ul>${buildBoneHierarchy(laraModel)}</ul>`;
+    }
+
+    function findClosestBone(model, worldPoint) {
+      let closestBone = null;
+      let minDistance = Infinity;
+      const tPos = new THREE.Vector3();
+      
+      model.traverse(node => {
+        if (node.isBone) {
+          node.getWorldPosition(tPos);
+          const dist = tPos.distanceTo(worldPoint);
+          if (dist < minDistance) {
+            minDistance = dist;
+            closestBone = node;
+          }
+        }
+      });
+      return closestBone;
     }
 
     function onPointerDown(event) {
@@ -268,14 +286,13 @@
 
       raycaster.setFromCamera(mouse, camera);
 
-      if (laraModel && skeletonHelper && skeletonHelper.visible) {
-        const intersects = raycaster.intersectObjects([laraModel, skeletonHelper], true);
+      if (laraModel) {
+        const intersects = raycaster.intersectObject(laraModel, true);
         if (intersects.length > 0) {
-          const clickedObj = intersects[0].object;
-          if (clickedObj.isBone) {
-            selectBoneByName(clickedObj.name);
-          } else {
-            console.log("Clicked mesh part:", clickedObj.name);
+          const intersectPoint = intersects[0].point;
+          const closestBone = findClosestBone(laraModel, intersectPoint);
+          if (closestBone) {
+            selectBoneByName(closestBone.name);
           }
         }
       }
