@@ -376,6 +376,7 @@
           { name: 'release_hostage___villain', url: './models/test_metarig_anims/release_hostage___villain.glb' },
           { name: 'taken_hostage___victim', url: './models/test_metarig_anims/taken_hostage___victim.glb' },
           { name: 'taken_hostage___villain', url: './models/test_metarig_anims/taken_hostage___villain.glb' },
+          { name: 'skinning_test', url: './models/test_metarig_anims/skinning_test.glb' },
           { name: 'walking', url: './models/test_metarig_anims/walking.glb' }
         ];
 
@@ -542,9 +543,7 @@
         }
 
         if (prop === 'quaternion') {
-          // For shoulder (clavicle), applying world-space delta causes weird dislocated arms
-          // because Mixamo uses it more like a scapula. Applying local rotation directly is much safer.
-          const isShoulder = targetBoneName.toLowerCase().includes('shoulder');
+          if (targetBoneName.toLowerCase().includes('shoulder')) return;
 
           const mixamoBone = animBones[baseName];
           if (!mixamoBone) return;
@@ -563,15 +562,8 @@
             const srcLocalQ = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
             const animWorldQ = P_src.clone().multiply(srcLocalQ);
             const deltaQ = animWorldQ.clone().multiply(Q_src_inv);
-            let tgtLocalQ;
-            if (isShoulder) {
-              // Apply local rotation directly, dampened by 50% to reduce mesh tearing
-              const dampedQ = new THREE.Quaternion().slerp(srcLocalQ, 0.5);
-              tgtLocalQ = dampedQ;
-            } else {
-              const tgtAnimWorldQ = deltaQ.clone().multiply(Q_tgt);
-              tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
-            }
+            const tgtAnimWorldQ = deltaQ.clone().multiply(Q_tgt);
+            const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
 
             clone.values[i] = tgtLocalQ.x;
             clone.values[i+1] = tgtLocalQ.y;
