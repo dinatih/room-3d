@@ -543,6 +543,10 @@
         }
 
         if (prop === 'quaternion') {
+          // Skip clavicle/shoulder tracks to avoid crazy mesh deformation 
+          // Mixamo shoulder bones don't retarget well to metarig clavicles
+          if (targetBoneName.toLowerCase().includes('shoulder')) return;
+
           const mixamoBone = animBones[baseName];
           if (!mixamoBone) return;
 
