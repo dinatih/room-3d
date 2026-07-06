@@ -31,6 +31,7 @@
     let camera, scene, renderer, clock, mixer;
     let laraModel, skeletonHelper;
     let gui;
+    let selectedBoneMarker;
     let guiOptions = {
       showSkeleton: true,
       wireframe: false,
@@ -138,6 +139,15 @@
       grid.material.transparent = true;
       scene.add(grid);
 
+      // Selected bone marker
+      selectedBoneMarker = new THREE.Mesh(
+        new THREE.SphereGeometry(2, 16, 16),
+        new THREE.MeshBasicMaterial({ color: 0xffaa00, depthTest: false, transparent: true, opacity: 0.8 })
+      );
+      selectedBoneMarker.renderOrder = 999;
+      selectedBoneMarker.visible = false;
+      scene.add(selectedBoneMarker);
+
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -173,7 +183,7 @@
       
       let html = '';
       if (bone.isBone) {
-        html += `<li id="li-bone-${bone.name}" style="cursor:pointer;" onclick="selectBoneByName('${bone.name}', event)">${bone.name}</li>`;
+        html += `<li id="li-bone-${bone.name}" class="bone-item" onclick="selectBoneByName('${bone.name}', event)">🦴 ${bone.name}</li>`;
       }
       
       if (bone.children && bone.children.length > 0) {
@@ -189,20 +199,27 @@
       return html;
     }
 
+    const tempBonePos = new THREE.Vector3();
+    
     window.selectBoneByName = function(name, event) {
       if (event) event.stopPropagation();
       if (selectedBone) {
         const oldLi = document.getElementById('li-bone-' + selectedBone.name);
-        if (oldLi) oldLi.style.color = 'white';
+        if (oldLi) oldLi.classList.remove('selected');
       }
       const bone = laraModel.getObjectByName(name);
       if (bone) {
         selectedBone = bone;
         const li = document.getElementById('li-bone-' + name);
         if (li) {
-          li.style.color = '#ffaa00';
+          li.classList.add('selected');
           li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
+        
+        bone.getWorldPosition(tempBonePos);
+        selectedBoneMarker.position.copy(tempBonePos);
+        selectedBoneMarker.visible = true;
+        
         console.log("Selected Bone:", name);
       }
     };
@@ -215,21 +232,29 @@
         infoDiv.style.position = 'absolute';
         infoDiv.style.bottom = '10px';
         infoDiv.style.left = '10px';
-        infoDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
-        infoDiv.style.color = 'white';
+        infoDiv.style.backgroundColor = '#2a2a2a';
+        infoDiv.style.color = '#e0e0e0';
         infoDiv.style.padding = '10px';
         infoDiv.style.maxHeight = '400px';
         infoDiv.style.width = '300px';
         infoDiv.style.overflowY = 'auto';
         infoDiv.style.fontFamily = 'monospace';
         infoDiv.style.fontSize = '12px';
+        infoDiv.style.border = '1px solid #444';
+        infoDiv.style.borderRadius = '5px';
+        infoDiv.style.boxShadow = '0 4px 6px rgba(0,0,0,0.5)';
         
         const style = document.createElement('style');
-        style.innerHTML = '#bone-info ul { padding-left: 15px; margin: 2px 0; } #bone-info li { list-style-type: none; margin: 2px 0; } #bone-info li:hover { background-color: rgba(255,255,255,0.2); }';
+        style.innerHTML = `
+          #bone-info ul { padding-left: 15px; margin: 2px 0; border-left: 1px dashed #555; }
+          #bone-info li { list-style-type: none; margin: 2px 0; cursor: pointer; padding: 2px 4px; border-radius: 3px; }
+          #bone-info li:hover { background-color: #3a3a3a; }
+          #bone-info li.selected { background-color: #5a3a00; color: #ffaa00; font-weight: bold; border-left: 2px solid #ffaa00; }
+        `;
         document.head.appendChild(style);
         document.body.appendChild(infoDiv);
       }
-      infoDiv.innerHTML = `<strong>Bone Hierarchy:</strong><ul>${buildBoneHierarchy(laraModel)}</ul>`;
+      infoDiv.innerHTML = `<strong style="color:white;">Bone Hierarchy:</strong><ul>${buildBoneHierarchy(laraModel)}</ul>`;
     }
 
     function onPointerDown(event) {
@@ -637,6 +662,10 @@
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
+      if (selectedBoneMarker && selectedBone && selectedBoneMarker.visible) {
+        selectedBone.getWorldPosition(tempBonePos);
+        selectedBoneMarker.position.copy(tempBonePos);
+      }
       renderer.render(scene, camera);
     }
   </script>

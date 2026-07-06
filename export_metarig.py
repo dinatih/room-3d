@@ -17,17 +17,9 @@ if not metarig:
     print("FATAL: metarig not found")
     sys.exit(1)
 
-# Delete XPS face bones, but keep ponytail
+# Create a single 'root' bone
 bpy.context.view_layer.objects.active = metarig
 bpy.ops.object.mode_set(mode='EDIT')
-deleted_xps_bones = []
-for eb in metarig.data.edit_bones:
-    name_lower = eb.name.lower()
-    if name_lower == 'glasses' or (name_lower.startswith('head ') and not name_lower.startswith('head hair ponytail')):
-        deleted_xps_bones.append(eb.name)
-        metarig.data.edit_bones.remove(eb)
-
-# Create a single 'root' bone
 root_bone = metarig.data.edit_bones.new('root')
 root_bone.head = (0, 0, 0)
 root_bone.tail = (0, 0.1, 0)
@@ -50,10 +42,6 @@ vg_mapping = {
     'hand left': 'hand.L',
     'hand right': 'hand.R'
 }
-
-# Add deleted XPS face bones to mapping so they fall back to the head (spine.005)
-for xps_bone in deleted_xps_bones:
-    vg_mapping[xps_bone] = 'spine.005'
 
 # Rename vertex groups to remove 'DEF-' prefix so they match metarig bones
 for obj in bpy.context.scene.objects:
