@@ -26,6 +26,17 @@ for b_name in bones_to_delete:
     if b_name in metarig.data.edit_bones:
         metarig.data.edit_bones.remove(metarig.data.edit_bones[b_name])
 
+# Create a single 'root' bone that points UP in Blender (Z axis)
+# This prevents unwanted -90 degree X rotations during GLTF export
+root_bone = metarig.data.edit_bones.new('root')
+root_bone.head = (0, 0, 0)
+root_bone.tail = (0, 0, 0.1)
+
+# Parent all unparented bones to the new root
+for eb in metarig.data.edit_bones:
+    if eb != root_bone and not eb.parent:
+        eb.parent = root_bone
+
 bpy.ops.object.mode_set(mode='OBJECT')
 
 # Ensure metarig is the only armature
