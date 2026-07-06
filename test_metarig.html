@@ -533,12 +533,28 @@
         clone.name = `${targetBoneName}.${prop}`;
 
         if (prop === 'position' && isHips) {
+          const P_tgt = (targetBone.parent && targetBone.parent.restWorldQuaternion)
+            ? targetBone.parent.restWorldQuaternion
+            : new THREE.Quaternion();
+          const P_tgt_inv = P_tgt.clone().invert();
+
           for (let i = 0; i < clone.values.length; i += 3) {
             // Mixamo T-pose Hips is roughly at Y=1.044
             const mixamoRestY = 1.044;
-            clone.values[i]   = targetBone.defaultPosition.x + clone.values[i];
-            clone.values[i+1] = targetBone.defaultPosition.y + (clone.values[i+1] - mixamoRestY);
-            clone.values[i+2] = targetBone.defaultPosition.z + clone.values[i+2];
+            
+            // Mixamo world-space delta
+            const deltaWorld = new THREE.Vector3(
+              clone.values[i],
+              clone.values[i+1] - mixamoRestY,
+              clone.values[i+2]
+            );
+            
+            // Convert to target bone's local space
+            const localDelta = deltaWorld.applyQuaternion(P_tgt_inv);
+            
+            clone.values[i]   = targetBone.defaultPosition.x + localDelta.x;
+            clone.values[i+1] = targetBone.defaultPosition.y + localDelta.y;
+            clone.values[i+2] = targetBone.defaultPosition.z + localDelta.z;
           }
         }
 
