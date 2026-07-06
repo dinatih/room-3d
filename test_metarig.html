@@ -34,7 +34,9 @@
     let guiOptions = {
       showSkeleton: true,
       wireframe: false,
-      animation: 't-pose'
+      animation: 't-pose',
+      paused: false,
+      timeScale: 1.0
     };
 
     // Exact mapping from Mixamo bone names to Rigify metarig bone names
@@ -147,11 +149,54 @@
       controls.update();
 
       window.addEventListener('resize', onWindowResize);
+      window.addEventListener('pointerdown', onPointerDown);
 
       clock = new THREE.Clock();
       
       setupGUI();
       loadModels();
+    }
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function onPointerDown(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      if (laraModel && skeletonHelper && skeletonHelper.visible) {
+        // Find bones as small spheres/boxes or just list all bones if clicking model
+        const intersects = raycaster.intersectObject(laraModel, true);
+        if (intersects.length > 0) {
+          console.log("Clicked mesh part:", intersects[0].object.name);
+          // Let's log all bones
+          const allBones = [];
+          laraModel.traverse(n => {
+            if (n.isBone) allBones.push(n.name);
+          });
+          console.log("Complete list of bones:");
+          console.log(allBones.join(', '));
+          
+          let infoDiv = document.getElementById('bone-info');
+          if (!infoDiv) {
+            infoDiv = document.createElement('div');
+            infoDiv.id = 'bone-info';
+            infoDiv.style.position = 'absolute';
+            infoDiv.style.bottom = '10px';
+            infoDiv.style.left = '10px';
+            infoDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
+            infoDiv.style.color = 'white';
+            infoDiv.style.padding = '10px';
+            infoDiv.style.maxHeight = '300px';
+            infoDiv.style.overflowY = 'auto';
+            infoDiv.style.fontFamily = 'monospace';
+            document.body.appendChild(infoDiv);
+          }
+          infoDiv.innerHTML = `<strong>Bones (${allBones.length}):</strong><br>` + allBones.join('<br>');
+        }
+      }
     }
 
 
@@ -173,6 +218,12 @@
             }
           });
         }
+      });
+      gui.add(guiOptions, 'paused').name('Pause').onChange(v => {
+        if (mixer) mixer.timeScale = v ? 0 : guiOptions.timeScale;
+      });
+      gui.add(guiOptions, 'timeScale', 0.1, 3.0, 0.1).name('Speed').onChange(v => {
+        if (mixer && !guiOptions.paused) mixer.timeScale = v;
       });
     }
 
