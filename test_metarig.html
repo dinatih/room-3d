@@ -461,7 +461,8 @@
             animBones[baseName] = {
               restWorldQuaternion: restWorldQ,
               parentRestWorldQuaternion: parentRestWorldQ,
-              restWorldPosition: restWorldP
+              restWorldPosition: restWorldP,
+              parentMatrixWorld: node.parent ? node.parent.matrixWorld.clone() : new THREE.Matrix4()
             };
           }
         }
@@ -503,17 +504,34 @@
             : new THREE.Quaternion();
           const P_tgt_inv = P_tgt.clone().invert();
 
-          // Get the rest Y from the first frame of the animation
-          // Mixamo tracks are [x0, y0, z0, x1, y1, z1, ...]
-          const mixamoRestY = clone.values[1];
+          const mixamoBone = animBones[baseName];
+          if (!mixamoBone) return;
+
+          // Compute first frame world position to use as reference rest pose
+          const parentMatrixWorld = mixamoBone.parentMatrixWorld || new THREE.Matrix4();
+          const firstLocalP = new THREE.Vector3(clone.values[0], clone.values[1], clone.values[2]);
+          const firstWorldP = firstLocalP.applyMatrix4(parentMatrixWorld);
+          
+          // Use the true REST pose height to avoid scaling bugs on prone animations
+          const mixamoRestY = mixamoBone.restWorldPosition.y;
+          
+          const isLaraNative = targetInstance.getObjectByName('mixamorig_root_hips') !== undefined;
+          const targetHipsHeight = isLaraNative ? targetBone.defaultPosition.z : targetBone.defaultPosition.y;
+          
+          let computedHipsRatio = 1.0;
+          if (mixamoRestY > 0.001) {
+             computedHipsRatio = targetHipsHeight / mixamoRestY;
+          }
 
           for (let i = 0; i < clone.values.length; i += 3) {
-            // Mixamo world-space delta
-            const deltaWorld = new THREE.Vector3(
-              clone.values[i],
-              clone.values[i+1] - mixamoRestY,
-              clone.values[i+2]
-            );
+            const srcLocalP = new THREE.Vector3(clone.values[i], clone.values[i+1], clone.values[i+2]);
+            const srcWorldP = srcLocalP.applyMatrix4(parentMatrixWorld);
+            
+            // World-space delta from first frame
+            const deltaWorld = srcWorldP.sub(firstWorldP);
+            
+            // Scale translation based on character height ratio
+            deltaWorld.multiplyScalar(computedHipsRatio);
             
             // Convert to target bone's local space
             const localDelta = deltaWorld.applyQuaternion(P_tgt_inv);
@@ -522,6 +540,7 @@
             clone.values[i+1] = targetBone.defaultPosition.y + localDelta.y;
             clone.values[i+2] = targetBone.defaultPosition.z + localDelta.z;
           }
+        }
         }
 
         if (prop === 'quaternion') {
