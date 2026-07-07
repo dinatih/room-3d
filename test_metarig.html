@@ -40,7 +40,7 @@
       wireframe: false,
       animation: 'None',
       paused: false,
-      timeScale: 1.0, frame: 0, ortho: true
+      timeScale: 1.0, frame: 0, orthoMode: true
     };
 
     // Exact mapping from Mixamo bone names to Rigify metarig bone names
@@ -621,7 +621,7 @@
       
       const aspect = window.innerWidth / window.innerHeight;
       const d = 150;
-      orthoCamera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 0.1, 1000);
+      orthoCamera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, -1000, 2000);
       orthoCamera.position.set(0, 100, 250);
       
       activeCamera = guiOptions.orthoMode ? orthoCamera : perspCamera;
@@ -895,6 +895,14 @@
       // Load Lara Model
       loader.load('./models/lara_perfect.glb', (gltf) => {
         laraModel = gltf.scene;
+        laraModel.traverse(n => {
+          if (n.isMesh) {
+            const name = n.name.toLowerCase();
+            if (name.includes('handgun') || name.includes('backpack') || name.includes('bag') || name.includes('holster')) {
+              n.visible = false;
+            }
+          }
+        });
         window.laraModel = laraModel;
         scene.add(laraModel);
         
