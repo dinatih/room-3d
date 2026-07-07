@@ -205,7 +205,7 @@
           sourceHairMap.set(hb.baseName.toLowerCase(), `hair_${idx + 1}`);
         });
 
-        const mixamoRefModel = (typeof xbotModel !== 'undefined' && xbotModel) ? xbotModel : animScene;
+        const mixamoRefModel = (typeof window.xbotModel !== 'undefined' && window.xbotModel) ? window.xbotModel : animScene;
         mixamoRefModel.updateMatrixWorld(true);
         mixamoRefModel.traverse(c => {
           if (c.isBone) {
@@ -925,6 +925,9 @@
       loader.load('./models/lara_perfect.glb', (gltf) => {
         laraModel = gltf.scene;
         laraModel.traverse(n => {
+          if (n.isBone) {
+            n.name = n.name.replace(/\./g, '_');
+          }
           if (n.isMesh) {
             const name = n.name.toLowerCase();
             if (name.includes('handgun') || name.includes('backpack') || name.includes('bag') || name.includes('holster')) {
@@ -945,16 +948,18 @@
         mixer = new THREE.AnimationMixer(laraModel);
 
         loader.load('./models/xbot.glb', (gltf) => {
-          const xbotModel = gltf.scene;
-          xbotModel.scale.set(100, 100, 100);
-          xbotModel.position.x = -60;
-          scene.add(xbotModel);
-          const xbotHelper = new THREE.SkeletonHelper(xbotModel);
+          window.xbotModel = gltf.scene;
+          window.xbotModel.scale.set(100, 100, 100);
+          window.xbotModel.position.x = -60;
+          scene.add(window.xbotModel);
+          const xbotHelper = new THREE.SkeletonHelper(window.xbotModel);
           scene.add(xbotHelper);
-          xbotMixer = new THREE.AnimationMixer(xbotModel);
+          xbotMixer = new THREE.AnimationMixer(window.xbotModel);
+          
+          loadAnimations();
         });
-        // Load animations
-                const animsToLoad = [
+        function loadAnimations() {
+        const animsToLoad = [
           { name: 'agreeing', url: './models/test_metarig_anims/agreeing.glb' },
           { name: 'back_flip_to_uppercut', url: './models/test_metarig_anims/back_flip_to_uppercut.glb' },
           { name: 'being_carried', url: './models/test_metarig_anims/being_carried.glb' },
@@ -1011,6 +1016,7 @@
             }
           });
         });
+        } // end loadAnimations
       });
     }
 

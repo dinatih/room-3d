@@ -1,102 +1,65 @@
 import bpy
-import sys
 
-blend_path = '/home/dinatih/Projects/room-3d/sources_backup/lara_croft_perfect_rigify.blend'
-output_path = '/home/dinatih/Projects/room-3d/public/models/lara_perfect.glb'
+bpy.ops.wm.open_mainfile(filepath="sources_backup/lara_croft_perfect_rigify_final.blend")
 
-bpy.ops.wm.open_mainfile(filepath=blend_path)
+# 1. Append metarig
+filepath = "sources_backup/lara_croft_perfect_rigify_base_on_maximo.blend"
+inner_path = "Object"
+object_name = "metarig"
 
-# Delete rig and Armature, we only want metarig
-for name in ['rig', 'Armature']:
-    obj = bpy.data.objects.get(name)
-    if obj:
-        bpy.data.objects.remove(obj, do_unlink=True)
-
-metarig = bpy.data.objects.get('metarig')
-if not metarig:
-    print("FATAL: metarig not found")
-    sys.exit(1)
-
-# Delete useless XPS root bones
-bpy.context.view_layer.objects.active = metarig
-bpy.ops.object.mode_set(mode='EDIT')
-
-bones_to_delete = ['root ground', 'root hips']
-for b_name in bones_to_delete:
-    if b_name in metarig.data.edit_bones:
-        metarig.data.edit_bones.remove(metarig.data.edit_bones[b_name])
-
-# Create a single 'root' bone that points UP in Blender (Z axis)
-# This prevents unwanted -90 degree X rotations during GLTF export
-root_bone = metarig.data.edit_bones.new('root')
-root_bone.head = (0, 0, 0)
-root_bone.tail = (0, 0, 0.1)
-
-# Parent all unparented bones to the new root
-for eb in metarig.data.edit_bones:
-    if eb != root_bone and not eb.parent:
-        eb.parent = root_bone
-
-bpy.ops.object.mode_set(mode='OBJECT')
-
-# Ensure metarig is the only armature
-bpy.context.view_layer.objects.active = metarig
-
-vg_mapping = {
-    'pelvis': 'spine',
-    'spine lower': 'spine.001',
-    'spine upper': 'spine.002',
-    'head neck lower': 'spine.004',
-    'head neck upper': 'spine.006',
-    'hand left': 'hand.L',
-    'hand right': 'hand.R'
-}
-
-# Rename vertex groups to remove 'DEF-' prefix so they match metarig bones
-for obj in bpy.context.scene.objects:
-    if obj.type == 'MESH':
-        # Keep only one Armature modifier
-        armature_mod = None
-        for mod in obj.modifiers:
-            if mod.type == 'ARMATURE':
-                if armature_mod is None:
-                    armature_mod = mod
-                    mod.object = metarig
-                else:
-                    obj.modifiers.remove(mod)
-        
-        if armature_mod is None:
-            armature_mod = obj.modifiers.new(name="Armature", type='ARMATURE')
-            armature_mod.object = metarig
-        
-        # GLTF requires the mesh to be parented to the armature
-        obj.parent = metarig
-        
-        # Rename vertex groups
-        for vg in obj.vertex_groups:
-            if vg.name.startswith('DEF-'):
-                new_name = vg.name[4:] # remove 'DEF-'
-                vg.name = new_name
-            elif vg.name in vg_mapping:
-                vg.name = vg_mapping[vg.name]
-
-bpy.ops.object.mode_set(mode='OBJECT')
-
-# Select all meshes and metarig for export
-bpy.ops.object.select_all(action='DESELECT')
-metarig.hide_set(False)
-metarig.hide_viewport = False
-metarig.select_set(True)
-for obj in bpy.context.scene.objects:
-    if obj.type == 'MESH' and not obj.name.startswith("WGT-"):
-        obj.select_set(True)
-
-# Export
-bpy.ops.export_scene.gltf(
-    filepath=output_path,
-    use_selection=True,
-    export_format='GLB',
-    export_apply=False
+bpy.ops.wm.append(
+    filepath=f"{filepath}/{inner_path}/{object_name}",
+    directory=f"{filepath}/{inner_path}/",
+    filename=object_name
 )
 
-print("SUCCESS_EXPORT_METARIG")
+metarig = bpy.data.objects.get("metarig")
+lara = bpy.data.objects.get("Lara")
+
+# 2. Rename Lara vertex groups (Remove DEF- prefix, or MCH-)
+for vg in lara.vertex_groups:
+    if vg.name.startswith("DEF-"):
+        vg.name = vg.name[4:]
+
+print("Groups renamed!")
+
+for mod in lara.modifiers:
+    if mod.type == 'ARMATURE':
+        lara.modifiers.remove(mod)
+
+bpy.ops.object.select_all(action='DESELECT')
+lara.select_set(True)
+metarig.select_set(True)
+bpy.context.view_layer.objects.active = metarig
+bpy.ops.object.parent_set(type='ARMATURE')
+
+for obj in bpy.data.objects:
+    if obj.parent == bpy.data.objects.get("rig"):
+        obj.parent = metarig
+        if obj.parent_type == 'BONE':
+            # Remove DEF- if it was there, or just keep it
+            bone_name = obj.parent_bone
+            if bone_name == "head":
+                obj.parent_bone = "spine.005"
+            elif bone_name.startswith("DEF-"):
+                obj.parent_bone = bone_name[4:]
+            # e.g., 'spine.005', 'hand.R', etc.
+
+rig = bpy.data.objects.get("rig")
+if rig:
+    bpy.data.objects.remove(rig)
+
+bpy.ops.export_scene.gltf(
+    filepath="public/models/lara_perfect.glb",
+    export_format='GLB',
+    use_selection=False,
+    export_apply=True,
+    export_cameras=False,
+    export_lights=False,
+    export_extras=True,
+    export_yup=True,
+    export_animations=True
+)
+print("Export complete!")
+
+bpy.ops.wm.save_as_mainfile(filepath="sources_backup/lara_croft_metarig_perfect.blend")
