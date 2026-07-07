@@ -344,7 +344,8 @@
         let baseName = match[1];
 
         if (prop === 'position' && baseName.toLowerCase() === 'hips' && hasRootTranslation) {
-          continue;
+          // Do NOT skip hips! Hips always have local offset even with root translation!
+          // continue;
         }
 
         let isRootJointTranslation = false;
@@ -928,12 +929,12 @@
           if (n.isBone) {
             n.name = n.name.replace(/\./g, '_');
           }
-          if (n.isMesh) {
-            const name = n.name.toLowerCase();
-            if (name.includes('handgun') || name.includes('backpack') || name.includes('bag') || name.includes('holster')) {
-              n.visible = guiOptions.showAccessories;
+            if (n.isMesh && n.name !== 'Lara') {
+              const name = n.name.toLowerCase();
+              if (name.includes('handgun') || name.includes('backpack') || name.includes('bag') || name.includes('holster') || name.includes('buckle') || name.includes('glasses') || name.includes('gear') || name.includes('metal')) {
+                n.visible = guiOptions.showAccessories;
+              }
             }
-          }
         });
         window.laraModel = laraModel;
         scene.add(laraModel);
