@@ -443,7 +443,7 @@
                                 !tgtLower.includes('shoulder_2') && 
                                 !tgtLower.includes('shoulder2') && 
                                 !tgtLower.includes('shoulder 2'));
-            if (isClavicle) continue;
+            // if (isClavicle) continue;
 
             const bone = targetInstance.getObjectByName(targetBoneName);
             if (bone) {
@@ -480,6 +480,10 @@
                     clone.values[i+1] = tgtLocalQ.y;
                     clone.values[i+2] = tgtLocalQ.z;
                     clone.values[i+3] = tgtLocalQ.w;
+                      if (targetBoneName === 'spine.001' && i === 0) {
+                        // console.log('spine.001 q:', tgtLocalQ.x, tgtLocalQ.y, tgtLocalQ.z, tgtLocalQ.w);
+                      }
+    
                   }
                 } else {
                   // Fallback
