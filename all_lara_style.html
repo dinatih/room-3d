@@ -157,13 +157,12 @@
       <p>Comparing <span id="model-count-text">16</span> variations side-by-side. Pan horizontally using the mouse.</p>
       <p id="loading-status">Loading models...</p>
       <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; pointer-events: auto;">
+        <button id="ortho-btn" style="cursor: pointer; padding: 6px; font-weight: 500; font-size: 12px; background: #1a1a1a; color: white; border: 1px solid #444; border-radius: 4px; width: 100%;">Mode: Perspective</button>
         <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
           <input type="checkbox" id="toggle-skeletons" style="cursor: pointer; accent-color: #ff4444;">
           <span>Afficher les Squelettes</span>
         </label>
         <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
-          <input type="checkbox" id="toggle-superposition" style="cursor: pointer; accent-color: #ff4444;">
-          <span>Superposer les modèles (X = 0)</span>
         </label>
         <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; user-select: none;">
           <input type="checkbox" id="toggle-red-outfits" style="cursor: pointer; accent-color: #ff4444;">
@@ -304,11 +303,18 @@
     scene.background = new THREE.Color(0xd2d2d2);
 
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
-    camera.position.set(0, 420, 1300);
+    camera.position.set(0, 637.5, 600);
 
+    const aspect = window.innerWidth / window.innerHeight;
+    const frustumSize = 600;
+    const orthoCamera = new THREE.OrthographicCamera(frustumSize * aspect / -2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / -2, 1, 10000);
+    orthoCamera.position.set(0, 637.5, 600);
+    
+    let activeCamera = camera;
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 420, 0);
+    controls.target.set(0, 637.5, 0);
     controls.maxPolarAngle = Math.PI; // Allow rotating below the floor/models
+
     controls.update();
 
     let needsRender = true;
@@ -355,15 +361,15 @@
 
     const variants = [
       { id: 'xbot_studio', label: 'X-Bot (Studio)', file: 'media/all_lara/xbot_studio.glb', color: '#3b82f6', fixOpaque: true },
-      { id: 'rosanna', label: 'Rosanna', file: 'media/sandbox/rosanna_lara_native.glb', color: '#ff2222', variant: 'rosanna' },
-      { id: 'marissa', label: 'Marissa', file: 'media/sandbox/lara_native.glb', color: '#ffffff', variant: 'marissa' },
-      { id: 'delphina', label: 'Delphina', file: 'media/sandbox/lara_native.glb', color: '#ffe08a', variant: 'delphina' },
-      { id: 'sara', label: 'Sara', file: 'media/sandbox/lara_native.glb', color: '#050505', variant: 'sara' },
-      { id: 'cha', label: 'Cha', file: 'media/sandbox/lara_native.glb', color: '#0044cc', variant: 'cha' },
-      { id: 'vivid', label: 'Vivid', file: 'media/sandbox/vivid_red_lara_native.glb', color: '#ff0000', variant: 'vivid' },
-      { id: 'sabira', label: 'Sabira', file: 'media/sandbox/lara_native.glb', color: '#ffd700', variant: 'sabira' },
-      { id: 'safa', label: 'Safa', file: 'media/sandbox/lara_native.glb', color: '#e2d6bd', variant: 'safa' },
-      { id: 'rajaa', label: 'Rajaa', file: 'media/sandbox/lara_native.glb', color: '#77cc33', variant: 'rajaa' }
+      { id: 'rosanna', label: 'Rosanna', file: 'media/rosanna_lara_native.glb', color: '#ff2222', variant: 'rosanna' },
+      { id: 'marissa', label: 'Marissa', file: 'media/lara_native.glb', color: '#ffffff', variant: 'marissa' },
+      { id: 'delphina', label: 'Delphina', file: 'media/lara_native.glb', color: '#ffe08a', variant: 'delphina' },
+      { id: 'sara', label: 'Sara', file: 'media/lara_native.glb', color: '#050505', variant: 'sara' },
+      { id: 'cha', label: 'Cha', file: 'media/lara_native.glb', color: '#0044cc', variant: 'cha' },
+      { id: 'vivid', label: 'Vivid', file: 'media/vivid_red_lara_native.glb', color: '#ff0000', variant: 'vivid' },
+      { id: 'sabira', label: 'Sabira', file: 'media/lara_native.glb', color: '#ffd700', variant: 'sabira' },
+      { id: 'safa', label: 'Safa', file: 'media/lara_native.glb', color: '#e2d6bd', variant: 'safa' },
+      { id: 'rajaa', label: 'Rajaa', file: 'media/lara_native.glb', color: '#77cc33', variant: 'rajaa' }
     ];
 
     function getCleanName(name) {
@@ -387,14 +393,7 @@
       'accessories', 'skin', 'handgun_part', 'hair'
     ]);
 
-    const DEFAULT_HIDDEN_MESHES = new Set([
-      'backpack', 'oxygen',
-      'binoculars', 'buckle', 'camera', 'goggles', 'grapple',
-      'handgun_left', 'handgun_right', 'mp5', 'mp5_ammo',
-      'handgun_left_holster', 'handgun_right_holster', 'mp5_holster', 'holster',
-      'headset', 'pda', 'personal_light', 'ribbon', 'purse',
-      'grenades', 'accessories', 'handgun_part'
-    ]);
+    const DEFAULT_HIDDEN_MESHES = new Set(['eye2', 'eye 2', 'specular', 'eye_specular', '5_+head|glasses_1.0_0_0', '7_-head|hair.fmv_1.0_0_0', '5_-hand|handgun left.hhl2_1.0_0_0', '5_-hand|handgun right.hhr2_1.0_0_0']);
 
     function updateMeshListUI() {
       const sortedEntries = Array.from(meshVisibility.entries()).sort((a, b) => {
@@ -933,17 +932,14 @@
     }
 
     const ANIMATION_FILES = [
-      "idle.glb",
-      "anim_back_flip_to_uppercut.glb",
-      "walking.glb",
-      "happy_walk.glb",
-      "victory.glb",
-      "jumping_jacks.glb",
-      "t-pose.glb",
+      "_female.glb",
+      "_male.glb",
+      "agreeing.glb",
       "angry_gesture.glb",
-      "ascending_stairs.glb",
-      "asking_question.glb",
+      "back_flip_to_uppercut.glb",
       "beckoning.glb",
+      "being_carried.glb",
+      "bellydancing.glb",
       "catwalk_sequence_01.glb",
       "catwalk_sequence_02.glb",
       "catwalk_sequence_03.glb",
@@ -953,55 +949,62 @@
       "clapping.glb",
       "closing.glb",
       "crawl_backwards_in_prone.glb",
-      "descending_stairs.glb",
+      "dancing_twerk.glb",
       "dig_and_plant_seeds.glb",
       "disappointed.glb",
       "double_leg_takedown_-_attacker.glb",
+      "double_leg_takedown_-_victim.glb",
       "drinking_fountain.glb",
-      "finding.glb",
-      "gaming.glb",
+      "female_laying_pose.glb",
+      "female_walk.glb",
+      "flip_kick.glb",
       "hanging_idle.glb",
-      "having_a_meeting,_female.glb",
-      "having_a_meeting,_male.glb",
+      "happy_idle.glb",
+      "happy_walk.glb",
+      "having_a_meeting",
+      "having_a_meeting",
+      "hook.glb",
+      "idle.glb",
+      "jump.glb",
+      "jumping_jacks.glb",
+      "kiss.glb",
+      "kiss_from_man.glb",
+      "kiss_from_woman.glb",
+      "knee_kick_lead.glb",
+      "laughing.glb",
       "laying_seizure.glb",
       "laying_severe_cough.glb",
       "left_turn.glb",
       "looking_through_files_low.glb",
       "martelo_do_chau_sem_mao.glb",
-      "one_shoulder_lean.glb",
-      "pick_fruit.glb",
+      "no.glb",
+      "pistol_idle.glb",
       "plant_a_plant.glb",
-      "plant_tree.glb",
       "pointing.glb",
-      "pull_pilot_from_seat.glb",
       "pull_plant.glb",
-      "pulled_from_seat.glb",
       "rapping.glb",
-      "right_turn.glb",
-      "rummaging.glb",
+      "release_hostage_-_villain.glb",
       "scared.glb",
       "searching_pockets.glb",
-      "seated_idle.glb",
-      "sitting_drinking.glb",
       "sitting_talking.glb",
       "skinning_test.glb",
       "stand_up.glb",
       "standing_arguing.glb",
-      "surprised.glb",
       "swing_into_wall.glb",
+      "t-pose.glb",
+      "taken_hostage_-_victim.glb",
+      "taken_hostage_-_villain.glb",
       "talking.glb",
       "talking_at_watercooler.glb",
       "talking_on_a_cell_phone.glb",
       "talking_on_phone.glb",
       "telling_a_secret.glb",
-      "tonic_seizure.glb",
       "tripping.glb",
-      "watering.glb",
-      "wheelbarrow_walk_turn.glb",
+      "victory.glb",
+      "walking.glb",
       "wheelchair.glb",
-      "yelling.glb",
       "woman-solo.glb",
-      "knee-push-up.glb"
+      "yelling.glb"
     ];
 
     function formatName(fileName) {
@@ -1120,6 +1123,28 @@
     const ROW_SPACING = 220;
 
     document.fonts.ready.then(() => {
+    const orthoBtn = document.getElementById('ortho-btn');
+    if (orthoBtn) {
+      let isOrtho = false;
+      orthoBtn.addEventListener('click', () => {
+        isOrtho = !isOrtho;
+        if (isOrtho) {
+          orthoCamera.position.copy(camera.position);
+          orthoCamera.rotation.copy(camera.rotation);
+          controls.object = orthoCamera;
+          activeCamera = orthoCamera;
+          orthoBtn.innerText = 'Mode: Orthographique';
+        } else {
+          camera.position.copy(orthoCamera.position);
+          camera.rotation.copy(orthoCamera.rotation);
+          controls.object = camera;
+          activeCamera = camera;
+          orthoBtn.innerText = 'Mode: Perspective';
+        }
+        controls.update();
+      });
+    }
+
       createAnimListUI();
 
       const btnPlayPause = document.getElementById('btn-play-pause');
@@ -1568,7 +1593,10 @@
                 } else if (matNameLower.includes('lashes') || matNameLower.includes('eyelash') || matNameLower.includes('eyelashes')) {
                   newName = 'eyelashes';
                   matched = true;
-                } else if (matNameLower.includes('eyes') || matNameLower.includes('eyeball') || matNameLower.includes('eye2') || (matNameLower.includes('eye') && !matNameLower.includes('eyebrow') && !matNameLower.includes('eyelash'))) {
+                } else if (matNameLower.includes('eye2') || matNameLower.includes('specular') || cleanMeshLower.includes('eye2') || cleanMeshLower.includes('specular')) {
+                  newName = 'eye_specular';
+                  matched = true;
+                } else if (matNameLower.includes('eyes') || matNameLower.includes('eyeball') || (matNameLower.includes('eye') && !matNameLower.includes('eyebrow') && !matNameLower.includes('eyelash'))) {
                   newName = 'eyes';
                   matched = true;
                 } else if (matNameLower.includes('headset')) {
@@ -1730,7 +1758,10 @@
                 } else if (cleanMeshLower.includes('lashes') || cleanMeshLower.includes('eyelash') || cleanMeshLower.includes('eyelashes')) {
                   newName = 'eyelashes';
                   matched = true;
-                } else if (cleanMeshLower.includes('eyes') || cleanMeshLower.includes('eyeball') || cleanMeshLower.includes('eye2') || (cleanMeshLower.includes('eye') && !cleanMeshLower.includes('eyebrow') && !cleanMeshLower.includes('eyelash'))) {
+                } else if (cleanMeshLower.includes('eye2') || cleanMeshLower.includes('specular')) {
+                  newName = 'eye_specular';
+                  matched = true;
+                } else if (cleanMeshLower.includes('eyes') || cleanMeshLower.includes('eyeball') || (cleanMeshLower.includes('eye') && !cleanMeshLower.includes('eyebrow') && !cleanMeshLower.includes('eyelash'))) {
                   newName = 'eyes';
                   matched = true;
                 } else if (cleanMeshLower.includes('headset')) {
@@ -1833,7 +1864,7 @@
                 c.name = newName;
               }
 
-              const isDefaultHidden = DEFAULT_HIDDEN_MESHES.has(c.name);
+              const isDefaultHidden = DEFAULT_HIDDEN_MESHES.has(c.name) || DEFAULT_HIDDEN_MESHES.has(c.name.toLowerCase());
               if (!meshVisibility.has(c.name)) {
                 meshVisibility.set(c.name, { label: c.name, visible: !isDefaultHidden });
                 updateMeshListUI();
@@ -1932,7 +1963,7 @@
           if (loadedCount === variants.length) {
             const loadingScreen = document.getElementById('loading-screen');
             if (loadingScreen) loadingScreen.style.display = 'none';
-            loadAndPlayAnimation("idle.glb");
+            loadAndPlayAnimation("bellydancing.glb");
           } else if (rawAnimClip && animScene) {
             const retargeted = retargetMixamoClip(rawAnimClip, model, animScene);
             if (retargeted) {
@@ -1950,7 +1981,7 @@
           if (loadedCount === variants.length) {
             const loadingScreen = document.getElementById('loading-screen');
             if (loadingScreen) loadingScreen.style.display = 'none';
-            loadAndPlayAnimation("idle.glb");
+            loadAndPlayAnimation("bellydancing.glb");
           }
         });
       });
@@ -1969,8 +2000,16 @@
     });
 
     window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
+            camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
+      
+      const aspect = window.innerWidth / window.innerHeight;
+      orthoCamera.left = -frustumSize * aspect / 2;
+      orthoCamera.right = frustumSize * aspect / 2;
+      orthoCamera.top = frustumSize / 2;
+      orthoCamera.bottom = -frustumSize / 2;
+      orthoCamera.updateProjectionMatrix();
+
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
@@ -3105,7 +3144,7 @@
         // Mettre à jour le marqueur 3D et la position du label 2D à chaque frame (pour l'animation)
         updateSelectedBoneMarker();
         
-        renderer.render(scene, camera);
+        renderer.render(scene, activeCamera);
         updateFPS();
         
         needsRender = false;
