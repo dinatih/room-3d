@@ -773,9 +773,9 @@
       gui.add(guiOptions, 'showAccessories').name('Accessoires Lara').onChange(v => {
         if (laraModel) {
           laraModel.traverse(n => {
-            if (n.isMesh) {
+            if (n.isMesh && n.name !== 'Lara') {
               const name = n.name.toLowerCase();
-              if (name.includes('handgun') || name.includes('backpack') || name.includes('bag') || name.includes('holster')) {
+              if (name.includes('handgun') || name.includes('backpack') || name.includes('bag') || name.includes('holster') || name.includes('buckle') || name.includes('glasses') || name.includes('gear') || name.includes('metal')) {
                 n.visible = v;
               }
             }
