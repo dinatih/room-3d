@@ -324,8 +324,7 @@
             
             let targetHipsHeight = 0.991;
             if (hipsBone && hipsBone.defaultPosition) {
-              const isLaraNative = targetInstance.getObjectByName('mixamorig_root_hips') !== undefined || targetInstance.getObjectByName('spine') !== undefined;
-              targetHipsHeight = isLaraNative ? hipsBone.defaultPosition.z : hipsBone.defaultPosition.y;
+              targetHipsHeight = hipsBone.defaultPosition.y;
             }
             
             if (refSrcY > 0) {
