@@ -8,4 +8,4 @@ draft.md
 public/media/glb/*.gltf
 .env.local
 .env.*.local
-sources_backup/
+sources_backup/animation/
