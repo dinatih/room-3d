@@ -32,8 +32,6 @@
     let laraModel, skeletonHelper;
     let gui;
     let selectedBoneMarker;
-    let selectedBone = null;
-    let tempBonePos = new THREE.Vector3();
     let frameController = null;
     let rawAnimClips = {};
     let xbotMixer = null;
@@ -50,7 +48,7 @@
     // Exact mapping from Mixamo bone names to Rigify metarig bone names
     // Bone mapping dictionary between Mixamo and Lara 2026 Native
     const BONE_SYNONYMS = {
-      'Hips': ['spine', 'pelvis', 'hip', 'root', 'roothips'],
+      'Hips': ['spine', 'pelvis', 'hip'],
       'Spine': ['spine001', 'spine01', 'spinelower', 'spine0', 'spine1'],
       'Spine1': ['spine002', 'spine02', 'spine1'],
       'Spine2': ['spine003', 'spine02', 'spineupper', 'spine2', 'spine03', 'spine3'],
@@ -207,7 +205,9 @@
           sourceHairMap.set(hb.baseName.toLowerCase(), `hair_${idx + 1}`);
         });
 
-        animScene.traverse(c => {
+        const mixamoRefModel = (typeof xbotModel !== 'undefined' && xbotModel) ? xbotModel : animScene;
+        mixamoRefModel.updateMatrixWorld(true);
+        mixamoRefModel.traverse(c => {
           if (c.isBone) {
             const match = c.name.match(/mixamorig[:_]?(.+)/i);
             if (match) {
@@ -447,7 +447,7 @@
                                 !tgtLower.includes('shoulder_2') && 
                                 !tgtLower.includes('shoulder2') && 
                                 !tgtLower.includes('shoulder 2'));
-            // if (isClavicle) continue;
+            if (isClavicle) continue;
 
             const bone = targetInstance.getObjectByName(targetBoneName);
             if (bone) {
