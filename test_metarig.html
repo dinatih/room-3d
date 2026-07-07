@@ -40,7 +40,8 @@
       wireframe: false,
       animation: 'None',
       paused: false,
-      timeScale: 1.0, frame: 0, orthoMode: true
+      timeScale: 1.0, frame: 0, orthoMode: true,
+      showAccessories: false
     };
 
     // Exact mapping from Mixamo bone names to Rigify metarig bone names
@@ -756,6 +757,19 @@
       gui.add(guiOptions, 'togglePause').name('Pause / Play');
       
       gui.add(guiOptions, 'timeScale', 0.1, 3.0, 0.1).name('Speed');
+
+      gui.add(guiOptions, 'showAccessories').name('Accessoires Lara').onChange(v => {
+        if (laraModel) {
+          laraModel.traverse(n => {
+            if (n.isMesh) {
+              const name = n.name.toLowerCase();
+              if (name.includes('handgun') || name.includes('backpack') || name.includes('bag') || name.includes('holster')) {
+                n.visible = v;
+              }
+            }
+          });
+        }
+      });
     }
 
 
@@ -903,7 +917,7 @@
           if (n.isMesh) {
             const name = n.name.toLowerCase();
             if (name.includes('handgun') || name.includes('backpack') || name.includes('bag') || name.includes('holster')) {
-              n.visible = false;
+              n.visible = guiOptions.showAccessories;
             }
           }
         });
