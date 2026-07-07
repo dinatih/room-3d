@@ -52,8 +52,8 @@
       'Spine': ['spine001', 'spine01', 'spinelower', 'spine0', 'spine1'],
       'Spine1': ['spine002', 'spine02', 'spine1'],
       'Spine2': ['spine003', 'spine02', 'spineupper', 'spine2', 'spine03', 'spine3'],
-      'Neck': ['neck', 'headnecklower'],
-      'Head': ['head', 'headneckupper'],
+      'Neck': ['neck', 'headnecklower', 'spine004'],
+      'Head': ['head', 'headneckupper', 'spine005'],
       'LeftShoulder': ['leftshoulder', 'shoulderl', 'claviclel', 'armleftshoulder', 'larmclavicle', 'shlderl', 'armleftshoulder1'],
       'LeftArm': ['armleftshoulder2', 'upperarml', 'larmhumerus', 'upperarm.l', 'upper_arm.l', 'leftarm', 'armleftelbow', 'arm.l', 'bicepl'],
       'LeftForeArm': ['lowerarml', 'larmradius', 'forearm.l', 'forearm_l', 'leftforearm', 'armleftelbow', 'armleftwrist', 'forarml', 'forearml'],
@@ -446,7 +446,6 @@
                                 !tgtLower.includes('shoulder_2') && 
                                 !tgtLower.includes('shoulder2') && 
                                 !tgtLower.includes('shoulder 2'));
-            if (isClavicle) continue;
 
             const bone = targetInstance.getObjectByName(targetBoneName);
             if (bone) {
@@ -475,7 +474,12 @@
                   for (let i = 0; i < clone.values.length; i += 4) {
                     const srcLocalQ = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
                     const animWorldQ = P_src.clone().multiply(srcLocalQ);
-                    const deltaQ = animWorldQ.clone().multiply(B_src_inv);
+                    let deltaQ = animWorldQ.clone().multiply(B_src_inv);
+                    
+                    if (isClavicle) {
+                      deltaQ.slerp(new THREE.Quaternion(), 0.6); // Reduce clavicle rotation by 60%
+                    }
+
                     const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
                     const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
 
@@ -483,10 +487,6 @@
                     clone.values[i+1] = tgtLocalQ.y;
                     clone.values[i+2] = tgtLocalQ.z;
                     clone.values[i+3] = tgtLocalQ.w;
-                      if (targetBoneName === 'spine.001' && i === 0) {
-                        // console.log('spine.001 q:', tgtLocalQ.x, tgtLocalQ.y, tgtLocalQ.z, tgtLocalQ.w);
-                      }
-    
                   }
                 } else {
                   // Fallback
