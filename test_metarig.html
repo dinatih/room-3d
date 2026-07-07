@@ -616,12 +616,12 @@
       document.body.appendChild(container);
 
       perspCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-      perspCamera.position.set(0, 100, 400);
+      perspCamera.position.set(0, 100, 250);
       
       const aspect = window.innerWidth / window.innerHeight;
       const d = 150;
       orthoCamera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 0.1, 1000);
-      orthoCamera.position.set(0, 100, 400);
+      orthoCamera.position.set(0, 100, 250);
       
       activeCamera = guiOptions.orthoMode ? orthoCamera : perspCamera;
       camera = activeCamera;
@@ -909,15 +909,12 @@
         loader.load('./models/xbot.glb', (gltf) => {
           const xbotModel = gltf.scene;
           xbotModel.scale.set(100, 100, 100);
-          xbotModel.position.x = -150;
+          xbotModel.position.x = -60;
           scene.add(xbotModel);
           const xbotHelper = new THREE.SkeletonHelper(xbotModel);
           scene.add(xbotHelper);
           xbotMixer = new THREE.AnimationMixer(xbotModel);
         });
-
-        });
-
         // Load animations
                 const animsToLoad = [
           { name: 'agreeing', url: './models/test_metarig_anims/agreeing.glb' },
@@ -1002,6 +999,7 @@
     function setupLaraModel(model) {
       // Scale compensation if needed
       model.scale.set(100, 100, 100);
+      model.position.x = 60;
       model.position.y = 0;
       model.updateMatrixWorld(true);
 
