@@ -298,6 +298,7 @@ export interface LayerState {
   walker:       boolean;
   accessories:  boolean;
   showAllLaraStyles: boolean;
+  breastPhysics: boolean;
 }
 
 export interface SidePanelProps {
@@ -463,7 +464,7 @@ export function SidePanel({
             value={activeWalkerId}
             onChange={(e) => useSceneStore.getState().setActiveWalkerId(e.target.value)}
           >
-            {CHARACTERS.filter(c => layers.showAllLaraStyles || !/^\d/.test(c.id) || c.id === activeWalkerId).map(c => (
+            {CHARACTERS.filter(c => layers.showAllLaraStyles || c.id === activeWalkerId).map(c => (
               <option key={c.id} value={c.id} className="bg-light text-dark">
                 {c.name}
               </option>
@@ -484,6 +485,7 @@ export function SidePanel({
       {layerBtn('purple', 'Miroirs',       'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
       {layerBtn('white',  'Squelette',     'skeleton')}
+      {layerBtn('pink',   'Physique poitrine', 'breastPhysics')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
       {layerBtn('gray',   'Ombres',        'shadows')}

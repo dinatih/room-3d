@@ -18,8 +18,9 @@ function heatColor(v: number, warn: number, danger: number) {
 
 const FPS_W = 164, FPS_H = 46;
 
-function drawFps(canvas: HTMLCanvasElement, samples: number[]) {
-  const gfx = canvas.getContext('2d')!;
+export function drawFps(canvas: HTMLCanvasElement, samples: number[]) {
+  const gfx = canvas.getContext('2d');
+  if (!gfx) return;
   const W = FPS_W, H = FPS_H;
   gfx.clearRect(0, 0, W, H);
   gfx.fillStyle = '#080812';
@@ -75,14 +76,11 @@ export function DevToolsGroups({ Group }: {
 
   useEffect(() => {
     devState.onUpdate = () => setTick(t => t + 1);
-    return () => { devState.onUpdate = null; };
+    if (fpsCanvasRef.current) devState.fpsCanvas = fpsCanvasRef.current;
+    return () => { devState.onUpdate = null; devState.fpsCanvas = null; };
   }, []);
 
-  useEffect(() => {
-    if (fpsCanvasRef.current && devState.fpsSamples.length > 0) {
-      drawFps(fpsCanvasRef.current, devState.fpsSamples);
-    }
-  });
+  // Removed useEffect for drawFps, it is now handled directly by DevToolsCollector
 
   const samples  = devState.fpsSamples;
   const curFps   = samples.length ? samples[samples.length - 1] : 0;

@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { devState } from './devState';
+import { drawFps } from './DevToolsOverlay';
 
 const FPS_SAMPLES = 80;
 
@@ -95,7 +96,15 @@ export function DevToolsCollector() {
       if (devState.fpsSamples.length > FPS_SAMPLES) devState.fpsSamples.shift();
     }
 
-    devState.onUpdate?.();
+    if (devState.fpsCanvas && devState.fpsSamples.length > 0) {
+      drawFps(devState.fpsCanvas, devState.fpsSamples);
+    }
+
+    // Throttle React updates to 4fps (250ms) so keyboard spam doesn't block the UI update
+    if (now - (devState as any).lastReactUpdate > 250 || !(devState as any).lastReactUpdate) {
+      (devState as any).lastReactUpdate = now;
+      devState.onUpdate?.();
+    }
   });
 
   return null;

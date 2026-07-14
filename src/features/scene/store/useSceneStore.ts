@@ -70,6 +70,7 @@ const initialLayers: LayerState = {
   surface: false,
   walker: true,
   accessories: true,
+  breastPhysics: true,
 };
 
 const initialExtraStates: Record<string, boolean> = {
