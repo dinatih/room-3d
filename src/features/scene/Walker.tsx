@@ -42,7 +42,8 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'vivid', name: 'Vivid', path: 'media/vivid_red_lara_native.glb', pos: [30, 0, 210], rot: Math.PI / 2, variant: 'vivid', height: 173.4, sittingScenePath: 'media/sandbox/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anim_sitting_idle.glb' },
   { id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [200, 0, -20], rot: Math.PI, variant: 'sabira', height: 173.4 },
   { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [250, 0, 320], rot: 0, variant: 'safa', height: 173.4 },
-  { id: 'rajaa', name: 'Rajaa', path: 'media/lara_native.glb', pos: [80, 0, -320], rot: Math.PI / 4, variant: 'rajaa', height: 173.4 }
+  { id: 'rajaa', name: 'Rajaa', path: 'media/lara_native.glb', pos: [80, 0, -320], rot: Math.PI / 4, variant: 'rajaa', height: 173.4 },
+  { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [120, 0, 0], rot: 0, variant: 'native', height: 173.4 }
 ];
 
 const BONE_SYNONYMS: Record<string, string[]> = {
