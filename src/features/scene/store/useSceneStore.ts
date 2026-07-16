@@ -50,7 +50,7 @@ const initialLayers: LayerState = {
   doors: true,
   neighbors: false,
   xray: false,
-  mirrors: true,
+  mirrors: false,
   mirrorsHD: false,
   plan: false,
   grid: false,
@@ -123,7 +123,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   furniture: initialFurniture,
   layers: initialLayers,
   extraStates: initialExtraStates,
-  activeWalkerId: 'rosanna',
+  activeWalkerId: 'native',
   measurementActive: false,
   cameraMode: 'orbit',
   setMeasurementActive: (active: boolean) => {

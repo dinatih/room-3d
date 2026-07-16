@@ -32,7 +32,8 @@ export interface CharacterConfig {
 }
 
 export const CHARACTERS: CharacterConfig[] = [
-  // 10 stylized Laras
+  // 11 stylized Laras
+  { id: 'native', name: 'Lara (Native)', path: 'media/lara_native.glb', pos: [251, 75, 178], rot: 1.325 + Math.PI / 2, variant: 'native', height: 173.4 },
   { id: 'rosanna', name: 'Rosanna', path: 'media/rosanna_lara_native.glb', pos: [251, 75, 178], rot: 1.325 + Math.PI / 2, variant: 'rosanna', height: 173.4, sittingScenePath: 'media/sandbox/anim_push_up.glb', customIdleAnimPath: 'media/sandbox/anim_push_up.glb' },
   { id: 'marissa', name: 'Marissa', path: 'media/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4, sittingScenePath: 'media/sandbox/anim_gangnam_style.glb', customIdleAnimPath: 'media/sandbox/anim_gangnam_style.glb' },
   { id: 'delphina', name: 'Delphina', path: 'media/lara_native.glb', pos: [120, 35, -250], rot: 1, variant: 'delphina', height: 173.4, sittingScenePath: 'media/sandbox/anim_swimming_to_edge.glb', customIdleAnimPath: 'media/sandbox/anim_swimming_to_edge.glb' },
