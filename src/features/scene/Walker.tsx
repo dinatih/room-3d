@@ -28,6 +28,7 @@ export interface CharacterConfig {
   height: number;
   sittingScenePath?: string;
   customIdleAnimPath?: string;
+  isLara?: boolean;
 }
 
 export const CHARACTERS: CharacterConfig[] = [
@@ -42,7 +43,7 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [200, 0, -20], rot: Math.PI, variant: 'sabira', height: 173.4 },
   { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [250, 0, 320], rot: 0, variant: 'safa', height: 173.4 },
   { id: 'rajaa', name: 'Rajaa', path: 'media/lara_native.glb', pos: [80, 0, -320], rot: Math.PI / 4, variant: 'rajaa', height: 173.4 },
-  { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [120, 0, 0], rot: 0, variant: 'native', height: 173.4 }
+  { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [120, 0, 0], rot: 0, variant: 'native', height: 173.4, isLara: false }
 ];
 
 const BONE_SYNONYMS: Record<string, string[]> = {
@@ -867,7 +868,7 @@ function SingleCharacter({
     animations.forEach(clip => {
       const isExternal = clip.name.endsWith('.glb');
       const actualAnimScene = (clip as any).userData?.animScene || (isExternal ? sittingScene : undefined);
-      const cacheKey = 'lara_' + clip.name;
+      const cacheKey = id + '_' + clip.name;
       let finalClip = _retargetCache[cacheKey];
       if (!finalClip) {
         finalClip = retargetClip(clip, scene, actualAnimScene);
@@ -887,7 +888,7 @@ function SingleCharacter({
         mixer.stopAllAction();
         mixer.uncacheRoot(scene);
     };
-  }, [scene, animations, name, isLara, targetHeight, variant, sittingScene]);
+  }, [scene, animations, name, isLara, targetHeight, variant, sittingScene, id]);
 
   const skeletonRef = useHelper(showSkeleton ? modelRef : null, THREE.SkeletonHelper);
 
@@ -905,7 +906,7 @@ function SingleCharacter({
 
   useEffect(() => {
     const onToggle = (e: any) => {
-      const expectedKey = 'walker-anim-lara';
+      const expectedKey = isLara ? 'walker-anim-lara' : 'walker-anim-xbot';
       if (e.detail.key === expectedKey) {
         const path = e.detail.value;
         if (!path || path === 'idle') {
@@ -917,7 +918,7 @@ function SingleCharacter({
         loader.load(path, (gltf: any) => {
           const clip = gltf.animations[0];
           if (clip) {
-            const cacheKey = 'lara_' + path;
+            const cacheKey = id + '_' + path;
             let finalClip = _retargetCache[cacheKey];
             if (!finalClip) {
                finalClip = retargetClip(clip, scene, gltf.scene);
@@ -947,7 +948,7 @@ function SingleCharacter({
 
     document.addEventListener('furniture-toggle', onToggle);
     return () => document.removeEventListener('furniture-toggle', onToggle);
-  }, [isActive, isLara, scene, invalidate]);
+  }, [isActive, isLara, scene, invalidate, id]);
 
   useFrame((_, rawDelta) => {
     const delta = Math.min(rawDelta, 0.1);
@@ -1288,7 +1289,7 @@ function InternalWalker(props: WalkerProps) {
             id={char.id}
             name={char.name}
             modelPath={char.path}
-            isLara={char.isLara}
+            isLara={char.isLara ?? true}
             targetHeight={char.height}
             isActive={isActive}
             animations={char.charAnims}

@@ -22,48 +22,11 @@ interface ActionDef {
 }
 
 const WALKER_ANIM_OPTIONS = [
-  { value: "idle", label: "Idle / Return to Default" },
-  { value: "media/glb-animations/catwalk_sequence_01.glb", label: "Catwalk Sequence 1" },
-  { value: "media/glb-animations/catwalk_sequence_02.glb", label: "Catwalk Sequence 2" },
-  { value: "media/glb-animations/catwalk_sequence_03.glb", label: "Catwalk Sequence 3" },
-  { value: "media/glb-animations/catwalk_sequence_04.glb", label: "Catwalk Sequence 4" },
-  { value: "media/glb-animations/catwalk_sequence_05.glb", label: "Catwalk Sequence 5" },
-  { value: "media/sandbox/anim_happy_walk_not_in_place.glb", label: "Happy Walk" },
-  { value: "media/sandbox/anim_sitting_idle.glb", label: "Sitting Idle" },
-  { value: "media/sandbox/anim_sitting_angry.glb", label: "Sitting Angry" },
   { value: "media/sandbox/anim_t_pose.glb", label: "T-Pose de Test" },
-  { value: "media/sandbox/anim_jump.glb", label: "Saut" },
-  { value: "media/sandbox/anim_sleeping_idle.glb", label: "Dormir" },
-  { value: "media/sandbox/anim_laying_idle.glb", label: "Laying Idle" },
-  { value: "media/sandbox/anim_skinning_test.glb", label: "Skinning Test" },
-  { value: "media/sandbox/anim_samba_dancing.glb", label: "Samba Dancing" },
-  { value: "media/sandbox/anim_back_flip_to_uppercut.glb", label: "Back Flip to Uppercut" },
   { value: "media/sandbox/anim_idle.glb", label: "Idle" },
   { value: "media/sandbox/anim_walking.glb", label: "Walking" },
-  { value: "media/sandbox/anim_right_turn_90.glb", label: "Right Turn 90" },
-  { value: "media/sandbox/anim_left_turn_90.glb", label: "Left Turn 90" },
-  { value: "media/sandbox/anim_gangnam_style.glb", label: "Gangnam Style" },
-  { value: "media/sandbox/anim_drinking_fountain.glb", label: "Drinking Fountain" },
-  { value: "media/sandbox/anim_martelo_do_chau_sem_mao.glb", label: "Martelo Do Chau Sem Mao" },
-  { value: "media/sandbox/anim_female_dynamic_pose.glb", label: "Female Dynamic Pose" },
-  { value: "media/sandbox/anim_push_up.glb", label: "Push Up" },
-  { value: "media/sandbox/anim_laying_idle_1.glb", label: "Laying Idle 1" },
-  { value: "media/sandbox/anim_swimming_to_edge.glb", label: "Swimming to Edge" },
-  { value: "media/sandbox/anim_dancing_maraschino_step.glb", label: "Dancing Maraschino Step" },
-  { value: "media/sandbox/anim_tender_placement.glb", label: "Tender Placement" },
   { value: "media/sandbox/anim_running.glb", label: "Running" },
-  { value: "media/sandbox/anim_left_turn.glb", label: "Left Turn" },
-  { value: "media/sandbox/anim_right_turn.glb", label: "Right Turn" },
-  { value: "media/sandbox/anim_left_turn_2.glb", label: "Left Turn 2" },
-  { value: "media/sandbox/anim_right_turn_2.glb", label: "Right Turn 2" },
-  { value: "media/sandbox/anim_climbing.glb", label: "Climbing" },
-  { value: "media/sandbox/anim_macarena_dance.glb", label: "Macarena Dance" },
-  { value: "media/sandbox/anim_knee-push-up.glb", label: "Knee Push Up" }
-].sort((a, b) => {
-  if (a.value === "idle") return -1;
-  if (b.value === "idle") return 1;
-  return a.label.localeCompare(b.label, 'fr', { sensitivity: 'base' });
-});
+];
 
 const ACTIONS: Record<string, ActionDef> = {
   eastGlassDoor: {

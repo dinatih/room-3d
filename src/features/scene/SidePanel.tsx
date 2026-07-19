@@ -269,7 +269,6 @@ export interface FurnitureState {
   glassDoorV2LeftOpen: boolean;
   glassDoorV2ShutterPos: number;
   mackaparDoors: boolean;
-  dronaBoxes: boolean;
 }
 
 export interface LayerState {
@@ -304,8 +303,6 @@ export interface LayerState {
 }
 
 export interface SidePanelProps {
-  furniture:       FurnitureState;
-  onToggleFurniture: (key: keyof FurnitureState) => void;
   layers:          LayerState;
   onToggleLayer:   (key: keyof LayerState) => void;
 }
@@ -334,8 +331,6 @@ const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> 
 // ── Composant principal ───────────────────────────────────────────────────────
 
 export function SidePanel({ 
-  furniture, 
-  onToggleFurniture, 
   layers, 
   onToggleLayer, 
   onOpenInventory, 
@@ -453,8 +448,9 @@ export function SidePanel({
       {layerBtn('peach',  'Portes',        'doors')}
       {layerBtn('peach',  'Équipements',   'equipment')}
       {layerBtn('purple', 'Mobilier',      'furniture')}
-      {b0('light', `Boîtes DRÖNA : ${furniture.dronaBoxes ? 'AFFICHEES' : 'CACHÉES'}`,
-        () => onToggleFurniture('dronaBoxes'))}
+      {layerBtn('purple', 'Miroirs',       'mirrors')}
+      {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
+      {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
       {layerBtn('light',  'Walker',        'walker')}
       {layerBtn('light',  'Accessoires Lara', 'accessories')}
@@ -486,13 +482,10 @@ export function SidePanel({
       {layerBtn('teal',   'Grille Lara 👥', 'laraGrid')}
       {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('cyan',   'X-Ray',         'xray')}
-      {layerBtn('purple', 'Miroirs',       'mirrors')}
-      {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
       {layerBtn('white',  'Squelette',     'skeleton')}
       {layerBtn('pink',   'Physique poitrine', 'breastPhysics')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
-      {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('cyan',   'LiDAR scan',    'lidar')}
       {layers.lidar && b0('cyan', ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}
       {layers.lidar && b0('cyan', `Opacité ${Math.round(lidarOpacity * 100)}%`, onToggleLidarOpacity)}

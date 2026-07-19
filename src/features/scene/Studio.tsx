@@ -144,11 +144,9 @@ function LoadingProgress() {
 }
 
 export function Studio() {
-  const furniture = useSceneStore(state => state.furniture);
   const layers = useSceneStore(state => state.layers);
   const measurementActive = useSceneStore(state => state.measurementActive);
   const cameraMode = useSceneStore(state => state.cameraMode);
-  const onToggleFurniture = useSceneStore(state => state.toggleFurniture);
   const onToggleLayer = useSceneStore(state => state.toggleLayer);
 
   const [showInventory, setShowInventory] = useState(false);
@@ -363,7 +361,6 @@ export function Studio() {
 
       {/* HTML overlays */}
       <SidePanel
-        furniture={furniture} onToggleFurniture={onToggleFurniture}
         layers={layers} onToggleLayer={onToggleLayer}
         onOpenInventory={() => setShowInventory(true)}
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
