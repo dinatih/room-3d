@@ -420,7 +420,7 @@ export function SidePanel({
   // ── Sections (utilisées dans Group desktop OU sheet mobile) ─────────────────
 
   const ViewsSection = (
-    <>
+    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
       {b0('gray',   'Perspective (Raccourci P)', () => dispatchKey('p'))}
       {b0('gray',   'Walk (Raccourci M)',        () => dispatchKey('m'))}
       {b0('gray',   '2D Dessus (Raccourci T)',   () => dispatchKey('t'))}
@@ -439,11 +439,11 @@ export function SidePanel({
       {b0('cyan',   'Avion ✈ (Raccourci F)',        () => dispatchKey('f'))}
       {b0('yellow', 'Autres vues…',  () => setShowViews(true))}
       {b0('teal',   'Raccourcis clavier ⌨',  () => setShowShortcuts(true))}
-    </>
+    </div>
   );
 
   const LayersSection = (
-    <>
+    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
       {layerBtn('green',  'Structure',     'structure')}
       {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
       {layerBtn('peach',  'Portes',        'doors')}
@@ -493,11 +493,11 @@ export function SidePanel({
           </select>
         </div>
       )}
-    </>
+    </div>
   );
 
   const DisplaySection = (
-    <>
+    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
       {layerBtn('teal',   'Grille',        'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
       {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
@@ -552,7 +552,7 @@ export function SidePanel({
           {layers.plan ? 'ON' : 'OFF'}
         </span>
       </button>
-    </>
+    </div>
   );
   const AnimationsSection = (
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
