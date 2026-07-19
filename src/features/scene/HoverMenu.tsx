@@ -21,7 +21,7 @@ interface ActionDef {
   options?: { value: string; label: string }[];
 }
 
-const WALKER_ANIM_OPTIONS = [
+export const WALKER_ANIM_OPTIONS = [
   { value: "idle", label: "Idle / Return to Default" },
   { value: "media/glb-animations/catwalk_sequence_01.glb", label: "Catwalk Sequence 1" },
   { value: "media/glb-animations/catwalk_sequence_02.glb", label: "Catwalk Sequence 2" },

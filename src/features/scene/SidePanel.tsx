@@ -21,6 +21,7 @@ const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
 import { useSceneStore } from './store/useSceneStore';
 import { CHARACTERS } from './Walker';
+import { WALKER_ANIM_OPTIONS } from './HoverMenu';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -319,12 +320,13 @@ export interface SidePanelProps2 extends SidePanelProps {
   onSetRenderStyle:        (key: RenderStyleKey) => void;
 }
 
-type TabKey = 'views' | 'layers' | 'display' | 'perf' | null;
+type TabKey = 'views' | 'layers' | 'display' | 'perf' | 'anims' | null;
 
 const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
   { key: 'perf',      emoji: '📊', label: 'Perf' },
   { key: 'views',     emoji: '📷', label: 'Vues' },
   { key: 'layers',    emoji: '📑', label: 'Calques' },
+  { key: 'anims',     emoji: '💃', label: 'Anims' },
   { key: 'display',   emoji: '👁',  label: 'Affichage' },
 ];
 
@@ -455,6 +457,26 @@ export function SidePanel({
       {layerBtn('light',  'Walker',        'walker')}
       {layerBtn('light',  'Accessoires Lara', 'accessories')}
       {layers.walker && layerBtn('light',  'Toutes les Lara 👥', 'showAllLaraStyles')}
+      <button 
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        onClick={() => {
+          onToggleLayer('laraGrid');
+          if (!layers.laraGrid) {
+            document.dispatchEvent(new CustomEvent('camera-view', { detail: { pos: [150, 450, 600], target: [150, 450, 200] } }));
+          }
+        }}
+        style={{ 
+          fontSize: isMobile ? '14px' : '11px',
+          minHeight: isMobile ? '48px' : undefined,
+          background: 'transparent',
+          opacity: layers.laraGrid ? 1 : 0.55,
+        }}
+      >
+        <span>Grille Lara 👥</span>
+        <span className={`badge ${layers.laraGrid ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+          {layers.laraGrid ? 'ON' : 'OFF'}
+        </span>
+      </button>
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent">
           <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>👤 Personnage</div>
@@ -479,7 +501,6 @@ export function SidePanel({
     <>
       {layerBtn('teal',   'Grille',        'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
-      {layerBtn('teal',   'Grille Lara 👥', 'laraGrid')}
       {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('cyan',   'X-Ray',         'xray')}
       {layerBtn('white',  'Squelette',     'skeleton')}
@@ -534,18 +555,37 @@ export function SidePanel({
       </button>
     </>
   );
+  const AnimationsSection = (
+    <div className="d-flex flex-column bg-transparent">
+      {WALKER_ANIM_OPTIONS.map(anim => (
+        <button
+          key={anim.value}
+          className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark"
+          onClick={() => {
+            document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: anim.value } }));
+            document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: anim.value } }));
+          }}
+          style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent' }}
+        >
+          {anim.label}
+        </button>
+      ))}
+    </div>
+  );
+
   // ── Rendu mobile : tab bar bottom + sheet ───────────────────────────────────
 
   if (isMobile) {
     const sheetOpen = activeTab !== null;
     const sheetTitle: Record<Exclude<TabKey, null>, string> = {
       views: '📷 Vues', layers: '📑 Calques', display: '👁 Affichage',
-      perf: '📊 Perf',
+      perf: '📊 Perf', anims: '💃 Animations'
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
       views: ViewsSection,
       layers: LayersSection,
       display: DisplaySection,
+      anims: AnimationsSection,
       perf: <DevToolsGroups Group={Group} />,
     };
 
@@ -661,6 +701,7 @@ export function SidePanel({
 
         <Group emoji="📷" title="Vues">{ViewsSection}</Group>
         <Group emoji="📑" title="Calques">{LayersSection}</Group>
+        <Group emoji="💃" title="Animations">{AnimationsSection}</Group>
         <Group emoji="👁" title="Affichage">{DisplaySection}</Group>
       </div>
 
