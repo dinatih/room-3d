@@ -14,7 +14,6 @@ import { LAYER_WALKER_DETAIL, LAYER_WALKER } from '@config';
 import { applyLaraVariantStyles, type LaraVariant } from './LaraVariants';
 
 
-const YBOT_PATH = 'media/y_bot.glb';
 const LARA_PATH = 'media/lara_native.glb';
 const ROSANNA_PATH = 'media/rosanna_lara_native.glb';
 const VIVID_PATH = 'media/vivid_red_lara_native.glb';
@@ -765,7 +764,6 @@ function SingleCharacter({
 
     // Initialize Hair Chain (Verlet)
     const hairChain: any[] = [];
-    const nameLower = (name || '').toLowerCase();
     const isScoopOrClone = false;
 
     if (isScoopOrClone) {
@@ -895,7 +893,7 @@ function SingleCharacter({
 
   useEffect(() => {
     if (skeletonRef.current) {
-        const helper = skeletonRef.current as THREE.SkeletonHelper;
+        const helper = skeletonRef.current as unknown as THREE.SkeletonHelper;
         const mat = helper.material as THREE.LineBasicMaterial;
         mat.color.set(0x00ffff);
         mat.depthTest = false;

@@ -1,13 +1,11 @@
-import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo, type ComponentType } from 'react';
-import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, Line, Grid } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';
 import { type InventoryItem, type StorageSpace } from './inventoryData';
 import { SCENE_REGISTRY, ACTION_LABELS } from './previewRegistry';
-
-import { glbLocalBBox } from '@features/scene/glbUtils';
 
 function GlbScene({ glbPath, onSize }: { glbPath: string; onSize?: () => void; }) {
   const [scene, setScene] = useState<THREE.Group | null>(null);
@@ -74,7 +72,7 @@ function FitCamera({ target = [0, 0, 0] }: { target?: [number, number, number] }
 }
 
 function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, glbPath, onTargetChange }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; }) {
-  const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!), [scale, setScale] = useState(1);
+  const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!), [, setScale] = useState(1);
   const [worldSize, setWorldSize] = useState<{ x: number; y: number; z: number } | null>(null);
 
   const fit = useCallback(() => {

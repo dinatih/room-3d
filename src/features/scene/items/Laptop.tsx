@@ -39,7 +39,7 @@ function moveOcc(root: THREE.Object3D, name: string, tx: number, ty: number, tz:
 
 // ── Modèle procédural ─────────────────────────────────────────────────────────
 
-function LaptopProcedural({ onSize }: { onSize: SceneItemProps['onSize'] }) {
+export function LaptopProcedural({ onSize }: { onSize: SceneItemProps['onSize'] }) {
   const screenTex = useTexture('media/photos/omarchy-screen.png');
   screenTex.colorSpace = THREE.SRGBColorSpace;
   const screenMat = useMemo(() => new THREE.MeshStandardMaterial({

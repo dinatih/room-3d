@@ -5,7 +5,7 @@
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
-import { ROOM_W } from '@config';
+
 import { wallsGroupRef } from './Building';
 
 const neighborMat = new THREE.MeshStandardMaterial({

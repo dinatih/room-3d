@@ -18,7 +18,6 @@ import type { SceneItemProps } from '@shared/types';
 // ── Dimensions (1 unité = 1 cm) ───────────────────────────────────────────────
 const L = 29.0;         // Longueur totale
 const W = 10.8;         // Largeur max (légèrement plus large que l'été pour le rembourrage)
-const H = 19.5;         // Hauteur totale (légèrement plus haute)
 const GAP = 2.2;        // Écartement de la paire
 const SH_HEEL = 4.6;
 const SH_TOE = 2.0;

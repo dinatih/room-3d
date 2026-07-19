@@ -16,7 +16,6 @@ const GLB_SINK   = 'media/glb/ikea-official/BOHOLMEN Évier 47x30 cm.glb';
 const GLB_FAUCET = 'media/glb/ikea-official/LAGAN Mitigeur chromé.glb';
 
 // BOHOLMEN : 46.6×15.7×30 cm à ×100, Y-up (Y=0=fond de vasque)
-const SINK_D = 30; // profondeur Z (cm)
 
 export function SinkBoholmen({ onSize }: SceneItemProps) {
   const { scene: sinkScene   } = useGLTFClone(GLB_SINK);

@@ -41,6 +41,8 @@ const initialFurniture: FurnitureState = {
   glassDoorV2ShutterPos: 0,
   sofaArmLeft: false,
   sofaArmRight: false,
+  mackaparDoors: true,
+  dronaBoxes: true,
 };
 
 const initialLayers: LayerState = {

@@ -22,8 +22,6 @@ const DOOR_X  = -W / 2 + DOOR_W / 2 + 0.3;
 const PANEL_X =  W / 2 - PANEL_W / 2 - 0.3;
 
 const FRONT_Z = D / 2;
-const REAR_Z  = -D / 2;
-
 const stainless = new THREE.MeshStandardMaterial({
   color: 0xc4c6c8, metalness: 0.88, roughness: 0.42,
 });
@@ -40,9 +38,6 @@ const glassMat = new THREE.MeshPhysicalMaterial({
   color: 0x1a2028, metalness: 0.3, roughness: 0.08,
   transparent: true, opacity: 0.55,
   transmission: 0.5, ior: 1.45, thickness: 0.2,
-});
-const interiorMat = new THREE.MeshStandardMaterial({
-  color: 0x2c2c2e, metalness: 0.4, roughness: 0.6,
 });
 const quartzTube = new THREE.MeshStandardMaterial({
   color: 0xfff0c8, emissive: 0xffb060, emissiveIntensity: 0.25,

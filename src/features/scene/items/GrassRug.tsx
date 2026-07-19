@@ -12,7 +12,7 @@ const RUG_W = 200;
 const RUG_D = 100;
 const RUG_H = 1.5;
 
-export function GrassRug({ onSize }: SceneItemProps) {
+export function GrassRug({  }: SceneItemProps) {
   const mats = useMemo(() => {
     const topTex = makeGrassTex();
     topTex.repeat.set(10, 5);

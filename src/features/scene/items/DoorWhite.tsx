@@ -14,11 +14,7 @@ const H  = 204;    // Hauteur standard
 const T  = 4;      // Épaisseur panneau
 const R  = 1.3;    // Rayon poignée
 
-const DT = 2.5;    // Épaisseur dormant
-const WW = WALL_THICKNESS;   // Profondeur dormant (épaisseur mur)
-const CW = 4.0;    // Largeur chambranle (casing)
-const CT = 1.0;    // Épaisseur chambranle
-const GAP = 0.1;   // Petit jeu pour éviter le z-fighting (1mm)
+
 
 function makeLeftFrameShape(wallThickness: number) {
   const halfWT = wallThickness / 2;

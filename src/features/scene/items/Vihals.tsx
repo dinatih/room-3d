@@ -4,7 +4,7 @@
  * Pliée   : procédural FoldedVihals, 44×88×9cm (debout, fine tranche verticale).
  * Action 'vihals-toggle' bascule entre les deux représentations (snap).
  */
-import { useLayoutEffect, useRef, useState, useEffect, useMemo } from 'react';
+import { useLayoutEffect, useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';

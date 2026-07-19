@@ -6,7 +6,7 @@
  *   → position=[MACK_X, 0, MACK_Z], rotation-y={Math.PI / 2}
  * Utilisé aussi dans l'inventaire via registry.ts.
  */
-import { useRef, useLayoutEffect, useMemo } from 'react';
+import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Mackapar }    from './Mackapar';
 import { Salopette }   from './Salopette';

@@ -2,7 +2,7 @@
  * LandingStrips.tsx — 3 pistes d'atterrissage dans et autour du studio.
  * 1 unité = 1 cm.
  */
-import * as THREE from 'three';
+
 import { ROOM_W, ROOM_D } from '@config';
 
 const CX = ROOM_W / 2; // 150

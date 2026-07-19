@@ -47,9 +47,8 @@ const PERSP_POS:    [number, number, number] = [ROOM_W / 2, 1000, -150];
 const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, WALL_H / 3, ROOM_D / 2];
 
 // Character capsule dimensions (cm): center at CHAR_CY above ground
-const CHAR_RADIUS = 15;
-const CHAR_HALF_H = 65;
-const CHAR_CY     = CHAR_HALF_H + CHAR_RADIUS; // 80cm — capsule spans Y=[0,160]
+
+
 
 type Mode = 'orbit' | 'walk' | 'top';
 
@@ -363,7 +362,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // ── Mouse drag (walk look) ──────────────────────────────────────────────────
 
   useEffect(() => {
-    const { domElement } = (camera as any).__r3f?.root?.getState?.()?.gl ?? {};
+
     // Fallback: grab canvas from document
     const canvas = document.querySelector('canvas')!;
 

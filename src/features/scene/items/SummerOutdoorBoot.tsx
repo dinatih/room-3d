@@ -19,7 +19,6 @@ import type { SceneItemProps } from '@shared/types';
 // ── Dimensions et Constantes (1 unité = 1 cm) ─────────────────────────────────
 const L = 29.0;         // Longueur totale (Z)
 const W = 10.5;         // Largeur max (X)
-const H = 19.0;         // Hauteur totale (Y)
 const GAP = 2.0;        // Écartement de la paire
 const SH_HEEL = 4.5;    // Hauteur semelle au talon
 const SH_TOE = 1.8;     // Hauteur semelle à la pointe

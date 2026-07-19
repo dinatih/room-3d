@@ -26,8 +26,6 @@ const TRACK    = WID - TIRE_W; // 15
 // Corps
 const BODY_W   = 12;
 const BODY_L   = 22;
-const SHELL_H  = 5.0;   // demi-coque haut (idem bas par symétrie)
-
 // ── Matériaux partagés ────────────────────────────────────────────────────
 const matBlack   = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.85, metalness: 0.05 });
 const matWhite   = new THREE.MeshStandardMaterial({ color: 0xeceef0, roughness: 0.35, metalness: 0.15 });

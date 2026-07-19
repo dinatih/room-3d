@@ -2,7 +2,7 @@
  * Inventory.tsx — port de js/ui/inventory.js
  * Styled using Bootstrap 5.3, custom red theme variables and fully responsive.
  */
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { INVENTORY, CATEGORIES, STORAGE_SPACES, type InventoryItem, type StorageSpace } from './inventoryData';
 import { InventoryPreview } from './InventoryPreview';
 import { useIsMobile } from '@shared/hooks/useIsMobile';

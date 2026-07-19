@@ -13,9 +13,9 @@ import {
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
 import { Minimap }          from '@features/scene/Minimap';
-import { SidePanel, type FurnitureState, type LayerState, type LidarMode } from '@features/scene/SidePanel';
+import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
 import { AnimationsPanel }  from '@features/scene/AnimationsPanel';
-import { Walls, Floor, Mirrors, DoorsPlaced, GROUND_COLOR } from './Building';
+import { Walls, Floor, Mirrors, GROUND_COLOR } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
 import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes } from './Placements';
@@ -328,16 +328,16 @@ export function Studio() {
            * GLB toggle via React visible (indépendant de camera.layers).
            */}
           <CategoryLayerGroup layer={LAYER_EQUIPMENT}>
-            <Equipment layers={layers} />
+            <Equipment />
           </CategoryLayerGroup>
 
           <CategoryLayerGroup layer={LAYER_FURNITURE}>
-            <Furniture layers={layers} />
-            <Furnishings layers={layers} />
-            <Decor layers={layers} />
-            <Backpacks layers={layers} />
-            <Garden layers={layers} />
-            <DronaBoxes layers={layers} />
+            <Furniture />
+            <Furnishings />
+            <Decor />
+            <Backpacks />
+            <Garden />
+            <DronaBoxes />
           </CategoryLayerGroup>
 
           {/* LAYER_MIRRORS (7) — miroirs Reflector */}

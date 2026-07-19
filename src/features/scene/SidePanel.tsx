@@ -10,7 +10,7 @@
  * écoutés par CameraController et le reste de la scène.
  * Styled using Bootstrap 5.3 and glassmorphism.
  */
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { RENDER_STYLES, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
 import { solarPosition } from '@features/scene/SunLight';
@@ -268,6 +268,8 @@ export interface FurnitureState {
   sofaArmRight:   boolean;
   glassDoorV2LeftOpen: boolean;
   glassDoorV2ShutterPos: number;
+  mackaparDoors: boolean;
+  dronaBoxes: boolean;
 }
 
 export interface LayerState {
@@ -379,7 +381,7 @@ export function SidePanel({
   }, [isMobile, activeTab]);
 
   // Helpers de boutons (Bootstrap style, transparent backgrounds for glass card inheritance)
-  const b0 = (color: string, label: string, onClick: () => void) => {
+  const b0 = (_color: string, label: string, onClick: () => void) => {
     return (
       <button 
         className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark bg-transparent"
@@ -395,7 +397,7 @@ export function SidePanel({
   };
 
   const layerBtn = (
-    color: string,
+    _color: string,
     label: string,
     key: keyof LayerState
   ) => {
@@ -451,6 +453,8 @@ export function SidePanel({
       {layerBtn('peach',  'Portes',        'doors')}
       {layerBtn('peach',  'Équipements',   'equipment')}
       {layerBtn('purple', 'Mobilier',      'furniture')}
+      {b0('light', `Boîtes DRÖNA : ${furniture.dronaBoxes ? 'AFFICHEES' : 'CACHÉES'}`,
+        () => onToggleFurniture('dronaBoxes'))}
       {layerBtn('blue',   'Voisins',       'neighbors')}
       {layerBtn('light',  'Walker',        'walker')}
       {layerBtn('light',  'Accessoires Lara', 'accessories')}
@@ -537,62 +541,6 @@ export function SidePanel({
       </button>
     </>
   );
-
-  const FurnitureSection = (
-    <>
-      <div className="p-2 border-bottom bg-transparent fw-semibold text-muted text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.06em' }}>
-        Porte-fenêtre
-      </div>
-      {b0('light', `Battant droit : ${furniture.eastGlassDoor ? 'OUVERT' : 'FERMÉ'}`,
-          () => onToggleFurniture('eastGlassDoor'))}
-      {b0('light', `Battant gauche : ${furniture.glassDoorV2LeftOpen && furniture.eastGlassDoor ? 'OUVERT' : 'FERMÉ'}`,
-          () => onToggleFurniture('glassDoorV2LeftOpen'))}
-      {b0('light', `Volet : ${furniture.glassDoorV2ShutterPos === 0 ? 'OUVERT' : furniture.glassDoorV2ShutterPos === 100 ? 'FERMÉ' : furniture.glassDoorV2ShutterPos + '% FERMÉ'}`,
-          () => onToggleFurniture('glassDoorV2ShutterPos'))}
-      {b0('light', `Porte entrée : ${furniture.entryDoor ? 'OUVERTE' : 'FERMÉE'}`,
-          () => onToggleFurniture('entryDoor'))}
-      {b0('light', `Porte séjour : ${furniture.livingDoor ? 'OUVERTE' : 'FERMÉE'}`,
-          () => onToggleFurniture('livingDoor'))}
-      {b0('light', `Porte SDB : ${furniture.bathroomDoor ? 'OUVERTE' : 'FERMÉE'}`,
-          () => onToggleFurniture('bathroomDoor'))}
-      {b0('light', `Portes couloir : ${furniture.corrDoors ? 'OUVERTES' : 'FERMÉES'}`,
-          () => onToggleFurniture('corrDoors'))}
-      {b0('light', `Placard SDB : ${furniture.sdbCloset ? 'OUVERT' : 'FERMÉ'}`,
-          () => onToggleFurniture('sdbCloset'))}
-      {b0('light', `Meuble SDB ouest : ${furniture.cbnWest ? 'OUVERT' : 'FERMÉ'}`,
-          () => onToggleFurniture('cbnWest'))}
-      {b0('light', `Meuble SDB est : ${furniture.cbnEast ? 'OUVERT' : 'FERMÉ'}`,
-          () => onToggleFurniture('cbnEast'))}
-      {b0('light', `Meuble évier : ${furniture.cabinet ? 'OUVERT' : 'FERMÉ'}`,
-          () => onToggleFurniture('cabinet'))}
-      {b0('light', `Lit : ${furniture.bedStacked ? 'EMPILÉ' : 'DÉPLIÉ'}`,
-          () => onToggleFurniture('bedStacked'))}
-      {b0('light', `Lit canapé : ${furniture.bedSofa ? 'ON' : 'OFF'}`,
-          () => onToggleFurniture('bedSofa'))}
-      {b0('light', 'Lit changer position',
-          () => onToggleFurniture('bedPosition'))}
-      {b0('light', 'Smörkull changer position',
-          () => onToggleFurniture('smorkullPos'))}
-      {b0('yellow', `Lampe OLA : ${furniture.lampOn ? 'ON' : 'OFF'}`,
-          () => onToggleFurniture('lampOn'))}
-      {b0('yellow', `Ampoule SDB : ${furniture.lampSdb ? 'ON' : 'OFF'}`,
-          () => onToggleFurniture('lampSdb'))}
-      {b0('yellow', `Ampoule couloir : ${furniture.lampCouloir ? 'ON' : 'OFF'}`,
-          () => onToggleFurniture('lampCouloir'))}
-
-      {b0('light', `Frigo compact : ${furniture.freezerOpen ? 'OUVERT' : 'FERMÉ'}`,
-          () => onToggleFurniture('freezerOpen'))}
-      {b0('light', `Frigo LAGAN : ${furniture.fridge ? 'OUVERT' : 'FERMÉ'}`,
-          () => onToggleFurniture('fridge'))}
-      {b0('yellow', `TV : ${furniture.tvOn ? 'ON' : 'OFF'}`,
-          () => onToggleFurniture('tvOn'))}
-      {b0('light', `Sofa accoudoir gauche : ${furniture.sofaArmLeft ? 'À PLAT' : 'LEVÉ'}`,
-          () => onToggleFurniture('sofaArmLeft'))}
-      {b0('light', `Sofa accoudoir droit : ${furniture.sofaArmRight ? 'À PLAT' : 'LEVÉ'}`,
-          () => onToggleFurniture('sofaArmRight'))}
-    </>
-  );
-
   // ── Rendu mobile : tab bar bottom + sheet ───────────────────────────────────
 
   if (isMobile) {

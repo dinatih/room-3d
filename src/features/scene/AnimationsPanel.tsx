@@ -5,7 +5,7 @@
  * d'exécution, et un bouton Arrêter.
  * Styled using Bootstrap 5.3, glassmorphism, and the project red theme accent.
  */
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import type { PlaneModelKey } from './PaperPlane';
 

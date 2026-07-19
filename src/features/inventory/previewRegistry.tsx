@@ -59,11 +59,6 @@ import { Rebound }                                    from '@features/scene/item
 import { Linky }                                      from '@features/scene/items/Linky';
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
 import { Walker, CHARACTERS }                         from '@features/scene/Walker';
-
-function PreviewWalker({ actionState }: { actionState?: any }) {
-  return <Walker isPreview={true} showSkeleton={actionState?.showBones} isPaused={actionState?.isPaused} walkerAnim={actionState?.walkerAnim} />;
-}
-
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
   'freezer':                Freezer,

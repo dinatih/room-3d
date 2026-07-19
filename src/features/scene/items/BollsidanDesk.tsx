@@ -33,7 +33,7 @@ function DeskTop() {
   return <mesh geometry={geo} material={whiteMat} castShadow receiveShadow />;
 }
 
-function BollsidanProcedural({ onSize, height = DEFAULT_H }: SceneItemProps & { height?: number }) {
+export function BollsidanProcedural({ onSize, height = DEFAULT_H }: SceneItemProps & { height?: number }) {
   const groupRef = useRef<THREE.Group>(null!);
   const footHgt = 2.5, colSize = 4.2, w = 68;
   const refEastX = w / 2 - 8;

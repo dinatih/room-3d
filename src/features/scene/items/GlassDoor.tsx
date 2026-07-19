@@ -28,7 +28,6 @@ const PANEL_FRAME_D = 5.5;
 function useStaticFrameGeo() {
   return useMemo(() => {
     const pvcGeos: THREE.BufferGeometry[] = [];
-    const metalGeos: THREE.BufferGeometry[] = [];
     const darkMetalGeos: THREE.BufferGeometry[] = [];
 
     const addBox = (geos: THREE.BufferGeometry[], w: number, h: number, d: number, x: number, y: number, z: number) => {

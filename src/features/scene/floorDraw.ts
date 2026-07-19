@@ -26,7 +26,7 @@ export const PLAN_ASPECT = (PLAN_Z_MAX - PLAN_Z_MIN) / (PLAN_X_MAX - PLAN_X_MIN)
 export function drawFloorPlan(
   ctx: CanvasRenderingContext2D,
   cw: number,
-  ch: number,
+  _ch: number,
 ) {
   const S  = cw / (PLAN_X_MAX - PLAN_X_MIN);
   const sc = cw / 150; // échelle relative pour épaisseurs et tirets

@@ -40,7 +40,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         const isHair = matName.includes('hair') || matName.includes('pony') || matName.includes('braid') || meshName.includes('hair') || meshName.includes('pony') || meshName.includes('braid');
         const isLash = matName.includes('lash');
         const isEye  = matName.includes('eye') && !isLash;
-        const isClothing = matName.includes('top') || matName.includes('shirt') || matName.includes('short') || matName.includes('pant') || matName.includes('boot') || matName.includes('gear') || matName.includes('bag') || matName.includes('pack') || matName.includes('belt') || matName.includes('holster');
+
         const isGlasses = matName.includes('lens') || matName.includes('glass') || matName.includes('frame');
         const isMouth = matName.includes('mouth') || matName.includes('teeth') || matName.includes('tongue');
 
@@ -156,9 +156,6 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         if (!isNative) {
           const isTop = matName.toLowerCase().includes('top') || matName.toLowerCase().includes('shirt') || matName.toLowerCase().includes('tank') || meshName.toLowerCase().includes('shirt');
           const isBackpack = matName.toLowerCase().includes('backpack') || matName.toLowerCase().includes('bag') || matName.toLowerCase().includes('pack');
-          const isOtherClothing = matName.toLowerCase().includes('boot') || 
-                                  matName.toLowerCase().includes('gear') || matName.toLowerCase().includes('holster') || matName.toLowerCase().includes('belt') ||
-                                  matName.toLowerCase().includes('vest') || matName.toLowerCase().includes('glove') || isBackpack;
 
           const isBuckle = matName.toLowerCase().includes('buckle');
           const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair && !isBuckle && 
@@ -234,9 +231,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   // BULLS 66 Text
                   const canvas = document.createElement('canvas');
                   canvas.width = 1024; canvas.height = 1024;
-                  const ctx = canvas.getContext('2d');
+                  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
                   if (ctx && mat.map && mat.map.image) {
-                    ctx.drawImage(mat.map.image, 0, 0, 1024, 1024);
+                    ctx.drawImage(mat.map.image as any, 0, 0, 1024, 1024);
                     ctx.fillStyle = 'black'; ctx.textAlign = 'center';
                     
                     // X=700 comme demandé

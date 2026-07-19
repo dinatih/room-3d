@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
 
+
 // Auto-copy generated images on Vite startup
 try {
   const srcDir = '/home/dinatih/.gemini/antigravity-cli/brain/c876eb68-1065-4a92-b783-2759df178247';

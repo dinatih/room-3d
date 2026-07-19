@@ -9,8 +9,7 @@
  *   Garden / GardenGlb — jardin (procédural + GLB)
  *   Backpacks — sacs à dos procéduraux
  */
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
 
@@ -48,20 +47,20 @@ import { Scooter }       from './items/Scooter';
 import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
 import { RaskogLargeGroup } from './items/RaskogLargeGroup';
-import { Dimpa }         from './items/Dimpa';
+
 import { Grejig }        from './items/Grejig';
 import { PalmLeaf }      from './items/PalmLeaf';
 import { Laptop }        from './items/Laptop';
 import { Phone }         from './items/Phone';
 import { Mug }           from './items/Mug';
-import { Backpack, BackpackSmall } from './items/Backpack';
+import { Backpack } from './items/Backpack';
 // Garden items
-import { Tent }          from './items/Tent';
+
 import { Vihals }        from './items/Vihals';
 import { Rebound }       from './items/Rebound';
 import { Linky }         from './items/Linky';
 import { LaserDistanceMaster } from './items/LaserDistanceMaster';
-import { AltappenRugField } from './items/AltappenRug';
+
 import { ArmrestSofa }  from './items/ArmrestSofa';
 import { ArmlessSofa }  from './items/ArmlessSofa';
 import { Bathtub }      from './items/Bathtub';
@@ -73,10 +72,10 @@ import { ShibaInu }    from './items/ShibaInu';
 import { Tisken }        from './items/Tisken';
 import { Tackan }        from './items/Tackan';
 import { Vathult }       from './items/Vathult';
-import { DronaInstances, DroneCell } from './items/Drona';
+import { DroneCell } from './items/Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
-import type { LayerState } from './SidePanel';
+
 import { useFurnitureToggles } from './utils/useFurnitureToggles';
 import { positionState } from '@features/scene/positionState';
 import { PositionTransition } from './utils/PositionTransition';
@@ -164,7 +163,7 @@ import { MergedStaticGroup } from './Building';
 // EQUIPMENT (Layer 1)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function Equipment({ layers }: { layers: LayerState }) {
+export function Equipment() {
   const as = useFurnitureToggles({ lampSdb: 'lamp-sdb-toggle', lampCouloir: 'lamp-couloir-toggle' });
   const HW_R = 28, HW_H = 65;
   const SDB_CX  = (NICHE_X + DOOR_START) / 2;
@@ -251,7 +250,7 @@ function LinkyGaine() {
 // FURNITURE (Layer 2)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function Furniture({ layers }: { layers: LayerState }) {
+export function Furniture() {
   const as = useFurnitureToggles({
     corrDoors:     'corr-doors-toggle',
     sdbCloset:     'sdb-closet-toggle',
@@ -416,7 +415,7 @@ function Desks() {
   );
 }
 
-export function Furnishings({ layers }: { layers: LayerState }) {
+export function Furnishings() {
   const TV_Y = WALL_H - 10 - TV_H / 2;
   const as = useFurnitureToggles({ tvOn: 'tv-toggle' });
   return (
@@ -578,7 +577,7 @@ function CeilingPalmLeaves() {
   );
 }
 
-export function Decor({ layers }: { layers: LayerState }) {
+export function Decor() {
   return (
     <MergedStaticGroup name="merged-decor">
       <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
@@ -630,7 +629,7 @@ export function Decor({ layers }: { layers: LayerState }) {
 // GARDEN — jardin / terrasse
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function Garden({ layers }: { layers: LayerState }) {
+export function Garden() {
   const as = useFurnitureToggles({
     sofaArmLeft: 'sofa-arm-right',
     sofaArmRight: 'sofa-arm-left',
@@ -675,7 +674,7 @@ export function Garden({ layers }: { layers: LayerState }) {
 // BACKPACKS — sacs à dos procéduraux
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function Backpacks({ layers }: { layers: LayerState }) {
+export function Backpacks() {
   return (
     <>
       <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
@@ -691,7 +690,7 @@ export function Backpacks({ layers }: { layers: LayerState }) {
 
 const DF = 33;
 
-export function DronaBoxes({ layers }: { layers: LayerState }) {
+export function DronaBoxes() {
   const cbZ = KITCHEN_Z + PARTITION_THICKNESS + 1 + 18.5; // 486.7
   const standalone = [
     { cx: DOOR_START - 31, cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },

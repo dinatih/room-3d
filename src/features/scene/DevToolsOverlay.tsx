@@ -7,9 +7,6 @@ import { devState } from './devState';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function fmtBytes(b: number) {
-  return b > 1 << 20 ? `${(b / (1 << 20)).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`;
-}
 function heatColor(v: number, warn: number, danger: number) {
   return v >= danger ? '#ff4444' : v >= warn ? '#ffcc44' : '#ffd700';
 }
