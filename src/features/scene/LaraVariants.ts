@@ -28,6 +28,11 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
   const isRajaa = style === 'rajaa';
 
   model.traverse(node => {
+    // Hide the jaw bone to universally remove teeth and tongue
+    if ((node as THREE.Bone).isBone && node.name.toLowerCase().includes('head_jaw')) {
+      node.scale.set(0, 0, 0);
+    }
+
     if ((node as THREE.Mesh).isMesh) {
       const mesh = node as THREE.Mesh;
       const originalMat = mesh.material as THREE.Material | THREE.Material[];
@@ -99,16 +104,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           }
         }
 
-        // HIDE teeth, tongue, and extra eye overlays which are all bundled in the "eyes" material
-        const isTeethAndTongue = matName.includes('eyes') && !matName.includes('eye2') && !matName.includes('lash');
-        if (isTeethAndTongue) {
-           mat.visible = false;
-        }
-
-        // 'eye2' is the actual pupil decal that sits over the face's white sclera.
-        const isPupil = matName.includes('eye2');
-        if (isPupil) {
-           mat.visible = true; 
+        // Both 'eyes' and 'eye2' might be transparent decals over a base eyeball.
+        const isEyeMat = matName.includes('eye') && !matName.includes('lash');
+        if (isEyeMat) {
+           mat.visible = true; // Ensure both are visible in case one is the sclera and one is the pupil
            mat.color.setHex(0xffffff); // Ensure base color is white so texture shows
            mat.emissive.setHex(0x000000);
            mat.metalness = 0;
