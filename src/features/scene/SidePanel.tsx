@@ -556,7 +556,7 @@ export function SidePanel({
     </>
   );
   const AnimationsSection = (
-    <div className="d-flex flex-column bg-transparent">
+    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
       {WALKER_ANIM_OPTIONS.map(anim => (
         <button
           key={anim.value}
