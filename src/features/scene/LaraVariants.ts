@@ -88,18 +88,15 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         }
 
         // EYE COLORING
-        if (matName.includes('eyes') && !matName.includes('lash')) {
-           mat.visible = false; // Hide the black overlay
-        }
-
-        const isPupil = matName.includes('eye2');
-        if (isPupil) {
+        // Both 'eyes' and 'eye2' might be transparent decals over a base eyeball.
+        if (isEye) {
+           mat.visible = true; // Ensure both are visible in case one is the sclera and one is the pupil
            mat.color.setHex(0xffffff); // Ensure base color is white so texture shows
            mat.emissive.setHex(0x000000);
            mat.metalness = 0;
            mat.roughness = 0.5;
-           mat.transparent = false;
-           mat.opacity = 1.0;
+           mat.transparent = true;
+           mat.alphaTest = 0.5; // Crucial for decal materials to not render black backgrounds!
            if ('transmission' in mat) (mat as any).transmission = 0;
            
            if (isDelphina) {
