@@ -88,7 +88,12 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         }
 
         // EYE COLORING
-        if (isEye) {
+        if (matName.includes('eyes') && !matName.includes('lash')) {
+           mat.visible = false; // Hide the black overlay
+        }
+
+        const isPupil = matName.includes('eye2');
+        if (isPupil) {
            mat.color.setHex(0xffffff); // Ensure base color is white so texture shows
            mat.emissive.setHex(0x000000);
            mat.metalness = 0;
