@@ -12,7 +12,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+
 import { glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
@@ -20,39 +20,38 @@ const GLB_DRONA = 'media/glb/ikea-official/DRÖNA.glb';
 
 const dronaMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.DoubleSide });
 
-function extractGeo(scene: THREE.Object3D, scale: number): THREE.BufferGeometry {
-  scene.updateMatrixWorld(true);
-
-  const parts: THREE.BufferGeometry[] = [];
-  scene.traverse(c => {
-    const m = c as THREE.Mesh;
-    if (m.isMesh) {
-      const g = m.geometry.clone();
-      g.applyMatrix4(m.matrixWorld);
-      for (const key of Object.keys(g.attributes)) {
-        if (!['position', 'normal', 'uv'].includes(key)) g.deleteAttribute(key);
-      }
-      parts.push(g);
-    }
-  });
-
-  let geo: THREE.BufferGeometry =
-    parts.length === 0 ? new THREE.BoxGeometry(33, 33, 38)
-    : parts.length === 1 ? parts[0]
-    : (mergeGeometries(parts) ?? parts[0]);
-
-  geo.applyMatrix4(new THREE.Matrix4().makeScale(scale, scale, scale));
-  const box = new THREE.Box3().setFromBufferAttribute(
-    geo.getAttribute('position') as THREE.BufferAttribute,
-  );
-  const center = box.getCenter(new THREE.Vector3());
-  geo.applyMatrix4(new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z));
-  return geo;
-}
-
 function useDronaGeoFrom(glb: typeof GLB_DRONA): THREE.BufferGeometry {
-  const { scene } = useGLTF(glb);
-  return useMemo(() => extractGeo(scene, 100), [scene]);
+  const { nodes } = useGLTF(glb) as any;
+  
+  return useMemo(() => {
+    // Find the first mesh in nodes
+    const meshNode = Object.values(nodes).find((n: any) => n.isMesh) as THREE.Mesh | undefined;
+    
+    if (!meshNode || !meshNode.geometry) {
+      console.warn('DRONA: No mesh found in GLB, using fallback box.');
+      return new THREE.BoxGeometry(33, 33, 38);
+    }
+    
+    const geo = meshNode.geometry.clone();
+    
+    // Scale by 100 (GLB is in meters, scene is in cm)
+    const scale = 100;
+    geo.applyMatrix4(new THREE.Matrix4().makeScale(scale, scale, scale));
+    
+    // Center the geometry so the origin is at the bottom center
+    const box = new THREE.Box3().setFromBufferAttribute(
+      geo.getAttribute('position') as THREE.BufferAttribute
+    );
+    const center = box.getCenter(new THREE.Vector3());
+    geo.applyMatrix4(new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z));
+    
+    console.log('DRONA Geometry extracted:', {
+      triangles: geo.index ? geo.index.count / 3 : geo.attributes.position.count / 3,
+      boundingBox: new THREE.Box3().setFromBufferAttribute(geo.getAttribute('position') as THREE.BufferAttribute)
+    });
+    
+    return geo;
+  }, [nodes]);
 }
 
 /**

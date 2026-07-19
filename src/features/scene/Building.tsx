@@ -6,21 +6,21 @@
  *
  * makeGrassTex est exporté car GrassRug (items/) le réutilise.
  */
-import { useMemo, useRef, useEffect, useState } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { Reflector } from 'three/addons/objects/Reflector.js';
 import { cameraState } from '@features/scene/cameraState';
+
+import { Reflector } from 'three/addons/objects/Reflector.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { GrassGround } from './GrassGround';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150, GLB_65x65 } from './items/NissedalMirror';
+import { NOOP_ITEM, NOOP_SIZE } from './sceneItem';
 import { DoorLiving, DoorBath } from './items/DoorWhite';
 import { DoorEntry }            from './items/DoorEntry';
 import { GlassDoor }            from './items/GlassDoor';
-import { NOOP_ITEM, NOOP_SIZE } from './sceneItem';
 import { useFurnitureToggles } from './utils/useFurnitureToggles';
 import { useSceneStore } from './store/useSceneStore';
-import { GrassGround } from './GrassGround';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -33,10 +33,7 @@ import {
   LAYER_WALKER,
 } from '@config';
 
-const BLDG_X_MIN = -100;
-const BLDG_X_MAX =  400;
 const BLDG_Z_MIN =  -30;
-const BLDG_Z_MAX =  800;
 
 export const GROUND_COLOR = 0x3a7d44;
 
@@ -53,7 +50,7 @@ const COLORS = {
 import { WALL_DEFS, PILLAR_DEFS, WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X, pEast, pWest, GARDEN_PANEL_DEFS } from './wallData';
 import { WoodenFencePanel } from './items/WoodenFencePanel';
 
-const FLOOR_Y = -5.25; // dalle béton : surface parquet à Y=0
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // WALLS — murs de l'appartement
@@ -225,7 +222,7 @@ function makeSprite(text: string, color: string, worldSize: number): THREE.Sprit
   const ctx = canvas.getContext('2d')!;
   // Fond semi-opaque pour contraste lisible sur n'importe quel mur
   ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-  const pad = PX * 0.18;
+
   ctx.fillRect(0, h / 2 - PX * 0.55, w, PX * 1.1);
   ctx.font = `bold ${PX}px sans-serif`;
   ctx.textAlign = 'center';
@@ -572,10 +569,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 
-const BLDG_W  = BLDG_X_MAX - BLDG_X_MIN;
-const BLDG_D  = BLDG_Z_MAX - BLDG_Z_MIN;
-const BLDG_CX = (BLDG_X_MIN + BLDG_X_MAX) / 2;
-const BLDG_CZ = (BLDG_Z_MIN + BLDG_Z_MAX) / 2;
+
 const CEIL_THICK = 20;
 
 // ── Faces intérieures pour l'alignement précis des sols ─────────────────────────
@@ -598,7 +592,7 @@ const INT_Z_NICHE_S = NICHE_Z_START + W_HALF; // 285 — face sud du linteau nic
 const INT_Z_ROOM_S = ROOM_D; // 400 — face nord du mur sud
 const INT_Z_KITCHEN_B = KITCHEN_Z; // 460 — face nord du mur SDB (sud cuisine)
 const INT_Z_BATH_N = KITCHEN_Z + PARTITION_THICKNESS; // 467.2 — face sud du mur SDB (nord SDB)
-const INT_Z_BATH_E = BATH_Z_END; // 610
+
 
 // ── Matériaux plafond (module-level) ─────────────────────────────────────────
 const ceilBottom = new THREE.MeshStandardMaterial({
@@ -1036,7 +1030,7 @@ function Baseboards() {
             SDB couloir (z=CORR_DOOR_S→CORR_DOOR_E), s'arrêtant à 1.5cm des bords de l'ouverture. */}
         {(() => {
           const CORR_WALL_EAST = CORR_WALL_X + PARTITION_THICKNESS / 2; // 199.2
-          const CLOSET_N = ROOM_D + PARTITION_THICKNESS;      // 407.2
+
           const CLOSET_S = KITCHEN_Z;                        // 460
           const CORR_DOOR_S = 517;                           // 517
           const CORR_DOOR_E = 603;                           // 603
@@ -1412,7 +1406,6 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     } as ConstructorParameters<typeof Reflector>[1]);
     mir.position.set(...position);
     mir.rotation.y = rotationY;
-    mir.camera.layers.mask = MIRROR_BASE_MASK;
 
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
@@ -1426,9 +1419,18 @@ function ReflectorMirror({ w, h, position, rotationY }: {
         renderTarget.setSize(targetRes, targetRes);
       }
 
-      // En mode HD, on prend tout ce que voit la caméra principale + le Walker Detail
-      mir.camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+      // Sync layer mask to the cached reflection camera
+      const reflectionCamera = (mir as any).getReflectionCamera(camera);
+      if (reflectionCamera) {
+        reflectionCamera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+      }
+      
+      const oldMask = camera.layers.mask;
+      camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
+      
+      camera.layers.mask = oldMask;
       _reflectionDepth--;
     };
 
@@ -1459,7 +1461,6 @@ function MergedReflector({ planes, position, rotationY }: {
     } as ConstructorParameters<typeof Reflector>[1]);
     mir.position.set(...position);
     mir.rotation.y = rotationY;
-    mir.camera.layers.mask = MIRROR_BASE_MASK;
 
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
@@ -1472,8 +1473,18 @@ function MergedReflector({ planes, position, rotationY }: {
         renderTarget.setSize(targetRes, targetRes);
       }
 
-      mir.camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+      // Sync layer mask to the cached reflection camera
+      const reflectionCamera = (mir as any).getReflectionCamera(camera);
+      if (reflectionCamera) {
+        reflectionCamera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+      }
+      
+      const oldMask = camera.layers.mask;
+      camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
+      
+      camera.layers.mask = oldMask;
       _reflectionDepth--;
     };
 
@@ -1550,7 +1561,7 @@ function MirrorsA() {
 
       {([0, 1, 2] as const).map((i) => {
         const mz = MA_START_Z + MA_W / 2 + i * MA_W;
-        const cy = MA_BOTTOM_Y + MA_H / 2;
+
         return (
           <group key={i} userData={{ animUnit: true }}>
             {/* cadre GLB — rotation-y=-π/2 : glace locale -Z → monde +X (face pièce) */}
@@ -1564,7 +1575,7 @@ function MirrorsA() {
       {/* 4e miroir 70×160 (procédural) */}
       {(() => {
         const mz = MA_START_Z + 3 * MA_W + M4_W / 2;
-        const cy = MA_BOTTOM_Y + M4_H / 2;
+
         return (
           <group userData={{ animUnit: true }}>
             <group position={[fx, MA_BOTTOM_Y, mz]} rotation-y={Math.PI / 2}>
@@ -1627,7 +1638,7 @@ export function Mirrors() {
 //                structure attendue +Z → correction −π/2)
 
 
-const DOOR_W_WHITE = 83;
+
 const DOOR_W_ENTRY = 90;
 const DOOR_HEIGHT  = 204;
 
@@ -1642,11 +1653,11 @@ export function DoorsPlaced() {
     glassDoorV2ShutterPos: 'glass-door-v2-shutter-pos',
   });
 
-  const bathHingeZ = BATH_Z_END - 10;
+
 
   const entry = useMemo(() => {
     // origin = point A avec un offset de 5cm vers l'extérieur (off=5)
-    const hinge = DiagWall.p(DiagWall.door.start, 5);
+
     const center = DiagWall.p(DiagWall.door.start + DOOR_W_ENTRY / 2, 5);
 
     return {
