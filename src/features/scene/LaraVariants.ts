@@ -99,10 +99,16 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           }
         }
 
-        // EYE COLORING
-        // Both 'eyes' and 'eye2' might be transparent decals over a base eyeball.
-        if (isEye) {
-           mat.visible = true; // Ensure both are visible in case one is the sclera and one is the pupil
+        // HIDE teeth, tongue, and extra eye overlays which are all bundled in the "eyes" material
+        const isTeethAndTongue = matName.includes('eyes') && !matName.includes('eye2') && !matName.includes('lash');
+        if (isTeethAndTongue) {
+           mat.visible = false;
+        }
+
+        // 'eye2' is the actual pupil decal that sits over the face's white sclera.
+        const isPupil = matName.includes('eye2');
+        if (isPupil) {
+           mat.visible = true; 
            mat.color.setHex(0xffffff); // Ensure base color is white so texture shows
            mat.emissive.setHex(0x000000);
            mat.metalness = 0;
