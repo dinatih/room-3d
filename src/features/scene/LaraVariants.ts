@@ -22,12 +22,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       const matArray = Array.isArray(originalMat) ? originalMat : [originalMat];
       const meshName = mesh.name.toLowerCase();
 
-      // HIDE "eyes" and "eyeball" meshes (which render as black)
-      // to reveal "eye2" which seems to contain the actual textured pupils.
-      const isBlackEye = meshName.includes('eyes') || meshName.includes('eyeball');
-      if (isBlackEye) {
-        mesh.visible = false;
-      }
+      // Show all eye meshes to see if it fixes the black sockets
 
       // Clone materials to avoid sharing
       const clonedMats = matArray.map(m => m.clone() as THREE.MeshStandardMaterial);
@@ -93,23 +88,36 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         }
 
         // EYE COLORING
-        const isEyesMaterial = matName.includes('eyes') && !matName.includes('lash');
-        if (isEyesMaterial) {
+        if (isEye) {
+           mat.color.setHex(0xffffff); // Ensure base color is white so texture shows
+           mat.emissive.setHex(0x000000);
+           mat.metalness = 0;
+           mat.roughness = 0.5;
+           mat.transparent = false;
+           mat.opacity = 1.0;
+           if ('transmission' in mat) (mat as any).transmission = 0;
+           
            if (isDelphina) {
               const loader = new THREE.TextureLoader();
               const blueTex = loader.load('media/textures/8003_blue.png');
               blueTex.flipY = false;
               blueTex.colorSpace = THREE.SRGBColorSpace;
               mat.map = blueTex;
-              mat.needsUpdate = true;
            } else if (isCha) {
               const loader = new THREE.TextureLoader();
               const greenTex = loader.load('media/textures/8003_green.png');
               greenTex.flipY = false;
               greenTex.colorSpace = THREE.SRGBColorSpace;
               mat.map = greenTex;
-              mat.needsUpdate = true;
+           } else {
+              // Default brown texture for all other Laras
+              const loader = new THREE.TextureLoader();
+              const brownTex = loader.load('media/textures/8003.png');
+              brownTex.flipY = false;
+              brownTex.colorSpace = THREE.SRGBColorSpace;
+              mat.map = brownTex;
            }
+           mat.needsUpdate = true;
         }
 
         // TEXTURE REPLACEMENTS FOR CHA (SUPERMAN TOP, RED BOOTS, GOLDEN SOCKS) & RAJAA (CAMOUFLAGE)
