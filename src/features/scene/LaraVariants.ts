@@ -2,6 +2,18 @@ import * as THREE from 'three';
 
 export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivid' | 'sabira' | 'safa' | 'rajaa';
 
+const textureCache: Record<string, THREE.Texture> = {};
+
+function getTexture(url: string): THREE.Texture {
+  if (!textureCache[url]) {
+    const tex = new THREE.TextureLoader().load(url);
+    tex.flipY = false;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    textureCache[url] = tex;
+  }
+  return textureCache[url];
+}
+
 export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVariant) {
   if (!style) return;
   const isVivid = style === 'vivid';
@@ -100,24 +112,12 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
            if ('transmission' in mat) (mat as any).transmission = 0;
            
            if (isDelphina) {
-              const loader = new THREE.TextureLoader();
-              const blueTex = loader.load('media/textures/8003_blue.png');
-              blueTex.flipY = false;
-              blueTex.colorSpace = THREE.SRGBColorSpace;
-              mat.map = blueTex;
+              mat.map = getTexture('media/textures/8003_blue.png');
            } else if (isCha) {
-              const loader = new THREE.TextureLoader();
-              const greenTex = loader.load('media/textures/8003_green.png');
-              greenTex.flipY = false;
-              greenTex.colorSpace = THREE.SRGBColorSpace;
-              mat.map = greenTex;
+              mat.map = getTexture('media/textures/8003_green.png');
            } else {
               // Default brown texture for all other Laras
-              const loader = new THREE.TextureLoader();
-              const brownTex = loader.load('media/textures/8003.png');
-              brownTex.flipY = false;
-              brownTex.colorSpace = THREE.SRGBColorSpace;
-              mat.map = brownTex;
+              mat.map = getTexture('media/textures/8003.png');
            }
            mat.needsUpdate = true;
         }
@@ -128,37 +128,21 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         const isShorts = matName.toLowerCase().includes('short') || matName.toLowerCase().includes('pant') || meshName.toLowerCase().includes('short');
         if (isCha) {
            if (isShirt) {
-              const loader = new THREE.TextureLoader();
-              const shirtTex = loader.load('media/textures/8019_cha.png');
-              shirtTex.flipY = false;
-              shirtTex.colorSpace = THREE.SRGBColorSpace;
-              mat.map = shirtTex;
+              mat.map = getTexture('media/textures/8019_cha.png');
               mat.needsUpdate = true;
            }
            if (isBoot) {
-              const loader = new THREE.TextureLoader();
-              const bootsTex = loader.load('media/textures/8016_cha.png');
-              bootsTex.flipY = false;
-              bootsTex.colorSpace = THREE.SRGBColorSpace;
-              mat.map = bootsTex;
+              mat.map = getTexture('media/textures/8016_cha.png');
               mat.needsUpdate = true;
            }
         }
         if (isRajaa) {
            if (isShirt) {
-              const loader = new THREE.TextureLoader();
-              const shirtTex = loader.load('media/textures/8019_rajaa.png');
-              shirtTex.flipY = false;
-              shirtTex.colorSpace = THREE.SRGBColorSpace;
-              mat.map = shirtTex;
+              mat.map = getTexture('media/textures/8019_rajaa.png');
               mat.needsUpdate = true;
            }
            if (isShorts) {
-              const loader = new THREE.TextureLoader();
-              const shortsTex = loader.load('media/textures/8031_rajaa.png');
-              shortsTex.flipY = false;
-              shortsTex.colorSpace = THREE.SRGBColorSpace;
-              mat.map = shortsTex;
+              mat.map = getTexture('media/textures/8031_rajaa.png');
               mat.needsUpdate = true;
            }
         }
