@@ -22,9 +22,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       const matArray = Array.isArray(originalMat) ? originalMat : [originalMat];
       const meshName = mesh.name.toLowerCase();
 
-      // HIDE "eyes" (which are the solid black eyes) to reveal "eye2" (the real eyes with pupils)
-      const isBlackEyes = meshName.includes('eyes') && !meshName.includes('eye2');
-      if (isBlackEyes) {
+      // HIDE "eyes" and "eye2" meshes (which often render as black overlays)
+      // to reveal the actual eyeballs underneath (head_eyeball_left / right)
+      const isOverlayEye = meshName.includes('eyes') || meshName.includes('eye2');
+      if (isOverlayEye) {
         mesh.visible = false;
       }
 
