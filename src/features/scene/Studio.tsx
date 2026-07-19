@@ -124,13 +124,15 @@ function ShadowController({ enabled }: { enabled: boolean }) {
 }
 
 function LoadingProgress() {
-  const { progress, active } = useProgress();
+  const { progress, active, item } = useProgress();
   const doneRef = useRef(false);
 
   useEffect(() => {
     const bar   = document.getElementById('loading-bar');
     const cover = document.getElementById('loading');
+    const itemEl = document.getElementById('loading-item');
     if (bar) bar.style.width = `${progress}%`;
+    if (itemEl && item) itemEl.textContent = item;
     if (!active && progress >= 100 && !doneRef.current) {
       doneRef.current = true;
       if (cover) {
@@ -138,7 +140,7 @@ function LoadingProgress() {
         setTimeout(() => cover.remove(), 450);
       }
     }
-  }, [progress, active]);
+  }, [progress, active, item]);
 
   return null;
 }
