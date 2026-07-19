@@ -22,9 +22,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       const matArray = Array.isArray(originalMat) ? originalMat : [originalMat];
       const meshName = mesh.name.toLowerCase();
 
-      // HIDE eye2 by default
-      const isEye2 = meshName.includes('eye2');
-      if (isEye2) {
+      // HIDE "eyes" (which are the solid black eyes) to reveal "eye2" (the real eyes with pupils)
+      const isBlackEyes = meshName.includes('eyes') && !meshName.includes('eye2');
+      if (isBlackEyes) {
         mesh.visible = false;
       }
 
