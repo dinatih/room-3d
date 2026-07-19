@@ -220,12 +220,6 @@ export function InventoryPreview({
                 <option value="idle">Idle</option>
                 <option value="walk">Walking</option>
                 <option value="run">Running</option>
-                <option value="agree">Agree</option>
-                <option value="headShake">Head Shake</option>
-                <option value="sad_pose">Sad Pose</option>
-                <option value="sneak_pose">Sneak Pose</option>
-                <option value="media/sandbox/anim_woman-solo.glb">Woman Solo</option>
-                <option value="media/sandbox/anim_knee-push-up.glb">Knee Push Up</option>
               </select>
             </div>
           )}
