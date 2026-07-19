@@ -45,11 +45,6 @@ function useDronaGeoFrom(glb: typeof GLB_DRONA): THREE.BufferGeometry {
     const center = box.getCenter(new THREE.Vector3());
     geo.applyMatrix4(new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z));
     
-    console.log('DRONA Geometry extracted:', {
-      triangles: geo.index ? geo.index.count / 3 : geo.attributes.position.count / 3,
-      boundingBox: new THREE.Box3().setFromBufferAttribute(geo.getAttribute('position') as THREE.BufferAttribute)
-    });
-    
     return geo;
   }, [nodes]);
 }
