@@ -255,10 +255,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                 roughness: (isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.9 : (isVivid ? 0.1 : 0.25),
                 metalness: (isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.0 : (isVivid ? 0.3 : 0.1),
                 transparent: false,
-                alphaTest: isHair ? 0.5 : 0,
+                alphaTest: isHair ? 0.5 : 0.5, // Allow alpha test for cutouts
                 depthWrite: true,
                 name: style + 'Material',
-                side: THREE.FrontSide
+                side: THREE.DoubleSide
               });
               
               // We need to replace the material on the mesh directly
