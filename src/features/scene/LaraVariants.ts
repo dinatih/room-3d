@@ -257,7 +257,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                 transparent: false,
                 alphaTest: 0.5, // Allow alpha test for cutouts
                 depthWrite: true,
-                name: style + 'Material',
+                visible: mat.visible,
+                name: mat.name || (style + 'Material'),
                 side: THREE.DoubleSide
               });
               

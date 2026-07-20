@@ -71,6 +71,7 @@ const initialLayers: LayerState = {
   surface: false,
   walker: true,
   accessories: true,
+  laraPistols: true,
   breastPhysics: true,
 };
 

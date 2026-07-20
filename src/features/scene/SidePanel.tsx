@@ -298,6 +298,7 @@ export interface LayerState {
   surface:      boolean;
   walker:       boolean;
   accessories:  boolean;
+  laraPistols:  boolean;
   showAllLaraStyles: boolean;
   breastPhysics: boolean;
 }
@@ -454,6 +455,7 @@ export function SidePanel({
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
       {layerBtn('light',  'Walker',        'walker')}
+      {layerBtn('light',  'Pistolets Lara', 'laraPistols')}
       {layerBtn('light',  'Accessoires Lara', 'accessories')}
       {layers.walker && layerBtn('light',  'Toutes les Lara 👥', 'showAllLaraStyles')}
       <button 

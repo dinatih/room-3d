@@ -654,6 +654,7 @@ function SingleCharacter({
   const laraGrid = useSceneStore(state => state.layers.laraGrid);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
+  const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
   const { scene } = useGLTFClone(modelPath);
 
   const groupRef = useRef<THREE.Group>(null!);
@@ -701,20 +702,57 @@ function SingleCharacter({
         const mesh = node as THREE.Mesh;
         const nameLower = (mesh.name || '').toLowerCase();
         
-        let isAccessory = false;
+        let isAccessoryMesh = false;
+        let isPistolMesh = false;
         for (const accName of ACCESSORIES_MESH_NAMES) {
-          if (nameLower.includes(accName)) {
-            isAccessory = true;
+          const accNameSpace = accName.replace(/_/g, ' ');
+          if (nameLower.includes(accName) || nameLower.includes(accNameSpace)) {
+            isAccessoryMesh = true;
+            if ((accName === 'handgun_left' || accName === 'handgun_right' || accName === 'handgun_part') && !nameLower.includes('holster')) {
+              isPistolMesh = true;
+            }
             break;
           }
         }
         
-        if (isAccessory) {
-          mesh.visible = showAccessories;
+        if (isAccessoryMesh) {
+          if (isPistolMesh && !laraPistols) {
+            mesh.visible = false;
+          } else {
+            mesh.visible = showAccessories;
+          }
+        }
+        
+        if (mesh.material) {
+          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          materials.forEach(mat => {
+            if (!mat) return;
+            const matNameLower = (mat.name || '').toLowerCase();
+            let isAccessoryMat = false;
+            let isPistolMat = false;
+            for (const accName of ACCESSORIES_MESH_NAMES) {
+              const accNameSpace = accName.replace(/_/g, ' ');
+              if (matNameLower.includes(accName) || matNameLower.includes(accNameSpace)) {
+                isAccessoryMat = true;
+                if ((accName === 'handgun_left' || accName === 'handgun_right' || accName === 'handgun_part') && !matNameLower.includes('holster')) {
+                  isPistolMat = true;
+                }
+                break;
+              }
+            }
+            
+            if (isAccessoryMat) {
+              if (isPistolMat && !laraPistols) {
+                mat.visible = false;
+              } else {
+                mat.visible = showAccessories;
+              }
+            }
+          });
         }
       }
     });
-  }, [scene, showAccessories]);
+  }, [scene, showAccessories, laraPistols]);
 
   useLayoutEffect(() => {
     // Rename all hair bones sequentially from base to tip
