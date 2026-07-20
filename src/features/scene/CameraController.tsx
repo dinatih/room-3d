@@ -209,6 +209,16 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   // Apply walk look after entering walk (mode ref is set, state follows)
   useEffect(() => {
+    const cam = camera as THREE.PerspectiveCamera;
+    if (cam.isPerspectiveCamera) {
+      if (mode === 'walk') {
+        cam.near = 17; // Clip geometry within 15 units (hides inner face/mouth)
+      } else {
+        cam.near = 0.1; // Default near clipping
+      }
+      cam.updateProjectionMatrix();
+    }
+
     if (mode === 'walk') {
       // small delay to ensure OrbitControls has processed the enableRotate change
       requestAnimationFrame(() => updateWalkLook());
@@ -413,11 +423,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     cameraState.isWalking = modeRef.current === 'walk';
     cameraState.isMoving  = (modeRef.current === 'walk' && keys.current.size > 0)
       || (modeRef.current === 'orbit' && (keys.current.has('ArrowUp') || keys.current.has('ArrowDown')));
-    
+
     if (modeRef.current === 'walk') {
       cameraState.walkYaw   = walkYaw.current;
       cameraState.walkPitch = walkPitch.current;
-      
+
       // Sync walker position for minimap in walk mode
       cameraState.walkerX = walkPos.current.x;
       cameraState.walkerZ = walkPos.current.z;

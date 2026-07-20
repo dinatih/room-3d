@@ -28,10 +28,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
   const isRajaa = style === 'rajaa';
 
   model.traverse(node => {
-    // Hide the jaw bone to universally remove teeth and tongue
-    if ((node as THREE.Bone).isBone && node.name.toLowerCase().includes('head_jaw')) {
-      node.scale.set(0, 0, 0);
-    }
+
 
     if ((node as THREE.Mesh).isMesh) {
       const mesh = node as THREE.Mesh;
