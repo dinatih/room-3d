@@ -257,8 +257,15 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         }
         return;
       }
-      if ((e.key === 'm' || e.key === 'M') && modeRef.current !== 'walk') {
-        enterWalk(walkPos.current.x, walkPos.current.z);
+      if (e.key === 'm' || e.key === 'M') {
+        if (modeRef.current !== 'walk') {
+          enterWalk(walkPos.current.x, walkPos.current.z);
+        } else {
+          const store = useSceneStore.getState();
+          const currentIndex = CHARACTERS.findIndex(c => c.id === store.activeWalkerId);
+          const nextIndex = (currentIndex + 1) % CHARACTERS.length;
+          store.setActiveWalkerId(CHARACTERS[nextIndex].id);
+        }
         return;
       }
       if (e.key === 'l' || e.key === 'L') {
