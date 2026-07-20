@@ -42,7 +42,6 @@ const initialFurniture: FurnitureState = {
   sofaArmLeft: false,
   sofaArmRight: false,
   mackaparDoors: true,
-  dronaBoxes: true,
 };
 
 const initialLayers: LayerState = {
