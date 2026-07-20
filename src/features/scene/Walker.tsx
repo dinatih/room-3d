@@ -1308,6 +1308,21 @@ function InternalWalker(props: WalkerProps) {
   const laying1Gltf = useGLTF('media/sandbox/anim_laying_idle_1.glb');
   const climbingGltf = useGLTF('media/sandbox/anim_climbing.glb');
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && /^(input|textarea|select)$/i.test(target.tagName)) return;
+      if (e.key === 'm' || e.key === 'M') {
+        const state = useSceneStore.getState();
+        const currentIndex = CHARACTERS.findIndex(c => c.id === state.activeWalkerId);
+        const nextIndex = (currentIndex + 1) % CHARACTERS.length;
+        state.setActiveWalkerId(CHARACTERS[nextIndex].id);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const animGltfs: Record<string, any> = useMemo(() => ({
     'media/sandbox/anim_sitting_idle.glb': sittingGltf,
     'media/sandbox/anim_swimming_to_edge.glb': swimmingGltf,
