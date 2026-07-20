@@ -1398,7 +1398,7 @@ function ReflectorMirror({ w, h, position, rotationY }: {
 }) {
   const reflector = useMemo(() => {
     // Résolution de base basse pour sauver les FPS. Le mode HD est géré via cameraState.
-    const res = cameraState.mirrorsHD ? 512 : 256;
+    const res = (cameraState.mirrorsHD || cameraState.mode === 'walk') ? 512 : 256;
     const mir = new Reflector(new THREE.PlaneGeometry(w, h), {
       textureWidth:  res,
       textureHeight: res,
@@ -1413,7 +1413,7 @@ function ReflectorMirror({ w, h, position, rotationY }: {
       _reflectionDepth++;
 
       // Adaptation dynamique (résolution / layer mask)
-      const targetRes = cameraState.mirrorsHD ? 512 : 256;
+      const targetRes = (cameraState.mirrorsHD || cameraState.mode === 'walk') ? 512 : 256;
       const renderTarget = (mir as any).getRenderTarget();
       if (renderTarget && renderTarget.width !== targetRes) {
         renderTarget.setSize(targetRes, targetRes);
@@ -1422,11 +1422,11 @@ function ReflectorMirror({ w, h, position, rotationY }: {
       // Sync layer mask to the cached reflection camera
       const reflectionCamera = (mir as any).getReflectionCamera(camera);
       if (reflectionCamera) {
-        reflectionCamera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+        reflectionCamera.layers.mask = (cameraState.mirrorsHD || cameraState.mode === 'walk') ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
       }
       
       const oldMask = camera.layers.mask;
-      camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+      camera.layers.mask = (cameraState.mirrorsHD || cameraState.mode === 'walk') ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
 
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
       
@@ -1453,7 +1453,7 @@ function MergedReflector({ planes, position, rotationY }: {
     });
     const mergedGeo = mergeGeometries(geos, false);
 
-    const res = cameraState.mirrorsHD ? 512 : 256;
+    const res = (cameraState.mirrorsHD || cameraState.mode === 'walk') ? 512 : 256;
     const mir = new Reflector(mergedGeo, {
       textureWidth:  res,
       textureHeight: res,
@@ -1467,7 +1467,7 @@ function MergedReflector({ planes, position, rotationY }: {
       if (_reflectionDepth >= 1) return;
       _reflectionDepth++;
 
-      const targetRes = cameraState.mirrorsHD ? 512 : 256;
+      const targetRes = (cameraState.mirrorsHD || cameraState.mode === 'walk') ? 512 : 256;
       const renderTarget = (mir as any).getRenderTarget();
       if (renderTarget && renderTarget.width !== targetRes) {
         renderTarget.setSize(targetRes, targetRes);
@@ -1476,11 +1476,11 @@ function MergedReflector({ planes, position, rotationY }: {
       // Sync layer mask to the cached reflection camera
       const reflectionCamera = (mir as any).getReflectionCamera(camera);
       if (reflectionCamera) {
-        reflectionCamera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+        reflectionCamera.layers.mask = (cameraState.mirrorsHD || cameraState.mode === 'walk') ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
       }
       
       const oldMask = camera.layers.mask;
-      camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+      camera.layers.mask = (cameraState.mirrorsHD || cameraState.mode === 'walk') ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
 
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
       
