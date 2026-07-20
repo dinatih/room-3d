@@ -1323,11 +1323,12 @@ function InternalWalker(props: WalkerProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target && /^(input|textarea|select)$/i.test(target.tagName)) return;
-      if (e.key === 'm' || e.key === 'M') {
+      if ((e.key === 'm' || e.key === 'M') && cameraState.mode === 'walk') {
         const state = useSceneStore.getState();
         const currentIndex = CHARACTERS.findIndex(c => c.id === state.activeWalkerId);
         const nextIndex = (currentIndex + 1) % CHARACTERS.length;
         state.setActiveWalkerId(CHARACTERS[nextIndex].id);
+        return;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
