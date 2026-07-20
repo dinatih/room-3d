@@ -64,9 +64,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         mat.depthWrite = true;
         mat.alphaTest = 0;
 
-        const isShirtOrTop = matName.toLowerCase().includes('shirt') || matName.toLowerCase().includes('top') || meshName.toLowerCase().includes('shirt');
-
-        if (isHair || isLash || matName.includes('trans') || isShirtOrTop) {
+        if (isHair || isLash || matName.includes('trans')) {
           mat.transparent = false; // Force opaque cutout to avoid glass sorting issues
           mat.alphaTest = 0.5;
           mat.side = THREE.DoubleSide;
@@ -164,36 +162,47 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
 
           if (shouldColor) {
             let color = 0xcc0000; // Brighter default red
+            let forceProcedural = false;
             
             if (isRosanna) {
                if (isShorts) {
                  color = 0xa2c4d9; // Blue jean
+                 forceProcedural = true;
                }
                else if (isTop || isBackpack) color = 0xff2222; // Red
             } else if (isMarissa) {
                if (isShorts) {
                  color = 0xa2c4d9; 
+                 forceProcedural = true;
                } else {
                  color = 0xffffff; 
+                 forceProcedural = true; // Force procedural white to ignore teal texture
                }
             } else if (isDelphina) {
                color = 0xffffff; 
+               forceProcedural = true; // Force all-white
             } else if (isSara) {
                color = 0x050505; // Deep black
+               forceProcedural = true; // Avoid texture details for pure black look
             } else if (isCha) {
                if (isShorts) {
                  color = 0xff0000; // Vivid red
+                 forceProcedural = true;
                } else if (isTop) {
                  color = 0x0044cc; // Superman blue
+                 forceProcedural = true;
                } else {
                  color = 0x151515; // Black boots / gear
+                 forceProcedural = true;
                }
             } else if (isSabira) {
                if (isTop) {
                  color = 0xffd700; // Yellow top
+                 forceProcedural = true;
                }
             } else if (isSafa) {
                color = 0xe2d6bd; // Beige
+               forceProcedural = true;
             } else {
               // Vivid Red
               const redColor = 0xff0000;
@@ -202,7 +211,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
               color = isGear ? gearColor : redColor;
             }
 
-            const useMap = mat.map != null;
+            const useMap = mat.map && !forceProcedural;
 
             if (useMap) {
                mat.color.setHex(color);
@@ -210,50 +219,35 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                  mat.emissive = new THREE.Color(color);
                  mat.emissiveIntensity = 0.35;
                }
-
-               // Grayscale desaturation for cleaner tinting, plus BULLS 66 Text
-               const canvas = document.createElement('canvas');
-               canvas.width = 1024; canvas.height = 1024;
-               const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
-               if (ctx && mat.map && mat.map.image) {
-                 ctx.drawImage(mat.map.image as any, 0, 0, 1024, 1024);
-                 
-                 // Desaturate to allow pure color multiplication
-                 const imgData = ctx.getImageData(0, 0, 1024, 1024);
-                 const data = imgData.data;
-                 for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i], g = data[i+1], b = data[i+2];
-                    const avg = (r + g + b) / 3;
-                    data[i] = avg; data[i+1] = avg; data[i+2] = avg;
-                 }
-                 ctx.putImageData(imgData, 0, 0);
-
-                 if (isRosanna && isTop) {
-                   ctx.fillStyle = 'black'; ctx.textAlign = 'center';
-                   ctx.font = '900 80px Graduate';
-                   ctx.fillText('BULLS', 700, 750);
-                   ctx.font = '900 150px Graduate';
-                   ctx.fillText('66', 700, 870);
-                 }
-                 
-                 const newTex = new THREE.CanvasTexture(canvas);
-                 newTex.flipY = false;
-                 newTex.colorSpace = THREE.SRGBColorSpace;
-                 mat.map = newTex;
-                 mat.needsUpdate = true;
-               }
-
                if (isRosanna && isTop) {
                   mat.roughness = 0.5;
                   mat.metalness = 0.0;
                   mat.emissive = new THREE.Color(0xff0000);
                   mat.emissiveIntensity = 0.01;
-               } else if (isSara || isMarissa || isDelphina || isSafa || isSabira) {
-                  mat.roughness = 0.9;
-                  mat.metalness = 0.0;
+
+                  // BULLS 66 Text
+                  const canvas = document.createElement('canvas');
+                  canvas.width = 1024; canvas.height = 1024;
+                  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+                  if (ctx && mat.map && mat.map.image) {
+                    ctx.drawImage(mat.map.image as any, 0, 0, 1024, 1024);
+                    ctx.fillStyle = 'black'; ctx.textAlign = 'center';
+                    
+                    // X=700 comme demandé
+                    ctx.font = '900 80px Graduate';
+                    ctx.fillText('BULLS', 700, 750);
+                    ctx.font = '900 150px Graduate';
+                    ctx.fillText('66', 700, 870);
+                    
+                    const newTex = new THREE.CanvasTexture(canvas);
+                    newTex.flipY = false;
+                    newTex.colorSpace = THREE.SRGBColorSpace;
+                    mat.map = newTex;
+                    mat.needsUpdate = true;
+                  }
                }
             } else {
-              // Procedural material fallback if no map
+              // Procedural material for jeans, white, black, beige, yellow
               const newMat = new THREE.MeshStandardMaterial({
                 color: color,
                 emissive: (isVivid || (isRosanna && isTop)) ? new THREE.Color(color === 0x050505 ? 0 : color) : new THREE.Color(0,0,0),
@@ -261,13 +255,14 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                 roughness: (isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.9 : (isVivid ? 0.1 : 0.25),
                 metalness: (isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.0 : (isVivid ? 0.3 : 0.1),
                 transparent: false,
-                alphaTest: 0.5,
+                alphaTest: 0.5, // Allow alpha test for cutouts
                 depthWrite: true,
                 visible: mat.visible,
                 name: mat.name || (style + 'Material'),
                 side: THREE.DoubleSide
               });
               
+              // We need to replace the material on the mesh directly
               if (clonedMats.length === 1) {
                   mesh.material = newMat;
               } else {
