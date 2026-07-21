@@ -238,6 +238,12 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const onDown = (e: KeyboardEvent) => {
       // Plane mode owns input — bail out so arrow/WASD don't move walker or camera.
       if (planeModeRef.current) return;
+      
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
+        return;
+      }
+      
       // Global shortcuts
       if (e.key === 'Escape') {
         if (modeRef.current === 'walk') exitWalkMode();

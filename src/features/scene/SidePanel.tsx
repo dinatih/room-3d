@@ -485,7 +485,10 @@ export function SidePanel({
             className="form-select form-select-sm bg-transparent text-dark border-secondary"
             style={{ fontSize: isMobile ? '14px' : '11px' }}
             value={activeWalkerId}
-            onChange={(e) => useSceneStore.getState().setActiveWalkerId(e.target.value)}
+            onChange={(e) => {
+              useSceneStore.getState().setActiveWalkerId(e.target.value);
+              e.target.blur();
+            }}
           >
             {CHARACTERS.filter(c => layers.showAllLaraStyles || c.id === activeWalkerId).map(c => (
               <option key={c.id} value={c.id} className="bg-light text-dark">
