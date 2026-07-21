@@ -747,21 +747,22 @@ function SingleCharacter({
         const nameLower = (mesh.name || '').toLowerCase();
         
         let isAccessoryMesh = false;
-        let isPistolMesh = false;
         for (const accName of ACCESSORIES_MESH_NAMES) {
           const accNameSpace = accName.replace(/_/g, ' ');
           if (nameLower.includes(accName) || nameLower.includes(accNameSpace)) {
             isAccessoryMesh = true;
-            if ((accName === 'handgun_left' || accName === 'handgun_right' || accName === 'handgun_part') && !nameLower.includes('holster')) {
-              isPistolMesh = true;
-            }
             break;
           }
         }
         
         if (isAccessoryMesh) {
-          if (isPistolMesh && !laraPistols) {
-            mesh.visible = false;
+          const isHandPistol = nameLower.includes('handgun') && !nameLower.includes('holster');
+          const isHolsterPistol = (nameLower.includes('handgun') && nameLower.includes('holster')) || nameLower === 'holster' || nameLower.includes('mp5_holster') || nameLower.endsWith('_holster');
+          
+          if (isHandPistol) {
+            mesh.visible = laraPistols ? showAccessories : false;
+          } else if (isHolsterPistol) {
+            mesh.visible = !laraPistols ? showAccessories : false;
           } else {
             mesh.visible = showAccessories;
           }
@@ -773,21 +774,22 @@ function SingleCharacter({
             if (!mat) return;
             const matNameLower = (mat.name || '').toLowerCase();
             let isAccessoryMat = false;
-            let isPistolMat = false;
             for (const accName of ACCESSORIES_MESH_NAMES) {
               const accNameSpace = accName.replace(/_/g, ' ');
               if (matNameLower.includes(accName) || matNameLower.includes(accNameSpace)) {
                 isAccessoryMat = true;
-                if ((accName === 'handgun_left' || accName === 'handgun_right' || accName === 'handgun_part') && !matNameLower.includes('holster')) {
-                  isPistolMat = true;
-                }
                 break;
               }
             }
             
             if (isAccessoryMat) {
-              if (isPistolMat && !laraPistols) {
-                mat.visible = false;
+              const isHandPistolMat = matNameLower.includes('handgun') && !matNameLower.includes('holster');
+              const isHolsterPistolMat = (matNameLower.includes('handgun') && matNameLower.includes('holster')) || matNameLower === 'holster' || matNameLower.includes('mp5_holster') || matNameLower.endsWith('_holster');
+              
+              if (isHandPistolMat) {
+                mat.visible = laraPistols ? showAccessories : false;
+              } else if (isHolsterPistolMat) {
+                mat.visible = !laraPistols ? showAccessories : false;
               } else {
                 mat.visible = showAccessories;
               }
@@ -1242,10 +1244,10 @@ function SingleCharacter({
                 node.tipPrev.copy(restTip);
               }
               
-              const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - 0.30)); // damping = 0.30
+              const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - 0.50)); // damping = 0.50
               const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
               
-              next.lerp(restTip, 0.25); // stiffness = 0.25
+              next.lerp(restTip, 0.02); // stiffness = 0.02 (almost pure gravity)
               
               const dir = new THREE.Vector3().subVectors(next, jointWorld);
               const currentLen = dir.length();
@@ -1318,7 +1320,7 @@ function SingleCharacter({
             const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
             
             let scaledQ = qDelta;
-            const breastIntensity = 5.0;
+            const breastIntensity = 1.0;
             const w = Math.min(1, Math.max(-1, qDelta.w));
             const angle = 2 * Math.acos(w);
             if (Math.abs(angle) > 1e-5) {
