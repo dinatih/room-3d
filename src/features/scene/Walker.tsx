@@ -170,7 +170,7 @@ function resolveTargetFingerBoneName(targetInstance: THREE.Object3D, side: strin
   const sideChar = side.charAt(0).toLowerCase();
   const segmentIndex = parseInt(segment) - 1;
   const segmentLetter = ['a', 'b', 'c'][segmentIndex] || 'a';
-  
+
   const candidates = [
     new RegExp(`^${type}${segment}_${sideChar}$`, 'i'),
     new RegExp(`arm.*${side}.*finger.*${type === 'thumb' ? 1 : type === 'index' ? 2 : type === 'middle' ? 3 : type === 'ring' ? 4 : 5}${segmentLetter}`, 'i'),
@@ -243,10 +243,10 @@ function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: string,
       targetInstance.traverse(node => {
         if ((node as any).isBone && !foundName) {
           const nameNormalized = node.name.toLowerCase().replace(/[:_ .\-]/g, '');
-          if (nameNormalized === syn || (nameNormalized.includes(syn) && 
-              !nameNormalized.includes(syn + '1') && 
-              !nameNormalized.includes(syn + '2') && 
-              !nameNormalized.includes(syn + '3') && 
+          if (nameNormalized === syn || (nameNormalized.includes(syn) &&
+              !nameNormalized.includes(syn + '1') &&
+              !nameNormalized.includes(syn + '2') &&
+              !nameNormalized.includes(syn + '3') &&
               !nameNormalized.includes(syn + '4'))) {
             if (!nameNormalized.includes('twist') && !nameNormalized.includes('muscle') && !nameNormalized.includes('offset')) {
               foundName = node.name;
@@ -280,7 +280,7 @@ function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: string,
 function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, animScene: THREE.Object3D | undefined): THREE.AnimationClip {
   const animBones: Record<string, any> = {};
   const sourceHairMap = new Map<string, string>();
-  
+
   if (animScene) {
     animScene.updateMatrixWorld(true);
 
@@ -745,7 +745,7 @@ function SingleCharacter({
       if ((node as THREE.Mesh).isMesh) {
         const mesh = node as THREE.Mesh;
         const nameLower = (mesh.name || '').toLowerCase();
-        
+
         let isAccessoryMesh = false;
         for (const accName of ACCESSORIES_MESH_NAMES) {
           const accNameSpace = accName.replace(/_/g, ' ');
@@ -754,11 +754,11 @@ function SingleCharacter({
             break;
           }
         }
-        
+
         if (isAccessoryMesh) {
           const isHandPistol = nameLower.includes('handgun') && !nameLower.includes('holster');
           const isHolsterPistol = (nameLower.includes('handgun') && nameLower.includes('holster')) || nameLower === 'holster' || nameLower.includes('mp5_holster') || nameLower.endsWith('_holster');
-          
+
           if (isHandPistol) {
             mesh.visible = laraPistols ? showAccessories : false;
           } else if (isHolsterPistol) {
@@ -767,7 +767,7 @@ function SingleCharacter({
             mesh.visible = showAccessories;
           }
         }
-        
+
         if (mesh.material) {
           const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
           materials.forEach(mat => {
@@ -781,11 +781,11 @@ function SingleCharacter({
                 break;
               }
             }
-            
+
             if (isAccessoryMat) {
               const isHandPistolMat = matNameLower.includes('handgun') && !matNameLower.includes('holster');
               const isHolsterPistolMat = (matNameLower.includes('handgun') && matNameLower.includes('holster')) || matNameLower === 'holster' || matNameLower.includes('mp5_holster') || matNameLower.endsWith('_holster');
-              
+
               if (isHandPistolMat) {
                 mat.visible = laraPistols ? showAccessories : false;
               } else if (isHolsterPistolMat) {
@@ -830,7 +830,7 @@ function SingleCharacter({
     scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
     scene.updateMatrixWorld(true);
-    
+
     const resolvedHipsName = resolveTargetBoneName(scene, 'Hips');
     const hips = resolvedHipsName ? scene.getObjectByName(resolvedHipsName) : null;
     if (hips) {
@@ -920,7 +920,7 @@ function SingleCharacter({
             const worldLength = length * worldScale.y;
             const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
             const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
-            
+
             const boneRestQuat = bone.getWorldQuaternion(new THREE.Quaternion());
             const relQuat = baseParentRestQuat.clone().invert().multiply(boneRestQuat);
 
@@ -962,7 +962,7 @@ function SingleCharacter({
       const worldLength = length * worldScale.z;
       const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
       const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
-      
+
       breastChain.push({
         bone,
         restQuat: bone.quaternion.clone(),
@@ -1113,10 +1113,10 @@ function SingleCharacter({
             const meshName = o.name.toLowerCase();
             const mat = (o as THREE.Mesh).material;
             const matName = mat ? (Array.isArray(mat) ? mat[0].name.toLowerCase() : mat.name.toLowerCase()) : '';
-            
-            const isHeadPart = meshName.includes('head') || meshName.includes('hair') || meshName.includes('eye') || meshName.includes('lash') || meshName.includes('mouth') || meshName.includes('teeth') || 
+
+            const isHeadPart = meshName.includes('head') || meshName.includes('hair') || meshName.includes('eye') || meshName.includes('lash') || meshName.includes('mouth') || meshName.includes('teeth') ||
                                matName.includes('head') || matName.includes('hair') || matName.includes('eye') || matName.includes('lash') || matName.includes('mouth');
-                               
+
             if (isFirstPerson && isHeadPart) {
               o.layers.set(LAYER_WALKER_DETAIL);
             } else {
@@ -1149,7 +1149,7 @@ function SingleCharacter({
     }
 
     // Consider rotating as moving to prevent idle timeout freezes
-    const isRotating = isActive && useSceneStore.getState().activeWalkerId === id && 
+    const isRotating = isActive && useSceneStore.getState().activeWalkerId === id &&
       (Math.abs(cameraState.walkYaw - (groupRef.current.userData.lastYaw || 0)) > 0.001);
     groupRef.current.userData.lastYaw = cameraState.walkYaw;
 
@@ -1212,7 +1212,7 @@ function SingleCharacter({
         let simDt = delta;
         if (simDt > 0.05) simDt = 0.05; // cap to 20fps
         const dtRatio = physicsPrevDt.current > 0 ? (simDt / physicsPrevDt.current) : 1;
-        
+
         // Ponytail physics simulation (Verlet)
         const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
         if (enableHairPhysics && hairChainRef.current.length > 0) {
@@ -1222,33 +1222,33 @@ function SingleCharacter({
 
             const baseParentQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
             const g = new THREE.Vector3(0, -981, 0); // standard gravity (cm/s^2)
-            
+
             for (const node of hairChainRef.current) {
               const { bone, restQuat, relQuat, axis, worldLength } = node;
               const parent = bone.parent;
               if (!parent) continue;
-              
 
-              
+
+
               const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-              
+
               // Rest dir based on baseParent to break feedback loop of deformed parent bones
               const restQuatWorld = baseParentQuat.clone().multiply(relQuat);
               const restDir = axis.clone().applyQuaternion(restQuatWorld).normalize();
               const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
-              
+
               // Teleportation safety reset
               const dist = jointWorld.distanceTo(node.tipWorld);
               if (dist > worldLength * 3) {
                 node.tipWorld.copy(restTip);
                 node.tipPrev.copy(restTip);
               }
-              
+
               const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - 0.50)); // damping = 0.50
               const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
-              
+
               next.lerp(restTip, 0.02); // stiffness = 0.02 (almost pure gravity)
-              
+
               const dir = new THREE.Vector3().subVectors(next, jointWorld);
               const currentLen = dir.length();
               if (currentLen > 1e-6) {
@@ -1256,14 +1256,14 @@ function SingleCharacter({
               } else {
                 dir.copy(restDir).multiplyScalar(worldLength);
               }
-              
+
               node.tipPrev.copy(node.tipWorld);
               node.tipWorld.copy(jointWorld).add(dir);
-              
+
               const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
               const parentQuatInv = parentQuat.clone().invert();
               const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
-              
+
               const restDirParent = axis.clone().applyQuaternion(restQuat);
               const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
               bone.quaternion.copy(qDelta).multiply(restQuat);
@@ -1275,14 +1275,14 @@ function SingleCharacter({
         const enableBreastPhysics = useSceneStore.getState().layers.breastPhysics;
         if (enableBreastPhysics && breastChainRef.current.length > 0) {
           const g = new THREE.Vector3(0, -700, 0); // moderate gravity for breasts to allow bouncy feel
-          
+
           for (const node of breastChainRef.current) {
             const { bone, restQuat, axis, worldLength } = node;
             const parent = bone.parent;
             if (!parent) continue;
-            
+
             const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-            
+
             // Teleportation safety reset
             const dist = jointWorld.distanceTo(node.tipWorld);
             if (dist > worldLength * 3) {
@@ -1292,16 +1292,16 @@ function SingleCharacter({
               node.tipWorld.copy(tipW);
               node.tipPrev.copy(tipW);
             }
-            
+
             const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - 0.12)); // damping = 0.12
             const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
-            
+
             const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
             const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
             const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
-            
+
             next.lerp(restTip, 0.15); // stiffness = 0.15
-            
+
             const dir = new THREE.Vector3().subVectors(next, jointWorld);
             const currentLen = dir.length();
             if (currentLen > 1e-6) {
@@ -1309,18 +1309,18 @@ function SingleCharacter({
             } else {
               dir.copy(restDir).multiplyScalar(worldLength);
             }
-            
+
             node.tipPrev.copy(node.tipWorld);
             node.tipWorld.copy(jointWorld).add(dir);
-            
+
             const parentQuatInv = parentQuat.clone().invert();
             const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
-            
+
             const restDirParent = axis.clone().applyQuaternion(restQuat);
             const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
-            
+
             let scaledQ = qDelta;
-            const breastIntensity = 1.0;
+            const breastIntensity = 2.0;
             const w = Math.min(1, Math.max(-1, qDelta.w));
             const angle = 2 * Math.acos(w);
             if (Math.abs(angle) > 1e-5) {
@@ -1336,7 +1336,7 @@ function SingleCharacter({
             bone.quaternion.copy(scaledQ).multiply(restQuat);
           }
         }
-        
+
         physicsPrevDt.current = simDt;
     }
 
@@ -1406,9 +1406,9 @@ function InternalWalker(props: WalkerProps) {
         walkAnim,
         runAnim,
         ...(char.customIdleAnimPath && animGltfs[char.customIdleAnimPath]?.animations[0]
-          ? [Object.assign(animGltfs[char.customIdleAnimPath].animations[0].clone(), { 
-              name: char.customIdleAnimPath, 
-              userData: { animScene: animGltfs[char.customIdleAnimPath].scene } 
+          ? [Object.assign(animGltfs[char.customIdleAnimPath].animations[0].clone(), {
+              name: char.customIdleAnimPath,
+              userData: { animScene: animGltfs[char.customIdleAnimPath].scene }
             })]
           : [])
       ];

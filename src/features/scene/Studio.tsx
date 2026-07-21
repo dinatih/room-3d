@@ -35,6 +35,7 @@ import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { RealWorldLayer } from '@features/scene/RealWorldLayer';
 import { SunLight, SunSphere } from '@features/scene/SunLight';
+import { SkySphere } from './SkySphere';
 import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/scene/BuildAnimations';
 import { RenderStyleLayer, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
 import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
@@ -250,6 +251,7 @@ export function Studio() {
           setupEnvironment(scene, gl);
         }}
       >
+        <SkySphere />
         <ambientLight color={0x8899bb} intensity={0.6} />
         {layers.realSun ? <><SunLight /><SunSphere /></> : (
           <directionalLight
