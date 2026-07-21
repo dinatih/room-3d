@@ -1252,24 +1252,42 @@ function SingleCharacter({
               const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
 
               next.lerp(restTip, 0.02); // stiffness = 0.02 (almost pure gravity)
-              
-              // Simple sphere collision against the back/backpack
-              if (spineBoneRef.current) {
-                const spineWorld = new THREE.Vector3().setFromMatrixPosition(spineBoneRef.current.matrixWorld);
-                const forwardDir = new THREE.Vector3();
-                scene.getWorldDirection(forwardDir);
-                // Offset the center backward (opposite of forwardDir) to cover the backpack area
-                // We'll move it ~15cm backward and ~10cm down from the spine
-                const center = spineWorld.clone().addScaledVector(forwardDir, -15).setY(spineWorld.y - 10);
-                const radius = 25.0; // cm, large enough to cover back and backpack
+              // Resolve constraints iteratively (2 passes) to ensure length and collision are both satisfied
+              for (let i = 0; i < 2; i++) {
+                // 1. Length constraint
+                const dir = new THREE.Vector3().subVectors(next, jointWorld);
+                const currentLen = dir.length();
+                if (currentLen > 1e-6) {
+                  dir.multiplyScalar(worldLength / currentLen);
+                } else {
+                  dir.copy(restDir).multiplyScalar(worldLength);
+                }
+                next.copy(jointWorld).add(dir);
 
-                const distToCenter = next.distanceTo(center);
-                if (distToCenter < radius) {
-                  const pushOut = new THREE.Vector3().subVectors(next, center).normalize().multiplyScalar(radius - distToCenter);
-                  next.add(pushOut);
+                // 2. Collision constraints (Body + Backpack)
+                if (spineBoneRef.current) {
+                  const spineWorld = new THREE.Vector3().setFromMatrixPosition(spineBoneRef.current.matrixWorld);
+                  const forwardDir = new THREE.Vector3();
+                  scene.getWorldDirection(forwardDir);
+                  
+                  // Sphere 1: Head / Neck (radius 14)
+                  const center1 = spineWorld.clone().addScaledVector(forwardDir, -2).setY(spineWorld.y + 15);
+                  let dist = next.distanceTo(center1);
+                  if (dist < 14.0) next.add(new THREE.Vector3().subVectors(next, center1).normalize().multiplyScalar(14.0 - dist));
+
+                  // Sphere 2: Backpack / Upper Back (radius 23)
+                  const center2 = spineWorld.clone().addScaledVector(forwardDir, -16).setY(spineWorld.y - 5);
+                  dist = next.distanceTo(center2);
+                  if (dist < 23.0) next.add(new THREE.Vector3().subVectors(next, center2).normalize().multiplyScalar(23.0 - dist));
+
+                  // Sphere 3: Lower Back / Butt (radius 18)
+                  const center3 = spineWorld.clone().addScaledVector(forwardDir, -12).setY(spineWorld.y - 32);
+                  dist = next.distanceTo(center3);
+                  if (dist < 18.0) next.add(new THREE.Vector3().subVectors(next, center3).normalize().multiplyScalar(18.0 - dist));
                 }
               }
 
+              // Final exact length constraint
               const dir = new THREE.Vector3().subVectors(next, jointWorld);
               const currentLen = dir.length();
               if (currentLen > 1e-6) {
