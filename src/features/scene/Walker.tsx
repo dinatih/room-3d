@@ -711,6 +711,7 @@ function SingleCharacter({
 
   const hairChainRef = useRef<any[]>([]);
   const breastChainRef = useRef<any[]>([]);
+  const spineBoneRef = useRef<THREE.Bone | null>(null);
   const physicsPrevDt = useRef<number>(1 / 60);
 
   const { invalidate } = useThree();
@@ -833,6 +834,9 @@ function SingleCharacter({
 
     const resolvedHipsName = resolveTargetBoneName(scene, 'Hips');
     const hips = resolvedHipsName ? scene.getObjectByName(resolvedHipsName) : null;
+    const resolvedSpineName = resolveTargetBoneName(scene, 'Spine2') || resolveTargetBoneName(scene, 'Spine');
+    spineBoneRef.current = (resolvedSpineName ? scene.getObjectByName(resolvedSpineName) : null) as THREE.Bone;
+
     if (hips) {
         const parent = scene.parent || scene;
         const hipsWorld = new THREE.Vector3();
@@ -1248,6 +1252,23 @@ function SingleCharacter({
               const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
 
               next.lerp(restTip, 0.02); // stiffness = 0.02 (almost pure gravity)
+              
+              // Simple sphere collision against the back/backpack
+              if (spineBoneRef.current) {
+                const spineWorld = new THREE.Vector3().setFromMatrixPosition(spineBoneRef.current.matrixWorld);
+                const forwardDir = new THREE.Vector3();
+                scene.getWorldDirection(forwardDir);
+                // Offset the center backward (opposite of forwardDir) to cover the backpack area
+                // We'll move it ~15cm backward and ~10cm down from the spine
+                const center = spineWorld.clone().addScaledVector(forwardDir, -15).setY(spineWorld.y - 10);
+                const radius = 25.0; // cm, large enough to cover back and backpack
+
+                const distToCenter = next.distanceTo(center);
+                if (distToCenter < radius) {
+                  const pushOut = new THREE.Vector3().subVectors(next, center).normalize().multiplyScalar(radius - distToCenter);
+                  next.add(pushOut);
+                }
+              }
 
               const dir = new THREE.Vector3().subVectors(next, jointWorld);
               const currentLen = dir.length();
@@ -1320,7 +1341,7 @@ function SingleCharacter({
             const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
 
             let scaledQ = qDelta;
-            const breastIntensity = 2.0;
+            const breastIntensity = 1.0;
             const w = Math.min(1, Math.max(-1, qDelta.w));
             const angle = 2 * Math.acos(w);
             if (Math.abs(angle) > 1e-5) {
