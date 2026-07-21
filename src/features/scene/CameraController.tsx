@@ -77,9 +77,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (activeWalkerId !== prevWalkerId.current) {
         const config = CHARACTERS.find(c => c.id === activeWalkerId);
         if (config) {
-          cameraState.walkerX = config.pos[0];
-          cameraState.walkerZ = config.pos[2];
-          cameraState.walkerYaw = config.rot;
+          const savedPos = cameraState.positions[activeWalkerId];
+          cameraState.walkerX = savedPos ? savedPos.x : config.pos[0];
+          cameraState.walkerZ = savedPos ? savedPos.z : config.pos[2];
+          cameraState.walkerYaw = savedPos ? savedPos.yaw : config.rot;
           cameraState.walkerHeight = config.height;
 
           // Sync movement refs
@@ -445,6 +446,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     // Sync walker yaw for minimap before onUpdate call
     cameraState.walkerYaw = cameraState.walkYaw;
+
+    // Save active walker position
+    cameraState.positions[activeWalkerId] = {
+      x: cameraState.walkerX,
+      z: cameraState.walkerZ,
+      yaw: cameraState.walkerYaw
+    };
 
     // Throttle minimap redraw à ~15fps (67ms) — drawFloorPlan est coûteux
     minimapThrottle.current += delta;
