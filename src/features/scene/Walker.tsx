@@ -1057,10 +1057,11 @@ function SingleCharacter({
       } else if (isNPC) {
         const savedPos = cameraState.positions[id];
         const px = savedPos ? savedPos.x : npcPosition[0];
+        const py_pos = savedPos ? savedPos.y : npcPosition[1];
         const pz = savedPos ? savedPos.z : npcPosition[2];
-        const py = savedPos ? savedPos.yaw : npcRotationY;
-        groupRef.current.position.set(px, npcPosition[1], pz);
-        groupRef.current.rotation.y = py;
+        const py_rot = savedPos ? savedPos.yaw : npcRotationY;
+        groupRef.current.position.set(px, py_pos, pz);
+        groupRef.current.rotation.y = py_rot;
         groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
       } else {
         groupRef.current.visible = false;

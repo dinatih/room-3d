@@ -450,6 +450,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     // Save active walker position
     cameraState.positions[activeWalkerId] = {
       x: cameraState.walkerX,
+      y: 0,
       z: cameraState.walkerZ,
       yaw: cameraState.walkerYaw
     };
