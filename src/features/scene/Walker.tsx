@@ -717,6 +717,8 @@ function SingleCharacter({
   const spine2BoneRef = useRef<THREE.Bone | null>(null);
   const spineBoneRef = useRef<THREE.Bone | null>(null);
   const hipsBoneRef = useRef<THREE.Bone | null>(null);
+  const lShoulderRef = useRef<THREE.Bone | null>(null);
+  const rShoulderRef = useRef<THREE.Bone | null>(null);
 
   const physicsPrevDt = useRef<number>(1 / 60);
 
@@ -850,6 +852,12 @@ function SingleCharacter({
     
     const rHead = resolveTargetBoneName(scene, 'Head') || resolveTargetBoneName(scene, 'Neck');
     headBoneRef.current = (rHead ? scene.getObjectByName(rHead) : null) as THREE.Bone;
+    
+    const rLShoulder = resolveTargetBoneName(scene, 'LeftShoulder');
+    lShoulderRef.current = (rLShoulder ? scene.getObjectByName(rLShoulder) : null) as THREE.Bone;
+    
+    const rRShoulder = resolveTargetBoneName(scene, 'RightShoulder');
+    rShoulderRef.current = (rRShoulder ? scene.getObjectByName(rRShoulder) : null) as THREE.Bone;
 
     if (hips) {
         const parent = scene.parent || scene;
@@ -1279,13 +1287,25 @@ function SingleCharacter({
                 next.copy(jointWorld).add(dir);
 
                 // 2. Collision constraints (Body + Backpack)
-                // We use the actual world positions of the skeleton bones so that the spheres
-                // perfectly track the character even when she bends (e.g. push-ups).
-                
+                // We use a robust cross-product of (Hips->Head) and (RightShoulder->LeftShoulder) 
+                // to get the exact "Backward" direction of the torso, independent of the rig's bone axes!
+                let backDir = new THREE.Vector3(0, 0, -1);
+                if (headBoneRef.current && hipsBoneRef.current && lShoulderRef.current && rShoulderRef.current) {
+                  const headW = new THREE.Vector3().setFromMatrixPosition(headBoneRef.current.matrixWorld);
+                  const hipsW = new THREE.Vector3().setFromMatrixPosition(hipsBoneRef.current.matrixWorld);
+                  const lShoulderW = new THREE.Vector3().setFromMatrixPosition(lShoulderRef.current.matrixWorld);
+                  const rShoulderW = new THREE.Vector3().setFromMatrixPosition(rShoulderRef.current.matrixWorld);
+                  
+                  const up = new THREE.Vector3().subVectors(headW, hipsW).normalize();
+                  const right = new THREE.Vector3().subVectors(lShoulderW, rShoulderW).normalize(); // Assuming character faces +Z, left is +X, right is -X. So Right->Left is +X
+                  backDir.crossVectors(up, right).normalize(); // Y cross X = -Z (Backward)
+                }
+
                 // Head sphere
                 if (headBoneRef.current) {
                   const center = new THREE.Vector3().setFromMatrixPosition(headBoneRef.current.matrixWorld);
-                  const radius = 14.0;
+                  center.addScaledVector(backDir, 5); // push slightly back
+                  const radius = 15.0;
                   const dist = next.distanceTo(center);
                   if (dist < radius) next.add(new THREE.Vector3().subVectors(next, center).normalize().multiplyScalar(radius - dist));
                 }
@@ -1293,6 +1313,7 @@ function SingleCharacter({
                 // Backpack / Upper Back (Spine2)
                 if (spine2BoneRef.current) {
                   const center = new THREE.Vector3().setFromMatrixPosition(spine2BoneRef.current.matrixWorld);
+                  center.addScaledVector(backDir, 16); // push into the backpack
                   const radius = 24.0;
                   const dist = next.distanceTo(center);
                   if (dist < radius) next.add(new THREE.Vector3().subVectors(next, center).normalize().multiplyScalar(radius - dist));
@@ -1301,6 +1322,7 @@ function SingleCharacter({
                 // Mid Back (Spine)
                 if (spineBoneRef.current) {
                   const center = new THREE.Vector3().setFromMatrixPosition(spineBoneRef.current.matrixWorld);
+                  center.addScaledVector(backDir, 12);
                   const radius = 20.0;
                   const dist = next.distanceTo(center);
                   if (dist < radius) next.add(new THREE.Vector3().subVectors(next, center).normalize().multiplyScalar(radius - dist));
@@ -1309,6 +1331,7 @@ function SingleCharacter({
                 // Lower Back / Butt (Hips)
                 if (hipsBoneRef.current) {
                   const center = new THREE.Vector3().setFromMatrixPosition(hipsBoneRef.current.matrixWorld);
+                  center.addScaledVector(backDir, 10);
                   const radius = 22.0;
                   const dist = next.distanceTo(center);
                   if (dist < radius) next.add(new THREE.Vector3().subVectors(next, center).normalize().multiplyScalar(radius - dist));
@@ -1334,6 +1357,7 @@ function SingleCharacter({
               const restDirParent = axis.clone().applyQuaternion(restQuat);
               const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
               bone.quaternion.copy(qDelta).multiply(restQuat);
+              bone.updateMatrixWorld(true);
             }
           }
         }
