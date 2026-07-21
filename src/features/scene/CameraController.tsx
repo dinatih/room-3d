@@ -261,10 +261,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         if (modeRef.current !== 'walk') {
           enterWalk(walkPos.current.x, walkPos.current.z);
         } else {
-          const store = useSceneStore.getState();
-          const currentIndex = CHARACTERS.findIndex(c => c.id === store.activeWalkerId);
-          const nextIndex = (currentIndex + 1) % CHARACTERS.length;
-          store.setActiveWalkerId(CHARACTERS[nextIndex].id);
+          exitWalkMode();
         }
         return;
       }

@@ -1070,8 +1070,8 @@ function SingleCharacter({
             const mat = (o as THREE.Mesh).material;
             const matName = mat ? (Array.isArray(mat) ? mat[0].name.toLowerCase() : mat.name.toLowerCase()) : '';
             
-            const isHeadPart = meshName.includes('head') || meshName.includes('face') || meshName.includes('hair') || meshName.includes('eye') || meshName.includes('lash') || meshName.includes('mouth') || meshName.includes('teeth') || 
-                               matName.includes('head') || matName.includes('face') || matName.includes('hair') || matName.includes('eye') || matName.includes('lash') || matName.includes('mouth');
+            const isHeadPart = meshName.includes('head') || meshName.includes('hair') || meshName.includes('eye') || meshName.includes('lash') || meshName.includes('mouth') || meshName.includes('teeth') || 
+                               matName.includes('head') || matName.includes('hair') || matName.includes('eye') || matName.includes('lash') || matName.includes('mouth');
                                
             if (isFirstPerson && isHeadPart) {
               o.layers.set(LAYER_WALKER_DETAIL);
