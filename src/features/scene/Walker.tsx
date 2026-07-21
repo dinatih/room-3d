@@ -802,14 +802,7 @@ function SingleCharacter({
       if (c.isMesh) {
         c.castShadow = isActive;
         c.receiveShadow = isActive;
-        c.frustumCulled = true;
-        if (c.geometry && !c.userData.boundsEnlarged) {
-            c.geometry.computeBoundingSphere();
-            if (c.geometry.boundingSphere) {
-                c.geometry.boundingSphere.radius += 100;
-            }
-            c.userData.boundsEnlarged = true;
-        }
+        c.frustumCulled = false; // Disable culling for SkinnedMesh as bones move vertices far from rest pose bounding box
         if (c.material) {
             const materials = Array.isArray(c.material) ? c.material : [c.material];
             materials.forEach((mat: any) => {
