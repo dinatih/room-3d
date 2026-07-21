@@ -50,8 +50,51 @@ export const WALKER_ANIM_OPTIONS = [
   { value: "media/sandbox/anim_right_turn_2.glb", label: "Right Turn 2" },
   { value: "media/sandbox/anim_climbing.glb", label: "Climbing" },
   { value: "media/glb-animations/macarena_dance.glb", label: "Macarena Dance" },
-  { value: "media/sandbox/anim_woman-solo.glb", label: "Woman Solo" }
-].sort((a, b) => {
+  { value: "media/sandbox/anim_woman-solo.glb", label: "Woman Solo" },
+  { value: "media/sandbox/anim_agreeing.glb", label: "Agreeing" },
+  { value: "media/sandbox/anim_back_flip_to_uppercut.glb", label: "Back Flip To Uppercut" },
+  { value: "media/sandbox/anim_bartending.glb", label: "Bartending" },
+  { value: "media/sandbox/anim_being_carried.glb", label: "Being Carried" },
+  { value: "media/sandbox/anim_belly_dance.glb", label: "Belly Dance" },
+  { value: "media/sandbox/anim_bellydancing.glb", label: "Bellydancing" },
+  { value: "media/sandbox/anim_bencao.glb", label: "Bencao" },
+  { value: "media/sandbox/anim_bicep_curl.glb", label: "Bicep Curl" },
+  { value: "media/sandbox/anim_blow_a_kiss.glb", label: "Blow A Kiss" },
+  { value: "media/sandbox/anim_body_jab_cross.glb", label: "Body Jab Cross" },
+  { value: "media/sandbox/anim_booty_hip_hop_dance.glb", label: "Booty Hip Hop Dance" },
+  { value: "media/sandbox/anim_boxing.glb", label: "Boxing" },
+  { value: "media/sandbox/anim_braced_hang.glb", label: "Braced Hang" },
+  { value: "media/sandbox/anim_burpee.glb", label: "Burpee" },
+  { value: "media/sandbox/anim_button_pushing.glb", label: "Button Pushing" },
+  { value: "media/sandbox/anim_catwalk_sequence_05.glb", label: "Catwalk Sequence 05" },
+  { value: "media/sandbox/anim_dancing_twerk.glb", label: "Dancing Twerk" },
+  { value: "media/sandbox/anim_double_leg_takedown_attacker.glb", label: "Double Leg Takedown - Attacker" },
+  { value: "media/sandbox/anim_double_leg_takedown_victim.glb", label: "Double Leg Takedown - Victim" },
+  { value: "media/sandbox/anim_drinking_fountain.glb", label: "Drinking Fountain" },
+  { value: "media/sandbox/anim_female_laying_pose.glb", label: "Female Laying Pose" },
+  { value: "media/sandbox/anim_female_walk.glb", label: "Female Walk" },
+  { value: "media/sandbox/anim_flip_kick.glb", label: "Flip Kick" },
+  { value: "media/sandbox/anim_happy_idle.glb", label: "Happy Idle" },
+  { value: "media/sandbox/anim_happy_walk.glb", label: "Happy Walk" },
+  { value: "media/sandbox/anim_header_soccerball_1.glb", label: "Header Soccerball (1)" },
+  { value: "media/sandbox/anim_hook.glb", label: "Hook" },
+  { value: "media/sandbox/anim_idle.glb", label: "idle" },
+  { value: "media/sandbox/anim_jump.glb", label: "Jump" },
+  { value: "media/sandbox/anim_kiss.glb", label: "Kiss" },
+  { value: "media/sandbox/anim_kiss_from_man.glb", label: "Kiss from man" },
+  { value: "media/sandbox/anim_kiss_from_woman.glb", label: "Kiss from woman" },
+  { value: "media/sandbox/anim_knee_kick_lead.glb", label: "Knee Kick Lead" },
+  { value: "media/sandbox/anim_laughing.glb", label: "Laughing" },
+  { value: "media/sandbox/anim_no.glb", label: "No" },
+  { value: "media/sandbox/anim_pistol_idle.glb", label: "Pistol Idle" },
+  { value: "media/sandbox/anim_release_hostage_villain.glb", label: "Release Hostage - Villain" },
+  { value: "media/sandbox/anim_skinning_test.glb", label: "Skinning Test" },
+  { value: "media/sandbox/anim_stall_soccerball_1.glb", label: "Stall Soccerball (1)" },
+  { value: "media/sandbox/anim_taken_hostage_victim.glb", label: "Taken Hostage - Victim" },
+  { value: "media/sandbox/anim_taken_hostage_villain.glb", label: "Taken Hostage - Villain" },
+  { value: "media/sandbox/anim_t_pose.glb", label: "T-Pose" },
+  { value: "media/sandbox/anim_walking.glb", label: "Walking" }
+].filter((v, i, a) => a.findIndex(t => t.value === v.value) === i).sort((a, b) => {
   if (a.value === "idle") return -1;
   if (b.value === "idle") return 1;
   return a.label.localeCompare(b.label, 'fr', { sensitivity: 'base' });
@@ -841,15 +884,13 @@ function SingleCharacter({
 
     // Initialize Hair Chain (Verlet)
     const hairChain: any[] = [];
-    const isScoopOrClone = false;
-
-    if (isScoopOrClone) {
-      const hairBones: THREE.Bone[] = [];
-      scene.traverse(c => {
-        if ((c as any).isBone && c.name.startsWith('hair_')) {
-          hairBones.push(c as THREE.Bone);
-        }
-      });
+    const hairBones: THREE.Bone[] = [];
+    scene.traverse(c => {
+      const nLower = (c.name || '').toLowerCase();
+      if ((c as any).isBone && (nLower.includes('hair') || nLower.includes('pony') || nLower.includes('braid'))) {
+        hairBones.push(c as THREE.Bone);
+      }
+    });
       hairBones.sort((a, b) => getDepth(a) - getDepth(b));
 
       if (hairBones.length > 0) {
@@ -862,7 +903,10 @@ function SingleCharacter({
           for (const bone of hairBones) {
             let axis = prevAxis.clone();
             let length = 8.0;
-            const child = bone.children.find(x => (x as any).isBone && x.name.startsWith('hair_'));
+            const child = bone.children.find(x => {
+              const cnLower = (x.name || '').toLowerCase();
+              return (x as any).isBone && (cnLower.includes('hair') || cnLower.includes('pony') || cnLower.includes('braid'));
+            });
             if (child && child.position.lengthSq() > 1e-8) {
               length = child.position.length();
               axis = child.position.clone().normalize();
@@ -891,7 +935,6 @@ function SingleCharacter({
           }
         }
       }
-    }
   hairChainRef.current = hairChain;
 
     // Initialize Breast Chain (Verlet)
