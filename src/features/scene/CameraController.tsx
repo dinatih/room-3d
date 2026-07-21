@@ -100,13 +100,18 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     modeRef.current = m;
     cameraState.mode = m;
     setMode(m);
+    
+    // Auto-enable HD mirrors when entering walk mode
+    if (m === 'walk' && !useSceneStore.getState().layers.mirrorsHD) {
+      useSceneStore.getState().toggleLayer('mirrorsHD');
+    }
   }
 
   // OrbitControls imperative ref
   const ctrlRef = useRef<OrbitControlsImpl>(null!);
 
   // Walk state (refs — updated every frame, no re-render needed)
-  const initialWalker = CHARACTERS.find(c => c.id === 'rosanna') || CHARACTERS[0];
+  const initialWalker = CHARACTERS.find(c => c.id === useSceneStore.getState().activeWalkerId) || CHARACTERS[0];
   const walkPos   = useRef({ x: initialWalker.pos[0], y: initialWalker.height * EYE_RATIO, z: initialWalker.pos[2] });
   const walkYaw   = useRef(initialWalker.rot);
   const walkPitch = useRef(0);

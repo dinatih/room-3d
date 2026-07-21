@@ -78,12 +78,12 @@ export interface CharacterConfig {
 export const CHARACTERS: CharacterConfig[] = [
   // 11 stylized Laras
   { id: 'native', name: 'Lara (Native)', path: 'media/lara_native.glb', pos: [251, 0, 178], rot: 1.325 + Math.PI / 2, variant: 'native', height: 173.4 },
-  { id: 'rosanna', name: 'Rosanna', path: 'media/rosanna_lara_native.glb', pos: [251, 75, 178], rot: 1.325 + Math.PI / 2, variant: 'rosanna', height: 173.4, sittingScenePath: 'media/sandbox/anim_push_up.glb', customIdleAnimPath: 'media/sandbox/anim_push_up.glb' },
+  { id: 'rosanna', name: 'Rosanna', path: 'media/lara_native.glb', pos: [251, 75, 178], rot: 1.325 + Math.PI / 2, variant: 'rosanna', height: 173.4, sittingScenePath: 'media/sandbox/anim_push_up.glb', customIdleAnimPath: 'media/sandbox/anim_push_up.glb' },
   { id: 'marissa', name: 'Marissa', path: 'media/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4, sittingScenePath: 'media/glb-animations/macarena_dance.glb', customIdleAnimPath: 'media/glb-animations/macarena_dance.glb' },
   { id: 'delphina', name: 'Delphina', path: 'media/lara_native.glb', pos: [120, 35, -250], rot: 1, variant: 'delphina', height: 173.4, sittingScenePath: 'media/sandbox/anim_swimming_to_edge.glb', customIdleAnimPath: 'media/sandbox/anim_swimming_to_edge.glb' },
   { id: 'sara', name: 'Sara', path: 'media/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'media/sandbox/anim_climbing.glb', customIdleAnimPath: 'media/sandbox/anim_climbing.glb' },
   { id: 'cha', name: 'Cha', path: 'media/lara_native.glb', pos: [30, 0, 151], rot: Math.PI / 2, variant: 'cha', height: 173.4, sittingScenePath: 'media/sandbox/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anim_sitting_idle.glb' },
-  { id: 'vivid', name: 'Vivid', path: 'media/vivid_red_lara_native.glb', pos: [30, 0, 210], rot: Math.PI / 2, variant: 'vivid', height: 173.4, sittingScenePath: 'media/sandbox/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anim_sitting_idle.glb' },
+  { id: 'vivid', name: 'Vivid', path: 'media/lara_native.glb', pos: [30, 0, 210], rot: Math.PI / 2, variant: 'vivid', height: 173.4, sittingScenePath: 'media/sandbox/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anim_sitting_idle.glb' },
   { id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [200, 0, -20], rot: Math.PI, variant: 'sabira', height: 173.4 },
   { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [250, 0, 320], rot: 0, variant: 'safa', height: 173.4 },
   { id: 'rajaa', name: 'Rajaa', path: 'media/lara_native.glb', pos: [80, 0, -320], rot: Math.PI / 4, variant: 'rajaa', height: 173.4 },
@@ -668,6 +668,7 @@ function SingleCharacter({
 
   const hairChainRef = useRef<any[]>([]);
   const breastChainRef = useRef<any[]>([]);
+  const physicsPrevDt = useRef<number>(1 / 60);
 
   const { invalidate } = useThree();
 
@@ -910,8 +911,8 @@ function SingleCharacter({
     });
 
     for (const bone of breastBones) {
-      let axis = new THREE.Vector3(0, 0, 1); // point forward along Z
-      let length = 5.0;
+      let axis = new THREE.Vector3(0, 1, 0); // point forward along local Y (bone length)
+      let length = 15.0;
       const child = bone.children.find(x => (x as any).isBone);
       if (child && child.position.lengthSq() > 1e-8) {
         length = child.position.length();
@@ -1120,10 +1121,6 @@ function SingleCharacter({
         idleTimerRef.current = 0;
     }
 
-    if (isActive && !prevFirstPersonRef.current) {
-        idleTimerRef.current = 0;
-    }
-
     // Both characters time out after 10s of inactivity to save CPU
     const isIdleTimeout = idleTimerRef.current > 10;
 
@@ -1173,6 +1170,11 @@ function SingleCharacter({
         // Update world matrices once per frame per character
         scene.updateMatrixWorld(true);
 
+        // Physics simulation timestep (Time-Corrected Verlet)
+        let simDt = delta;
+        if (simDt > 0.05) simDt = 0.05; // cap to 20fps
+        const dtRatio = physicsPrevDt.current > 0 ? (simDt / physicsPrevDt.current) : 1;
+        
         // Ponytail physics simulation (Verlet)
         if (hairChainRef.current.length > 0) {
           const firstNode = hairChainRef.current[0];
@@ -1180,8 +1182,6 @@ function SingleCharacter({
           if (baseParent) {
 
             const baseParentQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
-            let simDt = delta;
-            if (simDt > 0.05) simDt = 0.05;
             const g = new THREE.Vector3(0, -981, 0); // standard gravity (cm/s^2)
             
             for (const node of hairChainRef.current) {
@@ -1205,7 +1205,7 @@ function SingleCharacter({
                 node.tipPrev.copy(restTip);
               }
               
-              const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.30); // damping = 0.30
+              const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - 0.30)); // damping = 0.30
               const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
               
               next.lerp(restTip, 0.25); // stiffness = 0.25
@@ -1235,8 +1235,6 @@ function SingleCharacter({
         // Breast physics simulation (Verlet)
         const enableBreastPhysics = useSceneStore.getState().layers.breastPhysics;
         if (enableBreastPhysics && breastChainRef.current.length > 0) {
-          let simDt = delta;
-          if (simDt > 0.05) simDt = 0.05;
           const g = new THREE.Vector3(0, -700, 0); // moderate gravity for breasts to allow bouncy feel
           
           for (const node of breastChainRef.current) {
@@ -1256,7 +1254,7 @@ function SingleCharacter({
               node.tipPrev.copy(tipW);
             }
             
-            const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - 0.12); // damping = 0.12
+            const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - 0.12)); // damping = 0.12
             const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
             
             const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
@@ -1283,7 +1281,7 @@ function SingleCharacter({
             const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
             
             let scaledQ = qDelta;
-            const breastIntensity = 10.0;
+            const breastIntensity = 5.0;
             const w = Math.min(1, Math.max(-1, qDelta.w));
             const angle = 2 * Math.acos(w);
             if (Math.abs(angle) > 1e-5) {
@@ -1299,6 +1297,8 @@ function SingleCharacter({
             bone.quaternion.copy(scaledQ).multiply(restQuat);
           }
         }
+        
+        physicsPrevDt.current = simDt;
     }
 
     if (!isIdleTimeout || isMoving || isPreview) {

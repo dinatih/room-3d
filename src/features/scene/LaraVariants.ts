@@ -109,8 +109,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
            mat.emissive.setHex(0x000000);
            mat.metalness = 0;
            mat.roughness = 0.5;
-           mat.transparent = true;
-           mat.alphaTest = 0.5; // Crucial for decal materials to not render black backgrounds!
+           mat.transparent = false; // Force opaque to prevent depth sorting bugs
+           mat.alphaTest = 0.5; 
            if ('transmission' in mat) (mat as any).transmission = 0;
            
            if (isDelphina) {
