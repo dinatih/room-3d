@@ -1,34 +1,23 @@
-import { useGLTF } from '@react-three/drei';
+import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
-import { useLayoutEffect } from 'react';
 
 export function SkySphere() {
-  const { scene } = useGLTF('/media/sky_sphere.glb');
+  const texture = useTexture('/media/HDR_029_Sky_Cloudy_Bg.jpg');
+  texture.colorSpace = THREE.SRGBColorSpace;
+  // If the texture is mapped equirectangularly, mapping should be set.
+  // We can just apply it to a sphere with BackSide.
 
-  useLayoutEffect(() => {
-    scene.traverse((node) => {
-      if ((node as THREE.Mesh).isMesh) {
-        const mesh = node as THREE.Mesh;
-        // Make sure it doesn't cast shadows
-        mesh.castShadow = false;
-        mesh.receiveShadow = false;
-        if (mesh.material) {
-           (mesh.material as THREE.MeshStandardMaterial).side = THREE.BackSide;
-           (mesh.material as THREE.MeshStandardMaterial).depthWrite = false;
-           // If it's too dark or bright, maybe use MeshBasicMaterial
-           const basicMat = new THREE.MeshBasicMaterial({
-               map: (mesh.material as THREE.MeshStandardMaterial).map,
-               side: THREE.BackSide,
-               depthWrite: false,
-               fog: false
-           });
-           mesh.material = basicMat;
-        }
-      }
-    });
-  }, [scene]);
-
-  return <primitive object={scene} scale={[500, 500, 500]} position={[0, -100, 0]} />;
+  return (
+    <mesh position={[150, 0, 150]} scale={[2000, 2000, 2000]}>
+      <sphereGeometry args={[1, 64, 64]} />
+      <meshBasicMaterial 
+        map={texture} 
+        side={THREE.BackSide} 
+        depthWrite={false} 
+        fog={false} 
+      />
+    </mesh>
+  );
 }
 
-useGLTF.preload('/media/sky_sphere.glb');
+useTexture.preload('/media/HDR_029_Sky_Cloudy_Bg.jpg');
