@@ -66,7 +66,7 @@ import { ArmlessSofa }  from './items/ArmlessSofa';
 import { Bathtub }      from './items/Bathtub';
 import { ChestBench }   from './items/ChestBench';
 import { PottedPalm }   from './items/PottedPalm';
-import { RaskogSmall }  from './items/Raskog';
+
 import { JoggingSuit }  from './items/JoggingSuit';
 import { ShibaInu }    from './items/ShibaInu';
 import { Tisken }        from './items/Tisken';
@@ -301,11 +301,6 @@ export function Furniture() {
       </group>
 
     </MergedStaticGroup>
-
-      {/* Desserte RÅSKOG (petite) devant le congélateur */}
-      <group position={[62, 0, 18]} userData={{ animUnit: true }}>
-        <RaskogSmall item={stub('raskog-small')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
     </>
   );
 }

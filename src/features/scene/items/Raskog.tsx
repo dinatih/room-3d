@@ -11,7 +11,6 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 
 const RASKOG_LARGE = 'media/glb/ikea-official/RÅSKOG desserte 35x45x77 blanc.glb';
-const RASKOG_SMALL = 'media/glb/ikea-official/RÅSKOG Desserte blanc 28x38x61 cm.glb';
 
 function RaskogBase({ glbPath, targetH, onSize }: SceneItemProps & { glbPath: string; targetH: number }) {
   const { scene } = useGLTFClone(glbPath);
@@ -38,9 +37,4 @@ export function RaskogLarge(props: SceneItemProps) {
   return <RaskogBase {...props} glbPath={RASKOG_LARGE} targetH={77} />;
 }
 
-export function RaskogSmall(props: SceneItemProps) {
-  return <RaskogBase {...props} glbPath={RASKOG_SMALL} targetH={61} />;
-}
-
 useGLTF.preload(RASKOG_LARGE);
-useGLTF.preload(RASKOG_SMALL);

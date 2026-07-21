@@ -301,6 +301,7 @@ export interface LayerState {
   laraPistols:  boolean;
   showAllLaraStyles: boolean;
   breastPhysics: boolean;
+  hairPhysics: boolean;
 }
 
 export interface SidePanelProps {
@@ -508,7 +509,9 @@ export function SidePanel({
       {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('cyan',   'X-Ray',         'xray')}
       {layerBtn('white',  'Squelette',     'skeleton')}
+      {layerBtn('gray',   'Pistolets Lara', 'laraPistols')}
       {layerBtn('pink',   'Physique poitrine', 'breastPhysics')}
+      {layerBtn('pink',   'Physique cheveux', 'hairPhysics')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
       {layerBtn('cyan',   'LiDAR scan',    'lidar')}

@@ -84,10 +84,10 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'sara', name: 'Sara', path: 'media/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'media/sandbox/anim_climbing.glb', customIdleAnimPath: 'media/sandbox/anim_climbing.glb' },
   { id: 'cha', name: 'Cha', path: 'media/lara_native.glb', pos: [30, 0, 151], rot: Math.PI / 2, variant: 'cha', height: 173.4, sittingScenePath: 'media/sandbox/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anim_sitting_idle.glb' },
   { id: 'vivid', name: 'Vivid', path: 'media/lara_native.glb', pos: [30, 0, 210], rot: Math.PI / 2, variant: 'vivid', height: 173.4, sittingScenePath: 'media/sandbox/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anim_sitting_idle.glb' },
-  { id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [200, 0, -20], rot: Math.PI, variant: 'sabira', height: 173.4 },
+  { id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [200, 0, -40], rot: Math.PI, variant: 'sabira', height: 173.4 },
   { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [250, 0, 320], rot: 0, variant: 'safa', height: 173.4 },
-  { id: 'rajaa', name: 'Rajaa', path: 'media/lara_native.glb', pos: [80, 0, -320], rot: Math.PI / 4, variant: 'rajaa', height: 173.4 },
-  { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [120, 0, 0], rot: 0, variant: 'native', height: 173.4, isLara: false }
+  { id: 'sandra', name: 'Sandra', path: 'media/lara_native.glb', pos: [80, 0, -320], rot: Math.PI / 4, variant: 'sandra', height: 173.4 },
+  { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [150, 0, -600], rot: 0, variant: 'native', height: 173.4, isLara: false }
 ];
 
 const BONE_SYNONYMS: Record<string, string[]> = {
@@ -1169,7 +1169,8 @@ function SingleCharacter({
         const dtRatio = physicsPrevDt.current > 0 ? (simDt / physicsPrevDt.current) : 1;
         
         // Ponytail physics simulation (Verlet)
-        if (hairChainRef.current.length > 0) {
+        const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
+        if (enableHairPhysics && hairChainRef.current.length > 0) {
           const firstNode = hairChainRef.current[0];
           const baseParent = firstNode.bone.parent;
           if (baseParent) {
