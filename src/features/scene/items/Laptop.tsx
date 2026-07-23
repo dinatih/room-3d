@@ -146,6 +146,29 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
     const usbcOcc = c.getObjectByName('occurrence of GFW00_3H_NB_ID_USBC_CARD_1');
     if (usbcOcc) usbcOcc.visible = false;
 
+    // Fix z-fighting on the screen (LCD/Glass)
+    c.traverse(child => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mat = (child as THREE.Mesh).material;
+        if (mat && Array.isArray(mat)) return; // skip multi-materials for simplicity
+        const m = mat as THREE.MeshStandardMaterial;
+        const name = ((m.name || '') + ' ' + (child.name || '')).toLowerCase();
+        
+        // The LCD or Glass panel is often named with these keywords
+        if (name.includes('lcd') || name.includes('screen') || name.includes('display')) {
+          m.polygonOffset = true;
+          m.polygonOffsetFactor = -1;
+          m.polygonOffsetUnits = -1;
+          m.needsUpdate = true;
+        } else if (name.includes('glass')) {
+          m.polygonOffset = true;
+          m.polygonOffsetFactor = -2; // pull glass even closer
+          m.polygonOffsetUnits = -2;
+          m.needsUpdate = true;
+        }
+      }
+    });
+
     mergeGlbByMaterial(c);
     return c;
   }, [scene]);

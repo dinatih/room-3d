@@ -21,10 +21,7 @@ const GLB_DRONA = 'media/glb/ikea-official/DRÖNA.glb';
 const dronaMat = new THREE.MeshStandardMaterial({ 
   color: 0xcc0000, 
   roughness: 0.8, 
-  side: THREE.DoubleSide,
-  polygonOffset: true,
-  polygonOffsetFactor: -1,
-  polygonOffsetUnits: -1
+  side: THREE.DoubleSide
 });
 
 function useDronaGeoFrom(glb: typeof GLB_DRONA): THREE.BufferGeometry {
@@ -41,8 +38,9 @@ function useDronaGeoFrom(glb: typeof GLB_DRONA): THREE.BufferGeometry {
     
     const geo = meshNode.geometry.clone();
     
-    // Scale by 100 (GLB is in meters, scene is in cm)
-    const scale = 100;
+    // Scale by 99.5 (GLB is in meters, scene is in cm)
+    // We use slightly less than 100 to avoid z-fighting with the Kallax shelf walls
+    const scale = 99.5;
     geo.applyMatrix4(new THREE.Matrix4().makeScale(scale, scale, scale));
     
     // Center the geometry so the origin is at the bottom center
@@ -68,7 +66,7 @@ export function Drona({ onSize }: SceneItemProps) {
   const { scene } = useGLTF(GLB_DRONA);
 
   useLayoutEffect(() => {
-    scene.scale.setScalar(100);
+    scene.scale.setScalar(99.5);
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,

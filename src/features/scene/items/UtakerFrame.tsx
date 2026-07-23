@@ -16,10 +16,7 @@ const HAUT_GLB = 'media/glb/ikea-official/UTÅKER lit empilable 80x200 pin (haut
 
 const redMat = new THREE.MeshStandardMaterial({ 
   color: 0xcc2222, 
-  roughness: 0.75,
-  polygonOffset: true,
-  polygonOffsetFactor: -1,
-  polygonOffsetUnits: -1 
+  roughness: 0.75
 });
 
 function Mattress({ matColor, matHeight }: { matColor: number; matHeight: number }) {
@@ -36,11 +33,11 @@ function Bedcovers({ matHeight }: { matHeight: number }) {
   const polR = 8, polL = 90;
   return (
     <group>
-      <mesh position={[1.5, top + 0.6, 0]} castShadow receiveShadow material={redMat}><boxGeometry args={[203, 1.2, 86]} /></mesh>
+      <mesh position={[1.5, top + 0.6 + 0.05, 0]} castShadow receiveShadow material={redMat}><boxGeometry args={[203.1, 1.2, 86.1]} /></mesh>
       {([-1, 1] as const).map(s => (
-        <mesh key={s} position={[1.5, top - 10, s * 43]} castShadow material={redMat}><boxGeometry args={[203, 20, 1.2]} /></mesh>
+        <mesh key={s} position={[1.5, top - 10, s * 43.05]} castShadow material={redMat}><boxGeometry args={[203.1, 20, 1.2]} /></mesh>
       ))}
-      <mesh position={[103, top - 10, 0]} castShadow material={redMat}><boxGeometry args={[1.2, 20, 86]} /></mesh>
+      <mesh position={[103.05, top - 10, 0]} castShadow material={redMat}><boxGeometry args={[1.2, 20, 86.1]} /></mesh>
       {([-50, 50] as const).map(cx => (
         <mesh key={cx} position={[cx, top + 1.2 + polR + 0.5, 40 - polR - 1]}
           rotation={[0, 0, -Math.PI / 2]} castShadow material={redMat}>
