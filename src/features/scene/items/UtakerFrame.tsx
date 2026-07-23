@@ -14,7 +14,13 @@ import type { SceneItemProps } from '@shared/types';
 const BAS_GLB  = 'media/glb/ikea-official/UTÅKER lit empilable 80x200 pin (bas).glb';
 const HAUT_GLB = 'media/glb/ikea-official/UTÅKER lit empilable 80x200 pin (haut).glb';
 
-const redMat = new THREE.MeshStandardMaterial({ color: 0xcc2222, roughness: 0.75 });
+const redMat = new THREE.MeshStandardMaterial({ 
+  color: 0xcc2222, 
+  roughness: 0.75,
+  polygonOffset: true,
+  polygonOffsetFactor: -1,
+  polygonOffsetUnits: -1 
+});
 
 function Mattress({ matColor, matHeight }: { matColor: number; matHeight: number }) {
   const mat = new THREE.MeshStandardMaterial({ color: matColor, roughness: 0.8 });

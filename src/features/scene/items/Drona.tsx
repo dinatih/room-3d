@@ -18,7 +18,14 @@ import type { SceneItemProps } from '@shared/types';
 
 const GLB_DRONA = 'media/glb/ikea-official/DRÖNA.glb';
 
-const dronaMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.8, side: THREE.DoubleSide });
+const dronaMat = new THREE.MeshStandardMaterial({ 
+  color: 0xcc0000, 
+  roughness: 0.8, 
+  side: THREE.DoubleSide,
+  polygonOffset: true,
+  polygonOffsetFactor: -1,
+  polygonOffsetUnits: -1
+});
 
 function useDronaGeoFrom(glb: typeof GLB_DRONA): THREE.BufferGeometry {
   const { nodes } = useGLTF(glb) as any;
