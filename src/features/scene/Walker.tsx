@@ -1453,10 +1453,15 @@ function InternalWalker(props: WalkerProps) {
   // Preloaded anim paths
   const sittingGltf = useGLTF('media/sandbox/anim_sitting_idle.glb');
   const swimmingGltf = useGLTF('media/sandbox/anim_swimming_to_edge.glb');
-  const marissaGltf = useGLTF('media/glb-animations/macarena_dance.glb');
   const pushUpGltf = useGLTF('media/sandbox/anim_push_up.glb');
   const laying1Gltf = useGLTF('media/sandbox/anim_laying_idle_1.glb');
   const climbingGltf = useGLTF('media/sandbox/anim_climbing.glb');
+  
+  // New character anims
+  const bellyDanceGltf = useGLTF('media/sandbox/anim_belly_dance.glb');
+  const dancingTwerkGltf = useGLTF('media/sandbox/anim_dancing_twerk.glb');
+  const soccerballGltf = useGLTF('media/sandbox/anim_stall_soccerball_1.glb');
+  const jabCrossGltf = useGLTF('media/sandbox/anim_body_jab_cross.glb');
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1471,11 +1476,14 @@ function InternalWalker(props: WalkerProps) {
   const animGltfs: Record<string, any> = useMemo(() => ({
     'media/sandbox/anim_sitting_idle.glb': sittingGltf,
     'media/sandbox/anim_swimming_to_edge.glb': swimmingGltf,
-    'media/glb-animations/macarena_dance.glb': marissaGltf,
     'media/sandbox/anim_push_up.glb': pushUpGltf,
     'media/sandbox/anim_climbing.glb': climbingGltf,
     'media/sandbox/anim_laying_idle_1.glb': laying1Gltf,
-  }), [sittingGltf, swimmingGltf, marissaGltf, pushUpGltf, climbingGltf, laying1Gltf]);
+    'media/sandbox/anim_belly_dance.glb': bellyDanceGltf,
+    'media/sandbox/anim_dancing_twerk.glb': dancingTwerkGltf,
+    'media/sandbox/anim_stall_soccerball_1.glb': soccerballGltf,
+    'media/sandbox/anim_body_jab_cross.glb': jabCrossGltf,
+  }), [sittingGltf, swimmingGltf, pushUpGltf, climbingGltf, laying1Gltf, bellyDanceGltf, dancingTwerkGltf, soccerballGltf, jabCrossGltf]);
 
   const charactersWithAnims = useMemo(() => {
     return CHARACTERS.map(char => {
@@ -1566,11 +1574,14 @@ useGLTF.preload(ROSANNA_PATH);
 useGLTF.preload(VIVID_PATH);
 useGLTF.preload('media/sandbox/anim_sitting_idle.glb');
 useGLTF.preload('media/sandbox/anim_swimming_to_edge.glb');
-useGLTF.preload('media/glb-animations/macarena_dance.glb');
 useGLTF.preload('media/sandbox/anim_climbing.glb');
 useGLTF.preload('media/sandbox/anim_push_up.glb');
 useGLTF.preload('media/sandbox/anim_laying_idle_1.glb');
 useGLTF.preload('media/sandbox/anim_woman-solo.glb');
+useGLTF.preload('media/sandbox/anim_belly_dance.glb');
+useGLTF.preload('media/sandbox/anim_dancing_twerk.glb');
+useGLTF.preload('media/sandbox/anim_stall_soccerball_1.glb');
+useGLTF.preload('media/sandbox/anim_body_jab_cross.glb');
 
 
 CHARACTERS.forEach(char => {
