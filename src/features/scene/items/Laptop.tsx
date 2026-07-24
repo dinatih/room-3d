@@ -150,21 +150,20 @@ function LaptopGlb({ onSize }: { onSize: SceneItemProps['onSize'] }) {
     c.traverse(child => {
       if ((child as THREE.Mesh).isMesh) {
         const mat = (child as THREE.Mesh).material;
-        if (mat && Array.isArray(mat)) return; // skip multi-materials for simplicity
+        if (mat && Array.isArray(mat)) return;
         const m = mat as THREE.MeshStandardMaterial;
         const name = ((m.name || '') + ' ' + (child.name || '')).toLowerCase();
         
-        // The LCD or Glass panel is often named with these keywords
         if (name.includes('lcd') || name.includes('screen') || name.includes('display')) {
-          m.polygonOffset = true;
-          m.polygonOffsetFactor = -1;
-          m.polygonOffsetUnits = -1;
-          m.needsUpdate = true;
+          // Instead of polygonOffset, we ensure it renders correctly
+          m.polygonOffset = false;
+          m.depthWrite = true;
+          m.side = THREE.FrontSide;
         } else if (name.includes('glass')) {
-          m.polygonOffset = true;
-          m.polygonOffsetFactor = -2; // pull glass even closer
-          m.polygonOffsetUnits = -2;
-          m.needsUpdate = true;
+          m.polygonOffset = false;
+          m.depthWrite = false; // Glass should not write to depth buffer to avoid z-fighting with LCD behind it
+          m.transparent = true;
+          m.opacity = 0.3;
         }
       }
     });

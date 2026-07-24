@@ -122,14 +122,14 @@ export const CHARACTERS: CharacterConfig[] = [
   // 11 stylized Laras
   { id: 'native', name: 'Lara (Native)', path: 'media/lara_native.glb', pos: [140, 0, 30], rot: 1.9, variant: 'native', height: 173.4 },
   { id: 'rosanna', name: 'Rosanna', path: 'media/lara_native.glb', pos: [251, 75, 178], rot: 1.325 + Math.PI / 2, variant: 'rosanna', height: 173.4, sittingScenePath: 'media/sandbox/anim_push_up.glb', customIdleAnimPath: 'media/sandbox/anim_push_up.glb' },
-  { id: 'marissa', name: 'Marissa', path: 'media/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4, sittingScenePath: 'media/glb-animations/macarena_dance.glb', customIdleAnimPath: 'media/glb-animations/macarena_dance.glb' },
+  { id: 'marissa', name: 'Marissa', path: 'media/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4, sittingScenePath: 'media/sandbox/anim_belly_dance.glb', customIdleAnimPath: 'media/sandbox/anim_belly_dance.glb' },
   { id: 'delphina', name: 'Delphina', path: 'media/lara_native.glb', pos: [120, 35, -250], rot: 1, variant: 'delphina', height: 173.4, sittingScenePath: 'media/sandbox/anim_swimming_to_edge.glb', customIdleAnimPath: 'media/sandbox/anim_swimming_to_edge.glb' },
   { id: 'sara', name: 'Sara', path: 'media/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'media/sandbox/anim_climbing.glb', customIdleAnimPath: 'media/sandbox/anim_climbing.glb' },
   { id: 'cha', name: 'Cha', path: 'media/lara_native.glb', pos: [30, 0, 151], rot: Math.PI / 2, variant: 'cha', height: 173.4, sittingScenePath: 'media/sandbox/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anim_sitting_idle.glb' },
   { id: 'vivid', name: 'Vivid', path: 'media/lara_native.glb', pos: [30, 0, 210], rot: Math.PI / 2, variant: 'vivid', height: 173.4, sittingScenePath: 'media/sandbox/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anim_sitting_idle.glb' },
-  { id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [200, 0, -40], rot: Math.PI, variant: 'sabira', height: 173.4 },
-  { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [250, 0, 320], rot: 0, variant: 'safa', height: 173.4 },
-  { id: 'sandra', name: 'Sandra', path: 'media/lara_native.glb', pos: [80, 0, -320], rot: Math.PI / 4, variant: 'sandra', height: 173.4 },
+  { id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [200, 0, -40], rot: Math.PI, variant: 'sabira', height: 173.4, customIdleAnimPath: 'media/sandbox/anim_dancing_twerk.glb', sittingScenePath: 'media/sandbox/anim_dancing_twerk.glb' },
+  { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [250, 0, 320], rot: 0, variant: 'safa', height: 173.4, customIdleAnimPath: 'media/sandbox/anim_stall_soccerball_1.glb', sittingScenePath: 'media/sandbox/anim_stall_soccerball_1.glb' },
+  { id: 'sandra', name: 'Sandra', path: 'media/lara_native.glb', pos: [80, 0, -320], rot: Math.PI / 4, variant: 'sandra', height: 173.4, customIdleAnimPath: 'media/sandbox/anim_body_jab_cross.glb', sittingScenePath: 'media/sandbox/anim_body_jab_cross.glb' },
   { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [150, 0, -600], rot: 0, variant: 'native', height: 173.4, isLara: false }
 ];
 
