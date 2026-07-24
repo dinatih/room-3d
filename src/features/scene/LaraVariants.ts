@@ -98,6 +98,11 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
              mat.color.setHex(0xbc9c74); // Blonde-chatain
              mat.emissive.setHex(0xbc9c74);
              mat.emissiveIntensity = 0.05;
+          } else if (isMarissa) {
+             mat.map = null;
+             mat.color.setHex(0x8c6239); // Châtain clair
+             mat.emissive.setHex(0x8c6239);
+             mat.emissiveIntensity = 0.05;
           }
         }
 
@@ -145,6 +150,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           const isBackpack = matName.toLowerCase().includes('backpack') || matName.toLowerCase().includes('bag') || matName.toLowerCase().includes('pack');
 
           const isBuckle = matName.toLowerCase().includes('buckle');
+          const isGear = matName.toLowerCase().includes('gear') || matName.toLowerCase().includes('holster');
+          
           const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair && !isBuckle && 
                               !(isCha && (isShirt || isBoot)) && 
                               !(isSabira && !isTop);
@@ -162,6 +169,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
             } else if (isMarissa) {
                if (isShorts) {
                  color = 0xa2c4d9; 
+                 forceProcedural = true;
+               } else if (isTop || isBackpack || isGear) {
+                 color = 0x151515; // Noir mat
                  forceProcedural = true;
                } else {
                  color = 0xffffff; 
