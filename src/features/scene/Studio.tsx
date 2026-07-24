@@ -33,16 +33,13 @@ import { FloorPlan }                    from '@features/scene/FloorPlan';
 import { VirtualDPad }                  from '@features/scene/VirtualDPad';
 import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
-import { RealWorldLayer } from '@features/scene/RealWorldLayer';
 import { SunLight, SunSphere } from '@features/scene/SunLight';
 import { SkySphere } from './SkySphere';
 import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/scene/BuildAnimations';
-import { RenderStyleLayer, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
 import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
-import { SurfaceLayer }              from '@features/scene/SurfaceLayer';
 import { MeasurementTool }            from './MeasurementTool';
 
 import {
@@ -177,7 +174,6 @@ export function Studio() {
     cameraState.invalidate?.();
   }, []);
 
-  const [renderStyle, setRenderStyle] = useState<RenderStyleKey>('default');
 
   const [planeMode,          setPlaneMode]          = useState(false);
   const [planeModel,         setPlaneModel]         = useState<PlaneModelKey>('paper');
@@ -296,9 +292,6 @@ export function Studio() {
         <HoverRaycaster />
         <DevToolsCollector />
         <GlbReveal />
-        {renderStyle !== 'default' && <RenderStyleLayer style={renderStyle} />}
-        {layers.realWorld && <RealWorldLayer />}
-
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.xray        && <XRayLayer />}
         {layers.wallEdges   && <WallEdgesLayer />}
@@ -307,8 +300,6 @@ export function Studio() {
         {layers.lights      && <LightHelpers />}
         {layers.plan        && <FloorPlan />}
         {cameraMode === 'top' && measurementActive && <MeasurementTool />}
-        {layers.surface     && <SurfaceLayer />}
-
         {/* Contenu 3D — masqué en mode Plan */}
         <Suspense fallback={null}>
         <CameraController planeMode={planeMode} />
@@ -369,7 +360,6 @@ export function Studio() {
         onOpenInventory={() => setShowInventory(true)}
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
         lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
-        renderStyle={renderStyle} onSetRenderStyle={setRenderStyle}
       />
       {planeMode && (
         <div style={{

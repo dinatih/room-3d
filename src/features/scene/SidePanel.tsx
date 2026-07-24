@@ -12,7 +12,6 @@
  */
 import { useState, useEffect } from 'react';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
-import { RENDER_STYLES, type RenderStyleKey } from '@features/scene/RenderStyleLayer';
 import { solarPosition } from '@features/scene/SunLight';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
@@ -292,10 +291,8 @@ export interface LayerState {
   lights:       boolean;
   shadows:      boolean;
   pillarsOnly:    boolean;
-  realWorld:    boolean;
   realSun:      boolean;
   grass:        boolean;
-  surface:      boolean;
   walker:       boolean;
   accessories:  boolean;
   laraPistols:  boolean;
@@ -317,8 +314,6 @@ export interface SidePanelProps2 extends SidePanelProps {
   onCycleLidar:            () => void;
   lidarOpacity:            number;
   onToggleLidarOpacity:    () => void;
-  renderStyle:             RenderStyleKey;
-  onSetRenderStyle:        (key: RenderStyleKey) => void;
 }
 
 type TabKey = 'views' | 'layers' | 'display' | 'perf' | 'anims' | null;
@@ -340,9 +335,7 @@ export function SidePanel({
   lidarMode, 
   onCycleLidar, 
   lidarOpacity, 
-  onToggleLidarOpacity, 
-  renderStyle, 
-  onSetRenderStyle 
+  onToggleLidarOpacity,
 }: SidePanelProps2) {
   
   const measurementActive = useSceneStore(state => state.measurementActive);
@@ -517,33 +510,7 @@ export function SidePanel({
       {layerBtn('cyan',   'LiDAR scan',    'lidar')}
       {layers.lidar && b0('cyan', ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}
       {layers.lidar && b0('cyan', `Opacité ${Math.round(lidarOpacity * 100)}%`, onToggleLidarOpacity)}
-      {layerBtn('teal',   'Monde réel 🌍', 'realWorld')}
       {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
-      {layerBtn('green',  'Surfaces m²',   'surface')}
-
-      
-      <div className="p-2 border-bottom bg-transparent">
-        <div className="text-muted fw-semibold mb-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🎨 Rendu</div>
-        <div className="d-flex flex-wrap gap-1">
-          {RENDER_STYLES.map(({ key, label }) => {
-            const active = renderStyle === key;
-            return (
-              <button
-                key={key}
-                onClick={() => onSetRenderStyle(key)}
-                className={`btn btn-sm ${active ? 'btn-danger' : 'btn-outline-secondary'}`}
-                style={{
-                  fontSize: isMobile ? '12px' : '9px',
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {sunInfo && (
         <div className="p-2 border-bottom text-muted" style={{ fontSize: '9px', background: 'transparent' }}>
