@@ -8,7 +8,7 @@ export function SkySphere() {
   // We can just apply it to a sphere with BackSide.
 
   return (
-    <mesh position={[150, 0, 150]} scale={[2000, 2000, 2000]}>
+    <mesh position={[150, 0, 150]} scale={[10000, 10000, 10000]}>
       <sphereGeometry args={[1, 64, 64]} />
       <meshBasicMaterial 
         map={texture} 

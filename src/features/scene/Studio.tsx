@@ -231,7 +231,7 @@ export function Studio() {
         camera={{
           fov:  50,
           near: 1,
-          far:  5000,
+          far:  20000,
           position: [ROOM_W / 2, 1000, -150],
         }}
         shadows={{ type: PCFSoftShadowMap }}
@@ -261,11 +261,11 @@ export function Studio() {
             castShadow
             shadow-mapSize={[1024, 1024]}
             shadow-camera-near={1}
-            shadow-camera-far={2000}
-            shadow-camera-left={-600}
-            shadow-camera-right={600}
-            shadow-camera-top={600}
-            shadow-camera-bottom={-600}
+            shadow-camera-far={3000}
+            shadow-camera-left={-1200}
+            shadow-camera-right={1200}
+            shadow-camera-top={1200}
+            shadow-camera-bottom={-1200}
             shadow-bias={-0.0002}
             shadow-normalBias={0.04}
           />
