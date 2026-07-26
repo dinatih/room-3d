@@ -12,7 +12,7 @@ def main():
 
     project_root = Path(__file__).resolve().parent.parent.parent
     blender_script = project_root / 'sources_backup' / 'fbx_to_glb.py'
-    dest_dir = project_root / 'public' / 'media' / 'sandbox'
+    dest_dir = project_root / 'public' / 'media' / 'sandbox' / 'anims'
     walker_file = project_root / 'src' / 'features' / 'scene' / 'Walker.tsx'
     
     if not blender_script.exists():
