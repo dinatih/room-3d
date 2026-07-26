@@ -800,8 +800,6 @@ function SingleCharacter({
                 mat.depthWrite = true;
                 mat.side = THREE.FrontSide;
             });
-            delete c.raycast;
-            delete c.userData.hoverAction;
         }
       }
       if (!c.restWorldQuaternion) {
@@ -1079,13 +1077,18 @@ function SingleCharacter({
       if (isActive) {
         c.userData.hoverAction = {
           label: `Customiser ${name} 👤`,
-          actions: ['lara-custom-holster', 'lara-custom-pistols', 'lara-custom-backpack']
+          actions: [
+            isLara ? 'walker-anim-lara' : 'walker-anim-xbot',
+            'lara-custom-holster',
+            'lara-custom-pistols',
+            'lara-custom-backpack'
+          ]
         };
       } else {
         delete c.userData.hoverAction;
       }
     });
-  }, [isActive, name, scene]);
+  }, [isActive, name, scene, isLara]);
 
   useEffect(() => {
     if (!scene) return;
