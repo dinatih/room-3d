@@ -11,7 +11,7 @@ import { hoverState } from '@features/scene/hoverState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { positionState } from '@features/scene/positionState';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
-import { WALKER_ANIM_OPTIONS } from './Walker';
+import { WALKER_ANIM_OPTIONS } from './animOptions';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
 
