@@ -69,9 +69,11 @@ const ACTIONS: Record<string, ActionDef> = {
   'raskog-large-position': { btnLabel: () => { const p = positionState['raskog-large-position'];    return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'raskog-large-position'    },
   'walker-meshes':         { btnLabel: 'Meshes',             toggleKey: 'walker-meshes'     },
   'sofa-arm-left':         { btnLabel: 'Accoudoir Gauche',  toggleKey: 'sofaArmLeft'       },
-  'sofa-arm-right':        { btnLabel: 'Accoudoir Droit',   toggleKey: 'sofaArmRight'      },
   'walker-anim-lara':      { btnLabel: 'Jouer une animation', toggleKey: 'walker-anim-lara', type: 'select', options: WALKER_ANIM_OPTIONS },
   'walker-anim-xbot':      { btnLabel: 'Jouer une animation', toggleKey: 'walker-anim-xbot', type: 'select', options: WALKER_ANIM_OPTIONS },
+  'lara-custom-holster':   { btnLabel: 'Holsters & Boucle', toggleKey: 'lara-custom-holster' },
+  'lara-custom-pistols':   { btnLabel: 'Pistolets Mains',  toggleKey: 'lara-custom-pistols' },
+  'lara-custom-backpack':  { btnLabel: 'Sac à dos',         toggleKey: 'lara-custom-backpack' },
 };
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
@@ -369,6 +371,10 @@ export function HoverOverlay() {
   const showDot   = state.visible && !state.locked;
   const showModal = state.locked;
 
+  const [selectFilter, setSelectFilter] = useState('');
+  const [selectedHoverVal, setSelectedHoverVal] = useState<string>('');
+  const [copiedHover, setCopiedHover] = useState<boolean>(false);
+
   const lockedActions = showModal
     ? state.lockedActionIds.map(id => ACTIONS[id]).filter(Boolean)
     : [];
@@ -424,22 +430,89 @@ export function HoverOverlay() {
           <div style={{ color: '#ddd', fontSize: 12, fontWeight: 600 }}>{state.lockedLabel}</div>
           {lockedActions.map((action, i) => {
             if (action.type === 'select') {
+              const opts = action.options ?? [];
+              const filteredOpts = selectFilter.trim()
+                ? opts.filter(o => o.label.toLowerCase().includes(selectFilter.trim().toLowerCase()) || o.value.toLowerCase().includes(selectFilter.trim().toLowerCase()))
+                : opts;
+              const filename = selectedHoverVal ? (selectedHoverVal.split('/').pop() || selectedHoverVal) : '';
+
               return (
-                <select
-                  key={i}
-                  style={BTN_STYLE}
-                  onChange={(e) => {
-                    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: action.toggleKey, value: e.target.value } }));
-                    // Don't close hover overlay on select change
-                    hoverState.onUpdate?.();
-                  }}
-                  defaultValue=""
-                >
-                  <option value="" disabled>{action.btnLabel ? (typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel) : "Choisir une animation..."}</option>
-                  {action.options?.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {opts.length > 10 && (
+                    <input
+                      type="text"
+                      placeholder="🔍 Filtrer anims..."
+                      value={selectFilter}
+                      onChange={e => setSelectFilter(e.target.value)}
+                      style={{
+                        background: 'rgba(255,255,255,0.15)',
+                        color: '#fff',
+                        border: '1px solid rgba(255,255,255,0.25)',
+                        borderRadius: 4,
+                        padding: '3px 6px',
+                        fontSize: 11,
+                        outline: 'none',
+                      }}
+                    />
+                  )}
+                  <select
+                    style={BTN_STYLE}
+                    value={selectedHoverVal}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedHoverVal(val);
+                      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: action.toggleKey, value: val } }));
+                      hoverState.onUpdate?.();
+                    }}
+                  >
+                    <option value="" disabled>{action.btnLabel ? (typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel) : "Choisir une animation..."} ({filteredOpts.length})</option>
+                    {filteredOpts.map(opt => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.value === selectedHoverVal ? `▶ ${opt.label}` : opt.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  {selectedHoverVal && selectedHoverVal !== 'idle' && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 6,
+                      background: 'rgba(255,215,0,0.12)',
+                      border: '1px solid rgba(255,215,0,0.3)',
+                      borderRadius: 6,
+                      padding: '4px 8px',
+                      fontSize: 10,
+                      color: '#ffd700',
+                    }}>
+                      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={filename}>
+                        📁 {filename}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(filename);
+                          setCopiedHover(true);
+                          setTimeout(() => setCopiedHover(false), 2000);
+                        }}
+                        style={{
+                          background: 'rgba(255,215,0,0.25)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 4,
+                          padding: '2px 6px',
+                          fontSize: 9,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {copiedHover ? '✓ Copié !' : '📋 Copier'}
+                      </button>
+                    </div>
+                  )}
+                </div>
               );
             }
             return (

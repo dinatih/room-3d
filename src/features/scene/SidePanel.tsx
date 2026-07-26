@@ -1,5 +1,6 @@
 /**
- * SidePanel.tsx — menu de contrôle.
+ * SidePanel.tsx
+ * Updated: 2026-07-27 T-Pose position fix
  *
  * Desktop : panneau accordéon à gauche (sections Vues / Affichage / Mobilier
  *   / Inventaire / DevTools).
@@ -10,7 +11,7 @@
  * écoutés par CameraController et le reste de la scène.
  * Styled using Bootstrap 5.3 and glassmorphism.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { solarPosition } from '@features/scene/SunLight';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -140,6 +141,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Walk mode (entrer/quitter)" keys={['M']} />
               <R label="Vue top-down (toggle)"      keys={['T']} />
               <R label="Avion en papier (toggle)"   keys={['F']} />
+              <R label="Grille Lara (toggle)"       keys={['G']} />
               <R label="Quitter walk / top-down"    keys={['Échap']} />
               <R label="Changer de personnage"      keys={['L']} />
             </div>
@@ -467,7 +469,7 @@ export function SidePanel({
           opacity: layers.laraGrid ? 1 : 0.55,
         }}
       >
-        <span>Grille Lara 👥</span>
+        <span>Grille Lara 👥 (G)</span>
         <span className={`badge ${layers.laraGrid ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
           {layers.laraGrid ? 'ON' : 'OFF'}
         </span>
@@ -529,21 +531,275 @@ export function SidePanel({
       </button>
     </div>
   );
+  const [animSearch, setAnimSearch] = useState('');
+  const [activeAnimValue, setActiveAnimValue] = useState<string>('idle');
+  const [copiedAnim, setCopiedAnim] = useState<string | null>(null);
+  const [animLoopMode, setAnimLoopMode] = useState<'infinite' | '3x' | '1x'>('infinite');
+
+  const setLoopMode = (mode: 'infinite' | '3x' | '1x') => {
+    setAnimLoopMode(mode);
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-loop', value: mode } }));
+  };
+  const [recentAnims, setRecentAnims] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('recent_animations');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    const onToggle = (e: any) => {
+      if (e.detail?.key === 'walker-anim-lara' || e.detail?.key === 'walker-anim-xbot') {
+        const val = e.detail.value ?? 'idle';
+        setActiveAnimValue(val);
+        if (val && val !== 'idle') {
+          setRecentAnims(prev => {
+            const next = [val, ...prev.filter(v => v !== val)].slice(0, 5);
+            try {
+              localStorage.setItem('recent_animations', JSON.stringify(next));
+            } catch {}
+            return next;
+          });
+        }
+      }
+    };
+    document.addEventListener('furniture-toggle', onToggle);
+    return () => document.removeEventListener('furniture-toggle', onToggle);
+  }, []);
+
+  const handleCopyAnim = (anim: { value: string; label: string }, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const filename = anim.value.split('/').pop() || anim.value;
+    navigator.clipboard.writeText(filename);
+    setCopiedAnim(anim.value);
+    setTimeout(() => setCopiedAnim(null), 2000);
+  };
+
+  const filteredAnims = useMemo(() => {
+    const q = animSearch.trim().toLowerCase();
+    if (!q) return WALKER_ANIM_OPTIONS;
+    return WALKER_ANIM_OPTIONS.filter(a =>
+      a.label.toLowerCase().includes(q) || a.value.toLowerCase().includes(q)
+    );
+  }, [animSearch]);
+
+  const animsContainerRef = useRef<HTMLDivElement>(null);
+
+  const selectNextAnim = (direction: 'next' | 'prev') => {
+    if (!filteredAnims.length) return;
+    const currentIndex = filteredAnims.findIndex(a => a.value === activeAnimValue);
+    let nextIndex = 0;
+    if (currentIndex === -1) {
+      nextIndex = direction === 'next' ? 0 : filteredAnims.length - 1;
+    } else {
+      if (direction === 'next') {
+        nextIndex = (currentIndex + 1) % filteredAnims.length;
+      } else {
+        nextIndex = (currentIndex - 1 + filteredAnims.length) % filteredAnims.length;
+      }
+    }
+    const targetAnim = filteredAnims[nextIndex];
+    if (targetAnim) {
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: targetAnim.value } }));
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: targetAnim.value } }));
+    }
+  };
+
+  const handleKeyDownAnims = (e: React.KeyboardEvent | KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      e.stopPropagation();
+      selectNextAnim(e.key === 'ArrowDown' ? 'next' : 'prev');
+    }
+  };
+
+  useEffect(() => {
+    if (activeAnimValue && animsContainerRef.current) {
+      const activeEl = animsContainerRef.current.querySelector('.active-anim-item');
+      if (activeEl) {
+        activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+  }, [activeAnimValue]);
+
+  const activeAnimOpt = WALKER_ANIM_OPTIONS.find(a => a.value === activeAnimValue);
+
   const AnimationsSection = (
-    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
-      {WALKER_ANIM_OPTIONS.map(anim => (
-        <button
-          key={anim.value}
-          className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark"
-          onClick={() => {
-            document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: anim.value } }));
-            document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: anim.value } }));
-          }}
-          style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent' }}
-        >
-          {anim.label}
-        </button>
-      ))}
+    <div
+      className="d-flex flex-column bg-transparent overflow-hidden"
+      style={{ maxHeight: '55vh', outline: 'none' }}
+      tabIndex={0}
+      onKeyDown={handleKeyDownAnims}
+    >
+      <div className="p-2 border-bottom bg-white shadow-sm sticky-top" style={{ zIndex: 5 }}>
+        <div className="input-group input-group-sm mb-1">
+          <span className="input-group-text bg-light text-muted border-end-0">🔍</span>
+          <input
+            type="text"
+            className="form-control border-start-0 ps-0"
+            placeholder="Filtrer ou ↕ flèches..."
+            value={animSearch}
+            onChange={e => setAnimSearch(e.target.value)}
+            onKeyDown={handleKeyDownAnims}
+            style={{ fontSize: isMobile ? '13px' : '11px' }}
+          />
+          {animSearch && (
+            <button
+              className="btn btn-outline-secondary border-start-0"
+              type="button"
+              onClick={() => setAnimSearch('')}
+              style={{ fontSize: '10px' }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        <div className="d-flex align-items-center justify-content-between mb-2 px-1" style={{ fontSize: '10px' }}>
+          <span className="text-muted fw-semibold">Lecture :</span>
+          <div className="btn-group btn-group-sm" role="group">
+            <button
+              type="button"
+              className={`btn ${animLoopMode === 'infinite' ? 'btn-danger active fw-bold' : 'btn-outline-secondary'} py-0 px-2`}
+              style={{ fontSize: '9px' }}
+              onClick={() => setLoopMode('infinite')}
+              title="Boucle infinie (par défaut)"
+            >
+              ∞ Infini
+            </button>
+            <button
+              type="button"
+              className={`btn ${animLoopMode === '3x' ? 'btn-danger active fw-bold' : 'btn-outline-secondary'} py-0 px-2`}
+              style={{ fontSize: '9px' }}
+              onClick={() => setLoopMode('3x')}
+              title="Répéter 3 fois"
+            >
+              3x
+            </button>
+            <button
+              type="button"
+              className={`btn ${animLoopMode === '1x' ? 'btn-danger active fw-bold' : 'btn-outline-secondary'} py-0 px-2`}
+              style={{ fontSize: '9px' }}
+              onClick={() => setLoopMode('1x')}
+              title="Jouer 1 seule fois"
+            >
+              1x
+            </button>
+          </div>
+        </div>
+
+        {recentAnims.length > 0 && !animSearch && (
+          <div className="mb-2 p-1.5 bg-light rounded border">
+            <div className="text-muted fw-bold mb-1 px-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              🕒 Récentes ({recentAnims.length})
+            </div>
+            <div className="d-flex flex-wrap gap-1">
+              {recentAnims.map(val => {
+                const opt = WALKER_ANIM_OPTIONS.find(a => a.value === val);
+                const isAct = activeAnimValue === val;
+                const label = opt ? opt.label : val.split('/').pop() || val;
+                return (
+                  <button
+                    key={val}
+                    className={`btn btn-xs ${isAct ? 'btn-danger fw-bold' : 'btn-outline-dark'} py-0 px-2 text-truncate`}
+                    style={{ fontSize: '10px', maxWidth: '100%' }}
+                    onClick={() => {
+                      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: val } }));
+                      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: val } }));
+                    }}
+                    title={label}
+                  >
+                    {isAct ? '▶ ' : ''}{label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {activeAnimOpt && activeAnimValue !== 'idle' && (
+          <div className="p-2 mb-1 rounded border border-danger-subtle bg-danger-subtle bg-opacity-25 d-flex flex-column gap-1">
+            <div className="d-flex justify-content-between align-items-center">
+              <span className="fw-bold text-danger text-truncate me-1" style={{ fontSize: '11px' }}>
+                ▶ En cours : {activeAnimOpt.label}
+              </span>
+              <button
+                className="btn btn-sm btn-outline-danger py-0 px-2 fw-semibold shrink-0"
+                style={{ fontSize: '9px' }}
+                onClick={(e) => handleCopyAnim(activeAnimOpt, e)}
+                title="Copier le nom du fichier GLB"
+              >
+                {copiedAnim === activeAnimOpt.value ? '✓ Copié !' : '📋 Copier nom'}
+              </button>
+            </div>
+            <div className="font-monospace text-muted text-truncate" style={{ fontSize: '9px' }}>
+              📁 {activeAnimOpt.value.split('/').pop()}
+            </div>
+          </div>
+        )}
+
+        <div className="text-muted small px-1 d-flex justify-content-between" style={{ fontSize: '9px' }}>
+          <span>{filteredAnims.length} animation{filteredAnims.length > 1 ? 's' : ''}</span>
+          <span className="text-muted">↕ Flèches Clavier</span>
+        </div>
+      </div>
+
+      <div ref={animsContainerRef} className="overflow-auto flex-grow-1" style={{ maxHeight: '40vh' }}>
+        {filteredAnims.length === 0 ? (
+          <div className="p-3 text-center text-muted small">
+            Aucune animation ne correspond à &quot;{animSearch}&quot;
+          </div>
+        ) : (
+          filteredAnims.map(anim => {
+            const isActive = activeAnimValue === anim.value;
+            const isPose = anim.label.toLowerCase().includes('pose') || anim.value.toLowerCase().includes('pose');
+            const filename = anim.value.split('/').pop() || anim.value;
+
+            return (
+              <div
+                key={anim.value}
+                className={`d-flex align-items-center justify-content-between border-bottom px-2 py-2 ${
+                  isActive ? 'active-anim-item bg-danger text-white fw-bold shadow-sm' : 'bg-white hover-bg-light text-dark'
+                }`}
+                style={{
+                  fontSize: isMobile ? '13px' : '11px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onClick={() => {
+                  document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: anim.value } }));
+                  document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: anim.value } }));
+                }}
+              >
+                <div className="d-flex align-items-center gap-1 overflow-hidden me-2" style={{ flex: 1 }}>
+                  <span style={{ fontSize: '10px' }}>{isActive ? '▶' : ''}</span>
+                  <span className="text-truncate" title={anim.label}>{anim.label}</span>
+                  {isPose && (
+                    <span
+                      className={`badge ${isActive ? 'bg-light text-danger' : 'bg-warning text-dark'} ms-1 fw-normal`}
+                      style={{ fontSize: '8px', letterSpacing: '0.02em', flexShrink: 0 }}
+                    >
+                      POSE 10s
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className={`btn btn-sm ${isActive ? 'btn-light text-danger border-0' : 'btn-outline-secondary border-0'} p-1 shrink-0`}
+                  style={{ fontSize: '10px', lineHeight: 1 }}
+                  onClick={(e) => handleCopyAnim(anim, e)}
+                  title={`Copier "${filename}"`}
+                >
+                  {copiedAnim === anim.value ? '✓' : '📋'}
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 

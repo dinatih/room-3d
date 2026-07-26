@@ -1,8 +1,9 @@
 /**
  * Walker.tsx — Personnages (Walkers & NPCs).
  * Gère le chargement, les animations, le retargeting et le positionnement dynamique.
+ * Updated: 2026-07-27 T-Pose position fix
  */
-import { useRef, useLayoutEffect, Suspense, useEffect, useMemo } from 'react';
+import { useRef, useLayoutEffect, Suspense, useEffect, useMemo, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
@@ -15,85 +16,760 @@ import { applyLaraVariantStyles, type LaraVariant } from './LaraVariants';
 
 export const WALKER_ANIM_OPTIONS = [
   { value: "idle", label: "Idle / Return to Default" },
-  { value: "media/glb-animations/catwalk_sequence_01.glb", label: "Catwalk Sequence 1" },
-  { value: "media/glb-animations/catwalk_sequence_02.glb", label: "Catwalk Sequence 2" },
-  { value: "media/glb-animations/catwalk_sequence_03.glb", label: "Catwalk Sequence 3" },
-  { value: "media/glb-animations/catwalk_sequence_04.glb", label: "Catwalk Sequence 4" },
-  { value: "media/glb-animations/catwalk_sequence_05.glb", label: "Catwalk Sequence 5" },
-  { value: "media/sandbox/anim_happy_walk_not_in_place.glb", label: "Happy Walk" },
-  { value: "media/sandbox/anim_sitting_idle.glb", label: "Sitting Idle" },
-  { value: "media/sandbox/anim_sitting_angry.glb", label: "Sitting Angry" },
-  { value: "media/sandbox/anim_t_pose.glb", label: "T-Pose de Test" },
-  { value: "media/sandbox/anim_jump.glb", label: "Saut" },
-  { value: "media/sandbox/anim_sleeping_idle.glb", label: "Dormir" },
-  { value: "media/sandbox/anim_laying_idle.glb", label: "Laying Idle" },
-  { value: "media/sandbox/anim_skinning_test.glb", label: "Skinning Test" },
-  { value: "media/sandbox/anim_samba_dancing.glb", label: "Samba Dancing" },
-  { value: "media/sandbox/anim_back_flip_to_uppercut.glb", label: "Back Flip to Uppercut" },
-  { value: "media/sandbox/anim_idle.glb", label: "Idle" },
-  { value: "media/sandbox/anim_walking.glb", label: "Walking" },
-  { value: "media/sandbox/anim_right_turn_90.glb", label: "Right Turn 90" },
-  { value: "media/sandbox/anim_left_turn_90.glb", label: "Left Turn 90" },
-  { value: "media/sandbox/anim_gangnam_style.glb", label: "Gangnam Style" },
-  { value: "media/sandbox/anim_drinking_fountain.glb", label: "Drinking Fountain" },
-  { value: "media/sandbox/anim_martelo_do_chau_sem_mao.glb", label: "Martelo Do Chau Sem Mao" },
-  { value: "media/sandbox/anim_female_dynamic_pose.glb", label: "Female Dynamic Pose" },
-  { value: "media/sandbox/anim_push_up.glb", label: "Push Up" },
-  { value: "media/sandbox/anim_laying_idle_1.glb", label: "Laying Idle 1" },
-  { value: "media/sandbox/anim_swimming_to_edge.glb", label: "Swimming to Edge" },
-  { value: "media/sandbox/anim_dancing_maraschino_step.glb", label: "Dancing Maraschino Step" },
-  { value: "media/sandbox/anim_tender_placement.glb", label: "Tender Placement" },
-  { value: "media/sandbox/anim_running.glb", label: "Running" },
-  { value: "media/sandbox/anim_left_turn.glb", label: "Left Turn" },
-  { value: "media/sandbox/anim_right_turn.glb", label: "Right Turn" },
-  { value: "media/sandbox/anim_left_turn_2.glb", label: "Left Turn 2" },
-  { value: "media/sandbox/anim_right_turn_2.glb", label: "Right Turn 2" },
-  { value: "media/sandbox/anim_climbing.glb", label: "Climbing" },
-  { value: "media/glb-animations/macarena_dance.glb", label: "Macarena Dance" },
-  { value: "media/sandbox/anim_woman-solo.glb", label: "Woman Solo" },
-  { value: "media/sandbox/anim_agreeing.glb", label: "Agreeing" },
-  { value: "media/sandbox/anim_back_flip_to_uppercut.glb", label: "Back Flip To Uppercut" },
-  { value: "media/sandbox/anim_bartending.glb", label: "Bartending" },
-  { value: "media/sandbox/anim_being_carried.glb", label: "Being Carried" },
-  { value: "media/sandbox/anim_belly_dance.glb", label: "Belly Dance" },
-  { value: "media/sandbox/anim_bellydancing.glb", label: "Bellydancing" },
-  { value: "media/sandbox/anim_bencao.glb", label: "Bencao" },
-  { value: "media/sandbox/anim_bicep_curl.glb", label: "Bicep Curl" },
-  { value: "media/sandbox/anim_blow_a_kiss.glb", label: "Blow A Kiss" },
-  { value: "media/sandbox/anim_body_jab_cross.glb", label: "Body Jab Cross" },
-  { value: "media/sandbox/anim_booty_hip_hop_dance.glb", label: "Booty Hip Hop Dance" },
-  { value: "media/sandbox/anim_boxing.glb", label: "Boxing" },
-  { value: "media/sandbox/anim_braced_hang.glb", label: "Braced Hang" },
-  { value: "media/sandbox/anim_burpee.glb", label: "Burpee" },
-  { value: "media/sandbox/anim_button_pushing.glb", label: "Button Pushing" },
-  { value: "media/sandbox/anim_catwalk_sequence_05.glb", label: "Catwalk Sequence 05" },
-  { value: "media/sandbox/anim_dancing_twerk.glb", label: "Dancing Twerk" },
-  { value: "media/sandbox/anim_double_leg_takedown_attacker.glb", label: "Double Leg Takedown - Attacker" },
-  { value: "media/sandbox/anim_double_leg_takedown_victim.glb", label: "Double Leg Takedown - Victim" },
-  { value: "media/sandbox/anim_drinking_fountain.glb", label: "Drinking Fountain" },
-  { value: "media/sandbox/anim_female_laying_pose.glb", label: "Female Laying Pose" },
-  { value: "media/sandbox/anim_female_walk.glb", label: "Female Walk" },
-  { value: "media/sandbox/anim_flip_kick.glb", label: "Flip Kick" },
-  { value: "media/sandbox/anim_happy_idle.glb", label: "Happy Idle" },
-  { value: "media/sandbox/anim_happy_walk.glb", label: "Happy Walk" },
-  { value: "media/sandbox/anim_header_soccerball_1.glb", label: "Header Soccerball (1)" },
-  { value: "media/sandbox/anim_hook.glb", label: "Hook" },
-  { value: "media/sandbox/anim_idle.glb", label: "idle" },
-  { value: "media/sandbox/anim_jump.glb", label: "Jump" },
-  { value: "media/sandbox/anim_kiss.glb", label: "Kiss" },
-  { value: "media/sandbox/anim_kiss_from_man.glb", label: "Kiss from man" },
-  { value: "media/sandbox/anim_kiss_from_woman.glb", label: "Kiss from woman" },
-  { value: "media/sandbox/anim_knee_kick_lead.glb", label: "Knee Kick Lead" },
-  { value: "media/sandbox/anim_laughing.glb", label: "Laughing" },
-  { value: "media/sandbox/anim_no.glb", label: "No" },
-  { value: "media/sandbox/anim_pistol_idle.glb", label: "Pistol Idle" },
-  { value: "media/sandbox/anim_release_hostage_villain.glb", label: "Release Hostage - Villain" },
-  { value: "media/sandbox/anim_skinning_test.glb", label: "Skinning Test" },
-  { value: "media/sandbox/anim_stall_soccerball_1.glb", label: "Stall Soccerball (1)" },
-  { value: "media/sandbox/anim_taken_hostage_victim.glb", label: "Taken Hostage - Victim" },
-  { value: "media/sandbox/anim_taken_hostage_villain.glb", label: "Taken Hostage - Villain" },
-  { value: "media/sandbox/anim_t_pose.glb", label: "T-Pose" },
-  { value: "media/sandbox/anim_walking.glb", label: "Walking" }
+  { value: "media/sandbox/anims/anim_t-pose.glb", label: "T-Pose" },
+  { value: "media/sandbox/anims/anim_acknowledging.glb", label: "acknowledging" },
+  { value: "media/sandbox/anims/anim_action_idle_to_fight_idle.glb", label: "Action Idle To Fight Idle" },
+  { value: "media/sandbox/anims/anim_action_idle_to_standing_idle.glb", label: "Action Idle To Standing Idle" },
+  { value: "media/sandbox/anims/anim_administering_cpr.glb", label: "Administering Cpr" },
+  { value: "media/sandbox/anims/anim_aerial_evade.glb", label: "Aerial Evade" },
+  { value: "media/sandbox/anims/anim_agreeing.glb", label: "Agreeing" },
+  { value: "media/sandbox/anims/anim_aiming.glb", label: "Aiming" },
+  { value: "media/sandbox/anims/anim_aiming_gun.glb", label: "Aiming Gun" },
+  { value: "media/sandbox/anims/anim_air_squat_bent_arms.glb", label: "Air Squat Bent Arms" },
+  { value: "media/sandbox/anims/anim_angry.glb", label: "Angry" },
+  { value: "media/sandbox/anims/anim_angry_1.glb", label: "Angry (1)" },
+  { value: "media/sandbox/anims/anim_angry_2.glb", label: "Angry (2)" },
+  { value: "media/sandbox/anims/anim_angry_gesture.glb", label: "Angry Gesture" },
+  { value: "media/sandbox/anims/anim_annoyed_head_shake.glb", label: "annoyed head shake" },
+  { value: "media/sandbox/anims/anim_arm_stretching.glb", label: "Arm Stretching" },
+  { value: "media/sandbox/anims/anim_armada.glb", label: "Armada" },
+  { value: "media/sandbox/anims/anim_armada_1.glb", label: "Armada (1)" },
+  { value: "media/sandbox/anims/anim_armada_to_esquiva.glb", label: "armada to esquiva" },
+  { value: "media/sandbox/anims/anim_arms_hip_hop_dance.glb", label: "Arms Hip Hop Dance" },
+  { value: "media/sandbox/anims/anim_arms_hip_hop_dance_1.glb", label: "Arms Hip Hop Dance (1)" },
+  { value: "media/sandbox/anims/anim_ascending_stairs.glb", label: "Ascending Stairs" },
+  { value: "media/sandbox/anims/anim_asking_question.glb", label: "Asking Question" },
+  { value: "media/sandbox/anims/anim_au.glb", label: "Au" },
+  { value: "media/sandbox/anims/anim_au_to_role.glb", label: "Au To Role" },
+  { value: "media/sandbox/anims/anim_back_flip_to_uppercut.glb", label: "Back Flip To Uppercut" },
+  { value: "media/sandbox/anims/anim_back_squat.glb", label: "Back Squat" },
+  { value: "media/sandbox/anims/anim_backward_walking_turn.glb", label: "backward walking turn" },
+  { value: "media/sandbox/anims/anim_bartending.glb", label: "Bartending" },
+  { value: "media/sandbox/anims/anim_bash.glb", label: "Bash" },
+  { value: "media/sandbox/anims/anim_bashful.glb", label: "Bashful" },
+  { value: "media/sandbox/anims/anim_beckoning.glb", label: "Beckoning" },
+  { value: "media/sandbox/anims/anim_being_carried.glb", label: "Being Carried" },
+  { value: "media/sandbox/anims/anim_being_carried_1.glb", label: "Being Carried (1)" },
+  { value: "media/sandbox/anims/anim_being_cocky.glb", label: "being cocky" },
+  { value: "media/sandbox/anims/anim_belly_dance.glb", label: "Belly Dance" },
+  { value: "media/sandbox/anims/anim_bellydancing.glb", label: "Bellydancing" },
+  { value: "media/sandbox/anims/anim_bencao.glb", label: "Bencao" },
+  { value: "media/sandbox/anims/anim_bicep_curl.glb", label: "Bicep Curl" },
+  { value: "media/sandbox/anims/anim_big_hit_to_head.glb", label: "Big Hit To Head" },
+  { value: "media/sandbox/anims/anim_big_hit_to_head_1.glb", label: "Big Hit To Head (1)" },
+  { value: "media/sandbox/anims/anim_big_rib_hit.glb", label: "Big Rib Hit" },
+  { value: "media/sandbox/anims/anim_big_side_hit.glb", label: "Big Side Hit" },
+  { value: "media/sandbox/anims/anim_block.glb", label: "Block" },
+  { value: "media/sandbox/anims/anim_blocking.glb", label: "Blocking" },
+  { value: "media/sandbox/anims/anim_blow_a_kiss.glb", label: "Blow A Kiss" },
+  { value: "media/sandbox/anims/anim_body_jab_cross.glb", label: "Body Jab Cross" },
+  { value: "media/sandbox/anims/anim_booty_hip_hop_dance.glb", label: "Booty Hip Hop Dance" },
+  { value: "media/sandbox/anims/anim_box_idle.glb", label: "box idle" },
+  { value: "media/sandbox/anims/anim_box_turn.glb", label: "box turn" },
+  { value: "media/sandbox/anims/anim_box_turn_2.glb", label: "box turn (2)" },
+  { value: "media/sandbox/anims/anim_box_walk_arc.glb", label: "box walk arc" },
+  { value: "media/sandbox/anims/anim_boxing.glb", label: "Boxing" },
+  { value: "media/sandbox/anims/anim_boxing_1.glb", label: "Boxing (1)" },
+  { value: "media/sandbox/anims/anim_boxing_2.glb", label: "Boxing (2)" },
+  { value: "media/sandbox/anims/anim_boxing_3.glb", label: "Boxing (3)" },
+  { value: "media/sandbox/anims/anim_boxing_4.glb", label: "Boxing (4)" },
+  { value: "media/sandbox/anims/anim_boxing_5.glb", label: "Boxing (5)" },
+  { value: "media/sandbox/anims/anim_boxing_6.glb", label: "Boxing (6)" },
+  { value: "media/sandbox/anims/anim_braced_hang.glb", label: "Braced Hang" },
+  { value: "media/sandbox/anims/anim_braced_hang_hop_left.glb", label: "Braced Hang Hop Left" },
+  { value: "media/sandbox/anims/anim_braced_hang_shimmy.glb", label: "Braced Hang Shimmy" },
+  { value: "media/sandbox/anims/anim_breakdance_1990.glb", label: "Breakdance 1990" },
+  { value: "media/sandbox/anims/anim_breakdance_1990_2.glb", label: "breakdance 1990 (2)" },
+  { value: "media/sandbox/anims/anim_breakdance_1990_3.glb", label: "breakdance 1990 (3)" },
+  { value: "media/sandbox/anims/anim_breakdance_ending_1.glb", label: "breakdance ending 1" },
+  { value: "media/sandbox/anims/anim_breakdance_ending_2.glb", label: "breakdance ending 2" },
+  { value: "media/sandbox/anims/anim_breakdance_ending_3.glb", label: "breakdance ending 3" },
+  { value: "media/sandbox/anims/anim_breakdance_footwork_1.glb", label: "breakdance footwork 1" },
+  { value: "media/sandbox/anims/anim_breakdance_footwork_2.glb", label: "breakdance footwork 2" },
+  { value: "media/sandbox/anims/anim_breakdance_footwork_3.glb", label: "breakdance footwork 3" },
+  { value: "media/sandbox/anims/anim_breakdance_footwork_to_freeze.glb", label: "breakdance footwork to freeze" },
+  { value: "media/sandbox/anims/anim_breakdance_footwork_to_idle.glb", label: "Breakdance Footwork To Idle" },
+  { value: "media/sandbox/anims/anim_breakdance_footwork_to_idle_2.glb", label: "breakdance footwork to idle (2)" },
+  { value: "media/sandbox/anims/anim_breakdance_freeze_var_1.glb", label: "breakdance freeze var 1" },
+  { value: "media/sandbox/anims/anim_breakdance_freeze_var_2.glb", label: "breakdance freeze var 2" },
+  { value: "media/sandbox/anims/anim_breakdance_freeze_var_3.glb", label: "breakdance freeze var 3" },
+  { value: "media/sandbox/anims/anim_breakdance_freeze_var_4.glb", label: "breakdance freeze var 4" },
+  { value: "media/sandbox/anims/anim_breakdance_freezes.glb", label: "Breakdance Freezes" },
+  { value: "media/sandbox/anims/anim_breakdance_freezes_1.glb", label: "Breakdance Freezes (1)" },
+  { value: "media/sandbox/anims/anim_breakdance_freezes_2.glb", label: "Breakdance Freezes (2)" },
+  { value: "media/sandbox/anims/anim_breakdance_ready.glb", label: "breakdance ready" },
+  { value: "media/sandbox/anims/anim_breakdance_ready_2.glb", label: "breakdance ready (2)" },
+  { value: "media/sandbox/anims/anim_breakdance_ready_3.glb", label: "breakdance ready (3)" },
+  { value: "media/sandbox/anims/anim_breakdance_swipes.glb", label: "breakdance swipes" },
+  { value: "media/sandbox/anims/anim_breakdance_uprock.glb", label: "breakdance uprock" },
+  { value: "media/sandbox/anims/anim_breakdance_uprock_2.glb", label: "breakdance uprock (2)" },
+  { value: "media/sandbox/anims/anim_breakdance_uprock_to_ground.glb", label: "breakdance uprock to ground" },
+  { value: "media/sandbox/anims/anim_breakdance_uprock_to_ground_2.glb", label: "breakdance uprock to ground (2)" },
+  { value: "media/sandbox/anims/anim_breakdance_uprock_var_1.glb", label: "breakdance uprock var 1" },
+  { value: "media/sandbox/anims/anim_breakdance_uprock_var_1_end.glb", label: "breakdance uprock var 1 end" },
+  { value: "media/sandbox/anims/anim_breakdance_uprock_var_1_start.glb", label: "breakdance uprock var 1 start" },
+  { value: "media/sandbox/anims/anim_breakdance_uprock_var_2.glb", label: "breakdance uprock var 2" },
+  { value: "media/sandbox/anims/anim_brooklyn_uprock.glb", label: "Brooklyn Uprock" },
+  { value: "media/sandbox/anims/anim_brutal_assassination.glb", label: "Brutal Assassination" },
+  { value: "media/sandbox/anims/anim_brutal_assassination_1.glb", label: "Brutal Assassination (1)" },
+  { value: "media/sandbox/anims/anim_burpee.glb", label: "Burpee" },
+  { value: "media/sandbox/anims/anim_burpee_end.glb", label: "Burpee End" },
+  { value: "media/sandbox/anims/anim_button_pushing.glb", label: "Button Pushing" },
+  { value: "media/sandbox/anims/anim_can_can.glb", label: "Can Can" },
+  { value: "media/sandbox/anims/anim_capoeira.glb", label: "Capoeira" },
+  { value: "media/sandbox/anims/anim_capoeira_2.glb", label: "capoeira (2)" },
+  { value: "media/sandbox/anims/anim_capoeira_3.glb", label: "capoeira (3)" },
+  { value: "media/sandbox/anims/anim_cards.glb", label: "Cards" },
+  { value: "media/sandbox/anims/anim_catwalk_sequence_01.glb", label: "Catwalk Sequence 01" },
+  { value: "media/sandbox/anims/anim_catwalk_sequence_02.glb", label: "Catwalk Sequence 02" },
+  { value: "media/sandbox/anims/anim_catwalk_sequence_03.glb", label: "Catwalk Sequence 03" },
+  { value: "media/sandbox/anims/anim_catwalk_sequence_04.glb", label: "Catwalk Sequence 04" },
+  { value: "media/sandbox/anims/anim_catwalk_sequence_05.glb", label: "Catwalk Sequence 05" },
+  { value: "media/sandbox/anims/anim_catwalk_walking_not_in_place.glb", label: "Catwalk Walking not in place" },
+  { value: "media/sandbox/anims/anim_ch22_nonpbr.glb", label: "Ch22 Nonpbr" },
+  { value: "media/sandbox/anims/anim_ch47_nonpbr.glb", label: "Ch47 Nonpbr" },
+  { value: "media/sandbox/anims/anim_chapa_2.glb", label: "Chapa 2" },
+  { value: "media/sandbox/anims/anim_chapa_giratoria.glb", label: "Chapa-Giratoria" },
+  { value: "media/sandbox/anims/anim_chapa_giratoria_2.glb", label: "chapa giratoria 2" },
+  { value: "media/sandbox/anims/anim_chapaeu_de_couro.glb", label: "chapaeu de couro" },
+  { value: "media/sandbox/anims/anim_cheering.glb", label: "Cheering" },
+  { value: "media/sandbox/anims/anim_cheering_while_sitting.glb", label: "Cheering While Sitting" },
+  { value: "media/sandbox/anims/anim_clapping.glb", label: "Clapping" },
+  { value: "media/sandbox/anims/anim_clean_and_jerk.glb", label: "Clean And Jerk" },
+  { value: "media/sandbox/anims/anim_climbing.glb", label: "Climbing" },
+  { value: "media/sandbox/anims/anim_climbing_1.glb", label: "Climbing (1)" },
+  { value: "media/sandbox/anims/anim_climbing_a_rope.glb", label: "Climbing A Rope" },
+  { value: "media/sandbox/anims/anim_climbing_a_rope_1.glb", label: "Climbing A Rope (1)" },
+  { value: "media/sandbox/anims/anim_climbing_down.glb", label: "Climbing Down" },
+  { value: "media/sandbox/anims/anim_climbing_up_wall.glb", label: "Climbing Up Wall" },
+  { value: "media/sandbox/anims/anim_closing.glb", label: "Closing" },
+  { value: "media/sandbox/anims/anim_cocky_head_turn.glb", label: "Cocky Head Turn" },
+  { value: "media/sandbox/anims/anim_convulsing.glb", label: "Convulsing" },
+  { value: "media/sandbox/anims/anim_corkscrew_kip_up.glb", label: "Corkscrew Kip Up" },
+  { value: "media/sandbox/anims/anim_counting.glb", label: "Counting" },
+  { value: "media/sandbox/anims/anim_couple_man.glb", label: "Couple Man" },
+  { value: "media/sandbox/anims/anim_couple_woman.glb", label: "Couple Woman" },
+  { value: "media/sandbox/anims/anim_cow_milking.glb", label: "Cow Milking" },
+  { value: "media/sandbox/anims/anim_crawl_backwards.glb", label: "Crawl Backwards" },
+  { value: "media/sandbox/anims/anim_crawl_backwards_in_prone.glb", label: "Crawl Backwards In Prone" },
+  { value: "media/sandbox/anims/anim_crawling_backwards.glb", label: "Crawling Backwards" },
+  { value: "media/sandbox/anims/anim_cross_jumps_rotation.glb", label: "Cross Jumps Rotation" },
+  { value: "media/sandbox/anims/anim_cross_punch.glb", label: "Cross Punch" },
+  { value: "media/sandbox/anims/anim_crossleg_freeze.glb", label: "Crossleg Freeze" },
+  { value: "media/sandbox/anims/anim_crouch_idle.glb", label: "crouch idle" },
+  { value: "media/sandbox/anims/anim_crouch_look_around_corner.glb", label: "Crouch Look Around Corner" },
+  { value: "media/sandbox/anims/anim_crouch_to_stand.glb", label: "Crouch To Stand" },
+  { value: "media/sandbox/anims/anim_crouch_to_standing_idle.glb", label: "crouch to standing idle" },
+  { value: "media/sandbox/anims/anim_crying.glb", label: "Crying" },
+  { value: "media/sandbox/anims/anim_dancing.glb", label: "Dancing" },
+  { value: "media/sandbox/anims/anim_dancing_1.glb", label: "Dancing (1)" },
+  { value: "media/sandbox/anims/anim_dancing_2.glb", label: "Dancing (2)" },
+  { value: "media/sandbox/anims/anim_dancing_3.glb", label: "Dancing (3)" },
+  { value: "media/sandbox/anims/anim_dancing_4.glb", label: "Dancing (4)" },
+  { value: "media/sandbox/anims/anim_dancing_5.glb", label: "Dancing (5)" },
+  { value: "media/sandbox/anims/anim_dancing_6.glb", label: "Dancing (6)" },
+  { value: "media/sandbox/anims/anim_dancing_7.glb", label: "Dancing (7)" },
+  { value: "media/sandbox/anims/anim_dancing_maraschino_step.glb", label: "Dancing Maraschino Step" },
+  { value: "media/sandbox/anims/anim_dancing_maraschino_step_1.glb", label: "Dancing Maraschino Step (1)" },
+  { value: "media/sandbox/anims/anim_dancing_running_man.glb", label: "Dancing Running Man" },
+  { value: "media/sandbox/anims/anim_dancing_twerk.glb", label: "Dancing Twerk" },
+  { value: "media/sandbox/anims/anim_defeat.glb", label: "Defeat" },
+  { value: "media/sandbox/anims/anim_descending_stairs.glb", label: "Descending Stairs" },
+  { value: "media/sandbox/anims/anim_dig_and_plant_seeds.glb", label: "Dig And Plant Seeds" },
+  { value: "media/sandbox/anims/anim_dig_and_plant_seeds_1.glb", label: "Dig And Plant Seeds (1)" },
+  { value: "media/sandbox/anims/anim_disappointed.glb", label: "Disappointed" },
+  { value: "media/sandbox/anims/anim_dismissing_gesture.glb", label: "dismissing gesture" },
+  { value: "media/sandbox/anims/anim_dive_roll.glb", label: "Dive Roll" },
+  { value: "media/sandbox/anims/anim_dodging.glb", label: "Dodging" },
+  { value: "media/sandbox/anims/anim_dodging_1.glb", label: "Dodging (1)" },
+  { value: "media/sandbox/anims/anim_double_leg_takedown___attacker.glb", label: "Double Leg Takedown   Attacker" },
+  { value: "media/sandbox/anims/anim_double_leg_takedown_attacker.glb", label: "Double Leg Takedown - Attacker" },
+  { value: "media/sandbox/anims/anim_double_leg_takedown_victim.glb", label: "Double Leg Takedown - Victim" },
+  { value: "media/sandbox/anims/anim_drinking_fountain.glb", label: "Drinking Fountain" },
+  { value: "media/sandbox/anims/anim_dropping.glb", label: "Dropping" },
+  { value: "media/sandbox/anims/anim_drunk_idle.glb", label: "drunk idle" },
+  { value: "media/sandbox/anims/anim_drunk_idle_variation.glb", label: "Drunk Idle Variation" },
+  { value: "media/sandbox/anims/anim_drunk_idle_variation_1.glb", label: "Drunk Idle Variation (1)" },
+  { value: "media/sandbox/anims/anim_drunk_idle_variation_2.glb", label: "drunk idle variation (2)" },
+  { value: "media/sandbox/anims/anim_drunk_run_backward.glb", label: "drunk run backward" },
+  { value: "media/sandbox/anims/anim_drunk_run_forward.glb", label: "drunk run forward" },
+  { value: "media/sandbox/anims/anim_drunk_running_left_turn.glb", label: "drunk running left turn" },
+  { value: "media/sandbox/anims/anim_drunk_turn.glb", label: "drunk turn" },
+  { value: "media/sandbox/anims/anim_drunk_walk.glb", label: "Drunk Walk" },
+  { value: "media/sandbox/anims/anim_drunk_walk_backwards.glb", label: "drunk walk backwards" },
+  { value: "media/sandbox/anims/anim_drunk_walking_turn.glb", label: "drunk walking turn" },
+  { value: "media/sandbox/anims/anim_ducking.glb", label: "Ducking" },
+  { value: "media/sandbox/anims/anim_dwarf_idle.glb", label: "Dwarf Idle" },
+  { value: "media/sandbox/anims/anim_dying.glb", label: "Dying" },
+  { value: "media/sandbox/anims/anim_elbow_punch.glb", label: "Elbow Punch" },
+  { value: "media/sandbox/anims/anim_elbow_uppercut_combo.glb", label: "Elbow Uppercut Combo" },
+  { value: "media/sandbox/anims/anim_entering_code.glb", label: "Entering Code" },
+  { value: "media/sandbox/anims/anim_entry.glb", label: "Entry" },
+  { value: "media/sandbox/anims/anim_esquiva_1.glb", label: "esquiva 1" },
+  { value: "media/sandbox/anims/anim_esquiva_2.glb", label: "Esquiva 2" },
+  { value: "media/sandbox/anims/anim_esquiva_3.glb", label: "esquiva 3" },
+  { value: "media/sandbox/anims/anim_esquiva_4.glb", label: "esquiva 4" },
+  { value: "media/sandbox/anims/anim_esquiva_5.glb", label: "esquiva 5" },
+  { value: "media/sandbox/anims/anim_fall_flat.glb", label: "Fall Flat" },
+  { value: "media/sandbox/anims/anim_falling.glb", label: "Falling" },
+  { value: "media/sandbox/anims/anim_falling_idle.glb", label: "Falling Idle" },
+  { value: "media/sandbox/anims/anim_female_dance_pose.glb", label: "Female Dance Pose" },
+  { value: "media/sandbox/anims/anim_female_dance_pose_1.glb", label: "Female Dance Pose (1)" },
+  { value: "media/sandbox/anims/anim_female_dance_pose_2.glb", label: "Female Dance Pose (2)" },
+  { value: "media/sandbox/anims/anim_female_dynamic_pose.glb", label: "Female Dynamic Pose" },
+  { value: "media/sandbox/anims/anim_female_laying_pose.glb", label: "Female Laying Pose" },
+  { value: "media/sandbox/anims/anim_female_laying_pose_1.glb", label: "Female Laying Pose (1)" },
+  { value: "media/sandbox/anims/anim_female_laying_pose_2.glb", label: "Female Laying Pose (2)" },
+  { value: "media/sandbox/anims/anim_female_laying_pose_3.glb", label: "Female Laying Pose (3)" },
+  { value: "media/sandbox/anims/anim_female_laying_pose_4.glb", label: "Female Laying Pose (4)" },
+  { value: "media/sandbox/anims/anim_female_laying_pose_5.glb", label: "Female Laying Pose (5)" },
+  { value: "media/sandbox/anims/anim_female_laying_pose_6.glb", label: "Female Laying Pose (6)" },
+  { value: "media/sandbox/anims/anim_female_laying_pose_7.glb", label: "Female Laying Pose (7)" },
+  { value: "media/sandbox/anims/anim_female_laying_pose_8.glb", label: "Female Laying Pose (8)" },
+  { value: "media/sandbox/anims/anim_female_laying_pose_9.glb", label: "Female Laying Pose (9)" },
+  { value: "media/sandbox/anims/anim_female_locomotion_pose.glb", label: "Female Locomotion Pose" },
+  { value: "media/sandbox/anims/anim_female_peek_and_aim.glb", label: "Female Peek And Aim" },
+  { value: "media/sandbox/anims/anim_female_sitting_pose.glb", label: "Female Sitting Pose" },
+  { value: "media/sandbox/anims/anim_female_sitting_pose_1.glb", label: "Female Sitting Pose (1)" },
+  { value: "media/sandbox/anims/anim_female_sitting_pose_2.glb", label: "Female Sitting Pose (2)" },
+  { value: "media/sandbox/anims/anim_female_sitting_pose_3.glb", label: "Female Sitting Pose (3)" },
+  { value: "media/sandbox/anims/anim_female_sitting_pose_4.glb", label: "Female Sitting Pose (4)" },
+  { value: "media/sandbox/anims/anim_female_standing_pose.glb", label: "Female Standing Pose" },
+  { value: "media/sandbox/anims/anim_female_standing_pose_1.glb", label: "Female Standing Pose (1)" },
+  { value: "media/sandbox/anims/anim_female_standing_pose_2.glb", label: "Female Standing Pose (2)" },
+  { value: "media/sandbox/anims/anim_female_standing_pose_3.glb", label: "Female Standing Pose (3)" },
+  { value: "media/sandbox/anims/anim_female_standing_pose_4.glb", label: "Female Standing Pose (4)" },
+  { value: "media/sandbox/anims/anim_female_walk.glb", label: "Female Walk" },
+  { value: "media/sandbox/anims/anim_femme_peek_around_corner.glb", label: "Femme Peek Around Corner" },
+  { value: "media/sandbox/anims/anim_fight_idle.glb", label: "Fight Idle" },
+  { value: "media/sandbox/anims/anim_finding.glb", label: "Finding" },
+  { value: "media/sandbox/anims/anim_fireball.glb", label: "Fireball" },
+  { value: "media/sandbox/anims/anim_fist_fight_b.glb", label: "Fist Fight B" },
+  { value: "media/sandbox/anims/anim_flair.glb", label: "Flair" },
+  { value: "media/sandbox/anims/anim_flair_2.glb", label: "flair (2)" },
+  { value: "media/sandbox/anims/anim_flair_3.glb", label: "flair (3)" },
+  { value: "media/sandbox/anims/anim_flip_kick.glb", label: "Flip Kick" },
+  { value: "media/sandbox/anims/anim_flip_kick_1.glb", label: "Flip Kick (1)" },
+  { value: "media/sandbox/anims/anim_floating.glb", label: "Floating" },
+  { value: "media/sandbox/anims/anim_flying.glb", label: "Flying" },
+  { value: "media/sandbox/anims/anim_flying_bicycle_kick.glb", label: "Flying Bicycle Kick" },
+  { value: "media/sandbox/anims/anim_focus.glb", label: "Focus" },
+  { value: "media/sandbox/anims/anim_free_hang_hop_left.glb", label: "Free Hang Hop Left" },
+  { value: "media/sandbox/anims/anim_free_hang_hop_right.glb", label: "Free Hang Hop Right" },
+  { value: "media/sandbox/anims/anim_freehang_drop.glb", label: "Freehang Drop" },
+  { value: "media/sandbox/anims/anim_front_flip.glb", label: "Front Flip" },
+  { value: "media/sandbox/anims/anim_front_twist_flip.glb", label: "Front Twist Flip" },
+  { value: "media/sandbox/anims/anim_gaming.glb", label: "Gaming" },
+  { value: "media/sandbox/anims/anim_gangnam_style.glb", label: "gangnam style" },
+  { value: "media/sandbox/anims/anim_getting_hit_backwards.glb", label: "Getting Hit Backwards" },
+  { value: "media/sandbox/anims/anim_getting_up.glb", label: "Getting Up" },
+  { value: "media/sandbox/anims/anim_ginga_backward.glb", label: "ginga backward" },
+  { value: "media/sandbox/anims/anim_ginga_forward.glb", label: "ginga forward" },
+  { value: "media/sandbox/anims/anim_ginga_sideways_1.glb", label: "ginga sideways 1" },
+  { value: "media/sandbox/anims/anim_ginga_sideways_2.glb", label: "ginga sideways 2" },
+  { value: "media/sandbox/anims/anim_ginga_sideways_to_au.glb", label: "ginga sideways to au" },
+  { value: "media/sandbox/anims/anim_ginga_variation_1.glb", label: "Ginga Variation 1" },
+  { value: "media/sandbox/anims/anim_ginga_variation_2.glb", label: "ginga variation 2" },
+  { value: "media/sandbox/anims/anim_ginga_variation_3.glb", label: "ginga variation 3" },
+  { value: "media/sandbox/anims/anim_goalkeeper_body_block.glb", label: "Goalkeeper Body Block" },
+  { value: "media/sandbox/anims/anim_goalkeeper_miss.glb", label: "Goalkeeper Miss" },
+  { value: "media/sandbox/anims/anim_golf_chip.glb", label: "Golf Chip" },
+  { value: "media/sandbox/anims/anim_goofy_running.glb", label: "Goofy Running" },
+  { value: "media/sandbox/anims/anim_great_sword_idle.glb", label: "Great Sword Idle" },
+  { value: "media/sandbox/anims/anim_great_sword_power_up.glb", label: "Great Sword Power Up" },
+  { value: "media/sandbox/anims/anim_guitar_playing.glb", label: "Guitar Playing" },
+  { value: "media/sandbox/anims/anim_gunplay.glb", label: "Gunplay" },
+  { value: "media/sandbox/anims/anim_gunplay_1.glb", label: "Gunplay (1)" },
+  { value: "media/sandbox/anims/anim_gunplay_shooting.glb", label: "Gunplay Shooting" },
+  { value: "media/sandbox/anims/anim_hand_raising.glb", label: "Hand Raising" },
+  { value: "media/sandbox/anims/anim_hanging_idle.glb", label: "Hanging Idle" },
+  { value: "media/sandbox/anims/anim_happy_hand_gesture.glb", label: "Happy Hand Gesture" },
+  { value: "media/sandbox/anims/anim_happy_idle.glb", label: "Happy Idle" },
+  { value: "media/sandbox/anims/anim_happy_walk.glb", label: "Happy Walk" },
+  { value: "media/sandbox/anims/anim_happy_walk_backward.glb", label: "Happy Walk Backward" },
+  { value: "media/sandbox/anims/anim_happy_walk_not_in_place.glb", label: "Happy Walk not in place" },
+  { value: "media/sandbox/anims/anim_hard_head_nod.glb", label: "hard head nod" },
+  { value: "media/sandbox/anims/anim_hard_landing.glb", label: "Hard Landing" },
+  { value: "media/sandbox/anims/anim_having_a_meeting_female.glb", label: "Having A Meeting, Female" },
+  { value: "media/sandbox/anims/anim_having_a_meeting_male.glb", label: "Having A Meeting, Male" },
+  { value: "media/sandbox/anims/anim_head_hit.glb", label: "Head Hit" },
+  { value: "media/sandbox/anims/anim_head_nod_yes.glb", label: "Head Nod Yes" },
+  { value: "media/sandbox/anims/anim_head_spinning.glb", label: "Head Spinning" },
+  { value: "media/sandbox/anims/anim_headbutt.glb", label: "Headbutt" },
+  { value: "media/sandbox/anims/anim_header.glb", label: "Header" },
+  { value: "media/sandbox/anims/anim_header_soccerball.glb", label: "Header Soccerball" },
+  { value: "media/sandbox/anims/anim_header_soccerball_1.glb", label: "Header Soccerball (1)" },
+  { value: "media/sandbox/anims/anim_helping_out.glb", label: "Helping Out" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing.glb", label: "Hip Hop Dancing" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_1.glb", label: "Hip Hop Dancing (1)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_10.glb", label: "Hip Hop Dancing (10)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_11.glb", label: "Hip Hop Dancing (11)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_12.glb", label: "Hip Hop Dancing (12)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_13.glb", label: "Hip Hop Dancing (13)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_14.glb", label: "Hip Hop Dancing (14)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_15.glb", label: "Hip Hop Dancing (15)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_16.glb", label: "Hip Hop Dancing (16)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_17.glb", label: "Hip Hop Dancing (17)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_18.glb", label: "Hip Hop Dancing (18)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_19.glb", label: "Hip Hop Dancing (19)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_2.glb", label: "Hip Hop Dancing (2)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_3.glb", label: "Hip Hop Dancing (3)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_4.glb", label: "Hip Hop Dancing (4)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_5.glb", label: "Hip Hop Dancing (5)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_6.glb", label: "Hip Hop Dancing (6)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_7.glb", label: "Hip Hop Dancing (7)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_8.glb", label: "Hip Hop Dancing (8)" },
+  { value: "media/sandbox/anims/anim_hip_hop_dancing_9.glb", label: "Hip Hop Dancing (9)" },
+  { value: "media/sandbox/anims/anim_hit_to_body.glb", label: "Hit To Body" },
+  { value: "media/sandbox/anims/anim_hit_to_body_1.glb", label: "Hit To Body (1)" },
+  { value: "media/sandbox/anims/anim_hit_to_head.glb", label: "Hit To Head" },
+  { value: "media/sandbox/anims/anim_hit_to_side_of_body.glb", label: "Hit To Side Of Body" },
+  { value: "media/sandbox/anims/anim_hit_to_the_legs.glb", label: "Hit To The Legs" },
+  { value: "media/sandbox/anims/anim_hokey_pokey.glb", label: "Hokey Pokey" },
+  { value: "media/sandbox/anims/anim_holding_idle.glb", label: "holding idle" },
+  { value: "media/sandbox/anims/anim_holding_turn_left.glb", label: "holding turn left" },
+  { value: "media/sandbox/anims/anim_holding_turn_right.glb", label: "holding turn right" },
+  { value: "media/sandbox/anims/anim_holding_walk.glb", label: "holding walk" },
+  { value: "media/sandbox/anims/anim_hook.glb", label: "Hook" },
+  { value: "media/sandbox/anims/anim_house_dancing.glb", label: "House Dancing" },
+  { value: "media/sandbox/anims/anim_house_dancing_1.glb", label: "House Dancing (1)" },
+  { value: "media/sandbox/anims/anim_house_dancing_2.glb", label: "House Dancing (2)" },
+  { value: "media/sandbox/anims/anim_hurricane_kick.glb", label: "Hurricane Kick" },
+  { value: "media/sandbox/anims/anim_idle.glb", label: "idle" },
+  { value: "media/sandbox/anims/anim_idle_fight.glb", label: "Idle fight" },
+  { value: "media/sandbox/anims/anim_idle_left_right.glb", label: "Idle Left Right" },
+  { value: "media/sandbox/anims/anim_illegal_elbow_punch.glb", label: "Illegal Elbow Punch" },
+  { value: "media/sandbox/anims/anim_injured_walk_right_turn.glb", label: "Injured Walk Right Turn" },
+  { value: "media/sandbox/anims/anim_inside_crescent_kick.glb", label: "Inside Crescent Kick" },
+  { value: "media/sandbox/anims/anim_insult.glb", label: "Insult" },
+  { value: "media/sandbox/anims/anim_inward_block.glb", label: "Inward Block" },
+  { value: "media/sandbox/anims/anim_jab_to_elbow_punch.glb", label: "Jab To Elbow Punch" },
+  { value: "media/sandbox/anims/anim_jab_to_elbow_punch_1.glb", label: "Jab To Elbow Punch (1)" },
+  { value: "media/sandbox/anims/anim_jazz_dancing.glb", label: "Jazz Dancing" },
+  { value: "media/sandbox/anims/anim_jazz_dancing_1.glb", label: "Jazz Dancing (1)" },
+  { value: "media/sandbox/anims/anim_jazz_dancing_2.glb", label: "Jazz Dancing (2)" },
+  { value: "media/sandbox/anims/anim_jazz_dancing_3.glb", label: "Jazz Dancing (3)" },
+  { value: "media/sandbox/anims/anim_jazz_dancing_4.glb", label: "Jazz Dancing (4)" },
+  { value: "media/sandbox/anims/anim_joyful_jump.glb", label: "Joyful Jump" },
+  { value: "media/sandbox/anims/anim_jump.glb", label: "jump" },
+  { value: "media/sandbox/anims/anim_jump_away.glb", label: "Jump Away" },
+  { value: "media/sandbox/anims/anim_jump_away_1.glb", label: "Jump Away (1)" },
+  { value: "media/sandbox/anims/anim_jump_down.glb", label: "Jump Down" },
+  { value: "media/sandbox/anims/anim_jump_over.glb", label: "Jump Over" },
+  { value: "media/sandbox/anims/anim_jump_push_up.glb", label: "Jump Push Up" },
+  { value: "media/sandbox/anims/anim_jumping_down.glb", label: "Jumping Down" },
+  { value: "media/sandbox/anims/anim_jumping_down_1.glb", label: "Jumping Down (1)" },
+  { value: "media/sandbox/anims/anim_jumping_jacks.glb", label: "Jumping Jacks" },
+  { value: "media/sandbox/anims/anim_jumping_over_into_combat.glb", label: "Jumping Over Into Combat" },
+  { value: "media/sandbox/anims/anim_jumping_parkour.glb", label: "Jumping parkour" },
+  { value: "media/sandbox/anims/anim_jumping_rope.glb", label: "Jumping Rope" },
+  { value: "media/sandbox/anims/anim_kettlebell_swing.glb", label: "Kettlebell Swing" },
+  { value: "media/sandbox/anims/anim_kick_soccerball.glb", label: "Kick Soccerball" },
+  { value: "media/sandbox/anims/anim_kick_to_the_groin.glb", label: "Kick To The Groin" },
+  { value: "media/sandbox/anims/anim_kick_to_the_groin_1.glb", label: "Kick To The Groin (1)" },
+  { value: "media/sandbox/anims/anim_kick_up_soccerball.glb", label: "Kick Up Soccerball" },
+  { value: "media/sandbox/anims/anim_kicking.glb", label: "Kicking" },
+  { value: "media/sandbox/anims/anim_kicking_1.glb", label: "Kicking (1)" },
+  { value: "media/sandbox/anims/anim_kicking_2.glb", label: "Kicking (2)" },
+  { value: "media/sandbox/anims/anim_kicking_3.glb", label: "Kicking (3)" },
+  { value: "media/sandbox/anims/anim_kicking_4.glb", label: "Kicking (4)" },
+  { value: "media/sandbox/anims/anim_kicking_5.glb", label: "Kicking (5)" },
+  { value: "media/sandbox/anims/anim_kicking_6.glb", label: "Kicking (6)" },
+  { value: "media/sandbox/anims/anim_kicking_7.glb", label: "Kicking (7)" },
+  { value: "media/sandbox/anims/anim_kicking_out.glb", label: "Kicking Out" },
+  { value: "media/sandbox/anims/anim_kidney_hit.glb", label: "Kidney Hit" },
+  { value: "media/sandbox/anims/anim_kip_up.glb", label: "Kip Up" },
+  { value: "media/sandbox/anims/anim_kiss.glb", label: "Kiss" },
+  { value: "media/sandbox/anims/anim_kiss_1.glb", label: "Kiss (1)" },
+  { value: "media/sandbox/anims/anim_kiss_from_man.glb", label: "Kiss from man" },
+  { value: "media/sandbox/anims/anim_kiss_from_woman.glb", label: "Kiss from woman" },
+  { value: "media/sandbox/anims/anim_knee_jab.glb", label: "Knee Jab" },
+  { value: "media/sandbox/anims/anim_knee_jab_1.glb", label: "Knee Jab (1)" },
+  { value: "media/sandbox/anims/anim_knee_kick_lead.glb", label: "Knee Kick Lead" },
+  { value: "media/sandbox/anims/anim_kneeing_soccerball.glb", label: "Kneeing Soccerball" },
+  { value: "media/sandbox/anims/anim_kneeling_idle.glb", label: "kneeling idle" },
+  { value: "media/sandbox/anims/anim_kneeling_inspecting.glb", label: "Kneeling Inspecting" },
+  { value: "media/sandbox/anims/anim_kneeling_pointing.glb", label: "Kneeling Pointing" },
+  { value: "media/sandbox/anims/anim_laughing.glb", label: "Laughing" },
+  { value: "media/sandbox/anims/anim_laughing_1.glb", label: "Laughing (1)" },
+  { value: "media/sandbox/anims/anim_laying.glb", label: "Laying" },
+  { value: "media/sandbox/anims/anim_laying_1.glb", label: "Laying (1)" },
+  { value: "media/sandbox/anims/anim_laying_idle.glb", label: "Laying Idle" },
+  { value: "media/sandbox/anims/anim_laying_idle_1.glb", label: "Laying Idle (1)" },
+  { value: "media/sandbox/anims/anim_laying_idle_2.glb", label: "Laying Idle (2)" },
+  { value: "media/sandbox/anims/anim_laying_mild_cough.glb", label: "Laying Mild Cough" },
+  { value: "media/sandbox/anims/anim_laying_seizure.glb", label: "Laying Seizure" },
+  { value: "media/sandbox/anims/anim_laying_severe_cough.glb", label: "Laying Severe Cough" },
+  { value: "media/sandbox/anims/anim_laying_shrugging.glb", label: "Laying Shrugging" },
+  { value: "media/sandbox/anims/anim_laying_sleeping.glb", label: "Laying Sleeping" },
+  { value: "media/sandbox/anims/anim_lead_jab.glb", label: "Lead Jab" },
+  { value: "media/sandbox/anims/anim_lead_jab_1.glb", label: "Lead Jab (1)" },
+  { value: "media/sandbox/anims/anim_leaning.glb", label: "Leaning" },
+  { value: "media/sandbox/anims/anim_left_strafe.glb", label: "left strafe" },
+  { value: "media/sandbox/anims/anim_left_strafe_walk.glb", label: "left strafe walk" },
+  { value: "media/sandbox/anims/anim_left_strafe_walking.glb", label: "left strafe walking" },
+  { value: "media/sandbox/anims/anim_left_turn.glb", label: "Left Turn" },
+  { value: "media/sandbox/anims/anim_left_turn_2.glb", label: "left turn (2)" },
+  { value: "media/sandbox/anims/anim_left_turn_90.glb", label: "left turn 90" },
+  { value: "media/sandbox/anims/anim_leg_sweep.glb", label: "Leg Sweep" },
+  { value: "media/sandbox/anims/anim_leg_sweep_1.glb", label: "Leg Sweep (1)" },
+  { value: "media/sandbox/anims/anim_lengthy_head_nod.glb", label: "lengthy head nod" },
+  { value: "media/sandbox/anims/anim_lifting.glb", label: "Lifting" },
+  { value: "media/sandbox/anims/anim_light_hit_to_head.glb", label: "Light Hit To Head" },
+  { value: "media/sandbox/anims/anim_listening_to_music.glb", label: "Listening To Music" },
+  { value: "media/sandbox/anims/anim_locking_hip_hop_dance.glb", label: "Locking Hip Hop Dance" },
+  { value: "media/sandbox/anims/anim_lola_b_styperek.glb", label: "Lola B Styperek" },
+  { value: "media/sandbox/anims/anim_look_around.glb", label: "Look Around" },
+  { value: "media/sandbox/anims/anim_look_away_gesture.glb", label: "look away gesture" },
+  { value: "media/sandbox/anims/anim_looking.glb", label: "Looking" },
+  { value: "media/sandbox/anims/anim_looking_around.glb", label: "Looking Around" },
+  { value: "media/sandbox/anims/anim_looking_through_files_low.glb", label: "Looking Through Files Low" },
+  { value: "media/sandbox/anims/anim_loser.glb", label: "Loser" },
+  { value: "media/sandbox/anims/anim_low_crawl.glb", label: "Low Crawl" },
+  { value: "media/sandbox/anims/anim_lying_down.glb", label: "Lying Down" },
+  { value: "media/sandbox/anims/anim_macaco_side.glb", label: "macaco side" },
+  { value: "media/sandbox/anims/anim_macarena_dance.glb", label: "Macarena Dance" },
+  { value: "media/sandbox/anims/anim_macarena_dance_1.glb", label: "Macarena Dance (1)" },
+  { value: "media/sandbox/anims/anim_male_crouch_pose.glb", label: "Male Crouch Pose" },
+  { value: "media/sandbox/anims/anim_male_dynamic_matrix_pose.glb", label: "Male Dynamic Matrix Pose" },
+  { value: "media/sandbox/anims/anim_male_laying_pose.glb", label: "Male Laying Pose" },
+  { value: "media/sandbox/anims/anim_male_laying_pose_1.glb", label: "Male Laying Pose (1)" },
+  { value: "media/sandbox/anims/anim_male_laying_pose_2.glb", label: "Male Laying Pose (2)" },
+  { value: "media/sandbox/anims/anim_male_sitting_pose.glb", label: "Male Sitting Pose" },
+  { value: "media/sandbox/anims/anim_male_sitting_pose_1.glb", label: "Male Sitting Pose (1)" },
+  { value: "media/sandbox/anims/anim_male_sitting_pose_2.glb", label: "Male Sitting Pose (2)" },
+  { value: "media/sandbox/anims/anim_male_sitting_pose_3.glb", label: "Male Sitting Pose (3)" },
+  { value: "media/sandbox/anims/anim_male_standing_pose.glb", label: "Male Standing Pose" },
+  { value: "media/sandbox/anims/anim_martelo_2.glb", label: "Martelo 2" },
+  { value: "media/sandbox/anims/anim_martelo_3.glb", label: "Martelo 3" },
+  { value: "media/sandbox/anims/anim_martelo_do_chau.glb", label: "martelo do chau" },
+  { value: "media/sandbox/anims/anim_martelo_do_chau_sem_mao.glb", label: "Martelo Do Chau Sem Mao" },
+  { value: "media/sandbox/anims/anim_meia_lua_de_compasso.glb", label: "Meia Lua De Compasso" },
+  { value: "media/sandbox/anims/anim_meia_lua_de_compasso_back.glb", label: "Meia Lua De Compasso Back" },
+  { value: "media/sandbox/anims/anim_meia_lua_de_frente.glb", label: "Meia Lua De Frente" },
+  { value: "media/sandbox/anims/anim_military_signaling.glb", label: "Military Signaling" },
+  { value: "media/sandbox/anims/anim_military_signaling_1.glb", label: "Military Signaling (1)" },
+  { value: "media/sandbox/anims/anim_military_signaling_2.glb", label: "Military Signaling (2)" },
+  { value: "media/sandbox/anims/anim_mma_idle.glb", label: "Mma Idle" },
+  { value: "media/sandbox/anims/anim_mma_kick.glb", label: "Mma Kick" },
+  { value: "media/sandbox/anims/anim_mma_kick_1.glb", label: "Mma Kick (1)" },
+  { value: "media/sandbox/anims/anim_mma_kick_2.glb", label: "Mma Kick (2)" },
+  { value: "media/sandbox/anims/anim_moving_while_hanging.glb", label: "Moving While Hanging" },
+  { value: "media/sandbox/anims/anim_neck_stretching.glb", label: "Neck Stretching" },
+  { value: "media/sandbox/anims/anim_nervously_look_around.glb", label: "Nervously Look Around" },
+  { value: "media/sandbox/anims/anim_ninja_idle.glb", label: "Ninja Idle" },
+  { value: "media/sandbox/anims/anim_no.glb", label: "No" },
+  { value: "media/sandbox/anims/anim_northern_soul_spin_combo.glb", label: "Northern Soul Spin Combo" },
+  { value: "media/sandbox/anims/anim_northern_soul_spin_combo_1.glb", label: "Northern Soul Spin Combo (1)" },
+  { value: "media/sandbox/anims/anim_offensive_idle.glb", label: "Offensive Idle" },
+  { value: "media/sandbox/anims/anim_offensive_idle_1.glb", label: "Offensive Idle (1)" },
+  { value: "media/sandbox/anims/anim_one_shoulder_lean.glb", label: "One Shoulder Lean" },
+  { value: "media/sandbox/anims/anim_open_door_outwards.glb", label: "Open Door Outwards" },
+  { value: "media/sandbox/anims/anim_opening.glb", label: "Opening" },
+  { value: "media/sandbox/anims/anim_overhead_squat.glb", label: "Overhead Squat" },
+  { value: "media/sandbox/anims/anim_patting.glb", label: "Patting" },
+  { value: "media/sandbox/anims/anim_petting_animal.glb", label: "Petting Animal" },
+  { value: "media/sandbox/anims/anim_pick_fruit.glb", label: "Pick Fruit" },
+  { value: "media/sandbox/anims/anim_pick_fruit_2.glb", label: "pick fruit (2)" },
+  { value: "media/sandbox/anims/anim_pick_fruit_3.glb", label: "pick fruit (3)" },
+  { value: "media/sandbox/anims/anim_picking_at_shirt.glb", label: "Picking At Shirt" },
+  { value: "media/sandbox/anims/anim_picking_at_shirt_1.glb", label: "Picking At Shirt (1)" },
+  { value: "media/sandbox/anims/anim_pike_walk.glb", label: "Pike Walk" },
+  { value: "media/sandbox/anims/anim_pistol_idle.glb", label: "Pistol Idle" },
+  { value: "media/sandbox/anims/anim_pistol_idle_1.glb", label: "Pistol Idle (1)" },
+  { value: "media/sandbox/anims/anim_pistol_idle_2.glb", label: "Pistol Idle (2)" },
+  { value: "media/sandbox/anims/anim_pistol_kneel_to_stand.glb", label: "Pistol Kneel To Stand" },
+  { value: "media/sandbox/anims/anim_pistol_to_idle.glb", label: "Pistol To Idle" },
+  { value: "media/sandbox/anims/anim_pivot.glb", label: "Pivot" },
+  { value: "media/sandbox/anims/anim_plant_a_plant.glb", label: "Plant A Plant" },
+  { value: "media/sandbox/anims/anim_plant_tree.glb", label: "Plant Tree" },
+  { value: "media/sandbox/anims/anim_plotting.glb", label: "Plotting" },
+  { value: "media/sandbox/anims/anim_pointing.glb", label: "Pointing" },
+  { value: "media/sandbox/anims/anim_pontera.glb", label: "pontera" },
+  { value: "media/sandbox/anims/anim_praying.glb", label: "Praying" },
+  { value: "media/sandbox/anims/anim_praying_1.glb", label: "Praying (1)" },
+  { value: "media/sandbox/anims/anim_praying_2.glb", label: "Praying (2)" },
+  { value: "media/sandbox/anims/anim_pull_pilot_from_seat.glb", label: "Pull Pilot From Seat" },
+  { value: "media/sandbox/anims/anim_pull_plant.glb", label: "Pull Plant" },
+  { value: "media/sandbox/anims/anim_pull_plant_1.glb", label: "Pull Plant (1)" },
+  { value: "media/sandbox/anims/anim_pull_plant_2.glb", label: "pull plant (2)" },
+  { value: "media/sandbox/anims/anim_pulled_from_seat.glb", label: "Pulled From Seat" },
+  { value: "media/sandbox/anims/anim_punch_combo.glb", label: "Punch Combo" },
+  { value: "media/sandbox/anims/anim_punch_to_elbow_combo.glb", label: "Punch To Elbow Combo" },
+  { value: "media/sandbox/anims/anim_punching.glb", label: "Punching" },
+  { value: "media/sandbox/anims/anim_punching_1.glb", label: "Punching (1)" },
+  { value: "media/sandbox/anims/anim_punching_light.glb", label: "Punching Light" },
+  { value: "media/sandbox/anims/anim_push_up.glb", label: "Push Up" },
+  { value: "media/sandbox/anims/anim_putting_down.glb", label: "Putting Down" },
+  { value: "media/sandbox/anims/anim_putting_down_1.glb", label: "Putting Down (1)" },
+  { value: "media/sandbox/anims/anim_quad_punch.glb", label: "Quad Punch" },
+  { value: "media/sandbox/anims/anim_queshada_1.glb", label: "queshada 1" },
+  { value: "media/sandbox/anims/anim_queshada_2.glb", label: "Queshada 2" },
+  { value: "media/sandbox/anims/anim_quick_informal_bow.glb", label: "Quick Informal Bow" },
+  { value: "media/sandbox/anims/anim_rallying.glb", label: "Rallying" },
+  { value: "media/sandbox/anims/anim_rapping.glb", label: "Rapping" },
+  { value: "media/sandbox/anims/anim_rasteira_1.glb", label: "rasteira 1" },
+  { value: "media/sandbox/anims/anim_rasteira_2.glb", label: "rasteira 2" },
+  { value: "media/sandbox/anims/anim_receive_soccerball.glb", label: "Receive Soccerball" },
+  { value: "media/sandbox/anims/anim_receiving_an_uppercut.glb", label: "Receiving An Uppercut" },
+  { value: "media/sandbox/anims/anim_release_hostage_villain.glb", label: "Release Hostage - Villain" },
+  { value: "media/sandbox/anims/anim_relieved_sigh.glb", label: "Relieved Sigh" },
+  { value: "media/sandbox/anims/anim_removing_driver.glb", label: "Removing Driver" },
+  { value: "media/sandbox/anims/anim_restrain.glb", label: "Restrain" },
+  { value: "media/sandbox/anims/anim_rib_hit.glb", label: "Rib Hit" },
+  { value: "media/sandbox/anims/anim_right_block.glb", label: "Right Block" },
+  { value: "media/sandbox/anims/anim_right_hook.glb", label: "Right Hook" },
+  { value: "media/sandbox/anims/anim_right_strafe.glb", label: "right strafe" },
+  { value: "media/sandbox/anims/anim_right_strafe_walk.glb", label: "right strafe walk" },
+  { value: "media/sandbox/anims/anim_right_strafe_walking.glb", label: "right strafe walking" },
+  { value: "media/sandbox/anims/anim_right_turn.glb", label: "Right Turn" },
+  { value: "media/sandbox/anims/anim_right_turn_2.glb", label: "right turn (2)" },
+  { value: "media/sandbox/anims/anim_right_turn_90.glb", label: "right turn 90" },
+  { value: "media/sandbox/anims/anim_robot_hip_hop_dance.glb", label: "Robot Hip Hop Dance" },
+  { value: "media/sandbox/anims/anim_roundhouse_kick.glb", label: "Roundhouse Kick" },
+  { value: "media/sandbox/anims/anim_rumba_dancing.glb", label: "Rumba Dancing" },
+  { value: "media/sandbox/anims/anim_rummaging.glb", label: "Rummaging" },
+  { value: "media/sandbox/anims/anim_run_and_swing.glb", label: "Run And Swing" },
+  { value: "media/sandbox/anims/anim_run_backward_arc_right.glb", label: "run backward arc right" },
+  { value: "media/sandbox/anims/anim_run_to_flip.glb", label: "Run To Flip" },
+  { value: "media/sandbox/anims/anim_running.glb", label: "running" },
+  { value: "media/sandbox/anims/anim_running_crawl.glb", label: "running crawl" },
+  { value: "media/sandbox/anims/anim_running_slide.glb", label: "Running Slide" },
+  { value: "media/sandbox/anims/anim_sad_idle.glb", label: "Sad Idle" },
+  { value: "media/sandbox/anims/anim_salsa_dancing.glb", label: "Salsa Dancing" },
+  { value: "media/sandbox/anims/anim_salsa_dancing_1.glb", label: "Salsa Dancing (1)" },
+  { value: "media/sandbox/anims/anim_salsa_dancing_2.glb", label: "Salsa Dancing (2)" },
+  { value: "media/sandbox/anims/anim_salsa_dancing_3.glb", label: "Salsa Dancing (3)" },
+  { value: "media/sandbox/anims/anim_salsa_dancing_4.glb", label: "Salsa Dancing (4)" },
+  { value: "media/sandbox/anims/anim_salsa_dancing_5.glb", label: "Salsa Dancing (5)" },
+  { value: "media/sandbox/anims/anim_salsa_dancing_6.glb", label: "Salsa Dancing (6)" },
+  { value: "media/sandbox/anims/anim_salsa_dancing_man.glb", label: "Salsa Dancing man" },
+  { value: "media/sandbox/anims/anim_samba_dancing.glb", label: "Samba Dancing" },
+  { value: "media/sandbox/anims/anim_samba_dancing_1.glb", label: "Samba Dancing (1)" },
+  { value: "media/sandbox/anims/anim_samba_dancing_2.glb", label: "Samba Dancing (2)" },
+  { value: "media/sandbox/anims/anim_samba_dancing_3.glb", label: "Samba Dancing (3)" },
+  { value: "media/sandbox/anims/anim_samba_dancing_4.glb", label: "Samba Dancing (4)" },
+  { value: "media/sandbox/anims/anim_samba_dancing_5.glb", label: "Samba Dancing (5)" },
+  { value: "media/sandbox/anims/anim_samba_dancing_6.glb", label: "Samba Dancing (6)" },
+  { value: "media/sandbox/anims/anim_samba_dancing_7.glb", label: "Samba Dancing (7)" },
+  { value: "media/sandbox/anims/anim_sarcastic_head_nod.glb", label: "sarcastic head nod" },
+  { value: "media/sandbox/anims/anim_scared.glb", label: "Scared" },
+  { value: "media/sandbox/anims/anim_scissor_kick.glb", label: "Scissor Kick" },
+  { value: "media/sandbox/anims/anim_searching_files_high.glb", label: "Searching Files High" },
+  { value: "media/sandbox/anims/anim_searching_pockets.glb", label: "Searching Pockets" },
+  { value: "media/sandbox/anims/anim_seated_idle.glb", label: "Seated Idle" },
+  { value: "media/sandbox/anims/anim_shaking_hands_2.glb", label: "Shaking Hands 2" },
+  { value: "media/sandbox/anims/anim_shaking_head_no.glb", label: "shaking head no" },
+  { value: "media/sandbox/anims/anim_shooting.glb", label: "Shooting" },
+  { value: "media/sandbox/anims/anim_shooting_gun.glb", label: "Shooting Gun" },
+  { value: "media/sandbox/anims/anim_shooting_pistol.glb", label: "Shooting Pistol" },
+  { value: "media/sandbox/anims/anim_shoulder_throw_aggressor.glb", label: "Shoulder Throw, Aggressor" },
+  { value: "media/sandbox/anims/anim_shoulder_throw_victim.glb", label: "Shoulder Throw, Victim" },
+  { value: "media/sandbox/anims/anim_side_kick.glb", label: "Side Kick" },
+  { value: "media/sandbox/anims/anim_silly_dancing.glb", label: "Silly Dancing" },
+  { value: "media/sandbox/anims/anim_silly_dancing_1.glb", label: "Silly Dancing (1)" },
+  { value: "media/sandbox/anims/anim_silly_dancing_2.glb", label: "Silly Dancing (2)" },
+  { value: "media/sandbox/anims/anim_singing.glb", label: "Singing" },
+  { value: "media/sandbox/anims/anim_sit_to_stand.glb", label: "Sit To Stand" },
+  { value: "media/sandbox/anims/anim_sitting.glb", label: "Sitting" },
+  { value: "media/sandbox/anims/anim_sitting_1.glb", label: "Sitting (1)" },
+  { value: "media/sandbox/anims/anim_sitting_2.glb", label: "Sitting (2)" },
+  { value: "media/sandbox/anims/anim_sitting_3.glb", label: "Sitting (3)" },
+  { value: "media/sandbox/anims/anim_sitting_angry.glb", label: "Sitting Angry" },
+  { value: "media/sandbox/anims/anim_sitting_disbelief.glb", label: "Sitting Disbelief" },
+  { value: "media/sandbox/anims/anim_sitting_drinking.glb", label: "Sitting Drinking" },
+  { value: "media/sandbox/anims/anim_sitting_gun_motion.glb", label: "Sitting Gun Motion" },
+  { value: "media/sandbox/anims/anim_sitting_idle.glb", label: "Sitting Idle" },
+  { value: "media/sandbox/anims/anim_sitting_idle_1.glb", label: "Sitting Idle (1)" },
+  { value: "media/sandbox/anims/anim_sitting_laughing.glb", label: "Sitting Laughing" },
+  { value: "media/sandbox/anims/anim_sitting_legs_swing.glb", label: "Sitting-legs-swing" },
+  { value: "media/sandbox/anims/anim_sitting_talking.glb", label: "Sitting Talking" },
+  { value: "media/sandbox/anims/anim_sitting_talking_1.glb", label: "Sitting Talking (1)" },
+  { value: "media/sandbox/anims/anim_sitting_thumbs_up.glb", label: "Sitting Thumbs Up" },
+  { value: "media/sandbox/anims/anim_sitting_yell.glb", label: "Sitting Yell" },
+  { value: "media/sandbox/anims/anim_situps.glb", label: "Situps" },
+  { value: "media/sandbox/anims/anim_skinning_test.glb", label: "Skinning Test" },
+  { value: "media/sandbox/anims/anim_sleeping_idle.glb", label: "Sleeping Idle" },
+  { value: "media/sandbox/anims/anim_smoking.glb", label: "Smoking" },
+  { value: "media/sandbox/anims/anim_snake_hip_hop_dance.glb", label: "Snake Hip Hop Dance" },
+  { value: "media/sandbox/anims/anim_snake_hip_hop_dance_1.glb", label: "Snake Hip Hop Dance (1)" },
+  { value: "media/sandbox/anims/anim_soccer_header.glb", label: "Soccer Header" },
+  { value: "media/sandbox/anims/anim_soccer_idle.glb", label: "Soccer Idle" },
+  { value: "media/sandbox/anims/anim_soccer_penalty_kick.glb", label: "Soccer Penalty Kick" },
+  { value: "media/sandbox/anims/anim_soccer_spin.glb", label: "Soccer Spin" },
+  { value: "media/sandbox/anims/anim_soccer_tackle.glb", label: "Soccer Tackle" },
+  { value: "media/sandbox/anims/anim_soccer_tackle_1.glb", label: "Soccer Tackle (1)" },
+  { value: "media/sandbox/anims/anim_soccer_tackle_2.glb", label: "Soccer Tackle (2)" },
+  { value: "media/sandbox/anims/anim_spat_in_face.glb", label: "Spat In Face" },
+  { value: "media/sandbox/anims/anim_speedbag.glb", label: "Speedbag" },
+  { value: "media/sandbox/anims/anim_spit_reaction.glb", label: "Spit Reaction" },
+  { value: "media/sandbox/anims/anim_sprint_to_wall_climb.glb", label: "Sprint To Wall Climb" },
+  { value: "media/sandbox/anims/anim_stall_soccerball.glb", label: "Stall Soccerball" },
+  { value: "media/sandbox/anims/anim_stall_soccerball_1.glb", label: "Stall Soccerball (1)" },
+  { value: "media/sandbox/anims/anim_stand_up.glb", label: "Stand Up" },
+  { value: "media/sandbox/anims/anim_stand_up_1.glb", label: "Stand Up (1)" },
+  { value: "media/sandbox/anims/anim_standard_run.glb", label: "Standard Run" },
+  { value: "media/sandbox/anims/anim_standing_1h_cast_spell_01.glb", label: "standing 1H cast spell 01" },
+  { value: "media/sandbox/anims/anim_standing_1h_magic_attack_01.glb", label: "Standing 1H Magic Attack 01" },
+  { value: "media/sandbox/anims/anim_standing_1h_magic_attack_02.glb", label: "Standing 1H Magic Attack 02" },
+  { value: "media/sandbox/anims/anim_standing_1h_magic_attack_03.glb", label: "Standing 1H Magic Attack 03" },
+  { value: "media/sandbox/anims/anim_standing_2h_cast_spell_01.glb", label: "Standing 2H Cast Spell 01" },
+  { value: "media/sandbox/anims/anim_standing_2h_magic_area_attack_01.glb", label: "Standing 2H Magic Area Attack 01" },
+  { value: "media/sandbox/anims/anim_standing_2h_magic_area_attack_02.glb", label: "Standing 2H Magic Area Attack 02" },
+  { value: "media/sandbox/anims/anim_standing_2h_magic_attack_01.glb", label: "Standing 2H Magic Attack 01" },
+  { value: "media/sandbox/anims/anim_standing_2h_magic_attack_02.glb", label: "Standing 2H Magic Attack 02" },
+  { value: "media/sandbox/anims/anim_standing_2h_magic_attack_03.glb", label: "Standing 2H Magic Attack 03" },
+  { value: "media/sandbox/anims/anim_standing_2h_magic_attack_04.glb", label: "Standing 2H Magic Attack 04" },
+  { value: "media/sandbox/anims/anim_standing_2h_magic_attack_05.glb", label: "Standing 2H Magic Attack 05" },
+  { value: "media/sandbox/anims/anim_standing_arguing.glb", label: "Standing Arguing" },
+  { value: "media/sandbox/anims/anim_standing_arguing_1.glb", label: "Standing Arguing (1)" },
+  { value: "media/sandbox/anims/anim_standing_block_idle.glb", label: "standing block idle" },
+  { value: "media/sandbox/anims/anim_standing_block_react_large.glb", label: "standing block react large" },
+  { value: "media/sandbox/anims/anim_standing_cheering.glb", label: "Standing Cheering" },
+  { value: "media/sandbox/anims/anim_standing_clap.glb", label: "Standing Clap" },
+  { value: "media/sandbox/anims/anim_standing_cover_turn.glb", label: "Standing Cover Turn" },
+  { value: "media/sandbox/anims/anim_standing_death_backward_01.glb", label: "Standing Death Backward 01" },
+  { value: "media/sandbox/anims/anim_standing_disarm_over_shoulder.glb", label: "standing disarm over shoulder" },
+  { value: "media/sandbox/anims/anim_standing_disarm_underarm.glb", label: "standing disarm underarm" },
+  { value: "media/sandbox/anims/anim_standing_idle.glb", label: "standing idle" },
+  { value: "media/sandbox/anims/anim_standing_idle_looking_ver_1.glb", label: "standing idle looking ver. 1" },
+  { value: "media/sandbox/anims/anim_standing_idle_looking_ver_2.glb", label: "standing idle looking ver. 2" },
+  { value: "media/sandbox/anims/anim_standing_jump.glb", label: "Standing Jump" },
+  { value: "media/sandbox/anims/anim_standing_jump_1.glb", label: "Standing Jump (1)" },
+  { value: "media/sandbox/anims/anim_standing_melee_attack_360_high.glb", label: "standing melee attack 360 high" },
+  { value: "media/sandbox/anims/anim_standing_melee_attack_360_low.glb", label: "standing melee attack 360 low" },
+  { value: "media/sandbox/anims/anim_standing_melee_attack_backhand.glb", label: "standing melee attack backhand" },
+  { value: "media/sandbox/anims/anim_standing_melee_attack_downward.glb", label: "standing melee attack downward" },
+  { value: "media/sandbox/anims/anim_standing_melee_attack_horizontal.glb", label: "standing melee attack horizontal" },
+  { value: "media/sandbox/anims/anim_standing_melee_attack_kick_ver_1.glb", label: "standing melee attack kick ver. 1" },
+  { value: "media/sandbox/anims/anim_standing_melee_attack_kick_ver_2.glb", label: "standing melee attack kick ver. 2" },
+  { value: "media/sandbox/anims/anim_standing_melee_combo_attack_ver_1.glb", label: "standing melee combo attack ver. 1" },
+  { value: "media/sandbox/anims/anim_standing_melee_combo_attack_ver_2.glb", label: "standing melee combo attack ver. 2" },
+  { value: "media/sandbox/anims/anim_standing_melee_combo_attack_ver_3.glb", label: "standing melee combo attack ver. 3" },
+  { value: "media/sandbox/anims/anim_standing_melee_kick.glb", label: "Standing Melee Kick" },
+  { value: "media/sandbox/anims/anim_standing_melee_run_jump_attack.glb", label: "standing melee run jump attack" },
+  { value: "media/sandbox/anims/anim_standing_react_death_right.glb", label: "Standing React Death Right" },
+  { value: "media/sandbox/anims/anim_standing_react_large_from_left.glb", label: "standing react large from left" },
+  { value: "media/sandbox/anims/anim_standing_react_large_from_right.glb", label: "standing react large from right" },
+  { value: "media/sandbox/anims/anim_standing_react_large_gut.glb", label: "standing react large gut" },
+  { value: "media/sandbox/anims/anim_standing_run_back.glb", label: "standing run back" },
+  { value: "media/sandbox/anims/anim_standing_run_forward.glb", label: "standing run forward" },
+  { value: "media/sandbox/anims/anim_standing_taunt_battlecry.glb", label: "standing taunt battlecry" },
+  { value: "media/sandbox/anims/anim_standing_taunt_chest_thump.glb", label: "standing taunt chest thump" },
+  { value: "media/sandbox/anims/anim_standing_thumbs_up.glb", label: "Standing Thumbs Up" },
+  { value: "media/sandbox/anims/anim_standing_turn_left_90.glb", label: "standing turn left 90" },
+  { value: "media/sandbox/anims/anim_standing_turn_right_90.glb", label: "standing turn right 90" },
+  { value: "media/sandbox/anims/anim_standing_using_touchscreen_tablet.glb", label: "Standing Using Touchscreen Tablet" },
+  { value: "media/sandbox/anims/anim_standing_w_briefcase_idle.glb", label: "Standing W_Briefcase Idle" },
+  { value: "media/sandbox/anims/anim_standing_walk_back.glb", label: "standing walk back" },
+  { value: "media/sandbox/anims/anim_standing_walk_forward.glb", label: "standing walk forward" },
+  { value: "media/sandbox/anims/anim_standing_walk_left.glb", label: "standing walk left" },
+  { value: "media/sandbox/anims/anim_standing_walk_right.glb", label: "standing walk right" },
+  { value: "media/sandbox/anims/anim_step_hip_hop_dance.glb", label: "Step Hip Hop Dance" },
+  { value: "media/sandbox/anims/anim_stomach_hit.glb", label: "Stomach Hit" },
+  { value: "media/sandbox/anims/anim_stomp.glb", label: "Stomp" },
+  { value: "media/sandbox/anims/anim_stroke_hand_gesture.glb", label: "Stroke Hand Gesture" },
+  { value: "media/sandbox/anims/anim_stroke_shaking_head.glb", label: "Stroke Shaking Head" },
+  { value: "media/sandbox/anims/anim_sumo_high_pull.glb", label: "Sumo High Pull" },
+  { value: "media/sandbox/anims/anim_superhuman_choke_lift.glb", label: "Superhuman Choke Lift" },
+  { value: "media/sandbox/anims/anim_surprise_uppercut.glb", label: "Surprise Uppercut" },
+  { value: "media/sandbox/anims/anim_surprised.glb", label: "Surprised" },
+  { value: "media/sandbox/anims/anim_swagger_walk.glb", label: "Swagger Walk" },
+  { value: "media/sandbox/anims/anim_swimming.glb", label: "Swimming" },
+  { value: "media/sandbox/anims/anim_swimming_to_edge.glb", label: "Swimming To Edge" },
+  { value: "media/sandbox/anims/anim_swing_dancing.glb", label: "Swing Dancing" },
+  { value: "media/sandbox/anims/anim_swing_into_wall.glb", label: "Swing Into Wall" },
+  { value: "media/sandbox/anims/anim_swing_to_land.glb", label: "Swing To Land" },
+  { value: "media/sandbox/anims/anim_swing_to_land_1.glb", label: "Swing To Land (1)" },
+  { value: "media/sandbox/anims/anim_swing_to_land_2.glb", label: "Swing To Land (2)" },
+  { value: "media/sandbox/anims/anim_sword_and_shield_attack.glb", label: "Sword And Shield Attack" },
+  { value: "media/sandbox/anims/anim_sword_and_shield_crouch_block_idle.glb", label: "Sword And Shield Crouch Block Idle" },
+  { value: "media/sandbox/anims/anim_sword_and_shield_crouch_idle.glb", label: "Sword And Shield Crouch Idle" },
+  { value: "media/sandbox/anims/anim_taken_hostage_victim.glb", label: "Taken Hostage - Victim" },
+  { value: "media/sandbox/anims/anim_taken_hostage_villain.glb", label: "Taken Hostage - Villain" },
+  { value: "media/sandbox/anims/anim_taking_item.glb", label: "Taking Item" },
+  { value: "media/sandbox/anims/anim_taking_item_1.glb", label: "Taking Item (1)" },
+  { value: "media/sandbox/anims/anim_taking_punch.glb", label: "Taking Punch" },
+  { value: "media/sandbox/anims/anim_talking.glb", label: "Talking" },
+  { value: "media/sandbox/anims/anim_talking_1.glb", label: "Talking (1)" },
+  { value: "media/sandbox/anims/anim_talking_2.glb", label: "Talking (2)" },
+  { value: "media/sandbox/anims/anim_talking_at_watercooler.glb", label: "Talking At Watercooler" },
+  { value: "media/sandbox/anims/anim_talking_on_a_cell_phone.glb", label: "Talking On A Cell Phone" },
+  { value: "media/sandbox/anims/anim_talking_on_phone.glb", label: "Talking On Phone" },
+  { value: "media/sandbox/anims/anim_talking_phone_pacing.glb", label: "Talking Phone Pacing" },
+  { value: "media/sandbox/anims/anim_talking_woman.glb", label: "Talking woman" },
+  { value: "media/sandbox/anims/anim_taunt.glb", label: "Taunt" },
+  { value: "media/sandbox/anims/anim_taunt_1.glb", label: "Taunt (1)" },
+  { value: "media/sandbox/anims/anim_taunt_2.glb", label: "Taunt (2)" },
+  { value: "media/sandbox/anims/anim_telling_a_secret.glb", label: "Telling A Secret" },
+  { value: "media/sandbox/anims/anim_tender_placement.glb", label: "Tender Placement" },
+  { value: "media/sandbox/anims/anim_tender_placement_1.glb", label: "Tender Placement (1)" },
+  { value: "media/sandbox/anims/anim_texting.glb", label: "Texting" },
+  { value: "media/sandbox/anims/anim_texting_while_standing.glb", label: "Texting While Standing" },
+  { value: "media/sandbox/anims/anim_thankful.glb", label: "Thankful" },
+  { value: "media/sandbox/anims/anim_thinking.glb", label: "Thinking" },
+  { value: "media/sandbox/anims/anim_thoughtful_head_shake.glb", label: "Thoughtful Head Shake" },
+  { value: "media/sandbox/anims/anim_threatening.glb", label: "Threatening" },
+  { value: "media/sandbox/anims/anim_thriller_part_2.glb", label: "Thriller Part 2" },
+  { value: "media/sandbox/anims/anim_throwing.glb", label: "Throwing" },
+  { value: "media/sandbox/anims/anim_tonic_seizure.glb", label: "Tonic Seizure" },
+  { value: "media/sandbox/anims/anim_tripping.glb", label: "Tripping" },
+  { value: "media/sandbox/anims/anim_troca_1.glb", label: "Troca 1" },
+  { value: "media/sandbox/anims/anim_tut_hip_hop_dance.glb", label: "Tut Hip Hop Dance" },
+  { value: "media/sandbox/anims/anim_twist_dance.glb", label: "Twist Dance" },
+  { value: "media/sandbox/anims/anim_typing.glb", label: "Typing" },
+  { value: "media/sandbox/anims/anim_unarmed_equip_over_shoulder.glb", label: "unarmed equip over shoulder" },
+  { value: "media/sandbox/anims/anim_unarmed_equip_underarm.glb", label: "unarmed equip underarm" },
+  { value: "media/sandbox/anims/anim_unarmed_idle.glb", label: "unarmed idle" },
+  { value: "media/sandbox/anims/anim_unarmed_idle_looking_ver_1.glb", label: "unarmed idle looking ver. 1" },
+  { value: "media/sandbox/anims/anim_unarmed_idle_looking_ver_2.glb", label: "unarmed idle looking ver. 2" },
+  { value: "media/sandbox/anims/anim_unarmed_jump.glb", label: "unarmed jump" },
+  { value: "media/sandbox/anims/anim_unarmed_jump_running.glb", label: "unarmed jump running" },
+  { value: "media/sandbox/anims/anim_unarmed_run_back.glb", label: "unarmed run back" },
+  { value: "media/sandbox/anims/anim_unarmed_run_forward.glb", label: "unarmed run forward" },
+  { value: "media/sandbox/anims/anim_unarmed_turn_left_90.glb", label: "unarmed turn left 90" },
+  { value: "media/sandbox/anims/anim_unarmed_turn_right_90.glb", label: "unarmed turn right 90" },
+  { value: "media/sandbox/anims/anim_unarmed_walk_back.glb", label: "unarmed walk back" },
+  { value: "media/sandbox/anims/anim_unarmed_walk_forward.glb", label: "unarmed walk forward" },
+  { value: "media/sandbox/anims/anim_uppercut.glb", label: "Uppercut" },
+  { value: "media/sandbox/anims/anim_uppercut_jab.glb", label: "Uppercut Jab" },
+  { value: "media/sandbox/anims/anim_uppercut_jab_1.glb", label: "Uppercut Jab (1)" },
+  { value: "media/sandbox/anims/anim_vampiric_bite.glb", label: "Vampiric Bite" },
+  { value: "media/sandbox/anims/anim_victory.glb", label: "Victory" },
+  { value: "media/sandbox/anims/anim_walking.glb", label: "Walking" },
+  { value: "media/sandbox/anims/anim_walking_backward.glb", label: "Walking Backward" },
+  { value: "media/sandbox/anims/anim_walking_slow.glb", label: "Walking slow" },
+  { value: "media/sandbox/anims/anim_walking_test.glb", label: "Walking Test" },
+  { value: "media/sandbox/anims/anim_wall_run.glb", label: "Wall Run" },
+  { value: "media/sandbox/anims/anim_watering.glb", label: "Watering" },
+  { value: "media/sandbox/anims/anim_waving.glb", label: "Waving" },
+  { value: "media/sandbox/anims/anim_weight_shift.glb", label: "weight shift" },
+  { value: "media/sandbox/anims/anim_wheelbarrow_dump.glb", label: "wheelbarrow dump" },
+  { value: "media/sandbox/anims/anim_wheelbarrow_idle.glb", label: "wheelbarrow idle" },
+  { value: "media/sandbox/anims/anim_wheelbarrow_walk.glb", label: "wheelbarrow walk" },
+  { value: "media/sandbox/anims/anim_wheelbarrow_walk_2.glb", label: "wheelbarrow walk (2)" },
+  { value: "media/sandbox/anims/anim_wheelbarrow_walk_turn.glb", label: "Wheelbarrow Walk Turn" },
+  { value: "media/sandbox/anims/anim_wheelbarrow_walk_turn_2.glb", label: "wheelbarrow walk turn (2)" },
+  { value: "media/sandbox/anims/anim_wheelchair.glb", label: "Wheelchair" },
+  { value: "media/sandbox/anims/anim_wiping_sweat.glb", label: "Wiping Sweat" },
+  { value: "media/sandbox/anims/anim_woman-solo.glb", label: "Woman-Solo" },
+  { value: "media/sandbox/anims/anim_writhing_in_pain.glb", label: "Writhing In Pain" },
+  { value: "media/sandbox/anims/anim_writing.glb", label: "Writing" },
+  { value: "media/sandbox/anims/anim_x_bot.glb", label: "X Bot" },
+  { value: "media/sandbox/anims/anim_yelling.glb", label: "Yelling" },
+  { value: "media/sandbox/anims/anim_ymca_dance.glb", label: "Ymca Dance" },
+  { value: "media/sandbox/anims/anim_ymca_dance_1.glb", label: "Ymca Dance (1)" },
+  { value: "media/sandbox/anims/anim_zombie_attack.glb", label: "zombie attack" },
+  { value: "media/sandbox/anims/anim_zombie_biting.glb", label: "Zombie Biting" },
+  { value: "media/sandbox/anims/anim_zombie_biting_2.glb", label: "zombie biting (2)" },
+  { value: "media/sandbox/anims/anim_zombie_crawl.glb", label: "zombie crawl" },
+  { value: "media/sandbox/anims/anim_zombie_death.glb", label: "zombie death" },
+  { value: "media/sandbox/anims/anim_zombie_dying.glb", label: "zombie dying" },
+  { value: "media/sandbox/anims/anim_zombie_idle.glb", label: "zombie idle" },
+  { value: "media/sandbox/anims/anim_zombie_neck_bite.glb", label: "zombie neck bite" },
+  { value: "media/sandbox/anims/anim_zombie_run.glb", label: "zombie run" },
+  { value: "media/sandbox/anims/anim_zombie_scream.glb", label: "zombie scream" },
+  { value: "media/sandbox/anims/anim_zombie_walk.glb", label: "zombie walk" },
 ].filter((v, i, a) => a.findIndex(t => t.value === v.value) === i).sort((a, b) => {
   if (a.value === "idle") return -1;
   if (b.value === "idle") return 1;
@@ -121,15 +797,15 @@ export interface CharacterConfig {
 export const CHARACTERS: CharacterConfig[] = [
   // 11 stylized Laras
   { id: 'native', name: 'Lara (Native)', path: 'media/lara_native.glb', pos: [140, 0, 30], rot: 1.9, variant: 'native', height: 173.4 },
-  { id: 'rosanna', name: 'Rosanna', path: 'media/lara_native.glb', pos: [251, 75, 178], rot: 1.325 + Math.PI / 2, variant: 'rosanna', height: 173.4, sittingScenePath: 'media/sandbox/anim_push_up.glb', customIdleAnimPath: 'media/sandbox/anim_push_up.glb' },
-  { id: 'marissa', name: 'Marissa', path: 'media/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4, sittingScenePath: 'media/sandbox/anim_belly_dance.glb', customIdleAnimPath: 'media/sandbox/anim_belly_dance.glb' },
-  { id: 'delphina', name: 'Delphina', path: 'media/lara_native.glb', pos: [120, 35, -250], rot: 1, variant: 'delphina', height: 173.4, sittingScenePath: 'media/sandbox/anim_swimming_to_edge.glb', customIdleAnimPath: 'media/sandbox/anim_swimming_to_edge.glb' },
-  { id: 'sara', name: 'Sara', path: 'media/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'media/sandbox/anim_climbing.glb', customIdleAnimPath: 'media/sandbox/anim_climbing.glb' },
-  { id: 'cha', name: 'Cha', path: 'media/lara_native.glb', pos: [30, 0, 151], rot: Math.PI / 2, variant: 'cha', height: 173.4, sittingScenePath: 'media/sandbox/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anim_sitting_idle.glb' },
-  { id: 'vivid', name: 'Vivid', path: 'media/lara_native.glb', pos: [30, 0, 210], rot: Math.PI / 2, variant: 'vivid', height: 173.4, sittingScenePath: 'media/sandbox/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anim_sitting_idle.glb' },
-  { id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [100, 0, 370], rot: Math.atan2(158 - 100, 200 - 370), variant: 'sabira', height: 173.4, customIdleAnimPath: 'media/sandbox/anim_dancing_twerk.glb', sittingScenePath: 'media/sandbox/anim_dancing_twerk.glb' },
-  { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [250, 0, 320], rot: Math.atan2(158 - 250, 200 - 320), variant: 'safa', height: 173.4, customIdleAnimPath: 'media/sandbox/anim_stall_soccerball_1.glb', sittingScenePath: 'media/sandbox/anim_stall_soccerball_1.glb' },
-  { id: 'sandra', name: 'Sandra', path: 'media/lara_native.glb', pos: [120, 0, -600], rot: 0, variant: 'sandra', height: 173.4, customIdleAnimPath: 'media/sandbox/anim_body_jab_cross.glb', sittingScenePath: 'media/sandbox/anim_body_jab_cross.glb' },
+  { id: 'rosanna', name: 'Rosanna', path: 'media/lara_native.glb', pos: [251, 75, 178], rot: 1.325 + Math.PI / 2, variant: 'rosanna', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_push_up.glb', customIdleAnimPath: 'media/sandbox/anims/anim_push_up.glb' },
+  { id: 'marissa', name: 'Marissa', path: 'media/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_belly_dance.glb', customIdleAnimPath: 'media/sandbox/anims/anim_belly_dance.glb' },
+  { id: 'delphina', name: 'Delphina', path: 'media/lara_native.glb', pos: [120, 35, -250], rot: 1, variant: 'delphina', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_female_laying_pose_9.glb', customIdleAnimPath: 'media/sandbox/anims/anim_female_laying_pose_9.glb' },
+  { id: 'sara', name: 'Sara', path: 'media/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_climbing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_climbing.glb' },
+  { id: 'cha', name: 'Cha', path: 'media/lara_native.glb', pos: [30, 0, 151], rot: Math.PI / 2, variant: 'cha', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anims/anim_sitting_idle.glb' },
+  { id: 'vivid', name: 'Vivid', path: 'media/lara_native.glb', pos: [30, 0, 210], rot: Math.PI / 2, variant: 'vivid', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anims/anim_sitting_idle.glb' },
+  { id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [100, 0, 370], rot: Math.atan2(158 - 100, 200 - 370), variant: 'sabira', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_dancing_twerk.glb', sittingScenePath: 'media/sandbox/anims/anim_dancing_twerk.glb' },
+  { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [250, 0, 320], rot: Math.atan2(158 - 250, 200 - 320), variant: 'safa', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_stall_soccerball_1.glb', sittingScenePath: 'media/sandbox/anims/anim_stall_soccerball_1.glb' },
+  { id: 'sandra', name: 'Sandra', path: 'media/lara_native.glb', pos: [120, 0, -600], rot: 0, variant: 'sandra', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_body_jab_cross.glb', sittingScenePath: 'media/sandbox/anims/anim_body_jab_cross.glb' },
   { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [150, 0, -600], rot: 0, variant: 'native', height: 173.4, isLara: false }
 ];
 
@@ -542,9 +1218,10 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
             if (isRootJointTranslation && (animNameLower.includes('laying') || animNameLower.includes('sleeping'))) {
               yVal = 0.12; // Force to ground level (in meters)
             }
-            const dx = (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
-            const dy = isWalk ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
-            const dz = (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
+            const isTPose = animNameLower.includes('t-pose') || animNameLower.includes('tpose');
+            const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
+            const dy = (isWalk || isTPose) ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
+            const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
 
             const dP = new THREE.Vector3(dx, dy, dz)
               .applyQuaternion(P_src)
@@ -708,10 +1385,16 @@ function SingleCharacter({
   const idleTimerRef = useRef<number>(0);
   const customAnimName = useRef<string | null>(null);
   const prevFirstPersonRef = useRef<boolean | null>(null);
+  const animLoopModeRef = useRef<'infinite' | '3x' | '1x'>('infinite');
+  const [equipment, setEquipment] = useState<{ holster: boolean; pistols: boolean; backpack: boolean }>({
+    holster: true,
+    pistols: true,
+    backpack: true,
+  });
 
   const hairChainRef = useRef<any[]>([]);
   const breastChainRef = useRef<any[]>([]);
-  
+
   // Collision bones
   const headBoneRef = useRef<THREE.Bone | null>(null);
   const spine2BoneRef = useRef<THREE.Bone | null>(null);
@@ -843,19 +1526,19 @@ function SingleCharacter({
     const resolvedHipsName = resolveTargetBoneName(scene, 'Hips');
     const hips = resolvedHipsName ? scene.getObjectByName(resolvedHipsName) : null;
     hipsBoneRef.current = hips as THREE.Bone;
-    
+
     const rSpine2 = resolveTargetBoneName(scene, 'Spine2');
     spine2BoneRef.current = (rSpine2 ? scene.getObjectByName(rSpine2) : null) as THREE.Bone;
-    
+
     const rSpine = resolveTargetBoneName(scene, 'Spine');
     spineBoneRef.current = (rSpine ? scene.getObjectByName(rSpine) : null) as THREE.Bone;
-    
+
     const rHead = resolveTargetBoneName(scene, 'Head') || resolveTargetBoneName(scene, 'Neck');
     headBoneRef.current = (rHead ? scene.getObjectByName(rHead) : null) as THREE.Bone;
-    
+
     const rLShoulder = resolveTargetBoneName(scene, 'LeftShoulder');
     lShoulderRef.current = (rLShoulder ? scene.getObjectByName(rLShoulder) : null) as THREE.Bone;
-    
+
     const rRShoulder = resolveTargetBoneName(scene, 'RightShoulder');
     rShoulderRef.current = (rRShoulder ? scene.getObjectByName(rRShoulder) : null) as THREE.Bone;
 
@@ -882,7 +1565,7 @@ function SingleCharacter({
                 mat.side = THREE.FrontSide;
             });
             delete c.raycast;
-            c.userData.hoverAction = { label: name, actionId: 'walker-anim-lara' };
+            delete c.userData.hoverAction;
         }
       }
       if (!c.restWorldQuaternion) {
@@ -1051,20 +1734,44 @@ function SingleCharacter({
     }
   }, [skeletonRef, showSkeleton]);
 
+  const poseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     const onToggle = (e: any) => {
-      const expectedKey = isLara ? 'walker-anim-lara' : 'walker-anim-xbot';
-      if (e.detail.key === expectedKey) {
+      if (e.detail?.key === 'walker-anim-loop') {
+        animLoopModeRef.current = e.detail.value || 'infinite';
+        return;
+      }
+      if (e.detail?.key === 'lara-custom-holster' && isActive) {
+        setEquipment((prev: { holster: boolean; pistols: boolean; backpack: boolean }) => ({ ...prev, holster: !prev.holster }));
+        invalidate();
+        return;
+      }
+      if (e.detail?.key === 'lara-custom-pistols' && isActive) {
+        setEquipment((prev: { holster: boolean; pistols: boolean; backpack: boolean }) => ({ ...prev, pistols: !prev.pistols }));
+        invalidate();
+        return;
+      }
+      if (e.detail?.key === 'lara-custom-backpack' && isActive) {
+        setEquipment((prev: { holster: boolean; pistols: boolean; backpack: boolean }) => ({ ...prev, backpack: !prev.backpack }));
+        invalidate();
+        return;
+      }
+      const isForMe = (isLara && e.detail?.key === 'walker-anim-lara') ||
+                      (!isLara && e.detail?.key === 'walker-anim-xbot');
+      if (isForMe && e.detail?.value) {
         const path = e.detail.value;
-        if (!path || path === 'idle') {
-          customAnimName.current = null;
-          return;
+
+        if (poseTimerRef.current) {
+          clearTimeout(poseTimerRef.current);
+          poseTimerRef.current = null;
         }
 
         const loader = new GLTFLoader();
         loader.load(path, (gltf: any) => {
           const clip = gltf.animations[0];
           if (clip) {
+            clip.name = path;
             const cacheKey = id + '_' + path;
             let finalClip = _retargetCache[cacheKey];
             if (!finalClip) {
@@ -1079,12 +1786,39 @@ function SingleCharacter({
             let action = actionsRef.current[path];
             if (!action) {
               action = mixer.clipAction(finalClip);
+              action.enabled = true;
               actionsRef.current[path] = action;
             }
 
-            // The user wants it to play exactly 2 times and return to idle
-            action.setLoop(THREE.LoopRepeat, 2);
-            action.clampWhenFinished = true;
+            const pathLower = path.toLowerCase();
+            const clipNameLower = (clip.name || '').toLowerCase();
+            const isPose = (pathLower.includes('pose') || clipNameLower.includes('pose')) && !pathLower.includes('t-pose') && !clipNameLower.includes('t-pose');
+
+            if (isPose) {
+              const clipDur = finalClip.duration > 0.01 ? finalClip.duration : 0.033;
+              const repetitions = Math.max(1, Math.round(10.0 / clipDur));
+              action.setLoop(THREE.LoopRepeat, repetitions);
+              action.clampWhenFinished = true;
+
+              poseTimerRef.current = setTimeout(() => {
+                if (customAnimName.current === path) {
+                  customAnimName.current = null;
+                  invalidate();
+                }
+              }, 10000);
+            } else {
+              const mode = animLoopModeRef.current;
+              if (mode === 'infinite') {
+                action.setLoop(THREE.LoopRepeat, Infinity);
+                action.clampWhenFinished = false;
+              } else if (mode === '3x') {
+                action.setLoop(THREE.LoopRepeat, 3);
+                action.clampWhenFinished = true;
+              } else {
+                action.setLoop(THREE.LoopOnce, 1);
+                action.clampWhenFinished = true;
+              }
+            }
 
             customAnimName.current = path;
             invalidate();
@@ -1094,8 +1828,77 @@ function SingleCharacter({
     };
 
     document.addEventListener('furniture-toggle', onToggle);
-    return () => document.removeEventListener('furniture-toggle', onToggle);
+    return () => {
+      document.removeEventListener('furniture-toggle', onToggle);
+      if (poseTimerRef.current) {
+        clearTimeout(poseTimerRef.current);
+        poseTimerRef.current = null;
+      }
+    };
   }, [isActive, isLara, scene, invalidate, id]);
+
+  useEffect(() => {
+    if (!modelRef.current) return;
+    if (isActive) {
+      modelRef.current.userData.hoverAction = {
+        label: `Customiser ${name} 👤`,
+        actions: ['lara-custom-holster', 'lara-custom-pistols', 'lara-custom-backpack']
+      };
+    } else {
+      delete modelRef.current.userData.hoverAction;
+    }
+  }, [isActive, name]);
+
+  useEffect(() => {
+    if (!scene) return;
+    scene.traverse(o => {
+      if ((o as THREE.Mesh).isMesh) {
+        const meshName = o.name.toLowerCase();
+        const mat = (o as THREE.Mesh).material;
+        const matName = mat ? (Array.isArray(mat) ? mat[0].name.toLowerCase() : mat.name.toLowerCase()) : '';
+
+        const isHolsterPart = meshName.includes('holster') || meshName.includes('gear') || meshName.includes('buckle') || matName.includes('holster') || matName.includes('gear') || matName.includes('buckle');
+        const isPistolPart = meshName.includes('pistol') || meshName.includes('gun') || meshName.includes('weapon') || matName.includes('pistol') || matName.includes('gun') || matName.includes('weapon');
+        const isBackpackPart = meshName.includes('backpack') || meshName.includes('bag') || meshName.includes('pack') || matName.includes('backpack') || matName.includes('bag') || matName.includes('pack');
+
+        if (isHolsterPart) o.visible = equipment.holster;
+        if (isPistolPart) o.visible = equipment.pistols;
+        if (isBackpackPart) o.visible = equipment.backpack;
+      }
+    });
+    invalidate();
+  }, [scene, equipment, invalidate]);
+
+  useEffect(() => {
+    if (customIdleAnimPath && scene && mixerRef.current && !actionsRef.current[customIdleAnimPath]) {
+      const loader = new GLTFLoader();
+      loader.load(customIdleAnimPath, (gltf: any) => {
+        const clip = gltf.animations[0];
+        if (clip) {
+          const cacheKey = id + '_' + customIdleAnimPath;
+          let finalClip = _retargetCache[cacheKey];
+          if (!finalClip) {
+            finalClip = retargetClip(clip, scene, gltf.scene);
+            _retargetCache[cacheKey] = finalClip;
+          }
+          finalClip.name = customIdleAnimPath;
+
+          const mixer = mixerRef.current;
+          if (!mixer) return;
+
+          let action = actionsRef.current[customIdleAnimPath];
+          if (!action) {
+            action = mixer.clipAction(finalClip);
+            action.enabled = true;
+            action.play();
+            action.setEffectiveWeight(0);
+            actionsRef.current[customIdleAnimPath] = action;
+          }
+          invalidate();
+        }
+      });
+    }
+  }, [customIdleAnimPath, id, scene, invalidate]);
 
   useFrame((_, rawDelta) => {
     const delta = Math.min(rawDelta, 0.1);
@@ -1287,7 +2090,7 @@ function SingleCharacter({
                 next.copy(jointWorld).add(dir);
 
                 // 2. Collision constraints (Body + Backpack)
-                // We use a robust cross-product of (Hips->Head) and (RightShoulder->LeftShoulder) 
+                // We use a robust cross-product of (Hips->Head) and (RightShoulder->LeftShoulder)
                 // to get the exact "Backward" direction of the torso, independent of the rig's bone axes!
                 let backDir = new THREE.Vector3(0, 0, -1);
                 if (headBoneRef.current && hipsBoneRef.current && lShoulderRef.current && rShoulderRef.current) {
@@ -1295,7 +2098,7 @@ function SingleCharacter({
                   const hipsW = new THREE.Vector3().setFromMatrixPosition(hipsBoneRef.current.matrixWorld);
                   const lShoulderW = new THREE.Vector3().setFromMatrixPosition(lShoulderRef.current.matrixWorld);
                   const rShoulderW = new THREE.Vector3().setFromMatrixPosition(rShoulderRef.current.matrixWorld);
-                  
+
                   const up = new THREE.Vector3().subVectors(headW, hipsW).normalize();
                   const right = new THREE.Vector3().subVectors(lShoulderW, rShoulderW).normalize(); // Assuming character faces +Z, left is +X, right is -X. So Right->Left is +X
                   backDir.crossVectors(up, right).normalize(); // Y cross X = -Z (Backward)
@@ -1411,7 +2214,7 @@ function SingleCharacter({
             const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
 
             let scaledQ = qDelta;
-            const breastIntensity = 1.0;
+            const breastIntensity = 1.2;
             const w = Math.min(1, Math.max(-1, qDelta.w));
             const angle = 2 * Math.acos(w);
             if (Math.abs(angle) > 1e-5) {
@@ -1446,22 +2249,23 @@ function SingleCharacter({
 
 function InternalWalker(props: WalkerProps) {
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
-  const idleGltf = useGLTF('media/sandbox/anim_idle.glb');
-  const walkingGltf = useGLTF('media/sandbox/anim_walking.glb');
-  const runningGltf = useGLTF('media/sandbox/anim_running.glb');
+  const idleGltf = useGLTF('media/sandbox/anims/anim_idle.glb');
+  const walkingGltf = useGLTF('media/sandbox/anims/anim_walking.glb');
+  const runningGltf = useGLTF('media/sandbox/anims/anim_running.glb');
 
   // Preloaded anim paths
-  const sittingGltf = useGLTF('media/sandbox/anim_sitting_idle.glb');
-  const swimmingGltf = useGLTF('media/sandbox/anim_swimming_to_edge.glb');
-  const pushUpGltf = useGLTF('media/sandbox/anim_push_up.glb');
-  const laying1Gltf = useGLTF('media/sandbox/anim_laying_idle_1.glb');
-  const climbingGltf = useGLTF('media/sandbox/anim_climbing.glb');
-  
+  const sittingGltf = useGLTF('media/sandbox/anims/anim_sitting_idle.glb');
+  const swimmingGltf = useGLTF('media/sandbox/anims/anim_swimming_to_edge.glb');
+  const pushUpGltf = useGLTF('media/sandbox/anims/anim_push_up.glb');
+  const laying1Gltf = useGLTF('media/sandbox/anims/anim_laying_idle_1.glb');
+  const climbingGltf = useGLTF('media/sandbox/anims/anim_climbing.glb');
+
   // New character anims
-  const bellyDanceGltf = useGLTF('media/sandbox/anim_belly_dance.glb');
-  const dancingTwerkGltf = useGLTF('media/sandbox/anim_dancing_twerk.glb');
-  const soccerballGltf = useGLTF('media/sandbox/anim_stall_soccerball_1.glb');
-  const jabCrossGltf = useGLTF('media/sandbox/anim_body_jab_cross.glb');
+  const bellyDanceGltf = useGLTF('media/sandbox/anims/anim_belly_dance.glb');
+  const dancingTwerkGltf = useGLTF('media/sandbox/anims/anim_dancing_twerk.glb');
+  const soccerballGltf = useGLTF('media/sandbox/anims/anim_stall_soccerball_1.glb');
+  const jabCrossGltf = useGLTF('media/sandbox/anims/anim_body_jab_cross.glb');
+  const femaleLayingPose9Gltf = useGLTF('media/sandbox/anims/anim_female_laying_pose_9.glb');
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1474,16 +2278,17 @@ function InternalWalker(props: WalkerProps) {
   }, []);
 
   const animGltfs: Record<string, any> = useMemo(() => ({
-    'media/sandbox/anim_sitting_idle.glb': sittingGltf,
-    'media/sandbox/anim_swimming_to_edge.glb': swimmingGltf,
-    'media/sandbox/anim_push_up.glb': pushUpGltf,
-    'media/sandbox/anim_climbing.glb': climbingGltf,
-    'media/sandbox/anim_laying_idle_1.glb': laying1Gltf,
-    'media/sandbox/anim_belly_dance.glb': bellyDanceGltf,
-    'media/sandbox/anim_dancing_twerk.glb': dancingTwerkGltf,
-    'media/sandbox/anim_stall_soccerball_1.glb': soccerballGltf,
-    'media/sandbox/anim_body_jab_cross.glb': jabCrossGltf,
-  }), [sittingGltf, swimmingGltf, pushUpGltf, climbingGltf, laying1Gltf, bellyDanceGltf, dancingTwerkGltf, soccerballGltf, jabCrossGltf]);
+    'media/sandbox/anims/anim_sitting_idle.glb': sittingGltf,
+    'media/sandbox/anims/anim_swimming_to_edge.glb': swimmingGltf,
+    'media/sandbox/anims/anim_push_up.glb': pushUpGltf,
+    'media/sandbox/anims/anim_climbing.glb': climbingGltf,
+    'media/sandbox/anims/anim_laying_idle_1.glb': laying1Gltf,
+    'media/sandbox/anims/anim_belly_dance.glb': bellyDanceGltf,
+    'media/sandbox/anims/anim_dancing_twerk.glb': dancingTwerkGltf,
+    'media/sandbox/anims/anim_stall_soccerball_1.glb': soccerballGltf,
+    'media/sandbox/anims/anim_body_jab_cross.glb': jabCrossGltf,
+    'media/sandbox/anims/anim_female_laying_pose_9.glb': femaleLayingPose9Gltf,
+  }), [sittingGltf, swimmingGltf, pushUpGltf, climbingGltf, laying1Gltf, bellyDanceGltf, dancingTwerkGltf, soccerballGltf, jabCrossGltf, femaleLayingPose9Gltf]);
 
   const charactersWithAnims = useMemo(() => {
     return CHARACTERS.map(char => {
@@ -1572,16 +2377,16 @@ export function Walker(props: WalkerProps) {
 useGLTF.preload(LARA_PATH);
 useGLTF.preload(ROSANNA_PATH);
 useGLTF.preload(VIVID_PATH);
-useGLTF.preload('media/sandbox/anim_sitting_idle.glb');
-useGLTF.preload('media/sandbox/anim_swimming_to_edge.glb');
-useGLTF.preload('media/sandbox/anim_climbing.glb');
-useGLTF.preload('media/sandbox/anim_push_up.glb');
-useGLTF.preload('media/sandbox/anim_laying_idle_1.glb');
-useGLTF.preload('media/sandbox/anim_woman-solo.glb');
-useGLTF.preload('media/sandbox/anim_belly_dance.glb');
-useGLTF.preload('media/sandbox/anim_dancing_twerk.glb');
-useGLTF.preload('media/sandbox/anim_stall_soccerball_1.glb');
-useGLTF.preload('media/sandbox/anim_body_jab_cross.glb');
+useGLTF.preload('media/sandbox/anims/anim_sitting_idle.glb');
+useGLTF.preload('media/sandbox/anims/anim_swimming_to_edge.glb');
+useGLTF.preload('media/sandbox/anims/anim_climbing.glb');
+useGLTF.preload('media/sandbox/anims/anim_push_up.glb');
+useGLTF.preload('media/sandbox/anims/anim_laying_idle_1.glb');
+useGLTF.preload('media/sandbox/anims/anim_woman-solo.glb');
+useGLTF.preload('media/sandbox/anims/anim_belly_dance.glb');
+useGLTF.preload('media/sandbox/anims/anim_dancing_twerk.glb');
+useGLTF.preload('media/sandbox/anims/anim_stall_soccerball_1.glb');
+useGLTF.preload('media/sandbox/anims/anim_body_jab_cross.glb');
 
 
 CHARACTERS.forEach(char => {
