@@ -100,8 +100,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
              mat.emissiveIntensity = 0.05;
           } else if (isMarissa) {
              mat.map = null;
-             mat.color.setHex(0x8c6239); // Châtain clair
-             mat.emissive.setHex(0x8c6239);
+             mat.color.setHex(0x3a2312); // Châtain foncé
+             mat.emissive.setHex(0x221308);
              mat.emissiveIntensity = 0.05;
           }
         }
@@ -110,19 +110,24 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         const isEyeMat = matName.includes('eye') && !matName.includes('lash');
         if (isEyeMat) {
            mat.visible = true; // Ensure both are visible in case one is the sclera and one is the pupil
-           mat.color.setHex(0xffffff); // Ensure base color is white so texture shows
            mat.emissive.setHex(0x000000);
            mat.metalness = 0;
-           mat.roughness = 0.5;
+           mat.roughness = 0.3;
            mat.transparent = false; // Force opaque to prevent depth sorting bugs
            mat.alphaTest = 0.5; 
            if ('transmission' in mat) (mat as any).transmission = 0;
            
            if (isDelphina) {
+              mat.color.setHex(0xffffff);
               mat.map = getTexture('media/textures/8003_blue.png');
            } else if (isCha) {
+              mat.color.setHex(0xffffff);
               mat.map = getTexture('media/textures/8003_green.png');
+           } else if (isMarissa) {
+              mat.color.setHex(0xffffff);
+              mat.map = getTexture('media/textures/8003_black.png');
            } else {
+              mat.color.setHex(0xffffff);
               // Default brown texture for all other Laras
               mat.map = getTexture('media/textures/8003.png');
            }
@@ -173,9 +178,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                } else if (isTop || isBackpack || isGear) {
                  color = 0x151515; // Noir mat
                  forceProcedural = true;
-               } else {
-                 color = 0xffffff; 
-                 forceProcedural = true; // Force procedural white to ignore teal texture
+               } else if (isBoot) {
+                 color = 0xffffff; // Boots stay pure white
+                 forceProcedural = true;
                }
             } else if (isDelphina) {
                color = 0xffffff; 
@@ -283,7 +288,172 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
             }
           }
         }
+
+        // MARISSA TATTOOS ON SKIN (Lion head on forearm, Skull on thigh)
+        if (isMarissa && isSkin && (matName.includes('arm') || matName.includes('body') || meshName.includes('arm') || meshName.includes('body'))) {
+          applyMarissaTattoos(mat);
+        }
       });
     }
   });
+
+  // MARISSA 3D PIERCINGS (Cupid's bow stud & Left nostril ring attached to main head bone)
+  if (isMarissa && !model.userData.hasMarissaPiercings) {
+    model.userData.hasMarissaPiercings = true;
+
+    const piercingMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      metalness: 0.95,
+      roughness: 0.05,
+      name: 'MarissaPiercingMat',
+    });
+
+    const headBone = model.getObjectByName('head_neck_upper') || model.getObjectByName('head') || model.getObjectByName('Head');
+    if (headBone) {
+      headBone.children = headBone.children.filter(c => c.name !== 'MarissaCupidPiercing' && c.name !== 'MarissaNostrilPiercing');
+
+      // 1. Coupe de Cupidon - Clou / Bille (Sphere stud) au centre au-dessus de la lèvre supérieure
+      const studGeo = new THREE.SphereGeometry(0.0038, 16, 16);
+      const studMesh = new THREE.Mesh(studGeo, piercingMat);
+      studMesh.name = 'MarissaCupidPiercing';
+      studMesh.position.set(0.000, 0.098, 0.053);
+      headBone.add(studMesh);
+
+      // 2. Narine Gauche - Boucle / Anneau (Torus ring) sur l'aile de la narine gauche
+      const ringGeo = new THREE.TorusGeometry(0.0038, 0.0011, 12, 24);
+      const ringMesh = new THREE.Mesh(ringGeo, piercingMat);
+      ringMesh.name = 'MarissaNostrilPiercing';
+      ringMesh.position.set(0.015, 0.124, 0.038);
+      ringMesh.rotation.y = Math.PI / 2.2;
+      headBone.add(ringMesh);
+    }
+  }
+}
+
+// ── MARISSA TATTOO CANVAS GENERATOR ──────────────────────────────────────────
+
+const marissaTattooTextureCache: Record<string, THREE.CanvasTexture> = {};
+
+function applyMarissaTattoos(mat: THREE.MeshStandardMaterial) {
+  mat.map = getMarissaTattooTexture();
+  mat.needsUpdate = true;
+}
+
+function getMarissaTattooTexture(): THREE.CanvasTexture {
+  if (marissaTattooTextureCache['marissa_tattoos']) {
+    return marissaTattooTextureCache['marissa_tattoos'];
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.flipY = false;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  marissaTattooTextureCache['marissa_tattoos'] = tex;
+
+  const drawAll = (img?: HTMLImageElement) => {
+    if (!ctx) return;
+    if (img) {
+      try {
+        ctx.drawImage(img, 0, 0, 512, 512);
+      } catch {
+        ctx.fillStyle = '#dca888';
+        ctx.fillRect(0, 0, 512, 512);
+      }
+    } else {
+      ctx.fillStyle = '#dca888';
+      ctx.fillRect(0, 0, 512, 512);
+    }
+    drawMarissaTattoosOnCanvas(ctx);
+    tex.needsUpdate = true;
+  };
+
+  const img = new Image();
+  img.src = 'media/textures/8001.png';
+  img.onload = () => drawAll(img);
+  img.onerror = () => drawAll();
+  drawAll();
+
+  return tex;
+}
+
+function drawMarissaTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
+  // ── 1. TATOUAGE TÊTE DE LION (Avant-bras gauche) ──
+  ctx.save();
+  ctx.translate(240, 205);
+  ctx.fillStyle = 'rgba(18, 18, 22, 0.88)';
+  ctx.strokeStyle = 'rgba(12, 12, 16, 0.95)';
+  ctx.lineWidth = 2;
+
+  // Lion Mane Spikes
+  ctx.beginPath();
+  const numSpikes = 18;
+  for (let i = 0; i < numSpikes; i++) {
+    const angle = (i / numSpikes) * Math.PI * 2;
+    const r = (i % 2 === 0) ? 28 : 20;
+    const x = Math.cos(angle) * r;
+    const y = Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+
+  // Lion Head & Ears
+  ctx.beginPath();
+  ctx.arc(0, 0, 16, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(-11, -12, 5, 0, Math.PI * 2);
+  ctx.arc(11, -12, 5, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Eyes, Nose & Muzzle
+  ctx.beginPath();
+  ctx.arc(-6, -4, 2.2, 0, Math.PI * 2);
+  ctx.arc(6, -4, 2.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(0, 1);
+  ctx.lineTo(-4, -3);
+  ctx.lineTo(4, -3);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(0, 1); ctx.lineTo(0, 7);
+  ctx.moveTo(-6, 8); ctx.quadraticCurveTo(0, 11, 6, 8);
+  ctx.moveTo(-6, 5); ctx.lineTo(-18, 2);
+  ctx.moveTo(-6, 7); ctx.lineTo(-18, 8);
+  ctx.moveTo(6, 5);  ctx.lineTo(18, 2);
+  ctx.moveTo(6, 7);  ctx.lineTo(18, 8);
+  ctx.stroke();
+
+  ctx.font = 'bold 9px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(12, 12, 16, 0.9)';
+  ctx.fillText('🦁 LION', 0, 24);
+  ctx.restore();
+
+  // ── 2. TATOUAGE TEXTE "BEAUTY IS AS BEAUTY DOES" (Face avant, mi-cuisse gauche, horizontal) ──
+  ctx.save();
+  ctx.translate(186, 398);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = 'rgba(15, 15, 20, 0.95)';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '900 16px "Cinzel", "Times New Roman", serif';
+
+  const lines = ['BEAUTY', 'IS AS', 'BEAUTY', 'DOES'];
+  const lineHeight = 19;
+  const startY = -((lines.length - 1) * lineHeight) / 2;
+
+  lines.forEach((line, idx) => {
+    ctx.fillText(line, 0, startY + idx * lineHeight);
+  });
+
+  ctx.restore();
 }
