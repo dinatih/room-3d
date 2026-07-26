@@ -1074,16 +1074,18 @@ function SingleCharacter({
   }, [isActive, isLara, scene, invalidate, id]);
 
   useEffect(() => {
-    if (!modelRef.current) return;
-    if (isActive) {
-      modelRef.current.userData.hoverAction = {
-        label: `Customiser ${name} 👤`,
-        actions: ['lara-custom-holster', 'lara-custom-pistols', 'lara-custom-backpack']
-      };
-    } else {
-      delete modelRef.current.userData.hoverAction;
-    }
-  }, [isActive, name]);
+    if (!scene) return;
+    scene.traverse(c => {
+      if (isActive) {
+        c.userData.hoverAction = {
+          label: `Customiser ${name} 👤`,
+          actions: ['lara-custom-holster', 'lara-custom-pistols', 'lara-custom-backpack']
+        };
+      } else {
+        delete c.userData.hoverAction;
+      }
+    });
+  }, [isActive, name, scene]);
 
   useEffect(() => {
     if (!scene) return;

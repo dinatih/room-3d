@@ -124,7 +124,9 @@ export function HoverRaycaster() {
       pointer.y = -((clientY - rect.top)  / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(pointer, camera);
-      raycaster.layers.mask = camera.layers.mask & ~(1 << LAYER_NEIGHBORS) & ~(1 << LAYER_LIDAR);
+      raycaster.layers.enableAll();
+      raycaster.layers.disable(LAYER_NEIGHBORS);
+      raycaster.layers.disable(LAYER_LIDAR);
       const hits = raycaster.intersectObjects(scene.children, true);
 
       for (const hit of hits) {
