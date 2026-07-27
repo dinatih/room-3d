@@ -125,8 +125,8 @@ const SIT_H   = 70;
 const STAND_H = 103;
 
 const DESK1_POSITIONS = [
-  { x: 22,   z: 74.5, ry: Math.PI / 2 },
   { x: 73.5, z: 18,   ry: 0           },
+  { x: 22,   z: 74.5, ry: Math.PI / 2 },
   { x: 40,  z: 60,  ry: Math.PI     },
 ] as const;
 
@@ -323,7 +323,7 @@ function Bed() {
   }, []);
 
   const [stacked,   setStacked]   = useState(true);
-  const [sofa,      setSofa]      = useState(false);
+  const [sofa,      setSofa]      = useState(true);
   const [bedPosIdx, setBedPosIdx] = useState(0);
 
   useEffect(() => {

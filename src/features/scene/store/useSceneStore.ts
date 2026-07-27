@@ -28,7 +28,7 @@ const initialFurniture: FurnitureState = {
   cbnEast: false,
   cabinet: false,
   bedStacked: true,
-  bedSofa: false,
+  bedSofa: true,
   bedPosition: false,
   smorkullPos: false,
   lampOn: false,
