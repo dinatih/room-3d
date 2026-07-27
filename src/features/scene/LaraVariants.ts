@@ -14,7 +14,10 @@ function getTexture(url: string): THREE.Texture {
   return textureCache[url];
 }
 
-function createGrayscaleTexture(originalTex: THREE.Texture, isWhiteTop = false): THREE.Texture | null {
+function createGrayscaleTexture(
+  originalTex: THREE.Texture,
+  mode: 'vivid' | 'light' | 'standard' = 'standard'
+): THREE.Texture | null {
   if (!originalTex || !originalTex.image) return null;
   const img = originalTex.image as HTMLImageElement | HTMLCanvasElement;
   const width = img.width || 1024;
@@ -27,11 +30,14 @@ function createGrayscaleTexture(originalTex: THREE.Texture, isWhiteTop = false):
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
-  if (isWhiteTop) {
-    // Boost brightness so white t-shirt appears clean white with soft fold shadows
+  if (mode === 'vivid') {
+    // Exaggerated high contrast for Vivid variant so fabric folds and shadow creases pop out strongly
+    ctx.filter = 'grayscale(100%) brightness(140%) contrast(210%)';
+  } else if (mode === 'light') {
+    // Boost brightness so white/light clothes appear clean with soft fold shadows
     ctx.filter = 'grayscale(100%) brightness(185%) contrast(110%)';
   } else {
-    // Balanced contrast for dark grey t-shirt with visible fold highlights
+    // Balanced contrast for dark/standard colored clothes
     ctx.filter = 'grayscale(100%) brightness(130%) contrast(140%)';
   }
   ctx.drawImage(img, 0, 0, width, height);
@@ -271,8 +277,13 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
 
              if (useMap) {
                 if ((isTop || isShorts) && mat.map && !isCha) {
-                   const isLightColor = isDelphina || isSabira || isSafa || color === 0xffffff || color === 0xffd700 || color === 0xe2d6bd || color === 0xa2c4d9;
-                   const bwMap = createGrayscaleTexture(mat.map, isLightColor);
+                   let mode: 'vivid' | 'light' | 'standard' = 'standard';
+                   if (isVivid) {
+                     mode = 'vivid';
+                   } else if (isDelphina || isSabira || isSafa || color === 0xffffff || color === 0xffd700 || color === 0xe2d6bd || color === 0xa2c4d9) {
+                     mode = 'light';
+                   }
+                   const bwMap = createGrayscaleTexture(mat.map, mode);
                    if (bwMap) mat.map = bwMap;
                    mat.roughness = 0.5;
                    mat.metalness = 0.0;
@@ -280,7 +291,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                 mat.color.setHex(color);
                if (isVivid) {
                  mat.emissive = new THREE.Color(color);
-                 mat.emissiveIntensity = 0.35;
+                 mat.emissiveIntensity = 0.18;
                }
                if (isRosanna && isTop) {
                   mat.roughness = 0.5;
