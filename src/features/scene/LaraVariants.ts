@@ -90,8 +90,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         const isGlasses = matName.includes('lens') || matName.includes('glass') || matName.includes('frame');
         const isMouth = matName.includes('mouth') || matName.includes('teeth') || matName.includes('tongue');
 
-        // HIDE GLASSES for Delphina, Marissa and Cha
-        if ((isDelphina || isMarissa || isCha) && isGlasses) {
+        // HIDE GLASSES for Delphina and Cha
+        if ((isDelphina || isCha) && isGlasses) {
            mat.visible = false;
         }
 
