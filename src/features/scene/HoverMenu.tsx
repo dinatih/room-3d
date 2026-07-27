@@ -71,6 +71,13 @@ const ACTIONS: Record<string, ActionDef> = {
   'sofa-arm-left':         { btnLabel: 'Accoudoir Gauche',  toggleKey: 'sofaArmLeft'       },
   'walker-anim-lara':      { btnLabel: 'Jouer une animation', toggleKey: 'walker-anim-lara', type: 'select', options: WALKER_ANIM_OPTIONS },
   'walker-anim-xbot':      { btnLabel: 'Jouer une animation', toggleKey: 'walker-anim-xbot', type: 'select', options: WALKER_ANIM_OPTIONS },
+  'lara-expression':       { btnLabel: 'Expression faciale',  toggleKey: 'lara-expression', type: 'select', options: [
+    { value: 'neutral', label: 'Neutre 😐' },
+    { value: 'smile', label: 'Vrai sourire 😊' },
+    { value: 'smirk', label: 'Sourire en coin 😏' },
+    { value: 'wink', label: 'Clin d\'œil 😉' },
+    { value: 'open_mouth', label: 'Bouche ouverte 😮' }
+  ] },
   'lara-custom-holster':   { btnLabel: 'Holsters & Boucle', toggleKey: 'lara-custom-holster' },
   'lara-custom-pistols':   { btnLabel: 'Pistolets Mains',  toggleKey: 'lara-custom-pistols' },
   'lara-custom-backpack':  { btnLabel: 'Sac à dos',         toggleKey: 'lara-custom-backpack' },
