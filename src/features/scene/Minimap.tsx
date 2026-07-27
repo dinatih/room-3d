@@ -17,7 +17,7 @@ import { CHARACTERS } from './Walker';
 import { useSceneStore } from './store/useSceneStore';
 
 const SMALL_W_DESKTOP = 140;
-const SMALL_W_MOBILE  = 55;
+const SMALL_W_MOBILE  = 140;
 
 // ── Icône avion (plan 2D) ─────────────────────────────────────────────────────
 function drawPlaneIcon(
@@ -188,8 +188,11 @@ export function Minimap() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    canvas.width  = canvasW;
-    canvas.height = canvasH;
+    const dpr = Math.max(window.devicePixelRatio || 1, 2);
+    canvas.width  = Math.round(canvasW * dpr);
+    canvas.height = Math.round(canvasH * dpr);
+    canvas.style.width = `${canvasW}px`;
+    canvas.style.height = `${canvasH}px`;
 
     let rafId: number;
     const loop = () => {
@@ -259,9 +262,13 @@ export function Minimap() {
         <div className="glass-card shadow-sm p-1 rounded-3 w-100 position-relative">
           <canvas
             ref={canvasRef}
-            className="rounded-2 w-100"
+            className="rounded-2"
             style={{
               display: 'block',
+              width: '100%',
+              height: 'auto',
+              maxHeight: '185px',
+              objectFit: 'contain',
               background: 'transparent',
               opacity: 0.95,
               cursor: 'pointer',
