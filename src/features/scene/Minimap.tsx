@@ -10,7 +10,7 @@ import { cameraState } from '@features/scene/cameraState';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import {
   drawFloorPlan,
-  PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_ASPECT,
+  PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_Z_MAX, PLAN_ASPECT,
 } from './floorDraw';
 import { LANDING_STRIPS } from './LandingStrips';
 import { CHARACTERS } from './Walker';
@@ -51,17 +51,21 @@ function drawMinimap(
 ) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-  const W  = canvas.width;
-  const S  = W / (PLAN_X_MAX - PLAN_X_MIN);
+  const W = canvas.width;
+  const H = canvas.height;
+  const S = Math.min(W / (PLAN_X_MAX - PLAN_X_MIN), H / (PLAN_Z_MAX - PLAN_Z_MIN));
   const sc = W / smallW;
 
-  const tx = (x: number) => (x - PLAN_X_MIN) * S;
-  const tz = (z: number) => (z - PLAN_Z_MIN) * S;
+  const offX = (W - (PLAN_X_MAX - PLAN_X_MIN) * S) / 2;
+  const offZ = (H - (PLAN_Z_MAX - PLAN_Z_MIN) * S) / 2;
+
+  const tx = (x: number) => offX + (x - PLAN_X_MIN) * S;
+  const tz = (z: number) => offZ + (z - PLAN_Z_MIN) * S;
 
   // Fond
-  ctx.clearRect(0, 0, W, canvas.height);
+  ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-  ctx.fillRect(0, 0, W, canvas.height);
+  ctx.fillRect(0, 0, W, H);
 
   // ── Pistes d'atterrissage (seulement si activées) ─────────────────────────
   if (cameraState.landingStripsVisible) {
@@ -175,7 +179,9 @@ export function Minimap() {
   const canvasW = expanded
     ? Math.round(Math.min(window.innerWidth * 0.85, (window.innerHeight * 0.85) / PLAN_ASPECT))
     : smallW;
-  const canvasH = Math.round(canvasW * Math.min(PLAN_ASPECT, 1.35));
+  const canvasH = expanded
+    ? Math.round(canvasW * PLAN_ASPECT)
+    : Math.round(canvasW * 1.35);
 
   useEffect(() => {
     if (isCollapsed) return;

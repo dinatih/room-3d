@@ -26,13 +26,16 @@ export const PLAN_ASPECT = (PLAN_Z_MAX - PLAN_Z_MIN) / (PLAN_X_MAX - PLAN_X_MIN)
 export function drawFloorPlan(
   ctx: CanvasRenderingContext2D,
   cw: number,
-  _ch: number,
+  ch: number,
 ) {
-  const S  = cw / (PLAN_X_MAX - PLAN_X_MIN);
+  const S  = Math.min(cw / (PLAN_X_MAX - PLAN_X_MIN), ch / (PLAN_Z_MAX - PLAN_Z_MIN));
   const sc = cw / 150; // échelle relative pour épaisseurs et tirets
 
-  const tx = (x: number) => (x - PLAN_X_MIN) * S;
-  const tz = (z: number) => (z - PLAN_Z_MIN) * S;
+  const offX = (cw - (PLAN_X_MAX - PLAN_X_MIN) * S) / 2;
+  const offZ = (ch - (PLAN_Z_MAX - PLAN_Z_MIN) * S) / 2;
+
+  const tx = (x: number) => offX + (x - PLAN_X_MIN) * S;
+  const tz = (z: number) => offZ + (z - PLAN_Z_MIN) * S;
 
   // ── Sols ────────────────────────────────────────────────────────────────────
   ctx.fillStyle = 'rgba(212, 164, 55, 0.12)';
