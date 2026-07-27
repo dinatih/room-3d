@@ -462,6 +462,7 @@ export function SidePanel({
       {layerBtn('light',  'Accessoires Lara 🎒', 'accessories')}
       {layerBtn('pink',   'Physique poitrine 💃', 'breastPhysics')}
       {layerBtn('pink',   'Physique cheveux 💇‍♀️', 'hairPhysics')}
+      {layerBtn('white',  'Squelette 🦴',     'skeleton')}
       {layers.walker && layerBtn('light',  'Toutes les Lara 👥', 'showAllLaraStyles')}
       <button 
         className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
@@ -512,7 +513,6 @@ export function SidePanel({
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
       {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('cyan',   'X-Ray',         'xray')}
-      {layerBtn('white',  'Squelette',     'skeleton')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
       {layerBtn('cyan',   'LiDAR scan',    'lidar')}

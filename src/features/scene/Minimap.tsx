@@ -182,32 +182,18 @@ export function Minimap() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    // Set size only once per dimension change to avoid buffer reallocation lag
     canvas.width  = canvasW;
     canvas.height = canvasH;
 
-    let raf: number | null = null;
-    let pending = false;
-
-    const draw = () => {
-      pending = false;
+    let rafId: number;
+    const loop = () => {
       drawMinimap(canvas, smallW);
+      rafId = requestAnimationFrame(loop);
     };
-
-    const prev = cameraState.onUpdate;
-    cameraState.onUpdate = () => {
-      if (!pending) {
-        pending = true;
-        raf = requestAnimationFrame(draw);
-      }
-    };
-    
-    // Initial draw
-    draw();
+    loop();
 
     return () => {
-      cameraState.onUpdate = prev;
-      if (raf !== null) cancelAnimationFrame(raf);
+      cancelAnimationFrame(rafId);
     };
   }, [canvasW, canvasH, smallW, isCollapsed]);
 
@@ -217,10 +203,10 @@ export function Minimap() {
     return () => window.removeEventListener('keydown', onKey);
   }, [expanded]);
 
-  // Position relative on right side of screen (below top right buttons)
+  // Position relative on bottom right of screen
   const containerStyle: React.CSSProperties = isMobile
     ? { position: 'fixed', top: 12, right: 12, zIndex: 9999 }
-    : { position: 'fixed', top: 220, right: 16, zIndex: 9999 };
+    : { position: 'fixed', bottom: 24, right: 24, zIndex: 9999 };
 
   if (isCollapsed) {
     return (
