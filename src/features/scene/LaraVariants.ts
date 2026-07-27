@@ -176,7 +176,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                  color = 0xa2c4d9;
                  forceProcedural = true;
                } else if (isTop) {
-                 color = 0x222222; // Teinte noire fusionnée avec la texture de base (préserve plis & ombres)
+                 color = 0x444444; // Gris foncé / anthracite fusionné avec la texture de base (plis & ombres visibles)
                  forceProcedural = false;
                } else if (isBackpack || isGear) {
                  color = 0x151515;
@@ -233,6 +233,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
 
             if (useMap) {
                mat.color.setHex(color);
+               if (isMarissa && isTop) {
+                  mat.roughness = 0.8;
+                  mat.metalness = 0.0;
+               }
                if (isVivid) {
                  mat.emissive = new THREE.Color(color);
                  mat.emissiveIntensity = 0.35;
