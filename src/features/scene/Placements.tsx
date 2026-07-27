@@ -308,13 +308,13 @@ export function Furniture() {
 function Beds() {
   return (
     <>
-      {/* Lit Ouest — au sol (Y = 0), plaqué contre le meuble KallaxNW et en face de MeubleT / miroirs */}
-      <group position={[74, 0, 195]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Ouest' } }}>
-        <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {/* Lit Est — au sol (Y = 0), plaqué contre le meuble KallaxNE (Z = 75.5 cm) et le mur Est (Mur B) */}
-      <group position={[ROOM_W - 83 / 2, 0, 175.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Est' } }}>
+      {/* Lit Ouest (haut) — au sol (Y = 0), Z = 245 cm (contre le meuble KallaxNW), en face de MeubleT / miroirs */}
+      <group position={[74, 0, 245]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Ouest' } }}>
         <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* Lit Est (bas) — au sol (Y = 0), Z = 175.5 cm (contre le meuble KallaxNE), mur Est (Mur B) */}
+      <group position={[ROOM_W - 83 / 2, 0, 175.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Est' } }}>
+        <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
   );
