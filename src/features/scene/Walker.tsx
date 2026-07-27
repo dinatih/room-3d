@@ -611,6 +611,7 @@ function SingleCharacter({
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
+  const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const { scene } = useGLTFClone(modelPath);
 
   const groupRef = useRef<THREE.Group>(null!);
@@ -790,8 +791,8 @@ function SingleCharacter({
     scene.traverse(o => {
       const c = o as any;
       if (c.isMesh) {
-        c.castShadow = isActive;
-        c.receiveShadow = isActive;
+        c.castShadow = characterShadows;
+        c.receiveShadow = characterShadows;
         c.frustumCulled = false; // Disable culling for SkinnedMesh as bones move vertices far from rest pose bounding box
         if (c.material) {
             const materials = Array.isArray(c.material) ? c.material : [c.material];

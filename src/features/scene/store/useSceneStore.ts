@@ -72,6 +72,7 @@ const initialLayers: LayerState = {
   laraPistols: true,
   breastPhysics: true,
   hairPhysics: true,
+  characterShadows: true,
 };
 
 const initialExtraStates: Record<string, boolean> = {

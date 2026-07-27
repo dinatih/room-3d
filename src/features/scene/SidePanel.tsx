@@ -302,6 +302,7 @@ export interface LayerState {
   showAllLaraStyles: boolean;
   breastPhysics: boolean;
   hairPhysics: boolean;
+  characterShadows: boolean;
 }
 
 export interface SidePanelProps {
@@ -458,6 +459,7 @@ export function SidePanel({
   const PersonnageSection = (
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
       {layerBtn('light',  'Personnage 3D (Walker)', 'walker')}
+      {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
       {layerBtn('light',  'Pistolets Lara 🔫', 'laraPistols')}
       {layerBtn('light',  'Accessoires Lara 🎒', 'accessories')}
       {layerBtn('pink',   'Physique poitrine 💃', 'breastPhysics')}
