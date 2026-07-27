@@ -608,6 +608,16 @@ export function SidePanel({
     }
   };
 
+  const playRandomAnim = () => {
+    const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle');
+    if (!pool.length) return;
+    const randomAnim = pool[Math.floor(Math.random() * pool.length)];
+    if (randomAnim) {
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: randomAnim.value } }));
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: randomAnim.value } }));
+    }
+  };
+
   const handleKeyDownAnims = (e: React.KeyboardEvent | KeyboardEvent) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
@@ -656,6 +666,15 @@ export function SidePanel({
               ✕
             </button>
           )}
+          <button
+            className="btn btn-warning text-dark fw-bold border-start-0 px-2"
+            type="button"
+            onClick={playRandomAnim}
+            title="Jouer une animation au hasard parmi les 750+ GLBs"
+            style={{ fontSize: '10px' }}
+          >
+            🎲 Aléatoire
+          </button>
         </div>
 
         <div className="d-flex align-items-center justify-content-between mb-2 px-1" style={{ fontSize: '10px' }}>
