@@ -208,6 +208,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                 } else if (isTop || isBackpack) {
                   color = 0xff2222; // Red
                   forceProcedural = false;
+                } else if (isGear || isBoot) {
+                  color = 0x222222; // Dark leather
+                  forceProcedural = false;
                 }
              } else if (isMarissa) {
                 if (isShorts) {
@@ -217,22 +220,22 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   color = 0x555555; // Dark charcoal
                   forceProcedural = false;
                 } else if (isBackpack || isGear) {
-                  color = 0x151515;
-                  forceProcedural = true;
+                  color = 0x222222; // Dark leather
+                  forceProcedural = false;
                 } else if (isBoot) {
-                  color = 0xffffff; // Boots stay pure white
-                  forceProcedural = true;
+                  color = 0xffffff; // Boots stay pure white with full lace & sole details
+                  forceProcedural = false;
                 }
              } else if (isDelphina) {
-                color = 0xffffff;
+                color = 0xffffff; // Pure white for clothes, backpack, holsters, boots
                 forceProcedural = false;
              } else if (isSara) {
                 if (isTop || isShorts) {
                   color = 0x444444; // Dark grey
                   forceProcedural = false;
                 } else {
-                  color = 0x050505; // Deep black
-                  forceProcedural = true;
+                  color = 0x151515; // Black leather gear/boots/backpack
+                  forceProcedural = false;
                 }
              } else if (isCha) {
                 if (isShorts) {
@@ -243,11 +246,14 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   forceProcedural = true;
                 } else {
                   color = 0x151515; // Black boots / gear
-                  forceProcedural = true;
+                  forceProcedural = false;
                 }
              } else if (isSabira) {
                 if (isTop || isShorts) {
                   color = 0xffd700; // Yellow top / shorts
+                  forceProcedural = false;
+                } else {
+                  color = 0x151515; // Black boots / gear
                   forceProcedural = false;
                 }
              } else if (isSafa) {
@@ -261,22 +267,23 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   color = 0xff0000; // Red shorts
                   forceProcedural = false;
                 } else {
-                  color = 0x050505; // Black boots
-                  forceProcedural = true;
+                  color = 0x151515; // Black boots / gear
+                  forceProcedural = false;
                 }
              } else {
                // Vivid Red
                const redColor = 0xff0000;
                const gearColor = 0x990000;
-               const isGear = matName.includes('gear') || matName.includes('holster') || matName.includes('boot');
-               color = isGear ? gearColor : redColor;
-               if (isTop || isShorts) forceProcedural = false;
+               const isGearOrBoot = matName.includes('gear') || matName.includes('holster') || matName.includes('boot');
+               color = isGearOrBoot ? gearColor : redColor;
+               forceProcedural = false;
              }
 
              const useMap = mat.map && !forceProcedural;
 
              if (useMap) {
-                if ((isTop || isShorts) && mat.map && !isCha) {
+                const isClothingOrGear = isTop || isShorts || isBackpack || isGear || isBoot;
+                if (isClothingOrGear && mat.map && !(isCha && (isShirt || isBoot))) {
                    let mode: 'vivid' | 'light' | 'standard' = 'standard';
                    if (isVivid) {
                      mode = 'vivid';
