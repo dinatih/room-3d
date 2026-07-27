@@ -478,14 +478,35 @@ button, input, select, textarea {
 
 /* ── RESPONSIVE RESPONSIVENESS (MOBILE) ── */
 @media (max-width: 767px) {
+  .inventory-overlay {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
   .inventory-modal {
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     border-radius: 0;
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(255, 255, 255, 0.96);
+  }
+  .inventory-topbar {
+    padding-top: max(8px, env(safe-area-inset-top, 0px));
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    padding-bottom: 8px;
+  }
+  .inventory-topbar-brand {
+    font-size: 14px;
+  }
+  .inventory-topbar-search {
+    max-width: 100%;
+    order: 3;
+    width: 100%;
+    margin-top: 4px;
   }
   .inventory-layout {
-    height: calc(100% - 56px);
+    height: calc(100% - 90px);
     flex-direction: column;
   }
   .inventory-pane-list {
