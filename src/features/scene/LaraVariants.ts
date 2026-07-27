@@ -14,7 +14,7 @@ function getTexture(url: string): THREE.Texture {
   return textureCache[url];
 }
 
-function createGrayscaleTexture(originalTex: THREE.Texture): THREE.Texture | null {
+function createGrayscaleTexture(originalTex: THREE.Texture, isWhiteTop = false): THREE.Texture | null {
   if (!originalTex || !originalTex.image) return null;
   const img = originalTex.image as HTMLImageElement | HTMLCanvasElement;
   const width = img.width || 1024;
@@ -27,7 +27,13 @@ function createGrayscaleTexture(originalTex: THREE.Texture): THREE.Texture | nul
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
-  ctx.filter = 'grayscale(100%) contrast(140%) brightness(110%)';
+  if (isWhiteTop) {
+    // Boost brightness so white t-shirt appears clean white with soft fold shadows
+    ctx.filter = 'grayscale(100%) brightness(185%) contrast(110%)';
+  } else {
+    // Balanced contrast for dark grey t-shirt with visible fold highlights
+    ctx.filter = 'grayscale(100%) brightness(130%) contrast(140%)';
+  }
   ctx.drawImage(img, 0, 0, width, height);
   ctx.filter = 'none';
 
@@ -200,7 +206,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   color = 0xa2c4d9;
                   forceProcedural = true;
                 } else if (isTop) {
-                  color = 0x2b2b2b; // Noir textile fusionné avec la carte B&W des plis & ombres
+                  color = 0x555555; // Gris très foncé / anthracite fusionné avec la carte B&W
                   forceProcedural = false;
                 } else if (isBackpack || isGear) {
                   color = 0x151515;
@@ -257,7 +263,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
 
             if (useMap) {
                if ((isMarissa || isDelphina) && isTop && mat.map) {
-                  const bwMap = createGrayscaleTexture(mat.map);
+                  const bwMap = createGrayscaleTexture(mat.map, isDelphina);
                   if (bwMap) mat.map = bwMap;
                   mat.roughness = 0.5;
                   mat.metalness = 0.0;
