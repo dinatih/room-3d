@@ -143,8 +143,7 @@ const SMORKULL_POSITIONS = [
 ];
 
 const AIRPERFORMER_POSITIONS = [
-  { x: 297, z: 230,    ry: 0 },
-  { x: 261, z: w2 / 2, ry: 0 }, // devant KallaxNE (face x=277, centre z=37.75)
+  { x: 261, z: w2 / 2, ry: 0 }, // devant KallaxNE (face x=277, centre z=37.75) — par défaut
   { x: 200, z: 100,    ry: 0 },
   { x: 297, z: w2 + 16, ry: 0 }, // angle KallaxNE / Mur Est
 ];
