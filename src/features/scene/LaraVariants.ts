@@ -195,19 +195,18 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
             let color = 0xcc0000; // Brighter default red
             let forceProcedural = false;
 
-            if (isRosanna) {
-               if (isShorts) {
-                 color = 0xa2c4d9; // Blue jean
-                 forceProcedural = true;
-               }
-               else if (isTop || isBackpack) {
-                 color = 0xff2222; // Red
-                 forceProcedural = false;
-               }
-            } else if (isMarissa) {
+             if (isRosanna) {
                 if (isShorts) {
-                  color = 0xa2c4d9;
-                  forceProcedural = true;
+                  color = 0xa2c4d9; // Blue jean
+                  forceProcedural = false;
+                } else if (isTop || isBackpack) {
+                  color = 0xff2222; // Red
+                  forceProcedural = false;
+                }
+             } else if (isMarissa) {
+                if (isShorts) {
+                  color = 0xa2c4d9; // Blue jean
+                  forceProcedural = false;
                 } else if (isTop) {
                   color = 0x555555; // Dark charcoal
                   forceProcedural = false;
@@ -222,63 +221,63 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                 color = 0xffffff;
                 forceProcedural = false;
              } else if (isSara) {
-               if (isTop) {
+                if (isTop || isShorts) {
                   color = 0x444444; // Dark grey
                   forceProcedural = false;
-               } else {
+                } else {
                   color = 0x050505; // Deep black
                   forceProcedural = true;
-               }
-            } else if (isCha) {
-               if (isShorts) {
-                 color = 0xff0000; // Vivid red
-                 forceProcedural = true;
-               } else if (isTop) {
-                 color = 0x0044cc; // Superman blue
-                 forceProcedural = true;
-               } else {
-                 color = 0x151515; // Black boots / gear
-                 forceProcedural = true;
-               }
-            } else if (isSabira) {
-               if (isTop) {
-                 color = 0xffd700; // Yellow top
-                 forceProcedural = false;
-               }
-            } else if (isSafa) {
-               color = 0xe2d6bd; // Beige
-               forceProcedural = false;
-            } else if (isSandra) {
-               if (isTop) {
-                 color = 0x444444; // Black/grey shirt
-                 forceProcedural = false;
-               } else if (isShorts) {
-                 color = 0xff0000; // Red shorts
-                 forceProcedural = true;
-               } else {
-                 color = 0x050505; // Black boots
-                 forceProcedural = true;
-               }
-            } else {
-              // Vivid Red
-              const redColor = 0xff0000;
-              const gearColor = 0x990000;
-              const isGear = matName.includes('gear') || matName.includes('holster') || matName.includes('boot');
-              color = isGear ? gearColor : redColor;
-              if (isTop) forceProcedural = false;
-            }
+                }
+             } else if (isCha) {
+                if (isShorts) {
+                  color = 0xff0000; // Vivid red shorts
+                  forceProcedural = false;
+                } else if (isTop) {
+                  color = 0x0044cc; // Superman blue
+                  forceProcedural = true;
+                } else {
+                  color = 0x151515; // Black boots / gear
+                  forceProcedural = true;
+                }
+             } else if (isSabira) {
+                if (isTop || isShorts) {
+                  color = 0xffd700; // Yellow top / shorts
+                  forceProcedural = false;
+                }
+             } else if (isSafa) {
+                color = 0xe2d6bd; // Beige
+                forceProcedural = false;
+             } else if (isSandra) {
+                if (isTop) {
+                  color = 0x444444; // Black/grey shirt
+                  forceProcedural = false;
+                } else if (isShorts) {
+                  color = 0xff0000; // Red shorts
+                  forceProcedural = false;
+                } else {
+                  color = 0x050505; // Black boots
+                  forceProcedural = true;
+                }
+             } else {
+               // Vivid Red
+               const redColor = 0xff0000;
+               const gearColor = 0x990000;
+               const isGear = matName.includes('gear') || matName.includes('holster') || matName.includes('boot');
+               color = isGear ? gearColor : redColor;
+               if (isTop || isShorts) forceProcedural = false;
+             }
 
-            const useMap = mat.map && !forceProcedural;
+             const useMap = mat.map && !forceProcedural;
 
-            if (useMap) {
-               if (isTop && mat.map && !isCha) {
-                  const isLightColor = isDelphina || isSabira || isSafa || color === 0xffffff || color === 0xffd700 || color === 0xe2d6bd;
-                  const bwMap = createGrayscaleTexture(mat.map, isLightColor);
-                  if (bwMap) mat.map = bwMap;
-                  mat.roughness = 0.5;
-                  mat.metalness = 0.0;
-               }
-               mat.color.setHex(color);
+             if (useMap) {
+                if ((isTop || isShorts) && mat.map && !isCha) {
+                   const isLightColor = isDelphina || isSabira || isSafa || color === 0xffffff || color === 0xffd700 || color === 0xe2d6bd || color === 0xa2c4d9;
+                   const bwMap = createGrayscaleTexture(mat.map, isLightColor);
+                   if (bwMap) mat.map = bwMap;
+                   mat.roughness = 0.5;
+                   mat.metalness = 0.0;
+                }
+                mat.color.setHex(color);
                if (isVivid) {
                  mat.emissive = new THREE.Color(color);
                  mat.emissiveIntensity = 0.35;
