@@ -1447,10 +1447,12 @@ function SingleCharacter({
           }
         }
 
-        // Breast physics simulation (Verlet)
+        // Breast physics simulation (Verlet with low-FPS stability & max angle clamp)
         const enableBreastPhysics = useSceneStore.getState().layers.breastPhysics;
         if (enableBreastPhysics && breastChainRef.current.length > 0) {
-          const g = new THREE.Vector3(0, -700, 0); // moderate gravity for breasts to allow bouncy feel
+          const g = new THREE.Vector3(0, -500, 0); // Natural gravity
+          const dampingFactor = Math.exp(-12 * simDt); // Framerate-independent exponential damping
+          const maxBreastAngle = Math.PI / 15; // 12 degrees max rotation clamp to eliminate mesh distortion at low FPS
 
           for (const node of breastChainRef.current) {
             const { bone, restQuat, axis, worldLength } = node;
@@ -1461,7 +1463,7 @@ function SingleCharacter({
 
             // Teleportation safety reset
             const dist = jointWorld.distanceTo(node.tipWorld);
-            if (dist > worldLength * 3) {
+            if (dist > worldLength * 2.5) {
               const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
               const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
               const tipW = jointWorld.clone().addScaledVector(restDir, worldLength);
@@ -1469,14 +1471,15 @@ function SingleCharacter({
               node.tipPrev.copy(tipW);
             }
 
-            const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - 0.12)); // damping = 0.12
-            const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
+            const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dampingFactor);
+            const cappedDt = Math.min(simDt, 0.025); // Cap timestep for displacement formula to prevent explosion at low FPS
+            const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, cappedDt * cappedDt);
 
             const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
             const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
             const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
 
-            next.lerp(restTip, 0.15); // stiffness = 0.15
+            next.lerp(restTip, 0.25); // Spring stiffness back to rest position
 
             const dir = new THREE.Vector3().subVectors(next, jointWorld);
             const currentLen = dir.length();
@@ -1496,7 +1499,7 @@ function SingleCharacter({
             const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
 
             let scaledQ = qDelta;
-            const breastIntensity = 1.2;
+            const breastIntensity = 1.8; // Controlled multiplier for natural subtle bounce
             const w = Math.min(1, Math.max(-1, qDelta.w));
             const angle = 2 * Math.acos(w);
             if (Math.abs(angle) > 1e-5) {
@@ -1507,7 +1510,9 @@ function SingleCharacter({
               } else {
                 rotAxis.set(0, 0, 1);
               }
-              scaledQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, angle * breastIntensity);
+              // CLAMP maximum rotation angle to prevent mesh distortion at low FPS!
+              const clampedAngle = Math.min(maxBreastAngle, angle * breastIntensity);
+              scaledQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, clampedAngle);
             }
             bone.quaternion.copy(scaledQ).multiply(restQuat);
           }
