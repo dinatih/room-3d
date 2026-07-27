@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import type { PlaneModelKey } from './PaperPlane';
+import { Minimap } from './Minimap';
 
 export interface AnimationsPanelProps {
   buildAnim:        boolean; onStartBuildAnim:  () => void;
@@ -270,6 +271,9 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
           )}
         </div>
       )}
+
+      {/* Minimap (Plan 2D) encadrée dans le menu de droite */}
+      <Minimap />
     </div>
   );
 }

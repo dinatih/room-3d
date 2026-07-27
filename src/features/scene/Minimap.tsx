@@ -203,21 +203,16 @@ export function Minimap() {
     return () => window.removeEventListener('keydown', onKey);
   }, [expanded]);
 
-  // Position relative on bottom right of screen
-  const containerStyle: React.CSSProperties = isMobile
-    ? { position: 'fixed', top: 12, right: 12, zIndex: 9999 }
-    : { position: 'fixed', bottom: 24, right: 24, zIndex: 9999 };
-
   if (isCollapsed) {
     return (
       <button
         onClick={() => setIsCollapsed(false)}
-        className="btn btn-dark shadow-sm glass-card border-secondary text-white d-flex align-items-center gap-1 rounded-pill px-3 py-1"
-        style={{ ...containerStyle, cursor: 'pointer', opacity: 0.95 }}
+        className="btn btn-dark shadow-sm glass-card border-secondary text-white d-flex align-items-center justify-content-between rounded-3 w-100 px-2 py-1.5"
+        style={{ cursor: 'pointer', opacity: 0.95 }}
         title="Afficher la minimap (Plan 2D)"
       >
-        <span>🗺️</span>
-        <span style={{ fontSize: '11px', fontWeight: 600 }}>Plan</span>
+        <span style={{ fontSize: '11px', fontWeight: 600 }}>🗺️ Plan 2D</span>
+        <span style={{ fontSize: '10px' }}>➕</span>
       </button>
     );
   }
@@ -229,7 +224,7 @@ export function Minimap() {
         <div
           onClick={() => setExpanded(false)}
           className="position-fixed inset-0 bg-dark bg-opacity-50"
-          style={{ backdropFilter: 'blur(4px)', zIndex: 200 }}
+          style={{ backdropFilter: 'blur(4px)', zIndex: 2000 }}
         />
       )}
 
@@ -237,7 +232,7 @@ export function Minimap() {
         /* EXPANDED VIEW: Styled inside a Bootstrap Card */
         <div 
           className="card glass-card shadow-lg p-2 position-fixed"
-          style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 201 }}
+          style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 2001 }}
         >
           <div className="card-header border-0 bg-transparent p-0 d-flex justify-content-between align-items-center mb-2">
             <span className="fw-semibold text-muted text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.06em', color: 'var(--text) !important' }}>
@@ -254,18 +249,15 @@ export function Minimap() {
           </div>
         </div>
       ) : (
-        /* SMALL VIEW: Floating photo-frame card */
-        <div 
-          className="glass-card shadow-sm p-1 rounded-3 position-relative"
-          style={containerStyle}
-        >
+        /* MENU VIEW: Photo-frame card inside the right menu panel */
+        <div className="glass-card shadow-sm p-1 rounded-3 w-100 position-relative">
           <canvas
             ref={canvasRef}
-            className="rounded-2"
+            className="rounded-2 w-100"
             style={{
               display: 'block',
               background: 'transparent',
-              opacity: 0.88,
+              opacity: 0.95,
               cursor: 'pointer',
             }}
             onClick={() => setExpanded(true)}
@@ -289,7 +281,7 @@ export function Minimap() {
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); setIsCollapsed(true); }}
-            title="Réduire à un icône"
+            title="Réduire"
             className="btn btn-dark btn-sm position-absolute d-flex align-items-center justify-content-center"
             style={{
               top: 8,

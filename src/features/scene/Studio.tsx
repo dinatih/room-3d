@@ -12,7 +12,6 @@ import {
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
-import { Minimap }          from '@features/scene/Minimap';
 import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
 import { AnimationsPanel }  from '@features/scene/AnimationsPanel';
 import { Walls, Floor, Mirrors, GROUND_COLOR } from './Building';
@@ -417,7 +416,6 @@ export function Studio() {
         }}
       />
       {showInventory && <Inventory onClose={() => setShowInventory(false)} />}
-      <Minimap />
       <VirtualDPad />
       <HoverOverlay />
       {layers.wallEdges && <EdgeHoverOverlay />}
