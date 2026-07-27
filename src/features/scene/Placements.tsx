@@ -18,7 +18,6 @@ import { KallaxSE }      from './items/KallaxSE';
 import { KallaxNW }      from './items/KallaxNW';
 import { KallaxCuisine } from './items/KallaxCuisine';
 import { CuisineGroup, CuisineDrona, CuisineLillhavet } from './items/CuisineGroup';
-import { Freezer }       from './items/Freezer';
 import { BathroomCabinetWest, BathroomCabinetEast } from './items/BathroomCabinet';
 import { Toilet }        from './items/Toilet';
 import { TradfriBulb }   from './items/TradfriBulb';
@@ -177,9 +176,6 @@ export function Equipment() {
       </group>
       <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ animUnit: true }}>
         <CuisineGroup item={stub('cuisine-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
-      </group>
-      <group position={[24.5, 0, 269.5]} userData={{ animUnit: true }}>
-        <Freezer item={stub('freezer')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[DOOR_START - 84, 14, KITCHEN_Z + PARTITION_THICKNESS + 24.5]} userData={{ animUnit: true }}>
         <VasqueSdb item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
