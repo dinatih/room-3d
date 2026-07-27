@@ -312,8 +312,8 @@ function Beds() {
       <group position={[74, 0, 195]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Ouest' } }}>
         <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* Lit Est — au sol (Y = 0), plaqué contre le mur Est (Mur B) */}
-      <group position={[ROOM_W - 83 / 2, 0, 190]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Est' } }}>
+      {/* Lit Est — au sol (Y = 0), plaqué contre le meuble KallaxNE et le mur Est (Mur B) */}
+      <group position={[ROOM_W - 83 / 2, 0, 195]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Est' } }}>
         <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
