@@ -1615,18 +1615,18 @@ function SingleCharacter({
           }
         }
 
-        // Breast physics simulation (Fixed Sub-Stepping 60Hz for perfect low-FPS stability)
+        // Breast physics simulation (Fixed Sub-Stepping 60Hz for perfect low-FPS stability & natural bounce)
         const enableBreastPhysics = useSceneStore.getState().layers.breastPhysics;
         if (enableBreastPhysics && breastChainRef.current.length > 0) {
-          const g = new THREE.Vector3(0, -500, 0); // Natural gravity
-          const maxBreastAngle = Math.PI / 8.5; // ~21° max angle (souple et naturel)
+          const g = new THREE.Vector3(0, -600, 0); // Gravité naturelle
+          const maxBreastAngle = Math.PI / 7.2; // ~25° max angle (mouvement ample et fluide)
 
           // Sub-stepping avec un pas de temps FIXE de 1/60s (16.6ms) pour garantir une physique identique quel que soit le FPS
           const fixedDt = 1 / 60;
           const subSteps = Math.min(4, Math.max(1, Math.round(simDt / fixedDt)));
 
           for (let step = 0; step < subSteps; step++) {
-            const dampingFactor = Math.exp(-8 * fixedDt);
+            const dampingFactor = Math.exp(-3 * fixedDt); // Damping plus doux (-3 au lieu de -8) pour plus de flexibilité
 
             for (const node of breastChainRef.current) {
               const { bone, restQuat, axis, worldLength } = node;
@@ -1652,7 +1652,7 @@ function SingleCharacter({
               const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
               const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
 
-              next.lerp(restTip, 0.18); // Rappel ressort stable
+              next.lerp(restTip, 0.04); // Raideur réduite pour autoriser du débattement physique réactif
 
               const dir = new THREE.Vector3().subVectors(next, jointWorld);
               const currentLen = dir.length();
@@ -1672,7 +1672,7 @@ function SingleCharacter({
               const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
 
               let scaledQ = qDelta;
-              const breastIntensity = 1.0; // Ratio 1:1 direct et stable grâce au sub-stepping
+              const breastIntensity = 3.0; // Multiplicateur d'intensité réactif
               const w = Math.min(1, Math.max(-1, qDelta.w));
               const angle = 2 * Math.acos(w);
               if (Math.abs(angle) > 1e-5) {
