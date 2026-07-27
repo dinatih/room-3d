@@ -10,7 +10,6 @@
 import { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Kallax2x1 }      from './Kallax2x1';
-import { MeubleT }        from './MeubleT';
 import { ShoeHatRack }    from './ShoeHatRack';
 import { DronaInstances } from './Drona';
 import { Freezer }        from './Freezer';
@@ -25,7 +24,6 @@ const w1 = tw(1); // 40.5
 const w2 = tw(2); // 75.5
 const h1 = th(1); // 41  ← devient la profondeur visuelle une fois pivoté
 const DEP = 39;   // Kallax depth (KALLAX_DEPTH)
-const MEUBLE_T_D = 27.5;
 const FREEZER_H = 50; // Hauteur du congélateur CHIQ au sol
 
 // Positions en espace root (rotY=π/2).
@@ -73,12 +71,6 @@ export function KallaxSE({ onSize }: SceneItemProps) {
       </group>
 
       <DronaInstances matrices={dronaMatrices} />
-
-      {/* MeubleT — posé sur le dessus du stack (Y = FREEZER_H + 2×w2), flush mur B */}
-      {/* local: x = stack_z − z_world = 0, z = x_world − stack_x = DEP/2 − MEUBLE_T_D/2 */}
-      <group position={[0, FREEZER_H + 2 * w2, DEP / 2 - MEUBLE_T_D / 2]} rotation-y={-Math.PI}>
-        <MeubleT item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
 
       {/* ShoeHatRack — au sol, côté mur D, flush mur B */}
       {/* local: x = stack_z − z_world = −w1/2, z = x_world − stack_x = DEP/2 */}

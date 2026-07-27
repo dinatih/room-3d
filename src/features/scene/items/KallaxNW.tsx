@@ -14,6 +14,7 @@ import { Kallax1x1 }      from './Kallax1x1';
 import { MannequinHead }  from './MannequinHead';
 import { DronaInstances } from './Drona';
 import { Variera32x13 }   from './Variera32x13';
+import { MeubleT }        from './MeubleT';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -90,6 +91,11 @@ export function KallaxNW({ onSize }: SceneItemProps) {
         rotation-y={-Math.PI / 2}
       >
         <Variera32x13 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* MeubleT — au sol (Y = 0) à gauche des meubles Kallax */}
+      <group position={[0, 0, -w2 / 2 - 15]} rotation-y={-Math.PI / 2}>
+        <MeubleT item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>
   );
