@@ -200,13 +200,16 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                  color = 0xa2c4d9; // Blue jean
                  forceProcedural = true;
                }
-               else if (isTop || isBackpack) color = 0xff2222; // Red
+               else if (isTop || isBackpack) {
+                 color = 0xff2222; // Red
+                 forceProcedural = false;
+               }
             } else if (isMarissa) {
                 if (isShorts) {
                   color = 0xa2c4d9;
                   forceProcedural = true;
                 } else if (isTop) {
-                  color = 0x555555; // Gris très foncé / anthracite fusionné avec la carte B&W
+                  color = 0x555555; // Dark charcoal
                   forceProcedural = false;
                 } else if (isBackpack || isGear) {
                   color = 0x151515;
@@ -217,10 +220,15 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                 }
              } else if (isDelphina) {
                 color = 0xffffff;
-                forceProcedural = false; // Fusion du blanc pur avec la carte B&W des plis & ombres
+                forceProcedural = false;
              } else if (isSara) {
-               color = 0x050505; // Deep black
-               forceProcedural = true; // Avoid texture details for pure black look
+               if (isTop) {
+                  color = 0x444444; // Dark grey
+                  forceProcedural = false;
+               } else {
+                  color = 0x050505; // Deep black
+                  forceProcedural = true;
+               }
             } else if (isCha) {
                if (isShorts) {
                  color = 0xff0000; // Vivid red
@@ -235,15 +243,15 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
             } else if (isSabira) {
                if (isTop) {
                  color = 0xffd700; // Yellow top
-                 forceProcedural = true;
+                 forceProcedural = false;
                }
             } else if (isSafa) {
                color = 0xe2d6bd; // Beige
-               forceProcedural = true;
+               forceProcedural = false;
             } else if (isSandra) {
                if (isTop) {
-                 color = 0x050505; // Black shirt
-                 forceProcedural = true;
+                 color = 0x444444; // Black/grey shirt
+                 forceProcedural = false;
                } else if (isShorts) {
                  color = 0xff0000; // Red shorts
                  forceProcedural = true;
@@ -257,13 +265,15 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
               const gearColor = 0x990000;
               const isGear = matName.includes('gear') || matName.includes('holster') || matName.includes('boot');
               color = isGear ? gearColor : redColor;
+              if (isTop) forceProcedural = false;
             }
 
             const useMap = mat.map && !forceProcedural;
 
             if (useMap) {
-               if ((isMarissa || isDelphina) && isTop && mat.map) {
-                  const bwMap = createGrayscaleTexture(mat.map, isDelphina);
+               if (isTop && mat.map && !isCha) {
+                  const isLightColor = isDelphina || isSabira || isSafa || color === 0xffffff || color === 0xffd700 || color === 0xe2d6bd;
+                  const bwMap = createGrayscaleTexture(mat.map, isLightColor);
                   if (bwMap) mat.map = bwMap;
                   mat.roughness = 0.5;
                   mat.metalness = 0.0;
