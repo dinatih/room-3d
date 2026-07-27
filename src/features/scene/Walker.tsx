@@ -39,10 +39,10 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'sara', name: 'Sara', path: 'media/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_climbing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_climbing.glb' },
   { id: 'cha', name: 'Cha', path: 'media/lara_native.glb', pos: [30, 0, 151], rot: Math.PI / 2, variant: 'cha', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anims/anim_sitting_idle.glb' },
   { id: 'vivid', name: 'Vivid', path: 'media/lara_native.glb', pos: [30, 0, 210], rot: Math.PI / 2, variant: 'vivid', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_sitting_idle.glb', customIdleAnimPath: 'media/sandbox/anims/anim_sitting_idle.glb' },
+  { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [150, 0, -600], rot: 0, variant: 'native', height: 173.4, isLara: false },
   { id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [100, 0, 370], rot: Math.atan2(158 - 100, 200 - 370), variant: 'sabira', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_dancing_twerk.glb', sittingScenePath: 'media/sandbox/anims/anim_dancing_twerk.glb' },
   { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [250, 0, 320], rot: Math.atan2(158 - 250, 200 - 320), variant: 'safa', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_stall_soccerball_1.glb', sittingScenePath: 'media/sandbox/anims/anim_stall_soccerball_1.glb' },
-  { id: 'sandra', name: 'Sandra', path: 'media/lara_native.glb', pos: [120, 0, -600], rot: 0, variant: 'sandra', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_body_jab_cross.glb', sittingScenePath: 'media/sandbox/anims/anim_body_jab_cross.glb' },
-  { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [150, 0, -600], rot: 0, variant: 'native', height: 173.4, isLara: false }
+  { id: 'sandra', name: 'Sandra', path: 'media/lara_native.glb', pos: [120, 0, -600], rot: 0, variant: 'sandra', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_body_jab_cross.glb', sittingScenePath: 'media/sandbox/anims/anim_body_jab_cross.glb' }
 ];
 
 const BONE_SYNONYMS: Record<string, string[]> = {
@@ -1028,29 +1028,31 @@ function SingleCharacter({
             const clipNameLower = (clip.name || '').toLowerCase();
             const isPose = (pathLower.includes('pose') || clipNameLower.includes('pose')) && !pathLower.includes('t-pose') && !clipNameLower.includes('t-pose');
 
-            if (isPose) {
-              const clipDur = finalClip.duration > 0.01 ? finalClip.duration : 0.033;
-              const repetitions = Math.max(1, Math.round(10.0 / clipDur));
-              action.setLoop(THREE.LoopRepeat, repetitions);
+            const mode = animLoopModeRef.current;
+            if (mode === 'infinite') {
+              action.setLoop(THREE.LoopRepeat, Infinity);
+              action.clampWhenFinished = false;
+            } else if (mode === '3x') {
+              action.setLoop(THREE.LoopRepeat, 3);
               action.clampWhenFinished = true;
-
-              poseTimerRef.current = setTimeout(() => {
-                if (customAnimName.current === path) {
-                  customAnimName.current = null;
-                  invalidate();
-                }
-              }, 10000);
+              if (isPose) {
+                poseTimerRef.current = setTimeout(() => {
+                  if (customAnimName.current === path) {
+                    customAnimName.current = null;
+                    invalidate();
+                  }
+                }, 30000); // 3x 10sec = 30 seconds
+              }
             } else {
-              const mode = animLoopModeRef.current;
-              if (mode === 'infinite') {
-                action.setLoop(THREE.LoopRepeat, Infinity);
-                action.clampWhenFinished = false;
-              } else if (mode === '3x') {
-                action.setLoop(THREE.LoopRepeat, 3);
-                action.clampWhenFinished = true;
-              } else {
-                action.setLoop(THREE.LoopOnce, 1);
-                action.clampWhenFinished = true;
+              action.setLoop(THREE.LoopOnce, 1);
+              action.clampWhenFinished = true;
+              if (isPose) {
+                poseTimerRef.current = setTimeout(() => {
+                  if (customAnimName.current === path) {
+                    customAnimName.current = null;
+                    invalidate();
+                  }
+                }, 10000); // 1x 10sec
               }
             }
 
@@ -1070,6 +1072,22 @@ function SingleCharacter({
       }
     };
   }, [isActive, isLara, scene, invalidate, id]);
+
+  useEffect(() => {
+    const resetTimer = () => {
+      idleTimerRef.current = 0;
+    };
+    window.addEventListener('pointermove', resetTimer, { passive: true });
+    window.addEventListener('keydown', resetTimer, { passive: true });
+    window.addEventListener('touchstart', resetTimer, { passive: true });
+    window.addEventListener('wheel', resetTimer, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', resetTimer);
+      window.removeEventListener('keydown', resetTimer);
+      window.removeEventListener('touchstart', resetTimer);
+      window.removeEventListener('wheel', resetTimer);
+    };
+  }, []);
 
   useEffect(() => {
     if (!scene) return;

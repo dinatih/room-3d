@@ -267,8 +267,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                 color: color,
                 emissive: (isVivid || (isRosanna && isTop)) ? new THREE.Color(color === 0x050505 ? 0 : color) : new THREE.Color(0,0,0),
                 emissiveIntensity: isVivid ? 0.5 : ((isRosanna && isTop) ? 0.05 : 0),
-                roughness: (isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.9 : (isVivid ? 0.1 : 0.25),
-                metalness: (isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.0 : (isVivid ? 0.3 : 0.1),
+                roughness: (isMarissa && isTop) ? 0.15 : ((isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.9 : (isVivid ? 0.1 : 0.25)),
+                metalness: (isMarissa && isTop) ? 0.35 : ((isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.0 : (isVivid ? 0.3 : 0.1)),
                 transparent: false,
                 alphaTest: 0.5, // Allow alpha test for cutouts
                 depthWrite: true,

@@ -169,6 +169,7 @@ export function Minimap() {
   const isMobile = useIsMobile();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [expanded, setExpanded] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const smallW = isMobile ? SMALL_W_MOBILE : SMALL_W_DESKTOP;
   const canvasW = expanded
@@ -177,6 +178,7 @@ export function Minimap() {
   const canvasH = Math.round(canvasW * PLAN_ASPECT);
 
   useEffect(() => {
+    if (isCollapsed) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     
@@ -207,7 +209,7 @@ export function Minimap() {
       cameraState.onUpdate = prev;
       if (raf !== null) cancelAnimationFrame(raf);
     };
-  }, [canvasW, canvasH, smallW]);
+  }, [canvasW, canvasH, smallW, isCollapsed]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && expanded) setExpanded(false); };
@@ -219,6 +221,20 @@ export function Minimap() {
   const containerStyle: React.CSSProperties = isMobile
     ? { position: 'fixed', top: 8, right: 8, zIndex: 50 }
     : { position: 'fixed', bottom: 16, right: 16, zIndex: 50 };
+
+  if (isCollapsed) {
+    return (
+      <button
+        onClick={() => setIsCollapsed(false)}
+        className="btn btn-dark shadow-sm glass-card border-secondary text-white d-flex align-items-center gap-1 rounded-pill px-3 py-1"
+        style={{ ...containerStyle, cursor: 'pointer', opacity: 0.95 }}
+        title="Afficher la minimap (Plan 2D)"
+      >
+        <span>🗺️</span>
+        <span style={{ fontSize: '11px', fontWeight: 600 }}>Plan</span>
+      </button>
+    );
+  }
 
   return (
     <>
@@ -254,7 +270,7 @@ export function Minimap() {
       ) : (
         /* SMALL VIEW: Floating photo-frame card */
         <div 
-          className="glass-card shadow-sm p-1 rounded-3"
+          className="glass-card shadow-sm p-1 rounded-3 position-relative"
           style={containerStyle}
         >
           <canvas
@@ -279,11 +295,28 @@ export function Minimap() {
               height: 22,
               padding: 0,
               fontSize: '10px',
-              opacity: 0.75,
+              opacity: 0.85,
               borderRadius: '4px',
             }}
           >
             ⛶
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setIsCollapsed(true); }}
+            title="Réduire à un icône"
+            className="btn btn-dark btn-sm position-absolute d-flex align-items-center justify-content-center"
+            style={{
+              top: 8,
+              right: 8,
+              width: 22,
+              height: 22,
+              padding: 0,
+              fontSize: '11px',
+              opacity: 0.85,
+              borderRadius: '4px',
+            }}
+          >
+            ➖
           </button>
         </div>
       )}
