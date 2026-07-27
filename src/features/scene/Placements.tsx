@@ -305,55 +305,18 @@ export function Furniture() {
 // FURNISHINGS — meubles avec état animé (lit, bureaux, TV)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function Bed() {
-  const bedPositions = useMemo(() => {
-    const PAD = 3, halfL = 102.5, halfW = 41.5;
-    const dxK = KALLAX_DEPTH;
-    const dxS = ROOM_W - (ROOM_W - 35) + PAD; // RASKOG_LARGE_NW_X = ROOM_W-35
-    const dzT = 243.5 - (w2 + PAD);            // RASKOG_LARGE_NW_Z = 243.5
-    const u    = (dzT - Math.sqrt(dzT * dzT - 4 * dxK * dxS)) / 2;
-    const NE_Z = w2 + PAD + u;
-    const alpha = Math.atan2(dxK, u);
-    return [
-      { x: ROOM_W - halfL * Math.cos(alpha) - halfW * Math.sin(alpha),
-        z: NE_Z + halfL * Math.sin(alpha) - halfW * Math.cos(alpha), ry: alpha },
-      { x: ROOM_W - 83 / 2,  z: 190, ry: Math.PI / 2 },
-      { x: ROOM_W - 205 / 2, z: 200, ry: 0           },
-    ];
-  }, []);
-
-  const [stacked,   setStacked]   = useState(true);
-  const [sofa,      setSofa]      = useState(true);
-  const [bedPosIdx, setBedPosIdx] = useState(0);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { key } = (e as CustomEvent).detail as { key: string };
-      if (key === 'bedStacked')  setStacked(v => !v);
-      if (key === 'bedSofa')     setSofa(v => !v);
-      if (key === 'bedPosition') { setSofa(false); setBedPosIdx(i => (i + 1) % 3); }
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, []);
-  useEffect(() => { positionState['bed-position'] = { idx: bedPosIdx, total: 3 }; }, [bedPosIdx]);
-
-  const p   = bedPositions[bedPosIdx];
-  const pos: [number, number, number] = sofa ? [74, 0, 195] : [p.x, 0, p.z];
-  const ry  = sofa ? Math.PI / 2 : p.ry;
-  const b2: [number, number, number] = sofa
-    ? [5, 0, (ROOM_W - 83 / 2) - 74]
-    : [0, stacked ? 23 : 0, stacked ? 0 : -83];
-
+function Beds() {
   return (
-    <PositionTransition x={pos[0]} z={pos[2]} ry={ry}>
-      <group userData={{ hoverAction: { label: 'Lit Utåker', actions: ['bed-toggle', 'bed-position', 'bed-sofa'] } }}>
+    <>
+      {/* Lit Ouest — au sol (Y = 0), plaqué contre le meuble KallaxNW et en face de MeubleT / miroirs */}
+      <group position={[74, 0, 195]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Ouest' } }}>
         <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        <group position={b2}>
-          <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
       </group>
-    </PositionTransition>
+      {/* Lit Est — au sol (Y = 0), plaqué contre le mur Est (Mur B) */}
+      <group position={[ROOM_W - 83 / 2, 0, 190]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Est' } }}>
+        <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+    </>
   );
 }
 
@@ -411,7 +374,7 @@ export function Furnishings() {
   const as = useFurnitureToggles({ tvOn: 'tv-toggle' });
   return (
     <>
-      <Bed />
+      <Beds />
       <Desks />
       <>
         <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
