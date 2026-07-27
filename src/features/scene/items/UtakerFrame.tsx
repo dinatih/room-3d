@@ -64,7 +64,7 @@ function Cadre({ glbPath }: { glbPath: string }) {
 export function UtakerFrame({ item, onSize }: SceneItemProps) {
   const groupRef = useRef<THREE.Group>(null!);
   const isUpper  = item.id === 'utaker-upper';
-  const matColor = isUpper ? 0xffffff : 0x87ceeb;
+  const matColor = isUpper ? 0xffffff : 0xcc2222;
   const matHeight = isUpper ? 24 : 18;
   const glbPath  = isUpper ? HAUT_GLB : BAS_GLB;
 
