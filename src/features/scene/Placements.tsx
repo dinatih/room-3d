@@ -308,12 +308,12 @@ export function Furniture() {
 function Beds() {
   return (
     <>
-      {/* Lit Ouest (bas) — au sol (Y = 0), Z = 175.5 cm (contre le meuble KallaxNW), en face de MeubleT / miroirs */}
-      <group position={[74, 0, 175.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Ouest' } }}>
+      {/* Lit Ouest (bas) — au sol (Y = 0), contre le mur Nord + largeur d'un Kallax (Z = 139.5 cm, début Z = 39.5 cm) */}
+      <group position={[74, 0, 139.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Ouest' } }}>
         <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* Lit Est (haut, couette rouge) — au sol (Y = 0), Z = 175.5 cm (contre le meuble KallaxNE), mur Est (Mur B) */}
-      <group position={[ROOM_W - 83 / 2, 0, 175.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Est' } }}>
+      {/* Lit Est (haut, couette rouge) — au sol (Y = 0), position fixe mur Est (Z = 190 cm) */}
+      <group position={[ROOM_W - 83 / 2, 0, 190]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Est' } }}>
         <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
