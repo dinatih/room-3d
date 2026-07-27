@@ -219,8 +219,8 @@ export function Minimap() {
 
   // Position relative depending on desktop/mobile
   const containerStyle: React.CSSProperties = isMobile
-    ? { position: 'fixed', top: 8, right: 8, zIndex: 50 }
-    : { position: 'fixed', bottom: 16, right: 16, zIndex: 50 };
+    ? { position: 'fixed', top: 12, right: 12, zIndex: 9999 }
+    : { position: 'fixed', bottom: 32, right: 24, zIndex: 9999 };
 
   if (isCollapsed) {
     return (

@@ -1001,6 +1001,17 @@ function SingleCharacter({
           poseTimerRef.current = null;
         }
 
+        if (path === 'idle') {
+          if (customAnimName.current && actionsRef.current[customAnimName.current]) {
+            actionsRef.current[customAnimName.current].stop();
+          }
+          customAnimName.current = null;
+          mixerRef.current?.stopAllAction();
+          activeActionName.current = 'idle';
+          invalidate();
+          return;
+        }
+
         const loader = new GLTFLoader();
         loader.load(path, (gltf: any) => {
           const clip = gltf.animations[0];
@@ -1233,7 +1244,6 @@ function SingleCharacter({
 
     if (customAnimName.current) {
       target = customAnimName.current;
-      idleTimerRef.current = 0;
     }
 
     // Consider rotating as moving to prevent idle timeout freezes
