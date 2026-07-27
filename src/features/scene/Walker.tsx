@@ -969,6 +969,18 @@ function SingleCharacter({
     }
   }, [skeletonRef, showSkeleton]);
 
+  useEffect(() => {
+    if (!scene) return;
+    scene.traverse(o => {
+      const c = o as any;
+      if (c.isMesh) {
+        c.castShadow = characterShadows;
+        c.receiveShadow = characterShadows;
+      }
+    });
+    invalidate();
+  }, [scene, characterShadows, invalidate]);
+
   const poseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
