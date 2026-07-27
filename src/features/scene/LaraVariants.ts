@@ -176,7 +176,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                  color = 0xa2c4d9;
                  forceProcedural = true;
                } else if (isTop) {
-                 color = 0x666666; // Teinte sombre sur la texture de base (même comportement exact que Rosanna)
+                 color = 0xff2222; // Rouge vif (même comportement exact que Rosanna)
                  forceProcedural = false;
                } else if (isBackpack || isGear) {
                  color = 0x151515;
