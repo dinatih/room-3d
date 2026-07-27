@@ -93,8 +93,8 @@ export function KallaxNW({ onSize }: SceneItemProps) {
         <Variera32x13 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      {/* MeubleT — au sol (Y = 0) à gauche des meubles Kallax */}
-      <group position={[0, 0, -w2 / 2 - 15]} rotation-y={-Math.PI / 2}>
+      {/* MeubleT — au sol (Y = 0) à gauche des meubles Kallax, le long et contre le mur Ouest */}
+      <group position={[-75, 0, -6]} rotation-y={0}>
         <MeubleT item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>
