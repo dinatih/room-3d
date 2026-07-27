@@ -187,7 +187,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                }
             } else if (isDelphina) {
                color = 0xffffff;
-               forceProcedural = true; // Force all-white
+               forceProcedural = false; // Fusion de la teinte blanche avec la texture de base (préservation des plis et détails)
             } else if (isSara) {
                color = 0x050505; // Deep black
                forceProcedural = true; // Avoid texture details for pure black look
@@ -233,7 +233,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
 
             if (useMap) {
                mat.color.setHex(color);
-               if (isMarissa && isTop) {
+               if ((isMarissa || isDelphina) && isTop) {
                   mat.roughness = 0.5;
                   mat.metalness = 0.0;
                }
