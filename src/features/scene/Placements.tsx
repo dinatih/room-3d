@@ -45,7 +45,6 @@ import { MuligRail }     from './items/MuligRail';
 import { Scooter }       from './items/Scooter';
 import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
-import { RaskogLargeGroup } from './items/RaskogLargeGroup';
 
 import { Grejig }        from './items/Grejig';
 import { PalmLeaf }      from './items/PalmLeaf';
@@ -143,16 +142,8 @@ const SMORKULL_POSITIONS = [
 ];
 
 const AIRPERFORMER_POSITIONS = [
-  { x: 261, z: w2 / 2, ry: 0 }, // devant KallaxNE (face x=277, centre z=37.75) — par défaut
+  { x: 261, z: w2 - 10, ry: 0 }, // devant KallaxNE (face x=277, centre z=37.75) — par défaut
   { x: 200, z: 100,    ry: 0 },
-  { x: 297, z: w2 + 16, ry: 0 }, // angle KallaxNE / Mur Est
-];
-
-const RASKOG_LARGE_POSITIONS = [
-  { x: ROOM_W - 20, z: 271.5,       ry: Math.PI / 2 },
-  { x: ROOM_W - 26, z: 280,       ry: Math.PI },
-  { x: 258,          z: KALLAX_SE_Z, ry: Math.PI / 2 }, // devant KallaxSE (face x=277)
-  { x: 100,           z: MACK_Z,     ry: Math.PI / 2 }, // devant MacKapar
 ];
 
 import { MergedStaticGroup } from './Building';
@@ -312,7 +303,7 @@ function Beds() {
         <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Lit Est (haut, couette rouge) — au sol (Y = 0), position fixe mur Est (Z = 190 cm) */}
-      <group position={[ROOM_W - 83 / 2, 0, 190]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Est' } }}>
+      <group position={[ROOM_W - 4 - 83 / 2, 0, 190]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Est' } }}>
         <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
@@ -459,26 +450,6 @@ function AirPerformer_() {
   );
 }
 
-function RaskogLarge_() {
-  const [posIdx, setPosIdx] = useState(0);
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { key } = (e as CustomEvent).detail as { key: string };
-      if (key === 'raskog-large-position') setPosIdx(i => (i + 1) % RASKOG_LARGE_POSITIONS.length);
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, []);
-  useEffect(() => { positionState['raskog-large-position'] = { idx: posIdx, total: RASKOG_LARGE_POSITIONS.length }; }, [posIdx]);
-  const p = RASKOG_LARGE_POSITIONS[posIdx];
-  return (
-    <PositionTransition x={p.x} z={p.z} ry={p.ry}>
-      <group userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'RÅSKOG grande', actions: ['raskog-large-position'] } }}>
-        <RaskogLargeGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-    </PositionTransition>
-  );
-}
 
 function LampOla_() {
   const [lampOn, setLampOn] = useState(false);
@@ -573,7 +544,6 @@ export function Decor() {
           </group>
         ))}
       </>
-      <RaskogLarge_ />
     </MergedStaticGroup>
   );
 }
