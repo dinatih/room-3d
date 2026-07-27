@@ -339,10 +339,10 @@ function Bed() {
   useEffect(() => { positionState['bed-position'] = { idx: bedPosIdx, total: 3 }; }, [bedPosIdx]);
 
   const p   = bedPositions[bedPosIdx];
-  const pos: [number, number, number] = sofa ? [74, 0, 95] : [p.x, 0, p.z];
+  const pos: [number, number, number] = sofa ? [74, 0, 195] : [p.x, 0, p.z];
   const ry  = sofa ? Math.PI / 2 : p.ry;
   const b2: [number, number, number] = sofa
-    ? [-95, 0, (ROOM_W - 83 / 2) - 74]
+    ? [5, 0, (ROOM_W - 83 / 2) - 74]
     : [0, stacked ? 23 : 0, stacked ? 0 : -83];
 
   return (
