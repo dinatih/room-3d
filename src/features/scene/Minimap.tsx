@@ -16,7 +16,7 @@ import { LANDING_STRIPS } from './LandingStrips';
 import { CHARACTERS } from './Walker';
 import { useSceneStore } from './store/useSceneStore';
 
-const SMALL_W_DESKTOP = 150;
+const SMALL_W_DESKTOP = 140;
 const SMALL_W_MOBILE  = 55;
 
 // ── Icône avion (plan 2D) ─────────────────────────────────────────────────────
@@ -173,9 +173,9 @@ export function Minimap() {
 
   const smallW = isMobile ? SMALL_W_MOBILE : SMALL_W_DESKTOP;
   const canvasW = expanded
-    ? Math.round(Math.min(window.innerWidth * 0.88, (window.innerHeight * 0.88) / PLAN_ASPECT))
+    ? Math.round(Math.min(window.innerWidth * 0.85, (window.innerHeight * 0.85) / PLAN_ASPECT))
     : smallW;
-  const canvasH = Math.round(canvasW * PLAN_ASPECT);
+  const canvasH = Math.round(canvasW * Math.min(PLAN_ASPECT, 1.35));
 
   useEffect(() => {
     if (isCollapsed) return;
@@ -217,10 +217,10 @@ export function Minimap() {
     return () => window.removeEventListener('keydown', onKey);
   }, [expanded]);
 
-  // Position relative depending on desktop/mobile
+  // Position relative on right side of screen (below top right buttons)
   const containerStyle: React.CSSProperties = isMobile
     ? { position: 'fixed', top: 12, right: 12, zIndex: 9999 }
-    : { position: 'fixed', bottom: 32, right: 24, zIndex: 9999 };
+    : { position: 'fixed', top: 220, right: 16, zIndex: 9999 };
 
   if (isCollapsed) {
     return (
