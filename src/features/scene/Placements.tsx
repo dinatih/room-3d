@@ -135,7 +135,7 @@ const DESK2_POSITIONS = [
 ] as const;
 
 const SMORKULL_POSITIONS = [
-  { x: 85,  z: 272, ry: Math.PI / 2  }, // entre le lit Ouest et le Mackapar (avancé de +50X)
+  { x: 82,  z: 326, ry: 0            }, // glissée pliée entre la poubelle et le Mackapär (dans leur longueur, ry: 0)
   { x: 150, z: 100, ry: Math.PI      },
   { x: 150, z: 300, ry: Math.PI      },
   { x: 240, z: 38,  ry: -Math.PI / 2 }, // devant KallaxNE
