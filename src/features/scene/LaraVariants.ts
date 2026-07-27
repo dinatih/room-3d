@@ -14,6 +14,30 @@ function getTexture(url: string): THREE.Texture {
   return textureCache[url];
 }
 
+function createGrayscaleTexture(originalTex: THREE.Texture): THREE.Texture | null {
+  if (!originalTex || !originalTex.image) return null;
+  const img = originalTex.image as HTMLImageElement | HTMLCanvasElement;
+  const width = img.width || 1024;
+  const height = img.height || 1024;
+  if (!width || !height) return null;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  ctx.filter = 'grayscale(100%) contrast(140%) brightness(110%)';
+  ctx.drawImage(img, 0, 0, width, height);
+  ctx.filter = 'none';
+
+  const newTex = new THREE.CanvasTexture(canvas);
+  newTex.flipY = originalTex.flipY;
+  newTex.colorSpace = THREE.SRGBColorSpace;
+  newTex.needsUpdate = true;
+  return newTex;
+}
+
 export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVariant) {
   if (!style) return;
   const isVivid = style === 'vivid';
@@ -172,23 +196,23 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                }
                else if (isTop || isBackpack) color = 0xff2222; // Red
             } else if (isMarissa) {
-               if (isShorts) {
-                 color = 0xa2c4d9;
-                 forceProcedural = true;
-               } else if (isTop) {
-                 color = 0xff2222; // Rouge vif (même comportement exact que Rosanna)
-                 forceProcedural = false;
-               } else if (isBackpack || isGear) {
-                 color = 0x151515;
-                 forceProcedural = true;
-               } else if (isBoot) {
-                 color = 0xffffff; // Boots stay pure white
-                 forceProcedural = true;
-               }
-            } else if (isDelphina) {
-               color = 0xffffff;
-               forceProcedural = false; // Fusion de la teinte blanche avec la texture de base (préservation des plis et détails)
-            } else if (isSara) {
+                if (isShorts) {
+                  color = 0xa2c4d9;
+                  forceProcedural = true;
+                } else if (isTop) {
+                  color = 0x2b2b2b; // Noir textile fusionné avec la carte B&W des plis & ombres
+                  forceProcedural = false;
+                } else if (isBackpack || isGear) {
+                  color = 0x151515;
+                  forceProcedural = true;
+                } else if (isBoot) {
+                  color = 0xffffff; // Boots stay pure white
+                  forceProcedural = true;
+                }
+             } else if (isDelphina) {
+                color = 0xffffff;
+                forceProcedural = false; // Fusion du blanc pur avec la carte B&W des plis & ombres
+             } else if (isSara) {
                color = 0x050505; // Deep black
                forceProcedural = true; // Avoid texture details for pure black look
             } else if (isCha) {
@@ -232,11 +256,13 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
             const useMap = mat.map && !forceProcedural;
 
             if (useMap) {
-               mat.color.setHex(color);
-               if ((isMarissa || isDelphina) && isTop) {
+               if ((isMarissa || isDelphina) && isTop && mat.map) {
+                  const bwMap = createGrayscaleTexture(mat.map);
+                  if (bwMap) mat.map = bwMap;
                   mat.roughness = 0.5;
                   mat.metalness = 0.0;
                }
+               mat.color.setHex(color);
                if (isVivid) {
                  mat.emissive = new THREE.Color(color);
                  mat.emissiveIntensity = 0.35;
