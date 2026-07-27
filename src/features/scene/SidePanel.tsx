@@ -630,9 +630,19 @@ export function SidePanel({
 
   useEffect(() => {
     if (activeAnimValue && animsContainerRef.current) {
-      const activeEl = animsContainerRef.current.querySelector('.active-anim-item');
+      const container = animsContainerRef.current;
+      const activeEl = container.querySelector('.active-anim-item') as HTMLElement | null;
       if (activeEl) {
-        activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        const elTop = activeEl.offsetTop;
+        const elHeight = activeEl.offsetHeight;
+        const containerScrollTop = container.scrollTop;
+        const containerHeight = container.clientHeight;
+
+        if (elTop < containerScrollTop) {
+          container.scrollTop = elTop;
+        } else if (elTop + elHeight > containerScrollTop + containerHeight) {
+          container.scrollTop = elTop + elHeight - containerHeight;
+        }
       }
     }
   }, [activeAnimValue]);
