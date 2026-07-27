@@ -320,7 +320,7 @@ export interface SidePanelProps2 extends SidePanelProps {
   onToggleLidarOpacity:    () => void;
 }
 
-type TabKey = 'views' | 'layers' | 'personnage' | 'display' | 'perf' | 'anims' | null;
+type TabKey = 'views' | 'layers' | 'personnage' | 'perf' | 'anims' | null;
 
 const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
   { key: 'perf',       emoji: '📊', label: 'Perf' },
@@ -328,7 +328,6 @@ const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> 
   { key: 'layers',     emoji: '📑', label: 'Calques' },
   { key: 'personnage', emoji: '👤', label: 'Perso' },
   { key: 'anims',      emoji: '💃', label: 'Anims' },
-  { key: 'display',    emoji: '👁',  label: 'Affichage' },
 ];
 
 // ── Composant principal ───────────────────────────────────────────────────────
@@ -443,7 +442,7 @@ export function SidePanel({
   );
 
   const LayersSection = (
-    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
+    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
       {layerBtn('green',  'Structure',     'structure')}
       {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
       {layerBtn('peach',  'Portes',        'doors')}
@@ -453,6 +452,33 @@ export function SidePanel({
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
+
+      {layerBtn('teal',   'Grille 🌐',     'grid')}
+      {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
+      {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
+      {layerBtn('cyan',   'X-Ray 🩻',      'xray')}
+      {layerBtn('yellow', 'Lumières ☀',    'lights')}
+      {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
+      {layerBtn('cyan',   'LiDAR scan 📡', 'lidar')}
+      {layers.lidar && b0('cyan', ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}
+      {layers.lidar && b0('cyan', `Opacité ${Math.round(lidarOpacity * 100)}%`, onToggleLidarOpacity)}
+      {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
+
+      {sunInfo && (
+        <div className="p-2 border-bottom text-muted" style={{ fontSize: '9px', background: 'transparent' }}>
+          ☀️ {sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
+        </div>
+      )}
+      <button 
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
+        style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent', opacity: layers.plan ? 1 : 0.55 }}
+      >
+        <span>Plan 2D</span>
+        <span className={`badge ${layers.plan ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+          {layers.plan ? 'ON' : 'OFF'}
+        </span>
+      </button>
     </div>
   );
 
@@ -506,37 +532,6 @@ export function SidePanel({
           </select>
         </div>
       )}
-    </div>
-  );
-
-  const DisplaySection = (
-    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
-      {layerBtn('teal',   'Grille',        'grid')}
-      {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
-      {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
-      {layerBtn('cyan',   'X-Ray',         'xray')}
-      {layerBtn('yellow', 'Lumières ☀',    'lights')}
-      {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
-      {layerBtn('cyan',   'LiDAR scan',    'lidar')}
-      {layers.lidar && b0('cyan', ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}
-      {layers.lidar && b0('cyan', `Opacité ${Math.round(lidarOpacity * 100)}%`, onToggleLidarOpacity)}
-      {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
-
-      {sunInfo && (
-        <div className="p-2 border-bottom text-muted" style={{ fontSize: '9px', background: 'transparent' }}>
-          ☀️ {sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
-        </div>
-      )}
-      <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
-        onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
-        style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent', opacity: layers.plan ? 1 : 0.55 }}
-      >
-        <span>Plan</span>
-        <span className={`badge ${layers.plan ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
-          {layers.plan ? 'ON' : 'OFF'}
-        </span>
-      </button>
     </div>
   );
   const [animSearch, setAnimSearch] = useState('');
@@ -835,14 +830,13 @@ export function SidePanel({
   if (isMobile) {
     const sheetOpen = activeTab !== null;
     const sheetTitle: Record<Exclude<TabKey, null>, string> = {
-      views: '📷 Vues', layers: '📑 Calques', personnage: '👤 Personnage', display: '👁 Affichage',
+      views: '📷 Vues', layers: '📑 Calques', personnage: '👤 Personnage',
       perf: '📊 Perf', anims: '💃 Animations'
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
       views: ViewsSection,
       layers: LayersSection,
       personnage: PersonnageSection,
-      display: DisplaySection,
       anims: AnimationsSection,
       perf: <DevToolsGroups Group={Group} />,
     };
@@ -961,7 +955,6 @@ export function SidePanel({
         <Group emoji="📑" title="Calques">{LayersSection}</Group>
         <Group emoji="👤" title="Personnage">{PersonnageSection}</Group>
         <Group emoji="💃" title="Animations">{AnimationsSection}</Group>
-        <Group emoji="👁" title="Affichage">{DisplaySection}</Group>
       </div>
 
       {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
