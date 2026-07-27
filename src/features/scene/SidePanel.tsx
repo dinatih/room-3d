@@ -551,7 +551,7 @@ export function SidePanel({
   const [recentAnims, setRecentAnims] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('recent_animations');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? JSON.parse(saved).slice(0, 2) : [];
     } catch {
       return [];
     }
@@ -564,7 +564,7 @@ export function SidePanel({
         setActiveAnimValue(val);
         if (val && val !== 'idle') {
           setRecentAnims(prev => {
-            const next = [val, ...prev.filter(v => v !== val)].slice(0, 5);
+            const next = [val, ...prev.filter(v => v !== val)].slice(0, 2);
             try {
               localStorage.setItem('recent_animations', JSON.stringify(next));
             } catch {}
@@ -717,13 +717,13 @@ export function SidePanel({
           </div>
         </div>
 
-        {recentAnims.length > 0 && !animSearch && (
+        {recentAnims.slice(0, 2).length > 0 && !animSearch && (
           <div className="mb-2 p-1.5 bg-light rounded border">
             <div className="text-muted fw-bold mb-1 px-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              🕒 Récentes ({recentAnims.length})
+              🕒 Récentes ({recentAnims.slice(0, 2).length})
             </div>
             <div className="d-flex flex-wrap gap-1">
-              {recentAnims.map(val => {
+              {recentAnims.slice(0, 2).map(val => {
                 const opt = WALKER_ANIM_OPTIONS.find(a => a.value === val);
                 const isAct = activeAnimValue === val;
                 const label = opt ? opt.label : val.split('/').pop() || val;
