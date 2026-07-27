@@ -1615,74 +1615,79 @@ function SingleCharacter({
           }
         }
 
-        // Breast physics simulation (Verlet with low-FPS stability & max angle clamp)
+        // Breast physics simulation (Fixed Sub-Stepping 60Hz for perfect low-FPS stability)
         const enableBreastPhysics = useSceneStore.getState().layers.breastPhysics;
         if (enableBreastPhysics && breastChainRef.current.length > 0) {
           const g = new THREE.Vector3(0, -500, 0); // Natural gravity
-          const dampingFactor = Math.exp(-6 * simDt); // Assouplissement du damping pour plus de liberté
-          const maxBreastAngle = Math.PI / 7.5; // Doubler l'angle max à 24 degrés (2x plus de liberté de mouvement)
+          const maxBreastAngle = Math.PI / 8.5; // ~21° max angle (souple et naturel)
 
-          for (const node of breastChainRef.current) {
-            const { bone, restQuat, axis, worldLength } = node;
-            const parent = bone.parent;
-            if (!parent) continue;
+          // Sub-stepping avec un pas de temps FIXE de 1/60s (16.6ms) pour garantir une physique identique quel que soit le FPS
+          const fixedDt = 1 / 60;
+          const subSteps = Math.min(4, Math.max(1, Math.round(simDt / fixedDt)));
 
-            const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+          for (let step = 0; step < subSteps; step++) {
+            const dampingFactor = Math.exp(-8 * fixedDt);
 
-            // Teleportation safety reset
-            const dist = jointWorld.distanceTo(node.tipWorld);
-            if (dist > worldLength * 2.5) {
+            for (const node of breastChainRef.current) {
+              const { bone, restQuat, axis, worldLength } = node;
+              const parent = bone.parent;
+              if (!parent) continue;
+
+              const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+
+              // Teleportation safety reset
+              const dist = jointWorld.distanceTo(node.tipWorld);
+              if (dist > worldLength * 2.0) {
+                const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
+                const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
+                const tipW = jointWorld.clone().addScaledVector(restDir, worldLength);
+                node.tipWorld.copy(tipW);
+                node.tipPrev.copy(tipW);
+              }
+
+              const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dampingFactor);
+              const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, fixedDt * fixedDt);
+
               const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
               const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
-              const tipW = jointWorld.clone().addScaledVector(restDir, worldLength);
-              node.tipWorld.copy(tipW);
-              node.tipPrev.copy(tipW);
-            }
+              const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
 
-            const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dampingFactor);
-            const cappedDt = Math.min(simDt, 0.025); // Cap timestep for displacement formula to prevent explosion at low FPS
-            const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, cappedDt * cappedDt);
+              next.lerp(restTip, 0.18); // Rappel ressort stable
 
-            const parentQuat = parent.getWorldQuaternion(new THREE.Quaternion());
-            const restDir = axis.clone().applyQuaternion(restQuat).applyQuaternion(parentQuat);
-            const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
-
-            next.lerp(restTip, 0.12); // Réduction de la raideur du ressort (0.25 -> 0.12) pour 2x plus d'amplitude
-
-            const dir = new THREE.Vector3().subVectors(next, jointWorld);
-            const currentLen = dir.length();
-            if (currentLen > 1e-6) {
-              dir.multiplyScalar(worldLength / currentLen);
-            } else {
-              dir.copy(restDir).multiplyScalar(worldLength);
-            }
-
-            node.tipPrev.copy(node.tipWorld);
-            node.tipWorld.copy(jointWorld).add(dir);
-
-            const parentQuatInv = parentQuat.clone().invert();
-            const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
-
-            const restDirParent = axis.clone().applyQuaternion(restQuat);
-            const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
-
-            let scaledQ = qDelta;
-            const breastIntensity = 3.0; // Multiplicateur réactif
-            const w = Math.min(1, Math.max(-1, qDelta.w));
-            const angle = 2 * Math.acos(w);
-            if (Math.abs(angle) > 1e-5) {
-              const sinHalf = Math.sqrt(1 - w * w);
-              const rotAxis = new THREE.Vector3();
-              if (sinHalf > 1e-5) {
-                rotAxis.set(qDelta.x / sinHalf, qDelta.y / sinHalf, qDelta.z / sinHalf).normalize();
+              const dir = new THREE.Vector3().subVectors(next, jointWorld);
+              const currentLen = dir.length();
+              if (currentLen > 1e-6) {
+                dir.multiplyScalar(worldLength / currentLen);
               } else {
-                rotAxis.set(0, 0, 1);
+                dir.copy(restDir).multiplyScalar(worldLength);
               }
-              // CLAMP maximum rotation angle (24° max angle)
-              const clampedAngle = Math.min(maxBreastAngle, angle * breastIntensity);
-              scaledQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, clampedAngle);
+
+              node.tipPrev.copy(node.tipWorld);
+              node.tipWorld.copy(jointWorld).add(dir);
+
+              const parentQuatInv = parentQuat.clone().invert();
+              const localTargetDir = dir.clone().normalize().applyQuaternion(parentQuatInv);
+
+              const restDirParent = axis.clone().applyQuaternion(restQuat);
+              const qDelta = new THREE.Quaternion().setFromUnitVectors(restDirParent, localTargetDir);
+
+              let scaledQ = qDelta;
+              const breastIntensity = 1.0; // Ratio 1:1 direct et stable grâce au sub-stepping
+              const w = Math.min(1, Math.max(-1, qDelta.w));
+              const angle = 2 * Math.acos(w);
+              if (Math.abs(angle) > 1e-5) {
+                const sinHalf = Math.sqrt(1 - w * w);
+                const rotAxis = new THREE.Vector3();
+                if (sinHalf > 1e-5) {
+                  rotAxis.set(qDelta.x / sinHalf, qDelta.y / sinHalf, qDelta.z / sinHalf).normalize();
+                } else {
+                  rotAxis.set(0, 0, 1);
+                }
+                const clampedAngle = Math.min(maxBreastAngle, angle * breastIntensity);
+                scaledQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, clampedAngle);
+              }
+              bone.quaternion.copy(scaledQ).multiply(restQuat);
             }
-            bone.quaternion.copy(scaledQ).multiply(restQuat);
           }
         }
 
