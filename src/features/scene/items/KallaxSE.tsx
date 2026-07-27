@@ -57,8 +57,8 @@ export function KallaxSE({ onSize }: SceneItemProps) {
 
   return (
     <group ref={ref}>
-      {/* Congélateur CHIQ au sol sous la tour Kallax (Y = 0, pivoté de -90°) */}
-      <group position={[0, 0, 0]} rotation-y={-Math.PI / 2}>
+      {/* Congélateur CHIQ au sol sous la tour Kallax (Y = 0, pivoté de +90°) */}
+      <group position={[0, 0, 0]} rotation-y={Math.PI / 2}>
         <Freezer item={k('freezer')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
