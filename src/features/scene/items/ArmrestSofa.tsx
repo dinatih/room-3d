@@ -298,7 +298,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
 
       {/* ── 3. ANIMATED LEFT ARMREST & CUSHION ──────────────────────────────── */}
       {/* Pivot at Z = -57.5, Y = 41. Local armrest extends into -Z */}
-      <group ref={leftGroupRef} position={[0, 41, -57.5]} userData={{ hoverAction: { label: 'Accoudoir Droit', actionId: 'sofa-arm-right' } }}>
+      <group ref={leftGroupRef} position={[0, 41, -57.5]} userData={{ hoverAction: { label: 'Accoudoir Gauche', actionId: 'sofa-arm-left' } }}>
         {/* Rattan Armrest Frame */}
         <mesh geometry={armFrameGeo} material={rattanMat} position={[0, -3, -17.125]} castShadow receiveShadow />
         {/* Left Cushion Section */}
@@ -308,7 +308,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
 
       {/* ── 4. ANIMATED RIGHT ARMREST & CUSHION ─────────────────────────────── */}
       {/* Pivot at Z = 57.5, Y = 41. Local armrest extends into +Z */}
-      <group ref={rightGroupRef} position={[0, 41, 57.5]} userData={{ hoverAction: { label: 'Accoudoir Gauche', actionId: 'sofa-arm-left' } }}>
+      <group ref={rightGroupRef} position={[0, 41, 57.5]} userData={{ hoverAction: { label: 'Accoudoir Droit', actionId: 'sofa-arm-right' } }}>
         {/* Rattan Armrest Frame */}
         <mesh geometry={armFrameGeo} material={rattanMat} position={[0, -3, 17.125]} castShadow receiveShadow />
         {/* Right Cushion Section */}

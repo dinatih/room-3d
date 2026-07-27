@@ -99,11 +99,11 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
              mat.emissive.setHex(0xbc9c74);
              mat.emissiveIntensity = 0.05;
           } else if (isMarissa) {
-             mat.map = null;
-             mat.color.setHex(0x3a2312); // Châtain foncé
-             mat.emissive.setHex(0x221308);
-             mat.emissiveIntensity = 0.05;
-          }
+              mat.map = null;
+              mat.color.setHex(0x9e7344); // Châtain clair
+              mat.emissive.setHex(0x4a321a);
+              mat.emissiveIntensity = 0.05;
+           }
         }
 
         // Both 'eyes' and 'eye2' might be transparent decals over a base eyeball.
@@ -175,8 +175,11 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                if (isShorts) {
                  color = 0xa2c4d9;
                  forceProcedural = true;
-               } else if (isTop || isBackpack || isGear) {
-                 color = 0x151515; // Noir mat
+               } else if (isTop) {
+                 color = 0x222222; // Teinte noire fusionnée avec la texture de base (préserve plis & ombres)
+                 forceProcedural = false;
+               } else if (isBackpack || isGear) {
+                 color = 0x151515;
                  forceProcedural = true;
                } else if (isBoot) {
                  color = 0xffffff; // Boots stay pure white
