@@ -438,9 +438,9 @@ function drawMarissaTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
   ctx.fillText('🦁 LION', 0, 24);
   ctx.restore();
 
-  // ── 2. TATOUAGE TEXTE "BEAUTY IS AS BEAUTY DOES" (Face avant, haut de cuisse gauche, près du holster) ──
+  // ── 2. TATOUAGE TEXTE "BEAUTY IS AS BEAUTY DOES" (Face avant, mi-cuisse gauche, horizontal) ──
   ctx.save();
-  ctx.translate(186, 465);
+  ctx.translate(186, 398);
   ctx.rotate(-Math.PI / 2);
   ctx.fillStyle = 'rgba(15, 15, 20, 0.95)';
   ctx.textAlign = 'center';
