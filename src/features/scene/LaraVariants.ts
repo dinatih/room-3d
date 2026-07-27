@@ -313,17 +313,17 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       headBone.children = headBone.children.filter(c => c.name !== 'MarissaCupidPiercing' && c.name !== 'MarissaNostrilPiercing');
 
       // 1. Coupe de Cupidon - Clou / Bille (Sphere stud) au centre au-dessus de la lèvre supérieure
-      const studGeo = new THREE.SphereGeometry(0.0048, 16, 16);
+      const studGeo = new THREE.SphereGeometry(0.0038, 16, 16);
       const studMesh = new THREE.Mesh(studGeo, piercingMat);
       studMesh.name = 'MarissaCupidPiercing';
-      studMesh.position.set(0.000, 0.096, 0.068);
+      studMesh.position.set(0.000, 0.106, 0.063);
       headBone.add(studMesh);
 
       // 2. Narine Gauche - Boucle / Anneau (Torus ring) sur l'aile de la narine gauche
       const ringGeo = new THREE.TorusGeometry(0.0038, 0.0011, 12, 24);
       const ringMesh = new THREE.Mesh(ringGeo, piercingMat);
       ringMesh.name = 'MarissaNostrilPiercing';
-      ringMesh.position.set(0.005, 0.114, 0.038);
+      ringMesh.position.set(0.014, 0.120, 0.046);
       ringMesh.rotation.y = Math.PI / 2.2;
       headBone.add(ringMesh);
     }
