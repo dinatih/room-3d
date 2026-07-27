@@ -319,14 +319,15 @@ export interface SidePanelProps2 extends SidePanelProps {
   onToggleLidarOpacity:    () => void;
 }
 
-type TabKey = 'views' | 'layers' | 'display' | 'perf' | 'anims' | null;
+type TabKey = 'views' | 'layers' | 'personnage' | 'display' | 'perf' | 'anims' | null;
 
 const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
-  { key: 'perf',      emoji: '📊', label: 'Perf' },
-  { key: 'views',     emoji: '📷', label: 'Vues' },
-  { key: 'layers',    emoji: '📑', label: 'Calques' },
-  { key: 'anims',     emoji: '💃', label: 'Anims' },
-  { key: 'display',   emoji: '👁',  label: 'Affichage' },
+  { key: 'perf',       emoji: '📊', label: 'Perf' },
+  { key: 'views',      emoji: '📷', label: 'Vues' },
+  { key: 'layers',     emoji: '📑', label: 'Calques' },
+  { key: 'personnage', emoji: '👤', label: 'Perso' },
+  { key: 'anims',      emoji: '💃', label: 'Anims' },
+  { key: 'display',    emoji: '👁',  label: 'Affichage' },
 ];
 
 // ── Composant principal ───────────────────────────────────────────────────────
@@ -451,9 +452,16 @@ export function SidePanel({
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
-      {layerBtn('light',  'Walker',        'walker')}
-      {layerBtn('light',  'Pistolets Lara', 'laraPistols')}
-      {layerBtn('light',  'Accessoires Lara', 'accessories')}
+    </div>
+  );
+
+  const PersonnageSection = (
+    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
+      {layerBtn('light',  'Personnage 3D (Walker)', 'walker')}
+      {layerBtn('light',  'Pistolets Lara 🔫', 'laraPistols')}
+      {layerBtn('light',  'Accessoires Lara 🎒', 'accessories')}
+      {layerBtn('pink',   'Physique poitrine 💃', 'breastPhysics')}
+      {layerBtn('pink',   'Physique cheveux 💇‍♀️', 'hairPhysics')}
       {layers.walker && layerBtn('light',  'Toutes les Lara 👥', 'showAllLaraStyles')}
       <button 
         className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
@@ -477,7 +485,7 @@ export function SidePanel({
       </button>
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent">
-          <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>👤 Personnage</div>
+          <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>👤 Choix Personnage</div>
           <select
             className="form-select form-select-sm bg-transparent text-dark border-secondary"
             style={{ fontSize: isMobile ? '14px' : '11px' }}
@@ -505,9 +513,6 @@ export function SidePanel({
       {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('cyan',   'X-Ray',         'xray')}
       {layerBtn('white',  'Squelette',     'skeleton')}
-      {layerBtn('gray',   'Pistolets Lara', 'laraPistols')}
-      {layerBtn('pink',   'Physique poitrine', 'breastPhysics')}
-      {layerBtn('pink',   'Physique cheveux', 'hairPhysics')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
       {layerBtn('cyan',   'LiDAR scan',    'lidar')}
@@ -828,12 +833,13 @@ export function SidePanel({
   if (isMobile) {
     const sheetOpen = activeTab !== null;
     const sheetTitle: Record<Exclude<TabKey, null>, string> = {
-      views: '📷 Vues', layers: '📑 Calques', display: '👁 Affichage',
+      views: '📷 Vues', layers: '📑 Calques', personnage: '👤 Personnage', display: '👁 Affichage',
       perf: '📊 Perf', anims: '💃 Animations'
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
       views: ViewsSection,
       layers: LayersSection,
+      personnage: PersonnageSection,
       display: DisplaySection,
       anims: AnimationsSection,
       perf: <DevToolsGroups Group={Group} />,
@@ -951,6 +957,7 @@ export function SidePanel({
 
         <Group emoji="📷" title="Vues">{ViewsSection}</Group>
         <Group emoji="📑" title="Calques">{LayersSection}</Group>
+        <Group emoji="👤" title="Personnage">{PersonnageSection}</Group>
         <Group emoji="💃" title="Animations">{AnimationsSection}</Group>
         <Group emoji="👁" title="Affichage">{DisplaySection}</Group>
       </div>
