@@ -33,7 +33,7 @@ export interface CharacterConfig {
 export const CHARACTERS: CharacterConfig[] = [
   // 11 stylized Laras
   { id: 'native', name: 'Lara (Native)', path: 'media/lara_native.glb', pos: [140, 0, 30], rot: 1.9, variant: 'native', height: 173.4 },
-  { id: 'rosanna', name: 'Rosanna', path: 'media/lara_native.glb', pos: [251, 75, 178], rot: 1.325 + Math.PI / 2, variant: 'rosanna', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_push_up.glb', customIdleAnimPath: 'media/sandbox/anims/anim_push_up.glb' },
+  { id: 'rosanna', name: 'Rosanna', path: 'media/lara_native.glb', pos: [251, 75, 178], rot: 1.325 + Math.PI, variant: 'rosanna', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_sleeping_idle.glb', customIdleAnimPath: 'media/sandbox/anims/anim_sleeping_idle.glb' },
   { id: 'marissa', name: 'Marissa', path: 'media/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_belly_dance.glb', customIdleAnimPath: 'media/sandbox/anims/anim_belly_dance.glb' },
   { id: 'delphina', name: 'Delphina', path: 'media/lara_native.glb', pos: [120, 35, -250], rot: 1, variant: 'delphina', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_female_laying_pose_9.glb', customIdleAnimPath: 'media/sandbox/anims/anim_female_laying_pose_9.glb' },
   { id: 'sara', name: 'Sara', path: 'media/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_climbing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_climbing.glb' },
