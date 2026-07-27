@@ -150,10 +150,10 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
   const rightFlat = !!(actionState && actionState['sofa-arm-right']);
 
   // Angle state refs (in radians)
-  // Upright angle: 75 deg (1.309 rad) for Left, -75 deg (-1.309 rad) for Right
-  // Flat angle: 0 deg
-  const leftAngleRef = useRef(leftFlat ? 0 : 1.309);
-  const rightAngleRef = useRef(rightFlat ? 0 : -1.309);
+  // Visual Left (+Z = 57.5): Upright angle is -1.309 rad, Flat is 0
+  // Visual Right (-Z = -57.5): Upright angle is 1.309 rad, Flat is 0
+  const leftAngleRef = useRef(leftFlat ? 0 : -1.309);
+  const rightAngleRef = useRef(rightFlat ? 0 : 1.309);
 
   // Set sizing bounding box once
   useLayoutEffect(() => {
@@ -214,12 +214,12 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
 
   // Animation logic in render loop
   useFrame((_, delta) => {
-    const targetLeft = leftFlat ? 0 : 1.309;
-    const targetRight = rightFlat ? 0 : -1.309;
+    const targetLeft = leftFlat ? 0 : -1.309;
+    const targetRight = rightFlat ? 0 : 1.309;
 
     let changed = false;
 
-    // Smoothly interpolate left armrest angle
+    // Smoothly interpolate left armrest angle (+Z)
     const diffLeft = targetLeft - leftAngleRef.current;
     if (Math.abs(diffLeft) > 0.002) {
       leftAngleRef.current += diffLeft * Math.min(delta * 7, 1);
@@ -228,7 +228,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
       leftAngleRef.current = targetLeft;
     }
 
-    // Smoothly interpolate right armrest angle
+    // Smoothly interpolate right armrest angle (-Z)
     const diffRight = targetRight - rightAngleRef.current;
     if (Math.abs(diffRight) > 0.002) {
       rightAngleRef.current += diffRight * Math.min(delta * 7, 1);
@@ -296,23 +296,23 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
       </group>
 
 
-      {/* ── 3. ANIMATED LEFT ARMREST & CUSHION ──────────────────────────────── */}
-      {/* Pivot at Z = -57.5, Y = 41. Local armrest extends into -Z */}
-      <group ref={leftGroupRef} position={[0, 41, -57.5]} userData={{ hoverAction: { label: 'Accoudoir Gauche', actionId: 'sofa-arm-left' } }}>
+      {/* ── 3. ANIMATED LEFT ARMREST (Visual Left in room = +Z 57.5) ────────────── */}
+      {/* Pivot at Z = 57.5, Y = 41. Local armrest extends into +Z */}
+      <group ref={leftGroupRef} position={[0, 41, 57.5]} userData={{ hoverAction: { label: 'Accoudoir Gauche', actionId: 'sofa-arm-left' } }}>
         {/* Rattan Armrest Frame */}
-        <mesh geometry={armFrameGeo} material={rattanMat} position={[0, -3, -17.125]} castShadow receiveShadow />
+        <mesh geometry={armFrameGeo} material={rattanMat} position={[0, -3, 17.125]} castShadow receiveShadow />
         {/* Left Cushion Section */}
-        <mesh geometry={armCushionGeo} material={fabricMat} position={[0, 3.5, -17.125]} castShadow receiveShadow />
+        <mesh geometry={armCushionGeo} material={fabricMat} position={[0, 3.5, 17.125]} castShadow receiveShadow />
       </group>
 
 
-      {/* ── 4. ANIMATED RIGHT ARMREST & CUSHION ─────────────────────────────── */}
-      {/* Pivot at Z = 57.5, Y = 41. Local armrest extends into +Z */}
-      <group ref={rightGroupRef} position={[0, 41, 57.5]} userData={{ hoverAction: { label: 'Accoudoir Droit', actionId: 'sofa-arm-right' } }}>
+      {/* ── 4. ANIMATED RIGHT ARMREST (Visual Right in room = -Z -57.5) ──────────── */}
+      {/* Pivot at Z = -57.5, Y = 41. Local armrest extends into -Z */}
+      <group ref={rightGroupRef} position={[0, 41, -57.5]} userData={{ hoverAction: { label: 'Accoudoir Droit', actionId: 'sofa-arm-right' } }}>
         {/* Rattan Armrest Frame */}
-        <mesh geometry={armFrameGeo} material={rattanMat} position={[0, -3, 17.125]} castShadow receiveShadow />
+        <mesh geometry={armFrameGeo} material={rattanMat} position={[0, -3, -17.125]} castShadow receiveShadow />
         {/* Right Cushion Section */}
-        <mesh geometry={armCushionGeo} material={fabricMat} position={[0, 3.5, 17.125]} castShadow receiveShadow />
+        <mesh geometry={armCushionGeo} material={fabricMat} position={[0, 3.5, -17.125]} castShadow receiveShadow />
       </group>
     </group>
   );
