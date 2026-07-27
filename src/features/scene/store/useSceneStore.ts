@@ -39,7 +39,7 @@ const initialFurniture: FurnitureState = {
   tvOn: false,
   glassDoorV2LeftOpen: false,
   glassDoorV2ShutterPos: 0,
-  sofaArmLeft: false,
+  sofaArmLeft: true,
   sofaArmRight: false,
   mackaparDoors: true,
 };

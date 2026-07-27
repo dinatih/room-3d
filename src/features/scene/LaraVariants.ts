@@ -74,7 +74,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         if (isHair) {
           if (isDelphina) {
              mat.map = null; // Kill dark texture to see blonde
-             mat.color.setHex(0xffe08a); 
+             mat.color.setHex(0xffe08a);
              mat.emissive.setHex(0xffe08a);
              mat.emissiveIntensity = 0.2;
           } else if (isVivid) {
@@ -114,9 +114,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
            mat.metalness = 0;
            mat.roughness = 0.3;
            mat.transparent = false; // Force opaque to prevent depth sorting bugs
-           mat.alphaTest = 0.5; 
+           mat.alphaTest = 0.5;
            if ('transmission' in mat) (mat as any).transmission = 0;
-           
+
            if (isDelphina) {
               mat.color.setHex(0xffffff);
               mat.map = getTexture('media/textures/8003_blue.png');
@@ -156,15 +156,15 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
 
           const isBuckle = matName.toLowerCase().includes('buckle');
           const isGear = matName.toLowerCase().includes('gear') || matName.toLowerCase().includes('holster');
-          
-          const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair && !isBuckle && 
-                              !(isCha && (isShirt || isBoot)) && 
+
+          const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair && !isBuckle &&
+                              !(isCha && (isShirt || isBoot)) &&
                               !(isSabira && !isTop);
 
           if (shouldColor) {
             let color = 0xcc0000; // Brighter default red
             let forceProcedural = false;
-            
+
             if (isRosanna) {
                if (isShorts) {
                  color = 0xa2c4d9; // Blue jean
@@ -173,7 +173,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                else if (isTop || isBackpack) color = 0xff2222; // Red
             } else if (isMarissa) {
                if (isShorts) {
-                 color = 0xa2c4d9; 
+                 color = 0xa2c4d9;
                  forceProcedural = true;
                } else if (isTop || isBackpack || isGear) {
                  color = 0x151515; // Noir mat
@@ -183,7 +183,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                  forceProcedural = true;
                }
             } else if (isDelphina) {
-               color = 0xffffff; 
+               color = 0xffffff;
                forceProcedural = true; // Force all-white
             } else if (isSara) {
                color = 0x050505; // Deep black
@@ -247,13 +247,13 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   if (ctx && mat.map && mat.map.image) {
                     ctx.drawImage(mat.map.image as any, 0, 0, 1024, 1024);
                     ctx.fillStyle = 'black'; ctx.textAlign = 'center';
-                    
+
                     // X=700 comme demandé
                     ctx.font = '900 80px Graduate';
                     ctx.fillText('BULLS', 700, 750);
                     ctx.font = '900 150px Graduate';
                     ctx.fillText('66', 700, 870);
-                    
+
                     const newTex = new THREE.CanvasTexture(canvas);
                     newTex.flipY = false;
                     newTex.colorSpace = THREE.SRGBColorSpace;
@@ -276,7 +276,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                 name: mat.name || (style + 'Material'),
                 side: THREE.DoubleSide
               });
-              
+
               // We need to replace the material on the mesh directly
               if (clonedMats.length === 1) {
                   mesh.material = newMat;
@@ -313,17 +313,17 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       headBone.children = headBone.children.filter(c => c.name !== 'MarissaCupidPiercing' && c.name !== 'MarissaNostrilPiercing');
 
       // 1. Coupe de Cupidon - Clou / Bille (Sphere stud) au centre au-dessus de la lèvre supérieure
-      const studGeo = new THREE.SphereGeometry(0.0038, 16, 16);
+      const studGeo = new THREE.SphereGeometry(0.0028, 5, 5);
       const studMesh = new THREE.Mesh(studGeo, piercingMat);
       studMesh.name = 'MarissaCupidPiercing';
-      studMesh.position.set(0.000, 0.106, 0.063);
+      studMesh.position.set(-0.000, 0.106, 0.053);
       headBone.add(studMesh);
 
       // 2. Narine Gauche - Boucle / Anneau (Torus ring) sur l'aile de la narine gauche
       const ringGeo = new THREE.TorusGeometry(0.0038, 0.0011, 12, 24);
       const ringMesh = new THREE.Mesh(ringGeo, piercingMat);
       ringMesh.name = 'MarissaNostrilPiercing';
-      ringMesh.position.set(0.014, 0.120, 0.046);
+      ringMesh.position.set(0.012, 0.120, 0.040);
       ringMesh.rotation.y = Math.PI / 2.2;
       headBone.add(ringMesh);
     }

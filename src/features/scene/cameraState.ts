@@ -3,6 +3,8 @@
  * Mis à jour chaque frame par CameraController, lu par MinimapOverlay via RAF.
  */
 
+import { CHARACTERS } from './Walker';
+
 type CameraMode = 'orbit' | 'walk' | 'top' | 'plane';
 
 export const cameraState = {
@@ -16,10 +18,10 @@ export const cameraState = {
   isMoving:  false as boolean,
   walkYaw:   0     as number,
   walkPitch: 0     as number,
-  /** Position et orientation du walker unique (mis à jour par CameraController) */
-  walkerX: 140 as number, 
-  walkerZ: 30 as number, 
-  walkerYaw: 1.9 as number,
+  /** Position et orientation du walker unique (synchro dynamique depuis CHARACTERS) */
+  walkerX: (CHARACTERS[0]?.pos[0] ?? 140) as number, 
+  walkerZ: (CHARACTERS[0]?.pos[2] ?? 30) as number, 
+  walkerYaw: (CHARACTERS[0]?.rot ?? 1.9) as number,
   /** Positions enregistrées de tous les walkers */
   positions: {} as Record<string, {x: number, y: number, z: number, yaw: number}>,
   /** Hauteur (cm) du walker — écrit par Walker.tsx, lue par les caméras walk */

@@ -145,15 +145,15 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
   const leftGroupRef = useRef<THREE.Group>(null);
   const rightGroupRef = useRef<THREE.Group>(null);
 
-  // Angle state refs (in radians)
-  // Upright angle: 75 deg (1.309 rad) for Left, -75 deg (-1.309 rad) for Right
-  // Flat angle: 0 deg
-  const leftAngleRef = useRef(1.309);
-  const rightAngleRef = useRef(-1.309);
-
   // Check if armrests are flat (toggled ON in actionState)
   const leftFlat = !!(actionState && actionState['sofa-arm-left']);
   const rightFlat = !!(actionState && actionState['sofa-arm-right']);
+
+  // Angle state refs (in radians)
+  // Upright angle: 75 deg (1.309 rad) for Left, -75 deg (-1.309 rad) for Right
+  // Flat angle: 0 deg
+  const leftAngleRef = useRef(leftFlat ? 0 : 1.309);
+  const rightAngleRef = useRef(rightFlat ? 0 : -1.309);
 
   // Set sizing bounding box once
   useLayoutEffect(() => {

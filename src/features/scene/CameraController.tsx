@@ -71,7 +71,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   useEffect(() => { planeModeRef.current = planeMode; }, [planeMode]);
 
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
-  const prevWalkerId = useRef(activeWalkerId);
+  const prevWalkerId = useRef<string | null>(null);
 
   useEffect(() => {
     if (activeWalkerId !== prevWalkerId.current) {

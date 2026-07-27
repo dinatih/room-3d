@@ -554,8 +554,8 @@ export function Decor() {
 
 export function Garden() {
   const as = useFurnitureToggles({
-    sofaArmLeft: 'sofa-arm-right',
-    sofaArmRight: 'sofa-arm-left',
+    sofaArmLeft: 'sofa-arm-left',
+    sofaArmRight: 'sofa-arm-right',
   });
   return (
     <MergedStaticGroup name="merged-garden">
