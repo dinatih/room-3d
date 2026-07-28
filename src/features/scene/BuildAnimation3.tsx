@@ -26,9 +26,9 @@ import * as THREE from 'three';
 // ── Constantes ────────────────────────────────────────────────────────────────
 
 const DROP_HEIGHT = 2000;  // cm (en coordonnées monde)
-const STAGGER_MS  = 220;
-const FALL_MS_MIN = 1200;
-const FALL_MS_MAX = 1900;
+const STAGGER_MS  = 55;
+const FALL_MS_MIN = 300;
+const FALL_MS_MAX = 475;
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 
@@ -135,15 +135,21 @@ function collectScene(scene: THREE.Scene): {
   function visit(o: THREE.Object3D, depth: number): void {
     if (!o.visible || isUtility(o)) return;
     if (o.userData?.noAnim) return;
-    // Le sourceRef de MergedStaticGroup ne doit jamais être classifié en bloc
-    // même s'il a des meshes directs (cas des murs) — toujours descendre
-    if (o.userData?.isMergedSource) {
+
+    // Si on croise un MergedStaticGroup (ou source/destination), toujours descendre dans les enfants
+    if (o.userData?.isMergedSource || o.userData?.isMergedStatic || o.name?.startsWith('merged-')) {
       o.children.forEach((c) => visit(c, depth + 1));
       return;
     }
 
     // Nœud explicitement marqué comme unité d'animation
     if (o.userData?.animUnit && hasMesh(o) && !picked.has(o)) {
+      classify(o);
+      return;
+    }
+
+    // Un mesh individuel (ex: mur, meuble static dé-fusionné)
+    if ((o as THREE.Mesh).isMesh && !picked.has(o)) {
       classify(o);
       return;
     }
@@ -155,7 +161,7 @@ function collectScene(scene: THREE.Scene): {
       return;
     }
 
-    // Wrapper pur ou trop peu profond → descendre
+    // Wrapper pur ou groupe conteneur → descendre
     if (isPureWrapper(o) || depth < 2) {
       o.children.forEach((c) => visit(c, depth + 1));
     } else if (!picked.has(o) && hasMesh(o)) {
