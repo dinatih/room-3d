@@ -249,7 +249,7 @@ export function Furniture() {
   return (
     <>
       <MergedStaticGroup name="merged-furniture">
-      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
         <KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
@@ -563,13 +563,13 @@ export function Garden() {
              userData={{ skipMerge: true, hoverAction: { label: 'Canapé de jardin', actions: ['sofa-arm-left', 'sofa-arm-right'] } }}>
         <ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} />
       </group>
-      <group position={[100, 0, -80]} rotation={[0, Math.PI, 0]}>
+      <group position={[100, 0, -80]} rotation={[0, Math.PI, 0]} userData={{ animUnit: true }}>
         <ArmlessSofa item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[40, 0, -90]}>
+      <group position={[40, 0, -90]} userData={{ animUnit: true }}>
         <ChestBench item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[120, 0, -250]} rotation={[0, 1, 0]}>
+      <group position={[120, 0, -250]} rotation={[0, 1, 0]} userData={{ animUnit: true }}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 
