@@ -7,38 +7,159 @@
     <title>Inventaire 3D</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { background: #0e0e18; overflow: hidden; }
+      body { background: #ffffff; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; }
       #loading {
         position: fixed; inset: 0; background: #ffffff;
         display: flex; flex-direction: column;
         align-items: center; justify-content: center;
         z-index: 9999; transition: opacity 0.4s ease;
+        padding: 20px;
       }
       #loading.hidden { opacity: 0; pointer-events: none; }
+      
+      #loading-card {
+        background: #ffffff;
+        border: 1px solid #fee2e2;
+        box-shadow: 0 15px 35px rgba(211, 47, 47, 0.08), 0 5px 15px rgba(0, 0, 0, 0.04);
+        border-radius: 16px;
+        padding: 28px 32px;
+        max-width: 580px;
+        width: 100%;
+        color: #374151;
+        text-align: center;
+      }
+
+      #loading-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+
+      #loading-photos {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+      }
+
+      .profile-avatar {
+        width: 85px;
+        height: 85px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #d32f2f;
+        box-shadow: 0 4px 12px rgba(211, 47, 47, 0.15);
+      }
+
+      #loading-title h1 {
+        font-size: 24px;
+        color: #111827;
+        letter-spacing: 0.02em;
+        margin-bottom: 4px;
+        font-weight: 700;
+      }
+
+      #loading-title h2 {
+        font-size: 14px;
+        color: #d32f2f;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      #loading-title .subtitle {
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 500;
+      }
+
+      #loading-body {
+        font-size: 13px;
+        line-height: 1.55;
+        color: #4b5563;
+        background: #fef2f2;
+        padding: 14px 18px;
+        border-radius: 10px;
+        border: 1px solid #fecaca;
+        margin-bottom: 20px;
+        text-align: left;
+      }
+
+      #loading-body strong { color: #991b1b; }
+      #loading-body em { color: #6b7280; font-style: italic; display: block; margin-top: 6px; }
+      #loading-body .links { margin-top: 10px; font-size: 12px; color: #4b5563; }
+      #loading-body a { color: #d32f2f; text-decoration: none; font-weight: 600; }
+      #loading-body a:hover { text-decoration: underline; }
+
+      #loading-progress-section {
+        display: flex; flex-direction: column; align-items: center;
+      }
+
       #loading-label {
-        color: #d32f2f; font-family: system-ui, -apple-system, sans-serif; font-size: 13px;
-        margin-bottom: 14px; letter-spacing: 0.08em; font-weight: 500;
+        color: #d32f2f; font-size: 12px;
+        margin-bottom: 10px; letter-spacing: 0.08em; font-weight: 600;
       }
       #loading-track {
-        width: 200px; height: 3px; background: #e9ecef; border-radius: 2px;
-      }
-      #loading-item {
-        font-family: monospace; font-size: 10px; color: #888; margin-top: 10px;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;
+        width: 100%; height: 4px; background: #e9ecef; border-radius: 2px; overflow: hidden;
       }
       #loading-bar {
         height: 100%; width: 0%; background: #d32f2f;
         border-radius: 2px; transition: width 0.15s ease;
       }
+      #loading-item {
+        font-family: monospace; font-size: 10px; color: #9ca3af; margin-top: 8px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px;
+      }
     </style>
-    <script type="module" crossorigin src="/assets/inventory-C-KjGkGt.js"></script>
+    <script type="module" crossorigin src="/assets/inventory-CMnM_7zr.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/inventory-CujyApwQ.css">
   </head>
   <body>
     <div id="loading">
-      <div id="loading-label">Chargement…</div>
-      <div id="loading-track"><div id="loading-bar"></div></div>
-      <div id="loading-item"></div>
+      <div id="loading-card">
+        <div id="loading-header">
+          <div id="loading-photos">
+            <img src="https://avatars.githubusercontent.com/u/309161?v=4" alt="David HERELLE Github" class="profile-avatar" />
+            <img src="/david_profile.jpeg" alt="David HERELLE Corporate" class="profile-avatar" />
+          </div>
+          <div id="loading-title">
+            <h1>David HERELLE</h1>
+            <h2>Architecte de Systèmes d'Information Web & Tech Lead</h2>
+            <div class="subtitle">Superviseur d'Agents IA · 8+ ans d’expérience (JobTeaser, Tracktor...)</div>
+          </div>
+        </div>
+
+        <div id="loading-body">
+          <p>
+            🚀 <strong>À la recherche de mon prochain défi technique (2026) !</strong><br />
+            Spécialiste de l'architecture Web (Ruby on Rails, PostgreSQL, React, Three.js) et du pilotage d'agents IA autonomes.<br />
+            <em>"L'IA ne remplace pas le développeur, elle supprime 90% du boilerplate pour se concentrer sur l'architecture, la créativité et les décisions métier."</em>
+          </p>
+          <div class="links">
+            📍 Paris 13ème (BNF / Station F) · 🌐 <a href="https://github.com/dinatih" target="_blank">GitHub dinatih</a> · <a href="https://www.linkedin.com/in/dinatih/" target="_blank">LinkedIn Profile</a>
+          </div>
+        </div>
+
+        <div id="loading-progress-section">
+          <div id="loading-label">CHARGEMENT DE LA SCÈNE 3D…</div>
+          <div id="loading-track"><div id="loading-bar"></div></div>
+          <div id="loading-item">Chargement des éléments…</div>
+        </div>
+
+        <div id="loading-countdown-container" style="display: none; margin-top: 16px; flex-direction: column; align-items: center; gap: 10px;">
+          <div id="loading-countdown-text" style="font-size: 13px; font-weight: 600; color: #d32f2f;">
+            Prêt ! Lancement automatique dans <span id="loading-countdown-timer">5</span>s…
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button id="btn-pause-launch" type="button" style="background: #ffffff; color: #d32f2f; border: 1.5px solid #d32f2f; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
+              ⏸ Pause / Rester sur la carte
+            </button>
+            <button id="btn-start-now" type="button" style="background: #d32f2f; color: #ffffff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
+              🚀 Lancer maintenant
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
     <div id="root"></div>
   </body>
