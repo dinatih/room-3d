@@ -114,11 +114,13 @@ function FoldedVihals({ onSize }: { onSize: (v: THREE.Vector3) => void }) {
 
 // ── Composant principal ──────────────────────────────────────────────────────
 export function Vihals({ onSize, actionState }: SceneItemProps) {
-  const [folded, setFolded] = useState(false);
+  const [folded, setFolded] = useState(() => !!actionState?.['vihals-toggle']);
 
   useEffect(() => {
-    setFolded(!!actionState['vihals-toggle']);
-  }, [actionState['vihals-toggle']]);
+    if (actionState?.['vihals-toggle'] !== undefined) {
+      setFolded(!!actionState['vihals-toggle']);
+    }
+  }, [actionState?.['vihals-toggle']]);
 
   useEffect(() => {
     const handler = (e: Event) => {

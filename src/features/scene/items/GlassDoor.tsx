@@ -177,7 +177,7 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
   const glass = (
     <meshPhysicalMaterial
       color="#b2e0ff" transparent opacity={0.15} roughness={0.01} metalness={0.1}
-      transmission={0.9} thickness={1.2} side={THREE.DoubleSide}
+      transmission={0.9} thickness={1.2} side={THREE.DoubleSide} depthWrite={false}
     />
   );
   const metalMat = <meshStandardMaterial color="#cccccc" metalness={0.8} roughness={0.2} />;

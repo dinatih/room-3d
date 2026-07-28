@@ -398,7 +398,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
     }
 
     return () => {
-      // Nettoyage : restaurer la visibilité des originaux si le MergedStaticGroup est démonté
+      // Nettoyage : restaurer la visibilité des originaux
       processedMeshes.forEach(m => {
         if (m.userData.wasMerged) {
           m.visible = true;
@@ -411,7 +411,8 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
 
   return (
     <group userData={userData}>
-      <group ref={sourceRef}>{children}</group>
+      {/* isMergedSource : visit() doit toujours descendre dans ce groupe, jamais le classifier */}
+      <group ref={sourceRef} userData={{ isMergedSource: true }}>{children}</group>
       <group ref={mergedRef} />
     </group>
   );

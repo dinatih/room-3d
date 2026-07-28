@@ -123,19 +123,52 @@ function ShadowController({ enabled }: { enabled: boolean }) {
 function LoadingProgress() {
   const { progress, active, item } = useProgress();
   const doneRef = useRef(false);
+  const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    const bar   = document.getElementById('loading-bar');
+    const bar = document.getElementById('loading-bar');
     const cover = document.getElementById('loading');
     const itemEl = document.getElementById('loading-item');
+    const countdownContainer = document.getElementById('loading-countdown-container');
+    const timerEl = document.getElementById('loading-countdown-timer');
+    const textEl = document.getElementById('loading-countdown-text');
+    const btnPause = document.getElementById('btn-pause-launch');
+    const btnStart = document.getElementById('btn-start-now');
+
     if (bar) bar.style.width = `${progress}%`;
     if (itemEl && item) itemEl.textContent = item;
+
     if (!active && progress >= 100 && !doneRef.current) {
       doneRef.current = true;
-      if (cover) {
-        cover.classList.add('hidden');
-        setTimeout(() => cover.remove(), 450);
+
+      if (countdownContainer) countdownContainer.style.display = 'flex';
+      let remainingSeconds = 5;
+
+      const launchApp = () => {
+        if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+        if (cover) {
+          cover.classList.add('hidden');
+          setTimeout(() => cover.remove(), 450);
+        }
+      };
+
+      if (btnStart) btnStart.onclick = launchApp;
+
+      if (btnPause) {
+        btnPause.onclick = () => {
+          if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+          if (textEl) textEl.textContent = '⏸ Lancement automatique suspendu. Prenez le temps de lire !';
+          btnPause.style.display = 'none';
+        };
       }
+
+      countdownTimerRef.current = setInterval(() => {
+        remainingSeconds--;
+        if (timerEl) timerEl.textContent = remainingSeconds.toString();
+        if (remainingSeconds <= 0) {
+          launchApp();
+        }
+      }, 1000);
     }
   }, [progress, active, item]);
 

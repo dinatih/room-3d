@@ -301,6 +301,14 @@ export interface LayerState {
   laraPistols:  boolean;
   showAllLaraStyles: boolean;
   breastPhysics: boolean;
+  breastIntensity?: number;
+  breastMass?: number;
+  breastFirmness?: number;
+  braElasticity?: number;
+  braElasticityXZ?: number;
+  breastLagDelay?: number;
+  maxBreastAngle?: number;
+  maxBreastAngleXZ?: number;
   hairPhysics: boolean;
   characterShadows: boolean;
 }
@@ -366,6 +374,8 @@ export function SidePanel({
     const id = setInterval(update, 30_000);
     return () => clearInterval(id);
   }, [layers.realSun]);
+
+  const [globalHaircut, setGlobalHaircut] = useState<string>('hair_100');
 
   // Ferme le sheet via Escape sur mobile
   useEffect(() => {
@@ -513,23 +523,255 @@ export function SidePanel({
         </span>
       </button>
       {layers.walker && (
-        <div className="p-2 border-bottom bg-transparent">
-          <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>👤 Choix Personnage</div>
-          <select
-            className="form-select form-select-sm bg-transparent text-dark border-secondary"
-            style={{ fontSize: isMobile ? '14px' : '11px' }}
-            value={activeWalkerId}
-            onChange={(e) => {
-              useSceneStore.getState().setActiveWalkerId(e.target.value);
-              e.target.blur();
-            }}
-          >
-            {CHARACTERS.filter(c => layers.showAllLaraStyles || c.id === activeWalkerId).map(c => (
-              <option key={c.id} value={c.id} className="bg-light text-dark">
-                {c.name}
-              </option>
-            ))}
-          </select>
+        <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
+          <div>
+            <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>👤 Choix Personnage</div>
+            <select
+              className="form-select form-select-sm bg-transparent text-dark border-secondary"
+              style={{ fontSize: isMobile ? '14px' : '11px' }}
+              value={activeWalkerId}
+              onChange={(e) => {
+                useSceneStore.getState().setActiveWalkerId(e.target.value);
+                e.target.blur();
+              }}
+            >
+              {CHARACTERS.filter(c => layers.showAllLaraStyles || c.id === activeWalkerId).map(c => (
+                <option key={c.id} value={c.id} className="bg-light text-dark">
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>💇‍♀️ Coupe de cheveux</div>
+            <select
+              className="form-select form-select-sm bg-transparent text-dark border-secondary"
+              style={{ fontSize: isMobile ? '14px' : '11px' }}
+              value={globalHaircut}
+              onChange={(e) => {
+                const val = e.target.value;
+                setGlobalHaircut(val);
+                document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: val } }));
+                e.target.blur();
+              }}
+            >
+              <option value="original" className="bg-light text-dark">Coupe d'origine 👱‍♀️</option>
+              <option value="hair_100" className="bg-light text-dark">Coupe #1 (Carré Court / Bob)</option>
+              <option value="hair_101" className="bg-light text-dark">Coupe #2 (Queue de cheval haute & mèches visages)</option>
+              <option value="hair_102" className="bg-light text-dark">Coupe #3 (Pixie effilée & déstructurée)</option>
+              <option value="hair_103" className="bg-light text-dark">Coupe #4 (Shag mi-longue / Wolf cut)</option>
+              <option value="hair_104" className="bg-light text-dark">Coupe #5 (Mi-longue lissée avec frange)</option>
+              <option value="hair_105" className="bg-light text-dark">Coupe #6 (Queue de cheval très haute)</option>
+              <option value="hair_106" className="bg-light text-dark">Coupe #7 (Carré court avec frange droite)</option>
+              <option value="hair_107" className="bg-light text-dark">Coupe #8 (Couettes hautes & frange latérale)</option>
+              <option value="hair_108" className="bg-light text-dark">Coupe #9 (Courte hérissée avec bandeau)</option>
+              <option value="hair_109" className="bg-light text-dark">Coupe #10 (Lob ondulé / Wavy lob)</option>
+              <option value="hair_110" className="bg-light text-dark">Coupe #11 (Coupe Hime / 姫カット)</option>
+              <option value="hair_111" className="bg-light text-dark">Coupe #12 (Mi-tresse plaquée mi-ondulé)</option>
+              <option value="hair_112" className="bg-light text-dark">Coupe #13 (Chignon haut hérissé & bandeau)</option>
+            </select>
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                💥 Intensité Physique Poitrine
+              </span>
+              <span className="badge bg-danger" style={{ fontSize: '9px' }}>
+                {(layers.breastIntensity ?? 1.0).toFixed(1)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.0"
+              max="10.0"
+              step="0.2"
+              value={layers.breastIntensity ?? 1.0}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, breastIntensity: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                ⚖️ Masse / Poids Poitrine (breastMass)
+              </span>
+              <span className="badge bg-danger text-white" style={{ fontSize: '9px' }}>
+                {(layers.breastMass ?? 1.0).toFixed(1)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.1"
+              max="4.0"
+              step="0.1"
+              value={layers.breastMass ?? 1.0}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, breastMass: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                🧶 Fermeté / Maintien Poitrine (breastFirmness)
+              </span>
+              <span className="badge bg-purple text-white" style={{ fontSize: '9px', backgroundColor: '#6f42c1' }}>
+                {(layers.breastFirmness ?? 1.0).toFixed(1)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.1"
+              max="3.0"
+              step="0.1"
+              value={layers.breastFirmness ?? 1.0}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, breastFirmness: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                👙 Élasticité Verticale (braElasticity)
+              </span>
+              <span className="badge bg-primary" style={{ fontSize: '9px' }}>
+                {(layers.braElasticity ?? 1.0).toFixed(1)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.2"
+              max="4.0"
+              step="0.1"
+              value={layers.braElasticity ?? 1.0}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, braElasticity: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                ↔️ Élasticité Horizontale XZ (braElasticityXZ)
+              </span>
+              <span className="badge bg-success text-dark" style={{ fontSize: '9px' }}>
+                {(layers.braElasticityXZ ?? 1.0).toFixed(1)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.2"
+              max="5.0"
+              step="0.1"
+              value={layers.braElasticityXZ ?? 1.0}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, braElasticityXZ: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                ⏱️ Retard / Déphasage Inertie (breastLagDelay)
+              </span>
+              <span className="badge bg-secondary text-white" style={{ fontSize: '9px' }}>
+                {(layers.breastLagDelay ?? 1.0).toFixed(1)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.0"
+              max="3.0"
+              step="0.1"
+              value={layers.breastLagDelay ?? 1.0}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, breastLagDelay: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                📐 Angle Max Vertical (maxBreastAngle)
+              </span>
+              <span className="badge bg-info text-dark" style={{ fontSize: '9px' }}>
+                {layers.maxBreastAngle ?? 25}°
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="5"
+              max="60"
+              step="1"
+              value={layers.maxBreastAngle ?? 25}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, maxBreastAngle: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                ↔️ Angle Max Horizontal (maxBreastAngleXZ)
+              </span>
+              <span className="badge bg-warning text-dark" style={{ fontSize: '9px' }}>
+                {layers.maxBreastAngleXZ ?? 35}°
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="5"
+              max="120"
+              step="1"
+              value={layers.maxBreastAngleXZ ?? 35}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, maxBreastAngleXZ: val }
+                }));
+              }}
+            />
+          </div>
         </div>
       )}
     </div>
@@ -554,6 +796,9 @@ export function SidePanel({
 
   useEffect(() => {
     const onToggle = (e: any) => {
+      if (e.detail?.key === 'lara-haircut') {
+        if (e.detail.value) setGlobalHaircut(e.detail.value);
+      }
       if (e.detail?.key === 'walker-anim-lara' || e.detail?.key === 'walker-anim-xbot') {
         const val = e.detail.value ?? 'idle';
         setActiveAnimValue(val);

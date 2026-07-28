@@ -135,7 +135,7 @@ const DESK2_POSITIONS = [
 ] as const;
 
 const SMORKULL_POSITIONS = [
-  { x: 82,  z: 326, ry: 0            }, // glissée pliée entre la poubelle et le Mackapär (dans leur longueur, ry: 0)
+  { x: 85,  z: 272, ry: Math.PI / 2  }, // entre le lit Ouest et le Mackapar (avancé de +50X)
   { x: 150, z: 100, ry: Math.PI      },
   { x: 150, z: 300, ry: Math.PI      },
   { x: 240, z: 38,  ry: -Math.PI / 2 }, // devant KallaxNE
@@ -312,7 +312,7 @@ function Beds() {
 
 function Desks() {
   const [d1H,   setD1H]   = useState(SIT_H);
-  const [d2H,   setD2H]   = useState(SIT_H);
+  const [d2H,   setD2H]   = useState(STAND_H);
   const [d1Pos, setD1Pos] = useState(0);
   const [d2Pos, setD2Pos] = useState(0);
 
@@ -583,8 +583,8 @@ export function Garden() {
              userData={{ hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
         <ShibaInu />
       </group>
-      <group position={[30, 0, 210]} rotation={[0, Math.PI / 2, 0]}>
-        <Vihals item={{} as any} actionState={{}} onSize={() => {}} />
+      <group position={[52, 0, 326]} rotation={[0, 0, 0]}>
+        <Vihals item={{} as any} actionState={{ 'vihals-toggle': true }} onSize={() => {}} />
       </group>
       <group position={[210, -3.48, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true }}>
         <Rebound item={{} as any} actionState={{}} onSize={() => {}} />

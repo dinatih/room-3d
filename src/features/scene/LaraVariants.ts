@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivid' | 'sabira' | 'safa' | 'sandra';
+export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivid' | 'sabira' | 'safa' | 'sandra' | 'rajaa' | 'angelina' | 'romana' | 'lgbta';
 
 const textureCache: Record<string, THREE.Texture> = {};
 
@@ -16,7 +16,7 @@ function getTexture(url: string): THREE.Texture {
 
 function createGrayscaleTexture(
   originalTex: THREE.Texture,
-  mode: 'vivid' | 'light' | 'standard' = 'standard'
+  mode: 'vivid' | 'light' | 'white-boost' | 'standard' = 'standard'
 ): THREE.Texture | null {
   if (!originalTex || !originalTex.image) return null;
   const img = originalTex.image as HTMLImageElement | HTMLCanvasElement;
@@ -33,6 +33,9 @@ function createGrayscaleTexture(
   if (mode === 'vivid') {
     // Exaggerated high contrast for Vivid variant so fabric folds and shadow creases pop out strongly
     ctx.filter = 'grayscale(100%) brightness(140%) contrast(210%)';
+  } else if (mode === 'white-boost') {
+    // Tripled brightness with reduced contrast to keep subtle texture details while eliminating deep grey shadows
+    ctx.filter = 'grayscale(100%) brightness(300%) contrast(70%)';
   } else if (mode === 'light') {
     // Boost brightness so white/light clothes appear clean with soft fold shadows
     ctx.filter = 'grayscale(100%) brightness(185%) contrast(110%)';
@@ -62,6 +65,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
   const isSabira = style === 'sabira';
   const isSafa = style === 'safa';
   const isSandra = style === 'sandra';
+  const isRajaa = style === 'rajaa';
+  const isAngelina = style === 'angelina';
+  const isRomana = style === 'romana';
+  const isLgbta = style === 'lgbta';
 
   model.traverse(node => {
 
@@ -90,8 +97,13 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         const isGlasses = matName.includes('lens') || matName.includes('glass') || matName.includes('frame');
         const isMouth = matName.includes('mouth') || matName.includes('teeth') || matName.includes('tongue');
 
-        // HIDE GLASSES for Delphina and Cha
-        if ((isDelphina || isCha) && isGlasses) {
+        // HIDE GLASSES for Delphina, Cha, and Romana
+        if ((isDelphina || isCha || isRomana) && isGlasses) {
+           mat.visible = false;
+        }
+
+        // HIDE BRAID for Angelina
+        if (isAngelina && isHair && (matName.includes('braid') || matName.includes('pony') || meshName.includes('braid') || meshName.includes('pony'))) {
            mat.visible = false;
         }
 
@@ -113,6 +125,16 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
              mat.color.setHex(0xffe08a);
              mat.emissive.setHex(0xffe08a);
              mat.emissiveIntensity = 0.2;
+          } else if (isAngelina) {
+             mat.map = null; // Cheveux bleus électriques pour Angelina
+             mat.color.setHex(0x0088ff);
+             mat.emissive.setHex(0x0044aa);
+             mat.emissiveIntensity = 0.15;
+          } else if (isLgbta) {
+             mat.map = null; // Cheveux violet/rose néon Lgbta
+             mat.color.setHex(0xff00cc);
+             mat.emissive.setHex(0xaa00aa);
+             mat.emissiveIntensity = 0.15;
           } else if (isVivid) {
              mat.color.setHex(0xff0000);
              mat.emissive.setHex(0xff0000);
@@ -153,9 +175,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
            mat.alphaTest = 0.5;
            if ('transmission' in mat) (mat as any).transmission = 0;
 
-           if (isDelphina) {
+           if (isDelphina || isRomana) {
               mat.color.setHex(0xffffff);
-              mat.map = getTexture('media/textures/8003_blue.png');
+              mat.map = getTexture('media/textures/8003_blue.png'); // Yeux bleus pour Delphina et Romana
            } else if (isCha) {
               mat.color.setHex(0xffffff);
               mat.map = getTexture('media/textures/8003_green.png');
@@ -185,6 +207,17 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
            }
         }
 
+        if (isRajaa) {
+           if (isShirt) {
+              mat.map = getTexture('media/textures/8019_rajaa.png');
+              mat.needsUpdate = true;
+           }
+           if (isShorts) {
+              mat.map = getTexture('media/textures/8031_rajaa.png');
+              mat.needsUpdate = true;
+           }
+        }
+
         // CLOTHING COLOR-IFICATION
         if (!isNative) {
           const isTop = matName.toLowerCase().includes('top') || matName.toLowerCase().includes('shirt') || matName.toLowerCase().includes('tank') || meshName.toLowerCase().includes('shirt');
@@ -194,8 +227,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           const isGear = matName.toLowerCase().includes('gear') || matName.toLowerCase().includes('holster');
 
           const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair && !isBuckle &&
+                              !(!isDelphina && isGear) &&
                               !(isCha && (isShirt || isBoot)) &&
-                              !(isSabira && !isTop);
+                              !(isSabira && !isTop) &&
+                              !isRajaa;
 
           if (shouldColor) {
             let color = 0xcc0000; // Brighter default red
@@ -223,7 +258,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   color = 0x222222; // Dark leather
                   forceProcedural = false;
                 } else if (isBoot) {
-                  color = 0xffffff; // Boots stay pure white with full lace & sole details
+                  color = 0xffffff; // Pure bright white boots with details
                   forceProcedural = false;
                 }
              } else if (isDelphina) {
@@ -270,13 +305,54 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   color = 0x151515; // Black boots / gear
                   forceProcedural = false;
                 }
+             } else if (isRajaa) {
+                if (isTop || isShorts) {
+                  color = 0x4b5320; // Kaki militaire
+                  forceProcedural = false;
+                } else {
+                  color = 0x2b2b2b; // Équipement militaire sombre
+                  forceProcedural = false;
+                }
+             } else if (isAngelina) {
+                if (isTop) {
+                  color = 0x111111; // Haut noir cyber
+                  forceProcedural = false;
+                } else if (isShorts) {
+                  color = 0x0066cc; // Shorts bleu nuit
+                  forceProcedural = false;
+                } else {
+                  color = 0x222222; // Bottes et équipements noirs
+                  forceProcedural = false;
+                }
+             } else if (isRomana) {
+                if (isTop) {
+                  color = 0x800020; // Bourgogne / Bordeaux élégant
+                  forceProcedural = false;
+                } else if (isShorts) {
+                  color = 0x2b2b2b; // Short sombre
+                  forceProcedural = false;
+                } else {
+                  color = 0x1a1a1a;
+                  forceProcedural = false;
+                }
+             } else if (isLgbta) {
+                if (isTop) {
+                  color = 0xff0055; // Magenta arc-en-ciel
+                  forceProcedural = false;
+                } else if (isShorts) {
+                  color = 0x00ccff; // Cyan vif
+                  forceProcedural = false;
+                } else if (isBackpack) {
+                  color = 0xffcc00; // Jaune solaire
+                  forceProcedural = false;
+                } else {
+                  color = 0x9900ff; // Violet vif
+                  forceProcedural = false;
+                }
              } else {
-               // Vivid Red
-               const redColor = 0xff0000;
-               const gearColor = 0x990000;
-               const isGearOrBoot = matName.includes('gear') || matName.includes('holster') || matName.includes('boot');
-               color = isGearOrBoot ? gearColor : redColor;
-               forceProcedural = false;
+                // Vivid Red
+                color = 0xff0000; // Pure vivid red matching top & shorts
+                forceProcedural = false;
              }
 
              const useMap = mat.map && !forceProcedural;
@@ -284,18 +360,24 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
              if (useMap) {
                 const isClothingOrGear = isTop || isShorts || isBackpack || isGear || isBoot;
                 if (isClothingOrGear && mat.map && !(isCha && (isShirt || isBoot))) {
-                   let mode: 'vivid' | 'light' | 'standard' = 'standard';
+                   let mode: 'vivid' | 'light' | 'white-boost' | 'standard' = 'standard';
                    if (isVivid) {
                      mode = 'vivid';
-                   } else if (isDelphina || isSabira || isSafa || color === 0xffffff || color === 0xffd700 || color === 0xe2d6bd || color === 0xa2c4d9) {
+                   } else if (color === 0xffffff || (isBoot && (isMarissa || isDelphina))) {
+                     mode = 'white-boost';
+                   } else if (isDelphina || isSabira || isSafa || color === 0xffd700 || color === 0xe2d6bd || color === 0xa2c4d9) {
                      mode = 'light';
                    }
                    const bwMap = createGrayscaleTexture(mat.map, mode);
                    if (bwMap) mat.map = bwMap;
-                   mat.roughness = 0.5;
+                   mat.roughness = 0.4;
                    mat.metalness = 0.0;
                 }
                 mat.color.setHex(color);
+                if (color === 0xffffff || (isBoot && (isMarissa || isDelphina))) {
+                  mat.emissive = new THREE.Color(0x222222);
+                  mat.emissiveIntensity = 0.10;
+                }
                if (isVivid) {
                  mat.emissive = new THREE.Color(color);
                  mat.emissiveIntensity = 0.18;
@@ -329,12 +411,13 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                }
             } else {
               // Procedural material for jeans, white, black, beige, yellow
+              const isWhite = color === 0xffffff;
               const newMat = new THREE.MeshStandardMaterial({
                 color: color,
-                emissive: (isVivid || (isRosanna && isTop)) ? new THREE.Color(color === 0x050505 ? 0 : color) : new THREE.Color(0,0,0),
-                emissiveIntensity: isVivid ? 0.5 : ((isRosanna && isTop) ? 0.05 : 0),
-                roughness: (isMarissa && isTop) ? 0.15 : ((isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.9 : (isVivid ? 0.1 : 0.25)),
-                metalness: (isMarissa && isTop) ? 0.35 : ((isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.0 : (isVivid ? 0.3 : 0.1)),
+                emissive: isWhite ? new THREE.Color(0xffffff) : ((isVivid || (isRosanna && isTop)) ? new THREE.Color(color === 0x050505 ? 0 : color) : new THREE.Color(0,0,0)),
+                emissiveIntensity: isWhite ? 0.35 : (isVivid ? 0.5 : ((isRosanna && isTop) ? 0.05 : 0)),
+                roughness: isWhite ? 0.2 : ((isMarissa && isTop) ? 0.15 : ((isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.9 : (isVivid ? 0.1 : 0.25))),
+                metalness: isWhite ? 0.0 : ((isMarissa && isTop) ? 0.35 : ((isRosanna || isMarissa || isDelphina || isSara || isSafa || isSabira) ? 0.0 : (isVivid ? 0.3 : 0.1))),
                 transparent: false,
                 alphaTest: 0.5, // Allow alpha test for cutouts
                 depthWrite: true,

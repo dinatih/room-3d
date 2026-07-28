@@ -392,6 +392,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     // Fallback: grab canvas from document
     const canvas = document.querySelector('canvas')!;
 
+    let touchLastX = 0;
+    let touchLastY = 0;
+
     const onDown  = (e: MouseEvent) => { if (modeRef.current === 'walk' && e.button === 0) dragging.current = true; };
     const onUp    = () => { dragging.current = false; };
     const onMove  = (e: MouseEvent) => {
@@ -401,6 +404,34 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       updateWalkLook();
       invalidate();
     };
+
+    // ── Mobile Touch controls (Walk orientation) ────────────────────────────────
+    const onTouchStart = (e: TouchEvent) => {
+      if (modeRef.current === 'walk' && e.touches.length === 1) {
+        dragging.current = true;
+        touchLastX = e.touches[0].clientX;
+        touchLastY = e.touches[0].clientY;
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!dragging.current || modeRef.current !== 'walk' || e.touches.length !== 1) return;
+      const dx = e.touches[0].clientX - touchLastX;
+      const dy = e.touches[0].clientY - touchLastY;
+      touchLastX = e.touches[0].clientX;
+      touchLastY = e.touches[0].clientY;
+
+      const TOUCH_SENS = MOUSE_SENS * 1.5;
+      walkYaw.current   -= dx * TOUCH_SENS;
+      walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - dy * TOUCH_SENS));
+      updateWalkLook();
+      invalidate();
+    };
+
+    const onTouchEnd = () => {
+      dragging.current = false;
+    };
+
     // Scroll wheel en walk = FOV (zoom). Range 30°–110°.
     const onWheel = (e: WheelEvent) => {
       if (modeRef.current !== 'walk') return;
@@ -416,11 +447,21 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     canvas.addEventListener('mousedown', onDown);
     document.addEventListener('mouseup',   onUp);
     document.addEventListener('mousemove', onMove);
+
+    canvas.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: true });
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
+
     canvas.addEventListener('wheel', onWheel, { passive: false });
     return () => {
       canvas.removeEventListener('mousedown', onDown);
       document.removeEventListener('mouseup',   onUp);
       document.removeEventListener('mousemove', onMove);
+
+      canvas.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+
       canvas.removeEventListener('wheel', onWheel);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps

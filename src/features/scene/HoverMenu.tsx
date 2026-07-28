@@ -11,6 +11,7 @@ import { hoverState } from '@features/scene/hoverState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { positionState } from '@features/scene/positionState';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
+import { cameraState } from './cameraState';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
@@ -81,6 +82,22 @@ const ACTIONS: Record<string, ActionDef> = {
   'lara-custom-holster':   { btnLabel: 'Holsters & Boucle', toggleKey: 'lara-custom-holster' },
   'lara-custom-pistols':   { btnLabel: 'Pistolets Mains',  toggleKey: 'lara-custom-pistols' },
   'lara-custom-backpack':  { btnLabel: 'Sac à dos',         toggleKey: 'lara-custom-backpack' },
+  'lara-haircut':          { btnLabel: 'Coupe de cheveux 💇‍♀️', toggleKey: 'lara-haircut', type: 'select', options: [
+    { value: 'original', label: 'Coupe d\'origine 👱‍♀️' },
+    { value: 'hair_100', label: 'Coupe #1 (Carré Court / Bob)' },
+    { value: 'hair_101', label: 'Coupe #2 (Queue de cheval haute & mèches visages)' },
+    { value: 'hair_102', label: 'Coupe #3 (Pixie effilée & déstructurée)' },
+    { value: 'hair_103', label: 'Coupe #4 (Shag mi-longue / Wolf cut)' },
+    { value: 'hair_104', label: 'Coupe #5 (Mi-longue lissée avec frange)' },
+    { value: 'hair_105', label: 'Coupe #6 (Queue de cheval très haute)' },
+    { value: 'hair_106', label: 'Coupe #7 (Carré court avec frange droite)' },
+    { value: 'hair_107', label: 'Coupe #8 (Couettes hautes & frange latérale)' },
+    { value: 'hair_108', label: 'Coupe #9 (Courte hérissée avec bandeau)' },
+    { value: 'hair_109', label: 'Coupe #10 (Lob ondulé / Wavy lob)' },
+    { value: 'hair_110', label: 'Coupe #11 (Coupe Hime / 姫カット)' },
+    { value: 'hair_111', label: 'Coupe #12 (Mi-tresse plaquée mi-ondulé)' },
+    { value: 'hair_112', label: 'Coupe #13 (Chignon haut hérissé & bandeau)' }
+  ] },
 };
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
@@ -160,6 +177,10 @@ export function HoverRaycaster() {
           cur = cur.parent;
         }
         if (side === 'west' || side === 'east' || side === 'north' || side === 'both') continue;
+
+        if (cameraState.mode === 'walk' && resolveAction(hit.object)?.actionIds.includes('lara-expression')) {
+          continue;
+        }
 
         const action = resolveAction(hit.object);
         if (action && action.actionIds.some(id => ACTIONS[id])) return action;
@@ -482,7 +503,7 @@ export function HoverOverlay() {
                     ))}
                   </select>
 
-                  {selectedHoverVal && selectedHoverVal !== 'idle' && (
+                  {action.toggleKey.startsWith('walker-anim') && selectedHoverVal && selectedHoverVal !== 'idle' && (
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
