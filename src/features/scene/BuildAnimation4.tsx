@@ -171,14 +171,14 @@ function collectScene(scene: THREE.Scene): {
       return;
     }
 
-    // Un mesh individuel (ex: mur, meuble static dé-fusionné)
-    if ((o as THREE.Mesh).isMesh && !picked.has(o)) {
+    const hasDirectMesh = o.children.some((c) => (c as THREE.Mesh).isMesh);
+    if (depth >= 2 && hasDirectMesh && !picked.has(o)) {
       classify(o);
       return;
     }
 
-    const hasDirectMesh = o.children.some((c) => (c as THREE.Mesh).isMesh);
-    if (depth >= 2 && hasDirectMesh && !picked.has(o)) {
+    // Un mesh individuel (ex: mur, meuble static dé-fusionné)
+    if ((o as THREE.Mesh).isMesh && !picked.has(o)) {
       classify(o);
       return;
     }

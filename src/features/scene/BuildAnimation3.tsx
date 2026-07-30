@@ -148,15 +148,15 @@ function collectScene(scene: THREE.Scene): {
       return;
     }
 
-    // Un mesh individuel (ex: mur, meuble static dé-fusionné)
-    if ((o as THREE.Mesh).isMesh && !picked.has(o)) {
+    // Nœud qui a des meshes directs → unité de placement (depth >= 2)
+    const hasDirectMesh = o.children.some((c) => (c as THREE.Mesh).isMesh);
+    if (depth >= 2 && hasDirectMesh && !picked.has(o)) {
       classify(o);
       return;
     }
 
-    // Nœud qui a des meshes directs → unité de placement (depth >= 2)
-    const hasDirectMesh = o.children.some((c) => (c as THREE.Mesh).isMesh);
-    if (depth >= 2 && hasDirectMesh && !picked.has(o)) {
+    // Un mesh individuel s'il n'est pas enveloppé
+    if ((o as THREE.Mesh).isMesh && !picked.has(o)) {
       classify(o);
       return;
     }
