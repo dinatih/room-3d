@@ -26,9 +26,9 @@ import * as THREE from 'three';
 // ── Constantes ────────────────────────────────────────────────────────────────
 
 const DROP_HEIGHT = 2000;  // cm (en coordonnées monde)
-const STAGGER_MS  = 55;
-const FALL_MS_MIN = 300;
-const FALL_MS_MAX = 475;
+const STAGGER_MS  = 110;
+const FALL_MS_MIN = 600;
+const FALL_MS_MAX = 950;
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 
@@ -226,11 +226,11 @@ export function BuildAnimation3({
 
     const { furniture, walls, floor, ceiling } = collectScene(s3);
 
-    // Ordre : mobilier (aléatoire) → murs → sol (monte) → plafond en dernier
+    // Ordre : murs en premier → mobilier (aléatoire) → sol (monte) → plafond en dernier
     const floorSet = new Set(floor);
     const allOrdered = [
-      ...shuffle(furniture),
       ...walls,
+      ...shuffle(furniture),
       ...floor,
       ...ceiling,
     ];

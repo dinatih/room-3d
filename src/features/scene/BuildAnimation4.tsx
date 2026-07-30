@@ -19,12 +19,12 @@ import { ROOM_W, ROOM_D, WALL_H } from '@config';
 // ── Constantes ────────────────────────────────────────────────────────────────
 
 const DROP_HEIGHT      = 2000;
-const STAGGER_MS       = 55;
-const WALL_PHASE_MS    = 1500;
-const WALL_STAGGER_MIN = 6;
-const WALL_STAGGER_MAX = 55;
-const FALL_MS_MIN      = 300;
-const FALL_MS_MAX      = 475;
+const STAGGER_MS       = 110;
+const WALL_PHASE_MS    = 3000;
+const WALL_STAGGER_MIN = 12;
+const WALL_STAGGER_MAX = 110;
+const FALL_MS_MIN      = 600;
+const FALL_MS_MAX      = 950;
 const MATERIALIZE_T    = 0.80;
 const FLASH_DURATION   = 180;
 
@@ -470,8 +470,8 @@ export function BuildAnimation4({
     let cursor = 0;
 
     const scheduled: Array<{ obj: THREE.Object3D; startTime: number }> = [];
-    shuffle(moveable).forEach((obj) => { scheduled.push({ obj, startTime: cursor }); cursor += STAGGER_MS; });
     walls.forEach((obj)           => { scheduled.push({ obj, startTime: cursor }); cursor += wallStagger; });
+    shuffle(moveable).forEach((obj) => { scheduled.push({ obj, startTime: cursor }); cursor += STAGGER_MS; });
     floor.forEach((obj)           => { scheduled.push({ obj, startTime: cursor }); cursor += STAGGER_MS; });
     ceiling.forEach((obj)         => { scheduled.push({ obj, startTime: cursor }); cursor += STAGGER_MS; });
 
