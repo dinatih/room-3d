@@ -496,7 +496,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
 
           {/* ── Piliers ────────────────────────────────────────────────────────── */}
           {(
-            <group>
+            <group userData={{ animUnit: true, brickType: 'wall' }}>
               {PILLAR_DEFS.map((p) => {
                 const pp = p as any;
                 const pw = pp.w ?? WALL_THICKNESS;
@@ -525,7 +525,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
 
           {/* ── Murs ─────────────────────────────────────────────────────────────── */}
           {!pillarsOnly && (
-            <group>
+            <group userData={{ animUnit: true, brickType: 'wall' }}>
               {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
                 const mat = MAT_MAP[d.mat ?? 'default'];
                 const uData = { brickType: 'wall', side: d.mat };
