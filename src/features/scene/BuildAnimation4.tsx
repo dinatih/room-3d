@@ -171,22 +171,15 @@ function collectScene(scene: THREE.Scene): {
       return;
     }
 
-    const hasDirectMesh = o.children.some((c) => (c as THREE.Mesh).isMesh);
-    if (depth >= 2 && hasDirectMesh && !picked.has(o)) {
-      classify(o);
-      return;
-    }
-
-    // Un mesh individuel (ex: mur, meuble static dé-fusionné)
+    // Chaque mesh individuel est une unité d'animation distincte
     if ((o as THREE.Mesh).isMesh && !picked.has(o)) {
       classify(o);
       return;
     }
 
-    if (isPureWrapper(o) || depth < 2) {
+    // Descendre dans tous les wrappers et groupes conteneurs
+    if (isPureWrapper(o) || depth < 2 || o.children.length > 0) {
       o.children.forEach((c) => visit(c, depth + 1));
-    } else if (!picked.has(o) && hasMesh(o)) {
-      classify(o);
     }
   }
 
