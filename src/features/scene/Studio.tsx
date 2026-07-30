@@ -14,7 +14,7 @@ import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
 import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
 import { AnimationsPanel }  from '@features/scene/AnimationsPanel';
-import { Walls, Floor, Mirrors, GROUND_COLOR } from './Building';
+import { Walls, Floor, Mirrors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
 import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes } from './Placements';
@@ -34,7 +34,7 @@ import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { SunLight, SunSphere } from '@features/scene/SunLight';
 import { SkySphere } from './SkySphere';
-import { BuildAnimation, BuildAnimation3, BuildAnimation4 } from '@features/scene/BuildAnimations';
+import { BuildAnimation, BuildAnimation3, BuildAnimation4, BuildAnimationPro } from '@features/scene/BuildAnimations';
 import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
@@ -252,12 +252,13 @@ export function Studio() {
   const [buildAnim,    setBuildAnim]    = useState(false);
   const [buildAnim3,   setBuildAnim3]   = useState(false);
   const [buildAnim4,   setBuildAnim4]   = useState(false);
+  const [buildAnimPro, setBuildAnimPro] = useState(false);
   const [animDurations, setAnimDurations] = useState<Record<string, number>>({
     buildAnim: 6000,
   });
 
   const stopAll = () => {
-    setBuildAnim(false); setBuildAnim3(false); setBuildAnim4(false);
+    setBuildAnim(false); setBuildAnim3(false); setBuildAnim4(false); setBuildAnimPro(false);
   };
 
   const start = (set: React.Dispatch<React.SetStateAction<boolean>>) => () => {
@@ -289,7 +290,7 @@ export function Studio() {
         }}
         onCreated={({ scene, gl, camera }) => {
           (window as any).threeScene = scene;
-          scene.background = new Color(GROUND_COLOR);
+          scene.background = new Color(0x02030a);
           gl.shadowMap.enabled = true;
           camera.layers.enableAll();
           // LAYER_WALKER_DETAIL réservé aux miroirs (cf. Walker FPS hide)
@@ -334,9 +335,11 @@ export function Studio() {
                          />}
         {autopilotVisible && <AutopilotPlane model={planeModel} />}
         {showLandingStrips && <LandingStrips />}
-        {buildAnim    && <BuildAnimation              onFinish={() => setBuildAnim(false)} />}
-        {buildAnim3   && <BuildAnimation3             onFinish={() => setBuildAnim3(false)}   onDuration={setDuration('buildAnim3')}   />}
-        {buildAnim4   && <BuildAnimation4             onFinish={() => setBuildAnim4(false)}   onDuration={setDuration('buildAnim4')}   />}
+        {/* Animations */}
+        {buildAnim    && <BuildAnimation  onFinish={() => setBuildAnim(false)} />}
+        {buildAnim3   && <BuildAnimation3 onFinish={() => setBuildAnim3(false)}   onDuration={setDuration('buildAnim3')} />}
+        {buildAnim4   && <BuildAnimation4 onFinish={() => setBuildAnim4(false)}   onDuration={setDuration('buildAnim4')} />}
+        {buildAnimPro && <BuildAnimationPro onFinish={() => setBuildAnimPro(false)} onDuration={setDuration('buildAnimPro')} />}
         <VRMode />
         <ImmersiveMode />
         <HoverRaycaster />
@@ -434,6 +437,7 @@ export function Studio() {
         buildAnim={buildAnim}       onStartBuildAnim={start(setBuildAnim)}
         buildAnim3={buildAnim3}     onStartBuildAnim3={start(setBuildAnim3)}
         buildAnim4={buildAnim4}     onStartBuildAnim4={start(setBuildAnim4)}
+        buildAnimPro={buildAnimPro} onStartBuildAnimPro={start(setBuildAnimPro)}
         onStop={stopAll}
         durations={animDurations}
         planeModel={planeModel}

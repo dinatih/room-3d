@@ -14,6 +14,7 @@ export interface AnimationsPanelProps {
   buildAnim:        boolean; onStartBuildAnim:  () => void;
   buildAnim3:       boolean; onStartBuildAnim3: () => void;
   buildAnim4:       boolean; onStartBuildAnim4: () => void;
+  buildAnimPro:     boolean; onStartBuildAnimPro: () => void;
   onStop:           () => void;
   durations:        Record<string, number>; // ms par animation
   planeModel:       PlaneModelKey;
@@ -33,6 +34,7 @@ const ANIMS: Array<{
   { key: 'buildAnim',    start: 'onStartBuildAnim',    label: 'Créer l\'appart', color: '#0ea5a0' },
   { key: 'buildAnim3',   start: 'onStartBuildAnim3',   label: 'Tombée du ciel',  color: '#0ea5a0' },
   { key: 'buildAnim4',   start: 'onStartBuildAnim4',   label: 'Matrix',          color: '#00c853' },
+  { key: 'buildAnimPro', start: 'onStartBuildAnimPro', label: 'Tombée (Pro)',    color: '#ff9800' },
 ];
 
 function fmtMs(ms: number): string {

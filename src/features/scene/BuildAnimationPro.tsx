@@ -114,14 +114,20 @@ function unmergeScene(scene: THREE.Scene): () => void {
  * On classifie par brickType trouvé dans le sous-arbre.
  */
 function collectScene(scene: THREE.Scene): {
-  furniture: THREE.Object3D[];
+  rest:      THREE.Object3D[];
   walls:     THREE.Object3D[];
+  pillars:   THREE.Object3D[];
   floor:     THREE.Object3D[];
+  skirting:  THREE.Object3D[];
+  ikea:      THREE.Object3D[];
   ceiling:   THREE.Object3D[];
 } {
-  const furniture: THREE.Object3D[] = [];
+  const rest:      THREE.Object3D[] = [];
   const walls:     THREE.Object3D[] = [];
+  const pillars:   THREE.Object3D[] = [];
   const floor:     THREE.Object3D[] = [];
+  const skirting:  THREE.Object3D[] = [];
+  const ikea:      THREE.Object3D[] = [];
   const ceiling:   THREE.Object3D[] = [];
   const picked = new Set<THREE.Object3D>();
 
@@ -178,16 +184,22 @@ function collectScene(scene: THREE.Scene): {
       brickType = o.parent.userData.brickType as string;
     }
 
+    let isPillar = false;
+    if (o.userData?.type === 'pillar') isPillar = true;
+    else o.traverse(c => { if (c.userData?.type === 'pillar') isPillar = true; });
+
     if      (brickType === 'ceiling') ceiling.push(o);
     else if (brickType === 'floor')   floor.push(o);
+    else if (brickType === 'wall' && isPillar) pillars.push(o);
     else if (brickType === 'wall')    walls.push(o);
     else if (brickType === 'ground')  { /* sol extérieur — ignorer */ }
-    else if (brickType === 'skirting') { /* plinthes — ignorer */ }
-    else                              furniture.push(o);
+    else if (brickType === 'skirting') skirting.push(o);
+    else if (o.userData?.isIkea)      ikea.push(o);
+    else                              rest.push(o);
   }
 
   scene.children.forEach((child) => visit(child, 0));
-  return { furniture, walls, floor, ceiling };
+  return { rest, walls, pillars, floor, skirting, ikea, ceiling };
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -200,7 +212,7 @@ function shuffle<T>(arr: T[]): T[] {
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
-export function BuildAnimation3({
+export function BuildAnimationPro({
   onFinish,
   onDuration,
 }: {
@@ -221,12 +233,15 @@ export function BuildAnimation3({
     const remerge = unmergeScene(s3);
     s3.updateMatrixWorld(true);
 
-    const { furniture, walls, floor, ceiling } = collectScene(s3);
-    const floorSet = new Set(floor);
+    const { rest, walls, pillars, floor, skirting, ikea, ceiling } = collectScene(s3);
+    const floorSet = new Set([...floor, ...skirting]);
     const allOrdered = [
-      ...walls,
-      ...shuffle(furniture),
+      ...skirting,
       ...floor,
+      ...pillars,
+      ...walls,
+      ...shuffle(ikea),
+      ...shuffle(rest),
       ...ceiling,
     ];
 

@@ -164,13 +164,13 @@ export function Equipment() {
       <group position={[NICHE_X + HW_R, WALL_H - 10 - HW_H / 2, KITCHEN_Z + 20 + HW_R]} rotation-y={Math.PI / 2} userData={{ side: 'west' }}>
         <WaterHeater item={stub('water-heater')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ animUnit: true }}>
+      <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ animUnit: true, isIkea: true }}>
         <CuisineGroup item={stub('cuisine-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
-      <group position={[DOOR_START - 84, 14, KITCHEN_Z + PARTITION_THICKNESS + 24.5]} userData={{ animUnit: true }}>
+      <group position={[DOOR_START - 84, 14, KITCHEN_Z + PARTITION_THICKNESS + 24.5]} userData={{ animUnit: true, isIkea: true }}>
         <VasqueSdb item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[NICHE_X + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5]} userData={{ animUnit: true }}>
+      <group position={[NICHE_X + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5]} userData={{ animUnit: true, isIkea: true }}>
         <Toilet item={stub('toilet')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group visible={!!as['lamp-sdb-toggle']} position={[SDB_CX, WALL_H - 10, SDB_CZ]} rotation={[Math.PI, 0, 0]}>
@@ -186,7 +186,7 @@ export function Equipment() {
         <Vathult item={stub('vathult-350')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Niche douche 70×70cm : Centre : KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35 */}
-      <group position={[NICHE_X + 35, 0, KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35]} userData={{ animUnit: true }}>
+      <group position={[NICHE_X + 35, 0, KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35]} userData={{ animUnit: true, isIkea: true }}>
         <Shower item={stub('shower')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Gaine plastique couloir mur est — 25.5×6.5 cm, sol au plafond,
@@ -249,17 +249,17 @@ export function Furniture() {
   return (
     <>
       <MergedStaticGroup name="merged-furniture">
-      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
+      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true, isIkea: true }}>
         <KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, isIkea: true }}>
         <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* JBL Charge 3 — debout sur le dessus du KallaxNE (h1+h2+Variera=133.5), côté lit */}
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 118, w2 - 11]}>
         <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true }}>
+      <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true, isIkea: true }}>
         <KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} />
         {/* Télémètre Laserliner couché à plat dans la Drona bas-droite du 2×2 bas */}
         <group position={[17.5, 6.25, -5]} rotation={[Math.PI / 2, 0, 0]}>
@@ -270,7 +270,7 @@ export function Furniture() {
       <group position={[NICHE_X + KALLAX_DEPTH + 18, 0, MACK_Z + w2 / 2 - 6]} rotation-y={Math.PI / 2}>
         <TrashBin item={stub('trash-bin')} actionState={as} onSize={NOOP_SIZE} />
       </group>
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, ROOM_D - 60 - w1 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, ROOM_D - 60 - w1 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, isIkea: true }}>
         <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[(NICHE_X + DOOR_START) / 2 - 5, 0, BATH_Z_END - 53]}>
@@ -279,10 +279,10 @@ export function Furniture() {
       <group position={[KITCHEN_X0, 0, ROOM_D]}>
         <CuisineDrona />
       </group>
-      <group position={[NICHE_X + 20, 0, cbZ]} userData={{ animUnit: true }}>
+      <group position={[NICHE_X + 20, 0, cbZ]} userData={{ animUnit: true, isIkea: true }}>
         <BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={NOOP_SIZE} />
       </group>
-      <group position={[DOOR_START - 31, 0, cbZ]} userData={{ animUnit: true }}>
+      <group position={[DOOR_START - 31, 0, cbZ]} userData={{ animUnit: true, isIkea: true }}>
         <BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} />
       </group>
 
@@ -299,11 +299,11 @@ function Beds() {
   return (
     <>
       {/* Lit Ouest (bas) — au sol (Y = 0), contre le mur Nord + largeur d'un Kallax (Z = 139.5 cm, début Z = 39.5 cm) */}
-      <group position={[74, 0, 139.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Ouest' } }}>
+      <group position={[74, 0, 139.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Lit Utåker Ouest' } }}>
         <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Lit Est (haut, couette rouge) — au sol (Y = 0), position fixe mur Est (Z = 190 cm) */}
-      <group position={[ROOM_W - 4 - 83 / 2, 0, 190]} rotation-y={Math.PI / 2} userData={{ animUnit: true, hoverAction: { label: 'Lit Utåker Est' } }}>
+      <group position={[ROOM_W - 4 - 83 / 2, 0, 190]} rotation-y={Math.PI / 2} userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Lit Utåker Est' } }}>
         <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
@@ -337,12 +337,12 @@ function Desks() {
   return (
     <>
       <PositionTransition x={p1.x} z={p1.z} ry={p1.ry}>
-        <group userData={{ animUnit: true, hoverAction: { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] } }}>
+        <group userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] } }}>
           <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} />
         </group>
       </PositionTransition>
       <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
-        <group userData={{ animUnit: true, hoverAction: { label: 'Bureau 2', actions: ['desk2-toggle', 'desk2-position'] } }}>
+        <group userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Bureau 2', actions: ['desk2-toggle', 'desk2-position'] } }}>
           <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
           <group position={[0, d2H, 0]} rotation={[0, Math.PI, 0]}>
             <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
@@ -512,24 +512,24 @@ export function Decor() {
       <group position={[ROOM_W - 5, WALL_H / 2, ROOM_D / 2]} rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
         <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true }}>
+      <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, isIkea: true }}>
         <LackShelf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true }}>
+      <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true, isIkea: true }}>
         <MuligRail item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[110, 0.5, 500]} userData={{ animUnit: true }}>
+      <group position={[110, 0.5, 500]} userData={{ animUnit: true, isIkea: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[30, 0.5, 202]} userData={{ animUnit: true }}>
+      <group position={[30, 0.5, 202]} userData={{ animUnit: true, isIkea: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[298, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true }}>
+      <group position={[298, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true, isIkea: true }}>
         <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <Smorkull_ />
       <LampOla_ />
-      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ animUnit: true }}>
+      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ animUnit: true, isIkea: true }}>
         <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[297, 144, 173.5]} rotation={[Math.PI / 2, 0, Math.PI / 2]} userData={{ animUnit: true }}>
@@ -539,7 +539,7 @@ export function Decor() {
       <CeilingPalmLeaves />
       <>
         {[0, 18, 36].map(y => (
-          <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ animUnit: true }}>
+          <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ animUnit: true, isIkea: true }}>
             <Grejig item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
           </group>
         ))}

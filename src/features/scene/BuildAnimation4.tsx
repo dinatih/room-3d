@@ -551,7 +551,8 @@ export function BuildAnimation4({
         stateRef.current.groundMeshes.forEach((o) => { o.visible = true; });
       }
     };
-  }, [scene, invalidate, onDuration]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene, invalidate]);
 
   useFrame((_, delta) => {
     const st = stateRef.current;
