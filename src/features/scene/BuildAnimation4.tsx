@@ -11,8 +11,8 @@
  *   ou marqués animUnit. Travaille en coordonnées LOCALES corrigées par
  *   le facteur worldToLocalY pour que 1 unité monde = mouvement correct.
  */
-import { useEffect } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useRef, useLayoutEffect } from 'react';
+import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ROOM_W, ROOM_D, WALL_H } from '@config';
 
@@ -442,14 +442,21 @@ export function BuildAnimation4({
   onDuration?: (ms: number) => void;
 }) {
   const { scene, invalidate } = useThree();
+  const stateRef = useRef<{
+    objects: AnimObj[];
+    totalEnd: number;
+    startTime: number | null;
+    prevTime: number | null;
+    remerge: () => void;
+    rain: ReturnType<typeof createRain>;
+    origFog: THREE.Fog | THREE.FogExp2 | null;
+    groundMeshes: THREE.Object3D[];
+    finished: boolean;
+  } | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const s3 = scene as unknown as THREE.Scene;
-
-    // UNMERGE : restaurer les meshes originaux pour l'animation individuelle
     const remerge = unmergeScene(s3);
-
-    // Mettre à jour toutes les matrices monde avant la collecte
     s3.updateMatrixWorld(true);
 
     const { moveable, walls, floor, ceiling } = collectScene(s3);
@@ -513,88 +520,100 @@ export function BuildAnimation4({
     });
     groundMeshes.forEach((o) => { o.visible = false; });
 
-    // Retirer le brouillard
     const origFog = s3.fog;
     s3.fog = null;
 
     const rain = createRain(s3);
+
+    stateRef.current = {
+      objects,
+      totalEnd,
+      startTime: null,
+      prevTime: null,
+      remerge,
+      rain,
+      origFog,
+      groundMeshes,
+      finished: false,
+    };
     invalidate();
 
-    let start: number | null = null;
-    let prev:  number | null = null;
-    let raf: number;
-
-    function tick(now: number) {
-      if (start === null) start = now;
-      if (prev  === null) prev  = now;
-      const elapsed = now - start;
-      const dt      = (now - prev) / 1000;
-      prev = now;
-
-      objects.forEach((a) => {
-        const raw = (elapsed - a.startTime) / a.duration;
-        if (raw <= 0) return;
-        const t          = Math.min(raw, 1);
-        const localDelta = DROP_HEIGHT * a.worldToLocalY * (1 - easeOutCubic(t));
-        a.obj.position.y = a.fromBelow
-          ? a.origLocalY - localDelta
-          : a.origLocalY + localDelta;
-
-        // Matérialisation
-        if (!a.materialized && t >= MATERIALIZE_T) {
-          a.materialized = true;
-          a.flashEnd     = now + FLASH_DURATION;
-          applyFlash(a.meshSaves);
-        }
-        if (a.materialized && now < a.flashEnd) {
-          const ft = 1 - (a.flashEnd - now) / FLASH_DURATION;
-          MAT_FLASH.opacity = 1 - ft;
-        }
-        if (a.materialized && now >= a.flashEnd) {
-          restoreOriginal(a.meshSaves);
-        }
-      });
-
-      // Pluie — fondu dans les 15 % finaux
-      const fadeOut =
-        elapsed < totalEnd * 0.85
-          ? 1
-          : Math.max(0, (totalEnd - elapsed) / (totalEnd * 0.15));
-      rain.update(dt, fadeOut);
-
-      invalidate();
-
-      if (elapsed < totalEnd) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        objects.forEach((a) => {
+    return () => {
+      if (stateRef.current) {
+        stateRef.current.objects.forEach((a) => {
           a.obj.position.y = a.origLocalY;
           restoreOriginal(a.meshSaves);
         });
-        rain.dispose();
-        remerge();
-        s3.fog = origFog;
-        groundMeshes.forEach((o) => { o.visible = true; });
-        invalidate();
-        onFinish();
+        stateRef.current.rain.dispose();
+        stateRef.current.remerge();
+        s3.fog = stateRef.current.origFog;
+        stateRef.current.groundMeshes.forEach((o) => { o.visible = true; });
       }
-    }
+    };
+  }, [scene, invalidate, onDuration]);
 
-    raf = requestAnimationFrame(tick);
+  useFrame((_, delta) => {
+    const st = stateRef.current;
+    if (!st || st.finished) return;
 
-    return () => {
-      cancelAnimationFrame(raf);
-      objects.forEach((a) => {
+    const now = performance.now();
+    if (st.startTime === null) st.startTime = now;
+    if (st.prevTime === null) st.prevTime = now;
+
+    const elapsed = now - st.startTime;
+    const dt = delta;
+    st.prevTime = now;
+
+    st.objects.forEach((a) => {
+      const raw = (elapsed - a.startTime) / a.duration;
+      if (raw <= 0) return;
+      const t          = Math.min(raw, 1);
+      const localDelta = DROP_HEIGHT * a.worldToLocalY * (1 - easeOutCubic(t));
+      a.obj.position.y = a.fromBelow
+        ? a.origLocalY - localDelta
+        : a.origLocalY + localDelta;
+
+      // Matérialisation
+      if (!a.materialized && t >= MATERIALIZE_T) {
+        a.materialized = true;
+        a.flashEnd     = now + FLASH_DURATION;
+        applyFlash(a.meshSaves);
+      }
+      if (a.materialized && now < a.flashEnd) {
+        const ft = 1 - (a.flashEnd - now) / FLASH_DURATION;
+        MAT_FLASH.opacity = 1 - ft;
+      }
+      if (a.materialized && now >= a.flashEnd) {
+        restoreOriginal(a.meshSaves);
+      }
+    });
+
+    // Pluie — fondu dans les 15 % finaux
+    const fadeOut =
+      elapsed < st.totalEnd * 0.85
+        ? 1
+        : Math.max(0, (st.totalEnd - elapsed) / (st.totalEnd * 0.15));
+    st.rain.update(dt, fadeOut);
+
+    invalidate();
+
+    if (elapsed >= st.totalEnd) {
+      st.finished = true;
+      st.objects.forEach((a) => {
         a.obj.position.y = a.origLocalY;
         restoreOriginal(a.meshSaves);
       });
-      rain.dispose();
-      remerge();
-      s3.fog = origFog;
-      groundMeshes.forEach((o) => { o.visible = true; });
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      st.rain.dispose();
+      st.remerge();
+
+      const s3 = scene as unknown as THREE.Scene;
+      s3.fog = st.origFog;
+      st.groundMeshes.forEach((o) => { o.visible = true; });
+
+      invalidate();
+      onFinish();
+    }
+  });
 
   return null;
 }

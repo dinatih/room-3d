@@ -19,8 +19,8 @@
  *   immédiat est un groupe de catégorie (layer) ou la scène elle-même, et
  *   qui contiennent au moins un Mesh visible.
  */
-import { useEffect } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useRef, useLayoutEffect } from 'react';
+import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -205,19 +205,20 @@ export function BuildAnimation3({
   onDuration?: (ms: number) => void;
 }) {
   const { scene, invalidate } = useThree();
+  const stateRef = useRef<{
+    objects: AnimObj[];
+    totalEnd: number;
+    startTime: number | null;
+    remerge: () => void;
+    finished: boolean;
+  } | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const s3 = scene as unknown as THREE.Scene;
-
-    // UNMERGE : restaurer les meshes originaux pour que chaque item tombe individuellement.
     const remerge = unmergeScene(s3);
-
-    // Mettre à jour toutes les matrices monde avant la collecte
     s3.updateMatrixWorld(true);
 
     const { furniture, walls, floor, ceiling } = collectScene(s3);
-
-    // Ordre : murs en premier → mobilier (aléatoire) → sol (monte) → plafond en dernier
     const floorSet = new Set(floor);
     const allOrdered = [
       ...walls,
@@ -228,11 +229,7 @@ export function BuildAnimation3({
 
     let cursor = 0;
     const objects: AnimObj[] = allOrdered.map((obj) => {
-      // Position Y monde
-      const worldPos = new THREE.Vector3();
-      obj.getWorldPosition(worldPos);
       const worldToLocalY = getWorldToLocalYFactor(obj);
-
       const entry: AnimObj = {
         obj,
         origLocalY:    obj.position.y,
@@ -254,7 +251,7 @@ export function BuildAnimation3({
 
     onDuration?.(totalEnd);
 
-    // Décaler tous les objets (en espace local, en tenant compte du facteur)
+    // Décaler tous les objets au départ
     objects.forEach((a) => {
       const localDelta = DROP_HEIGHT * a.worldToLocalY;
       a.obj.position.y = a.fromBelow
@@ -262,65 +259,51 @@ export function BuildAnimation3({
         : a.origLocalY + localDelta;
     });
 
-    // === DEBUG : vérifier positions monde après displacement ===
-    s3.updateMatrixWorld(true);
-    objects.slice(0, 5).forEach((a, i) => {
-      const wp = new THREE.Vector3();
-      a.obj.getWorldPosition(wp);
-      // Remonter la chaîne parentale pour trouver qui a un worldY bizarre
-      const chain: string[] = [];
-      let cur: THREE.Object3D | null = a.obj.parent;
-      while (cur && cur !== s3) {
-        const pw = new THREE.Vector3();
-        cur.getWorldPosition(pw);
-        chain.push(`${cur.type}(name="${cur.name}" worldY=${pw.y.toFixed(1)} localY=${cur.position.y.toFixed(1)})`);
-        cur = cur.parent;
+    stateRef.current = {
+      objects,
+      totalEnd,
+      startTime: null,
+      remerge,
+      finished: false,
+    };
+    invalidate();
+
+    return () => {
+      if (stateRef.current) {
+        stateRef.current.objects.forEach((a) => { a.obj.position.y = a.origLocalY; });
+        stateRef.current.remerge();
       }
-      console.log(`[BA3] obj[${i}] name="${a.obj.name}" origLocalY=${a.origLocalY.toFixed(1)} worldY_after=${wp.y.toFixed(1)}`);
-      console.log(`  chain: ${chain.slice(0,4).join(' → ')}`);
+    };
+  }, [scene, invalidate, onDuration]);
+
+  useFrame(() => {
+    const st = stateRef.current;
+    if (!st || st.finished) return;
+
+    const now = performance.now();
+    if (st.startTime === null) st.startTime = now;
+    const elapsed = now - st.startTime;
+
+    st.objects.forEach((a) => {
+      const raw = (elapsed - a.startTime) / a.duration;
+      if (raw <= 0) return;
+      const t           = Math.min(raw, 1);
+      const localDelta  = DROP_HEIGHT * a.worldToLocalY * (1 - easeOutCubic(t));
+      a.obj.position.y  = a.fromBelow
+        ? a.origLocalY - localDelta
+        : a.origLocalY + localDelta;
     });
-    // === FIN DEBUG ===
 
     invalidate();
 
-    let start: number | null = null;
-    let raf: number;
-
-    function tick(now: number) {
-      if (start === null) start = now;
-      const elapsed = now - start;
-
-      objects.forEach((a) => {
-        const raw = (elapsed - a.startTime) / a.duration;
-        if (raw <= 0) return;
-        const t           = Math.min(raw, 1);
-        const localDelta  = DROP_HEIGHT * a.worldToLocalY * (1 - easeOutCubic(t));
-        a.obj.position.y  = a.fromBelow
-          ? a.origLocalY - localDelta
-          : a.origLocalY + localDelta;
-      });
-
+    if (elapsed >= st.totalEnd) {
+      st.finished = true;
+      st.objects.forEach((a) => { a.obj.position.y = a.origLocalY; });
+      st.remerge();
       invalidate();
-
-      if (elapsed < totalEnd) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        objects.forEach((a) => { a.obj.position.y = a.origLocalY; });
-        remerge();
-        invalidate();
-        onFinish();
-      }
+      onFinish();
     }
-
-    raf = requestAnimationFrame(tick);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      objects.forEach((a) => { a.obj.position.y = a.origLocalY; });
-      remerge();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  });
 
   return null;
 }
