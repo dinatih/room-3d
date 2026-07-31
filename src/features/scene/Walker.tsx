@@ -736,7 +736,6 @@ function SingleCharacter({
   const prevSpinePosRef = useRef<THREE.Vector3 | null>(null);
   const prevSpineVelRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const torsoAccelRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
-  const customHairAnimBonesRef = useRef<{ bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[]>([]);
 
   // Collision bones
   const headBoneRef = useRef<THREE.Bone | null>(null);
@@ -1302,6 +1301,7 @@ function SingleCharacter({
     }
 
     if (haircut === 'original') {
+      
       invalidate();
       return;
     }
@@ -1402,29 +1402,6 @@ function SingleCharacter({
 
       attachmentGroup.add(clonedHair);
       headBone.add(attachmentGroup);
-
-      // Pré-filtrer et optimiser en cache la liste exacte des os de mèches de la coupe (customHairAnimBonesRef)
-      const animBones: { bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[] = [];
-      clonedHair.traverse(c => {
-        if ((c as any).isBone) {
-          const b = c as THREE.Bone;
-          if (!(b as any).restLocalQuaternion) {
-            (b as any).restLocalQuaternion = b.quaternion.clone();
-          }
-          const nLower = (b.name || '').toLowerCase();
-          const isRootOrScalpBone = nLower.includes('bip_head') || nLower.includes('bip_neck') || nLower.includes('bip_spine') || nLower.startsWith('head') || nLower.includes('root') || nLower.includes('scalp') || nLower.startsWith('bone3_') || nLower.startsWith('bone4_') || b.parent === clonedHair;
-
-          if (!isRootOrScalpBone) {
-            const index = parseInt(nLower.replace(/\D/g, ''), 10) || 1;
-            animBones.push({
-              bone: b,
-              restQ: (b as any).restLocalQuaternion,
-              index,
-            });
-          }
-        }
-      });
-      customHairAnimBonesRef.current = animBones;
     }
 
     invalidate();
@@ -1461,7 +1438,7 @@ function SingleCharacter({
     }
   }, [customIdleAnimPath, id, scene, invalidate]);
 
-  useFrame((state, rawDelta) => {
+  useFrame((_state, rawDelta) => {
     const delta = Math.min(rawDelta, 0.1);
     if (!groupRef.current || !mixerRef.current) return;
 
@@ -1473,8 +1450,8 @@ function SingleCharacter({
       const row = Math.floor(characterIndex / 5);
       const col = characterIndex % 5;
       const targetX = 150 + (col - 2) * 120;
-      const targetY = 400 + row * 220;
-      const targetZ = 200;
+      const targetY = 0;
+      const targetZ = 200 + row * 120;
       groupRef.current.position.set(targetX, targetY, targetZ);
       groupRef.current.rotation.y = 0;
       groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
@@ -1584,52 +1561,6 @@ function SingleCharacter({
     if (activeActionName.current !== 'tpose' && !isPaused && !isIdleTimeout) {
         mixer.update(delta);
 
-        // Physique réactive & Gravité universelle (sans vent/bruit continu au repos)
-        const isPhysicsActive = useSceneStore.getState().layers.hairPhysics;
-        const animBones = customHairAnimBonesRef.current;
-
-        if (animBones.length > 0) {
-          const time = state.clock.getElapsedTime();
-          const eulerAnim = new THREE.Euler(0, 0, 0, 'YXZ');
-          const animQuat = new THREE.Quaternion();
-          const gravityWorld = new THREE.Vector3(0, -1, 0); // Gravité universelle vers le bas
-
-          // L'oscillation ("rebond/vent") ne s'active QUE lorsque le personnage se déplace réellement
-          const motionFactor = isMoving ? (target.includes('run') ? 1.5 : 1.0) : 0.0;
-
-          for (let i = 0; i < animBones.length; i++) {
-            const { bone, restQ, index } = animBones[i];
-            if (isPhysicsActive) {
-              // 1. Gravité monde passive : s'applique toujours (même au repos absolu / couché / debout)
-              const parent = bone.parent;
-              let gravityQuat = new THREE.Quaternion();
-              if (parent) {
-                const parentWorldQ = parent.getWorldQuaternion(new THREE.Quaternion());
-                const localGravity = gravityWorld.clone().applyQuaternion(parentWorldQ.clone().invert());
-                const defaultDir = new THREE.Vector3(0, -1, 0);
-                gravityQuat.setFromUnitVectors(defaultDir, localGravity);
-              }
-
-              // 2. Oscillations dynamiques : n'existent QUE pendant le mouvement (0 au repos)
-              if (motionFactor > 0) {
-                const phase = time * 4.0 + index * 0.7;
-                const swingX = Math.sin(phase) * 0.18 * motionFactor;
-                const swingY = Math.sin(phase * 0.6 + 1.2) * 0.10 * motionFactor;
-                const swingZ = Math.cos(phase * 0.85) * 0.14 * motionFactor;
-
-                eulerAnim.set(swingX, swingY, swingZ, 'YXZ');
-                animQuat.setFromEuler(eulerAnim);
-              } else {
-                animQuat.identity();
-              }
-
-              // Repos pur = Pose neutre + Gravité monde. Mouvement = Gravité + Rebond dynamique.
-              bone.quaternion.copy(restQ).slerp(restQ.clone().multiply(gravityQuat), 0.55).multiply(animQuat);
-            } else {
-              bone.quaternion.copy(restQ);
-            }
-          }
-        }
 
         // Reset / Application des expressions faciales dynamiques
         const currentExpr = expressionRef.current as string;

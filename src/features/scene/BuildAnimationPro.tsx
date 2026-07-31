@@ -234,7 +234,6 @@ export function BuildAnimationPro({
     s3.updateMatrixWorld(true);
 
     const { rest, walls, pillars, floor, skirting, ikea, ceiling } = collectScene(s3);
-    const floorSet = new Set([...floor, ...skirting]);
     const allOrdered = [
       ...skirting,
       ...floor,
@@ -254,7 +253,7 @@ export function BuildAnimationPro({
         worldToLocalY,
         startTime:     cursor,
         duration:      FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN),
-        fromBelow:     floorSet.has(obj),
+        fromBelow:     false,
       };
       cursor += STAGGER_MS;
       return entry;
