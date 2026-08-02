@@ -6,7 +6,7 @@
  *
  * makeGrassTex est exporté car GrassRug (items/) le réutilise.
  */
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect, useLayoutEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
@@ -290,7 +290,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
   const sourceRef = useRef<THREE.Group>(null!);
   const mergedRef = useRef<THREE.Group>(null!);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!sourceRef.current || !mergedRef.current) return;
     const src = sourceRef.current;
     const dst = mergedRef.current;
