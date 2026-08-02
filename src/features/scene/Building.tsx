@@ -292,6 +292,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
 
   useLayoutEffect(() => {
     if (!sourceRef.current || !mergedRef.current) return;
+    if ((window as any).isAnimProRunning) return;
     const src = sourceRef.current;
     const dst = mergedRef.current;
 
@@ -398,6 +399,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
     }
 
     return () => {
+      if ((window as any).isAnimProRunning) return;
       // Nettoyage : restaurer la visibilité des originaux
       processedMeshes.forEach(m => {
         if (m.userData.wasMerged) {

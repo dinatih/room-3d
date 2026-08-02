@@ -48,6 +48,7 @@ function unmergeScene(scene: THREE.Scene): () => void {
     } else if (m.userData.wasMerged) {
       m.visible = true;
       toRestore.push(m);
+      console.log('UNMERGE found original:', m.name || m.uuid, 'set to visible');
     }
   });
 
@@ -107,12 +108,14 @@ function collectScene(scene: THREE.Scene) {
 
     if (o.userData?.animUnit && hasMesh(o) && !picked.has(o)) {
       classify(o);
+      console.log('COLLECTED animUnit:', o.userData);
       return;
     }
 
     const hasDirectMesh = o.children.some(c => (c as THREE.Mesh).isMesh);
     if (depth >= 2 && hasDirectMesh && !picked.has(o)) {
       classify(o);
+      console.log('COLLECTED directMesh:', o.userData);
       return;
     }
 
@@ -162,6 +165,7 @@ export function BuildAnimationPro({ onFinish, onDuration }: { onFinish: () => vo
   const stateRef = useRef<AnimState | null>(null);
 
   useLayoutEffect(() => {
+    (window as any).isAnimProRunning = true;
     const s3 = scene as unknown as THREE.Scene;
     
     // 1. D'abord on unmerge (ça cache les merged, ça montre les originaux)
@@ -217,6 +221,7 @@ export function BuildAnimationPro({ onFinish, onDuration }: { onFinish: () => vo
     invalidate();
 
     return () => {
+      (window as any).isAnimProRunning = false;
       if (stateRef.current) {
         stateRef.current.objects.forEach(a => { a.obj.position.y = a.origLocalY; });
         stateRef.current.remerge();
@@ -245,6 +250,7 @@ export function BuildAnimationPro({ onFinish, onDuration }: { onFinish: () => vo
 
     if (elapsed >= st.totalEnd) {
       st.finished = true;
+      (window as any).isAnimProRunning = false;
       st.objects.forEach(a => { a.obj.position.y = a.origLocalY; });
       st.remerge();
       invalidate();
