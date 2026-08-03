@@ -1571,7 +1571,8 @@ function SingleCharacter({
           const gravityWorld = new THREE.Vector3(0, -1, 0); // Gravité universelle vers le bas
 
           // L'oscillation ("rebond/vent") s'active avec une perte d'énergie progressive au repos
-          const targetEnergy = isMoving ? (target.includes('run') ? 1.5 : 1.0) : (target !== 'idle' ? 0.3 : 0.0);
+          const isTorsoMoving = torsoAccelRef.current && torsoAccelRef.current.lengthSq() > 0.01;
+          const targetEnergy = (isMoving || isTorsoMoving) ? (target.includes('run') ? 1.5 : 1.0) : 0.0;
           wigEnergyRef.current += (targetEnergy - wigEnergyRef.current) * (delta * 3.0);
           const motionFactor = wigEnergyRef.current;
 
