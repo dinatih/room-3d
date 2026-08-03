@@ -1,2 +1,2 @@
-export { BuildAnimation4 } from './BuildAnimation4';
-export { BuildAnimationPro } from './BuildAnimationPro';
+export { BuildAnimation } from './BuildAnimation';
+export { BuildAnimationMatrix } from './BuildAnimationMatrix';

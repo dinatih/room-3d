@@ -11,8 +11,8 @@ import type { PlaneModelKey } from './PaperPlane';
 import { Minimap } from './Minimap';
 
 export interface AnimationsPanelProps {
-  buildAnim4:       boolean; onStartBuildAnim4: () => void;
-  buildAnimPro:     boolean; onStartBuildAnimPro: () => void;
+  buildAnim:        boolean; onStartBuildAnim:  () => void;
+  buildAnimMatrix:  boolean; onStartBuildAnimMatrix: () => void;
   onStop:           () => void;
   durations:        Record<string, number>; // ms par animation
   planeModel:       PlaneModelKey;
@@ -29,8 +29,8 @@ const ANIMS: Array<{
   label:  string;
   color:  string;
 }> = [
-  { key: 'buildAnim4',   start: 'onStartBuildAnim4',   label: 'Matrix Pro',          color: '#00c853' },
-  { key: 'buildAnimPro', start: 'onStartBuildAnimPro', label: 'Tombée (Pro)',    color: '#ff9800' },
+  { key: 'buildAnim',       start: 'onStartBuildAnim',       label: 'Tombée du ciel', color: '#ff9800' },
+  { key: 'buildAnimMatrix', start: 'onStartBuildAnimMatrix', label: 'Matrix',         color: '#00c853' },
 ];
 
 function fmtMs(ms: number): string {

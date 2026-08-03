@@ -34,7 +34,7 @@ import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { SunLight, SunSphere } from '@features/scene/SunLight';
 import { SkySphere } from './SkySphere';
-import { BuildAnimation4, BuildAnimationPro } from '@features/scene/BuildAnimations';
+import { BuildAnimation, BuildAnimationMatrix } from '@features/scene/BuildAnimations';
 import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
@@ -254,12 +254,12 @@ export function Studio() {
     return () => window.removeEventListener('keydown', onKey);
   }, [onToggleLayer]);
 
-  const [buildAnim4,   setBuildAnim4]   = useState(false);
-  const [buildAnimPro, setBuildAnimPro] = useState(false);
+  const [buildAnim,       setBuildAnim]       = useState(false);
+  const [buildAnimMatrix, setBuildAnimMatrix] = useState(false);
   const [animDurations, setAnimDurations] = useState<Record<string, number>>({});
 
   const stopAll = () => {
-    setBuildAnim4(false); setBuildAnimPro(false);
+    setBuildAnim(false); setBuildAnimMatrix(false);
   };
 
   const start = (set: React.Dispatch<React.SetStateAction<boolean>>) => () => {
@@ -337,8 +337,8 @@ export function Studio() {
         {autopilotVisible && <AutopilotPlane model={planeModel} />}
         {showLandingStrips && <LandingStrips />}
         {/* Animations */}
-        {buildAnim4   && <BuildAnimation4 onFinish={() => setBuildAnim4(false)}   onDuration={setDuration('buildAnim4')} />}
-        {buildAnimPro && <BuildAnimationPro onFinish={() => setBuildAnimPro(false)} onDuration={setDuration('buildAnimPro')} />}
+        {buildAnim       && <BuildAnimation       onFinish={() => setBuildAnim(false)}       onDuration={setDuration('buildAnim')} />}
+        {buildAnimMatrix && <BuildAnimationMatrix onFinish={() => setBuildAnimMatrix(false)} onDuration={setDuration('buildAnimMatrix')} />}
         <VRMode />
         <ImmersiveMode />
         <HoverRaycaster />
@@ -433,8 +433,8 @@ export function Studio() {
         </div>
       )}
       <AnimationsPanel
-        buildAnim4={buildAnim4}     onStartBuildAnim4={start(setBuildAnim4)}
-        buildAnimPro={buildAnimPro} onStartBuildAnimPro={start(setBuildAnimPro)}
+        buildAnim={buildAnim}             onStartBuildAnim={start(setBuildAnim)}
+        buildAnimMatrix={buildAnimMatrix} onStartBuildAnimMatrix={start(setBuildAnimMatrix)}
         onStop={stopAll}
         durations={animDurations}
         planeModel={planeModel}
