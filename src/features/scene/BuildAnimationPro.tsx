@@ -113,14 +113,15 @@ function collectScene(scene: THREE.Scene) {
     }
 
     const hasDirectMesh = o.children.some(c => (c as THREE.Mesh).isMesh);
-    if (depth >= 2 && hasDirectMesh && !picked.has(o)) {
+    const hasAnimUnitChild = o.children.some(c => c.userData?.animUnit);
+    if (depth >= 2 && hasDirectMesh && !hasAnimUnitChild && !picked.has(o)) {
       classify(o);
       console.log('COLLECTED directMesh:', o.userData);
       return;
     }
 
     let pureWrapper = true;
-    if ((o as THREE.Mesh).isMesh || o.children.some(c => (c as THREE.Mesh).isMesh)) {
+    if (!hasAnimUnitChild && ((o as THREE.Mesh).isMesh || o.children.some(c => (c as THREE.Mesh).isMesh))) {
       pureWrapper = false;
     }
 
@@ -128,6 +129,7 @@ function collectScene(scene: THREE.Scene) {
       o.children.forEach(c => visit(c, depth + 1));
     } else if (!picked.has(o) && hasMesh(o)) {
       classify(o);
+      console.log('COLLECTED wrapper:', o.userData);
     }
   }
 
