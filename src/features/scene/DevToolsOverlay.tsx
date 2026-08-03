@@ -71,13 +71,13 @@ export function DevToolsGroups({ Group }: {
   const [showTop, setShowTop] = useState(false);
   const fpsCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  const [showDetails, setShowDetails] = useState(false);
+
   useEffect(() => {
     devState.onUpdate = () => setTick(t => t + 1);
     if (fpsCanvasRef.current) devState.fpsCanvas = fpsCanvasRef.current;
     return () => { devState.onUpdate = null; devState.fpsCanvas = null; };
   }, []);
-
-  // Removed useEffect for drawFps, it is now handled directly by DevToolsCollector
 
   const samples  = devState.fpsSamples;
   const curFps   = samples.length ? samples[samples.length - 1] : 0;
@@ -104,67 +104,86 @@ export function DevToolsGroups({ Group }: {
           <span style={{ color: '#444' }}>min:{fpsMin} max:{fpsMax}</span>
         </div>
 
-        {/* RENDU — stats GPU, mises à jour chaque frame */}
+        {/* RENDU — stats GPU principales */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 4 }}>
           <div style={sectionHeaderStyle}>RENDU <span style={{ color: '#444', fontWeight: 400 }}>· live</span></div>
           <StatRow label="Draw calls" value={devState.drawCalls.toLocaleString()} color={heatColor(devState.drawCalls, 200, 500)} />
           <StatRow label="Triangles"  value={(devState.triangles / 1000).toFixed(1) + 'k'} color={heatColor(devState.triangles, 1_000_000, 2_000_000)} />
-          <StatRow label="Géométries" value={devState.geometries} color="#777" />
-          <StatRow label="Textures"   value={devState.textures}   color="#777" />
         </div>
 
-        {/* SCÈNE — graph total, sur demande (refresh) */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 4, marginTop: 4 }}>
-          <div
-            onClick={() => setShowScene(!showScene)}
-            style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-          >
-            <span>SCÈNE <span style={{ color: '#444', fontWeight: 400 }}>· total</span></span>
-            <span style={{ fontSize: 8 }}>{showScene ? '▼' : '▶'}</span>
-          </div>
-          {showScene && (
-            <>
-              <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
-              <StatRow label="Instanced" value={devState.instances} />
-              <StatRow label="Lights"    value={devState.lights} color="#777" />
-              <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#777" />
-              <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#777" />
-              {devState.meshes > 800 && (
-                <div style={{ color: '#ff8866', fontSize: 9, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
-              )}
-            </>
-          )}
+        {/* Bouton pour afficher les infos supplémentaires */}
+        <button
+          onClick={() => setShowDetails(!showDetails)}
+          style={{
+            display: 'block', width: '100%', textAlign: 'left',
+            background: 'transparent', border: 'none',
+            color: '#888', fontSize: 9, padding: '4px 10px', cursor: 'pointer', marginTop: 4,
+          }}
+        >
+          {showDetails ? '▼ Moins d\'infos' : '▶ Plus d\'infos'}
+        </button>
 
-          {devState.topMeshes.length > 0 && (
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4, paddingTop: 4 }}>
+        {showDetails && (
+          <>
+            <div style={{ paddingBottom: 4 }}>
+              <StatRow label="Géométries" value={devState.geometries} color="#777" />
+              <StatRow label="Textures"   value={devState.textures}   color="#777" />
+            </div>
+
+            {/* SCÈNE — graph total, sur demande (refresh) */}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 4, marginTop: 4 }}>
               <div
-                onClick={() => setShowTop(!showTop)}
+                onClick={() => setShowScene(!showScene)}
                 style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
               >
-                <span>TOP <span style={{ color: '#444', fontWeight: 400 }}>· par groupe</span></span>
-                <span style={{ fontSize: 8 }}>{showTop ? '▼' : '▶'}</span>
+                <span>SCÈNE <span style={{ color: '#444', fontWeight: 400 }}>· total</span></span>
+                <span style={{ fontSize: 8 }}>{showScene ? '▼' : '▶'}</span>
               </div>
-              {showTop && devState.topMeshes.map(([name, count]) => (
-                <div key={name} style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 10px', fontSize: 10 }}>
-                  <span style={{ color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }}>{name}</span>
-                  <span style={{ color: '#777', flexShrink: 0, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>{count}</span>
-                </div>
-              ))}
-            </div>
-          )}
+              {showScene && (
+                <>
+                  <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
+                  <StatRow label="Instanced" value={devState.instances} />
+                  <StatRow label="Lights"    value={devState.lights} color="#777" />
+                  <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#777" />
+                  <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#777" />
+                  {devState.meshes > 800 && (
+                    <div style={{ color: '#ff8866', fontSize: 9, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
+                  )}
+                </>
+              )}
 
-          <button
-            onClick={handleRefreshScene}
-            style={{
-              display: 'block', width: '100%', textAlign: 'left',
-              background: 'transparent', border: 'none',
-              borderTop: '1px solid rgba(255,255,255,0.06)',
-              color: '#444', fontSize: 9, padding: '4px 10px', cursor: 'pointer', marginTop: 4,
-            }}
-          >
-            ↺ Refresh
-          </button>
-        </div>
+              {devState.topMeshes.length > 0 && (
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4, paddingTop: 4 }}>
+                  <div
+                    onClick={() => setShowTop(!showTop)}
+                    style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <span>TOP <span style={{ color: '#444', fontWeight: 400 }}>· par groupe</span></span>
+                    <span style={{ fontSize: 8 }}>{showTop ? '▼' : '▶'}</span>
+                  </div>
+                  {showTop && devState.topMeshes.map(([name, count]) => (
+                    <div key={name} style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 10px', fontSize: 10 }}>
+                      <span style={{ color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }}>{name}</span>
+                      <span style={{ color: '#777', flexShrink: 0, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>{count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                onClick={handleRefreshScene}
+                style={{
+                  display: 'block', width: '100%', textAlign: 'left',
+                  background: 'transparent', border: 'none',
+                  borderTop: '1px solid rgba(255,255,255,0.06)',
+                  color: '#444', fontSize: 9, padding: '4px 10px', cursor: 'pointer', marginTop: 4,
+                }}
+              >
+                ↺ Refresh
+              </button>
+            </div>
+          </>
+        )}
       </Group>
     </>
   );
