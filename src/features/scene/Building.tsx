@@ -289,10 +289,13 @@ export const wallsGroupRef = { current: null as THREE.Group | null };
 export function MergedStaticGroup({ children, name = 'merged-static', userData }: { children: React.ReactNode; name?: string; userData?: Record<string, any> }) {
   const sourceRef = useRef<THREE.Group>(null!);
   const mergedRef = useRef<THREE.Group>(null!);
+  const hasMerged = useRef(false);
 
   useLayoutEffect(() => {
     if (!sourceRef.current || !mergedRef.current) return;
+    if (hasMerged.current) return; // Prevent re-merging on every render (which causes 1s freeze)
     if ((window as any).isAnimProRunning) return;
+    
     const src = sourceRef.current;
     const dst = mergedRef.current;
 
