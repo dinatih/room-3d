@@ -537,12 +537,12 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                 return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
               })}
               {/* Mur diagonal */}
-              <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow userData={{ animUnit: true, brickType: 'wall' }} />
-              <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow userData={{ animUnit: true, brickType: 'wall' }} />
+              <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
+              <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
 
               {/* Panneaux bois occultants jardin */}
               {GARDEN_PANEL_DEFS.map((p, i) => (
-                <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ skipMerge: true, animUnit: true, brickType: 'wall' }}>
+                <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ skipMerge: true, animUnit: true, brickType: 'wall', side: 'garden' }}>
                   <WoodenFencePanel w={p.w} h={p.h} d={p.d} />
                 </group>
               ))}
@@ -553,7 +553,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                 rotation-y={DiagWall.rotY + Math.PI / 2}
                 castShadow
                 receiveShadow
-                userData={{ animUnit: true, brickType: 'wall' }}
+                userData={{ animUnit: true, brickType: 'wall', side: 'gardenFront' }}
                 material={wallMat}
               >
                 <boxGeometry args={[577.35, WALL_H, 40]} />

@@ -71,7 +71,7 @@ function collectScene(scene: THREE.Scene) {
   const floor: THREE.Object3D[] = [];
   const skirting: THREE.Object3D[] = [];
   const pillars: THREE.Object3D[] = [];
-  const walls: THREE.Object3D[] = [];
+  const wallsBySide = new Map<string, THREE.Object3D[]>();
   const ikea: THREE.Object3D[] = [];
   const rest: THREE.Object3D[] = [];
   const ceiling: THREE.Object3D[] = [];
@@ -99,7 +99,11 @@ function collectScene(scene: THREE.Scene) {
     if (brickType === 'ceiling') ceiling.push(o);
     else if (brickType === 'floor') floor.push(o);
     else if (brickType === 'wall' && isPillar) pillars.push(o);
-    else if (brickType === 'wall') walls.push(o);
+    else if (brickType === 'wall') {
+      const side = o.userData?.side || 'misc';
+      if (!wallsBySide.has(side)) wallsBySide.set(side, []);
+      wallsBySide.get(side)!.push(o);
+    }
     else if (brickType === 'ground') { /* ignore */ }
     else if (brickType === 'skirting') skirting.push(o);
     else if (o.userData?.isIkea) ikea.push(o);
@@ -117,7 +121,6 @@ function collectScene(scene: THREE.Scene) {
 
     if (o.userData?.animUnit && hasMesh(o) && !picked.has(o)) {
       classify(o);
-      console.log('COLLECTED animUnit:', o.userData);
       return;
     }
 
@@ -125,7 +128,6 @@ function collectScene(scene: THREE.Scene) {
     const hasAnimUnitChild = o.children.some(c => c.userData?.animUnit);
     if (depth >= 2 && hasDirectMesh && !hasAnimUnitChild && !picked.has(o)) {
       classify(o);
-      console.log('COLLECTED directMesh:', o.userData);
       return;
     }
 
@@ -138,12 +140,11 @@ function collectScene(scene: THREE.Scene) {
       o.children.forEach(c => visit(c, depth + 1));
     } else if (!picked.has(o) && hasMesh(o)) {
       classify(o);
-      console.log('COLLECTED wrapper:', o.userData);
     }
   }
 
   scene.children.forEach(child => visit(child, 0));
-  return { floor, skirting, pillars, walls, ikea, rest, ceiling };
+  return { floor, skirting, pillars, wallsBySide, ikea, rest, ceiling };
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -178,12 +179,13 @@ export function BuildAnimationPro({ onFinish, onDuration }: { onFinish: () => vo
   useLayoutEffect(() => {
     (window as any).isAnimProRunning = true;
     const s3 = scene as unknown as THREE.Scene;
+    (window as any).__THREE_SCENE__ = s3;
     
     // 1. D'abord on unmerge (ça cache les merged, ça montre les originaux)
     const remerge = unmergeScene(s3);
 
     // 2. Ensuite on collecte
-    const { floor, skirting, pillars, walls, ikea, rest, ceiling } = collectScene(s3);
+    const { floor, skirting, pillars, wallsBySide, ikea, rest, ceiling } = collectScene(s3);
 
     // L'ordre demandé : plinthes/sol, piliers, ikea, reste, murs, plafond
     const groupedObjects: AnimObj[] = [];
@@ -222,7 +224,11 @@ export function BuildAnimationPro({ onFinish, onDuration }: { onFinish: () => vo
     addSequential(shuffle(pillars));
     addSequential(shuffle(ikea));
     addSequential(shuffle(rest));
-    addGrouped(walls);    // All wall segments fall as one block
+    
+    // Each wall side falls as a unified block, but shuffled order of walls
+    const wallGroups = shuffle(Array.from(wallsBySide.values()));
+    wallGroups.forEach(group => addGrouped(group));
+    
     addSequential(ceiling);
 
     const objects = groupedObjects;
