@@ -1591,9 +1591,9 @@ function SingleCharacter({
               // 2. Oscillations dynamiques : n'existent QUE pendant le mouvement (0 au repos)
               if (motionFactor > 0) {
                 const phase = time * 4.0 + index * 0.7;
-                const swingX = Math.sin(phase) * 0.18 * motionFactor;
-                const swingY = Math.sin(phase * 0.6 + 1.2) * 0.10 * motionFactor;
-                const swingZ = Math.cos(phase * 0.85) * 0.14 * motionFactor;
+                const swingX = Math.sin(phase) * 0.45 * motionFactor;
+                const swingY = Math.sin(phase * 0.6 + 1.2) * 0.25 * motionFactor;
+                const swingZ = Math.cos(phase * 0.85) * 0.35 * motionFactor;
 
                 eulerAnim.set(swingX, swingY, swingZ, 'YXZ');
                 animQuat.setFromEuler(eulerAnim);
