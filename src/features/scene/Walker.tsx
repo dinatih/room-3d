@@ -1571,7 +1571,7 @@ function SingleCharacter({
           const gravityWorld = new THREE.Vector3(0, -1, 0); // Gravité universelle vers le bas
 
           // L'oscillation ("rebond/vent") s'active avec une perte d'énergie progressive au repos
-          const isTorsoMoving = torsoAccelRef.current && torsoAccelRef.current.lengthSq() > 0.01;
+          const isTorsoMoving = target !== 'idle' && torsoAccelRef.current && torsoAccelRef.current.lengthSq() > 0.01;
           const targetEnergy = (isMoving || isTorsoMoving) ? (target.includes('run') ? 1.5 : 1.0) : 0.0;
           wigEnergyRef.current += (targetEnergy - wigEnergyRef.current) * (delta * 3.0);
           const motionFactor = wigEnergyRef.current;
@@ -1592,9 +1592,11 @@ function SingleCharacter({
               // 2. Oscillations dynamiques : n'existent QUE pendant le mouvement (0 au repos)
               if (motionFactor > 0) {
                 const phase = time * 4.0 + index * 0.7;
-                const swingX = Math.sin(phase) * 0.18 * motionFactor;
-                const swingY = Math.sin(phase * 0.6 + 1.2) * 0.15 * motionFactor;
-                const swingZ = Math.cos(phase * 0.85) * 0.28 * motionFactor;
+                // Pour éviter que l'orientation locale chaotique des os annule le gauche/droite,
+                // on distribue équitablement le balancier sur les axes X et Z avec un fort Z.
+                const swingX = Math.sin(phase) * 0.12 * motionFactor;
+                const swingY = Math.sin(phase * 0.6 + 1.2) * 0.12 * motionFactor;
+                const swingZ = Math.sin(phase * 0.85 + 2.0) * 0.35 * motionFactor; // <-- Z très prononcé (gauche/droite)
 
                 eulerAnim.set(swingX, swingY, swingZ, 'YXZ');
                 animQuat.setFromEuler(eulerAnim);
