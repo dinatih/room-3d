@@ -923,7 +923,7 @@ export function SidePanel({
       tabIndex={0}
       onKeyDown={handleKeyDownAnims}
     >
-      <div className="p-2 border-bottom bg-white shadow-sm sticky-top" style={{ zIndex: 5 }}>
+      <div className="p-2 border-bottom shadow-sm sticky-top" style={{ zIndex: 5, background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)' }}>
         <div className="input-group input-group-sm mb-1">
           <span className="input-group-text bg-light text-muted border-end-0">🔍</span>
           <input
@@ -1060,7 +1060,7 @@ export function SidePanel({
               <div
                 key={anim.value}
                 className={`d-flex align-items-center justify-content-between border-bottom px-2 py-2 ${
-                  isActive ? 'active-anim-item bg-danger text-white fw-bold shadow-sm' : 'bg-white hover-bg-light text-dark'
+                  isActive ? 'active-anim-item bg-danger text-white fw-bold shadow-sm' : 'bg-transparent hover-bg-light text-dark'
                 }`}
                 style={{
                   fontSize: isMobile ? '13px' : '11px',
@@ -1132,11 +1132,13 @@ export function SidePanel({
         {/* Bottom sheet */}
         {sheetOpen && activeTab !== null && (
           <div
-            className="position-fixed start-0 end-0 bg-white border-top shadow-lg z-index-95 d-flex flex-column rounded-top-4"
+            className="position-fixed start-0 end-0 border-top shadow-lg z-index-95 d-flex flex-column rounded-top-4"
             style={{
               bottom: 64,
               maxHeight: 'calc(100vh - 120px)',
               zIndex: 95,
+              background: 'rgba(255, 255, 255, 0.75)',
+              backdropFilter: 'blur(8px)',
             }}
             onWheel={e => e.stopPropagation()}
           >
@@ -1153,7 +1155,7 @@ export function SidePanel({
 
             {/* Sheet body */}
             <div className="overflow-auto p-2" style={{ flex: 1 }}>
-              <div className="d-flex flex-column bg-white">
+              <div className="d-flex flex-column bg-transparent">
                 {sheetBody[activeTab]}
               </div>
             </div>
@@ -1162,8 +1164,8 @@ export function SidePanel({
 
         {/* Tab bar */}
         <div 
-          className="position-fixed bottom-0 start-0 end-0 bg-white border-top shadow-lg d-flex justify-content-around align-items-center"
-          style={{ height: '64px', zIndex: 100, paddingBottom: 'env(safe-area-inset-bottom)' }}
+          className="position-fixed bottom-0 start-0 end-0 border-top shadow-lg d-flex justify-content-around align-items-center"
+          style={{ height: '64px', zIndex: 100, paddingBottom: 'env(safe-area-inset-bottom)', background: 'rgba(255, 255, 255, 0.75)', backdropFilter: 'blur(8px)' }}
         >
           {/* Inventaire — ouvre le modal directement */}
           <button

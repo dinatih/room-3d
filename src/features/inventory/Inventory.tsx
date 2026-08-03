@@ -393,9 +393,9 @@ export function Inventory({ onClose }: { onClose: () => void }) {
 
       {/* MODAL DETAIL (mobile) */}
       {showMobileModal && selected && (
-        <div className="modal fade show d-block" tabIndex={-1} role="dialog" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+        <div className="modal fade show d-block" tabIndex={-1} role="dialog" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }} onClick={(e) => { e.stopPropagation(); setShowMobileModal(false); }}>
           <div className="modal-dialog modal-fullscreen-sm-down modal-dialog-scrollable" role="document">
-            <div className="modal-content">
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
               <div className="modal-header">
                 <h5 className="modal-title">{selected.name}</h5>
                 <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowMobileModal(false)}></button>
