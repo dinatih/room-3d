@@ -186,28 +186,46 @@ export function BuildAnimationPro({ onFinish, onDuration }: { onFinish: () => vo
     const { floor, skirting, pillars, walls, ikea, rest, ceiling } = collectScene(s3);
 
     // L'ordre demandé : plinthes/sol, piliers, ikea, reste, murs, plafond
-    const allOrdered = [
-      ...skirting,
-      ...floor,
-      ...shuffle(pillars),
-      ...shuffle(ikea),
-      ...shuffle(rest),
-      ...shuffle(walls),
-      ...ceiling,
-    ];
-
+    const groupedObjects: AnimObj[] = [];
     let cursor = 0;
-    const objects = allOrdered.map(obj => {
-      const entry: AnimObj = {
-        obj,
-        origLocalY: obj.position.y,
-        worldToLocalY: getWorldToLocalYFactor(obj),
-        startTime: cursor,
-        duration: FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN),
-      };
+
+    const addSequential = (items: THREE.Object3D[]) => {
+      items.forEach(obj => {
+        groupedObjects.push({
+          obj,
+          origLocalY: obj.position.y,
+          worldToLocalY: getWorldToLocalYFactor(obj),
+          startTime: cursor,
+          duration: FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN),
+        });
+        cursor += STAGGER_MS;
+      });
+    };
+
+    const addGrouped = (items: THREE.Object3D[]) => {
+      if (items.length === 0) return;
+      const duration = FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN);
+      items.forEach(obj => {
+        groupedObjects.push({
+          obj,
+          origLocalY: obj.position.y,
+          worldToLocalY: getWorldToLocalYFactor(obj),
+          startTime: cursor,
+          duration,
+        });
+      });
       cursor += STAGGER_MS;
-      return entry;
-    });
+    };
+
+    addGrouped(skirting); // Skirting boards fall as one block
+    addSequential(floor);
+    addSequential(shuffle(pillars));
+    addSequential(shuffle(ikea));
+    addSequential(shuffle(rest));
+    addGrouped(walls);    // All wall segments fall as one block
+    addSequential(ceiling);
+
+    const objects = groupedObjects;
 
     const totalEnd = objects.length > 0 
       ? objects[objects.length - 1].startTime + objects[objects.length - 1].duration + 200 
