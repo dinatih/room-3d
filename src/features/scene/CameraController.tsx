@@ -257,6 +257,12 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         return;
       }
       if (e.key === 'p' || e.key === 'P') {
+        const laraGridActive = useSceneStore.getState().layers.laraGrid;
+        if (laraGridActive) {
+          document.dispatchEvent(new CustomEvent('toggle-lara-haircut'));
+          return;
+        }
+
         if (modeRef.current === 'walk') exitWalkMode();
         else if (modeRef.current === 'top') exitTop();
         // Reset to default perspective

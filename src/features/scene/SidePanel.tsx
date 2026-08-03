@@ -375,7 +375,26 @@ export function SidePanel({
     return () => clearInterval(id);
   }, [layers.realSun]);
 
-  const [globalHaircut, setGlobalHaircut] = useState<string>('hair_100');
+  const [globalHaircut, setGlobalHaircut] = useState<string>('original');
+  const lastWigRef = useRef<string>('hair_101');
+
+  useEffect(() => {
+    const handleToggleHaircut = () => {
+      setGlobalHaircut(prev => {
+        if (prev === 'original') {
+          const next = lastWigRef.current;
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: next } }));
+          return next;
+        } else {
+          lastWigRef.current = prev;
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: 'original' } }));
+          return 'original';
+        }
+      });
+    };
+    document.addEventListener('toggle-lara-haircut', handleToggleHaircut as any);
+    return () => document.removeEventListener('toggle-lara-haircut', handleToggleHaircut as any);
+  }, []);
 
   // Ferme le sheet via Escape sur mobile
   useEffect(() => {
@@ -552,6 +571,7 @@ export function SidePanel({
               onChange={(e) => {
                 const val = e.target.value;
                 setGlobalHaircut(val);
+                if (val !== 'original') lastWigRef.current = val;
                 document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: val } }));
                 e.target.blur();
               }}
