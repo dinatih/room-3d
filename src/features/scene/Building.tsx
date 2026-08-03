@@ -84,7 +84,7 @@ const slabConcreteTop = new THREE.MeshStandardMaterial({
 const slabConcreteSide = new THREE.MeshStandardMaterial({
   color: COLORS.floor, roughness: 0.6, side: THREE.FrontSide,
 });
-const groundExteriorMat = new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9, transparent: true, opacity: 0.5 });
+const groundExteriorMat = new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9, transparent: true, opacity: 0.8 });
 
 // westMats : face -X (index 1) invisible ; eastMats : face +X (index 0) invisible
 // northMats : face -Z (index 5) invisible (face extérieure nord, vue de Z<0)
@@ -293,7 +293,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
   useLayoutEffect(() => {
     if (!sourceRef.current || !mergedRef.current) return;
     if ((window as any).isAnimProRunning) return;
-    
+
     const src = sourceRef.current;
     const dst = mergedRef.current;
 
@@ -1426,12 +1426,12 @@ function ReflectorMirror({ w, h, position, rotationY }: {
       if (reflectionCamera) {
         reflectionCamera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
       }
-      
+
       const oldMask = camera.layers.mask;
       camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
 
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
-      
+
       camera.layers.mask = oldMask;
       _reflectionDepth--;
     };
@@ -1480,12 +1480,12 @@ function MergedReflector({ planes, position, rotationY }: {
       if (reflectionCamera) {
         reflectionCamera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
       }
-      
+
       const oldMask = camera.layers.mask;
       camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
 
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
-      
+
       camera.layers.mask = oldMask;
       _reflectionDepth--;
     };
