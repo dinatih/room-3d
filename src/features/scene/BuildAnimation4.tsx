@@ -26,11 +26,11 @@ const MATERIALIZE_T    = 0.80;
 const FLASH_DURATION   = 180;
 
 const MAT_GREEN = new THREE.MeshBasicMaterial({
-  color:     0x00ff41,
+  color:     0xff0041,
   wireframe: true,
 });
 const MAT_FLASH = new THREE.MeshBasicMaterial({
-  color:       0x88ffbb,
+  color:       0xff88aa,
   wireframe:   false,
   transparent: true,
   opacity:     1,
@@ -339,8 +339,8 @@ const FRAG = /* glsl */`
     }
     if (dist < 0.03) brightness = 4.0;
 
-    vec3 finalColor = vec3(0.0, 1.0, 0.25);
-    if (dist < 0.02) finalColor = vec3(0.75, 1.0, 0.85);
+    vec3 finalColor = vec3(1.0, 0.0, 0.25);
+    if (dist < 0.02) finalColor = vec3(1.0, 0.75, 0.85);
 
     if (finalAlpha < 0.01) discard;
     if (brightness  < 0.01) discard;

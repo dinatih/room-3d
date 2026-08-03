@@ -11,8 +11,6 @@ import type { PlaneModelKey } from './PaperPlane';
 import { Minimap } from './Minimap';
 
 export interface AnimationsPanelProps {
-  buildAnim:        boolean; onStartBuildAnim:  () => void;
-  buildAnim3:       boolean; onStartBuildAnim3: () => void;
   buildAnim4:       boolean; onStartBuildAnim4: () => void;
   buildAnimPro:     boolean; onStartBuildAnimPro: () => void;
   onStop:           () => void;
@@ -31,8 +29,6 @@ const ANIMS: Array<{
   label:  string;
   color:  string;
 }> = [
-  { key: 'buildAnim',    start: 'onStartBuildAnim',    label: 'Créer l\'appart', color: '#0ea5a0' },
-  { key: 'buildAnim3',   start: 'onStartBuildAnim3',   label: 'Tombée du ciel',  color: '#0ea5a0' },
   { key: 'buildAnim4',   start: 'onStartBuildAnim4',   label: 'Matrix Pro',          color: '#00c853' },
   { key: 'buildAnimPro', start: 'onStartBuildAnimPro', label: 'Tombée (Pro)',    color: '#ff9800' },
 ];
