@@ -20,9 +20,6 @@ import { ROOM_W, ROOM_D, WALL_H } from '@config';
 
 const DROP_HEIGHT      = 2000;
 const STAGGER_MS       = 110;
-const WALL_PHASE_MS    = 3000;
-const WALL_STAGGER_MIN = 12;
-const WALL_STAGGER_MAX = 110;
 const FALL_MS_MIN      = 600;
 const FALL_MS_MAX      = 950;
 const MATERIALIZE_T    = 0.80;
@@ -118,15 +115,39 @@ function unmergeScene(scene: THREE.Scene): () => void {
   const toHide:    THREE.Mesh[] = [];
   const toRestore: THREE.Mesh[] = [];
 
+  // 1. Cacher les merged statiques
   scene.traverse(o => {
     const m = o as THREE.Mesh;
     if (!m.isMesh) return;
     if (m.userData.isMergedStatic) {
       m.visible = false;
       toHide.push(m);
-    } else if (m.userData.wasMerged) {
-      m.visible = true;
-      toRestore.push(m);
+    }
+  });
+
+  // 2. Montrer les originaux (tous ceux dans isMergedSource)
+  scene.traverse(o => {
+    if (o.userData?.isMergedSource) {
+      o.traverse(m => {
+        if ((m as THREE.Mesh).isMesh && !m.userData.isMergedStatic) {
+          if ((m as any).isInstancedMesh) return;
+          if (m.userData.skipMerge) return;
+
+          let parent = m.parent;
+          let skip = false;
+          while (parent && !parent.userData?.isMergedSource) {
+            if (parent.userData?.skipMerge) {
+              skip = true;
+              break;
+            }
+            parent = parent.parent;
+          }
+          if (skip) return;
+
+          m.visible = true;
+          toRestore.push(m as THREE.Mesh);
+        }
+      });
     }
   });
 
@@ -138,59 +159,24 @@ function unmergeScene(scene: THREE.Scene): () => void {
 
 // ── Collecte principale ───────────────────────────────────────────────────────
 
-function collectScene(scene: THREE.Scene): {
-  moveable: THREE.Object3D[];
-  walls:    THREE.Object3D[];
-  floor:    THREE.Object3D[];
-  ceiling:  THREE.Object3D[];
-} {
-  const moveable: THREE.Object3D[] = [];
-  const walls:    THREE.Object3D[] = [];
-  const floor:    THREE.Object3D[] = [];
-  const ceiling:  THREE.Object3D[] = [];
+function collectScene(scene: THREE.Scene) {
+  const floor: THREE.Object3D[] = [];
+  const skirting: THREE.Object3D[] = [];
+  const pillars: THREE.Object3D[] = [];
+  const wallsBySide = new Map<string, THREE.Object3D[]>();
+  const ikea: THREE.Object3D[] = [];
+  const rest: THREE.Object3D[] = [];
+  const ceiling: THREE.Object3D[] = [];
+  
   const picked = new Set<THREE.Object3D>();
-
-  function isPureWrapper(o: THREE.Object3D): boolean {
-    if ((o as THREE.Mesh).isMesh) return false;
-    return !o.children.some((c) => (c as THREE.Mesh).isMesh);
-  }
-
-  function visit(o: THREE.Object3D, depth: number): void {
-    if (!o.visible || isUtility(o)) return;
-    if (o.userData?.noAnim) return;
-
-    // Si on croise un MergedStaticGroup (ou source/destination), toujours descendre dans les enfants
-    if (o.userData?.isMergedSource || o.userData?.isMergedStatic || o.name?.startsWith('merged-')) {
-      o.children.forEach((c) => visit(c, depth + 1));
-      return;
-    }
-
-    // Nœud explicitement marqué comme unité d'animation
-    if (o.userData?.animUnit && hasMesh(o) && !picked.has(o)) {
-      classify(o);
-      return;
-    }
-
-    const hasDirectMesh = o.children.some((c) => (c as THREE.Mesh).isMesh);
-    if (depth >= 2 && hasDirectMesh && !picked.has(o)) {
-      classify(o);
-      return;
-    }
-
-    if (isPureWrapper(o) || depth < 2) {
-      o.children.forEach((c) => visit(c, depth + 1));
-    } else if (!picked.has(o) && hasMesh(o)) {
-      classify(o);
-    }
-  }
 
   function classify(o: THREE.Object3D): void {
     if (picked.has(o)) return;
     picked.add(o);
 
-    let brickType: string | undefined = o.userData?.brickType as string | undefined;
+    let brickType = o.userData?.brickType as string | undefined;
     if (!brickType) {
-      o.traverse((c) => {
+      o.traverse(c => {
         if (!brickType && c.userData?.brickType) brickType = c.userData.brickType as string;
       });
     }
@@ -198,16 +184,59 @@ function collectScene(scene: THREE.Scene): {
       brickType = o.parent.userData.brickType as string;
     }
 
-    if      (brickType === 'ceiling')  ceiling.push(o);
-    else if (brickType === 'floor')    floor.push(o);
-    else if (brickType === 'wall')     walls.push(o);
-    else if (brickType === 'ground')   { /* sol extérieur — ignorer */ }
-    else if (brickType === 'skirting') { /* plinthes — ignorer */ }
-    else                               moveable.push(o);
+    let isPillar = false;
+    if (o.userData?.type === 'pillar') isPillar = true;
+    else o.traverse(c => { if (c.userData?.type === 'pillar') isPillar = true; });
+
+    if (brickType === 'ceiling') ceiling.push(o);
+    else if (brickType === 'floor') floor.push(o);
+    else if (brickType === 'wall' && isPillar) pillars.push(o);
+    else if (brickType === 'wall') {
+      const side = o.userData?.side || 'misc';
+      if (!wallsBySide.has(side)) wallsBySide.set(side, []);
+      wallsBySide.get(side)!.push(o);
+    }
+    else if (brickType === 'ground') { /* ignore */ }
+    else if (brickType === 'skirting') skirting.push(o);
+    else if (o.userData?.isIkea) ikea.push(o);
+    else rest.push(o);
   }
 
-  scene.children.forEach((child) => visit(child, 0));
-  return { moveable, walls, floor, ceiling };
+  function visit(o: THREE.Object3D, depth: number): void {
+    if (!o.visible || isUtility(o)) return;
+    if (o.userData?.noAnim) return;
+
+    if (o.userData?.isMergedSource || o.userData?.isMergedStatic || o.name?.startsWith('merged-')) {
+      o.children.forEach(c => visit(c, depth + 1));
+      return;
+    }
+
+    if (o.userData?.animUnit && hasMesh(o) && !picked.has(o)) {
+      classify(o);
+      return;
+    }
+
+    const hasDirectMesh = o.children.some(c => (c as THREE.Mesh).isMesh);
+    const hasAnimUnitChild = o.children.some(c => c.userData?.animUnit);
+    if (depth >= 2 && hasDirectMesh && !hasAnimUnitChild && !picked.has(o)) {
+      classify(o);
+      return;
+    }
+
+    let pureWrapper = true;
+    if (!hasAnimUnitChild && ((o as THREE.Mesh).isMesh || o.children.some(c => (c as THREE.Mesh).isMesh))) {
+      pureWrapper = false;
+    }
+
+    if (pureWrapper || depth < 2) {
+      o.children.forEach(c => visit(c, depth + 1));
+    } else if (!picked.has(o) && hasMesh(o)) {
+      classify(o);
+    }
+  }
+
+  scene.children.forEach(child => visit(child, 0));
+  return { floor, skirting, pillars, wallsBySide, ikea, rest, ceiling };
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -460,23 +489,44 @@ export function BuildAnimation4({
     const remerge = unmergeScene(s3);
     s3.updateMatrixWorld(true);
 
-    const { moveable, walls, floor, ceiling } = collectScene(s3);
-
-    const wallStagger =
-      walls.length > 0
-        ? Math.min(WALL_STAGGER_MAX, Math.max(WALL_STAGGER_MIN, WALL_PHASE_MS / walls.length))
-        : STAGGER_MS;
+    const { floor, skirting, pillars, wallsBySide, ikea, rest, ceiling } = collectScene(s3);
 
     const floorSet = new Set(floor);
     let cursor = 0;
 
-    const scheduled: Array<{ obj: THREE.Object3D; startTime: number }> = [];
-    walls.forEach((obj)           => { scheduled.push({ obj, startTime: cursor }); cursor += wallStagger; });
-    shuffle(moveable).forEach((obj) => { scheduled.push({ obj, startTime: cursor }); cursor += STAGGER_MS; });
-    floor.forEach((obj)           => { scheduled.push({ obj, startTime: cursor }); cursor += STAGGER_MS; });
-    ceiling.forEach((obj)         => { scheduled.push({ obj, startTime: cursor }); cursor += STAGGER_MS; });
+    const scheduled: Array<{ obj: THREE.Object3D; startTime: number; duration: number }> = [];
 
-    const objects: AnimObj[] = scheduled.map(({ obj, startTime }) => {
+    const addGrouped = (items: THREE.Object3D[], stagger = false) => {
+      if (items.length === 0) return;
+      const duration = FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN);
+      items.forEach(obj => {
+        scheduled.push({ obj, startTime: cursor, duration });
+        if (stagger) cursor += STAGGER_MS;
+      });
+      if (!stagger) cursor += STAGGER_MS;
+    };
+
+    // 1. Skirting (plinthes, d'un coup)
+    addGrouped(skirting);
+
+    // 2. Rest + Ikea (aléatoire, stagger)
+    const furniture = shuffle([...ikea, ...rest]);
+    addGrouped(furniture, true);
+
+    // 3. Pillars (un par un)
+    pillars.forEach(p => addGrouped([p]));
+
+    // 4. Murs par face
+    const wallGroups = shuffle(Array.from(wallsBySide.values()));
+    wallGroups.forEach(group => addGrouped(group));
+
+    // 5. Floor (vient d'en bas, stagger)
+    addGrouped(floor, true);
+    
+    // 6. Ceiling (vient d'en haut, stagger)
+    addGrouped(ceiling, true);
+
+    const objects: AnimObj[] = scheduled.map(({ obj, startTime, duration }) => {
       const meshSaves: MeshSave[] = [];
       collectMeshes(obj, meshSaves);
       if (!floorSet.has(obj) && !isLargeFlat(obj)) {
@@ -489,7 +539,7 @@ export function BuildAnimation4({
         origLocalY:   obj.position.y,
         worldToLocalY,
         startTime,
-        duration:     FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN),
+        duration,
         fromBelow:    floorSet.has(obj),
         meshSaves,
         materialized: false,

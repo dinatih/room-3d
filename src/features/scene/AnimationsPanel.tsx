@@ -33,7 +33,7 @@ const ANIMS: Array<{
 }> = [
   { key: 'buildAnim',    start: 'onStartBuildAnim',    label: 'Créer l\'appart', color: '#0ea5a0' },
   { key: 'buildAnim3',   start: 'onStartBuildAnim3',   label: 'Tombée du ciel',  color: '#0ea5a0' },
-  { key: 'buildAnim4',   start: 'onStartBuildAnim4',   label: 'Matrix',          color: '#00c853' },
+  { key: 'buildAnim4',   start: 'onStartBuildAnim4',   label: 'Matrix Pro',          color: '#00c853' },
   { key: 'buildAnimPro', start: 'onStartBuildAnimPro', label: 'Tombée (Pro)',    color: '#ff9800' },
 ];
 
