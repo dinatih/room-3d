@@ -12,9 +12,9 @@ function easeOutCubic(x: number): number {
 }
 
 function getWorldToLocalYFactor(o: THREE.Object3D): number {
-  const ws = new THREE.Vector3();
-  o.getWorldScale(ws);
-  return ws.y === 0 ? 1 : ws.y;
+  const ws = new THREE.Vector3(1, 1, 1);
+  if (o.parent) o.parent.getWorldScale(ws);
+  return ws.y === 0 ? 1 : 1 / ws.y;
 }
 
 function isUtility(o: THREE.Object3D): boolean {

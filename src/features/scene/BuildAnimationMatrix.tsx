@@ -98,13 +98,9 @@ function isLargeFlat(o: THREE.Object3D): boolean {
 
 /** Retourne le facteur de conversion monde→local sur l'axe Y pour un objet. */
 function getWorldToLocalYFactor(o: THREE.Object3D): number {
-  if (!o.parent) return 1;
-  const p0 = new THREE.Vector3(0, 0, 0);
-  const p1 = new THREE.Vector3(0, 1, 0);
-  o.parent.worldToLocal(p0);
-  o.parent.worldToLocal(p1);
-  const factor = Math.abs(p1.y - p0.y);
-  return factor > 0.0001 ? factor : 1;
+  const ws = new THREE.Vector3(1, 1, 1);
+  if (o.parent) o.parent.getWorldScale(ws);
+  return ws.y === 0 ? 1 : 1 / ws.y;
 }
 
 // ── Collecte principale ───────────────────────────────────────────────────────
