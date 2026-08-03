@@ -97,6 +97,11 @@ function ShadowWarmup() {
 /** Active/désactive les ombres en réponse au toggle UI. */
 function ShadowController({ enabled }: { enabled: boolean }) {
   const { gl, scene, invalidate } = useThree();
+  
+  useEffect(() => {
+    (window as any).__THREE_SCENE__ = scene;
+  }, [scene]);
+
   useEffect(() => {
     gl.shadowMap.enabled = enabled;
     scene.traverse(obj => {

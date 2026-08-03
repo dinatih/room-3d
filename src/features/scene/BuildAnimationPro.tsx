@@ -35,20 +35,29 @@ function hasMesh(o: THREE.Object3D): boolean {
   return found;
 }
 
-function unmergeScene(scene: THREE.Scene): () => void {
+export function unmergeScene(scene: THREE.Scene) {
   const toHide: THREE.Mesh[] = [];
   const toRestore: THREE.Mesh[] = [];
 
+  // 1. Cacher les merged statiques
+  scene.traverse(m => {
+    if ((m as THREE.Mesh).isMesh) {
+      if (m.userData.isMergedStatic) {
+        m.visible = false;
+        toHide.push(m as THREE.Mesh);
+      }
+    }
+  });
+
+  // 2. Montrer les originaux (tous ceux dans isMergedSource)
   scene.traverse(o => {
-    const m = o as THREE.Mesh;
-    if (!m.isMesh) return;
-    if (m.userData.isMergedStatic) {
-      m.visible = false;
-      toHide.push(m);
-    } else if (m.userData.wasMerged) {
-      m.visible = true;
-      toRestore.push(m);
-      console.log('UNMERGE found original:', m.name || m.uuid, 'set to visible');
+    if (o.userData?.isMergedSource) {
+      o.traverse(m => {
+        if ((m as THREE.Mesh).isMesh && !m.userData.isMergedStatic) {
+          m.visible = true;
+          toRestore.push(m as THREE.Mesh);
+        }
+      });
     }
   });
 
