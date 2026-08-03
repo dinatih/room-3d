@@ -174,14 +174,14 @@ export function BuildAnimationPro({ onFinish, onDuration }: { onFinish: () => vo
     // 2. Ensuite on collecte
     const { floor, skirting, pillars, walls, ikea, rest, ceiling } = collectScene(s3);
 
-    // L'ordre demandé : plinthes/sol, piliers, murs, ikea, reste, plafond
+    // L'ordre demandé : plinthes/sol, piliers, ikea, reste, murs, plafond
     const allOrdered = [
       ...skirting,
       ...floor,
-      ...pillars,
-      ...walls,
+      ...shuffle(pillars),
       ...shuffle(ikea),
       ...shuffle(rest),
+      ...shuffle(walls),
       ...ceiling,
     ];
 

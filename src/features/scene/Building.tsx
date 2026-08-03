@@ -498,7 +498,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
 
           {/* ── Piliers ────────────────────────────────────────────────────────── */}
           {(
-            <group userData={{ animUnit: true, brickType: 'wall' }}>
+            <group>
               {PILLAR_DEFS.map((p) => {
                 const pp = p as any;
                 const pw = pp.w ?? WALL_THICKNESS;
@@ -508,40 +508,40 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                   return (
                     <mesh key={pp.id} position={[pp.x, WALL_H / 2, pp.z]} rotation-y={rot}
                           material={wallMat} castShadow receiveShadow
-                          userData={{ brickType: 'wall', type: 'pillar', id: pp.id }}>
+                          userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: pp.id }}>
                       <boxGeometry args={[pw, WALL_H, pd]} />
                     </mesh>
                   );
                 }
                 return (
                   <P key={pp.id} w={pw} h={WALL_H} d={pd} x={pp.x} y={WALL_H / 2} z={pp.z}
-                    userData={{ brickType: 'wall', type: 'pillar', id: pp.id }} />
+                    userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: pp.id }} />
                 );
               })}
               <mesh geometry={diagGeos.diagPillar}   material={wallMat} castShadow receiveShadow
-                userData={{ brickType: 'wall', type: 'pillar', id: 'diag-ne-kite' }} />
+                userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: 'diag-ne-kite' }} />
               <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
-                userData={{ brickType: 'wall', type: 'pillar', id: 'diag-sw-kite' }} />
+                userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: 'diag-sw-kite' }} />
             </group>
           )}
 
           {/* ── Murs ─────────────────────────────────────────────────────────────── */}
           {!pillarsOnly && (
-            <group userData={{ animUnit: true, brickType: 'wall' }}>
+            <group>
               {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
                 const mat = MAT_MAP[d.mat ?? 'default'];
-                const uData = { brickType: 'wall', side: d.mat };
+                const uData = { animUnit: true, brickType: 'wall', side: d.mat };
                 if (d.axis === 'z')
                   return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
                 return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
               })}
               {/* Mur diagonal */}
-              <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow userData={{ brickType: 'wall' }} />
-              <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow userData={{ brickType: 'wall' }} />
+              <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow userData={{ animUnit: true, brickType: 'wall' }} />
+              <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow userData={{ animUnit: true, brickType: 'wall' }} />
 
               {/* Panneaux bois occultants jardin */}
               {GARDEN_PANEL_DEFS.map((p, i) => (
-                <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ skipMerge: true }}>
+                <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ skipMerge: true, animUnit: true, brickType: 'wall' }}>
                   <WoodenFencePanel w={p.w} h={p.h} d={p.d} />
                 </group>
               ))}
@@ -552,7 +552,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                 rotation-y={DiagWall.rotY + Math.PI / 2}
                 castShadow
                 receiveShadow
-                userData={{ brickType: 'wall' }}
+                userData={{ animUnit: true, brickType: 'wall' }}
                 material={wallMat}
               >
                 <boxGeometry args={[577.35, WALL_H, 40]} />
