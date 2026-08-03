@@ -6,11 +6,11 @@
  * Placement monde : wrapper group dans Furniture.tsx  → rotY=+π/2
  * Utilisé aussi dans l'inventaire via registry.ts.
  */
-import { useRef, useLayoutEffect } from 'react';
+import { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Kallax2x1 }   from './Kallax2x1';
 import { Kallax2x2 }   from './Kallax2x2';
-import { DroneCell } from './Drona';
+import { DronaInstances } from './Drona';
 import { Variera32x28 } from './Variera32x28';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
@@ -27,9 +27,6 @@ const VAR2_W = 32, VAR2_D = 28, VAR2_H = 16; // VARIERA 32×28×16 demi-étag
 
 function k(id: string) { return { id } as any; }
 
-// ── Drona (7 boîtes) ──────────────────────────────────────────────────────────
-
-
 // ── Composant principal ───────────────────────────────────────────────────────
 
 export function KallaxNE({ onSize }: SceneItemProps) {
@@ -40,37 +37,49 @@ export function KallaxNE({ onSize }: SceneItemProps) {
     onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
   }, []);
 
+  const dronaMatrices = useMemo(() => {
+    const matrices: THREE.Matrix4[] = [];
+    const p = new THREE.Vector3();
+    const q = new THREE.Quaternion();
+    const s = new THREE.Vector3(1, 1, 1);
+    
+    // 2×1 bas
+    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+    for (const x of [-17.5, 17.5]) {
+      p.set(x, h1 - 20.5, 0);
+      matrices.push(new THREE.Matrix4().compose(p, q, s));
+    }
+    
+    // 2×2 haut
+    for (const x of [-17.5, 17.5]) {
+      for (const y of [-20.5, -56]) {
+        p.set(x, h1 + h2 + y, 0);
+        matrices.push(new THREE.Matrix4().compose(p, q, s));
+      }
+    }
+    
+    // Sur la VARIERA
+    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
+    p.set(W2_HALF - VAR2_W / 2 - 4, h1 + h2 + VAR2_H + DF / 2, DEP_HALF - VAR2_D / 2 - 10);
+    matrices.push(new THREE.Matrix4().compose(p, q, s));
+    
+    return matrices;
+  }, []);
+
   return (
     <group ref={ref}>
       {/* 2×1 bas — spans Y ∈ [0, h1] */}
       <group position={[0, h1, 0]}>
         <Kallax2x1 item={k('kallax-ne-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        {/* 2 Drona : cellules gauche/droite (Y=-20.5), X=±17.5 */}
-        {([-17.5, 17.5] as const).map(x => (
-          <group key={x} position={[x, -20.5, 0]} rotation-y={Math.PI / 2}>
-            <DroneCell />
-          </group>
-        ))}
       </group>
+      
       {/* 2×2 haut — spans Y ∈ [h1, h1+h2] */}
       <group position={[0, h1 + h2, 0]}>
         <Kallax2x2 item={k('kallax-ne-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        {/* 4 Drona : cellules rangée haute (Y=-20.5) et basse (Y=-56), X=±17.5 */}
-        {([-17.5, 17.5] as const).flatMap(x =>
-          ([-20.5, -56] as const).map(y => (
-            <group key={`${x}${y}`} position={[x, y, 0]} rotation-y={Math.PI / 2}>
-              <DroneCell />
-            </group>
-          ))
-        )}
       </group>
-      {/* Drona posée sur VARIERA, centrée sur étagère, tournée 90°. */}
-      <group
-        position={[W2_HALF - VAR2_W / 2 - 4, h1 + h2 + VAR2_H + DF / 2, DEP_HALF - VAR2_D / 2 - 10]}
-        rotation-y={-Math.PI / 2}
-      >
-        <DroneCell />
-      </group>
+      
+      {/* DRONA Instances */}
+      <DronaInstances matrices={dronaMatrices} />
 
       {/* VARIERA 32×28 sur sommet 2×2, coin Nord-Est (local +X=mur Nord, +Z=mur Est).
           rotY=0 : grand axe (32) le long X (= world Z, parallèle mur Est).
