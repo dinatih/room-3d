@@ -1,0 +1,10 @@
+--- src/features/scene/Building.tsx
++++ src/features/scene/Building.tsx
+@@ -322,6 +322,7 @@
+       if (processedMeshes.has(mesh)) return;
+ 
+       // On cache l'original
++      console.log('MERGING:', mesh.name || mesh.uuid, 'hiding original');
+       mesh.visible = false;
+       mesh.userData.wasMerged = true;
+       processedMeshes.add(mesh);

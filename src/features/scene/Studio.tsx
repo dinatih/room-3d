@@ -241,8 +241,7 @@ export function Studio() {
       const currentGrid = useSceneStore.getState().layers.laraGrid;
       onToggleLayer('laraGrid');
       if (!currentGrid) {
-        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 'tpose' } }));
-        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'tpose' } }));
+        document.dispatchEvent(new CustomEvent('camera-view', { detail: { pos: [150, 450, 600], target: [150, 450, 200] } }));
       }
       cameraState.invalidate?.();
     };

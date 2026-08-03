@@ -507,8 +507,7 @@ export function SidePanel({
         onClick={() => {
           onToggleLayer('laraGrid');
           if (!layers.laraGrid) {
-            document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 'tpose' } }));
-            document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'tpose' } }));
+            document.dispatchEvent(new CustomEvent('camera-view', { detail: { pos: [150, 450, 600], target: [150, 450, 200] } }));
           }
         }}
         style={{ 
@@ -789,7 +788,9 @@ export function SidePanel({
   const [recentAnims, setRecentAnims] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('recent_animations');
-      return saved ? JSON.parse(saved).slice(0, 2) : [];
+      if (!saved) return [];
+      const parsed = JSON.parse(saved).slice(0, 2);
+      return parsed.filter((v: string) => WALKER_ANIM_OPTIONS.some(a => a.value === v));
     } catch {
       return [];
     }

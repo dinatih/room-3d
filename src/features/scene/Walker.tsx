@@ -737,6 +737,7 @@ function SingleCharacter({
   const prevSpineVelRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const torsoAccelRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const customHairAnimBonesRef = useRef<{ bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[]>([]);
+  const wigEnergyRef = useRef(1.0);
 
   // Collision bones
   const headBoneRef = useRef<THREE.Bone | null>(null);
@@ -1127,12 +1128,7 @@ function SingleCharacter({
         }
 
         if (path === 'idle') {
-          if (customAnimName.current && actionsRef.current[customAnimName.current]) {
-            actionsRef.current[customAnimName.current].stop();
-          }
           customAnimName.current = null;
-          mixerRef.current?.stopAllAction();
-          activeActionName.current = 'idle';
           invalidate();
           return;
         }
@@ -1551,37 +1547,17 @@ function SingleCharacter({
     // Both characters time out after 10s of inactivity to save CPU
     const isIdleTimeout = idleTimerRef.current > 10;
 
-    if (target === 'tpose') {
-        if (activeActionName.current !== 'tpose') {
-            mixer.stopAllAction();
-            scene.traverse(o => {
-                if ((o as THREE.Bone).isBone) {
-                    const b = o as THREE.Bone;
-                    if (b.userData.restPos) b.position.copy(b.userData.restPos);
-                    if (b.userData.restQuat) b.quaternion.copy(b.userData.restQuat);
-                }
-            });
-            activeActionName.current = 'tpose';
-        }
-        // En T-Pose : figer la chevelure attachée dans sa pose d'origine neutre
-        scene.traverse(c => {
-          if ((c as any).isBone && c.parent?.name === 'lara_custom_hair_attachment' && (c as any).restLocalQuaternion) {
-            (c as any).quaternion.copy((c as any).restLocalQuaternion);
-          }
-        });
-    } else {
-        const to = actions[target];
-        if (to && activeActionName.current !== target) {
-            const from = (activeActionName.current && activeActionName.current !== 'tpose') ? actions[activeActionName.current] : null;
-            if (from) from.fadeOut(0.2);
-            to.reset().fadeIn(0.2).play();
-            to.setEffectiveWeight(1);
-            activeActionName.current = target;
-            idleTimerRef.current = 0;
-        }
+    const to = actions[target];
+    if (to && activeActionName.current !== target) {
+        const from = activeActionName.current ? actions[activeActionName.current] : null;
+        if (from) from.fadeOut(0.2);
+        to.reset().fadeIn(0.2).play();
+        to.setEffectiveWeight(1);
+        activeActionName.current = target;
+        idleTimerRef.current = 0;
     }
 
-    if (activeActionName.current !== 'tpose' && !isPaused && !isIdleTimeout) {
+    if (!isPaused && !isIdleTimeout) {
         mixer.update(delta);
 
         // Physique réactive & Gravité universelle (sans vent/bruit continu au repos)
@@ -1594,8 +1570,10 @@ function SingleCharacter({
           const animQuat = new THREE.Quaternion();
           const gravityWorld = new THREE.Vector3(0, -1, 0); // Gravité universelle vers le bas
 
-          // L'oscillation ("rebond/vent") ne s'active QUE lorsque le personnage se déplace réellement
-          const motionFactor = isMoving ? (target.includes('run') ? 1.5 : 1.0) : 0.0;
+          // L'oscillation ("rebond/vent") s'active avec une perte d'énergie progressive au repos
+          const targetEnergy = isMoving ? (target.includes('run') ? 1.5 : 1.0) : (target !== 'idle' ? 0.3 : 0.0);
+          wigEnergyRef.current += (targetEnergy - wigEnergyRef.current) * (delta * 3.0);
+          const motionFactor = wigEnergyRef.current;
 
           for (let i = 0; i < animBones.length; i++) {
             const { bone, restQ, index } = animBones[i];
@@ -1800,7 +1778,7 @@ function SingleCharacter({
 
         // Ponytail physics simulation (Verlet)
         const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
-        if (enableHairPhysics && target !== 'tpose' && hairChainRef.current.length > 0) {
+        if (enableHairPhysics && hairChainRef.current.length > 0) {
           const firstNode = hairChainRef.current[0];
           const baseParent = firstNode.bone.parent;
           if (baseParent) {
@@ -1829,7 +1807,7 @@ function SingleCharacter({
                 node.tipPrev.copy(restTip);
               }
 
-              const isHeadMoving = isMoving || (target !== 'idle' && target !== 'tpose');
+              const isHeadMoving = isMoving || (target !== 'idle');
               const dampingFactor = isHeadMoving ? 0.35 : 0.65;
 
               const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - dampingFactor));
@@ -1839,9 +1817,10 @@ function SingleCharacter({
               const lerpStiffness = isHeadMoving ? 0.05 : 0.12;
               next.lerp(restTip, lerpStiffness);
 
-              // Restitution et frein au repos si la vitesse est faible (immobilisation totale)
-              if (!isHeadMoving && vel.lengthSq() < 0.05) {
-                next.copy(restTip);
+              // Restitution et frein au repos si la vitesse est faible (immobilisation totale sans bruit)
+              if (!isHeadMoving) {
+                vel.set(0, 0, 0);
+                next.lerp(restTip, 0.8);
               }
               // Resolve constraints iteratively (2 passes) to ensure length and collision are both satisfied
               for (let i = 0; i < 2; i++) {

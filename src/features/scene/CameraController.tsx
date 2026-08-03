@@ -285,9 +285,24 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         return;
       }
       if (e.key === 't' || e.key === 'T') {
-        modeRef.current === 'top' ? exitTop() : enterTop();
+        const laraGridActive = useSceneStore.getState().layers.laraGrid;
+        if (laraGridActive) {
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 'media/sandbox/anims/anim_t-pose.glb' } }));
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'media/sandbox/anims/anim_t-pose.glb' } }));
+        } else {
+          modeRef.current === 'top' ? exitTop() : enterTop();
+        }
         return;
       }
+      if (e.key === 'i' || e.key === 'I') {
+        const laraGridActive = useSceneStore.getState().layers.laraGrid;
+        if (laraGridActive) {
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 'idle' } }));
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'idle' } }));
+        }
+        return;
+      }
+
 
       const k = e.key;
       const isArrow = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(k);

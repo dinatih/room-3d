@@ -1,0 +1,18 @@
+--- src/features/scene/Building.tsx
++++ src/features/scene/Building.tsx
+@@ -293,6 +293,7 @@
+ 
+   useLayoutEffect(() => {
+     if (!sourceRef.current || !mergedRef.current) return;
++    if ((window as any).isAnimProRunning) return;
+     const src = sourceRef.current;
+     const dst = mergedRef.current;
+ 
+@@ -404,6 +405,7 @@
+     }
+ 
+     return () => {
++      if ((window as any).isAnimProRunning) return;
+       // Nettoyage : restaurer la visibilité des originaux
+       processedMeshes.forEach(m => {
+         if (m.userData.wasMerged) {

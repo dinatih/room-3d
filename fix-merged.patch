@@ -1,0 +1,35 @@
+--- src/features/scene/Building.tsx
++++ src/features/scene/Building.tsx
+@@ -291,30 +291,10 @@
+   const sourceRef = useRef<THREE.Group>(null!);
+   const mergedRef = useRef<THREE.Group>(null!);
+-  const lastProcessedUuids = useRef<Set<string>>(new Set());
+ 
+   useLayoutEffect(() => {
+     if (!sourceRef.current || !mergedRef.current) return;
+     const src = sourceRef.current;
+     const dst = mergedRef.current;
+ 
+-    // Check if the actual meshes have changed before re-merging
+-    const currentUuids = new Set<string>();
+-    src.traverse(node => {
+-      const mesh = node as THREE.Mesh;
+-      if (mesh.isMesh && mesh.type === 'Mesh' && !(mesh as any).isInstancedMesh && !mesh.userData?.isMergedStatic && !mesh.userData?.skipMerge) {
+-        currentUuids.add(mesh.uuid);
+-      }
+-    });
+-
+-    let hasChanged = currentUuids.size !== lastProcessedUuids.current.size;
+-    if (!hasChanged) {
+-      for (const uuid of currentUuids) {
+-        if (!lastProcessedUuids.current.has(uuid)) {
+-          hasChanged = true;
+-          break;
+-        }
+-      }
+-    }
+-
+-    if (!hasChanged && lastProcessedUuids.current.size > 0) return;
+-    lastProcessedUuids.current = currentUuids;
+-
+     dst.clear();
