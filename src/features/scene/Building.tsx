@@ -403,10 +403,8 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
       if ((window as any).isAnimProRunning) return;
       // Nettoyage : restaurer la visibilité des originaux
       processedMeshes.forEach(m => {
-        if (m.userData.wasMerged) {
-          m.visible = true;
-          delete m.userData.wasMerged;
-        }
+        m.visible = true;
+        delete m.userData.wasMerged;
       });
       dst.clear();
     };

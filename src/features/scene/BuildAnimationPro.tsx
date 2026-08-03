@@ -53,7 +53,21 @@ export function unmergeScene(scene: THREE.Scene) {
   scene.traverse(o => {
     if (o.userData?.isMergedSource) {
       o.traverse(m => {
-        if ((m as THREE.Mesh).isMesh && m.userData.wasMerged) {
+        if ((m as THREE.Mesh).isMesh && !m.userData.isMergedStatic) {
+          if ((m as any).isInstancedMesh) return;
+          if (m.userData.skipMerge) return;
+
+          let parent = m.parent;
+          let skip = false;
+          while (parent && !parent.userData?.isMergedSource) {
+            if (parent.userData?.skipMerge) {
+              skip = true;
+              break;
+            }
+            parent = parent.parent;
+          }
+          if (skip) return;
+
           m.visible = true;
           toRestore.push(m as THREE.Mesh);
         }
