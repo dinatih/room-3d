@@ -51,15 +51,19 @@ export function MackaparGroup({ onSize }: SceneItemProps) {
         <Mackapar item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Salopette suspendue à la barre */}
-      <group position={[0, RAIL_Y - 120, 0]} userData={{ animUnit: true }}>
-        <Salopette item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <group userData={{ animUnit: true }}>
+        <group position={[0, RAIL_Y - 120, 0]}>
+          <Salopette item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
       </group>
       {dronaMatrices.map((m, i) => {
         const p = new THREE.Vector3().setFromMatrixPosition(m);
         const q = new THREE.Quaternion().setFromRotationMatrix(m);
         return (
-          <group key={i} position={p} quaternion={q} userData={{ animUnit: true }}>
-            <DroneCell />
+          <group key={i} userData={{ animUnit: true }}>
+            <group position={p} quaternion={q}>
+              <DroneCell />
+            </group>
           </group>
         );
       })}

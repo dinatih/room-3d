@@ -100,6 +100,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'baseball-cap':           BaseballCap,
   'mug':                    Mug,
   'mirror-nissedal-wide':   NissedalMirror,
+  'nissedal50320320':       NissedalMirror,
   'ninja-sp101':            NinjaSP101,
   'mini-pc':                MllseG2Pro,
   'matter-hub':             MatterHub,

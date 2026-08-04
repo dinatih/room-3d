@@ -102,6 +102,15 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
             </div>
           </div>
 
+          {!isStorage && (item as InventoryItem).price && (
+            <div className="inventory-spec-card">
+              <div className="inventory-spec-label">Prix</div>
+              <div className="inventory-spec-value" style={{ fontWeight: 'bold' }}>
+                {(item as InventoryItem).price} €
+              </div>
+            </div>
+          )}
+
           {!isStorage && (item as InventoryItem).category === 'consumable' && (
             <>
               <div className="inventory-spec-card">
@@ -140,7 +149,9 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
         <hr className="inventory-detail-divider" />
         <div className="inventory-detail-section-label">Notes & Description</div>
         <div className="inventory-detail-notes">
-          {item.notes || "Aucune note descriptive disponible pour cet élément."}
+          {!isStorage && (item as InventoryItem).description 
+            ? (item as InventoryItem).description 
+            : item.notes || "Aucune note descriptive disponible pour cet élément."}
         </div>
 
         <div className="inventory-detail-actions mt-3">

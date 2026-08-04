@@ -51,7 +51,7 @@ export function NissedalFrame({ w, h, ft, fd }: { w: number; h: number; ft: numb
 // ── Composant inventaire GLB ──────────────────────────────────────────────────
 
 export const GLB_40x150 = 'media/glb/ikea-official/NISSEDAL miroir 40x150 noir.glb';
-export const GLB_65x65  = 'media/glb/ikea-official/NISSEDAL miroir 65x65 noir.glb';
+export const GLB_65x65  = 'media/glb/ikea-official/Nissedal50320320.glb';
 
 /**
  * Cadre GLB pour la scène (Mirrors.tsx) : charge le GLB et masque la glace.
@@ -218,7 +218,7 @@ export function NissedalMirror({ item, onSize }: SceneItemProps) {
   if (item.id === 'mirror-nissedal-a') {
     return <NissedalMirrorGlb glb={GLB_40x150} onSize={onSize} />;
   }
-  if (item.id === 'mirror-nissedal-d') {
+  if (item.id === 'mirror-nissedal-d' || item.id === 'nissedal50320320') {
     return <NissedalMirrorGlb glb={GLB_65x65} onSize={onSize} />;
   }
 

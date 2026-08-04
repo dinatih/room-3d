@@ -147,15 +147,28 @@ function RegistryScene({ item, actionState, showDims, onTargetChange }: { item: 
   return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isWalker} showDims={showDims} glbPath={item.glbPath} onTargetChange={onTargetChange} />;
 }
 
-function PhotoGallery({ photos }: { photos: string[] }) {
-  const [idx, setIdx] = useState(0);
+function PhotoGallery({ photos, initialIndex = 0, onIndexChange }: { photos: string[], initialIndex?: number, onIndexChange?: (i: number) => void }) {
+  const [idx, setIdx] = useState(initialIndex);
+  useEffect(() => { setIdx(initialIndex); }, [initialIndex]);
+
+  const handleNext = () => {
+    const next = (idx + 1) % photos.length;
+    setIdx(next);
+    onIndexChange?.(next);
+  };
+  const handlePrev = () => {
+    const prev = (idx - 1 + photos.length) % photos.length;
+    setIdx(prev);
+    onIndexChange?.(prev);
+  };
+
   return (
     <div style={{ position: 'absolute', inset: 0, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <img src={photos[idx]} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }} />
       {photos.length > 1 && (
         <>
-          <button onClick={() => setIdx(i => (i - 1 + photos.length) % photos.length)} style={{ position: 'absolute', left: 4, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.45)', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', padding: '6px 9px', fontSize: 16, lineHeight: 1 }}>‹</button>
-          <button onClick={() => setIdx(i => (i + 1) % photos.length)} style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.45)', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', padding: '6px 9px', fontSize: 16, lineHeight: 1 }}>›</button>
+          <button onClick={handlePrev} style={{ position: 'absolute', left: 4, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.45)', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', padding: '6px 9px', fontSize: 16, lineHeight: 1 }}>‹</button>
+          <button onClick={handleNext} style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.45)', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', padding: '6px 9px', fontSize: 16, lineHeight: 1 }}>›</button>
           <div style={{ position: 'absolute', bottom: 30, left: 0, right: 0, textAlign: 'center', fontSize: 10, color: '#666', pointerEvents: 'none' }}>{idx + 1} / {photos.length}</div>
         </>
       )}
@@ -181,11 +194,13 @@ export function InventoryPreview({
   const actionKeys = item && 'category' in item && (item as InventoryItem).category === 'walkers' ? [] : (item as any)?.actions?.[0] ? [(item as any).actions[0]] : [];
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(true), [autoRotate, setAutoRotate] = useState(true);
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
-  useEffect(() => { setActionStates({}); setViewMode('3d'); setAutoRotate(true); setTarget([0, 0, 0]); }, [item?.id]);
+  const [photoIdx, setPhotoIdx] = useState(0);
+  useEffect(() => { setActionStates({}); setViewMode('3d'); setAutoRotate(true); setTarget([0, 0, 0]); setPhotoIdx(0); }, [item?.id]);
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
   return (
-    <div style={{ width, height, background: '#d2d2d2', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width, flexShrink: 0 }}>
+    <div style={{ width: '100%', height, background: '#d2d2d2', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
       {!item && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444', fontSize: 12, pointerEvents: 'none' }}>Sélectionner un objet</div>}
       {item && (
         <>
@@ -206,7 +221,7 @@ export function InventoryPreview({
               <Grid infiniteGrid fadeDistance={15} cellColor="#999999" sectionColor="#666666" cellSize={0.2} sectionSize={1} position={[0, -0.001, 0]} />
               <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} /></Suspense>
             </Canvas>
-          ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} /> : null}
+          ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
           <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <button onClick={() => setShowDims(v => !v)} style={{ padding: '3px 8px', fontSize: 11, background: 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📏 {showDims ? 'Masquer Dims' : 'Afficher Dims'}</button>
           </div>
@@ -231,14 +246,34 @@ export function InventoryPreview({
               })}
             </div>
           )}
+
+          {/* Debug URLs Overlay */}
+          <div style={{ position: 'absolute', bottom: hideFooter ? 4 : 40, left: 8, zIndex: 3, fontSize: 9, opacity: 0.5, color: '#222', textShadow: '0 0 2px rgba(255,255,255,0.8)', pointerEvents: 'none', whiteSpace: 'nowrap', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'monospace' }} title={`${glbPath || 'No GLB'} | ${photos ? photos.join(', ') : 'No photos'}`}>
+            {glbPath ? `GLB: ${glbPath}` : 'No GLB'} {photos && photos.length > 0 ? `| IMG: ${photos[0]} ${photos.length > 1 ? `(+${photos.length-1})` : ''}` : ''}
+          </div>
+
           {!hideFooter && (
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '6px 10px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center' }}>
-              <div style={{ flex: 1 }}><div style={{ fontWeight: 'bold', fontSize: 12 }}>{item.name}</div><div style={{ opacity: 0.8 }}>{item.dims.w}×{item.dims.d}×{item.dims.h} cm</div></div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 'bold', fontSize: 12 }}>{item.name}</div>
+                <div style={{ opacity: 0.8 }}>
+                  {item.dims.w}×{item.dims.d}×{item.dims.h} cm
+                  {'price' in item && item.price ? ` · ${item.price} €` : ''}
+                </div>
+              </div>
               {item && 'url' in item && (item as InventoryItem).url && <a href={(item as InventoryItem).url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} title={(item as InventoryItem).url} style={{ marginLeft: 8, color: '#7ab8ff', textDecoration: 'none', pointerEvents: 'auto' }}>🔗</a>}
             </div>
           )}
         </>
       )}
+    </div>
+    {item && hasPhotos && (
+      <div style={{ display: 'flex', overflowX: 'auto', gap: 6, padding: '8px', scrollbarWidth: 'thin', width: '100%', background: '#eaeaea' }}>
+        {photos!.map((p, i) => (
+          <img key={i} src={p} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 4, flexShrink: 0, border: '1px solid #ccc', background: '#fff', cursor: 'pointer', opacity: photoIdx === i && viewMode === 'photos' ? 0.5 : 1 }} onClick={() => { setPhotoIdx(i); setViewMode('photos'); }} title="Voir cette photo" />
+        ))}
+      </div>
+    )}
     </div>
   );
 }
