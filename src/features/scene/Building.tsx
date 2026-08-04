@@ -567,16 +567,33 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
               ))}
 
               {/* Mur en face du jardin (parallèle au Mur diag) */}
-              <mesh
-                ref={(m) => { if (m) m.material = northMats as any; }}
-                position={[150, WALL_H / 2, -786.33]}
-                rotation-y={DiagWall.rotY + Math.PI / 2}
-                castShadow
-                receiveShadow
-                userData={{ animUnit: true, brickType: 'wall', side: 'gardenFront' }}
-              >
-                <boxGeometry args={[1200, WALL_H, 40]} />
-              </mesh>
+              {(() => {
+                const wallLen = 1200;
+                const maxLen = 40;
+                const count = Math.ceil(wallLen / maxLen);
+                const step = wallLen / count;
+                const cx = 150;
+                const cz = -786.33;
+                const rotY = DiagWall.rotY + Math.PI / 2;
+                return Array.from({ length: count }).map((_, i) => {
+                  const localX = -wallLen / 2 + (i + 0.5) * step;
+                  const dx = localX * Math.cos(rotY);
+                  const dz = -localX * Math.sin(rotY);
+                  return (
+                    <mesh
+                      key={i}
+                      ref={(m) => { if (m) m.material = northMats as any; }}
+                      position={[cx + dx, WALL_H / 2, cz + dz]}
+                      rotation-y={rotY}
+                      castShadow
+                      receiveShadow
+                      userData={{ animUnit: true, brickType: 'wall', side: 'gardenFront' }}
+                    >
+                      <boxGeometry args={[step, WALL_H, 40]} />
+                    </mesh>
+                  );
+                });
+              })()}
             </group>
           )}
         </group>
