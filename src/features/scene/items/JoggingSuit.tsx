@@ -11,7 +11,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 import { BaseballCap } from './BaseballCap';
 
-const TARGET_H = 155;
+const TARGET_H = 145;
 const red = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
 
 export function JoggingSuit({ onSize }: SceneItemProps) {
@@ -30,7 +30,7 @@ export function JoggingSuit({ onSize }: SceneItemProps) {
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
-      -box.min.y,
+      -box.min.y + 10,
       -(box.min.z + box.max.z) / 2,
     );
     onSize(box.getSize(new THREE.Vector3()));
