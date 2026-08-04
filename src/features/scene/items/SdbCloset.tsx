@@ -11,14 +11,14 @@ import { useRef, useLayoutEffect, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
+import { DiagWall, BATH_Z_END } from '@config';
 
-const W       = 120;   // SLIDE_X1 - SLIDE_X0
+const W       = 123.4; // BATH_E_FACE (192) - SHOWER_E_X (68.6)
 const H       = 250;   // WALL_H
-const PANEL_W = W / 2; // 60
+const PANEL_W = W / 2; // 61.7
 const PANEL_T = 2.3;
 const SEP_T   = 1;
 const RAIL_D  = 7;
-const TRI_D   = 60;    // profondeur étagère triangulaire
 const SHELF_Y = 170;
 const SHELF_T = 2;
 
@@ -47,12 +47,26 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   }, []);
 
   const shelfGeo = useMemo(() => {
-    // Forme triangulaire en coords locales (XY), extrusion Z → après rotateX(-π/2) → XZ
-    // Vertices locaux résultants : (−55,170,0), (+55,170,0), (−55,170,TRI_D)
+    // Coordonnées du centre du placard dans le monde (fixé dans Placements.tsx)
+    const WORLD_X_CENTER = 130.3;
+    
+    // Pour -W/2 (côté gauche) :
+    const xL = WORLD_X_CENTER - W / 2;
+    const zL = DiagWall.A.z + (xL - DiagWall.A.x) * DiagWall.slope;
+    const depthL = zL - BATH_Z_END;
+
+    // Pour +W/2 (côté droit) :
+    const xR = WORLD_X_CENTER + W / 2;
+    const zR = DiagWall.A.z + (xR - DiagWall.A.x) * DiagWall.slope;
+    const depthR = zR - BATH_Z_END;
+
+    // Y du Shape devient -Z dans la 3D (après rotateX(-PI/2))
+    // Donc une profondeur vers le sud (+Z) correspond à un Y négatif dans le Shape.
     const shape = new THREE.Shape();
-    shape.moveTo(-W / 2, 0);
-    shape.lineTo(+W / 2, 0);
-    shape.lineTo(-W / 2, -TRI_D);
+    shape.moveTo(-W / 2, 0);          // Avant gauche
+    shape.lineTo(+W / 2, 0);          // Avant droit
+    shape.lineTo(+W / 2, -depthR);    // Arrière droit
+    shape.lineTo(-W / 2, -depthL);    // Arrière gauche
     shape.closePath();
     const geo = new THREE.ExtrudeGeometry(shape, { depth: SHELF_T, bevelEnabled: false });
     geo.rotateX(-Math.PI / 2);
