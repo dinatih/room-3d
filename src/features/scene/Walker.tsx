@@ -1498,26 +1498,33 @@ function SingleCharacter({
       groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
     } else {
       if (isActive) {
-        groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
-        groupRef.current.rotation.y = cameraState.walkYaw;
-        groupRef.current.visible = !cameraState.walkerHidden;
-      } else if (isNPC) {
-        if (id === 'xbot') {
+        if (isGuidedTour) {
           const agentState = updateAgent(delta);
-          groupRef.current.position.set(agentState.x, npcPosition[1], agentState.z);
+          groupRef.current.position.set(agentState.x, 0, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
           customAnimName.current = agentState.animation;
-          groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
+          groupRef.current.visible = !cameraState.walkerHidden;
+          
+          // Synchronise la position IA avec la caméra FPV
+          cameraState.walkerX = agentState.x;
+          cameraState.walkerZ = agentState.z;
+          cameraState.walkYaw = agentState.rotY;
+          cameraState.isAIControlled = true;
         } else {
-          const savedPos = cameraState.positions[id];
-          const px = savedPos ? savedPos.x : npcPosition[0];
-          const py_pos = savedPos ? savedPos.y : npcPosition[1];
-          const pz = savedPos ? savedPos.z : npcPosition[2];
-          const py_rot = savedPos ? savedPos.yaw : npcRotationY;
-          groupRef.current.position.set(px, py_pos, pz);
-          groupRef.current.rotation.y = py_rot;
-          groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
+          groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
+          groupRef.current.rotation.y = cameraState.walkYaw;
+          groupRef.current.visible = !cameraState.walkerHidden;
+          cameraState.isAIControlled = false;
         }
+      } else if (isNPC) {
+        const savedPos = cameraState.positions[id];
+        const px = savedPos ? savedPos.x : npcPosition[0];
+        const py_pos = savedPos ? savedPos.y : npcPosition[1];
+        const pz = savedPos ? savedPos.z : npcPosition[2];
+        const py_rot = savedPos ? savedPos.yaw : npcRotationY;
+        groupRef.current.position.set(px, py_pos, pz);
+        groupRef.current.rotation.y = py_rot;
+        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
       } else {
         groupRef.current.visible = false;
       }

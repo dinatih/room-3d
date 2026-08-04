@@ -16,6 +16,7 @@ export const cameraState = {
   /** Walk mode : état partagé avec Walker.tsx */
   isWalking: false as boolean,
   isMoving:  false as boolean,
+  isAIControlled: false as boolean,
   walkYaw:   0     as number,
   walkPitch: 0     as number,
   /** Position et orientation du walker unique (synchro dynamique depuis CHARACTERS) */

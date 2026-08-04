@@ -503,12 +503,16 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       || (modeRef.current === 'orbit' && (keys.current.has('ArrowUp') || keys.current.has('ArrowDown')));
 
     if (modeRef.current === 'walk') {
-      cameraState.walkYaw   = walkYaw.current;
-      cameraState.walkPitch = walkPitch.current;
+      if (!cameraState.isAIControlled) {
+        cameraState.walkYaw   = walkYaw.current;
+        cameraState.walkPitch = walkPitch.current;
+      }
 
       // Sync walker position for minimap in walk mode
-      cameraState.walkerX = walkPos.current.x;
-      cameraState.walkerZ = walkPos.current.z;
+      if (!cameraState.isAIControlled) {
+        cameraState.walkerX = walkPos.current.x;
+        cameraState.walkerZ = walkPos.current.z;
+      }
     }
 
     // Sync walker yaw for minimap before onUpdate call
@@ -617,6 +621,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
 
     if (modeRef.current !== 'walk') return;
+    if (cameraState.isAIControlled) {
+      walkPos.current.x = cameraState.walkerX;
+      walkPos.current.z = cameraState.walkerZ;
+      walkYaw.current = cameraState.walkerYaw;
+      updateWalkLook();
+      return;
+    }
+
     if (keys.current.size === 0) return;
 
     // Keep rendering while keys are held in walk mode
