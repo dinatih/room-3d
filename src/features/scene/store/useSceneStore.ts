@@ -58,7 +58,6 @@ const initialLayers: LayerState = {
   grid: false,
   gridDepth: false,
   laraGrid: false,
-  realWorld: false,
   showAllLaraStyles: true,
   skeleton: false,
   ceiling: false,

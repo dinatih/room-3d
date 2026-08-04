@@ -17,7 +17,7 @@ import { Stove }          from './Stove';
 import { KitchenCabinet } from './KitchenCabinet';
 import { Fridge }         from './Fridge';
 import { DroneCell } from './Drona';
-import { Lillhavet }      from './Lillhavet';
+import { Lillhavet80461276 } from './Lillhavet80461276';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -120,7 +120,7 @@ export function CuisineDrona() {
 export function CuisineLillhavet() {
   return (
     <group position={[75, 155, 41]}>
-      <Lillhavet item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <Lillhavet80461276 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
     </group>
   );
 }

@@ -40,7 +40,7 @@ import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
 import { MeasurementTool }            from './MeasurementTool';
-import { ParisMap }                   from './ParisMap';
+
 
 import {
   ROOM_W,
@@ -280,7 +280,7 @@ export function Studio() {
         camera={{
           fov:  50,
           near: 5,
-          far:  2000000,
+          far:  10000,
           position: [ROOM_W / 2, 1000, -150],
         }}
         shadows={{ type: PCFSoftShadowMap }}
@@ -403,10 +403,6 @@ export function Studio() {
             </CategoryLayerGroup>
           )}
 
-          {/* Paris Map (Monde réel) */}
-          {layers.realWorld && (
-            <ParisMap />
-          )}
 
         </group>
         </Suspense>

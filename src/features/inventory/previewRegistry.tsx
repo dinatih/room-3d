@@ -14,6 +14,7 @@ import { DoorLiving, DoorBath }                        from '@features/scene/ite
 import { DoorFrame }                                  from '@features/scene/items/DoorFrame';
 import { GlassDoor }                                  from '@features/scene/items/GlassDoor';
 import { Toilet }                                     from '@features/scene/items/Toilet';
+import { Lillhavet80461276 } from '@features/scene/items/Lillhavet80461276';
 import { WaterHeater }                                from '@features/scene/items/WaterHeater';
 import { CorridorCloset }                             from '@features/scene/items/CorridorCloset';
 import { SdbCloset }                                  from '@features/scene/items/SdbCloset';
@@ -71,6 +72,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'door-sdb':               DoorBath,
   'door-glass':             GlassDoor,
   'door-frame':             DoorFrame,
+  'lillhavet80461276':      Lillhavet80461276,
   'toilet':                 Toilet,
   'corridor-closet':        CorridorCloset,
   'sdb-closet':             SdbCloset,
