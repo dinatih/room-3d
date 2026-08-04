@@ -264,10 +264,10 @@ export function Furniture() {
         <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* 2 sacs DIMPA contre le mur Ouest, entre le MeubleT et la Drona */}
-      <group position={[11, 0, 169.25]} rotation-y={Math.PI / 2} userData={{ isIkea: true }}>
+      <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ isIkea: true }}>
         <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[11, 0, 237.25]} rotation-y={Math.PI / 2} userData={{ isIkea: true }}>
+      <group position={[16, 0, 225]} rotation-y={Math.PI / 2} userData={{ isIkea: true }}>
         <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ isIkea: true }}>
@@ -309,8 +309,8 @@ export function Furniture() {
 function Beds() {
   return (
     <>
-      {/* Lit Ouest (haut, principal) — au sol (Y = 0), contre la Drona qui est contre le Mackapar (Z = 172.5) */}
-      <group position={[74, 0, 172.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Lit Utåker Ouest (Principal)' } }}>
+      {/* Lit Ouest (haut, principal) — au sol (Y = 0), contre la Drona qui est contre le Mackapar (Z = 161.5) */}
+      <group position={[74, 0, 161.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Lit Utåker Ouest (Principal)' } }}>
         <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Lit Est (bas, secondaire, amour) — au sol (Y = 0), position fixe mur Est (Z = 190 cm) */}
@@ -634,7 +634,7 @@ export function DronaBoxes() {
   const standalone = [
     { cx: DOOR_START - 31, cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },
     { cx: NICHE_X + 20,    cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },
-    { cx: 16.5,            cy: 0 + DF / 2 + 0.2,  cz: 289, rotY: Math.PI / 2 },
+    { cx: 16.5,            cy: 0 + DF / 2 + 0.2,  cz: 278, rotY: Math.PI / 2 },
   ];
   return (
     <group userData={{ isIkea: true }}>
