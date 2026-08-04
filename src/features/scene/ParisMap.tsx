@@ -30,6 +30,13 @@ export function ParisMap() {
           metalness: 0.0,
         });
         
+        // Anti z-fighting pour les routes plaquées sur le sol
+        if (name.includes('road') || name.includes('path') || name.includes('pedestrian') || name.includes('footway') || name.includes('railway')) {
+          child.material.polygonOffset = true;
+          child.material.polygonOffsetFactor = -1;
+          child.material.polygonOffsetUnits = -1;
+        }
+
         child.castShadow = true;
         child.receiveShadow = true;
       }
@@ -38,19 +45,23 @@ export function ParisMap() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey) {
-        setPos(p => {
-          let np = [...p] as [number, number, number];
-          if (e.key === 'ArrowUp') np[2] -= 100;
-          if (e.key === 'ArrowDown') np[2] += 100;
-          if (e.key === 'ArrowLeft') np[0] -= 100;
-          if (e.key === 'ArrowRight') np[0] += 100;
-          if (e.key === 'PageUp') np[1] += 100;
-          if (e.key === 'PageDown') np[1] -= 100;
-          console.log('Map position:', np);
-          return np;
-        });
-      }
+      // Ignorer si on tape dans un input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      setPos(p => {
+        let np = [...p] as [number, number, number];
+        let moved = false;
+        
+        if (e.key === 'i' || e.key === 'I') { np[2] -= 100; moved = true; }
+        if (e.key === 'k' || e.key === 'K') { np[2] += 100; moved = true; }
+        if (e.key === 'j' || e.key === 'J') { np[0] -= 100; moved = true; }
+        if (e.key === 'l' || e.key === 'L') { np[0] += 100; moved = true; }
+        if (e.key === 'o' || e.key === 'O') { np[1] += 100; moved = true; }
+        if (e.key === 'u' || e.key === 'U') { np[1] -= 100; moved = true; }
+        
+        if (moved) console.log('Map position:', np);
+        return np;
+      });
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
