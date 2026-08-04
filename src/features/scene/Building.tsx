@@ -214,6 +214,28 @@ function DiagBox({ d1, d2, yBase = 0, h = WALL_H, mat = southMats, userData }: {
   );
 }
 
+function SplitDiagBox(props: {
+  d1: number; d2: number; yBase?: number; h?: number; mat?: THREE.Material | THREE.Material[]; userData?: any;
+}) {
+  const MAX_LEN = 40;
+  const len = props.d2 - props.d1;
+  if (len <= MAX_LEN) return <DiagBox {...props} />;
+  const count = Math.ceil(len / MAX_LEN);
+  const step = len / count;
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <DiagBox
+          key={i}
+          {...props}
+          d1={props.d1 + i * step}
+          d2={props.d1 + (i + 1) * step}
+        />
+      ))}
+    </>
+  );
+}
+
 /** ExtrudeGeometry depuis une liste de points [worldX, worldZ]. */
 export function makeExtrudeGeo(
   pts: [number, number][],
@@ -534,8 +556,8 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                 return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
               })}
               {/* Mur diagonal */}
-              <DiagBox d1={DiagWall.door.start} d2={DiagWall.door.end} yBase={DOOR_H} h={WALL_H - DOOR_H} userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
-              <DiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
+              <SplitDiagBox d1={DiagWall.door.start} d2={DiagWall.door.end} yBase={DOOR_H} h={WALL_H - DOOR_H} userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
+              <SplitDiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
 
               {/* Panneaux bois occultants jardin */}
               {GARDEN_PANEL_DEFS.map((p, i) => (
