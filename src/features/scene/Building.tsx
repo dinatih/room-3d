@@ -217,23 +217,7 @@ function DiagBox({ d1, d2, yBase = 0, h = WALL_H, mat = southMats, userData }: {
 function SplitDiagBox(props: {
   d1: number; d2: number; yBase?: number; h?: number; mat?: THREE.Material | THREE.Material[]; userData?: any;
 }) {
-  const MAX_LEN = 40;
-  const len = props.d2 - props.d1;
-  if (len <= MAX_LEN) return <DiagBox {...props} />;
-  const count = Math.ceil(len / MAX_LEN);
-  const step = len / count;
-  return (
-    <>
-      {Array.from({ length: count }).map((_, i) => (
-        <DiagBox
-          key={i}
-          {...props}
-          d1={props.d1 + i * step - (i > 0 ? 0.1 : 0)}
-          d2={props.d1 + (i + 1) * step + (i < count - 1 ? 0.1 : 0)}
-        />
-      ))}
-    </>
-  );
+  return <DiagBox {...props} />;
 }
 
 /** ExtrudeGeometry depuis une liste de points [worldX, worldZ]. */
@@ -569,31 +553,21 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
               {/* Mur en face du jardin (parallèle au Mur diag) */}
               {(() => {
                 const wallLen = 1200;
-                const maxLen = 40;
-                const count = Math.ceil(wallLen / maxLen);
-                const step = wallLen / count;
                 const cx = 150;
                 const cz = -786.33;
                 const rotY = DiagWall.rotY + Math.PI / 2;
-                return Array.from({ length: count }).map((_, i) => {
-                  const localX = -wallLen / 2 + (i + 0.5) * step;
-                  const dx = localX * Math.cos(rotY);
-                  const dz = -localX * Math.sin(rotY);
-                  const chunkLen = step + (i > 0 && i < count - 1 ? 0.2 : 0.1);
-                  return (
-                    <mesh
-                      key={i}
-                      ref={(m) => { if (m) m.material = northMats as any; }}
-                      position={[cx + dx, WALL_H / 2, cz + dz]}
-                      rotation-y={rotY}
-                      castShadow
-                      receiveShadow
-                      userData={{ animUnit: true, brickType: 'wall', side: 'gardenFront' }}
-                    >
-                      <boxGeometry args={[chunkLen, WALL_H, 40]} />
-                    </mesh>
-                  );
-                });
+                return (
+                  <mesh
+                    ref={(m) => { if (m) m.material = northMats as any; }}
+                    position={[cx, WALL_H / 2, cz]}
+                    rotation-y={rotY}
+                    castShadow
+                    receiveShadow
+                    userData={{ animUnit: true, brickType: 'wall', side: 'gardenFront' }}
+                  >
+                    <boxGeometry args={[wallLen, WALL_H, 40]} />
+                  </mesh>
+                );
               })()}
             </group>
           )}
