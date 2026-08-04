@@ -17,7 +17,7 @@ import { Variera32x13 }   from './Variera32x13';
 import { MeubleT }        from './MeubleT';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
-import { Dimpa10056770 } from './Dimpa10056770';
+
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
 const TF = 3.5, TI = 1.5, NH = 34, NW_K = 33.5;
@@ -113,13 +113,7 @@ export function KallaxNW({ onSize }: SceneItemProps) {
       <group position={[75, 0, 0.75]} rotation-y={Math.PI}>
         <MeubleT item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* 2 sacs DIMPA à gauche du MeubleT et contre les miroirs */}
-      <group position={[125, 0, 13.5]}>
-        <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <group position={[145, 0, 13.5]}>
-        <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
+
     </group>
   );
 }

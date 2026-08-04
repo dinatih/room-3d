@@ -70,6 +70,7 @@ import { Tisken }        from './items/Tisken';
 import { Tackan }        from './items/Tackan';
 import { Vathult }       from './items/Vathult';
 import { DroneCell } from './items/Drona';
+import { Dimpa10056770 } from './items/Dimpa10056770';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 
@@ -261,6 +262,13 @@ export function Furniture() {
       {/* JBL Charge 3 — debout sur le dessus du KallaxNE (h1+h2+Variera=133.5), côté lit */}
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 118, w2 - 11]}>
         <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* 2 sacs DIMPA contre le mur Ouest, entre le MeubleT et la Drona */}
+      <group position={[11, 0, 169.25]} rotation-y={Math.PI / 2} userData={{ isIkea: true }}>
+        <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[11, 0, 237.25]} rotation-y={Math.PI / 2} userData={{ isIkea: true }}>
+        <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ isIkea: true }}>
         <KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} />

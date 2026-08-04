@@ -665,16 +665,40 @@ export function SidePanel({
         </div>
       )}
       <div className="text-muted fw-semibold mb-1 text-dark mt-2" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🤖 Actions IA (Autopilot)</div>
-      <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
-        onClick={() => useSceneStore.getState().triggerAction('aiGoToilet')}
-        style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent' }}
-      >
-        <span>Aller aux toilettes 🚽</span>
-        <span className={`badge ${extraStates.aiGoToilet ? 'bg-primary' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
-          {extraStates.aiGoToilet ? 'EN COURS' : 'JOUER'}
-        </span>
-      </button>
+      {(() => {
+        const aiBtn = (label: string, key: string, emoji: string) => {
+          const isPlaying = extraStates[key as keyof typeof extraStates];
+          return (
+            <button
+              key={key}
+              className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+              onClick={() => useSceneStore.getState().triggerAction(key)}
+              style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent' }}
+            >
+              <span>{label} {emoji}</span>
+              <span className={`badge ${isPlaying ? 'bg-primary' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+                {isPlaying ? 'EN COURS' : 'JOUER'}
+              </span>
+            </button>
+          );
+        };
+        return (
+          <>
+            {aiBtn('Aller aux toilettes (pipi)', 'aiGoToilet', '🚽')}
+            {aiBtn('Travailler Bureau 1', 'aiSitDesk1', '💻')}
+            {aiBtn('Travailler Bureau 2', 'aiSitDesk2', '💻')}
+            {aiBtn('Dormir Lit Principal (Ouest)', 'aiBedWest', '🛌')}
+            {aiBtn('Dormir Lit Secondaire (Est)', 'aiBedEast', '🛌')}
+            {aiBtn('Se baigner (Baignoire)', 'aiBathtub', '🛀')}
+            {aiBtn('Se doucher', 'aiShower', '🚿')}
+            {aiBtn('Détente Canapé Jardin Est', 'aiGardenSofaEast', '🛋️')}
+            {aiBtn('Détente Canapé Jardin Ouest', 'aiGardenSofaWest', '🛋️')}
+            {aiBtn('Faire à manger (Cuisine)', 'aiCooking', '🍳')}
+            {aiBtn('Prendre objet Kallax NE', 'aiKallaxNE', '📦')}
+            {aiBtn('Prendre l\'air au fond du jardin', 'aiFreshAir', '🌳')}
+          </>
+        );
+      })()}
       <div className="text-muted fw-semibold mb-1 text-dark mt-3" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⚙️ Options d'affichage</div>
       {layerBtn('light',  'Personnage 3D (Walker)', 'walker')}
       {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}

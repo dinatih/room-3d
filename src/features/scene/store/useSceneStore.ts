@@ -90,6 +90,17 @@ const initialExtraStates: Record<string, boolean> = {
   wcLid: false,
   'walker-meshes': false,
   aiGoToilet: false,
+  aiSitDesk1: false,
+  aiSitDesk2: false,
+  aiBedWest: false,
+  aiBedEast: false,
+  aiBathtub: false,
+  aiShower: false,
+  aiGardenSofaEast: false,
+  aiGardenSofaWest: false,
+  aiCooking: false,
+  aiKallaxNE: false,
+  aiFreshAir: false,
 };
 
 function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 'transient'; name: string } {

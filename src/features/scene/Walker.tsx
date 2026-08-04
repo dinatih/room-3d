@@ -14,7 +14,20 @@ import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { LAYER_WALKER_DETAIL, LAYER_WALKER } from '@config';
 import { applyLaraVariantStyles, type LaraVariant } from './LaraVariants';
-import { ACTION_GO_TO_TOILET } from './ai/ZoneNodes';
+import { 
+  ACTION_GO_TO_TOILET,
+  ACTION_SIT_DESK_1,
+  ACTION_SIT_DESK_2,
+  ACTION_BED_WEST,
+  ACTION_BED_EAST,
+  ACTION_BATHTUB,
+  ACTION_SHOWER,
+  ACTION_GARDEN_SOFA_EAST,
+  ACTION_GARDEN_SOFA_WEST,
+  ACTION_COOKING,
+  ACTION_KALLAX_NE,
+  ACTION_FRESH_AIR
+} from './ai/ZoneNodes';
 import { useAgentController } from './ai/useAgentController';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
@@ -755,12 +768,47 @@ function SingleCharacter({
   const { invalidate } = useThree();
 
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
-  const aiGoToilet = useSceneStore(state => state.extraStates.aiGoToilet);
-  const isGuidedTour = aiGoToilet && id === activeWalkerId;
+  const extraStates = useSceneStore(state => state.extraStates);
+  
+  const activeActionKey = useMemo(() => {
+    if (extraStates.aiGoToilet) return 'aiGoToilet';
+    if (extraStates.aiSitDesk1) return 'aiSitDesk1';
+    if (extraStates.aiSitDesk2) return 'aiSitDesk2';
+    if (extraStates.aiBedWest) return 'aiBedWest';
+    if (extraStates.aiBedEast) return 'aiBedEast';
+    if (extraStates.aiBathtub) return 'aiBathtub';
+    if (extraStates.aiShower) return 'aiShower';
+    if (extraStates.aiGardenSofaEast) return 'aiGardenSofaEast';
+    if (extraStates.aiGardenSofaWest) return 'aiGardenSofaWest';
+    if (extraStates.aiCooking) return 'aiCooking';
+    if (extraStates.aiKallaxNE) return 'aiKallaxNE';
+    if (extraStates.aiFreshAir) return 'aiFreshAir';
+    return null;
+  }, [extraStates]);
+
+  const activeActionScenario = useMemo(() => {
+    switch (activeActionKey) {
+      case 'aiGoToilet': return ACTION_GO_TO_TOILET;
+      case 'aiSitDesk1': return ACTION_SIT_DESK_1;
+      case 'aiSitDesk2': return ACTION_SIT_DESK_2;
+      case 'aiBedWest': return ACTION_BED_WEST;
+      case 'aiBedEast': return ACTION_BED_EAST;
+      case 'aiBathtub': return ACTION_BATHTUB;
+      case 'aiShower': return ACTION_SHOWER;
+      case 'aiGardenSofaEast': return ACTION_GARDEN_SOFA_EAST;
+      case 'aiGardenSofaWest': return ACTION_GARDEN_SOFA_WEST;
+      case 'aiCooking': return ACTION_COOKING;
+      case 'aiKallaxNE': return ACTION_KALLAX_NE;
+      case 'aiFreshAir': return ACTION_FRESH_AIR;
+      default: return null;
+    }
+  }, [activeActionKey]);
+
+  const isGuidedTour = activeActionKey && id === activeWalkerId;
   
   const { update: updateAgent } = useAgentController(
     id,
-    isGuidedTour ? ACTION_GO_TO_TOILET : null,
+    isGuidedTour ? activeActionScenario : null,
     false, // pas de boucle pour cette action
     () => {
       if (groupRef.current) {
@@ -773,9 +821,11 @@ function SingleCharacter({
       return { x: npcPosition[0], z: npcPosition[2], rotY: npcRotationY };
     },
     () => {
-      useSceneStore.setState(s => ({
-        extraStates: { ...s.extraStates, aiGoToilet: false }
-      }));
+      if (activeActionKey) {
+        useSceneStore.setState(s => ({
+          extraStates: { ...s.extraStates, [activeActionKey]: false }
+        }));
+      }
     }
   );
 
@@ -1463,6 +1513,7 @@ function SingleCharacter({
           const cacheKey = id + '_' + customIdleAnimPath;
           let finalClip = _retargetCache[cacheKey];
           if (!finalClip) {
+            gltf.scene.updateMatrixWorld(true);
             finalClip = retargetClip(clip, scene, gltf.scene);
             _retargetCache[cacheKey] = finalClip;
           }
@@ -1584,6 +1635,7 @@ function SingleCharacter({
               const cacheKey = id + '_' + target;
               let finalClip = _retargetCache[cacheKey];
               if (!finalClip) {
+                gltf.scene.updateMatrixWorld(true);
                 finalClip = retargetClip(clip, scene, gltf.scene);
                 _retargetCache[cacheKey] = finalClip;
               }
