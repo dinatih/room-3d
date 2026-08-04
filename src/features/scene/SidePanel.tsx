@@ -514,8 +514,8 @@ export function SidePanel({
       {furnitureBtn('Placard Couloir', 'corrDoors', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Placard SDB Gauche', 'sdbClosetL', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Placard SDB Droite', 'sdbClosetR', 'OUVERT', 'FERMÉ')}
-      {furnitureBtn('SDB Ouest', 'cbnWest', 'OUVERT', 'FERMÉ')}
-      {furnitureBtn('SDB Est', 'cbnEast', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Armoire SDB Ouest', 'cbnWest', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Armoire SDB Est', 'cbnEast', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Meuble sous évier', 'cabinet', 'OUVERT', 'FERMÉ')}
       
       <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>MOBILIER & ÉLECTRO</div>

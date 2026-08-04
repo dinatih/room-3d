@@ -9,6 +9,7 @@
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
+import { BaseballCap } from './BaseballCap';
 
 const W  = 60;    // largeur
 const D  = 26;    // profondeur
@@ -93,6 +94,11 @@ export function ShoeHatRack({ onSize }: SceneItemProps) {
           <Tube p1={[x, barY+7,      TR]} p2={[x, barY+11.5, TR+5.5]}    />
           {/* Crochet bas */}
           <Tube p1={[x, barY+3.85,   TR]} p2={[x, barY+6.85,  TR+4]}     />
+          
+          {/* Casquette sur le crochet haut */}
+          <group position={[x, barY+8, TR+5.5]} rotation={[-Math.PI/6, 0, 0]}>
+            <BaseballCap onSize={() => {}} actionState={{}} item={{} as any} />
+          </group>
         </group>
       )))}
     </group>
