@@ -1,7 +1,7 @@
 /**
  * UtakerFrame.tsx — Cadre lit IKEA Utåker (GLB) + matelas et housses procéduraux.
- * id 'utaker-lower' → cadre bas GLB, matelas bleu, H=18 cm
- * id 'utaker-upper' → cadre haut GLB, matelas blanc, H=24 cm + couette rouge
+ * id 'utaker-lower' → cadre bas GLB, matelas Vestmarka
+ * id 'utaker-upper' → cadre haut GLB, matelas Anneland + surmatelas Nasfjallet
  * Coordonnées locales : centré XZ (longueur sur X), Y=0 = sol.
  */
 import { useLayoutEffect, useRef } from 'react';
@@ -10,43 +10,14 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
+import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+
+import { Anneland70481722 } from './Anneland70481722';
+import { Vestmarka90470195 } from './Vestmarka90470195';
+import { Nasfjallet10558045 } from './Nasfjallet10558045';
 
 const BAS_GLB  = 'media/glb/ikea-official/UTÅKER lit empilable 80x200 pin (bas).glb';
 const HAUT_GLB = 'media/glb/ikea-official/UTÅKER lit empilable 80x200 pin (haut).glb';
-
-const redMat = new THREE.MeshStandardMaterial({ 
-  color: 0xcc2222, 
-  roughness: 0.75
-});
-
-function Mattress({ matColor, matHeight }: { matColor: number; matHeight: number }) {
-  const mat = new THREE.MeshStandardMaterial({ color: matColor, roughness: 0.8 });
-  return (
-    <mesh position={[0, 11 + matHeight / 2, 0]} castShadow receiveShadow material={mat}>
-      <boxGeometry args={[200, matHeight, 80]} />
-    </mesh>
-  );
-}
-
-function Bedcovers({ matHeight }: { matHeight: number }) {
-  const top = 11 + matHeight;
-  const polR = 8, polL = 90;
-  return (
-    <group>
-      <mesh position={[1.5, top + 0.6 + 0.05, 0]} castShadow receiveShadow material={redMat}><boxGeometry args={[203.1, 1.2, 86.1]} /></mesh>
-      {([-1, 1] as const).map(s => (
-        <mesh key={s} position={[1.5, top - 10, s * 43.05]} castShadow material={redMat}><boxGeometry args={[203.1, 20, 1.2]} /></mesh>
-      ))}
-      <mesh position={[103.05, top - 10, 0]} castShadow material={redMat}><boxGeometry args={[1.2, 20, 86.1]} /></mesh>
-      {([-50, 50] as const).map(cx => (
-        <mesh key={cx} position={[cx, top + 1.2 + polR + 0.5, 40 - polR - 1]}
-          rotation={[0, 0, -Math.PI / 2]} castShadow material={redMat}>
-          <cylinderGeometry args={[polR, polR, polL, 12]} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
 
 function Cadre({ glbPath }: { glbPath: string }) {
   const { scene } = useGLTFClone(glbPath);
@@ -64,8 +35,6 @@ function Cadre({ glbPath }: { glbPath: string }) {
 export function UtakerFrame({ item, onSize }: SceneItemProps) {
   const groupRef = useRef<THREE.Group>(null!);
   const isUpper  = item.id === 'utaker-upper';
-  const matColor = isUpper ? 0xffffff : 0xcc2222;
-  const matHeight = isUpper ? 24 : 18;
   const glbPath  = isUpper ? HAUT_GLB : BAS_GLB;
 
   useLayoutEffect(() => {
@@ -76,8 +45,20 @@ export function UtakerFrame({ item, onSize }: SceneItemProps) {
   return (
     <group ref={groupRef}>
       <Cadre glbPath={glbPath} />
-      <Mattress matColor={matColor} matHeight={matHeight} />
-      {isUpper && <Bedcovers matHeight={matHeight} />}
+      {isUpper ? (
+        <>
+          <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
+            <Anneland70481722 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          </group>
+          <group position={[0, 11 + 24, 0]} rotation-y={Math.PI / 2}>
+            <Nasfjallet10558045 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          </group>
+        </>
+      ) : (
+        <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
+          <Vestmarka90470195 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      )}
     </group>
   );
 }
