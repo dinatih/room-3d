@@ -59,7 +59,7 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'sara', name: 'Sara', path: 'media/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_climbing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_climbing.glb' },
   { id: 'cha', name: 'Cha', path: 'media/lara_native.glb', pos: [85, 0, 272], rot: Math.PI / 2, variant: 'cha', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_sitting_laughing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_sitting_laughing.glb' },
   { id: 'vivid', name: 'ViviDa', path: 'media/lara_native.glb', pos: [200, 0, 215], rot: Math.PI, variant: 'vivid', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_texting_while_standing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_texting_while_standing.glb' },
-  { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [250, 0, 500], rot: 0, variant: 'native', height: 173.4, isLara: false },
+  { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [288, 0, 603], rot: 0, variant: 'native', height: 173.4, isLara: false },
   {
     id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [100, 0, 370], rot: Math.atan2(158 - 100, 200 - 370), variant: 'sabira', height: 173.4,
     customIdleAnimPath: [

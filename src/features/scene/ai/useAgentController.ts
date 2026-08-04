@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { AgentInstruction } from './aiTypes';
 import { ZONES } from './ZoneNodes';
+import { useSceneStore } from '../store/useSceneStore';
 
 export interface AgentState {
   x: number;
@@ -56,7 +57,7 @@ export function useAgentController(
         statusRef.current = 'INTERACTING';
         timerRef.current = currentInstruction.duration || 1.0;
         if (currentInstruction.triggerEventKey) {
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: currentInstruction.triggerEventKey, value: true } }));
+          useSceneStore.getState().toggleFurniture(currentInstruction.triggerEventKey as any);
         }
       }
     }
