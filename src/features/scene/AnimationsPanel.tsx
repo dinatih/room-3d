@@ -56,7 +56,7 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
 
   const anyRunning   = ANIMS.some(a => props[a.key] as boolean);
   const activeKey    = ANIMS.find(a => props[a.key] as boolean)?.key ?? null;
-  const activeAnim   = ANIMS.find(a => props[a.key] as boolean) ?? null;
+
   const [expanded, setExpanded] = useState(false);
   
   // Mobile : collapsed par défaut, déplié auto en cours d'animation
@@ -117,59 +117,58 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
         const isActive = props[a.key] as boolean;
         const dur      = props.durations[a.key];
         return (
-          <button
-            key={a.key}
-            disabled={anyRunning && !isActive}
-            onClick={() => (props[a.start] as () => void)()}
-            className={`btn w-100 text-start rounded-3 py-2 px-3 fw-bold d-flex justify-content-between align-items-center ${isActive ? 'btn-danger text-white border-danger shadow-sm' : 'glass-card text-dark shadow-sm'}`}
-            style={{
-              fontSize: isMobile ? '13px' : '11px',
-              minHeight: isMobile ? '44px' : undefined,
-              letterSpacing: '0.02em',
-              opacity: anyRunning && !isActive ? 0.35 : 1,
-            }}
-          >
-            <span>{isActive ? `▶ ${a.label}` : `▶ ${a.label}`}</span>
-            <span className="small fw-normal opacity-75">
-              {dur ? fmtMs(dur) : ''}
-            </span>
-          </button>
+          <div key={a.key} className="d-flex flex-column gap-1">
+            <button
+              disabled={anyRunning && !isActive}
+              onClick={() => (props[a.start] as () => void)()}
+              className={`btn w-100 text-start rounded-3 py-2 px-3 fw-bold d-flex justify-content-between align-items-center ${isActive ? 'btn-danger text-white border-danger shadow-sm' : 'glass-card text-dark shadow-sm'}`}
+              style={{
+                fontSize: isMobile ? '13px' : '11px',
+                minHeight: isMobile ? '44px' : undefined,
+                letterSpacing: '0.02em',
+                opacity: anyRunning && !isActive ? 0.35 : 1,
+              }}
+            >
+              <span>{isActive ? `▶ ${a.label}` : `▶ ${a.label}`}</span>
+              <span className="small fw-normal opacity-75">
+                {dur ? fmtMs(dur) : ''}
+              </span>
+            </button>
+            {anyRunning && isActive && (
+              <div 
+                className="card border border-danger-subtle p-2 d-flex flex-column gap-2 bg-danger-subtle bg-opacity-10 text-dark shadow-sm"
+                style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+              >
+                {/* Timer */}
+                <div className="d-flex justify-content-between small fw-bold text-danger" style={{ fontSize: '10px' }}>
+                  <span>{fmtElapsed(elapsed)}</span>
+                  {totalMs > 0 && <span className="text-muted">{fmtMs(totalMs)}</span>}
+                </div>
+
+                {/* Barre de progression */}
+                {totalMs > 0 && (
+                  <div className="progress" style={{ height: '3px', background: 'rgba(0,0,0,0.08)' }}>
+                    <div 
+                      className="progress-bar bg-danger" 
+                      role="progressbar" 
+                      style={{ width: `${progress * 100}%`, transition: 'width 0.2s linear' }}
+                    />
+                  </div>
+                )}
+
+                {/* Bouton stop */}
+                <button
+                  onClick={props.onStop}
+                  className="btn btn-danger btn-sm w-100 fw-bold py-1 border-0"
+                  style={{ fontSize: '10px', letterSpacing: '0.04em' }}
+                >
+                  ■ Arrêter
+                </button>
+              </div>
+            )}
+          </div>
         );
       })}
-
-      {/* Zone active : timer + barre de progression + Arrêter */}
-      {anyRunning && activeAnim && (
-        <div 
-          className="card border border-danger-subtle p-2 d-flex flex-column gap-2 bg-danger-subtle bg-opacity-10 text-dark shadow-sm"
-          style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
-        >
-          {/* Timer */}
-          <div className="d-flex justify-content-between small fw-bold text-danger" style={{ fontSize: '10px' }}>
-            <span>{fmtElapsed(elapsed)}</span>
-            {totalMs > 0 && <span className="text-muted">{fmtMs(totalMs)}</span>}
-          </div>
-
-          {/* Barre de progression */}
-          {totalMs > 0 && (
-            <div className="progress" style={{ height: '3px', background: 'rgba(0,0,0,0.08)' }}>
-              <div 
-                className="progress-bar bg-danger" 
-                role="progressbar" 
-                style={{ width: `${progress * 100}%`, transition: 'width 0.2s linear' }}
-              />
-            </div>
-          )}
-
-          {/* Bouton stop */}
-          <button
-            onClick={props.onStop}
-            className="btn btn-danger btn-sm w-100 fw-bold py-1 border-0"
-            style={{ fontSize: '10px', letterSpacing: '0.04em' }}
-          >
-            ■ Arrêter
-          </button>
-        </div>
-      )}
 
       {/* XP Interactive Group */}
       {showList && (

@@ -915,7 +915,7 @@ export function SidePanel({
     }
   }, [activeAnimValue]);
 
-
+  const activeAnimOpt = WALKER_ANIM_OPTIONS.find(a => a.value === activeAnimValue);
 
   const AnimationsSection = (
     <div
@@ -1019,7 +1019,26 @@ export function SidePanel({
           </div>
         )}
 
-
+        {activeAnimOpt && activeAnimValue !== 'idle' && (
+          <div className="p-2 mb-1 rounded border border-danger-subtle bg-danger-subtle bg-opacity-25 d-flex flex-column gap-1">
+            <div className="d-flex justify-content-between align-items-center">
+              <span className="fw-bold text-danger text-truncate me-1" style={{ fontSize: '11px' }}>
+                ▶ En cours : {activeAnimOpt.label}
+              </span>
+              <button
+                className="btn btn-sm btn-outline-danger py-0 px-2 fw-semibold shrink-0"
+                style={{ fontSize: '9px' }}
+                onClick={(e) => handleCopyAnim(activeAnimOpt, e)}
+                title="Copier le nom du fichier GLB"
+              >
+                {copiedAnim === activeAnimOpt.value ? '✓ Copié !' : '📋 Copier nom'}
+              </button>
+            </div>
+            <div className="font-monospace text-muted text-truncate" style={{ fontSize: '9px' }}>
+              📁 {activeAnimOpt.value.split('/').pop()}
+            </div>
+          </div>
+        )}
 
         <div className="text-muted small px-1 d-flex justify-content-between" style={{ fontSize: '9px' }}>
           <span>{filteredAnims.length} animation{filteredAnims.length > 1 ? 's' : ''}</span>
@@ -1039,56 +1058,43 @@ export function SidePanel({
             const filename = anim.value.split('/').pop() || anim.value;
 
             return (
-              <div key={anim.value} className="border-bottom">
-                <div
-                  className={`d-flex align-items-center justify-content-between px-2 py-2 ${
-                    isActive ? 'active-anim-item bg-danger text-white fw-bold shadow-sm' : 'bg-transparent hover-bg-light text-dark'
-                  }`}
-                  style={{
-                    fontSize: isMobile ? '13px' : '11px',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                  onClick={() => {
-                    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: anim.value } }));
-                    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: anim.value } }));
-                  }}
-                >
-                  <div className="d-flex align-items-center gap-1 overflow-hidden me-2" style={{ flex: 1 }}>
-                    <span style={{ fontSize: '10px' }}>{isActive ? '▶' : ''}</span>
-                    <span className="text-truncate" title={anim.label}>{anim.label}</span>
-                    {isPose && (
-                      <span
-                        className={`badge ${isActive ? 'bg-light text-danger' : 'bg-warning text-dark'} ms-1 fw-normal`}
-                        style={{ fontSize: '8px', letterSpacing: '0.02em', flexShrink: 0 }}
-                      >
-                        POSE 10s
-                      </span>
-                    )}
-                  </div>
-
-                  <button
-                    type="button"
-                    className={`btn btn-sm ${isActive ? 'btn-light text-danger border-0' : 'btn-outline-secondary border-0'} p-1 shrink-0`}
-                    style={{ fontSize: '10px', lineHeight: 1 }}
-                    onClick={(e) => handleCopyAnim(anim, e)}
-                    title={`Copier "${filename}"`}
-                  >
-                    {copiedAnim === anim.value ? '✓' : '📋'}
-                  </button>
+              <div
+                key={anim.value}
+                className={`d-flex align-items-center justify-content-between border-bottom px-2 py-2 ${
+                  isActive ? 'active-anim-item bg-danger text-white fw-bold shadow-sm' : 'bg-transparent hover-bg-light text-dark'
+                }`}
+                style={{
+                  fontSize: isMobile ? '13px' : '11px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onClick={() => {
+                  document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: anim.value } }));
+                  document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: anim.value } }));
+                }}
+              >
+                <div className="d-flex align-items-center gap-1 overflow-hidden me-2" style={{ flex: 1 }}>
+                  <span style={{ fontSize: '10px' }}>{isActive ? '▶' : ''}</span>
+                  <span className="text-truncate" title={anim.label}>{anim.label}</span>
+                  {isPose && (
+                    <span
+                      className={`badge ${isActive ? 'bg-light text-danger' : 'bg-warning text-dark'} ms-1 fw-normal`}
+                      style={{ fontSize: '8px', letterSpacing: '0.02em', flexShrink: 0 }}
+                    >
+                      POSE 10s
+                    </span>
+                  )}
                 </div>
-                {isActive && anim.value !== 'idle' && (
-                  <div className="p-2 mb-2 rounded border border-danger-subtle bg-danger-subtle bg-opacity-25 d-flex flex-column gap-1 mt-1 mx-2">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="fw-bold text-danger text-truncate me-1" style={{ fontSize: '11px' }}>
-                        ▶ En cours : {anim.label}
-                      </span>
-                    </div>
-                    <div className="font-monospace text-muted text-truncate" style={{ fontSize: '9px' }}>
-                      📁 {filename}
-                    </div>
-                  </div>
-                )}
+
+                <button
+                  type="button"
+                  className={`btn btn-sm ${isActive ? 'btn-light text-danger border-0' : 'btn-outline-secondary border-0'} p-1 shrink-0`}
+                  style={{ fontSize: '10px', lineHeight: 1 }}
+                  onClick={(e) => handleCopyAnim(anim, e)}
+                  title={`Copier "${filename}"`}
+                >
+                  {copiedAnim === anim.value ? '✓' : '📋'}
+                </button>
               </div>
             );
           })

@@ -239,19 +239,23 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
       cursor += STAGGER_MS;
     };
 
-    const sortByZ = (arr: THREE.Object3D[]) => {
+    const sortByZAndX = (arr: THREE.Object3D[]) => {
       return [...arr].sort((a, b) => {
         const vA = new THREE.Vector3();
         const vB = new THREE.Vector3();
         a.getWorldPosition(vA);
         b.getWorldPosition(vB);
-        return vA.z - vB.z;
+        // Trier par Z (Nord->Sud), puis par X (Ouest->Est) si Z est très proche
+        if (Math.abs(vA.z - vB.z) > 1) {
+          return vA.z - vB.z;
+        }
+        return vA.x - vB.x;
       });
     };
 
     addGrouped(skirting); // Skirting boards fall as one block
     addSequential(floor);
-    addSequential(sortByZ(pillars));
+    addSequential(sortByZAndX(pillars));
     addSequential(shuffle(ikea));
     addSequential(shuffle(rest));
     
