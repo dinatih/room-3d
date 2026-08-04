@@ -11,7 +11,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 import { BaseballCap } from './BaseballCap';
 
-const TARGET_H = 142;
+const TARGET_H = 155;
 const red = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
 
 export function JoggingSuit({ onSize }: SceneItemProps) {
