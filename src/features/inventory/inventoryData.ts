@@ -270,3 +270,4 @@ export const CATEGORIES: Category[] = [
   { id: 'walkers',      label: '👥 Personnages' },
   { id: 'glbs',         label: '🎲 GLBs' },
 ];
+// Mise à jour des catégories IKEA
