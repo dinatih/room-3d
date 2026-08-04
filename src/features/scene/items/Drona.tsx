@@ -89,7 +89,7 @@ export function Drona({ onSize }: SceneItemProps) {
 /** Boîte Drona unique — à placer dans un <group position rotation>. */
 export function DroneCell() {
   const geo = useDronaGeoFrom(GLB_DRONA);
-  return <mesh geometry={geo} material={dronaMat} castShadow receiveShadow />;
+  return <mesh geometry={geo} material={dronaMat} castShadow receiveShadow userData={{ skipMerge: true }} />;
 }
 
 /** N boîtes Drona via InstancedMesh. Chaque Matrix4 encode position + rotation. */

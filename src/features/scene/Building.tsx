@@ -329,11 +329,12 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
       const mesh = node as THREE.Mesh;
       if (!mesh.isMesh || mesh.type !== 'Mesh' || (mesh as any).isInstancedMesh || mesh.userData?.isMergedStatic || mesh.userData?.skipMerge) return;
 
-      // Skip merging if any ancestor has skipMerge: true
+      // Skip merging if any ancestor has skipMerge: true or hoverAction defined
       let parent = mesh.parent;
       let skip = false;
-      while (parent && parent !== src) {
-        if (parent.userData?.skipMerge) {
+      if (mesh.userData?.skipMerge || mesh.userData?.hoverAction) skip = true;
+      while (!skip && parent && parent !== src) {
+        if (parent.userData?.skipMerge || parent.userData?.hoverAction) {
           skip = true;
           break;
         }
@@ -404,6 +405,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
       m.castShadow = true;
       m.receiveShadow = true;
       m.userData = { ...userData, isMergedStatic: true };
+      m.raycast = () => {}; // OPTIMISATION : Désactive le raycasting sur ce gros mesh statique pour ne pas plomber les perfs au survol
 
       // Héritage automatique du layer mask depuis le premier mesh source correspondant
       src.traverse(node => {

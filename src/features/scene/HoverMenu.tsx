@@ -198,7 +198,7 @@ export function HoverRaycaster() {
       if (e.pointerType === 'touch') return;
       if (hoverState.touchActive) return;
       const now = performance.now();
-      if (now - lastMove < 32) return;
+      if (now - lastMove < 100) return;
       lastMove = now;
 
       const found = raycastAt(e.clientX, e.clientY);
