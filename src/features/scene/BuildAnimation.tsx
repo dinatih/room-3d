@@ -239,9 +239,19 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
       cursor += STAGGER_MS;
     };
 
+    const sortByZ = (arr: THREE.Object3D[]) => {
+      return [...arr].sort((a, b) => {
+        const vA = new THREE.Vector3();
+        const vB = new THREE.Vector3();
+        a.getWorldPosition(vA);
+        b.getWorldPosition(vB);
+        return vA.z - vB.z;
+      });
+    };
+
     addGrouped(skirting); // Skirting boards fall as one block
     addSequential(floor);
-    addSequential(shuffle(pillars));
+    addSequential(sortByZ(pillars));
     addSequential(shuffle(ikea));
     addSequential(shuffle(rest));
     
