@@ -177,7 +177,9 @@ function splitW(def: WallDef): WallDef[] {
     const count = Math.ceil(len / MAX_LEN);
     const step = len / count;
     for (let i = 0; i < count; i++) {
-      res.push({ ...def, z1: def.z1 + i * step, z2: def.z1 + (i + 1) * step });
+      const z1 = def.z1 + i * step - (i > 0 ? 0.1 : 0);
+      const z2 = def.z1 + (i + 1) * step + (i < count - 1 ? 0.1 : 0);
+      res.push({ ...def, z1, z2 });
     }
   } else {
     const len = def.x2 - def.x1;
@@ -185,7 +187,9 @@ function splitW(def: WallDef): WallDef[] {
     const count = Math.ceil(len / MAX_LEN);
     const step = len / count;
     for (let i = 0; i < count; i++) {
-      res.push({ ...def, x1: def.x1 + i * step, x2: def.x1 + (i + 1) * step });
+      const x1 = def.x1 + i * step - (i > 0 ? 0.1 : 0);
+      const x2 = def.x1 + (i + 1) * step + (i < count - 1 ? 0.1 : 0);
+      res.push({ ...def, x1, x2 });
     }
   }
   return res;

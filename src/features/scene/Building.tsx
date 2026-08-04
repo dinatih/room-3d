@@ -228,8 +228,8 @@ function SplitDiagBox(props: {
         <DiagBox
           key={i}
           {...props}
-          d1={props.d1 + i * step}
-          d2={props.d1 + (i + 1) * step}
+          d1={props.d1 + i * step - (i > 0 ? 0.1 : 0)}
+          d2={props.d1 + (i + 1) * step + (i < count - 1 ? 0.1 : 0)}
         />
       ))}
     </>
@@ -579,6 +579,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                   const localX = -wallLen / 2 + (i + 0.5) * step;
                   const dx = localX * Math.cos(rotY);
                   const dz = -localX * Math.sin(rotY);
+                  const chunkLen = step + (i > 0 && i < count - 1 ? 0.2 : 0.1);
                   return (
                     <mesh
                       key={i}
@@ -589,7 +590,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                       receiveShadow
                       userData={{ animUnit: true, brickType: 'wall', side: 'gardenFront' }}
                     >
-                      <boxGeometry args={[step, WALL_H, 40]} />
+                      <boxGeometry args={[chunkLen, WALL_H, 40]} />
                     </mesh>
                   );
                 });
