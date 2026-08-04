@@ -14,7 +14,8 @@ export function useAgentController(
   _characterId: string,
   scenario: AgentInstruction[] | null,
   loop: boolean = false,
-  getRealPosition: () => { x: number; z: number; rotY: number }
+  getRealPosition: () => { x: number; z: number; rotY: number },
+  onComplete?: () => void
 ) {
   const stateRef = useRef<AgentState>({
     x: 0,
@@ -25,7 +26,7 @@ export function useAgentController(
 
   const stepIndexRef = useRef(0);
   const timerRef = useRef(0);
-  const statusRef = useRef<'IDLE' | 'MOVING' | 'INTERACTING'>('IDLE');
+  const statusRef = useRef<'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED'>('IDLE');
   const prevScenarioRef = useRef(scenario);
   const startPosRef = useRef<{x: number, z: number, rotY: number} | null>(null);
 
@@ -60,6 +61,10 @@ export function useAgentController(
       if (loop) {
         stepIndexRef.current = 0; // Boucler le scénario
       } else {
+        if (statusRef.current !== 'FINISHED') {
+          statusRef.current = 'FINISHED' as any;
+          if (onComplete) onComplete();
+        }
         stateRef.current.animation = 'idle';
         return stateRef.current;
       }

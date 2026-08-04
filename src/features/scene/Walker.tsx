@@ -770,6 +770,11 @@ function SingleCharacter({
         };
       }
       return { x: npcPosition[0], z: npcPosition[2], rotY: npcRotationY };
+    },
+    () => {
+      useSceneStore.setState(s => ({
+        extraStates: { ...s.extraStates, aiGoToilet: false }
+      }));
     }
   );
 

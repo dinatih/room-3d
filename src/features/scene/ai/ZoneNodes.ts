@@ -12,9 +12,13 @@ export const ZONES: Record<string, ZoneNode> = {
 };
 
 export const ACTION_GO_TO_TOILET: AgentInstruction[] = [
-  // L'agent part de n'importe où. On l'envoie au couloir pour qu'il passe la porte.
+  // Aller vers la porte du salon
+  { type: 'MOVE_TO', targetNodeId: 'Couloir_Central' },
+  // Ouvrir la porte du salon
+  { type: 'INTERACT', triggerEventKey: 'livingDoor', animation: 'idle', duration: 1.0 },
+
+  // S'avancer dans le couloir jusqu'à la SDB
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
-  
   // Ouvrir la porte de la SDB
   { type: 'INTERACT', triggerEventKey: 'bathroomDoor', animation: 'idle', duration: 1.5 },
   
@@ -25,12 +29,25 @@ export const ACTION_GO_TO_TOILET: AgentInstruction[] = [
   // S'asseoir sur les toilettes (vers le Sud = 0)
   { type: 'INTERACT', animation: 'anim_sitting_idle', duration: 10.0, rotY: 0 },
   
-  // Sortir
+  // Tirer la chasse (vers le Nord = Math.PI)
+  { type: 'INTERACT', animation: 'anim_shaking_hands_2', duration: 2.0, rotY: Math.PI },
+  
+  // Aller au lavabo
+  { type: 'MOVE_TO', targetNodeId: 'Devant_Vasque' },
+  // Se laver les mains (vers l'Ouest = Math.PI / 2)
+  { type: 'INTERACT', animation: 'anim_shaking_hands_2', duration: 4.0, rotY: Math.PI / 2 },
+
+  // Sortir de la SDB
   { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
   
   // Fermer la porte SDB
   { type: 'INTERACT', triggerEventKey: 'bathroomDoor', animation: 'idle', duration: 1.0 },
+
+  // Revenir dans le salon
+  { type: 'MOVE_TO', targetNodeId: 'Couloir_Central' },
+  // Fermer la porte du salon
+  { type: 'INTERACT', triggerEventKey: 'livingDoor', animation: 'idle', duration: 1.0 },
 
   // Revenir à la position initiale
   { type: 'RETURN_TO_START' },
