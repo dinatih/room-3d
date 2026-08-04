@@ -13,7 +13,8 @@ export function useAgentController(
   _characterId: string,
   initialPos: [number, number],
   initialRot: number,
-  scenario: AgentInstruction[] | null
+  scenario: AgentInstruction[] | null,
+  loop: boolean = false
 ) {
   const stateRef = useRef<AgentState>({
     x: initialPos[0],
@@ -32,9 +33,18 @@ export function useAgentController(
   const ROT_SPEED = 5;
 
   const update = (dt: number) => {
-    if (!scenario || stepIndexRef.current >= scenario.length) {
+    if (!scenario) {
       stateRef.current.animation = 'idle';
       return stateRef.current;
+    }
+
+    if (stepIndexRef.current >= scenario.length) {
+      if (loop) {
+        stepIndexRef.current = 0; // Boucler le scénario
+      } else {
+        stateRef.current.animation = 'idle';
+        return stateRef.current;
+      }
     }
 
     const currentInstruction = scenario[stepIndexRef.current];

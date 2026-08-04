@@ -754,11 +754,14 @@ function SingleCharacter({
   const { invalidate } = useThree();
 
   const isGuidedTour = isNPC && id === 'xbot';
+  const aiLoopTour = useSceneStore(state => state.extraStates.aiLoopTour);
+  
   const { update: updateAgent } = useAgentController(
     id,
     [npcPosition[0], npcPosition[2]],
     npcRotationY,
-    isGuidedTour ? SCENARIO_VISITE_GUIDEE : null
+    isGuidedTour ? SCENARIO_VISITE_GUIDEE : null,
+    aiLoopTour
   );
 
   useEffect(() => {
