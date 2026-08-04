@@ -684,6 +684,7 @@ export function SidePanel({
         };
         return (
           <>
+            {aiBtn('Visite guidée complète', 'aiFullTour', '🤖')}
             {aiBtn('Aller aux toilettes (pipi)', 'aiGoToilet', '🚽')}
             {aiBtn('Travailler Bureau 1', 'aiSitDesk1', '💻')}
             {aiBtn('Travailler Bureau 2', 'aiSitDesk2', '💻')}
