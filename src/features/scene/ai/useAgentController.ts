@@ -12,21 +12,36 @@ export interface AgentState {
 
 export function useAgentController(
   _characterId: string,
-  initialPos: [number, number],
-  initialRot: number,
   scenario: AgentInstruction[] | null,
-  loop: boolean = false
+  loop: boolean = false,
+  getRealPosition: () => { x: number; z: number; rotY: number }
 ) {
   const stateRef = useRef<AgentState>({
-    x: initialPos[0],
-    z: initialPos[1],
-    rotY: initialRot,
+    x: 0,
+    z: 0,
+    rotY: 0,
     animation: 'idle'
   });
 
   const stepIndexRef = useRef(0);
   const timerRef = useRef(0);
   const statusRef = useRef<'IDLE' | 'MOVING' | 'INTERACTING'>('IDLE');
+  const prevScenarioRef = useRef(scenario);
+
+  if (scenario !== prevScenarioRef.current) {
+    stepIndexRef.current = 0;
+    timerRef.current = 0;
+    statusRef.current = 'IDLE';
+    prevScenarioRef.current = scenario;
+    
+    // Sync starting position with the actual character position when AI starts
+    if (scenario) {
+      const real = getRealPosition();
+      stateRef.current.x = real.x;
+      stateRef.current.z = real.z;
+      stateRef.current.rotY = real.rotY;
+    }
+  }
 
   // Vitesse de déplacement (cm par seconde)
   const SPEED = 100;

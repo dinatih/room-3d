@@ -89,7 +89,7 @@ const initialExtraStates: Record<string, boolean> = {
   'bin-toggle': false,
   wcLid: false,
   'walker-meshes': false,
-  aiLoopTour: true,
+  aiGoToilet: false,
 };
 
 function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 'transient'; name: string } {

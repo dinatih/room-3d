@@ -14,8 +14,8 @@ import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { LAYER_WALKER_DETAIL, LAYER_WALKER } from '@config';
 import { applyLaraVariantStyles, type LaraVariant } from './LaraVariants';
+import { ACTION_GO_TO_TOILET } from './ai/ZoneNodes';
 import { useAgentController } from './ai/useAgentController';
-import { SCENARIO_VISITE_GUIDEE } from './ai/ZoneNodes';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 export { WALKER_ANIM_OPTIONS };
@@ -753,15 +753,24 @@ function SingleCharacter({
 
   const { invalidate } = useThree();
 
-  const isGuidedTour = isNPC && id === 'xbot';
-  const aiLoopTour = useSceneStore(state => state.extraStates.aiLoopTour);
+  const activeWalkerId = useSceneStore(state => state.activeWalkerId);
+  const aiGoToilet = useSceneStore(state => state.extraStates.aiGoToilet);
+  const isGuidedTour = aiGoToilet && id === activeWalkerId;
   
   const { update: updateAgent } = useAgentController(
     id,
-    [npcPosition[0], npcPosition[2]],
-    npcRotationY,
-    isGuidedTour ? SCENARIO_VISITE_GUIDEE : null,
-    aiLoopTour
+    isGuidedTour ? ACTION_GO_TO_TOILET : null,
+    false, // pas de boucle pour cette action
+    () => {
+      if (groupRef.current) {
+        return { 
+          x: groupRef.current.position.x, 
+          z: groupRef.current.position.z, 
+          rotY: groupRef.current.rotation.y 
+        };
+      }
+      return { x: npcPosition[0], z: npcPosition[2], rotY: npcRotationY };
+    }
   );
 
   useEffect(() => {
