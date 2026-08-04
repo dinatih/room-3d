@@ -27,6 +27,7 @@ export function useAgentController(
   const timerRef = useRef(0);
   const statusRef = useRef<'IDLE' | 'MOVING' | 'INTERACTING'>('IDLE');
   const prevScenarioRef = useRef(scenario);
+  const startPosRef = useRef<{x: number, z: number, rotY: number} | null>(null);
 
   if (scenario !== prevScenarioRef.current) {
     stepIndexRef.current = 0;
@@ -40,6 +41,7 @@ export function useAgentController(
       stateRef.current.x = real.x;
       stateRef.current.z = real.z;
       stateRef.current.rotY = real.rotY;
+      startPosRef.current = { x: real.x, z: real.z, rotY: real.rotY };
     }
   }
 
@@ -66,7 +68,7 @@ export function useAgentController(
     const currentInstruction = scenario[stepIndexRef.current];
 
     if (statusRef.current === 'IDLE') {
-      if (currentInstruction.type === 'MOVE_TO') {
+      if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START') {
         statusRef.current = 'MOVING';
       } else if (currentInstruction.type === 'INTERACT' || currentInstruction.type === 'WAIT') {
         statusRef.current = 'INTERACTING';
@@ -81,7 +83,10 @@ export function useAgentController(
       let tx = stateRef.current.x;
       let tz = stateRef.current.z;
 
-      if (currentInstruction.targetNodeId && ZONES[currentInstruction.targetNodeId]) {
+      if (currentInstruction.type === 'RETURN_TO_START' && startPosRef.current) {
+        tx = startPosRef.current.x;
+        tz = startPosRef.current.z;
+      } else if (currentInstruction.targetNodeId && ZONES[currentInstruction.targetNodeId]) {
         const node = ZONES[currentInstruction.targetNodeId];
         tx = node.x;
         tz = node.z;

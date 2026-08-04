@@ -611,46 +611,6 @@ export function SidePanel({
 
   const PersonnageSection = (
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
-      <div className="text-muted fw-semibold mb-1 text-dark mt-2" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🤖 Actions IA (Autopilot)</div>
-      <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
-        onClick={() => useSceneStore.getState().triggerAction('aiGoToilet')}
-        style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent' }}
-      >
-        <span>Aller aux toilettes 🚽</span>
-        <span className={`badge ${extraStates.aiGoToilet ? 'bg-primary' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
-          {extraStates.aiGoToilet ? 'EN COURS' : 'JOUER'}
-        </span>
-      </button>
-      <div className="text-muted fw-semibold mb-1 text-dark mt-3" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⚙️ Options d'affichage</div>
-      {layerBtn('light',  'Personnage 3D (Walker)', 'walker')}
-      {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
-      {layerBtn('light',  'Pistolets Lara 🔫', 'laraPistols')}
-      {layerBtn('light',  'Accessoires Lara 🎒', 'accessories')}
-      {layerBtn('pink',   'Physique poitrine 💃', 'breastPhysics')}
-      {layerBtn('pink',   'Physique cheveux 💇‍♀️', 'hairPhysics')}
-      {layerBtn('white',  'Squelette 🦴',     'skeleton')}
-      {layers.walker && layerBtn('light',  'Toutes les Lara 👥', 'showAllLaraStyles')}
-      <button 
-        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
-        onClick={() => {
-          onToggleLayer('laraGrid');
-          if (!layers.laraGrid) {
-            document.dispatchEvent(new CustomEvent('camera-view', { detail: { pos: [150, 450, 600], target: [150, 450, 200] } }));
-          }
-        }}
-        style={{ 
-          fontSize: isMobile ? '14px' : '11px',
-          minHeight: isMobile ? '48px' : undefined,
-          background: 'transparent',
-          opacity: layers.laraGrid ? 1 : 0.55,
-        }}
-      >
-        <span>Grille Lara 👥 (G)</span>
-        <span className={`badge ${layers.laraGrid ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
-          {layers.laraGrid ? 'ON' : 'OFF'}
-        </span>
-      </button>
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
           <div>
@@ -702,6 +662,50 @@ export function SidePanel({
               <option value="hair_112" className="bg-light text-dark">Coupe #13 (Chignon haut hérissé & bandeau)</option>
             </select>
           </div>
+        </div>
+      )}
+      <div className="text-muted fw-semibold mb-1 text-dark mt-2" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🤖 Actions IA (Autopilot)</div>
+      <button 
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        onClick={() => useSceneStore.getState().triggerAction('aiGoToilet')}
+        style={{ fontSize: isMobile ? '14px' : '11px', background: 'transparent' }}
+      >
+        <span>Aller aux toilettes 🚽</span>
+        <span className={`badge ${extraStates.aiGoToilet ? 'bg-primary' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+          {extraStates.aiGoToilet ? 'EN COURS' : 'JOUER'}
+        </span>
+      </button>
+      <div className="text-muted fw-semibold mb-1 text-dark mt-3" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⚙️ Options d'affichage</div>
+      {layerBtn('light',  'Personnage 3D (Walker)', 'walker')}
+      {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
+      {layerBtn('light',  'Pistolets Lara 🔫', 'laraPistols')}
+      {layerBtn('light',  'Accessoires Lara 🎒', 'accessories')}
+      {layerBtn('pink',   'Physique poitrine 💃', 'breastPhysics')}
+      {layerBtn('pink',   'Physique cheveux 💇‍♀️', 'hairPhysics')}
+      {layerBtn('white',  'Squelette 🦴',     'skeleton')}
+      {layers.walker && layerBtn('light',  'Toutes les Lara 👥', 'showAllLaraStyles')}
+      <button 
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        onClick={() => {
+          onToggleLayer('laraGrid');
+          if (!layers.laraGrid) {
+            document.dispatchEvent(new CustomEvent('camera-view', { detail: { pos: [150, 450, 600], target: [150, 450, 200] } }));
+          }
+        }}
+        style={{ 
+          fontSize: isMobile ? '14px' : '11px',
+          minHeight: isMobile ? '48px' : undefined,
+          background: 'transparent',
+          opacity: layers.laraGrid ? 1 : 0.55,
+        }}
+      >
+        <span>Grille Lara 👥 (G)</span>
+        <span className={`badge ${layers.laraGrid ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+          {layers.laraGrid ? 'ON' : 'OFF'}
+        </span>
+      </button>
+      {layers.walker && (
+        <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
 
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">

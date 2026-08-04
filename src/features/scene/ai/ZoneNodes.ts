@@ -31,4 +31,7 @@ export const ACTION_GO_TO_TOILET: AgentInstruction[] = [
   
   // Fermer la porte SDB
   { type: 'INTERACT', triggerEventKey: 'bathroomDoor', animation: 'idle', duration: 1.0 },
+
+  // Revenir à la position initiale
+  { type: 'RETURN_TO_START' },
 ];

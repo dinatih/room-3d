@@ -12,7 +12,7 @@ export interface ZoneNode {
   z: number;
 }
 
-export type InstructionType = 'MOVE_TO' | 'INTERACT' | 'WAIT';
+export type InstructionType = 'MOVE_TO' | 'INTERACT' | 'WAIT' | 'RETURN_TO_START';
 
 export interface AgentInstruction {
   type: InstructionType;
