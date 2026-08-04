@@ -153,7 +153,13 @@ import { MergedStaticGroup } from './Building';
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function Equipment() {
-  const as = useFurnitureToggles({ lampSdb: 'lamp-sdb-toggle', lampCouloir: 'lamp-couloir-toggle' });
+  const as = useFurnitureToggles({ 
+    lampSdb: 'lamp-sdb-toggle', 
+    lampCouloir: 'lamp-couloir-toggle',
+    corrDoors: 'corr-doors-toggle',
+    sdbClosetL: 'sdb-closet-l-toggle',
+    sdbClosetR: 'sdb-closet-r-toggle',
+  });
   const HW_R = 28, HW_H = 65;
   const SDB_CX  = (NICHE_X + DOOR_START) / 2;
   const SDB_CZ  = (KITCHEN_Z + PARTITION_THICKNESS + BATH_Z_END) / 2;
@@ -238,9 +244,6 @@ function LinkyGaine() {
 
 export function Furniture() {
   const as = useFurnitureToggles({
-    corrDoors:     'corr-doors-toggle',
-    sdbClosetL:    'sdb-closet-l-toggle',
-    sdbClosetR:    'sdb-closet-r-toggle',
     cbnWest:       'cbn-west-toggle',
     cbnEast:       'cbn-east-toggle',
     ninja:         'ninja-toggle',
