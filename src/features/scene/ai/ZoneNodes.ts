@@ -2,7 +2,7 @@ import { AgentInstruction, ZoneNode } from './aiTypes';
 
 export const ZONES: Record<string, ZoneNode> = {
   Start: { id: 'Start', x: 250, z: 300 },
-  Couloir_Central: { id: 'Couloir_Central', x: 250, z: 400 },
+  Couloir_Central: { id: 'Couloir_Central', x: 250, z: 350 },
   Couloir_Entree: { id: 'Couloir_Entree', x: 248, z: 535 }, // Dedans, devant porte d'entrée
   Sortie: { id: 'Sortie', x: 288, z: 603 }, // Dehors, devant la porte
   Couloir_SDB: { id: 'Couloir_SDB', x: 248, z: 560 }, // Devant porte SDB dans le couloir
@@ -27,15 +27,15 @@ export const ACTION_GO_TO_TOILET: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Toilette' },
   
   // S'asseoir sur les toilettes (vers le Sud = 0)
-  { type: 'INTERACT', animation: 'anim_sitting_idle', duration: 10.0, rotY: 0 },
+  { type: 'INTERACT', animation: 'media/sandbox/anims/anim_sitting_idle.glb', duration: 10.0, rotY: 0 },
   
   // Tirer la chasse (vers le Nord = Math.PI)
-  { type: 'INTERACT', animation: 'anim_shaking_hands_2', duration: 2.0, rotY: Math.PI },
+  { type: 'INTERACT', animation: 'media/sandbox/anims/anim_shaking_hands_2.glb', duration: 2.0, rotY: Math.PI },
   
   // Aller au lavabo
   { type: 'MOVE_TO', targetNodeId: 'Devant_Vasque' },
   // Se laver les mains (vers l'Ouest = Math.PI / 2)
-  { type: 'INTERACT', animation: 'anim_shaking_hands_2', duration: 4.0, rotY: Math.PI / 2 },
+  { type: 'INTERACT', animation: 'media/sandbox/anims/anim_shaking_hands_2.glb', duration: 4.0, rotY: Math.PI / 2 },
 
   // Sortir de la SDB
   { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },

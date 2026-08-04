@@ -740,6 +740,7 @@ function SingleCharacter({
   const torsoAccelRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const customHairAnimBonesRef = useRef<{ bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[]>([]);
   const wigEnergyRef = useRef(1.0);
+  const loadingAnimsRef = useRef<Set<string>>(new Set());
 
   // Collision bones
   const headBoneRef = useRef<THREE.Bone | null>(null);
@@ -1573,6 +1574,31 @@ function SingleCharacter({
 
     if (customAnimName.current) {
       target = customAnimName.current;
+      if (!actions[target] && target.endsWith('.glb')) {
+        if (!loadingAnimsRef.current.has(target)) {
+          loadingAnimsRef.current.add(target);
+          const loader = new GLTFLoader();
+          loader.load(target, (gltf: any) => {
+            const clip = gltf.animations[0];
+            if (clip && mixerRef.current) {
+              const cacheKey = id + '_' + target;
+              let finalClip = _retargetCache[cacheKey];
+              if (!finalClip) {
+                finalClip = retargetClip(clip, scene, gltf.scene);
+                _retargetCache[cacheKey] = finalClip;
+              }
+              finalClip.name = target;
+              const action = mixerRef.current.clipAction(finalClip);
+              action.enabled = true;
+              action.play();
+              action.setEffectiveWeight(0);
+              actionsRef.current[target] = action;
+              invalidate();
+            }
+          });
+        }
+        target = 'idle'; // fallback while loading
+      }
     }
 
     // Consider rotating as moving to prevent idle timeout freezes
