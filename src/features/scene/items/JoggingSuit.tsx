@@ -9,6 +9,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
+import { BaseballCap } from './BaseballCap';
 
 const TARGET_H = 170;
 const red = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
@@ -35,7 +36,14 @@ export function JoggingSuit({ onSize }: SceneItemProps) {
     onSize(box.getSize(new THREE.Vector3()));
   }, [scene]);
 
-  return <primitive object={scene} />;
+  return (
+    <group>
+      <primitive object={scene} />
+      <group position={[0, 172, 1]}>
+        <BaseballCap onSize={() => {}} actionState={{}} item={{} as any} />
+      </group>
+    </group>
+  );
 }
 
 useGLTF.preload('media/glb/realistic_human_cloths.glb');

@@ -34,7 +34,6 @@ import { UtakerFrame }   from './items/UtakerFrame';
 import { BollsidanDesk } from './items/BollsidanDesk';
 import { AirPerformer }  from './items/AirPerformer';
 import { TrashBin }      from './items/TrashBin';
-import { BaseballCap }   from './items/BaseballCap';
 import { Fniss }         from './items/Fniss';
 import { LackShelf }     from './items/LackShelf';
 import { LampOla }       from './items/LampOla';
@@ -544,10 +543,7 @@ export function Decor() {
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ isIkea: true }}>
         <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[297, 144, 173.5]} rotation={[Math.PI / 2, 0, Math.PI / 2]} userData={{ animUnit: true }}>
-        <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <SneakersPair />
+            <SneakersPair />
       <CeilingPalmLeaves />
       <>
         {[0, 18, 36].map(y => (
