@@ -329,12 +329,13 @@ export interface SidePanelProps2 extends SidePanelProps {
   onToggleLidarOpacity:    () => void;
 }
 
-type TabKey = 'views' | 'layers' | 'personnage' | 'perf' | 'anims' | null;
+type TabKey = 'views' | 'layers' | 'personnage' | 'perf' | 'anims' | 'interactif' | null;
 
 const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
   { key: 'perf',       emoji: '📊', label: 'Perf' },
   { key: 'views',      emoji: '📷', label: 'Vues' },
   { key: 'layers',     emoji: '📑', label: 'Calques' },
+  { key: 'interactif', emoji: '🎮', label: 'Interact' },
   { key: 'personnage', emoji: '👤', label: 'Perso' },
   { key: 'anims',      emoji: '💃', label: 'Anims' },
 ];
@@ -352,6 +353,8 @@ export function SidePanel({
 }: SidePanelProps2) {
   
   const measurementActive = useSceneStore(state => state.measurementActive);
+  const furniture = useSceneStore(state => state.furniture);
+  const toggleFurniture = useSceneStore(state => state.toggleFurniture);
   const setMeasurementActive = useSceneStore(state => state.setMeasurementActive);
   const cameraMode = useSceneStore(state => state.cameraMode);
   const isMobile = useIsMobile();
@@ -446,7 +449,67 @@ export function SidePanel({
     );
   };
 
+  const furnitureBtn = (
+    label: string,
+    key: keyof FurnitureState,
+    displayValue?: (val: any) => string
+  ) => {
+    const val = furniture[key];
+    const isOn = typeof val === 'boolean' ? val : !!val;
+    return (
+      <button 
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        onClick={() => toggleFurniture(key)}
+        style={{ 
+          fontSize: isMobile ? '14px' : '11px',
+          minHeight: isMobile ? '48px' : undefined,
+          background: 'transparent',
+          opacity: isOn ? 1 : 0.55,
+        }}
+      >
+        <span>{label}</span>
+        <span className={`badge ${isOn ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+          {displayValue ? displayValue(val) : (isOn ? 'ON' : 'OFF')}
+        </span>
+      </button>
+    );
+  };
+
   // ── Sections (utilisées dans Group desktop OU sheet mobile) ─────────────────
+
+  const InteractifSection = (
+    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
+      <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>PORTES & FENÊTRES</div>
+      {furnitureBtn('Porte Entrée', 'entryDoor')}
+      {furnitureBtn('Porte Séjour', 'livingDoor')}
+      {furnitureBtn('Porte SDB', 'bathroomDoor')}
+      {furnitureBtn('Baie Vitrée Est', 'eastGlassDoor')}
+      {furnitureBtn('Baie Vitrée Ouest', 'glassDoorV2LeftOpen')}
+      {furnitureBtn('Volets Ouest', 'glassDoorV2ShutterPos', v => `${v}%`)}
+      
+      <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>PLACARDS</div>
+      {furnitureBtn('Placard Couloir', 'corrDoors')}
+      {furnitureBtn('Placard SDB Gauche', 'sdbClosetL')}
+      {furnitureBtn('Placard SDB Droite', 'sdbClosetR')}
+      {furnitureBtn('Cuisine Ouest', 'cbnWest')}
+      {furnitureBtn('Cuisine Est', 'cbnEast')}
+      {furnitureBtn('Meuble TV', 'cabinet')}
+      {furnitureBtn('Mackapär', 'mackaparDoors')}
+      
+      <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>MOBILIER & ÉLECTRO</div>
+      {furnitureBtn('Lit Superposé', 'bedStacked')}
+      {furnitureBtn('Lit Canapé', 'bedSofa')}
+      {furnitureBtn('Lit Déplié', 'bedPosition')}
+      {furnitureBtn('Accoudoir Canapé Gauche', 'sofaArmLeft')}
+      {furnitureBtn('Accoudoir Canapé Droit', 'sofaArmRight')}
+      {furnitureBtn('Frigo Ouvert', 'freezerOpen')}
+      {furnitureBtn('TV Allumée', 'tvOn')}
+      
+      <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>LUMIÈRES</div>
+      {furnitureBtn('Lumière SDB', 'lampSdb')}
+      {furnitureBtn('Lumière Couloir', 'lampCouloir')}
+    </div>
+  );
 
   const ViewsSection = (
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
@@ -1109,11 +1172,12 @@ export function SidePanel({
     const sheetOpen = activeTab !== null;
     const sheetTitle: Record<Exclude<TabKey, null>, string> = {
       views: '📷 Vues', layers: '📑 Calques', personnage: '👤 Personnage',
-      perf: '📊 Perf', anims: '💃 Animations'
+      perf: '📊 Perf', anims: '💃 Animations', interactif: '🎮 Interactif'
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
       views: ViewsSection,
       layers: LayersSection,
+      interactif: InteractifSection,
       personnage: PersonnageSection,
       anims: AnimationsSection,
       perf: <DevToolsGroups Group={Group} />,
@@ -1233,6 +1297,7 @@ export function SidePanel({
 
         <Group emoji="📷" title="Vues">{ViewsSection}</Group>
         <Group emoji="📑" title="Calques">{LayersSection}</Group>
+        <Group emoji="🎮" title="Interactif">{InteractifSection}</Group>
         <Group emoji="👤" title="Personnage">{PersonnageSection}</Group>
         <Group emoji="💃" title="Animations">{AnimationsSection}</Group>
       </div>

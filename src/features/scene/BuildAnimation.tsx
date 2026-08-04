@@ -167,14 +167,6 @@ function collectScene(scene: THREE.Scene) {
   return { floor, skirting, pillars, wallsBySide, ikea, rest, ceiling };
 }
 
-function shuffle<T>(arr: T[]): T[] {
-  const res = [...arr];
-  for (let i = res.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [res[i], res[j]] = [res[j], res[i]];
-  }
-  return res;
-}
 
 interface AnimObj {
   obj: THREE.Object3D;
@@ -239,31 +231,42 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
       cursor += STAGGER_MS;
     };
 
-    const sortByZAndX = (arr: THREE.Object3D[]) => {
+    const sortByYZX = (arr: THREE.Object3D[]) => {
       return [...arr].sort((a, b) => {
         const vA = new THREE.Vector3();
         const vB = new THREE.Vector3();
         a.getWorldPosition(vA);
         b.getWorldPosition(vB);
-        // Trier par Z (Nord->Sud), puis par X (Ouest->Est) si Z est très proche
-        if (Math.abs(vA.z - vB.z) > 1) {
-          return vA.z - vB.z;
-        }
+        // 1. Trier par Y (bas -> haut)
+        if (Math.abs(vA.y - vB.y) > 1) return vA.y - vB.y;
+        // 2. Trier par Z (Nord -> Sud)
+        if (Math.abs(vA.z - vB.z) > 1) return vA.z - vB.z;
+        // 3. Trier par X (Ouest -> Est)
         return vA.x - vB.x;
       });
     };
 
     addGrouped(skirting); // Skirting boards fall as one block
-    addSequential(floor);
-    addSequential(sortByZAndX(pillars));
-    addSequential(shuffle(ikea));
-    addSequential(shuffle(rest));
+    addSequential(sortByYZX(floor));
+    addSequential(sortByYZX(pillars));
+    addSequential(sortByYZX(ikea));
+    addSequential(sortByYZX(rest));
     
-    // Each wall side falls as a unified block, but shuffled order of walls
-    const wallGroups = shuffle(Array.from(wallsBySide.values()));
+    // Each wall side falls as a unified block, but sorted by YZX
+    const wallGroups = Array.from(wallsBySide.values()).sort((groupA, groupB) => {
+      const a = groupA[0], b = groupB[0];
+      if (!a || !b) return 0;
+      const vA = new THREE.Vector3();
+      const vB = new THREE.Vector3();
+      a.getWorldPosition(vA);
+      b.getWorldPosition(vB);
+      if (Math.abs(vA.y - vB.y) > 1) return vA.y - vB.y;
+      if (Math.abs(vA.z - vB.z) > 1) return vA.z - vB.z;
+      return vA.x - vB.x;
+    });
     wallGroups.forEach(group => addGrouped(group));
     
-    addSequential(ceiling);
+    addSequential(sortByYZX(ceiling));
 
     const objects = groupedObjects;
 
