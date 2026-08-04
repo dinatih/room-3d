@@ -96,7 +96,7 @@ export function ShoeHatRack({ onSize }: SceneItemProps) {
           <Tube p1={[x, barY+3.85,   TR]} p2={[x, barY+6.85,  TR+4]}     />
           
           {/* Casquette sur le crochet haut */}
-          <group position={[x, barY+8, TR+5.5]} rotation={[-Math.PI/6, 0, 0]}>
+          <group position={[x, barY+8, TR+5.5]} rotation={[-Math.PI/2, 0, 0]}>
             <BaseballCap onSize={() => {}} actionState={{}} item={{} as any} />
           </group>
         </group>

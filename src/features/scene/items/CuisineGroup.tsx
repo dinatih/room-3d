@@ -143,39 +143,51 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
   return (
     <group ref={ref}>
       {/* Plan de travail */}
-      <group position={[KIT_W / 2, COUNTER_H, KIT_D / 2]} userData={{ animUnit: true }}>
-        <Counter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <group userData={{ animUnit: true, isIkea: true }}>
+        <group position={[KIT_W / 2, COUNTER_H, KIT_D / 2]}>
+          <Counter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
       </group>
 
       {/* Évier — bord arrière à 10.5 cm du fond de niche (Z=60) */}
-      <group position={[CABINET_W / 2, COUNTER_H + COUNTER_SLAB - 15, 26]} userData={{ animUnit: true }}>
-        <SinkBoholmen item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <group userData={{ animUnit: true, isIkea: true }}>
+        <group position={[CABINET_W / 2, COUNTER_H + COUNTER_SLAB - 15, 26]}>
+          <SinkBoholmen item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
       </group>
 
       {/* Plaques */}
-      <group position={[CABINET_W + FRIDGE_W / 2, COUNTER_H + COUNTER_SLAB - 4.5, KIT_D / 2]} rotation={[0, -Math.PI, 0]} userData={{ animUnit: true }}>
-        <Stove item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <group userData={{ animUnit: true, isIkea: true }}>
+        <group position={[CABINET_W + FRIDGE_W / 2, COUNTER_H + COUNTER_SLAB - 4.5, KIT_D / 2]} rotation={[0, -Math.PI, 0]}>
+          <Stove item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
       </group>
 
       {/* Meuble sous évier */}
-      <group position={[CABINET_W / 2, 10, KIT_D / 2]} userData={{ animUnit: true }}>
-        <KitchenCabinet item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <group userData={{ animUnit: true, isIkea: true }}>
+        <group position={[CABINET_W / 2, 10, KIT_D / 2]}>
+          <KitchenCabinet item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
       </group>
 
       {/* Réfrigérateur */}
-      <group position={[CABINET_W + FRIDGE_W / 2, 0, KIT_D / 2]} userData={{ animUnit: true }}>
-        <Fridge item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <group userData={{ animUnit: true, isIkea: true }}>
+        <group position={[CABINET_W + FRIDGE_W / 2, 0, KIT_D / 2]}>
+          <Fridge item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
       </group>
 
       {/* Meuble haut */}
-      <group userData={{ animUnit: true }}>
+      <group userData={{ animUnit: true, isIkea: true }}>
         <UpperCabinet />
       </group>
 
       {/* 3 boîtes Drona sur le meuble haut */}
       {!noDrona && DRONA_TRANSFORMS.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
-          <DroneCell />
+        <group key={i} userData={{ animUnit: true, isIkea: true }}>
+          <group position={t.p} quaternion={t.q} scale={t.s}>
+            <DroneCell />
+          </group>
         </group>
       ))}
     </group>

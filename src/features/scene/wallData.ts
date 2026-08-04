@@ -167,6 +167,30 @@ export const pEast  = (id: PillarId) => pX(id) + pW(id) / 2;
 export const pNorth = (id: PillarId) => pZ(id) - pD(id) / 2;
 export const pSouth = (id: PillarId) => pZ(id) + pD(id) / 2;
 
+function splitW(def: WallDef): WallDef[] {
+  if (def.segKind === 'door' || def.segKind === 'none' || def.t !== PARTITION_THICKNESS) return [def];
+  const MAX_LEN = 40;
+  const res: WallDef[] = [];
+  if (def.axis === 'z') {
+    const len = def.z2 - def.z1;
+    if (len <= MAX_LEN) return [def];
+    const count = Math.ceil(len / MAX_LEN);
+    const step = len / count;
+    for (let i = 0; i < count; i++) {
+      res.push({ ...def, z1: def.z1 + i * step, z2: def.z1 + (i + 1) * step });
+    }
+  } else {
+    const len = def.x2 - def.x1;
+    if (len <= MAX_LEN) return [def];
+    const count = Math.ceil(len / MAX_LEN);
+    const step = len / count;
+    for (let i = 0; i < count; i++) {
+      res.push({ ...def, x1: def.x1 + i * step, x2: def.x1 + (i + 1) * step });
+    }
+  }
+  return res;
+}
+
 export const WALL_DEFS: WallDef[] = [
 
   // ── MUR OUEST ──────────────────────────────────────────────────────────────
@@ -176,10 +200,10 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'z', xc: pEast('corner-nw') - WALL_THICKNESS / 2, z1: pSouth('corner-nw'), z2: pNorth('niche-beam'), mat: 'west' },
 
   // Ouest SDB + couloir (saute les piliers)
-  { axis: 'z', xc: pX('corner-sw'), z1: pSouth('corner-sw'), z2: pNorth('bath-nw'), mat: 'west' },
-  { axis: 'z', xc: pX('corner-sw'), z1: pSouth('bath-nw'), z2: pNorth('shower-nw'), mat: 'west' },
-  { axis: 'z', xc: pX('corner-sw'), z1: pSouth('shower-nw'), z2: pNorth('shower-sw'), mat: 'west' },
-  { axis: 'z', xc: pX('corner-sw'), z1: pSouth('shower-sw'), z2: pNorth('diag-sw'), mat: 'west' },
+  ...splitW({ axis: 'z', xc: pX('corner-sw'), z1: pSouth('corner-sw'), z2: pNorth('bath-nw'), mat: 'west', t: PARTITION_THICKNESS }),
+  ...splitW({ axis: 'z', xc: pX('corner-sw'), z1: pSouth('bath-nw'), z2: pNorth('shower-nw'), mat: 'west', t: PARTITION_THICKNESS }),
+  ...splitW({ axis: 'z', xc: pX('corner-sw'), z1: pSouth('shower-nw'), z2: pNorth('shower-sw'), mat: 'west', t: PARTITION_THICKNESS }),
+  ...splitW({ axis: 'z', xc: pX('corner-sw'), z1: pSouth('shower-sw'), z2: pNorth('diag-sw'), mat: 'west', t: PARTITION_THICKNESS }),
 
   // ── MUR EST ────────────────────────────────────────────────────────────────
   { axis: 'z', xc: pX('corner-ne'), z1: pSouth('corner-ne'), z2: pNorth('corner-se'), mat: 'east' }, // Est 1 (séjour)
@@ -187,32 +211,32 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'z', xc: pX('corner-ne'), z1: pSouth('corner-se'), z2: pNorth('diag-ne'), mat: 'east' }, // Est 3 (couloir droit)
 
   // ── MUR SUD (Z=400) ────────────────────────────────────────────────────────
-  { axis: 'x', x1: pEast('corner-sw'), x2: pWest('kitchen-sw'), zc: pZ('corner-sw'), t: PARTITION_THICKNESS },
-  { axis: 'x', x1: pEast('kitchen-se'), x2: pWest('door-living-w'), zc: pZ('corner-sw'), t: PARTITION_THICKNESS },
+  ...splitW({ axis: 'x', x1: pEast('corner-sw'), x2: pWest('kitchen-sw'), zc: pZ('corner-sw'), t: PARTITION_THICKNESS }),
+  ...splitW({ axis: 'x', x1: pEast('kitchen-se'), x2: pWest('door-living-w'), zc: pZ('corner-sw'), t: PARTITION_THICKNESS }),
   // Linteau au-dessus de la porte principale (3D seulement)
-  { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: pZ('corner-sw'), yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none', t: PARTITION_THICKNESS },
-  { axis: 'x', x1: pEast('door-living-e'), x2: pWest('corner-se'), zc: pZ('corner-sw'), t: PARTITION_THICKNESS },
+  ...splitW({ axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: pZ('corner-sw'), yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none', t: PARTITION_THICKNESS }),
+  ...splitW({ axis: 'x', x1: pEast('door-living-e'), x2: pWest('corner-se'), zc: pZ('corner-sw'), t: PARTITION_THICKNESS }),
   // Porte principale (2D uniquement)
-  { axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: ROOM_D, segKind: 'door', t: PARTITION_THICKNESS },
+  ...splitW({ axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: ROOM_D, segKind: 'door', t: PARTITION_THICKNESS }),
 
   // ── Cuisine ────────────────────────────────────────────────────────────────
-  { axis: 'z', xc: pX('kitchen-sw'), z1: pSouth('kitchen-sw'), z2: pNorth('kitchen-nw'), t: PARTITION_THICKNESS },
-  { axis: 'z', xc: pX('kitchen-se'), z1: pSouth('kitchen-se'), z2: pNorth('kitchen-ne'), t: PARTITION_THICKNESS },
+  ...splitW({ axis: 'z', xc: pX('kitchen-sw'), z1: pSouth('kitchen-sw'), z2: pNorth('kitchen-nw'), t: PARTITION_THICKNESS }),
+  ...splitW({ axis: 'z', xc: pX('kitchen-se'), z1: pSouth('kitchen-se'), z2: pNorth('kitchen-ne'), t: PARTITION_THICKNESS }),
   // Mur nord SDB / fond cuisine (3 morceaux, saute les piliers)
-  { axis: 'x', x1: pEast('bath-nw'), x2: pWest('kitchen-nw'), zc: pZ('bath-nw'), t: PARTITION_THICKNESS },
-  { axis: 'x', x1: pEast('kitchen-nw'), x2: pWest('kitchen-ne'), zc: pZ('bath-nw'), t: PARTITION_THICKNESS },
-  { axis: 'x', x1: pEast('kitchen-ne'), x2: pWest('bath-ne'), zc: pZ('bath-nw'), t: PARTITION_THICKNESS },
+  ...splitW({ axis: 'x', x1: pEast('bath-nw'), x2: pWest('kitchen-nw'), zc: pZ('bath-nw'), t: PARTITION_THICKNESS }),
+  ...splitW({ axis: 'x', x1: pEast('kitchen-nw'), x2: pWest('kitchen-ne'), zc: pZ('bath-nw'), t: PARTITION_THICKNESS }),
+  ...splitW({ axis: 'x', x1: pEast('kitchen-ne'), x2: pWest('bath-ne'), zc: pZ('bath-nw'), t: PARTITION_THICKNESS }),
 
   // ── Couloir gauche (X=185, Z=460→600) ────────────────────────────────────
   // Segment avant porte
-  { axis: 'z', xc: pX('bath-ne'), z1: pSouth('bath-ne'), z2: pNorth('door-bath-n'), t: PARTITION_THICKNESS },
+  ...splitW({ axis: 'z', xc: pX('bath-ne'), z1: pSouth('bath-ne'), z2: pNorth('door-bath-n'), t: PARTITION_THICKNESS }),
   // Segment après porte
-  { axis: 'z', xc: pX('bath-ne'), z1: pSouth('door-bath-s'), z2: pNorth('bath-se'), t: PARTITION_THICKNESS },
+  ...splitW({ axis: 'z', xc: pX('bath-ne'), z1: pSouth('door-bath-s'), z2: pNorth('bath-se'), t: PARTITION_THICKNESS }),
   // Linteau au-dessus de la porte couloir (3D seulement)
-  { axis: 'z', xc: pX('bath-ne'), z1: pNorth('door-bath-n'), z2: pNorth('door-bath-s'),
-    yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none', t: PARTITION_THICKNESS },
+  ...splitW({ axis: 'z', xc: pX('bath-ne'), z1: pNorth('door-bath-n'), z2: pNorth('door-bath-s'),
+    yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none', t: PARTITION_THICKNESS }),
   // Porte couloir SDB (2D uniquement)
-  { axis: 'z', xc: pX('bath-ne'), z1: pNorth('door-bath-n'), z2: pNorth('door-bath-s'), segKind: 'door', t: PARTITION_THICKNESS },
+  ...splitW({ axis: 'z', xc: pX('bath-ne'), z1: pNorth('door-bath-n'), z2: pNorth('door-bath-s'), segKind: 'door', t: PARTITION_THICKNESS }),
 
   // ── MUR NORD (Z=0) ──────────────────────────────────────────────────────────
   // Panneau ouest intérieur (placo)
@@ -236,7 +260,7 @@ export const WALL_DEFS: WallDef[] = [
   { axis: 'x', x1: pEast('glass-west-ext'), x2: pWest('glass-east-ext'), zc: -20, t: 20, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' },
 
   // ── Douche ─────────────────────────────────────────────────────────────────
-  { axis: 'z', xc: pX('shower-ne'), z1: pSouth('shower-ne'), z2: pNorth('shower-se'), t: PARTITION_THICKNESS },
-  { axis: 'x', x1: pEast('shower-sw'), x2: pWest('shower-se'), zc: pZ('shower-sw'), t: PARTITION_THICKNESS },
+  ...splitW({ axis: 'z', xc: pX('shower-ne'), z1: pSouth('shower-ne'), z2: pNorth('shower-se'), t: PARTITION_THICKNESS }),
+  ...splitW({ axis: 'x', x1: pEast('shower-sw'), x2: pWest('shower-se'), zc: pZ('shower-sw'), t: PARTITION_THICKNESS }),
 
 ];

@@ -346,15 +346,23 @@ function Desks() {
         </group>
       </PositionTransition>
       <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
-        <group userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Bureau 2', actions: ['desk2-toggle', 'desk2-position'] } }}>
-          <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
+        <group userData={{ hoverAction: { label: 'Bureau 2', actions: ['desk2-toggle', 'desk2-position'] } }}>
+          <group userData={{ animUnit: true, isIkea: true }}>
+            <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
+          </group>
           <group position={[0, d2H, 0]} rotation={[0, Math.PI, 0]}>
-            <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
-            <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
-              <Phone item={{} as any} actionState={{}} onSize={() => {}} />
+            <group userData={{ animUnit: true, isIkea: true }}>
+              <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
             </group>
-            <group position={[-22, 0, -7]}>
-              <Mug item={{} as any} actionState={{}} onSize={() => {}} />
+            <group userData={{ animUnit: true, isIkea: true }}>
+              <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
+                <Phone item={{} as any} actionState={{}} onSize={() => {}} />
+              </group>
+            </group>
+            <group userData={{ animUnit: true, isIkea: true }}>
+              <group position={[-22, 0, -7]}>
+                <Mug item={{} as any} actionState={{}} onSize={() => {}} />
+              </group>
             </group>
           </group>
         </group>

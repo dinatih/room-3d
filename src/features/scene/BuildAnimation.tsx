@@ -216,20 +216,6 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
       });
     };
 
-    const addGrouped = (items: THREE.Object3D[]) => {
-      if (items.length === 0) return;
-      const duration = FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN);
-      items.forEach(obj => {
-        groupedObjects.push({
-          obj,
-          origLocalY: obj.position.y,
-          worldToLocalY: getWorldToLocalYFactor(obj),
-          startTime: cursor,
-          duration,
-        });
-      });
-      cursor += STAGGER_MS;
-    };
 
     const sortByYZX = (arr: THREE.Object3D[]) => {
       return [...arr].sort((a, b) => {
@@ -245,27 +231,19 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
         return vA.x - vB.x;
       });
     };
+    const allWalls: THREE.Object3D[] = [];
+    wallsBySide.forEach(group => allWalls.push(...group));
 
-    addGrouped(skirting); // Skirting boards fall as one block
+    const mixedObjects = [
+      ...skirting,
+      ...pillars,
+      ...ikea,
+      ...rest,
+      ...allWalls
+    ];
+
     addSequential(sortByYZX(floor));
-    addSequential(sortByYZX(pillars));
-    addSequential(sortByYZX(ikea));
-    addSequential(sortByYZX(rest));
-    
-    // Each wall side falls as a unified block, but sorted by YZX
-    const wallGroups = Array.from(wallsBySide.values()).sort((groupA, groupB) => {
-      const a = groupA[0], b = groupB[0];
-      if (!a || !b) return 0;
-      const vA = new THREE.Vector3();
-      const vB = new THREE.Vector3();
-      a.getWorldPosition(vA);
-      b.getWorldPosition(vB);
-      if (Math.abs(vA.y - vB.y) > 1) return vA.y - vB.y;
-      if (Math.abs(vA.z - vB.z) > 1) return vA.z - vB.z;
-      return vA.x - vB.x;
-    });
-    wallGroups.forEach(group => addGrouped(group));
-    
+    addSequential(sortByYZX(mixedObjects));
     addSequential(sortByYZX(ceiling));
 
     const objects = groupedObjects;
