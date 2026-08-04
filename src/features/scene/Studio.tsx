@@ -405,9 +405,7 @@ export function Studio() {
 
           {/* Paris Map (Monde réel) */}
           {layers.realWorld && (
-            <CategoryLayerGroup layer={LAYER_NEIGHBORS}>
-              <ParisMap />
-            </CategoryLayerGroup>
+            <ParisMap />
           )}
 
         </group>
