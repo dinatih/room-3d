@@ -7,9 +7,9 @@ import { useGLTF } from '@react-three/drei';
 export function ParisMap() {
   const { scene } = useGLTF('/models/paris_13e.glb');
 
-  // Ajustement de la position pour compenser l'altitude réelle du terrain (ex: 64m)
+  // Ajustement de la position pour compenser l'altitude réelle du terrain (ex: 26m au centre)
   return (
-    <group position={[0, -6400, 0]} rotation={[0, 0, 0]} scale={100}>
+    <group position={[0, -2600, 0]} rotation={[0, 0, 0]} scale={100}>
       <primitive object={scene} />
     </group>
   );
