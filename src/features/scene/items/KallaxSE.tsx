@@ -11,7 +11,7 @@ import { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Kallax2x1 }      from './Kallax2x1';
 import { ShoeHatRack }    from './ShoeHatRack';
-import { DronaInstances } from './Drona';
+import { DroneCell } from './Drona';
 import { Freezer }        from './Freezer';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
@@ -70,7 +70,18 @@ export function KallaxSE({ onSize }: SceneItemProps) {
         <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      <DronaInstances matrices={dronaMatrices} />
+      {/* DRONA Instances individuelles pour animation */}
+      {dronaMatrices.map((m, i) => {
+        const p = new THREE.Vector3();
+        const q = new THREE.Quaternion();
+        const s = new THREE.Vector3();
+        m.decompose(p, q, s);
+        return (
+          <group key={i} position={p} quaternion={q} scale={s}>
+            <DroneCell />
+          </group>
+        );
+      })}
 
       {/* ShoeHatRack — au sol, côté mur D, flush mur B */}
       {/* local: x = stack_z − z_world = −w1/2, z = x_world − stack_x = DEP/2 */}

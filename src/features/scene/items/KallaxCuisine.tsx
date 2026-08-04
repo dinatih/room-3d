@@ -12,7 +12,7 @@ import { Kallax2x1 }     from './Kallax2x1';
 import { Kallax2x2 }     from './Kallax2x2';
 import { Kallax2x2Spec } from './Kallax2x2Spec';
 import { NinjaSP101 } from './NinjaSP101';
-import { DronaInstances } from './Drona';
+import { DroneCell } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -80,8 +80,18 @@ export function KallaxCuisine({ actionState, onSize }: SceneItemProps) {
       <group position={[0, h2 + h2 + h1, 0]}>
         <Kallax2x1 item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* 6 Drona : 4 dans le 2×2 bas + 2 sur le dessus */}
-      <DronaInstances matrices={dronaMatrices} />
+      {/* DRONA Instances individuelles pour animation (6 Drona : 4 dans le 2x2 bas + 2 sur le dessus) */}
+      {dronaMatrices.map((m, i) => {
+        const p = new THREE.Vector3();
+        const q = new THREE.Quaternion();
+        const s = new THREE.Vector3();
+        m.decompose(p, q, s);
+        return (
+          <group key={i} position={p} quaternion={q} scale={s}>
+            <DroneCell />
+          </group>
+        );
+      })}
 
       {/* Mini four Ninja SP101EU — dans la case basse du 2×2 spec */}
       <group position={[-8, PIZZA_Y, 0]} rotation-y={Math.PI}>

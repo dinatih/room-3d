@@ -28,9 +28,8 @@ const shelfMat  = new THREE.MeshStandardMaterial({ color: 0xf0f0e8, roughness: 0
 const handleMat = new THREE.MeshStandardMaterial({ color: 0xb0b0b0, roughness: 0.25, metalness: 0.8 });
 
 // Positions X locales des panneaux
-const X_CLOSED_L = -PANEL_W / 2;  // -27.5
-const X_CLOSED_R = +PANEL_W / 2;  // +27.5
-const X_OPEN     = +PANEL_W / 2;  // tous à droite quand ouvert
+const X_CLOSED_L = -PANEL_W / 2;  // -30.85
+const X_CLOSED_R = +PANEL_W / 2;  // +30.85
 
 // Les deux panneaux se croisent : panneau L côté SDB, panneau R côté mur
 const ZL = -(SEP_T / 2 + PANEL_T / 2);  // -1.65
@@ -39,7 +38,8 @@ const ZR = +(SEP_T / 2 + PANEL_T / 2);  // +1.65
 export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   const groupLRef = useRef<THREE.Group>(null!);
   const groupRRef = useRef<THREE.Group>(null!);
-  const isOpen    = actionState['sdb-closet-toggle'] ?? false;
+  const isOpenL   = actionState['sdb-closet-l-toggle'] ?? false;
+  const isOpenR   = actionState['sdb-closet-r-toggle'] ?? false;
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
@@ -75,8 +75,10 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   }, []);
 
   useFrame(() => {
-    const targetL = isOpen ? X_OPEN : X_CLOSED_L;
-    const targetR = isOpen ? X_OPEN : X_CLOSED_R;
+    // Si la porte gauche est ouverte, elle glisse à la place de la porte droite
+    const targetL = isOpenL ? X_CLOSED_R : X_CLOSED_L;
+    // Si la porte droite est ouverte, elle glisse à la place de la porte gauche
+    const targetR = isOpenR ? X_CLOSED_L : X_CLOSED_R;
     const dL = targetL - groupLRef.current.position.x;
     const dR = targetR - groupRRef.current.position.x;
     if (Math.abs(dL) > 0.01 || Math.abs(dR) > 0.01) {
@@ -90,7 +92,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   });
 
   return (
-    <group userData={{ hoverAction: { label: 'Placard SDB', actionId: 'sdbCloset' } }}>
+    <group>
       {/* Rail haut */}
       <mesh position={[0, H - 1.5, 0]} castShadow material={railMat}>
         <boxGeometry args={[W + 4, 3, RAIL_D]} />
@@ -101,7 +103,8 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
       </mesh>
 
       {/* Panneau gauche + poignée */}
-      <group ref={groupLRef} position={[X_CLOSED_L, 0, ZL]}>
+      <group ref={groupLRef} position={[X_CLOSED_L, 0, ZL]}
+             userData={{ hoverAction: { label: 'Porte SDB G', actionId: 'sdbClosetL' } }}>
         <mesh position={[0, H / 2, 0]} castShadow material={doorMat}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
         </mesh>
@@ -111,7 +114,8 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
       </group>
 
       {/* Panneau droit + poignée */}
-      <group ref={groupRRef} position={[X_CLOSED_R, 0, ZR]}>
+      <group ref={groupRRef} position={[X_CLOSED_R, 0, ZR]}
+             userData={{ hoverAction: { label: 'Porte SDB D', actionId: 'sdbClosetR' } }}>
         <mesh position={[0, H / 2, 0]} castShadow material={doorMat}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
         </mesh>

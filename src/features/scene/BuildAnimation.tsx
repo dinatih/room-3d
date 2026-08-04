@@ -54,6 +54,7 @@ export function unmergeScene(scene: THREE.Scene) {
     if (o.userData?.isMergedSource) {
       o.traverse(m => {
         if ((m as THREE.Mesh).isMesh && !m.userData.isMergedStatic) {
+          if (m.type !== 'Mesh') return;
           if ((m as any).isInstancedMesh) return;
           if (m.userData.skipMerge) return;
 
@@ -110,6 +111,11 @@ function collectScene(scene: THREE.Scene) {
     if (o.userData?.type === 'pillar') isPillar = true;
     else o.traverse(c => { if (c.userData?.type === 'pillar') isPillar = true; });
 
+    let isIkea = o.userData?.isIkea;
+    if (!isIkea) {
+      o.traverseAncestors(p => { if (p.userData?.isIkea) isIkea = true; });
+    }
+
     if (brickType === 'ceiling') ceiling.push(o);
     else if (brickType === 'floor') floor.push(o);
     else if (brickType === 'wall' && isPillar) pillars.push(o);
@@ -120,7 +126,7 @@ function collectScene(scene: THREE.Scene) {
     }
     else if (brickType === 'ground') { /* ignore */ }
     else if (brickType === 'skirting') skirting.push(o);
-    else if (o.userData?.isIkea) ikea.push(o);
+    else if (isIkea) ikea.push(o);
     else rest.push(o);
   }
 

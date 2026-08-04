@@ -12,7 +12,7 @@ import * as THREE from 'three';
 import { Kallax2x1 }      from './Kallax2x1';
 import { Kallax1x1 }      from './Kallax1x1';
 import { MannequinHead }  from './MannequinHead';
-import { DronaInstances } from './Drona';
+import { DroneCell } from './Drona';
 import { Variera32x13 }   from './Variera32x13';
 import { MeubleT }        from './MeubleT';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
@@ -72,7 +72,18 @@ export function KallaxNW({ onSize }: SceneItemProps) {
       <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
         <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <DronaInstances matrices={dronaMatrices} />
+      {/* DRONA Instances individuelles pour animation */}
+      {dronaMatrices.map((m, i) => {
+        const p = new THREE.Vector3();
+        const q = new THREE.Quaternion();
+        const s = new THREE.Vector3();
+        m.decompose(p, q, s);
+        return (
+          <group key={i} position={p} quaternion={q} scale={s}>
+            <DroneCell />
+          </group>
+        );
+      })}
 
       {/* MannequinHead centré sur sommet tour, pivoté 45° vers centre pièce.
           Head forward = +Z local. rotY=3π/4 → world +X+Z (diagonale corner→centre). */}

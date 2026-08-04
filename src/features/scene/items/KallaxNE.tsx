@@ -10,7 +10,7 @@ import { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Kallax2x1 }   from './Kallax2x1';
 import { Kallax2x2 }   from './Kallax2x2';
-import { DronaInstances } from './Drona';
+import { DroneCell } from './Drona';
 import { Variera32x28 } from './Variera32x28';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
@@ -78,8 +78,18 @@ export function KallaxNE({ onSize }: SceneItemProps) {
         <Kallax2x2 item={k('kallax-ne-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       
-      {/* DRONA Instances */}
-      <DronaInstances matrices={dronaMatrices} />
+      {/* DRONA Instances individuelles pour animation */}
+      {dronaMatrices.map((m, i) => {
+        const p = new THREE.Vector3();
+        const q = new THREE.Quaternion();
+        const s = new THREE.Vector3();
+        m.decompose(p, q, s);
+        return (
+          <group key={i} position={p} quaternion={q} scale={s}>
+            <DroneCell />
+          </group>
+        );
+      })}
 
       {/* VARIERA 32×28 sur sommet 2×2, coin Nord-Est (local +X=mur Nord, +Z=mur Est).
           rotY=0 : grand axe (32) le long X (= world Z, parallèle mur Est).
