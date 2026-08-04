@@ -15,7 +15,7 @@ export const SCENARIO_VISITE_GUIDEE: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Sortie' },
   
   // Ouvrir la porte d'entrée
-  { type: 'INTERACT', triggerEventKey: 'entry-door-toggle', animation: 'idle', duration: 1.5 },
+  { type: 'INTERACT', triggerEventKey: 'entryDoor', animation: 'idle', duration: 1.5 },
   
   // Entrer dans l'appartement
   { type: 'MOVE_TO', targetNodeId: 'Couloir_Entree' },
@@ -24,7 +24,7 @@ export const SCENARIO_VISITE_GUIDEE: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
   
   // Ouvrir la porte de la SDB
-  { type: 'INTERACT', triggerEventKey: 'bathroom-door-toggle', animation: 'idle', duration: 1.5 },
+  { type: 'INTERACT', triggerEventKey: 'bathroomDoor', animation: 'idle', duration: 1.5 },
   
   // Passer la porte SDB
   { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },
@@ -39,12 +39,12 @@ export const SCENARIO_VISITE_GUIDEE: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
   
   // Fermer la porte SDB
-  { type: 'INTERACT', triggerEventKey: 'bathroom-door-toggle', animation: 'idle', duration: 1.0 },
+  { type: 'INTERACT', triggerEventKey: 'bathroomDoor', animation: 'idle', duration: 1.0 },
   
   // Aller vers la sortie
   { type: 'MOVE_TO', targetNodeId: 'Couloir_Entree' },
   
   // Fermer porte entrée (on interagit avant de sortir complètement si on veut, ou après)
   { type: 'MOVE_TO', targetNodeId: 'Sortie' },
-  { type: 'INTERACT', triggerEventKey: 'entry-door-toggle', animation: 'idle', duration: 1.0 }
+  { type: 'INTERACT', triggerEventKey: 'entryDoor', animation: 'idle', duration: 1.0 }
 ];
