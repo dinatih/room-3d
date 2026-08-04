@@ -40,6 +40,7 @@ import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
 import { MeasurementTool }            from './MeasurementTool';
+import { ParisMap }                   from './ParisMap';
 
 import {
   ROOM_W,
@@ -399,6 +400,13 @@ export function Studio() {
           {layers.lidar && (
             <CategoryLayerGroup layer={LAYER_LIDAR}>
               <LidarScan mode={lidarMode} opacity={lidarOpacity} />
+            </CategoryLayerGroup>
+          )}
+
+          {/* Paris Map (Monde réel) */}
+          {layers.realWorld && (
+            <CategoryLayerGroup layer={LAYER_NEIGHBORS}>
+              <ParisMap />
             </CategoryLayerGroup>
           )}
 

@@ -286,6 +286,7 @@ export interface LayerState {
   grid:         boolean;
   gridDepth:    boolean;
   laraGrid:     boolean;
+  realWorld:    boolean;
 
   skeleton:     boolean;
   ceiling:      boolean;
@@ -588,6 +589,7 @@ export function SidePanel({
       {layerBtn('cyan',   'LiDAR scan 📡', 'lidar')}
       {layers.lidar && b0('cyan', ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}
       {layers.lidar && b0('cyan', `Opacité ${Math.round(lidarOpacity * 100)}%`, onToggleLidarOpacity)}
+      {layerBtn('primary', 'Quartier (Paris 13) 🌍', 'realWorld')}
       {layerBtn('yellow', 'Soleil réel ☀', 'realSun')}
 
       {sunInfo && (
