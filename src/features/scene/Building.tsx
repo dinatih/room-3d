@@ -91,12 +91,14 @@ const groundExteriorMat = new THREE.MeshStandardMaterial({ color: COLORS.ground,
 const westMats  = boxFaceMats({ '+x': wallMat, '+y': wallMat, '-y': wallMat, '+z': wallMat, '-z': wallMat });
 const eastMats  = boxFaceMats({ '-x': wallMat, '+y': wallMat, '-y': wallMat, '+z': wallMat, '-z': wallMat });
 const northMats = boxFaceMats({ '+x': wallMat, '-x': wallMat, '+y': wallMat, '-y': wallMat, '+z': wallMat });
+const southMats = boxFaceMats({ '+x': wallMat, '-x': wallMat, '+y': wallMat, '-y': wallMat, '-z': wallMat });
 
 // Lookup matériau par nom (utilisé lors du rendu WALL_DEFS)
 const MAT_MAP: Record<string, THREE.Material | THREE.Material[]> = {
   west:    westMats,
   east:    eastMats,
   north:   northMats,
+  south:   southMats,
   default: wallMat,
 };
 
@@ -192,6 +194,25 @@ function WX({ x1, x2, zc, t = WALL_THICKNESS, yBase = 0, h = WALL_H, mat = wallM
   userData?: Record<string, unknown>;
 }) {
   return <P w={x2 - x1} h={h} d={t} x={(x1 + x2) / 2} y={yBase + h / 2} z={zc} mat={caplessX(mat)} userData={userData} />;
+}
+
+function DiagBox({ d1, d2, yBase = 0, h = WALL_H, mat = southMats, userData }: {
+  d1: number; d2: number; yBase?: number; h?: number; mat?: THREE.Material | THREE.Material[]; userData?: any;
+}) {
+  const len = d2 - d1;
+  const cx = (d1 + d2) / 2;
+  const center = DiagWall.p(cx, DiagWall.depth / 2);
+  return (
+    <mesh
+      ref={(m) => { if (m) m.material = mat as any; }}
+      position={[center.x, yBase + h / 2, center.z]}
+      rotation-y={DiagWall.rotY + Math.PI / 2}
+      castShadow receiveShadow
+      userData={userData}
+    >
+      <boxGeometry args={[len, h, DiagWall.depth]} />
+    </mesh>
+  );
 }
 
 /** ExtrudeGeometry depuis une liste de points [worldX, worldZ]. */
@@ -426,29 +447,6 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
   // Géométries complexes via useMemo ──────────────────────────────────────────
 
   const diagGeos = useMemo(() => {
-    // Linteau au-dessus de la porte d'entrée
-    const linteau = makeExtrudeGeo(
-      [
-        DiagWall.p(DiagWall.door.start),
-        DiagWall.p(DiagWall.door.end),
-        DiagWall.p(DiagWall.door.end, DiagWall.depth),
-        DiagWall.p(DiagWall.door.start, DiagWall.depth)
-      ].map(p => [p.x, p.z]),
-      WALL_H - DOOR_H,
-      DOOR_H,
-    );
-
-    // Section SW — tronquée de WALL_THICKNESS cm côté SW pour le pilier
-    const sw = makeExtrudeGeo(
-      [
-        DiagWall.p(DiagWall.door.end),
-        DiagWall.p(DiagWall.len - WALL_THICKNESS),
-        DiagWall.p(DiagWall.len - WALL_THICKNESS, DiagWall.depth),
-        DiagWall.p(DiagWall.door.end, DiagWall.depth)
-      ].map(p => [p.x, p.z]),
-      WALL_H,
-    );
-
     // diag-ne-kite — 4 côtés, angle en C = angle interne de la jonction (~120°).
     // C = intersection de X=DiagWall.A.x+WALL_THICKNESS avec la droite ext diagonale passant par eP(0).
     const eP0 = DiagWall.p(0, DiagWall.depth);
@@ -483,7 +481,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
       WALL_H,
     );
 
-    return { linteau, sw, diagPillar, diagPillarSW };
+    return { diagPillar, diagPillarSW };
   }, []);
 
   return (
@@ -535,8 +533,8 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                 return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
               })}
               {/* Mur diagonal */}
-              <mesh geometry={diagGeos.linteau} material={wallMatDiag} castShadow receiveShadow userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
-              <mesh geometry={diagGeos.sw}      material={wallMatDiag} castShadow receiveShadow userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
+              <DiagBox d1={DiagWall.door.start} d2={DiagWall.door.end} yBase={DOOR_H} h={WALL_H - DOOR_H} userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
+              <DiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
 
               {/* Panneaux bois occultants jardin */}
               {GARDEN_PANEL_DEFS.map((p, i) => (
@@ -547,14 +545,14 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
 
               {/* Mur en face du jardin (parallèle au Mur diag) */}
               <mesh
+                ref={(m) => { if (m) m.material = northMats as any; }}
                 position={[150, WALL_H / 2, -786.33]}
                 rotation-y={DiagWall.rotY + Math.PI / 2}
                 castShadow
                 receiveShadow
                 userData={{ animUnit: true, brickType: 'wall', side: 'gardenFront' }}
-                material={wallMat}
               >
-                <boxGeometry args={[577.35, WALL_H, 40]} />
+                <boxGeometry args={[1200, WALL_H, 40]} />
               </mesh>
             </group>
           )}
