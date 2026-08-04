@@ -3,9 +3,9 @@ import { AgentInstruction, ZoneNode } from './aiTypes';
 export const ZONES: Record<string, ZoneNode> = {
   Start: { id: 'Start', x: 250, z: 300 },
   Couloir_Central: { id: 'Couloir_Central', x: 250, z: 400 },
-  Couloir_Entree: { id: 'Couloir_Entree', x: 280, z: 480 }, // Devant porte d'entrée
-  Sortie: { id: 'Sortie', x: 350, z: 580 }, // Dehors
-  Couloir_SDB: { id: 'Couloir_SDB', x: 250, z: 560 }, // Devant porte SDB dans le couloir
+  Couloir_Entree: { id: 'Couloir_Entree', x: 248, z: 535 }, // Dedans, devant porte d'entrée
+  Sortie: { id: 'Sortie', x: 288, z: 603 }, // Dehors, devant la porte
+  Couloir_SDB: { id: 'Couloir_SDB', x: 248, z: 560 }, // Devant porte SDB dans le couloir
   Devant_Vasque: { id: 'Devant_Vasque', x: 116, z: 545 }, // Devant la vasque dans SDB
   Entree_SDB: { id: 'Entree_SDB', x: 150, z: 560 }, // Juste à l'intérieur de la SDB
 };
