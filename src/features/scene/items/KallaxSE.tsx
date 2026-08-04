@@ -82,7 +82,7 @@ export function KallaxSE({ onSize }: SceneItemProps) {
 
       {/* DRONA Instances individuelles pour animation */}
       {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
           <DroneCell />
         </group>
       ))}

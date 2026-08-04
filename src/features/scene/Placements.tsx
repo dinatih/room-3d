@@ -627,7 +627,7 @@ export function DronaBoxes() {
   return (
     <group userData={{ isIkea: true }}>
       {standalone.map((p, i) => (
-        <group key={i} position={[p.cx, p.cy, p.cz]} rotation={[0, p.rotY, 0]}>
+        <group key={i} position={[p.cx, p.cy, p.cz]} rotation={[0, p.rotY, 0]} userData={{ animUnit: true }}>
           <DroneCell />
         </group>
       ))}

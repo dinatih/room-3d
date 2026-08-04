@@ -92,14 +92,24 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
     const targetR = isOpenLRef.current ? X_CLOSED_L : X_CLOSED_R;
     const dL = targetL - groupLRef.current.position.x;
     const dR = targetR - groupRRef.current.position.x;
-    if (Math.abs(dL) > 0.01 || Math.abs(dR) > 0.01) {
+    let changed = false;
+    if (Math.abs(dL) > 0.01) {
       groupLRef.current.position.x += dL * 0.12;
-      groupRRef.current.position.x += dR * 0.12;
-      invalidate();
-    } else {
+      changed = true;
+    } else if (groupLRef.current.position.x !== targetL) {
       groupLRef.current.position.x = targetL;
-      groupRRef.current.position.x = targetR;
+      changed = true;
     }
+
+    if (Math.abs(dR) > 0.01) {
+      groupRRef.current.position.x += dR * 0.12;
+      changed = true;
+    } else if (groupRRef.current.position.x !== targetR) {
+      groupRRef.current.position.x = targetR;
+      changed = true;
+    }
+
+    if (changed) invalidate();
   });
 
   return (

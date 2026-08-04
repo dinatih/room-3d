@@ -109,7 +109,7 @@ export function CuisineDrona() {
   return (
     <>
       {DRONA_TRANSFORMS.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
           <DroneCell />
         </group>
       ))}
@@ -172,7 +172,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
 
       {/* 3 boîtes Drona sur le meuble haut */}
       {!noDrona && DRONA_TRANSFORMS.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
           <DroneCell />
         </group>
       ))}
