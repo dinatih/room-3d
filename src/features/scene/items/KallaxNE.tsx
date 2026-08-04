@@ -66,6 +66,16 @@ export function KallaxNE({ onSize }: SceneItemProps) {
     return matrices;
   }, []);
 
+  const dronaTransforms = useMemo(() => {
+    return dronaMatrices.map(m => {
+      const p = new THREE.Vector3();
+      const q = new THREE.Quaternion();
+      const s = new THREE.Vector3();
+      m.decompose(p, q, s);
+      return { p, q, s };
+    });
+  }, [dronaMatrices]);
+
   return (
     <group ref={ref}>
       {/* 2×1 bas — spans Y ∈ [0, h1] */}
@@ -79,17 +89,11 @@ export function KallaxNE({ onSize }: SceneItemProps) {
       </group>
       
       {/* DRONA Instances individuelles pour animation */}
-      {dronaMatrices.map((m, i) => {
-        const p = new THREE.Vector3();
-        const q = new THREE.Quaternion();
-        const s = new THREE.Vector3();
-        m.decompose(p, q, s);
-        return (
-          <group key={i} position={p} quaternion={q} scale={s}>
-            <DroneCell />
-          </group>
-        );
-      })}
+      {dronaTransforms.map((t, i) => (
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
+          <DroneCell />
+        </group>
+      ))}
 
       {/* VARIERA 32×28 sur sommet 2×2, coin Nord-Est (local +X=mur Nord, +Z=mur Est).
           rotY=0 : grand axe (32) le long X (= world Z, parallèle mur Est).

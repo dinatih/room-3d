@@ -48,6 +48,16 @@ export function KallaxSE({ onSize }: SceneItemProps) {
     return DRONA_POSITIONS.map(([x, y, z]) => rot.clone().setPosition(x, y, z));
   }, []);
 
+  const dronaTransforms = useMemo(() => {
+    return dronaMatrices.map(m => {
+      const p = new THREE.Vector3();
+      const q = new THREE.Quaternion();
+      const s = new THREE.Vector3();
+      m.decompose(p, q, s);
+      return { p, q, s };
+    });
+  }, [dronaMatrices]);
+
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
     onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
@@ -71,17 +81,11 @@ export function KallaxSE({ onSize }: SceneItemProps) {
       </group>
 
       {/* DRONA Instances individuelles pour animation */}
-      {dronaMatrices.map((m, i) => {
-        const p = new THREE.Vector3();
-        const q = new THREE.Quaternion();
-        const s = new THREE.Vector3();
-        m.decompose(p, q, s);
-        return (
-          <group key={i} position={p} quaternion={q} scale={s}>
-            <DroneCell />
-          </group>
-        );
-      })}
+      {dronaTransforms.map((t, i) => (
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
+          <DroneCell />
+        </group>
+      ))}
 
       {/* ShoeHatRack — au sol, côté mur D, flush mur B */}
       {/* local: x = stack_z − z_world = −w1/2, z = x_world − stack_x = DEP/2 */}

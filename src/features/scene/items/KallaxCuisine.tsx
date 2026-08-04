@@ -61,6 +61,16 @@ export function KallaxCuisine({ actionState, onSize }: SceneItemProps) {
     return [...inside, ...top];
   }, []);
 
+  const dronaTransforms = useMemo(() => {
+    return dronaMatrices.map(m => {
+      const p = new THREE.Vector3();
+      const q = new THREE.Quaternion();
+      const s = new THREE.Vector3();
+      m.decompose(p, q, s);
+      return { p, q, s };
+    });
+  }, [dronaMatrices]);
+
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
     onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
@@ -81,17 +91,11 @@ export function KallaxCuisine({ actionState, onSize }: SceneItemProps) {
         <Kallax2x1 item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* DRONA Instances individuelles pour animation (6 Drona : 4 dans le 2x2 bas + 2 sur le dessus) */}
-      {dronaMatrices.map((m, i) => {
-        const p = new THREE.Vector3();
-        const q = new THREE.Quaternion();
-        const s = new THREE.Vector3();
-        m.decompose(p, q, s);
-        return (
-          <group key={i} position={p} quaternion={q} scale={s}>
-            <DroneCell />
-          </group>
-        );
-      })}
+      {dronaTransforms.map((t, i) => (
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
+          <DroneCell />
+        </group>
+      ))}
 
       {/* Mini four Ninja SP101EU — dans la case basse du 2×2 spec */}
       <group position={[-8, PIZZA_Y, 0]} rotation-y={Math.PI}>

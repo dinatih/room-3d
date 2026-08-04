@@ -276,7 +276,7 @@ export function Furniture() {
       <group position={[(NICHE_X + DOOR_START) / 2 - 5, 0, BATH_Z_END - 53]}>
         <GrassRug item={stub('grass-rug')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[KITCHEN_X0, 0, ROOM_D]}>
+      <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ isIkea: true }}>
         <CuisineDrona />
       </group>
       <group position={[NICHE_X + 20, 0, cbZ]} userData={{ animUnit: true, isIkea: true }}>
@@ -621,7 +621,7 @@ export function DronaBoxes() {
     { cx: 24.5,            cy: 50 + DF / 2 + 0.2, cz: 269.5,           rotY: Math.PI / 2 },
   ];
   return (
-    <group userData={{ animUnit: true }}>
+    <group userData={{ isIkea: true }}>
       {standalone.map((p, i) => (
         <group key={i} position={[p.cx, p.cy, p.cz]} rotation={[0, p.rotY, 0]}>
           <DroneCell />

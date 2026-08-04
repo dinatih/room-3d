@@ -16,7 +16,7 @@ import { SinkBoholmen }   from './SinkBoholmen';
 import { Stove }          from './Stove';
 import { KitchenCabinet } from './KitchenCabinet';
 import { Fridge }         from './Fridge';
-import { DronaInstances } from './Drona';
+import { DroneCell } from './Drona';
 import { Lillhavet }      from './Lillhavet';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
@@ -96,9 +96,25 @@ const DRONA_MATRICES = [0, 1, 2].map(i => {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
+const DRONA_TRANSFORMS = DRONA_MATRICES.map(m => {
+  const p = new THREE.Vector3();
+  const q = new THREE.Quaternion();
+  const s = new THREE.Vector3();
+  m.decompose(p, q, s);
+  return { p, q, s };
+});
+
 /** Drona layer seul — pour placement dans un layer séparé (furniture). */
 export function CuisineDrona() {
-  return <DronaInstances matrices={DRONA_MATRICES} />;
+  return (
+    <>
+      {DRONA_TRANSFORMS.map((t, i) => (
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
+          <DroneCell />
+        </group>
+      ))}
+    </>
+  );
 }
 
 export function CuisineLillhavet() {
@@ -155,7 +171,11 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
       <UpperCabinet />
 
       {/* 3 boîtes Drona sur le meuble haut */}
-      {!noDrona && <DronaInstances matrices={DRONA_MATRICES} />}
+      {!noDrona && DRONA_TRANSFORMS.map((t, i) => (
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
+          <DroneCell />
+        </group>
+      ))}
     </group>
   );
 }

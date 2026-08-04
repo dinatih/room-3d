@@ -52,6 +52,16 @@ export function KallaxNW({ onSize }: SceneItemProps) {
     return DRONA_POSITIONS.map(([x, y, z]) => rot.clone().setPosition(x, y, z));
   }, []);
 
+  const dronaTransforms = useMemo(() => {
+    return dronaMatrices.map(m => {
+      const p = new THREE.Vector3();
+      const q = new THREE.Quaternion();
+      const s = new THREE.Vector3();
+      m.decompose(p, q, s);
+      return { p, q, s };
+    });
+  }, [dronaMatrices]);
+
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
     onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
@@ -73,17 +83,11 @@ export function KallaxNW({ onSize }: SceneItemProps) {
         <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* DRONA Instances individuelles pour animation */}
-      {dronaMatrices.map((m, i) => {
-        const p = new THREE.Vector3();
-        const q = new THREE.Quaternion();
-        const s = new THREE.Vector3();
-        m.decompose(p, q, s);
-        return (
-          <group key={i} position={p} quaternion={q} scale={s}>
-            <DroneCell />
-          </group>
-        );
-      })}
+      {dronaTransforms.map((t, i) => (
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
+          <DroneCell />
+        </group>
+      ))}
 
       {/* MannequinHead centré sur sommet tour, pivoté 45° vers centre pièce.
           Head forward = +Z local. rotY=3π/4 → world +X+Z (diagonale corner→centre). */}
