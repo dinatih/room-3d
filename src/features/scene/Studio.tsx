@@ -279,8 +279,8 @@ export function Studio() {
         frameloop={showInventory ? 'never' : 'demand'}
         camera={{
           fov:  50,
-          near: 1,
-          far:  20000,
+          near: 5,
+          far:  2000000,
           position: [ROOM_W / 2, 1000, -150],
         }}
         shadows={{ type: PCFSoftShadowMap }}
