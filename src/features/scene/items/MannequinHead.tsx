@@ -26,6 +26,19 @@ export function MannequinHead({ onSize }: SceneItemProps) {
       -(box.min.z + box.max.z) / 2,
     );
     onSize(box.getSize(new THREE.Vector3()));
+
+    // Ajouter une "perruque" aléatoire en teintant la matière
+    const randomColor = new THREE.Color().setHSL(Math.random(), 0.8, 0.5);
+    scene.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      if (mesh.isMesh && mesh.material) {
+        // Cloner la matière pour ne pas affecter les autres instances
+        mesh.material = (mesh.material as THREE.Material).clone();
+        if ('color' in mesh.material) {
+          (mesh.material as THREE.MeshStandardMaterial).color = randomColor;
+        }
+      }
+    });
   }, [scene]);
 
   return <primitive object={scene} />;

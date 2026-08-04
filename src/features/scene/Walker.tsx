@@ -26,7 +26,8 @@ import {
   ACTION_GARDEN_SOFA_WEST,
   ACTION_COOKING,
   ACTION_KALLAX_NE,
-  ACTION_FRESH_AIR
+  ACTION_FRESH_AIR,
+  ACTION_FULL_TOUR
 } from './ai/ZoneNodes';
 import { useAgentController } from './ai/useAgentController';
 
@@ -771,6 +772,7 @@ function SingleCharacter({
   const extraStates = useSceneStore(state => state.extraStates);
   
   const activeActionKey = useMemo(() => {
+    if (extraStates.aiFullTour) return 'aiFullTour';
     if (extraStates.aiGoToilet) return 'aiGoToilet';
     if (extraStates.aiSitDesk1) return 'aiSitDesk1';
     if (extraStates.aiSitDesk2) return 'aiSitDesk2';
@@ -788,6 +790,7 @@ function SingleCharacter({
 
   const activeActionScenario = useMemo(() => {
     switch (activeActionKey) {
+      case 'aiFullTour': return ACTION_FULL_TOUR;
       case 'aiGoToilet': return ACTION_GO_TO_TOILET;
       case 'aiSitDesk1': return ACTION_SIT_DESK_1;
       case 'aiSitDesk2': return ACTION_SIT_DESK_2;
@@ -1658,7 +1661,7 @@ function SingleCharacter({
       (Math.abs(cameraState.walkYaw - (groupRef.current.userData.lastYaw || 0)) > 0.001);
     groupRef.current.userData.lastYaw = cameraState.walkYaw;
 
-    if (!isPaused && !isMoving && !isPreview && !isRotating) {
+    if (!isPaused && !isMoving && !isPreview && !isRotating && !isGuidedTour) {
         idleTimerRef.current += delta;
     } else {
         idleTimerRef.current = 0;
@@ -2159,8 +2162,12 @@ function InternalWalker(props: WalkerProps) {
   const femaleStandingPose1Gltf = useGLTF('media/sandbox/anims/anim_female_standing_pose_1.glb');
   const femaleStandingPose2Gltf = useGLTF('media/sandbox/anims/anim_female_standing_pose_2.glb');
   const femaleSittingPoseGltf = useGLTF('media/sandbox/anims/anim_female_sitting_pose.glb');
+  const femaleSittingPose1Gltf = useGLTF('media/sandbox/anims/anim_female_sitting_pose_1.glb');
+  const femaleSittingPose3Gltf = useGLTF('media/sandbox/anims/anim_female_sitting_pose_3.glb');
   const femaleDancePoseGltf = useGLTF('media/sandbox/anims/anim_female_dance_pose.glb');
   const femaleDynamicPoseGltf = useGLTF('media/sandbox/anims/anim_female_dynamic_pose.glb');
+  const shakingHands2Gltf = useGLTF('media/sandbox/anims/anim_shaking_hands_2.glb');
+  const handRaisingGltf = useGLTF('media/sandbox/anims/anim_hand_raising.glb');
 
   const hipHopDanceGltf = useGLTF('media/sandbox/anims/anim_hip_hop_dancing.glb');
   const hipHopDance1Gltf = useGLTF('media/sandbox/anims/anim_hip_hop_dancing_1.glb');
@@ -2221,8 +2228,12 @@ function InternalWalker(props: WalkerProps) {
     'media/sandbox/anims/anim_female_standing_pose_1.glb': femaleStandingPose1Gltf,
     'media/sandbox/anims/anim_female_standing_pose_2.glb': femaleStandingPose2Gltf,
     'media/sandbox/anims/anim_female_sitting_pose.glb': femaleSittingPoseGltf,
+    'media/sandbox/anims/anim_female_sitting_pose_1.glb': femaleSittingPose1Gltf,
+    'media/sandbox/anims/anim_female_sitting_pose_3.glb': femaleSittingPose3Gltf,
     'media/sandbox/anims/anim_female_dance_pose.glb': femaleDancePoseGltf,
     'media/sandbox/anims/anim_female_dynamic_pose.glb': femaleDynamicPoseGltf,
+    'media/sandbox/anims/anim_shaking_hands_2.glb': shakingHands2Gltf,
+    'media/sandbox/anims/anim_hand_raising.glb': handRaisingGltf,
     'media/sandbox/anims/anim_hip_hop_dancing.glb': hipHopDanceGltf,
     'media/sandbox/anims/anim_hip_hop_dancing_1.glb': hipHopDance1Gltf,
     'media/sandbox/anims/anim_hip_hop_dancing_2.glb': hipHopDance2Gltf,
@@ -2251,7 +2262,7 @@ function InternalWalker(props: WalkerProps) {
     'media/sandbox/anims/anim_jazz_dancing.glb': jazzDanceGltf,
     'media/sandbox/anims/anim_can_can.glb': canCanGltf,
     'media/sandbox/anims/anim_ymca_dance.glb': ymcaDanceGltf,
-  }), [sittingGltf, swimmingGltf, pushUpGltf, climbingGltf, laying1Gltf, bellyDanceGltf, dancingTwerkGltf, soccerballGltf, jabCrossGltf, femaleLayingPose9Gltf, takedownVictimGltf, takedownAttackerGltf, femaleStandingPoseGltf, femaleStandingPose1Gltf, femaleStandingPose2Gltf, femaleSittingPoseGltf, femaleDancePoseGltf, femaleDynamicPoseGltf, hipHopDanceGltf, hipHopDance1Gltf, hipHopDance2Gltf, hipHopDance4Gltf, hipHopDance6Gltf, hipHopDance7Gltf, hipHopDance10Gltf, lockingHipHopGltf, robotHipHopGltf, salsaDanceGltf, salsaDance1Gltf, salsaDance3Gltf, salsaDance4Gltf, sambaDanceGltf, sambaDance1Gltf, sambaDance2Gltf, houseDanceGltf, breakdanceUprockGltf, gangnamStyleGltf, capoeiraGltf, rumbaDanceGltf, twistDanceGltf, macarenaDanceGltf, macarenaDance1Gltf, swingDanceGltf, jazzDanceGltf, canCanGltf, ymcaDanceGltf]);
+  }), [sittingGltf, swimmingGltf, pushUpGltf, climbingGltf, laying1Gltf, bellyDanceGltf, dancingTwerkGltf, soccerballGltf, jabCrossGltf, femaleLayingPose9Gltf, takedownVictimGltf, takedownAttackerGltf, femaleStandingPoseGltf, femaleStandingPose1Gltf, femaleStandingPose2Gltf, femaleSittingPoseGltf, femaleDancePoseGltf, femaleDynamicPoseGltf, hipHopDanceGltf, hipHopDance1Gltf, hipHopDance2Gltf, hipHopDance4Gltf, hipHopDance6Gltf, hipHopDance7Gltf, hipHopDance10Gltf, lockingHipHopGltf, robotHipHopGltf, salsaDanceGltf, salsaDance1Gltf, salsaDance3Gltf, salsaDance4Gltf, sambaDanceGltf, sambaDance1Gltf, sambaDance2Gltf, houseDanceGltf, breakdanceUprockGltf, gangnamStyleGltf, capoeiraGltf, rumbaDanceGltf, twistDanceGltf, macarenaDanceGltf, macarenaDance1Gltf, swingDanceGltf, jazzDanceGltf, canCanGltf, ymcaDanceGltf, shakingHands2Gltf, femaleSittingPose1Gltf, femaleSittingPose3Gltf, handRaisingGltf]);
 
   const charactersWithAnims = useMemo(() => {
     return CHARACTERS.map(char => {
@@ -2272,12 +2283,15 @@ function InternalWalker(props: WalkerProps) {
         idleAnim,
         walkAnim,
         runAnim,
-        ...(char.customIdleAnimPath && animGltfs[char.customIdleAnimPath]?.animations[0]
-          ? [Object.assign(animGltfs[char.customIdleAnimPath].animations[0].clone(), {
-              name: char.customIdleAnimPath,
-              userData: { animScene: animGltfs[char.customIdleAnimPath].scene }
-            })]
-          : [])
+        // Inclure également toutes les animations de la map pour qu'elles soient prêtes à l'emploi (AI, interact, etc.)
+        ...Object.entries(animGltfs)
+          .filter(([_, gltf]) => gltf?.animations?.[0])
+          .map(([path, gltf]) => {
+            return Object.assign(gltf.animations[0].clone(), {
+              name: path,
+              userData: { animScene: gltf.scene }
+            });
+          })
       ];
       const sittingScene = char.sittingScenePath && animGltfs[char.sittingScenePath]?.scene;
       return {
@@ -2348,6 +2362,10 @@ useGLTF.preload('media/sandbox/anims/anim_swimming_to_edge.glb');
 useGLTF.preload('media/sandbox/anims/anim_climbing.glb');
 useGLTF.preload('media/sandbox/anims/anim_push_up.glb');
 useGLTF.preload('media/sandbox/anims/anim_laying_idle_1.glb');
+useGLTF.preload('media/sandbox/anims/anim_shaking_hands_2.glb');
+useGLTF.preload('media/sandbox/anims/anim_female_sitting_pose_1.glb');
+useGLTF.preload('media/sandbox/anims/anim_female_sitting_pose_3.glb');
+useGLTF.preload('media/sandbox/anims/anim_hand_raising.glb');
 useGLTF.preload('media/sandbox/anims/anim_woman-solo.glb');
 useGLTF.preload('media/sandbox/anims/anim_belly_dance.glb');
 useGLTF.preload('media/sandbox/anims/anim_dancing_twerk.glb');

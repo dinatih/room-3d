@@ -123,3 +123,19 @@ export const ACTION_FRESH_AIR: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Fond_Jardin' },
   { type: 'INTERACT', animation: 'idle', duration: 15.0, rotY: Math.PI },
 ];
+
+export const ACTION_FULL_TOUR: AgentInstruction[] = [
+  ...ACTION_GO_TO_TOILET,
+  ...ACTION_GO_TO_DESK_1,
+  ...ACTION_GO_TO_DESK_2,
+  ...ACTION_GO_TO_BED_WEST,
+  ...ACTION_GO_TO_BED_EAST,
+  ...ACTION_GO_TO_BATHTUB,
+  ...ACTION_GO_TO_SHOWER,
+  ...ACTION_GO_TO_GARDEN_SOFA_EAST,
+  ...ACTION_GO_TO_GARDEN_SOFA_WEST,
+  ...ACTION_COOKING,
+  ...ACTION_KALLAX_NE,
+  ...ACTION_FRESH_AIR,
+  { type: 'RETURN_TO_START' }
+];

@@ -101,6 +101,7 @@ const initialExtraStates: Record<string, boolean> = {
   aiCooking: false,
   aiKallaxNE: false,
   aiFreshAir: false,
+  aiFullTour: true,
 };
 
 function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 'transient'; name: string } {
