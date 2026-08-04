@@ -40,6 +40,15 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   const groupRRef = useRef<THREE.Group>(null!);
   const isOpenL   = actionState['sdb-closet-l-toggle'] ?? false;
   const isOpenR   = actionState['sdb-closet-r-toggle'] ?? false;
+  
+  // Use refs for useFrame to prevent stale closures (as per GEMINI.md)
+  const isOpenLRef = useRef(isOpenL);
+  const isOpenRRef = useRef(isOpenR);
+  
+  useLayoutEffect(() => {
+    isOpenLRef.current = isOpenL;
+    isOpenRRef.current = isOpenR;
+  }, [isOpenL, isOpenR]);
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
@@ -75,10 +84,10 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   }, []);
 
   useFrame(() => {
-    // Si la porte gauche est ouverte, elle glisse à la place de la porte droite
-    const targetL = isOpenL ? X_CLOSED_R : X_CLOSED_L;
-    // Si la porte droite est ouverte, elle glisse à la place de la porte gauche
-    const targetR = isOpenR ? X_CLOSED_L : X_CLOSED_R;
+    // groupLRef (en -X) est la Porte Droite depuis la SDB -> obéit à isOpenR
+    const targetL = isOpenRRef.current ? X_CLOSED_R : X_CLOSED_L;
+    // groupRRef (en +X) est la Porte Gauche depuis la SDB -> obéit à isOpenL
+    const targetR = isOpenLRef.current ? X_CLOSED_L : X_CLOSED_R;
     const dL = targetL - groupLRef.current.position.x;
     const dR = targetR - groupRRef.current.position.x;
     if (Math.abs(dL) > 0.01 || Math.abs(dR) > 0.01) {
@@ -102,9 +111,9 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
         <boxGeometry args={[W + 4, 1.5, RAIL_D]} />
       </mesh>
 
-      {/* Panneau gauche + poignée */}
+      {/* Panneau gauche (en -X, ce qui correspond à la Droite depuis la SDB) */}
       <group ref={groupLRef} position={[X_CLOSED_L, 0, ZL]}
-             userData={{ hoverAction: { label: 'Porte SDB G', actionId: 'sdbClosetL' } }}>
+             userData={{ hoverAction: { label: 'Porte SDB D', actionId: 'sdbClosetR' } }}>
         <mesh position={[0, H / 2, 0]} castShadow material={doorMat}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
         </mesh>
@@ -113,9 +122,9 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
         </mesh>
       </group>
 
-      {/* Panneau droit + poignée */}
+      {/* Panneau droit (en +X, ce qui correspond à la Gauche depuis la SDB) */}
       <group ref={groupRRef} position={[X_CLOSED_R, 0, ZR]}
-             userData={{ hoverAction: { label: 'Porte SDB D', actionId: 'sdbClosetR' } }}>
+             userData={{ hoverAction: { label: 'Porte SDB G', actionId: 'sdbClosetL' } }}>
         <mesh position={[0, H / 2, 0]} castShadow material={doorMat}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
         </mesh>
