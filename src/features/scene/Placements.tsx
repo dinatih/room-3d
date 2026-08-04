@@ -301,8 +301,8 @@ export function Furniture() {
 function Beds() {
   return (
     <>
-      {/* Lit Ouest (haut, principal) — au sol (Y = 0), contre le mur Nord + largeur d'un Kallax (Z = 139.5 cm, début Z = 39.5 cm) */}
-      <group position={[74, 0, 139.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Lit Utåker Ouest (Principal)' } }}>
+      {/* Lit Ouest (haut, principal) — au sol (Y = 0), contre la Drona qui est contre le Mackapar (Z = 172.5) */}
+      <group position={[74, 0, 172.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Lit Utåker Ouest (Principal)' } }}>
         <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Lit Est (bas, secondaire, amour) — au sol (Y = 0), position fixe mur Est (Z = 190 cm) */}
@@ -626,7 +626,7 @@ export function DronaBoxes() {
   const standalone = [
     { cx: DOOR_START - 31, cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },
     { cx: NICHE_X + 20,    cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },
-    { cx: 24.5,            cy: 0 + DF / 2 + 0.2,  cz: 269.5, rotY: Math.PI / 2 },
+    { cx: 85,              cy: 0 + DF / 2 + 0.2,  cz: 289, rotY: Math.PI / 2 },
   ];
   return (
     <group userData={{ isIkea: true }}>
