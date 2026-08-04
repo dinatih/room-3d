@@ -1,11 +1,12 @@
 import { AgentInstruction, ZoneNode } from './aiTypes';
 
 export const ZONES: Record<string, ZoneNode> = {
-  Start: { id: 'Start', x: 140, z: 30 },
-  Couloir_Central: { id: 'Couloir_Central', x: 140, z: 400 },
-  Couloir_Entree: { id: 'Couloir_Entree', x: 140, z: 520 }, // Devant porte d'entrée
-  Couloir_SDB: { id: 'Couloir_SDB', x: 140, z: 560 }, // Devant porte SDB
-  Devant_Vasque: { id: 'Devant_Vasque', x: 116, z: 510 }, // Devant la vasque dans SDB
+  Start: { id: 'Start', x: 250, z: 300 },
+  Couloir_Central: { id: 'Couloir_Central', x: 250, z: 400 },
+  Couloir_Entree: { id: 'Couloir_Entree', x: 280, z: 480 }, // Devant porte d'entrée
+  Sortie: { id: 'Sortie', x: 350, z: 580 }, // Dehors
+  Couloir_SDB: { id: 'Couloir_SDB', x: 250, z: 560 }, // Devant porte SDB dans le couloir
+  Devant_Vasque: { id: 'Devant_Vasque', x: 116, z: 489 }, // Devant la vasque dans SDB
 };
 
 export const SCENARIO_VISITE_GUIDEE: AgentInstruction[] = [
@@ -38,6 +39,7 @@ export const SCENARIO_VISITE_GUIDEE: AgentInstruction[] = [
   // Aller vers la sortie
   { type: 'MOVE_TO', targetNodeId: 'Couloir_Entree' },
   
-  // Fermer porte entrée
+  // Fermer porte entrée (on interagit avant de sortir complètement si on veut, ou après)
+  { type: 'MOVE_TO', targetNodeId: 'Sortie' },
   { type: 'INTERACT', triggerEventKey: 'entry-door-toggle', animation: 'idle', duration: 1.0 }
 ];
