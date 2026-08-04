@@ -270,7 +270,7 @@ useGLTF.preload('/media/glb/ikea-official/${glbFileName}');
         }).join(', ');
         
         const newEntry = `
-  { id: '${componentName.toLowerCase()}', name: "${productData.name.replace(/"/g, '\\"')}", brand: 'IKEA', category: 'ikea', qty: 1, dims: { w: ${productData.w}, d: ${productData.d}, h: ${productData.h} }, glbPath: 'media/glb/ikea-official/${glbFileName}', photos: [${photoPaths}], url: '${url}', price: '${productData.price}', description: "${productData.desc.replace(/"/g, '\\"')}" },`;
+  { id: '${componentName.toLowerCase()}', name: "${productData.name.replace(/"/g, '\\"')}", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: ${productData.w}, d: ${productData.d}, h: ${productData.h} }, glbPath: 'media/glb/ikea-official/${glbFileName}', photos: [${photoPaths}], url: '${url}', price: '${productData.price}', notes: '' },`;
         
         invContent = invContent.replace('export const INVENTORY: InventoryItem[] = [', 'export const INVENTORY: InventoryItem[] = [' + newEntry);
         fs.writeFileSync(inventoryPath, invContent);

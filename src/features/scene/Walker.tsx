@@ -14,6 +14,8 @@ import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { LAYER_WALKER_DETAIL, LAYER_WALKER } from '@config';
 import { applyLaraVariantStyles, type LaraVariant } from './LaraVariants';
+import { useAgentController } from './ai/useAgentController';
+import { SCENARIO_VISITE_GUIDEE } from './ai/ZoneNodes';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 export { WALKER_ANIM_OPTIONS };
@@ -751,6 +753,14 @@ function SingleCharacter({
 
   const { invalidate } = useThree();
 
+  const isGuidedTour = isNPC && id === 'xbot';
+  const { update: updateAgent } = useAgentController(
+    id,
+    [npcPosition[0], npcPosition[2]],
+    npcRotationY,
+    isGuidedTour ? SCENARIO_VISITE_GUIDEE : null
+  );
+
   useEffect(() => {
     const handleActivity = () => {
       if (idleTimerRef.current > 10) {
@@ -1480,14 +1490,22 @@ function SingleCharacter({
         groupRef.current.rotation.y = cameraState.walkYaw;
         groupRef.current.visible = !cameraState.walkerHidden;
       } else if (isNPC) {
-        const savedPos = cameraState.positions[id];
-        const px = savedPos ? savedPos.x : npcPosition[0];
-        const py_pos = savedPos ? savedPos.y : npcPosition[1];
-        const pz = savedPos ? savedPos.z : npcPosition[2];
-        const py_rot = savedPos ? savedPos.yaw : npcRotationY;
-        groupRef.current.position.set(px, py_pos, pz);
-        groupRef.current.rotation.y = py_rot;
-        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
+        if (id === 'xbot') {
+          const agentState = updateAgent(delta);
+          groupRef.current.position.set(agentState.x, npcPosition[1], agentState.z);
+          groupRef.current.rotation.y = agentState.rotY;
+          customAnimName.current = agentState.animation;
+          groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
+        } else {
+          const savedPos = cameraState.positions[id];
+          const px = savedPos ? savedPos.x : npcPosition[0];
+          const py_pos = savedPos ? savedPos.y : npcPosition[1];
+          const pz = savedPos ? savedPos.z : npcPosition[2];
+          const py_rot = savedPos ? savedPos.yaw : npcRotationY;
+          groupRef.current.position.set(px, py_pos, pz);
+          groupRef.current.rotation.y = py_rot;
+          groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
+        }
       } else {
         groupRef.current.visible = false;
       }

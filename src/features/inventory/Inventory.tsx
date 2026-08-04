@@ -147,11 +147,9 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
         </div>
 
         <hr className="inventory-detail-divider" />
-        <div className="inventory-detail-section-label">Notes & Description</div>
+        <div className="inventory-detail-section-label">Notes</div>
         <div className="inventory-detail-notes">
-          {!isStorage && (item as InventoryItem).description 
-            ? (item as InventoryItem).description 
-            : item.notes || "Aucune note descriptive disponible pour cet élément."}
+          {item.notes || "Aucune note descriptive disponible pour cet élément."}
         </div>
 
         <div className="inventory-detail-actions mt-3">
