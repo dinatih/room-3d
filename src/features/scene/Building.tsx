@@ -60,7 +60,6 @@ import { WoodenFencePanel } from './items/WoodenFencePanel';
 // ── Matériaux (module-level, instances uniques) ───────────────────────────────
 const wallMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
 const noCapMat = new THREE.MeshBasicMaterial({ visible: false });
-const wallMatDiag = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
 const skirtingMat   = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.4 });
 
 // BoxGeometry face order : [+X(0), -X(1), +Y(2), -Y(3), +Z(4), -Z(5)]
@@ -963,15 +962,16 @@ function Baseboards() {
   const diagSegA = { ...DiagWall.p((0 + Math.max(0, DiagWall.door.start - CW_ENTRY)) / 2, -SD / 2), len: Math.max(0, DiagWall.door.start - CW_ENTRY) };
   const diagSegB = { ...DiagWall.p((DiagWall.door.end + CW_ENTRY + diagParquetLen) / 2, -SD / 2), len: diagParquetLen - (DiagWall.door.end + CW_ENTRY) };
 
-  // Plinthe diagonale corridor (de X=200 à X=140)
-  const corridorXEnd = INT_X_KITCHEN_R + PARTITION_THICKNESS; // 137.2
+  // Plinthe diagonale corridor (de X=200 à mur est du couloir)
+  const CORR_WALL_EAST = CORR_WALL_X + PARTITION_THICKNESS / 2; // 199.2
+  const corridorXEnd = CORR_WALL_EAST; // 199.2
   const corridorZEnd = DiagWall.A.z + (corridorXEnd - DiagWall.A.x) * DiagWall.slope;
   const diagCorridorTotalLen = Math.sqrt((DiagWall.A.x - corridorXEnd) ** 2 + (DiagWall.A.z - corridorZEnd) ** 2);
-  const diagSegC = { ...DiagWall.p((diagParquetLen + diagCorridorTotalLen) / 2, -SD / 2), len: diagCorridorTotalLen - diagParquetLen };
+  const diagSegC = { ...DiagWall.p((diagParquetLen + diagCorridorTotalLen) / 2, -SD / 2), len: Math.max(0, diagCorridorTotalLen - diagParquetLen) };
 
   const diagQRA = { ...DiagWall.p((0 + Math.max(0, DiagWall.door.start - CW_ENTRY)) / 2, -SD), len: Math.max(0, DiagWall.door.start - CW_ENTRY) };
   const diagQRB = { ...DiagWall.p((DiagWall.door.end + CW_ENTRY + diagParquetLen) / 2, -SD), len: diagParquetLen - (DiagWall.door.end + CW_ENTRY) };
-  const diagQRC = { ...DiagWall.p((diagParquetLen + diagCorridorTotalLen) / 2, -SD), len: diagCorridorTotalLen - diagParquetLen };
+  const diagQRC = { ...DiagWall.p((diagParquetLen + diagCorridorTotalLen) / 2, -SD), len: Math.max(0, diagCorridorTotalLen - diagParquetLen) };
 
   return (
     <MergedStaticGroup name="merged-skirting">
@@ -1167,8 +1167,8 @@ function BathSkirting() {
 
   // Coins SDB (cf Tile())
   const Bz = DiagWall.A.z + (INT_X_NICHE  - DiagWall.A.x) * DiagWall.slope; // ≈ 727.5
-  const corridorXEnd = KITCHEN_X1 + WALL_THICKNESS; // 140
-  const Cz = DiagWall.A.z + (corridorXEnd - DiagWall.A.x) * DiagWall.slope; // ≈ 642.1 (Z à X=140)
+  const corridorXEnd = BATH_E_FACE; // 192
+  const Cz = DiagWall.A.z + (corridorXEnd - DiagWall.A.x) * DiagWall.slope; // Z à X=192
 
   // Porte SDB sur mur est (CORR_WALL_X) : ouverture brute de 86cm centrée sur Z=560 (517 à 603)
   const CORR_DOOR_S = 517;  // 517
