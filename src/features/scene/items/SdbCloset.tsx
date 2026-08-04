@@ -52,6 +52,8 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
+    groupLRef.current.position.x = isOpenRRef.current ? X_CLOSED_R : X_CLOSED_L;
+    groupRRef.current.position.x = isOpenLRef.current ? X_CLOSED_L : X_CLOSED_R;
     onSize(new THREE.Vector3(W, H, RAIL_D));
   }, []);
 
@@ -112,7 +114,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
       </mesh>
 
       {/* Panneau gauche (en -X, ce qui correspond à la Droite depuis la SDB) */}
-      <group ref={groupLRef} position={[X_CLOSED_L, 0, ZL]}
+      <group ref={groupLRef} position-y={0} position-z={ZL}
              userData={{ hoverAction: { label: 'Porte SDB D', actionId: 'sdbClosetR' } }}>
         <mesh position={[0, H / 2, 0]} castShadow material={doorMat}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
@@ -123,7 +125,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
       </group>
 
       {/* Panneau droit (en +X, ce qui correspond à la Gauche depuis la SDB) */}
-      <group ref={groupRRef} position={[X_CLOSED_R, 0, ZR]}
+      <group ref={groupRRef} position-y={0} position-z={ZR}
              userData={{ hoverAction: { label: 'Porte SDB G', actionId: 'sdbClosetL' } }}>
         <mesh position={[0, H / 2, 0]} castShadow material={doorMat}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
