@@ -7,15 +7,18 @@ export const ZONES: Record<string, ZoneNode> = {
   Sortie: { id: 'Sortie', x: 350, z: 580 }, // Dehors
   Couloir_SDB: { id: 'Couloir_SDB', x: 250, z: 560 }, // Devant porte SDB dans le couloir
   Devant_Vasque: { id: 'Devant_Vasque', x: 116, z: 489 }, // Devant la vasque dans SDB
+  Entree_SDB: { id: 'Entree_SDB', x: 150, z: 560 }, // Juste à l'intérieur de la SDB
 };
 
 export const SCENARIO_VISITE_GUIDEE: AgentInstruction[] = [
-  // Aller vers l'entrée
-  { type: 'MOVE_TO', targetNodeId: 'Couloir_Central' },
-  { type: 'MOVE_TO', targetNodeId: 'Couloir_Entree' },
+  // Aller devant la porte d'entrée (depuis la Sortie si on boucle, ou depuis sa position initiale)
+  { type: 'MOVE_TO', targetNodeId: 'Sortie' },
   
   // Ouvrir la porte d'entrée
   { type: 'INTERACT', triggerEventKey: 'entry-door-toggle', animation: 'idle', duration: 1.5 },
+  
+  // Entrer dans l'appartement
+  { type: 'MOVE_TO', targetNodeId: 'Couloir_Entree' },
   
   // Aller à la SDB
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
@@ -23,14 +26,16 @@ export const SCENARIO_VISITE_GUIDEE: AgentInstruction[] = [
   // Ouvrir la porte de la SDB
   { type: 'INTERACT', triggerEventKey: 'bathroom-door-toggle', animation: 'idle', duration: 1.5 },
   
-  // Entrer et aller devant la vasque
+  // Passer la porte SDB
+  { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },
+  // Aller devant la vasque
   { type: 'MOVE_TO', targetNodeId: 'Devant_Vasque' },
   
-  // Faire une pose artistique devant le miroir (ex: anim_female_dynamic_pose ou custom)
-  // On utilise une animation qui est chargée par défaut, ex. "pose_mirror" ou juste "idle"
+  // Faire une pose artistique devant le miroir
   { type: 'INTERACT', animation: 'anim_female_dynamic_pose', duration: 4.0 },
   
   // Sortir
+  { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
   
   // Fermer la porte SDB
