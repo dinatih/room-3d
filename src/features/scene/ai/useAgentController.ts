@@ -111,6 +111,19 @@ export function useAgentController(
       }
     } else if (statusRef.current === 'INTERACTING') {
       stateRef.current.animation = currentInstruction.animation || 'idle';
+      
+      if (currentInstruction.rotY !== undefined) {
+        let rotDiff = currentInstruction.rotY - stateRef.current.rotY;
+        while (rotDiff > Math.PI) rotDiff -= 2 * Math.PI;
+        while (rotDiff < -Math.PI) rotDiff += 2 * Math.PI;
+        const maxRot = ROT_SPEED * dt;
+        if (Math.abs(rotDiff) <= maxRot) {
+            stateRef.current.rotY = currentInstruction.rotY;
+        } else {
+            stateRef.current.rotY += Math.sign(rotDiff) * maxRot;
+        }
+      }
+
       timerRef.current -= dt;
       if (timerRef.current <= 0) {
         statusRef.current = 'IDLE';

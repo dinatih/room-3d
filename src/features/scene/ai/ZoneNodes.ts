@@ -6,7 +6,7 @@ export const ZONES: Record<string, ZoneNode> = {
   Couloir_Entree: { id: 'Couloir_Entree', x: 280, z: 480 }, // Devant porte d'entrée
   Sortie: { id: 'Sortie', x: 350, z: 580 }, // Dehors
   Couloir_SDB: { id: 'Couloir_SDB', x: 250, z: 560 }, // Devant porte SDB dans le couloir
-  Devant_Vasque: { id: 'Devant_Vasque', x: 116, z: 489 }, // Devant la vasque dans SDB
+  Devant_Vasque: { id: 'Devant_Vasque', x: 116, z: 545 }, // Devant la vasque dans SDB
   Entree_SDB: { id: 'Entree_SDB', x: 150, z: 560 }, // Juste à l'intérieur de la SDB
 };
 
@@ -31,8 +31,8 @@ export const SCENARIO_VISITE_GUIDEE: AgentInstruction[] = [
   // Aller devant la vasque
   { type: 'MOVE_TO', targetNodeId: 'Devant_Vasque' },
   
-  // Faire une pose artistique devant le miroir
-  { type: 'INTERACT', animation: 'anim_female_dynamic_pose', duration: 4.0 },
+  // Faire une pose artistique devant le miroir en le regardant (vers le Nord = Math.PI)
+  { type: 'INTERACT', animation: 'anim_female_dynamic_pose', duration: 4.0, rotY: Math.PI },
   
   // Sortir
   { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },

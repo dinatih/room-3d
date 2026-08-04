@@ -22,4 +22,5 @@ export interface AgentInstruction {
   animation?: string; // animation to play
   duration?: number; // for WAIT or INTERACT
   triggerEventKey?: string; // event to dispatch
+  rotY?: number; // target rotation to face during interaction
 }
