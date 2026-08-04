@@ -10,7 +10,7 @@ import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Mackapar }    from './Mackapar';
 import { Salopette }   from './Salopette';
-import { DronaInstances } from './Drona';
+import { DroneCell } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -41,19 +41,28 @@ export function MackaparGroup({ onSize }: SceneItemProps) {
   const ref = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
-    ref.current.userData.animUnit = true; // tombe en bloc dans BuildAnimation2/3
     ref.current.updateMatrixWorld(true);
     onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
   }, []);
 
   return (
     <group ref={ref}>
-      <Mackapar item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <group userData={{ animUnit: true }}>
+        <Mackapar item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
       {/* Salopette suspendue à la barre */}
-      <group position={[0, RAIL_Y - 120, 0]}>
+      <group position={[0, RAIL_Y - 120, 0]} userData={{ animUnit: true }}>
         <Salopette item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <DronaInstances matrices={dronaMatrices} />
+      {dronaMatrices.map((m, i) => {
+        const p = new THREE.Vector3().setFromMatrixPosition(m);
+        const q = new THREE.Quaternion().setFromRotationMatrix(m);
+        return (
+          <group key={i} position={p} quaternion={q} userData={{ animUnit: true }}>
+            <DroneCell />
+          </group>
+        );
+      })}
     </group>
   );
 }
