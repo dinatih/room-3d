@@ -807,12 +807,29 @@ function SingleCharacter({
     }
   }, [activeActionKey]);
 
+  const delphinaScenario = useMemo(() => {
+    if (id !== 'delphina') return null;
+    const actions = [
+      ACTION_SIT_DESK_1, ACTION_SIT_DESK_2, ACTION_BED_WEST, ACTION_BED_EAST,
+      ACTION_BATHTUB, ACTION_SHOWER, ACTION_GARDEN_SOFA_EAST, ACTION_GARDEN_SOFA_WEST,
+      ACTION_COOKING, ACTION_KALLAX_NE, ACTION_FRESH_AIR, ACTION_GO_TO_TOILET
+    ];
+    // Shuffle the array of arrays
+    const shuffled = [...actions].sort(() => Math.random() - 0.5);
+    // Flatten
+    return shuffled.flat();
+  }, [id]);
+
   const isGuidedTour = activeActionKey && id === activeWalkerId;
+  const isDelphinaNpc = id === 'delphina' && id !== activeWalkerId;
+  
+  const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : null);
+  const loopScenario = isDelphinaNpc;
   
   const { update: updateAgent } = useAgentController(
     id,
-    isGuidedTour ? activeActionScenario : null,
-    false, // pas de boucle pour cette action
+    finalScenario,
+    loopScenario, // Boucle uniquement si c'est le bot aléatoire (Delphina)
     () => {
       if (groupRef.current) {
         return { 
