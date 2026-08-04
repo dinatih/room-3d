@@ -532,7 +532,7 @@ export function Decor() {
       <group position={[110, 0.5, 500]} userData={{ animUnit: true, isIkea: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[30, 0.5, 202]} userData={{ animUnit: true, isIkea: true }}>
+      <group position={[NICHE_X + KALLAX_DEPTH - 10, 0.5, MACK_Z + 15]} userData={{ animUnit: true, isIkea: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[298, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true, isIkea: true }}>
@@ -626,7 +626,7 @@ export function DronaBoxes() {
   const standalone = [
     { cx: DOOR_START - 31, cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },
     { cx: NICHE_X + 20,    cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },
-    { cx: 24.5,            cy: 50 + DF / 2 + 0.2, cz: 269.5,           rotY: Math.PI / 2 },
+    { cx: 24.5,            cy: 0 + DF / 2 + 0.2,  cz: 269.5, rotY: Math.PI / 2 },
   ];
   return (
     <group userData={{ isIkea: true }}>

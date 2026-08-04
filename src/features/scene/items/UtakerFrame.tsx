@@ -28,11 +28,11 @@ const redFabricMat = new THREE.MeshPhysicalMaterial({
   sheenRoughness: 0.6,
 });
 
-function RealisticBolsters({ topY }: { topY: number }) {
+function RealisticBolsters({ topY, zOffset = -26 }: { topY: number; zOffset?: number }) {
   const polR = 12;
   const polL = 100 - 2 * polR; 
   return (
-    <group position={[0, topY + polR - 2, -26]}>
+    <group position={[0, topY + polR - 2, zOffset]}>
       <mesh position={[-50, 0, 0]} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow material={redFabricMat}>
         <capsuleGeometry args={[polR, polL, 16, 32]} />
       </mesh>
@@ -101,7 +101,7 @@ export function UtakerFrame({ item, onSize }: SceneItemProps) {
             <Vestmarka90470195 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
           </group>
           <RealisticDuvet topY={29} drop={14} />
-          <RealisticBolsters topY={29} />
+          <RealisticBolsters topY={29} zOffset={26} />
         </>
       )}
     </group>
