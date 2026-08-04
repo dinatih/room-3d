@@ -5,7 +5,7 @@
  * Coordonnées locales : centré XZ (longueur sur X), Y=0 = sol.
  */
 import { useLayoutEffect, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, RoundedBox } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import * as THREE from 'three';
@@ -18,6 +18,45 @@ import { Nasfjallet10558045 } from './Nasfjallet10558045';
 
 const BAS_GLB  = 'media/glb/ikea-official/UTÅKER lit empilable 80x200 pin (bas).glb';
 const HAUT_GLB = 'media/glb/ikea-official/UTÅKER lit empilable 80x200 pin (haut).glb';
+
+const redFabricMat = new THREE.MeshPhysicalMaterial({
+  color: 0x991111,
+  roughness: 0.9,
+  clearcoat: 0.0,
+  sheen: 1.0,
+  sheenColor: new THREE.Color(0xff5555),
+  sheenRoughness: 0.6,
+});
+
+function RealisticBolsters({ topY }: { topY: number }) {
+  const polR = 12;
+  const polL = 100 - 2 * polR; 
+  return (
+    <group position={[0, topY + polR - 2, -26]}>
+      <mesh position={[-50, 0, 0]} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow material={redFabricMat}>
+        <capsuleGeometry args={[polR, polL, 16, 32]} />
+      </mesh>
+      <mesh position={[50, 0, 0]} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow material={redFabricMat}>
+        <capsuleGeometry args={[polR, polL, 16, 32]} />
+      </mesh>
+    </group>
+  );
+}
+
+function RealisticDuvet({ topY, drop }: { topY: number; drop: number }) {
+  const len = 150; 
+  const wid = 82;
+  return (
+    <group position={[25, topY + 1, 0]}>
+      <RoundedBox args={[len, 2, wid]} radius={0.8} smoothness={4} castShadow receiveShadow material={redFabricMat} />
+      <RoundedBox args={[len, drop, 2]} position={[0, -drop/2 + 0.5, wid/2]} radius={0.8} smoothness={4} castShadow receiveShadow material={redFabricMat} />
+      <RoundedBox args={[len, drop, 2]} position={[0, -drop/2 + 0.5, -wid/2]} radius={0.8} smoothness={4} castShadow receiveShadow material={redFabricMat} />
+      <RoundedBox args={[2, drop, wid - 2]} position={[len/2, -drop/2 + 0.5, 0]} radius={0.8} smoothness={4} castShadow receiveShadow material={redFabricMat} />
+      {/* Pliure décorative en haut de la couette */}
+      <RoundedBox args={[6, 3.5, wid]} position={[-len/2 + 3, 1, 0]} radius={1.7} smoothness={4} castShadow receiveShadow material={redFabricMat} />
+    </group>
+  );
+}
 
 function Cadre({ glbPath }: { glbPath: string }) {
   const { scene } = useGLTFClone(glbPath);
@@ -53,11 +92,17 @@ export function UtakerFrame({ item, onSize }: SceneItemProps) {
           <group position={[0, 11 + 24, 0]} rotation-y={Math.PI / 2}>
             <Nasfjallet10558045 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
           </group>
+          <RealisticDuvet topY={39} drop={20} />
+          <RealisticBolsters topY={39} />
         </>
       ) : (
-        <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
-          <Vestmarka90470195 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
+        <>
+          <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
+            <Vestmarka90470195 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          </group>
+          <RealisticDuvet topY={29} drop={14} />
+          <RealisticBolsters topY={29} />
+        </>
       )}
     </group>
   );
