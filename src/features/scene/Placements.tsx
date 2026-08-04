@@ -239,7 +239,8 @@ function LinkyGaine() {
 export function Furniture() {
   const as = useFurnitureToggles({
     corrDoors:     'corr-doors-toggle',
-    sdbCloset:     'sdb-closet-toggle',
+    sdbClosetL:    'sdb-closet-l-toggle',
+    sdbClosetR:    'sdb-closet-r-toggle',
     cbnWest:       'cbn-west-toggle',
     cbnEast:       'cbn-east-toggle',
     ninja:         'ninja-toggle',

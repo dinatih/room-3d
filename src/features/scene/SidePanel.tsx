@@ -252,7 +252,8 @@ export interface FurnitureState {
   livingDoor:   boolean;
   bathroomDoor: boolean;
   corrDoors:    boolean;
-  sdbCloset:    boolean;
+  sdbClosetL:   boolean;
+  sdbClosetR:   boolean;
   cbnWest:      boolean;
   cbnEast:      boolean;
   cabinet:      boolean;
