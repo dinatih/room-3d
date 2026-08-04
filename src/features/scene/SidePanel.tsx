@@ -449,9 +449,32 @@ export function SidePanel({
     );
   };
 
+  const triggerBtn = (label: string, actionKey: string, badgeLabel = 'Action') => {
+    return (
+      <button 
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        onClick={() => {
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: actionKey } }));
+        }}
+        style={{ 
+          fontSize: isMobile ? '14px' : '11px',
+          minHeight: isMobile ? '48px' : undefined,
+          background: 'transparent',
+        }}
+      >
+        <span>{label}</span>
+        <span className="badge bg-secondary" style={{ fontSize: '9px' }}>
+          {badgeLabel}
+        </span>
+      </button>
+    );
+  };
+
   const furnitureBtn = (
     label: string,
     key: keyof FurnitureState,
+    txtOn = 'ON',
+    txtOff = 'OFF',
     displayValue?: (val: any) => string
   ) => {
     const val = furniture[key];
@@ -469,7 +492,7 @@ export function SidePanel({
       >
         <span>{label}</span>
         <span className={`badge ${isOn ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
-          {displayValue ? displayValue(val) : (isOn ? 'ON' : 'OFF')}
+          {displayValue ? displayValue(val) : (isOn ? txtOn : txtOff)}
         </span>
       </button>
     );
@@ -480,34 +503,44 @@ export function SidePanel({
   const InteractifSection = (
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
       <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>PORTES & FENÊTRES</div>
-      {furnitureBtn('Porte Entrée', 'entryDoor')}
-      {furnitureBtn('Porte Séjour', 'livingDoor')}
-      {furnitureBtn('Porte SDB', 'bathroomDoor')}
-      {furnitureBtn('Baie Vitrée Est', 'eastGlassDoor')}
-      {furnitureBtn('Baie Vitrée Ouest', 'glassDoorV2LeftOpen')}
-      {furnitureBtn('Volets Ouest', 'glassDoorV2ShutterPos', v => `${v}%`)}
+      {furnitureBtn('Porte Entrée', 'entryDoor', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Porte Séjour', 'livingDoor', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Porte SDB', 'bathroomDoor', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Baie Vitrée Est', 'eastGlassDoor', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Baie Vitrée Ouest', 'glassDoorV2LeftOpen', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Volets', 'glassDoorV2ShutterPos', 'ON', 'OFF', v => `${v}%`)}
       
       <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>PLACARDS</div>
-      {furnitureBtn('Placard Couloir', 'corrDoors')}
-      {furnitureBtn('Placard SDB Gauche', 'sdbClosetL')}
-      {furnitureBtn('Placard SDB Droite', 'sdbClosetR')}
-      {furnitureBtn('Cuisine Ouest', 'cbnWest')}
-      {furnitureBtn('Cuisine Est', 'cbnEast')}
-      {furnitureBtn('Meuble TV', 'cabinet')}
-      {furnitureBtn('Mackapär', 'mackaparDoors')}
+      {furnitureBtn('Placard Couloir', 'corrDoors', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Placard SDB Gauche', 'sdbClosetL', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Placard SDB Droite', 'sdbClosetR', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('SDB Ouest', 'cbnWest', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('SDB Est', 'cbnEast', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Meuble sous évier', 'cabinet', 'OUVERT', 'FERMÉ')}
       
       <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>MOBILIER & ÉLECTRO</div>
-      {furnitureBtn('Lit Superposé', 'bedStacked')}
-      {furnitureBtn('Lit Canapé', 'bedSofa')}
-      {furnitureBtn('Lit Déplié', 'bedPosition')}
+      {furnitureBtn('Lit Superposé', 'bedStacked', 'EMPILÉ', 'SÉPARÉ')}
+      {furnitureBtn('Lit Canapé', 'bedSofa', 'CANAPÉ', 'LIT')}
+      {furnitureBtn('Lit Déplié', 'bedPosition', 'DÉPLIÉ', 'PLIÉ')}
       {furnitureBtn('Accoudoir Canapé Gauche', 'sofaArmLeft')}
       {furnitureBtn('Accoudoir Canapé Droit', 'sofaArmRight')}
-      {furnitureBtn('Frigo Ouvert', 'freezerOpen')}
+      {furnitureBtn('Congélateur', 'freezerOpen', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Réfrigérateur', 'fridge', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('TV Allumée', 'tvOn')}
+      {triggerBtn('Bureau 1 (Assis/Debout)', 'desk1-toggle')}
+      {triggerBtn('Bureau 1 (Position)', 'desk1-position')}
+      {triggerBtn('Bureau 2 (Assis/Debout)', 'desk2-toggle')}
+      {triggerBtn('Bureau 2 (Position)', 'desk2-position')}
+      {triggerBtn('Smorkull (Position)', 'smorkull-position')}
+      {triggerBtn('Air Performer (Power)', 'airPerformerPower')}
+      {triggerBtn('Air Performer (Mode)', 'airPerformerMode')}
+      {triggerBtn('Air Performer (Vitesse)', 'airPerformerSpeed')}
+      {triggerBtn('Air Performer (Position)', 'airperformer-position')}
       
       <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>LUMIÈRES</div>
-      {furnitureBtn('Lumière SDB', 'lampSdb')}
-      {furnitureBtn('Lumière Couloir', 'lampCouloir')}
+      {furnitureBtn('Lampe SDB', 'lampSdb')}
+      {furnitureBtn('Lampe Couloir', 'lampCouloir')}
+      {furnitureBtn('Lampe Ola', 'lampOn')}
     </div>
   );
 
