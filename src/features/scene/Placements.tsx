@@ -626,7 +626,7 @@ export function DronaBoxes() {
   const standalone = [
     { cx: DOOR_START - 31, cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },
     { cx: NICHE_X + 20,    cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },
-    { cx: 85,              cy: 0 + DF / 2 + 0.2,  cz: 289, rotY: Math.PI / 2 },
+    { cx: 16.5,            cy: 0 + DF / 2 + 0.2,  cz: 289, rotY: Math.PI / 2 },
   ];
   return (
     <group userData={{ isIkea: true }}>

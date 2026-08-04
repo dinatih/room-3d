@@ -113,11 +113,11 @@ export function KallaxNW({ onSize }: SceneItemProps) {
       <group position={[75, 0, 0.75]} rotation-y={Math.PI}>
         <MeubleT item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* 2 sacs DIMPA à gauche du MeubleT */}
-      <group position={[15, 0, 15]}>
+      {/* 2 sacs DIMPA à gauche du MeubleT et contre les miroirs */}
+      <group position={[125, 0, 13.5]}>
         <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[35, 0, 15]}>
+      <group position={[145, 0, 13.5]}>
         <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>
