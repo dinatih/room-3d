@@ -11,7 +11,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 import { BaseballCap } from './BaseballCap';
 
-const TARGET_H = 170;
+const TARGET_H = 142;
 const red = new THREE.MeshStandardMaterial({ color: 0xcc2020, roughness: 0.6 });
 
 export function JoggingSuit({ onSize }: SceneItemProps) {
@@ -39,7 +39,7 @@ export function JoggingSuit({ onSize }: SceneItemProps) {
   return (
     <group>
       <primitive object={scene} />
-      <group position={[0, 172, 1]}>
+      <group position={[0, 170, 1]}>
         <BaseballCap onSize={() => {}} actionState={{}} item={{} as any} />
       </group>
     </group>
