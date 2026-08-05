@@ -91,6 +91,7 @@ const initialExtraStates: Record<string, boolean> = {
   'walker-meshes': false,
   aiGoToilet: false,
   aiSitDesk1: false,
+  aiSitOfficeChair: false,
   aiSitDesk2: false,
   aiBedWest: false,
   aiBedEast: false,

@@ -687,6 +687,7 @@ export function SidePanel({
             {aiBtn('Visite guidée complète', 'aiFullTour', '🤖')}
             {aiBtn('Aller aux toilettes (pipi)', 'aiGoToilet', '🚽')}
             {aiBtn('Travailler Bureau 1', 'aiSitDesk1', '💻')}
+            {aiBtn('Chaise de bureau', 'aiSitOfficeChair', '🪑')}
             {aiBtn('Travailler Bureau 2', 'aiSitDesk2', '💻')}
             {aiBtn('Dormir Lit Principal (Ouest)', 'aiBedWest', '🛌')}
             {aiBtn('Dormir Lit Secondaire (Est)', 'aiBedEast', '🛌')}

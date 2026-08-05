@@ -17,6 +17,7 @@ import { applyLaraVariantStyles, type LaraVariant } from './LaraVariants';
 import { 
   ACTION_GO_TO_TOILET,
   ACTION_SIT_DESK_1,
+  ACTION_SIT_OFFICE_CHAIR,
   ACTION_SIT_DESK_2,
   ACTION_BED_WEST,
   ACTION_BED_EAST,
@@ -54,7 +55,7 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'marissa', name: 'Marissa', path: 'media/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_belly_dance.glb', customIdleAnimPath: 'media/sandbox/anims/anim_belly_dance.glb' },
   {
     id: 'delphina', name: 'Delphina', path: 'media/lara_native.glb', pos: [120, 35, -250], rot: 1, variant: 'delphina', height: 173.4,
-    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_snake_hip_hop_dance.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_salsa_dancing.glb', 'media/sandbox/anims/anim_salsa_dancing_1.glb', 'media/sandbox/anims/anim_salsa_dancing_3.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_samba_dancing_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_2.glb', 'media/sandbox/anims/anim_hip_hop_dancing_4.glb', 'media/sandbox/anims/anim_house_dancing.glb', 'media/sandbox/anims/anim_breakdance_uprock.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()[Math.floor(Math.random() * 12)],
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_snake_hip_hop_dance.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_salsa_dancing.glb', 'media/sandbox/anims/anim_salsa_dancing_1.glb', 'media/sandbox/anims/anim_salsa_dancing_3.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_samba_dancing_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_2.glb', 'media/sandbox/anims/anim_hip_hop_dancing_4.glb', 'media/sandbox/anims/anim_house_dancing.glb', 'media/sandbox/anims/anim_breakdance_uprock.glb']; return anims[Math.floor(Math.random() * anims.length)]; })(),
     sittingScenePath: 'media/sandbox/anims/anim_snake_hip_hop_dance.glb'
   },
   { id: 'sara', name: 'Sara', path: 'media/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_climbing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_climbing.glb' },
@@ -71,7 +72,7 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [288, 0, 603], rot: 0, variant: 'native', height: 173.4, isLara: false },
   {
     id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [100, 0, 370], rot: Math.atan2(158 - 100, 200 - 370), variant: 'sabira', height: 173.4,
-    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_hip_hop_dancing.glb', 'media/sandbox/anims/anim_hip_hop_dancing_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_6.glb', 'media/sandbox/anims/anim_hip_hop_dancing_10.glb', 'media/sandbox/anims/anim_locking_hip_hop_dance.glb', 'media/sandbox/anims/anim_robot_hip_hop_dance.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_samba_dancing_2.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_gangnam_style.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()[Math.floor(Math.random() * 10)],
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_hip_hop_dancing.glb', 'media/sandbox/anims/anim_hip_hop_dancing_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_6.glb', 'media/sandbox/anims/anim_hip_hop_dancing_10.glb', 'media/sandbox/anims/anim_locking_hip_hop_dance.glb', 'media/sandbox/anims/anim_robot_hip_hop_dance.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_samba_dancing_2.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_gangnam_style.glb']; return anims[Math.floor(Math.random() * anims.length)]; })(),
     sittingScenePath: 'media/sandbox/anims/anim_snake_hip_hop_dance.glb'
   },
   { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [140, 0, 590], rot: Math.atan2(158 - 250, 200 - 320), variant: 'safa', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_stall_soccerball_1.glb', sittingScenePath: 'media/sandbox/anims/anim_stall_soccerball_1.glb' },
@@ -79,19 +80,19 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'rajaa', name: 'Rajaa', path: 'media/lara_native.glb', pos: [-150, 0, 0], rot: 0, variant: 'rajaa', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_best_double_leg_takedown_attacker.glb', sittingScenePath: 'media/sandbox/anims/anim_best_double_leg_takedown_attacker.glb' },
   {
     id: 'romana', name: 'Romana', path: 'media/lara_native.glb', pos: [270, 45, -110], rot: Math.PI, variant: 'romana', height: 173.4,
-    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_female_laying_pose_9.glb', 'media/sandbox/anims/anim_female_standing_pose.glb', 'media/sandbox/anims/anim_female_standing_pose_1.glb', 'media/sandbox/anims/anim_female_standing_pose_2.glb', 'media/sandbox/anims/anim_female_sitting_pose.glb', 'media/sandbox/anims/anim_female_dance_pose.glb', 'media/sandbox/anims/anim_female_dynamic_pose.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()[Math.floor(Math.random() * 7)]
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_female_laying_pose_9.glb', 'media/sandbox/anims/anim_female_standing_pose.glb', 'media/sandbox/anims/anim_female_standing_pose_1.glb', 'media/sandbox/anims/anim_female_standing_pose_2.glb', 'media/sandbox/anims/anim_female_sitting_pose.glb', 'media/sandbox/anims/anim_female_dance_pose.glb', 'media/sandbox/anims/anim_female_dynamic_pose.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
   },
   {
     id: 'angelina', name: 'Angelina', path: 'media/lara_native.glb',
     pos: [Math.floor(Math.random() * 200) + 50, 0, -(Math.floor(Math.random() * 300) + 300)] as [number, number, number],
     rot: Math.random() * Math.PI * 2, variant: 'angelina', height: 173.4,
-    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_hip_hop_dancing.glb', 'media/sandbox/anims/anim_hip_hop_dancing_7.glb', 'media/sandbox/anims/anim_salsa_dancing.glb', 'media/sandbox/anims/anim_salsa_dancing_4.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_capoeira.glb', 'media/sandbox/anims/anim_rumba_dancing.glb', 'media/sandbox/anims/anim_twist_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()[Math.floor(Math.random() * 10)]
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_hip_hop_dancing.glb', 'media/sandbox/anims/anim_hip_hop_dancing_7.glb', 'media/sandbox/anims/anim_salsa_dancing.glb', 'media/sandbox/anims/anim_salsa_dancing_4.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_capoeira.glb', 'media/sandbox/anims/anim_rumba_dancing.glb', 'media/sandbox/anims/anim_twist_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
   },
   {
     id: 'lgbta', name: 'Lgbta', path: 'media/lara_native.glb',
     pos: [Math.floor(Math.random() * 200) + 150, 0, -(Math.floor(Math.random() * 300) + 250)] as [number, number, number],
     rot: Math.random() * Math.PI * 2, variant: 'lgbta', height: 173.4,
-    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_macarena_dance.glb', 'media/sandbox/anims/anim_macarena_dance_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_1.glb', 'media/sandbox/anims/anim_swing_dancing.glb', 'media/sandbox/anims/anim_jazz_dancing.glb', 'media/sandbox/anims/anim_can_can.glb', 'media/sandbox/anims/anim_gangnam_style.glb', 'media/sandbox/anims/anim_ymca_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()[Math.floor(Math.random() * 10)]
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_macarena_dance.glb', 'media/sandbox/anims/anim_macarena_dance_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_1.glb', 'media/sandbox/anims/anim_swing_dancing.glb', 'media/sandbox/anims/anim_jazz_dancing.glb', 'media/sandbox/anims/anim_can_can.glb', 'media/sandbox/anims/anim_gangnam_style.glb', 'media/sandbox/anims/anim_ymca_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
   }
 ];
 
@@ -729,6 +730,7 @@ function SingleCharacter({
     if (extraStates.aiFullTour) return 'aiFullTour';
     if (extraStates.aiGoToilet) return 'aiGoToilet';
     if (extraStates.aiSitDesk1) return 'aiSitDesk1';
+    if (extraStates.aiSitOfficeChair) return 'aiSitOfficeChair';
     if (extraStates.aiSitDesk2) return 'aiSitDesk2';
     if (extraStates.aiBedWest) return 'aiBedWest';
     if (extraStates.aiBedEast) return 'aiBedEast';
@@ -747,6 +749,7 @@ function SingleCharacter({
       case 'aiFullTour': return ACTION_FULL_TOUR;
       case 'aiGoToilet': return ACTION_GO_TO_TOILET;
       case 'aiSitDesk1': return ACTION_SIT_DESK_1;
+      case 'aiSitOfficeChair': return ACTION_SIT_OFFICE_CHAIR;
       case 'aiSitDesk2': return ACTION_SIT_DESK_2;
       case 'aiBedWest': return ACTION_BED_WEST;
       case 'aiBedEast': return ACTION_BED_EAST;
@@ -762,9 +765,9 @@ function SingleCharacter({
   }, [activeActionKey]);
 
   const delphinaScenario = useMemo(() => {
-    if (id !== 'delphina') return null;
+    if (id !== 'delphina' && id !== 'vivid') return null;
     const actions = [
-      ACTION_SIT_DESK_1, ACTION_SIT_DESK_2, ACTION_BED_WEST, ACTION_BED_EAST,
+      ACTION_SIT_DESK_1, ACTION_SIT_OFFICE_CHAIR, ACTION_SIT_DESK_2, ACTION_BED_WEST, ACTION_BED_EAST,
       ACTION_BATHTUB, ACTION_SHOWER, ACTION_GARDEN_SOFA_EAST, ACTION_GARDEN_SOFA_WEST,
       ACTION_COOKING, ACTION_KALLAX_NE, ACTION_FRESH_AIR, ACTION_GO_TO_TOILET
     ];
@@ -775,7 +778,7 @@ function SingleCharacter({
   }, [id]);
 
   const isGuidedTour = activeActionKey && id === activeWalkerId;
-  const isDelphinaNpc = id === 'delphina' && id !== activeWalkerId;
+  const isDelphinaNpc = (id === 'delphina' || id === 'vivid') && id !== activeWalkerId;
   
   const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : null);
   const loopScenario = isDelphinaNpc;
