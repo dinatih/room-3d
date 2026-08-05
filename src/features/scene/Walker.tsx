@@ -54,40 +54,24 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'marissa', name: 'Marissa', path: 'media/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_belly_dance.glb', customIdleAnimPath: 'media/sandbox/anims/anim_belly_dance.glb' },
   {
     id: 'delphina', name: 'Delphina', path: 'media/lara_native.glb', pos: [120, 35, -250], rot: 1, variant: 'delphina', height: 173.4,
-    customIdleAnimPath: [
-      'media/sandbox/anims/anim_snake_hip_hop_dance.glb',
-      'media/sandbox/anims/anim_belly_dance.glb',
-      'media/sandbox/anims/anim_dancing_twerk.glb',
-      'media/sandbox/anims/anim_salsa_dancing.glb',
-      'media/sandbox/anims/anim_salsa_dancing_1.glb',
-      'media/sandbox/anims/anim_salsa_dancing_3.glb',
-      'media/sandbox/anims/anim_samba_dancing.glb',
-      'media/sandbox/anims/anim_samba_dancing_1.glb',
-      'media/sandbox/anims/anim_hip_hop_dancing_2.glb',
-      'media/sandbox/anims/anim_hip_hop_dancing_4.glb',
-      'media/sandbox/anims/anim_house_dancing.glb',
-      'media/sandbox/anims/anim_breakdance_uprock.glb'
-    ][Math.floor(Math.random() * 12)],
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_snake_hip_hop_dance.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_salsa_dancing.glb', 'media/sandbox/anims/anim_salsa_dancing_1.glb', 'media/sandbox/anims/anim_salsa_dancing_3.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_samba_dancing_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_2.glb', 'media/sandbox/anims/anim_hip_hop_dancing_4.glb', 'media/sandbox/anims/anim_house_dancing.glb', 'media/sandbox/anims/anim_breakdance_uprock.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()[Math.floor(Math.random() * 12)],
     sittingScenePath: 'media/sandbox/anims/anim_snake_hip_hop_dance.glb'
   },
   { id: 'sara', name: 'Sara', path: 'media/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_climbing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_climbing.glb' },
-  { id: 'cha', name: 'Cha', path: 'media/lara_native.glb', pos: [85, 0, 272], rot: Math.PI / 2, variant: 'cha', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_sitting_laughing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_sitting_laughing.glb' },
+  { id: 'cha', name: 'Cha', path: 'media/lara_native.glb', pos: [150, 0, -150], rot: Math.PI / 2, variant: 'cha', height: 173.4,
+    customIdleAnimPath: (() => {
+      const valid = WALKER_ANIM_OPTIONS.filter(o => {
+        const l = o.label.toLowerCase();
+        return o.value.includes('.glb') && !l.includes('dance') && !l.includes('pose') && !l.includes('dancing');
+      });
+      return valid[Math.floor(Math.random() * valid.length)].value;
+    })()
+  },
   { id: 'vivid', name: 'ViviDa', path: 'media/lara_native.glb', pos: [200, 0, 215], rot: Math.PI, variant: 'vivid', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_texting_while_standing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_texting_while_standing.glb' },
   { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [288, 0, 603], rot: 0, variant: 'native', height: 173.4, isLara: false },
   {
     id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [100, 0, 370], rot: Math.atan2(158 - 100, 200 - 370), variant: 'sabira', height: 173.4,
-    customIdleAnimPath: [
-      'media/sandbox/anims/anim_hip_hop_dancing.glb',
-      'media/sandbox/anims/anim_hip_hop_dancing_1.glb',
-      'media/sandbox/anims/anim_hip_hop_dancing_6.glb',
-      'media/sandbox/anims/anim_hip_hop_dancing_10.glb',
-      'media/sandbox/anims/anim_locking_hip_hop_dance.glb',
-      'media/sandbox/anims/anim_robot_hip_hop_dance.glb',
-      'media/sandbox/anims/anim_samba_dancing.glb',
-      'media/sandbox/anims/anim_samba_dancing_2.glb',
-      'media/sandbox/anims/anim_belly_dance.glb',
-      'media/sandbox/anims/anim_gangnam_style.glb'
-    ][Math.floor(Math.random() * 10)],
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_hip_hop_dancing.glb', 'media/sandbox/anims/anim_hip_hop_dancing_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_6.glb', 'media/sandbox/anims/anim_hip_hop_dancing_10.glb', 'media/sandbox/anims/anim_locking_hip_hop_dance.glb', 'media/sandbox/anims/anim_robot_hip_hop_dance.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_samba_dancing_2.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_gangnam_style.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()[Math.floor(Math.random() * 10)],
     sittingScenePath: 'media/sandbox/anims/anim_snake_hip_hop_dance.glb'
   },
   { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [140, 0, 590], rot: Math.atan2(158 - 250, 200 - 320), variant: 'safa', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_stall_soccerball_1.glb', sittingScenePath: 'media/sandbox/anims/anim_stall_soccerball_1.glb' },
@@ -95,49 +79,19 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'rajaa', name: 'Rajaa', path: 'media/lara_native.glb', pos: [-150, 0, 0], rot: 0, variant: 'rajaa', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_best_double_leg_takedown_attacker.glb', sittingScenePath: 'media/sandbox/anims/anim_best_double_leg_takedown_attacker.glb' },
   {
     id: 'romana', name: 'Romana', path: 'media/lara_native.glb', pos: [270, 45, -110], rot: Math.PI, variant: 'romana', height: 173.4,
-    customIdleAnimPath: [
-      'media/sandbox/anims/anim_female_laying_pose_9.glb',
-      'media/sandbox/anims/anim_female_standing_pose.glb',
-      'media/sandbox/anims/anim_female_standing_pose_1.glb',
-      'media/sandbox/anims/anim_female_standing_pose_2.glb',
-      'media/sandbox/anims/anim_female_sitting_pose.glb',
-      'media/sandbox/anims/anim_female_dance_pose.glb',
-      'media/sandbox/anims/anim_female_dynamic_pose.glb'
-    ][Math.floor(Math.random() * 7)]
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_female_laying_pose_9.glb', 'media/sandbox/anims/anim_female_standing_pose.glb', 'media/sandbox/anims/anim_female_standing_pose_1.glb', 'media/sandbox/anims/anim_female_standing_pose_2.glb', 'media/sandbox/anims/anim_female_sitting_pose.glb', 'media/sandbox/anims/anim_female_dance_pose.glb', 'media/sandbox/anims/anim_female_dynamic_pose.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()[Math.floor(Math.random() * 7)]
   },
   {
     id: 'angelina', name: 'Angelina', path: 'media/lara_native.glb',
     pos: [Math.floor(Math.random() * 200) + 50, 0, -(Math.floor(Math.random() * 300) + 300)] as [number, number, number],
     rot: Math.random() * Math.PI * 2, variant: 'angelina', height: 173.4,
-    customIdleAnimPath: [
-      'media/sandbox/anims/anim_dancing_twerk.glb',
-      'media/sandbox/anims/anim_belly_dance.glb',
-      'media/sandbox/anims/anim_hip_hop_dancing.glb',
-      'media/sandbox/anims/anim_hip_hop_dancing_7.glb',
-      'media/sandbox/anims/anim_salsa_dancing.glb',
-      'media/sandbox/anims/anim_salsa_dancing_4.glb',
-      'media/sandbox/anims/anim_samba_dancing.glb',
-      'media/sandbox/anims/anim_capoeira.glb',
-      'media/sandbox/anims/anim_rumba_dancing.glb',
-      'media/sandbox/anims/anim_twist_dance.glb'
-    ][Math.floor(Math.random() * 10)]
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_hip_hop_dancing.glb', 'media/sandbox/anims/anim_hip_hop_dancing_7.glb', 'media/sandbox/anims/anim_salsa_dancing.glb', 'media/sandbox/anims/anim_salsa_dancing_4.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_capoeira.glb', 'media/sandbox/anims/anim_rumba_dancing.glb', 'media/sandbox/anims/anim_twist_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()[Math.floor(Math.random() * 10)]
   },
   {
     id: 'lgbta', name: 'Lgbta', path: 'media/lara_native.glb',
     pos: [Math.floor(Math.random() * 200) + 150, 0, -(Math.floor(Math.random() * 300) + 250)] as [number, number, number],
     rot: Math.random() * Math.PI * 2, variant: 'lgbta', height: 173.4,
-    customIdleAnimPath: [
-      'media/sandbox/anims/anim_belly_dance.glb',
-      'media/sandbox/anims/anim_dancing_twerk.glb',
-      'media/sandbox/anims/anim_macarena_dance.glb',
-      'media/sandbox/anims/anim_macarena_dance_1.glb',
-      'media/sandbox/anims/anim_hip_hop_dancing_1.glb',
-      'media/sandbox/anims/anim_swing_dancing.glb',
-      'media/sandbox/anims/anim_jazz_dancing.glb',
-      'media/sandbox/anims/anim_can_can.glb',
-      'media/sandbox/anims/anim_gangnam_style.glb',
-      'media/sandbox/anims/anim_ymca_dance.glb'
-    ][Math.floor(Math.random() * 10)]
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_macarena_dance.glb', 'media/sandbox/anims/anim_macarena_dance_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_1.glb', 'media/sandbox/anims/anim_swing_dancing.glb', 'media/sandbox/anims/anim_jazz_dancing.glb', 'media/sandbox/anims/anim_can_can.glb', 'media/sandbox/anims/anim_gangnam_style.glb', 'media/sandbox/anims/anim_ymca_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()[Math.floor(Math.random() * 10)]
   }
 ];
 
@@ -1594,14 +1548,22 @@ function SingleCharacter({
           cameraState.isAIControlled = false;
         }
       } else if (isNPC) {
-        const savedPos = cameraState.positions[id];
-        const px = savedPos ? savedPos.x : npcPosition[0];
-        const py_pos = savedPos ? savedPos.y : npcPosition[1];
-        const pz = savedPos ? savedPos.z : npcPosition[2];
-        const py_rot = savedPos ? savedPos.yaw : npcRotationY;
-        groupRef.current.position.set(px, py_pos, pz);
-        groupRef.current.rotation.y = py_rot;
-        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
+        if (isDelphinaNpc) {
+          const agentState = updateAgent(delta);
+          groupRef.current.position.set(agentState.x, 0, agentState.z);
+          groupRef.current.rotation.y = agentState.rotY;
+          customAnimName.current = agentState.animation;
+          groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
+        } else {
+          const savedPos = cameraState.positions[id];
+          const px = savedPos ? savedPos.x : npcPosition[0];
+          const py_pos = savedPos ? savedPos.y : npcPosition[1];
+          const pz = savedPos ? savedPos.z : npcPosition[2];
+          const py_rot = savedPos ? savedPos.yaw : npcRotationY;
+          groupRef.current.position.set(px, py_pos, pz);
+          groupRef.current.rotation.y = py_rot;
+          groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
+        }
       } else {
         groupRef.current.visible = false;
       }
