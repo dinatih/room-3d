@@ -30,6 +30,7 @@ import {
   ACTION_FRESH_AIR,
   ACTION_FULL_TOUR
 } from './ai/ZoneNodes';
+import type { AgentInstruction } from './ai/aiTypes';
 import { useAgentController } from './ai/useAgentController';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
@@ -765,20 +766,43 @@ function SingleCharacter({
   }, [activeActionKey]);
 
   const delphinaScenario = useMemo(() => {
-    if (id !== 'delphina' && id !== 'vivid') return null;
+    if (id !== 'delphina' && id !== 'vivid' && id !== 'angelina' && id !== 'cha') return null;
     const actions = [
       ACTION_SIT_DESK_1, ACTION_SIT_OFFICE_CHAIR, ACTION_SIT_DESK_2, ACTION_BED_WEST, ACTION_BED_EAST,
       ACTION_BATHTUB, ACTION_SHOWER, ACTION_GARDEN_SOFA_EAST, ACTION_GARDEN_SOFA_WEST,
       ACTION_COOKING, ACTION_KALLAX_NE, ACTION_FRESH_AIR, ACTION_GO_TO_TOILET
     ];
-    // Shuffle the array of arrays
+    // Danses aléatoires disponibles pour intercaler entre les actions
+    const danceAnims = [
+      'media/sandbox/anims/anim_belly_dance.glb',
+      'media/sandbox/anims/anim_dancing_twerk.glb',
+      'media/sandbox/anims/anim_hip_hop_dancing.glb',
+      'media/sandbox/anims/anim_hip_hop_dancing_2.glb',
+      'media/sandbox/anims/anim_salsa_dancing.glb',
+      'media/sandbox/anims/anim_samba_dancing.glb',
+      'media/sandbox/anims/anim_house_dancing.glb',
+      'media/sandbox/anims/anim_capoeira.glb',
+      'media/sandbox/anims/anim_rumba_dancing.glb',
+      'media/sandbox/anims/anim_gangnam_style.glb',
+    ];
+    const randomDance = (): AgentInstruction => ({
+      type: 'INTERACT',
+      animation: danceAnims[Math.floor(Math.random() * danceAnims.length)],
+      duration: 8.0 + Math.random() * 7.0, // 8 à 15 secondes de danse
+    });
+    // Shuffle the array of action groups
     const shuffled = [...actions].sort(() => Math.random() - 0.5);
-    // Flatten
-    return shuffled.flat();
+    // Interposer une danse aléatoire entre chaque action
+    const withDances: AgentInstruction[][] = [];
+    shuffled.forEach((action, i) => {
+      withDances.push(action);
+      if (i < shuffled.length - 1) withDances.push([randomDance()]);
+    });
+    return withDances.flat();
   }, [id]);
 
   const isGuidedTour = activeActionKey && id === activeWalkerId;
-  const isDelphinaNpc = (id === 'delphina' || id === 'vivid') && id !== activeWalkerId;
+  const isDelphinaNpc = (id === 'delphina' || id === 'vivid' || id === 'angelina' || id === 'cha') && id !== activeWalkerId;
   
   const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : null);
   const loopScenario = isDelphinaNpc;
@@ -2132,6 +2156,7 @@ function InternalWalker(props: WalkerProps) {
   const pushUpGltf = useGLTF('media/sandbox/anims/anim_push_up.glb');
   const laying1Gltf = useGLTF('media/sandbox/anims/anim_laying_idle_1.glb');
   const climbingGltf = useGLTF('media/sandbox/anims/anim_climbing.glb');
+  const openDoorOutwardsGltf = useGLTF('media/sandbox/anims/anim_open_door_outwards.glb');
 
   // New character anims
   const bellyDanceGltf = useGLTF('media/sandbox/anims/anim_belly_dance.glb');
@@ -2203,6 +2228,7 @@ function InternalWalker(props: WalkerProps) {
     'media/sandbox/anims/anim_swimming_to_edge.glb': swimmingGltf,
     'media/sandbox/anims/anim_push_up.glb': pushUpGltf,
     'media/sandbox/anims/anim_climbing.glb': climbingGltf,
+    'media/sandbox/anims/anim_open_door_outwards.glb': openDoorOutwardsGltf,
     'media/sandbox/anims/anim_laying_idle_1.glb': laying1Gltf,
     'media/sandbox/anims/anim_belly_dance.glb': bellyDanceGltf,
     'media/sandbox/anims/anim_dancing_twerk.glb': dancingTwerkGltf,
@@ -2249,7 +2275,7 @@ function InternalWalker(props: WalkerProps) {
     'media/sandbox/anims/anim_jazz_dancing.glb': jazzDanceGltf,
     'media/sandbox/anims/anim_can_can.glb': canCanGltf,
     'media/sandbox/anims/anim_ymca_dance.glb': ymcaDanceGltf,
-  }), [sittingGltf, swimmingGltf, pushUpGltf, climbingGltf, laying1Gltf, bellyDanceGltf, dancingTwerkGltf, soccerballGltf, jabCrossGltf, femaleLayingPose9Gltf, takedownVictimGltf, takedownAttackerGltf, femaleStandingPoseGltf, femaleStandingPose1Gltf, femaleStandingPose2Gltf, femaleSittingPoseGltf, femaleDancePoseGltf, femaleDynamicPoseGltf, hipHopDanceGltf, hipHopDance1Gltf, hipHopDance2Gltf, hipHopDance4Gltf, hipHopDance6Gltf, hipHopDance7Gltf, hipHopDance10Gltf, lockingHipHopGltf, robotHipHopGltf, salsaDanceGltf, salsaDance1Gltf, salsaDance3Gltf, salsaDance4Gltf, sambaDanceGltf, sambaDance1Gltf, sambaDance2Gltf, houseDanceGltf, breakdanceUprockGltf, gangnamStyleGltf, capoeiraGltf, rumbaDanceGltf, twistDanceGltf, macarenaDanceGltf, macarenaDance1Gltf, swingDanceGltf, jazzDanceGltf, canCanGltf, ymcaDanceGltf, shakingHands2Gltf, femaleSittingPose1Gltf, femaleSittingPose3Gltf, handRaisingGltf]);
+  }), [sittingGltf, swimmingGltf, pushUpGltf, climbingGltf, laying1Gltf, openDoorOutwardsGltf, bellyDanceGltf, dancingTwerkGltf, soccerballGltf, jabCrossGltf, femaleLayingPose9Gltf, takedownVictimGltf, takedownAttackerGltf, femaleStandingPoseGltf, femaleStandingPose1Gltf, femaleStandingPose2Gltf, femaleSittingPoseGltf, femaleDancePoseGltf, femaleDynamicPoseGltf, hipHopDanceGltf, hipHopDance1Gltf, hipHopDance2Gltf, hipHopDance4Gltf, hipHopDance6Gltf, hipHopDance7Gltf, hipHopDance10Gltf, lockingHipHopGltf, robotHipHopGltf, salsaDanceGltf, salsaDance1Gltf, salsaDance3Gltf, salsaDance4Gltf, sambaDanceGltf, sambaDance1Gltf, sambaDance2Gltf, houseDanceGltf, breakdanceUprockGltf, gangnamStyleGltf, capoeiraGltf, rumbaDanceGltf, twistDanceGltf, macarenaDanceGltf, macarenaDance1Gltf, swingDanceGltf, jazzDanceGltf, canCanGltf, ymcaDanceGltf, shakingHands2Gltf, femaleSittingPose1Gltf, femaleSittingPose3Gltf, handRaisingGltf]);
 
   const charactersWithAnims = useMemo(() => {
     return CHARACTERS.map(char => {

@@ -71,7 +71,7 @@ export const ACTION_SIT_DESK_1: AgentInstruction[] = [
 
 export const ACTION_SIT_OFFICE_CHAIR: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Chaise_Bureau' },
-  { type: 'INTERACT', animation: 'media/sandbox/anims/anim_sitting_idle.glb', duration: 10.0, rotY: -Math.PI / 2 },
+  { type: 'INTERACT', animation: 'media/sandbox/anims/anim_sitting_idle.glb', duration: 10.0, rotY: Math.PI / 2 },
 ];
 
 export const ACTION_SIT_DESK_2: AgentInstruction[] = [
