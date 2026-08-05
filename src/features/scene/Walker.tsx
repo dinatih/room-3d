@@ -1604,6 +1604,11 @@ function SingleCharacter({
     let isMoving = isActive ? cameraState.isMoving : false;
     let target = isPreview ? (walkerAnim || 'idle') : (isMoving ? 'walk' : 'idle');
 
+    // Si le joueur reprend le contrôle manuel (plus de visite guidée), effacer l'animation IA
+    if (isActive && !isGuidedTour && customAnimName.current) {
+      customAnimName.current = null;
+    }
+
     if (isNPC && customIdleAnimPath && target === 'idle') {
       target = customIdleAnimPath;
     }
