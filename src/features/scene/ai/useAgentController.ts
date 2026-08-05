@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { AgentInstruction } from './aiTypes';
 import { ZONES } from './ZoneNodes';
 import { useSceneStore } from '../store/useSceneStore';
+import { npcLog } from '@features/ui/NpcConsole';
 
 export interface AgentState {
   x: number;
@@ -29,6 +30,8 @@ export function useAgentController(
   const statusRef = useRef<'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED'>('IDLE');
   const prevScenarioRef = useRef(scenario);
   const startPosRef = useRef<{x: number, z: number, rotY: number} | null>(null);
+  // Ref pour éviter les logs dupliqués à chaque frame
+  const lastLogRef = useRef<string>('');
 
   if (scenario !== prevScenarioRef.current) {
     stepIndexRef.current = 0;
@@ -60,6 +63,12 @@ export function useAgentController(
     if (stepIndexRef.current >= scenario.length) {
       if (loop) {
         stepIndexRef.current = 0; // Boucler le scénario
+        // Log de rebouclage, une seule fois par cycle
+        const loopKey = `loop-${_characterId}`;
+        if (lastLogRef.current !== loopKey) {
+          lastLogRef.current = loopKey;
+          npcLog(_characterId, '↺ Nouveau scénario aléatoire');
+        }
       } else {
         if (statusRef.current !== 'FINISHED') {
           statusRef.current = 'FINISHED' as any;
@@ -75,11 +84,42 @@ export function useAgentController(
     if (statusRef.current === 'IDLE') {
       if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START') {
         statusRef.current = 'MOVING';
+        // Log départ MOVE_TO
+        let tx = stateRef.current.x;
+        let tz = stateRef.current.z;
+        if (currentInstruction.type === 'RETURN_TO_START' && startPosRef.current) {
+          tx = startPosRef.current.x;
+          tz = startPosRef.current.z;
+        } else if (currentInstruction.targetNodeId && ZONES[currentInstruction.targetNodeId]) {
+          const node = ZONES[currentInstruction.targetNodeId];
+          tx = node.x;
+          tz = node.z;
+        } else if (currentInstruction.targetPos) {
+          tx = currentInstruction.targetPos[0];
+          tz = currentInstruction.targetPos[2];
+        }
+        const targetNodeId = currentInstruction.targetNodeId ?? 'pos';
+        const logKey = `move-${stepIndexRef.current}-${targetNodeId}`;
+        if (lastLogRef.current !== logKey) {
+          lastLogRef.current = logKey;
+          npcLog(_characterId, `Marche vers ${targetNodeId} (${tx.toFixed(0)}, ${tz.toFixed(0)})`);
+        }
       } else if (currentInstruction.type === 'INTERACT' || currentInstruction.type === 'WAIT') {
         statusRef.current = 'INTERACTING';
         timerRef.current = currentInstruction.duration || 1.0;
         if (currentInstruction.triggerEventKey) {
           useSceneStore.getState().toggleFurniture(currentInstruction.triggerEventKey as any);
+        }
+        // Log action INTERACT
+        const animation = currentInstruction.animation ?? '';
+        const duration = currentInstruction.duration ?? 1.0;
+        const logKey = `interact-${stepIndexRef.current}-${animation}`;
+        if (lastLogRef.current !== logKey) {
+          lastLogRef.current = logKey;
+          const label = animation
+            ? animation.replace('media/sandbox/anims/', '').replace('.glb', '')
+            : currentInstruction.type;
+          npcLog(_characterId, `Action: ${label} (${duration}s)`);
         }
       }
     }
@@ -108,6 +148,12 @@ export function useAgentController(
         // Arrivé
         stateRef.current.x = tx;
         stateRef.current.z = tz;
+        const arrivedKey = `arrived-${stepIndexRef.current}`;
+        if (lastLogRef.current !== arrivedKey) {
+          lastLogRef.current = arrivedKey;
+          const targetNodeId = currentInstruction.targetNodeId ?? 'destination';
+          npcLog(_characterId, `Arrivé à ${targetNodeId}`);
+        }
         statusRef.current = 'IDLE';
         stepIndexRef.current++;
         stateRef.current.animation = 'idle';

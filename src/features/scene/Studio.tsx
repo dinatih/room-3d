@@ -40,6 +40,7 @@ import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
 import { MeasurementTool }            from './MeasurementTool';
+import { NpcConsole }                 from '@features/ui/NpcConsole';
 
 
 import {
@@ -455,6 +456,7 @@ export function Studio() {
       <VirtualDPad />
       <HoverOverlay />
       {layers.wallEdges && <EdgeHoverOverlay />}
+      <NpcConsole />
     </div>
   );
 }
