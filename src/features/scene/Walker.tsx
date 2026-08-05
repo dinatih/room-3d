@@ -14,7 +14,7 @@ import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { LAYER_WALKER_DETAIL, LAYER_WALKER } from '@config';
 import { applyLaraVariantStyles, type LaraVariant } from './LaraVariants';
-import { 
+import {
   ACTION_GO_TO_TOILET,
   ACTION_SIT_DESK_1,
   ACTION_SIT_OFFICE_CHAIR,
@@ -69,7 +69,7 @@ export const CHARACTERS: CharacterConfig[] = [
       return valid[Math.floor(Math.random() * valid.length)].value;
     })()
   },
-  { id: 'vivid', name: 'ViviDa', path: 'media/lara_native.glb', pos: [200, 0, 215], rot: Math.PI, variant: 'vivid', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_texting_while_standing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_texting_while_standing.glb' },
+  { id: 'vivida', name: 'ViviDa', path: 'media/lara_native.glb', pos: [200, 0, 215], rot: Math.PI, variant: 'vivida', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_texting_while_standing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_texting_while_standing.glb' },
   { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [288, 0, 603], rot: 0, variant: 'native', height: 173.4, isLara: false },
   {
     id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [100, 0, 370], rot: Math.atan2(158 - 100, 200 - 370), variant: 'sabira', height: 173.4,
@@ -726,7 +726,7 @@ function SingleCharacter({
 
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
   const extraStates = useSceneStore(state => state.extraStates);
-  
+
   const activeActionKey = useMemo(() => {
     if (extraStates.aiFullTour) return 'aiFullTour';
     if (extraStates.aiGoToilet) return 'aiGoToilet';
@@ -766,7 +766,7 @@ function SingleCharacter({
   }, [activeActionKey]);
 
   const delphinaScenario = useMemo(() => {
-    if (id !== 'delphina' && id !== 'vivid' && id !== 'angelina' && id !== 'cha' && id !== 'sabira' && id !== 'lgbta' && id !== 'marissa') return null;
+    if (id !== 'delphina' && id !== 'vivida' && id !== 'angelina' && id !== 'cha' && id !== 'sabira' && id !== 'lgbta' && id !== 'marissa') return null;
     const actions = [
       ACTION_SIT_DESK_1, ACTION_SIT_OFFICE_CHAIR, ACTION_SIT_DESK_2, ACTION_BED_WEST, ACTION_BED_EAST,
       ACTION_BATHTUB, ACTION_SHOWER, ACTION_GARDEN_SOFA_EAST, ACTION_GARDEN_SOFA_WEST,
@@ -802,21 +802,21 @@ function SingleCharacter({
   }, [id]);
 
   const isGuidedTour = activeActionKey && id === activeWalkerId;
-  const isDelphinaNpc = (id === 'delphina' || id === 'vivid' || id === 'angelina' || id === 'cha' || id === 'sabira' || id === 'lgbta' || id === 'marissa') && id !== activeWalkerId;
-  
+  const isDelphinaNpc = (id === 'delphina' || id === 'vivida' || id === 'angelina' || id === 'cha' || id === 'sabira' || id === 'lgbta' || id === 'marissa') && id !== activeWalkerId;
+
   const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : null);
   const loopScenario = isDelphinaNpc;
-  
+
   const { update: updateAgent } = useAgentController(
     id,
     finalScenario,
     loopScenario, // Boucle uniquement si c'est le bot aléatoire (Delphina)
     () => {
       if (groupRef.current) {
-        return { 
-          x: groupRef.current.position.x, 
-          z: groupRef.current.position.z, 
-          rotY: groupRef.current.rotation.y 
+        return {
+          x: groupRef.current.position.x,
+          z: groupRef.current.position.z,
+          rotY: groupRef.current.rotation.y
         };
       }
       return { x: npcPosition[0], z: npcPosition[2], rotY: npcRotationY };
@@ -1562,7 +1562,7 @@ function SingleCharacter({
           groupRef.current.rotation.y = agentState.rotY;
           customAnimName.current = agentState.animation;
           groupRef.current.visible = !cameraState.walkerHidden;
-          
+
           // Synchronise la position IA avec la caméra FPV
           cameraState.walkerX = agentState.x;
           cameraState.walkerZ = agentState.z;
@@ -2365,7 +2365,7 @@ export function Walker(props: WalkerProps) {
 // Preloads
 const LARA_PATH = 'media/lara_native.glb';
 const ROSANNA_PATH = 'media/rosanna_lara_native.glb';
-const VIVID_PATH = 'media/vivid_red_lara_native.glb';
+const VIVID_PATH = 'media/vivida_red_lara_native.glb';
 
 useGLTF.preload(LARA_PATH);
 useGLTF.preload(ROSANNA_PATH);

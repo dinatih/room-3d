@@ -11,7 +11,7 @@ import { useState, useEffect, useRef } from 'react';
 // ── Palette de couleurs par NPC ────────────────────────────────────────────
 const NPC_COLORS: Record<string, string> = {
   delphina: '#00ff88',
-  vivid:    '#ff6b9d',
+  vivida:    '#ff6b9d',
   angelina: '#ffaa00',
   cha:      '#00ccff',
   sabira:   '#ff4444',
