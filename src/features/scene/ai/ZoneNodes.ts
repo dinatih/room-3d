@@ -19,7 +19,7 @@ export const ZONES: Record<string, ZoneNode> = {
   Douche: { id: 'Douche', x: 15, z: 645 },
   Canape_Est: { id: 'Canape_Est', x: 270, z: -80 },
   Canape_Ouest: { id: 'Canape_Ouest', x: 100, z: -50 },
-  Cuisine: { id: 'Cuisine', x: 80, z: 430 },
+  Cuisine: { id: 'Cuisine', x: 80, z: 370 },
   Kallax_NE: { id: 'Kallax_NE', x: 240, z: 38 },
   Devant_Baie_Vitree: { id: 'Devant_Baie_Vitree', x: 200, z: 20 },
   Dans_Jardin: { id: 'Dans_Jardin', x: 200, z: -20 },

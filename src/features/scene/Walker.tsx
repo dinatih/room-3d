@@ -76,7 +76,7 @@ export const CHARACTERS: CharacterConfig[] = [
     customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_hip_hop_dancing.glb', 'media/sandbox/anims/anim_hip_hop_dancing_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_6.glb', 'media/sandbox/anims/anim_hip_hop_dancing_10.glb', 'media/sandbox/anims/anim_locking_hip_hop_dance.glb', 'media/sandbox/anims/anim_robot_hip_hop_dance.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_samba_dancing_2.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_gangnam_style.glb']; return anims[Math.floor(Math.random() * anims.length)]; })(),
     sittingScenePath: 'media/sandbox/anims/anim_snake_hip_hop_dance.glb'
   },
-  { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [140, 0, 590], rot: Math.atan2(158 - 250, 200 - 320), variant: 'safa', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_stall_soccerball_1.glb', sittingScenePath: 'media/sandbox/anims/anim_stall_soccerball_1.glb' },
+  { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [150, 0, -400], rot: Math.PI, variant: 'safa', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_stall_soccerball_1.glb', sittingScenePath: 'media/sandbox/anims/anim_stall_soccerball_1.glb' },
   { id: 'sandra', name: 'Sandra', path: 'media/lara_native.glb', pos: [-150, 0, 270], rot: Math.PI, variant: 'sandra', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_best_double_leg_takedown_victim.glb', sittingScenePath: 'media/sandbox/anims/anim_best_double_leg_takedown_victim.glb' },
   { id: 'rajaa', name: 'Rajaa', path: 'media/lara_native.glb', pos: [-150, 0, 0], rot: 0, variant: 'rajaa', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_best_double_leg_takedown_attacker.glb', sittingScenePath: 'media/sandbox/anims/anim_best_double_leg_takedown_attacker.glb' },
   {
@@ -766,7 +766,7 @@ function SingleCharacter({
   }, [activeActionKey]);
 
   const delphinaScenario = useMemo(() => {
-    if (id !== 'delphina' && id !== 'vivid' && id !== 'angelina' && id !== 'cha') return null;
+    if (id !== 'delphina' && id !== 'vivid' && id !== 'angelina' && id !== 'cha' && id !== 'sabira' && id !== 'lgbta' && id !== 'marissa') return null;
     const actions = [
       ACTION_SIT_DESK_1, ACTION_SIT_OFFICE_CHAIR, ACTION_SIT_DESK_2, ACTION_BED_WEST, ACTION_BED_EAST,
       ACTION_BATHTUB, ACTION_SHOWER, ACTION_GARDEN_SOFA_EAST, ACTION_GARDEN_SOFA_WEST,
@@ -802,7 +802,7 @@ function SingleCharacter({
   }, [id]);
 
   const isGuidedTour = activeActionKey && id === activeWalkerId;
-  const isDelphinaNpc = (id === 'delphina' || id === 'vivid' || id === 'angelina' || id === 'cha') && id !== activeWalkerId;
+  const isDelphinaNpc = (id === 'delphina' || id === 'vivid' || id === 'angelina' || id === 'cha' || id === 'sabira' || id === 'lgbta' || id === 'marissa') && id !== activeWalkerId;
   
   const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : null);
   const loopScenario = isDelphinaNpc;
