@@ -12,28 +12,100 @@
  * La perruque est ajoutée dans l'espace cm du group wrapper et non dans l'espace
  * GLB scalé de scene — évite l'effet de multiplication de scale.
  */
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useRef, useEffect, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
+import { useFrame } from '@react-three/fiber';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
+
+interface MannequinHeadProps extends SceneItemProps {
+  mannequinId?: string;
+  wigIndex?: number;
+  hairColor?: string;
+  windEnabled?: boolean;
+}
+
+const HAIR_COLORS: Record<string, THREE.Color> = {
+  naturel:  new THREE.Color(0.4, 0.25, 0.1),
+  noir:     new THREE.Color(0.05, 0.03, 0.03),
+  brun:     new THREE.Color(0.25, 0.12, 0.05),
+  chatain:  new THREE.Color(0.35, 0.18, 0.07),
+  blond:    new THREE.Color(0.85, 0.7,  0.3),
+  roux:     new THREE.Color(0.7,  0.2,  0.05),
+  rouge:    new THREE.Color(0.8,  0.05, 0.05),
+  blanc:    new THREE.Color(0.95, 0.95, 0.95),
+  bleu:     new THREE.Color(0.05, 0.2,  0.9),
+  vert:     new THREE.Color(0.05, 0.7,  0.15),
+  rose:     new THREE.Color(0.95, 0.3,  0.65),
+  violet:   new THREE.Color(0.5,  0.05, 0.9),
+};
 
 const TARGET_H = 45; // cm
 
 // Préfixes des 13 coiffures dans hair_pack_part_2.glb
 const HAIR_NUMBERS = ['100','101','102','103','104','105','106','107','108','109','110','111','112'];
 
-export function MannequinHead({ onSize }: SceneItemProps) {
+export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initialWigIndex, hairColor: initialHairColor, windEnabled: initialWindEnabled }: MannequinHeadProps) {
   const ref = useRef<THREE.Group>(null!);
   const { scene } = useGLTFClone('media/glb/wig_mannequin.glb');
   const hairPack = useGLTF('media/hair_pack_part_2.glb');
 
-  const randomWigNumber = useMemo(
-    () => HAIR_NUMBERS[Math.floor(Math.random() * HAIR_NUMBERS.length)],
-    [],
-  );
+  const [wigIndex, setWigIndex] = useState<number>(initialWigIndex ?? Math.floor(Math.random() * HAIR_NUMBERS.length));
+  const [hairColor, setHairColor] = useState<string | undefined>(initialHairColor);
+  const [windEnabled, setWindEnabled] = useState<boolean>(initialWindEnabled ?? false);
+  const clonedHairRef = useRef<THREE.Object3D | null>(null);
+  const hairBonesRef = useRef<{ bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[]>([]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { key, value } = (e as CustomEvent).detail;
+      if (key === `mannequin-${mannequinId}-wig`) {
+        setWigIndex(value === -1 || value === '-1' ? Math.floor(Math.random() * 13) : parseInt(value, 10));
+      }
+      if (key === `mannequin-${mannequinId}-color`) setHairColor(value);
+      if (key === `mannequin-${mannequinId}-wind`) setWindEnabled(value === true || value === 'true');
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, [mannequinId]);
+
+  useFrame((state) => {
+    if (hairColor === 'arc-en-ciel' && clonedHairRef.current) {
+      const hue = (state.clock.elapsedTime * 0.2) % 1;
+      const color = new THREE.Color().setHSL(hue, 0.8, 0.5);
+      clonedHairRef.current.traverse((child: THREE.Object3D) => {
+        const m = child as THREE.Mesh;
+        if (m.isMesh && m.material) {
+          if (Array.isArray(m.material)) {
+            m.material.forEach(mat => {
+              if (mat && 'color' in mat) (mat as THREE.MeshStandardMaterial).color.copy(color);
+            });
+          } else if ('color' in m.material) {
+            (m.material as THREE.MeshStandardMaterial).color.copy(color);
+          }
+        }
+      });
+    }
+
+    if (windEnabled && hairBonesRef.current.length > 0) {
+      const t = state.clock.elapsedTime * 3;
+      hairBonesRef.current.forEach(({ bone, restQ, index }) => {
+        const windX = Math.sin(t + index * 0.5) * 0.15;
+        const windZ = Math.cos(t * 0.8 + index * 0.5) * 0.15;
+        const windQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(windX, 0, windZ));
+        bone.quaternion.copy(restQ).multiply(windQ);
+      });
+    } else if (!windEnabled && hairBonesRef.current.length > 0) {
+      hairBonesRef.current.forEach(({ bone, restQ }) => {
+        bone.quaternion.copy(restQ);
+      });
+    }
+  });
+
+  const activeWigNumber = HAIR_NUMBERS[wigIndex] || HAIR_NUMBERS[0];
 
   useLayoutEffect(() => {
     const group = ref.current;
@@ -59,7 +131,7 @@ export function MannequinHead({ onSize }: SceneItemProps) {
     if (!hairPack?.scene) return;
 
     // Trouver le nœud racine de la coiffure (ex: "Hair101_ARM_75")
-    const prefix = `Hair${randomWigNumber}_ARM_`;
+    const prefix = `Hair${activeWigNumber}_ARM_`;
     let sourceGroup: THREE.Object3D | undefined;
     hairPack.scene.traverse(child => {
       if (!sourceGroup && child.name.startsWith(prefix)) sourceGroup = child;
@@ -76,6 +148,9 @@ export function MannequinHead({ onSize }: SceneItemProps) {
       if (m.isMesh && m.material) {
         m.visible = true;
         m.renderOrder = 1;
+        
+        const targetColor = hairColor && HAIR_COLORS[hairColor] ? HAIR_COLORS[hairColor] : null;
+
         if (Array.isArray(m.material)) {
           m.material = m.material.map(mat => {
             if (!mat) return mat;
@@ -83,17 +158,31 @@ export function MannequinHead({ onSize }: SceneItemProps) {
             c.side = THREE.DoubleSide;
             c.alphaTest = 0.5;
             c.depthWrite = true;
+            if (targetColor && 'color' in c) (c as THREE.MeshStandardMaterial).color.copy(targetColor);
             c.needsUpdate = true;
             return c;
           });
         } else if (m.material) {
-          const c = m.material.clone();
+          const c = m.material.clone() as THREE.MeshStandardMaterial;
           c.side = THREE.DoubleSide;
           c.alphaTest = 0.5;
           c.depthWrite = true;
+          if (targetColor) c.color.copy(targetColor);
           c.needsUpdate = true;
           m.material = c;
         }
+      }
+    });
+
+    hairBonesRef.current = [];
+    clonedHair.traverse((child: THREE.Object3D) => {
+      const b = child as THREE.Bone;
+      if (b.isBone && b.name.toLowerCase().startsWith('bone')) {
+        hairBonesRef.current.push({
+          bone: b,
+          restQ: b.quaternion.clone(),
+          index: hairBonesRef.current.length,
+        });
       }
     });
 
@@ -139,7 +228,7 @@ export function MannequinHead({ onSize }: SceneItemProps) {
       const headPos = (hairHeadBone as THREE.Object3D).position.clone();
       clonedHair.position.set(
         -headPos.x * wigScale,
-        TARGET_H * 0.82 - headPos.y * wigScale,
+        TARGET_H * 0.72 - headPos.y * wigScale,
         -headPos.z * wigScale,
       );
     } else {
@@ -156,9 +245,10 @@ export function MannequinHead({ onSize }: SceneItemProps) {
       clonedHair.position.set(-hairCenter.x, TARGET_H * 0.40 - scaledBox.min.y, -hairCenter.z);
     }
 
+    clonedHairRef.current = clonedHair;
     group.add(clonedHair);
 
-  }, [scene, hairPack, randomWigNumber]);
+  }, [scene, hairPack, activeWigNumber, hairColor]);
 
   return <group ref={ref} />;
 }

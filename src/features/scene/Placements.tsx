@@ -260,8 +260,12 @@ export function Furniture() {
         <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* JBL Charge 3 — debout sur le dessus du KallaxNE (h1+h2+Variera=133.5), côté lit */}
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 118, w2 - 11]}>
+      <group position={[ROOM_W - KALLAX_DEPTH / 2 - 15, 118, w2 - 11]}>
         <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      {/* Mannequin KallaxNE */}
+      <group position={[ROOM_W - 4, 133.5, w2 / 2]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin', actions: ['mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
+        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="kallax-ne" />
       </group>
       {/* 2 sacs DIMPA contre le mur Ouest, entre le MeubleT et la Drona */}
       <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ isIkea: true }}>

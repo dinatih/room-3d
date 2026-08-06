@@ -95,8 +95,9 @@ export function KallaxNW({ onSize }: SceneItemProps) {
       <group
         position={[0, w2 + 2 * w1, 6]}
         rotation-y={(3 * Math.PI) / 4}
+        userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin', actions: ['mannequin-kallax-nw-wig', 'mannequin-kallax-nw-color', 'mannequin-kallax-nw-wind'] } }}
       >
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="kallax-nw" />
       </group>
 
       {/* VARIERA demi-étagère sur sommet tour, longueur plaquée contre mur Nord.
@@ -112,6 +113,9 @@ export function KallaxNW({ onSize }: SceneItemProps) {
       {/* MeubleT — au sol (Y = 0) à gauche des meubles Kallax, plaqué contre la glace des miroirs */}
       <group position={[59.5, 0, 0.75]} rotation-y={Math.PI}>
         <MeubleT item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <group position={[0, 55, 0]} rotation-y={Math.PI - Math.PI / 8} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin', actions: ['mannequin-meubleT-wig', 'mannequin-meubleT-color', 'mannequin-meubleT-wind'] } }}>
+          <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="meubleT" />
+        </group>
       </group>
 
     </group>
