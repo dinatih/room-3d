@@ -11,12 +11,12 @@ import { useState, useEffect, useRef } from 'react';
 // ── Palette de couleurs par NPC ────────────────────────────────────────────
 const NPC_COLORS: Record<string, string> = {
   delphina: '#00ff88',
-  vivida:    '#ff6b9d',
-  angelina: '#ffaa00',
+  vivida:   '#ff4444',
+  angelina: '#00aaff',
   cha:      '#00ccff',
-  sabira:   '#ff4444',
+  sabira:   '#ffff44',
   lgbta:    '#cc88ff',
-  marissa:  '#ffff44',
+  marissa:  '#ff6b9d',
 };
 
 function getNpcColor(npcId: string): string {

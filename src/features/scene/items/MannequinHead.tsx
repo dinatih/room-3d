@@ -2,8 +2,17 @@
  * MannequinHead.tsx — Tête de mannequin (GLB media/glb/wig_mannequin.glb).
  * Coordonnées locales : centré XZ, Y=0 = base épaules. Scale par hauteur (45 cm).
  * Ajoute une perruque aléatoire depuis hair_pack_part_2.glb (même logique que Walker.tsx).
+ *
+ * Architecture :
+ *  <group ref={ref}>        ← espace cm (1 unit = 1 cm), pas de scale
+ *    <scene>                ← mannequin scalé × scaleFactor pour atteindre 45 cm
+ *    <clonedHair>           ← perruque ajoutée DIRECTEMENT ici, pas dans scene
+ *  </group>
+ *
+ * La perruque est ajoutée dans l'espace cm du group wrapper et non dans l'espace
+ * GLB scalé de scene — évite l'effet de multiplication de scale.
  */
-import { useLayoutEffect, useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
@@ -11,110 +20,128 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const TARGET_H = 45;
+const TARGET_H = 45; // cm
 
-// Les 13 prefixes de coiffures dans hair_pack_part_2.glb
-// (noms de nœuds: Hair100_ARM_32, Hair101_ARM_75, ... Hair112_ARM_527)
-const HAIR_NUMBERS = ['100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '110', '111', '112'];
-
+// Préfixes des 13 coiffures dans hair_pack_part_2.glb
+const HAIR_NUMBERS = ['100','101','102','103','104','105','106','107','108','109','110','111','112'];
 
 export function MannequinHead({ onSize }: SceneItemProps) {
+  const ref = useRef<THREE.Group>(null!);
   const { scene } = useGLTFClone('media/glb/wig_mannequin.glb');
   const hairPack = useGLTF('media/hair_pack_part_2.glb');
 
-  // Index stable par instance (ne change pas au re-render)
-  const randomWigNumber = useMemo(() => HAIR_NUMBERS[Math.floor(Math.random() * HAIR_NUMBERS.length)], []);
+  const randomWigNumber = useMemo(
+    () => HAIR_NUMBERS[Math.floor(Math.random() * HAIR_NUMBERS.length)],
+    [],
+  );
 
   useLayoutEffect(() => {
-    removeGlbLines(scene);
+    const group = ref.current;
 
+    // Nettoyer les enfants précédents
+    while (group.children.length > 0) group.remove(group.children[0]);
+
+    // ── 1. Tête de mannequin ─────────────────────────────────────────────────
+    removeGlbLines(scene);
     scene.scale.set(1, 1, 1);
     const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
-    const scaleFactor = TARGET_H / raw.y;
-    scene.scale.setScalar(scaleFactor);
-
+    scene.scale.setScalar(TARGET_H / raw.y);
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
+    group.add(scene);
     onSize(box.getSize(new THREE.Vector3()));
 
-    // Même logique que Walker.tsx haircut swap
+    // ── 2. Perruque (ajoutée au group wrapper, PAS à scene) ──────────────────
     if (!hairPack?.scene) return;
 
-    // 1. Trouver le nœud source dans le pack (ex: "Hair100_ARM_32")
-    const targetGroupName = `Hair${randomWigNumber}_ARM_`;
-    let sourceGroup: THREE.Object3D | null = null;
+    // Trouver le nœud racine de la coiffure (ex: "Hair101_ARM_75")
+    const prefix = `Hair${randomWigNumber}_ARM_`;
+    let sourceGroup: THREE.Object3D | undefined;
     hairPack.scene.traverse(child => {
-      if (!sourceGroup && child.name.startsWith(targetGroupName)) {
-        sourceGroup = child;
-      }
+      if (!sourceGroup && child.name.startsWith(prefix)) sourceGroup = child;
     });
-
     if (!sourceGroup) return;
 
-    // 2. Cloner avec SkeletonUtils pour préserver les bones/skinning
+    // Cloner avec SkeletonUtils comme dans Walker.tsx
     const clonedHair = SkeletonUtils.clone(sourceGroup as THREE.Object3D);
 
-    // 3. Configurer les matériaux (identique à Walker.tsx)
+    // Configurer les matériaux (identique à Walker.tsx)
     clonedHair.traverse((child: THREE.Object3D) => {
       child.frustumCulled = false;
-      if ((child as THREE.Mesh).isMesh) {
-        const m = child as THREE.Mesh;
+      const m = child as THREE.Mesh;
+      if (m.isMesh && m.material) {
         m.visible = true;
         m.renderOrder = 1;
         if (Array.isArray(m.material)) {
           m.material = m.material.map(mat => {
             if (!mat) return mat;
-            const clonedMat = mat.clone();
-            clonedMat.side = THREE.DoubleSide;
-            clonedMat.alphaTest = 0.5;
-            clonedMat.depthWrite = true;
-            clonedMat.needsUpdate = true;
-            return clonedMat;
+            const c = mat.clone();
+            c.side = THREE.DoubleSide;
+            c.alphaTest = 0.5;
+            c.depthWrite = true;
+            c.needsUpdate = true;
+            return c;
           });
         } else if (m.material) {
-          const clonedMat = m.material.clone();
-          clonedMat.side = THREE.DoubleSide;
-          clonedMat.alphaTest = 0.5;
-          clonedMat.depthWrite = true;
-          clonedMat.needsUpdate = true;
-          m.material = clonedMat;
+          const c = m.material.clone();
+          c.side = THREE.DoubleSide;
+          c.alphaTest = 0.5;
+          c.depthWrite = true;
+          c.needsUpdate = true;
+          m.material = c;
         }
       }
     });
 
-    // 4. Trouver l'os bip_head dans la coupe pour aligner
-    let hairHeadBone: THREE.Object3D | null = null;
-    clonedHair.traverse((c: THREE.Object3D) => {
-      const nLower = (c.name || '').toLowerCase();
-      if (nLower.startsWith('bip_head') && !hairHeadBone) hairHeadBone = c;
+    // ── 3. Calculer bbox de la perruque à scale 1 pour normaliser ────────────
+    clonedHair.scale.set(1, 1, 1);
+    clonedHair.position.set(0, 0, 0);
+    clonedHair.rotation.set(0, 0, 0);
+    clonedHair.updateMatrixWorld(true);
+
+    const hairBox = new THREE.Box3();
+    clonedHair.traverse((child: THREE.Object3D) => {
+      const m = child as THREE.Mesh;
+      if (m.isMesh && m.geometry) {
+        m.geometry.computeBoundingBox();
+        if (m.geometry.boundingBox) {
+          hairBox.union(m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld));
+        }
+      }
     });
 
-    // 5. Échelle comme Walker.tsx (×1.4) + repositionner
-    const s = 1.4;
-    clonedHair.scale.set(s, s, s);
+    if (hairBox.isEmpty()) return;
 
-    if (hairHeadBone) {
-      clonedHair.updateMatrixWorld(true);
-      const headLocalPos = (hairHeadBone as THREE.Object3D).position.clone();
-      clonedHair.position.set(
-        -headLocalPos.x * s,
-        TARGET_H * 0.78 - headLocalPos.y * s,
-        -headLocalPos.z * s,
-      );
-    } else {
-      // Fallback : placer environ à 80% de la hauteur de la tête
-      clonedHair.position.set(0, TARGET_H * 0.78, 0);
-    }
+    // Scaler pour que la hauteur = 70% de TARGET_H (espace cm du wrapper group)
+    const hairNativeH = hairBox.getSize(new THREE.Vector3()).y;
+    const wigScale = (TARGET_H * 0.70) / hairNativeH;
+    clonedHair.scale.setScalar(wigScale);
 
-    scene.add(clonedHair);
+    // Recentrer XZ et placer la base de la perruque à ~38% de la hauteur de la tête
+    clonedHair.updateMatrixWorld(true);
+    const scaledBox = new THREE.Box3();
+    clonedHair.traverse((child: THREE.Object3D) => {
+      const m = child as THREE.Mesh;
+      if (m.isMesh && m.geometry?.boundingBox) {
+        scaledBox.union(m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld));
+      }
+    });
+    const hairCenter = scaledBox.getCenter(new THREE.Vector3());
+    clonedHair.position.set(
+      -hairCenter.x,
+      TARGET_H * 0.38 - scaledBox.min.y,
+      -hairCenter.z,
+    );
+
+    group.add(clonedHair);
 
   }, [scene, hairPack, randomWigNumber]);
 
-  return <primitive object={scene} />;
+  return <group ref={ref} />;
 }
 
 useGLTF.preload('media/glb/wig_mannequin.glb');
