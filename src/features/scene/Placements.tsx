@@ -113,7 +113,7 @@ const mulCZ    = NICHE_Z_START - 110 - 40;
 
 const MEUBLE_T_X = ROOM_W - 13.75;
 const MEUBLE_T_Z = KALLAX_SE_Z;
-const MEUBLE_T_Y = KALLAX_SE_TOP; // dessus kallax SE
+const MEUBLE_T_Y = KALLAX_SE_TOP + 50; // dessus kallax SE + freezer
 
 const LAMP_ROT_Y = Math.atan2(ROOM_W / 2 - MEUBLE_T_X, ROOM_D / 2 - MEUBLE_T_Z);
 const MACK_X     = NICHE_X + 42;

@@ -1622,6 +1622,34 @@ function SingleCharacter({
       return;
     }
 
+    if (variant === 'lgbta') {
+      const cycle = 15;
+      const t = state.clock.elapsedTime % cycle;
+      let hue = 0.86; // Pink
+      if (t > 10) {
+        hue = (0.86 + (t - 10) / 5) % 1.0;
+      }
+      const c = new THREE.Color().setHSL(hue, 1.0, 0.5);
+      const e = new THREE.Color().setHSL(hue, 1.0, 0.15);
+      groupRef.current.traverse((o) => {
+        if ((o as THREE.Mesh).isMesh) {
+          const mesh = o as THREE.Mesh;
+          const mat = mesh.material;
+          if (!mat) return;
+          const matName = Array.isArray(mat) ? mat[0].name.toLowerCase() : (mat as THREE.Material).name.toLowerCase();
+          const meshName = mesh.name.toLowerCase();
+          const isHair = matName.includes('hair') || matName.includes('pony') || matName.includes('braid') || meshName.includes('hair') || meshName.includes('pony') || meshName.includes('braid');
+          if (isHair) {
+            const mList = Array.isArray(mat) ? mat : [mat];
+            mList.forEach((m: any) => {
+              if (m.color) m.color.copy(c);
+              if (m.emissive) m.emissive.copy(e);
+            });
+          }
+        }
+      });
+    }
+
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
 
