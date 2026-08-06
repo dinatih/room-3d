@@ -97,7 +97,16 @@ export function MannequinHead({ onSize }: SceneItemProps) {
       }
     });
 
-    // ── 3. Calculer bbox de la perruque à scale 1 pour normaliser ────────────
+    // ── 3. Trouver l'os bip_head de la perruque (même logique que Walker.tsx) ──
+    let hairHeadBone: THREE.Object3D | null = null;
+    clonedHair.traverse((c: THREE.Object3D) => {
+      const nLower = c.name.toLowerCase();
+      if ((nLower.startsWith('bip_head') || nLower === 'head') && !hairHeadBone) {
+        hairHeadBone = c;
+      }
+    });
+
+    // ── 4. Calculer bbox des meshes uniquement (pour déterminer le scale) ─────
     clonedHair.scale.set(1, 1, 1);
     clonedHair.position.set(0, 0, 0);
     clonedHair.rotation.set(0, 0, 0);
@@ -121,21 +130,31 @@ export function MannequinHead({ onSize }: SceneItemProps) {
     const wigScale = (TARGET_H * 0.70) / hairNativeH;
     clonedHair.scale.setScalar(wigScale);
 
-    // Recentrer XZ et placer la base de la perruque à ~38% de la hauteur de la tête
-    clonedHair.updateMatrixWorld(true);
-    const scaledBox = new THREE.Box3();
-    clonedHair.traverse((child: THREE.Object3D) => {
-      const m = child as THREE.Mesh;
-      if (m.isMesh && m.geometry?.boundingBox) {
-        scaledBox.union(m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld));
-      }
-    });
-    const hairCenter = scaledBox.getCenter(new THREE.Vector3());
-    clonedHair.position.set(
-      -hairCenter.x,
-      TARGET_H * 0.38 - scaledBox.min.y,
-      -hairCenter.z,
-    );
+    // ── 5. Positionner via bip_head comme Walker.tsx ──────────────────────────
+    // L'os bip_head de la perruque doit coïncider avec le sommet de la tête du mannequin.
+    // TARGET_H * 0.82 = environ le niveau des oreilles/sommet dans l'espace cm du wrapper.
+    if (hairHeadBone) {
+      clonedHair.updateMatrixWorld(true);
+      // Position locale de bip_head dans l'espace du clonedHair (avant scaling world)
+      const headPos = (hairHeadBone as THREE.Object3D).position.clone();
+      clonedHair.position.set(
+        -headPos.x * wigScale,
+        TARGET_H * 0.82 - headPos.y * wigScale,
+        -headPos.z * wigScale,
+      );
+    } else {
+      // Fallback : centrer XZ sur bbox et placer à 40% de la hauteur
+      clonedHair.updateMatrixWorld(true);
+      const scaledBox = new THREE.Box3();
+      clonedHair.traverse((child: THREE.Object3D) => {
+        const m = child as THREE.Mesh;
+        if (m.isMesh && m.geometry?.boundingBox) {
+          scaledBox.union(m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld));
+        }
+      });
+      const hairCenter = scaledBox.getCenter(new THREE.Vector3());
+      clonedHair.position.set(-hairCenter.x, TARGET_H * 0.40 - scaledBox.min.y, -hairCenter.z);
+    }
 
     group.add(clonedHair);
 
