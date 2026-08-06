@@ -52,6 +52,9 @@ export function useAgentController(
       stateRef.current.z = real.z;
       stateRef.current.rotY = real.rotY;
       startPosRef.current = { x: real.x, z: real.z, rotY: real.rotY };
+      if (spawnDelay > 0) {
+        appLog(_characterId, `⏳ En attente de déploiement (${spawnDelay}s)...`);
+      }
     }
   }
 

@@ -826,11 +826,15 @@ function SingleCharacter({
     loopScenario, // Boucle uniquement si c'est le bot aléatoire (Delphina)
     () => {
       if (groupRef.current) {
-        return {
-          x: groupRef.current.position.x,
-          z: groupRef.current.position.z,
-          rotY: groupRef.current.rotation.y
-        };
+        const { x, z } = groupRef.current.position;
+        // Si l'objet n'a pas encore été positionné (0,0 initial par défaut) on utilise la position de base
+        if (x !== 0 || z !== 0) {
+          return {
+            x,
+            z,
+            rotY: groupRef.current.rotation.y
+          };
+        }
       }
       return { x: npcPosition[0], z: npcPosition[2], rotY: npcRotationY };
     },
