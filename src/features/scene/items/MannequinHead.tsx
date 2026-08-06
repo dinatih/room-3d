@@ -57,6 +57,18 @@ function getUniqueRandomWig(): number {
   return index;
 }
 
+let usedInitialColors: string[] = [];
+function getUniqueRandomColor(): string {
+  const colorKeys = [...Object.keys(HAIR_COLORS), 'arc-en-ciel'];
+  if (usedInitialColors.length >= colorKeys.length) usedInitialColors = [];
+  let color;
+  do {
+    color = colorKeys[Math.floor(Math.random() * colorKeys.length)];
+  } while (usedInitialColors.includes(color));
+  usedInitialColors.push(color);
+  return color;
+}
+
 // Préfixes des 13 coiffures dans hair_pack_part_2.glb
 const HAIR_NUMBERS = ['100','101','102','103','104','105','106','107','108','109','110','111','112'];
 
@@ -66,7 +78,7 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
   const hairPack = useGLTF('media/hair_pack_part_2.glb');
 
   const [wigIndex, setWigIndex] = useState<number>(initialWigIndex ?? getUniqueRandomWig());
-  const [hairColor, setHairColor] = useState<string | undefined>(initialHairColor);
+  const [hairColor, setHairColor] = useState<string | undefined>(initialHairColor ?? getUniqueRandomColor());
   const [windEnabled, setWindEnabled] = useState<boolean>(initialWindEnabled ?? false);
   const clonedHairRef = useRef<THREE.Object3D | null>(null);
   const hairBonesRef = useRef<{ bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[]>([]);
@@ -75,10 +87,14 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
     const handler = (e: Event) => {
       const { key, value } = (e as CustomEvent).detail;
       if (key === `mannequin-${mannequinId}-random`) {
-        setWigIndex(Math.floor(Math.random() * 13));
+        const newWig = Math.floor(Math.random() * 13);
+        setWigIndex(newWig);
         const colorKeys = Object.keys(HAIR_COLORS);
         colorKeys.push('arc-en-ciel');
-        setHairColor(colorKeys[Math.floor(Math.random() * colorKeys.length)]);
+        const newColor = colorKeys[Math.floor(Math.random() * colorKeys.length)];
+        setHairColor(newColor);
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: `mannequin-${mannequinId}-wig`, value: newWig.toString() } }));
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: `mannequin-${mannequinId}-color`, value: newColor } }));
       }
       if (key === `mannequin-${mannequinId}-wig`) {
         setWigIndex(value === -1 || value === '-1' ? Math.floor(Math.random() * 13) : parseInt(value, 10));
@@ -90,6 +106,10 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
       }
     };
     document.addEventListener('furniture-toggle', handler);
+    // Notify HoverMenu of the initial states so the selectboxes aren't empty
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: `mannequin-${mannequinId}-wig`, value: wigIndex.toString() } }));
+    if (hairColor) document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: `mannequin-${mannequinId}-color`, value: hairColor } }));
+
     return () => document.removeEventListener('furniture-toggle', handler);
   }, [mannequinId]);
 

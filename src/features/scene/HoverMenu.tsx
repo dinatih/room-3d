@@ -568,8 +568,19 @@ export function HoverOverlay() {
   const showModal = state.locked;
 
   const [selectFilter, setSelectFilter] = useState('');
-  const [selectedHoverVal, setSelectedHoverVal] = useState<string>('');
+  const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
   const [copiedHover, setCopiedHover] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { key, value } = (e as CustomEvent).detail;
+      if (value !== undefined) {
+        setSelectedValues(prev => ({ ...prev, [key]: String(value) }));
+      }
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, []);
 
   const lockedActions = showModal
     ? state.lockedActionIds.map(id => ACTIONS[id]).filter(Boolean)
@@ -630,7 +641,8 @@ export function HoverOverlay() {
               const filteredOpts = selectFilter.trim()
                 ? opts.filter(o => o.label.toLowerCase().includes(selectFilter.trim().toLowerCase()) || o.value.toLowerCase().includes(selectFilter.trim().toLowerCase()))
                 : opts;
-              const filename = selectedHoverVal ? (selectedHoverVal.split('/').pop() || selectedHoverVal) : '';
+              const val = selectedValues[action.toggleKey] ?? '';
+              const filename = val ? (val.split('/').pop() || val) : '';
 
               return (
                 <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -653,23 +665,23 @@ export function HoverOverlay() {
                   )}
                   <select
                     style={BTN_STYLE}
-                    value={selectedHoverVal}
+                    value={val}
                     onChange={(e) => {
-                      const val = e.target.value;
-                      setSelectedHoverVal(val);
-                      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: action.toggleKey, value: val } }));
+                      const newVal = e.target.value;
+                      setSelectedValues(prev => ({ ...prev, [action.toggleKey]: newVal }));
+                      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: action.toggleKey, value: newVal } }));
                       hoverState.onUpdate?.();
                     }}
                   >
                     <option value="" disabled>{action.btnLabel ? (typeof action.btnLabel === 'function' ? action.btnLabel() : action.btnLabel) : "Choisir une animation..."} ({filteredOpts.length})</option>
                     {filteredOpts.map(opt => (
                       <option key={opt.value} value={opt.value}>
-                        {opt.value === selectedHoverVal ? `▶ ${opt.label}` : opt.label}
+                        {opt.value === val ? `▶ ${opt.label}` : opt.label}
                       </option>
                     ))}
                   </select>
 
-                  {action.toggleKey.startsWith('walker-anim') && selectedHoverVal && selectedHoverVal !== 'idle' && (
+                  {action.toggleKey.startsWith('walker-anim') && val && val !== 'idle' && (
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
