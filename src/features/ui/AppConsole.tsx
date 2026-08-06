@@ -53,7 +53,7 @@ function formatTime(ts: number): string {
   return `${hh}:${mm}:${ss}`;
 }
 
-const MAX_LOGS = 60;
+const MAX_LOGS = 200;
 
 // ── Composant ──────────────────────────────────────────────────────────────
 export function AppConsole() {
@@ -110,8 +110,9 @@ export function AppConsole() {
   const containerStyle: React.CSSProperties = {
     position: 'fixed',
     top: 0,
-    left: 0,
     right: 0,
+    width: '100%',
+    maxWidth: '500px',
     zIndex: 9999,
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: '11px',
@@ -193,11 +194,6 @@ export function AppConsole() {
         <span style={titleStyle}>
           <span>🤖</span>
           <span>APP LOGS</span>
-          {logs.length > 0 && (
-            <span style={{ opacity: 0.5, fontSize: '9px', fontWeight: 400 }}>
-              ({logs.length}/{MAX_LOGS})
-            </span>
-          )}
           {!autoScroll && (
             <button
               onClick={() => {
