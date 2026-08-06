@@ -817,6 +817,9 @@ function SingleCharacter({
   const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : null);
   const loopScenario = isDelphinaNpc;
 
+  const autonomousCharacters = ['marissa', 'delphina', 'cha', 'vivida', 'sabira', 'angelina', 'lgbta'];
+  const autonomousIndex = autonomousCharacters.indexOf(id);
+
   const { update: updateAgent } = useAgentController(
     id,
     finalScenario,
@@ -837,7 +840,8 @@ function SingleCharacter({
           extraStates: { ...s.extraStates, [activeActionKey]: false }
         }));
       }
-    }
+    },
+    isDelphinaNpc && autonomousIndex >= 0 ? autonomousIndex * 6.0 : 0
   );
 
   useEffect(() => {
@@ -1568,7 +1572,7 @@ function SingleCharacter({
       if (isActive) {
         if (isGuidedTour) {
           const agentState = updateAgent(delta);
-          groupRef.current.position.set(agentState.x, 0, agentState.z);
+          groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
           customAnimName.current = agentState.animation;
           groupRef.current.visible = !cameraState.walkerHidden;
@@ -1587,7 +1591,7 @@ function SingleCharacter({
       } else if (isNPC) {
         if (isDelphinaNpc) {
           const agentState = updateAgent(delta);
-          groupRef.current.position.set(agentState.x, 0, agentState.z);
+          groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
           customAnimName.current = agentState.animation;
           groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;

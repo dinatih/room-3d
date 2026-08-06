@@ -1,6 +1,6 @@
 import { useSceneStore } from '../store/useSceneStore';
 import { ZONES } from './ZoneNodes';
-import { Text } from '@react-three/drei';
+import { Text, Billboard } from '@react-three/drei';
 
 export function AiZonesHelper() {
   const visible = useSceneStore(s => s.layers.aiZones);
@@ -25,18 +25,20 @@ export function AiZonesHelper() {
             <meshBasicMaterial color="#ffffff" depthTest={false} />
           </mesh>
           {/* Texte du nom et position */}
-          <Text
-            position={[0, 20, 0]}
-            fontSize={8}
-            color="#00ff88"
-            anchorX="center"
-            anchorY="middle"
-            outlineWidth={0.8}
-            outlineColor="#000000"
-            material-depthTest={false}
-          >
-            {`${zone.id}\n(${Math.round(zone.x)}, ${Math.round(zone.z)})`}
-          </Text>
+          <Billboard position={[0, 20, 0]}>
+            <Text
+              key={`text-${zone.id}`}
+              fontSize={8}
+              color="#00ff88"
+              anchorX="center"
+              anchorY="middle"
+              outlineWidth={0.8}
+              outlineColor="#000000"
+              material-depthTest={false}
+            >
+              {`${zone.id}\n(${Math.round(zone.x)}, ${Math.round(zone.z)})`}
+            </Text>
+          </Billboard>
         </group>
       ))}
     </group>

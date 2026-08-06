@@ -6,6 +6,7 @@ import { appLog } from '@features/ui/AppConsole';
 
 export interface AgentState {
   x: number;
+  y: number;
   z: number;
   rotY: number;
   animation: string;
@@ -16,10 +17,12 @@ export function useAgentController(
   scenario: AgentInstruction[] | null,
   loop: boolean = false,
   getRealPosition: () => { x: number; z: number; rotY: number },
-  onComplete?: () => void
+  onComplete?: () => void,
+  spawnDelay: number = 0
 ) {
   const stateRef = useRef<AgentState>({
     x: 0,
+    y: 0,
     z: 0,
     rotY: 0,
     animation: 'idle'
@@ -27,7 +30,8 @@ export function useAgentController(
 
   const stepIndexRef = useRef(0);
   const timerRef = useRef(0);
-  const statusRef = useRef<'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED'>('IDLE');
+  const statusRef = useRef<'WAITING' | 'FALLING' | 'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED'>(spawnDelay > 0 ? 'WAITING' : 'IDLE');
+  const delayTimerRef = useRef(spawnDelay);
   const prevScenarioRef = useRef(scenario);
   const startPosRef = useRef<{x: number, z: number, rotY: number} | null>(null);
   // Ref pour éviter les logs dupliqués à chaque frame
@@ -36,13 +40,15 @@ export function useAgentController(
   if (scenario !== prevScenarioRef.current) {
     stepIndexRef.current = 0;
     timerRef.current = 0;
-    statusRef.current = 'IDLE';
+    statusRef.current = spawnDelay > 0 ? 'WAITING' : 'IDLE';
+    delayTimerRef.current = spawnDelay;
     prevScenarioRef.current = scenario;
     
     // Sync starting position with the actual character position when AI starts
     if (scenario) {
       const real = getRealPosition();
       stateRef.current.x = real.x;
+      stateRef.current.y = spawnDelay > 0 ? 500 : 0;
       stateRef.current.z = real.z;
       stateRef.current.rotY = real.rotY;
       startPosRef.current = { x: real.x, z: real.z, rotY: real.rotY };
@@ -56,6 +62,26 @@ export function useAgentController(
 
   const update = (dt: number) => {
     if (!scenario) {
+      stateRef.current.animation = 'idle';
+      return stateRef.current;
+    }
+
+    if (statusRef.current === 'WAITING') {
+      delayTimerRef.current -= dt;
+      if (delayTimerRef.current <= 0) {
+        statusRef.current = 'FALLING';
+        appLog(_characterId, `▶ Tombée du ciel`);
+      }
+      stateRef.current.animation = 'idle';
+      return stateRef.current;
+    }
+
+    if (statusRef.current === 'FALLING') {
+      stateRef.current.y -= 500 * dt;
+      if (stateRef.current.y <= 0) {
+        stateRef.current.y = 0;
+        statusRef.current = 'IDLE';
+      }
       stateRef.current.animation = 'idle';
       return stateRef.current;
     }
