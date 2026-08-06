@@ -113,7 +113,7 @@ const mulCZ    = NICHE_Z_START - 110 - 40;
 
 const MEUBLE_T_X = ROOM_W - 13.75;
 const MEUBLE_T_Z = KALLAX_SE_Z;
-const MEUBLE_T_Y = KALLAX_SE_TOP + 55; // dessus meuble + lampe
+const MEUBLE_T_Y = KALLAX_SE_TOP; // dessus kallax SE
 
 const LAMP_ROT_Y = Math.atan2(ROOM_W / 2 - MEUBLE_T_X, ROOM_D / 2 - MEUBLE_T_Z);
 const MACK_X     = NICHE_X + 42;
@@ -485,12 +485,12 @@ function LampOla_() {
   }, []);
   return (
     <>
-      <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 30]} rotation-y={LAMP_ROT_Y}
+      <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 10]} rotation-y={LAMP_ROT_Y}
         userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
         <LampOla item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         {lampOn && <pointLight color={0xfff5e0} intensity={120000} distance={350} decay={2} position={[0, 96, 0]} />}
       </group>
-      <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z]} rotation-y={LAMP_ROT_Y - Math.PI / 8} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 5', actions: ['mannequin-lamp-random', 'mannequin-lamp-wig', 'mannequin-lamp-color', 'mannequin-lamp-wind'] } }}>
+      <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z + 10]} rotation-y={LAMP_ROT_Y - Math.PI / 8} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 5', actions: ['mannequin-lamp-random', 'mannequin-lamp-wig', 'mannequin-lamp-color', 'mannequin-lamp-wind'] } }}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lamp" />
       </group>
     </>
