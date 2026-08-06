@@ -32,7 +32,7 @@ export function useAgentController(
   const timerRef = useRef(0);
   const statusRef = useRef<'WAITING' | 'FALLING' | 'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED'>(spawnDelay > 0 ? 'WAITING' : 'IDLE');
   const delayTimerRef = useRef(spawnDelay);
-  const prevScenarioRef = useRef(scenario);
+  const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
   const startPosRef = useRef<{x: number, z: number, rotY: number} | null>(null);
   // Ref pour éviter les logs dupliqués à chaque frame
   const lastLogRef = useRef<string>('');
