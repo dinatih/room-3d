@@ -264,7 +264,7 @@ export function Furniture() {
         <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Mannequin KallaxNE */}
-      <group position={[ROOM_W - 4, 118, w2 - 11]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 2', actions: ['mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
+      <group position={[ROOM_W - 4, 118, w2 - 11]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 2', actions: ['mannequin-kallax-ne-random', 'mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="kallax-ne" />
       </group>
       {/* 2 sacs DIMPA contre le mur Ouest, entre le MeubleT et la Drona */}
@@ -527,7 +527,7 @@ function CeilingPalmLeaves() {
 export function Decor() {
   return (
     <MergedStaticGroup name="merged-decor">
-      <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 4', actions: ['mannequin-lack-wig', 'mannequin-lack-color', 'mannequin-lack-wind'] } }}>
+      <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 4', actions: ['mannequin-lack-random', 'mannequin-lack-wig', 'mannequin-lack-color', 'mannequin-lack-wind'] } }}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lack" />
       </group>
       <AirPerformer_ />{/* PERF TEST — remettre pour réactiver */}

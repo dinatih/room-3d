@@ -62,6 +62,12 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
   useEffect(() => {
     const handler = (e: Event) => {
       const { key, value } = (e as CustomEvent).detail;
+      if (key === `mannequin-${mannequinId}-random`) {
+        setWigIndex(Math.floor(Math.random() * 13));
+        const colorKeys = Object.keys(HAIR_COLORS);
+        colorKeys.push('arc-en-ciel');
+        setHairColor(colorKeys[Math.floor(Math.random() * colorKeys.length)]);
+      }
       if (key === `mannequin-${mannequinId}-wig`) {
         setWigIndex(value === -1 || value === '-1' ? Math.floor(Math.random() * 13) : parseInt(value, 10));
       }

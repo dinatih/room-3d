@@ -26,8 +26,8 @@ interface ActionDef {
 
 
 const ACTIONS: Record<string, ActionDef> = {
+  'mannequin-kallax-nw-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-kallax-nw-random' },
   'mannequin-kallax-nw-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-kallax-nw-wig', type: 'select', options: [
-    { value: '-1', label: '🎲 Aléatoire' },
     { value: '0', label: 'Coupe #1 (Carré Court / Bob)' },
     { value: '1', label: 'Coupe #2 (Queue de cheval haute & mèches visages)' },
     { value: '2', label: 'Coupe #3 (Pixie effilée & déstructurée)' },
@@ -59,8 +59,8 @@ const ACTIONS: Record<string, ActionDef> = {
   ] },
   'mannequin-kallax-nw-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-kallax-nw-wind' },
 
+  'mannequin-kallax-ne-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-kallax-ne-random' },
   'mannequin-kallax-ne-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-kallax-ne-wig', type: 'select', options: [
-    { value: '-1', label: '🎲 Aléatoire' },
     { value: '0', label: 'Coupe #1 (Carré Court / Bob)' },
     { value: '1', label: 'Coupe #2 (Queue de cheval haute & mèches visages)' },
     { value: '2', label: 'Coupe #3 (Pixie effilée & déstructurée)' },
@@ -92,8 +92,8 @@ const ACTIONS: Record<string, ActionDef> = {
   ] },
   'mannequin-kallax-ne-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-kallax-ne-wind' },
 
+  'mannequin-meubleT-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-meubleT-random' },
   'mannequin-meubleT-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-meubleT-wig', type: 'select', options: [
-    { value: '-1', label: '🎲 Aléatoire' },
     { value: '0', label: 'Coupe #1 (Carré Court / Bob)' },
     { value: '1', label: 'Coupe #2 (Queue de cheval haute & mèches visages)' },
     { value: '2', label: 'Coupe #3 (Pixie effilée & déstructurée)' },
@@ -125,8 +125,8 @@ const ACTIONS: Record<string, ActionDef> = {
   ] },
   'mannequin-meubleT-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-meubleT-wind' },
 
+  'mannequin-lack-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-lack-random' },
   'mannequin-lack-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-lack-wig', type: 'select', options: [
-    { value: '-1', label: '🎲 Aléatoire' },
     { value: '0', label: 'Coupe #1 (Carré Court / Bob)' },
     { value: '1', label: 'Coupe #2 (Queue de cheval haute & mèches visages)' },
     { value: '2', label: 'Coupe #3 (Pixie effilée & déstructurée)' },
