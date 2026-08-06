@@ -48,7 +48,7 @@ export function useAgentController(
     if (scenario) {
       const real = getRealPosition();
       stateRef.current.x = real.x;
-      stateRef.current.y = spawnDelay > 0 ? 500 : 0;
+      stateRef.current.y = spawnDelay > 0 ? 800 : 0;
       stateRef.current.z = real.z;
       stateRef.current.rotY = real.rotY;
       startPosRef.current = { x: real.x, z: real.z, rotY: real.rotY };
@@ -73,6 +73,7 @@ export function useAgentController(
       delayTimerRef.current -= dt;
       if (delayTimerRef.current <= 0) {
         statusRef.current = 'FALLING';
+        timerRef.current = 6.0; // 6 seconds to fall
         appLog(_characterId, `▶ Tombée du ciel`);
       }
       stateRef.current.animation = 'idle';
@@ -80,10 +81,13 @@ export function useAgentController(
     }
 
     if (statusRef.current === 'FALLING') {
-      stateRef.current.y -= 500 * dt;
-      if (stateRef.current.y <= 0) {
+      timerRef.current -= dt;
+      if (timerRef.current <= 0) {
         stateRef.current.y = 0;
         statusRef.current = 'IDLE';
+      } else {
+        const p_inv = timerRef.current / 6.0; // 1 to 0
+        stateRef.current.y = 800 * (p_inv * p_inv * p_inv); // ease-out (ralenti à la fin)
       }
       stateRef.current.animation = 'idle';
       return stateRef.current;
