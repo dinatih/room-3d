@@ -66,7 +66,10 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
         setWigIndex(value === -1 || value === '-1' ? Math.floor(Math.random() * 13) : parseInt(value, 10));
       }
       if (key === `mannequin-${mannequinId}-color`) setHairColor(value);
-      if (key === `mannequin-${mannequinId}-wind`) setWindEnabled(value === true || value === 'true');
+      if (key === `mannequin-${mannequinId}-wind`) {
+        if (value === undefined) setWindEnabled(v => !v);
+        else setWindEnabled(value === true || value === 'true');
+      }
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
