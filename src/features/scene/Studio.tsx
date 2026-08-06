@@ -19,6 +19,7 @@ import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
 import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes } from './Placements';
 import { Walker } from './Walker';
+import { AiZonesHelper } from './ai/AiZonesHelper';
 import { XRayLayer }        from '@features/scene/XRayLayer';
 import { WallEdgesLayer, EdgeHoverRaycaster, EdgeHoverOverlay } from '@features/scene/WallEdgesLayer';
 import { GridLayer }        from '@features/scene/Grid';
@@ -348,6 +349,7 @@ export function Studio() {
         <GlbReveal />
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.xray        && <XRayLayer />}
+        <AiZonesHelper />
         {layers.wallEdges   && <WallEdgesLayer />}
         {layers.wallEdges   && <EdgeHoverRaycaster />}
         {layers.grid        && <GridLayer depthTest={layers.gridDepth} />}

@@ -301,6 +301,7 @@ export interface LayerState {
   accessories:  boolean;
   laraPistols:  boolean;
   showAllLaraStyles: boolean;
+  aiZones: boolean;
   breastPhysics: boolean;
   breastIntensity?: number;
   breastMass?: number;
@@ -577,6 +578,8 @@ export function SidePanel({
       {layerBtn('purple', 'Mobilier',      'furniture')}
       {layerBtn('purple', 'Miroirs',       'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
+      {layerBtn('gray',   'Lidar 📸',        'lidar')}
+      {layerBtn('gray',   'Zones IA 🤖',    'aiZones')}
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
 

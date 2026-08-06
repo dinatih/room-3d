@@ -27,6 +27,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { ROOM_W, ROOM_D, WALL_H } from '@config';
 import { cameraState } from './cameraState';
 import { useSceneStore } from './store/useSceneStore';
+import { appLog } from '@features/ui/AppConsole';
 import { CHARACTERS } from './Walker';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -50,7 +51,7 @@ const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, WALL_H / 3, ROOM_D /
 
 
 
-type Mode = 'orbit' | 'walk' | 'top';
+type Mode = 'orbit' | 'walk' | 'fpv' | 'top';
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
@@ -102,7 +103,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     setMode(m);
     
     // Auto-enable HD mirrors when entering walk mode
-    if (m === 'walk' && !useSceneStore.getState().layers.mirrorsHD) {
+    if ((m === 'walk' || m === 'fpv') && !useSceneStore.getState().layers.mirrorsHD) {
       useSceneStore.getState().toggleLayer('mirrorsHD');
     }
   }
@@ -137,9 +138,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const targetY = walkPos.current.y;
     const targetZ = walkPos.current.z;
 
-    // Recul (GTA style)
-    const distanceBehind = 180;
-    const heightAbove = 50;
+    // Recul (GTA style) ou vue à la 1ère personne
+    const isFPV = modeRef.current === 'fpv';
+    const distanceBehind = isFPV ? 0 : 180;
+    const heightAbove = isFPV ? 0 : 50;
 
     const camX = targetX - Math.sin(walkYaw.current) * cosP * distanceBehind;
     const camY = targetY - Math.sin(walkPitch.current) * distanceBehind + heightAbove;
@@ -155,7 +157,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     ctrl.update();
   }
 
-  function enterWalk(x: number, z: number) {
+  function enterWalk(x: number, z: number, walkMode: 'walk' | 'fpv' = 'walk') {
     walkPos.current = { x, y: activeWalkH(), z };
     walkYaw.current   = 0;
     walkPitch.current = 0;
@@ -167,7 +169,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
     const cam = camera as THREE.PerspectiveCamera;
     if (cam.isPerspectiveCamera) savedFov.current = cam.fov;
-    changeMode('walk');
+    changeMode(walkMode);
     invalidate(); // déclenche un frame pour que la minimap affiche l'icône
   }
 
@@ -190,7 +192,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   }
 
   function enterTop() {
-    if (modeRef.current === 'walk') exitWalkMode();
+    if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
     // Save current perspective so we can restore on exit
     savedPerspPos.current.copy(camera.position);
     if (ctrlRef.current) savedPerspTarget.current.copy(ctrlRef.current.target);
@@ -231,7 +233,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
     if (cam.isPerspectiveCamera) {
-      if (mode === 'walk') {
+      if (mode === 'walk' || mode === 'fpv') {
         cam.near = 17; // Clip geometry within 15 units (hides inner face/mouth)
       } else {
         cam.near = 0.1; // Default near clipping
@@ -239,7 +241,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       cam.updateProjectionMatrix();
     }
 
-    if (mode === 'walk') {
+    if (mode === 'walk' || mode === 'fpv') {
       // small delay to ensure OrbitControls has processed the enableRotate change
       requestAnimationFrame(() => updateWalkLook());
     }
@@ -266,7 +268,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       
       // Global shortcuts
       if (e.key === 'Escape') {
-        if (modeRef.current === 'walk') exitWalkMode();
+        if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
         else if (modeRef.current === 'top') exitTop();
         return;
       }
@@ -277,7 +279,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           return;
         }
 
-        if (modeRef.current === 'walk') exitWalkMode();
+        if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
         else if (modeRef.current === 'top') exitTop();
         // Reset to default perspective
         camera.position.set(...PERSP_POS);
@@ -290,10 +292,15 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         return;
       }
       if (e.key === 'm' || e.key === 'M') {
-        if (modeRef.current !== 'walk') {
-          enterWalk(walkPos.current.x, walkPos.current.z);
-        } else {
+        if (modeRef.current === 'orbit' || modeRef.current === 'top') {
+          enterWalk(walkPos.current.x, walkPos.current.z, 'walk');
+          appLog('system', '🎥 Mode Follow (3ème personne)');
+        } else if (modeRef.current === 'walk') {
+          enterWalk(walkPos.current.x, walkPos.current.z, 'fpv');
+          appLog('system', '🎥 Mode FPV (1ère personne)');
+        } else if (modeRef.current === 'fpv') {
           exitWalkMode();
+          appLog('system', '🎥 Mode Vue Libre (Orbit)');
         }
         return;
       }
@@ -354,7 +361,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
 
       // Walk-only keys
-      if (modeRef.current !== 'walk') return;
+      if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
       if (isArrow) {
         keys.current.add(k);
         if (e.ctrlKey)  keys.current.add('Ctrl' + k);
@@ -396,7 +403,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         pos: [number, number, number];
         target: [number, number, number];
       };
-      if (modeRef.current === 'walk') exitWalkMode();
+      if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
       if (modeRef.current === 'top')  exitTop();
       camera.position.set(...pos);
       savedPerspPos.current.set(...pos);
@@ -430,10 +437,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     let touchLastX = 0;
     let touchLastY = 0;
 
-    const onDown  = (e: MouseEvent) => { if (modeRef.current === 'walk' && e.button === 0) dragging.current = true; };
+    const onDown  = (e: MouseEvent) => { if ((modeRef.current === 'walk' || modeRef.current === 'fpv') && e.button === 0) dragging.current = true; };
     const onUp    = () => { dragging.current = false; };
     const onMove  = (e: MouseEvent) => {
-      if (!dragging.current || modeRef.current !== 'walk') return;
+      if (!dragging.current || (modeRef.current !== 'walk' && modeRef.current !== 'fpv')) return;
       walkYaw.current   -= e.movementX * MOUSE_SENS;
       walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - e.movementY * MOUSE_SENS));
       updateWalkLook();
@@ -442,7 +449,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     // ── Mobile Touch controls (Walk orientation) ────────────────────────────────
     const onTouchStart = (e: TouchEvent) => {
-      if (modeRef.current === 'walk' && e.touches.length === 1) {
+      if ((modeRef.current === 'walk' || modeRef.current === 'fpv') && e.touches.length === 1) {
         dragging.current = true;
         touchLastX = e.touches[0].clientX;
         touchLastY = e.touches[0].clientY;
@@ -450,7 +457,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!dragging.current || modeRef.current !== 'walk' || e.touches.length !== 1) return;
+      if (!dragging.current || (modeRef.current !== 'walk' && modeRef.current !== 'fpv') || e.touches.length !== 1) return;
       const dx = e.touches[0].clientX - touchLastX;
       const dy = e.touches[0].clientY - touchLastY;
       touchLastX = e.touches[0].clientX;
@@ -469,7 +476,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     // Scroll wheel en walk = FOV (zoom). Range 30°–110°.
     const onWheel = (e: WheelEvent) => {
-      if (modeRef.current !== 'walk') return;
+      if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
       const cam = camera as THREE.PerspectiveCamera;
       if (!cam.isPerspectiveCamera) return;
       e.preventDefault();
@@ -512,11 +519,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     cameraState.camX     = camera.position.x;
     cameraState.camZ     = camera.position.z;
-    cameraState.isWalking = modeRef.current === 'walk';
-    cameraState.isMoving  = (modeRef.current === 'walk' && keys.current.size > 0)
+    cameraState.isWalking = modeRef.current === 'walk' || modeRef.current === 'fpv';
+    cameraState.isMoving  = (cameraState.isWalking && keys.current.size > 0)
       || (modeRef.current === 'orbit' && (keys.current.has('ArrowUp') || keys.current.has('ArrowDown')));
 
-    if (modeRef.current === 'walk') {
+    if (cameraState.isWalking) {
       if (!cameraState.isAIControlled) {
         cameraState.walkYaw   = walkYaw.current;
         cameraState.walkPitch = walkPitch.current;
@@ -524,6 +531,15 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
       // Sync walker position for minimap in walk mode
       if (!cameraState.isAIControlled) {
+        cameraState.walkerX = walkPos.current.x;
+        cameraState.walkerZ = walkPos.current.z;
+      }
+      updateWalkLook();
+      
+      // Update store for DevTools
+      useSceneStore.getState().setCameraMode(mode);
+    } else {
+        if (!cameraState.isAIControlled) {
         cameraState.walkerX = walkPos.current.x;
         cameraState.walkerZ = walkPos.current.z;
       }

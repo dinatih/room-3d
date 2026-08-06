@@ -527,8 +527,8 @@ function CeilingPalmLeaves() {
 export function Decor() {
   return (
     <MergedStaticGroup name="merged-decor">
-      <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]}>
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin', actions: ['mannequin-lack-wig', 'mannequin-lack-color', 'mannequin-lack-wind'] } }}>
+        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lack" />
       </group>
       <AirPerformer_ />{/* PERF TEST — remettre pour réactiver */}
       {/* Google Nest Mini — mur EST (B) en son centre, à plat contre le mur */}
@@ -554,10 +554,6 @@ export function Decor() {
       <LampOla_ />
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ isIkea: true }}>
         <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        {/* 4e tête de mannequin — étagère droite du Mackapär (Y≈100, Z_local≈+20) */}
-        <group position={[0, 100, 20]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin', actions: ['mannequin-mackapar-wig', 'mannequin-mackapar-color', 'mannequin-mackapar-wind'] } }}>
-          <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="mackapar" />
-        </group>
       </group>
             <SneakersPair />
       <CeilingPalmLeaves />

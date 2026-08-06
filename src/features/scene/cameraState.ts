@@ -5,7 +5,7 @@
 
 import { CHARACTERS } from './Walker';
 
-type CameraMode = 'orbit' | 'walk' | 'top' | 'plane';
+type CameraMode = 'orbit' | 'walk' | 'fpv' | 'top' | 'plane';
 
 export const cameraState = {
   mode: 'orbit' as CameraMode,

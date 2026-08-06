@@ -8,9 +8,9 @@ interface SceneStore {
   extraStates: Record<string, boolean>;
   activeWalkerId: string;
   measurementActive: boolean;
-  cameraMode: 'orbit' | 'walk' | 'top' | 'plane';
+  cameraMode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane';
   setMeasurementActive: (active: boolean) => void;
-  setCameraMode: (mode: 'orbit' | 'walk' | 'top' | 'plane') => void;
+  setCameraMode: (mode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane') => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
   toggleLayer: (key: keyof LayerState) => void;
   triggerAction: (key: string) => void;
@@ -82,6 +82,7 @@ const initialLayers: LayerState = {
   maxBreastAngleXZ: 35,
   hairPhysics: true,
   characterShadows: true,
+  aiZones: false,
 };
 
 const initialExtraStates: Record<string, boolean> = {
