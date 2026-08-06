@@ -92,13 +92,13 @@ export function AppConsole() {
   // Auto-scroll vers le bas à chaque nouveau log
   useEffect(() => {
     if (visible && autoScroll && bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+      bottomRef.current.scrollIntoView({ behavior: 'auto' });
     }
   }, [logs, visible, autoScroll]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
-    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
+    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 30;
     if (isAtBottom && !autoScroll) {
       setAutoScroll(true);
     } else if (!isAtBottom && autoScroll) {
@@ -199,7 +199,7 @@ export function AppConsole() {
               onClick={() => {
                 setAutoScroll(true);
                 if (bottomRef.current) {
-                  bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+                  bottomRef.current.scrollIntoView({ behavior: 'auto' });
                 }
               }}
               style={{

@@ -650,7 +650,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
     }
 
-    if (modeRef.current !== 'walk') return;
+    if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
     if (cameraState.isAIControlled) {
       walkPos.current.x = cameraState.walkerX;
       walkPos.current.z = cameraState.walkerZ;
