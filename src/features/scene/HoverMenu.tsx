@@ -125,7 +125,7 @@ const ACTIONS: Record<string, ActionDef> = {
   ] },
   'mannequin-meubleT-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-meubleT-wind' },
 
-  'mannequin-mackapar-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-mackapar-wig', type: 'select', options: [
+  'mannequin-lack-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-lack-wig', type: 'select', options: [
     { value: '-1', label: '🎲 Aléatoire' },
     { value: '0', label: 'Coupe #1 (Carré Court / Bob)' },
     { value: '1', label: 'Coupe #2 (Queue de cheval haute & mèches visages)' },
@@ -141,7 +141,7 @@ const ACTIONS: Record<string, ActionDef> = {
     { value: '11', label: 'Coupe #12 (Mi-tresse plaquée mi-ondulé)' },
     { value: '12', label: 'Coupe #13 (Chignon haut hérissé & bandeau)' },
   ] },
-  'mannequin-mackapar-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-mackapar-color', type: 'select', options: [
+  'mannequin-lack-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-lack-color', type: 'select', options: [
     { value: 'naturel', label: 'Naturel 🟫' },
     { value: 'noir', label: 'Noir ⚫' },
     { value: 'brun', label: 'Brun 🟫' },
@@ -156,7 +156,7 @@ const ACTIONS: Record<string, ActionDef> = {
     { value: 'violet', label: 'Violet 💜' },
     { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
   ] },
-  'mannequin-mackapar-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-mackapar-wind' },
+  'mannequin-lack-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-lack-wind' },
 
   eastGlassDoor: {
     btnLabel: 'Ouvrir / Fermer Droit',
