@@ -59,6 +59,7 @@ const MAX_LOGS = 60;
 export function AppConsole() {
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
   const [visible, setVisible] = useState(true);
+  const [autoScroll, setAutoScroll] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Injecter la Google Font JetBrains Mono une seule fois
@@ -90,15 +91,25 @@ export function AppConsole() {
 
   // Auto-scroll vers le bas à chaque nouveau log
   useEffect(() => {
-    if (visible && bottomRef.current) {
+    if (visible && autoScroll && bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [logs, visible]);
+  }, [logs, visible, autoScroll]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
+    if (isAtBottom && !autoScroll) {
+      setAutoScroll(true);
+    } else if (!isAtBottom && autoScroll) {
+      setAutoScroll(false);
+    }
+  };
 
   // ── Styles inline ──────────────────────────────────────────────────────
   const containerStyle: React.CSSProperties = {
     position: 'fixed',
-    bottom: 0,
+    top: 0,
     left: 0,
     right: 0,
     zIndex: 9999,
@@ -187,6 +198,30 @@ export function AppConsole() {
               ({logs.length}/{MAX_LOGS})
             </span>
           )}
+          {!autoScroll && (
+            <button
+              onClick={() => {
+                setAutoScroll(true);
+                if (bottomRef.current) {
+                  bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              style={{
+                background: 'rgba(0, 255, 136, 0.1)',
+                border: '1px solid #00ff88',
+                color: '#00ff88',
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '9px',
+                lineHeight: 1,
+                padding: '2px 6px',
+                cursor: 'pointer',
+                borderRadius: '2px',
+                marginLeft: '10px'
+              }}
+            >
+              ↓ SUIVRE
+            </button>
+          )}
         </span>
         <button
           style={closeBtnStyle}
@@ -207,7 +242,7 @@ export function AppConsole() {
 
       {/* Log area */}
       {visible && (
-        <div style={logAreaStyle}>
+        <div style={logAreaStyle} onScroll={handleScroll}>
           {logs.length === 0 && (
             <div style={{ ...lineStyle, color: 'rgba(100, 100, 100, 0.7)', fontStyle: 'italic' }}>
               En attente de logs…
