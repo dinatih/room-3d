@@ -554,6 +554,10 @@ export function Decor() {
       <LampOla_ />
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ isIkea: true }}>
         <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        {/* 4e tête de mannequin — étagère droite du Mackapär (Y≈100, Z_local≈+20) */}
+        <group position={[0, 100, 20]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin', actions: ['mannequin-mackapar-wig', 'mannequin-mackapar-color', 'mannequin-mackapar-wind'] } }}>
+          <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="mackapar" />
+        </group>
       </group>
             <SneakersPair />
       <CeilingPalmLeaves />

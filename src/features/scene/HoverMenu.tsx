@@ -124,6 +124,40 @@ const ACTIONS: Record<string, ActionDef> = {
     { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
   ] },
   'mannequin-meubleT-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-meubleT-wind' },
+
+  'mannequin-mackapar-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-mackapar-wig', type: 'select', options: [
+    { value: '-1', label: '🎲 Aléatoire' },
+    { value: '0', label: 'Coupe #1 (Carré Court / Bob)' },
+    { value: '1', label: 'Coupe #2 (Queue de cheval haute & mèches visages)' },
+    { value: '2', label: 'Coupe #3 (Pixie effilée & déstructurée)' },
+    { value: '3', label: 'Coupe #4 (Shag mi-longue / Wolf cut)' },
+    { value: '4', label: 'Coupe #5 (Mi-longue lissée avec frange)' },
+    { value: '5', label: 'Coupe #6 (Queue de cheval très haute)' },
+    { value: '6', label: 'Coupe #7 (Carré court avec frange droite)' },
+    { value: '7', label: 'Coupe #8 (Couettes hautes & frange latérale)' },
+    { value: '8', label: 'Coupe #9 (Courte hérissée avec bandeau)' },
+    { value: '9', label: 'Coupe #10 (Lob ondulé / Wavy lob)' },
+    { value: '10', label: 'Coupe #11 (Coupe Hime / 姫カット)' },
+    { value: '11', label: 'Coupe #12 (Mi-tresse plaquée mi-ondulé)' },
+    { value: '12', label: 'Coupe #13 (Chignon haut hérissé & bandeau)' },
+  ] },
+  'mannequin-mackapar-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-mackapar-color', type: 'select', options: [
+    { value: 'naturel', label: 'Naturel 🟫' },
+    { value: 'noir', label: 'Noir ⚫' },
+    { value: 'brun', label: 'Brun 🟫' },
+    { value: 'chatain', label: 'Châtain 🟤' },
+    { value: 'blond', label: 'Blond 🌟' },
+    { value: 'roux', label: 'Roux 🦊' },
+    { value: 'rouge', label: 'Rouge ❤️' },
+    { value: 'blanc', label: 'Blanc ❄️' },
+    { value: 'bleu', label: 'Bleu 💙' },
+    { value: 'vert', label: 'Vert 💚' },
+    { value: 'rose', label: 'Rose 🌸' },
+    { value: 'violet', label: 'Violet 💜' },
+    { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
+  ] },
+  'mannequin-mackapar-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-mackapar-wind' },
+
   eastGlassDoor: {
     btnLabel: 'Ouvrir / Fermer Droit',
     toggleKey: 'eastGlassDoor'
@@ -567,7 +601,7 @@ export function HoverOverlay() {
 
               return (
                 <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {opts.length > 10 && (
+                  {opts.length > 10 && action.toggleKey.startsWith('walker-anim') && (
                     <input
                       type="text"
                       placeholder="🔍 Filtrer anims..."
