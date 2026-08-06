@@ -1,15 +1,15 @@
 /**
- * NpcConsole.tsx — Console de debug style CS:GO fixée en bas de l'écran.
- * Affiche les logs des NPCs avec horodatage et couleurs par personnage.
+ * AppConsole.tsx — Console de debug style CS:GO fixée en bas de l'écran.
+ * Affiche les logs de l'application avec horodatage et couleurs par tag.
  *
  * Usage :
- *   import { npcLog } from '@features/ui/NpcConsole';
- *   npcLog('delphina', 'Marche vers la cuisine');
+ *   import { appLog } from '@features/ui/AppConsole';
+ *   appLog('delphina', 'Marche vers la cuisine');
  */
 import { useState, useEffect, useRef } from 'react';
 
-// ── Palette de couleurs par NPC ────────────────────────────────────────────
-const NPC_COLORS: Record<string, string> = {
+// ── Palette de couleurs par tag ────────────────────────────────────────────
+const TAG_COLORS: Record<string, string> = {
   delphina: '#00ff88',
   vivida:   '#ff4444',
   angelina: '#00aaff',
@@ -17,16 +17,18 @@ const NPC_COLORS: Record<string, string> = {
   sabira:   '#ffff44',
   lgbta:    '#cc88ff',
   marissa:  '#ff6b9d',
+  system:   '#ffffff',
+  error:    '#ff0000',
 };
 
-function getNpcColor(npcId: string): string {
-  return NPC_COLORS[npcId.toLowerCase()] ?? '#aaaaaa';
+function getTagColor(tag: string): string {
+  return TAG_COLORS[tag.toLowerCase()] ?? '#aaaaaa';
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────
-export interface NpcLogEntry {
+export interface AppLogEntry {
   id: number;
-  npcId: string;
+  tag: string;
   message: string;
   timestamp: number;
 }
@@ -34,10 +36,10 @@ export interface NpcLogEntry {
 // ── Singleton : émettre un log depuis n'importe où ─────────────────────────
 let _logCounter = 0;
 
-export const npcLog = (npcId: string, message: string): void => {
+export const appLog = (tag: string, message: string): void => {
   document.dispatchEvent(
-    new CustomEvent('npc-log', {
-      detail: { npcId, message, timestamp: Date.now() },
+    new CustomEvent('app-log', {
+      detail: { tag, message, timestamp: Date.now() },
     })
   );
 };
@@ -54,14 +56,14 @@ function formatTime(ts: number): string {
 const MAX_LOGS = 60;
 
 // ── Composant ──────────────────────────────────────────────────────────────
-export function NpcConsole() {
-  const [logs, setLogs] = useState<NpcLogEntry[]>([]);
+export function AppConsole() {
+  const [logs, setLogs] = useState<AppLogEntry[]>([]);
   const [visible, setVisible] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Injecter la Google Font JetBrains Mono une seule fois
   useEffect(() => {
-    const id = 'npc-console-font';
+    const id = 'app-console-font';
     if (document.getElementById(id)) return;
     const link = document.createElement('link');
     link.id = id;
@@ -71,19 +73,19 @@ export function NpcConsole() {
     document.head.appendChild(link);
   }, []);
 
-  // Écouter les CustomEvents 'npc-log'
+  // Écouter les CustomEvents 'app-log'
   useEffect(() => {
     const handler = (e: Event) => {
-      const ev = e as CustomEvent<{ npcId: string; message: string; timestamp: number }>;
-      const { npcId, message, timestamp } = ev.detail;
+      const ev = e as CustomEvent<{ tag: string; message: string; timestamp: number }>;
+      const { tag, message, timestamp } = ev.detail;
       setLogs(prev => {
-        const entry: NpcLogEntry = { id: ++_logCounter, npcId, message, timestamp };
+        const entry: AppLogEntry = { id: ++_logCounter, tag, message, timestamp };
         const next = [...prev, entry];
         return next.length > MAX_LOGS ? next.slice(next.length - MAX_LOGS) : next;
       });
     };
-    document.addEventListener('npc-log', handler);
-    return () => document.removeEventListener('npc-log', handler);
+    document.addEventListener('app-log', handler);
+    return () => document.removeEventListener('app-log', handler);
   }, []);
 
   // Auto-scroll vers le bas à chaque nouveau log
@@ -179,7 +181,7 @@ export function NpcConsole() {
       <div style={headerStyle}>
         <span style={titleStyle}>
           <span>🤖</span>
-          <span>NPCs LOG</span>
+          <span>APP LOGS</span>
           {logs.length > 0 && (
             <span style={{ opacity: 0.5, fontSize: '9px', fontWeight: 400 }}>
               ({logs.length}/{MAX_LOGS})
@@ -208,11 +210,11 @@ export function NpcConsole() {
         <div style={logAreaStyle}>
           {logs.length === 0 && (
             <div style={{ ...lineStyle, color: 'rgba(100, 100, 100, 0.7)', fontStyle: 'italic' }}>
-              En attente de logs NPC…
+              En attente de logs…
             </div>
           )}
           {logs.map(entry => {
-            const color = getNpcColor(entry.npcId);
+            const color = getTagColor(entry.tag);
             return (
               <div key={entry.id} style={lineStyle}>
                 <span style={tsStyle}>[{formatTime(entry.timestamp)}]</span>
@@ -225,7 +227,7 @@ export function NpcConsole() {
                     minWidth: '70px',
                   }}
                 >
-                  {entry.npcId}
+                  {entry.tag}
                 </span>
                 <span style={{ color: 'rgba(0,255,136,0.4)', flexShrink: 0 }}>›</span>
                 <span style={msgStyle}>{entry.message}</span>

@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { AgentInstruction } from './aiTypes';
 import { ZONES } from './ZoneNodes';
 import { useSceneStore } from '../store/useSceneStore';
-import { npcLog } from '@features/ui/NpcConsole';
+import { appLog } from '@features/ui/AppConsole';
 
 export interface AgentState {
   x: number;
@@ -67,7 +67,7 @@ export function useAgentController(
         const loopKey = `loop-${_characterId}`;
         if (lastLogRef.current !== loopKey) {
           lastLogRef.current = loopKey;
-          npcLog(_characterId, '↺ Nouveau scénario aléatoire');
+          appLog(_characterId, '🔄 Nouveau scénario aléatoire');
         }
       } else {
         if (statusRef.current !== 'FINISHED') {
@@ -102,7 +102,7 @@ export function useAgentController(
         const logKey = `move-${stepIndexRef.current}-${targetNodeId}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
-          npcLog(_characterId, `Marche vers ${targetNodeId} (${tx.toFixed(0)}, ${tz.toFixed(0)})`);
+          appLog(_characterId, `🚶‍♂️ Marche vers ${targetNodeId} (${tx.toFixed(0)}, ${tz.toFixed(0)})`);
         }
       } else if (currentInstruction.type === 'INTERACT' || currentInstruction.type === 'WAIT') {
         statusRef.current = 'INTERACTING';
@@ -119,7 +119,7 @@ export function useAgentController(
           const label = animation
             ? animation.replace('media/sandbox/anims/', '').replace('.glb', '')
             : currentInstruction.type;
-          npcLog(_characterId, `Action: ${label} (${duration}s)`);
+          appLog(_characterId, `🎭 Action: ${label} (${duration}s)`);
         }
       }
     }
@@ -152,7 +152,7 @@ export function useAgentController(
         if (lastLogRef.current !== arrivedKey) {
           lastLogRef.current = arrivedKey;
           const targetNodeId = currentInstruction.targetNodeId ?? 'destination';
-          npcLog(_characterId, `Arrivé à ${targetNodeId}`);
+          appLog(_characterId, `🎯 Arrivé à ${targetNodeId}`);
         }
         statusRef.current = 'IDLE';
         stepIndexRef.current++;
