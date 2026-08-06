@@ -337,7 +337,7 @@ const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> 
   { key: 'layers',     emoji: '📑', label: 'Calques' },
   { key: 'interactif', emoji: '🎮', label: 'Interact' },
   { key: 'personnage', emoji: '👤', label: 'Perso' },
-  { key: 'anims',      emoji: '💃', label: 'Anims' },
+  { key: 'anims',      emoji: '💃', label: 'Anim Perso' },
 ];
 
 // ── Composant principal ───────────────────────────────────────────────────────
@@ -1248,7 +1248,7 @@ export function SidePanel({
     const sheetOpen = activeTab !== null;
     const sheetTitle: Record<Exclude<TabKey, null>, string> = {
       views: '📷 Vues', layers: '📑 Calques', personnage: '👤 Personnage',
-      perf: '📊 Perf', anims: '💃 Animations', interactif: '🎮 Interactif'
+      perf: '📊 Perf', anims: '💃 Animations Perso', interactif: '🎮 Interactif'
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
       views: ViewsSection,
@@ -1305,14 +1305,23 @@ export function SidePanel({
 
         {/* Tab bar */}
         <div 
-          className="position-fixed bottom-0 start-0 end-0 border-top shadow-lg d-flex justify-content-around align-items-center"
-          style={{ height: '64px', zIndex: 100, paddingBottom: 'env(safe-area-inset-bottom)', background: 'rgba(255, 255, 255, 0.75)', backdropFilter: 'blur(8px)' }}
+          className="position-fixed bottom-0 start-0 end-0 border-top shadow-lg d-flex align-items-center"
+          style={{ 
+            height: '64px', 
+            zIndex: 100, 
+            paddingBottom: 'env(safe-area-inset-bottom)', 
+            background: 'rgba(255, 255, 255, 0.75)', 
+            backdropFilter: 'blur(8px)',
+            overflowX: 'auto',
+            scrollbarWidth: 'none',
+            whiteSpace: 'nowrap'
+          }}
         >
           {/* Inventaire — ouvre le modal directement */}
           <button
             onClick={onOpenInventory}
             className="btn border-0 d-flex flex-column align-items-center justify-content-center py-1 text-secondary"
-            style={{ fontSize: '10px', flex: 1 }}
+            style={{ fontSize: '10px', minWidth: '60px', flex: '0 0 auto' }}
           >
             <span style={{ fontSize: '20px', lineHeight: 1 }}>📦</span>
             <span className="fw-semibold">Inventaire</span>
@@ -1325,7 +1334,7 @@ export function SidePanel({
                 key={t.key}
                 onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
                 className={`btn border-0 d-flex flex-column align-items-center justify-content-center py-1 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
-                style={{ fontSize: '10px', flex: 1 }}
+                style={{ fontSize: '10px', minWidth: '60px', flex: '0 0 auto' }}
               >
                 <span style={{ fontSize: '20px', lineHeight: 1 }}>{t.emoji}</span>
                 <span className="fw-semibold">{t.label}</span>
@@ -1375,7 +1384,7 @@ export function SidePanel({
         <Group emoji="📑" title="Calques">{LayersSection}</Group>
         <Group emoji="🎮" title="Interactif">{InteractifSection}</Group>
         <Group emoji="👤" title="Personnage">{PersonnageSection}</Group>
-        <Group emoji="💃" title="Animations">{AnimationsSection}</Group>
+        <Group emoji="💃" title="Animations Perso">{AnimationsSection}</Group>
       </div>
 
       {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
