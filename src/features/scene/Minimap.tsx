@@ -108,8 +108,11 @@ function drawMinimap(
     if (char.id !== activeWalkerId) {
       const isNumbered = /^\d/.test(char.id);
       if (!showAllLaraStyles && isNumbered) return;
+      const currentPos = cameraState.positions[char.id];
+      const x = currentPos ? currentPos.x : char.pos[0];
+      const z = currentPos ? currentPos.z : char.pos[2];
       ctx.save();
-      ctx.translate(tx(char.pos[0]), tz(char.pos[2]));
+      ctx.translate(tx(x), tz(z));
       ctx.beginPath(); 
       ctx.arc(0, 0, R * 0.7, 0, Math.PI * 2); 
       ctx.fill(); 

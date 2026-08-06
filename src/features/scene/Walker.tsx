@@ -1581,6 +1581,7 @@ function SingleCharacter({
           groupRef.current.rotation.y = agentState.rotY;
           customAnimName.current = agentState.animation;
           groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
+          cameraState.positions[id] = { x: agentState.x, y: 0, z: agentState.z, yaw: agentState.rotY };
         } else {
           const savedPos = cameraState.positions[id];
           const px = savedPos ? savedPos.x : npcPosition[0];
