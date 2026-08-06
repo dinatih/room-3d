@@ -699,6 +699,16 @@ function SingleCharacter({
   });
 
   const [haircut, setHaircut] = useState<string>('original');
+
+  useEffect(() => {
+    if (variant === 'lgbta') {
+      const interval = setInterval(() => {
+        const index = Math.floor(Math.random() * 13);
+        setHaircut('hair_' + (100 + index));
+      }, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [variant]);
   const hairPackGltf = useGLTF('media/hair_pack_part_2.glb');
 
   const hairChainRef = useRef<any[]>([]);
