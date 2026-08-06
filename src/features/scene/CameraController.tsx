@@ -130,14 +130,28 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   function updateWalkLook() {
     const ctrl = ctrlRef.current;
     if (!ctrl) return;
-    const d    = 100;
     const cosP = Math.cos(walkPitch.current);
+
+    // Position des yeux du perso
+    const targetX = walkPos.current.x;
+    const targetY = walkPos.current.y;
+    const targetZ = walkPos.current.z;
+
+    // Recul (GTA style)
+    const distanceBehind = 180;
+    const heightAbove = 50;
+
+    const camX = targetX - Math.sin(walkYaw.current) * cosP * distanceBehind;
+    const camY = targetY - Math.sin(walkPitch.current) * distanceBehind + heightAbove;
+    const camZ = targetZ - Math.cos(walkYaw.current) * cosP * distanceBehind;
+
+    const lookDist = 200;
     ctrl.target.set(
-      walkPos.current.x + Math.sin(walkYaw.current) * cosP * d,
-      walkPos.current.y + Math.sin(walkPitch.current) * d,
-      walkPos.current.z + Math.cos(walkYaw.current) * cosP * d,
+      targetX + Math.sin(walkYaw.current) * cosP * lookDist,
+      targetY + Math.sin(walkPitch.current) * lookDist,
+      targetZ + Math.cos(walkYaw.current) * cosP * lookDist
     );
-    camera.position.set(walkPos.current.x, walkPos.current.y, walkPos.current.z);
+    camera.position.set(camX, camY, camZ);
     ctrl.update();
   }
 

@@ -81,7 +81,7 @@ const initialLayers: LayerState = {
   maxBreastAngle: 25,
   maxBreastAngleXZ: 35,
   hairPhysics: true,
-  characterShadows: false,
+  characterShadows: true,
 };
 
 const initialExtraStates: Record<string, boolean> = {

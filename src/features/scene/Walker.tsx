@@ -1596,7 +1596,7 @@ function SingleCharacter({
         groupRef.current.visible = false;
       }
 
-      const isFirstPerson = isActive && cameraState.mode === 'walk';
+      const isFirstPerson = false; // Désactivé : on utilise le mode follow GTA (3ème personne)
       if (prevFirstPersonRef.current !== isFirstPerson) {
         scene.traverse(o => {
           if ((o as THREE.Mesh).isMesh) {
