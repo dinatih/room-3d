@@ -45,6 +45,18 @@ const HAIR_COLORS: Record<string, THREE.Color> = {
 
 const TARGET_H = 45; // cm
 
+// Keep track of used initial wigs to avoid duplicates on startup
+let usedInitialWigs: number[] = [];
+function getUniqueRandomWig(): number {
+  if (usedInitialWigs.length >= 13) usedInitialWigs = [];
+  let index;
+  do {
+    index = Math.floor(Math.random() * 13);
+  } while (usedInitialWigs.includes(index));
+  usedInitialWigs.push(index);
+  return index;
+}
+
 // Préfixes des 13 coiffures dans hair_pack_part_2.glb
 const HAIR_NUMBERS = ['100','101','102','103','104','105','106','107','108','109','110','111','112'];
 
@@ -53,7 +65,7 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
   const { scene } = useGLTFClone('media/glb/wig_mannequin.glb');
   const hairPack = useGLTF('media/hair_pack_part_2.glb');
 
-  const [wigIndex, setWigIndex] = useState<number>(initialWigIndex ?? Math.floor(Math.random() * HAIR_NUMBERS.length));
+  const [wigIndex, setWigIndex] = useState<number>(initialWigIndex ?? getUniqueRandomWig());
   const [hairColor, setHairColor] = useState<string | undefined>(initialHairColor);
   const [windEnabled, setWindEnabled] = useState<boolean>(initialWindEnabled ?? false);
   const clonedHairRef = useRef<THREE.Object3D | null>(null);

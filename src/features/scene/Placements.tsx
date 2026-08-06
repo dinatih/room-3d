@@ -484,11 +484,16 @@ function LampOla_() {
     return () => document.removeEventListener('furniture-toggle', handler);
   }, []);
   return (
-    <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z]} rotation-y={LAMP_ROT_Y}
-      userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
-      <LampOla item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      {lampOn && <pointLight color={0xfff5e0} intensity={120000} distance={350} decay={2} position={[0, 96, 0]} />}
-    </group>
+    <>
+      <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 30]} rotation-y={LAMP_ROT_Y}
+        userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
+        <LampOla item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        {lampOn && <pointLight color={0xfff5e0} intensity={120000} distance={350} decay={2} position={[0, 96, 0]} />}
+      </group>
+      <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z]} rotation-y={LAMP_ROT_Y - Math.PI / 8} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 5', actions: ['mannequin-lamp-random', 'mannequin-lamp-wig', 'mannequin-lamp-color', 'mannequin-lamp-wind'] } }}>
+        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lamp" />
+      </group>
+    </>
   );
 }
 
