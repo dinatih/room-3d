@@ -349,7 +349,9 @@ export function Studio() {
         <GlbReveal />
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.xray        && <XRayLayer />}
-        <AiZonesHelper />
+        <Suspense fallback={null}>
+          <AiZonesHelper />
+        </Suspense>
         {layers.wallEdges   && <WallEdgesLayer />}
         {layers.wallEdges   && <EdgeHoverRaycaster />}
         {layers.grid        && <GridLayer depthTest={layers.gridDepth} />}
