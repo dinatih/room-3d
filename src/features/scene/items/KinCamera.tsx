@@ -13,20 +13,22 @@ export function KinCamera({ onSize }: SceneItemProps) {
 
     // Positionnement sous le plafond
     // L'objet est placé à Y=250 dans Placements.tsx.
-    // S'il est encore trop enfoncé, on le descend de 3 cm.
-    scene.position.set(0, -3, 0);
+    // Sa moitié de hauteur vaut ~2.83cm. On décale de -2.83 pour qu'il affleure exactement.
+    scene.position.set(0, -2.83, 0);
 
     scene.traverse((child: any) => {
       if (child.isMesh) {
-        // meshId1 (283 vertices) = dome, meshId0 (1993 vertices) = base
-        if (child.geometry.attributes.position.count < 1000) {
-          child.material = new THREE.MeshPhysicalMaterial({
-             color: 0x050505,
+        // Le convertisseur a nommé les matériaux "lambert1" et "lambert2"
+        // On se fie au nom du matériau ou on teste simplement s'il s'agit du dôme.
+        const isDome = child.material?.name === 'lambert2' || child.geometry?.attributes?.position?.count < 1000;
+        
+        if (isDome) {
+          child.material = new THREE.MeshStandardMaterial({
+             color: 0x111111,
              transparent: true,
-             opacity: 0.8,
-             roughness: 0.05,
-             transmission: 0.9, 
-             thickness: 1.0,
+             opacity: 0.75,
+             roughness: 0.2,
+             metalness: 0.8,
           });
         } else {
           child.material = new THREE.MeshStandardMaterial({

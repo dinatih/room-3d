@@ -1,7 +1,6 @@
 import { useLayoutEffect, useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { WigDebug } from './WigDebug';
 import { useGLTF } from '@react-three/drei';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
@@ -30,13 +29,15 @@ export interface WigProps {
   id: string | number;
   color?: string; // e.g. "brun", "arc-en-ciel", ou undefined
   offset?: [number, number, number];
-  windEnabled?: boolean;
   scale?: number;
-  onBonesExtracted?: (bones: WigBone[]) => void;
+  windEnabled?: boolean;
+  onBonesExtracted?: (bones: { bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[]) => void;
+  attachTo?: THREE.Object3D | null;
 }
 
-export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted }: WigProps) {
+export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
   const { scene: fullScene } = useGLTF('media/hair_pack_part_2.glb');
+  const clonedHairRef = useRef<THREE.Group>(null!);
   
   const scene = useMemo(() => {
     let sourceGroup: THREE.Object3D | null = null;
@@ -55,22 +56,27 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     });
 
     const s = 1.4;
-    sg.scale.set(s, s, s);
+    
     if (hairHeadBone) {
       sg.updateMatrixWorld(true);
       const headPos = (hairHeadBone as THREE.Object3D).position.clone();
       sg.position.set(
         -headPos.x * s,
-        -headPos.y * s + 0.07,
+        -headPos.y * s + 0.07 * scale, // scale adjustment
         -headPos.z * s
       );
+    } else {
+      sg.position.set(0, 0.15 * scale, 0);
     }
 
+    // Apply the user requested scale DIRECTLY to sg instead of the wrapper group
+    // This prevents position offset multiplication bugs
+    sg.scale.set(s * scale, s * scale, s * scale);
+
     return sg;
-  }, [fullScene, id]);
+  }, [fullScene, id, scale]);
 
   const hairBonesRef = useRef<WigBone[]>([]);
-  const clonedHairRef = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
     if (!scene) return;
@@ -118,13 +124,17 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         const m = child as THREE.Mesh;
         m.visible = true;
         m.renderOrder = 1;
+        
+        const targetColor = color && HAIR_COLORS[color] ? HAIR_COLORS[color] : null;
+
         if (Array.isArray(m.material)) {
-          m.material = m.material.map(mat => {
-            if (!mat) return mat;
-            const clonedMat = mat.clone();
+          m.material = m.material.map((_mat: any) => {
+            if (!_mat) return _mat;
+            const clonedMat = _mat.clone();
             clonedMat.side = THREE.DoubleSide;
             clonedMat.alphaTest = 0.5;
             clonedMat.depthWrite = true;
+            if (targetColor && 'color' in clonedMat) (clonedMat as any).color.copy(targetColor);
             clonedMat.needsUpdate = true;
             return clonedMat;
           });
@@ -133,6 +143,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           clonedMat.side = THREE.DoubleSide;
           clonedMat.alphaTest = 0.5;
           clonedMat.depthWrite = true;
+          if (targetColor && 'color' in clonedMat) (clonedMat as any).color.copy(targetColor);
           clonedMat.needsUpdate = true;
           m.material = clonedMat;
         }
@@ -163,9 +174,21 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     });
     
     hairBonesRef.current = extractedBones;
-    if (onBonesExtracted) onBonesExtracted(extractedBones);
+    if (onBonesExtracted) {
+      onBonesExtracted(hairBonesRef.current);
+    }
+  }, [scene, color, scale, id]);
 
-  }, [scene, color, onBonesExtracted]);
+  useLayoutEffect(() => {
+    if (attachTo && scene) {
+      attachTo.add(scene);
+    }
+    return () => {
+      if (attachTo && scene) {
+        attachTo.remove(scene);
+      }
+    };
+  }, [attachTo, scene]);
 
   // 3. Animation du vent (Mannequin) et couleur arc-en-ciel
   useFrame((state) => {
@@ -202,11 +225,9 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     }
   });
 
-  return (
-    <group ref={clonedHairRef} position={offset} scale={[scale, scale, scale]} name="lara_custom_hair_attachment">
-      <mesh position={[0,0,0]}><boxGeometry args={[0.5, 0.5, 0.5]} /><meshBasicMaterial color="green" /></mesh>
+  return attachTo ? null : (
+    <group ref={clonedHairRef} position={offset} name="lara_custom_hair_attachment">
       <primitive object={scene} dispose={null} />
-      <WigDebug />
     </group>
   );
 }

@@ -1,31 +1,46 @@
 const { NodeIO } = require('@gltf-transform/core');
-const { KHRMaterialsTransmission, KHRMaterialsVolume } = require('@gltf-transform/extensions');
 
 async function main() {
-  const io = new NodeIO().registerExtensions([KHRMaterialsTransmission, KHRMaterialsVolume]);
+  const io = new NodeIO();
   
   const document = await io.read('public/media/sandbox/kin-fine-camera.glb');
   const root = document.getRoot();
   
-  const transmissionExtension = document.createExtension(KHRMaterialsTransmission);
-  const volumeExtension = document.createExtension(KHRMaterialsVolume);
-
   const materials = root.listMaterials();
   for (const mat of materials) {
     const name = mat.getName();
-    if (name === 'lambert2' || mat.getBaseColorFactor()[3] < 1.0) { // If it's already blend
+    
+    // On s'assure de nettoyer les anciennes extensions de transmission qui causent des bugs de rendu sans envMap
+    mat.setExtension('KHR_materials_transmission', null);
+    mat.setExtension('KHR_materials_volume', null);
+    
+    if (name === 'lambert2' || mat.getAlphaMode() === 'BLEND') { 
        mat.setAlphaMode('BLEND');
-       
-       const transmission = transmissionExtension.createTransmission()
-         .setTransmissionFactor(0.9);
-         
-       const volume = volumeExtension.createVolume()
-         .setThicknessFactor(1.0);
-         
-       mat.setExtension('KHR_materials_transmission', transmission);
-       mat.setExtension('KHR_materials_volume', volume);
-       mat.setRoughnessFactor(0.05);
-       mat.setBaseColorFactor([0.02, 0.02, 0.02, 0.8]);
+       mat.setRoughnessFactor(0.2);
+       mat.setMetallicFactor(0.8); // Rendre brillant
+       mat.setBaseColorFactor([0.01, 0.01, 0.01, 0.75]); // Noir transparent classique
+    } else {
+       mat.setBaseColorFactor([0.9, 0.9, 0.9, 1]);
+       mat.setRoughnessFactor(0.8);
+    }
+  }
+
+  // Vérifier explicitement que le petit mesh est bien assigné au matériau noir
+  const meshes = root.listMeshes();
+  let domeMat = materials.find(m => m.getName() === 'lambert2') || materials[1];
+  let baseMat = materials.find(m => m.getName() === 'lambert1') || materials[0];
+
+  for (const mesh of meshes) {
+    const prims = mesh.listPrimitives();
+    for (const prim of prims) {
+       const pos = prim.getAttribute('POSITION');
+       if (pos && pos.getCount() < 1000) {
+          // Dome
+          prim.setMaterial(domeMat);
+       } else {
+          // Base
+          prim.setMaterial(baseMat);
+       }
     }
   }
 

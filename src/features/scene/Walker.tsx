@@ -4,7 +4,7 @@
  * Updated: 2026-07-27 T-Pose position fix
  */
 import { useRef, useLayoutEffect, Suspense, useEffect, useMemo, useState } from 'react';
-import { useFrame, useThree, createPortal } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { Wig } from './items/Wig';
@@ -2082,14 +2082,14 @@ function SingleCharacter({
     <group ref={groupRef} userData={{ animUnit: true }}>
       <primitive ref={modelRef} object={scene} />
       
-      {headBoneState && haircut !== 'original' && createPortal(
+      {headBoneState && haircut !== 'original' && (
         <Wig 
           id={haircut.replace('hair_', '')}
           onBonesExtracted={(bones) => {
             customHairAnimBonesRef.current = bones;
           }}
-        />,
-        headBoneState
+          attachTo={headBoneState}
+        />
       )}
       {!isPreview && isActive && <GroundPoint />}
     </group>
