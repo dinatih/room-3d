@@ -253,6 +253,8 @@ export interface FurnitureState {
   bathroomDoor: boolean;
   corrDoors:    boolean;
   bimDoubleDoor:     boolean;
+  bimDoorLeftOpen:   boolean;
+  bimDoorRightOpen:  boolean;
   sdbClosetL:   boolean;
   sdbClosetR:   boolean;
   cbnWest:      boolean;

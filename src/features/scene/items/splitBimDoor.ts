@@ -19,7 +19,17 @@ export function splitBimDoor(originalScene: THREE.Group) {
     const index = geo.index;
     if (!pos || !index) return;
     
-    const mat = mesh.material as THREE.Material;
+    let mat = mesh.material as THREE.MeshStandardMaterial;
+    if (mat) {
+      mat = mat.clone();
+      if (mat.name.toLowerCase().includes('glass') || mat.name.toLowerCase().includes('vitr') || mat.name.toLowerCase().includes('verre') || mat.opacity < 1) {
+        mat.transparent = true;
+        mat.opacity = 0.35;
+        mat.roughness = 0.1;
+        mat.metalness = 0.1;
+        mat.color = new THREE.Color('#aaccff');
+      }
+    }
 
     const fIndices: number[] = [];
     const lIndices: number[] = [];

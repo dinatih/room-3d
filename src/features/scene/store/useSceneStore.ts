@@ -44,6 +44,8 @@ const initialFurniture: FurnitureState = {
   sofaArmRight: false,
   mackaparDoors: true,
   bimDoubleDoor: true,
+  bimDoorLeftOpen: false,
+  bimDoorRightOpen: false,
 };
 
 const initialLayers: LayerState = {
