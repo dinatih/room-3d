@@ -196,8 +196,14 @@ const ACTIONS: Record<string, ActionDef> = {
     toggleKey: 'eastGlassDoor'
   },
   glassDoorLeftOpen: { btnLabel: 'Ouvrir / Fermer Gauche', toggleKey: 'glassDoorV2LeftOpen' },
-  bimDoorLeftOpen: { btnLabel: 'Ouvrir Gauche', toggleKey: 'bim-door-left-open' },
-  bimDoorRightOpen: { btnLabel: 'Ouvrir Droit', toggleKey: 'bim-door-right-open' },
+  bimDoorLeftOpen: { 
+    btnLabel: () => useSceneStore.getState().furniture.bimDoorLeftOpen ? 'Fermer Gauche' : 'Ouvrir Gauche', 
+    toggleKey: 'bim-door-left-open' 
+  },
+  bimDoorRightOpen: { 
+    btnLabel: () => useSceneStore.getState().furniture.bimDoorRightOpen ? 'Fermer Droit' : 'Ouvrir Droit', 
+    toggleKey: 'bim-door-right-open' 
+  },
   glassDoorShutter: {
     btnLabel: () => {
       const pos = useSceneStore.getState().furniture.glassDoorV2ShutterPos;
@@ -528,6 +534,10 @@ function injectPulse() {
 
 export function HoverOverlay() {
   const dotRef = React.useRef<HTMLDivElement>(null);
+  
+  // S'abonne aux changements d'états du mobilier pour re-rendre les labels réactifs (ex: Ouvrir/Fermer)
+  useSceneStore(state => state.furniture);
+  
   const [state, setState] = useState({
     visible: false, label: '', actionIds: [] as string[],
     locked: false, lockedLabel: '', lockedActionIds: [] as string[], lockedX: 0, lockedY: 0,

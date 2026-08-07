@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { WigDebug } from './WigDebug';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { useGLTF } from '@react-three/drei';
 
@@ -156,6 +157,7 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
   return (
     <group ref={clonedHairRef} position={offset} name="lara_custom_hair_attachment">
       <primitive object={hairNode} />
+      <WigDebug />
     </group>
   );
 }

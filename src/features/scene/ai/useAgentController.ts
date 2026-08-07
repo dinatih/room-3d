@@ -155,7 +155,12 @@ export function useAgentController(
         statusRef.current = 'INTERACTING';
         timerRef.current = currentInstruction.duration || 1.0;
         if (currentInstruction.triggerEventKey) {
-          const key = currentInstruction.triggerEventKey as any;
+          let key = currentInstruction.triggerEventKey as any;
+          
+          if (key === 'eastGlassDoor' && useSceneStore.getState().furniture.bimDoubleDoor) {
+            key = 'bimDoorRightOpen';
+          }
+
           const currentVal = (useSceneStore.getState().furniture as any)[key];
           const isDoor = key.toLowerCase().includes('door');
           
