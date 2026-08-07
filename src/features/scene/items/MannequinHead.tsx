@@ -116,6 +116,7 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
 
   return (
     <group ref={ref}>
+      <mesh position={[0,40,0]}><boxGeometry args={[10, 10, 10]} /><meshBasicMaterial color="blue" /></mesh>
       <primitive object={scene} />
       <Wig 
         id={activeWigNumber}

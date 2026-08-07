@@ -204,6 +204,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
 
   return (
     <group ref={clonedHairRef} position={offset} scale={[scale, scale, scale]} name="lara_custom_hair_attachment">
+      <mesh position={[0,0,0]}><boxGeometry args={[0.5, 0.5, 0.5]} /><meshBasicMaterial color="green" /></mesh>
       <primitive object={scene} dispose={null} />
       <WigDebug />
     </group>
