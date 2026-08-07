@@ -4,7 +4,7 @@ import { useGLTFClone } from '../useGLTFClone';
 import type { SceneItemProps } from '@shared/types';
 
 export function KinCamera({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/sandbox/kin-fine-camera.glb');
+  const { scene } = useGLTFClone('media/sandbox/camera_render.glb');
 
   useLayoutEffect(() => {
     // Les matériaux, l'échelle et la rotation ont été "bakes" directement dans le fichier GLB.
