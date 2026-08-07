@@ -225,7 +225,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'door-living',      name: 'Porte séjour',                   brand: '',         category: 'doors',     qty: 1, dims: { w: 83,  d: 4,   h: 204 }, notes: 'Blanche, mur D, poignée L double face', actions: ['living-door-toggle'] },
   { id: 'door-sdb',         name: 'Porte SDB',                      brand: '',         category: 'doors',     qty: 1, dims: { w: 4,   d: 83,  h: 204 }, notes: 'Blanche, mur couloir, poignée L double face', actions: ['bathroom-door-toggle'] },
   { id: 'door-glass',       name: 'Porte-fenêtre',                  brand: '',         category: 'doors',     qty: 1, dims: { w: 160, d: 5,   h: 190 }, notes: 'Double battant PVC blanc, vitrage, seuil 20cm', actions: ['east-glass-door-toggle'] },
-  { id: 'door-bim-double',  name: 'S9000 Double Door',              brand: 'GEALAN',   category: 'doors',     qty: 1, dims: { w: 160, d: 8,   h: 210 }, notes: 'BIMObject S9000 Double-vent door with threshold' },
+  { id: 'door-bim-double',  name: 'S9000 Double Door',              brand: 'GEALAN',   category: 'doors',     qty: 1, dims: { w: 160, d: 8,   h: 210 }, notes: 'BIMObject S9000 Double-vent door with threshold', actions: ['east-glass-door-toggle', 'glass-door-v2-left-open'] },
   { id: 'door-frame',       name: 'Dormant de porte',               brand: 'Standard', category: 'doors',     qty: 1, dims: { w: 88,  d: 9.2, h: 205 }, notes: 'Dormant/huisserie standard pour mur de 7.2 cm d\'épaisseur. Largeur totale 9.2 cm, recouvrement de 1 cm des deux côtés avec lèvres symétriques (3 cm de hauteur). Passage utile de 83 cm avec butée de 1.8 cm.' },
 
 ];

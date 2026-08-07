@@ -1,25 +1,60 @@
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { SceneItemProps } from '@shared/types';
-import { Box3, Vector3 } from 'three';
+import { Box3, Vector3, Group, MathUtils } from 'three';
+import { splitBimDoor } from './splitBimDoor';
 
-export function BimDoubleDoor({ onSize }: SceneItemProps) {
+export function BimDoubleDoor({ actionState, onSize }: SceneItemProps) {
   const { scene } = useGLTFClone('/media/S9000_Double_Door.glb');
+  
+  const { frameGroup, leftGroup, rightGroup } = useMemo(() => {
+    // To prevent re-splitting the same scene
+    if (scene.userData.splitParts) return scene.userData.splitParts;
+    const parts = splitBimDoor(scene);
+    scene.userData.splitParts = parts;
+    return parts;
+  }, [scene]);
+
+  const leftRef = useRef<Group>(null!);
+  const rightRef = useRef<Group>(null!);
 
   useLayoutEffect(() => {
     if (!scene) return;
-    // IFC often uses meters (1 = 1m) or millimeters (1 = 1mm). 
-    // Usually assimp converts to scene units depending on the importer, let's try scale 100 (meters to cm).
     scene.scale.set(100, 100, 100);
-    // Adjust rotation if needed (BIM models might be rotated)
     scene.rotation.set(0, 0, 0);
     
+    // Size is computed from the original scene or the group.
+    // Actually we can compute size from the assembled parts!
     const box = new Box3().setFromObject(scene);
     const size = new Vector3();
     box.getSize(size);
     if (onSize) onSize(size);
   }, [scene, onSize]);
 
-  // Translate down slightly if it has a weird pivot
-  return <primitive object={scene} position={[0, -105, 0]} />;
+  // Target angles
+  // For the left door, open means rotating inwards or outwards? Let's say it rotates out (Math.PI / 2)
+  // We can use generic actionState like actionState['east-glass-door-toggle'] or we can add new ones
+  const leftOpen = !!actionState['glass-door-v2-left-open'] || !!actionState['glass-door-left-open'];
+  const rightOpen = !!actionState['east-glass-door-toggle'];
+
+  const leftTarget = leftOpen ? Math.PI / 2 : 0;
+  const rightTarget = rightOpen ? -Math.PI / 2 : 0;
+
+  useFrame((_, delta) => {
+    if (leftRef.current) {
+      leftRef.current.rotation.y = MathUtils.damp(leftRef.current.rotation.y, leftTarget, 5, delta);
+    }
+    if (rightRef.current) {
+      rightRef.current.rotation.y = MathUtils.damp(rightRef.current.rotation.y, rightTarget, 5, delta);
+    }
+  });
+
+  return (
+    <group position={[0, -105, 0]} scale={[100, 100, 100]}>
+      <primitive object={frameGroup} />
+      <primitive object={leftGroup} ref={leftRef} />
+      <primitive object={rightGroup} ref={rightRef} />
+    </group>
+  );
 }
