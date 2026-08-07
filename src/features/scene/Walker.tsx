@@ -1665,20 +1665,19 @@ function SingleCharacter({
                 gravityQuat.setFromUnitVectors(defaultDir, localGravity);
               }
 
-              // 2. Oscillations dynamiques : n'existent QUE pendant le mouvement (0 au repos)
-              if (motionFactor > 0) {
-                const phase = time * 4.0 + index * 0.7;
-                // Pour éviter que l'orientation locale chaotique des os annule le gauche/droite,
-                // on distribue équitablement le balancier sur les axes X et Z avec un fort Z.
-                const swingX = Math.sin(phase) * 0.12 * motionFactor;
-                const swingY = Math.sin(phase * 0.6 + 1.2) * 0.12 * motionFactor;
-                const swingZ = Math.sin(phase * 0.85 + 2.0) * 0.35 * motionFactor; // <-- Z très prononcé (gauche/droite)
+              // 2. Oscillations dynamiques : Rebond fort en mouvement, brise légère au repos
+              const baseIdleEnergy = 0.15; // Léger mouvement au repos
+              const totalFactor = Math.max(baseIdleEnergy, motionFactor);
+              
+              const phase = time * 4.0 + index * 0.7;
+              // Pour éviter que l'orientation locale chaotique des os annule le gauche/droite,
+              // on distribue équitablement le balancier sur les axes X et Z avec un fort Z.
+              const swingX = Math.sin(phase) * 0.12 * totalFactor;
+              const swingY = Math.sin(phase * 0.6 + 1.2) * 0.12 * totalFactor;
+              const swingZ = Math.sin(phase * 0.85 + 2.0) * 0.35 * totalFactor; // <-- Z très prononcé (gauche/droite)
 
-                eulerAnim.set(swingX, swingY, swingZ, 'YXZ');
-                animQuat.setFromEuler(eulerAnim);
-              } else {
-                animQuat.identity();
-              }
+              eulerAnim.set(swingX, swingY, swingZ, 'YXZ');
+              animQuat.setFromEuler(eulerAnim);
 
               // Repos pur = Pose neutre + Gravité monde. Mouvement = Gravité + Rebond dynamique.
               bone.quaternion.copy(restQ).slerp(restQ.clone().multiply(gravityQuat), 0.55).multiply(animQuat);

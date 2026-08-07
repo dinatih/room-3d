@@ -1,21 +1,23 @@
 const { NodeIO } = require('@gltf-transform/core');
-const { resample, dedup } = require('@gltf-transform/functions');
+const { center } = require('@gltf-transform/functions');
 
 async function main() {
   const io = new NodeIO();
   const document = await io.read('public/media/sandbox/camera_render.glb');
   const root = document.getRoot();
 
-  // Écraser la base pour réduire la hauteur par 3, comme demandé
+  // On centre parfaitement la géométrie à l'origine !
+  await document.transform(
+      center({ pivot: 'center' })
+  );
+
+  // Appliquer le scale et les fix de base
   const nodes = root.listNodes();
   for (const node of nodes) {
-      if (node.getParentNode() === null) {
-          // Si c'est un noeud racine (pas un sous-noeud), on l'écrase
-          // Attention, le DAE original est pSphere... ils n'ont peut-être pas de parent ou un parent root
-      }
-      // Au lieu de ça on va juste scaler les noeuds qui ont les meshes
       if (node.getMesh()) {
-          node.setScale([10, 3.33, 10]); // On agrandit X et Z par 10 (c'était petit avant), et Y par 3.33 (ce qui fait 1/3 de 10)
+          // L'utilisateur dit qu'elle est x2 ou x3 trop grosse
+          // Donc on met x0.33, z0.33, et on aplatit encore plus y (0.11)
+          node.setScale([0.33, 0.11, 0.33]);
       }
   }
 
@@ -44,10 +46,6 @@ async function main() {
           mat.setMetallicFactor(0.0);
       }
   }
-
-  // Pour valider les échelles (bake)
-  // Utilisons les outils de transformation de la géométrie au lieu du rescale node si ça bug, 
-  // Mais node scale suffit généralement.
 
   await io.write('public/media/sandbox/camera_render.glb', document);
 }
