@@ -134,6 +134,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
             clonedMat.side = THREE.DoubleSide;
             clonedMat.alphaTest = 0.5;
             clonedMat.depthWrite = true;
+            clonedMat.transparent = false;
             if (targetColor && 'color' in clonedMat) (clonedMat as any).color.copy(targetColor);
             clonedMat.needsUpdate = true;
             return clonedMat;
@@ -143,6 +144,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           clonedMat.side = THREE.DoubleSide;
           clonedMat.alphaTest = 0.5;
           clonedMat.depthWrite = true;
+          clonedMat.transparent = false;
           if (targetColor && 'color' in clonedMat) (clonedMat as any).color.copy(targetColor);
           clonedMat.needsUpdate = true;
           m.material = clonedMat;

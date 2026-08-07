@@ -16,28 +16,32 @@ export function KinCamera({ onSize }: SceneItemProps) {
     // Sa moitié de hauteur vaut ~2.83cm. On décale de -2.83 pour qu'il affleure exactement.
     scene.position.set(0, -2.83, 0);
 
+    // Identifier le dôme de façon robuste : c'est la partie avec le moins de sommets
+    const meshes: any[] = [];
     scene.traverse((child: any) => {
       if (child.isMesh) {
-        // Le convertisseur a nommé les matériaux "lambert1" et "lambert2"
-        // On se fie au nom du matériau ou on teste simplement s'il s'agit du dôme.
-        const isDome = child.material?.name === 'lambert2' || child.geometry?.attributes?.position?.count < 1000;
-        
-        if (isDome) {
-          child.material = new THREE.MeshStandardMaterial({
-             color: 0x111111,
-             transparent: true,
-             opacity: 0.75,
-             roughness: 0.2,
-             metalness: 0.8,
-          });
-        } else {
-          child.material = new THREE.MeshStandardMaterial({
-             color: 0xffffff,
-             roughness: 0.7,
-          });
-        }
+        meshes.push(child);
       }
     });
+
+    meshes.sort((a, b) => a.geometry.attributes.position.count - b.geometry.attributes.position.count);
+
+    if (meshes.length >= 2) {
+      // Le mesh avec le moins de vertices (meshes[0]) est le dôme
+      meshes[0].material = new THREE.MeshStandardMaterial({
+        color: 0x111111,
+        transparent: true,
+        opacity: 0.75,
+        roughness: 0.2,
+        metalness: 0.8,
+      });
+
+      // Le mesh avec le plus de vertices (meshes[1]) est la base
+      meshes[1].material = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.7,
+      });
+    }
 
     onSize?.(new THREE.Vector3(20, 3.3, 20));
   }, [scene, onSize]);
