@@ -52,7 +52,7 @@ export function BimDoubleDoor({ actionState, onSize }: SceneItemProps) {
   });
 
   return (
-    <group position={[-75, -105, 0]} scale={[100, 100, 100]}>
+    <group position={[-75, -85, 0]} scale={[100, 100, 100]}>
       <primitive object={frameGroup} />
       <primitive object={leftGroup} ref={leftRef} />
       <primitive object={rightGroup} ref={rightRef} />

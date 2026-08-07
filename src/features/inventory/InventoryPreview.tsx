@@ -191,7 +191,7 @@ export function InventoryPreview({
 }) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
   const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = !!photos && photos.length > 0;
-  const actionKeys = item && 'category' in item && (item as InventoryItem).category === 'walkers' ? [] : (item as any)?.actions?.[0] ? [(item as any).actions[0]] : [];
+  const actionKeys: string[] = item && 'category' in item && (item as InventoryItem).category === 'walkers' ? [] : ((item as any)?.actions || []);
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(true), [autoRotate, setAutoRotate] = useState(true);
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [photoIdx, setPhotoIdx] = useState(0);
