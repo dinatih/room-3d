@@ -19,6 +19,7 @@ import { NOOP_ITEM, NOOP_SIZE } from './sceneItem';
 import { DoorLiving, DoorBath } from './items/DoorWhite';
 import { DoorEntry }            from './items/DoorEntry';
 import { GlassDoor }            from './items/GlassDoor';
+import { BimDoubleDoor }        from './items/BimDoubleDoor';
 import { useFurnitureToggles } from './utils/useFurnitureToggles';
 import { useSceneStore } from './store/useSceneStore';
 
@@ -1695,7 +1696,12 @@ export function DoorsPlaced() {
             actions: ['eastGlassDoor', 'glassDoorLeftOpen', 'glassDoorShutter']
           }
         }}>
-        <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+        {!useSceneStore(state => state.furniture.bimDoubleDoor) && (
+          <GlassDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+        )}
+        {useSceneStore(state => state.furniture.bimDoubleDoor) && (
+          <BimDoubleDoor item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+        )}
       </group>
       <group
         position={[(DOOR_START + DOOR_END) / 2, DOOR_HEIGHT / 2, ROOM_D + PARTITION_THICKNESS / 2]}

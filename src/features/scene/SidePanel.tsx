@@ -252,6 +252,7 @@ export interface FurnitureState {
   livingDoor:   boolean;
   bathroomDoor: boolean;
   corrDoors:    boolean;
+  bimDoubleDoor:     boolean;
   sdbClosetL:   boolean;
   sdbClosetR:   boolean;
   cbnWest:      boolean;
@@ -510,6 +511,7 @@ export function SidePanel({
       {furnitureBtn('Porte Séjour', 'livingDoor', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Porte SDB', 'bathroomDoor', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Baie Vitrée Est', 'eastGlassDoor', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Porte Double BIM', 'bimDoubleDoor', 'ON', 'OFF')}
       {furnitureBtn('Baie Vitrée Ouest', 'glassDoorV2LeftOpen', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Volets', 'glassDoorV2ShutterPos', 'ON', 'OFF', v => `${v}%`)}
       
