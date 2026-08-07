@@ -30,6 +30,11 @@ export function optimizeMaterials(root: THREE.Object3D) {
  * La scale/rotation de root est bakée dans la géométrie ; root.scale reset à 1.
  */
 export function mergeGlbByMaterial(root: THREE.Object3D): void {
+  if (root.userData.merged) {
+    root.scale.set(1, 1, 1);
+    return;
+  }
+  root.userData.merged = true;
   // On optimise d'abord les matériaux (transparence -> alphaTest)
   optimizeMaterials(root);
 
