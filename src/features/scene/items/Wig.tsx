@@ -1,7 +1,8 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTF } from '@react-three/drei';
 
 export const HAIR_COLORS: Record<string, THREE.Color> = {
   naturel:  new THREE.Color(0.4, 0.25, 0.1),
@@ -36,14 +37,24 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
   const url = `media/wigs/wig_${id}.glb`;
   const { scene } = useGLTFClone(url);
   
+  const hairNode = useMemo(() => {
+    let found: THREE.Object3D | null = null;
+    scene.traverse(c => {
+      if (!found && c.name.startsWith('Hair') && c.name.includes('_ARM_')) {
+        found = c;
+      }
+    });
+    return found || scene;
+  }, [scene]);
+  
   const hairBonesRef = useRef<WigBone[]>([]);
   const clonedHairRef = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
-    if (!scene) return;
+    if (!hairNode) return;
 
     // 1. Configurer la visibilité et cloner les matériaux
-    scene.traverse((child) => {
+    hairNode.traverse((child: any) => {
       child.frustumCulled = false;
       const m = child as THREE.Mesh;
       if (m.isMesh && m.material) {
@@ -77,7 +88,7 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
 
     // 2. Extraire les os pour l'animation/physique
     const extractedBones: WigBone[] = [];
-    scene.traverse((child) => {
+    hairNode.traverse((child: any) => {
       if ((child as any).isBone) {
         const b = child as THREE.Bone;
         if (!(b as any).restLocalQuaternion) {
@@ -89,7 +100,7 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
                               nLower.includes('bip_spine') || nLower.startsWith('head') || 
                               nLower.includes('root') || nLower.includes('scalp') || 
                               nLower.startsWith('bone3_') || nLower.startsWith('bone4_') || 
-                              b.parent === scene;
+                              b.parent === hairNode;
 
         if (!isRootOrScalp && nLower.startsWith('bone')) {
           const index = parseInt(nLower.replace(/\D/g, ''), 10) || 1;
@@ -105,14 +116,14 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
     hairBonesRef.current = extractedBones;
     if (onBonesExtracted) onBonesExtracted(extractedBones);
 
-  }, [scene, color]);
+  }, [hairNode, color]);
 
   // 3. Animation du vent (Mannequin) et couleur arc-en-ciel
   useFrame((state) => {
     if (color === 'arc-en-ciel' && clonedHairRef.current) {
       const hue = (state.clock.elapsedTime * 0.2) % 1;
       const rainbow = new THREE.Color().setHSL(hue, 0.8, 0.5);
-      clonedHairRef.current.traverse((child) => {
+      clonedHairRef.current.traverse((child: any) => {
         const m = child as THREE.Mesh;
         if (m.isMesh && m.material) {
           if (Array.isArray(m.material)) {
@@ -144,10 +155,13 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
 
   return (
     <group ref={clonedHairRef} position={offset} name="lara_custom_hair_attachment">
-      <primitive object={scene} />
+      <primitive object={hairNode} />
     </group>
   );
 }
 
 // Preload the most common ones or we can just let Suspense handle it.
 // The user has 13 wigs. We can preload them if needed, or leave it lazy.
+
+const HAIR_NUMBERS = ['100','101','102','103','104','105','106','107','108','109','110','111','112'];
+HAIR_NUMBERS.forEach(id => useGLTF.preload(`media/wigs/wig_${id}.glb`));
