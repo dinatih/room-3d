@@ -131,6 +131,8 @@ function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 'transien
     'ninja-toggle': 'ninja',
     'sofa-arm-left': 'sofaArmLeft',
     'sofa-arm-right': 'sofaArmRight',
+    'bim-door-left-open': 'bimDoorLeftOpen',
+    'bim-door-right-open': 'bimDoorRightOpen',
   };
 
   if (key in map) {
