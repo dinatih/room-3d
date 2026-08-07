@@ -71,9 +71,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
   const isLgbta = style === 'lgbta';
 
   model.traverse(node => {
-
-
     if ((node as THREE.Mesh).isMesh) {
+      if (node.userData && node.userData.isCustomHair) return; // Skip custom hair meshes
+
       const mesh = node as THREE.Mesh;
       const originalMat = mesh.material as THREE.Material | THREE.Material[];
       const matArray = Array.isArray(originalMat) ? originalMat : [originalMat];

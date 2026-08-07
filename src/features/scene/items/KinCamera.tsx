@@ -26,18 +26,23 @@ export function KinCamera({ onSize }: SceneItemProps) {
 
     meshes.sort((a, b) => a.geometry.attributes.position.count - b.geometry.attributes.position.count);
 
-      // DEBUG: Cache le mesh 0 (283 vertices) pour voir s'il disparait
-      meshes[0].visible = true; // Rendre visible !
+    if (meshes.length >= 2) {
+      meshes[0].visible = true;
       meshes[0].material = new THREE.MeshStandardMaterial({
-        color: 0xff0000,
+        color: 0x111111,
+        transparent: true,
+        opacity: 0.75,
+        roughness: 0.1,
+        metalness: 0.0,
         side: THREE.DoubleSide,
       });
 
       meshes[1].material = new THREE.MeshStandardMaterial({
-        color: 0x00ff00,
+        color: 0xffffff,
+        roughness: 0.7,
         side: THREE.DoubleSide,
       });
-
+    }
     onSize?.(new THREE.Vector3(20, 3.3, 20));
   }, [scene, onSize]);
 
