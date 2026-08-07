@@ -37,6 +37,8 @@ import { appLog } from '@features/ui/AppConsole';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 export { WALKER_ANIM_OPTIONS };
 
+const EMPTY_SCENARIO: AgentInstruction[] = [];
+
 export interface CharacterConfig {
   id: string;
   name: string;
@@ -815,7 +817,7 @@ function SingleCharacter({
   const isGuidedTour = activeActionKey && id === activeWalkerId;
   const isDelphinaNpc = (id === 'delphina' || id === 'vivida' || id === 'angelina' || id === 'cha' || id === 'sabira' || id === 'lgbta' || id === 'marissa') && id !== activeWalkerId;
 
-  const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : []);
+  const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : EMPTY_SCENARIO);
   const loopScenario = isDelphinaNpc;
 
   const { update: updateAgent } = useAgentController(
