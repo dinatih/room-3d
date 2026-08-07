@@ -29,7 +29,7 @@ export const ACTION_GO_TO_TOILET: AgentInstruction[] = [
   // Aller vers la porte du salon
   { type: 'MOVE_TO', targetNodeId: 'Couloir_Central' },
   // Ouvrir la porte du salon
-  { type: 'INTERACT', triggerEventKey: 'livingDoor', animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
+  { type: 'INTERACT', triggerEventKey: 'livingDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
 
   // S'avancer dans le couloir jusqu'à la SDB
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
@@ -56,7 +56,7 @@ export const ACTION_GO_TO_TOILET: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
   
   // Fermer la porte SDB
-  { type: 'INTERACT', triggerEventKey: 'bathroomDoor', animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
+  { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
 
   // Revenir dans le salon
   { type: 'MOVE_TO', targetNodeId: 'Couloir_Central' },
@@ -91,7 +91,7 @@ export const ACTION_BED_EAST: AgentInstruction[] = [
 
 export const ACTION_BATHTUB: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
-  { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
+  { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
   { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
   { type: 'MOVE_TO', targetNodeId: 'Baignoire' },
   { type: 'INTERACT', animation: 'media/sandbox/anims/anim_sitting_idle.glb', duration: 10.0, rotY: 0 },
@@ -119,7 +119,7 @@ export const ACTION_SHOWER: AgentInstruction[] = [
 
 export const ACTION_GARDEN_SOFA_EAST: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
-  { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
+  { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
   { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
   { type: 'MOVE_TO', targetNodeId: 'Canape_Est' },
   { type: 'INTERACT', animation: 'media/sandbox/anims/anim_female_sitting_pose_3.glb', duration: 10.0, rotY: Math.PI },
@@ -130,7 +130,7 @@ export const ACTION_GARDEN_SOFA_EAST: AgentInstruction[] = [
 
 export const ACTION_GARDEN_SOFA_WEST: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
-  { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
+  { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
   { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
   { type: 'MOVE_TO', targetNodeId: 'Canape_Ouest' },
   { type: 'INTERACT', animation: 'media/sandbox/anims/anim_sitting_idle.glb', duration: 10.0, rotY: Math.PI },
@@ -151,7 +151,7 @@ export const ACTION_KALLAX_NE: AgentInstruction[] = [
 
 export const ACTION_FRESH_AIR: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
-  { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
+  { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
   { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
   { type: 'MOVE_TO', targetNodeId: 'Fond_Jardin' },
   { type: 'INTERACT', animation: 'idle', duration: 15.0, rotY: Math.PI },

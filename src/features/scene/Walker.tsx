@@ -842,7 +842,7 @@ function SingleCharacter({
         }));
       }
     },
-    isNPC ? (characterIndex ?? 0) * 3.0 : 0
+    isNPC ? (id === 'sandra' || id === 'rajaa' ? 9 * 3.0 : (characterIndex ?? 0) * 3.0) : 0
   );
 
   useEffect(() => {
@@ -1594,8 +1594,13 @@ function SingleCharacter({
         groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
         groupRef.current.rotation.y = agentState.rotY;
         customAnimName.current = agentState.animation;
-        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
-        cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
+        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && agentState.isSpawned;
+        
+        if (agentState.isSpawned) {
+          cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
+        } else {
+          delete cameraState.positions[id];
+        }
       } else {
         groupRef.current.visible = false;
       }

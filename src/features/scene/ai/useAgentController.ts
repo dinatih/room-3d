@@ -10,6 +10,7 @@ export interface AgentState {
   z: number;
   rotY: number;
   animation: string;
+  isSpawned: boolean;
 }
 
 export function useAgentController(
@@ -25,7 +26,8 @@ export function useAgentController(
     y: 0,
     z: 0,
     rotY: 0,
-    animation: 'idle'
+    animation: 'idle',
+    isSpawned: spawnDelay === 0
   });
 
   const stepIndexRef = useRef(0);
@@ -74,6 +76,7 @@ export function useAgentController(
       if (delayTimerRef.current <= 0) {
         statusRef.current = 'FALLING';
         timerRef.current = 6.0; // 6 seconds to fall
+        stateRef.current.isSpawned = true;
         appLog(_characterId, `▶ Tombée du ciel`);
       }
       stateRef.current.animation = 'idle';
@@ -151,7 +154,21 @@ export function useAgentController(
         statusRef.current = 'INTERACTING';
         timerRef.current = currentInstruction.duration || 1.0;
         if (currentInstruction.triggerEventKey) {
-          useSceneStore.getState().toggleFurniture(currentInstruction.triggerEventKey as any);
+          const key = currentInstruction.triggerEventKey as any;
+          const currentVal = (useSceneStore.getState().furniture as any)[key];
+          const isDoor = key.toLowerCase().includes('door');
+          
+          if (isDoor) {
+            const wantsToOpen = currentInstruction.animation?.includes('open_door');
+            if (wantsToOpen && !currentVal) {
+              useSceneStore.getState().toggleFurniture(key);
+            } else if (!wantsToOpen && currentVal) {
+              // Si un perso ferme la porte (wantsToOpen=false), on la ferme uniquement si elle est ouverte
+              useSceneStore.getState().toggleFurniture(key);
+            }
+          } else {
+            useSceneStore.getState().toggleFurniture(key);
+          }
         }
         // Log action INTERACT
         const animation = currentInstruction.animation ?? '';
