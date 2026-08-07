@@ -32,6 +32,7 @@ import {
 } from './ai/ZoneNodes';
 import type { AgentInstruction } from './ai/aiTypes';
 import { useAgentController } from './ai/useAgentController';
+import { appLog } from '@features/ui/AppConsole';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 export { WALKER_ANIM_OPTIONS };
@@ -1596,7 +1597,7 @@ function SingleCharacter({
           cameraState.isAIControlled = false;
         }
       } else if (isNPC) {
-        if (!(idleTimerRef.current > 10)) {
+        if (!(idleTimerRef.current > 42)) {
           const agentState = updateAgent(delta);
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
@@ -1724,8 +1725,12 @@ function SingleCharacter({
         idleTimerRef.current = 0;
     }
 
-    // Both characters time out after 10s of inactivity to save CPU
-    const isIdleTimeout = idleTimerRef.current > 10;
+    // Both characters time out after 42s of inactivity to save CPU
+    const prevIdle = idleTimerRef.current - delta;
+    const isIdleTimeout = idleTimerRef.current > 42;
+    if (isIdleTimeout && prevIdle <= 42 && isActive) {
+      appLog('system', '💤 Moteur 3D suspendu (42s inactif). Bougez pour reprendre.');
+    }
 
     const to = actions[target];
     if (to && activeActionName.current !== target) {
