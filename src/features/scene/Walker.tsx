@@ -814,11 +814,8 @@ function SingleCharacter({
   const isGuidedTour = activeActionKey && id === activeWalkerId;
   const isDelphinaNpc = (id === 'delphina' || id === 'vivida' || id === 'angelina' || id === 'cha' || id === 'sabira' || id === 'lgbta' || id === 'marissa') && id !== activeWalkerId;
 
-  const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : null);
+  const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : []);
   const loopScenario = isDelphinaNpc;
-
-  const autonomousCharacters = ['marissa', 'delphina', 'cha', 'vivida', 'sabira', 'angelina', 'lgbta'];
-  const autonomousIndex = autonomousCharacters.indexOf(id);
 
   const { update: updateAgent } = useAgentController(
     id,
@@ -845,7 +842,7 @@ function SingleCharacter({
         }));
       }
     },
-    isDelphinaNpc && autonomousIndex >= 0 ? autonomousIndex * 6.0 : 0
+    isNPC ? (characterIndex ?? 0) * 3.0 : 0
   );
 
   useEffect(() => {
@@ -1593,23 +1590,12 @@ function SingleCharacter({
           cameraState.isAIControlled = false;
         }
       } else if (isNPC) {
-        if (isDelphinaNpc) {
-          const agentState = updateAgent(delta);
-          groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
-          groupRef.current.rotation.y = agentState.rotY;
-          customAnimName.current = agentState.animation;
-          groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
-          cameraState.positions[id] = { x: agentState.x, y: 0, z: agentState.z, yaw: agentState.rotY };
-        } else {
-          const savedPos = cameraState.positions[id];
-          const px = savedPos ? savedPos.x : npcPosition[0];
-          const py_pos = savedPos ? savedPos.y : npcPosition[1];
-          const pz = savedPos ? savedPos.z : npcPosition[2];
-          const py_rot = savedPos ? savedPos.yaw : npcRotationY;
-          groupRef.current.position.set(px, py_pos, pz);
-          groupRef.current.rotation.y = py_rot;
-          groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
-        }
+        const agentState = updateAgent(delta);
+        groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
+        groupRef.current.rotation.y = agentState.rotY;
+        customAnimName.current = agentState.animation;
+        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
+        cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
       } else {
         groupRef.current.visible = false;
       }

@@ -48,7 +48,7 @@ export function useAgentController(
     if (scenario) {
       const real = getRealPosition();
       stateRef.current.x = real.x;
-      stateRef.current.y = spawnDelay > 0 ? 800 : 0;
+      stateRef.current.y = spawnDelay > 0 ? 2500 : 0;
       stateRef.current.z = real.z;
       stateRef.current.rotY = real.rotY;
       startPosRef.current = { x: real.x, z: real.z, rotY: real.rotY };
@@ -88,7 +88,7 @@ export function useAgentController(
         timerRef.current = 1.96; // duration of crouch_to_stand approx 2s
       } else {
         const p_inv = timerRef.current / 6.0; // 1 to 0
-        stateRef.current.y = 800 * (p_inv * p_inv * p_inv); // ease-out (ralenti à la fin)
+        stateRef.current.y = 2500 * (p_inv * p_inv * p_inv); // ease-out (ralenti à la fin)
       }
       stateRef.current.animation = 'media/sandbox/anims/anim_falling.glb';
       return stateRef.current;
