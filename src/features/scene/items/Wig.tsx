@@ -40,20 +40,43 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
   const clonedHairRef = useRef<THREE.Group>(null!);
   
   const scene = useMemo(() => {
-    let sourceGroup: THREE.Object3D | null = null;
-    
     // Parse ID and map to 100 series (e.g. "2" -> "102")
     const numId = typeof id === 'string' ? parseInt(id.replace('hair_', ''), 10) : id;
     const gltfId = isNaN(numId) ? id : (numId < 100 ? 100 + numId : numId);
+
+    // Clone the ENTIRE scene to ensure SkinnedMesh binds perfectly to the bones
+    const clonedFullScene = SkeletonUtils.clone(fullScene) as THREE.Group;
     
-    fullScene.traverse(child => {
-      if (!sourceGroup && child.name.startsWith(`Hair${gltfId}_ARM_`)) sourceGroup = child;
+    // FIX: SkeletonUtils.clone often fails to bind the skeleton correctly when portaling.
+    // We must manually re-bind all SkinnedMeshes to their cloned bones.
+    const clonedBones: { [name: string]: THREE.Bone } = {};
+    clonedFullScene.traverse(child => {
+      if ((child as THREE.Bone).isBone) {
+        clonedBones[child.name] = child as THREE.Bone;
+      }
     });
-    if (!sourceGroup) return new THREE.Group();
+
+    clonedFullScene.traverse(child => {
+      if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
+        const sm = child as THREE.SkinnedMesh;
+        // Reconstruct the skeleton using the cloned bones instead of the originals
+        const newBones = sm.skeleton.bones.map(b => clonedBones[b.name] || b);
+        const newSkeleton = new THREE.Skeleton(newBones, sm.skeleton.boneInverses);
+        sm.bind(newSkeleton, sm.bindMatrix);
+      }
+    });
+
+
     
-    const sg = SkeletonUtils.clone(sourceGroup as THREE.Object3D);
+    let sg: THREE.Object3D | null = null;
+    clonedFullScene.traverse(child => {
+      if (!sg && child.name.startsWith(`Hair${gltfId}_ARM_`)) sg = child as THREE.Object3D;
+    });
+
+    if (!sg) return new THREE.Group();
+    
     let hairHeadBone: THREE.Object3D | null = null;
-    sg.traverse((c: any) => {
+    (sg as THREE.Object3D).traverse((c: any) => {
       const nLower = c.name.toLowerCase();
       if ((nLower.startsWith('bip_head') || nLower === 'head') && !hairHeadBone) {
         hairHeadBone = c;
@@ -63,25 +86,35 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     const s = 1.4;
     
     if (hairHeadBone) {
-      sg.updateMatrixWorld(true);
+      (sg as THREE.Object3D).updateMatrixWorld(true);
       const headPos = (hairHeadBone as THREE.Object3D).position.clone();
-      sg.position.set(
+      (sg as THREE.Object3D).position.set(
         -headPos.x * s * scale,
         -headPos.y * s * scale + (attachTo ? 0.07 : 0),
         -headPos.z * s * scale
       );
     } else {
-      sg.position.set(0, 0.15 * scale, 0);
+      (sg as THREE.Object3D).position.set(0, 0.15 * scale, 0);
     }
 
     // Apply the user requested scale DIRECTLY to sg instead of the wrapper group
-    // This prevents position offset multiplication bugs
-    sg.scale.set(s * scale, s * scale, s * scale);
+    (sg as THREE.Object3D).scale.set(s * scale, s * scale, s * scale);
 
-    return sg;
+    return (sg as THREE.Object3D);
   }, [fullScene, id, scale]);
 
   const hairBonesRef = useRef<WigBone[]>([]);
+  
+  useFrame((state) => {
+    if (hairBonesRef.current.length > 0) {
+      const rootBone = hairBonesRef.current[0].bone;
+      if (!(window as any)._spinLogged) {
+        console.log("[Wig] Violent spin test activated on bone:", rootBone.name);
+        (window as any)._spinLogged = true;
+      }
+      rootBone.rotation.x = state.clock.elapsedTime * 15; // Violently spin like a helicopter
+    }
+  });
 
   useLayoutEffect(() => {
     if (!scene) return;
@@ -90,6 +123,27 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     const extractedBones: WigBone[] = [];
     scene.traverse((child: any) => {
       child.frustumCulled = false;
+      
+      if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
+        const sm = child as THREE.SkinnedMesh;
+        if (!(window as any)._skinLogged2) {
+          console.log("[Wig] SkinnedMesh found:", sm.name, "with", sm.skeleton.bones.length, "bones.");
+          (window as any)._skinLogged2 = true;
+        }
+        // Extract bones DIRECTLY from the SkinnedMesh's skeleton!
+        if (extractedBones.length === 0) {
+          const isRootOrScalp = (n: string) => n.toLowerCase().includes('root') || n.toLowerCase().includes('spine') || n.toLowerCase().includes('neck') || n.toLowerCase().includes('head');
+          sm.skeleton.bones.forEach(b => {
+            if (!isRootOrScalp(b.name)) {
+              extractedBones.push({
+                bone: b,
+                restQ: b.quaternion.clone(),
+                index: extractedBones.length
+              });
+            }
+          });
+        }
+      }
       
       if ((child as THREE.Mesh).isMesh) {
         const m = child as THREE.Mesh;
@@ -151,7 +205,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       }
     });
     
-    console.log("Wig extracted bones:", extractedBones.length); hairBonesRef.current = extractedBones;
+    console.log("Wig extracted bones directly from skeleton:", extractedBones.length); hairBonesRef.current = extractedBones;
     if (onBonesExtracted) {
       onBonesExtracted(hairBonesRef.current);
     }
@@ -187,19 +241,21 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       });
     }
 
-    if (windEnabled && hairBonesRef.current.length > 0) {
-      const t = state.clock.elapsedTime * 3;
-      hairBonesRef.current.forEach(({ bone, restQ, index }) => {
-        const windX = Math.sin(t + index * 0.5) * 0.15;
-        const windZ = Math.cos(t * 0.8 + index * 0.5) * 0.15;
-        const windQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(windX, 0, windZ));
-        bone.quaternion.copy(restQ).multiply(windQ);
-      });
-    } else if (!windEnabled && hairBonesRef.current.length > 0) {
-      // Remise à zéro s'il n'y a pas de vent
-      hairBonesRef.current.forEach(({ bone, restQ }) => {
-        bone.quaternion.copy(restQ);
-      });
+    if (!attachTo) {
+      if (windEnabled && hairBonesRef.current.length > 0) {
+        const t = state.clock.elapsedTime * 3;
+        hairBonesRef.current.forEach(({ bone, restQ, index }) => {
+          const windX = Math.sin(t + index * 0.5) * 0.15;
+          const windZ = Math.cos(t * 0.8 + index * 0.5) * 0.15;
+          const windQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(windX, 0, windZ));
+          bone.quaternion.copy(restQ).multiply(windQ);
+        });
+      } else if (!windEnabled && hairBonesRef.current.length > 0) {
+        // Remise à zéro s'il n'y a pas de vent
+        hairBonesRef.current.forEach(({ bone, restQ }) => {
+          bone.quaternion.copy(restQ);
+        });
+      }
     }
   });
 

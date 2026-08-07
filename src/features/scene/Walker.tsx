@@ -173,6 +173,57 @@ function getDepth(node: THREE.Object3D): number {
   return depth;
 }
 
+export function buildHairChain(hairBones: THREE.Bone[]) {
+  const hairChain: any[] = [];
+  const bones = [...hairBones].sort((a, b) => getDepth(a) - getDepth(b));
+
+  if (bones.length > 0) {
+    const baseParent = bones[0].parent;
+    if (baseParent) {
+      baseParent.updateMatrixWorld(true);
+      const baseParentRestQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
+
+      let prevAxis = new THREE.Vector3(0, -1, 0);
+      for (const bone of bones) {
+        let axis = prevAxis.clone();
+        let length = 8.0;
+        const child = bone.children.find(x => bones.includes(x as THREE.Bone));
+        if (child && child.position.lengthSq() > 1e-8) {
+          length = child.position.length();
+          axis = child.position.clone().normalize();
+        }
+        prevAxis = axis.clone();
+        bone.updateMatrixWorld(true);
+        const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+        const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
+        const worldLength = length * worldScale.y;
+        const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
+        const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
+
+        const boneRestQuat = bone.getWorldQuaternion(new THREE.Quaternion());
+        const relQuat = baseParentRestQuat.clone().invert().multiply(boneRestQuat);
+
+        hairChain.push({
+          bone,
+          restQuat: bone.quaternion.clone(),
+          relQuat,
+          axis,
+          length,
+          worldLength,
+          tipWorld: tipWorld.clone(),
+          tipPrev: tipWorld.clone(),
+        });
+      }
+    } else {
+      console.log(`[buildHairChain] baseParent is null for bone ${bones[0].name}`);
+    }
+  } else {
+    console.log(`[buildHairChain] bones array is empty`);
+  }
+  console.log(`[buildHairChain] Returning chain of length ${hairChain.length}`);
+  return hairChain;
+}
+
 const _retargetCache: Record<string, THREE.AnimationClip> = {};
 
 function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: string, sourceHairMap: Map<string, string> | null = null): string | null {
@@ -702,7 +753,7 @@ function SingleCharacter({
     backpack: true,
   });
 
-  const [haircut, setHaircut] = useState<string>('original');
+  const [haircut, setHaircut] = useState<string>('native');
 
   useEffect(() => {
     if (variant === 'lgbta') {
@@ -1039,52 +1090,6 @@ function SingleCharacter({
 
 
 
-    const buildHairChain = (hairBones: THREE.Bone[]) => {
-      const hairChain: any[] = [];
-      const bones = [...hairBones].sort((a, b) => getDepth(a) - getDepth(b));
-
-      if (bones.length > 0) {
-        const baseParent = bones[0].parent;
-        if (baseParent) {
-          baseParent.updateMatrixWorld(true);
-          const baseParentRestQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
-
-          let prevAxis = new THREE.Vector3(0, -1, 0);
-          for (const bone of bones) {
-            let axis = prevAxis.clone();
-            let length = 8.0;
-            const child = bone.children.find(x => bones.includes(x as THREE.Bone));
-            if (child && child.position.lengthSq() > 1e-8) {
-              length = child.position.length();
-              axis = child.position.clone().normalize();
-            }
-            prevAxis = axis.clone();
-            bone.updateMatrixWorld(true);
-            const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-            const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
-            const worldLength = length * worldScale.y;
-            const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
-            const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
-
-            const boneRestQuat = bone.getWorldQuaternion(new THREE.Quaternion());
-            const relQuat = baseParentRestQuat.clone().invert().multiply(boneRestQuat);
-
-            hairChain.push({
-              bone,
-              restQuat: bone.quaternion.clone(),
-              relQuat,
-              axis,
-              length,
-              worldLength,
-              tipWorld: tipWorld.clone(),
-              tipPrev: tipWorld.clone(),
-            });
-          }
-        }
-      }
-      return hairChain;
-    };
-
     // Initialize Native Hair Chain (Verlet)
     const nativeHairBones: THREE.Bone[] = [];
     scene.traverse(c => {
@@ -1094,9 +1099,6 @@ function SingleCharacter({
       }
     });
     hairChainRef.current = buildHairChain(nativeHairBones);
-    
-    // Store builder for custom hair
-    (window as any)._buildHairChain = buildHairChain;
 
     // Initialize Breast Chain (Verlet)
     const breastChain: any[] = [];
@@ -1639,6 +1641,7 @@ function SingleCharacter({
     if (!isPaused && !isIdleTimeout) {
         mixer.update(delta);
 
+        // Physique réactive & Gravité universelle (sans vent/bruit continu au repos)
         const isPhysicsActive = useSceneStore.getState().layers.hairPhysics;
         if (!isPhysicsActive && customHairChainRef.current.length > 0) {
           for (const node of customHairChainRef.current) {
@@ -1816,6 +1819,12 @@ function SingleCharacter({
         // Ponytail physics simulation (Verlet)
         const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
         const activeHairChain = (haircut !== 'original' && customHairChainRef.current.length > 0) ? customHairChainRef.current : hairChainRef.current;
+        
+        if (!(window as any)._hairDebugLogged && activeHairChain.length > 0) {
+          console.log(`[HairPhysics] Active chain length: ${activeHairChain.length}, isCustom: ${activeHairChain === customHairChainRef.current}`);
+          (window as any)._hairDebugLogged = true;
+        }
+
         if (enableHairPhysics && activeHairChain.length > 0) {
           const firstNode = activeHairChain[0];
           const baseParent = firstNode.bone.parent;
@@ -1833,19 +1842,19 @@ function SingleCharacter({
 
               const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
 
-              // Direction de repos verticale de la tresse dirigée vers le sol (-Y monde projeté)
               const downWorld = new THREE.Vector3(0, -1, 0);
-              const restDir = downWorld.clone().lerp(axis.clone().applyQuaternion(baseParentQuat.clone().multiply(relQuat)).normalize(), 0.15).normalize();
+              const restDirWorld = axis.clone().applyQuaternion(baseParentQuat.clone().multiply(relQuat)).normalize();
+              const restDir = downWorld.clone().lerp(restDirWorld, 0.15).normalize();
               const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
 
               // Teleportation safety reset
               const dist = jointWorld.distanceTo(node.tipWorld);
-              if (dist > worldLength * 3) {
+              if (dist > Math.max(worldLength * 3, 20.0)) {
                 node.tipWorld.copy(restTip);
                 node.tipPrev.copy(restTip);
               }
 
-              const isHeadMoving = isMoving || (target !== 'idle');
+              const isHeadMoving = isMoving || (target !== 'idle') || (walkerAnim && walkerAnim.toLowerCase().includes('walk')) || (walkerAnim && walkerAnim.toLowerCase().includes('run'));
               const dampingFactor = isHeadMoving ? 0.35 : 0.65;
 
               const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - dampingFactor));
@@ -1856,7 +1865,7 @@ function SingleCharacter({
               next.lerp(restTip, lerpStiffness);
 
               // Restitution et frein au repos si la vitesse est faible (immobilisation totale sans bruit)
-              if (!isHeadMoving) {
+              if (!isHeadMoving && vel.lengthSq() < 0.1) {
                 vel.set(0, 0, 0);
                 next.lerp(restTip, 0.8);
               }
@@ -1931,9 +1940,19 @@ function SingleCharacter({
 
               // Orientation réelle des os de la tresse (ponytail) d'après le résultat physique Verlet
               const currentDirWorld = dir.clone().normalize();
+              if (!(window as any)._boneLogged && activeHairChain === customHairChainRef.current && node === activeHairChain[0]) {
+                console.log(`[HairPhysics] wLen:${worldLength.toFixed(3)}, vel:${vel.length().toFixed(3)}, isHeadMoving:`, isHeadMoving, `Quat:`, bone.quaternion.toArray().map((n: number) => n.toFixed(3)));
+                (window as any)._boneLogged = true;
+                setTimeout(() => { (window as any)._boneLogged = false; }, 1000);
+              }
               const parentWQuat = parent.getWorldQuaternion(new THREE.Quaternion());
-              const targetQuatWorld = new THREE.Quaternion().setFromUnitVectors(axis, currentDirWorld);
-              bone.quaternion.copy(parentWQuat.invert().multiply(targetQuatWorld));
+              
+              // Correct quaternion math: Swing from REST WORLD direction to CURRENT WORLD direction
+              const boneRestWorldQuat = baseParentQuat.clone().multiply(relQuat);
+              const swing = new THREE.Quaternion().setFromUnitVectors(restDirWorld, currentDirWorld);
+              
+              const newWorldQuat = swing.multiply(boneRestWorldQuat);
+              bone.quaternion.copy(parentWQuat.invert().multiply(newWorldQuat));
 
               bone.updateMatrixWorld(true);
             }
@@ -2045,9 +2064,9 @@ function SingleCharacter({
         <Wig 
           id={haircut.replace('hair_', '')}
           onBonesExtracted={(bones) => {
-            if ((window as any)._buildHairChain) {
-              customHairChainRef.current = (window as any)._buildHairChain(bones.map(b => b.bone));
-            }
+            console.log(`[Wig] Passing ${bones.length} bones to buildHairChain`);
+            customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
+            (window as any)._hairDebugLogged = false; // Reset log when wig changes
           }}
           attachTo={headBoneState}
         />
