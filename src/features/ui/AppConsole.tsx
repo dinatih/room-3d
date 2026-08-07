@@ -59,7 +59,7 @@ const MAX_LOGS = 200;
 export function AppConsole() {
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
   const [visible, setVisible] = useState(true);
-  const [autoScroll, setAutoScroll] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Injecter la Google Font JetBrains Mono une seule fois
@@ -89,22 +89,12 @@ export function AppConsole() {
     return () => document.removeEventListener('app-log', handler);
   }, []);
 
-  // Auto-scroll vers le bas à chaque nouveau log
+  // Auto-scroll vers le bas à chaque nouveau log si non en pause
   useEffect(() => {
-    if (visible && autoScroll && bottomRef.current) {
+    if (visible && !isPaused && bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'auto' });
     }
-  }, [logs, visible, autoScroll]);
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const target = e.currentTarget;
-    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 30;
-    if (isAtBottom && !autoScroll) {
-      setAutoScroll(true);
-    } else if (!isAtBottom && autoScroll) {
-      setAutoScroll(false);
-    }
-  };
+  }, [logs, visible, isPaused]);
 
   // ── Styles inline ──────────────────────────────────────────────────────
   const containerStyle: React.CSSProperties = {
@@ -194,30 +184,23 @@ export function AppConsole() {
         <span style={titleStyle}>
           <span>🤖</span>
           <span>APP LOGS</span>
-          {!autoScroll && (
-            <button
-              onClick={() => {
-                setAutoScroll(true);
-                if (bottomRef.current) {
-                  bottomRef.current.scrollIntoView({ behavior: 'auto' });
-                }
-              }}
-              style={{
-                background: 'rgba(0, 255, 136, 0.1)',
-                border: '1px solid #00ff88',
-                color: '#00ff88',
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '9px',
-                lineHeight: 1,
-                padding: '2px 6px',
-                cursor: 'pointer',
-                borderRadius: '2px',
-                marginLeft: '10px'
-              }}
-            >
-              ↓ SUIVRE
-            </button>
-          )}
+          <button
+            onClick={() => setIsPaused(p => !p)}
+            style={{
+              background: isPaused ? 'rgba(255, 170, 0, 0.2)' : 'rgba(0, 255, 136, 0.1)',
+              border: `1px solid ${isPaused ? '#ffaa00' : '#00ff88'}`,
+              color: isPaused ? '#ffaa00' : '#00ff88',
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '9px',
+              lineHeight: 1,
+              padding: '2px 6px',
+              cursor: 'pointer',
+              borderRadius: '2px',
+              marginLeft: '10px'
+            }}
+          >
+            {isPaused ? '▶ REPRENDRE' : '⏸ PAUSE'}
+          </button>
         </span>
         <button
           style={closeBtnStyle}
@@ -238,7 +221,7 @@ export function AppConsole() {
 
       {/* Log area */}
       {visible && (
-        <div style={logAreaStyle} onScroll={handleScroll}>
+        <div style={logAreaStyle}>
           {logs.length === 0 && (
             <div style={{ ...lineStyle, color: 'rgba(100, 100, 100, 0.7)', fontStyle: 'italic' }}>
               En attente de logs…
