@@ -1386,7 +1386,7 @@ function SingleCharacter({
         const mat = m.material;
         const matName = mat ? (Array.isArray(mat) ? (mat[0]?.name || '').toLowerCase() : (mat.name || '').toLowerCase()) : '';
         const isBraid = meshName.includes('braid') || meshName.includes('pony') || matName.includes('braid') || matName.includes('pony');
-        const isOriginalHair = meshName.includes('hair') || isBraid || matName.includes('hair');
+        const isOriginalHair = (meshName.includes('hair') || isBraid || matName.includes('hair')) && !m.userData.isCustomHair;
 
         if (isOriginalHair) {
           const show = haircut === 'original' && !(variant === 'angelina' && isBraid);

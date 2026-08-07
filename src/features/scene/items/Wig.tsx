@@ -41,8 +41,13 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
   
   const scene = useMemo(() => {
     let sourceGroup: THREE.Object3D | null = null;
+    
+    // Parse ID and map to 100 series (e.g. "2" -> "102")
+    const numId = typeof id === 'string' ? parseInt(id.replace('hair_', ''), 10) : id;
+    const gltfId = isNaN(numId) ? id : (numId < 100 ? 100 + numId : numId);
+    
     fullScene.traverse(child => {
-      if (!sourceGroup && child.name.startsWith(`Hair${id}_ARM_`)) sourceGroup = child;
+      if (!sourceGroup && child.name.startsWith(`Hair${gltfId}_ARM_`)) sourceGroup = child;
     });
     if (!sourceGroup) return new THREE.Group();
     
