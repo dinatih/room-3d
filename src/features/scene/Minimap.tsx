@@ -109,8 +109,9 @@ function drawMinimap(
       const isNumbered = /^\d/.test(char.id);
       if (!showAllLaraStyles && isNumbered) return;
       const currentPos = cameraState.positions[char.id];
-      const x = currentPos ? currentPos.x : char.pos[0];
-      const z = currentPos ? currentPos.z : char.pos[2];
+      if (!currentPos) return;
+      const x = currentPos.x;
+      const z = currentPos.z;
       ctx.save();
       ctx.translate(tx(x), tz(z));
       ctx.beginPath(); 
