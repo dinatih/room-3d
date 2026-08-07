@@ -58,6 +58,7 @@ import { Tent }                                       from '@features/scene/item
 import { Vihals }                                     from '@features/scene/items/Vihals';
 import { Rebound }                                    from '@features/scene/items/Rebound';
 import { Linky }                                      from '@features/scene/items/Linky';
+import { BimDoubleDoor }                              from '@features/scene/items/BimDoubleDoor';
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
 import { Drona }                                      from '@features/scene/items/Drona';
 import { Walker, CHARACTERS }                         from '@features/scene/Walker';
@@ -72,6 +73,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'door-living':            DoorLiving,
   'door-sdb':               DoorBath,
   'door-glass':             GlassDoor,
+  'door-bim-double':        BimDoubleDoor,
   'door-frame':             DoorFrame,
   'lillhavet80461276':      Lillhavet80461276,
   'toilet':                 Toilet,
