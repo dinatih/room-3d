@@ -753,7 +753,7 @@ function SingleCharacter({
     backpack: true,
   });
 
-  const [haircut, setHaircut] = useState<string>('native');
+  const [haircut, setHaircut] = useState<string>('original');
 
   useEffect(() => {
     if (variant === 'lgbta') {
