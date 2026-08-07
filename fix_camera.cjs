@@ -16,12 +16,13 @@ async function main() {
     
     if (name === 'lambert2' || mat.getAlphaMode() === 'BLEND') { 
        mat.setAlphaMode('BLEND');
-       mat.setRoughnessFactor(0.2);
-       mat.setMetallicFactor(0.8); // Rendre brillant
+       mat.setRoughnessFactor(0.1);
+       mat.setMetallicFactor(0.0); // No metalness, otherwise it reflects white light!
        mat.setBaseColorFactor([0.01, 0.01, 0.01, 0.75]); // Noir transparent classique
     } else {
        mat.setBaseColorFactor([0.9, 0.9, 0.9, 1]);
        mat.setRoughnessFactor(0.8);
+       mat.setMetallicFactor(0.0);
     }
   }
 

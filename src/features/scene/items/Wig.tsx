@@ -61,9 +61,9 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       sg.updateMatrixWorld(true);
       const headPos = (hairHeadBone as THREE.Object3D).position.clone();
       sg.position.set(
-        -headPos.x * s,
-        -headPos.y * s + 0.07 * scale, // scale adjustment
-        -headPos.z * s
+        -headPos.x * s * scale,
+        -headPos.y * s * scale + (attachTo ? 0.07 : 0),
+        -headPos.z * s * scale
       );
     } else {
       sg.position.set(0, 0.15 * scale, 0);

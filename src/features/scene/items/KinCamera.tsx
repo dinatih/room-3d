@@ -32,8 +32,8 @@ export function KinCamera({ onSize }: SceneItemProps) {
         color: 0x111111,
         transparent: true,
         opacity: 0.75,
-        roughness: 0.2,
-        metalness: 0.8,
+        roughness: 0.1,
+        metalness: 0.0,
       });
 
       // Le mesh avec le plus de vertices (meshes[1]) est la base
