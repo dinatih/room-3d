@@ -1,25 +1,33 @@
 const { NodeIO } = require('@gltf-transform/core');
+const { KHRMaterialsTransmission, KHRMaterialsVolume } = require('@gltf-transform/extensions');
 
 async function main() {
-  const io = new NodeIO();
-  // We need to read the ORIGINAL assimp output, because the current one is already modified.
-  // Wait, I overwrote `kin-fine-camera.glb` with the baked one!
-  // I should re-convert from DAE to get a clean slate, or just scale the current one by 0.01!
-  // If I just scale the current one by 0.01:
+  const io = new NodeIO().registerExtensions([KHRMaterialsTransmission, KHRMaterialsVolume]);
+  
   const document = await io.read('public/media/sandbox/kin-fine-camera.glb');
-  
   const root = document.getRoot();
-  const scene = root.getDefaultScene();
   
-  scene.traverse((node) => {
-    if (scene.listChildren().includes(node)) {
-      // The current scale is [1000, 333, 1000].
-      // We want to scale it down by 100, so new scale is [10, 3.33, 10].
-      // Actually, applying scale on top of existing scale:
-      const currentScale = node.getScale();
-      node.setScale([currentScale[0] * 0.01, currentScale[1] * 0.01, currentScale[2] * 0.01]);
+  const transmissionExtension = document.createExtension(KHRMaterialsTransmission);
+  const volumeExtension = document.createExtension(KHRMaterialsVolume);
+
+  const materials = root.listMaterials();
+  for (const mat of materials) {
+    const name = mat.getName();
+    if (name === 'lambert2' || mat.getBaseColorFactor()[3] < 1.0) { // If it's already blend
+       mat.setAlphaMode('BLEND');
+       
+       const transmission = transmissionExtension.createTransmission()
+         .setTransmissionFactor(0.9);
+         
+       const volume = volumeExtension.createVolume()
+         .setThicknessFactor(1.0);
+         
+       mat.setExtension('KHR_materials_transmission', transmission);
+       mat.setExtension('KHR_materials_volume', volume);
+       mat.setRoughnessFactor(0.05);
+       mat.setBaseColorFactor([0.02, 0.02, 0.02, 0.8]);
     }
-  });
+  }
 
   await io.write('public/media/sandbox/kin-fine-camera.glb', document);
 }

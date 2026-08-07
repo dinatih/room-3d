@@ -13,10 +13,31 @@ export function KinCamera({ onSize }: SceneItemProps) {
 
     // Positionnement sous le plafond
     // L'objet est placé à Y=250 dans Placements.tsx.
-    // Sa hauteur (écrasée) fait environ 3.3cm, donc on le descend d'environ 1.6cm pour qu'il affleure le plafond
-    scene.position.set(0, -1.6, 0);
+    // S'il est encore trop enfoncé, on le descend de 3 cm.
+    scene.position.set(0, -3, 0);
 
-    onSize?.(new THREE.Vector3(20, 6, 20));
+    scene.traverse((child: any) => {
+      if (child.isMesh) {
+        // meshId1 (283 vertices) = dome, meshId0 (1993 vertices) = base
+        if (child.geometry.attributes.position.count < 1000) {
+          child.material = new THREE.MeshPhysicalMaterial({
+             color: 0x050505,
+             transparent: true,
+             opacity: 0.8,
+             roughness: 0.05,
+             transmission: 0.9, 
+             thickness: 1.0,
+          });
+        } else {
+          child.material = new THREE.MeshStandardMaterial({
+             color: 0xffffff,
+             roughness: 0.7,
+          });
+        }
+      }
+    });
+
+    onSize?.(new THREE.Vector3(20, 3.3, 20));
   }, [scene, onSize]);
 
   return <primitive object={scene} />;
