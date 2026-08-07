@@ -823,17 +823,23 @@ function SingleCharacter({
     loopScenario, // Boucle uniquement si c'est le bot aléatoire (Delphina)
     () => {
       if (groupRef.current) {
-        const { x, z } = groupRef.current.position;
+        const { x, y, z } = groupRef.current.position;
         // Si l'objet n'a pas encore été positionné (0,0 initial par défaut) on utilise la position de base
         if (x !== 0 || z !== 0) {
           return {
             x,
+            y,
             z,
             rotY: groupRef.current.rotation.y
           };
         }
       }
-      return { x: npcPosition[0], z: npcPosition[2], rotY: npcRotationY };
+      return {
+        x: npcPosition[0],
+        y: npcPosition[1] || 0,
+        z: npcPosition[2],
+        rotY: npcRotationY
+      };
     },
     () => {
       if (activeActionKey) {
@@ -1590,16 +1596,18 @@ function SingleCharacter({
           cameraState.isAIControlled = false;
         }
       } else if (isNPC) {
-        const agentState = updateAgent(delta);
-        groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
-        groupRef.current.rotation.y = agentState.rotY;
-        customAnimName.current = agentState.animation;
-        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && agentState.isSpawned;
-        
-        if (agentState.isSpawned) {
-          cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
-        } else {
-          delete cameraState.positions[id];
+        if (!(idleTimerRef.current > 10)) {
+          const agentState = updateAgent(delta);
+          groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
+          groupRef.current.rotation.y = agentState.rotY;
+          customAnimName.current = agentState.animation;
+          groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && agentState.isSpawned;
+          
+          if (agentState.isSpawned) {
+            cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
+          } else {
+            delete cameraState.positions[id];
+          }
         }
       } else {
         groupRef.current.visible = false;
@@ -1726,7 +1734,9 @@ function SingleCharacter({
         to.reset().fadeIn(0.2).play();
         to.setEffectiveWeight(1);
         activeActionName.current = target;
-        idleTimerRef.current = 0;
+        if (!isNPC) {
+          idleTimerRef.current = 0;
+        }
     }
 
     if (!isPaused && !isIdleTimeout) {

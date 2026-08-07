@@ -17,7 +17,7 @@ export function useAgentController(
   _characterId: string,
   scenario: AgentInstruction[] | null,
   loop: boolean = false,
-  getRealPosition: () => { x: number; z: number; rotY: number },
+  getRealPosition: () => { x: number; y: number; z: number; rotY: number },
   onComplete?: () => void,
   spawnDelay: number = 0
 ) {
@@ -35,7 +35,7 @@ export function useAgentController(
   const statusRef = useRef<'WAITING' | 'FALLING' | 'LANDING' | 'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED'>(spawnDelay > 0 ? 'WAITING' : 'IDLE');
   const delayTimerRef = useRef(spawnDelay);
   const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
-  const startPosRef = useRef<{x: number, z: number, rotY: number} | null>(null);
+  const startPosRef = useRef<{x: number, y: number, z: number, rotY: number} | null>(null);
   // Ref pour éviter les logs dupliqués à chaque frame
   const lastLogRef = useRef<string>('');
 
@@ -50,10 +50,10 @@ export function useAgentController(
     if (scenario) {
       const real = getRealPosition();
       stateRef.current.x = real.x;
-      stateRef.current.y = spawnDelay > 0 ? 2500 : 0;
+      stateRef.current.y = spawnDelay > 0 ? 2500 : real.y;
       stateRef.current.z = real.z;
       stateRef.current.rotY = real.rotY;
-      startPosRef.current = { x: real.x, z: real.z, rotY: real.rotY };
+      startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY };
       if (spawnDelay > 0) {
         appLog(_characterId, `⏳ En attente de déploiement (${spawnDelay}s)...`);
       }
@@ -86,12 +86,13 @@ export function useAgentController(
     if (statusRef.current === 'FALLING') {
       timerRef.current -= dt;
       if (timerRef.current <= 0) {
-        stateRef.current.y = 0;
+        stateRef.current.y = startPosRef.current?.y ?? 0;
         statusRef.current = 'LANDING';
         timerRef.current = 1.96; // duration of crouch_to_stand approx 2s
       } else {
         const p_inv = timerRef.current / 6.0; // 1 to 0
-        stateRef.current.y = 2500 * (p_inv * p_inv * p_inv); // ease-out (ralenti à la fin)
+        const targetY = startPosRef.current?.y ?? 0;
+        stateRef.current.y = targetY + (2500 - targetY) * (p_inv * p_inv * p_inv); // ease-out (ralenti à la fin)
       }
       stateRef.current.animation = 'media/sandbox/anims/anim_falling.glb';
       return stateRef.current;
