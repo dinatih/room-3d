@@ -1002,7 +1002,7 @@ function SingleCharacter({
 
     scene.traverse(o => {
       const c = o as any;
-      if (c.isMesh) {
+      if (c.isMesh && !c.userData.isCustomHair) {
         c.castShadow = characterShadows;
         c.receiveShadow = characterShadows;
         c.frustumCulled = false; // Disable culling for SkinnedMesh as bones move vertices far from rest pose bounding box

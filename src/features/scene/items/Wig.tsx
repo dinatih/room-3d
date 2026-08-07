@@ -81,41 +81,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
   useLayoutEffect(() => {
     if (!scene) return;
 
-    // 1. Configurer la visibilité et cloner les matériaux
-    scene.traverse((child: any) => {
-      child.visible = true;
-      child.frustumCulled = false;
-      const m = child as THREE.Mesh;
-      if (m.isMesh && m.material) {
-        m.visible = true;
-        m.renderOrder = 1;
-        
-        const targetColor = color && HAIR_COLORS[color] ? HAIR_COLORS[color] : null;
-
-        if (Array.isArray(m.material)) {
-          m.material = m.material.map(mat => {
-            if (!mat) return mat;
-            const c = mat.clone();
-            c.side = THREE.DoubleSide;
-            c.alphaTest = 0.5;
-            c.depthWrite = true;
-            if (targetColor && 'color' in c) (c as THREE.MeshStandardMaterial).color.copy(targetColor);
-            c.needsUpdate = true;
-            return c;
-          });
-        } else {
-          const c = m.material.clone() as THREE.MeshStandardMaterial;
-          c.side = THREE.DoubleSide;
-          c.alphaTest = 0.5;
-          c.depthWrite = true;
-          if (targetColor) c.color.copy(targetColor);
-          c.needsUpdate = true;
-          m.material = c;
-        }
-      }
-    });
-
-    // 2. Extraire les os pour l'animation/physique
+    // 1. Extraire les os pour l'animation/physique et configurer les matériaux
     const extractedBones: WigBone[] = [];
     scene.traverse((child: any) => {
       child.frustumCulled = false;
@@ -126,6 +92,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         m.castShadow = true;
         m.receiveShadow = true;
         m.renderOrder = 1;
+        m.userData.isCustomHair = true;
         m.layers.enable(0);
         m.layers.enable(1);
         m.layers.enable(2);
@@ -140,7 +107,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
             clonedMat.side = THREE.DoubleSide;
             clonedMat.alphaTest = 0.5;
             clonedMat.depthWrite = true;
-            clonedMat.transparent = false;
             if (targetColor && 'color' in clonedMat) (clonedMat as any).color.copy(targetColor);
             clonedMat.needsUpdate = true;
             return clonedMat;
@@ -150,7 +116,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           clonedMat.side = THREE.DoubleSide;
           clonedMat.alphaTest = 0.5;
           clonedMat.depthWrite = true;
-          clonedMat.transparent = false;
           if (targetColor && 'color' in clonedMat) (clonedMat as any).color.copy(targetColor);
           clonedMat.needsUpdate = true;
           m.material = clonedMat;
