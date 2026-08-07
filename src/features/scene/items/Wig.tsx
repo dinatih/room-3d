@@ -123,7 +123,13 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       if ((child as THREE.Mesh).isMesh) {
         const m = child as THREE.Mesh;
         m.visible = true;
+        m.castShadow = true;
+        m.receiveShadow = true;
         m.renderOrder = 1;
+        m.layers.enable(0);
+        m.layers.enable(1);
+        m.layers.enable(2);
+        m.layers.enable(3);
         
         const targetColor = color && HAIR_COLORS[color] ? HAIR_COLORS[color] : null;
 

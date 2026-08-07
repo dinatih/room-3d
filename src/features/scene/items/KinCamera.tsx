@@ -27,19 +27,13 @@ export function KinCamera({ onSize }: SceneItemProps) {
     meshes.sort((a, b) => a.geometry.attributes.position.count - b.geometry.attributes.position.count);
 
     if (meshes.length >= 2) {
-      // Le mesh avec le moins de vertices (meshes[0]) est le dôme
+      // DEBUG: Force le dôme en ROUGE OPAQUE et la base en VERT OPAQUE
       meshes[0].material = new THREE.MeshStandardMaterial({
-        color: 0x111111,
-        transparent: true,
-        opacity: 0.75,
-        roughness: 0.1,
-        metalness: 0.0,
+        color: 0xff0000,
       });
 
-      // Le mesh avec le plus de vertices (meshes[1]) est la base
       meshes[1].material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        roughness: 0.7,
+        color: 0x00ff00,
       });
     }
 
