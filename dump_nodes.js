@@ -7,7 +7,10 @@ const gltf = JSON.parse(jsonString);
 
 function printNode(idx, indent) {
   const n = gltf.nodes[idx];
-  console.log(indent + (n.name || 'node_' + idx));
+  console.log(indent + (n.name || 'node_' + idx) + (n.matrix ? ` matrix: ${JSON.stringify(n.matrix)}` : ''));
+  if (n.mesh !== undefined) {
+    console.log(indent + '  has mesh ' + n.mesh);
+  }
   if (n.children) {
     for (let c of n.children) printNode(c, indent + '  ');
   }

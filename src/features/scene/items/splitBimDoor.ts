@@ -5,12 +5,16 @@ export function splitBimDoor(originalScene: THREE.Group) {
   const leftGeos: { geo: THREE.BufferGeometry; mat: THREE.Material }[] = [];
   const rightGeos: { geo: THREE.BufferGeometry; mat: THREE.Material }[] = [];
 
+  originalScene.updateMatrixWorld(true);
+
   originalScene.traverse((node) => {
     const mesh = node as THREE.Mesh;
     if (!mesh.isMesh) return;
     
-    // We assume geometries are indexed and have position attribute
-    const geo = mesh.geometry;
+    // Clone geometry and bake matrixWorld so we work in meter scale
+    const geo = mesh.geometry.clone();
+    geo.applyMatrix4(mesh.matrixWorld);
+    
     const pos = geo.attributes.position;
     const index = geo.index;
     if (!pos || !index) return;
