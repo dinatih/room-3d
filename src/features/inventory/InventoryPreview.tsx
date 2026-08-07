@@ -128,7 +128,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     // Small delay to ensure skeleton/skinning matrices are computed
     const timer = setTimeout(fit, 50);
     return () => clearTimeout(timer);
-  }, [fit, item?.id, glbPath, actionState]);
+  }, [fit, item?.id, glbPath]);
 
   return (
     <group>

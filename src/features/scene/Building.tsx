@@ -1668,6 +1668,8 @@ export function DoorsPlaced() {
     entryDoor:             'entry-door-toggle',
     glassDoorV2LeftOpen:   'glass-door-v2-left-open',
     glassDoorV2ShutterPos: 'glass-door-v2-shutter-pos',
+    bimDoorLeftOpen:       'bim-door-left-open',
+    bimDoorRightOpen:      'bim-door-right-open',
   });
 
 
@@ -1692,8 +1694,10 @@ export function DoorsPlaced() {
         userData={{
           animUnit: true,
           hoverAction: {
-            label: 'Porte-fenêtre',
-            actions: ['eastGlassDoor', 'glassDoorLeftOpen', 'glassDoorShutter']
+            label: useSceneStore.getState().furniture.bimDoubleDoor ? 'Porte Double BIM' : 'Porte-fenêtre',
+            actions: useSceneStore.getState().furniture.bimDoubleDoor 
+              ? ['bimDoorLeftOpen', 'bimDoorRightOpen'] 
+              : ['eastGlassDoor', 'glassDoorLeftOpen', 'glassDoorShutter']
           }
         }}>
         {!useSceneStore(state => state.furniture.bimDoubleDoor) && (

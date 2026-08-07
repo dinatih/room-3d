@@ -4,11 +4,11 @@
  * Updated: 2026-07-27 T-Pose position fix
  */
 import { useRef, useLayoutEffect, Suspense, useEffect, useMemo, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame, useThree, createPortal } from '@react-three/fiber';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { Wig } from './items/Wig';
 import * as THREE from 'three';
-import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
@@ -713,7 +713,6 @@ function SingleCharacter({
       return () => clearInterval(interval);
     }
   }, [variant]);
-  const hairPackGltf = useGLTF('media/hair_pack_part_2.glb');
 
   const hairChainRef = useRef<any[]>([]);
   const breastChainRef = useRef<any[]>([]);
@@ -725,6 +724,8 @@ function SingleCharacter({
   const customHairAnimBonesRef = useRef<{ bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[]>([]);
   const wigEnergyRef = useRef(1.0);
   const loadingAnimsRef = useRef<Set<string>>(new Set());
+
+  const [headBoneState, setHeadBoneState] = useState<THREE.Bone | null>(null);
 
   // Collision bones
   const headBoneRef = useRef<THREE.Bone | null>(null);
@@ -1398,144 +1399,22 @@ function SingleCharacter({
       }
     });
 
-    // 2. Nettoyage des anciennes coupes personnalisées
+    // 2. Trouver le bone de tête et cacher les attachments existants (legacy)
     const resolvedHName = resolveTargetBoneName(scene, 'Head');
     const headBone = headBoneRef.current || (resolvedHName ? scene.getObjectByName(resolvedHName) as THREE.Bone : null);
     if (!headBone) return;
+
+    if (headBoneState !== headBone) {
+      setHeadBoneState(headBone);
+    }
 
     const existingAttachment = headBone.getObjectByName('lara_custom_hair_attachment');
     if (existingAttachment) {
       headBone.remove(existingAttachment);
     }
 
-    if (haircut === 'original') {
-      invalidate();
-      return;
-    }
-
-    // 3. Extrait de la coupe sélectionnée
-    let sourceGroup: THREE.Object3D | null = null;
-
-    if (hairPackGltf && hairPackGltf.scene) {
-      const hairNumber = haircut.replace('hair_', '');
-      const targetGroupName = `Hair${hairNumber}_ARM_`;
-      hairPackGltf.scene.traverse(child => {
-        if (!sourceGroup && child.name.startsWith(targetGroupName)) {
-          sourceGroup = child;
-        }
-      });
-    }
-
-    if (sourceGroup) {
-      const clonedHair = SkeletonUtils.clone(sourceGroup as THREE.Object3D);
-      clonedHair.name = 'lara_custom_hair_attachment';
-
-      // 1. Configurer la visibilité, les couches de rendu et le tri de transparence des mèches (avec clonage des matériaux et sauvegarde des poses d'origine)
-      clonedHair.traverse(child => {
-        child.frustumCulled = false;
-        child.layers.mask = scene.layers.mask;
-        if ((child as any).isBone) {
-          (child as any).restLocalQuaternion = (child as THREE.Bone).quaternion.clone();
-        }
-        if ((child as THREE.Mesh).isMesh) {
-          const m = child as THREE.Mesh;
-          m.visible = true;
-          m.renderOrder = 1;
-          if (Array.isArray(m.material)) {
-            m.material = m.material.map(mat => {
-              if (!mat) return mat;
-              const clonedMat = mat.clone();
-              clonedMat.side = THREE.DoubleSide;
-              clonedMat.alphaTest = 0.5;
-              clonedMat.depthWrite = true;
-              clonedMat.needsUpdate = true;
-              return clonedMat;
-            });
-          } else if (m.material) {
-            const clonedMat = m.material.clone();
-            clonedMat.side = THREE.DoubleSide;
-            clonedMat.alphaTest = 0.5;
-            clonedMat.depthWrite = true;
-            clonedMat.needsUpdate = true;
-            m.material = clonedMat;
-          }
-        }
-      });
-
-      // 2. Trouver l'os bip_head / head propre à cette coupe
-      let hairHeadBone: THREE.Object3D | null = null;
-      clonedHair.traverse(c => {
-        const nLower = (c.name || '').toLowerCase();
-        if (nLower.startsWith('bip_head') || nLower.startsWith('head_140') || nLower === 'head') {
-          if (!hairHeadBone) hairHeadBone = c;
-        }
-      });
-
-      // Calcul de la Bounding Box de la coupe pour homogénéiser l'échelle globale
-      clonedHair.updateMatrixWorld(true);
-      const visibleHairBox = new THREE.Box3();
-      clonedHair.traverse(child => {
-        if ((child as THREE.Mesh).isMesh && child.visible) {
-          const m = child as THREE.Mesh;
-          if (m.geometry) {
-            m.geometry.computeBoundingBox();
-            if (m.geometry.boundingBox) {
-              const b = m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld);
-              visibleHairBox.union(b);
-            }
-          }
-        }
-      });
-      const attachmentGroup = new THREE.Group();
-      attachmentGroup.name = 'lara_custom_hair_attachment';
-
-      // Échelle augmentée à 110% (+10%) pour s'adapter à la tête de Lara
-      const s = 1.4;
-      clonedHair.scale.set(s, s, s);
-
-      // Repositionner le groupe pour que l'os bip_head de la coupe coïncide exactement avec le Head bone de Lara
-      if (hairHeadBone) {
-        clonedHair.updateMatrixWorld(true);
-        const headLocalPos = (hairHeadBone as THREE.Object3D).position.clone();
-        // Rehaussement de la perruque sur Y pour couvrir le sommet de la tête
-        clonedHair.position.set(
-          -headLocalPos.x * s,
-          -headLocalPos.y * s + 0.07,
-          -headLocalPos.z * s
-        );
-      } else {
-        clonedHair.position.set(0, 0.15, 0);
-      }
-
-      attachmentGroup.add(clonedHair);
-      headBone.add(attachmentGroup);
-
-      // Pré-filtrer et optimiser en cache la liste exacte des os de mèches de la coupe (customHairAnimBonesRef)
-      const animBones: { bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[] = [];
-      clonedHair.traverse(c => {
-        if ((c as any).isBone) {
-          const b = c as THREE.Bone;
-          if (!(b as any).restLocalQuaternion) {
-            (b as any).restLocalQuaternion = b.quaternion.clone();
-          }
-          const nLower = (b.name || '').toLowerCase();
-          const isRootOrScalpBone = nLower.includes('bip_head') || nLower.includes('bip_neck') || nLower.includes('bip_spine') || nLower.startsWith('head') || nLower.includes('root') || nLower.includes('scalp') || nLower.startsWith('bone3_') || nLower.startsWith('bone4_') || b.parent === clonedHair;
-
-          if (!isRootOrScalpBone) {
-            const index = parseInt(nLower.replace(/\D/g, ''), 10) || 1;
-            animBones.push({
-              bone: b,
-              restQ: (b as any).restLocalQuaternion,
-              index,
-            });
-          }
-        }
-      });
-      customHairAnimBonesRef.current = animBones;
-    }
-
     invalidate();
-  }, [scene, haircut, hairPackGltf, invalidate]);
+  }, [scene, haircut, invalidate]);
 
   useEffect(() => {
     if (customIdleAnimPath && scene && mixerRef.current && !actionsRef.current[customIdleAnimPath]) {
@@ -2202,6 +2081,16 @@ function SingleCharacter({
   return (
     <group ref={groupRef} userData={{ animUnit: true }}>
       <primitive ref={modelRef} object={scene} />
+      
+      {headBoneState && haircut !== 'original' && createPortal(
+        <Wig 
+          id={haircut.replace('hair_', '')}
+          onBonesExtracted={(bones) => {
+            customHairAnimBonesRef.current = bones;
+          }}
+        />,
+        headBoneState
+      )}
       {!isPreview && isActive && <GroundPoint />}
     </group>
   );

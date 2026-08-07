@@ -35,11 +35,12 @@ export function BimDoubleDoor({ actionState, onSize }: SceneItemProps) {
   // Target angles
   // For the left door, open means rotating inwards or outwards? Let's say it rotates out (Math.PI / 2)
   // We can use generic actionState like actionState['east-glass-door-toggle'] or we can add new ones
-  const leftOpen = !!actionState['glass-door-v2-left-open'] || !!actionState['glass-door-left-open'];
-  const rightOpen = !!actionState['east-glass-door-toggle'];
+  const leftOpen = !!actionState['bim-door-left-open'];
+  const rightOpen = !!actionState['bim-door-right-open'];
 
-  const leftTarget = leftOpen ? Math.PI / 2 : 0;
-  const rightTarget = rightOpen ? -Math.PI / 2 : 0;
+  // To open inwards, we invert the signs
+  const leftTarget = leftOpen ? -Math.PI / 2 : 0;
+  const rightTarget = rightOpen ? Math.PI / 2 : 0;
 
   useFrame((_, delta) => {
     if (leftRef.current) {
@@ -51,7 +52,7 @@ export function BimDoubleDoor({ actionState, onSize }: SceneItemProps) {
   });
 
   return (
-    <group position={[0, -105, 0]} scale={[100, 100, 100]}>
+    <group position={[-75, -105, 0]} scale={[100, 100, 100]}>
       <primitive object={frameGroup} />
       <primitive object={leftGroup} ref={leftRef} />
       <primitive object={rightGroup} ref={rightRef} />
