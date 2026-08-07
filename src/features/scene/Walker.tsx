@@ -1666,10 +1666,6 @@ function SingleCharacter({
       customAnimName.current = null;
     }
 
-    if (isNPC && customIdleAnimPath && target === 'idle') {
-      target = customIdleAnimPath;
-    }
-
     if (customAnimName.current) {
       target = customAnimName.current;
       if (!actions[target] && target.endsWith('.glb')) {
@@ -1698,6 +1694,10 @@ function SingleCharacter({
         }
         target = 'idle'; // fallback while loading
       }
+    }
+
+    if (isNPC && customIdleAnimPath && target === 'idle') {
+      target = customIdleAnimPath;
     }
 
     // Consider rotating as moving to prevent idle timeout freezes
