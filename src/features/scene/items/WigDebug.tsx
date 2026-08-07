@@ -18,7 +18,7 @@ export function WigDebug() {
   });
   return (
     <mesh ref={ref}>
-      <boxGeometry args={[20, 20, 20]} />
+      <boxGeometry args={[0.2, 0.2, 0.2]} />
       <meshBasicMaterial color="red" wireframe />
     </mesh>
   );

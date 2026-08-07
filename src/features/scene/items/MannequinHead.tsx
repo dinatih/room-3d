@@ -122,6 +122,7 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
         color={hairColor}
         windEnabled={windEnabled}
         offset={MANNEQUIN_WIG_OFFSET}
+        scale={26}
       />
     </group>
   );

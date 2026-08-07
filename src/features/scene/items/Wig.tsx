@@ -2,8 +2,8 @@ import { useLayoutEffect, useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { WigDebug } from './WigDebug';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { useGLTF } from '@react-three/drei';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 export const HAIR_COLORS: Record<string, THREE.Color> = {
   naturel:  new THREE.Color(0.4, 0.25, 0.1),
@@ -31,21 +31,21 @@ export interface WigProps {
   color?: string; // e.g. "brun", "arc-en-ciel", ou undefined
   offset?: [number, number, number];
   windEnabled?: boolean;
+  scale?: number;
   onBonesExtracted?: (bones: WigBone[]) => void;
 }
 
-export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBonesExtracted }: WigProps) {
-  const { scene: fullScene } = useGLTFClone('media/hair_pack_part_2.glb');
+export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted }: WigProps) {
+  const { scene: fullScene } = useGLTF('media/hair_pack_part_2.glb');
   
   const scene = useMemo(() => {
     let sourceGroup: THREE.Object3D | null = null;
     fullScene.traverse(child => {
       if (!sourceGroup && child.name.startsWith(`Hair${id}_ARM_`)) sourceGroup = child;
     });
-    if (!sourceGroup) return fullScene;
+    if (!sourceGroup) return new THREE.Group();
     
-    // Reproduce original offset logic since we are using the un-split file
-    const sg = sourceGroup as THREE.Object3D;
+    const sg = SkeletonUtils.clone(sourceGroup as THREE.Object3D);
     let hairHeadBone: THREE.Object3D | null = null;
     sg.traverse((c: any) => {
       const nLower = c.name.toLowerCase();
@@ -77,6 +77,7 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
 
     // 1. Configurer la visibilité et cloner les matériaux
     scene.traverse((child: any) => {
+      child.visible = true;
       child.frustumCulled = false;
       const m = child as THREE.Mesh;
       if (m.isMesh && m.material) {
@@ -111,6 +112,7 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
     // 2. Extraire les os pour l'animation/physique
     const extractedBones: WigBone[] = [];
     scene.traverse((child: any) => {
+      child.visible = true;
       if ((child as any).isBone) {
         const b = child as THREE.Bone;
         if (!(b as any).restLocalQuaternion) {
@@ -176,8 +178,8 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
   });
 
   return (
-    <group ref={clonedHairRef} position={offset} name="lara_custom_hair_attachment">
-      <primitive object={scene} />
+    <group ref={clonedHairRef} position={offset} scale={[scale, scale, scale]} name="lara_custom_hair_attachment">
+      <primitive object={scene} dispose={null} />
       <WigDebug />
     </group>
   );
