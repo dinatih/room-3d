@@ -151,7 +151,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       }
     });
     
-    hairBonesRef.current = extractedBones;
+    console.log("Wig extracted bones:", extractedBones.length); hairBonesRef.current = extractedBones;
     if (onBonesExtracted) {
       onBonesExtracted(hairBonesRef.current);
     }
