@@ -35,27 +35,48 @@ export interface WigProps {
 }
 
 export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBonesExtracted }: WigProps) {
-  const url = `media/wigs/wig_${id}.glb`;
-  const { scene } = useGLTFClone(url);
+  const { scene: fullScene } = useGLTFClone('media/hair_pack_part_2.glb');
   
-  const hairNode = useMemo(() => {
-    let found: THREE.Object3D | null = null;
-    scene.traverse(c => {
-      if (!found && c.name.startsWith('Hair') && c.name.includes('_ARM_')) {
-        found = c;
+  const scene = useMemo(() => {
+    let sourceGroup: THREE.Object3D | null = null;
+    fullScene.traverse(child => {
+      if (!sourceGroup && child.name.startsWith(`Hair${id}_ARM_`)) sourceGroup = child;
+    });
+    if (!sourceGroup) return fullScene;
+    
+    // Reproduce original offset logic since we are using the un-split file
+    const sg = sourceGroup as THREE.Object3D;
+    let hairHeadBone: THREE.Object3D | null = null;
+    sg.traverse((c: any) => {
+      const nLower = c.name.toLowerCase();
+      if ((nLower.startsWith('bip_head') || nLower === 'head') && !hairHeadBone) {
+        hairHeadBone = c;
       }
     });
-    return found || scene;
-  }, [scene]);
-  
+
+    const s = 1.4;
+    sg.scale.set(s, s, s);
+    if (hairHeadBone) {
+      sg.updateMatrixWorld(true);
+      const headPos = (hairHeadBone as THREE.Object3D).position.clone();
+      sg.position.set(
+        -headPos.x * s,
+        -headPos.y * s + 0.07,
+        -headPos.z * s
+      );
+    }
+
+    return sg;
+  }, [fullScene, id]);
+
   const hairBonesRef = useRef<WigBone[]>([]);
   const clonedHairRef = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
-    if (!hairNode) return;
+    if (!scene) return;
 
     // 1. Configurer la visibilité et cloner les matériaux
-    hairNode.traverse((child: any) => {
+    scene.traverse((child: any) => {
       child.frustumCulled = false;
       const m = child as THREE.Mesh;
       if (m.isMesh && m.material) {
@@ -89,7 +110,7 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
 
     // 2. Extraire les os pour l'animation/physique
     const extractedBones: WigBone[] = [];
-    hairNode.traverse((child: any) => {
+    scene.traverse((child: any) => {
       if ((child as any).isBone) {
         const b = child as THREE.Bone;
         if (!(b as any).restLocalQuaternion) {
@@ -101,7 +122,7 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
                               nLower.includes('bip_spine') || nLower.startsWith('head') || 
                               nLower.includes('root') || nLower.includes('scalp') || 
                               nLower.startsWith('bone3_') || nLower.startsWith('bone4_') || 
-                              b.parent === hairNode;
+                              b.parent === scene;
 
         if (!isRootOrScalp && nLower.startsWith('bone')) {
           const index = parseInt(nLower.replace(/\D/g, ''), 10) || 1;
@@ -117,7 +138,7 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
     hairBonesRef.current = extractedBones;
     if (onBonesExtracted) onBonesExtracted(extractedBones);
 
-  }, [hairNode, color]);
+  }, [scene, color, onBonesExtracted]);
 
   // 3. Animation du vent (Mannequin) et couleur arc-en-ciel
   useFrame((state) => {
@@ -156,7 +177,7 @@ export function Wig({ id, color, offset = [0, 0, 0], windEnabled = false, onBone
 
   return (
     <group ref={clonedHairRef} position={offset} name="lara_custom_hair_attachment">
-      <primitive object={hairNode} />
+      <primitive object={scene} />
       <WigDebug />
     </group>
   );

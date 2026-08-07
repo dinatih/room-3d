@@ -44,6 +44,7 @@ import { MuligRail }     from './items/MuligRail';
 import { Scooter }       from './items/Scooter';
 import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
+import { KinCamera } from './items/KinCamera';
 
 import { Grejig }        from './items/Grejig';
 import { PalmLeaf }      from './items/PalmLeaf';
@@ -203,6 +204,9 @@ export function Equipment() {
       </group>
       <group position={[130.3, 0, BATH_Z_END]}>
         <SdbCloset item={stub('sdb-closet')} actionState={as} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[150, 250, 200]}>
+        <KinCamera item={stub('kin-camera')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
   );
