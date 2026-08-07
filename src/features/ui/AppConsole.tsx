@@ -56,7 +56,7 @@ function formatTime(ts: number): string {
 const MAX_LOGS = 200;
 
 // ── Composant ──────────────────────────────────────────────────────────────
-export function AppConsole() {
+export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
   const [visible, setVisible] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
@@ -178,7 +178,7 @@ export function AppConsole() {
 
   // ── Rendu ──────────────────────────────────────────────────────────────
   return (
-    <div style={containerStyle}>
+    <div style={{ ...containerStyle, display: hidden ? 'none' : 'block' }}>
       {/* Header */}
       <div style={headerStyle}>
         <span style={titleStyle}>

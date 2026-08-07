@@ -677,6 +677,7 @@ function SingleCharacter({
 }: SingleCharacterProps) {
   const laraGrid = useSceneStore(state => state.layers.laraGrid);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
+  const showWallhack = useSceneStore(state => state.layers.wallhack);
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
@@ -1187,10 +1188,17 @@ function SingleCharacter({
       if (c.isMesh) {
         c.castShadow = characterShadows;
         c.receiveShadow = characterShadows;
+        if (c.material) {
+          const materials = Array.isArray(c.material) ? c.material : [c.material];
+          materials.forEach((mat: any) => {
+             mat.depthTest = !showWallhack;
+             mat.depthWrite = !showWallhack;
+          });
+        }
       }
     });
     invalidate();
-  }, [scene, characterShadows, invalidate]);
+  }, [scene, characterShadows, showWallhack, invalidate]);
 
   const poseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

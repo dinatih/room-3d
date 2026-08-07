@@ -144,7 +144,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     // Recul (GTA style) ou vue à la 1ère personne
     const isFPV = modeRef.current === 'fpv';
     const distanceBehind = isFPV ? 0 : 180;
-    const heightAbove = isFPV ? 0 : 50;
+    const heightAbove = isFPV ? 0 : 120;
 
     const camX = targetX - Math.sin(walkYaw.current) * cosP * distanceBehind;
     const camY = targetY - Math.sin(walkPitch.current) * distanceBehind + heightAbove;

@@ -460,7 +460,7 @@ export function Studio() {
       <VirtualDPad />
       <HoverOverlay />
       {layers.wallEdges && <EdgeHoverOverlay />}
-      <AppConsole />
+      <AppConsole hidden={showInventory} />
     </div>
   );
 }

@@ -301,6 +301,7 @@ export interface LayerState {
   accessories:  boolean;
   laraPistols:  boolean;
   showAllLaraStyles: boolean;
+  wallhack: boolean;
   aiZones: boolean;
   breastPhysics: boolean;
   breastIntensity?: number;
@@ -711,7 +712,8 @@ export function SidePanel({
       {layerBtn('light',  'Accessoires Lara 🎒', 'accessories')}
       {layerBtn('pink',   'Physique poitrine 💃', 'breastPhysics')}
       {layerBtn('pink',   'Physique cheveux 💇‍♀️', 'hairPhysics')}
-      {layerBtn('white',  'Squelette 🦴',     'skeleton')}
+      {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}
+      {layerBtn('cyan', 'Squelettes / Bones', 'skeleton')}
       {layers.walker && layerBtn('light',  'Toutes les Lara 👥', 'showAllLaraStyles')}
       <button 
         className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
