@@ -44,7 +44,7 @@ export function KallaxNE({ onSize }: SceneItemProps) {
     const s = new THREE.Vector3(1, 1, 1);
     
     // 2×1 bas
-    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0);
     for (const x of [-17.5, 17.5]) {
       p.set(x, h1 - 20.5, 0);
       matrices.push(new THREE.Matrix4().compose(p, q, s));
@@ -59,7 +59,7 @@ export function KallaxNE({ onSize }: SceneItemProps) {
     }
     
     // Sur la VARIERA
-    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
+    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
     p.set(W2_HALF - VAR2_W / 2 - 4, h1 + h2 + VAR2_H + DF / 2, DEP_HALF - VAR2_D / 2 - 10);
     matrices.push(new THREE.Matrix4().compose(p, q, s));
     

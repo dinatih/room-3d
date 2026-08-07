@@ -51,7 +51,7 @@ export function KallaxCuisine({ actionState, onSize }: SceneItemProps) {
   const ref = useRef<THREE.Group>(null!);
 
   const dronaMatrices = useMemo(() => {
-    const rot = new THREE.Matrix4().makeRotationY(Math.PI / 2);
+    const rot = new THREE.Matrix4(); // Identité
     const inside = cells22().map(([cx, cy, cz]) =>
       rot.clone().setPosition(cx, h2 / 2 + cy, cz),
     );

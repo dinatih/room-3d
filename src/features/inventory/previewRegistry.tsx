@@ -59,6 +59,7 @@ import { Vihals }                                     from '@features/scene/item
 import { Rebound }                                    from '@features/scene/items/Rebound';
 import { Linky }                                      from '@features/scene/items/Linky';
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
+import { Drona }                                      from '@features/scene/items/Drona';
 import { Walker, CHARACTERS }                         from '@features/scene/Walker';
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
@@ -76,6 +77,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'toilet':                 Toilet,
   'corridor-closet':        CorridorCloset,
   'sdb-closet':             SdbCloset,
+  'drona':                  Drona,
 
   // ── Procéduraux (pas de glbPath) ──────────────────────────────────────────
   'counter':                Counter,

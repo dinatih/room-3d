@@ -102,8 +102,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     cameraState.mode = m;
     setMode(m);
     
-    // Auto-enable HD mirrors when entering walk mode
-    if ((m === 'walk' || m === 'fpv') && !useSceneStore.getState().layers.mirrorsHD) {
+    // Auto-enable HD mirrors in fpv, disable in walk (3rd person) for performance
+    const isMirrorsHD = useSceneStore.getState().layers.mirrorsHD;
+    if (m === 'fpv' && !isMirrorsHD) {
+      useSceneStore.getState().toggleLayer('mirrorsHD');
+    } else if (m === 'walk' && isMirrorsHD) {
       useSceneStore.getState().toggleLayer('mirrorsHD');
     }
   }

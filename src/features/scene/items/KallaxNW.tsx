@@ -49,7 +49,7 @@ export function KallaxNW({ onSize }: SceneItemProps) {
   const px = -h1 / 2; // -20.5 : center the pivoted Kallax at X=0
 
   const dronaMatrices = useMemo(() => {
-    const rot = new THREE.Matrix4().makeRotationY(Math.PI / 2);
+    const rot = new THREE.Matrix4(); // Identité
     return DRONA_POSITIONS.map(([x, y, z]) => rot.clone().setPosition(x, y, z));
   }, []);
 

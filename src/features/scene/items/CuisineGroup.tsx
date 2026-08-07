@@ -83,7 +83,7 @@ useGLTF.preload(METOD_WALL_GLB);
 // Local (wrapper at (30,0,400)): x=[16.75, 50, 83.25], y=211.7, z=40.5, rotY=π
 
 const DF       = 33;
-const rot90    = new THREE.Matrix4().makeRotationY(Math.PI / 2);
+const rot90    = new THREE.Matrix4(); // Identité
 
 const KIT_W_FULL = 100;
 const gap        = (KIT_W_FULL - 3 * DF) / 4;  // 0.25

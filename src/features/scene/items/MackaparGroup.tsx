@@ -29,7 +29,7 @@ const dronaMatrices = (() => {
   const dronaY = 200 + DF / 2 + 0.2;
   return [20, -20].map(z => {
     dummy.position.set(0.5, dronaY, z);
-    dummy.rotation.set(0, 0, 0);
+    dummy.rotation.set(0, -Math.PI / 2, 0);
     dummy.updateMatrix();
     return dummy.matrix.clone();
   });

@@ -13,7 +13,6 @@ import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-import { glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB_DRONA = 'media/glb/ikea-official/DRÖNA.glb';
@@ -43,6 +42,9 @@ function useDronaGeoFrom(glb: typeof GLB_DRONA): THREE.BufferGeometry {
     const scale = 99.5;
     geo.applyMatrix4(new THREE.Matrix4().makeScale(scale, scale, scale));
     
+    // Correction de l'orientation : pivoter de +90° (la languette devient la face avant, la fermeture éclair à l'arrière)
+    geo.applyMatrix4(new THREE.Matrix4().makeRotationY(Math.PI / 2));
+    
     // Center the geometry so the origin is at the bottom center
     const box = new THREE.Box3().setFromBufferAttribute(
       geo.getAttribute('position') as THREE.BufferAttribute
@@ -63,27 +65,18 @@ export function useDronaGeo(): THREE.BufferGeometry {
 }
 
 export function Drona({ onSize }: SceneItemProps) {
-  const { scene } = useGLTF(GLB_DRONA);
+  const geo = useDronaGeo();
 
   useLayoutEffect(() => {
-    scene.scale.setScalar(99.5);
-    const box = glbLocalBBox(scene);
-    scene.position.set(
-      -(box.min.x + box.max.x) / 2,
-      -box.min.y,
-      -(box.min.z + box.max.z) / 2,
-    );
-    scene.traverse(c => {
-      if ((c as THREE.Mesh).isMesh) {
-        (c as THREE.Mesh).material = dronaMat;
-        c.castShadow = true;
-        c.receiveShadow = true;
-      }
-    });
-    onSize(box.getSize(new THREE.Vector3()));
-  }, [scene]);
+    geo.computeBoundingBox();
+    const size = new THREE.Vector3();
+    if (geo.boundingBox) {
+      geo.boundingBox.getSize(size);
+    }
+    onSize(size);
+  }, [geo, onSize]);
 
-  return <primitive object={scene} />;
+  return <mesh geometry={geo} material={dronaMat} castShadow receiveShadow />;
 }
 
 /** Boîte Drona unique — à placer dans un <group position rotation>. */
