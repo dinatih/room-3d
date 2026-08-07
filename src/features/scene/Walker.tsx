@@ -715,14 +715,13 @@ function SingleCharacter({
   }, [variant]);
 
   const hairChainRef = useRef<any[]>([]);
+  const customHairChainRef = useRef<any[]>([]);
   const breastChainRef = useRef<any[]>([]);
   const breastImpulseRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const breastVelRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const prevSpinePosRef = useRef<THREE.Vector3 | null>(null);
   const prevSpineVelRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const torsoAccelRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
-  const customHairAnimBonesRef = useRef<{ bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[]>([]);
-  const wigEnergyRef = useRef(1.0);
   const loadingAnimsRef = useRef<Set<string>>(new Set());
 
   const [headBoneState, setHeadBoneState] = useState<THREE.Bone | null>(null);
@@ -1040,31 +1039,21 @@ function SingleCharacter({
 
 
 
-    // Initialize Hair Chain (Verlet)
-    const hairChain: any[] = [];
-    const hairBones: THREE.Bone[] = [];
-    scene.traverse(c => {
-      const nLower = (c.name || '').toLowerCase();
-      if ((c as any).isBone && (nLower.includes('hair') || nLower.includes('pony') || nLower.includes('braid'))) {
-        hairBones.push(c as THREE.Bone);
-      }
-    });
-      hairBones.sort((a, b) => getDepth(a) - getDepth(b));
+    const buildHairChain = (hairBones: THREE.Bone[]) => {
+      const hairChain: any[] = [];
+      const bones = [...hairBones].sort((a, b) => getDepth(a) - getDepth(b));
 
-      if (hairBones.length > 0) {
-        const baseParent = hairBones[0].parent;
+      if (bones.length > 0) {
+        const baseParent = bones[0].parent;
         if (baseParent) {
           baseParent.updateMatrixWorld(true);
           const baseParentRestQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
 
           let prevAxis = new THREE.Vector3(0, -1, 0);
-          for (const bone of hairBones) {
+          for (const bone of bones) {
             let axis = prevAxis.clone();
             let length = 8.0;
-            const child = bone.children.find(x => {
-              const cnLower = (x.name || '').toLowerCase();
-              return (x as any).isBone && (cnLower.includes('hair') || cnLower.includes('pony') || cnLower.includes('braid'));
-            });
+            const child = bone.children.find(x => bones.includes(x as THREE.Bone));
             if (child && child.position.lengthSq() > 1e-8) {
               length = child.position.length();
               axis = child.position.clone().normalize();
@@ -1093,7 +1082,21 @@ function SingleCharacter({
           }
         }
       }
-  hairChainRef.current = hairChain;
+      return hairChain;
+    };
+
+    // Initialize Native Hair Chain (Verlet)
+    const nativeHairBones: THREE.Bone[] = [];
+    scene.traverse(c => {
+      const nLower = (c.name || '').toLowerCase();
+      if ((c as any).isBone && (nLower.includes('hair') || nLower.includes('pony') || nLower.includes('braid')) && !(c as any).userData.isCustomHair) {
+        nativeHairBones.push(c as THREE.Bone);
+      }
+    });
+    hairChainRef.current = buildHairChain(nativeHairBones);
+    
+    // Store builder for custom hair
+    (window as any)._buildHairChain = buildHairChain;
 
     // Initialize Breast Chain (Verlet)
     const breastChain: any[] = [];
@@ -1636,54 +1639,10 @@ function SingleCharacter({
     if (!isPaused && !isIdleTimeout) {
         mixer.update(delta);
 
-        // Physique réactive & Gravité universelle (sans vent/bruit continu au repos)
         const isPhysicsActive = useSceneStore.getState().layers.hairPhysics;
-        const animBones = customHairAnimBonesRef.current;
-
-        if (animBones.length > 0) {
-          const time = state.clock.getElapsedTime();
-          const eulerAnim = new THREE.Euler(0, 0, 0, 'YXZ');
-          const animQuat = new THREE.Quaternion();
-          const gravityWorld = new THREE.Vector3(0, -1, 0); // Gravité universelle vers le bas
-
-          // L'oscillation ("rebond/vent") s'active avec une perte d'énergie progressive au repos
-          const isTorsoMoving = target !== 'idle' && torsoAccelRef.current && torsoAccelRef.current.lengthSq() > 0.01;
-          const targetEnergy = (isMoving || isTorsoMoving) ? (target.includes('run') ? 1.5 : 1.0) : 0.0;
-          wigEnergyRef.current += (targetEnergy - wigEnergyRef.current) * (delta * 3.0);
-          const motionFactor = wigEnergyRef.current;
-
-          for (let i = 0; i < animBones.length; i++) {
-            const { bone, restQ, index } = animBones[i];
-            if (isPhysicsActive) {
-              // 1. Gravité monde passive : s'applique toujours (même au repos absolu / couché / debout)
-              const parent = bone.parent;
-              let gravityQuat = new THREE.Quaternion();
-              if (parent) {
-                const parentWorldQ = parent.getWorldQuaternion(new THREE.Quaternion());
-                const localGravity = gravityWorld.clone().applyQuaternion(parentWorldQ.clone().invert());
-                const defaultDir = new THREE.Vector3(0, -1, 0);
-                gravityQuat.setFromUnitVectors(defaultDir, localGravity);
-              }
-
-              // 2. Oscillations dynamiques : Rebond fort en mouvement, brise légère au repos
-              const baseIdleEnergy = 0.15; // Léger mouvement au repos
-              const totalFactor = Math.max(baseIdleEnergy, motionFactor);
-              
-              const phase = time * 4.0 + index * 0.7;
-              // Pour éviter que l'orientation locale chaotique des os annule le gauche/droite,
-              // on distribue équitablement le balancier sur les axes X et Z avec un fort Z.
-              const swingX = Math.sin(phase) * 0.12 * totalFactor;
-              const swingY = Math.sin(phase * 0.6 + 1.2) * 0.12 * totalFactor;
-              const swingZ = Math.sin(phase * 0.85 + 2.0) * 0.35 * totalFactor; // <-- Z très prononcé (gauche/droite)
-
-              eulerAnim.set(swingX, swingY, swingZ, 'YXZ');
-              animQuat.setFromEuler(eulerAnim);
-
-              // Repos pur = Pose neutre + Gravité monde. Mouvement = Gravité + Rebond dynamique.
-              bone.quaternion.copy(restQ).slerp(restQ.clone().multiply(gravityQuat), 0.55).multiply(animQuat);
-            } else {
-              bone.quaternion.copy(restQ);
-            }
+        if (!isPhysicsActive && customHairChainRef.current.length > 0) {
+          for (const node of customHairChainRef.current) {
+            node.bone.quaternion.copy(node.restQuat);
           }
         }
 
@@ -1856,15 +1815,16 @@ function SingleCharacter({
 
         // Ponytail physics simulation (Verlet)
         const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
-        if (enableHairPhysics && hairChainRef.current.length > 0) {
-          const firstNode = hairChainRef.current[0];
+        const activeHairChain = (haircut !== 'original' && customHairChainRef.current.length > 0) ? customHairChainRef.current : hairChainRef.current;
+        if (enableHairPhysics && activeHairChain.length > 0) {
+          const firstNode = activeHairChain[0];
           const baseParent = firstNode.bone.parent;
           if (baseParent) {
 
             const baseParentQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
             const g = new THREE.Vector3(0, -981, 0); // standard gravity (cm/s^2)
 
-            for (const node of hairChainRef.current) {
+            for (const node of activeHairChain) {
               const { bone, relQuat, axis, worldLength } = node;
               const parent = bone.parent;
               if (!parent) continue;
@@ -2085,7 +2045,9 @@ function SingleCharacter({
         <Wig 
           id={haircut.replace('hair_', '')}
           onBonesExtracted={(bones) => {
-            customHairAnimBonesRef.current = bones;
+            if ((window as any)._buildHairChain) {
+              customHairChainRef.current = (window as any)._buildHairChain(bones.map(b => b.bone));
+            }
           }}
           attachTo={headBoneState}
         />

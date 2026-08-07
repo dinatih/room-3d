@@ -2,22 +2,34 @@ import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { useGLTFClone } from '../useGLTFClone';
 import type { SceneItemProps } from '@shared/types';
+import { glbLocalBBox } from '@features/scene/glbUtils';
 
 export function KinCamera({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone('media/sandbox/camera_render.glb');
 
   useLayoutEffect(() => {
-    // Les matériaux, l'échelle et la rotation ont été "bakes" directement dans le fichier GLB.
-    // L'objet est maintenant à la bonne taille (20cm de diamètre, hauteur écrasée / 3) 
-    // et possède les bons matériaux (dome noir transparent, base blanche).
+    // 1. Reset scale pour lire la vraie bounding box
+    scene.scale.set(1, 1, 1);
+    const box = glbLocalBBox(scene);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
 
-    // Positionnement sous le plafond
-    // L'objet est placé à Y=250 dans Placements.tsx.
-    // Sa moitié de hauteur vaut ~2.83cm. On décale de -2.83 pour qu'il affleure exactement.
-    scene.position.set(0, -2.83, 0);
+    // 2. L'utilisateur veut que le diamètre soit d'environ 12cm.
+    // L'axe X ou Z de size correspond au diamètre.
+    const S = 12 / size.x;
+    scene.scale.set(S, S, S);
 
-    // Identifier le dôme de façon robuste : c'est la partie avec le moins de sommets
-    // Identifier les meshes par leur nom de matériau (car ils ont tous le même nombre de vertices dans le nouveau GLB)
+    // 3. Corriger le décalage du modèle ET l'aligner sous le plafond
+    // - Pour centrer sur X/Z : -center.x * S
+    // - Pour que le HAUT touche le plafond (qui est l'origine du groupe parent à Y=250) :
+    //   Le point le plus haut localement est (center.y + size.y / 2)
+    scene.position.set(
+      -center.x * S,
+      - (center.y + size.y / 2) * S,
+      -center.z * S
+    );
+
+    // 4. Identifier les meshes par leur nom de matériau et appliquer les bons styles
     scene.traverse((child: any) => {
       if (child.isMesh && child.material) {
         if (child.material.name.includes('lambert8')) {
@@ -32,7 +44,6 @@ export function KinCamera({ onSize }: SceneItemProps) {
           });
         } else if (child.material.name.includes('lambert1') || child.material.name.includes('lambert9')) {
           // La base et la lentille interne (on les met en blanc opaque)
-          // Note: On pourrait garder lambert9 noir si c'est la lentille, mais la demande est "base en blanche"
           child.material = new THREE.MeshStandardMaterial({
             color: child.material.name.includes('lambert9') ? 0x222222 : 0xffffff,
             roughness: 0.7,
@@ -42,7 +53,7 @@ export function KinCamera({ onSize }: SceneItemProps) {
       }
     });
 
-    onSize?.(new THREE.Vector3(20, 3.3, 20));
+    onSize?.(new THREE.Vector3(12, size.y * S, 12));
   }, [scene, onSize]);
 
   return <primitive object={scene} />;
