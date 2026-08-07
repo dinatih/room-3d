@@ -112,7 +112,32 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     // 2. Extraire les os pour l'animation/physique
     const extractedBones: WigBone[] = [];
     scene.traverse((child: any) => {
-      child.visible = true;
+      child.frustumCulled = false;
+      
+      if ((child as THREE.Mesh).isMesh) {
+        const m = child as THREE.Mesh;
+        m.visible = true;
+        m.renderOrder = 1;
+        if (Array.isArray(m.material)) {
+          m.material = m.material.map(mat => {
+            if (!mat) return mat;
+            const clonedMat = mat.clone();
+            clonedMat.side = THREE.DoubleSide;
+            clonedMat.alphaTest = 0.5;
+            clonedMat.depthWrite = true;
+            clonedMat.needsUpdate = true;
+            return clonedMat;
+          });
+        } else if (m.material) {
+          const clonedMat = (m.material as THREE.Material).clone();
+          clonedMat.side = THREE.DoubleSide;
+          clonedMat.alphaTest = 0.5;
+          clonedMat.depthWrite = true;
+          clonedMat.needsUpdate = true;
+          m.material = clonedMat;
+        }
+      }
+
       if ((child as any).isBone) {
         const b = child as THREE.Bone;
         if (!(b as any).restLocalQuaternion) {
@@ -185,8 +210,4 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
   );
 }
 
-// Preload the most common ones or we can just let Suspense handle it.
-// The user has 13 wigs. We can preload them if needed, or leave it lazy.
-
-const HAIR_NUMBERS = ['100','101','102','103','104','105','106','107','108','109','110','111','112'];
-HAIR_NUMBERS.forEach(id => useGLTF.preload(`media/wigs/wig_${id}.glb`));
+// Removed invalid preloads

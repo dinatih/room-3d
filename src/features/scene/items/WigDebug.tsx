@@ -11,14 +11,14 @@ export function WigDebug() {
       
       const pos = new THREE.Vector3();
       ref.current.getWorldPosition(pos);
-      if (Math.random() < 0.01) {
-        console.log("WigDebug World Pos:", pos.x, pos.y, pos.z);
+      if (Math.random() < 0.05) {
+        console.log("WigDebug World Pos:", pos.x, pos.y, pos.z, "Scale:", ref.current.scale.x);
       }
     }
   });
   return (
     <mesh ref={ref}>
-      <boxGeometry args={[0.2, 0.2, 0.2]} />
+      <boxGeometry args={[1, 1, 1]} />
       <meshBasicMaterial color="red" wireframe />
     </mesh>
   );
