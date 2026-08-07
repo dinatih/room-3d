@@ -30,7 +30,7 @@ export function useAgentController(
 
   const stepIndexRef = useRef(0);
   const timerRef = useRef(0);
-  const statusRef = useRef<'WAITING' | 'FALLING' | 'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED'>(spawnDelay > 0 ? 'WAITING' : 'IDLE');
+  const statusRef = useRef<'WAITING' | 'FALLING' | 'LANDING' | 'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED'>(spawnDelay > 0 ? 'WAITING' : 'IDLE');
   const delayTimerRef = useRef(spawnDelay);
   const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
   const startPosRef = useRef<{x: number, z: number, rotY: number} | null>(null);
@@ -84,12 +84,22 @@ export function useAgentController(
       timerRef.current -= dt;
       if (timerRef.current <= 0) {
         stateRef.current.y = 0;
-        statusRef.current = 'IDLE';
+        statusRef.current = 'LANDING';
+        timerRef.current = 1.96; // duration of crouch_to_stand approx 2s
       } else {
         const p_inv = timerRef.current / 6.0; // 1 to 0
         stateRef.current.y = 800 * (p_inv * p_inv * p_inv); // ease-out (ralenti à la fin)
       }
-      stateRef.current.animation = 'idle';
+      stateRef.current.animation = 'media/sandbox/anims/anim_falling.glb';
+      return stateRef.current;
+    }
+
+    if (statusRef.current === 'LANDING') {
+      timerRef.current -= dt;
+      if (timerRef.current <= 0) {
+        statusRef.current = 'IDLE';
+      }
+      stateRef.current.animation = 'media/sandbox/anims/anim_crouch_to_stand.glb';
       return stateRef.current;
     }
 

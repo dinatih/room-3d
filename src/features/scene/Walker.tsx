@@ -2198,6 +2198,8 @@ function InternalWalker(props: WalkerProps) {
   const runningGltf = useGLTF('media/sandbox/anims/anim_running.glb');
 
   // Preloaded anim paths
+  const fallingGltf = useGLTF('media/sandbox/anims/anim_falling.glb');
+  const crouchToStandGltf = useGLTF('media/sandbox/anims/anim_crouch_to_stand.glb');
   const sittingGltf = useGLTF('media/sandbox/anims/anim_sitting_idle.glb');
   const swimmingGltf = useGLTF('media/sandbox/anims/anim_swimming_to_edge.glb');
   const pushUpGltf = useGLTF('media/sandbox/anims/anim_push_up.glb');
@@ -2272,6 +2274,8 @@ function InternalWalker(props: WalkerProps) {
   }, []);
 
   const animGltfs: Record<string, any> = useMemo(() => ({
+    'media/sandbox/anims/anim_falling.glb': fallingGltf,
+    'media/sandbox/anims/anim_crouch_to_stand.glb': crouchToStandGltf,
     'media/sandbox/anims/anim_sitting_idle.glb': sittingGltf,
     'media/sandbox/anims/anim_swimming_to_edge.glb': swimmingGltf,
     'media/sandbox/anims/anim_push_up.glb': pushUpGltf,
@@ -2324,7 +2328,7 @@ function InternalWalker(props: WalkerProps) {
     'media/sandbox/anims/anim_jazz_dancing.glb': jazzDanceGltf,
     'media/sandbox/anims/anim_can_can.glb': canCanGltf,
     'media/sandbox/anims/anim_ymca_dance.glb': ymcaDanceGltf,
-  }), [sittingGltf, swimmingGltf, pushUpGltf, climbingGltf, laying1Gltf, openDoorOutwardsGltf, textingGltf, bellyDanceGltf, dancingTwerkGltf, soccerballGltf, jabCrossGltf, femaleLayingPose9Gltf, takedownVictimGltf, takedownAttackerGltf, femaleStandingPoseGltf, femaleStandingPose1Gltf, femaleStandingPose2Gltf, femaleSittingPoseGltf, femaleDancePoseGltf, femaleDynamicPoseGltf, hipHopDanceGltf, hipHopDance1Gltf, hipHopDance2Gltf, hipHopDance4Gltf, hipHopDance6Gltf, hipHopDance7Gltf, hipHopDance10Gltf, lockingHipHopGltf, robotHipHopGltf, salsaDanceGltf, salsaDance1Gltf, salsaDance3Gltf, salsaDance4Gltf, sambaDanceGltf, sambaDance1Gltf, sambaDance2Gltf, houseDanceGltf, breakdanceUprockGltf, gangnamStyleGltf, capoeiraGltf, rumbaDanceGltf, twistDanceGltf, macarenaDanceGltf, macarenaDance1Gltf, swingDanceGltf, jazzDanceGltf, canCanGltf, ymcaDanceGltf, shakingHands2Gltf, femaleSittingPose1Gltf, femaleSittingPose3Gltf, handRaisingGltf]);
+  }), [fallingGltf, crouchToStandGltf, sittingGltf, swimmingGltf, pushUpGltf, climbingGltf, laying1Gltf, openDoorOutwardsGltf, textingGltf, bellyDanceGltf, dancingTwerkGltf, soccerballGltf, jabCrossGltf, femaleLayingPose9Gltf, takedownVictimGltf, takedownAttackerGltf, femaleStandingPoseGltf, femaleStandingPose1Gltf, femaleStandingPose2Gltf, femaleSittingPoseGltf, femaleDancePoseGltf, femaleDynamicPoseGltf, hipHopDanceGltf, hipHopDance1Gltf, hipHopDance2Gltf, hipHopDance4Gltf, hipHopDance6Gltf, hipHopDance7Gltf, hipHopDance10Gltf, lockingHipHopGltf, robotHipHopGltf, salsaDanceGltf, salsaDance1Gltf, salsaDance3Gltf, salsaDance4Gltf, sambaDanceGltf, sambaDance1Gltf, sambaDance2Gltf, houseDanceGltf, breakdanceUprockGltf, gangnamStyleGltf, capoeiraGltf, rumbaDanceGltf, twistDanceGltf, macarenaDanceGltf, macarenaDance1Gltf, swingDanceGltf, jazzDanceGltf, canCanGltf, ymcaDanceGltf, shakingHands2Gltf, femaleSittingPose1Gltf, femaleSittingPose3Gltf, handRaisingGltf]);
 
   const charactersWithAnims = useMemo(() => {
     return CHARACTERS.map(char => {
@@ -2419,6 +2423,11 @@ const VIVID_PATH = 'media/vivida_red_lara_native.glb';
 useGLTF.preload(LARA_PATH);
 useGLTF.preload(ROSANNA_PATH);
 useGLTF.preload(VIVID_PATH);
+useGLTF.preload('media/sandbox/anims/anim_idle.glb');
+useGLTF.preload('media/sandbox/anims/anim_walking.glb');
+useGLTF.preload('media/sandbox/anims/anim_running.glb');
+useGLTF.preload('media/sandbox/anims/anim_falling.glb');
+useGLTF.preload('media/sandbox/anims/anim_crouch_to_stand.glb');
 useGLTF.preload('media/sandbox/anims/anim_sitting_idle.glb');
 useGLTF.preload('media/sandbox/anims/anim_swimming_to_edge.glb');
 useGLTF.preload('media/sandbox/anims/anim_climbing.glb');
