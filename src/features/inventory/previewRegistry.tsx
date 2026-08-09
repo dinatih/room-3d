@@ -183,3 +183,6 @@ SCENE_REGISTRY['ushiro'] = function UshiroPreview({ actionState }: { actionState
 SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState }: { actionState?: any }) {
   return <RobinBird isPreview={true} previewAnim={actionState?.walkerAnim} showSkeletonPreview={actionState?.showBones} />;
 } as any;
+
+import { Blaskata50569513 } from '@features/scene/items/Blaskata50569513';
+SCENE_REGISTRY['blaskata50569513'] = Blaskata50569513 as any;

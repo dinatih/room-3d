@@ -28,17 +28,23 @@ const redFabricMat = new THREE.MeshPhysicalMaterial({
   sheenRoughness: 0.6,
 });
 
+import { Blaskata50569513 } from './Blaskata50569513';
+
 function RealisticBolsters({ topY, zOffset = -26 }: { topY: number; zOffset?: number }) {
-  const polR = 12;
-  const polL = 100 - 2 * polR; 
+  // Blaskata is originally 80cm. Scale 1.25 gives 100cm.
+  // We place two of them side by side.
   return (
-    <group position={[0, topY + polR - 2, zOffset]}>
-      <mesh position={[-50, 0, 0]} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow material={redFabricMat}>
-        <capsuleGeometry args={[polR, polL, 16, 32]} />
-      </mesh>
-      <mesh position={[50, 0, 0]} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow material={redFabricMat}>
-        <capsuleGeometry args={[polR, polL, 16, 32]} />
-      </mesh>
+    <group position={[0, topY + 5, zOffset]}>
+      {/* Blaskata is typically along X or Z. Assuming it's along Z, we might need rotation. 
+          The Utaker bed is 80x200. We want the bolsters across the width? Or along the length?
+          "traversins ... sur le lit" they were at X=-50 and X=50 with rotation Z=PI/2.
+          Let's place Blaskata at the same spots. */}
+      <group position={[-50, 0, 0]} rotation={[0, Math.PI / 2, 0]} scale={1.25}>
+        <Blaskata50569513 item={{ id: 'blaskata' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[50, 0, 0]} rotation={[0, Math.PI / 2, 0]} scale={1.25}>
+        <Blaskata50569513 item={{ id: 'blaskata' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
     </group>
   );
 }
