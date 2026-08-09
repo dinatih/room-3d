@@ -68,6 +68,9 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
       
       lidHingeRef.current = hinge;
       hinge.userData.initialRotation = hinge.rotation.x;
+      if ((lid as THREE.Mesh).material) {
+         ((lid as THREE.Mesh).material as THREE.MeshStandardMaterial).color = new THREE.Color('red');
+      }
     }
 
     if (seat && !seatHingeRef.current && seat.parent) {
@@ -91,6 +94,9 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
 
       seatHingeRef.current = hinge;
       hinge.userData.initialRotation = hinge.rotation.x;
+      if ((seat as THREE.Mesh).material) {
+         ((seat as THREE.Mesh).material as THREE.MeshStandardMaterial).color = new THREE.Color('blue');
+      }
     }
 
     if (button) {
