@@ -28,6 +28,8 @@ import {
   ACTION_COOKING,
   ACTION_KALLAX_NE,
   ACTION_FRESH_AIR,
+  ACTION_ENTREE_BAT_B,
+  ACTION_ENTREE_COURS_BAT_B,
   ACTION_FULL_TOUR
 } from './ai/ZoneNodes';
 import type { AgentInstruction } from './ai/aiTypes';
@@ -852,7 +854,8 @@ function SingleCharacter({
     const actions = [
       ACTION_SIT_DESK_1, ACTION_SIT_OFFICE_CHAIR, ACTION_SIT_DESK_2, ACTION_BED_WEST, ACTION_BED_EAST,
       ACTION_BATHTUB, ACTION_SHOWER, ACTION_GARDEN_SOFA_EAST, ACTION_GARDEN_SOFA_WEST,
-      ACTION_COOKING, ACTION_KALLAX_NE, ACTION_FRESH_AIR, ACTION_GO_TO_TOILET
+      ACTION_COOKING, ACTION_KALLAX_NE, ACTION_FRESH_AIR, ACTION_GO_TO_TOILET,
+      ACTION_ENTREE_BAT_B, ACTION_ENTREE_COURS_BAT_B
     ];
     // Danses aléatoires disponibles pour intercaler entre les actions
     const danceAnims = [

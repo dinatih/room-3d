@@ -24,6 +24,8 @@ export const ZONES: Record<string, ZoneNode> = {
   Devant_Baie_Vitree: { id: 'Devant_Baie_Vitree', x: 200, z: 20 },
   Dans_Jardin: { id: 'Dans_Jardin', x: 200, z: -20 },
   Fond_Jardin: { id: 'Fond_Jardin', x: 150, z: -350 },
+  Entree_Bat_B_Couloir: { id: 'Entree_Bat_B_Couloir', x: -350, z: 1002 },
+  Entree_Cours_Bat_B_Jardin: { id: 'Entree_Cours_Bat_B_Jardin', x: -350, z: -200 },
 };
 export const ACTION_GO_TO_TOILET: AgentInstruction[] = [
   // Aller vers la porte du salon
@@ -160,6 +162,26 @@ export const ACTION_FRESH_AIR: AgentInstruction[] = [
   { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', animation: 'idle', duration: 1.0 },
 ];
 
+export const ACTION_ENTREE_BAT_B: AgentInstruction[] = [
+  { type: 'MOVE_TO', targetNodeId: 'Couloir_Central' },
+  { type: 'INTERACT', triggerEventKey: 'livingDoor', animation: 'idle', duration: 1.0 },
+  { type: 'MOVE_TO', targetNodeId: 'Entree_Bat_B_Couloir' },
+  { type: 'INTERACT', animation: 'idle', duration: 10.0, rotY: Math.PI / 2 },
+  { type: 'MOVE_TO', targetNodeId: 'Couloir_Central' },
+  { type: 'INTERACT', triggerEventKey: 'livingDoor', animation: 'idle', duration: 1.0 },
+];
+
+export const ACTION_ENTREE_COURS_BAT_B: AgentInstruction[] = [
+  { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
+  { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
+  { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
+  { type: 'MOVE_TO', targetNodeId: 'Entree_Cours_Bat_B_Jardin' },
+  { type: 'INTERACT', animation: 'idle', duration: 10.0, rotY: Math.PI / 2 },
+  { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
+  { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
+  { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', animation: 'idle', duration: 1.0 },
+];
+
 export const ACTION_FULL_TOUR: AgentInstruction[] = [
   ...ACTION_GO_TO_TOILET,
   ...ACTION_SIT_DESK_1,
@@ -173,5 +195,7 @@ export const ACTION_FULL_TOUR: AgentInstruction[] = [
   ...ACTION_COOKING,
   ...ACTION_KALLAX_NE,
   ...ACTION_FRESH_AIR,
+  ...ACTION_ENTREE_BAT_B,
+  ...ACTION_ENTREE_COURS_BAT_B,
   { type: 'RETURN_TO_START' }
 ];
