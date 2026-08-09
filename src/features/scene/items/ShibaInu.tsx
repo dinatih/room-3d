@@ -66,6 +66,11 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
       m.castShadow = true;
       m.receiveShadow = true;
       m.frustumCulled = false;
+      if (m.material) {
+        const mat = m.material as THREE.MeshStandardMaterial;
+        mat.metalness = 0;
+        mat.roughness = 0.8;
+      }
     });
 
     if (animations.length > 0) {
