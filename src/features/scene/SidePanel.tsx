@@ -543,6 +543,9 @@ export function SidePanel({
       {triggerBtn('Air Performer (Mode)', 'airPerformerMode')}
       {triggerBtn('Air Performer (Vitesse)', 'airPerformerSpeed')}
       {triggerBtn('Air Performer (Position)', 'airperformer-position')}
+      {triggerBtn('WC Couvercle', 'wc-lid-toggle')}
+      {triggerBtn('WC Siège', 'wc-seat-toggle')}
+      {triggerBtn('WC Chasse d\'eau', 'wc-flush')}
       
       <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>LUMIÈRES</div>
       {furnitureBtn('Lampe SDB', 'lampSdb')}
