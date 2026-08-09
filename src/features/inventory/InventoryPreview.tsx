@@ -217,7 +217,7 @@ export function InventoryPreview({
               <directionalLight position={[3, 5, 3]} intensity={1.5} />
               <directionalLight position={[-2, 1, -2]} intensity={0.5} color="#aabbff" />
               <FitCamera target={target} />
-              <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={false} minDistance={0.3} maxDistance={50} target={target} onStart={() => setAutoRotate(false)} />
+              <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={true} minDistance={0.3} maxDistance={50} target={target} onStart={() => setAutoRotate(false)} />
               <Grid infiniteGrid fadeDistance={15} cellColor="#999999" sectionColor="#666666" cellSize={0.2} sectionSize={1} position={[0, -0.001, 0]} />
               <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} /></Suspense>
             </Canvas>
