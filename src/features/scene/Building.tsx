@@ -1282,11 +1282,23 @@ function RedPVCCorridor() {
     });
   }, []);
 
+  const yellowCeilMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#e5c93d', // Béton jaune
+    roughness: 0.8,
+  }), []);
+
   return (
-    <group position={[center.x, -0.1, center.z]} rotation-y={DiagWall.rotY + Math.PI / 2}>
-      <mesh receiveShadow userData={{ brickType: 'floor' }} rotation-x={-Math.PI / 2}>
+    <group position={[center.x, 0, center.z]} rotation-y={DiagWall.rotY + Math.PI / 2}>
+      {/* Sol PVC rouge */}
+      <mesh position={[0, -0.1, 0]} receiveShadow userData={{ brickType: 'floor' }} rotation-x={-Math.PI / 2}>
         <planeGeometry args={[TOTAL_LENGTH, WIDTH]} />
         <primitive object={mat} attach="material" />
+      </mesh>
+      
+      {/* Plafond dalle béton jaune (20cm d'épaisseur, base à WALL_H) */}
+      <mesh position={[0, WALL_H + 10, 0]} castShadow receiveShadow userData={{ brickType: 'ceiling' }}>
+        <boxGeometry args={[TOTAL_LENGTH, 20, WIDTH]} />
+        <primitive object={yellowCeilMat} attach="material" />
       </mesh>
     </group>
   );
