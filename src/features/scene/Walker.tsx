@@ -1934,7 +1934,7 @@ function SingleCharacter({
                 }
 
                 // Tête (Sphère douce)
-                if (headBoneRef.current) {
+                if (headBoneRef.current && worldLength > 1.0) {
                   const center = new THREE.Vector3().setFromMatrixPosition(headBoneRef.current.matrixWorld).addScaledVector(backDir, 4);
                   const radius = 13.0;
                   const dist = next.distanceTo(center);
@@ -1942,7 +1942,7 @@ function SingleCharacter({
                 }
 
                 // Sac à dos (Collider Rectangulaire Plat OBB)
-                if (spine2BoneRef.current) {
+                if (spine2BoneRef.current && worldLength > 1.0) {
                   const backpackCenter = new THREE.Vector3().setFromMatrixPosition(spine2BoneRef.current.matrixWorld).addScaledVector(backDir, 11);
                   // Dimensions du rectangle du sac à dos (Demi-largeur = 14cm, Demi-hauteur = 18cm, Épaisseur arrière = 8cm)
                   const localPos = new THREE.Vector3().subVectors(next, backpackCenter);
