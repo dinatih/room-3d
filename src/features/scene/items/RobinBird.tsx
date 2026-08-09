@@ -42,7 +42,7 @@ export function RobinBird({ isPreview = false, previewAnim = '' }: { isPreview?:
         mat.metalness = 0;
         mat.roughness = 0.8;
         mat.transparent = false;
-        mat.alphaTest = 0.5;
+        mat.alphaTest = 0;
         mat.depthWrite = true;
       }
     });
