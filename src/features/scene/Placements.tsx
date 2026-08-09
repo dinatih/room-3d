@@ -604,9 +604,10 @@ export function Garden() {
       </group>
       <group position={[120, 0, -250]} rotation={[0, 1, 0]} userData={{ animUnit: true }}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
-        <group position={[0, 50, 70]} rotation={[0, Math.PI, 0]} userData={{ hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
-          <RobinBird />
-        </group>
+      </group>
+
+      <group userData={{ hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
+        <RobinBird />
       </group>
 
       <group position={[100, 0, -145]} userData={{ animUnit: true }}>

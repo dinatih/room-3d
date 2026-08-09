@@ -1,23 +1,46 @@
 import { useRef, useLayoutEffect, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 
 const GLB_PATH = 'media/glb/robin_bird.glb';
 
+type AIState = {
+  mode: 'autonomous' | 'forced';
+  state: 'idle' | 'flying';
+  targetPos: THREE.Vector3;
+  timer: number;
+};
+
+// Points d'intérêts dans le jardin (Z < 0)
+const LANDING_POINTS = [
+  new THREE.Vector3(120, 50, -200),  // Baignoire
+  new THREE.Vector3(270, 45, -110),  // ArmrestSofa
+  new THREE.Vector3(100, 45, -80),   // ArmlessSofa
+  new THREE.Vector3(40, 45, -90),    // ChestBench
+  new THREE.Vector3(100, 120, -145), // PottedPalm
+  new THREE.Vector3(150, 150, -390), // Mur fond jardin
+  new THREE.Vector3(5, 120, -200),   // Palissade bois (gauche)
+  new THREE.Vector3(295, 120, -200)  // Palissade bois (droite)
+];
+
 export function RobinBird({ isPreview = false, previewAnim = '' }: { isPreview?: boolean, previewAnim?: string }) {
   const { scene, animations } = useGLTFClone(GLB_PATH);
   const { invalidate } = useThree();
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
-  
-  // Sequence state
+  const modelRef = useRef<THREE.Group>(null);
   const isPlayingRef = useRef(false);
-  const seqAnimIndexRef = useRef(0);
-  const seqLoopCountRef = useRef(0);
+
+  // IA Autonome
+  const aiStateRef = useRef<AIState>({
+    mode: 'autonomous',
+    state: 'idle',
+    targetPos: LANDING_POINTS[0].clone(),
+    timer: 2.0
+  });
 
   useLayoutEffect(() => {
-    scene.scale.set(1, 1, 1);
+    scene.scale.setScalar(1);
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
     const size = box.getSize(new THREE.Vector3());
@@ -48,98 +71,120 @@ export function RobinBird({ isPreview = false, previewAnim = '' }: { isPreview?:
     });
 
     if (animations.length > 0) {
-      const mixer = new THREE.AnimationMixer(scene);
-      mixerRef.current = mixer;
+      mixerRef.current = new THREE.AnimationMixer(scene);
+    }
+
+    if (modelRef.current && !isPreview) {
+      modelRef.current.position.copy(LANDING_POINTS[0]);
     }
 
     return () => { mixerRef.current?.stopAllAction(); };
-  }, [scene, animations]);
+  }, [scene, animations, isPreview]);
 
-  // Handle Preview Animations or Initial Idle
+  // Handle Initial State / Preview
   useEffect(() => {
     if (!mixerRef.current || animations.length === 0) return;
     
     mixerRef.current.stopAllAction();
-    
     let targetAnimName = 'Robin_Bird_Idle';
     if (isPreview && previewAnim) {
       targetAnimName = previewAnim;
     }
-    
     const clip = animations.find(a => a.name === targetAnimName) || animations[0];
     const action = mixerRef.current.clipAction(clip);
     action.setLoop(THREE.LoopRepeat, Infinity);
     action.reset().play();
+    isPlayingRef.current = true;
     invalidate();
   }, [animations, invalidate, isPreview, previewAnim]);
 
+  // Listener événements de l'UI (Menu Hover)
   useEffect(() => {
-    if (isPreview || !mixerRef.current) return;
-    
-    const onFinished = () => {
-      if (!isPlayingRef.current || !mixerRef.current) return;
-      
-      seqLoopCountRef.current++;
-      if (seqLoopCountRef.current >= 3) {
-        seqLoopCountRef.current = 0;
-        seqAnimIndexRef.current++;
-        
-        if (seqAnimIndexRef.current >= animations.length) {
-          // Finished all animations
-          isPlayingRef.current = false;
-          mixerRef.current.stopAllAction();
-          const idleClip = animations.find(a => a.name === 'Robin_Bird_Idle') || animations[0];
-          mixerRef.current.clipAction(idleClip).setLoop(THREE.LoopRepeat, Infinity).play();
-          invalidate();
-          return;
-        }
-      }
-      
-      // Play next step in sequence
-      const nextClip = animations[seqAnimIndexRef.current];
-      mixerRef.current.stopAllAction();
-      const action = mixerRef.current.clipAction(nextClip);
-      action.setLoop(THREE.LoopOnce, 1);
-      action.clampWhenFinished = true;
-      action.reset().play();
-      invalidate();
-    };
-    
-    mixerRef.current.addEventListener('finished', onFinished);
-    
+    if (isPreview) return;
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
-      
-      if (key === 'robin-bird-replay' && mixerRef.current && animations.length > 0) {
-        isPlayingRef.current = true;
-        seqAnimIndexRef.current = 0;
-        seqLoopCountRef.current = 0;
-        
-        mixerRef.current.stopAllAction();
-        const action = mixerRef.current.clipAction(animations[0]);
-        action.setLoop(THREE.LoopOnce, 1);
-        action.clampWhenFinished = true;
-        action.reset().play();
-        invalidate();
+      if (key === 'robin-bird-replay') {
+        // Redémarre l'IA et force l'envol
+        aiStateRef.current.mode = 'autonomous';
+        aiStateRef.current.state = 'idle';
+        aiStateRef.current.timer = 0; // Trigger take off immediately
       }
     };
     document.addEventListener('furniture-toggle', handler);
-    return () => {
-      mixerRef.current?.removeEventListener('finished', onFinished);
-      document.removeEventListener('furniture-toggle', handler);
-    };
-  }, [invalidate, isPreview, animations]);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, [isPreview]);
 
+  // Boucle de jeu (IA & Animation)
   useFrame((_, delta) => {
-    if (mixerRef.current) {
-      mixerRef.current.update(delta);
-      if (isPlayingRef.current) {
-        invalidate();
+    if (!mixerRef.current || !modelRef.current) return;
+    
+    if (!isPreview) {
+      const ai = aiStateRef.current;
+      if (ai.mode === 'autonomous') {
+        if (ai.state === 'idle') {
+          ai.timer -= delta;
+          if (ai.timer <= 0) {
+            // Choose a new random landing point different from current
+            let pts = LANDING_POINTS.filter(p => p.distanceTo(modelRef.current!.position) > 10);
+            if (pts.length === 0) pts = LANDING_POINTS;
+            const nextTarget = pts[Math.floor(Math.random() * pts.length)];
+            ai.targetPos.copy(nextTarget);
+            
+            ai.state = 'flying';
+            
+            mixerRef.current.stopAllAction();
+            const flyClip = animations.find(a => a.name === 'Robin_Bird_Fly') || animations[0];
+            mixerRef.current.clipAction(flyClip).setLoop(THREE.LoopRepeat, Infinity).play();
+          } else {
+            // Randomly switch idle animations (Eat, Call, Idle) occasionally
+            if (Math.random() < 0.01) {
+              const idleAnimNames = ['Robin_Bird_Idle', 'Robin_Bird_Idle2', 'Robin_Bird_Eat', 'Robin_Bird_Call'];
+              const randIdle = idleAnimNames[Math.floor(Math.random() * idleAnimNames.length)];
+              const clip = animations.find(a => a.name === randIdle) || animations[0];
+              mixerRef.current.stopAllAction();
+              mixerRef.current.clipAction(clip).setLoop(THREE.LoopRepeat, Infinity).play();
+            }
+          }
+        } else if (ai.state === 'flying') {
+          const speed = 150 * delta; // 150 cm/sec
+          const dist = modelRef.current.position.distanceTo(ai.targetPos);
+          
+          if (dist < speed) {
+            // Arrived
+            modelRef.current.position.copy(ai.targetPos);
+            ai.state = 'idle';
+            ai.timer = 3 + Math.random() * 5; // Pause 3-8s
+            
+            mixerRef.current.stopAllAction();
+            const idleClip = animations.find(a => a.name === 'Robin_Bird_Idle') || animations[0];
+            mixerRef.current.clipAction(idleClip).setLoop(THREE.LoopRepeat, Infinity).play();
+          } else {
+            // Move & Rotate towards target
+            const dir = new THREE.Vector3().subVectors(ai.targetPos, modelRef.current.position).normalize();
+            
+            // Add some arc to the flight (Y height) based on distance left vs total distance
+            // Actually simple straight line for now
+            modelRef.current.position.add(dir.multiplyScalar(speed));
+            
+            // Look at target
+            const targetRot = Math.atan2(dir.x, dir.z);
+            // Smooth rotation
+            let rotDiff = targetRot - modelRef.current.rotation.y;
+            while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
+            while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
+            modelRef.current.rotation.y += rotDiff * Math.min(1, 10 * delta);
+          }
+        }
       }
+      invalidate(); // Re-render required since model moves
     }
+
+    mixerRef.current.update(delta);
   });
 
-  return <primitive object={scene} />;
+  return (
+    <group ref={modelRef}>
+      <primitive object={scene} />
+    </group>
+  );
 }
-
-useGLTF.preload(GLB_PATH);
