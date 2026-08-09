@@ -2,6 +2,8 @@ import { useRef, useLayoutEffect, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
+import { useHelper } from '@react-three/drei';
+import { useSceneStore } from '@features/scene/store/useSceneStore';
 
 const GLB_PATH = 'media/glb/robin_bird.glb';
 
@@ -14,22 +16,26 @@ type AIState = {
 
 // Points d'intérêts dans le jardin (Z < 0)
 const LANDING_POINTS = [
-  new THREE.Vector3(120, 50, -200),  // Baignoire
-  new THREE.Vector3(270, 45, -110),  // ArmrestSofa
-  new THREE.Vector3(100, 45, -80),   // ArmlessSofa
-  new THREE.Vector3(40, 45, -90),    // ChestBench
-  new THREE.Vector3(100, 120, -145), // PottedPalm
+  new THREE.Vector3(149, 50, -231),  // Baignoire (rebord)
+  new THREE.Vector3(270, 75, -110),  // ArmrestSofa (dossier)
+  new THREE.Vector3(100, 75, -80),   // ArmlessSofa (dossier)
+  new THREE.Vector3(40, 62, -90),    // ChestBench (dessus)
+  new THREE.Vector3(100, 140, -145), // PottedPalm (feuilles)
   new THREE.Vector3(150, 150, -390), // Mur fond jardin
   new THREE.Vector3(5, 120, -200),   // Palissade bois (gauche)
   new THREE.Vector3(295, 120, -200)  // Palissade bois (droite)
 ];
 
-export function RobinBird({ isPreview = false, previewAnim = '' }: { isPreview?: boolean, previewAnim?: string }) {
+export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPreview = false }: { isPreview?: boolean, previewAnim?: string, showSkeletonPreview?: boolean }) {
   const { scene, animations } = useGLTFClone(GLB_PATH);
   const { invalidate } = useThree();
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const modelRef = useRef<THREE.Group>(null);
   const isPlayingRef = useRef(false);
+
+  const showSkeletonGlobal = useSceneStore(s => s.layers.skeleton);
+  const showSkeleton = isPreview ? showSkeletonPreview : showSkeletonGlobal;
+  useHelper(showSkeleton ? modelRef as any : null, THREE.SkeletonHelper);
 
   // IA Autonome
   const aiStateRef = useRef<AIState>({
