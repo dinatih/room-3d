@@ -14,7 +14,7 @@ import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'media/glb/president_toilet_horizontal_outlet.glb';
 
-export function Toilet({ actionState, onSize }: SceneItemProps) {
+export function Toilet({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
   const { invalidate } = useThree();
 
@@ -22,13 +22,35 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
   const seatHingeRef = useRef<THREE.Group | null>(null);
   const buttonRef = useRef<THREE.Object3D | null>(null);
 
-  const isLidOpenRef = useRef(!!actionState?.['wc-lid-toggle']);
-  const isSeatOpenRef = useRef(!!actionState?.['wc-seat-toggle']);
-  const isFlushingRef = useRef(!!actionState?.['wc-flush']);
-  
-  isLidOpenRef.current = !!actionState?.['wc-lid-toggle'];
-  isSeatOpenRef.current = !!actionState?.['wc-seat-toggle'];
-  isFlushingRef.current = !!actionState?.['wc-flush'];
+  const isLidOpenRef = useRef(false);
+  const isSeatOpenRef = useRef(false);
+  const isFlushingRef = useRef(false);
+
+  useLayoutEffect(() => {
+    const handler = (e: any) => {
+      const { key, value } = e.detail;
+      if (key === 'wc-lid-toggle') {
+        isLidOpenRef.current = value !== undefined ? !!value : !isLidOpenRef.current;
+        invalidate();
+      }
+      if (key === 'wc-seat-toggle') {
+        isSeatOpenRef.current = value !== undefined ? !!value : !isSeatOpenRef.current;
+        invalidate();
+      }
+      if (key === 'wc-flush') {
+        isFlushingRef.current = value !== undefined ? !!value : true;
+        invalidate();
+        if (isFlushingRef.current) {
+          setTimeout(() => {
+            isFlushingRef.current = false;
+            invalidate();
+          }, 1500);
+        }
+      }
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, [invalidate]);
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
