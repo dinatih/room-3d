@@ -4,7 +4,7 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 export function ShibaInu() {
-  const { scene, animations } = useGLTF('/media/glb/animated_dog_shiba_inu.glb');
+  const { scene, animations } = useGLTF('/models/shiba_inu_blender.glb');
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
   const actionRef  = useRef<THREE.AnimationAction | null>(null);
@@ -12,11 +12,19 @@ export function ShibaInu() {
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
+    scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
     const size = box.getSize(new THREE.Vector3());
-    scene.scale.setScalar(40 / size.y);
-    box.setFromObject(scene);
-    scene.position.set(0, -box.min.y, 0);
+    console.log("SHIBA INU FBX->GLB SIZE:", size);
+
+    if (size.y > 0) {
+      scene.scale.setScalar(40 / size.y);
+    } else {
+      scene.scale.setScalar(1); // fallback
+    }
+    scene.updateMatrixWorld(true);
+    const scaledBox = new THREE.Box3().setFromObject(scene);
+    scene.position.set(0, -scaledBox.min.y, 0);
 
     scene.traverse(c => {
       const m = c as THREE.Mesh;
@@ -63,4 +71,4 @@ export function ShibaInu() {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('/media/glb/animated_dog_shiba_inu.glb');
+useGLTF.preload('/models/shiba_inu_blender.glb');

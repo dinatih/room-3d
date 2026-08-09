@@ -59,3 +59,4 @@ Pour différencier l'origine des commits (IDE vs CLI/agy), toujours ajouter le c
 - **Pas de LaTeX** : Ne jamais utiliser les symboles de dollars (`$`) ou d'expressions mathématiques de type LaTeX dans les réponses de chat, car elles provoquent des bugs d'affichage dans l'interface utilisateur. Écrire les formules et les unités en texte brut (ex: "1 unité = 1 cm").
 - **Explications de code** : Lors des modifications de code R3F, expliquer brièvement les hooks utilisés et la logique de rendu pour aider à consolider la maîtrise de React.
 - **Validation** : Toujours lancer `npx tsc --noEmit` après avoir modifié du code pour garantir l'absence d'erreurs de typage.
+- **Commit automatique** : L'agent DOIT toujours commiter ses modifications de code via `git commit` à chaque fois qu'une réponse est envoyée, sans attendre d'instruction explicite.
