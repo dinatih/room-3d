@@ -203,16 +203,19 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
   useLayoutEffect(() => {
     if (attachTo && scene) {
       // Remove any previously attached hair armatures to prevent duplicate wigs
-      const existingWigs = attachTo.children.filter((c: any) => c.userData.isWigRoot);
-      existingWigs.forEach((w: any) => attachTo.remove(w));
+      const existingWigs = attachTo.children.filter((c: any) => c.userData.isWigRoot || /^[0-9]+$/.test(c.name) || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_'));
+      
+      console.log(`[Wig Setup] attaching scene ${scene.name} (uuid: ${scene.uuid}). headBone currently has ${attachTo.children.length} children:`, attachTo.children.map((c: any) => c.name));
+      if (existingWigs.length > 0) {
+        console.log(`[Wig Setup] removing ${existingWigs.length} old wigs:`, existingWigs.map((w: any) => w.name));
+        existingWigs.forEach((w: any) => attachTo.remove(w));
+      }
 
       attachTo.add(scene);
-      console.log(`[Wig Debug] Attached to headBone. Total children on headBone: ${attachTo.children.length}`);
-      const wigs = attachTo.children.filter((c: any) => c.name === scene.name || c === scene);
-      console.log(`[Wig Debug] Wigs on headBone: ${wigs.length}`);
     }
     return () => {
       if (attachTo && scene) {
+        console.log(`[Wig Cleanup] removing scene ${scene.name} (uuid: ${scene.uuid})`);
         attachTo.remove(scene);
       }
     };

@@ -1434,7 +1434,9 @@ function SingleCharacter({
     }
 
     if (haircut === 'original') {
-      const ghostWigs = headBone.children.filter((c: any) => c.userData.isWigRoot);
+      const ghostWigs = headBone.children.filter((c: any) => c.userData.isWigRoot || /^[0-9]+$/.test(c.name) || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_'));
+      console.log(`[Wig Sweep] haircut=original. headBone children:`, headBone.children.map(c => c.name));
+      console.log(`[Wig Sweep] found ghosts:`, ghostWigs.map(w => w.name));
       ghostWigs.forEach((w: any) => headBone.remove(w));
     }
 
