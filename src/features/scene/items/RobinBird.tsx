@@ -41,6 +41,9 @@ export function RobinBird({ isPreview = false, previewAnim = '' }: { isPreview?:
         const mat = m.material as THREE.MeshStandardMaterial;
         mat.metalness = 0;
         mat.roughness = 0.8;
+        mat.transparent = false;
+        mat.alphaTest = 0.5;
+        mat.depthWrite = true;
       }
     });
 
