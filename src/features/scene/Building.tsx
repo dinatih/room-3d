@@ -1295,8 +1295,8 @@ function RedPVCCorridor() {
         <primitive object={mat} attach="material" />
       </mesh>
       
-      {/* Plafond dalle béton jaune (20cm d'épaisseur, base à WALL_H) */}
-      <mesh position={[0, WALL_H + 10, 0]} castShadow receiveShadow userData={{ brickType: 'ceiling' }}>
+      {/* Dalle béton jaune en dessous du couloir PVC (20cm d'épaisseur, base supérieure à y=0) */}
+      <mesh position={[0, -10, 0]} castShadow receiveShadow userData={{ brickType: 'floor' }}>
         <boxGeometry args={[TOTAL_LENGTH, 20, WIDTH]} />
         <primitive object={yellowCeilMat} attach="material" />
       </mesh>
