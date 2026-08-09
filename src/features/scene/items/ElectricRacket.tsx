@@ -16,10 +16,26 @@ export function ElectricRacket({ onSize }: SceneItemProps) {
     const size = glbLocalBBox(scene);
 
     if (size.max.x - size.min.x > 0 && size.max.y - size.min.y > 0 && size.max.z - size.min.z > 0) {
-      // Deform to 24 wide, 43 high. We'll scale Z proportionally to Y or X.
-      // Let's use 2 as a fixed depth or scale it proportionally to the height.
-      const scaleZ = 2 / (size.max.z - size.min.z); 
-      scene.scale.set(24 / (size.max.x - size.min.x), 43 / (size.max.y - size.min.y), scaleZ);
+      const sx = size.max.x - size.min.x;
+      const sy = size.max.y - size.min.y;
+      const sz = size.max.z - size.min.z;
+
+      const targetScale: Record<'x' | 'y' | 'z', number> = { x: 1, y: 1, z: 1 };
+      
+      const dims = [
+        { axis: 'x' as const, val: sx },
+        { axis: 'y' as const, val: sy },
+        { axis: 'z' as const, val: sz },
+      ].sort((a, b) => b.val - a.val); // Longest first
+
+      // Longest -> length (43)
+      targetScale[dims[0].axis] = 43 / dims[0].val;
+      // Middle -> width (24)
+      targetScale[dims[1].axis] = 24 / dims[1].val;
+      // Shortest -> thickness (2)
+      targetScale[dims[2].axis] = 2 / dims[2].val;
+      
+      scene.scale.set(targetScale.x, targetScale.y, targetScale.z);
     }
 
     scene.updateMatrixWorld(true);
