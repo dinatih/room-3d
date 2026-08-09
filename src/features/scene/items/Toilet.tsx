@@ -21,9 +21,13 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
   const seatHingeRef = useRef<THREE.Group | null>(null);
   const buttonRef = useRef<THREE.Object3D | null>(null);
 
-  const isLidOpen = !!actionState?.['wc-lid-toggle'];
-  const isSeatOpen = !!actionState?.['wc-seat-toggle'];
-  const isFlushing = !!actionState?.['wc-flush'];
+  const isLidOpenRef = useRef(!!actionState?.['wc-lid-toggle']);
+  const isSeatOpenRef = useRef(!!actionState?.['wc-seat-toggle']);
+  const isFlushingRef = useRef(!!actionState?.['wc-flush']);
+  
+  isLidOpenRef.current = !!actionState?.['wc-lid-toggle'];
+  isSeatOpenRef.current = !!actionState?.['wc-seat-toggle'];
+  isFlushingRef.current = !!actionState?.['wc-flush'];
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -103,17 +107,17 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
 
   useFrame((_, delta) => {
     if (lidHingeRef.current) {
-      const targetLidAngle = isLidOpen ? -Math.PI / 2.2 : 0;
+      const targetLidAngle = isLidOpenRef.current ? -Math.PI / 2.2 : 0;
       lidHingeRef.current.rotation.x += (targetLidAngle - lidHingeRef.current.rotation.x) * 10 * delta;
     }
     
     if (seatHingeRef.current) {
-      const targetSeatAngle = isSeatOpen ? -Math.PI / 2.2 : 0;
+      const targetSeatAngle = isSeatOpenRef.current ? -Math.PI / 2.2 : 0;
       seatHingeRef.current.rotation.x += (targetSeatAngle - seatHingeRef.current.rotation.x) * 10 * delta;
     }
 
     if (buttonRef.current && buttonRef.current.userData.originalZ !== undefined) {
-      const targetZ = isFlushing ? buttonRef.current.userData.originalZ - 0.03 : buttonRef.current.userData.originalZ;
+      const targetZ = isFlushingRef.current ? buttonRef.current.userData.originalZ - 0.03 : buttonRef.current.userData.originalZ;
       buttonRef.current.position.z += (targetZ - buttonRef.current.position.z) * 15 * delta;
     }
   });
