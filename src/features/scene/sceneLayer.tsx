@@ -21,7 +21,7 @@
  */
 import { useRef, useLayoutEffect, useEffect } from 'react';
 import * as THREE from 'three';
-import { useThree, useFrame } from '@react-three/fiber';
+import { useThree } from '@react-three/fiber';
 import {
   LAYER_STRUCTURE, LAYER_EQUIPMENT, LAYER_FURNITURE,
   LAYER_NEIGHBORS, LAYER_LIDAR, LAYER_MIRRORS, LAYER_WALKER
@@ -75,16 +75,9 @@ export function CategoryLayerGroup({
  * Un seul composant remplace tous les <group visible={layers.X}> de catégorie.
  */
 export function SceneLayerController({ layers }: { layers: SceneLayers }) {
-  const { camera, invalidate, gl } = useThree();
+  const { camera, invalidate } = useThree();
 
-  useFrame(() => {
-    if (gl.xr && gl.xr.isPresenting) {
-      const mask = camera.layers.mask;
-      gl.xr.getCamera().cameras.forEach(c => {
-        c.layers.mask = mask;
-      });
-    }
-  });
+
 
   useEffect(() => {
     // LAYER_GLB (4) est géré par React visible sur les groupes GLB, pas camera.layers

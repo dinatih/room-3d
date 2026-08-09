@@ -138,6 +138,15 @@ export function VRMode() {
     gl.xr.addEventListener('sessionstart', onSessionStart);
     gl.xr.addEventListener('sessionend',   onSessionEnd);
 
+    // ── Touch fallback pour avancer (si le controller WebXR échoue sur certains mobiles) ──
+    const onWalkStart = () => { walkingRef.current = true; };
+    const onWalkEnd   = () => { walkingRef.current = false; };
+
+    window.addEventListener('touchstart', onWalkStart);
+    window.addEventListener('touchend',   onWalkEnd);
+    window.addEventListener('mousedown',  onWalkStart);
+    window.addEventListener('mouseup',    onWalkEnd);
+
     return () => {
       obs.disconnect();
       btn.remove();
@@ -148,6 +157,12 @@ export function VRMode() {
       gl.xr.enabled = false;
       gl.xr.removeEventListener('sessionstart', onSessionStart);
       gl.xr.removeEventListener('sessionend',   onSessionEnd);
+      
+      window.removeEventListener('touchstart', onWalkStart);
+      window.removeEventListener('touchend',   onWalkEnd);
+      window.removeEventListener('mousedown',  onWalkStart);
+      window.removeEventListener('mouseup',    onWalkEnd);
+
       rig.remove(ctrl);
       scene.remove(rig);
       rigRef.current = null;

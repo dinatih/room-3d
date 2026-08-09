@@ -65,11 +65,11 @@ export const DiagWall = {
 
 // Layers Three.js
 export const LAYER_STRUCTURE  = 0; // Murs, sol, plafond
-export const LAYER_EQUIPMENT  = 1; // WC, douche, évier, chauffe-eau…
-export const LAYER_FURNITURE  = 2; // Lit, tables, chaises, étagères…
-export const LAYER_NETWORKS   = 3; // Tuyauterie, électricité (optionnel)
-export const LAYER_NEIGHBORS  = 4; // Appartements voisins (fantôme)
-export const LAYER_LIDAR      = 5; // Scan LiDAR
-export const LAYER_WALKER_DETAIL = 6; // Meshes walker masqués en main camera (FPS) mais visibles dans miroirs (yeux, peau visage)
-export const LAYER_MIRRORS       = 7; // Miroirs NISSEDAL / Reflector
-export const LAYER_WALKER        = 8; // Personnages 3D
+export const LAYER_EQUIPMENT  = 11; // WC, douche, évier, chauffe-eau…
+export const LAYER_FURNITURE  = 12; // Lit, tables, chaises, étagères…
+export const LAYER_NETWORKS   = 13; // Tuyauterie, électricité (optionnel)
+export const LAYER_NEIGHBORS  = 14; // Appartements voisins (fantôme)
+export const LAYER_LIDAR      = 15; // Scan LiDAR
+export const LAYER_WALKER_DETAIL = 16; // Meshes walker masqués en main camera (FPS) mais visibles dans miroirs (yeux, peau visage)
+export const LAYER_MIRRORS       = 17; // Miroirs NISSEDAL / Reflector
+export const LAYER_WALKER        = 18; // Personnages 3D
