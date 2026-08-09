@@ -180,7 +180,7 @@ export function Equipment() {
       <group position={[DOOR_START - 84, 14, KITCHEN_Z + PARTITION_THICKNESS + 24.5]} userData={{ animUnit: true, isIkea: true }}>
         <VasqueSdb item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[NICHE_X + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5]} userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'WC President', actions: ['wc-lid-toggle', 'wc-seat-toggle', 'wc-flush'] } }}>
+      <group position={[NICHE_X + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5]} userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'WC President', actions: ['wc-lid-toggle', 'wc-seat-toggle', 'wc-flush'] } }}>
         <Toilet item={stub('toilet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group visible={!!as['lamp-sdb-toggle']} position={[SDB_CX, WALL_H - 10, SDB_CZ]} rotation={[Math.PI, 0, 0]}>

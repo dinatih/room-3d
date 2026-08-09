@@ -84,7 +84,11 @@ const slabConcreteTop = new THREE.MeshStandardMaterial({
 const slabConcreteSide = new THREE.MeshStandardMaterial({
   color: COLORS.floor, roughness: 0.6, side: THREE.FrontSide,
 });
-const groundExteriorMat = new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 0.9, transparent: true, opacity: 0.8 });
+const groundTex = new THREE.TextureLoader().load('media/textures/grass_fdfd.png');
+groundTex.wrapS = THREE.RepeatWrapping;
+groundTex.wrapT = THREE.RepeatWrapping;
+groundTex.repeat.set(50, 100);
+const groundExteriorMat = new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.9 });
 
 // westMats : face -X (index 1) invisible ; eastMats : face +X (index 0) invisible
 // northMats : face -Z (index 5) invisible (face extérieure nord, vue de Z<0)
