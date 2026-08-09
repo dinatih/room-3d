@@ -16,7 +16,11 @@ import * as THREE from 'three';
 export function useGLTFClone(path: string): { scene: THREE.Group; animations: THREE.AnimationClip[] } {
   const gltf = useGLTF(path);
   const scene = useMemo(() => {
-    return SkeletonUtils.clone(gltf.scene) as THREE.Group;
+    const cloned = SkeletonUtils.clone(gltf.scene) as THREE.Group;
+    cloned.traverse((c: any) => {
+      c.frustumCulled = false;
+    });
+    return cloned;
   }, [gltf.scene]);
   return { scene, animations: gltf.animations };
 }
