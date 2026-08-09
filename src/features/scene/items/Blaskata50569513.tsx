@@ -23,7 +23,8 @@ export function Blaskata50569513({ onSize, ...props }: SceneItemProps) {
         const m = c as THREE.Mesh;
         if (m.material) {
           const mat = m.material as THREE.MeshStandardMaterial;
-          mat.color = new THREE.Color(0xaa1111); // Red
+          mat.color = new THREE.Color(0xff2222); // Rouge vif
+          mat.roughness = 0.8;
         }
       }
     });
