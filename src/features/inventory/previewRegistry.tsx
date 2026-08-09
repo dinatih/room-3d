@@ -171,6 +171,6 @@ CHARACTERS.forEach(char => {
   } as any;
 });
 
-SCENE_REGISTRY['ushiro'] = function UshiroPreview() {
-  return <ShibaInu />;
+SCENE_REGISTRY['ushiro'] = function UshiroPreview({ actionState }: { actionState?: any }) {
+  return <ShibaInu isPreview={true} previewAnim={actionState?.walkerAnim} showSkeletonPreview={actionState?.showBones} />;
 } as any;

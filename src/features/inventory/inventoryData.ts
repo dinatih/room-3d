@@ -232,6 +232,17 @@ export const INVENTORY: InventoryItem[] = [
 
 import { CHARACTERS } from '@features/scene/Walker';
 
+INVENTORY.push({
+  id: 'ushiro',
+  name: 'Chien Ushiro (Shiba Inu)',
+  brand: 'Animal',
+  category: 'walkers',
+  qty: 1,
+  dims: { w: 40, d: 80, h: 40 },
+  glbPath: 'models/shiba_inu_blender.glb',
+  notes: `Personnage : Chien Shiba Inu (Ushiro).`
+});
+
 CHARACTERS.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
     INVENTORY.push({
@@ -247,16 +258,6 @@ CHARACTERS.forEach(char => {
   }
 });
 
-INVENTORY.push({
-  id: 'ushiro',
-  name: 'Ushiro (Shiba Inu)',
-  brand: 'Animal',
-  category: 'walkers',
-  qty: 1,
-  dims: { w: 40, d: 80, h: 40 },
-  glbPath: 'models/shiba_inu_blender.glb',
-  notes: `Personnage : Shiba Inu (Ushiro).`
-});
 
 export const STORAGE_SPACES: StorageSpace[] = [
   { id: 'kallax-ne-stack', name: 'Kallax NE',       dims: { w: 75.5, d: 39, h: 222 }, notes: 'Coin mur C+B — 2×1 bas + 2×2 haut empilés, 6 Drona + 1 dessus' },

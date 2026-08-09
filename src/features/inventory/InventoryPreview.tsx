@@ -229,12 +229,28 @@ export function InventoryPreview({
             <div style={{ position: 'absolute', top: 40, left: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }} onClick={e => e.stopPropagation()}>
               <button onClick={() => setActionStates(s => ({ ...s, showBones: !s.showBones }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.showBones ? '#0058a3' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}</button>
               <button onClick={() => setActionStates(s => ({ ...s, isPaused: !s.isPaused }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.isPaused ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.isPaused ? '▶️ Play' : '⏸️ Pause'}</button>
-              <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📐 T-Pose</button>
+              
+              {item.id !== 'ushiro' && (
+                <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📐 T-Pose</button>
+              )}
+              
               <select value={actionStates.walkerAnim || 'idle'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
-                <option value="tpose">T-Pose (Rest)</option>
-                <option value="idle">Idle</option>
-                <option value="walk">Walking</option>
-                <option value="run">Running</option>
+                {item.id === 'ushiro' ? (
+                  <>
+                    <option value="idle">Idle</option>
+                    <option value="jump">Jump</option>
+                    <option value="run">Run</option>
+                    <option value="sitdown">SitDown</option>
+                    <option value="walk">Walk</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="tpose">T-Pose (Rest)</option>
+                    <option value="idle">Idle</option>
+                    <option value="walk">Walking</option>
+                    <option value="run">Running</option>
+                  </>
+                )}
               </select>
             </div>
           )}
