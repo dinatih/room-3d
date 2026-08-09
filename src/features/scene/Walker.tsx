@@ -1417,7 +1417,7 @@ function SingleCharacter({
           mats.forEach((m2: THREE.Material) => {
             const matName = m2.name.toLowerCase();
             const isBraid = meshName.includes('braid') || meshName.includes('pony') || matName.includes('braid') || matName.includes('pony');
-            const isOriginalHair = (meshName.includes('hair') || isBraid || matName.includes('hair')) && !m.userData.isCustomHair;
+            const isOriginalHair = (meshName.includes('hair') || isBraid || matName.includes('hair') || matName.includes('scalp')) && !m.userData.isCustomHair;
 
             if (isOriginalHair) {
               const show = haircut === 'original' && !(variant === 'angelina' && isBraid);
@@ -1934,7 +1934,7 @@ function SingleCharacter({
                 }
 
                 // Tête (Sphère douce)
-                if (headBoneRef.current && worldLength > 1.0) {
+                if (headBoneRef.current && activeHairChain !== customHairChainRef.current) {
                   const center = new THREE.Vector3().setFromMatrixPosition(headBoneRef.current.matrixWorld).addScaledVector(backDir, 4);
                   const radius = 13.0;
                   const dist = next.distanceTo(center);
@@ -1942,7 +1942,7 @@ function SingleCharacter({
                 }
 
                 // Sac à dos (Collider Rectangulaire Plat OBB)
-                if (spine2BoneRef.current && worldLength > 1.0) {
+                if (spine2BoneRef.current && activeHairChain !== customHairChainRef.current) {
                   const backpackCenter = new THREE.Vector3().setFromMatrixPosition(spine2BoneRef.current.matrixWorld).addScaledVector(backDir, 11);
                   // Dimensions du rectangle du sac à dos (Demi-largeur = 14cm, Demi-hauteur = 18cm, Épaisseur arrière = 8cm)
                   const localPos = new THREE.Vector3().subVectors(next, backpackCenter);
