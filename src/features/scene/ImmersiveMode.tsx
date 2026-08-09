@@ -32,6 +32,7 @@ export function ImmersiveMode() {
   const walking = useRef(false);
   const pos     = useRef(new THREE.Vector3(ROOM_W / 2, activeWalkH(), ROOM_D / 2));
   const orient  = useRef<{ alpha: number; beta: number; gamma: number } | null>(null);
+  const alphaOffset = useRef<number | null>(null);
 
   useEffect(() => {
     // Desktop : rien à faire
@@ -76,6 +77,11 @@ export function ImmersiveMode() {
     // ── DeviceOrientation ──────────────────────────────────────────────────────
     const onOrient = (e: DeviceOrientationEvent) => {
       if (!active.current) return;
+      if (alphaOffset.current === null && e.alpha !== null) {
+        // On the very first event, we calculate the offset so that the device faces X=0 (Wall A, Mirror)
+        // Face X=0 means Y-rotation of +90 degrees.
+        alphaOffset.current = e.alpha - 90;
+      }
       orient.current = {
         alpha: e.alpha ?? 0,
         beta:  e.beta  ?? 0,
@@ -101,8 +107,9 @@ export function ImmersiveMode() {
     async function enter() {
       active.current   = true;
       cameraState.isXR = true;
-      pos.current.set(cameraState.camX, activeWalkH(), cameraState.camZ);
+      pos.current.set(ROOM_W / 2, activeWalkH(), ROOM_D / 2);
       orient.current   = null;
+      alphaOffset.current = null;
       btn.textContent  = '✕ Quitter';
 
       try {
@@ -128,6 +135,7 @@ export function ImmersiveMode() {
       walking.current  = false;
       cameraState.isXR = false;
       orient.current   = null;
+      alphaOffset.current = null;
       btn.textContent  = '👁 Immersif';
 
       window.removeEventListener('deviceorientation', onOrient);
@@ -164,7 +172,7 @@ export function ImmersiveMode() {
     if (o) {
       const euler = new THREE.Euler(
         THREE.MathUtils.degToRad(o.beta),
-        THREE.MathUtils.degToRad(o.alpha),
+        THREE.MathUtils.degToRad(o.alpha - (alphaOffset.current || 0)),
         THREE.MathUtils.degToRad(-o.gamma),
         'YXZ',
       );
