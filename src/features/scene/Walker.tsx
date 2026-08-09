@@ -1659,12 +1659,6 @@ function SingleCharacter({
         mixer.update(delta);
 
         // Physique réactive & Gravité universelle (sans vent/bruit continu au repos)
-        const isPhysicsActive = useSceneStore.getState().layers.hairPhysics;
-        if (!isPhysicsActive && customHairChainRef.current.length > 0) {
-          for (const node of customHairChainRef.current) {
-            node.bone.quaternion.copy(node.restQuat);
-          }
-        }
 
         // Reset / Application des expressions faciales dynamiques
         const currentExpr = expressionRef.current as string;
@@ -1837,6 +1831,14 @@ function SingleCharacter({
         const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
         const activeHairChain = (haircut !== 'original' && customHairChainRef.current.length > 0) ? customHairChainRef.current : hairChainRef.current;
         
+        if (!enableHairPhysics && activeHairChain.length > 0) {
+          for (const node of activeHairChain) {
+            if (node.restQuat) {
+              node.bone.quaternion.copy(node.restQuat);
+            }
+          }
+        }
+
         if (!(window as any)._hairDebugLogged && activeHairChain.length > 0) {
           console.log(`[HairPhysics] Active chain length: ${activeHairChain.length}, isCustom: ${activeHairChain === customHairChainRef.current}`);
           (window as any)._hairDebugLogged = true;
