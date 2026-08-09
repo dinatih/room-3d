@@ -64,6 +64,7 @@ import { ElectricRacket }                             from '@features/scene/item
 import { Drona }                                      from '@features/scene/items/Drona';
 import { Walker, CHARACTERS }                         from '@features/scene/Walker';
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
+import { RobinBird }                                  from '@features/scene/items/RobinBird';
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
   'freezer':                Freezer,
@@ -177,4 +178,8 @@ CHARACTERS.forEach(char => {
 
 SCENE_REGISTRY['ushiro'] = function UshiroPreview({ actionState }: { actionState?: any }) {
   return <ShibaInu isPreview={true} previewAnim={actionState?.walkerAnim} showSkeletonPreview={actionState?.showBones} />;
+} as any;
+
+SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview() {
+  return <RobinBird isPreview={true} />;
 } as any;

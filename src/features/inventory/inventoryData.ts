@@ -244,6 +244,17 @@ INVENTORY.push({
   notes: `Personnage : Chien Shiba Inu (Ushiro).`
 });
 
+INVENTORY.push({
+  id: 'robin-bird',
+  name: 'Oiseau Robin',
+  brand: 'Animal',
+  category: 'walkers',
+  qty: 1,
+  dims: { w: 10, d: 10, h: 10 },
+  glbPath: 'media/glb/robin_bird.glb',
+  notes: `Personnage : Oiseau Robin.`
+});
+
 CHARACTERS.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
     INVENTORY.push({

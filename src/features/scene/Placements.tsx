@@ -67,6 +67,7 @@ import { PottedPalm }   from './items/PottedPalm';
 
 import { JoggingSuit }  from './items/JoggingSuit';
 import { ShibaInu }    from './items/ShibaInu';
+import { RobinBird }   from './items/RobinBird';
 import { Tisken }        from './items/Tisken';
 import { Tackan }        from './items/Tackan';
 import { Vathult }       from './items/Vathult';
@@ -603,6 +604,10 @@ export function Garden() {
       </group>
       <group position={[120, 0, -250]} rotation={[0, 1, 0]} userData={{ animUnit: true }}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+
+      <group position={[110, 50, -245]} rotation={[0, Math.PI / 4, 0]} userData={{ hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
+        <RobinBird />
       </group>
 
       <group position={[100, 0, -145]} userData={{ animUnit: true }}>

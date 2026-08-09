@@ -236,6 +236,7 @@ const ACTIONS: Record<string, ActionDef> = {
   'desk2-position':{ btnLabel: () => { const p = positionState['desk2-position'];   return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'desk2-position'},
   'smorkull-position': { btnLabel: () => { const p = positionState['smorkull-position']; return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'smorkull-position' },
   'shiba-replay':      { btnLabel: 'Rejouer',           toggleKey: 'shiba-replay'      },
+  'robin-bird-replay': { btnLabel: 'Rejouer',           toggleKey: 'robin-bird-replay' },
   'nestMini':          { btnLabel: 'Ok Google',         toggleKey: 'nestMini'          },
   'tv':                { btnLabel: 'Allumer / Éteindre', toggleKey: 'tvOn'             },
   'bin':               { btnLabel: 'Ouvrir / Fermer',   toggleKey: 'bin-toggle'       },
