@@ -4,6 +4,7 @@ import { useGLTF, useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
+import { cameraState } from '@features/scene/cameraState';
 
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
 
@@ -193,6 +194,16 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
           }
         }
       }
+    }
+    
+    
+    if (!isPreview) {
+      cameraState.positions['shiba'] = {
+        x: modelRef.current.position.x,
+        y: modelRef.current.position.y,
+        z: modelRef.current.position.z,
+        yaw: modelRef.current.rotation.y
+      };
     }
     
     mixerRef.current.update(delta);

@@ -123,6 +123,27 @@ function drawMinimap(
   });
   ctx.restore();
 
+  // ── Shiba Inu (Ushiro) ──────────────────────────────────────────────────────
+  const shibaPos = cameraState.positions['shiba'];
+  if (shibaPos) {
+    ctx.save();
+    ctx.translate(tx(shibaPos.x), tz(shibaPos.z));
+    ctx.rotate(-shibaPos.yaw);
+    ctx.fillStyle = 'rgba(255, 153, 0, 0.8)'; // Orange
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 1 * sc;
+    ctx.beginPath(); 
+    ctx.arc(0, 0, R * 0.8, 0, Math.PI * 2); 
+    ctx.fill(); 
+    ctx.stroke();
+    // Petit museau pour indiquer la direction
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(0, -R * 0.8, R * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   // ── Walker icon ────────────────────────────────────────────────────────────
   const w = { x: cameraState.walkerX, z: cameraState.walkerZ, yaw: cameraState.walkerYaw };
   
