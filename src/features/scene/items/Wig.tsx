@@ -105,17 +105,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
 
   const hairBonesRef = useRef<WigBone[]>([]);
   
-  useFrame((state) => {
-    if (hairBonesRef.current.length > 0) {
-      const rootBone = hairBonesRef.current[0].bone;
-      if (!(window as any)._spinLogged) {
-        console.log("[Wig] Violent spin test activated on bone:", rootBone.name);
-        (window as any)._spinLogged = true;
-      }
-      rootBone.rotation.x = state.clock.elapsedTime * 15; // Violently spin like a helicopter
-    }
-  });
-
   useLayoutEffect(() => {
     if (!scene) return;
 
@@ -147,7 +136,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       
       if ((child as THREE.Mesh).isMesh) {
         const m = child as THREE.Mesh;
-        m.visible = true;
         m.castShadow = true;
         m.receiveShadow = true;
         m.renderOrder = 1;
@@ -214,6 +202,9 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
   useLayoutEffect(() => {
     if (attachTo && scene) {
       attachTo.add(scene);
+      console.log(`[Wig Debug] Attached to headBone. Total children on headBone: ${attachTo.children.length}`);
+      const wigs = attachTo.children.filter(c => c.name === scene.name || c === scene);
+      console.log(`[Wig Debug] Wigs on headBone: ${wigs.length}`);
     }
     return () => {
       if (attachTo && scene) {

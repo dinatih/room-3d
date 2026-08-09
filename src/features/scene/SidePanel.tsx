@@ -641,7 +641,35 @@ export function SidePanel({
           </div>
 
           <div>
-            <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>💇‍♀️ Coupe de cheveux</div>
+            
+          <div className="mb-2">
+            <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🎨 Couleur des cheveux</div>
+            <select
+              className="form-select form-select-sm bg-transparent text-dark border-secondary"
+              style={{ fontSize: isMobile ? '14px' : '11px' }}
+              defaultValue="rose"
+              onChange={(e) => {
+                const val = e.target.value;
+                document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircolor', value: val } }));
+                e.target.blur();
+              }}
+            >
+              <option value="rose" className="bg-light text-dark">Rose</option>
+              <option value="naturel" className="bg-light text-dark">Naturel</option>
+              <option value="noir" className="bg-light text-dark">Noir</option>
+              <option value="brun" className="bg-light text-dark">Brun</option>
+              <option value="chatain" className="bg-light text-dark">Châtain</option>
+              <option value="blond" className="bg-light text-dark">Blond</option>
+              <option value="roux" className="bg-light text-dark">Roux</option>
+              <option value="rouge" className="bg-light text-dark">Rouge</option>
+              <option value="bleu" className="bg-light text-dark">Bleu</option>
+              <option value="vert" className="bg-light text-dark">Vert</option>
+              <option value="violet" className="bg-light text-dark">Violet</option>
+              <option value="arc-en-ciel" className="bg-light text-dark">Arc-en-ciel</option>
+            </select>
+          </div>
+
+          <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>💇‍♀️ Coupe de cheveux</div>
             <select
               className="form-select form-select-sm bg-transparent text-dark border-secondary"
               style={{ fontSize: isMobile ? '14px' : '11px' }}

@@ -754,6 +754,7 @@ function SingleCharacter({
   });
 
   const [haircut, setHaircut] = useState<string>('original');
+  const [hairColor, setHairColor] = useState<string>('rose');
 
   useEffect(() => {
     if (variant === 'lgbta') {
@@ -1310,6 +1311,9 @@ function SingleCharacter({
           }
         });
       }
+      if (e.detail.key === 'lara-haircolor') {
+        setHairColor(e.detail.value);
+      }
       if (e.detail.key === 'lara-haircut') {
         setHaircut(e.detail.value || 'original');
         invalidate();
@@ -1387,19 +1391,32 @@ function SingleCharacter({
     scene.traverse(o => {
       if ((o as THREE.Mesh).isMesh) {
         const m = o as THREE.Mesh;
+        
+        // Clone materials once per instance so visibility doesn't affect other characters
+        if (m.material && !m.userData.materialsCloned) {
+          if (Array.isArray(m.material)) {
+            m.material = m.material.map(mat => mat.clone());
+          } else {
+            m.material = (m.material as THREE.Material).clone();
+          }
+          m.userData.materialsCloned = true;
+        }
+
         const meshName = (m.name || '').toLowerCase();
         const mat = m.material;
-        const matName = mat ? (Array.isArray(mat) ? (mat[0]?.name || '').toLowerCase() : (mat.name || '').toLowerCase()) : '';
-        const isBraid = meshName.includes('braid') || meshName.includes('pony') || matName.includes('braid') || matName.includes('pony');
-        const isOriginalHair = (meshName.includes('hair') || isBraid || matName.includes('hair')) && !m.userData.isCustomHair;
 
-        if (isOriginalHair) {
-          const show = haircut === 'original' && !(variant === 'angelina' && isBraid);
-          m.visible = show;
-          if (mat) {
-            const mats = Array.isArray(mat) ? mat : [mat];
-            mats.forEach(mt => { if (mt) mt.visible = show; });
-          }
+        if (mat) {
+          const mats = Array.isArray(mat) ? mat : [mat];
+          mats.forEach((m2: THREE.Material) => {
+            const matName = m2.name.toLowerCase();
+            const isBraid = meshName.includes('braid') || meshName.includes('pony') || matName.includes('braid') || matName.includes('pony');
+            const isOriginalHair = (meshName.includes('hair') || isBraid || matName.includes('hair')) && !m.userData.isCustomHair;
+
+            if (isOriginalHair) {
+              const show = haircut === 'original' && !(variant === 'angelina' && isBraid);
+              m2.visible = show;
+            }
+          });
         }
       }
     });
@@ -1855,7 +1872,7 @@ function SingleCharacter({
               }
 
               const isHeadMoving = isMoving || (target !== 'idle') || (walkerAnim && walkerAnim.toLowerCase().includes('walk')) || (walkerAnim && walkerAnim.toLowerCase().includes('run'));
-              const dampingFactor = isHeadMoving ? 0.35 : 0.65;
+              const dampingFactor = isHeadMoving ? 0.75 : 0.85;
 
               const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - dampingFactor));
               const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
@@ -2063,6 +2080,7 @@ function SingleCharacter({
       {headBoneState && haircut !== 'original' && (
         <Wig 
           id={haircut.replace('hair_', '')}
+          color={hairColor}
           onBonesExtracted={(bones) => {
             console.log(`[Wig] Passing ${bones.length} bones to buildHairChain`);
             customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
