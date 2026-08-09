@@ -42,30 +42,54 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
     const seat = scene.getObjectByName('seat');
     const button = scene.getObjectByName('button');
 
-    if (lid && !lidHingeRef.current) {
+    if (lid && !lidHingeRef.current && lid.parent) {
       const box = glbLocalBBox(lid);
       const hinge = new THREE.Group();
-      // Hinge at the back (min Z) and top (max Y)
-      hinge.position.set(0, box.max.y, box.min.z);
-      scene.add(hinge);
+      
+      hinge.position.copy(lid.position);
+      hinge.rotation.copy(lid.rotation);
+      hinge.scale.copy(lid.scale);
+      
+      // Pivot offset in local space
+      hinge.translateX(0);
+      hinge.translateY(box.max.y);
+      hinge.translateZ(box.min.z);
+
+      lid.parent.add(hinge);
+
       lid.position.set(0, -box.max.y, -box.min.z);
+      lid.rotation.set(0, 0, 0);
+      lid.scale.set(1, 1, 1);
       hinge.add(lid);
+      
       lidHingeRef.current = hinge;
     }
 
-    if (seat && !seatHingeRef.current) {
+    if (seat && !seatHingeRef.current && seat.parent) {
       const box = glbLocalBBox(seat);
       const hinge = new THREE.Group();
-      hinge.position.set(0, box.max.y, box.min.z);
-      scene.add(hinge);
+      
+      hinge.position.copy(seat.position);
+      hinge.rotation.copy(seat.rotation);
+      hinge.scale.copy(seat.scale);
+      
+      hinge.translateX(0);
+      hinge.translateY(box.max.y);
+      hinge.translateZ(box.min.z);
+
+      seat.parent.add(hinge);
+      
       seat.position.set(0, -box.max.y, -box.min.z);
+      seat.rotation.set(0, 0, 0);
+      seat.scale.set(1, 1, 1);
       hinge.add(seat);
+
       seatHingeRef.current = hinge;
     }
 
     if (button) {
       buttonRef.current = button;
-      button.userData.originalY = button.position.y;
+      button.userData.originalZ = button.position.z;
     }
 
     const box = glbLocalBBox(scene);
@@ -88,9 +112,9 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
       seatHingeRef.current.rotation.x += (targetSeatAngle - seatHingeRef.current.rotation.x) * 10 * delta;
     }
 
-    if (buttonRef.current && buttonRef.current.userData.originalY !== undefined) {
-      const targetY = isFlushing ? buttonRef.current.userData.originalY - 0.03 : buttonRef.current.userData.originalY;
-      buttonRef.current.position.y += (targetY - buttonRef.current.position.y) * 15 * delta;
+    if (buttonRef.current && buttonRef.current.userData.originalZ !== undefined) {
+      const targetZ = isFlushing ? buttonRef.current.userData.originalZ - 0.03 : buttonRef.current.userData.originalZ;
+      buttonRef.current.position.z += (targetZ - buttonRef.current.position.z) * 15 * delta;
     }
   });
 

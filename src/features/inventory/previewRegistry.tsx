@@ -150,7 +150,7 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'bim-door-right-open':              ['Ouvrir Droit', 'Fermer Droit'],
   'wc-lid-toggle':         ['Ouvrir Couvercle', 'Fermer Couvercle'],
   'wc-seat-toggle':        ['Ouvrir Siège', 'Fermer Siège'],
-  'wc-flush':              ['Tirer la chasse', 'Relâcher la chasse'],
+  'wc-flush':              ['Appuyer sur la chasse', 'Relâcher la chasse'],
   'corr-doors-toggle':     ['Ouvrir', 'Fermer'],
   'sdb-closet-toggle':     ['Ouvrir', 'Fermer'],
   'ninja-toggle':          ['Ouvrir', 'Fermer'],
