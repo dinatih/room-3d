@@ -143,13 +143,13 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
             const rand = Math.random();
             let tx, tz;
             if (rand < 0.6) {
-              // Main Room (60%)
-              tx = 50 + Math.random() * 200;
-              tz = 50 + Math.random() * 300;
+              // Garden (60%)
+              tx = -50 + Math.random() * 400;  // X: -50 to 350
+              tz = -350 + Math.random() * 320; // Z: -350 to -30
             } else if (rand < 0.9) {
-              // Garden (30%)
-              tx = 50 + Math.random() * 200;
-              tz = -250 + Math.random() * 250;
+              // Main Room (30%)
+              tx = 50 + Math.random() * 200;   // X: 50 to 250
+              tz = 50 + Math.random() * 300;   // Z: 50 to 350
             } else {
               // Bathroom (10%)
               tx = 20 + Math.random() * 110;
