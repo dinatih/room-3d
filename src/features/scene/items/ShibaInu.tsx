@@ -75,6 +75,17 @@ export function ShibaInu() {
       const { key } = (e as CustomEvent).detail as { key: string };
       if (key === 'shiba-replay' && replayRef.current) {
         replayRef.current();
+      } else if (key.startsWith('shiba-play-') && mixerRef.current) {
+        const idx = parseInt(key.split('-')[2], 10);
+        if (!isNaN(idx) && animations[idx]) {
+          mixerRef.current.stopAllAction();
+          const action = mixerRef.current.clipAction(animations[idx]);
+          action.setLoop(THREE.LoopRepeat, Infinity);
+          action.clampWhenFinished = false;
+          action.reset().play();
+          playingRef.current = true;
+          invalidate();
+        }
       }
     };
     document.addEventListener('furniture-toggle', handler);
