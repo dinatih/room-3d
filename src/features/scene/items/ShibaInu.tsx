@@ -207,9 +207,6 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     }
     
     mixerRef.current.update(delta);
-    if (playingRef.current || (!isPreview && aiStateRef.current.mode === 'autonomous' && aiStateRef.current.state !== 'idle')) {
-      invalidate();
-    }
   });
 
   return (
