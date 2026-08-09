@@ -215,10 +215,10 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
 
   // 3. Animation du vent (Mannequin) et couleur arc-en-ciel
   useFrame((state) => {
-    if (color === 'arc-en-ciel' && clonedHairRef.current) {
+    if (color === 'arc-en-ciel' && scene) {
       const hue = (state.clock.elapsedTime * 0.2) % 1;
       const rainbow = new THREE.Color().setHSL(hue, 0.8, 0.5);
-      clonedHairRef.current.traverse((child: any) => {
+      scene.traverse((child: any) => {
         const m = child as THREE.Mesh;
         if (m.isMesh && m.material) {
           if (Array.isArray(m.material)) {
