@@ -139,7 +139,7 @@ function drawMinimap(
     // Petit museau pour indiquer la direction
     ctx.fillStyle = 'white';
     ctx.beginPath();
-    ctx.arc(0, -R * 0.8, R * 0.3, 0, Math.PI * 2);
+    ctx.arc(0, R * 0.8, R * 0.3, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
