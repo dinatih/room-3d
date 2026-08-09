@@ -64,58 +64,36 @@ export function Toilet({ onSize }: SceneItemProps) {
       }
     });
 
-    // Set up pivots for lid and seat
-    const lid = scene.getObjectByName('lid');
-    const seat = scene.getObjectByName('seat');
+    const setupHinge = (meshName: string, hingeRef: React.MutableRefObject<THREE.Group | null>) => {
+      const mesh = scene.getObjectByName(meshName);
+      if (mesh && !hingeRef.current && mesh.parent) {
+        const box = glbLocalBBox(mesh);
+        const hinge = new THREE.Group();
+        
+        hinge.position.copy(mesh.position);
+        hinge.rotation.copy(mesh.rotation);
+        hinge.scale.copy(mesh.scale);
+        
+        hinge.translateX(0);
+        hinge.translateY(box.max.y);
+        hinge.translateZ(box.min.z);
+
+        mesh.parent.add(hinge);
+
+        mesh.position.set(0, -box.max.y, -box.min.z);
+        mesh.rotation.set(0, 0, 0);
+        mesh.scale.set(1, 1, 1);
+        hinge.add(mesh);
+        
+        hingeRef.current = hinge;
+        hinge.userData.initialRotation = hinge.rotation.x;
+      }
+    };
+
+    setupHinge('lid', lidHingeRef);
+    setupHinge('seat', seatHingeRef);
+
     const button = scene.getObjectByName('button');
-
-    if (lid && !lidHingeRef.current && lid.parent) {
-      const box = glbLocalBBox(lid);
-      const hinge = new THREE.Group();
-      
-      hinge.position.copy(lid.position);
-      hinge.rotation.copy(lid.rotation);
-      hinge.scale.copy(lid.scale);
-      
-      // Pivot offset in local space
-      hinge.translateX(0);
-      hinge.translateY(box.max.y);
-      hinge.translateZ(box.min.z);
-
-      lid.parent.add(hinge);
-
-      lid.position.set(0, -box.max.y, -box.min.z);
-      lid.rotation.set(0, 0, 0);
-      lid.scale.set(1, 1, 1);
-      hinge.add(lid);
-      
-      lidHingeRef.current = hinge;
-      hinge.userData.initialRotation = hinge.rotation.x;
-    }
-
-    if (seat && !seatHingeRef.current && seat.parent) {
-      const box = glbLocalBBox(seat);
-      const hinge = new THREE.Group();
-      
-      hinge.position.copy(seat.position);
-      hinge.rotation.copy(seat.rotation);
-      hinge.scale.copy(seat.scale);
-      
-      hinge.translateX(0);
-      hinge.translateY(box.max.y);
-      hinge.translateZ(box.min.z);
-
-      seat.parent.add(hinge);
-      
-      seat.position.set(0, -box.max.y, -box.min.z);
-      seat.rotation.set(0, 0, 0);
-      seat.scale.set(1, 1, 1);
-      hinge.add(seat);
-
-      seatHingeRef.current = hinge;
-      hinge.userData.initialRotation = hinge.rotation.x;
-    }
-
     if (button) {
       buttonRef.current = button;
       button.userData.originalZ = button.position.z;
