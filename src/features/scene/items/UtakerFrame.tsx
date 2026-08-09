@@ -39,10 +39,10 @@ function RealisticBolsters({ topY, zOffset = -26 }: { topY: number; zOffset?: nu
           The Utaker bed is 80x200. We want the bolsters across the width? Or along the length?
           "traversins ... sur le lit" they were at X=-50 and X=50 with rotation Z=PI/2.
           Let's place Blaskata at the same spots. */}
-      <group position={[-50, 0, 0]} rotation={[0, 0, 0]} scale={1.25}>
+      <group position={[-50, 0, 0]} rotation={[0, 0, 0]}>
         <Blaskata50569513 item={{ id: 'blaskata' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[50, 0, 0]} rotation={[0, 0, 0]} scale={1.25}>
+      <group position={[50, 0, 0]} rotation={[0, 0, 0]}>
         <Blaskata50569513 item={{ id: 'blaskata' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>

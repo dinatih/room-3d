@@ -15,7 +15,8 @@ export function Blaskata50569513({ onSize, ...props }: SceneItemProps) {
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
-    scene.scale.setScalar(100);
+    scene.scale.setScalar(1);
+    scene.updateMatrixWorld(true);
     
     // Override material to red
     scene.traverse(c => {
@@ -30,7 +31,18 @@ export function Blaskata50569513({ onSize, ...props }: SceneItemProps) {
     });
 
     mergeGlbByMaterial(scene);
-    const box = glbLocalBBox(scene);
+    let box = glbLocalBBox(scene);
+    let size = box.getSize(new THREE.Vector3());
+    
+    // Force dimensions: 80cm length, 20cm diameter
+    const sx = size.x > size.y && size.x > size.z ? 80 / size.x : 20 / size.x;
+    const sy = size.y > size.x && size.y > size.z ? 80 / size.y : 20 / size.y;
+    const sz = size.z > size.x && size.z > size.y ? 80 / size.z : 20 / size.z;
+    scene.scale.set(sx, sy, sz);
+    
+    scene.updateMatrixWorld(true);
+    box = glbLocalBBox(scene);
+    
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
