@@ -7,7 +7,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
@@ -16,6 +16,7 @@ const GLB = 'media/glb/president_toilet_horizontal_outlet.glb';
 
 export function Toilet({ actionState, onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
+  const { invalidate } = useThree();
 
   const lidHingeRef = useRef<THREE.Group | null>(null);
   const seatHingeRef = useRef<THREE.Group | null>(null);
@@ -68,9 +69,6 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
       
       lidHingeRef.current = hinge;
       hinge.userData.initialRotation = hinge.rotation.x;
-      if ((lid as THREE.Mesh).material) {
-         ((lid as THREE.Mesh).material as THREE.MeshStandardMaterial).color = new THREE.Color('red');
-      }
     }
 
     if (seat && !seatHingeRef.current && seat.parent) {
@@ -94,9 +92,6 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
 
       seatHingeRef.current = hinge;
       hinge.userData.initialRotation = hinge.rotation.x;
-      if ((seat as THREE.Mesh).material) {
-         ((seat as THREE.Mesh).material as THREE.MeshStandardMaterial).color = new THREE.Color('blue');
-      }
     }
 
     if (button) {
@@ -114,20 +109,35 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
   }, [scene, onSize]);
 
   useFrame((_, delta) => {
+    let active = false;
     if (lidHingeRef.current && lidHingeRef.current.userData.initialRotation !== undefined) {
       const targetLidAngle = lidHingeRef.current.userData.initialRotation + (isLidOpenRef.current ? -Math.PI / 2.2 : 0);
-      lidHingeRef.current.rotation.x += (targetLidAngle - lidHingeRef.current.rotation.x) * 10 * delta;
+      const diff = targetLidAngle - lidHingeRef.current.rotation.x;
+      if (Math.abs(diff) > 0.005) {
+        lidHingeRef.current.rotation.x += diff * 10 * delta;
+        active = true;
+      }
     }
     
     if (seatHingeRef.current && seatHingeRef.current.userData.initialRotation !== undefined) {
       const targetSeatAngle = seatHingeRef.current.userData.initialRotation + (isSeatOpenRef.current ? -Math.PI / 2.2 : 0);
-      seatHingeRef.current.rotation.x += (targetSeatAngle - seatHingeRef.current.rotation.x) * 10 * delta;
+      const diff = targetSeatAngle - seatHingeRef.current.rotation.x;
+      if (Math.abs(diff) > 0.005) {
+        seatHingeRef.current.rotation.x += diff * 10 * delta;
+        active = true;
+      }
     }
 
     if (buttonRef.current && buttonRef.current.userData.originalZ !== undefined) {
       const targetZ = isFlushingRef.current ? buttonRef.current.userData.originalZ - 0.03 : buttonRef.current.userData.originalZ;
-      buttonRef.current.position.z += (targetZ - buttonRef.current.position.z) * 15 * delta;
+      const diff = targetZ - buttonRef.current.position.z;
+      if (Math.abs(diff) > 0.001) {
+        buttonRef.current.position.z += diff * 15 * delta;
+        active = true;
+      }
     }
+
+    if (active) invalidate();
   });
 
   return <primitive object={scene} />;
