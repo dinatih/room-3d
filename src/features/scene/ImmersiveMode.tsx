@@ -90,13 +90,38 @@ export function ImmersiveMode() {
       invalidate();
     };
 
-    // ── Touch hold → avancer ───────────────────────────────────────────────────
+    // ── Touch hold (1 doigt) → avancer | 2 doigts → pivoter ──────────────────
+    let touchStartX = 0;
+    let initialAlphaOffset = 0;
+
     const onTouchStart = (e: TouchEvent) => {
       if (!active.current) return;
-      walking.current = true;
       e.preventDefault();
+      if (e.touches.length === 2) {
+        walking.current = false;
+        touchStartX = e.touches[0].clientX;
+        initialAlphaOffset = alphaOffset.current || 0;
+      } else if (e.touches.length === 1) {
+        walking.current = true;
+      }
     };
-    const onTouchEnd = () => { walking.current = false; };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!active.current) return;
+      if (e.touches.length === 2) {
+        const deltaX = e.touches[0].clientX - touchStartX;
+        const sensitivity = 0.5; // 1px = 0.5 degré
+        alphaOffset.current = initialAlphaOffset + (deltaX * sensitivity);
+        invalidate();
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!active.current) return;
+      if (e.touches.length < 2) {
+        walking.current = false;
+      }
+    };
 
     // ── Fullscreen quitté depuis navigateur ────────────────────────────────────
     const onFsChange = () => {
@@ -146,6 +171,7 @@ export function ImmersiveMode() {
     btn.addEventListener('click', () => { active.current ? exit() : enter(); });
 
     gl.domElement.addEventListener('touchstart',  onTouchStart, { passive: false });
+    gl.domElement.addEventListener('touchmove',   onTouchMove,  { passive: false });
     gl.domElement.addEventListener('touchend',    onTouchEnd,   { passive: true  });
     document.addEventListener('fullscreenchange', onFsChange);
 
@@ -157,6 +183,7 @@ export function ImmersiveMode() {
         container.remove();
       }
       gl.domElement.removeEventListener('touchstart',  onTouchStart);
+      gl.domElement.removeEventListener('touchmove',   onTouchMove);
       gl.domElement.removeEventListener('touchend',    onTouchEnd);
       document.removeEventListener('fullscreenchange', onFsChange);
     };
