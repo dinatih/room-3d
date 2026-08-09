@@ -182,7 +182,6 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
           }
         }
       }
-      invalidate(); // Re-render required since model moves
     }
 
     mixerRef.current.update(delta);
