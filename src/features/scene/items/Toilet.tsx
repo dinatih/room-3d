@@ -9,7 +9,7 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'media/glb/president_toilet_horizontal_outlet.glb';
@@ -21,15 +21,22 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
   const seatHingeRef = useRef<THREE.Group | null>(null);
   const buttonRef = useRef<THREE.Object3D | null>(null);
 
-  const isLidOpen = actionState?.['lid'] === 'open';
-  const isSeatOpen = actionState?.['seat'] === 'open';
-  const isFlushing = actionState?.['flush'] === 'active';
+  const isLidOpen = !!actionState?.['wc-lid-toggle'];
+  const isSeatOpen = !!actionState?.['wc-seat-toggle'];
+  const isFlushing = !!actionState?.['wc-flush'];
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
     scene.scale.setScalar(100);
-    mergeGlbByMaterial(scene);
     
+    scene.traverse((c) => {
+      const m = c as THREE.Mesh;
+      if (m.isMesh) {
+        m.castShadow = true;
+        m.receiveShadow = true;
+      }
+    });
+
     // Set up pivots for lid and seat
     const lid = scene.getObjectByName('lid');
     const seat = scene.getObjectByName('seat');
