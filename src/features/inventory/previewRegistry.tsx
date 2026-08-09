@@ -60,6 +60,7 @@ import { Rebound }                                    from '@features/scene/item
 import { Linky }                                      from '@features/scene/items/Linky';
 import { BimDoubleDoor }                              from '@features/scene/items/BimDoubleDoor';
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
+import { ElectricRacket }                             from '@features/scene/items/ElectricRacket';
 import { Drona }                                      from '@features/scene/items/Drona';
 import { Walker, CHARACTERS }                         from '@features/scene/Walker';
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
@@ -113,6 +114,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'matter-hub':             MatterHub,
   'linky':                  Linky,
   'laser-distancemaster':   LaserDistanceMaster,
+  'electric-racket':        ElectricRacket,
   'sony-srs-xb33':          JblCharge3,
   'trash-bin':              TrashBin,
   'vacuum-cleaner':         VacuumCleaner,

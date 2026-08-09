@@ -1571,7 +1571,7 @@ function SingleCharacter({
           const matName = Array.isArray(mat) ? mat[0].name.toLowerCase() : (mat as THREE.Material).name.toLowerCase();
           const meshName = mesh.name.toLowerCase();
           const isHair = matName.includes('hair') || matName.includes('pony') || matName.includes('braid') || meshName.includes('hair') || meshName.includes('pony') || meshName.includes('braid');
-          if (isHair && !mesh.userData.isCustomHair) {
+          if (isHair) {
             const mList = Array.isArray(mat) ? mat : [mat];
             mList.forEach((m: any) => {
               if (m.color) m.color.copy(c);
