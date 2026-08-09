@@ -99,6 +99,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
 
     // Apply the user requested scale DIRECTLY to sg instead of the wrapper group
     (sg as THREE.Object3D).scale.set(s * scale, s * scale, s * scale);
+    (sg as THREE.Object3D).userData.isWigRoot = true;
 
     return (sg as THREE.Object3D);
   }, [fullScene, id, scale]);
@@ -202,7 +203,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
   useLayoutEffect(() => {
     if (attachTo && scene) {
       // Remove any previously attached hair armatures to prevent duplicate wigs
-      const existingWigs = attachTo.children.filter((c: any) => c.name.startsWith('Hair') || c.name.includes('_ARM_'));
+      const existingWigs = attachTo.children.filter((c: any) => c.userData.isWigRoot);
       existingWigs.forEach((w: any) => attachTo.remove(w));
 
       attachTo.add(scene);

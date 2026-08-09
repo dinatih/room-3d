@@ -1433,6 +1433,11 @@ function SingleCharacter({
       setHeadBoneState(headBone);
     }
 
+    if (haircut === 'original') {
+      const ghostWigs = headBone.children.filter((c: any) => c.userData.isWigRoot);
+      ghostWigs.forEach((w: any) => headBone.remove(w));
+    }
+
     const existingAttachment = headBone.getObjectByName('lara_custom_hair_attachment');
     if (existingAttachment) {
       headBone.remove(existingAttachment);
