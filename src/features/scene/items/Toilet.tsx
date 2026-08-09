@@ -67,6 +67,7 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
       hinge.add(lid);
       
       lidHingeRef.current = hinge;
+      hinge.userData.initialRotation = hinge.rotation.x;
     }
 
     if (seat && !seatHingeRef.current && seat.parent) {
@@ -89,6 +90,7 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
       hinge.add(seat);
 
       seatHingeRef.current = hinge;
+      hinge.userData.initialRotation = hinge.rotation.x;
     }
 
     if (button) {
@@ -106,13 +108,13 @@ export function Toilet({ actionState, onSize }: SceneItemProps) {
   }, [scene, onSize]);
 
   useFrame((_, delta) => {
-    if (lidHingeRef.current) {
-      const targetLidAngle = isLidOpenRef.current ? -Math.PI / 2.2 : 0;
+    if (lidHingeRef.current && lidHingeRef.current.userData.initialRotation !== undefined) {
+      const targetLidAngle = lidHingeRef.current.userData.initialRotation + (isLidOpenRef.current ? -Math.PI / 2.2 : 0);
       lidHingeRef.current.rotation.x += (targetLidAngle - lidHingeRef.current.rotation.x) * 10 * delta;
     }
     
-    if (seatHingeRef.current) {
-      const targetSeatAngle = isSeatOpenRef.current ? -Math.PI / 2.2 : 0;
+    if (seatHingeRef.current && seatHingeRef.current.userData.initialRotation !== undefined) {
+      const targetSeatAngle = seatHingeRef.current.userData.initialRotation + (isSeatOpenRef.current ? -Math.PI / 2.2 : 0);
       seatHingeRef.current.rotation.x += (targetSeatAngle - seatHingeRef.current.rotation.x) * 10 * delta;
     }
 
