@@ -54,6 +54,8 @@ export function ElectricRacket({ onSize }: SceneItemProps) {
           if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial) {
             if (!mat.name.toLowerCase().includes('rede') && !mat.name.toLowerCase().includes('raio')) {
               mat.color.set('#ffffff');
+              mat.map = null;
+              mat.needsUpdate = true;
             }
           }
         }
