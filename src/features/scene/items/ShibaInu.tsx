@@ -1,6 +1,7 @@
 import { useRef, useLayoutEffect, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, useHelper } from '@react-three/drei';
+import { useSceneStore } from '@features/scene/store/useSceneStore';
 import * as THREE from 'three';
 
 export function ShibaInu() {
@@ -9,6 +10,10 @@ export function ShibaInu() {
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
   const playingRef = useRef(false);
   const replayRef  = useRef<(() => void) | null>(null);
+  
+  const showSkeleton = useSceneStore(s => s.layers.skeleton);
+  const modelRef = useRef<THREE.Group>(null);
+  useHelper(showSkeleton ? modelRef as any : null, THREE.SkeletonHelper);
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
@@ -98,7 +103,11 @@ export function ShibaInu() {
     if (playingRef.current) invalidate();
   });
 
-  return <primitive object={scene} />;
+  return (
+    <group ref={modelRef as any}>
+      <primitive object={scene} />
+    </group>
+  );
 }
 
 useGLTF.preload('/models/shiba_inu_blender.glb');

@@ -62,6 +62,7 @@ import { BimDoubleDoor }                              from '@features/scene/item
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
 import { Drona }                                      from '@features/scene/items/Drona';
 import { Walker, CHARACTERS }                         from '@features/scene/Walker';
+import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
   'freezer':                Freezer,
@@ -169,3 +170,7 @@ CHARACTERS.forEach(char => {
     return <Walker isPreview={true} previewCharacterId={char.id} showSkeleton={actionState?.showBones} isPaused={actionState?.isPaused} walkerAnim={actionState?.walkerAnim} />;
   } as any;
 });
+
+SCENE_REGISTRY['ushiro'] = function UshiroPreview() {
+  return <ShibaInu />;
+} as any;
