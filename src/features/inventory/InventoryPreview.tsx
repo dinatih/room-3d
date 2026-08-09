@@ -252,6 +252,42 @@ export function InventoryPreview({
                   </>
                 )}
               </select>
+
+              {item.id !== 'ushiro' && (
+                <>
+                  <select value={actionStates.previewHaircut || 'original'} onChange={e => setActionStates(s => ({ ...s, previewHaircut: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
+                    <option value="original">Coupe d'origine</option>
+                    <option value="hair_100">Coupe #1 (Bob)</option>
+                    <option value="hair_101">Coupe #2 (Queue H.)</option>
+                    <option value="hair_102">Coupe #3 (Pixie)</option>
+                    <option value="hair_103">Coupe #4 (Wolf)</option>
+                    <option value="hair_104">Coupe #5 (Frange)</option>
+                    <option value="hair_105">Coupe #6 (Queue TT H.)</option>
+                    <option value="hair_106">Coupe #7 (Bob Frange)</option>
+                    <option value="hair_107">Coupe #8 (Couettes)</option>
+                    <option value="hair_108">Coupe #9 (Hérissée)</option>
+                    <option value="hair_109">Coupe #10 (Wavy Lob)</option>
+                    <option value="hair_110">Coupe #11 (Hime)</option>
+                    <option value="hair_111">Coupe #12 (Mi-tresse)</option>
+                    <option value="hair_112">Coupe #13 (Chignon)</option>
+                  </select>
+
+                  <select value={actionStates.previewHairColor || 'rose'} onChange={e => setActionStates(s => ({ ...s, previewHairColor: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
+                    <option value="rose">Rose</option>
+                    <option value="naturel">Naturel</option>
+                    <option value="noir">Noir</option>
+                    <option value="brun">Brun</option>
+                    <option value="chatain">Châtain</option>
+                    <option value="blond">Blond</option>
+                    <option value="roux">Roux</option>
+                    <option value="rouge">Rouge</option>
+                    <option value="bleu">Bleu</option>
+                    <option value="vert">Vert</option>
+                    <option value="violet">Violet</option>
+                    <option value="arc-en-ciel">Arc-en-ciel</option>
+                  </select>
+                </>
+              )}
             </div>
           )}
           {showing3D && actionKeys.length > 0 && (

@@ -171,7 +171,7 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
 
 CHARACTERS.forEach(char => {
   SCENE_REGISTRY[char.id] = function DynamicPreview({ actionState }: { actionState?: any }) {
-    return <Walker isPreview={true} previewCharacterId={char.id} showSkeleton={actionState?.showBones} isPaused={actionState?.isPaused} walkerAnim={actionState?.walkerAnim} />;
+    return <Walker isPreview={true} previewCharacterId={char.id} showSkeleton={actionState?.showBones} isPaused={actionState?.isPaused} walkerAnim={actionState?.walkerAnim} previewHaircut={actionState?.previewHaircut} previewHairColor={actionState?.previewHairColor} />;
   } as any;
 });
 

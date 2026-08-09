@@ -675,6 +675,8 @@ interface WalkerProps {
   showSkeleton?: boolean;
   isPreview?: boolean;
   previewCharacterId?: string;
+  previewHaircut?: string;
+  previewHairColor?: string;
   characterIndex?: number;
   walkerAnim?: string;
   isPaused?: boolean;
@@ -724,6 +726,8 @@ function SingleCharacter({
   characterIndex = 0,
   walkerAnim = 'idle',
   isPaused = false,
+  previewHaircut,
+  previewHairColor,
   animations,
 
   variant,
@@ -733,6 +737,12 @@ function SingleCharacter({
   sittingScene,
   customIdleAnimPath
 }: SingleCharacterProps) {
+  const [localHaircut, setLocalHaircut] = useState<string>('original');
+  const haircut = isPreview && previewHaircut ? previewHaircut : localHaircut;
+
+  const [localHairColor, setLocalHairColor] = useState<string>('rose');
+  const hairColor = isPreview && previewHairColor ? previewHairColor : localHairColor;
+
   const laraGrid = useSceneStore(state => state.layers.laraGrid);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const showWallhack = useSceneStore(state => state.layers.wallhack);
@@ -760,14 +770,13 @@ function SingleCharacter({
     backpack: true,
   });
 
-  const [haircut, setHaircut] = useState<string>('original');
-  const [hairColor, setHairColor] = useState<string>('rose');
-
   useEffect(() => {
     if (variant === 'lgbta') {
       const interval = setInterval(() => {
         const index = Math.floor(Math.random() * 13);
-        setHaircut('hair_' + (100 + index));
+        if (index >= 0 && index <= 12) {
+          setLocalHaircut('hair_' + (100 + index));
+        }
       }, 30000);
       return () => clearInterval(interval);
     }
@@ -1217,6 +1226,18 @@ function SingleCharacter({
   const poseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    const handleToggleHairColor = (e: any) => {
+      if (e.detail.key === 'lara-haircolor') {
+        setLocalHairColor(e.detail.value);
+      }
+    };
+    const handleToggleHaircut = (e: any) => {
+      if (e.detail.key === 'lara-haircut') {
+        setLocalHaircut(e.detail.value || 'original');
+        invalidate();
+      }
+    };
+
     const onToggle = (e: any) => {
       if (e.detail?.key === 'walker-anim-loop') {
         animLoopModeRef.current = e.detail.value || 'infinite';
@@ -1318,14 +1339,8 @@ function SingleCharacter({
           }
         });
       }
-      if (e.detail.key === 'lara-haircolor') {
-        setHairColor(e.detail.value);
-      }
-      if (e.detail.key === 'lara-haircut') {
-        setHaircut(e.detail.value || 'original');
-        invalidate();
-        return;
-      }
+      handleToggleHairColor(e);
+      handleToggleHaircut(e);
     };
 
     document.addEventListener('furniture-toggle', onToggle);
@@ -2320,6 +2335,8 @@ function InternalWalker(props: WalkerProps) {
             npcRotationY={char.rot}
             sittingScene={char.sittingScene}
             walkerAnim={props.walkerAnim}
+            previewHaircut={props.previewHaircut}
+            previewHairColor={props.previewHairColor}
             customIdleAnimPath={char.customIdleAnimPath}
             characterIndex={index}
           />
