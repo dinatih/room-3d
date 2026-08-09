@@ -608,8 +608,7 @@ export function Garden() {
       <group position={[240, 0, -400]} userData={{ animUnit: true }}>
         <JoggingSuit item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[180, 0, -120]} rotation={[0, -Math.PI / 4, 0]}
-             userData={{ hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
+      <group userData={{ hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
         <ShibaInu />
       </group>
       <group position={[52, 0, 326]} rotation={[0, 0, 0]}>

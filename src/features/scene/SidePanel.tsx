@@ -709,7 +709,7 @@ export function SidePanel({
           style={{ fontSize: '11px' }}
           onClick={() => { document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'shiba-replay' } })); }}
         >
-          ▶️ Rejouer Toute La Séquence
+          ▶️ 🤖 Mode Autonome (Roaming)
         </button>
         <div className="d-flex flex-wrap gap-1 mt-1">
           {['Idle', 'Jump', 'Run', 'SitDown', 'Walk'].map((animName, i) => (

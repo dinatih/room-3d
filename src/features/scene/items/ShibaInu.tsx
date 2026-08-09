@@ -5,30 +5,33 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 
+type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
+
 export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPreview = false }: { isPreview?: boolean, previewAnim?: string, showSkeletonPreview?: boolean }) {
   const { scene, animations } = useGLTFClone('/models/shiba_inu_blender.glb');
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
   const playingRef = useRef(false);
-  const replayRef  = useRef<(() => void) | null>(null);
-  
   
   const showSkeletonGlobal = useSceneStore(s => s.layers.skeleton);
   const showSkeleton = isPreview ? showSkeletonPreview : showSkeletonGlobal;
   const modelRef = useRef<THREE.Group>(null);
   useHelper(showSkeleton ? modelRef as any : null, THREE.SkeletonHelper);
 
+  const aiStateRef = useRef<AIState>({
+    mode: 'autonomous',
+    state: 'idle',
+    targetPos: new THREE.Vector3(180, 0, -120),
+    timer: 2.0
+  });
+
   // Handle Preview Animations
   useEffect(() => {
     if (!isPreview || !mixerRef.current || !previewAnim) return;
     
-    // Map previewAnim ("idle", "jump", etc.) to actual animation names
     const animMap: Record<string, string> = {
-      'idle': 'Dog|Dog|Idle',
-      'jump': 'Dog|Dog|Jump',
-      'run': 'Dog|Dog|Run',
-      'sitdown': 'Dog|Dog|SitDown',
-      'walk': 'Dog|Dog|Walk'
+      'idle': 'Dog|Dog|Idle', 'jump': 'Dog|Dog|Jump', 'run': 'Dog|Dog|Run',
+      'sitdown': 'Dog|Dog|SitDown', 'walk': 'Dog|Dog|Walk'
     };
     
     const targetAnimName = animMap[previewAnim] || 'Dog|Dog|Idle';
@@ -49,7 +52,6 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
     const size = box.getSize(new THREE.Vector3());
-    console.log("SHIBA INU FBX->GLB SIZE:", size);
 
     if (size.y > 0) {
       scene.scale.setScalar(40 / size.y);
@@ -75,51 +77,45 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
 
     if (animations.length > 0) {
       const mixer = new THREE.AnimationMixer(scene);
-      let currentAnim = 0;
-
-      const playCurrent = () => {
-        if (currentAnim >= animations.length) {
-          playingRef.current = false;
-          return;
-        }
-        mixer.stopAllAction();
-        const action = mixer.clipAction(animations[currentAnim]);
-        action.setLoop(THREE.LoopRepeat, 3); // 3x repeats per animation
-        action.clampWhenFinished = true;
-        action.reset().play();
-        playingRef.current = true;
-        invalidate();
-      };
-
-      mixer.addEventListener('finished', () => {
-        currentAnim++;
-        playCurrent();
-      });
-
-      replayRef.current = () => {
-        if (playingRef.current) return;
-        currentAnim = 0;
-        playCurrent();
-      };
-
-      if (!isPreview) {
-        playCurrent(); // Auto-play first time
-      }
       mixerRef.current = mixer;
     }
 
+    // Set initial transform
+    if (modelRef.current && !isPreview) {
+      modelRef.current.position.set(180, 0, -120);
+      modelRef.current.rotation.y = -Math.PI / 4;
+    }
+
     return () => { mixerRef.current?.stopAllAction(); };
-  }, [scene, animations, invalidate, isPreview]);
+  }, [scene, animations, isPreview]);
+
+  // Initial animation
+  useEffect(() => {
+    if (!isPreview && mixerRef.current && animations.length > 0) {
+      const clip = animations.find(a => a.name === 'Dog|Dog|Idle') || animations[0];
+      const action = mixerRef.current.clipAction(clip);
+      action.setLoop(THREE.LoopRepeat, Infinity);
+      action.reset().play();
+      playingRef.current = true;
+    }
+  }, [isPreview, animations]);
 
   useEffect(() => {
     if (isPreview) return;
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
-      if (key === 'shiba-replay' && replayRef.current) {
-        replayRef.current();
+      
+      if (key === 'shiba-replay') {
+        // Return to autonomous mode
+        aiStateRef.current.mode = 'autonomous';
+        aiStateRef.current.state = 'idle';
+        aiStateRef.current.timer = 1.0;
+        
       } else if (key.startsWith('shiba-play-') && mixerRef.current) {
+        // Forced manual animation
         const idx = parseInt(key.split('-')[2], 10);
         if (!isNaN(idx) && animations[idx]) {
+          aiStateRef.current.mode = 'forced';
           mixerRef.current.stopAllAction();
           const action = mixerRef.current.clipAction(animations[idx]);
           action.setLoop(THREE.LoopRepeat, Infinity);
@@ -132,12 +128,64 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
-  }, [invalidate, isPreview]);
+  }, [invalidate, isPreview, animations]);
 
   useFrame((_, delta) => {
-    if (!mixerRef.current) return;
+    if (!mixerRef.current || !modelRef.current) return;
+    
+    if (!isPreview) {
+      const ai = aiStateRef.current;
+      if (ai.mode === 'autonomous') {
+        if (ai.state === 'idle') {
+          ai.timer -= delta;
+          if (ai.timer <= 0) {
+            // Pick new target
+            const tx = 50 + Math.random() * 200; // room bounds approx X: 50 to 250
+            const tz = -150 + Math.random() * 450; // Z: -150 to 300
+            ai.targetPos.set(tx, 0, tz);
+            
+            const dist = modelRef.current.position.distanceTo(ai.targetPos);
+            ai.state = dist > 150 ? 'running' : 'walking';
+            
+            mixerRef.current.stopAllAction();
+            const clipName = ai.state === 'running' ? 'Dog|Dog|Run' : 'Dog|Dog|Walk';
+            const clip = animations.find(a => a.name === clipName) || animations[4];
+            const action = mixerRef.current.clipAction(clip);
+            action.setLoop(THREE.LoopRepeat, Infinity);
+            action.reset().play();
+          }
+        } else {
+          // Moving
+          const speed = ai.state === 'running' ? 120 : 50;
+          const dist = modelRef.current.position.distanceTo(ai.targetPos);
+          if (dist < 5) {
+            ai.state = 'idle';
+            ai.timer = 3 + Math.random() * 8; // wait 3 to 11 seconds
+            
+            mixerRef.current.stopAllAction();
+            const clipName = Math.random() > 0.5 ? 'Dog|Dog|Idle' : 'Dog|Dog|SitDown';
+            const clip = animations.find(a => a.name === clipName) || animations[0];
+            const action = mixerRef.current.clipAction(clip);
+            action.setLoop(THREE.LoopRepeat, Infinity);
+            action.reset().play();
+          } else {
+            const dir = new THREE.Vector3().subVectors(ai.targetPos, modelRef.current.position).normalize();
+            modelRef.current.position.addScaledVector(dir, speed * delta);
+            
+            const targetRot = Math.atan2(dir.x, dir.z);
+            let diff = targetRot - modelRef.current.rotation.y;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            modelRef.current.rotation.y += diff * 10 * delta;
+          }
+        }
+      }
+    }
+    
     mixerRef.current.update(delta);
-    if (playingRef.current) invalidate();
+    if (playingRef.current || (!isPreview && aiStateRef.current.mode === 'autonomous' && aiStateRef.current.state !== 'idle')) {
+      invalidate();
+    }
   });
 
   return (
