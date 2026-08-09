@@ -34,10 +34,10 @@ export function Blaskata50569513({ onSize, ...props }: SceneItemProps) {
     let box = glbLocalBBox(scene);
     let size = box.getSize(new THREE.Vector3());
     
-    // Force dimensions: 80cm length, 20cm diameter
-    const sx = size.x > size.y && size.x > size.z ? 80 / size.x : 20 / size.x;
-    const sy = size.y > size.x && size.y > size.z ? 80 / size.y : 20 / size.y;
-    const sz = size.z > size.x && size.z > size.y ? 80 / size.z : 20 / size.z;
+    // Force dimensions: 100cm length, 20cm diameter
+    const sx = size.x > size.y && size.x > size.z ? 100 / size.x : 20 / size.x;
+    const sy = size.y > size.x && size.y > size.z ? 100 / size.y : 20 / size.y;
+    const sz = size.z > size.x && size.z > size.y ? 100 / size.z : 20 / size.z;
     scene.scale.set(sx, sy, sz);
     
     scene.updateMatrixWorld(true);
