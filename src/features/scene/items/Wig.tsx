@@ -201,9 +201,13 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
 
   useLayoutEffect(() => {
     if (attachTo && scene) {
+      // Remove any previously attached hair armatures to prevent duplicate wigs
+      const existingWigs = attachTo.children.filter((c: any) => c.name.startsWith('Hair') || c.name.includes('_ARM_'));
+      existingWigs.forEach((w: any) => attachTo.remove(w));
+
       attachTo.add(scene);
       console.log(`[Wig Debug] Attached to headBone. Total children on headBone: ${attachTo.children.length}`);
-      const wigs = attachTo.children.filter(c => c.name === scene.name || c === scene);
+      const wigs = attachTo.children.filter((c: any) => c.name === scene.name || c === scene);
       console.log(`[Wig Debug] Wigs on headBone: ${wigs.length}`);
     }
     return () => {

@@ -1415,7 +1415,7 @@ function SingleCharacter({
             if (isOriginalHair) {
               const show = haircut === 'original' && !(variant === 'angelina' && isBraid);
               m2.visible = show;
-              if (m.isMesh) {
+              if (m.isMesh || m.isSkinnedMesh) {
                 (m as THREE.Mesh).visible = show;
               }
             }
