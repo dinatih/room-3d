@@ -6,7 +6,7 @@ import * as THREE from 'three';
 
 const GLB_PATH = 'media/glb/robin_bird.glb';
 
-export function RobinBird({ isPreview = false }: { isPreview?: boolean }) {
+export function RobinBird({ isPreview = false, previewAnim = '' }: { isPreview?: boolean, previewAnim?: string }) {
   const { scene, animations } = useGLTFClone(GLB_PATH);
   const { invalidate } = useThree();
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
@@ -52,16 +52,23 @@ export function RobinBird({ isPreview = false }: { isPreview?: boolean }) {
     return () => { mixerRef.current?.stopAllAction(); };
   }, [scene, animations]);
 
-  // Initial animation
+  // Handle Preview Animations or Initial Idle
   useEffect(() => {
-    if (mixerRef.current && animations.length > 0) {
-      const idleClip = animations.find(a => a.name === 'Robin_Bird_Idle') || animations[0];
-      const action = mixerRef.current.clipAction(idleClip);
-      action.setLoop(THREE.LoopRepeat, Infinity);
-      action.play();
-      invalidate();
+    if (!mixerRef.current || animations.length === 0) return;
+    
+    mixerRef.current.stopAllAction();
+    
+    let targetAnimName = 'Robin_Bird_Idle';
+    if (isPreview && previewAnim) {
+      targetAnimName = previewAnim;
     }
-  }, [animations, invalidate]);
+    
+    const clip = animations.find(a => a.name === targetAnimName) || animations[0];
+    const action = mixerRef.current.clipAction(clip);
+    action.setLoop(THREE.LoopRepeat, Infinity);
+    action.reset().play();
+    invalidate();
+  }, [animations, invalidate, isPreview, previewAnim]);
 
   useEffect(() => {
     if (isPreview || !mixerRef.current) return;

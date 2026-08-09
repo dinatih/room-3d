@@ -606,7 +606,7 @@ export function Garden() {
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 
-      <group position={[110, 50, -245]} rotation={[0, Math.PI / 4, 0]} userData={{ hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
+      <group position={[110, 50, -235]} rotation={[0, Math.PI / 4, 0]} userData={{ hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
         <RobinBird />
       </group>
 

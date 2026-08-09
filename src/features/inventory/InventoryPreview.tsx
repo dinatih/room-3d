@@ -230,18 +230,33 @@ export function InventoryPreview({
               <button onClick={() => setActionStates(s => ({ ...s, showBones: !s.showBones }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.showBones ? '#0058a3' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}</button>
               <button onClick={() => setActionStates(s => ({ ...s, isPaused: !s.isPaused }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.isPaused ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.isPaused ? '▶️ Play' : '⏸️ Pause'}</button>
               
-              {item.id !== 'ushiro' && (
+              {!['shiba-inu', 'robin-bird'].includes(item.id) && (
                 <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📐 T-Pose</button>
               )}
               
               <select value={actionStates.walkerAnim || 'idle'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
-                {item.id === 'ushiro' ? (
+                {item.id === 'shiba-inu' ? (
                   <>
                     <option value="idle">Idle</option>
                     <option value="jump">Jump</option>
                     <option value="run">Run</option>
                     <option value="sitdown">SitDown</option>
                     <option value="walk">Walk</option>
+                  </>
+                ) : item.id === 'robin-bird' ? (
+                  <>
+                    <option value="Robin_Bird_Idle">Idle</option>
+                    <option value="Robin_Bird_Idle2">Idle 2</option>
+                    <option value="Robin_Bird_Walk">Walk</option>
+                    <option value="Robin_Bird_WalkBack">Walk Back</option>
+                    <option value="Robin_Bird_Fly">Fly</option>
+                    <option value="Robin_Bird_Eat">Eat</option>
+                    <option value="Robin_Bird_Eat2">Eat 2</option>
+                    <option value="Robin_Bird_Eat3">Eat 3</option>
+                    <option value="Robin_Bird_Call">Call</option>
+                    <option value="Robin_Bird_Call2">Call 2</option>
+                    <option value="Robin_Bird_Hit">Hit</option>
+                    <option value="Robin_Bird_Die">Die</option>
                   </>
                 ) : (
                   <>
@@ -253,7 +268,7 @@ export function InventoryPreview({
                 )}
               </select>
 
-              {item.id !== 'ushiro' && (
+              {!['shiba-inu', 'robin-bird'].includes(item.id) && (
                 <>
                   <select value={actionStates.previewHaircut || 'original'} onChange={e => setActionStates(s => ({ ...s, previewHaircut: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
                     <option value="original">Coupe d'origine</option>

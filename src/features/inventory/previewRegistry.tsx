@@ -180,6 +180,6 @@ SCENE_REGISTRY['ushiro'] = function UshiroPreview({ actionState }: { actionState
   return <ShibaInu isPreview={true} previewAnim={actionState?.walkerAnim} showSkeletonPreview={actionState?.showBones} />;
 } as any;
 
-SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview() {
-  return <RobinBird isPreview={true} />;
+SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState }: { actionState?: any }) {
+  return <RobinBird isPreview={true} previewAnim={actionState?.walkerAnim} />;
 } as any;
