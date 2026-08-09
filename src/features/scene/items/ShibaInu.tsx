@@ -7,8 +7,8 @@ export function ShibaInu() {
   const { scene, animations } = useGLTF('/models/shiba_inu_blender.glb');
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
-  const actionRef  = useRef<THREE.AnimationAction | null>(null);
   const playingRef = useRef(false);
+  const replayRef  = useRef<(() => void) | null>(null);
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
@@ -36,15 +36,35 @@ export function ShibaInu() {
 
     if (animations.length > 0) {
       const mixer = new THREE.AnimationMixer(scene);
-      mixer.addEventListener('finished', () => { playingRef.current = false; });
-      const action = mixer.clipAction(animations[0]);
-      action.setLoop(THREE.LoopOnce, 1);
-      action.clampWhenFinished = true;
-      action.play();
-      playingRef.current = true;
-      mixerRef.current   = mixer;
-      actionRef.current  = action;
-      invalidate();
+      let currentAnim = 0;
+
+      const playCurrent = () => {
+        if (currentAnim >= animations.length) {
+          playingRef.current = false;
+          return;
+        }
+        mixer.stopAllAction();
+        const action = mixer.clipAction(animations[currentAnim]);
+        action.setLoop(THREE.LoopRepeat, 3); // 3x repeats per animation
+        action.clampWhenFinished = true;
+        action.reset().play();
+        playingRef.current = true;
+        invalidate();
+      };
+
+      mixer.addEventListener('finished', () => {
+        currentAnim++;
+        playCurrent();
+      });
+
+      replayRef.current = () => {
+        if (playingRef.current) return;
+        currentAnim = 0;
+        playCurrent();
+      };
+
+      playCurrent(); // Auto-play first time
+      mixerRef.current = mixer;
     }
 
     return () => { mixerRef.current?.stopAllAction(); };
@@ -53,10 +73,9 @@ export function ShibaInu() {
   useEffect(() => {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
-      if (key !== 'shiba-replay' || !actionRef.current) return;
-      actionRef.current.reset().play();
-      playingRef.current = true;
-      invalidate();
+      if (key === 'shiba-replay' && replayRef.current) {
+        replayRef.current();
+      }
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
