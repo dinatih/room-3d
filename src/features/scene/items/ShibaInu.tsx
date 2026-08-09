@@ -143,14 +143,18 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
             // Pick new target
             const rand = Math.random();
             let tx, tz;
-            if (rand < 0.6) {
-              // Garden (60%)
-              tx = -50 + Math.random() * 400;  // X: -50 to 350
+            if (rand < 0.5) {
+              // Garden étendu (50%)
+              tx = -350 + Math.random() * 1000;  // X: -350 to 650
               tz = -350 + Math.random() * 320; // Z: -350 to -30
-            } else if (rand < 0.9) {
-              // Main Room (30%)
+            } else if (rand < 0.7) {
+              // Main Room (20%)
               tx = 50 + Math.random() * 200;   // X: 50 to 250
               tz = 50 + Math.random() * 300;   // Z: 50 to 350
+            } else if (rand < 0.9) {
+              // Couloir rouge (20%) - Zone AI Entrée bat B
+              tx = -350 + Math.random() * 1000; // X: -350 to 650
+              tz = 598.3 - (tx - 348.5) * 0.57735; // Suit l'axe central du couloir
             } else {
               // Bathroom (10%)
               tx = 20 + Math.random() * 110;
