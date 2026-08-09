@@ -1254,6 +1254,44 @@ function BathSkirting() {
   );
 }
 
+// ── Couloir PVC Rouge (devant porte d'entrée, 3 apparts) ──────────────────────
+function RedPVCCorridor() {
+  const WIDTH = 120;
+  const TOTAL_LENGTH = 1200; 
+  // Centre du mur diagonal du milieu (le studio courant)
+  const dCenter = DiagWall.len / 2; 
+  // Décalé à l'extérieur : moitié du mur (5) + moitié du couloir (60) = 65
+  const center = DiagWall.p(dCenter, DiagWall.depth / 2 + WIDTH / 2);
+
+  const mat = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    ctx.fillStyle = '#b32d2d'; // Rouge PVC
+    ctx.fillRect(0, 0, 128, 128);
+    // Un peu de bruit pour la texture
+    for (let i = 0; i < 800; i++) {
+      ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)';
+      ctx.fillRect(Math.random() * 128, Math.random() * 128, 2, 2);
+    }
+    const t = new THREE.CanvasTexture(canvas);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(TOTAL_LENGTH / 100, WIDTH / 100);
+    return new THREE.MeshStandardMaterial({
+      map: t, roughness: 0.6, metalness: 0.1
+    });
+  }, []);
+
+  return (
+    <group position={[center.x, -0.1, center.z]} rotation-y={DiagWall.rotY + Math.PI / 2}>
+      <mesh receiveShadow userData={{ brickType: 'floor' }} rotation-x={-Math.PI / 2}>
+        <planeGeometry args={[TOTAL_LENGTH, WIDTH]} />
+        <primitive object={mat} attach="material" />
+      </mesh>
+    </group>
+  );
+}
+
 // ── Composant principal ────────────────────────────────────────────────────────
 export function Floor() {
   const showGrass = useSceneStore(state => state.layers.grass);
@@ -1264,6 +1302,9 @@ export function Floor() {
 
       {/* Carrelage bath + couloir */}
       <Tile />
+
+      {/* Couloir extérieur PVC rouge */}
+      <RedPVCCorridor />
 
       {/* Plinthes parquet */}
       <Baseboards />
