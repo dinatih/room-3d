@@ -196,10 +196,17 @@ export function buildHairChain(hairBones: THREE.Bone[]) {
         bone.updateMatrixWorld(true);
         const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
         const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
-        const worldLength = length * worldScale.y;
         const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
-        const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
 
+        let worldLength = length * worldScale.y;
+        if (child) {
+          const p1 = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+          const p2 = new THREE.Vector3().setFromMatrixPosition(child.matrixWorld);
+          worldLength = p1.distanceTo(p2);
+        }
+        if (worldLength < 0.1) worldLength = 0.1;
+
+        const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
         const boneRestQuat = bone.getWorldQuaternion(new THREE.Quaternion());
         const relQuat = baseParentRestQuat.clone().invert().multiply(boneRestQuat);
 
