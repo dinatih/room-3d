@@ -140,8 +140,21 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
           ai.timer -= delta;
           if (ai.timer <= 0) {
             // Pick new target
-            const tx = 50 + Math.random() * 200; // room bounds approx X: 50 to 250
-            const tz = -150 + Math.random() * 450; // Z: -150 to 300
+            const rand = Math.random();
+            let tx, tz;
+            if (rand < 0.6) {
+              // Main Room (60%)
+              tx = 50 + Math.random() * 200;
+              tz = 50 + Math.random() * 300;
+            } else if (rand < 0.9) {
+              // Garden (30%)
+              tx = 50 + Math.random() * 200;
+              tz = -250 + Math.random() * 250;
+            } else {
+              // Bathroom (10%)
+              tx = 20 + Math.random() * 110;
+              tz = 520 + Math.random() * 120;
+            }
             ai.targetPos.set(tx, 0, tz);
             
             const dist = modelRef.current.position.distanceTo(ai.targetPos);
