@@ -203,11 +203,11 @@ export const WALL_DEFS: WallDef[] = [
   // Ouest 2 (Intérieur) : face avant (séjour), s'arrête à la niche.
   ...splitW({ axis: 'z', xc: pEast('corner-nw') - WALL_THICKNESS / 2, z1: pSouth('corner-nw'), z2: pNorth('niche-beam'), mat: 'west' }),
 
-  // Ouest SDB + couloir (saute les piliers)
-  ...splitW({ axis: 'z', xc: pX('corner-sw'), z1: pSouth('corner-sw'), z2: pNorth('bath-nw'), mat: 'west', t: PARTITION_THICKNESS }),
-  ...splitW({ axis: 'z', xc: pX('corner-sw'), z1: pSouth('bath-nw'), z2: pNorth('shower-nw'), mat: 'west', t: PARTITION_THICKNESS }),
-  ...splitW({ axis: 'z', xc: pX('corner-sw'), z1: pSouth('shower-nw'), z2: pNorth('shower-sw'), mat: 'west', t: PARTITION_THICKNESS }),
-  ...splitW({ axis: 'z', xc: pX('corner-sw'), z1: pSouth('shower-sw'), z2: pNorth('diag-sw'), mat: 'west', t: PARTITION_THICKNESS }),
+  // Ouest SDB + couloir (saute les piliers) - Mur béton de 10cm (par défaut)
+  ...splitW({ axis: 'z', xc: pX('corner-sw'), z1: pSouth('corner-sw'), z2: pNorth('bath-nw'), mat: 'west' }),
+  ...splitW({ axis: 'z', xc: pX('corner-sw'), z1: pSouth('bath-nw'), z2: pNorth('shower-nw'), mat: 'west' }),
+  ...splitW({ axis: 'z', xc: pX('corner-sw'), z1: pSouth('shower-nw'), z2: pNorth('shower-sw'), mat: 'west' }),
+  ...splitW({ axis: 'z', xc: pX('corner-sw'), z1: pSouth('shower-sw'), z2: pNorth('diag-sw'), mat: 'west' }),
 
   // ── MUR EST ────────────────────────────────────────────────────────────────
   ...splitW({ axis: 'z', xc: pX('corner-ne'), z1: pSouth('corner-ne'), z2: pNorth('corner-se'), mat: 'east' }), // Est 1 (séjour)
