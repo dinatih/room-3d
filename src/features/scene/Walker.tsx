@@ -716,6 +716,46 @@ interface SingleCharacterProps extends WalkerProps {
   customIdleAnimPath?: string;
 }
 
+function HeartParachute({ isFalling }: { isFalling: boolean }) {
+  const heartShape = useMemo(() => {
+    const shape = new THREE.Shape();
+    for (let i = 0; i <= 64; i++) {
+        const t = (i / 64) * Math.PI * 2;
+        const x = 1.2 * 16 * Math.pow(Math.sin(t), 3);
+        const y = 1.2 * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+        if (i === 0) shape.moveTo(x, y);
+        else shape.lineTo(x, y);
+    }
+    return shape;
+  }, []);
+
+  const extrudeSettings = useMemo(() => ({
+    depth: 10,
+    bevelEnabled: true,
+    bevelSegments: 4,
+    steps: 1,
+    bevelSize: 2,
+    bevelThickness: 2
+  }), []);
+
+  if (!isFalling) return null;
+
+  return (
+    <group position={[0, 270, 0]}>
+      {/* Corde reliée au personnage */}
+      <mesh position={[0, -60, 0]}>
+        <cylinderGeometry args={[0.5, 0.5, 120, 8]} />
+        <meshStandardMaterial color="#eeeeee" roughness={0.9} />
+      </mesh>
+      {/* Coussin Cœur FAMNIG HJÄRTA centré */}
+      <mesh rotation={[Math.PI, 0, 0]} position={[0, 0, -5]}>
+        <extrudeGeometry args={[heartShape, extrudeSettings]} />
+        <meshStandardMaterial color="#d4112e" roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
 function SingleCharacter({
   id,
   name,
@@ -2126,6 +2166,7 @@ function SingleCharacter({
           attachTo={headBoneState}
         />
       )}
+      <HeartParachute isFalling={customAnimName.current === 'media/sandbox/anims/anim_falling.glb'} />
       {!isPreview && isActive && <GroundPoint />}
     </group>
   );

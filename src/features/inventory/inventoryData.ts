@@ -147,6 +147,8 @@ export const INVENTORY: InventoryItem[] = [
 
   { id: 'mirror-nissedal-a',name: 'Miroir Nissedal 40×150 (mur A)', brand: 'IKEA',     category: 'bathroom',     qty: 4, dims: { w: 40,  d: 5,   h: 150 }, notes: 'Mur A, Reflector', glbPath: 'media/glb/ikea-official/NISSEDAL miroir 40x150 noir.glb', photos: ['media/photos/ikea/mirror-nissedal-a-1.jpg', 'media/photos/ikea/mirror-nissedal-a-2.jpg', 'media/photos/ikea/mirror-nissedal-a-3.jpg'] },
 
+  { id: 'famnig-hjarta-27470460', name: "FAMNIG HJÄRTA Coussin", brand: 'IKEA', category: 'decor', qty: 1, dims: { w: 40, d: 10, h: 40 }, url: 'https://www.ikea.com/fr/fr/p/famnig-hjaerta-coussin-rouge-27470460/', notes: 'Utilisé comme parachute pour le déploiement des personnages', price: '9,99' },
+
   { id: 'mug',              name: 'Mug rouge',                      brand: '',         category: 'decor',     qty: 1, dims: { w: 8,   d: 8,   h: 9.5 }, notes: 'Bureau 2' },
   { id: 'mannequin-head',   name: 'Tête de mannequin',              brand: '',         category: 'decor',     qty: 3, dims: { w: 41,  d: 22,  h: 45  }, notes: '1 Raskog grande, 1 Kallax NW, 1 LACK' },
   { id: 'lamp-ola',         name: 'Lampe OLA',                      brand: 'IKEA',     category: 'lighting',     qty: 1, dims: { w: 30,  d: 30,  h: 120 }, notes: 'Sur pied, meuble TV', glbPath: 'media/glb/ikea_lamp_ola.glb', photos: ['media/photos/ikea/lamp-ola-1.jpg', 'media/photos/ikea/lamp-ola-2.jpg', 'media/photos/ikea/lamp-ola-3.jpg'] },
