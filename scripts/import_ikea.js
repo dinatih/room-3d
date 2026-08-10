@@ -131,7 +131,8 @@ const toComponentName = (name) => {
         }
 
         // Grab all product images
-        const imgs = Array.from(document.querySelectorAll('img.pip-image, img'));
+        const gallery = document.querySelector('.pip-product-gallery__left-section-wrapper, [class*="product-gallery__left-section-wrapper"]') || document;
+        const imgs = Array.from(gallery.querySelectorAll('img.pip-image, img'));
         let imageUrls = imgs
             .map(img => img.src)
             .filter(src => src && src.includes('images/products') && (src.endsWith('.jpg') || src.endsWith('.png') || src.endsWith('.webp') || src.includes('.jpg?')));

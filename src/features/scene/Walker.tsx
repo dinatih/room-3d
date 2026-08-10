@@ -729,7 +729,7 @@ function HeartParachute({ isFalling }: { isFalling: boolean }) {
         <meshStandardMaterial color="#eeeeee" roughness={0.9} />
       </mesh>
       {/* Coussin Cœur FAMNIG HJÄRTA centré */}
-      <primitive object={scene} scale={[1, 1, 1]} rotation={[Math.PI / 2, 0, 0]} />
+      <primitive object={scene} scale={[100, 100, 100]} rotation={[Math.PI / 2, 0, 0]} />
     </group>
   );
 }
@@ -2409,3 +2409,5 @@ useGLTF.preload('media/sandbox/anims/anim_texting_while_standing.glb');
 CHARACTERS.forEach(char => {
   useGLTF.preload(char.path);
 });
+
+useGLTF.preload('media/glb/ikea-official/Famnig27470460.glb');
