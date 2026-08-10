@@ -7,6 +7,7 @@ import { useRef, useLayoutEffect, Suspense, useEffect, useMemo, useState } from 
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { Famnig27470460 } from './items/Famnig27470460';
 import { Wig } from './items/Wig';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -716,20 +717,26 @@ interface SingleCharacterProps extends WalkerProps {
   customIdleAnimPath?: string;
 }
 
-function HeartParachute({ isFalling }: { isFalling: boolean }) {
-  const { scene } = useGLTFClone('media/glb/ikea-official/Famnig27470460.glb');
-
-  if (!isFalling || !scene) return null;
+function HeartParachute({ customAnimName }: { customAnimName: React.MutableRefObject<string | null> }) {
+  const groupRef = useRef<THREE.Group>(null!);
+  
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.visible = customAnimName.current === 'media/sandbox/anims/anim_falling.glb';
+    }
+  });
 
   return (
-    <group position={[0, 270, 0]}>
+    <group ref={groupRef} position={[0, 270, 0]} visible={false}>
       {/* Corde reliée au personnage */}
       <mesh position={[0, -60, 0]}>
         <cylinderGeometry args={[0.5, 0.5, 120, 8]} />
         <meshStandardMaterial color="#eeeeee" roughness={0.9} />
       </mesh>
       {/* Coussin Cœur FAMNIG HJÄRTA centré */}
-      <primitive object={scene} scale={[100, 100, 100]} rotation={[Math.PI / 2, 0, 0]} />
+      <group rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+        <Famnig27470460 item={{} as any} actionState={{} as any} onSize={() => {}} />
+      </group>
     </group>
   );
 }
@@ -2144,7 +2151,7 @@ function SingleCharacter({
           attachTo={headBoneState}
         />
       )}
-      <HeartParachute isFalling={customAnimName.current === 'media/sandbox/anims/anim_falling.glb'} />
+      <HeartParachute customAnimName={customAnimName} />
       {!isPreview && isActive && <GroundPoint />}
     </group>
   );
