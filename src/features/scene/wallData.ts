@@ -246,12 +246,12 @@ export const WALL_DEFS: WallDef[] = [
   // Panneau ouest intérieur (placo)
   ...splitW({ axis: 'x', x1: pEast('corner-nw'), x2: pWest('glass-west'), zc: pZ('corner-nw'), mat: 'north' }),
   // Panneau ouest extérieur (béton)
-  ...splitW({ axis: 'x', x1: pEast('corner-nw-ext'), x2: pWest('glass-west-ext'), zc: pZ('corner-nw-ext'), t: 20, mat: 'north' }),
+  ...splitW({ axis: 'x', x1: pEast('corner-nw-ext'), x2: pWest('glass-west-ext'), zc: pZ('corner-nw-ext'), t: 20, mat: 'north', h: WALL_H - 0.1 }),
 
   // Panneau est intérieur (placo)
   ...splitW({ axis: 'x', x1: pEast('glass-east'), x2: pWest('corner-ne'), zc: pZ('corner-ne'), mat: 'north' }),
   // Panneau est extérieur (béton)
-  ...splitW({ axis: 'x', x1: pEast('glass-east-ext'), x2: pWest('corner-ne-ext'), zc: pZ('corner-ne-ext'), t: 20, mat: 'north' }),
+  ...splitW({ axis: 'x', x1: pEast('glass-east-ext'), x2: pWest('corner-ne-ext'), zc: pZ('corner-ne-ext'), t: 20, mat: 'north', h: WALL_H - 0.1 }),
 
   // Baie vitrée — couches dissociées
   // Muret bas (Intérieur)
