@@ -76,7 +76,7 @@ export function WallEdgesLayer() {
       geos.forEach(g => g.dispose());
       if (!merged) return;
 
-      const deduped = mergeVertices(merged, 0.2);
+      const deduped = mergeVertices(merged, 0.25);
       merged.dispose();
 
       const edges = new THREE.EdgesGeometry(deduped, 1);
