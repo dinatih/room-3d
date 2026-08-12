@@ -785,6 +785,7 @@ function SingleCharacter({
   const activeActionName = useRef<string>('');
   const idleTimerRef = useRef<number>(0);
   const customAnimName = useRef<string | null>(null);
+  const userAnimOverrideRef = useRef<boolean>(false);
   const prevFirstPersonRef = useRef<boolean | null>(null);
   const animLoopModeRef = useRef<'infinite' | '3x' | '1x'>('infinite');
   const [expression, setExpression] = useState<'neutral' | 'smile' | 'wink'>('neutral');
@@ -1188,6 +1189,7 @@ function SingleCharacter({
     mixer.addEventListener('finished', (e) => {
       if (customAnimName.current && actionsRef.current[customAnimName.current] === e.action) {
         customAnimName.current = null;
+        userAnimOverrideRef.current = false;
       }
     });
 
@@ -1303,6 +1305,7 @@ function SingleCharacter({
 
         if (path === 'idle') {
           customAnimName.current = null;
+          userAnimOverrideRef.current = false;
           invalidate();
           return;
         }
@@ -1345,6 +1348,7 @@ function SingleCharacter({
                 poseTimerRef.current = setTimeout(() => {
                   if (customAnimName.current === path) {
                     customAnimName.current = null;
+                    userAnimOverrideRef.current = false;
                     invalidate();
                   }
                 }, 30000); // 3x 10sec = 30 seconds
@@ -1356,6 +1360,7 @@ function SingleCharacter({
                 poseTimerRef.current = setTimeout(() => {
                   if (customAnimName.current === path) {
                     customAnimName.current = null;
+                    userAnimOverrideRef.current = false;
                     invalidate();
                   }
                 }, 10000); // 1x 10sec
@@ -1363,6 +1368,7 @@ function SingleCharacter({
             }
 
             customAnimName.current = path;
+            userAnimOverrideRef.current = true;
             invalidate();
           }
         });
@@ -1547,6 +1553,11 @@ function SingleCharacter({
       groupRef.current.position.set(targetX, targetY, targetZ);
       groupRef.current.rotation.y = 0;
       groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
+      // En mode grille, effacer l'animation IA pour que les NPCs restent en idle
+      // sauf si l'utilisateur a manuellement choisi une animation
+      if (!userAnimOverrideRef.current) {
+        customAnimName.current = null;
+      }
     } else {
       if (isActive) {
         if (isGuidedTour) {
@@ -1572,7 +1583,10 @@ function SingleCharacter({
           const agentState = updateAgent(delta);
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
-          customAnimName.current = agentState.animation;
+          // Ne pas écraser l'animation choisie par l'utilisateur
+          if (!userAnimOverrideRef.current) {
+            customAnimName.current = agentState.animation;
+          }
           groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && agentState.isSpawned;
           
           if (agentState.isSpawned) {
