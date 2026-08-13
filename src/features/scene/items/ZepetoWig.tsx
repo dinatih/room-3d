@@ -36,7 +36,8 @@ export interface WigProps {
 }
 
 export function ZepetoWig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
-  const { scene: fullScene } = useGLTF('media/zepeto_hair.glb');
+  const gltfPath = id === 'hair_pigtails' ? 'media/white_long_pigtails.glb' : 'media/zepeto_hair.glb';
+  const { scene: fullScene } = useGLTF(gltfPath);
   const clonedHairRef = useRef<THREE.Group>(null!);
   
   const scene = useMemo(() => {
@@ -271,3 +272,5 @@ export function ZepetoWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
     </group>
   );
 }
+useGLTF.preload('media/white_long_pigtails.glb');
+useGLTF.preload('media/zepeto_hair.glb');

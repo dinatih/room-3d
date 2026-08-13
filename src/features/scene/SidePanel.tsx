@@ -699,6 +699,8 @@ export function SidePanel({
               <option value="hair_110" className="bg-light text-dark">Coupe #11 (Coupe Hime / 姫カット)</option>
               <option value="hair_111" className="bg-light text-dark">Coupe #12 (Mi-tresse plaquée mi-ondulé)</option>
               <option value="hair_112" className="bg-light text-dark">Coupe #13 (Chignon haut hérissé & bandeau)</option>
+              <option value="hair_zepeto" className="bg-light text-dark">Coupe Zepeto (Rigged)</option>
+              <option value="hair_pigtails" className="bg-light text-dark">Couettes Blanches (Rigged)</option>
             </select>
           </div>
         </div>

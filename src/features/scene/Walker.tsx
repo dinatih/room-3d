@@ -2180,7 +2180,7 @@ function SingleCharacter({
       <primitive ref={modelRef} object={scene} />
       
       {headBoneState && haircut !== 'original' && (
-        haircut === 'hair_zepeto' ? (
+        (haircut === 'hair_zepeto' || haircut === 'hair_pigtails') ? (
           <ZepetoWig
             id={haircut.replace('hair_', '')}
             color={hairColor}
