@@ -1356,15 +1356,13 @@ function SingleCharacter({
           return;
         }
 
-        const loader = new GLTFLoader();
-        loader.load(path, (gltf: any) => {
-          const clip = gltf.animations[0];
+        const handleClip = (clip: THREE.AnimationClip, sourceScene: THREE.Object3D | undefined) => {
           if (clip) {
             clip.name = path;
             const cacheKey = id + '_' + path;
             let finalClip = _retargetCache[cacheKey];
             if (!finalClip) {
-               finalClip = retargetClip(clip, scene, gltf.scene);
+               finalClip = retargetClip(clip, scene, sourceScene);
                _retargetCache[cacheKey] = finalClip;
             }
             finalClip.name = path;
@@ -1417,7 +1415,17 @@ function SingleCharacter({
             userAnimOverrideRef.current = true;
             invalidate();
           }
-        });
+        };
+
+        const existingAnim = animations?.find(a => a.name === path);
+        if (existingAnim) {
+          handleClip(existingAnim, existingAnim.userData?.animScene as THREE.Object3D | undefined);
+        } else {
+          const loader = new GLTFLoader();
+          loader.load(path, (gltf: any) => {
+            handleClip(gltf.animations[0], gltf.scene);
+          });
+        }
       }
       handleToggleHairColor(e);
       handleToggleHaircut(e);
