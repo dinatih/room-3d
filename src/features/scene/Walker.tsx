@@ -653,24 +653,12 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           }
 
           if (B_src && P_src) {
-            let B_src_adjusted = B_src.clone();
-            if (isMileyAnim) {
-              const offsetAngle = Math.PI * (45 / 180);
-              if (baseName === 'LeftArm') {
-                 const upRot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), offsetAngle);
-                 B_src_adjusted.premultiply(upRot);
-              } else if (baseName === 'RightArm') {
-                 const upRot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -offsetAngle);
-                 B_src_adjusted.premultiply(upRot);
-              }
-            }
-          
             const B_tgt = bone.restWorldQuaternion;
             const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
               ? bone.parent.restWorldQuaternion
               : new THREE.Quaternion();
             const P_tgt_inv = P_tgt.clone().invert();
-            const B_src_inv = B_src_adjusted.clone().invert();
+            const B_src_inv = B_src.clone().invert();
 
             for (let j = 0; j < clone.values.length / 4; j++) {
               const srcLocalQ = new THREE.Quaternion(
@@ -683,6 +671,18 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
               const animWorldQ = P_src.clone().multiply(srcLocalQ);
               const deltaQ = animWorldQ.clone().multiply(B_src_inv);
               const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
+
+              if (isMileyAnim) {
+                const offsetAngle = Math.PI * (45 / 180);
+                if (baseName === 'LeftArm') {
+                   const downRot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -offsetAngle);
+                   tgtAnimWorldQ.premultiply(downRot);
+                } else if (baseName === 'RightArm') {
+                   const downRot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), offsetAngle);
+                   tgtAnimWorldQ.premultiply(downRot);
+                }
+              }
+
               const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
 
               clone.values[4*j]   = tgtLocalQ.x;
