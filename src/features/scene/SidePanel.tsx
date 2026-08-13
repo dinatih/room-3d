@@ -700,7 +700,8 @@ export function SidePanel({
               <option value="hair_111" className="bg-light text-dark">Coupe #12 (Mi-tresse plaquée mi-ondulé)</option>
               <option value="hair_112" className="bg-light text-dark">Coupe #13 (Chignon haut hérissé & bandeau)</option>
               <option value="hair_zepeto" className="bg-light text-dark">Coupe Zepeto (zHairezt)</option>
-              <option value="hair_pigtails" className="bg-light text-dark">Couettes Blanches (zHairezt)</option>
+              <option value="hair_pigtails" className="bg-light text-dark">Longues Couettes Blanches (zHairezt)</option>
+              <option value="hair_buns" className="bg-light text-dark">Longs Chignons Buns (zHairezt)</option>
             </select>
           </div>
         </div>

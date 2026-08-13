@@ -66,7 +66,7 @@ import { Walker, CHARACTERS }                         from '@features/scene/Walk
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
 import { Wig }                                        from '@features/scene/items/Wig';
-import { ZepetoWig }                                  from '@features/scene/items/ZepetoWig';
+import { RiggedWig }                                  from '@features/scene/items/RiggedWig';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
@@ -202,13 +202,14 @@ const WIGS = [
   { id: 'hair_111', name: 'Coupe #12 (Mi-tresse)' },
   { id: 'hair_112', name: 'Coupe #13 (Chignon)' },
   { id: 'hair_zepeto', name: 'Coupe Zepeto (zHairezt)' },
-  { id: 'hair_pigtails', name: 'Couettes Blanches (zHairezt)' },
+  { id: 'hair_pigtails', name: 'Longues Couettes Blanches (zHairezt)' },
+  { id: 'hair_buns', name: 'Longs Chignons Buns (zHairezt)' },
 ];
 
 WIGS.forEach(wig => {
   SCENE_REGISTRY[wig.id] = function WigPreview() {
-    if (wig.id === 'hair_zepeto' || wig.id === 'hair_pigtails') {
-      return <ZepetoWig id={wig.id} scale={1} />;
+    if (wig.id === 'hair_zepeto' || wig.id === 'hair_pigtails' || wig.id === 'hair_buns') {
+      return <RiggedWig id={wig.id} scale={1} />;
     }
     return <Wig id={wig.id} scale={1} />;
   } as any;

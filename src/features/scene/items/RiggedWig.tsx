@@ -35,8 +35,14 @@ export interface WigProps {
   attachTo?: THREE.Object3D | null;
 }
 
-export function ZepetoWig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
-  const gltfPath = id === 'hair_pigtails' ? 'media/white_long_pigtails.glb' : 'media/zepeto_hair.glb';
+export const RIGGED_WIGS_PATHS: Record<string, string> = {
+  zepeto: 'media/zepeto_hair.glb',
+  pigtails: 'media/white_long_pigtails.glb',
+  buns: 'media/long_hair_with_buns.glb'
+};
+
+export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
+  const gltfPath = RIGGED_WIGS_PATHS[id as string] || 'media/zepeto_hair.glb';
   const { scene: fullScene } = useGLTF(gltfPath);
   const clonedHairRef = useRef<THREE.Group>(null!);
   
@@ -280,3 +286,4 @@ export function ZepetoWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
 }
 useGLTF.preload('media/white_long_pigtails.glb');
 useGLTF.preload('media/zepeto_hair.glb');
+useGLTF.preload('media/long_hair_with_buns.glb');
