@@ -178,13 +178,21 @@ export function Inventory({ onClose }: { onClose: () => void }) {
     return INVENTORY.filter(i => {
       if (activeCat === 'actionnable' && !i.actions?.length) return false;
       if (activeCat === 'glbs'        && !i.glbPath)         return false;
-      if (activeCat !== 'all' && activeCat !== 'actionnable' && activeCat !== 'glbs' && i.category !== activeCat) return false;
+      
+      if (activeCat !== 'all' && activeCat !== 'actionnable' && activeCat !== 'glbs') {
+        if (i.category !== activeCat) return false;
+      }
+
       if (q && !i.name.toLowerCase().includes(q) &&
                !i.brand.toLowerCase().includes(q) &&
                !(i.notes ?? '').toLowerCase().includes(q)) return false;
       return true;
     });
   }, [activeCat, search]);
+
+  useEffect(() => {
+    console.log('--- DEBUG NAVLIST ---', { activeCat, itemsCount: items.length, firstItem: items[0] });
+  }, [items, activeCat]);
 
   const showSpaces = activeCat === 'storage' || activeCat === 'actionnable';
   const spaces = activeCat === 'actionnable'
