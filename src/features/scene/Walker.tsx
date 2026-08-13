@@ -103,6 +103,32 @@ export const CHARACTERS: CharacterConfig[] = [
   }
 ];
 
+const CC3_TO_MIXAMO: Record<string, string> = {
+  'CC_Base_Hip': 'Hips',
+  'CC_Base_Waist': 'Spine',
+  'CC_Base_Spine01': 'Spine1',
+  'CC_Base_Spine02': 'Spine2',
+  'CC_Base_NeckTwist01': 'Neck',
+  'CC_Base_NeckTwist02': 'Neck',
+  'CC_Base_Head': 'Head',
+  'CC_Base_L_Clavicle': 'LeftShoulder',
+  'CC_Base_L_Upperarm': 'LeftArm',
+  'CC_Base_L_Forearm': 'LeftForeArm',
+  'CC_Base_L_Hand': 'LeftHand',
+  'CC_Base_R_Clavicle': 'RightShoulder',
+  'CC_Base_R_Upperarm': 'RightArm',
+  'CC_Base_R_Forearm': 'RightForeArm',
+  'CC_Base_R_Hand': 'RightHand',
+  'CC_Base_L_Thigh': 'LeftUpLeg',
+  'CC_Base_L_Calf': 'LeftLeg',
+  'CC_Base_L_Foot': 'LeftFoot',
+  'CC_Base_L_ToeBase': 'LeftToeBase',
+  'CC_Base_R_Thigh': 'RightUpLeg',
+  'CC_Base_R_Calf': 'RightLeg',
+  'CC_Base_R_Foot': 'RightFoot',
+  'CC_Base_R_ToeBase': 'RightToeBase'
+};
+
 const BONE_SYNONYMS: Record<string, string[]> = {
   'Hips': ['hips', 'pelvis', 'cog', 'roothips', 'rootground', 'hip'],
   'Spine': ['spine01', 'spinelower', 'spine0', 'spine1', 'spine'],
@@ -330,7 +356,9 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
 
     animScene.traverse((c: any) => {
       if (c.isBone) {
-        const match = c.name.match(/mixamorig[:_]?(.+)/i);
+        let name = c.name;
+        if (CC3_TO_MIXAMO[name]) name = 'mixamorig:' + CC3_TO_MIXAMO[name];
+        const match = name.match(/mixamorig[:_]?(.+)/i);
         if (match) {
           animBones[match[1]] = {
             restWorldQuaternion: c.getWorldQuaternion(new THREE.Quaternion()),
@@ -458,9 +486,15 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
   const hasRootTranslation = workingClip.tracks.some(t => t.name.toLowerCase().includes('rootjoint') && t.name.endsWith('.position'));
   const tracks: THREE.KeyframeTrack[] = [];
 
+  const isMileyAnim = rawClip.name.toLowerCase().startsWith('miley/');
+
   for (const tr of workingClip.tracks) {
     const [boneFull, prop] = tr.name.split('.');
-    const match = boneFull.match(/mixamorig[:_]?(.+)/i);
+    
+    let mappedBoneFull = boneFull;
+    if (CC3_TO_MIXAMO[boneFull]) mappedBoneFull = 'mixamorig:' + CC3_TO_MIXAMO[boneFull];
+    
+    const match = mappedBoneFull.match(/mixamorig[:_]?(.+)/i);
     if (!match) continue;
     let baseName = match[1];
 
@@ -619,12 +653,24 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           }
 
           if (B_src && P_src) {
+            let B_src_adjusted = B_src.clone();
+            if (isMileyAnim) {
+              const offsetAngle = Math.PI * (45 / 180);
+              if (baseName === 'LeftArm') {
+                 const upRot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), offsetAngle);
+                 B_src_adjusted.premultiply(upRot);
+              } else if (baseName === 'RightArm') {
+                 const upRot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -offsetAngle);
+                 B_src_adjusted.premultiply(upRot);
+              }
+            }
+          
             const B_tgt = bone.restWorldQuaternion;
             const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
               ? bone.parent.restWorldQuaternion
               : new THREE.Quaternion();
             const P_tgt_inv = P_tgt.clone().invert();
-            const B_src_inv = B_src.clone().invert();
+            const B_src_inv = B_src_adjusted.clone().invert();
 
             for (let j = 0; j < clone.values.length / 4; j++) {
               const srcLocalQ = new THREE.Quaternion(
