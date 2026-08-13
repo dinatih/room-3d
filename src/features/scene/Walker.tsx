@@ -9,6 +9,7 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { Famnig27470460 } from './items/Famnig27470460';
 import { Wig } from './items/Wig';
+import { ZepetoWig } from './items/ZepetoWig';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { cameraState } from '@features/scene/cameraState';
@@ -2179,16 +2180,29 @@ function SingleCharacter({
       <primitive ref={modelRef} object={scene} />
       
       {headBoneState && haircut !== 'original' && (
-        <Wig 
-          id={haircut.replace('hair_', '')}
-          color={hairColor}
-          onBonesExtracted={(bones) => {
-            console.log(`[Wig] Passing ${bones.length} bones to buildHairChain`);
-            customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
-            (window as any)._hairDebugLogged = false; // Reset log when wig changes
-          }}
-          attachTo={headBoneState}
-        />
+        haircut === 'hair_zepeto' ? (
+          <ZepetoWig
+            id={haircut.replace('hair_', '')}
+            color={hairColor}
+            onBonesExtracted={(bones) => {
+              console.log(`[ZepetoWig] Passing ${bones.length} bones to buildHairChain`);
+              customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
+              (window as any)._hairDebugLogged = false;
+            }}
+            attachTo={headBoneState}
+          />
+        ) : (
+          <Wig 
+            id={haircut.replace('hair_', '')}
+            color={hairColor}
+            onBonesExtracted={(bones) => {
+              console.log(`[Wig] Passing ${bones.length} bones to buildHairChain`);
+              customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
+              (window as any)._hairDebugLogged = false;
+            }}
+            attachTo={headBoneState}
+          />
+        )
       )}
       <HeartParachute customAnimName={customAnimName} />
       {!isPreview && isActive && <GroundPoint />}

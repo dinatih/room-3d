@@ -66,6 +66,8 @@ import { Walker, CHARACTERS }                         from '@features/scene/Walk
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
 import { Wig }                                        from '@features/scene/items/Wig';
+import { ZepetoWig }                                  from '@features/scene/items/ZepetoWig';
+
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
   'freezer':                Freezer,
@@ -199,10 +201,14 @@ const WIGS = [
   { id: 'hair_110', name: 'Coupe #11 (Hime)' },
   { id: 'hair_111', name: 'Coupe #12 (Mi-tresse)' },
   { id: 'hair_112', name: 'Coupe #13 (Chignon)' },
+  { id: 'hair_zepeto', name: 'Coupe Zepeto (Rigged)' },
 ];
 
 WIGS.forEach(wig => {
   SCENE_REGISTRY[wig.id] = function WigPreview() {
+    if (wig.id === 'hair_zepeto') {
+      return <ZepetoWig id={wig.id} scale={1} />;
+    }
     return <Wig id={wig.id} scale={1} />;
   } as any;
 });

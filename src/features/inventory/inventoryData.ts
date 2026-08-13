@@ -291,6 +291,7 @@ const WIGS_ITEMS = [
   { id: 'hair_110', name: 'Coupe #11 (Hime)' },
   { id: 'hair_111', name: 'Coupe #12 (Mi-tresse)' },
   { id: 'hair_112', name: 'Coupe #13 (Chignon)' },
+  { id: 'hair_zepeto', name: 'Coupe Zepeto (Rigged)' },
 ];
 
 WIGS_ITEMS.forEach(wig => {

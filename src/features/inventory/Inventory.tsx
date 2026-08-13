@@ -190,10 +190,6 @@ export function Inventory({ onClose }: { onClose: () => void }) {
     });
   }, [activeCat, search]);
 
-  useEffect(() => {
-    console.log('--- DEBUG NAVLIST ---', { activeCat, itemsCount: items.length, firstItem: items[0] });
-  }, [items, activeCat]);
-
   const showSpaces = activeCat === 'storage' || activeCat === 'actionnable';
   const spaces = activeCat === 'actionnable'
     ? STORAGE_SPACES.filter(sp => sp.actions?.length)
