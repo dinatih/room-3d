@@ -598,6 +598,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           }
           clone.times = newTimes;
           clone.values = newValues;
+        } else {
           let yMinDelta = 0;
           if (animNameLower.includes('takedown')) {
             let minY = Infinity;
