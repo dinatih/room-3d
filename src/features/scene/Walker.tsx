@@ -5,7 +5,7 @@
  */
 import { useRef, useLayoutEffect, Suspense, useEffect, useMemo, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTF, useHelper } from '@react-three/drei';
+import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { Famnig27470460 } from './items/Famnig27470460';
 import { Wig } from './items/Wig';
@@ -707,7 +707,6 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
 }
 
 interface WalkerProps {
-  showSkeleton?: boolean;
   isPreview?: boolean;
   previewCharacterId?: string;
   previewHaircut?: string;
@@ -780,7 +779,6 @@ function SingleCharacter({
   isLara,
   targetHeight,
   isActive,
-  showSkeleton = false,
   isPreview = false,
   characterIndex = 0,
   walkerAnim = 'idle',
@@ -1252,19 +1250,6 @@ function SingleCharacter({
     };
   }, [scene, animations, name, isLara, targetHeight, variant, sittingScene, id]);
 
-  const skeletonRef = useHelper(showSkeleton ? modelRef : null, THREE.SkeletonHelper);
-
-  useEffect(() => {
-    if (skeletonRef.current) {
-        const helper = skeletonRef.current as unknown as THREE.SkeletonHelper;
-        const mat = helper.material as THREE.LineBasicMaterial;
-        mat.color.set(0x00ffff);
-        mat.depthTest = false;
-        helper.renderOrder = 99999;
-        helper.raycast = () => {};
-        helper.traverse(c => { c.raycast = () => {}; });
-    }
-  }, [skeletonRef, showSkeleton]);
 
   useEffect(() => {
     if (!scene) return;

@@ -42,6 +42,7 @@ import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
 import { MeasurementTool }            from './MeasurementTool';
 import { AppConsole }                 from '@features/ui/AppConsole';
+import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
 
 
 import {
@@ -372,8 +373,9 @@ export function Studio() {
           <Floor />
           {/* LAYER_WALKER (8) — Personnages 3D */}
           <CategoryLayerGroup layer={LAYER_WALKER}>
-            <Walker showSkeleton={layers.skeleton} />
+            <Walker />
           </CategoryLayerGroup>
+          <GlobalSkeletonHelpers show={layers.skeleton} />
           {/*
            * LAYER_EQUIPMENT (1) — équipements sanitaires et cuisine.
            * GLB toggle via React visible (indépendant de camera.layers).

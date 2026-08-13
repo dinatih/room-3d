@@ -6,6 +6,7 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';
 import { type InventoryItem, type StorageSpace } from './inventoryData';
 import { SCENE_REGISTRY, ACTION_LABELS } from './previewRegistry';
+import { GlobalSkeletonHelpers } from '@features/scene/utils/GlobalSkeletonHelpers';
 
 function GlbScene({ glbPath, onSize }: { glbPath: string; onSize?: () => void; }) {
   const [scene, setScene] = useState<THREE.Group | null>(null);
@@ -220,6 +221,7 @@ export function InventoryPreview({
               <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={true} minDistance={0.3} maxDistance={50} target={target} onStart={() => setAutoRotate(false)} />
               <Grid infiniteGrid fadeDistance={15} cellColor="#999999" sectionColor="#666666" cellSize={0.2} sectionSize={1} position={[0, -0.001, 0]} />
               <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} /></Suspense>
+              <GlobalSkeletonHelpers show={actionStates.showBones} />
             </Canvas>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
           <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>

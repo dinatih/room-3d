@@ -173,16 +173,16 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
 
 CHARACTERS.forEach(char => {
   SCENE_REGISTRY[char.id] = function DynamicPreview({ actionState }: { actionState?: any }) {
-    return <Walker isPreview={true} previewCharacterId={char.id} showSkeleton={actionState?.showBones} isPaused={actionState?.isPaused} walkerAnim={actionState?.walkerAnim} previewHaircut={actionState?.previewHaircut} previewHairColor={actionState?.previewHairColor} />;
+    return <Walker isPreview={true} previewCharacterId={char.id} isPaused={actionState?.isPaused} walkerAnim={actionState?.walkerAnim} previewHaircut={actionState?.previewHaircut} previewHairColor={actionState?.previewHairColor} />;
   } as any;
 });
 
-SCENE_REGISTRY['ushiro'] = function UshiroPreview({ actionState }: { actionState?: any }) {
-  return <ShibaInu isPreview={true} previewAnim={actionState?.walkerAnim} showSkeletonPreview={actionState?.showBones} />;
+SCENE_REGISTRY['shiba-inu'] = function ShibaPreview({ actionState }: { actionState?: any }) {
+  return <ShibaInu isPreview={true} previewAnim={actionState?.walkerAnim} />;
 } as any;
 
 SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState }: { actionState?: any }) {
-  return <RobinBird isPreview={true} previewAnim={actionState?.walkerAnim} showSkeletonPreview={actionState?.showBones} />;
+  return <RobinBird isPreview={true} previewAnim={actionState?.walkerAnim} />;
 } as any;
 
 const WIGS = [
@@ -202,8 +202,8 @@ const WIGS = [
 ];
 
 WIGS.forEach(wig => {
-  SCENE_REGISTRY[wig.id] = function WigPreview({ actionState }: { actionState?: any }) {
-    return <Wig id={wig.id} showSkeleton={actionState?.showBones} scale={1} />;
+  SCENE_REGISTRY[wig.id] = function WigPreview() {
+    return <Wig id={wig.id} scale={1} />;
   } as any;
 });
 

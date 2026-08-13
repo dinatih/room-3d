@@ -33,10 +33,9 @@ export interface WigProps {
   windEnabled?: boolean;
   onBonesExtracted?: (bones: { bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[]) => void;
   attachTo?: THREE.Object3D | null;
-  showSkeleton?: boolean;
 }
 
-export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo, showSkeleton }: WigProps) {
+export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
   const { scene: fullScene } = useGLTF('media/hair_pack_part_2.glb');
   const clonedHairRef = useRef<THREE.Group>(null!);
   
@@ -114,8 +113,8 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       }
     });
 
-    if (rootBone && rootBone.parent !== sg) {
-      (sg as THREE.Object3D).add(rootBone);
+    if (rootBone && (rootBone as THREE.Bone).parent !== sg) {
+      (sg as THREE.Object3D).add(rootBone as THREE.Bone);
     }
 
     return (sg as THREE.Object3D);
@@ -275,17 +274,9 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     }
   });
 
-  const helper = useMemo(() => {
-    if (!scene || !showSkeleton) return null;
-    return new THREE.SkeletonHelper(scene);
-  }, [scene, showSkeleton]);
-
   return attachTo ? null : (
     <group ref={clonedHairRef} position={offset} name="lara_custom_hair_attachment">
       <primitive object={scene} dispose={null} />
-      {helper && <primitive object={helper} />}
     </group>
   );
 }
-
-// Removed invalid preloads
