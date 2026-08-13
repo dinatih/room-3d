@@ -599,37 +599,57 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           clone.times = newTimes;
           clone.values = newValues;
         } else {
-          let yMinDelta = 0;
-          if (animNameLower.includes('takedown')) {
-            // Calculer le décalage minimum en Y pour caler le point le plus bas du mouvement pile au niveau du sol
-            let minY = Infinity;
+          if (isMileyAnim) {
+             for (let j = 0; j < clone.values.length / 3; j++) {
+                // For position, just use the raw track values directly, 
+                // but scale them to match the target Hips height
+                let yVal = clone.values[3*j+1];
+                let zVal = clone.values[3*j+2];
+                
+                if (Math.abs(yVal) < 0.01 && Math.abs(zVal) < 0.01) {
+                  // In-place animation, keep default position
+                  clone.values[3*j] = bone.defaultPosition.x;
+                  clone.values[3*j+1] = bone.defaultPosition.y;
+                  clone.values[3*j+2] = bone.defaultPosition.z;
+                } else {
+                  // Mixamo tracks are Y-up. If it's a Mixamo profile CC3 export, it should be Y-up.
+                  // Just add the offset from 0 to default position
+                  clone.values[3*j] = clone.values[3*j] * computedHipsRatio;
+                  clone.values[3*j+1] = clone.values[3*j+1] * computedHipsRatio + (bone.defaultPosition.y - srcHipsDefaultY * computedHipsRatio);
+                  clone.values[3*j+2] = clone.values[3*j+2] * computedHipsRatio;
+                }
+             }
+          } else {
+            let yMinDelta = 0;
+            if (animNameLower.includes('takedown')) {
+              let minY = Infinity;
+              for (let j = 0; j < clone.values.length / 3; j++) {
+                if (clone.values[3*j+1] < minY) minY = clone.values[3*j+1];
+              }
+              if (minY < 0) {
+                yMinDelta = -minY;
+              }
+            }
+
             for (let j = 0; j < clone.values.length / 3; j++) {
-              if (clone.values[3*j+1] < minY) minY = clone.values[3*j+1];
-            }
-            // Si le point le plus bas s'enfonce sous le sol d'origine, on recale la base du mouvement
-            if (minY < 0) {
-              yMinDelta = -minY;
-            }
-          }
+              let yVal = clone.values[3*j+1] + yMinDelta;
+              if (isRootJointTranslation && (animNameLower.includes('laying') || animNameLower.includes('sleeping'))) {
+                yVal = 0.12; 
+              }
+              const isTPose = animNameLower.includes('t-pose') || animNameLower.includes('tpose');
+              const dy = (isWalk || isTPose) ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
+              const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
+              const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
 
-          for (let j = 0; j < clone.values.length / 3; j++) {
-            let yVal = clone.values[3*j+1] + yMinDelta;
-            if (isRootJointTranslation && (animNameLower.includes('laying') || animNameLower.includes('sleeping'))) {
-              yVal = 0.12; // Force to ground level (in meters)
+              const dP = new THREE.Vector3(dx, dy, dz)
+                .applyQuaternion(P_src)
+                .applyQuaternion(P_tgt_inv);
+              const resPos = bone.defaultPosition.clone().add(dP);
+
+              clone.values[3*j] = resPos.x;
+              clone.values[3*j+1] = resPos.y;
+              clone.values[3*j+2] = resPos.z;
             }
-            const isTPose = animNameLower.includes('t-pose') || animNameLower.includes('tpose');
-            const dy = (isWalk || isTPose) ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
-            const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
-            const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
-
-            const dP = new THREE.Vector3(dx, dy, dz)
-              .applyQuaternion(P_src)
-              .applyQuaternion(P_tgt_inv);
-            const resPos = bone.defaultPosition.clone().add(dP);
-
-            clone.values[3*j] = resPos.x;
-            clone.values[3*j+1] = resPos.y;
-            clone.values[3*j+2] = resPos.z;
           }
         }
       }
@@ -653,6 +673,13 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           }
 
           if (B_src && P_src) {
+            if (isMileyAnim) {
+               // Bypass mathematical retargeting and use raw tracks
+               // We only adjust A-pose to T-pose for arms if needed.
+               // Actually, let's just use raw tracks.
+               continue; 
+            }
+
             const B_tgt = bone.restWorldQuaternion;
             const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
               ? bone.parent.restWorldQuaternion
@@ -671,18 +698,6 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
               const animWorldQ = P_src.clone().multiply(srcLocalQ);
               const deltaQ = animWorldQ.clone().multiply(B_src_inv);
               const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
-
-              if (isMileyAnim) {
-                const offsetAngle = Math.PI * (45 / 180);
-                if (baseName === 'LeftArm') {
-                   const downRot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -offsetAngle);
-                   tgtAnimWorldQ.premultiply(downRot);
-                } else if (baseName === 'RightArm') {
-                   const downRot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), offsetAngle);
-                   tgtAnimWorldQ.premultiply(downRot);
-                }
-              }
-
               const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
 
               clone.values[4*j]   = tgtLocalQ.x;
