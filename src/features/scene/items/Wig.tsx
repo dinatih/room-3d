@@ -102,6 +102,22 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     (sg as THREE.Object3D).scale.set(s * scale, s * scale, s * scale);
     (sg as THREE.Object3D).userData.isWigRoot = true;
 
+    // Fix SkeletonHelper by reparenting the root bone to sg so it inherits the correct world transform
+    let rootBone: THREE.Bone | null = null;
+    clonedFullScene.traverse(child => {
+      if ((child as THREE.Bone).isBone && !rootBone) {
+        let p = child;
+        while (p.parent && (p.parent as THREE.Bone).isBone) {
+          p = p.parent as THREE.Bone;
+        }
+        rootBone = p as THREE.Bone;
+      }
+    });
+
+    if (rootBone && rootBone.parent !== sg) {
+      (sg as THREE.Object3D).add(rootBone);
+    }
+
     return (sg as THREE.Object3D);
   }, [fullScene, id, scale]);
 
