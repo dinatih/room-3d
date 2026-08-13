@@ -81,7 +81,7 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
       }
     });
 
-    const s = 1.0;
+    const s = (id === 'pigtails' || id === 'hair_pigtails') ? 0.01 : 1.0;
     
     if (hairHeadBone) {
       (sg as THREE.Object3D).updateMatrixWorld(true);
