@@ -4,7 +4,7 @@ import * as THREE from 'three';
 
 export function GlobalSkeletonHelpers({ show }: { show: boolean }) {
   const { scene } = useThree();
-  const helpersRef = useRef<Map<THREE.SkinnedMesh, THREE.SkeletonHelper>>(new Map());
+  const helpersRef = useRef<Map<THREE.Bone, THREE.SkeletonHelper>>(new Map());
 
   // Use a slow interval to detect new SkinnedMeshes instead of doing it every frame
   useEffect(() => {
@@ -19,34 +19,43 @@ export function GlobalSkeletonHelpers({ show }: { show: boolean }) {
     }
 
     const interval = setInterval(() => {
-      const currentMeshes = new Set<THREE.SkinnedMesh>();
+      const currentTopBones = new Set<THREE.Bone>();
       
       scene.traverse((child) => {
         if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
           const skinnedMesh = child as THREE.SkinnedMesh;
-          currentMeshes.add(skinnedMesh);
+          if (skinnedMesh.skeleton && skinnedMesh.skeleton.bones.length > 0) {
+            let topBone = skinnedMesh.skeleton.bones[0];
+            while (topBone.parent && (topBone.parent as THREE.Bone).isBone) {
+              topBone = topBone.parent as THREE.Bone;
+            }
+            currentTopBones.add(topBone);
+          }
         }
       });
 
-      // Add helpers for new meshes
-      currentMeshes.forEach(mesh => {
-        if (!helpersRef.current.has(mesh)) {
-          // Find a suitable parent to attach the helper to.
-          // SkeletonHelper draws vertices in world space of the bones, relative to the helper's world space.
-          // In Three.js, adding it to the scene works well because it overrides updateMatrixWorld to copy the root's matrixWorld.
-          const helper = new THREE.SkeletonHelper(mesh);
-          // R3F scene is the root.
+      // Add helpers for new skeletons
+      currentTopBones.forEach(topBone => {
+        if (!helpersRef.current.has(topBone)) {
+          const helper = new THREE.SkeletonHelper(topBone);
+          const mat = helper.material as THREE.LineBasicMaterial;
+          mat.color.set(0x00ffff);
+          mat.depthTest = false;
+          helper.renderOrder = 99999;
+          helper.raycast = () => {};
+          helper.traverse(c => { c.raycast = () => {}; });
+          
           scene.add(helper);
-          helpersRef.current.set(mesh, helper);
+          helpersRef.current.set(topBone, helper);
         }
       });
 
-      // Remove helpers for meshes that no longer exist
-      helpersRef.current.forEach((helper, mesh) => {
-        if (!currentMeshes.has(mesh) || !mesh.parent) {
+      // Remove helpers for skeletons that no longer exist
+      helpersRef.current.forEach((helper, topBone) => {
+        if (!currentTopBones.has(topBone) || !topBone.parent) {
           helper.removeFromParent();
           helper.dispose();
-          helpersRef.current.delete(mesh);
+          helpersRef.current.delete(topBone);
         }
       });
     }, 1000); // Check every second
