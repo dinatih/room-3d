@@ -225,16 +225,19 @@ export function InventoryPreview({
           <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <button onClick={() => setShowDims(v => !v)} style={{ padding: '3px 8px', fontSize: 11, background: 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📏 {showDims ? 'Masquer Dims' : 'Afficher Dims'}</button>
           </div>
-          {showing3D && 'category' in item && (item as any).category === 'walkers' && (
+          {showing3D && 'category' in item && ((item as any).category === 'walkers' || (item as any).category === 'wigs') && (
             <div style={{ position: 'absolute', top: 40, left: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }} onClick={e => e.stopPropagation()}>
               <button onClick={() => setActionStates(s => ({ ...s, showBones: !s.showBones }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.showBones ? '#0058a3' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}</button>
-              <button onClick={() => setActionStates(s => ({ ...s, isPaused: !s.isPaused }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.isPaused ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.isPaused ? '▶️ Play' : '⏸️ Pause'}</button>
               
-              {!['shiba-inu', 'robin-bird'].includes(item.id) && (
-                <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📐 T-Pose</button>
-              )}
-              
-              <select value={actionStates.walkerAnim || 'idle'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
+              {(item as any).category === 'walkers' && (
+                <>
+                  <button onClick={() => setActionStates(s => ({ ...s, isPaused: !s.isPaused }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.isPaused ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.isPaused ? '▶️ Play' : '⏸️ Pause'}</button>
+                  
+                  {!['shiba-inu', 'robin-bird'].includes(item.id) && (
+                    <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📐 T-Pose</button>
+                  )}
+                  
+                  <select value={actionStates.walkerAnim || 'idle'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
                 {item.id === 'shiba-inu' ? (
                   <>
                     <option value="idle">Idle</option>
@@ -302,6 +305,8 @@ export function InventoryPreview({
                     <option value="arc-en-ciel">Arc-en-ciel</option>
                   </select>
                 </>
+              )}
+              </>
               )}
             </div>
           )}

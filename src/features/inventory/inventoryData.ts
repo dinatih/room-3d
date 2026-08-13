@@ -40,6 +40,9 @@ export interface Category {
 }
 
 export const INVENTORY: InventoryItem[] = [
+  { id: 'fornuft10428488', name: "FÖRNUFT couteau, acier inoxydable, 21 cm", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: 10, d: 21, h: 10 }, glbPath: 'media/glb/ikea-official/Fornuft10428488.glb', photos: ['media/ikea-official/fornuft10428488/Fornuft10428488.jpg', 'media/ikea-official/fornuft10428488/Fornuft10428488_1.jpg', 'media/ikea-official/fornuft10428488/Fornuft10428488_2.jpg'], url: 'https://www.ikea.com/fr/fr/p/foernuft-couteau-acier-inoxydable-10428488/', price: '2,49', notes: '' },
+  { id: 'fornuft40428482', name: "FÖRNUFT fourchette, acier inoxydable, 19 cm", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: 10, d: 19, h: 10 }, glbPath: 'media/glb/ikea-official/Fornuft40428482.glb', photos: ['media/ikea-official/fornuft40428482/Fornuft40428482.jpg', 'media/ikea-official/fornuft40428482/Fornuft40428482_1.jpg', 'media/ikea-official/fornuft40428482/Fornuft40428482_2.jpg'], url: 'https://www.ikea.com/fr/fr/p/foernuft-fourchette-acier-inoxydable-40428482/', price: '2,49', notes: '' },
+  { id: 'snitta00287295', name: "SNITTA couteau, noir, 22 cm", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: 10, d: 22, h: 10 }, glbPath: 'media/glb/ikea-official/Snitta00287295.glb', photos: ['media/ikea-official/snitta00287295/Snitta00287295.jpg', 'media/ikea-official/snitta00287295/Snitta00287295_1.jpg', 'media/ikea-official/snitta00287295/Snitta00287295_2.jpg'], url: 'https://www.ikea.com/fr/fr/p/snitta-couteau-noir-00287295/', price: '4,99', notes: '' },
   { id: 'famnig27470460', name: "FAMNIG HJÄRTA coussin, rouge, 40x101 cm", brand: 'IKEA', category: 'decor', qty: 1, dims: { w: 101, d: 40, h: 10 }, glbPath: 'media/glb/ikea-official/Famnig27470460.glb', photos: ['media/ikea-official/famnig27470460/Famnig27470460.jpg', 'media/ikea-official/famnig27470460/Famnig27470460_1.jpg', 'media/ikea-official/famnig27470460/Famnig27470460_2.jpg', 'media/ikea-official/famnig27470460/Famnig27470460_3.jpg'], url: 'https://www.ikea.com/fr/fr/p/famnig-hjaerta-coussin-rouge-27470460/', price: '14,99', notes: 'Utilisé comme parachute pour le déploiement des personnages' },
   { id: 'blaskata50569513', name: "BLÅSKATA coussin, cylindrique/gris clair, 80 cm", brand: 'IKEA', category: 'decor', qty: 1, dims: { w: 20, d: 100, h: 20 }, glbPath: 'media/glb/ikea-official/Blaskata50569513.glb', photos: ['media/ikea-official/blaskata50569513/Blaskata50569513.jpg', 'media/ikea-official/blaskata50569513/Blaskata50569513_1.jpg', 'media/ikea-official/blaskata50569513/Blaskata50569513_2.jpg', 'media/ikea-official/blaskata50569513/Blaskata50569513_3.jpg', 'media/ikea-official/blaskata50569513/Blaskata50569513_4.jpg', 'media/ikea-official/blaskata50569513/Blaskata50569513_5.jpg', 'media/ikea-official/blaskata50569513/Blaskata50569513_6.jpg', 'media/ikea-official/blaskata50569513/Blaskata50569513_7.jpg', 'media/ikea-official/blaskata50569513/Blaskata50569513_8.jpg'], url: 'https://www.ikea.com/fr/fr/p/blaskata-coussin-cylindrique-gris-clair-50569513/', price: '24,99', notes: 'IKEA utilisé comme objet générique pour les traversins' },
   { id: 'dimpa10056770', name: "DIMPA sac de rangement, transparent, 65x22x65 cm", brand: 'IKEA', category: 'storage', qty: 5, dims: { w: 68, d: 27, h: 67 }, glbPath: 'media/glb/ikea-official/Dimpa10056770.glb', photos: ['media/ikea-official/dimpa10056770/Dimpa10056770.jpg', 'media/ikea-official/dimpa10056770/Dimpa10056770_1.jpg', 'media/ikea-official/dimpa10056770/Dimpa10056770_2.jpg', 'media/ikea-official/dimpa10056770/Dimpa10056770_3.jpg', 'media/ikea-official/dimpa10056770/Dimpa10056770_4.jpg', 'media/ikea-official/dimpa10056770/Dimpa10056770_5.jpg', 'media/ikea-official/dimpa10056770/Dimpa10056770_6.jpg'], url: 'https://www.ikea.com/fr/fr/p/dimpa-sac-de-rangement-transparent-10056770/', price: '3,50', notes: '5 sacs séjour mur C' },
@@ -273,6 +276,35 @@ CHARACTERS.forEach(char => {
   }
 });
 
+const WIGS_ITEMS = [
+  { id: 'hair_100', name: 'Coupe #1 (Bob)' },
+  { id: 'hair_101', name: 'Coupe #2 (Queue H.)' },
+  { id: 'hair_102', name: 'Coupe #3 (Pixie)' },
+  { id: 'hair_103', name: 'Coupe #4 (Wolf)' },
+  { id: 'hair_104', name: 'Coupe #5 (Frange)' },
+  { id: 'hair_105', name: 'Coupe #6 (Queue TT H.)' },
+  { id: 'hair_106', name: 'Coupe #7 (Bob Frange)' },
+  { id: 'hair_107', name: 'Coupe #8 (Couettes)' },
+  { id: 'hair_108', name: 'Coupe #9 (Hérissée)' },
+  { id: 'hair_109', name: 'Coupe #10 (Wavy Lob)' },
+  { id: 'hair_110', name: 'Coupe #11 (Hime)' },
+  { id: 'hair_111', name: 'Coupe #12 (Mi-tresse)' },
+  { id: 'hair_112', name: 'Coupe #13 (Chignon)' },
+];
+
+WIGS_ITEMS.forEach(wig => {
+  if (!INVENTORY.some((item: InventoryItem) => item.id === wig.id)) {
+    INVENTORY.push({
+      id: wig.id,
+      name: wig.name,
+      brand: 'Custom',
+      category: 'wigs',
+      qty: 1,
+      dims: { w: 25, d: 25, h: 25 },
+      notes: `Perruque 3D: ${wig.name}.`
+    });
+  }
+});
 
 export const STORAGE_SPACES: StorageSpace[] = [
   { id: 'kallax-ne-stack', name: 'Kallax NE',       dims: { w: 75.5, d: 39, h: 222 }, notes: 'Coin mur C+B — 2×1 bas + 2×2 haut empilés, 6 Drona + 1 dessus' },
@@ -299,6 +331,7 @@ export const CATEGORIES: Category[] = [
   { id: 'decor',        label: 'Déco' },
   { id: 'consumable',   label: '🛒 Consomables' },
   { id: 'walkers',      label: '👥 Personnages' },
+  { id: 'wigs',         label: '💇 Perruques' },
   { id: 'glbs',         label: '🎲 GLBs' },
 ];
 // Mise à jour des catégories IKEA

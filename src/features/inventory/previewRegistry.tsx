@@ -65,6 +65,7 @@ import { Drona }                                      from '@features/scene/item
 import { Walker, CHARACTERS }                         from '@features/scene/Walker';
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
+import { Wig }                                        from '@features/scene/items/Wig';
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
   'freezer':                Freezer,
@@ -183,6 +184,29 @@ SCENE_REGISTRY['ushiro'] = function UshiroPreview({ actionState }: { actionState
 SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState }: { actionState?: any }) {
   return <RobinBird isPreview={true} previewAnim={actionState?.walkerAnim} showSkeletonPreview={actionState?.showBones} />;
 } as any;
+
+const WIGS = [
+  { id: 'hair_100', name: 'Coupe #1 (Bob)' },
+  { id: 'hair_101', name: 'Coupe #2 (Queue H.)' },
+  { id: 'hair_102', name: 'Coupe #3 (Pixie)' },
+  { id: 'hair_103', name: 'Coupe #4 (Wolf)' },
+  { id: 'hair_104', name: 'Coupe #5 (Frange)' },
+  { id: 'hair_105', name: 'Coupe #6 (Queue TT H.)' },
+  { id: 'hair_106', name: 'Coupe #7 (Bob Frange)' },
+  { id: 'hair_107', name: 'Coupe #8 (Couettes)' },
+  { id: 'hair_108', name: 'Coupe #9 (Hérissée)' },
+  { id: 'hair_109', name: 'Coupe #10 (Wavy Lob)' },
+  { id: 'hair_110', name: 'Coupe #11 (Hime)' },
+  { id: 'hair_111', name: 'Coupe #12 (Mi-tresse)' },
+  { id: 'hair_112', name: 'Coupe #13 (Chignon)' },
+];
+
+WIGS.forEach(wig => {
+  SCENE_REGISTRY[wig.id] = function WigPreview({ actionState }: { actionState?: any }) {
+    return <Wig id={wig.id} showSkeleton={actionState?.showBones} scale={1} />;
+  } as any;
+});
+
 
 import { Blaskata50569513 } from '@features/scene/items/Blaskata50569513';
 SCENE_REGISTRY['blaskata50569513'] = Blaskata50569513 as any;
