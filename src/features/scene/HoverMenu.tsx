@@ -276,7 +276,8 @@ const ACTIONS: Record<string, ActionDef> = {
     { value: 'hair_112', label: 'Coupe #13 (Chignon haut hérissé & bandeau)' },
     { value: 'hair_zepeto', label: 'Coupe #14 (Zepeto, zHairezt)' },
     { value: 'hair_pigtails', label: 'Coupe #15 (Longues Couettes Blanches, zHairezt)' },
-    { value: 'hair_buns', label: 'Coupe #16 (Longs Chignons Buns, zHairezt)' }
+    { value: 'hair_buns', label: 'Coupe #16 (Longs Chignons Buns, zHairezt)' },
+    { value: 'hair_short_layers', label: 'Coupe #17 (Courte Dégradée, zHairezt)' }
   ] },
 };
 

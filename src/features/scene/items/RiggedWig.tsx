@@ -38,7 +38,8 @@ export interface WigProps {
 export const RIGGED_WIGS_PATHS: Record<string, string> = {
   zepeto: 'media/zepeto_hair.glb',
   pigtails: 'media/white_long_pigtails.glb',
-  buns: 'media/long_hair_with_buns.glb'
+  buns: 'media/long_hair_with_buns.glb',
+  short_layers: 'media/short_hair_cut_in_layers.glb'
 };
 
 export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
@@ -81,7 +82,7 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
       }
     });
 
-    const s = (id === 'pigtails' || id === 'hair_pigtails') ? 0.01 : 1.0;
+    const s = (id === 'pigtails' || id === 'hair_pigtails') ? 0.1 : 1.0;
     
     if (hairHeadBone) {
       (sg as THREE.Object3D).updateMatrixWorld(true);
@@ -287,3 +288,4 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
 useGLTF.preload('media/white_long_pigtails.glb');
 useGLTF.preload('media/zepeto_hair.glb');
 useGLTF.preload('media/long_hair_with_buns.glb');
+useGLTF.preload('media/short_hair_cut_in_layers.glb');

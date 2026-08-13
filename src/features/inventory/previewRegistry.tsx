@@ -204,11 +204,12 @@ const WIGS = [
   { id: 'hair_zepeto', name: 'Coupe #14 (Zepeto, zHairezt)' },
   { id: 'hair_pigtails', name: 'Coupe #15 (Longues Couettes Blanches, zHairezt)' },
   { id: 'hair_buns', name: 'Coupe #16 (Longs Chignons Buns, zHairezt)' },
+  { id: 'hair_short_layers', name: 'Coupe #17 (Courte Dégradée, zHairezt)' },
 ];
 
 WIGS.forEach(wig => {
   SCENE_REGISTRY[wig.id] = function WigPreview() {
-    if (wig.id === 'hair_zepeto' || wig.id === 'hair_pigtails' || wig.id === 'hair_buns') {
+    if (wig.id === 'hair_zepeto' || wig.id === 'hair_pigtails' || wig.id === 'hair_buns' || wig.id === 'hair_short_layers') {
       return <RiggedWig id={wig.id} scale={1} />;
     }
     return <Wig id={wig.id} scale={1} />;

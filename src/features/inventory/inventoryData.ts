@@ -294,6 +294,7 @@ const WIGS_ITEMS = [
   { id: 'hair_zepeto', name: 'Coupe #14 (Zepeto, zHairezt)' },
   { id: 'hair_pigtails', name: 'Coupe #15 (Longues Couettes Blanches, zHairezt)' },
   { id: 'hair_buns', name: 'Coupe #16 (Longs Chignons Buns, zHairezt)' },
+  { id: 'hair_short_layers', name: 'Coupe #17 (Courte Dégradée, zHairezt)' },
 ];
 
 WIGS_ITEMS.forEach(wig => {
