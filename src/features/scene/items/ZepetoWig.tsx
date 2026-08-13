@@ -70,7 +70,7 @@ export function ZepetoWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
     let hairHeadBone: THREE.Object3D | null = null;
     (sg as THREE.Object3D).traverse((c: any) => {
       const nLower = c.name.toLowerCase();
-      if ((nLower.startsWith('bip_head') || nLower === 'head') && !hairHeadBone) {
+      if ((nLower.startsWith('bip_head') || nLower.startsWith('head')) && !hairHeadBone) {
         hairHeadBone = c;
       }
     });
@@ -130,7 +130,12 @@ export function ZepetoWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
         }
         // Extract bones DIRECTLY from the SkinnedMesh's skeleton!
         if (extractedBones.length === 0) {
-          const isRootOrScalp = (n: string) => n.toLowerCase().includes('root') || n.toLowerCase().includes('spine') || n.toLowerCase().includes('neck') || n.toLowerCase().includes('head');
+          const isRootOrScalp = (n: string) => {
+            const nl = n.toLowerCase();
+            return nl.includes('root') || nl.includes('spine') || nl.includes('neck') || 
+                   nl.includes('head') || nl.includes('hairall') || nl.includes('jbone') || 
+                   nl.includes('forehead') || nl.includes('scalp');
+          };
           sm.skeleton.bones.forEach(b => {
             if (!isRootOrScalp(b.name)) {
               extractedBones.push({
@@ -188,11 +193,12 @@ export function ZepetoWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
         const isRootOrScalp = nLower.includes('bip_head') || nLower.includes('bip_neck') || 
                               nLower.includes('bip_spine') || nLower.startsWith('head') || 
                               nLower.includes('root') || nLower.includes('scalp') || 
-                              nLower.startsWith('bone3_') || nLower.startsWith('bone4_') || 
+                              nLower.includes('hairall') || nLower.includes('jbone') ||
+                              nLower.includes('forehead') ||
                               b.parent === scene;
 
-        if (!isRootOrScalp && nLower.startsWith('bone')) {
-          const index = parseInt(nLower.replace(/\D/g, ''), 10) || 1;
+        if (!isRootOrScalp) {
+          const index = extractedBones.length;
           extractedBones.push({
             bone: b,
             restQ: (b as any).restLocalQuaternion,

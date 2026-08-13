@@ -274,8 +274,8 @@ const ACTIONS: Record<string, ActionDef> = {
     { value: 'hair_110', label: 'Coupe #11 (Coupe Hime / 姫カット)' },
     { value: 'hair_111', label: 'Coupe #12 (Mi-tresse plaquée mi-ondulé)' },
     { value: 'hair_112', label: 'Coupe #13 (Chignon haut hérissé & bandeau)' },
-    { value: 'hair_zepeto', label: 'Coupe Zepeto (Rigged)' },
-    { value: 'hair_pigtails', label: 'Couettes Blanches (Rigged)' }
+    { value: 'hair_zepeto', label: 'Coupe Zepeto (zHairezt)' },
+    { value: 'hair_pigtails', label: 'Couettes Blanches (zHairezt)' }
   ] },
 };
 
