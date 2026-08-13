@@ -2281,7 +2281,7 @@ function InternalWalker(props: WalkerProps) {
   const jazzDanceGltf = useGLTF('media/sandbox/anims/anim_jazz_dancing.glb');
   const canCanGltf = useGLTF('media/sandbox/anims/anim_can_can.glb');
   const ymcaDanceGltf = useGLTF('media/sandbox/anims/anim_ymca_dance.glb');
-  const mileyAnimsGltf = useGLTF('models/miley_all_animations.glb');
+  const mileyAnimsGltf = useGLTF('models/miley_all_animations_v2.glb');
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -2471,7 +2471,7 @@ useGLTF.preload('media/sandbox/anims/anim_dancing_twerk.glb');
 useGLTF.preload('media/sandbox/anims/anim_stall_soccerball_1.glb');
 useGLTF.preload('media/sandbox/anims/anim_body_jab_cross.glb');
 useGLTF.preload('media/sandbox/anims/anim_texting_while_standing.glb');
-useGLTF.preload('models/miley_all_animations.glb');
+useGLTF.preload('models/miley_all_animations_v2.glb');
 
 
 CHARACTERS.forEach(char => {
