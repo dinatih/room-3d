@@ -455,6 +455,10 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
       // is now the root joint's parent (which is usually the scene root).
       if (animBones['Hips'] && animBones['RootJoint']) {
         animBones['Hips'].parentRestWorldQuaternion = animBones['RootJoint'].parentRestWorldQuaternion.clone();
+        const rootPos = animBones['RootJoint'].defaultPosition;
+        const rootRot = animBones['RootJoint'].restLocalQuaternion;
+        const hipsPos = animBones['Hips'].defaultPosition;
+        animBones['Hips'].defaultPosition = rootPos.clone().add(hipsPos.clone().applyQuaternion(rootRot));
       }
     } else {
       const hipsPosTrack = workingClip.tracks.find(t => t.name.toLowerCase().includes('hips') && !(t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')));
@@ -463,6 +467,79 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         hipsName = hipsPosTrack.name.split('.')[0] + '.quaternion';
       }
       rootRotTrack.name = hipsName;
+    }
+  }
+
+  // Combine rootjoint and hips positions
+  const rootPosTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')) && t.name.endsWith('.position'));
+  const hipsPosTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('hips') || t.name.toLowerCase().endsWith('hips.position')) && t.name.endsWith('.position') && !(t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')));
+
+  if (rootPosTrackIndex !== -1) {
+    const rootPosTrack = workingClip.tracks[rootPosTrackIndex];
+    if (hipsPosTrackIndex !== -1 && rootRotTrackIndex !== -1) { // we need rootRotTrack to rotate hipsPos
+      const rootRotTrack = workingClip.tracks.find(t => (t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')) && t.name.endsWith('.quaternion')) || workingClip.tracks[hipsRotTrackIndex]; // fallback if spliced? wait, rootRotTrackIndex was spliced out!
+      // Let's use the ORIGINAL rootRotTrack from rawClip!
+      const origRootRotTrack = rawClip.tracks.find(t => (t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')) && t.name.endsWith('.quaternion'));
+      
+      const hipsPosTrack = workingClip.tracks[hipsPosTrackIndex];
+      const timesSet = new Set<number>([...rootPosTrack.times, ...hipsPosTrack.times]);
+      const times = Array.from(timesSet).sort((a, b) => a - b);
+      const values = new Float32Array(times.length * 3);
+
+      const evaluateVectorTrack = (track: THREE.KeyframeTrack, t: number): THREE.Vector3 => {
+        const trackTimes = track.times;
+        const trackValues = track.values;
+        if (t <= trackTimes[0]) {
+          return new THREE.Vector3(trackValues[0], trackValues[1], trackValues[2]);
+        }
+        if (t >= trackTimes[trackTimes.length - 1]) {
+          const idx = (trackTimes.length - 1) * 3;
+          return new THREE.Vector3(trackValues[idx], trackValues[idx+1], trackValues[idx+2]);
+        }
+        let i = 0;
+        while (i < trackTimes.length - 1 && trackTimes[i+1] < t) i++;
+        const alpha = (t - trackTimes[i]) / (trackTimes[i+1] - trackTimes[i]);
+        const v0 = new THREE.Vector3(trackValues[3*i], trackValues[3*i+1], trackValues[3*i+2]);
+        const v1 = new THREE.Vector3(trackValues[3*(i+1)], trackValues[3*(i+1)+1], trackValues[3*(i+1)+2]);
+        return v0.lerp(v1, alpha);
+      };
+
+      const evaluateQuaternionTrackRaw = (track: THREE.KeyframeTrack, t: number): THREE.Quaternion => {
+        const trackTimes = track.times;
+        const trackValues = track.values;
+        if (t <= trackTimes[0]) return new THREE.Quaternion(trackValues[0], trackValues[1], trackValues[2], trackValues[3]);
+        if (t >= trackTimes[trackTimes.length - 1]) {
+          const idx = (trackTimes.length - 1) * 4;
+          return new THREE.Quaternion(trackValues[idx], trackValues[idx+1], trackValues[idx+2], trackValues[idx+3]);
+        }
+        let i = 0;
+        while (i < trackTimes.length - 1 && trackTimes[i+1] < t) i++;
+        const alpha = (t - trackTimes[i]) / (trackTimes[i+1] - trackTimes[i]);
+        const q0 = new THREE.Quaternion(trackValues[4*i], trackValues[4*i+1], trackValues[4*i+2], trackValues[4*i+3]);
+        const q1 = new THREE.Quaternion(trackValues[4*(i+1)], trackValues[4*(i+1)+1], trackValues[4*(i+1)+2], trackValues[4*(i+1)+3]);
+        return q0.slerp(q1, alpha);
+      };
+
+      for (let i = 0; i < times.length; i++) {
+        const t = times[i];
+        const vRoot = evaluateVectorTrack(rootPosTrack, t);
+        const vHips = evaluateVectorTrack(hipsPosTrack, t);
+        const qRoot = origRootRotTrack ? evaluateQuaternionTrackRaw(origRootRotTrack, t) : new THREE.Quaternion();
+        
+        // Combined World Pos = Root.Pos + Root.Rot * Hips.Pos
+        const combined = vRoot.add(vHips.applyQuaternion(qRoot));
+        values[3*i] = combined.x;
+        values[3*i+1] = combined.y;
+        values[3*i+2] = combined.z;
+      }
+      hipsPosTrack.times = new Float32Array(times);
+      hipsPosTrack.values = values;
+      workingClip.tracks.splice(rootPosTrackIndex, 1);
+    } else {
+      const hipsPosTrack = workingClip.tracks.find(t => t.name.toLowerCase().includes('hips') && !(t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')));
+      if (!hipsPosTrack) {
+        rootPosTrack.name = 'mixamorig:Hips.position';
+      }
     }
   }
 
@@ -492,14 +569,13 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         if (bone && bone.defaultPosition) {
           targetHipsHeight = bone.defaultPosition.length();
         }
-        if (refSrcY > 0) {
-          computedHipsRatio = targetHipsHeight / refSrcY;
+        if (Math.abs(refSrcY) > 0) {
+          computedHipsRatio = targetHipsHeight / Math.abs(refSrcY);
         }
       }
     }
   }
 
-  const hasRootTranslation = workingClip.tracks.some(t => (t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')) && t.name.endsWith('.position'));
   const tracks: THREE.KeyframeTrack[] = [];
 
 
@@ -519,10 +595,6 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
     }
 
     if (!match) continue;
-
-    if (prop === 'position' && baseName.toLowerCase() === 'hips' && hasRootTranslation) {
-      continue;
-    }
 
     let isRootJointTranslation = false;
     if (prop === 'position' && (boneFull.toLowerCase().includes('rootjoint') || boneFull.toLowerCase().includes('cc_base_boneroot'))) {
