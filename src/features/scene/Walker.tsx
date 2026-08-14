@@ -744,11 +744,6 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
             if (isHips) {
               // Hips world rest rotation must be neutralized so the character stands up (for Mixamo +90X rest poses)
               B_src = new THREE.Quaternion();
-              
-              // If RootJoint exists, the tracks were combined, moving the Hips track into Scene space
-              if (animBones['RootJoint']) {
-                P_src = new THREE.Quaternion();
-              }
             }
           } else {
             B_src = new THREE.Quaternion();
