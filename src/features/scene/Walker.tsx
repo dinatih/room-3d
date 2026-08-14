@@ -447,10 +447,14 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         values[4*i+2] = qCombined.z;
         values[4*i+3] = qCombined.w;
       }
-      hipsRotTrack.times = new Float32Array(times);
-      hipsRotTrack.values = values;
       
-      workingClip.tracks.splice(rootRotTrackIndex, 1);
+      const newHipsRotTrack = new THREE.QuaternionKeyframeTrack(hipsRotTrack.name, new Float32Array(times), values);
+      workingClip.tracks.splice(hipsRotTrackIndex, 1, newHipsRotTrack);
+      
+      const updatedRootRotTrackIndex = workingClip.tracks.indexOf(rootRotTrack);
+      if (updatedRootRotTrackIndex !== -1) {
+        workingClip.tracks.splice(updatedRootRotTrackIndex, 1);
+      }
     } else {
       const hipsPosTrack = workingClip.tracks.find(t => t.name.toLowerCase().includes('hips') && !(t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')));
       let hipsName = 'mixamorig:Hips.quaternion';
@@ -516,23 +520,24 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           posValues[3*i+1] = pCombined.y;
           posValues[3*i+2] = pCombined.z;
         }
-        hipsPosTrack.times = new Float32Array(posTimes);
-        hipsPosTrack.values = posValues;
-        workingClip.tracks.splice(rootPosTrackIndex, 1);
+        
+        const newHipsPosTrack = new THREE.VectorKeyframeTrack(hipsPosTrack.name, new Float32Array(posTimes), posValues);
+        workingClip.tracks.splice(hipsPosTrackIndex, 1, newHipsPosTrack);
+        
+        const updatedRootPosTrackIndex = workingClip.tracks.indexOf(rootPosTrack);
+        if (updatedRootPosTrackIndex !== -1) {
+          workingClip.tracks.splice(updatedRootPosTrackIndex, 1);
+        }
       }
     }
   }
 
-  // We combined the root joint into Hips, so Hips now holds the absolute world rotation!
-  // To prevent the retargeting loop from folding this combined rotation, we must neutralize 
-  // the rest poses for Hips in the source skeleton.
+  // Restore rootjoint default offset to Hips for position calculation
   if (animBones['Hips'] && animBones['RootJoint']) {
-    animBones['Hips'].parentRestWorldQuaternion = new THREE.Quaternion();
-    animBones['Hips'].restWorldQuaternion = new THREE.Quaternion();
-    
-    // For position retargeting to work correctly, we also need to adjust the defaultPosition.
-    // We just treat it as if it's already in world space with no parents.
-    animBones['Hips'].defaultPosition = new THREE.Vector3(0, 99.1, 0); // fallback approximate height
+    const rootPos = animBones['RootJoint'].defaultPosition;
+    const rootRot = animBones['RootJoint'].restLocalQuaternion;
+    const hipsPos = animBones['Hips'].defaultPosition;
+    animBones['Hips'].defaultPosition = rootPos.clone().add(hipsPos.clone().applyQuaternion(rootRot));
   }
 
   // Determine height translations scale multiplier dynamically
