@@ -742,32 +742,6 @@ export function SidePanel({
         </div>
       )}
 
-      {/* SHIBA INU SECTION */}
-      <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
-        <div className="text-muted fw-semibold mb-1 text-dark mt-2" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🐕 Ushiro (Shiba Inu)</div>
-        <button 
-          className="btn btn-sm btn-outline-dark text-start px-2 py-1" 
-          style={{ fontSize: '11px' }}
-          onClick={() => { document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'shiba-replay' } })); }}
-        >
-          ▶️ 🤖 Mode Autonome (Roaming)
-        </button>
-        <div className="d-flex flex-wrap gap-1 mt-1">
-          {['Idle', 'Jump', 'Run', 'SitDown', 'Walk'].map((animName, i) => (
-            <button
-              key={animName}
-              className="btn btn-sm btn-outline-secondary px-2 py-1 flex-grow-1"
-              style={{ fontSize: '10px' }}
-              onClick={() => {
-                document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: `shiba-play-${i}` } }));
-              }}
-            >
-              🔄 {animName}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className="text-muted fw-semibold mb-1 text-dark mt-2" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🤖 Actions IA (Autopilot)</div>
       {(() => {
         const aiBtn = (label: string, key: string, emoji: string) => {

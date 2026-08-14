@@ -277,7 +277,7 @@ CHARACTERS.forEach(char => {
   }
 });
 
-const WIGS_ITEMS = [
+export const WIGS_ITEMS = [
   { id: 'hair_100', name: 'Coupe #1 (Bob)' },
   { id: 'hair_101', name: 'Coupe #2 (Queue H.)' },
   { id: 'hair_102', name: 'Coupe #3 (Pixie)' },
@@ -329,7 +329,28 @@ const WIGS_ITEMS = [
   { id: 'hair_wavy_long_hair_with_bangs', name: 'Coupe #49 (Longs Ondulés Frange, zHairezt)' },
   { id: 'hair_wavy_white_hair_to_one_side', name: 'Coupe #50 (Ondulés Blancs sur le Côté, zHairezt)' },
   { id: 'hair_high_white_bunponytail', name: 'Coupe #51 (Chignon/Queue Haut Blanc, zHairezt)' },
-  { id: 'hair_white_hair_arraged_to_one_side', name: 'Coupe #52 (Cheveux Blancs Arrangés sur un Côté, zHairezt)' }
+  { id: 'hair_white_hair_arraged_to_one_side', name: 'Coupe #52 (Cheveux Blancs Arrangés sur un Côté, zHairezt)' },
+  { id: 'hair_black_long_hair', name: 'Coupe #53 (Longs Cheveux Noirs, zHairezt)' },
+  { id: 'hair_blonde_ponytail_with_bangs', name: 'Coupe #54 (Queue de Cheval Blonde Frange, zHairezt)' },
+  { id: 'hair_bratz_curly_hair', name: 'Coupe #55 (Bratz Bouclée, zHairezt)' },
+  { id: 'hair_bratz_long_hair', name: 'Coupe #56 (Bratz Longue, zHairezt)' },
+  { id: 'hair_chinook_wind_ponytail', name: 'Coupe #57 (Chinook Queue de Cheval, zHairezt)' },
+  { id: 'hair_hair_bitten', name: 'Coupe #58 (Bitten, zHairezt)' },
+  { id: 'hair_kcon_long_hair', name: 'Coupe #59 (KCON Longue, zHairezt)' },
+  { id: 'hair_long_down_ponytail', name: 'Coupe #60 (Longue Queue de Cheval Basse, zHairezt)' },
+  { id: 'hair_long_hair_cut_in_layers', name: 'Coupe #61 (Longue Dégradée, zHairezt)' },
+  { id: 'hair_long_hair_with_bow', name: 'Coupe #62 (Longue avec Nœud, zHairezt)' },
+  { id: 'hair_medium_short_hair_combed_to_the_sides', name: 'Coupe #63 (Mi-Courte sur les Côtés, zHairezt)' },
+  { id: 'hair_nmixx_white_hair', name: 'Coupe #64 (NMIXX Blanche, zHairezt)' },
+  { id: 'hair_nmixx_white_longshort_hair', name: 'Coupe #65 (NMIXX Blanche Long/Court, zHairezt)' },
+  { id: 'hair_noicepotatonp_osanahair', name: 'Coupe #66 (Osana, zHairezt)' },
+  { id: 'hair_side_swept_curls', name: 'Coupe #67 (Boucles Balayées sur le Côté, zHairezt)' },
+  { id: 'hair_straight_long_white_hair', name: 'Coupe #68 (Longs Cheveux Lisses Blancs, zHairezt)' },
+  { id: 'hair_two_braids_with_red_ties', name: 'Coupe #69 (Deux Tresses Attaches Rouges, zHairezt)' },
+  { id: 'hair_vcha_long_white_hair', name: 'Coupe #70 (VCHA Longue Blanche, zHairezt)' },
+  { id: 'hair_wavy_hair_arranged_to_one_side', name: 'Coupe #71 (Ondulés sur un Côté, zHairezt)' },
+  { id: 'hair_wavy_hair_with_bangs_02', name: 'Coupe #72 (Ondulés Frange V2, zHairezt)' },
+  { id: 'hair_white_long_wavy_hair', name: 'Coupe #73 (Longs Blancs Ondulés, zHairezt)' }
 ];
 
 WIGS_ITEMS.forEach(wig => {

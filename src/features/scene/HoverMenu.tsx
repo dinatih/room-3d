@@ -25,23 +25,16 @@ interface ActionDef {
 
 
 
+import { WIGS_ITEMS } from '@features/inventory/inventoryData';
+
+const mappedWigOptions = WIGS_ITEMS.map((wig, i) => ({
+  value: i.toString(),
+  label: wig.name
+}));
+
 const ACTIONS: Record<string, ActionDef> = {
   'mannequin-kallax-nw-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-kallax-nw-random' },
-  'mannequin-kallax-nw-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-kallax-nw-wig', type: 'select', options: [
-    { value: '0', label: 'Coupe #1 (Carré Court / Bob)' },
-    { value: '1', label: 'Coupe #2 (Queue de cheval haute & mèches visages)' },
-    { value: '2', label: 'Coupe #3 (Pixie effilée & déstructurée)' },
-    { value: '3', label: 'Coupe #4 (Shag mi-longue / Wolf cut)' },
-    { value: '4', label: 'Coupe #5 (Mi-longue lissée avec frange)' },
-    { value: '5', label: 'Coupe #6 (Queue de cheval très haute)' },
-    { value: '6', label: 'Coupe #7 (Carré court avec frange droite)' },
-    { value: '7', label: 'Coupe #8 (Couettes hautes & frange latérale)' },
-    { value: '8', label: 'Coupe #9 (Courte hérissée avec bandeau)' },
-    { value: '9', label: 'Coupe #10 (Lob ondulé / Wavy lob)' },
-    { value: '10', label: 'Coupe #11 (Coupe Hime / 姫カット)' },
-    { value: '11', label: 'Coupe #12 (Mi-tresse plaquée mi-ondulé)' },
-    { value: '12', label: 'Coupe #13 (Chignon haut hérissé & bandeau)' }
-  ] },
+  'mannequin-kallax-nw-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-kallax-nw-wig', type: 'select', options: mappedWigOptions },
   'mannequin-kallax-nw-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-kallax-nw-color', type: 'select', options: [
     { value: 'naturel', label: 'Naturel 🟫' },
     { value: 'noir', label: 'Noir ⚫' },
@@ -60,21 +53,7 @@ const ACTIONS: Record<string, ActionDef> = {
   'mannequin-kallax-nw-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-kallax-nw-wind' },
 
   'mannequin-kallax-ne-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-kallax-ne-random' },
-  'mannequin-kallax-ne-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-kallax-ne-wig', type: 'select', options: [
-    { value: '0', label: 'Coupe #1 (Carré Court / Bob)' },
-    { value: '1', label: 'Coupe #2 (Queue de cheval haute & mèches visages)' },
-    { value: '2', label: 'Coupe #3 (Pixie effilée & déstructurée)' },
-    { value: '3', label: 'Coupe #4 (Shag mi-longue / Wolf cut)' },
-    { value: '4', label: 'Coupe #5 (Mi-longue lissée avec frange)' },
-    { value: '5', label: 'Coupe #6 (Queue de cheval très haute)' },
-    { value: '6', label: 'Coupe #7 (Carré court avec frange droite)' },
-    { value: '7', label: 'Coupe #8 (Couettes hautes & frange latérale)' },
-    { value: '8', label: 'Coupe #9 (Courte hérissée avec bandeau)' },
-    { value: '9', label: 'Coupe #10 (Lob ondulé / Wavy lob)' },
-    { value: '10', label: 'Coupe #11 (Coupe Hime / 姫カット)' },
-    { value: '11', label: 'Coupe #12 (Mi-tresse plaquée mi-ondulé)' },
-    { value: '12', label: 'Coupe #13 (Chignon haut hérissé & bandeau)' }
-  ] },
+  'mannequin-kallax-ne-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-kallax-ne-wig', type: 'select', options: mappedWigOptions },
   'mannequin-kallax-ne-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-kallax-ne-color', type: 'select', options: [
     { value: 'naturel', label: 'Naturel 🟫' },
     { value: 'noir', label: 'Noir ⚫' },
@@ -93,21 +72,7 @@ const ACTIONS: Record<string, ActionDef> = {
   'mannequin-kallax-ne-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-kallax-ne-wind' },
 
   'mannequin-meubleT-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-meubleT-random' },
-  'mannequin-meubleT-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-meubleT-wig', type: 'select', options: [
-    { value: '0', label: 'Coupe #1 (Carré Court / Bob)' },
-    { value: '1', label: 'Coupe #2 (Queue de cheval haute & mèches visages)' },
-    { value: '2', label: 'Coupe #3 (Pixie effilée & déstructurée)' },
-    { value: '3', label: 'Coupe #4 (Shag mi-longue / Wolf cut)' },
-    { value: '4', label: 'Coupe #5 (Mi-longue lissée avec frange)' },
-    { value: '5', label: 'Coupe #6 (Queue de cheval très haute)' },
-    { value: '6', label: 'Coupe #7 (Carré court avec frange droite)' },
-    { value: '7', label: 'Coupe #8 (Couettes hautes & frange latérale)' },
-    { value: '8', label: 'Coupe #9 (Courte hérissée avec bandeau)' },
-    { value: '9', label: 'Coupe #10 (Lob ondulé / Wavy lob)' },
-    { value: '10', label: 'Coupe #11 (Coupe Hime / 姫カット)' },
-    { value: '11', label: 'Coupe #12 (Mi-tresse plaquée mi-ondulé)' },
-    { value: '12', label: 'Coupe #13 (Chignon haut hérissé & bandeau)' }
-  ] },
+  'mannequin-meubleT-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-meubleT-wig', type: 'select', options: mappedWigOptions },
   'mannequin-meubleT-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-meubleT-color', type: 'select', options: [
     { value: 'naturel', label: 'Naturel 🟫' },
     { value: 'noir', label: 'Noir ⚫' },
@@ -126,21 +91,7 @@ const ACTIONS: Record<string, ActionDef> = {
   'mannequin-meubleT-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-meubleT-wind' },
 
   'mannequin-lack-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-lack-random' },
-  'mannequin-lack-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-lack-wig', type: 'select', options: [
-    { value: '0', label: 'Coupe #1 (Carré Court / Bob)' },
-    { value: '1', label: 'Coupe #2 (Queue de cheval haute & mèches visages)' },
-    { value: '2', label: 'Coupe #3 (Pixie effilée & déstructurée)' },
-    { value: '3', label: 'Coupe #4 (Shag mi-longue / Wolf cut)' },
-    { value: '4', label: 'Coupe #5 (Mi-longue lissée avec frange)' },
-    { value: '5', label: 'Coupe #6 (Queue de cheval très haute)' },
-    { value: '6', label: 'Coupe #7 (Carré court avec frange droite)' },
-    { value: '7', label: 'Coupe #8 (Couettes hautes & frange latérale)' },
-    { value: '8', label: 'Coupe #9 (Courte hérissée avec bandeau)' },
-    { value: '9', label: 'Coupe #10 (Lob ondulé / Wavy lob)' },
-    { value: '10', label: 'Coupe #11 (Coupe Hime / 姫カット)' },
-    { value: '11', label: 'Coupe #12 (Mi-tresse plaquée mi-ondulé)' },
-    { value: '12', label: 'Coupe #13 (Chignon haut hérissé & bandeau)' },
-  ] },
+  'mannequin-lack-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-lack-wig', type: 'select', options: mappedWigOptions },
   'mannequin-lack-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-lack-color', type: 'select', options: [
     { value: 'naturel', label: 'Naturel 🟫' },
     { value: 'noir', label: 'Noir ⚫' },
@@ -159,21 +110,7 @@ const ACTIONS: Record<string, ActionDef> = {
   'mannequin-lack-wind':  { btnLabel: 'Vent 💨', toggleKey: 'mannequin-lack-wind' },
 
   'mannequin-lamp-random': { btnLabel: '🎲 Aléatoire complet', toggleKey: 'mannequin-lamp-random' },
-  'mannequin-lamp-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-lamp-wig', type: 'select', options: [
-    { value: '0', label: 'Coupe #1 (Carré Court / Bob)' },
-    { value: '1', label: 'Coupe #2 (Queue de cheval haute & mèches visages)' },
-    { value: '2', label: 'Coupe #3 (Pixie effilée & déstructurée)' },
-    { value: '3', label: 'Coupe #4 (Shag mi-longue / Wolf cut)' },
-    { value: '4', label: 'Coupe #5 (Mi-longue lissée avec frange)' },
-    { value: '5', label: 'Coupe #6 (Queue de cheval très haute)' },
-    { value: '6', label: 'Coupe #7 (Carré court avec frange droite)' },
-    { value: '7', label: 'Coupe #8 (Couettes hautes & frange latérale)' },
-    { value: '8', label: 'Coupe #9 (Courte hérissée avec bandeau)' },
-    { value: '9', label: 'Coupe #10 (Lob ondulé / Wavy lob)' },
-    { value: '10', label: 'Coupe #11 (Coupe Hime / 姫カット)' },
-    { value: '11', label: 'Coupe #12 (Mi-tresse plaquée mi-ondulé)' },
-    { value: '12', label: 'Coupe #13 (Chignon haut hérissé & bandeau)' },
-  ] },
+  'mannequin-lamp-wig':   { btnLabel: 'Perruque 💇', toggleKey: 'mannequin-lamp-wig', type: 'select', options: mappedWigOptions },
   'mannequin-lamp-color': { btnLabel: 'Couleur cheveux 🎨', toggleKey: 'mannequin-lamp-color', type: 'select', options: [
     { value: 'naturel', label: 'Naturel 🟫' },
     { value: 'noir', label: 'Noir ⚫' },

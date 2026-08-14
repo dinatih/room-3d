@@ -2205,7 +2205,14 @@ function SingleCharacter({
           'hair_scbe_hair_combed_to_one_side', 'hair_wavy_wet_white_hair', 'hair_nyyd_wavy_hair',
           'hair_short_wavy_hair_with_bangs', 'hair_nmixxhair_whith_bangs', 'hair_long_hair_styled_to_the_sides',
           'hair_wavy_long_hair_with_bangs', 'hair_wavy_white_hair_to_one_side', 'hair_high_white_bunponytail',
-          'hair_white_hair_arraged_to_one_side'
+          'hair_white_hair_arraged_to_one_side',
+          'hair_black_long_hair', 'hair_blonde_ponytail_with_bangs', 'hair_bratz_curly_hair',
+          'hair_bratz_long_hair', 'hair_chinook_wind_ponytail', 'hair_hair_bitten',
+          'hair_kcon_long_hair', 'hair_long_down_ponytail', 'hair_long_hair_cut_in_layers',
+          'hair_long_hair_with_bow', 'hair_medium_short_hair_combed_to_the_sides', 'hair_nmixx_white_hair',
+          'hair_nmixx_white_longshort_hair', 'hair_noicepotatonp_osanahair', 'hair_side_swept_curls',
+          'hair_straight_long_white_hair', 'hair_two_braids_with_red_ties', 'hair_vcha_long_white_hair',
+          'hair_wavy_hair_arranged_to_one_side', 'hair_wavy_hair_with_bangs_02', 'hair_white_long_wavy_hair'
         ].includes(haircut as string) ? (
           <RiggedWig
             id={haircut.replace('hair_', '')}

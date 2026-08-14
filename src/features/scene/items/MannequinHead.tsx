@@ -19,6 +19,8 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { Wig, HAIR_COLORS } from './Wig';
+import { RiggedWig } from './RiggedWig';
+import { WIGS_ITEMS } from '@features/inventory/inventoryData';
 
 interface MannequinHeadProps extends SceneItemProps {
   mannequinId?: string;
@@ -32,10 +34,10 @@ const TARGET_H = 45; // cm
 // Keep track of used initial wigs to avoid duplicates on startup
 let usedInitialWigs: number[] = [];
 function getUniqueRandomWig(): number {
-  if (usedInitialWigs.length >= 13) usedInitialWigs = [];
+  if (usedInitialWigs.length >= WIGS_ITEMS.length) usedInitialWigs = [];
   let index;
   do {
-    index = Math.floor(Math.random() * 13);
+    index = Math.floor(Math.random() * WIGS_ITEMS.length);
   } while (usedInitialWigs.includes(index));
   usedInitialWigs.push(index);
   return index;
@@ -53,8 +55,6 @@ function getUniqueRandomColor(): string {
   return color;
 }
 
-// Préfixes des 13 coiffures dans media/wigs/
-const HAIR_NUMBERS = ['100','101','102','103','104','105','106','107','108','109','110','111','112'];
 
 export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initialWigIndex, hairColor: initialHairColor, windEnabled: initialWindEnabled }: MannequinHeadProps) {
   const ref = useRef<THREE.Group>(null!);
@@ -68,7 +68,7 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
     const handler = (e: Event) => {
       const { key, value } = (e as CustomEvent).detail;
       if (key === `mannequin-${mannequinId}-random`) {
-        const newWig = Math.floor(Math.random() * 13);
+        const newWig = Math.floor(Math.random() * WIGS_ITEMS.length);
         setWigIndex(newWig);
         const colorKeys = Object.keys(HAIR_COLORS);
         colorKeys.push('arc-en-ciel');
@@ -78,7 +78,7 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: `mannequin-${mannequinId}-color`, value: newColor } }));
       }
       if (key === `mannequin-${mannequinId}-wig`) {
-        setWigIndex(value === -1 || value === '-1' ? Math.floor(Math.random() * 13) : parseInt(value, 10));
+        setWigIndex(value === -1 || value === '-1' ? Math.floor(Math.random() * WIGS_ITEMS.length) : parseInt(value, 10));
       }
       if (key === `mannequin-${mannequinId}-color`) setHairColor(value);
       if (key === `mannequin-${mannequinId}-wind`) {
@@ -94,7 +94,7 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
     return () => document.removeEventListener('furniture-toggle', handler);
   }, [mannequinId, wigIndex, hairColor]);
 
-  const activeWigNumber = HAIR_NUMBERS[wigIndex] || HAIR_NUMBERS[0];
+  const activeWigId = WIGS_ITEMS[wigIndex]?.id || WIGS_ITEMS[0].id;
 
   useLayoutEffect(() => {
     // ── Tête de mannequin ─────────────────────────────────────────────────
@@ -118,13 +118,23 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
     <group ref={ref}>
       <mesh position={[0,40,0]}><boxGeometry args={[10, 10, 10]} /><meshBasicMaterial color="blue" /></mesh>
       <primitive object={scene} />
-      <Wig 
-        id={activeWigNumber}
-        color={hairColor}
-        windEnabled={windEnabled}
-        offset={MANNEQUIN_WIG_OFFSET}
-        scale={90}
-      />
+      {wigIndex < 13 ? (
+        <Wig 
+          id={activeWigId.replace('hair_', '')}
+          color={hairColor}
+          windEnabled={windEnabled}
+          offset={MANNEQUIN_WIG_OFFSET}
+          scale={90}
+        />
+      ) : (
+        <RiggedWig
+          id={activeWigId.replace('hair_', '')}
+          color={hairColor}
+          windEnabled={windEnabled}
+          offset={MANNEQUIN_WIG_OFFSET}
+          scale={90}
+        />
+      )}
     </group>
   );
 }
