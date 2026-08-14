@@ -1094,7 +1094,7 @@ function SingleCharacter({
 
     const fallbackScale = 100.0;
     const baseHeight = isLara ? 173.4 : 181.0;
-    const scaleFactor = targetHeight / baseHeight;
+    const scaleFactor = (targetHeight / baseHeight) * 100.0;
 
     scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
