@@ -538,6 +538,10 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
     const rootRot = animBones['RootJoint'].restLocalQuaternion;
     const hipsPos = animBones['Hips'].defaultPosition;
     animBones['Hips'].defaultPosition = rootPos.clone().add(hipsPos.clone().applyQuaternion(rootRot));
+  } else if (animBones['Hips']) {
+    // For Mixamo animations (no RootJoint), neutralize the rest rotation to avoid 90-degree world rotation folding.
+    animBones['Hips'].parentRestWorldQuaternion = new THREE.Quaternion();
+    animBones['Hips'].restWorldQuaternion = new THREE.Quaternion();
   }
 
   // Determine height translations scale multiplier dynamically
