@@ -306,6 +306,11 @@ const WIGS_ITEMS = [
   { id: 'hair_high_bun', name: 'Coupe #26 (Chignon Haut Frange, zHairezt)' },
   { id: 'hair_high_ponytail', name: 'Coupe #27 (Petite Queue de Cheval Haute, zHairezt)' },
   { id: 'hair_nmixx_short', name: 'Coupe #28 (NMIXX Courte V2, zHairezt)' },
+  { id: 'hair_long_braids', name: 'Coupe #29 (Longues Tresses Frange, zHairezt)' },
+  { id: 'hair_nmixx_16', name: 'Coupe #30 (NMIXX #16, zHairezt)' },
+  { id: 'hair_zepeto_nmixx', name: 'Coupe #31 (Zepeto NMIXX, zHairezt)' },
+  { id: 'hair_bob_buns', name: 'Coupe #32 (Carré Bob Buns, zHairezt)' },
+  { id: 'hair_wavy_ponytails', name: 'Coupe #33 (Longues Couettes Ondulées Blanches, zHairezt)' },
 ];
 
 WIGS_ITEMS.forEach(wig => {

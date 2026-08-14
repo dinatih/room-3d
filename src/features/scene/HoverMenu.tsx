@@ -288,7 +288,12 @@ const ACTIONS: Record<string, ActionDef> = {
     { value: 'hair_low_bun', label: 'Coupe #25 (Chignon Bas Frange, zHairezt)' },
     { value: 'hair_high_bun', label: 'Coupe #26 (Chignon Haut Frange, zHairezt)' },
     { value: 'hair_high_ponytail', label: 'Coupe #27 (Petite Queue de Cheval Haute, zHairezt)' },
-    { value: 'hair_nmixx_short', label: 'Coupe #28 (NMIXX Courte V2, zHairezt)' }
+    { value: 'hair_nmixx_short', label: 'Coupe #28 (NMIXX Courte V2, zHairezt)' },
+    { value: 'hair_long_braids', label: 'Coupe #29 (Longues Tresses Frange, zHairezt)' },
+    { value: 'hair_nmixx_16', label: 'Coupe #30 (NMIXX #16, zHairezt)' },
+    { value: 'hair_zepeto_nmixx', label: 'Coupe #31 (Zepeto NMIXX, zHairezt)' },
+    { value: 'hair_bob_buns', label: 'Coupe #32 (Carré Bob Buns, zHairezt)' },
+    { value: 'hair_wavy_ponytails', label: 'Coupe #33 (Longues Couettes Ondulées Blanches, zHairezt)' }
   ] },
 };
 
@@ -695,6 +700,7 @@ export function HoverOverlay() {
                   )}
                   <select
                     style={BTN_STYLE}
+                    onKeyDown={(e) => e.stopPropagation()}
                     value={val}
                     onChange={(e) => {
                       const newVal = e.target.value;

@@ -650,6 +650,7 @@ export function SidePanel({
             <select
               className="form-select form-select-sm bg-transparent text-dark border-secondary"
               style={{ fontSize: isMobile ? '14px' : '11px' }}
+              onKeyDown={(e) => e.stopPropagation()}
               defaultValue="rose"
               onChange={(e) => {
                 const val = e.target.value;
@@ -676,6 +677,7 @@ export function SidePanel({
             <select
               className="form-select form-select-sm bg-transparent text-dark border-secondary"
               style={{ fontSize: isMobile ? '14px' : '11px' }}
+              onKeyDown={(e) => e.stopPropagation()}
               value={globalHaircut}
               onChange={(e) => {
                 const val = e.target.value;
@@ -714,6 +716,11 @@ export function SidePanel({
               <option value="hair_high_bun" className="bg-light text-dark">Coupe #26 (Chignon Haut Frange, zHairezt)</option>
               <option value="hair_high_ponytail" className="bg-light text-dark">Coupe #27 (Petite Queue de Cheval Haute, zHairezt)</option>
               <option value="hair_nmixx_short" className="bg-light text-dark">Coupe #28 (NMIXX Courte V2, zHairezt)</option>
+              <option value="hair_long_braids" className="bg-light text-dark">Coupe #29 (Longues Tresses Frange, zHairezt)</option>
+              <option value="hair_nmixx_16" className="bg-light text-dark">Coupe #30 (NMIXX #16, zHairezt)</option>
+              <option value="hair_zepeto_nmixx" className="bg-light text-dark">Coupe #31 (Zepeto NMIXX, zHairezt)</option>
+              <option value="hair_bob_buns" className="bg-light text-dark">Coupe #32 (Carré Bob Buns, zHairezt)</option>
+              <option value="hair_wavy_ponytails" className="bg-light text-dark">Coupe #33 (Longues Couettes Ondulées Blanches, zHairezt)</option>
             </select>
           </div>
         </div>

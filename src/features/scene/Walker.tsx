@@ -395,8 +395,8 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
   }
 
   // Combine rootjoint and hips rotations
-  const rootRotTrackIndex = workingClip.tracks.findIndex(t => t.name.toLowerCase().includes('rootjoint') && t.name.endsWith('.quaternion'));
-  const hipsRotTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('hips') || t.name.toLowerCase().endsWith('hips.quaternion')) && t.name.endsWith('.quaternion') && !t.name.toLowerCase().includes('rootjoint'));
+  const rootRotTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')) && t.name.endsWith('.quaternion'));
+  const hipsRotTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('hips') || t.name.toLowerCase().endsWith('hips.quaternion')) && t.name.endsWith('.quaternion') && !(t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')));
 
   if (rootRotTrackIndex !== -1) {
     const rootRotTrack = workingClip.tracks[rootRotTrackIndex];
@@ -442,7 +442,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
       hipsRotTrack.values = values;
       workingClip.tracks.splice(rootRotTrackIndex, 1);
     } else {
-      const hipsPosTrack = workingClip.tracks.find(t => t.name.toLowerCase().includes('hips') && !t.name.toLowerCase().includes('rootjoint'));
+      const hipsPosTrack = workingClip.tracks.find(t => t.name.toLowerCase().includes('hips') && !(t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')));
       let hipsName = 'mixamorig:Hips.quaternion';
       if (hipsPosTrack) {
         hipsName = hipsPosTrack.name.split('.')[0] + '.quaternion';
@@ -484,7 +484,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
     }
   }
 
-  const hasRootTranslation = workingClip.tracks.some(t => t.name.toLowerCase().includes('rootjoint') && t.name.endsWith('.position'));
+  const hasRootTranslation = workingClip.tracks.some(t => (t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')) && t.name.endsWith('.position'));
   const tracks: THREE.KeyframeTrack[] = [];
 
 
@@ -504,7 +504,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
     }
 
     let isRootJointTranslation = false;
-    if (prop === 'position' && baseName.toLowerCase().includes('rootjoint')) {
+    if (prop === 'position' && (baseName.toLowerCase().includes('rootjoint') || baseName.toLowerCase().includes('cc_base_boneroot'))) {
       baseName = 'Hips';
       isRootJointTranslation = true;
     }
@@ -2185,7 +2185,8 @@ function SingleCharacter({
           'hair_nmixx_hat_braids', 'hair_very_long', 'hair_two_braids_bangs', 
           'hair_aespa_short', 'hair_wavy_ponytail', 'hair_nimxx_short',
           'hair_short_combed', 'hair_low_bun', 'hair_high_bun',
-          'hair_high_ponytail', 'hair_nmixx_short'
+          'hair_high_ponytail', 'hair_nmixx_short', 'hair_long_braids',
+          'hair_nmixx_16', 'hair_zepeto_nmixx', 'hair_bob_buns', 'hair_wavy_ponytails'
         ].includes(haircut as string) ? (
           <RiggedWig
             id={haircut.replace('hair_', '')}
