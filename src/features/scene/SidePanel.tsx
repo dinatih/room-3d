@@ -20,7 +20,7 @@ const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
 import { useSceneStore } from './store/useSceneStore';
-import { CHARACTERS } from './Walker';
+import { INVENTORY_ITEMS, WIGS_ITEMS } from './inventory/inventoryData';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 
 import {
@@ -685,58 +685,9 @@ export function SidePanel({
               }}
             >
               <option value="original" className="bg-light text-dark">Coupe d'origine 👱‍♀️</option>
-              <option value="hair_100" className="bg-light text-dark">Coupe #1 (Carré Court / Bob)</option>
-              <option value="hair_101" className="bg-light text-dark">Coupe #2 (Queue de cheval haute & mèches visages)</option>
-              <option value="hair_102" className="bg-light text-dark">Coupe #3 (Pixie effilée & déstructurée)</option>
-              <option value="hair_103" className="bg-light text-dark">Coupe #4 (Shag mi-longue / Wolf cut)</option>
-              <option value="hair_104" className="bg-light text-dark">Coupe #5 (Mi-longue lissée avec frange)</option>
-              <option value="hair_105" className="bg-light text-dark">Coupe #6 (Queue de cheval très haute)</option>
-              <option value="hair_106" className="bg-light text-dark">Coupe #7 (Carré court avec frange droite)</option>
-              <option value="hair_107" className="bg-light text-dark">Coupe #8 (Couettes hautes & frange latérale)</option>
-              <option value="hair_108" className="bg-light text-dark">Coupe #9 (Courte hérissée avec bandeau)</option>
-              <option value="hair_109" className="bg-light text-dark">Coupe #10 (Lob ondulé / Wavy lob)</option>
-              <option value="hair_110" className="bg-light text-dark">Coupe #11 (Coupe Hime / 姫カット)</option>
-              <option value="hair_111" className="bg-light text-dark">Coupe #12 (Mi-tresse plaquée mi-ondulé)</option>
-              <option value="hair_112" className="bg-light text-dark">Coupe #13 (Chignon haut hérissé & bandeau)</option>
-              <option value="hair_zepeto" className="bg-light text-dark">Coupe #14 (Zepeto, zHairezt)</option>
-              <option value="hair_pigtails" className="bg-light text-dark">Coupe #15 (Longues Couettes Blanches, zHairezt)</option>
-              <option value="hair_buns" className="bg-light text-dark">Coupe #16 (Longs Chignons Buns, zHairezt)</option>
-              <option value="hair_short_layers" className="bg-light text-dark">Coupe #17 (Courte Dégradée, zHairezt)</option>
-              <option value="hair_nmixx_hat_braids" className="bg-light text-dark">Coupe #18 (NMIXX Bonnet & Tresses, zHairezt)</option>
-              <option value="hair_very_long" className="bg-light text-dark">Coupe #19 (Très Longue, zHairezt)</option>
-              <option value="hair_two_braids_bangs" className="bg-light text-dark">Coupe #20 (Deux Tresses Frange, zHairezt)</option>
-              <option value="hair_aespa_short" className="bg-light text-dark">Coupe #21 (Aespa Courte, zHairezt)</option>
-              <option value="hair_wavy_ponytail" className="bg-light text-dark">Coupe #22 (Queue de Cheval Ondulée, zHairezt)</option>
-              <option value="hair_nimxx_short" className="bg-light text-dark">Coupe #23 (NIMXX Courte V1, zHairezt)</option>
-              <option value="hair_short_combed" className="bg-light text-dark">Coupe #24 (Courte Plaquée Arrière, zHairezt)</option>
-              <option value="hair_low_bun" className="bg-light text-dark">Coupe #25 (Chignon Bas Frange, zHairezt)</option>
-              <option value="hair_high_bun" className="bg-light text-dark">Coupe #26 (Chignon Haut Frange, zHairezt)</option>
-              <option value="hair_high_ponytail" className="bg-light text-dark">Coupe #27 (Petite Queue de Cheval Haute, zHairezt)</option>
-              <option value="hair_nmixx_short" className="bg-light text-dark">Coupe #28 (NMIXX Courte V2, zHairezt)</option>
-              <option value="hair_long_braids" className="bg-light text-dark">Coupe #29 (Longues Tresses Frange, zHairezt)</option>
-              <option value="hair_nmixx_16" className="bg-light text-dark">Coupe #30 (NMIXX #16, zHairezt)</option>
-              <option value="hair_zepeto_nmixx" className="bg-light text-dark">Coupe #31 (Zepeto NMIXX, zHairezt)</option>
-              <option value="hair_bob_buns" className="bg-light text-dark">Coupe #32 (Carré Bob Buns, zHairezt)</option>
-              <option value="hair_wavy_ponytails" className="bg-light text-dark">Coupe #33 (Longues Couettes Ondulées Blanches, zHairezt)</option>
-              <option value="hair_two_long_ponytails" className="bg-light text-dark">Coupe #34 (Deux Longues Couettes, zHairezt)</option>
-              <option value="hair_cyber_two_long_ponytails" className="bg-light text-dark">Coupe #35 (Cyber Deux Longues Couettes, zHairezt)</option>
-              <option value="hair_white_hair_with_bun" className="bg-light text-dark">Coupe #36 (Cheveux Blancs avec Chignon, zHairezt)</option>
-              <option value="hair_short_hair" className="bg-light text-dark">Coupe #37 (Cheveux Courts, zHairezt)</option>
-              <option value="hair_white_ponytail" className="bg-light text-dark">Coupe #38 (Queue de Cheval Blanche, zHairezt)</option>
-              <option value="hair_nmixx_hair_with_bangs" className="bg-light text-dark">Coupe #39 (NMIXX avec Frange, zHairezt)</option>
-              <option value="hair_two_white_ponytails" className="bg-light text-dark">Coupe #40 (Deux Queues de Cheval Blanches, zHairezt)</option>
-              <option value="hair_wolf_haircut" className="bg-light text-dark">Coupe #41 (Coupe Wolf, zHairezt)</option>
-              <option value="hair_white_bob_hairct" className="bg-light text-dark">Coupe #42 (Carré Bob Blanc, zHairezt)</option>
-              <option value="hair_scbe_hair_combed_to_one_side" className="bg-light text-dark">Coupe #43 (Cheveux Plaqués sur le Côté, zHairezt)</option>
-              <option value="hair_wavy_wet_white_hair" className="bg-light text-dark">Coupe #44 (Cheveux Blancs Ondulés Mouillés, zHairezt)</option>
-              <option value="hair_nyyd_wavy_hair" className="bg-light text-dark">Coupe #45 (NYYD Ondulés, zHairezt)</option>
-              <option value="hair_short_wavy_hair_with_bangs" className="bg-light text-dark">Coupe #46 (Courts Ondulés avec Frange, zHairezt)</option>
-              <option value="hair_nmixxhair_whith_bangs" className="bg-light text-dark">Coupe #47 (NMIXX Frange V2, zHairezt)</option>
-              <option value="hair_long_hair_styled_to_the_sides" className="bg-light text-dark">Coupe #48 (Longs Stylisés sur les Côtés, zHairezt)</option>
-              <option value="hair_wavy_long_hair_with_bangs" className="bg-light text-dark">Coupe #49 (Longs Ondulés Frange, zHairezt)</option>
-              <option value="hair_wavy_white_hair_to_one_side" className="bg-light text-dark">Coupe #50 (Ondulés Blancs sur le Côté, zHairezt)</option>
-              <option value="hair_high_white_bunponytail" className="bg-light text-dark">Coupe #51 (Chignon/Queue Haut Blanc, zHairezt)</option>
-              <option value="hair_white_hair_arraged_to_one_side" className="bg-light text-dark">Coupe #52 (Cheveux Blancs Arrangés sur un Côté, zHairezt)</option>
+              {WIGS_ITEMS.map((wig) => (
+                <option key={wig.id} value={wig.id} className="bg-light text-dark">{wig.name}</option>
+              ))}
             </select>
           </div>
         </div>
