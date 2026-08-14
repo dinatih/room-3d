@@ -455,6 +455,12 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
       // is now the root joint's parent (which is usually the scene root).
       if (animBones['Hips'] && animBones['RootJoint']) {
         animBones['Hips'].parentRestWorldQuaternion = animBones['RootJoint'].parentRestWorldQuaternion.clone();
+        
+        // The RootJoint animation track in these GLB files is typically an absolute world rotation,
+        // which means it is relative to Identity, NOT to its -90X rest rotation in the GLTF scene.
+        // Therefore, we must remove the RootJoint's rest rotation from Hips's restWorldQuaternion.
+        animBones['Hips'].restWorldQuaternion = animBones['Hips'].restLocalQuaternion.clone();
+
         const rootPos = animBones['RootJoint'].defaultPosition;
         const rootRot = animBones['RootJoint'].restLocalQuaternion;
         const hipsPos = animBones['Hips'].defaultPosition;
