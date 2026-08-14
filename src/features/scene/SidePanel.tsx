@@ -721,6 +721,25 @@ export function SidePanel({
               <option value="hair_zepeto_nmixx" className="bg-light text-dark">Coupe #31 (Zepeto NMIXX, zHairezt)</option>
               <option value="hair_bob_buns" className="bg-light text-dark">Coupe #32 (Carré Bob Buns, zHairezt)</option>
               <option value="hair_wavy_ponytails" className="bg-light text-dark">Coupe #33 (Longues Couettes Ondulées Blanches, zHairezt)</option>
+              <option value="hair_two_long_ponytails" className="bg-light text-dark">Coupe #34 (Deux Longues Couettes, zHairezt)</option>
+              <option value="hair_cyber_two_long_ponytails" className="bg-light text-dark">Coupe #35 (Cyber Deux Longues Couettes, zHairezt)</option>
+              <option value="hair_white_hair_with_bun" className="bg-light text-dark">Coupe #36 (Cheveux Blancs avec Chignon, zHairezt)</option>
+              <option value="hair_short_hair" className="bg-light text-dark">Coupe #37 (Cheveux Courts, zHairezt)</option>
+              <option value="hair_white_ponytail" className="bg-light text-dark">Coupe #38 (Queue de Cheval Blanche, zHairezt)</option>
+              <option value="hair_nmixx_hair_with_bangs" className="bg-light text-dark">Coupe #39 (NMIXX avec Frange, zHairezt)</option>
+              <option value="hair_two_white_ponytails" className="bg-light text-dark">Coupe #40 (Deux Queues de Cheval Blanches, zHairezt)</option>
+              <option value="hair_wolf_haircut" className="bg-light text-dark">Coupe #41 (Coupe Wolf, zHairezt)</option>
+              <option value="hair_white_bob_hairct" className="bg-light text-dark">Coupe #42 (Carré Bob Blanc, zHairezt)</option>
+              <option value="hair_scbe_hair_combed_to_one_side" className="bg-light text-dark">Coupe #43 (Cheveux Plaqués sur le Côté, zHairezt)</option>
+              <option value="hair_wavy_wet_white_hair" className="bg-light text-dark">Coupe #44 (Cheveux Blancs Ondulés Mouillés, zHairezt)</option>
+              <option value="hair_nyyd_wavy_hair" className="bg-light text-dark">Coupe #45 (NYYD Ondulés, zHairezt)</option>
+              <option value="hair_short_wavy_hair_with_bangs" className="bg-light text-dark">Coupe #46 (Courts Ondulés avec Frange, zHairezt)</option>
+              <option value="hair_nmixxhair_whith_bangs" className="bg-light text-dark">Coupe #47 (NMIXX Frange V2, zHairezt)</option>
+              <option value="hair_long_hair_styled_to_the_sides" className="bg-light text-dark">Coupe #48 (Longs Stylisés sur les Côtés, zHairezt)</option>
+              <option value="hair_wavy_long_hair_with_bangs" className="bg-light text-dark">Coupe #49 (Longs Ondulés Frange, zHairezt)</option>
+              <option value="hair_wavy_white_hair_to_one_side" className="bg-light text-dark">Coupe #50 (Ondulés Blancs sur le Côté, zHairezt)</option>
+              <option value="hair_high_white_bunponytail" className="bg-light text-dark">Coupe #51 (Chignon/Queue Haut Blanc, zHairezt)</option>
+              <option value="hair_white_hair_arraged_to_one_side" className="bg-light text-dark">Coupe #52 (Cheveux Blancs Arrangés sur un Côté, zHairezt)</option>
             </select>
           </div>
         </div>

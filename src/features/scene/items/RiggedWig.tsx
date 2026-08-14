@@ -55,7 +55,26 @@ export const RIGGED_WIGS_PATHS: Record<string, string> = {
   nmixx_16: 'media/nmixx_hair_n16.glb',
   zepeto_nmixx: 'media/zepeto_nmixx_hair.glb',
   bob_buns: 'media/bob_haircut_with_buns.glb',
-  wavy_ponytails: 'media/white_long_wavy_ponytails.glb'
+  wavy_ponytails: 'media/white_long_wavy_ponytails.glb',
+  two_long_ponytails: 'media/two_long_ponytails.glb',
+  cyber_two_long_ponytails: 'media/cyber_two_long_ponytails.glb',
+  white_hair_with_bun: 'media/white_hair_with_bun.glb',
+  short_hair: 'media/short_hair.glb',
+  white_ponytail: 'media/white_ponytail.glb',
+  nmixx_hair_with_bangs: 'media/nmixx_hair_with_bangs.glb',
+  two_white_ponytails: 'media/two_white_ponytails.glb',
+  wolf_haircut: 'media/wolf_haircut.glb',
+  white_bob_hairct: 'media/white_bob_hairct.glb',
+  scbe_hair_combed_to_one_side: 'media/scbe_hair_combed_to_one_side.glb',
+  wavy_wet_white_hair: 'media/wavy_wet_white_hair.glb',
+  nyyd_wavy_hair: 'media/nyyd_wavy_hair.glb',
+  short_wavy_hair_with_bangs: 'media/short_wavy_hair_with_bangs.glb',
+  nmixxhair_whith_bangs: 'media/nmixxhair_whith_bangs.glb',
+  long_hair_styled_to_the_sides: 'media/long_hair_styled_to_the_sides.glb',
+  wavy_long_hair_with_bangs: 'media/wavy_long_hair_with_bangs.glb',
+  wavy_white_hair_to_one_side: 'media/wavy_white_hair_to_one_side.glb',
+  high_white_bunponytail: 'media/high_white_bunponytail.glb',
+  white_hair_arraged_to_one_side: 'media/white_hair_arraged_to_one_side.glb'
 };
 
 export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
@@ -321,3 +340,22 @@ useGLTF.preload('media/nmixx_hair_n16.glb');
 useGLTF.preload('media/zepeto_nmixx_hair.glb');
 useGLTF.preload('media/bob_haircut_with_buns.glb');
 useGLTF.preload('media/white_long_wavy_ponytails.glb');
+useGLTF.preload('media/two_long_ponytails.glb');
+useGLTF.preload('media/cyber_two_long_ponytails.glb');
+useGLTF.preload('media/white_hair_with_bun.glb');
+useGLTF.preload('media/short_hair.glb');
+useGLTF.preload('media/white_ponytail.glb');
+useGLTF.preload('media/nmixx_hair_with_bangs.glb');
+useGLTF.preload('media/two_white_ponytails.glb');
+useGLTF.preload('media/wolf_haircut.glb');
+useGLTF.preload('media/white_bob_hairct.glb');
+useGLTF.preload('media/scbe_hair_combed_to_one_side.glb');
+useGLTF.preload('media/wavy_wet_white_hair.glb');
+useGLTF.preload('media/nyyd_wavy_hair.glb');
+useGLTF.preload('media/short_wavy_hair_with_bangs.glb');
+useGLTF.preload('media/nmixxhair_whith_bangs.glb');
+useGLTF.preload('media/long_hair_styled_to_the_sides.glb');
+useGLTF.preload('media/wavy_long_hair_with_bangs.glb');
+useGLTF.preload('media/wavy_white_hair_to_one_side.glb');
+useGLTF.preload('media/high_white_bunponytail.glb');
+useGLTF.preload('media/white_hair_arraged_to_one_side.glb');

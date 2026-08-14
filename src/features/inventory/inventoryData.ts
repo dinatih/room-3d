@@ -311,6 +311,25 @@ const WIGS_ITEMS = [
   { id: 'hair_zepeto_nmixx', name: 'Coupe #31 (Zepeto NMIXX, zHairezt)' },
   { id: 'hair_bob_buns', name: 'Coupe #32 (Carré Bob Buns, zHairezt)' },
   { id: 'hair_wavy_ponytails', name: 'Coupe #33 (Longues Couettes Ondulées Blanches, zHairezt)' },
+  { id: 'hair_two_long_ponytails', name: 'Coupe #34 (Deux Longues Couettes, zHairezt)' },
+  { id: 'hair_cyber_two_long_ponytails', name: 'Coupe #35 (Cyber Deux Longues Couettes, zHairezt)' },
+  { id: 'hair_white_hair_with_bun', name: 'Coupe #36 (Cheveux Blancs avec Chignon, zHairezt)' },
+  { id: 'hair_short_hair', name: 'Coupe #37 (Cheveux Courts, zHairezt)' },
+  { id: 'hair_white_ponytail', name: 'Coupe #38 (Queue de Cheval Blanche, zHairezt)' },
+  { id: 'hair_nmixx_hair_with_bangs', name: 'Coupe #39 (NMIXX avec Frange, zHairezt)' },
+  { id: 'hair_two_white_ponytails', name: 'Coupe #40 (Deux Queues de Cheval Blanches, zHairezt)' },
+  { id: 'hair_wolf_haircut', name: 'Coupe #41 (Coupe Wolf, zHairezt)' },
+  { id: 'hair_white_bob_hairct', name: 'Coupe #42 (Carré Bob Blanc, zHairezt)' },
+  { id: 'hair_scbe_hair_combed_to_one_side', name: 'Coupe #43 (Cheveux Plaqués sur le Côté, zHairezt)' },
+  { id: 'hair_wavy_wet_white_hair', name: 'Coupe #44 (Cheveux Blancs Ondulés Mouillés, zHairezt)' },
+  { id: 'hair_nyyd_wavy_hair', name: 'Coupe #45 (NYYD Ondulés, zHairezt)' },
+  { id: 'hair_short_wavy_hair_with_bangs', name: 'Coupe #46 (Courts Ondulés avec Frange, zHairezt)' },
+  { id: 'hair_nmixxhair_whith_bangs', name: 'Coupe #47 (NMIXX Frange V2, zHairezt)' },
+  { id: 'hair_long_hair_styled_to_the_sides', name: 'Coupe #48 (Longs Stylisés sur les Côtés, zHairezt)' },
+  { id: 'hair_wavy_long_hair_with_bangs', name: 'Coupe #49 (Longs Ondulés Frange, zHairezt)' },
+  { id: 'hair_wavy_white_hair_to_one_side', name: 'Coupe #50 (Ondulés Blancs sur le Côté, zHairezt)' },
+  { id: 'hair_high_white_bunponytail', name: 'Coupe #51 (Chignon/Queue Haut Blanc, zHairezt)' },
+  { id: 'hair_white_hair_arraged_to_one_side', name: 'Coupe #52 (Cheveux Blancs Arrangés sur un Côté, zHairezt)' }
 ];
 
 WIGS_ITEMS.forEach(wig => {

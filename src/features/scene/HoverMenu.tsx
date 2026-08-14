@@ -293,7 +293,26 @@ const ACTIONS: Record<string, ActionDef> = {
     { value: 'hair_nmixx_16', label: 'Coupe #30 (NMIXX #16, zHairezt)' },
     { value: 'hair_zepeto_nmixx', label: 'Coupe #31 (Zepeto NMIXX, zHairezt)' },
     { value: 'hair_bob_buns', label: 'Coupe #32 (Carré Bob Buns, zHairezt)' },
-    { value: 'hair_wavy_ponytails', label: 'Coupe #33 (Longues Couettes Ondulées Blanches, zHairezt)' }
+    { value: 'hair_wavy_ponytails', label: 'Coupe #33 (Longues Couettes Ondulées Blanches, zHairezt)' },
+    { value: 'hair_two_long_ponytails', label: 'Coupe #34 (Deux Longues Couettes, zHairezt)' },
+    { value: 'hair_cyber_two_long_ponytails', label: 'Coupe #35 (Cyber Deux Longues Couettes, zHairezt)' },
+    { value: 'hair_white_hair_with_bun', label: 'Coupe #36 (Cheveux Blancs avec Chignon, zHairezt)' },
+    { value: 'hair_short_hair', label: 'Coupe #37 (Cheveux Courts, zHairezt)' },
+    { value: 'hair_white_ponytail', label: 'Coupe #38 (Queue de Cheval Blanche, zHairezt)' },
+    { value: 'hair_nmixx_hair_with_bangs', label: 'Coupe #39 (NMIXX avec Frange, zHairezt)' },
+    { value: 'hair_two_white_ponytails', label: 'Coupe #40 (Deux Queues de Cheval Blanches, zHairezt)' },
+    { value: 'hair_wolf_haircut', label: 'Coupe #41 (Coupe Wolf, zHairezt)' },
+    { value: 'hair_white_bob_hairct', label: 'Coupe #42 (Carré Bob Blanc, zHairezt)' },
+    { value: 'hair_scbe_hair_combed_to_one_side', label: 'Coupe #43 (Cheveux Plaqués sur le Côté, zHairezt)' },
+    { value: 'hair_wavy_wet_white_hair', label: 'Coupe #44 (Cheveux Blancs Ondulés Mouillés, zHairezt)' },
+    { value: 'hair_nyyd_wavy_hair', label: 'Coupe #45 (NYYD Ondulés, zHairezt)' },
+    { value: 'hair_short_wavy_hair_with_bangs', label: 'Coupe #46 (Courts Ondulés avec Frange, zHairezt)' },
+    { value: 'hair_nmixxhair_whith_bangs', label: 'Coupe #47 (NMIXX Frange V2, zHairezt)' },
+    { value: 'hair_long_hair_styled_to_the_sides', label: 'Coupe #48 (Longs Stylisés sur les Côtés, zHairezt)' },
+    { value: 'hair_wavy_long_hair_with_bangs', label: 'Coupe #49 (Longs Ondulés Frange, zHairezt)' },
+    { value: 'hair_wavy_white_hair_to_one_side', label: 'Coupe #50 (Ondulés Blancs sur le Côté, zHairezt)' },
+    { value: 'hair_high_white_bunponytail', label: 'Coupe #51 (Chignon/Queue Haut Blanc, zHairezt)' },
+    { value: 'hair_white_hair_arraged_to_one_side', label: 'Coupe #52 (Cheveux Blancs Arrangés sur un Côté, zHairezt)' }
   ] },
 };
 
