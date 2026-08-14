@@ -369,6 +369,11 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
             parentRestWorldQuaternion: c.parent ? c.parent.getWorldQuaternion(new THREE.Quaternion()) : new THREE.Quaternion(),
             defaultPosition: c.position.clone()
           };
+          if (match[1] === 'Hips' || match[1] === 'Spine') {
+            const eW = new THREE.Euler().setFromQuaternion(animBones[match[1]].restWorldQuaternion, 'XYZ');
+            const ePW = new THREE.Euler().setFromQuaternion(animBones[match[1]].parentRestWorldQuaternion, 'XYZ');
+            console.log(`[ANIM BONES] model=${rawClip.name} bone=${match[1]} worldQ=(${Math.round(eW.x*180/Math.PI)},${Math.round(eW.y*180/Math.PI)},${Math.round(eW.z*180/Math.PI)}) pWorldQ=(${Math.round(ePW.x*180/Math.PI)},${Math.round(ePW.y*180/Math.PI)},${Math.round(ePW.z*180/Math.PI)})`);
+          }
         } else if (name.toLowerCase() === 'cc_base_boneroot' || name.toLowerCase() === 'rootjoint') {
           animBones['RootJoint'] = {
             restWorldQuaternion: c.getWorldQuaternion(new THREE.Quaternion()),
@@ -534,9 +539,6 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
 
   // Restore rootjoint default offset to Hips for position calculation
   if (animBones['Hips'] && animBones['RootJoint']) {
-    // Override Hips rest rotations to Identity because the RootJoint rotation is already baked into Hips track
-    animBones['Hips'].parentRestWorldQuaternion = new THREE.Quaternion();
-    animBones['Hips'].restWorldQuaternion = new THREE.Quaternion();
 
     const rootPos = animBones['RootJoint'].defaultPosition;
     const rootRot = animBones['RootJoint'].restLocalQuaternion;
@@ -736,8 +738,18 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           let B_src = null;
           let P_src = null;
           if (animBones[baseName]) {
-            B_src = animBones[baseName].restWorldQuaternion;
-            P_src = animBones[baseName].parentRestWorldQuaternion;
+            B_src = animBones[baseName].restWorldQuaternion.clone();
+            P_src = animBones[baseName].parentRestWorldQuaternion.clone();
+            
+            if (isHips) {
+              // Hips world rest rotation must be neutralized so the character stands up (for Mixamo +90X rest poses)
+              B_src = new THREE.Quaternion();
+              
+              // If RootJoint exists, the tracks were combined, moving the Hips track into Scene space
+              if (animBones['RootJoint']) {
+                P_src = new THREE.Quaternion();
+              }
+            }
           } else {
             B_src = new THREE.Quaternion();
             P_src = new THREE.Quaternion();
@@ -1667,6 +1679,7 @@ function SingleCharacter({
   useFrame((state, rawDelta) => {
     const delta = Math.min(rawDelta, 0.1);
     if (!groupRef.current || !mixerRef.current) return;
+
 
     if (isPreview) {
       groupRef.current.position.set(0, 0, 0);
