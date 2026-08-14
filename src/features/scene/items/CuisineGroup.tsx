@@ -18,6 +18,11 @@ import { KitchenCabinet } from './KitchenCabinet';
 import { Fridge }         from './Fridge';
 import { DroneCell } from './Drona';
 import { Lillhavet80461276 } from './Lillhavet80461276';
+import { Snitta00287295 } from './Snitta00287295';
+import { Fornuft40428482 } from './Fornuft40428482';
+import { Fornuft10428488 } from './Fornuft10428488';
+import { Fornuft90428489 } from './Fornuft90428489';
+import { Fornuft80428475 } from './Fornuft80428475';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
@@ -121,6 +126,18 @@ export function CuisineLillhavet() {
   return (
     <group position={[75, 155, 41]}>
       <Lillhavet80461276 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <group position={[0, 4, -2]}>
+        <group position={[1, 0, 1]} rotation={[0.2, 0, 0.1]}><Snitta00287295 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
+        <group position={[-1, 0, -1]} rotation={[-0.2, 0.5, 0.1]}><Snitta00287295 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
+        <group position={[2, 0, -2]} rotation={[0.1, 0, 0.2]}><Fornuft40428482 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
+        <group position={[-2, 0, 2]} rotation={[-0.1, -0.5, -0.2]}><Fornuft40428482 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
+        <group position={[0, 0, 2]} rotation={[0.3, 0.2, 0]}><Fornuft10428488 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
+        <group position={[0, 0, -2]} rotation={[-0.3, 0.1, 0.1]}><Fornuft10428488 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
+        <group position={[2, 0, 0]} rotation={[0.1, -0.2, 0.3]}><Fornuft90428489 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
+        <group position={[-2, 0, 0]} rotation={[0.2, 0.3, -0.1]}><Fornuft90428489 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
+        <group position={[1.5, 0, 1.5]} rotation={[0.1, 0, 0.1]}><Fornuft80428475 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
+        <group position={[-1.5, 0, -1.5]} rotation={[-0.1, 0.1, -0.1]}><Fornuft80428475 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
+      </group>
     </group>
   );
 }

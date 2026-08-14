@@ -2,10 +2,10 @@ import { AgentInstruction, ZoneNode } from './aiTypes';
 
 export const ZONES: Record<string, ZoneNode> = {
   Start: { id: 'Start', x: 250, z: 300 },
-  Couloir_Central: { id: 'Couloir_Central', x: 250, z: 350 },
+  Couloir_Central: { id: 'Couloir_Central', x: 240, z: 350 },
   Couloir_Entree: { id: 'Couloir_Entree', x: 248, z: 535 }, // Dedans, devant porte d'entrée
   Sortie: { id: 'Sortie', x: 288, z: 603 }, // Dehors, devant la porte
-  Couloir_SDB: { id: 'Couloir_SDB', x: 248, z: 560 }, // Devant porte SDB dans le couloir
+  Couloir_SDB: { id: 'Couloir_SDB', x: 248, z: 535 }, // Devant porte SDB dans le couloir
   Devant_Vasque: { id: 'Devant_Vasque', x: 116, z: 545 }, // Devant la vasque dans SDB
   Entree_SDB: { id: 'Entree_SDB', x: 150, z: 560 }, // Juste à l'intérieur de la SDB
   Toilette: { id: 'Toilette', x: 50, z: 520 }, // Devant les toilettes
@@ -23,7 +23,7 @@ export const ZONES: Record<string, ZoneNode> = {
   Kallax_NE: { id: 'Kallax_NE', x: 240, z: 38 },
   Devant_Baie_Vitree: { id: 'Devant_Baie_Vitree', x: 200, z: 20 },
   Dans_Jardin: { id: 'Dans_Jardin', x: 200, z: -20 },
-  Fond_Jardin: { id: 'Fond_Jardin', x: 150, z: -350 },
+  Fond_Jardin: { id: 'Fond_Jardin', x: 150, z: -650 },
   Entree_Bat_B_Couloir: { id: 'Entree_Bat_B_Couloir', x: -350, z: 1002 },
   Entree_Cours_Bat_B_Jardin: { id: 'Entree_Cours_Bat_B_Jardin', x: -350, z: -200 },
 };
@@ -37,17 +37,17 @@ export const ACTION_GO_TO_TOILET: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
   // Ouvrir la porte de la SDB (On pousse la porte pour entrer)
   { type: 'INTERACT', triggerEventKey: 'bathroomDoor', animation: 'idle', duration: 1.5 },
-  
+
   // Entrer et aller aux toilettes
   { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },
   { type: 'MOVE_TO', targetNodeId: 'Toilette' },
-  
+
   // S'asseoir sur les toilettes (vers le Sud = 0)
   { type: 'INTERACT', animation: 'media/sandbox/anims/anim_sitting_idle.glb', duration: 10.0, rotY: 0 },
-  
+
   // Tirer la chasse (vers le Nord = Math.PI)
   { type: 'INTERACT', animation: 'media/sandbox/anims/anim_shaking_hands_2.glb', duration: 2.0, rotY: Math.PI },
-  
+
   // Aller au lavabo
   { type: 'MOVE_TO', targetNodeId: 'Devant_Vasque' },
   // Se laver les mains (vers l'Ouest = Math.PI / 2)
@@ -56,7 +56,7 @@ export const ACTION_GO_TO_TOILET: AgentInstruction[] = [
   // Sortir de la SDB
   { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
-  
+
   // Fermer la porte SDB
   { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 1.5 },
 
@@ -83,7 +83,7 @@ export const ACTION_SIT_DESK_2: AgentInstruction[] = [
 
 export const ACTION_BED_WEST: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Lit_Ouest' },
-  { type: 'INTERACT', animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb', duration: 10.0, rotY: -Math.PI / 2 },
+  { type: 'INTERACT', animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb', duration: 10.0, rotY: Math.PI / 2 },
 ];
 
 export const ACTION_BED_EAST: AgentInstruction[] = [

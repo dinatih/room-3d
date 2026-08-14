@@ -155,8 +155,8 @@ import { MergedStaticGroup } from './Building';
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function Equipment() {
-  const as = useFurnitureToggles({ 
-    lampSdb: 'lamp-sdb-toggle', 
+  const as = useFurnitureToggles({
+    lampSdb: 'lamp-sdb-toggle',
     lampCouloir: 'lamp-couloir-toggle',
     corrDoors: 'corr-doors-toggle',
     sdbClosetL: 'sdb-closet-l-toggle',
@@ -272,7 +272,7 @@ export function Furniture() {
         <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Mannequin KallaxNE */}
-      <group position={[ROOM_W - 4, 118, w2 - 11]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 2', actions: ['mannequin-kallax-ne-random', 'mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
+      <group position={[ROOM_W - 14, 118, w2 - 11]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 2', actions: ['mannequin-kallax-ne-random', 'mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="kallax-ne" />
       </group>
       {/* 2 sacs DIMPA contre le mur Ouest, entre le MeubleT et la Drona */}

@@ -808,6 +808,7 @@ function SingleCharacter({
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const { scene } = useGLTFClone(modelPath);
+  const mileyAnimsGltf = useGLTF('models/miley_all_animations_v2.glb');
 
   const groupRef = useRef<THREE.Group>(null!);
   const modelRef = useRef<THREE.Object3D>(null!);
@@ -1089,10 +1090,6 @@ function SingleCharacter({
     scene.rotation.set(0, 0, 0);
     scene.updateMatrixWorld(true);
 
-    const box = new THREE.Box3().setFromObject(scene);
-    const rawSize = box.getSize(new THREE.Vector3());
-
-    const fallbackScale = 100.0;
     const baseHeight = isLara ? 173.4 : 181.0;
     const scaleFactor = (targetHeight / baseHeight) * 100.0;
 
