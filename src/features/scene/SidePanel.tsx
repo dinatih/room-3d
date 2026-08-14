@@ -20,7 +20,7 @@ const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
 import { useSceneStore } from './store/useSceneStore';
-import { INVENTORY_ITEMS, WIGS_ITEMS } from './inventory/inventoryData';
+import { INVENTORY_ITEMS, WIGS_ITEMS } from '../inventory/inventoryData';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 
 import {
