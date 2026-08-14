@@ -369,6 +369,13 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
             parentRestWorldQuaternion: c.parent ? c.parent.getWorldQuaternion(new THREE.Quaternion()) : new THREE.Quaternion(),
             defaultPosition: c.position.clone()
           };
+        } else if (name.toLowerCase() === 'cc_base_boneroot' || name.toLowerCase() === 'rootjoint') {
+          animBones['RootJoint'] = {
+            restWorldQuaternion: c.getWorldQuaternion(new THREE.Quaternion()),
+            restLocalQuaternion: c.quaternion.clone(),
+            parentRestWorldQuaternion: c.parent ? c.parent.getWorldQuaternion(new THREE.Quaternion()) : new THREE.Quaternion(),
+            defaultPosition: c.position.clone()
+          };
         }
       }
     });
@@ -397,8 +404,8 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
   }
 
   // Combine rootjoint and hips rotations
-  const rootRotTrackIndex = workingClip.tracks.findIndex(t => t.name.toLowerCase().includes('rootjoint') && t.name.endsWith('.quaternion'));
-  const hipsRotTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('hips') || t.name.toLowerCase().endsWith('hips.quaternion')) && t.name.endsWith('.quaternion') && !t.name.toLowerCase().includes('rootjoint'));
+  const rootRotTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')) && t.name.endsWith('.quaternion'));
+  const hipsRotTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('hips') || t.name.toLowerCase().endsWith('hips.quaternion')) && t.name.endsWith('.quaternion') && !(t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')));
 
   if (rootRotTrackIndex !== -1) {
     const rootRotTrack = workingClip.tracks[rootRotTrackIndex];
@@ -443,8 +450,14 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
       hipsRotTrack.times = new Float32Array(times);
       hipsRotTrack.values = values;
       workingClip.tracks.splice(rootRotTrackIndex, 1);
+      
+      // We combined the root joint into Hips, so Hips's effective parent during retargeting 
+      // is now the root joint's parent (which is usually the scene root).
+      if (animBones['Hips'] && animBones['RootJoint']) {
+        animBones['Hips'].parentRestWorldQuaternion = animBones['RootJoint'].parentRestWorldQuaternion.clone();
+      }
     } else {
-      const hipsPosTrack = workingClip.tracks.find(t => t.name.toLowerCase().includes('hips') && !t.name.toLowerCase().includes('rootjoint'));
+      const hipsPosTrack = workingClip.tracks.find(t => t.name.toLowerCase().includes('hips') && !(t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')));
       let hipsName = 'mixamorig:Hips.quaternion';
       if (hipsPosTrack) {
         hipsName = hipsPosTrack.name.split('.')[0] + '.quaternion';
@@ -486,7 +499,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
     }
   }
 
-  const hasRootTranslation = workingClip.tracks.some(t => t.name.toLowerCase().includes('rootjoint') && t.name.endsWith('.position'));
+  const hasRootTranslation = workingClip.tracks.some(t => (t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')) && t.name.endsWith('.position'));
   const tracks: THREE.KeyframeTrack[] = [];
 
 
@@ -497,16 +510,22 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
     let mappedBoneFull = boneFull;
     if (CC3_TO_MIXAMO[boneFull]) mappedBoneFull = 'mixamorig:' + CC3_TO_MIXAMO[boneFull];
     
-    const match = mappedBoneFull.match(/mixamorig[:_]?(.+)/i);
+    let match = mappedBoneFull.match(/mixamorig[:_]?(.+)/i);
+    let baseName = match ? match[1] : '';
+    
+    if (mappedBoneFull.toLowerCase() === 'cc_base_boneroot' || mappedBoneFull.toLowerCase() === 'rootjoint') {
+      baseName = 'Hips';
+      match = ['Hips', 'Hips'];
+    }
+
     if (!match) continue;
-    let baseName = match[1];
 
     if (prop === 'position' && baseName.toLowerCase() === 'hips' && hasRootTranslation) {
       continue;
     }
 
     let isRootJointTranslation = false;
-    if (prop === 'position' && baseName.toLowerCase().includes('rootjoint')) {
+    if (prop === 'position' && (boneFull.toLowerCase().includes('rootjoint') || boneFull.toLowerCase().includes('cc_base_boneroot'))) {
       baseName = 'Hips';
       isRootJointTranslation = true;
     }
