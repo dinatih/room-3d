@@ -2180,7 +2180,11 @@ function SingleCharacter({
       <primitive ref={modelRef} object={scene} />
       
       {headBoneState && haircut !== 'original' && (
-        (haircut === 'hair_zepeto' || haircut === 'hair_pigtails' || haircut === 'hair_buns' || haircut === 'hair_short_layers') ? (
+        [
+          'hair_zepeto', 'hair_pigtails', 'hair_buns', 'hair_short_layers', 
+          'hair_nmixx_hat_braids', 'hair_very_long', 'hair_two_braids_bangs', 
+          'hair_aespa_short', 'hair_wavy_ponytail'
+        ].includes(haircut as string) ? (
           <RiggedWig
             id={haircut.replace('hair_', '')}
             color={hairColor}

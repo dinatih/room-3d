@@ -703,6 +703,11 @@ export function SidePanel({
               <option value="hair_pigtails" className="bg-light text-dark">Coupe #15 (Longues Couettes Blanches, zHairezt)</option>
               <option value="hair_buns" className="bg-light text-dark">Coupe #16 (Longs Chignons Buns, zHairezt)</option>
               <option value="hair_short_layers" className="bg-light text-dark">Coupe #17 (Courte Dégradée, zHairezt)</option>
+              <option value="hair_nmixx_hat_braids" className="bg-light text-dark">Coupe #18 (NMIXX Bonnet & Tresses, zHairezt)</option>
+              <option value="hair_very_long" className="bg-light text-dark">Coupe #19 (Très Longue, zHairezt)</option>
+              <option value="hair_two_braids_bangs" className="bg-light text-dark">Coupe #20 (Deux Tresses Frange, zHairezt)</option>
+              <option value="hair_aespa_short" className="bg-light text-dark">Coupe #21 (Aespa Courte, zHairezt)</option>
+              <option value="hair_wavy_ponytail" className="bg-light text-dark">Coupe #22 (Queue de Cheval Ondulée, zHairezt)</option>
             </select>
           </div>
         </div>

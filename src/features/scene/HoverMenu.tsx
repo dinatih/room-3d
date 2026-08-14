@@ -277,7 +277,12 @@ const ACTIONS: Record<string, ActionDef> = {
     { value: 'hair_zepeto', label: 'Coupe #14 (Zepeto, zHairezt)' },
     { value: 'hair_pigtails', label: 'Coupe #15 (Longues Couettes Blanches, zHairezt)' },
     { value: 'hair_buns', label: 'Coupe #16 (Longs Chignons Buns, zHairezt)' },
-    { value: 'hair_short_layers', label: 'Coupe #17 (Courte Dégradée, zHairezt)' }
+    { value: 'hair_short_layers', label: 'Coupe #17 (Courte Dégradée, zHairezt)' },
+    { value: 'hair_nmixx_hat_braids', label: 'Coupe #18 (NMIXX Bonnet & Tresses, zHairezt)' },
+    { value: 'hair_very_long', label: 'Coupe #19 (Très Longue, zHairezt)' },
+    { value: 'hair_two_braids_bangs', label: 'Coupe #20 (Deux Tresses Frange, zHairezt)' },
+    { value: 'hair_aespa_short', label: 'Coupe #21 (Aespa Courte, zHairezt)' },
+    { value: 'hair_wavy_ponytail', label: 'Coupe #22 (Queue de Cheval Ondulée, zHairezt)' }
   ] },
 };
 
