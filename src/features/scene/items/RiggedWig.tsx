@@ -138,23 +138,35 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
       }
     });
 
-    const tinyScaleIds = ['pigtails', 'hair_pigtails', 'very_long', 'hair_very_long', 'wavy_ponytail', 'hair_wavy_ponytail', 'two_white_ponytails', 'hair_two_white_ponytails'];
-    const s = tinyScaleIds.includes(id as string) ? 0.1 : 1.0;
+    const wigFixes: Record<string, { scale: number, rotation: [number, number, number], offset: [number, number, number] }> = {
+      'pigtails': { scale: 0.3, rotation: [Math.PI / 2, 0, 0], offset: [0, 0, 0] },
+      'hair_pigtails': { scale: 0.3, rotation: [Math.PI / 2, 0, 0], offset: [0, 0, 0] },
+      'very_long': { scale: 0.02, rotation: [Math.PI / 2, 0, 0], offset: [0, 0, 0] },
+      'hair_very_long': { scale: 0.02, rotation: [Math.PI / 2, 0, 0], offset: [0, 0, 0] },
+      'two_white_ponytails': { scale: 0.3, rotation: [Math.PI / 2, 0, 0], offset: [0, 0, 0] },
+      'hair_two_white_ponytails': { scale: 0.3, rotation: [Math.PI / 2, 0, 0], offset: [0, 0, 0] },
+      'wavy_ponytail': { scale: 0.1, rotation: [0, 0, 0], offset: [0, -0.05, 0] },
+      'hair_wavy_ponytail': { scale: 0.1, rotation: [0, 0, 0], offset: [0, -0.05, 0] }
+    };
     
+    const fix = wigFixes[id as string] || { scale: 1.0, rotation: [0, 0, 0], offset: [0, 0, 0] };
+    const s = fix.scale;
+
     if (hairHeadBone) {
       (sg as THREE.Object3D).updateMatrixWorld(true);
       const headPos = (hairHeadBone as THREE.Object3D).position.clone();
       (sg as THREE.Object3D).position.set(
-        -headPos.x * s * scale,
-        -headPos.y * s * scale + (attachTo ? 0.07 : 0),
-        -headPos.z * s * scale
+        -headPos.x * s * scale + fix.offset[0],
+        -headPos.y * s * scale + (attachTo ? 0.07 : 0) + fix.offset[1],
+        -headPos.z * s * scale + fix.offset[2]
       );
     } else {
-      (sg as THREE.Object3D).position.set(0, 0.15 * scale, 0);
+      (sg as THREE.Object3D).position.set(fix.offset[0], 0.15 * scale + fix.offset[1], fix.offset[2]);
     }
 
     // Apply the user requested scale DIRECTLY to sg instead of the wrapper group
     (sg as THREE.Object3D).scale.set(s * scale, s * scale, s * scale);
+    (sg as THREE.Object3D).rotation.set(fix.rotation[0], fix.rotation[1], fix.rotation[2]);
     (sg as THREE.Object3D).userData.isWigRoot = true;
 
     // Fix SkeletonHelper by reparenting the root bone to sg so it inherits the correct world transform
