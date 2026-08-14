@@ -762,6 +762,7 @@ export const WALKER_ANIM_OPTIONS = [
   { value: "media/sandbox/anims/anim_armature__talk_f_genaiguy.glb", label: " Talk F (genaiguy)" },
   { value: "media/sandbox/anims/anim_armature_air_dance_genaiguy.glb", label: "Air Dance (genaiguy)" },
   { value: "media/sandbox/anims/anim_armature_b1_attack_back_somersault_flip_genaiguy.glb", label: "B1 Attack Back Somersault Flip (genaiguy)" },
+  { value: "media/sandbox/anims/miley_b1_attack_back_somersault_flip.glb", label: "B1 Attack Back Somersault Flip (miley extracted)" },
   { value: "media/sandbox/anims/anim_armature_b1_fall_kicked_knockout_genaiguy.glb", label: "B1 Fall Kicked Knockout (genaiguy)" },
   { value: "media/sandbox/anims/anim_armature_b2_attack_front_kick_genaiguy.glb", label: "B2 Attack Front Kick (genaiguy)" },
   { value: "media/sandbox/anims/anim_armature_b3_attack_reverse_turning_kick_genaiguy.glb", label: "B3 Attack Reverse Turning Kick (genaiguy)" },
