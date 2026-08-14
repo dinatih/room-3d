@@ -534,6 +534,10 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
 
   // Restore rootjoint default offset to Hips for position calculation
   if (animBones['Hips'] && animBones['RootJoint']) {
+    // Override Hips rest rotations to Identity because the RootJoint rotation is already baked into Hips track
+    animBones['Hips'].parentRestWorldQuaternion = new THREE.Quaternion();
+    animBones['Hips'].restWorldQuaternion = new THREE.Quaternion();
+
     const rootPos = animBones['RootJoint'].defaultPosition;
     const rootRot = animBones['RootJoint'].restLocalQuaternion;
     const hipsPos = animBones['Hips'].defaultPosition;
