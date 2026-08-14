@@ -632,7 +632,6 @@ export function SidePanel({
               value={activeWalkerId}
               onChange={(e) => {
                 useSceneStore.getState().setActiveWalkerId(e.target.value);
-                e.target.blur();
               }}
             >
               {CHARACTERS.filter(c => layers.showAllLaraStyles || c.id === activeWalkerId).map(c => (
@@ -655,7 +654,6 @@ export function SidePanel({
               onChange={(e) => {
                 const val = e.target.value;
                 document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircolor', value: val } }));
-                e.target.blur();
               }}
             >
               <option value="rouge" className="bg-light text-dark">Rouge</option>
@@ -684,7 +682,6 @@ export function SidePanel({
                 setGlobalHaircut(val);
                 if (val !== 'original') lastWigRef.current = val;
                 document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: val } }));
-                e.target.blur();
               }}
             >
               <option value="original" className="bg-light text-dark">Coupe d'origine 👱‍♀️</option>
