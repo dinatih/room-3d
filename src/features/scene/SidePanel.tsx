@@ -657,8 +657,8 @@ export function SidePanel({
                 e.target.blur();
               }}
             >
+              <option value="rouge" className="bg-light text-dark">Rouge</option>
               <option value="rose" className="bg-light text-dark">Rose</option>
-              <option value="naturel" className="bg-light text-dark">Naturel</option>
               <option value="noir" className="bg-light text-dark">Noir</option>
               <option value="brun" className="bg-light text-dark">Brun</option>
               <option value="chatain" className="bg-light text-dark">Châtain</option>
@@ -708,6 +708,12 @@ export function SidePanel({
               <option value="hair_two_braids_bangs" className="bg-light text-dark">Coupe #20 (Deux Tresses Frange, zHairezt)</option>
               <option value="hair_aespa_short" className="bg-light text-dark">Coupe #21 (Aespa Courte, zHairezt)</option>
               <option value="hair_wavy_ponytail" className="bg-light text-dark">Coupe #22 (Queue de Cheval Ondulée, zHairezt)</option>
+              <option value="hair_nimxx_short" className="bg-light text-dark">Coupe #23 (NIMXX Courte V1, zHairezt)</option>
+              <option value="hair_short_combed" className="bg-light text-dark">Coupe #24 (Courte Plaquée Arrière, zHairezt)</option>
+              <option value="hair_low_bun" className="bg-light text-dark">Coupe #25 (Chignon Bas Frange, zHairezt)</option>
+              <option value="hair_high_bun" className="bg-light text-dark">Coupe #26 (Chignon Haut Frange, zHairezt)</option>
+              <option value="hair_high_ponytail" className="bg-light text-dark">Coupe #27 (Petite Queue de Cheval Haute, zHairezt)</option>
+              <option value="hair_nmixx_short" className="bg-light text-dark">Coupe #28 (NMIXX Courte V2, zHairezt)</option>
             </select>
           </div>
         </div>

@@ -2183,7 +2183,9 @@ function SingleCharacter({
         [
           'hair_zepeto', 'hair_pigtails', 'hair_buns', 'hair_short_layers', 
           'hair_nmixx_hat_braids', 'hair_very_long', 'hair_two_braids_bangs', 
-          'hair_aespa_short', 'hair_wavy_ponytail'
+          'hair_aespa_short', 'hair_wavy_ponytail', 'hair_nimxx_short',
+          'hair_short_combed', 'hair_low_bun', 'hair_high_bun',
+          'hair_high_ponytail', 'hair_nmixx_short'
         ].includes(haircut as string) ? (
           <RiggedWig
             id={haircut.replace('hair_', '')}

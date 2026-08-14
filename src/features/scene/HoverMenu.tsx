@@ -49,10 +49,10 @@ const ACTIONS: Record<string, ActionDef> = {
     { value: 'chatain', label: 'Châtain 🟤' },
     { value: 'blond', label: 'Blond 🌟' },
     { value: 'roux', label: 'Roux 🦊' },
-    { value: 'rouge', label: 'Rouge ❤️' },
     { value: 'blanc', label: 'Blanc ❄️' },
     { value: 'bleu', label: 'Bleu 💙' },
     { value: 'vert', label: 'Vert 💚' },
+    { value: 'rouge', label: 'Rouge ❤️' },
     { value: 'rose', label: 'Rose 🌸' },
     { value: 'violet', label: 'Violet 💜' },
     { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
@@ -282,7 +282,13 @@ const ACTIONS: Record<string, ActionDef> = {
     { value: 'hair_very_long', label: 'Coupe #19 (Très Longue, zHairezt)' },
     { value: 'hair_two_braids_bangs', label: 'Coupe #20 (Deux Tresses Frange, zHairezt)' },
     { value: 'hair_aespa_short', label: 'Coupe #21 (Aespa Courte, zHairezt)' },
-    { value: 'hair_wavy_ponytail', label: 'Coupe #22 (Queue de Cheval Ondulée, zHairezt)' }
+    { value: 'hair_wavy_ponytail', label: 'Coupe #22 (Queue de Cheval Ondulée, zHairezt)' },
+    { value: 'hair_nimxx_short', label: 'Coupe #23 (NIMXX Courte V1, zHairezt)' },
+    { value: 'hair_short_combed', label: 'Coupe #24 (Courte Plaquée Arrière, zHairezt)' },
+    { value: 'hair_low_bun', label: 'Coupe #25 (Chignon Bas Frange, zHairezt)' },
+    { value: 'hair_high_bun', label: 'Coupe #26 (Chignon Haut Frange, zHairezt)' },
+    { value: 'hair_high_ponytail', label: 'Coupe #27 (Petite Queue de Cheval Haute, zHairezt)' },
+    { value: 'hair_nmixx_short', label: 'Coupe #28 (NMIXX Courte V2, zHairezt)' }
   ] },
 };
 

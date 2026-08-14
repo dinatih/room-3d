@@ -210,15 +210,24 @@ const WIGS = [
   { id: 'hair_two_braids_bangs', name: 'Coupe #20 (Deux Tresses Frange, zHairezt)' },
   { id: 'hair_aespa_short', name: 'Coupe #21 (Aespa Courte, zHairezt)' },
   { id: 'hair_wavy_ponytail', name: 'Coupe #22 (Queue de Cheval Ondulée, zHairezt)' },
+  { id: 'hair_nimxx_short', name: 'Coupe #23 (NIMXX Courte V1, zHairezt)' },
+  { id: 'hair_short_combed', name: 'Coupe #24 (Courte Plaquée Arrière, zHairezt)' },
+  { id: 'hair_low_bun', name: 'Coupe #25 (Chignon Bas Frange, zHairezt)' },
+  { id: 'hair_high_bun', name: 'Coupe #26 (Chignon Haut Frange, zHairezt)' },
+  { id: 'hair_high_ponytail', name: 'Coupe #27 (Petite Queue de Cheval Haute, zHairezt)' },
+  { id: 'hair_nmixx_short', name: 'Coupe #28 (NMIXX Courte V2, zHairezt)' },
 ];
 
 WIGS.forEach(wig => {
   SCENE_REGISTRY[wig.id] = function WigPreview() {
     if (
-      wig.id === 'hair_zepeto' || wig.id === 'hair_pigtails' || wig.id === 'hair_buns' || 
-      wig.id === 'hair_short_layers' || wig.id === 'hair_nmixx_hat_braids' ||
-      wig.id === 'hair_very_long' || wig.id === 'hair_two_braids_bangs' ||
-      wig.id === 'hair_aespa_short' || wig.id === 'hair_wavy_ponytail'
+      [
+        'hair_zepeto', 'hair_pigtails', 'hair_buns', 'hair_short_layers', 
+        'hair_nmixx_hat_braids', 'hair_very_long', 'hair_two_braids_bangs', 
+        'hair_aespa_short', 'hair_wavy_ponytail', 'hair_nimxx_short',
+        'hair_short_combed', 'hair_low_bun', 'hair_high_bun',
+        'hair_high_ponytail', 'hair_nmixx_short'
+      ].includes(wig.id)
     ) {
       return <RiggedWig id={wig.id} scale={1} />;
     }

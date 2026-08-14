@@ -44,7 +44,13 @@ export const RIGGED_WIGS_PATHS: Record<string, string> = {
   very_long: 'media/very_long_hair.glb',
   two_braids_bangs: 'media/two_braids_with_bangs.glb',
   aespa_short: 'media/aespa_short_hair.glb',
-  wavy_ponytail: 'media/wavy_white_ponytail.glb'
+  wavy_ponytail: 'media/wavy_white_ponytail.glb',
+  nimxx_short: 'media/nimxx_short_hair.glb',
+  short_combed: 'media/short_hair_combed_back.glb',
+  low_bun: 'media/low_bun_with_bangs.glb',
+  high_bun: 'media/high_bun_with_bangs.glb',
+  high_ponytail: 'media/high_short_ponytail.glb',
+  nmixx_short: 'media/nmixx_short_hair.glb'
 };
 
 export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
@@ -299,3 +305,9 @@ useGLTF.preload('media/very_long_hair.glb');
 useGLTF.preload('media/two_braids_with_bangs.glb');
 useGLTF.preload('media/aespa_short_hair.glb');
 useGLTF.preload('media/wavy_white_ponytail.glb');
+useGLTF.preload('media/nimxx_short_hair.glb');
+useGLTF.preload('media/short_hair_combed_back.glb');
+useGLTF.preload('media/low_bun_with_bangs.glb');
+useGLTF.preload('media/high_bun_with_bangs.glb');
+useGLTF.preload('media/high_short_ponytail.glb');
+useGLTF.preload('media/nmixx_short_hair.glb');
