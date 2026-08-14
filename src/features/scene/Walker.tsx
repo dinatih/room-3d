@@ -43,6 +43,8 @@ export { WALKER_ANIM_OPTIONS };
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
 
+const globalGLTFCache: Record<string, Promise<any>> = {};
+
 export interface CharacterConfig {
   id: string;
   name: string;
@@ -1391,15 +1393,22 @@ function SingleCharacter({
         if (existingAnim) {
           handleClip(existingAnim, existingAnim.userData?.animScene as THREE.Object3D | undefined);
         } else {
-          const loader = new GLTFLoader();
-          loader.load(path, (gltf: any) => {
+          const loadCallback = (gltf: any) => {
             let sourceScene = gltf.scene;
             if (path.toLowerCase().includes('miley') && (!sourceScene || !sourceScene.getObjectByName('mixamorigHips'))) {
                // Fallback to the full miley armature if standalone animation lacks it
                sourceScene = mileyAnimsGltf.scene;
             }
             handleClip(gltf.animations[0], sourceScene);
-          });
+          };
+          
+          if (!globalGLTFCache[path]) {
+            globalGLTFCache[path] = new Promise((resolve, reject) => {
+              const loader = new GLTFLoader();
+              loader.load(path, resolve, undefined, reject);
+            });
+          }
+          globalGLTFCache[path].then(loadCallback).catch(console.error);
         }
       }
       handleToggleHairColor(e);
