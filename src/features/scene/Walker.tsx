@@ -1396,7 +1396,12 @@ function SingleCharacter({
         } else {
           const loader = new GLTFLoader();
           loader.load(path, (gltf: any) => {
-            handleClip(gltf.animations[0], gltf.scene);
+            let sourceScene = gltf.scene;
+            if (path.toLowerCase().includes('miley') && (!sourceScene || !sourceScene.getObjectByName('mixamorigHips'))) {
+               // Fallback to the full miley armature if standalone animation lacks it
+               sourceScene = mileyAnimsGltf.scene;
+            }
+            handleClip(gltf.animations[0], sourceScene);
           });
         }
       }
