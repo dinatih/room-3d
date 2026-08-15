@@ -2695,12 +2695,8 @@ export function Walker(props: WalkerProps) {
 
 // Preloads
 const LARA_PATH = 'media/lara_native.glb';
-const ROSANNA_PATH = 'media/rosanna_lara_native.glb';
-const VIVID_PATH = 'media/vivida_red_lara_native.glb';
 
 useGLTF.preload(LARA_PATH);
-useGLTF.preload(ROSANNA_PATH);
-useGLTF.preload(VIVID_PATH);
 useGLTF.preload('media/sandbox/anims/miley_blender_idle01_f.glb');
 useGLTF.preload('media/sandbox/anims/anim_walking.glb');
 useGLTF.preload('media/sandbox/anims/anim_running.glb');
