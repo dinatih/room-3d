@@ -398,8 +398,16 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
   // Detect and fix centimeter positions (scale to meters)
   for (const track of workingClip.tracks) {
     if (track.name.endsWith('.position')) {
-      const firstVal = new THREE.Vector3(track.values[0], track.values[1], track.values[2]);
-      if (firstVal.length() > 5.0) {
+      // Find the maximum absolute value in the track to determine if it's in cm
+      let maxVal = 0;
+      for (let i = 0; i < track.values.length; i++) {
+        if (Math.abs(track.values[i]) > maxVal) {
+          maxVal = Math.abs(track.values[i]);
+        }
+      }
+      
+      // If the track has values > 5.0, it's almost certainly in centimeters
+      if (maxVal > 5.0) {
         for (let i = 0; i < track.values.length; i++) {
           track.values[i] *= 0.01;
         }
