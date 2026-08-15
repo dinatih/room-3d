@@ -1297,10 +1297,10 @@ export function SidePanel({
       </button>
       <button 
         className="btn btn-outline-secondary text-start p-2 border shadow-sm bg-white rounded-3 d-flex align-items-center gap-2" 
-        onClick={() => playCoupleAnim('media/sandbox/anims/miley_armature_couple_pop_dance_f.glb', 'media/sandbox/anims/miley_armature_couple_pop_dance_m.glb')}
+        onClick={() => playCoupleAnim('media/sandbox/anims/miley_armature_couple_pop_dance_m.glb', 'media/sandbox/anims/miley_armature_couple_pop_dance_f.glb')}
       >
         <span style={{ fontSize: '16px' }}>🕺</span>
-        <span className="fw-bold">Pop Dance (F: Sandra, M: Rajaa)</span>
+        <span className="fw-bold">Pop Dance (M: Sandra, F: Rajaa)</span>
       </button>
     </div>
   );
