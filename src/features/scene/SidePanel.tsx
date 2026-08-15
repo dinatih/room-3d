@@ -335,7 +335,7 @@ export interface SidePanelProps2 extends SidePanelProps {
   onToggleLidarOpacity:    () => void;
 }
 
-type TabKey = 'views' | 'layers' | 'personnage' | 'perf' | 'anims' | 'interactif' | null;
+type TabKey = 'views' | 'layers' | 'personnage' | 'perf' | 'anims' | 'animsCouple' | 'interactif' | null;
 
 const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> = [
   { key: 'perf',       emoji: '📊', label: 'Perf' },
@@ -344,6 +344,7 @@ const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> 
   { key: 'interactif', emoji: '🎮', label: 'Interact' },
   { key: 'personnage', emoji: '👤', label: 'Perso' },
   { key: 'anims',      emoji: '💃', label: 'Anim Perso' },
+  { key: 'animsCouple',emoji: '👯‍♀️', label: 'Couple' },
 ];
 
 // ── Composant principal ───────────────────────────────────────────────────────
@@ -1273,13 +1274,37 @@ export function SidePanel({
     </div>
   );
 
+  const playCoupleAnim = (sandraPath: string, rajaaPath: string) => {
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-sandra', value: sandraPath } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-rajaa', value: rajaaPath } }));
+  };
+
+  const AnimationsCoupleSection = (
+    <div className="p-2 d-flex flex-column gap-2 bg-transparent" style={{ fontSize: '11px' }}>
+      <button 
+        className="btn btn-outline-secondary text-start p-2 border shadow-sm bg-white rounded-3 d-flex align-items-center gap-2" 
+        onClick={() => playCoupleAnim('media/sandbox/anims/miley_armature_b1_fall_kicked_knockout.glb', 'media/sandbox/anims/miley_armature_b1_attack_back_somersault_flip.glb')}
+      >
+        <span style={{ fontSize: '16px' }}>💥</span>
+        <span className="fw-bold">B1 (Attack: Rajaa, Dodge: Sandra)</span>
+      </button>
+      <button 
+        className="btn btn-outline-secondary text-start p-2 border shadow-sm bg-white rounded-3 d-flex align-items-center gap-2" 
+        onClick={() => playCoupleAnim('media/sandbox/anims/miley_armature_d1_attack_arms_block.glb', 'media/sandbox/anims/miley_armature_d1_dodge_sideways.glb')}
+      >
+        <span style={{ fontSize: '16px' }}>🤺</span>
+        <span className="fw-bold">D1 (Attack: Sandra, Dodge: Rajaa)</span>
+      </button>
+    </div>
+  );
+
   // ── Rendu mobile : tab bar bottom + sheet ───────────────────────────────────
 
   if (isMobile) {
     const sheetOpen = activeTab !== null;
     const sheetTitle: Record<Exclude<TabKey, null>, string> = {
       views: '📷 Vues', layers: '📑 Calques', personnage: '👤 Personnage',
-      perf: '📊 Perf', anims: '💃 Animations Perso', interactif: '🎮 Interactif'
+      perf: '📊 Perf', anims: '💃 Animations Perso', animsCouple: '👯‍♀️ Animations Couple', interactif: '🎮 Interactif'
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
       views: ViewsSection,
@@ -1287,6 +1312,7 @@ export function SidePanel({
       interactif: InteractifSection,
       personnage: PersonnageSection,
       anims: AnimationsSection,
+      animsCouple: AnimationsCoupleSection,
       perf: <DevToolsGroups Group={Group} />,
     };
 
@@ -1416,6 +1442,7 @@ export function SidePanel({
         <Group emoji="🎮" title="Interactif">{InteractifSection}</Group>
         <Group emoji="👤" title="Personnage">{PersonnageSection}</Group>
         <Group emoji="💃" title="Animations Perso">{AnimationsSection}</Group>
+        <Group emoji="👯‍♀️" title="Animations Couple">{AnimationsCoupleSection}</Group>
       </div>
 
       {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
