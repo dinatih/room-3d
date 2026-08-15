@@ -107,6 +107,7 @@ export const CHARACTERS: CharacterConfig[] = [
 ];
 
 const CC3_TO_MIXAMO: Record<string, string> = {
+  'CC_Base_Pelvis': 'Hips',
   'CC_Base_Hip': 'Hips',
   'CC_Base_Waist': 'Spine',
   'CC_Base_Spine01': 'Spine1',
@@ -453,7 +454,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         values[4*i+3] = qCombined.w;
       }
       
-      const newHipsRotTrack = new THREE.QuaternionKeyframeTrack(hipsRotTrack.name, new Float32Array(times), values);
+      const newHipsRotTrack = new THREE.QuaternionKeyframeTrack('mixamorig:Hips.quaternion', new Float32Array(times), values);
       workingClip.tracks.splice(hipsRotTrackIndex, 1, newHipsRotTrack);
       
       const updatedRootRotTrackIndex = workingClip.tracks.indexOf(rootRotTrack);
@@ -461,12 +462,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         workingClip.tracks.splice(updatedRootRotTrackIndex, 1);
       }
     } else {
-      const hipsPosTrack = workingClip.tracks.find(t => t.name.toLowerCase().includes('hips') && !(t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')));
-      let hipsName = 'mixamorig:Hips.quaternion';
-      if (hipsPosTrack) {
-        hipsName = hipsPosTrack.name.split('.')[0] + '.quaternion';
-      }
-      rootRotTrack.name = hipsName;
+      rootRotTrack.name = 'mixamorig:Hips.quaternion';
     }
   }
 
