@@ -419,6 +419,28 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
   const rootRotTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')) && t.name.endsWith('.quaternion'));
   const hipsRotTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('hips') || t.name.toLowerCase().includes('hip') || t.name.toLowerCase().includes('pelvis')) && t.name.endsWith('.quaternion') && !(t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')));
 
+  const evaluateQuaternionTrack = (track: THREE.KeyframeTrack, t: number): THREE.Quaternion => {
+    const trackTimes = track.times;
+    const trackValues = track.values;
+    if (t <= trackTimes[0]) {
+      return new THREE.Quaternion(trackValues[0], trackValues[1], trackValues[2], trackValues[3]);
+    }
+    if (t >= trackTimes[trackTimes.length - 1]) {
+      const idx = (trackTimes.length - 1) * 4;
+      return new THREE.Quaternion(trackValues[idx], trackValues[idx+1], trackValues[idx+2], trackValues[idx+3]);
+    }
+    let i = 0;
+    while (i < trackTimes.length - 1 && trackTimes[i+1] < t) {
+      i++;
+    }
+    const t0 = trackTimes[i];
+    const t1 = trackTimes[i+1];
+    const alpha = (t - t0) / (t1 - t0);
+    const q0 = new THREE.Quaternion(trackValues[4*i], trackValues[4*i+1], trackValues[4*i+2], trackValues[4*i+3]);
+    const q1 = new THREE.Quaternion(trackValues[4*(i+1)], trackValues[4*(i+1)+1], trackValues[4*(i+1)+2], trackValues[4*(i+1)+3]);
+    return q0.slerp(q1, alpha);
+  };
+
   if (rootRotTrackIndex !== -1) {
     const rootRotTrack = workingClip.tracks[rootRotTrackIndex];
     if (hipsRotTrackIndex !== -1) {
@@ -426,28 +448,6 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
       const timesSet = new Set<number>([...rootRotTrack.times, ...hipsRotTrack.times]);
       const times = Array.from(timesSet).sort((a, b) => a - b);
       const values = new Float32Array(times.length * 4);
-
-      const evaluateQuaternionTrack = (track: THREE.KeyframeTrack, t: number): THREE.Quaternion => {
-        const trackTimes = track.times;
-        const trackValues = track.values;
-        if (t <= trackTimes[0]) {
-          return new THREE.Quaternion(trackValues[0], trackValues[1], trackValues[2], trackValues[3]);
-        }
-        if (t >= trackTimes[trackTimes.length - 1]) {
-          const idx = (trackTimes.length - 1) * 4;
-          return new THREE.Quaternion(trackValues[idx], trackValues[idx+1], trackValues[idx+2], trackValues[idx+3]);
-        }
-        let i = 0;
-        while (i < trackTimes.length - 1 && trackTimes[i+1] < t) {
-          i++;
-        }
-        const t0 = trackTimes[i];
-        const t1 = trackTimes[i+1];
-        const alpha = (t - t0) / (t1 - t0);
-        const q0 = new THREE.Quaternion(trackValues[4*i], trackValues[4*i+1], trackValues[4*i+2], trackValues[4*i+3]);
-        const q1 = new THREE.Quaternion(trackValues[4*(i+1)], trackValues[4*(i+1)+1], trackValues[4*(i+1)+2], trackValues[4*(i+1)+3]);
-        return q0.slerp(q1, alpha);
-      };
 
       const qRootRestInv = new THREE.Quaternion(-0.7071067690849304, 0, 0, 0.7071067690849304).invert();
       for (let i = 0; i < times.length; i++) {
@@ -765,6 +765,8 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         if (bone.restLocalQuaternion && bone.restWorldQuaternion) {
           let B_src = null;
           let P_src = null;
+          let clavicleTrack: THREE.KeyframeTrack | null = null;
+          let clavicleParentRestWorld = new THREE.Quaternion();
           if (animBones[baseName]) {
             B_src = animBones[baseName].restWorldQuaternion.clone();
             P_src = animBones[baseName].parentRestWorldQuaternion.clone();
@@ -784,10 +786,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
                 B_src.premultiply(worldOffsetQ); // Apply offset in world space
               }
             }
-            
             // Check if we need to bake clavicle animation into the arm (if target lacks a clavicle)
-            let clavicleTrack: THREE.KeyframeTrack | null = null;
-            let clavicleParentRestWorld = new THREE.Quaternion();
             if (baseName === 'LeftArm' || baseName === 'RightArm') {
               const clavicleBaseName = baseName === 'LeftArm' ? 'LeftShoulder' : 'RightShoulder';
               const clavicleSynonyms = BONE_SYNONYMS[clavicleBaseName] || [];
