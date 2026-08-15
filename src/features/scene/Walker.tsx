@@ -366,7 +366,8 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
             restWorldQuaternion: c.getWorldQuaternion(new THREE.Quaternion()),
             restLocalQuaternion: c.quaternion.clone(),
             parentRestWorldQuaternion: c.parent ? c.parent.getWorldQuaternion(new THREE.Quaternion()) : new THREE.Quaternion(),
-            defaultPosition: c.position.clone()
+            defaultPosition: c.position.clone(),
+            bone: c
           };
           if (match[1] === 'Hips' || match[1] === 'Spine') {
             const eW = new THREE.Euler().setFromQuaternion(animBones[match[1]].restWorldQuaternion, 'XYZ');
@@ -378,7 +379,8 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
             restWorldQuaternion: c.getWorldQuaternion(new THREE.Quaternion()),
             restLocalQuaternion: c.quaternion.clone(),
             parentRestWorldQuaternion: c.parent ? c.parent.getWorldQuaternion(new THREE.Quaternion()) : new THREE.Quaternion(),
-            defaultPosition: c.position.clone()
+            defaultPosition: c.position.clone(),
+            bone: c
           };
         }
       }
