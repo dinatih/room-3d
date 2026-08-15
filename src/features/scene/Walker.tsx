@@ -783,6 +783,15 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
                 const worldOffsetQ = new THREE.Quaternion().setFromAxisAngle(axis, angle);
                 B_src.premultiply(worldOffsetQ); // Apply offset in world space
               }
+              
+              // Compensate for missing clavicle on Lara models (which lose ~15 deg of downward pitch from the clavicle animation)
+              // We detect Lara by checking if her arm bone is named 'arm_left_shoulder_2' or similar
+              if (targetBoneName.includes('arm_left_shoulder_2') || targetBoneName.includes('arm_right_shoulder_2')) {
+                const clavicleCompensationAngle = 15 * Math.PI / 180;
+                const axis = baseName === 'LeftArm' ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 0, -1);
+                const clavicleOffsetQ = new THREE.Quaternion().setFromAxisAngle(axis, clavicleCompensationAngle);
+                B_src.premultiply(clavicleOffsetQ); // Make B_src point further UP, which forces deltaQ further DOWN
+              }
             }
           } else {
             B_src = new THREE.Quaternion();
