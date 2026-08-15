@@ -483,8 +483,22 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
 
   if (rootPosTrackIndex !== -1) {
     const rootPosTrack = workingClip.tracks[rootPosTrackIndex];
-    if (hipsPosTrackIndex !== -1) {
-      const hipsPosTrack = workingClip.tracks[hipsPosTrackIndex];
+    let hipsPosTrack = hipsPosTrackIndex !== -1 ? workingClip.tracks[hipsPosTrackIndex] : null;
+    
+    // If the animation doesn't have a hips position track (e.g. Miley animations where all translation is on root),
+    // create a static one from the default position so we can still combine them.
+    if (!hipsPosTrack && animBones['Hips']) {
+      const defPos = animBones['Hips'].defaultPosition.clone();
+      // Ensure it's in meters if it came from CC4 (centimeters)
+      if (defPos.length() > 5.0) defPos.multiplyScalar(0.01);
+      hipsPosTrack = new THREE.VectorKeyframeTrack(
+        'mixamorig:Hips.position',
+        [0],
+        [defPos.x, defPos.y, defPos.z]
+      );
+    }
+
+    if (hipsPosTrack) {
       const rootRotTrack = rawClip.tracks.find(t => (t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')) && t.name.endsWith('.quaternion'));
       if (rootRotTrack) {
         const posTimes = rootPosTrack.times;
@@ -539,7 +553,8 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           const pCombinedWorld = pRootDelta.add(pHipsWorld);
           
           // 3. Convert back to Z-up local space so it plays correctly on Lara (whose parent has -90 X)
-          const pFinalLocal = pCombinedWorld.applyQuaternion(qRootRestInv).multiplyScalar(0.01);
+          // 3. Convert back to Z-up local space so it plays correctly on Lara (whose parent has -90 X)
+          const pFinalLocal = pCombinedWorld.applyQuaternion(qRootRestInv);
           
           posValues[3*i] = pFinalLocal.x;
           posValues[3*i+1] = pFinalLocal.y;
@@ -547,7 +562,11 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         }
         
         const newHipsPosTrack = new THREE.VectorKeyframeTrack('mixamorig:Hips.position', new Float32Array(posTimes), posValues);
-        workingClip.tracks.splice(hipsPosTrackIndex, 1, newHipsPosTrack);
+        if (hipsPosTrackIndex !== -1) {
+          workingClip.tracks.splice(hipsPosTrackIndex, 1, newHipsPosTrack);
+        } else {
+          workingClip.tracks.push(newHipsPosTrack);
+        }
         
         const updatedRootPosTrackIndex = workingClip.tracks.indexOf(rootPosTrack);
         if (updatedRootPosTrackIndex !== -1) {
