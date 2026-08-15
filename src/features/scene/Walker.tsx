@@ -454,10 +454,9 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         const t = times[i];
         const qRoot = evaluateQuaternionTrack(rootRotTrack, t);
         const qHips = evaluateQuaternionTrack(hipsRotTrack, t);
-        // Extract root delta: qRoot_delta = qRootRestInv * qRoot
-        const qRootDelta = qRootRestInv.clone().multiply(qRoot);
-        // Apply root delta to Hips:
-        const qCombined = qRootDelta.multiply(qHips);
+        
+        // The true world rotation of the hips is the parent's world rotation * local rotation
+        const qCombined = qRoot.clone().multiply(qHips);
         
         values[4*i] = qCombined.x;
         values[4*i+1] = qCombined.y;
@@ -550,15 +549,14 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           
           // 2. Add root motion delta (also in Y-up world space)
           const pRootDelta = pRoot.clone().sub(pRootRest);
-          const pCombinedWorld = pRootDelta.add(pHipsWorld);
+          const pFinalWorld = pRootDelta.add(pHipsWorld);
           
-          // 3. Convert back to Z-up local space so it plays correctly on Lara (whose parent has -90 X)
-          // 3. Convert back to Z-up local space so it plays correctly on Lara (whose parent has -90 X)
-          const pFinalLocal = pCombinedWorld.applyQuaternion(qRootRestInv);
+          // We leave it in world space because the generic loop will apply P_src (Identity) and P_tgt_inv (+90 X) 
+          // to correctly project it onto the target bone.
           
-          posValues[3*i] = pFinalLocal.x;
-          posValues[3*i+1] = pFinalLocal.y;
-          posValues[3*i+2] = pFinalLocal.z;
+          posValues[3*i] = pFinalWorld.x;
+          posValues[3*i+1] = pFinalWorld.y;
+          posValues[3*i+2] = pFinalWorld.z;
         }
         
         const newHipsPosTrack = new THREE.VectorKeyframeTrack('mixamorig:Hips.position', new Float32Array(posTimes), posValues);
