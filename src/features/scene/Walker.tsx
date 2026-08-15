@@ -576,15 +576,6 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
     }
   }
 
-  // Restore rootjoint default offset to Hips for position calculation
-  if (animBones['Hips'] && animBones['RootJoint']) {
-
-    const rootPos = animBones['RootJoint'].defaultPosition;
-    const rootRot = animBones['RootJoint'].restLocalQuaternion;
-    const hipsPos = animBones['Hips'].defaultPosition;
-    animBones['Hips'].defaultPosition = rootPos.clone().add(hipsPos.clone().applyQuaternion(rootRot));
-  }
-
   // Determine height translations scale multiplier dynamically
   let srcHipsDefaultY = 0.991;
   let computedHipsRatio = 100.0;
