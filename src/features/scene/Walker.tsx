@@ -2721,7 +2721,6 @@ useGLTF.preload('media/sandbox/anims/anim_shaking_hands_2.glb');
 useGLTF.preload('media/sandbox/anims/anim_female_sitting_pose_1.glb');
 useGLTF.preload('media/sandbox/anims/anim_female_sitting_pose_3.glb');
 useGLTF.preload('media/sandbox/anims/anim_hand_raising.glb');
-useGLTF.preload('media/sandbox/anims/anim_woman-solo.glb');
 useGLTF.preload('media/sandbox/anims/anim_belly_dance.glb');
 useGLTF.preload('media/sandbox/anims/anim_dancing_twerk.glb');
 useGLTF.preload('media/sandbox/anims/anim_stall_soccerball_1.glb');
