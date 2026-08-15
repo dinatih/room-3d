@@ -768,10 +768,21 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           if (animBones[baseName]) {
             B_src = animBones[baseName].restWorldQuaternion.clone();
             P_src = animBones[baseName].parentRestWorldQuaternion.clone();
-            
             if (isHips) {
               // Hips world rest rotation must be neutralized so the character stands up (for Mixamo +90X rest poses)
               B_src = new THREE.Quaternion();
+            }
+
+            // Auto-correct A-pose arms to T-pose references
+            if (baseName === 'LeftArm' || baseName === 'RightArm') {
+              const dir = new THREE.Vector3(0, 1, 0).applyQuaternion(B_src);
+              if (dir.y < -0.1) { // If arm is pointing downwards (A-pose)
+                const angle = Math.asin(-dir.y); // Calculate pitch angle
+                // LeftArm points +X (rotate around +Z to pitch up), RightArm points -X (rotate around -Z)
+                const axis = baseName === 'LeftArm' ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 0, -1);
+                const worldOffsetQ = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+                B_src.premultiply(worldOffsetQ); // Apply offset in world space
+              }
             }
           } else {
             B_src = new THREE.Quaternion();
