@@ -1279,29 +1279,52 @@ export function SidePanel({
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-rajaa', value: rajaaPath } }));
   };
 
+  const coupleAnims = [
+    { label: 'B1', icon: '💥', s: 'b1_fall_kicked_knockout', r: 'b1_attack_back_somersault_flip' },
+    { label: 'D1', icon: '🤺', s: 'd1_attack_arms_block', r: 'd1_dodge_sideways' },
+    { label: 'D4', icon: '🤺', s: 'd4_attack_reverse_front_snap_kick', r: 'd4_dodge_roll_back' },
+    { label: 'F2', icon: '🥊', s: 'f2_attack_straight_punch02', r: 'f2_fall_to_ground_face_up01' },
+    { label: 'H1', icon: '👊', s: 'h1_attack_punches', r: 'h1_hit_punches' },
+    { label: 'H2', icon: '👊', s: 'h2_attack_side_kicks', r: 'h2_hit_dodge' },
+    { label: 'H4', icon: '👊', s: 'h4_attack_rising_kick', r: 'h4_hit_staggering' },
+    { label: 'Ko1', icon: '😵', s: 'ko1_attack_uppercut', r: 'ko1_fall_to_ground_sprawl' },
+    { label: 'Ko2', icon: '😵', s: 'ko2_attack_hood_kicks', r: 'ko2_fall_to_ground_axel_down' },
+    { label: 'Ko3', icon: '😵', s: 'ko3_attack_hammer_fist', r: 'ko3_fall_to_ground_side_up02' },
+    { label: 'P1', icon: '😤', s: 'p1_standoff_push_knockout', r: 'p1_standoff_block_straight_punch' },
+    { label: 'P2', icon: '😤', s: 'p2_standoff_provokes_m1', r: 'p2_standoff_provokes_m2' },
+    { label: 'S1', icon: '🥋', s: 's1_sparring_punch_m1', r: 's1_sparring_punch_m2' },
+    { label: 'S2', icon: '🥋', s: 's2_sparring_kicks', r: 's2_sparring_dodges01' },
+    { label: 'S3', icon: '🥋', s: 's3_sparring_reverse_kicks', r: 's3_sparring_dodges02' },
+    { label: 'S4', icon: '🥋', s: 's4_sparring_double_kicks_m1', r: 's4_sparring_double_kicks_m2' },
+    { label: 'S5', icon: '🥋', s: 's5_sparring_block_kick', r: 's5_sparring_block_hit' },
+    { label: 'T1', icon: '🤼', s: 't1_attack_thrown', r: 't1_hit_suplex' },
+    { label: 'T3', icon: '🤼', s: 't3_attack_shoulder_throw', r: 't3_fall_shoulder_throw' },
+    { label: 'T4', icon: '🤼', s: 't4_attack_knee_strike', r: 't4_fall_belly_to_back_slam' },
+    { label: 'T5', icon: '🤼', s: 't5_attack_headlock_takeover', r: 't5_fall_headlock_takeover' },
+    { label: 'Pop Dance', icon: '🕺', s: 'couple_pop_dance_m', r: 'couple_pop_dance_f' },
+    { label: 'Energetic Dance', icon: '🕺', s: 'energetic_dance_m', r: 'energetic_dance_f' },
+    { label: 'Slow Dance', icon: '💃', s: 'slow_dance_m', r: 'slow_dance_f' },
+    { label: 'Cuddle Kiss', icon: '😘', s: 'cuddle_kiss_m', r: 'cuddle_kiss_f' },
+    { label: 'Eye to Eye Kiss', icon: '🤗', s: 'eye_to_eye_hug_kiss_m', r: 'eye_to_eye_hug_kiss_f' },
+    { label: 'Farewell Kiss', icon: '👋', s: 'farewell_kiss_m', r: 'farewell_kiss_f' },
+    { label: 'Date Bearhug', icon: '🐻', s: 'date_bearhug_m', r: 'date_bearhug_f' },
+    { label: 'Propose', icon: '💍', s: 'propose_m', r: 'propose_f' },
+    { label: 'Sit Cuddle', icon: '🛋️', s: 'sit_cuddle_hug_m', r: 'sit_cuddle_hug_f' },
+  ];
+
   const AnimationsCoupleSection = (
-    <div className="p-2 d-flex flex-column gap-2 bg-transparent" style={{ fontSize: '11px' }}>
-      <button 
-        className="btn btn-outline-secondary text-start p-2 border shadow-sm bg-white rounded-3 d-flex align-items-center gap-2" 
-        onClick={() => playCoupleAnim('media/sandbox/anims/miley_armature_b1_fall_kicked_knockout.glb', 'media/sandbox/anims/miley_armature_b1_attack_back_somersault_flip.glb')}
-      >
-        <span style={{ fontSize: '16px' }}>💥</span>
-        <span className="fw-bold">B1 (Attack: Rajaa, Dodge: Sandra)</span>
-      </button>
-      <button 
-        className="btn btn-outline-secondary text-start p-2 border shadow-sm bg-white rounded-3 d-flex align-items-center gap-2" 
-        onClick={() => playCoupleAnim('media/sandbox/anims/miley_armature_d1_attack_arms_block.glb', 'media/sandbox/anims/miley_armature_d1_dodge_sideways.glb')}
-      >
-        <span style={{ fontSize: '16px' }}>🤺</span>
-        <span className="fw-bold">D1 (Attack: Sandra, Dodge: Rajaa)</span>
-      </button>
-      <button 
-        className="btn btn-outline-secondary text-start p-2 border shadow-sm bg-white rounded-3 d-flex align-items-center gap-2" 
-        onClick={() => playCoupleAnim('media/sandbox/anims/miley_armature_couple_pop_dance_m.glb', 'media/sandbox/anims/miley_armature_couple_pop_dance_f.glb')}
-      >
-        <span style={{ fontSize: '16px' }}>🕺</span>
-        <span className="fw-bold">Pop Dance (M: Sandra, F: Rajaa)</span>
-      </button>
+    <div className="p-2 d-flex flex-wrap gap-1 bg-transparent">
+      {coupleAnims.map(a => (
+        <button 
+          key={a.label}
+          className="btn btn-outline-secondary p-1 px-2 border shadow-sm bg-white rounded-2 d-flex align-items-center gap-1" 
+          onClick={() => playCoupleAnim(`media/sandbox/anims/miley_armature_${a.s}.glb`, `media/sandbox/anims/miley_armature_${a.r}.glb`)}
+          style={{ fontSize: '10px' }}
+        >
+          <span style={{ fontSize: '12px' }}>{a.icon}</span>
+          <span className="fw-semibold">{a.label}</span>
+        </button>
+      ))}
     </div>
   );
 
