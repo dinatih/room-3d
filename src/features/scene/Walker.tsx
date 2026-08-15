@@ -907,7 +907,7 @@ function SingleCharacter({
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const { scene } = useGLTFClone(modelPath);
-  const mileyAnimsGltf = useGLTF('models/miley_all_animations_v3.glb');
+
 
   const groupRef = useRef<THREE.Group>(null!);
   const modelRef = useRef<THREE.Object3D>(null!);
@@ -1493,8 +1493,7 @@ function SingleCharacter({
           const loadCallback = (gltf: any) => {
             let sourceScene = gltf.scene;
             if (path.toLowerCase().includes('miley') && (!sourceScene || !sourceScene.getObjectByName('mixamorigHips'))) {
-               // Fallback to the full miley armature if standalone animation lacks it
-               sourceScene = mileyAnimsGltf.scene;
+               // Removed fallback to big miley armature
             }
             handleClip(gltf.animations[0], sourceScene);
           };
@@ -2412,7 +2411,7 @@ function InternalWalker(props: WalkerProps) {
   const jazzDanceGltf = useGLTF('media/sandbox/anims/anim_jazz_dancing.glb');
   const canCanGltf = useGLTF('media/sandbox/anims/anim_can_can.glb');
   const ymcaDanceGltf = useGLTF('media/sandbox/anims/anim_ymca_dance.glb');
-  const mileyAnimsGltf = useGLTF('models/miley_all_animations_v3.glb');
+
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -2508,13 +2507,7 @@ function InternalWalker(props: WalkerProps) {
               name: path,
               userData: { animScene: gltf.scene }
             });
-          }),
-        ...(mileyAnimsGltf.animations || []).map(anim => {
-          return Object.assign(anim.clone(), {
-            name: `miley/${anim.name}`,
-            userData: { animScene: mileyAnimsGltf.scene }
-          });
-        })
+          })
       ];
       const sittingScene = char.sittingScenePath && animGltfs[char.sittingScenePath]?.scene;
       return {
@@ -2524,7 +2517,7 @@ function InternalWalker(props: WalkerProps) {
         sittingScene
       };
     });
-  }, [idleGltf, walkingGltf, runningGltf, animGltfs, mileyAnimsGltf]);
+  }, [idleGltf, walkingGltf, runningGltf, animGltfs]);
 
   return (
     <>
@@ -2602,7 +2595,7 @@ useGLTF.preload('media/sandbox/anims/anim_dancing_twerk.glb');
 useGLTF.preload('media/sandbox/anims/anim_stall_soccerball_1.glb');
 useGLTF.preload('media/sandbox/anims/anim_body_jab_cross.glb');
 useGLTF.preload('media/sandbox/anims/anim_texting_while_standing.glb');
-useGLTF.preload('models/miley_all_animations_v3.glb');
+
 
 
 CHARACTERS.forEach(char => {
