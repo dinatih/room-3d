@@ -128,7 +128,37 @@ const CC3_TO_MIXAMO: Record<string, string> = {
   'CC_Base_R_Thigh': 'RightUpLeg',
   'CC_Base_R_Calf': 'RightLeg',
   'CC_Base_R_Foot': 'RightFoot',
-  'CC_Base_R_ToeBase': 'RightToeBase'
+  'CC_Base_R_ToeBase': 'RightToeBase',
+  'CC_Base_L_Thumb1': 'LeftHandThumb1',
+  'CC_Base_L_Thumb2': 'LeftHandThumb2',
+  'CC_Base_L_Thumb3': 'LeftHandThumb3',
+  'CC_Base_L_Index1': 'LeftHandIndex1',
+  'CC_Base_L_Index2': 'LeftHandIndex2',
+  'CC_Base_L_Index3': 'LeftHandIndex3',
+  'CC_Base_L_Mid1': 'LeftHandMiddle1',
+  'CC_Base_L_Mid2': 'LeftHandMiddle2',
+  'CC_Base_L_Mid3': 'LeftHandMiddle3',
+  'CC_Base_L_Ring1': 'LeftHandRing1',
+  'CC_Base_L_Ring2': 'LeftHandRing2',
+  'CC_Base_L_Ring3': 'LeftHandRing3',
+  'CC_Base_L_Pinky1': 'LeftHandPinky1',
+  'CC_Base_L_Pinky2': 'LeftHandPinky2',
+  'CC_Base_L_Pinky3': 'LeftHandPinky3',
+  'CC_Base_R_Thumb1': 'RightHandThumb1',
+  'CC_Base_R_Thumb2': 'RightHandThumb2',
+  'CC_Base_R_Thumb3': 'RightHandThumb3',
+  'CC_Base_R_Index1': 'RightHandIndex1',
+  'CC_Base_R_Index2': 'RightHandIndex2',
+  'CC_Base_R_Index3': 'RightHandIndex3',
+  'CC_Base_R_Mid1': 'RightHandMiddle1',
+  'CC_Base_R_Mid2': 'RightHandMiddle2',
+  'CC_Base_R_Mid3': 'RightHandMiddle3',
+  'CC_Base_R_Ring1': 'RightHandRing1',
+  'CC_Base_R_Ring2': 'RightHandRing2',
+  'CC_Base_R_Ring3': 'RightHandRing3',
+  'CC_Base_R_Pinky1': 'RightHandPinky1',
+  'CC_Base_R_Pinky2': 'RightHandPinky2',
+  'CC_Base_R_Pinky3': 'RightHandPinky3'
 };
 
 const BONE_SYNONYMS: Record<string, string[]> = {
@@ -283,13 +313,21 @@ function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: string,
     }
   }
 
-  const fingerMatch = baseName.match(/Hand(Thumb|Index|Middle|Ring|Pinky)(\d)/i);
-  if (fingerMatch) {
-    const side = baseName.toLowerCase().includes('left') ? 'left' : 'right';
-    const type = fingerMatch[1].toLowerCase();
+  // Support for both mixamo format (HandIndex1) and CharacterCreator format (L_Index1)
+  const fingerMatch = baseName.match(/(?:Hand)?(Thumb|Index|Middle|Mid|Ring|Pinky)(\d)/i);
+  if (fingerMatch && !baseName.toLowerCase().includes('toe')) {
+    let side = baseName.toLowerCase().includes('left') ? 'left' : 'right';
+    if (baseName.includes('_L_')) side = 'left';
+    if (baseName.includes('_R_')) side = 'right';
+    let type = fingerMatch[1].toLowerCase();
+    if (type === 'mid') type = 'middle';
     const segment = fingerMatch[2];
     const resolvedFinger = resolveTargetFingerBoneName(targetInstance, side, type, segment);
-    if (resolvedFinger) return resolvedFinger;
+    if (resolvedFinger) {
+      // console.log(`[FINGER] Mapped ${baseName} -> ${resolvedFinger}`);
+      return resolvedFinger;
+    }
+    // console.log(`[FINGER_FAIL] Could not map ${baseName} (${side}, ${type}, ${segment})`);
   }
 
   const synonyms = BONE_SYNONYMS[baseName];
@@ -338,6 +376,29 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
   const sourceHairMap = new Map<string, string>();
 
   if (animScene) {
+    animScene.updateMatrixWorld(true);
+
+    // Auto T-pose correction for A-pose models (like CC3/CC4)
+    // We adjust the rest pose of the arms in animScene so it aligns with standard Mixamo T-pose.
+    animScene.traverse((c: any) => {
+      if (c.isBone) {
+        let name = c.name;
+        if (CC3_TO_MIXAMO[name]) name = CC3_TO_MIXAMO[name];
+        if (name === 'LeftArm' || name === 'RightArm') {
+          const wQ = c.getWorldQuaternion(new THREE.Quaternion());
+          const dir = new THREE.Vector3(0, 1, 0).applyQuaternion(wQ);
+          // If the arm is pointing downwards (dir.y < -0.1), it's an A-pose.
+          if (dir.y < -0.1) {
+            const targetDir = name === 'LeftArm' ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(-1, 0, 0);
+            const offsetQ = new THREE.Quaternion().setFromUnitVectors(dir.normalize(), targetDir);
+            const pWQ = c.parent ? c.parent.getWorldQuaternion(new THREE.Quaternion()) : new THREE.Quaternion();
+            const newWorldQ = offsetQ.clone().multiply(wQ);
+            c.quaternion.copy(pWQ.invert().multiply(newWorldQ));
+          }
+        }
+      }
+    });
+    // Update matrices again after our corrections
     animScene.updateMatrixWorld(true);
 
     const sourceHairBones: Array<{ bone: THREE.Object3D; baseName: string; depth: number }> = [];
@@ -777,17 +838,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
               B_src = new THREE.Quaternion();
             }
 
-            // Auto-correct A-pose arms to T-pose references
-            if (baseName === 'LeftArm' || baseName === 'RightArm') {
-              const dir = new THREE.Vector3(0, 1, 0).applyQuaternion(B_src);
-              if (dir.y < -0.1) { // If arm is pointing downwards (A-pose)
-                const angle = Math.asin(-dir.y); // Calculate pitch angle
-                // LeftArm points +X (rotate around +Z to pitch up), RightArm points -X (rotate around -Z)
-                const axis = baseName === 'LeftArm' ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 0, -1);
-                const worldOffsetQ = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-                B_src.premultiply(worldOffsetQ); // Apply offset in world space
-              }
-            }
+
             // Check if we need to bake clavicle animation into the arm (if target lacks a clavicle)
             if (baseName === 'LeftArm' || baseName === 'RightArm') {
               const clavicleBaseName = baseName === 'LeftArm' ? 'LeftShoulder' : 'RightShoulder';
@@ -2423,7 +2474,7 @@ function SingleCharacter({
 
 function InternalWalker(props: WalkerProps) {
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
-  const idleGltf = useGLTF('media/sandbox/anims/anim_idle.glb');
+  const idleGltf = useGLTF('media/sandbox/anims/miley_blender_idle01_f.glb');
   const walkingGltf = useGLTF('media/sandbox/anims/anim_walking.glb');
   const runningGltf = useGLTF('media/sandbox/anims/anim_running.glb');
 
@@ -2656,7 +2707,7 @@ const VIVID_PATH = 'media/vivida_red_lara_native.glb';
 useGLTF.preload(LARA_PATH);
 useGLTF.preload(ROSANNA_PATH);
 useGLTF.preload(VIVID_PATH);
-useGLTF.preload('media/sandbox/anims/anim_idle.glb');
+useGLTF.preload('media/sandbox/anims/miley_blender_idle01_f.glb');
 useGLTF.preload('media/sandbox/anims/anim_walking.glb');
 useGLTF.preload('media/sandbox/anims/anim_running.glb');
 useGLTF.preload('media/sandbox/anims/anim_falling.glb');
