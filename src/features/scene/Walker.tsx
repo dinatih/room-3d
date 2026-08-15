@@ -107,8 +107,6 @@ export const CHARACTERS: CharacterConfig[] = [
 ];
 
 const CC3_TO_MIXAMO: Record<string, string> = {
-  'CC_Base_Pelvis': 'Hips',
-  'CC_Base_Hip': 'Hips',
   'CC_Base_Waist': 'Spine',
   'CC_Base_Spine01': 'Spine1',
   'CC_Base_Spine02': 'Spine2',
@@ -522,7 +520,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           posValues[3*i+2] = pCombined.z;
         }
         
-        const newHipsPosTrack = new THREE.VectorKeyframeTrack(hipsPosTrack.name, new Float32Array(posTimes), posValues);
+        const newHipsPosTrack = new THREE.VectorKeyframeTrack('mixamorig:Hips.position', new Float32Array(posTimes), posValues);
         workingClip.tracks.splice(hipsPosTrackIndex, 1, newHipsPosTrack);
         
         const updatedRootPosTrackIndex = workingClip.tracks.indexOf(rootPosTrack);
