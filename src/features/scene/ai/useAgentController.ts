@@ -272,5 +272,11 @@ export function useAgentController(
     return stateRef.current;
   };
 
-  return { update };
+  const setPosition = (x: number, y: number, z: number) => {
+    stateRef.current.x = x;
+    stateRef.current.y = y;
+    stateRef.current.z = z;
+  };
+
+  return { update, setPosition };
 }

@@ -1181,7 +1181,7 @@ function SingleCharacter({
   const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : EMPTY_SCENARIO);
   const loopScenario = isDelphinaNpc;
 
-  const { update: updateAgent } = useAgentController(
+  const { update: updateAgent, setPosition: setAgentPosition } = useAgentController(
     id,
     finalScenario,
     loopScenario, // Boucle uniquement si c'est le bot aléatoire (Delphina)
@@ -1543,6 +1543,15 @@ function SingleCharacter({
       const isForMe = (isLara && e.detail?.key === 'walker-anim-lara') ||
                       (!isLara && e.detail?.key === 'walker-anim-xbot') ||
                       (e.detail?.key === `walker-anim-${id}`);
+
+      if (e.detail?.key === `walker-pos-${id}`) {
+        if (Array.isArray(e.detail.value) && e.detail.value.length === 3) {
+          setAgentPosition(e.detail.value[0], e.detail.value[1], e.detail.value[2]);
+          invalidate();
+        }
+        return;
+      }
+
       if (isForMe && e.detail?.value) {
         const path = e.detail.value;
 
