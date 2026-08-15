@@ -848,16 +848,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
               }
 
               const animWorldQ = currentP_src.multiply(srcLocalQ);
-              let deltaQ = animWorldQ.clone().multiply(B_src_inv);
-              
-              // Proportion compensation: Exaggerate arm/elbow rotations slightly to compensate for wide shoulders on Lara/xbot
-              // This helps hands reach the head/body properly when playing animations authored on narrow-shouldered meshes (like Miley)
-              // Since it scales deltaQ, it preserves the T-pose exactly (where deltaQ = Identity).
-              if (baseName === 'LeftArm' || baseName === 'RightArm' || baseName === 'LeftForeArm' || baseName === 'RightForeArm') {
-                const exaggerationFactor = 1.12; // 12% extra rotation
-                deltaQ = new THREE.Quaternion().identity().slerp(deltaQ, exaggerationFactor).normalize();
-              }
-
+              const deltaQ = animWorldQ.clone().multiply(B_src_inv);
               const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
               const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
 
