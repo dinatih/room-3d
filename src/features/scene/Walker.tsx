@@ -86,7 +86,7 @@ export const CHARACTERS: CharacterConfig[] = [
     sittingScenePath: 'media/sandbox/anims/anim_snake_hip_hop_dance.glb'
   },
   { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [150, 0, -400], rot: Math.PI, variant: 'safa', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_stall_soccerball_1.glb', sittingScenePath: 'media/sandbox/anims/anim_stall_soccerball_1.glb' },
-  { id: 'sandra', name: 'Sandra', path: 'media/lara_native.glb', pos: [-350, 0, 0], rot: 0, variant: 'sandra', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/miley_armature_d1_attack_arms_block.glb', sittingScenePath: 'media/sandbox/anims/miley_armature_d1_attack_arms_block.glb' },
+  { id: 'sandra', name: 'Sandra', path: 'media/lara_native.glb', pos: [-400, 0, 0], rot: 0, variant: 'sandra', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/miley_armature_d1_attack_arms_block.glb', sittingScenePath: 'media/sandbox/anims/miley_armature_d1_attack_arms_block.glb' },
   { id: 'rajaa', name: 'Rajaa', path: 'media/lara_native.glb', pos: [-450, 0, 0], rot: 0, variant: 'rajaa', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/miley_armature_d1_dodge_sideways.glb', sittingScenePath: 'media/sandbox/anims/miley_armature_d1_dodge_sideways.glb' },
   {
     id: 'romana', name: 'Romana', path: 'media/lara_native.glb', pos: [270, 45, -110], rot: Math.PI, variant: 'romana', height: 173.4,
@@ -1541,7 +1541,8 @@ function SingleCharacter({
         return;
       }
       const isForMe = (isLara && e.detail?.key === 'walker-anim-lara') ||
-                      (!isLara && e.detail?.key === 'walker-anim-xbot');
+                      (!isLara && e.detail?.key === 'walker-anim-xbot') ||
+                      (e.detail?.key === `walker-anim-${id}`);
       if (isForMe && e.detail?.value) {
         const path = e.detail.value;
 
