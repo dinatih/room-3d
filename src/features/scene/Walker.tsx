@@ -514,6 +514,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         };
 
         const pRootRest = evaluateVectorTrack(rootPosTrack, posTimes[0]);
+        const qRootRestInv = new THREE.Quaternion(-0.7071067690849304, 0, 0, 0.7071067690849304).invert();
 
         for (let i = 0; i < posTimes.length; i++) {
           const t = posTimes[i];
@@ -521,19 +522,20 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           const pHips = evaluateVectorTrack(hipsPosTrack, t);
           const qRoot = evaluateQuaternionTrack(rootRotTrack, t);
           
-          // pRoot is in CC4 world space. pHips is in CC4 root space (Z-up).
-          // To get hips to CC4 world space, rotate by qRoot.
-          const pHipsRotated = pHips.clone().applyQuaternion(qRoot);
+          // pRoot is in CC4 world space (Y-up). pHips is in CC4 root space (Z-up).
+          // 1. Convert hips to Y-up world space:
+          const pHipsWorld = pHips.clone().applyQuaternion(qRoot);
           
-          // Calculate root motion delta to avoid teleporting the character away from origin
+          // 2. Add root motion delta (also in Y-up world space)
           const pRootDelta = pRoot.clone().sub(pRootRest);
+          const pCombinedWorld = pRootDelta.add(pHipsWorld);
           
-          // Final position is root delta + rotated hips, scaled from cm to m
-          const pCombined = pRootDelta.add(pHipsRotated).multiplyScalar(0.01);
+          // 3. Convert back to Z-up local space so it plays correctly on Lara (whose parent has -90 X)
+          const pFinalLocal = pCombinedWorld.applyQuaternion(qRootRestInv).multiplyScalar(0.01);
           
-          posValues[3*i] = pCombined.x;
-          posValues[3*i+1] = pCombined.y;
-          posValues[3*i+2] = pCombined.z;
+          posValues[3*i] = pFinalLocal.x;
+          posValues[3*i+1] = pFinalLocal.y;
+          posValues[3*i+2] = pFinalLocal.z;
         }
         
         const newHipsPosTrack = new THREE.VectorKeyframeTrack('mixamorig:Hips.position', new Float32Array(posTimes), posValues);
