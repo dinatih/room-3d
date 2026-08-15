@@ -82,7 +82,7 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'xbot', name: 'Xbot', path: 'media/sandbox/Xbot_official.glb', pos: [288, 0, 603], rot: 0, variant: 'native', height: 173.4, isLara: false },
   {
     id: 'sabira', name: 'Sabira', path: 'media/lara_native.glb', pos: [100, 0, 370], rot: Math.atan2(158 - 100, 200 - 370), variant: 'sabira', height: 173.4,
-    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_hip_hop_dancing.glb', 'media/sandbox/anims/anim_hip_hop_dancing_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_6.glb', 'media/sandbox/anims/anim_hip_hop_dancing_10.glb', 'media/sandbox/anims/anim_locking_hip_hop_dance.glb', 'media/sandbox/anims/anim_robot_hip_hop_dance.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_samba_dancing_2.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_gangnam_style.glb']; return anims[Math.floor(Math.random() * anims.length)]; })(),
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_hip_hop_dancing.glb', 'media/sandbox/anims/anim_hip_hop_dancing_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_6.glb', 'media/sandbox/anims/anim_hip_hop_dancing.glb', 'media/sandbox/anims/anim_locking_hip_hop_dance.glb', 'media/sandbox/anims/anim_robot_hip_hop_dance.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_samba_dancing_2.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_gangnam_style.glb']; return anims[Math.floor(Math.random() * anims.length)]; })(),
     sittingScenePath: 'media/sandbox/anims/anim_snake_hip_hop_dance.glb'
   },
   { id: 'safa', name: 'Safa', path: 'media/lara_native.glb', pos: [150, 0, -400], rot: Math.PI, variant: 'safa', height: 173.4, customIdleAnimPath: 'media/sandbox/anims/anim_stall_soccerball_1.glb', sittingScenePath: 'media/sandbox/anims/anim_stall_soccerball_1.glb' },
@@ -96,13 +96,13 @@ export const CHARACTERS: CharacterConfig[] = [
     id: 'angelina', name: 'Angelina', path: 'media/lara_native.glb',
     pos: [Math.floor(Math.random() * 200) + 50, 0, -(Math.floor(Math.random() * 300) + 300)] as [number, number, number],
     rot: Math.random() * Math.PI * 2, variant: 'angelina', height: 173.4,
-    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_hip_hop_dancing.glb', 'media/sandbox/anims/anim_hip_hop_dancing_7.glb', 'media/sandbox/anims/anim_salsa_dancing.glb', 'media/sandbox/anims/anim_salsa_dancing_4.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_capoeira.glb', 'media/sandbox/anims/anim_rumba_dancing.glb', 'media/sandbox/anims/anim_twist_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_hip_hop_dancing.glb', 'media/sandbox/anims/anim_hip_hop_dancing_1.glb', 'media/sandbox/anims/anim_salsa_dancing.glb', 'media/sandbox/anims/anim_salsa_dancing_4.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_capoeira.glb', 'media/sandbox/anims/anim_rumba_dancing.glb', 'media/sandbox/anims/anim_twist_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
   },
   {
     id: 'lgbta', name: 'Lgbta', path: 'media/lara_native.glb',
     pos: [Math.floor(Math.random() * 200) + 150, 0, -(Math.floor(Math.random() * 300) + 250)] as [number, number, number],
     rot: Math.random() * Math.PI * 2, variant: 'lgbta', height: 173.4,
-    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_macarena_dance.glb', 'media/sandbox/anims/anim_macarena_dance_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_1.glb', 'media/sandbox/anims/anim_swing_dancing.glb', 'media/sandbox/anims/anim_jazz_dancing.glb', 'media/sandbox/anims/anim_can_can.glb', 'media/sandbox/anims/anim_gangnam_style.glb', 'media/sandbox/anims/anim_ymca_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
+    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_macarena_dance.glb', 'media/sandbox/anims/anim_macarena_dance.glb', 'media/sandbox/anims/anim_hip_hop_dancing_1.glb', 'media/sandbox/anims/anim_swing_dancing.glb', 'media/sandbox/anims/anim_jazz_dancing.glb', 'media/sandbox/anims/anim_can_can.glb', 'media/sandbox/anims/anim_gangnam_style.glb', 'media/sandbox/anims/anim_ymca_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
   }
 ];
 
@@ -2517,8 +2517,8 @@ function InternalWalker(props: WalkerProps) {
   const hipHopDance2Gltf = useGLTF('media/sandbox/anims/anim_hip_hop_dancing_2.glb');
   const hipHopDance4Gltf = useGLTF('media/sandbox/anims/anim_hip_hop_dancing_4.glb');
   const hipHopDance6Gltf = useGLTF('media/sandbox/anims/anim_hip_hop_dancing_6.glb');
-  const hipHopDance7Gltf = useGLTF('media/sandbox/anims/anim_hip_hop_dancing_7.glb');
-  const hipHopDance10Gltf = useGLTF('media/sandbox/anims/anim_hip_hop_dancing_10.glb');
+  const hipHopDance7Gltf = useGLTF('media/sandbox/anims/anim_hip_hop_dancing_1.glb');
+  const hipHopDance10Gltf = useGLTF('media/sandbox/anims/anim_hip_hop_dancing.glb');
   const lockingHipHopGltf = useGLTF('media/sandbox/anims/anim_locking_hip_hop_dance.glb');
   const robotHipHopGltf = useGLTF('media/sandbox/anims/anim_robot_hip_hop_dance.glb');
 
@@ -2538,7 +2538,7 @@ function InternalWalker(props: WalkerProps) {
   const rumbaDanceGltf = useGLTF('media/sandbox/anims/anim_rumba_dancing.glb');
   const twistDanceGltf = useGLTF('media/sandbox/anims/anim_twist_dance.glb');
   const macarenaDanceGltf = useGLTF('media/sandbox/anims/anim_macarena_dance.glb');
-  const macarenaDance1Gltf = useGLTF('media/sandbox/anims/anim_macarena_dance_1.glb');
+  const macarenaDance1Gltf = useGLTF('media/sandbox/anims/anim_macarena_dance.glb');
   const swingDanceGltf = useGLTF('media/sandbox/anims/anim_swing_dancing.glb');
   const jazzDanceGltf = useGLTF('media/sandbox/anims/anim_jazz_dancing.glb');
   const canCanGltf = useGLTF('media/sandbox/anims/anim_can_can.glb');
@@ -2587,8 +2587,8 @@ function InternalWalker(props: WalkerProps) {
     'media/sandbox/anims/anim_hip_hop_dancing_2.glb': hipHopDance2Gltf,
     'media/sandbox/anims/anim_hip_hop_dancing_4.glb': hipHopDance4Gltf,
     'media/sandbox/anims/anim_hip_hop_dancing_6.glb': hipHopDance6Gltf,
-    'media/sandbox/anims/anim_hip_hop_dancing_7.glb': hipHopDance7Gltf,
-    'media/sandbox/anims/anim_hip_hop_dancing_10.glb': hipHopDance10Gltf,
+    'media/sandbox/anims/anim_hip_hop_dancing_1.glb': hipHopDance7Gltf,
+    'media/sandbox/anims/anim_hip_hop_dancing.glb': hipHopDance10Gltf,
     'media/sandbox/anims/anim_locking_hip_hop_dance.glb': lockingHipHopGltf,
     'media/sandbox/anims/anim_robot_hip_hop_dance.glb': robotHipHopGltf,
     'media/sandbox/anims/anim_salsa_dancing.glb': salsaDanceGltf,
@@ -2605,7 +2605,7 @@ function InternalWalker(props: WalkerProps) {
     'media/sandbox/anims/anim_rumba_dancing.glb': rumbaDanceGltf,
     'media/sandbox/anims/anim_twist_dance.glb': twistDanceGltf,
     'media/sandbox/anims/anim_macarena_dance.glb': macarenaDanceGltf,
-    'media/sandbox/anims/anim_macarena_dance_1.glb': macarenaDance1Gltf,
+    'media/sandbox/anims/anim_macarena_dance.glb': macarenaDance1Gltf,
     'media/sandbox/anims/anim_swing_dancing.glb': swingDanceGltf,
     'media/sandbox/anims/anim_jazz_dancing.glb': jazzDanceGltf,
     'media/sandbox/anims/anim_can_can.glb': canCanGltf,
