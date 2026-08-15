@@ -796,8 +796,8 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
                 clone.values[4*j+3]
               );
 
-              if (isHips && j === 0) {
-                console.log(`[DEBUG_HIPS] clip=${rawClip.name} P_src=`, P_src.toArray(), `srcLocalQ=`, clone.values.slice(0, 4));
+              if (isHips && j === 0 && (rawClip.name.includes("genaiguy") || rawClip.name.includes("miley"))) {
+                console.log(`[DEBUG_HIPS] clip=${rawClip.name}\n  P_src=`, P_src.toArray(), `\n  srcLocalQ=`, clone.values.slice(0, 4), `\n  B_tgt=`, B_tgt.toArray(), `\n  P_tgt=`, P_tgt.toArray());
               }
 
               const animWorldQ = P_src.clone().multiply(srcLocalQ);
