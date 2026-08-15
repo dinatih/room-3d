@@ -796,6 +796,10 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
                 clone.values[4*j+3]
               );
 
+              if (isHips && j === 0) {
+                console.log(`[DEBUG_HIPS] clip=${rawClip.name} P_src=`, P_src.toArray(), `srcLocalQ=`, clone.values.slice(0, 4));
+              }
+
               const animWorldQ = P_src.clone().multiply(srcLocalQ);
               const deltaQ = animWorldQ.clone().multiply(B_src_inv);
               const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
