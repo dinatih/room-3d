@@ -783,14 +783,34 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
                 const worldOffsetQ = new THREE.Quaternion().setFromAxisAngle(axis, angle);
                 B_src.premultiply(worldOffsetQ); // Apply offset in world space
               }
+            }
+            
+            // Check if we need to bake clavicle animation into the arm (if target lacks a clavicle)
+            let clavicleTrack: THREE.KeyframeTrack | null = null;
+            let clavicleParentRestWorld = new THREE.Quaternion();
+            if (baseName === 'LeftArm' || baseName === 'RightArm') {
+              const clavicleBaseName = baseName === 'LeftArm' ? 'LeftShoulder' : 'RightShoulder';
+              const clavicleSynonyms = BONE_SYNONYMS[clavicleBaseName] || [];
+              let targetHasClavicle = false;
+              targetInstance.traverse(node => {
+                if ((node as any).isBone && !targetHasClavicle) {
+                  if (clavicleSynonyms.some(s => node.name.toLowerCase().includes(s))) {
+                    targetHasClavicle = true;
+                  }
+                }
+              });
               
-              // Compensate for missing clavicle on Lara models (which lose ~15 deg of downward pitch from the clavicle animation)
-              // We detect Lara by checking if her arm bone is named 'arm_left_shoulder_2' or similar
-              if (targetBoneName.includes('arm_left_shoulder_2') || targetBoneName.includes('arm_right_shoulder_2')) {
-                const clavicleCompensationAngle = 15 * Math.PI / 180;
-                const axis = baseName === 'LeftArm' ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 0, -1);
-                const clavicleOffsetQ = new THREE.Quaternion().setFromAxisAngle(axis, clavicleCompensationAngle);
-                B_src.premultiply(clavicleOffsetQ); // Make B_src point further UP, which forces deltaQ further DOWN
+              if (!targetHasClavicle) {
+                // Target lacks clavicle. Find the clavicle track in the source animation.
+                const clavicleSourceNode = animBones[baseName].bone.parent;
+                if (clavicleSourceNode) {
+                  const clavicleTrackName = `${clavicleSourceNode.name}.quaternion`;
+                  clavicleTrack = rawClip.tracks.find(t => t.name === clavicleTrackName) || null;
+                  if (clavicleTrack) {
+                    const clavicleRestLocal = clavicleSourceNode.quaternion.clone(); // Rest local rotation
+                    clavicleParentRestWorld = P_src.clone().multiply(clavicleRestLocal.invert());
+                  }
+                }
               }
             }
           } else {
@@ -813,12 +833,20 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
                 clone.values[4*j+2],
                 clone.values[4*j+3]
               );
-
-              if (isHips && j === 0) {
-                console.log(`[DEBUG_HIPS] clip=${rawClip.name} P_src=`, P_src.toArray(), `srcLocalQ=`, clone.values.slice(0, 4));
+              
+              let currentP_src = P_src.clone();
+              if (clavicleTrack) {
+                // Evaluate clavicle animation at this frame
+                const t = clone.times[j];
+                const clavicleAnimatedLocal = evaluateQuaternionTrack(clavicleTrack, t);
+                currentP_src = clavicleParentRestWorld.clone().multiply(clavicleAnimatedLocal);
               }
 
-              const animWorldQ = P_src.clone().multiply(srcLocalQ);
+              if (isHips && j === 0) {
+                console.log(`[DEBUG_HIPS] clip=${rawClip.name} P_src=`, currentP_src.toArray(), `srcLocalQ=`, clone.values.slice(0, 4));
+              }
+
+              const animWorldQ = currentP_src.multiply(srcLocalQ);
               const deltaQ = animWorldQ.clone().multiply(B_src_inv);
               const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
               const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
