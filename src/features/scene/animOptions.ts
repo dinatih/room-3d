@@ -762,8 +762,8 @@ export const WALKER_ANIM_OPTIONS = [
   { value: "media/sandbox/anims/anim_armature__talk_f_genaiguy.glb", label: " Talk F (genaiguy)" },
   { value: "media/sandbox/anims/anim_armature_air_dance_genaiguy.glb", label: "Air Dance (genaiguy)" },
   { value: "media/sandbox/anims/anim_armature_b1_attack_back_somersault_flip_genaiguy.glb", label: "B1 Attack Back Somersault Flip (genaiguy)" },
-  { value: "media/sandbox/anims/miley_v3_b1_attack_somersault.glb", label: "B1 Attack Back Somersault (Miley v3)" },
-  { value: "media/sandbox/anims/miley_v3_idle01_f.glb", label: "Idle01 F (Miley v3)" },
+  { value: "media/sandbox/anims/miley_blender_b1_attack.glb", label: "B1 Attack Back Somersault (Miley Blender)" },
+  { value: "media/sandbox/anims/miley_blender_idle01_f.glb", label: "Idle01 F (Miley Blender)" },
 
   { value: "media/sandbox/anims/anim_armature_b1_fall_kicked_knockout_genaiguy.glb", label: "B1 Fall Kicked Knockout (genaiguy)" },
   { value: "media/sandbox/anims/anim_armature_b2_attack_front_kick_genaiguy.glb", label: "B2 Attack Front Kick (genaiguy)" },
