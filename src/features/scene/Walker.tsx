@@ -441,11 +441,16 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         return q0.slerp(q1, alpha);
       };
 
+      const qRootRestInv = new THREE.Quaternion(-0.7071067690849304, 0, 0, 0.7071067690849304).invert();
       for (let i = 0; i < times.length; i++) {
         const t = times[i];
         const qRoot = evaluateQuaternionTrack(rootRotTrack, t);
         const qHips = evaluateQuaternionTrack(hipsRotTrack, t);
-        const qCombined = qRoot.multiply(qHips);
+        // Extract root delta: qRoot_delta = qRootRestInv * qRoot
+        const qRootDelta = qRootRestInv.clone().multiply(qRoot);
+        // Apply root delta to Hips:
+        const qCombined = qRootDelta.multiply(qHips);
+        
         values[4*i] = qCombined.x;
         values[4*i+1] = qCombined.y;
         values[4*i+2] = qCombined.z;
@@ -492,29 +497,24 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
           const v1 = new THREE.Vector3(trackValues[3*(i+1)], trackValues[3*(i+1)+1], trackValues[3*(i+1)+2]);
           return v0.lerp(v1, alpha);
         };
-        const evaluateQuaternionTrack = (track: THREE.KeyframeTrack, t: number): THREE.Quaternion => {
-          const trackTimes = track.times;
-          const trackValues = track.values;
-          if (t <= trackTimes[0]) return new THREE.Quaternion(trackValues[0], trackValues[1], trackValues[2], trackValues[3]);
-          if (t >= trackTimes[trackTimes.length - 1]) {
-            const idx = (trackTimes.length - 1) * 4;
-            return new THREE.Quaternion(trackValues[idx], trackValues[idx+1], trackValues[idx+2], trackValues[idx+3]);
-          }
-          let i = 0;
-          while (i < trackTimes.length - 1 && trackTimes[i+1] < t) i++;
-          const alpha = (t - trackTimes[i]) / (trackTimes[i+1] - trackTimes[i]);
-          const q0 = new THREE.Quaternion(trackValues[4*i], trackValues[4*i+1], trackValues[4*i+2], trackValues[4*i+3]);
-          const q1 = new THREE.Quaternion(trackValues[4*(i+1)], trackValues[4*(i+1)+1], trackValues[4*(i+1)+2], trackValues[4*(i+1)+3]);
-          return q0.slerp(q1, alpha);
-        };
+        // Removed evaluateQuaternionTrack since it's no longer used for position
+
+        const pRootRest = evaluateVectorTrack(rootPosTrack, posTimes[0]);
 
         for (let i = 0; i < posTimes.length; i++) {
           const t = posTimes[i];
           const pRoot = evaluateVectorTrack(rootPosTrack, t);
           const pHips = evaluateVectorTrack(hipsPosTrack, t);
-          const qRoot = evaluateQuaternionTrack(rootRotTrack, t);
-          const pHipsRotated = pHips.applyQuaternion(qRoot);
-          const pCombined = pRoot.add(pHipsRotated);
+          
+          // Hips position is in cm, CC4 Root is in m or cm?
+          // Based on empirical values, Hips Z is ~101 (cm). Root X is ~3.3 (m? wait, no, 3.3 cm? No, 332 cm! No, wait... let's just assume Root is same scale as Hips, we scale both by 0.01)
+          // Actually, 3.32 could be meters in Blender if it applied scale.
+          // Let's scale both by 0.01 just in case, because Yasmine's hips are at Z=1.01.
+          
+          const pRootDelta = pRoot.clone().sub(pRootRest).multiplyScalar(0.01);
+          const pHipsScaled = pHips.clone().multiplyScalar(0.01);
+          const pCombined = pHipsScaled.add(pRootDelta);
+          
           posValues[3*i] = pCombined.x;
           posValues[3*i+1] = pCombined.y;
           posValues[3*i+2] = pCombined.z;
