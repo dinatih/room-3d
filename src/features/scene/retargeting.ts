@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 
 export const CC3_TO_MIXAMO: Record<string, string> = {
+  'CC_Base_Pelvis': 'Hips',
+  'CC_Base_Hip': 'Hips',
   'CC_Base_Waist': 'Spine',
   'CC_Base_Spine01': 'Spine1',
   'CC_Base_Spine02': 'Spine2',
