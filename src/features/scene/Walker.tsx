@@ -1664,6 +1664,16 @@ function SingleCharacter({
   }, [isActive, isLara, scene, invalidate, id]);
 
   useEffect(() => {
+    const mixer = mixerRef.current;
+    if (!mixer) return;
+    const onFinished = (e: any) => {
+      document.dispatchEvent(new CustomEvent('walker-anim-finished', { detail: { id, path: e.action.getClip().name } }));
+    };
+    mixer.addEventListener('finished', onFinished);
+    return () => mixer.removeEventListener('finished', onFinished);
+  }, [id, scene]);
+
+  useEffect(() => {
     const resetTimer = () => {
       idleTimerRef.current = 0;
     };

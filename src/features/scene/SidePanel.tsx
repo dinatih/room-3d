@@ -1274,7 +1274,30 @@ export function SidePanel({
     </div>
   );
 
+  const [autoCycleIndex, setAutoCycleIndex] = useState(0);
+
+  useEffect(() => {
+    if (autoCycleIndex < 0) return;
+    const anim = coupleAnims[autoCycleIndex];
+    if (anim) {
+      const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
+      playCoupleAnim(`media/sandbox/anims/${prefix}${anim.s}.glb`, `media/sandbox/anims/${prefix}${anim.r}.glb`, anim.dist ?? 50);
+    }
+  }, [autoCycleIndex]);
+
+  useEffect(() => {
+    const onFinished = (e: any) => {
+      // Only cycle when sandra finishes to avoid double triggers
+      if (e.detail?.id === 'sandra') {
+        setAutoCycleIndex(prev => prev < 0 ? -1 : (prev + 1) % coupleAnims.length);
+      }
+    };
+    document.addEventListener('walker-anim-finished', onFinished);
+    return () => document.removeEventListener('walker-anim-finished', onFinished);
+  }, []);
+
   const playCoupleAnim = (sandraPath: string, rajaaPath: string, dist: number = 50) => {
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-loop', value: '1x' } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-sandra', value: sandraPath } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-rajaa', value: rajaaPath } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-sandra', value: [-450 + dist, 0, 0] } }));
@@ -1303,14 +1326,15 @@ export function SidePanel({
     { label: 'T4', icon: '🤼', s: 't4_fall_belly_to_back_slam', r: 't4_attack_knee_strike', dist: 100 },
     { label: 'T5', icon: '🤼', s: 't5_attack_headlock_takeover', r: 't5_fall_headlock_takeover', dist: 100 },
     { label: 'Pop Dance', icon: '🕺', s: 'couple_pop_dance_m', r: 'couple_pop_dance_f', dist: 50 },
-    { label: 'Energetic Dance', icon: '🕺', s: 'energetic_dance_m', r: 'energetic_dance_f', dist: 50 },
+    { label: 'Energetic Dance', icon: '🕺', s: 'energetic_dance_m', r: 'energetic_dance_f', dist: 100 },
     { label: 'Slow Dance', icon: '💃', s: 'slow_dance_m', r: 'slow_dance_f', dist: 50 },
     { label: 'Cuddle Kiss', icon: '😘', s: 'cuddle_kiss_m', r: 'cuddle_kiss_f', dist: 50 },
-    { label: 'Eye to Eye Kiss', icon: '🤗', s: 'eye_to_eye_hug_kiss_f', r: 'eye_to_eye_hug_kiss_m', dist: 50 },
-    { label: 'Farewell Kiss', icon: '👋', s: 'farewell_kiss_m', r: 'farewell_kiss_f', dist: 50 },
+    { label: 'Eye to Eye Kiss', icon: '🤗', s: 'eye_to_eye_hug_kiss_f', r: 'eye_to_eye_hug_kiss_m', dist: 30 },
+    { label: 'Farewell Kiss', icon: '👋', s: 'farewell_kiss_m', r: 'farewell_kiss_f', dist: 100 },
     { label: 'Date Bearhug', icon: '🐻', s: 'date_bearhug_m', r: 'date_bearhug_f', dist: 50 },
     { label: 'Propose', icon: '💍', s: 'propose_f', r: 'propose_m', dist: 50 },
     { label: 'Sit Cuddle', icon: '🛋️', s: 'sit_cuddle_hug_m', r: 'sit_cuddle_hug_f', dist: 50 },
+    { label: 'Double Leg Takedown', icon: '🤼', s: 'anim_best_double_leg_takedown_victim', r: 'anim_best_double_leg_takedown_attacker', prefix: '', dist: 100 },
   ];
 
   const AnimationsCoupleSection = (
@@ -1319,7 +1343,10 @@ export function SidePanel({
         <button 
           key={a.label}
           className="btn btn-outline-secondary p-1 px-2 border shadow-sm bg-white rounded-2 d-flex align-items-center gap-1" 
-          onClick={() => playCoupleAnim(`media/sandbox/anims/miley_armature_${a.s}.glb`, `media/sandbox/anims/miley_armature_${a.r}.glb`, a.dist ?? 50)}
+          onClick={() => {
+            setAutoCycleIndex(-1); // Stop auto cycle on manual click
+            playCoupleAnim(`media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.s}.glb`, `media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.r}.glb`, a.dist ?? 50);
+          }}
           style={{ fontSize: '10px' }}
         >
           <span style={{ fontSize: '12px' }}>{a.icon}</span>
