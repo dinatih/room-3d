@@ -34,6 +34,7 @@ export function AiZonesHelper() {
               anchorY="middle"
               outlineWidth={0.8}
               outlineColor="#000000"
+              depthOffset={-100}
               material-depthTest={false}
               renderOrder={9999}
             >
