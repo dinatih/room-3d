@@ -23,12 +23,12 @@ import {
   ACTION_SIT_DESK_1,
   ACTION_SIT_OFFICE_CHAIR,
   ACTION_SIT_DESK_2,
-  ACTION_BED_WEST,
-  ACTION_BED_EAST,
-  ACTION_BATHTUB,
+  ACTIONS_BED_WEST,
+  ACTIONS_BED_EAST,
+  ACTIONS_BATHTUB,
   ACTION_SHOWER,
-  ACTION_GARDEN_SOFA_EAST,
-  ACTION_GARDEN_SOFA_WEST,
+  ACTIONS_GARDEN_SOFA_EAST,
+  ACTIONS_GARDEN_SOFA_WEST,
   ACTION_COOKING,
   ACTION_KALLAX_NE,
   ACTION_FRESH_AIR,
@@ -237,12 +237,12 @@ export function SingleCharacter({
       case 'aiSitDesk1': return ACTION_SIT_DESK_1;
       case 'aiSitOfficeChair': return ACTION_SIT_OFFICE_CHAIR;
       case 'aiSitDesk2': return ACTION_SIT_DESK_2;
-      case 'aiBedWest': return ACTION_BED_WEST;
-      case 'aiBedEast': return ACTION_BED_EAST;
-      case 'aiBathtub': return ACTION_BATHTUB;
+      case 'aiBedWest': return ACTIONS_BED_WEST[0];
+      case 'aiBedEast': return ACTIONS_BED_EAST[0];
+      case 'aiBathtub': return ACTIONS_BATHTUB[0];
       case 'aiShower': return ACTION_SHOWER;
-      case 'aiGardenSofaEast': return ACTION_GARDEN_SOFA_EAST;
-      case 'aiGardenSofaWest': return ACTION_GARDEN_SOFA_WEST;
+      case 'aiGardenSofaEast': return ACTIONS_GARDEN_SOFA_EAST[0];
+      case 'aiGardenSofaWest': return ACTIONS_GARDEN_SOFA_WEST[0];
       case 'aiCooking': return ACTION_COOKING;
       case 'aiKallaxNE': return ACTION_KALLAX_NE;
       case 'aiFreshAir': return ACTION_FRESH_AIR;
@@ -253,8 +253,8 @@ export function SingleCharacter({
   const delphinaScenario = useMemo(() => {
     if (id !== 'delphina' && id !== 'vivida' && id !== 'angelina' && id !== 'cha' && id !== 'sabira' && id !== 'lgbta' && id !== 'marissa') return null;
     const actions = [
-      ACTION_SIT_DESK_1, ACTION_SIT_OFFICE_CHAIR, ACTION_SIT_DESK_2, ACTION_BED_WEST, ACTION_BED_EAST,
-      ACTION_BATHTUB, ACTION_SHOWER, ACTION_GARDEN_SOFA_EAST, ACTION_GARDEN_SOFA_WEST,
+      ACTION_SIT_DESK_1, ACTION_SIT_OFFICE_CHAIR, ACTION_SIT_DESK_2, ...ACTIONS_BED_WEST, ...ACTIONS_BED_EAST,
+      ...ACTIONS_BATHTUB, ACTION_SHOWER, ...ACTIONS_GARDEN_SOFA_EAST, ...ACTIONS_GARDEN_SOFA_WEST,
       ACTION_COOKING, ACTION_KALLAX_NE, ACTION_FRESH_AIR, ACTION_GO_TO_TOILET,
       ACTION_ENTREE_BAT_B, ACTION_ENTREE_COURS_BAT_B
     ];
