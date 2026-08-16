@@ -95,7 +95,7 @@ export interface SingleCharacterProps extends WalkerProps {
 
 function HeartParachute({ customAnimName }: { customAnimName: React.MutableRefObject<string | null> }) {
   const groupRef = useRef<THREE.Group>(null!);
-  
+
   useFrame(() => {
     if (groupRef.current) {
       groupRef.current.visible = customAnimName.current === 'media/sandbox/anims/anim_falling.glb';
@@ -261,15 +261,15 @@ export function SingleCharacter({
     // Danses aléatoires disponibles pour intercaler entre les actions
     const danceAnims = [
       'media/sandbox/anims/anim_belly_dance.glb',
-      'media/sandbox/anims/anim_dancing_twerk.glb',
-      'media/sandbox/anims/anim_hip_hop_dancing.glb',
-      'media/sandbox/anims/anim_hip_hop_dancing_2.glb',
-      'media/sandbox/anims/anim_salsa_dancing.glb',
-      'media/sandbox/anims/anim_samba_dancing.glb',
+      // 'media/sandbox/anims/anim_dancing_twerk.glb',
+      // 'media/sandbox/anims/anim_hip_hop_dancing.glb',
+      // 'media/sandbox/anims/anim_hip_hop_dancing_2.glb',
+      // 'media/sandbox/anims/anim_salsa_dancing.glb',
+      // 'media/sandbox/anims/anim_samba_dancing.glb',
       'media/sandbox/anims/anim_house_dancing.glb',
-      'media/sandbox/anims/anim_capoeira.glb',
-      'media/sandbox/anims/anim_rumba_dancing.glb',
-      'media/sandbox/anims/anim_gangnam_style.glb',
+      // 'media/sandbox/anims/anim_capoeira.glb',
+      // 'media/sandbox/anims/anim_rumba_dancing.glb',
+      // 'media/sandbox/anims/anim_gangnam_style.glb',
       'media/sandbox/anims/miley_armature_10_dance_like_sidestep.glb',
       'media/sandbox/anims/miley_armature_aerobic_dance.glb',
       'media/sandbox/anims/miley_armature_air_dance.glb',
@@ -694,6 +694,14 @@ export function SingleCharacter({
           return;
         }
 
+        const isTPose = path === 'tpose' || path.includes('t_pose') || path.includes('t-pose');
+        if (isTPose) {
+          customAnimName.current = 'tpose';
+          userAnimOverrideRef.current = true;
+          invalidate();
+          return;
+        }
+
         const handleClip = (clip: THREE.AnimationClip, sourceScene: THREE.Object3D | undefined) => {
           if (clip) {
             clip.name = path;
@@ -732,7 +740,7 @@ export function SingleCharacter({
             let sourceScene = gltf.scene;
             handleClip(gltf.animations[0], sourceScene);
           };
-          
+
           if (!globalGLTFCache[path]) {
             globalGLTFCache[path] = new Promise((resolve, reject) => {
               const loader = new GLTFLoader(silentManager);
@@ -807,7 +815,7 @@ export function SingleCharacter({
     scene.traverse(o => {
       if ((o as THREE.Mesh).isMesh) {
         const m = o as THREE.Mesh;
-        
+
         // Clone materials once per instance so visibility doesn't affect other characters
         if (m.material && !m.userData.materialsCloned) {
           if (Array.isArray(m.material)) {
@@ -960,7 +968,7 @@ export function SingleCharacter({
           customAnimName.current = agentState.animation;
         }
         groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && agentState.isSpawned;
-        
+
         if (agentState.isSpawned) {
           cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
         } else {
@@ -1075,27 +1083,38 @@ export function SingleCharacter({
       }
     }
 
-    if (isNPC && customIdleAnimPath && target === 'idle') {
-      target = customIdleAnimPath;
-    }
+    const isTPose = target === 'tpose' || target.includes('t_pose') || target.includes('t-pose');
 
-    const to = actions[target];
-    if (to && activeActionName.current !== target) {
-        const from = activeActionName.current ? actions[activeActionName.current] : null;
-        if (from) from.fadeOut(0.2);
-        
-        const isContinuous = target === 'idle' || target === 'walk' || target === 'run' || (isNPC && target === customIdleAnimPath);
-        if (isContinuous) {
-          to.setLoop(THREE.LoopRepeat, Infinity);
-          to.clampWhenFinished = false;
+    if (isTPose) {
+      if (activeActionName.current && actions[activeActionName.current]) {
+        actions[activeActionName.current].fadeOut(0.15);
+      }
+      activeActionName.current = 'tpose';
+      scene.traverse((c: any) => {
+        if (c.isBone) {
+          if (c.userData.restPos) c.position.copy(c.userData.restPos);
+          if (c.userData.restQuat) c.quaternion.copy(c.userData.restQuat);
         }
+      });
+    } else {
+      const to = actions[target];
+      if (to && activeActionName.current !== target) {
+          const from = (activeActionName.current && activeActionName.current !== 'tpose') ? actions[activeActionName.current] : null;
+          if (from) from.fadeOut(0.2);
 
-        to.reset().fadeIn(0.2).play();
-        to.setEffectiveWeight(1);
-        activeActionName.current = target;
+          const isContinuous = target === 'idle' || target === 'walk' || target === 'run' || (isNPC && target === customIdleAnimPath);
+          if (isContinuous) {
+            to.setLoop(THREE.LoopRepeat, Infinity);
+            to.clampWhenFinished = false;
+          }
+
+          to.reset().fadeIn(0.2).play();
+          to.setEffectiveWeight(1);
+          activeActionName.current = target;
+      }
     }
 
-    if (!isPaused) {
+    if (!isPaused && !isTPose) {
         mixer.update(delta);
 
         // Physique réactive & Gravité universelle (sans vent/bruit continu au repos)
@@ -1270,7 +1289,7 @@ export function SingleCharacter({
         // Ponytail physics simulation (Verlet)
         const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
         const activeHairChain = (haircut !== 'original' && customHairChainRef.current.length > 0) ? customHairChainRef.current : hairChainRef.current;
-        
+
         if (!enableHairPhysics && activeHairChain.length > 0) {
           for (const node of activeHairChain) {
             if (node.restQuat) {
@@ -1405,11 +1424,11 @@ export function SingleCharacter({
                 setTimeout(() => { (window as any)._boneLogged = false; }, 1000);
               }
               const parentWQuat = parent.getWorldQuaternion(new THREE.Quaternion());
-              
+
               // Correct quaternion math: Swing from REST WORLD direction to CURRENT WORLD direction
               const boneRestWorldQuat = baseParentQuat.clone().multiply(relQuat);
               const swing = new THREE.Quaternion().setFromUnitVectors(restDirWorld, currentDirWorld);
-              
+
               const newWorldQuat = swing.multiply(boneRestWorldQuat);
               bone.quaternion.copy(parentWQuat.invert().multiply(newWorldQuat));
 
@@ -1518,11 +1537,11 @@ export function SingleCharacter({
   return (
     <group ref={groupRef} userData={{ animUnit: true, noAnim: true }}>
       <primitive ref={modelRef} object={scene} />
-      
+
       {headBoneState && haircut !== 'original' && (
         [
-          'hair_zepeto', 'hair_pigtails', 'hair_buns', 'hair_short_layers', 
-          'hair_nmixx_hat_braids', 'hair_very_long', 'hair_two_braids_bangs', 
+          'hair_zepeto', 'hair_pigtails', 'hair_buns', 'hair_short_layers',
+          'hair_nmixx_hat_braids', 'hair_very_long', 'hair_two_braids_bangs',
           'hair_aespa_short', 'hair_wavy_ponytail', 'hair_nimxx_short',
           'hair_short_combed', 'hair_low_bun', 'hair_high_bun',
           'hair_high_ponytail', 'hair_nmixx_short', 'hair_long_braids',
@@ -1553,7 +1572,7 @@ export function SingleCharacter({
             attachTo={headBoneState}
           />
         ) : (
-          <Wig 
+          <Wig
             id={haircut.replace('hair_', '')}
             color={hairColor}
             onBonesExtracted={(bones) => {
@@ -1570,4 +1589,3 @@ export function SingleCharacter({
     </group>
   );
 }
-
