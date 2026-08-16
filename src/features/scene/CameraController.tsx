@@ -317,8 +317,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       if (e.key === 't' || e.key === 'T') {
         const laraGridActive = useSceneStore.getState().layers.laraGrid;
         if (laraGridActive) {
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 'media/sandbox/anims/anim_t-pose.glb' } }));
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'media/sandbox/anims/anim_t-pose.glb' } }));
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 'media/sandbox/anims/anim_t_pose.glb' } }));
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'media/sandbox/anims/anim_t_pose.glb' } }));
         } else {
           modeRef.current === 'top' ? exitTop() : enterTop();
         }

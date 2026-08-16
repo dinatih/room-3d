@@ -4,6 +4,7 @@
 
 export const WALKER_ANIM_OPTIONS = [
   { value: "idle", label: "Idle / Return to Default" },
+  { value: "media/sandbox/anims/anim_t_pose.glb", label: "📐 T-Pose (Rest)" },
   { value: "media/sandbox/anims/miley_armature_01_rightward_movement_after_dodge.glb", label: "[MILEY] 01 Rightward Movement After Dodge (249f / 4.2s, 423KB)" },
   { value: "media/sandbox/anims/miley_armature_02_leftward_movement_after_dodge.glb", label: "[MILEY] 02 Leftward Movement After Dodge (261f / 4.3s, 490KB)" },
   { value: "media/sandbox/anims/miley_armature_03_side_movement_and_head_strikes.glb", label: "[MILEY] 03 Side Movement And Head Strikes (569f / 9.5s, 1015KB)" },
@@ -879,8 +880,10 @@ export const WALKER_ANIM_OPTIONS = [
 ].filter((v, i, a) => a.findIndex(t => t.value === v.value) === i).sort((a, b) => {
   if (a.value === "idle") return -1;
   if (b.value === "idle") return 1;
-  if (a.value.includes("t-pose")) return -1;
-  if (b.value.includes("t-pose")) return 1;
+  const isATPose = a.value.includes("t_pose") || a.value.includes("t-pose") || a.value === "tpose";
+  const isBTPose = b.value.includes("t_pose") || b.value.includes("t-pose") || b.value === "tpose";
+  if (isATPose && !isBTPose) return -1;
+  if (isBTPose && !isATPose) return 1;
   return a.label.localeCompare(b.label, 'fr', { sensitivity: 'base' });
 });
 

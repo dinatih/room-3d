@@ -688,7 +688,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
             if (isRootJointTranslation && (animNameLower.includes('laying') || animNameLower.includes('sleeping'))) {
               yVal = 0.12; 
             }
-            const isTPose = animNameLower.includes('t-pose') || animNameLower.includes('tpose');
+            const isTPose = animNameLower.includes('t-pose') || animNameLower.includes('t_pose') || animNameLower.includes('tpose');
             const dy = (isWalk || isTPose) ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
             const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
             const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
