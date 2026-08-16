@@ -1281,7 +1281,13 @@ export function SidePanel({
     const anim = coupleAnims[autoCycleIndex];
     if (anim) {
       const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
-      playCoupleAnim(`media/sandbox/anims/${prefix}${anim.s}.glb`, `media/sandbox/anims/${prefix}${anim.r}.glb`, anim.dist ?? 50);
+      const trigger = () => playCoupleAnim(`media/sandbox/anims/${prefix}${anim.s}.glb`, `media/sandbox/anims/${prefix}${anim.r}.glb`, anim.dist ?? 50);
+      
+      if (autoCycleIndex === 0) {
+        setTimeout(trigger, 1000);
+      } else {
+        trigger();
+      }
     }
   }, [autoCycleIndex]);
 
