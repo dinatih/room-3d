@@ -442,6 +442,11 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         if (isMarissa && isSkin && (matName.includes('arm') || matName.includes('body') || meshName.includes('arm') || meshName.includes('body'))) {
           applyMarissaTattoos(mat);
         }
+
+        // SARA FRONT NECK TATTOO ON FACE SKIN
+        if (isSara && isSkin && (matName.includes('face') || matName.includes('head') || meshName.includes('face') || meshName.includes('head'))) {
+          applySaraNeckTattoo(mat);
+        }
       });
     }
   });
@@ -606,3 +611,268 @@ function drawMarissaTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
 
   ctx.restore();
 }
+
+// ── SARA FRONT NECK TATTOO CANVAS GENERATOR ──────────────────────────────────
+
+const saraNeckTattooTextureCache: Record<string, THREE.CanvasTexture> = {};
+
+function applySaraNeckTattoo(mat: THREE.MeshStandardMaterial) {
+  mat.map = getSaraNeckTattooTexture();
+  mat.needsUpdate = true;
+}
+
+function getSaraNeckTattooTexture(): THREE.CanvasTexture {
+  if (saraNeckTattooTextureCache['sara_neck_tattoo']) {
+    return saraNeckTattooTextureCache['sara_neck_tattoo'];
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.flipY = false;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  saraNeckTattooTextureCache['sara_neck_tattoo'] = tex;
+
+  const drawAll = (img?: HTMLImageElement) => {
+    if (!ctx) return;
+    if (img) {
+      try {
+        ctx.drawImage(img, 0, 0, 512, 512);
+      } catch {
+        ctx.fillStyle = '#dca888';
+        ctx.fillRect(0, 0, 512, 512);
+      }
+    } else {
+      ctx.fillStyle = '#dca888';
+      ctx.fillRect(0, 0, 512, 512);
+    }
+    drawSaraNeckTattooOnCanvas(ctx);
+    tex.needsUpdate = true;
+  };
+
+  const img = new Image();
+  img.src = 'media/textures/8000.png';
+  img.onload = () => drawAll(img);
+  img.onerror = () => drawAll();
+  drawAll();
+
+  return tex;
+}
+
+function drawSaraNeckTattooOnCanvas(ctx: CanvasRenderingContext2D) {
+  // Center of the front neck UV mapped on 8000.png
+  // Rotating by -45 degrees aligns X horizontally across the neck and Y vertically down the throat
+  ctx.save();
+  ctx.translate(320, 320);
+  ctx.rotate(-Math.PI / 4);
+
+  const inkDark = 'rgba(14, 16, 22, 0.94)';
+  const inkMedium = 'rgba(22, 24, 32, 0.82)';
+  const inkLight = 'rgba(25, 27, 36, 0.55)';
+  const rubyRed = 'rgba(190, 24, 38, 0.88)';
+
+  // Helper for symmetrical drawing across X axis
+  const drawSymmetric = (fn: (side: number) => void) => {
+    fn(1);
+    fn(-1);
+  };
+
+  // 1. SACRED GEOMETRY BACKGROUND RAYS & MANDALA ARCS
+  ctx.save();
+  ctx.strokeStyle = inkLight;
+  ctx.lineWidth = 0.8;
+
+  // Concentric fine arcs centered at (0, -2)
+  for (let r = 16; r <= 36; r += 7) {
+    ctx.beginPath();
+    ctx.arc(0, -2, r, Math.PI * 0.15, Math.PI * 0.85, false);
+    ctx.stroke();
+  }
+
+  // Radiating stippled rays from center
+  for (let angle = 20; angle <= 160; angle += 14) {
+    const rad = (angle * Math.PI) / 180;
+    const x1 = Math.cos(rad) * 12;
+    const y1 = -2 + Math.sin(rad) * 12;
+    const x2 = Math.cos(rad) * 32;
+    const y2 = -2 + Math.sin(rad) * 32;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 2. ORNATE GOTHIC MOTH / SACRED WINGS (Spanning across front of neck)
+  ctx.save();
+  ctx.strokeStyle = inkDark;
+  ctx.fillStyle = inkDark;
+  ctx.lineWidth = 1.4;
+
+  // Upper Main Wings (Sweeping upwards & outward towards sides of throat)
+  drawSymmetric((s) => {
+    ctx.beginPath();
+    ctx.moveTo(0, -5);
+    ctx.bezierCurveTo(s * 12, -22, s * 28, -20, s * 37, -10);
+    ctx.bezierCurveTo(s * 33, -2, s * 22, 2, s * 4, -1);
+    ctx.closePath();
+    ctx.stroke();
+
+    // Internal Wing Veins / Filigree cells
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(0, -4);
+    ctx.quadraticCurveTo(s * 15, -12, s * 34, -10);
+    ctx.moveTo(0, -4);
+    ctx.quadraticCurveTo(s * 12, -6, s * 26, -1);
+    ctx.moveTo(s * 14, -12);
+    ctx.lineTo(s * 20, -18);
+    ctx.moveTo(s * 22, -10);
+    ctx.lineTo(s * 28, -16);
+    ctx.stroke();
+
+    // Decorative edge scallops & dots
+    ctx.lineWidth = 1.2;
+    for (let i = 1; i <= 3; i++) {
+      const px = s * (22 + i * 4);
+      const py = -8 + i * 3;
+      ctx.beginPath();
+      ctx.arc(px, py, 1.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+
+  // Lower Wings (Slightly smaller, rounded gothic curves)
+  drawSymmetric((s) => {
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(s * 2, 0);
+    ctx.bezierCurveTo(s * 16, 4, s * 26, 8, s * 22, 16);
+    ctx.bezierCurveTo(s * 14, 18, s * 6, 12, 0, 8);
+    ctx.closePath();
+    ctx.stroke();
+
+    // Inner details on lower wings
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(s * 2, 2);
+    ctx.quadraticCurveTo(s * 12, 8, s * 18, 14);
+    ctx.stroke();
+  });
+
+  // 3. CENTRAL BODY & CRESCENT MOON
+  // Crescent Moon on top (just under the chin)
+  ctx.beginPath();
+  ctx.arc(0, -14, 6, 0, Math.PI * 2, false);
+  ctx.fill();
+  ctx.fillStyle = '#dca888'; // Cutout inner crescent
+  ctx.beginPath();
+  ctx.arc(0, -16, 5, 0, Math.PI * 2, false);
+  ctx.fill();
+
+  // Central Thorax / Abdomen
+  ctx.fillStyle = inkDark;
+  ctx.beginPath();
+  ctx.ellipse(0, 3, 3.2, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Fine Abdomen Ribs
+  ctx.strokeStyle = '#dca888';
+  ctx.lineWidth = 1;
+  for (let y = -1; y <= 7; y += 2.2) {
+    ctx.beginPath();
+    ctx.moveTo(-2.5, y);
+    ctx.lineTo(2.5, y);
+    ctx.stroke();
+  }
+
+  // Antennae with elegant feather curls
+  ctx.strokeStyle = inkDark;
+  ctx.lineWidth = 1.1;
+  drawSymmetric((s) => {
+    ctx.beginPath();
+    ctx.moveTo(0, -6);
+    ctx.quadraticCurveTo(s * 4, -14, s * 10, -15);
+    ctx.stroke();
+    // Tiny antenna dot
+    ctx.beginPath();
+    ctx.arc(s * 10, -15, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Center Ruby Gem (Sara's signature crimson accent)
+  ctx.fillStyle = rubyRed;
+  ctx.beginPath();
+  ctx.moveTo(0, -6);
+  ctx.lineTo(3.2, -2.5);
+  ctx.lineTo(0, 1);
+  ctx.lineTo(-3.2, -2.5);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = inkDark;
+  ctx.lineWidth = 0.9;
+  ctx.stroke();
+
+  // 4. LOWER GOTHIC FILIGREE & CHANDELIER PENDANTS (Extending down the throat)
+  ctx.strokeStyle = inkMedium;
+  ctx.fillStyle = inkDark;
+  ctx.lineWidth = 1.1;
+
+  // Central hanging diamond chain
+  ctx.beginPath();
+  ctx.moveTo(0, 10);
+  ctx.lineTo(0, 26);
+  ctx.stroke();
+
+  // Central bottom droplet
+  ctx.beginPath();
+  ctx.moveTo(0, 24);
+  ctx.lineTo(3, 29);
+  ctx.lineTo(0, 35);
+  ctx.lineTo(-3, 29);
+  ctx.closePath();
+  ctx.fill();
+
+  // Symmetrical side drops / bead swags
+  drawSymmetric((s) => {
+    // Swag loop from body to side
+    ctx.beginPath();
+    ctx.moveTo(0, 8);
+    ctx.quadraticCurveTo(s * 10, 18, s * 14, 14);
+    ctx.stroke();
+
+    // Side vertical drop
+    ctx.beginPath();
+    ctx.moveTo(s * 14, 14);
+    ctx.lineTo(s * 14, 25);
+    ctx.stroke();
+
+    // Side mini teardrop pendant
+    ctx.beginPath();
+    ctx.arc(s * 14, 27, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Small outer beads
+    ctx.beginPath();
+    ctx.arc(s * 8, 14, 1.2, 0, Math.PI * 2);
+    ctx.arc(s * 22, 22, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 5. UPPER THROAT CHEVRON DOTWORK (Delicate neck collar dots)
+  ctx.fillStyle = inkDark;
+  for (let i = -5; i <= 5; i++) {
+    const dx = i * 6;
+    const dy = -22 + Math.abs(i) * 2;
+    const radius = i === 0 ? 1.6 : (Math.abs(i) % 2 === 0 ? 1.2 : 0.8);
+    ctx.beginPath();
+    ctx.arc(dx, dy, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
