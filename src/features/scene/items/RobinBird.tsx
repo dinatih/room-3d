@@ -190,6 +190,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     }
 
     mixerRef.current.update(delta);
+    invalidate();
   });
 
   return (

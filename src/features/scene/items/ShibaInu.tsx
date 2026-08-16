@@ -211,6 +211,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     }
     
     mixerRef.current.update(delta);
+    invalidate();
   });
 
   return (

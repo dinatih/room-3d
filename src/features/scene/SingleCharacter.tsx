@@ -343,10 +343,8 @@ export function SingleCharacter({
 
   useEffect(() => {
     const handleActivity = () => {
-      if (idleTimerRef.current > 10) {
-        invalidate();
-      }
       idleTimerRef.current = 0;
+      invalidate();
     };
 
     window.addEventListener('mousemove', handleActivity);
@@ -1081,8 +1079,17 @@ export function SingleCharacter({
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
 
-    // Inactive model is always stationary
-    let isMoving = isActive ? cameraState.isMoving : false;
+    const isNpcActive = isNPC && (
+      (customAnimName.current !== null && customAnimName.current !== 'idle' && !customAnimName.current.includes('idle')) ||
+      (customIdleAnimPath && customIdleAnimPath.includes('dance')) ||
+      Math.abs(groupRef.current.position.x - (groupRef.current.userData.prevX ?? groupRef.current.position.x)) > 0.01 ||
+      Math.abs(groupRef.current.position.z - (groupRef.current.userData.prevZ ?? groupRef.current.position.z)) > 0.01
+    );
+    groupRef.current.userData.prevX = groupRef.current.position.x;
+    groupRef.current.userData.prevZ = groupRef.current.position.z;
+
+    // Inactive model is stationary unless active as NPC
+    let isMoving = isActive ? cameraState.isMoving : isNpcActive;
     let target = isPreview ? (walkerAnim || 'idle') : (isMoving ? 'walk' : 'idle');
 
     // Si le joueur reprend le contrôle manuel (plus de visite guidée), effacer l'animation IA
