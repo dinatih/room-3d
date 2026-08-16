@@ -971,12 +971,6 @@ export function SidePanel({
   const [animSearch, setAnimSearch] = useState('');
   const [activeAnimValue, setActiveAnimValue] = useState<string>('idle');
   const [copiedAnim, setCopiedAnim] = useState<string | null>(null);
-  const [animLoopMode, setAnimLoopMode] = useState<'infinite' | '3x' | '1x'>('infinite');
-
-  const setLoopMode = (mode: 'infinite' | '3x' | '1x') => {
-    setAnimLoopMode(mode);
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-loop', value: mode } }));
-  };
   const [recentAnims, setRecentAnims] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('recent_animations');
@@ -1128,38 +1122,6 @@ export function SidePanel({
           </button>
         </div>
 
-        <div className="d-flex align-items-center justify-content-between mb-2 px-1" style={{ fontSize: '10px' }}>
-          <span className="text-muted fw-semibold">Lecture :</span>
-          <div className="btn-group btn-group-sm" role="group">
-            <button
-              type="button"
-              className={`btn ${animLoopMode === 'infinite' ? 'btn-danger active fw-bold' : 'btn-outline-secondary'} py-0 px-2`}
-              style={{ fontSize: '9px' }}
-              onClick={() => setLoopMode('infinite')}
-              title="Boucle infinie (par défaut)"
-            >
-              ∞ Infini
-            </button>
-            <button
-              type="button"
-              className={`btn ${animLoopMode === '3x' ? 'btn-danger active fw-bold' : 'btn-outline-secondary'} py-0 px-2`}
-              style={{ fontSize: '9px' }}
-              onClick={() => setLoopMode('3x')}
-              title="Répéter 3 fois"
-            >
-              3x
-            </button>
-            <button
-              type="button"
-              className={`btn ${animLoopMode === '1x' ? 'btn-danger active fw-bold' : 'btn-outline-secondary'} py-0 px-2`}
-              style={{ fontSize: '9px' }}
-              onClick={() => setLoopMode('1x')}
-              title="Jouer 1 seule fois"
-            >
-              1x
-            </button>
-          </div>
-        </div>
 
         {recentAnims.slice(0, 2).length > 0 && !animSearch && (
           <div className="mb-2 p-1.5 bg-light rounded border">
@@ -1318,8 +1280,6 @@ export function SidePanel({
   }, []);
 
   const playCoupleAnim = (sandraPath: string, rajaaPath: string, dist: number = 50, rotS?: number, rotR?: number, sPos?: [number, number, number]) => {
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-loop', value: '1x', targetId: 'sandra' } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-loop', value: '1x', targetId: 'rajaa' } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-sandra', value: sandraPath } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-rajaa', value: rajaaPath } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-sandra', value: sPos || [-450 + dist, 0, 0] } }));

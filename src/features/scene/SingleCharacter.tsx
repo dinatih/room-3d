@@ -162,7 +162,6 @@ export function SingleCharacter({
   const customAnimName = useRef<string | null>(null);
   const userAnimOverrideRef = useRef<boolean>(false);
   const prevFirstPersonRef = useRef<boolean | null>(null);
-  const animLoopModeRef = useRef<'infinite' | '3x' | '1x'>('infinite');
   const [expression, setExpression] = useState<'neutral' | 'smile' | 'wink'>('neutral');
   const expressionRef = useRef<'neutral' | 'smile' | 'wink'>('neutral');
   expressionRef.current = expression;
@@ -624,8 +623,6 @@ export function SingleCharacter({
     invalidate();
   }, [scene, characterShadows, showWallhack, invalidate]);
 
-  const poseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   useEffect(() => {
     const timeout = setTimeout(() => {
       document.dispatchEvent(new CustomEvent('walker-ready', { detail: { id } }));
@@ -647,12 +644,6 @@ export function SingleCharacter({
     };
 
     const onToggle = (e: any) => {
-      if (e.detail?.key === 'walker-anim-loop') {
-        if (!e.detail?.targetId || e.detail.targetId === id || (isActive && !e.detail.targetId)) {
-          animLoopModeRef.current = e.detail.value || 'infinite';
-        }
-        return;
-      }
       if (e.detail?.key === 'lara-expression' && isActive) {
         setExpression(e.detail.value || 'neutral');
         invalidate();
@@ -696,11 +687,6 @@ export function SingleCharacter({
       if (isForMe && e.detail?.value) {
         const path = e.detail.value;
 
-        if (poseTimerRef.current) {
-          clearTimeout(poseTimerRef.current);
-          poseTimerRef.current = null;
-        }
-
         if (path === 'idle') {
           customAnimName.current = null;
           userAnimOverrideRef.current = false;
@@ -729,39 +715,8 @@ export function SingleCharacter({
               actionsRef.current[path] = action;
             }
 
-            const pathLower = path.toLowerCase();
-            const clipNameLower = (clip.name || '').toLowerCase();
-            const isPose = (pathLower.includes('pose') || clipNameLower.includes('pose')) && !pathLower.includes('t-pose') && !clipNameLower.includes('t-pose');
-
-            const mode = animLoopModeRef.current;
-            if (mode === 'infinite') {
-              action.setLoop(THREE.LoopRepeat, Infinity);
-              action.clampWhenFinished = false;
-            } else if (mode === '3x') {
-              action.setLoop(THREE.LoopRepeat, 3);
-              action.clampWhenFinished = true;
-              if (isPose) {
-                poseTimerRef.current = setTimeout(() => {
-                  if (customAnimName.current === path) {
-                    customAnimName.current = null;
-                    userAnimOverrideRef.current = false;
-                    invalidate();
-                  }
-                }, 30000); // 3x 10sec = 30 seconds
-              }
-            } else {
-              action.setLoop(THREE.LoopOnce, 1);
-              action.clampWhenFinished = true;
-              if (isPose) {
-                poseTimerRef.current = setTimeout(() => {
-                  if (customAnimName.current === path) {
-                    customAnimName.current = null;
-                    userAnimOverrideRef.current = false;
-                    invalidate();
-                  }
-                }, 10000); // 1x 10sec
-              }
-            }
+            action.setLoop(THREE.LoopRepeat, Infinity);
+            action.clampWhenFinished = false;
 
             customAnimName.current = path;
             userAnimOverrideRef.current = true;
@@ -794,10 +749,6 @@ export function SingleCharacter({
     document.addEventListener('furniture-toggle', onToggle);
     return () => {
       document.removeEventListener('furniture-toggle', onToggle);
-      if (poseTimerRef.current) {
-        clearTimeout(poseTimerRef.current);
-        poseTimerRef.current = null;
-      }
     };
   }, [isActive, isLara, scene, invalidate, id]);
 
