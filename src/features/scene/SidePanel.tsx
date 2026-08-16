@@ -1361,21 +1361,33 @@ export function SidePanel({
   ];
 
   const AnimationsCoupleSection = (
-    <div className="p-2 d-flex flex-wrap gap-1 bg-transparent">
-      {coupleAnims.map(a => (
-        <button 
-          key={a.label}
-          className="btn btn-outline-secondary p-1 px-2 border shadow-sm bg-white rounded-2 d-flex align-items-center gap-1" 
-          onClick={() => {
-            setAutoCycleIndex(-1); // Stop auto cycle on manual click
-            playCoupleAnim(`media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.s}.glb`, `media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.r}.glb`, a.dist ?? 50, (a as any).rotS, (a as any).rotR, (a as any).sPos);
+    <div
+      className="d-flex flex-column bg-transparent overflow-hidden"
+      style={{ maxHeight: '55vh' }}
+    >
+      <div className="p-2 border-bottom shadow-sm sticky-top" style={{ zIndex: 5, background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)' }}>
+        <select
+          className="form-select form-select-sm"
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === '') return;
+            const a = coupleAnims.find(anim => anim.label === val);
+            if (a) {
+              setAutoCycleIndex(-1); // Stop auto cycle on manual click
+              playCoupleAnim(`media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.s}.glb`, `media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.r}.glb`, a.dist ?? 50, (a as any).rotS, (a as any).rotR, (a as any).sPos);
+            }
           }}
-          style={{ fontSize: '10px' }}
+          defaultValue=""
+          style={{ fontSize: isMobile ? '13px' : '11px' }}
         >
-          <span style={{ fontSize: '12px' }}>{a.icon}</span>
-          <span className="fw-semibold">{a.label}</span>
-        </button>
-      ))}
+          <option value="" disabled>Sélectionner une animation de couple...</option>
+          {coupleAnims.map(a => (
+            <option key={a.label} value={a.label}>
+              {a.icon} {a.label}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 

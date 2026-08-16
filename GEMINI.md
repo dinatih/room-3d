@@ -60,3 +60,4 @@ Pour différencier l'origine des commits (IDE vs CLI/agy), toujours ajouter le c
 - **Explications de code** : Lors des modifications de code R3F, expliquer brièvement les hooks utilisés et la logique de rendu pour aider à consolider la maîtrise de React.
 - **Validation** : Toujours lancer `npx tsc --noEmit` après avoir modifié du code pour garantir l'absence d'erreurs de typage.
 - **Commit automatique** : L'agent DOIT toujours commiter ses modifications de code via `git commit` à chaque fois qu'une réponse est envoyée, sans attendre d'instruction explicite.
+- **Interdiction de bash pour l'édition** : Ne JAMAIS utiliser le terminal `bash` (avec des commandes comme `sed`, `cat`, `echo`, ou `grep` pour modifier ou lire des fichiers). Tu DOIS impérativement utiliser tes outils d'édition natifs (`replace_file_content`, `multi_replace_file_content`, `view_file`) pour ne pas spammer l'utilisateur avec des demandes d'autorisation dans la console.
