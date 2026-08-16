@@ -2449,7 +2449,7 @@ function SingleCharacter({
   });
 
   return (
-    <group ref={groupRef} userData={{ animUnit: true }}>
+    <group ref={groupRef} userData={{ animUnit: true, noAnim: true }}>
       <primitive ref={modelRef} object={scene} />
       
       {headBoneState && haircut !== 'original' && (

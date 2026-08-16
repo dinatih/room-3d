@@ -258,7 +258,7 @@ export function Studio() {
     return () => window.removeEventListener('keydown', onKey);
   }, [onToggleLayer]);
 
-  const [buildAnim,       setBuildAnim]       = useState(false);
+  const [buildAnim,       setBuildAnim]       = useState(true);
   const [buildAnimMatrix, setBuildAnimMatrix] = useState(false);
   const [animDurations, setAnimDurations] = useState<Record<string, number>>({});
 
