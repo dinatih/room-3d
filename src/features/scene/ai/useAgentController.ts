@@ -278,5 +278,9 @@ export function useAgentController(
     stateRef.current.z = z;
   };
 
-  return { update, setPosition };
+  const setRotation = (rotY: number) => {
+    stateRef.current.rotY = rotY;
+  };
+
+  return { update, setPosition, setRotation };
 }
