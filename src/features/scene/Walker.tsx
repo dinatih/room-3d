@@ -25,31 +25,31 @@ const ANIM_URLS = [
   "media/sandbox/anims/anim_female_dynamic_pose.glb",
   "media/sandbox/anims/anim_shaking_hands_2.glb",
   "media/sandbox/anims/anim_hand_raising.glb",
-  "media/sandbox/anims/anim_hip_hop_dancing.glb",
-  "media/sandbox/anims/anim_hip_hop_dancing_1.glb",
-  "media/sandbox/anims/anim_hip_hop_dancing_2.glb",
-  "media/sandbox/anims/anim_hip_hop_dancing_4.glb",
-  "media/sandbox/anims/anim_hip_hop_dancing_6.glb",
-  "media/sandbox/anims/anim_locking_hip_hop_dance.glb",
-  "media/sandbox/anims/anim_robot_hip_hop_dance.glb",
+  // "media/sandbox/anims/anim_hip_hop_dancing.glb",
+  // "media/sandbox/anims/anim_hip_hop_dancing_1.glb",
+  // "media/sandbox/anims/anim_hip_hop_dancing_2.glb",
+  // "media/sandbox/anims/anim_hip_hop_dancing_4.glb",
+  // "media/sandbox/anims/anim_hip_hop_dancing_6.glb",
+  // "media/sandbox/anims/anim_locking_hip_hop_dance.glb",
+  // "media/sandbox/anims/anim_robot_hip_hop_dance.glb",
   "media/sandbox/anims/anim_salsa_dancing.glb",
   "media/sandbox/anims/anim_salsa_dancing_1.glb",
   "media/sandbox/anims/anim_salsa_dancing_3.glb",
   "media/sandbox/anims/anim_salsa_dancing_4.glb",
-  "media/sandbox/anims/anim_samba_dancing.glb",
+  // "media/sandbox/anims/anim_samba_dancing.glb",
   "media/sandbox/anims/anim_samba_dancing_1.glb",
-  "media/sandbox/anims/anim_samba_dancing_2.glb",
+  // "media/sandbox/anims/anim_samba_dancing_2.glb",
   "media/sandbox/anims/anim_house_dancing.glb",
-  "media/sandbox/anims/anim_breakdance_uprock.glb",
-  "media/sandbox/anims/anim_gangnam_style.glb",
-  "media/sandbox/anims/anim_capoeira.glb",
-  "media/sandbox/anims/anim_rumba_dancing.glb",
-  "media/sandbox/anims/anim_twist_dance.glb",
-  "media/sandbox/anims/anim_macarena_dance.glb",
-  "media/sandbox/anims/anim_swing_dancing.glb",
-  "media/sandbox/anims/anim_jazz_dancing.glb",
-  "media/sandbox/anims/anim_can_can.glb",
-  "media/sandbox/anims/anim_ymca_dance.glb",
+  // "media/sandbox/anims/anim_breakdance_uprock.glb",
+  // "media/sandbox/anims/anim_gangnam_style.glb",
+  // "media/sandbox/anims/anim_capoeira.glb",
+  // "media/sandbox/anims/anim_rumba_dancing.glb",
+  // "media/sandbox/anims/anim_twist_dance.glb",
+  // "media/sandbox/anims/anim_macarena_dance.glb",
+  // "media/sandbox/anims/anim_swing_dancing.glb",
+  // "media/sandbox/anims/anim_jazz_dancing.glb",
+  // "media/sandbox/anims/anim_can_can.glb",
+  // "media/sandbox/anims/anim_ymca_dance.glb",
   "media/sandbox/anims/miley_armature_10_dance_like_sidestep.glb",
   "media/sandbox/anims/miley_armature_aerobic_dance.glb",
   "media/sandbox/anims/miley_armature_air_dance.glb",
@@ -99,7 +99,7 @@ export interface WalkerProps {
 
 function InternalWalker(props: WalkerProps) {
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
-  const idleGltf = useGLTF('media/sandbox/anims/miley_blender_idle01_f.glb');
+  const idleGltf = useGLTF('media/sandbox/anims/miley_armature_idle01_f.glb');
   const walkingGltf = useGLTF('media/sandbox/anims/anim_walking.glb');
   const runningGltf = useGLTF('media/sandbox/anims/anim_running.glb');
 
@@ -205,7 +205,7 @@ export function Walker(props: WalkerProps) {
 const LARA_PATH = 'media/lara_native.glb';
 
 useGLTF.preload(LARA_PATH);
-useGLTF.preload('media/sandbox/anims/miley_blender_idle01_f.glb');
+useGLTF.preload('media/sandbox/anims/miley_armature_idle01_f.glb');
 useGLTF.preload('media/sandbox/anims/anim_walking.glb');
 useGLTF.preload('media/sandbox/anims/anim_running.glb');
 ANIM_URLS.forEach(url => useGLTF.preload(url));

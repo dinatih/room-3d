@@ -177,7 +177,6 @@ export const WALKER_ANIM_OPTIONS = [
   { value: "media/sandbox/anims/miley_armature_walk_relaxed_start.glb", label: "[MILEY] Walk Relaxed Start (213f / 3.5s, 409KB)" },
   { value: "media/sandbox/anims/miley_armature_wand_attack.glb", label: "[MILEY] Wand Attack (351f / 5.8s, 694KB)" },
   { value: "media/sandbox/anims/miley_blender_b1_attack.glb", label: "[MILEY] B1 Attack (523f / 8.7s, 4728KB)" },
-  { value: "media/sandbox/anims/miley_blender_idle01_f.glb", label: "[MILEY] Idle01 F (1987f / 33.1s, 3641KB)" },
   { value: "media/sandbox/anims/anim_acknowledging.glb", label: "acknowledging (48f / 1.6s, 104KB)" },
   { value: "media/sandbox/anims/anim_action_idle_to_fight_idle.glb", label: "Action Idle To Fight Idle (31f / 1.0s, 90KB)" },
   { value: "media/sandbox/anims/anim_action_idle_to_standing_idle.glb", label: "Action Idle To Standing Idle (29f / 1.0s, 88KB)" },
