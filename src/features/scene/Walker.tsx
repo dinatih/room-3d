@@ -1646,9 +1646,6 @@ function SingleCharacter({
         } else {
           const loadCallback = (gltf: any) => {
             let sourceScene = gltf.scene;
-            if (path.toLowerCase().includes('miley') && (!sourceScene || !sourceScene.getObjectByName('mixamorigHips'))) {
-               // Removed fallback to big miley armature
-            }
             handleClip(gltf.animations[0], sourceScene);
           };
           
