@@ -38,11 +38,24 @@ import {
 } from './ai/ZoneNodes';
 import type { AgentInstruction } from './ai/aiTypes';
 import { useAgentController } from './ai/useAgentController';
+import { appLog } from '@features/ui/AppConsole';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 export { WALKER_ANIM_OPTIONS };
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
+
+let globalLastActivityTime = typeof performance !== 'undefined' ? performance.now() : 0;
+if (typeof window !== 'undefined') {
+  const onUserActivity = () => {
+    globalLastActivityTime = performance.now();
+  };
+  window.addEventListener('mousemove', onUserActivity, { passive: true });
+  window.addEventListener('keydown', onUserActivity, { passive: true });
+  window.addEventListener('touchstart', onUserActivity, { passive: true });
+  window.addEventListener('wheel', onUserActivity, { passive: true });
+  window.addEventListener('pointerdown', onUserActivity, { passive: true });
+}
 
 const silentManager = new THREE.LoadingManager();
 const globalGLTFCache: Record<string, Promise<any>> = {};
@@ -160,6 +173,7 @@ export function SingleCharacter({
   const customAnimName = useRef<string | null>(null);
   const userAnimOverrideRef = useRef<boolean>(false);
   const prevFirstPersonRef = useRef<boolean | null>(null);
+  const hasLoggedIdleRef = useRef<boolean>(false);
   const [expression, setExpression] = useState<'neutral' | 'smile' | 'wink'>('neutral');
   const expressionRef = useRef<'neutral' | 'smile' | 'wink'>('neutral');
   expressionRef.current = expression;
@@ -335,7 +349,7 @@ export function SingleCharacter({
         }));
       }
     },
-    isNPC ? (id === 'sandra' || id === 'rajaa' ? 9 * 3.0 : ((characterIndex ?? 0) + 1) * 3.0) : 0
+    isDelphinaNpc ? ((characterIndex ?? 0) + 1) * 3.0 : 0
   );
 
   useEffect(() => {
@@ -1082,7 +1096,15 @@ export function SingleCharacter({
         activeActionName.current = target;
     }
 
-    if (!isPaused) {
+    const isIdleTimeout = (performance.now() - globalLastActivityTime) > 42000;
+    if (isIdleTimeout && !hasLoggedIdleRef.current && isActive) {
+      hasLoggedIdleRef.current = true;
+      appLog('system', '💤 Moteur 3D suspendu (42s inactif). Bougez pour reprendre.');
+    } else if (!isIdleTimeout && hasLoggedIdleRef.current) {
+      hasLoggedIdleRef.current = false;
+    }
+
+    if (!isPaused && !isIdleTimeout) {
         mixer.update(delta);
 
         // Physique réactive & Gravité universelle (sans vent/bruit continu au repos)
@@ -1497,7 +1519,7 @@ export function SingleCharacter({
         physicsPrevDt.current = simDt;
     }
 
-    if (!isPaused) {
+    if (!isPaused && !isIdleTimeout) {
         invalidate();
     }
   });
