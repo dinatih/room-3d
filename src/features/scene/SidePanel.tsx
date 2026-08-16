@@ -1368,7 +1368,7 @@ export function SidePanel({
           className="btn btn-outline-secondary p-1 px-2 border shadow-sm bg-white rounded-2 d-flex align-items-center gap-1" 
           onClick={() => {
             setAutoCycleIndex(-1); // Stop auto cycle on manual click
-            playCoupleAnim(`media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.s}.glb`, `media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.r}.glb`, a.dist ?? 50);
+            playCoupleAnim(`media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.s}.glb`, `media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.r}.glb`, a.dist ?? 50, (a as any).rotS, (a as any).rotR, (a as any).sPos);
           }}
           style={{ fontSize: '10px' }}
         >
