@@ -1281,7 +1281,7 @@ export function SidePanel({
     const anim = coupleAnims[autoCycleIndex];
     if (anim) {
       const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
-      const trigger = () => playCoupleAnim(`media/sandbox/anims/${prefix}${anim.s}.glb`, `media/sandbox/anims/${prefix}${anim.r}.glb`, anim.dist ?? 50, (anim as any).rotS, (anim as any).rotR);
+      const trigger = () => playCoupleAnim(`media/sandbox/anims/${prefix}${anim.s}.glb`, `media/sandbox/anims/${prefix}${anim.r}.glb`, anim.dist ?? 50, (anim as any).rotS, (anim as any).rotR, (anim as any).sPos);
       
       if (autoCycleIndex === 0) {
         setTimeout(trigger, 1000);
@@ -1302,11 +1302,11 @@ export function SidePanel({
     return () => document.removeEventListener('walker-anim-finished', onFinished);
   }, []);
 
-  const playCoupleAnim = (sandraPath: string, rajaaPath: string, dist: number = 50, rotS?: number, rotR?: number) => {
+  const playCoupleAnim = (sandraPath: string, rajaaPath: string, dist: number = 50, rotS?: number, rotR?: number, sPos?: [number, number, number]) => {
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-loop', value: '1x' } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-sandra', value: sandraPath } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-rajaa', value: rajaaPath } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-sandra', value: [-450 + dist, 0, 0] } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-sandra', value: sPos || [-450 + dist, 0, 0] } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-rot-sandra', value: rotS !== undefined ? rotS : 0 } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-rot-rajaa', value: rotR !== undefined ? rotR : 0 } }));
   };
@@ -1342,7 +1342,7 @@ export function SidePanel({
     { label: 'Date Bearhug', icon: '🐻', s: 'date_bearhug_m', r: 'date_bearhug_f', dist: 50 },
     { label: 'Propose', icon: '💍', s: 'propose_f', r: 'propose_m', dist: 50 },
     { label: 'Sit Cuddle', icon: '🛋️', s: 'sit_cuddle_hug_m', r: 'sit_cuddle_hug_f', dist: 50 },
-    { label: 'Double Leg Takedown', icon: '🤼', s: 'anim_best_double_leg_takedown_victim', r: 'anim_best_double_leg_takedown_attacker', prefix: '', dist: 0, rotS: 0, rotR: 0 },
+    { label: 'Double Leg Takedown', icon: '🤼', s: 'anim_best_double_leg_takedown_victim', r: 'anim_best_double_leg_takedown_attacker', prefix: '', dist: 0, rotS: Math.PI, rotR: 0, sPos: [-450, 0, 270] },
   ];
 
   const AnimationsCoupleSection = (
