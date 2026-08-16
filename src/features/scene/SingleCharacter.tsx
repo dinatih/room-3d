@@ -38,7 +38,6 @@ import {
 } from './ai/ZoneNodes';
 import type { AgentInstruction } from './ai/aiTypes';
 import { useAgentController } from './ai/useAgentController';
-import { appLog } from '@features/ui/AppConsole';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 export { WALKER_ANIM_OPTIONS };
@@ -158,7 +157,6 @@ export function SingleCharacter({
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const actionsRef = useRef<Record<string, THREE.AnimationAction>>({});
   const activeActionName = useRef<string>('');
-  const idleTimerRef = useRef<number>(0);
   const customAnimName = useRef<string | null>(null);
   const userAnimOverrideRef = useRef<boolean>(false);
   const prevFirstPersonRef = useRef<boolean | null>(null);
@@ -342,7 +340,6 @@ export function SingleCharacter({
 
   useEffect(() => {
     const handleActivity = () => {
-      idleTimerRef.current = 0;
       invalidate();
     };
 
@@ -762,21 +759,6 @@ export function SingleCharacter({
     return () => mixer.removeEventListener('finished', onFinished);
   }, [id, scene]);
 
-  useEffect(() => {
-    const resetTimer = () => {
-      idleTimerRef.current = 0;
-    };
-    window.addEventListener('pointermove', resetTimer, { passive: true });
-    window.addEventListener('keydown', resetTimer, { passive: true });
-    window.addEventListener('touchstart', resetTimer, { passive: true });
-    window.addEventListener('wheel', resetTimer, { passive: true });
-    return () => {
-      window.removeEventListener('pointermove', resetTimer);
-      window.removeEventListener('keydown', resetTimer);
-      window.removeEventListener('touchstart', resetTimer);
-      window.removeEventListener('wheel', resetTimer);
-    };
-  }, []);
 
   useEffect(() => {
     if (!scene) return;
@@ -957,21 +939,19 @@ export function SingleCharacter({
           cameraState.isAIControlled = false;
         }
       } else if (isNPC) {
-        if (!(idleTimerRef.current > 42)) {
-          const agentState = updateAgent(delta);
-          groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
-          groupRef.current.rotation.y = agentState.rotY;
-          // Ne pas écraser l'animation choisie par l'utilisateur
-          if (!userAnimOverrideRef.current) {
-            customAnimName.current = agentState.animation;
-          }
-          groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && agentState.isSpawned;
-          
-          if (agentState.isSpawned) {
-            cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
-          } else {
-            delete cameraState.positions[id];
-          }
+        const agentState = updateAgent(delta);
+        groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
+        groupRef.current.rotation.y = agentState.rotY;
+        // Ne pas écraser l'animation choisie par l'utilisateur
+        if (!userAnimOverrideRef.current) {
+          customAnimName.current = agentState.animation;
+        }
+        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && agentState.isSpawned;
+        
+        if (agentState.isSpawned) {
+          cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
+        } else {
+          delete cameraState.positions[id];
         }
       } else {
         groupRef.current.visible = false;
@@ -1086,24 +1066,6 @@ export function SingleCharacter({
       target = customIdleAnimPath;
     }
 
-    // Consider rotating as moving to prevent idle timeout freezes
-    const isRotating = isActive && useSceneStore.getState().activeWalkerId === id &&
-      (Math.abs(cameraState.walkYaw - (groupRef.current.userData.lastYaw || 0)) > 0.001);
-    groupRef.current.userData.lastYaw = cameraState.walkYaw;
-
-    if (!isPaused && !isMoving && !isPreview && !isRotating && !isGuidedTour) {
-        idleTimerRef.current += delta;
-    } else {
-        idleTimerRef.current = 0;
-    }
-
-    // Both characters time out after 42s of inactivity to save CPU
-    const prevIdle = idleTimerRef.current - delta;
-    const isIdleTimeout = idleTimerRef.current > 42;
-    if (isIdleTimeout && prevIdle <= 42 && isActive) {
-      appLog('system', '💤 Moteur 3D suspendu (42s inactif). Bougez pour reprendre.');
-    }
-
     const to = actions[target];
     if (to && activeActionName.current !== target) {
         const from = activeActionName.current ? actions[activeActionName.current] : null;
@@ -1118,12 +1080,9 @@ export function SingleCharacter({
         to.reset().fadeIn(0.2).play();
         to.setEffectiveWeight(1);
         activeActionName.current = target;
-        if (!isNPC) {
-          idleTimerRef.current = 0;
-        }
     }
 
-    if (!isPaused && !isIdleTimeout) {
+    if (!isPaused) {
         mixer.update(delta);
 
         // Physique réactive & Gravité universelle (sans vent/bruit continu au repos)
@@ -1538,7 +1497,7 @@ export function SingleCharacter({
         physicsPrevDt.current = simDt;
     }
 
-    if (!isIdleTimeout || isMoving || isPreview) {
+    if (!isPaused) {
         invalidate();
     }
   });
