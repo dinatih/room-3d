@@ -4,6 +4,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
+import { isAppIdle } from '@features/scene/idleState';
 
 const GLB_PATH = 'media/glb/robin_bird.glb';
 
@@ -127,7 +128,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
 
   // Boucle de jeu (IA & Animation)
   useFrame((_, delta) => {
-    if (!mixerRef.current || !modelRef.current) return;
+    if (isAppIdle() || !mixerRef.current || !modelRef.current) return;
     
     if (!isPreview) {
       const ai = aiStateRef.current;

@@ -5,6 +5,7 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
+import { isAppIdle } from '@features/scene/idleState';
 
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
 
@@ -132,7 +133,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   }, [invalidate, isPreview, animations]);
 
   useFrame((_, delta) => {
-    if (!mixerRef.current || !modelRef.current) return;
+    if (isAppIdle() || !mixerRef.current || !modelRef.current) return;
     
     if (!isPreview) {
       const ai = aiStateRef.current;

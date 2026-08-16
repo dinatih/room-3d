@@ -39,23 +39,12 @@ import {
 import type { AgentInstruction } from './ai/aiTypes';
 import { useAgentController } from './ai/useAgentController';
 import { appLog } from '@features/ui/AppConsole';
+import { isAppIdle } from './idleState';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 export { WALKER_ANIM_OPTIONS };
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
-
-let globalLastActivityTime = typeof performance !== 'undefined' ? performance.now() : 0;
-if (typeof window !== 'undefined') {
-  const onUserActivity = () => {
-    globalLastActivityTime = performance.now();
-  };
-  window.addEventListener('mousemove', onUserActivity, { passive: true });
-  window.addEventListener('keydown', onUserActivity, { passive: true });
-  window.addEventListener('touchstart', onUserActivity, { passive: true });
-  window.addEventListener('wheel', onUserActivity, { passive: true });
-  window.addEventListener('pointerdown', onUserActivity, { passive: true });
-}
 
 const silentManager = new THREE.LoadingManager();
 const globalGLTFCache: Record<string, Promise<any>> = {};
@@ -913,6 +902,16 @@ export function SingleCharacter({
     const delta = Math.min(rawDelta, 0.1);
     if (!groupRef.current || !mixerRef.current) return;
 
+    const isIdleTimeout = isAppIdle();
+    if (isIdleTimeout) {
+      if (!hasLoggedIdleRef.current && isActive) {
+        hasLoggedIdleRef.current = true;
+        appLog('system', '💤 Moteur 3D suspendu (42s inactif). Bougez pour reprendre.');
+      }
+      return;
+    } else if (hasLoggedIdleRef.current) {
+      hasLoggedIdleRef.current = false;
+    }
 
     if (isPreview) {
       groupRef.current.position.set(0, 0, 0);
@@ -1096,15 +1095,7 @@ export function SingleCharacter({
         activeActionName.current = target;
     }
 
-    const isIdleTimeout = (performance.now() - globalLastActivityTime) > 42000;
-    if (isIdleTimeout && !hasLoggedIdleRef.current && isActive) {
-      hasLoggedIdleRef.current = true;
-      appLog('system', '💤 Moteur 3D suspendu (42s inactif). Bougez pour reprendre.');
-    } else if (!isIdleTimeout && hasLoggedIdleRef.current) {
-      hasLoggedIdleRef.current = false;
-    }
-
-    if (!isPaused && !isIdleTimeout) {
+    if (!isPaused) {
         mixer.update(delta);
 
         // Physique réactive & Gravité universelle (sans vent/bruit continu au repos)
@@ -1519,7 +1510,7 @@ export function SingleCharacter({
         physicsPrevDt.current = simDt;
     }
 
-    if (!isPaused && !isIdleTimeout) {
+    if (!isPaused) {
         invalidate();
     }
   });
