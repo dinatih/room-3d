@@ -1,7 +1,6 @@
 import { AgentInstruction, ZoneNode } from './aiTypes';
 
 export const ZONES: Record<string, ZoneNode> = {
-  Start: { id: 'Start', x: 250, z: 300 },
   Couloir_Central: { id: 'Couloir_Central', x: 240, z: 350 },
   Couloir_Entree: { id: 'Couloir_Entree', x: 248, z: 535 }, // Dedans, devant porte d'entrée
   Sortie: { id: 'Sortie', x: 288, z: 603 }, // Dehors, devant la porte
@@ -15,7 +14,6 @@ export const ZONES: Record<string, ZoneNode> = {
   Lit_Ouest: { id: 'Lit_Ouest', x: 120, z: 172 },
   Lit_Est: { id: 'Lit_Est', x: 210, z: 190 },
   Baignoire: { id: 'Baignoire', x: 120, z: -250 },
-  Centre_SDB: { id: 'Centre_SDB', x: 60, z: 600 },
   Douche: { id: 'Douche', x: 15, z: 645 },
   Canape_Est: { id: 'Canape_Est', x: 270, z: -80 },
   Canape_Ouest: { id: 'Canape_Ouest', x: 100, z: -50 },
@@ -26,6 +24,25 @@ export const ZONES: Record<string, ZoneNode> = {
   Fond_Jardin: { id: 'Fond_Jardin', x: 150, z: -650 },
   Entree_Bat_B_Couloir: { id: 'Entree_Bat_B_Couloir', x: -350, z: 1002 },
   Entree_Cours_Bat_B_Jardin: { id: 'Entree_Cours_Bat_B_Jardin', x: -350, z: -200 },
+  Placard_Couloir: { id: 'Placard_Couloir', x: 165, z: 435 },
+  Placard_SDB: { id: 'Placard_SDB', x: 130, z: 610 },
+  Congelateur: { id: 'Congelateur', x: 250, z: 320 },
+  SDB_Drona_Ouest: { id: 'SDB_Drona_Ouest', x: 10, z: 490 },
+  SDB_Drona_Est: { id: 'SDB_Drona_Est', x: 169, z: 490 },
+  Miroir_Sud: { id: 'Miroir_Sud', x: 160, z: 440 },
+  Lit_Ouest_2: { id: 'Lit_Ouest_2', x: 120, z: 150 },
+  Lit_Ouest_3: { id: 'Lit_Ouest_3', x: 120, z: 130 },
+  Lit_Ouest_Couche: { id: 'Lit_Ouest_Couche', x: 80, z: 150 },
+  Lit_Est_2: { id: 'Lit_Est_2', x: 210, z: 170 },
+  Lit_Est_3: { id: 'Lit_Est_3', x: 210, z: 150 },
+  Lit_Est_Couche: { id: 'Lit_Est_Couche', x: 250, z: 170 },
+  Canape_Est_2: { id: 'Canape_Est_2', x: 270, z: -100 },
+  Canape_Est_Allonge: { id: 'Canape_Est_Allonge', x: 270, z: -90 },
+  Canape_Ouest_2: { id: 'Canape_Ouest_2', x: 100, z: -70 },
+  Baignoire_Bout_Ouest_1: { id: 'Baignoire_Bout_Ouest_1', x: 35, z: -230 },
+  Baignoire_Bout_Ouest_2: { id: 'Baignoire_Bout_Ouest_2', x: 35, z: -270 },
+  Baignoire_Bout_Est_1: { id: 'Baignoire_Bout_Est_1', x: 205, z: -230 },
+  Baignoire_Bout_Est_2: { id: 'Baignoire_Bout_Est_2', x: 205, z: -270 },
 };
 export const ACTION_GO_TO_TOILET: AgentInstruction[] = [
   // Aller vers la porte du salon
@@ -108,10 +125,8 @@ export const ACTION_SHOWER: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
   { type: 'INTERACT', triggerEventKey: 'bathroomDoor', animation: 'idle', duration: 1.5 },
   { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },
-  { type: 'MOVE_TO', targetNodeId: 'Centre_SDB' },
   { type: 'MOVE_TO', targetNodeId: 'Douche' },
   { type: 'INTERACT', animation: 'media/sandbox/anims/anim_shaking_hands_2.glb', duration: 10.0, rotY: Math.PI / 2 },
-  { type: 'MOVE_TO', targetNodeId: 'Centre_SDB' },
   { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
   { type: 'INTERACT', triggerEventKey: 'bathroomDoor', animation: 'idle', duration: 1.5 },
