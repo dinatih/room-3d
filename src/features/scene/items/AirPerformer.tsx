@@ -1,5 +1,6 @@
 /**
  * AirPerformer.tsx — Philips Air Performer AMF870/15 3D procedural simulation.
+ * Exact replication of philips_air_performer (2) best.html design.
  * Scale: 1 unit = 1 cm. Total height: 106.4 cm. Base stand diameter: 32.5 cm.
  * Integrates interactive events, particle systems, dynamic LED screen canvas texture,
  * and synthesized fan hum audio matching the standalone test bench.
@@ -21,6 +22,102 @@ interface Particle {
   maxLife: number;
   type: 'clean' | 'dirty';
   color: THREE.Color;
+}
+
+// ---------------------------------------------------------------------
+// Dimensions (cm) — Philips Air Performer AMF870 proportions
+// ---------------------------------------------------------------------
+const H_TOTAL = 106.4;
+const BASE_R = 32.5 / 2; // 16.25
+const BASE_H = 2;
+
+const neckR = 13; // rayon du cylindre principal (diamètre 26cm)
+const bevelPad = 0.85; // extension du bevel du cadre extérieur
+const outerW = 24.3; // largeur de la pilule
+const bodyDepth = 12.5; // épaisseur avant-arrière
+const outerH = 60; // hauteur de la pilule (boucle)
+const neckHeight = 45; // hauteur du cylindre principal
+const loopBottomY = H_TOTAL - outerH; // 46.4
+
+const midMargin = 1.3; // fin liseré sombre en bordure externe
+const midW = outerW - 2 * midMargin;
+const midH = outerH - 2 * midMargin;
+
+const topRim = 1.8; // largeur du bandeau argenté en haut
+const sideBottomRim = 5; // bandeau argenté (bas)
+const innerW = midW - 2 * 1.0;
+const innerTop = midH / 2 - topRim;
+const innerBottom = -midH / 2 + sideBottomRim;
+const innerH = innerTop - innerBottom;
+const innerCenterY = (innerTop + innerBottom) / 2;
+
+const pillCenterY = loopBottomY + outerH / 2;
+const holeBottomY = pillCenterY + innerBottom;
+const shoulderTopRX = outerW / 2 + bevelPad;
+const shoulderTopRZ = bodyDepth / 2 + 0.5;
+
+// ---------------------------------------------------------------------
+// Helper: build a "pill" (stadium) outline on a Shape or Path
+// ---------------------------------------------------------------------
+function pillOutline<T extends THREE.Shape | THREE.Path>(target: T, w: number, h: number, offsetX: number, offsetY: number): T {
+  const r = Math.min(w, h) / 2;
+  const x = offsetX - w / 2, y = offsetY - h / 2;
+  target.moveTo(x, y + r);
+  target.lineTo(x, y + h - r);
+  target.absarc(x + r, y + h - r, r, Math.PI, Math.PI / 2, true);
+  target.lineTo(x + w - r, y + h);
+  target.absarc(x + w - r, y + h - r, r, Math.PI / 2, 0, true);
+  target.lineTo(x + w, y + r);
+  target.absarc(x + w - r, y + r, r, 0, -Math.PI / 2, true);
+  target.lineTo(x + r, y);
+  target.absarc(x + r, y + r, r, -Math.PI / 2, -Math.PI, true);
+  return target;
+}
+
+function extrudeRing(outerW: number, outerH: number, innerW: number, innerH: number, innerOffsetY: number, depth: number, bevelT: number, bevelS: number) {
+  const shape = pillOutline(new THREE.Shape(), outerW, outerH, 0, 0);
+  const hole = pillOutline(new THREE.Path(), innerW, innerH, 0, innerOffsetY);
+  shape.holes.push(hole);
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth,
+    bevelEnabled: true,
+    bevelThickness: bevelT,
+    bevelSize: bevelS,
+    bevelSegments: 6,
+    curveSegments: 48,
+    steps: 1
+  });
+  geo.translate(0, 0, -depth / 2);
+  return geo;
+}
+
+function buildShoulder(bottomR: number, topRX: number, topRZ: number, yBottom: number, yTop: number, radialSeg: number, heightSeg: number) {
+  const positions: number[] = [], uvs: number[] = [], indices: number[] = [];
+  for (let i = 0; i <= heightSeg; i++) {
+    const t = i / heightSeg;
+    const te = t * t * (3 - 2 * t); // easing doux
+    const y = THREE.MathUtils.lerp(yBottom, yTop, t);
+    const rx = THREE.MathUtils.lerp(bottomR, topRX, te);
+    const rz = THREE.MathUtils.lerp(bottomR, topRZ, te);
+    for (let j = 0; j <= radialSeg; j++) {
+      const a = (j / radialSeg) * Math.PI * 2;
+      positions.push(Math.sin(a) * rx, y, Math.cos(a) * rz);
+      uvs.push(j / radialSeg, t);
+    }
+  }
+  for (let i = 0; i < heightSeg; i++) {
+    for (let j = 0; j < radialSeg; j++) {
+      const a = i * (radialSeg + 1) + j;
+      const b = a + radialSeg + 1;
+      indices.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
 }
 
 export function AirPerformer({ onSize }: SceneItemProps) {
@@ -174,35 +271,7 @@ export function AirPerformer({ onSize }: SceneItemProps) {
     };
   }, []);
 
-  // ── Procedural Canvas Textures ─────────────────────────────────────────────
-  // 1. Filter grid mesh canvas texture
-  const filterTexture = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 256;
-    const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = '#222328';
-    ctx.fillRect(0, 0, 512, 256);
-    ctx.fillStyle = '#0a0a0c';
-    const dotRadius = 1.0;
-    const spacingX = 6;
-    const spacingY = 6;
-    for (let y = 0; y < 256; y += spacingY) {
-      for (let x = 0; x < 512; x += spacingX) {
-        const offsetX = (y / spacingY) % 2 === 0 ? 0 : spacingX / 2;
-        ctx.beginPath();
-        ctx.arc(x + offsetX, y, dotRadius, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(4, 1);
-    return texture;
-  }, []);
-
-  // 2. Dynamic LED screen canvas texture
+  // ── Dynamic LED screen canvas texture ──────────────────────────────────────
   const screenCanvas = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 256;
@@ -350,16 +419,20 @@ export function AirPerformer({ onSize }: SceneItemProps) {
 
     let lx = 0, ly = 0, lz = 0.2;
     const selection = Math.random();
+    const straightHalf = innerH / 2 - innerW / 2;
+    const yTop = innerCenterY + straightHalf;
+    const yBot = innerCenterY - straightHalf;
+
     if (selection < 0.45) {
-      lx = -8.4;
-      ly = 44 + Math.random() * 50.9;
+      lx = -innerW / 2;
+      ly = pillCenterY + THREE.MathUtils.lerp(yBot, yTop, Math.random());
     } else if (selection < 0.9) {
-      lx = 8.4;
-      ly = 44 + Math.random() * 50.9;
+      lx = innerW / 2;
+      ly = pillCenterY + THREE.MathUtils.lerp(yBot, yTop, Math.random());
     } else {
       const angle = Math.random() * Math.PI;
-      lx = Math.cos(angle) * 8.35;
-      ly = 94.9 + Math.sin(angle) * 8.35;
+      lx = Math.cos(angle) * (innerW / 2);
+      ly = pillCenterY + yTop + Math.sin(angle) * (innerW / 2);
     }
 
     const currentSpeed = speedRef.current;
@@ -458,13 +531,13 @@ export function AirPerformer({ onSize }: SceneItemProps) {
         colArr[i * 3 + 1] = p.color.g * alpha;
         colArr[i * 3 + 2] = p.color.b * alpha;
       } else {
-        // Pulled inwards to bottom filter cylinder (center Y = 15)
+        // Pulled inwards to cylinder neck (center Y = 24.5)
         const dx = 0 - p.x;
-        const dy = 15.0 - p.y;
+        const dy = (BASE_H + neckHeight / 2) - p.y;
         const dz = 0 - p.z;
         const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-        if (dist < 16.5) {
+        if (dist < neckR + 0.5) {
           p.active = false;
           continue;
         }
@@ -479,7 +552,7 @@ export function AirPerformer({ onSize }: SceneItemProps) {
         p.vz *= 0.99;
 
         const lifeAlpha = 1.0 - p.life / p.maxLife;
-        const filterDistanceAlpha = Math.min((dist - 16) / 25, 1.0);
+        const filterDistanceAlpha = Math.min((dist - neckR) / 25, 1.0);
         const finalAlpha = lifeAlpha * filterDistanceAlpha;
 
         colArr[i * 3] = p.color.r * finalAlpha;
@@ -503,17 +576,31 @@ export function AirPerformer({ onSize }: SceneItemProps) {
   const pointsRef = useRef<THREE.Points>(null!);
   const oscillationTimeRef = useRef(0);
 
-  // ── Materials ──────────────────────────────────────────────────────────────
-  const matStand = useMemo(() => new THREE.MeshStandardMaterial({
-    color: 0x16171b,
-    roughness: 0.6,
-    metalness: 0.1,
+  // ── Materials (Matching philips_air_performer (2) best.html) ────────────────
+  const darkBody = useMemo(() => new THREE.MeshStandardMaterial({
+    color: 0x33383e,
+    roughness: 0.55,
+    metalness: 0.18,
+    side: THREE.DoubleSide
   }), []);
 
-  const matAnthracite = useMemo(() => new THREE.MeshStandardMaterial({
-    color: 0x2b2c31,
-    roughness: 0.45,
-    metalness: 0.3,
+  const silverRim = useMemo(() => new THREE.MeshStandardMaterial({
+    color: 0xd7dadd,
+    roughness: 0.35,
+    metalness: 0.35,
+    side: THREE.DoubleSide
+  }), []);
+
+  const baseMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: 0x2c3136,
+    roughness: 0.5,
+    metalness: 0.2
+  }), []);
+
+  const slatMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: 0x14171a,
+    roughness: 0.6,
+    metalness: 0.1
   }), []);
 
   const matGlossyBlack = useMemo(() => new THREE.MeshStandardMaterial({
@@ -521,15 +608,6 @@ export function AirPerformer({ onSize }: SceneItemProps) {
     roughness: 0.12,
     metalness: 0.8,
   }), []);
-
-  const matFilter = useMemo(() => new THREE.MeshStandardMaterial({
-    color: 0x3d3f47,
-    map: filterTexture,
-    bumpMap: filterTexture,
-    bumpScale: -0.04,
-    roughness: 0.5,
-    metalness: 0.7,
-  }), [filterTexture]);
 
   const matHeater = useMemo(() => new THREE.MeshStandardMaterial({
     color: 0x000000,
@@ -542,6 +620,74 @@ export function AirPerformer({ onSize }: SceneItemProps) {
   const matScreen = useMemo(() => new THREE.MeshBasicMaterial({
     map: screenTexture,
   }), [screenTexture]);
+
+  // ── Procedural Geometries ──────────────────────────────────────────────────
+  const outerRingGeo = useMemo(() =>
+    extrudeRing(outerW, outerH, midW, midH, 0, bodyDepth, 1.05, bevelPad),
+  []);
+
+  const silverGeo = useMemo(() =>
+    extrudeRing(midW, midH, innerW, innerH, innerCenterY, bodyDepth * 0.92, 0.7, 0.55),
+  []);
+
+  const shoulderGeo = useMemo(() =>
+    buildShoulder(
+      neckR, shoulderTopRX, shoulderTopRZ,
+      BASE_H + neckHeight, holeBottomY,
+      72, 24
+    ),
+  []);
+
+  const baseGeo = useMemo(() =>
+    new THREE.CylinderGeometry(BASE_R, BASE_R, BASE_H, 96),
+  []);
+
+  const rimGeo = useMemo(() =>
+    new THREE.TorusGeometry(BASE_R - 0.4, 0.35, 12, 96),
+  []);
+
+  const neckGeo = useMemo(() =>
+    new THREE.CylinderGeometry(neckR, neckR, neckHeight, 72, 1, false),
+  []);
+
+  // ── Inner loop slats data ──────────────────────────────────────────────────
+  const innerSlats = useMemo(() => {
+    const items: { x: number; y: number; z: number }[] = [];
+    const half = innerW / 2 + 0.35;
+    const straightHalf = innerH / 2 - innerW / 2;
+    const yTop = innerCenterY + straightHalf - 2;
+    const yBot = innerCenterY - straightHalf + 2;
+    const count = 15;
+    for (let side = -1; side <= 1; side += 2) {
+      for (let i = 0; i < count; i++) {
+        const t = i / (count - 1);
+        const y = THREE.MathUtils.lerp(yBot, yTop, t);
+        items.push({ x: side * half, y, z: bodyDepth * 0.46 - 0.4 });
+      }
+    }
+    return items;
+  }, []);
+
+  // ── Curved slats on cylinder neck data ─────────────────────────────────────
+  const cylinderSlats = useMemo(() => {
+    const items: { x: number; y: number; z: number; rotY: number }[] = [];
+    const arcSlats = 22;
+    const arcSpan = Math.PI * 0.92;
+    const bandY = BASE_H + neckHeight * 0.52;
+    const bandH = neckHeight * 0.42;
+    const rows = 3;
+    for (let r = 0; r < rows; r++) {
+      const y = bandY - bandH / 2 + (r + 0.5) * (bandH / rows);
+      for (let i = 0; i < arcSlats; i++) {
+        const t = i / (arcSlats - 1);
+        const theta = Math.PI + (-arcSpan / 2 + t * arcSpan);
+        const x = neckR * Math.sin(theta);
+        const z = neckR * Math.cos(theta);
+        items.push({ x, y, z: z + 0.18 * Math.cos(theta), rotY: theta });
+      }
+    }
+    return items;
+  }, []);
 
   // ── R3F frame update loop ──────────────────────────────────────────────────
   useFrame((state, delta) => {
@@ -665,83 +811,79 @@ export function AirPerformer({ onSize }: SceneItemProps) {
       }}
     >
       {/* ── 1. BASE STAND (FIXED) ── */}
-      <mesh position={[0, 1, 0]} material={matStand} castShadow receiveShadow>
-        <cylinderGeometry args={[16.25, 16.25, 2, 64]} />
-      </mesh>
+      <mesh position={[0, BASE_H / 2, 0]} material={baseMat} geometry={baseGeo} castShadow receiveShadow />
+      <mesh position={[0, BASE_H + 0.05, 0]} rotation={[Math.PI / 2, 0, 0]} material={silverRim} geometry={rimGeo} />
 
       {/* ── 2. OSCILLATING CONTAINER (ROTATING GROUP) ── */}
       <group ref={oscillatingGroupRef} position={[0, 0, 0]}>
-        {/* Bottom spacer ring */}
-        <mesh position={[0, 2.2, 0]} material={matGlossyBlack}>
-          <cylinderGeometry args={[16.1, 16.1, 0.4, 64]} />
-        </mesh>
+        {/* A. Neck Cylinder */}
+        <mesh
+          position={[0, BASE_H + neckHeight / 2, 0]}
+          geometry={neckGeo}
+          material={darkBody}
+          castShadow
+          receiveShadow
+        />
 
-        {/* A. Filter cover tower (height 25, starts at 2.4) */}
-        <mesh position={[0, 14.9, 0]} material={matFilter} castShadow receiveShadow>
-          <cylinderGeometry args={[16.0, 16.0, 25.0, 64]} />
-        </mesh>
+        {/* B. Arc Slats on cylinder neck */}
+        {cylinderSlats.map((slat, idx) => (
+          <mesh
+            key={`c-slat-${idx}`}
+            position={[slat.x, slat.y, slat.z]}
+            rotation={[0, slat.rotY, 0]}
+            material={slatMat}
+            castShadow
+          >
+            <boxGeometry args={[0.55, (neckHeight * 0.42 / 3) * 0.55, 0.5]} />
+          </mesh>
+        ))}
 
-        {/* B. Upper body tower (height 14.8, starts at 27.4) */}
-        <mesh position={[0, 34.8, 0]} material={matAnthracite} castShadow receiveShadow>
-          <cylinderGeometry args={[16.0, 16.0, 14.8, 64]} />
-        </mesh>
+        {/* C. Shoulder Transition Geometry */}
+        <mesh
+          geometry={shoulderGeo}
+          material={darkBody}
+          castShadow
+          receiveShadow
+        />
 
-        {/* C. Circular screen display */}
-        {/* Screen bezel */}
-        <mesh position={[0, 34.8, 15.95]} rotation={[Math.PI / 2, 0, 0]} material={matGlossyBlack}>
-          <cylinderGeometry args={[3.0, 3.0, 0.3, 32]} />
-        </mesh>
-        {/* Screen canvas */}
-        <mesh position={[0, 34.8, 16.12]} rotation={[Math.PI / 2, 0, 0]} material={matScreen}>
-          <cylinderGeometry args={[2.8, 2.8, 0.1, 32]} />
-        </mesh>
+        {/* D. Outer Dark Pill Loop */}
+        <mesh
+          position={[0, loopBottomY + outerH / 2, 0]}
+          geometry={outerRingGeo}
+          material={darkBody}
+          castShadow
+          receiveShadow
+        />
 
-        {/* D. Tapered neck transition (height 1.8, starts at 42.2) */}
-        <mesh position={[0, 43.1, 0]} material={matAnthracite} castShadow>
-          <cylinderGeometry args={[13.0, 15.8, 1.8, 64]} />
-        </mesh>
+        {/* E. Silver Inner Rim */}
+        <mesh
+          position={[0, loopBottomY + outerH / 2, -0.5]}
+          geometry={silverGeo}
+          material={silverRim}
+          castShadow
+          receiveShadow
+        />
 
-        {/* E. Bladeless loop columns (height 50.9, starts at 44.0) */}
-        {/* Left column */}
-        <mesh position={[-9.0, 69.45, 0]} material={matAnthracite} castShadow receiveShadow>
-          <cylinderGeometry args={[2.5, 2.5, 50.9, 32]} />
-        </mesh>
-        {/* Right column */}
-        <mesh position={[9.0, 69.45, 0]} material={matAnthracite} castShadow receiveShadow>
-          <cylinderGeometry args={[2.5, 2.5, 50.9, 32]} />
-        </mesh>
+        {/* F. Inner Loop Vertical Slats */}
+        <group position={[0, loopBottomY + outerH / 2, 0]}>
+          {innerSlats.map((s, idx) => (
+            <mesh
+              key={`i-slat-${idx}`}
+              position={[s.x, s.y, s.z]}
+              material={slatMat}
+              castShadow
+            >
+              <boxGeometry args={[2.1, 0.5, 0.5]} />
+            </mesh>
+          ))}
+        </group>
 
-        {/* F. Bladeless top arch (Torus center Y = 94.9) */}
-        <mesh position={[0, 94.9, 0]} material={matAnthracite} castShadow receiveShadow>
-          <torusGeometry args={[9.0, 2.5, 32, 64, Math.PI]} />
+        {/* G. Front Circular LED Screen */}
+        <mesh position={[0, BASE_H + neckHeight * 0.68, neckR - 0.05]} rotation={[0, 0, 0]} material={matGlossyBlack}>
+          <cylinderGeometry args={[2.9, 2.9, 0.3, 32]} />
         </mesh>
-
-        {/* G. Inner air channel (Glossy black inside loop) */}
-        {/* Left inner column */}
-        <mesh position={[-8.4, 69.45, 0]} material={matGlossyBlack}>
-          <cylinderGeometry args={[2.2, 2.2, 50.9, 32]} />
-        </mesh>
-        {/* Right inner column */}
-        <mesh position={[8.4, 69.45, 0]} material={matGlossyBlack}>
-          <cylinderGeometry args={[2.2, 2.2, 50.9, 32]} />
-        </mesh>
-        {/* Top inner arch */}
-        <mesh position={[0, 94.9, 0]} material={matGlossyBlack}>
-          <torusGeometry args={[8.4, 2.2, 32, 64, Math.PI]} />
-        </mesh>
-
-        {/* H. Heater glow slits */}
-        {/* Left glow slit */}
-        <mesh position={[-8.35, 69.45, 0.05]} material={matHeater}>
-          <cylinderGeometry args={[2.25, 2.25, 50.9, 16]} />
-        </mesh>
-        {/* Right glow slit */}
-        <mesh position={[8.35, 69.45, 0.05]} material={matHeater}>
-          <cylinderGeometry args={[2.25, 2.25, 50.9, 16]} />
-        </mesh>
-        {/* Top glow arch */}
-        <mesh position={[0, 94.9, 0.05]} material={matHeater}>
-          <torusGeometry args={[8.35, 2.25, 16, 32, Math.PI]} />
+        <mesh position={[0, BASE_H + neckHeight * 0.68, neckR + 0.12]} rotation={[Math.PI / 2, 0, 0]} material={matScreen}>
+          <cylinderGeometry args={[2.7, 2.7, 0.05, 32]} />
         </mesh>
 
         {/* ── Auxiliary Lights ── */}
@@ -752,7 +894,7 @@ export function AirPerformer({ onSize }: SceneItemProps) {
           intensity={0}
           distance={30}
           decay={2.0}
-          position={[0, 34.8, 18.0]}
+          position={[0, BASE_H + neckHeight * 0.68, neckR + 2.0]}
         />
         {/* Heater warm pointlight */}
         <pointLight
@@ -761,11 +903,11 @@ export function AirPerformer({ onSize }: SceneItemProps) {
           intensity={0}
           distance={50}
           decay={1.5}
-          position={[0, 69.45, 12.0]}
+          position={[0, loopBottomY + outerH / 2, 8.0]}
         />
       </group>
 
-      {/* ── 3. PARTICLE SYSTEMS (ADDED IN PARENT GROUP AS SELF-CONTAINED LOCAL SIMULATION) ── */}
+      {/* ── 3. PARTICLE SYSTEMS (LOCAL SIMULATION) ── */}
       <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute
@@ -790,3 +932,4 @@ export function AirPerformer({ onSize }: SceneItemProps) {
     </group>
   );
 }
+
