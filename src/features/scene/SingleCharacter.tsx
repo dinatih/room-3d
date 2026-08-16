@@ -45,6 +45,7 @@ export { WALKER_ANIM_OPTIONS };
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
 
+const silentManager = new THREE.LoadingManager();
 const globalGLTFCache: Record<string, Promise<any>> = {};
 
 
@@ -614,7 +615,10 @@ export function SingleCharacter({
   const poseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    document.dispatchEvent(new CustomEvent('walker-ready', { detail: { id } }));
+    const timeout = setTimeout(() => {
+      document.dispatchEvent(new CustomEvent('walker-ready', { detail: { id } }));
+    }, 0);
+    return () => clearTimeout(timeout);
   }, [id]);
 
   useEffect(() => {
@@ -762,7 +766,7 @@ export function SingleCharacter({
           
           if (!globalGLTFCache[path]) {
             globalGLTFCache[path] = new Promise((resolve, reject) => {
-              const loader = new GLTFLoader();
+              const loader = new GLTFLoader(silentManager);
               loader.load(path, resolve, undefined, reject);
             });
           }

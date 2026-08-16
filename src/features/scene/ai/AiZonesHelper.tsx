@@ -35,6 +35,7 @@ export function AiZonesHelper() {
               outlineWidth={0.8}
               outlineColor="#000000"
               material-depthTest={false}
+              renderOrder={9999}
             >
               {`${zone.id}\n(${Math.round(zone.x)}, ${Math.round(zone.z)})`}
             </Text>

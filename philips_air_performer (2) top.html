@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Philips Air Performer — reproduction Three.js</title>
+<style>
+  html, body { margin:0; padding:0; overflow:hidden; background:#101418; height:100%; }
+  canvas { display:block; }
+  #hud {
+    position:fixed; top:14px; left:16px; color:#cfd6dc; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size:13px; letter-spacing:.2px; opacity:.75; pointer-events:none; line-height:1.5;
+  }
+  #hud b { color:#fff; }
+  #dims {
+    position:fixed; bottom:14px; left:16px; color:#8b95a1; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size:12px; opacity:.7; pointer-events:none;
+  }
+</style>
+</head>
+<body>
+<div id="hud"><b>Philips Air Performer AMF870</b><br>Glisser : orbiter · Molette : zoom</div>
+<div id="dims">H 106.4cm · socle Ø32.5cm × 2cm</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+// ---------------------------------------------------------------------
+// Scene / camera / renderer  (1 unit = 1 cm)
+// ---------------------------------------------------------------------
+const scene = new THREE.Scene();
+const bgTop = new THREE.Color(0x1b2128), bgBot = new THREE.Color(0x05070a);
+{
+  const c = document.createElement('canvas'); c.width=8; c.height=256;
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0,0,0,256);
+  g.addColorStop(0, '#232a33'); g.addColorStop(1,'#04060a');
+  ctx.fillStyle=g; ctx.fillRect(0,0,8,256);
+  const tex = new THREE.CanvasTexture(c);
+  scene.background = tex;
+}
+scene.fog = new THREE.Fog(0x0a0d11, 220, 480);
+
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth/window.innerHeight, 0.1, 2000);
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+document.body.appendChild(renderer.domElement);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ---------------------------------------------------------------------
+// Lights
+// ---------------------------------------------------------------------
+scene.add(new THREE.HemisphereLight(0x9fb4c9, 0x11151a, 0.55));
+
+const key = new THREE.DirectionalLight(0xffffff, 1.15);
+key.position.set(90, 160, 110);
+key.castShadow = true;
+key.shadow.mapSize.set(2048,2048);
+key.shadow.camera.near = 10; key.shadow.camera.far = 400;
+key.shadow.camera.left = -90; key.shadow.camera.right = 90;
+key.shadow.camera.top = 90; key.shadow.camera.bottom = -90;
+key.shadow.bias = -0.0015;
+scene.add(key);
+
+const fill = new THREE.DirectionalLight(0x8fb8ff, 0.35);
+fill.position.set(-120, 60, -80);
+scene.add(fill);
+
+const rim = new THREE.PointLight(0xffffff, 0.4, 400);
+rim.position.set(-40, 100, -120);
+scene.add(rim);
+
+// Floor
+const floorMat = new THREE.MeshStandardMaterial({ color:0x0c0f13, roughness:0.9, metalness:0.05 });
+const floor = new THREE.Mesh(new THREE.CircleGeometry(260, 64), floorMat);
+floor.rotation.x = -Math.PI/2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// ---------------------------------------------------------------------
+// Materials
+// ---------------------------------------------------------------------
+const darkBody   = new THREE.MeshStandardMaterial({ color:0x33383e, roughness:0.55, metalness:0.18, side: THREE.DoubleSide });
+const silverRim  = new THREE.MeshStandardMaterial({ color:0xd7dadd, roughness:0.35, metalness:0.35, side: THREE.DoubleSide });
+const baseMat    = new THREE.MeshStandardMaterial({ color:0x2c3136, roughness:0.5, metalness:0.2 });
+const slatMat    = new THREE.MeshStandardMaterial({ color:0x14171a, roughness:0.6, metalness:0.1 });
+
+// ---------------------------------------------------------------------
+// Helper: build a "pill" (stadium) outline on a Shape or Path
+// ---------------------------------------------------------------------
+function pillOutline(target, w, h, offsetX, offsetY){
+  const r = Math.min(w,h)/2;
+  const x = offsetX - w/2, y = offsetY - h/2;
+  target.moveTo(x, y + r);
+  target.lineTo(x, y + h - r);
+  target.absarc(x + r, y + h - r, r, Math.PI, Math.PI/2, true);
+  target.lineTo(x + w - r, y + h);
+  target.absarc(x + w - r, y + h - r, r, Math.PI/2, 0, true);
+  target.lineTo(x + w, y + r);
+  target.absarc(x + w - r, y + r, r, 0, -Math.PI/2, true);
+  target.lineTo(x + r, y);
+  target.absarc(x + r, y + r, r, -Math.PI/2, -Math.PI, true);
+  return target;
+}
+
+function extrudeRing(outerW, outerH, innerW, innerH, innerOffsetY, depth, bevelT, bevelS){
+  const shape = pillOutline(new THREE.Shape(), outerW, outerH, 0, 0);
+  const hole  = pillOutline(new THREE.Path(), innerW, innerH, 0, innerOffsetY);
+  shape.holes.push(hole);
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth, bevelEnabled:true, bevelThickness:bevelT, bevelSize:bevelS,
+    bevelSegments:6, curveSegments:48, steps:1
+  });
+  geo.translate(0,0,-depth/2);
+  return geo;
+}
+
+// ---------------------------------------------------------------------
+// Dimensions (cm) — Philips Air Performer AMF870 proportions
+// ---------------------------------------------------------------------
+const H_TOTAL   = 106.4;
+const BASE_R    = 32.5/2;   // 16.25
+const BASE_H    = 2;
+
+const neckR = 13;           // rayon du cylindre (diamètre 26cm)
+const bevelPad = 0.85;      // extension du bevel du cadre extérieur
+const outerW = 2*(neckR - bevelPad); // pilule légèrement "limée" pour rester dans l'emprise du cylindre
+const bodyDepth = 12.5;     // épaisseur avant-arrière
+const outerH = 79;          // hauteur de la pilule (boucle)
+const loopBottomY = 26.2;   // hauteur (depuis le sol) du bas de la boucle
+const loopTopY = loopBottomY + outerH; // doit être proche de H_TOTAL
+
+const midMargin  = 1.3;     // fin liseré sombre en bordure externe
+const midW = outerW - 2*midMargin;
+const midH = outerH - 2*midMargin;
+
+const topRim = 2.6;         // largeur du bandeau argenté en haut
+const sideBottomRim = 9.4;  // bandeau argenté (bas) qui accueille l'écran
+const innerW = midW - 2*1.9;
+const innerTop = midH/2 - topRim;
+const innerBottom = -midH/2 + sideBottomRim;
+const innerH = innerTop - innerBottom;
+const innerCenterY = (innerTop + innerBottom)/2;
+
+const neckHeight = loopBottomY - BASE_H; // du dessus du socle jusqu'au bas de la boucle
+
+const group = new THREE.Group();
+scene.add(group);
+
+// --- Coque sombre extérieure (fin cadre) ---
+const outerRingGeo = extrudeRing(outerW, outerH, midW, midH, 0, bodyDepth, 1.05, bevelPad);
+const outerRingMesh = new THREE.Mesh(outerRingGeo, darkBody);
+outerRingMesh.position.y = loopBottomY + outerH/2;
+outerRingMesh.castShadow = true; outerRingMesh.receiveShadow = true;
+group.add(outerRingMesh);
+
+// --- Bandeau argenté (large, autour de l'ouverture) ---
+const silverGeo = extrudeRing(midW, midH, innerW, innerH, innerCenterY, bodyDepth*0.92, 0.7, 0.55);
+const silverMesh = new THREE.Mesh(silverGeo, silverRim);
+silverMesh.position.y = loopBottomY + outerH/2;
+silverMesh.position.z = -0.5;
+silverMesh.castShadow = true; silverMesh.receiveShadow = true;
+group.add(silverMesh);
+
+// --- Grilles latérales (petites lamelles verticales le long de l'ouverture) ---
+{
+  const half = innerW/2 + 0.35;
+  const straightHalf = innerH/2 - innerW/2; // partie rectiligne (hors demi-cercles)
+  const yTop = innerCenterY + straightHalf - 2;
+  const yBot = innerCenterY - straightHalf + 2;
+  const count = 15;
+  const slatGeo = new THREE.BoxGeometry(2.1, 0.5, 0.5);
+  for (let side=-1; side<=1; side+=2){
+    for (let i=0;i<count;i++){
+      const t = i/(count-1);
+      const y = THREE.MathUtils.lerp(yBot, yTop, t);
+      const m = new THREE.Mesh(slatGeo, slatMat);
+      m.position.set(side*half, y, bodyDepth*0.46 - 0.4);
+      m.castShadow = true;
+      group.add(m);
+    }
+  }
+}
+
+function makeCanvasTexture(draw, w=512, h=192){
+  const c = document.createElement('canvas'); c.width=w; c.height=h;
+  const ctx = c.getContext('2d');
+  draw(ctx, w, h);
+  const tex = new THREE.CanvasTexture(c);
+  tex.encoding = THREE.sRGBEncoding;
+  return tex;
+}
+
+// ---------------------------------------------------------------------
+// Col : simple cylindre droit, même diamètre que la pilule (26cm),
+// posé sur le socle (le socle reste plus large, pour la stabilité)
+// ---------------------------------------------------------------------
+const neckGeo = new THREE.CylinderGeometry(neckR, neckR, neckHeight, 72, 1, false);
+const neckMesh = new THREE.Mesh(neckGeo, darkBody);
+neckMesh.position.y = BASE_H + neckHeight/2;
+neckMesh.castShadow = true; neckMesh.receiveShadow = true;
+group.add(neckMesh);
+
+// --- Grille en demi-cercle sur le cylindre (petites lamelles courbes) ---
+{
+  const arcSlats = 22;                 // nombre de lamelles sur le demi-cercle
+  const arcSpan = Math.PI * 0.92;      // un peu moins de 180°, centré face avant
+  const bandY = BASE_H + neckHeight*0.52;   // hauteur de la bande de grille
+  const bandH = neckHeight*0.42;            // hauteur occupée par les lamelles
+  const rows = 3;
+  const slatGeo = new THREE.BoxGeometry(0.55, bandH/rows*0.55, 0.5);
+  for (let r=0; r<rows; r++){
+    const y = bandY - bandH/2 + (r+0.5)*(bandH/rows);
+    for (let i=0;i<arcSlats;i++){
+      const t = arcSlats===1 ? 0.5 : i/(arcSlats-1);
+      const theta = Math.PI + (-arcSpan/2 + t*arcSpan); // centré face arrière (-Z)
+      const x = neckR * Math.sin(theta);
+      const z = neckR * Math.cos(theta);
+      const m = new THREE.Mesh(slatGeo, slatMat);
+      m.position.set(x, y, z + 0.18*Math.cos(theta));
+      m.rotation.y = theta;
+      m.castShadow = true;
+      group.add(m);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Raccord conique : ajouté par-dessus le cylindre, du cercle (haut du
+// cylindre) vers la bande fine en Z (épaisseur de la pilule)
+// ---------------------------------------------------------------------
+function buildShoulder(bottomR, topRX, topRZ, yBottom, yTop, radialSeg, heightSeg){
+  const positions = [], uvs = [], indices = [];
+  for (let i=0;i<=heightSeg;i++){
+    const t = i/heightSeg;
+    const te = t*t*(3-2*t); // easing doux
+    const y = THREE.MathUtils.lerp(yBottom, yTop, t);
+    const rx = THREE.MathUtils.lerp(bottomR, topRX, te);
+    const rz = THREE.MathUtils.lerp(bottomR, topRZ, te);
+    for (let j=0;j<=radialSeg;j++){
+      const a = (j/radialSeg) * Math.PI*2;
+      positions.push(Math.sin(a)*rx, y, Math.cos(a)*rz);
+      uvs.push(j/radialSeg, t);
+    }
+  }
+  for (let i=0;i<heightSeg;i++){
+    for (let j=0;j<radialSeg;j++){
+      const a = i*(radialSeg+1)+j;
+      const b = a + radialSeg + 1;
+      indices.push(a,b,a+1,  b,b+1,a+1);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs,2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
+}
+
+const shoulderH = 6;                        // hauteur du raccord conique
+const shoulderTopRX = outerW/2 + bevelPad;   // = neckR (largeur de la pilule)
+const shoulderTopRZ = bodyDepth/2 + 0.5;     // épaisseur (Z) de la pilule
+const shoulderGeo = buildShoulder(
+  neckR, shoulderTopRX, shoulderTopRZ,
+  BASE_H + neckHeight, BASE_H + neckHeight + shoulderH,
+  72, 16
+);
+const shoulderMesh = new THREE.Mesh(shoulderGeo, darkBody);
+shoulderMesh.castShadow = true; shoulderMesh.receiveShadow = true;
+group.add(shoulderMesh);
+
+// ---------------------------------------------------------------------
+// Plateau (socle) rond
+// ---------------------------------------------------------------------
+const baseGeo = new THREE.CylinderGeometry(BASE_R, BASE_R, BASE_H, 96);
+const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+baseMesh.position.y = BASE_H/2;
+baseMesh.castShadow = true; baseMesh.receiveShadow = true;
+group.add(baseMesh);
+
+// petit chanfrein supérieur du plateau (liseré)
+const rimGeo = new THREE.TorusGeometry(BASE_R-0.4, 0.35, 12, 96);
+const rimMesh = new THREE.Mesh(rimGeo, silverRim);
+rimMesh.rotation.x = Math.PI/2;
+rimMesh.position.y = BASE_H + 0.05;
+group.add(rimMesh);
+
+// ---------------------------------------------------------------------
+// Camera & controls (orbit maison : drag + molette)
+// ---------------------------------------------------------------------
+const target = new THREE.Vector3(0, H_TOTAL*0.42, 0);
+let radius = 190, azimuth = 0.55, polar = 1.32;
+const minPolar = 0.35, maxPolar = 1.55, minR = 60, maxR = 420;
+
+function updateCamera(){
+  const sp = Math.sin(polar), cp = Math.cos(polar);
+  camera.position.set(
+    target.x + radius*sp*Math.sin(azimuth),
+    target.y + radius*cp,
+    target.z + radius*sp*Math.cos(azimuth)
+  );
+  camera.lookAt(target);
+}
+updateCamera();
+
+let dragging = false, lastX=0, lastY=0;
+renderer.domElement.addEventListener('pointerdown', e=>{
+  dragging = true; lastX = e.clientX; lastY = e.clientY;
+  renderer.domElement.setPointerCapture(e.pointerId);
+});
+renderer.domElement.addEventListener('pointerup', ()=> dragging=false);
+renderer.domElement.addEventListener('pointerleave', ()=> dragging=false);
+renderer.domElement.addEventListener('pointermove', e=>{
+  if(!dragging) return;
+  const dx = e.clientX-lastX, dy = e.clientY-lastY;
+  lastX=e.clientX; lastY=e.clientY;
+  azimuth -= dx*0.006;
+  polar = THREE.MathUtils.clamp(polar - dy*0.006, minPolar, maxPolar);
+  updateCamera();
+});
+renderer.domElement.addEventListener('wheel', e=>{
+  e.preventDefault();
+  radius = THREE.MathUtils.clamp(radius + e.deltaY*0.15, minR, maxR);
+  updateCamera();
+}, { passive:false });
+
+// rotation lente automatique tant que l'utilisateur n'interagit pas
+let idleTimer = 0, autoRotate = true;
+renderer.domElement.addEventListener('pointerdown', ()=>{ autoRotate=false; idleTimer=0; });
+
+function animate(){
+  requestAnimationFrame(animate);
+  if (autoRotate && !dragging){
+    azimuth += 0.0018;
+    updateCamera();
+  } else if (!dragging){
+    idleTimer++;
+    if (idleTimer > 240){ autoRotate = true; }
+  }
+  renderer.render(scene, camera);
+}
+animate();
+
+})();
+</script>
+</body>
+</html>

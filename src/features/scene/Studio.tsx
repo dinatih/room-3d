@@ -132,9 +132,7 @@ function ShadowController({ enabled }: { enabled: boolean }) {
 function LoadingProgress({ onComplete }: { onComplete?: () => void }) {
   const { progress, active, item } = useProgress();
   const doneRef = useRef(false);
-  const maxProgressRef = useRef(0);
   const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pendingIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const bar = document.getElementById('loading-bar');
@@ -146,55 +144,41 @@ function LoadingProgress({ onComplete }: { onComplete?: () => void }) {
     const btnPause = document.getElementById('btn-pause-launch');
     const btnStart = document.getElementById('btn-start-now');
 
-    if (progress > maxProgressRef.current) {
-      maxProgressRef.current = progress;
-    }
-
-    if (bar) bar.style.width = `${maxProgressRef.current}%`;
+    if (bar) bar.style.width = `${progress}%`;
     if (itemEl && item) itemEl.textContent = item;
 
-    // Si on est à 100%, on attend un peu pour s'assurer qu'aucun autre chargement ne démarre
     if (!active && progress >= 100 && !doneRef.current) {
-      if (!pendingIdleTimerRef.current) {
-        pendingIdleTimerRef.current = setTimeout(() => {
-          doneRef.current = true;
+      doneRef.current = true;
 
-          if (countdownContainer) countdownContainer.style.display = 'flex';
-          let remainingSeconds = 5;
+      if (countdownContainer) countdownContainer.style.display = 'flex';
+      let remainingSeconds = 5;
 
-          const launchApp = () => {
-            if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-            if (cover) {
-              cover.classList.add('hidden');
-              setTimeout(() => cover.remove(), 450);
-            }
-            if (onComplete) onComplete();
-          };
+      const launchApp = () => {
+        if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+        if (cover) {
+          cover.classList.add('hidden');
+          setTimeout(() => cover.remove(), 450);
+        }
+        if (onComplete) onComplete();
+      };
 
-          if (btnStart) btnStart.onclick = launchApp;
+      if (btnStart) btnStart.onclick = launchApp;
 
-          if (btnPause) {
-            btnPause.onclick = () => {
-              if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-              if (textEl) textEl.textContent = '⏸ Lancement automatique suspendu. Prenez le temps de lire !';
-              btnPause.style.display = 'none';
-            };
-          }
-
-          countdownTimerRef.current = setInterval(() => {
-            remainingSeconds--;
-            if (timerEl) timerEl.textContent = remainingSeconds.toString();
-            if (remainingSeconds <= 0) {
-              launchApp();
-            }
-          }, 1000);
-        }, 500); // 500ms de marge pour les chargements successifs
+      if (btnPause) {
+        btnPause.onclick = () => {
+          if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+          if (textEl) textEl.textContent = '⏸ Lancement automatique suspendu. Prenez le temps de lire !';
+          btnPause.style.display = 'none';
+        };
       }
-    } else {
-      if (active && pendingIdleTimerRef.current) {
-        clearTimeout(pendingIdleTimerRef.current);
-        pendingIdleTimerRef.current = null;
-      }
+
+      countdownTimerRef.current = setInterval(() => {
+        remainingSeconds--;
+        if (timerEl) timerEl.textContent = remainingSeconds.toString();
+        if (remainingSeconds <= 0) {
+          launchApp();
+        }
+      }, 1000);
     }
   }, [progress, active, item]);
 
