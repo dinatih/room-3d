@@ -349,7 +349,7 @@ export function SingleCharacter({
         }));
       }
     },
-    isDelphinaNpc ? ((characterIndex ?? 0) + 1) * 3.0 : 0
+    isNPC ? (id === 'sandra' || id === 'rajaa' ? 9 * 3.0 : ((characterIndex ?? 0) + 1) * 3.0) : 0
   );
 
   useEffect(() => {
