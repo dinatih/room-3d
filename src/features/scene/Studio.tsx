@@ -129,7 +129,7 @@ function ShadowController({ enabled }: { enabled: boolean }) {
   return null;
 }
 
-function LoadingProgress() {
+function LoadingProgress({ onComplete }: { onComplete?: () => void }) {
   const { progress, active, item } = useProgress();
   const doneRef = useRef(false);
   const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -159,6 +159,7 @@ function LoadingProgress() {
           cover.classList.add('hidden');
           setTimeout(() => cover.remove(), 450);
         }
+        if (onComplete) onComplete();
       };
 
       if (btnStart) btnStart.onclick = launchApp;
@@ -193,6 +194,7 @@ export function Studio() {
   const [showInventory, setShowInventory] = useState(false);
 
   useEffect(() => {
+    (window as any).isAnimProRunning = false;
     // Analytics tracking (disabled in dev to prevent 404s)
     /*
     fetch('/api/visits', {
@@ -258,7 +260,7 @@ export function Studio() {
     return () => window.removeEventListener('keydown', onKey);
   }, [onToggleLayer]);
 
-  const [buildAnim,       setBuildAnim]       = useState(true);
+  const [buildAnim,       setBuildAnim]       = useState(false);
   const [buildAnimMatrix, setBuildAnimMatrix] = useState(false);
   const [animDurations, setAnimDurations] = useState<Record<string, number>>({});
 
@@ -276,7 +278,7 @@ export function Studio() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <LoadingProgress />
+      <LoadingProgress onComplete={() => setBuildAnim(true)} />
       <Canvas
         style={{ width: '100%', height: '100%' }}
         frameloop={showInventory ? 'never' : 'demand'}
