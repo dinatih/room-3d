@@ -512,7 +512,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
       const times = Array.from(timesSet).sort((a, b) => a - b);
       const values = new Float32Array(times.length * 4);
 
-      const qRootRestInv = new THREE.Quaternion(-0.7071067690849304, 0, 0, 0.7071067690849304).invert();
+
       for (let i = 0; i < times.length; i++) {
         const t = times[i];
         const qRoot = evaluateQuaternionTrack(rootRotTrack, t);
@@ -598,7 +598,7 @@ function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object
         };
 
         const pRootRest = evaluateVectorTrack(rootPosTrack, posTimes[0]);
-        const qRootRestInv = new THREE.Quaternion(-0.7071067690849304, 0, 0, 0.7071067690849304).invert();
+
 
         for (let i = 0; i < posTimes.length; i++) {
           const t = posTimes[i];
@@ -1501,6 +1501,10 @@ function SingleCharacter({
   }, [scene, characterShadows, showWallhack, invalidate]);
 
   const poseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    document.dispatchEvent(new CustomEvent('walker-ready', { detail: { id } }));
+  }, [id]);
 
   useEffect(() => {
     const handleToggleHairColor = (e: any) => {

@@ -21,7 +21,7 @@ const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
 import { useSceneStore } from './store/useSceneStore';
 import { CHARACTERS } from './Walker';
-import { INVENTORY_ITEMS, WIGS_ITEMS } from '../inventory/inventoryData';
+import { WIGS_ITEMS } from '../inventory/inventoryData';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 
 import {
@@ -1283,12 +1283,27 @@ export function SidePanel({
       const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
       const trigger = () => playCoupleAnim(`media/sandbox/anims/${prefix}${anim.s}.glb`, `media/sandbox/anims/${prefix}${anim.r}.glb`, anim.dist ?? 50, (anim as any).rotS, (anim as any).rotR, (anim as any).sPos);
       
-      if (autoCycleIndex === 0) {
-        setTimeout(trigger, 1000);
-      } else {
+      if (autoCycleIndex !== 0) {
         trigger();
+      } else {
+        const fallbackTimer = setTimeout(trigger, 2500);
+        return () => clearTimeout(fallbackTimer);
       }
     }
+  }, [autoCycleIndex]);
+
+  useEffect(() => {
+    const onReady = (e: any) => {
+      if (e.detail?.id === 'sandra' && autoCycleIndex === 0) {
+        const anim = coupleAnims[0];
+        if (anim) {
+          const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
+          playCoupleAnim(`media/sandbox/anims/${prefix}${anim.s}.glb`, `media/sandbox/anims/${prefix}${anim.r}.glb`, anim.dist ?? 50, (anim as any).rotS, (anim as any).rotR, (anim as any).sPos);
+        }
+      }
+    };
+    document.addEventListener('walker-ready', onReady);
+    return () => document.removeEventListener('walker-ready', onReady);
   }, [autoCycleIndex]);
 
   useEffect(() => {
