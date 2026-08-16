@@ -1318,7 +1318,8 @@ export function SidePanel({
   }, []);
 
   const playCoupleAnim = (sandraPath: string, rajaaPath: string, dist: number = 50, rotS?: number, rotR?: number, sPos?: [number, number, number]) => {
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-loop', value: '1x' } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-loop', value: '1x', targetId: 'sandra' } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-loop', value: '1x', targetId: 'rajaa' } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-sandra', value: sandraPath } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-rajaa', value: rajaaPath } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-sandra', value: sPos || [-450 + dist, 0, 0] } }));

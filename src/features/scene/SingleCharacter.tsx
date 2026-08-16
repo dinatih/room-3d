@@ -648,7 +648,9 @@ export function SingleCharacter({
 
     const onToggle = (e: any) => {
       if (e.detail?.key === 'walker-anim-loop') {
-        animLoopModeRef.current = e.detail.value || 'infinite';
+        if (!e.detail?.targetId || e.detail.targetId === id || (isActive && !e.detail.targetId)) {
+          animLoopModeRef.current = e.detail.value || 'infinite';
+        }
         return;
       }
       if (e.detail?.key === 'lara-expression' && isActive) {
@@ -947,6 +949,8 @@ export function SingleCharacter({
           let action = actionsRef.current[customIdleAnimPath];
           if (!action) {
             action = mixer.clipAction(finalClip);
+            action.setLoop(THREE.LoopRepeat, Infinity);
+            action.clampWhenFinished = false;
             action.enabled = true;
             action.play();
             action.setEffectiveWeight(0);
@@ -1153,6 +1157,13 @@ export function SingleCharacter({
     if (to && activeActionName.current !== target) {
         const from = activeActionName.current ? actions[activeActionName.current] : null;
         if (from) from.fadeOut(0.2);
+        
+        const isContinuous = target === 'idle' || target === 'walk' || target === 'run' || (isNPC && target === customIdleAnimPath);
+        if (isContinuous) {
+          to.setLoop(THREE.LoopRepeat, Infinity);
+          to.clampWhenFinished = false;
+        }
+
         to.reset().fadeIn(0.2).play();
         to.setEffectiveWeight(1);
         activeActionName.current = target;
