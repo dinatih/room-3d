@@ -100,6 +100,21 @@ function useHingeGeo() {
   }, []);
 }
 
+const pvcMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.15, metalness: 0.05 });
+const glassMaterial = new THREE.MeshPhysicalMaterial({
+  color: '#b2e0ff',
+  transparent: true,
+  opacity: 0.28,
+  roughness: 0.03,
+  metalness: 0.08,
+  envMapIntensity: 1.2,
+  side: THREE.DoubleSide,
+  depthWrite: false,
+});
+const metalMaterial = new THREE.MeshStandardMaterial({ color: '#cccccc', metalness: 0.8, roughness: 0.2 });
+const darkMetalMaterial = new THREE.MeshStandardMaterial({ color: '#555555', metalness: 0.7, roughness: 0.3 });
+const shutterMaterial = new THREE.MeshStandardMaterial({ color: '#dcdcdc', roughness: 0.4, metalness: 0.1 });
+
 export function GlassDoor({ actionState, onSize }: SceneItemProps) {
   const { invalidate } = useThree();
   const rightDoorRef = useRef<THREE.Group>(null!);
@@ -173,15 +188,6 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
     instancedShutterRef.current.instanceMatrix.needsUpdate = true;
   }, []);
 
-  const pvcMat = <meshStandardMaterial color="#ffffff" roughness={0.15} metalness={0.05} />;
-  const glass = (
-    <meshPhysicalMaterial
-      color="#b2e0ff" transparent opacity={0.15} roughness={0.01} metalness={0.1}
-      transmission={0.9} thickness={1.2} side={THREE.DoubleSide} depthWrite={false}
-    />
-  );
-  const metalMat = <meshStandardMaterial color="#cccccc" metalness={0.8} roughness={0.2} />;
-
   const W_INNER = W_TOTAL - FRAME * 2;
   const PANEL_W = W_INNER / 2;
   const gw = PANEL_W - PANEL_FRAME_W * 2;
@@ -189,43 +195,40 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
   return (
     <group position={[0, -GLASS_TOP / 2, 0]}>
-      <mesh geometry={staticFrames.pvc} castShadow receiveShadow>{pvcMat}</mesh>
-      <mesh geometry={staticFrames.darkMetal} castShadow receiveShadow>
-        <meshStandardMaterial color="#555555" metalness={0.7} roughness={0.3} />
-      </mesh>
+      <mesh geometry={staticFrames.pvc} material={pvcMaterial} castShadow receiveShadow />
+      <mesh geometry={staticFrames.darkMetal} material={darkMetalMaterial} castShadow receiveShadow />
 
       {/* Battant Gauche */}
       <group ref={leftDoorRef} position={[-W_INNER / 2, 0, 0]}>
         <group position={[PANEL_W / 2, 0, 0]}>
-          <mesh position={[0, 30 + 190 / 2, 0]} geometry={panelFrameGeo} castShadow>{pvcMat}</mesh>
-          <mesh position={[0, 30 + 190 / 2, 0]}><boxGeometry args={[gw, gh, 0.8]} />{glass}</mesh>
-          <mesh position={[PANEL_W / 2 + 0.5, 30 + 190 / 2, 0.5]} castShadow>
-            <boxGeometry args={[2.5, 190, FRAME_D_V2 + 0.4]} />{pvcMat}
+          <mesh position={[0, 30 + 190 / 2, 0]} geometry={panelFrameGeo} material={pvcMaterial} castShadow />
+          <mesh position={[0, 30 + 190 / 2, 0]} material={glassMaterial}><boxGeometry args={[gw, gh, 0.8]} /></mesh>
+          <mesh position={[PANEL_W / 2 + 0.5, 30 + 190 / 2, 0.5]} material={pvcMaterial} castShadow>
+            <boxGeometry args={[2.5, 190, FRAME_D_V2 + 0.4]} />
           </mesh>
         </group>
-        <mesh position={[0, 0, 0]} geometry={hingeGeo}>{metalMat}</mesh>
+        <mesh position={[0, 0, 0]} geometry={hingeGeo} material={metalMaterial} />
       </group>
 
       {/* Battant Droit */}
       <group ref={rightDoorRef} position={[W_INNER / 2, 0, 0]}>
         <group position={[-PANEL_W / 2, 0, 0]}>
-          <mesh position={[0, 30 + 190 / 2, 0]} geometry={panelFrameGeo} castShadow>{pvcMat}</mesh>
-          <mesh position={[0, 30 + 190 / 2, 0]}><boxGeometry args={[gw, gh, 0.8]} />{glass}</mesh>
+          <mesh position={[0, 30 + 190 / 2, 0]} geometry={panelFrameGeo} material={pvcMaterial} castShadow />
+          <mesh position={[0, 30 + 190 / 2, 0]} material={glassMaterial}><boxGeometry args={[gw, gh, 0.8]} /></mesh>
           
           <group position={[-PANEL_W / 2 + 6, 125, FRAME_D_V2 / 2 + 0.1]}>
-            <mesh position={[0, 0, 0.1]}><boxGeometry args={[2.5, 4.5, 0.2]} />{metalMat}</mesh>
-            <mesh position={[0, 0, 0.4]} rotation-x={Math.PI / 2}><cylinderGeometry args={[0.4, 0.4, 0.6, 8]} />{metalMat}</mesh>
+            <mesh position={[0, 0, 0.1]} material={metalMaterial}><boxGeometry args={[2.5, 4.5, 0.2]} /></mesh>
+            <mesh position={[0, 0, 0.4]} rotation-x={Math.PI / 2} material={metalMaterial}><cylinderGeometry args={[0.4, 0.4, 0.6, 8]} /></mesh>
             <group ref={handleRef} position={[0, 0, 0.7]}>
-              <mesh position={[4.5, 0, 0.1]}><boxGeometry args={[9, 0.9, 0.5]} />{metalMat}</mesh>
+              <mesh position={[4.5, 0, 0.1]} material={metalMaterial}><boxGeometry args={[9, 0.9, 0.5]} /></mesh>
             </group>
           </group>
         </group>
-        <mesh position={[0, 0, 0]} geometry={hingeGeo}>{metalMat}</mesh>
+        <mesh position={[0, 0, 0]} geometry={hingeGeo} material={metalMaterial} />
       </group>
 
-      <instancedMesh ref={instancedShutterRef} args={[null as any, null as any, 50]}>
+      <instancedMesh ref={instancedShutterRef} args={[null as any, null as any, 50]} material={shutterMaterial}>
         <boxGeometry args={[W_INNER + 2, 3.8, 1.2]} />
-        <meshStandardMaterial color="#dcdcdc" roughness={0.4} metalness={0.1} />
       </instancedMesh>
     </group>
   );

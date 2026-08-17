@@ -136,6 +136,10 @@ interface DoorImplProps {
   wallThickness?: number;
 }
 
+const frameMaterial = new THREE.MeshStandardMaterial({ color: '#f0ede8', roughness: 0.35 });
+const doorPanelMaterial = new THREE.MeshStandardMaterial({ color: '#f5f5f5', roughness: 0.4 });
+const doorHandleMaterial = new THREE.MeshStandardMaterial({ color: '#999999', metalness: 0.85, roughness: 0.15 });
+
 function DoorImpl({
   actionKey,
   pivotX,
@@ -148,15 +152,14 @@ function DoorImpl({
   wallThickness = WALL_THICKNESS
 }: DoorImplProps) {
   const doorRef = useRef<THREE.Group>(null!);
-  const isOpen = !!actionState[actionKey];
+  const isOpen = actionState[actionKey] ?? false;
   const { invalidate } = useThree();
 
   const frameGeo  = useDoorFrameGeo(wallThickness);
   const handleGeo = useHandleGeo(mancheDir);
 
   useLayoutEffect(() => {
-    // Dimension totale pour l'inventaire/minimap (Largeur 89 cm, Hauteur 205 cm)
-    onSize(new THREE.Vector3(W + 6, H + 1, wallThickness + 2));
+    onSize(new THREE.Vector3(W, H, wallThickness + 2));
   }, [wallThickness]);
 
   useFrame(() => {
@@ -170,28 +173,19 @@ function DoorImpl({
     }
   });
 
-  const dormMat = <meshStandardMaterial color="#f0ede8" roughness={0.35} />;
-
   return (
     <group position={[0, -H / 2, 0]}>
-
-      <mesh geometry={frameGeo} castShadow receiveShadow>
-        {dormMat}
-      </mesh>
+      <mesh geometry={frameGeo} material={frameMaterial} castShadow receiveShadow />
 
       <group ref={doorRef} position={[pivotX, 0, 0]}>
         {/* Panneau mobile */}
-        <mesh position={[panelX, H / 2, 0]} castShadow receiveShadow>
+        <mesh position={[panelX, H / 2, 0]} material={doorPanelMaterial} castShadow receiveShadow>
           <boxGeometry args={[W, H, T]} />
-          <meshStandardMaterial color="#f5f5f5" roughness={0.4} />
         </mesh>
         
         {/* Poignées */}
-        <mesh position={[handleX, 100, 0]} geometry={handleGeo}>
-          <meshStandardMaterial color="#999999" metalness={0.85} roughness={0.15} />
-        </mesh>
+        <mesh position={[handleX, 100, 0]} geometry={handleGeo} material={doorHandleMaterial} />
       </group>
-
     </group>
   );
 }

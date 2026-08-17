@@ -71,6 +71,12 @@ function useHandleGeo() {
   }, []);
 }
 
+const redFrameMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', roughness: 0.5 });
+const whiteFrameMaterial = new THREE.MeshStandardMaterial({ color: '#f5f5f0', roughness: 0.3 });
+const redPanelMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', roughness: 0.5, metalness: 0.1 });
+const metalHandleMaterial = new THREE.MeshStandardMaterial({ color: '#999999', metalness: 0.85, roughness: 0.15 });
+const knobMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', metalness: 0.3, roughness: 0.4 });
+
 export function DoorEntry({ actionState, onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
   const isOpen  = actionState['entry-door-toggle'] ?? false;
@@ -94,36 +100,25 @@ export function DoorEntry({ actionState, onSize }: SceneItemProps) {
     }
   });
 
-  const redMat = <meshStandardMaterial color="#cc0000" roughness={0.5} />;
-  const whtMat = <meshStandardMaterial color="#f5f5f0" roughness={0.3} />;
-
   return (
     <group position={[0, -H / 2, 0]}>
-
-      <mesh geometry={frames.red} castShadow>{redMat}</mesh>
-      <mesh geometry={frames.wht} castShadow>{whtMat}</mesh>
+      <mesh geometry={frames.red} material={redFrameMaterial} castShadow />
+      <mesh geometry={frames.wht} material={whiteFrameMaterial} castShadow />
 
       <group ref={doorRef} position={[-W / 2, 0, 0]}>
-
         {/* Panneau rouge */}
-        <mesh position={[W / 2, H / 2, 0]} castShadow receiveShadow>
+        <mesh position={[W / 2, H / 2, 0]} material={redPanelMaterial} castShadow receiveShadow>
           <boxGeometry args={[W, H, T]} />
-          <meshStandardMaterial color="#cc0000" roughness={0.5} metalness={0.1} />
         </mesh>
 
         {/* Poignée intérieure */}
-        <mesh position={[70, 100, 0]} geometry={handle}>
-          <meshStandardMaterial color="#999999" metalness={0.85} roughness={0.15} />
-        </mesh>
+        <mesh position={[70, 100, 0]} geometry={handle} material={metalHandleMaterial} />
 
         {/* Knob rouge extérieur (face -Z) */}
-        <mesh position={[W / 2, H / 2, -T / 2 - 5]}>
+        <mesh position={[W / 2, H / 2, -T / 2 - 5]} material={knobMaterial}>
           <sphereGeometry args={[5, 16, 12]} />
-          <meshStandardMaterial color="#cc0000" metalness={0.3} roughness={0.4} />
         </mesh>
-
       </group>
-
     </group>
   );
 }
