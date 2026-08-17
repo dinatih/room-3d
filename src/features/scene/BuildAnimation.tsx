@@ -171,6 +171,7 @@ function collectScene(scene: THREE.Scene) {
 interface AnimObj {
   obj: THREE.Object3D;
   origLocalY: number;
+  origVisible: boolean;
   worldToLocalY: number;
   startTime: number;
   duration: number;
@@ -208,6 +209,7 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
         groupedObjects.push({
           obj,
           origLocalY: obj.position.y,
+          origVisible: obj.visible,
           worldToLocalY: getWorldToLocalYFactor(obj),
           startTime: cursor,
           duration: FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN),
@@ -215,7 +217,6 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
         cursor += STAGGER_MS;
       });
     };
-
 
     const sortByYZX = (arr: THREE.Object3D[]) => {
       return [...arr].sort((a, b) => {
@@ -254,10 +255,11 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
     
     onDuration?.(totalEnd);
 
-    // 3. Décaler tout vers le HAUT
+    // 3. Décaler tout vers le HAUT et cacher les objets en attente pour préserver le GPU
     objects.forEach(a => {
       const localDelta = DROP_HEIGHT * a.worldToLocalY;
       a.obj.position.y = a.origLocalY + localDelta;
+      a.obj.visible = false;
     });
 
     stateRef.current = {
@@ -273,7 +275,10 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
     return () => {
       (window as any).isAnimProRunning = false;
       if (stateRef.current) {
-        stateRef.current.objects.forEach(a => { a.obj.position.y = a.origLocalY; });
+        stateRef.current.objects.forEach(a => {
+          a.obj.position.y = a.origLocalY;
+          a.obj.visible = a.origVisible;
+        });
         stateRef.current.remerge();
       }
     };
@@ -289,9 +294,13 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
 
     st.objects.forEach(a => {
       const raw = (elapsed - a.startTime) / a.duration;
-      if (raw <= 0) return;
-      const t = Math.min(raw, 1);
+      if (raw <= 0) {
+        if (a.obj.visible) a.obj.visible = false;
+        return;
+      }
+      if (!a.obj.visible) a.obj.visible = a.origVisible;
       
+      const t = Math.min(raw, 1);
       const localDelta = DROP_HEIGHT * a.worldToLocalY * (1 - easeOutCubic(t));
       a.obj.position.y = a.origLocalY + localDelta;
     });
@@ -301,7 +310,10 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
     if (elapsed >= st.totalEnd) {
       st.finished = true;
       (window as any).isAnimProRunning = false;
-      st.objects.forEach(a => { a.obj.position.y = a.origLocalY; });
+      st.objects.forEach(a => {
+        a.obj.position.y = a.origLocalY;
+        a.obj.visible = a.origVisible;
+      });
       st.remerge();
       invalidate();
       onFinish();
