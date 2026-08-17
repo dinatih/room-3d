@@ -267,7 +267,7 @@ export function SingleCharacter({
   }, [activeActionKey]);
 
   const delphinaScenario = useMemo(() => {
-    if (id !== 'delphina' && id !== 'vivida' && id !== 'angelina' && id !== 'cha' && id !== 'sabira' && id !== 'lgbta' && id !== 'marissa') return null;
+    if (id !== 'delphina' && id !== 'vivida' && id !== 'angelina' && id !== 'cha' && id !== 'sabira' && id !== 'lgbta' && id !== 'marissa' && id !== 'rosanna') return null;
     const actions = [
       ACTION_SIT_DESK_1, ACTION_SIT_OFFICE_CHAIR, ACTION_SIT_DESK_2, ...ACTIONS_BED_WEST, ...ACTIONS_BED_EAST,
       ...ACTIONS_BATHTUB, ACTION_SHOWER, ...ACTIONS_GARDEN_SOFA_EAST, ...ACTIONS_GARDEN_SOFA_WEST,
@@ -318,7 +318,7 @@ export function SingleCharacter({
   }, [id]);
 
   const isGuidedTour = activeActionKey && id === activeWalkerId;
-  const isDelphinaNpc = (id === 'delphina' || id === 'vivida' || id === 'angelina' || id === 'cha' || id === 'sabira' || id === 'lgbta' || id === 'marissa') && id !== activeWalkerId;
+  const isDelphinaNpc = (id === 'delphina' || id === 'vivida' || id === 'angelina' || id === 'cha' || id === 'sabira' || id === 'lgbta' || id === 'marissa' || id === 'rosanna') && id !== activeWalkerId;
 
   const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : EMPTY_SCENARIO);
   const loopScenario = isDelphinaNpc;
