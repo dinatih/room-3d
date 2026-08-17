@@ -46,6 +46,25 @@ export { WALKER_ANIM_OPTIONS };
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
 
+// Static temp vectors for zero-allocation per-frame physics & transforms
+const _tmpV1 = new THREE.Vector3();
+const _tmpV2 = new THREE.Vector3();
+const _tmpV3 = new THREE.Vector3();
+const _tmpV4 = new THREE.Vector3();
+const _tmpV5 = new THREE.Vector3();
+const _tmpV6 = new THREE.Vector3();
+const _tmpV7 = new THREE.Vector3();
+const _tmpQ1 = new THREE.Quaternion();
+const _tmpQ2 = new THREE.Quaternion();
+const _tmpQ3 = new THREE.Quaternion();
+const _tmpG  = new THREE.Vector3(0, -981, 0);
+const _downWorld = new THREE.Vector3(0, -1, 0);
+const _upDir = new THREE.Vector3(0, 1, 0);
+const _rightDir = new THREE.Vector3(1, 0, 0);
+const _backDir = new THREE.Vector3(0, 0, -1);
+const _eulerBreast = new THREE.Euler(0, 0, 0, 'ZXY');
+const _animBreastQ = new THREE.Quaternion();
+
 const silentManager = new THREE.LoadingManager();
 const globalGLTFCache: Record<string, Promise<any>> = {};
 
@@ -166,6 +185,7 @@ export function SingleCharacter({
   const [expression, setExpression] = useState<'neutral' | 'smile' | 'wink'>('neutral');
   const expressionRef = useRef<'neutral' | 'smile' | 'wink'>('neutral');
   expressionRef.current = expression;
+  const prevExprRef = useRef<string>('neutral');
 
   const [equipment, setEquipment] = useState<{ holster: boolean; pistols: boolean; backpack: boolean }>({
     holster: true,
@@ -1126,19 +1146,23 @@ export function SingleCharacter({
 
         // Reset / Application des expressions faciales dynamiques
         const currentExpr = expressionRef.current as string;
-        if (currentExpr === 'neutral') {
-          // Remise à zéro explicite de tous les os du visage
-          scene.traverse(c => {
-            if ((c as any).isBone && c.name.startsWith('head_') && !c.name.includes('ponytail') && !c.name.includes('neck')) {
-              if ((c as any).userData.restPos) {
-                (c as any).position.copy((c as any).userData.restPos);
+        if (currentExpr !== prevExprRef.current) {
+          prevExprRef.current = currentExpr;
+          if (currentExpr === 'neutral') {
+            // Remise à zéro explicite de tous les os du visage uniquement lors de la transition
+            scene.traverse(c => {
+              if ((c as any).isBone && c.name.startsWith('head_') && !c.name.includes('ponytail') && !c.name.includes('neck')) {
+                if ((c as any).userData.restPos) {
+                  (c as any).position.copy((c as any).userData.restPos);
+                }
+                if ((c as any).userData.restQuat) {
+                  (c as any).quaternion.copy((c as any).userData.restQuat);
+                }
               }
-              if ((c as any).userData.restQuat) {
-                (c as any).quaternion.copy((c as any).userData.restQuat);
-              }
-            }
-          });
-        } else if (currentExpr === 'smirk') {
+            });
+          }
+        }
+        if (currentExpr === 'smirk') {
           // Sourire en coin très prononcé (coin droit relevé + étiré)
           const lipRight1 = scene.getObjectByName('head_lip_upper_right_1');
           const lipRight2 = scene.getObjectByName('head_lip_upper_right_2');
@@ -1312,23 +1336,29 @@ export function SingleCharacter({
           const firstNode = activeHairChain[0];
           const baseParent = firstNode.bone.parent;
           if (baseParent) {
+            baseParent.getWorldQuaternion(_tmpQ1);
 
-            const baseParentQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
-            const g = new THREE.Vector3(0, -981, 0); // standard gravity (cm/s^2)
+            // Compute torso frame vectors once per character
+            if (headBoneRef.current && hipsBoneRef.current && lShoulderRef.current && rShoulderRef.current) {
+              const headW = _tmpV4.setFromMatrixPosition(headBoneRef.current.matrixWorld);
+              const hipsW = _tmpV5.setFromMatrixPosition(hipsBoneRef.current.matrixWorld);
+              const lShoulderW = _tmpV6.setFromMatrixPosition(lShoulderRef.current.matrixWorld);
+              const rShoulderW = _tmpV7.setFromMatrixPosition(rShoulderRef.current.matrixWorld);
+
+              _upDir.subVectors(headW, hipsW).normalize();
+              _rightDir.subVectors(lShoulderW, rShoulderW).normalize();
+              _backDir.crossVectors(_upDir, _rightDir).normalize();
+            }
 
             for (const node of activeHairChain) {
               const { bone, relQuat, axis, worldLength } = node;
               const parent = bone.parent;
               if (!parent) continue;
 
-
-
-              const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-
-              const downWorld = new THREE.Vector3(0, -1, 0);
-              const restDirWorld = axis.clone().applyQuaternion(baseParentQuat.clone().multiply(relQuat)).normalize();
-              const restDir = downWorld.clone().lerp(restDirWorld, 0.15).normalize();
-              const restTip = jointWorld.clone().addScaledVector(restDir, worldLength);
+              const jointWorld = _tmpV1.setFromMatrixPosition(bone.matrixWorld);
+              const restDirWorld = _tmpV2.copy(axis).applyQuaternion(_tmpQ2.copy(_tmpQ1).multiply(relQuat)).normalize();
+              const restDir = _tmpV3.copy(_downWorld).lerp(restDirWorld, 0.15).normalize();
+              const restTip = _tmpV4.copy(jointWorld).addScaledVector(restDir, worldLength);
 
               // Teleportation safety reset
               const dist = jointWorld.distanceTo(node.tipWorld);
@@ -1340,8 +1370,8 @@ export function SingleCharacter({
               const isHeadMoving = isMoving || (target !== 'idle') || (walkerAnim && walkerAnim.toLowerCase().includes('walk')) || (walkerAnim && walkerAnim.toLowerCase().includes('run'));
               const dampingFactor = isHeadMoving ? 0.75 : 0.85;
 
-              const vel = new THREE.Vector3().subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - dampingFactor));
-              const next = new THREE.Vector3().copy(node.tipWorld).add(vel).addScaledVector(g, simDt * simDt);
+              const vel = _tmpV5.subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - dampingFactor));
+              const next = _tmpV6.copy(node.tipWorld).add(vel).addScaledVector(_tmpG, simDt * simDt);
 
               // Souplesse d'attraction vers le bas (gravité naturelle)
               const lerpStiffness = isHeadMoving ? 0.05 : 0.12;
@@ -1352,10 +1382,11 @@ export function SingleCharacter({
                 vel.set(0, 0, 0);
                 next.lerp(restTip, 0.8);
               }
-              // Resolve constraints iteratively (2 passes) to ensure length and collision are both satisfied
+
+              // Resolve constraints iteratively (2 passes)
               for (let i = 0; i < 2; i++) {
                 // 1. Length constraint
-                const dir = new THREE.Vector3().subVectors(next, jointWorld);
+                const dir = _tmpV7.subVectors(next, jointWorld);
                 const currentLen = dir.length();
                 if (currentLen > 1e-6) {
                   dir.multiplyScalar(worldLength / currentLen);
@@ -1365,74 +1396,53 @@ export function SingleCharacter({
                 next.copy(jointWorld).add(dir);
 
                 // 2. Colliders géométriques (Tête sphérique + Sac à dos OBB rectangulaire plat)
-                let backDir = new THREE.Vector3(0, 0, -1);
-                let rightDir = new THREE.Vector3(1, 0, 0);
-                let upDir = new THREE.Vector3(0, 1, 0);
-
-                if (headBoneRef.current && hipsBoneRef.current && lShoulderRef.current && rShoulderRef.current) {
-                  const headW = new THREE.Vector3().setFromMatrixPosition(headBoneRef.current.matrixWorld);
-                  const hipsW = new THREE.Vector3().setFromMatrixPosition(hipsBoneRef.current.matrixWorld);
-                  const lShoulderW = new THREE.Vector3().setFromMatrixPosition(lShoulderRef.current.matrixWorld);
-                  const rShoulderW = new THREE.Vector3().setFromMatrixPosition(rShoulderRef.current.matrixWorld);
-
-                  upDir = new THREE.Vector3().subVectors(headW, hipsW).normalize();
-                  rightDir = new THREE.Vector3().subVectors(lShoulderW, rShoulderW).normalize();
-                  backDir.crossVectors(upDir, rightDir).normalize();
-                }
-
                 // Tête (Sphère douce)
                 if (headBoneRef.current && activeHairChain !== customHairChainRef.current) {
-                  const center = new THREE.Vector3().setFromMatrixPosition(headBoneRef.current.matrixWorld).addScaledVector(backDir, 4);
+                  const center = _tmpV2.setFromMatrixPosition(headBoneRef.current.matrixWorld).addScaledVector(_backDir, 4);
                   const radius = 13.0;
-                  const dist = next.distanceTo(center);
-                  if (dist < radius) next.add(new THREE.Vector3().subVectors(next, center).normalize().multiplyScalar(radius - dist));
+                  const dCenter = next.distanceTo(center);
+                  if (dCenter < radius) {
+                    next.add(_tmpV3.subVectors(next, center).normalize().multiplyScalar(radius - dCenter));
+                  }
                 }
 
                 // Sac à dos (Collider Rectangulaire Plat OBB)
                 if (spine2BoneRef.current && activeHairChain !== customHairChainRef.current) {
-                  const backpackCenter = new THREE.Vector3().setFromMatrixPosition(spine2BoneRef.current.matrixWorld).addScaledVector(backDir, 11);
-                  // Dimensions du rectangle du sac à dos (Demi-largeur = 14cm, Demi-hauteur = 18cm, Épaisseur arrière = 8cm)
-                  const localPos = new THREE.Vector3().subVectors(next, backpackCenter);
-                  const px = localPos.dot(rightDir);
-                  const py = localPos.dot(upDir);
-                  const pz = localPos.dot(backDir);
+                  const backpackCenter = _tmpV2.setFromMatrixPosition(spine2BoneRef.current.matrixWorld).addScaledVector(_backDir, 11);
+                  const localPos = _tmpV3.subVectors(next, backpackCenter);
+                  const px = localPos.dot(_rightDir);
+                  const py = localPos.dot(_upDir);
+                  const pz = localPos.dot(_backDir);
 
                   const halfW = 14.0;
                   const halfH = 18.0;
                   const thickness = 7.0;
 
-                  // Si le point de la tresse rentre dans la boîte rectangulaire du sac
                   if (Math.abs(px) < halfW && Math.abs(py) < halfH && pz < thickness && pz > -5.0) {
-                    // Pousser le nœud de la tresse à plat sur la surface arrière du sac à dos
-                    next.addScaledVector(backDir, thickness - pz);
+                    next.addScaledVector(_backDir, thickness - pz);
                   }
                 }
               }
 
               // Final exact length constraint
-              const dir = new THREE.Vector3().subVectors(next, jointWorld);
-              const currentLen = dir.length();
-              if (currentLen > 1e-6) {
-                dir.multiplyScalar(worldLength / currentLen);
+              const finalDir = _tmpV7.subVectors(next, jointWorld);
+              const finalLen = finalDir.length();
+              if (finalLen > 1e-6) {
+                finalDir.multiplyScalar(worldLength / finalLen);
               } else {
-                dir.copy(restDir).multiplyScalar(worldLength);
+                finalDir.copy(restDir).multiplyScalar(worldLength);
               }
 
               node.tipPrev.copy(node.tipWorld);
-              node.tipWorld.copy(jointWorld).add(dir);
+              node.tipWorld.copy(jointWorld).add(finalDir);
 
               // Orientation réelle des os de la tresse (ponytail) d'après le résultat physique Verlet
-              const currentDirWorld = dir.clone().normalize();
-              if (!(window as any)._boneLogged && activeHairChain === customHairChainRef.current && node === activeHairChain[0]) {
-                console.log(`[HairPhysics] wLen:${worldLength.toFixed(3)}, vel:${vel.length().toFixed(3)}, isHeadMoving:`, isHeadMoving, `Quat:`, bone.quaternion.toArray().map((n: number) => n.toFixed(3)));
-                (window as any)._boneLogged = true;
-                setTimeout(() => { (window as any)._boneLogged = false; }, 1000);
-              }
-              const parentWQuat = parent.getWorldQuaternion(new THREE.Quaternion());
+              const currentDirWorld = _tmpV2.copy(finalDir).normalize();
+              const parentWQuat = parent.getWorldQuaternion(_tmpQ3);
 
               // Correct quaternion math: Swing from REST WORLD direction to CURRENT WORLD direction
-              const boneRestWorldQuat = baseParentQuat.clone().multiply(relQuat);
-              const swing = new THREE.Quaternion().setFromUnitVectors(restDirWorld, currentDirWorld);
+              const boneRestWorldQuat = _tmpQ2.copy(_tmpQ1).multiply(relQuat);
+              const swing = _tmpQ1.setFromUnitVectors(restDirWorld, currentDirWorld);
 
               const newWorldQuat = swing.multiply(boneRestWorldQuat);
               bone.quaternion.copy(parentWQuat.invert().multiply(newWorldQuat));
@@ -1444,26 +1454,22 @@ export function SingleCharacter({
 
         // 1. Détection de la véritable vitesse/accélération du torse en temps réel
         if (spine2BoneRef.current) {
-          const currentSpinePos = new THREE.Vector3();
-          spine2BoneRef.current.getWorldPosition(currentSpinePos);
+          spine2BoneRef.current.getWorldPosition(_tmpV1);
           if (prevSpinePosRef.current) {
-            // Vitesse instantanée du torse (delta de déplacement monde)
-            const spineVel = currentSpinePos.clone().sub(prevSpinePosRef.current).divideScalar(Math.max(0.001, simDt));
-            // Accélération (impulsion de mouvement récurrente)
-            const spineAccel = spineVel.clone().sub(prevSpineVelRef.current).divideScalar(Math.max(0.001, simDt));
+            _tmpV2.subVectors(_tmpV1, prevSpinePosRef.current).divideScalar(Math.max(0.001, simDt));
+            _tmpV3.subVectors(_tmpV2, prevSpineVelRef.current).divideScalar(Math.max(0.001, simDt));
 
-            // Si l'accélération du torse est quasi nulle (personnage fixe/immobile/T-pose), l'excitation externe F_ext = 0
-            if (spineAccel.lengthSq() > 0.01) {
-              torsoAccelRef.current.copy(spineAccel);
+            if (_tmpV3.lengthSq() > 0.01) {
+              torsoAccelRef.current.copy(_tmpV3);
             } else {
-              torsoAccelRef.current.lerp(new THREE.Vector3(0, 0, 0), simDt * 10.0);
+              torsoAccelRef.current.lerp(_tmpV4.set(0, 0, 0), simDt * 10.0);
             }
-            prevSpineVelRef.current.copy(spineVel);
+            prevSpineVelRef.current.copy(_tmpV2);
           } else {
-            prevSpinePosRef.current = currentSpinePos.clone();
-            prevSpineVelRef.current = new THREE.Vector3(0, 0, 0);
+            prevSpinePosRef.current = new THREE.Vector3().copy(_tmpV1);
+            prevSpineVelRef.current.set(0, 0, 0);
           }
-          prevSpinePosRef.current.copy(currentSpinePos);
+          prevSpinePosRef.current.copy(_tmpV1);
         }
 
         // 2. Intégrateur masse-ressort-amortisseur authentique (Physical Spring-Damper)
@@ -1482,15 +1488,11 @@ export function SingleCharacter({
 
         if (enableBreastPhysics && breastIntensity > 0 && breastChainRef.current.length > 0) {
           const mass = Math.max(0.2, breastMass);
-
-          // La fermeté (breastFirmness) règle la résistance au déplacement et la force de rappel vers le centre du torse
           const stiffness = (35.0 * braElasticity * breastFirmness);
           const damping = 10.0 * (1.0 + breastLagDelay * 0.4);
-
-          // Moins de fermeté = plus de liberté de débattement horizontal autour du torse (multiplicateur 1.0 / breastFirmness)
           const softnessFactor = 1.0 / Math.max(0.1, breastFirmness);
 
-          const externalForce = torsoAccelRef.current.clone().multiplyScalar((0.2 * breastIntensity * softnessFactor) / mass);
+          const externalForce = _tmpV1.copy(torsoAccelRef.current).multiplyScalar((0.2 * breastIntensity * softnessFactor) / mass);
           externalForce.x *= braElasticityXZ * 1.5;
           externalForce.y *= braElasticity * 1.2;
           externalForce.z *= braElasticityXZ * 1.8;
@@ -1512,22 +1514,18 @@ export function SingleCharacter({
             breastVelRef.current.set(0, 0, 0);
           }
 
-          const eulerBreast = new THREE.Euler(0, 0, 0, 'ZXY');
-          const animBreastQ = new THREE.Quaternion();
-
           for (let i = 0; i < breastChainRef.current.length; i++) {
             const { bone, restQuat } = breastChainRef.current[i];
 
-            // Rebond vertical X et débattement horizontal Y/Z modulés par la fermeté configurée
             let swingX = Math.max(-maxBreastAngleRad, Math.min(maxBreastAngleRad, breastImpulseRef.current.y * 0.25));
             let swingY = Math.max(-maxBreastAngleXZRad, Math.min(maxBreastAngleXZRad, breastImpulseRef.current.x * 0.45 * softnessFactor));
             let swingZ = Math.max(-maxBreastAngleXZRad, Math.min(maxBreastAngleXZRad, breastImpulseRef.current.z * 0.45 * softnessFactor));
 
-            eulerBreast.set(swingX, swingY, swingZ, 'ZXY');
-            animBreastQ.setFromEuler(eulerBreast);
+            _eulerBreast.set(swingX, swingY, swingZ, 'ZXY');
+            _animBreastQ.setFromEuler(_eulerBreast);
 
             const baseRest = (bone as any).userData?.restQuat || (bone as any).restLocalQuaternion || restQuat;
-            bone.quaternion.copy(baseRest).multiply(animBreastQ);
+            bone.quaternion.copy(baseRest).multiply(_animBreastQ);
           }
         }
 
