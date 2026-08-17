@@ -23,6 +23,7 @@ import { useSceneStore } from './store/useSceneStore';
 import { CHARACTERS } from './Walker';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
+import { resetAppIdle } from './idleState';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -1024,6 +1025,7 @@ export function SidePanel({
   const animsContainerRef = useRef<HTMLDivElement>(null);
 
   const selectNextAnim = (direction: 'next' | 'prev') => {
+    resetAppIdle();
     if (!filteredAnims.length) return;
     const currentIndex = filteredAnims.findIndex(a => a.value === activeAnimValue);
     let nextIndex = 0;
@@ -1044,6 +1046,7 @@ export function SidePanel({
   };
 
   const playRandomAnim = () => {
+    resetAppIdle();
     const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle');
     if (!pool.length) return;
     const randomAnim = pool[Math.floor(Math.random() * pool.length)];
@@ -1054,6 +1057,7 @@ export function SidePanel({
   };
 
   const handleKeyDownAnims = (e: React.KeyboardEvent | KeyboardEvent) => {
+    resetAppIdle();
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
       e.stopPropagation();

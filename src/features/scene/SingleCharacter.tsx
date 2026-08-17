@@ -39,7 +39,7 @@ import {
 import type { AgentInstruction } from './ai/aiTypes';
 import { useAgentController } from './ai/useAgentController';
 import { appLog } from '@features/ui/AppConsole';
-import { isAppIdle } from './idleState';
+import { isAppIdle, resetAppIdle } from './idleState';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 export { WALKER_ANIM_OPTIONS };
@@ -685,6 +685,7 @@ export function SingleCharacter({
       }
 
       if (isForMe && e.detail?.value) {
+        resetAppIdle();
         const path = e.detail.value;
 
         if (path === 'idle') {
