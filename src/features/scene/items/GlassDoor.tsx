@@ -155,27 +155,25 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
     if (Math.abs(dRight) > 0.001) { rightRotRef.current += dRight * 0.12; moved = true; }
     else rightRotRef.current = rightTarget;
 
-    rightDoorRef.current.rotation.y = rightRotRef.current;
-    leftDoorRef.current.rotation.y = leftRotRef.current;
+    if (moved) {
+      rightDoorRef.current.rotation.y = rightRotRef.current;
+      leftDoorRef.current.rotation.y = leftRotRef.current;
 
-    if (handleRef.current) {
-      const maxTilt = 35 * (Math.PI / 180);
-      let handleTilt = 0;
-      if (rightRotRef.current > 0 && rightRotRef.current < 0.3) {
-        handleTilt = -Math.sin((rightRotRef.current / 0.3) * Math.PI) * maxTilt;
+      if (handleRef.current) {
+        const maxTilt = 35 * (Math.PI / 180);
+        let handleTilt = 0;
+        if (rightRotRef.current > 0 && rightRotRef.current < 0.3) {
+          handleTilt = -Math.sin((rightRotRef.current / 0.3) * Math.PI) * maxTilt;
+        }
+        handleRef.current.rotation.z = handleTilt;
       }
-      handleRef.current.rotation.z = handleTilt;
-    }
 
-    const dShutter = s.targetShutter - shutterPercentRef.current;
-    if (Math.abs(dShutter) > 0.1) { shutterPercentRef.current += dShutter * 0.08; moved = true; }
-    else shutterPercentRef.current = s.targetShutter;
-
-    if (instancedShutterRef.current) {
-      const currentHeight = (200 * shutterPercentRef.current) / 100;
-      instancedShutterRef.current.count = Math.max(0, Math.min(50, Math.ceil(currentHeight / 4)));
+      if (instancedShutterRef.current) {
+        const currentHeight = (200 * shutterPercentRef.current) / 100;
+        instancedShutterRef.current.count = Math.max(0, Math.min(50, Math.ceil(currentHeight / 4)));
+      }
+      invalidate();
     }
-    if (moved) invalidate();
   });
 
   useLayoutEffect(() => {

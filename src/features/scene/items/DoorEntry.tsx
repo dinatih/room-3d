@@ -91,12 +91,14 @@ export function DoorEntry({ actionState, onSize }: SceneItemProps) {
 
   useFrame(() => {
     const target = isOpen ? -(2 * Math.PI / 3) : 0;
-    const delta = target - doorRef.current.rotation.y;
+    const current = doorRef.current.rotation.y;
+    const delta = target - current;
     if (Math.abs(delta) > 0.001) {
       doorRef.current.rotation.y += delta * 0.12;
       invalidate();
-    } else {
+    } else if (current !== target) {
       doorRef.current.rotation.y = target;
+      invalidate();
     }
   });
 

@@ -164,12 +164,14 @@ function DoorImpl({
 
   useFrame(() => {
     const target = isOpen ? openAngle : 0;
-    const delta = target - doorRef.current.rotation.y;
+    const current = doorRef.current.rotation.y;
+    const delta = target - current;
     if (Math.abs(delta) > 0.001) {
       doorRef.current.rotation.y += delta * 0.12;
       invalidate();
-    } else {
+    } else if (current !== target) {
       doorRef.current.rotation.y = target;
+      invalidate();
     }
   });
 

@@ -44,10 +44,20 @@ export function BimDoubleDoor({ actionState, onSize }: SceneItemProps) {
 
   useFrame((_, delta) => {
     if (leftRef.current) {
-      leftRef.current.rotation.y = MathUtils.damp(leftRef.current.rotation.y, leftTarget, 5, delta);
+      const cur = leftRef.current.rotation.y;
+      if (Math.abs(leftTarget - cur) > 0.001) {
+        leftRef.current.rotation.y = MathUtils.damp(cur, leftTarget, 5, delta);
+      } else if (cur !== leftTarget) {
+        leftRef.current.rotation.y = leftTarget;
+      }
     }
     if (rightRef.current) {
-      rightRef.current.rotation.y = MathUtils.damp(rightRef.current.rotation.y, rightTarget, 5, delta);
+      const cur = rightRef.current.rotation.y;
+      if (Math.abs(rightTarget - cur) > 0.001) {
+        rightRef.current.rotation.y = MathUtils.damp(cur, rightTarget, 5, delta);
+      } else if (cur !== rightTarget) {
+        rightRef.current.rotation.y = rightTarget;
+      }
     }
   });
 
