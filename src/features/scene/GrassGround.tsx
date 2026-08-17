@@ -106,7 +106,6 @@ function GrassInstances({
       <instancedMesh
         ref={grassRef}
         args={[grassMesh.geometry, grassMesh.material, count]}
-        castShadow
         receiveShadow
       />
     </group>

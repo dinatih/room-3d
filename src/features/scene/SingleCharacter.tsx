@@ -498,7 +498,9 @@ export function SingleCharacter({
     scene.traverse(o => {
       const c = o as any;
       if (c.isMesh && !c.userData.isCustomHair) {
-        c.castShadow = characterShadows;
+        const name = (c.name || '').toLowerCase();
+        const isTiny = name.includes('teeth') || name.includes('lash') || name.includes('eye') || name.includes('tongue');
+        c.castShadow = characterShadows && !isTiny;
         c.receiveShadow = characterShadows;
         c.frustumCulled = false; // Disable culling for SkinnedMesh as bones move vertices far from rest pose bounding box
         if (c.material) {
@@ -625,7 +627,9 @@ export function SingleCharacter({
     scene.traverse(o => {
       const c = o as any;
       if (c.isMesh) {
-        c.castShadow = characterShadows;
+        const name = (c.name || '').toLowerCase();
+        const isTiny = name.includes('teeth') || name.includes('lash') || name.includes('eye') || name.includes('tongue');
+        c.castShadow = characterShadows && !isTiny;
         c.receiveShadow = characterShadows;
         if (c.material) {
           const materials = Array.isArray(c.material) ? c.material : [c.material];
@@ -1122,8 +1126,13 @@ export function SingleCharacter({
         // Physique réactive & Gravité universelle (sans vent/bruit continu au repos)
 
 
-        // Update world matrices once per frame per character
-        scene.updateMatrixWorld(true);
+        const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
+        const enableBreastPhysics = useSceneStore.getState().layers.breastPhysics;
+
+        // Update world matrices only when physics is active
+        if (enableHairPhysics || enableBreastPhysics) {
+          scene.updateMatrixWorld(true);
+        }
 
         // Physics simulation timestep (Time-Corrected Verlet)
         let simDt = delta;
@@ -1131,7 +1140,6 @@ export function SingleCharacter({
         const dtRatio = physicsPrevDt.current > 0 ? (simDt / physicsPrevDt.current) : 1;
 
         // Ponytail physics simulation (Verlet)
-        const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
         const activeHairChain = (haircut !== 'original' && customHairChainRef.current.length > 0) ? customHairChainRef.current : hairChainRef.current;
 
         if (!enableHairPhysics && activeHairChain.length > 0) {
@@ -1288,7 +1296,6 @@ export function SingleCharacter({
         }
 
         // 2. Intégrateur masse-ressort-amortisseur authentique (Physical Spring-Damper)
-        const enableBreastPhysics = useSceneStore.getState().layers.breastPhysics;
         const breastIntensity = useSceneStore.getState().layers.breastIntensity ?? 1.0;
         const breastMass = useSceneStore.getState().layers.breastMass ?? 1.0;
         const breastFirmness = useSceneStore.getState().layers.breastFirmness ?? 1.0;

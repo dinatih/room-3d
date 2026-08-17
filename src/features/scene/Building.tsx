@@ -1480,6 +1480,12 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1 || (window as any).isAnimProRunning) return;
+      if (!useSceneStore.getState().layers.mirrors) return;
+
+      // Évite les passes de caméra virtuelles coûteuses si la caméra est loin (vue globale / orbit éloigné)
+      const dist = camera.position.distanceTo(mir.position);
+      if (dist > 750) return;
+
       _reflectionDepth++;
 
       // Adaptation dynamique (résolution / layer mask)
@@ -1535,6 +1541,12 @@ function MergedReflector({ planes, position, rotationY }: {
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1 || (window as any).isAnimProRunning) return;
+      if (!useSceneStore.getState().layers.mirrors) return;
+
+      // Évite les passes de caméra virtuelles coûteuses si la caméra est loin (vue globale / orbit éloigné)
+      const dist = camera.position.distanceTo(mir.position);
+      if (dist > 750) return;
+
       _reflectionDepth++;
 
       const targetRes = cameraState.mirrorsHD ? 512 : 256;
