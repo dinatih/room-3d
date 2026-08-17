@@ -182,10 +182,6 @@ export function SingleCharacter({
   const userAnimOverrideRef = useRef<boolean>(false);
   const prevFirstPersonRef = useRef<boolean | null>(null);
   const hasLoggedIdleRef = useRef<boolean>(false);
-  const [expression, setExpression] = useState<'neutral' | 'smile' | 'wink'>('neutral');
-  const expressionRef = useRef<'neutral' | 'smile' | 'wink'>('neutral');
-  expressionRef.current = expression;
-  const prevExprRef = useRef<string>('neutral');
 
   const [equipment, setEquipment] = useState<{ holster: boolean; pistols: boolean; backpack: boolean }>({
     holster: true,
@@ -664,11 +660,6 @@ export function SingleCharacter({
     };
 
     const onToggle = (e: any) => {
-      if (e.detail?.key === 'lara-expression' && isActive) {
-        setExpression(e.detail.value || 'neutral');
-        invalidate();
-        return;
-      }
       if (e.detail?.key === 'lara-custom-holster' && isActive) {
         setEquipment((prev: { holster: boolean; pistols: boolean; backpack: boolean }) => ({ ...prev, holster: !prev.holster }));
         invalidate();
@@ -792,21 +783,7 @@ export function SingleCharacter({
   }, [id, scene]);
 
 
-  useEffect(() => {
-    if (!scene) return;
-    scene.traverse(c => {
-      if (isActive) {
-        c.userData.hoverAction = {
-          label: `Customiser ${name} 👤`,
-          actions: [
-            'lara-expression'
-          ]
-        };
-      } else {
-        delete c.userData.hoverAction;
-      }
-    });
-  }, [isActive, name, scene]);
+
 
   useEffect(() => {
     if (!scene) return;
@@ -1143,168 +1120,6 @@ export function SingleCharacter({
         mixer.update(delta);
 
         // Physique réactive & Gravité universelle (sans vent/bruit continu au repos)
-
-        // Reset / Application des expressions faciales dynamiques
-        const currentExpr = expressionRef.current as string;
-        if (currentExpr !== prevExprRef.current) {
-          prevExprRef.current = currentExpr;
-          if (currentExpr === 'neutral') {
-            // Remise à zéro explicite de tous les os du visage uniquement lors de la transition
-            scene.traverse(c => {
-              if ((c as any).isBone && c.name.startsWith('head_') && !c.name.includes('ponytail') && !c.name.includes('neck')) {
-                if ((c as any).userData.restPos) {
-                  (c as any).position.copy((c as any).userData.restPos);
-                }
-                if ((c as any).userData.restQuat) {
-                  (c as any).quaternion.copy((c as any).userData.restQuat);
-                }
-              }
-            });
-          }
-        }
-        if (currentExpr === 'smirk') {
-          // Sourire en coin très prononcé (coin droit relevé + étiré)
-          const lipRight1 = scene.getObjectByName('head_lip_upper_right_1');
-          const lipRight2 = scene.getObjectByName('head_lip_upper_right_2');
-          const lipLowerRight2 = scene.getObjectByName('head_lip_lower_right_2');
-          const cheekRight = scene.getObjectByName('head_cheek_right');
-          const browRight1 = scene.getObjectByName('head_eyebrow_right_1');
-
-          if (lipRight1 && lipRight1.userData.restPos) {
-            lipRight1.position.set(lipRight1.userData.restPos.x - 0.008, lipRight1.userData.restPos.y + 0.015, lipRight1.userData.restPos.z + 0.008);
-          }
-          if (lipRight2 && lipRight2.userData.restPos) {
-            lipRight2.position.set(lipRight2.userData.restPos.x - 0.012, lipRight2.userData.restPos.y + 0.022, lipRight2.userData.restPos.z + 0.010);
-          }
-          if (lipLowerRight2 && lipLowerRight2.userData.restPos) {
-            lipLowerRight2.position.set(lipLowerRight2.userData.restPos.x - 0.008, lipLowerRight2.userData.restPos.y + 0.012, lipLowerRight2.userData.restPos.z + 0.006);
-          }
-          if (cheekRight && cheekRight.userData.restPos) {
-            cheekRight.position.set(cheekRight.userData.restPos.x - 0.006, cheekRight.userData.restPos.y + 0.010, cheekRight.userData.restPos.z + 0.005);
-          }
-          if (browRight1 && browRight1.userData.restPos) {
-            browRight1.position.set(browRight1.userData.restPos.x, browRight1.userData.restPos.y + 0.005, browRight1.userData.restPos.z);
-          }
-        } else if (currentExpr === 'smile') {
-          // Vrai sourire symétrique (Coins des lèvres relevés + joues rehaussées)
-          const lipRight1 = scene.getObjectByName('head_lip_upper_right_1');
-          const lipRight2 = scene.getObjectByName('head_lip_upper_right_2');
-          const lipLeft1 = scene.getObjectByName('head_lip_upper_left_1');
-          const lipLeft2 = scene.getObjectByName('head_lip_upper_left_2');
-          const lipLowerRight2 = scene.getObjectByName('head_lip_lower_right_2');
-          const lipLowerLeft2 = scene.getObjectByName('head_lip_lower_left_2');
-          const cheekRight = scene.getObjectByName('head_cheek_right');
-          const cheekLeft = scene.getObjectByName('head_cheek_left');
-
-          if (lipRight1 && lipRight1.userData.restPos) {
-            lipRight1.position.set(lipRight1.userData.restPos.x - 0.006, lipRight1.userData.restPos.y + 0.012, lipRight1.userData.restPos.z + 0.006);
-          }
-          if (lipRight2 && lipRight2.userData.restPos) {
-            lipRight2.position.set(lipRight2.userData.restPos.x - 0.010, lipRight2.userData.restPos.y + 0.018, lipRight2.userData.restPos.z + 0.008);
-          }
-          if (lipLeft1 && lipLeft1.userData.restPos) {
-            lipLeft1.position.set(lipLeft1.userData.restPos.x + 0.006, lipLeft1.userData.restPos.y + 0.012, lipLeft1.userData.restPos.z + 0.006);
-          }
-          if (lipLeft2 && lipLeft2.userData.restPos) {
-            lipLeft2.position.set(lipLeft2.userData.restPos.x + 0.010, lipLeft2.userData.restPos.y + 0.018, lipLeft2.userData.restPos.z + 0.008);
-          }
-          if (lipLowerRight2 && lipLowerRight2.userData.restPos) {
-            lipLowerRight2.position.set(lipLowerRight2.userData.restPos.x - 0.006, lipLowerRight2.userData.restPos.y + 0.010, lipLowerRight2.userData.restPos.z + 0.005);
-          }
-          if (lipLowerLeft2 && lipLowerLeft2.userData.restPos) {
-            lipLowerLeft2.position.set(lipLowerLeft2.userData.restPos.x + 0.006, lipLowerLeft2.userData.restPos.y + 0.010, lipLowerLeft2.userData.restPos.z + 0.005);
-          }
-          if (cheekRight && cheekRight.userData.restPos) {
-            cheekRight.position.set(cheekRight.userData.restPos.x - 0.005, cheekRight.userData.restPos.y + 0.008, cheekRight.userData.restPos.z + 0.004);
-          }
-          if (cheekLeft && cheekLeft.userData.restPos) {
-            cheekLeft.position.set(cheekLeft.userData.restPos.x + 0.005, cheekLeft.userData.restPos.y + 0.008, cheekLeft.userData.restPos.z + 0.004);
-          }
-        } else if (currentExpr === 'wink') {
-          // Clin d'œil très prononcé (œil gauche totalement fermé + sourcil froncé + léger sourire)
-          const eyeLUpper = scene.getObjectByName('head_eyelid_left_upper');
-          const eyeLLower = scene.getObjectByName('head_eyelid_left_lower');
-          const browLeft1 = scene.getObjectByName('head_eyebrow_left_1');
-          const browLeft2 = scene.getObjectByName('head_eyebrow_left_2');
-          const browLeft3 = scene.getObjectByName('head_eyebrow_left_3');
-          const lipRight1 = scene.getObjectByName('head_lip_upper_right_1');
-          const lipRight2 = scene.getObjectByName('head_lip_upper_right_2');
-
-          if (eyeLUpper && eyeLUpper.userData.restPos) {
-            eyeLUpper.position.set(eyeLUpper.userData.restPos.x, eyeLUpper.userData.restPos.y - 0.018, eyeLUpper.userData.restPos.z + 0.002);
-          }
-          if (eyeLLower && eyeLLower.userData.restPos) {
-            eyeLLower.position.set(eyeLLower.userData.restPos.x, eyeLLower.userData.restPos.y + 0.016, eyeLLower.userData.restPos.z + 0.002);
-          }
-          if (browLeft1 && browLeft1.userData.restPos) {
-            browLeft1.position.set(browLeft1.userData.restPos.x, browLeft1.userData.restPos.y - 0.008, browLeft1.userData.restPos.z);
-          }
-          if (browLeft2 && browLeft2.userData.restPos) {
-            browLeft2.position.set(browLeft2.userData.restPos.x, browLeft2.userData.restPos.y - 0.008, browLeft2.userData.restPos.z);
-          }
-          if (browLeft3 && browLeft3.userData.restPos) {
-            browLeft3.position.set(browLeft3.userData.restPos.x, browLeft3.userData.restPos.y - 0.008, browLeft3.userData.restPos.z);
-          }
-          if (lipRight1 && lipRight1.userData.restPos) {
-            lipRight1.position.set(lipRight1.userData.restPos.x - 0.005, lipRight1.userData.restPos.y + 0.010, lipRight1.userData.restPos.z + 0.005);
-          }
-          if (lipRight2 && lipRight2.userData.restPos) {
-            lipRight2.position.set(lipRight2.userData.restPos.x - 0.008, lipRight2.userData.restPos.y + 0.014, lipRight2.userData.restPos.z + 0.006);
-          }
-        } else if (currentExpr === 'open_mouth') {
-          // Bouche grande ouverte : ouverture par élévation de la lèvre supérieure + léger abaissement mâchoire (lèvre inférieure reste collée à la dentition)
-          const jaw = scene.getObjectByName('head_jaw');
-          const lipUpperMiddle = scene.getObjectByName('head_lip_upper_middle');
-          const lipUpperLeft1 = scene.getObjectByName('head_lip_upper_left_1');
-          const lipUpperRight1 = scene.getObjectByName('head_lip_upper_right_1');
-          const lipUpperLeft2 = scene.getObjectByName('head_lip_upper_left_2');
-          const lipUpperRight2 = scene.getObjectByName('head_lip_upper_right_2');
-
-          if (jaw && jaw.userData.restPos) {
-            // Abaissement très modéré de la mâchoire globale
-            jaw.position.set(
-              jaw.userData.restPos.x,
-              jaw.userData.restPos.y - 0.006,
-              jaw.userData.restPos.z
-            );
-          }
-          // Lèvre supérieure bien relevée pour ouvrir la bouche par le haut
-          if (lipUpperMiddle && lipUpperMiddle.userData.restPos) {
-            lipUpperMiddle.position.set(
-              lipUpperMiddle.userData.restPos.x,
-              lipUpperMiddle.userData.restPos.y + 0.016,
-              lipUpperMiddle.userData.restPos.z + 0.005
-            );
-          }
-          if (lipUpperLeft1 && lipUpperLeft1.userData.restPos) {
-            lipUpperLeft1.position.set(
-              lipUpperLeft1.userData.restPos.x,
-              lipUpperLeft1.userData.restPos.y + 0.012,
-              lipUpperLeft1.userData.restPos.z + 0.004
-            );
-          }
-          if (lipUpperRight1 && lipUpperRight1.userData.restPos) {
-            lipUpperRight1.position.set(
-              lipUpperRight1.userData.restPos.x,
-              lipUpperRight1.userData.restPos.y + 0.012,
-              lipUpperRight1.userData.restPos.z + 0.004
-            );
-          }
-          if (lipUpperLeft2 && lipUpperLeft2.userData.restPos) {
-            lipUpperLeft2.position.set(
-              lipUpperLeft2.userData.restPos.x,
-              lipUpperLeft2.userData.restPos.y + 0.008,
-              lipUpperLeft2.userData.restPos.z + 0.003
-            );
-          }
-          if (lipUpperRight2 && lipUpperRight2.userData.restPos) {
-            lipUpperRight2.position.set(
-              lipUpperRight2.userData.restPos.x,
-              lipUpperRight2.userData.restPos.y + 0.008,
-              lipUpperRight2.userData.restPos.z + 0.003
-            );
-          }
-        }
 
 
         // Update world matrices once per frame per character
