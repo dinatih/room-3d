@@ -1064,21 +1064,22 @@ export function SidePanel({
   useEffect(() => {
     if (activeAnimValue && animsContainerRef.current) {
       const container = animsContainerRef.current;
-      const activeEl = container.querySelector('.active-anim-item') as HTMLElement | null;
-      if (activeEl) {
-        const elTop = activeEl.offsetTop;
-        const elHeight = activeEl.offsetHeight;
-        const containerScrollTop = container.scrollTop;
-        const containerHeight = container.clientHeight;
+      const frameId = requestAnimationFrame(() => {
+        const activeEl = container.querySelector('.active-anim-item') as HTMLElement | null;
+        if (activeEl) {
+          const containerRect = container.getBoundingClientRect();
+          const activeRect = activeEl.getBoundingClientRect();
 
-        if (elTop < containerScrollTop) {
-          container.scrollTop = elTop;
-        } else if (elTop + elHeight > containerScrollTop + containerHeight) {
-          container.scrollTop = elTop + elHeight - containerHeight;
+          if (activeRect.top < containerRect.top) {
+            container.scrollTop -= (containerRect.top - activeRect.top + 6);
+          } else if (activeRect.bottom > containerRect.bottom) {
+            container.scrollTop += (activeRect.bottom - containerRect.bottom + 6);
+          }
         }
-      }
+      });
+      return () => cancelAnimationFrame(frameId);
     }
-  }, [activeAnimValue]);
+  }, [activeAnimValue, filteredAnims]);
 
   const activeAnimOpt = WALKER_ANIM_OPTIONS.find(a => a.value === activeAnimValue);
 
@@ -1179,7 +1180,7 @@ export function SidePanel({
         </div>
       </div>
 
-      <div ref={animsContainerRef} className="overflow-auto flex-grow-1" style={{ maxHeight: '40vh' }}>
+      <div ref={animsContainerRef} className="overflow-auto flex-grow-1" style={{ maxHeight: '40vh', position: 'relative', scrollBehavior: 'smooth' }}>
         {filteredAnims.length === 0 ? (
           <div className="p-3 text-center text-muted small">
             Aucune animation ne correspond à &quot;{animSearch}&quot;
