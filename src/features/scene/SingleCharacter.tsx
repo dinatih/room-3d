@@ -1084,6 +1084,10 @@ export function SingleCharacter({
       }
     }
 
+    if (isNPC && customIdleAnimPath && target === 'idle') {
+      target = customIdleAnimPath;
+    }
+
     const isTPose = target === 'tpose' || target.includes('t_pose') || target.includes('t-pose');
 
     if (isTPose) {
