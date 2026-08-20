@@ -218,7 +218,18 @@ function DiagBox({ d1, d2, yBase = 0, h = WALL_H, mat = southMats, userData }: {
 function SplitDiagBox(props: {
   d1: number; d2: number; yBase?: number; h?: number; mat?: THREE.Material | THREE.Material[]; userData?: any;
 }) {
-  return <DiagBox {...props} />;
+  const MAX_LEN = 100; // Tranches de mur diagonal de 1 m (100 cm) max
+  const len = props.d2 - props.d1;
+  if (len <= MAX_LEN) return <DiagBox {...props} />;
+  const count = Math.ceil(len / MAX_LEN);
+  const step = len / count;
+  const boxes = [];
+  for (let i = 0; i < count; i++) {
+    const d1 = props.d1 + i * step - (i > 0 ? 0.1 : 0);
+    const d2 = props.d1 + (i + 1) * step + (i < count - 1 ? 0.1 : 0);
+    boxes.push(<DiagBox key={i} {...props} d1={d1} d2={d2} />);
+  }
+  return <>{boxes}</>;
 }
 
 /** ExtrudeGeometry depuis une liste de points [worldX, worldZ]. */

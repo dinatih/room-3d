@@ -30,21 +30,34 @@ import { useSceneStore } from './store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
 import { CHARACTERS } from './walkerConfig';
 
-// ── Constantes ────────────────────────────────────────────────────────────────
+// ── Constantes & Repères de Placement Caméra ───────────────────────────────────
 
-const CX = ROOM_W / 2;
-const CZ = ROOM_D / 2;
+const CX = ROOM_W / 2; // 150 cm — centre X de la pièce
+const CZ = ROOM_D / 2; // 200 cm — centre Z du séjour
 
-const EYE_RATIO  = 0.93; // niveau yeux ≈ 93% taille totale
+const EYE_RATIO  = 0.93; // niveau des yeux ≈ 93% de la taille totale du personnage
 const WALK_SPEED = 2;
 
-/** Hauteur caméra walk = niveau yeux du walker (≈ 93% de sa taille). */
+/** Hauteur caméra en mode marche = niveau des yeux du walker (≈ 93% de sa taille). */
 function activeWalkH(): number {
   return cameraState.walkerHeight * EYE_RATIO;
 }
 const MOUSE_SENS  = 0.002;
 
+/**
+ * Position de départ de la caméra en mode Perspective / Orbit :
+ * X = ROOM_W / 2 = 150 cm (centré horizontalement)
+ * Y = 1000 cm = 10 m (vue en hauteur / plongée)
+ * Z = -150 cm (reculé vers le nord, côté jardin, regardant vers le sud)
+ */
 const PERSP_POS:    [number, number, number] = [ROOM_W / 2, 1000, -150];
+
+/**
+ * Cible (look-at target) de la caméra en mode Orbit :
+ * X = ROOM_W / 2 = 150 cm (centré)
+ * Y = WALL_H / 3 = 83.3 cm (tiers inférieur de la hauteur des murs)
+ * Z = ROOM_D / 2 = 200 cm (centre de la pièce)
+ */
 const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, WALL_H / 3, ROOM_D / 2];
 
 // Character capsule dimensions (cm): center at CHAR_CY above ground
@@ -131,12 +144,22 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   // ── Walk helpers ────────────────────────────────────────────────────────────
 
+  /**
+   * Recalcule la position et la visée (target) de la caméra lors de la marche :
+   * - En mode FPV (1ère personne) : la caméra est exactement aux yeux du personnage (distanceBehind = 0, heightAbove = 0).
+   * - En mode Walk (3ème personne / style GTA) : la caméra est décalée de 180 cm en arrière et 120 cm en hauteur au-dessus du walker.
+   * - Calcul trigonométrique :
+   *     camX = targetX - sin(yaw) * cos(pitch) * distance
+   *     camY = targetY - sin(pitch) * distance + heightAbove
+   *     camZ = targetZ - cos(yaw) * cos(pitch) * distance
+   * - La cible de regard (target) est projetée 200 cm devant le regard du walker.
+   */
   function updateWalkLook() {
     const ctrl = ctrlRef.current;
     if (!ctrl) return;
     const cosP = Math.cos(walkPitch.current);
 
-    // Position des yeux du perso
+    // Position des yeux du personnage (point d'ancrage)
     const targetX = walkPos.current.x;
     const targetY = walkPos.current.y;
     const targetZ = walkPos.current.z;

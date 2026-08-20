@@ -282,6 +282,16 @@ export function Studio() {
       <Canvas
         style={{ width: '100%', height: '100%' }}
         frameloop={showInventory ? 'never' : 'demand'}
+        /* 
+         * ── Placement & configuration initiale de la caméra 3D ───────────────
+         * - fov: 50° (champ de vision vertical naturel)
+         * - near: 5 cm (évite le clipping avec les objets proches)
+         * - far: 10 000 cm / 100 m (couvre la pièce, l'extérieur et le ciel)
+         * - position: [ROOM_W / 2, 1000, -150] = [150, 1000, -150]
+         *     X = ROOM_W / 2 = 150 cm (centré sur la largeur de la pièce)
+         *     Y = 1000 cm = 10 m (hauteur de vue en plongée pour embrasser toute la scène)
+         *     Z = -150 cm (reculé vers le nord, face au jardin et à la baie vitrée)
+         */
         camera={{
           fov:  50,
           near: 5,

@@ -169,7 +169,7 @@ export const pSouth = (id: PillarId) => pZ(id) + pD(id) / 2;
 
 function splitW(def: WallDef): WallDef[] {
   if (def.segKind === 'door' || def.segKind === 'none') return [def];
-  const MAX_LEN = 40;
+  const MAX_LEN = 100; // Tranches de mur de 1 m (100 cm) max à la place de 40 cm
   const res: WallDef[] = [];
   if (def.axis === 'z') {
     const len = def.z2 - def.z1;
