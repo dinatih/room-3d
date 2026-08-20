@@ -51,12 +51,6 @@ const _tmpV1 = new THREE.Vector3();
 const _tmpV2 = new THREE.Vector3();
 const _tmpV3 = new THREE.Vector3();
 const _tmpV4 = new THREE.Vector3();
-const _tmpV5 = new THREE.Vector3();
-const _tmpV6 = new THREE.Vector3();
-const _tmpV7 = new THREE.Vector3();
-const _tmpQ1 = new THREE.Quaternion();
-const _tmpQ2 = new THREE.Quaternion();
-const _tmpQ3 = new THREE.Quaternion();
 const _tmpG  = new THREE.Vector3(0, -981, 0);
 const _downWorld = new THREE.Vector3(0, -1, 0);
 const _upDir = new THREE.Vector3(0, 1, 0);
@@ -64,6 +58,27 @@ const _rightDir = new THREE.Vector3(1, 0, 0);
 const _backDir = new THREE.Vector3(0, 0, -1);
 const _eulerBreast = new THREE.Euler(0, 0, 0, 'ZXY');
 const _animBreastQ = new THREE.Quaternion();
+
+// Dedicated static vectors & quaternions for hair physics (prevents per-node state corruption)
+const _baseParentQuat = new THREE.Quaternion();
+const _boneRestWorldQuat = new THREE.Quaternion();
+const _swingQuat = new THREE.Quaternion();
+const _parentWQuat = new THREE.Quaternion();
+const _jointWorld = new THREE.Vector3();
+const _restDirWorld = new THREE.Vector3();
+const _restDir = new THREE.Vector3();
+const _restTip = new THREE.Vector3();
+const _hairVel = new THREE.Vector3();
+const _hairNext = new THREE.Vector3();
+const _hairDir = new THREE.Vector3();
+const _hairFinalDir = new THREE.Vector3();
+const _hairCurrentDirWorld = new THREE.Vector3();
+const _colliderCenter = new THREE.Vector3();
+const _colliderOffset = new THREE.Vector3();
+const _headW = new THREE.Vector3();
+const _hipsW = new THREE.Vector3();
+const _lShoulderW = new THREE.Vector3();
+const _rShoulderW = new THREE.Vector3();
 
 const silentManager = new THREE.LoadingManager();
 const globalGLTFCache: Record<string, Promise<any>> = {};
@@ -1159,14 +1174,14 @@ export function SingleCharacter({
           const firstNode = activeHairChain[0];
           const baseParent = firstNode.bone.parent;
           if (baseParent) {
-            baseParent.getWorldQuaternion(_tmpQ1);
+            baseParent.getWorldQuaternion(_baseParentQuat);
 
             // Compute torso frame vectors once per character
             if (headBoneRef.current && hipsBoneRef.current && lShoulderRef.current && rShoulderRef.current) {
-              const headW = _tmpV4.setFromMatrixPosition(headBoneRef.current.matrixWorld);
-              const hipsW = _tmpV5.setFromMatrixPosition(hipsBoneRef.current.matrixWorld);
-              const lShoulderW = _tmpV6.setFromMatrixPosition(lShoulderRef.current.matrixWorld);
-              const rShoulderW = _tmpV7.setFromMatrixPosition(rShoulderRef.current.matrixWorld);
+              const headW = _headW.setFromMatrixPosition(headBoneRef.current.matrixWorld);
+              const hipsW = _hipsW.setFromMatrixPosition(hipsBoneRef.current.matrixWorld);
+              const lShoulderW = _lShoulderW.setFromMatrixPosition(lShoulderRef.current.matrixWorld);
+              const rShoulderW = _rShoulderW.setFromMatrixPosition(rShoulderRef.current.matrixWorld);
 
               _upDir.subVectors(headW, hipsW).normalize();
               _rightDir.subVectors(lShoulderW, rShoulderW).normalize();
@@ -1178,10 +1193,10 @@ export function SingleCharacter({
               const parent = bone.parent;
               if (!parent) continue;
 
-              const jointWorld = _tmpV1.setFromMatrixPosition(bone.matrixWorld);
-              const restDirWorld = _tmpV2.copy(axis).applyQuaternion(_tmpQ2.copy(_tmpQ1).multiply(relQuat)).normalize();
-              const restDir = _tmpV3.copy(_downWorld).lerp(restDirWorld, 0.15).normalize();
-              const restTip = _tmpV4.copy(jointWorld).addScaledVector(restDir, worldLength);
+              const jointWorld = _jointWorld.setFromMatrixPosition(bone.matrixWorld);
+              const restDirWorld = _restDirWorld.copy(axis).applyQuaternion(_boneRestWorldQuat.copy(_baseParentQuat).multiply(relQuat)).normalize();
+              const restDir = _restDir.copy(_downWorld).lerp(restDirWorld, 0.15).normalize();
+              const restTip = _restTip.copy(jointWorld).addScaledVector(restDir, worldLength);
 
               // Teleportation safety reset
               const dist = jointWorld.distanceTo(node.tipWorld);
@@ -1193,8 +1208,8 @@ export function SingleCharacter({
               const isHeadMoving = isMoving || (target !== 'idle') || (walkerAnim && walkerAnim.toLowerCase().includes('walk')) || (walkerAnim && walkerAnim.toLowerCase().includes('run'));
               const dampingFactor = isHeadMoving ? 0.75 : 0.85;
 
-              const vel = _tmpV5.subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - dampingFactor));
-              const next = _tmpV6.copy(node.tipWorld).add(vel).addScaledVector(_tmpG, simDt * simDt);
+              const vel = _hairVel.subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - dampingFactor));
+              const next = _hairNext.copy(node.tipWorld).add(vel).addScaledVector(_tmpG, simDt * simDt);
 
               // Souplesse d'attraction vers le bas (gravité naturelle)
               const lerpStiffness = isHeadMoving ? 0.05 : 0.12;
@@ -1209,7 +1224,7 @@ export function SingleCharacter({
               // Resolve constraints iteratively (2 passes)
               for (let i = 0; i < 2; i++) {
                 // 1. Length constraint
-                const dir = _tmpV7.subVectors(next, jointWorld);
+                const dir = _hairDir.subVectors(next, jointWorld);
                 const currentLen = dir.length();
                 if (currentLen > 1e-6) {
                   dir.multiplyScalar(worldLength / currentLen);
@@ -1221,18 +1236,18 @@ export function SingleCharacter({
                 // 2. Colliders géométriques (Tête sphérique + Sac à dos OBB rectangulaire plat)
                 // Tête (Sphère douce)
                 if (headBoneRef.current && activeHairChain !== customHairChainRef.current) {
-                  const center = _tmpV2.setFromMatrixPosition(headBoneRef.current.matrixWorld).addScaledVector(_backDir, 4);
+                  const center = _colliderCenter.setFromMatrixPosition(headBoneRef.current.matrixWorld).addScaledVector(_backDir, 4);
                   const radius = 13.0;
                   const dCenter = next.distanceTo(center);
                   if (dCenter < radius) {
-                    next.add(_tmpV3.subVectors(next, center).normalize().multiplyScalar(radius - dCenter));
+                    next.add(_colliderOffset.subVectors(next, center).normalize().multiplyScalar(radius - dCenter));
                   }
                 }
 
                 // Sac à dos (Collider Rectangulaire Plat OBB)
                 if (spine2BoneRef.current && activeHairChain !== customHairChainRef.current) {
-                  const backpackCenter = _tmpV2.setFromMatrixPosition(spine2BoneRef.current.matrixWorld).addScaledVector(_backDir, 11);
-                  const localPos = _tmpV3.subVectors(next, backpackCenter);
+                  const backpackCenter = _colliderCenter.setFromMatrixPosition(spine2BoneRef.current.matrixWorld).addScaledVector(_backDir, 11);
+                  const localPos = _colliderOffset.subVectors(next, backpackCenter);
                   const px = localPos.dot(_rightDir);
                   const py = localPos.dot(_upDir);
                   const pz = localPos.dot(_backDir);
@@ -1248,7 +1263,7 @@ export function SingleCharacter({
               }
 
               // Final exact length constraint
-              const finalDir = _tmpV7.subVectors(next, jointWorld);
+              const finalDir = _hairFinalDir.subVectors(next, jointWorld);
               const finalLen = finalDir.length();
               if (finalLen > 1e-6) {
                 finalDir.multiplyScalar(worldLength / finalLen);
@@ -1260,12 +1275,12 @@ export function SingleCharacter({
               node.tipWorld.copy(jointWorld).add(finalDir);
 
               // Orientation réelle des os de la tresse (ponytail) d'après le résultat physique Verlet
-              const currentDirWorld = _tmpV2.copy(finalDir).normalize();
-              const parentWQuat = parent.getWorldQuaternion(_tmpQ3);
+              const currentDirWorld = _hairCurrentDirWorld.copy(finalDir).normalize();
+              const parentWQuat = parent.getWorldQuaternion(_parentWQuat);
 
               // Correct quaternion math: Swing from REST WORLD direction to CURRENT WORLD direction
-              const boneRestWorldQuat = _tmpQ2.copy(_tmpQ1).multiply(relQuat);
-              const swing = _tmpQ1.setFromUnitVectors(restDirWorld, currentDirWorld);
+              const boneRestWorldQuat = _boneRestWorldQuat.copy(_baseParentQuat).multiply(relQuat);
+              const swing = _swingQuat.setFromUnitVectors(restDirWorld, currentDirWorld);
 
               const newWorldQuat = swing.multiply(boneRestWorldQuat);
               bone.quaternion.copy(parentWQuat.invert().multiply(newWorldQuat));
