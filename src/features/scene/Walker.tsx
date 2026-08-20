@@ -2,6 +2,7 @@ const ANIM_URLS = [
   "media/sandbox/anims/anim_falling.glb",
   "media/sandbox/anims/anim_crouch_to_stand.glb",
   "media/sandbox/anims/anim_sitting_idle.glb",
+  "media/sandbox/anims/anim_sleeping_idle.glb",
   "media/sandbox/anims/anim_swimming_to_edge.glb",
   "media/sandbox/anims/anim_push_up.glb",
   "media/sandbox/anims/anim_climbing.glb",
