@@ -1,0 +1,467 @@
+import { SmartObjectDef, SmartObjectCategory, AgentInstruction } from './aiTypes';
+
+/**
+ * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
+ * Chaque meuble déclare ses slots d'interaction, ses animations, ses positions et ses orientations.
+ */
+export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
+  // ── LITS ───────────────────────────────────────────────────────────────────
+  'bed-west': {
+    id: 'bed-west',
+    name: 'Lit Utåker Ouest (Principal)',
+    category: 'bed',
+    position: [74, 0, 151.5],
+    slots: [
+      {
+        slotId: 'seat-north',
+        name: 'S\'asseoir (Nord)',
+        offset: [90, 0, 80],
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb',
+        duration: 15.0,
+      },
+      {
+        slotId: 'seat-middle',
+        name: 'S\'asseoir (Milieu)',
+        offset: [90, 0, 150],
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb',
+        duration: 15.0,
+      },
+      {
+        slotId: 'seat-south',
+        name: 'S\'asseoir (Sud)',
+        offset: [90, 0, 220],
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb',
+        duration: 15.0,
+      },
+      {
+        slotId: 'lie-down',
+        name: 'Dormir couché',
+        offset: [74, 0, 150],
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_sleeping_idle.glb',
+        duration: 15.0,
+      }
+    ]
+  },
+  'bed-east': {
+    id: 'bed-east',
+    name: 'Lit Utåker Est (Secondaire)',
+    category: 'bed',
+    position: [270, 0, 190],
+    slots: [
+      {
+        slotId: 'seat-north',
+        name: 'S\'asseoir (Nord)',
+        offset: [245, 0, 120],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb',
+        duration: 15.0,
+      },
+      {
+        slotId: 'seat-middle',
+        name: 'S\'asseoir (Milieu)',
+        offset: [245, 0, 190],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb',
+        duration: 15.0,
+      },
+      {
+        slotId: 'seat-south',
+        name: 'S\'asseoir (Sud)',
+        offset: [245, 0, 260],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb',
+        duration: 15.0,
+      },
+      {
+        slotId: 'lie-down',
+        name: 'Dormir couché',
+        offset: [270, 0, 190],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_sleeping_idle.glb',
+        duration: 15.0,
+      }
+    ]
+  },
+
+  // ── BUREAUX & ASSISES TRAVAIL ──────────────────────────────────────────────
+  'desk-bollsidan-1': {
+    id: 'desk-bollsidan-1',
+    name: 'Bureau Bollsidan 1',
+    category: 'surface',
+    position: [73.5, 0, 50],
+    slots: [
+      {
+        slotId: 'work-sitting',
+        name: 'Travailler assis',
+        offset: [73.5, 0, 50],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        duration: 10.0,
+      }
+    ]
+  },
+  'chair-office': {
+    id: 'chair-office',
+    name: 'Chaise de Bureau',
+    category: 'seating',
+    position: [85, 0, 272],
+    slots: [
+      {
+        slotId: 'sit',
+        name: 'S\'asseoir',
+        offset: [85, 0, 272],
+        rotY: Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        duration: 10.0,
+      }
+    ]
+  },
+  'desk-bollsidan-2': {
+    id: 'desk-bollsidan-2',
+    name: 'Bureau Bollsidan 2',
+    category: 'surface',
+    position: [200, 0, 215],
+    slots: [
+      {
+        slotId: 'work-standing',
+        name: 'Travailler debout',
+        offset: [200, 0, 215],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
+        duration: 10.0,
+      }
+    ]
+  },
+
+  // ── HYGIÈNE & SDB ─────────────────────────────────────────────────────────
+  'toilet': {
+    id: 'toilet',
+    name: 'Toilettes WC',
+    category: 'hygiene',
+    position: [50, 0, 500],
+    slots: [
+      {
+        slotId: 'use',
+        name: 'Faire ses besoins',
+        offset: [50, 0, 500],
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        duration: 10.0,
+      },
+      {
+        slotId: 'flush',
+        name: 'Tirer la chasse',
+        offset: [50, 0, 500],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        duration: 2.0,
+        triggerEventKey: 'wc-flush'
+      }
+    ]
+  },
+  'vasque-sdb': {
+    id: 'vasque-sdb',
+    name: 'Vasque Salle de bain',
+    category: 'hygiene',
+    position: [116, 0, 545],
+    slots: [
+      {
+        slotId: 'wash-hands',
+        name: 'Se laver les mains',
+        offset: [116, 0, 545],
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        duration: 4.0,
+      }
+    ]
+  },
+  'shower': {
+    id: 'shower',
+    name: 'Douche',
+    category: 'hygiene',
+    position: [15, 0, 645],
+    slots: [
+      {
+        slotId: 'take-shower',
+        name: 'Prendre une douche',
+        offset: [15, 0, 645],
+        rotY: Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        duration: 10.0,
+      }
+    ]
+  },
+  'bathtub-garden': {
+    id: 'bathtub-garden',
+    name: 'Baignoire Jardin',
+    category: 'hygiene',
+    position: [120, 0, -250],
+    slots: [
+      {
+        slotId: 'center',
+        name: 'Se relaxer au centre',
+        offset: [120, 0, -250],
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        duration: 15.0,
+      },
+      {
+        slotId: 'west',
+        name: 'Bain Côté Ouest',
+        offset: [80, 0, -280],
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        duration: 15.0,
+      },
+      {
+        slotId: 'east',
+        name: 'Bain Côté Est',
+        offset: [160, 0, -220],
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        duration: 15.0,
+      }
+    ]
+  },
+
+  // ── CANAPÉS JARDIN ────────────────────────────────────────────────────────
+  'sofa-garden-east': {
+    id: 'sofa-garden-east',
+    name: 'Canapé Jardin Est',
+    category: 'seating',
+    position: [270, 0, -110],
+    slots: [
+      {
+        slotId: 'seat-1',
+        name: 'Place assise 1',
+        offset: [270, 0, -80],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_female_sitting_pose_3.glb',
+        duration: 15.0,
+      },
+      {
+        slotId: 'seat-2',
+        name: 'Place assise 2',
+        offset: [270, 0, -140],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_female_sitting_pose_3.glb',
+        duration: 15.0,
+      }
+    ]
+  },
+  'sofa-garden-west': {
+    id: 'sofa-garden-west',
+    name: 'Canapé Jardin Ouest',
+    category: 'seating',
+    position: [100, 0, -80],
+    slots: [
+      {
+        slotId: 'seat-1',
+        name: 'Place assise 1',
+        offset: [100, 0, -60],
+        rotY: Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        duration: 15.0,
+      },
+      {
+        slotId: 'seat-2',
+        name: 'Place assise 2',
+        offset: [100, 0, -100],
+        rotY: Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        duration: 15.0,
+      }
+    ]
+  },
+
+  // ── CUISINE & APPAREILS ───────────────────────────────────────────────────
+  'cuisine-group': {
+    id: 'cuisine-group',
+    name: 'Meuble Cuisine',
+    category: 'surface',
+    position: [80, 0, 370],
+    slots: [
+      {
+        slotId: 'cook',
+        name: 'Cuisiner',
+        offset: [80, 0, 370],
+        rotY: -Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        duration: 10.0,
+      }
+    ]
+  },
+  'freezer': {
+    id: 'freezer',
+    name: 'Congélateur CHIQ',
+    category: 'appliance',
+    position: [250, 0, 320],
+    slots: [
+      {
+        slotId: 'open-pick',
+        name: 'Prendre un ingrédient',
+        offset: [250, 0, 320],
+        rotY: -Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        duration: 2.5,
+      }
+    ]
+  },
+
+  // ── RANGEMENTS & KALLAX ───────────────────────────────────────────────────
+  'kallax-ne': {
+    id: 'kallax-ne',
+    name: 'Kallax Nord-Est',
+    category: 'storage',
+    position: [240, 0, 38],
+    slots: [
+      {
+        slotId: 'inspect',
+        name: 'Prendre un objet en hauteur',
+        offset: [240, 0, 38],
+        rotY: -Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        duration: 5.0,
+      }
+    ]
+  },
+  'corridor-closet': {
+    id: 'corridor-closet',
+    name: 'Placard Couloir',
+    category: 'storage',
+    position: [220, 0, 435],
+    slots: [
+      {
+        slotId: 'open-tidy',
+        name: 'Ranger des affaires',
+        offset: [220, 0, 435],
+        rotY: Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        duration: 2.5,
+      }
+    ]
+  },
+  'mirror-south': {
+    id: 'mirror-south',
+    name: 'Miroir Sud',
+    category: 'decor',
+    position: [160, 0, 350],
+    slots: [
+      {
+        slotId: 'admire',
+        name: 'S\'admirer dans le miroir',
+        offset: [160, 0, 350],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_female_standing_pose_2.glb',
+        duration: 3.5,
+      }
+    ]
+  },
+
+  // ── EXTÉRIEUR & ESPACES JARDIN ─────────────────────────────────────────────
+  'garden-fresh-air': {
+    id: 'garden-fresh-air',
+    name: 'Fond du Jardin',
+    category: 'outdoor',
+    position: [150, 0, -650],
+    slots: [
+      {
+        slotId: 'breathe',
+        name: 'Prendre l\'air au fond',
+        offset: [150, 0, -650],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_female_standing_pose.glb',
+        duration: 6.0,
+      }
+    ]
+  },
+  'building-b-corridor': {
+    id: 'building-b-corridor',
+    name: 'Entrée Bâtiment B (Couloir)',
+    category: 'outdoor',
+    position: [-350, 0, 1002],
+    slots: [
+      {
+        slotId: 'visit',
+        name: 'Consulter son téléphone',
+        offset: [-350, 0, 1002],
+        rotY: Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
+        duration: 6.0,
+      }
+    ]
+  },
+  'building-b-garden': {
+    id: 'building-b-garden',
+    name: 'Entrée Cours Bâtiment B (Jardin)',
+    category: 'outdoor',
+    position: [-350, 0, -200],
+    slots: [
+      {
+        slotId: 'admire',
+        name: 'Observer la cour',
+        offset: [-350, 0, -200],
+        rotY: Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_female_standing_pose_1.glb',
+        duration: 6.0,
+      }
+    ]
+  }
+};
+
+/**
+ * Utilitaires d'accès et de requêtage pour les Smart Objects
+ */
+export function getSmartObject(id: string): SmartObjectDef | undefined {
+  return SMART_OBJECTS[id];
+}
+
+export function getAllSmartObjects(): SmartObjectDef[] {
+  return Object.values(SMART_OBJECTS);
+}
+
+export function getSmartObjectsByCategory(category: SmartObjectCategory): SmartObjectDef[] {
+  return Object.values(SMART_OBJECTS).filter(obj => obj.category === category);
+}
+
+/**
+ * Convertit une interaction de Smart Object en instructions d'agent prêtes pour le contrôleur.
+ */
+export function buildSmartObjectInstructionSequence(
+  objectId: string,
+  slotId?: string
+): AgentInstruction[] {
+  const obj = SMART_OBJECTS[objectId];
+  if (!obj || !obj.slots.length) return [];
+
+  const slot = slotId
+    ? obj.slots.find(s => s.slotId === slotId) ?? obj.slots[0]
+    : obj.slots[Math.floor(Math.random() * obj.slots.length)];
+
+  const targetPos = slot.approachOffset ?? slot.offset;
+
+  const instructions: AgentInstruction[] = [
+    {
+      type: 'MOVE_TO',
+      targetPos,
+      smartObjectId: obj.id,
+      slotId: slot.slotId
+    },
+    {
+      type: 'INTERACT',
+      smartObjectId: obj.id,
+      slotId: slot.slotId,
+      animation: slot.animation,
+      duration: slot.duration ?? 5.0,
+      rotY: slot.rotY,
+      triggerEventKey: slot.triggerEventKey,
+      triggerTargetState: slot.triggerTargetState
+    }
+  ];
+
+  return instructions;
+}

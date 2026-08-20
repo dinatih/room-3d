@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { AgentInstruction } from './aiTypes';
 import { ZONES } from './ZoneNodes';
+import { SMART_OBJECTS } from './smartObjectRegistry';
 import { useSceneStore } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
 
@@ -12,6 +13,36 @@ export interface AgentState {
   animation: string;
   isSpawned: boolean;
 }
+
+function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number; z: number } | null): { tx: number; tz: number; label: string; rotY?: number; anim?: string; duration?: number } {
+  if (instr.type === 'RETURN_TO_START' && startPos) {
+    return { tx: startPos.x, tz: startPos.z, label: 'point de départ' };
+  }
+  if (instr.smartObjectId && SMART_OBJECTS[instr.smartObjectId]) {
+    const obj = SMART_OBJECTS[instr.smartObjectId];
+    const slot = instr.slotId
+      ? (obj.slots.find(s => s.slotId === instr.slotId) ?? obj.slots[0])
+      : obj.slots[0];
+    const pos = slot ? (slot.approachOffset ?? slot.offset) : obj.position;
+    return {
+      tx: pos[0],
+      tz: pos[2],
+      label: `${obj.name}${slot ? ` (${slot.name})` : ''}`,
+      rotY: slot?.rotY,
+      anim: slot?.animation,
+      duration: slot?.duration
+    };
+  }
+  if (instr.targetNodeId && ZONES[instr.targetNodeId]) {
+    const node = ZONES[instr.targetNodeId];
+    return { tx: node.x, tz: node.z, label: node.id };
+  }
+  if (instr.targetPos) {
+    return { tx: instr.targetPos[0], tz: instr.targetPos[2], label: `pos(${instr.targetPos[0].toFixed(0)}, ${instr.targetPos[2].toFixed(0)})` };
+  }
+  return { tx: 0, tz: 0, label: 'inconnu' };
+}
+
 
 export function useAgentController(
   _characterId: string,
@@ -131,29 +162,16 @@ export function useAgentController(
     if (statusRef.current === 'IDLE') {
       if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START') {
         statusRef.current = 'MOVING';
-        // Log départ MOVE_TO
-        let tx = stateRef.current.x;
-        let tz = stateRef.current.z;
-        if (currentInstruction.type === 'RETURN_TO_START' && startPosRef.current) {
-          tx = startPosRef.current.x;
-          tz = startPosRef.current.z;
-        } else if (currentInstruction.targetNodeId && ZONES[currentInstruction.targetNodeId]) {
-          const node = ZONES[currentInstruction.targetNodeId];
-          tx = node.x;
-          tz = node.z;
-        } else if (currentInstruction.targetPos) {
-          tx = currentInstruction.targetPos[0];
-          tz = currentInstruction.targetPos[2];
-        }
-        const targetNodeId = currentInstruction.targetNodeId ?? 'pos';
-        const logKey = `move-${stepIndexRef.current}-${targetNodeId}`;
+        const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
+        const logKey = `move-${stepIndexRef.current}-${target.label}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
-          appLog(_characterId, `🚶‍♂️ Marche vers ${targetNodeId} (${tx.toFixed(0)}, ${tz.toFixed(0)})`);
+          appLog(_characterId, `🚶‍♂️ Marche vers ${target.label} (${target.tx.toFixed(0)}, ${target.tz.toFixed(0)})`);
         }
       } else if (currentInstruction.type === 'INTERACT' || currentInstruction.type === 'WAIT') {
         statusRef.current = 'INTERACTING';
-        timerRef.current = currentInstruction.duration || 1.0;
+        const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
+        timerRef.current = currentInstruction.duration || target.duration || 1.0;
         if (currentInstruction.triggerEventKey) {
           let key = currentInstruction.triggerEventKey as any;
           
@@ -177,34 +195,23 @@ export function useAgentController(
           }
         }
         // Log action INTERACT
-        const animation = currentInstruction.animation ?? '';
-        const duration = currentInstruction.duration ?? 1.0;
+        const animation = currentInstruction.animation || target.anim || '';
+        const duration = timerRef.current;
         const logKey = `interact-${stepIndexRef.current}-${animation}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
           const label = animation
             ? animation.replace('media/sandbox/anims/', '').replace('.glb', '')
             : currentInstruction.type;
-          appLog(_characterId, `🎭 Action: ${label} (${duration}s)`);
+          appLog(_characterId, `🎭 Action: ${label} (${duration.toFixed(1)}s)`);
         }
       }
     }
 
     if (statusRef.current === 'MOVING') {
-      let tx = stateRef.current.x;
-      let tz = stateRef.current.z;
-
-      if (currentInstruction.type === 'RETURN_TO_START' && startPosRef.current) {
-        tx = startPosRef.current.x;
-        tz = startPosRef.current.z;
-      } else if (currentInstruction.targetNodeId && ZONES[currentInstruction.targetNodeId]) {
-        const node = ZONES[currentInstruction.targetNodeId];
-        tx = node.x;
-        tz = node.z;
-      } else if (currentInstruction.targetPos) {
-        tx = currentInstruction.targetPos[0];
-        tz = currentInstruction.targetPos[2];
-      }
+      const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
+      const tx = target.tx;
+      const tz = target.tz;
 
       const dx = tx - stateRef.current.x;
       const dz = tz - stateRef.current.z;
@@ -217,8 +224,7 @@ export function useAgentController(
         const arrivedKey = `arrived-${stepIndexRef.current}`;
         if (lastLogRef.current !== arrivedKey) {
           lastLogRef.current = arrivedKey;
-          const targetNodeId = currentInstruction.targetNodeId ?? 'destination';
-          appLog(_characterId, `🎯 Arrivé à ${targetNodeId}`);
+          appLog(_characterId, `🎯 Arrivé à ${target.label}`);
         }
         statusRef.current = 'IDLE';
         stepIndexRef.current++;
@@ -231,6 +237,7 @@ export function useAgentController(
         const dirZ = dz / dist;
         stateRef.current.x += dirX * moveDist;
         stateRef.current.z += dirZ * moveDist;
+
 
         // Rotation
         const targetRot = Math.atan2(dirX, dirZ);
@@ -248,15 +255,17 @@ export function useAgentController(
         }
       }
     } else if (statusRef.current === 'INTERACTING') {
-      stateRef.current.animation = currentInstruction.animation || 'idle';
+      const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
+      stateRef.current.animation = currentInstruction.animation || target.anim || 'idle';
       
-      if (currentInstruction.rotY !== undefined) {
-        let rotDiff = currentInstruction.rotY - stateRef.current.rotY;
+      const targetRotY = currentInstruction.rotY !== undefined ? currentInstruction.rotY : target.rotY;
+      if (targetRotY !== undefined) {
+        let rotDiff = targetRotY - stateRef.current.rotY;
         while (rotDiff > Math.PI) rotDiff -= 2 * Math.PI;
         while (rotDiff < -Math.PI) rotDiff += 2 * Math.PI;
         const maxRot = ROT_SPEED * dt;
         if (Math.abs(rotDiff) <= maxRot) {
-            stateRef.current.rotY = currentInstruction.rotY;
+            stateRef.current.rotY = targetRotY;
         } else {
             stateRef.current.rotY += Math.sign(rotDiff) * maxRot;
         }

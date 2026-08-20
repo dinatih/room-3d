@@ -37,6 +37,7 @@ import {
   ACTION_ENTREE_COURS_BAT_B,
   ACTION_FULL_TOUR
 } from './ai/ZoneNodes';
+import { buildSmartObjectInstructionSequence } from './ai/smartObjectRegistry';
 import type { AgentInstruction } from './ai/aiTypes';
 import { useAgentController } from './ai/useAgentController';
 import { appLog } from '@features/ui/AppConsole';
@@ -69,12 +70,27 @@ const AUTONOMOUS_DANCE_ANIMS = [
 ];
 
 function buildAutonomousScenario(): AgentInstruction[] {
-  const actions = [
-    ACTION_SIT_DESK_1, ACTION_SIT_OFFICE_CHAIR, ACTION_SIT_DESK_2, ...ACTIONS_BED_WEST, ...ACTIONS_BED_EAST,
-    ...ACTIONS_BATHTUB, ACTION_SHOWER, ...ACTIONS_GARDEN_SOFA_EAST, ...ACTIONS_GARDEN_SOFA_WEST,
-    ACTION_COOKING, ACTION_KALLAX_NE, ACTION_FRESH_AIR, ACTION_GO_TO_TOILET,
-    ACTION_ENTREE_BAT_B, ACTION_ENTREE_COURS_BAT_B
-  ];
+  // Combine séquences Smart Objects + actions procédurales
+  const smartActions: AgentInstruction[][] = [
+    buildSmartObjectInstructionSequence('bed-west'),
+    buildSmartObjectInstructionSequence('bed-east'),
+    buildSmartObjectInstructionSequence('desk-bollsidan-1'),
+    buildSmartObjectInstructionSequence('chair-office'),
+    buildSmartObjectInstructionSequence('desk-bollsidan-2'),
+    buildSmartObjectInstructionSequence('mirror-south'),
+    buildSmartObjectInstructionSequence('sofa-garden-east'),
+    buildSmartObjectInstructionSequence('sofa-garden-west'),
+    buildSmartObjectInstructionSequence('bathtub-garden'),
+    buildSmartObjectInstructionSequence('corridor-closet'),
+    buildSmartObjectInstructionSequence('kallax-ne'),
+    buildSmartObjectInstructionSequence('cuisine-group'),
+    buildSmartObjectInstructionSequence('freezer'),
+    ACTION_GO_TO_TOILET,
+    ACTION_SHOWER,
+    ACTION_FRESH_AIR,
+    ACTION_ENTREE_BAT_B,
+    ACTION_ENTREE_COURS_BAT_B
+  ].filter(seq => seq.length > 0);
 
   const randomDance = (): AgentInstruction => ({
     type: 'INTERACT',
@@ -83,7 +99,7 @@ function buildAutonomousScenario(): AgentInstruction[] {
   });
 
   // Mélanger les actions et intercaler une danse entre chaque action
-  const shuffled = [...actions].sort(() => Math.random() - 0.5);
+  const shuffled = [...smartActions].sort(() => Math.random() - 0.5);
   const withDances: AgentInstruction[][] = [];
   shuffled.forEach((action, i) => {
     withDances.push(action);
@@ -91,6 +107,7 @@ function buildAutonomousScenario(): AgentInstruction[] {
   });
   return withDances.flat();
 }
+
 
 // Static temp vectors for zero-allocation per-frame physics & transforms
 const _tmpV1 = new THREE.Vector3();
