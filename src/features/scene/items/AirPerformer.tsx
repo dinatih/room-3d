@@ -7,6 +7,7 @@
  */
 import { useLayoutEffect, useMemo, useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { useFrame, useThree } from '@react-three/fiber';
 import type { SceneItemProps } from '@shared/types';
 
@@ -83,8 +84,8 @@ function extrudeRing(outerW: number, outerH: number, innerW: number, innerH: num
     bevelEnabled: true,
     bevelThickness: bevelT,
     bevelSize: bevelS,
-    bevelSegments: 6,
-    curveSegments: 48,
+    bevelSegments: 2,
+    curveSegments: 16,
     steps: 1
   });
   geo.translate(0, 0, -depth / 2);
@@ -634,44 +635,48 @@ export function AirPerformer({ onSize }: SceneItemProps) {
     buildShoulder(
       neckR, shoulderTopRX, shoulderTopRZ,
       BASE_H + neckHeight, holeBottomY,
-      72, 24
+      32, 8
     ),
   []);
 
   const baseGeo = useMemo(() =>
-    new THREE.CylinderGeometry(BASE_R, BASE_R, BASE_H, 96),
+    new THREE.CylinderGeometry(BASE_R, BASE_R, BASE_H, 36),
   []);
 
   const rimGeo = useMemo(() =>
-    new THREE.TorusGeometry(BASE_R - 0.4, 0.35, 12, 96),
+    new THREE.TorusGeometry(BASE_R - 0.4, 0.35, 6, 36),
   []);
 
   const neckGeo = useMemo(() =>
-    new THREE.CylinderGeometry(neckR, neckR, neckHeight, 72, 1, false),
+    new THREE.CylinderGeometry(neckR, neckR, neckHeight, 36, 1, false),
   []);
 
-  // ── Inner loop slats data ──────────────────────────────────────────────────
-  const innerSlats = useMemo(() => {
-    const items: { x: number; y: number; z: number }[] = [];
+  // ── Inner loop slats merged geometry ───────────────────────────────────────
+  const innerSlatsGeo = useMemo(() => {
+    const geos: THREE.BufferGeometry[] = [];
     const half = innerW / 2 + 0.35;
     const straightHalf = innerH / 2 - innerW / 2;
     const yTop = innerCenterY + straightHalf - 2;
     const yBot = innerCenterY - straightHalf + 2;
-    const count = 15;
+    const count = 12;
     for (let side = -1; side <= 1; side += 2) {
       for (let i = 0; i < count; i++) {
         const t = i / (count - 1);
         const y = THREE.MathUtils.lerp(yBot, yTop, t);
-        items.push({ x: side * half, y, z: bodyDepth * 0.46 - 0.4 });
+        const g = new THREE.BoxGeometry(2.1, 0.5, 0.5);
+        g.translate(side * half, y, bodyDepth * 0.46 - 0.4);
+        geos.push(g);
       }
     }
-    return items;
+    const merged = mergeGeometries(geos, false);
+    geos.forEach(g => g.dispose());
+    return merged;
   }, []);
 
-  // ── Curved slats on cylinder neck data ─────────────────────────────────────
-  const cylinderSlats = useMemo(() => {
-    const items: { x: number; y: number; z: number; rotY: number }[] = [];
-    const arcSlats = 22;
+  // ── Curved slats on cylinder neck merged geometry ──────────────────────────
+  const cylinderSlatsGeo = useMemo(() => {
+    const geos: THREE.BufferGeometry[] = [];
+    const arcSlats = 16;
     const arcSpan = Math.PI * 0.92;
     const bandY = BASE_H + neckHeight * 0.52;
     const bandH = neckHeight * 0.42;
@@ -683,10 +688,15 @@ export function AirPerformer({ onSize }: SceneItemProps) {
         const theta = Math.PI + (-arcSpan / 2 + t * arcSpan);
         const x = neckR * Math.sin(theta);
         const z = neckR * Math.cos(theta);
-        items.push({ x, y, z: z + 0.18 * Math.cos(theta), rotY: theta });
+        const g = new THREE.BoxGeometry(0.55, (neckHeight * 0.42 / 3) * 0.55, 0.5);
+        g.rotateY(theta);
+        g.translate(x, y, z + 0.18 * Math.cos(theta));
+        geos.push(g);
       }
     }
-    return items;
+    const merged = mergeGeometries(geos, false);
+    geos.forEach(g => g.dispose());
+    return merged;
   }, []);
 
   // ── R3F frame update loop ──────────────────────────────────────────────────
@@ -825,18 +835,8 @@ export function AirPerformer({ onSize }: SceneItemProps) {
           receiveShadow
         />
 
-        {/* B. Arc Slats on cylinder neck */}
-        {cylinderSlats.map((slat, idx) => (
-          <mesh
-            key={`c-slat-${idx}`}
-            position={[slat.x, slat.y, slat.z]}
-            rotation={[0, slat.rotY, 0]}
-            material={slatMat}
-            castShadow
-          >
-            <boxGeometry args={[0.55, (neckHeight * 0.42 / 3) * 0.55, 0.5]} />
-          </mesh>
-        ))}
+        {/* B. Arc Slats on cylinder neck (Merged geometry) */}
+        <mesh geometry={cylinderSlatsGeo} material={slatMat} castShadow />
 
         {/* C. Shoulder Transition Geometry */}
         <mesh
@@ -864,19 +864,13 @@ export function AirPerformer({ onSize }: SceneItemProps) {
           receiveShadow
         />
 
-        {/* F. Inner Loop Vertical Slats */}
-        <group position={[0, loopBottomY + outerH / 2, 0]}>
-          {innerSlats.map((s, idx) => (
-            <mesh
-              key={`i-slat-${idx}`}
-              position={[s.x, s.y, s.z]}
-              material={slatMat}
-              castShadow
-            >
-              <boxGeometry args={[2.1, 0.5, 0.5]} />
-            </mesh>
-          ))}
-        </group>
+        {/* F. Inner Loop Vertical Slats (Merged geometry) */}
+        <mesh
+          position={[0, loopBottomY + outerH / 2, 0]}
+          geometry={innerSlatsGeo}
+          material={slatMat}
+          castShadow
+        />
 
         {/* G. Front Circular LED Screen */}
         <mesh position={[0, BASE_H + neckHeight * 0.68, neckR - 0.05]} rotation={[0, 0, 0]} material={matGlossyBlack}>
