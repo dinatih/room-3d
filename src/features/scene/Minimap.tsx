@@ -13,7 +13,7 @@ import {
   PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_Z_MAX, PLAN_ASPECT,
 } from './floorDraw';
 import { LANDING_STRIPS } from './LandingStrips';
-import { CHARACTERS } from './Walker';
+import { CHARACTERS } from './walkerConfig';
 import { useSceneStore } from './store/useSceneStore';
 
 const SMALL_W_DESKTOP = 140;

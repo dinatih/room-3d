@@ -3,7 +3,7 @@
  * Mis à jour chaque frame par CameraController, lu par MinimapOverlay via RAF.
  */
 
-import { CHARACTERS } from './Walker';
+import { CHARACTERS } from './walkerConfig';
 
 type CameraMode = 'orbit' | 'walk' | 'fpv' | 'top' | 'plane';
 

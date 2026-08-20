@@ -238,7 +238,7 @@ export const INVENTORY: InventoryItem[] = [
 
 ];
 
-import { CHARACTERS } from '@features/scene/Walker';
+import { CHARACTERS } from '@features/scene/walkerConfig';
 
 INVENTORY.push({
   id: 'ushiro',

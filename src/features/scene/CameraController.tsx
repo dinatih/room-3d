@@ -28,7 +28,7 @@ import { ROOM_W, ROOM_D, WALL_H } from '@config';
 import { cameraState } from './cameraState';
 import { useSceneStore } from './store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
-import { CHARACTERS } from './Walker';
+import { CHARACTERS } from './walkerConfig';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 

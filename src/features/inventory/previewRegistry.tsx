@@ -63,7 +63,8 @@ import { BimDoubleDoor }                              from '@features/scene/item
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
 import { ElectricRacket }                             from '@features/scene/items/ElectricRacket';
 import { Drona }                                      from '@features/scene/items/Drona';
-import { Walker, CHARACTERS }                         from '@features/scene/Walker';
+import { Walker }                                      from '@features/scene/Walker';
+import { CHARACTERS }                                 from '@features/scene/walkerConfig';
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
 import { Wig }                                        from '@features/scene/items/Wig';
