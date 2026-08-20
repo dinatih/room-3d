@@ -208,13 +208,13 @@ function collectScene(scene: THREE.Scene) {
     if (!o.visible || isUtility(o)) return;
     if (o.userData?.noAnim) return;
 
-    if (o.userData?.isMergedSource || o.userData?.isMergedStatic || o.name?.startsWith('merged-')) {
-      o.children.forEach(c => visit(c, depth + 1));
+    if (o.userData?.animUnit && hasMesh(o) && !picked.has(o)) {
+      classify(o);
       return;
     }
 
-    if (o.userData?.animUnit && hasMesh(o) && !picked.has(o)) {
-      classify(o);
+    if (o.userData?.isMergedSource || o.userData?.isMergedStatic || o.name?.startsWith('merged-')) {
+      o.children.forEach(c => visit(c, depth + 1));
       return;
     }
 

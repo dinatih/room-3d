@@ -112,7 +112,7 @@ export function NinjaSP101({ actionState, onSize }: SceneItemProps) {
   }, []);
 
   return (
-    <group userData={{ hoverAction: { label: 'Mini four Ninja SP101EU', actionId: 'ninja' } }}>
+    <group userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Mini four Ninja SP101EU', actionId: 'ninja' } }}>
       <MergedStaticGroup name="merged-ninja">
         {/* Coque inox brossée (côtés + dessus + arrière) */}
         <mesh geometry={shellGeo} material={stainless} castShadow receiveShadow />

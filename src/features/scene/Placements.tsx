@@ -203,10 +203,10 @@ export function Equipment() {
       {/* Gaine plastique couloir mur est — 25.5×6.5 cm, sol au plafond,
           début Z=500 (5m du nord). Linky Enedis monté en façade. */}
       <LinkyGaine />
-      <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + 10 + KITCHEN_Z) / 2]}>
+      <group position={[(KITCHEN_X1 + DOOR_START) / 2, 0, (ROOM_D + 10 + KITCHEN_Z) / 2]} userData={{ animUnit: true, isIkea: true }}>
         <CorridorCloset item={stub('corridor-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
-      <group position={[130.3, 0, BATH_Z_END]}>
+      <group position={[130.3, 0, BATH_Z_END]} userData={{ animUnit: true, isIkea: true }}>
         <SdbCloset item={stub('sdb-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group position={[150, 250, 200]}>
