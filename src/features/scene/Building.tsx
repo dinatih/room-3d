@@ -1564,14 +1564,14 @@ function MergedReflector({ planes, position, rotationY }: {
   return <primitive object={reflector} />;
 }
 
-// ── 3× Nissedal 60×60 — Mur Sud ────────────────────────────────────────────────
+// ── 3× Nissedal 65×65 — Mur Sud ────────────────────────────────────────────────
 
 function MirrorsD() {
   const W_M = 65, H_M = 65;
-  const FT = 1.8, FD = 1.2;
+  const FT = 1.8, FD = 5.0; // épaisseur standard Nissedal 5cm
   const cx  = (KITCHEN_X1 + DOOR_START) / 2;
   const fz  = ROOM_D - 2 - FD / 2;
-  const mirZ = fz - 0.1;
+  const mirZ = ROOM_D - 2 - FD + 0.5; // glace à 0.5cm du bord avant
 
   const planes = useMemo(() => [0, 1, 2].map(i => {
     const cy = (WALL_H - 3.5) - H_M / 2 - i * (H_M + 0.5);
