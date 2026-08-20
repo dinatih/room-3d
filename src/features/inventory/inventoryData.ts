@@ -377,6 +377,7 @@ WIGS_ITEMS.forEach(wig => {
       category: 'wigs',
       qty: 1,
       dims: { w: 25, d: 25, h: 25 },
+      glbPath: wig.glbPath || 'media/hair_pack_part_2.glb',
       notes: `Perruque 3D: ${wig.name}.`
     });
   }
