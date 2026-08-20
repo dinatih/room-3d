@@ -18,6 +18,7 @@ const TAG_COLORS: Record<string, string> = {
   lgbta:    '#cc88ff',
   marissa:  '#ff6b9d',
   system:   '#ffffff',
+  perf:     '#ffaa00',
   error:    '#ff0000',
 };
 

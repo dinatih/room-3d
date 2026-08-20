@@ -1,39 +1,57 @@
 /**
  * DevToolsCollector.tsx — collecte les stats Three.js depuis le Canvas.
- * Placer dans <Canvas>. Expose devState.refreshScene pour les stats scène.
+ * Placer dans <Canvas>. Expose devState.refreshScene et devState.logDiagnostics.
  */
 import { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { devState } from './devState';
+import { devState, type TopObjectStat } from './devState';
 import { drawFps } from './DevToolsOverlay';
+import { appLog } from '@features/ui/AppConsole';
 
 const FPS_SAMPLES = 80;
 
 /**
- * Trouve le plus proche ancêtre identifiable d'un mesh, pour le grouping.
- * Cherche, en remontant : un nom non-vide, ou userData.hoverAction.label
- * (convention de wrapping utilisée par les composants du projet).
+ * Trouve l'entité / ancêtre de plus haut niveau pour identifier clairement le composant.
  */
-function ancestorKey(obj: THREE.Object3D): string {
+function resolveEntityKey(obj: THREE.Object3D): string {
   let cur: THREE.Object3D | null = obj;
-  while (cur) {
-    if (cur.name) return cur.name;
+  let fallbackName = '';
+
+  while (cur && cur.parent && cur.parent.type !== 'Scene') {
+    // 1. Label dans hoverAction (défini par convention sur les items interactifs et portes)
     const label = cur.userData?.hoverAction?.label as string | undefined;
     if (label) return label;
+
+    const itemName = (cur.userData?.itemName || cur.userData?.name) as string | undefined;
+    if (itemName) return itemName;
+
+    // 2. Nom explicite non générique
+    if (
+      cur.name &&
+      !cur.name.match(/^(Mesh|Node|Cube|Cylinder|Sphere|default|primitive|Group|Scene|Object|\d+|polySurface)/i)
+    ) {
+      fallbackName = cur.name;
+    }
+
     cur = cur.parent;
   }
-  return '(unnamed)';
+
+  if (fallbackName) return fallbackName;
+  if (cur && cur.name && cur.name !== 'Scene') return cur.name;
+  return obj.name || '(Sans nom)';
 }
 
 export function DevToolsCollector() {
   const { gl, scene } = useThree();
   const lastFrameTime = useRef(performance.now());
+  const lowFpsCount = useRef(0);
+  const lastAutoDiagTime = useRef(0);
 
   useEffect(() => {
     devState.refreshScene = () => {
       let meshes = 0, instances = 0, lights = 0, verts = 0, tris = 0;
-      const buckets = new Map<string, number>();
+      const objectStats = new Map<string, { meshes: number; instances: number; tris: number; verts: number }>();
 
       scene.traverse(obj => {
         const m = obj as THREE.Mesh;
@@ -46,21 +64,33 @@ export function DevToolsCollector() {
         if (!m.visible) return;
 
         const isInst = (obj as THREE.InstancedMesh).isInstancedMesh;
+        const instCount = isInst ? (obj as THREE.InstancedMesh).count : 1;
+
         if (isInst) instances++;
         else meshes++;
+
+        let objVerts = 0;
+        let objTris = 0;
 
         if (m.geometry) {
           const pos = m.geometry.attributes?.position;
           if (pos) {
             const count = m.geometry.index ? m.geometry.index.count : pos.count;
             const t = count / 3;
-            const factor = isInst ? (obj as THREE.InstancedMesh).count : 1;
-            verts += pos.count * factor;
-            tris  += t * factor;
+            objVerts = pos.count * instCount;
+            objTris = t * instCount;
+            verts += objVerts;
+            tris  += objTris;
           }
-          const key = ancestorKey(obj);
-          buckets.set(key, (buckets.get(key) ?? 0) + (isInst ? (obj as THREE.InstancedMesh).count : 1));
         }
+
+        const key = resolveEntityKey(obj);
+        const existing = objectStats.get(key) ?? { meshes: 0, instances: 0, tris: 0, verts: 0 };
+        if (isInst) existing.instances += instCount;
+        else existing.meshes += 1;
+        existing.tris += objTris;
+        existing.verts += objVerts;
+        objectStats.set(key, existing);
       });
 
       devState.meshes    = meshes;
@@ -68,15 +98,72 @@ export function DevToolsCollector() {
       devState.lights    = lights;
       devState.verts     = Math.round(verts);
       devState.tris      = Math.round(tris);
-      devState.topMeshes = Array.from(buckets.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 15);
+
+      const topObjectsList: TopObjectStat[] = Array.from(objectStats.entries()).map(([name, s]) => ({
+        name,
+        tris: Math.round(s.tris),
+        verts: Math.round(s.verts),
+        meshes: s.meshes,
+        instances: s.instances,
+      }));
+
+      devState.topObjects = [...topObjectsList].sort((a, b) => b.tris - a.tris);
+      devState.topMeshes  = [...topObjectsList]
+        .sort((a, b) => (b.meshes + b.instances) - (a.meshes + a.instances))
+        .map(o => [o.name, o.meshes + o.instances]);
+
       devState.onUpdate?.();
     };
 
+    const runDiagnostics = (autoReason?: string) => {
+      if (!devState.refreshScene) return;
+      devState.refreshScene();
+
+      const samples = devState.fpsSamples;
+      const curFps = samples.length ? samples[samples.length - 1] : 0;
+      const dc = devState.drawCalls;
+      const trisK = (devState.triangles / 1000).toFixed(1);
+
+      if (autoReason) {
+        appLog('perf', `⚠️ Chute FPS détectée (${curFps} FPS) — ${autoReason}`);
+      } else {
+        appLog('perf', `🔍 Diagnostic Perf lancé — ${curFps} FPS | ${dc} Draw calls | ${trisK}k Triangles`);
+      }
+
+      // Top 5 coupables par triangles
+      const topTris = [...devState.topObjects].sort((a, b) => b.tris - a.tris).slice(0, 5);
+      topTris.forEach((item, idx) => {
+        const kTris = (item.tris / 1000).toFixed(1);
+        const instStr = item.instances > 0 ? ` (+${item.instances} inst)` : '';
+        appLog('perf', `#${idx + 1} ${item.name} : ${kTris}k tris, ${item.meshes} meshes${instStr}`);
+      });
+
+      // Bilan spécifique sur les portes
+      const doors = devState.topObjects.filter(item => 
+        item.name.toLowerCase().includes('porte') || item.name.toLowerCase().includes('door')
+      );
+      if (doors.length > 0) {
+        const totalDoorTris = doors.reduce((acc, d) => acc + d.tris, 0);
+        const totalDoorMeshes = doors.reduce((acc, d) => acc + d.meshes, 0);
+        appLog('perf', `🚪 Bilan Portes : ${(totalDoorTris / 1000).toFixed(1)}k tris, ${totalDoorMeshes} meshes au total`);
+      }
+
+      // Affichage détaillé dans la console développeur du navigateur
+      console.group('%c[PERF DIAGNOSTIC] Analyse de la scène 3D', 'color: #ffaa00; font-weight: bold; font-size: 12px;');
+      console.log(`FPS: ${curFps} | Draw calls: ${dc} | Triangles rendus: ${devState.triangles}`);
+      console.table(devState.topObjects);
+      console.groupEnd();
+    };
+
+    devState.logDiagnostics = () => runDiagnostics();
+
     // Auto-refresh stats every 2s
     const id = setInterval(() => devState.refreshScene?.(), 2000);
-    return () => { devState.refreshScene = null; clearInterval(id); };
+    return () => {
+      devState.refreshScene = null;
+      devState.logDiagnostics = null;
+      clearInterval(id);
+    };
   }, [scene]);
 
   useFrame(() => {
@@ -91,16 +178,30 @@ export function DevToolsCollector() {
     const now = performance.now();
     const dt  = now - lastFrameTime.current;
     lastFrameTime.current = now;
+    let fps = 0;
     if (dt > 0 && dt < 2000) {
-      devState.fpsSamples.push(Math.round(1000 / dt));
+      fps = Math.round(1000 / dt);
+      devState.fpsSamples.push(fps);
       if (devState.fpsSamples.length > FPS_SAMPLES) devState.fpsSamples.shift();
+    }
+
+    // Détection de chute de FPS (< 24 FPS persistant sur plusieurs frames)
+    if (fps > 0 && fps < 24) {
+      lowFpsCount.current += 1;
+      if (lowFpsCount.current > 40 && now - lastAutoDiagTime.current > 15000) {
+        lastAutoDiagTime.current = now;
+        lowFpsCount.current = 0;
+        devState.logDiagnostics?.();
+      }
+    } else if (fps >= 30) {
+      lowFpsCount.current = Math.max(0, lowFpsCount.current - 1);
     }
 
     if (devState.fpsCanvas && devState.fpsSamples.length > 0) {
       drawFps(devState.fpsCanvas, devState.fpsSamples);
     }
 
-    // Throttle React updates to 4fps (250ms) so keyboard spam doesn't block the UI update
+    // Throttle React updates to 4fps (250ms)
     if (now - (devState as any).lastReactUpdate > 250 || !(devState as any).lastReactUpdate) {
       (devState as any).lastReactUpdate = now;
       devState.onUpdate?.();
@@ -109,3 +210,4 @@ export function DevToolsCollector() {
 
   return null;
 }
+

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
 import type { FurnitureState, LayerState } from '@features/scene/SidePanel';
+import { appLog } from '@features/ui/AppConsole';
 
 interface SceneStore {
   furniture: FurnitureState;
@@ -173,6 +174,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         const cur = state.furniture.glassDoorV2ShutterPos;
         const next = cur === 0 ? 70 : cur === 70 ? 90 : cur === 90 ? 100 : 0;
         nextFurniture = { ...state.furniture, glassDoorV2ShutterPos: next };
+        appLog('system', `Volet roulant: ${next}%`);
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: next } }));
       } else if (key === 'glassDoorV2LeftOpen') {
         const nextLeft = !state.furniture.glassDoorV2LeftOpen;
@@ -180,23 +182,19 @@ export const useSceneStore = create<SceneStore>((set) => ({
         nextFurniture = {
           ...state.furniture,
           glassDoorV2LeftOpen: nextLeft,
-          eastGlassDoor: nextRight
+          eastGlassDoor: nextRight,
         };
-        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'glassDoorV2LeftOpen', value: nextLeft } }));
-        if (nextRight !== state.furniture.eastGlassDoor) {
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'eastGlassDoor', value: nextRight } }));
-        }
+        appLog('system', `Porte-fenêtre gauche: ${nextLeft ? 'ouverte' : 'fermée'}`);
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: nextLeft } }));
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'eastGlassDoor', value: nextRight } }));
       } else {
-        nextFurniture = { ...state.furniture, [key]: !state.furniture[key] as any };
-        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: nextFurniture[key] } }));
+        const val = !state.furniture[key];
+        nextFurniture = { ...state.furniture, [key]: val };
+        appLog('system', `Meuble/Porte [${String(key)}]: ${val ? 'ON / Ouvert' : 'OFF / Fermé'}`);
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: val } }));
       }
 
-      // Map special keys for legacy components
-      if (key === 'freezerOpen') {
-        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'freezer' } }));
-      } else if (key === 'tvOn') {
-        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'tv' } }));
-      } else if (key === 'lampOn') {
+      if (key === 'lampOn') {
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lamp-toggle' } }));
       } else if (key === 'bedStacked') {
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-toggle' } }));
@@ -216,6 +214,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   toggleLayer: (key) => {
     set((state) => {
       const nextLayers = { ...state.layers, [key]: !state.layers[key] };
+      appLog('system', `Calque [${String(key)}]: ${nextLayers[key] ? 'visible' : 'masqué'}`);
       if (key === 'mirrors') {
         // Force l'invalidation pour que SceneLayerController mette à jour le mask camera
         cameraState.invalidate?.();

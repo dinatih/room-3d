@@ -152,35 +152,52 @@ export function DevToolsGroups({ Group }: {
                 </>
               )}
 
-              {devState.topMeshes.length > 0 && (
+              {devState.topObjects.length > 0 && (
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4, paddingTop: 4 }}>
                   <div
                     onClick={() => setShowTop(!showTop)}
                     style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                   >
-                    <span>TOP <span style={{ color: '#444', fontWeight: 400 }}>· par groupe</span></span>
+                    <span>TOP TRIANGLES <span style={{ color: '#444', fontWeight: 400 }}>· coupables</span></span>
                     <span style={{ fontSize: 8 }}>{showTop ? '▼' : '▶'}</span>
                   </div>
-                  {showTop && devState.topMeshes.map(([name, count]) => (
-                    <div key={name} style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 10px', fontSize: 10 }}>
-                      <span style={{ color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }}>{name}</span>
-                      <span style={{ color: '#777', flexShrink: 0, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>{count}</span>
+                  {showTop && devState.topObjects.slice(0, 10).map((obj) => (
+                    <div key={obj.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 10px', fontSize: 10 }}>
+                      <span style={{ color: '#aaa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }} title={obj.name}>
+                        {obj.name}
+                      </span>
+                      <span style={{ color: heatColor(obj.tris, 50_000, 200_000), flexShrink: 0, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>
+                        {(obj.tris / 1000).toFixed(1)}k
+                      </span>
                     </div>
                   ))}
                 </div>
               )}
 
-              <button
-                onClick={handleRefreshScene}
-                style={{
-                  display: 'block', width: '100%', textAlign: 'left',
-                  background: 'transparent', border: 'none',
-                  borderTop: '1px solid rgba(255,255,255,0.06)',
-                  color: '#444', fontSize: 9, padding: '4px 10px', cursor: 'pointer', marginTop: 4,
-                }}
-              >
-                ↺ Refresh
-              </button>
+              <div style={{ display: 'flex', gap: 4, padding: '6px 8px 2px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4 }}>
+                <button
+                  onClick={handleRefreshScene}
+                  style={{
+                    flex: 1,
+                    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: 3, color: '#aaa', fontSize: 9, padding: '3px 6px', cursor: 'pointer',
+                  }}
+                >
+                  ↺ Refresh
+                </button>
+                <button
+                  onClick={() => devState.logDiagnostics?.()}
+                  style={{
+                    flex: 1.5,
+                    background: 'rgba(255,170,0,0.15)', border: '1px solid #ffaa00',
+                    borderRadius: 3, color: '#ffaa00', fontSize: 9, padding: '3px 6px', cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                  title="Envoie un rapport détaillé dans APP LOGS et la console F12"
+                >
+                  🔍 Log Diagnostic
+                </button>
+              </div>
             </div>
           </>
         )}

@@ -161,7 +161,7 @@ export function Shower({ onSize }: SceneItemProps) {
       </group>
 
       {/* Porte — centrée en X, 2cm devant la face sud du bac (local Z=−TRAY_HALF) */}
-      <group position={[0, 0, -(TRAY_HALF + 2)]}>
+      <group position={[0, 20, -(TRAY_HALF + 2)]}>
         <ShowerDoor />
       </group>
     </group>
