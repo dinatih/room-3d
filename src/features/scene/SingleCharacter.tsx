@@ -41,11 +41,56 @@ import type { AgentInstruction } from './ai/aiTypes';
 import { useAgentController } from './ai/useAgentController';
 import { appLog } from '@features/ui/AppConsole';
 import { isAppIdle, resetAppIdle } from './idleState';
+import { AUTONOMOUS_NPC_IDS } from './walkerConfig';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 export { WALKER_ANIM_OPTIONS };
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
+
+/** Danses aléatoires intercalées entre les actions autonomes */
+const AUTONOMOUS_DANCE_ANIMS = [
+  'media/sandbox/anims/anim_belly_dance.glb',
+  'media/sandbox/anims/anim_house_dancing.glb',
+  'media/sandbox/anims/miley_armature_10_dance_like_sidestep.glb',
+  'media/sandbox/anims/miley_armature_aerobic_dance.glb',
+  'media/sandbox/anims/miley_armature_air_dance.glb',
+  'media/sandbox/anims/miley_armature_couple_pop_dance_f.glb',
+  'media/sandbox/anims/miley_armature_couple_pop_dance_m.glb',
+  'media/sandbox/anims/miley_armature_dance_graceful.glb',
+  'media/sandbox/anims/miley_armature_dancetomusic_f.glb',
+  'media/sandbox/anims/miley_armature_energetic_dance_f.glb',
+  'media/sandbox/anims/miley_armature_energetic_dance_m.glb',
+  'media/sandbox/anims/miley_armature_sensual_dance_01.glb',
+  'media/sandbox/anims/miley_armature_sensual_dance_02.glb',
+  'media/sandbox/anims/miley_armature_sensual_dance_03.glb',
+  'media/sandbox/anims/miley_armature_slow_dance_f.glb',
+  'media/sandbox/anims/miley_armature_slow_dance_m.glb',
+];
+
+function buildAutonomousScenario(): AgentInstruction[] {
+  const actions = [
+    ACTION_SIT_DESK_1, ACTION_SIT_OFFICE_CHAIR, ACTION_SIT_DESK_2, ...ACTIONS_BED_WEST, ...ACTIONS_BED_EAST,
+    ...ACTIONS_BATHTUB, ACTION_SHOWER, ...ACTIONS_GARDEN_SOFA_EAST, ...ACTIONS_GARDEN_SOFA_WEST,
+    ACTION_COOKING, ACTION_KALLAX_NE, ACTION_FRESH_AIR, ACTION_GO_TO_TOILET,
+    ACTION_ENTREE_BAT_B, ACTION_ENTREE_COURS_BAT_B
+  ];
+
+  const randomDance = (): AgentInstruction => ({
+    type: 'INTERACT',
+    animation: AUTONOMOUS_DANCE_ANIMS[Math.floor(Math.random() * AUTONOMOUS_DANCE_ANIMS.length)],
+    duration: 8.0 + Math.random() * 7.0, // 8 à 15 secondes de danse
+  });
+
+  // Mélanger les actions et intercaler une danse entre chaque action
+  const shuffled = [...actions].sort(() => Math.random() - 0.5);
+  const withDances: AgentInstruction[][] = [];
+  shuffled.forEach((action, i) => {
+    withDances.push(action);
+    if (i < shuffled.length - 1) withDances.push([randomDance()]);
+  });
+  return withDances.flat();
+}
 
 // Static temp vectors for zero-allocation per-frame physics & transforms
 const _tmpV1 = new THREE.Vector3();
@@ -282,62 +327,16 @@ export function SingleCharacter({
     }
   }, [activeActionKey]);
 
-  const delphinaScenario = useMemo(() => {
-    if (id !== 'delphina' && id !== 'vivida' && id !== 'angelina' && id !== 'cha' && id !== 'sabira' && id !== 'lgbta' && id !== 'marissa' && id !== 'rosanna') return null;
-    const actions = [
-      ACTION_SIT_DESK_1, ACTION_SIT_OFFICE_CHAIR, ACTION_SIT_DESK_2, ...ACTIONS_BED_WEST, ...ACTIONS_BED_EAST,
-      ...ACTIONS_BATHTUB, ACTION_SHOWER, ...ACTIONS_GARDEN_SOFA_EAST, ...ACTIONS_GARDEN_SOFA_WEST,
-      ACTION_COOKING, ACTION_KALLAX_NE, ACTION_FRESH_AIR, ACTION_GO_TO_TOILET,
-      ACTION_ENTREE_BAT_B, ACTION_ENTREE_COURS_BAT_B
-    ];
-    // Danses aléatoires disponibles pour intercaler entre les actions
-    const danceAnims = [
-      'media/sandbox/anims/anim_belly_dance.glb',
-      // 'media/sandbox/anims/anim_dancing_twerk.glb',
-      // 'media/sandbox/anims/anim_hip_hop_dancing.glb',
-      // 'media/sandbox/anims/anim_hip_hop_dancing_2.glb',
-      // 'media/sandbox/anims/anim_salsa_dancing.glb',
-      // 'media/sandbox/anims/anim_samba_dancing.glb',
-      'media/sandbox/anims/anim_house_dancing.glb',
-      // 'media/sandbox/anims/anim_capoeira.glb',
-      // 'media/sandbox/anims/anim_rumba_dancing.glb',
-      // 'media/sandbox/anims/anim_gangnam_style.glb',
-      'media/sandbox/anims/miley_armature_10_dance_like_sidestep.glb',
-      'media/sandbox/anims/miley_armature_aerobic_dance.glb',
-      'media/sandbox/anims/miley_armature_air_dance.glb',
-      'media/sandbox/anims/miley_armature_couple_pop_dance_f.glb',
-      'media/sandbox/anims/miley_armature_couple_pop_dance_m.glb',
-      'media/sandbox/anims/miley_armature_dance_graceful.glb',
-      'media/sandbox/anims/miley_armature_dancetomusic_f.glb',
-      'media/sandbox/anims/miley_armature_energetic_dance_f.glb',
-      'media/sandbox/anims/miley_armature_energetic_dance_m.glb',
-      'media/sandbox/anims/miley_armature_sensual_dance_01.glb',
-      'media/sandbox/anims/miley_armature_sensual_dance_02.glb',
-      'media/sandbox/anims/miley_armature_sensual_dance_03.glb',
-      'media/sandbox/anims/miley_armature_slow_dance_f.glb',
-      'media/sandbox/anims/miley_armature_slow_dance_m.glb',
-    ];
-    const randomDance = (): AgentInstruction => ({
-      type: 'INTERACT',
-      animation: danceAnims[Math.floor(Math.random() * danceAnims.length)],
-      duration: 8.0 + Math.random() * 7.0, // 8 à 15 secondes de danse
-    });
-    // Shuffle the array of action groups
-    const shuffled = [...actions].sort(() => Math.random() - 0.5);
-    // Interposer une danse aléatoire entre chaque action
-    const withDances: AgentInstruction[][] = [];
-    shuffled.forEach((action, i) => {
-      withDances.push(action);
-      if (i < shuffled.length - 1) withDances.push([randomDance()]);
-    });
-    return withDances.flat();
-  }, [id]);
+  const isAutonomousNpc = AUTONOMOUS_NPC_IDS.has(id) && id !== activeWalkerId;
+  const isGuidedTour = Boolean(activeActionKey && id === activeWalkerId);
 
-  const isGuidedTour = activeActionKey && id === activeWalkerId;
-  const isDelphinaNpc = (id === 'delphina' || id === 'vivida' || id === 'angelina' || id === 'cha' || id === 'sabira' || id === 'lgbta' || id === 'marissa' || id === 'rosanna') && id !== activeWalkerId;
+  const autonomousScenario = useMemo(() => {
+    if (!isAutonomousNpc) return null;
+    return buildAutonomousScenario();
+  }, [isAutonomousNpc]);
 
-  const finalScenario = isGuidedTour ? activeActionScenario : (isDelphinaNpc ? delphinaScenario : EMPTY_SCENARIO);
-  const loopScenario = isDelphinaNpc;
+  const finalScenario = isGuidedTour ? activeActionScenario : (isAutonomousNpc ? autonomousScenario : EMPTY_SCENARIO);
+  const loopScenario = isAutonomousNpc;
 
   const { update: updateAgent, setPosition: setAgentPosition, setRotation: setAgentRotation } = useAgentController(
     id,
@@ -1055,7 +1054,7 @@ export function SingleCharacter({
 
     const isNpcActive = isNPC && (
       (customAnimName.current !== null && customAnimName.current !== 'idle' && !customAnimName.current.includes('idle')) ||
-      (!isDelphinaNpc && customIdleAnimPath && customIdleAnimPath.includes('dance')) ||
+      (!isAutonomousNpc && customIdleAnimPath && customIdleAnimPath.includes('dance')) ||
       Math.abs(groupRef.current.position.x - (groupRef.current.userData.prevX ?? groupRef.current.position.x)) > 0.01 ||
       Math.abs(groupRef.current.position.z - (groupRef.current.userData.prevZ ?? groupRef.current.position.z)) > 0.01
     );
@@ -1101,7 +1100,7 @@ export function SingleCharacter({
       }
     }
 
-    if (isNPC && customIdleAnimPath && target === 'idle' && !isDelphinaNpc) {
+    if (isNPC && customIdleAnimPath && target === 'idle' && !isAutonomousNpc) {
       target = customIdleAnimPath;
     }
 
