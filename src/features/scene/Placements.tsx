@@ -44,7 +44,7 @@ import { MuligRail }     from './items/MuligRail';
 import { Scooter }       from './items/Scooter';
 import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
-import { KinCamera } from './items/KinCamera';
+// import { KinCamera } from './items/KinCamera';
 
 import { Grejig }        from './items/Grejig';
 import { PalmLeaf }      from './items/PalmLeaf';
@@ -65,7 +65,7 @@ import { Bathtub }      from './items/Bathtub';
 import { ChestBench }   from './items/ChestBench';
 import { PottedPalm }   from './items/PottedPalm';
 
-import { JoggingSuit }  from './items/JoggingSuit';
+// import { JoggingSuit }  from './items/JoggingSuit';
 import { ShibaInu }    from './items/ShibaInu';
 import { RobinBird }   from './items/RobinBird';
 import { Tisken }        from './items/Tisken';
@@ -209,9 +209,9 @@ export function Equipment() {
       <group position={[130.3, 0, BATH_Z_END]} userData={{ animUnit: true, isIkea: true }}>
         <SdbCloset item={stub('sdb-closet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
-      <group position={[150, 250, 200]}>
+      {/* <group position={[150, 250, 200]}>
         <KinCamera item={stub('kin-camera')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
+      </group> */}
     </>
   );
 }
@@ -613,9 +613,9 @@ export function Garden() {
       <group position={[100, 0, -145]} userData={{ animUnit: true }}>
         <PottedPalm item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[240, 0, -400]} userData={{ animUnit: true }}>
+      {/* <group position={[240, 0, -400]} userData={{ animUnit: true }}>
         <JoggingSuit item={{} as any} actionState={{}} onSize={() => {}} />
-      </group>
+      </group> */}
       <group userData={{ hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
         <ShibaInu />
       </group>

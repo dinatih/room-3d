@@ -9,13 +9,13 @@
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Mackapar }    from './Mackapar';
-import { Salopette }   from './Salopette';
+// import { Salopette }   from './Salopette';
 import { DroneCell } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
-const RAIL_Y = 165; // hauteur de la barre porte-vêtements
+// const RAIL_Y = 165; // hauteur de la barre porte-vêtements
 const DF     = 33;  // taille boîte Drona
 
 // ── Drona (2 boîtes sur le dessus) ───────────────────────────────────────────
@@ -51,11 +51,11 @@ export function MackaparGroup({ onSize }: SceneItemProps) {
         <Mackapar item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Salopette suspendue à la barre */}
-      <group userData={{ animUnit: true }}>
+      {/* <group userData={{ animUnit: true }}>
         <group position={[0, RAIL_Y - 120, 0]}>
           <Salopette item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
-      </group>
+      </group> */}
       {dronaMatrices.map((m, i) => {
         const p = new THREE.Vector3().setFromMatrixPosition(m);
         const q = new THREE.Quaternion().setFromRotationMatrix(m);
