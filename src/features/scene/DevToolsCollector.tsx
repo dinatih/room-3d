@@ -141,16 +141,6 @@ export function DevToolsCollector() {
         appLog('perf', `#${idx + 1} ${item.name} : ${kTris}k tris, ${item.meshes} meshes${instStr}`);
       });
 
-      // Bilan spécifique sur les portes
-      const doors = devState.topObjects.filter(item => 
-        item.name.toLowerCase().includes('porte') || item.name.toLowerCase().includes('door')
-      );
-      if (doors.length > 0) {
-        const totalDoorTris = doors.reduce((acc, d) => acc + d.tris, 0);
-        const totalDoorMeshes = doors.reduce((acc, d) => acc + d.meshes, 0);
-        appLog('perf', `🚪 Bilan Portes : ${(totalDoorTris / 1000).toFixed(1)}k tris, ${totalDoorMeshes} meshes au total`);
-      }
-
       // Affichage détaillé dans la console développeur du navigateur
       console.group('%c[PERF DIAGNOSTIC] Analyse de la scène 3D', 'color: #ffaa00; font-weight: bold; font-size: 12px;');
       console.log(`FPS: ${curFps} | Draw calls: ${dc} | Triangles rendus: ${devState.triangles}`);

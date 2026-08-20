@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
 import type { FurnitureState, LayerState } from '@features/scene/SidePanel';
-import { appLog } from '@features/ui/AppConsole';
 
 interface SceneStore {
   furniture: FurnitureState;
@@ -174,7 +173,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
         const cur = state.furniture.glassDoorV2ShutterPos;
         const next = cur === 0 ? 70 : cur === 70 ? 90 : cur === 90 ? 100 : 0;
         nextFurniture = { ...state.furniture, glassDoorV2ShutterPos: next };
-        appLog('system', `Volet roulant: ${next}%`);
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: next } }));
       } else if (key === 'glassDoorV2LeftOpen') {
         const nextLeft = !state.furniture.glassDoorV2LeftOpen;
@@ -184,13 +182,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
           glassDoorV2LeftOpen: nextLeft,
           eastGlassDoor: nextRight,
         };
-        appLog('system', `Porte-fenêtre gauche: ${nextLeft ? 'ouverte' : 'fermée'}`);
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: nextLeft } }));
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'eastGlassDoor', value: nextRight } }));
       } else {
         const val = !state.furniture[key];
         nextFurniture = { ...state.furniture, [key]: val };
-        appLog('system', `Meuble/Porte [${String(key)}]: ${val ? 'ON / Ouvert' : 'OFF / Fermé'}`);
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: val } }));
       }
 
@@ -214,7 +210,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
   toggleLayer: (key) => {
     set((state) => {
       const nextLayers = { ...state.layers, [key]: !state.layers[key] };
-      appLog('system', `Calque [${String(key)}]: ${nextLayers[key] ? 'visible' : 'masqué'}`);
       if (key === 'mirrors') {
         // Force l'invalidation pour que SceneLayerController mette à jour le mask camera
         cameraState.invalidate?.();
