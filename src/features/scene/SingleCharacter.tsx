@@ -1055,7 +1055,7 @@ export function SingleCharacter({
 
     const isNpcActive = isNPC && (
       (customAnimName.current !== null && customAnimName.current !== 'idle' && !customAnimName.current.includes('idle')) ||
-      (customIdleAnimPath && customIdleAnimPath.includes('dance')) ||
+      (!isDelphinaNpc && customIdleAnimPath && customIdleAnimPath.includes('dance')) ||
       Math.abs(groupRef.current.position.x - (groupRef.current.userData.prevX ?? groupRef.current.position.x)) > 0.01 ||
       Math.abs(groupRef.current.position.z - (groupRef.current.userData.prevZ ?? groupRef.current.position.z)) > 0.01
     );
@@ -1101,7 +1101,7 @@ export function SingleCharacter({
       }
     }
 
-    if (isNPC && customIdleAnimPath && target === 'idle') {
+    if (isNPC && customIdleAnimPath && target === 'idle' && !isDelphinaNpc) {
       target = customIdleAnimPath;
     }
 
