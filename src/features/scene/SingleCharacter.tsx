@@ -9,6 +9,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { Famnig27470460 } from './items/Famnig27470460';
 import { Wig } from './items/Wig';
 import { RiggedWig } from './items/RiggedWig';
+import { isRiggedWig } from '@features/inventory/inventoryData';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { cameraState } from '@features/scene/cameraState';
@@ -1379,28 +1380,7 @@ export function SingleCharacter({
       <primitive ref={modelRef} object={scene} />
 
       {headBoneState && haircut !== 'original' && (
-        [
-          'hair_zepeto', /* 'hair_pigtails', */ 'hair_buns', 'hair_short_layers',
-          'hair_nmixx_hat_braids', /* 'hair_very_long', */ 'hair_two_braids_bangs',
-          'hair_aespa_short', /* 'hair_wavy_ponytail', */ 'hair_nimxx_short',
-          'hair_short_combed', 'hair_low_bun', 'hair_high_bun',
-          'hair_high_ponytail', 'hair_nmixx_short', 'hair_long_braids',
-          'hair_nmixx_16', 'hair_zepeto_nmixx', 'hair_bob_buns', 'hair_wavy_ponytails',
-          'hair_two_long_ponytails', 'hair_cyber_two_long_ponytails', 'hair_white_hair_with_bun',
-          'hair_short_hair', 'hair_white_ponytail', 'hair_nmixx_hair_with_bangs',
-          /* 'hair_two_white_ponytails', */ 'hair_wolf_haircut', 'hair_white_bob_hairct',
-          'hair_scbe_hair_combed_to_one_side', 'hair_wavy_wet_white_hair', 'hair_nyyd_wavy_hair',
-          'hair_short_wavy_hair_with_bangs', 'hair_nmixxhair_whith_bangs', 'hair_long_hair_styled_to_the_sides',
-          'hair_wavy_long_hair_with_bangs', 'hair_wavy_white_hair_to_one_side', 'hair_high_white_bunponytail',
-          'hair_white_hair_arraged_to_one_side',
-          /* 'hair_black_long_hair', */ /* 'hair_blonde_ponytail_with_bangs', */ 'hair_bratz_curly_hair',
-          'hair_bratz_long_hair', /* 'hair_chinook_wind_ponytail', */ /* 'hair_hair_bitten', */
-          'hair_kcon_long_hair', /* 'hair_long_down_ponytail', */ /* 'hair_long_hair_cut_in_layers', */
-          'hair_long_hair_with_bow', /* 'hair_medium_short_hair_combed_to_the_sides', */ 'hair_nmixx_white_hair',
-          'hair_nmixx_white_longshort_hair', /* 'hair_noicepotatonp_osanahair', */ 'hair_side_swept_curls',
-          'hair_straight_long_white_hair', 'hair_two_braids_with_red_ties', 'hair_vcha_long_white_hair',
-          'hair_wavy_hair_arranged_to_one_side', 'hair_wavy_hair_with_bangs_02', 'hair_white_long_wavy_hair'
-        ].includes(haircut as string) ? (
+        isRiggedWig(haircut as string) ? (
           <RiggedWig
             id={haircut.replace('hair_', '')}
             color={hairColor}

@@ -20,7 +20,7 @@ import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { Wig, HAIR_COLORS } from './Wig';
 import { RiggedWig } from './RiggedWig';
-import { WIGS_ITEMS } from '@features/inventory/inventoryData';
+import { WIGS_ITEMS, isRiggedWig } from '@features/inventory/inventoryData';
 
 interface MannequinHeadProps extends SceneItemProps {
   mannequinId?: string;
@@ -118,8 +118,8 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
     <group ref={ref}>
       <mesh position={[0,40,0]}><boxGeometry args={[10, 10, 10]} /><meshBasicMaterial color="blue" /></mesh>
       <primitive object={scene} />
-      {wigIndex < 13 ? (
-        <Wig 
+      {isRiggedWig(activeWigId) ? (
+        <RiggedWig
           id={activeWigId.replace('hair_', '')}
           color={hairColor}
           windEnabled={windEnabled}
@@ -127,7 +127,7 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
           scale={90}
         />
       ) : (
-        <RiggedWig
+        <Wig 
           id={activeWigId.replace('hair_', '')}
           color={hairColor}
           windEnabled={windEnabled}

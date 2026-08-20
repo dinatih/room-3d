@@ -5,6 +5,7 @@
  */
 import type { ComponentType } from 'react';
 import type { SceneItemProps } from '@shared/types';
+import { WIGS_ITEMS, isRiggedWig }                    from './inventoryData';
 import { Freezer }                                    from '@features/scene/items/Freezer';
 import { Fridge }                                     from '@features/scene/items/Fridge';
 import { KitchenCabinet }                             from '@features/scene/items/KitchenCabinet';
@@ -189,108 +190,9 @@ SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState }: { acti
   return <RobinBird isPreview={true} previewAnim={actionState?.walkerAnim} />;
 } as any;
 
-const WIGS = [
-  { id: 'hair_100', name: 'Coupe #1 (Bob)' },
-  { id: 'hair_101', name: 'Coupe #2 (Queue H.)' },
-  { id: 'hair_102', name: 'Coupe #3 (Pixie)' },
-  { id: 'hair_103', name: 'Coupe #4 (Wolf)' },
-  { id: 'hair_104', name: 'Coupe #5 (Frange)' },
-  { id: 'hair_105', name: 'Coupe #6 (Queue TT H.)' },
-  { id: 'hair_106', name: 'Coupe #7 (Bob Frange)' },
-  { id: 'hair_107', name: 'Coupe #8 (Couettes)' },
-  { id: 'hair_108', name: 'Coupe #9 (Hérissée)' },
-  { id: 'hair_109', name: 'Coupe #10 (Wavy Lob)' },
-  { id: 'hair_110', name: 'Coupe #11 (Hime)' },
-  { id: 'hair_111', name: 'Coupe #12 (Mi-tresse)' },
-  { id: 'hair_112', name: 'Coupe #13 (Chignon)' },
-  { id: 'hair_zepeto', name: 'Coupe #14 (Zepeto, zHairezt)' },
-  // { id: 'hair_pigtails', name: 'Coupe #15 (Longues Couettes Blanches, zHairezt)' },
-  { id: 'hair_buns', name: 'Coupe #16 (Longs Chignons Buns, zHairezt)' },
-  { id: 'hair_short_layers', name: 'Coupe #17 (Courte Dégradée, zHairezt)' },
-  { id: 'hair_nmixx_hat_braids', name: 'Coupe #18 (NMIXX Bonnet & Tresses, zHairezt)' },
-  // { id: 'hair_very_long', name: 'Coupe #19 (Très Longue, zHairezt)' },
-  { id: 'hair_two_braids_bangs', name: 'Coupe #20 (Deux Tresses Frange, zHairezt)' },
-  { id: 'hair_aespa_short', name: 'Coupe #21 (Aespa Courte, zHairezt)' },
-  // { id: 'hair_wavy_ponytail', name: 'Coupe #22 (Queue de Cheval Ondulée, zHairezt)' },
-  { id: 'hair_nimxx_short', name: 'Coupe #23 (NIMXX Courte V1, zHairezt)' },
-  { id: 'hair_short_combed', name: 'Coupe #24 (Courte Plaquée Arrière, zHairezt)' },
-  { id: 'hair_low_bun', name: 'Coupe #25 (Chignon Bas Frange, zHairezt)' },
-  { id: 'hair_high_bun', name: 'Coupe #26 (Chignon Haut Frange, zHairezt)' },
-  { id: 'hair_high_ponytail', name: 'Coupe #27 (Petite Queue de Cheval Haute, zHairezt)' },
-  { id: 'hair_nmixx_short', name: 'Coupe #28 (NMIXX Courte V2, zHairezt)' },
-  { id: 'hair_long_braids', name: 'Coupe #29 (Longues Tresses Frange, zHairezt)' },
-  { id: 'hair_nmixx_16', name: 'Coupe #30 (NMIXX #16, zHairezt)' },
-  { id: 'hair_zepeto_nmixx', name: 'Coupe #31 (Zepeto NMIXX, zHairezt)' },
-  { id: 'hair_bob_buns', name: 'Coupe #32 (Carré Bob Buns, zHairezt)' },
-  { id: 'hair_wavy_ponytails', name: 'Coupe #33 (Longues Couettes Ondulées Blanches, zHairezt)' },
-  { id: 'hair_two_long_ponytails', name: 'Coupe #34 (Deux Longues Couettes, zHairezt)' },
-  { id: 'hair_cyber_two_long_ponytails', name: 'Coupe #35 (Cyber Deux Longues Couettes, zHairezt)' },
-  { id: 'hair_white_hair_with_bun', name: 'Coupe #36 (Cheveux Blancs avec Chignon, zHairezt)' },
-  { id: 'hair_short_hair', name: 'Coupe #37 (Cheveux Courts, zHairezt)' },
-  { id: 'hair_white_ponytail', name: 'Coupe #38 (Queue de Cheval Blanche, zHairezt)' },
-  { id: 'hair_nmixx_hair_with_bangs', name: 'Coupe #39 (NMIXX avec Frange, zHairezt)' },
-  // { id: 'hair_two_white_ponytails', name: 'Coupe #40 (Deux Queues de Cheval Blanches, zHairezt)' },
-  { id: 'hair_wolf_haircut', name: 'Coupe #41 (Coupe Wolf, zHairezt)' },
-  { id: 'hair_white_bob_hairct', name: 'Coupe #42 (Carré Bob Blanc, zHairezt)' },
-  { id: 'hair_scbe_hair_combed_to_one_side', name: 'Coupe #43 (Cheveux Plaqués sur le Côté, zHairezt)' },
-  { id: 'hair_wavy_wet_white_hair', name: 'Coupe #44 (Cheveux Blancs Ondulés Mouillés, zHairezt)' },
-  { id: 'hair_nyyd_wavy_hair', name: 'Coupe #45 (NYYD Ondulés, zHairezt)' },
-  { id: 'hair_short_wavy_hair_with_bangs', name: 'Coupe #46 (Courts Ondulés avec Frange, zHairezt)' },
-  { id: 'hair_nmixxhair_whith_bangs', name: 'Coupe #47 (NMIXX Frange V2, zHairezt)' },
-  { id: 'hair_long_hair_styled_to_the_sides', name: 'Coupe #48 (Longs Stylisés sur les Côtés, zHairezt)' },
-  { id: 'hair_wavy_long_hair_with_bangs', name: 'Coupe #49 (Longs Ondulés Frange, zHairezt)' },
-  { id: 'hair_wavy_white_hair_to_one_side', name: 'Coupe #50 (Ondulés Blancs sur le Côté, zHairezt)' },
-  { id: 'hair_high_white_bunponytail', name: 'Coupe #51 (Chignon/Queue Haut Blanc, zHairezt)' },
-  { id: 'hair_white_hair_arraged_to_one_side', name: 'Coupe #52 (Cheveux Blancs Arrangés sur un Côté, zHairezt)' },
-  // { id: 'hair_black_long_hair', name: 'Coupe #53 (Longs Cheveux Noirs, zHairezt)' },
-  // { id: 'hair_blonde_ponytail_with_bangs', name: 'Coupe #54 (Queue de Cheval Blonde Frange, zHairezt)' },
-  { id: 'hair_bratz_curly_hair', name: 'Coupe #55 (Bratz Bouclée, zHairezt)' },
-  { id: 'hair_bratz_long_hair', name: 'Coupe #56 (Bratz Longue, zHairezt)' },
-  // { id: 'hair_chinook_wind_ponytail', name: 'Coupe #57 (Chinook Queue de Cheval, zHairezt)' },
-  // { id: 'hair_hair_bitten', name: 'Coupe #58 (Bitten, zHairezt)' },
-  { id: 'hair_kcon_long_hair', name: 'Coupe #59 (KCON Longue, zHairezt)' },
-  // { id: 'hair_long_down_ponytail', name: 'Coupe #60 (Longue Queue de Cheval Basse, zHairezt)' },
-  // { id: 'hair_long_hair_cut_in_layers', name: 'Coupe #61 (Longue Dégradée, zHairezt)' },
-  { id: 'hair_long_hair_with_bow', name: 'Coupe #62 (Longue avec Nœud, zHairezt)' },
-  // { id: 'hair_medium_short_hair_combed_to_the_sides', name: 'Coupe #63 (Mi-Courte sur les Côtés, zHairezt)' },
-  { id: 'hair_nmixx_white_hair', name: 'Coupe #64 (NMIXX Blanche, zHairezt)' },
-  { id: 'hair_nmixx_white_longshort_hair', name: 'Coupe #65 (NMIXX Blanche Long/Court, zHairezt)' },
-  // { id: 'hair_noicepotatonp_osanahair', name: 'Coupe #66 (Osana, zHairezt)' },
-  { id: 'hair_side_swept_curls', name: 'Coupe #67 (Boucles Balayées sur le Côté, zHairezt)' },
-  { id: 'hair_straight_long_white_hair', name: 'Coupe #68 (Longs Cheveux Lisses Blancs, zHairezt)' },
-  { id: 'hair_two_braids_with_red_ties', name: 'Coupe #69 (Deux Tresses Attaches Rouges, zHairezt)' },
-  { id: 'hair_vcha_long_white_hair', name: 'Coupe #70 (VCHA Longue Blanche, zHairezt)' },
-  { id: 'hair_wavy_hair_arranged_to_one_side', name: 'Coupe #71 (Ondulés sur un Côté, zHairezt)' },
-  { id: 'hair_wavy_hair_with_bangs_02', name: 'Coupe #72 (Ondulés Frange V2, zHairezt)' },
-  { id: 'hair_white_long_wavy_hair', name: 'Coupe #73 (Longs Blancs Ondulés, zHairezt)' }
-];
-
-WIGS.forEach(wig => {
+WIGS_ITEMS.forEach(wig => {
   SCENE_REGISTRY[wig.id] = function WigPreview() {
-    if (
-      [
-        'hair_zepeto', 'hair_pigtails', 'hair_buns', 'hair_short_layers', 
-        'hair_nmixx_hat_braids', 'hair_very_long', 'hair_two_braids_bangs', 
-        'hair_aespa_short', 'hair_wavy_ponytail', 'hair_nimxx_short',
-        'hair_short_combed', 'hair_low_bun', 'hair_high_bun',
-        'hair_high_ponytail', 'hair_nmixx_short', 'hair_long_braids',
-        'hair_nmixx_16', 'hair_zepeto_nmixx', 'hair_bob_buns', 'hair_wavy_ponytails',
-        'hair_two_long_ponytails', 'hair_cyber_two_long_ponytails', 'hair_white_hair_with_bun',
-        'hair_short_hair', 'hair_white_ponytail', 'hair_nmixx_hair_with_bangs',
-        'hair_two_white_ponytails', 'hair_wolf_haircut', 'hair_white_bob_hairct',
-        'hair_scbe_hair_combed_to_one_side', 'hair_wavy_wet_white_hair', 'hair_nyyd_wavy_hair',
-        'hair_short_wavy_hair_with_bangs', 'hair_nmixxhair_whith_bangs', 'hair_long_hair_styled_to_the_sides',
-        'hair_wavy_long_hair_with_bangs', 'hair_wavy_white_hair_to_one_side', 'hair_high_white_bunponytail',
-        'hair_white_hair_arraged_to_one_side',
-        'hair_black_long_hair', 'hair_blonde_ponytail_with_bangs', 'hair_bratz_curly_hair',
-        'hair_bratz_long_hair', 'hair_chinook_wind_ponytail', 'hair_hair_bitten',
-        'hair_kcon_long_hair', 'hair_long_down_ponytail', 'hair_long_hair_cut_in_layers',
-        'hair_long_hair_with_bow', 'hair_medium_short_hair_combed_to_the_sides', 'hair_nmixx_white_hair',
-        'hair_nmixx_white_longshort_hair', 'hair_noicepotatonp_osanahair', 'hair_side_swept_curls',
-        'hair_straight_long_white_hair', 'hair_two_braids_with_red_ties', 'hair_vcha_long_white_hair',
-        'hair_wavy_hair_arranged_to_one_side', 'hair_wavy_hair_with_bangs_02', 'hair_white_long_wavy_hair'
-      ].includes(wig.id)
-    ) {
+    if (isRiggedWig(wig.id)) {
       return <RiggedWig id={wig.id} scale={1} />;
     }
     return <Wig id={wig.id} scale={1} />;
