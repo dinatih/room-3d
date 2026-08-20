@@ -49,6 +49,9 @@ export function DevToolsCollector() {
   const lastAutoDiagTime = useRef(0);
 
   useEffect(() => {
+    (window as any).__DEV_STATE__ = devState;
+    (window as any).__THREE_SCENE__ = scene;
+    (window as any).__THREE_GL__ = gl;
     devState.refreshScene = () => {
       let meshes = 0, instances = 0, lights = 0, verts = 0, tris = 0;
       const objectStats = new Map<string, { meshes: number; instances: number; tris: number; verts: number }>();

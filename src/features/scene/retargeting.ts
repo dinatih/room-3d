@@ -315,11 +315,6 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
             defaultPosition: c.position.clone(),
             bone: c
           };
-          if (match[1] === 'Hips' || match[1] === 'Spine') {
-            const eW = new THREE.Euler().setFromQuaternion(animBones[match[1]].restWorldQuaternion, 'XYZ');
-            const ePW = new THREE.Euler().setFromQuaternion(animBones[match[1]].parentRestWorldQuaternion, 'XYZ');
-            console.log(`[ANIM BONES] model=${rawClip.name} bone=${match[1]} worldQ=(${Math.round(eW.x*180/Math.PI)},${Math.round(eW.y*180/Math.PI)},${Math.round(eW.z*180/Math.PI)}) pWorldQ=(${Math.round(ePW.x*180/Math.PI)},${Math.round(ePW.y*180/Math.PI)},${Math.round(ePW.z*180/Math.PI)})`);
-          }
         } else if (name.toLowerCase() === 'cc_base_boneroot' || name.toLowerCase() === 'rootjoint') {
           animBones['RootJoint'] = {
             restWorldQuaternion: c.getWorldQuaternion(new THREE.Quaternion()),
@@ -777,10 +772,6 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
                 const t = clone.times[j];
                 const clavicleAnimatedLocal = evaluateQuaternionTrack(clavicleTrack, t);
                 currentP_src = clavicleParentRestWorld.clone().multiply(clavicleAnimatedLocal);
-              }
-
-              if (isHips && j === 0) {
-                console.log(`[DEBUG_HIPS] clip=${rawClip.name} P_src=`, currentP_src.toArray(), `srcLocalQ=`, clone.values.slice(0, 4));
               }
 
               const animWorldQ = currentP_src.multiply(srcLocalQ);
