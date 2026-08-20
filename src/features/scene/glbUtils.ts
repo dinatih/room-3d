@@ -45,7 +45,7 @@ export function mergeGlbByMaterial(root: THREE.Object3D): void {
 
   root.traverse(node => {
     const mesh = node as THREE.Mesh;
-    if (!mesh.isMesh || Array.isArray(mesh.material)) return;
+    if (!mesh.isMesh || !mesh.visible || Array.isArray(mesh.material)) return;
     const mat = mesh.material as THREE.Material;
     if (!groups.has(mat.uuid)) groups.set(mat.uuid, { geos: [], mat });
 

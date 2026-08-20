@@ -115,7 +115,7 @@ function makeNissedalBackTransparent(scene: THREE.Object3D, box: THREE.Box3) {
 
     const pos = posAttr.array;
     const indices = indexAttr ? indexAttr.array : null;
-    const border = 1.5; // cm
+    const border = 1.0; // cm (le cadre GLB mesure ~1.4cm de large, 1.0cm capture toute la glace et le dos)
 
     const isCenter = (vx: number, vy: number) => {
       return (
