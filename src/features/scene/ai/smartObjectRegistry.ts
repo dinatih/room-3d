@@ -173,9 +173,25 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'wash-hands',
         name: 'Se laver les mains',
         offset: [116, 0, 545],
-        rotY: 0,
+        rotY: Math.PI,
         animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
         duration: 4.0,
+      },
+      {
+        slotId: 'brush-teeth',
+        name: 'Se laver les dents',
+        offset: [116, 0, 545],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        duration: 5.0,
+      },
+      {
+        slotId: 'shave-makeup',
+        name: 'Se Raser / Maquiller',
+        offset: [116, 0, 545],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        duration: 5.0,
       }
     ]
   },
@@ -183,19 +199,18 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'shower',
     name: 'Douche',
     category: 'hygiene',
-    position: [35, 0, 615],
+    position: [45, 0, 638],
     slots: [
       {
         slotId: 'take-shower',
         name: 'Prendre une douche',
-        offset: [35, 0, 615],
+        offset: [45, 0, 638],
         rotY: Math.PI,
         animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
         duration: 25.0,
       }
     ]
   },
-
   'sdb-closet': {
     id: 'sdb-closet',
     name: 'Placard Salle de bain',
@@ -212,6 +227,39 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       }
     ]
   },
+  'drona-west': {
+    id: 'drona-west',
+    name: 'Meuble bas / Dröna Ouest',
+    category: 'storage',
+    position: [30, 0, 487],
+    slots: [
+      {
+        slotId: 'pick-item',
+        name: 'Prendre un objet',
+        offset: [30, 0, 535],
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        duration: 3.5,
+      }
+    ]
+  },
+  'drona-east': {
+    id: 'drona-east',
+    name: 'Meuble bas / Dröna Est',
+    category: 'storage',
+    position: [169, 0, 487],
+    slots: [
+      {
+        slotId: 'pick-item',
+        name: 'Prendre un objet',
+        offset: [169, 0, 535],
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        duration: 3.5,
+      }
+    ]
+  },
+
   'bathtub-garden': {
     id: 'bathtub-garden',
     name: 'Baignoire Jardin',
@@ -329,40 +377,9 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     ]
   },
 
-  // ── RANGEMENTS, KALLAX & DRONA ─────────────────────────────────────────────
-  'drona-west': {
-    id: 'drona-west',
-    name: 'Meuble bas / Dröna Ouest',
-    category: 'storage',
-    position: [40, 0, 150],
-    slots: [
-      {
-        slotId: 'pick-item',
-        name: 'Prendre un objet',
-        offset: [65, 0, 150],
-        rotY: -Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_hand_raising.glb',
-        duration: 3.5,
-      }
-    ]
-  },
-  'drona-east': {
-    id: 'drona-east',
-    name: 'Meuble bas / Dröna Est',
-    category: 'storage',
-    position: [280, 0, 150],
-    slots: [
-      {
-        slotId: 'pick-item',
-        name: 'Prendre un objet',
-        offset: [255, 0, 150],
-        rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_hand_raising.glb',
-        duration: 3.5,
-      }
-    ]
-  },
+  // ── RANGEMENTS, KALLAX & COULOIR ──────────────────────────────────────────
   'kallax-ne': {
+
     id: 'kallax-ne',
     name: 'Kallax Nord-Est',
     category: 'storage',
