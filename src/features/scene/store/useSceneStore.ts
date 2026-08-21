@@ -89,7 +89,9 @@ const initialLayers: LayerState = {
   characterShadows: true,
   aiZones: false,
   npcCollisions: true,
+  debugNpcCollisions: false,
   furnitureCollisions: true,
+  debugFurnitureCollisions: false,
 };
 
 const initialExtraStates: Record<string, boolean> = {

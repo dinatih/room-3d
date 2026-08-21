@@ -20,6 +20,7 @@ import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/scene
 import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes } from './Placements';
 import { Walker } from './Walker';
 import { AiZonesHelper } from './ai/AiZonesHelper';
+import { CollisionDebugHelper } from './ai/CollisionDebugHelper';
 import { XRayLayer }        from '@features/scene/XRayLayer';
 import { WallEdgesLayer, EdgeHoverRaycaster, EdgeHoverOverlay } from '@features/scene/WallEdgesLayer';
 import { GridLayer }        from '@features/scene/Grid';
@@ -371,6 +372,7 @@ export function Studio() {
         {layers.xray        && <XRayLayer />}
         <Suspense fallback={null}>
           <AiZonesHelper />
+          <CollisionDebugHelper />
         </Suspense>
         {layers.wallEdges   && <WallEdgesLayer />}
 

@@ -310,7 +310,9 @@ export interface LayerState {
   wallhack: boolean;
   aiZones: boolean;
   npcCollisions: boolean;
+  debugNpcCollisions: boolean;
   furnitureCollisions: boolean;
+  debugFurnitureCollisions: boolean;
   breastPhysics: boolean;
   breastIntensity?: number;
   breastMass?: number;
@@ -595,7 +597,9 @@ export function SidePanel({
       {layerBtn('gray',   'Lidar 📸',        'lidar')}
       {layerBtn('gray',   'Zones IA 🤖',    'aiZones')}
       {layerBtn('blue',   'Collisions inter-PNJ 👥', 'npcCollisions')}
+      {layers.npcCollisions && layerBtn('cyan', '↳ Debug PNJ (Rayon 70cm) ⭕', 'debugNpcCollisions')}
       {layerBtn('blue',   'Collisions objets/meubles 🪑', 'furnitureCollisions')}
+      {layers.furnitureCollisions && layerBtn('cyan', '↳ Debug Objets/Meubles 📐', 'debugFurnitureCollisions')}
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
 
