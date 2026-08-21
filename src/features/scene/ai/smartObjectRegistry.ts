@@ -204,7 +204,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'take-shower',
         name: 'Prendre une douche',
-        offset: [45, 0, 638],
+        offset: [35, 0, 645],
         rotY: Math.PI,
         animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
         duration: 25.0,
@@ -576,4 +576,3 @@ export function buildSmartObjectInstructionSequence(
     }
   ];
 }
-

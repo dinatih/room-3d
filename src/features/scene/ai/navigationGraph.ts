@@ -13,8 +13,8 @@ export type RoomId = 'living' | 'corridor' | 'bathroom' | 'garden' | 'outdoor_co
  * - Extérieur Cours / Jardin Bâtiment B (outdoor_garden) : X < -100 et Z <= 0, ou grand déport nord (Z < -500)
  */
 export function getRoomFromCoords(x: number, z: number): RoomId {
-  // Salle de bain complète (inclut la niche de douche x in [0, 75], z in [400, 620] et les sanitaires)
-  if (x >= -10 && x < 192 && z >= 400 && z <= 630) {
+  // Salle de bain complète (inclut le receveur de douche jusqu'à Z=675 et les sanitaires)
+  if (x >= -10 && x < 192 && z >= 400 && z <= 680) {
     return 'bathroom';
   }
 
@@ -27,7 +27,7 @@ export function getRoomFromCoords(x: number, z: number): RoomId {
   }
 
   // Extérieur Bâtiment B (Sortie Couloir Sud-Ouest / Rue)
-  if ((x < -100 && z > 100) || z > 630 || (x > 270 && z > 580)) {
+  if ((x < -100 && z > 100) || z > 680 || (x > 270 && z > 580)) {
     return 'outdoor_corridor';
   }
 
@@ -44,6 +44,7 @@ export function getRoomFromCoords(x: number, z: number): RoomId {
   // Zone sud couloir (Z > 400 et X >= 192)
   return 'corridor';
 }
+
 
 
 /**
