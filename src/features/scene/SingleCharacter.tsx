@@ -444,9 +444,14 @@ export function SingleCharacter({
       const c = o as any;
       if (c.isMesh && !c.userData.isCustomHair) {
         const name = (c.name || '').toLowerCase();
-        const isTiny = name.includes('teeth') || name.includes('lash') || name.includes('eye') || name.includes('tongue');
-        c.castShadow = characterShadows && !isTiny;
-        c.receiveShadow = characterShadows;
+        const isInternalInvisible = name.includes('teeth') || name.includes('dent') ||
+                                    name.includes('lash') || name.includes('cil') ||
+                                    name.includes('eye') || name.includes('oeil') ||
+                                    name.includes('tongue') || name.includes('langue') ||
+                                    name.includes('cornea') || name.includes('sclera') ||
+                                    name.includes('pupil') || name.includes('mouth_inner');
+        c.castShadow = characterShadows && !isInternalInvisible;
+        c.receiveShadow = characterShadows && !isInternalInvisible;
         c.frustumCulled = true;
         if (c.geometry) {
           c.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.9, 0), 1.6);
@@ -576,9 +581,14 @@ export function SingleCharacter({
       const c = o as any;
       if (c.isMesh) {
         const name = (c.name || '').toLowerCase();
-        const isTiny = name.includes('teeth') || name.includes('lash') || name.includes('eye') || name.includes('tongue');
-        c.castShadow = characterShadows && !isTiny;
-        c.receiveShadow = characterShadows;
+        const isInternalInvisible = name.includes('teeth') || name.includes('dent') ||
+                                    name.includes('lash') || name.includes('cil') ||
+                                    name.includes('eye') || name.includes('oeil') ||
+                                    name.includes('tongue') || name.includes('langue') ||
+                                    name.includes('cornea') || name.includes('sclera') ||
+                                    name.includes('pupil') || name.includes('mouth_inner');
+        c.castShadow = characterShadows && !isInternalInvisible;
+        c.receiveShadow = characterShadows && !isInternalInvisible;
         if (c.material) {
           const materials = Array.isArray(c.material) ? c.material : [c.material];
           materials.forEach((mat: any) => {

@@ -15,7 +15,7 @@ export interface AgentState {
   isSpawned: boolean;
 }
 
-function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number; z: number } | null): { tx: number; tz: number; label: string; rotY?: number; anim?: string; duration?: number } {
+function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number; z: number } | null): { tx: number; ty?: number; tz: number; label: string; rotY?: number; anim?: string; duration?: number } {
   if (instr.type === 'RETURN_TO_START' && startPos) {
     return { tx: startPos.x, tz: startPos.z, label: 'point de départ' };
   }
@@ -27,6 +27,7 @@ function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number
     const pos = slot ? (slot.approachOffset ?? slot.offset) : obj.position;
     return {
       tx: pos[0],
+      ty: pos[1],
       tz: pos[2],
       label: `${obj.name}${slot ? ` (${slot.name})` : ''}`,
       rotY: slot?.rotY,
@@ -340,6 +341,9 @@ export function useAgentController(
     } else if (statusRef.current === 'INTERACTING') {
       const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
       stateRef.current.animation = currentInstruction.animation || target.anim || 'idle';
+      if (target.ty !== undefined) {
+        stateRef.current.y = target.ty;
+      }
       
       const targetRotY = currentInstruction.rotY !== undefined ? currentInstruction.rotY : target.rotY;
       if (targetRotY !== undefined) {
@@ -357,6 +361,7 @@ export function useAgentController(
       timerRef.current -= dt;
       if (timerRef.current <= 0) {
         statusRef.current = 'IDLE';
+        stateRef.current.y = startPosRef.current?.y ?? 0;
         if (hasNavStep) {
           dynamicNavIndexRef.current++;
           if (dynamicNavIndexRef.current >= dynamicNavQueueRef.current.length) {

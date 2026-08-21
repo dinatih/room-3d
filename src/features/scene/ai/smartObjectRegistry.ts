@@ -40,7 +40,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'lie-down',
         name: 'Dormir couché',
         offset: [74, 45, 150],
-        rotY: 0,
+        rotY: Math.PI / 2,
         animation: 'media/sandbox/anims/anim_sleeping_idle.glb',
         duration: 15.0,
       }
@@ -79,8 +79,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'lie-down',
         name: 'Dormir couché',
-        offset: [270, 0, 190],
-        rotY: Math.PI,
+        offset: [270, 45, 190],
+        rotY: Math.PI / 2,
         animation: 'media/sandbox/anims/anim_sleeping_idle.glb',
         duration: 15.0,
       }
