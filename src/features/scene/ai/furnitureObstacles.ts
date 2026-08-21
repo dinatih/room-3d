@@ -139,7 +139,7 @@ export function getActiveFurnitureObstacles(): FurnitureObstacle[] {
     name: 'Coffre-banc Jardin',
     x: 40,
     z: -90,
-    radius: 35,
+    radius: 70,
     smartObjectIds: ['chest-bench']
   });
 
