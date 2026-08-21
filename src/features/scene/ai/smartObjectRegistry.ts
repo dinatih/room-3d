@@ -577,7 +577,28 @@ export function buildSmartObjectInstructionSequence(
     triggerTargetState: slot.triggerTargetState
   };
 
-  // Traitement spécifique des meubles avec portes qui doivent s'ouvrir avant et se refermer après
+  // Traitement spécifique des meubles avec portes et routines composées
+  if (objectId === 'shower') {
+    return [
+      { type: 'MOVE_TO', targetNodeId: 'Devant_Douche' },
+      { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.5 },
+      { type: 'MOVE_TO', smartObjectId: 'shower', slotId: 'take-shower' },
+      { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.4 },
+      baseInstruction,
+      { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: true, duration: 0.5 },
+      { type: 'MOVE_TO', targetNodeId: 'Devant_Douche' },
+      { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.4 }
+    ];
+  }
+
+  if (objectId === 'toilet') {
+    return [
+      { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'use' },
+      { type: 'INTERACT', smartObjectId: 'toilet', slotId: 'flush' },
+      { type: 'USE_OBJECT', smartObjectId: 'vasque-sdb', slotId: 'wash-hands' }
+    ];
+  }
+
   if (objectId === 'sdb-closet') {
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
@@ -586,7 +607,6 @@ export function buildSmartObjectInstructionSequence(
       { type: 'INTERACT', triggerEventKey: 'sdb-closet-r-toggle', triggerTargetState: false, duration: 0.4 }
     ];
   }
-
 
   if (objectId === 'corridor-closet') {
     return [
@@ -599,3 +619,4 @@ export function buildSmartObjectInstructionSequence(
 
   return [baseInstruction];
 }
+

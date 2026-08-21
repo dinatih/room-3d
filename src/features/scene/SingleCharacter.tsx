@@ -20,23 +20,12 @@ import { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES } from './walk
 export { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES };
 import { buildHairChain, resolveTargetBoneName, retargetClip, getDepth, _retargetCache } from './retargeting';
 import {
-  ACTION_GO_TO_TOILET,
-  ACTION_SIT_DESK_1,
-  ACTION_SIT_OFFICE_CHAIR,
-  ACTION_SIT_DESK_2,
-  ACTIONS_BED_WEST,
-  ACTIONS_BED_EAST,
-  ACTIONS_BATHTUB,
-  ACTION_SHOWER,
-  ACTIONS_GARDEN_SOFA_EAST,
-  ACTIONS_GARDEN_SOFA_WEST,
-  ACTION_COOKING,
-  ACTION_KALLAX_NE,
-  ACTION_FRESH_AIR,
   ACTION_FULL_TOUR,
   buildAutonomousScenario
 } from './ai/scenarios';
+import { buildSmartObjectInstructionSequence } from './ai/smartObjectRegistry';
 import type { AgentInstruction } from './ai/aiTypes';
+
 
 import { useAgentController } from './ai/useAgentController';
 import { appLog } from '@features/ui/AppConsole';
@@ -269,22 +258,23 @@ export function SingleCharacter({
   const activeActionScenario = useMemo(() => {
     switch (activeActionKey) {
       case 'aiFullTour': return ACTION_FULL_TOUR;
-      case 'aiGoToilet': return ACTION_GO_TO_TOILET;
-      case 'aiSitDesk1': return ACTION_SIT_DESK_1;
-      case 'aiSitOfficeChair': return ACTION_SIT_OFFICE_CHAIR;
-      case 'aiSitDesk2': return ACTION_SIT_DESK_2;
-      case 'aiBedWest': return ACTIONS_BED_WEST[0];
-      case 'aiBedEast': return ACTIONS_BED_EAST[0];
-      case 'aiBathtub': return ACTIONS_BATHTUB[0];
-      case 'aiShower': return ACTION_SHOWER;
-      case 'aiGardenSofaEast': return ACTIONS_GARDEN_SOFA_EAST[0];
-      case 'aiGardenSofaWest': return ACTIONS_GARDEN_SOFA_WEST[0];
-      case 'aiCooking': return ACTION_COOKING;
-      case 'aiKallaxNE': return ACTION_KALLAX_NE;
-      case 'aiFreshAir': return ACTION_FRESH_AIR;
+      case 'aiGoToilet': return buildSmartObjectInstructionSequence('toilet');
+      case 'aiSitDesk1': return buildSmartObjectInstructionSequence('desk-bollsidan-1');
+      case 'aiSitOfficeChair': return buildSmartObjectInstructionSequence('chair-office');
+      case 'aiSitDesk2': return buildSmartObjectInstructionSequence('desk-bollsidan-2');
+      case 'aiBedWest': return buildSmartObjectInstructionSequence('bed-west');
+      case 'aiBedEast': return buildSmartObjectInstructionSequence('bed-east');
+      case 'aiBathtub': return buildSmartObjectInstructionSequence('bathtub-garden');
+      case 'aiShower': return buildSmartObjectInstructionSequence('shower');
+      case 'aiGardenSofaEast': return buildSmartObjectInstructionSequence('sofa-garden-east');
+      case 'aiGardenSofaWest': return buildSmartObjectInstructionSequence('sofa-garden-west');
+      case 'aiCooking': return buildSmartObjectInstructionSequence('cuisine-group');
+      case 'aiKallaxNE': return buildSmartObjectInstructionSequence('kallax-ne');
+      case 'aiFreshAir': return buildSmartObjectInstructionSequence('garden-fresh-air');
       default: return null;
     }
   }, [activeActionKey]);
+
 
   // Le personnage est autonome s'il fait partie des PNJ autonomes (qu'il soit le joueur actif ou un PNJ)
   const isAutonomous = AUTONOMOUS_NPC_IDS.has(id);
