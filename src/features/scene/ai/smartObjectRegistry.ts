@@ -39,7 +39,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'lie-down',
         name: 'Dormir couché',
-        offset: [74, 0, 150],
+        offset: [74, 45, 150],
         rotY: 0,
         animation: 'media/sandbox/anims/anim_sleeping_idle.glb',
         duration: 15.0,
@@ -423,8 +423,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'admire',
         name: 'S\'admirer dans le miroir',
-        offset: [160, 0, 350],
-        rotY: Math.PI,
+        offset: [160, 0, 340],
+        rotY: 0,
         animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
         duration: 25.0,
       }
@@ -599,4 +599,3 @@ export function buildSmartObjectInstructionSequence(
 
   return [baseInstruction];
 }
-

@@ -48,8 +48,9 @@ import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
 import {
   ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NEIGHBORS, LAYER_LIDAR,
-  LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER,
+  LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER, LAYER_AI_ZONES,
 } from '@config';
+
 
 /**
  * Génère une env map PMREM à partir d'une scène artificielle (sol/mur/lumières)
@@ -369,9 +370,12 @@ export function Studio() {
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.xray        && <XRayLayer />}
         <Suspense fallback={null}>
-          <AiZonesHelper />
+          <CategoryLayerGroup layer={LAYER_AI_ZONES}>
+            <AiZonesHelper />
+          </CategoryLayerGroup>
         </Suspense>
         {layers.wallEdges   && <WallEdgesLayer />}
+
         {layers.wallEdges   && <EdgeHoverRaycaster />}
         {layers.grid        && <GridLayer depthTest={layers.gridDepth} />}
         {layers.lights      && <LightHelpers />}

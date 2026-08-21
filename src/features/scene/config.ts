@@ -73,3 +73,5 @@ export const LAYER_LIDAR      = 15; // Scan LiDAR
 export const LAYER_WALKER_DETAIL = 16; // Meshes walker masqués en main camera (FPS) mais visibles dans miroirs (yeux, peau visage)
 export const LAYER_MIRRORS       = 17; // Miroirs NISSEDAL / Reflector
 export const LAYER_WALKER        = 18; // Personnages 3D
+export const LAYER_AI_ZONES      = 19; // Zones IA, cercles, flèches et labels texte
+

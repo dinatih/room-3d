@@ -1500,16 +1500,19 @@ function ReflectorMirror({ w, h, position, rotationY }: {
         renderTarget.setSize(targetRes, targetRes);
       }
 
-      // Sync layer mask to the cached reflection camera
+      // Sync layer mask to the cached reflection camera (exclude AI zones and unwanted overlays)
+      const mirrorMask = (cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK) & ~(1 << 19); // 19 = LAYER_AI_ZONES
+
       const reflectionCamera = (mir as any).getReflectionCamera(camera);
       if (reflectionCamera) {
-        reflectionCamera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+        reflectionCamera.layers.mask = mirrorMask;
       }
 
       const oldMask = camera.layers.mask;
-      camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+      camera.layers.mask = mirrorMask;
 
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
+
 
       camera.layers.mask = oldMask;
       _reflectionDepth--;
