@@ -83,7 +83,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     from: 'living',
     to: 'corridor',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetNodeId: 'corridor-center' },
+      { type: 'MOVE_TO', targetNodeId: 'living-corridor-door' },
       { type: 'INTERACT', triggerEventKey: 'livingDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
       { type: 'MOVE_TO', targetNodeId: 'corridor-entry-door' }
     ]
@@ -92,11 +92,12 @@ export const ROOM_PORTALS: RoomPortal[] = [
     from: 'corridor',
     to: 'living',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetNodeId: 'corridor-center' },
+      { type: 'MOVE_TO', targetNodeId: 'living-corridor-door' },
       { type: 'INTERACT', triggerEventKey: 'livingDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
       { type: 'MOVE_TO', targetPos: [230, 0, 320] } // Avance dans le salon
     ]
   },
+
 
   // ── COULOIR <-> SALLE DE BAIN (via Porte SDB) ──
   {

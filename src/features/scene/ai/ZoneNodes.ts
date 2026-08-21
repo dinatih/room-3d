@@ -5,7 +5,7 @@ import { ZoneNode } from './aiTypes';
  * Les meubles et interactions spécifiques sont gérés via SMART_OBJECTS (smartObjectRegistry.ts).
  */
 export const WAYPOINTS: Record<string, ZoneNode> = {
-  'corridor-center':        { id: 'corridor-center',        name: 'Couloir Central',             x: 230, z: 350 },
+  'living-corridor-door':   { id: 'living-corridor-door',   name: 'Séjour (Devant Porte)',       x: 230, z: 350 },
   'corridor-entry-door':    { id: 'corridor-entry-door',    name: 'Couloir (Devant Porte)',      x: 248, z: 535 },
   'outdoor-entry-door':     { id: 'outdoor-entry-door',     name: 'Extérieur (Devant Porte)',    x: 288, z: 603 },
   'corridor-bathroom-door': { id: 'corridor-bathroom-door', name: 'Couloir (Devant Porte SDB)',  x: 248, z: 535 },
@@ -16,6 +16,7 @@ export const WAYPOINTS: Record<string, ZoneNode> = {
   'outdoor-garden-west':    { id: 'outdoor-garden-west',    name: 'Cour Ouest',                  x: -200, z: -100 },
   'outdoor-garden-east':    { id: 'outdoor-garden-east',    name: 'Cour Est',                    x: 400, z: -500 },
 };
+
 
 /** Alias de rétro-compatibilité */
 export const ZONES = WAYPOINTS;
