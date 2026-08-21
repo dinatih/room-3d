@@ -224,10 +224,12 @@ export function HoverRaycaster() {
     let hideTimer: ReturnType<typeof setTimeout> | null = null;
     let interactiveCache: THREE.Object3D[] = [];
     let lastCacheTime = 0;
+    const downPos = { x: 0, y: 0 };
+    let isDragGesture = false;
 
     function getInteractiveRoots(): THREE.Object3D[] {
       const now = performance.now();
-      if (now - lastCacheTime > 1500 || interactiveCache.length === 0) {
+      if (now - lastCacheTime > 3000 || interactiveCache.length === 0) {
         interactiveCache = [];
         scene.traverse(obj => {
           if (obj.userData?.hoverAction) {
@@ -308,17 +310,39 @@ export function HoverRaycaster() {
     let showTimer: ReturnType<typeof setTimeout> | null = null;
     let currentHoverObject: string | null = null;
 
+    const onPointerDown = (e: PointerEvent) => {
+      downPos.x = e.clientX;
+      downPos.y = e.clientY;
+      isDragGesture = false;
+
+      // Si double-clic ou clic multiple rapide, fermer immédiatement tout menu
+      if (e.detail >= 2) {
+        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+        currentHoverObject = null;
+        if (hoverState.locked) {
+          hoverState.locked = false;
+        }
+        hoverState.visible = false;
+        hoverState.onUpdate?.();
+      }
+    };
+
     const onMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
       if (hoverState.touchActive) return;
-      if (cameraState.isDragging) {
+
+      if (e.buttons > 0 || Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y) > 6) {
+        isDragGesture = true;
+      }
+
+      if (isDragGesture || cameraState.isDragging || e.buttons > 0) {
         if (showTimer) { clearTimeout(showTimer); showTimer = null; }
         currentHoverObject = null;
         scheduleHide();
         return;
       }
       const now = performance.now();
-      if (now - lastMove < 100) return;
+      if (now - lastMove < 200) return;
       lastMove = now;
 
       const found = raycastAt(e.clientX, e.clientY);
@@ -333,7 +357,7 @@ export function HoverRaycaster() {
           hoverState.y = e.clientY;
           hoverState.onUpdate?.();
         } 
-        // Si c'est un nouvel objet interactif
+        // Si c'est un nouvel objet interactif (attente 3s avant d'afficher)
         else {
           currentHoverObject = newHoverId;
           hoverState.visible = false;
@@ -346,7 +370,7 @@ export function HoverRaycaster() {
             hoverState.actionIds = found.actionIds;
             canvas.style.cursor  = 'pointer';
             hoverState.onUpdate?.();
-          }, 2000);
+          }, 3000);
         }
       } else {
         // Plus d'objet interactif sous la souris
@@ -363,9 +387,27 @@ export function HoverRaycaster() {
       scheduleHide(); 
     };
 
+    const onDblClick = () => {
+      if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+      currentHoverObject = null;
+      hoverState.locked = false;
+      hoverState.visible = false;
+      hoverState.onUpdate?.();
+    };
+
     // ── Clic : épingle / ferme le modal ──────────────────────────────────────
     const onClick = (e: MouseEvent) => {
       if (hoverState.touchActive) return;
+
+      // Double-clic, glissé de caméra ou caméra en cours de drag -> ignorer et fermer
+      if (isDragGesture || e.detail >= 2 || cameraState.isDragging) {
+        if (hoverState.locked) {
+          hoverState.locked = false;
+          hoverState.onUpdate?.();
+        }
+        return;
+      }
+
       const found = raycastAt(e.clientX, e.clientY);
       if (found) {
         const sameObject = hoverState.locked &&
@@ -426,17 +468,21 @@ export function HoverRaycaster() {
       hoverState.onUpdate?.();
     };
 
+    canvas.addEventListener('pointerdown',  onPointerDown);
     canvas.addEventListener('pointermove',  onMove);
     canvas.addEventListener('pointerleave', onLeave);
     canvas.addEventListener('click',        onClick);
+    canvas.addEventListener('dblclick',     onDblClick);
     window.addEventListener('keydown',      onKeyDown);
     canvas.addEventListener('touchstart',   onTouchStart, { passive: true });
     canvas.addEventListener('touchmove',    onTouchMove,  { passive: true });
     canvas.addEventListener('touchend',     onTouchEnd);
     return () => {
+      canvas.removeEventListener('pointerdown',  onPointerDown);
       canvas.removeEventListener('pointermove',  onMove);
       canvas.removeEventListener('pointerleave', onLeave);
       canvas.removeEventListener('click',        onClick);
+      canvas.removeEventListener('dblclick',     onDblClick);
       window.removeEventListener('keydown',      onKeyDown);
       canvas.removeEventListener('touchstart',   onTouchStart);
       canvas.removeEventListener('touchmove',    onTouchMove);
