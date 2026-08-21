@@ -72,6 +72,7 @@ export function useAgentController(
   // Navigation dynamique inter-pièces
   const dynamicNavQueueRef = useRef<AgentInstruction[]>([]);
   const dynamicNavIndexRef = useRef(0);
+  const activeNavStepIndexRef = useRef<number>(-1);
 
   // Ref pour éviter les logs dupliqués à chaque frame
   const lastLogRef = useRef<string>('');
@@ -84,6 +85,7 @@ export function useAgentController(
     prevScenarioRef.current = scenario;
     dynamicNavQueueRef.current = [];
     dynamicNavIndexRef.current = 0;
+    activeNavStepIndexRef.current = -1;
     
     // Sync starting position with the actual character position when AI starts
     if (scenario) {
@@ -149,6 +151,7 @@ export function useAgentController(
     if (stepIndexRef.current >= scenario.length && dynamicNavQueueRef.current.length === 0) {
       if (loop) {
         stepIndexRef.current = 0; // Boucler le scénario
+        activeNavStepIndexRef.current = -1;
         // Log de rebouclage, une seule fois par cycle
         const loopKey = `loop-${_characterId}`;
         if (lastLogRef.current !== loopKey) {
@@ -175,8 +178,9 @@ export function useAgentController(
       if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START' || currentInstruction.type === 'USE_OBJECT') {
         const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
         
-        // Si nous n'étions pas déjà dans une file de navigation, vérifier si un changement de pièce est nécessaire
-        if (!hasNavStep) {
+        // Calculer le chemin inter-pièces UNIQUEMENT une seule fois par instruction principale
+        if (!hasNavStep && activeNavStepIndexRef.current !== stepIndexRef.current) {
+          activeNavStepIndexRef.current = stepIndexRef.current;
           const startRoom = getRoomFromCoords(stateRef.current.x, stateRef.current.z);
           const targetRoom = getRoomFromCoords(target.tx, target.tz);
           
@@ -193,6 +197,7 @@ export function useAgentController(
             }
           }
         }
+
 
         statusRef.current = 'MOVING';
         const logKey = `move-${stepIndexRef.current}-${dynamicNavIndexRef.current}-${target.label}`;
