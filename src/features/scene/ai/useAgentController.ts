@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { AgentInstruction } from './aiTypes';
 import { ZONES } from './ZoneNodes';
 import { SMART_OBJECTS } from './smartObjectRegistry';
+import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
 
@@ -67,6 +68,11 @@ export function useAgentController(
   const delayTimerRef = useRef(spawnDelay);
   const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
   const startPosRef = useRef<{x: number, y: number, z: number, rotY: number} | null>(null);
+  
+  // Navigation dynamique inter-pièces
+  const dynamicNavQueueRef = useRef<AgentInstruction[]>([]);
+  const dynamicNavIndexRef = useRef(0);
+
   // Ref pour éviter les logs dupliqués à chaque frame
   const lastLogRef = useRef<string>('');
 
@@ -76,6 +82,8 @@ export function useAgentController(
     statusRef.current = spawnDelay > 0 ? 'WAITING' : 'IDLE';
     delayTimerRef.current = spawnDelay;
     prevScenarioRef.current = scenario;
+    dynamicNavQueueRef.current = [];
+    dynamicNavIndexRef.current = 0;
     
     // Sync starting position with the actual character position when AI starts
     if (scenario) {
@@ -138,7 +146,7 @@ export function useAgentController(
       return stateRef.current;
     }
 
-    if (stepIndexRef.current >= scenario.length) {
+    if (stepIndexRef.current >= scenario.length && dynamicNavQueueRef.current.length === 0) {
       if (loop) {
         stepIndexRef.current = 0; // Boucler le scénario
         // Log de rebouclage, une seule fois par cycle
@@ -157,13 +165,37 @@ export function useAgentController(
       }
     }
 
-    const currentInstruction = scenario[stepIndexRef.current];
+    // ── Détermination de l'instruction active (nav queue prioritaire ou scénario principal) ──
+    const hasNavStep = dynamicNavIndexRef.current < dynamicNavQueueRef.current.length;
+    const currentInstruction = hasNavStep
+      ? dynamicNavQueueRef.current[dynamicNavIndexRef.current]
+      : scenario[stepIndexRef.current];
 
     if (statusRef.current === 'IDLE') {
       if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START' || currentInstruction.type === 'USE_OBJECT') {
-        statusRef.current = 'MOVING';
         const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
-        const logKey = `move-${stepIndexRef.current}-${target.label}`;
+        
+        // Si nous n'étions pas déjà dans une file de navigation, vérifier si un changement de pièce est nécessaire
+        if (!hasNavStep) {
+          const startRoom = getRoomFromCoords(stateRef.current.x, stateRef.current.z);
+          const targetRoom = getRoomFromCoords(target.tx, target.tz);
+          
+          if (startRoom !== targetRoom) {
+            const navSteps = buildNavigationWaypoints(
+              { x: stateRef.current.x, z: stateRef.current.z },
+              { x: target.tx, z: target.tz }
+            );
+            if (navSteps.length > 0) {
+              dynamicNavQueueRef.current = navSteps;
+              dynamicNavIndexRef.current = 0;
+              // Reprendre avec la 1ère étape de transition
+              return update(dt);
+            }
+          }
+        }
+
+        statusRef.current = 'MOVING';
+        const logKey = `move-${stepIndexRef.current}-${dynamicNavIndexRef.current}-${target.label}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
           appLog(_characterId, `🚶‍♂️ Marche vers ${target.label} (${target.tx.toFixed(0)}, ${target.tz.toFixed(0)})`);
@@ -183,7 +215,7 @@ export function useAgentController(
           const isDoor = key.toLowerCase().includes('door');
           
           if (isDoor) {
-            const wantsToOpen = currentInstruction.animation?.includes('open_door');
+            const wantsToOpen = currentInstruction.triggerTargetState ?? currentInstruction.animation?.includes('open_door');
             if (wantsToOpen && !currentVal) {
               useSceneStore.getState().toggleFurniture(key);
             } else if (!wantsToOpen && currentVal) {
@@ -197,7 +229,7 @@ export function useAgentController(
         // Log action INTERACT
         const animation = currentInstruction.animation || target.anim || '';
         const duration = timerRef.current;
-        const logKey = `interact-${stepIndexRef.current}-${animation}`;
+        const logKey = `interact-${stepIndexRef.current}-${dynamicNavIndexRef.current}-${animation}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
           const label = animation
@@ -207,6 +239,7 @@ export function useAgentController(
         }
       }
     }
+
 
     if (statusRef.current === 'MOVING') {
       const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
@@ -250,7 +283,15 @@ export function useAgentController(
           }
         } else {
           statusRef.current = 'IDLE';
-          stepIndexRef.current++;
+          if (hasNavStep) {
+            dynamicNavIndexRef.current++;
+            if (dynamicNavIndexRef.current >= dynamicNavQueueRef.current.length) {
+              dynamicNavQueueRef.current = [];
+              dynamicNavIndexRef.current = 0;
+            }
+          } else {
+            stepIndexRef.current++;
+          }
           stateRef.current.animation = 'idle';
         }
       } else {
@@ -298,9 +339,18 @@ export function useAgentController(
       timerRef.current -= dt;
       if (timerRef.current <= 0) {
         statusRef.current = 'IDLE';
-        stepIndexRef.current++;
+        if (hasNavStep) {
+          dynamicNavIndexRef.current++;
+          if (dynamicNavIndexRef.current >= dynamicNavQueueRef.current.length) {
+            dynamicNavQueueRef.current = [];
+            dynamicNavIndexRef.current = 0;
+          }
+        } else {
+          stepIndexRef.current++;
+        }
       }
     }
+
 
 
     return stateRef.current;
