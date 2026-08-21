@@ -49,28 +49,8 @@ export { WALKER_ANIM_OPTIONS };
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
 
-/** Danses aléatoires intercalées entre les actions autonomes */
-const AUTONOMOUS_DANCE_ANIMS = [
-  'media/sandbox/anims/anim_belly_dance.glb',
-  'media/sandbox/anims/anim_house_dancing.glb',
-  'media/sandbox/anims/miley_armature_10_dance_like_sidestep.glb',
-  'media/sandbox/anims/miley_armature_aerobic_dance.glb',
-  'media/sandbox/anims/miley_armature_air_dance.glb',
-  'media/sandbox/anims/miley_armature_couple_pop_dance_f.glb',
-  'media/sandbox/anims/miley_armature_couple_pop_dance_m.glb',
-  'media/sandbox/anims/miley_armature_dance_graceful.glb',
-  'media/sandbox/anims/miley_armature_dancetomusic_f.glb',
-  'media/sandbox/anims/miley_armature_energetic_dance_f.glb',
-  'media/sandbox/anims/miley_armature_energetic_dance_m.glb',
-  'media/sandbox/anims/miley_armature_sensual_dance_01.glb',
-  'media/sandbox/anims/miley_armature_sensual_dance_02.glb',
-  'media/sandbox/anims/miley_armature_sensual_dance_03.glb',
-  'media/sandbox/anims/miley_armature_slow_dance_f.glb',
-  'media/sandbox/anims/miley_armature_slow_dance_m.glb',
-];
-
 function buildAutonomousScenario(): AgentInstruction[] {
-  // Combine séquences Smart Objects + actions procédurales
+  // Combine séquences Smart Objects + actions réalistes de vie quotidienne
   const smartActions: AgentInstruction[][] = [
     buildSmartObjectInstructionSequence('bed-west'),
     buildSmartObjectInstructionSequence('bed-east'),
@@ -92,21 +72,11 @@ function buildAutonomousScenario(): AgentInstruction[] {
     ACTION_ENTREE_COURS_BAT_B
   ].filter(seq => seq.length > 0);
 
-  const randomDance = (): AgentInstruction => ({
-    type: 'INTERACT',
-    animation: AUTONOMOUS_DANCE_ANIMS[Math.floor(Math.random() * AUTONOMOUS_DANCE_ANIMS.length)],
-    duration: 8.0 + Math.random() * 7.0, // 8 à 15 secondes de danse
-  });
-
-  // Mélanger les actions et intercaler une danse entre chaque action
+  // Mélanger les actions de vie quotidienne de façon fluide et réaliste
   const shuffled = [...smartActions].sort(() => Math.random() - 0.5);
-  const withDances: AgentInstruction[][] = [];
-  shuffled.forEach((action, i) => {
-    withDances.push(action);
-    if (i < shuffled.length - 1) withDances.push([randomDance()]);
-  });
-  return withDances.flat();
+  return shuffled.flat();
 }
+
 
 
 // Static temp vectors for zero-allocation per-frame physics & transforms
