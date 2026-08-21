@@ -337,8 +337,11 @@ export function useAgentController(
       const dz = tz - stateRef.current.z;
       const dist = Math.sqrt(dx * dx + dz * dz);
 
-      if (dist < 2.0) {
-        // Arrivé
+      // Seuil d'arrivée souple à 15 cm (pour les waypoints de passage) ou 5 cm (pour les smart objects)
+      const ARRIVAL_THRESHOLD = (currentInstruction.type === 'USE_OBJECT' || (!hasNavStep && currentInstruction.smartObjectId)) ? 8.0 : 18.0;
+
+      if (dist < ARRIVAL_THRESHOLD) {
+        // Arrivé au waypoint
         stateRef.current.x = tx;
         stateRef.current.z = tz;
         const arrivedKey = `arrived-${stepIndexRef.current}`;
@@ -411,14 +414,17 @@ export function useAgentController(
         let dirZ = dz / dist;
 
         // ── Système d'évitement et de contournement des autres personnages (NPCs et joueur) ──
-        // Rayon de sécurité personnelle : 40 cm. Distance d'anticipation : jusqu'à 85 cm.
-        const AVOID_RADIUS = 40;
-        const LOOKAHEAD_DIST = 85;
+        // Rayon de sécurité personnelle : 35 cm. Distance d'anticipation : jusqu'à 70 cm.
+        const AVOID_RADIUS = 35;
+        const LOOKAHEAD_DIST = 70;
         let avoidanceForceX = 0;
         let avoidanceForceZ = 0;
 
         const currentX = stateRef.current.x;
         const currentZ = stateRef.current.z;
+
+        // Si nous sommes très proches du waypoint de destination (< 30 cm), réduire l'évitement pour garantir l'arrivée
+        const targetProximityDampener = Math.min(1.0, dist / 30.0);
 
         // Parcourir les positions des autres personnages connus
         for (const [otherId, pos] of Object.entries(cameraState.positions)) {
@@ -447,7 +453,7 @@ export function useAgentController(
                 // Force de contournement latéral (augmente quand la distance diminue)
                 const lateralWeight = Math.max(0.2, (AVOID_RADIUS - perpDist) / AVOID_RADIUS);
                 const proximityWeight = Math.max(0.3, (LOOKAHEAD_DIST - otherDist) / LOOKAHEAD_DIST);
-                const steerIntensity = 1.6 * lateralWeight * proximityWeight;
+                const steerIntensity = 1.0 * lateralWeight * proximityWeight * targetProximityDampener;
 
                 // Ajouter la déviation latérale perpendiculaire
                 const perpX = -dirZ * steerSide;
@@ -456,9 +462,9 @@ export function useAgentController(
                 avoidanceForceX += perpX * steerIntensity;
                 avoidanceForceZ += perpZ * steerIntensity;
 
-                // Répulsion radiale supplémentaire si très proche
+                // Répulsion radiale douce supplémentaire si très proche
                 if (otherDist < AVOID_RADIUS) {
-                  const repulseIntensity = ((AVOID_RADIUS - otherDist) / AVOID_RADIUS) * 1.2;
+                  const repulseIntensity = ((AVOID_RADIUS - otherDist) / AVOID_RADIUS) * 0.7 * targetProximityDampener;
                   avoidanceForceX -= (toOtherX / otherDist) * repulseIntensity;
                   avoidanceForceZ -= (toOtherZ / otherDist) * repulseIntensity;
                 }
@@ -467,7 +473,7 @@ export function useAgentController(
           }
         }
 
-        // Combiner la direction cible et les forces d'évitement
+        // Combiner la direction cible (qui conserve toujours un poids minimum fort pour continuer d'avancer vers la cible)
         let steerX = dirX + avoidanceForceX;
         let steerZ = dirZ + avoidanceForceZ;
         const steerLen = Math.hypot(steerX, steerZ);
