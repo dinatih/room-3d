@@ -42,7 +42,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [74, 45, 150],
         rotY: Math.PI / 2,
         animation: 'media/sandbox/anims/anim_sleeping_idle.glb',
-        duration: 15.0,
+        duration: 45.0,
       }
     ]
   },
