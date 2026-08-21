@@ -581,11 +581,12 @@ export function buildSmartObjectInstructionSequence(
   if (objectId === 'sdb-closet') {
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
-      { type: 'INTERACT', triggerEventKey: 'sdb-closet-l-toggle', triggerTargetState: true, duration: 0.5 },
+      { type: 'INTERACT', triggerEventKey: 'sdb-closet-r-toggle', triggerTargetState: true, duration: 0.5 },
       baseInstruction,
-      { type: 'INTERACT', triggerEventKey: 'sdb-closet-l-toggle', triggerTargetState: false, duration: 0.4 }
+      { type: 'INTERACT', triggerEventKey: 'sdb-closet-r-toggle', triggerTargetState: false, duration: 0.4 }
     ];
   }
+
 
   if (objectId === 'corridor-closet') {
     return [

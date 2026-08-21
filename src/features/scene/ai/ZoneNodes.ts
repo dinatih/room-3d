@@ -80,13 +80,14 @@ export const ACTION_SHOWER: AgentInstruction[] = [
 export const ACTION_LAUNDRY: AgentInstruction[] = [
   // 1. Se place devant le placard SDB
   { type: 'MOVE_TO', smartObjectId: 'sdb-closet', slotId: 'pick-laundry' },
-  // 2. Ouvre la porte du placard
-  { type: 'INTERACT', triggerEventKey: 'sdb-closet-l-toggle', triggerTargetState: true, duration: 0.5 },
+  // 2. Ouvre la porte droite du placard
+  { type: 'INTERACT', triggerEventKey: 'sdb-closet-r-toggle', triggerTargetState: true, duration: 0.5 },
   // 3. Prend le sac de linge sale
   { type: 'USE_OBJECT', smartObjectId: 'sdb-closet', slotId: 'pick-laundry' },
-  // 4. Referme la porte du placard
-  { type: 'INTERACT', triggerEventKey: 'sdb-closet-l-toggle', triggerTargetState: false, duration: 0.4 }
+  // 4. Referme la porte droite du placard
+  { type: 'INTERACT', triggerEventKey: 'sdb-closet-r-toggle', triggerTargetState: false, duration: 0.4 }
 ];
+
 
 
 

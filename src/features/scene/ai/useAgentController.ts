@@ -210,27 +210,40 @@ export function useAgentController(
         const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
         timerRef.current = currentInstruction.duration || target.duration || 1.0;
         if (currentInstruction.triggerEventKey) {
-          let key = currentInstruction.triggerEventKey as any;
+          let key = currentInstruction.triggerEventKey;
           
           if (key === 'eastGlassDoor' && useSceneStore.getState().furniture.bimDoubleDoor) {
             key = 'bimDoorRightOpen';
           }
 
-          const currentVal = (useSceneStore.getState().furniture as any)[key];
-          const isDoor = key.toLowerCase().includes('door');
+          const store = useSceneStore.getState();
+          const furniture = store.furniture as any;
+          const extraStates = store.extraStates as any;
+
+          // Mapping de compatibilité pour lire la valeur actuelle
+          const lookupKey = 
+            key === 'corr-doors-toggle' ? 'corrDoors' :
+            key === 'sdb-closet-l-toggle' ? 'sdbClosetL' :
+            key === 'sdb-closet-r-toggle' ? 'sdbClosetR' :
+            key === 'sdb-closet-toggle' ? 'sdbClosetR' :
+            key;
+
+          const currentVal = furniture[lookupKey] ?? extraStates[lookupKey] ?? false;
+          const isDoor = key.toLowerCase().includes('door') || key.toLowerCase().includes('closet');
           
           if (isDoor) {
             const wantsToOpen = currentInstruction.triggerTargetState ?? currentInstruction.animation?.includes('open_door');
             if (wantsToOpen && !currentVal) {
-              useSceneStore.getState().toggleFurniture(key);
+              store.triggerAction(key);
             } else if (!wantsToOpen && currentVal) {
               // Si un perso ferme la porte (wantsToOpen=false), on la ferme uniquement si elle est ouverte
-              useSceneStore.getState().toggleFurniture(key);
+              store.triggerAction(key);
             }
           } else {
-            useSceneStore.getState().toggleFurniture(key);
+            store.triggerAction(key);
           }
         }
+
         // Log action INTERACT
         const animation = currentInstruction.animation || target.anim || '';
         const duration = timerRef.current;
