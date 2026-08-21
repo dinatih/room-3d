@@ -3,7 +3,6 @@ import * as THREE from 'three';
 export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivida' | 'sabira' | 'safa' | 'sandra' | 'rajaa' | 'angelina' | 'romana' | 'lgbta';
 
 const textureCache: Record<string, THREE.Texture> = {};
-const grayscaleTextureCache: Record<string, THREE.Texture> = {};
 
 function getTexture(url: string): THREE.Texture {
   if (!textureCache[url]) {
@@ -20,11 +19,6 @@ function createGrayscaleTexture(
   mode: 'vivida' | 'light' | 'white-boost' | 'standard' = 'standard'
 ): THREE.Texture | null {
   if (!originalTex || !originalTex.image) return null;
-  const cacheKey = `${originalTex.uuid || (originalTex.image as any)?.src || 'tex'}_${mode}`;
-  if (grayscaleTextureCache[cacheKey]) {
-    return grayscaleTextureCache[cacheKey];
-  }
-
   const img = originalTex.image as HTMLImageElement | HTMLCanvasElement;
   const width = img.width || 1024;
   const height = img.height || 1024;
@@ -56,7 +50,6 @@ function createGrayscaleTexture(
   newTex.flipY = originalTex.flipY;
   newTex.colorSpace = THREE.SRGBColorSpace;
   newTex.needsUpdate = true;
-  grayscaleTextureCache[cacheKey] = newTex;
   return newTex;
 }
 
@@ -395,8 +388,25 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   mat.emissive = new THREE.Color(0xff0000);
                   mat.emissiveIntensity = 0.01;
 
-                  if (mat.map && mat.map.image) {
-                    mat.map = getRosannaTopTexture(mat.map);
+                  // BULLS 66 Text
+                  const canvas = document.createElement('canvas');
+                  canvas.width = 1024; canvas.height = 1024;
+                  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+                  if (ctx && mat.map && mat.map.image) {
+                    ctx.drawImage(mat.map.image as any, 0, 0, 1024, 1024);
+                    ctx.fillStyle = 'black'; ctx.textAlign = 'center';
+
+                    // X=700 comme demandé
+                    ctx.font = '900 80px Graduate';
+                    ctx.fillText('BULLS', 700, 750);
+                    ctx.font = '900 150px Graduate';
+                    ctx.fillText('66', 700, 870);
+
+                    const newTex = new THREE.CanvasTexture(canvas);
+                    newTex.flipY = false;
+                    newTex.colorSpace = THREE.SRGBColorSpace;
+                    mat.map = newTex;
+                    mat.needsUpdate = true;
                   }
                }
             } else {
@@ -440,63 +450,33 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
   if (isMarissa && !model.userData.hasMarissaPiercings) {
     model.userData.hasMarissaPiercings = true;
 
+    const piercingMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      metalness: 0.95,
+      roughness: 0.05,
+      name: 'MarissaPiercingMat',
+    });
+
     const headBone = model.getObjectByName('head_neck_upper') || model.getObjectByName('head') || model.getObjectByName('Head');
     if (headBone) {
       headBone.children = headBone.children.filter(c => c.name !== 'MarissaCupidPiercing' && c.name !== 'MarissaNostrilPiercing');
 
       // 1. Coupe de Cupidon - Clou / Bille (Sphere stud) au centre au-dessus de la lèvre supérieure
-      const studMesh = new THREE.Mesh(sharedStudGeo, sharedPiercingMat);
+      const studGeo = new THREE.SphereGeometry(0.0028, 5, 5);
+      const studMesh = new THREE.Mesh(studGeo, piercingMat);
       studMesh.name = 'MarissaCupidPiercing';
       studMesh.position.set(-0.000, 0.106, 0.053);
       headBone.add(studMesh);
 
       // 2. Narine Gauche - Boucle / Anneau (Torus ring) sur l'aile de la narine gauche
-      const ringMesh = new THREE.Mesh(sharedRingGeo, sharedPiercingMat);
+      const ringGeo = new THREE.TorusGeometry(0.0038, 0.0011, 12, 24);
+      const ringMesh = new THREE.Mesh(ringGeo, piercingMat);
       ringMesh.name = 'MarissaNostrilPiercing';
       ringMesh.position.set(0.012, 0.120, 0.040);
       ringMesh.rotation.y = Math.PI / 2.2;
       headBone.add(ringMesh);
     }
   }
-}
-
-// ── SHARED PIERCINGS & ROSANNA CACHE ──────────────────────────────────────────
-
-const sharedPiercingMat = new THREE.MeshStandardMaterial({
-  color: 0xffffff,
-  metalness: 0.95,
-  roughness: 0.05,
-  name: 'MarissaPiercingMat',
-});
-const sharedStudGeo = new THREE.SphereGeometry(0.0028, 5, 5);
-const sharedRingGeo = new THREE.TorusGeometry(0.0038, 0.0011, 12, 24);
-let rosannaTopTextureCache: THREE.CanvasTexture | null = null;
-
-function getRosannaTopTexture(baseMap: THREE.Texture): THREE.Texture {
-  if (rosannaTopTextureCache) return rosannaTopTextureCache;
-  const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 1024;
-  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
-  if (ctx && baseMap && baseMap.image) {
-    ctx.drawImage(baseMap.image as any, 0, 0, 1024, 1024);
-    ctx.fillStyle = 'black';
-    ctx.textAlign = 'center';
-
-    // X=700 comme demandé
-    ctx.font = '900 80px Graduate';
-    ctx.fillText('BULLS', 700, 750);
-    ctx.font = '900 150px Graduate';
-    ctx.fillText('66', 700, 870);
-
-    const newTex = new THREE.CanvasTexture(canvas);
-    newTex.flipY = false;
-    newTex.colorSpace = THREE.SRGBColorSpace;
-    newTex.needsUpdate = true;
-    rosannaTopTextureCache = newTex;
-    return newTex;
-  }
-  return baseMap;
 }
 
 // ── MARISSA TATTOO CANVAS GENERATOR ──────────────────────────────────────────
