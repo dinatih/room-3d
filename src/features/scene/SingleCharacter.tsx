@@ -65,6 +65,7 @@ function buildAutonomousScenario(): AgentInstruction[] {
     buildSmartObjectInstructionSequence('kallax-ne'),
     buildSmartObjectInstructionSequence('cuisine-group'),
     buildSmartObjectInstructionSequence('freezer'),
+    buildSmartObjectInstructionSequence('rain-dance'),
     ACTION_GO_TO_TOILET,
     ACTION_SHOWER,
     ACTION_FRESH_AIR,

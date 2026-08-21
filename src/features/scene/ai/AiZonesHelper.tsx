@@ -17,31 +17,37 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export function AiZonesHelper() {
   const visible = useSceneStore(s => s.layers.aiZones);
+  const cameraMode = useSceneStore(s => s.cameraMode);
   if (!visible) return null;
 
+  const isTopView = cameraMode === 'top';
+  // En vue du dessus, on place les repères visuels bien au-dessus des meubles pour être toujours lisibles
+  const baseHeight = isTopView ? 280 : 1.2;
+  const labelHeight = isTopView ? 290 : 25;
+
   return (
-    <group>
+    <group renderOrder={9999}>
       {/* ── Points de passage / Waypoints ── */}
       {Object.values(ZONES).map(zone => (
-        <group key={`wp-${zone.id}`} position={[zone.x, 1, zone.z]}>
+        <group key={`wp-${zone.id}`} position={[zone.x, baseHeight, zone.z]}>
           <mesh rotation={[-Math.PI / 2, 0, 0]}>
             <circleGeometry args={[6, 24]} />
-            <meshBasicMaterial color="#ffffff" opacity={0.25} transparent depthTest={false} />
+            <meshBasicMaterial color="#ffffff" opacity={0.35} transparent depthTest={false} depthWrite={false} />
           </mesh>
           <mesh rotation={[-Math.PI / 2, 0, 0]}>
             <ringGeometry args={[5, 6, 24]} />
-            <meshBasicMaterial color="#aaaaaa" depthTest={false} />
+            <meshBasicMaterial color="#aaaaaa" depthTest={false} depthWrite={false} />
           </mesh>
-          <Billboard position={[0, 15, 0]}>
+          <Billboard position={[0, isTopView ? 8 : 15, 0]}>
             <Text
-              fontSize={6}
-              color="#cccccc"
+              fontSize={6.5}
+              color="#eeeeee"
               anchorX="center"
               anchorY="middle"
-              outlineWidth={0.6}
+              outlineWidth={0.7}
               outlineColor="#000000"
-              depthOffset={-50}
               material-depthTest={false}
+              material-depthWrite={false}
               renderOrder={9998}
             >
               {`📍 ${zone.id}`}
@@ -53,40 +59,68 @@ export function AiZonesHelper() {
       {/* ── Smart Objects et leurs Slots d'affordance ── */}
       {Object.values(SMART_OBJECTS).map(obj => {
         const color = CATEGORY_COLORS[obj.category] || '#00ff88';
+        const slotsCount = obj.slots.length;
+        
+        // Calcule le centre moyen de tous les slots de l'objet pour un label d'objet unique et propre
+        const avgX = obj.slots.reduce((sum, s) => sum + s.offset[0], 0) / (slotsCount || 1);
+        const avgZ = obj.slots.reduce((sum, s) => sum + s.offset[2], 0) / (slotsCount || 1);
+
         return (
           <group key={`smart-${obj.id}`}>
-            {obj.slots.map(slot => {
+            {/* Si l'objet a plusieurs slots qui sont proches, on affiche un titre principal d'objet, et des labels compacts par slot */}
+            <Billboard position={[avgX, labelHeight + (slotsCount > 1 ? 12 : 0), avgZ]}>
+              <Text
+                fontSize={7.5}
+                color={color}
+                anchorX="center"
+                anchorY="middle"
+                outlineWidth={0.8}
+                outlineColor="#000000"
+                material-depthTest={false}
+                material-depthWrite={false}
+                renderOrder={9999}
+              >
+                {`✨ ${obj.name}`}
+              </Text>
+            </Billboard>
+
+            {obj.slots.map((slot, slotIdx) => {
               const pos = slot.offset;
+              
+              // Décalage vertical si plusieurs slots ont exactement les mêmes coordonnées X/Z
+              const isSameCoords = obj.slots.some((other, oIdx) => oIdx < slotIdx && Math.hypot(other.offset[0] - pos[0], other.offset[2] - pos[2]) < 5);
+              const slotOffsetY = isSameCoords ? (slotIdx * 6) : 0;
+
               return (
-                <group key={`slot-${obj.id}-${slot.slotId}`} position={[pos[0], 1.2, pos[2]]}>
+                <group key={`slot-${obj.id}-${slot.slotId}`} position={[pos[0], baseHeight, pos[2]]}>
                   {/* Cible au sol */}
                   <mesh rotation={[-Math.PI / 2, 0, 0]}>
                     <circleGeometry args={[10, 32]} />
-                    <meshBasicMaterial color={color} opacity={0.35} transparent depthTest={false} />
+                    <meshBasicMaterial color={color} opacity={0.4} transparent depthTest={false} depthWrite={false} />
                   </mesh>
                   <mesh rotation={[-Math.PI / 2, 0, 0]}>
                     <ringGeometry args={[8, 10, 32]} />
-                    <meshBasicMaterial color={color} depthTest={false} />
+                    <meshBasicMaterial color={color} depthTest={false} depthWrite={false} />
                   </mesh>
                   {/* Flèche d'orientation */}
                   <mesh rotation={[-Math.PI / 2, 0, -slot.rotY]} position={[0, 0.2, 0]}>
                     <coneGeometry args={[3, 8, 16]} />
-                    <meshBasicMaterial color="#ffffff" depthTest={false} />
+                    <meshBasicMaterial color="#ffffff" depthTest={false} depthWrite={false} />
                   </mesh>
-                  {/* Label Smart Object + Slot */}
-                  <Billboard position={[0, 24, 0]}>
+                  {/* Label Slot individuel */}
+                  <Billboard position={[0, (isTopView ? 5 : 12) + slotOffsetY, 0]}>
                     <Text
-                      fontSize={7.5}
-                      color={color}
+                      fontSize={6.0}
+                      color="#ffffff"
                       anchorX="center"
                       anchorY="middle"
-                      outlineWidth={0.8}
+                      outlineWidth={0.6}
                       outlineColor="#000000"
-                      depthOffset={-100}
                       material-depthTest={false}
-                      renderOrder={9999}
+                      material-depthWrite={false}
+                      renderOrder={10000}
                     >
-                      {`✨ ${obj.name}\n[${slot.name}]`}
+                      {`[${slot.name}]`}
                     </Text>
                   </Billboard>
                 </group>
@@ -98,4 +132,5 @@ export function AiZonesHelper() {
     </group>
   );
 }
+
 

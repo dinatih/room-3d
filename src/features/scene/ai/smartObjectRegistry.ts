@@ -305,7 +305,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'open-pick',
         name: 'Prendre un ingrédient',
         offset: [250, 0, 320],
-        rotY: -Math.PI / 2,
+        rotY: Math.PI / 2,
         animation: 'media/sandbox/anims/anim_hand_raising.glb',
         duration: 2.5,
       }
@@ -323,7 +323,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'inspect',
         name: 'Prendre un objet en hauteur',
         offset: [240, 0, 38],
-        rotY: -Math.PI / 2,
+        rotY: Math.PI / 2,
         animation: 'media/sandbox/anims/anim_hand_raising.glb',
         duration: 5.0,
       }
@@ -339,7 +339,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'open-tidy',
         name: 'Ranger des affaires',
         offset: [220, 0, 435],
-        rotY: Math.PI / 2,
+        rotY: -Math.PI / 2,
         animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
         duration: 2.5,
       }
@@ -386,6 +386,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     position: [-350, 0, 1002],
     slots: [
       {
+        slotId: 'trash',
+        name: 'Jeter les poubelles',
+        offset: [-350, 0, 1002],
+        rotY: Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        duration: 5.0,
+      },
+      {
         slotId: 'visit',
         name: 'Consulter son téléphone',
         offset: [-350, 0, 1002],
@@ -402,12 +410,36 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     position: [-350, 0, -200],
     slots: [
       {
+        slotId: 'laundromat',
+        name: 'Aller au lavomatique',
+        offset: [-350, 0, -200],
+        rotY: Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
+        duration: 6.0,
+      },
+      {
         slotId: 'admire',
         name: 'Observer la cour',
         offset: [-350, 0, -200],
         rotY: Math.PI / 2,
         animation: 'media/sandbox/anims/anim_female_standing_pose_1.glb',
         duration: 6.0,
+      }
+    ]
+  },
+  'rain-dance': {
+    id: 'rain-dance',
+    name: 'Jardin Nord (Pluie)',
+    category: 'outdoor',
+    position: [0, 0, -400],
+    slots: [
+      {
+        slotId: 'dance-in-rain',
+        name: 'Danser sous la pluie',
+        offset: [0, 0, -400],
+        rotY: 0,
+        animation: 'media/sandbox/anims/miley_armature_sensual_dance_01.glb',
+        duration: 12.0,
       }
     ]
   }
@@ -428,6 +460,23 @@ export function getSmartObjectsByCategory(category: SmartObjectCategory): SmartO
   return Object.values(SMART_OBJECTS).filter(obj => obj.category === category);
 }
 
+const MILEY_DANCE_ANIMS = [
+  'media/sandbox/anims/miley_armature_10_dance_like_sidestep.glb',
+  'media/sandbox/anims/miley_armature_aerobic_dance.glb',
+  'media/sandbox/anims/miley_armature_air_dance.glb',
+  'media/sandbox/anims/miley_armature_couple_pop_dance_f.glb',
+  'media/sandbox/anims/miley_armature_couple_pop_dance_m.glb',
+  'media/sandbox/anims/miley_armature_dance_graceful.glb',
+  'media/sandbox/anims/miley_armature_dancetomusic_f.glb',
+  'media/sandbox/anims/miley_armature_energetic_dance_f.glb',
+  'media/sandbox/anims/miley_armature_energetic_dance_m.glb',
+  'media/sandbox/anims/miley_armature_sensual_dance_01.glb',
+  'media/sandbox/anims/miley_armature_sensual_dance_02.glb',
+  'media/sandbox/anims/miley_armature_sensual_dance_03.glb',
+  'media/sandbox/anims/miley_armature_slow_dance_f.glb',
+  'media/sandbox/anims/miley_armature_slow_dance_m.glb'
+];
+
 /**
  * Convertit une interaction de Smart Object en instruction d'agent prête pour le contrôleur.
  */
@@ -442,12 +491,16 @@ export function buildSmartObjectInstructionSequence(
     ? obj.slots.find(s => s.slotId === slotId) ?? obj.slots[0]
     : obj.slots[Math.floor(Math.random() * obj.slots.length)];
 
+  const chosenAnim = objectId === 'rain-dance'
+    ? MILEY_DANCE_ANIMS[Math.floor(Math.random() * MILEY_DANCE_ANIMS.length)]
+    : slot.animation;
+
   return [
     {
       type: 'USE_OBJECT',
       smartObjectId: obj.id,
       slotId: slot.slotId,
-      animation: slot.animation,
+      animation: chosenAnim,
       duration: slot.duration,
       rotY: slot.rotY,
       triggerEventKey: slot.triggerEventKey,
