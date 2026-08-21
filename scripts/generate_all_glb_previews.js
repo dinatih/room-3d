@@ -51,15 +51,15 @@ allItemGlbs.forEach(glbFullPath => {
   const relGlb = path.relative('public', glbFullPath);
   const dirName = path.dirname(relGlb);
   const baseName = path.basename(relGlb, '.glb');
-  const outPng = `${dirName}/${baseName}_preview.png`;
+  const outPng = `${dirName}/${baseName}_3d_preview.png`;
   renderGlbThumbnail(relGlb, outPng);
 });
 
 // 2. Process all characters
 console.log('=== 2. GENERATING PREVIEWS FOR CHARACTERS ===');
-renderGlbThumbnail('characters/lara/lara_native.glb', 'characters/lara/lara_native_preview.png');
-renderGlbThumbnail('characters/xbot/Xbot_official.glb', 'characters/xbot/Xbot_official_preview.png');
-renderGlbThumbnail('characters/ushiro/shiba_inu_dog_ushiro.glb', 'characters/ushiro/shiba_inu_dog_ushiro_preview.png');
+renderGlbThumbnail('characters/lara/lara_native.glb', 'characters/lara/lara_native_3d_preview.png');
+renderGlbThumbnail('characters/xbot/Xbot_official.glb', 'characters/xbot/Xbot_official_3d_preview.png');
+renderGlbThumbnail('characters/ushiro/shiba_inu_dog_ushiro.glb', 'characters/ushiro/shiba_inu_dog_ushiro_3d_preview.png');
 
 // 3. Update inventoryData.ts to append or include preview images for each item with glbPath
 console.log('=== 3. UPDATING inventoryData.ts ===');
@@ -73,7 +73,7 @@ invCode = invCode.replace(/{\s*id:\s*'([^']+)'[^}]*}/g, (block, id) => {
   const glbPath = glbMatch[1];
   const dirName = path.dirname(glbPath);
   const baseName = path.basename(glbPath, '.glb');
-  const previewPath = `${dirName}/${baseName}_preview.png`;
+  const previewPath = `${dirName}/${baseName}_3d_preview.png`;
 
   if (fs.existsSync(path.join('public', previewPath))) {
     const photosMatch = block.match(/photos:\s*\[([^\]]*)\]/);

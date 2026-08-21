@@ -60,7 +60,7 @@ function processBlock(block) {
   const glbPath = glbMatch[1];
   const dirName = path.dirname(glbPath);
   const baseName = path.basename(glbPath, '.glb');
-  const previewPath = `${dirName}/${baseName}_preview.png`;
+  const previewPath = `${dirName}/${baseName}_3d_preview.png`;
 
   if (fs.existsSync(path.join('public', previewPath))) {
     const quotedPreview = `'${previewPath}'`;
@@ -71,7 +71,7 @@ function processBlock(block) {
       let currentPhotos = rawPhotos.split(',')
         .map(s => s.trim())
         .filter(Boolean)
-        .filter(s => !s.includes('_preview.png') && !s.includes('/previews/'));
+        .filter(s => !s.includes('_3d_preview.png') && !s.includes('/previews/'));
       
       const newPhotos = [...currentPhotos, quotedPreview].join(', ');
       return block.replace(/photos:\s*\[[\s\S]*?\]/, `photos: [${newPhotos}]`);
@@ -95,7 +95,7 @@ invCode = invCode.replace(
   qty: 1,
   dims: { w: 40, d: 80, h: 40 },
   glbPath: 'characters/ushiro/shiba_inu_dog_ushiro.glb',
-  photos: ['characters/ushiro/shiba_inu_dog_ushiro_preview.png'],
+  photos: ['characters/ushiro/shiba_inu_dog_ushiro_3d_preview.png'],
   notes: \`Personnage : Chien Shiba Inu (Ushiro).\`
 });`
 );
@@ -110,7 +110,7 @@ invCode = invCode.replace(
   qty: 1,
   dims: { w: 10, d: 10, h: 10 },
   glbPath: 'items/robin-bird/model.glb',
-  photos: ['items/robin-bird/model_preview.png'],
+  photos: ['items/robin-bird/model_3d_preview.png'],
   notes: \`Personnage : Oiseau Robin.\`
 });`
 );
@@ -119,7 +119,7 @@ invCode = invCode.replace(
   /CHARACTERS\.forEach\(char => \{[\s\S]*?\}\);\s*\}\);/,
   `CHARACTERS.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
-    const charPreview = char.path.includes('xbot') ? 'characters/xbot/Xbot_official_preview.png' : 'characters/lara/lara_native_preview.png';
+    const charPreview = char.path.includes('xbot') ? 'characters/xbot/Xbot_official_3d_preview.png' : 'characters/lara/lara_native_3d_preview.png';
     INVENTORY.push({
       id: char.id,
       name: char.name,

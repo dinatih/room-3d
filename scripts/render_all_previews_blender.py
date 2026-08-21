@@ -85,13 +85,13 @@ if __name__ == '__main__':
                 rel = os.path.relpath(full, 'public')
                 dir_name = os.path.dirname(rel)
                 base_name = os.path.splitext(os.path.basename(rel))[0]
-                out_png = f"{dir_name}/{base_name}_preview.png"
+                out_png = f"{dir_name}/{base_name}_3d_preview.png"
                 if not os.path.exists(os.path.join('public', out_png)):
                     render_model(rel, out_png)
 
     # 2. Characters
     print("=== Rendering Characters ===")
-    render_model('characters/lara/lara_native.glb', 'characters/lara/lara_native_preview.png')
-    render_model('characters/xbot/Xbot_official.glb', 'characters/xbot/Xbot_official_preview.png')
-    render_model('characters/ushiro/shiba_inu_dog_ushiro.glb', 'characters/ushiro/shiba_inu_dog_ushiro_preview.png')
-    render_model('items/robin-bird/model.glb', 'items/robin-bird/model_preview.png')
+    render_model('characters/lara/lara_native.glb', 'characters/lara/lara_native_3d_preview.png')
+    render_model('characters/xbot/Xbot_official.glb', 'characters/xbot/Xbot_official_3d_preview.png')
+    render_model('characters/ushiro/shiba_inu_dog_ushiro.glb', 'characters/ushiro/shiba_inu_dog_ushiro_3d_preview.png')
+    render_model('items/robin-bird/model.glb', 'items/robin-bird/model_3d_preview.png')
