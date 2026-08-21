@@ -204,10 +204,26 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     position: [45, 0, 638],
     slots: [
       {
-        slotId: 'take-shower',
-        name: 'Prendre une douche',
-        offset: [25, 0, 645],
+        slotId: 'take-shower-1',
+        name: 'Prendre une douche (Gauche)',
+        offset: [25, 0, 630],
         rotY: Math.PI,
+        animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
+        duration: 25.0,
+      },
+      {
+        slotId: 'take-shower-2',
+        name: 'Prendre une douche (Droite)',
+        offset: [55, 0, 640],
+        rotY: Math.PI,
+        animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
+        duration: 25.0,
+      },
+      {
+        slotId: 'take-shower-3',
+        name: 'Prendre une douche (Fond)',
+        offset: [35, 0, 660],
+        rotY: 0,
         animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
         duration: 25.0,
       }
@@ -590,7 +606,7 @@ export function buildSmartObjectInstructionSequence(
     return [
       { type: 'MOVE_TO', targetNodeId: 'bathroom-shower-entry' },
       { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.5 },
-      { type: 'MOVE_TO', smartObjectId: 'shower', slotId: 'take-shower' },
+      { type: 'MOVE_TO', smartObjectId: 'shower', slotId: slot.slotId },
       { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.4 },
       baseInstruction,
       { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: true, duration: 0.5 },

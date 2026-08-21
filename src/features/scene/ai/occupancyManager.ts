@@ -39,16 +39,7 @@ class SmartObjectOccupancyManager {
       }
     }
 
-    // 2. Douche : une seule personne dans la cabine
-    if (objectId === 'shower') {
-      for (const [k, r] of this.occupiedSlots.entries()) {
-        if (k.startsWith('shower:') && (!forCharacterId || r.characterId !== forCharacterId)) {
-          return true;
-        }
-      }
-    }
-
-    // 3. Lits (bed-west, bed-east) :
+    // 2. Lits (bed-west, bed-east) :
     // - Si quelqu'un est couché ('lie-down'), tout le lit est occupé.
     // - Si quelqu'un veut se coucher ('lie-down'), aucun slot de siège ne doit être pris.
     if (objectId.startsWith('bed-')) {
@@ -67,24 +58,6 @@ class SmartObjectOccupancyManager {
       }
     }
 
-    // 4. Baignoire (bathtub-garden) :
-    // - 'center' occupe toute la baignoire.
-    // - si 'center' est occupé, 'west' et 'east' sont bloqués.
-    if (objectId === 'bathtub-garden') {
-      if (slotId === 'center') {
-        for (const [k, r] of this.occupiedSlots.entries()) {
-          if (k.startsWith('bathtub-garden:') && (!forCharacterId || r.characterId !== forCharacterId)) {
-            return true;
-          }
-        }
-      } else {
-        const centerRes = this.occupiedSlots.get(this.slotKey(objectId, 'center'));
-        if (centerRes && (!forCharacterId || centerRes.characterId !== forCharacterId)) {
-          return true;
-        }
-      }
-    }
-
     return false;
   }
 
@@ -96,7 +69,7 @@ class SmartObjectOccupancyManager {
     const res = this.occupiedSlots.get(key);
     if (res) return res.characterId;
 
-    if (objectId === 'toilet' || objectId === 'shower') {
+    if (objectId === 'toilet') {
       for (const [k, r] of this.occupiedSlots.entries()) {
         if (k.startsWith(`${objectId}:`)) return r.characterId;
       }
