@@ -220,7 +220,6 @@ export function HoverRaycaster() {
     const canvas = gl.domElement;
     const raycaster = new THREE.Raycaster();
     const pointer   = new THREE.Vector2();
-    let lastMove    = 0;
     let hideTimer: ReturnType<typeof setTimeout> | null = null;
     let interactiveCache: THREE.Object3D[] = [];
     let lastCacheTime = 0;
@@ -306,9 +305,10 @@ export function HoverRaycaster() {
       return null;
     }
 
-    // ── Souris : hover → dot ──────────────────────────────────────────────────
+    // ── Souris : hover → dot (Uniquement après 3s d'arrêt complet de la souris) ──
     let showTimer: ReturnType<typeof setTimeout> | null = null;
-    let currentHoverObject: string | null = null;
+    let lastClientX = 0;
+    let lastClientY = 0;
 
     const onPointerDown = (e: PointerEvent) => {
       downPos.x = e.clientX;
@@ -318,7 +318,6 @@ export function HoverRaycaster() {
       // Si double-clic ou clic multiple rapide, fermer immédiatement tout menu
       if (e.detail >= 2) {
         if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-        currentHoverObject = null;
         if (hoverState.locked) {
           hoverState.locked = false;
         }
@@ -337,59 +336,49 @@ export function HoverRaycaster() {
 
       if (isDragGesture || cameraState.isDragging || e.buttons > 0) {
         if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-        currentHoverObject = null;
         scheduleHide();
         return;
       }
-      const now = performance.now();
-      if (now - lastMove < 200) return;
-      lastMove = now;
 
-      const found = raycastAt(e.clientX, e.clientY);
-      const newHoverId = found ? found.actionIds.join(',') : null;
-
-      if (found) {
-        cancelHide();
-        
-        // Si on survole le même objet, on met à jour la position
-        if (currentHoverObject === newHoverId) {
-          hoverState.x = e.clientX;
-          hoverState.y = e.clientY;
-          hoverState.onUpdate?.();
-        } 
-        // Si c'est un nouvel objet interactif (attente 3s avant d'afficher)
-        else {
-          currentHoverObject = newHoverId;
-          hoverState.visible = false;
-          hoverState.onUpdate?.();
-          
-          if (showTimer) clearTimeout(showTimer);
-          showTimer = setTimeout(() => {
-            hoverState.visible   = true;
-            hoverState.label     = found.label;
-            hoverState.actionIds = found.actionIds;
-            canvas.style.cursor  = 'pointer';
-            hoverState.onUpdate?.();
-          }, 3000);
-        }
-      } else {
-        // Plus d'objet interactif sous la souris
-        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-        currentHoverObject = null;
-        scheduleHide();
-        canvas.style.cursor  = '';
+      // Si la souris bouge, masquer l'indicateur actif immédiatement (0 raycast pendant le déplacement)
+      if (hoverState.visible && !hoverState.locked) {
+        hoverState.visible = false;
+        hoverState.onUpdate?.();
+        canvas.style.cursor = '';
       }
+
+      lastClientX = e.clientX;
+      lastClientY = e.clientY;
+
+      if (showTimer) clearTimeout(showTimer);
+
+      // Uniquement après 3 secondes d'immobilité totale : exécuter un UNIQUE raycast
+      showTimer = setTimeout(() => {
+        showTimer = null;
+        if (cameraState.isDragging || isDragGesture) return;
+
+        const found = raycastAt(lastClientX, lastClientY);
+        if (found) {
+          hoverState.visible   = true;
+          hoverState.x         = lastClientX;
+          hoverState.y         = lastClientY;
+          hoverState.label     = found.label;
+          hoverState.actionIds = found.actionIds;
+          canvas.style.cursor  = 'pointer';
+          hoverState.onUpdate?.();
+        } else {
+          canvas.style.cursor = '';
+        }
+      }, 3000);
     };
 
     const onLeave = () => { 
       if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-      currentHoverObject = null;
       scheduleHide(); 
     };
 
     const onDblClick = () => {
       if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-      currentHoverObject = null;
       hoverState.locked = false;
       hoverState.visible = false;
       hoverState.onUpdate?.();
