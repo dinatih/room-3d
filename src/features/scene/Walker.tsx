@@ -24,8 +24,10 @@ const ANIM_URLS = [
   "media/sandbox/anims/anim_female_sitting_pose_3.glb",
   "media/sandbox/anims/anim_female_dance_pose.glb",
   "media/sandbox/anims/anim_female_dynamic_pose.glb",
+  "media/sandbox/anims/anim_texting_while_standing.glb",
   "media/sandbox/anims/anim_shaking_hands_2.glb",
   "media/sandbox/anims/anim_hand_raising.glb",
+
   // "media/sandbox/anims/anim_hip_hop_dancing.glb",
   // "media/sandbox/anims/anim_hip_hop_dancing_1.glb",
   // "media/sandbox/anims/anim_hip_hop_dancing_2.glb",

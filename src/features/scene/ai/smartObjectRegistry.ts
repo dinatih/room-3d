@@ -173,28 +173,29 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'wash-hands',
         name: 'Se laver les mains',
         offset: [116, 0, 545],
-        rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
-        duration: 4.0,
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
+        duration: 5.0,
       },
       {
         slotId: 'brush-teeth',
         name: 'Se laver les dents',
         offset: [116, 0, 545],
-        rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
         duration: 5.0,
       },
       {
         slotId: 'shave-makeup',
         name: 'Se Raser / Maquiller',
         offset: [116, 0, 545],
-        rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
         duration: 5.0,
       }
     ]
   },
+
   'shower': {
     id: 'shower',
     name: 'Douche',
@@ -204,7 +205,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'take-shower',
         name: 'Prendre une douche',
-        offset: [35, 0, 645],
+        offset: [25, 0, 645],
         rotY: Math.PI,
         animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
         duration: 25.0,
