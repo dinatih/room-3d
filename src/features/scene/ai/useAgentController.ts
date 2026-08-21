@@ -20,6 +20,10 @@ function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number
   if (instr.type === 'RETURN_TO_START' && startPos) {
     return { tx: startPos.x, tz: startPos.z, label: 'point de départ' };
   }
+  if (instr.targetNodeId && ZONES[instr.targetNodeId]) {
+    const node = ZONES[instr.targetNodeId];
+    return { tx: node.x, tz: node.z, label: node.name || node.id, rotY: instr.rotY };
+  }
   if (instr.smartObjectId && SMART_OBJECTS[instr.smartObjectId]) {
     const obj = SMART_OBJECTS[instr.smartObjectId];
     const slot = instr.slotId
@@ -35,10 +39,6 @@ function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number
       anim: slot?.animation,
       duration: slot?.duration
     };
-  }
-  if (instr.targetNodeId && ZONES[instr.targetNodeId]) {
-    const node = ZONES[instr.targetNodeId];
-    return { tx: node.x, tz: node.z, label: node.id };
   }
   if (instr.targetPos) {
     return { tx: instr.targetPos[0], tz: instr.targetPos[2], label: `pos(${instr.targetPos[0].toFixed(0)}, ${instr.targetPos[2].toFixed(0)})` };

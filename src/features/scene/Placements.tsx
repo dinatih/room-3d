@@ -161,7 +161,7 @@ export function Equipment() {
     corrDoors: 'corr-doors-toggle',
     sdbClosetL: 'sdb-closet-l-toggle',
     sdbClosetR: 'sdb-closet-r-toggle',
-    'shower-door-toggle': 'shower-door-toggle',
+    showerDoor: 'shower-door-toggle',
     'wc-lid-toggle': 'wc-lid-toggle',
     'wc-seat-toggle': 'wc-seat-toggle',
     'wc-flush': 'wc-flush'

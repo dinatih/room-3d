@@ -46,6 +46,7 @@ const initialFurniture: FurnitureState = {
   bimDoubleDoor: true,
   bimDoorLeftOpen: false,
   bimDoorRightOpen: false,
+  showerDoor: false,
 };
 
 const initialLayers: LayerState = {

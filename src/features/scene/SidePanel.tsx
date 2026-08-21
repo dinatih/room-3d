@@ -277,6 +277,7 @@ export interface FurnitureState {
   glassDoorV2LeftOpen: boolean;
   glassDoorV2ShutterPos: number;
   mackaparDoors: boolean;
+  showerDoor: boolean;
 }
 
 export interface LayerState {
