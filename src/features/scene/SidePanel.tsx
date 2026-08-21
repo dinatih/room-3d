@@ -1295,33 +1295,6 @@ export function SidePanel({
           )}
         </div>
 
-        {/* Chips rapides de catégories */}
-        <div className="d-flex flex-wrap gap-1 mb-1.5">
-          {ANIM_CATEGORIES.map(cat => {
-            const isSelected = selectedCategories.includes(cat.key);
-            return (
-              <button
-                key={cat.key}
-                type="button"
-                className={`btn btn-xs py-0 px-1.5 rounded-pill border ${
-                  isSelected ? 'btn-danger text-white fw-bold shadow-xs' : 'btn-light text-muted border-secondary-subtle'
-                }`}
-                style={{ fontSize: '9.5px', lineHeight: '1.4' }}
-                onClick={() => {
-                  setSelectedCategories(prev =>
-                    prev.includes(cat.key)
-                      ? prev.filter(k => k !== cat.key)
-                      : [...prev, cat.key]
-                  );
-                }}
-                title={`Basculer catégorie ${cat.label} (${categoryCounts[cat.key] || 0} anims)`}
-              >
-                {cat.icon} {cat.label}
-              </button>
-            );
-          })}
-        </div>
-
         {recentAnims.slice(0, 2).length > 0 && !animSearch && selectedCategories.length === 0 && (
           <div className="mb-2 p-1.5 bg-light rounded border">
             <div className="text-muted fw-bold mb-1 px-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
