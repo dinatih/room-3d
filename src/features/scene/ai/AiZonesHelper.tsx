@@ -181,11 +181,12 @@ export function AiZonesHelper() {
                     <ringGeometry args={[8, 10, 32]} />
                     <meshBasicMaterial color={color} depthTest={false} depthWrite={false} />
                   </mesh>
-                  {/* Flèche d'orientation */}
-                  <mesh rotation={[-Math.PI / 2, 0, -slot.rotY]} position={[0, 0.2, 0]}>
+                  {/* Flèche d'orientation — pointe du cône = direction du regard */}
+                  <mesh rotation={[Math.PI / 2, 0, slot.rotY]} position={[0, 0.2, 0]}>
                     <coneGeometry args={[3, 8, 16]} />
                     <meshBasicMaterial color="#ffffff" depthTest={false} depthWrite={false} />
                   </mesh>
+
                 </group>
               );
             })}

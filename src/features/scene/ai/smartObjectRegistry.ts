@@ -173,7 +173,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'wash-hands',
         name: 'Se laver les mains',
         offset: [116, 0, 545],
-        rotY: 0,
+        rotY: Math.PI,
         animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
         duration: 5.0,
       },
@@ -181,7 +181,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'brush-teeth',
         name: 'Se laver les dents',
         offset: [116, 0, 545],
-        rotY: 0,
+        rotY: Math.PI,
         animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
         duration: 5.0,
       },
@@ -189,7 +189,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'shave-makeup',
         name: 'Se Raser / Maquiller',
         offset: [116, 0, 545],
-        rotY: 0,
+        rotY: Math.PI,
         animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
         duration: 5.0,
       }
@@ -238,7 +238,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'pick-item',
         name: 'Prendre un objet',
         offset: [30, 0, 535],
-        rotY: 0,
+        rotY: Math.PI,
         animation: 'media/sandbox/anims/anim_hand_raising.glb',
         duration: 3.5,
       }
@@ -254,12 +254,13 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'pick-item',
         name: 'Prendre un objet',
         offset: [169, 0, 535],
-        rotY: 0,
+        rotY: Math.PI,
         animation: 'media/sandbox/anims/anim_hand_raising.glb',
         duration: 3.5,
       }
     ]
   },
+
 
   'bathtub-garden': {
     id: 'bathtub-garden',
