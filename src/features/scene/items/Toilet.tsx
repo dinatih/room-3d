@@ -1,6 +1,6 @@
 /**
  * Toilet.tsx — WC President Toilet Horizontal Outlet.
- * items/president-toilet/model.glb
+ * items/president-toilet/president-toilet.glb
  * GLB en mètres → scale ×100 (1 unité = 1 cm).
  * Coordonnées locales : centré X/Z, Y=0 = sol.
  */
@@ -12,7 +12,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'items/president-toilet/model.glb';
+const GLB = 'items/president-toilet/president-toilet.glb';
 
 export function Toilet({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

@@ -7,7 +7,7 @@ import * as THREE from 'three';
  * Remplace l'ancienne palissade procédurale.
  */
 export function WoodenFencePanel({ w, h, d }: { w: number, h: number, d: number }) {
-  const { scene } = useGLTF('/items/fence-panel/model.glb');
+  const { scene } = useGLTF('/items/fence-panel/fence-panel.glb');
   
   const clone = useMemo(() => {
     const c = scene.clone(true);
@@ -45,4 +45,4 @@ export function WoodenFencePanel({ w, h, d }: { w: number, h: number, d: number 
   return <primitive object={clone} />;
 }
 
-useGLTF.preload('/items/fence-panel/model.glb');
+useGLTF.preload('/items/fence-panel/fence-panel.glb');

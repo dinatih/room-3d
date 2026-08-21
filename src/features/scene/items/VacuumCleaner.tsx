@@ -13,7 +13,7 @@ const TARGET_H = 112;
 const redOpaqueMat = new THREE.MeshStandardMaterial({ color: 0xcc1500, roughness: 0.35, metalness: 0.1 });
 
 export function VacuumCleaner({ onSize }: SceneItemProps) {
-  const { scene: gltfScene } = useGLTF('items/rowenta-rh2079wo/model.glb');
+  const { scene: gltfScene } = useGLTF('items/rowenta-rh2079wo/rowenta-rh2079wo.glb');
   const scene = useMemo(() => gltfScene.clone(true), [gltfScene]);
 
   useLayoutEffect(() => {
@@ -67,4 +67,4 @@ export function VacuumCleaner({ onSize }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('items/rowenta-rh2079wo/model.glb');
+useGLTF.preload('items/rowenta-rh2079wo/rowenta-rh2079wo.glb');

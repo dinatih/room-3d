@@ -126,7 +126,7 @@ export function PaperPlaneMesh() {
 // ── Mesh Rocket ───────────────────────────────────────────────────────────────
 
 function RocketMesh() {
-  const { scene } = useGLTFClone('items/plane-rocket/model.glb');
+  const { scene } = useGLTFClone('items/plane-rocket/plane-rocket.glb');
   const s = useMemo(() => glbScale(scene, 55), [scene]);
   return (
     <group rotation={[0, Math.PI / 2, 0]}>
@@ -138,7 +138,7 @@ function RocketMesh() {
 // ── Mesh Comète (animé, SkinnedMesh) ─────────────────────────────────────────
 
 function CometMesh() {
-  const gltf = useGLTF('items/plane-comet/model.glb');
+  const gltf = useGLTF('items/plane-comet/plane-comet.glb');
 
   const { cloned, s, offset } = useMemo(() => {
     const c = SkeletonUtils.clone(gltf.scene) as THREE.Group;
@@ -179,8 +179,8 @@ export function PlaneMesh({ model }: { model: PlaneModelKey }) {
   return <PaperPlaneMesh />;
 }
 
-useGLTF.preload('items/plane-rocket/model.glb');
-useGLTF.preload('items/plane-comet/model.glb');
+useGLTF.preload('items/plane-rocket/plane-rocket.glb');
+useGLTF.preload('items/plane-comet/plane-comet.glb');
 
 // ── Composant principal ───────────────────────────────────────────────────────
 

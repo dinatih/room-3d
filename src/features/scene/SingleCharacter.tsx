@@ -1376,7 +1376,7 @@ export function SingleCharacter({
           />
         )
       )}
-      <HeartParachute customAnimName={customAnimName} />
+      {!isPreview && <HeartParachute customAnimName={customAnimName} />}
       {!isPreview && isActive && <GroundPoint />}
     </group>
   );

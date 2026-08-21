@@ -80,16 +80,26 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     if (!outerRef.current || !innerRef.current) return;
     outerRef.current.scale.set(1, 1, 1); outerRef.current.position.set(0, 0, 0); outerRef.current.updateMatrixWorld(true);
     
-    // Temporarily hide helpers/GroundPoint to get true model dimensions
-    const hidden: THREE.Object3D[] = [];
-    innerRef.current.traverse(o => { 
-      if (o.visible && (o.type.includes('Helper') || o.name === 'GroundPoint')) { 
-        o.visible = false; hidden.push(o); 
-      } 
+    const box = new THREE.Box3();
+    innerRef.current.traverse(o => {
+      if ((o as THREE.Mesh).isMesh && o.visible) {
+        let p: THREE.Object3D | null = o;
+        let isVis = true;
+        while (p && p !== innerRef.current) {
+          if (!p.visible || p.type.includes('Helper') || p.name === 'GroundPoint') {
+            isVis = false;
+            break;
+          }
+          p = p.parent;
+        }
+        if (isVis) {
+          const meshBox = new THREE.Box3().setFromObject(o);
+          if (!meshBox.isEmpty()) {
+            box.union(meshBox);
+          }
+        }
+      }
     });
-    
-    const box = new THREE.Box3().setFromObject(innerRef.current);
-    hidden.forEach(o => o.visible = true);
 
     if (box.isEmpty()) return;
     

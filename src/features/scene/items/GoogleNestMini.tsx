@@ -1,5 +1,5 @@
 /**
- * GoogleNestMini.tsx — Google Nest Mini 2 (GLB items/google-nest/model.glb).
+ * GoogleNestMini.tsx — Google Nest Mini 2 (GLB items/google-nest/google-nest.glb).
  * Diamètre normalisé 10 cm (réf : Nest Mini ≈ Ø9,8 × 4,2 cm).
  *
  * Animation "Ok Google" : 4 LEDs procédurales émissives (bleu/rouge/jaune/vert Google)
@@ -29,7 +29,7 @@ const GOOGLE_COLORS = [
 const DOT_X = [-2.25, -0.75, 0.75, 2.25];
 
 export function GoogleNestMini({ onSize }: SceneItemProps) {
-  const { scene }    = useGLTFClone('items/google-nest/model.glb');
+  const { scene }    = useGLTFClone('items/google-nest/google-nest.glb');
   const dotsGroupRef = useRef<THREE.Group>(null!);
   const dotMatsRef   = useRef<THREE.MeshStandardMaterial[]>([]);
   const animRef      = useRef(false);
@@ -112,4 +112,4 @@ export function GoogleNestMini({ onSize }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('items/google-nest/model.glb');
+useGLTF.preload('items/google-nest/google-nest.glb');

@@ -23,7 +23,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 
 
-const GLB_TRAY   = 'items/shower/model.glb';
+const GLB_TRAY   = 'items/shower/shower.glb';
 const GLB_BAR    = 'items/vallamosse barre avec douchette haut réglable chromé/VALLAMOSSE Barre avec douchette haut réglable chromé.glb';
 const GLB_FAUCET = 'items/vallamosse mitigeur thermostatique pour douche chromé 150 mm/VALLAMOSSE Mitigeur thermostatique pour douche chromé 150 mm.glb';
 
