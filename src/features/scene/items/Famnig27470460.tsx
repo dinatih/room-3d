@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/famnig-hjaerta-coussin-rouge-27470460/
  */
 export function Famnig27470460({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/items/Famnig27470460.glb');
+  const { scene } = useGLTFClone('/items/famnig27470460/Famnig27470460.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function Famnig27470460({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/items/Famnig27470460.glb');
+useGLTF.preload('/items/famnig27470460/Famnig27470460.glb');

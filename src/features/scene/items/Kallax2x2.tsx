@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'items/KALLAX etag 77x77 blanc.glb';
+const GLB = 'items/kallax etag 77x77 blanc/KALLAX etag 77x77 blanc.glb';
 
 export function Kallax2x2({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

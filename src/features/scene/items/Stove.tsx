@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'items/VÄLBILDAD.glb';
+const GLB = 'items/välbildad/VÄLBILDAD.glb';
 
 export function Stove({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

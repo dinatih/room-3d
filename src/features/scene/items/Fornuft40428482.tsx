@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/foernuft-fourchette-acier-inoxydable-40428482/
  */
 export function Fornuft40428482({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/items/Fornuft40428482.glb');
+  const { scene } = useGLTFClone('/items/fornuft40428482/Fornuft40428482.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function Fornuft40428482({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/items/Fornuft40428482.glb');
+useGLTF.preload('/items/fornuft40428482/Fornuft40428482.glb');

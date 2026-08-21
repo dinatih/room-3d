@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'items/SMÖRKULL.glb';
+const GLB = 'items/smörkull/SMÖRKULL.glb';
 
 export function Smorkull({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

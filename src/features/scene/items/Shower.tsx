@@ -24,8 +24,8 @@ import type { SceneItemProps } from '@shared/types';
 
 
 const GLB_TRAY   = 'items/shower/model.glb';
-const GLB_BAR    = 'items/VALLAMOSSE Barre avec douchette haut réglable chromé.glb';
-const GLB_FAUCET = 'items/VALLAMOSSE Mitigeur thermostatique pour douche chromé 150 mm.glb';
+const GLB_BAR    = 'items/vallamosse barre avec douchette haut réglable chromé/VALLAMOSSE Barre avec douchette haut réglable chromé.glb';
+const GLB_FAUCET = 'items/vallamosse mitigeur thermostatique pour douche chromé 150 mm/VALLAMOSSE Mitigeur thermostatique pour douche chromé 150 mm.glb';
 
 // Bac GLB recentré (script Python) : bbox ±0.34m → scale=100 → 68×68cm centré à l'origine.
 // Groupe au centre niche (world 25,0,635). TRAY_HALF = demi-étendue = 34cm.

@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/altappen-caillebotis-gris-clair-90420898/
  */
 export function Altappen90420898({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/items/Altappen90420898.glb');
+  const { scene } = useGLTFClone('/items/altappen90420898/Altappen90420898.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function Altappen90420898({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/items/Altappen90420898.glb');
+useGLTF.preload('/items/altappen90420898/Altappen90420898.glb');

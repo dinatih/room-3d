@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'items/VARIERA demi-etag 32x28x16 blanc.glb';
+const GLB = 'items/variera demi-etag 32x28x16 blanc/VARIERA demi-etag 32x28x16 blanc.glb';
 
 export function Variera32x28({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

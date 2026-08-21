@@ -220,4 +220,4 @@ CHARACTERS.forEach(char => {
   useGLTF.preload(char.path);
 });
 
-useGLTF.preload('items/Famnig27470460.glb');
+useGLTF.preload('items/famnig27470460/Famnig27470460.glb');

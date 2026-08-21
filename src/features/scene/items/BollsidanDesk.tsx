@@ -11,7 +11,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 
 const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
 const DEFAULT_H = 70;
-const GLB_PATH = 'items/BOLLSIDAN Table pour ordinateur portable blanc 68x36 cm.glb';
+const GLB_PATH = 'items/bollsidan table pour ordinateur portable blanc 68x36 cm/BOLLSIDAN Table pour ordinateur portable blanc 68x36 cm.glb';
 
 function DeskTop() {
   const geo = useMemo(() => {

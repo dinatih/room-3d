@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/foernuft-cuillere-acier-inoxydable-90428489/
  */
 export function Fornuft90428489({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/items/Fornuft90428489.glb');
+  const { scene } = useGLTFClone('/items/fornuft90428489/Fornuft90428489.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function Fornuft90428489({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/items/Fornuft90428489.glb');
+useGLTF.preload('/items/fornuft90428489/Fornuft90428489.glb');

@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/dimpa-sac-de-rangement-transparent-10056770/
  */
 export function Dimpa10056770({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/items/Dimpa10056770.glb');
+  const { scene } = useGLTFClone('/items/dimpa10056770/Dimpa10056770.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function Dimpa10056770({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/items/Dimpa10056770.glb');
+useGLTF.preload('/items/dimpa10056770/Dimpa10056770.glb');

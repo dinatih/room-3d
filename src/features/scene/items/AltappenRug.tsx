@@ -20,7 +20,7 @@ function gardenX0(z: number): number {
   return Math.ceil((-110 - 110 * (z + 5 + 190) / 70) / 10) * 10;
 }
 
-const GLB = 'items/ALTAPPEN Caillebotis, gris clair, 0.81 m².glb';
+const GLB = 'items/altappen90420898/Altappen90420898.glb';
 
 // ── Tuile unique (inventaire) ─────────────────────────────────────────────────
 

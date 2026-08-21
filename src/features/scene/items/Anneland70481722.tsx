@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/anneland-matelas-hybride-ferme-blanc-70481722/
  */
 export function Anneland70481722({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/items/Anneland70481722.glb');
+  const { scene } = useGLTFClone('/items/anneland70481722/Anneland70481722.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function Anneland70481722({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/items/Anneland70481722.glb');
+useGLTF.preload('/items/anneland70481722/Anneland70481722.glb');

@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'items/GREJIG_gris.glb';
+const GLB = 'items/grejig_gris/GREJIG_gris.glb';
 
 export function Grejig({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
