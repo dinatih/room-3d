@@ -51,6 +51,7 @@ const ANIM_URLS = [
   // "media/sandbox/anims/anim_jazz_dancing.glb",
   // "media/sandbox/anims/anim_can_can.glb",
   // "media/sandbox/anims/anim_ymca_dance.glb",
+  "media/sandbox/anims/miley_armature_posing_f.glb",
   "media/sandbox/anims/miley_armature_10_dance_like_sidestep.glb",
   "media/sandbox/anims/miley_armature_aerobic_dance.glb",
   "media/sandbox/anims/miley_armature_air_dance.glb",
@@ -65,6 +66,7 @@ const ANIM_URLS = [
   "media/sandbox/anims/miley_armature_sensual_dance_03.glb",
   "media/sandbox/anims/miley_armature_slow_dance_f.glb",
   "media/sandbox/anims/miley_armature_slow_dance_m.glb"
+
 ];
 
 /**

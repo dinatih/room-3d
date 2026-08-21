@@ -62,6 +62,9 @@ function buildAutonomousScenario(): AgentInstruction[] {
     buildSmartObjectInstructionSequence('sofa-garden-west'),
     buildSmartObjectInstructionSequence('bathtub-garden'),
     buildSmartObjectInstructionSequence('corridor-closet'),
+    buildSmartObjectInstructionSequence('sdb-closet'),
+    buildSmartObjectInstructionSequence('drona-west'),
+    buildSmartObjectInstructionSequence('drona-east'),
     buildSmartObjectInstructionSequence('kallax-ne'),
     buildSmartObjectInstructionSequence('cuisine-group'),
     buildSmartObjectInstructionSequence('freezer'),
@@ -72,6 +75,7 @@ function buildAutonomousScenario(): AgentInstruction[] {
     ACTION_ENTREE_BAT_B,
     ACTION_ENTREE_COURS_BAT_B
   ].filter(seq => seq.length > 0);
+
 
   // Mélanger les actions de vie quotidienne de façon fluide et réaliste
   const shuffled = [...smartActions].sort(() => Math.random() - 0.5);

@@ -13,6 +13,11 @@ export type RoomId = 'living' | 'corridor' | 'bathroom' | 'garden' | 'outdoor_co
  * - Extérieur Cours / Jardin Bâtiment B (outdoor_garden) : X < -100 et Z <= 0, ou grand déport nord (Z < -500)
  */
 export function getRoomFromCoords(x: number, z: number): RoomId {
+  // Salle de bain complète (inclut la niche de douche x in [0, 75], z in [400, 620] et les sanitaires)
+  if (x >= -10 && x < 192 && z >= 400 && z <= 630) {
+    return 'bathroom';
+  }
+
   // Extérieur Bâtiment B (Cour Jardin Ouest / Nord)
   if (x < -100 && z <= 100) {
     return 'outdoor_garden';
@@ -22,7 +27,7 @@ export function getRoomFromCoords(x: number, z: number): RoomId {
   }
 
   // Extérieur Bâtiment B (Sortie Couloir Sud-Ouest / Rue)
-  if ((x < -100 && z > 100) || z > 600 || (x > 270 && z > 580)) {
+  if ((x < -100 && z > 100) || z > 630 || (x > 270 && z > 580)) {
     return 'outdoor_corridor';
   }
 
@@ -36,12 +41,10 @@ export function getRoomFromCoords(x: number, z: number): RoomId {
     return 'living';
   }
 
-  // Zone sud (Z > 400)
-  if (x < 192) {
-    return 'bathroom';
-  }
+  // Zone sud couloir (Z > 400 et X >= 192)
   return 'corridor';
 }
+
 
 /**
  * Définition d'un portail (passage entre deux pièces adjacentes).

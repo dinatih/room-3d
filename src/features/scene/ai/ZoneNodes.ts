@@ -10,6 +10,7 @@ export const WAYPOINTS: Record<string, ZoneNode> = {
   Sortie: { id: 'Sortie', x: 288, z: 603 }, // Dehors, devant la porte
   Couloir_SDB: { id: 'Couloir_SDB', x: 248, z: 535 }, // Devant porte SDB dans le couloir
   Entree_SDB: { id: 'Entree_SDB', x: 150, z: 560 }, // Juste à l'intérieur de la SDB
+  Devant_Douche: { id: 'Devant_Douche', x: 45, z: 560 }, // Devant la porte de douche dans la SDB
   Devant_Baie_Vitree: { id: 'Devant_Baie_Vitree', x: 200, z: 20 },
   Dans_Jardin: { id: 'Dans_Jardin', x: 200, z: -50 },
   Devant_Jardin_Voisin_Ouest: { id: 'Devant_Jardin_Voisin_Ouest', x: -200, z: -100 },
@@ -58,8 +59,13 @@ export const ACTIONS_BATHTUB: AgentInstruction[][] = [
 ];
 
 export const ACTION_SHOWER: AgentInstruction[] = [
-  { type: 'USE_OBJECT', smartObjectId: 'shower', slotId: 'take-shower' }
+  { type: 'MOVE_TO', targetNodeId: 'Devant_Douche' },
+  { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.5 },
+  { type: 'USE_OBJECT', smartObjectId: 'shower', slotId: 'take-shower' },
+  { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.3 },
+  { type: 'MOVE_TO', targetNodeId: 'Devant_Douche' }
 ];
+
 
 export const ACTIONS_GARDEN_SOFA_EAST: AgentInstruction[][] = [
   [{ type: 'USE_OBJECT', smartObjectId: 'sofa-garden-east', slotId: 'seat-1' }],

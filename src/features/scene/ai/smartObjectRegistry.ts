@@ -190,8 +190,24 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre une douche',
         offset: [15, 0, 645],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
         duration: 10.0,
+      }
+    ]
+  },
+  'sdb-closet': {
+    id: 'sdb-closet',
+    name: 'Placard Salle de bain',
+    category: 'storage',
+    position: [130, 0, 600],
+    slots: [
+      {
+        slotId: 'pick-laundry',
+        name: 'Prendre le sac de Linge sale',
+        offset: [130, 0, 565],
+        rotY: 0,
+        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        duration: 3.5,
       }
     ]
   },
@@ -312,7 +328,39 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     ]
   },
 
-  // ── RANGEMENTS & KALLAX ───────────────────────────────────────────────────
+  // ── RANGEMENTS, KALLAX & DRONA ─────────────────────────────────────────────
+  'drona-west': {
+    id: 'drona-west',
+    name: 'Meuble bas / Dröna Ouest',
+    category: 'storage',
+    position: [40, 0, 150],
+    slots: [
+      {
+        slotId: 'pick-item',
+        name: 'Prendre un objet',
+        offset: [65, 0, 150],
+        rotY: -Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        duration: 3.5,
+      }
+    ]
+  },
+  'drona-east': {
+    id: 'drona-east',
+    name: 'Meuble bas / Dröna Est',
+    category: 'storage',
+    position: [280, 0, 150],
+    slots: [
+      {
+        slotId: 'pick-item',
+        name: 'Prendre un objet',
+        offset: [255, 0, 150],
+        rotY: Math.PI / 2,
+        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        duration: 3.5,
+      }
+    ]
+  },
   'kallax-ne': {
     id: 'kallax-ne',
     name: 'Kallax Nord-Est',
@@ -356,11 +404,12 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'admirer dans le miroir',
         offset: [160, 0, 350],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_female_standing_pose_2.glb',
-        duration: 3.5,
+        animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
+        duration: 5.0,
       }
     ]
   },
+
 
   // ── EXTÉRIEUR & ESPACES JARDIN ─────────────────────────────────────────────
   'garden-fresh-air': {

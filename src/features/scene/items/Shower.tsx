@@ -16,11 +16,12 @@
  */
 import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { useThree } from '@react-three/fiber';
+import { useThree, useFrame } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
+
 
 const GLB_TRAY   = 'media/glb/Shower tray 90x90cm.glb';
 const GLB_BAR    = 'media/glb/ikea-official/VALLAMOSSE Barre avec douchette haut réglable chromé.glb';
@@ -87,48 +88,70 @@ const frameMat = new THREE.MeshStandardMaterial({
   roughness: 0.15,
 });
 
-/** Porte de douche procédurale : vitre + cadre alu + poignée. */
-function ShowerDoor() {
+/** Porte de douche procédurale : vitre + cadre alu + poignée avec pivot d'ouverture. */
+function ShowerDoor({ isOpen }: { isOpen: boolean }) {
   const hw = DOOR_W / 2;
   const hf = FRAME / 2;
+  const pivotRef = useRef<THREE.Group>(null!);
+
+  useFrame((_, delta) => {
+    if (!pivotRef.current) return;
+    // Rotation cible : ouverte à ~85 degrés (Math.PI * 0.47)
+    const targetAngle = isOpen ? -Math.PI * 0.47 : 0;
+    pivotRef.current.rotation.y = THREE.MathUtils.damp(
+      pivotRef.current.rotation.y,
+      targetAngle,
+      8,
+      delta
+    );
+  });
+
   return (
-    <group>
-      {/* Vitre */}
-      <mesh material={glassMat} position={[0, DOOR_H / 2, 0]} castShadow>
-        <boxGeometry args={[DOOR_W - FRAME * 2, DOOR_H - FRAME * 2, DOOR_T]} />
-      </mesh>
+    // Le pivot de la charnière est placé à gauche de la porte (x = -hw)
+    <group position={[-hw, 0, 0]}>
+      <group ref={pivotRef}>
+        {/* Décale les éléments de +hw pour que la charnière soit sur le bord gauche */}
+        <group position={[hw, 0, 0]}>
+          {/* Vitre */}
+          <mesh material={glassMat} position={[0, DOOR_H / 2, 0]} castShadow>
+            <boxGeometry args={[DOOR_W - FRAME * 2, DOOR_H - FRAME * 2, DOOR_T]} />
+          </mesh>
 
-      {/* Profil bas */}
-      <mesh material={frameMat} position={[0, hf, 0]} castShadow receiveShadow>
-        <boxGeometry args={[DOOR_W, FRAME, FRAME]} />
-      </mesh>
-      {/* Profil haut */}
-      <mesh material={frameMat} position={[0, DOOR_H - hf, 0]} castShadow>
-        <boxGeometry args={[DOOR_W, FRAME, FRAME]} />
-      </mesh>
-      {/* Profil gauche */}
-      <mesh material={frameMat} position={[-hw + hf, DOOR_H / 2, 0]} castShadow>
-        <boxGeometry args={[FRAME, DOOR_H, FRAME]} />
-      </mesh>
-      {/* Profil droit */}
-      <mesh material={frameMat} position={[hw - hf, DOOR_H / 2, 0]} castShadow>
-        <boxGeometry args={[FRAME, DOOR_H, FRAME]} />
-      </mesh>
+          {/* Profil bas */}
+          <mesh material={frameMat} position={[0, hf, 0]} castShadow receiveShadow>
+            <boxGeometry args={[DOOR_W, FRAME, FRAME]} />
+          </mesh>
+          {/* Profil haut */}
+          <mesh material={frameMat} position={[0, DOOR_H - hf, 0]} castShadow>
+            <boxGeometry args={[DOOR_W, FRAME, FRAME]} />
+          </mesh>
+          {/* Profil gauche */}
+          <mesh material={frameMat} position={[-hw + hf, DOOR_H / 2, 0]} castShadow>
+            <boxGeometry args={[FRAME, DOOR_H, FRAME]} />
+          </mesh>
+          {/* Profil droit */}
+          <mesh material={frameMat} position={[hw - hf, DOOR_H / 2, 0]} castShadow>
+            <boxGeometry args={[FRAME, DOOR_H, FRAME]} />
+          </mesh>
 
-      {/* Poignée — barre verticale côté droit, face extérieure */}
-      <mesh material={frameMat} position={[hw - FRAME - 3, DOOR_H / 2, DOOR_T + 1.5]} castShadow>
-        <boxGeometry args={[1.5, 22, 1.5]} />
-      </mesh>
+          {/* Poignée — barre verticale côté droit, face extérieure */}
+          <mesh material={frameMat} position={[hw - FRAME - 3, DOOR_H / 2, DOOR_T + 1.5]} castShadow>
+            <boxGeometry args={[1.5, 22, 1.5]} />
+          </mesh>
+        </group>
+      </group>
     </group>
   );
 }
 
-export function Shower({ onSize }: SceneItemProps) {
+export function Shower({ actionState, onSize }: SceneItemProps) {
   const { scene: tray   } = useGLTFClone(GLB_TRAY);
   const { scene: bar    } = useGLTFClone(GLB_BAR);
   const { scene: faucet } = useGLTFClone(GLB_FAUCET);
   const groupRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
+
+  const isDoorOpen = Boolean(actionState?.['shower-door-toggle'] ?? actionState?.['showerDoor']);
 
   useLayoutEffect(() => {
     setupScene(tray, 100);
@@ -162,11 +185,12 @@ export function Shower({ onSize }: SceneItemProps) {
 
       {/* Porte — centrée en X, 2cm devant la face sud du bac (local Z=−TRAY_HALF) */}
       <group position={[0, 20, -(TRAY_HALF + 2)]}>
-        <ShowerDoor />
+        <ShowerDoor isOpen={isDoorOpen} />
       </group>
     </group>
   );
 }
+
 
 useGLTF.preload(GLB_TRAY);
 useGLTF.preload(GLB_BAR);

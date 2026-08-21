@@ -161,6 +161,7 @@ export function Equipment() {
     corrDoors: 'corr-doors-toggle',
     sdbClosetL: 'sdb-closet-l-toggle',
     sdbClosetR: 'sdb-closet-r-toggle',
+    'shower-door-toggle': 'shower-door-toggle',
     'wc-lid-toggle': 'wc-lid-toggle',
     'wc-seat-toggle': 'wc-seat-toggle',
     'wc-flush': 'wc-flush'
@@ -198,8 +199,9 @@ export function Equipment() {
       </group>
       {/* Niche douche 70×70cm : Centre : KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35 */}
       <group position={[NICHE_X + 35, 0, KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35]} userData={{ animUnit: true, isIkea: true }}>
-        <Shower item={stub('shower')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Shower item={stub('shower')} actionState={as} onSize={NOOP_SIZE} />
       </group>
+
       {/* Gaine plastique couloir mur est — 25.5×6.5 cm, sol au plafond,
           début Z=500 (5m du nord). Linky Enedis monté en façade. */}
       <LinkyGaine />
