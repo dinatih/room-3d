@@ -447,7 +447,10 @@ export function SingleCharacter({
         const isTiny = name.includes('teeth') || name.includes('lash') || name.includes('eye') || name.includes('tongue');
         c.castShadow = characterShadows && !isTiny;
         c.receiveShadow = characterShadows;
-        c.frustumCulled = false; // Disable culling for SkinnedMesh as bones move vertices far from rest pose bounding box
+        c.frustumCulled = true;
+        if (c.geometry) {
+          c.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.9, 0), 1.6);
+        }
         if (c.material) {
             const materials = Array.isArray(c.material) ? c.material : [c.material];
             materials.forEach((mat: any) => {

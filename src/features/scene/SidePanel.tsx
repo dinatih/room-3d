@@ -738,7 +738,7 @@ export function SidePanel({
       {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
       {layerBtn('light',  'Pistolets Lara 🔫', 'laraPistols')}
       {layerBtn('light',  'Accessoires Lara 🎒', 'accessories')}
-      {layerBtn('pink',   'Physique poitrine 💃', 'breastPhysics')}
+      {layerBtn('pink',   'Physique buste 💃', 'breastPhysics')}
       {layerBtn('pink',   'Physique cheveux 💇‍♀️', 'hairPhysics')}
       {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}
       {layerBtn('cyan', 'Squelettes / Bones', 'skeleton')}
@@ -769,7 +769,7 @@ export function SidePanel({
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
               <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                💥 Intensité Physique Poitrine
+                💥 Intensité Physique Buste
               </span>
               <span className="badge bg-danger" style={{ fontSize: '9px' }}>
                 {(layers.breastIntensity ?? 1.0).toFixed(1)}x
@@ -794,7 +794,7 @@ export function SidePanel({
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
               <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                ⚖️ Masse / Poids Poitrine (breastMass)
+                ⚖️ Masse / Poids Buste (breastMass)
               </span>
               <span className="badge bg-danger text-white" style={{ fontSize: '9px' }}>
                 {(layers.breastMass ?? 1.0).toFixed(1)}x
@@ -819,7 +819,7 @@ export function SidePanel({
           <div>
             <div className="d-flex justify-content-between align-items-center mb-1">
               <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                🧶 Fermeté / Maintien Poitrine (breastFirmness)
+                🧶 Fermeté / Maintien Buste (breastFirmness)
               </span>
               <span className="badge bg-purple text-white" style={{ fontSize: '9px', backgroundColor: '#6f42c1' }}>
                 {(layers.breastFirmness ?? 1.0).toFixed(1)}x

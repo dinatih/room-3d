@@ -128,7 +128,10 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     // 1. Extraire les os pour l'animation/physique et configurer les matériaux
     const extractedBones: WigBone[] = [];
     scene.traverse((child: any) => {
-      child.frustumCulled = false;
+      child.frustumCulled = true;
+      if (child.geometry) {
+        child.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 100);
+      }
       
       if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
         const sm = child as THREE.SkinnedMesh;
