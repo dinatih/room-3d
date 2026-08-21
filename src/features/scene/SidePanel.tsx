@@ -353,6 +353,27 @@ const TABS: Array<{ key: Exclude<TabKey, null>; emoji: string; label: string }> 
   { key: 'animsCouple',emoji: '👯‍♀️', label: 'Couple' },
 ];
 
+export const ANIM_CATEGORIES = [
+  { key: 'combat', label: 'Combat', icon: '⚔️' },
+  { key: 'dances', label: 'Danses', icon: '💃' },
+  { key: 'emotes_gestures', label: 'Emotes & Gestes', icon: '👋' },
+  { key: 'interactions', label: 'Interactions', icon: '🎮' },
+  { key: 'locomotion', label: 'Locomotion', icon: '🏃' },
+  { key: 'poses_idles', label: 'Poses & Idles', icon: '🧘' },
+  { key: 'sports_fitness', label: 'Sports & Fitness', icon: '⚽' },
+] as const;
+
+export function getAnimCategory(val: string): string {
+  if (val === 'idle') return 'poses_idles';
+  if (val.startsWith('animations/')) {
+    const parts = val.split('/');
+    if (parts.length > 1) {
+      return parts[1];
+    }
+  }
+  return 'other';
+}
+
 // ── Composant principal ───────────────────────────────────────────────────────
 
 export function SidePanel({ 
@@ -979,6 +1000,9 @@ export function SidePanel({
     </div>
   );
   const [animSearch, setAnimSearch] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const [activeAnimValue, setActiveAnimValue] = useState<string>('idle');
   const [copiedAnim, setCopiedAnim] = useState<string | null>(null);
   const [recentAnims, setRecentAnims] = useState<string[]>(() => {
@@ -991,6 +1015,29 @@ export function SidePanel({
       return [];
     }
   });
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
+        setCategoryDropdownOpen(false);
+      }
+    };
+    if (categoryDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [categoryDropdownOpen]);
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    WALKER_ANIM_OPTIONS.forEach(a => {
+      const cat = getAnimCategory(a.value);
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return counts;
+  }, []);
 
   useEffect(() => {
     const onToggle = (e: any) => {
@@ -1025,11 +1072,19 @@ export function SidePanel({
 
   const filteredAnims = useMemo(() => {
     const q = animSearch.trim().toLowerCase();
-    if (!q) return WALKER_ANIM_OPTIONS;
-    return WALKER_ANIM_OPTIONS.filter(a =>
-      a.label.toLowerCase().includes(q) || a.value.toLowerCase().includes(q)
-    );
-  }, [animSearch]);
+    return WALKER_ANIM_OPTIONS.filter(a => {
+      if (selectedCategories.length > 0) {
+        const cat = getAnimCategory(a.value);
+        if (!selectedCategories.includes(cat)) {
+          return false;
+        }
+      }
+      if (q) {
+        return a.label.toLowerCase().includes(q) || a.value.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [animSearch, selectedCategories]);
 
   const animsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -1056,7 +1111,7 @@ export function SidePanel({
 
   const playRandomAnim = () => {
     resetAppIdle();
-    const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle');
+    const pool = (filteredAnims.length > 0 ? filteredAnims : WALKER_ANIM_OPTIONS).filter(a => a.value !== 'idle');
     if (!pool.length) return;
     const randomAnim = pool[Math.floor(Math.random() * pool.length)];
     if (randomAnim) {
@@ -1103,13 +1158,14 @@ export function SidePanel({
       tabIndex={0}
       onKeyDown={handleKeyDownAnims}
     >
-      <div className="p-2 border-bottom shadow-sm sticky-top" style={{ zIndex: 5, background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)' }}>
-        <div className="input-group input-group-sm mb-1">
+      <div className="p-2 border-bottom shadow-sm sticky-top" style={{ zIndex: 5, background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)' }}>
+        {/* Barre de recherche pattern text */}
+        <div className="input-group input-group-sm mb-1.5">
           <span className="input-group-text bg-light text-muted border-end-0">🔍</span>
           <input
             type="text"
             className="form-control border-start-0 ps-0"
-            placeholder="Filtrer ou ↕ flèches..."
+            placeholder="Filtrer texte ou ↕ flèches..."
             value={animSearch}
             onChange={e => setAnimSearch(e.target.value)}
             onKeyDown={handleKeyDownAnims}
@@ -1129,15 +1185,144 @@ export function SidePanel({
             className="btn btn-warning text-dark fw-bold border-start-0 px-2"
             type="button"
             onClick={playRandomAnim}
-            title="Jouer une animation au hasard parmi les 750+ GLBs"
+            title="Jouer une animation au hasard parmi la sélection"
             style={{ fontSize: '10px' }}
           >
             🎲 Aléatoire
           </button>
         </div>
 
+        {/* Filtre select à choix multiple par catégorie / nom de sous-dossier */}
+        <div ref={categoryDropdownRef} className="position-relative mb-1.5">
+          <div className="d-flex gap-1">
+            <button
+              type="button"
+              className={`btn btn-sm w-100 text-start d-flex justify-content-between align-items-center py-1 px-2 ${
+                selectedCategories.length > 0
+                  ? 'btn-danger bg-danger text-white border-danger shadow-sm'
+                  : 'btn-outline-secondary bg-white text-dark border'
+              }`}
+              style={{ fontSize: isMobile ? '12px' : '11px', borderRadius: '4px' }}
+              onClick={() => setCategoryDropdownOpen(prev => !prev)}
+            >
+              <span className="text-truncate">
+                📁 <strong>Catégories :</strong> {selectedCategories.length === 0
+                  ? `Toutes (${ANIM_CATEGORIES.length})`
+                  : `${selectedCategories.map(k => ANIM_CATEGORIES.find(c => c.key === k)?.label).join(', ')} (${selectedCategories.length})`
+                }
+              </span>
+              <span className="ms-1 opacity-75" style={{ fontSize: '9px' }}>{categoryDropdownOpen ? '▲' : '▼'}</span>
+            </button>
 
-        {recentAnims.slice(0, 2).length > 0 && !animSearch && (
+            {selectedCategories.length > 0 && (
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger px-2 shrink-0"
+                style={{ fontSize: '10px' }}
+                onClick={() => setSelectedCategories([])}
+                title="Réinitialiser toutes les catégories"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {categoryDropdownOpen && (
+            <div
+              className="position-absolute start-0 end-0 mt-1 p-2 bg-white border rounded shadow-lg"
+              style={{
+                zIndex: 1050,
+                backdropFilter: 'blur(12px)',
+                background: 'rgba(255, 255, 255, 0.98)',
+                maxHeight: '230px',
+                overflowY: 'auto'
+              }}
+            >
+              <div className="d-flex justify-content-between align-items-center mb-1.5 pb-1 border-bottom">
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm p-0 text-decoration-none fw-semibold"
+                  style={{ fontSize: '10.5px' }}
+                  onClick={() => setSelectedCategories(ANIM_CATEGORIES.map(c => c.key))}
+                >
+                  ✓ Tout cocher
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm p-0 text-decoration-none text-danger fw-semibold"
+                  style={{ fontSize: '10.5px' }}
+                  onClick={() => setSelectedCategories([])}
+                >
+                  ✕ Tout décocher (Toutes)
+                </button>
+              </div>
+
+              <div className="d-flex flex-column gap-1">
+                {ANIM_CATEGORIES.map(cat => {
+                  const isChecked = selectedCategories.includes(cat.key);
+                  const count = categoryCounts[cat.key] || 0;
+                  return (
+                    <label
+                      key={cat.key}
+                      className={`d-flex align-items-center justify-content-between px-2 py-1 rounded cursor-pointer mb-0 ${
+                        isChecked ? 'bg-danger-subtle text-danger-emphasis fw-semibold' : 'hover-bg-light text-dark'
+                      }`}
+                      style={{ fontSize: '11px', cursor: 'pointer', userSelect: 'none' }}
+                    >
+                      <span className="d-flex align-items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          className="form-check-input mt-0 me-1.5"
+                          checked={isChecked}
+                          onChange={() => {
+                            setSelectedCategories(prev =>
+                              prev.includes(cat.key)
+                                ? prev.filter(k => k !== cat.key)
+                                : [...prev, cat.key]
+                            );
+                          }}
+                        />
+                        <span>{cat.icon} {cat.label}</span>
+                      </span>
+                      <span className={`badge ${isChecked ? 'bg-danger text-white' : 'bg-secondary-subtle text-secondary-emphasis'}`} style={{ fontSize: '9px' }}>
+                        {count}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Chips rapides de catégories */}
+        <div className="d-flex flex-wrap gap-1 mb-1.5">
+          {ANIM_CATEGORIES.map(cat => {
+            const isSelected = selectedCategories.includes(cat.key);
+            return (
+              <button
+                key={cat.key}
+                type="button"
+                className={`btn btn-xs py-0 px-1.5 rounded-pill border ${
+                  isSelected ? 'btn-danger text-white fw-bold shadow-xs' : 'btn-light text-muted border-secondary-subtle'
+                }`}
+                style={{ fontSize: '9.5px', lineHeight: '1.4' }}
+                onClick={() => {
+                  setSelectedCategories(prev =>
+                    prev.includes(cat.key)
+                      ? prev.filter(k => k !== cat.key)
+                      : [...prev, cat.key]
+                  );
+                }}
+                title={`Basculer catégorie ${cat.label} (${categoryCounts[cat.key] || 0} anims)`}
+              >
+                {cat.icon} {cat.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {recentAnims.slice(0, 2).length > 0 && !animSearch && selectedCategories.length === 0 && (
           <div className="mb-2 p-1.5 bg-light rounded border">
             <div className="text-muted fw-bold mb-1 px-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               🕒 Récentes ({recentAnims.slice(0, 2).length})
@@ -1196,13 +1381,15 @@ export function SidePanel({
       <div ref={animsContainerRef} className="overflow-auto flex-grow-1" style={{ maxHeight: '40vh', position: 'relative', scrollBehavior: 'smooth' }}>
         {filteredAnims.length === 0 ? (
           <div className="p-3 text-center text-muted small">
-            Aucune animation ne correspond à &quot;{animSearch}&quot;
+            Aucune animation ne correspond aux filtres actuels
           </div>
         ) : (
           filteredAnims.map(anim => {
             const isActive = activeAnimValue === anim.value;
             const isPose = anim.label.toLowerCase().includes('pose') || anim.value.toLowerCase().includes('pose');
             const filename = anim.value.split('/').pop() || anim.value;
+            const animCat = getAnimCategory(anim.value);
+            const catObj = ANIM_CATEGORIES.find(c => c.key === animCat);
 
             return (
               <div
@@ -1223,6 +1410,15 @@ export function SidePanel({
                 <div className="d-flex align-items-center gap-1 overflow-hidden me-2" style={{ flex: 1 }}>
                   <span style={{ fontSize: '10px' }}>{isActive ? '▶' : ''}</span>
                   <span className="text-truncate" title={anim.label}>{anim.label}</span>
+                  {catObj && (
+                    <span
+                      className={`badge ${isActive ? 'bg-white bg-opacity-25 text-white' : 'bg-secondary-subtle text-secondary-emphasis'} ms-1 fw-normal`}
+                      style={{ fontSize: '8px', letterSpacing: '0.02em', flexShrink: 0 }}
+                      title={`Sous-dossier: ${catObj.label}`}
+                    >
+                      {catObj.icon}
+                    </span>
+                  )}
                   {isPose && (
                     <span
                       className={`badge ${isActive ? 'bg-light text-danger' : 'bg-warning text-dark'} ms-1 fw-normal`}
