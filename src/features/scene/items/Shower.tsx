@@ -96,8 +96,8 @@ function ShowerDoor({ isOpen }: { isOpen: boolean }) {
 
   useFrame((_, delta) => {
     if (!pivotRef.current) return;
-    // Rotation cible : ouverte à ~85 degrés (Math.PI * 0.47)
-    const targetAngle = isOpen ? -Math.PI * 0.47 : 0;
+    // Rotation cible : ouverture vers l'extérieur de la douche (angle positif vers la SDB)
+    const targetAngle = isOpen ? Math.PI * 0.47 : 0;
     pivotRef.current.rotation.y = THREE.MathUtils.damp(
       pivotRef.current.rotation.y,
       targetAngle,
@@ -105,6 +105,7 @@ function ShowerDoor({ isOpen }: { isOpen: boolean }) {
       delta
     );
   });
+
 
   return (
     // Le pivot de la charnière est placé à gauche de la porte (x = -hw)

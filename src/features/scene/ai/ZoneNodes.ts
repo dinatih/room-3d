@@ -59,12 +59,35 @@ export const ACTIONS_BATHTUB: AgentInstruction[][] = [
 ];
 
 export const ACTION_SHOWER: AgentInstruction[] = [
+  // 1. Va devant la douche
   { type: 'MOVE_TO', targetNodeId: 'Devant_Douche' },
+  // 2. Ouvre la porte de douche depuis l'extérieur
   { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.5 },
+  // 3. Entre dans le bac de douche
+  { type: 'MOVE_TO', smartObjectId: 'shower', slotId: 'take-shower' },
+  // 4. Ferme la porte de douche depuis l'intérieur
+  { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.4 },
+  // 5. Exécute l'animation complète de douche
   { type: 'USE_OBJECT', smartObjectId: 'shower', slotId: 'take-shower' },
-  { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.3 },
-  { type: 'MOVE_TO', targetNodeId: 'Devant_Douche' }
+  // 6. Ouvre la porte depuis l'intérieur
+  { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: true, duration: 0.5 },
+  // 7. Sort devant la douche
+  { type: 'MOVE_TO', targetNodeId: 'Devant_Douche' },
+  // 8. Referme la porte depuis l'extérieur
+  { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.4 }
 ];
+
+export const ACTION_LAUNDRY: AgentInstruction[] = [
+  // 1. Se place devant le placard SDB
+  { type: 'MOVE_TO', smartObjectId: 'sdb-closet', slotId: 'pick-laundry' },
+  // 2. Ouvre la porte du placard
+  { type: 'INTERACT', triggerEventKey: 'sdb-closet-l-toggle', triggerTargetState: true, duration: 0.5 },
+  // 3. Prend le sac de linge sale
+  { type: 'USE_OBJECT', smartObjectId: 'sdb-closet', slotId: 'pick-laundry' },
+  // 4. Referme la porte du placard
+  { type: 'INTERACT', triggerEventKey: 'sdb-closet-l-toggle', triggerTargetState: false, duration: 0.4 }
+];
+
 
 
 export const ACTIONS_GARDEN_SOFA_EAST: AgentInstruction[][] = [

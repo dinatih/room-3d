@@ -183,18 +183,19 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'shower',
     name: 'Douche',
     category: 'hygiene',
-    position: [15, 0, 645],
+    position: [35, 0, 615],
     slots: [
       {
         slotId: 'take-shower',
         name: 'Prendre une douche',
-        offset: [15, 0, 645],
-        rotY: Math.PI / 2,
+        offset: [35, 0, 615],
+        rotY: Math.PI,
         animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
-        duration: 10.0,
+        duration: 25.0,
       }
     ]
   },
+
   'sdb-closet': {
     id: 'sdb-closet',
     name: 'Placard Salle de bain',
@@ -405,10 +406,11 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [160, 0, 350],
         rotY: Math.PI,
         animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
-        duration: 5.0,
+        duration: 25.0,
       }
     ]
   },
+
 
 
   // ── EXTÉRIEUR & ESPACES JARDIN ─────────────────────────────────────────────

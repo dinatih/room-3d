@@ -28,7 +28,9 @@ import {
   ACTIONS_BED_EAST,
   ACTIONS_BATHTUB,
   ACTION_SHOWER,
+  ACTION_LAUNDRY,
   ACTIONS_GARDEN_SOFA_EAST,
+
   ACTIONS_GARDEN_SOFA_WEST,
   ACTION_COOKING,
   ACTION_KALLAX_NE,
@@ -62,7 +64,6 @@ function buildAutonomousScenario(): AgentInstruction[] {
     buildSmartObjectInstructionSequence('sofa-garden-west'),
     buildSmartObjectInstructionSequence('bathtub-garden'),
     buildSmartObjectInstructionSequence('corridor-closet'),
-    buildSmartObjectInstructionSequence('sdb-closet'),
     buildSmartObjectInstructionSequence('drona-west'),
     buildSmartObjectInstructionSequence('drona-east'),
     buildSmartObjectInstructionSequence('kallax-ne'),
@@ -71,10 +72,12 @@ function buildAutonomousScenario(): AgentInstruction[] {
     buildSmartObjectInstructionSequence('rain-dance'),
     ACTION_GO_TO_TOILET,
     ACTION_SHOWER,
+    ACTION_LAUNDRY,
     ACTION_FRESH_AIR,
     ACTION_ENTREE_BAT_B,
     ACTION_ENTREE_COURS_BAT_B
   ].filter(seq => seq.length > 0);
+
 
 
   // Mélanger les actions de vie quotidienne de façon fluide et réaliste

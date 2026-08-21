@@ -245,20 +245,26 @@ export function Studio() {
   // G → toggle mode grille lara (ignoré quand un input/textarea est focus)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'g' && e.key !== 'G') return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const t = e.target as HTMLElement | null;
       if (t && /^(input|textarea|select)$/i.test(t.tagName)) return;
-      const currentGrid = useSceneStore.getState().layers.laraGrid;
-      onToggleLayer('laraGrid');
-      if (!currentGrid) {
-        document.dispatchEvent(new CustomEvent('camera-view', { detail: { pos: [150, 450, 600], target: [150, 450, 200] } }));
+
+      if (e.key === 'g' || e.key === 'G') {
+        const currentGrid = useSceneStore.getState().layers.laraGrid;
+        onToggleLayer('laraGrid');
+        if (!currentGrid) {
+          document.dispatchEvent(new CustomEvent('camera-view', { detail: { pos: [150, 450, 600], target: [150, 450, 200] } }));
+        }
+        cameraState.invalidate?.();
+      } else if (e.key === 'z' || e.key === 'Z') {
+        onToggleLayer('aiZones');
+        cameraState.invalidate?.();
       }
-      cameraState.invalidate?.();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onToggleLayer]);
+
 
   const [buildAnim,       setBuildAnim]       = useState(false);
   const [buildAnimMatrix, setBuildAnimMatrix] = useState(false);
