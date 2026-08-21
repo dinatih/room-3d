@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/foernuft-couteau-acier-inoxydable-10428488/
  */
 export function Fornuft10428488({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/media/glb/ikea-official/Fornuft10428488.glb');
+  const { scene } = useGLTFClone('/items/Fornuft10428488.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function Fornuft10428488({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/media/glb/ikea-official/Fornuft10428488.glb');
+useGLTF.preload('/items/Fornuft10428488.glb');

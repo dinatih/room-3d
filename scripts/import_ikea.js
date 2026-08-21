@@ -195,10 +195,9 @@ const toComponentName = (name) => {
     const componentName = toComponentName(productData.name) + articleId;
     console.log(`Generating component ${componentName}...`);
 
-    const glbFileName = `${componentName}.glb`;
-    const glbDir = path.resolve('public/media/glb/ikea-official');
-    fs.mkdirSync(glbDir, { recursive: true });
-    const glbPath = path.resolve(glbDir, glbFileName);
+    const itemDir = path.resolve('public/items', componentName.toLowerCase());
+    fs.mkdirSync(itemDir, { recursive: true });
+    const glbPath = path.resolve(itemDir, glbFileName);
     
     console.log(`Downloading model to ${glbPath}`);
     await downloadFile(glbUrl, glbPath);
@@ -211,9 +210,7 @@ const toComponentName = (name) => {
             // First image has no suffix, others have _1, _2 etc.
             const suffix = i === 0 ? '' : `_${i}`;
             const imgFileName = `${componentName}${suffix}${ext}`;
-            const imgDir = path.resolve('public/media/ikea-official', componentName.toLowerCase());
-            fs.mkdirSync(imgDir, { recursive: true });
-            const imgPath = path.resolve(imgDir, imgFileName);
+            const imgPath = path.resolve(itemDir, imgFileName);
             console.log(`Downloading image ${i+1}/${imgUrls.length} to ${imgPath}`);
             await downloadFile(url, imgPath);
         }
@@ -232,7 +229,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: ${url}
  */
 export function ${componentName}({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/media/glb/ikea-official/${glbFileName}');
+  const { scene } = useGLTFClone('/items/${componentName.toLowerCase()}/${glbFileName}');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -254,7 +251,7 @@ export function ${componentName}({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/media/glb/ikea-official/${glbFileName}');
+useGLTF.preload('/items/${componentName.toLowerCase()}/${glbFileName}');
 `;
 
     const compPath = path.resolve('src/features/scene/items', `${componentName}.tsx`);
@@ -267,11 +264,11 @@ useGLTF.preload('/media/glb/ikea-official/${glbFileName}');
         const photoPaths = imgUrls.map((url, i) => {
             const ext = path.extname(new URL(url).pathname) || '.jpg';
             const suffix = i === 0 ? '' : `_${i}`;
-            return `'media/ikea-official/${componentName.toLowerCase()}/${componentName}${suffix}${ext}'`;
+            return `'items/${componentName.toLowerCase()}/${componentName}${suffix}${ext}'`;
         }).join(', ');
         
         const newEntry = `
-  { id: '${componentName.toLowerCase()}', name: "${productData.name.replace(/"/g, '\\"')}", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: ${productData.w}, d: ${productData.d}, h: ${productData.h} }, glbPath: 'media/glb/ikea-official/${glbFileName}', photos: [${photoPaths}], url: '${url}', price: '${productData.price}', notes: '' },`;
+  { id: '${componentName.toLowerCase()}', name: "${productData.name.replace(/"/g, '\\"')}", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: ${productData.w}, d: ${productData.d}, h: ${productData.h} }, glbPath: 'items/${componentName.toLowerCase()}/${glbFileName}', photos: [${photoPaths}], url: '${url}', price: '${productData.price}', notes: '' },`;
         
         invContent = invContent.replace('export const INVENTORY: InventoryItem[] = [', 'export const INVENTORY: InventoryItem[] = [' + newEntry);
         fs.writeFileSync(inventoryPath, invContent);

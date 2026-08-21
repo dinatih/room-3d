@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/glb/ikea-official/FNISS poubelle 10 l blanc.glb';
+const GLB = 'items/FNISS poubelle 10 l blanc.glb';
 
 export function Fniss({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

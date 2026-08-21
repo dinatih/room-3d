@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/glb/ikea-official/VIHALS.glb';
+const GLB = 'items/VIHALS.glb';
 
 // ── Open : GLB IKEA ───────────────────────────────────────────────────────────
 function OpenVihals({ onSize }: { onSize: (v: THREE.Vector3) => void }) {

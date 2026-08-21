@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/glb/ikea-official/MACKAPÄR.glb';
+const GLB = 'items/MACKAPÄR.glb';
 
 export function Mackapar({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

@@ -14,7 +14,7 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { LidarMode } from '@features/scene/SidePanel';
 
-const SCAN_PATH = 'media/glb/4_7_2026_chevaleret.glb';
+const SCAN_PATH = 'items/station-chevaleret/model.glb';
 
 // ── Alignement ───────────────────────────────────────────────────────────────
 const POS_X = 158;

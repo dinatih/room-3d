@@ -149,7 +149,7 @@ export function useAgentController(
         const targetY = startPosRef.current?.y ?? 0;
         stateRef.current.y = targetY + (2500 - targetY) * (p_inv * p_inv * p_inv); // ease-out (ralenti à la fin)
       }
-      stateRef.current.animation = 'media/sandbox/anims/anim_falling.glb';
+      stateRef.current.animation = 'animations/anim_falling.glb';
       return stateRef.current;
     }
 
@@ -158,7 +158,7 @@ export function useAgentController(
       if (timerRef.current <= 0) {
         statusRef.current = 'IDLE';
       }
-      stateRef.current.animation = 'media/sandbox/anims/anim_crouch_to_stand.glb';
+      stateRef.current.animation = 'animations/anim_crouch_to_stand.glb';
       return stateRef.current;
     }
 
@@ -319,7 +319,7 @@ export function useAgentController(
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
           const label = animation
-            ? animation.replace('media/sandbox/anims/', '').replace('.glb', '')
+            ? animation.replace('animations/', '').replace('.glb', '')
             : currentInstruction.type;
           appLog(_characterId, `🎭 Action: ${label} (${duration.toFixed(1)}s)`);
         }
@@ -379,7 +379,7 @@ export function useAgentController(
           if (lastLogRef.current !== logKey) {
             lastLogRef.current = logKey;
             const label = animation
-              ? animation.replace('media/sandbox/anims/', '').replace('.glb', '')
+              ? animation.replace('animations/', '').replace('.glb', '')
               : 'USE_OBJECT';
             appLog(_characterId, `🎭 Action: ${label} (${duration.toFixed(1)}s)`);
           }

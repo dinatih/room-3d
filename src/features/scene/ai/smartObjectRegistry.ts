@@ -18,7 +18,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Nord)',
         offset: [90, 0, 80],
         rotY: 0,
-        animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb',
+        animation: 'animations/anim_female_sitting_pose_1.glb',
         duration: 15.0,
       },
       {
@@ -26,7 +26,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Milieu)',
         offset: [90, 0, 150],
         rotY: 0,
-        animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb',
+        animation: 'animations/anim_female_sitting_pose_1.glb',
         duration: 15.0,
       },
       {
@@ -34,7 +34,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Sud)',
         offset: [90, 0, 220],
         rotY: 0,
-        animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb',
+        animation: 'animations/anim_female_sitting_pose_1.glb',
         duration: 15.0,
       },
       {
@@ -42,7 +42,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Dormir couché',
         offset: [74, 45, 150],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_sleeping_idle.glb',
+        animation: 'animations/anim_sleeping_idle.glb',
         duration: 45.0,
       }
     ]
@@ -58,7 +58,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Nord)',
         offset: [245, 0, 120],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb',
+        animation: 'animations/anim_female_sitting_pose_1.glb',
         duration: 15.0,
       },
       {
@@ -66,7 +66,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Milieu)',
         offset: [245, 0, 190],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb',
+        animation: 'animations/anim_female_sitting_pose_1.glb',
         duration: 15.0,
       },
       {
@@ -74,7 +74,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Sud)',
         offset: [245, 0, 260],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_female_sitting_pose_1.glb',
+        animation: 'animations/anim_female_sitting_pose_1.glb',
         duration: 15.0,
       },
       {
@@ -82,7 +82,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Dormir couché',
         offset: [270, 45, 190],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_sleeping_idle.glb',
+        animation: 'animations/anim_sleeping_idle.glb',
         duration: 15.0,
       }
     ]
@@ -100,7 +100,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Travailler assis',
         offset: [73.5, 0, 50],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        animation: 'animations/anim_sitting_idle.glb',
         duration: 10.0,
       }
     ]
@@ -116,7 +116,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir',
         offset: [85, 0, 272],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        animation: 'animations/anim_sitting_idle.glb',
         duration: 10.0,
       }
     ]
@@ -132,7 +132,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Travailler debout',
         offset: [200, 0, 215],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
+        animation: 'animations/anim_texting_while_standing.glb',
         duration: 10.0,
       }
     ]
@@ -150,7 +150,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Faire ses besoins',
         offset: [50, 0, 500],
         rotY: 0,
-        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        animation: 'animations/anim_sitting_idle.glb',
         duration: 10.0,
       },
       {
@@ -158,7 +158,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Tirer la chasse',
         offset: [50, 0, 500],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        animation: 'animations/anim_shaking_hands_2.glb',
         duration: 2.0,
         triggerEventKey: 'wc-flush'
       }
@@ -175,7 +175,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Se laver les mains',
         offset: [116, 0, 545],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
+        animation: 'animations/anim_texting_while_standing.glb',
         duration: 5.0,
       },
       {
@@ -183,7 +183,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Se laver les dents',
         offset: [116, 0, 545],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
+        animation: 'animations/anim_texting_while_standing.glb',
         duration: 5.0,
       },
       {
@@ -191,7 +191,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Se Raser / Maquiller',
         offset: [116, 0, 545],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
+        animation: 'animations/anim_texting_while_standing.glb',
         duration: 5.0,
       }
     ]
@@ -208,7 +208,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre une douche (Centre)',
         offset: [25, 0, 645],
         rotY: 0,
-        animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
+        animation: 'animations/miley_armature_posing_f.glb',
         duration: 25.0,
       },
       {
@@ -216,7 +216,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre une douche (Gauche)',
         offset: [8, 0, 645],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
+        animation: 'animations/miley_armature_posing_f.glb',
         duration: 25.0,
       },
       {
@@ -224,7 +224,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre une douche (Droite)',
         offset: [42, 0, 645],
         rotY: -Math.PI / 2,
-        animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
+        animation: 'animations/miley_armature_posing_f.glb',
         duration: 25.0,
       }
     ]
@@ -240,7 +240,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre le sac de Linge sale',
         offset: [130, 0, 565],
         rotY: 0,
-        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        animation: 'animations/anim_hand_raising.glb',
         duration: 3.5,
       }
     ]
@@ -257,7 +257,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un objet',
         offset: [30, 0, 535],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        animation: 'animations/anim_hand_raising.glb',
         duration: 3.5,
       }
     ]
@@ -273,7 +273,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un objet',
         offset: [169, 0, 535],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        animation: 'animations/anim_hand_raising.glb',
         duration: 3.5,
       }
     ]
@@ -291,7 +291,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Se relaxer au centre',
         offset: [120, 0, -250],
         rotY: Math.PI / 4,
-        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        animation: 'animations/anim_sitting_idle.glb',
         duration: 30.0,
       },
       {
@@ -299,7 +299,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Bain Côté Ouest',
         offset: [80, 0, -280],
         rotY: Math.PI / 4,
-        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        animation: 'animations/anim_sitting_idle.glb',
         duration: 30.0,
       },
       {
@@ -307,7 +307,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Bain Côté Est',
         offset: [160, 0, -220],
         rotY: Math.PI + Math.PI / 4,
-        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        animation: 'animations/anim_sitting_idle.glb',
         duration: 30.0,
       }
     ]
@@ -325,7 +325,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Place assise 1',
         offset: [270, 0, -80],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_female_sitting_pose_3.glb',
+        animation: 'animations/anim_female_sitting_pose_3.glb',
         duration: 15.0,
       },
       {
@@ -333,7 +333,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Place assise 2',
         offset: [270, 0, -140],
         rotY: Math.PI,
-        animation: 'media/sandbox/anims/anim_female_sitting_pose_3.glb',
+        animation: 'animations/anim_female_sitting_pose_3.glb',
         duration: 15.0,
       }
     ]
@@ -349,7 +349,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Place assise 1',
         offset: [100, 0, -60],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        animation: 'animations/anim_sitting_idle.glb',
         duration: 15.0,
       },
       {
@@ -357,7 +357,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Place assise 2',
         offset: [100, 0, -100],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_sitting_idle.glb',
+        animation: 'animations/anim_sitting_idle.glb',
         duration: 15.0,
       }
     ]
@@ -375,7 +375,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Cuisiner',
         offset: [80, 0, 370],
         rotY: -Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        animation: 'animations/anim_shaking_hands_2.glb',
         duration: 10.0,
       }
     ]
@@ -391,7 +391,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un ingrédient',
         offset: [250, 0, 320],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        animation: 'animations/anim_hand_raising.glb',
         duration: 2.5,
       }
     ]
@@ -410,7 +410,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un objet en hauteur',
         offset: [240, 0, 38],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        animation: 'animations/anim_hand_raising.glb',
         duration: 5.0,
       }
     ]
@@ -426,7 +426,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Ranger des affaires',
         offset: [220, 0, 435],
         rotY: -Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_shaking_hands_2.glb',
+        animation: 'animations/anim_shaking_hands_2.glb',
         duration: 2.5,
       }
     ]
@@ -442,7 +442,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'admirer dans le miroir',
         offset: [160, 0, 340],
         rotY: 0,
-        animation: 'media/sandbox/anims/miley_armature_posing_f.glb',
+        animation: 'animations/miley_armature_posing_f.glb',
         duration: 25.0,
       }
     ]
@@ -462,7 +462,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre l\'air au fond',
         offset: [150, 0, -600],
         rotY: 0,
-        animation: 'media/sandbox/anims/anim_female_standing_pose.glb',
+        animation: 'animations/anim_female_standing_pose.glb',
         duration: 6.0,
       }
     ]
@@ -478,7 +478,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Jeter les poubelles',
         offset: [-350, 0, 1002],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_hand_raising.glb',
+        animation: 'animations/anim_hand_raising.glb',
         duration: 5.0,
       },
       {
@@ -486,7 +486,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Consulter son téléphone',
         offset: [-350, 0, 1002],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
+        animation: 'animations/anim_texting_while_standing.glb',
         duration: 6.0,
       }
     ]
@@ -502,7 +502,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Aller au lavomatique',
         offset: [-350, 0, -200],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_texting_while_standing.glb',
+        animation: 'animations/anim_texting_while_standing.glb',
         duration: 6.0,
       },
       {
@@ -510,7 +510,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Observer la cour',
         offset: [-350, 0, -200],
         rotY: Math.PI / 2,
-        animation: 'media/sandbox/anims/anim_female_standing_pose_1.glb',
+        animation: 'animations/anim_female_standing_pose_1.glb',
         duration: 6.0,
       }
     ]
@@ -526,7 +526,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danser sous la pluie',
         offset: [0, 0, -400],
         rotY: 0,
-        animation: 'media/sandbox/anims/miley_armature_sensual_dance_01.glb',
+        animation: 'animations/miley_armature_sensual_dance_01.glb',
         duration: 12.0,
       }
     ]
@@ -549,20 +549,20 @@ export function getSmartObjectsByCategory(category: SmartObjectCategory): SmartO
 }
 
 const MILEY_DANCE_ANIMS = [
-  'media/sandbox/anims/miley_armature_10_dance_like_sidestep.glb',
-  'media/sandbox/anims/miley_armature_aerobic_dance.glb',
-  'media/sandbox/anims/miley_armature_air_dance.glb',
-  'media/sandbox/anims/miley_armature_couple_pop_dance_f.glb',
-  'media/sandbox/anims/miley_armature_couple_pop_dance_m.glb',
-  'media/sandbox/anims/miley_armature_dance_graceful.glb',
-  'media/sandbox/anims/miley_armature_dancetomusic_f.glb',
-  'media/sandbox/anims/miley_armature_energetic_dance_f.glb',
-  'media/sandbox/anims/miley_armature_energetic_dance_m.glb',
-  'media/sandbox/anims/miley_armature_sensual_dance_01.glb',
-  'media/sandbox/anims/miley_armature_sensual_dance_02.glb',
-  'media/sandbox/anims/miley_armature_sensual_dance_03.glb',
-  'media/sandbox/anims/miley_armature_slow_dance_f.glb',
-  'media/sandbox/anims/miley_armature_slow_dance_m.glb'
+  'animations/miley_armature_10_dance_like_sidestep.glb',
+  'animations/miley_armature_aerobic_dance.glb',
+  'animations/miley_armature_air_dance.glb',
+  'animations/miley_armature_couple_pop_dance_f.glb',
+  'animations/miley_armature_couple_pop_dance_m.glb',
+  'animations/miley_armature_dance_graceful.glb',
+  'animations/miley_armature_dancetomusic_f.glb',
+  'animations/miley_armature_energetic_dance_f.glb',
+  'animations/miley_armature_energetic_dance_m.glb',
+  'animations/miley_armature_sensual_dance_01.glb',
+  'animations/miley_armature_sensual_dance_02.glb',
+  'animations/miley_armature_sensual_dance_03.glb',
+  'animations/miley_armature_slow_dance_f.glb',
+  'animations/miley_armature_slow_dance_m.glb'
 ];
 
 /**
@@ -605,7 +605,7 @@ export function buildSmartObjectInstructionSequence(
   if (objectId === 'shower') {
     return [
       { type: 'MOVE_TO', targetNodeId: 'bathroom-shower-entry', rotY: 0 },
-      { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.8, rotY: 0 },
+      { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: true, animation: 'animations/anim_open_door_outwards.glb', duration: 0.8, rotY: 0 },
       { type: 'MOVE_TO', smartObjectId: 'shower', slotId: slot.slotId },
       { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.5 },
       baseInstruction,

@@ -1,5 +1,5 @@
 /**
- * LampOla.tsx — Lampe IKEA OLA (GLB media/glb/ikea_lamp_ola.glb).
+ * LampOla.tsx — Lampe IKEA OLA (GLB items/lamp-ola/model.glb).
  * Coordonnées locales : centré par bbox, Y=0 = sol, scale ×100, teintes jaunes → blanc.
  * Placement monde dans GlbItems.tsx.
  */
@@ -11,7 +11,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 
 export function LampOla({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/glb/ikea_lamp_ola.glb');
+  const { scene } = useGLTFClone('items/lamp-ola/model.glb');
 
   useLayoutEffect(() => {
     scene.scale.setScalar(100);
@@ -41,4 +41,4 @@ export function LampOla({ onSize }: SceneItemProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('media/glb/ikea_lamp_ola.glb');
+useGLTF.preload('items/lamp-ola/model.glb');

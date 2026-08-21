@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/stackstod-organiseur-bureau-rouge-60620144/
  */
 export function Stackstod({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/media/glb/ikea-official/Stackstod.glb');
+  const { scene } = useGLTFClone('/items/Stackstod.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function Stackstod({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/media/glb/ikea-official/Stackstod.glb');
+useGLTF.preload('/items/Stackstod.glb');

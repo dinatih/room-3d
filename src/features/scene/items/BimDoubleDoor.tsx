@@ -6,7 +6,7 @@ import { Box3, Vector3, Group, MathUtils } from 'three';
 import { splitBimDoor } from './splitBimDoor';
 
 export function BimDoubleDoor({ actionState, onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('/media/S9000_Double_Door.glb');
+  const { scene } = useGLTFClone('/items/bim-double-door/model.glb');
   
   const { frameGroup, leftGroup, rightGroup } = useMemo(() => {
     // To prevent re-splitting the same scene

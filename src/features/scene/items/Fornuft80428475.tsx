@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/foernuft-petite-cuillere-acier-inoxydable-80428475/
  */
 export function Fornuft80428475({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/media/glb/ikea-official/Fornuft80428475.glb');
+  const { scene } = useGLTFClone('/items/Fornuft80428475.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function Fornuft80428475({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/media/glb/ikea-official/Fornuft80428475.glb');
+useGLTF.preload('/items/Fornuft80428475.glb');

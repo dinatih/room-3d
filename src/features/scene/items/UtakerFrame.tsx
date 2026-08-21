@@ -16,8 +16,8 @@ import { Anneland70481722 } from './Anneland70481722';
 import { Vestmarka90470195 } from './Vestmarka90470195';
 import { Nasfjallet10558045 } from './Nasfjallet10558045';
 
-const BAS_GLB  = 'media/glb/ikea-official/UTÅKER lit empilable 80x200 pin (bas).glb';
-const HAUT_GLB = 'media/glb/ikea-official/UTÅKER lit empilable 80x200 pin (haut).glb';
+const BAS_GLB  = 'items/UTÅKER lit empilable 80x200 pin (bas).glb';
+const HAUT_GLB = 'items/UTÅKER lit empilable 80x200 pin (haut).glb';
 
 const redFabricMat = new THREE.MeshPhysicalMaterial({
   color: 0x991111,

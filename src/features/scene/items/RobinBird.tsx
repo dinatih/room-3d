@@ -6,7 +6,7 @@ import { useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { isAppIdle } from '@features/scene/idleState';
 
-const GLB_PATH = 'media/glb/robin_bird.glb';
+const GLB_PATH = 'items/robin-bird/model.glb';
 
 type AIState = {
   mode: 'autonomous' | 'forced';

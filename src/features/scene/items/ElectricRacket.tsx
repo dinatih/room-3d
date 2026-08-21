@@ -6,7 +6,7 @@ import { glbLocalBBox } from '@features/scene/glbUtils';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 
 export function ElectricRacket({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('/models/electric_racket.glb');
+  const { scene } = useGLTFClone('/items/electric-racket/model.glb');
   const group = useRef<THREE.Group>(null);
 
   useLayoutEffect(() => {
@@ -74,4 +74,4 @@ export function ElectricRacket({ onSize }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/models/electric_racket.glb');
+useGLTF.preload('/items/electric-racket/model.glb');

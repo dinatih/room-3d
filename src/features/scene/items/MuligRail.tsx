@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/glb/ikea-official/MULIG.glb';
+const GLB = 'items/MULIG.glb';
 
 export function MuligRail({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

@@ -13,7 +13,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/glb/ikea-official/LACK étagère murale 110x26 blanc.glb';
+const GLB = 'items/LACK étagère murale 110x26 blanc.glb';
 
 export function LackShelf({ onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);

@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/vestmarka-matelas-a-ressorts-ferme-bleu-clair-90470195/
  */
 export function Vestmarka90470195({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/media/glb/ikea-official/Vestmarka90470195.glb');
+  const { scene } = useGLTFClone('/items/Vestmarka90470195.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function Vestmarka90470195({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/media/glb/ikea-official/Vestmarka90470195.glb');
+useGLTF.preload('/items/Vestmarka90470195.glb');

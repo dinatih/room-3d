@@ -14,7 +14,7 @@ const EXTERIOR_FADE_END = SKY_RADIUS * 1.22;
 const RAINBOW_COLORS = ['#ff3055', '#ff8a00', '#ffe94d', '#35ff6f', '#28d7ff', '#5177ff', '#c45cff'];
 
 export function SkySphere() {
-  const texture = useTexture('/media/HDR_029_Sky_Cloudy_Bg.jpg');
+  const texture = useTexture('/environment/HDR_029_Sky_Cloudy_Bg.jpg');
   texture.colorSpace = THREE.SRGBColorSpace;
 
   return (
@@ -339,4 +339,4 @@ function seededUnit(seed: number) {
   return x - Math.floor(x);
 }
 
-useTexture.preload('/media/HDR_029_Sky_Cloudy_Bg.jpg');
+useTexture.preload('/environment/HDR_029_Sky_Cloudy_Bg.jpg');

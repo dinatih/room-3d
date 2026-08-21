@@ -15,7 +15,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/glb/ikea-official/TILLREDA_anim.glb';
+const GLB = 'items/TILLREDA_anim.glb';
 
 export function Freezer({ actionState, onSize }: SceneItemProps) {
   const { scene, animations } = useGLTFClone(GLB);

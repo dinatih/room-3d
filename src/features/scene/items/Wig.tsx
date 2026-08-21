@@ -36,7 +36,7 @@ export interface WigProps {
 }
 
 export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
-  const { scene: fullScene } = useGLTF('media/hair_pack_part_2.glb');
+  const { scene: fullScene } = useGLTF('characters/wigs/hair_pack_part_2.glb');
   const clonedHairRef = useRef<THREE.Group>(null!);
   
   const scene = useMemo(() => {

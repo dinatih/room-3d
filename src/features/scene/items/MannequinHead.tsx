@@ -1,5 +1,5 @@
 /**
- * MannequinHead.tsx — Tête de mannequin (GLB media/glb/wig_mannequin.glb).
+ * MannequinHead.tsx — Tête de mannequin (GLB characters/accessories/wig_mannequin.glb).
  * Coordonnées locales : centré XZ, Y=0 = base épaules. Scale par hauteur (45 cm).
  * Ajoute une perruque aléatoire depuis hair_pack_part_2.glb (même logique que Walker.tsx).
  *
@@ -58,7 +58,7 @@ function getUniqueRandomColor(): string {
 
 export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initialWigIndex, hairColor: initialHairColor, windEnabled: initialWindEnabled }: MannequinHeadProps) {
   const ref = useRef<THREE.Group>(null!);
-  const { scene } = useGLTFClone('media/glb/wig_mannequin.glb');
+  const { scene } = useGLTFClone('characters/accessories/wig_mannequin.glb');
 
   const [wigIndex, setWigIndex] = useState<number>(initialWigIndex ?? getUniqueRandomWig());
   const [hairColor, setHairColor] = useState<string | undefined>(initialHairColor ?? getUniqueRandomColor());
@@ -139,6 +139,6 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
   );
 }
 
-useGLTF.preload('media/glb/wig_mannequin.glb');
+useGLTF.preload('characters/accessories/wig_mannequin.glb');
 // The individual wigs are dynamically loaded by Wig.tsx
 

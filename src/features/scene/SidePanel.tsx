@@ -1294,8 +1294,8 @@ export function SidePanel({
     if (anim) {
       const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
       const trigger = () => playCoupleAnim(
-        `media/sandbox/anims/${prefix}${anim.s}.glb`,
-        `media/sandbox/anims/${prefix}${anim.r}.glb`,
+        `animations/${prefix}${anim.s}.glb`,
+        `animations/${prefix}${anim.r}.glb`,
         anim.dist ?? 50,
         (anim as any).rotS,
         (anim as any).rotR,
@@ -1319,8 +1319,8 @@ export function SidePanel({
         if (anim) {
           const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
           playCoupleAnim(
-            `media/sandbox/anims/${prefix}${anim.s}.glb`,
-            `media/sandbox/anims/${prefix}${anim.r}.glb`,
+            `animations/${prefix}${anim.s}.glb`,
+            `animations/${prefix}${anim.r}.glb`,
             anim.dist ?? 50,
             (anim as any).rotS,
             (anim as any).rotR,
@@ -1360,8 +1360,8 @@ export function SidePanel({
               setAutoCycleIndex(idx);
               const a = coupleAnims[idx];
               playCoupleAnim(
-                `media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.s}.glb`,
-                `media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.r}.glb`,
+                `animations/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.s}.glb`,
+                `animations/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.r}.glb`,
                 a.dist ?? 50,
                 (a as any).rotS,
                 (a as any).rotR,

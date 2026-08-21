@@ -1,5 +1,5 @@
 /**
- * PalmLeaf.tsx — Plante artificielle feuille de palmier (GLB media/glb/Palm_Leaf1.glb).
+ * PalmLeaf.tsx — Plante artificielle feuille de palmier (GLB items/plant-monstera/model.glb).
  * Coordonnées locales : X/Z centrés, Y=0 = sol.
  */
 import { useLayoutEffect } from 'react';
@@ -12,7 +12,7 @@ import type { SceneItemProps } from '@shared/types';
 const TARGET_H = 80; // cm — ajuster si trop grand/petit
 
 export function PalmLeaf({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/glb/Palm_Leaf1.glb');
+  const { scene } = useGLTFClone('items/plant-monstera/model.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function PalmLeaf({ onSize }: SceneItemProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('media/glb/Palm_Leaf1.glb');
+useGLTF.preload('items/plant-monstera/model.glb');

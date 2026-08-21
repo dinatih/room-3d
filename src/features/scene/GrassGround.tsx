@@ -7,7 +7,7 @@ interface GrassGroundProps {
 }
 
 export function GrassGround({ yPos = -3.48 }: GrassGroundProps) {
-  const { scene } = useGLTF('media/glb/patch_of_grass_joined.glb');
+  const { scene } = useGLTF('environment/patch_of_grass_joined.glb');
 
   // Trouver les meshes correspondants à l'herbe et au sol
   const { grassMesh, soilMesh } = useMemo(() => {
@@ -112,4 +112,4 @@ function GrassInstances({
   );
 }
 
-useGLTF.preload('media/glb/patch_of_grass_joined.glb');
+useGLTF.preload('environment/patch_of_grass_joined.glb');

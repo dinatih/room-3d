@@ -15,7 +15,7 @@ import * as THREE from 'three';
 
 import type { SceneItemProps } from '@shared/types';
 
-const GLB_DRONA = 'media/glb/ikea-official/DRÖNA.glb';
+const GLB_DRONA = 'items/DRÖNA.glb';
 
 const dronaMat = new THREE.MeshStandardMaterial({ 
   color: 0xcc0000, 

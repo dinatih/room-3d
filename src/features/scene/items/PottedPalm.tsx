@@ -1,5 +1,5 @@
 /**
- * PottedPalm.tsx — Palmier en pot (GLB media/glb/potted_palm.glb).
+ * PottedPalm.tsx — Palmier en pot (GLB items/plant-monstera/potted_palm.glb).
  * Coordonnées locales : X/Z centrés, Y=0 = sol.
  * Placement monde dans Garden.tsx.
  */
@@ -13,7 +13,7 @@ import type { SceneItemProps } from '@shared/types';
 const TARGET_H = 150;
 
 export function PottedPalm({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/glb/potted_palm.glb');
+  const { scene } = useGLTFClone('items/plant-monstera/potted_palm.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -34,4 +34,4 @@ export function PottedPalm({ onSize }: SceneItemProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('media/glb/potted_palm.glb');
+useGLTF.preload('items/plant-monstera/potted_palm.glb');

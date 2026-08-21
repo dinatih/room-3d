@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/blaskata-coussin-cylindrique-gris-clair-50569513/
  */
 export function Blaskata50569513({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/media/glb/ikea-official/Blaskata50569513.glb');
+  const { scene } = useGLTFClone('/items/Blaskata50569513.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -58,4 +58,4 @@ export function Blaskata50569513({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/media/glb/ikea-official/Blaskata50569513.glb');
+useGLTF.preload('/items/Blaskata50569513.glb');

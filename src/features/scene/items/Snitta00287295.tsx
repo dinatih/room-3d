@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/snitta-couteau-noir-00287295/
  */
 export function Snitta00287295({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/media/glb/ikea-official/Snitta00287295.glb');
+  const { scene } = useGLTFClone('/items/Snitta00287295.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function Snitta00287295({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/media/glb/ikea-official/Snitta00287295.glb');
+useGLTF.preload('/items/Snitta00287295.glb');

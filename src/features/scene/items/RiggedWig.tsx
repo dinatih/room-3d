@@ -39,7 +39,7 @@ import { RIGGED_WIGS_PATHS } from '@features/inventory/inventoryData';
 export { RIGGED_WIGS_PATHS };
 
 export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
-  const gltfPath = RIGGED_WIGS_PATHS[id as string] || 'media/zepeto_hair.glb';
+  const gltfPath = RIGGED_WIGS_PATHS[id as string] || 'characters/wigs/zepeto_hair.glb';
   const { scene: fullScene } = useGLTF(gltfPath);
   const clonedHairRef = useRef<THREE.Group>(null!);
   

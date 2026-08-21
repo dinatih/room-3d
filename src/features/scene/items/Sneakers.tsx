@@ -1,5 +1,5 @@
 /**
- * Sneakers.tsx — Une paire de baskets (GLB media/glb/sneaker.glb), couleur rouge.
+ * Sneakers.tsx — Une paire de baskets (GLB characters/accessories/sneaker.glb), couleur rouge.
  * Coordonnées locales : centré XZ, Y=0 = sol.
  * Gauche à X>0, droite à X<0 (miroir scale.z).
  * Fidèle à js/decor/sneakers.js.
@@ -16,8 +16,8 @@ const GAP = 1;
 const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.6 });
 
 export function Sneakers({ onSize }: SceneItemProps) {
-  const { scene: left  } = useGLTFClone('media/glb/sneaker.glb');
-  const { scene: right } = useGLTFClone('media/glb/sneaker.glb');
+  const { scene: left  } = useGLTFClone('characters/accessories/sneaker.glb');
+  const { scene: right } = useGLTFClone('characters/accessories/sneaker.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(left);
@@ -61,4 +61,4 @@ export function Sneakers({ onSize }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('media/glb/sneaker.glb');
+useGLTF.preload('characters/accessories/sneaker.glb');

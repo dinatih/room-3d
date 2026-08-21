@@ -1,5 +1,5 @@
 /**
- * Ballon d'eau chaude 100L — GLB media/glb/water heater.glb.
+ * Ballon d'eau chaude 100L — GLB items/water-heater/model.glb.
  * Coordonnées locales : centré XYZ, Y=0 = centre du ballon (suspendu au mur).
  *
  * GLB en pouces (ImageToStl, all nodes identity) :
@@ -13,7 +13,7 @@ import * as THREE from 'three';
 import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'media/glb/water heater.glb';
+const GLB = 'items/water-heater/model.glb';
 
 // Vertex bounds measured from GLB (all node transforms identity, units = inches)
 const GLB_SY = 32.919;  // hauteur (Y)

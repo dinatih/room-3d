@@ -18,7 +18,7 @@ const BEZEL = 0.6;
 const PORT_W = 1.2, PORT_H = 0.6, PORT_D = 3;
 
 // source CAD : https://cad.onshape.com/documents/b17a72e361e72e3c5b6e7bb7/w/95ca42a57c78f484e8786505/e/db39482865fc64b9783df21f
-const GLB_PATH = 'media/glb/Framework 13 Laptop.draco.glb';
+const GLB_PATH = 'items/framework-laptop13/model.glb';
 
 // GLB exporté Y-up. Z centré sur 0.41 cm → offset -0.41
 const GLB_POS: [number, number, number] = [0, 0, -0.41];
@@ -40,7 +40,7 @@ function moveOcc(root: THREE.Object3D, name: string, tx: number, ty: number, tz:
 // ── Modèle procédural ─────────────────────────────────────────────────────────
 
 export function LaptopProcedural({ onSize }: { onSize: SceneItemProps['onSize'] }) {
-  const screenTex = useTexture('media/photos/omarchy-screen.png');
+  const screenTex = useTexture('items/omarchy-screen/omarchy-screen.png');
   screenTex.colorSpace = THREE.SRGBColorSpace;
   const screenMat = useMemo(() => new THREE.MeshStandardMaterial({
     map: screenTex, roughness: 0.1, metalness: 0.2,
