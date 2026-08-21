@@ -65,12 +65,17 @@ export function AiZonesHelper() {
         const avgX = obj.slots.reduce((sum, s) => sum + s.offset[0], 0) / (slotsCount || 1);
         const avgZ = obj.slots.reduce((sum, s) => sum + s.offset[2], 0) / (slotsCount || 1);
 
+        // Liste multi-lignes claire des actions du smart object
+        const slotsText = obj.slots.map(s => `• ${s.name}`).join('\n');
+        const fullLabel = `✨ ${obj.name}\n${slotsText}`;
+
         return (
           <group key={`smart-${obj.id}`}>
-            {/* Si l'objet a plusieurs slots qui sont proches, on affiche un titre principal d'objet, et des labels compacts par slot */}
-            <Billboard position={[avgX, labelHeight + (slotsCount > 1 ? 12 : 0), avgZ]}>
+            {/* Label Unique Multi-lignes au-dessus de l'objet (visible à travers tout) */}
+            <Billboard position={[avgX, labelHeight, avgZ]}>
               <Text
-                fontSize={7.5}
+                fontSize={7.0}
+                lineHeight={1.15}
                 color={color}
                 anchorX="center"
                 anchorY="middle"
@@ -80,17 +85,13 @@ export function AiZonesHelper() {
                 material-depthWrite={false}
                 renderOrder={9999}
               >
-                {`✨ ${obj.name}`}
+                {fullLabel}
               </Text>
             </Billboard>
 
-            {obj.slots.map((slot, slotIdx) => {
+            {/* Cibles au sol + flèches d'orientation pour chaque slot */}
+            {obj.slots.map(slot => {
               const pos = slot.offset;
-              
-              // Décalage vertical si plusieurs slots ont exactement les mêmes coordonnées X/Z
-              const isSameCoords = obj.slots.some((other, oIdx) => oIdx < slotIdx && Math.hypot(other.offset[0] - pos[0], other.offset[2] - pos[2]) < 5);
-              const slotOffsetY = isSameCoords ? (slotIdx * 6) : 0;
-
               return (
                 <group key={`slot-${obj.id}-${slot.slotId}`} position={[pos[0], baseHeight, pos[2]]}>
                   {/* Cible au sol */}
@@ -107,28 +108,13 @@ export function AiZonesHelper() {
                     <coneGeometry args={[3, 8, 16]} />
                     <meshBasicMaterial color="#ffffff" depthTest={false} depthWrite={false} />
                   </mesh>
-                  {/* Label Slot individuel */}
-                  <Billboard position={[0, (isTopView ? 5 : 12) + slotOffsetY, 0]}>
-                    <Text
-                      fontSize={6.0}
-                      color="#ffffff"
-                      anchorX="center"
-                      anchorY="middle"
-                      outlineWidth={0.6}
-                      outlineColor="#000000"
-                      material-depthTest={false}
-                      material-depthWrite={false}
-                      renderOrder={10000}
-                    >
-                      {`[${slot.name}]`}
-                    </Text>
-                  </Billboard>
                 </group>
               );
             })}
           </group>
         );
       })}
+
     </group>
   );
 }

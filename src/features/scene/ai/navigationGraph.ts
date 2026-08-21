@@ -1,27 +1,41 @@
 import { AgentInstruction } from './aiTypes';
 
-export type RoomId = 'living' | 'corridor' | 'bathroom' | 'garden' | 'outdoor';
+export type RoomId = 'living' | 'corridor' | 'bathroom' | 'garden' | 'outdoor_corridor' | 'outdoor_garden';
 
 /**
  * Détermine la pièce (RoomId) à partir de coordonnées 2D (x, z).
  * Repères architecturaux de l'appartement :
  * - Séjour (living) : 0 <= Z <= 400
- * - Jardin (garden) : Z < 0 (dans le domaine de la terrasse/jardin nord, X dans [-100, 400], Z >= -500)
- * - Fond jardin / Extérieur nord : Z < -500 ou Z < 0 avec grand déport
+ * - Jardin (garden) : Z < 0 et X >= -100 (terrasse et jardin nord direct)
  * - Couloir (corridor) : Z > 400 et X >= 192
  * - Salle de bain (bathroom) : Z > 400 et X < 192
- * - Bâtiment B / Extérieur ouest : X < -100
+ * - Extérieur Couloir / Sortie Bâtiment B (outdoor_corridor) : Z > 400 et X < 192 (dehors au sud-ouest) ou X < -100 avec Z > 0
+ * - Extérieur Cours / Jardin Bâtiment B (outdoor_garden) : X < -100 et Z <= 0, ou grand déport nord (Z < -500)
  */
 export function getRoomFromCoords(x: number, z: number): RoomId {
-  if (x < -100 || z > 800 || z < -500) {
-    return 'outdoor';
+  // Extérieur Bâtiment B (Cour Jardin Ouest / Nord)
+  if (x < -100 && z <= 100) {
+    return 'outdoor_garden';
   }
+  if (z < -500) {
+    return 'outdoor_garden';
+  }
+
+  // Extérieur Bâtiment B (Sortie Couloir Sud-Ouest / Rue)
+  if ((x < -100 && z > 100) || z > 600 || (x > 270 && z > 580)) {
+    return 'outdoor_corridor';
+  }
+
+  // Jardin intérieur / terrasse
   if (z < 0) {
     return 'garden';
   }
+
+  // Séjour
   if (z <= 400) {
     return 'living';
   }
+
   // Zone sud (Z > 400)
   if (x < 192) {
     return 'bathroom';
@@ -100,10 +114,10 @@ export const ROOM_PORTALS: RoomPortal[] = [
     ]
   },
 
-  // ── COULOIR <-> EXTÉRIEUR BÂTIMENT (via Porte d'entrée) ──
+  // ── COULOIR <-> COULOIR EXTÉRIEUR (via Porte d'entrée) ──
   {
     from: 'corridor',
-    to: 'outdoor',
+    to: 'outdoor_corridor',
     traverseInstructions: [
       { type: 'MOVE_TO', targetNodeId: 'Couloir_Entree' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.4 },
@@ -111,7 +125,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     ]
   },
   {
-    from: 'outdoor',
+    from: 'outdoor_corridor',
     to: 'corridor',
     traverseInstructions: [
       { type: 'MOVE_TO', targetNodeId: 'Sortie' },
@@ -120,17 +134,17 @@ export const ROOM_PORTALS: RoomPortal[] = [
     ]
   },
 
-  // ── JARDIN <-> EXTÉRIEUR COURS / BÂTIMENT B ──
+  // ── JARDIN <-> COURS EXTÉRIEURE (via Entrée Bâtiment B Jardin) ──
   {
     from: 'garden',
-    to: 'outdoor',
+    to: 'outdoor_garden',
     traverseInstructions: [
       { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
       { type: 'MOVE_TO', smartObjectId: 'building-b-garden', slotId: 'admire' }
     ]
   },
   {
-    from: 'outdoor',
+    from: 'outdoor_garden',
     to: 'garden',
     traverseInstructions: [
       { type: 'MOVE_TO', smartObjectId: 'building-b-garden', slotId: 'admire' },
@@ -142,12 +156,13 @@ export const ROOM_PORTALS: RoomPortal[] = [
 /** Graphe d'adjacence des pièces pour BFS (recherche du chemin le plus court) */
 const ADJACENCY: Record<RoomId, RoomId[]> = {
   living: ['garden', 'corridor'],
-  corridor: ['living', 'bathroom', 'outdoor'],
+  corridor: ['living', 'bathroom', 'outdoor_corridor'],
   bathroom: ['corridor'],
-  garden: ['living', 'outdoor'],
-
-  outdoor: ['corridor', 'garden']
+  garden: ['living', 'outdoor_garden'],
+  outdoor_corridor: ['corridor'],
+  outdoor_garden: ['garden']
 };
+
 
 /**
  * Calcule la séquence de pièces à traverser pour aller de `startRoom` à `targetRoom` (BFS).
