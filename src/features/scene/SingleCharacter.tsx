@@ -926,6 +926,7 @@ export function SingleCharacter({
           cameraState.walkerZ = agentState.z;
           cameraState.walkYaw = agentState.rotY;
           cameraState.isAIControlled = true;
+          cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
         } else {
           // Mode contrôle manuel utilisateur (flèches clavier)
           groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
@@ -933,6 +934,7 @@ export function SingleCharacter({
           groupRef.current.visible = !cameraState.walkerHidden;
           cameraState.isAIControlled = false;
           customAnimName.current = null;
+          cameraState.positions[id] = { x: cameraState.walkerX, y: 0, z: cameraState.walkerZ, yaw: cameraState.walkYaw };
           
           // Met à jour la position interne de l'agent pour qu'il reprenne depuis la nouvelle position
           setAgentPosition(cameraState.walkerX, 0, cameraState.walkerZ);

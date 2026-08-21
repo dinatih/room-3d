@@ -5,6 +5,7 @@ import { SMART_OBJECTS } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
 import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
+import { cameraState } from '../cameraState';
 import { appLog } from '@features/ui/AppConsole';
 
 export interface AgentState {
@@ -405,15 +406,86 @@ export function useAgentController(
       } else {
         // Déplacement
         stateRef.current.animation = 'walk';
+        
+        let dirX = dx / dist;
+        let dirZ = dz / dist;
+
+        // ── Système d'évitement et de contournement des autres personnages (NPCs et joueur) ──
+        // Rayon de sécurité personnelle : 40 cm. Distance d'anticipation : jusqu'à 85 cm.
+        const AVOID_RADIUS = 40;
+        const LOOKAHEAD_DIST = 85;
+        let avoidanceForceX = 0;
+        let avoidanceForceZ = 0;
+
+        const currentX = stateRef.current.x;
+        const currentZ = stateRef.current.z;
+
+        // Parcourir les positions des autres personnages connus
+        for (const [otherId, pos] of Object.entries(cameraState.positions)) {
+          if (otherId === _characterId || !pos) continue;
+
+          const toOtherX = pos.x - currentX;
+          const toOtherZ = pos.z - currentZ;
+          const otherDist = Math.hypot(toOtherX, toOtherZ);
+
+          if (otherDist > 0.1 && otherDist < LOOKAHEAD_DIST) {
+            // Produit scalaire pour savoir si l'autre personnage se trouve devant nous dans la direction voulue
+            const forwardProj = toOtherX * dirX + toOtherZ * dirZ;
+
+            // Détection : l'obstacle est devant ou très proche (dans la bulle d'évitement)
+            if (forwardProj > 0 || otherDist < AVOID_RADIUS) {
+              // Calcul de la distance latérale perpendiculaire à notre trajectoire
+              const perpDist = Math.abs(-dirZ * toOtherX + dirX * toOtherZ);
+
+              // Si l'obstacle est sur notre trajectoire (couloir de largeur AVOID_RADIUS)
+              if (perpDist < AVOID_RADIUS) {
+                // Vecteur normal perpendiculaire (vers la droite : (dirZ, -dirX), vers la gauche : (-dirZ, dirX))
+                // Déterminer de quel côté de notre trajectoire se situe l'obstacle (signe du cross product 2D)
+                const cross = dirX * toOtherZ - dirZ * toOtherX;
+                const steerSide = cross >= 0 ? -1 : 1; // Si l'obstacle est à droite, on contourne par la gauche et vice-versa
+
+                // Force de contournement latéral (augmente quand la distance diminue)
+                const lateralWeight = Math.max(0.2, (AVOID_RADIUS - perpDist) / AVOID_RADIUS);
+                const proximityWeight = Math.max(0.3, (LOOKAHEAD_DIST - otherDist) / LOOKAHEAD_DIST);
+                const steerIntensity = 1.6 * lateralWeight * proximityWeight;
+
+                // Ajouter la déviation latérale perpendiculaire
+                const perpX = -dirZ * steerSide;
+                const perpZ = dirX * steerSide;
+
+                avoidanceForceX += perpX * steerIntensity;
+                avoidanceForceZ += perpZ * steerIntensity;
+
+                // Répulsion radiale supplémentaire si très proche
+                if (otherDist < AVOID_RADIUS) {
+                  const repulseIntensity = ((AVOID_RADIUS - otherDist) / AVOID_RADIUS) * 1.2;
+                  avoidanceForceX -= (toOtherX / otherDist) * repulseIntensity;
+                  avoidanceForceZ -= (toOtherZ / otherDist) * repulseIntensity;
+                }
+              }
+            }
+          }
+        }
+
+        // Combiner la direction cible et les forces d'évitement
+        let steerX = dirX + avoidanceForceX;
+        let steerZ = dirZ + avoidanceForceZ;
+        const steerLen = Math.hypot(steerX, steerZ);
+
+        if (steerLen > 0.001) {
+          steerX /= steerLen;
+          steerZ /= steerLen;
+        } else {
+          steerX = dirX;
+          steerZ = dirZ;
+        }
+
         const moveDist = Math.min(SPEED * dt, dist);
-        const dirX = dx / dist;
-        const dirZ = dz / dist;
-        stateRef.current.x += dirX * moveDist;
-        stateRef.current.z += dirZ * moveDist;
+        stateRef.current.x += steerX * moveDist;
+        stateRef.current.z += steerZ * moveDist;
 
-
-        // Rotation
-        const targetRot = Math.atan2(dirX, dirZ);
+        // Rotation orientée vers la direction effective de déplacement (contournement fluide)
+        const targetRot = Math.atan2(steerX, steerZ);
         
         // Shortest path rotation
         let rotDiff = targetRot - stateRef.current.rotY;
