@@ -1242,55 +1242,7 @@ export function SidePanel({
   );
 
   const [autoCycleIndex, setAutoCycleIndex] = useState(0);
-
-  useEffect(() => {
-    if (autoCycleIndex < 0) return;
-    const anim = coupleAnims[autoCycleIndex];
-    if (anim) {
-      const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
-      const trigger = () => playCoupleAnim(`media/sandbox/anims/${prefix}${anim.s}.glb`, `media/sandbox/anims/${prefix}${anim.r}.glb`, anim.dist ?? 50, (anim as any).rotS, (anim as any).rotR, (anim as any).sPos);
-      
-      if (autoCycleIndex !== 0) {
-        trigger();
-      } else {
-        const fallbackTimer = setTimeout(trigger, 2500);
-        return () => clearTimeout(fallbackTimer);
-      }
-    }
-  }, [autoCycleIndex]);
-
-  useEffect(() => {
-    const onReady = (e: any) => {
-      if (e.detail?.id === 'sandra' && autoCycleIndex === 0) {
-        const anim = coupleAnims[0];
-        if (anim) {
-          const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
-          playCoupleAnim(`media/sandbox/anims/${prefix}${anim.s}.glb`, `media/sandbox/anims/${prefix}${anim.r}.glb`, anim.dist ?? 50, (anim as any).rotS, (anim as any).rotR, (anim as any).sPos);
-        }
-      }
-    };
-    document.addEventListener('walker-ready', onReady);
-    return () => document.removeEventListener('walker-ready', onReady);
-  }, [autoCycleIndex]);
-
-  useEffect(() => {
-    const onFinished = (e: any) => {
-      // Only cycle when sandra finishes to avoid double triggers
-      if (e.detail?.id === 'sandra') {
-        setAutoCycleIndex(prev => prev < 0 ? -1 : (prev + 1) % coupleAnims.length);
-      }
-    };
-    document.addEventListener('walker-anim-finished', onFinished);
-    return () => document.removeEventListener('walker-anim-finished', onFinished);
-  }, []);
-
-  const playCoupleAnim = (sandraPath: string, rajaaPath: string, dist: number = 50, rotS?: number, rotR?: number, sPos?: [number, number, number]) => {
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-sandra', value: sandraPath } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-rajaa', value: rajaaPath } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-sandra', value: sPos || [-450 + dist, 0, 0] } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-rot-sandra', value: rotS !== undefined ? rotS : 0 } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-rot-rajaa', value: rotR !== undefined ? rotR : 0 } }));
-  };
+  const isFirstMountRef = useRef(true);
 
   const coupleAnims = [
     { label: 'B1', icon: '💥', s: 'b1_fall_kicked_knockout', r: 'b1_attack_back_somersault_flip', dist: 100 },
@@ -1326,6 +1278,71 @@ export function SidePanel({
     { label: 'Double Leg Takedown', icon: '🤼', s: 'anim_best_double_leg_takedown_victim', r: 'anim_best_double_leg_takedown_attacker', prefix: '', dist: 0, rotS: Math.PI, rotR: 0, sPos: [-450, 0, 270] },
   ];
 
+  const playCoupleAnim = (sandraPath: string, rajaaPath: string, dist: number = 50, rotS?: number, rotR?: number, sPos?: [number, number, number], rPos?: [number, number, number]) => {
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-sandra', value: sandraPath, loop: false } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-rajaa', value: rajaaPath, loop: false } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-sandra', value: sPos || [-450 + dist, 0, 0] } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-rajaa', value: rPos || [-450, 0, 0] } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-rot-sandra', value: rotS !== undefined ? rotS : 0 } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-rot-rajaa', value: rotR !== undefined ? rotR : 0 } }));
+  };
+
+  useEffect(() => {
+    if (autoCycleIndex < 0) return;
+    const anim = coupleAnims[autoCycleIndex];
+    if (anim) {
+      const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
+      const trigger = () => playCoupleAnim(
+        `media/sandbox/anims/${prefix}${anim.s}.glb`,
+        `media/sandbox/anims/${prefix}${anim.r}.glb`,
+        anim.dist ?? 50,
+        (anim as any).rotS,
+        (anim as any).rotR,
+        (anim as any).sPos
+      );
+      
+      if (!isFirstMountRef.current) {
+        trigger();
+      } else {
+        isFirstMountRef.current = false;
+        const fallbackTimer = setTimeout(trigger, 1500);
+        return () => clearTimeout(fallbackTimer);
+      }
+    }
+  }, [autoCycleIndex]);
+
+  useEffect(() => {
+    const onReady = (e: any) => {
+      if (e.detail?.id === 'sandra' && autoCycleIndex === 0) {
+        const anim = coupleAnims[0];
+        if (anim) {
+          const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
+          playCoupleAnim(
+            `media/sandbox/anims/${prefix}${anim.s}.glb`,
+            `media/sandbox/anims/${prefix}${anim.r}.glb`,
+            anim.dist ?? 50,
+            (anim as any).rotS,
+            (anim as any).rotR,
+            (anim as any).sPos
+          );
+        }
+      }
+    };
+    document.addEventListener('walker-ready', onReady);
+    return () => document.removeEventListener('walker-ready', onReady);
+  }, [autoCycleIndex]);
+
+  useEffect(() => {
+    const onFinished = (e: any) => {
+      // Only cycle when sandra finishes to avoid double triggers
+      if (e.detail?.id === 'sandra') {
+        setAutoCycleIndex(prev => prev < 0 ? -1 : (prev + 1) % coupleAnims.length);
+      }
+    };
+    document.addEventListener('walker-anim-finished', onFinished);
+    return () => document.removeEventListener('walker-anim-finished', onFinished);
+  }, []);
+
   const AnimationsCoupleSection = (
     <div
       className="d-flex flex-column bg-transparent overflow-hidden"
@@ -1337,13 +1354,21 @@ export function SidePanel({
           onChange={(e) => {
             const val = e.target.value;
             if (val === '') return;
-            const a = coupleAnims.find(anim => anim.label === val);
-            if (a) {
-              setAutoCycleIndex(-1); // Stop auto cycle on manual click
-              playCoupleAnim(`media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.s}.glb`, `media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.r}.glb`, a.dist ?? 50, (a as any).rotS, (a as any).rotR, (a as any).sPos);
+            const idx = coupleAnims.findIndex(anim => anim.label === val);
+            if (idx !== -1) {
+              setAutoCycleIndex(idx);
+              const a = coupleAnims[idx];
+              playCoupleAnim(
+                `media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.s}.glb`,
+                `media/sandbox/anims/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.r}.glb`,
+                a.dist ?? 50,
+                (a as any).rotS,
+                (a as any).rotR,
+                (a as any).sPos
+              );
             }
           }}
-          defaultValue=""
+          value={autoCycleIndex >= 0 && coupleAnims[autoCycleIndex] ? coupleAnims[autoCycleIndex].label : ""}
           style={{ fontSize: isMobile ? '13px' : '11px' }}
         >
           <option value="" disabled>Sélectionner une animation de couple...</option>

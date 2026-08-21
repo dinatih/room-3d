@@ -356,7 +356,7 @@ export function SingleCharacter({
         }));
       }
     },
-    isNPC ? (id === 'sandra' || id === 'rajaa' ? 9 * 3.0 : ((characterIndex ?? 0) + 1) * 3.0) : 0
+    isNPC ? (id === 'sandra' || id === 'rajaa' ? 0 : ((characterIndex ?? 0) + 1) * 3.0) : 0
   );
 
   useEffect(() => {
@@ -741,11 +741,21 @@ export function SingleCharacter({
               actionsRef.current[path] = action;
             }
 
-            action.setLoop(THREE.LoopRepeat, Infinity);
-            action.clampWhenFinished = false;
+            const isSandraOrRajaa = id === 'sandra' || id === 'rajaa';
+            if (isSandraOrRajaa || e.detail?.loop === false) {
+              action.setLoop(THREE.LoopOnce, 1);
+              action.clampWhenFinished = true;
+            } else {
+              action.setLoop(THREE.LoopRepeat, Infinity);
+              action.clampWhenFinished = false;
+            }
 
             customAnimName.current = path;
             userAnimOverrideRef.current = true;
+            if (activeActionName.current === path) {
+              action.reset().fadeIn(0.2).play();
+              action.setEffectiveWeight(1);
+            }
             invalidate();
           }
         };
@@ -1076,6 +1086,10 @@ export function SingleCharacter({
               finalClip.name = target;
               const action = mixerRef.current.clipAction(finalClip);
               action.enabled = true;
+              if (id === 'sandra' || id === 'rajaa') {
+                action.setLoop(THREE.LoopOnce, 1);
+                action.clampWhenFinished = true;
+              }
               action.play();
               action.setEffectiveWeight(0);
               actionsRef.current[target] = action;
@@ -1110,10 +1124,13 @@ export function SingleCharacter({
           const from = (activeActionName.current && activeActionName.current !== 'tpose') ? actions[activeActionName.current] : null;
           if (from) from.fadeOut(0.2);
 
-          const isContinuous = target === 'idle' || target === 'walk' || target === 'run' || (isNPC && target === customIdleAnimPath);
+          const isContinuous = target === 'idle' || target === 'walk' || target === 'run' || (isNPC && target === customIdleAnimPath && id !== 'sandra' && id !== 'rajaa');
           if (isContinuous) {
             to.setLoop(THREE.LoopRepeat, Infinity);
             to.clampWhenFinished = false;
+          } else if (id === 'sandra' || id === 'rajaa') {
+            to.setLoop(THREE.LoopOnce, 1);
+            to.clampWhenFinished = true;
           }
 
           to.reset().fadeIn(0.2).play();
