@@ -136,11 +136,11 @@ class SmartObjectOccupancyManager {
       }
     }
 
-    // Cherche parmi tous les slots de l'objet
-    for (const slot of obj.slots) {
-      if (!this.isSlotOccupied(objectId, slot.slotId, characterId)) {
-        return slot.slotId;
-      }
+    // Cherche parmi tous les slots de l'objet de façon aléatoire pour varier les actions (dormir couché, assises variées...)
+    const availableSlots = obj.slots.filter(slot => !this.isSlotOccupied(objectId, slot.slotId, characterId));
+    if (availableSlots.length > 0) {
+      const randomSlot = availableSlots[Math.floor(Math.random() * availableSlots.length)];
+      return randomSlot.slotId;
     }
 
     return null;
