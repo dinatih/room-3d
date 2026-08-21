@@ -1096,10 +1096,8 @@ export function SingleCharacter({
               finalClip.name = target;
               const action = mixerRef.current.clipAction(finalClip);
               action.enabled = true;
-              if (id === 'sandra' || id === 'rajaa') {
-                action.setLoop(THREE.LoopOnce, 1);
-                action.clampWhenFinished = true;
-              }
+              action.setLoop(THREE.LoopRepeat, Infinity);
+              action.clampWhenFinished = false;
               action.play();
               action.setEffectiveWeight(0);
               actionsRef.current[target] = action;
@@ -1135,14 +1133,8 @@ export function SingleCharacter({
           const from = (activeActionName.current && activeActionName.current !== 'tpose') ? actions[activeActionName.current] : null;
           if (from) from.fadeOut(0.2);
 
-          const isContinuous = target === 'idle' || target === 'walk' || target === 'run' || (isNPC && target === customIdleAnimPath && id !== 'sandra' && id !== 'rajaa');
-          if (isContinuous) {
-            to.setLoop(THREE.LoopRepeat, Infinity);
-            to.clampWhenFinished = false;
-          } else if (id === 'sandra' || id === 'rajaa') {
-            to.setLoop(THREE.LoopOnce, 1);
-            to.clampWhenFinished = true;
-          }
+          to.setLoop(THREE.LoopRepeat, Infinity);
+          to.clampWhenFinished = false;
 
           to.reset().fadeIn(0.2).play();
           to.setEffectiveWeight(1);

@@ -17,13 +17,10 @@ export interface CharacterConfig {
 export const CHARACTERS: CharacterConfig[] = [
   // 11 stylized Laras
   { id: 'native', name: 'Lara (Native)', path: 'media/lara_native.glb', pos: [140, 0, 30], rot: 1.9, variant: 'native', height: 173.4 },
-  { id: 'rosanna', name: 'Rosanna', path: 'media/lara_native.glb', pos: [251, 45, 178], rot: 1.325 + Math.PI, variant: 'rosanna', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_sleeping_idle.glb', customIdleAnimPath: 'media/sandbox/anims/anim_sleeping_idle.glb' },
-  { id: 'marissa', name: 'Marissa', path: 'media/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_belly_dance.glb', customIdleAnimPath: 'media/sandbox/anims/anim_belly_dance.glb' },
-  {
-    id: 'delphina', name: 'Delphina', path: 'media/lara_native.glb', pos: [120, 35, -250], rot: 1, variant: 'delphina', height: 173.4,
-    customIdleAnimPath: (() => { const anims = ['media/sandbox/anims/anim_snake_hip_hop_dance.glb', 'media/sandbox/anims/anim_belly_dance.glb', 'media/sandbox/anims/anim_dancing_twerk.glb', 'media/sandbox/anims/anim_salsa_dancing.glb', 'media/sandbox/anims/anim_salsa_dancing_1.glb', 'media/sandbox/anims/anim_salsa_dancing_3.glb', 'media/sandbox/anims/anim_samba_dancing.glb', 'media/sandbox/anims/anim_samba_dancing_1.glb', 'media/sandbox/anims/anim_hip_hop_dancing_2.glb', 'media/sandbox/anims/anim_hip_hop_dancing_4.glb', 'media/sandbox/anims/anim_house_dancing.glb', 'media/sandbox/anims/anim_breakdance_uprock.glb']; return anims[Math.floor(Math.random() * anims.length)]; })(),
-    sittingScenePath: 'media/sandbox/anims/anim_snake_hip_hop_dance.glb'
-  },
+  { id: 'rosanna', name: 'Rosanna', path: 'media/lara_native.glb', pos: [251, 0, 178], rot: 1.325 + Math.PI, variant: 'rosanna', height: 173.4 },
+  { id: 'marissa', name: 'Marissa', path: 'media/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4 },
+  { id: 'delphina', name: 'Delphina', path: 'media/lara_native.glb', pos: [120, 0, -250], rot: 1, variant: 'delphina', height: 173.4 },
+
   // { id: 'sara', name: 'Sara', path: 'media/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'media/sandbox/anims/anim_climbing.glb', customIdleAnimPath: 'media/sandbox/anims/anim_climbing.glb' },
   { id: 'cha', name: 'Cha', path: 'media/lara_native.glb', pos: [150, 0, -150], rot: Math.PI / 2, variant: 'cha', height: 173.4,
     customIdleAnimPath: (() => {
