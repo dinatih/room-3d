@@ -133,7 +133,13 @@ function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 'transien
     'sofa-arm-right': 'sofaArmRight',
     'bim-door-left-open': 'bimDoorLeftOpen',
     'bim-door-right-open': 'bimDoorRightOpen',
+    'corr-doors-toggle': 'corrDoors',
+    'sdb-closet-toggle': 'sdbClosetL',
+    'sdb-closet-l-toggle': 'sdbClosetL',
+    'sdb-closet-r-toggle': 'sdbClosetR',
+    'shower-door-toggle': 'showerDoor',
   };
+
 
   if (key in map) {
     const mapped = map[key];

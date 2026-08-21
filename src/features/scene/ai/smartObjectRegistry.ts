@@ -228,6 +228,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       }
     ]
   },
+
   'drona-west': {
     id: 'drona-west',
     name: 'Meuble bas / Dröna Ouest',
