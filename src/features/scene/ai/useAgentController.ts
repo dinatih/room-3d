@@ -1,7 +1,8 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { AgentInstruction } from './aiTypes';
 import { ZONES } from './ZoneNodes';
 import { SMART_OBJECTS } from './smartObjectRegistry';
+import { OccupancyManager } from './occupancyManager';
 import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
@@ -69,6 +70,7 @@ export function useAgentController(
   const delayTimerRef = useRef(spawnDelay);
   const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
   const startPosRef = useRef<{x: number, y: number, z: number, rotY: number} | null>(null);
+  const claimedSlotRef = useRef<{ objectId: string; slotId: string } | null>(null);
   
   // Navigation dynamique inter-pièces
   const dynamicNavQueueRef = useRef<AgentInstruction[]>([]);
@@ -78,7 +80,18 @@ export function useAgentController(
   // Ref pour éviter les logs dupliqués à chaque frame
   const lastLogRef = useRef<string>('');
 
+  // Libérer toutes les réservations au démontage
+  useEffect(() => {
+    return () => {
+      OccupancyManager.releaseAllForCharacter(_characterId);
+    };
+  }, [_characterId]);
+
   if (scenario !== prevScenarioRef.current) {
+    if (claimedSlotRef.current) {
+      OccupancyManager.releaseAllForCharacter(_characterId);
+      claimedSlotRef.current = null;
+    }
     stepIndexRef.current = 0;
     timerRef.current = 0;
     statusRef.current = spawnDelay > 0 ? 'WAITING' : 'IDLE';
@@ -150,6 +163,10 @@ export function useAgentController(
     }
 
     if (stepIndexRef.current >= scenario.length && dynamicNavQueueRef.current.length === 0) {
+      if (claimedSlotRef.current) {
+        OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
+        claimedSlotRef.current = null;
+      }
       if (loop) {
         stepIndexRef.current = 0; // Boucler le scénario
         activeNavStepIndexRef.current = -1;
@@ -157,7 +174,7 @@ export function useAgentController(
         const loopKey = `loop-${_characterId}`;
         if (lastLogRef.current !== loopKey) {
           lastLogRef.current = loopKey;
-          appLog(_characterId, '🔄 Nouveau scénario aléatoire');
+          appLog(_characterId, '🔄 Nouveau cycle d\'activité autonome');
         }
       } else {
         if (statusRef.current !== 'FINISHED') {
@@ -176,6 +193,50 @@ export function useAgentController(
       : scenario[stepIndexRef.current];
 
     if (statusRef.current === 'IDLE') {
+      // Vérification et réservation d'occupation pour les objets intelligents
+      if (!hasNavStep && currentInstruction.smartObjectId) {
+        const objId = currentInstruction.smartObjectId;
+        const reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
+        
+        if (OccupancyManager.isSlotOccupied(objId, reqSlotId, _characterId)) {
+          // Place occupée : trouver un autre slot libre sur le même meuble si disponible (ex. autre siège d'un lit ou canapé)
+          const altSlotId = OccupancyManager.getAvailableSlot(objId, _characterId, currentInstruction.slotId);
+          if (altSlotId) {
+            currentInstruction.slotId = altSlotId;
+            OccupancyManager.claimSlot(objId, altSlotId, _characterId);
+            claimedSlotRef.current = { objectId: objId, slotId: altSlotId };
+          } else {
+            // Aucun slot libre sur ce meuble (ex. chaise de bureau ou WC déjà pris par un autre perso)
+            const occupant = OccupancyManager.getOccupant(objId, reqSlotId);
+            const objName = SMART_OBJECTS[objId]?.name || objId;
+            
+            if (loop) {
+              appLog(_characterId, `⚠️ ${objName} est occupé${occupant ? ` (${occupant})` : ''}, recherche d'une autre place...`);
+              // Passer toutes les étapes liées à ce meuble dans le scénario
+              while (
+                stepIndexRef.current < scenario.length &&
+                scenario[stepIndexRef.current].smartObjectId === objId
+              ) {
+                stepIndexRef.current++;
+              }
+              dynamicNavQueueRef.current = [];
+              dynamicNavIndexRef.current = 0;
+              return update(dt);
+            } else {
+              appLog(_characterId, `⚠️ ${objName} est actuellement occupé${occupant ? ` (${occupant})` : ''}`);
+              statusRef.current = 'FINISHED' as any;
+              if (onComplete) onComplete();
+              stateRef.current.animation = 'idle';
+              return stateRef.current;
+            }
+          }
+        } else {
+          // Slot libre : réserver la place
+          OccupancyManager.claimSlot(objId, reqSlotId, _characterId);
+          claimedSlotRef.current = { objectId: objId, slotId: reqSlotId };
+        }
+      }
+
       if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START' || currentInstruction.type === 'USE_OBJECT') {
         const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
         
@@ -310,6 +371,12 @@ export function useAgentController(
             }
           } else {
             stepIndexRef.current++;
+            // Libérer le slot si l'étape suivante ne concerne plus le même objet
+            const nextInstr = stepIndexRef.current < scenario.length ? scenario[stepIndexRef.current] : null;
+            if (claimedSlotRef.current && (!nextInstr || nextInstr.smartObjectId !== claimedSlotRef.current.objectId)) {
+              OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
+              claimedSlotRef.current = null;
+            }
           }
           stateRef.current.animation = 'idle';
         }
@@ -370,6 +437,12 @@ export function useAgentController(
           }
         } else {
           stepIndexRef.current++;
+          // Libérer le slot si l'étape suivante ne concerne plus le même objet
+          const nextInstr = stepIndexRef.current < scenario.length ? scenario[stepIndexRef.current] : null;
+          if (claimedSlotRef.current && (!nextInstr || nextInstr.smartObjectId !== claimedSlotRef.current.objectId)) {
+            OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
+            claimedSlotRef.current = null;
+          }
         }
       }
     }

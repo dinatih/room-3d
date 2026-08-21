@@ -58,9 +58,9 @@ export const ACTION_FULL_TOUR: AgentInstruction[] = [
 /**
  * Construit un scénario autonome complet de vie quotidienne
  */
-export function buildAutonomousScenario(): AgentInstruction[] {
+export function buildAutonomousScenario(characterId?: string): AgentInstruction[] {
   const smartActions = AUTONOMOUS_SMART_OBJECTS
-    .map(id => buildSmartObjectInstructionSequence(id))
+    .map(id => buildSmartObjectInstructionSequence(id, undefined, characterId))
     .filter(seq => seq.length > 0);
 
   // Mélanger les actions de vie quotidienne de façon fluide et réaliste

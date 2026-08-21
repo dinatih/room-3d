@@ -1,4 +1,5 @@
 import { SmartObjectDef, SmartObjectCategory, AgentInstruction } from './aiTypes';
+import { OccupancyManager } from './occupancyManager';
 
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
@@ -553,13 +554,20 @@ const MILEY_DANCE_ANIMS = [
  */
 export function buildSmartObjectInstructionSequence(
   objectId: string,
-  slotId?: string
+  slotId?: string,
+  characterId?: string
 ): AgentInstruction[] {
   const obj = SMART_OBJECTS[objectId];
   if (!obj || !obj.slots.length) return [];
 
-  const slot = slotId
-    ? obj.slots.find(s => s.slotId === slotId) ?? obj.slots[0]
+  // Trouver un slot disponible si un characterId est fourni, ou utiliser le slot demandé
+  let chosenSlotId = slotId;
+  if (!chosenSlotId && characterId) {
+    chosenSlotId = OccupancyManager.getAvailableSlot(objectId, characterId) ?? undefined;
+  }
+
+  const slot = chosenSlotId
+    ? obj.slots.find(s => s.slotId === chosenSlotId) ?? obj.slots[0]
     : obj.slots[Math.floor(Math.random() * obj.slots.length)];
 
   const chosenAnim = objectId === 'rain-dance'

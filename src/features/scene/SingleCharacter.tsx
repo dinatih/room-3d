@@ -282,8 +282,8 @@ export function SingleCharacter({
 
   const autonomousScenario = useMemo(() => {
     if (!isAutonomous) return null;
-    return buildAutonomousScenario();
-  }, [isAutonomous]);
+    return buildAutonomousScenario(id);
+  }, [isAutonomous, id]);
 
   const finalScenario = isGuidedTour ? activeActionScenario : (isAutonomous ? autonomousScenario : EMPTY_SCENARIO);
   const loopScenario = isAutonomous;
