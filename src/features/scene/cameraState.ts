@@ -17,6 +17,12 @@ export const cameraState = {
   isWalking: false as boolean,
   isMoving:  false as boolean,
   isAIControlled: false as boolean,
+  /** Timestamp de la dernière action manuelle utilisateur (flèches clavier) */
+  lastUserControlTime: 0 as number,
+  /** Vérifie si l'utilisateur a pris la main manuellement récemment (< 4s) */
+  isUserControlling(): boolean {
+    return (performance.now() - this.lastUserControlTime) < 4000;
+  },
   walkYaw:   0     as number,
   walkPitch: 0     as number,
   /** Position et orientation du walker unique (synchro dynamique depuis CHARACTERS) */

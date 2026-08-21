@@ -596,6 +596,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       invalidate();
 
       // Plain arrows — move active walker
+      const isPlainMove = k.has('ArrowLeft') || k.has('ArrowRight') || k.has('ArrowUp') || k.has('ArrowDown');
+      if (isPlainMove) {
+        cameraState.lastUserControlTime = performance.now();
+      }
+
       if (k.has('ArrowLeft'))  cameraState.walkYaw += 0.03 * dt;
       if (k.has('ArrowRight')) cameraState.walkYaw -= 0.03 * dt;
       const wYaw = cameraState.walkYaw;
@@ -689,6 +694,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     // Keep rendering while keys are held in walk mode
     invalidate();
+
+    cameraState.lastUserControlTime = performance.now();
 
     const yaw   = walkYaw.current;
     const sp    = WALK_SPEED * dt;

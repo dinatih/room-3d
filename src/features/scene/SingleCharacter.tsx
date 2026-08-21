@@ -314,21 +314,22 @@ export function SingleCharacter({
     }
   }, [activeActionKey]);
 
-  const isAutonomousNpc = AUTONOMOUS_NPC_IDS.has(id) && id !== activeWalkerId;
+  // Le personnage est autonome s'il fait partie des PNJ autonomes (qu'il soit le joueur actif ou un PNJ)
+  const isAutonomous = AUTONOMOUS_NPC_IDS.has(id);
   const isGuidedTour = Boolean(activeActionKey && id === activeWalkerId);
 
   const autonomousScenario = useMemo(() => {
-    if (!isAutonomousNpc) return null;
+    if (!isAutonomous) return null;
     return buildAutonomousScenario();
-  }, [isAutonomousNpc]);
+  }, [isAutonomous]);
 
-  const finalScenario = isGuidedTour ? activeActionScenario : (isAutonomousNpc ? autonomousScenario : EMPTY_SCENARIO);
-  const loopScenario = isAutonomousNpc;
+  const finalScenario = isGuidedTour ? activeActionScenario : (isAutonomous ? autonomousScenario : EMPTY_SCENARIO);
+  const loopScenario = isAutonomous;
 
   const { update: updateAgent, setPosition: setAgentPosition, setRotation: setAgentRotation } = useAgentController(
     id,
     finalScenario,
-    loopScenario, // Boucle uniquement si c'est le bot aléatoire (Delphina)
+    loopScenario, // Boucle la vie quotidienne
     () => {
       if (groupRef.current) {
         const { x, y, z } = groupRef.current.position;
@@ -955,23 +956,32 @@ export function SingleCharacter({
       }
     } else {
       if (isActive) {
-        if (isGuidedTour) {
+        const isUserManuallyMoving = cameraState.isUserControlling();
+
+        if (isGuidedTour || (!isUserManuallyMoving && isAutonomous)) {
+          // Mode autonome / visite guidée : l'IA déplace le joueur
           const agentState = updateAgent(delta);
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
           customAnimName.current = agentState.animation;
           groupRef.current.visible = !cameraState.walkerHidden;
 
-          // Synchronise la position IA avec la caméra FPV
+          // Synchronise la position avec cameraState pour minimap et FPV
           cameraState.walkerX = agentState.x;
           cameraState.walkerZ = agentState.z;
           cameraState.walkYaw = agentState.rotY;
           cameraState.isAIControlled = true;
         } else {
+          // Mode contrôle manuel utilisateur (flèches clavier)
           groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
           groupRef.current.rotation.y = cameraState.walkYaw;
           groupRef.current.visible = !cameraState.walkerHidden;
           cameraState.isAIControlled = false;
+          customAnimName.current = null;
+          
+          // Met à jour la position interne de l'agent pour qu'il reprenne depuis la nouvelle position
+          setAgentPosition(cameraState.walkerX, 0, cameraState.walkerZ);
+          setAgentRotation(cameraState.walkYaw);
         }
       } else if (isNPC) {
         const agentState = updateAgent(delta);
@@ -1051,19 +1061,19 @@ export function SingleCharacter({
 
     const isNpcActive = isNPC && (
       (customAnimName.current !== null && customAnimName.current !== 'idle' && !customAnimName.current.includes('idle')) ||
-      (!isAutonomousNpc && customIdleAnimPath && customIdleAnimPath.includes('dance')) ||
+      (!isAutonomous && customIdleAnimPath && customIdleAnimPath.includes('dance')) ||
       Math.abs(groupRef.current.position.x - (groupRef.current.userData.prevX ?? groupRef.current.position.x)) > 0.01 ||
       Math.abs(groupRef.current.position.z - (groupRef.current.userData.prevZ ?? groupRef.current.position.z)) > 0.01
     );
     groupRef.current.userData.prevX = groupRef.current.position.x;
     groupRef.current.userData.prevZ = groupRef.current.position.z;
 
-    // Inactive model is stationary unless active as NPC
-    let isMoving = isActive ? cameraState.isMoving : isNpcActive;
+    // Inactive model is stationary unless active as NPC or autonomous player
+    let isMoving = (isActive && cameraState.isUserControlling()) ? cameraState.isMoving : isNpcActive;
     let target = isPreview ? (walkerAnim || 'idle') : (isMoving ? 'walk' : 'idle');
 
-    // Si le joueur reprend le contrôle manuel (plus de visite guidée), effacer l'animation IA
-    if (isActive && !isGuidedTour && customAnimName.current) {
+    // Si le joueur reprend le contrôle manuel (flèches clavier), effacer l'animation IA pour marcher ou idle
+    if (isActive && !isGuidedTour && cameraState.isUserControlling() && customAnimName.current) {
       customAnimName.current = null;
     }
 
@@ -1101,9 +1111,10 @@ export function SingleCharacter({
       }
     }
 
-    if (isNPC && customIdleAnimPath && target === 'idle' && !isAutonomousNpc) {
+    if (isNPC && customIdleAnimPath && target === 'idle' && !isAutonomous) {
       target = customIdleAnimPath;
     }
+
 
     const isTPose = target === 'tpose' || target.includes('t_pose') || target.includes('t-pose');
 
