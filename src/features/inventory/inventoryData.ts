@@ -266,9 +266,7 @@ INVENTORY.push({
 
 CHARACTERS.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
-    const charPreview = char.path.includes('xbot') 
-      ? 'characters/xbot/Xbot_official_3d_preview.png' 
-      : `characters/lara/previews/${char.id}_3d_preview.png`;
+    const photos = char.path.includes('xbot') ? ['characters/xbot/Xbot_official_3d_preview.png'] : undefined;
     INVENTORY.push({
       id: char.id,
       name: char.name,
@@ -277,7 +275,7 @@ CHARACTERS.forEach(char => {
       qty: 1,
       dims: { w: 45, d: 25, h: char.height },
       glbPath: char.path,
-      photos: [charPreview],
+      ...(photos ? { photos } : {}),
       notes: `Personnage : ${char.name}.`
     });
   }
