@@ -355,6 +355,9 @@ export function useAgentController(
         if (currentInstruction.type === 'USE_OBJECT') {
           statusRef.current = 'INTERACTING';
           timerRef.current = currentInstruction.duration || target.duration || 1.0;
+          if (target.ty !== undefined) {
+            stateRef.current.y = target.ty;
+          }
           if (currentInstruction.triggerEventKey) {
             let key = currentInstruction.triggerEventKey;
             if (key === 'eastGlassDoor' && useSceneStore.getState().furniture.bimDoubleDoor) {
