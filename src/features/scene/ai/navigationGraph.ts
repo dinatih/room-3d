@@ -105,7 +105,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     to: 'bathroom',
     traverseInstructions: [
       { type: 'MOVE_TO', targetNodeId: 'corridor-bathroom-door' },
-      { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: true, duration: 0.4 },
+      { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
       { type: 'MOVE_TO', targetNodeId: 'bathroom-entry' }
     ]
   },
@@ -114,7 +114,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     to: 'corridor',
     traverseInstructions: [
       { type: 'MOVE_TO', targetNodeId: 'bathroom-entry' },
-      { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: true, duration: 0.4 },
+      { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
       { type: 'MOVE_TO', targetNodeId: 'corridor-bathroom-door' }
     ]
   },
@@ -125,7 +125,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     to: 'outdoor_corridor',
     traverseInstructions: [
       { type: 'MOVE_TO', targetNodeId: 'corridor-entry-door' },
-      { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.4 },
+      { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
       { type: 'MOVE_TO', targetNodeId: 'outdoor-entry-door' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.4 }
     ]
@@ -135,7 +135,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     to: 'corridor',
     traverseInstructions: [
       { type: 'MOVE_TO', targetNodeId: 'outdoor-entry-door' },
-      { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.4 },
+      { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
       { type: 'MOVE_TO', targetNodeId: 'corridor-entry-door' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.4 }
     ]

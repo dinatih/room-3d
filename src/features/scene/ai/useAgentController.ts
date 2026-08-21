@@ -268,9 +268,6 @@ export function useAgentController(
           appLog(_characterId, `🚶‍♂️ Marche vers ${target.label} (${target.tx.toFixed(0)}, ${target.tz.toFixed(0)})`);
         }
       } else if (currentInstruction.type === 'INTERACT' || currentInstruction.type === 'WAIT') {
-        statusRef.current = 'INTERACTING';
-        const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
-        timerRef.current = currentInstruction.duration || target.duration || 1.0;
         if (currentInstruction.triggerEventKey) {
           let key = currentInstruction.triggerEventKey;
           
@@ -289,15 +286,31 @@ export function useAgentController(
             ? Boolean(extraStates[resolved.name])
             : false;
 
+          // Si l'état souhaité est déjà actif (ex: porte déjà complètement ouverte), sauter l'étape et l'animation
           if (currentInstruction.triggerTargetState !== undefined) {
-            const wantsToOpen = currentInstruction.triggerTargetState;
-            if (wantsToOpen !== currentVal) {
+            const targetState = currentInstruction.triggerTargetState;
+            if (currentVal === targetState) {
+              if (hasNavStep) {
+                dynamicNavIndexRef.current++;
+                if (dynamicNavIndexRef.current >= dynamicNavQueueRef.current.length) {
+                  dynamicNavQueueRef.current = [];
+                  dynamicNavIndexRef.current = 0;
+                }
+              } else {
+                stepIndexRef.current++;
+              }
+              return update(dt);
+            } else {
               store.triggerAction(key);
             }
           } else {
             store.triggerAction(key);
           }
         }
+
+        statusRef.current = 'INTERACTING';
+        const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
+        timerRef.current = currentInstruction.duration || target.duration || 1.0;
 
         // Log action INTERACT
         const animation = currentInstruction.animation || target.anim || '';
