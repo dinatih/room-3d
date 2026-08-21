@@ -98,7 +98,6 @@ export const ROOM_PORTALS: RoomPortal[] = [
     ]
   },
 
-
   // ── COULOIR <-> SALLE DE BAIN (via Porte SDB) ──
   {
     from: 'corridor',
@@ -124,7 +123,6 @@ export const ROOM_PORTALS: RoomPortal[] = [
     from: 'corridor',
     to: 'outdoor_corridor',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetNodeId: 'corridor-entry-door' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, animation: 'animations/interactions/anim_open_door_outwards.glb', duration: 0.4 },
       { type: 'MOVE_TO', targetNodeId: 'outdoor-entry-door' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.4 }
