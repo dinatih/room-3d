@@ -183,9 +183,10 @@ CHARACTERS.forEach(char => {
   } as any;
 });
 
-SCENE_REGISTRY['shiba-inu'] = function ShibaPreview({ actionState }: { actionState?: any }) {
+SCENE_REGISTRY['ushiro'] = function ShibaPreview({ actionState }: { actionState?: any }) {
   return <ShibaInu isPreview={true} previewAnim={actionState?.walkerAnim} />;
 } as any;
+SCENE_REGISTRY['shiba-inu'] = SCENE_REGISTRY['ushiro'];
 
 SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState }: { actionState?: any }) {
   return <RobinBird isPreview={true} previewAnim={actionState?.walkerAnim} />;

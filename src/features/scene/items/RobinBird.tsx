@@ -6,7 +6,7 @@ import { useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { isAppIdle } from '@features/scene/idleState';
 
-const GLB_PATH = 'items/robin-bird/model.glb';
+const GLB_PATH = 'characters/robin/model.glb';
 
 type AIState = {
   mode: 'autonomous' | 'forced';
@@ -32,7 +32,7 @@ const LANDING_POINTS = [
   new THREE.Vector3(650, 0, -200)    // Entrée cours bat B (jardin est)
 ];
 
-export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPreview = false }: { isPreview?: boolean, previewAnim?: string, showSkeletonPreview?: boolean }) {
+export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPreview = false, onSize }: { isPreview?: boolean, previewAnim?: string, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
   const { scene, animations } = useGLTFClone(GLB_PATH);
   const { invalidate } = useThree();
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
@@ -65,6 +65,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     scene.updateMatrixWorld(true);
     const scaledBox = new THREE.Box3().setFromObject(scene);
     scene.position.set(0, -scaledBox.min.y, 0);
+    onSize?.(scaledBox.getSize(new THREE.Vector3()));
 
     scene.traverse(c => {
       const m = c as THREE.Mesh;

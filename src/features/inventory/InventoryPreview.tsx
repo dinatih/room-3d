@@ -235,12 +235,12 @@ export function InventoryPreview({
                 <>
                   <button onClick={() => setActionStates(s => ({ ...s, isPaused: !s.isPaused }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.isPaused ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.isPaused ? '▶️ Play' : '⏸️ Pause'}</button>
                   
-                  {!['shiba-inu', 'robin-bird'].includes(item.id) && (
+                  {!['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id) && (
                     <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📐 T-Pose</button>
                   )}
                   
                   <select value={actionStates.walkerAnim || 'idle'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
-                {item.id === 'shiba-inu' ? (
+                {['ushiro', 'shiba-inu'].includes(item.id) ? (
                   <>
                     <option value="idle">Idle</option>
                     <option value="jump">Jump</option>
@@ -273,7 +273,7 @@ export function InventoryPreview({
                 )}
               </select>
 
-              {!['shiba-inu', 'robin-bird'].includes(item.id) && (
+              {!['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id) && (
                 <>
                   <select value={actionStates.previewHaircut || 'original'} onChange={e => setActionStates(s => ({ ...s, previewHaircut: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
                     <option value="original">Coupe d'origine</option>

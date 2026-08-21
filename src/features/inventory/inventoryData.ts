@@ -259,14 +259,16 @@ INVENTORY.push({
   category: 'walkers',
   qty: 1,
   dims: { w: 10, d: 10, h: 10 },
-  glbPath: 'items/robin-bird/model.glb',
-  photos: ['items/robin-bird/model_3d_preview.png'],
+  glbPath: 'characters/robin/model.glb',
+  photos: ['characters/robin/model_3d_preview.png'],
   notes: `Personnage : Oiseau Robin.`
 });
 
 CHARACTERS.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
-    const charPreview = char.path.includes('xbot') ? 'characters/xbot/Xbot_official_3d_preview.png' : 'characters/lara/lara_native_3d_preview.png';
+    const charPreview = char.path.includes('xbot') 
+      ? 'characters/xbot/Xbot_official_3d_preview.png' 
+      : `characters/lara/previews/${char.id}_3d_preview.png`;
     INVENTORY.push({
       id: char.id,
       name: char.name,
