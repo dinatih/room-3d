@@ -28,19 +28,16 @@ import {
   ACTIONS_BED_EAST,
   ACTIONS_BATHTUB,
   ACTION_SHOWER,
-  ACTION_LAUNDRY,
   ACTIONS_GARDEN_SOFA_EAST,
-
   ACTIONS_GARDEN_SOFA_WEST,
   ACTION_COOKING,
   ACTION_KALLAX_NE,
   ACTION_FRESH_AIR,
-  ACTION_ENTREE_BAT_B,
-  ACTION_ENTREE_COURS_BAT_B,
-  ACTION_FULL_TOUR
-} from './ai/ZoneNodes';
-import { buildSmartObjectInstructionSequence } from './ai/smartObjectRegistry';
+  ACTION_FULL_TOUR,
+  buildAutonomousScenario
+} from './ai/scenarios';
 import type { AgentInstruction } from './ai/aiTypes';
+
 import { useAgentController } from './ai/useAgentController';
 import { appLog } from '@features/ui/AppConsole';
 import { isAppIdle, resetAppIdle } from './idleState';
@@ -51,39 +48,6 @@ export { WALKER_ANIM_OPTIONS };
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
 
-function buildAutonomousScenario(): AgentInstruction[] {
-  // Combine séquences Smart Objects + actions réalistes de vie quotidienne
-  const smartActions: AgentInstruction[][] = [
-    buildSmartObjectInstructionSequence('bed-west'),
-    buildSmartObjectInstructionSequence('bed-east'),
-    buildSmartObjectInstructionSequence('desk-bollsidan-1'),
-    buildSmartObjectInstructionSequence('chair-office'),
-    buildSmartObjectInstructionSequence('desk-bollsidan-2'),
-    buildSmartObjectInstructionSequence('mirror-south'),
-    buildSmartObjectInstructionSequence('sofa-garden-east'),
-    buildSmartObjectInstructionSequence('sofa-garden-west'),
-    buildSmartObjectInstructionSequence('bathtub-garden'),
-    buildSmartObjectInstructionSequence('corridor-closet'),
-    buildSmartObjectInstructionSequence('drona-west'),
-    buildSmartObjectInstructionSequence('drona-east'),
-    buildSmartObjectInstructionSequence('kallax-ne'),
-    buildSmartObjectInstructionSequence('cuisine-group'),
-    buildSmartObjectInstructionSequence('freezer'),
-    buildSmartObjectInstructionSequence('rain-dance'),
-    ACTION_GO_TO_TOILET,
-    ACTION_SHOWER,
-    ACTION_LAUNDRY,
-    ACTION_FRESH_AIR,
-    ACTION_ENTREE_BAT_B,
-    ACTION_ENTREE_COURS_BAT_B
-  ].filter(seq => seq.length > 0);
-
-
-
-  // Mélanger les actions de vie quotidienne de façon fluide et réaliste
-  const shuffled = [...smartActions].sort(() => Math.random() - 0.5);
-  return shuffled.flat();
-}
 
 
 
