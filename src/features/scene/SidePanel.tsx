@@ -1253,38 +1253,55 @@ export function SidePanel({
   const [autoCycleIndex, setAutoCycleIndex] = useState(0);
   const isFirstMountRef = useRef(true);
 
-  const coupleAnims = [
-    { label: 'B1', icon: '💥', s: 'b1_fall_kicked_knockout', r: 'b1_attack_back_somersault_flip', dist: 100 },
-    { label: 'D1', icon: '🤺', s: 'd1_attack_arms_block', r: 'd1_dodge_sideways', dist: 100 },
-    { label: 'D4', icon: '🤺', s: 'd4_attack_reverse_front_snap_kick', r: 'd4_dodge_roll_back', dist: 100 },
-    { label: 'F2', icon: '🥊', s: 'f2_attack_straight_punch02', r: 'f2_fall_to_ground_face_up01', dist: 100 },
-    { label: 'H1', icon: '👊', s: 'h1_hit_punches', r: 'h1_attack_punches', dist: 100 },
-    { label: 'H2', icon: '👊', s: 'h2_attack_side_kicks', r: 'h2_hit_dodge', dist: 100 },
-    { label: 'H4', icon: '👊', s: 'h4_attack_rising_kick', r: 'h4_hit_staggering', dist: 100 },
-    { label: 'Ko1', icon: '😵', s: 'ko1_fall_to_ground_sprawl', r: 'ko1_attack_uppercut', dist: 100 },
-    { label: 'Ko2', icon: '😵', s: 'ko2_attack_hood_kicks', r: 'ko2_fall_to_ground_axel_down', dist: 100 },
-    { label: 'Ko3', icon: '😵', s: 'ko3_attack_hammer_fist', r: 'ko3_fall_to_ground_side_up02', dist: 100 },
-    { label: 'P1', icon: '😤', s: 'p1_standoff_push_knockout', r: 'p1_standoff_block_straight_punch' },
-    { label: 'P2', icon: '😤', s: 'p2_standoff_provokes_m1', r: 'p2_standoff_provokes_m2' },
-    { label: 'S1', icon: '🥋', s: 's1_sparring_punch_m1', r: 's1_sparring_punch_m2', dist: 100 },
-    { label: 'S2', icon: '🥋', s: 's2_sparring_dodges01', r: 's2_sparring_kicks', dist: 100 },
-    { label: 'S3', icon: '🥋', s: 's3_sparring_dodges02', r: 's3_sparring_reverse_kicks', dist: 100 },
-    { label: 'S4', icon: '🥋', s: 's4_sparring_double_kicks_m1', r: 's4_sparring_double_kicks_m2', dist: 100 },
-    { label: 'S5', icon: '🥋', s: 's5_sparring_block_kick', r: 's5_sparring_block_hit', dist: 100 },
-    { label: 'T1', icon: '🤼', s: 't1_attack_thrown', r: 't1_hit_suplex', dist: 100 },
-    { label: 'T3', icon: '🤼', s: 't3_fall_shoulder_throw', r: 't3_attack_shoulder_throw', dist: 100 },
-    { label: 'T4', icon: '🤼', s: 't4_fall_belly_to_back_slam', r: 't4_attack_knee_strike', dist: 100 },
-    { label: 'T5', icon: '🤼', s: 't5_attack_headlock_takeover', r: 't5_fall_headlock_takeover', dist: 100 },
-    { label: 'Pop Dance', icon: '🕺', s: 'couple_pop_dance_m', r: 'couple_pop_dance_f', dist: 50 },
-    { label: 'Energetic Dance', icon: '🕺', s: 'energetic_dance_m', r: 'energetic_dance_f', dist: 100 },
-    { label: 'Slow Dance', icon: '💃', s: 'slow_dance_m', r: 'slow_dance_f', dist: 50 },
-    { label: 'Cuddle Kiss', icon: '😘', s: 'cuddle_kiss_m', r: 'cuddle_kiss_f', dist: 50 },
-    { label: 'Eye to Eye Kiss', icon: '🤗', s: 'eye_to_eye_hug_kiss_f', r: 'eye_to_eye_hug_kiss_m', dist: 30 },
-    { label: 'Farewell Kiss', icon: '👋', s: 'farewell_kiss_m', r: 'farewell_kiss_f', dist: 100 },
-    { label: 'Date Bearhug', icon: '🐻', s: 'date_bearhug_m', r: 'date_bearhug_f', dist: 50 },
-    { label: 'Propose', icon: '💍', s: 'propose_f', r: 'propose_m', dist: 50 },
-    { label: 'Sit Cuddle', icon: '🛋️', s: 'sit_cuddle_hug_m', r: 'sit_cuddle_hug_f', dist: 50 },
-    { label: 'Double Leg Takedown', icon: '🤼', s: 'anim_best_double_leg_takedown_victim', r: 'anim_best_double_leg_takedown_attacker', prefix: '', dist: 0, rotS: Math.PI, rotR: 0, sPos: [-450, 0, 270] },
+  interface CoupleAnimConfig {
+    label: string;
+    icon: string;
+    s: string;
+    r: string;
+    dist?: number;
+    rotS?: number;
+    rotR?: number;
+    sPos?: [number, number, number];
+    rPos?: [number, number, number];
+  }
+
+  const coupleAnims: CoupleAnimConfig[] = [
+    { label: 'B1', icon: '💥', s: 'animations/combat/miley_armature_b1_fall_kicked_knockout.glb', r: 'animations/locomotion/miley_armature_b1_attack_back_somersault_flip.glb', dist: 100 },
+    { label: 'D1', icon: '🤺', s: 'animations/combat/miley_armature_d1_attack_arms_block.glb', r: 'animations/combat/miley_armature_d1_dodge_sideways.glb', dist: 100 },
+    { label: 'D4', icon: '🤺', s: 'animations/combat/miley_armature_d4_attack_reverse_front_snap_kick.glb', r: 'animations/combat/miley_armature_d4_dodge_roll_back.glb', dist: 100 },
+    { label: 'F2', icon: '🥊', s: 'animations/combat/miley_armature_f2_attack_straight_punch02.glb', r: 'animations/locomotion/miley_armature_f2_fall_to_ground_face_up01.glb', dist: 100 },
+    { label: 'H1', icon: '👊', s: 'animations/combat/miley_armature_h1_hit_punches.glb', r: 'animations/combat/miley_armature_h1_attack_punches.glb', dist: 100 },
+    { label: 'H2', icon: '👊', s: 'animations/combat/miley_armature_h2_attack_side_kicks.glb', r: 'animations/combat/miley_armature_h2_hit_dodge.glb', dist: 100 },
+    { label: 'H4', icon: '👊', s: 'animations/combat/miley_armature_h4_attack_rising_kick.glb', r: 'animations/combat/miley_armature_h4_hit_staggering.glb', dist: 100 },
+    { label: 'Ko1', icon: '😵', s: 'animations/locomotion/miley_armature_ko1_fall_to_ground_sprawl.glb', r: 'animations/combat/miley_armature_ko1_attack_uppercut.glb', dist: 100 },
+    { label: 'Ko2', icon: '😵', s: 'animations/combat/miley_armature_ko2_attack_hood_kicks.glb', r: 'animations/locomotion/miley_armature_ko2_fall_to_ground_axel_down.glb', dist: 100 },
+    { label: 'Ko3', icon: '😵', s: 'animations/interactions/miley_armature_ko3_attack_hammer_fist.glb', r: 'animations/locomotion/miley_armature_ko3_fall_to_ground_side_up02.glb', dist: 100 },
+    { label: 'P1', icon: '😤', s: 'animations/combat/miley_armature_p1_standoff_push_knockout.glb', r: 'animations/combat/miley_armature_p1_standoff_block_straight_punch.glb' },
+    { label: 'P2', icon: '😤', s: 'animations/poses_idles/miley_armature_p2_standoff_provokes_m1.glb', r: 'animations/poses_idles/miley_armature_p2_standoff_provokes_m2.glb' },
+    { label: 'S1', icon: '🥋', s: 'animations/combat/miley_armature_s1_sparring_punch_m1.glb', r: 'animations/combat/miley_armature_s1_sparring_punch_m2.glb', dist: 100 },
+    { label: 'S2', icon: '🥋', s: 'animations/combat/miley_armature_s2_sparring_dodges01.glb', r: 'animations/combat/miley_armature_s2_sparring_kicks.glb', dist: 100 },
+    { label: 'S3', icon: '🥋', s: 'animations/combat/miley_armature_s3_sparring_dodges02.glb', r: 'animations/combat/miley_armature_s3_sparring_reverse_kicks.glb', dist: 100 },
+    { label: 'S4', icon: '🥋', s: 'animations/combat/miley_armature_s4_sparring_double_kicks_m1.glb', r: 'animations/combat/miley_armature_s4_sparring_double_kicks_m2.glb', dist: 100 },
+    { label: 'S5', icon: '🥋', s: 'animations/combat/miley_armature_s5_sparring_block_kick.glb', r: 'animations/combat/miley_armature_s5_sparring_block_hit.glb', dist: 100 },
+    { label: 'T1', icon: '🤼', s: 'animations/interactions/miley_armature_t1_attack_thrown.glb', r: 'animations/combat/miley_armature_t1_hit_suplex.glb', dist: 100 },
+    { label: 'T3', icon: '🤼', s: 'animations/locomotion/miley_armature_t3_fall_shoulder_throw.glb', r: 'animations/interactions/miley_armature_t3_attack_shoulder_throw.glb', dist: 100 },
+    { label: 'T4', icon: '🤼', s: 'animations/dances/miley_armature_t4_fall_belly_to_back_slam.glb', r: 'animations/combat/miley_armature_t4_attack_knee_strike.glb', dist: 100 },
+    { label: 'T5', icon: '🤼', s: 'animations/emotes_gestures/miley_armature_t5_attack_headlock_takeover.glb', r: 'animations/locomotion/miley_armature_t5_fall_headlock_takeover.glb', dist: 100 },
+    { label: 'Pop Dance', icon: '🕺', s: 'animations/dances/miley_armature_couple_pop_dance_m.glb', r: 'animations/dances/miley_armature_couple_pop_dance_f.glb', dist: 50 },
+    { label: 'Energetic Dance', icon: '🕺', s: 'animations/dances/miley_armature_energetic_dance_m.glb', r: 'animations/dances/miley_armature_energetic_dance_f.glb', dist: 100 },
+    { label: 'Slow Dance', icon: '💃', s: 'animations/dances/miley_armature_slow_dance_m.glb', r: 'animations/dances/miley_armature_slow_dance_f.glb', dist: 50 },
+    { label: 'Cuddle Kiss', icon: '😘', s: 'animations/emotes_gestures/miley_armature_cuddle_kiss_m.glb', r: 'animations/emotes_gestures/miley_armature_cuddle_kiss_f.glb', dist: 50 },
+    { label: 'Eye to Eye Kiss', icon: '🤗', s: 'animations/emotes_gestures/miley_armature_eye_to_eye_hug_kiss_f.glb', r: 'animations/emotes_gestures/miley_armature_eye_to_eye_hug_kiss_m.glb', dist: 30 },
+    { label: 'Farewell Kiss', icon: '👋', s: 'animations/emotes_gestures/miley_armature_farewell_kiss_m.glb', r: 'animations/emotes_gestures/miley_armature_farewell_kiss_f.glb', dist: 100 },
+    { label: 'Date Bearhug', icon: '🐻', s: 'animations/interactions/miley_armature_date_bearhug_m.glb', r: 'animations/interactions/miley_armature_date_bearhug_f.glb', dist: 50 },
+    { label: 'Propose', icon: '💍', s: 'animations/poses_idles/miley_armature_propose_f.glb', r: 'animations/poses_idles/miley_armature_propose_m.glb', dist: 50 },
+    { label: 'Sit Cuddle', icon: '🛋️', s: 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb', r: 'animations/poses_idles/miley_armature_sit_cuddle_hug_f.glb', dist: 50 },
+    { label: 'Double Leg Takedown', icon: '🤼', s: 'animations/combat/anim_best_double_leg_takedown_victim.glb', r: 'animations/combat/anim_best_double_leg_takedown_attacker.glb', dist: 0, rotS: Math.PI, rotR: 0, sPos: [-450, 0, 270] },
+    { label: 'Prise d\'otage', icon: '🚨', s: 'animations/interactions/anim_taken_hostage_victim.glb', r: 'animations/interactions/anim_taken_hostage_villain.glb', dist: 0 },
+    { label: 'Projection épaule', icon: '🥋', s: 'animations/interactions/anim_shoulder_throw_victim.glb', r: 'animations/interactions/anim_shoulder_throw_aggressor.glb', dist: 0 },
+    { label: 'Baiser Homme / Femme', icon: '💋', s: 'animations/emotes_gestures/anim_kiss_from_woman.glb', r: 'animations/emotes_gestures/anim_kiss_from_man.glb', dist: 0 },
+    { label: 'Baiser', icon: '💏', s: 'animations/emotes_gestures/anim_kiss.glb', r: 'animations/emotes_gestures/anim_kiss_1.glb', dist: 0 },
+    { label: 'Assassinat brutal', icon: '🗡️', s: 'animations/combat/anim_brutal_assassination.glb', r: 'animations/combat/anim_brutal_assassination_1.glb', dist: 0 },
   ];
 
   const playCoupleAnim = (sandraPath: string, rajaaPath: string, dist: number = 50, rotS?: number, rotR?: number, sPos?: [number, number, number], rPos?: [number, number, number]) => {
@@ -1300,14 +1317,14 @@ export function SidePanel({
     if (autoCycleIndex < 0) return;
     const anim = coupleAnims[autoCycleIndex];
     if (anim) {
-      const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
       const trigger = () => playCoupleAnim(
-        `animations/${prefix}${anim.s}.glb`,
-        `animations/${prefix}${anim.r}.glb`,
+        anim.s,
+        anim.r,
         anim.dist ?? 50,
-        (anim as any).rotS,
-        (anim as any).rotR,
-        (anim as any).sPos
+        anim.rotS,
+        anim.rotR,
+        anim.sPos,
+        anim.rPos
       );
       
       if (!isFirstMountRef.current) {
@@ -1325,14 +1342,14 @@ export function SidePanel({
       if (e.detail?.id === 'sandra' && autoCycleIndex === 0) {
         const anim = coupleAnims[0];
         if (anim) {
-          const prefix = anim.prefix !== undefined ? anim.prefix : 'miley_armature_';
           playCoupleAnim(
-            `animations/${prefix}${anim.s}.glb`,
-            `animations/${prefix}${anim.r}.glb`,
+            anim.s,
+            anim.r,
             anim.dist ?? 50,
-            (anim as any).rotS,
-            (anim as any).rotR,
-            (anim as any).sPos
+            anim.rotS,
+            anim.rotR,
+            anim.sPos,
+            anim.rPos
           );
         }
       }
@@ -1368,12 +1385,13 @@ export function SidePanel({
               setAutoCycleIndex(idx);
               const a = coupleAnims[idx];
               playCoupleAnim(
-                `animations/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.s}.glb`,
-                `animations/${a.prefix !== undefined ? a.prefix : 'miley_armature_'}${a.r}.glb`,
+                a.s,
+                a.r,
                 a.dist ?? 50,
-                (a as any).rotS,
-                (a as any).rotR,
-                (a as any).sPos
+                a.rotS,
+                a.rotR,
+                a.sPos,
+                a.rPos
               );
             }
           }}

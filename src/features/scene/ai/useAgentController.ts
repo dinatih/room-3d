@@ -57,11 +57,12 @@ export function useAgentController(
   onComplete?: () => void,
   spawnDelay: number = 0
 ) {
+  const initialPos = getRealPosition();
   const stateRef = useRef<AgentState>({
-    x: 0,
-    y: 0,
-    z: 0,
-    rotY: 0,
+    x: initialPos.x,
+    y: initialPos.y,
+    z: initialPos.z,
+    rotY: initialPos.rotY,
     animation: 'idle',
     isSpawned: spawnDelay === 0
   });
