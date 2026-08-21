@@ -414,51 +414,54 @@ export function useAgentController(
         let dirX = dx / dist;
         let dirZ = dz / dist;
 
-        // ── 1. Évitement et contournement des autres personnages (NPCs et joueur) ──
-        // Rayon de sécurité personnelle : 35 cm. Distance d'anticipation : jusqu'à 70 cm.
-        const AVOID_RADIUS = 35;
-        const LOOKAHEAD_DIST = 70;
-        let avoidanceForceX = 0;
-        let avoidanceForceZ = 0;
-
         const currentX = stateRef.current.x;
         const currentZ = stateRef.current.z;
+        let avoidanceForceX = 0;
+        let avoidanceForceZ = 0;
 
         // Si nous sommes très proches du waypoint de destination (< 30 cm), réduire l'évitement pour garantir l'arrivée
         const targetProximityDampener = Math.min(1.0, dist / 30.0);
 
-        // Parcourir les positions des autres personnages connus
-        for (const [otherId, pos] of Object.entries(cameraState.positions)) {
-          if (otherId === _characterId || !pos) continue;
+        // ── 1. Évitement et contournement des autres personnages (NPCs et joueur) ──
+        const isNpcCollisionsEnabled = useSceneStore.getState().layers.npcCollisions;
+        if (isNpcCollisionsEnabled) {
+          // Rayon de sécurité personnelle : 35 cm. Distance d'anticipation : jusqu'à 70 cm.
+          const AVOID_RADIUS = 35;
+          const LOOKAHEAD_DIST = 70;
 
-          const toOtherX = pos.x - currentX;
-          const toOtherZ = pos.z - currentZ;
-          const otherDist = Math.hypot(toOtherX, toOtherZ);
+          // Parcourir les positions des autres personnages connus
+          for (const [otherId, pos] of Object.entries(cameraState.positions)) {
+            if (otherId === _characterId || !pos) continue;
 
-          if (otherDist > 0.1 && otherDist < LOOKAHEAD_DIST) {
-            const forwardProj = toOtherX * dirX + toOtherZ * dirZ;
+            const toOtherX = pos.x - currentX;
+            const toOtherZ = pos.z - currentZ;
+            const otherDist = Math.hypot(toOtherX, toOtherZ);
 
-            if (forwardProj > 0 || otherDist < AVOID_RADIUS) {
-              const perpDist = Math.abs(-dirZ * toOtherX + dirX * toOtherZ);
+            if (otherDist > 0.1 && otherDist < LOOKAHEAD_DIST) {
+              const forwardProj = toOtherX * dirX + toOtherZ * dirZ;
 
-              if (perpDist < AVOID_RADIUS) {
-                const cross = dirX * toOtherZ - dirZ * toOtherX;
-                const steerSide = cross >= 0 ? -1 : 1;
+              if (forwardProj > 0 || otherDist < AVOID_RADIUS) {
+                const perpDist = Math.abs(-dirZ * toOtherX + dirX * toOtherZ);
 
-                const lateralWeight = Math.max(0.2, (AVOID_RADIUS - perpDist) / AVOID_RADIUS);
-                const proximityWeight = Math.max(0.3, (LOOKAHEAD_DIST - otherDist) / LOOKAHEAD_DIST);
-                const steerIntensity = 1.0 * lateralWeight * proximityWeight * targetProximityDampener;
+                if (perpDist < AVOID_RADIUS) {
+                  const cross = dirX * toOtherZ - dirZ * toOtherX;
+                  const steerSide = cross >= 0 ? -1 : 1;
 
-                const perpX = -dirZ * steerSide;
-                const perpZ = dirX * steerSide;
+                  const lateralWeight = Math.max(0.2, (AVOID_RADIUS - perpDist) / AVOID_RADIUS);
+                  const proximityWeight = Math.max(0.3, (LOOKAHEAD_DIST - otherDist) / LOOKAHEAD_DIST);
+                  const steerIntensity = 1.0 * lateralWeight * proximityWeight * targetProximityDampener;
 
-                avoidanceForceX += perpX * steerIntensity;
-                avoidanceForceZ += perpZ * steerIntensity;
+                  const perpX = -dirZ * steerSide;
+                  const perpZ = dirX * steerSide;
 
-                if (otherDist < AVOID_RADIUS) {
-                  const repulseIntensity = ((AVOID_RADIUS - otherDist) / AVOID_RADIUS) * 0.7 * targetProximityDampener;
-                  avoidanceForceX -= (toOtherX / otherDist) * repulseIntensity;
-                  avoidanceForceZ -= (toOtherZ / otherDist) * repulseIntensity;
+                  avoidanceForceX += perpX * steerIntensity;
+                  avoidanceForceZ += perpZ * steerIntensity;
+
+                  if (otherDist < AVOID_RADIUS) {
+                    const repulseIntensity = ((AVOID_RADIUS - otherDist) / AVOID_RADIUS) * 0.7 * targetProximityDampener;
+                    avoidanceForceX -= (toOtherX / otherDist) * repulseIntensity;
+                    avoidanceForceZ -= (toOtherZ / otherDist) * repulseIntensity;
+                  }
                 }
               }
             }
@@ -466,46 +469,49 @@ export function useAgentController(
         }
 
         // ── 2. Évitement et contournement des meubles au sol (avec prise en compte des positions dynamiques HoverMenu) ──
-        const furnitureObstacles = getActiveFurnitureObstacles();
-        const currentDestObjId = currentInstruction.smartObjectId;
+        const isFurnitureCollisionsEnabled = useSceneStore.getState().layers.furnitureCollisions;
+        if (isFurnitureCollisionsEnabled) {
+          const furnitureObstacles = getActiveFurnitureObstacles();
+          const currentDestObjId = currentInstruction.smartObjectId;
 
-        for (const obs of furnitureObstacles) {
-          // Si le meuble est la destination ciblée par l'action courante, ne pas l'éviter (pour s'y asseoir / interagir)
-          if (currentDestObjId && obs.smartObjectIds && obs.smartObjectIds.includes(currentDestObjId)) {
-            continue;
-          }
+          for (const obs of furnitureObstacles) {
+            // Si le meuble est la destination ciblée par l'action courante, ne pas l'éviter (pour s'y asseoir / interagir)
+            if (currentDestObjId && obs.smartObjectIds && obs.smartObjectIds.includes(currentDestObjId)) {
+              continue;
+            }
 
-          const toObsX = obs.x - currentX;
-          const toObsZ = obs.z - currentZ;
-          const obsDist = Math.hypot(toObsX, toObsZ);
-          const obsLookahead = obs.radius + 40; // anticipation
+            const toObsX = obs.x - currentX;
+            const toObsZ = obs.z - currentZ;
+            const obsDist = Math.hypot(toObsX, toObsZ);
+            const obsLookahead = obs.radius + 40; // anticipation
 
-          if (obsDist > 0.1 && obsDist < obsLookahead) {
-            const forwardProj = toObsX * dirX + toObsZ * dirZ;
+            if (obsDist > 0.1 && obsDist < obsLookahead) {
+              const forwardProj = toObsX * dirX + toObsZ * dirZ;
 
-            if (forwardProj > 0 || obsDist < obs.radius + 10) {
-              const perpDist = Math.abs(-dirZ * toObsX + dirX * toObsZ);
-              const clearanceRadius = obs.radius + 20;
+              if (forwardProj > 0 || obsDist < obs.radius + 10) {
+                const perpDist = Math.abs(-dirZ * toObsX + dirX * toObsZ);
+                const clearanceRadius = obs.radius + 20;
 
-              if (perpDist < clearanceRadius) {
-                const cross = dirX * toObsZ - dirZ * toObsX;
-                const steerSide = cross >= 0 ? -1 : 1;
+                if (perpDist < clearanceRadius) {
+                  const cross = dirX * toObsZ - dirZ * toObsX;
+                  const steerSide = cross >= 0 ? -1 : 1;
 
-                const lateralWeight = Math.max(0.2, (clearanceRadius - perpDist) / clearanceRadius);
-                const proximityWeight = Math.max(0.3, (obsLookahead - obsDist) / obsLookahead);
-                const steerIntensity = 1.3 * lateralWeight * proximityWeight * targetProximityDampener;
+                  const lateralWeight = Math.max(0.2, (clearanceRadius - perpDist) / clearanceRadius);
+                  const proximityWeight = Math.max(0.3, (obsLookahead - obsDist) / obsLookahead);
+                  const steerIntensity = 1.3 * lateralWeight * proximityWeight * targetProximityDampener;
 
-                const perpX = -dirZ * steerSide;
-                const perpZ = dirX * steerSide;
+                  const perpX = -dirZ * steerSide;
+                  const perpZ = dirX * steerSide;
 
-                avoidanceForceX += perpX * steerIntensity;
-                avoidanceForceZ += perpZ * steerIntensity;
+                  avoidanceForceX += perpX * steerIntensity;
+                  avoidanceForceZ += perpZ * steerIntensity;
 
-                // Répulsion radiale si l'agent est trop près du bord du meuble
-                if (obsDist < obs.radius + 10) {
-                  const repulseIntensity = (((obs.radius + 10) - obsDist) / (obs.radius + 10)) * 1.0 * targetProximityDampener;
-                  avoidanceForceX -= (toObsX / obsDist) * repulseIntensity;
-                  avoidanceForceZ -= (toObsZ / obsDist) * repulseIntensity;
+                  // Répulsion radiale si l'agent est trop près du bord du meuble
+                  if (obsDist < obs.radius + 10) {
+                    const repulseIntensity = (((obs.radius + 10) - obsDist) / (obs.radius + 10)) * 1.0 * targetProximityDampener;
+                    avoidanceForceX -= (toObsX / obsDist) * repulseIntensity;
+                    avoidanceForceZ -= (toObsZ / obsDist) * repulseIntensity;
+                  }
                 }
               }
             }

@@ -309,6 +309,8 @@ export interface LayerState {
   showAllLaraStyles: boolean;
   wallhack: boolean;
   aiZones: boolean;
+  npcCollisions: boolean;
+  furnitureCollisions: boolean;
   breastPhysics: boolean;
   breastIntensity?: number;
   breastMass?: number;
@@ -592,6 +594,8 @@ export function SidePanel({
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
       {layerBtn('gray',   'Lidar 📸',        'lidar')}
       {layerBtn('gray',   'Zones IA 🤖',    'aiZones')}
+      {layerBtn('blue',   'Collisions inter-PNJ 👥', 'npcCollisions')}
+      {layerBtn('blue',   'Collisions objets/meubles 🪑', 'furnitureCollisions')}
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
 

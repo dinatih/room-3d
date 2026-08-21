@@ -88,6 +88,8 @@ const initialLayers: LayerState = {
   hairPhysics: true,
   characterShadows: true,
   aiZones: false,
+  npcCollisions: true,
+  furnitureCollisions: true,
 };
 
 const initialExtraStates: Record<string, boolean> = {
