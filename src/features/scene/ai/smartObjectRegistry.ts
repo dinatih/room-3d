@@ -580,16 +580,17 @@ export function buildSmartObjectInstructionSequence(
   // Traitement spécifique des meubles avec portes et routines composées
   if (objectId === 'shower') {
     return [
-      { type: 'MOVE_TO', targetNodeId: 'Devant_Douche' },
+      { type: 'MOVE_TO', targetNodeId: 'bathroom-shower-entry' },
       { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.5 },
       { type: 'MOVE_TO', smartObjectId: 'shower', slotId: 'take-shower' },
       { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.4 },
       baseInstruction,
       { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: true, duration: 0.5 },
-      { type: 'MOVE_TO', targetNodeId: 'Devant_Douche' },
+      { type: 'MOVE_TO', targetNodeId: 'bathroom-shower-entry' },
       { type: 'INTERACT', triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.4 }
     ];
   }
+
 
   if (objectId === 'toilet') {
     return [

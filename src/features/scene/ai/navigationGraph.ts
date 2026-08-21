@@ -63,18 +63,18 @@ export const ROOM_PORTALS: RoomPortal[] = [
     from: 'living',
     to: 'garden',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
+      { type: 'MOVE_TO', targetNodeId: 'living-glass-door' },
       { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
-      { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' }
+      { type: 'MOVE_TO', targetNodeId: 'garden-patio' }
     ]
   },
   {
     from: 'garden',
     to: 'living',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
+      { type: 'MOVE_TO', targetNodeId: 'garden-patio' },
       { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
-      { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' }
+      { type: 'MOVE_TO', targetNodeId: 'living-glass-door' }
     ]
   },
 
@@ -83,16 +83,16 @@ export const ROOM_PORTALS: RoomPortal[] = [
     from: 'living',
     to: 'corridor',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetNodeId: 'Couloir_Central' },
+      { type: 'MOVE_TO', targetNodeId: 'corridor-center' },
       { type: 'INTERACT', triggerEventKey: 'livingDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
-      { type: 'MOVE_TO', targetNodeId: 'Couloir_Entree' }
+      { type: 'MOVE_TO', targetNodeId: 'corridor-entry-door' }
     ]
   },
   {
     from: 'corridor',
     to: 'living',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetNodeId: 'Couloir_Central' },
+      { type: 'MOVE_TO', targetNodeId: 'corridor-center' },
       { type: 'INTERACT', triggerEventKey: 'livingDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
       { type: 'MOVE_TO', targetPos: [230, 0, 320] } // Avance dans le salon
     ]
@@ -103,18 +103,18 @@ export const ROOM_PORTALS: RoomPortal[] = [
     from: 'corridor',
     to: 'bathroom',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
+      { type: 'MOVE_TO', targetNodeId: 'corridor-bathroom-door' },
       { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: true, duration: 0.4 },
-      { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' }
+      { type: 'MOVE_TO', targetNodeId: 'bathroom-entry' }
     ]
   },
   {
     from: 'bathroom',
     to: 'corridor',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },
+      { type: 'MOVE_TO', targetNodeId: 'bathroom-entry' },
       { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: true, duration: 0.4 },
-      { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' }
+      { type: 'MOVE_TO', targetNodeId: 'corridor-bathroom-door' }
     ]
   },
 
@@ -123,9 +123,9 @@ export const ROOM_PORTALS: RoomPortal[] = [
     from: 'corridor',
     to: 'outdoor_corridor',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetNodeId: 'Couloir_Entree' },
+      { type: 'MOVE_TO', targetNodeId: 'corridor-entry-door' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.4 },
-      { type: 'MOVE_TO', targetNodeId: 'Sortie' },
+      { type: 'MOVE_TO', targetNodeId: 'outdoor-entry-door' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.4 }
     ]
   },
@@ -133,12 +133,13 @@ export const ROOM_PORTALS: RoomPortal[] = [
     from: 'outdoor_corridor',
     to: 'corridor',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetNodeId: 'Sortie' },
+      { type: 'MOVE_TO', targetNodeId: 'outdoor-entry-door' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.4 },
-      { type: 'MOVE_TO', targetNodeId: 'Couloir_Entree' },
+      { type: 'MOVE_TO', targetNodeId: 'corridor-entry-door' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.4 }
     ]
   },
+
 
 
   // ── COURS EXTÉRIEURE <-> COULOIR EXTÉRIEUR (Passage direct Cour Bât B) ──

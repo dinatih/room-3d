@@ -42,9 +42,11 @@ export interface SmartAction {
 
 export interface ZoneNode {
   id: string;
+  name?: string;
   x: number;
   z: number;
 }
+
 
 export type InstructionType = 'MOVE_TO' | 'INTERACT' | 'WAIT' | 'RETURN_TO_START' | 'USE_OBJECT';
 

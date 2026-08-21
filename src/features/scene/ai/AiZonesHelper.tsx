@@ -111,10 +111,11 @@ export function AiZonesHelper() {
   const waypointSprites = useMemo(() => {
     const map: Record<string, THREE.Sprite> = {};
     Object.values(ZONES).forEach(zone => {
-      map[zone.id] = makeLabelSprite(`📍 ${zone.id}`, [], '#ffffff', 4.5);
+      map[zone.id] = makeLabelSprite(`📍 ${zone.name || zone.id}`, [], '#ffffff', 4.5);
     });
     return map;
   }, []);
+
 
   const smartObjectSprites = useMemo(() => {
     const map: Record<string, THREE.Sprite> = {};
