@@ -125,7 +125,8 @@ export const ROOM_PORTALS: RoomPortal[] = [
     traverseInstructions: [
       { type: 'MOVE_TO', targetNodeId: 'Couloir_Entree' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.4 },
-      { type: 'MOVE_TO', targetNodeId: 'Sortie' }
+      { type: 'MOVE_TO', targetNodeId: 'Sortie' },
+      { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.4 }
     ]
   },
   {
@@ -134,9 +135,11 @@ export const ROOM_PORTALS: RoomPortal[] = [
     traverseInstructions: [
       { type: 'MOVE_TO', targetNodeId: 'Sortie' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.4 },
-      { type: 'MOVE_TO', targetNodeId: 'Couloir_Entree' }
+      { type: 'MOVE_TO', targetNodeId: 'Couloir_Entree' },
+      { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.4 }
     ]
   },
+
 
   // ── COURS EXTÉRIEURE <-> COULOIR EXTÉRIEUR (Passage direct Cour Bât B) ──
   {

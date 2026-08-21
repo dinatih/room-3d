@@ -565,16 +565,36 @@ export function buildSmartObjectInstructionSequence(
     ? MILEY_DANCE_ANIMS[Math.floor(Math.random() * MILEY_DANCE_ANIMS.length)]
     : slot.animation;
 
-  return [
-    {
-      type: 'USE_OBJECT',
-      smartObjectId: obj.id,
-      slotId: slot.slotId,
-      animation: chosenAnim,
-      duration: slot.duration,
-      rotY: slot.rotY,
-      triggerEventKey: slot.triggerEventKey,
-      triggerTargetState: slot.triggerTargetState
-    }
-  ];
+  const baseInstruction: AgentInstruction = {
+    type: 'USE_OBJECT',
+    smartObjectId: obj.id,
+    slotId: slot.slotId,
+    animation: chosenAnim,
+    duration: slot.duration,
+    rotY: slot.rotY,
+    triggerEventKey: slot.triggerEventKey,
+    triggerTargetState: slot.triggerTargetState
+  };
+
+  // Traitement spécifique des meubles avec portes qui doivent s'ouvrir avant et se refermer après
+  if (objectId === 'sdb-closet') {
+    return [
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
+      { type: 'INTERACT', triggerEventKey: 'sdb-closet-l-toggle', triggerTargetState: true, duration: 0.5 },
+      baseInstruction,
+      { type: 'INTERACT', triggerEventKey: 'sdb-closet-l-toggle', triggerTargetState: false, duration: 0.4 }
+    ];
+  }
+
+  if (objectId === 'corridor-closet') {
+    return [
+      { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
+      { type: 'INTERACT', triggerEventKey: 'corr-doors-toggle', triggerTargetState: true, duration: 0.5 },
+      baseInstruction,
+      { type: 'INTERACT', triggerEventKey: 'corr-doors-toggle', triggerTargetState: false, duration: 0.4 }
+    ];
+  }
+
+  return [baseInstruction];
 }
+
