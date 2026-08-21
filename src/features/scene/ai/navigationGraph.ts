@@ -134,21 +134,21 @@ export const ROOM_PORTALS: RoomPortal[] = [
     ]
   },
 
-  // ── JARDIN <-> COURS EXTÉRIEURE (via Entrée Bâtiment B Jardin) ──
+  // ── COURS EXTÉRIEURE <-> COULOIR EXTÉRIEUR (Passage direct Cour Bât B) ──
   {
-    from: 'garden',
+    from: 'outdoor_corridor',
     to: 'outdoor_garden',
     traverseInstructions: [
-      { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
+      { type: 'MOVE_TO', smartObjectId: 'building-b-corridor', slotId: 'visit' },
       { type: 'MOVE_TO', smartObjectId: 'building-b-garden', slotId: 'admire' }
     ]
   },
   {
     from: 'outdoor_garden',
-    to: 'garden',
+    to: 'outdoor_corridor',
     traverseInstructions: [
       { type: 'MOVE_TO', smartObjectId: 'building-b-garden', slotId: 'admire' },
-      { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' }
+      { type: 'MOVE_TO', smartObjectId: 'building-b-corridor', slotId: 'visit' }
     ]
   }
 ];
@@ -159,9 +159,10 @@ const ADJACENCY: Record<RoomId, RoomId[]> = {
   corridor: ['living', 'bathroom', 'outdoor_corridor'],
   bathroom: ['corridor'],
   garden: ['living', 'outdoor_garden'],
-  outdoor_corridor: ['corridor'],
-  outdoor_garden: ['garden']
+  outdoor_corridor: ['corridor', 'outdoor_garden'],
+  outdoor_garden: ['garden', 'outdoor_corridor']
 };
+
 
 
 /**

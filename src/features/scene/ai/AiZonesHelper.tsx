@@ -1,7 +1,8 @@
+import * as THREE from 'three';
+import { useMemo } from 'react';
 import { useSceneStore } from '../store/useSceneStore';
 import { ZONES } from './ZoneNodes';
 import { SMART_OBJECTS } from './smartObjectRegistry';
-import { Text, Billboard } from '@react-three/drei';
 
 const CATEGORY_COLORS: Record<string, string> = {
   bed: '#ff4081',
@@ -15,79 +16,156 @@ const CATEGORY_COLORS: Record<string, string> = {
   door: '#ff5252'
 };
 
+/**
+ * Crée un Sprite Three.js net et contrasté avec fond semi-transparent,
+ * 100% visible à travers les murs grâce à depthTest: false et renderOrder élevé.
+ */
+function makeLabelSprite(
+  title: string,
+  lines: string[],
+  titleColor: string,
+  fontSizeWorld: number
+): THREE.Sprite {
+  const PX = 48;
+  const paddingX = 24;
+  const paddingY = 16;
+  const lineHeight = PX * 1.25;
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.font = `bold ${PX}px sans-serif`;
+  let maxW = ctx.measureText(title).width;
+  ctx.font = `normal ${Math.round(PX * 0.85)}px sans-serif`;
+  for (const line of lines) {
+    const w = ctx.measureText(line).width;
+    if (w > maxW) maxW = w;
+  }
+
+  const canvasW = Math.ceil(maxW + paddingX * 2);
+  const totalLines = 1 + lines.length;
+  const canvasH = Math.ceil(totalLines * lineHeight + paddingY * 2);
+
+  canvas.width = canvasW;
+  canvas.height = canvasH;
+
+  // Fond semi-opaque arrondi pour un contraste parfait
+  ctx.fillStyle = 'rgba(10, 15, 20, 0.78)';
+  const r = 12;
+  ctx.beginPath();
+  ctx.moveTo(r, 0);
+  ctx.lineTo(canvasW - r, 0);
+  ctx.quadraticCurveTo(canvasW, 0, canvasW, r);
+  ctx.lineTo(canvasW, canvasH - r);
+  ctx.quadraticCurveTo(canvasW, canvasH, canvasW - r, canvasH);
+  ctx.lineTo(r, canvasH);
+  ctx.quadraticCurveTo(0, canvasH, 0, canvasH - r);
+  ctx.lineTo(0, r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // Bordure
+  ctx.strokeStyle = titleColor;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Titre
+  ctx.font = `bold ${PX}px sans-serif`;
+  ctx.fillStyle = titleColor;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText(title, canvasW / 2, paddingY);
+
+  // Lignes secondaires
+  ctx.font = `500 ${Math.round(PX * 0.82)}px sans-serif`;
+  ctx.fillStyle = '#ffffff';
+  let curY = paddingY + lineHeight;
+  for (const line of lines) {
+    ctx.fillText(line, canvasW / 2, curY);
+    curY += lineHeight;
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  const mat = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+  });
+
+  const sprite = new THREE.Sprite(mat);
+  const worldH = fontSizeWorld * totalLines * 1.5;
+  const worldW = worldH * (canvasW / canvasH);
+  sprite.scale.set(worldW, worldH, 1);
+  sprite.renderOrder = 99999;
+  return sprite;
+}
+
 export function AiZonesHelper() {
   const visible = useSceneStore(s => s.layers.aiZones);
   const cameraMode = useSceneStore(s => s.cameraMode);
+
+  // Génération mémoïsée des sprites de labels
+  const waypointSprites = useMemo(() => {
+    const map: Record<string, THREE.Sprite> = {};
+    Object.values(ZONES).forEach(zone => {
+      map[zone.id] = makeLabelSprite(`📍 ${zone.id}`, [], '#ffffff', 4.5);
+    });
+    return map;
+  }, []);
+
+  const smartObjectSprites = useMemo(() => {
+    const map: Record<string, THREE.Sprite> = {};
+    Object.values(SMART_OBJECTS).forEach(obj => {
+      const color = CATEGORY_COLORS[obj.category] || '#00ff88';
+      const lines = obj.slots.map(s => `• ${s.name}`);
+      map[obj.id] = makeLabelSprite(`✨ ${obj.name}`, lines, color, 5.0);
+    });
+    return map;
+  }, []);
+
   if (!visible) return null;
 
   const isTopView = cameraMode === 'top';
-  // En vue du dessus, on place les repères visuels bien au-dessus des meubles pour être toujours lisibles
   const baseHeight = isTopView ? 280 : 1.2;
-  const labelHeight = isTopView ? 290 : 25;
+  const labelHeight = isTopView ? 290 : 26;
 
   return (
-    <group renderOrder={9999}>
+    <group renderOrder={99999}>
       {/* ── Points de passage / Waypoints ── */}
-      {Object.values(ZONES).map(zone => (
-        <group key={`wp-${zone.id}`} position={[zone.x, baseHeight, zone.z]}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <circleGeometry args={[6, 24]} />
-            <meshBasicMaterial color="#ffffff" opacity={0.35} transparent depthTest={false} depthWrite={false} />
-          </mesh>
-          <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[5, 6, 24]} />
-            <meshBasicMaterial color="#aaaaaa" depthTest={false} depthWrite={false} />
-          </mesh>
-          <Billboard position={[0, isTopView ? 8 : 15, 0]}>
-            <Text
-              fontSize={6.5}
-              color="#eeeeee"
-              anchorX="center"
-              anchorY="middle"
-              outlineWidth={0.7}
-              outlineColor="#000000"
-              material-depthTest={false}
-              material-depthWrite={false}
-              renderOrder={9998}
-            >
-              {`📍 ${zone.id}`}
-            </Text>
-          </Billboard>
-        </group>
-      ))}
+      {Object.values(ZONES).map(zone => {
+        const sprite = waypointSprites[zone.id];
+        return (
+          <group key={`wp-${zone.id}`} position={[zone.x, baseHeight, zone.z]}>
+            <mesh rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[6, 24]} />
+              <meshBasicMaterial color="#ffffff" opacity={0.35} transparent depthTest={false} depthWrite={false} />
+            </mesh>
+            <mesh rotation={[-Math.PI / 2, 0, 0]}>
+              <ringGeometry args={[5, 6, 24]} />
+              <meshBasicMaterial color="#aaaaaa" depthTest={false} depthWrite={false} />
+            </mesh>
+            {sprite && <primitive object={sprite} position={[0, isTopView ? 8 : 16, 0]} />}
+          </group>
+        );
+      })}
 
       {/* ── Smart Objects et leurs Slots d'affordance ── */}
       {Object.values(SMART_OBJECTS).map(obj => {
         const color = CATEGORY_COLORS[obj.category] || '#00ff88';
         const slotsCount = obj.slots.length;
         
-        // Calcule le centre moyen de tous les slots de l'objet pour un label d'objet unique et propre
+        // Centre moyen pour le label unifié
         const avgX = obj.slots.reduce((sum, s) => sum + s.offset[0], 0) / (slotsCount || 1);
         const avgZ = obj.slots.reduce((sum, s) => sum + s.offset[2], 0) / (slotsCount || 1);
-
-        // Liste multi-lignes claire des actions du smart object
-        const slotsText = obj.slots.map(s => `• ${s.name}`).join('\n');
-        const fullLabel = `✨ ${obj.name}\n${slotsText}`;
+        const sprite = smartObjectSprites[obj.id];
 
         return (
           <group key={`smart-${obj.id}`}>
-            {/* Label Unique Multi-lignes au-dessus de l'objet (visible à travers tout) */}
-            <Billboard position={[avgX, labelHeight, avgZ]}>
-              <Text
-                fontSize={7.0}
-                lineHeight={1.15}
-                color={color}
-                anchorX="center"
-                anchorY="middle"
-                outlineWidth={0.8}
-                outlineColor="#000000"
-                material-depthTest={false}
-                material-depthWrite={false}
-                renderOrder={9999}
-              >
-                {fullLabel}
-              </Text>
-            </Billboard>
+            {/* Label Sprite Billboardé 100% visible à travers les murs */}
+            {sprite && <primitive object={sprite} position={[avgX, labelHeight, avgZ]} />}
 
             {/* Cibles au sol + flèches d'orientation pour chaque slot */}
             {obj.slots.map(slot => {
@@ -114,9 +192,9 @@ export function AiZonesHelper() {
           </group>
         );
       })}
-
     </group>
   );
 }
+
 
 
