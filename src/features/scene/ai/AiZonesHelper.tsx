@@ -126,7 +126,19 @@ export function AiZonesHelper() {
     return map;
   }, []);
 
+  // Géométrie mémoïsée du triangle d'orientation 2D (arêtes droites nettes, base plate)
+  const arrowGeo = useMemo(() => {
+    const shape = new THREE.Shape();
+    // Triangle isocèle 2D : pointe en haut (Y=+5.5), base droite en bas (Y=-3.0)
+    shape.moveTo(0, 5.5);
+    shape.lineTo(3.2, -3.0);
+    shape.lineTo(-3.2, -3.0);
+    shape.closePath();
+    return new THREE.ShapeGeometry(shape);
+  }, []);
+
   if (!visible) return null;
+
 
   const isTopView = cameraMode === 'top';
   const baseHeight = isTopView ? 280 : 1.2;
@@ -181,12 +193,14 @@ export function AiZonesHelper() {
                     <ringGeometry args={[8, 10, 32]} />
                     <meshBasicMaterial color={color} depthTest={false} depthWrite={false} />
                   </mesh>
-                  {/* Flèche d'orientation — pointe du cône = direction du regard */}
-                  <mesh rotation={[Math.PI / 2, 0, slot.rotY]} position={[0, 0.2, 0]}>
-                    <coneGeometry args={[3, 8, 16]} />
-                    <meshBasicMaterial color="#ffffff" depthTest={false} depthWrite={false} />
+                  {/* Flèche d'orientation triangulaire 2D plate — base plate et pointe nette */}
+                  <mesh
+                    geometry={arrowGeo}
+                    rotation={[-Math.PI / 2, 0, slot.rotY]}
+                    position={[0, 0.2, 0]}
+                  >
+                    <meshBasicMaterial color="#ffffff" depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
                   </mesh>
-
                 </group>
               );
             })}
@@ -196,6 +210,8 @@ export function AiZonesHelper() {
     </group>
   );
 }
+
+
 
 
 
