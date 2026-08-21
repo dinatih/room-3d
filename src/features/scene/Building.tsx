@@ -32,6 +32,9 @@ import {
   DiagWall,
   LAYER_WALKER_DETAIL,
   LAYER_WALKER,
+  LAYER_AI_ZONES,
+  LAYER_LIDAR,
+  LAYER_NEIGHBORS,
 } from '@config';
 
 const BLDG_Z_MIN =  -30;
@@ -1463,6 +1466,7 @@ export function Floor() {
 const kallaxW1 = 40.5; // kallaxW(1)
 
 const MIRROR_BASE_MASK = (1 << 0) | (1 << LAYER_WALKER_DETAIL) | (1 << LAYER_WALKER);
+const MIRROR_EXCLUDED_MASK = (1 << LAYER_AI_ZONES) | (1 << LAYER_LIDAR) | (1 << LAYER_NEIGHBORS);
 
 // Compteur global de profondeur de réflexion.
 // Empêche les miroirs perpendiculaires de se rendre mutuellement en boucle infinie :
@@ -1501,7 +1505,7 @@ function ReflectorMirror({ w, h, position, rotationY }: {
       }
 
       // Sync layer mask to the cached reflection camera (exclude AI zones and unwanted overlays)
-      const mirrorMask = (cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK) & ~(1 << 19); // 19 = LAYER_AI_ZONES
+      const mirrorMask = (cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
 
       const reflectionCamera = (mir as any).getReflectionCamera(camera);
       if (reflectionCamera) {
@@ -1557,14 +1561,16 @@ function MergedReflector({ planes, position, rotationY }: {
         renderTarget.setSize(targetRes, targetRes);
       }
 
-      // Sync layer mask to the cached reflection camera
+      // Sync layer mask to the cached reflection camera (exclude AI zones and unwanted overlays)
+      const mirrorMask = (cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
+
       const reflectionCamera = (mir as any).getReflectionCamera(camera);
       if (reflectionCamera) {
-        reflectionCamera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+        reflectionCamera.layers.mask = mirrorMask;
       }
 
       const oldMask = camera.layers.mask;
-      camera.layers.mask = cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK;
+      camera.layers.mask = mirrorMask;
 
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
 
