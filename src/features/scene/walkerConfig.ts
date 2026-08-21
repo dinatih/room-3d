@@ -68,8 +68,9 @@ export const ACCESSORIES_MESH_NAMES = new Set([
   'grenades', 'accessories', 'handgun_part'
 ]);
 
-/** PNJ en mode exploration autonome (scénarios aléatoires et danses) */
+/** PNJ en mode exploration autonome (scénarios aléatoires et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
-  'delphina', 'vivida', 'angelina', 'cha', 'sabira', 'lgbta', 'marissa', 'rosanna'
+  'native', 'delphina', 'vivida', 'angelina', 'cha', 'sabira', 'lgbta', 'marissa', 'rosanna'
 ]);
+
 
