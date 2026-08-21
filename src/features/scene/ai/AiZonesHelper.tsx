@@ -129,13 +129,16 @@ export function AiZonesHelper() {
   // Géométrie mémoïsée du triangle d'orientation 2D (arêtes droites nettes, base plate)
   const arrowGeo = useMemo(() => {
     const shape = new THREE.Shape();
-    // Triangle isocèle 2D : pointe en haut (Y=+5.5), base droite en bas (Y=-3.0)
-    shape.moveTo(0, 5.5);
-    shape.lineTo(3.2, -3.0);
-    shape.lineTo(-3.2, -3.0);
+    // Triangle isocèle 2D : pointe en bas (Y = -5.5) pour pointer vers Z+ dans le repère 3D lors du rotX = -PI/2
+    // Quand rotY = 0, le personnage regarde vers Z+ (Sud).
+    // Quand rotY = Math.PI, le personnage regarde vers Z- (Nord).
+    shape.moveTo(0, -5.5);
+    shape.lineTo(3.2, 3.0);
+    shape.lineTo(-3.2, 3.0);
     shape.closePath();
     return new THREE.ShapeGeometry(shape);
   }, []);
+
 
   if (!visible) return null;
 
