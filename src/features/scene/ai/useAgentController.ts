@@ -338,11 +338,27 @@ export function useAgentController(
           statusRef.current = 'INTERACTING';
           timerRef.current = currentInstruction.duration || target.duration || 1.0;
           if (currentInstruction.triggerEventKey) {
-            let key = currentInstruction.triggerEventKey as any;
+            let key = currentInstruction.triggerEventKey;
             if (key === 'eastGlassDoor' && useSceneStore.getState().furniture.bimDoubleDoor) {
               key = 'bimDoorRightOpen';
             }
-            useSceneStore.getState().toggleFurniture(key);
+            const store = useSceneStore.getState();
+            const resolved = resolveStoreKey(key);
+            const furniture = store.furniture as any;
+            const extraStates = store.extraStates as any;
+            const currentVal = resolved.type === 'furniture'
+              ? Boolean(furniture[resolved.name])
+              : resolved.type === 'extra'
+              ? Boolean(extraStates[resolved.name])
+              : false;
+
+            if (currentInstruction.triggerTargetState !== undefined) {
+              if (currentInstruction.triggerTargetState !== currentVal) {
+                store.triggerAction(key);
+              }
+            } else {
+              store.triggerAction(key);
+            }
           }
           const animation = currentInstruction.animation || target.anim || '';
           const duration = timerRef.current;
