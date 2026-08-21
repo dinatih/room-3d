@@ -48,7 +48,7 @@ import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
 import {
   ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NEIGHBORS, LAYER_LIDAR,
-  LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER, LAYER_AI_ZONES,
+  LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER,
 } from '@config';
 
 
@@ -370,9 +370,7 @@ export function Studio() {
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.xray        && <XRayLayer />}
         <Suspense fallback={null}>
-          <CategoryLayerGroup layer={LAYER_AI_ZONES}>
-            <AiZonesHelper />
-          </CategoryLayerGroup>
+          <AiZonesHelper />
         </Suspense>
         {layers.wallEdges   && <WallEdgesLayer />}
 
