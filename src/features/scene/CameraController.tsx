@@ -201,6 +201,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   function exitWalkMode() {
     dragging.current = false;
+    cameraState.isDragging = false;
     keys.current.clear();
     const ctrl = ctrlRef.current;
     if (ctrl) {
@@ -458,8 +459,16 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     let touchLastX = 0;
     let touchLastY = 0;
 
-    const onDown  = (e: MouseEvent) => { if ((modeRef.current === 'walk' || modeRef.current === 'fpv') && e.button === 0) dragging.current = true; };
-    const onUp    = () => { dragging.current = false; };
+    const onDown  = (e: MouseEvent) => {
+      if ((modeRef.current === 'walk' || modeRef.current === 'fpv') && e.button === 0) {
+        dragging.current = true;
+        cameraState.isDragging = true;
+      }
+    };
+    const onUp    = () => {
+      dragging.current = false;
+      cameraState.isDragging = false;
+    };
     const onMove  = (e: MouseEvent) => {
       if (!dragging.current || (modeRef.current !== 'walk' && modeRef.current !== 'fpv')) return;
       walkYaw.current   -= e.movementX * MOUSE_SENS;
@@ -472,6 +481,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const onTouchStart = (e: TouchEvent) => {
       if ((modeRef.current === 'walk' || modeRef.current === 'fpv') && e.touches.length === 1) {
         dragging.current = true;
+        cameraState.isDragging = true;
         touchLastX = e.touches[0].clientX;
         touchLastY = e.touches[0].clientY;
       }
@@ -493,6 +503,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     const onTouchEnd = () => {
       dragging.current = false;
+      cameraState.isDragging = false;
     };
 
     // Scroll wheel en walk = FOV (zoom). Range 30°–110°.

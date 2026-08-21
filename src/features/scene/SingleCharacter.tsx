@@ -322,27 +322,7 @@ export function SingleCharacter({
     isNPC ? (id === 'sandra' || id === 'rajaa' ? 0 : ((characterIndex ?? 0) + 1) * 3.0) : 0
   );
 
-  useEffect(() => {
-    const handleActivity = () => {
-      invalidate();
-    };
 
-    window.addEventListener('mousemove', handleActivity);
-    window.addEventListener('keydown', handleActivity);
-    window.addEventListener('mousedown', handleActivity);
-    window.addEventListener('wheel', handleActivity, { passive: true });
-    window.addEventListener('touchstart', handleActivity, { passive: true });
-    window.addEventListener('touchmove', handleActivity, { passive: true });
-
-    return () => {
-      window.removeEventListener('mousemove', handleActivity);
-      window.removeEventListener('keydown', handleActivity);
-      window.removeEventListener('mousedown', handleActivity);
-      window.removeEventListener('wheel', handleActivity);
-      window.removeEventListener('touchstart', handleActivity);
-      window.removeEventListener('touchmove', handleActivity);
-    };
-  }, [invalidate]);
 
   useLayoutEffect(() => {
     scene.traverse(node => {

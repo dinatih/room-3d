@@ -273,25 +273,25 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'center',
         name: 'Se relaxer au centre',
         offset: [120, 0, -250],
-        rotY: 0,
+        rotY: Math.PI / 4,
         animation: 'media/sandbox/anims/anim_sitting_idle.glb',
-        duration: 15.0,
+        duration: 30.0,
       },
       {
         slotId: 'west',
         name: 'Bain Côté Ouest',
         offset: [80, 0, -280],
-        rotY: 0,
+        rotY: Math.PI / 4,
         animation: 'media/sandbox/anims/anim_sitting_idle.glb',
-        duration: 15.0,
+        duration: 30.0,
       },
       {
         slotId: 'east',
         name: 'Bain Côté Est',
         offset: [160, 0, -220],
-        rotY: 0,
+        rotY: Math.PI + Math.PI / 4,
         animation: 'media/sandbox/anims/anim_sitting_idle.glb',
-        duration: 15.0,
+        duration: 30.0,
       }
     ]
   },
@@ -620,4 +620,3 @@ export function buildSmartObjectInstructionSequence(
 
   return [baseInstruction];
 }
-

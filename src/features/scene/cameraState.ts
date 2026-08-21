@@ -16,6 +16,7 @@ export const cameraState = {
   /** Walk mode : état partagé avec Walker.tsx */
   isWalking: false as boolean,
   isMoving:  false as boolean,
+  isDragging: false as boolean,
   isAIControlled: false as boolean,
   /** Timestamp de la dernière action manuelle utilisateur (flèches clavier) */
   lastUserControlTime: 0 as number,

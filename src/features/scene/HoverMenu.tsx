@@ -10,6 +10,7 @@ import * as THREE   from 'three';
 import { hoverState } from '@features/scene/hoverState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { positionState } from '@features/scene/positionState';
+import { cameraState } from '@features/scene/cameraState';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 
@@ -221,6 +222,22 @@ export function HoverRaycaster() {
     const pointer   = new THREE.Vector2();
     let lastMove    = 0;
     let hideTimer: ReturnType<typeof setTimeout> | null = null;
+    let interactiveCache: THREE.Object3D[] = [];
+    let lastCacheTime = 0;
+
+    function getInteractiveRoots(): THREE.Object3D[] {
+      const now = performance.now();
+      if (now - lastCacheTime > 1500 || interactiveCache.length === 0) {
+        interactiveCache = [];
+        scene.traverse(obj => {
+          if (obj.userData?.hoverAction) {
+            interactiveCache.push(obj);
+          }
+        });
+        lastCacheTime = now;
+      }
+      return interactiveCache;
+    }
 
     function scheduleHide() {
       if (hideTimer) return;
@@ -240,6 +257,11 @@ export function HoverRaycaster() {
     hoverState.cancelHide = cancelHide;
 
     function raycastAt(clientX: number, clientY: number): { label: string; actionIds: string[] } | null {
+      if (cameraState.isDragging) return null;
+
+      const candidates = getInteractiveRoots();
+      if (candidates.length === 0) return null;
+
       const rect = canvas.getBoundingClientRect();
       pointer.x =  ((clientX - rect.left) / rect.width)  * 2 - 1;
       pointer.y = -((clientY - rect.top)  / rect.height) * 2 + 1;
@@ -248,7 +270,7 @@ export function HoverRaycaster() {
       raycaster.layers.enableAll();
       raycaster.layers.disable(LAYER_NEIGHBORS);
       raycaster.layers.disable(LAYER_LIDAR);
-      const hits = raycaster.intersectObjects(scene.children, true);
+      const hits = raycaster.intersectObjects(candidates, true);
 
       for (const hit of hits) {
         if (!hit.object.visible) continue;
@@ -289,6 +311,12 @@ export function HoverRaycaster() {
     const onMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
       if (hoverState.touchActive) return;
+      if (cameraState.isDragging) {
+        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+        currentHoverObject = null;
+        scheduleHide();
+        return;
+      }
       const now = performance.now();
       if (now - lastMove < 100) return;
       lastMove = now;
