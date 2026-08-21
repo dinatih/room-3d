@@ -126,7 +126,7 @@ function HeartParachute({ customAnimName }: { customAnimName: React.MutableRefOb
 
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.visible = customAnimName.current === 'animations/anim_falling.glb';
+      groupRef.current.visible = customAnimName.current === 'animations/locomotion/anim_falling.glb';
     }
   });
 

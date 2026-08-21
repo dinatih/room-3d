@@ -1,73 +1,73 @@
 const ANIM_URLS = [
-  "animations/anim_falling.glb",
-  "animations/anim_crouch_to_stand.glb",
-  "animations/anim_sitting_idle.glb",
-  "animations/anim_sleeping_idle.glb",
-  "animations/anim_swimming_to_edge.glb",
-  "animations/anim_push_up.glb",
-  "animations/anim_climbing.glb",
-  "animations/anim_open_door_outwards.glb",
-  "animations/anim_texting_while_standing.glb",
-  "animations/anim_laying_idle_1.glb",
-  "animations/anim_belly_dance.glb",
-  "animations/anim_dancing_twerk.glb",
-  "animations/anim_stall_soccerball_1.glb",
-  "animations/anim_body_jab_cross.glb",
-  "animations/anim_female_laying_pose_9.glb",
-  "animations/anim_best_double_leg_takedown_victim.glb",
-  "animations/anim_best_double_leg_takedown_attacker.glb",
-  "animations/anim_female_standing_pose.glb",
-  "animations/anim_female_standing_pose_1.glb",
-  "animations/anim_female_standing_pose_2.glb",
-  "animations/anim_female_sitting_pose.glb",
-  "animations/anim_female_sitting_pose_1.glb",
-  "animations/anim_female_sitting_pose_3.glb",
-  "animations/anim_female_dance_pose.glb",
-  "animations/anim_female_dynamic_pose.glb",
-  "animations/anim_texting_while_standing.glb",
-  "animations/anim_shaking_hands_2.glb",
-  "animations/anim_hand_raising.glb",
+  "animations/locomotion/anim_falling.glb",
+  "animations/poses_idles/anim_crouch_to_stand.glb",
+  "animations/poses_idles/anim_sitting_idle.glb",
+  "animations/poses_idles/anim_sleeping_idle.glb",
+  "animations/sports_fitness/anim_swimming_to_edge.glb",
+  "animations/sports_fitness/anim_push_up.glb",
+  "animations/locomotion/anim_climbing.glb",
+  "animations/interactions/anim_open_door_outwards.glb",
+  "animations/poses_idles/anim_texting_while_standing.glb",
+  "animations/poses_idles/anim_laying_idle_1.glb",
+  "animations/dances/anim_belly_dance.glb",
+  "animations/dances/anim_dancing_twerk.glb",
+  "animations/sports_fitness/anim_stall_soccerball_1.glb",
+  "animations/combat/anim_body_jab_cross.glb",
+  "animations/poses_idles/anim_female_laying_pose_9.glb",
+  "animations/combat/anim_best_double_leg_takedown_victim.glb",
+  "animations/combat/anim_best_double_leg_takedown_attacker.glb",
+  "animations/poses_idles/anim_female_standing_pose.glb",
+  "animations/poses_idles/anim_female_standing_pose_1.glb",
+  "animations/poses_idles/anim_female_standing_pose_2.glb",
+  "animations/poses_idles/anim_female_sitting_pose.glb",
+  "animations/poses_idles/anim_female_sitting_pose_1.glb",
+  "animations/poses_idles/anim_female_sitting_pose_3.glb",
+  "animations/dances/anim_female_dance_pose.glb",
+  "animations/poses_idles/anim_female_dynamic_pose.glb",
+  "animations/poses_idles/anim_texting_while_standing.glb",
+  "animations/emotes_gestures/anim_shaking_hands_2.glb",
+  "animations/emotes_gestures/anim_hand_raising.glb",
 
-  // "animations/anim_hip_hop_dancing.glb",
-  // "animations/anim_hip_hop_dancing_1.glb",
-  // "animations/anim_hip_hop_dancing_2.glb",
-  // "animations/anim_hip_hop_dancing_4.glb",
-  // "animations/anim_hip_hop_dancing_6.glb",
-  // "animations/anim_locking_hip_hop_dance.glb",
-  // "animations/anim_robot_hip_hop_dance.glb",
-  "animations/anim_salsa_dancing.glb",
-  "animations/anim_salsa_dancing_1.glb",
-  "animations/anim_salsa_dancing_3.glb",
-  "animations/anim_salsa_dancing_4.glb",
-  // "animations/anim_samba_dancing.glb",
-  "animations/anim_samba_dancing_1.glb",
-  // "animations/anim_samba_dancing_2.glb",
-  "animations/anim_house_dancing.glb",
-  // "animations/anim_breakdance_uprock.glb",
-  // "animations/anim_gangnam_style.glb",
-  // "animations/anim_capoeira.glb",
-  // "animations/anim_rumba_dancing.glb",
-  // "animations/anim_twist_dance.glb",
-  // "animations/anim_macarena_dance.glb",
-  // "animations/anim_swing_dancing.glb",
-  // "animations/anim_jazz_dancing.glb",
-  // "animations/anim_can_can.glb",
-  // "animations/anim_ymca_dance.glb",
-  "animations/miley_armature_posing_f.glb",
-  "animations/miley_armature_10_dance_like_sidestep.glb",
-  "animations/miley_armature_aerobic_dance.glb",
-  "animations/miley_armature_air_dance.glb",
-  "animations/miley_armature_couple_pop_dance_f.glb",
-  "animations/miley_armature_couple_pop_dance_m.glb",
-  "animations/miley_armature_dance_graceful.glb",
-  "animations/miley_armature_dancetomusic_f.glb",
-  "animations/miley_armature_energetic_dance_f.glb",
-  "animations/miley_armature_energetic_dance_m.glb",
-  "animations/miley_armature_sensual_dance_01.glb",
-  "animations/miley_armature_sensual_dance_02.glb",
-  "animations/miley_armature_sensual_dance_03.glb",
-  "animations/miley_armature_slow_dance_f.glb",
-  "animations/miley_armature_slow_dance_m.glb"
+  // "animations/dances/anim_hip_hop_dancing.glb",
+  // "animations/dances/anim_hip_hop_dancing_1.glb",
+  // "animations/dances/anim_hip_hop_dancing_2.glb",
+  // "animations/dances/anim_hip_hop_dancing_4.glb",
+  // "animations/dances/anim_hip_hop_dancing_6.glb",
+  // "animations/dances/anim_locking_hip_hop_dance.glb",
+  // "animations/dances/anim_robot_hip_hop_dance.glb",
+  "animations/dances/anim_salsa_dancing.glb",
+  "animations/dances/anim_salsa_dancing_1.glb",
+  "animations/dances/anim_salsa_dancing_3.glb",
+  "animations/dances/anim_salsa_dancing_4.glb",
+  // "animations/dances/anim_samba_dancing.glb",
+  "animations/dances/anim_samba_dancing_1.glb",
+  // "animations/dances/anim_samba_dancing_2.glb",
+  "animations/dances/anim_house_dancing.glb",
+  // "animations/dances/anim_breakdance_uprock.glb",
+  // "animations/dances/anim_gangnam_style.glb",
+  // "animations/combat/anim_capoeira.glb",
+  // "animations/dances/anim_rumba_dancing.glb",
+  // "animations/dances/anim_twist_dance.glb",
+  // "animations/dances/anim_macarena_dance.glb",
+  // "animations/dances/anim_swing_dancing.glb",
+  // "animations/dances/anim_jazz_dancing.glb",
+  // "animations/dances/anim_can_can.glb",
+  // "animations/dances/anim_ymca_dance.glb",
+  "animations/poses_idles/miley_armature_posing_f.glb",
+  "animations/dances/miley_armature_10_dance_like_sidestep.glb",
+  "animations/dances/miley_armature_aerobic_dance.glb",
+  "animations/dances/miley_armature_air_dance.glb",
+  "animations/dances/miley_armature_couple_pop_dance_f.glb",
+  "animations/dances/miley_armature_couple_pop_dance_m.glb",
+  "animations/dances/miley_armature_dance_graceful.glb",
+  "animations/dances/miley_armature_dancetomusic_f.glb",
+  "animations/dances/miley_armature_energetic_dance_f.glb",
+  "animations/dances/miley_armature_energetic_dance_m.glb",
+  "animations/dances/miley_armature_sensual_dance_01.glb",
+  "animations/dances/miley_armature_sensual_dance_02.glb",
+  "animations/dances/miley_armature_sensual_dance_03.glb",
+  "animations/dances/miley_armature_slow_dance_f.glb",
+  "animations/dances/miley_armature_slow_dance_m.glb"
 
 ];
 
@@ -104,9 +104,9 @@ export interface WalkerProps {
 
 function InternalWalker(props: WalkerProps) {
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
-  const idleGltf = useGLTF('animations/miley_armature_idle01_f.glb');
-  const walkingGltf = useGLTF('animations/anim_walking.glb');
-  const runningGltf = useGLTF('animations/anim_running.glb');
+  const idleGltf = useGLTF('animations/poses_idles/miley_armature_idle01_f.glb');
+  const walkingGltf = useGLTF('animations/locomotion/anim_walking.glb');
+  const runningGltf = useGLTF('animations/locomotion/anim_running.glb');
 
     const gltfs = useGLTF(ANIM_URLS) as any[];
 
@@ -210,9 +210,9 @@ export function Walker(props: WalkerProps) {
 const LARA_PATH = 'characters/lara/lara_native.glb';
 
 useGLTF.preload(LARA_PATH);
-useGLTF.preload('animations/miley_armature_idle01_f.glb');
-useGLTF.preload('animations/anim_walking.glb');
-useGLTF.preload('animations/anim_running.glb');
+useGLTF.preload('animations/poses_idles/miley_armature_idle01_f.glb');
+useGLTF.preload('animations/locomotion/anim_walking.glb');
+useGLTF.preload('animations/locomotion/anim_running.glb');
 ANIM_URLS.forEach(url => useGLTF.preload(url));
 
 

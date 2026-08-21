@@ -21,7 +21,7 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'marissa', name: 'Marissa', path: 'characters/lara/lara_native.glb', pos: [160, 0, -440], rot: 0, variant: 'marissa', height: 173.4 },
   { id: 'delphina', name: 'Delphina', path: 'characters/lara/lara_native.glb', pos: [120, 0, -250], rot: 1, variant: 'delphina', height: 173.4 },
 
-  // { id: 'sara', name: 'Sara', path: 'characters/lara/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'animations/anim_climbing.glb', customIdleAnimPath: 'animations/anim_climbing.glb' },
+  // { id: 'sara', name: 'Sara', path: 'characters/lara/lara_native.glb', pos: [340, -40, -310], rot: -Math.PI / 2, variant: 'sara', height: 173.4, sittingScenePath: 'animations/locomotion/anim_climbing.glb', customIdleAnimPath: 'animations/locomotion/anim_climbing.glb' },
   { id: 'cha', name: 'Cha', path: 'characters/lara/lara_native.glb', pos: [150, 0, -150], rot: Math.PI / 2, variant: 'cha', height: 173.4,
     customIdleAnimPath: (() => {
       const valid = WALKER_ANIM_OPTIONS.filter(o => {
@@ -31,31 +31,31 @@ export const CHARACTERS: CharacterConfig[] = [
       return valid[Math.floor(Math.random() * valid.length)].value;
     })()
   },
-  { id: 'vivida', name: 'ViviDa', path: 'characters/lara/lara_native.glb', pos: [200, 0, 215], rot: Math.PI, variant: 'vivida', height: 173.4, sittingScenePath: 'animations/anim_texting_while_standing.glb', customIdleAnimPath: 'animations/anim_texting_while_standing.glb' },
+  { id: 'vivida', name: 'ViviDa', path: 'characters/lara/lara_native.glb', pos: [200, 0, 215], rot: Math.PI, variant: 'vivida', height: 173.4, sittingScenePath: 'animations/poses_idles/anim_texting_while_standing.glb', customIdleAnimPath: 'animations/poses_idles/anim_texting_while_standing.glb' },
   { id: 'xbot', name: 'Xbot', path: 'characters/xbot/Xbot_official.glb', pos: [288, 0, 603], rot: 0, variant: 'native', height: 173.4, isLara: false },
   {
     id: 'sabira', name: 'Sabira', path: 'characters/lara/lara_native.glb', pos: [100, 0, 370], rot: Math.atan2(158 - 100, 200 - 370), variant: 'sabira', height: 173.4,
-    customIdleAnimPath: (() => { const anims = ['animations/anim_hip_hop_dancing.glb', 'animations/anim_hip_hop_dancing_1.glb', 'animations/anim_hip_hop_dancing_6.glb', 'animations/anim_hip_hop_dancing.glb', 'animations/anim_locking_hip_hop_dance.glb', 'animations/anim_robot_hip_hop_dance.glb', 'animations/anim_samba_dancing.glb', 'animations/anim_samba_dancing_2.glb', 'animations/anim_belly_dance.glb', 'animations/anim_gangnam_style.glb']; return anims[Math.floor(Math.random() * anims.length)]; })(),
-    sittingScenePath: 'animations/anim_snake_hip_hop_dance.glb'
+    customIdleAnimPath: (() => { const anims = ['animations/dances/anim_hip_hop_dancing.glb', 'animations/dances/anim_hip_hop_dancing_1.glb', 'animations/dances/anim_hip_hop_dancing_6.glb', 'animations/dances/anim_hip_hop_dancing.glb', 'animations/dances/anim_locking_hip_hop_dance.glb', 'animations/dances/anim_robot_hip_hop_dance.glb', 'animations/dances/anim_samba_dancing.glb', 'animations/dances/anim_samba_dancing_2.glb', 'animations/dances/anim_belly_dance.glb', 'animations/dances/anim_gangnam_style.glb']; return anims[Math.floor(Math.random() * anims.length)]; })(),
+    sittingScenePath: 'animations/dances/anim_snake_hip_hop_dance.glb'
   },
-  // { id: 'safa', name: 'Safa', path: 'characters/lara/lara_native.glb', pos: [150, 0, -400], rot: Math.PI, variant: 'safa', height: 173.4, customIdleAnimPath: 'animations/anim_stall_soccerball_1.glb', sittingScenePath: 'animations/anim_stall_soccerball_1.glb' },
+  // { id: 'safa', name: 'Safa', path: 'characters/lara/lara_native.glb', pos: [150, 0, -400], rot: Math.PI, variant: 'safa', height: 173.4, customIdleAnimPath: 'animations/sports_fitness/anim_stall_soccerball_1.glb', sittingScenePath: 'animations/sports_fitness/anim_stall_soccerball_1.glb' },
   { id: 'sandra', name: 'Sandra', path: 'characters/lara/lara_native.glb', pos: [-400, 0, 0], rot: 0, variant: 'sandra', height: 173.4 },
   { id: 'rajaa', name: 'Rajaa', path: 'characters/lara/lara_native.glb', pos: [-450, 0, 0], rot: 0, variant: 'rajaa', height: 173.4 },
   // {
   //   id: 'romana', name: 'Romana', path: 'characters/lara/lara_native.glb', pos: [270, 45, -110], rot: Math.PI, variant: 'romana', height: 173.4,
-  //   customIdleAnimPath: (() => { const anims = ['animations/anim_female_laying_pose_9.glb', 'animations/anim_female_standing_pose.glb', 'animations/anim_female_standing_pose_1.glb', 'animations/anim_female_standing_pose_2.glb', 'animations/anim_female_sitting_pose.glb', 'animations/anim_female_dance_pose.glb', 'animations/anim_female_dynamic_pose.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
+  //   customIdleAnimPath: (() => { const anims = ['animations/poses_idles/anim_female_laying_pose_9.glb', 'animations/poses_idles/anim_female_standing_pose.glb', 'animations/poses_idles/anim_female_standing_pose_1.glb', 'animations/poses_idles/anim_female_standing_pose_2.glb', 'animations/poses_idles/anim_female_sitting_pose.glb', 'animations/dances/anim_female_dance_pose.glb', 'animations/poses_idles/anim_female_dynamic_pose.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
   // },
   // {
   //   id: 'angelina', name: 'Angelina', path: 'characters/lara/lara_native.glb',
   //   pos: [Math.floor(Math.random() * 200) + 50, 0, -(Math.floor(Math.random() * 300) + 300)] as [number, number, number],
   //   rot: Math.random() * Math.PI * 2, variant: 'angelina', height: 173.4,
-  //   customIdleAnimPath: (() => { const anims = ['animations/anim_dancing_twerk.glb', 'animations/anim_belly_dance.glb', 'animations/anim_hip_hop_dancing.glb', 'animations/anim_hip_hop_dancing_1.glb', 'animations/anim_salsa_dancing.glb', 'animations/anim_salsa_dancing_4.glb', 'animations/anim_samba_dancing.glb', 'animations/anim_capoeira.glb', 'animations/anim_rumba_dancing.glb', 'animations/anim_twist_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
+  //   customIdleAnimPath: (() => { const anims = ['animations/dances/anim_dancing_twerk.glb', 'animations/dances/anim_belly_dance.glb', 'animations/dances/anim_hip_hop_dancing.glb', 'animations/dances/anim_hip_hop_dancing_1.glb', 'animations/dances/anim_salsa_dancing.glb', 'animations/dances/anim_salsa_dancing_4.glb', 'animations/dances/anim_samba_dancing.glb', 'animations/combat/anim_capoeira.glb', 'animations/dances/anim_rumba_dancing.glb', 'animations/dances/anim_twist_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
   // },
   // {
   //   id: 'lgbta', name: 'Lgbta', path: 'characters/lara/lara_native.glb',
   //   pos: [Math.floor(Math.random() * 200) + 150, 0, -(Math.floor(Math.random() * 300) + 250)] as [number, number, number],
   //   rot: Math.random() * Math.PI * 2, variant: 'lgbta', height: 173.4,
-  //   customIdleAnimPath: (() => { const anims = ['animations/anim_belly_dance.glb', 'animations/anim_dancing_twerk.glb', 'animations/anim_macarena_dance.glb', 'animations/anim_macarena_dance.glb', 'animations/anim_hip_hop_dancing_1.glb', 'animations/anim_swing_dancing.glb', 'animations/anim_jazz_dancing.glb', 'animations/anim_can_can.glb', 'animations/anim_gangnam_style.glb', 'animations/anim_ymca_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
+  //   customIdleAnimPath: (() => { const anims = ['animations/dances/anim_belly_dance.glb', 'animations/dances/anim_dancing_twerk.glb', 'animations/dances/anim_macarena_dance.glb', 'animations/dances/anim_macarena_dance.glb', 'animations/dances/anim_hip_hop_dancing_1.glb', 'animations/dances/anim_swing_dancing.glb', 'animations/dances/anim_jazz_dancing.glb', 'animations/dances/anim_can_can.glb', 'animations/dances/anim_gangnam_style.glb', 'animations/dances/anim_ymca_dance.glb']; return anims[Math.floor(Math.random() * anims.length)]; })()
   // }
 ];
 
