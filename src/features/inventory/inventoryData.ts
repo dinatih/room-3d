@@ -40,6 +40,7 @@ export interface Category {
 }
 
 export const INVENTORY: InventoryItem[] = [
+  { id: 'koppla00314741', name: "KOPPLA Prise quadruple 2 ports USB, blanc, 3", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: 6, d: 30, h: 10 }, glbPath: 'media/glb/ikea-official/Koppla00314741.glb', photos: ['media/ikea-official/koppla00314741/Koppla00314741.jpg', 'media/ikea-official/koppla00314741/Koppla00314741_1.jpg', 'media/ikea-official/koppla00314741/Koppla00314741_2.jpg'], url: 'https://www.ikea.com/fr/fr/p/koppla-prise-quadruple-2-ports-usb-blanc-00314741/', price: '17,99', notes: '' },
   { id: 'lillhavet80461276', name: "LILLHAVET égouttoir multifonction, anthracite", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: 17.4, d: 47.8, h: 14 }, glbPath: 'media/glb/ikea-official/Lillhavet80461276.glb', photos: ['media/ikea-official/lillhavet80461276/Lillhavet80461276.jpg', 'media/ikea-official/lillhavet80461276/Lillhavet80461276_1.jpg', 'media/ikea-official/lillhavet80461276/Lillhavet80461276_2.jpg', 'media/ikea-official/lillhavet80461276/Lillhavet80461276_3.jpg', 'media/ikea-official/lillhavet80461276/Lillhavet80461276_4.jpg'], url: 'https://www.ikea.com/fr/fr/p/lillhavet-egouttoir-multifonction-anthracite-80461276/', price: '16,99', notes: '' },
   { id: 'fornuft80428475', name: "FÖRNUFT petite cuillère, acier inoxydable, 14 cm", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: 10, d: 14, h: 10 }, glbPath: 'media/glb/ikea-official/Fornuft80428475.glb', photos: ['media/ikea-official/fornuft80428475/Fornuft80428475.jpg', 'media/ikea-official/fornuft80428475/Fornuft80428475_1.jpg', 'media/ikea-official/fornuft80428475/Fornuft80428475_2.jpg'], url: 'https://www.ikea.com/fr/fr/p/foernuft-petite-cuillere-acier-inoxydable-80428475/', price: '2,49', notes: '' },
   { id: 'fornuft90428489', name: "FÖRNUFT cuillère, acier inoxydable, 19 cm", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: 10, d: 19, h: 10 }, glbPath: 'media/glb/ikea-official/Fornuft90428489.glb', photos: ['media/ikea-official/fornuft90428489/Fornuft90428489.jpg', 'media/ikea-official/fornuft90428489/Fornuft90428489_1.jpg', 'media/ikea-official/fornuft90428489/Fornuft90428489_2.jpg'], url: 'https://www.ikea.com/fr/fr/p/foernuft-cuillere-acier-inoxydable-90428489/', price: '2,49', notes: '' },
@@ -57,7 +58,6 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'stackstod', name: "STACKSTOD organiseur bureau, rouge, 32x18x16 cm", brand: 'IKEA', category: 'storage', qty: 1, dims: { w: 32, d: 18, h: 16 }, glbPath: 'media/glb/ikea-official/Stackstod.glb', photos: ['media/ikea-official/stackstod/Stackstod.jpg', 'media/ikea-official/stackstod/Stackstod_1.jpg', 'media/ikea-official/stackstod/Stackstod_2.jpg', 'media/ikea-official/stackstod/Stackstod_3.jpg', 'media/ikea-official/stackstod/Stackstod_4.jpg'], url: 'https://www.ikea.com/fr/fr/p/stackstod-organiseur-bureau-rouge-60620144/', price: '2,99' },
   { id: 'kin-fine-camera', name: "Video-Surveillance OpenEye 12MP Cloud IP Fisheye Camera", brand: 'OpenEye', category: 'decor', qty: 1, dims: { w: 10, d: 10, h: 5 }, glbPath: 'media/sandbox/camera_render.glb', notes: 'Plafond', actions: [] },
 
-  { id: 'koppla', name: "KOPPLA Prise quadruple 2 ports USB, blanc, 3", brand: 'IKEA', category: 'decor', qty: 1, dims: { w: 6, d: 30, h: 10 }, glbPath: 'models/Koppla.glb', photos: ['media/Koppla.jpg', 'media/Koppla_1.jpg', 'media/Koppla_2.jpg'], url: 'https://www.ikea.com/fr/fr/p/koppla-prise-quadruple-2-ports-usb-blanc-00314741/', price: '17' },
 
   // ── STORAGE ──────────────────────────────────────────────────────────────────
   { id: 'kallax-2x1',       name: 'Kallax 2×1',                     brand: 'IKEA',     category: 'storage',   qty: 5,  dims: { w: 77, d: 39, h: 41 }, notes: 'NE (1), SE (2 pivotées), NW (1 pivotée), cuisine (1)', glbPath: 'media/glb/ikea-official/KALLAX etag 77x41 blanc.glb', photos: ['media/photos/ikea/kallax-2x1-1.jpg', 'media/photos/ikea/kallax-2x1-2.jpg', 'media/photos/ikea/kallax-2x1-3.jpg'] },
@@ -247,7 +247,7 @@ INVENTORY.push({
   category: 'walkers',
   qty: 1,
   dims: { w: 40, d: 80, h: 40 },
-  glbPath: 'models/shiba_inu_blender.glb',
+  glbPath: 'models/shiba_inu_dog_ushiro.glb',
   notes: `Personnage : Chien Shiba Inu (Ushiro).`
 });
 

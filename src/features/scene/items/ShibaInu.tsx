@@ -10,7 +10,7 @@ import { isAppIdle } from '@features/scene/idleState';
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
 
 export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPreview = false }: { isPreview?: boolean, previewAnim?: string, showSkeletonPreview?: boolean }) {
-  const { scene, animations } = useGLTFClone('/models/shiba_inu_blender.glb');
+  const { scene, animations } = useGLTFClone('/models/shiba_inu_dog_ushiro.glb');
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
   const playingRef = useRef(false);
@@ -222,4 +222,4 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   );
 }
 
-useGLTF.preload('/models/shiba_inu_blender.glb');
+useGLTF.preload('/models/shiba_inu_dog_ushiro.glb');

@@ -11,7 +11,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * URL: https://www.ikea.com/fr/fr/p/koppla-prise-quadruple-2-ports-usb-blanc-00314741/
  */
 export function Koppla({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/models/Koppla.glb');
+  const { scene } = useGLTFClone('/media/glb/ikea-official/Koppla00314741.glb');
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -33,4 +33,4 @@ export function Koppla({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/models/Koppla.glb');
+useGLTF.preload('/media/glb/ikea-official/Koppla00314741.glb');
