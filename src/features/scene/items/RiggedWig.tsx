@@ -39,7 +39,9 @@ import { RIGGED_WIGS_PATHS } from '@features/inventory/inventoryData';
 export { RIGGED_WIGS_PATHS };
 
 export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
-  const gltfPath = RIGGED_WIGS_PATHS[id as string] || 'characters/wigs/zepeto_hair.glb';
+  const strId = String(id);
+  const cleanId = strId.replace(/^hair_/, '');
+  const gltfPath = RIGGED_WIGS_PATHS[strId] || RIGGED_WIGS_PATHS[cleanId] || (typeof id === 'string' && id.endsWith('.glb') ? id : 'characters/wigs/zepeto_hair.glb');
   const { scene: fullScene } = useGLTF(gltfPath);
   const clonedHairRef = useRef<THREE.Group>(null!);
   
@@ -89,7 +91,7 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
       'hair_wavy_ponytail': { scale: 0.1, rotation: [0, 0, 0], offset: [0, -0.05, 0] }
     };
     
-    const fix = wigFixes[id as string] || { scale: 1.0, rotation: [0, 0, 0], offset: [0, 0, 0] };
+    const fix = wigFixes[strId] || wigFixes[cleanId] || { scale: 1.0, rotation: [0, 0, 0], offset: [0, 0, 0] };
     const s = fix.scale;
 
     if (hairHeadBone) {

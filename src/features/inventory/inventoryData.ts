@@ -359,13 +359,16 @@ export const WIGS_ITEMS: WigItem[] = [
   { id: 'hair_white_long_wavy_hair', name: 'Coupe #73 (Longs Blancs Ondulés, zHairezt)', glbPath: 'characters/wigs/white_long_wavy_hair.glb' }
 ];
 
-export const RIGGED_WIGS_PATHS: Record<string, string> = Object.fromEntries(
-  WIGS_ITEMS.filter(w => !!w.glbPath).map(w => [w.id.replace('hair_', ''), w.glbPath!])
-);
+export const RIGGED_WIGS_PATHS: Record<string, string> = {};
+WIGS_ITEMS.filter(w => !!w.glbPath).forEach(w => {
+  RIGGED_WIGS_PATHS[w.id] = w.glbPath!;
+  RIGGED_WIGS_PATHS[w.id.replace(/^hair_/, '')] = w.glbPath!;
+});
 
 export const isRiggedWig = (id: string | number): boolean => {
   const strId = String(id);
-  return WIGS_ITEMS.some(w => (w.id === strId || w.id.replace('hair_', '') === strId) && !!w.glbPath);
+  const cleanId = strId.replace(/^hair_/, '');
+  return !!(RIGGED_WIGS_PATHS[strId] || RIGGED_WIGS_PATHS[cleanId]);
 };
 
 WIGS_ITEMS.forEach(wig => {
