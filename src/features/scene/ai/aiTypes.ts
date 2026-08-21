@@ -46,7 +46,7 @@ export interface ZoneNode {
   z: number;
 }
 
-export type InstructionType = 'MOVE_TO' | 'INTERACT' | 'WAIT' | 'RETURN_TO_START';
+export type InstructionType = 'MOVE_TO' | 'INTERACT' | 'WAIT' | 'RETURN_TO_START' | 'USE_OBJECT';
 
 export interface AgentInstruction {
   type: InstructionType;

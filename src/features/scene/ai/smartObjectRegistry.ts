@@ -429,7 +429,7 @@ export function getSmartObjectsByCategory(category: SmartObjectCategory): SmartO
 }
 
 /**
- * Convertit une interaction de Smart Object en instructions d'agent prêtes pour le contrôleur.
+ * Convertit une interaction de Smart Object en instruction d'agent prête pour le contrôleur.
  */
 export function buildSmartObjectInstructionSequence(
   objectId: string,
@@ -442,26 +442,17 @@ export function buildSmartObjectInstructionSequence(
     ? obj.slots.find(s => s.slotId === slotId) ?? obj.slots[0]
     : obj.slots[Math.floor(Math.random() * obj.slots.length)];
 
-  const targetPos = slot.approachOffset ?? slot.offset;
-
-  const instructions: AgentInstruction[] = [
+  return [
     {
-      type: 'MOVE_TO',
-      targetPos,
-      smartObjectId: obj.id,
-      slotId: slot.slotId
-    },
-    {
-      type: 'INTERACT',
+      type: 'USE_OBJECT',
       smartObjectId: obj.id,
       slotId: slot.slotId,
       animation: slot.animation,
-      duration: slot.duration ?? 5.0,
+      duration: slot.duration,
       rotY: slot.rotY,
       triggerEventKey: slot.triggerEventKey,
       triggerTargetState: slot.triggerTargetState
     }
   ];
-
-  return instructions;
 }
+

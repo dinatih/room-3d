@@ -160,7 +160,7 @@ export function useAgentController(
     const currentInstruction = scenario[stepIndexRef.current];
 
     if (statusRef.current === 'IDLE') {
-      if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START') {
+      if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START' || currentInstruction.type === 'USE_OBJECT') {
         statusRef.current = 'MOVING';
         const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
         const logKey = `move-${stepIndexRef.current}-${target.label}`;
@@ -226,9 +226,33 @@ export function useAgentController(
           lastLogRef.current = arrivedKey;
           appLog(_characterId, `🎯 Arrivé à ${target.label}`);
         }
-        statusRef.current = 'IDLE';
-        stepIndexRef.current++;
-        stateRef.current.animation = 'idle';
+
+        // Si l'instruction est USE_OBJECT, on enchaîne directement sur l'interaction !
+        if (currentInstruction.type === 'USE_OBJECT') {
+          statusRef.current = 'INTERACTING';
+          timerRef.current = currentInstruction.duration || target.duration || 1.0;
+          if (currentInstruction.triggerEventKey) {
+            let key = currentInstruction.triggerEventKey as any;
+            if (key === 'eastGlassDoor' && useSceneStore.getState().furniture.bimDoubleDoor) {
+              key = 'bimDoorRightOpen';
+            }
+            useSceneStore.getState().toggleFurniture(key);
+          }
+          const animation = currentInstruction.animation || target.anim || '';
+          const duration = timerRef.current;
+          const logKey = `interact-${stepIndexRef.current}-${animation}`;
+          if (lastLogRef.current !== logKey) {
+            lastLogRef.current = logKey;
+            const label = animation
+              ? animation.replace('media/sandbox/anims/', '').replace('.glb', '')
+              : 'USE_OBJECT';
+            appLog(_characterId, `🎭 Action: ${label} (${duration.toFixed(1)}s)`);
+          }
+        } else {
+          statusRef.current = 'IDLE';
+          stepIndexRef.current++;
+          stateRef.current.animation = 'idle';
+        }
       } else {
         // Déplacement
         stateRef.current.animation = 'walk';
@@ -277,6 +301,7 @@ export function useAgentController(
         stepIndexRef.current++;
       }
     }
+
 
     return stateRef.current;
   };

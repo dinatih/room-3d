@@ -25,64 +25,35 @@ export const ACTION_GO_TO_TOILET: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
   { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: true, duration: 0.4 },
   { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },
-  { type: 'MOVE_TO', smartObjectId: 'toilet', slotId: 'use' },
-  { type: 'INTERACT', smartObjectId: 'toilet', slotId: 'use' },
+  { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'use' },
   { type: 'INTERACT', smartObjectId: 'toilet', slotId: 'flush' },
-  { type: 'MOVE_TO', smartObjectId: 'vasque-sdb', slotId: 'wash-hands' },
-  { type: 'INTERACT', smartObjectId: 'vasque-sdb', slotId: 'wash-hands' },
+  { type: 'USE_OBJECT', smartObjectId: 'vasque-sdb', slotId: 'wash-hands' },
 ];
 
 export const ACTION_SIT_DESK_1: AgentInstruction[] = [
-  { type: 'MOVE_TO', smartObjectId: 'desk-bollsidan-1', slotId: 'work-sitting' },
-  { type: 'INTERACT', smartObjectId: 'desk-bollsidan-1', slotId: 'work-sitting' },
+  { type: 'USE_OBJECT', smartObjectId: 'desk-bollsidan-1', slotId: 'work-sitting' },
 ];
 
 export const ACTION_SIT_OFFICE_CHAIR: AgentInstruction[] = [
-  { type: 'MOVE_TO', smartObjectId: 'chair-office', slotId: 'sit' },
-  { type: 'INTERACT', smartObjectId: 'chair-office', slotId: 'sit' },
+  { type: 'USE_OBJECT', smartObjectId: 'chair-office', slotId: 'sit' },
 ];
 
 export const ACTION_SIT_DESK_2: AgentInstruction[] = [
-  { type: 'MOVE_TO', smartObjectId: 'desk-bollsidan-2', slotId: 'work-standing' },
-  { type: 'INTERACT', smartObjectId: 'desk-bollsidan-2', slotId: 'work-standing' },
+  { type: 'USE_OBJECT', smartObjectId: 'desk-bollsidan-2', slotId: 'work-standing' },
 ];
 
 export const ACTIONS_BED_WEST: AgentInstruction[][] = [
-  [
-    { type: 'MOVE_TO', smartObjectId: 'bed-west', slotId: 'seat-north' },
-    { type: 'INTERACT', smartObjectId: 'bed-west', slotId: 'seat-north' }
-  ],
-  [
-    { type: 'MOVE_TO', smartObjectId: 'bed-west', slotId: 'seat-middle' },
-    { type: 'INTERACT', smartObjectId: 'bed-west', slotId: 'seat-middle' }
-  ],
-  [
-    { type: 'MOVE_TO', smartObjectId: 'bed-west', slotId: 'seat-south' },
-    { type: 'INTERACT', smartObjectId: 'bed-west', slotId: 'seat-south' }
-  ],
-  [
-    { type: 'MOVE_TO', smartObjectId: 'bed-west', slotId: 'lie-down' },
-    { type: 'INTERACT', smartObjectId: 'bed-west', slotId: 'lie-down' }
-  ]
+  [{ type: 'USE_OBJECT', smartObjectId: 'bed-west', slotId: 'seat-north' }],
+  [{ type: 'USE_OBJECT', smartObjectId: 'bed-west', slotId: 'seat-middle' }],
+  [{ type: 'USE_OBJECT', smartObjectId: 'bed-west', slotId: 'seat-south' }],
+  [{ type: 'USE_OBJECT', smartObjectId: 'bed-west', slotId: 'lie-down' }]
 ];
 
 export const ACTIONS_BED_EAST: AgentInstruction[][] = [
-  [
-    { type: 'MOVE_TO', smartObjectId: 'bed-east', slotId: 'seat-north' },
-    { type: 'INTERACT', smartObjectId: 'bed-east', slotId: 'seat-north' }
-  ],
-  [
-    { type: 'MOVE_TO', smartObjectId: 'bed-east', slotId: 'seat-middle' },
-    { type: 'INTERACT', smartObjectId: 'bed-east', slotId: 'seat-middle' }
-  ],
-  [
-    { type: 'MOVE_TO', smartObjectId: 'bed-east', slotId: 'seat-south' },
-    { type: 'INTERACT', smartObjectId: 'bed-east', slotId: 'seat-south' }
-  ],
-  [
-    { type: 'MOVE_TO', smartObjectId: 'bed-east', slotId: 'lie-down' },
-    { type: 'INTERACT', smartObjectId: 'bed-east', slotId: 'lie-down' }
-  ]
+  [{ type: 'USE_OBJECT', smartObjectId: 'bed-east', slotId: 'seat-north' }],
+  [{ type: 'USE_OBJECT', smartObjectId: 'bed-east', slotId: 'seat-middle' }],
+  [{ type: 'USE_OBJECT', smartObjectId: 'bed-east', slotId: 'seat-south' }],
+  [{ type: 'USE_OBJECT', smartObjectId: 'bed-east', slotId: 'lie-down' }]
 ];
 
 export const ACTIONS_BATHTUB: AgentInstruction[][] = [
@@ -90,8 +61,7 @@ export const ACTIONS_BATHTUB: AgentInstruction[][] = [
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
-    { type: 'MOVE_TO', smartObjectId: 'bathtub-garden', slotId: 'center' },
-    { type: 'INTERACT', smartObjectId: 'bathtub-garden', slotId: 'center' },
+    { type: 'USE_OBJECT', smartObjectId: 'bathtub-garden', slotId: 'center' },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: false, duration: 0.3 }
@@ -100,8 +70,7 @@ export const ACTIONS_BATHTUB: AgentInstruction[][] = [
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
-    { type: 'MOVE_TO', smartObjectId: 'bathtub-garden', slotId: 'west' },
-    { type: 'INTERACT', smartObjectId: 'bathtub-garden', slotId: 'west' },
+    { type: 'USE_OBJECT', smartObjectId: 'bathtub-garden', slotId: 'west' },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: false, duration: 0.3 }
@@ -110,8 +79,7 @@ export const ACTIONS_BATHTUB: AgentInstruction[][] = [
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
-    { type: 'MOVE_TO', smartObjectId: 'bathtub-garden', slotId: 'east' },
-    { type: 'INTERACT', smartObjectId: 'bathtub-garden', slotId: 'east' },
+    { type: 'USE_OBJECT', smartObjectId: 'bathtub-garden', slotId: 'east' },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: false, duration: 0.3 }
@@ -124,8 +92,7 @@ export const ACTION_SHOWER: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
   { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: true, duration: 0.3 },
   { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },
-  { type: 'MOVE_TO', smartObjectId: 'shower', slotId: 'take-shower' },
-  { type: 'INTERACT', smartObjectId: 'shower', slotId: 'take-shower' },
+  { type: 'USE_OBJECT', smartObjectId: 'shower', slotId: 'take-shower' },
   { type: 'MOVE_TO', targetNodeId: 'Entree_SDB' },
   { type: 'MOVE_TO', targetNodeId: 'Couloir_SDB' },
   { type: 'INTERACT', triggerEventKey: 'bathroomDoor', triggerTargetState: false, duration: 0.3 },
@@ -138,8 +105,7 @@ export const ACTIONS_GARDEN_SOFA_EAST: AgentInstruction[][] = [
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
-    { type: 'MOVE_TO', smartObjectId: 'sofa-garden-east', slotId: 'seat-1' },
-    { type: 'INTERACT', smartObjectId: 'sofa-garden-east', slotId: 'seat-1' },
+    { type: 'USE_OBJECT', smartObjectId: 'sofa-garden-east', slotId: 'seat-1' },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: false, duration: 0.3 }
@@ -148,8 +114,7 @@ export const ACTIONS_GARDEN_SOFA_EAST: AgentInstruction[][] = [
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
-    { type: 'MOVE_TO', smartObjectId: 'sofa-garden-east', slotId: 'seat-2' },
-    { type: 'INTERACT', smartObjectId: 'sofa-garden-east', slotId: 'seat-2' },
+    { type: 'USE_OBJECT', smartObjectId: 'sofa-garden-east', slotId: 'seat-2' },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: false, duration: 0.3 }
@@ -161,8 +126,7 @@ export const ACTIONS_GARDEN_SOFA_WEST: AgentInstruction[][] = [
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
-    { type: 'MOVE_TO', smartObjectId: 'sofa-garden-west', slotId: 'seat-1' },
-    { type: 'INTERACT', smartObjectId: 'sofa-garden-west', slotId: 'seat-1' },
+    { type: 'USE_OBJECT', smartObjectId: 'sofa-garden-west', slotId: 'seat-1' },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: false, duration: 0.3 }
@@ -171,8 +135,7 @@ export const ACTIONS_GARDEN_SOFA_WEST: AgentInstruction[][] = [
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
-    { type: 'MOVE_TO', smartObjectId: 'sofa-garden-west', slotId: 'seat-2' },
-    { type: 'INTERACT', smartObjectId: 'sofa-garden-west', slotId: 'seat-2' },
+    { type: 'USE_OBJECT', smartObjectId: 'sofa-garden-west', slotId: 'seat-2' },
     { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
     { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
     { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: false, duration: 0.3 }
@@ -180,27 +143,21 @@ export const ACTIONS_GARDEN_SOFA_WEST: AgentInstruction[][] = [
 ];
 
 export const ACTION_COOKING: AgentInstruction[] = [
-  { type: 'MOVE_TO', smartObjectId: 'cuisine-group', slotId: 'cook' },
-  { type: 'INTERACT', smartObjectId: 'cuisine-group', slotId: 'cook' },
-  { type: 'MOVE_TO', smartObjectId: 'freezer', slotId: 'open-pick' },
-  { type: 'INTERACT', smartObjectId: 'freezer', slotId: 'open-pick' },
+  { type: 'USE_OBJECT', smartObjectId: 'cuisine-group', slotId: 'cook' },
+  { type: 'USE_OBJECT', smartObjectId: 'freezer', slotId: 'open-pick' },
 ];
 
 export const ACTION_KALLAX_NE: AgentInstruction[] = [
-  { type: 'MOVE_TO', smartObjectId: 'kallax-ne', slotId: 'inspect' },
-  { type: 'INTERACT', smartObjectId: 'kallax-ne', slotId: 'inspect' },
-  { type: 'MOVE_TO', smartObjectId: 'corridor-closet', slotId: 'open-tidy' },
-  { type: 'INTERACT', smartObjectId: 'corridor-closet', slotId: 'open-tidy' },
-  { type: 'MOVE_TO', smartObjectId: 'mirror-south', slotId: 'admire' },
-  { type: 'INTERACT', smartObjectId: 'mirror-south', slotId: 'admire' },
+  { type: 'USE_OBJECT', smartObjectId: 'kallax-ne', slotId: 'inspect' },
+  { type: 'USE_OBJECT', smartObjectId: 'corridor-closet', slotId: 'open-tidy' },
+  { type: 'USE_OBJECT', smartObjectId: 'mirror-south', slotId: 'admire' },
 ];
 
 export const ACTION_FRESH_AIR: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
   { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
   { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
-  { type: 'MOVE_TO', smartObjectId: 'garden-fresh-air', slotId: 'breathe' },
-  { type: 'INTERACT', smartObjectId: 'garden-fresh-air', slotId: 'breathe' },
+  { type: 'USE_OBJECT', smartObjectId: 'garden-fresh-air', slotId: 'breathe' },
   { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
   { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
   { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: false, duration: 0.3 },
@@ -209,8 +166,7 @@ export const ACTION_FRESH_AIR: AgentInstruction[] = [
 export const ACTION_ENTREE_BAT_B: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Couloir_Central' },
   { type: 'INTERACT', triggerEventKey: 'livingDoor', triggerTargetState: true, duration: 0.3 },
-  { type: 'MOVE_TO', smartObjectId: 'building-b-corridor', slotId: 'visit' },
-  { type: 'INTERACT', smartObjectId: 'building-b-corridor', slotId: 'visit' },
+  { type: 'USE_OBJECT', smartObjectId: 'building-b-corridor', slotId: 'visit' },
   { type: 'MOVE_TO', targetNodeId: 'Couloir_Central' },
   { type: 'INTERACT', triggerEventKey: 'livingDoor', triggerTargetState: false, duration: 0.3 },
 ];
@@ -219,8 +175,7 @@ export const ACTION_ENTREE_COURS_BAT_B: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
   { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, animation: 'media/sandbox/anims/anim_open_door_outwards.glb', duration: 0.4 },
   { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
-  { type: 'MOVE_TO', smartObjectId: 'building-b-garden', slotId: 'admire' },
-  { type: 'INTERACT', smartObjectId: 'building-b-garden', slotId: 'admire' },
+  { type: 'USE_OBJECT', smartObjectId: 'building-b-garden', slotId: 'admire' },
   { type: 'MOVE_TO', targetNodeId: 'Dans_Jardin' },
   { type: 'MOVE_TO', targetNodeId: 'Devant_Baie_Vitree' },
   { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: false, duration: 0.3 },
