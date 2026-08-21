@@ -110,7 +110,7 @@ const initialExtraStates: Record<string, boolean> = {
   aiFullTour: true,
 };
 
-function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 'transient'; name: string } {
+export function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 'transient'; name: string } {
   const furnitureKeys = Object.keys(initialFurniture);
 
   if (furnitureKeys.includes(key)) {

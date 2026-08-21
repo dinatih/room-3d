@@ -4,7 +4,7 @@ import { ZONES } from './ZoneNodes';
 import { SMART_OBJECTS } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
 import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
-import { useSceneStore } from '../store/useSceneStore';
+import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
 
 export interface AgentState {
@@ -279,26 +279,19 @@ export function useAgentController(
           }
 
           const store = useSceneStore.getState();
+          const resolved = resolveStoreKey(key);
           const furniture = store.furniture as any;
           const extraStates = store.extraStates as any;
 
-          // Mapping de compatibilité pour lire la valeur actuelle
-          const lookupKey = 
-            key === 'corr-doors-toggle' ? 'corrDoors' :
-            key === 'sdb-closet-l-toggle' ? 'sdbClosetL' :
-            key === 'sdb-closet-r-toggle' ? 'sdbClosetR' :
-            key === 'sdb-closet-toggle' ? 'sdbClosetR' :
-            key;
+          const currentVal = resolved.type === 'furniture'
+            ? Boolean(furniture[resolved.name])
+            : resolved.type === 'extra'
+            ? Boolean(extraStates[resolved.name])
+            : false;
 
-          const currentVal = furniture[lookupKey] ?? extraStates[lookupKey] ?? false;
-          const isDoor = key.toLowerCase().includes('door') || key.toLowerCase().includes('closet');
-          
-          if (isDoor) {
-            const wantsToOpen = currentInstruction.triggerTargetState ?? currentInstruction.animation?.includes('open_door');
-            if (wantsToOpen && !currentVal) {
-              store.triggerAction(key);
-            } else if (!wantsToOpen && currentVal) {
-              // Si un perso ferme la porte (wantsToOpen=false), on la ferme uniquement si elle est ouverte
+          if (currentInstruction.triggerTargetState !== undefined) {
+            const wantsToOpen = currentInstruction.triggerTargetState;
+            if (wantsToOpen !== currentVal) {
               store.triggerAction(key);
             }
           } else {
