@@ -443,8 +443,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'breathe',
         name: 'Prendre l\'air au fond',
-        offset: [150, 0, -650],
-        rotY: Math.PI,
+        offset: [150, 0, -600],
+        rotY: 0,
         animation: 'media/sandbox/anims/anim_female_standing_pose.glb',
         duration: 6.0,
       }
