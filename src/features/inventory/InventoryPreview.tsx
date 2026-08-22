@@ -272,6 +272,16 @@ export function InventoryPreview({
                         >
                           🎲
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActionStates(s => ({ ...s, walkerAnim: 'idle', isPaused: false }));
+                          }}
+                          style={{ padding: '3px 8px', fontSize: 11, background: '#6c757d', color: '#fff', border: '1px solid #545b62', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}
+                          title="Remettre en Idle / Arrêter l'animation"
+                        >
+                          ⏹️
+                        </button>
                       </>
                     )}
                   </div>

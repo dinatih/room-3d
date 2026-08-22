@@ -1008,24 +1008,42 @@ export function SidePanel({
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: val } }));
   };
 
-  const randomDiceBtn = (
-    <button
-      type="button"
-      className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold"
-      style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
-      title="Lancer une animation aléatoire (Perso)"
-      onClick={(e) => {
-        e.stopPropagation();
-        resetAppIdle();
-        const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle');
-        if (pool.length > 0) {
-          const randomAnim = pool[Math.floor(Math.random() * pool.length)];
-          handleSelectGlobalAnim(randomAnim.value);
-        }
-      }}
-    >
-      🎲
-    </button>
+  const handleResetAnim = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    resetAppIdle();
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 'idle' } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'idle' } }));
+  };
+
+  const animHeaderButtons = (
+    <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
+      <button
+        type="button"
+        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold"
+        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
+        title="Lancer une animation aléatoire (Perso)"
+        onClick={(e) => {
+          e.stopPropagation();
+          resetAppIdle();
+          const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle');
+          if (pool.length > 0) {
+            const randomAnim = pool[Math.floor(Math.random() * pool.length)];
+            handleSelectGlobalAnim(randomAnim.value);
+          }
+        }}
+      >
+        🎲
+      </button>
+      <button
+        type="button"
+        className="btn btn-sm btn-secondary text-white p-0 px-1 border-0 shadow-sm fw-bold"
+        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
+        title="Désactiver l'anim (Remettre les PNJ en mode IA autonome)"
+        onClick={handleResetAnim}
+      >
+        ⏹️
+      </button>
+    </div>
   );
 
   const AnimationsSection = (
@@ -1243,7 +1261,7 @@ export function SidePanel({
             <div className="d-flex justify-content-between align-items-center p-3 border-bottom text-dark">
               <span className="fw-bold">{sheetTitle[activeTab]}</span>
               <div className="d-flex align-items-center gap-2">
-                {activeTab === 'anims' && randomDiceBtn}
+                {activeTab === 'anims' && animHeaderButtons}
                 <button
                   type="button"
                   className="btn-close"
@@ -1347,7 +1365,7 @@ export function SidePanel({
         <Group emoji="📑" title="Calques">{LayersSection}</Group>
         <Group emoji="🎮" title="Interactif">{InteractifSection}</Group>
         <Group emoji="👤" title="Personnage">{PersonnageSection}</Group>
-        <Group emoji="💃" title="Animations Perso" extra={randomDiceBtn}>{AnimationsSection}</Group>
+        <Group emoji="💃" title="Animations Perso" extra={animHeaderButtons}>{AnimationsSection}</Group>
         <Group emoji="👯‍♀️" title="Animations Couple">{AnimationsCoupleSection}</Group>
       </div>
 

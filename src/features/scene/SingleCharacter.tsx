@@ -3,7 +3,7 @@
  * Gère le chargement, les animations, le retargeting et le positionnement dynamique.
  * Updated: 2026-07-27 T-Pose position fix
  */
-import { useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
+import { useRef, useLayoutEffect, useEffect, useMemo, useState, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { Famnig27470460 } from './items/Famnig27470460';
@@ -12,6 +12,7 @@ import { RiggedWig } from './items/RiggedWig';
 import { isRiggedWig } from '@features/inventory/inventoryData';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { LAYER_WALKER_DETAIL, LAYER_WALKER } from '@config';
@@ -75,6 +76,8 @@ const _lShoulderW = new THREE.Vector3();
 const _rShoulderW = new THREE.Vector3();
 
 const silentManager = new THREE.LoadingManager();
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('/draco/');
 const globalGLTFCache: Record<string, Promise<any>> = {};
 
 
@@ -218,7 +221,6 @@ export function SingleCharacter({
   const prevSpinePosRef = useRef<THREE.Vector3 | null>(null);
   const prevSpineVelRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const torsoAccelRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
-  const loadingAnimsRef = useRef<Set<string>>(new Set());
 
   const [headBoneState, setHeadBoneState] = useState<THREE.Bone | null>(null);
 
@@ -608,20 +610,109 @@ export function SingleCharacter({
     return () => clearTimeout(timeout);
   }, [id]);
 
+  const loadAndPlayClip = useCallback((path: string, loop = true) => {
+    if (!scene || !mixerRef.current) return;
+    const isTPose = path === 'tpose' || path === 'animations/poses_idles/anim_t_pose.glb';
+    if (isTPose) {
+      customAnimName.current = 'tpose';
+      userAnimOverrideRef.current = true;
+      invalidate();
+      return;
+    }
+
+    if (path === 'idle') {
+      customAnimName.current = null;
+      userAnimOverrideRef.current = false;
+      invalidate();
+      return;
+    }
+
+    const handleClip = (clip: THREE.AnimationClip, sourceScene: THREE.Object3D | undefined) => {
+      if (!clip) return;
+      const mixer = mixerRef.current;
+      if (!mixer) return;
+
+      clip.name = path;
+      const cacheKey = id + '_' + path;
+      let finalClip = _retargetCache[cacheKey];
+      if (!finalClip) {
+        if (sourceScene) sourceScene.updateMatrixWorld(true);
+        finalClip = retargetClip(clip, scene, sourceScene);
+        _retargetCache[cacheKey] = finalClip;
+      }
+      finalClip.name = path;
+
+      let action = actionsRef.current[path];
+      if (!action) {
+        action = mixer.clipAction(finalClip);
+        action.enabled = true;
+        actionsRef.current[path] = action;
+      }
+
+      const isSandraOrRajaa = id === 'sandra' || id === 'rajaa';
+      if (isSandraOrRajaa || !loop) {
+        action.setLoop(THREE.LoopOnce, 1);
+        action.clampWhenFinished = true;
+      } else {
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.clampWhenFinished = false;
+      }
+
+      customAnimName.current = path;
+      userAnimOverrideRef.current = true;
+      invalidate();
+    };
+
+    const existingAnim = animations?.find(a => a.name === path);
+    if (existingAnim) {
+      handleClip(existingAnim, existingAnim.userData?.animScene as THREE.Object3D | undefined);
+    } else {
+      const loadCallback = (gltf: any) => {
+        let sourceScene = gltf.scene;
+        if (sourceScene) sourceScene.updateMatrixWorld(true);
+        handleClip(gltf.animations[0], sourceScene);
+      };
+
+      if (!globalGLTFCache[path]) {
+        globalGLTFCache[path] = new Promise((resolve, reject) => {
+          const loader = new GLTFLoader(silentManager);
+          loader.setDRACOLoader(dracoLoader);
+          loader.load(path, resolve, undefined, reject);
+        });
+      }
+      globalGLTFCache[path].then(loadCallback).catch(console.error);
+    }
+  }, [id, scene, animations, invalidate]);
+
+  useEffect(() => {
+    if (!isPreview) return;
+    if (!walkerAnim || walkerAnim === 'idle') {
+      customAnimName.current = null;
+      userAnimOverrideRef.current = false;
+      invalidate();
+      return;
+    }
+    loadAndPlayClip(walkerAnim);
+  }, [walkerAnim, isPreview, loadAndPlayClip, invalidate]);
+
   useEffect(() => {
     const handleToggleHairColor = (e: any) => {
-      if (e.detail.key === 'lara-haircolor') {
+      if (e.detail?.key === 'lara-haircolor') {
         setLocalHairColor(e.detail.value);
       }
     };
     const handleToggleHaircut = (e: any) => {
-      if (e.detail.key === 'lara-haircut') {
+      if (e.detail?.key === 'lara-haircut') {
         setLocalHaircut(e.detail.value || 'original');
         invalidate();
       }
     };
 
     const onToggle = (e: any) => {
+      const isForMe = (isLara && e.detail?.key === 'walker-anim-lara') ||
+                      (!isLara && e.detail?.key === 'walker-anim-xbot') ||
+                      (e.detail?.key === `walker-anim-${id}`);
+
       if (e.detail?.key === 'lara-custom-holster' && isActive) {
         setEquipment((prev: { holster: boolean; pistols: boolean; backpack: boolean }) => ({ ...prev, holster: !prev.holster }));
         invalidate();
@@ -637,9 +728,6 @@ export function SingleCharacter({
         invalidate();
         return;
       }
-      const isForMe = (isLara && e.detail?.key === 'walker-anim-lara') ||
-                      (!isLara && e.detail?.key === 'walker-anim-xbot') ||
-                      (e.detail?.key === `walker-anim-${id}`);
 
       if (e.detail?.key === `walker-pos-${id}`) {
         if (Array.isArray(e.detail.value) && e.detail.value.length === 3) {
@@ -660,79 +748,7 @@ export function SingleCharacter({
       if (isForMe && e.detail?.value) {
         resetAppIdle();
         const path = e.detail.value;
-
-        if (path === 'idle') {
-          customAnimName.current = null;
-          userAnimOverrideRef.current = false;
-          invalidate();
-          return;
-        }
-
-        const isTPose = path === 'tpose' || path.includes('t_pose') || path.includes('t-pose');
-        if (isTPose) {
-          customAnimName.current = 'tpose';
-          userAnimOverrideRef.current = true;
-          invalidate();
-          return;
-        }
-
-        const handleClip = (clip: THREE.AnimationClip, sourceScene: THREE.Object3D | undefined) => {
-          if (clip) {
-            clip.name = path;
-            const cacheKey = id + '_' + path;
-            let finalClip = _retargetCache[cacheKey];
-            if (!finalClip) {
-               finalClip = retargetClip(clip, scene, sourceScene);
-               _retargetCache[cacheKey] = finalClip;
-            }
-            finalClip.name = path;
-
-            const mixer = mixerRef.current;
-            if (!mixer) return;
-
-            let action = actionsRef.current[path];
-            if (!action) {
-              action = mixer.clipAction(finalClip);
-              action.enabled = true;
-              actionsRef.current[path] = action;
-            }
-
-            const isSandraOrRajaa = id === 'sandra' || id === 'rajaa';
-            if (isSandraOrRajaa || e.detail?.loop === false) {
-              action.setLoop(THREE.LoopOnce, 1);
-              action.clampWhenFinished = true;
-            } else {
-              action.setLoop(THREE.LoopRepeat, Infinity);
-              action.clampWhenFinished = false;
-            }
-
-            customAnimName.current = path;
-            userAnimOverrideRef.current = true;
-            if (activeActionName.current === path) {
-              action.reset().fadeIn(0.2).play();
-              action.setEffectiveWeight(1);
-            }
-            invalidate();
-          }
-        };
-
-        const existingAnim = animations?.find(a => a.name === path);
-        if (existingAnim) {
-          handleClip(existingAnim, existingAnim.userData?.animScene as THREE.Object3D | undefined);
-        } else {
-          const loadCallback = (gltf: any) => {
-            let sourceScene = gltf.scene;
-            handleClip(gltf.animations[0], sourceScene);
-          };
-
-          if (!globalGLTFCache[path]) {
-            globalGLTFCache[path] = new Promise((resolve, reject) => {
-              const loader = new GLTFLoader(silentManager);
-              loader.load(path, resolve, undefined, reject);
-            });
-          }
-          globalGLTFCache[path].then(loadCallback).catch(console.error);
-        }
+        loadAndPlayClip(path, e.detail?.loop !== false);
       }
       handleToggleHairColor(e);
       handleToggleHaircut(e);
@@ -742,7 +758,7 @@ export function SingleCharacter({
     return () => {
       document.removeEventListener('furniture-toggle', onToggle);
     };
-  }, [isActive, isLara, scene, invalidate, id]);
+  }, [isActive, isLara, id, loadAndPlayClip, invalidate]);
 
   useEffect(() => {
     const mixer = mixerRef.current;
@@ -1035,36 +1051,7 @@ export function SingleCharacter({
     }
 
     if (!actions[target] && target.endsWith('.glb')) {
-      if (!loadingAnimsRef.current.has(target)) {
-        loadingAnimsRef.current.add(target);
-        const loader = new GLTFLoader();
-        loader.load(target, (gltf: any) => {
-          const clip = gltf.animations[0];
-          if (clip && mixerRef.current) {
-            const cacheKey = id + '_' + target;
-            let finalClip = _retargetCache[cacheKey];
-            if (!finalClip) {
-              gltf.scene.updateMatrixWorld(true);
-              finalClip = retargetClip(clip, scene, gltf.scene);
-              _retargetCache[cacheKey] = finalClip;
-            }
-            finalClip.name = target;
-            const action = mixerRef.current.clipAction(finalClip);
-            action.enabled = true;
-            if (id === 'sandra' || id === 'rajaa') {
-              action.setLoop(THREE.LoopOnce, 1);
-              action.clampWhenFinished = true;
-            } else {
-              action.setLoop(THREE.LoopRepeat, Infinity);
-              action.clampWhenFinished = false;
-            }
-            action.play();
-            action.setEffectiveWeight(0);
-            actionsRef.current[target] = action;
-            invalidate();
-          }
-        });
-      }
+      loadAndPlayClip(target);
       target = 'idle'; // fallback while loading
     }
 
