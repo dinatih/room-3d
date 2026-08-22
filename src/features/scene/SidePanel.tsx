@@ -22,6 +22,8 @@ const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 import { useSceneStore } from './store/useSceneStore';
 import { CHARACTERS } from './walkerConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
+import { WALKER_ANIM_OPTIONS } from './animOptions';
+import { resetAppIdle } from './idleState';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -75,15 +77,15 @@ function dispatchKey(key: string) {
 
 // ── Accordion Group Component (Bootstrap Glass Card style) ────────────────────
 
-function Group({ emoji, title, defaultOpen = false, children }: {
-  emoji: string; title: string; defaultOpen?: boolean; children: React.ReactNode;
+function Group({ emoji, title, defaultOpen = false, extra, children }: {
+  emoji: string; title: string; defaultOpen?: boolean; extra?: React.ReactNode; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="card shadow-sm glass-card overflow-hidden">
-      <div className="card-header p-0 border-0 bg-transparent">
+      <div className="card-header p-0 border-0 bg-transparent d-flex align-items-center justify-content-between">
         <button
-          className="btn w-100 text-start py-2 px-3 fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none"
+          className="btn flex-grow-1 text-start py-2 px-3 fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none"
           onClick={() => setOpen(!open)}
           style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em' }}
         >
@@ -99,6 +101,11 @@ function Group({ emoji, title, defaultOpen = false, children }: {
             ▶
           </span>
         </button>
+        {extra && (
+          <div className="pe-2 d-flex align-items-center" onClick={e => e.stopPropagation()}>
+            {extra}
+          </div>
+        )}
       </div>
       {open && (
         <div className="card-body p-0 bg-transparent d-flex flex-column border-top border-light-subtle">
@@ -1001,6 +1008,26 @@ export function SidePanel({
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: val } }));
   };
 
+  const randomDiceBtn = (
+    <button
+      type="button"
+      className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold"
+      style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
+      title="Lancer une animation aléatoire (Perso)"
+      onClick={(e) => {
+        e.stopPropagation();
+        resetAppIdle();
+        const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle');
+        if (pool.length > 0) {
+          const randomAnim = pool[Math.floor(Math.random() * pool.length)];
+          handleSelectGlobalAnim(randomAnim.value);
+        }
+      }}
+    >
+      🎲
+    </button>
+  );
+
   const AnimationsSection = (
     <CharacterAnimSelector
       activeAnimValue={activeAnimValue}
@@ -1215,12 +1242,15 @@ export function SidePanel({
             {/* Sheet header */}
             <div className="d-flex justify-content-between align-items-center p-3 border-bottom text-dark">
               <span className="fw-bold">{sheetTitle[activeTab]}</span>
-              <button
-                type="button"
-                className="btn-close"
-                aria-label="Close"
-                onClick={() => setActiveTab(null)}
-              />
+              <div className="d-flex align-items-center gap-2">
+                {activeTab === 'anims' && randomDiceBtn}
+                <button
+                  type="button"
+                  className="btn-close"
+                  aria-label="Close"
+                  onClick={() => setActiveTab(null)}
+                />
+              </div>
             </div>
 
             {/* Sheet body */}
@@ -1317,7 +1347,7 @@ export function SidePanel({
         <Group emoji="📑" title="Calques">{LayersSection}</Group>
         <Group emoji="🎮" title="Interactif">{InteractifSection}</Group>
         <Group emoji="👤" title="Personnage">{PersonnageSection}</Group>
-        <Group emoji="💃" title="Animations Perso">{AnimationsSection}</Group>
+        <Group emoji="💃" title="Animations Perso" extra={randomDiceBtn}>{AnimationsSection}</Group>
         <Group emoji="👯‍♀️" title="Animations Couple">{AnimationsCoupleSection}</Group>
       </div>
 
