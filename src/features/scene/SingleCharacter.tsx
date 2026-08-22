@@ -1036,43 +1036,44 @@ export function SingleCharacter({
 
     if (customAnimName.current) {
       target = customAnimName.current;
-      if (!actions[target] && target.endsWith('.glb')) {
-        if (!loadingAnimsRef.current.has(target)) {
-          loadingAnimsRef.current.add(target);
-          const loader = new GLTFLoader();
-          loader.load(target, (gltf: any) => {
-            const clip = gltf.animations[0];
-            if (clip && mixerRef.current) {
-              const cacheKey = id + '_' + target;
-              let finalClip = _retargetCache[cacheKey];
-              if (!finalClip) {
-                gltf.scene.updateMatrixWorld(true);
-                finalClip = retargetClip(clip, scene, gltf.scene);
-                _retargetCache[cacheKey] = finalClip;
-              }
-              finalClip.name = target;
-              const action = mixerRef.current.clipAction(finalClip);
-              action.enabled = true;
-              if (id === 'sandra' || id === 'rajaa') {
-                action.setLoop(THREE.LoopOnce, 1);
-                action.clampWhenFinished = true;
-              } else {
-                action.setLoop(THREE.LoopRepeat, Infinity);
-                action.clampWhenFinished = false;
-              }
-              action.play();
-              action.setEffectiveWeight(0);
-              actionsRef.current[target] = action;
-              invalidate();
-            }
-          });
-        }
-        target = 'idle'; // fallback while loading
-      }
     }
 
     if (isNPC && customIdleAnimPath && target === 'idle' && !isAutonomous) {
       target = customIdleAnimPath;
+    }
+
+    if (!actions[target] && target.endsWith('.glb')) {
+      if (!loadingAnimsRef.current.has(target)) {
+        loadingAnimsRef.current.add(target);
+        const loader = new GLTFLoader();
+        loader.load(target, (gltf: any) => {
+          const clip = gltf.animations[0];
+          if (clip && mixerRef.current) {
+            const cacheKey = id + '_' + target;
+            let finalClip = _retargetCache[cacheKey];
+            if (!finalClip) {
+              gltf.scene.updateMatrixWorld(true);
+              finalClip = retargetClip(clip, scene, gltf.scene);
+              _retargetCache[cacheKey] = finalClip;
+            }
+            finalClip.name = target;
+            const action = mixerRef.current.clipAction(finalClip);
+            action.enabled = true;
+            if (id === 'sandra' || id === 'rajaa') {
+              action.setLoop(THREE.LoopOnce, 1);
+              action.clampWhenFinished = true;
+            } else {
+              action.setLoop(THREE.LoopRepeat, Infinity);
+              action.clampWhenFinished = false;
+            }
+            action.play();
+            action.setEffectiveWeight(0);
+            actionsRef.current[target] = action;
+            invalidate();
+          }
+        });
+      }
+      target = 'idle'; // fallback while loading
     }
 
 

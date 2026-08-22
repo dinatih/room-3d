@@ -7,6 +7,8 @@ import * as THREE from 'three';
 import { type InventoryItem, type StorageSpace, WIGS_ITEMS } from './inventoryData';
 import { SCENE_REGISTRY, ACTION_LABELS } from './previewRegistry';
 import { GlobalSkeletonHelpers } from '@features/scene/utils/GlobalSkeletonHelpers';
+import { CharacterAnimSelector } from '@features/scene/CharacterAnimSelector';
+import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
 
 function GlbScene({ glbPath, onSize }: { glbPath: string; onSize?: () => void; }) {
   const [scene, setScene] = useState<THREE.Group | null>(null);
@@ -206,8 +208,16 @@ export function InventoryPreview({
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(true), [autoRotate, setAutoRotate] = useState(true);
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [photoIdx, setPhotoIdx] = useState(0);
-  useEffect(() => { setActionStates({}); setViewMode('3d'); setAutoRotate(true); setTarget([0, 0, 0]); setPhotoIdx(0); }, [item?.id]);
+  const [showAnimSelector, setShowAnimSelector] = useState(false);
+  useEffect(() => { setActionStates({}); setViewMode('3d'); setAutoRotate(true); setTarget([0, 0, 0]); setPhotoIdx(0); setShowAnimSelector(false); }, [item?.id]);
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
+
+  const isWalkerItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
+  const isHumanWalker = isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id);
+  const currentAnimOpt = isHumanWalker ? WALKER_ANIM_OPTIONS.find(a => a.value === (actionStates.walkerAnim || 'idle')) : null;
+  const currentAnimLabel = actionStates.walkerAnim === 'tpose'
+    ? 'T-Pose'
+    : (currentAnimOpt ? currentAnimOpt.label : (actionStates.walkerAnim || 'Idle'));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width, flexShrink: 0 }}>
@@ -243,75 +253,140 @@ export function InventoryPreview({
               
               {(item as any).category === 'walkers' && (
                 <>
-                  <button onClick={() => setActionStates(s => ({ ...s, isPaused: !s.isPaused }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.isPaused ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.isPaused ? '▶️ Play' : '⏸️ Pause'}</button>
-                  
-                  {!['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id) && (
-                    <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📐 T-Pose</button>
+                  <div style={{ display: 'flex', gap: 3 }}>
+                    <button onClick={() => setActionStates(s => ({ ...s, isPaused: !s.isPaused }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.isPaused ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.isPaused ? '▶️ Play' : '⏸️ Pause'}</button>
+                    {isHumanWalker && (
+                      <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }} title="T-Pose (Rest)">📐</button>
+                    )}
+                  </div>
+
+                  {isHumanWalker ? (
+                    <button
+                      onClick={() => setShowAnimSelector(v => !v)}
+                      style={{
+                        padding: '4px 8px',
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        background: showAnimSelector ? '#c82333' : 'rgba(0,0,0,0.7)',
+                        border: `1px solid ${showAnimSelector ? '#dc3545' : '#555'}`,
+                        borderRadius: 4,
+                        color: '#fff',
+                        cursor: 'pointer',
+                        maxWidth: 130,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 4
+                      }}
+                      title={typeof currentAnimLabel === 'string' ? currentAnimLabel : undefined}
+                    >
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        🎬 {currentAnimLabel}
+                      </span>
+                      <span style={{ fontSize: 8, opacity: 0.8 }}>{showAnimSelector ? '▲' : '▼'}</span>
+                    </button>
+                  ) : (
+                    <select value={actionStates.walkerAnim || 'idle'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
+                      {['ushiro', 'shiba-inu'].includes(item.id) ? (
+                        <>
+                          <option value="idle">Idle</option>
+                          <option value="jump">Jump</option>
+                          <option value="run">Run</option>
+                          <option value="sitdown">SitDown</option>
+                          <option value="walk">Walk</option>
+                        </>
+                      ) : item.id === 'robin-bird' ? (
+                        <>
+                          <option value="Robin_Bird_Idle">Idle</option>
+                          <option value="Robin_Bird_Idle2">Idle 2</option>
+                          <option value="Robin_Bird_Walk">Walk</option>
+                          <option value="Robin_Bird_WalkBack">Walk Back</option>
+                          <option value="Robin_Bird_Fly">Fly</option>
+                          <option value="Robin_Bird_Eat">Eat</option>
+                          <option value="Robin_Bird_Eat2">Eat 2</option>
+                          <option value="Robin_Bird_Eat3">Eat 3</option>
+                          <option value="Robin_Bird_Call">Call</option>
+                          <option value="Robin_Bird_Call2">Call 2</option>
+                          <option value="Robin_Bird_Hit">Hit</option>
+                          <option value="Robin_Bird_Die">Die</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="tpose">T-Pose (Rest)</option>
+                          <option value="idle">Idle</option>
+                          <option value="walk">Walking</option>
+                          <option value="run">Running</option>
+                        </>
+                      )}
+                    </select>
                   )}
-                  
-                  <select value={actionStates.walkerAnim || 'idle'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
-                {['ushiro', 'shiba-inu'].includes(item.id) ? (
-                  <>
-                    <option value="idle">Idle</option>
-                    <option value="jump">Jump</option>
-                    <option value="run">Run</option>
-                    <option value="sitdown">SitDown</option>
-                    <option value="walk">Walk</option>
-                  </>
-                ) : item.id === 'robin-bird' ? (
-                  <>
-                    <option value="Robin_Bird_Idle">Idle</option>
-                    <option value="Robin_Bird_Idle2">Idle 2</option>
-                    <option value="Robin_Bird_Walk">Walk</option>
-                    <option value="Robin_Bird_WalkBack">Walk Back</option>
-                    <option value="Robin_Bird_Fly">Fly</option>
-                    <option value="Robin_Bird_Eat">Eat</option>
-                    <option value="Robin_Bird_Eat2">Eat 2</option>
-                    <option value="Robin_Bird_Eat3">Eat 3</option>
-                    <option value="Robin_Bird_Call">Call</option>
-                    <option value="Robin_Bird_Call2">Call 2</option>
-                    <option value="Robin_Bird_Hit">Hit</option>
-                    <option value="Robin_Bird_Die">Die</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="tpose">T-Pose (Rest)</option>
-                    <option value="idle">Idle</option>
-                    <option value="walk">Walking</option>
-                    <option value="run">Running</option>
-                  </>
-                )}
-              </select>
 
-              {!['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id) && (
-                <>
-                  <select value={actionStates.previewHaircut || 'original'} onChange={e => setActionStates(s => ({ ...s, previewHaircut: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
-                    <option value="original">Coupe d'origine</option>
-                    {WIGS_ITEMS.map(wig => (
-                      <option key={wig.id} value={wig.id}>{wig.name}</option>
-                    ))}
-                  </select>
+                  {!['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id) && (
+                    <>
+                      <select value={actionStates.previewHaircut || 'original'} onChange={e => setActionStates(s => ({ ...s, previewHaircut: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
+                        <option value="original">Coupe d'origine</option>
+                        {WIGS_ITEMS.map(wig => (
+                          <option key={wig.id} value={wig.id}>{wig.name}</option>
+                        ))}
+                      </select>
 
-                  <select value={actionStates.previewHairColor || 'rose'} onChange={e => setActionStates(s => ({ ...s, previewHairColor: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
-                    <option value="rose">Rose</option>
-                    <option value="naturel">Naturel</option>
-                    <option value="noir">Noir</option>
-                    <option value="brun">Brun</option>
-                    <option value="chatain">Châtain</option>
-                    <option value="blond">Blond</option>
-                    <option value="roux">Roux</option>
-                    <option value="rouge">Rouge</option>
-                    <option value="bleu">Bleu</option>
-                    <option value="vert">Vert</option>
-                    <option value="violet">Violet</option>
-                    <option value="arc-en-ciel">Arc-en-ciel</option>
-                  </select>
+                      <select value={actionStates.previewHairColor || 'rose'} onChange={e => setActionStates(s => ({ ...s, previewHairColor: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
+                        <option value="rose">Rose</option>
+                        <option value="naturel">Naturel</option>
+                        <option value="noir">Noir</option>
+                        <option value="brun">Brun</option>
+                        <option value="chatain">Châtain</option>
+                        <option value="blond">Blond</option>
+                        <option value="roux">Roux</option>
+                        <option value="rouge">Rouge</option>
+                        <option value="bleu">Bleu</option>
+                        <option value="vert">Vert</option>
+                        <option value="violet">Violet</option>
+                        <option value="arc-en-ciel">Arc-en-ciel</option>
+                      </select>
+                    </>
+                  )}
                 </>
-              )}
-              </>
               )}
             </div>
           )}
+
+          {/* Modal / Tiroir de sélection d'animations pour personnages humains */}
+          {showAnimSelector && isHumanWalker && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 8,
+                left: 8,
+                right: 8,
+                bottom: hideFooter ? 8 : 42,
+                zIndex: 10,
+                background: 'rgba(255, 255, 255, 0.96)',
+                backdropFilter: 'blur(14px)',
+                WebkitBackdropFilter: 'blur(14px)',
+                borderRadius: 8,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <CharacterAnimSelector
+                activeAnimValue={actionStates.walkerAnim || 'idle'}
+                onSelectAnim={(val) => {
+                  setActionStates(s => ({ ...s, walkerAnim: val }));
+                  setShowAnimSelector(false);
+                }}
+                onClose={() => setShowAnimSelector(false)}
+                title={`Animations (${item.name})`}
+                maxHeight="100%"
+                listMaxHeight="calc(100% - 130px)"
+                autoFocus={true}
+              />
+            </div>
+          )}
+
           {showing3D && actionKeys.length > 0 && (
             <div style={{ position: 'absolute', top: 40, right: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
               {actionKeys.map(key => {
