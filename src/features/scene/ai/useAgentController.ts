@@ -57,13 +57,17 @@ export function useAgentController(
   onComplete?: () => void,
   spawnDelay: number = 0
 ) {
-  const initialPos = getRealPosition();
+  const firstCoords = (scenario && scenario.length > 0) ? resolveInstructionCoords(scenario[0], null) : null;
+  const initialPos = (firstCoords && (firstCoords.tx !== 0 || firstCoords.tz !== 0))
+    ? { x: firstCoords.tx, y: firstCoords.ty ?? 0, z: firstCoords.tz, rotY: firstCoords.rotY ?? 0 }
+    : getRealPosition();
+
   const stateRef = useRef<AgentState>({
     x: initialPos.x,
     y: initialPos.y,
     z: initialPos.z,
     rotY: initialPos.rotY,
-    animation: 'idle',
+    animation: firstCoords?.anim || 'idle',
     isSpawned: spawnDelay === 0
   });
 
@@ -72,7 +76,7 @@ export function useAgentController(
   const statusRef = useRef<'WAITING' | 'FALLING' | 'LANDING' | 'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED'>(spawnDelay > 0 ? 'WAITING' : 'IDLE');
   const delayTimerRef = useRef(spawnDelay);
   const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
-  const startPosRef = useRef<{x: number, y: number, z: number, rotY: number} | null>(null);
+  const startPosRef = useRef<{x: number, y: number, z: number, rotY: number} | null>(initialPos);
   const claimedSlotRef = useRef<{ objectId: string; slotId: string } | null>(null);
   
   // Navigation dynamique inter-pièces
@@ -104,13 +108,21 @@ export function useAgentController(
     dynamicNavIndexRef.current = 0;
     activeNavStepIndexRef.current = -1;
     
-    // Sync starting position with the actual character position when AI starts
+    // Sync starting position directly with the first action zone or real position
     if (scenario) {
-      const real = getRealPosition();
+      const stepCoords = scenario.length > 0 ? resolveInstructionCoords(scenario[0], null) : null;
+      const real = (stepCoords && (stepCoords.tx !== 0 || stepCoords.tz !== 0))
+        ? { x: stepCoords.tx, y: stepCoords.ty ?? 0, z: stepCoords.tz, rotY: stepCoords.rotY ?? 0 }
+        : getRealPosition();
+
       stateRef.current.x = real.x;
       stateRef.current.y = spawnDelay > 0 ? 2500 : real.y;
       stateRef.current.z = real.z;
       stateRef.current.rotY = real.rotY;
+      stateRef.current.isSpawned = spawnDelay === 0;
+      if (stepCoords?.anim) {
+        stateRef.current.animation = stepCoords.anim;
+      }
       startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY };
       if (spawnDelay > 0) {
         appLog(_characterId, `⏳ En attente de déploiement (${spawnDelay}s)...`);

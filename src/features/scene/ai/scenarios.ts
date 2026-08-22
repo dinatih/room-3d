@@ -55,16 +55,39 @@ export const ACTION_FULL_TOUR: AgentInstruction[] = [
   { type: 'RETURN_TO_START' }
 ];
 
+// Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)
+export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
+  native:   'desk-bollsidan-1',
+  rosanna:  'sofa-garden-east',
+  marissa:  'bed-east',
+  delphina: 'shower',
+  sara:     'building-b-garden',
+  cha:      'cuisine-group',
+  vivida:   'desk-bollsidan-2',
+  sabira:   'rain-dance',
+  safa:     'garden-fresh-air',
+  romana:   'bed-west',
+  angelina: 'bathtub-garden',
+  lgbta:    'sofa-garden-west',
+};
+
 /**
  * Construit un scénario autonome complet de vie quotidienne
  */
 export function buildAutonomousScenario(characterId?: string): AgentInstruction[] {
-  const smartActions = AUTONOMOUS_SMART_OBJECTS
+  const preferredFirst = characterId ? INITIAL_SMART_OBJECT_BY_CHAR[characterId] : undefined;
+
+  const otherObjects = preferredFirst
+    ? AUTONOMOUS_SMART_OBJECTS.filter(id => id !== preferredFirst)
+    : AUTONOMOUS_SMART_OBJECTS;
+
+  const shuffled = [...otherObjects].sort(() => Math.random() - 0.5);
+  const orderedIds = preferredFirst ? [preferredFirst, ...shuffled] : shuffled;
+
+  const smartActions = orderedIds
     .map(id => buildSmartObjectInstructionSequence(id, undefined, characterId))
     .filter(seq => seq.length > 0);
 
-  // Mélanger les actions de vie quotidienne de façon fluide et réaliste
-  const shuffled = [...smartActions].sort(() => Math.random() - 0.5);
-  return shuffled.flat();
+  return smartActions.flat();
 }
 
