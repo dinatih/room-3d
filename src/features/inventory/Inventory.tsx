@@ -163,7 +163,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
 
 // ── Main Inventory Component ──────────────────────────────────────────────────
 
-export function Inventory({ onClose }: { onClose: () => void }) {
+export function Inventory({ visible = true, onClose }: { visible?: boolean; onClose: () => void }) {
   const isMobile = useIsMobile();
   const [activeCat, setActiveCat]         = useState('all');
   const [search, setSearch]               = useState('');
@@ -221,6 +221,7 @@ export function Inventory({ onClose }: { onClose: () => void }) {
 
   // Keyboard navigation
   useEffect(() => {
+    if (!visible) return;
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       const isTyping = tag === 'INPUT' || tag === 'TEXTAREA';
@@ -253,13 +254,14 @@ export function Inventory({ onClose }: { onClose: () => void }) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [navList, focusedIndex, isMobile, onClose]);
+  }, [navList, focusedIndex, isMobile, onClose, visible]);
 
   return (
     <div
       className="inventory-overlay"
       onClick={onClose}
       onKeyDown={(e) => e.stopPropagation()}
+      style={{ display: visible ? undefined : 'none' }}
     >
       <div
         className="inventory-modal"

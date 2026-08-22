@@ -482,7 +482,7 @@ export function Studio() {
           });
         }}
       />
-      {showInventory && <Inventory onClose={() => setShowInventory(false)} />}
+      <Inventory visible={showInventory} onClose={() => setShowInventory(false)} />
       <VirtualDPad />
       <HoverOverlay />
       {layers.wallEdges && <EdgeHoverOverlay />}
