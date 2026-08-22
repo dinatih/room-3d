@@ -261,6 +261,8 @@ export function Studio() {
       } else if (e.key === 'z' || e.key === 'Z') {
         onToggleLayer('aiZones');
         cameraState.invalidate?.();
+      } else if (e.key === 'i' || e.key === 'I') {
+        setShowInventory(prev => !prev);
       }
     };
     window.addEventListener('keydown', onKey);

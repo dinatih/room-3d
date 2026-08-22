@@ -138,6 +138,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
           <div className="modal-body py-1">
             <div>
               <Section title="Global" />
+              <R label="Inventaire (toggle)"        keys={['I']} />
               <R label="Vue perspective (reset)"    keys={['P']} />
               <R label="Walk mode (entrer/quitter)" keys={['M']} />
               <R label="Vue top-down (toggle)"      keys={['T']} />
@@ -1298,9 +1299,13 @@ export function SidePanel({
           <button
             className="btn btn-danger w-100 rounded-0 py-2 px-3 fw-bold text-start text-uppercase d-flex align-items-center justify-content-between border-0"
             onClick={onOpenInventory}
+            title="Ouvrir l'inventaire (Touche I)"
             style={{ fontSize: '11px', letterSpacing: '0.06em' }}
           >
-            <span>📦 Inventaire</span>
+            <span className="d-flex align-items-center gap-1.5">
+              <span>📦 Inventaire</span>
+              <kbd className="bg-white bg-opacity-25 text-white border-0 px-1 rounded font-monospace" style={{ fontSize: '9px' }}>I</kbd>
+            </span>
             <span style={{ fontSize: '9px' }}>▶</span>
           </button>
         </div>

@@ -222,8 +222,19 @@ export function Inventory({ onClose }: { onClose: () => void }) {
   // Keyboard navigation
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA';
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (!isTyping && (e.key === 'i' || e.key === 'I')) {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (isTyping || tag === 'BUTTON') return;
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setFocusedIndex(i => Math.min(i + 1, navList.length - 1));
@@ -242,7 +253,7 @@ export function Inventory({ onClose }: { onClose: () => void }) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [navList, focusedIndex, isMobile]);
+  }, [navList, focusedIndex, isMobile, onClose]);
 
   return (
     <div
