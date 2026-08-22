@@ -290,6 +290,10 @@ export function SingleCharacter({
   const finalScenario = isGuidedTour ? activeActionScenario : (isAutonomous ? autonomousScenario : EMPTY_SCENARIO);
   const loopScenario = isAutonomous;
 
+  const isExcepted = id === 'sandra' || id === 'rajaa' || id === 'xbot';
+  const hasSkyDrop = isNPC && !isExcepted && isAutonomous;
+  const spawnDelay = hasSkyDrop ? ((characterIndex ?? 0) * 1.0) : 0;
+
   const { update: updateAgent, setPosition: setAgentPosition, setRotation: setAgentRotation } = useAgentController(
     id,
     finalScenario,
@@ -321,7 +325,8 @@ export function SingleCharacter({
         }));
       }
     },
-    0
+    spawnDelay,
+    hasSkyDrop
   );
 
 

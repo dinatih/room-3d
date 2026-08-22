@@ -55,25 +55,31 @@ export function useAgentController(
   loop: boolean = false,
   getRealPosition: () => { x: number; y: number; z: number; rotY: number },
   onComplete?: () => void,
-  spawnDelay: number = 0
+  spawnDelay: number = 0,
+  hasSkyDrop: boolean = false
 ) {
   const firstCoords = (scenario && scenario.length > 0) ? resolveInstructionCoords(scenario[0], null) : null;
   const initialPos = (firstCoords && (firstCoords.tx !== 0 || firstCoords.tz !== 0))
     ? { x: firstCoords.tx, y: firstCoords.ty ?? 0, z: firstCoords.tz, rotY: firstCoords.rotY ?? 0 }
     : getRealPosition();
 
+  const isWaiting = hasSkyDrop && spawnDelay > 0;
+  const isFallingImmediately = hasSkyDrop && spawnDelay === 0;
+
   const stateRef = useRef<AgentState>({
     x: initialPos.x,
-    y: initialPos.y,
+    y: hasSkyDrop ? 2500 : initialPos.y,
     z: initialPos.z,
     rotY: initialPos.rotY,
-    animation: firstCoords?.anim || 'idle',
-    isSpawned: spawnDelay === 0
+    animation: isFallingImmediately ? 'animations/locomotion/anim_falling.glb' : (hasSkyDrop ? 'idle' : (firstCoords?.anim || 'idle')),
+    isSpawned: !isWaiting
   });
 
   const stepIndexRef = useRef(0);
-  const timerRef = useRef(0);
-  const statusRef = useRef<'WAITING' | 'FALLING' | 'LANDING' | 'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED'>(spawnDelay > 0 ? 'WAITING' : 'IDLE');
+  const timerRef = useRef(isFallingImmediately ? 6.0 : 0);
+  const statusRef = useRef<'WAITING' | 'FALLING' | 'LANDING' | 'IDLE' | 'MOVING' | 'INTERACTING' | 'FINISHED'>(
+    isWaiting ? 'WAITING' : (isFallingImmediately ? 'FALLING' : 'IDLE')
+  );
   const delayTimerRef = useRef(spawnDelay);
   const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
   const startPosRef = useRef<{x: number, y: number, z: number, rotY: number} | null>(initialPos);
@@ -99,9 +105,12 @@ export function useAgentController(
       OccupancyManager.releaseAllForCharacter(_characterId);
       claimedSlotRef.current = null;
     }
+    const isWait = hasSkyDrop && spawnDelay > 0;
+    const isFallNow = hasSkyDrop && spawnDelay === 0;
+
     stepIndexRef.current = 0;
-    timerRef.current = 0;
-    statusRef.current = spawnDelay > 0 ? 'WAITING' : 'IDLE';
+    timerRef.current = isFallNow ? 6.0 : 0;
+    statusRef.current = isWait ? 'WAITING' : (isFallNow ? 'FALLING' : 'IDLE');
     delayTimerRef.current = spawnDelay;
     prevScenarioRef.current = scenario;
     dynamicNavQueueRef.current = [];
@@ -116,16 +125,16 @@ export function useAgentController(
         : getRealPosition();
 
       stateRef.current.x = real.x;
-      stateRef.current.y = spawnDelay > 0 ? 2500 : real.y;
+      stateRef.current.y = hasSkyDrop ? 2500 : real.y;
       stateRef.current.z = real.z;
       stateRef.current.rotY = real.rotY;
-      stateRef.current.isSpawned = spawnDelay === 0;
-      if (stepCoords?.anim) {
-        stateRef.current.animation = stepCoords.anim;
-      }
+      stateRef.current.isSpawned = !isWait;
+      stateRef.current.animation = isFallNow ? 'animations/locomotion/anim_falling.glb' : (hasSkyDrop ? 'idle' : (stepCoords?.anim || 'idle'));
       startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY };
-      if (spawnDelay > 0) {
-        appLog(_characterId, `⏳ En attente de déploiement (${spawnDelay}s)...`);
+      if (isWait) {
+        appLog(_characterId, `⏳ En attente de déploiement (${spawnDelay.toFixed(1)}s)...`);
+      } else if (isFallNow) {
+        appLog(_characterId, `▶ Tombée du ciel en parachute coeur`);
       }
     }
   }
