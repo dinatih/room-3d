@@ -641,21 +641,49 @@ export function HoverOverlay() {
               return (
                 <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {opts.length > 10 && action.toggleKey.startsWith('walker-anim') && (
-                    <input
-                      type="text"
-                      placeholder="🔍 Filtrer anims..."
-                      value={selectFilter}
-                      onChange={e => setSelectFilter(e.target.value)}
-                      style={{
-                        background: 'rgba(255,255,255,0.15)',
-                        color: '#fff',
-                        border: '1px solid rgba(255,255,255,0.25)',
-                        borderRadius: 4,
-                        padding: '3px 6px',
-                        fontSize: 11,
-                        outline: 'none',
-                      }}
-                    />
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <input
+                        type="text"
+                        placeholder="🔍 Filtrer anims..."
+                        value={selectFilter}
+                        onChange={e => setSelectFilter(e.target.value)}
+                        style={{
+                          background: 'rgba(255,255,255,0.15)',
+                          color: '#fff',
+                          border: '1px solid rgba(255,255,255,0.25)',
+                          borderRadius: 4,
+                          padding: '3px 6px',
+                          fontSize: 11,
+                          outline: 'none',
+                          flex: 1,
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const pool = opts.filter(o => o.value !== 'idle');
+                          if (pool.length > 0) {
+                            const randomOpt = pool[Math.floor(Math.random() * pool.length)];
+                            setSelectedValues(prev => ({ ...prev, [action.toggleKey]: randomOpt.value }));
+                            document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: action.toggleKey, value: randomOpt.value } }));
+                            hoverState.onUpdate?.();
+                          }
+                        }}
+                        style={{
+                          background: '#ffc107',
+                          color: '#000',
+                          border: 'none',
+                          borderRadius: 4,
+                          padding: '2px 8px',
+                          fontSize: 11,
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                        }}
+                        title="Animation aléatoire"
+                      >
+                        🎲
+                      </button>
+                    </div>
                   )}
                   <select
                     style={BTN_STYLE}

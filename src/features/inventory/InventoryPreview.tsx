@@ -253,10 +253,26 @@ export function InventoryPreview({
               
               {(item as any).category === 'walkers' && (
                 <>
-                  <div style={{ display: 'flex', gap: 3 }}>
-                    <button onClick={() => setActionStates(s => ({ ...s, isPaused: !s.isPaused }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.isPaused ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.isPaused ? '▶️ Play' : '⏸️ Pause'}</button>
+                  <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                    <button onClick={() => setActionStates(s => ({ ...s, isPaused: !s.isPaused }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.isPaused ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }} title={actionStates.isPaused ? "Play" : "Pause"}>{actionStates.isPaused ? '▶️' : '⏸️'}</button>
                     {isHumanWalker && (
-                      <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }} title="T-Pose (Rest)">📐</button>
+                      <>
+                        <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }} title="T-Pose (Rest)">📐</button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle' && a.value !== 'tpose' && a.value !== 'animations/poses_idles/anim_t_pose.glb');
+                            if (pool.length > 0) {
+                              const randomAnim = pool[Math.floor(Math.random() * pool.length)];
+                              setActionStates(s => ({ ...s, walkerAnim: randomAnim.value, isPaused: false }));
+                            }
+                          }}
+                          style={{ padding: '3px 8px', fontSize: 11, background: '#ffc107', color: '#000', border: '1px solid #d39e00', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}
+                          title="Lancer une animation aléatoire"
+                        >
+                          🎲
+                        </button>
+                      </>
                     )}
                   </div>
 

@@ -50,6 +50,9 @@ function dispatchKey(key: string) {
   window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
 }
 
+import { WALKER_ANIM_OPTIONS } from './animOptions';
+import { resetAppIdle } from './idleState';
+
 export function AnimationsPanel(props: AnimationsPanelProps) {
   const isMobile     = useIsMobile();
   const [planeOpen, setPlaneOpen] = useState(false);
@@ -84,6 +87,17 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
   const totalMs    = activeKey ? (props.durations[activeKey] ?? 0) : 0;
   const progress   = totalMs > 0 ? Math.min(elapsed / totalMs, 1) : 0;
 
+  const handleQuickRandomAnim = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    resetAppIdle();
+    const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle');
+    if (pool.length > 0) {
+      const randomAnim = pool[Math.floor(Math.random() * pool.length)];
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: randomAnim.value } }));
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: randomAnim.value } }));
+    }
+  };
+
   return (
     <div 
       className="position-fixed d-flex flex-column gap-2"
@@ -94,10 +108,10 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
         width: isMobile ? 140 : 170,
       }}
     >
-      {/* Titre — cliquable sur mobile pour collapse/expand */}
+      {/* Titre — cliquable sur mobile pour collapse/expand + bouton de raccourci 🎲 */}
       <div
         onClick={isMobile && !anyRunning ? () => setExpanded(e => !e) : undefined}
-        className="card shadow-sm glass-card text-dark py-2 px-3 fw-bold d-flex justify-content-between align-items-center"
+        className="card shadow-sm glass-card text-dark py-2 px-3 fw-bold d-flex justify-content-between align-items-center flex-row"
         style={{
           fontSize: '10px',
           textTransform: 'uppercase',
@@ -107,9 +121,20 @@ export function AnimationsPanel(props: AnimationsPanelProps) {
         }}
       >
         <span>🎬 Animations</span>
-        {isMobile && !anyRunning && (
-          <span style={{ fontSize: '8px', color: 'var(--muted)' }}>{expanded ? '▲' : '▼'}</span>
-        )}
+        <div className="d-flex align-items-center gap-1.5" onClick={e => e.stopPropagation()}>
+          <button
+            type="button"
+            className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold"
+            style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
+            title="Lancer une animation aléatoire (Perso)"
+            onClick={handleQuickRandomAnim}
+          >
+            🎲
+          </button>
+          {isMobile && !anyRunning && (
+            <span style={{ fontSize: '8px', color: 'var(--muted)' }}>{expanded ? '▲' : '▼'}</span>
+          )}
+        </div>
       </div>
 
       {/* Boutons d'animations */}

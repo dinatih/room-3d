@@ -277,8 +277,8 @@ export function SingleCharacter({
 
 
   // Le personnage est autonome s'il fait partie des PNJ autonomes (qu'il soit le joueur actif ou un PNJ)
-  const isAutonomous = AUTONOMOUS_NPC_IDS.has(id);
-  const isGuidedTour = Boolean(activeActionKey && id === activeWalkerId);
+  const isAutonomous = !isPreview && AUTONOMOUS_NPC_IDS.has(id);
+  const isGuidedTour = !isPreview && Boolean(activeActionKey && id === activeWalkerId);
 
   const autonomousScenario = useMemo(() => {
     if (!isAutonomous) return null;
@@ -1016,7 +1016,7 @@ export function SingleCharacter({
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
 
-    const isNpcActive = isNPC && (
+    const isNpcActive = !isPreview && isNPC && (
       (customAnimName.current !== null && customAnimName.current !== 'idle' && !customAnimName.current.includes('idle')) ||
       (!isAutonomous && customIdleAnimPath && customIdleAnimPath.includes('dance')) ||
       Math.abs(groupRef.current.position.x - (groupRef.current.userData.prevX ?? groupRef.current.position.x)) > 0.01 ||
@@ -1026,20 +1026,12 @@ export function SingleCharacter({
     groupRef.current.userData.prevZ = groupRef.current.position.z;
 
     // Inactive model is stationary unless active as NPC or autonomous player
-    let isMoving = (isActive && cameraState.isUserControlling()) ? cameraState.isMoving : isNpcActive;
-    let target = isPreview ? (walkerAnim || 'idle') : (isMoving ? 'walk' : 'idle');
+    let isMoving = (!isPreview && isActive && cameraState.isUserControlling()) ? cameraState.isMoving : isNpcActive;
+    let target = isPreview ? (walkerAnim || 'idle') : (customAnimName.current || (isMoving ? 'walk' : (isNPC && customIdleAnimPath && !isAutonomous ? customIdleAnimPath : 'idle')));
 
     // Si le joueur reprend le contrôle manuel (flèches clavier), effacer l'animation IA pour marcher ou idle
     if (isActive && !isGuidedTour && cameraState.isUserControlling() && customAnimName.current) {
       customAnimName.current = null;
-    }
-
-    if (customAnimName.current) {
-      target = customAnimName.current;
-    }
-
-    if (isNPC && customIdleAnimPath && target === 'idle' && !isAutonomous) {
-      target = customIdleAnimPath;
     }
 
     if (!actions[target] && target.endsWith('.glb')) {
@@ -1077,7 +1069,7 @@ export function SingleCharacter({
     }
 
 
-    const isTPose = target === 'tpose' || target.includes('t_pose') || target.includes('t-pose');
+    const isTPose = target === 'tpose' || target === 'animations/poses_idles/anim_t_pose.glb';
 
     if (isTPose) {
       if (activeActionName.current && actions[activeActionName.current]) {
