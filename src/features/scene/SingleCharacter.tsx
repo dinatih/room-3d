@@ -413,7 +413,7 @@ export function SingleCharacter({
         }
       }
     });
-  }, [scene, showAccessories, laraPistols, laraNude, laraShoes, laraGloves]);
+  }, [scene, showAccessories, laraPistols]);
 
   useLayoutEffect(() => {
     // Rename all hair bones sequentially from base to tip
@@ -621,7 +621,7 @@ export function SingleCharacter({
         mixer.stopAllAction();
         mixer.uncacheRoot(scene);
     };
-  }, [scene, animations, name, isLara, targetHeight, variant, sittingScene, id, laraNude, laraShoes, laraGloves, characterShadows]);
+  }, [scene, animations, name, isLara, targetHeight, variant, sittingScene, id]);
 
 
   useEffect(() => {
