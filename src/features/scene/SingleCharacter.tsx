@@ -182,6 +182,8 @@ export function SingleCharacter({
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
   const laraNude = useSceneStore(state => state.layers.laraNude ?? false);
+  const laraShoes = useSceneStore(state => state.layers.laraShoes ?? true);
+  const laraGloves = useSceneStore(state => state.layers.laraGloves ?? true);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const { scene } = useGLTFClone(modelPath);
 
@@ -788,14 +790,32 @@ export function SingleCharacter({
         const matName = mat ? (Array.isArray(mat) ? mat[0].name.toLowerCase() : mat.name.toLowerCase()) : '';
 
         const isNudeBody = meshName.includes('body_nude') || meshName.includes('5_body_1_0_0.004') || matName.includes('5_body_1_0_0.004');
+        const isPanties = meshName.includes('panties') || matName.includes('bathrobeb');
         const isClothedBody = meshName === 'body' || matName === '5_body_1.0_0_0';
         const isShirt = meshName.includes('shirt') || matName.includes('shirt');
         const isShorts = meshName.includes('shorts') || matName.includes('shorts');
 
-        if (isNudeBody) {
+        const isBoots = meshName.includes('boots') || matName.includes('boots');
+        const isFeet = meshName.includes('feet') || matName.includes('feet');
+        const isGloves = meshName.includes('gloves') || meshName.includes('fingers') || matName.includes('gloves') || matName.includes('fingers');
+        const isHands = meshName.includes('hands') || matName.includes('hands');
+
+        if (isNudeBody || isPanties) {
           o.visible = laraNude;
         } else if (isClothedBody || isShirt || isShorts) {
           o.visible = !laraNude;
+        }
+
+        if (isBoots) {
+          o.visible = laraShoes;
+        } else if (isFeet) {
+          o.visible = !laraShoes;
+        }
+
+        if (isGloves) {
+          o.visible = laraGloves;
+        } else if (isHands) {
+          o.visible = !laraGloves;
         }
 
         const isHolsterPart = meshName.includes('holster') || meshName.includes('gear') || meshName.includes('buckle') || matName.includes('holster') || matName.includes('gear') || matName.includes('buckle');
@@ -808,7 +828,7 @@ export function SingleCharacter({
       }
     });
     invalidate();
-  }, [scene, equipment, laraNude, showAccessories, laraPistols, invalidate]);
+  }, [scene, equipment, laraNude, laraShoes, laraGloves, showAccessories, laraPistols, invalidate]);
 
   // Dynamic Haircut Swap system (hair_pack_part_2.glb & mira_hair_2026.glb)
   useEffect(() => {

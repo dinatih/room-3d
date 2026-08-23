@@ -77,6 +77,8 @@ const initialLayers: LayerState = {
   accessories: true,
   laraPistols: true,
   laraNude: false,
+  laraShoes: true,
+  laraGloves: true,
   breastPhysics: true,
   breastIntensity: 1.0,
   breastMass: 1.0,
