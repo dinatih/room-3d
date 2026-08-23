@@ -484,9 +484,6 @@ export function SingleCharacter({
         c.castShadow = characterShadows && !isInternalInvisible;
         c.receiveShadow = characterShadows && !isInternalInvisible;
         c.frustumCulled = true;
-        if (c.geometry) {
-          c.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.9, 0), 1.6);
-        }
         if (c.material) {
             const materials = Array.isArray(c.material) ? c.material : [c.material];
             materials.forEach((mat: any) => {
@@ -494,6 +491,27 @@ export function SingleCharacter({
                 mat.depthWrite = true;
                 mat.side = THREE.FrontSide;
             });
+        }
+
+        const isBoots = name.includes('boots');
+        const isFeet = name.includes('feet');
+        const isGloves = name.includes('gloves') || name.includes('fingers');
+        const isHands = name.includes('hands');
+        const isNudeBody = name.includes('body_nude') || name.includes('panties');
+        const isClothedBody = name === 'body' || name.includes('shirt') || name.includes('shorts');
+
+        let vis = true;
+        if (isBoots) vis = laraShoes;
+        else if (isFeet) vis = !laraShoes;
+        else if (isGloves) vis = laraGloves;
+        else if (isHands) vis = !laraGloves;
+        else if (isNudeBody) vis = laraNude;
+        else if (isClothedBody) vis = !laraNude;
+
+        c.visible = vis;
+        if (c.material) {
+          const mats = Array.isArray(c.material) ? c.material : [c.material];
+          mats.forEach((m: any) => { m.visible = vis; });
         }
       }
       if (!c.restWorldQuaternion) {
@@ -1386,6 +1404,36 @@ export function SingleCharacter({
         }
 
         physicsPrevDt.current = simDt;
+    }
+
+    if (scene) {
+      scene.traverse((o: any) => {
+        if (o.isMesh) {
+          const n = (o.name || '').toLowerCase();
+          const isBoots = n.includes('boots');
+          const isFeet = n.includes('feet');
+          const isGloves = n.includes('gloves') || n.includes('fingers');
+          const isHands = n.includes('hands');
+          const isNudeBody = n.includes('body_nude') || n.includes('panties');
+          const isClothedBody = n === 'body' || n.includes('shirt') || n.includes('shorts');
+
+          let vis = true;
+          if (isBoots) vis = laraShoes;
+          else if (isFeet) vis = !laraShoes;
+          else if (isGloves) vis = laraGloves;
+          else if (isHands) vis = !laraGloves;
+          else if (isNudeBody) vis = laraNude;
+          else if (isClothedBody) vis = !laraNude;
+
+          if (o.visible !== vis) o.visible = vis;
+          if (o.material) {
+            const mats = Array.isArray(o.material) ? o.material : [o.material];
+            mats.forEach((m: any) => {
+              if (m.visible !== vis) m.visible = vis;
+            });
+          }
+        }
+      });
     }
 
     if (!isPaused) {
