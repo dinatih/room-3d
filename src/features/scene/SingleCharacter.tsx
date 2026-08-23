@@ -796,15 +796,9 @@ export function SingleCharacter({
         const isShorts = meshName.includes('shorts') || matName.includes('shorts');
 
         const isBoots = meshName.includes('boots') || matName.includes('boots');
-        const isFeet = meshName.includes('feet') || matName.includes('feet');
+        const isFeet = meshName.includes('feet') || meshName.includes('5_feet');
         const isGloves = meshName.includes('gloves') || meshName.includes('fingers') || matName.includes('gloves') || matName.includes('fingers');
-        const isHands = meshName.includes('hands') || matName.includes('hands');
-
-        if (isNudeBody || isPanties) {
-          o.visible = laraNude;
-        } else if (isClothedBody || isShirt || isShorts) {
-          o.visible = !laraNude;
-        }
+        const isHands = meshName.includes('hands') || meshName.includes('5_hands');
 
         if (isBoots) {
           o.visible = laraShoes;
@@ -816,6 +810,12 @@ export function SingleCharacter({
           o.visible = laraGloves;
         } else if (isHands) {
           o.visible = !laraGloves;
+        }
+
+        if (isNudeBody || isPanties) {
+          o.visible = laraNude;
+        } else if (isClothedBody || isShirt || isShorts) {
+          o.visible = !laraNude;
         }
 
         const isHolsterPart = meshName.includes('holster') || meshName.includes('gear') || meshName.includes('buckle') || matName.includes('holster') || matName.includes('gear') || matName.includes('buckle');
