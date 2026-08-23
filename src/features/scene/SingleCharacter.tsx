@@ -789,30 +789,26 @@ export function SingleCharacter({
         const mat = (o as THREE.Mesh).material;
         const matName = mat ? (Array.isArray(mat) ? mat[0].name.toLowerCase() : mat.name.toLowerCase()) : '';
 
-        const isNudeBody = meshName.includes('body_nude') || meshName.includes('5_body_1_0_0.004') || matName.includes('5_body_1_0_0.004');
-        const isPanties = meshName.includes('panties') || matName.includes('bathrobeb');
-        const isClothedBody = meshName === 'body' || matName === '5_body_1.0_0_0';
-        const isShirt = meshName.includes('shirt') || matName.includes('shirt');
-        const isShorts = meshName.includes('shorts') || matName.includes('shorts');
-
-        const isBoots = meshName.includes('boots') || matName.includes('boots');
+        const isBoots = meshName.includes('boots');
         const isFeet = meshName.includes('feet') || meshName.includes('5_feet');
-        const isGloves = meshName.includes('gloves') || meshName.includes('fingers') || matName.includes('gloves') || matName.includes('fingers');
+        const isGloves = meshName.includes('gloves') || meshName.includes('fingers');
         const isHands = meshName.includes('hands') || meshName.includes('5_hands');
+
+        const isNudeBody = meshName.includes('body_nude') || meshName.includes('5_body_torso') || meshName.includes('5_body_legs');
+        const isPanties = meshName.includes('panties') || meshName.includes('5_panties');
+        const isClothedBody = meshName === 'body';
+        const isShirt = meshName.includes('shirt');
+        const isShorts = meshName.includes('shorts');
 
         if (isBoots) {
           o.visible = laraShoes;
         } else if (isFeet) {
           o.visible = !laraShoes;
-        }
-
-        if (isGloves) {
+        } else if (isGloves) {
           o.visible = laraGloves;
         } else if (isHands) {
           o.visible = !laraGloves;
-        }
-
-        if (isNudeBody || isPanties) {
+        } else if (isNudeBody || isPanties) {
           o.visible = laraNude;
         } else if (isClothedBody || isShirt || isShorts) {
           o.visible = !laraNude;

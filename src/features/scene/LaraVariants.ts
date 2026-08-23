@@ -75,7 +75,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       if (node.userData && node.userData.isCustomHair) return; // Skip custom hair meshes
       const mesh = node as THREE.Mesh;
       const meshName = mesh.name.toLowerCase();
-      if (meshName.includes('body_nude') || meshName.includes('5_body_1_0_0.004')) return; // Preserve pristine nude body texture
+      if (meshName.includes('body_nude') || meshName.includes('5_body') || meshName.includes('panties') || meshName.includes('feet') || meshName.includes('hands')) return; // Preserve pristine textures
 
       const originalMat = mesh.material as THREE.Material | THREE.Material[];
       const matArray = Array.isArray(originalMat) ? originalMat : [originalMat];
