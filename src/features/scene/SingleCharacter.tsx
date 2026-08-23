@@ -987,12 +987,19 @@ export function SingleCharacter({
           const isClothedBody = n === 'body' || n.includes('shirt') || n.includes('shorts');
 
           let vis = true;
-          if (isBoots) vis = laraShoes;
-          else if (isFeet) vis = !laraShoes;
-          else if (isGloves) vis = laraGloves;
-          else if (isHands) vis = !laraGloves;
-          else if (isNudeBody) vis = laraNude;
-          else if (isClothedBody) vis = !laraNude;
+          if (isBoots) {
+            vis = !laraNude ? laraShoes : false;
+          } else if (isFeet) {
+            vis = laraNude ? !laraShoes : false;
+          } else if (isGloves) {
+            vis = !laraNude ? laraGloves : false;
+          } else if (isHands) {
+            vis = laraNude || !laraGloves;
+          } else if (isNudeBody) {
+            vis = laraNude;
+          } else if (isClothedBody) {
+            vis = !laraNude;
+          }
 
           if (o.visible !== vis) o.visible = vis;
           if (o.material) {
