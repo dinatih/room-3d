@@ -89,7 +89,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         const matName = mat.name ? mat.name.toLowerCase() : "";
 
         const isHand = matName.includes('hand') || matName.includes('finger') || meshName.includes('hand') || meshName.includes('finger');
-        const isSkin = matName.includes('skin') || matName.includes('face') || matName.includes('head') || matName.includes('body') || matName.includes('arm') || matName.includes('leg') || isHand;
+        const isSkin = matName.includes('skin') || matName.includes('face') || matName.includes('head') || matName.includes('body') || matName.includes('arm') || matName.includes('leg') || meshName.includes('body') || meshName.includes('arm') || isHand;
         const isHair = matName.includes('hair') || matName.includes('pony') || matName.includes('braid') || meshName.includes('hair') || meshName.includes('pony') || meshName.includes('braid');
         const isLash = matName.includes('lash');
         const isEye  = matName.includes('eye') && !isLash;
