@@ -362,6 +362,27 @@ export function SingleCharacter({
           }
         }
 
+        const isBoots = nameLower.includes('boots');
+        const isFeet = nameLower.includes('feet');
+        const isGloves = nameLower.includes('gloves') || nameLower.includes('fingers');
+        const isHands = nameLower.includes('hands');
+        const isNudeBody = nameLower.includes('body_nude') || nameLower.includes('panties');
+        const isClothedBody = nameLower === 'body' || nameLower.includes('shirt') || nameLower.includes('shorts');
+
+        if (isBoots) {
+          mesh.visible = laraShoes;
+        } else if (isFeet) {
+          mesh.visible = !laraShoes;
+        } else if (isGloves) {
+          mesh.visible = laraGloves;
+        } else if (isHands) {
+          mesh.visible = !laraGloves;
+        } else if (isNudeBody) {
+          mesh.visible = laraNude;
+        } else if (isClothedBody) {
+          mesh.visible = !laraNude;
+        }
+
         if (mesh.material) {
           const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
           materials.forEach(mat => {
