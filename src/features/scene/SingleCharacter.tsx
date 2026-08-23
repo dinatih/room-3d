@@ -370,13 +370,13 @@ export function SingleCharacter({
         const isClothedBody = nameLower === 'body' || nameLower.includes('shirt') || nameLower.includes('shorts');
 
         if (isBoots) {
-          mesh.visible = laraShoes;
+          mesh.visible = !laraNude ? true : laraShoes;
         } else if (isFeet) {
-          mesh.visible = !laraShoes;
+          mesh.visible = laraNude ? !laraShoes : false;
         } else if (isGloves) {
-          mesh.visible = laraGloves;
+          mesh.visible = !laraNude ? laraGloves : false;
         } else if (isHands) {
-          mesh.visible = !laraGloves;
+          mesh.visible = laraNude || !laraGloves;
         } else if (isNudeBody) {
           mesh.visible = laraNude;
         } else if (isClothedBody) {
@@ -501,10 +501,10 @@ export function SingleCharacter({
         const isClothedBody = name === 'body' || name.includes('shirt') || name.includes('shorts');
 
         let vis = true;
-        if (isBoots) vis = laraShoes;
-        else if (isFeet) vis = !laraShoes;
-        else if (isGloves) vis = laraGloves;
-        else if (isHands) vis = !laraGloves;
+        if (isBoots) vis = !laraNude ? true : laraShoes;
+        else if (isFeet) vis = laraNude ? !laraShoes : false;
+        else if (isGloves) vis = !laraNude ? laraGloves : false;
+        else if (isHands) vis = laraNude || !laraGloves;
         else if (isNudeBody) vis = laraNude;
         else if (isClothedBody) vis = !laraNude;
 
@@ -988,7 +988,7 @@ export function SingleCharacter({
 
           let vis = true;
           if (isBoots) {
-            vis = !laraNude ? laraShoes : false;
+            vis = !laraNude ? true : laraShoes;
           } else if (isFeet) {
             vis = laraNude ? !laraShoes : false;
           } else if (isGloves) {
