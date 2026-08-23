@@ -1079,6 +1079,36 @@ export function SingleCharacter({
       }
     }
 
+    if (scene) {
+      scene.traverse((o: any) => {
+        if (o.isMesh) {
+          const n = (o.name || '').toLowerCase();
+          const isBoots = n.includes('boots');
+          const isFeet = n.includes('feet');
+          const isGloves = n.includes('gloves') || n.includes('fingers');
+          const isHands = n.includes('hands');
+          const isNudeBody = n.includes('body_nude') || n.includes('panties');
+          const isClothedBody = n === 'body' || n.includes('shirt') || n.includes('shorts');
+
+          let vis = true;
+          if (isBoots) vis = laraShoes;
+          else if (isFeet) vis = !laraShoes;
+          else if (isGloves) vis = laraGloves;
+          else if (isHands) vis = !laraGloves;
+          else if (isNudeBody) vis = laraNude;
+          else if (isClothedBody) vis = !laraNude;
+
+          if (o.visible !== vis) o.visible = vis;
+          if (o.material) {
+            const mats = Array.isArray(o.material) ? o.material : [o.material];
+            mats.forEach((m: any) => {
+              if (m.visible !== vis) m.visible = vis;
+            });
+          }
+        }
+      });
+    }
+
     if (!groupRef.current.visible) {
       return;
     }
@@ -1404,36 +1434,6 @@ export function SingleCharacter({
         }
 
         physicsPrevDt.current = simDt;
-    }
-
-    if (scene) {
-      scene.traverse((o: any) => {
-        if (o.isMesh) {
-          const n = (o.name || '').toLowerCase();
-          const isBoots = n.includes('boots');
-          const isFeet = n.includes('feet');
-          const isGloves = n.includes('gloves') || n.includes('fingers');
-          const isHands = n.includes('hands');
-          const isNudeBody = n.includes('body_nude') || n.includes('panties');
-          const isClothedBody = n === 'body' || n.includes('shirt') || n.includes('shorts');
-
-          let vis = true;
-          if (isBoots) vis = laraShoes;
-          else if (isFeet) vis = !laraShoes;
-          else if (isGloves) vis = laraGloves;
-          else if (isHands) vis = !laraGloves;
-          else if (isNudeBody) vis = laraNude;
-          else if (isClothedBody) vis = !laraNude;
-
-          if (o.visible !== vis) o.visible = vis;
-          if (o.material) {
-            const mats = Array.isArray(o.material) ? o.material : [o.material];
-            mats.forEach((m: any) => {
-              if (m.visible !== vis) m.visible = vis;
-            });
-          }
-        }
-      });
     }
 
     if (!isPaused) {
