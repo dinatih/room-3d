@@ -182,6 +182,8 @@ export function SingleCharacter({
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
   const laraNude = useSceneStore(state => state.layers.laraNude ?? false);
+  const laraShoes = useSceneStore(state => state.layers.laraShoes ?? true);
+  const laraGloves = useSceneStore(state => state.layers.laraGloves ?? true);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const { scene } = useGLTFClone(modelPath);
 
@@ -360,10 +362,22 @@ export function SingleCharacter({
           }
         }
 
-        const isNudeBody = nameLower.includes('body_nude');
+        const isBoots = nameLower.includes('boots');
+        const isFeet = nameLower.includes('feet');
+        const isGloves = nameLower.includes('gloves') || nameLower.includes('fingers');
+        const isHands = nameLower.includes('hands');
+        const isNudeBody = nameLower.includes('body_nude') || nameLower.includes('panties');
         const isClothedBody = nameLower === 'body' || nameLower.includes('shirt') || nameLower.includes('shorts');
 
-        if (isNudeBody) {
+        if (isBoots) {
+          mesh.visible = laraShoes;
+        } else if (isFeet) {
+          mesh.visible = !laraShoes;
+        } else if (isGloves) {
+          mesh.visible = laraGloves;
+        } else if (isHands) {
+          mesh.visible = !laraGloves;
+        } else if (isNudeBody) {
           mesh.visible = laraNude;
         } else if (isClothedBody) {
           mesh.visible = !laraNude;
@@ -479,11 +493,19 @@ export function SingleCharacter({
             });
         }
 
-        const isNudeBody = name.includes('body_nude');
+        const isBoots = name.includes('boots');
+        const isFeet = name.includes('feet');
+        const isGloves = name.includes('gloves') || name.includes('fingers');
+        const isHands = name.includes('hands');
+        const isNudeBody = name.includes('body_nude') || name.includes('panties');
         const isClothedBody = name === 'body' || name.includes('shirt') || name.includes('shorts');
 
         let vis = true;
-        if (isNudeBody) vis = laraNude;
+        if (isBoots) vis = laraShoes;
+        else if (isFeet) vis = !laraShoes;
+        else if (isGloves) vis = laraGloves;
+        else if (isHands) vis = !laraGloves;
+        else if (isNudeBody) vis = laraNude;
         else if (isClothedBody) vis = !laraNude;
 
         c.visible = vis;
@@ -806,6 +828,11 @@ export function SingleCharacter({
         const mat = (o as THREE.Mesh).material;
         const matName = mat ? (Array.isArray(mat) ? mat[0].name.toLowerCase() : mat.name.toLowerCase()) : '';
 
+        const isBoots = meshName.includes('boots');
+        const isFeet = meshName.includes('feet') || meshName.includes('5_feet');
+        const isGloves = meshName.includes('gloves') || meshName.includes('fingers');
+        const isHands = meshName.includes('hands') || meshName.includes('5_hands');
+
         const isNudeBody = meshName.includes('body_nude') || meshName.includes('5_body_torso') || meshName.includes('5_body_legs');
         const isPanties = meshName.includes('panties') || meshName.includes('5_panties');
         const isClothedBody = meshName === 'body';
@@ -814,7 +841,15 @@ export function SingleCharacter({
 
         let shouldBeVisible = true;
 
-        if (isNudeBody || isPanties) {
+        if (isBoots) {
+          shouldBeVisible = laraShoes;
+        } else if (isFeet) {
+          shouldBeVisible = !laraShoes;
+        } else if (isGloves) {
+          shouldBeVisible = laraGloves;
+        } else if (isHands) {
+          shouldBeVisible = !laraGloves;
+        } else if (isNudeBody || isPanties) {
           shouldBeVisible = laraNude;
         } else if (isClothedBody || isShirt || isShorts) {
           shouldBeVisible = !laraNude;
@@ -838,7 +873,7 @@ export function SingleCharacter({
       }
     });
     invalidate();
-  }, [scene, equipment, laraNude, showAccessories, laraPistols, invalidate]);
+  }, [scene, equipment, laraNude, laraShoes, laraGloves, showAccessories, laraPistols, invalidate]);
 
   // Dynamic Haircut Swap system (hair_pack_part_2.glb & mira_hair_2026.glb)
   useEffect(() => {
@@ -944,15 +979,20 @@ export function SingleCharacter({
       scene.traverse((o: any) => {
         if (o.isMesh) {
           const n = (o.name || '').toLowerCase();
-          const isNudeBody = n.includes('body_nude');
+          const isBoots = n.includes('boots');
+          const isFeet = n.includes('feet');
+          const isGloves = n.includes('gloves') || n.includes('fingers');
+          const isHands = n.includes('hands');
+          const isNudeBody = n.includes('body_nude') || n.includes('panties');
           const isClothedBody = n === 'body' || n.includes('shirt') || n.includes('shorts');
 
           let vis = true;
-          if (isNudeBody) {
-            vis = laraNude;
-          } else if (isClothedBody) {
-            vis = !laraNude;
-          }
+          if (isBoots) vis = laraShoes;
+          else if (isFeet) vis = !laraShoes;
+          else if (isGloves) vis = laraGloves;
+          else if (isHands) vis = !laraGloves;
+          else if (isNudeBody) vis = laraNude;
+          else if (isClothedBody) vis = !laraNude;
 
           if (o.visible !== vis) o.visible = vis;
           if (o.material) {
