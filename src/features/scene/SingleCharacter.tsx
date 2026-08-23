@@ -821,27 +821,37 @@ export function SingleCharacter({
         const isShirt = meshName.includes('shirt');
         const isShorts = meshName.includes('shorts');
 
+        let shouldBeVisible = true;
+
         if (isBoots) {
-          o.visible = laraShoes;
+          shouldBeVisible = laraShoes;
         } else if (isFeet) {
-          o.visible = !laraShoes;
+          shouldBeVisible = !laraShoes;
         } else if (isGloves) {
-          o.visible = laraGloves;
+          shouldBeVisible = laraGloves;
         } else if (isHands) {
-          o.visible = !laraGloves;
+          shouldBeVisible = !laraGloves;
         } else if (isNudeBody || isPanties) {
-          o.visible = laraNude;
+          shouldBeVisible = laraNude;
         } else if (isClothedBody || isShirt || isShorts) {
-          o.visible = !laraNude;
+          shouldBeVisible = !laraNude;
         }
 
         const isHolsterPart = meshName.includes('holster') || meshName.includes('gear') || meshName.includes('buckle') || matName.includes('holster') || matName.includes('gear') || matName.includes('buckle');
         const isPistolPart = meshName.includes('pistol') || meshName.includes('gun') || meshName.includes('weapon') || matName.includes('pistol') || matName.includes('gun') || matName.includes('weapon');
         const isBackpackPart = meshName.includes('backpack') || meshName.includes('bag') || meshName.includes('pack') || matName.includes('backpack') || matName.includes('bag') || matName.includes('pack');
 
-        if (isHolsterPart) o.visible = equipment.holster && showAccessories;
-        if (isPistolPart) o.visible = equipment.pistols && laraPistols;
-        if (isBackpackPart) o.visible = equipment.backpack && showAccessories;
+        if (isHolsterPart) shouldBeVisible = shouldBeVisible && equipment.holster && showAccessories;
+        if (isPistolPart) shouldBeVisible = shouldBeVisible && equipment.pistols && laraPistols;
+        if (isBackpackPart) shouldBeVisible = shouldBeVisible && equipment.backpack && showAccessories;
+
+        o.visible = shouldBeVisible;
+        if (mat) {
+          const mats = Array.isArray(mat) ? mat : [mat];
+          mats.forEach(m => {
+            m.visible = shouldBeVisible;
+          });
+        }
       }
     });
     invalidate();
