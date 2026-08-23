@@ -312,6 +312,7 @@ export interface LayerState {
   walker:       boolean;
   accessories:  boolean;
   laraPistols:  boolean;
+  laraNude?:    boolean;
   showAllLaraStyles: boolean;
   wallhack: boolean;
   aiZones: boolean;
@@ -756,6 +757,7 @@ export function SidePanel({
       {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
       {layerBtn('light',  'Pistolets Lara 🔫', 'laraPistols')}
       {layerBtn('light',  'Accessoires Lara 🎒', 'accessories')}
+      {layerBtn('pink',   'Déshabiller les Lara 👙', 'laraNude')}
       {layerBtn('pink',   'Physique buste 💃', 'breastPhysics')}
       {layerBtn('pink',   'Physique cheveux 💇‍♀️', 'hairPhysics')}
       {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}

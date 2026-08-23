@@ -181,6 +181,7 @@ export function SingleCharacter({
   const showWallhack = useSceneStore(state => state.layers.wallhack);
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
+  const laraNude = useSceneStore(state => state.layers.laraNude ?? false);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const { scene } = useGLTFClone(modelPath);
 
@@ -786,17 +787,28 @@ export function SingleCharacter({
         const mat = (o as THREE.Mesh).material;
         const matName = mat ? (Array.isArray(mat) ? mat[0].name.toLowerCase() : mat.name.toLowerCase()) : '';
 
+        const isNudeBody = meshName.includes('body_nude') || meshName.includes('5_body_1_0_0.004') || matName.includes('5_body_1_0_0.004');
+        const isClothedBody = meshName === 'body' || matName === '5_body_1.0_0_0';
+        const isShirt = meshName.includes('shirt') || matName.includes('shirt');
+        const isShorts = meshName.includes('shorts') || matName.includes('shorts');
+
+        if (isNudeBody) {
+          o.visible = laraNude;
+        } else if (isClothedBody || isShirt || isShorts) {
+          o.visible = !laraNude;
+        }
+
         const isHolsterPart = meshName.includes('holster') || meshName.includes('gear') || meshName.includes('buckle') || matName.includes('holster') || matName.includes('gear') || matName.includes('buckle');
         const isPistolPart = meshName.includes('pistol') || meshName.includes('gun') || meshName.includes('weapon') || matName.includes('pistol') || matName.includes('gun') || matName.includes('weapon');
         const isBackpackPart = meshName.includes('backpack') || meshName.includes('bag') || meshName.includes('pack') || matName.includes('backpack') || matName.includes('bag') || matName.includes('pack');
 
-        if (isHolsterPart) o.visible = equipment.holster;
-        if (isPistolPart) o.visible = equipment.pistols;
-        if (isBackpackPart) o.visible = equipment.backpack;
+        if (isHolsterPart) o.visible = equipment.holster && showAccessories;
+        if (isPistolPart) o.visible = equipment.pistols && laraPistols;
+        if (isBackpackPart) o.visible = equipment.backpack && showAccessories;
       }
     });
     invalidate();
-  }, [scene, equipment, invalidate]);
+  }, [scene, equipment, laraNude, showAccessories, laraPistols, invalidate]);
 
   // Dynamic Haircut Swap system (hair_pack_part_2.glb & mira_hair_2026.glb)
   useEffect(() => {
