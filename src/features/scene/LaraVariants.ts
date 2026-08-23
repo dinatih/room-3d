@@ -435,9 +435,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           }
         }
 
-        // MARISSA TATTOOS ON SKIN (Lion head on forearm, Skull on thigh)
-        // Ne pas appliquer sur body_nude qui possède son propre UV mapping XPS complet
-        if (isMarissa && isSkin && (matName.includes('arm') || matName.includes('body') || meshName.includes('arm') || meshName.includes('body')) && !meshName.includes('nude')) {
+        // MARISSA TATTOOS ON SKIN (Lion head on forearm)
+        // N'appliquer que sur les bras/jambes spécifiques, jamais sur le torse
+        if (isMarissa && isSkin && (matName.includes('arm') || meshName.includes('arm') || matName.includes('finger') || meshName.includes('finger')) && !meshName.includes('body')) {
           applyMarissaTattoos(mat);
         }
       });
