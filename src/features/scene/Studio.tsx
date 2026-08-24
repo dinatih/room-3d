@@ -259,7 +259,10 @@ export function Studio() {
         }
         cameraState.invalidate?.();
       } else if (e.key === 'z' || e.key === 'Z') {
-        onToggleLayer('aiZones');
+        onToggleLayer('laraTopOff');
+        cameraState.invalidate?.();
+      } else if (e.key === 'c' || e.key === 'C') {
+        onToggleLayer('laraBottomOff');
         cameraState.invalidate?.();
       } else if (e.key === 'i' || e.key === 'I') {
         setShowInventory(prev => !prev);

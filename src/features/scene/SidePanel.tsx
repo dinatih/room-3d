@@ -151,6 +151,8 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Vue top-down (toggle)"      keys={['T']} />
               <R label="Avion en papier (toggle)"   keys={['F']} />
               <R label="Grille Lara (toggle)"       keys={['G']} />
+              <R label="Enlever le haut (toggle)"   keys={['Z']} />
+              <R label="Enlever le bas (toggle)"    keys={['C']} />
               <R label="Déshabiller les Lara (toggle)" keys={['X']} />
               <R label="Quitter walk / top-down"    keys={['Échap']} />
               <R label="Changer de personnage"      keys={['L']} />

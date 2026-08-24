@@ -1,7 +1,6 @@
 /**
- * Walker.tsx — Personnages (Walkers & NPCs).
- * Gère le chargement, les animations, le retargeting et le positionnement dynamique.
- * Updated: 2026-07-27 T-Pose position fix
+ * SingleCharacter.tsx — Personnages (Walkers & NPCs).
+ * Gère le chargement, les animations, le retargeting, l'indexation structurée et le positionnement dynamique.
  */
 import { useRef, useLayoutEffect, useEffect, useMemo, useState, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -19,14 +18,20 @@ import { LAYER_WALKER_DETAIL, LAYER_WALKER } from '@config';
 import { applyLaraVariantStyles, type LaraVariant } from './LaraVariants';
 import { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES, isCharacterVisibleInMode } from './walkerConfig';
 export { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES, isCharacterVisibleInMode };
-import { buildHairChain, resolveTargetBoneName, retargetClip, getDepth, _retargetCache } from './retargeting';
+import { buildHairChain, retargetClip, _retargetCache } from './retargeting';
+import {
+  extractCharacterParts,
+  applyClothingAndAccessoriesVisibility,
+  applyRenderProperties,
+  isHeadMesh
+} from './characterParts';
+export { isHeadMesh };
 import {
   ACTION_FULL_TOUR,
   buildAutonomousScenario
 } from './ai/scenarios';
 import { buildSmartObjectInstructionSequence } from './ai/smartObjectRegistry';
 import type { AgentInstruction } from './ai/aiTypes';
-
 
 import { useAgentController } from './ai/useAgentController';
 import { appLog } from '@features/ui/AppConsole';
@@ -37,30 +42,6 @@ import { WALKER_ANIM_OPTIONS } from './animOptions';
 export { WALKER_ANIM_OPTIONS };
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
-
-/** Détermine si un mesh fait partie de la tête / visage / cheveux / yeux / accessoires de tête */
-export function isHeadMesh(mesh: THREE.Object3D): boolean {
-  if (mesh.userData?.isHeadPart || mesh.userData?.isCustomHair || mesh.userData?.isWigRoot) return true;
-  const meshName = (mesh.name || '').toLowerCase();
-  const mat = (mesh as THREE.Mesh).material;
-  const matNames: string[] = [];
-  if (mat) {
-    if (Array.isArray(mat)) {
-      mat.forEach(m => { if (m?.name) matNames.push(m.name.toLowerCase()); });
-    } else if (mat.name) {
-      matNames.push(mat.name.toLowerCase());
-    }
-  }
-  const matStr = matNames.join(' ');
-
-  const headKeywords = [
-    'head', 'face', 'hair', 'braid', 'pony', 'eye', 'lash', 'cil',
-    'mouth', 'teeth', 'dent', 'tongue', 'langue', 'cornea', 'sclera',
-    'pupil', 'glasses', 'scalp', 'brow', 'wig'
-  ];
-
-  return headKeywords.some(kw => meshName.includes(kw) || matStr.includes(kw));
-}
 
 /** Met à jour les layers Three.js de l'ensemble du personnage (corps vs tête/visage pour FPV vs miroir) */
 export function updateCharacterLayers(root: THREE.Object3D, isFirstPerson: boolean) {
@@ -74,9 +55,6 @@ export function updateCharacterLayers(root: THREE.Object3D, isFirstPerson: boole
     }
   });
 }
-
-
-
 
 // Static temp vectors for zero-allocation per-frame physics & transforms
 const _tmpV1 = new THREE.Vector3();
@@ -116,8 +94,6 @@ const silentManager = new THREE.LoadingManager();
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
 const globalGLTFCache: Record<string, Promise<any>> = {};
-
-
 
 export interface WalkerProps {
   isPreview?: boolean;
@@ -227,6 +203,8 @@ export function SingleCharacter({
   const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
   const { scene } = useGLTFClone(modelPath);
 
+  // Extraction structurée des maillages et des os
+  const parts = useMemo(() => extractCharacterParts(scene, isLara), [scene, isLara]);
 
   const groupRef = useRef<THREE.Group>(null!);
   const modelRef = useRef<THREE.Object3D>(null!);
@@ -330,8 +308,7 @@ export function SingleCharacter({
     }
   }, [activeActionKey]);
 
-
-  // Le personnage est autonome s'il fait partie des PNJ autonomes (qu'il soit le joueur actif ou un PNJ)
+  // Le personnage est autonome s'il fait partie des PNJ autonomes
   const isAutonomous = !isPreview && AUTONOMOUS_NPC_IDS.has(id);
   const isGuidedTour = !isPreview && Boolean(activeActionKey && id === activeWalkerId);
 
@@ -350,11 +327,10 @@ export function SingleCharacter({
   const { update: updateAgent, setPosition: setAgentPosition, setRotation: setAgentRotation } = useAgentController(
     id,
     finalScenario,
-    loopScenario, // Boucle la vie quotidienne
+    loopScenario,
     () => {
       if (groupRef.current) {
         const { x, y, z } = groupRef.current.position;
-        // Si l'objet n'a pas encore été positionné (0,0 initial par défaut) on utilise la position de base
         if (x !== 0 || z !== 0) {
           return {
             x,
@@ -382,123 +358,7 @@ export function SingleCharacter({
     hasSkyDrop
   );
 
-
-
   useLayoutEffect(() => {
-    scene.traverse(node => {
-      if ((node as THREE.Mesh).isMesh) {
-        const mesh = node as THREE.Mesh;
-        const nameLower = (mesh.name || '').toLowerCase();
-
-        let isAccessoryMesh = false;
-        for (const accName of ACCESSORIES_MESH_NAMES) {
-          const accNameSpace = accName.replace(/_/g, ' ');
-          if (nameLower.includes(accName) || nameLower.includes(accNameSpace)) {
-            isAccessoryMesh = true;
-            break;
-          }
-        }
-
-        if (isAccessoryMesh) {
-          const isHandPistol = nameLower.includes('handgun') && !nameLower.includes('holster');
-          const isHolsterPistol = (nameLower.includes('handgun') && nameLower.includes('holster')) || nameLower === 'holster' || nameLower.includes('mp5_holster') || nameLower.endsWith('_holster');
-
-          if (isHandPistol) {
-            mesh.visible = laraPistols ? showAccessories : false;
-          } else if (isHolsterPistol) {
-            mesh.visible = !laraPistols ? showAccessories : false;
-          } else {
-            mesh.visible = showAccessories;
-          }
-        }
-
-        const isBoots = nameLower.includes('boots');
-        const isFeet = nameLower.includes('feet');
-        const isGloves = nameLower.includes('gloves') || nameLower.includes('fingers');
-        const isHands = nameLower.includes('hands');
-
-        const isTopNude = laraNude || laraTopOff;
-        const isBottomNude = laraNude || laraBottomOff;
-
-        const isShirt = nameLower.includes('shirt');
-        const isClothedTorso = nameLower === 'body_torso';
-        const isNudeTorso = nameLower.includes('body_nude_torso') || nameLower.includes('5_body_torso');
-
-        const isShorts = nameLower.includes('shorts');
-        const isClothedLegs = nameLower === 'body_legs';
-        const isNudeLegs = nameLower.includes('body_nude_legs') || nameLower.includes('5_body_legs');
-        const isPanties = nameLower.includes('panties');
-
-        const isClothedBody = nameLower === 'body';
-
-        if (isBoots) {
-          mesh.visible = laraShoes;
-        } else if (isFeet) {
-          mesh.visible = !laraShoes;
-        } else if (isGloves) {
-          mesh.visible = true;
-        } else if (isHands) {
-          mesh.visible = false;
-        } else if (isShirt || isClothedTorso) {
-          mesh.visible = !isTopNude;
-        } else if (isNudeTorso) {
-          mesh.visible = isTopNude;
-        } else if (isShorts || isClothedLegs) {
-          mesh.visible = !isBottomNude;
-        } else if (isNudeLegs || isPanties) {
-          mesh.visible = isBottomNude;
-        } else if (isClothedBody) {
-          mesh.visible = !isTopNude && !isBottomNude;
-        }
-
-        if (mesh.material) {
-          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-          materials.forEach(mat => {
-            if (!mat) return;
-            const matNameLower = (mat.name || '').toLowerCase();
-            let isAccessoryMat = false;
-            for (const accName of ACCESSORIES_MESH_NAMES) {
-              const accNameSpace = accName.replace(/_/g, ' ');
-              if (matNameLower.includes(accName) || matNameLower.includes(accNameSpace)) {
-                isAccessoryMat = true;
-                break;
-              }
-            }
-
-            if (isAccessoryMat) {
-              const isHandPistolMat = matNameLower.includes('handgun') && !matNameLower.includes('holster');
-              const isHolsterPistolMat = (matNameLower.includes('handgun') && matNameLower.includes('holster')) || matNameLower === 'holster' || matNameLower.includes('mp5_holster') || matNameLower.endsWith('_holster');
-
-              if (isHandPistolMat) {
-                mat.visible = laraPistols ? showAccessories : false;
-              } else if (isHolsterPistolMat) {
-                mat.visible = !laraPistols ? showAccessories : false;
-              } else {
-                mat.visible = showAccessories;
-              }
-            }
-          });
-        }
-      }
-    });
-  }, [scene, showAccessories, laraPistols]);
-
-  useLayoutEffect(() => {
-    // Rename all hair bones sequentially from base to tip
-    const targetHairBones: Array<{ bone: THREE.Object3D; depth: number }> = [];
-    scene.traverse(c => {
-      if ((c as any).isBone) {
-        const nameLower = (c.name || '').toLowerCase();
-        if (nameLower.includes('hair') || nameLower.includes('ponytail') || nameLower.includes('braid') || nameLower.includes('pony')) {
-          targetHairBones.push({ bone: c, depth: getDepth(c) });
-        }
-      }
-    });
-    targetHairBones.sort((a, b) => a.depth - b.depth);
-    targetHairBones.forEach((hb, idx) => {
-      hb.bone.name = `hair_${idx + 1}`;
-    });
-
     scene.scale.set(1, 1, 1);
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
@@ -506,168 +366,33 @@ export function SingleCharacter({
 
     const baseHeight = isLara ? 173.4 : 181.0;
     const scaleFactor = (targetHeight / baseHeight) * 100.0;
-
     scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
-
     scene.updateMatrixWorld(true);
 
-    const resolvedHipsName = resolveTargetBoneName(scene, 'Hips');
-    const hips = resolvedHipsName ? scene.getObjectByName(resolvedHipsName) : null;
-    hipsBoneRef.current = hips as THREE.Bone;
+    // Sync bone references
+    hipsBoneRef.current = parts.bones.hips;
+    spine2BoneRef.current = parts.bones.spine2;
+    spineBoneRef.current = parts.bones.spine;
+    headBoneRef.current = parts.bones.head;
+    lShoulderRef.current = parts.bones.lShoulder;
+    rShoulderRef.current = parts.bones.rShoulder;
 
-    const rSpine2 = resolveTargetBoneName(scene, 'Spine2');
-    spine2BoneRef.current = (rSpine2 ? scene.getObjectByName(rSpine2) : null) as THREE.Bone;
-
-    const rSpine = resolveTargetBoneName(scene, 'Spine');
-    spineBoneRef.current = (rSpine ? scene.getObjectByName(rSpine) : null) as THREE.Bone;
-
-    const rHead = resolveTargetBoneName(scene, 'Head') || resolveTargetBoneName(scene, 'Neck');
-    headBoneRef.current = (rHead ? scene.getObjectByName(rHead) : null) as THREE.Bone;
-
-    const rLShoulder = resolveTargetBoneName(scene, 'LeftShoulder');
-    lShoulderRef.current = (rLShoulder ? scene.getObjectByName(rLShoulder) : null) as THREE.Bone;
-
-    const rRShoulder = resolveTargetBoneName(scene, 'RightShoulder');
-    rShoulderRef.current = (rRShoulder ? scene.getObjectByName(rRShoulder) : null) as THREE.Bone;
-
-    if (hips) {
-        const parent = scene.parent || scene;
-        const hipsWorld = new THREE.Vector3();
-        hips.getWorldPosition(hipsWorld);
-        const hipsLocal = parent.worldToLocal(hipsWorld);
-        scene.position.x -= hipsLocal.x;
-        scene.position.z -= hipsLocal.z;
+    if (parts.bones.hips) {
+      const parent = scene.parent || scene;
+      const hipsWorld = new THREE.Vector3();
+      parts.bones.hips.getWorldPosition(hipsWorld);
+      const hipsLocal = parent.worldToLocal(hipsWorld);
+      scene.position.x -= hipsLocal.x;
+      scene.position.z -= hipsLocal.z;
     }
-
-    scene.traverse(o => {
-      const c = o as any;
-      if (c.isMesh && !c.userData.isCustomHair) {
-        const name = (c.name || '').toLowerCase();
-        const isInternalInvisible = name.includes('teeth') || name.includes('dent') ||
-                                    name.includes('lash') || name.includes('cil') ||
-                                    name.includes('eye') || name.includes('oeil') ||
-                                    name.includes('tongue') || name.includes('langue') ||
-                                    name.includes('cornea') || name.includes('sclera') ||
-                                    name.includes('pupil') || name.includes('mouth_inner');
-        c.castShadow = characterShadows && !isInternalInvisible;
-        c.receiveShadow = characterShadows && !isInternalInvisible;
-        c.frustumCulled = true;
-        if (c.material) {
-            const materials = Array.isArray(c.material) ? c.material : [c.material];
-            materials.forEach((mat: any) => {
-                mat.transparent = false;
-                mat.depthWrite = true;
-                mat.side = THREE.DoubleSide;
-            });
-        }
-
-        const isBoots = name.includes('boots');
-        const isFeet = name.includes('feet');
-        const isGloves = name.includes('gloves') || name.includes('fingers');
-        const isHands = name.includes('hands');
-
-        const isTopNude = laraNude || laraTopOff;
-        const isBottomNude = laraNude || laraBottomOff;
-
-        const isShirt = name.includes('shirt');
-        const isClothedTorso = name === 'body_torso';
-        const isNudeTorso = name.includes('body_nude_torso') || name.includes('5_body_torso');
-
-        const isShorts = name.includes('shorts');
-        const isClothedLegs = name === 'body_legs';
-        const isNudeLegs = name.includes('body_nude_legs') || name.includes('5_body_legs');
-        const isPanties = name.includes('panties');
-
-        const isClothedBody = name === 'body';
-
-        let vis = true;
-        if (isBoots) vis = laraShoes;
-        else if (isFeet) vis = !laraShoes;
-        else if (isGloves) vis = true;
-        else if (isHands) vis = false;
-        else if (isShirt || isClothedTorso) vis = !isTopNude;
-        else if (isNudeTorso) vis = isTopNude;
-        else if (isShorts || isClothedLegs) vis = !isBottomNude;
-        else if (isNudeLegs || isPanties) vis = isBottomNude;
-        else if (isClothedBody) vis = !isTopNude && !isBottomNude;
-
-        c.visible = vis;
-        if (c.material) {
-          const mats = Array.isArray(c.material) ? c.material : [c.material];
-          mats.forEach((m: any) => { m.visible = vis; });
-        }
-      }
-      if (!c.restWorldQuaternion) {
-        c.restWorldQuaternion = c.getWorldQuaternion(new THREE.Quaternion());
-      }
-      if (c.isBone) {
-        if (!c.defaultPosition) {
-          c.defaultPosition = c.position.clone();
-        }
-        if (!c.restLocalQuaternion) {
-          c.restLocalQuaternion = c.quaternion.clone();
-        }
-        if (!c.userData.restPos) {
-          c.userData.restPos = c.position.clone();
-        }
-        if (!c.userData.restQuat) {
-          c.userData.restQuat = c.quaternion.clone();
-        }
-      }
-    });
 
     if (variant) {
-        applyLaraVariantStyles(scene, variant);
+      applyLaraVariantStyles(scene, variant);
     }
 
-
-
-    // Initialize Native Hair Chain (Verlet)
-    const nativeHairBones: THREE.Bone[] = [];
-    scene.traverse(c => {
-      const nLower = (c.name || '').toLowerCase();
-      if ((c as any).isBone && (nLower.includes('hair') || nLower.includes('pony') || nLower.includes('braid')) && !(c as any).userData.isCustomHair) {
-        nativeHairBones.push(c as THREE.Bone);
-      }
-    });
-    hairChainRef.current = buildHairChain(nativeHairBones);
-
-    // Initialize Breast Chain (Verlet)
-    const breastChain: any[] = [];
-    const breastBones: THREE.Bone[] = [];
-    scene.traverse(c => {
-      if ((c as any).isBone && c.name.toLowerCase().includes('breast')) {
-        breastBones.push(c as THREE.Bone);
-      }
-    });
-
-    for (const bone of breastBones) {
-      let axis = new THREE.Vector3(0, 1, 0); // point forward along local Y (bone length)
-      let length = 15.0;
-      const child = bone.children.find(x => (x as any).isBone);
-      if (child && child.position.lengthSq() > 1e-8) {
-        length = child.position.length();
-        axis = child.position.clone().normalize();
-      }
-      bone.updateMatrixWorld(true);
-      const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-      const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
-      const worldLength = length * worldScale.z;
-      const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
-      const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
-
-      const initialRestQ = (bone as any).restLocalQuaternion ? (bone as any).restLocalQuaternion.clone() : bone.quaternion.clone();
-      breastChain.push({
-        bone,
-        restQuat: initialRestQ,
-        axis,
-        length,
-        worldLength,
-        tipWorld: tipWorld.clone(),
-        tipPrev: tipWorld.clone(),
-      });
-    }
-    breastChainRef.current = breastChain;
+    // Set chains from indexed parts
+    hairChainRef.current = parts.hairChain;
+    breastChainRef.current = parts.breastChain;
 
     const mixer = new THREE.AnimationMixer(scene);
     mixerRef.current = mixer;
@@ -701,39 +426,36 @@ export function SingleCharacter({
     activeActionName.current = '';
 
     return () => {
-        mixer.stopAllAction();
-        mixer.uncacheRoot(scene);
+      mixer.stopAllAction();
+      mixer.uncacheRoot(scene);
     };
-  }, [scene, animations, name, isLara, targetHeight, variant, sittingScene, id]);
+  }, [scene, parts, animations, name, isLara, targetHeight, variant, sittingScene, id]);
 
-
+  // Visibilité des vêtements et des accessoires (ciblée, zéro traversée)
   useEffect(() => {
     if (!scene) return;
-    scene.traverse(o => {
-      const c = o as any;
-      if (c.isMesh) {
-        const name = (c.name || '').toLowerCase();
-        const isInternalInvisible = name.includes('teeth') || name.includes('dent') ||
-                                    name.includes('lash') || name.includes('cil') ||
-                                    name.includes('eye') || name.includes('oeil') ||
-                                    name.includes('tongue') || name.includes('langue') ||
-                                    name.includes('cornea') || name.includes('sclera') ||
-                                    name.includes('pupil') || name.includes('mouth_inner');
-        c.castShadow = characterShadows && !isInternalInvisible;
-        c.receiveShadow = characterShadows && !isInternalInvisible;
-        if (c.material) {
-          const materials = Array.isArray(c.material) ? c.material : [c.material];
-          materials.forEach((mat: any) => {
-             mat.depthTest = !showWallhack;
-             mat.depthWrite = !showWallhack;
-             mat.wireframe = characterWireframe;
-          });
-        }
-      }
+    applyClothingAndAccessoriesVisibility(parts, {
+      laraNude,
+      laraTopOff,
+      laraBottomOff,
+      laraShoes,
+      showAccessories,
+      laraPistols,
+      equipment
     });
     invalidate();
-  }, [scene, characterShadows, showWallhack, characterWireframe, invalidate]);
+  }, [parts, scene, equipment, laraNude, laraTopOff, laraBottomOff, laraShoes, showAccessories, laraPistols, invalidate]);
 
+  // Propriétés de rendu : ombres, wallhack, fil de fer
+  useEffect(() => {
+    if (!scene) return;
+    applyRenderProperties(parts, {
+      characterShadows,
+      showWallhack,
+      characterWireframe
+    });
+    invalidate();
+  }, [parts, scene, characterShadows, showWallhack, characterWireframe, invalidate]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -846,17 +568,17 @@ export function SingleCharacter({
                       (e.detail?.key === `walker-anim-${id}`);
 
       if (e.detail?.key === 'lara-custom-holster' && isActive) {
-        setEquipment((prev: { holster: boolean; pistols: boolean; backpack: boolean }) => ({ ...prev, holster: !prev.holster }));
+        setEquipment(prev => ({ ...prev, holster: !prev.holster }));
         invalidate();
         return;
       }
       if (e.detail?.key === 'lara-custom-pistols' && isActive) {
-        setEquipment((prev: { holster: boolean; pistols: boolean; backpack: boolean }) => ({ ...prev, pistols: !prev.pistols }));
+        setEquipment(prev => ({ ...prev, pistols: !prev.pistols }));
         invalidate();
         return;
       }
       if (e.detail?.key === 'lara-custom-backpack' && isActive) {
-        setEquipment((prev: { holster: boolean; pistols: boolean; backpack: boolean }) => ({ ...prev, backpack: !prev.backpack }));
+        setEquipment(prev => ({ ...prev, backpack: !prev.backpack }));
         invalidate();
         return;
       }
@@ -902,122 +624,24 @@ export function SingleCharacter({
     return () => mixer.removeEventListener('finished', onFinished);
   }, [id, scene]);
 
-
-
-
-  useEffect(() => {
-    if (!scene) return;
-    scene.traverse(o => {
-      if ((o as THREE.Mesh).isMesh) {
-        const meshName = o.name.toLowerCase();
-        const mat = (o as THREE.Mesh).material;
-        const matName = mat ? (Array.isArray(mat) ? mat[0].name.toLowerCase() : mat.name.toLowerCase()) : '';
-
-        const isBoots = meshName.includes('boots');
-        const isFeet = meshName.includes('feet') || meshName.includes('5_feet');
-        const isGloves = meshName.includes('gloves') || meshName.includes('fingers');
-        const isHands = meshName.includes('hands') || meshName.includes('5_hands');
-
-        const isTopNude = laraNude || laraTopOff;
-        const isBottomNude = laraNude || laraBottomOff;
-
-        const isShirt = meshName.includes('shirt');
-        const isClothedTorso = meshName === 'body_torso';
-        const isNudeTorso = meshName.includes('body_nude_torso') || meshName.includes('5_body_torso');
-
-        const isShorts = meshName.includes('shorts');
-        const isClothedLegs = meshName === 'body_legs';
-        const isNudeLegs = meshName.includes('body_nude_legs') || meshName.includes('5_body_legs');
-        const isPanties = meshName.includes('panties') || meshName.includes('5_panties');
-
-        const isClothedBody = meshName === 'body';
-
-        let shouldBeVisible = true;
-
-        if (isBoots) {
-          shouldBeVisible = laraShoes;
-        } else if (isFeet) {
-          shouldBeVisible = !laraShoes;
-        } else if (isGloves) {
-          shouldBeVisible = true;
-        } else if (isHands) {
-          shouldBeVisible = false;
-        } else if (isShirt || isClothedTorso) {
-          shouldBeVisible = !isTopNude;
-        } else if (isNudeTorso) {
-          shouldBeVisible = isTopNude;
-        } else if (isShorts || isClothedLegs) {
-          shouldBeVisible = !isBottomNude;
-        } else if (isNudeLegs || isPanties) {
-          shouldBeVisible = isBottomNude;
-        } else if (isClothedBody) {
-          shouldBeVisible = !isTopNude && !isBottomNude;
-        }
-
-        const isHolsterPart = meshName.includes('holster') || meshName.includes('gear') || meshName.includes('buckle') || matName.includes('holster') || matName.includes('gear') || matName.includes('buckle');
-        const isPistolPart = meshName.includes('pistol') || meshName.includes('gun') || meshName.includes('weapon') || matName.includes('pistol') || matName.includes('gun') || matName.includes('weapon');
-        const isBackpackPart = meshName.includes('backpack') || meshName.includes('bag') || meshName.includes('pack') || matName.includes('backpack') || matName.includes('bag') || matName.includes('pack');
-
-        if (isHolsterPart) shouldBeVisible = shouldBeVisible && equipment.holster && showAccessories;
-        if (isPistolPart) shouldBeVisible = shouldBeVisible && equipment.pistols && laraPistols;
-        if (isBackpackPart) shouldBeVisible = shouldBeVisible && equipment.backpack && showAccessories;
-
-        o.visible = shouldBeVisible;
-        if (mat) {
-          const mats = Array.isArray(mat) ? mat : [mat];
-          mats.forEach(m => {
-            m.visible = shouldBeVisible;
-          });
-        }
-      }
-    });
-    invalidate();
-  }, [scene, equipment, laraNude, laraTopOff, laraBottomOff, laraShoes, showAccessories, laraPistols, invalidate]);
-
-  // Dynamic Haircut Swap system (hair_pack_part_2.glb & mira_hair_2026.glb)
+  // Dynamic Haircut Swap system
   useEffect(() => {
     if (!scene) return;
 
-    // 1. Visibilité de la chevelure et de la tresse (braid) d'origine
-    scene.traverse(o => {
-      if ((o as THREE.Mesh).isMesh) {
-        const m = o as THREE.Mesh;
-
-        // Clone materials once per instance so visibility doesn't affect other characters
-        if (m.material && !m.userData.materialsCloned) {
-          if (Array.isArray(m.material)) {
-            m.material = m.material.map(mat => mat.clone());
-          } else {
-            m.material = (m.material as THREE.Material).clone();
-          }
-          m.userData.materialsCloned = true;
-        }
-
-        const meshName = (m.name || '').toLowerCase();
-        const mat = m.material;
-
-        if (mat) {
-          const mats = Array.isArray(mat) ? mat : [mat];
-          mats.forEach((m2: THREE.Material) => {
-            const matName = m2.name.toLowerCase();
-            const isBraid = meshName.includes('braid') || meshName.includes('pony') || matName.includes('braid') || matName.includes('pony');
-            const isOriginalHair = (meshName.includes('hair') || isBraid || matName.includes('hair') || matName.includes('scalp')) && !m.userData.isCustomHair;
-
-            if (isOriginalHair) {
-              const show = haircut === 'original' && !(variant === 'angelina' && isBraid);
-              m2.visible = show;
-              if ((m as any).isMesh || (m as any).isSkinnedMesh) {
-                (m as THREE.Mesh).visible = show;
-              }
-            }
-          });
-        }
+    // 1. Visibilité de la chevelure et tresse d'origine
+    const showNativeHair = haircut === 'original';
+    for (const item of parts.nativeHairMeshes) {
+      const meshName = (item.mesh.name || '').toLowerCase();
+      const isBraid = meshName.includes('braid') || meshName.includes('pony');
+      const visible = showNativeHair && !(variant === 'angelina' && isBraid);
+      item.mesh.visible = visible;
+      for (const mat of item.materials) {
+        if (mat) mat.visible = visible;
       }
-    });
+    }
 
-    // 2. Trouver le bone de tête et cacher les attachments existants (legacy)
-    const resolvedHName = resolveTargetBoneName(scene, 'Head');
-    const headBone = headBoneRef.current || (resolvedHName ? scene.getObjectByName(resolvedHName) as THREE.Bone : null);
+    // 2. Bone de tête
+    const headBone = parts.bones.head;
     if (!headBone) return;
 
     if (headBoneState !== headBone) {
@@ -1025,9 +649,7 @@ export function SingleCharacter({
     }
 
     if (haircut === 'original') {
-      const ghostWigs = headBone.children.filter((c: any) => c.userData.isWigRoot || /^[0-9]+$/.test(c.name) || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_'));
-      console.log(`[Wig Sweep] haircut=original. headBone children:`, headBone.children.map(c => c.name));
-      console.log(`[Wig Sweep] found ghosts:`, ghostWigs.map(w => w.name));
+      const ghostWigs = headBone.children.filter((c: any) => c.userData.isWigRoot || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_'));
       ghostWigs.forEach((w: any) => headBone.remove(w));
     }
 
@@ -1041,7 +663,7 @@ export function SingleCharacter({
     }
 
     invalidate();
-  }, [scene, haircut, isActive, invalidate]);
+  }, [scene, parts, haircut, variant, isActive, headBoneState, invalidate]);
 
   useEffect(() => {
     if (customIdleAnimPath && scene && mixerRef.current && !actionsRef.current[customIdleAnimPath]) {
@@ -1078,51 +700,6 @@ export function SingleCharacter({
   }, [customIdleAnimPath, id, scene, invalidate]);
 
   useFrame((state, rawDelta) => {
-    if (scene) {
-      scene.traverse((o: any) => {
-        if (o.isMesh) {
-          const n = (o.name || '').toLowerCase();
-          const isBoots = n.includes('boots');
-          const isFeet = n.includes('feet');
-          const isGloves = n.includes('gloves') || n.includes('fingers');
-          const isHands = n.includes('hands');
-
-          const isTopNude = laraNude || laraTopOff;
-          const isBottomNude = laraNude || laraBottomOff;
-
-          const isShirt = n.includes('shirt');
-          const isClothedTorso = n === 'body_torso';
-          const isNudeTorso = n.includes('body_nude_torso') || n.includes('5_body_torso');
-
-          const isShorts = n.includes('shorts');
-          const isClothedLegs = n === 'body_legs';
-          const isNudeLegs = n.includes('body_nude_legs') || n.includes('5_body_legs');
-          const isPanties = n.includes('panties');
-
-          const isClothedBody = n === 'body';
-
-          let vis = true;
-          if (isBoots) vis = laraShoes;
-          else if (isFeet) vis = !laraShoes;
-          else if (isGloves) vis = true;
-          else if (isHands) vis = false;
-          else if (isShirt || isClothedTorso) vis = !isTopNude;
-          else if (isNudeTorso) vis = isTopNude;
-          else if (isShorts || isClothedLegs) vis = !isBottomNude;
-          else if (isNudeLegs || isPanties) vis = isBottomNude;
-          else if (isClothedBody) vis = !isTopNude && !isBottomNude;
-
-          if (o.visible !== vis) o.visible = vis;
-          if (o.material) {
-            const mats = Array.isArray(o.material) ? o.material : [o.material];
-            mats.forEach((m: any) => {
-              if (m.visible !== vis) m.visible = vis;
-            });
-          }
-        }
-      });
-    }
-
     const delta = Math.min(rawDelta, 0.1);
     if (!groupRef.current || !mixerRef.current) return;
 
@@ -1151,8 +728,6 @@ export function SingleCharacter({
       groupRef.current.rotation.y = 0;
       const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId);
       groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode;
-      // En mode grille, effacer l'animation IA pour que les NPCs restent en idle
-      // sauf si l'utilisateur a manuellement choisi une animation
       if (!userAnimOverrideRef.current) {
         customAnimName.current = null;
       }
@@ -1161,14 +736,13 @@ export function SingleCharacter({
         const isUserManuallyMoving = cameraState.isUserControlling();
 
         if (isGuidedTour || (!isUserManuallyMoving && isAutonomous)) {
-          // Mode autonome / visite guidée : l'IA déplace le joueur
+          // Mode autonome / visite guidée
           const agentState = updateAgent(delta);
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
           customAnimName.current = agentState.animation;
           groupRef.current.visible = !cameraState.walkerHidden;
 
-          // Synchronise la position avec cameraState pour minimap et FPV
           cameraState.walkerX = agentState.x;
           cameraState.walkerZ = agentState.z;
           cameraState.walkYaw = agentState.rotY;
@@ -1183,7 +757,6 @@ export function SingleCharacter({
           customAnimName.current = null;
           cameraState.positions[id] = { x: cameraState.walkerX, y: 0, z: cameraState.walkerZ, yaw: cameraState.walkYaw };
           
-          // Met à jour la position interne de l'agent pour qu'il reprenne depuis la nouvelle position
           setAgentPosition(cameraState.walkerX, 0, cameraState.walkerZ);
           setAgentRotation(cameraState.walkYaw);
         }
@@ -1191,7 +764,6 @@ export function SingleCharacter({
         const agentState = updateAgent(delta);
         groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
         groupRef.current.rotation.y = agentState.rotY;
-        // Ne pas écraser l'animation choisie par l'utilisateur
         if (!userAnimOverrideRef.current) {
           customAnimName.current = agentState.animation;
         }
@@ -1220,32 +792,21 @@ export function SingleCharacter({
       return;
     }
 
-    if (variant === 'lgbta') {
+    // Animation dynamique LGBT+ (directement sur les matériaux indexés, zéro traversée)
+    if (variant === 'lgbta' && parts.lgbtaHairMaterials.length > 0) {
       const cycle = 15;
       const t = state.clock.elapsedTime % cycle;
-      let hue = 0.86; // Pink
+      let hue = 0.86;
       if (t > 10) {
         hue = (0.86 + (t - 10) / 5) % 1.0;
       }
       const c = new THREE.Color().setHSL(hue, 1.0, 0.5);
       const e = new THREE.Color().setHSL(hue, 1.0, 0.15);
-      groupRef.current.traverse((o) => {
-        if ((o as THREE.Mesh).isMesh) {
-          const mesh = o as THREE.Mesh;
-          const mat = mesh.material;
-          if (!mat) return;
-          const matName = Array.isArray(mat) ? mat[0].name.toLowerCase() : (mat as THREE.Material).name.toLowerCase();
-          const meshName = mesh.name.toLowerCase();
-          const isHair = matName.includes('hair') || matName.includes('pony') || matName.includes('braid') || meshName.includes('hair') || meshName.includes('pony') || meshName.includes('braid');
-          if (isHair) {
-            const mList = Array.isArray(mat) ? mat : [mat];
-            mList.forEach((m: any) => {
-              if (m.color) m.color.copy(c);
-              if (m.emissive) m.emissive.copy(e);
-            });
-          }
-        }
-      });
+      for (let i = 0; i < parts.lgbtaHairMaterials.length; i++) {
+        const m = parts.lgbtaHairMaterials[i] as any;
+        if (m.color) m.color.copy(c);
+        if (m.emissive) m.emissive.copy(e);
+      }
     }
 
     const mixer = mixerRef.current;
@@ -1260,20 +821,17 @@ export function SingleCharacter({
     groupRef.current.userData.prevX = groupRef.current.position.x;
     groupRef.current.userData.prevZ = groupRef.current.position.z;
 
-    // Inactive model is stationary unless active as NPC or autonomous player
     let isMoving = (!isPreview && isActive && cameraState.isUserControlling()) ? cameraState.isMoving : isNpcActive;
     let target = isPreview ? (walkerAnim || 'idle') : (customAnimName.current || (isMoving ? 'walk' : (isNPC && customIdleAnimPath && !isAutonomous ? customIdleAnimPath : 'idle')));
 
-    // Si le joueur reprend le contrôle manuel (flèches clavier), effacer l'animation IA pour marcher ou idle
     if (isActive && !isGuidedTour && cameraState.isUserControlling() && customAnimName.current) {
       customAnimName.current = null;
     }
 
     if (!actions[target] && target.endsWith('.glb')) {
       loadAndPlayClip(target);
-      target = 'idle'; // fallback while loading
+      target = 'idle';
     }
-
 
     const isTPose = target === 'tpose' || target === 'animations/poses_idles/anim_t_pose.glb';
 
@@ -1291,260 +849,239 @@ export function SingleCharacter({
     } else {
       const to = actions[target];
       if (to && activeActionName.current !== target) {
-          const from = (activeActionName.current && activeActionName.current !== 'tpose') ? actions[activeActionName.current] : null;
-          if (from) from.fadeOut(0.2);
+        const from = (activeActionName.current && activeActionName.current !== 'tpose') ? actions[activeActionName.current] : null;
+        if (from) from.fadeOut(0.2);
 
-          const isContinuous = target === 'idle' || target === 'walk' || target === 'run' || (isNPC && target === customIdleAnimPath && id !== 'sandra' && id !== 'rajaa');
-          if (isContinuous) {
-            to.setLoop(THREE.LoopRepeat, Infinity);
-            to.clampWhenFinished = false;
-          } else if (id === 'sandra' || id === 'rajaa') {
-            to.setLoop(THREE.LoopOnce, 1);
-            to.clampWhenFinished = true;
-          }
+        const isContinuous = target === 'idle' || target === 'walk' || target === 'run' || (isNPC && target === customIdleAnimPath && id !== 'sandra' && id !== 'rajaa');
+        if (isContinuous) {
+          to.setLoop(THREE.LoopRepeat, Infinity);
+          to.clampWhenFinished = false;
+        } else if (id === 'sandra' || id === 'rajaa') {
+          to.setLoop(THREE.LoopOnce, 1);
+          to.clampWhenFinished = true;
+        }
 
-          to.reset().fadeIn(0.2).play();
-          to.setEffectiveWeight(1);
-          activeActionName.current = target;
+        to.reset().fadeIn(0.2).play();
+        to.setEffectiveWeight(1);
+        activeActionName.current = target;
       }
     }
 
     if (!isPaused && !isTPose) {
-        mixer.update(delta);
+      mixer.update(delta);
 
-        // Physique réactive & Gravité universelle (sans vent/bruit continu au repos)
+      const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
+      const enableBreastPhysics = useSceneStore.getState().layers.breastPhysics;
 
+      if (enableHairPhysics || enableBreastPhysics) {
+        scene.updateMatrixWorld(true);
+      }
 
-        const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
-        const enableBreastPhysics = useSceneStore.getState().layers.breastPhysics;
+      let simDt = delta;
+      if (simDt > 0.05) simDt = 0.05;
+      const dtRatio = physicsPrevDt.current > 0 ? (simDt / physicsPrevDt.current) : 1;
 
-        // Update world matrices only when physics is active
-        if (enableHairPhysics || enableBreastPhysics) {
-          scene.updateMatrixWorld(true);
+      // Ponytail physics simulation (Verlet)
+      const activeHairChain = (haircut !== 'original' && customHairChainRef.current.length > 0) ? customHairChainRef.current : hairChainRef.current;
+
+      if (!enableHairPhysics && activeHairChain.length > 0) {
+        for (const node of activeHairChain) {
+          if (node.restQuat) {
+            node.bone.quaternion.copy(node.restQuat);
+          }
         }
+      }
 
-        // Physics simulation timestep (Time-Corrected Verlet)
-        let simDt = delta;
-        if (simDt > 0.05) simDt = 0.05; // cap to 20fps
-        const dtRatio = physicsPrevDt.current > 0 ? (simDt / physicsPrevDt.current) : 1;
+      if (enableHairPhysics && activeHairChain.length > 0) {
+        const firstNode = activeHairChain[0];
+        const baseParent = firstNode.bone.parent;
+        if (baseParent) {
+          baseParent.getWorldQuaternion(_baseParentQuat);
 
-        // Ponytail physics simulation (Verlet)
-        const activeHairChain = (haircut !== 'original' && customHairChainRef.current.length > 0) ? customHairChainRef.current : hairChainRef.current;
+          if (headBoneRef.current && hipsBoneRef.current && lShoulderRef.current && rShoulderRef.current) {
+            const headW = _headW.setFromMatrixPosition(headBoneRef.current.matrixWorld);
+            const hipsW = _hipsW.setFromMatrixPosition(hipsBoneRef.current.matrixWorld);
+            const lShoulderW = _lShoulderW.setFromMatrixPosition(lShoulderRef.current.matrixWorld);
+            const rShoulderW = _rShoulderW.setFromMatrixPosition(rShoulderRef.current.matrixWorld);
 
-        if (!enableHairPhysics && activeHairChain.length > 0) {
+            _upDir.subVectors(headW, hipsW).normalize();
+            _rightDir.subVectors(lShoulderW, rShoulderW).normalize();
+            _backDir.crossVectors(_upDir, _rightDir).normalize();
+          }
+
           for (const node of activeHairChain) {
-            if (node.restQuat) {
-              node.bone.quaternion.copy(node.restQuat);
-            }
-          }
-        }
+            const { bone, relQuat, axis, worldLength } = node;
+            const parent = bone.parent;
+            if (!parent) continue;
 
-        if (!(window as any)._hairDebugLogged && activeHairChain.length > 0) {
-          console.log(`[HairPhysics] Active chain length: ${activeHairChain.length}, isCustom: ${activeHairChain === customHairChainRef.current}`);
-          (window as any)._hairDebugLogged = true;
-        }
+            const jointWorld = _jointWorld.setFromMatrixPosition(bone.matrixWorld);
+            const restDirWorld = _restDirWorld.copy(axis).applyQuaternion(_boneRestWorldQuat.copy(_baseParentQuat).multiply(relQuat)).normalize();
+            const restDir = _restDir.copy(_downWorld).lerp(restDirWorld, 0.15).normalize();
+            const restTip = _restTip.copy(jointWorld).addScaledVector(restDir, worldLength);
 
-        if (enableHairPhysics && activeHairChain.length > 0) {
-          const firstNode = activeHairChain[0];
-          const baseParent = firstNode.bone.parent;
-          if (baseParent) {
-            baseParent.getWorldQuaternion(_baseParentQuat);
-
-            // Compute torso frame vectors once per character
-            if (headBoneRef.current && hipsBoneRef.current && lShoulderRef.current && rShoulderRef.current) {
-              const headW = _headW.setFromMatrixPosition(headBoneRef.current.matrixWorld);
-              const hipsW = _hipsW.setFromMatrixPosition(hipsBoneRef.current.matrixWorld);
-              const lShoulderW = _lShoulderW.setFromMatrixPosition(lShoulderRef.current.matrixWorld);
-              const rShoulderW = _rShoulderW.setFromMatrixPosition(rShoulderRef.current.matrixWorld);
-
-              _upDir.subVectors(headW, hipsW).normalize();
-              _rightDir.subVectors(lShoulderW, rShoulderW).normalize();
-              _backDir.crossVectors(_upDir, _rightDir).normalize();
+            const dist = jointWorld.distanceTo(node.tipWorld);
+            if (dist > Math.max(worldLength * 3, 20.0)) {
+              node.tipWorld.copy(restTip);
+              node.tipPrev.copy(restTip);
             }
 
-            for (const node of activeHairChain) {
-              const { bone, relQuat, axis, worldLength } = node;
-              const parent = bone.parent;
-              if (!parent) continue;
+            const isHeadMoving = isMoving || (target !== 'idle') || (walkerAnim && walkerAnim.toLowerCase().includes('walk')) || (walkerAnim && walkerAnim.toLowerCase().includes('run'));
+            const dampingFactor = isHeadMoving ? 0.75 : 0.85;
 
-              const jointWorld = _jointWorld.setFromMatrixPosition(bone.matrixWorld);
-              const restDirWorld = _restDirWorld.copy(axis).applyQuaternion(_boneRestWorldQuat.copy(_baseParentQuat).multiply(relQuat)).normalize();
-              const restDir = _restDir.copy(_downWorld).lerp(restDirWorld, 0.15).normalize();
-              const restTip = _restTip.copy(jointWorld).addScaledVector(restDir, worldLength);
+            const vel = _hairVel.subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - dampingFactor));
+            const next = _hairNext.copy(node.tipWorld).add(vel).addScaledVector(_tmpG, simDt * simDt);
 
-              // Teleportation safety reset
-              const dist = jointWorld.distanceTo(node.tipWorld);
-              if (dist > Math.max(worldLength * 3, 20.0)) {
-                node.tipWorld.copy(restTip);
-                node.tipPrev.copy(restTip);
-              }
+            const lerpStiffness = isHeadMoving ? 0.05 : 0.12;
+            next.lerp(restTip, lerpStiffness);
 
-              const isHeadMoving = isMoving || (target !== 'idle') || (walkerAnim && walkerAnim.toLowerCase().includes('walk')) || (walkerAnim && walkerAnim.toLowerCase().includes('run'));
-              const dampingFactor = isHeadMoving ? 0.75 : 0.85;
+            if (!isHeadMoving && vel.lengthSq() < 0.1) {
+              vel.set(0, 0, 0);
+              next.lerp(restTip, 0.8);
+            }
 
-              const vel = _hairVel.subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - dampingFactor));
-              const next = _hairNext.copy(node.tipWorld).add(vel).addScaledVector(_tmpG, simDt * simDt);
-
-              // Souplesse d'attraction vers le bas (gravité naturelle)
-              const lerpStiffness = isHeadMoving ? 0.05 : 0.12;
-              next.lerp(restTip, lerpStiffness);
-
-              // Restitution et frein au repos si la vitesse est faible (immobilisation totale sans bruit)
-              if (!isHeadMoving && vel.lengthSq() < 0.1) {
-                vel.set(0, 0, 0);
-                next.lerp(restTip, 0.8);
-              }
-
-              // Resolve constraints iteratively (2 passes)
-              for (let i = 0; i < 2; i++) {
-                // 1. Length constraint
-                const dir = _hairDir.subVectors(next, jointWorld);
-                const currentLen = dir.length();
-                if (currentLen > 1e-6) {
-                  dir.multiplyScalar(worldLength / currentLen);
-                } else {
-                  dir.copy(restDir).multiplyScalar(worldLength);
-                }
-                next.copy(jointWorld).add(dir);
-
-                // 2. Colliders géométriques (Tête sphérique + Sac à dos OBB rectangulaire plat)
-                // Tête (Sphère douce)
-                if (headBoneRef.current && activeHairChain !== customHairChainRef.current) {
-                  const center = _colliderCenter.setFromMatrixPosition(headBoneRef.current.matrixWorld).addScaledVector(_backDir, 4);
-                  const radius = 13.0;
-                  const dCenter = next.distanceTo(center);
-                  if (dCenter < radius) {
-                    next.add(_colliderOffset.subVectors(next, center).normalize().multiplyScalar(radius - dCenter));
-                  }
-                }
-
-                // Sac à dos (Collider Rectangulaire Plat OBB)
-                if (spine2BoneRef.current && activeHairChain !== customHairChainRef.current) {
-                  const backpackCenter = _colliderCenter.setFromMatrixPosition(spine2BoneRef.current.matrixWorld).addScaledVector(_backDir, 11);
-                  const localPos = _colliderOffset.subVectors(next, backpackCenter);
-                  const px = localPos.dot(_rightDir);
-                  const py = localPos.dot(_upDir);
-                  const pz = localPos.dot(_backDir);
-
-                  const halfW = 14.0;
-                  const halfH = 18.0;
-                  const thickness = 7.0;
-
-                  if (Math.abs(px) < halfW && Math.abs(py) < halfH && pz < thickness && pz > -5.0) {
-                    next.addScaledVector(_backDir, thickness - pz);
-                  }
-                }
-              }
-
-              // Final exact length constraint
-              const finalDir = _hairFinalDir.subVectors(next, jointWorld);
-              const finalLen = finalDir.length();
-              if (finalLen > 1e-6) {
-                finalDir.multiplyScalar(worldLength / finalLen);
+            // Constraints pass
+            for (let i = 0; i < 2; i++) {
+              const dir = _hairDir.subVectors(next, jointWorld);
+              const currentLen = dir.length();
+              if (currentLen > 1e-6) {
+                dir.multiplyScalar(worldLength / currentLen);
               } else {
-                finalDir.copy(restDir).multiplyScalar(worldLength);
+                dir.copy(restDir).multiplyScalar(worldLength);
+              }
+              next.copy(jointWorld).add(dir);
+
+              // Tête
+              if (headBoneRef.current && activeHairChain !== customHairChainRef.current) {
+                const center = _colliderCenter.setFromMatrixPosition(headBoneRef.current.matrixWorld).addScaledVector(_backDir, 4);
+                const radius = 13.0;
+                const dCenter = next.distanceTo(center);
+                if (dCenter < radius) {
+                  next.add(_colliderOffset.subVectors(next, center).normalize().multiplyScalar(radius - dCenter));
+                }
               }
 
-              node.tipPrev.copy(node.tipWorld);
-              node.tipWorld.copy(jointWorld).add(finalDir);
+              // Sac à dos
+              if (spine2BoneRef.current && activeHairChain !== customHairChainRef.current) {
+                const backpackCenter = _colliderCenter.setFromMatrixPosition(spine2BoneRef.current.matrixWorld).addScaledVector(_backDir, 11);
+                const localPos = _colliderOffset.subVectors(next, backpackCenter);
+                const px = localPos.dot(_rightDir);
+                const py = localPos.dot(_upDir);
+                const pz = localPos.dot(_backDir);
 
-              // Orientation réelle des os de la tresse (ponytail) d'après le résultat physique Verlet
-              const currentDirWorld = _hairCurrentDirWorld.copy(finalDir).normalize();
-              const parentWQuat = parent.getWorldQuaternion(_parentWQuat);
+                const halfW = 14.0;
+                const halfH = 18.0;
+                const thickness = 7.0;
 
-              // Correct quaternion math: Swing from REST WORLD direction to CURRENT WORLD direction
-              const boneRestWorldQuat = _boneRestWorldQuat.copy(_baseParentQuat).multiply(relQuat);
-              const swing = _swingQuat.setFromUnitVectors(restDirWorld, currentDirWorld);
-
-              const newWorldQuat = swing.multiply(boneRestWorldQuat);
-              bone.quaternion.copy(parentWQuat.invert().multiply(newWorldQuat));
-
-              bone.updateMatrixWorld(true);
+                if (Math.abs(px) < halfW && Math.abs(py) < halfH && pz < thickness && pz > -5.0) {
+                  next.addScaledVector(_backDir, thickness - pz);
+                }
+              }
             }
-          }
-        }
 
-        // 1. Détection de la véritable vitesse/accélération du torse en temps réel
-        if (spine2BoneRef.current) {
-          spine2BoneRef.current.getWorldPosition(_tmpV1);
-          if (prevSpinePosRef.current) {
-            _tmpV2.subVectors(_tmpV1, prevSpinePosRef.current).divideScalar(Math.max(0.001, simDt));
-            _tmpV3.subVectors(_tmpV2, prevSpineVelRef.current).divideScalar(Math.max(0.001, simDt));
-
-            if (_tmpV3.lengthSq() > 0.01) {
-              torsoAccelRef.current.copy(_tmpV3);
+            const finalDir = _hairFinalDir.subVectors(next, jointWorld);
+            const finalLen = finalDir.length();
+            if (finalLen > 1e-6) {
+              finalDir.multiplyScalar(worldLength / finalLen);
             } else {
-              torsoAccelRef.current.lerp(_tmpV4.set(0, 0, 0), simDt * 10.0);
+              finalDir.copy(restDir).multiplyScalar(worldLength);
             }
-            prevSpineVelRef.current.copy(_tmpV2);
+
+            node.tipPrev.copy(node.tipWorld);
+            node.tipWorld.copy(jointWorld).add(finalDir);
+
+            const currentDirWorld = _hairCurrentDirWorld.copy(finalDir).normalize();
+            const parentWQuat = parent.getWorldQuaternion(_parentWQuat);
+            const boneRestWorldQuat = _boneRestWorldQuat.copy(_baseParentQuat).multiply(relQuat);
+            const swing = _swingQuat.setFromUnitVectors(restDirWorld, currentDirWorld);
+
+            const newWorldQuat = swing.multiply(boneRestWorldQuat);
+            bone.quaternion.copy(parentWQuat.invert().multiply(newWorldQuat));
+            bone.updateMatrixWorld(true);
+          }
+        }
+      }
+
+      // Vitesse & accélération du torse
+      if (spine2BoneRef.current) {
+        spine2BoneRef.current.getWorldPosition(_tmpV1);
+        if (prevSpinePosRef.current) {
+          _tmpV2.subVectors(_tmpV1, prevSpinePosRef.current).divideScalar(Math.max(0.001, simDt));
+          _tmpV3.subVectors(_tmpV2, prevSpineVelRef.current).divideScalar(Math.max(0.001, simDt));
+
+          if (_tmpV3.lengthSq() > 0.01) {
+            torsoAccelRef.current.copy(_tmpV3);
           } else {
-            prevSpinePosRef.current = new THREE.Vector3().copy(_tmpV1);
-            prevSpineVelRef.current.set(0, 0, 0);
+            torsoAccelRef.current.lerp(_tmpV4.set(0, 0, 0), simDt * 10.0);
           }
-          prevSpinePosRef.current.copy(_tmpV1);
+          prevSpineVelRef.current.copy(_tmpV2);
+        } else {
+          prevSpinePosRef.current = new THREE.Vector3().copy(_tmpV1);
+          prevSpineVelRef.current.set(0, 0, 0);
+        }
+        prevSpinePosRef.current.copy(_tmpV1);
+      }
+
+      // Physique poitrine
+      const breastIntensity = useSceneStore.getState().layers.breastIntensity ?? 1.0;
+      const breastMass = useSceneStore.getState().layers.breastMass ?? 1.0;
+      const breastFirmness = useSceneStore.getState().layers.breastFirmness ?? 1.0;
+      const braElasticity = useSceneStore.getState().layers.braElasticity ?? 1.0;
+      const braElasticityXZ = useSceneStore.getState().layers.braElasticityXZ ?? 1.0;
+      const breastLagDelay = useSceneStore.getState().layers.breastLagDelay ?? 1.0;
+      const maxBreastAngleDeg = useSceneStore.getState().layers.maxBreastAngle ?? 25;
+      const maxBreastAngleXZDeg = useSceneStore.getState().layers.maxBreastAngleXZ ?? 35;
+
+      const maxBreastAngleRad = (maxBreastAngleDeg * Math.PI) / 180;
+      const maxBreastAngleXZRad = (maxBreastAngleXZDeg * Math.PI) / 180;
+
+      if (enableBreastPhysics && breastIntensity > 0 && breastChainRef.current.length > 0) {
+        const mass = Math.max(0.2, breastMass);
+        const stiffness = (35.0 * braElasticity * breastFirmness);
+        const damping = 10.0 * (1.0 + breastLagDelay * 0.4);
+        const softnessFactor = 1.0 / Math.max(0.1, breastFirmness);
+
+        const externalForce = _tmpV1.copy(torsoAccelRef.current).multiplyScalar((0.2 * breastIntensity * softnessFactor) / mass);
+        externalForce.x *= braElasticityXZ * 1.5;
+        externalForce.y *= braElasticity * 1.2;
+        externalForce.z *= braElasticityXZ * 1.8;
+
+        const accel = externalForce
+          .addScaledVector(breastImpulseRef.current, -stiffness / mass)
+          .addScaledVector(breastVelRef.current, -damping / mass);
+
+        breastVelRef.current.addScaledVector(accel, simDt);
+        breastImpulseRef.current.addScaledVector(breastVelRef.current, simDt);
+
+        if (externalForce.lengthSq() < 0.0001) {
+          breastVelRef.current.multiplyScalar(Math.max(0, 1 - simDt * 8.0));
+          breastImpulseRef.current.multiplyScalar(Math.max(0, 1 - simDt * 6.0));
         }
 
-        // 2. Intégrateur masse-ressort-amortisseur authentique (Physical Spring-Damper)
-        const breastIntensity = useSceneStore.getState().layers.breastIntensity ?? 1.0;
-        const breastMass = useSceneStore.getState().layers.breastMass ?? 1.0;
-        const breastFirmness = useSceneStore.getState().layers.breastFirmness ?? 1.0;
-        const braElasticity = useSceneStore.getState().layers.braElasticity ?? 1.0;
-        const braElasticityXZ = useSceneStore.getState().layers.braElasticityXZ ?? 1.0;
-        const breastLagDelay = useSceneStore.getState().layers.breastLagDelay ?? 1.0;
-        const maxBreastAngleDeg = useSceneStore.getState().layers.maxBreastAngle ?? 25;
-        const maxBreastAngleXZDeg = useSceneStore.getState().layers.maxBreastAngleXZ ?? 35;
-
-        const maxBreastAngleRad = (maxBreastAngleDeg * Math.PI) / 180;
-        const maxBreastAngleXZRad = (maxBreastAngleXZDeg * Math.PI) / 180;
-
-        if (enableBreastPhysics && breastIntensity > 0 && breastChainRef.current.length > 0) {
-          const mass = Math.max(0.2, breastMass);
-          const stiffness = (35.0 * braElasticity * breastFirmness);
-          const damping = 10.0 * (1.0 + breastLagDelay * 0.4);
-          const softnessFactor = 1.0 / Math.max(0.1, breastFirmness);
-
-          const externalForce = _tmpV1.copy(torsoAccelRef.current).multiplyScalar((0.2 * breastIntensity * softnessFactor) / mass);
-          externalForce.x *= braElasticityXZ * 1.5;
-          externalForce.y *= braElasticity * 1.2;
-          externalForce.z *= braElasticityXZ * 1.8;
-
-          const accel = externalForce
-            .addScaledVector(breastImpulseRef.current, -stiffness / mass)
-            .addScaledVector(breastVelRef.current, -damping / mass);
-
-          breastVelRef.current.addScaledVector(accel, simDt);
-          breastImpulseRef.current.addScaledVector(breastVelRef.current, simDt);
-
-          if (externalForce.lengthSq() < 0.0001) {
-            breastVelRef.current.multiplyScalar(Math.max(0, 1 - simDt * 8.0));
-            breastImpulseRef.current.multiplyScalar(Math.max(0, 1 - simDt * 6.0));
-          }
-
-          if (breastImpulseRef.current.lengthSq() < 1e-7) {
-            breastImpulseRef.current.set(0, 0, 0);
-            breastVelRef.current.set(0, 0, 0);
-          }
-
-          for (let i = 0; i < breastChainRef.current.length; i++) {
-            const { bone, restQuat } = breastChainRef.current[i];
-
-            let swingX = Math.max(-maxBreastAngleRad, Math.min(maxBreastAngleRad, breastImpulseRef.current.y * 0.25));
-            let swingY = Math.max(-maxBreastAngleXZRad, Math.min(maxBreastAngleXZRad, breastImpulseRef.current.x * 0.45 * softnessFactor));
-            let swingZ = Math.max(-maxBreastAngleXZRad, Math.min(maxBreastAngleXZRad, breastImpulseRef.current.z * 0.45 * softnessFactor));
-
-            _eulerBreast.set(swingX, swingY, swingZ, 'ZXY');
-            _animBreastQ.setFromEuler(_eulerBreast);
-
-            const baseRest = (bone as any).userData?.restQuat || (bone as any).restLocalQuaternion || restQuat;
-            bone.quaternion.copy(baseRest).multiply(_animBreastQ);
-          }
+        if (breastImpulseRef.current.lengthSq() < 1e-7) {
+          breastImpulseRef.current.set(0, 0, 0);
+          breastVelRef.current.set(0, 0, 0);
         }
 
-        physicsPrevDt.current = simDt;
+        for (let i = 0; i < breastChainRef.current.length; i++) {
+          const { bone, restQuat } = breastChainRef.current[i];
+
+          let swingX = Math.max(-maxBreastAngleRad, Math.min(maxBreastAngleRad, breastImpulseRef.current.y * 0.25));
+          let swingY = Math.max(-maxBreastAngleXZRad, Math.min(maxBreastAngleXZRad, breastImpulseRef.current.x * 0.45 * softnessFactor));
+          let swingZ = Math.max(-maxBreastAngleXZRad, Math.min(maxBreastAngleXZRad, breastImpulseRef.current.z * 0.45 * softnessFactor));
+
+          _eulerBreast.set(swingX, swingY, swingZ, 'ZXY');
+          _animBreastQ.setFromEuler(_eulerBreast);
+
+          const baseRest = (bone as any).userData?.restQuat || (bone as any).restLocalQuaternion || restQuat;
+          bone.quaternion.copy(baseRest).multiply(_animBreastQ);
+        }
+      }
+
+      physicsPrevDt.current = simDt;
     }
 
     if (!isPaused) {
-        invalidate();
+      invalidate();
     }
   });
 
@@ -1558,9 +1095,7 @@ export function SingleCharacter({
             id={haircut.replace('hair_', '')}
             color={hairColor}
             onBonesExtracted={(bones) => {
-              console.log(`[RiggedWig] Passing ${bones.length} bones to buildHairChain`);
               customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
-              (window as any)._hairDebugLogged = false;
             }}
             attachTo={headBoneState}
           />
@@ -1569,9 +1104,7 @@ export function SingleCharacter({
             id={haircut.replace('hair_', '')}
             color={hairColor}
             onBonesExtracted={(bones) => {
-              console.log(`[Wig] Passing ${bones.length} bones to buildHairChain`);
               customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
-              (window as any)._hairDebugLogged = false;
             }}
             attachTo={headBoneState}
           />
