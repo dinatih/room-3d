@@ -380,11 +380,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         if (e.altKey)   keys.current.add('Alt' + k);
         e.preventDefault();
       }
-      const lk = k.toLowerCase();
-      if ('wasd'.includes(lk) && lk.length === 1) {
-        keys.current.add(lk);
-        e.preventDefault();
-      }
       // Kick off the first frame — useFrame keeps the loop going while keys held
       if (keys.current.size > 0) invalidate();
     };
@@ -697,7 +692,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const sp    = WALK_SPEED * dt;
     const fwdX  = Math.sin(yaw) * sp;
     const fwdZ  = Math.cos(yaw) * sp;
-    const rgtX  = fwdZ, rgtZ = -fwdX;
     const k     = keys.current;
 
     if (k.has('ArrowLeft'))  walkYaw.current += 0.03 * dt;
@@ -712,10 +706,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const noMod = !k.has('CtrlArrowUp') && !k.has('CtrlArrowDown') && !k.has('AltArrowUp') && !k.has('AltArrowDown');
 
     let dx = 0, dz = 0;
-    if (noMod && (k.has('ArrowUp')   || k.has('w'))) { dx += fwdX; dz += fwdZ; }
-    if (noMod && (k.has('ArrowDown') || k.has('s'))) { dx -= fwdX; dz -= fwdZ; }
-    if (k.has('a')) { dx -= rgtX; dz -= rgtZ; }
-    if (k.has('d')) { dx += rgtX; dz += rgtZ; }
+    if (noMod && k.has('ArrowUp'))   { dx += fwdX; dz += fwdZ; }
+    if (noMod && k.has('ArrowDown')) { dx -= fwdX; dz -= fwdZ; }
     if (dx !== 0 || dz !== 0) {
       const c = collideMove(walkPos.current.x, walkPos.current.z, dx, dz);
       walkPos.current.x = c.x;

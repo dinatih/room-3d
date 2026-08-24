@@ -146,6 +146,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
             <div>
               <Section title="Global" />
               <R label="Inventaire (toggle)"        keys={['I']} />
+              <R label="Zones IA (toggle)"          keys={['A']} />
               <R label="Vue perspective (reset)"    keys={['P']} />
               <R label="Walk mode (entrer/quitter)" keys={['M']} />
               <R label="Vue top-down (toggle)"      keys={['T']} />
@@ -162,8 +163,8 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <Section title="Avion (mode vol)" />
               <R label="Décoller (pré-vol)"         keys={['Espace', 'C']} />
               <R label="Changer de vue"             keys={['C']} />
-              <R label="Piquer / cabrer"            keys={['W', 'S', '↑', '↓']} />
-              <R label="Roulis (vire)"              keys={['A', 'D', '←', '→']} />
+              <R label="Piquer / cabrer"            keys={['↑', '↓']} />
+              <R label="Roulis (vire)"              keys={['←', '→']} />
               <R label="Accélérer"                  keys={['Espace']} />
               <R label="Freiner"                    keys={['Shift']} />
               <R label="Quitter"                    keys={['F', 'Échap']} />
@@ -180,8 +181,8 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
 
             <div>
               <Section title="Walk mode" />
-              <R label="Avancer / reculer"          keys={['W', 'S', '↑', '↓']} />
-              <R label="Pivoter gauche / droite"    keys={['A', 'D', '←', '→']} />
+              <R label="Avancer / reculer"          keys={['↑', '↓']} />
+              <R label="Pivoter gauche / droite"    keys={['←', '→']} />
               <R label="Incliner la caméra"         keys={['Ctrl + ↑↓']} />
               <R label="Monter / descendre"         keys={['Alt + ↑↓']} />
               <R label="Regarder librement"         keys={['Clic + glisser']} />
