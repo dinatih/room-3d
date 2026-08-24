@@ -189,7 +189,7 @@ export function SingleCharacter({
 
   const laraGrid = useSceneStore(state => state.layers.laraGrid);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
-  const laraCount = useSceneStore(state => state.layers.laraCount ?? 15);
+  const laraCount = useSceneStore(state => state.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15));
   const showWallhack = useSceneStore(state => state.layers.wallhack);
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);

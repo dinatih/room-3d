@@ -99,7 +99,7 @@ function drawMinimap(
   // ── Other characters (NPCs) icons ───────────────────────────────────────────
   const activeWalkerId = useSceneStore.getState().activeWalkerId;
   const showAllLaraStyles = useSceneStore.getState().layers.showAllLaraStyles;
-  const laraCount = useSceneStore.getState().layers.laraCount ?? 15;
+  const laraCount = useSceneStore.getState().layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15);
   ctx.save();
   ctx.fillStyle   = 'rgba(0, 102, 255, 0.4)';
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';

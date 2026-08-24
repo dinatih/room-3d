@@ -324,7 +324,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
       if (e.key === 'l' || e.key === 'L') {
         const store = useSceneStore.getState();
-        const laraCount = store.layers.laraCount ?? 15;
+        const laraCount = store.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15);
         const visibleChars = CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, laraCount, store.activeWalkerId));
         const currentIndex = visibleChars.findIndex(c => c.id === store.activeWalkerId);
         const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % visibleChars.length;

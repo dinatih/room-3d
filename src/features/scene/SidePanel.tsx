@@ -665,7 +665,7 @@ export function SidePanel({
                 useSceneStore.getState().setActiveWalkerId(e.target.value);
               }}
             >
-              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? 15, activeWalkerId) || c.id === activeWalkerId).map(c => (
+              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeWalkerId) || c.id === activeWalkerId).map(c => (
                 <option key={c.id} value={c.id} className="bg-light text-dark">
                   {c.name}
                 </option>
@@ -782,14 +782,14 @@ export function SidePanel({
               👥 Nombre de Personnages
             </span>
             <span className="badge bg-primary" style={{ fontSize: '9px' }}>
-              {(layers.laraCount ?? 15) === 2 ? '2 (Xbot + Lara)' : (layers.laraCount ?? 15) === 10 ? '10 (Eco)' : '15 (Toutes)'}
+              {(layers.laraCount ?? (isMobile ? 2 : 15)) === 2 ? '2 (Xbot + Lara)' : (layers.laraCount ?? (isMobile ? 2 : 15)) === 10 ? '10 (Eco)' : '15 (Toutes)'}
             </span>
           </div>
           <div className="btn-group btn-group-sm w-100" role="group">
             <button
               type="button"
-              className={`btn btn-sm ${layers.laraCount === 2 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ fontSize: isMobile ? '13px' : '11px', background: layers.laraCount === 2 ? undefined : 'transparent' }}
+              className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 2 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
+              style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 2 ? undefined : 'transparent' }}
               onClick={() => {
                 useSceneStore.setState(st => ({
                   layers: { ...st.layers, laraCount: 2, showAllLaraStyles: true }
@@ -800,8 +800,8 @@ export function SidePanel({
             </button>
             <button
               type="button"
-              className={`btn btn-sm ${layers.laraCount === 10 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ fontSize: isMobile ? '13px' : '11px', background: layers.laraCount === 10 ? undefined : 'transparent' }}
+              className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 10 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
+              style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 10 ? undefined : 'transparent' }}
               onClick={() => {
                 useSceneStore.setState(st => ({
                   layers: { ...st.layers, laraCount: 10, showAllLaraStyles: true }
@@ -812,8 +812,8 @@ export function SidePanel({
             </button>
             <button
               type="button"
-              className={`btn btn-sm ${(layers.laraCount ?? 15) === 15 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? 15) === 15 ? undefined : 'transparent' }}
+              className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 15 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
+              style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 15 ? undefined : 'transparent' }}
               onClick={() => {
                 useSceneStore.setState(st => ({
                   layers: { ...st.layers, laraCount: 15, showAllLaraStyles: true }
