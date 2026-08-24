@@ -442,8 +442,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'admirer dans le miroir',
         offset: [160, 0, 340],
         rotY: 0,
-        animation: 'animations/poses_idles/anim_female_standing_pose_1.glb',
-        duration: 15.0,
+        animation: 'animations/poses_idles/miley_armature_change_pose.glb',
+        duration: 45.0,
       }
     ]
   },

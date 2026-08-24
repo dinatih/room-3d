@@ -502,12 +502,12 @@ export function SingleCharacter({
     return () => clearTimeout(timeout);
   }, [id]);
 
-  const loadAndPlayClip = useCallback((path: string, loop = true) => {
+  const loadAndPlayClip = useCallback((path: string, loop = true, isUserOverride = false) => {
     if (!scene || !mixerRef.current) return;
     const isTPose = path === 'tpose' || path === 'animations/poses_idles/anim_t_pose.glb';
     if (isTPose) {
       customAnimName.current = 'tpose';
-      userAnimOverrideRef.current = true;
+      if (isUserOverride) userAnimOverrideRef.current = true;
       invalidate();
       return;
     }
@@ -551,7 +551,7 @@ export function SingleCharacter({
       }
 
       customAnimName.current = path;
-      userAnimOverrideRef.current = true;
+      if (isUserOverride) userAnimOverrideRef.current = true;
       invalidate();
     };
 
@@ -640,7 +640,7 @@ export function SingleCharacter({
       if (isForMe && e.detail?.value) {
         resetAppIdle();
         const path = e.detail.value;
-        loadAndPlayClip(path, e.detail?.loop !== false);
+        loadAndPlayClip(path, e.detail?.loop !== false, true);
       }
       handleToggleHairColor(e);
       handleToggleHaircut(e);
