@@ -39,6 +39,11 @@ export function LampOla({ actionState, onSize }: SceneItemProps) {
       const origMat = mergedMesh.material as THREE.MeshStandardMaterial;
       const bodyMat = origMat ? origMat.clone() : new THREE.MeshStandardMaterial({ color: 0xffffff });
       const diffuserMat = bodyMat.clone();
+      diffuserMat.polygonOffset = true;
+      diffuserMat.polygonOffsetFactor = -2;
+      diffuserMat.polygonOffsetUnits = -4;
+      diffuserMat.side = THREE.DoubleSide;
+      bodyMat.side = THREE.DoubleSide;
       diffuserMatRef.current = diffuserMat;
 
       const nonIndexed = mergedMesh.geometry.index ? mergedMesh.geometry.toNonIndexed() : mergedMesh.geometry.clone();
@@ -122,11 +127,20 @@ export function LampOla({ actionState, onSize }: SceneItemProps) {
         const targetPos = isDiffuser ? diffPos : bodyPos;
         const targetNorm = isDiffuser ? diffNorm : bodyNorm;
         const targetUv = isDiffuser ? diffUv : bodyUv;
+        const offset = isDiffuser ? 0.06 : 0; // 0.6mm forward offset along normal
 
         for (let k = 0; k < 3; k++) {
           const idx = i + k;
-          targetPos.push(pos.getX(idx), pos.getY(idx), pos.getZ(idx));
-          if (normalAttr) targetNorm.push(normalAttr.getX(idx), normalAttr.getY(idx), normalAttr.getZ(idx));
+          const nx = normalAttr ? normalAttr.getX(idx) : 0;
+          const ny = normalAttr ? normalAttr.getY(idx) : 1;
+          const nz = normalAttr ? normalAttr.getZ(idx) : 0;
+
+          targetPos.push(
+            pos.getX(idx) + nx * offset,
+            pos.getY(idx) + ny * offset,
+            pos.getZ(idx) + nz * offset
+          );
+          if (normalAttr) targetNorm.push(nx, ny, nz);
           if (uv) targetUv.push(uv.getX(idx), uv.getY(idx));
         }
       }
