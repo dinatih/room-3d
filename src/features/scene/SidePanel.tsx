@@ -398,6 +398,7 @@ export function SidePanel({
   const toggleFurniture = useSceneStore(state => state.toggleFurniture);
   const setMeasurementActive = useSceneStore(state => state.setMeasurementActive);
   const cameraMode = useSceneStore(state => state.cameraMode);
+  const extraStates = useSceneStore(state => state.extraStates);
   const isMobile = useIsMobile();
   const [showViews,     setShowViews]     = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -730,6 +731,31 @@ export function SidePanel({
               ))}
             </select>
           </div>
+        </div>
+      )}
+
+      {layers.walker && (
+        <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
+          <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            🤖 Visite guidée de l'appartement
+          </div>
+          <button
+            type="button"
+            className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between shadow-none"
+            onClick={() => {
+              useSceneStore.getState().triggerAction('aiFullTour');
+            }}
+            style={{ 
+              fontSize: isMobile ? '14px' : '11px', 
+              background: 'transparent',
+              minHeight: isMobile ? '48px' : undefined 
+            }}
+          >
+            <span>🚶‍♀️ Visite Complète (Sud ➔ Nord)</span>
+            <span className={`badge ${extraStates?.aiFullTour ? 'bg-primary' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+              {extraStates?.aiFullTour ? 'EN COURS' : 'DÉMARRER'}
+            </span>
+          </button>
         </div>
       )}
 

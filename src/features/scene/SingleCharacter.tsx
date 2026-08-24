@@ -30,7 +30,6 @@ import {
   ACTION_FULL_TOUR,
   buildAutonomousScenario
 } from './ai/scenarios';
-import { buildSmartObjectInstructionSequence } from './ai/smartObjectRegistry';
 import type { AgentInstruction } from './ai/aiTypes';
 
 import { useAgentController } from './ai/useAgentController';
@@ -270,40 +269,12 @@ export function SingleCharacter({
 
   const activeActionKey = useMemo(() => {
     if (extraStates.aiFullTour) return 'aiFullTour';
-    if (extraStates.aiGoToilet) return 'aiGoToilet';
-    if (extraStates.aiSitDesk1) return 'aiSitDesk1';
-    if (extraStates.aiSitOfficeChair) return 'aiSitOfficeChair';
-    if (extraStates.aiSitDesk2) return 'aiSitDesk2';
-    if (extraStates.aiBedWest) return 'aiBedWest';
-    if (extraStates.aiBedEast) return 'aiBedEast';
-    if (extraStates.aiBathtub) return 'aiBathtub';
-    if (extraStates.aiShower) return 'aiShower';
-    if (extraStates.aiGardenSofaEast) return 'aiGardenSofaEast';
-    if (extraStates.aiGardenSofaWest) return 'aiGardenSofaWest';
-    if (extraStates.aiCooking) return 'aiCooking';
-    if (extraStates.aiKallaxNE) return 'aiKallaxNE';
-    if (extraStates.aiFreshAir) return 'aiFreshAir';
     return null;
   }, [extraStates]);
 
   const activeActionScenario = useMemo(() => {
-    switch (activeActionKey) {
-      case 'aiFullTour': return ACTION_FULL_TOUR;
-      case 'aiGoToilet': return buildSmartObjectInstructionSequence('toilet');
-      case 'aiSitDesk1': return buildSmartObjectInstructionSequence('desk-bollsidan-1');
-      case 'aiSitOfficeChair': return buildSmartObjectInstructionSequence('chair-office');
-      case 'aiSitDesk2': return buildSmartObjectInstructionSequence('desk-bollsidan-2');
-      case 'aiBedWest': return buildSmartObjectInstructionSequence('bed-west');
-      case 'aiBedEast': return buildSmartObjectInstructionSequence('bed-east');
-      case 'aiBathtub': return buildSmartObjectInstructionSequence('bathtub-garden');
-      case 'aiShower': return buildSmartObjectInstructionSequence('shower');
-      case 'aiGardenSofaEast': return buildSmartObjectInstructionSequence('sofa-garden-east');
-      case 'aiGardenSofaWest': return buildSmartObjectInstructionSequence('sofa-garden-west');
-      case 'aiCooking': return buildSmartObjectInstructionSequence('cuisine-group');
-      case 'aiKallaxNE': return buildSmartObjectInstructionSequence('kallax-ne');
-      case 'aiFreshAir': return buildSmartObjectInstructionSequence('garden-fresh-air');
-      default: return null;
-    }
+    if (activeActionKey === 'aiFullTour') return ACTION_FULL_TOUR;
+    return null;
   }, [activeActionKey]);
 
   // Le personnage est autonome s'il fait partie des PNJ autonomes

@@ -33,25 +33,53 @@ export const AUTONOMOUS_SMART_OBJECTS: string[] = [
 
 /**
  * Visite guidée complète de l'appartement (Full Tour)
+ * Départ : Porte d'entrée (extérieur couloir sud)
+ * Parcours : En zig-zag de l'Est à l'Ouest et du Sud au Nord
  */
 export const ACTION_FULL_TOUR: AgentInstruction[] = [
+  // ── DÉPART : Porte d'entrée (côté couloir extérieur sud) ──
+  { type: 'MOVE_TO', targetNodeId: 'outdoor-entry-door' },
+  { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, animation: 'animations/interactions/anim_open_door_outwards.glb', duration: 0.8 },
+  { type: 'MOVE_TO', targetNodeId: 'corridor-entry-door' },
+  { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.5 },
+
+  // ── ÉTAPE 1 : Couloir Sud-Est ──
+  ...buildSmartObjectInstructionSequence('corridor-closet'),
+
+  // ── ÉTAPE 2 : Salle de bain (Sud-Ouest) ──
   ...buildSmartObjectInstructionSequence('toilet'),
-  ...buildSmartObjectInstructionSequence('desk-bollsidan-1'),
+  ...buildSmartObjectInstructionSequence('drona-west'),
+  ...buildSmartObjectInstructionSequence('vasque-sdb'),
+  ...buildSmartObjectInstructionSequence('drona-east'),
+  ...buildSmartObjectInstructionSequence('sdb-closet'),
+  ...buildSmartObjectInstructionSequence('shower'),
+
+  // ── ÉTAPE 3 : Séjour Sud (Zig-zag Est -> Centre -> Ouest) ──
+  ...buildSmartObjectInstructionSequence('freezer'),
+  ...buildSmartObjectInstructionSequence('mirror-south'),
+  ...buildSmartObjectInstructionSequence('cuisine-group'),
+
+  // ── ÉTAPE 4 : Séjour Milieu (Zig-zag Ouest -> Est -> Centre-Est -> Ouest) ──
+  ...buildSmartObjectInstructionSequence('chair-office'),
+  ...buildSmartObjectInstructionSequence('bed-east'),
   ...buildSmartObjectInstructionSequence('desk-bollsidan-2'),
   ...buildSmartObjectInstructionSequence('bed-west'),
-  ...buildSmartObjectInstructionSequence('bed-east'),
-  ...buildSmartObjectInstructionSequence('bathtub-garden'),
-  ...buildSmartObjectInstructionSequence('shower'),
-  ...buildSmartObjectInstructionSequence('sofa-garden-east'),
-  ...buildSmartObjectInstructionSequence('sofa-garden-west'),
-  ...buildSmartObjectInstructionSequence('cuisine-group'),
-  ...buildSmartObjectInstructionSequence('freezer'),
+
+  // ── ÉTAPE 5 : Séjour Nord (Zig-zag Ouest -> Est -> Baie vitrée) ──
+  ...buildSmartObjectInstructionSequence('desk-bollsidan-1'),
   ...buildSmartObjectInstructionSequence('kallax-ne'),
-  ...buildSmartObjectInstructionSequence('corridor-closet'),
-  ...buildSmartObjectInstructionSequence('mirror-south'),
+
+  // ── ÉTAPE 6 : Jardin & Extérieurs Nord (Zig-zag Ouest -> Est -> Nord) ──
+  ...buildSmartObjectInstructionSequence('sofa-garden-west'),
+  ...buildSmartObjectInstructionSequence('sofa-garden-east'),
+  ...buildSmartObjectInstructionSequence('bathtub-garden'),
+  ...buildSmartObjectInstructionSequence('rain-dance'),
   ...buildSmartObjectInstructionSequence('garden-fresh-air'),
-  ...buildSmartObjectInstructionSequence('building-b-corridor'),
   ...buildSmartObjectInstructionSequence('building-b-garden'),
+  ...buildSmartObjectInstructionSequence('building-b-corridor'),
+
+  // ── ÉTAPE 7 : Fin de la visite & retour au point de départ ──
+  { type: 'MOVE_TO', targetNodeId: 'outdoor-entry-door' },
   { type: 'RETURN_TO_START' }
 ];
 
