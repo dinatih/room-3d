@@ -10,5 +10,4 @@ public/media/glb/*.gltf
 .env.*.local
 sources_backup/personnages/
 sources_backup/
-
-
+*.blend1
