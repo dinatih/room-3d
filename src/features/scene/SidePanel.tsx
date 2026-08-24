@@ -155,6 +155,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Enlever le haut (toggle)"   keys={['Z']} />
               <R label="Enlever le bas (toggle)"    keys={['C']} />
               <R label="Déshabiller les Lara (toggle)" keys={['X']} />
+              <R label="Squelettes / Bones (toggle)" keys={['K']} />
               <R label="Quitter walk / top-down"    keys={['Échap']} />
               <R label="Changer de personnage"      keys={['L']} />
             </div>
@@ -844,7 +845,7 @@ export function SidePanel({
       {layerBtn('pink',   'Physique buste 💃', 'breastPhysics')}
       {layerBtn('pink',   'Physique cheveux 💇‍♀️', 'hairPhysics')}
       {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}
-      {layerBtn('cyan', 'Squelettes / Bones 🦴', 'skeleton')}
+      {layerBtn('cyan', 'Squelettes / Bones 🦴 (K)', 'skeleton')}
       {layerBtn('cyan', 'Fil de fer (Wireframe) 🕸️', 'characterWireframe')}
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
