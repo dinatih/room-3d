@@ -17,8 +17,8 @@ import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { LAYER_WALKER_DETAIL, LAYER_WALKER } from '@config';
 import { applyLaraVariantStyles, type LaraVariant } from './LaraVariants';
-import { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES } from './walkerConfig';
-export { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES };
+import { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES, isCharacterVisibleInMode } from './walkerConfig';
+export { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES, isCharacterVisibleInMode };
 import { buildHairChain, resolveTargetBoneName, retargetClip, getDepth, _retargetCache } from './retargeting';
 import {
   ACTION_FULL_TOUR,
@@ -178,6 +178,7 @@ export function SingleCharacter({
 
   const laraGrid = useSceneStore(state => state.layers.laraGrid);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
+  const laraCount = useSceneStore(state => state.layers.laraCount ?? 15);
   const showWallhack = useSceneStore(state => state.layers.wallhack);
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
@@ -1097,7 +1098,8 @@ export function SingleCharacter({
       const targetZ = 200;
       groupRef.current.position.set(targetX, targetY, targetZ);
       groupRef.current.rotation.y = 0;
-      groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles;
+      const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId);
+      groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode;
       // En mode grille, effacer l'animation IA pour que les NPCs restent en idle
       // sauf si l'utilisateur a manuellement choisi une animation
       if (!userAnimOverrideRef.current) {
@@ -1142,9 +1144,10 @@ export function SingleCharacter({
         if (!userAnimOverrideRef.current) {
           customAnimName.current = agentState.animation;
         }
-        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && agentState.isSpawned;
+        const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId);
+        groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode && agentState.isSpawned;
 
-        if (agentState.isSpawned) {
+        if (agentState.isSpawned && isVisibleInCountMode) {
           cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
         } else {
           delete cameraState.positions[id];

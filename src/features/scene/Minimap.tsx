@@ -13,7 +13,7 @@ import {
   PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_Z_MAX, PLAN_ASPECT,
 } from './floorDraw';
 import { LANDING_STRIPS } from './LandingStrips';
-import { CHARACTERS } from './walkerConfig';
+import { CHARACTERS, isCharacterVisibleInMode } from './walkerConfig';
 import { useSceneStore } from './store/useSceneStore';
 
 const SMALL_W_DESKTOP = 140;
@@ -99,6 +99,7 @@ function drawMinimap(
   // ── Other characters (NPCs) icons ───────────────────────────────────────────
   const activeWalkerId = useSceneStore.getState().activeWalkerId;
   const showAllLaraStyles = useSceneStore.getState().layers.showAllLaraStyles;
+  const laraCount = useSceneStore.getState().layers.laraCount ?? 15;
   ctx.save();
   ctx.fillStyle   = 'rgba(0, 102, 255, 0.4)';
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';
@@ -106,8 +107,8 @@ function drawMinimap(
   
   CHARACTERS.forEach(char => {
     if (char.id !== activeWalkerId) {
-      const isNumbered = /^\d/.test(char.id);
-      if (!showAllLaraStyles && isNumbered) return;
+      if (!showAllLaraStyles) return;
+      if (!isCharacterVisibleInMode(char.id, laraCount, activeWalkerId)) return;
       const currentPos = cameraState.positions[char.id];
       if (!currentPos) return;
       const x = currentPos.x;

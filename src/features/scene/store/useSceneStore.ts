@@ -62,6 +62,7 @@ const initialLayers: LayerState = {
   grid: false,
   gridDepth: false,
   laraGrid: false,
+  laraCount: 15,
   showAllLaraStyles: true,
   wallhack: false,
   skeleton: false,

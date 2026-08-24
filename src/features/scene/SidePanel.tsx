@@ -20,7 +20,7 @@ const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
 import { useSceneStore } from './store/useSceneStore';
-import { CHARACTERS } from './walkerConfig';
+import { CHARACTERS, isCharacterVisibleInMode, type LaraCountMode } from './walkerConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { resetAppIdle } from './idleState';
@@ -317,6 +317,7 @@ export interface LayerState {
   laraTopOff?:  boolean;
   laraBottomOff?: boolean;
   laraShoes?:   boolean;
+  laraCount?:   LaraCountMode;
   showAllLaraStyles: boolean;
   wallhack: boolean;
   aiZones: boolean;
@@ -662,7 +663,7 @@ export function SidePanel({
                 useSceneStore.getState().setActiveWalkerId(e.target.value);
               }}
             >
-              {CHARACTERS.filter(c => layers.showAllLaraStyles || c.id === activeWalkerId).map(c => (
+              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? 15, activeWalkerId) || c.id === activeWalkerId).map(c => (
                 <option key={c.id} value={c.id} className="bg-light text-dark">
                   {c.name}
                 </option>
@@ -772,7 +773,56 @@ export function SidePanel({
       {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}
       {layerBtn('cyan', 'Squelettes / Bones', 'skeleton')}
       {layerBtn('cyan', 'Fil de fer (Wireframe) 🕸️', 'characterWireframe')}
-      {layers.walker && layerBtn('light',  'Toutes les Lara 👥', 'showAllLaraStyles')}
+      {layers.walker && (
+        <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
+          <div className="d-flex justify-content-between align-items-center mb-1">
+            <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              👥 Nombre de Lara
+            </span>
+            <span className="badge bg-primary" style={{ fontSize: '9px' }}>
+              {(layers.laraCount ?? 15) === 2 ? '2 (Couple)' : (layers.laraCount ?? 15) === 12 ? '12 Laras' : '15 (Toutes)'}
+            </span>
+          </div>
+          <div className="btn-group btn-group-sm w-100" role="group">
+            <button
+              type="button"
+              className={`btn btn-sm ${layers.laraCount === 2 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
+              style={{ fontSize: isMobile ? '13px' : '11px', background: layers.laraCount === 2 ? undefined : 'transparent' }}
+              onClick={() => {
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, laraCount: 2, showAllLaraStyles: true }
+                }));
+              }}
+            >
+              2 (Couple)
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${layers.laraCount === 12 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
+              style={{ fontSize: isMobile ? '13px' : '11px', background: layers.laraCount === 12 ? undefined : 'transparent' }}
+              onClick={() => {
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, laraCount: 12, showAllLaraStyles: true }
+                }));
+              }}
+            >
+              12 Laras
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${(layers.laraCount ?? 15) === 15 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
+              style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? 15) === 15 ? undefined : 'transparent' }}
+              onClick={() => {
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, laraCount: 15, showAllLaraStyles: true }
+                }));
+              }}
+            >
+              15 (Toutes)
+            </button>
+          </div>
+        </div>
+      )}
       <button 
         className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
         onClick={() => {
