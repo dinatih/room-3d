@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react';
 import { AgentInstruction } from './aiTypes';
 import { ZONES } from './ZoneNodes';
 import { SMART_OBJECTS } from './smartObjectRegistry';
+import { resolveSlotAnimation } from './animationPacks';
 import { OccupancyManager } from './occupancyManager';
 import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
@@ -48,13 +49,14 @@ function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number
       ? (obj.slots.find(s => s.slotId === instr.slotId) ?? obj.slots[0])
       : obj.slots[0];
     const pos = slot ? (slot.approachOffset ?? slot.offset) : obj.position;
+    const resolved = slot ? resolveSlotAnimation(slot) : null;
     return {
       tx: pos[0],
       ty: pos[1],
       tz: pos[2],
       label: `${obj.name}${slot ? ` (${slot.name})` : ''}`,
-      rotY: slot?.rotY,
-      anim: slot?.animation,
+      rotY: resolved?.rotY ?? slot?.rotY,
+      anim: resolved?.animation ?? slot?.animation,
       duration: slot?.duration
     };
   }
@@ -248,9 +250,10 @@ export function useAgentController(
             currentInstruction.slotId = altSlotId;
             const newSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === altSlotId);
             if (newSlot) {
-              currentInstruction.animation = newSlot.animation;
+              const resolved = resolveSlotAnimation(newSlot);
+              currentInstruction.animation = resolved.animation;
               currentInstruction.duration = newSlot.duration;
-              currentInstruction.rotY = newSlot.rotY;
+              currentInstruction.rotY = resolved.rotY;
             }
             OccupancyManager.claimSlot(objId, altSlotId, _characterId);
             claimedSlotRef.current = { objectId: objId, slotId: altSlotId };

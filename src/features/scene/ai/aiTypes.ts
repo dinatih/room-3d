@@ -15,9 +15,10 @@ export interface InteractionSlot {
   offset: [number, number, number]; // Position relative ou absolue d'interaction [x, y, z]
   approachOffset?: [number, number, number]; // Position d'arrivée avant d'interagir
   rotY: number;               // Orientation (radians)
-  animation: string;          // Chemin vers le clip d'animation GLB
+  animation?: string;         // Chemin vers le clip d'animation GLB
   duration?: number;          // Durée par défaut en secondes
   availableAnims?: string[];  // Variantes possibles pour l'aléatoire
+  animations_random?: string | string[]; // Pack nommé (ex: 'sitted_front_pack', 'side_sitted_pack') ou liste d'anims
   triggerEventKey?: string;   // Event à déclencher (ex: 'wc-flush', 'eastGlassDoor')
   triggerTargetState?: boolean;
 }
