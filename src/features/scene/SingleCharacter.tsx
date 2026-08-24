@@ -35,7 +35,7 @@ import type { AgentInstruction } from './ai/aiTypes';
 
 import { useAgentController } from './ai/useAgentController';
 import { appLog } from '@features/ui/AppConsole';
-import { isAppIdle, resetAppIdle } from './idleState';
+import { isAppIdle } from './idleState';
 import { AUTONOMOUS_NPC_IDS } from './walkerConfig';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
@@ -638,7 +638,6 @@ export function SingleCharacter({
       }
 
       if (isForMe && e.detail?.value) {
-        resetAppIdle();
         const path = e.detail.value;
         loadAndPlayClip(path, e.detail?.loop !== false, true);
       }

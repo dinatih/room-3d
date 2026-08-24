@@ -7,6 +7,7 @@ import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { devState, type TopObjectStat } from './devState';
 import { drawFps } from './DevToolsOverlay';
+import { isAppIdle } from './idleState';
 import { appLog } from '@features/ui/AppConsole';
 
 const FPS_SAMPLES = 80;
@@ -160,6 +161,12 @@ export function DevToolsCollector() {
   }, [scene]);
 
   useFrame(() => {
+    if (isAppIdle()) {
+      devState.drawCalls = 0;
+      devState.triangles = 0;
+      return;
+    }
+
     // Renderer stats — mis à jour dans devState à chaque frame (pas de React)
     const info = gl.info;
     devState.drawCalls  = info.render.calls;

@@ -132,6 +132,21 @@ function ShadowController({ enabled }: { enabled: boolean }) {
   return null;
 }
 
+function FrameloopController({ isIdle, showInventory }: { isIdle: boolean; showInventory: boolean }) {
+  const setFrameloop = useThree((state) => state.setFrameloop);
+  const invalidate = useThree((state) => state.invalidate);
+
+  useEffect(() => {
+    const loop = showInventory || isIdle ? 'never' : 'demand';
+    setFrameloop(loop);
+    if (loop !== 'never') {
+      invalidate();
+    }
+  }, [isIdle, showInventory, setFrameloop, invalidate]);
+
+  return null;
+}
+
 function LoadingProgress({ onComplete }: { onComplete?: () => void }) {
   const { progress, active, item } = useProgress();
   const doneRef = useRef(false);
@@ -365,6 +380,7 @@ export function Studio() {
         <PerformanceMonitor />
         <ShadowWarmup />
         <ShadowController enabled={layers.shadows} />
+        <FrameloopController isIdle={isIdle} showInventory={showInventory} />
         {planeMode    && <PaperPlane
                            onExit={() => setPlaneMode(false)}
                            model={planeModel}
