@@ -39,8 +39,9 @@ export function GoogleNestMini({ onSize }: SceneItemProps) {
   useLayoutEffect(() => {
     removeGlbLines(scene);
     scene.scale.set(1, 1, 1);
+    scene.rotation.set(0, 0, -Math.PI / 2);
     const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
-    scene.scale.setScalar(TARGET_W / raw.x);
+    scene.scale.setScalar(TARGET_W / raw.z);
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
@@ -51,9 +52,10 @@ export function GoogleNestMini({ onSize }: SceneItemProps) {
 
     scene.userData.hoverAction = { label: 'Google Nest Mini', actionId: 'nestMini' };
 
-    // Positionne le groupe LEDs sur la face supérieure du device
-    const topY = (box.max.y - box.min.y) / 2;
-    dotsGroupRef.current.position.set(0, topY + DOT_R + 0.2, 0);
+    // Positionne le groupe LEDs sur la face avant du device (face tournée vers +X)
+    const frontX = (box.max.x - box.min.x) / 2;
+    dotsGroupRef.current.position.set(frontX + DOT_R + 0.2, 0, 0);
+    dotsGroupRef.current.rotation.set(0, Math.PI / 2, 0);
   }, [scene]);
 
   useEffect(() => {
