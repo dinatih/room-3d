@@ -855,17 +855,37 @@ export function SingleCharacter({
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
 
-    const isNpcActive = !isPreview && isNPC && (
-      (customAnimName.current !== null && customAnimName.current !== 'idle' && !customAnimName.current.includes('idle')) ||
-      (!isAutonomous && customIdleAnimPath && customIdleAnimPath.includes('dance')) ||
-      Math.abs(groupRef.current.position.x - (groupRef.current.userData.prevX ?? groupRef.current.position.x)) > 0.01 ||
-      Math.abs(groupRef.current.position.z - (groupRef.current.userData.prevZ ?? groupRef.current.position.z)) > 0.01
-    );
+    const prevX = groupRef.current.userData.prevX ?? groupRef.current.position.x;
+    const prevZ = groupRef.current.userData.prevZ ?? groupRef.current.position.z;
+    const dx = groupRef.current.position.x - prevX;
+    const dz = groupRef.current.position.z - prevZ;
+    const isDisplacing = Math.hypot(dx, dz) > 0.005;
     groupRef.current.userData.prevX = groupRef.current.position.x;
     groupRef.current.userData.prevZ = groupRef.current.position.z;
 
+    const isNpcActive = !isPreview && isNPC && (
+      (customAnimName.current !== null && customAnimName.current !== 'idle' && !customAnimName.current.includes('idle')) ||
+      (!isAutonomous && customIdleAnimPath && customIdleAnimPath.includes('dance')) ||
+      isDisplacing
+    );
+
     let isMoving = (!isPreview && isActive && cameraState.isUserControlling()) ? cameraState.isMoving : isNpcActive;
-    let target = isPreview ? (walkerAnim || 'idle') : (customAnimName.current || (isMoving ? 'walk' : (isNPC && customIdleAnimPath && !isAutonomous ? customIdleAnimPath : 'idle')));
+
+    const isCurrentAnimAWalk = customAnimName.current ? (
+      customAnimName.current === 'walk' ||
+      customAnimName.current.includes('walk') ||
+      customAnimName.current.includes('catwalk')
+    ) : false;
+
+    let target: string;
+    if (isPreview) {
+      target = walkerAnim || 'idle';
+    } else if (isDisplacing && !isCurrentAnimAWalk) {
+      // Si le personnage est en déplacement physique dans la pièce, il DOIT impérativement marcher
+      target = 'walk';
+    } else {
+      target = customAnimName.current || (isMoving ? 'walk' : (isNPC && customIdleAnimPath && !isAutonomous ? customIdleAnimPath : 'idle'));
+    }
 
     if (isActive && !isGuidedTour && cameraState.isUserControlling() && customAnimName.current) {
       customAnimName.current = null;

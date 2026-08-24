@@ -311,6 +311,8 @@ export function useAgentController(
 
 
         statusRef.current = 'MOVING';
+        stateRef.current.animation = currentWalkAnimRef.current;
+        stateRef.current.y = 0;
         const logKey = `move-${stepIndexRef.current}-${dynamicNavIndexRef.current}-${target.label}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
@@ -626,6 +628,7 @@ export function useAgentController(
       timerRef.current -= dt;
       if (timerRef.current <= 0) {
         statusRef.current = 'IDLE';
+        stateRef.current.animation = 'idle';
         stateRef.current.y = startPosRef.current?.y ?? 0;
         if (hasNavStep) {
           dynamicNavIndexRef.current++;
