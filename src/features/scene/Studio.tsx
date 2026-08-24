@@ -263,8 +263,12 @@ export function Studio() {
         cameraState.invalidate?.();
       } else if (e.key === 'i' || e.key === 'I') {
         setShowInventory(prev => !prev);
+      } else if (e.key === 'x' || e.key === 'X') {
+        onToggleLayer('laraNude');
+        cameraState.invalidate?.();
       }
     };
+
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onToggleLayer]);

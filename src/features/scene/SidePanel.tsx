@@ -151,6 +151,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Vue top-down (toggle)"      keys={['T']} />
               <R label="Avion en papier (toggle)"   keys={['F']} />
               <R label="Grille Lara (toggle)"       keys={['G']} />
+              <R label="Déshabiller les Lara (toggle)" keys={['X']} />
               <R label="Quitter walk / top-down"    keys={['Échap']} />
               <R label="Changer de personnage"      keys={['L']} />
             </div>
@@ -761,7 +762,7 @@ export function SidePanel({
       {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
       {layerBtn('light',  'Pistolets Lara 🔫', 'laraPistols')}
       {layerBtn('light',  'Accessoires Lara 🎒', 'accessories')}
-      {layerBtn('pink',   'Déshabiller les Lara 👙', 'laraNude')}
+      {layerBtn('pink',   'Déshabiller les Lara 👙 (X)', 'laraNude')}
       {layerBtn('light',  'Chaussures Lara 👢', 'laraShoes')}
       {layerBtn('light',  'Gants Lara 🧤', 'laraGloves')}
       {layerBtn('pink',   'Physique buste 💃', 'breastPhysics')}
