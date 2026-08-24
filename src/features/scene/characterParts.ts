@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 import { ACCESSORIES_MESH_NAMES } from './walkerConfig';
-import { resolveTargetBoneName, getDepth, buildHairChain } from './retargeting';
+import { resolveTargetBoneName, getDepth } from './retargeting';
 
 export interface CharacterMeshPart {
   mesh: THREE.Mesh;
-  materials: THREE.Material[];
 }
 
 export interface CharacterBones {
@@ -20,14 +19,11 @@ export interface CharacterBones {
 
 export interface CharacterRenderMesh {
   mesh: THREE.Mesh;
-  materials: THREE.Material[];
   isInternalInvisible: boolean;
 }
 
 export interface CharacterParts {
   bones: CharacterBones;
-  hairChain: any[];
-  breastChain: any[];
 
   // Clothing parts
   boots: CharacterMeshPart[];
@@ -55,11 +51,6 @@ export interface CharacterParts {
   allRenderMeshes: CharacterRenderMesh[];
 }
 
-function getMaterials(mesh: THREE.Mesh): THREE.Material[] {
-  if (!mesh.material) return [];
-  return Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-}
-
 const HEAD_KEYWORDS = [
   'head', 'face', 'hair', 'braid', 'pony', 'eye', 'lash', 'cil',
   'mouth', 'teeth', 'dent', 'tongue', 'langue', 'cornea', 'sclera',
@@ -69,9 +60,10 @@ const HEAD_KEYWORDS = [
 export function isHeadMesh(mesh: THREE.Object3D): boolean {
   if (mesh.userData?.isHeadPart || mesh.userData?.isCustomHair || mesh.userData?.isWigRoot) return true;
   const meshName = (mesh.name || '').toLowerCase();
+  const mat = (mesh as THREE.Mesh).material;
   const matNames: string[] = [];
-  if ((mesh as THREE.Mesh).material) {
-    const mats = getMaterials(mesh as THREE.Mesh);
+  if (mat) {
+    const mats = Array.isArray(mat) ? mat : [mat];
     mats.forEach(m => { if (m?.name) matNames.push(m.name.toLowerCase()); });
   }
   const matStr = matNames.join(' ');
@@ -83,7 +75,7 @@ const INTERNAL_INVISIBLE_KEYWORDS = [
   'cornea', 'sclera', 'pupil', 'mouth_inner'
 ];
 
-export function extractCharacterParts(scene: THREE.Object3D, _isLara?: boolean): CharacterParts {
+export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
   // 1. Rename hair bones sequentially from base to tip
   const targetHairBones: Array<{ bone: THREE.Object3D; depth: number }> = [];
   scene.traverse(c => {
@@ -169,29 +161,34 @@ export function extractCharacterParts(scene: THREE.Object3D, _isLara?: boolean):
 
     if (o.isMesh && !o.userData.isCustomHair) {
       const mesh = o as THREE.Mesh;
-      const mats = getMaterials(mesh);
       const name = (mesh.name || '').toLowerCase();
-      const matNames = mats.map(m => (m?.name || '').toLowerCase()).join(' ');
-
-      const isInternalInvisible = INTERNAL_INVISIBLE_KEYWORDS.some(kw => name.includes(kw) || matNames.includes(kw));
-      allRenderMeshes.push({ mesh, materials: mats, isInternalInvisible });
-
-      // Hair materials for LGBT+ variant or native hair
-      const isHairMesh = name.includes('hair') || name.includes('braid') || name.includes('pony') || matNames.includes('hair') || matNames.includes('braid') || matNames.includes('pony');
-      if (isHairMesh) {
-        nativeHairMeshes.push({ mesh, materials: mats });
+      const mat = mesh.material;
+      const matNames: string[] = [];
+      if (mat) {
+        const mats = Array.isArray(mat) ? mat : [mat];
         mats.forEach(m => {
-          if (m && !lgbtaHairMaterials.includes(m)) {
+          if (m?.name) matNames.push(m.name.toLowerCase());
+          if (m && !lgbtaHairMaterials.includes(m) && (name.includes('hair') || name.includes('braid') || name.includes('pony') || (m.name && (m.name.toLowerCase().includes('hair') || m.name.toLowerCase().includes('braid') || m.name.toLowerCase().includes('pony'))))) {
             lgbtaHairMaterials.push(m);
           }
         });
+      }
+      const matStr = matNames.join(' ');
+
+      const isInternalInvisible = INTERNAL_INVISIBLE_KEYWORDS.some(kw => name.includes(kw) || matStr.includes(kw));
+      allRenderMeshes.push({ mesh, isInternalInvisible });
+
+      // Hair meshes
+      const isHairMesh = name.includes('hair') || name.includes('braid') || name.includes('pony') || matStr.includes('hair') || matStr.includes('braid') || matStr.includes('pony');
+      if (isHairMesh) {
+        nativeHairMeshes.push({ mesh });
       }
 
       // Check accessories
       let isAccessory = false;
       for (const accName of ACCESSORIES_MESH_NAMES) {
         const accNameSpace = accName.replace(/_/g, ' ');
-        if (name.includes(accName) || name.includes(accNameSpace) || matNames.includes(accName) || matNames.includes(accNameSpace)) {
+        if (name.includes(accName) || name.includes(accNameSpace) || matStr.includes(accName) || matStr.includes(accNameSpace)) {
           isAccessory = true;
           break;
         }
@@ -199,73 +196,43 @@ export function extractCharacterParts(scene: THREE.Object3D, _isLara?: boolean):
 
       const isHandPistol = name.includes('handgun') && !name.includes('holster');
       const isHolsterPistol = (name.includes('handgun') && name.includes('holster')) || name === 'holster' || name.includes('mp5_holster') || name.endsWith('_holster');
-      const isHolster = name.includes('holster') || name.includes('gear') || name.includes('buckle') || matNames.includes('holster') || matNames.includes('gear') || matNames.includes('buckle');
-      const isBackpack = name.includes('backpack') || name.includes('bag') || name.includes('pack') || matNames.includes('backpack') || matNames.includes('bag') || matNames.includes('pack');
+      const isHolster = name.includes('holster') || name.includes('gear') || name.includes('buckle') || matStr.includes('holster') || matStr.includes('gear') || matStr.includes('buckle');
+      const isBackpack = name.includes('backpack') || name.includes('bag') || name.includes('pack') || matStr.includes('backpack') || matStr.includes('bag') || matStr.includes('pack');
 
       if (isHandPistol) {
-        handPistols.push({ mesh, materials: mats });
+        handPistols.push({ mesh });
       } else if (isHolsterPistol) {
-        holsterPistols.push({ mesh, materials: mats });
+        holsterPistols.push({ mesh });
       } else if (isHolster) {
-        holsters.push({ mesh, materials: mats });
+        holsters.push({ mesh });
       } else if (isBackpack) {
-        backpacks.push({ mesh, materials: mats });
+        backpacks.push({ mesh });
       } else if (isAccessory) {
-        otherAccessories.push({ mesh, materials: mats });
+        otherAccessories.push({ mesh });
       }
 
-      // Clothing / Body classification
+      // Clothing / Body classification with full compatibility for all mesh name variants
       if (name.includes('boots')) {
-        boots.push({ mesh, materials: mats });
-      } else if (name.includes('feet')) {
-        feet.push({ mesh, materials: mats });
+        boots.push({ mesh });
+      } else if (name.includes('feet') || name.includes('5_feet')) {
+        feet.push({ mesh });
       } else if (name.includes('gloves') || name.includes('fingers')) {
-        gloves.push({ mesh, materials: mats });
-      } else if (name.includes('hands')) {
-        hands.push({ mesh, materials: mats });
+        gloves.push({ mesh });
+      } else if (name.includes('hands') || name.includes('5_hands')) {
+        hands.push({ mesh });
       } else if (name.includes('shirt') || name === 'body_torso') {
-        torsoClothed.push({ mesh, materials: mats });
-      } else if (name.includes('body_nude_torso')) {
-        torsoNude.push({ mesh, materials: mats });
+        torsoClothed.push({ mesh });
+      } else if (name.includes('body_nude_torso') || name.includes('5_body_torso')) {
+        torsoNude.push({ mesh });
       } else if (name.includes('shorts') || name === 'body_legs') {
-        legsClothed.push({ mesh, materials: mats });
-      } else if (name.includes('body_nude_legs') || name.includes('panties')) {
-        legsNude.push({ mesh, materials: mats });
+        legsClothed.push({ mesh });
+      } else if (name.includes('body_nude_legs') || name.includes('5_body_legs') || name.includes('panties') || name.includes('5_panties')) {
+        legsNude.push({ mesh });
       } else if (name === 'body') {
-        bodyFull.push({ mesh, materials: mats });
+        bodyFull.push({ mesh });
       }
     }
   });
-
-  // 5. Build Hair & Breast chains
-  const hairChain = buildHairChain(nativeHairBones);
-
-  const breastChain: any[] = [];
-  for (const bone of breastBones) {
-    let axis = new THREE.Vector3(0, 1, 0);
-    let length = 15.0;
-    const child = bone.children.find(x => (x as any).isBone);
-    if (child && child.position.lengthSq() > 1e-8) {
-      length = child.position.length();
-      axis = child.position.clone().normalize();
-    }
-    bone.updateMatrixWorld(true);
-    const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-    const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
-    const worldLength = length * worldScale.z;
-    const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
-    const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
-    const initialRestQ = (bone as any).restLocalQuaternion ? (bone as any).restLocalQuaternion.clone() : bone.quaternion.clone();
-    breastChain.push({
-      bone,
-      restQuat: initialRestQ,
-      axis,
-      length,
-      worldLength,
-      tipWorld: tipWorld.clone(),
-      tipPrev: tipWorld.clone(),
-    });
-  }
 
   return {
     bones: {
@@ -278,8 +245,6 @@ export function extractCharacterParts(scene: THREE.Object3D, _isLara?: boolean):
       nativeHairBones,
       breastBones
     },
-    hairChain,
-    breastChain,
 
     boots,
     feet,
@@ -303,12 +268,19 @@ export function extractCharacterParts(scene: THREE.Object3D, _isLara?: boolean):
   };
 }
 
-function setPartVisibility(partList: CharacterMeshPart[], visible: boolean) {
+export function setPartVisibility(partList: CharacterMeshPart[], visible: boolean) {
   for (let i = 0; i < partList.length; i++) {
-    const { mesh, materials } = partList[i];
+    const mesh = partList[i].mesh;
     mesh.visible = visible;
-    for (let j = 0; j < materials.length; j++) {
-      if (materials[j]) materials[j].visible = visible;
+    const mat = mesh.material;
+    if (mat) {
+      if (Array.isArray(mat)) {
+        for (let j = 0; j < mat.length; j++) {
+          if (mat[j]) mat[j].visible = visible;
+        }
+      } else {
+        mat.visible = visible;
+      }
     }
   }
 }
@@ -368,12 +340,16 @@ export function applyRenderProperties(parts: CharacterParts, opts: RenderPropert
     item.mesh.receiveShadow = canCastShadow;
     item.mesh.frustumCulled = true;
 
-    for (let j = 0; j < item.materials.length; j++) {
-      const mat = item.materials[j] as any;
-      if (mat) {
-        mat.depthTest = !opts.showWallhack;
-        mat.depthWrite = !opts.showWallhack;
-        mat.wireframe = opts.characterWireframe;
+    const mat = item.mesh.material;
+    if (mat) {
+      const mats = Array.isArray(mat) ? mat : [mat];
+      for (let j = 0; j < mats.length; j++) {
+        const m = mats[j] as any;
+        if (m) {
+          m.depthTest = !opts.showWallhack;
+          m.depthWrite = !opts.showWallhack;
+          m.wireframe = opts.characterWireframe;
+        }
       }
     }
   }

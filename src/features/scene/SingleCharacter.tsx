@@ -69,7 +69,7 @@ const _backDir = new THREE.Vector3(0, 0, -1);
 const _eulerBreast = new THREE.Euler(0, 0, 0, 'ZXY');
 const _animBreastQ = new THREE.Quaternion();
 
-// Dedicated static vectors & quaternions for hair physics (prevents per-node state corruption)
+// Dedicated static vectors & quaternions for hair physics
 const _baseParentQuat = new THREE.Quaternion();
 const _boneRestWorldQuat = new THREE.Quaternion();
 const _swingQuat = new THREE.Quaternion();
@@ -148,12 +148,10 @@ function HeartParachute({ customAnimName }: { customAnimName: React.MutableRefOb
 
   return (
     <group ref={groupRef} position={[0, 270, 0]} visible={false}>
-      {/* Corde reliée au personnage */}
       <mesh position={[0, -60, 0]}>
         <cylinderGeometry args={[0.5, 0.5, 120, 8]} />
         <meshStandardMaterial color="#eeeeee" roughness={0.9} />
       </mesh>
-      {/* Coussin Cœur FAMNIG HJÄRTA centré */}
       <group rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
         <Famnig27470460 item={{} as any} actionState={{} as any} onSize={() => {}} />
       </group>
@@ -204,7 +202,7 @@ export function SingleCharacter({
   const { scene } = useGLTFClone(modelPath);
 
   // Extraction structurée des maillages et des os
-  const parts = useMemo(() => extractCharacterParts(scene, isLara), [scene, isLara]);
+  const parts = useMemo(() => extractCharacterParts(scene), [scene]);
 
   const groupRef = useRef<THREE.Group>(null!);
   const modelRef = useRef<THREE.Object3D>(null!);
@@ -390,9 +388,36 @@ export function SingleCharacter({
       applyLaraVariantStyles(scene, variant);
     }
 
-    // Set chains from indexed parts
-    hairChainRef.current = parts.hairChain;
-    breastChainRef.current = parts.breastChain;
+    // Build Verlet chains AFTER scale and transform have been updated
+    hairChainRef.current = buildHairChain(parts.bones.nativeHairBones);
+
+    const breastChain: any[] = [];
+    for (const bone of parts.bones.breastBones) {
+      let axis = new THREE.Vector3(0, 1, 0);
+      let length = 15.0;
+      const child = bone.children.find(x => (x as any).isBone);
+      if (child && child.position.lengthSq() > 1e-8) {
+        length = child.position.length();
+        axis = child.position.clone().normalize();
+      }
+      bone.updateMatrixWorld(true);
+      const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+      const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
+      const worldLength = length * worldScale.z;
+      const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
+      const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
+      const initialRestQ = (bone as any).restLocalQuaternion ? (bone as any).restLocalQuaternion.clone() : bone.quaternion.clone();
+      breastChain.push({
+        bone,
+        restQuat: initialRestQ,
+        axis,
+        length,
+        worldLength,
+        tipWorld: tipWorld.clone(),
+        tipPrev: tipWorld.clone(),
+      });
+    }
+    breastChainRef.current = breastChain;
 
     const mixer = new THREE.AnimationMixer(scene);
     mixerRef.current = mixer;
@@ -635,8 +660,13 @@ export function SingleCharacter({
       const isBraid = meshName.includes('braid') || meshName.includes('pony');
       const visible = showNativeHair && !(variant === 'angelina' && isBraid);
       item.mesh.visible = visible;
-      for (const mat of item.materials) {
-        if (mat) mat.visible = visible;
+      const mat = item.mesh.material;
+      if (mat) {
+        if (Array.isArray(mat)) {
+          mat.forEach(m => { if (m) m.visible = visible; });
+        } else {
+          mat.visible = visible;
+        }
       }
     }
 
@@ -882,7 +912,8 @@ export function SingleCharacter({
       const dtRatio = physicsPrevDt.current > 0 ? (simDt / physicsPrevDt.current) : 1;
 
       // Ponytail physics simulation (Verlet)
-      const activeHairChain = (haircut !== 'original' && customHairChainRef.current.length > 0) ? customHairChainRef.current : hairChainRef.current;
+      const isCustomHair = (haircut !== 'original' && customHairChainRef.current.length > 0);
+      const activeHairChain = isCustomHair ? customHairChainRef.current : hairChainRef.current;
 
       if (!enableHairPhysics && activeHairChain.length > 0) {
         for (const node of activeHairChain) {
@@ -909,29 +940,45 @@ export function SingleCharacter({
             _backDir.crossVectors(_upDir, _rightDir).normalize();
           }
 
-          for (const node of activeHairChain) {
+          const isHeadMoving = isMoving || (target !== 'idle') || (walkerAnim && walkerAnim.toLowerCase().includes('walk')) || (walkerAnim && walkerAnim.toLowerCase().includes('run'));
+
+          // Dual configurations:
+          // 1. Native ponytail / braid: cartoonish inertia trailing momentum with weighted tip
+          // 2. Custom wigs: lighter soft physics
+          const dampingFactor = isCustomHair
+            ? (isHeadMoving ? 0.75 : 0.85)
+            : (isHeadMoving ? 0.70 : 0.85);
+
+          const lerpStiffness = isCustomHair
+            ? (isHeadMoving ? 0.05 : 0.12)
+            : (isHeadMoving ? 0.038 : 0.12);
+
+          for (let nodeIdx = 0; nodeIdx < activeHairChain.length; nodeIdx++) {
+            const node = activeHairChain[nodeIdx];
             const { bone, relQuat, axis, worldLength } = node;
             const parent = bone.parent;
             if (!parent) continue;
 
             const jointWorld = _jointWorld.setFromMatrixPosition(bone.matrixWorld);
             const restDirWorld = _restDirWorld.copy(axis).applyQuaternion(_boneRestWorldQuat.copy(_baseParentQuat).multiply(relQuat)).normalize();
-            const restDir = _restDir.copy(_downWorld).lerp(restDirWorld, 0.15).normalize();
+            const restDir = _restDir.copy(_downWorld).lerp(restDirWorld, isCustomHair ? 0.15 : 0.10).normalize();
             const restTip = _restTip.copy(jointWorld).addScaledVector(restDir, worldLength);
 
+            // Teleportation safety reset
             const dist = jointWorld.distanceTo(node.tipWorld);
             if (dist > Math.max(worldLength * 3, 20.0)) {
               node.tipWorld.copy(restTip);
               node.tipPrev.copy(restTip);
             }
 
-            const isHeadMoving = isMoving || (target !== 'idle') || (walkerAnim && walkerAnim.toLowerCase().includes('walk')) || (walkerAnim && walkerAnim.toLowerCase().includes('run'));
-            const dampingFactor = isHeadMoving ? 0.75 : 0.85;
+            // Weighted tip factor for native cartoonish braid
+            const tipWeightFactor = !isCustomHair
+              ? (1.0 + (nodeIdx / Math.max(1, activeHairChain.length - 1)) * 0.40)
+              : 1.0;
 
             const vel = _hairVel.subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - dampingFactor));
-            const next = _hairNext.copy(node.tipWorld).add(vel).addScaledVector(_tmpG, simDt * simDt);
+            const next = _hairNext.copy(node.tipWorld).add(vel).addScaledVector(_tmpG, simDt * simDt * tipWeightFactor);
 
-            const lerpStiffness = isHeadMoving ? 0.05 : 0.12;
             next.lerp(restTip, lerpStiffness);
 
             if (!isHeadMoving && vel.lengthSq() < 0.1) {
@@ -939,7 +986,7 @@ export function SingleCharacter({
               next.lerp(restTip, 0.8);
             }
 
-            // Constraints pass
+            // Constraints pass (2 passes)
             for (let i = 0; i < 2; i++) {
               const dir = _hairDir.subVectors(next, jointWorld);
               const currentLen = dir.length();
@@ -950,8 +997,8 @@ export function SingleCharacter({
               }
               next.copy(jointWorld).add(dir);
 
-              // Tête
-              if (headBoneRef.current && activeHairChain !== customHairChainRef.current) {
+              // Tête (Sphère douce)
+              if (headBoneRef.current && !isCustomHair) {
                 const center = _colliderCenter.setFromMatrixPosition(headBoneRef.current.matrixWorld).addScaledVector(_backDir, 4);
                 const radius = 13.0;
                 const dCenter = next.distanceTo(center);
@@ -960,8 +1007,8 @@ export function SingleCharacter({
                 }
               }
 
-              // Sac à dos
-              if (spine2BoneRef.current && activeHairChain !== customHairChainRef.current) {
+              // Sac à dos (Collider OBB)
+              if (spine2BoneRef.current && !isCustomHair) {
                 const backpackCenter = _colliderCenter.setFromMatrixPosition(spine2BoneRef.current.matrixWorld).addScaledVector(_backDir, 11);
                 const localPos = _colliderOffset.subVectors(next, backpackCenter);
                 const px = localPos.dot(_rightDir);

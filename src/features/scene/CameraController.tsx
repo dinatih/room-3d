@@ -341,16 +341,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         }
         return;
       }
-      if (e.key === 'z' || e.key === 'Z') {
-        useSceneStore.getState().toggleLayer('laraTopOff');
-        invalidate();
-        return;
-      }
-      if (e.key === 'c' || e.key === 'C') {
-        useSceneStore.getState().toggleLayer('laraBottomOff');
-        invalidate();
-        return;
-      }
 
 
       const k = e.key;
