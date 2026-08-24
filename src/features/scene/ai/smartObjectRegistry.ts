@@ -18,7 +18,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Nord)',
         offset: [90, 0, 80],
         rotY: 0,
-        animation: 'animations/poses_idles/anim_female_sitting_pose_1.glb',
+        animation: 'animations/poses_idles/anim_female_sitting_pose_3.glb',
         duration: 15.0,
       },
       {
@@ -34,7 +34,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Sud)',
         offset: [90, 0, 220],
         rotY: 0,
-        animation: 'animations/poses_idles/anim_female_sitting_pose_1.glb',
+        animation: 'animations/poses_idles/anim_female_sitting_pose_2.glb',
         duration: 15.0,
       },
       {
@@ -74,7 +74,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Sud)',
         offset: [245, 0, 260],
         rotY: Math.PI,
-        animation: 'animations/poses_idles/anim_female_sitting_pose_1.glb',
+        animation: 'animations/poses_idles/anim_female_sitting_pose_3.glb',
         duration: 15.0,
       },
       {
@@ -333,7 +333,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Place assise 2',
         offset: [270, 0, -140],
         rotY: Math.PI,
-        animation: 'animations/poses_idles/anim_female_sitting_pose_3.glb',
+        animation: 'animations/poses_idles/anim_female_sitting_pose_1.glb',
         duration: 15.0,
       }
     ]
@@ -357,7 +357,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Place assise 2',
         offset: [100, 0, -100],
         rotY: Math.PI / 2,
-        animation: 'animations/poses_idles/anim_sitting_idle.glb',
+        animation: 'animations/poses_idles/anim_female_sitting_pose_1.glb',
         duration: 15.0,
       }
     ]
@@ -442,8 +442,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'admirer dans le miroir',
         offset: [160, 0, 340],
         rotY: 0,
-        animation: 'animations/poses_idles/miley_armature_change_pose.glb',
-        duration: 45.0,
+        animation: 'animations/poses_idles/anim_female_standing_pose_1.glb',
+        duration: 15.0,
       }
     ]
   },
