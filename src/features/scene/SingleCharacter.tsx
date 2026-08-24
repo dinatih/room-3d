@@ -494,15 +494,6 @@ export function SingleCharacter({
             });
         }
 
-        if (name === 'body_nude_legs' && !c.userData.uvFlipped && (c as any).geometry?.attributes?.uv) {
-          c.userData.uvFlipped = true;
-          const uvAttr = (c as any).geometry.attributes.uv;
-          for (let i = 1; i < uvAttr.count * 2; i += 2) {
-            uvAttr.array[i] = 1.0 - uvAttr.array[i];
-          }
-          uvAttr.needsUpdate = true;
-        }
-
         const isBoots = name.includes('boots');
         const isFeet = name.includes('feet');
         const isGloves = name.includes('gloves') || name.includes('fingers');
