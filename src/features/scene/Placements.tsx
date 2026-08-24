@@ -607,7 +607,7 @@ export function Decor() {
       {/* Google Nest Mini — mur OUEST (A), à plat sur la bordure des 2 miroirs nord (i=0 et i=1),
           à 1.05 m du sol. X=7 (flush bord avant cadre Nissedal FD=5 + demi-épaisseur disque ~2),
           Z=90.5 (centre entre miroir i=0 @z=70.5 et miroir i=1 @z=110.5), Y=105. */}
-      <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, 0, 0]}>
+      <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, Math.PI / 2, 0]}>
         <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, isIkea: true }}>
