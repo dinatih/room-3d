@@ -1400,7 +1400,7 @@ export function SidePanel({
         style={{
           top: 16,
           left: 16,
-          width: 220,
+          width: 260,
           maxHeight: 'calc(100vh - 32px)',
           zIndex: 100,
           scrollbarWidth: 'none',
