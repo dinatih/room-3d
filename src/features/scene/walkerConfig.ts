@@ -43,23 +43,23 @@ export const ACCESSORIES_MESH_NAMES = new Set([
   'grenades', 'accessories', 'handgun_part'
 ]);
 
-export type LaraCountMode = 2 | 12 | 15;
+export type LaraCountMode = 2 | 10 | 15;
 
-export const STYLIZED_LARA_IDS = new Set([
-  'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta'
-]);
-
-export const COUPLE_LARA_IDS = new Set([
-  'sandra', 'rajaa'
+export const PERF_EXCLUDED_LARA_IDS = new Set([
+  'sara', 'safa', 'romana', 'angelina', 'lgbta'
 ]);
 
 export function isCharacterVisibleInMode(id: string, mode: LaraCountMode = 15, activeWalkerId?: string): boolean {
-  if (activeWalkerId && id === activeWalkerId) return true;
   if (mode === 2) {
-    return COUPLE_LARA_IDS.has(id);
+    if (id === 'xbot') return true;
+    if (activeWalkerId && activeWalkerId !== 'xbot') {
+      return id === activeWalkerId;
+    }
+    return id === 'native';
   }
-  if (mode === 12) {
-    return STYLIZED_LARA_IDS.has(id);
+  if (mode === 10) {
+    if (activeWalkerId && id === activeWalkerId) return true;
+    return !PERF_EXCLUDED_LARA_IDS.has(id);
   }
   // mode === 15: all characters
   return true;

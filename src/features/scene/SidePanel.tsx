@@ -777,10 +777,10 @@ export function SidePanel({
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
           <div className="d-flex justify-content-between align-items-center mb-1">
             <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              👥 Nombre de Lara
+              👥 Nombre de Personnages
             </span>
             <span className="badge bg-primary" style={{ fontSize: '9px' }}>
-              {(layers.laraCount ?? 15) === 2 ? '2 (Couple)' : (layers.laraCount ?? 15) === 12 ? '12 Laras' : '15 (Toutes)'}
+              {(layers.laraCount ?? 15) === 2 ? '2 (Xbot + Lara)' : (layers.laraCount ?? 15) === 10 ? '10 (Eco)' : '15 (Toutes)'}
             </span>
           </div>
           <div className="btn-group btn-group-sm w-100" role="group">
@@ -794,19 +794,19 @@ export function SidePanel({
                 }));
               }}
             >
-              2 (Couple)
+              2 (Xbot+Lara)
             </button>
             <button
               type="button"
-              className={`btn btn-sm ${layers.laraCount === 12 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
-              style={{ fontSize: isMobile ? '13px' : '11px', background: layers.laraCount === 12 ? undefined : 'transparent' }}
+              className={`btn btn-sm ${layers.laraCount === 10 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
+              style={{ fontSize: isMobile ? '13px' : '11px', background: layers.laraCount === 10 ? undefined : 'transparent' }}
               onClick={() => {
                 useSceneStore.setState(st => ({
-                  layers: { ...st.layers, laraCount: 12, showAllLaraStyles: true }
+                  layers: { ...st.layers, laraCount: 10, showAllLaraStyles: true }
                 }));
               }}
             >
-              12 Laras
+              10 (Eco)
             </button>
             <button
               type="button"
