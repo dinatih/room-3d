@@ -1,18 +1,13 @@
-/**
- * LampOla.tsx — Lampe IKEA OLA (GLB items/lamp-ola/lamp-ola.glb).
- * Coordonnées locales : centré par bbox, Y=0 = sol, scale ×100, teintes jaunes → blanc.
- * Placement monde dans GlbItems.tsx.
- */
-import { useState, useLayoutEffect } from 'react';
+import { useRef, useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 export function LampOla({ actionState, onSize }: SceneItemProps) {
   const { scene } = useGLTFClone('items/lamp-ola/lamp-ola.glb');
-  const [topY, setTopY] = useState(95.5);
+  const diffuserMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
   const isOn = actionState?.on !== undefined
     ? Boolean(actionState.on)
     : Boolean(actionState?.['lamp-toggle'] || actionState?.lampOn);
@@ -21,46 +16,169 @@ export function LampOla({ actionState, onSize }: SceneItemProps) {
     scene.scale.set(1, 1, 1);
     scene.scale.setScalar(100);
     removeGlbLines(scene);
-    scene.traverse(c => {
+
+    const meshesToProcess: THREE.Mesh[] = [];
+    scene.traverse((c) => {
       const mesh = c as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      const mat = mesh.material as THREE.MeshStandardMaterial;
-      if (!mat?.color) return;
-      mesh.material = mat.clone();
-      const hsl = { h: 0, s: 0, l: 0 };
-      (mesh.material as THREE.MeshStandardMaterial).color.getHSL(hsl);
-      if (hsl.h > 0.08 && hsl.h < 0.20 && hsl.s > 0.2) {
-        (mesh.material as THREE.MeshStandardMaterial).color.set(0xffffff);
-      }
+      if (mesh.isMesh) meshesToProcess.push(mesh);
     });
-    mergeGlbByMaterial(scene);
+
+    for (const mesh of meshesToProcess) {
+      const origMat = mesh.material as THREE.MeshStandardMaterial;
+      const bodyMat = origMat ? origMat.clone() : new THREE.MeshStandardMaterial({ color: 0xffffff });
+      const diffuserMat = bodyMat.clone();
+      diffuserMatRef.current = diffuserMat;
+
+      const hsl = { h: 0, s: 0, l: 0 };
+      bodyMat.color.getHSL(hsl);
+      if (hsl.h > 0.08 && hsl.h < 0.20 && hsl.s > 0.2) {
+        bodyMat.color.set(0xffffff);
+        diffuserMat.color.set(0xffffff);
+      }
+
+      const geo = mesh.geometry;
+      if (!geo || !geo.attributes.position) continue;
+      const nonIndexed = geo.index ? geo.toNonIndexed() : geo.clone();
+      const pos = nonIndexed.attributes.position;
+      const uv = nonIndexed.attributes.uv;
+      const normalAttr = nonIndexed.attributes.normal;
+      const count = pos.count;
+
+      nonIndexed.computeBoundingBox();
+      const bbox = nonIndexed.boundingBox!;
+      const height = bbox.max.y - bbox.min.y;
+      const topThreshold = bbox.min.y + height * 0.45;
+
+      const vA = new THREE.Vector3();
+      const vB = new THREE.Vector3();
+      const vC = new THREE.Vector3();
+      const cb = new THREE.Vector3();
+      const ab = new THREE.Vector3();
+      const center = new THREE.Vector3();
+
+      interface TriangleInfo {
+        index: number;
+        normal: THREE.Vector3;
+        center: THREE.Vector3;
+        d: number;
+      }
+      const topTriangles: TriangleInfo[] = [];
+
+      for (let i = 0; i < count; i += 3) {
+        vA.fromBufferAttribute(pos, i);
+        vB.fromBufferAttribute(pos, i + 1);
+        vC.fromBufferAttribute(pos, i + 2);
+
+        center.set(0, 0, 0).add(vA).add(vB).add(vC).divideScalar(3);
+        if (center.y < topThreshold) continue;
+
+        cb.subVectors(vC, vB);
+        ab.subVectors(vA, vB);
+        cb.cross(ab).normalize();
+
+        if (cb.y > 0.15) {
+          const d = -cb.dot(center);
+          topTriangles.push({
+            index: i,
+            normal: cb.clone(),
+            center: center.clone(),
+            d,
+          });
+        }
+      }
+
+      let bestCluster = new Set<number>();
+      for (let i = 0; i < topTriangles.length; i++) {
+        const ref = topTriangles[i];
+        const currentCluster = new Set<number>();
+        for (let j = 0; j < topTriangles.length; j++) {
+          const target = topTriangles[j];
+          const dot = ref.normal.dot(target.normal);
+          if (dot > 0.96) {
+            const dist = Math.abs(ref.normal.dot(target.center) + ref.d);
+            if (dist < 1.0) {
+              currentCluster.add(target.index);
+            }
+          }
+        }
+        if (currentCluster.size > bestCluster.size) {
+          bestCluster = currentCluster;
+        }
+      }
+
+      const bodyPos: number[] = [];
+      const bodyNorm: number[] = [];
+      const bodyUv: number[] = [];
+
+      const diffPos: number[] = [];
+      const diffNorm: number[] = [];
+      const diffUv: number[] = [];
+
+      for (let i = 0; i < count; i += 3) {
+        const isDiffuser = bestCluster.has(i);
+        const targetPos = isDiffuser ? diffPos : bodyPos;
+        const targetNorm = isDiffuser ? diffNorm : bodyNorm;
+        const targetUv = isDiffuser ? diffUv : bodyUv;
+
+        for (let k = 0; k < 3; k++) {
+          const idx = i + k;
+          targetPos.push(pos.getX(idx), pos.getY(idx), pos.getZ(idx));
+          if (normalAttr) targetNorm.push(normalAttr.getX(idx), normalAttr.getY(idx), normalAttr.getZ(idx));
+          if (uv) targetUv.push(uv.getX(idx), uv.getY(idx));
+        }
+      }
+
+      const parent = mesh.parent || scene;
+      parent.remove(mesh);
+
+      if (bodyPos.length > 0) {
+        const bodyGeo = new THREE.BufferGeometry();
+        bodyGeo.setAttribute('position', new THREE.Float32BufferAttribute(bodyPos, 3));
+        if (bodyNorm.length > 0) bodyGeo.setAttribute('normal', new THREE.Float32BufferAttribute(bodyNorm, 3));
+        if (bodyUv.length > 0) bodyGeo.setAttribute('uv', new THREE.Float32BufferAttribute(bodyUv, 2));
+        bodyGeo.computeVertexNormals();
+        const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+        bodyMesh.castShadow = true;
+        bodyMesh.receiveShadow = true;
+        parent.add(bodyMesh);
+      }
+
+      if (diffPos.length > 0) {
+        const diffGeo = new THREE.BufferGeometry();
+        diffGeo.setAttribute('position', new THREE.Float32BufferAttribute(diffPos, 3));
+        if (diffNorm.length > 0) diffGeo.setAttribute('normal', new THREE.Float32BufferAttribute(diffNorm, 3));
+        if (diffUv.length > 0) diffGeo.setAttribute('uv', new THREE.Float32BufferAttribute(diffUv, 2));
+        diffGeo.computeVertexNormals();
+        const diffMesh = new THREE.Mesh(diffGeo, diffuserMat);
+        diffMesh.castShadow = true;
+        diffMesh.receiveShadow = true;
+        parent.add(diffMesh);
+      }
+    }
+
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    const size = box.getSize(new THREE.Vector3());
-    setTopY(size.y);
-    onSize(size);
+    onSize(box.getSize(new THREE.Vector3()));
   }, [scene, onSize]);
 
-  return (
-    <group>
-      <primitive object={scene} />
-      {/* Disque diffuseur supérieur pointant vers le plafond */}
-      <mesh position={[0, topY - 0.2, 0]} rotation-x={-Math.PI / 2}>
-        <circleGeometry args={[9.2, 32]} />
-        <meshStandardMaterial
-          color={isOn ? 0xfffaed : 0xd8d8d8}
-          emissive={isOn ? 0xfff2d6 : 0x000000}
-          emissiveIntensity={isOn ? 2.5 : 0}
-          roughness={0.2}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-    </group>
-  );
+  useLayoutEffect(() => {
+    if (diffuserMatRef.current) {
+      if (isOn) {
+        diffuserMatRef.current.emissive.set(0xfff2d6);
+        diffuserMatRef.current.emissiveIntensity = 2.5;
+      } else {
+        diffuserMatRef.current.emissive.set(0x000000);
+        diffuserMatRef.current.emissiveIntensity = 0;
+      }
+    }
+  }, [isOn]);
+
+  return <primitive object={scene} />;
 }
 
 useGLTF.preload('items/lamp-ola/lamp-ola.glb');
+
