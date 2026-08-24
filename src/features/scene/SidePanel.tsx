@@ -891,6 +891,31 @@ export function SidePanel({
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-1">
                     <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      📐 Angle max déviation repos (Max Angle)
+                    </span>
+                    <span className="badge bg-danger text-white" style={{ fontSize: '9px' }}>
+                      {layers.wigMaxAngle ?? 15}°
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    className="form-range"
+                    min="5"
+                    max="45"
+                    step="1"
+                    value={layers.wigMaxAngle ?? 15}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      useSceneStore.setState(st => ({
+                        layers: { ...st.layers, wigMaxAngle: val }
+                      }));
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       🌍 Gravité globale (Gravity)
                     </span>
                     <span className="badge bg-danger text-white" style={{ fontSize: '9px' }}>

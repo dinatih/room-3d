@@ -104,6 +104,7 @@ const initialLayers: LayerState = {
   wigInertia: 1.0,
   wigWind: 0.0,
   wigTipWeight: 1.2,
+  wigMaxAngle: 15,
   wigHeadCollisionRadius: 13.0,
   characterShadows: true,
   characterWireframe: false,

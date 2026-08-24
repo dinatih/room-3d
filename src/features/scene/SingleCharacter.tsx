@@ -84,6 +84,8 @@ const _hairFinalDir = new THREE.Vector3();
 const _hairCurrentDirWorld = new THREE.Vector3();
 const _colliderCenter = new THREE.Vector3();
 const _colliderOffset = new THREE.Vector3();
+const _rotAxis = new THREE.Vector3();
+const _clampedSwingQuat = new THREE.Quaternion();
 const _headW = new THREE.Vector3();
 const _hipsW = new THREE.Vector3();
 const _lShoulderW = new THREE.Vector3();
@@ -1059,10 +1061,29 @@ export function SingleCharacter({
               finalDir.copy(restDir).multiplyScalar(worldLength);
             }
 
+            const currentDirWorld = _hairCurrentDirWorld.copy(finalDir).normalize();
+
+            // ── Cône de déviation angulaire stricte (max 15° par rapport à la pose de repos) ──
+            const maxAngleDeg = isWig 
+              ? (useSceneStore.getState().layers.wigMaxAngle ?? 15)
+              : 35;
+            const maxAngleRad = (maxAngleDeg * Math.PI) / 180;
+            const cosAngle = Math.max(-1.0, Math.min(1.0, restDirWorld.dot(currentDirWorld)));
+            const currentAngle = Math.acos(cosAngle);
+
+            if (currentAngle > maxAngleRad) {
+              _rotAxis.crossVectors(restDirWorld, currentDirWorld);
+              if (_rotAxis.lengthSq() > 1e-6) {
+                _rotAxis.normalize();
+                _clampedSwingQuat.setFromAxisAngle(_rotAxis, maxAngleRad);
+                currentDirWorld.copy(restDirWorld).applyQuaternion(_clampedSwingQuat).normalize();
+                finalDir.copy(currentDirWorld).multiplyScalar(worldLength);
+              }
+            }
+
             node.tipPrev.copy(node.tipWorld);
             node.tipWorld.copy(jointWorld).add(finalDir);
 
-            const currentDirWorld = _hairCurrentDirWorld.copy(finalDir).normalize();
             const parentWQuat = parent.getWorldQuaternion(_parentWQuat);
             const boneRestWorldQuat = _boneRestWorldQuat.copy(_baseParentQuat).multiply(relQuat);
             const swing = _swingQuat.setFromUnitVectors(restDirWorld, currentDirWorld);
