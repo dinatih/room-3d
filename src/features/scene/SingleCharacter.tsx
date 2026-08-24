@@ -38,6 +38,43 @@ export { WALKER_ANIM_OPTIONS };
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
 
+/** Détermine si un mesh fait partie de la tête / visage / cheveux / yeux / accessoires de tête */
+export function isHeadMesh(mesh: THREE.Object3D): boolean {
+  if (mesh.userData?.isHeadPart || mesh.userData?.isCustomHair || mesh.userData?.isWigRoot) return true;
+  const meshName = (mesh.name || '').toLowerCase();
+  const mat = (mesh as THREE.Mesh).material;
+  const matNames: string[] = [];
+  if (mat) {
+    if (Array.isArray(mat)) {
+      mat.forEach(m => { if (m?.name) matNames.push(m.name.toLowerCase()); });
+    } else if (mat.name) {
+      matNames.push(mat.name.toLowerCase());
+    }
+  }
+  const matStr = matNames.join(' ');
+
+  const headKeywords = [
+    'head', 'face', 'hair', 'braid', 'pony', 'eye', 'lash', 'cil',
+    'mouth', 'teeth', 'dent', 'tongue', 'langue', 'cornea', 'sclera',
+    'pupil', 'glasses', 'scalp', 'brow', 'wig'
+  ];
+
+  return headKeywords.some(kw => meshName.includes(kw) || matStr.includes(kw));
+}
+
+/** Met à jour les layers Three.js de l'ensemble du personnage (corps vs tête/visage pour FPV vs miroir) */
+export function updateCharacterLayers(root: THREE.Object3D, isFirstPerson: boolean) {
+  root.traverse(o => {
+    if ((o as THREE.Mesh).isMesh) {
+      if (isFirstPerson && isHeadMesh(o)) {
+        o.layers.set(LAYER_WALKER_DETAIL);
+      } else {
+        o.layers.set(LAYER_WALKER);
+      }
+    }
+  });
+}
+
 
 
 
@@ -989,8 +1026,12 @@ export function SingleCharacter({
       headBone.remove(existingAttachment);
     }
 
+    if (groupRef.current) {
+      updateCharacterLayers(groupRef.current, isActive && cameraState.mode === 'fpv');
+    }
+
     invalidate();
-  }, [scene, haircut, invalidate]);
+  }, [scene, haircut, isActive, invalidate]);
 
   useEffect(() => {
     if (customIdleAnimPath && scene && mixerRef.current && !actionsRef.current[customIdleAnimPath]) {
@@ -1158,22 +1199,9 @@ export function SingleCharacter({
 
       const isFirstPerson = isActive && cameraState.mode === 'fpv';
       if (prevFirstPersonRef.current !== isFirstPerson) {
-        scene.traverse(o => {
-          if ((o as THREE.Mesh).isMesh) {
-            const meshName = o.name.toLowerCase();
-            const mat = (o as THREE.Mesh).material;
-            const matName = mat ? (Array.isArray(mat) ? mat[0].name.toLowerCase() : mat.name.toLowerCase()) : '';
-
-            const isHeadPart = meshName.includes('head') || meshName.includes('hair') || meshName.includes('eye') || meshName.includes('lash') || meshName.includes('mouth') || meshName.includes('teeth') ||
-                               matName.includes('head') || matName.includes('hair') || matName.includes('eye') || matName.includes('lash') || matName.includes('mouth');
-
-            if (isFirstPerson && isHeadPart) {
-              o.layers.set(LAYER_WALKER_DETAIL);
-            } else {
-              o.layers.set(LAYER_WALKER);
-            }
-          }
-        });
+        if (groupRef.current) {
+          updateCharacterLayers(groupRef.current, isFirstPerson);
+        }
         prevFirstPersonRef.current = isFirstPerson;
       }
     }

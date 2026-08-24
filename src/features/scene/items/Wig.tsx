@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { LAYER_WALKER } from '@config';
 
 export const HAIR_COLORS: Record<string, THREE.Color> = {
   naturel:  new THREE.Color(0.4, 0.25, 0.1),
@@ -160,10 +161,8 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         m.receiveShadow = true;
         m.renderOrder = 1;
         m.userData.isCustomHair = true;
-        m.layers.enable(0);
-        m.layers.enable(1);
-        m.layers.enable(2);
-        m.layers.enable(3);
+        m.userData.isHeadPart = true;
+        m.layers.set(LAYER_WALKER);
         
         const targetColor = color && HAIR_COLORS[color] ? HAIR_COLORS[color] : null;
 
