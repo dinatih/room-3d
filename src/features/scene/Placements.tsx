@@ -190,30 +190,30 @@ export function Equipment() {
         rotation={[Math.PI, 0, 0]}
         userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Ampoule SDB (TRÅDFRI)', actions: ['lampSdb'] } }}
       >
-        <TradfriBulb item={stub('tradfri-bulb')} actionState={{ on: !!as['lamp-sdb-toggle'] }} onSize={NOOP_SIZE} />
+        <TradfriBulb item={stub('tradfri-bulb-sdb')} actionState={{ on: !!as['lamp-sdb-toggle'] }} onSize={NOOP_SIZE} />
         {!!as['lamp-sdb-toggle'] && (
           <pointLight
-            position={[0, 15, 0]}
-            intensity={35}
-            distance={450}
-            decay={1.2}
-            color={0xfff2dc}
+            position={[0, 20, 0]}
+            intensity={120}
+            distance={0}
+            decay={1.0}
+            color={0xfff5e6}
           />
         )}
       </group>
       <group
-        position={[CORR_CX, WALL_H - 10, CORR_CZ]}
+        position={[CORR_CX, WALL_H - 10, CORR_CZ + 80]}
         rotation={[Math.PI, 0, 0]}
         userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Ampoule Couloir (TRÅDFRI)', actions: ['lampCouloir'] } }}
       >
-        <TradfriBulb item={stub('tradfri-bulb')} actionState={{ on: !!as['lamp-couloir-toggle'] }} onSize={NOOP_SIZE} />
+        <TradfriBulb item={stub('tradfri-bulb-couloir')} actionState={{ on: !!as['lamp-couloir-toggle'] }} onSize={NOOP_SIZE} />
         {!!as['lamp-couloir-toggle'] && (
           <pointLight
-            position={[0, 15, 0]}
-            intensity={35}
-            distance={450}
-            decay={1.2}
-            color={0xfff2dc}
+            position={[0, 20, 0]}
+            intensity={120}
+            distance={0}
+            decay={1.0}
+            color={0xfff5e6}
           />
         )}
       </group>

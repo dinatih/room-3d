@@ -14,13 +14,26 @@ const GLB = 'items/trådfri ampoule led e27 1055 lumen connecté sans fil variat
 
 export function TradfriBulb({ actionState, onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
-  const isOn = !!actionState?.['lamp-sdb-toggle'] || !!actionState?.['lamp-couloir-toggle'] || !!actionState?.on;
+  const isOn = actionState?.on !== undefined
+    ? Boolean(actionState.on)
+    : Boolean(actionState?.['lamp-sdb-toggle'] || actionState?.['lamp-couloir-toggle']);
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
     scene.scale.set(1, 1, 1);
     scene.scale.setScalar(100);
     mergeGlbByMaterial(scene);
+    // Clone materials per instance so toggling one bulb doesn't affect other instances
+    scene.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (mesh.isMesh && mesh.material) {
+        if (Array.isArray(mesh.material)) {
+          mesh.material = mesh.material.map(m => m.clone());
+        } else {
+          mesh.material = mesh.material.clone();
+        }
+      }
+    });
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
@@ -40,7 +53,7 @@ export function TradfriBulb({ actionState, onSize }: SceneItemProps) {
             const stdMat = m as THREE.MeshStandardMaterial;
             if (isOn) {
               stdMat.emissive.set(0xfff2d6);
-              stdMat.emissiveIntensity = 1.5;
+              stdMat.emissiveIntensity = 2.0;
             } else {
               stdMat.emissive.set(0x000000);
               stdMat.emissiveIntensity = 0;
