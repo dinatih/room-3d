@@ -1063,21 +1063,21 @@ export function SingleCharacter({
 
             const currentDirWorld = _hairCurrentDirWorld.copy(finalDir).normalize();
 
-            // ── Cône de déviation angulaire stricte (max 15° par rapport à la pose de repos) ──
-            const maxAngleDeg = isWig 
-              ? (useSceneStore.getState().layers.wigMaxAngle ?? 15)
-              : 35;
-            const maxAngleRad = (maxAngleDeg * Math.PI) / 180;
-            const cosAngle = Math.max(-1.0, Math.min(1.0, restDirWorld.dot(currentDirWorld)));
-            const currentAngle = Math.acos(cosAngle);
+            // ── Cône de déviation angulaire stricte (Perruques UNIQUEMENT - max 15° par rapport au repos) ──
+            if (isWig) {
+              const maxAngleDeg = useSceneStore.getState().layers.wigMaxAngle ?? 15;
+              const maxAngleRad = (maxAngleDeg * Math.PI) / 180;
+              const cosAngle = Math.max(-1.0, Math.min(1.0, restDirWorld.dot(currentDirWorld)));
+              const currentAngle = Math.acos(cosAngle);
 
-            if (currentAngle > maxAngleRad) {
-              _rotAxis.crossVectors(restDirWorld, currentDirWorld);
-              if (_rotAxis.lengthSq() > 1e-6) {
-                _rotAxis.normalize();
-                _clampedSwingQuat.setFromAxisAngle(_rotAxis, maxAngleRad);
-                currentDirWorld.copy(restDirWorld).applyQuaternion(_clampedSwingQuat).normalize();
-                finalDir.copy(currentDirWorld).multiplyScalar(worldLength);
+              if (currentAngle > maxAngleRad) {
+                _rotAxis.crossVectors(restDirWorld, currentDirWorld);
+                if (_rotAxis.lengthSq() > 1e-6) {
+                  _rotAxis.normalize();
+                  _clampedSwingQuat.setFromAxisAngle(_rotAxis, maxAngleRad);
+                  currentDirWorld.copy(restDirWorld).applyQuaternion(_clampedSwingQuat).normalize();
+                  finalDir.copy(currentDirWorld).multiplyScalar(worldLength);
+                }
               }
             }
 
