@@ -383,6 +383,10 @@ import { CharacterAnimSelector } from './CharacterAnimSelector';
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
+const ALL_HAIR_COLORS: string[] = [
+  'naturel', 'noir', 'brun', 'chatain', 'blond', 'roux', 'rouge', 'blanc', 'bleu', 'vert', 'rose', 'violet', 'arc-en-ciel'
+];
+
 export function SidePanel({ 
   layers, 
   onToggleLayer, 
@@ -422,7 +426,29 @@ export function SidePanel({
   }, [layers.realSun]);
 
   const [globalHaircut, setGlobalHaircut] = useState<string>('original');
+  const [globalHairColor, setGlobalHairColor] = useState<string>('rose');
   const lastWigRef = useRef<string>('hair_101');
+
+  const handleRandomHairColor = () => {
+    const otherColors = ALL_HAIR_COLORS.filter((c: string) => c !== globalHairColor);
+    const newColor = otherColors[Math.floor(Math.random() * otherColors.length)];
+    setGlobalHairColor(newColor);
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircolor', value: newColor } }));
+  };
+
+  const handleRandomHaircut = () => {
+    const allHaircuts = ['original', ...WIGS_ITEMS.map(w => w.id)];
+    const otherHaircuts = allHaircuts.filter(h => h !== globalHaircut);
+    const newHaircut = otherHaircuts[Math.floor(Math.random() * otherHaircuts.length)];
+    setGlobalHaircut(newHaircut);
+    if (newHaircut !== 'original') lastWigRef.current = newHaircut;
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: newHaircut } }));
+  };
+
+  const handleRandomHaircutAndColor = () => {
+    handleRandomHaircut();
+    handleRandomHairColor();
+  };
 
   useEffect(() => {
     const handleToggleHaircut = () => {
@@ -684,52 +710,98 @@ export function SidePanel({
           </div>
 
           <div>
-            
-          <div className="mb-2">
-            <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🎨 Couleur des cheveux</div>
-            <select
-              className="form-select form-select-sm bg-transparent text-dark border-secondary"
-              style={{ fontSize: isMobile ? '14px' : '11px' }}
-              onKeyDown={(e) => e.stopPropagation()}
-              defaultValue="rose"
-              onChange={(e) => {
-                const val = e.target.value;
-                document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircolor', value: val } }));
+            {/* Bouton global Coupe & Couleur Aléatoire */}
+            <button
+              type="button"
+              className="btn btn-warning w-100 text-dark fw-bold mb-3 py-2 px-3 d-flex align-items-center justify-content-center gap-2 shadow-none"
+              style={{
+                fontSize: isMobile ? '13px' : '11px',
+                background: 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)',
+                border: 'none',
+                borderRadius: '6px'
               }}
+              onClick={handleRandomHaircutAndColor}
+              title="Changer aléatoirement la coupe et la couleur des cheveux 🎲"
             >
-              <option value="rouge" className="bg-light text-dark">Rouge</option>
-              <option value="rose" className="bg-light text-dark">Rose</option>
-              <option value="noir" className="bg-light text-dark">Noir</option>
-              <option value="brun" className="bg-light text-dark">Brun</option>
-              <option value="chatain" className="bg-light text-dark">Châtain</option>
-              <option value="blond" className="bg-light text-dark">Blond</option>
-              <option value="roux" className="bg-light text-dark">Roux</option>
-              <option value="rouge" className="bg-light text-dark">Rouge</option>
-              <option value="bleu" className="bg-light text-dark">Bleu</option>
-              <option value="vert" className="bg-light text-dark">Vert</option>
-              <option value="violet" className="bg-light text-dark">Violet</option>
-              <option value="arc-en-ciel" className="bg-light text-dark">Arc-en-ciel</option>
-            </select>
-          </div>
+              <span>🎲</span>
+              <span>Coupe & Couleur aléatoires</span>
+            </button>
 
-          <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>💇‍♀️ Coupe de cheveux</div>
-            <select
-              className="form-select form-select-sm bg-transparent text-dark border-secondary"
-              style={{ fontSize: isMobile ? '14px' : '11px' }}
-              onKeyDown={(e) => e.stopPropagation()}
-              value={globalHaircut}
-              onChange={(e) => {
-                const val = e.target.value;
-                setGlobalHaircut(val);
-                if (val !== 'original') lastWigRef.current = val;
-                document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: val } }));
-              }}
-            >
-              <option value="original" className="bg-light text-dark">Coupe d'origine 👱‍♀️</option>
-              {WIGS_ITEMS.map((wig) => (
-                <option key={wig.id} value={wig.id} className="bg-light text-dark">{wig.name}</option>
-              ))}
-            </select>
+            <div className="mb-2">
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <div className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  🎨 Couleur des cheveux
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
+                  onClick={handleRandomHairColor}
+                  title="Couleur aléatoire 🎲"
+                  style={{ fontSize: '11px', lineHeight: 1 }}
+                >
+                  🎲
+                </button>
+              </div>
+              <select
+                className="form-select form-select-sm bg-transparent text-dark border-secondary"
+                style={{ fontSize: isMobile ? '14px' : '11px' }}
+                onKeyDown={(e) => e.stopPropagation()}
+                value={globalHairColor}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setGlobalHairColor(val);
+                  document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircolor', value: val } }));
+                }}
+              >
+                <option value="naturel" className="bg-light text-dark">Naturel</option>
+                <option value="noir" className="bg-light text-dark">Noir</option>
+                <option value="brun" className="bg-light text-dark">Brun</option>
+                <option value="chatain" className="bg-light text-dark">Châtain</option>
+                <option value="blond" className="bg-light text-dark">Blond</option>
+                <option value="roux" className="bg-light text-dark">Roux</option>
+                <option value="rouge" className="bg-light text-dark">Rouge</option>
+                <option value="blanc" className="bg-light text-dark">Blanc</option>
+                <option value="bleu" className="bg-light text-dark">Bleu</option>
+                <option value="vert" className="bg-light text-dark">Vert</option>
+                <option value="rose" className="bg-light text-dark">Rose</option>
+                <option value="violet" className="bg-light text-dark">Violet</option>
+                <option value="arc-en-ciel" className="bg-light text-dark">Arc-en-ciel 🌈</option>
+              </select>
+            </div>
+
+            <div className="mb-1">
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <div className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  💇‍♀️ Coupe de cheveux
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
+                  onClick={handleRandomHaircut}
+                  title="Coupe aléatoire 🎲"
+                  style={{ fontSize: '11px', lineHeight: 1 }}
+                >
+                  🎲
+                </button>
+              </div>
+              <select
+                className="form-select form-select-sm bg-transparent text-dark border-secondary"
+                style={{ fontSize: isMobile ? '14px' : '11px' }}
+                onKeyDown={(e) => e.stopPropagation()}
+                value={globalHaircut}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setGlobalHaircut(val);
+                  if (val !== 'original') lastWigRef.current = val;
+                  document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: val } }));
+                }}
+              >
+                <option value="original" className="bg-light text-dark">Coupe d'origine 👱‍♀️</option>
+                {WIGS_ITEMS.map((wig) => (
+                  <option key={wig.id} value={wig.id} className="bg-light text-dark">{wig.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       )}
