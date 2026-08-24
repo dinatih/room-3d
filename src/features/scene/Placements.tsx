@@ -462,9 +462,6 @@ export function Furnishings() {
         <group position={[DOOR_START - 84 - 22, 129, KITCHEN_Z + PARTITION_THICKNESS + 2.1]} rotation={[Math.PI / 2, 0, 0]}>
           <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
-        <group position={[DOOR_START - 84 + 22, 129, KITCHEN_Z + PARTITION_THICKNESS + 2.1]} rotation={[Math.PI / 2, 0, 0]}>
-          <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
       </>
     </>
   );
@@ -523,25 +520,42 @@ function LampOla_() {
     lampOn: 'lamp-toggle',
   });
   const lampOn = !!as['lamp-toggle'];
+  const [targetObj, setTargetObj] = useState<THREE.Object3D | null>(null);
 
   return (
     <>
       <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 10]} rotation-y={LAMP_ROT_Y}
         userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
         <LampOla item={NOOP_ITEM} actionState={{ on: lampOn }} onSize={NOOP_SIZE} />
-        {lampOn && (
-          <pointLight
-            color={0xfff2dc}
-            intensity={240}
-            distance={0}
-            decay={1.0}
-            position={[0, 106, 0]}
-            castShadow
-            shadow-mapSize={[1024, 1024]}
-            shadow-bias={-0.001}
-            shadow-camera-near={5}
-            shadow-camera-far={800}
-          />
+        {/* Cible d'orientation du faisceau vers le haut / plafond */}
+        <object3D ref={setTargetObj} position={[0, 250, 15]} />
+        {lampOn && targetObj && (
+          <>
+            {/* Faisceau directionnel conique (SpotLight) orienté vers le plafond */}
+            <spotLight
+              target={targetObj}
+              position={[0, 100, 0]}
+              angle={Math.PI / 3.2}
+              penumbra={0.7}
+              intensity={350}
+              distance={0}
+              decay={1.0}
+              color={0xfff2dc}
+              castShadow
+              shadow-mapSize={[1024, 1024]}
+              shadow-bias={-0.001}
+              shadow-camera-near={5}
+              shadow-camera-far={800}
+            />
+            {/* Halo d'ambiance doux et localisé autour du bol */}
+            <pointLight
+              position={[0, 102, 0]}
+              intensity={35}
+              distance={180}
+              decay={1.5}
+              color={0xfff2dc}
+            />
+          </>
         )}
       </group>
       <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z + 10]} rotation-y={LAMP_ROT_Y - Math.PI / 8} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 5', actions: ['mannequin-lamp-random', 'mannequin-lamp-wig', 'mannequin-lamp-color', 'mannequin-lamp-wind'] } }}>
