@@ -530,18 +530,29 @@ function LampOla_() {
         userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
         <LampOla item={NOOP_ITEM} actionState={{ on: lampOn }} onSize={NOOP_SIZE} />
         {lampOn && (
-          <pointLight
-            color={0xfff5e6}
-            intensity={100}
-            distance={0}
-            decay={1.0}
-            position={[0, 96, 0]}
-            castShadow
-            shadow-mapSize={[1024, 1024]}
-            shadow-bias={-0.001}
-            shadow-camera-near={1}
-            shadow-camera-far={600}
-          />
+          <>
+            {/* Source principale au-dessus du diffuseur avec ombres */}
+            <pointLight
+              color={0xfff2dc}
+              intensity={260}
+              distance={0}
+              decay={1.0}
+              position={[0, 106, 0]}
+              castShadow
+              shadow-mapSize={[1024, 1024]}
+              shadow-bias={-0.001}
+              shadow-camera-near={5}
+              shadow-camera-far={800}
+            />
+            {/* Rebond de lumière diffusée sur le plafond / ambiance séjour */}
+            <pointLight
+              color={0xfffaee}
+              intensity={120}
+              distance={0}
+              decay={1.0}
+              position={[0, 145, 0]}
+            />
+          </>
         )}
       </group>
       <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z + 10]} rotation-y={LAMP_ROT_Y - Math.PI / 8} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 5', actions: ['mannequin-lamp-random', 'mannequin-lamp-wig', 'mannequin-lamp-color', 'mannequin-lamp-wind'] } }}>
