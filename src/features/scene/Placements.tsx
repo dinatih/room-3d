@@ -519,20 +519,30 @@ function AirPerformer_() {
 
 
 function LampOla_() {
-  const [lampOn, setLampOn] = useState(false);
-  useEffect(() => {
-    const handler = (e: Event) => {
-      if ((e as CustomEvent).detail?.key === 'lampOn') setLampOn(v => !v);
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, []);
+  const as = useFurnitureToggles({
+    lampOn: 'lamp-toggle',
+  });
+  const lampOn = !!as['lamp-toggle'];
+
   return (
     <>
       <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 10]} rotation-y={LAMP_ROT_Y}
         userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
-        <LampOla item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        {lampOn && <pointLight color={0xfff5e0} intensity={120000} distance={350} decay={2} position={[0, 96, 0]} />}
+        <LampOla item={NOOP_ITEM} actionState={{ on: lampOn }} onSize={NOOP_SIZE} />
+        {lampOn && (
+          <pointLight
+            color={0xfff5e6}
+            intensity={100}
+            distance={0}
+            decay={1.0}
+            position={[0, 96, 0]}
+            castShadow
+            shadow-mapSize={[1024, 1024]}
+            shadow-bias={-0.001}
+            shadow-camera-near={1}
+            shadow-camera-far={600}
+          />
+        )}
       </group>
       <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z + 10]} rotation-y={LAMP_ROT_Y - Math.PI / 8} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 5', actions: ['mannequin-lamp-random', 'mannequin-lamp-wig', 'mannequin-lamp-color', 'mannequin-lamp-wind'] } }}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lamp" />
