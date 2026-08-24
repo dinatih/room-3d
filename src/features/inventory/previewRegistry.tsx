@@ -69,6 +69,7 @@ import { ShibaInu }                                   from '@features/scene/item
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
 import { Wig }                                        from '@features/scene/items/Wig';
 import { RiggedWig }                                  from '@features/scene/items/RiggedWig';
+import { GoogleNestMini }                             from '@features/scene/items/GoogleNestMini';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
@@ -129,6 +130,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'tent-quechua-2sec':      Tent,
   'vihals-chair':           Vihals,
   'tyco-rebound':           Rebound,
+  'google-nest-mini':       GoogleNestMini,
 
   // ── Composites (assemblages multi-pièces) ─────────────────────────────────
   'kallax-ne-stack':        KallaxNE,
@@ -175,6 +177,7 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'vihals-toggle':         ['Plier', 'Déplier'],
   'sofa-arm-left':         ['Mettre à plat G', 'Relever G'],
   'sofa-arm-right':        ['Mettre à plat D', 'Relever D'],
+  'nestMini':              ['Ok Google 🎙️', 'Ok Google 🎙️'],
 };
 
 CHARACTERS.forEach(char => {
