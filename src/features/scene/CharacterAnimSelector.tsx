@@ -41,6 +41,9 @@ export interface CharacterAnimSelectorProps {
   autoFocus?: boolean;
 }
 
+/** Nombre d'animations récentes affichées dans la section "Récentes" */
+const MAX_RECENT = 2;
+
 export function CharacterAnimSelector({
   activeAnimValue = 'idle',
   onSelectAnim,
@@ -66,7 +69,7 @@ export function CharacterAnimSelector({
     try {
       const saved = localStorage.getItem('recent_animations');
       if (!saved) return [];
-      const parsed = JSON.parse(saved).slice(0, 4);
+      const parsed = JSON.parse(saved).slice(0, MAX_RECENT);
       return parsed.filter((v: string) => WALKER_ANIM_OPTIONS.some(a => a.value === v));
     } catch {
       return [];
@@ -107,7 +110,7 @@ export function CharacterAnimSelector({
     onSelectAnim(val);
     if (val && val !== 'idle') {
       setRecentAnims(prev => {
-        const next = [val, ...prev.filter(v => v !== val)].slice(0, 4);
+        const next = [val, ...prev.filter(v => v !== val)].slice(0, MAX_RECENT);
         try {
           localStorage.setItem('recent_animations', JSON.stringify(next));
         } catch {}
@@ -366,13 +369,13 @@ export function CharacterAnimSelector({
         </div>
 
         {/* Animations récentes */}
-        {showRecent && recentAnims.slice(0, 4).length > 0 && !animSearch && selectedCategories.length === 0 && (
+        {showRecent && recentAnims.slice(0, MAX_RECENT).length > 0 && !animSearch && selectedCategories.length === 0 && (
           <div className="mb-2 p-1.5 bg-light rounded border">
             <div className="text-muted fw-bold mb-1 px-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              🕒 Récentes ({recentAnims.slice(0, 4).length})
+              🕒 Récentes ({recentAnims.slice(0, MAX_RECENT).length})
             </div>
             <div className="d-flex flex-wrap gap-1">
-              {recentAnims.slice(0, 4).map(val => {
+              {recentAnims.slice(0, MAX_RECENT).map(val => {
                 const opt = WALKER_ANIM_OPTIONS.find(a => a.value === val);
                 const isAct = activeAnimValue === val;
                 const label = opt ? opt.label : val.split('/').pop() || val;
