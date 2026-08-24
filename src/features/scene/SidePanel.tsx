@@ -1082,6 +1082,23 @@ export function SidePanel({
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'idle' } }));
   };
 
+  const personnageHeaderButtons = (
+    <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
+      <button
+        type="button"
+        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold"
+        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
+        title="Coupe et couleur de cheveux aléatoires 🎲"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleRandomHaircutAndColor();
+        }}
+      >
+        🎲
+      </button>
+    </div>
+  );
+
   const animHeaderButtons = (
     <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
       <button
@@ -1328,6 +1345,7 @@ export function SidePanel({
             <div className="d-flex justify-content-between align-items-center p-3 border-bottom text-dark">
               <span className="fw-bold">{sheetTitle[activeTab]}</span>
               <div className="d-flex align-items-center gap-2">
+                {activeTab === 'personnage' && personnageHeaderButtons}
                 {activeTab === 'anims' && animHeaderButtons}
                 <button
                   type="button"
@@ -1373,6 +1391,40 @@ export function SidePanel({
           
           {TABS.map(t => {
             const active = activeTab === t.key;
+            if (t.key === 'personnage') {
+              return (
+                <div key={t.key} className="d-flex align-items-center position-relative" style={{ flex: '0 0 auto' }}>
+                  <button
+                    onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
+                    className={`btn border-0 d-flex flex-column align-items-center justify-content-center py-1 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
+                    style={{ fontSize: '10px', minWidth: '60px' }}
+                  >
+                    <span style={{ fontSize: '20px', lineHeight: 1 }}>{t.emoji}</span>
+                    <span className="fw-semibold">{t.label}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRandomHaircutAndColor();
+                    }}
+                    className="btn btn-sm btn-warning p-0 d-flex align-items-center justify-content-center border-0 rounded-circle position-absolute shadow-sm"
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      top: '4px',
+                      right: '4px',
+                      fontSize: '11px',
+                      zIndex: 10,
+                      background: '#ffc107',
+                    }}
+                    title="Coupe et couleur aléatoires 🎲"
+                  >
+                    🎲
+                  </button>
+                </div>
+              );
+            }
             return (
               <button
                 key={t.key}
@@ -1431,7 +1483,7 @@ export function SidePanel({
         <Group emoji="📷" title="Vues">{ViewsSection}</Group>
         <Group emoji="📑" title="Calques">{LayersSection}</Group>
         <Group emoji="🎮" title="Interactif">{InteractifSection}</Group>
-        <Group emoji="👤" title="Personnage">{PersonnageSection}</Group>
+        <Group emoji="👤" title="Personnage" extra={personnageHeaderButtons}>{PersonnageSection}</Group>
         <Group emoji="💃" title="Animations Perso" extra={animHeaderButtons}>{AnimationsSection}</Group>
         <Group emoji="👯‍♀️" title="Animations Couple">{AnimationsCoupleSection}</Group>
       </div>
