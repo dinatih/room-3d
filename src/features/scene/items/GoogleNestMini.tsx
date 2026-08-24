@@ -96,7 +96,7 @@ export function GoogleNestMini({ onSize }: SceneItemProps) {
       <primitive object={scene} />
       <group ref={dotsGroupRef}>
         {DOT_X.map((x, i) => (
-          <mesh key={i} position={[x, 0, 0]}>
+          <mesh key={i} position={[0, x, 0]}>
             <sphereGeometry args={[DOT_R, 8, 6]} />
             <meshStandardMaterial
               ref={(m) => { if (m) dotMatsRef.current[i] = m; }}
