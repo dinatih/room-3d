@@ -193,30 +193,18 @@ export function Equipment() {
         userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Ampoule SDB (TRÅDFRI)', actions: ['lampBath'] } }}
       >
         <TradfriBulb item={stub('tradfri-bulb-sdb')} actionState={{ on: !!as['lamp-bath-toggle'] }} onSize={NOOP_SIZE} />
-        {!!as['lamp-bath-toggle'] && (
-          lightsHD ? (
-            <pointLight
-              position={[0, 20, 0]}
-              intensity={120}
-              distance={0}
-              decay={1.0}
-              color={0xfff5e6}
-              castShadow
-              shadow-mapSize={[1024, 1024]}
-              shadow-bias={-0.001}
-              shadow-camera-near={1}
-              shadow-camera-far={600}
-            />
-          ) : (
-            <pointLight
-              position={[0, 20, 0]}
-              intensity={2.5}
-              distance={280}
-              decay={2.0}
-              color={0xfff5e6}
-            />
-          )
-        )}
+        <pointLight
+          position={[0, 20, 0]}
+          intensity={as['lamp-bath-toggle'] ? (lightsHD ? 120 : 2.5) : 0}
+          distance={lightsHD ? 0 : 280}
+          decay={lightsHD ? 1.0 : 2.0}
+          color={0xfff5e6}
+          castShadow={lightsHD}
+          shadow-mapSize={[1024, 1024]}
+          shadow-bias={-0.001}
+          shadow-camera-near={1}
+          shadow-camera-far={600}
+        />
       </group>
       <group
         position={[CORR_CX, WALL_H - 10, CORR_LAMP_Z]}
@@ -224,30 +212,18 @@ export function Equipment() {
         userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Ampoule Couloir (TRÅDFRI)', actions: ['lampCorridor'] } }}
       >
         <TradfriBulb item={stub('tradfri-bulb-couloir')} actionState={{ on: !!as['lamp-corridor-toggle'] }} onSize={NOOP_SIZE} />
-        {!!as['lamp-corridor-toggle'] && (
-          lightsHD ? (
-            <pointLight
-              position={[0, 20, 0]}
-              intensity={120}
-              distance={0}
-              decay={1.0}
-              color={0xfff5e6}
-              castShadow
-              shadow-mapSize={[1024, 1024]}
-              shadow-bias={-0.001}
-              shadow-camera-near={1}
-              shadow-camera-far={600}
-            />
-          ) : (
-            <pointLight
-              position={[0, 20, 0]}
-              intensity={2.5}
-              distance={280}
-              decay={2.0}
-              color={0xfff5e6}
-            />
-          )
-        )}
+        <pointLight
+          position={[0, 20, 0]}
+          intensity={as['lamp-corridor-toggle'] ? (lightsHD ? 120 : 2.5) : 0}
+          distance={lightsHD ? 0 : 280}
+          decay={lightsHD ? 1.0 : 2.0}
+          color={0xfff5e6}
+          castShadow={lightsHD}
+          shadow-mapSize={[1024, 1024]}
+          shadow-bias={-0.001}
+          shadow-camera-near={1}
+          shadow-camera-far={600}
+        />
       </group>
       {/* VÅTHULT — bandeau LED 35 cm au-dessus du miroir vasque (top miroir = 174) */}
       <group position={[DOOR_START - 84, 176, KITCHEN_Z + PARTITION_THICKNESS + 2.1]}>
@@ -552,44 +528,30 @@ function LampOla_() {
         <LampOla item={NOOP_ITEM} actionState={{ on: lampOn }} onSize={NOOP_SIZE} />
         {/* Cible d'orientation du faisceau vers le haut / plafond */}
         <object3D ref={setTargetObj} position={[0, 250, 15]} />
-        {lampOn && (
-          lightsHD && targetObj ? (
-            <>
-              {/* Faisceau directionnel conique (SpotLight) orienté vers le plafond */}
-              <spotLight
-                target={targetObj}
-                position={[0, 100, 0]}
-                angle={Math.PI / 3.2}
-                penumbra={0.7}
-                intensity={350}
-                distance={0}
-                decay={1.0}
-                color={0xfff2dc}
-                castShadow
-                shadow-mapSize={[1024, 1024]}
-                shadow-bias={-0.001}
-                shadow-camera-near={5}
-                shadow-camera-far={800}
-              />
-              {/* Halo d'ambiance doux et localisé autour du bol */}
-              <pointLight
-                position={[0, 102, 0]}
-                intensity={35}
-                distance={180}
-                decay={1.5}
-                color={0xfff2dc}
-              />
-            </>
-          ) : (
-            <pointLight
-              position={[0, 96, 0]}
-              intensity={3.5}
-              distance={350}
-              decay={2.0}
-              color={0xfff2dc}
-            />
-          )
+        {targetObj && (
+          <spotLight
+            target={targetObj}
+            position={[0, 100, 0]}
+            angle={Math.PI / 3.2}
+            penumbra={0.7}
+            intensity={lampOn && lightsHD ? 350 : 0}
+            distance={0}
+            decay={1.0}
+            color={0xfff2dc}
+            castShadow={lightsHD}
+            shadow-mapSize={[1024, 1024]}
+            shadow-bias={-0.001}
+            shadow-camera-near={5}
+            shadow-camera-far={800}
+          />
         )}
+        <pointLight
+          position={[0, 96, 0]}
+          intensity={lampOn ? (lightsHD ? 35 : 3.5) : 0}
+          distance={lightsHD ? 180 : 350}
+          decay={lightsHD ? 1.5 : 2.0}
+          color={0xfff2dc}
+        />
       </group>
       <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z + 10]} rotation-y={LAMP_ROT_Y - Math.PI / 8} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 5', actions: ['mannequin-lamp-random', 'mannequin-lamp-wig', 'mannequin-lamp-color', 'mannequin-lamp-wind'] } }}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lamp" />
@@ -640,7 +602,7 @@ export function Decor() {
       {/* Google Nest Mini — mur OUEST (A), à plat sur la bordure des 2 miroirs nord (i=0 et i=1),
           à 1.05 m du sol. X=7 (flush bord avant cadre Nissedal FD=5 + demi-épaisseur disque ~2),
           Z=90.5 (centre entre miroir i=0 @z=70.5 et miroir i=1 @z=110.5), Y=105. */}
-      <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
+      <group position={[7, 105, 90.5]} rotation={[0, 0, -Math.PI / 2]}>
         <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, isIkea: true }}>
