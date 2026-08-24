@@ -75,6 +75,7 @@ const initialLayers: LayerState = {
   wallEdges: false,
   lidar: false,
   lights: false,
+  lightsHD: false,
   shadows: true,
   pillarsOnly: false,
   realSun: false,

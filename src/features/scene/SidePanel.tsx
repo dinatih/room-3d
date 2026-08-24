@@ -309,6 +309,7 @@ export interface LayerState {
   wallEdges:    boolean;
   lidar:        boolean;
   lights:       boolean;
+  lightsHD:     boolean;
   shadows:      boolean;
   pillarsOnly:    boolean;
   realSun:      boolean;
@@ -628,6 +629,7 @@ export function SidePanel({
       {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('cyan',   'X-Ray 🩻',      'xray')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
+      {layerBtn('yellow', 'Lumières HD ✨', 'lightsHD')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
       {layerBtn('cyan',   'LiDAR scan 📡', 'lidar')}
       {layers.lidar && b0('cyan', ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}
