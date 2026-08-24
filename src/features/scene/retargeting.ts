@@ -177,6 +177,61 @@ export function buildHairChain(hairBones: THREE.Bone[]) {
   return hairChain;
 }
 
+export function buildWigChains(wigBones: THREE.Bone[]) {
+  const wigChain: any[] = [];
+  const bones = [...wigBones].sort((a, b) => getDepth(a) - getDepth(b));
+
+  for (const bone of bones) {
+    const parent = bone.parent;
+    if (!parent) continue;
+
+    bone.updateMatrixWorld(true);
+    const parentRestWorldQuat = parent.getWorldQuaternion(new THREE.Quaternion());
+    const boneRestWorldQuat = bone.getWorldQuaternion(new THREE.Quaternion());
+    const parentRestRelQuat = parentRestWorldQuat.clone().invert().multiply(boneRestWorldQuat);
+
+    let axis = new THREE.Vector3(0, -1, 0);
+    let worldLength = 5.0;
+    const child = bone.children.find(x => (x as any).isBone && bones.includes(x as THREE.Bone)) as THREE.Bone | undefined;
+
+    const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
+
+    if (child) {
+      child.updateMatrixWorld(true);
+      const childJointWorld = new THREE.Vector3().setFromMatrixPosition(child.matrixWorld);
+      const dist = jointWorld.distanceTo(childJointWorld);
+      if (dist > 0.05) {
+        worldLength = dist;
+        if (child.position.lengthSq() > 1e-6) {
+          axis = child.position.clone().normalize();
+        }
+      }
+    } else {
+      if (bone.position.lengthSq() > 1e-6) {
+        axis = bone.position.clone().normalize();
+      }
+      const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
+      worldLength = Math.max(1.0, 4.0 * (worldScale.y || 1.0));
+    }
+
+    const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
+    const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
+
+    wigChain.push({
+      bone,
+      restLocalQuat: (bone as any).restLocalQuaternion ? (bone as any).restLocalQuaternion.clone() : bone.quaternion.clone(),
+      parentRestRelQuat,
+      axis,
+      worldLength,
+      tipWorld: tipWorld.clone(),
+      tipPrev: tipWorld.clone(),
+    });
+  }
+
+  console.log(`[buildWigChains] Returning wig chain of length ${wigChain.length}`);
+  return wigChain;
+}
+
 export const _retargetCache: Record<string, THREE.AnimationClip> = {};
 
 export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: string, sourceHairMap: Map<string, string> | null = null): string | null {
