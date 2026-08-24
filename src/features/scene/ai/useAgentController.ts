@@ -18,6 +18,22 @@ export interface AgentState {
   isSpawned: boolean;
 }
 
+export const NPC_WALK_ANIMATIONS = [
+  'animations/locomotion/miley_armature_elegant_walk_2l.glb',
+  'animations/locomotion/miley_armature_catwalk_loop.glb',
+  'animations/locomotion/miley_armature_walk_f.glb',
+  'animations/locomotion/anim_female_walk.glb',
+  'animations/locomotion/anim_happy_walk_not_in_place.glb',
+  'animations/locomotion/anim_unarmed_walk_forward.glb',
+  'animations/locomotion/anim_walking.glb',
+  'animations/locomotion/anim_walking_slow.glb',
+  'animations/locomotion/anim_wheelbarrow_walk_2.glb'
+];
+
+export function getRandomNpcWalkAnimation(): string {
+  return NPC_WALK_ANIMATIONS[Math.floor(Math.random() * NPC_WALK_ANIMATIONS.length)];
+}
+
 function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number; z: number } | null): { tx: number; ty?: number; tz: number; label: string; rotY?: number; anim?: string; duration?: number } {
   if (instr.type === 'RETURN_TO_START' && startPos) {
     return { tx: startPos.x, tz: startPos.z, label: 'point de départ' };
@@ -89,6 +105,9 @@ export function useAgentController(
   const dynamicNavQueueRef = useRef<AgentInstruction[]>([]);
   const dynamicNavIndexRef = useRef(0);
   const activeNavStepIndexRef = useRef<number>(-1);
+
+  // Animation de marche aléatoire courante pour les trajets
+  const currentWalkAnimRef = useRef<string>(getRandomNpcWalkAnimation());
 
   // Ref pour éviter les logs dupliqués à chaque frame
   const lastLogRef = useRef<string>('');
@@ -415,6 +434,7 @@ export function useAgentController(
           }
         } else {
           statusRef.current = 'IDLE';
+          currentWalkAnimRef.current = getRandomNpcWalkAnimation();
           if (hasNavStep) {
             dynamicNavIndexRef.current++;
             if (dynamicNavIndexRef.current >= dynamicNavQueueRef.current.length) {
@@ -434,7 +454,7 @@ export function useAgentController(
         }
       } else {
         // Déplacement
-        stateRef.current.animation = 'walk';
+        stateRef.current.animation = currentWalkAnimRef.current;
         
         let dirX = dx / dist;
         let dirZ = dz / dist;

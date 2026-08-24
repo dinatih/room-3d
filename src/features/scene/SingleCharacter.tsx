@@ -895,7 +895,7 @@ export function SingleCharacter({
         const from = (activeActionName.current && activeActionName.current !== 'tpose') ? actions[activeActionName.current] : null;
         if (from) from.fadeOut(0.2);
 
-        const isContinuous = target === 'idle' || target === 'walk' || target === 'run' || (isNPC && target === customIdleAnimPath && id !== 'sandra' && id !== 'rajaa');
+        const isContinuous = target === 'idle' || target === 'walk' || target === 'run' || target.includes('walk') || target.includes('catwalk') || (isNPC && target === customIdleAnimPath && id !== 'sandra' && id !== 'rajaa');
         if (isContinuous) {
           to.setLoop(THREE.LoopRepeat, Infinity);
           to.clampWhenFinished = false;

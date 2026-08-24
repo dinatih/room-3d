@@ -1,4 +1,13 @@
 const ANIM_URLS = [
+  "animations/locomotion/miley_armature_elegant_walk_2l.glb",
+  "animations/locomotion/miley_armature_catwalk_loop.glb",
+  "animations/locomotion/miley_armature_walk_f.glb",
+  "animations/locomotion/anim_female_walk.glb",
+  "animations/locomotion/anim_happy_walk_not_in_place.glb",
+  "animations/locomotion/anim_unarmed_walk_forward.glb",
+  "animations/locomotion/anim_walking.glb",
+  "animations/locomotion/anim_walking_slow.glb",
+  "animations/locomotion/anim_wheelbarrow_walk_2.glb",
   "animations/locomotion/anim_falling.glb",
   "animations/poses_idles/anim_crouch_to_stand.glb",
   "animations/poses_idles/anim_sitting_idle.glb",
