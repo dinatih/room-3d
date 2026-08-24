@@ -2,7 +2,7 @@ import { useRef, useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 export function LampOla({ actionState, onSize }: SceneItemProps) {
@@ -17,28 +17,31 @@ export function LampOla({ actionState, onSize }: SceneItemProps) {
     scene.scale.setScalar(100);
     removeGlbLines(scene);
 
-    const meshesToProcess: THREE.Mesh[] = [];
-    scene.traverse((c) => {
+    scene.traverse(c => {
       const mesh = c as THREE.Mesh;
-      if (mesh.isMesh) meshesToProcess.push(mesh);
+      if (!mesh.isMesh) return;
+      const mat = mesh.material as THREE.MeshStandardMaterial;
+      if (!mat?.color) return;
+      mesh.material = mat.clone();
+      const hsl = { h: 0, s: 0, l: 0 };
+      (mesh.material as THREE.MeshStandardMaterial).color.getHSL(hsl);
+      if (hsl.h > 0.08 && hsl.h < 0.20 && hsl.s > 0.2) {
+        (mesh.material as THREE.MeshStandardMaterial).color.set(0xffffff);
+      }
     });
 
-    for (const mesh of meshesToProcess) {
-      const origMat = mesh.material as THREE.MeshStandardMaterial;
+    // Merge to bake node transforms and scale into centimeters
+    mergeGlbByMaterial(scene);
+
+    // Isolate the diffuser disc from the merged mesh
+    const mergedMesh = scene.children.find((c: any) => c.isMesh) as THREE.Mesh | undefined;
+    if (mergedMesh && mergedMesh.geometry) {
+      const origMat = mergedMesh.material as THREE.MeshStandardMaterial;
       const bodyMat = origMat ? origMat.clone() : new THREE.MeshStandardMaterial({ color: 0xffffff });
       const diffuserMat = bodyMat.clone();
       diffuserMatRef.current = diffuserMat;
 
-      const hsl = { h: 0, s: 0, l: 0 };
-      bodyMat.color.getHSL(hsl);
-      if (hsl.h > 0.08 && hsl.h < 0.20 && hsl.s > 0.2) {
-        bodyMat.color.set(0xffffff);
-        diffuserMat.color.set(0xffffff);
-      }
-
-      const geo = mesh.geometry;
-      if (!geo || !geo.attributes.position) continue;
-      const nonIndexed = geo.index ? geo.toNonIndexed() : geo.clone();
+      const nonIndexed = mergedMesh.geometry.index ? mergedMesh.geometry.toNonIndexed() : mergedMesh.geometry.clone();
       const pos = nonIndexed.attributes.position;
       const uv = nonIndexed.attributes.uv;
       const normalAttr = nonIndexed.attributes.normal;
@@ -96,7 +99,7 @@ export function LampOla({ actionState, onSize }: SceneItemProps) {
           const dot = ref.normal.dot(target.normal);
           if (dot > 0.96) {
             const dist = Math.abs(ref.normal.dot(target.center) + ref.d);
-            if (dist < 1.0) {
+            if (dist < 0.6) {
               currentCluster.add(target.index);
             }
           }
@@ -128,8 +131,7 @@ export function LampOla({ actionState, onSize }: SceneItemProps) {
         }
       }
 
-      const parent = mesh.parent || scene;
-      parent.remove(mesh);
+      scene.remove(mergedMesh);
 
       if (bodyPos.length > 0) {
         const bodyGeo = new THREE.BufferGeometry();
@@ -140,7 +142,7 @@ export function LampOla({ actionState, onSize }: SceneItemProps) {
         const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
         bodyMesh.castShadow = true;
         bodyMesh.receiveShadow = true;
-        parent.add(bodyMesh);
+        scene.add(bodyMesh);
       }
 
       if (diffPos.length > 0) {
@@ -152,7 +154,7 @@ export function LampOla({ actionState, onSize }: SceneItemProps) {
         const diffMesh = new THREE.Mesh(diffGeo, diffuserMat);
         diffMesh.castShadow = true;
         diffMesh.receiveShadow = true;
-        parent.add(diffMesh);
+        scene.add(diffMesh);
       }
     }
 
