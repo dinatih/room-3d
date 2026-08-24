@@ -630,6 +630,10 @@ const ceilBottom = new THREE.MeshStandardMaterial({
 });
 const ceilBottomBack = new THREE.MeshStandardMaterial({
   color: COLORS.wall, roughness: 0.35, envMapIntensity: 0.15,
+  side: THREE.BackSide,
+});
+const ceilDepthMaterial = new THREE.MeshDepthMaterial({
+  depthPacking: THREE.RGBADepthPacking,
   side: THREE.DoubleSide,
 });
 const ceilMats = boxFaceMats({ '-y': ceilBottom });
@@ -1418,10 +1422,11 @@ export function Floor() {
 
           return (
             <group position={[0, WALL_H - 1, 0]}>
-              {/* Dessous opaque (visible d'en bas) */}
+              {/* Dessous opaque (visible d'en bas, transparent d'en haut) + ombre portée du soleil */}
               <mesh
                 geometry={ceilBottomGeo}
                 material={ceilBottomBack}
+                customDepthMaterial={ceilDepthMaterial}
                 castShadow
                 receiveShadow
                 userData={{ brickType: 'ceiling' }}
