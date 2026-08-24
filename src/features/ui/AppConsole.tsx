@@ -7,20 +7,18 @@
  *   appLog('delphina', 'Marche vers la cuisine');
  */
 import { useState, useEffect, useRef } from 'react';
-import { findCharacter } from '@features/scene/walkerConfig';
+import { CHARACTERS, findCharacter } from '@features/scene/walkerConfig';
 
 // ── Palette de couleurs par tag ────────────────────────────────────────────
+// Les couleurs NPC viennent de CharacterConfig.color (source unique de vérité).
+// Seuls les tags système restent définis ici.
 const TAG_COLORS: Record<string, string> = {
-  delphina: '#00ff88',
-  vivida:   '#ff4444',
-  angelina: '#00aaff',
-  cha:      '#00ccff',
-  sabira:   '#ffff44',
-  lgbta:    '#cc88ff',
-  marissa:  '#ff6b9d',
+  // Tags système (non-NPC)
   system:   '#ffffff',
   perf:     '#ffaa00',
   error:    '#ff0000',
+  // Tags NPC : peuplés dynamiquement depuis CHARACTERS
+  ...Object.fromEntries(CHARACTERS.map(c => [c.id, c.color])),
 };
 
 function getTagColor(tag: string): string {

@@ -5,6 +5,8 @@ export interface CharacterConfig {
   name: string;
   /** Emoji identifiant visuel du NPC, utilisable à la place du nom dans les UI */
   emoji: string;
+  /** Couleur CSS du tag dans la console de logs (ex: '#00ff88') */
+  color: string;
   path: string;
   pos: [number, number, number];
   rot: number;
@@ -17,23 +19,23 @@ export interface CharacterConfig {
 
 export const CHARACTERS: CharacterConfig[] = [
   // 12 stylized Laras (positions et animations gérées par l'IA sur leur zone d'action)
-  { id: 'native',   name: 'Native',   emoji: '🥇', path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'native',   height: 173.4 },
-  { id: 'rosanna',  name: 'Rosanna',  emoji: '🏀', path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'rosanna',  height: 173.4 },
-  { id: 'marissa',  name: 'Marissa',  emoji: '💇‍♀️', path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'marissa',  height: 173.4 },
-  { id: 'delphina', name: 'Delphina', emoji: '🐕️', path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'delphina', height: 173.4 },
-  { id: 'sara',     name: 'Sara',     emoji: '🧗‍♀️', path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'sara',     height: 173.4 },
-  { id: 'cha',      name: 'Cha',      emoji: '🐈️', path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'cha',      height: 173.4 },
-  { id: 'vivida',   name: 'ViviDa',   emoji: '🫀', path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'vivida',   height: 173.4 },
-  { id: 'sabira',   name: 'Sabira',   emoji: '🌸', path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'sabira',   height: 173.4 },
-  { id: 'safa',     name: 'Safa',     emoji: '⚽️', path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'safa',     height: 173.4 },
-  { id: 'romana',   name: 'Romana',   emoji: '👶', path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'romana',   height: 173.4 },
-  { id: 'angelina', name: 'Angelina', emoji: '🧑‍🏫', path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'angelina', height: 173.4 },
-  { id: 'lgbta',    name: 'Lgbta',    emoji: '🌈', path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'lgbta',    height: 173.4 },
+  { id: 'native',   name: 'Native',   emoji: '🥇', color: '#aaaaaa',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'native',   height: 173.4 },
+  { id: 'rosanna',  name: 'Rosanna',  emoji: '🏀', color: '#ff8844',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'rosanna',  height: 173.4 },
+  { id: 'marissa',  name: 'Marissa',  emoji: '💇‍♀️', color: '#ff6b9d',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'marissa',  height: 173.4 },
+  { id: 'delphina', name: 'Delphina', emoji: '🐕️', color: '#00ff88',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'delphina', height: 173.4 },
+  { id: 'sara',     name: 'Sara',     emoji: '🧗‍♀️', color: '#ff4444',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'sara',     height: 173.4 },
+  { id: 'cha',      name: 'Cha',      emoji: '🐈️', color: '#00ccff',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'cha',      height: 173.4 },
+  { id: 'vivida',   name: 'ViviDa',   emoji: '🫀', color: '#ff4444',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'vivida',   height: 173.4 },
+  { id: 'sabira',   name: 'Sabira',   emoji: '🌸', color: '#ffff44',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'sabira',   height: 173.4 },
+  { id: 'safa',     name: 'Safa',     emoji: '⚽️', color: '#88ff44',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'safa',     height: 173.4 },
+  { id: 'romana',   name: 'Romana',   emoji: '👶', color: '#ffaacc',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'romana',   height: 173.4 },
+  { id: 'angelina', name: 'Angelina', emoji: '🧑‍🏫', color: '#00aaff',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'angelina', height: 173.4 },
+  { id: 'lgbta',    name: 'Lgbta',    emoji: '🌈', color: '#cc88ff',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'lgbta',    height: 173.4 },
 
   // Exceptions : Xbot, Sandra et Rajaa (gardent leur position et comportement actuels)
-  { id: 'xbot',     name: 'Xbot',     emoji: '🤖', path: 'characters/xbot/Xbot_official.glb', pos: [288, 0, 603], rot: 0, variant: 'native', height: 173.4, isLara: false },
-  { id: 'sandra',   name: 'Sandra',   emoji: '🥊', path: 'characters/lara/lara_native.glb', pos: [-400, 0, 0], rot: 0, variant: 'sandra', height: 173.4 },
-  { id: 'rajaa',    name: 'Rajaa',    emoji: '🚗', path: 'characters/lara/lara_native.glb', pos: [-450, 0, 0], rot: 0, variant: 'rajaa',  height: 173.4 }
+  { id: 'xbot',     name: 'Xbot',     emoji: '🤖', color: '#aaaaaa',  path: 'characters/xbot/Xbot_official.glb', pos: [288, 0, 603], rot: 0, variant: 'native', height: 173.4, isLara: false },
+  { id: 'sandra',   name: 'Sandra',   emoji: '🥊', color: '#ff4444',  path: 'characters/lara/lara_native.glb', pos: [-400, 0, 0], rot: 0, variant: 'sandra', height: 173.4 },
+  { id: 'rajaa',    name: 'Rajaa',    emoji: '🚗', color: '#aacc44',  path: 'characters/lara/lara_native.glb', pos: [-450, 0, 0], rot: 0, variant: 'rajaa',  height: 173.4 }
 ];
 
 /** Retourne le label complet d'un NPC : "emoji nom" (utile dans les UI pour éviter les noms en dur) */
