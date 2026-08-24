@@ -286,6 +286,13 @@ export function useAgentController(
           // Slot libre : réserver la place
           OccupancyManager.claimSlot(objId, reqSlotId, _characterId);
           claimedSlotRef.current = { objectId: objId, slotId: reqSlotId };
+          const chosenSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId);
+          if (chosenSlot && !currentInstruction.animation) {
+            const resolved = resolveSlotAnimation(chosenSlot);
+            currentInstruction.animation = resolved.animation;
+            if (chosenSlot.duration && !currentInstruction.duration) currentInstruction.duration = chosenSlot.duration;
+            if (currentInstruction.rotY === undefined) currentInstruction.rotY = resolved.rotY;
+          }
         }
       }
 
@@ -364,6 +371,15 @@ export function useAgentController(
 
         statusRef.current = 'INTERACTING';
         const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
+        if (!currentInstruction.animation && target.anim) {
+          currentInstruction.animation = target.anim;
+        }
+        if (currentInstruction.rotY === undefined && target.rotY !== undefined) {
+          currentInstruction.rotY = target.rotY;
+        }
+        if (!currentInstruction.duration && target.duration) {
+          currentInstruction.duration = target.duration;
+        }
         timerRef.current = currentInstruction.duration || target.duration || 1.0;
 
         // Log action INTERACT
@@ -406,10 +422,19 @@ export function useAgentController(
         // Si l'instruction est USE_OBJECT, on enchaîne directement sur l'interaction !
         if (currentInstruction.type === 'USE_OBJECT') {
           statusRef.current = 'INTERACTING';
+          if (!currentInstruction.animation && target.anim) {
+            currentInstruction.animation = target.anim;
+          }
+          if (currentInstruction.rotY === undefined && target.rotY !== undefined) {
+            currentInstruction.rotY = target.rotY;
+          }
+          if (!currentInstruction.duration && target.duration) {
+            currentInstruction.duration = target.duration;
+          }
           timerRef.current = currentInstruction.duration || target.duration || 1.0;
           stateRef.current.y = target.ty ?? 0;
-          if (target.rotY !== undefined) {
-            stateRef.current.rotY = target.rotY;
+          if (currentInstruction.rotY !== undefined) {
+            stateRef.current.rotY = currentInstruction.rotY;
           }
           if (currentInstruction.triggerEventKey) {
             let key = currentInstruction.triggerEventKey;
