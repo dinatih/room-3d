@@ -16,7 +16,7 @@ export function TradfriBulb({ actionState, onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
   const isOn = actionState?.on !== undefined
     ? Boolean(actionState.on)
-    : Boolean(actionState?.['lamp-sdb-toggle'] || actionState?.['lamp-couloir-toggle']);
+    : Boolean(actionState?.['lamp-bath-toggle'] || actionState?.['lamp-corridor-toggle'] || actionState?.['lamp-sdb-toggle'] || actionState?.['lamp-couloir-toggle']);
 
   useLayoutEffect(() => {
     removeGlbLines(scene);

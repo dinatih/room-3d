@@ -277,8 +277,8 @@ export interface FurnitureState {
   bedPosition:  boolean;
   smorkullPos:  boolean;
   lampOn:       boolean;
-  lampSdb:        boolean;
-  lampCouloir:    boolean;
+  lampBath:     boolean;
+  lampCorridor: boolean;
   freezerOpen:    boolean;
   fridge:         boolean;
   tvOn:           boolean;
@@ -576,8 +576,8 @@ export function SidePanel({
       {triggerBtn('WC Chasse d\'eau', 'wc-flush')}
       
       <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>LUMIÈRES</div>
-      {furnitureBtn('Lampe SDB', 'lampSdb')}
-      {furnitureBtn('Lampe Couloir', 'lampCouloir')}
+      {furnitureBtn('Lampe SDB', 'lampBath')}
+      {furnitureBtn('Lampe Couloir', 'lampCorridor')}
       {furnitureBtn('Lampe Ola', 'lampOn')}
     </div>
   );

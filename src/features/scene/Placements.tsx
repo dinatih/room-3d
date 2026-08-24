@@ -86,7 +86,7 @@ import {
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   BATH_Z_END, DOOR_START,
 } from '@config';
-import { PARTITION_THICKNESS } from './wallData';
+import { PARTITION_THICKNESS, pZ } from './wallData';
 
 const KALLAX_DEPTH = 39;
 
@@ -156,8 +156,8 @@ import { MergedStaticGroup } from './Building';
 
 export function Equipment() {
   const as = useFurnitureToggles({
-    lampSdb: 'lamp-sdb-toggle',
-    lampCouloir: 'lamp-couloir-toggle',
+    lampBath: 'lamp-bath-toggle',
+    lampCorridor: 'lamp-corridor-toggle',
     corrDoors: 'corr-doors-toggle',
     sdbClosetL: 'sdb-closet-l-toggle',
     sdbClosetR: 'sdb-closet-r-toggle',
@@ -170,7 +170,7 @@ export function Equipment() {
   const SDB_CX  = (NICHE_X + DOOR_START) / 2;
   const SDB_CZ  = (KITCHEN_Z + PARTITION_THICKNESS + BATH_Z_END) / 2;
   const CORR_CX = (DOOR_START + ROOM_W) / 2;
-  const CORR_CZ = (ROOM_D + KITCHEN_Z) / 2;
+  const CORR_LAMP_Z = (pZ('corner-se') + pZ('diag-ne')) / 2;
   return (
     <>
       <group position={[NICHE_X + HW_R, WALL_H - 10 - HW_H / 2, KITCHEN_Z + 20 + HW_R]} rotation-y={Math.PI / 2} userData={{ side: 'west' }}>
@@ -188,32 +188,42 @@ export function Equipment() {
       <group
         position={[SDB_CX, WALL_H - 10, SDB_CZ]}
         rotation={[Math.PI, 0, 0]}
-        userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Ampoule SDB (TRÅDFRI)', actions: ['lampSdb'] } }}
+        userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Ampoule SDB (TRÅDFRI)', actions: ['lampBath'] } }}
       >
-        <TradfriBulb item={stub('tradfri-bulb-sdb')} actionState={{ on: !!as['lamp-sdb-toggle'] }} onSize={NOOP_SIZE} />
-        {!!as['lamp-sdb-toggle'] && (
+        <TradfriBulb item={stub('tradfri-bulb-sdb')} actionState={{ on: !!as['lamp-bath-toggle'] }} onSize={NOOP_SIZE} />
+        {!!as['lamp-bath-toggle'] && (
           <pointLight
             position={[0, 20, 0]}
             intensity={120}
             distance={0}
             decay={1.0}
             color={0xfff5e6}
+            castShadow
+            shadow-mapSize={[1024, 1024]}
+            shadow-bias={-0.001}
+            shadow-camera-near={1}
+            shadow-camera-far={600}
           />
         )}
       </group>
       <group
-        position={[CORR_CX, WALL_H - 10, CORR_CZ + 80]}
+        position={[CORR_CX, WALL_H - 10, CORR_LAMP_Z]}
         rotation={[Math.PI, 0, 0]}
-        userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Ampoule Couloir (TRÅDFRI)', actions: ['lampCouloir'] } }}
+        userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Ampoule Couloir (TRÅDFRI)', actions: ['lampCorridor'] } }}
       >
-        <TradfriBulb item={stub('tradfri-bulb-couloir')} actionState={{ on: !!as['lamp-couloir-toggle'] }} onSize={NOOP_SIZE} />
-        {!!as['lamp-couloir-toggle'] && (
+        <TradfriBulb item={stub('tradfri-bulb-couloir')} actionState={{ on: !!as['lamp-corridor-toggle'] }} onSize={NOOP_SIZE} />
+        {!!as['lamp-corridor-toggle'] && (
           <pointLight
             position={[0, 20, 0]}
             intensity={120}
             distance={0}
             decay={1.0}
             color={0xfff5e6}
+            castShadow
+            shadow-mapSize={[1024, 1024]}
+            shadow-bias={-0.001}
+            shadow-camera-near={1}
+            shadow-camera-far={600}
           />
         )}
       </group>
