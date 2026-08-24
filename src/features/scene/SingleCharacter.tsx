@@ -256,6 +256,16 @@ export function SingleCharacter({
     }
   }, [variant]);
 
+  const cameraMode = useSceneStore(state => state.cameraMode);
+
+  useEffect(() => {
+    if (groupRef.current) {
+      const isFirstPerson = isActive && (cameraMode === 'fpv' || cameraState.mode === 'fpv');
+      updateCharacterLayers(groupRef.current, isFirstPerson);
+      prevFirstPersonRef.current = isFirstPerson;
+    }
+  }, [cameraMode, isActive]);
+
   const hairChainRef = useRef<any[]>([]);
   const customHairChainRef = useRef<any[]>([]);
   const breastChainRef = useRef<any[]>([]);

@@ -24,7 +24,8 @@ import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import {
   LAYER_STRUCTURE, LAYER_EQUIPMENT, LAYER_FURNITURE,
-  LAYER_NEIGHBORS, LAYER_LIDAR, LAYER_MIRRORS, LAYER_WALKER
+  LAYER_NEIGHBORS, LAYER_LIDAR, LAYER_MIRRORS, LAYER_WALKER,
+  LAYER_WALKER_DETAIL
 } from '@config';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -56,6 +57,9 @@ export function CategoryLayerGroup({
   const ref = useRef<THREE.Group>(null!);
   useLayoutEffect(() => {
     ref.current.traverse(obj => {
+      // Ne pas écraser les masques isolés spécifiquement sur LAYER_WALKER_DETAIL (tête walker en FPV)
+      if ((obj.layers.mask & (1 << LAYER_WALKER_DETAIL)) !== 0) return;
+
       const isDefault = (obj.layers.mask & 1) !== 0;
       const isTarget = (obj.layers.mask & (1 << layer)) !== 0;
       if (!isDefault && isTarget) return;

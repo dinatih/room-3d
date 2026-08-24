@@ -255,11 +255,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
     if (cam.isPerspectiveCamera) {
-      if (mode === 'walk' || mode === 'fpv') {
-        cam.near = 17; // Clip geometry within 15 units (hides inner face/mouth)
-      } else {
-        cam.near = 0.1; // Default near clipping
-      }
+      cam.near = 0.1;
       cam.updateProjectionMatrix();
     }
 
