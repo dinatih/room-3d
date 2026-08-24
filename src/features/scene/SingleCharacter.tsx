@@ -923,6 +923,7 @@ export function SingleCharacter({
           const userWigDamping = useSceneStore.getState().layers.wigDamping ?? 0.80;
           const userWigGravity = useSceneStore.getState().layers.wigGravity ?? 1.0;
           const userWigInertia = useSceneStore.getState().layers.wigInertia ?? 1.0;
+          const userWigTipWeight = useSceneStore.getState().layers.wigTipWeight ?? 1.2;
           const userWigWind = useSceneStore.getState().layers.wigWind ?? 0.0;
           const userWigHeadRadius = useSceneStore.getState().layers.wigHeadCollisionRadius ?? 13.0;
 
@@ -937,7 +938,6 @@ export function SingleCharacter({
             : baseStiffness;
 
           const gravMultiplier = isWig ? userWigGravity : 1.0;
-          const inertiaMultiplier = isWig ? userWigInertia : 1.0;
           const headColliderRadius = isWig ? userWigHeadRadius : 13.0;
 
           for (let nodeIdx = 0; nodeIdx < activeHairChain.length; nodeIdx++) {
@@ -958,27 +958,58 @@ export function SingleCharacter({
               node.tipPrev.copy(restTip);
             }
 
-            // Weighted tip factor for trailing inertia
-            const baseTipWeight = 1.0 + (nodeIdx / Math.max(1, activeHairChain.length - 1)) * 0.40;
-            const tipWeightFactor = isWig ? (1.0 + (baseTipWeight - 1.0) * inertiaMultiplier) : baseTipWeight;
+            // Normalized position along the chain (0 = root, 1 = tip)
+            const pChain = nodeIdx / Math.max(1, activeHairChain.length - 1);
 
-            const vel = _hairVel.subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - dampingFactor));
-            const next = _hairNext.copy(node.tipWorld).add(vel).addScaledVector(_tmpG, simDt * simDt * tipWeightFactor * gravMultiplier);
+            // 1. Damping: progressively increase damping towards the tip for wigs to kill whip vibrations
+            const nodeDamping = isWig
+              ? Math.min(0.98, dampingFactor + (0.96 - dampingFactor) * pChain * 0.5)
+              : dampingFactor;
+
+            // 2. Velocity computation with anti-flick clamping
+            const vel = _hairVel.subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - nodeDamping));
+            if (isWig) {
+              const maxTipTravel = worldLength * (0.6 + (1 - pChain) * 0.6);
+              if (vel.length() > maxTipTravel) {
+                vel.setLength(maxTipTravel);
+              }
+            }
+
+            // 3. Tip weight anchor (acts like a small stabilizing weight at the tip of each strand)
+            const tipAnchorStrength = isWig ? (userWigTipWeight * pChain * pChain) : 0;
+
+            const tipWeightFactor = isWig
+              ? (1.0 + (userWigInertia - 1.0) * (1.0 - pChain * 0.5))
+              : (1.0 + pChain * 0.40);
+
+            const next = _hairNext.copy(node.tipWorld)
+              .add(vel)
+              .addScaledVector(_tmpG, simDt * simDt * tipWeightFactor * gravMultiplier);
+
+            if (tipAnchorStrength > 0) {
+              next.addScaledVector(_downWorld, simDt * 80.0 * tipAnchorStrength);
+            }
 
             // Ambient wind breeze for wigs
             if (isWig && userWigWind > 0) {
               const tWind = (state.clock.elapsedTime * 3.0) + (nodeIdx * 0.5);
-              const wX = Math.sin(tWind) * 0.35 * userWigWind;
-              const wZ = Math.cos(tWind * 0.7) * 0.35 * userWigWind;
+              const wX = Math.sin(tWind) * 0.25 * userWigWind;
+              const wZ = Math.cos(tWind * 0.7) * 0.25 * userWigWind;
               next.x += wX * simDt * 60;
               next.z += wZ * simDt * 60;
             }
 
-            next.lerp(restTip, lerpStiffness);
+            // Spring return to natural rest orientation
+            const effectiveStiffness = isWig
+              ? Math.min(1.0, lerpStiffness * (1.0 + tipAnchorStrength * 0.5))
+              : lerpStiffness;
+            next.lerp(restTip, effectiveStiffness);
 
-            if (!isHeadMoving && vel.lengthSq() < 0.1) {
-              vel.set(0, 0, 0);
-              next.lerp(restTip, 0.8);
+            // Anti-vibration sleep filter when velocity is low
+            const sleepThreshold = isWig ? (0.25 + pChain * 0.35) : 0.1;
+            if (!isHeadMoving && vel.lengthSq() < sleepThreshold) {
+              vel.multiplyScalar(0.2);
+              next.lerp(restTip, isWig ? 0.90 : 0.80);
             }
 
             // Constraints pass (2 passes)
