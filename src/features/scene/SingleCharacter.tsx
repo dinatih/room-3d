@@ -916,9 +916,29 @@ export function SingleCharacter({
             _backDir.crossVectors(_upDir, _rightDir).normalize();
           }
 
+          const isWig = (haircut !== 'original');
           const isHeadMoving = isMoving || (target !== 'idle') || (walkerAnim && walkerAnim.toLowerCase().includes('walk')) || (walkerAnim && walkerAnim.toLowerCase().includes('run'));
-          const dampingFactor = isHeadMoving ? 0.70 : 0.85;
-          const lerpStiffness = isHeadMoving ? 0.038 : 0.12;
+
+          const userWigStiffness = useSceneStore.getState().layers.wigStiffness ?? 1.0;
+          const userWigDamping = useSceneStore.getState().layers.wigDamping ?? 0.80;
+          const userWigGravity = useSceneStore.getState().layers.wigGravity ?? 1.0;
+          const userWigInertia = useSceneStore.getState().layers.wigInertia ?? 1.0;
+          const userWigWind = useSceneStore.getState().layers.wigWind ?? 0.0;
+          const userWigHeadRadius = useSceneStore.getState().layers.wigHeadCollisionRadius ?? 13.0;
+
+          const baseDamping = isHeadMoving ? 0.70 : 0.85;
+          const dampingFactor = isWig 
+            ? (isHeadMoving ? (userWigDamping * 0.90) : userWigDamping)
+            : baseDamping;
+
+          const baseStiffness = isHeadMoving ? 0.038 : 0.12;
+          const lerpStiffness = isWig
+            ? Math.min(1.0, baseStiffness * userWigStiffness)
+            : baseStiffness;
+
+          const gravMultiplier = isWig ? userWigGravity : 1.0;
+          const inertiaMultiplier = isWig ? userWigInertia : 1.0;
+          const headColliderRadius = isWig ? userWigHeadRadius : 13.0;
 
           for (let nodeIdx = 0; nodeIdx < activeHairChain.length; nodeIdx++) {
             const node = activeHairChain[nodeIdx];
@@ -938,11 +958,21 @@ export function SingleCharacter({
               node.tipPrev.copy(restTip);
             }
 
-            // Weighted tip factor for cartoonish trailing inertia
-            const tipWeightFactor = 1.0 + (nodeIdx / Math.max(1, activeHairChain.length - 1)) * 0.40;
+            // Weighted tip factor for trailing inertia
+            const baseTipWeight = 1.0 + (nodeIdx / Math.max(1, activeHairChain.length - 1)) * 0.40;
+            const tipWeightFactor = isWig ? (1.0 + (baseTipWeight - 1.0) * inertiaMultiplier) : baseTipWeight;
 
             const vel = _hairVel.subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - dampingFactor));
-            const next = _hairNext.copy(node.tipWorld).add(vel).addScaledVector(_tmpG, simDt * simDt * tipWeightFactor);
+            const next = _hairNext.copy(node.tipWorld).add(vel).addScaledVector(_tmpG, simDt * simDt * tipWeightFactor * gravMultiplier);
+
+            // Ambient wind breeze for wigs
+            if (isWig && userWigWind > 0) {
+              const tWind = (state.clock.elapsedTime * 3.0) + (nodeIdx * 0.5);
+              const wX = Math.sin(tWind) * 0.35 * userWigWind;
+              const wZ = Math.cos(tWind * 0.7) * 0.35 * userWigWind;
+              next.x += wX * simDt * 60;
+              next.z += wZ * simDt * 60;
+            }
 
             next.lerp(restTip, lerpStiffness);
 
@@ -964,8 +994,8 @@ export function SingleCharacter({
 
               // Tête (Sphère douce)
               if (headBoneRef.current) {
-                const center = _colliderCenter.setFromMatrixPosition(headBoneRef.current.matrixWorld).addScaledVector(_backDir, 4);
-                const radius = 13.0;
+                const center = _colliderCenter.setFromMatrixPosition(headBoneRef.current.matrixWorld).addScaledVector(_backDir, isWig ? 2 : 4);
+                const radius = headColliderRadius;
                 const dCenter = next.distanceTo(center);
                 if (dCenter < radius) {
                   next.add(_colliderOffset.subVectors(next, center).normalize().multiplyScalar(radius - dCenter));

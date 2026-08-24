@@ -346,6 +346,7 @@ export interface LayerState {
   wigInertia?: number;
   wigWind?: number;
   wigMaxAngle?: number;
+  wigHeadCollisionRadius?: number;
   characterShadows: boolean;
   characterWireframe?: boolean;
 }
@@ -843,6 +844,165 @@ export function SidePanel({
       {layerBtn('pink',   'Physique buste 💃', 'breastPhysics')}
       {layerBtn('pink',   'Physique cheveux (Tresse & Perruques) 💇‍♀️', 'hairPhysics')}
       {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}
+
+      {/* ── Réglages Physique Perruques (distincts de la tresse native) ── */}
+      {layers.walker && layers.hairPhysics && (
+        <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
+          <div className="text-muted fw-bold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            💇‍♀️ Paramètres Physique Perruques
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                🧶 Rigidité & Maintien (Stiffness)
+              </span>
+              <span className="badge bg-primary text-white" style={{ fontSize: '9px' }}>
+                {(layers.wigStiffness ?? 1.0).toFixed(2)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.1"
+              max="3.0"
+              step="0.1"
+              value={layers.wigStiffness ?? 1.0}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, wigStiffness: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                🧯 Amortissement / Anti-vibration (Damping)
+              </span>
+              <span className="badge bg-success text-white" style={{ fontSize: '9px' }}>
+                {(layers.wigDamping ?? 0.80).toFixed(2)}
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.50"
+              max="0.98"
+              step="0.02"
+              value={layers.wigDamping ?? 0.80}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, wigDamping: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                🌍 Gravité / Poids des mèches (Gravity)
+              </span>
+              <span className="badge bg-danger text-white" style={{ fontSize: '9px' }}>
+                {(layers.wigGravity ?? 1.0).toFixed(2)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.0"
+              max="3.0"
+              step="0.1"
+              value={layers.wigGravity ?? 1.0}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, wigGravity: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                🏃 Inertie dynamique (Inertia)
+              </span>
+              <span className="badge bg-warning text-dark" style={{ fontSize: '9px' }}>
+                {(layers.wigInertia ?? 1.0).toFixed(1)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.0"
+              max="3.0"
+              step="0.1"
+              value={layers.wigInertia ?? 1.0}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, wigInertia: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                💨 Vent / Brise ambiante (Wind)
+              </span>
+              <span className="badge bg-info text-dark" style={{ fontSize: '9px' }}>
+                {(layers.wigWind ?? 0.0).toFixed(1)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.0"
+              max="2.0"
+              step="0.1"
+              value={layers.wigWind ?? 0.0}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, wigWind: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                🛡️ Rayon Collision Tête (Head Collider)
+              </span>
+              <span className="badge bg-secondary text-white" style={{ fontSize: '9px' }}>
+                {(layers.wigHeadCollisionRadius ?? 13.0).toFixed(1)} cm
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="8.0"
+              max="20.0"
+              step="0.5"
+              value={layers.wigHeadCollisionRadius ?? 13.0}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, wigHeadCollisionRadius: val }
+                }));
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ── Réglages Physique Buste ── */}
       {layers.walker && (
