@@ -7,6 +7,7 @@
  *   appLog('delphina', 'Marche vers la cuisine');
  */
 import { useState, useEffect, useRef } from 'react';
+import { findCharacter } from '@features/scene/walkerConfig';
 
 // ── Palette de couleurs par tag ────────────────────────────────────────────
 const TAG_COLORS: Record<string, string> = {
@@ -239,10 +240,10 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
                     flexShrink: 0,
                     fontWeight: 500,
                     textShadow: `0 0 6px ${color}55`,
-                    minWidth: '70px',
+                    minWidth: '90px',
                   }}
                 >
-                  {entry.tag}
+                  {(() => { const ch = findCharacter(entry.tag); return ch ? `${ch.emoji} ${entry.tag}` : entry.tag; })()}
                 </span>
                 <span style={{ color: 'rgba(0,255,136,0.4)', flexShrink: 0 }}>›</span>
                 <span style={msgStyle}>{entry.message}</span>
