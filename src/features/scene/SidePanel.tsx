@@ -20,7 +20,7 @@ const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
 import { useSceneStore } from './store/useSceneStore';
-import { CHARACTERS, isCharacterVisibleInMode, type LaraCountMode } from './walkerConfig';
+import { CHARACTERS, isCharacterVisibleInMode, npcLabel, type LaraCountMode } from './walkerConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { resetAppIdle } from './idleState';
@@ -668,7 +668,7 @@ export function SidePanel({
             >
               {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeWalkerId) || c.id === activeWalkerId).map(c => (
                 <option key={c.id} value={c.id} className="bg-light text-dark">
-                  {c.name}
+                  {npcLabel(c)}
                 </option>
               ))}
             </select>
