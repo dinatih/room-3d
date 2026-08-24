@@ -182,8 +182,9 @@ export function SingleCharacter({
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
   const laraNude = useSceneStore(state => state.layers.laraNude ?? false);
+  const laraTopOff = useSceneStore(state => state.layers.laraTopOff ?? false);
+  const laraBottomOff = useSceneStore(state => state.layers.laraBottomOff ?? false);
   const laraShoes = useSceneStore(state => state.layers.laraShoes ?? true);
-  const laraGloves = useSceneStore(state => state.layers.laraGloves ?? true);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
   const { scene } = useGLTFClone(modelPath);
@@ -367,21 +368,37 @@ export function SingleCharacter({
         const isFeet = nameLower.includes('feet');
         const isGloves = nameLower.includes('gloves') || nameLower.includes('fingers');
         const isHands = nameLower.includes('hands');
-        const isNudeBody = nameLower.includes('body_nude') || nameLower.includes('panties');
-        const isClothedBody = nameLower === 'body' || nameLower.includes('shirt') || nameLower.includes('shorts');
+
+        const isTopNude = laraNude || laraTopOff;
+        const isBottomNude = laraNude || laraBottomOff;
+
+        const isShirt = nameLower.includes('shirt');
+        const isNudeTorso = nameLower.includes('body_nude_torso') || nameLower.includes('5_body_torso');
+
+        const isShorts = nameLower.includes('shorts');
+        const isNudeLegs = nameLower.includes('body_nude_legs') || nameLower.includes('5_body_legs');
+        const isPanties = nameLower.includes('panties');
+
+        const isClothedBody = nameLower === 'body';
 
         if (isBoots) {
           mesh.visible = laraShoes;
         } else if (isFeet) {
           mesh.visible = !laraShoes;
         } else if (isGloves) {
-          mesh.visible = laraGloves;
+          mesh.visible = true;
         } else if (isHands) {
-          mesh.visible = !laraGloves;
-        } else if (isNudeBody) {
-          mesh.visible = laraNude;
+          mesh.visible = false;
+        } else if (isShirt) {
+          mesh.visible = !isTopNude;
+        } else if (isNudeTorso) {
+          mesh.visible = isTopNude;
+        } else if (isShorts) {
+          mesh.visible = !isBottomNude;
+        } else if (isNudeLegs || isPanties) {
+          mesh.visible = isBottomNude;
         } else if (isClothedBody) {
-          mesh.visible = !laraNude;
+          mesh.visible = !isTopNude && !isBottomNude;
         }
 
         if (mesh.material) {
@@ -498,16 +515,29 @@ export function SingleCharacter({
         const isFeet = name.includes('feet');
         const isGloves = name.includes('gloves') || name.includes('fingers');
         const isHands = name.includes('hands');
-        const isNudeBody = name.includes('body_nude') || name.includes('panties');
-        const isClothedBody = name === 'body' || name.includes('shirt') || name.includes('shorts');
+
+        const isTopNude = laraNude || laraTopOff;
+        const isBottomNude = laraNude || laraBottomOff;
+
+        const isShirt = name.includes('shirt');
+        const isNudeTorso = name.includes('body_nude_torso') || name.includes('5_body_torso');
+
+        const isShorts = name.includes('shorts');
+        const isNudeLegs = name.includes('body_nude_legs') || name.includes('5_body_legs');
+        const isPanties = name.includes('panties');
+
+        const isClothedBody = name === 'body';
 
         let vis = true;
         if (isBoots) vis = laraShoes;
         else if (isFeet) vis = !laraShoes;
-        else if (isGloves) vis = laraGloves;
-        else if (isHands) vis = !laraGloves;
-        else if (isNudeBody) vis = laraNude;
-        else if (isClothedBody) vis = !laraNude;
+        else if (isGloves) vis = true;
+        else if (isHands) vis = false;
+        else if (isShirt) vis = !isTopNude;
+        else if (isNudeTorso) vis = isTopNude;
+        else if (isShorts) vis = !isBottomNude;
+        else if (isNudeLegs || isPanties) vis = isBottomNude;
+        else if (isClothedBody) vis = !isTopNude && !isBottomNude;
 
         c.visible = vis;
         if (c.material) {
@@ -836,11 +866,17 @@ export function SingleCharacter({
         const isGloves = meshName.includes('gloves') || meshName.includes('fingers');
         const isHands = meshName.includes('hands') || meshName.includes('5_hands');
 
-        const isNudeBody = meshName.includes('body_nude') || meshName.includes('5_body_torso') || meshName.includes('5_body_legs');
-        const isPanties = meshName.includes('panties') || meshName.includes('5_panties');
-        const isClothedBody = meshName === 'body';
+        const isTopNude = laraNude || laraTopOff;
+        const isBottomNude = laraNude || laraBottomOff;
+
         const isShirt = meshName.includes('shirt');
+        const isNudeTorso = meshName.includes('body_nude_torso') || meshName.includes('5_body_torso');
+
         const isShorts = meshName.includes('shorts');
+        const isNudeLegs = meshName.includes('body_nude_legs') || meshName.includes('5_body_legs');
+        const isPanties = meshName.includes('panties') || meshName.includes('5_panties');
+
+        const isClothedBody = meshName === 'body';
 
         let shouldBeVisible = true;
 
@@ -849,13 +885,19 @@ export function SingleCharacter({
         } else if (isFeet) {
           shouldBeVisible = !laraShoes;
         } else if (isGloves) {
-          shouldBeVisible = laraGloves;
+          shouldBeVisible = true;
         } else if (isHands) {
-          shouldBeVisible = !laraGloves;
-        } else if (isNudeBody || isPanties) {
-          shouldBeVisible = laraNude;
-        } else if (isClothedBody || isShirt || isShorts) {
-          shouldBeVisible = !laraNude;
+          shouldBeVisible = false;
+        } else if (isShirt) {
+          shouldBeVisible = !isTopNude;
+        } else if (isNudeTorso) {
+          shouldBeVisible = isTopNude;
+        } else if (isShorts) {
+          shouldBeVisible = !isBottomNude;
+        } else if (isNudeLegs || isPanties) {
+          shouldBeVisible = isBottomNude;
+        } else if (isClothedBody) {
+          shouldBeVisible = !isTopNude && !isBottomNude;
         }
 
         const isHolsterPart = meshName.includes('holster') || meshName.includes('gear') || meshName.includes('buckle') || matName.includes('holster') || matName.includes('gear') || matName.includes('buckle');
@@ -876,7 +918,7 @@ export function SingleCharacter({
       }
     });
     invalidate();
-  }, [scene, equipment, laraNude, laraShoes, laraGloves, showAccessories, laraPistols, invalidate]);
+  }, [scene, equipment, laraNude, laraTopOff, laraBottomOff, laraShoes, showAccessories, laraPistols, invalidate]);
 
   // Dynamic Haircut Swap system (hair_pack_part_2.glb & mira_hair_2026.glb)
   useEffect(() => {
@@ -986,16 +1028,29 @@ export function SingleCharacter({
           const isFeet = n.includes('feet');
           const isGloves = n.includes('gloves') || n.includes('fingers');
           const isHands = n.includes('hands');
-          const isNudeBody = n.includes('body_nude') || n.includes('panties');
-          const isClothedBody = n === 'body' || n.includes('shirt') || n.includes('shorts');
+
+          const isTopNude = laraNude || laraTopOff;
+          const isBottomNude = laraNude || laraBottomOff;
+
+          const isShirt = n.includes('shirt');
+          const isNudeTorso = n.includes('body_nude_torso') || n.includes('5_body_torso');
+
+          const isShorts = n.includes('shorts');
+          const isNudeLegs = n.includes('body_nude_legs') || n.includes('5_body_legs');
+          const isPanties = n.includes('panties');
+
+          const isClothedBody = n === 'body';
 
           let vis = true;
           if (isBoots) vis = laraShoes;
           else if (isFeet) vis = !laraShoes;
-          else if (isGloves) vis = laraGloves;
-          else if (isHands) vis = !laraGloves;
-          else if (isNudeBody) vis = laraNude;
-          else if (isClothedBody) vis = !laraNude;
+          else if (isGloves) vis = true;
+          else if (isHands) vis = false;
+          else if (isShirt) vis = !isTopNude;
+          else if (isNudeTorso) vis = isTopNude;
+          else if (isShorts) vis = !isBottomNude;
+          else if (isNudeLegs || isPanties) vis = isBottomNude;
+          else if (isClothedBody) vis = !isTopNude && !isBottomNude;
 
           if (o.visible !== vis) o.visible = vis;
           if (o.material) {
