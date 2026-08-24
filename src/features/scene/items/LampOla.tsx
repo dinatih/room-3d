@@ -95,22 +95,36 @@ export function LampOla({ actionState, onSize }: SceneItemProps) {
         }
       }
 
-      let bestCluster = new Set<number>();
+      // Find dominant reference plane of the diffuser disc
+      let bestRef: TriangleInfo | null = null;
+      let maxCount = 0;
+
       for (let i = 0; i < topTriangles.length; i++) {
         const ref = topTriangles[i];
-        const currentCluster = new Set<number>();
+        let cnt = 0;
         for (let j = 0; j < topTriangles.length; j++) {
           const target = topTriangles[j];
-          const dot = ref.normal.dot(target.normal);
-          if (dot > 0.96) {
+          if (ref.normal.dot(target.normal) > 0.85) {
             const dist = Math.abs(ref.normal.dot(target.center) + ref.d);
-            if (dist < 0.6) {
-              currentCluster.add(target.index);
-            }
+            if (dist < 1.5) cnt++;
           }
         }
-        if (currentCluster.size > bestCluster.size) {
-          bestCluster = currentCluster;
+        if (cnt > maxCount) {
+          maxCount = cnt;
+          bestRef = ref;
+        }
+      }
+
+      // Collect ALL triangles across the entire disc surface
+      const bestCluster = new Set<number>();
+      if (bestRef) {
+        for (let i = 0; i < topTriangles.length; i++) {
+          const tri = topTriangles[i];
+          const dot = bestRef.normal.dot(tri.normal);
+          const dist = Math.abs(bestRef.normal.dot(tri.center) + bestRef.d);
+          if (dot > 0.70 && dist < 1.8) {
+            bestCluster.add(tri.index);
+          }
         }
       }
 
@@ -127,7 +141,7 @@ export function LampOla({ actionState, onSize }: SceneItemProps) {
         const targetPos = isDiffuser ? diffPos : bodyPos;
         const targetNorm = isDiffuser ? diffNorm : bodyNorm;
         const targetUv = isDiffuser ? diffUv : bodyUv;
-        const offset = isDiffuser ? 0.06 : 0; // 0.6mm forward offset along normal
+        const offset = isDiffuser ? 0.08 : 0; // 0.8mm forward offset along normal
 
         for (let k = 0; k < 3; k++) {
           const idx = i + k;
