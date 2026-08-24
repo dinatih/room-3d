@@ -41,6 +41,7 @@ import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/sc
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
+import { useAppIdle }                  from './idleState';
 import { MeasurementTool }            from './MeasurementTool';
 import { AppConsole }                 from '@features/ui/AppConsole';
 import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
@@ -296,12 +297,14 @@ export function Studio() {
   const setDuration = (key: string) => (ms: number) =>
     setAnimDurations(d => ({ ...d, [key]: ms }));
 
+  const isIdle = useAppIdle();
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <LoadingProgress onComplete={() => setBuildAnim(true)} />
       <Canvas
         style={{ width: '100%', height: '100%' }}
-        frameloop={showInventory ? 'never' : 'demand'}
+        frameloop={showInventory || isIdle ? 'never' : 'demand'}
         /* 
          * ── Placement & configuration initiale de la caméra 3D ───────────────
          * - fov: 50° (champ de vision vertical naturel)

@@ -4,6 +4,7 @@
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { devState } from './devState';
+import { useAppIdle } from './idleState';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -91,6 +92,8 @@ export function DevToolsGroups({ Group }: {
     setTick(t => t + 1);
   }, []);
 
+  const isIdle = useAppIdle();
+
   return (
     <>
       <Group emoji="📊" title="Perf" defaultOpen>
@@ -100,15 +103,17 @@ export function DevToolsGroups({ Group }: {
           style={{ display: 'block', margin: '0 8px 4px', borderRadius: 3 }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 10px 6px', fontSize: 10 }}>
-          <span style={{ color: fpsColor, fontWeight: 700 }}>{curFps} FPS</span>
+          <span style={{ color: isIdle ? '#f59e0b' : fpsColor, fontWeight: 700 }}>{isIdle ? '0 FPS (veille)' : `${curFps} FPS`}</span>
           <span style={{ color: '#444' }}>min:{fpsMin} max:{fpsMax}</span>
         </div>
 
         {/* RENDU — stats GPU principales */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 4 }}>
-          <div style={sectionHeaderStyle}>RENDU <span style={{ color: '#444', fontWeight: 400 }}>· live</span></div>
-          <StatRow label="Draw calls" value={devState.drawCalls.toLocaleString()} color={heatColor(devState.drawCalls, 200, 500)} />
-          <StatRow label="Triangles"  value={(devState.triangles / 1000).toFixed(1) + 'k'} color={heatColor(devState.triangles, 1_000_000, 2_000_000)} />
+          <div style={sectionHeaderStyle}>
+            RENDU <span style={{ color: isIdle ? '#f59e0b' : '#444', fontWeight: isIdle ? 600 : 400 }}>{isIdle ? '· veille (42s inactif)' : '· live'}</span>
+          </div>
+          <StatRow label="Draw calls" value={isIdle ? '0' : devState.drawCalls.toLocaleString()} color={isIdle ? '#777' : heatColor(devState.drawCalls, 200, 500)} />
+          <StatRow label="Triangles"  value={isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'} color={isIdle ? '#777' : heatColor(devState.triangles, 1_000_000, 2_000_000)} />
         </div>
 
         {/* Bouton pour afficher les infos supplémentaires */}
