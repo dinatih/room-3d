@@ -58,8 +58,8 @@ export const ACTION_FULL_TOUR: AgentInstruction[] = [
 // Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)
 export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
   native:   'desk-bollsidan-1',
-  rosanna:  'sofa-garden-east',
-  marissa:  'bed-east',
+  rosanna:  'bed-east',
+  marissa:  'sofa-garden-east',
   delphina: 'shower',
   sara:     'building-b-garden',
   cha:      'cuisine-group',
