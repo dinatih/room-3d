@@ -542,7 +542,8 @@ export function SingleCharacter({
       }
 
       const isSandraOrRajaa = id === 'sandra' || id === 'rajaa';
-      if (isSandraOrRajaa || !loop) {
+      const isShortPose = finalClip.duration <= 0.3;
+      if (isShortPose || isSandraOrRajaa || !loop) {
         action.setLoop(THREE.LoopOnce, 1);
         action.clampWhenFinished = true;
       } else {
@@ -887,13 +888,16 @@ export function SingleCharacter({
         const from = (activeActionName.current && activeActionName.current !== 'tpose') ? actions[activeActionName.current] : null;
         if (from) from.fadeOut(0.2);
 
+        const clip = to.getClip();
+        const isShortPose = clip && clip.duration <= 0.3;
         const isContinuous = target === 'idle' || target === 'walk' || target === 'run' || target.includes('walk') || target.includes('catwalk') || (isNPC && target === customIdleAnimPath && id !== 'sandra' && id !== 'rajaa');
-        if (isContinuous) {
-          to.setLoop(THREE.LoopRepeat, Infinity);
-          to.clampWhenFinished = false;
-        } else if (id === 'sandra' || id === 'rajaa') {
+
+        if (isShortPose || id === 'sandra' || id === 'rajaa') {
           to.setLoop(THREE.LoopOnce, 1);
           to.clampWhenFinished = true;
+        } else if (isContinuous || isAutonomous) {
+          to.setLoop(THREE.LoopRepeat, Infinity);
+          to.clampWhenFinished = false;
         }
 
         to.reset().fadeIn(0.2).play();
