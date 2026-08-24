@@ -333,7 +333,9 @@ export interface LayerState {
   maxBreastAngleXZ?: number;
   hairPhysics: boolean;
   characterShadows: boolean;
+  characterWireframe?: boolean;
 }
+
 
 export interface SidePanelProps {
   layers:          LayerState;
@@ -766,6 +768,7 @@ export function SidePanel({
       {layerBtn('pink',   'Physique cheveux 💇‍♀️', 'hairPhysics')}
       {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}
       {layerBtn('cyan', 'Squelettes / Bones', 'skeleton')}
+      {layerBtn('cyan', 'Fil de fer (Wireframe) 🕸️', 'characterWireframe')}
       {layers.walker && layerBtn('light',  'Toutes les Lara 👥', 'showAllLaraStyles')}
       <button 
         className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"

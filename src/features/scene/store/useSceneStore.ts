@@ -90,6 +90,7 @@ const initialLayers: LayerState = {
   maxBreastAngleXZ: 35,
   hairPhysics: true,
   characterShadows: true,
+  characterWireframe: false,
   aiZones: false,
   npcCollisions: true,
   debugNpcCollisions: false,

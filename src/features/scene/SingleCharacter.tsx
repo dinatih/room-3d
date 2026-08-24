@@ -185,6 +185,7 @@ export function SingleCharacter({
   const laraShoes = useSceneStore(state => state.layers.laraShoes ?? true);
   const laraGloves = useSceneStore(state => state.layers.laraGloves ?? true);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
+  const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
   const { scene } = useGLTFClone(modelPath);
 
 
@@ -643,12 +644,14 @@ export function SingleCharacter({
           materials.forEach((mat: any) => {
              mat.depthTest = !showWallhack;
              mat.depthWrite = !showWallhack;
+             mat.wireframe = characterWireframe;
           });
         }
       }
     });
     invalidate();
-  }, [scene, characterShadows, showWallhack, invalidate]);
+  }, [scene, characterShadows, showWallhack, characterWireframe, invalidate]);
+
 
   useEffect(() => {
     const timeout = setTimeout(() => {
