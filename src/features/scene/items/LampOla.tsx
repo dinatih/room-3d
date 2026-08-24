@@ -3,7 +3,7 @@
  * Coordonnées locales : centré par bbox, Y=0 = sol, scale ×100, teintes jaunes → blanc.
  * Placement monde dans GlbItems.tsx.
  */
-import { useLayoutEffect } from 'react';
+import { useState, useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
@@ -12,6 +12,7 @@ import type { SceneItemProps } from '@shared/types';
 
 export function LampOla({ actionState, onSize }: SceneItemProps) {
   const { scene } = useGLTFClone('items/lamp-ola/lamp-ola.glb');
+  const [topY, setTopY] = useState(95.5);
   const isOn = actionState?.on !== undefined
     ? Boolean(actionState.on)
     : Boolean(actionState?.['lamp-toggle'] || actionState?.lampOn);
@@ -39,33 +40,27 @@ export function LampOla({ actionState, onSize }: SceneItemProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    const size = box.getSize(new THREE.Vector3());
+    setTopY(size.y);
+    onSize(size);
   }, [scene, onSize]);
 
-  useLayoutEffect(() => {
-    scene.traverse((c) => {
-      const mesh = c as THREE.Mesh;
-      if (mesh.isMesh && mesh.material) {
-        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        mats.forEach((m) => {
-          if ('emissive' in m) {
-            const stdMat = m as THREE.MeshStandardMaterial;
-            if (stdMat.color && (stdMat.color.r > 0.5 && stdMat.color.g > 0.5 && stdMat.color.b > 0.5)) {
-              if (isOn) {
-                stdMat.emissive.set(0xffeedd);
-                stdMat.emissiveIntensity = 1.5;
-              } else {
-                stdMat.emissive.set(0x000000);
-                stdMat.emissiveIntensity = 0;
-              }
-            }
-          }
-        });
-      }
-    });
-  }, [scene, isOn]);
-
-  return <primitive object={scene} />;
+  return (
+    <group>
+      <primitive object={scene} />
+      {/* Disque diffuseur supérieur pointant vers le plafond */}
+      <mesh position={[0, topY - 0.2, 0]} rotation-x={-Math.PI / 2}>
+        <circleGeometry args={[9.2, 32]} />
+        <meshStandardMaterial
+          color={isOn ? 0xfffaed : 0xd8d8d8}
+          emissive={isOn ? 0xfff2d6 : 0x000000}
+          emissiveIntensity={isOn ? 2.5 : 0}
+          roughness={0.2}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </group>
+  );
 }
 
 useGLTF.preload('items/lamp-ola/lamp-ola.glb');
