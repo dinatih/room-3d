@@ -490,7 +490,7 @@ export function SingleCharacter({
             materials.forEach((mat: any) => {
                 mat.transparent = false;
                 mat.depthWrite = true;
-                mat.side = THREE.FrontSide;
+                mat.side = THREE.DoubleSide;
             });
         }
 
