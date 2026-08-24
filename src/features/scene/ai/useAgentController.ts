@@ -246,6 +246,12 @@ export function useAgentController(
           const altSlotId = OccupancyManager.getAvailableSlot(objId, _characterId, currentInstruction.slotId);
           if (altSlotId) {
             currentInstruction.slotId = altSlotId;
+            const newSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === altSlotId);
+            if (newSlot) {
+              currentInstruction.animation = newSlot.animation;
+              currentInstruction.duration = newSlot.duration;
+              currentInstruction.rotY = newSlot.rotY;
+            }
             OccupancyManager.claimSlot(objId, altSlotId, _characterId);
             claimedSlotRef.current = { objectId: objId, slotId: altSlotId };
           } else {
@@ -396,8 +402,9 @@ export function useAgentController(
         if (currentInstruction.type === 'USE_OBJECT') {
           statusRef.current = 'INTERACTING';
           timerRef.current = currentInstruction.duration || target.duration || 1.0;
-          if (target.ty !== undefined) {
-            stateRef.current.y = target.ty;
+          stateRef.current.y = target.ty ?? 0;
+          if (target.rotY !== undefined) {
+            stateRef.current.rotY = target.rotY;
           }
           if (currentInstruction.triggerEventKey) {
             let key = currentInstruction.triggerEventKey;
@@ -454,6 +461,7 @@ export function useAgentController(
         }
       } else {
         // Déplacement
+        stateRef.current.y = 0;
         stateRef.current.animation = currentWalkAnimRef.current;
         
         let dirX = dx / dist;
