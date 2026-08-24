@@ -632,10 +632,6 @@ const ceilBottomBack = new THREE.MeshStandardMaterial({
   color: COLORS.wall, roughness: 0.35, envMapIntensity: 0.15,
   side: THREE.BackSide,
 });
-const ceilDepthMaterial = new THREE.MeshDepthMaterial({
-  depthPacking: THREE.RGBADepthPacking,
-  side: THREE.DoubleSide,
-});
 const ceilMats = boxFaceMats({ '-y': ceilBottom });
 
 // ── Texture parquet ────────────────────────────────────────────────────────────
@@ -1422,12 +1418,10 @@ export function Floor() {
 
           return (
             <group position={[0, WALL_H - 1, 0]}>
-              {/* Dessous opaque (visible d'en bas, transparent d'en haut) + ombre portée du soleil */}
+              {/* Dessous opaque (visible d'en bas) */}
               <mesh
                 geometry={ceilBottomGeo}
                 material={ceilBottomBack}
-                customDepthMaterial={ceilDepthMaterial}
-                castShadow
                 receiveShadow
                 userData={{ brickType: 'ceiling' }}
               />
@@ -1439,7 +1433,6 @@ export function Floor() {
         <mesh
           ref={(m) => { if (m) m.material = ceilMats as any; }}
           position={[300 - 235 / 2 + 16, WALL_H - 1 + CEIL_THICK / 2, BLDG_Z_MIN - 75]}
-          castShadow
           receiveShadow
           userData={{ brickType: 'ceiling' }}
         >
