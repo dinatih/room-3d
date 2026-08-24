@@ -448,13 +448,26 @@ export function SingleCharacter({
       action.setEffectiveWeight(0);
     });
 
-    activeActionName.current = '';
+    applyClothingAndAccessoriesVisibility(parts, {
+      laraNude,
+      laraTopOff,
+      laraBottomOff,
+      laraShoes,
+      showAccessories,
+      laraPistols,
+      equipment
+    });
+    applyRenderProperties(parts, {
+      characterShadows,
+      showWallhack,
+      characterWireframe
+    });
 
     return () => {
       mixer.stopAllAction();
       mixer.uncacheRoot(scene);
     };
-  }, [scene, parts, animations, name, isLara, targetHeight, variant, sittingScene, id]);
+  }, [scene, parts, animations, name, isLara, targetHeight, variant, sittingScene, id, laraNude, laraTopOff, laraBottomOff, laraShoes, showAccessories, laraPistols, equipment, characterShadows, showWallhack, characterWireframe]);
 
   // Visibilité des vêtements et des accessoires (ciblée, zéro traversée)
   useEffect(() => {

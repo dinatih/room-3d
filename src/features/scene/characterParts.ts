@@ -211,22 +211,22 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
         otherAccessories.push({ mesh });
       }
 
-      // Clothing / Body classification with full compatibility for all mesh name variants
-      if (name.includes('boots')) {
+      // Clothing / Body classification
+      if (name === 'boots' || name.includes('boots')) {
         boots.push({ mesh });
-      } else if (name.includes('feet') || name.includes('5_feet')) {
+      } else if (name === 'body_nude_feet' || name.includes('feet') || name.includes('5_feet')) {
         feet.push({ mesh });
-      } else if (name.includes('gloves') || name.includes('fingers')) {
+      } else if (name === 'gloves' || name === 'fingers' || name.includes('gloves') || name.includes('fingers')) {
         gloves.push({ mesh });
-      } else if (name.includes('hands') || name.includes('5_hands')) {
+      } else if (name === 'body_nude_hands' || name.includes('hands') || name.includes('5_hands')) {
         hands.push({ mesh });
-      } else if (name.includes('shirt') || name === 'body_torso') {
+      } else if (name === 'shirt' || name === 'body_torso' || (name.includes('torso') && !name.includes('nude')) || name.includes('shirt')) {
         torsoClothed.push({ mesh });
-      } else if (name.includes('body_nude_torso') || name.includes('5_body_torso')) {
+      } else if (name === 'body_nude_torso' || (name.includes('torso') && name.includes('nude')) || name.includes('5_body_torso')) {
         torsoNude.push({ mesh });
-      } else if (name.includes('shorts') || name === 'body_legs') {
+      } else if (name === 'shorts' || name === 'body_legs' || (name.includes('legs') && !name.includes('nude')) || name.includes('shorts')) {
         legsClothed.push({ mesh });
-      } else if (name.includes('body_nude_legs') || name.includes('5_body_legs') || name.includes('panties') || name.includes('5_panties')) {
+      } else if (name === 'body_nude_legs' || name === 'body_nude_panties' || (name.includes('legs') && name.includes('nude')) || name.includes('panties') || name.includes('5_body_legs') || name.includes('5_panties')) {
         legsNude.push({ mesh });
       } else if (name === 'body') {
         bodyFull.push({ mesh });
@@ -276,10 +276,10 @@ export function setPartVisibility(partList: CharacterMeshPart[], visible: boolea
     if (mat) {
       if (Array.isArray(mat)) {
         for (let j = 0; j < mat.length; j++) {
-          if (mat[j]) mat[j].visible = visible;
+          if (mat[j]) mat[j].visible = true;
         }
       } else {
-        mat.visible = visible;
+        mat.visible = true;
       }
     }
   }
