@@ -18,8 +18,8 @@ export interface AnimationPackDef {
 
 export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
   // ── PACK ASSISE DE FACE (Orientation de base 0°) ───────────────────────────
-  sitted_front_pack: {
-    id: 'sitted_front_pack',
+  seated_front: {
+    id: 'seated_front',
     name: 'Poses assises de face',
     defaultRotYOffset: 0,
     animations: [
@@ -42,8 +42,8 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
   },
 
   // ── PACK ASSISE DE CÔTÉ (Orientation décalée de 90° / π/2) ────────────────
-  side_sitted_pack: {
-    id: 'side_sitted_pack',
+  seated_side: {
+    id: 'seated_side',
     name: 'Poses assises de côté (90°)',
     defaultRotYOffset: Math.PI / 2, // Rotation de départ décalée de 90°
     animations: [
@@ -53,6 +53,14 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
     ],
   },
 };
+
+// ── Alias pratiques & rétrocompatibilité ─────────────────────────────────────
+ANIMATION_PACKS['seated_front_pack'] = ANIMATION_PACKS['seated_front'];
+ANIMATION_PACKS['seated_side_pack']  = ANIMATION_PACKS['seated_side'];
+ANIMATION_PACKS['sitted_front_pack'] = ANIMATION_PACKS['seated_front'];
+ANIMATION_PACKS['side_sitted_pack']  = ANIMATION_PACKS['seated_side'];
+ANIMATION_PACKS['sitting_front']     = ANIMATION_PACKS['seated_front'];
+ANIMATION_PACKS['sitting_side']      = ANIMATION_PACKS['seated_side'];
 
 /**
  * Résout une animation aléatoire ou définie et son orientation finale (avec rotY offset si nécessaire)
