@@ -628,7 +628,6 @@ export function useAgentController(
       timerRef.current -= dt;
       if (timerRef.current <= 0) {
         statusRef.current = 'IDLE';
-        stateRef.current.animation = 'idle';
         stateRef.current.y = startPosRef.current?.y ?? 0;
         if (hasNavStep) {
           dynamicNavIndexRef.current++;

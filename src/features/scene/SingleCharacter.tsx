@@ -855,14 +855,7 @@ export function SingleCharacter({
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
 
-    const prevX = groupRef.current.userData.prevX ?? groupRef.current.position.x;
-    const prevZ = groupRef.current.userData.prevZ ?? groupRef.current.position.z;
-    const isMoving = (!isPreview && isActive && cameraState.isUserControlling())
-      ? cameraState.isMoving
-      : (Math.hypot(groupRef.current.position.x - prevX, groupRef.current.position.z - prevZ) > 0.01);
-    groupRef.current.userData.prevX = groupRef.current.position.x;
-    groupRef.current.userData.prevZ = groupRef.current.position.z;
-
+    const isMoving = !isPreview && isActive && cameraState.isUserControlling() && cameraState.isMoving;
     let target = isPreview
       ? (walkerAnim || 'idle')
       : (customAnimName.current || (isMoving ? 'walk' : (isNPC && customIdleAnimPath && !isAutonomous ? customIdleAnimPath : 'idle')));
