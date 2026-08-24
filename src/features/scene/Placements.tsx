@@ -185,13 +185,37 @@ export function Equipment() {
       <group position={[NICHE_X + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5]} userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'WC President', actions: ['wc-lid-toggle', 'wc-seat-toggle', 'wc-flush'] } }}>
         <Toilet item={stub('toilet')} actionState={as} onSize={NOOP_SIZE} />
       </group>
-      <group visible={!!as['lamp-sdb-toggle']} position={[SDB_CX, WALL_H - 10, SDB_CZ]} rotation={[Math.PI, 0, 0]}>
-        <TradfriBulb item={stub('tradfri-bulb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        <pointLight intensity={8} distance={250} color={0xffe8b0} />
+      <group
+        position={[SDB_CX, WALL_H - 10, SDB_CZ]}
+        rotation={[Math.PI, 0, 0]}
+        userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Ampoule SDB (TRÅDFRI)', actions: ['lampSdb'] } }}
+      >
+        <TradfriBulb item={stub('tradfri-bulb')} actionState={{ on: !!as['lamp-sdb-toggle'] }} onSize={NOOP_SIZE} />
+        {!!as['lamp-sdb-toggle'] && (
+          <pointLight
+            position={[0, 15, 0]}
+            intensity={35}
+            distance={450}
+            decay={1.2}
+            color={0xfff2dc}
+          />
+        )}
       </group>
-      <group visible={!!as['lamp-couloir-toggle']} position={[CORR_CX, WALL_H - 10, CORR_CZ]} rotation={[Math.PI, 0, 0]}>
-        <TradfriBulb item={stub('tradfri-bulb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        <pointLight intensity={8} distance={250} color={0xffe8b0} />
+      <group
+        position={[CORR_CX, WALL_H - 10, CORR_CZ]}
+        rotation={[Math.PI, 0, 0]}
+        userData={{ skipMerge: true, animUnit: true, hoverAction: { label: 'Ampoule Couloir (TRÅDFRI)', actions: ['lampCouloir'] } }}
+      >
+        <TradfriBulb item={stub('tradfri-bulb')} actionState={{ on: !!as['lamp-couloir-toggle'] }} onSize={NOOP_SIZE} />
+        {!!as['lamp-couloir-toggle'] && (
+          <pointLight
+            position={[0, 15, 0]}
+            intensity={35}
+            distance={450}
+            decay={1.2}
+            color={0xfff2dc}
+          />
+        )}
       </group>
       {/* VÅTHULT — bandeau LED 35 cm au-dessus du miroir vasque (top miroir = 174) */}
       <group position={[DOOR_START - 84, 176, KITCHEN_Z + PARTITION_THICKNESS + 2.1]}>

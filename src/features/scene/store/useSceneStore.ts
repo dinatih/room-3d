@@ -137,6 +137,8 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 't
     freezer: 'freezerOpen',
     tv: 'tvOn',
     'lamp-toggle': 'lampOn',
+    'lamp-sdb-toggle': 'lampSdb',
+    'lamp-couloir-toggle': 'lampCouloir',
     'bed-toggle': 'bedStacked',
     'bed-sofa': 'bedSofa',
     'bed-position': 'bedPosition',
@@ -214,6 +216,10 @@ export const useSceneStore = create<SceneStore>((set) => ({
 
       if (key === 'lampOn') {
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lamp-toggle' } }));
+      } else if (key === 'lampSdb') {
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lamp-sdb-toggle' } }));
+      } else if (key === 'lampCouloir') {
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lamp-couloir-toggle' } }));
       } else if (key === 'bedStacked') {
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-toggle' } }));
       } else if (key === 'bedSofa') {

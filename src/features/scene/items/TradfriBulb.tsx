@@ -12,8 +12,9 @@ import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/trådfri ampoule led e27 1055 lumen connecté sans fil variateur intensité-spectre blanc globe/TRÅDFRI Ampoule LED E27 1055 lumen connecté sans fil variateur intensité-spectre blanc globe.glb';
 
-export function TradfriBulb({ onSize }: SceneItemProps) {
+export function TradfriBulb({ actionState, onSize }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
+  const isOn = !!actionState?.['lamp-sdb-toggle'] || !!actionState?.['lamp-couloir-toggle'] || !!actionState?.on;
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -27,7 +28,28 @@ export function TradfriBulb({ onSize }: SceneItemProps) {
       -(box.min.z + box.max.z) / 2,
     );
     onSize(box.getSize(new THREE.Vector3()));
-  }, [scene]);
+  }, [scene, onSize]);
+
+  useLayoutEffect(() => {
+    scene.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (mesh.isMesh && mesh.material) {
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        mats.forEach((m) => {
+          if ('emissive' in m) {
+            const stdMat = m as THREE.MeshStandardMaterial;
+            if (isOn) {
+              stdMat.emissive.set(0xfff2d6);
+              stdMat.emissiveIntensity = 1.5;
+            } else {
+              stdMat.emissive.set(0x000000);
+              stdMat.emissiveIntensity = 0;
+            }
+          }
+        });
+      }
+    });
+  }, [scene, isOn]);
 
   return <primitive object={scene} />;
 }
