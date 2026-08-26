@@ -1,7 +1,10 @@
 /**
- * idleState.ts — Gestion globale de l'inactivité utilisateur (protection anti-CPU 42s).
+ * idleState.ts — Gestion globale de l'inactivité utilisateur.
  */
 import { useState, useEffect } from 'react';
+
+/** Délai avant la mise en veille du moteur 3D, en secondes. */
+export const APP_IDLE_TIMEOUT_SECONDS = 42;
 
 let globalLastActivityTime = typeof performance !== 'undefined' ? performance.now() : 0;
 const idleListeners = new Set<(idle: boolean) => void>();
@@ -47,7 +50,7 @@ if (typeof window !== 'undefined') {
 }
 
 export function isAppIdle(): boolean {
-  return (performance.now() - globalLastActivityTime) > 42000;
+  return (performance.now() - globalLastActivityTime) > APP_IDLE_TIMEOUT_SECONDS * 1000;
 }
 
 export function useAppIdle(): boolean {
@@ -63,4 +66,3 @@ export function useAppIdle(): boolean {
 
   return idle;
 }
-

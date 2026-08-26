@@ -34,7 +34,7 @@ import type { AgentInstruction } from './ai/aiTypes';
 
 import { useAgentController } from './ai/useAgentController';
 import { appLog } from '@features/ui/AppConsole';
-import { isAppIdle } from './idleState';
+import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from './idleState';
 import { AUTONOMOUS_NPC_IDS } from './walkerConfig';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
@@ -745,7 +745,7 @@ export function SingleCharacter({
     if (isIdleTimeout) {
       if (!hasLoggedIdleRef.current && isActive) {
         hasLoggedIdleRef.current = true;
-        appLog('system', '💤 Moteur 3D suspendu (42s inactif). Bougez pour reprendre.');
+        appLog('system', `💤 Moteur 3D suspendu (${APP_IDLE_TIMEOUT_SECONDS}s inactif). Bougez pour reprendre.`);
       }
       return;
     } else if (hasLoggedIdleRef.current) {

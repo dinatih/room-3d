@@ -4,7 +4,7 @@
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { devState } from './devState';
-import { useAppIdle } from './idleState';
+import { APP_IDLE_TIMEOUT_SECONDS, useAppIdle } from './idleState';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -110,7 +110,7 @@ export function DevToolsGroups({ Group }: {
         {/* RENDU — stats GPU principales */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 4 }}>
           <div style={sectionHeaderStyle}>
-            RENDU <span style={{ color: isIdle ? '#f59e0b' : '#444', fontWeight: isIdle ? 600 : 400 }}>{isIdle ? '· veille (42s inactif)' : '· live'}</span>
+            RENDU <span style={{ color: isIdle ? '#f59e0b' : '#444', fontWeight: isIdle ? 600 : 400 }}>{isIdle ? `· veille (${APP_IDLE_TIMEOUT_SECONDS}s inactif)` : '· live'}</span>
           </div>
           <StatRow label="Draw calls" value={isIdle ? '0' : devState.drawCalls.toLocaleString()} color={isIdle ? '#777' : heatColor(devState.drawCalls, 200, 500)} />
           <StatRow label="Triangles"  value={isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'} color={isIdle ? '#777' : heatColor(devState.triangles, 1_000_000, 2_000_000)} />
