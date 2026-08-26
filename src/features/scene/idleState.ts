@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 
 /** Délai avant la mise en veille du moteur 3D, en secondes. */
-export const APP_IDLE_TIMEOUT_SECONDS = 42;
+export const APP_IDLE_TIMEOUT_SECONDS = 120;
 
 let globalLastActivityTime = typeof performance !== 'undefined' ? performance.now() : 0;
 const idleListeners = new Set<(idle: boolean) => void>();
