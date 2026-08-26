@@ -612,7 +612,7 @@ export function Decor() {
       <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true, isIkea: true }}>
         <MuligRail item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[110, 0.5, 500]} userData={{ animUnit: true, isIkea: true }}>
+      <group position={[110, 5, 500]} userData={{ animUnit: true, isIkea: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[NICHE_X + KALLAX_DEPTH - 10, 0.5, MACK_Z + 15]} userData={{ animUnit: true, isIkea: true }}>

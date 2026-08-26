@@ -25,7 +25,7 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
     animations: [
       'animations/poses_idles/anim_sitting_idle.glb',
       'animations/poses_idles/anim_sitting_2.glb',
-      'animations/poses_idles/anim_sitting_thumbs_up.glb',
+      // 'animations/poses_idles/anim_sitting_thumbs_up.glb',
       'animations/poses_idles/anim_sitting_talking_1.glb',
       'animations/poses_idles/anim_sitting_talking.glb',
       'animations/poses_idles/anim_sitting_laughing.glb',
@@ -35,7 +35,7 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
       'animations/poses_idles/anim_male_sitting_pose_2.glb',
       'animations/poses_idles/anim_male_sitting_pose_1.glb',
       'animations/poses_idles/anim_female_sitting_pose.glb',
-      'animations/poses_idles/anim_cheering_while_sitting.glb',
+      // 'animations/poses_idles/anim_cheering_while_sitting.glb',
       'animations/poses_idles/miley_armature_sit_talk.glb',
       'animations/poses_idles/miley_armature_sit_look_up_laugh.glb',
     ],

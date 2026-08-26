@@ -17,27 +17,25 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'seat-north',
         name: 'S\'asseoir (Nord)',
         offset: [90, 0, 80],
-        rotY: 0,
-        animations_random: 'seated_side',
-        animation: 'animations/poses_idles/anim_female_sitting_pose_3.glb',
+        rotY: Math.PI / 2,
+        // animations_random: 'seated_front',
+        animation: 'animations/poses_idles/anim_sitting_thumbs_up.glb',
         duration: 15.0,
       },
       {
         slotId: 'seat-middle',
         name: 'S\'asseoir (Milieu)',
         offset: [90, 0, 150],
-        rotY: 0,
-        animations_random: 'seated_side',
-        animation: 'animations/poses_idles/anim_female_sitting_pose_1.glb',
+        rotY: Math.PI / 2,
+        animations_random: 'seated_front',
         duration: 15.0,
       },
       {
         slotId: 'seat-south',
         name: 'S\'asseoir (Sud)',
         offset: [90, 0, 220],
-        rotY: 0,
-        animations_random: 'seated_side',
-        animation: 'animations/poses_idles/anim_female_sitting_pose_2.glb',
+        rotY: Math.PI / 2,
+        animations_random: 'seated_front',
         duration: 15.0,
       },
       {
@@ -61,7 +59,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Nord)',
         offset: [245, 0, 120],
         rotY: Math.PI,
-        animations_random: 'seated_side',
+        animations_random: 'seated_front',
         animation: 'animations/poses_idles/anim_female_sitting_pose_1.glb',
         duration: 15.0,
       },
@@ -70,7 +68,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Milieu)',
         offset: [245, 0, 190],
         rotY: Math.PI,
-        animations_random: 'seated_side',
+        animations_random: 'seated_front',
         animation: 'animations/poses_idles/anim_female_sitting_pose_1.glb',
         duration: 15.0,
       },
@@ -79,7 +77,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Sud)',
         offset: [245, 0, 260],
         rotY: Math.PI,
-        animations_random: 'seated_side',
+        animations_random: 'seated_front',
         animation: 'animations/poses_idles/anim_female_sitting_pose_3.glb',
         duration: 15.0,
       },
@@ -107,7 +105,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [73.5, 0, 50],
         rotY: Math.PI,
         animations_random: 'seated_front',
-        animation: 'animations/poses_idles/anim_sitting_idle.glb',
         duration: 10.0,
       }
     ]
@@ -124,8 +121,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [85, 0, 272],
         rotY: Math.PI / 2,
         animations_random: 'seated_front',
-        animation: 'animations/poses_idles/anim_sitting_idle.glb',
-        duration: 10.0,
+        duration: 40.0,
       }
     ]
   },
@@ -299,7 +295,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Se relaxer au centre',
         offset: [120, 0, -250],
         rotY: Math.PI / 4,
-        animation: 'animations/poses_idles/anim_sitting_idle.glb',
+        animations_random: 'seated_front',
         duration: 30.0,
       },
       {
@@ -307,7 +303,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Bain Côté Ouest',
         offset: [80, 0, -280],
         rotY: Math.PI / 4,
-        animation: 'animations/poses_idles/anim_sitting_idle.glb',
+        animations_random: 'seated_front',
         duration: 30.0,
       },
       {
@@ -315,7 +311,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Bain Côté Est',
         offset: [160, 0, -220],
         rotY: Math.PI + Math.PI / 4,
-        animation: 'animations/poses_idles/anim_sitting_idle.glb',
+        animations_random: 'seated_front',
         duration: 30.0,
       }
     ]
@@ -333,8 +329,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Place assise 1',
         offset: [270, 0, -80],
         rotY: Math.PI,
-        animations_random: 'seated_front',
-        animation: 'animations/poses_idles/anim_female_sitting_pose_3.glb',
+        animations_random: 'seated_side',
         duration: 15.0,
       },
       {
@@ -342,8 +337,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Place assise 2',
         offset: [270, 0, -140],
         rotY: Math.PI,
-        animations_random: 'seated_front',
-        animation: 'animations/poses_idles/anim_female_sitting_pose_1.glb',
+        animations_random: 'seated_side',
         duration: 15.0,
       }
     ]
@@ -360,7 +354,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [100, 0, -60],
         rotY: Math.PI / 2,
         animations_random: 'seated_front',
-        animation: 'animations/poses_idles/anim_sitting_idle.glb',
         duration: 15.0,
       },
       {
@@ -369,7 +362,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [100, 0, -100],
         rotY: Math.PI / 2,
         animations_random: 'seated_front',
-        animation: 'animations/poses_idles/anim_female_sitting_pose_1.glb',
         duration: 15.0,
       }
     ]
