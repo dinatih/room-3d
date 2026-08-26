@@ -15,7 +15,7 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { LAYER_WALKER_DETAIL, LAYER_WALKER } from '@config';
-import { applyLaraVariantStyles, type LaraVariant } from './LaraVariants';
+import { applyLaraVariantStyles, disposeLaraVariantMaterials, type LaraVariant } from './LaraVariants';
 import { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES, isCharacterVisibleInMode } from './walkerConfig';
 export { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES, isCharacterVisibleInMode };
 import { buildHairChain, retargetClip, _retargetCache } from './retargeting';
@@ -94,7 +94,35 @@ const _rShoulderW = new THREE.Vector3();
 const silentManager = new THREE.LoadingManager();
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
-const globalGLTFCache: Record<string, Promise<any>> = {};
+const MAX_DYNAMIC_GLTF_CACHE = 12;
+const MAX_RETARGETED_CLIPS = 48;
+const globalGLTFCache = new Map<string, Promise<any>>();
+
+function cacheDynamicGLTF(path: string): Promise<any> {
+  const cached = globalGLTFCache.get(path);
+  if (cached) {
+    globalGLTFCache.delete(path);
+    globalGLTFCache.set(path, cached);
+    return cached;
+  }
+  const pending = new Promise((resolve, reject) => {
+    const loader = new GLTFLoader(silentManager);
+    loader.setDRACOLoader(dracoLoader);
+    loader.load(path, resolve, undefined, reject);
+  });
+  globalGLTFCache.set(path, pending);
+  while (globalGLTFCache.size > MAX_DYNAMIC_GLTF_CACHE) {
+    globalGLTFCache.delete(globalGLTFCache.keys().next().value!);
+  }
+  return pending;
+}
+
+function cacheRetargetedClip(key: string, clip: THREE.AnimationClip) {
+  if (!_retargetCache[key] && Object.keys(_retargetCache).length >= MAX_RETARGETED_CLIPS) {
+    delete _retargetCache[Object.keys(_retargetCache)[0]];
+  }
+  _retargetCache[key] = clip;
+}
 
 export interface WalkerProps {
   isPreview?: boolean;
@@ -201,6 +229,8 @@ export function SingleCharacter({
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
   const { scene } = useGLTFClone(modelPath);
+
+  useEffect(() => () => disposeLaraVariantMaterials(scene), [scene]);
 
   // Extraction structurée des maillages et des os
   const parts = useMemo(() => extractCharacterParts(scene), [scene]);
@@ -411,7 +441,7 @@ export function SingleCharacter({
       let finalClip = _retargetCache[cacheKey];
       if (!finalClip) {
         finalClip = retargetClip(clip, scene, actualAnimScene);
-        _retargetCache[cacheKey] = finalClip;
+        cacheRetargetedClip(cacheKey, finalClip);
       }
 
       const action = mixer.clipAction(finalClip);
@@ -503,7 +533,7 @@ export function SingleCharacter({
       if (!finalClip) {
         if (sourceScene) sourceScene.updateMatrixWorld(true);
         finalClip = retargetClip(clip, scene, sourceScene);
-        _retargetCache[cacheKey] = finalClip;
+        cacheRetargetedClip(cacheKey, finalClip);
       }
       finalClip.name = path;
 
@@ -538,14 +568,7 @@ export function SingleCharacter({
         handleClip(gltf.animations[0], sourceScene);
       };
 
-      if (!globalGLTFCache[path]) {
-        globalGLTFCache[path] = new Promise((resolve, reject) => {
-          const loader = new GLTFLoader(silentManager);
-          loader.setDRACOLoader(dracoLoader);
-          loader.load(path, resolve, undefined, reject);
-        });
-      }
-      globalGLTFCache[path].then(loadCallback).catch(console.error);
+      cacheDynamicGLTF(path).then(loadCallback).catch(console.error);
     }
   }, [id, scene, animations, invalidate]);
 
@@ -691,7 +714,7 @@ export function SingleCharacter({
           if (!finalClip) {
             gltf.scene.updateMatrixWorld(true);
             finalClip = retargetClip(clip, scene, gltf.scene);
-            _retargetCache[cacheKey] = finalClip;
+            cacheRetargetedClip(cacheKey, finalClip);
           }
           finalClip.name = customIdleAnimPath;
 

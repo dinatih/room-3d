@@ -77,9 +77,22 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       const meshName = mesh.name.toLowerCase();
       if (meshName.includes('body_nude') || meshName.includes('panties') || meshName.includes('feet') || meshName.includes('hands')) return; // Preserve pristine nude textures
 
-      const originalMat = mesh.material as THREE.Material | THREE.Material[];
-      const matArray = Array.isArray(originalMat) ? originalMat : [originalMat];
+      // Variants need independent materials, but this function can run again
+      // after a UI setting changes. Always clone from the immutable GLTF
+      // materials and release the previous per-character clones first.
+      const currentMat = mesh.material as THREE.Material | THREE.Material[];
+      const baseMaterials = (mesh.userData.__baseVariantMaterials ??
+        (Array.isArray(currentMat) ? currentMat : [currentMat])) as THREE.Material[];
+      if (!mesh.userData.__baseVariantMaterials) {
+        mesh.userData.__baseVariantMaterials = baseMaterials;
+      }
+      (Array.isArray(currentMat) ? currentMat : [currentMat]).forEach(material => {
+        if (material?.userData.__ownedCharacterMaterial) material.dispose();
+      });
+
+      const matArray = baseMaterials;
       const clonedMats = matArray.map(m => m.clone() as THREE.MeshStandardMaterial);
+      clonedMats.forEach(material => { material.userData.__ownedCharacterMaterial = true; });
       mesh.material = clonedMats.length === 1 ? clonedMats[0] : clonedMats;
 
       clonedMats.forEach(mat => {
@@ -475,6 +488,17 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       headBone.add(ringMesh);
     }
   }
+}
+
+/** Releases only materials created for a character variant, never GLTF-shared assets. */
+export function disposeLaraVariantMaterials(model: THREE.Object3D) {
+  model.traverse((node: any) => {
+    if (!node.isMesh || !node.material) return;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    materials.forEach((material: THREE.Material) => {
+      if (material.userData.__ownedCharacterMaterial) material.dispose();
+    });
+  });
 }
 
 // ── MARISSA TATTOO CANVAS GENERATOR ──────────────────────────────────────────

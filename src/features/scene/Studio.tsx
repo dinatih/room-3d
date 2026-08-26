@@ -1,7 +1,7 @@
 /**
  * Studio.tsx — racine R3F : Canvas, lumières, fog, env map, état UI global.
  */
-import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
+import { useState, useCallback, useEffect, useRef, Suspense, lazy } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 
 import { useProgress, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
@@ -27,7 +27,6 @@ import { GridLayer }        from '@features/scene/Grid';
 import { LightHelpers }     from '@features/scene/LightHelpers';
 import { HoverRaycaster, HoverOverlay } from '@features/scene/HoverMenu';
 import { DevToolsCollector }            from '@features/scene/DevToolsCollector';
-import { Inventory }                    from '@features/inventory/Inventory';
 import { VRMode }                       from '@features/scene/VRMode';
 import { ImmersiveMode }                from '@features/scene/ImmersiveMode';
 import { FloorPlan }                    from '@features/scene/FloorPlan';
@@ -45,6 +44,10 @@ import { useAppIdle }                  from './idleState';
 import { MeasurementTool }            from './MeasurementTool';
 import { AppConsole }                 from '@features/ui/AppConsole';
 import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
+
+// The inventory pulls in a second R3F canvas, its GLTF loaders and a large
+// catalogue. Do not parse it until the user explicitly opens the inventory.
+const Inventory = lazy(() => import('@features/inventory/Inventory').then(module => ({ default: module.Inventory })));
 
 
 import {
@@ -514,7 +517,11 @@ export function Studio() {
           });
         }}
       />
-      <Inventory visible={showInventory} onClose={() => setShowInventory(false)} />
+      {showInventory && (
+        <Suspense fallback={null}>
+          <Inventory visible onClose={() => setShowInventory(false)} />
+        </Suspense>
+      )}
       <VirtualDPad />
       <HoverOverlay />
       {layers.wallEdges && <EdgeHoverOverlay />}

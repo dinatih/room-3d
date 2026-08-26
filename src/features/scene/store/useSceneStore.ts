@@ -67,7 +67,9 @@ const initialLayers: LayerState = {
   grid: false,
   gridDepth: false,
   laraGrid: false,
-  laraCount: isMobileInitial ? 2 : 15,
+  // Desktop previously mounted all 15 animated characters at startup. Keep the
+  // full modes available in the UI, but start with the lightest useful scene.
+  laraCount: 2,
   showAllLaraStyles: true,
   wallhack: false,
   skeleton: false,
@@ -318,4 +320,3 @@ export const useSceneStore = create<SceneStore>((set) => ({
 if (typeof window !== 'undefined') {
   (window as any).useSceneStore = useSceneStore;
 }
-

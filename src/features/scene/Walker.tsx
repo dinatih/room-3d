@@ -89,9 +89,8 @@ import { Suspense, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { SingleCharacter } from './SingleCharacter';
-import { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES } from './walkerConfig';
+import { CHARACTERS, isCharacterVisibleInMode, type CharacterConfig, ACCESSORIES_MESH_NAMES } from './walkerConfig';
 export { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES };
-import { _retargetCache } from './retargeting';
 
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
@@ -113,19 +112,11 @@ export interface WalkerProps {
 
 function InternalWalker(props: WalkerProps) {
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
+  const laraCount = useSceneStore(state => state.layers.laraCount ?? 2);
+  const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const idleGltf = useGLTF('animations/poses_idles/miley_armature_idle01_f.glb');
   const walkingGltf = useGLTF('animations/locomotion/anim_walking.glb');
   const runningGltf = useGLTF('animations/locomotion/anim_running.glb');
-
-    const gltfs = useGLTF(ANIM_URLS) as any[];
-
-  const animGltfs: Record<string, any> = useMemo(() => {
-    const map: Record<string, any> = {};
-    ANIM_URLS.forEach((url, i) => {
-      map[url] = gltfs[i];
-    });
-    return map;
-  }, [gltfs]);
 
 
   const charactersWithAnims = useMemo(() => {
@@ -147,36 +138,33 @@ function InternalWalker(props: WalkerProps) {
         idleAnim,
         walkAnim,
         runAnim,
-        // Inclure également toutes les animations de la map pour qu'elles soient prêtes à l'emploi (AI, interact, etc.)
-        ...Object.entries(animGltfs)
-          .filter(([_, gltf]) => gltf?.animations?.[0])
-          .map(([path, gltf]) => {
-            return Object.assign(gltf.animations[0].clone(), {
-              name: path,
-              userData: { animScene: gltf.scene }
-            });
-          })
       ];
-      const sittingScene = char.sittingScenePath && animGltfs[char.sittingScenePath]?.scene;
       return {
         ...char,
         isLara,
         charAnims,
-        sittingScene
+        // Special animations are loaded only when requested by SingleCharacter.
+        sittingScene: undefined
       };
     });
-  }, [idleGltf, walkingGltf, runningGltf, animGltfs]);
+  }, [idleGltf, walkingGltf, runningGltf]);
+
+  const mountedCharacters = useMemo(() => {
+    if (props.isPreview) {
+      return charactersWithAnims.filter(char => char.id === props.previewCharacterId);
+    }
+    return charactersWithAnims.filter(char =>
+      char.id === activeWalkerId ||
+      (showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeWalkerId))
+    );
+  }, [activeWalkerId, charactersWithAnims, laraCount, props.isPreview, props.previewCharacterId, showAllLaraStyles]);
 
   return (
     <>
-      {charactersWithAnims.map((char, index) => {
+      {mountedCharacters.map(char => {
         const isActive = props.isPreview
           ? char.id === props.previewCharacterId
           : char.id === activeWalkerId;
-
-        if (props.isPreview && char.id !== props.previewCharacterId) {
-          return null;
-        }
 
         return (
           <SingleCharacter
@@ -199,7 +187,7 @@ function InternalWalker(props: WalkerProps) {
             previewHaircut={props.previewHaircut}
             previewHairColor={props.previewHairColor}
             customIdleAnimPath={char.customIdleAnimPath}
-            characterIndex={index}
+            characterIndex={CHARACTERS.findIndex(candidate => candidate.id === char.id)}
           />
         );
       })}
@@ -222,11 +210,5 @@ useGLTF.preload(LARA_PATH);
 useGLTF.preload('animations/poses_idles/miley_armature_idle01_f.glb');
 useGLTF.preload('animations/locomotion/anim_walking.glb');
 useGLTF.preload('animations/locomotion/anim_running.glb');
-ANIM_URLS.forEach(url => useGLTF.preload(url));
-
-
-CHARACTERS.forEach(char => {
-  useGLTF.preload(char.path);
-});
 
 useGLTF.preload('items/famnig27470460/Famnig27470460.glb');

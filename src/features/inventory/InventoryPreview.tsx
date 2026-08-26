@@ -10,21 +10,46 @@ import { GlobalSkeletonHelpers } from '@features/scene/utils/GlobalSkeletonHelpe
 import { CharacterAnimSelector } from '@features/scene/CharacterAnimSelector';
 import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
 
+function disposePreviewScene(root: THREE.Object3D) {
+  root.traverse((node: any) => {
+    if (!node.isMesh) return;
+    node.geometry?.dispose();
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    materials.forEach((material: THREE.Material | undefined) => {
+      if (!material) return;
+      Object.values(material).forEach((value: any) => {
+        if (value?.isTexture) value.dispose();
+      });
+      material.dispose();
+    });
+  });
+}
+
 function GlbScene({ glbPath, onSize }: { glbPath: string; onSize?: () => void; }) {
   const [scene, setScene] = useState<THREE.Group | null>(null);
   useEffect(() => {
     const draco = new DRACOLoader(); draco.setDecoderPath('/draco/');
     const loader = new GLTFLoader(); loader.setDRACOLoader(draco);
+    let cancelled = false;
     loader.load(glbPath, gltf => {
-      setScene(gltf.scene);
-    });
+      if (cancelled) disposePreviewScene(gltf.scene);
+      else setScene(gltf.scene);
+    }, undefined, () => undefined);
+    return () => {
+      cancelled = true;
+      draco.dispose();
+      setScene(previous => {
+        if (previous) disposePreviewScene(previous);
+        return null;
+      });
+    };
   }, [glbPath]);
 
   useLayoutEffect(() => {
     if (scene) onSize?.();
   }, [scene, onSize]);
 
-  if (!scene) return null; return <primitive object={scene} />;
+  if (!scene) return null; return <primitive object={scene} dispose={null} />;
 }
 
 function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, d: number, h: number }; worldSize: { x: number; y: number; z: number }; grounded?: boolean; }) {

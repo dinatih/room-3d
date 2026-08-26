@@ -16,11 +16,9 @@ import * as THREE from 'three';
 export function useGLTFClone(path: string): { scene: THREE.Group; animations: THREE.AnimationClip[] } {
   const gltf = useGLTF(path);
   const scene = useMemo(() => {
-    const cloned = SkeletonUtils.clone(gltf.scene) as THREE.Group;
-    cloned.traverse((c: any) => {
-      c.frustumCulled = false;
-    });
-    return cloned;
+    // Keep Three.js' frustum culling enabled. Disabling it on every clone makes
+    // off-screen characters and furniture remain in the render pipeline.
+    return SkeletonUtils.clone(gltf.scene) as THREE.Group;
   }, [gltf.scene]);
   return { scene, animations: gltf.animations };
 }

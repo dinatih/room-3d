@@ -36,6 +36,16 @@ export interface WigProps {
   attachTo?: THREE.Object3D | null;
 }
 
+function disposeOwnedWigMaterials(root: THREE.Object3D) {
+  root.traverse((node: any) => {
+    if (!node.isMesh || !node.material) return;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    materials.forEach((material: THREE.Material) => {
+      if (material.userData.__ownedWigMaterial) material.dispose();
+    });
+  });
+}
+
 export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
   const { scene: fullScene } = useGLTF('characters/wigs/hair_pack_part_2.glb');
   const clonedHairRef = useRef<THREE.Group>(null!);
@@ -170,6 +180,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           m.material = m.material.map((_mat: any) => {
             if (!_mat) return _mat;
             const clonedMat = _mat.clone();
+            clonedMat.userData.__ownedWigMaterial = true;
             clonedMat.side = THREE.DoubleSide;
             clonedMat.alphaTest = 0.5;
             clonedMat.depthWrite = true;
@@ -179,6 +190,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
           });
         } else if (m.material) {
           const clonedMat = (m.material as THREE.Material).clone();
+          clonedMat.userData.__ownedWigMaterial = true;
           clonedMat.side = THREE.DoubleSide;
           clonedMat.alphaTest = 0.5;
           clonedMat.depthWrite = true;
@@ -226,7 +238,10 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       console.log(`[Wig Setup] attaching scene ${scene.name} (uuid: ${scene.uuid}). headBone currently has ${attachTo.children.length} children:`, attachTo.children.map((c: any) => c.name));
       if (existingWigs.length > 0) {
         console.log(`[Wig Setup] removing ${existingWigs.length} old wigs:`, existingWigs.map((w: any) => w.name));
-        existingWigs.forEach((w: any) => attachTo.remove(w));
+        existingWigs.forEach((w: any) => {
+          disposeOwnedWigMaterials(w);
+          attachTo.remove(w);
+        });
       }
 
       attachTo.add(scene);
@@ -235,6 +250,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       if (attachTo && scene) {
         console.log(`[Wig Cleanup] removing scene ${scene.name} (uuid: ${scene.uuid})`);
         attachTo.remove(scene);
+        disposeOwnedWigMaterials(scene);
       }
     };
   }, [attachTo, scene]);
