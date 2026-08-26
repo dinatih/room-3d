@@ -69,7 +69,6 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
-      m.frustumCulled = false;
       if (m.material) {
         const mat = m.material as THREE.MeshStandardMaterial;
         mat.metalness = 0;
