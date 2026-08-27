@@ -9,7 +9,7 @@ import { APP_IDLE_TIMEOUT_SECONDS, useAppIdle } from './idleState';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function heatColor(v: number, warn: number, danger: number) {
-  return v >= danger ? '#ff4444' : v >= warn ? '#ffcc44' : '#ffd700';
+  return v >= danger ? '#dc2626' : v >= warn ? '#d97706' : '#2563eb';
 }
 
 // ── FPS canvas ────────────────────────────────────────────────────────────────
@@ -21,23 +21,23 @@ export function drawFps(canvas: HTMLCanvasElement, samples: number[]) {
   if (!gfx) return;
   const W = FPS_W, H = FPS_H;
   gfx.clearRect(0, 0, W, H);
-  gfx.fillStyle = '#080812';
+  gfx.fillStyle = '#0f172a';
   gfx.fillRect(0, 0, W, H);
 
   const maxFps = Math.max(60, ...samples);
-  gfx.strokeStyle = '#1a1a2e'; gfx.lineWidth = 1;
+  gfx.strokeStyle = '#334155'; gfx.lineWidth = 1;
   for (const f of [30, 60]) {
     const y = H - (f / maxFps) * H;
     gfx.beginPath(); gfx.moveTo(0, y); gfx.lineTo(W, y); gfx.stroke();
   }
-  gfx.fillStyle = '#333'; gfx.font = '8px monospace';
+  gfx.fillStyle = '#94a3b8'; gfx.font = '8px monospace';
   gfx.fillText('60', 2, H - (60 / maxFps) * H - 2);
   if (maxFps > 65) gfx.fillText('30', 2, H - (30 / maxFps) * H - 2);
 
   const bw = W / 80;
   for (let i = 0; i < samples.length; i++) {
     const f = samples[i]; if (!f) continue;
-    gfx.fillStyle = f >= 50 ? '#44cc66' : f >= 30 ? '#ffaa00' : '#ff4444';
+    gfx.fillStyle = f >= 50 ? '#22c55e' : f >= 30 ? '#f59e0b' : '#ef4444';
     gfx.fillRect(i * bw, H - (f / maxFps) * H, Math.max(1, bw - 0.5), (f / maxFps) * H);
   }
 }
@@ -45,15 +45,15 @@ export function drawFps(canvas: HTMLCanvasElement, samples: number[]) {
 // ── Ligne de stat ─────────────────────────────────────────────────────────────
 
 const sectionHeaderStyle: React.CSSProperties = {
-  color: '#66cccc', fontSize: 9, fontWeight: 600,
+  color: '#0284c7', fontSize: 10, fontWeight: 700,
   letterSpacing: '.5px', padding: '0 10px 2px',
 };
 
 function StatRow({ label, value, color }: { label: string; value: string | number; color?: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 10px', fontSize: 10 }}>
-      <span style={{ color: '#666' }}>{label}</span>
-      <span style={{ color: color ?? '#ffd700', fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 10px', fontSize: 11 }}>
+      <span style={{ color: '#374151', fontWeight: 500 }}>{label}</span>
+      <span style={{ color: color ?? '#111827', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </div>
   );
 }
@@ -85,7 +85,7 @@ export function DevToolsGroups({ Group }: {
   const valid    = samples.filter(v => v > 0);
   const fpsMin   = valid.length ? Math.min(...valid) : 0;
   const fpsMax   = valid.length ? Math.max(...valid) : 0;
-  const fpsColor = curFps >= 50 ? '#44cc66' : curFps >= 30 ? '#ffaa00' : '#ff4444';
+  const fpsColor = curFps >= 50 ? '#16a34a' : curFps >= 30 ? '#d97706' : '#dc2626';
 
   const handleRefreshScene = useCallback(() => {
     devState.refreshScene?.();
@@ -100,20 +100,20 @@ export function DevToolsGroups({ Group }: {
         <canvas
           ref={fpsCanvasRef}
           width={FPS_W} height={FPS_H}
-          style={{ display: 'block', margin: '0 8px 4px', borderRadius: 3 }}
+          style={{ display: 'block', margin: '0 8px 4px', borderRadius: 4, boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 10px 6px', fontSize: 10 }}>
-          <span style={{ color: isIdle ? '#f59e0b' : fpsColor, fontWeight: 700 }}>{isIdle ? '0 FPS (veille)' : `${curFps} FPS`}</span>
-          <span style={{ color: '#444' }}>min:{fpsMin} max:{fpsMax}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 10px 6px', fontSize: 11 }}>
+          <span style={{ color: isIdle ? '#d97706' : fpsColor, fontWeight: 700 }}>{isIdle ? '0 FPS (veille)' : `${curFps} FPS`}</span>
+          <span style={{ color: '#4b5563', fontWeight: 500 }}>min:{fpsMin} max:{fpsMax}</span>
         </div>
 
         {/* RENDU — stats GPU principales */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 4 }}>
+        <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 4 }}>
           <div style={sectionHeaderStyle}>
-            RENDU <span style={{ color: isIdle ? '#f59e0b' : '#444', fontWeight: isIdle ? 600 : 400 }}>{isIdle ? `· veille (${APP_IDLE_TIMEOUT_SECONDS}s inactif)` : '· live'}</span>
+            RENDU <span style={{ color: isIdle ? '#d97706' : '#6b7280', fontWeight: isIdle ? 600 : 400 }}>{isIdle ? `· veille (${APP_IDLE_TIMEOUT_SECONDS}s inactif)` : '· live'}</span>
           </div>
-          <StatRow label="Draw calls" value={isIdle ? '0' : devState.drawCalls.toLocaleString()} color={isIdle ? '#777' : heatColor(devState.drawCalls, 200, 500)} />
-          <StatRow label="Triangles"  value={isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'} color={isIdle ? '#777' : heatColor(devState.triangles, 1_000_000, 2_000_000)} />
+          <StatRow label="Draw calls" value={isIdle ? '0' : devState.drawCalls.toLocaleString()} color={isIdle ? '#6b7280' : heatColor(devState.drawCalls, 200, 500)} />
+          <StatRow label="Triangles"  value={isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'} color={isIdle ? '#6b7280' : heatColor(devState.triangles, 1_000_000, 2_000_000)} />
         </div>
 
         {/* Bouton pour afficher les infos supplémentaires */}
@@ -122,7 +122,7 @@ export function DevToolsGroups({ Group }: {
           style={{
             display: 'block', width: '100%', textAlign: 'left',
             background: 'transparent', border: 'none',
-            color: '#888', fontSize: 9, padding: '4px 10px', cursor: 'pointer', marginTop: 4,
+            color: '#1d4ed8', fontSize: 10, fontWeight: 600, padding: '4px 10px', cursor: 'pointer', marginTop: 4,
           }}
         >
           {showDetails ? '▼ Moins d\'infos' : '▶ Plus d\'infos'}
@@ -131,47 +131,47 @@ export function DevToolsGroups({ Group }: {
         {showDetails && (
           <>
             <div style={{ paddingBottom: 4 }}>
-              <StatRow label="Géométries" value={devState.geometries} color="#777" />
-              <StatRow label="Textures"   value={devState.textures}   color="#777" />
+              <StatRow label="Géométries" value={devState.geometries} color="#111827" />
+              <StatRow label="Textures"   value={devState.textures}   color="#111827" />
             </div>
 
             {/* SCÈNE — graph total, sur demande (refresh) */}
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 4, marginTop: 4 }}>
+            <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 4, marginTop: 4 }}>
               <div
                 onClick={() => setShowScene(!showScene)}
                 style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
               >
-                <span>SCÈNE <span style={{ color: '#444', fontWeight: 400 }}>· total</span></span>
-                <span style={{ fontSize: 8 }}>{showScene ? '▼' : '▶'}</span>
+                <span>SCÈNE <span style={{ color: '#6b7280', fontWeight: 400 }}>· total</span></span>
+                <span style={{ fontSize: 9 }}>{showScene ? '▼' : '▶'}</span>
               </div>
               {showScene && (
                 <>
                   <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
                   <StatRow label="Instanced" value={devState.instances} />
-                  <StatRow label="Lights"    value={devState.lights} color="#777" />
-                  <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#777" />
-                  <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#777" />
+                  <StatRow label="Lights"    value={devState.lights} color="#111827" />
+                  <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#111827" />
+                  <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#111827" />
                   {devState.meshes > 800 && (
-                    <div style={{ color: '#ff8866', fontSize: 9, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
+                    <div style={{ color: '#dc2626', fontSize: 10, fontWeight: 600, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
                   )}
                 </>
               )}
 
               {devState.topObjects.length > 0 && (
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4, paddingTop: 4 }}>
+                <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: 4, paddingTop: 4 }}>
                   <div
                     onClick={() => setShowTop(!showTop)}
                     style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                   >
-                    <span>TOP TRIANGLES <span style={{ color: '#444', fontWeight: 400 }}>· coupables</span></span>
-                    <span style={{ fontSize: 8 }}>{showTop ? '▼' : '▶'}</span>
+                    <span>TOP TRIANGLES <span style={{ color: '#6b7280', fontWeight: 400 }}>· coupables</span></span>
+                    <span style={{ fontSize: 9 }}>{showTop ? '▼' : '▶'}</span>
                   </div>
                   {showTop && devState.topObjects.slice(0, 10).map((obj) => (
-                    <div key={obj.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 10px', fontSize: 10 }}>
-                      <span style={{ color: '#aaa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }} title={obj.name}>
+                    <div key={obj.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 10px', fontSize: 11 }}>
+                      <span style={{ color: '#111827', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130 }} title={obj.name}>
                         {obj.name}
                       </span>
-                      <span style={{ color: heatColor(obj.tris, 50_000, 200_000), flexShrink: 0, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>
+                      <span style={{ color: heatColor(obj.tris, 50_000, 200_000), fontWeight: 600, flexShrink: 0, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>
                         {(obj.tris / 1000).toFixed(1)}k
                       </span>
                     </div>
@@ -179,13 +179,13 @@ export function DevToolsGroups({ Group }: {
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 4, padding: '6px 8px 2px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4 }}>
+              <div style={{ display: 'flex', gap: 4, padding: '6px 8px 2px', borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: 4 }}>
                 <button
                   onClick={handleRefreshScene}
                   style={{
                     flex: 1,
-                    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: 3, color: '#aaa', fontSize: 9, padding: '3px 6px', cursor: 'pointer',
+                    background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.18)',
+                    borderRadius: 4, color: '#111827', fontSize: 10, fontWeight: 600, padding: '4px 6px', cursor: 'pointer',
                   }}
                 >
                   ↺ Refresh
@@ -194,9 +194,9 @@ export function DevToolsGroups({ Group }: {
                   onClick={() => devState.logDiagnostics?.()}
                   style={{
                     flex: 1.5,
-                    background: 'rgba(255,170,0,0.15)', border: '1px solid #ffaa00',
-                    borderRadius: 3, color: '#ffaa00', fontSize: 9, padding: '3px 6px', cursor: 'pointer',
-                    fontWeight: 600,
+                    background: 'rgba(217,119,6,0.12)', border: '1px solid #d97706',
+                    borderRadius: 4, color: '#9a3412', fontSize: 10, padding: '4px 6px', cursor: 'pointer',
+                    fontWeight: 700,
                   }}
                   title="Envoie un rapport détaillé dans APP LOGS et la console F12"
                 >

@@ -64,7 +64,7 @@ export function KallaxSE({ onSize }: SceneItemProps) {
   }, []);
 
   return (
-    <group ref={ref}>
+    <group ref={ref} userData={{ animUnit: true }}>
       {/* Congélateur CHIQ au sol sous la tour Kallax (Y = 0, pivoté de +90°) */}
       <group position={[0, 0, 0]} rotation-y={Math.PI / 2}>
         <Freezer item={k('freezer')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -80,9 +80,9 @@ export function KallaxSE({ onSize }: SceneItemProps) {
         <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      {/* DRONA Instances individuelles pour animation */}
+      {/* DRONA Instances */}
       {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
           <DroneCell />
         </group>
       ))}

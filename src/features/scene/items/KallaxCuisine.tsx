@@ -77,7 +77,7 @@ export function KallaxCuisine({ actionState, onSize }: SceneItemProps) {
   }, []);
 
   return (
-    <group ref={ref}>
+    <group ref={ref} userData={{ animUnit: true }}>
       {/* 2×2 bas — PY = h2 */}
       <group position={[0, h2, 0]}>
         <Kallax2x2 item={k('kallax-sw-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -90,9 +90,9 @@ export function KallaxCuisine({ actionState, onSize }: SceneItemProps) {
       <group position={[0, h2 + h2 + h1, 0]}>
         <Kallax2x1 item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* DRONA Instances individuelles pour animation (6 Drona : 4 dans le 2x2 bas + 2 sur le dessus) */}
+      {/* DRONA Instances (6 Drona : 4 dans le 2x2 bas + 2 sur le dessus) */}
       {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
           <DroneCell />
         </group>
       ))}

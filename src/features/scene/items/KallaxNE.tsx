@@ -77,7 +77,7 @@ export function KallaxNE({ onSize }: SceneItemProps) {
   }, [dronaMatrices]);
 
   return (
-    <group ref={ref}>
+    <group ref={ref} userData={{ animUnit: true }}>
       {/* 2×1 bas — spans Y ∈ [0, h1] */}
       <group position={[0, h1, 0]}>
         <Kallax2x1 item={k('kallax-ne-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -88,9 +88,9 @@ export function KallaxNE({ onSize }: SceneItemProps) {
         <Kallax2x2 item={k('kallax-ne-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       
-      {/* DRONA Instances individuelles pour animation */}
+      {/* DRONA Instances */}
       {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
           <DroneCell />
         </group>
       ))}
