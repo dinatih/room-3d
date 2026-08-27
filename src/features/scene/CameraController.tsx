@@ -324,6 +324,16 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         }
         return;
       }
+      if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') {
+        enterWalk(walkPos.current.x, walkPos.current.z, 'fpv');
+        appLog('system', '🎥 Mode FPV (1ère personne)');
+        return;
+      }
+      if (e.key === '3' || e.code === 'Digit3' || e.code === 'Numpad3') {
+        enterWalk(walkPos.current.x, walkPos.current.z, 'walk');
+        appLog('system', '🎥 Mode Follow (3ème personne)');
+        return;
+      }
       if (e.key === 'm' || e.key === 'M') {
         if (modeRef.current === 'orbit' || modeRef.current === 'top') {
           enterWalk(walkPos.current.x, walkPos.current.z, 'walk');
@@ -360,6 +370,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
       const k = e.key;
       const isArrow = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(k);
+      const isWASD  = ['w','a','s','d','z','q','W','A','S','D','Z','Q'].includes(k);
 
       // Orbit-mode zoom (PageUp/PageDown)
       if (modeRef.current === 'orbit' && (k === 'PageUp' || k === 'PageDown')) {
@@ -389,8 +400,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
       // Walk-only keys
       if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
-      if (isArrow) {
+      if (isArrow || isWASD) {
         keys.current.add(k);
+        keys.current.add(k.toLowerCase());
         if (e.ctrlKey)  keys.current.add('Ctrl' + k);
         if (e.altKey)   keys.current.add('Alt' + k);
         e.preventDefault();
@@ -403,6 +415,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       const k = e.key;
       keys.current.delete(k);
       keys.current.delete(k.toLowerCase());
+      keys.current.delete(k.toUpperCase());
       keys.current.delete('Shift'      + k);
       keys.current.delete('Ctrl'       + k);
       keys.current.delete('Alt'        + k);
@@ -725,36 +738,56 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const fwdZ  = Math.cos(yaw) * sp;
     const k     = keys.current;
 
-    if (k.has('ArrowLeft'))  walkYaw.current += 0.03 * dt;
-    if (k.has('ArrowRight')) walkYaw.current -= 0.03 * dt;
+    if (modeRef.current === 'walk') {
+      // 3rd Person : Les touches fléchées orbitent la caméra autour du personnage
+      if (k.has('ArrowLeft'))  orbitYaw.current += 0.03 * dt;
+      if (k.has('ArrowRight')) orbitYaw.current -= 0.03 * dt;
+      if (k.has('ArrowUp') || k.has('CtrlArrowUp'))     orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
+      if (k.has('ArrowDown') || k.has('CtrlArrowDown')) orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
 
-    if (k.has('CtrlArrowUp')) {
-      if (modeRef.current === 'walk') {
-        orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.02 * dt);
-      } else {
-        walkPitch.current = Math.min(1.4, walkPitch.current + 0.02 * dt);
+      if (k.has('AltArrowUp'))   walkPos.current.y += sp;
+      if (k.has('AltArrowDown')) walkPos.current.y -= sp;
+
+      // Déplacement du personnage au clavier (WASD / ZQSD)
+      const isMoveLeft  = k.has('a') || k.has('q');
+      const isMoveRight = k.has('d');
+      const isMoveFwd   = k.has('w') || k.has('z');
+      const isMoveBwd   = k.has('s');
+
+      if (isMoveLeft)  walkYaw.current += 0.03 * dt;
+      if (isMoveRight) walkYaw.current -= 0.03 * dt;
+
+      let dx = 0, dz = 0;
+      if (isMoveFwd) { dx += fwdX; dz += fwdZ; }
+      if (isMoveBwd) { dx -= fwdX; dz -= fwdZ; }
+      if (dx !== 0 || dz !== 0) {
+        const c = collideMove(walkPos.current.x, walkPos.current.z, dx, dz);
+        walkPos.current.x = c.x;
+        walkPos.current.z = c.z;
       }
-    }
-    if (k.has('CtrlArrowDown')) {
-      if (modeRef.current === 'walk') {
-        orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.02 * dt);
-      } else {
-        walkPitch.current = Math.max(-1.4, walkPitch.current - 0.02 * dt);
+    } else {
+      // Mode FPV (1ère personne)
+      const isTurnLeft  = k.has('ArrowLeft') || k.has('a') || k.has('q');
+      const isTurnRight = k.has('ArrowRight') || k.has('d');
+      if (isTurnLeft)  walkYaw.current += 0.03 * dt;
+      if (isTurnRight) walkYaw.current -= 0.03 * dt;
+
+      if (k.has('CtrlArrowUp'))   walkPitch.current = Math.min( 1.4, walkPitch.current + 0.02 * dt);
+      if (k.has('CtrlArrowDown')) walkPitch.current = Math.max(-1.4, walkPitch.current - 0.02 * dt);
+
+      if (k.has('AltArrowUp'))   walkPos.current.y += sp;
+      if (k.has('AltArrowDown')) walkPos.current.y -= sp;
+
+      let dx = 0, dz = 0;
+      const isFwd = k.has('ArrowUp') || k.has('w') || k.has('z');
+      const isBwd = k.has('ArrowDown') || k.has('s');
+      if (isFwd) { dx += fwdX; dz += fwdZ; }
+      if (isBwd) { dx -= fwdX; dz -= fwdZ; }
+      if (dx !== 0 || dz !== 0) {
+        const c = collideMove(walkPos.current.x, walkPos.current.z, dx, dz);
+        walkPos.current.x = c.x;
+        walkPos.current.z = c.z;
       }
-    }
-
-    if (k.has('AltArrowUp'))   walkPos.current.y += sp;
-    if (k.has('AltArrowDown')) walkPos.current.y -= sp;
-
-    const noMod = !k.has('CtrlArrowUp') && !k.has('CtrlArrowDown') && !k.has('AltArrowUp') && !k.has('AltArrowDown');
-
-    let dx = 0, dz = 0;
-    if (noMod && k.has('ArrowUp'))   { dx += fwdX; dz += fwdZ; }
-    if (noMod && k.has('ArrowDown')) { dx -= fwdX; dz -= fwdZ; }
-    if (dx !== 0 || dz !== 0) {
-      const c = collideMove(walkPos.current.x, walkPos.current.z, dx, dz);
-      walkPos.current.x = c.x;
-      walkPos.current.z = c.z;
     }
 
     updateWalkLook();
