@@ -8,6 +8,7 @@
     "dev:studio": "vite --open /studio.html",
     "build": "vite build",
     "preview": "vite preview",
+    "optimize:glb": "node scripts/optimize-lara.js",
     "test-bone": "node scratch/run_test.cjs"
   },
   "dependencies": {
