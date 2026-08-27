@@ -7,7 +7,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { Famnig27470460 } from './items/Famnig27470460';
 import { Wig } from './items/Wig';
-import { RiggedWig } from './items/RiggedWig';
+import { RiggedWig, HAIR_COLORS } from './items/RiggedWig';
 import { isRiggedWig } from '@features/inventory/inventoryData';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -673,8 +673,10 @@ export function SingleCharacter({
   useEffect(() => {
     if (!scene) return;
 
-    // 1. Visibilité de la chevelure et tresse d'origine
+    // 1. Visibilité et coloration de la chevelure / calotte d'origine
     const showNativeHair = haircut === 'original';
+    const targetColor = hairColor && HAIR_COLORS[hairColor] ? HAIR_COLORS[hairColor] : null;
+
     for (const item of parts.nativeHairMeshes) {
       const meshName = (item.mesh.name || '').toLowerCase();
       const isBraid = meshName.includes('braid') || meshName.includes('pony') || meshName.includes('classic') || meshName.includes('fmv');
@@ -685,11 +687,20 @@ export function SingleCharacter({
       item.mesh.visible = visible;
       const mat = item.mesh.material;
       if (mat) {
-        if (Array.isArray(mat)) {
-          mat.forEach(m => { if (m) m.visible = visible; });
-        } else {
-          mat.visible = visible;
-        }
+        const mats = Array.isArray(mat) ? mat : [mat];
+        mats.forEach(m => {
+          if (!m) return;
+          m.visible = visible;
+          if (targetColor && 'color' in m) {
+            (m as any).map = null; // Supprime la texture sombre par défaut pour afficher la couleur vive
+            (m as any).color.copy(targetColor);
+            if ('emissive' in m) {
+              (m as any).emissive.copy(targetColor);
+              (m as any).emissiveIntensity = 0.15;
+            }
+            m.needsUpdate = true;
+          }
+        });
       }
     }
 
@@ -716,7 +727,7 @@ export function SingleCharacter({
     }
 
     invalidate();
-  }, [scene, parts, haircut, variant, isActive, headBoneState, invalidate]);
+  }, [scene, parts, haircut, hairColor, variant, isActive, headBoneState, invalidate]);
 
   useEffect(() => {
     if (customIdleAnimPath && scene && mixerRef.current && !actionsRef.current[customIdleAnimPath]) {
