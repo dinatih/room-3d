@@ -736,8 +736,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         // 3rd Person : Les touches fléchées orbitent la caméra autour du personnage
         if (k.has('ArrowLeft'))  orbitYaw.current += 0.03 * dt;
         if (k.has('ArrowRight')) orbitYaw.current -= 0.03 * dt;
-        if (k.has('ArrowUp') || k.has('CtrlArrowUp'))     orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
-        if (k.has('ArrowDown') || k.has('CtrlArrowDown')) orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
+
+        // Ctrl+Haut / Bas : Zoom (rapprocher / éloigner la caméra)
+        if (k.has('CtrlArrowUp'))   orbitDistance.current = Math.max(60, orbitDistance.current - 4 * dt);
+        if (k.has('CtrlArrowDown')) orbitDistance.current = Math.min(600, orbitDistance.current + 4 * dt);
+
+        // Haut / Bas simples : Inclinaison verticale (pitch)
+        if (k.has('ArrowUp') && !k.has('CtrlArrowUp'))     orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
+        if (k.has('ArrowDown') && !k.has('CtrlArrowDown')) orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
 
         if (k.has('AltArrowUp'))   walkPos.current.y += sp;
         if (k.has('AltArrowDown')) walkPos.current.y -= sp;
