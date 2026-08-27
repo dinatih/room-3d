@@ -197,7 +197,9 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
             const clonedMat = _mat.clone();
             clonedMat.userData.__ownedWigMaterial = true;
             clonedMat.side = THREE.DoubleSide;
-            clonedMat.alphaTest = 0.5;
+            clonedMat.transparent = false;
+            clonedMat.opacity = 1;
+            clonedMat.alphaTest = 0.0;
             clonedMat.depthWrite = true;
             if (targetColor && 'color' in clonedMat) (clonedMat as any).color.copy(targetColor);
             clonedMat.needsUpdate = true;
@@ -207,7 +209,9 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
           const clonedMat = (m.material as THREE.Material).clone();
           clonedMat.userData.__ownedWigMaterial = true;
           clonedMat.side = THREE.DoubleSide;
-          clonedMat.alphaTest = 0.5;
+          clonedMat.transparent = false;
+          clonedMat.opacity = 1;
+          clonedMat.alphaTest = 0.0;
           clonedMat.depthWrite = true;
           if (targetColor && 'color' in clonedMat) (clonedMat as any).color.copy(targetColor);
           clonedMat.needsUpdate = true;
