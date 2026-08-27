@@ -1072,11 +1072,7 @@ export function SidePanel({
               type="button"
               className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 2 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
               style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 2 ? undefined : 'transparent' }}
-              onClick={() => {
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, laraCount: 2, showAllLaraStyles: true }
-                }));
-              }}
+              onClick={() => useSceneStore.getState().setLaraCount(2)}
             >
               2 (Xbot+Lara)
             </button>
@@ -1084,11 +1080,7 @@ export function SidePanel({
               type="button"
               className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 10 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
               style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 10 ? undefined : 'transparent' }}
-              onClick={() => {
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, laraCount: 10, showAllLaraStyles: true }
-                }));
-              }}
+              onClick={() => useSceneStore.getState().setLaraCount(10)}
             >
               10 (Eco)
             </button>
@@ -1096,11 +1088,7 @@ export function SidePanel({
               type="button"
               className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 15 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
               style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 15 ? undefined : 'transparent' }}
-              onClick={() => {
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, laraCount: 15, showAllLaraStyles: true }
-                }));
-              }}
+              onClick={() => useSceneStore.getState().setLaraCount(15)}
             >
               15 (Toutes)
             </button>
@@ -1388,9 +1376,7 @@ export function SidePanel({
               title={`Afficher ${cnt} PNJ (${cnt === 2 ? '2 Duo' : cnt === 10 ? '10 Eco' : '15 Tous'})`}
               onClick={(e) => {
                 e.stopPropagation();
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, laraCount: cnt, showAllLaraStyles: true }
-                }));
+                useSceneStore.getState().setLaraCount(cnt);
               }}
             >
               {cnt}

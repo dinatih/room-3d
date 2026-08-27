@@ -1,6 +1,35 @@
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
 import type { FurnitureState, LayerState } from '@features/scene/SidePanel';
+import type { LaraCountMode } from '@features/scene/walkerConfig';
+
+function parseUrlNpcCount(): LaraCountMode {
+  if (typeof window === 'undefined') return 2;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('npc') ?? params.get('npcs') ?? params.get('pnj') ?? params.get('laraCount') ?? params.get('characters');
+    if (raw !== null) {
+      const lower = raw.trim().toLowerCase();
+      if (lower === '15' || lower === 'all' || lower === 'toutes' || lower === 'tout' || lower === 'max') return 15;
+      if (lower === '10' || lower === 'eco') return 10;
+      if (lower === '2' || lower === 'duo' || lower === 'min') return 2;
+      const num = parseInt(lower, 10);
+      if (num >= 15) return 15;
+      if (num >= 10) return 10;
+      if (num >= 1) return 2;
+    }
+  } catch {}
+  return 2;
+}
+
+export function updateUrlNpcCount(count: LaraCountMode) {
+  if (typeof window === 'undefined') return;
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set('npc', count.toString());
+    window.history.replaceState(null, '', url.toString());
+  } catch {}
+}
 
 interface SceneStore {
   furniture: FurnitureState;
@@ -11,6 +40,7 @@ interface SceneStore {
   cameraMode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane';
   setMeasurementActive: (active: boolean) => void;
   setCameraMode: (mode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane') => void;
+  setLaraCount: (count: LaraCountMode) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
   toggleLayer: (key: keyof LayerState) => void;
   triggerAction: (key: string) => void;
@@ -62,9 +92,8 @@ const initialLayers: LayerState = {
   grid: false,
   gridDepth: false,
   laraGrid: false,
-  // Desktop previously mounted all 15 animated characters at startup. Keep the
-  // full modes available in the UI, but start with the lightest useful scene.
-  laraCount: 2,
+  // NPC count initialized from URL param (ex: ?npc=15 or ?npc=10 or ?npc=2) or fallback to 2
+  laraCount: parseUrlNpcCount(),
   showAllLaraStyles: true,
   wallhack: false,
   skeleton: false,
@@ -197,6 +226,13 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
   setCameraMode: (mode) => {
     set({ cameraMode: mode });
+  },
+  setLaraCount: (count) => {
+    updateUrlNpcCount(count);
+    set((state) => ({
+      layers: { ...state.layers, laraCount: count, showAllLaraStyles: true }
+    }));
+    cameraState.invalidate?.();
   },
 
   toggleFurniture: (key) => {
