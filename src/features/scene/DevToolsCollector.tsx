@@ -30,7 +30,7 @@ function resolveEntityKey(obj: THREE.Object3D): string {
     // 2. Nom explicite non générique
     if (
       cur.name &&
-      !cur.name.match(/^(Mesh|Node|Cube|Cylinder|Sphere|default|primitive|Group|Scene|Object|\d+|polySurface)/i)
+      !cur.name.match(/^(Mesh|Node|Cube|Cylinder|Sphere|default|primitive|Group|Scene|Object|\d+|polySurface)$/i)
     ) {
       fallbackName = cur.name;
     }
@@ -40,7 +40,7 @@ function resolveEntityKey(obj: THREE.Object3D): string {
 
   if (fallbackName) return fallbackName;
   if (cur && cur.name && cur.name !== 'Scene') return cur.name;
-  return obj.name || '(Sans nom)';
+  return obj.name || ((obj as any).isInstancedMesh ? 'Instanced Mesh' : '(Sans nom)');
 }
 
 export function DevToolsCollector() {

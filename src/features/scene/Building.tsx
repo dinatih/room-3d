@@ -510,84 +510,81 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
     <>
       {!pillarsOnly && <DoorsPlaced />}
 
-      <MergedStaticGroup name="merged-walls">
-        <group ref={(g) => { wallsGroupRef.current = g; }}>
+      <group ref={(g) => { wallsGroupRef.current = g; }} name="walls-group">
+        {showLabels && <PillarLabels />}
 
-          {showLabels && <PillarLabels />}
-
-          {/* ── Piliers ────────────────────────────────────────────────────────── */}
-          {(
-            <group>
-              {PILLAR_DEFS.map((p) => {
-                const pp = p as any;
-                const pw = pp.w ?? WALL_THICKNESS;
-                const pd = pp.d ?? WALL_THICKNESS;
-                const rot = pp.rot ?? 0;
-                if (rot) {
-                  return (
-                    <mesh key={pp.id} position={[pp.x, WALL_H / 2, pp.z]} rotation-y={rot}
-                          material={wallMat} castShadow receiveShadow
-                          userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: pp.id }}>
-                      <boxGeometry args={[pw, WALL_H, pd]} />
-                    </mesh>
-                  );
-                }
+        {/* ── Piliers ────────────────────────────────────────────────────────── */}
+        {(
+          <group name="pillars">
+            {PILLAR_DEFS.map((p) => {
+              const pp = p as any;
+              const pw = pp.w ?? WALL_THICKNESS;
+              const pd = pp.d ?? WALL_THICKNESS;
+              const rot = pp.rot ?? 0;
+              if (rot) {
                 return (
-                  <P key={pp.id} w={pw} h={WALL_H} d={pd} x={pp.x} y={WALL_H / 2} z={pp.z}
-                    userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: pp.id }} />
-                );
-              })}
-              <mesh geometry={diagGeos.diagPillar}   material={wallMat} castShadow receiveShadow
-                userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: 'diag-ne-kite' }} />
-              <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
-                userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: 'diag-sw-kite' }} />
-            </group>
-          )}
-
-          {/* ── Murs ─────────────────────────────────────────────────────────────── */}
-          {!pillarsOnly && (
-            <group>
-              {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
-                const mat = MAT_MAP[d.mat ?? 'default'];
-                const uData = { animUnit: true, brickType: 'wall', side: d.mat };
-                if (d.axis === 'z')
-                  return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
-                return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
-              })}
-              {/* Mur diagonal */}
-              <SplitDiagBox d1={DiagWall.door.start} d2={DiagWall.door.end} yBase={DOOR_H} h={WALL_H - DOOR_H} userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
-              <SplitDiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
-
-              {/* Panneaux bois occultants jardin */}
-              {GARDEN_PANEL_DEFS.map((p, i) => (
-                <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ skipMerge: true, animUnit: true, brickType: 'wall', side: 'garden' }}>
-                  <WoodenFencePanel w={p.w} h={p.h} d={p.d} />
-                </group>
-              ))}
-
-              {/* Mur en face du jardin (parallèle au Mur diag) */}
-              {(() => {
-                const wallLen = 1200;
-                const cx = 150;
-                const cz = -786.33;
-                const rotY = DiagWall.rotY + Math.PI / 2;
-                return (
-                  <mesh
-                    ref={(m) => { if (m) m.material = northMats as any; }}
-                    position={[cx, WALL_H / 2, cz]}
-                    rotation-y={rotY}
-                    castShadow
-                    receiveShadow
-                    userData={{ animUnit: true, brickType: 'wall', side: 'gardenFront' }}
-                  >
-                    <boxGeometry args={[wallLen, WALL_H, 40]} />
+                  <mesh key={pp.id} position={[pp.x, WALL_H / 2, pp.z]} rotation-y={rot}
+                        material={wallMat} castShadow receiveShadow
+                        userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: pp.id }}>
+                    <boxGeometry args={[pw, WALL_H, pd]} />
                   </mesh>
                 );
-              })()}
-            </group>
-          )}
-        </group>
-      </MergedStaticGroup>
+              }
+              return (
+                <P key={pp.id} w={pw} h={WALL_H} d={pd} x={pp.x} y={WALL_H / 2} z={pp.z}
+                  userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: pp.id }} />
+              );
+            })}
+            <mesh geometry={diagGeos.diagPillar}   material={wallMat} castShadow receiveShadow
+              userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: 'diag-ne-kite' }} />
+            <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
+              userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: 'diag-sw-kite' }} />
+          </group>
+        )}
+
+        {/* ── Murs ─────────────────────────────────────────────────────────────── */}
+        {!pillarsOnly && (
+          <group name="walls">
+            {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
+              const mat = MAT_MAP[d.mat ?? 'default'];
+              const uData = { animUnit: true, brickType: 'wall', side: d.mat };
+              if (d.axis === 'z')
+                return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
+              return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
+            })}
+            {/* Mur diagonal */}
+            <SplitDiagBox d1={DiagWall.door.start} d2={DiagWall.door.end} yBase={DOOR_H} h={WALL_H - DOOR_H} userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
+            <SplitDiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
+
+            {/* Panneaux bois occultants jardin */}
+            {GARDEN_PANEL_DEFS.map((p, i) => (
+              <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ skipMerge: true, animUnit: true, brickType: 'wall', side: 'garden' }}>
+                <WoodenFencePanel w={p.w} h={p.h} d={p.d} />
+              </group>
+            ))}
+
+            {/* Mur en face du jardin (parallèle au Mur diag) */}
+            {(() => {
+              const wallLen = 1200;
+              const cx = 150;
+              const cz = -786.33;
+              const rotY = DiagWall.rotY + Math.PI / 2;
+              return (
+                <mesh
+                  ref={(m) => { if (m) m.material = northMats as any; }}
+                  position={[cx, WALL_H / 2, cz]}
+                  rotation-y={rotY}
+                  castShadow
+                  receiveShadow
+                  userData={{ animUnit: true, brickType: 'wall', side: 'gardenFront' }}
+                >
+                  <boxGeometry args={[wallLen, WALL_H, 40]} />
+                </mesh>
+              );
+            })()}
+          </group>
+        )}
+      </group>
 
 
     </>
@@ -1005,35 +1002,34 @@ function Baseboards() {
   const diagQRC = { ...DiagWall.p((diagParquetLen + diagCorridorTotalLen) / 2, -SD), len: Math.max(0, diagCorridorTotalLen - diagParquetLen) };
 
   return (
-    <MergedStaticGroup name="merged-skirting">
-      <group userData={{ brickType: 'skirting' }}>
+    <group name="skirting-baseboards" userData={{ brickType: 'skirting' }}>
         {/* North wall Z=0, X: 0→316 */}
         <P w={INT_X_EAST - INT_X_WEST} h={SH} d={SD}
            x={(INT_X_WEST + INT_X_EAST) / 2} y={y} z={INT_Z_NORTH + SD / 2}
            mat={skirtingMat} />
         <QR cx={(INT_X_WEST + INT_X_EAST) / 2} cz={INT_Z_NORTH + SD}
-            len={INT_X_EAST - INT_X_WEST} dir="+Z" mat={skirtingMat} />
+           len={INT_X_EAST - INT_X_WEST} dir="+Z" mat={skirtingMat} />
 
         {/* East wall (north) X=316, Z: 0→ROOM_D */}
         <P w={SD} h={SH} d={INT_Z_ROOM_S - INT_Z_NORTH}
            x={INT_X_EAST - SD / 2} y={y} z={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
            mat={skirtingMat} />
         <QR cx={INT_X_EAST - SD} cz={(INT_Z_NORTH + INT_Z_ROOM_S) / 2}
-            len={INT_Z_ROOM_S - INT_Z_NORTH} dir="-X" mat={skirtingMat} />
+           len={INT_Z_ROOM_S - INT_Z_NORTH} dir="-X" mat={skirtingMat} />
 
         {/* East wall (sud, après mur SE) X=316, Z: ROOM_D+PARTITION_THICKNESS→DiagWall.A.z */}
         <P w={SD} h={SH} d={DiagWall.A.z - (ROOM_D + PARTITION_THICKNESS)}
            x={INT_X_EAST - SD / 2} y={y} z={((ROOM_D + PARTITION_THICKNESS) + DiagWall.A.z) / 2}
            mat={skirtingMat} />
         <QR cx={INT_X_EAST - SD} cz={((ROOM_D + PARTITION_THICKNESS) + DiagWall.A.z) / 2}
-            len={DiagWall.A.z - (ROOM_D + PARTITION_THICKNESS)} dir="-X" mat={skirtingMat} />
+           len={DiagWall.A.z - (ROOM_D + PARTITION_THICKNESS)} dir="-X" mat={skirtingMat} />
 
         {/* Mur SE — face nord (séjour) X: 287.5→316 (s'arrête à 1.5cm du bord du trou x=286), Z=ROOM_D */}
         <P w={28.5} h={SH} d={SD}
            x={301.75} y={y} z={INT_Z_ROOM_S - SD / 2}
            mat={skirtingMat} />
         <QR cx={301.75} cz={INT_Z_ROOM_S - SD}
-            len={28.5} dir="-Z" mat={skirtingMat} />
+           len={28.5} dir="-Z" mat={skirtingMat} />
 
         {/* Mur SE — face ouest (couloir/seuil) : pas de plinthe sur la face interne de l'ouverture */}
 
@@ -1042,7 +1038,7 @@ function Baseboards() {
            x={301.75} y={y} z={(ROOM_D + PARTITION_THICKNESS) + SD / 2}
            mat={skirtingMat} />
         <QR cx={301.75} cz={(ROOM_D + PARTITION_THICKNESS) + SD}
-            len={28.5} dir="+Z" mat={skirtingMat} />
+           len={28.5} dir="+Z" mat={skirtingMat} />
 
         {/* Mur diagonal (fractionné autour de la porte d'entrée) + Corridor */}
         {[diagSegA, diagSegB, diagSegC].map((s, i) => (
@@ -1120,58 +1116,57 @@ function Baseboards() {
            x={161.75} y={y} z={INT_Z_ROOM_S - SD / 2}
            mat={skirtingMat} />
         <QR cx={161.75} cz={INT_Z_ROOM_S - SD}
-            len={73.5} dir="-Z" mat={skirtingMat} />
+           len={73.5} dir="-Z" mat={skirtingMat} />
 
         {/* Kitchen east wall X=125, Z: 395→455 */}
         <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
            x={INT_X_KITCHEN_R - SD / 2} y={y} z={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
            mat={skirtingMat} />
         <QR cx={INT_X_KITCHEN_R - SD} cz={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
-            len={INT_Z_KITCHEN_B - INT_Z_ROOM_S} dir="-X" mat={skirtingMat} />
+           len={INT_Z_KITCHEN_B - INT_Z_ROOM_S} dir="-X" mat={skirtingMat} />
 
         {/* Kitchen south wall Z=455, X: 35→125 */}
         <P w={INT_X_KITCHEN_R - INT_X_KITCHEN_L} h={SH} d={SD}
            x={(INT_X_KITCHEN_L + INT_X_KITCHEN_R) / 2} y={y} z={INT_Z_KITCHEN_B - SD / 2}
            mat={skirtingMat} />
         <QR cx={(INT_X_KITCHEN_L + INT_X_KITCHEN_R) / 2} cz={INT_Z_KITCHEN_B - SD}
-            len={INT_X_KITCHEN_R - INT_X_KITCHEN_L} dir="-Z" mat={skirtingMat} />
+           len={INT_X_KITCHEN_R - INT_X_KITCHEN_L} dir="-Z" mat={skirtingMat} />
 
         {/* Kitchen west wall X=35, Z: 395→455 */}
         <P w={SD} h={SH} d={INT_Z_KITCHEN_B - INT_Z_ROOM_S}
            x={INT_X_KITCHEN_L + SD / 2} y={y} z={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
            mat={skirtingMat} />
         <QR cx={INT_X_KITCHEN_L + SD} cz={(INT_Z_ROOM_S + INT_Z_KITCHEN_B) / 2}
-            len={INT_Z_KITCHEN_B - INT_Z_ROOM_S} dir="+X" mat={skirtingMat} />
+           len={INT_Z_KITCHEN_B - INT_Z_ROOM_S} dir="+X" mat={skirtingMat} />
 
         {/* South wall segment 1: X: -10→35, Z=395 */}
         <P w={INT_X_KITCHEN_L - INT_X_NICHE} h={SH} d={SD}
            x={(INT_X_NICHE + INT_X_KITCHEN_L) / 2} y={y} z={INT_Z_ROOM_S - SD / 2}
            mat={skirtingMat} />
         <QR cx={(INT_X_NICHE + INT_X_KITCHEN_L) / 2} cz={INT_Z_ROOM_S - SD}
-            len={INT_X_KITCHEN_L - INT_X_NICHE} dir="-Z" mat={skirtingMat} />
+           len={INT_X_KITCHEN_L - INT_X_NICHE} dir="-Z" mat={skirtingMat} />
 
         {/* Niche west wall X=-10, Z: 285→395 */}
         <P w={SD} h={SH} d={INT_Z_ROOM_S - INT_Z_NICHE_S}
            x={INT_X_NICHE + SD / 2} y={y} z={(INT_Z_NICHE_S + INT_Z_ROOM_S) / 2}
            mat={skirtingMat} />
         <QR cx={INT_X_NICHE + SD} cz={(INT_Z_NICHE_S + INT_Z_ROOM_S) / 2}
-            len={INT_Z_ROOM_S - INT_Z_NICHE_S} dir="+X" mat={skirtingMat} />
+           len={INT_Z_ROOM_S - INT_Z_NICHE_S} dir="+X" mat={skirtingMat} />
 
         {/* Niche north face Z=285, X: -10→0 */}
         <P w={INT_X_WEST - INT_X_NICHE} h={SH} d={SD}
            x={(INT_X_NICHE + INT_X_WEST) / 2} y={y} z={INT_Z_NICHE_S + SD / 2}
            mat={skirtingMat} />
         <QR cx={(INT_X_NICHE + INT_X_WEST) / 2} cz={INT_Z_NICHE_S + SD}
-            len={INT_X_WEST - INT_X_NICHE} dir="+Z" mat={skirtingMat} />
+           len={INT_X_WEST - INT_X_NICHE} dir="+Z" mat={skirtingMat} />
 
         {/* West wall X=0, Z: 0→285 */}
         <P w={SD} h={SH} d={INT_Z_NICHE_S - INT_Z_NORTH}
            x={INT_X_WEST + SD / 2} y={y} z={(INT_Z_NORTH + INT_Z_NICHE_S) / 2}
            mat={skirtingMat} />
         <QR cx={INT_X_WEST + SD} cz={(INT_Z_NORTH + INT_Z_NICHE_S) / 2}
-            len={INT_Z_NICHE_S - INT_Z_NORTH} dir="+X" mat={skirtingMat} />
+           len={INT_Z_NICHE_S - INT_Z_NORTH} dir="+X" mat={skirtingMat} />
       </group>
-    </MergedStaticGroup>
   );
 }
 
@@ -1218,8 +1213,7 @@ function BathSkirting() {
   const diagLen = dB - dC;
 
   return (
-    <MergedStaticGroup name="merged-skirting">
-      <group userData={{ brickType: 'skirting' }}>
+    <group name="skirting-bath" userData={{ brickType: 'skirting' }}>
         {/* Mur nord SDB — Z=467.2, X: -10→200, face +Z */}
         <P w={INT_X_DOOR_S - INT_X_NICHE} h={SH_T} d={SD_T}
            x={(INT_X_NICHE + INT_X_DOOR_S) / 2} y={y} z={INT_Z_BATH_N + SD_T / 2}
@@ -1264,7 +1258,6 @@ function BathSkirting() {
           <boxGeometry args={[SD_T, SH_T, diagLen]} />
         </mesh>
       </group>
-    </MergedStaticGroup>
   );
 }
 

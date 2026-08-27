@@ -95,16 +95,18 @@ function GrassInstances({
   }, [grassMesh, soilMesh, columns, rows, scaleX, scaleZ, yPos]);
 
   return (
-    <group>
+    <group name="Pelouse Jardin">
       {/* Sol sous-jacent (terre) */}
       <instancedMesh
         ref={soilRef}
+        name="Terre (Jardin)"
         args={[soilMesh.geometry, soilMesh.material, count]}
         receiveShadow
       />
       {/* Brins d'herbe 3D */}
       <instancedMesh
         ref={grassRef}
+        name="Pelouse 3D (Jardin)"
         args={[grassMesh.geometry, grassMesh.material, count]}
         receiveShadow
       />
