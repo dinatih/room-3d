@@ -77,22 +77,22 @@ export function KallaxCuisine({ actionState, onSize }: SceneItemProps) {
   }, []);
 
   return (
-    <group ref={ref} userData={{ animUnit: true }}>
+    <group ref={ref}>
       {/* 2×2 bas — PY = h2 */}
-      <group position={[0, h2, 0]}>
+      <group position={[0, h2, 0]} userData={{ animUnit: true, isIkea: true }}>
         <Kallax2x2 item={k('kallax-sw-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* 2×2 spec (sans barre haute) — PY = 2×h2 */}
-      <group position={[0, h2 + h2, 0]}>
+      <group position={[0, h2 + h2, 0]} userData={{ animUnit: true, isIkea: true }}>
         <Kallax2x2Spec item={k('kallax-sw-2x2-spec')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* 2×1 haut — PY = 2×h2 + h1 */}
-      <group position={[0, h2 + h2 + h1, 0]}>
+      <group position={[0, h2 + h2 + h1, 0]} userData={{ animUnit: true, isIkea: true }}>
         <Kallax2x1 item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* DRONA Instances (6 Drona : 4 dans le 2x2 bas + 2 sur le dessus) */}
+      {/* DRONA Instances individuelles pour animation (6 Drona : 4 dans le 2x2 bas + 2 sur le dessus) */}
       {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true, isIkea: true }}>
           <DroneCell />
         </group>
       ))}

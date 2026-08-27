@@ -64,32 +64,32 @@ export function KallaxSE({ onSize }: SceneItemProps) {
   }, []);
 
   return (
-    <group ref={ref} userData={{ animUnit: true }}>
+    <group ref={ref}>
       {/* Congélateur CHIQ au sol sous la tour Kallax (Y = 0, pivoté de +90°) */}
-      <group position={[0, 0, 0]} rotation-y={Math.PI / 2}>
+      <group position={[0, 0, 0]} rotation-y={Math.PI / 2} userData={{ animUnit: true, isIkea: true }}>
         <Freezer item={k('freezer')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* k1 — premier 2×1 pivoté, posé sur le congélateur Y ∈ [FREEZER_H, FREEZER_H + w2] */}
-      <group position={[px, FREEZER_H + w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]}>
+      <group position={[px, FREEZER_H + w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true, isIkea: true }}>
         <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* k2 — deuxième 2×1 pivoté, posé sur k1 Y ∈ [FREEZER_H + w2, FREEZER_H + 2×w2] */}
-      <group position={[px, FREEZER_H + w2 / 2 + w2, 0]} rotation={[0, 0, Math.PI / 2]}>
+      <group position={[px, FREEZER_H + w2 / 2 + w2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true, isIkea: true }}>
         <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      {/* DRONA Instances */}
+      {/* DRONA Instances individuelles pour animation */}
       {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s}>
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true, isIkea: true }}>
           <DroneCell />
         </group>
       ))}
 
       {/* ShoeHatRack — au sol, côté mur D, flush mur B */}
       {/* local: x = stack_z − z_world = −w1/2, z = x_world − stack_x = DEP/2 */}
-      <group position={[-w1 / 2, 0, DEP / 2]} rotation-y={-Math.PI}>
+      <group position={[-w1 / 2, 0, DEP / 2]} rotation-y={-Math.PI} userData={{ animUnit: true, isIkea: true }}>
         <ShoeHatRack item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>

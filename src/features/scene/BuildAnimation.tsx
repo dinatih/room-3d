@@ -11,12 +11,6 @@ function easeOutCubic(x: number): number {
   return 1 - Math.pow(1 - x, 3);
 }
 
-function getWorldToLocalYFactor(o: THREE.Object3D): number {
-  const ws = new THREE.Vector3(1, 1, 1);
-  if (o.parent) o.parent.getWorldScale(ws);
-  return ws.y === 0 ? 1 : 1 / ws.y;
-}
-
 function isUtility(o: THREE.Object3D): boolean {
   return (
     o.userData?.isUtility ||
@@ -168,11 +162,27 @@ function collectScene(scene: THREE.Scene) {
 }
 
 
+function computeLocalDropVec(obj: THREE.Object3D, dropHeight: number): THREE.Vector3 {
+  const localVec = new THREE.Vector3(0, dropHeight, 0);
+  if (obj.parent) {
+    obj.parent.updateWorldMatrix(true, false);
+    const parentQuat = new THREE.Quaternion();
+    obj.parent.getWorldQuaternion(parentQuat);
+    localVec.applyQuaternion(parentQuat.invert());
+    const parentScale = new THREE.Vector3(1, 1, 1);
+    obj.parent.getWorldScale(parentScale);
+    if (parentScale.x !== 0) localVec.x /= parentScale.x;
+    if (parentScale.y !== 0) localVec.y /= parentScale.y;
+    if (parentScale.z !== 0) localVec.z /= parentScale.z;
+  }
+  return localVec;
+}
+
 interface AnimObj {
   obj: THREE.Object3D;
-  origLocalY: number;
+  origPos: THREE.Vector3;
   origVisible: boolean;
-  worldToLocalY: number;
+  localDropVec: THREE.Vector3;
   startTime: number;
   duration: number;
 }
@@ -208,9 +218,9 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
       items.forEach(obj => {
         groupedObjects.push({
           obj,
-          origLocalY: obj.position.y,
+          origPos: obj.position.clone(),
           origVisible: obj.visible,
-          worldToLocalY: getWorldToLocalYFactor(obj),
+          localDropVec: computeLocalDropVec(obj, DROP_HEIGHT),
           startTime: cursor,
           duration: FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN),
         });
@@ -257,8 +267,9 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
 
     // 3. Décaler tout vers le HAUT et cacher les objets en attente pour préserver le GPU
     objects.forEach(a => {
-      const localDelta = DROP_HEIGHT * a.worldToLocalY;
-      a.obj.position.y = a.origLocalY + localDelta;
+      a.obj.position.x = a.origPos.x + a.localDropVec.x;
+      a.obj.position.y = a.origPos.y + a.localDropVec.y;
+      a.obj.position.z = a.origPos.z + a.localDropVec.z;
       a.obj.visible = false;
     });
 
@@ -276,7 +287,7 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
       (window as any).isAnimProRunning = false;
       if (stateRef.current) {
         stateRef.current.objects.forEach(a => {
-          a.obj.position.y = a.origLocalY;
+          a.obj.position.copy(a.origPos);
           a.obj.visible = a.origVisible;
         });
         stateRef.current.remerge();
@@ -301,8 +312,10 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
       if (!a.obj.visible) a.obj.visible = a.origVisible;
       
       const t = Math.min(raw, 1);
-      const localDelta = DROP_HEIGHT * a.worldToLocalY * (1 - easeOutCubic(t));
-      a.obj.position.y = a.origLocalY + localDelta;
+      const progress = 1 - easeOutCubic(t);
+      a.obj.position.x = a.origPos.x + a.localDropVec.x * progress;
+      a.obj.position.y = a.origPos.y + a.localDropVec.y * progress;
+      a.obj.position.z = a.origPos.z + a.localDropVec.z * progress;
     });
 
     invalidate();
@@ -311,7 +324,7 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
       st.finished = true;
       (window as any).isAnimProRunning = false;
       st.objects.forEach(a => {
-        a.obj.position.y = a.origLocalY;
+        a.obj.position.copy(a.origPos);
         a.obj.visible = a.origVisible;
       });
       st.remerge();
