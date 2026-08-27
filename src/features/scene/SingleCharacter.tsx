@@ -213,8 +213,8 @@ export function SingleCharacter({
   const [localHaircut, setLocalHaircut] = useState<string>('original');
   const haircut = isPreview && previewHaircut ? previewHaircut : localHaircut;
 
-  const [localHairColor, setLocalHairColor] = useState<string>('rose');
-  const hairColor = isPreview && previewHairColor ? previewHairColor : localHairColor;
+  const [localHairColor, setLocalHairColor] = useState<string | undefined>(undefined);
+  const hairColor = isPreview ? previewHairColor : localHairColor;
 
   const laraGrid = useSceneStore(state => state.layers.laraGrid);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
