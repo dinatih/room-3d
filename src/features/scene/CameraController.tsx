@@ -533,7 +533,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       e.preventDefault();
       if (modeRef.current === 'walk') {
         const step = e.deltaY > 0 ? 15 : -15;
-        orbitDistance.current = Math.max(60, Math.min(600, orbitDistance.current + step));
+        orbitDistance.current = Math.max(30, orbitDistance.current + step);
         updateWalkLook();
       } else {
         const cam = camera as THREE.PerspectiveCamera;
@@ -725,8 +725,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         if (k.has('ArrowRight')) orbitYaw.current += 0.03 * dt;
 
         // Ctrl+Haut / Bas : Zoom (rapprocher / éloigner la caméra)
-        if (k.has('CtrlArrowUp'))   orbitDistance.current = Math.max(60, orbitDistance.current - 4 * dt);
-        if (k.has('CtrlArrowDown')) orbitDistance.current = Math.min(600, orbitDistance.current + 4 * dt);
+        if (k.has('CtrlArrowUp'))   orbitDistance.current = Math.max(30, orbitDistance.current - 4 * dt);
+        if (k.has('CtrlArrowDown')) orbitDistance.current = orbitDistance.current + 4 * dt;
 
         // Haut / Bas simples : Inclinaison verticale (pitch)
         if (k.has('ArrowUp') && !k.has('CtrlArrowUp'))     orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
