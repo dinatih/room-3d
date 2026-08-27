@@ -15,11 +15,11 @@ const FPS_SAMPLES = 80;
 /**
  * Trouve l'entité / ancêtre de plus haut niveau pour identifier clairement le composant.
  */
-function resolveEntityKey(obj: THREE.Object3D): string {
+function resolveEntityKey(obj: THREE.Object3D, rootScene?: THREE.Scene): string {
   let cur: THREE.Object3D | null = obj;
   let bestName = '';
 
-  while (cur && cur.type !== 'Scene') {
+  while (cur && cur !== rootScene) {
     // 1. Label dans hoverAction (défini par convention sur les items interactifs et portes)
     const label = cur.userData?.hoverAction?.label as string | undefined;
     if (label) return label;
@@ -40,7 +40,7 @@ function resolveEntityKey(obj: THREE.Object3D): string {
       cur.name &&
       cur.name !== 'Scene' &&
       cur.name !== 'Scene3D' &&
-      !cur.name.match(/^(Group|primitive|default|Scene)$/i)
+      !cur.name.match(/^(Group|primitive|default|Scene|\d+|polySurface\d*|Mesh|Node|Cube|Object_\d+)$/i)
     ) {
       bestName = cur.name;
     }
@@ -54,13 +54,13 @@ function resolveEntityKey(obj: THREE.Object3D): string {
   const mat = (obj as THREE.Mesh).material;
   if (mat) {
     const matName = Array.isArray(mat) ? mat[0]?.name : mat.name;
-    if (matName && matName.trim() !== '' && !matName.match(/^(default)$/i)) {
+    if (matName && matName.trim() !== '' && !matName.match(/^(default|Material|\d+)$/i)) {
       return `Mat: ${matName}`;
     }
   }
 
   // 6. Nom du maillage ou géométrie
-  if (obj.name && obj.name.trim() !== '') return obj.name;
+  if (obj.name && obj.name.trim() !== '' && !obj.name.match(/^(Mesh|Node|default|\d+|polySurface\d*)$/i)) return obj.name;
   if ((obj as THREE.Mesh).geometry?.name) return (obj as THREE.Mesh).geometry.name;
 
   return (obj as any).isInstancedMesh ? 'Instanced Mesh' : 'Élément 3D';
@@ -111,7 +111,7 @@ export function DevToolsCollector() {
           }
         }
 
-        const key = resolveEntityKey(obj);
+        const key = resolveEntityKey(obj, scene);
         const existing = objectStats.get(key) ?? { meshes: 0, instances: 0, tris: 0, verts: 0 };
         if (isInst) existing.instances += instCount;
         else existing.meshes += 1;
