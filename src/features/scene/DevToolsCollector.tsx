@@ -17,7 +17,7 @@ const FPS_SAMPLES = 80;
  */
 function resolveEntityKey(obj: THREE.Object3D): string {
   let cur: THREE.Object3D | null = obj;
-  let fallbackName = '';
+  let bestName = '';
 
   while (cur && cur.type !== 'Scene') {
     // 1. Label dans hoverAction (défini par convention sur les items interactifs et portes)
@@ -28,31 +28,42 @@ function resolveEntityKey(obj: THREE.Object3D): string {
     const itemName = (cur.userData?.itemName || cur.userData?.name) as string | undefined;
     if (itemName && itemName !== 'Scene' && itemName !== 'Group' && itemName !== 'Scene3D') return itemName;
 
-    // 3. Nom d'objet explicite non générique
+    // 3. gltfPath ou item ID
+    const gltfPath = (cur.userData?.gltfPath || cur.userData?.glb) as string | undefined;
+    if (gltfPath) {
+      const fn = gltfPath.split('/').pop()?.replace(/\.glb$/i, '');
+      if (fn && fn !== 'Scene') return fn;
+    }
+
+    // 4. Nom d'objet explicite non générique
     if (
       cur.name &&
       cur.name !== 'Scene' &&
-      !cur.name.match(/^(Mesh|Node|Cube|Cylinder|Sphere|default|primitive|Group|Object|\d+|polySurface\d*|Sketchfab_model|armature|root)$/i)
+      cur.name !== 'Scene3D' &&
+      !cur.name.match(/^(Group|primitive|default|Scene)$/i)
     ) {
-      fallbackName = cur.name;
+      bestName = cur.name;
     }
 
     cur = cur.parent;
   }
 
-  if (fallbackName) return fallbackName;
-  if (obj.name && !obj.name.match(/^(Mesh|Node|default|\d+|polySurface\d*)$/i)) return obj.name;
+  if (bestName) return bestName;
 
-  // 4. Fallback sur le nom du matériau
+  // 5. Fallback sur le nom du matériau
   const mat = (obj as THREE.Mesh).material;
   if (mat) {
     const matName = Array.isArray(mat) ? mat[0]?.name : mat.name;
-    if (matName && !matName.match(/^(default|Material|\d+)$/i)) {
+    if (matName && matName.trim() !== '' && !matName.match(/^(default)$/i)) {
       return `Mat: ${matName}`;
     }
   }
 
-  return (obj as any).isInstancedMesh ? 'Instanced Mesh' : '(Sans nom)';
+  // 6. Nom du maillage ou géométrie
+  if (obj.name && obj.name.trim() !== '') return obj.name;
+  if ((obj as THREE.Mesh).geometry?.name) return (obj as THREE.Mesh).geometry.name;
+
+  return (obj as any).isInstancedMesh ? 'Instanced Mesh' : 'Élément 3D';
 }
 
 export function DevToolsCollector() {

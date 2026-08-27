@@ -89,6 +89,21 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     return () => document.removeEventListener('app-log', handler);
   }, []);
 
+  // Raccourci clavier 'B' pour ouvrir / fermer la console
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+      if (e.key === 'b' || e.key === 'B') {
+        setVisible(v => !v);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Auto-scroll vers le bas à chaque nouveau log si non en pause
   useEffect(() => {
     if (visible && !isPaused && bottomRef.current) {
