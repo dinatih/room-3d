@@ -101,6 +101,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           walkPos.current.x = cameraState.walkerX;
           walkPos.current.z = cameraState.walkerZ;
           walkYaw.current = cameraState.walkerYaw;
+          orbitYaw.current = cameraState.walkerYaw;
           walkPos.current.y = activeWalkH();
 
           invalidate();
@@ -132,6 +133,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const walkPos   = useRef({ x: initialWalker.pos[0], y: initialWalker.height * EYE_RATIO, z: initialWalker.pos[2] });
   const walkYaw   = useRef(initialWalker.rot);
   const walkPitch = useRef(0);
+  const orbitYaw  = useRef(initialWalker.rot);
+  const orbitPitch = useRef(0.25);
+  const orbitDistance = useRef(220);
   const keys      = useRef(new Set<string>());
   const dragging  = useRef(false);
 
@@ -145,48 +149,59 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   // ── Walk helpers ────────────────────────────────────────────────────────────
 
   /**
-   * Recalcule la position et la visée (target) de la caméra lors de la marche :
-   * - En mode FPV (1ère personne) : la caméra est exactement aux yeux du personnage (distanceBehind = 0, heightAbove = 0).
-   * - En mode Walk (3ème personne / style GTA) : la caméra est décalée de 180 cm en arrière et 120 cm en hauteur au-dessus du walker.
-   * - Calcul trigonométrique :
-   *     camX = targetX - sin(yaw) * cos(pitch) * distance
-   *     camY = targetY - sin(pitch) * distance + heightAbove
-   *     camZ = targetZ - cos(yaw) * cos(pitch) * distance
-   * - La cible de regard (target) est projetée 200 cm devant le regard du walker.
+   * Recalcule la position et la visée (target) de la caméra :
+   * - En mode FPV (1ère personne) : caméra aux yeux du personnage, orientation selon walkYaw / walkPitch.
+   * - En mode Walk (3ème personne) : orbite libre autour du personnage (orbitYaw / orbitPitch / orbitDistance).
    */
   function updateWalkLook() {
     const ctrl = ctrlRef.current;
     if (!ctrl) return;
-    const cosP = Math.cos(walkPitch.current);
 
-    // Position des yeux du personnage (point d'ancrage)
-    const targetX = walkPos.current.x;
-    const targetY = walkPos.current.y;
-    const targetZ = walkPos.current.z;
-
-    // Recul (GTA style) ou vue à la 1ère personne
     const isFPV = modeRef.current === 'fpv';
-    const distanceBehind = isFPV ? 0 : 180;
-    const heightAbove = isFPV ? 0 : 120;
 
-    const camX = targetX - Math.sin(walkYaw.current) * cosP * distanceBehind;
-    const camY = targetY - Math.sin(walkPitch.current) * distanceBehind + heightAbove;
-    const camZ = targetZ - Math.cos(walkYaw.current) * cosP * distanceBehind;
+    if (isFPV) {
+      const cosP = Math.cos(walkPitch.current);
+      const targetX = walkPos.current.x;
+      const targetY = walkPos.current.y;
+      const targetZ = walkPos.current.z;
 
-    const lookDist = 200;
-    ctrl.target.set(
-      targetX + Math.sin(walkYaw.current) * cosP * lookDist,
-      targetY + Math.sin(walkPitch.current) * lookDist,
-      targetZ + Math.cos(walkYaw.current) * cosP * lookDist
-    );
-    camera.position.set(camX, camY, camZ);
-    ctrl.update();
+      const lookDist = 200;
+      ctrl.target.set(
+        targetX + Math.sin(walkYaw.current) * cosP * lookDist,
+        targetY + Math.sin(walkPitch.current) * lookDist,
+        targetZ + Math.cos(walkYaw.current) * cosP * lookDist
+      );
+      camera.position.set(targetX, targetY, targetZ);
+      ctrl.update();
+    } else {
+      // Orbite 3ème personne centrée sur le personnage
+      const targetX = walkPos.current.x;
+      const targetY = walkPos.current.y * 0.75; // hauteur poitrine / torse
+      const targetZ = walkPos.current.z;
+
+      const dist = orbitDistance.current;
+      const cosP = Math.cos(orbitPitch.current);
+      const sinP = Math.sin(orbitPitch.current);
+
+      const camX = targetX - Math.sin(orbitYaw.current) * cosP * dist;
+      const camY = Math.max(10, targetY + sinP * dist);
+      const camZ = targetZ - Math.cos(orbitYaw.current) * cosP * dist;
+
+      ctrl.target.set(targetX, targetY, targetZ);
+      camera.position.set(camX, camY, camZ);
+      ctrl.update();
+    }
   }
 
   function enterWalk(x: number, z: number, walkMode: 'walk' | 'fpv' = 'walk') {
     walkPos.current = { x, y: activeWalkH(), z };
-    walkYaw.current   = 0;
-    walkPitch.current = 0;
+    if (walkMode === 'walk') {
+      orbitYaw.current = walkYaw.current;
+      orbitPitch.current = 0.25;
+      orbitDistance.current = 220;
+    } else {
+      walkPitch.current = 0;
+    }
     const ctrl = ctrlRef.current;
     if (ctrl) {
       ctrl.enableRotate = false;
@@ -456,8 +471,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     };
     const onMove  = (e: MouseEvent) => {
       if (!dragging.current || (modeRef.current !== 'walk' && modeRef.current !== 'fpv')) return;
-      walkYaw.current   -= e.movementX * MOUSE_SENS;
-      walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - e.movementY * MOUSE_SENS));
+      if (modeRef.current === 'walk') {
+        orbitYaw.current   -= e.movementX * MOUSE_SENS;
+        orbitPitch.current  = Math.max(-0.6, Math.min(1.45, orbitPitch.current - e.movementY * MOUSE_SENS));
+      } else {
+        walkYaw.current   -= e.movementX * MOUSE_SENS;
+        walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - e.movementY * MOUSE_SENS));
+      }
       updateWalkLook();
       invalidate();
     };
@@ -480,8 +500,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       touchLastY = e.touches[0].clientY;
 
       const TOUCH_SENS = MOUSE_SENS * 1.5;
-      walkYaw.current   -= dx * TOUCH_SENS;
-      walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - dy * TOUCH_SENS));
+      if (modeRef.current === 'walk') {
+        orbitYaw.current   -= dx * TOUCH_SENS;
+        orbitPitch.current  = Math.max(-0.6, Math.min(1.45, orbitPitch.current - dy * TOUCH_SENS));
+      } else {
+        walkYaw.current   -= dx * TOUCH_SENS;
+        walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - dy * TOUCH_SENS));
+      }
       updateWalkLook();
       invalidate();
     };
@@ -491,15 +516,21 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       cameraState.isDragging = false;
     };
 
-    // Scroll wheel en walk = FOV (zoom). Range 30°–110°.
+    // Scroll wheel : en 3ème personne ajuste la distance d'orbite (zoom/dézoom) ; en FPV ajuste le FOV
     const onWheel = (e: WheelEvent) => {
       if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
-      const cam = camera as THREE.PerspectiveCamera;
-      if (!cam.isPerspectiveCamera) return;
       e.preventDefault();
-      const step = e.deltaY > 0 ? 2 : -2;
-      cam.fov = Math.max(30, Math.min(110, cam.fov + step));
-      cam.updateProjectionMatrix();
+      if (modeRef.current === 'walk') {
+        const step = e.deltaY > 0 ? 15 : -15;
+        orbitDistance.current = Math.max(60, Math.min(600, orbitDistance.current + step));
+        updateWalkLook();
+      } else {
+        const cam = camera as THREE.PerspectiveCamera;
+        if (!cam.isPerspectiveCamera) return;
+        const step = e.deltaY > 0 ? 2 : -2;
+        cam.fov = Math.max(30, Math.min(110, cam.fov + step));
+        cam.updateProjectionMatrix();
+      }
       invalidate();
     };
 
@@ -543,7 +574,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (cameraState.isWalking) {
       if (!cameraState.isAIControlled) {
         cameraState.walkYaw   = walkYaw.current;
-        cameraState.walkPitch = walkPitch.current;
+        cameraState.walkPitch = modeRef.current === 'walk' ? orbitPitch.current : walkPitch.current;
       }
 
       // Sync walker position for minimap in walk mode
@@ -697,8 +728,20 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (k.has('ArrowLeft'))  walkYaw.current += 0.03 * dt;
     if (k.has('ArrowRight')) walkYaw.current -= 0.03 * dt;
 
-    if (k.has('CtrlArrowUp'))   walkPitch.current = Math.min( 1.4, walkPitch.current + 0.02 * dt);
-    if (k.has('CtrlArrowDown')) walkPitch.current = Math.max(-1.4, walkPitch.current - 0.02 * dt);
+    if (k.has('CtrlArrowUp')) {
+      if (modeRef.current === 'walk') {
+        orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.02 * dt);
+      } else {
+        walkPitch.current = Math.min(1.4, walkPitch.current + 0.02 * dt);
+      }
+    }
+    if (k.has('CtrlArrowDown')) {
+      if (modeRef.current === 'walk') {
+        orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.02 * dt);
+      } else {
+        walkPitch.current = Math.max(-1.4, walkPitch.current - 0.02 * dt);
+      }
+    }
 
     if (k.has('AltArrowUp'))   walkPos.current.y += sp;
     if (k.has('AltArrowDown')) walkPos.current.y -= sp;
