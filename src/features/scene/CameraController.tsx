@@ -473,7 +473,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       if (!dragging.current || (modeRef.current !== 'walk' && modeRef.current !== 'fpv')) return;
       if (modeRef.current === 'walk') {
         orbitYaw.current   -= e.movementX * MOUSE_SENS;
-        orbitPitch.current  = Math.max(-0.6, Math.min(1.45, orbitPitch.current - e.movementY * MOUSE_SENS));
+        orbitPitch.current  = Math.max(-0.6, Math.min(1.45, orbitPitch.current + e.movementY * MOUSE_SENS));
       } else {
         walkYaw.current   -= e.movementX * MOUSE_SENS;
         walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - e.movementY * MOUSE_SENS));
@@ -502,7 +502,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       const TOUCH_SENS = MOUSE_SENS * 1.5;
       if (modeRef.current === 'walk') {
         orbitYaw.current   -= dx * TOUCH_SENS;
-        orbitPitch.current  = Math.max(-0.6, Math.min(1.45, orbitPitch.current - dy * TOUCH_SENS));
+        orbitPitch.current  = Math.max(-0.6, Math.min(1.45, orbitPitch.current + dy * TOUCH_SENS));
       } else {
         walkYaw.current   -= dx * TOUCH_SENS;
         walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - dy * TOUCH_SENS));
