@@ -49,11 +49,6 @@ const initialFurniture: FurnitureState = {
   showerDoor: false,
 };
 
-const isMobileInitial = typeof window !== 'undefined' && (
-  window.innerWidth <= 768 ||
-  (typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 768px)').matches)
-);
-
 const initialLayers: LayerState = {
   structure: true,
   equipment: true,

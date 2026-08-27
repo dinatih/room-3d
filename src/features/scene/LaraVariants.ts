@@ -440,7 +440,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
               if (clonedMats.length === 1) {
                   mesh.material = newMat;
               } else {
-                  const idx = matArray.indexOf(originalMat as any);
+                  const idx = clonedMats.indexOf(mat);
                   if (idx !== -1) clonedMats[idx] = newMat;
                   mesh.material = clonedMats;
               }
