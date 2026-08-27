@@ -24,6 +24,15 @@ export function GlobalSkeletonHelpers({ show }: { show: boolean }) {
       scene.traverse((child) => {
         if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
           const skinnedMesh = child as THREE.SkinnedMesh;
+          // Ignorer les SkinnedMeshes masqués (ex: cheveux natifs quand une perruque est portée)
+          let isVis = skinnedMesh.visible;
+          let p: THREE.Object3D | null = skinnedMesh.parent;
+          while (p && isVis) {
+            if (!p.visible) isVis = false;
+            p = p.parent;
+          }
+          if (!isVis) return;
+
           if (skinnedMesh.skeleton && skinnedMesh.skeleton.bones.length > 0) {
             let topBone = skinnedMesh.skeleton.bones[0];
             while (topBone.parent && (topBone.parent as THREE.Bone).isBone) {

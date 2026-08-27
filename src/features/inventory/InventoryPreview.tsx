@@ -258,7 +258,7 @@ export function InventoryPreview({
             </div>
           )}
           {showing3D ? (
-            <Canvas key={item.id} frameloop="always" camera={{ fov: 45, near: 0.01, far: 100, position: [1.4, 0.9, 1.8] }} gl={{ antialias: true, alpha: false }} onCreated={({ scene }) => { scene.background = new THREE.Color('#d2d2d2'); scene.fog = new THREE.Fog('#d2d2d2', 4, 15); }}>
+            <Canvas key={item.id} frameloop="always" camera={{ fov: 45, near: 0.01, far: 100, position: [1.4, 0.9, 1.8] }} gl={{ antialias: true, alpha: false }} onCreated={({ scene, camera }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); scene.fog = new THREE.Fog('#d2d2d2', 4, 15); }}>
               <ambientLight intensity={1.2} />
               <directionalLight position={[3, 5, 3]} intensity={1.5} />
               <directionalLight position={[-2, 1, -2]} intensity={0.5} color="#aabbff" />
