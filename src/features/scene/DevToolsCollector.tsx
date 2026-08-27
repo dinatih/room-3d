@@ -42,6 +42,16 @@ function resolveEntityKey(obj: THREE.Object3D): string {
 
   if (fallbackName) return fallbackName;
   if (obj.name && !obj.name.match(/^(Mesh|Node|default|\d+|polySurface\d*)$/i)) return obj.name;
+
+  // 4. Fallback sur le nom du matériau
+  const mat = (obj as THREE.Mesh).material;
+  if (mat) {
+    const matName = Array.isArray(mat) ? mat[0]?.name : mat.name;
+    if (matName && !matName.match(/^(default|Material|\d+)$/i)) {
+      return `Mat: ${matName}`;
+    }
+  }
+
   return (obj as any).isInstancedMesh ? 'Instanced Mesh' : '(Sans nom)';
 }
 
