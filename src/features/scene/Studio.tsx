@@ -151,17 +151,9 @@ function FrameloopController({ isIdle, showInventory }: { isIdle: boolean; showI
 }
 
 function LoadingProgress({ onComplete }: { onComplete?: () => void }) {
-  const { progress, active, item, loaded, total } = useProgress();
+  const { progress, active, item } = useProgress();
   const doneRef = useRef(false);
   const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const loadedItemsRef = useRef<string[]>([]);
-
-  useEffect(() => {
-    if (item && !loadedItemsRef.current.includes(item)) {
-      loadedItemsRef.current.push(item);
-      console.log(`[Asset Preload (${loaded}/${total})]`, item);
-    }
-  }, [item, loaded, total]);
 
   useEffect(() => {
     const bar = document.getElementById('loading-bar');
@@ -178,10 +170,6 @@ function LoadingProgress({ onComplete }: { onComplete?: () => void }) {
 
     if (!active && progress >= 100 && !doneRef.current) {
       doneRef.current = true;
-
-      console.groupCollapsed(`📦 [Asset Preload Complete] ${loadedItemsRef.current.length} fichiers préchargés`);
-      console.table(loadedItemsRef.current.map((path, idx) => ({ '#': idx + 1, path })));
-      console.groupEnd();
 
       if (countdownContainer) countdownContainer.style.display = 'flex';
       let remainingSeconds = 5;
