@@ -34,9 +34,7 @@ function resolveEntityKey(obj: THREE.Object3D): string {
       cur.name !== 'Scene' &&
       !cur.name.match(/^(Mesh|Node|Cube|Cylinder|Sphere|default|primitive|Group|Object|\d+|polySurface\d*|Sketchfab_model|armature|root)$/i)
     ) {
-      if (!fallbackName) {
-        fallbackName = cur.name;
-      }
+      fallbackName = cur.name;
     }
 
     cur = cur.parent;

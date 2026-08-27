@@ -95,18 +95,20 @@ function GrassInstances({
   }, [grassMesh, soilMesh, columns, rows, scaleX, scaleZ, yPos]);
 
   return (
-    <group name="Pelouse Jardin">
+    <group name="Gazon 3D (Jardin)" userData={{ itemName: 'Gazon 3D (Jardin)', name: 'Gazon 3D (Jardin)' }}>
       {/* Sol sous-jacent (terre) */}
       <instancedMesh
         ref={soilRef}
         name="Terre (Jardin)"
+        userData={{ itemName: 'Terre (Jardin)', name: 'Terre (Jardin)' }}
         args={[soilMesh.geometry, soilMesh.material, count]}
         receiveShadow
       />
       {/* Brins d'herbe 3D */}
       <instancedMesh
         ref={grassRef}
-        name="Pelouse 3D (Jardin)"
+        name="Gazon 3D (Brins)"
+        userData={{ itemName: 'Gazon 3D (Brins)', name: 'Gazon 3D (Brins)' }}
         args={[grassMesh.geometry, grassMesh.material, count]}
         receiveShadow
       />

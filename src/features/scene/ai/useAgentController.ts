@@ -152,10 +152,8 @@ export function useAgentController(
       stateRef.current.isSpawned = !isWait;
       stateRef.current.animation = isFallNow ? 'animations/locomotion/anim_falling.glb' : (hasSkyDrop ? 'idle' : (stepCoords?.anim || 'idle'));
       startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY };
-      if (isWait) {
-        appLog(_characterId, `⏳ En attente de déploiement (${spawnDelay.toFixed(1)}s)...`);
-      } else if (isFallNow) {
-        appLog(_characterId, `▶ Tombée du ciel en parachute coeur`);
+      if (isFallNow) {
+        appLog(_characterId, `🪂 Déploiement : Tombée du ciel en parachute`);
       }
     }
   }
@@ -177,7 +175,7 @@ export function useAgentController(
         statusRef.current = 'FALLING';
         timerRef.current = 6.0; // 6 seconds to fall
         stateRef.current.isSpawned = true;
-        appLog(_characterId, `▶ Tombée du ciel`);
+        appLog(_characterId, `🪂 Déploiement : Tombée du ciel en parachute`);
       }
       stateRef.current.animation = 'idle';
       return stateRef.current;
@@ -202,6 +200,7 @@ export function useAgentController(
       timerRef.current -= dt;
       if (timerRef.current <= 0) {
         statusRef.current = 'IDLE';
+        appLog(_characterId, `🎯 Déploiement terminé (Atterrissage réussi)`);
       }
       stateRef.current.animation = 'animations/poses_idles/anim_crouch_to_stand.glb';
       return stateRef.current;
