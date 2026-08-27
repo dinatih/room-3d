@@ -229,6 +229,18 @@ export function SingleCharacter({
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
   const { scene } = useGLTFClone(modelPath);
+  const charLabel = name || (isNPC ? `PNJ (${id})` : `Personnage (${id})`);
+
+  useLayoutEffect(() => {
+    if (!scene) return;
+    scene.name = charLabel;
+    scene.userData = { ...scene.userData, name: charLabel, itemName: charLabel };
+    scene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        child.userData = { ...child.userData, itemName: charLabel };
+      }
+    });
+  }, [scene, charLabel]);
 
   useEffect(() => () => disposeLaraVariantMaterials(scene), [scene]);
 
@@ -1203,7 +1215,7 @@ export function SingleCharacter({
   });
 
   return (
-    <group ref={groupRef} userData={{ animUnit: true, noAnim: true }}>
+    <group ref={groupRef} name={charLabel} userData={{ name: charLabel, itemName: charLabel, animUnit: true, noAnim: true }}>
       <primitive ref={modelRef} object={scene} />
 
       {headBoneState && haircut !== 'original' && (

@@ -1368,6 +1368,36 @@ export function SidePanel({
 
   const personnageHeaderButtons = (
     <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
+      <div className="btn-group btn-group-sm" role="group">
+        {([2, 10, 15] as const).map((cnt) => {
+          const currentCount = layers.laraCount ?? (isMobile ? 2 : 15);
+          const isActive = currentCount === cnt;
+          return (
+            <button
+              key={cnt}
+              type="button"
+              className={`btn btn-sm py-0 px-1 fw-bold ${isActive ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
+              style={{
+                fontSize: '10px',
+                lineHeight: '16px',
+                paddingTop: '1px',
+                paddingBottom: '1px',
+                background: isActive ? undefined : 'rgba(255, 255, 255, 0.65)',
+                border: '1px solid rgba(0, 0, 0, 0.15)',
+              }}
+              title={`Afficher ${cnt} PNJ (${cnt === 2 ? '2 Duo' : cnt === 10 ? '10 Eco' : '15 Tous'})`}
+              onClick={(e) => {
+                e.stopPropagation();
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, laraCount: cnt, showAllLaraStyles: true }
+                }));
+              }}
+            >
+              {cnt}
+            </button>
+          );
+        })}
+      </div>
       <button
         type="button"
         className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold"
