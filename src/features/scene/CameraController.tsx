@@ -233,15 +233,35 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     invalidate(); // met à jour la minimap (supprime l'icône)
   }
 
-  function enterTop() {
+  const topFollowRef = useRef(false);
+
+  function enterTop(follow = false) {
     if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
     // Save current perspective so we can restore on exit
     savedPerspPos.current.copy(camera.position);
     if (ctrlRef.current) savedPerspTarget.current.copy(ctrlRef.current.target);
+    topFollowRef.current = follow;
+    if (follow) {
+      const targetX = cameraState.walkerX;
+      const targetZ = cameraState.walkerZ;
+      camera.position.set(targetX, 2000, targetZ);
+      if (ctrlRef.current) {
+        ctrlRef.current.target.set(targetX, 0, targetZ);
+        ctrlRef.current.update();
+      }
+    } else {
+      camera.position.set(CX, 2000, CZ);
+      if (ctrlRef.current) {
+        ctrlRef.current.target.set(CX, 0, CZ);
+        ctrlRef.current.update();
+      }
+    }
     changeMode('top');
+    invalidate();
   }
 
   function exitTop() {
+    topFollowRef.current = false;
     // Restore perspective state after OrthographicCamera unmounts (next frame)
     changeMode('orbit');
     // camera.position / target restored by useEffect below
@@ -356,13 +376,29 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         store.setActiveWalkerId(visibleChars[nextIndex].id);
         return;
       }
+      if (e.key === 'y' || e.key === 'Y') {
+        if (modeRef.current === 'top' && topFollowRef.current) {
+          exitTop();
+          appLog('system', '🎥 Mode Vue Libre (Orbit)');
+        } else {
+          enterTop(true);
+          appLog('system', '🎥 Mode 2D Top (Suivi Perso)');
+        }
+        return;
+      }
       if (e.key === 't' || e.key === 'T') {
         const laraGridActive = useSceneStore.getState().layers.laraGrid;
         if (laraGridActive) {
           document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 'animations/poses_idles/anim_t_pose.glb' } }));
           document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'animations/poses_idles/anim_t_pose.glb' } }));
         } else {
-          modeRef.current === 'top' ? exitTop() : enterTop();
+          if (modeRef.current === 'top' && !topFollowRef.current) {
+            exitTop();
+            appLog('system', '🎥 Mode Vue Libre (Orbit)');
+          } else {
+            enterTop(false);
+            appLog('system', '🎥 Mode 2D Top (Pièce)');
+          }
         }
         return;
       }
@@ -701,6 +737,18 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
     }
 
+    if (modeRef.current === 'top' && topFollowRef.current) {
+      const targetX = cameraState.walkerX;
+      const targetZ = cameraState.walkerZ;
+      camera.position.x = targetX;
+      camera.position.z = targetZ;
+      if (ctrlRef.current) {
+        ctrlRef.current.target.set(targetX, 0, targetZ);
+        ctrlRef.current.update();
+      }
+      invalidate();
+    }
+
     if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
 
     if (cameraState.isAIControlled) {
@@ -776,7 +824,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       {mode === 'top' && (
         <OrthographicCamera
           makeDefault
-          position={[CX, 2000, CZ]}
+          position={topFollowRef.current ? [cameraState.walkerX, 2000, cameraState.walkerZ] : [CX, 2000, CZ]}
           up={[0, 0, -1]}
           left={-viewW / 2}  right={viewW / 2}
           top={viewH / 2}    bottom={-viewH / 2}

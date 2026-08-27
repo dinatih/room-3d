@@ -150,6 +150,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Vue perspective (reset)"    keys={['O']} />
               <R label="Walk mode (entrer/quitter)" keys={['M']} />
               <R label="Vue top-down (toggle)"      keys={['T']} />
+              <R label="Vue top-down suivi perso (toggle)" keys={['Y']} />
               <R label="Avion en papier (toggle)"   keys={['F']} />
               <R label="Grille Lara (toggle)"       keys={['G']} />
               <R label="Enlever le haut (toggle)"   keys={['Z']} />
@@ -627,6 +628,7 @@ export function SidePanel({
       {b0('gray',   'Perspective (Raccourci O)', () => dispatchKey('o'))}
       {b0('gray',   'Walk (Raccourci M)',        () => dispatchKey('m'))}
       {b0('gray',   '2D Dessus (Raccourci T)',   () => dispatchKey('t'))}
+      {b0('gray',   '2D Suivi Perso (Raccourci Y)', () => dispatchKey('y'))}
       {cameraMode === 'top' && (
         <button
           className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
