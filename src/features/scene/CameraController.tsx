@@ -7,7 +7,7 @@
  *   top    — vue orthographique du dessus (touche T)
  *
  * Raccourcis clavier :
- *   P          — vue perspective (reset)
+ *   O          — vue perspective (reset) / orbit libre
  *   M          — reprendre / entrer walk mode
  *   T          — toggle vue top-down
  *   Échap      — quitter walk mode / top-down
@@ -305,7 +305,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         else if (modeRef.current === 'top') exitTop();
         return;
       }
-      if (e.key === 'p' || e.key === 'P') {
+      if (e.key === 'o' || e.key === 'O') {
         const laraGridActive = useSceneStore.getState().layers.laraGrid;
         if (laraGridActive) {
           document.dispatchEvent(new CustomEvent('toggle-lara-haircut'));
@@ -483,8 +483,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const onMove  = (e: MouseEvent) => {
       if (!dragging.current || (modeRef.current !== 'walk' && modeRef.current !== 'fpv')) return;
       if (modeRef.current === 'walk') {
-        orbitYaw.current   -= e.movementX * MOUSE_SENS;
-        orbitPitch.current  = Math.max(-0.6, Math.min(1.45, orbitPitch.current + e.movementY * MOUSE_SENS));
+        orbitYaw.current   += e.movementX * MOUSE_SENS;
+        orbitPitch.current  = Math.max(-0.6, Math.min(1.45, orbitPitch.current - e.movementY * MOUSE_SENS));
       } else {
         walkYaw.current   -= e.movementX * MOUSE_SENS;
         walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - e.movementY * MOUSE_SENS));
@@ -512,8 +512,8 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
       const TOUCH_SENS = MOUSE_SENS * 1.5;
       if (modeRef.current === 'walk') {
-        orbitYaw.current   -= dx * TOUCH_SENS;
-        orbitPitch.current  = Math.max(-0.6, Math.min(1.45, orbitPitch.current + dy * TOUCH_SENS));
+        orbitYaw.current   += dx * TOUCH_SENS;
+        orbitPitch.current  = Math.max(-0.6, Math.min(1.45, orbitPitch.current - dy * TOUCH_SENS));
       } else {
         walkYaw.current   -= dx * TOUCH_SENS;
         walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - dy * TOUCH_SENS));
@@ -721,16 +721,16 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
       if (modeRef.current === 'walk') {
         // 3rd Person : Les touches fléchées orbitent la caméra autour du personnage
-        if (k.has('ArrowLeft'))  orbitYaw.current += 0.03 * dt;
-        if (k.has('ArrowRight')) orbitYaw.current -= 0.03 * dt;
+        if (k.has('ArrowLeft'))  orbitYaw.current -= 0.03 * dt;
+        if (k.has('ArrowRight')) orbitYaw.current += 0.03 * dt;
 
         // Ctrl+Haut / Bas : Zoom (rapprocher / éloigner la caméra)
         if (k.has('CtrlArrowUp'))   orbitDistance.current = Math.max(60, orbitDistance.current - 4 * dt);
         if (k.has('CtrlArrowDown')) orbitDistance.current = Math.min(600, orbitDistance.current + 4 * dt);
 
         // Haut / Bas simples : Inclinaison verticale (pitch)
-        if (k.has('ArrowUp') && !k.has('CtrlArrowUp'))     orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
-        if (k.has('ArrowDown') && !k.has('CtrlArrowDown')) orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
+        if (k.has('ArrowUp') && !k.has('CtrlArrowUp'))     orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
+        if (k.has('ArrowDown') && !k.has('CtrlArrowDown')) orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
 
         if (k.has('AltArrowUp'))   walkPos.current.y += sp;
         if (k.has('AltArrowDown')) walkPos.current.y -= sp;

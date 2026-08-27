@@ -147,7 +147,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <Section title="Global" />
               <R label="Inventaire (toggle)"        keys={['I']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
-              <R label="Vue perspective (reset)"    keys={['P']} />
+              <R label="Vue perspective (reset)"    keys={['O']} />
               <R label="Walk mode (entrer/quitter)" keys={['M']} />
               <R label="Vue top-down (toggle)"      keys={['T']} />
               <R label="Avion en papier (toggle)"   keys={['F']} />
@@ -624,7 +624,7 @@ export function SidePanel({
 
   const ViewsSection = (
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
-      {b0('gray',   'Perspective (Raccourci P)', () => dispatchKey('p'))}
+      {b0('gray',   'Perspective (Raccourci O)', () => dispatchKey('o'))}
       {b0('gray',   'Walk (Raccourci M)',        () => dispatchKey('m'))}
       {b0('gray',   '2D Dessus (Raccourci T)',   () => dispatchKey('t'))}
       {cameraMode === 'top' && (
