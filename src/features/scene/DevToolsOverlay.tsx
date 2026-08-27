@@ -97,115 +97,117 @@ export function DevToolsGroups({ Group }: {
   return (
     <>
       <Group emoji="📊" title="Perf" defaultOpen>
-        <canvas
-          ref={fpsCanvasRef}
-          width={FPS_W} height={FPS_H}
-          style={{ display: 'block', margin: '0 8px 4px', borderRadius: 4, boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 10px 6px', fontSize: 11 }}>
-          <span style={{ color: isIdle ? '#d97706' : fpsColor, fontWeight: 700 }}>{isIdle ? '0 FPS (veille)' : `${curFps} FPS`}</span>
-          <span style={{ color: '#4b5563', fontWeight: 500 }}>min:{fpsMin} max:{fpsMax}</span>
-        </div>
-
-        {/* RENDU — stats GPU principales */}
-        <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 4 }}>
-          <div style={sectionHeaderStyle}>
-            RENDU <span style={{ color: isIdle ? '#d97706' : '#6b7280', fontWeight: isIdle ? 600 : 400 }}>{isIdle ? `· veille (${APP_IDLE_TIMEOUT_SECONDS}s inactif)` : '· live'}</span>
+        <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
+          <canvas
+            ref={fpsCanvasRef}
+            width={FPS_W} height={FPS_H}
+            style={{ display: 'block', margin: '0 8px 4px', borderRadius: 4, boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 10px 6px', fontSize: 11 }}>
+            <span style={{ color: isIdle ? '#d97706' : fpsColor, fontWeight: 700 }}>{isIdle ? '0 FPS (veille)' : `${curFps} FPS`}</span>
+            <span style={{ color: '#4b5563', fontWeight: 500 }}>min:{fpsMin} max:{fpsMax}</span>
           </div>
-          <StatRow label="Draw calls" value={isIdle ? '0' : devState.drawCalls.toLocaleString()} color={isIdle ? '#6b7280' : heatColor(devState.drawCalls, 200, 500)} />
-          <StatRow label="Triangles"  value={isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'} color={isIdle ? '#6b7280' : heatColor(devState.triangles, 1_000_000, 2_000_000)} />
-        </div>
 
-        {/* Bouton pour afficher les infos supplémentaires */}
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          style={{
-            display: 'block', width: '100%', textAlign: 'left',
-            background: 'transparent', border: 'none',
-            color: '#1d4ed8', fontSize: 10, fontWeight: 600, padding: '4px 10px', cursor: 'pointer', marginTop: 4,
-          }}
-        >
-          {showDetails ? '▼ Moins d\'infos' : '▶ Plus d\'infos'}
-        </button>
-
-        {showDetails && (
-          <>
-            <div style={{ paddingBottom: 4 }}>
-              <StatRow label="Géométries" value={devState.geometries} color="#111827" />
-              <StatRow label="Textures"   value={devState.textures}   color="#111827" />
+          {/* RENDU — stats GPU principales */}
+          <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 4 }}>
+            <div style={sectionHeaderStyle}>
+              RENDU <span style={{ color: isIdle ? '#d97706' : '#6b7280', fontWeight: isIdle ? 600 : 400 }}>{isIdle ? `· veille (${APP_IDLE_TIMEOUT_SECONDS}s inactif)` : '· live'}</span>
             </div>
+            <StatRow label="Draw calls" value={isIdle ? '0' : devState.drawCalls.toLocaleString()} color={isIdle ? '#6b7280' : heatColor(devState.drawCalls, 200, 500)} />
+            <StatRow label="Triangles"  value={isIdle ? '0k' : (devState.triangles / 1000).toFixed(1) + 'k'} color={isIdle ? '#6b7280' : heatColor(devState.triangles, 1_000_000, 2_000_000)} />
+          </div>
 
-            {/* SCÈNE — graph total, sur demande (refresh) */}
-            <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 4, marginTop: 4 }}>
-              <div
-                onClick={() => setShowScene(!showScene)}
-                style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                <span>SCÈNE <span style={{ color: '#6b7280', fontWeight: 400 }}>· total</span></span>
-                <span style={{ fontSize: 9 }}>{showScene ? '▼' : '▶'}</span>
+          {/* Bouton pour afficher les infos supplémentaires */}
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            style={{
+              display: 'block', width: '100%', textAlign: 'left',
+              background: 'transparent', border: 'none',
+              color: '#1d4ed8', fontSize: 10, fontWeight: 600, padding: '4px 10px', cursor: 'pointer', marginTop: 4,
+            }}
+          >
+            {showDetails ? '▼ Moins d\'infos' : '▶ Plus d\'infos'}
+          </button>
+
+          {showDetails && (
+            <>
+              <div style={{ paddingBottom: 4 }}>
+                <StatRow label="Géométries" value={devState.geometries} color="#111827" />
+                <StatRow label="Textures"   value={devState.textures}   color="#111827" />
               </div>
-              {showScene && (
-                <>
-                  <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
-                  <StatRow label="Instanced" value={devState.instances} />
-                  <StatRow label="Lights"    value={devState.lights} color="#111827" />
-                  <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#111827" />
-                  <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#111827" />
-                  {devState.meshes > 800 && (
-                    <div style={{ color: '#dc2626', fontSize: 10, fontWeight: 600, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
-                  )}
-                </>
-              )}
 
-              {devState.topObjects.length > 0 && (
-                <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: 4, paddingTop: 4 }}>
-                  <div
-                    onClick={() => setShowTop(!showTop)}
-                    style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                  >
-                    <span>TOP TRIANGLES <span style={{ color: '#6b7280', fontWeight: 400 }}>· coupables</span></span>
-                    <span style={{ fontSize: 9 }}>{showTop ? '▼' : '▶'}</span>
-                  </div>
-                  {showTop && devState.topObjects.slice(0, 10).map((obj) => (
-                    <div key={obj.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 10px', fontSize: 11 }}>
-                      <span style={{ color: '#111827', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130 }} title={obj.name}>
-                        {obj.name}
-                      </span>
-                      <span style={{ color: heatColor(obj.tris, 50_000, 200_000), fontWeight: 600, flexShrink: 0, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>
-                        {(obj.tris / 1000).toFixed(1)}k
-                      </span>
-                    </div>
-                  ))}
+              {/* SCÈNE — graph total, sur demande (refresh) */}
+              <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 4, marginTop: 4 }}>
+                <div
+                  onClick={() => setShowScene(!showScene)}
+                  style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <span>SCÈNE <span style={{ color: '#6b7280', fontWeight: 400 }}>· total</span></span>
+                  <span style={{ fontSize: 9 }}>{showScene ? '▼' : '▶'}</span>
                 </div>
-              )}
+                {showScene && (
+                  <>
+                    <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
+                    <StatRow label="Instanced" value={devState.instances} />
+                    <StatRow label="Lights"    value={devState.lights} color="#111827" />
+                    <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#111827" />
+                    <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#111827" />
+                    {devState.meshes > 800 && (
+                      <div style={{ color: '#dc2626', fontSize: 10, fontWeight: 600, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
+                    )}
+                  </>
+                )}
 
-              <div style={{ display: 'flex', gap: 4, padding: '6px 8px 2px', borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: 4 }}>
-                <button
-                  onClick={handleRefreshScene}
-                  style={{
-                    flex: 1,
-                    background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.18)',
-                    borderRadius: 4, color: '#111827', fontSize: 10, fontWeight: 600, padding: '4px 6px', cursor: 'pointer',
-                  }}
-                >
-                  ↺ Refresh
-                </button>
-                <button
-                  onClick={() => devState.logDiagnostics?.()}
-                  style={{
-                    flex: 1.5,
-                    background: 'rgba(217,119,6,0.12)', border: '1px solid #d97706',
-                    borderRadius: 4, color: '#9a3412', fontSize: 10, padding: '4px 6px', cursor: 'pointer',
-                    fontWeight: 700,
-                  }}
-                  title="Envoie un rapport détaillé dans APP LOGS et la console F12"
-                >
-                  🔍 Log Diagnostic
-                </button>
+                {devState.topObjects.length > 0 && (
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: 4, paddingTop: 4 }}>
+                    <div
+                      onClick={() => setShowTop(!showTop)}
+                      style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <span>TOP TRIANGLES <span style={{ color: '#6b7280', fontWeight: 400 }}>· coupables</span></span>
+                      <span style={{ fontSize: 9 }}>{showTop ? '▼' : '▶'}</span>
+                    </div>
+                    {showTop && devState.topObjects.slice(0, 10).map((obj) => (
+                      <div key={obj.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 10px', fontSize: 11 }}>
+                        <span style={{ color: '#111827', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130 }} title={obj.name}>
+                          {obj.name}
+                        </span>
+                        <span style={{ color: heatColor(obj.tris, 50_000, 200_000), fontWeight: 600, flexShrink: 0, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>
+                          {(obj.tris / 1000).toFixed(1)}k
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 4, padding: '6px 8px 2px', borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: 4 }}>
+                  <button
+                    onClick={handleRefreshScene}
+                    style={{
+                      flex: 1,
+                      background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.18)',
+                      borderRadius: 4, color: '#111827', fontSize: 10, fontWeight: 600, padding: '4px 6px', cursor: 'pointer',
+                    }}
+                  >
+                    ↺ Refresh
+                  </button>
+                  <button
+                    onClick={() => devState.logDiagnostics?.()}
+                    style={{
+                      flex: 1.5,
+                      background: 'rgba(217,119,6,0.12)', border: '1px solid #d97706',
+                      borderRadius: 4, color: '#9a3412', fontSize: 10, padding: '4px 6px', cursor: 'pointer',
+                      fontWeight: 700,
+                    }}
+                    title="Envoie un rapport détaillé dans APP LOGS et la console F12"
+                  >
+                    🔍 Log Diagnostic
+                  </button>
+                </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </Group>
     </>
   );

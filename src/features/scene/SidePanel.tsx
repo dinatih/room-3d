@@ -1753,14 +1753,15 @@ export function SidePanel({
   return (
     <>
       <div 
-        className="position-fixed overflow-auto d-flex flex-column gap-2"
+        className="position-fixed overflow-auto d-flex flex-column gap-2 side-panel-desktop"
         style={{
           top: 16,
           left: 16,
           width: 260,
           maxHeight: 'calc(100vh - 32px)',
           zIndex: 100,
-          scrollbarWidth: 'none',
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(0, 0, 0, 0.25) transparent',
         }}
         onWheel={e => e.stopPropagation()}
       >

@@ -520,11 +520,23 @@ button, input, select, textarea {
 
 /* ── SCROLLBARS ── */
 .inventory-pane-list::-webkit-scrollbar, 
-.inventory-pane-detail::-webkit-scrollbar {
-  width: 4px;
+.inventory-pane-detail::-webkit-scrollbar,
+.side-panel-desktop::-webkit-scrollbar,
+.glass-card .overflow-auto::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
 .inventory-pane-list::-webkit-scrollbar-thumb, 
-.inventory-pane-detail::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+.inventory-pane-detail::-webkit-scrollbar-thumb,
+.side-panel-desktop::-webkit-scrollbar-thumb,
+.glass-card .overflow-auto::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
 }
+.inventory-pane-list::-webkit-scrollbar-track,
+.inventory-pane-detail::-webkit-scrollbar-track,
+.side-panel-desktop::-webkit-scrollbar-track,
+.glass-card .overflow-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
