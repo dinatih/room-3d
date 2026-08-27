@@ -510,7 +510,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
     <>
       {!pillarsOnly && <DoorsPlaced />}
 
-      <group ref={(g) => { wallsGroupRef.current = g; }} name="walls-group">
+      <group ref={(g) => { wallsGroupRef.current = g; }} name="walls-group" userData={{ itemName: 'Murs & Structure' }}>
         {showLabels && <PillarLabels />}
 
         {/* ── Piliers ────────────────────────────────────────────────────────── */}
@@ -1317,13 +1317,19 @@ export function Floor() {
   return (
     <>
       {/* Parquet séjour + cuisine */}
-      <Parquet />
+      <group name="parquet-group" userData={{ itemName: 'Sol Parquet' }}>
+        <Parquet />
+      </group>
 
       {/* Carrelage bath + couloir */}
-      <Tile />
+      <group name="tile-group" userData={{ itemName: 'Carrelage Sol' }}>
+        <Tile />
+      </group>
 
       {/* Couloir extérieur PVC rouge */}
-      <RedPVCCorridor />
+      <group name="pvc-corridor-group" userData={{ itemName: 'Couloir PVC' }}>
+        <RedPVCCorridor />
+      </group>
 
       {/* Plinthes parquet & SDB — Merged static group pour perf & animUnit pour descendre en 1 seul bloc */}
       <group name="skirting-group" userData={{ animUnit: true, brickType: 'skirting', itemName: 'Plinthes' }}>
@@ -1334,6 +1340,7 @@ export function Floor() {
       </group>
 
       {/* Dalle béton sous l'appartement (principale + voisins en épi) */}
+      <group name="slab-group" userData={{ itemName: 'Dalle Béton' }}>
       {(() => {
         const slabShape = useMemo(() => new THREE.Shape([
           new THREE.Vector2(-20, 30),
@@ -1387,10 +1394,10 @@ export function Floor() {
           </>
         );
       })()}
-
+      </group>
 
       {/* Plafonds */}
-      <group>
+      <group name="ceiling-group" userData={{ itemName: 'Plafonds' }}>
         {/* Plafond principal avec la même forme que la dalle en béton */}
         {(() => {
           const ceilShape = useMemo(() => {
@@ -1441,7 +1448,7 @@ export function Floor() {
         rotation={[-Math.PI / 2, 0, 0]}
         position={[150, -10, 0]}
         receiveShadow
-        userData={{ brickType: 'ground' }}
+        userData={{ brickType: 'ground', itemName: 'Terrain Extérieur' }}
       >
         <planeGeometry args={[1100, 2000]} />
       </mesh>

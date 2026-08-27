@@ -235,6 +235,22 @@ export function InventoryPreview({
   const [photoIdx, setPhotoIdx] = useState(0);
   const [showAnimSelector, setShowAnimSelector] = useState(false);
   useEffect(() => { setActionStates({}); setViewMode('3d'); setAutoRotate(true); setTarget([0, 0, 0]); setPhotoIdx(0); setShowAnimSelector(false); }, [item?.id]);
+
+  // Raccourci clavier 'K' pour afficher / masquer le squelette dans la preview 3D
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const targetEl = e.target as HTMLElement;
+      if (targetEl && (targetEl.tagName === 'INPUT' || targetEl.tagName === 'TEXTAREA' || targetEl.isContentEditable)) {
+        return;
+      }
+      if (e.key === 'k' || e.key === 'K') {
+        setActionStates(s => ({ ...s, showBones: !s.showBones }));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
   const isWalkerItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
