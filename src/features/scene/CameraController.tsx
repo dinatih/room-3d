@@ -579,7 +579,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     cameraState.camX     = camera.position.x;
     cameraState.camZ     = camera.position.z;
     cameraState.isWalking = modeRef.current === 'walk' || modeRef.current === 'fpv';
-    cameraState.isMoving  = (cameraState.isWalking && keys.current.size > 0)
+    cameraState.isMoving  = (modeRef.current === 'fpv' && (keys.current.has('ArrowUp') || keys.current.has('ArrowDown')))
       || (modeRef.current === 'orbit' && (keys.current.has('ArrowUp') || keys.current.has('ArrowDown')));
 
     if (cameraState.isWalking) {
@@ -725,7 +725,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (keys.current.size > 0) {
       // Keep rendering while keys are held in walk mode
       invalidate();
-      cameraState.lastUserControlTime = performance.now();
+      if (modeRef.current === 'fpv') {
+        cameraState.lastUserControlTime = performance.now();
+      }
 
       const k  = keys.current;
       const sp = WALK_SPEED * dt;

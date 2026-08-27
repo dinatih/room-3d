@@ -799,7 +799,7 @@ export function SingleCharacter({
       }
     } else {
       if (isActive) {
-        const isUserManuallyMoving = cameraState.isUserControlling();
+        const isUserManuallyMoving = cameraState.mode === 'orbit' && cameraState.isUserControlling();
 
         if (isGuidedTour || (!isUserManuallyMoving && isAutonomous)) {
           // Mode autonome / visite guidée
