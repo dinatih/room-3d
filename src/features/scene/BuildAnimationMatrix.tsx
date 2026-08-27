@@ -128,12 +128,12 @@ function unmergeScene(scene: THREE.Scene): () => void {
         if ((m as THREE.Mesh).isMesh && !m.userData.isMergedStatic) {
           if (m.type !== 'Mesh') return;
           if ((m as any).isInstancedMesh) return;
-          if (m.userData.skipMerge) return;
+          if (m.userData.skipMerge || m.userData.hoverAction) return;
 
           let parent = m.parent;
           let skip = false;
           while (parent && !parent.userData?.isMergedSource) {
-            if (parent.userData?.skipMerge) {
+            if (parent.userData?.skipMerge || parent.userData?.hoverAction) {
               skip = true;
               break;
             }

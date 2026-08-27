@@ -663,13 +663,13 @@ export function Garden() {
              userData={{ skipMerge: true, hoverAction: { label: 'Canapé de jardin', actions: ['sofa-arm-left', 'sofa-arm-right'] } }}>
         <ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} />
       </group>
-      <group position={[100, 0, -80]} rotation={[0, Math.PI, 0]} userData={{ animUnit: true }}>
+      <group position={[100, 0, -80]} rotation={[0, Math.PI, 0]} userData={{ animUnit: true, skipMerge: true }}>
         <ArmlessSofa item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[40, 0, -90]} userData={{ animUnit: true }}>
+      <group position={[40, 0, -90]} userData={{ animUnit: true, skipMerge: true }}>
         <ChestBench item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[120, 0, -300]} rotation={[0, 1, 0]} userData={{ animUnit: true }}>
+      <group position={[120, 0, -300]} rotation={[0, 1, 0]} userData={{ animUnit: true, skipMerge: true }}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 
@@ -677,7 +677,7 @@ export function Garden() {
         <RobinBird />
       </group>
 
-      <group position={[100, 0, -145]} userData={{ animUnit: true }}>
+      <group position={[100, 0, -145]} userData={{ animUnit: true, skipMerge: true }}>
         <PottedPalm item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
       {/* <group position={[240, 0, -400]} userData={{ animUnit: true }}>

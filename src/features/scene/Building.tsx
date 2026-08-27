@@ -457,7 +457,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
     <group userData={userData}>
       {/* isMergedSource : visit() doit toujours descendre dans ce groupe, jamais le classifier */}
       <group ref={sourceRef} userData={{ isMergedSource: true }}>{children}</group>
-      <group ref={mergedRef} />
+      <group ref={mergedRef} userData={{ isMergedStatic: true }} />
     </group>
   );
 }
