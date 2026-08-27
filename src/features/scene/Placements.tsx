@@ -280,6 +280,15 @@ function LinkyGaine() {
   );
 }
 
+
+// Catégorie,Rôle dans la scène 3D,Comportement / Contraintes,Exemples d'objets
+// Furniture: Structure & gros volumes,"Collisions strictes au sol (ground plane), bloque le passage (navmesh), définit les zones de la pièce.","Lit, bureau, canapé, armoire, table."
+// Furnishings: Habillage & confort fonctionnel,"S'ancre sur les murs/sols/fenêtres, souvent attaché à un élément structurel sans bloquer les déplacements.","Tapis au sol, rideaux aux fenêtres, lampadaire, coussins sur le canapé."
+// Decor: Détails & habillage de surface,"Petits objets posés sur le furniture (props / clutter), posters/tableaux sur les murs. Ne bloque pas la navigation.","Tasse sur le bureau, plante en pot, cadre mural, livre, bougie."
+//
+// Passe 1 (Furniture) : Placer les gros volumes structurants (alignement murs, orientation principale).
+// Passe 2 (Furnishings) : Habiller l'espace pour lui donner sa fonction et son confort (couvrir les fenêtres, le sol, poser l'éclairage d'ambiance).
+// Passe 3 (Decor) : Détecter les surfaces planes générées (raycast / bounding boxes) pour y empiler les petits détails et accessoires décoratifs.
 // ═══════════════════════════════════════════════════════════════════════════════
 // FURNITURE (Layer 2)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -612,10 +621,10 @@ export function Decor() {
       <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true, isIkea: true }}>
         <MuligRail item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[110, 5, 500]} userData={{ animUnit: true, isIkea: true }}>
+      <group position={[110, 1, 500]} userData={{ animUnit: true, isIkea: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[NICHE_X + KALLAX_DEPTH - 10, 0.5, MACK_Z + 15]} userData={{ animUnit: true, isIkea: true }}>
+      <group position={[15, 1, 110]} userData={{ animUnit: true, isIkea: true }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[298, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true, isIkea: true }}>
@@ -660,7 +669,7 @@ export function Garden() {
       <group position={[40, 0, -90]} userData={{ animUnit: true }}>
         <ChestBench item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-      <group position={[120, 0, -250]} rotation={[0, 1, 0]} userData={{ animUnit: true }}>
+      <group position={[120, 0, -300]} rotation={[0, 1, 0]} userData={{ animUnit: true }}>
         <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 

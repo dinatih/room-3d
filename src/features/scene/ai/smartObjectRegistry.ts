@@ -97,12 +97,12 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'desk-bollsidan-1',
     name: 'Bureau Bollsidan 1',
     category: 'surface',
-    position: [73.5, 0, 50],
+    position: [75, 0, 60],
     slots: [
       {
         slotId: 'work-sitting',
         name: 'Travailler assis',
-        offset: [73.5, 0, 50],
+        offset: [75, 0, 60],
         rotY: Math.PI,
         animations_random: 'seated_front',
         duration: 10.0,
@@ -160,7 +160,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'flush',
         name: 'Tirer la chasse',
-        offset: [50, 0, 500],
+        offset: [50, 0, 530],
         rotY: Math.PI,
         animation: 'animations/emotes_gestures/anim_shaking_hands_2.glb',
         duration: 2.0,
@@ -288,12 +288,12 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'bathtub-garden',
     name: 'Baignoire Jardin',
     category: 'hygiene',
-    position: [120, 0, -250],
+    position: [120, 0, -300],
     slots: [
       {
         slotId: 'center',
         name: 'Se relaxer au centre',
-        offset: [120, 0, -250],
+        offset: [120, 0, -300],
         rotY: Math.PI / 4,
         animations_random: 'seated_front',
         duration: 30.0,
@@ -301,7 +301,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'west',
         name: 'Bain Côté Ouest',
-        offset: [80, 0, -280],
+        offset: [80, 0, -330],
         rotY: Math.PI / 4,
         animations_random: 'seated_front',
         duration: 30.0,
@@ -309,7 +309,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'east',
         name: 'Bain Côté Est',
-        offset: [160, 0, -220],
+        offset: [160, 0, -270],
         rotY: Math.PI + Math.PI / 4,
         animations_random: 'seated_front',
         duration: 30.0,

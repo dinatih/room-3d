@@ -124,7 +124,7 @@ export function CuisineDrona() {
 
 export function CuisineLillhavet() {
   return (
-    <group position={[75, 155, 41]}>
+    <group position={[18, 155, 34]} rotation={[0, Math.PI - Math.PI / 4 - Math.PI / 8, 0]}>
       <Lillhavet80461276 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       <group position={[0, 4, -2]}>
         <group position={[1, 0, 1]} rotation={[0.2, 0, 0.1]}><Snitta00287295 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></group>
