@@ -39,9 +39,10 @@ function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number
   if (instr.type === 'RETURN_TO_START' && startPos) {
     return { tx: startPos.x, tz: startPos.z, label: 'point de départ' };
   }
-  if (instr.targetNodeId && ZONES[instr.targetNodeId]) {
-    const node = ZONES[instr.targetNodeId];
-    return { tx: node.x, tz: node.z, label: node.name || node.id, rotY: instr.rotY };
+  const waypointId = instr.targetWaypointId || instr.targetNodeId;
+  if (waypointId && ZONES[waypointId]) {
+    const node = ZONES[waypointId];
+    return { tx: node.x, tz: node.z, label: node.name || node.id, rotY: instr.rotY ?? node.rotationY };
   }
   if (instr.smartObjectId && SMART_OBJECTS[instr.smartObjectId]) {
     const obj = SMART_OBJECTS[instr.smartObjectId];

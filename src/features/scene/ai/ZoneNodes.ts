@@ -1,10 +1,11 @@
-import { ZoneNode } from './aiTypes';
+import { Waypoint } from './aiTypes';
 
 /**
  * WAYPOINTS — Nœuds de navigation et de passage purs (portes, couloirs, transitions).
+ * Un Waypoint représente uniquement un point ou repère spatial ponctuel [x, y, z] (avec rotation optionnelle).
  * Les meubles et interactions spécifiques sont gérés via SMART_OBJECTS (smartObjectRegistry.ts).
  */
-export const WAYPOINTS: Record<string, ZoneNode> = {
+export const WAYPOINTS: Record<string, Waypoint> = {
   'living-corridor-door':   { id: 'living-corridor-door',   name: 'Séjour (Devant Porte)',       x: 230, z: 350 },
   'corridor-entry-door':    { id: 'corridor-entry-door',    name: 'Couloir (Devant Entrée)',     x: 255, z: 510 },
   'outdoor-entry-door':     { id: 'outdoor-entry-door',     name: 'Extérieur (Devant Porte)',    x: 288, z: 603 },
@@ -17,9 +18,9 @@ export const WAYPOINTS: Record<string, ZoneNode> = {
   'outdoor-garden-east':    { id: 'outdoor-garden-east',    name: 'Cour Est',                    x: 400, z: -500 },
 };
 
-
 /** Alias de rétro-compatibilité */
 export const ZONES = WAYPOINTS;
+
 
 
 

@@ -41,13 +41,46 @@ export interface SmartAction {
   duration?: number;
 }
 
-export interface ZoneNode {
+export type InteractionType =
+  | 'sit'
+  | 'sleep'
+  | 'cook'
+  | 'wash'
+  | 'shower'
+  | 'work'
+  | 'relax'
+  | 'dance'
+  | 'admire'
+  | 'storage';
+
+/**
+ * WAYPOINT (Anciennement ZoneNode) : Repère spatial ponctuel [x, y, z] avec rotation optionnelle.
+ * Sert au positionnement, au pathfinding et aux slots d'approche.
+ */
+export interface Waypoint {
   id: string;
   name?: string;
   x: number;
+  y?: number;
   z: number;
+  rotationY?: number;
 }
 
+/** Alias de rétro-compatibilité */
+export type ZoneNode = Waypoint;
+
+/**
+ * SPATIAL ZONE : Volume englobant 3D (Pièce, Jardin, etc.)
+ */
+export interface SpatialZoneDef {
+  id: string;
+  name: string;
+  environment: 'indoor' | 'outdoor';
+  bounds: {
+    min: [number, number, number];
+    max: [number, number, number];
+  };
+}
 
 export type InstructionType = 'MOVE_TO' | 'INTERACT' | 'WAIT' | 'RETURN_TO_START' | 'USE_OBJECT';
 
@@ -56,6 +89,7 @@ export interface AgentInstruction {
   smartObjectId?: string; // target smart object ID
   slotId?: string; // specific slot inside the smart object
   targetNodeId?: string; // for MOVE_TO (fallback/waypoints)
+  targetWaypointId?: string; // alias moderne pour targetNodeId
   targetPos?: [number, number, number]; // direct position instead of node
   actionId?: string; // for INTERACT
   animation?: string; // animation to play
@@ -64,4 +98,5 @@ export interface AgentInstruction {
   triggerTargetState?: boolean; // optional target state to force
   rotY?: number; // target rotation to face during interaction
 }
+
 
