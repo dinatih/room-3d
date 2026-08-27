@@ -597,11 +597,13 @@ export function SingleCharacter({
 
   useEffect(() => {
     const handleToggleHairColor = (e: any) => {
+      if (id === 'native') return;
       if (e.detail?.key === 'lara-haircolor') {
         setLocalHairColor(e.detail.value);
       }
     };
     const handleToggleHaircut = (e: any) => {
+      if (id === 'native') return;
       if (e.detail?.key === 'lara-haircut') {
         setLocalHaircut(e.detail.value || 'original');
         invalidate();
@@ -673,17 +675,17 @@ export function SingleCharacter({
   useEffect(() => {
     if (!scene) return;
 
-    // 1. Visibilité et coloration de la chevelure / calotte d'origine
-    const showNativeHair = haircut === 'original';
-    const targetColor = hairColor && HAIR_COLORS[hairColor] ? HAIR_COLORS[hairColor] : null;
+    // 1. Visibilité et coloration de la chevelure d'origine
+    const isNativeLara = id === 'native' || variant === 'native';
+    const showNativeHair = isNativeLara || haircut === 'original';
+    const targetColor = !isNativeLara && hairColor && HAIR_COLORS[hairColor] ? HAIR_COLORS[hairColor] : null;
 
     for (const item of parts.nativeHairMeshes) {
       const meshName = (item.mesh.name || '').toLowerCase();
-      const isBraid = meshName.includes('braid') || meshName.includes('pony') || meshName.includes('classic') || meshName.includes('fmv');
-      const isBase = meshName.includes('base');
+      const isBraid = meshName.includes('braid') || meshName.includes('pony');
       
-      // Si perruque custom, on garde hair_base (calotte de crâne) visible pour fermer l'arrière de la tête
-      const visible = showNativeHair ? !(variant === 'angelina' && isBraid) : isBase;
+      // Si perruque custom, on masque tous les cheveux natifs pour éviter les débordements
+      const visible = showNativeHair ? !(variant === 'angelina' && isBraid) : false;
       item.mesh.visible = visible;
       const mat = item.mesh.material;
       if (mat) {
@@ -1232,7 +1234,7 @@ export function SingleCharacter({
     <group ref={groupRef} name={charLabel} userData={{ name: charLabel, itemName: charLabel, animUnit: true, noAnim: true }}>
       <primitive ref={modelRef} object={scene} />
 
-      {headBoneState && haircut !== 'original' && (
+      {headBoneState && id !== 'native' && variant !== 'native' && haircut !== 'original' && (
         isRiggedWig(haircut as string) ? (
           <RiggedWig
             id={haircut.replace('hair_', '')}
