@@ -15,6 +15,7 @@ import { useRef, useLayoutEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ROOM_W, ROOM_D, WALL_H } from '@config';
+import { appLog } from '@features/ui/AppConsole';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
@@ -663,6 +664,8 @@ export function BuildAnimationMatrix({
       st.groundMeshes.forEach((o) => { o.visible = true; });
 
       invalidate();
+      const durSec = ((performance.now() - (st.startTime ?? now)) / 1000).toFixed(1);
+      appLog('anim', `✨ Animation "Matrix" terminée en ${durSec}s (${st.objects.length} éléments assemblés)`);
       onFinish();
     }
   });

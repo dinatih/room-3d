@@ -19,28 +19,32 @@ function resolveEntityKey(obj: THREE.Object3D): string {
   let cur: THREE.Object3D | null = obj;
   let fallbackName = '';
 
-  while (cur && cur.parent && cur.parent.type !== 'Scene') {
+  while (cur && cur.type !== 'Scene') {
     // 1. Label dans hoverAction (défini par convention sur les items interactifs et portes)
     const label = cur.userData?.hoverAction?.label as string | undefined;
     if (label) return label;
 
+    // 2. Nom explicite via itemName ou name dans userData
     const itemName = (cur.userData?.itemName || cur.userData?.name) as string | undefined;
-    if (itemName) return itemName;
+    if (itemName && itemName !== 'Scene' && itemName !== 'Group' && itemName !== 'Scene3D') return itemName;
 
-    // 2. Nom explicite non générique
+    // 3. Nom d'objet explicite non générique
     if (
       cur.name &&
-      !cur.name.match(/^(Mesh|Node|Cube|Cylinder|Sphere|default|primitive|Group|Scene|Object|\d+|polySurface)$/i)
+      cur.name !== 'Scene' &&
+      !cur.name.match(/^(Mesh|Node|Cube|Cylinder|Sphere|default|primitive|Group|Object|\d+|polySurface\d*|Sketchfab_model|armature|root)$/i)
     ) {
-      fallbackName = cur.name;
+      if (!fallbackName) {
+        fallbackName = cur.name;
+      }
     }
 
     cur = cur.parent;
   }
 
   if (fallbackName) return fallbackName;
-  if (cur && cur.name && cur.name !== 'Scene') return cur.name;
-  return obj.name || ((obj as any).isInstancedMesh ? 'Instanced Mesh' : '(Sans nom)');
+  if (obj.name && !obj.name.match(/^(Mesh|Node|default|\d+|polySurface\d*)$/i)) return obj.name;
+  return (obj as any).isInstancedMesh ? 'Instanced Mesh' : '(Sans nom)';
 }
 
 export function DevToolsCollector() {

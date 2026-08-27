@@ -1325,11 +1325,13 @@ export function Floor() {
       {/* Couloir extérieur PVC rouge */}
       <RedPVCCorridor />
 
-      {/* Plinthes parquet */}
-      <Baseboards />
-
-      {/* Plinthes carrelage SDB */}
-      <BathSkirting />
+      {/* Plinthes parquet & SDB — Merged static group pour perf & animUnit pour descendre en 1 seul bloc */}
+      <group name="skirting-group" userData={{ animUnit: true, brickType: 'skirting', itemName: 'Plinthes' }}>
+        <MergedStaticGroup name="merged-skirting">
+          <Baseboards />
+          <BathSkirting />
+        </MergedStaticGroup>
+      </group>
 
       {/* Dalle béton sous l'appartement (principale + voisins en épi) */}
       {(() => {

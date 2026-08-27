@@ -1,6 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { appLog } from '@features/ui/AppConsole';
 
 const DROP_HEIGHT = 2000;
 const FALL_MS_MIN = 400;
@@ -329,6 +330,8 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
       });
       st.remerge();
       invalidate();
+      const durSec = ((performance.now() - (st.startTime ?? now)) / 1000).toFixed(1);
+      appLog('anim', `✨ Animation "Tombée du ciel" terminée en ${durSec}s (${st.objects.length} éléments assemblés)`);
       onFinish();
     }
   });
