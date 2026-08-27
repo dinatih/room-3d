@@ -482,7 +482,7 @@ export function SingleCharacter({
       mixer.stopAllAction();
       mixer.uncacheRoot(scene);
     };
-  }, [scene, parts, animations, name, isLara, targetHeight, variant, sittingScene, id, laraNude, laraTopOff, laraBottomOff, laraShoes, showAccessories, laraPistols, equipment, characterShadows, showWallhack, characterWireframe]);
+  }, [scene, parts, animations, name, isLara, targetHeight, variant, sittingScene, id]);
 
   // Visibilité des vêtements et des accessoires (ciblée, zéro traversée)
   useEffect(() => {
