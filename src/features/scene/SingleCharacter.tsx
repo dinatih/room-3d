@@ -677,8 +677,11 @@ export function SingleCharacter({
     const showNativeHair = haircut === 'original';
     for (const item of parts.nativeHairMeshes) {
       const meshName = (item.mesh.name || '').toLowerCase();
-      const isBraid = meshName.includes('braid') || meshName.includes('pony');
-      const visible = showNativeHair && !(variant === 'angelina' && isBraid);
+      const isBraid = meshName.includes('braid') || meshName.includes('pony') || meshName.includes('classic') || meshName.includes('fmv');
+      const isBase = meshName.includes('base');
+      
+      // Si perruque custom, on garde hair_base (calotte de crâne) visible pour fermer l'arrière de la tête
+      const visible = showNativeHair ? !(variant === 'angelina' && isBraid) : isBase;
       item.mesh.visible = visible;
       const mat = item.mesh.material;
       if (mat) {

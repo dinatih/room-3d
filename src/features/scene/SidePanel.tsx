@@ -457,7 +457,10 @@ export function SidePanel({
     const handleToggleHaircut = () => {
       setGlobalHaircut(prev => {
         if (prev === 'original') {
-          const next = lastWigRef.current;
+          // Choisir une perruque aléatoire à chaque activation
+          const wigIds = WIGS_ITEMS.map(w => w.id);
+          const next = wigIds[Math.floor(Math.random() * wigIds.length)];
+          lastWigRef.current = next;
           document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: next } }));
           return next;
         } else {
