@@ -17,7 +17,8 @@ const FPS_SAMPLES = 80;
  */
 function resolveEntityKey(obj: THREE.Object3D, rootScene?: THREE.Scene): string {
   let cur: THREE.Object3D | null = obj;
-  let bestName = '';
+  let semanticAncestor = '';
+  let anyAncestor = '';
 
   while (cur && cur !== rootScene) {
     // 1. Label dans hoverAction (défini par convention sur les items interactifs et portes)
@@ -26,7 +27,7 @@ function resolveEntityKey(obj: THREE.Object3D, rootScene?: THREE.Scene): string 
 
     // 2. Nom explicite via itemName ou name dans userData
     const itemName = (cur.userData?.itemName || cur.userData?.name) as string | undefined;
-    if (itemName && itemName !== 'Scene' && itemName !== 'Group' && itemName !== 'Scene3D') return itemName;
+    if (itemName && !itemName.match(/^(Scene|Group|Scene3D)$/i)) return itemName;
 
     // 3. gltfPath ou item ID
     const gltfPath = (cur.userData?.gltfPath || cur.userData?.glb) as string | undefined;
@@ -35,35 +36,39 @@ function resolveEntityKey(obj: THREE.Object3D, rootScene?: THREE.Scene): string 
       if (fn && fn !== 'Scene') return fn;
     }
 
-    // 4. Nom d'objet explicite non générique
-    if (
-      cur.name &&
-      cur.name !== 'Scene' &&
-      cur.name !== 'Scene3D' &&
-      !cur.name.match(/^(Group|primitive|default|Scene|\d+|polySurface\d*|Mesh|Node|Cube|Object_\d+)$/i)
-    ) {
-      bestName = cur.name;
+    // 4. Nom d'objet ancêtre non générique
+    if (cur.name && cur.name !== 'Scene' && cur.name !== 'Scene3D') {
+      if (!anyAncestor && !cur.name.match(/^(Group|primitive|Scene)$/i)) {
+        anyAncestor = cur.name;
+      }
+      if (!cur.name.match(/^(Group|primitive|default|Scene|\d+|polySurface\d*|Mesh\d*|Node\d*|Cube\d*|Object_\d+)$/i)) {
+        semanticAncestor = cur.name;
+      }
     }
 
     cur = cur.parent;
   }
 
-  if (bestName) return bestName;
+  // 1. Meilleur nom sémantique d'un composant parent
+  if (semanticAncestor) return semanticAncestor;
 
-  // 5. Fallback sur le nom du matériau
+  // 2. Nom du matériau Three.js
   const mat = (obj as THREE.Mesh).material;
   if (mat) {
     const matName = Array.isArray(mat) ? mat[0]?.name : mat.name;
-    if (matName && matName.trim() !== '' && !matName.match(/^(default|Material|\d+)$/i)) {
+    if (matName && matName.trim() !== '') {
       return `Mat: ${matName}`;
     }
   }
 
-  // 6. Nom du maillage ou géométrie
-  if (obj.name && obj.name.trim() !== '' && !obj.name.match(/^(Mesh|Node|default|\d+|polySurface\d*)$/i)) return obj.name;
+  // 3. Nom d'ancêtre / sous-groupe même générique (ex: Object_7, Parachute, etc.)
+  if (anyAncestor) return anyAncestor;
+
+  // 4. Nom direct du maillage ou géométrie
+  if (obj.name && obj.name.trim() !== '') return obj.name;
   if ((obj as THREE.Mesh).geometry?.name) return (obj as THREE.Mesh).geometry.name;
 
-  return (obj as any).isInstancedMesh ? 'Instanced Mesh' : 'Élément 3D';
+  return (obj as any).isInstancedMesh ? 'Instanced Mesh' : 'Mesh 3D';
 }
 
 export function DevToolsCollector() {
