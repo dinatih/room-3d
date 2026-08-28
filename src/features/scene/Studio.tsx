@@ -508,6 +508,7 @@ export function Studio() {
                 return !v;
               });
             }}
+            onToggleHideUI={() => setHideUI(h => !h)}
           />
           {planeMode && (
             <div style={{

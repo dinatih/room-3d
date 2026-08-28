@@ -392,6 +392,7 @@ export interface SidePanelProps2 extends SidePanelProps {
   onToggleAutopilot?:      () => void;
   showLandingStrips?:      boolean;
   onToggleLandingStrips?:  () => void;
+  onToggleHideUI?:         () => void;
 }
 
 type TabKey = 'views' | 'layers' | 'personnage' | 'perf' | 'anims' | 'animsCouple' | 'interactif' | null;
@@ -435,6 +436,7 @@ export function SidePanel({
   onToggleAutopilot,
   showLandingStrips = false,
   onToggleLandingStrips,
+  onToggleHideUI,
 }: SidePanelProps2) {
   
   const measurementActive = useSceneStore(state => state.measurementActive);
@@ -747,6 +749,7 @@ export function SidePanel({
         </button>
       )}
       {b0('cyan',   'Avion ✈ (Raccourci F)',           () => dispatchKey('f'))}
+      {onToggleHideUI && b0('dark',   'Masquer l\'interface 2D (Raccourci 0)', onToggleHideUI)}
       {b0('yellow', 'Autres vues…',                     () => setShowViews(true))}
       {b0('teal',   'Raccourcis clavier ⌨',             () => setShowShortcuts(true))}
     </div>
@@ -1916,6 +1919,19 @@ export function SidePanel({
               </button>
             );
           })}
+
+          {/* Bouton Masquer l'UI pour mobile */}
+          {onToggleHideUI && (
+            <button
+              onClick={onToggleHideUI}
+              className="btn border-0 d-flex flex-column align-items-center justify-content-center py-1 text-secondary"
+              style={{ fontSize: '10px', minWidth: '60px', flex: '0 0 auto' }}
+              title="Masquer l'interface"
+            >
+              <span style={{ fontSize: '20px', lineHeight: 1 }}>👁️‍🗨️</span>
+              <span className="fw-semibold">Cacher UI</span>
+            </button>
+          )}
         </div>
 
         {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
