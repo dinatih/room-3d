@@ -58,7 +58,7 @@ export const GLB_65x65  = 'items/nissedal50320320/Nissedal50320320.glb';
  * Coords locales : centré X/Z, Y=0 = bas du cadre.
  * targetH : si fourni, normalise la hauteur à cette valeur (cm) ; sinon scale×100 (GLB en mètres).
  */
-export function NissedalGlbFrame({ glb, targetH }: { glb: string; targetH?: number }) {
+export function NissedalGlbFrame({ glb, targetH, targetD }: { glb: string; targetH?: number; targetD?: number }) {
   const { scene } = useGLTFClone(glb);
 
   useLayoutEffect(() => {
@@ -67,8 +67,10 @@ export function NissedalGlbFrame({ glb, targetH }: { glb: string; targetH?: numb
     scene.rotation.x = -Math.PI / 2; // Z-up GLB : Z(hauteur)→Y, Y(épaisseur)→-Z, glace→-Z
     const rawBox  = glbLocalBBox(scene);
     const naturalH = rawBox.max.y - rawBox.min.y;
+    const naturalD = rawBox.max.z - rawBox.min.z;
     const s = targetH !== undefined && naturalH > 0 ? targetH / naturalH : 100;
-    scene.scale.setScalar(s);
+    const sD = targetD !== undefined && naturalD > 0 ? targetD / naturalD : s;
+    scene.scale.set(s, s, sD);
 
     // Identifier la glace = mesh avec la plus grande surface XY (après rotation)
     const meshes: THREE.Mesh[] = [];
