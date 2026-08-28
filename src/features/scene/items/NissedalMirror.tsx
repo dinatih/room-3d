@@ -50,7 +50,7 @@ export function NissedalFrame({ w, h, ft, fd }: { w: number; h: number; ft: numb
 
 // ── Composant inventaire GLB ──────────────────────────────────────────────────
 
-export const GLB_40x150 = 'items/nissedal miroir 40x150 noir/NISSEDAL miroir 40x150 noir.glb';
+export const GLB_40x150 = 'items/nissedal30320321/Nissedal30320321.glb';
 export const GLB_65x65  = 'items/nissedal50320320/Nissedal50320320.glb';
 
 /**
@@ -71,7 +71,6 @@ export function NissedalGlbFrame({ glb, targetH }: { glb: string; targetH?: numb
     scene.scale.setScalar(s);
 
     // Identifier la glace = mesh avec la plus grande surface XY (après rotation)
-    // Le cadre est composé de petites barres ; la glace couvre presque toute la surface.
     const meshes: THREE.Mesh[] = [];
     scene.traverse(c => { if ((c as THREE.Mesh).isMesh) meshes.push(c as THREE.Mesh); });
 
@@ -93,7 +92,6 @@ export function NissedalGlbFrame({ glb, targetH }: { glb: string; targetH?: numb
 
     mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
-    makeNissedalBackTransparent(scene, box);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
@@ -104,106 +102,23 @@ export function NissedalGlbFrame({ glb, targetH }: { glb: string; targetH?: numb
   return <primitive object={scene} />;
 }
 
-function makeNissedalBackTransparent(scene: THREE.Object3D, box: THREE.Box3) {
-  scene.traverse(node => {
-    const mesh = node as THREE.Mesh;
-    if (!mesh.isMesh) return;
-    const geo = mesh.geometry;
-    const indexAttr = geo.getIndex();
-    const posAttr = geo.getAttribute('position');
-    if (!posAttr) return;
-
-    const pos = posAttr.array;
-    const indices = indexAttr ? indexAttr.array : null;
-    const border = 1.0; // cm (le cadre GLB mesure ~1.4cm de large, 1.0cm capture toute la glace et le dos)
-
-    const isCenter = (vx: number, vy: number) => {
-      return (
-        vx > box.min.x + border &&
-        vx < box.max.x - border &&
-        vy > box.min.y + border &&
-        vy < box.max.y - border
-      );
-    };
-
-    if (indices) {
-      const newIndices: number[] = [];
-      for (let i = 0; i < indices.length; i += 3) {
-        const i0 = indices[i];
-        const i1 = indices[i + 1];
-        const i2 = indices[i + 2];
-
-        const v0x = pos[i0 * 3], v0y = pos[i0 * 3 + 1];
-        const v1x = pos[i1 * 3], v1y = pos[i1 * 3 + 1];
-        const v2x = pos[i2 * 3], v2y = pos[i2 * 3 + 1];
-
-        if (isCenter(v0x, v0y) && isCenter(v1x, v1y) && isCenter(v2x, v2y)) {
-          continue;
-        }
-        newIndices.push(i0, i1, i2);
-      }
-
-      const newIndexAttr = new (indices.constructor as any)(newIndices);
-      geo.setIndex(new THREE.BufferAttribute(newIndexAttr, 1));
-      if (geo.index) geo.index.needsUpdate = true;
-    } else {
-      const newPos: number[] = [];
-      const normAttr = geo.getAttribute('normal');
-      const uvAttr = geo.getAttribute('uv');
-      const newNorm: number[] = [];
-      const newUv: number[] = [];
-
-      const posArr = posAttr.array;
-      const normArr = normAttr ? normAttr.array : null;
-      const uvArr = uvAttr ? uvAttr.array : null;
-
-      for (let i = 0; i < posArr.length; i += 9) {
-        const v0x = posArr[i], v0y = posArr[i + 1];
-        const v1x = posArr[i + 3], v1y = posArr[i + 4];
-        const v2x = posArr[i + 6], v2y = posArr[i + 7];
-
-        if (isCenter(v0x, v0y) && isCenter(v1x, v1y) && isCenter(v2x, v2y)) {
-          continue;
-        }
-
-        for (let j = 0; j < 9; j++) newPos.push(posArr[i + j]);
-        if (normArr) {
-          for (let j = 0; j < 9; j++) newNorm.push(normArr[i + j]);
-        }
-        if (uvArr) {
-          for (let j = 0; j < 6; j++) newUv.push(uvArr[(i / 9) * 6 + j]);
-        }
-      }
-
-      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(newPos), 3));
-      if (normArr) {
-        geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(newNorm), 3));
-      }
-      if (uvArr) {
-        geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(newUv), 2));
-      }
-      geo.attributes.position.needsUpdate = true;
-    }
-  });
-}
-
 function NissedalMirrorGlb({ glb, onSize }: { glb: string; onSize: SceneItemProps['onSize'] }) {
   const { scene } = useGLTFClone(glb);
 
   useLayoutEffect(() => {
+    scene.scale.set(1, 1, 1);
     removeGlbLines(scene);
     scene.scale.setScalar(100);
     scene.rotation.x = -Math.PI / 2; // Z(hauteur)→Y, Y(épaisseur)→-Z
     mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
-    makeNissedalBackTransparent(scene, box);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
-  }, [scene]);
+    onSize?.(box.getSize(new THREE.Vector3()));
+  }, [scene, onSize]);
 
   return <primitive object={scene} />;
 }

@@ -1,3 +1,12 @@
+import { Brogrund70333982 } from '@features/scene/items/Brogrund70333982';
+import { Brogrund30328534 } from '@features/scene/items/Brogrund30328534';
+import { Lillviken20317852 } from '@features/scene/items/Lillviken20317852';
+import { Vallamosse10349655 } from '@features/scene/items/Vallamosse10349655';
+import { Nissedal30320321 } from '@features/scene/items/Nissedal30320321';
+import { Nissedal70320319 } from '@features/scene/items/Nissedal70320319';
+import { Nissedal50320320 } from '@features/scene/items/Nissedal50320320';
+import { Tisken40381253 } from '@features/scene/items/Tisken40381253';
+import { Vathult40467548 } from '@features/scene/items/Vathult40467548';
 import { Klyket50503598 } from '@features/scene/items/Klyket50503598';
 import { Enudden60251665 } from '@features/scene/items/Enudden60251665';
 import { Ikea20480013 } from '@features/scene/items/Ikea20480013';
@@ -89,6 +98,15 @@ import { GoogleNestMini }                             from '@features/scene/item
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'brogrund70333982': Brogrund70333982,
+  'brogrund30328534': Brogrund30328534,
+  'lillviken20317852': Lillviken20317852,
+  'vallamosse10349655': Vallamosse10349655,
+  'nissedal30320321': Nissedal30320321,
+  'nissedal70320319': Nissedal70320319,
+  'nissedal50320320': Nissedal50320320,
+  'tisken40381253': Tisken40381253,
+  'vathult40467548': Vathult40467548,
   'tasjon80392023': Tasjon80392023,
   'klyket50503598': Klyket50503598,
   'enudden60251665': Enudden60251665,
@@ -152,7 +170,6 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'mirror-nissedal-wide':   NissedalMirror,
   'mirror-nissedal-a':      NissedalMirror,
   'mirror-nissedal-d':      NissedalMirror,
-  'nissedal50320320':       NissedalMirror,
   'ninja-sp101':            NinjaSP101,
   'mini-pc':                MllseG2Pro,
   'matter-hub':             MatterHub,

@@ -35,23 +35,15 @@ const toComponentName = (name) => {
 };
 
 const URLS = [
-    'https://www.ikea.com/fr/fr/p/pepprig-eponge-a-recurer-vert-bleu-jaune-70567650/',
-    'https://www.ikea.com/fr/fr/p/rensare-sac-impermeable-10482036/',
-    'https://www.ikea.com/fr/fr/p/annons-faitout-avec-couvercle-verre-acier-inoxydable-80298474/',
-    'https://www.ikea.com/fr/fr/p/middagsmat-casserole-avec-couvercle-revetement-anti-adherent-verre-transparent-acier-inoxydable-60463714/',
-    'https://www.ikea.com/fr/fr/p/rinnig-brosse-a-vaisselle-gris-30407814/',
-    'https://www.ikea.com/fr/fr/p/tasjoen-mules-blanc-80392023/',
-    'https://www.ikea.com/fr/fr/p/koelvatten-eclairage-led-avec-capteur-gris-a-pile-00594176/',
-    'https://www.ikea.com/fr/fr/p/bilresa-telecommande-blanc-connecte-molette-70604172/',
-    'https://www.ikea.com/fr/fr/p/kabbleka-baguette-lum-led-av-connect-usb-couleur-ajustable-10609667/',
-    'https://www.ikea.com/fr/fr/p/dirigera-passerelle-pour-produits-connectes-blanc-connecte-10503406/',
-    'https://www.ikea.com/fr/fr/p/myggspray-detecteur-de-mouvement-sans-fil-connecte-70604186/',
-    'https://www.ikea.com/fr/fr/p/sekiner-crochet-pour-porte-blanc-60498110/',
-    'https://www.ikea.com/fr/fr/p/storavan-brosse-pour-wc-blanc-noir-80423816/',
-    'https://www.ikea.com/fr/fr/p/uppdatera-boite-blanc-40546471/',
-    'https://www.ikea.com/fr/fr/p/ikea-365-bouteille-a-eau-gris-fonce-20480013/',
-    'https://www.ikea.com/fr/fr/p/enudden-patere-pour-porte-blanc-60251665/',
-    'https://www.ikea.com/fr/fr/p/klyket-crochet-pliant-aluminium-beige-50503598/'
+    'https://www.ikea.com/fr/fr/p/vathult-eclairage-led-element-miroir-couleur-aluminium-40467548/',
+    'https://www.ikea.com/fr/fr/p/tisken-panier-a-ventouse-blanc-40381253/',
+    'https://www.ikea.com/fr/fr/p/nissedal-miroir-noir-50320320/',
+    'https://www.ikea.com/fr/fr/p/nissedal-miroir-noir-70320319/',
+    'https://www.ikea.com/fr/fr/p/nissedal-miroir-noir-30320321/',
+    'https://www.ikea.com/fr/fr/p/vallamosse-mitigeur-thermostatique-pour-douche-chrome-10349655/',
+    'https://www.ikea.com/fr/fr/p/lillviken-bouchon-20317852/',
+    'https://www.ikea.com/fr/fr/p/brogrund-barre-porte-serviettes-acier-inoxydable-30328534/',
+    'https://www.ikea.com/fr/fr/p/brogrund-etagere-murale-ou-porte-serviettes-acier-inoxydable-70333982/'
 ];
 
 async function importUrl(browser, url) {
