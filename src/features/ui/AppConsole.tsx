@@ -60,6 +60,8 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const [visible, setVisible] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const savedDimensionsRef = useRef<{ width?: number; height?: number }>({ width: 460, height: 215 });
 
   // Injecter la Google Font JetBrains Mono une seule fois
   useEffect(() => {
@@ -72,6 +74,23 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
       'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap';
     document.head.appendChild(link);
   }, []);
+
+  // Écouter les redimensionnements pour sauvegarder la taille manuelle
+  useEffect(() => {
+    if (!containerRef.current || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        if (visible && entry.contentRect.height > 60) {
+          savedDimensionsRef.current = {
+            width: entry.contentRect.width,
+            height: entry.contentRect.height,
+          };
+        }
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [visible]);
 
   // Écouter les CustomEvents 'app-log'
   useEffect(() => {
@@ -115,7 +134,8 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     position: 'fixed',
     top: 0,
     right: 0,
-    width: '460px',
+    width: visible && savedDimensionsRef.current.width ? `${savedDimensionsRef.current.width}px` : '460px',
+    height: visible && savedDimensionsRef.current.height ? `${savedDimensionsRef.current.height}px` : 'auto',
     maxWidth: '90vw',
     minWidth: '280px',
     zIndex: 9999,
@@ -204,10 +224,8 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   // ── Rendu ──────────────────────────────────────────────────────────────
   return (
     <div
-      style={{
-        ...containerStyle,
-        height: visible ? undefined : 'auto',
-      }}
+      ref={containerRef}
+      style={containerStyle}
     >
       {/* Header */}
       <div style={headerStyle}>

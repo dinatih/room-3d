@@ -12,10 +12,12 @@ function parseUrlNpcCount(): LaraCountMode {
       const lower = raw.trim().toLowerCase();
       if (lower === '15' || lower === 'all' || lower === 'toutes' || lower === 'tout' || lower === 'max') return 15;
       if (lower === '10' || lower === 'eco') return 10;
+      if (lower === '4' || lower === 'quad') return 4;
       if (lower === '2' || lower === 'duo' || lower === 'min') return 2;
       const num = parseInt(lower, 10);
       if (num >= 15) return 15;
       if (num >= 10) return 10;
+      if (num >= 4) return 4;
       if (num >= 1) return 2;
     }
   } catch {}
