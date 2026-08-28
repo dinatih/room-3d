@@ -138,8 +138,8 @@ export function MannequinHead({
     onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene, onSize]);
 
-  // Offset d'alignement manuel pour la tête de Mannequin (ajusté pour poser la perruque sur le crâne)
-  const MANNEQUIN_WIG_OFFSET: [number, number, number] = [0, 10.0, 0];
+  // Offset d'alignement manuel pour la tête de Mannequin, car son crâne diffère de celui de Lara.
+  const MANNEQUIN_WIG_OFFSET: [number, number, number] = [0, 31.0, 0]; // 31cm est environ TARGET_H * 0.69
 
   return (
     <group ref={ref}>
