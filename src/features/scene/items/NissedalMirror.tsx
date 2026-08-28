@@ -13,7 +13,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial, removeGlbBackFaces } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const frameMat  = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
@@ -91,6 +91,8 @@ export function NissedalGlbFrame({ glb, targetH }: { glb: string; targetH?: numb
     }
 
     mergeGlbByMaterial(scene);
+    removeGlbBackFaces(scene);
+
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
@@ -111,6 +113,7 @@ function NissedalMirrorGlb({ glb, onSize }: { glb: string; onSize: SceneItemProp
     scene.scale.setScalar(100);
     scene.rotation.x = -Math.PI / 2; // Z(hauteur)→Y, Y(épaisseur)→-Z
     mergeGlbByMaterial(scene);
+    removeGlbBackFaces(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
