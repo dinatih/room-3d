@@ -208,8 +208,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
 
   // Frame details
   const supportBeamGeo = useMemo(() => new THREE.BoxGeometry(2, 2, 110), []);
-  const legGeo = useMemo(() => new THREE.BoxGeometry(3, 35, 3), []);
-  const legRunnerGeo = useMemo(() => new THREE.BoxGeometry(56, 2, 3), []);
+  const legGeo = useMemo(() => new THREE.BoxGeometry(3, 33, 3), []);
   const footGeo = useMemo(() => new THREE.CylinderGeometry(2, 2, 1, 16), []);
 
   // Animation logic in render loop
@@ -259,27 +258,18 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
       <mesh geometry={supportBeamGeo} material={metalMat} position={[-20, 32, 0]} castShadow />
       <mesh geometry={supportBeamGeo} material={metalMat} position={[20, 32, 0]} castShadow />
 
-      {/* Slanted Legs (Left Side - Z = -50) */}
-      {/* Front Left Leg */}
-      <mesh geometry={legGeo} material={metalMat} position={[22.5, 16.5, -50]} rotation={[-0.15, 0, -0.3]} castShadow />
-      {/* Back Left Leg */}
-      <mesh geometry={legGeo} material={metalMat} position={[-22.5, 16.5, -50]} rotation={[-0.15, 0, 0.3]} castShadow />
-      {/* Left Runner connecting feet */}
-      <mesh geometry={legRunnerGeo} material={metalMat} position={[0, 1, -55]} castShadow />
-      {/* Left Feet (circular pads) */}
-      <mesh geometry={footGeo} material={feetMat} position={[25, 0.5, -55]} />
-      <mesh geometry={footGeo} material={feetMat} position={[-25, 0.5, -55]} />
+      {/* Straight Vertical Legs */}
+      {/* Left Side (Z = -50) */}
+      <mesh geometry={legGeo} material={metalMat} position={[24, 16.5, -50]} castShadow />
+      <mesh geometry={legGeo} material={metalMat} position={[-24, 16.5, -50]} castShadow />
+      <mesh geometry={footGeo} material={feetMat} position={[24, 0.5, -50]} />
+      <mesh geometry={footGeo} material={feetMat} position={[-24, 0.5, -50]} />
 
-      {/* Slanted Legs (Right Side - Z = 50) */}
-      {/* Front Right Leg */}
-      <mesh geometry={legGeo} material={metalMat} position={[22.5, 16.5, 50]} rotation={[0.15, 0, -0.3]} castShadow />
-      {/* Back Right Leg */}
-      <mesh geometry={legGeo} material={metalMat} position={[-22.5, 16.5, 50]} rotation={[0.15, 0, 0.3]} castShadow />
-      {/* Right Runner connecting feet */}
-      <mesh geometry={legRunnerGeo} material={metalMat} position={[0, 1, 55]} castShadow />
-      {/* Right Feet (circular pads) */}
-      <mesh geometry={footGeo} material={feetMat} position={[25, 0.5, 55]} />
-      <mesh geometry={footGeo} material={feetMat} position={[-25, 0.5, 55]} />
+      {/* Right Side (Z = 50) */}
+      <mesh geometry={legGeo} material={metalMat} position={[24, 16.5, 50]} castShadow />
+      <mesh geometry={legGeo} material={metalMat} position={[-24, 16.5, 50]} castShadow />
+      <mesh geometry={footGeo} material={feetMat} position={[24, 0.5, 50]} />
+      <mesh geometry={footGeo} material={feetMat} position={[-24, 0.5, 50]} />
 
 
       {/* ── 2. STATIC SEAT & BACKREST CUSHIONS ──────────────────────────────── */}
