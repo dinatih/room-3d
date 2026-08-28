@@ -583,12 +583,12 @@ function SneakersPair() {
   const pz = ROOM_D - 14;
   return (
     <>
-      {/* Paire inférieure au sol / étagère basse (Y = 0) */}
-      <group position={[MIRROR_CX, 0, pz]} userData={{ animUnit: true, itemName: 'Baskets Sneakers Rouges Bas' }}>
+      {/* Paire inférieure surélevée pour éviter le z-fighting avec le parquet (Y = 0.5) */}
+      <group position={[MIRROR_CX, 0.5, pz]} userData={{ animUnit: true, itemName: 'Baskets Sneakers Rouges Bas' }}>
         <SneakersRed item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* Paire supérieure sur l'étagère GREJIG (Y = 18) */}
-      <group position={[MIRROR_CX, 18, pz]} userData={{ animUnit: true, itemName: 'Baskets Sneakers Rouges Haut' }}>
+      {/* Paire supérieure sur l'étagère GREJIG (Y = 18.5) */}
+      <group position={[MIRROR_CX, 18.5, pz]} userData={{ animUnit: true, itemName: 'Baskets Sneakers Rouges Haut' }}>
         <SneakersRed item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>
