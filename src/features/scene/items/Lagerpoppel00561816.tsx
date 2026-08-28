@@ -17,6 +17,19 @@ export function Lagerpoppel00561816({ onSize, ...props }: SceneItemProps) {
     scene.scale.set(1, 1, 1);
     removeGlbLines(scene);
     scene.scale.setScalar(100);
+
+    // Teinte rouge foncé (atténue le bleu/rosé de la texture de base fuchsia)
+    scene.traverse(node => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.material) return;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const mat of mats) {
+        if ((mat as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+          (mat as THREE.MeshStandardMaterial).color.set('#b81424');
+        }
+      }
+    });
+
     mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
