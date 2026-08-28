@@ -122,13 +122,13 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: '11px',
     pointerEvents: 'auto',
-    display: 'flex',
+    display: hidden ? 'none' : 'flex',
     flexDirection: 'column',
-    resize: 'both',
+    resize: visible ? 'both' : 'none',
     overflow: 'hidden',
-    minHeight: '80px',
-    maxHeight: '85vh',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.7)',
+    minHeight: visible ? '80px' : 'auto',
+    maxHeight: visible ? '85vh' : 'auto',
+    boxShadow: visible ? '0 4px 20px rgba(0, 0, 0, 0.7)' : 'none',
   };
 
   const headerStyle: React.CSSProperties = {
@@ -203,7 +203,12 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
 
   // ── Rendu ──────────────────────────────────────────────────────────────
   return (
-    <div style={{ ...containerStyle, display: hidden ? 'none' : 'flex' }}>
+    <div
+      style={{
+        ...containerStyle,
+        height: visible ? undefined : 'auto',
+      }}
+    >
       {/* Header */}
       <div style={headerStyle}>
         <span style={titleStyle}>
