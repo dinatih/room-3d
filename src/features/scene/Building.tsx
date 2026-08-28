@@ -1628,8 +1628,8 @@ function MirrorsA() {
   const FT = 1.8, FD = 5.0; // épaisseur standard Nissedal 5cm
   const MA_START_Z  = kallaxW1 + 10;
   const MA_BOTTOM_Y = 6;
-  const fx  = FD / 2; // centré pour être flush au mur à X=0
-  const mirX = FD - 0.5; // glace à 0.5cm du bord avant
+  const fx  = 1.0; // Rapproché du mur A
+  const mirX = 3.0; // Glace affleurante dans le cadre
 
   const planes = useMemo(() => {
     const p: { w: number; h: number; x: number; y: number }[] = [];
