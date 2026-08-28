@@ -148,7 +148,7 @@ export function MannequinHead({
   const MANNEQUIN_WIG_OFFSET: [number, number, number] = [0, 31.0, 0]; // 31cm est environ TARGET_H * 0.69
 
   return (
-    <group ref={ref}>
+    <group ref={ref} userData={{ animUnit: true, isMannequin: true, itemName: 'Tête de mannequin' }}>
       <primitive object={scene} />
       {isRiggedWig(activeWigId) ? (
         <RiggedWig

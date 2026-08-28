@@ -83,6 +83,7 @@ function collectScene(scene: THREE.Scene) {
   const pillars: THREE.Object3D[] = [];
   const wallsBySide = new Map<string, THREE.Object3D[]>();
   const ikea: THREE.Object3D[] = [];
+  const mannequins: THREE.Object3D[] = [];
   const rest: THREE.Object3D[] = [];
   const ceiling: THREE.Object3D[] = [];
   
@@ -111,7 +112,16 @@ function collectScene(scene: THREE.Scene) {
       o.traverseAncestors(p => { if (p.userData?.isIkea) isIkea = true; });
     }
 
-    if (brickType === 'ceiling') ceiling.push(o);
+    let isMannequin = o.userData?.isMannequin;
+    if (!isMannequin) {
+      o.traverse(c => { if (c.userData?.isMannequin) isMannequin = true; });
+    }
+    if (!isMannequin && typeof o.userData?.itemName === 'string' && o.userData.itemName.toLowerCase().includes('mannequin')) {
+      isMannequin = true;
+    }
+
+    if (isMannequin) mannequins.push(o);
+    else if (brickType === 'ceiling') ceiling.push(o);
     else if (brickType === 'floor') floor.push(o);
     else if (brickType === 'wall' && isPillar) pillars.push(o);
     else if (brickType === 'wall') {
@@ -159,7 +169,7 @@ function collectScene(scene: THREE.Scene) {
   }
 
   scene.children.forEach(child => visit(child, 0));
-  return { floor, skirting, pillars, wallsBySide, ikea, rest, ceiling };
+  return { floor, skirting, pillars, wallsBySide, ikea, mannequins, rest, ceiling };
 }
 
 
@@ -209,9 +219,9 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
     const remerge = unmergeScene(s3);
 
     // 2. Ensuite on collecte
-    const { floor, skirting, pillars, wallsBySide, ikea, rest, ceiling } = collectScene(s3);
+    const { floor, skirting, pillars, wallsBySide, ikea, mannequins, rest, ceiling } = collectScene(s3);
 
-    // L'ordre demandé : plinthes/sol, piliers, ikea, reste, murs, plafond
+    // L'ordre demandé : plinthes/sol, piliers, ikea, reste, murs, plafond, puis mannequins en tout dernier
     const groupedObjects: AnimObj[] = [];
     let cursor = 0;
 
@@ -257,6 +267,7 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
     addSequential(sortByYZX(floor));
     addSequential(sortByYZX(mixedObjects));
     addSequential(sortByYZX(ceiling));
+    addSequential(sortByYZX(mannequins));
 
     const objects = groupedObjects;
 
