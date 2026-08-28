@@ -214,6 +214,7 @@ export function Studio() {
 
   const [showInventory, setShowInventory] = useState(false);
   const [inventoryInitialCat, setInventoryInitialCat] = useState<string>('all');
+  const [hideUI, setHideUI] = useState(false);
 
   useEffect(() => {
     (window as any).isAnimProRunning = false;
@@ -299,6 +300,8 @@ export function Studio() {
       } else if (e.key === 'k' || e.key === 'K') {
         onToggleLayer('skeleton');
         cameraState.invalidate?.();
+      } else if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') {
+        setHideUI(h => !h);
       }
     };
 
@@ -481,58 +484,72 @@ export function Studio() {
       </Canvas>
 
       {/* HTML overlays */}
-      <SidePanel
-        layers={layers} onToggleLayer={onToggleLayer}
-        onOpenInventory={() => setShowInventory(true)}
-        lidarMode={lidarMode} onCycleLidar={onCycleLidar}
-        lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
-        buildAnim={buildAnim}
-        onStartBuildAnim={start(setBuildAnim)}
-        buildAnimMatrix={buildAnimMatrix}
-        onStartBuildAnimMatrix={start(setBuildAnimMatrix)}
-        onStopBuildAnim={stopAll}
-        animDurations={animDurations}
-        planeModel={planeModel}
-        onSetPlaneModel={setPlaneModel}
-        autopilotVisible={autopilotVisible}
-        onToggleAutopilot={() => setAutopilotVisible(v => !v)}
-        showLandingStrips={showLandingStrips}
-        onToggleLandingStrips={() => {
-          setShowLandingStrips(v => {
-            cameraState.landingStripsVisible = !v;
-            return !v;
-          });
-        }}
-      />
-      {planeMode && (
-        <div style={{
-          position: 'absolute', bottom: 72, left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'rgba(0,0,0,0.6)', borderRadius: 8,
-          padding: '6px 16px', color: '#ddd', fontSize: 12,
-          pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
-          backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)',
-        }}>
-          {!planeLaunched
-            ? '✈ Espace / C → décoller   |   F / Échap → quitter'
-            : planeViewMode === 'landing'
-              ? '⬇ Atterrissage automatique…'
-              : planeViewMode === 'landed'
-                ? '🛬 Atterri — orbite   |   F / Échap = quitter'
-                : `Vue: ${planeViewMode}   |   C = changer vue   |   F / Échap = quitter`
-          }
-        </div>
+      {!hideUI && (
+        <>
+          <SidePanel
+            layers={layers} onToggleLayer={onToggleLayer}
+            onOpenInventory={() => setShowInventory(true)}
+            lidarMode={lidarMode} onCycleLidar={onCycleLidar}
+            lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
+            buildAnim={buildAnim}
+            onStartBuildAnim={start(setBuildAnim)}
+            buildAnimMatrix={buildAnimMatrix}
+            onStartBuildAnimMatrix={start(setBuildAnimMatrix)}
+            onStopBuildAnim={stopAll}
+            animDurations={animDurations}
+            planeModel={planeModel}
+            onSetPlaneModel={setPlaneModel}
+            autopilotVisible={autopilotVisible}
+            onToggleAutopilot={() => setAutopilotVisible(v => !v)}
+            showLandingStrips={showLandingStrips}
+            onToggleLandingStrips={() => {
+              setShowLandingStrips(v => {
+                cameraState.landingStripsVisible = !v;
+                return !v;
+              });
+            }}
+          />
+          {planeMode && (
+            <div style={{
+              position: 'absolute', bottom: 72, left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(0,0,0,0.6)', borderRadius: 8,
+              padding: '6px 16px', color: '#ddd', fontSize: 12,
+              pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
+              backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              {!planeLaunched
+                ? '✈ Espace / C → décoller   |   F / Échap → quitter'
+                : planeViewMode === 'landing'
+                  ? '⬇ Atterrissage automatique…'
+                  : planeViewMode === 'landed'
+                    ? '🛬 Atterri — orbite   |   F / Échap = quitter'
+                    : `Vue: ${planeViewMode}   |   C = changer vue   |   F / Échap = quitter`
+              }
+            </div>
+          )}
+          <Minimap />
+          {showInventory && (
+            <Suspense fallback={null}>
+              <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
+            </Suspense>
+          )}
+          <VirtualDPad />
+          <HoverOverlay />
+          {layers.wallEdges && <EdgeHoverOverlay />}
+          <AppConsole hidden={showInventory} />
+        </>
       )}
-      <Minimap />
-      {showInventory && (
-        <Suspense fallback={null}>
-          <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
-        </Suspense>
+      {hideUI && (
+        <button
+          onClick={() => setHideUI(false)}
+          className="btn btn-dark btn-sm position-fixed opacity-50 hover-opacity-100 shadow-sm"
+          style={{ top: 12, right: 12, zIndex: 9999, fontSize: '10px' }}
+          title="Réafficher l'interface (Touche 0)"
+        >
+          👁️ Afficher UI [0]
+        </button>
       )}
-      <VirtualDPad />
-      <HoverOverlay />
-      {layers.wallEdges && <EdgeHoverOverlay />}
-      <AppConsole hidden={showInventory} />
     </div>
   );
 }

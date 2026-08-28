@@ -233,22 +233,43 @@ export function Minimap() {
   }, [canvasW, canvasH, smallW, isCollapsed]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && expanded) setExpanded(false); };
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+      if (e.key === 'Escape' && expanded) {
+        setExpanded(false);
+      }
+      if (e.key === '8' || e.code === 'Digit8' || e.code === 'Numpad8') {
+        setIsCollapsed(c => !c);
+      }
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [expanded]);
 
   if (isCollapsed) {
     return (
-      <button
-        onClick={() => setIsCollapsed(false)}
-        className="btn btn-dark shadow-sm glass-card border-secondary text-white d-flex align-items-center justify-content-between rounded-3 w-100 px-2 py-1.5"
-        style={{ cursor: 'pointer', opacity: 0.95 }}
-        title="Afficher la minimap (Plan 2D)"
+      <div
+        className="position-fixed"
+        style={{
+          bottom: isMobile ? 12 : 20,
+          right: isMobile ? 12 : 20,
+          zIndex: 90,
+          pointerEvents: 'auto',
+        }}
       >
-        <span style={{ fontSize: '11px', fontWeight: 600 }}>🗺️ Plan 2D</span>
-        <span style={{ fontSize: '10px' }}>➕</span>
-      </button>
+        <button
+          onClick={() => setIsCollapsed(false)}
+          className="btn btn-dark shadow-sm glass-card border-secondary text-white d-flex align-items-center gap-1.5 rounded-3 px-2 py-1"
+          style={{ cursor: 'pointer', opacity: 0.95 }}
+          title="Afficher la minimap (Touche 8)"
+        >
+          <span style={{ fontSize: '11px', fontWeight: 600 }}>🗺️ Plan 2D [8]</span>
+          <span style={{ fontSize: '10px' }}>➕</span>
+        </button>
+      </div>
     );
   }
 

@@ -152,9 +152,12 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Inventaire Personnages (direct)" keys={['P']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
               <R label="Vue perspective (reset)"    keys={['O']} />
-              <R label="Walk mode (cycle Orbit/Walk/FPV)" keys={['M']} />
+              <R label="Walk mode (cycle 3P / FPV)" keys={['M']} />
               <R label="Vue 3ème personne directe"  keys={['3']} />
               <R label="Vue FPV 1ère personne directe" keys={['1']} />
+              <R label="Minimap 2D (toggle)"        keys={['8']} />
+              <R label="Masquer toute l'UI (Vue clean)" keys={['0']} />
+              <R label="Console de logs (toggle)"   keys={['B']} />
               <R label="Vue top-down (toggle)"      keys={['T']} />
               <R label="Vue top-down suivi perso (toggle)" keys={['Y']} />
               <R label="Avion en papier (toggle)"   keys={['F']} />
