@@ -115,25 +115,34 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     position: 'fixed',
     top: 0,
     right: 0,
-    width: '100%',
-    maxWidth: '500px',
+    width: '460px',
+    maxWidth: '90vw',
+    minWidth: '280px',
     zIndex: 9999,
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: '11px',
     pointerEvents: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    resize: 'both',
+    overflow: 'hidden',
+    minHeight: '80px',
+    maxHeight: '85vh',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.7)',
   };
 
   const headerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '3px 10px',
-    background: 'rgba(0, 0, 0, 0.92)',
+    padding: '4px 10px',
+    background: 'rgba(0, 0, 0, 0.95)',
     borderTop: '1px solid #00ff88',
     borderBottom: '1px solid rgba(0, 255, 136, 0.25)',
     color: '#00ff88',
     cursor: 'default',
     userSelect: 'none',
+    flexShrink: 0,
   };
 
   const titleStyle: React.CSSProperties = {
@@ -161,13 +170,15 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   };
 
   const logAreaStyle: React.CSSProperties = {
-    maxHeight: '150px',
+    flex: 1,
+    height: '180px',
+    minHeight: '60px',
     overflowY: 'auto',
-    background: 'rgba(0, 0, 0, 0.82)',
-    padding: '4px 10px',
+    background: 'rgba(0, 0, 0, 0.85)',
+    padding: '6px 10px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1px',
+    gap: '2px',
   };
 
   const lineStyle: React.CSSProperties = {
@@ -192,7 +203,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
 
   // ── Rendu ──────────────────────────────────────────────────────────────
   return (
-    <div style={{ ...containerStyle, display: hidden ? 'none' : 'block' }}>
+    <div style={{ ...containerStyle, display: hidden ? 'none' : 'flex' }}>
       {/* Header */}
       <div style={headerStyle}>
         <span style={titleStyle}>
