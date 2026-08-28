@@ -505,6 +505,14 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
     let touchLastX = 0;
     let touchLastY = 0;
+    let touchLastDist = 0;
+
+    const getTouchDist = (e: TouchEvent) => {
+      if (e.touches.length < 2) return 0;
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      return Math.hypot(dx, dy);
+    };
 
     const onDown  = (e: MouseEvent) => {
       if ((modeRef.current === 'walk' || modeRef.current === 'fpv') && e.button === 0) {
@@ -529,18 +537,46 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       invalidate();
     };
 
-    // ── Mobile Touch controls (Walk orientation) ────────────────────────────────
+    // ── Mobile Touch controls (Walk orientation & 2-finger Pinch-to-Zoom) ────────
     const onTouchStart = (e: TouchEvent) => {
-      if ((modeRef.current === 'walk' || modeRef.current === 'fpv') && e.touches.length === 1) {
+      if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
+      if (e.touches.length === 1) {
         dragging.current = true;
         cameraState.isDragging = true;
         touchLastX = e.touches[0].clientX;
         touchLastY = e.touches[0].clientY;
+        touchLastDist = 0;
+      } else if (e.touches.length === 2) {
+        dragging.current = false;
+        cameraState.isDragging = false;
+        touchLastDist = getTouchDist(e);
       }
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!dragging.current || (modeRef.current !== 'walk' && modeRef.current !== 'fpv') || e.touches.length !== 1) return;
+      if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
+
+      if (e.touches.length === 2) {
+        const dist = getTouchDist(e);
+        if (touchLastDist > 0) {
+          const delta = dist - touchLastDist;
+          if (modeRef.current === 'walk') {
+            orbitDistance.current = Math.max(30, Math.min(800, orbitDistance.current - delta * 0.8));
+            updateWalkLook();
+          } else {
+            const cam = camera as THREE.PerspectiveCamera;
+            if (cam.isPerspectiveCamera) {
+              cam.fov = Math.max(30, Math.min(110, cam.fov - delta * 0.08));
+              cam.updateProjectionMatrix();
+            }
+          }
+          invalidate();
+        }
+        touchLastDist = dist;
+        return;
+      }
+
+      if (!dragging.current || e.touches.length !== 1) return;
       const dx = e.touches[0].clientX - touchLastX;
       const dy = e.touches[0].clientY - touchLastY;
       touchLastX = e.touches[0].clientX;
@@ -558,9 +594,18 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       invalidate();
     };
 
-    const onTouchEnd = () => {
-      dragging.current = false;
-      cameraState.isDragging = false;
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        touchLastX = e.touches[0].clientX;
+        touchLastY = e.touches[0].clientY;
+        touchLastDist = 0;
+        dragging.current = true;
+        cameraState.isDragging = true;
+      } else if (e.touches.length === 0) {
+        dragging.current = false;
+        cameraState.isDragging = false;
+        touchLastDist = 0;
+      }
     };
 
     // Scroll wheel : en 3ème personne ajuste la distance d'orbite (zoom/dézoom) ; en FPV ajuste le FOV
