@@ -174,21 +174,38 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       camera.position.set(targetX, targetY, targetZ);
       ctrl.update();
     } else {
-      // Orbite 3ème personne centrée sur le personnage
+      // ── Mode 3ème Personne Intelligent & Cinématique ──
       const targetX = walkPos.current.x;
-      const targetY = walkPos.current.y * 0.75; // hauteur poitrine / torse
+      const targetY = walkPos.current.y * 0.75; // hauteur torse / regard
       const targetZ = walkPos.current.z;
 
+      // Si l'utilisateur n'a pas pris le contrôle de l'orbite manuellement, la caméra suit intelligemment le dos du PNJ
+      if (!cameraState.isDragging && !keys.current.has('ArrowLeft') && !keys.current.has('ArrowRight')) {
+        let diffYaw = walkYaw.current - orbitYaw.current;
+        while (diffYaw > Math.PI) diffYaw -= 2 * Math.PI;
+        while (diffYaw < -Math.PI) diffYaw += 2 * Math.PI;
+        // Suivi fluide et naturel de l'orientation du personnage
+        orbitYaw.current += diffYaw * 0.05;
+      }
+
+      // Calcul de la distance d'orbite avec léger recul dynamique
       const dist = orbitDistance.current;
       const cosP = Math.cos(orbitPitch.current);
       const sinP = Math.sin(orbitPitch.current);
 
-      const camX = targetX - Math.sin(orbitYaw.current) * cosP * dist;
-      const camY = Math.max(10, targetY + sinP * dist);
-      const camZ = targetZ - Math.cos(orbitYaw.current) * cosP * dist;
+      let camX = targetX - Math.sin(orbitYaw.current) * cosP * dist;
+      let camY = Math.max(15, targetY + sinP * dist);
+      let camZ = targetZ - Math.cos(orbitYaw.current) * cosP * dist;
 
-      ctrl.target.set(targetX, targetY, targetZ);
-      camera.position.set(camX, camY, camZ);
+      // Amortissement doux de la caméra (Smooth Lerp)
+      const lerpFactor = 0.15;
+      ctrl.target.x += (targetX - ctrl.target.x) * lerpFactor;
+      ctrl.target.y += (targetY - ctrl.target.y) * lerpFactor;
+      ctrl.target.z += (targetZ - ctrl.target.z) * lerpFactor;
+
+      camera.position.x += (camX - camera.position.x) * lerpFactor;
+      camera.position.y += (camY - camera.position.y) * lerpFactor;
+      camera.position.z += (camZ - camera.position.z) * lerpFactor;
       ctrl.update();
     }
   }
@@ -199,6 +216,22 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       orbitYaw.current = walkYaw.current;
       orbitPitch.current = 0.25;
       orbitDistance.current = 220;
+
+      const targetX = x;
+      const targetY = walkPos.current.y * 0.75;
+      const targetZ = z;
+      const dist = orbitDistance.current;
+      const cosP = Math.cos(orbitPitch.current);
+      const sinP = Math.sin(orbitPitch.current);
+      const camX = targetX - Math.sin(orbitYaw.current) * cosP * dist;
+      const camY = Math.max(15, targetY + sinP * dist);
+      const camZ = targetZ - Math.cos(orbitYaw.current) * cosP * dist;
+
+      camera.position.set(camX, camY, camZ);
+      if (ctrlRef.current) {
+        ctrlRef.current.target.set(targetX, targetY, targetZ);
+        ctrlRef.current.update();
+      }
     } else {
       walkPitch.current = 0;
     }
@@ -355,15 +388,13 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         return;
       }
       if (e.key === 'm' || e.key === 'M') {
-        if (modeRef.current === 'orbit' || modeRef.current === 'top') {
-          enterWalk(walkPos.current.x, walkPos.current.z, 'walk');
-          appLog('system', '🎥 Mode Follow (3ème personne)');
-        } else if (modeRef.current === 'walk') {
+        if (modeRef.current === 'walk') {
           enterWalk(walkPos.current.x, walkPos.current.z, 'fpv');
           appLog('system', '🎥 Mode FPV (1ère personne)');
-        } else if (modeRef.current === 'fpv') {
-          exitWalkMode();
-          appLog('system', '🎥 Mode Vue Libre (Orbit)');
+        } else {
+          // Si en FPV, Orbit ou Top : passer en 3ème personne intelligente
+          enterWalk(walkPos.current.x, walkPos.current.z, 'walk');
+          appLog('system', '🎥 Mode Suivi Intelligent (3ème personne)');
         }
         return;
       }
