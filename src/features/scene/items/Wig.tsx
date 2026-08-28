@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { LAYER_WALKER, LAYER_FURNITURE } from '@config';
+import { LAYER_WALKER } from '@config';
 
 export const HAIR_COLORS: Record<string, THREE.Color> = {
   naturel:  new THREE.Color(0.4, 0.25, 0.1),
@@ -101,19 +101,14 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     
     if (hairHeadBone) {
       (sg as THREE.Object3D).updateMatrixWorld(true);
-      const headWorldPos = new THREE.Vector3();
-      (hairHeadBone as THREE.Object3D).getWorldPosition(headWorldPos);
-      const sgWorldPos = new THREE.Vector3();
-      (sg as THREE.Object3D).getWorldPosition(sgWorldPos);
-      const headRelPos = headWorldPos.sub(sgWorldPos);
-
+      const headPos = (hairHeadBone as THREE.Object3D).position.clone();
       (sg as THREE.Object3D).position.set(
-        -headRelPos.x * s * scale + offset[0],
-        -headRelPos.y * s * scale + (attachTo ? 0.07 : 0) + offset[1],
-        -headRelPos.z * s * scale + offset[2]
+        -headPos.x * s * scale,
+        -headPos.y * s * scale + (attachTo ? 0.07 : 0),
+        -headPos.z * s * scale
       );
     } else {
-      (sg as THREE.Object3D).position.set(offset[0], 0.15 * scale + offset[1], offset[2]);
+      (sg as THREE.Object3D).position.set(0, 0.15 * scale, 0);
     }
 
     // Apply the user requested scale DIRECTLY to sg instead of the wrapper group
@@ -183,7 +178,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         if (attachTo) {
           m.layers.set(LAYER_WALKER);
         } else {
-          m.layers.set(LAYER_FURNITURE);
+          m.layers.set(0);
         }
         
         const targetColor = color && HAIR_COLORS[color] ? HAIR_COLORS[color] : null;
