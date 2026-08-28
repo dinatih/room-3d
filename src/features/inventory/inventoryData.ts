@@ -407,6 +407,7 @@ export const STORAGE_SPACES: StorageSpace[] = [
 
 export const CATEGORIES: Category[] = [
   { id: 'all',          label: 'Tout' },
+  { id: 'spaces',       label: '🏠 Espaces & Pièces' },
   { id: 'actionnable',  label: '⚡ Actionnable' },
   { id: 'doors',        label: '🚪 Portes' },
   { id: 'storage',      label: 'Rangement' },

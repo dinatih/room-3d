@@ -5,13 +5,16 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { INVENTORY, CATEGORIES, STORAGE_SPACES, type InventoryItem, type StorageSpace } from './inventoryData';
 import { InventoryPreview } from './InventoryPreview';
+import { SpatialZonePreview } from './SpatialZonePreview';
+import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
-type PreviewTarget = InventoryItem | StorageSpace | null;
+type PreviewTarget = InventoryItem | StorageSpace | SpatialZone | null;
 
 // Helper to determine the category icon/emoji
 function getCategoryEmoji(cat: string): string {
   switch (cat) {
+    case 'spaces': return '🏠';
     case 'storage': return '📦';
     case 'furniture': return '🛋️';
     case 'tech': return '💻';
@@ -32,23 +35,127 @@ function getCategoryEmoji(cat: string): string {
 function ItemDetailContent({ item }: { item: PreviewTarget }) {
   if (!item) return null;
 
-  const isStorage = !('category' in item); // Storage spaces don't have a category field
+  const isZone = item instanceof SpatialZone;
+  const isStorage = !isZone && !('category' in item);
+
+  if (isZone) {
+    const zone = item as SpatialZone;
+    const smartObjects = zone.getSmartObjects();
+    const waypoints = zone.getWaypoints();
+    const min = zone.bounds.min;
+    const max = zone.bounds.max;
+    const sizeStr = `${(max[0] - min[0]).toFixed(0)} × ${(max[2] - min[2]).toFixed(0)} × ${(max[1] - min[1]).toFixed(0)} cm`;
+
+    return (
+      <div className="inventory-detail-wrap">
+        {/* Rendu 3D isolé de la pièce / espace sans obstruction */}
+        <div className="inventory-detail-hero">
+          <SpatialZonePreview zone={zone} height={320} />
+        </div>
+
+        <div className="inventory-detail-body">
+          <h2 className="inventory-detail-title">{zone.name}</h2>
+          <p className="inventory-detail-brand">
+            {zone.environment === 'indoor' ? 'Intérieur studio' : 'Espace extérieur'} — Zone Spatiale 3D
+          </p>
+
+          <div className="inventory-detail-badges">
+            <span className="inventory-badge-tag inventory-badge-virt" style={{ fontSize: 11, padding: '3px 9px', background: '#0284c7', color: '#fff' }}>
+              {zone.environment === 'indoor' ? '🏠 Pièce Intérieure' : '🌳 Extérieur'}
+            </span>
+            <span className="inventory-badge-tag" style={{ fontSize: 11, padding: '3px 9px', background: '#e0f2fe', color: '#0369a1' }}>
+              ✨ {smartObjects.length} Smart Object{smartObjects.length > 1 ? 's' : ''}
+            </span>
+            <span className="inventory-badge-tag" style={{ fontSize: 11, padding: '3px 9px', background: '#f1f5f9', color: '#475569' }}>
+              📍 {waypoints.length} Waypoint{waypoints.length > 1 ? 's' : ''}
+            </span>
+          </div>
+
+          <div className="inventory-spec-grid">
+            <div className="inventory-spec-card">
+              <div className="inventory-spec-label">Volume Bounding Box (L×P×H)</div>
+              <div className="inventory-spec-value">{sizeStr}</div>
+            </div>
+            <div className="inventory-spec-card">
+              <div className="inventory-spec-label">SmartObjects interactifs</div>
+              <div className="inventory-spec-value" style={{ color: 'var(--red)', fontWeight: 'bold' }}>
+                {smartObjects.length} meuble{smartObjects.length > 1 ? 's' : ''}
+              </div>
+            </div>
+          </div>
+
+          <hr className="inventory-detail-divider" />
+          <div className="inventory-detail-section-label">SmartObjects & Affordances dans cette pièce</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+            {smartObjects.length === 0 ? (
+              <div style={{ color: 'var(--muted)', fontSize: 12 }}>Aucun SmartObject indexé dans ce volume.</div>
+            ) : (
+              smartObjects.map(obj => (
+                <div
+                  key={obj.id}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 6,
+                    padding: '8px 12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 4
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 600, fontSize: 13 }}>✨ {obj.name}</span>
+                    <span style={{ fontSize: 10, background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase' }}>
+                      {obj.category}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>
+                    Slots : {obj.slots.map(s => s.name).join(', ')}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <hr className="inventory-detail-divider" />
+          <div className="inventory-detail-section-label">Points de Passage (Waypoints)</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+            {waypoints.map(wp => (
+              <span
+                key={wp.id}
+                style={{
+                  background: '#f1f5f9',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: 4,
+                  padding: '3px 8px',
+                  fontSize: 11,
+                  color: '#334155'
+                }}
+              >
+                📍 {wp.name || wp.id} ({wp.x.toFixed(0)}, {wp.z.toFixed(0)})
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const catLabel = !isStorage 
     ? CATEGORIES.find(c => c.id === (item as InventoryItem).category)?.label ?? (item as InventoryItem).category 
     : 'Rangement';
 
-  const dimsStr = `${item.dims.w} × ${item.dims.d} × ${item.dims.h} cm`;
+  const dimsStr = `${(item as any).dims.w} × ${(item as any).dims.d} × ${(item as any).dims.h} cm`;
 
   return (
     <div className="inventory-detail-wrap">
       {/* 3D Preview Canvas / Photo Gallery as Hero */}
       <div className="inventory-detail-hero">
-        <InventoryPreview item={item} height={300} hideFooter={true} />
+        <InventoryPreview item={item as any} height={300} hideFooter={true} />
       </div>
 
       <div className="inventory-detail-body">
-        <h2 className="inventory-detail-title">{item.name}</h2>
+        <h2 className="inventory-detail-title">{(item as any).name}</h2>
         <p className="inventory-detail-brand">
           {!isStorage && (item as InventoryItem).brand ? `${(item as InventoryItem).brand} — ` : ''}
           {isStorage ? 'Espace de rangement' : catLabel}
@@ -149,12 +256,12 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
         <hr className="inventory-detail-divider" />
         <div className="inventory-detail-section-label">Notes</div>
         <div className="inventory-detail-notes">
-          {item.notes || "Aucune note descriptive disponible pour cet élément."}
+          {(item as any).notes || "Aucune note descriptive disponible pour cet élément."}
         </div>
 
         <div className="inventory-detail-actions mt-3">
-          <button className="inventory-btn-edit" onClick={() => alert(`Modifier : ${item.name}`)}>✏️ Modifier</button>
-          <button className="inventory-btn-delete" onClick={() => { if(confirm(`Supprimer ${item.name} ?`)) alert('Supprimé (démo)'); }}>🗑 Supprimer</button>
+          <button className="inventory-btn-edit" onClick={() => alert(`Modifier : ${(item as any).name}`)}>✏️ Modifier</button>
+          <button className="inventory-btn-delete" onClick={() => { if(confirm(`Supprimer ${(item as any).name} ?`)) alert('Supprimé (démo)'); }}>🗑 Supprimer</button>
         </div>
       </div>
     </div>
@@ -172,8 +279,17 @@ export function Inventory({ visible = true, onClose }: { visible?: boolean; onCl
   const [showMobileModal, setShowMobileModal] = useState(false);
   const tableContainerRef                 = useRef<HTMLDivElement>(null);
 
+  // SpatialZones list
+  const spatialZones = useMemo(() => {
+    const all = SpatialZoneManager.getAllZones();
+    const q = search.trim().toLowerCase();
+    if (!q) return all;
+    return all.filter(z => z.name.toLowerCase().includes(q) || z.id.toLowerCase().includes(q));
+  }, [search]);
+
   // Filter items list
   const items = useMemo(() => {
+    if (activeCat === 'spaces') return [];
     const q = search.trim().toLowerCase();
     return INVENTORY.filter(i => {
       if (activeCat === 'actionnable' && !i.actions?.length) return false;
@@ -195,11 +311,17 @@ export function Inventory({ visible = true, onClose }: { visible?: boolean; onCl
     ? STORAGE_SPACES.filter(sp => sp.actions?.length)
     : STORAGE_SPACES;
 
-  // Unified list: storage spaces first, then items
-  const navList = useMemo<PreviewTarget[]>(() => [
-    ...(showSpaces ? spaces : []),
-    ...items,
-  ], [showSpaces, spaces, items]);
+  // Unified list: Spatial zones (if category 'spaces' or 'all'), storage spaces, then items
+  const navList = useMemo<PreviewTarget[]>(() => {
+    if (activeCat === 'spaces') {
+      return spatialZones;
+    }
+    return [
+      ...(activeCat === 'all' ? spatialZones : []),
+      ...(showSpaces ? spaces : []),
+      ...items,
+    ];
+  }, [activeCat, spatialZones, showSpaces, spaces, items]);
 
   // Reset focus on list update
   useEffect(() => { setFocusedIndex(-1); }, [navList]);
@@ -325,10 +447,56 @@ export function Inventory({ visible = true, onClose }: { visible?: boolean; onCl
               ) : (
                 navList.map(target => {
                   if (!target) return null;
-                  const isStorage = !('category' in target);
+                  const isZone = target instanceof SpatialZone;
+                  const isStorage = !isZone && !('category' in target);
                   const id = target.id;
                   const isSelected = selected && selected.id === id;
                   const isFocused  = focusedId === id;
+
+                  if (isZone) {
+                    const zone = target as SpatialZone;
+                    const smartObjectsCount = zone.getSmartObjects().length;
+                    return (
+                      <div
+                        key={zone.id}
+                        data-item-id={zone.id}
+                        className={`inventory-item-row${isSelected ? ' active' : ''}`}
+                        onClick={() => {
+                          setSelected(target);
+                          if (isMobile) {
+                            setShowMobileModal(true);
+                          }
+                        }}
+                        style={{
+                          outline: isFocused ? '1px solid var(--red)' : undefined,
+                          outlineOffset: '-1px',
+                        }}
+                      >
+                        <div className="inventory-item-thumb">
+                          <span className="thumb-icon">{zone.environment === 'indoor' ? '🏠' : '🌳'}</span>
+                        </div>
+                        <div className="inventory-item-meta">
+                          <div className="inventory-item-name">{zone.name}</div>
+                          <div className="inventory-item-sub">
+                            <span>{zone.environment === 'indoor' ? 'Intérieur' : 'Extérieur'}</span>
+                            <span style={{ color: 'var(--border)' }}>·</span>
+                            <span>{smartObjectsCount} SmartObject{smartObjectsCount > 1 ? 's' : ''}</span>
+                          </div>
+                          <div className="inventory-item-badges">
+                            <span className="inventory-badge-tag inventory-badge-virt" style={{ background: '#0284c7', color: '#fff' }}>
+                              Espace 3D
+                            </span>
+                            <span className="inventory-badge-tag" style={{ background: '#e0f2fe', color: '#0369a1' }}>
+                              ✨ {smartObjectsCount} Objets
+                            </span>
+                          </div>
+                        </div>
+                        <div className="inventory-item-qty" style={{ fontSize: 11, color: '#64748b' }}>
+                          Zone
+                        </div>
+                      </div>
+                    );
+                  }
 
                   const catLabel = !isStorage 
                     ? CATEGORIES.find(c => c.id === (target as InventoryItem).category)?.label ?? (target as InventoryItem).category 
