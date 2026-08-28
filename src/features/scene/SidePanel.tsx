@@ -152,7 +152,9 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Inventaire Personnages (direct)" keys={['P']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
               <R label="Vue perspective (reset)"    keys={['O']} />
-              <R label="Walk mode (entrer/quitter)" keys={['M']} />
+              <R label="Walk mode (cycle Orbit/Walk/FPV)" keys={['M']} />
+              <R label="Vue 3ème personne directe"  keys={['3']} />
+              <R label="Vue FPV 1ère personne directe" keys={['1']} />
               <R label="Vue top-down (toggle)"      keys={['T']} />
               <R label="Vue top-down suivi perso (toggle)" keys={['Y']} />
               <R label="Avion en papier (toggle)"   keys={['F']} />
@@ -631,10 +633,12 @@ export function SidePanel({
 
   const ViewsSection = (
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
-      {b0('gray',   'Perspective (Raccourci O)', () => dispatchKey('o'))}
-      {b0('gray',   'Walk (Raccourci M)',        () => dispatchKey('m'))}
-      {b0('gray',   '2D Dessus (Raccourci T)',   () => dispatchKey('t'))}
-      {b0('gray',   '2D Suivi Perso (Raccourci Y)', () => dispatchKey('y'))}
+      {b0('gray',   'Perspective (Raccourci O)',       () => dispatchKey('o'))}
+      {b0('gray',   'Walk générique (Raccourci M)',    () => dispatchKey('m'))}
+      {b0('gray',   'Vue 3ème personne (Raccourci 3)', () => dispatchKey('3'))}
+      {b0('gray',   'Vue FPV 1ère pers. (Raccourci 1)',() => dispatchKey('1'))}
+      {b0('gray',   '2D Dessus (Raccourci T)',         () => dispatchKey('t'))}
+      {b0('gray',   '2D Suivi Perso (Raccourci Y)',    () => dispatchKey('y'))}
       {cameraMode === 'top' && (
         <button
           className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
@@ -647,9 +651,9 @@ export function SidePanel({
           </span>
         </button>
       )}
-      {b0('cyan',   'Avion ✈ (Raccourci F)',        () => dispatchKey('f'))}
-      {b0('yellow', 'Autres vues…',  () => setShowViews(true))}
-      {b0('teal',   'Raccourcis clavier ⌨',  () => setShowShortcuts(true))}
+      {b0('cyan',   'Avion ✈ (Raccourci F)',           () => dispatchKey('f'))}
+      {b0('yellow', 'Autres vues…',                     () => setShowViews(true))}
+      {b0('teal',   'Raccourcis clavier ⌨',             () => setShowShortcuts(true))}
     </div>
   );
 
