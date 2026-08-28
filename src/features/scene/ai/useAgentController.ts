@@ -695,6 +695,16 @@ export function useAgentController(
     } else if (statusRef.current === 'INTERACTING') {
       // ── Gestion spéciale pour duo-zone (✨ Scène Duo) ──
       if (currentInstruction.smartObjectId === 'duo-zone') {
+        if (duoSessionManager.isCompletedFor(_characterId)) {
+          duoSessionManager.leaveDuoZone(_characterId);
+          claimedSlotRef.current = null;
+          duoRoleRef.current = null;
+          duoInvitedRef.current = false;
+          statusRef.current = 'IDLE';
+          stepIndexRef.current++;
+          return update(dt);
+        }
+
         const isWaiting = duoSessionManager.isWaitingPartner(_characterId);
         if (isWaiting) {
           duoWaitTimerRef.current += dt;
@@ -723,6 +733,9 @@ export function useAgentController(
           return stateRef.current;
         }
 
+        // Ticker l'horloge centrale de la session (géré par le meneur rôle A)
+        duoSessionManager.tickSession(_characterId, dt);
+
         const animState = duoSessionManager.getCurrentAnimState();
         if (animState && duoRoleRef.current) {
           const role = duoRoleRef.current;
@@ -735,32 +748,21 @@ export function useAgentController(
           stateRef.current.y = pos[1];
           stateRef.current.z = pos[2];
           stateRef.current.rotY = rot;
-
-          timerRef.current -= dt;
-          if (timerRef.current <= 0) {
-            // Passer à l'animation suivante de la playlist de duo
-            const hasMore = duoSessionManager.advanceNextAnim(_characterId);
-            if (hasMore) {
-              const nextState = duoSessionManager.getCurrentAnimState();
-              timerRef.current = nextState?.duration ?? 5.0;
-            } else {
-              // Session de duo terminée
-              duoSessionManager.leaveDuoZone(_characterId);
-              claimedSlotRef.current = null;
-              duoRoleRef.current = null;
-              statusRef.current = 'IDLE';
-              stepIndexRef.current++;
-            }
-          }
           return stateRef.current;
-        } else if (duoSessionManager.isCompletedFor(_characterId)) {
+        }
+
+        // Session terminée
+        if (duoSessionManager.isCompletedFor(_characterId)) {
           duoSessionManager.leaveDuoZone(_characterId);
           claimedSlotRef.current = null;
           duoRoleRef.current = null;
+          duoInvitedRef.current = false;
           statusRef.current = 'IDLE';
           stepIndexRef.current++;
           return update(dt);
         }
+
+        return stateRef.current;
       }
 
       const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
