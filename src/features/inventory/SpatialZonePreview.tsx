@@ -19,7 +19,14 @@ import { ArmrestSofa } from '@features/scene/items/ArmrestSofa';
 import { ArmlessSofa } from '@features/scene/items/ArmlessSofa';
 import { Bathtub } from '@features/scene/items/Bathtub';
 import { GrassRug } from '@features/scene/items/GrassRug';
+import { Scooter } from '@features/scene/items/Scooter';
+import { Linky } from '@features/scene/items/Linky';
+import { TradfriBulb } from '@features/scene/items/TradfriBulb';
+import { DoorLiving, DoorBath } from '@features/scene/items/DoorWhite';
+import { DoorEntry } from '@features/scene/items/DoorEntry';
 import { NOOP_ITEM, NOOP_SIZE, NOOP_STATE } from '@features/scene/sceneItem';
+import { ROOM_W, ROOM_D, DOOR_START, DOOR_END, KITCHEN_Z, DiagWall } from '@config';
+import { PARTITION_THICKNESS, CORR_WALL_X, pZ } from '@features/scene/wallData';
 
 const CATEGORY_COLORS: Record<string, string> = {
   bed: '#ff4081',
@@ -54,21 +61,29 @@ function IsolatedZoneContent({ zone }: { zone: SpatialZone }) {
   const smartObjects = useMemo(() => zone.getSmartObjects(), [zone]);
   const waypoints = useMemo(() => zone.getWaypoints(), [zone]);
 
+  // Coordonnées et calculs de la porte d'entrée diagonale
+  const entry = useMemo(() => {
+    const c = DiagWall.p(DiagWall.door.start + 45, 5);
+    return {
+      wx: c.x,
+      wy: 102,
+      wz: c.z,
+      diagRotY: DiagWall.rotY - Math.PI / 2,
+    };
+  }, []);
+
+  const CORR_CX = (DOOR_START + ROOM_W) / 2;
+  const CORR_LAMP_Z = (pZ('corner-se') + pZ('diag-ne')) / 2;
+
   return (
     <group position={[-center[0], 0, -center[2]]}>
       {/* Sol de la pièce */}
       <mesh position={[center[0], -0.2, center[2]]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[size[0], size[2]]} />
         <meshStandardMaterial
-          color={zone.environment === 'outdoor' ? '#3a7d44' : (zone.id === 'bathroom' ? '#e2e8f0' : '#d4a437')}
+          color={zone.environment === 'outdoor' ? '#3a7d44' : (zone.id === 'bathroom' ? '#e2e8f0' : (zone.id === 'corridor' ? '#b32d2d' : '#d4a437'))}
           roughness={0.7}
         />
-      </mesh>
-
-      {/* Boîte englobante transparente */}
-      <mesh position={[center[0], size[1] / 2, center[2]]}>
-        <boxGeometry args={[size[0], size[1], size[2]]} />
-        <meshBasicMaterial color="#0058a3" opacity={0.06} transparent wireframe />
       </mesh>
 
       {/* ── Contenu 3D dédié par pièce ── */}
@@ -111,8 +126,101 @@ function IsolatedZoneContent({ zone }: { zone: SpatialZone }) {
 
       {zone.id === 'corridor' && (
         <group>
-          <group position={[220, 0, 435]}>
+          {/* Murs du couloir */}
+          {/* Mur Est (X=ROOM_W=316, de Z=400 à DiagWall.A.z=542) */}
+          <mesh position={[ROOM_W + 2.5, 125, (400 + DiagWall.A.z) / 2]}>
+            <boxGeometry args={[5, 250, DiagWall.A.z - 400]} />
+            <meshStandardMaterial color="#f1f5f9" roughness={0.5} />
+          </mesh>
+
+          {/* Mur Nord (séparation Séjour, Z=400) — de X=192 à X=DOOR_START (placard) + linteau au dessus porte */}
+          <mesh position={[(192 + DOOR_START) / 2, 125, ROOM_D + PARTITION_THICKNESS / 2]}>
+            <boxGeometry args={[DOOR_START - 192, 250, PARTITION_THICKNESS]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.5} />
+          </mesh>
+          <mesh position={[(DOOR_START + DOOR_END) / 2, 227, ROOM_D + PARTITION_THICKNESS / 2]}>
+            <boxGeometry args={[DOOR_END - DOOR_START, 46, PARTITION_THICKNESS]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.5} />
+          </mesh>
+          <mesh position={[(DOOR_END + ROOM_W) / 2, 125, ROOM_D + PARTITION_THICKNESS / 2]}>
+            <boxGeometry args={[ROOM_W - DOOR_END, 250, PARTITION_THICKNESS]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.5} />
+          </mesh>
+
+          {/* Mur Ouest (séparation SDB, X=CORR_WALL_X=195.6) — morceaux nord, sud et linteau */}
+          <mesh position={[CORR_WALL_X, 125, (460 + 513.4) / 2]}>
+            <boxGeometry args={[PARTITION_THICKNESS, 250, 513.4 - 460]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.5} />
+          </mesh>
+          <mesh position={[CORR_WALL_X, 227, 560]}>
+            <boxGeometry args={[PARTITION_THICKNESS, 46, 93.2]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.5} />
+          </mesh>
+          <mesh position={[CORR_WALL_X, 125, (606.6 + 680) / 2]}>
+            <boxGeometry args={[PARTITION_THICKNESS, 250, 680 - 606.6]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.5} />
+          </mesh>
+
+          {/* Mur Diagonal Sud / Entrée */}
+          {(() => {
+            const centerDiag = DiagWall.p(DiagWall.len / 2, DiagWall.depth / 2);
+            return (
+              <group position={[centerDiag.x, 125, centerDiag.z]} rotation-y={DiagWall.rotY + Math.PI / 2}>
+                {/* Linteau au dessus de la porte d'entrée */}
+                <mesh position={[-DiagWall.len / 2 + 55, 102, 0]}>
+                  <boxGeometry args={[90, 46, DiagWall.depth]} />
+                  <meshStandardMaterial color="#f1f5f9" roughness={0.5} />
+                </mesh>
+                {/* Panneau diagonal restant */}
+                <mesh position={[45, 0, 0]}>
+                  <boxGeometry args={[DiagWall.len - 100, 250, DiagWall.depth]} />
+                  <meshStandardMaterial color="#f1f5f9" roughness={0.5} />
+                </mesh>
+              </group>
+            );
+          })()}
+
+          {/* ── Les 3 Portes ── */}
+          {/* 1. Porte Séjour */}
+          <group position={[(DOOR_START + DOOR_END) / 2, 102, ROOM_D + PARTITION_THICKNESS / 2]}>
+            <DoorLiving item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          </group>
+
+          {/* 2. Porte SDB */}
+          <group position={[CORR_WALL_X, 102, 560]} rotation-y={Math.PI / 2}>
+            <DoorBath item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          </group>
+
+          {/* 3. Porte Entrée */}
+          <group position={[entry.wx, entry.wy, entry.wz]} rotation-y={entry.diagRotY}>
+            <DoorEntry item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          </group>
+
+          {/* ── Placard Couloir ── */}
+          <group position={[220, 0, (ROOM_D + 10 + KITCHEN_Z) / 2]}>
             <CorridorCloset item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          </group>
+
+          {/* ── Coffrage Linky ── */}
+          <group>
+            <mesh position={[ROOM_W - 3.25, 125, 512.75]}>
+              <boxGeometry args={[6.5, 250, 25.5]} />
+              <meshStandardMaterial color="#e8e8e8" roughness={0.7} />
+            </mesh>
+            <group position={[ROOM_W - 6.5 - 3.5, 170, 512.75]} rotation={[0, -Math.PI / 2, 0]}>
+              <Linky item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+            </group>
+          </group>
+
+          {/* ── Trottinette ── */}
+          <group position={[298, 0, 470]} rotation-y={Math.PI}>
+            <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          </group>
+
+          {/* ── Ampoule Tradfri Couloir ── */}
+          <group position={[CORR_CX, 240, CORR_LAMP_Z]} rotation={[Math.PI, 0, 0]}>
+            <TradfriBulb item={NOOP_ITEM} actionState={{ on: true }} onSize={NOOP_SIZE} />
+            <pointLight position={[0, 20, 0]} intensity={2.5} distance={300} decay={2} color={0xfff5e6} />
           </group>
         </group>
       )}
