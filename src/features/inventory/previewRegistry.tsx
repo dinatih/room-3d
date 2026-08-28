@@ -1,3 +1,11 @@
+import { Kallax20275814 } from '@features/scene/items/Kallax20275814';
+import { Kallax90301555 } from '@features/scene/items/Kallax90301555';
+import { Kallax20301554 } from '@features/scene/items/Kallax20301554';
+import { Raskog30586783 } from '@features/scene/items/Raskog30586783';
+import { Boholmen99157501 } from '@features/scene/items/Boholmen99157501';
+import { Utdrag10389142 } from '@features/scene/items/Utdrag10389142';
+import { Valbildad20467592 } from '@features/scene/items/Valbildad20467592';
+import { Havback49514017 } from '@features/scene/items/Havback49514017';
 import { Vallamosse10349660 } from '@features/scene/items/Vallamosse10349660';
 import { Brogrund70333982 } from '@features/scene/items/Brogrund70333982';
 import { Brogrund30328534 } from '@features/scene/items/Brogrund30328534';
@@ -73,7 +81,6 @@ import { Backpack }                                   from '@features/scene/item
 import { BaseballCap }                                from '@features/scene/items/BaseballCap';
 import { Mug }                                        from '@features/scene/items/Mug';
 import { Counter }                                    from '@features/scene/items/Counter';
-import { SinkBoholmen }                               from '@features/scene/items/SinkBoholmen';
 import { NissedalMirror }                             from '@features/scene/items/NissedalMirror';
 import { NinjaSP101 }                                 from '@features/scene/items/NinjaSP101';
 import { MllseG2Pro }                                 from '@features/scene/items/MllseG2Pro';
@@ -99,6 +106,14 @@ import { GoogleNestMini }                             from '@features/scene/item
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'kallax20275814': Kallax20275814,
+  'kallax90301555': Kallax90301555,
+  'kallax20301554': Kallax20301554,
+  'raskog30586783': Raskog30586783,
+  'boholmen99157501': Boholmen99157501,
+  'utdrag10389142': Utdrag10389142,
+  'valbildad20467592': Valbildad20467592,
+  'havback49514017': Havback49514017,
   'vallamosse10349660': Vallamosse10349660,
   'brogrund70333982': Brogrund70333982,
   'brogrund30328534': Brogrund30328534,
@@ -145,7 +160,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
 
   // ── Procéduraux (pas de glbPath) ──────────────────────────────────────────
   'counter':                Counter,
-  'sink-boholmen':          SinkBoholmen,
+  'sink-boholmen':          Boholmen99157501,
   'water-heater':           WaterHeater,
   'tv':                     TV,
   'laptop':                 Laptop,

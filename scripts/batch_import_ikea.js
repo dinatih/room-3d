@@ -35,7 +35,14 @@ const toComponentName = (name) => {
 };
 
 const URLS = [
-    'https://www.ikea.com/fr/fr/p/vallamosse-barre-avec-douchette-haut-reglable-chrome-10349660/'
+    'https://www.ikea.com/fr/fr/p/havbaeck-orrsjoen-meuble-avec-tiroirs-vasque-mitigeur-blanc-s49514017/',
+    'https://www.ikea.com/fr/fr/p/vaelbildad-plaque-de-cuisson-a-induction-ikea-300-noir-20467592/',
+    'https://www.ikea.com/fr/fr/p/utdrag-hotte-aspirante-integree-acier-inoxydable-10389142/',
+    'https://www.ikea.com/fr/fr/p/boholmen-evier-integre-1-bac-acier-inoxydable-s99157501/',
+    'http://ikea.com/fr/fr/p/raskog-desserte-blanc-30586783/',
+    'https://www.ikea.com/fr/fr/p/kallax-etagere-blanc-20301554/',
+    'https://www.ikea.com/fr/fr/p/kallax-etagere-blanc-90301555/',
+    'https://www.ikea.com/fr/fr/p/kallax-etagere-blanc-20275814/'
 ];
 
 async function importUrl(browser, url) {
@@ -117,7 +124,7 @@ async function importUrl(browser, url) {
         await btn3d.click();
         await new Promise(r => setTimeout(r, 4000));
     } else {
-        const idMatch = url.match(/-(\d+)\/?(?:#.*)?$/);
+        const idMatch = url.match(/-s?(\d+)\/?(?:#.*)?$/);
         if (idMatch) {
             const numericId = idMatch[1];
             const directGlb = `https://web-api.ikea.com/fr/fr/rotera/static/models/${numericId}-mini.glb`;
@@ -134,7 +141,7 @@ async function importUrl(browser, url) {
         }
     }
 
-    const idMatch = url.match(/-(\d+)\/?(?:#.*)?$/);
+    const idMatch = url.match(/-s?(\d+)\/?(?:#.*)?$/);
     const numericId = idMatch ? idMatch[1] : '';
     const rawName = toComponentName(productData.name);
     const componentName = `${rawName}${numericId}`;
@@ -151,6 +158,12 @@ async function importUrl(browser, url) {
     if (glbUrl) {
         console.log(`Downloading model to ${targetGlb}`);
         await downloadFile(glbUrl, targetGlb);
+    } else if (url.includes('boholmen')) {
+        const existingGlb = path.resolve(process.cwd(), 'public/items/boholmen évier 47x30 cm/BOHOLMEN Évier 47x30 cm.glb');
+        if (fs.existsSync(existingGlb)) {
+            console.log(`Copying existing Boholmen GLB to ${targetGlb}`);
+            fs.copyFileSync(existingGlb, targetGlb);
+        }
     }
 
     const downloadedPhotos = [];

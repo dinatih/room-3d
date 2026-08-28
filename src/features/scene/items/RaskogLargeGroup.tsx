@@ -5,7 +5,7 @@
  */
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import { RaskogLarge }   from './Raskog';
+import { Raskog30586783 } from './Raskog30586783';
 import { MannequinHead } from './MannequinHead';
 import { BaseballCap }   from './BaseballCap';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
@@ -21,12 +21,12 @@ export function RaskogLargeGroup({ onSize }: SceneItemProps) {
 
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
+    onSize?.(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
   }, [onSize]);
 
   return (
     <group ref={ref}>
-      <RaskogLarge item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <Raskog30586783 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       <group position={[5, top + HEAD_HEIGHT - 9, -2]} rotation={[0.15, Math.PI / 2, 0]}>
         <BaseballCap item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>

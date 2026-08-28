@@ -22,7 +22,7 @@ import { BathroomCabinetWest, BathroomCabinetEast } from './items/BathroomCabine
 import { Toilet }        from './items/Toilet';
 import { TradfriBulb }   from './items/TradfriBulb';
 import { Shower }        from './items/Shower';
-import { VasqueSdb }     from './items/VasqueSdb';
+import { Havback49514017 } from './items/Havback49514017';
 import { WaterHeater }   from './items/WaterHeater';
 import { GrassRug }      from './items/GrassRug';
 import { CorridorCloset } from './items/CorridorCloset';
@@ -70,9 +70,9 @@ import { PottedPalm }   from './items/PottedPalm';
 // import { JoggingSuit }  from './items/JoggingSuit';
 import { ShibaInu }    from './items/ShibaInu';
 import { RobinBird }   from './items/RobinBird';
-import { Tisken }        from './items/Tisken';
+import { Tisken40381253 } from './items/Tisken40381253';
+import { Vathult40467548 } from './items/Vathult40467548';
 import { Tackan }        from './items/Tackan';
-import { Vathult }       from './items/Vathult';
 import { DroneCell } from './items/Drona';
 import { Dimpa10056770 } from './items/Dimpa10056770';
 import { Vatterso20562909 } from './items/Vatterso20562909';
@@ -185,7 +185,7 @@ export function Equipment() {
         <CuisineGroup item={stub('cuisine-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
       <group position={[DOOR_START - 84, 14, KITCHEN_Z + PARTITION_THICKNESS + 24.5]} userData={{ animUnit: true, isIkea: true, itemName: 'Meuble Vasque SDB' }}>
-        <VasqueSdb item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Havback49514017 item={stub('vasque-sdb')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[NICHE_X + 60, 0, KITCHEN_Z + PARTITION_THICKNESS + 36.5]} userData={{ skipMerge: true, animUnit: true, itemName: 'WC President', hoverAction: { label: 'WC President', actions: ['wc-lid-toggle', 'wc-seat-toggle', 'wc-flush'] } }}>
         <Toilet item={stub('toilet')} actionState={as} onSize={NOOP_SIZE} />
@@ -230,7 +230,7 @@ export function Equipment() {
       </group>
       {/* VÅTHULT — bandeau LED 35 cm au-dessus du miroir vasque (top miroir = 174) */}
       <group position={[DOOR_START - 84, 176, KITCHEN_Z + PARTITION_THICKNESS + 2.1]} userData={{ itemName: 'Bandeau LED Våthult' }}>
-        <Vathult item={stub('vathult-350')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Vathult40467548 item={stub('vathult-350')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Niche douche 70×70cm : Centre : KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35 */}
       <group position={[NICHE_X + 35, 0, KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35]} userData={{ animUnit: true, isIkea: true, itemName: 'Cabine de Douche' }}>
@@ -477,7 +477,7 @@ export function Furnishings() {
         </group>
         {/* TISKEN sur miroir vasque — mi-hauteur, bord gauche et droit */}
         <group position={[DOOR_START - 84 - 22, 129, KITCHEN_Z + PARTITION_THICKNESS + 2.1]} rotation={[Math.PI / 2, 0, 0]} userData={{ itemName: 'Crochet Tisken' }}>
-          <Tisken item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <Tisken40381253 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </>
     </>
