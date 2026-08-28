@@ -1457,28 +1457,64 @@ export function SidePanel({
     }
   };
 
+  const handleRandomDuoAnim = () => {
+    resetAppIdle();
+    const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
+    if (randomAnim) {
+      handleSelectDuoAnim(randomAnim.id);
+    }
+  };
+
+  const duoAnimHeaderButtons = (
+    <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
+      <button
+        type="button"
+        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold"
+        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
+        title="Lancer une animation de couple aléatoire 🎲"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleRandomDuoAnim();
+        }}
+      >
+        🎲
+      </button>
+    </div>
+  );
+
   const AnimationsCoupleSection = (
     <div
       className="d-flex flex-column bg-transparent overflow-hidden"
       style={{ maxHeight: '55vh' }}
     >
       <div className="p-2 border-bottom shadow-sm sticky-top" style={{ zIndex: 5, background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)' }}>
-        <select
-          className="form-select form-select-sm"
-          onChange={(e) => {
-            const val = e.target.value;
-            if (val) handleSelectDuoAnim(val);
-          }}
-          value={selectedDuoAnimId}
-          style={{ fontSize: isMobile ? '13px' : '11px' }}
-        >
-          <option value="" disabled>Sélectionner une animation de couple...</option>
-          {DUO_ANIMATIONS.map(a => (
-            <option key={a.id} value={a.id}>
-              {a.icon} {a.label}
-            </option>
-          ))}
-        </select>
+        <div className="d-flex align-items-center gap-1">
+          <select
+            className="form-select form-select-sm"
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val) handleSelectDuoAnim(val);
+            }}
+            value={selectedDuoAnimId}
+            style={{ fontSize: isMobile ? '13px' : '11px' }}
+          >
+            <option value="" disabled>Sélectionner une animation de couple...</option>
+            {DUO_ANIMATIONS.map(a => (
+              <option key={a.id} value={a.id}>
+                {a.icon} {a.label}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="btn btn-sm btn-warning text-dark px-2 shadow-sm fw-bold"
+            style={{ fontSize: isMobile ? '13px' : '11px', whiteSpace: 'nowrap' }}
+            title="Animation de couple aléatoire 🎲"
+            onClick={handleRandomDuoAnim}
+          >
+            🎲
+          </button>
+        </div>
       </div>
 
       <div className="flex-grow-1 overflow-auto p-2" style={{ maxHeight: '45vh' }}>
@@ -1561,6 +1597,7 @@ export function SidePanel({
               <div className="d-flex align-items-center gap-2">
                 {activeTab === 'personnage' && personnageHeaderButtons}
                 {activeTab === 'anims' && animHeaderButtons}
+                {activeTab === 'animsCouple' && duoAnimHeaderButtons}
                 <button
                   type="button"
                   className="btn-close"
@@ -1639,6 +1676,40 @@ export function SidePanel({
                 </div>
               );
             }
+            if (t.key === 'animsCouple') {
+              return (
+                <div key={t.key} className="d-flex align-items-center position-relative" style={{ flex: '0 0 auto' }}>
+                  <button
+                    onClick={() => setActiveTab(a => a === t.key ? null : t.key)}
+                    className={`btn border-0 d-flex flex-column align-items-center justify-content-center py-1 ${active ? 'text-danger fw-bold' : 'text-secondary'}`}
+                    style={{ fontSize: '10px', minWidth: '60px' }}
+                  >
+                    <span style={{ fontSize: '20px', lineHeight: 1 }}>{t.emoji}</span>
+                    <span className="fw-semibold">{t.label}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRandomDuoAnim();
+                    }}
+                    className="btn btn-sm btn-warning p-0 d-flex align-items-center justify-content-center border-0 rounded-circle position-absolute shadow-sm"
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      top: '4px',
+                      right: '4px',
+                      fontSize: '11px',
+                      zIndex: 10,
+                      background: '#ffc107',
+                    }}
+                    title="Animation de couple aléatoire 🎲"
+                  >
+                    🎲
+                  </button>
+                </div>
+              );
+            }
             return (
               <button
                 key={t.key}
@@ -1700,7 +1771,7 @@ export function SidePanel({
         <Group emoji="🎮" title="Interactif">{InteractifSection}</Group>
         <Group emoji="👤" title="Personnage" extra={personnageHeaderButtons}>{PersonnageSection}</Group>
         <Group emoji="💃" title="Animations Perso" extra={animHeaderButtons}>{AnimationsSection}</Group>
-        <Group emoji="👯‍♀️" title="Animations Couple">{AnimationsCoupleSection}</Group>
+        <Group emoji="👯‍♀️" title="Animations Couple" extra={duoAnimHeaderButtons}>{AnimationsCoupleSection}</Group>
       </div>
 
       {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
