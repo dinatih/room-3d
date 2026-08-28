@@ -69,7 +69,15 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
-      m.frustumCulled = false;
+      m.frustumCulled = true;
+      if (m.geometry) {
+        m.geometry.computeBoundingBox();
+        m.geometry.computeBoundingSphere();
+        if (m.geometry.boundingSphere) {
+          // Agrandir généreusement le rayon de la sphère pour englober toutes les déformations d'animations du squelette
+          m.geometry.boundingSphere.radius = Math.max(m.geometry.boundingSphere.radius * 2.5, 2.0);
+        }
+      }
       if (m.material) {
         const mat = m.material as THREE.MeshStandardMaterial;
         mat.metalness = 0;

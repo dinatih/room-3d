@@ -72,7 +72,15 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
-      m.frustumCulled = false;
+      m.frustumCulled = true;
+      if (m.geometry) {
+        m.geometry.computeBoundingBox();
+        m.geometry.computeBoundingSphere();
+        if (m.geometry.boundingSphere) {
+          // Agrandir la sphère englobante pour couvrir les poses en vol
+          m.geometry.boundingSphere.radius = Math.max(m.geometry.boundingSphere.radius * 2.5, 1.5);
+        }
+      }
       if (m.material) {
         const mat = m.material as THREE.MeshStandardMaterial;
         mat.metalness = 0;
