@@ -192,10 +192,10 @@ export const SPATIAL_ZONES_CONFIG: SpatialZoneDef[] = [
     id: 'outdoor_corridor',
     name: 'Extérieur Couloir / Sortie Sud-Ouest',
     environment: 'outdoor',
-    // Délimité par : diag-sw-end, issue sud
+    // Délimité par : le couloir PVC rouge longeant la diagonale jusqu'à diag-ne (X=330)
     bounds: {
-      min: [-500, 0, 100],
-      max: [-10, 500, 1200]
+      min: [-500, 0, 450],
+      max: [330, 500, 1200]
     }
   },
   {

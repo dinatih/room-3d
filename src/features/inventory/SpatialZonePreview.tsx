@@ -7,6 +7,7 @@ import { SpatialZone } from '@features/scene/ai/SpatialZone';
 // Rendu complet et officiel du Studio
 import { Walls, Floor, Mirrors, DoorsPlaced } from '@features/scene/Building';
 import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes } from '@features/scene/Placements';
+import { SkySphere } from '@features/scene/SkySphere';
 
 const CATEGORY_COLORS: Record<string, string> = {
   bed: '#ff4081',
@@ -56,6 +57,9 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
 
   return (
     <group>
+      {/* Ciel panoramique réaliste */}
+      <SkySphere />
+
       {/* ── Scène réelle complète de l'appartement ── */}
       <group>
         <Walls />
