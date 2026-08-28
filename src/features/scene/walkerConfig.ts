@@ -89,5 +89,5 @@ export function isCharacterVisibleInMode(id: string, mode: LaraCountMode = 15, a
 
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
-  'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa'
+  'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa'
 ]);

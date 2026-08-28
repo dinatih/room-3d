@@ -16,6 +16,10 @@ export const WAYPOINTS: Record<string, Waypoint> = {
   'garden-patio':           { id: 'garden-patio',           name: 'Jardin (Terrasse)',           x: 200, z: -50 },
   'outdoor-garden-west':    { id: 'outdoor-garden-west',    name: 'Cour Ouest',                  x: -200, z: -100 },
   'outdoor-garden-east':    { id: 'outdoor-garden-east',    name: 'Cour Est',                    x: 400, z: -500 },
+  'bathroom-center':        { id: 'bathroom-center',        name: 'Centre Salle de bain',        x: 100, z: 550 },
+  'living-center':          { id: 'living-center',          name: 'Centre Séjour',               x: 160, z: 200 },
+  'corridor-center':        { id: 'corridor-center',        name: 'Centre Couloir',              x: 240, z: 480 },
+  'outdoor-neighbor-door':  { id: 'outdoor-neighbor-door',  name: 'Devant Porte Voisin',         x: -58, z: 802 },
 };
 
 

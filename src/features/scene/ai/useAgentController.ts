@@ -451,6 +451,16 @@ export function useAgentController(
             : currentInstruction.type;
           appLog(_characterId, `🎭 Action: ${label} (${duration.toFixed(1)}s)`);
         }
+      } else if (currentInstruction.type === 'ROTATE_360') {
+        statusRef.current = 'INTERACTING';
+        const duration = currentInstruction.duration || 5.0;
+        timerRef.current = duration;
+        stateRef.current.animation = currentInstruction.animation || 'animations/poses_idles/anim_texting_while_standing.glb';
+        const logKey = `rotate360-${stepIndexRef.current}-${dynamicNavIndexRef.current}`;
+        if (lastLogRef.current !== logKey) {
+          lastLogRef.current = logKey;
+          appLog(_characterId, `🔄 Inspection 360° en cours (${duration.toFixed(1)}s)`);
+        }
       }
     }
 
@@ -764,6 +774,21 @@ export function useAgentController(
           return update(dt);
         }
 
+        return stateRef.current;
+      }
+
+      // ── Gestion spéciale pour rotation continue 360° (Inspection Concierge) ──
+      if (currentInstruction.type === 'ROTATE_360') {
+        const totalDuration = currentInstruction.duration || 5.0;
+        const turnSpeed = (2 * Math.PI) / totalDuration;
+        stateRef.current.rotY = (stateRef.current.rotY + turnSpeed * dt) % (2 * Math.PI);
+        stateRef.current.animation = currentInstruction.animation || 'animations/poses_idles/anim_texting_while_standing.glb';
+
+        timerRef.current -= dt;
+        if (timerRef.current <= 0) {
+          statusRef.current = 'IDLE';
+          stepIndexRef.current++;
+        }
         return stateRef.current;
       }
 

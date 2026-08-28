@@ -79,7 +79,7 @@ export interface SpatialZoneDef {
   };
 }
 
-export type InstructionType = 'MOVE_TO' | 'INTERACT' | 'WAIT' | 'RETURN_TO_START' | 'USE_OBJECT';
+export type InstructionType = 'MOVE_TO' | 'INTERACT' | 'WAIT' | 'RETURN_TO_START' | 'USE_OBJECT' | 'ROTATE_360';
 
 export interface AgentInstruction {
   type: InstructionType;

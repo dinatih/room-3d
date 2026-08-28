@@ -84,6 +84,37 @@ export const ACTION_FULL_TOUR: AgentInstruction[] = [
   { type: 'RETURN_TO_START' }
 ];
 
+/**
+ * Scénario Concierge pour Xbot :
+ * Ronde d'état des lieux (Entrée -> SDB 360° -> Salon 360° -> Couloir 360° -> Sortie vers appartement voisin)
+ */
+export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
+  // ── 1. Arrivée et entrée ──
+  { type: 'MOVE_TO', targetNodeId: 'outdoor-entry-door' },
+  { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, animation: 'animations/interactions/anim_open_door_outwards.glb', duration: 0.8 },
+  { type: 'MOVE_TO', targetNodeId: 'corridor-entry-door' },
+  { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.5 },
+
+  // ── 2. Inspection Salle de bain ──
+  { type: 'MOVE_TO', targetNodeId: 'bathroom-center' },
+  { type: 'ROTATE_360', duration: 5.0, animation: 'animations/poses_idles/anim_texting_while_standing.glb' },
+
+  // ── 3. Inspection Salon / Séjour ──
+  { type: 'MOVE_TO', targetNodeId: 'living-center' },
+  { type: 'ROTATE_360', duration: 6.0, animation: 'animations/poses_idles/anim_texting_while_standing.glb' },
+
+  // ── 4. Inspection Couloir ──
+  { type: 'MOVE_TO', targetNodeId: 'corridor-center' },
+  { type: 'ROTATE_360', duration: 4.0, animation: 'animations/poses_idles/anim_texting_while_standing.glb' },
+
+  // ── 5. Sortie et direction porte du voisin ──
+  { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, animation: 'animations/interactions/anim_open_door_outwards.glb', duration: 0.8 },
+  { type: 'MOVE_TO', targetNodeId: 'outdoor-entry-door' },
+  { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.5 },
+  { type: 'MOVE_TO', targetNodeId: 'outdoor-neighbor-door' },
+  { type: 'WAIT', duration: 4.0, animation: 'animations/poses_idles/anim_texting_while_standing.glb' }
+];
+
 // Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)
 export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
   native:   'desk-bollsidan-1',
@@ -106,6 +137,10 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
  * Construit un scénario autonome complet de vie quotidienne
  */
 export function buildAutonomousScenario(characterId?: string): AgentInstruction[] {
+  if (characterId === 'xbot') {
+    return XBOT_CONCIERGE_TOUR;
+  }
+
   const preferredFirst = characterId ? INITIAL_SMART_OBJECT_BY_CHAR[characterId] : undefined;
 
   const otherObjects = preferredFirst
