@@ -79,7 +79,7 @@ import { Bollsidan30574370 }                          from '@features/scene/item
 import { MannequinHead }                              from '@features/scene/items/MannequinHead';
 import { Backpack }                                   from '@features/scene/items/Backpack';
 import { BaseballCap }                                from '@features/scene/items/BaseballCap';
-import { Mug }                                        from '@features/scene/items/Mug';
+import { Kejserlig90511501 }                          from '@features/scene/items/Kejserlig90511501';
 import { Counter }                                    from '@features/scene/items/Counter';
 import { NissedalMirror }                             from '@features/scene/items/NissedalMirror';
 import { NinjaSP101 }                                 from '@features/scene/items/NinjaSP101';
@@ -181,7 +181,8 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'mannequin-head':         MannequinHead,
   'backpack':               Backpack,
   'baseball-cap':           BaseballCap,
-  'mug':                    Mug,
+  'mug':                    Kejserlig90511501,
+  'kejserlig90511501':      Kejserlig90511501,
   'mirror-nissedal-wide':   NissedalMirror,
   'mirror-nissedal-a':      NissedalMirror,
   'mirror-nissedal-d':      NissedalMirror,

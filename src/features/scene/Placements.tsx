@@ -52,7 +52,7 @@ import { Lagerpoppel00561816 } from './items/Lagerpoppel00561816';
 import { PalmLeaf }      from './items/PalmLeaf';
 import { Laptop }        from './items/Laptop';
 import { Phone }         from './items/Phone';
-import { Mug }           from './items/Mug';
+import { Kejserlig90511501 } from './items/Kejserlig90511501';
 import { Backpack } from './items/Backpack';
 // Garden items
 
@@ -433,7 +433,7 @@ function Desks() {
             </group>
             <group userData={{ animUnit: true, isIkea: true }}>
               <group position={[-22, 0, -7]}>
-                <Mug item={{} as any} actionState={{}} onSize={() => {}} />
+                <Kejserlig90511501 item={{} as any} actionState={{}} onSize={() => {}} />
               </group>
             </group>
           </group>
