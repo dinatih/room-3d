@@ -73,6 +73,7 @@ import { Tackan }        from './items/Tackan';
 import { Vathult }       from './items/Vathult';
 import { DroneCell } from './items/Drona';
 import { Dimpa10056770 } from './items/Dimpa10056770';
+import { Vatterso20562909 } from './items/Vatterso20562909';
 import { useSceneStore } from './store/useSceneStore';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
@@ -684,6 +685,9 @@ export function Garden() {
       </group>
       <group position={[210, -3.48, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true, itemName: 'Rebound Jardin' }}>
         <Rebound item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+      <group position={[264, 0, -320]} rotation={[0, -Math.PI / 2, 0]} userData={{ isIkea: true, itemName: 'Boîte de Rangement Vättersö' }}>
+        <Vatterso20562909 item={stub('vatterso-20562909')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
   );

@@ -193,6 +193,7 @@ const toComponentName = (name) => {
     const urlParts = url.replace(/\/$/, '').split('-');
     const articleId = urlParts[urlParts.length - 1].replace(/[^0-9]/g, '') || Math.floor(Math.random()*10000000).toString();
     const componentName = toComponentName(productData.name) + articleId;
+    const glbFileName = `${componentName}.glb`;
     console.log(`Generating component ${componentName}...`);
 
     const itemDir = path.resolve('public/items', componentName.toLowerCase());
