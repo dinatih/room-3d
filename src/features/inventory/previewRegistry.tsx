@@ -39,7 +39,7 @@ import { Pepprig70567650 } from '@features/scene/items/Pepprig70567650';
  */
 import type { ComponentType } from 'react';
 import type { SceneItemProps } from '@shared/types';
-import { WIGS_ITEMS, isRiggedWig }                    from './inventoryData';
+import { WIGS_ITEMS }                                from './inventoryData';
 import { Freezer }                                    from '@features/scene/items/Freezer';
 import { Fridge }                                     from '@features/scene/items/Fridge';
 import { KitchenCabinet }                             from '@features/scene/items/KitchenCabinet';
@@ -100,8 +100,6 @@ import { Walker }                                      from '@features/scene/Wal
 import { CHARACTERS }                                 from '@features/scene/walkerConfig';
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
-import { Wig }                                        from '@features/scene/items/Wig';
-import { RiggedWig }                                  from '@features/scene/items/RiggedWig';
 import { GoogleNestMini }                             from '@features/scene/items/GoogleNestMini';
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
 
@@ -278,11 +276,18 @@ SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState }: { acti
 } as any;
 
 WIGS_ITEMS.forEach(wig => {
-  SCENE_REGISTRY[wig.id] = function WigPreview() {
-    if (isRiggedWig(wig.id)) {
-      return <RiggedWig id={wig.id} scale={1} />;
-    }
-    return <Wig id={wig.id} scale={1} />;
+  SCENE_REGISTRY[wig.id] = function WigPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
+    return (
+      <MannequinHead
+        mannequinId={`preview-${wig.id}`}
+        wigId={wig.id}
+        hairColor={actionState?.previewHairColor}
+        windEnabled={false}
+        item={{} as any}
+        actionState={actionState || {}}
+        onSize={onSize || (() => {})}
+      />
+    );
   } as any;
 });
 

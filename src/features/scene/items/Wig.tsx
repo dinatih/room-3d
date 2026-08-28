@@ -103,12 +103,12 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       (sg as THREE.Object3D).updateMatrixWorld(true);
       const headPos = (hairHeadBone as THREE.Object3D).position.clone();
       (sg as THREE.Object3D).position.set(
-        -headPos.x * s * scale,
-        -headPos.y * s * scale + (attachTo ? 0.07 : 0),
-        -headPos.z * s * scale
+        -headPos.x * s * scale + offset[0],
+        -headPos.y * s * scale + (attachTo ? 0.07 : 0) + offset[1],
+        -headPos.z * s * scale + offset[2]
       );
     } else {
-      (sg as THREE.Object3D).position.set(0, 0.15 * scale, 0);
+      (sg as THREE.Object3D).position.set(offset[0], 0.15 * scale + offset[1], offset[2]);
     }
 
     // Apply the user requested scale DIRECTLY to sg instead of the wrapper group

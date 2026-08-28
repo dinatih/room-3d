@@ -24,6 +24,7 @@ import { WIGS_ITEMS, isRiggedWig } from '@features/inventory/inventoryData';
 
 interface MannequinHeadProps extends SceneItemProps {
   mannequinId?: string;
+  wigId?: string;
   wigIndex?: number;
   hairColor?: string;
   windEnabled?: boolean;
@@ -56,13 +57,39 @@ function getUniqueRandomColor(): string {
 }
 
 
-export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initialWigIndex, hairColor: initialHairColor, windEnabled: initialWindEnabled }: MannequinHeadProps) {
+export function MannequinHead({
+  onSize,
+  mannequinId = 'default',
+  wigId,
+  wigIndex: initialWigIndex,
+  hairColor: initialHairColor,
+  windEnabled: initialWindEnabled
+}: MannequinHeadProps) {
   const ref = useRef<THREE.Group>(null!);
   const { scene } = useGLTFClone('characters/accessories/wig_mannequin.glb');
 
-  const [wigIndex, setWigIndex] = useState<number>(initialWigIndex ?? getUniqueRandomWig());
-  const [hairColor, setHairColor] = useState<string | undefined>(initialHairColor ?? getUniqueRandomColor());
+  const resolvedInitialIndex = wigId
+    ? WIGS_ITEMS.findIndex(w => w.id === wigId || w.id.replace('hair_', '') === wigId.replace('hair_', ''))
+    : initialWigIndex;
+
+  const [wigIndex, setWigIndex] = useState<number>(resolvedInitialIndex !== undefined && resolvedInitialIndex >= 0 ? resolvedInitialIndex : getUniqueRandomWig());
+  const [hairColor, setHairColor] = useState<string | undefined>(initialHairColor ?? (wigId ? undefined : getUniqueRandomColor()));
   const [windEnabled, setWindEnabled] = useState<boolean>(initialWindEnabled ?? false);
+
+  useEffect(() => {
+    if (wigId) {
+      const idx = WIGS_ITEMS.findIndex(w => w.id === wigId || w.id.replace('hair_', '') === wigId.replace('hair_', ''));
+      if (idx >= 0) setWigIndex(idx);
+    } else if (initialWigIndex !== undefined) {
+      setWigIndex(initialWigIndex);
+    }
+  }, [wigId, initialWigIndex]);
+
+  useEffect(() => {
+    if (initialHairColor !== undefined) {
+      setHairColor(initialHairColor);
+    }
+  }, [initialHairColor]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -108,7 +135,7 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene, onSize]);
 
   // Offset d'alignement manuel pour la tête de Mannequin, car son crâne diffère de celui de Lara.
@@ -116,7 +143,6 @@ export function MannequinHead({ onSize, mannequinId = 'default', wigIndex: initi
 
   return (
     <group ref={ref}>
-      <mesh position={[0,40,0]}><boxGeometry args={[10, 10, 10]} /><meshBasicMaterial color="blue" /></mesh>
       <primitive object={scene} />
       {isRiggedWig(activeWigId) ? (
         <RiggedWig
