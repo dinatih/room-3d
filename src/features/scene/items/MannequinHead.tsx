@@ -138,6 +138,9 @@ export function MannequinHead({
     onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene, onSize]);
 
+  // Offset d'alignement manuel pour la tête de Mannequin, car son crâne diffère de celui de Lara.
+  const MANNEQUIN_WIG_OFFSET: [number, number, number] = [0, 31.0, 0]; // 31cm est environ TARGET_H * 0.69
+
   return (
     <group ref={ref}>
       <primitive object={scene} />
@@ -146,6 +149,7 @@ export function MannequinHead({
           id={activeWigId.replace('hair_', '')}
           color={hairColor}
           windEnabled={windEnabled}
+          offset={MANNEQUIN_WIG_OFFSET}
           scale={90}
         />
       ) : (
@@ -153,6 +157,7 @@ export function MannequinHead({
           id={activeWigId.replace('hair_', '')}
           color={hairColor}
           windEnabled={windEnabled}
+          offset={MANNEQUIN_WIG_OFFSET}
           scale={90}
         />
       )}
