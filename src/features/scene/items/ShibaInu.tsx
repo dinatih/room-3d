@@ -74,8 +74,9 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
         if (m.geometry.boundingSphere) {
-          // Agrandir généreusement le rayon de la sphère pour englober toutes les déformations d'animations du squelette
-          m.geometry.boundingSphere.radius = Math.max(m.geometry.boundingSphere.radius * 2.5, 2.0);
+          // Le nœud interne du GLB a une échelle locale de 0.01.
+          // Un rayon local de 250 donne un rayon monde de 250 * 0.01 * 40.47 = ~101 cm dans la scène.
+          m.geometry.boundingSphere.radius = 250.0;
         }
       }
       if (m.material) {

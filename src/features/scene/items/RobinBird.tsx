@@ -77,8 +77,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
         if (m.geometry.boundingSphere) {
-          // Agrandir la sphère englobante pour couvrir les poses en vol
-          m.geometry.boundingSphere.radius = Math.max(m.geometry.boundingSphere.radius * 2.5, 1.5);
+          m.geometry.boundingSphere.radius = Math.max(m.geometry.boundingSphere.radius * 10, 50.0);
         }
       }
       if (m.material) {
