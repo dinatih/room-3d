@@ -43,7 +43,6 @@ import { GoogleNestMini } from './items/GoogleNestMini';
 import { Mulig30179435 } from './items/Mulig30179435';
 import { Scooter }       from './items/Scooter';
 import { Smorkull }      from './items/Smorkull';
-import { Sneakers }      from './items/Sneakers';
 import { SneakersRed }   from './items/SneakersRed';
 // import { KinCamera } from './items/KinCamera';
 
@@ -581,19 +580,15 @@ function LampOla_() {
 }
 
 function SneakersPair() {
-  const [pairW, setPairW] = useState(0);
-  const px = MIRROR_CX - 10, pz = ROOM_D - 15;
+  const pz = ROOM_D - 14;
   return (
     <>
       {/* Paire inférieure au sol / étagère basse (Y = 0) */}
-      <group position={[px, 0, pz]} userData={{ animUnit: true, itemName: 'Baskets Sneakers Gauche' }}>
-        <Sneakers item={NOOP_ITEM} actionState={NOOP_STATE} onSize={s => setPairW(s.x)} />
+      <group position={[MIRROR_CX, 0, pz]} userData={{ animUnit: true, itemName: 'Baskets Sneakers Rouges Bas' }}>
+        <SneakersRed item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[px + pairW + 3, 0, pz]} userData={{ animUnit: true, itemName: 'Baskets Sneakers Droite' }}>
-        <Sneakers item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {/* Nouvelle paire Sneakers Rouges au-dessus sur l'étagère GREJIG supérieure (Y = 18) */}
-      <group position={[MIRROR_CX, 18, pz]} userData={{ animUnit: true, itemName: 'Sneakers Full Rouge' }}>
+      {/* Paire supérieure sur l'étagère GREJIG (Y = 18) */}
+      <group position={[MIRROR_CX, 18, pz]} userData={{ animUnit: true, itemName: 'Baskets Sneakers Rouges Haut' }}>
         <SneakersRed item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>

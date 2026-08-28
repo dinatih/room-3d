@@ -65,7 +65,6 @@ import { AltappenRug }                                from '@features/scene/item
 import { JordanHexMule }                              from '@features/scene/items/JordanHexMule';
 import { SummerOutdoorBoot }                           from '@features/scene/items/SummerOutdoorBoot';
 import { WinterOutdoorBoot }                           from '@features/scene/items/WinterOutdoorBoot';
-import { Sneakers }                                   from '@features/scene/items/Sneakers';
 import { SneakersRed }                                from '@features/scene/items/SneakersRed';
 import { MackaparGroup }                              from '@features/scene/items/MackaparGroup';
 import { RaskogLargeGroup }                             from '@features/scene/items/RaskogLargeGroup';
@@ -173,7 +172,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'jordan-hex-mule':        JordanHexMule,
   'summer-outdoor-boot':    SummerOutdoorBoot,
   'winter-outdoor-boot':    WinterOutdoorBoot,
-  'sneaker':                Sneakers,
+  'sneaker':                SneakersRed,
   'sneakers-red':           SneakersRed,
   'meuble-t':               MeubleT,
   'utaker-lower':           UtakerStack,
