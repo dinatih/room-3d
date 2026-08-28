@@ -8,7 +8,7 @@
  */
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import { Mackapar }    from './Mackapar';
+import { Mackapar50530988 } from './Mackapar50530988';
 // import { Salopette }   from './Salopette';
 import { DroneCell } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
@@ -48,7 +48,7 @@ export function MackaparGroup({ onSize }: SceneItemProps) {
   return (
     <group ref={ref}>
       <group userData={{ animUnit: true, isIkea: true }}>
-        <Mackapar item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Mackapar50530988 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Salopette suspendue à la barre */}
       {/* <group userData={{ animUnit: true, isIkea: true }}>
