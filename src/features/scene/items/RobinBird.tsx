@@ -2,11 +2,11 @@ import { useRef, useLayoutEffect, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { useHelper } from '@react-three/drei';
+import { useGLTF, useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { isAppIdle } from '@features/scene/idleState';
 
-const GLB_PATH = 'characters/robin/robin.glb';
+const GLB_PATH = '/characters/robin/robin.glb';
 
 type AIState = {
   mode: 'autonomous' | 'forced';
@@ -200,3 +200,6 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     </group>
   );
 }
+
+useGLTF.preload(GLB_PATH);
+

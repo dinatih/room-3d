@@ -676,41 +676,44 @@ export function Garden() {
     sofaArmRight: 'sofa-arm-right',
   });
   return (
-    <MergedStaticGroup name="merged-garden">
-      <group position={[270, 0, -110]} rotation={[0, Math.PI, 0]}
-             userData={{ skipMerge: true, itemName: 'Canapé Jardin Est', hoverAction: { label: 'Canapé de jardin', actions: ['sofa-arm-left', 'sofa-arm-right'] } }}>
-        <ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} />
-      </group>
-      <group position={[100, 0, -80]} rotation={[0, Math.PI, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Canapé Jardin Ouest' }}>
-        <ArmlessSofa item={{} as any} actionState={{}} onSize={() => {}} />
-      </group>
-      <group position={[40, 0, -90]} userData={{ animUnit: true, skipMerge: true, itemName: 'Banc Coffre Jardin' }}>
-        <ChestBench item={{} as any} actionState={{}} onSize={() => {}} />
-      </group>
-      <group position={[120, 0, -300]} rotation={[0, 1, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Baignoire Balnéo' }}>
-        <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
-      </group>
+    <>
+      <MergedStaticGroup name="merged-garden">
+        <group position={[270, 0, -110]} rotation={[0, Math.PI, 0]}
+               userData={{ skipMerge: true, itemName: 'Canapé Jardin Est', hoverAction: { label: 'Canapé de jardin', actions: ['sofa-arm-left', 'sofa-arm-right'] } }}>
+          <ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} />
+        </group>
+        <group position={[100, 0, -80]} rotation={[0, Math.PI, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Canapé Jardin Ouest' }}>
+          <ArmlessSofa item={{} as any} actionState={{}} onSize={() => {}} />
+        </group>
+        <group position={[40, 0, -90]} userData={{ animUnit: true, skipMerge: true, itemName: 'Banc Coffre Jardin' }}>
+          <ChestBench item={{} as any} actionState={{}} onSize={() => {}} />
+        </group>
+        <group position={[120, 0, -300]} rotation={[0, 1, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Baignoire Balnéo' }}>
+          <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
+        </group>
 
-      <group userData={{ itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
+        <group position={[100, 0, -145]} userData={{ animUnit: true, skipMerge: true, itemName: 'Palmier en Pot' }}>
+          <PottedPalm item={{} as any} actionState={{}} onSize={() => {}} />
+        </group>
+        <group position={[52, 0, 326]} rotation={[0, 0, 0]} userData={{ itemName: 'Meuble Vihals' }}>
+          <Vihals item={{} as any} actionState={{ 'vihals-toggle': true }} onSize={() => {}} />
+        </group>
+        <group position={[210, -3.48, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true, itemName: 'Rebound Jardin' }}>
+          <Rebound item={{} as any} actionState={{}} onSize={() => {}} />
+        </group>
+        <group position={[264, 0, -320]} rotation={[0, -Math.PI / 2, 0]} userData={{ isIkea: true, itemName: 'Boîte de Rangement Vättersö' }}>
+          <Vatterso20562909 item={stub('vatterso-20562909')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      </MergedStaticGroup>
+
+      <group userData={{ skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
         <RobinBird />
       </group>
 
-      <group position={[100, 0, -145]} userData={{ animUnit: true, skipMerge: true, itemName: 'Palmier en Pot' }}>
-        <PottedPalm item={{} as any} actionState={{}} onSize={() => {}} />
-      </group>
-      <group userData={{ itemName: 'Shiba Inu', hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
+      <group userData={{ skipMerge: true, itemName: 'Shiba Inu', hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
         <ShibaInu />
       </group>
-      <group position={[52, 0, 326]} rotation={[0, 0, 0]} userData={{ itemName: 'Meuble Vihals' }}>
-        <Vihals item={{} as any} actionState={{ 'vihals-toggle': true }} onSize={() => {}} />
-      </group>
-      <group position={[210, -3.48, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true, itemName: 'Rebound Jardin' }}>
-        <Rebound item={{} as any} actionState={{}} onSize={() => {}} />
-      </group>
-      <group position={[264, 0, -320]} rotation={[0, -Math.PI / 2, 0]} userData={{ isIkea: true, itemName: 'Boîte de Rangement Vättersö' }}>
-        <Vatterso20562909 item={stub('vatterso-20562909')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-    </MergedStaticGroup>
+    </>
   );
 }
 
