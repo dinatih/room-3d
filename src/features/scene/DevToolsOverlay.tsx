@@ -68,8 +68,6 @@ export function DevToolsGroups({ Group }: {
   Group: React.ComponentType<{ emoji: string; title: string; defaultOpen?: boolean; children: React.ReactNode }>;
 }) {
   const [, setTick] = useState(0);
-  const [showScene, setShowScene] = useState(false);
-  const [showTop, setShowTop] = useState(false);
   const fpsCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [showDetails, setShowDetails] = useState(false);
@@ -136,38 +134,26 @@ export function DevToolsGroups({ Group }: {
                 <StatRow label="Textures"   value={devState.textures}   color="#111827" />
               </div>
 
-              {/* SCÈNE — graph total, sur demande (refresh) */}
+              {/* SCÈNE — graph total */}
               <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 4, marginTop: 4 }}>
-                <div
-                  onClick={() => setShowScene(!showScene)}
-                  style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                  <span>SCÈNE <span style={{ color: '#6b7280', fontWeight: 400 }}>· total</span></span>
-                  <span style={{ fontSize: 9 }}>{showScene ? '▼' : '▶'}</span>
+                <div style={sectionHeaderStyle}>
+                  SCÈNE <span style={{ color: '#6b7280', fontWeight: 400 }}>· total</span>
                 </div>
-                {showScene && (
-                  <>
-                    <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
-                    <StatRow label="Instanced" value={devState.instances} />
-                    <StatRow label="Lights"    value={devState.lights} color="#111827" />
-                    <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#111827" />
-                    <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#111827" />
-                    {devState.meshes > 800 && (
-                      <div style={{ color: '#dc2626', fontSize: 10, fontWeight: 600, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
-                    )}
-                  </>
+                <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
+                <StatRow label="Instanced" value={devState.instances} />
+                <StatRow label="Lights"    value={devState.lights} color="#111827" />
+                <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000) + 'k' : '—'} color="#111827" />
+                <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000) + 'k' : '—'} color="#111827" />
+                {devState.meshes > 800 && (
+                  <div style={{ color: '#dc2626', fontSize: 10, fontWeight: 600, padding: '2px 10px' }}>⚠ {devState.meshes} meshes → fusionner</div>
                 )}
 
                 {devState.topObjects.length > 0 && (
                   <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: 4, paddingTop: 4 }}>
-                    <div
-                      onClick={() => setShowTop(!showTop)}
-                      style={{ ...sectionHeaderStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                    >
-                      <span>TOP TRIANGLES <span style={{ color: '#6b7280', fontWeight: 400 }}>· coupables</span></span>
-                      <span style={{ fontSize: 9 }}>{showTop ? '▼' : '▶'}</span>
+                    <div style={sectionHeaderStyle}>
+                      TOP TRIANGLES <span style={{ color: '#6b7280', fontWeight: 400 }}>· coupables</span>
                     </div>
-                    {showTop && devState.topObjects.slice(0, 10).map((obj) => (
+                    {devState.topObjects.slice(0, 10).map((obj) => (
                       <div key={obj.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 10px', fontSize: 11 }}>
                         <span style={{ color: '#111827', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130 }} title={obj.name}>
                           {obj.name}
