@@ -931,6 +931,13 @@ export function SingleCharacter({
     }
 
     if (!isPaused && !isTPose) {
+      if (isPreview && walkerAnim && walkerAnim !== 'idle' && walkerAnim !== 'tpose' && activeActionName.current && actions[activeActionName.current]) {
+        const act = actions[activeActionName.current];
+        const clip = act.getClip();
+        if (clip && clip.duration > 0) {
+          act.time = state.clock.elapsedTime % clip.duration;
+        }
+      }
       mixer.update(delta);
 
       const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
