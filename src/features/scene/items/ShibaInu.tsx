@@ -74,8 +74,8 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
         if (m.geometry.boundingSphere) {
-          // Le nœud interne du GLB a une échelle locale de 0.01.
-          // Un rayon local de 250 donne un rayon monde de 250 * 0.01 * 40.47 = ~101 cm dans la scène.
+          // Le nœud racine du GLB est normalisé à une échelle de 1.
+          // Un rayon local de 250 unités donne un rayon monde de 250 * (40 / 98.8) = ~101 cm dans la scène 3D.
           m.geometry.boundingSphere.radius = 250.0;
         }
       }
