@@ -368,12 +368,27 @@ export interface SidePanelProps {
 
 export type LidarMode = 0 | 1 | 2 | 3;
 
+import type { PlaneModelKey } from './PaperPlane';
+
 export interface SidePanelProps2 extends SidePanelProps {
   onOpenInventory:         () => void;
   lidarMode:               LidarMode;
   onCycleLidar:            () => void;
   lidarOpacity:            number;
   onToggleLidarOpacity:    () => void;
+  // Contrôles Animations & Avion (fusionnés depuis le panneau droit)
+  buildAnim?:              boolean;
+  onStartBuildAnim?:       () => void;
+  buildAnimMatrix?:        boolean;
+  onStartBuildAnimMatrix?: () => void;
+  onStopBuildAnim?:        () => void;
+  animDurations?:          Record<string, number>;
+  planeModel?:             PlaneModelKey;
+  onSetPlaneModel?:        (m: PlaneModelKey) => void;
+  autopilotVisible?:       boolean;
+  onToggleAutopilot?:      () => void;
+  showLandingStrips?:      boolean;
+  onToggleLandingStrips?:  () => void;
 }
 
 type TabKey = 'views' | 'layers' | 'personnage' | 'perf' | 'anims' | 'animsCouple' | 'interactif' | null;
@@ -405,6 +420,18 @@ export function SidePanel({
   onCycleLidar, 
   lidarOpacity, 
   onToggleLidarOpacity,
+  buildAnim = false,
+  onStartBuildAnim,
+  buildAnimMatrix = false,
+  onStartBuildAnimMatrix,
+  onStopBuildAnim,
+  animDurations = {},
+  planeModel = 'paper',
+  onSetPlaneModel,
+  autopilotVisible = false,
+  onToggleAutopilot,
+  showLandingStrips = false,
+  onToggleLandingStrips,
 }: SidePanelProps2) {
   
   const measurementActive = useSceneStore(state => state.measurementActive);
@@ -624,6 +651,71 @@ export function SidePanel({
       {triggerBtn('WC Siège', 'wc-seat-toggle')}
       {triggerBtn('WC Chasse d\'eau', 'wc-flush')}
       
+      <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>EXPÉRIENCES & AVION ✈</div>
+      <button
+        className="btn btn-outline-danger w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 fw-bold"
+        onClick={() => dispatchKey('f')}
+        style={{ fontSize: isMobile ? '13px' : '11px' }}
+      >
+        ✈ Lancer / Quitter Avion [F]
+      </button>
+      <div className="p-2 border-bottom bg-transparent">
+        <div className="text-muted fw-semibold mb-1" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Modèle d'avion
+        </div>
+        <div className="d-flex gap-1">
+          <button 
+            className={`btn btn-sm flex-grow-1 p-1 ${planeModel === 'paper' ? 'btn-danger' : 'btn-outline-secondary'}`}
+            onClick={() => onSetPlaneModel?.('paper')}
+            style={{ fontSize: '9px' }}
+          >
+            Papier
+          </button>
+          <button 
+            className={`btn btn-sm flex-grow-1 p-1 ${planeModel === 'rocket' ? 'btn-danger' : 'btn-outline-secondary'}`}
+            onClick={() => onSetPlaneModel?.('rocket')}
+            style={{ fontSize: '9px' }}
+          >
+            Fusée
+          </button>
+          <button 
+            className={`btn btn-sm flex-grow-1 p-1 ${planeModel === 'comet' ? 'btn-danger' : 'btn-outline-secondary'}`}
+            onClick={() => onSetPlaneModel?.('comet')}
+            style={{ fontSize: '9px' }}
+          >
+            Comète
+          </button>
+        </div>
+      </div>
+      <button
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        onClick={onToggleAutopilot}
+        style={{ 
+          fontSize: isMobile ? '13px' : '11px', 
+          background: 'transparent',
+          opacity: autopilotVisible ? 1 : 0.55,
+        }}
+      >
+        <span>Pilote auto ∞</span>
+        <span className={`badge ${autopilotVisible ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+          {autopilotVisible ? 'ON' : 'OFF'}
+        </span>
+      </button>
+      <button
+        className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+        onClick={onToggleLandingStrips}
+        style={{ 
+          fontSize: isMobile ? '13px' : '11px', 
+          background: 'transparent',
+          opacity: showLandingStrips ? 1 : 0.55,
+        }}
+      >
+        <span>Pistes 🛬</span>
+        <span className={`badge ${showLandingStrips ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+          {showLandingStrips ? 'ON' : 'OFF'}
+        </span>
+      </button>
+
       <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>LUMIÈRES</div>
       {furnitureBtn('Lampe SDB', 'lampBath')}
       {furnitureBtn('Lampe Couloir', 'lampCorridor')}
@@ -1494,14 +1586,56 @@ export function SidePanel({
     </div>
   );
 
+  const isBuildAnimRunning = buildAnim || buildAnimMatrix;
+
   const AnimationsSection = (
-    <CharacterAnimSelector
-      activeAnimValue={activeAnimValue}
-      onSelectAnim={handleSelectGlobalAnim}
-      isMobile={isMobile}
-      maxHeight="55vh"
-      listMaxHeight="40vh"
-    />
+    <div className="d-flex flex-column bg-transparent">
+      {/* ── Section Scène & Assemblage 3D ── */}
+      <div className="p-2 border-bottom bg-light bg-opacity-50">
+        <div className="text-muted fw-bold text-uppercase mb-1.5" style={{ fontSize: '9px', letterSpacing: '0.06em' }}>
+          🏗️ Démo & Assemblage 3D
+        </div>
+        <div className="d-flex flex-column gap-1.5">
+          <div className="d-flex gap-1">
+            <button
+              disabled={isBuildAnimRunning && !buildAnim}
+              onClick={onStartBuildAnim}
+              className={`btn btn-sm flex-grow-1 text-start rounded-2 py-1 px-2 fw-bold d-flex justify-content-between align-items-center ${buildAnim ? 'btn-danger text-white' : 'btn-outline-secondary text-dark'}`}
+              style={{ fontSize: isMobile ? '12px' : '10px', background: buildAnim ? undefined : 'rgba(255, 255, 255, 0.7)' }}
+            >
+              <span>▶ Tombée du ciel</span>
+              <span className="small opacity-75">{animDurations['buildAnim'] ? `~${Math.round(animDurations['buildAnim'] / 1000)}s` : '~30s'}</span>
+            </button>
+            <button
+              disabled={isBuildAnimRunning && !buildAnimMatrix}
+              onClick={onStartBuildAnimMatrix}
+              className={`btn btn-sm flex-grow-1 text-start rounded-2 py-1 px-2 fw-bold d-flex justify-content-between align-items-center ${buildAnimMatrix ? 'btn-success text-white' : 'btn-outline-secondary text-dark'}`}
+              style={{ fontSize: isMobile ? '12px' : '10px', background: buildAnimMatrix ? undefined : 'rgba(255, 255, 255, 0.7)' }}
+            >
+              <span>▶ Matrix</span>
+              <span className="small opacity-75">{animDurations['buildAnimMatrix'] ? `~${Math.round(animDurations['buildAnimMatrix'] / 1000)}s` : ''}</span>
+            </button>
+          </div>
+          {isBuildAnimRunning && (
+            <button
+              onClick={onStopBuildAnim}
+              className="btn btn-danger btn-sm w-100 fw-bold py-1 border-0 shadow-sm"
+              style={{ fontSize: '10px', letterSpacing: '0.04em' }}
+            >
+              ■ Arrêter l'animation en cours
+            </button>
+          )}
+        </div>
+      </div>
+
+      <CharacterAnimSelector
+        activeAnimValue={activeAnimValue}
+        onSelectAnim={handleSelectGlobalAnim}
+        isMobile={isMobile}
+        maxHeight="50vh"
+        listMaxHeight="35vh"
+      />
+    </div>
   );
 
   const [selectedDuoAnimId, setSelectedDuoAnimId] = useState<string>("");

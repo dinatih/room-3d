@@ -256,7 +256,7 @@ export function Minimap() {
     <>
       {/* Dimmed backdrop when expanded */}
       {expanded && (
-        <div
+        <div 
           onClick={() => setExpanded(false)}
           className="position-fixed inset-0 bg-dark bg-opacity-50"
           style={{ backdropFilter: 'blur(4px)', zIndex: 2000 }}
@@ -284,8 +284,17 @@ export function Minimap() {
           </div>
         </div>
       ) : (
-        /* MENU VIEW: Photo-frame card inside the right menu panel */
-        <div className="glass-card shadow-sm p-1 rounded-3 w-100 position-relative">
+        /* FLOATING MINIMAP: Bottom-Right compact radar */
+        <div
+          className="position-fixed glass-card shadow-sm p-1 rounded-3"
+          style={{
+            bottom: isMobile ? 12 : 20,
+            right: isMobile ? 12 : 20,
+            width: isMobile ? 130 : 155,
+            zIndex: 90,
+            pointerEvents: 'auto',
+          }}
+        >
           <canvas
             ref={canvasRef}
             className="rounded-2"
@@ -293,7 +302,7 @@ export function Minimap() {
               display: 'block',
               width: '100%',
               height: 'auto',
-              maxHeight: '185px',
+              maxHeight: '175px',
               objectFit: 'contain',
               background: 'transparent',
               opacity: 0.95,
@@ -306,8 +315,8 @@ export function Minimap() {
             title="Agrandir le plan"
             className="btn btn-dark btn-sm position-absolute d-flex align-items-center justify-content-center"
             style={{
-              top: 8,
-              left: 8,
+              top: 6,
+              left: 6,
               width: 22,
               height: 22,
               padding: 0,
@@ -323,8 +332,8 @@ export function Minimap() {
             title="Réduire"
             className="btn btn-dark btn-sm position-absolute d-flex align-items-center justify-content-center"
             style={{
-              top: 8,
-              right: 8,
+              top: 6,
+              right: 6,
               width: 22,
               height: 22,
               padding: 0,

@@ -13,7 +13,7 @@ import {
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
 import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
-import { AnimationsPanel }  from '@features/scene/AnimationsPanel';
+import { Minimap }          from '@features/scene/Minimap';
 import { Walls, Floor, Mirrors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
@@ -486,6 +486,23 @@ export function Studio() {
         onOpenInventory={() => setShowInventory(true)}
         lidarMode={lidarMode} onCycleLidar={onCycleLidar}
         lidarOpacity={lidarOpacity} onToggleLidarOpacity={onToggleLidarOpacity}
+        buildAnim={buildAnim}
+        onStartBuildAnim={start(setBuildAnim)}
+        buildAnimMatrix={buildAnimMatrix}
+        onStartBuildAnimMatrix={start(setBuildAnimMatrix)}
+        onStopBuildAnim={stopAll}
+        animDurations={animDurations}
+        planeModel={planeModel}
+        onSetPlaneModel={setPlaneModel}
+        autopilotVisible={autopilotVisible}
+        onToggleAutopilot={() => setAutopilotVisible(v => !v)}
+        showLandingStrips={showLandingStrips}
+        onToggleLandingStrips={() => {
+          setShowLandingStrips(v => {
+            cameraState.landingStripsVisible = !v;
+            return !v;
+          });
+        }}
       />
       {planeMode && (
         <div style={{
@@ -506,23 +523,7 @@ export function Studio() {
           }
         </div>
       )}
-      <AnimationsPanel
-        buildAnim={buildAnim}             onStartBuildAnim={start(setBuildAnim)}
-        buildAnimMatrix={buildAnimMatrix} onStartBuildAnimMatrix={start(setBuildAnimMatrix)}
-        onStop={stopAll}
-        durations={animDurations}
-        planeModel={planeModel}
-        onSetPlaneModel={setPlaneModel}
-        autopilotVisible={autopilotVisible}
-        onToggleAutopilot={() => setAutopilotVisible(v => !v)}
-        showLandingStrips={showLandingStrips}
-        onToggleLandingStrips={() => {
-          setShowLandingStrips(v => {
-            cameraState.landingStripsVisible = !v;
-            return !v;
-          });
-        }}
-      />
+      <Minimap />
       {showInventory && (
         <Suspense fallback={null}>
           <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
