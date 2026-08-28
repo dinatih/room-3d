@@ -125,10 +125,10 @@ export function useAgentController(
   useEffect(() => {
     const onInvite = (e: any) => {
       if (e.detail?.targetId === _characterId) {
-        const role = duoSessionManager.joinDuoZone(_characterId);
+        const role = (e.detail?.forceRole as DuoRole) || duoSessionManager.joinDuoZone(_characterId);
         if (role) {
           duoRoleRef.current = role;
-          if (claimedSlotRef.current && claimedSlotRef.current.objectId !== 'duo-zone') {
+          if (claimedSlotRef.current && (claimedSlotRef.current.objectId !== 'duo-zone' || claimedSlotRef.current.slotId !== role)) {
             OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
             claimedSlotRef.current = null;
           }
@@ -138,7 +138,7 @@ export function useAgentController(
           ];
           dynamicNavIndexRef.current = 0;
           statusRef.current = 'IDLE';
-          appLog(_characterId, `🏃‍♂️ Répond à l'appel de ${e.detail.fromId} et rejoint la ✨ Scène Duo !`);
+          appLog(_characterId, `🏃‍♂️ Répond à l'appel de ${e.detail.fromId} (${role === 'roleA' ? 'Meneur' : 'Partenaire'}) et rejoint la ✨ Scène Duo !`);
         }
       }
     };

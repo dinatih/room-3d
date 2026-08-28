@@ -22,9 +22,10 @@ const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 import { useSceneStore } from './store/useSceneStore';
 import { CHARACTERS, isCharacterVisibleInMode, npcLabel, type LaraCountMode } from './walkerConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
-import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { resetAppIdle } from './idleState';
+import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { DUO_ANIMATIONS } from './ai/duoAnimations';
+import { duoSessionManager } from './ai/duoSessionManager';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -1446,68 +1447,15 @@ export function SidePanel({
     />
   );
 
-  const [autoCycleIndex, setAutoCycleIndex] = useState(-1);
+  const [selectedDuoAnimId, setSelectedDuoAnimId] = useState<string>("");
 
-  interface CoupleAnimConfig {
-    label: string;
-    icon: string;
-    s: string;
-    r: string;
-    dist?: number;
-    rotS?: number;
-    rotR?: number;
-    sPos?: [number, number, number];
-    rPos?: [number, number, number];
-  }
-
-  const coupleAnims: CoupleAnimConfig[] = DUO_ANIMATIONS.map(a => ({
-    label: a.label,
-    icon: a.icon,
-    s: a.animA,
-    r: a.animB,
-    dist: a.dist,
-    rotS: a.rotA,
-    rotR: a.rotB,
-    sPos: a.offsetA ? [-200 + a.offsetA[0], a.offsetA[1], -300 + a.offsetA[2]] as [number, number, number] : undefined,
-    rPos: a.offsetB ? [-200 + a.offsetB[0], a.offsetB[1], -300 + a.offsetB[2]] as [number, number, number] : undefined,
-  }));
-
-  const playCoupleAnim = (sandraPath: string, rajaaPath: string, dist: number = 50, rotS?: number, rotR?: number, sPos?: [number, number, number], rPos?: [number, number, number]) => {
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-sandra', value: sandraPath, loop: false } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-rajaa', value: rajaaPath, loop: false } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-sandra', value: sPos || [-200, 0, -300 + dist / 2] } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-rajaa', value: rPos || [-200, 0, -300 - dist / 2] } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-rot-sandra', value: rotS !== undefined ? rotS : Math.PI } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-rot-rajaa', value: rotR !== undefined ? rotR : 0 } }));
-  };
-
-  useEffect(() => {
-    if (autoCycleIndex < 0) return;
-    const anim = coupleAnims[autoCycleIndex];
-    if (anim) {
-      playCoupleAnim(
-        anim.s,
-        anim.r,
-        anim.dist ?? 50,
-        anim.rotS,
-        anim.rotR,
-        anim.sPos,
-        anim.rPos
-      );
+  const handleSelectDuoAnim = (animId: string) => {
+    setSelectedDuoAnimId(animId);
+    const def = DUO_ANIMATIONS.find(a => a.id === animId);
+    if (def) {
+      duoSessionManager.forceDuoAnimation(def);
     }
-  }, [autoCycleIndex]);
-
-  useEffect(() => {
-    if (autoCycleIndex < 0) return;
-    const onFinished = (e: any) => {
-      // Only cycle when sandra finishes to avoid double triggers
-      if (e.detail?.id === 'sandra') {
-        setAutoCycleIndex(prev => prev < 0 ? -1 : (prev + 1) % coupleAnims.length);
-      }
-    };
-    document.addEventListener('walker-anim-finished', onFinished);
-    return () => document.removeEventListener('walker-anim-finished', onFinished);
-  }, [autoCycleIndex]);
+  };
 
   const AnimationsCoupleSection = (
     <div
@@ -1519,32 +1467,48 @@ export function SidePanel({
           className="form-select form-select-sm"
           onChange={(e) => {
             const val = e.target.value;
-            if (val === '') return;
-            const idx = coupleAnims.findIndex(anim => anim.label === val);
-            if (idx !== -1) {
-              setAutoCycleIndex(idx);
-              const a = coupleAnims[idx];
-              playCoupleAnim(
-                a.s,
-                a.r,
-                a.dist ?? 50,
-                a.rotS,
-                a.rotR,
-                a.sPos,
-                a.rPos
-              );
-            }
+            if (val) handleSelectDuoAnim(val);
           }}
-          value={autoCycleIndex >= 0 && coupleAnims[autoCycleIndex] ? coupleAnims[autoCycleIndex].label : ""}
+          value={selectedDuoAnimId}
           style={{ fontSize: isMobile ? '13px' : '11px' }}
         >
           <option value="" disabled>Sélectionner une animation de couple...</option>
-          {coupleAnims.map(a => (
-            <option key={a.label} value={a.label}>
+          {DUO_ANIMATIONS.map(a => (
+            <option key={a.id} value={a.id}>
               {a.icon} {a.label}
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="flex-grow-1 overflow-auto p-2" style={{ maxHeight: '45vh' }}>
+        <div className="d-flex flex-column gap-1">
+          {DUO_ANIMATIONS.map(a => {
+            const isSelected = selectedDuoAnimId === a.id;
+            return (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => handleSelectDuoAnim(a.id)}
+                className={`btn btn-sm text-start d-flex align-items-center justify-content-between px-2 py-1 ${
+                  isSelected ? 'btn-primary text-white shadow-sm' : 'btn-outline-secondary border-0 bg-transparent text-dark'
+                }`}
+                style={{
+                  fontSize: isMobile ? '13px' : '11px',
+                  borderRadius: '6px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <span className="text-truncate me-2">
+                  <span className="me-1">{a.icon}</span> {a.label}
+                </span>
+                <span className={`badge border ${isSelected ? 'bg-light text-dark' : 'bg-light text-secondary'}`} style={{ fontSize: '9px' }}>
+                  x3
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

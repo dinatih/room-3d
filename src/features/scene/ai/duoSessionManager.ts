@@ -266,6 +266,67 @@ class DuoSessionManager {
 
     return null;
   }
+
+  /**
+   * Force le déclenchement d'une animation de couple spécifique (ex: depuis le SidePanel)
+   * en appelant les 2 PNJs autonomes les plus proches de la Duo Zone pour la jouer 3 fois.
+   */
+  public forceDuoAnimation(def: DuoAnimationDef): { targetA: string; targetB: string } | null {
+    const [bx, , bz] = this.basePos;
+
+    // Trier tous les PNJs autonomes par distance croissante au centre de la Duo Zone
+    const sortedNpcs: { id: string; dist: number }[] = [];
+    for (const npcId of AUTONOMOUS_NPC_IDS) {
+      const pos = cameraState.positions[npcId];
+      const dist = pos ? Math.hypot(pos.x - bx, pos.z - bz) : Infinity;
+      sortedNpcs.push({ id: npcId, dist });
+    }
+    sortedNpcs.sort((a, b) => a.dist - b.dist);
+
+    const availableIds = sortedNpcs.map(n => n.id);
+    const targetA = availableIds[0] || 'native';
+    const targetB = availableIds[1] || 'rosanna';
+
+    if (!targetA || !targetB || targetA === targetB) {
+      return null;
+    }
+
+    // Libérer les anciens occupants éventuels
+    if (this.participantA && this.participantA.characterId !== targetA) {
+      OccupancyManager.releaseSlot('duo-zone', 'roleA', this.participantA.characterId);
+    }
+    if (this.participantB && this.participantB.characterId !== targetB) {
+      OccupancyManager.releaseSlot('duo-zone', 'roleB', this.participantB.characterId);
+    }
+
+    // Configurer la session avec cette animation unique jouée 3 fois
+    this.playlist = [def];
+    this.currentAnimIndex = 0;
+    this.currentRepeatIndex = 0;
+    this.sessionTimer = def.duration ?? 5.0;
+    this.isSessionPlaying = false;
+    this.isSessionComplete = false;
+
+    // Assigner les 2 rôles
+    OccupancyManager.claimSlot('duo-zone', 'roleA', targetA);
+    this.participantA = { characterId: targetA, role: 'roleA', isReady: false };
+
+    OccupancyManager.claimSlot('duo-zone', 'roleB', targetB);
+    this.participantB = { characterId: targetB, role: 'roleB', isReady: false };
+
+    appLog('duo-zone', `🎮 Sélection SidePanel : "${def.label}" (x${this.repeatsPerAnim}) assignée à ${targetA} (Meneur) et ${targetB} (Partenaire) !`);
+
+    // Émettre l'invitation prioritaire aux 2 PNJs ciblés
+    document.dispatchEvent(new CustomEvent('npc-invite-duo', {
+      detail: { targetId: targetA, fromId: 'SidePanel', forceRole: 'roleA' }
+    }));
+    document.dispatchEvent(new CustomEvent('npc-invite-duo', {
+      detail: { targetId: targetB, fromId: 'SidePanel', forceRole: 'roleB' }
+    }));
+
+    this.emitChange();
+    return { targetA, targetB };
+  }
 }
 
 export const duoSessionManager = new DuoSessionManager();
