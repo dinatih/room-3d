@@ -48,6 +48,7 @@ import { Sneakers }      from './items/Sneakers';
 
 import { Grejig40329868 }   from './items/Grejig40329868';
 import { Stackstod60620144 } from './items/Stackstod60620144';
+import { Lagerpoppel00561816 } from './items/Lagerpoppel00561816';
 import { PalmLeaf }      from './items/PalmLeaf';
 import { Laptop }        from './items/Laptop';
 import { Phone }         from './items/Phone';
@@ -649,6 +650,17 @@ export function Decor() {
           </group>
         ))}
       </>
+      {/* Deux coussins LAGERPOPPEL fuchsia suspendus par un coin en V sur le mur EST (tout en haut / contre plafond) */}
+      <group position={[ROOM_W - 5.5, WALL_H - 1, ROOM_D / 2]} rotation={[0, -Math.PI / 2, 0.7]} userData={{ animUnit: true, isIkea: true, itemName: 'Coussin LAGERPOPPEL 1 (Mur Est)' }}>
+        <group position={[29, -40, 0]}>
+          <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      </group>
+      <group position={[ROOM_W - 6.5, WALL_H - 1, ROOM_D / 2]} rotation={[0, -Math.PI / 2, -0.7]} userData={{ animUnit: true, isIkea: true, itemName: 'Coussin LAGERPOPPEL 2 (Mur Est)' }}>
+        <group position={[-29, -40, 0]}>
+          <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      </group>
     </MergedStaticGroup>
   );
 }

@@ -70,6 +70,7 @@ import { RobinBird }                                  from '@features/scene/item
 import { Wig }                                        from '@features/scene/items/Wig';
 import { RiggedWig }                                  from '@features/scene/items/RiggedWig';
 import { GoogleNestMini }                             from '@features/scene/items/GoogleNestMini';
+import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   // ── Interactifs (open/close) ───────────────────────────────────────────────
@@ -133,6 +134,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'vihals-chair':           Vihals,
   'tyco-rebound':           Rebound,
   'google-nest-mini':       GoogleNestMini,
+  'lagerpoppel00561816':    Lagerpoppel00561816,
 
   // ── Composites (assemblages multi-pièces) ─────────────────────────────────
   'kallax-ne-stack':        KallaxNE,
