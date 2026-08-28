@@ -152,10 +152,10 @@ export const SPATIAL_ZONES_CONFIG: SpatialZoneDef[] = [
     id: 'living',
     name: 'Séjour / Salon',
     environment: 'indoor',
-    // Délimité par : corner-nw, corner-ne, corner-se, corner-sw, niche-beam, kitchen-*, door-living-*
+    // Délimité par : corner-nw, corner-ne, corner-se, corner-sw, niche-beam, kitchen-* (Z=460), door-living-*
     bounds: {
       min: [-15, 0, -10],
-      max: [330, 250, 407.2]
+      max: [330, 250, 460]
     }
   },
   {
