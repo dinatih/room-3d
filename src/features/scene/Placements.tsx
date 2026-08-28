@@ -580,7 +580,7 @@ function LampOla_() {
 }
 
 function SneakersPair() {
-  const pz = ROOM_D - 14;
+  const pz = ROOM_D - 16;
   return (
     <>
       {/* Paire inférieure surélevée pour éviter le z-fighting avec le parquet (Y = 0.5) */}
