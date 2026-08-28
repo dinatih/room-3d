@@ -1,6 +1,8 @@
 import { DUO_ANIMATIONS, DuoAnimationDef } from './duoAnimations';
 import { OccupancyManager } from './occupancyManager';
 import { appLog } from '@features/ui/AppConsole';
+import { cameraState } from '../cameraState';
+import { AUTONOMOUS_NPC_IDS } from '../walkerConfig';
 
 export type DuoRole = 'roleA' | 'roleB';
 
@@ -202,6 +204,43 @@ class DuoSessionManager {
       this.cleanup();
     }
     this.emitChange();
+  }
+
+  /**
+   * Trouve le PNJ autonome le plus proche de la Duo Zone et lui envoie une invitation.
+   */
+  public inviteNearestNpc(callerId: string): string | null {
+    if (this.participantA && this.participantB) return null;
+
+    const [bx, , bz] = this.basePos;
+    let closestId: string | null = null;
+    let minDistance = Infinity;
+
+    for (const npcId of AUTONOMOUS_NPC_IDS) {
+      if (npcId === callerId) continue;
+      if (this.participantA?.characterId === npcId || this.participantB?.characterId === npcId) continue;
+
+      const pos = cameraState.positions[npcId];
+      if (pos) {
+        const dx = pos.x - bx;
+        const dz = pos.z - bz;
+        const dist = Math.hypot(dx, dz);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestId = npcId;
+        }
+      }
+    }
+
+    if (closestId) {
+      appLog('duo-zone', `📢 ${callerId} invite ${closestId} (${minDistance.toFixed(0)} cm) à rejoindre la ✨ Scène Duo !`);
+      document.dispatchEvent(new CustomEvent('npc-invite-duo', {
+        detail: { targetId: closestId, fromId: callerId }
+      }));
+      return closestId;
+    }
+
+    return null;
   }
 
   private cleanup() {

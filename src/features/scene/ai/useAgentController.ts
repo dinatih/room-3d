@@ -119,10 +119,33 @@ export function useAgentController(
   // Gestion spécifique du rôle et attente pour la duo-zone
   const duoRoleRef = useRef<DuoRole | null>(null);
   const duoWaitTimerRef = useRef<number>(0);
+  const duoInvitedRef = useRef<boolean>(false);
 
-  // Libérer toutes les réservations au démontage
+  // Libérer toutes les réservations au démontage et écouter les invitations de duo
   useEffect(() => {
+    const onInvite = (e: any) => {
+      if (e.detail?.targetId === _characterId) {
+        const role = duoSessionManager.joinDuoZone(_characterId);
+        if (role) {
+          duoRoleRef.current = role;
+          if (claimedSlotRef.current && claimedSlotRef.current.objectId !== 'duo-zone') {
+            OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
+            claimedSlotRef.current = null;
+          }
+          claimedSlotRef.current = { objectId: 'duo-zone', slotId: role };
+          dynamicNavQueueRef.current = [
+            { type: 'USE_OBJECT', smartObjectId: 'duo-zone', slotId: role }
+          ];
+          dynamicNavIndexRef.current = 0;
+          statusRef.current = 'IDLE';
+          appLog(_characterId, `🏃‍♂️ Répond à l'appel de ${e.detail.fromId} et rejoint la ✨ Scène Duo !`);
+        }
+      }
+    };
+
+    document.addEventListener('npc-invite-duo', onInvite);
     return () => {
+      document.removeEventListener('npc-invite-duo', onInvite);
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
     };
@@ -134,6 +157,7 @@ export function useAgentController(
       duoSessionManager.leaveDuoZone(_characterId);
       claimedSlotRef.current = null;
       duoRoleRef.current = null;
+      duoInvitedRef.current = false;
     }
     const isWait = hasSkyDrop && spawnDelay > 0;
     const isFallNow = hasSkyDrop && spawnDelay === 0;
@@ -675,12 +699,19 @@ export function useAgentController(
             : 'animations/poses_idles/miley_armature_p2_standoff_provokes_m2.glb';
           stateRef.current.rotY = duoRoleRef.current === 'roleA' ? Math.PI : 0;
 
+          // À la moitié du délai (10s), appeler le PNJ le plus proche
+          if (duoWaitTimerRef.current >= 10.0 && !duoInvitedRef.current) {
+            duoInvitedRef.current = true;
+            duoSessionManager.inviteNearestNpc(_characterId);
+          }
+
           // Timeout de 20s si aucun partenaire n'arrive
           if (duoWaitTimerRef.current > 20.0) {
             appLog(_characterId, `⏳ Duo timeout : pas de partenaire, reprise du parcours`);
             duoSessionManager.leaveDuoZone(_characterId);
             claimedSlotRef.current = null;
             duoRoleRef.current = null;
+            duoInvitedRef.current = false;
             statusRef.current = 'IDLE';
             stepIndexRef.current++;
             return update(dt);
