@@ -31,16 +31,20 @@ export function updateUrlNpcCount(count: LaraCountMode) {
   } catch {}
 }
 
+import { getRandomHdriId } from '@features/scene/hdriConfig';
+
 interface SceneStore {
   furniture: FurnitureState;
   layers: LayerState;
   extraStates: Record<string, boolean>;
   activeWalkerId: string;
+  currentHdri: string;
   measurementActive: boolean;
   cameraMode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane';
   setMeasurementActive: (active: boolean) => void;
   setCameraMode: (mode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane') => void;
   setLaraCount: (count: LaraCountMode) => void;
+  setHdri: (id: string) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
   toggleLayer: (key: keyof LayerState) => void;
   triggerAction: (key: string) => void;
@@ -218,6 +222,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   layers: initialLayers,
   extraStates: initialExtraStates,
   activeWalkerId: 'native',
+  currentHdri: getRandomHdriId(),
   measurementActive: false,
   cameraMode: 'orbit',
   setMeasurementActive: (active: boolean) => {
@@ -232,6 +237,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
     set((state) => ({
       layers: { ...state.layers, laraCount: count, showAllLaraStyles: true }
     }));
+    cameraState.invalidate?.();
+  },
+  setHdri: (id: string) => {
+    set({ currentHdri: id });
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'hdri-change', value: id } }));
     cameraState.invalidate?.();
   },
 

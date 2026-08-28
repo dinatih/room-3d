@@ -20,6 +20,7 @@ const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
 import { useSceneStore } from './store/useSceneStore';
+import { HDRI_LIST } from './hdriConfig';
 import { CHARACTERS, isCharacterVisibleInMode, npcLabel, type LaraCountMode } from './walkerConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
 import { resetAppIdle } from './idleState';
@@ -416,6 +417,8 @@ export function SidePanel({
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>(null);
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
+  const currentHdri = useSceneStore(state => state.currentHdri);
+  const setHdri = useSceneStore(state => state.setHdri);
 
   useEffect(() => {
     if (!layers.realSun) { setSunInfo(null); return; }
@@ -652,6 +655,39 @@ export function SidePanel({
 
   const LayersSection = (
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
+      <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
+        <div className="d-flex justify-content-between align-items-center mb-1">
+          <div className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            🌆 Ambiance HDRI / Ciel
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
+            onClick={() => {
+              const otherHdris = HDRI_LIST.filter(h => h.id !== currentHdri);
+              const next = otherHdris[Math.floor(Math.random() * otherHdris.length)];
+              setHdri(next.id);
+            }}
+            title="HDRI aléatoire 🎲"
+            style={{ fontSize: '11px', lineHeight: 1 }}
+          >
+            🎲
+          </button>
+        </div>
+        <select
+          className="form-select form-select-sm bg-transparent text-dark border-secondary"
+          style={{ fontSize: isMobile ? '14px' : '11px' }}
+          onKeyDown={(e) => e.stopPropagation()}
+          value={currentHdri}
+          onChange={(e) => setHdri(e.target.value)}
+        >
+          {HDRI_LIST.map((h) => (
+            <option key={h.id} value={h.id} className="bg-light text-dark">
+              {h.name}
+            </option>
+          ))}
+        </select>
+      </div>
       {layerBtn('green',  'Structure',     'structure')}
       {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
       {layerBtn('peach',  'Portes',        'doors')}

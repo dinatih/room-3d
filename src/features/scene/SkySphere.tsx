@@ -1,7 +1,9 @@
-import { useMemo, useRef } from 'react';
-import { useTexture } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { useMemo, useRef, useState, useEffect } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { useSceneStore } from './store/useSceneStore';
+import { getHdriById } from './hdriConfig';
 
 const SKY_CENTER: [number, number, number] = [150, 0, 150];
 const SKY_RADIUS = 3600;
@@ -13,15 +15,58 @@ const EXTERIOR_FADE_START = SKY_RADIUS * 0.98;
 const EXTERIOR_FADE_END = SKY_RADIUS * 1.22;
 const RAINBOW_COLORS = ['#ff3055', '#ff8a00', '#ffe94d', '#35ff6f', '#28d7ff', '#5177ff', '#c45cff'];
 
+const textureCache = new Map<string, THREE.Texture>();
+const rgbeLoader = new RGBELoader();
+const textureLoader = new THREE.TextureLoader();
+
 export function SkySphere() {
-  const texture = useTexture('/environment/HDR_029_Sky_Cloudy_Bg.jpg');
-  texture.colorSpace = THREE.SRGBColorSpace;
+  const currentHdri = useSceneStore(state => state.currentHdri);
+  const [texture, setTexture] = useState<THREE.Texture | null>(() => {
+    const initialHdri = getHdriById(currentHdri);
+    return textureCache.get(initialHdri.id) ?? null;
+  });
+  const { scene, invalidate } = useThree();
+
+  useEffect(() => {
+    const hdri = getHdriById(currentHdri);
+    const cached = textureCache.get(hdri.id);
+    if (cached) {
+      setTexture(cached);
+      scene.environment = cached;
+      invalidate();
+      return;
+    }
+
+    let isMounted = true;
+    const onLoad = (loadedTexture: THREE.Texture) => {
+      loadedTexture.mapping = THREE.EquirectangularReflectionMapping;
+      if (hdri.type === 'jpg') {
+        loadedTexture.colorSpace = THREE.SRGBColorSpace;
+      }
+      textureCache.set(hdri.id, loadedTexture);
+      if (isMounted) {
+        setTexture(loadedTexture);
+        scene.environment = loadedTexture;
+        invalidate();
+      }
+    };
+
+    if (hdri.type === 'hdr') {
+      rgbeLoader.load(hdri.url, onLoad);
+    } else {
+      textureLoader.load(hdri.url, onLoad);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentHdri, scene, invalidate]);
 
   return (
     <group position={SKY_CENTER}>
       <SpaceBackdrop />
-      <FadingSkyDome texture={texture} />
-      <ExteriorSkyShell texture={texture} />
+      {texture && <FadingSkyDome texture={texture} />}
+      {texture && <ExteriorSkyShell texture={texture} />}
     </group>
   );
 }
@@ -338,5 +383,3 @@ function seededUnit(seed: number) {
   const x = Math.sin(seed * 12.9898) * 43758.5453;
   return x - Math.floor(x);
 }
-
-useTexture.preload('/environment/HDR_029_Sky_Cloudy_Bg.jpg');
