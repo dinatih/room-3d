@@ -6,14 +6,15 @@ import { SceneItemProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 
 /**
- * STACKSTOD organiseur bureau, rouge, 32x18x16 cm
- * Price: 2
- * URL: https://www.ikea.com/fr/fr/p/stackstod-organiseur-bureau-rouge-60620144/
+ * GREJIG Étagère à chaussures, 58x27 cm
+ * Price: 3,99
+ * URL: https://www.ikea.com/fr/fr/p/grejig-etagere-a-chaussures-gris-40329868/
  */
-export function Stackstod({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/items/stackstod/Stackstod.glb');
+export function Grejig40329868({ onSize, ...props }: SceneItemProps) {
+  const { scene } = useGLTFClone('/items/grejig40329868/Grejig40329868.glb');
 
   useLayoutEffect(() => {
+    scene.scale.set(1, 1, 1);
     removeGlbLines(scene);
     scene.scale.setScalar(100);
     mergeGlbByMaterial(scene);
@@ -33,4 +34,4 @@ export function Stackstod({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/items/stackstod/Stackstod.glb');
+useGLTF.preload('/items/grejig40329868/Grejig40329868.glb');

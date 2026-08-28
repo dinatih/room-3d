@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, Suspense } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { useState, useMemo, useEffect, useRef, useLayoutEffect, Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
@@ -21,18 +21,17 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 /**
- * Configure les clipping planes mondiaux directement sur le WebGLRenderer
+ * Rendu officiel du Studio croppé en local pour que la SkySphere et le fond céleste restent intacts
  */
-function ClippingSetup({ zone }: { zone: SpatialZone }) {
-  const { gl } = useThree();
+function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
   const min = zone.bounds.min;
   const max = zone.bounds.max;
+  const studioGroupRef = useRef<THREE.Group>(null);
 
-  useEffect(() => {
-    gl.localClippingEnabled = true;
-    // Les objets sont en coordonnées monde brutes : les plans découpent directement l'espace monde
+  // 6 plans de coupe orthogonaux pour découper exclusivement les objets du studio
+  const clippingPlanes = useMemo(() => {
     const pad = 1;
-    gl.clippingPlanes = [
+    return [
       new THREE.Plane(new THREE.Vector3(1, 0, 0), -(min[0] - pad)),   // X >= minX - pad
       new THREE.Plane(new THREE.Vector3(-1, 0, 0), max[0] + pad),    // X <= maxX + pad
       new THREE.Plane(new THREE.Vector3(0, 1, 0), -(min[1] - pad)),   // Y >= minY - pad
@@ -40,28 +39,39 @@ function ClippingSetup({ zone }: { zone: SpatialZone }) {
       new THREE.Plane(new THREE.Vector3(0, 0, 1), -(min[2] - pad)),   // Z >= minZ - pad
       new THREE.Plane(new THREE.Vector3(0, 0, -1), max[2] + pad),   // Z <= maxZ + pad
     ];
-    return () => {
-      gl.clippingPlanes = [];
-    };
-  }, [gl, min, max]);
+  }, [min, max]);
 
-  return null;
-}
+  // Applique les clipping planes localement sur tous les matériaux des meshes de la pièce
+  useLayoutEffect(() => {
+    if (!studioGroupRef.current) return;
+    studioGroupRef.current.traverse((child: THREE.Object3D) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach(m => {
+            m.clippingPlanes = clippingPlanes;
+            m.clipShadows = true;
+            m.needsUpdate = true;
+          });
+        } else if (mesh.material) {
+          mesh.material.clippingPlanes = clippingPlanes;
+          mesh.material.clipShadows = true;
+          mesh.material.needsUpdate = true;
+        }
+      }
+    });
+  }, [clippingPlanes]);
 
-/**
- * Rendu officiel du Studio sans translation de groupe pour que les clipping planes mondiaux s'appliquent fidèlement
- */
-function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
   const smartObjects = useMemo(() => zone.getSmartObjects(), [zone]);
   const waypoints = useMemo(() => zone.getWaypoints(), [zone]);
 
   return (
     <group>
-      {/* Ciel panoramique réaliste */}
+      {/* Ciel panoramique réaliste — non soumis aux plans de coupe */}
       <SkySphere />
 
-      {/* ── Scène réelle complète de l'appartement ── */}
-      <group>
+      {/* ── Scène réelle complète de l'appartement — soumise au découpage de la pièce ── */}
+      <group ref={studioGroupRef}>
         <Walls />
         <Floor />
         <DoorsPlaced />
@@ -176,15 +186,16 @@ export function SpatialZonePreview({
   return (
     <div style={{ width: '100%', height, position: 'relative', background: '#0b1120', borderRadius: 8, overflow: 'hidden' }}>
       <Canvas
-        camera={{ position: camPosition, fov: 42, near: 1, far: 5000 }}
+        camera={{ position: camPosition, fov: 42, near: 1, far: 8000 }}
         key={`${zone.id}-${isTopView ? 'top' : 'persp'}`}
         style={{ width: '100%', height: '100%' }}
+        onCreated={({ gl }) => {
+          gl.localClippingEnabled = true;
+        }}
       >
         <ambientLight intensity={1.5} />
         <directionalLight position={[200, 400, 200]} intensity={2.0} />
         <directionalLight position={[-200, 300, -200]} intensity={1.0} />
-
-        <ClippingSetup zone={zone} />
 
         <Suspense fallback={null}>
           <StudioCroppedScene zone={zone} />

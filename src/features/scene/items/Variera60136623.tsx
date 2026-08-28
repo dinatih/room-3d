@@ -6,14 +6,15 @@ import { SceneItemProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 
 /**
- * KOPPLA Prise quadruple 2 ports USB, blanc, 3
- * Price: 17
- * URL: https://www.ikea.com/fr/fr/p/koppla-prise-quadruple-2-ports-usb-blanc-00314741/
+ * VARIERA Demi
+ * Price: 4,99
+ * URL: https://www.ikea.com/fr/fr/p/variera-demi-etagere-blanc-60136623/
  */
-export function Koppla({ onSize, ...props }: SceneItemProps) {
-  const { scene } = useGLTFClone('/items/koppla00314741/Koppla00314741.glb');
+export function Variera60136623({ onSize, ...props }: SceneItemProps) {
+  const { scene } = useGLTFClone('/items/variera60136623/Variera60136623.glb');
 
   useLayoutEffect(() => {
+    scene.scale.set(1, 1, 1);
     removeGlbLines(scene);
     scene.scale.setScalar(100);
     mergeGlbByMaterial(scene);
@@ -33,4 +34,4 @@ export function Koppla({ onSize, ...props }: SceneItemProps) {
   );
 }
 
-useGLTF.preload('/items/koppla00314741/Koppla00314741.glb');
+useGLTF.preload('/items/variera60136623/Variera60136623.glb');

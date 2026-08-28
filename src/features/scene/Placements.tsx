@@ -34,8 +34,8 @@ import { UtakerFrame }   from './items/UtakerFrame';
 import { BollsidanDesk } from './items/BollsidanDesk';
 import { AirPerformer }  from './items/AirPerformer';
 import { TrashBin }      from './items/TrashBin';
-import { Fniss }         from './items/Fniss';
-import { LackShelf }     from './items/LackShelf';
+import { Fniss40295439 } from './items/Fniss40295439';
+import { Lack90282180 }  from './items/Lack90282180';
 import { LampOla }       from './items/LampOla';
 import { MackaparGroup } from './items/MackaparGroup';
 import { MannequinHead } from './items/MannequinHead';
@@ -46,7 +46,8 @@ import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
 // import { KinCamera } from './items/KinCamera';
 
-import { Grejig }        from './items/Grejig';
+import { Grejig40329868 }   from './items/Grejig40329868';
+import { Stackstod60620144 } from './items/Stackstod60620144';
 import { PalmLeaf }      from './items/PalmLeaf';
 import { Laptop }        from './items/Laptop';
 import { Phone }         from './items/Phone';
@@ -404,8 +405,15 @@ function Desks() {
   return (
     <>
       <PositionTransition x={p1.x} z={p1.z} ry={p1.ry}>
-        <group userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] } }}>
-          <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} />
+        <group userData={{ hoverAction: { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] } }}>
+          <group userData={{ animUnit: true, isIkea: true }}>
+            <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} />
+          </group>
+          <group position={[0, d1H, 0]} rotation={[0, Math.PI, 0]}>
+            <group position={[0, 0, 0]} userData={{ animUnit: true, isIkea: true, itemName: 'Organiseur STACKSTOD Bureau 1' }}>
+              <Stackstod60620144 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+            </group>
+          </group>
         </group>
       </PositionTransition>
       <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
@@ -613,16 +621,16 @@ export function Decor() {
         <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, isIkea: true, itemName: 'Étagère Lack' }}>
-        <LackShelf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Lack90282180 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true, isIkea: true, itemName: 'Penderie Mulig' }}>
         <Mulig30179435 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[110, 1, 500]} userData={{ animUnit: true, isIkea: true, itemName: 'Poubelle Fniss Couloir' }}>
-        <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[15, 1, 110]} userData={{ animUnit: true, isIkea: true, itemName: 'Poubelle Fniss Séjour' }}>
-        <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[298, 0, 470]} rotation-y={Math.PI} userData={{ animUnit: true, isIkea: true, itemName: 'Trottinette Xiaomi' }}>
         <Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -637,7 +645,7 @@ export function Decor() {
       <>
         {[0, 18, 36].map(y => (
           <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ animUnit: true, isIkea: true, itemName: `Range-chaussures Grejig ${y / 18 + 1}` }}>
-            <Grejig item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+            <Grejig40329868 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
           </group>
         ))}
       </>

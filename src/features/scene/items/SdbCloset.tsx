@@ -12,6 +12,8 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 import { DiagWall, BATH_Z_END } from '@config';
+import { Grejig40329868 } from './Grejig40329868';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 
 const W       = 123.4; // BATH_E_FACE (192) - SHOWER_E_X (68.6)
 const H       = 250;   // WALL_H
@@ -148,6 +150,11 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
 
       {/* Étagère triangulaire à 170cm */}
       <mesh geometry={shelfGeo} castShadow receiveShadow material={shelfMat} />
+
+      {/* Étagère à chaussures GREJIG contre le mur collé à la douche (côté Ouest du placard) */}
+      <group position={[-W / 2 + 27 / 2, 0, 35]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, isIkea: true, itemName: 'Étagère chaussures Grejig SDB' }}>
+        <Grejig40329868 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
     </group>
   );
 }
