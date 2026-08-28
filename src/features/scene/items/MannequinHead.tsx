@@ -150,7 +150,7 @@ export function MannequinHead({
           color={hairColor}
           windEnabled={windEnabled}
           offset={MANNEQUIN_WIG_OFFSET}
-          scale={90}
+          scale={1}
         />
       ) : (
         <Wig 
@@ -158,7 +158,7 @@ export function MannequinHead({
           color={hairColor}
           windEnabled={windEnabled}
           offset={MANNEQUIN_WIG_OFFSET}
-          scale={90}
+          scale={1}
         />
       )}
     </group>

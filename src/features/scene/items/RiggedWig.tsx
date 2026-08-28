@@ -137,11 +137,16 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
 
     if (hairHeadBone) {
       (sg as THREE.Object3D).updateMatrixWorld(true);
-      const headPos = (hairHeadBone as THREE.Object3D).position.clone();
+      const headWorldPos = new THREE.Vector3();
+      (hairHeadBone as THREE.Object3D).getWorldPosition(headWorldPos);
+      const sgWorldPos = new THREE.Vector3();
+      (sg as THREE.Object3D).getWorldPosition(sgWorldPos);
+      const headRelPos = headWorldPos.sub(sgWorldPos);
+
       (sg as THREE.Object3D).position.set(
-        -headPos.x * s * scale + fix.offset[0] + offset[0],
-        -headPos.y * s * scale + (attachTo ? 0.07 : 0) + fix.offset[1] + offset[1],
-        -headPos.z * s * scale + fix.offset[2] + offset[2]
+        -headRelPos.x * s * scale + fix.offset[0] + offset[0],
+        -headRelPos.y * s * scale + (attachTo ? 0.07 : 0) + fix.offset[1] + offset[1],
+        -headRelPos.z * s * scale + fix.offset[2] + offset[2]
       );
     } else {
       (sg as THREE.Object3D).position.set(fix.offset[0] + offset[0], 0.15 * scale + fix.offset[1] + offset[1], fix.offset[2] + offset[2]);
@@ -217,7 +222,9 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
         m.renderOrder = 1;
         m.userData.isCustomHair = true;
         m.userData.isHeadPart = true;
-        m.layers.set(LAYER_WALKER);
+        if (attachTo) {
+          m.layers.set(LAYER_WALKER);
+        }
         
         const targetColor = color && HAIR_COLORS[color] ? HAIR_COLORS[color] : null;
 
