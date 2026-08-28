@@ -44,25 +44,14 @@ export function unmergeScene(scene: THREE.Scene) {
     }
   });
 
-  // 2. Montrer les originaux (tous ceux dans isMergedSource)
+  // 2. Montrer les originaux (uniquement ceux qui ont été effectivement fusionnés)
   scene.traverse(o => {
     if (o.userData?.isMergedSource) {
       o.traverse(m => {
         if ((m as THREE.Mesh).isMesh && !m.userData.isMergedStatic) {
           if (m.type !== 'Mesh') return;
           if ((m as any).isInstancedMesh) return;
-          if (m.userData.skipMerge || m.userData.hoverAction) return;
-
-          let parent = m.parent;
-          let skip = false;
-          while (parent && !parent.userData?.isMergedSource) {
-            if (parent.userData?.skipMerge || parent.userData?.hoverAction) {
-              skip = true;
-              break;
-            }
-            parent = parent.parent;
-          }
-          if (skip) return;
+          if (!m.userData.wasMerged) return;
 
           m.visible = true;
           toRestore.push(m as THREE.Mesh);
