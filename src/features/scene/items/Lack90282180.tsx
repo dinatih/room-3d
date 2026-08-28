@@ -18,7 +18,7 @@ export function Lack90282180({ onSize, ...props }: SceneItemProps) {
     scene.rotation.set(0, 0, 0);
     removeGlbLines(scene);
     scene.scale.setScalar(100);
-    scene.rotation.x = -Math.PI / 2;
+    scene.rotation.set(-Math.PI / 2, 0, Math.PI);
     mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(

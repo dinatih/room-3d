@@ -17,7 +17,7 @@ export function Utdrag10389142({ onSize, ...props }: SceneItemProps) {
     scene.scale.set(1, 1, 1);
     removeGlbLines(scene);
     scene.scale.setScalar(100);
-    scene.rotation.x = -Math.PI / 2;
+    scene.rotation.x = Math.PI / 2;
     mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
