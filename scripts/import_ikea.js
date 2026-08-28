@@ -233,6 +233,7 @@ export function ${componentName}({ onSize, ...props }: SceneItemProps) {
   const { scene } = useGLTFClone('/items/${componentName.toLowerCase()}/${glbFileName}');
 
   useLayoutEffect(() => {
+    scene.scale.set(1, 1, 1);
     removeGlbLines(scene);
     scene.scale.setScalar(100);
     mergeGlbByMaterial(scene);

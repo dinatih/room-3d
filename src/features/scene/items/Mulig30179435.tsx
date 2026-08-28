@@ -10,10 +10,10 @@ import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 // ── 6 cintres Spruttig sur la tringle Mulig ──────────────────────────────────
 const HANGER_Z   = [-20, -12, -4, 4, 12, 20];
 const HANGER_ROTS = [0.04, -0.03, 0.05, -0.02, 0.03, -0.04];
-// Barre Mulig à ~15.5 cm de hauteur (15.5 - 19 cm hook height = -3.5 cm)
+// Barre Mulig à ~18.5 cm de hauteur (18.5 - 19 cm hook height = -0.5 cm)
 // Barre avancée à X = 10.5 cm par rapport au centre de Mulig
 const RAIL_X = 10.5;
-const RAIL_Y = 15.5 - 19;
+const RAIL_Y = 18.5 - 19;
 
 /**
  * MULIG Tringle à vêtements, blanc
