@@ -174,7 +174,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const lineStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'baseline',
-    gap: '8px',
+    gap: '4px',
     lineHeight: '1.5',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-all',
@@ -253,7 +253,6 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
                     flexShrink: 0,
                     fontWeight: 500,
                     textShadow: `0 0 6px ${color}55`,
-                    minWidth: '90px',
                   }}
                 >
                   {(() => { const ch = findCharacter(entry.tag); return ch ? `${ch.emoji} ${entry.tag}` : entry.tag; })()}
