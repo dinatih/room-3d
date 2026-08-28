@@ -151,8 +151,8 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
       {/* Étagère triangulaire à 170cm */}
       <mesh geometry={shelfGeo} castShadow receiveShadow material={shelfMat} />
 
-      {/* Étagère à chaussures GREJIG contre le mur collé à la douche (côté Ouest du placard) */}
-      <group position={[-W / 2 + 27 / 2, 0, 35]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, isIkea: true, itemName: 'Étagère chaussures Grejig SDB' }}>
+      {/* Étagère à chaussures GREJIG le long de la porte droite du placard (côté Ouest) */}
+      <group position={[X_CLOSED_L, 0, 20]} rotation={[0, 0, 0]} userData={{ animUnit: true, isIkea: true, itemName: 'Étagère chaussures Grejig SDB' }}>
         <Grejig40329868 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>

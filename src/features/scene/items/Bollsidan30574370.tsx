@@ -4,7 +4,8 @@
  * Price: 39,99
  * URL: https://www.ikea.com/fr/fr/p/bollsidan-table-pour-ordinateur-portable-blanc-30574370/
  */
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef, useCallback } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
@@ -69,39 +70,54 @@ const TOP_BOT   = 76.0;   // table-top assembly starts (chamfer + slab)
 const TOP_THICK = NATURAL_H - TOP_BOT;
 const NATURAL_COL_H = TOP_BOT - LOWER_TOP;
 
-function BollsidanGlb({ onSize, height = DEFAULT_H }: { onSize: SceneItemProps['onSize'], height?: number }) {
+function BollsidanGlb({ onSize, height = DEFAULT_H }: { onSize?: SceneItemProps['onSize'], height?: number }) {
   const { scene } = useGLTF(GLB_PATH);
+  const { invalidate } = useThree();
 
-  // Re-clone on height change so per-vertex stretch starts from natural geometry.
+  const targetHRef = useRef(height);
+  const currHRef = useRef(height);
+  const basePosRef = useRef<Float32Array | null>(null);
+  const meshRef = useRef<THREE.Mesh | null>(null);
+
   const clone = useMemo(() => {
     const c = scene.clone(true);
     removeGlbLines(c);
-    return c;
-  }, [scene, height]);
+    c.scale.set(1, 1, 1);
+    c.scale.setScalar(100);
+    mergeGlbByMaterial(c);
 
-  useLayoutEffect(() => {
-    clone.scale.set(1, 1, 1);
-    clone.scale.setScalar(100);
-    mergeGlbByMaterial(clone);
-
-    const newColH = Math.max(0.1, height - LOWER_TOP - TOP_THICK);
-    const stretch = newColH / NATURAL_COL_H;
-
-    clone.traverse(node => {
-      const mesh = node as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      const pos = mesh.geometry.attributes.position as THREE.BufferAttribute;
-      const arr = pos.array as Float32Array;
-      for (let i = 1; i < arr.length; i += 3) {
-        const y = arr[i];
-        if (y <= LOWER_TOP)     continue;
-        else if (y >= TOP_BOT)  arr[i] = LOWER_TOP + newColH + (y - TOP_BOT);
-        else                    arr[i] = LOWER_TOP + (y - LOWER_TOP) * stretch;
-      }
-      pos.needsUpdate = true;
-      mesh.geometry.computeBoundingBox();
-      mesh.geometry.computeVertexNormals();
+    let m: THREE.Mesh | null = null;
+    c.traverse(node => {
+      if ((node as THREE.Mesh).isMesh && !m) m = node as THREE.Mesh;
     });
+
+    if (m) {
+      meshRef.current = m;
+      const pos = (m as THREE.Mesh).geometry.attributes.position as THREE.BufferAttribute;
+      basePosRef.current = new Float32Array(pos.array);
+    }
+
+    return c;
+  }, [scene]);
+
+  const applyHeight = useCallback((h: number) => {
+    const mesh = meshRef.current;
+    const base = basePosRef.current;
+    if (!mesh || !base) return;
+
+    const newColH = Math.max(0.1, h - LOWER_TOP - TOP_THICK);
+    const stretch = newColH / NATURAL_COL_H;
+    const pos = mesh.geometry.attributes.position as THREE.BufferAttribute;
+    const arr = pos.array as Float32Array;
+
+    for (let i = 1; i < arr.length; i += 3) {
+      const y = base[i];
+      if (y <= LOWER_TOP)     arr[i] = y;
+      else if (y >= TOP_BOT)  arr[i] = LOWER_TOP + newColH + (y - TOP_BOT);
+      else                    arr[i] = LOWER_TOP + (y - LOWER_TOP) * stretch;
+    }
+    pos.needsUpdate = true;
+    mesh.geometry.computeBoundingBox();
 
     const box = glbLocalBBox(clone);
     clone.position.set(
@@ -109,16 +125,46 @@ function BollsidanGlb({ onSize, height = DEFAULT_H }: { onSize: SceneItemProps['
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
-  }, [clone, height]);
+  }, [clone]);
+
+  useLayoutEffect(() => {
+    targetHRef.current = height;
+    applyHeight(currHRef.current);
+    const box = glbLocalBBox(clone);
+    onSize?.(box.getSize(new THREE.Vector3()));
+  }, [height, applyHeight, clone, onSize]);
+
+  useFrame(() => {
+    const diff = targetHRef.current - currHRef.current;
+    if (Math.abs(diff) > 0.05) {
+      currHRef.current += diff * 0.15;
+      applyHeight(currHRef.current);
+      invalidate();
+    } else if (currHRef.current !== targetHRef.current) {
+      currHRef.current = targetHRef.current;
+      applyHeight(currHRef.current);
+      const box = glbLocalBBox(clone);
+      onSize?.(box.getSize(new THREE.Vector3()));
+      invalidate();
+    }
+  });
 
   return <primitive object={clone} />;
 }
 
-export function Bollsidan30574370({ onSize, height = DEFAULT_H, ...props }: SceneItemProps & { height?: number }) {
+export function Bollsidan30574370({ onSize, height, actionState, ...props }: SceneItemProps & { height?: number }) {
+  const isStanding = Boolean(
+    actionState?.['desk-toggle'] ??
+    actionState?.['desk1-toggle'] ??
+    actionState?.['desk2-toggle'] ??
+    actionState?.['standing'] ??
+    false
+  );
+  const effectiveHeight = height ?? (isStanding ? 105 : 70);
+
   return (
     <group {...props}>
-      <BollsidanGlb onSize={onSize} height={height} />
+      <BollsidanGlb onSize={onSize} height={effectiveHeight} />
     </group>
   );
 }

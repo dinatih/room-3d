@@ -171,6 +171,7 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'bed-toggle':            ['Désempiler', 'Empiler'],
   'bed-sofa':              ['Canapé', 'Lit'],
   'bed-position':          ['Position →', 'Position →'],
+  'desk-toggle':           ['Debout', 'Assis'],
   'desk1-toggle':          ['Debout', 'Assis'],
   'desk1-position':        ['Position →', 'Position →'],
   'desk2-toggle':          ['Debout', 'Assis'],
