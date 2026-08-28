@@ -213,15 +213,15 @@ export function DevToolsCollector() {
       if (devState.fpsSamples.length > FPS_SAMPLES) devState.fpsSamples.shift();
     }
 
-    // Détection de chute de FPS (< 24 FPS persistant sur plusieurs frames)
-    if (fps > 0 && fps < 24) {
+    // Détection de chute de FPS (< 20 FPS persistant sur plusieurs frames)
+    if (fps > 0 && fps < 20) {
       lowFpsCount.current += 1;
       if (lowFpsCount.current > 40 && now - lastAutoDiagTime.current > 15000) {
         lastAutoDiagTime.current = now;
         lowFpsCount.current = 0;
         devState.logDiagnostics?.();
       }
-    } else if (fps >= 30) {
+    } else if (fps >= 25) {
       lowFpsCount.current = Math.max(0, lowFpsCount.current - 1);
     }
 
