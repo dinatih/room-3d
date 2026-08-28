@@ -190,7 +190,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'chaussette-rouge', name: 'Chaussettes fines rouges',       brand: '',            category: 'clothing', qty: 10, dims: { w: 10, d: 8,  h: 2  }, notes: '10 paires, chaussettes fines' },
 
 
-  { id: 'mug',              name: 'Mug rouge KEJSERLIG',            brand: 'IKEA',     category: 'decor',     qty: 1, dims: { w: 8,   d: 8,   h: 9.5 }, notes: 'IKEA KEJSERLIG 30 cl rose foncé/rouge — Bureau 2', url: 'https://www.ikea.cn/cn/en/p/kejserlig-mug-dark-pink-90511501/', photos: ['items/mug/mug.jpg', 'items/mug/mug_1.jpg', 'items/mug/mug_2.jpg'] },
+  { id: 'mug',              name: 'Mug rouge KEJSERLIG',            brand: 'IKEA',     category: 'decor',     qty: 1, dims: { w: 8,   d: 8,   h: 9.5 }, notes: 'KEJSERLIG mug, dark pink, 30 cl — Bureau 2', url: 'https://www.ikea.cn/cn/en/p/kejserlig-mug-dark-pink-90511501/', photos: ['items/mug/mug.jpg', 'items/mug/mug_1.jpg', 'items/mug/mug_2.jpg'] },
   { id: 'mannequin-head',   name: 'Tête de mannequin',              brand: '',         category: 'decor',     qty: 3, dims: { w: 41,  d: 22,  h: 45  }, notes: '1 Raskog grande, 1 Kallax NW, 1 LACK' },
   { id: 'lamp-ola',         name: 'Lampe OLA',                      brand: 'IKEA',     category: 'lighting',     qty: 1, dims: { w: 30,  d: 30,  h: 120 }, notes: 'Sur pied, meuble TV', glbPath: 'items/lamp-ola/lamp-ola.glb', photos: ['items/lamp-ola/lamp-ola_3d_preview.png'] },
 
