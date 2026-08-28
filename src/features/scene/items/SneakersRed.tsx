@@ -14,6 +14,18 @@ export function SneakersRed({ onSize, ...props }: SceneItemProps) {
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
     removeGlbLines(scene);
+    scene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach((m) => {
+            m.side = THREE.DoubleSide;
+          });
+        } else if (mesh.material) {
+          mesh.material.side = THREE.DoubleSide;
+        }
+      }
+    });
     mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
