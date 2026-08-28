@@ -122,6 +122,39 @@ class DuoSessionManager {
     }
   }
 
+  public getParticipantA(): DuoSessionParticipant | null {
+    return this.participantA;
+  }
+
+  public getParticipantB(): DuoSessionParticipant | null {
+    return this.participantB;
+  }
+
+  public getElapsedTimeInRepeat(): number {
+    const currentAnim = this.playlist[this.currentAnimIndex];
+    const duration = currentAnim?.duration ?? 5.0;
+    return Math.max(0, duration - this.sessionTimer);
+  }
+
+  /**
+   * Met à jour la durée exacte du clip dès qu'il est chargé par Three.js,
+   * afin d'empêcher toute coupure prématurée des répétitions.
+   */
+  public updateRealClipDuration(animId: string, realDuration: number): void {
+    if (realDuration <= 0) return;
+    const currentAnim = this.playlist[this.currentAnimIndex];
+    if (currentAnim && currentAnim.id === animId) {
+      if (Math.abs((currentAnim.duration ?? 0) - realDuration) > 0.05) {
+        const oldDuration = currentAnim.duration ?? 5.0;
+        currentAnim.duration = realDuration;
+        // Si le timer était initialisé sur l'ancienne estimation, l'étendre pour couvrir la vraie durée
+        if (this.sessionTimer >= oldDuration - 0.5) {
+          this.sessionTimer = realDuration;
+        }
+      }
+    }
+  }
+
   public isWaitingPartner(characterId: string): boolean {
     if (this.participantA?.characterId === characterId && !this.participantB?.isReady) return true;
     if (this.participantB?.characterId === characterId && !this.participantA?.isReady) return true;

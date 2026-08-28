@@ -33,6 +33,7 @@ import {
 import type { AgentInstruction } from './ai/aiTypes';
 
 import { useAgentController } from './ai/useAgentController';
+import { duoSessionManager } from './ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from './idleState';
 import { AUTONOMOUS_NPC_IDS } from './walkerConfig';
@@ -567,6 +568,13 @@ export function SingleCharacter({
         action.clampWhenFinished = false;
       }
 
+      if (duoSessionManager.isPlaying()) {
+        const currentAnimState = duoSessionManager.getCurrentAnimState();
+        if (currentAnimState && (currentAnimState.clipA === path || currentAnimState.clipB === path)) {
+          duoSessionManager.updateRealClipDuration(currentAnimState.def.id, finalClip.duration);
+        }
+      }
+
       customAnimName.current = path;
       if (isUserOverride) userAnimOverrideRef.current = true;
       invalidate();
@@ -936,6 +944,22 @@ export function SingleCharacter({
         const clip = act.getClip();
         if (clip && clip.duration > 0) {
           act.time = state.clock.elapsedTime % clip.duration;
+        }
+      } else if (!isPreview && duoSessionManager.isPlaying()) {
+        const partA = duoSessionManager.getParticipantA();
+        const partB = duoSessionManager.getParticipantB();
+        if (partA?.characterId === id || partB?.characterId === id) {
+          const currentAnimState = duoSessionManager.getCurrentAnimState();
+          if (currentAnimState && activeActionName.current && (currentAnimState.clipA === activeActionName.current || currentAnimState.clipB === activeActionName.current)) {
+            const act = actions[activeActionName.current];
+            if (act) {
+              const clipDur = act.getClip().duration;
+              if (clipDur > 0) {
+                const elapsed = duoSessionManager.getElapsedTimeInRepeat();
+                act.time = elapsed % clipDur;
+              }
+            }
+          }
         }
       }
       mixer.update(delta);
