@@ -148,6 +148,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
             <div>
               <Section title="Global" />
               <R label="Inventaire (toggle)"        keys={['I']} />
+              <R label="Inventaire Personnages (direct)" keys={['P']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
               <R label="Vue perspective (reset)"    keys={['O']} />
               <R label="Walk mode (entrer/quitter)" keys={['M']} />

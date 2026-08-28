@@ -7,8 +7,8 @@ import { INVENTORY, CATEGORIES, STORAGE_SPACES, type InventoryItem, type Storage
 import { InventoryPreview } from './InventoryPreview';
 import { SpatialZonePreview } from './SpatialZonePreview';
 import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
-import { DUO_ANIMATIONS } from '@features/scene/ai/duoAnimations';
-import { duoSessionManager } from '@features/scene/ai/duoSessionManager';
+import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/ai/duoAnimations';
+import { CHARACTERS } from '@features/scene/walkerConfig';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 type PreviewTarget = InventoryItem | StorageSpace | SpatialZone | null;
@@ -36,6 +36,14 @@ function getCategoryEmoji(cat: string): string {
 
 function ItemDetailContent({ item }: { item: PreviewTarget }) {
   if (!item) return null;
+
+  const [selectedDuoAnim, setSelectedDuoAnim] = useState<DuoAnimationDef | undefined>(undefined);
+  const [selectedDuoPartner, setSelectedDuoPartner] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    setSelectedDuoAnim(undefined);
+    setSelectedDuoPartner(undefined);
+  }, [item?.id]);
 
   const isZone = item instanceof SpatialZone;
   const isStorage = !isZone && !('category' in item);
@@ -153,7 +161,13 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
     <div className="inventory-detail-wrap">
       {/* 3D Preview Canvas / Photo Gallery as Hero */}
       <div className="inventory-detail-hero">
-        <InventoryPreview item={item as any} height={300} hideFooter={true} />
+        <InventoryPreview
+          item={item as any}
+          height={300}
+          hideFooter={true}
+          initialDuoAnim={selectedDuoAnim}
+          initialDuoPartner={selectedDuoPartner}
+        />
       </div>
 
       <div className="inventory-detail-body">
@@ -265,16 +279,19 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           <>
             <hr className="inventory-detail-divider" />
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <div className="inventory-detail-section-label mb-0">👯‍♀️ Animations Duo (Meneur / Rôle A : {(item as any).name})</div>
+              <div className="inventory-detail-section-label mb-0">👯‍♀️ Animations Duo (Preview 3D : {(item as any).name})</div>
               <button
                 type="button"
                 className="btn btn-sm btn-warning text-dark px-2 py-0 fw-bold shadow-sm"
                 style={{ fontSize: '11px', borderRadius: '4px' }}
-                title="Lancer une animation de couple aléatoire avec un partenaire au hasard 🎲"
+                title="Lancer une animation de couple aléatoire dans la preview 3D 🎲"
                 onClick={() => {
                   const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
+                  const otherChars = CHARACTERS.filter(c => c.id !== item.id);
+                  const randPartner = otherChars[Math.floor(Math.random() * otherChars.length)]?.id;
                   if (randomAnim) {
-                    duoSessionManager.forceDuoAnimationWithLeader((item as any).id, randomAnim);
+                    setSelectedDuoAnim(randomAnim);
+                    setSelectedDuoPartner(randPartner);
                   }
                 }}
               >
@@ -287,17 +304,22 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
                 className="form-select form-select-sm"
                 onChange={(e) => {
                   const val = e.target.value;
-                  if (val) {
+                  if (!val) {
+                    setSelectedDuoAnim(undefined);
+                  } else {
                     const def = DUO_ANIMATIONS.find(a => a.id === val);
                     if (def) {
-                      duoSessionManager.forceDuoAnimationWithLeader((item as any).id, def);
+                      const otherChars = CHARACTERS.filter(c => c.id !== item.id);
+                      const randPartner = selectedDuoPartner || (otherChars[0]?.id ?? 'rosanna');
+                      setSelectedDuoAnim(def);
+                      setSelectedDuoPartner(randPartner);
                     }
                   }
                 }}
-                defaultValue=""
+                value={selectedDuoAnim?.id || ""}
                 style={{ fontSize: '12px' }}
               >
-                <option value="" disabled>Sélectionner une animation de couple...</option>
+                <option value="">Sélectionner une animation de couple...</option>
                 {DUO_ANIMATIONS.map(a => (
                   <option key={a.id} value={a.id}>
                     {a.icon} {a.label}
@@ -307,22 +329,32 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
             </div>
 
             <div className="d-flex flex-column gap-1 overflow-auto" style={{ maxHeight: '180px', paddingRight: '4px' }}>
-              {DUO_ANIMATIONS.map(a => (
-                <button
-                  key={a.id}
-                  type="button"
-                  onClick={() => duoSessionManager.forceDuoAnimationWithLeader((item as any).id, a)}
-                  className="btn btn-sm btn-outline-secondary text-start d-flex align-items-center justify-content-between px-2 py-1 bg-white border"
-                  style={{ fontSize: '11px', borderRadius: '6px' }}
-                >
-                  <span className="text-truncate me-2">
-                    <span className="me-1">{a.icon}</span> {a.label}
-                  </span>
-                  <span className="badge bg-light text-secondary border" style={{ fontSize: '9px' }}>
-                    x3
-                  </span>
-                </button>
-              ))}
+              {DUO_ANIMATIONS.map(a => {
+                const isSelected = selectedDuoAnim?.id === a.id;
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => {
+                      const otherChars = CHARACTERS.filter(c => c.id !== item.id);
+                      const partner = selectedDuoPartner || (otherChars[0]?.id ?? 'rosanna');
+                      setSelectedDuoAnim(a);
+                      setSelectedDuoPartner(partner);
+                    }}
+                    className={`btn btn-sm text-start d-flex align-items-center justify-content-between px-2 py-1 border ${
+                      isSelected ? 'btn-primary text-white shadow-sm' : 'btn-outline-secondary bg-white text-dark'
+                    }`}
+                    style={{ fontSize: '11px', borderRadius: '6px' }}
+                  >
+                    <span className="text-truncate me-2">
+                      <span className="me-1">{a.icon}</span> {a.label}
+                    </span>
+                    <span className={`badge border ${isSelected ? 'bg-light text-dark' : 'bg-light text-secondary'}`} style={{ fontSize: '9px' }}>
+                      Preview 3D
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </>
         )}
@@ -338,14 +370,32 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
 
 // ── Main Inventory Component ──────────────────────────────────────────────────
 
-export function Inventory({ visible = true, onClose }: { visible?: boolean; onClose: () => void }) {
+export function Inventory({
+  visible = true,
+  onClose,
+  initialCategory = 'all'
+}: {
+  visible?: boolean;
+  onClose: () => void;
+  initialCategory?: string;
+}) {
   const isMobile = useIsMobile();
-  const [activeCat, setActiveCat]         = useState('all');
+  const [activeCat, setActiveCat]         = useState(initialCategory);
   const [search, setSearch]               = useState('');
   const [selected, setSelected]           = useState<PreviewTarget>(null);
   const [focusedIndex, setFocusedIndex]   = useState(-1);
   const [showMobileModal, setShowMobileModal] = useState(false);
   const tableContainerRef                 = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (initialCategory) {
+      setActiveCat(initialCategory);
+      if (initialCategory === 'walkers') {
+        const firstWalker = INVENTORY.find(i => i.category === 'walkers' && i.id !== 'ushiro' && i.id !== 'robin-bird');
+        if (firstWalker) setSelected(firstWalker);
+      }
+    }
+  }, [initialCategory, visible]);
 
   // SpatialZones list
   const spatialZones = useMemo(() => {

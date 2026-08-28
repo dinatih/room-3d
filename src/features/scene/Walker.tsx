@@ -20,6 +20,8 @@ export { WALKER_ANIM_OPTIONS };
 
 
 
+import { type DuoAnimationDef } from './ai/duoAnimations';
+
 export interface WalkerProps {
   isPreview?: boolean;
   previewCharacterId?: string;
@@ -28,6 +30,10 @@ export interface WalkerProps {
   characterIndex?: number;
   walkerAnim?: string;
   isPaused?: boolean;
+  previewPosition?: [number, number, number];
+  previewRotationY?: number;
+  duoAnimDef?: DuoAnimationDef;
+  duoPartnerId?: string;
 }
 
 function InternalWalker(props: WalkerProps) {
@@ -71,17 +77,48 @@ function InternalWalker(props: WalkerProps) {
 
   const mountedCharacters = useMemo(() => {
     if (props.isPreview) {
+      if (props.duoAnimDef) {
+        const leaderId = props.previewCharacterId || 'native';
+        const partnerId = props.duoPartnerId || (leaderId === 'native' ? 'rosanna' : 'native');
+        const leader = charactersWithAnims.find(char => char.id === leaderId) || charactersWithAnims[0];
+        const partner = charactersWithAnims.find(char => char.id === partnerId) || charactersWithAnims.find(char => char.id !== leaderId) || charactersWithAnims[0];
+        return [
+          { ...leader, isDuoRoleA: true },
+          { ...partner, isDuoRoleB: true }
+        ];
+      }
       return charactersWithAnims.filter(char => char.id === props.previewCharacterId);
     }
     return charactersWithAnims.filter(char =>
       char.id === activeWalkerId ||
       (showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeWalkerId))
     );
-  }, [activeWalkerId, charactersWithAnims, laraCount, props.isPreview, props.previewCharacterId, showAllLaraStyles]);
+  }, [activeWalkerId, charactersWithAnims, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles]);
 
   return (
     <>
-      {mountedCharacters.map(char => {
+      {mountedCharacters.map((char: any) => {
+        const isDuoRoleA = char.isDuoRoleA;
+        const isDuoRoleB = char.isDuoRoleB;
+
+        let charAnim = props.walkerAnim;
+        let charPos: [number, number, number] | undefined = props.previewPosition;
+        let charRot: number | undefined = props.previewRotationY;
+
+        if (props.duoAnimDef) {
+          const def = props.duoAnimDef;
+          const dist = def.dist ?? 50;
+          if (isDuoRoleA) {
+            charAnim = def.animA;
+            charPos = def.offsetA ? [def.offsetA[0], def.offsetA[1], def.offsetA[2]] : [dist, 0, 0];
+            charRot = def.rotA !== undefined ? def.rotA : 0;
+          } else if (isDuoRoleB) {
+            charAnim = def.animB;
+            charPos = def.offsetB ? [def.offsetB[0], def.offsetB[1], def.offsetB[2]] : [0, 0, 0];
+            charRot = def.rotB !== undefined ? def.rotB : 0;
+          }
+        }
+
         const isActive = props.isPreview
           ? char.id === props.previewCharacterId
           : char.id === activeWalkerId;
@@ -89,7 +126,7 @@ function InternalWalker(props: WalkerProps) {
         return (
           <SingleCharacter
             {...props}
-            key={char.id}
+            key={char.id + (isDuoRoleB ? '-partner' : '')}
             id={char.id}
             name={char.name}
             modelPath={char.path}
@@ -97,13 +134,14 @@ function InternalWalker(props: WalkerProps) {
             targetHeight={char.height}
             isActive={isActive}
             animations={char.charAnims}
-
             variant={char.variant}
             isNPC={!isActive}
             npcPosition={char.pos}
             npcRotationY={char.rot}
             sittingScene={char.sittingScene}
-            walkerAnim={props.walkerAnim}
+            walkerAnim={charAnim}
+            previewPosition={charPos}
+            previewRotationY={charRot}
             previewHaircut={props.previewHaircut}
             previewHairColor={props.previewHairColor}
             customIdleAnimPath={char.customIdleAnimPath}

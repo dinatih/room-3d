@@ -213,6 +213,7 @@ export function Studio() {
   const onToggleLayer = useSceneStore(state => state.toggleLayer);
 
   const [showInventory, setShowInventory] = useState(false);
+  const [inventoryInitialCat, setInventoryInitialCat] = useState<string>('all');
 
   useEffect(() => {
     (window as any).isAnimProRunning = false;
@@ -283,7 +284,11 @@ export function Studio() {
       } else if (e.key === 'c' || e.key === 'C') {
         onToggleLayer('laraBottomOff');
         cameraState.invalidate?.();
+      } else if (e.key === 'p' || e.key === 'P') {
+        setInventoryInitialCat('walkers');
+        setShowInventory(true);
       } else if (e.key === 'i' || e.key === 'I') {
+        setInventoryInitialCat('all');
         setShowInventory(prev => !prev);
       } else if (e.key === 'x' || e.key === 'X') {
         onToggleLayer('laraNude');
@@ -519,7 +524,7 @@ export function Studio() {
       />
       {showInventory && (
         <Suspense fallback={null}>
-          <Inventory visible onClose={() => setShowInventory(false)} />
+          <Inventory visible onClose={() => setShowInventory(false)} initialCategory={inventoryInitialCat} />
         </Suspense>
       )}
       <VirtualDPad />

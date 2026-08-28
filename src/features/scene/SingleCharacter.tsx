@@ -132,6 +132,8 @@ export interface WalkerProps {
   characterIndex?: number;
   walkerAnim?: string;
   isPaused?: boolean;
+  previewPosition?: [number, number, number];
+  previewRotationY?: number;
 }
 
 function GroundPoint() {
@@ -202,13 +204,14 @@ export function SingleCharacter({
   previewHaircut,
   previewHairColor,
   animations,
-
   variant,
   isNPC = false,
   npcPosition = [0, 0, 0],
   npcRotationY = 0,
   sittingScene,
-  customIdleAnimPath
+  customIdleAnimPath,
+  previewPosition,
+  previewRotationY
 }: SingleCharacterProps) {
   const [localHaircut, setLocalHaircut] = useState<string>('original');
   const haircut = isPreview && previewHaircut ? previewHaircut : localHaircut;
@@ -780,8 +783,16 @@ export function SingleCharacter({
     }
 
     if (isPreview) {
-      groupRef.current.position.set(0, 0, 0);
-      groupRef.current.rotation.y = 0;
+      if (previewPosition) {
+        groupRef.current.position.set(previewPosition[0], previewPosition[1], previewPosition[2]);
+      } else {
+        groupRef.current.position.set(0, 0, 0);
+      }
+      if (previewRotationY !== undefined) {
+        groupRef.current.rotation.y = previewRotationY;
+      } else {
+        groupRef.current.rotation.y = 0;
+      }
       groupRef.current.visible = true;
     } else if (laraGrid) {
       const row = Math.floor(characterIndex / 5);
