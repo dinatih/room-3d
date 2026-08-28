@@ -47,10 +47,9 @@ export const appLog = (tag: string, message: string): void => {
 // ── Helpers ────────────────────────────────────────────────────────────────
 function formatTime(ts: number): string {
   const d = new Date(ts);
-  const hh = d.getHours().toString().padStart(2, '0');
   const mm = d.getMinutes().toString().padStart(2, '0');
   const ss = d.getSeconds().toString().padStart(2, '0');
-  return `${hh}:${mm}:${ss}`;
+  return `${mm}:${ss}`;
 }
 
 const MAX_LOGS = 200;
