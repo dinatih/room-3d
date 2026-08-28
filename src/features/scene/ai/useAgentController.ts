@@ -530,13 +530,16 @@ export function useAgentController(
           }
           const animation = currentInstruction.animation || target.anim || '';
           const duration = timerRef.current;
-          const logKey = `interact-${stepIndexRef.current}-${animation}`;
-          if (lastLogRef.current !== logKey) {
-            lastLogRef.current = logKey;
-            const label = animation
-              ? animation.replace('animations/', '').replace('.glb', '')
-              : 'USE_OBJECT';
-            appLog(_characterId, `🎭 Action: ${label} (${duration.toFixed(1)}s)`);
+          const isDuoWaiting = currentInstruction.smartObjectId === 'duo-zone' && duoSessionManager.isWaitingPartner(_characterId);
+          if (!isDuoWaiting) {
+            const logKey = `interact-${stepIndexRef.current}-${animation}`;
+            if (lastLogRef.current !== logKey) {
+              lastLogRef.current = logKey;
+              const label = animation
+                ? animation.replace('animations/', '').replace('.glb', '')
+                : 'USE_OBJECT';
+              appLog(_characterId, `🎭 Action: ${label} (${duration.toFixed(1)}s)`);
+            }
           }
         } else {
           statusRef.current = 'IDLE';
