@@ -177,7 +177,7 @@ export function Equipment() {
   const CORR_LAMP_Z = (pZ('corner-se') + pZ('diag-ne')) / 2;
   const lightsHD = useSceneStore((state) => state.layers.lightsHD);
   return (
-    <>
+    <MergedStaticGroup name="merged-equipment">
       <group position={[NICHE_X + HW_R, WALL_H - 10 - HW_H / 2, KITCHEN_Z + 20 + HW_R]} rotation-y={Math.PI / 2} userData={{ side: 'west', itemName: 'Chauffe-eau' }}>
         <WaterHeater item={stub('water-heater')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
@@ -249,7 +249,7 @@ export function Equipment() {
       {/* <group position={[150, 250, 200]}>
         <KinCamera item={stub('kin-camera')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group> */}
-    </>
+    </MergedStaticGroup>
   );
 }
 
@@ -447,7 +447,7 @@ export function Furnishings() {
   const TV_Y = WALL_H - 10 - TV_H / 2;
   const as = useFurnitureToggles({ tvOn: 'tv-toggle' });
   return (
-    <>
+    <MergedStaticGroup name="merged-furnishings">
       <Beds />
       <Desks />
       <>
@@ -480,7 +480,7 @@ export function Furnishings() {
           <Tisken40381253 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </>
-    </>
+    </MergedStaticGroup>
   );
 }
 
@@ -723,11 +723,11 @@ export function Garden() {
 
 export function Backpacks() {
   return (
-    <>
+    <MergedStaticGroup name="merged-backpacks">
       <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Sac à Dos' }}>
         <Backpack item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-    </>
+    </MergedStaticGroup>
   );
 }
 
@@ -745,12 +745,12 @@ export function DronaBoxes() {
     { cx: 16.5,            cy: 0 + DF / 2 + 0.2,  cz: 268, rotY: Math.PI / 2 },
   ];
   return (
-    <group userData={{ isIkea: true, itemName: 'Boîtes Drona Standalone' }}>
+    <MergedStaticGroup name="merged-drona-standalone">
       {standalone.map((p, i) => (
         <group key={i} position={[p.cx, p.cy, p.cz]} rotation={[0, p.rotY, 0]} userData={{ animUnit: true, itemName: `Boîte Drona ${i + 1}` }}>
           <DroneCell />
         </group>
       ))}
-    </group>
+    </MergedStaticGroup>
   );
 }
