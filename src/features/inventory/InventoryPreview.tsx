@@ -96,6 +96,7 @@ function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, 
 function FitCamera({ target = [0, 0, 0] }: { target?: [number, number, number] }) {
   const { camera } = useThree();
   useLayoutEffect(() => {
+    camera.layers.enableAll();
     camera.lookAt(new THREE.Vector3(...target));
   }, [camera, target]);
   return null;

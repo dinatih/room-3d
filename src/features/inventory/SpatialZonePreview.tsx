@@ -189,8 +189,9 @@ export function SpatialZonePreview({
         camera={{ position: camPosition, fov: 42, near: 1, far: 8000 }}
         key={`${zone.id}-${isTopView ? 'top' : 'persp'}`}
         style={{ width: '100%', height: '100%' }}
-        onCreated={({ gl }) => {
+        onCreated={({ gl, camera }) => {
           gl.localClippingEnabled = true;
+          camera.layers.enableAll();
         }}
       >
         <ambientLight intensity={1.5} />
