@@ -650,13 +650,13 @@ export function Decor() {
           </group>
         ))}
       </>
-      {/* Deux coussins LAGERPOPPEL fuchsia suspendus par un coin en V sur le mur EST (tout en haut / contre plafond) */}
-      <group position={[ROOM_W - 5.5, WALL_H - 1, ROOM_D / 2]} rotation={[0, -Math.PI / 2, 0.7]} userData={{ animUnit: true, isIkea: true, itemName: 'Coussin LAGERPOPPEL 1 (Mur Est)' }}>
+      {/* Deux coussins LAGERPOPPEL fuchsia suspendus par un coin (diagonale verticale) sur le mur EST contre le plafond */}
+      <group position={[ROOM_W - 5.5, WALL_H, ROOM_D / 2]} rotation={[0, -Math.PI / 2, -0.967]} userData={{ animUnit: true, isIkea: true, itemName: 'Coussin LAGERPOPPEL 1 (Mur Est)' }}>
         <group position={[29, -40, 0]}>
           <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
-      <group position={[ROOM_W - 6.5, WALL_H - 1, ROOM_D / 2]} rotation={[0, -Math.PI / 2, -0.7]} userData={{ animUnit: true, isIkea: true, itemName: 'Coussin LAGERPOPPEL 2 (Mur Est)' }}>
+      <group position={[ROOM_W - 6.8, WALL_H, ROOM_D / 2]} rotation={[0, -Math.PI / 2, 0.967]} userData={{ animUnit: true, isIkea: true, itemName: 'Coussin LAGERPOPPEL 2 (Mur Est)' }}>
         <group position={[-29, -40, 0]}>
           <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
