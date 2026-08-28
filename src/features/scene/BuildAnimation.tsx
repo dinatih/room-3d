@@ -4,9 +4,9 @@ import * as THREE from 'three';
 import { appLog } from '@features/ui/AppConsole';
 
 const DROP_HEIGHT = 2000;
-const FALL_MS_MIN = 600;
-const FALL_MS_MAX = 1000;
-const STAGGER_MS  = 180;
+const FALL_MS_MIN = 400;
+const FALL_MS_MAX = 800;
+const STAGGER_MS  = 120;
 
 function easeOutCubic(x: number): number {
   return 1 - Math.pow(1 - x, 3);

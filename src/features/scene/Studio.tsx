@@ -402,9 +402,6 @@ export function Studio() {
                          />}
         {autopilotVisible && <AutopilotPlane model={planeModel} />}
         {showLandingStrips && <LandingStrips />}
-        {/* Animations */}
-        {buildAnim       && <BuildAnimation       onFinish={() => setBuildAnim(false)}       onDuration={setDuration('buildAnim')} />}
-        {buildAnimMatrix && <BuildAnimationMatrix onFinish={() => setBuildAnimMatrix(false)} onDuration={setDuration('buildAnimMatrix')} />}
         <VRMode />
         <ImmersiveMode />
         <HoverRaycaster />
@@ -425,6 +422,9 @@ export function Studio() {
         {cameraMode === 'top' && measurementActive && <MeasurementTool />}
         {/* Contenu 3D — masqué en mode Plan */}
         <Suspense fallback={null}>
+        {/* Animations — exécutées une fois les éléments Suspense 3D résolus */}
+        {buildAnim       && <BuildAnimation       onFinish={() => setBuildAnim(false)}       onDuration={setDuration('buildAnim')} />}
+        {buildAnimMatrix && <BuildAnimationMatrix onFinish={() => setBuildAnimMatrix(false)} onDuration={setDuration('buildAnimMatrix')} />}
         <CameraController planeMode={planeMode} />
         <group visible={!layers.plan}>
 
