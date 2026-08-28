@@ -18,6 +18,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
+import { LAYER_FURNITURE } from '@config';
 import { Wig, HAIR_COLORS } from './Wig';
 import { RiggedWig } from './RiggedWig';
 import { WIGS_ITEMS, isRiggedWig } from '@features/inventory/inventoryData';
@@ -127,6 +128,11 @@ export function MannequinHead({
     // ── Tête de mannequin ─────────────────────────────────────────────────
     removeGlbLines(scene);
     scene.scale.set(1, 1, 1);
+    scene.traverse(o => {
+      if ((o as THREE.Mesh).isMesh) {
+        o.layers.set(LAYER_FURNITURE);
+      }
+    });
     const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
     scene.scale.setScalar(TARGET_H / raw.y);
     const box = glbLocalBBox(scene);
@@ -138,8 +144,8 @@ export function MannequinHead({
     onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene, onSize]);
 
-  // Offset d'alignement manuel pour la tête de Mannequin, car son crâne diffère de celui de Lara.
-  const MANNEQUIN_WIG_OFFSET: [number, number, number] = [0, 31.0, 0]; // 31cm est environ TARGET_H * 0.69
+  // Offset d'alignement pour placer le sommet de la perruque sur le crâne du mannequin (hauteur totale 45cm)
+  const MANNEQUIN_WIG_OFFSET: [number, number, number] = [0, 41.5, 0];
 
   return (
     <group ref={ref}>

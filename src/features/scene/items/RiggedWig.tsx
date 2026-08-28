@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { LAYER_WALKER } from '@config';
+import { LAYER_WALKER, LAYER_FURNITURE } from '@config';
 
 export const HAIR_COLORS: Record<string, THREE.Color> = {
   naturel:  new THREE.Color(0.4, 0.25, 0.1),
@@ -224,6 +224,8 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
         m.userData.isHeadPart = true;
         if (attachTo) {
           m.layers.set(LAYER_WALKER);
+        } else {
+          m.layers.set(LAYER_FURNITURE);
         }
         
         const targetColor = color && HAIR_COLORS[color] ? HAIR_COLORS[color] : null;
