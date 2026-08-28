@@ -486,6 +486,9 @@ export function useAgentController(
             duoWaitTimerRef.current = 0;
             const animState = duoSessionManager.getCurrentAnimState();
             timerRef.current = animState?.duration ?? 5.0;
+            stateRef.current.animation = duoRoleRef.current === 'roleA'
+              ? 'animations/poses_idles/anim_female_standing_pose.glb'
+              : 'animations/poses_idles/anim_female_standing_pose_1.glb';
           }
           if (!currentInstruction.animation && target.anim) {
             currentInstruction.animation = target.anim;
@@ -696,8 +699,8 @@ export function useAgentController(
         if (isWaiting) {
           duoWaitTimerRef.current += dt;
           stateRef.current.animation = duoRoleRef.current === 'roleA'
-            ? 'animations/poses_idles/miley_armature_p2_standoff_provokes_m1.glb'
-            : 'animations/poses_idles/miley_armature_p2_standoff_provokes_m2.glb';
+            ? 'animations/poses_idles/anim_female_standing_pose.glb'
+            : 'animations/poses_idles/anim_female_standing_pose_1.glb';
           stateRef.current.rotY = 0;
 
           // À la moitié du délai (10s), appeler le PNJ le plus proche

@@ -546,7 +546,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Rôle A (Sandra / Meneur)',
         offset: [-150, 0, -300],
         rotY: 0,
-        animation: 'animations/poses_idles/miley_armature_p2_standoff_provokes_m1.glb',
+        animation: 'animations/poses_idles/anim_female_standing_pose.glb',
         duration: 8.0,
       },
       {
@@ -554,7 +554,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Rôle B (Rajaa / Partenaire)',
         offset: [-200, 0, -300],
         rotY: 0,
-        animation: 'animations/poses_idles/miley_armature_p2_standoff_provokes_m2.glb',
+        animation: 'animations/poses_idles/anim_female_standing_pose_1.glb',
         duration: 8.0,
       }
     ]

@@ -33,6 +33,8 @@ class DuoSessionManager {
   
   private playlist: DuoAnimationDef[] = [];
   private currentAnimIndex = 0;
+  private currentRepeatIndex = 0;
+  public readonly repeatsPerAnim = 3;
   private isSessionPlaying = false;
   private isSessionComplete = false;
 
@@ -83,6 +85,7 @@ class DuoSessionManager {
    */
   private initPlaylistIfFirst() {
     this.currentAnimIndex = 0;
+    this.currentRepeatIndex = 0;
     this.isSessionPlaying = false;
     this.isSessionComplete = false;
     
@@ -106,9 +109,10 @@ class DuoSessionManager {
     // Si les deux sont prêts, démarrer la session
     if (this.participantA?.isReady && this.participantB?.isReady && !this.isSessionPlaying) {
       this.isSessionPlaying = true;
+      this.currentRepeatIndex = 0;
       const firstAnim = this.playlist[0];
       if (firstAnim) {
-        appLog('duo-zone', `🎭 Duo démarré entre ${this.participantA.characterId} & ${this.participantB.characterId} : "${firstAnim.label}" (${this.playlist.length} anims)`);
+        appLog('duo-zone', `🎭 Duo démarré entre ${this.participantA.characterId} & ${this.participantB.characterId} : "${firstAnim.label}" (x${this.repeatsPerAnim}, ${this.playlist.length} anims)`);
       }
       this.emitChange();
     }
@@ -164,16 +168,26 @@ class DuoSessionManager {
   }
 
   /**
-   * Fait avancer la playlist à la fin d'une animation.
+   * Fait avancer la playlist à la fin d'une animation (joue 3 fois chaque animation).
    * Retourne true si une animation suivante commence, false si la session est terminée.
    */
   public advanceNextAnim(_callerCharacterId: string): boolean {
     if (!this.isSessionPlaying) return false;
 
+    // Répéter chaque animation 3 fois
+    if (this.currentRepeatIndex + 1 < this.repeatsPerAnim) {
+      this.currentRepeatIndex++;
+      const currentAnim = this.playlist[this.currentAnimIndex];
+      appLog('duo-zone', `🔄 Répétition Duo (${this.currentRepeatIndex + 1}/${this.repeatsPerAnim}) : "${currentAnim.label}"`);
+      this.emitChange();
+      return true;
+    }
+
+    this.currentRepeatIndex = 0;
     this.currentAnimIndex++;
     if (this.currentAnimIndex < this.playlist.length) {
       const nextAnim = this.playlist[this.currentAnimIndex];
-      appLog('duo-zone', `🎬 Enchaînement Duo : "${nextAnim.label}" (${this.currentAnimIndex + 1}/${this.playlist.length})`);
+      appLog('duo-zone', `🎬 Nouvelle animation Duo : "${nextAnim.label}" (${this.currentAnimIndex + 1}/${this.playlist.length})`);
       this.emitChange();
       return true;
     } else {
