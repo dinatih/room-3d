@@ -1591,10 +1591,10 @@ function MergedReflector({ planes, position, rotationY }: {
 
 function MirrorsD() {
   const W_M = 65, H_M = 65;
-  const FT = 1.8, FD = 5.0; // épaisseur standard Nissedal 5cm
+  const FT = 1.8;
   const cx  = (KITCHEN_X1 + DOOR_START) / 2;
-  const fz  = ROOM_D - 2 - FD / 2;
-  const mirZ = ROOM_D - 2 - FD + 0.5; // glace à 0.5cm du bord avant
+  const fz  = ROOM_D - 3.5; // dos à 1cm du mur D
+  const mirZ = ROOM_D - 5.5; // glace à 0.5cm du bord avant
 
   const planes = useMemo(() => [0, 1, 2].map(i => {
     const cy = (WALL_H - 3.5) - H_M / 2 - i * (H_M + 0.5);
@@ -1628,8 +1628,8 @@ function MirrorsA() {
   const FT = 1.8, FD = 5.0; // épaisseur standard Nissedal 5cm
   const MA_START_Z  = kallaxW1 + 10;
   const MA_BOTTOM_Y = 6;
-  const fx  = 2 + FD / 2; // dos du cadre à 2cm du mur A (identique au mur D)
-  const mirX = 2 + FD - 0.5; // glace à 0.5cm du bord avant
+  const fx  = 3.5; // dos à 1cm du mur A
+  const mirX = 5.5; // glace à 0.5cm du bord avant
 
   const planes = useMemo(() => {
     const p: { w: number; h: number; x: number; y: number }[] = [];
