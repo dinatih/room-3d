@@ -261,13 +261,13 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
       ...pillars,
       ...ikea,
       ...rest,
+      ...mannequins,
       ...allWalls
     ];
 
     addSequential(sortByYZX(floor));
     addSequential(sortByYZX(mixedObjects));
     addSequential(sortByYZX(ceiling));
-    addSequential(sortByYZX(mannequins));
 
     const objects = groupedObjects;
 

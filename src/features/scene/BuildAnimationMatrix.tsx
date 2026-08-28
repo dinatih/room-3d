@@ -520,8 +520,8 @@ export function BuildAnimationMatrix({
     // 1. Skirting (plinthes, d'un coup)
     addGrouped(skirting);
 
-    // 2. Rest + Ikea (aléatoire, stagger)
-    const furniture = shuffle([...ikea, ...rest]);
+    // 2. Rest + Ikea + Mannequins (aléatoire, stagger)
+    const furniture = shuffle([...ikea, ...rest, ...mannequins]);
     addGrouped(furniture, true);
 
     // 3. Pillars (un par un)
@@ -536,9 +536,6 @@ export function BuildAnimationMatrix({
     
     // 6. Ceiling (vient d'en haut, stagger)
     addGrouped(ceiling, true);
-
-    // 7. Mannequins (arrivent en tout dernier sur les meubles, stagger)
-    addGrouped(mannequins, true);
 
     const objects: AnimObj[] = scheduled.map(({ obj, startTime, duration }) => {
       const meshSaves: MeshSave[] = [];
