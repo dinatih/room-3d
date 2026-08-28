@@ -4,7 +4,7 @@ import type { FurnitureState, LayerState } from '@features/scene/SidePanel';
 import type { LaraCountMode } from '@features/scene/walkerConfig';
 
 function parseUrlNpcCount(): LaraCountMode {
-  if (typeof window === 'undefined') return 2;
+  if (typeof window === 'undefined') return 4;
   try {
     const params = new URLSearchParams(window.location.search);
     const raw = params.get('npc') ?? params.get('npcs') ?? params.get('pnj') ?? params.get('laraCount') ?? params.get('characters');
@@ -21,7 +21,7 @@ function parseUrlNpcCount(): LaraCountMode {
       if (num >= 1) return 2;
     }
   } catch {}
-  return 2;
+  return 4;
 }
 
 export function updateUrlNpcCount(count: LaraCountMode) {

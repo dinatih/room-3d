@@ -38,7 +38,7 @@ export interface WalkerProps {
 
 function InternalWalker(props: WalkerProps) {
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
-  const laraCount = useSceneStore(state => state.layers.laraCount ?? 2);
+  const laraCount = useSceneStore(state => state.layers.laraCount ?? 4);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const idleGltf = useGLTF('animations/poses_idles/miley_armature_idle01_f.glb');
   const walkingGltf = useGLTF('animations/locomotion/anim_walking.glb');
