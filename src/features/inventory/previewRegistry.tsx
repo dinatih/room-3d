@@ -1,3 +1,18 @@
+import { Klyket50503598 } from '@features/scene/items/Klyket50503598';
+import { Enudden60251665 } from '@features/scene/items/Enudden60251665';
+import { Ikea20480013 } from '@features/scene/items/Ikea20480013';
+import { Uppdatera40546471 } from '@features/scene/items/Uppdatera40546471';
+import { Storavan80423816 } from '@features/scene/items/Storavan80423816';
+import { Sekiner60498110 } from '@features/scene/items/Sekiner60498110';
+import { Myggspray70604186 } from '@features/scene/items/Myggspray70604186';
+import { Dirigera10503406 } from '@features/scene/items/Dirigera10503406';
+import { Kabbleka10609667 } from '@features/scene/items/Kabbleka10609667';
+import { Bilresa70604172 } from '@features/scene/items/Bilresa70604172';
+import { Kolvatten00594176 } from '@features/scene/items/Kolvatten00594176';
+import { Rinnig30407814 } from '@features/scene/items/Rinnig30407814';
+import { Middagsmat60463714 } from '@features/scene/items/Middagsmat60463714';
+import { Annons80298474 } from '@features/scene/items/Annons80298474';
+import { Pepprig70567650 } from '@features/scene/items/Pepprig70567650';
 /**
  * Registry des composants TSX dédiés par item.id.
  * Uniquement pour les items interactifs (open/close) ou procéduraux (pas de glbPath).
@@ -73,6 +88,21 @@ import { GoogleNestMini }                             from '@features/scene/item
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'klyket50503598': Klyket50503598,
+  'enudden60251665': Enudden60251665,
+  'ikea20480013': Ikea20480013,
+  'uppdatera40546471': Uppdatera40546471,
+  'storavan80423816': Storavan80423816,
+  'sekiner60498110': Sekiner60498110,
+  'myggspray70604186': Myggspray70604186,
+  'dirigera10503406': Dirigera10503406,
+  'kabbleka10609667': Kabbleka10609667,
+  'bilresa70604172': Bilresa70604172,
+  'kolvatten00594176': Kolvatten00594176,
+  'rinnig30407814': Rinnig30407814,
+  'middagsmat60463714': Middagsmat60463714,
+  'annons80298474': Annons80298474,
+  'pepprig70567650': Pepprig70567650,
   // ── Interactifs (open/close) ───────────────────────────────────────────────
   'freezer':                Freezer,
   'fridge':                 Fridge,
