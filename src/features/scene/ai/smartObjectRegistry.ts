@@ -244,7 +244,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre le sac de Linge sale',
         offset: [130, 0, 565],
         rotY: 0,
-        animation: 'animations/emotes_gestures/anim_hand_raising.glb',
+        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
         duration: 3.5,
       }
     ]
@@ -261,7 +261,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un objet',
         offset: [30, 0, 535],
         rotY: Math.PI,
-        animation: 'animations/emotes_gestures/anim_hand_raising.glb',
+        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
         duration: 3.5,
       }
     ]
@@ -277,7 +277,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un objet',
         offset: [169, 0, 535],
         rotY: Math.PI,
-        animation: 'animations/emotes_gestures/anim_hand_raising.glb',
+        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
         duration: 3.5,
       }
     ]
@@ -414,7 +414,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un objet en hauteur',
         offset: [240, 0, 38],
         rotY: Math.PI / 2,
-        animation: 'animations/emotes_gestures/anim_hand_raising.glb',
+        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
         duration: 5.0,
       }
     ]
