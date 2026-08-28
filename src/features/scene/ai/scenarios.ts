@@ -98,6 +98,8 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
   romana:   'bed-west',
   angelina: 'bathtub-garden',
   lgbta:    'sofa-garden-west',
+  sandra:   'duo-zone',
+  rajaa:    'duo-zone',
 };
 
 /**

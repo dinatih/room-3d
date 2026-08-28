@@ -333,7 +333,7 @@ export function SingleCharacter({
   const finalScenario = isGuidedTour ? activeActionScenario : (isAutonomous ? autonomousScenario : EMPTY_SCENARIO);
   const loopScenario = isAutonomous;
 
-  const isExcepted = id === 'sandra' || id === 'rajaa' || id === 'xbot';
+  const isExcepted = id === 'xbot';
   const hasSkyDrop = isNPC && !isExcepted && isAutonomous;
   const spawnDelay = hasSkyDrop ? ((characterIndex ?? 0) * 1.0) : 0;
 
@@ -556,8 +556,7 @@ export function SingleCharacter({
         actionsRef.current[path] = action;
       }
 
-      const isSandraOrRajaa = id === 'sandra' || id === 'rajaa';
-      if (isSandraOrRajaa || !loop) {
+      if (!loop) {
         action.setLoop(THREE.LoopOnce, 1);
         action.clampWhenFinished = true;
       } else {
@@ -911,13 +910,8 @@ export function SingleCharacter({
         const from = (activeActionName.current && activeActionName.current !== 'tpose') ? actions[activeActionName.current] : null;
         if (from) from.fadeOut(0.2);
 
-        if (id === 'sandra' || id === 'rajaa') {
-          to.setLoop(THREE.LoopOnce, 1);
-          to.clampWhenFinished = true;
-        } else {
-          to.setLoop(THREE.LoopRepeat, Infinity);
-          to.clampWhenFinished = false;
-        }
+        to.setLoop(THREE.LoopRepeat, Infinity);
+        to.clampWhenFinished = false;
 
         to.reset().fadeIn(0.2).play();
         to.setEffectiveWeight(1);
