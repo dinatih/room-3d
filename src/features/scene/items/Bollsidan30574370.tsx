@@ -1,7 +1,8 @@
 /**
- * BollsidanDesk.tsx — Bureau réglable IKEA BOLLSIDAN (procédural + GLB).
- * Coordonnées locales : centré XZ, Y=0 = sol, hauteur assis 70cm.
- *
+ * Bollsidan30574370.tsx — Bureau réglable IKEA BOLLSIDAN (procédural + GLB dynamique assis/debout).
+ * Dimensions réelles : 68×36×70-105 cm.
+ * Price: 39,99
+ * URL: https://www.ikea.com/fr/fr/p/bollsidan-table-pour-ordinateur-portable-blanc-30574370/
  */
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
@@ -11,7 +12,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 
 const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
 const DEFAULT_H = 70;
-const GLB_PATH = 'items/bollsidan table pour ordinateur portable blanc 68x36 cm/BOLLSIDAN Table pour ordinateur portable blanc 68x36 cm.glb';
+const GLB_PATH = 'items/bollsidan30574370/Bollsidan30574370.glb';
 
 function DeskTop() {
   const geo = useMemo(() => {
@@ -114,8 +115,12 @@ function BollsidanGlb({ onSize, height = DEFAULT_H }: { onSize: SceneItemProps['
   return <primitive object={clone} />;
 }
 
-export function BollsidanDesk({ onSize, height = DEFAULT_H }: SceneItemProps & { height?: number }) {
-  return <BollsidanGlb onSize={onSize} height={height} />;
+export function Bollsidan30574370({ onSize, height = DEFAULT_H, ...props }: SceneItemProps & { height?: number }) {
+  return (
+    <group {...props}>
+      <BollsidanGlb onSize={onSize} height={height} />
+    </group>
+  );
 }
 
 useGLTF.preload(GLB_PATH);

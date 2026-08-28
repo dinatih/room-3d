@@ -41,7 +41,7 @@ import { KallaxNW }                                   from '@features/scene/item
 import { KallaxCuisine }                              from '@features/scene/items/KallaxCuisine';
 import { MeubleT }                                    from '@features/scene/items/MeubleT';
 import { UtakerStack }                                from '@features/scene/items/UtakerStack';
-import { BollsidanDesk }                              from '@features/scene/items/BollsidanDesk';
+import { Bollsidan30574370 }                          from '@features/scene/items/Bollsidan30574370';
 import { MannequinHead }                              from '@features/scene/items/MannequinHead';
 import { Backpack }                                   from '@features/scene/items/Backpack';
 import { BaseballCap }                                from '@features/scene/items/BaseballCap';
@@ -108,8 +108,10 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'winter-outdoor-boot':    WinterOutdoorBoot,
   'sneaker':                Sneakers,
   'meuble-t':               MeubleT,
-  'utaker-stack':           UtakerStack,
-  'desk-bollsidan':         BollsidanDesk,
+  'utaker-lower':           UtakerStack,
+  'utaker-upper':           UtakerStack,
+  'desk-bollsidan':         Bollsidan30574370,
+  'bollsidan30574370':      Bollsidan30574370,
   'mannequin-head':         MannequinHead,
   'backpack':               Backpack,
   'baseball-cap':           BaseballCap,

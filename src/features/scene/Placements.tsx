@@ -31,7 +31,7 @@ import { TV, TV_H }      from './items/TV';
 import { MllseG2Pro }    from './items/MllseG2Pro';
 import { JblCharge3 }   from './items/JblCharge3';
 import { UtakerFrame }   from './items/UtakerFrame';
-import { BollsidanDesk } from './items/BollsidanDesk';
+import { Bollsidan30574370 } from './items/Bollsidan30574370';
 import { AirPerformer }  from './items/AirPerformer';
 import { TrashBin }      from './items/TrashBin';
 import { Fniss40295439 } from './items/Fniss40295439';
@@ -407,7 +407,7 @@ function Desks() {
       <PositionTransition x={p1.x} z={p1.z} ry={p1.ry}>
         <group userData={{ hoverAction: { label: 'Bureau 1', actions: ['desk1-toggle', 'desk1-position'] } }}>
           <group userData={{ animUnit: true, isIkea: true }}>
-            <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} />
+            <Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} />
           </group>
           <group position={[0, d1H, 0]} rotation={[0, Math.PI, 0]}>
             <group position={[0, 0, 0]} userData={{ animUnit: true, isIkea: true, itemName: 'Organiseur STACKSTOD Bureau 1' }}>
@@ -419,7 +419,7 @@ function Desks() {
       <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
         <group userData={{ hoverAction: { label: 'Bureau 2', actions: ['desk2-toggle', 'desk2-position'] } }}>
           <group userData={{ animUnit: true, isIkea: true }}>
-            <BollsidanDesk item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
+            <Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
           </group>
           <group position={[0, d2H, 0]} rotation={[0, Math.PI, 0]}>
             <group userData={{ animUnit: true, isIkea: true }}>
