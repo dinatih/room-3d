@@ -534,6 +534,30 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         duration: 12.0,
       }
     ]
+  },
+  'duo-zone': {
+    id: 'duo-zone',
+    name: '✨ Scène Duo',
+    category: 'outdoor',
+    position: [-200, 0, -300],
+    slots: [
+      {
+        slotId: 'roleA',
+        name: 'Rôle A (Meneur)',
+        offset: [-200, 0, -275],
+        rotY: Math.PI,
+        animation: 'animations/poses_idles/miley_armature_p2_standoff_provokes_m1.glb',
+        duration: 8.0,
+      },
+      {
+        slotId: 'roleB',
+        name: 'Rôle B (Partenaire)',
+        offset: [-200, 0, -325],
+        rotY: 0,
+        animation: 'animations/poses_idles/miley_armature_p2_standoff_provokes_m2.glb',
+        duration: 8.0,
+      }
+    ]
   }
 };
 

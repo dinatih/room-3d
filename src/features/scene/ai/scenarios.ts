@@ -26,6 +26,7 @@ export const AUTONOMOUS_SMART_OBJECTS: string[] = [
   'cuisine-group',
   'freezer',
   'rain-dance',
+  'duo-zone',
   'garden-fresh-air',
   'building-b-corridor',
   'building-b-garden'

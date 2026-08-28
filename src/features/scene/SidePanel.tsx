@@ -24,6 +24,7 @@ import { CHARACTERS, isCharacterVisibleInMode, npcLabel, type LaraCountMode } fr
 import { WIGS_ITEMS } from '../inventory/inventoryData';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { resetAppIdle } from './idleState';
+import { DUO_ANIMATIONS } from './ai/duoAnimations';
 
 import {
   ROOM_W, ROOM_D, WALL_H,
@@ -1460,44 +1461,17 @@ export function SidePanel({
     rPos?: [number, number, number];
   }
 
-  const coupleAnims: CoupleAnimConfig[] = [
-    { label: 'B1', icon: '💥', s: 'animations/combat/miley_armature_b1_fall_kicked_knockout.glb', r: 'animations/locomotion/miley_armature_b1_attack_back_somersault_flip.glb', dist: 100 },
-    { label: 'D1', icon: '🤺', s: 'animations/combat/miley_armature_d1_attack_arms_block.glb', r: 'animations/combat/miley_armature_d1_dodge_sideways.glb', dist: 100 },
-    { label: 'D4', icon: '🤺', s: 'animations/combat/miley_armature_d4_attack_reverse_front_snap_kick.glb', r: 'animations/combat/miley_armature_d4_dodge_roll_back.glb', dist: 100 },
-    { label: 'F2', icon: '🥊', s: 'animations/combat/miley_armature_f2_attack_straight_punch02.glb', r: 'animations/locomotion/miley_armature_f2_fall_to_ground_face_up01.glb', dist: 100 },
-    { label: 'H1', icon: '👊', s: 'animations/combat/miley_armature_h1_hit_punches.glb', r: 'animations/combat/miley_armature_h1_attack_punches.glb', dist: 100 },
-    { label: 'H2', icon: '👊', s: 'animations/combat/miley_armature_h2_attack_side_kicks.glb', r: 'animations/combat/miley_armature_h2_hit_dodge.glb', dist: 100 },
-    { label: 'H4', icon: '👊', s: 'animations/combat/miley_armature_h4_attack_rising_kick.glb', r: 'animations/combat/miley_armature_h4_hit_staggering.glb', dist: 100 },
-    { label: 'Ko1', icon: '😵', s: 'animations/locomotion/miley_armature_ko1_fall_to_ground_sprawl.glb', r: 'animations/combat/miley_armature_ko1_attack_uppercut.glb', dist: 100 },
-    { label: 'Ko2', icon: '😵', s: 'animations/combat/miley_armature_ko2_attack_hood_kicks.glb', r: 'animations/locomotion/miley_armature_ko2_fall_to_ground_axel_down.glb', dist: 100 },
-    { label: 'Ko3', icon: '😵', s: 'animations/interactions/miley_armature_ko3_attack_hammer_fist.glb', r: 'animations/locomotion/miley_armature_ko3_fall_to_ground_side_up02.glb', dist: 100 },
-    { label: 'P1', icon: '😤', s: 'animations/combat/miley_armature_p1_standoff_push_knockout.glb', r: 'animations/combat/miley_armature_p1_standoff_block_straight_punch.glb' },
-    { label: 'P2', icon: '😤', s: 'animations/poses_idles/miley_armature_p2_standoff_provokes_m1.glb', r: 'animations/poses_idles/miley_armature_p2_standoff_provokes_m2.glb' },
-    { label: 'S1', icon: '🥋', s: 'animations/combat/miley_armature_s1_sparring_punch_m1.glb', r: 'animations/combat/miley_armature_s1_sparring_punch_m2.glb', dist: 100 },
-    { label: 'S2', icon: '🥋', s: 'animations/combat/miley_armature_s2_sparring_dodges01.glb', r: 'animations/combat/miley_armature_s2_sparring_kicks.glb', dist: 100 },
-    { label: 'S3', icon: '🥋', s: 'animations/combat/miley_armature_s3_sparring_dodges02.glb', r: 'animations/combat/miley_armature_s3_sparring_reverse_kicks.glb', dist: 100 },
-    { label: 'S4', icon: '🥋', s: 'animations/combat/miley_armature_s4_sparring_double_kicks_m1.glb', r: 'animations/combat/miley_armature_s4_sparring_double_kicks_m2.glb', dist: 100 },
-    { label: 'S5', icon: '🥋', s: 'animations/combat/miley_armature_s5_sparring_block_kick.glb', r: 'animations/combat/miley_armature_s5_sparring_block_hit.glb', dist: 100 },
-    { label: 'T1', icon: '🤼', s: 'animations/interactions/miley_armature_t1_attack_thrown.glb', r: 'animations/combat/miley_armature_t1_hit_suplex.glb', dist: 100 },
-    { label: 'T3', icon: '🤼', s: 'animations/locomotion/miley_armature_t3_fall_shoulder_throw.glb', r: 'animations/interactions/miley_armature_t3_attack_shoulder_throw.glb', dist: 100 },
-    { label: 'T4', icon: '🤼', s: 'animations/dances/miley_armature_t4_fall_belly_to_back_slam.glb', r: 'animations/combat/miley_armature_t4_attack_knee_strike.glb', dist: 100 },
-    { label: 'T5', icon: '🤼', s: 'animations/emotes_gestures/miley_armature_t5_attack_headlock_takeover.glb', r: 'animations/locomotion/miley_armature_t5_fall_headlock_takeover.glb', dist: 100 },
-    { label: 'Pop Dance', icon: '🕺', s: 'animations/dances/miley_armature_couple_pop_dance_m.glb', r: 'animations/dances/miley_armature_couple_pop_dance_f.glb', dist: 50 },
-    { label: 'Energetic Dance', icon: '🕺', s: 'animations/dances/miley_armature_energetic_dance_m.glb', r: 'animations/dances/miley_armature_energetic_dance_f.glb', dist: 100 },
-    { label: 'Slow Dance', icon: '💃', s: 'animations/dances/miley_armature_slow_dance_m.glb', r: 'animations/dances/miley_armature_slow_dance_f.glb', dist: 50 },
-    { label: 'Cuddle Kiss', icon: '😘', s: 'animations/emotes_gestures/miley_armature_cuddle_kiss_m.glb', r: 'animations/emotes_gestures/miley_armature_cuddle_kiss_f.glb', dist: 50 },
-    { label: 'Eye to Eye Kiss', icon: '🤗', s: 'animations/emotes_gestures/miley_armature_eye_to_eye_hug_kiss_f.glb', r: 'animations/emotes_gestures/miley_armature_eye_to_eye_hug_kiss_m.glb', dist: 30 },
-    { label: 'Farewell Kiss', icon: '👋', s: 'animations/emotes_gestures/miley_armature_farewell_kiss_m.glb', r: 'animations/emotes_gestures/miley_armature_farewell_kiss_f.glb', dist: 100 },
-    { label: 'Date Bearhug', icon: '🐻', s: 'animations/interactions/miley_armature_date_bearhug_m.glb', r: 'animations/interactions/miley_armature_date_bearhug_f.glb', dist: 50 },
-    { label: 'Propose', icon: '💍', s: 'animations/poses_idles/miley_armature_propose_f.glb', r: 'animations/poses_idles/miley_armature_propose_m.glb', dist: 50 },
-    { label: 'Sit Cuddle', icon: '🛋️', s: 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb', r: 'animations/poses_idles/miley_armature_sit_cuddle_hug_f.glb', dist: 50 },
-    { label: 'Double Leg Takedown', icon: '🤼', s: 'animations/combat/anim_best_double_leg_takedown_victim.glb', r: 'animations/combat/anim_best_double_leg_takedown_attacker.glb', dist: 0, rotS: Math.PI, rotR: 0, sPos: [-450, 0, 270] },
-    { label: 'Prise d\'otage', icon: '🚨', s: 'animations/interactions/anim_taken_hostage_victim.glb', r: 'animations/interactions/anim_taken_hostage_villain.glb', dist: 0 },
-    { label: 'Projection épaule', icon: '🥋', s: 'animations/interactions/anim_shoulder_throw_victim.glb', r: 'animations/interactions/anim_shoulder_throw_aggressor.glb', dist: 0 },
-    { label: 'Baiser Homme / Femme', icon: '💋', s: 'animations/emotes_gestures/anim_kiss_from_woman.glb', r: 'animations/emotes_gestures/anim_kiss_from_man.glb', dist: 0 },
-    { label: 'Baiser', icon: '💏', s: 'animations/emotes_gestures/anim_kiss.glb', r: 'animations/emotes_gestures/anim_kiss_1.glb', dist: 0 },
-    { label: 'Assassinat brutal', icon: '🗡️', s: 'animations/combat/anim_brutal_assassination.glb', r: 'animations/combat/anim_brutal_assassination_1.glb', dist: 0 },
-  ];
+  const coupleAnims: CoupleAnimConfig[] = DUO_ANIMATIONS.map(a => ({
+    label: a.label,
+    icon: a.icon,
+    s: a.animA,
+    r: a.animB,
+    dist: a.dist,
+    rotS: a.rotA,
+    rotR: a.rotB,
+    sPos: a.offsetA ? [-450 + a.offsetA[0], a.offsetA[1], a.offsetA[2]] as [number, number, number] : undefined,
+    rPos: a.offsetB ? [-450 + a.offsetB[0], a.offsetB[1], a.offsetB[2]] as [number, number, number] : undefined,
+  }));
 
   const playCoupleAnim = (sandraPath: string, rajaaPath: string, dist: number = 50, rotS?: number, rotR?: number, sPos?: [number, number, number], rPos?: [number, number, number]) => {
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-sandra', value: sandraPath, loop: false } }));

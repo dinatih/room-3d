@@ -4,6 +4,7 @@ import { WAYPOINTS } from './ZoneNodes';
 import { SMART_OBJECTS } from './smartObjectRegistry';
 import { resolveSlotAnimation } from './animationPacks';
 import { OccupancyManager } from './occupancyManager';
+import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
@@ -115,17 +116,24 @@ export function useAgentController(
   // Ref pour éviter les logs dupliqués à chaque frame
   const lastLogRef = useRef<string>('');
 
+  // Gestion spécifique du rôle et attente pour la duo-zone
+  const duoRoleRef = useRef<DuoRole | null>(null);
+  const duoWaitTimerRef = useRef<number>(0);
+
   // Libérer toutes les réservations au démontage
   useEffect(() => {
     return () => {
       OccupancyManager.releaseAllForCharacter(_characterId);
+      duoSessionManager.leaveDuoZone(_characterId);
     };
   }, [_characterId]);
 
   if (scenario !== prevScenarioRef.current) {
     if (claimedSlotRef.current) {
       OccupancyManager.releaseAllForCharacter(_characterId);
+      duoSessionManager.leaveDuoZone(_characterId);
       claimedSlotRef.current = null;
+      duoRoleRef.current = null;
     }
     const isWait = hasSkyDrop && spawnDelay > 0;
     const isFallNow = hasSkyDrop && spawnDelay === 0;
@@ -242,8 +250,34 @@ export function useAgentController(
       if (!hasNavStep && currentInstruction.smartObjectId) {
         const objId = currentInstruction.smartObjectId;
         const reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
-        
-        if (OccupancyManager.isSlotOccupied(objId, reqSlotId, _characterId)) {
+
+        if (objId === 'duo-zone') {
+          const role = duoSessionManager.joinDuoZone(_characterId);
+          if (role) {
+            duoRoleRef.current = role;
+            currentInstruction.slotId = role;
+            claimedSlotRef.current = { objectId: objId, slotId: role };
+            const slot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === role);
+            if (slot) {
+              currentInstruction.animation = slot.animation;
+              currentInstruction.duration = slot.duration;
+              currentInstruction.rotY = slot.rotY;
+            }
+          } else {
+            // Duo-zone complète (2 PNJs déjà dessus), passer au smart object suivant
+            if (loop) {
+              while (
+                stepIndexRef.current < scenario.length &&
+                scenario[stepIndexRef.current].smartObjectId === objId
+              ) {
+                stepIndexRef.current++;
+              }
+              dynamicNavQueueRef.current = [];
+              dynamicNavIndexRef.current = 0;
+              return update(dt);
+            }
+          }
+        } else if (OccupancyManager.isSlotOccupied(objId, reqSlotId, _characterId)) {
           // Place occupée : trouver un autre slot libre sur le même meuble si disponible (ex. autre siège d'un lit ou canapé)
           const altSlotId = OccupancyManager.getAvailableSlot(objId, _characterId, currentInstruction.slotId);
           if (altSlotId) {
@@ -422,6 +456,12 @@ export function useAgentController(
         // Si l'instruction est USE_OBJECT, on enchaîne directement sur l'interaction !
         if (currentInstruction.type === 'USE_OBJECT') {
           statusRef.current = 'INTERACTING';
+          if (currentInstruction.smartObjectId === 'duo-zone') {
+            duoSessionManager.markReady(_characterId);
+            duoWaitTimerRef.current = 0;
+            const animState = duoSessionManager.getCurrentAnimState();
+            timerRef.current = animState?.duration ?? 5.0;
+          }
           if (!currentInstruction.animation && target.anim) {
             currentInstruction.animation = target.anim;
           }
@@ -431,7 +471,9 @@ export function useAgentController(
           if (!currentInstruction.duration && target.duration) {
             currentInstruction.duration = target.duration;
           }
-          timerRef.current = currentInstruction.duration || target.duration || 1.0;
+          if (currentInstruction.smartObjectId !== 'duo-zone') {
+            timerRef.current = currentInstruction.duration || target.duration || 1.0;
+          }
           stateRef.current.y = target.ty ?? 0;
           if (currentInstruction.rotY !== undefined) {
             stateRef.current.rotY = currentInstruction.rotY;
@@ -571,30 +613,19 @@ export function useAgentController(
             if (obsDist > 0.1 && obsDist < obsLookahead) {
               const forwardProj = toObsX * dirX + toObsZ * dirZ;
 
-              if (forwardProj > 0 || obsDist < obs.radius + 10) {
+              if (forwardProj > 0) {
                 const perpDist = Math.abs(-dirZ * toObsX + dirX * toObsZ);
-                const clearanceRadius = obs.radius + 20;
 
-                if (perpDist < clearanceRadius) {
+                if (perpDist < obs.radius) {
                   const cross = dirX * toObsZ - dirZ * toObsX;
                   const steerSide = cross >= 0 ? -1 : 1;
 
-                  const lateralWeight = Math.max(0.2, (clearanceRadius - perpDist) / clearanceRadius);
+                  const lateralWeight = Math.max(0.3, (obs.radius - perpDist) / obs.radius);
                   const proximityWeight = Math.max(0.3, (obsLookahead - obsDist) / obsLookahead);
-                  const steerIntensity = 1.3 * lateralWeight * proximityWeight * targetProximityDampener;
+                  const steerIntensity = 1.0 * lateralWeight * proximityWeight * targetProximityDampener;
 
-                  const perpX = -dirZ * steerSide;
-                  const perpZ = dirX * steerSide;
-
-                  avoidanceForceX += perpX * steerIntensity;
-                  avoidanceForceZ += perpZ * steerIntensity;
-
-                  // Répulsion radiale si l'agent est trop près du bord du meuble
-                  if (obsDist < obs.radius + 10) {
-                    const repulseIntensity = (((obs.radius + 10) - obsDist) / (obs.radius + 10)) * 1.0 * targetProximityDampener;
-                    avoidanceForceX -= (toObsX / obsDist) * repulseIntensity;
-                    avoidanceForceZ -= (toObsZ / obsDist) * repulseIntensity;
-                  }
+                  avoidanceForceX += -dirZ * steerSide * steerIntensity;
+                  avoidanceForceZ += dirX * steerSide * steerIntensity;
                 }
               }
             }
@@ -634,6 +665,69 @@ export function useAgentController(
         }
       }
     } else if (statusRef.current === 'INTERACTING') {
+      // ── Gestion spéciale pour duo-zone (✨ Scène Duo) ──
+      if (currentInstruction.smartObjectId === 'duo-zone') {
+        const isWaiting = duoSessionManager.isWaitingPartner(_characterId);
+        if (isWaiting) {
+          duoWaitTimerRef.current += dt;
+          stateRef.current.animation = duoRoleRef.current === 'roleA'
+            ? 'animations/poses_idles/miley_armature_p2_standoff_provokes_m1.glb'
+            : 'animations/poses_idles/miley_armature_p2_standoff_provokes_m2.glb';
+          stateRef.current.rotY = duoRoleRef.current === 'roleA' ? Math.PI : 0;
+
+          // Timeout de 20s si aucun partenaire n'arrive
+          if (duoWaitTimerRef.current > 20.0) {
+            appLog(_characterId, `⏳ Duo timeout : pas de partenaire, reprise du parcours`);
+            duoSessionManager.leaveDuoZone(_characterId);
+            claimedSlotRef.current = null;
+            duoRoleRef.current = null;
+            statusRef.current = 'IDLE';
+            stepIndexRef.current++;
+            return update(dt);
+          }
+          return stateRef.current;
+        }
+
+        const animState = duoSessionManager.getCurrentAnimState();
+        if (animState && duoRoleRef.current) {
+          const role = duoRoleRef.current;
+          const clip = role === 'roleA' ? animState.clipA : animState.clipB;
+          const pos = role === 'roleA' ? animState.posA : animState.posB;
+          const rot = role === 'roleA' ? animState.rotA : animState.rotB;
+
+          stateRef.current.animation = clip;
+          stateRef.current.x = pos[0];
+          stateRef.current.y = pos[1];
+          stateRef.current.z = pos[2];
+          stateRef.current.rotY = rot;
+
+          timerRef.current -= dt;
+          if (timerRef.current <= 0) {
+            // Passer à l'animation suivante de la playlist de duo
+            const hasMore = duoSessionManager.advanceNextAnim(_characterId);
+            if (hasMore) {
+              const nextState = duoSessionManager.getCurrentAnimState();
+              timerRef.current = nextState?.duration ?? 5.0;
+            } else {
+              // Session de duo terminée
+              duoSessionManager.leaveDuoZone(_characterId);
+              claimedSlotRef.current = null;
+              duoRoleRef.current = null;
+              statusRef.current = 'IDLE';
+              stepIndexRef.current++;
+            }
+          }
+          return stateRef.current;
+        } else if (duoSessionManager.isCompletedFor(_characterId)) {
+          duoSessionManager.leaveDuoZone(_characterId);
+          claimedSlotRef.current = null;
+          duoRoleRef.current = null;
+          statusRef.current = 'IDLE';
+          stepIndexRef.current++;
+          return update(dt);
+        }
+      }
+
       const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
       stateRef.current.animation = currentInstruction.animation || target.anim || 'idle';
       if (target.ty !== undefined) {
