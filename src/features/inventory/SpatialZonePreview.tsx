@@ -1,5 +1,5 @@
-import { useMemo, Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { useState, useMemo, useEffect, Suspense } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
@@ -20,23 +20,42 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 /**
- * Rendu officiel du Studio croppé dynamiquement par la BoundingBox 3D de la SpatialZone
+ * Configure les clipping planes mondiaux directement sur le WebGLRenderer
  */
-function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
+function ClippingSetup({ zone }: { zone: SpatialZone }) {
+  const { gl } = useThree();
   const min = zone.bounds.min;
   const max = zone.bounds.max;
 
-  const center: [number, number, number] = [
-    (min[0] + max[0]) / 2,
-    (min[1] + max[1]) / 2,
-    (min[2] + max[2]) / 2,
-  ];
+  useEffect(() => {
+    gl.localClippingEnabled = true;
+    // Les objets sont en coordonnées monde brutes : les plans découpent directement l'espace monde
+    const pad = 1;
+    gl.clippingPlanes = [
+      new THREE.Plane(new THREE.Vector3(1, 0, 0), -(min[0] - pad)),   // X >= minX - pad
+      new THREE.Plane(new THREE.Vector3(-1, 0, 0), max[0] + pad),    // X <= maxX + pad
+      new THREE.Plane(new THREE.Vector3(0, 1, 0), -(min[1] - pad)),   // Y >= minY - pad
+      new THREE.Plane(new THREE.Vector3(0, -1, 0), max[1] + pad),   // Y <= maxY + pad
+      new THREE.Plane(new THREE.Vector3(0, 0, 1), -(min[2] - pad)),   // Z >= minZ - pad
+      new THREE.Plane(new THREE.Vector3(0, 0, -1), max[2] + pad),   // Z <= maxZ + pad
+    ];
+    return () => {
+      gl.clippingPlanes = [];
+    };
+  }, [gl, min, max]);
 
+  return null;
+}
+
+/**
+ * Rendu officiel du Studio sans translation de groupe pour que les clipping planes mondiaux s'appliquent fidèlement
+ */
+function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
   const smartObjects = useMemo(() => zone.getSmartObjects(), [zone]);
   const waypoints = useMemo(() => zone.getWaypoints(), [zone]);
 
   return (
-    <group position={[-center[0], 0, -center[2]]}>
+    <group>
       {/* ── Scène réelle complète de l'appartement ── */}
       <group>
         <Walls />
@@ -119,41 +138,49 @@ export function SpatialZonePreview({
   zone: SpatialZone;
   height?: number | string;
 }) {
-  const maxDim = Math.max(
-    zone.bounds.max[0] - zone.bounds.min[0],
-    zone.bounds.max[2] - zone.bounds.min[2]
-  );
-  const camDistance = Math.max(220, maxDim * 1.25);
-
   const min = zone.bounds.min;
   const max = zone.bounds.max;
 
-  // 6 clipping planes Three.js pour le renderer
-  const clippingPlanes = useMemo(() => {
-    const pad = 2;
-    return [
-      new THREE.Plane(new THREE.Vector3(1, 0, 0), -(min[0] - pad)),
-      new THREE.Plane(new THREE.Vector3(-1, 0, 0), max[0] + pad),
-      new THREE.Plane(new THREE.Vector3(0, 1, 0), -(min[1] - pad)),
-      new THREE.Plane(new THREE.Vector3(0, -1, 0), max[1] + pad),
-      new THREE.Plane(new THREE.Vector3(0, 0, 1), -(min[2] - pad)),
-      new THREE.Plane(new THREE.Vector3(0, 0, -1), max[2] + pad),
-    ];
-  }, [min, max]);
+  const centerX = (min[0] + max[0]) / 2;
+  const centerY = (min[1] + max[1]) / 2;
+  const centerZ = (min[2] + max[2]) / 2;
+
+  const maxDim = Math.max(max[0] - min[0], max[2] - min[2]);
+  const camDistance = Math.max(220, maxDim * 1.35);
+
+  const [isTopView, setIsTopView] = useState(false);
+
+  // Raccourci clavier 'T' pour basculer en Vue du dessus (Top View)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const targetEl = e.target as HTMLElement;
+      if (targetEl && (targetEl.tagName === 'INPUT' || targetEl.tagName === 'TEXTAREA' || targetEl.isContentEditable)) {
+        return;
+      }
+      if (e.key === 't' || e.key === 'T') {
+        setIsTopView(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const camPosition: [number, number, number] = isTopView
+    ? [centerX, camDistance * 1.8, centerZ + 0.01]
+    : [centerX + camDistance * 0.75, centerY + camDistance * 0.7, centerZ + camDistance * 0.75];
 
   return (
     <div style={{ width: '100%', height, position: 'relative', background: '#0b1120', borderRadius: 8, overflow: 'hidden' }}>
       <Canvas
-        camera={{ position: [camDistance * 0.8, camDistance * 0.7, camDistance * 0.8], fov: 42, near: 1, far: 5000 }}
+        camera={{ position: camPosition, fov: 42, near: 1, far: 5000 }}
+        key={`${zone.id}-${isTopView ? 'top' : 'persp'}`}
         style={{ width: '100%', height: '100%' }}
-        onCreated={({ gl }) => {
-          gl.localClippingEnabled = true;
-          gl.clippingPlanes = clippingPlanes;
-        }}
       >
         <ambientLight intensity={1.5} />
         <directionalLight position={[200, 400, 200]} intensity={2.0} />
         <directionalLight position={[-200, 300, -200]} intensity={1.0} />
+
+        <ClippingSetup zone={zone} />
 
         <Suspense fallback={null}>
           <StudioCroppedScene zone={zone} />
@@ -161,11 +188,12 @@ export function SpatialZonePreview({
 
         <OrbitControls
           makeDefault
+          target={[centerX, centerY, centerZ]}
           enableDamping
           dampingFactor={0.05}
-          maxPolarAngle={Math.PI / 2 - 0.02}
+          maxPolarAngle={isTopView ? Math.PI / 2 : Math.PI / 2 - 0.02}
           minDistance={40}
-          maxDistance={camDistance * 3}
+          maxDistance={camDistance * 3.5}
         />
       </Canvas>
 
@@ -186,7 +214,32 @@ export function SpatialZonePreview({
         backdropFilter: 'blur(4px)'
       }}>
         <span>{zone.environment === 'indoor' ? '🏠' : '🌳'}</span>
-        <span>Vue Studio Découpée : {zone.name}</span>
+        <span>Vue Découpée : {zone.name}</span>
+      </div>
+
+      <div style={{
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        display: 'flex',
+        gap: 6
+      }}>
+        <button
+          onClick={() => setIsTopView(prev => !prev)}
+          style={{
+            background: isTopView ? '#0284c7' : 'rgba(15, 23, 42, 0.85)',
+            color: '#ffffff',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '3px 8px',
+            borderRadius: 4,
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer',
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          {isTopView ? '📐 Vue 3D Persp (T)' : '🗺️ Vue Top (T)'}
+        </button>
       </div>
 
       <div style={{
@@ -200,9 +253,10 @@ export function SpatialZonePreview({
         fontSize: 10,
         pointerEvents: 'none'
       }}>
-        Clic gauche : rotation • Molette : zoom • Clic droit : translation
+        Touche <b>T</b> : Vue Dessus • Clic gauche : rotation • Molette : zoom • Clic droit : translation
       </div>
     </div>
   );
 }
+
 
