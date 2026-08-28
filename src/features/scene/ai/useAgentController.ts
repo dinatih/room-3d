@@ -475,7 +475,6 @@ export function useAgentController(
         const arrivedKey = `arrived-${stepIndexRef.current}`;
         if (lastLogRef.current !== arrivedKey) {
           lastLogRef.current = arrivedKey;
-          appLog(_characterId, `🎯 Arrivé à ${target.label}`);
         }
 
         // Si l'instruction est USE_OBJECT, on enchaîne directement sur l'interaction !
