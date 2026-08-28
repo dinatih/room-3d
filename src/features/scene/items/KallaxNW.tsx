@@ -13,7 +13,7 @@ import { Kallax2x1 }      from './Kallax2x1';
 import { Kallax1x1 }      from './Kallax1x1';
 import { MannequinHead }  from './MannequinHead';
 import { DroneCell } from './Drona';
-import { Variera60136623 } from './Variera60136623';
+import { Variera80136622 } from './Variera80136622';
 import { MeubleT }        from './MeubleT';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
@@ -107,7 +107,7 @@ export function KallaxNW({ onSize }: SceneItemProps) {
         position={[-h1 / 2 + VAR_D / 2, w2 + 2 * w1 + .5, DEP / 2 - VAR_W / 2]}
         rotation-y={-Math.PI / 2}
       >
-        <Variera60136623 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Variera80136622 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* MeubleT — au sol (Y = 0) à gauche des meubles Kallax, plaqué contre la glace des miroirs */}
