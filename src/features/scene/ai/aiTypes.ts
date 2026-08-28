@@ -54,7 +54,7 @@ export type InteractionType =
   | 'storage';
 
 /**
- * WAYPOINT (Anciennement ZoneNode) : Repère spatial ponctuel [x, y, z] avec rotation optionnelle.
+ * WAYPOINT : Repère spatial ponctuel [x, y, z] avec rotation optionnelle.
  * Sert au positionnement, au pathfinding et aux slots d'approche.
  */
 export interface Waypoint {
@@ -65,9 +65,6 @@ export interface Waypoint {
   z: number;
   rotationY?: number;
 }
-
-/** Alias de rétro-compatibilité */
-export type ZoneNode = Waypoint;
 
 /**
  * SPATIAL ZONE : Volume englobant 3D (Pièce, Jardin, etc.)
@@ -88,9 +85,9 @@ export interface AgentInstruction {
   type: InstructionType;
   smartObjectId?: string; // target smart object ID
   slotId?: string; // specific slot inside the smart object
-  targetNodeId?: string; // for MOVE_TO (fallback/waypoints)
-  targetWaypointId?: string; // alias moderne pour targetNodeId
-  targetPos?: [number, number, number]; // direct position instead of node
+  targetWaypointId?: string; // Waypoint cible pour la navigation
+  targetNodeId?: string; // rétro-compatibilité temporaire instruction JSON/scenarios
+  targetPos?: [number, number, number]; // direct position instead of waypoint
   actionId?: string; // for INTERACT
   animation?: string; // animation to play
   duration?: number; // for WAIT or INTERACT

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { useMemo } from 'react';
 import { useSceneStore } from '../store/useSceneStore';
-import { ZONES } from './ZoneNodes';
+import { WAYPOINTS } from './ZoneNodes';
 import { SMART_OBJECTS } from './smartObjectRegistry';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -110,8 +110,8 @@ export function AiZonesHelper() {
   // Génération mémoïsée des sprites de labels
   const waypointSprites = useMemo(() => {
     const map: Record<string, THREE.Sprite> = {};
-    Object.values(ZONES).forEach(zone => {
-      map[zone.id] = makeLabelSprite(`📍 ${zone.name || zone.id}`, [], '#ffffff', 4.5);
+    Object.values(WAYPOINTS).forEach(wp => {
+      map[wp.id] = makeLabelSprite(`📍 ${wp.name || wp.id}`, [], '#ffffff', 4.5);
     });
     return map;
   }, []);
@@ -151,10 +151,10 @@ export function AiZonesHelper() {
   return (
     <group renderOrder={99999}>
       {/* ── Points de passage / Waypoints ── */}
-      {Object.values(ZONES).map(zone => {
-        const sprite = waypointSprites[zone.id];
+      {Object.values(WAYPOINTS).map(wp => {
+        const sprite = waypointSprites[wp.id];
         return (
-          <group key={`wp-${zone.id}`} position={[zone.x, baseHeight, zone.z]}>
+          <group key={`wp-${wp.id}`} position={[wp.x, baseHeight, wp.z]}>
             <mesh rotation={[-Math.PI / 2, 0, 0]}>
               <circleGeometry args={[6, 24]} />
               <meshBasicMaterial color="#ffffff" opacity={0.35} transparent depthTest={false} depthWrite={false} />

@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { AgentInstruction } from './aiTypes';
-import { ZONES } from './ZoneNodes';
+import { WAYPOINTS } from './ZoneNodes';
 import { SMART_OBJECTS } from './smartObjectRegistry';
 import { resolveSlotAnimation } from './animationPacks';
 import { OccupancyManager } from './occupancyManager';
@@ -40,8 +40,8 @@ function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number
     return { tx: startPos.x, tz: startPos.z, label: 'point de départ' };
   }
   const waypointId = instr.targetWaypointId || instr.targetNodeId;
-  if (waypointId && ZONES[waypointId]) {
-    const node = ZONES[waypointId];
+  if (waypointId && WAYPOINTS[waypointId]) {
+    const node = WAYPOINTS[waypointId];
     return { tx: node.x, tz: node.z, label: node.name || node.id, rotY: instr.rotY ?? node.rotationY };
   }
   if (instr.smartObjectId && SMART_OBJECTS[instr.smartObjectId]) {

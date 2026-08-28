@@ -18,8 +18,6 @@ export const WAYPOINTS: Record<string, Waypoint> = {
   'outdoor-garden-east':    { id: 'outdoor-garden-east',    name: 'Cour Est',                    x: 400, z: -500 },
 };
 
-/** Alias de rétro-compatibilité */
-export const ZONES = WAYPOINTS;
 
 
 
