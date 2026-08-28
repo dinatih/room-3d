@@ -633,7 +633,7 @@ export function SidePanel({
 
   const ViewsSection = (
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
-      {b0('gray',   'Perspective (Raccourci O)',       () => dispatchKey('o'))}
+      {b0('gray',   'Perspective / Orbit (Raccourci O)', () => dispatchKey('o'))}
       {b0('gray',   'Walk générique (Raccourci M)',    () => dispatchKey('m'))}
       {b0('gray',   'Vue 3ème personne (Raccourci 3)', () => dispatchKey('3'))}
       {b0('gray',   'Vue FPV 1ère pers. (Raccourci 1)',() => dispatchKey('1'))}

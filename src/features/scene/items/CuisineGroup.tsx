@@ -202,7 +202,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
 
       {/* Hotte aspirante UTDRAG intégrée dans le meuble haut au-dessus des plaques */}
       <group userData={{ animUnit: true, isIkea: true }}>
-        <group position={[CABINET_W + FRIDGE_W / 2, 153, 41.5]}>
+        <group position={[CABINET_W + FRIDGE_W / 2, 153, 41.5]} rotation-y={Math.PI}>
           <Utdrag10389142 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
