@@ -1,36 +1,44 @@
-/**
- * MuligRail.tsx — Tringle MULIG IKEA (GLB media/glb/MULIG.glb).
- * Dimensions réelles : 60×16×26 cm (L×H×P) à ×100.
- * Le GLB officiel IKEA est en mètres → scale ×100 (1 unité = 1 cm).
- * Coordonnées locales : centré X/Z, Y=0 = sol.
- */
-import { useLayoutEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
+import { Mulig30179435 } from './Mulig30179435';
+import { Spruttig20317079 } from './Spruttig20317079';
+import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
-const GLB = 'items/mulig/MULIG.glb';
+// ── 6 cintres Spruttig sur la tringle Mulig ──────────────────────────────────
+const HANGER_Z   = [-20, -12, -4, 4, 12, 20];
+const HANGER_ROTS = [0.04, -0.03, 0.05, -0.02, 0.03, -0.04];
+// Barre Mulig à ~15.5 cm de hauteur (15.5 - 19 cm hook height = -3.5 cm)
+// Barre avancée à X = 10.5 cm par rapport au centre de Mulig
+const RAIL_X = 10.5;
+const RAIL_Y = 15.5 - 19;
 
-export function MuligRail({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone(GLB);
+export function MuligRail({ onSize, ...props }: SceneItemProps) {
+  const ref = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
-    removeGlbLines(scene);
-    scene.scale.setScalar(100);
-    scene.rotation.y = Math.PI / 2;
-    mergeGlbByMaterial(scene);
-    const box = glbLocalBBox(scene);
-    scene.position.set(
-      -(box.min.x + box.max.x) / 2,
-      -box.min.y,
-      -(box.min.z + box.max.z) / 2,
-    );
-    onSize(box.getSize(new THREE.Vector3()));
-  }, [scene]);
+    ref.current.updateMatrixWorld(true);
+    onSize?.(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
+  }, [onSize]);
 
-  return <primitive object={scene} />;
+  return (
+    <group ref={ref} {...props}>
+      <group userData={{ animUnit: true, isIkea: true }}>
+        <Mulig30179435 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* 6 cintres Spruttig sur la tringle Mulig */}
+      {HANGER_Z.map((z, i) => (
+        <group
+          key={`mulig-hanger-${i}`}
+          position={[RAIL_X, RAIL_Y, z]}
+          rotation={[0, HANGER_ROTS[i], 0]}
+          userData={{ animUnit: true, isIkea: true, itemName: `Cintre Spruttig Mulig ${i + 1}` }}
+        >
+          <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      ))}
+    </group>
+  );
 }
 
-useGLTF.preload(GLB);
