@@ -12,6 +12,7 @@ import { Kolvatten00594176 } from '@features/scene/items/Kolvatten00594176';
 import { Rinnig30407814 } from '@features/scene/items/Rinnig30407814';
 import { Middagsmat60463714 } from '@features/scene/items/Middagsmat60463714';
 import { Annons80298474 } from '@features/scene/items/Annons80298474';
+import { Tasjon80392023 } from '@features/scene/items/Tasjon80392023';
 import { Pepprig70567650 } from '@features/scene/items/Pepprig70567650';
 /**
  * Registry des composants TSX dédiés par item.id.
@@ -88,6 +89,7 @@ import { GoogleNestMini }                             from '@features/scene/item
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'tasjon80392023': Tasjon80392023,
   'klyket50503598': Klyket50503598,
   'enudden60251665': Enudden60251665,
   'ikea20480013': Ikea20480013,
