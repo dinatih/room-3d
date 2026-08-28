@@ -1446,8 +1446,7 @@ export function SidePanel({
     />
   );
 
-  const [autoCycleIndex, setAutoCycleIndex] = useState(0);
-  const isFirstMountRef = useRef(true);
+  const [autoCycleIndex, setAutoCycleIndex] = useState(-1);
 
   interface CoupleAnimConfig {
     label: string;
@@ -1469,16 +1468,16 @@ export function SidePanel({
     dist: a.dist,
     rotS: a.rotA,
     rotR: a.rotB,
-    sPos: a.offsetA ? [-450 + a.offsetA[0], a.offsetA[1], a.offsetA[2]] as [number, number, number] : undefined,
-    rPos: a.offsetB ? [-450 + a.offsetB[0], a.offsetB[1], a.offsetB[2]] as [number, number, number] : undefined,
+    sPos: a.offsetA ? [-200 + a.offsetA[0], a.offsetA[1], -300 + a.offsetA[2]] as [number, number, number] : undefined,
+    rPos: a.offsetB ? [-200 + a.offsetB[0], a.offsetB[1], -300 + a.offsetB[2]] as [number, number, number] : undefined,
   }));
 
   const playCoupleAnim = (sandraPath: string, rajaaPath: string, dist: number = 50, rotS?: number, rotR?: number, sPos?: [number, number, number], rPos?: [number, number, number]) => {
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-sandra', value: sandraPath, loop: false } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-rajaa', value: rajaaPath, loop: false } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-sandra', value: sPos || [-450 + dist, 0, 0] } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-rajaa', value: rPos || [-450, 0, 0] } }));
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-rot-sandra', value: rotS !== undefined ? rotS : 0 } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-sandra', value: sPos || [-200, 0, -300 + dist / 2] } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-pos-rajaa', value: rPos || [-200, 0, -300 - dist / 2] } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-rot-sandra', value: rotS !== undefined ? rotS : Math.PI } }));
     document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-rot-rajaa', value: rotR !== undefined ? rotR : 0 } }));
   };
 
@@ -1486,7 +1485,7 @@ export function SidePanel({
     if (autoCycleIndex < 0) return;
     const anim = coupleAnims[autoCycleIndex];
     if (anim) {
-      const trigger = () => playCoupleAnim(
+      playCoupleAnim(
         anim.s,
         anim.r,
         anim.dist ?? 50,
@@ -1495,39 +1494,11 @@ export function SidePanel({
         anim.sPos,
         anim.rPos
       );
-      
-      if (!isFirstMountRef.current) {
-        trigger();
-      } else {
-        isFirstMountRef.current = false;
-        const fallbackTimer = setTimeout(trigger, 1500);
-        return () => clearTimeout(fallbackTimer);
-      }
     }
   }, [autoCycleIndex]);
 
   useEffect(() => {
-    const onReady = (e: any) => {
-      if (e.detail?.id === 'sandra' && autoCycleIndex === 0) {
-        const anim = coupleAnims[0];
-        if (anim) {
-          playCoupleAnim(
-            anim.s,
-            anim.r,
-            anim.dist ?? 50,
-            anim.rotS,
-            anim.rotR,
-            anim.sPos,
-            anim.rPos
-          );
-        }
-      }
-    };
-    document.addEventListener('walker-ready', onReady);
-    return () => document.removeEventListener('walker-ready', onReady);
-  }, [autoCycleIndex]);
-
-  useEffect(() => {
+    if (autoCycleIndex < 0) return;
     const onFinished = (e: any) => {
       // Only cycle when sandra finishes to avoid double triggers
       if (e.detail?.id === 'sandra') {
@@ -1536,7 +1507,7 @@ export function SidePanel({
     };
     document.addEventListener('walker-anim-finished', onFinished);
     return () => document.removeEventListener('walker-anim-finished', onFinished);
-  }, []);
+  }, [autoCycleIndex]);
 
   const AnimationsCoupleSection = (
     <div
