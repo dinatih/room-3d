@@ -40,7 +40,7 @@ import { LampOla }       from './items/LampOla';
 import { MackaparGroup } from './items/MackaparGroup';
 import { MannequinHead } from './items/MannequinHead';
 import { GoogleNestMini } from './items/GoogleNestMini';
-import { MuligRail }     from './items/MuligRail';
+import { Mulig30179435 } from './items/Mulig30179435';
 import { Scooter }       from './items/Scooter';
 import { Smorkull }      from './items/Smorkull';
 import { Sneakers }      from './items/Sneakers';
@@ -616,7 +616,7 @@ export function Decor() {
         <LackShelf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true, isIkea: true, itemName: 'Penderie Mulig' }}>
-        <MuligRail item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Mulig30179435 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       <group position={[110, 1, 500]} userData={{ animUnit: true, isIkea: true, itemName: 'Poubelle Fniss Couloir' }}>
         <Fniss item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
