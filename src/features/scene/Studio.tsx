@@ -330,6 +330,7 @@ export function Studio() {
       <LoadingProgress onComplete={() => setBuildAnim(true)} />
       <Canvas
         style={{ width: '100%', height: '100%' }}
+        dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
         frameloop={showInventory || isIdle ? 'never' : 'demand'}
         /* 
          * ── Placement & configuration initiale de la caméra 3D ───────────────

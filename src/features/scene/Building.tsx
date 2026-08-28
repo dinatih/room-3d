@@ -1487,7 +1487,9 @@ function ReflectorMirror({ w, h, position, rotationY }: {
   const reflector = useMemo(() => {
     // Résolution de base basse pour sauver les FPS. Le mode HD est géré via cameraState.
     const res = cameraState.mirrorsHD ? 512 : 256;
-    const mir = new Reflector(new THREE.PlaneGeometry(w, h), {
+    const geo = new THREE.PlaneGeometry(w, h);
+    geo.computeBoundingBox();
+    const mir = new Reflector(geo, {
       textureWidth:  res,
       textureHeight: res,
       color: 0xbbbbbb,
@@ -1495,9 +1497,33 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     mir.position.set(...position);
     mir.rotation.y = rotationY;
 
+    const mirWorldPos = new THREE.Vector3();
+    const mirNormal = new THREE.Vector3(0, 0, 1);
+    const camToMir = new THREE.Vector3();
+    const mirQuat = new THREE.Quaternion();
+    const projScreenMatrix = new THREE.Matrix4();
+    const frustum = new THREE.Frustum();
+    const worldBox = new THREE.Box3();
+
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
+
+      // 1. Test d'orientation : la caméra doit être devant la face réfléchissante
+      mir.getWorldPosition(mirWorldPos);
+      mir.getWorldQuaternion(mirQuat);
+      mirNormal.set(0, 0, 1).applyQuaternion(mirQuat);
+      camToMir.subVectors(mirWorldPos, camera.position);
+      if (camToMir.dot(mirNormal) >= 0) return;
+
+      // 2. Frustum Culling : le miroir doit être dans le champ de vision de la caméra
+      if (geometry.boundingBox) {
+        projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+        frustum.setFromProjectionMatrix(projScreenMatrix);
+        worldBox.copy(geometry.boundingBox).applyMatrix4(mir.matrixWorld);
+        if (!frustum.intersectsBox(worldBox)) return;
+      }
+
       _reflectionDepth++;
 
       // Adaptation dynamique (résolution / layer mask)
@@ -1519,7 +1545,6 @@ function ReflectorMirror({ w, h, position, rotationY }: {
       camera.layers.mask = mirrorMask;
 
       origOnBeforeRender(renderer, scene, camera, geometry, material, group);
-
 
       camera.layers.mask = oldMask;
       _reflectionDepth--;
@@ -1543,6 +1568,7 @@ function MergedReflector({ planes, position, rotationY }: {
       return geo;
     });
     const mergedGeo = mergeGeometries(geos, false);
+    mergedGeo.computeBoundingBox();
 
     const res = cameraState.mirrorsHD ? 512 : 256;
     const mir = new Reflector(mergedGeo, {
@@ -1553,9 +1579,33 @@ function MergedReflector({ planes, position, rotationY }: {
     mir.position.set(...position);
     mir.rotation.y = rotationY;
 
+    const mirWorldPos = new THREE.Vector3();
+    const mirNormal = new THREE.Vector3(0, 0, 1);
+    const camToMir = new THREE.Vector3();
+    const mirQuat = new THREE.Quaternion();
+    const projScreenMatrix = new THREE.Matrix4();
+    const frustum = new THREE.Frustum();
+    const worldBox = new THREE.Box3();
+
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
+
+      // 1. Test d'orientation : la caméra doit être devant la face réfléchissante
+      mir.getWorldPosition(mirWorldPos);
+      mir.getWorldQuaternion(mirQuat);
+      mirNormal.set(0, 0, 1).applyQuaternion(mirQuat);
+      camToMir.subVectors(mirWorldPos, camera.position);
+      if (camToMir.dot(mirNormal) >= 0) return;
+
+      // 2. Frustum Culling : le miroir doit être dans le champ de vision de la caméra
+      if (geometry.boundingBox) {
+        projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+        frustum.setFromProjectionMatrix(projScreenMatrix);
+        worldBox.copy(geometry.boundingBox).applyMatrix4(mir.matrixWorld);
+        if (!frustum.intersectsBox(worldBox)) return;
+      }
+
       _reflectionDepth++;
 
       const targetRes = cameraState.mirrorsHD ? 512 : 256;
