@@ -134,6 +134,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const walkYaw   = useRef(initialWalker.rot);
   const walkPitch = useRef(0);
   const orbitYaw  = useRef(initialWalker.rot);
+  const orbitYawOffset = useRef(0); // Différentiel d'angle relatif au personnage
   const orbitPitch = useRef(0.25);
   const orbitDistance = useRef(220);
   const keys      = useRef(new Set<string>());
@@ -179,13 +180,20 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       const targetY = walkPos.current.y * 0.75; // hauteur torse / regard
       const targetZ = walkPos.current.z;
 
-      // Si l'utilisateur n'a pas pris le contrôle de l'orbite manuellement, la caméra suit intelligemment le dos du PNJ
-      if (!cameraState.isDragging && !keys.current.has('ArrowLeft') && !keys.current.has('ArrowRight')) {
-        let diffYaw = walkYaw.current - orbitYaw.current;
+      // Si l'utilisateur est en train de corriger l'angle manuellement (souris ou touches), on met à jour le différentiel
+      if (cameraState.isDragging || keys.current.has('ArrowLeft') || keys.current.has('ArrowRight')) {
+        let diff = orbitYaw.current - walkYaw.current;
+        while (diff > Math.PI) diff -= 2 * Math.PI;
+        while (diff < -Math.PI) diff += 2 * Math.PI;
+        orbitYawOffset.current = diff;
+      } else {
+        // En suivi automatique : la caméra conserve le différentiel d'angle choisi par l'utilisateur tout en suivant les virages du PNJ
+        const desiredYaw = walkYaw.current + orbitYawOffset.current;
+        let diffYaw = desiredYaw - orbitYaw.current;
         while (diffYaw > Math.PI) diffYaw -= 2 * Math.PI;
         while (diffYaw < -Math.PI) diffYaw += 2 * Math.PI;
-        // Suivi fluide et naturel de l'orientation du personnage
-        orbitYaw.current += diffYaw * 0.05;
+        // Suivi fluide et naturel
+        orbitYaw.current += diffYaw * 0.08;
       }
 
       // Calcul de la distance d'orbite avec léger recul dynamique
@@ -214,6 +222,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     walkPos.current = { x, y: activeWalkH(), z };
     if (walkMode === 'walk') {
       orbitYaw.current = walkYaw.current;
+      orbitYawOffset.current = 0;
       orbitPitch.current = 0.25;
       orbitDistance.current = 220;
 
