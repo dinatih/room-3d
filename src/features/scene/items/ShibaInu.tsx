@@ -141,25 +141,25 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
         if (ai.state === 'idle') {
           ai.timer -= delta;
           if (ai.timer <= 0) {
-            // Pick new target inside apartment and garden bounds
+            // Pick new target (champ d'action complet appartement, jardin et zones AI etendues)
             const rand = Math.random();
             let tx, tz;
-            if (rand < 0.45) {
-              // Garden (45%) : Z entre -330 et -60, X entre 40 et 260
-              tx = 40 + Math.random() * 220;
-              tz = -330 + Math.random() * 270;
-            } else if (rand < 0.80) {
-              // Main Room (35%) : Z entre 50 et 350, X entre 50 et 250
-              tx = 50 + Math.random() * 200;
-              tz = 50 + Math.random() * 300;
-            } else if (rand < 0.92) {
-              // Couloir (12%) : Z entre 420 et 560, X entre 130 et 260
-              tx = 130 + Math.random() * 130;
-              tz = 420 + Math.random() * 140;
+            if (rand < 0.5) {
+              // Garden étendu (50%)
+              tx = -350 + Math.random() * 1000;  // X: -350 to 650
+              tz = -350 + Math.random() * 320; // Z: -350 to -30
+            } else if (rand < 0.7) {
+              // Main Room (20%)
+              tx = 50 + Math.random() * 200;   // X: 50 to 250
+              tz = 50 + Math.random() * 300;   // Z: 50 to 350
+            } else if (rand < 0.9) {
+              // Couloir rouge (20%) - Zone AI Entrée bat B
+              tx = -350 + Math.random() * 1000; // X: -350 to 650
+              tz = 598.3 - (tx - 348.5) * 0.57735; // Suit l'axe central du couloir
             } else {
-              // Salle de bain (8%) : Z entre 450 et 550, X entre 30 et 110
-              tx = 30 + Math.random() * 80;
-              tz = 450 + Math.random() * 100;
+              // Bathroom (10%)
+              tx = 20 + Math.random() * 110;
+              tz = 520 + Math.random() * 120;
             }
             ai.targetPos.set(tx, 0, tz);
             
