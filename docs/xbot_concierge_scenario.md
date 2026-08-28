@@ -24,11 +24,11 @@ Xbot effectue des rondes de contrôle et d'inspection dans les logements :
 | 2 | `corridor-entry-door` | `MOVE_TO` | Franchissement du seuil |
 | 3 | Porte d'entrée | `INTERACT` | Fermeture de la porte (`entryDoor = false`) |
 | 4 | `bathroom-center` | `MOVE_TO` | Déplacement vers le centre de la SDB (X: 100, Z: 550) |
-| 5 | SDB | `ROTATE_360` | Tour complet à 360° lent (~5s) pour inspection |
+| 5 | SDB | `ROTATE_360` | Tour complet à 360° lent (~5s) avec `anim_right_turn.glb` |
 | 6 | `living-center` | `MOVE_TO` | Déplacement vers le centre du séjour (X: 160, Z: 200) |
-| 7 | Salon | `ROTATE_360` | Tour complet à 360° lent (~6s) pour inspection |
+| 7 | Salon | `ROTATE_360` | Tour complet à 360° lent (~6s) avec `anim_right_turn.glb` |
 | 8 | `corridor-center` | `MOVE_TO` | Déplacement vers le centre du couloir (X: 240, Z: 480) |
-| 9 | Couloir | `ROTATE_360` | Tour complet à 360° lent (~4s) pour inspection |
+| 9 | Couloir | `ROTATE_360` | Tour complet à 360° lent (~4s) avec `anim_right_turn.glb` |
 | 10 | Porte d'entrée | `INTERACT` | Ouverture de la porte (`entryDoor = true`) |
 | 11 | `outdoor-entry-door` | `MOVE_TO` | Sortie vers le couloir extérieur |
 | 12 | Porte d'entrée | `INTERACT` | Fermeture de la porte (`entryDoor = false`) |

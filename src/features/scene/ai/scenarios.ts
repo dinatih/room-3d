@@ -97,15 +97,15 @@ export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
 
   // ── 2. Inspection Salle de bain ──
   { type: 'MOVE_TO', targetNodeId: 'bathroom-center' },
-  { type: 'ROTATE_360', duration: 5.0, animation: 'animations/poses_idles/anim_texting_while_standing.glb' },
+  { type: 'ROTATE_360', duration: 5.0, animation: 'animations/locomotion/anim_right_turn.glb' },
 
   // ── 3. Inspection Salon / Séjour ──
   { type: 'MOVE_TO', targetNodeId: 'living-center' },
-  { type: 'ROTATE_360', duration: 6.0, animation: 'animations/poses_idles/anim_texting_while_standing.glb' },
+  { type: 'ROTATE_360', duration: 6.0, animation: 'animations/locomotion/anim_right_turn.glb' },
 
   // ── 4. Inspection Couloir ──
   { type: 'MOVE_TO', targetNodeId: 'corridor-center' },
-  { type: 'ROTATE_360', duration: 4.0, animation: 'animations/poses_idles/anim_texting_while_standing.glb' },
+  { type: 'ROTATE_360', duration: 4.0, animation: 'animations/locomotion/anim_right_turn.glb' },
 
   // ── 5. Sortie et direction entrée couloir Bâtiment B (attente 1min30 avant prochaine ronde) ──
   { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, animation: 'animations/interactions/anim_open_door_outwards.glb', duration: 0.8 },

@@ -458,7 +458,7 @@ export function useAgentController(
         statusRef.current = 'INTERACTING';
         const duration = currentInstruction.duration || 5.0;
         timerRef.current = duration;
-        stateRef.current.animation = currentInstruction.animation || 'animations/poses_idles/anim_texting_while_standing.glb';
+        stateRef.current.animation = currentInstruction.animation || 'animations/locomotion/anim_right_turn.glb';
         const logKey = `rotate360-${stepIndexRef.current}-${dynamicNavIndexRef.current}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
@@ -785,7 +785,7 @@ export function useAgentController(
         const totalDuration = currentInstruction.duration || 5.0;
         const turnSpeed = (2 * Math.PI) / totalDuration;
         stateRef.current.rotY = (stateRef.current.rotY + turnSpeed * dt) % (2 * Math.PI);
-        stateRef.current.animation = currentInstruction.animation || 'animations/poses_idles/anim_texting_while_standing.glb';
+        stateRef.current.animation = currentInstruction.animation || 'animations/locomotion/anim_right_turn.glb';
 
         timerRef.current -= dt;
         if (timerRef.current <= 0) {
