@@ -72,7 +72,6 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
-      m.frustumCulled = false;
       if (m.material) {
         const mat = m.material as THREE.MeshStandardMaterial;
         mat.metalness = 0;
