@@ -139,7 +139,7 @@ export function MannequinHead({
   }, [scene, onSize]);
 
   // Offset d'alignement manuel pour la tête de Mannequin (ajusté pour poser la perruque sur le crâne)
-  const MANNEQUIN_WIG_OFFSET: [number, number, number] = [0, 18.0, 0];
+  const MANNEQUIN_WIG_OFFSET: [number, number, number] = [0, 10.0, 0];
 
   return (
     <group ref={ref}>
