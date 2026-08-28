@@ -4,8 +4,7 @@ import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
 import { SceneItemProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
-import { Spruttig20317079 } from './Spruttig20317079';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+import { SpruttigInstances } from './Spruttig20317079';
 
 // ── 6 cintres Spruttig sur la tringle Mulig ──────────────────────────────────
 const HANGER_Z   = [-20, -12, -4, 4, 12, 20];
@@ -14,6 +13,11 @@ const HANGER_ROTS = [0.04, -0.03, 0.05, -0.02, 0.03, -0.04];
 // Barre avancée à X = 10.5 cm par rapport au centre de Mulig
 const RAIL_X = 10.5;
 const RAIL_Y = 18.5 - 19;
+
+const MULIG_HANGER_TRANSFORMS = HANGER_Z.map((z, i) => ({
+  position: [RAIL_X, RAIL_Y, z] as [number, number, number],
+  rotation: [0, HANGER_ROTS[i], 0] as [number, number, number],
+}));
 
 /**
  * MULIG Tringle à vêtements, blanc
@@ -46,17 +50,11 @@ export function Mulig30179435({ onSize, ...props }: SceneItemProps) {
     <group ref={groupRef} {...props}>
       <primitive object={scene} />
 
-      {/* 6 cintres Spruttig sur la tringle Mulig */}
-      {HANGER_Z.map((z, i) => (
-        <group
-          key={`mulig-hanger-${i}`}
-          position={[RAIL_X, RAIL_Y, z]}
-          rotation={[0, HANGER_ROTS[i], 0]}
-          userData={{ animUnit: true, isIkea: true, itemName: `Cintre Spruttig Mulig ${i + 1}` }}
-        >
-          <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-      ))}
+      {/* 6 cintres Spruttig instanciés en un seul draw call */}
+      <SpruttigInstances
+        transforms={MULIG_HANGER_TRANSFORMS}
+        userData={{ animUnit: true, isIkea: true, itemName: 'Cintres Spruttig Mulig' }}
+      />
     </group>
   );
 }
