@@ -15,7 +15,7 @@ type AIState = {
   timer: number;
 };
 
-// Points d'intérêts dans le jardin (Z < 0)
+// Points d'intérêts dans le jardin (Z < 0) et le salon
 const LANDING_POINTS = [
   new THREE.Vector3(149, 50, -231),  // Baignoire (rebord)
   new THREE.Vector3(270, 75, -110),  // ArmrestSofa (dossier)
@@ -23,13 +23,11 @@ const LANDING_POINTS = [
   new THREE.Vector3(40, 62, -90),    // ChestBench (dessus)
   new THREE.Vector3(100, 140, -145), // PottedPalm (feuilles)
   new THREE.Vector3(150, 150, -390), // Mur fond jardin
-  new THREE.Vector3(5, 120, -200),   // Palissade bois (gauche)
-  new THREE.Vector3(295, 120, -200), // Palissade bois (droite)
-  // Zones AI Ouest et Est (Entrée cours et Entrée bat B)
-  new THREE.Vector3(-350, 0, 1002),  // Entrée bat B (couloir ouest)
-  new THREE.Vector3(-350, 0, -200),  // Entrée cours bat B (jardin ouest)
-  new THREE.Vector3(650, 0, 424),    // Entrée bat B (couloir est)
-  new THREE.Vector3(650, 0, -200)    // Entrée cours bat B (jardin est)
+  new THREE.Vector3(20, 120, -200),  // Palissade bois (gauche)
+  new THREE.Vector3(280, 120, -200), // Palissade bois (droite)
+  new THREE.Vector3(210, 30, -200),  // Rebound jardin
+  new THREE.Vector3(264, 45, -320),  // Boîte Vättersö
+  new THREE.Vector3(150, 160, 150),  // Hauteur dans le salon
 ];
 
 export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPreview = false, onSize }: { isPreview?: boolean, previewAnim?: string, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
@@ -72,6 +70,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
+      m.frustumCulled = false;
       if (m.material) {
         const mat = m.material as THREE.MeshStandardMaterial;
         mat.metalness = 0;
