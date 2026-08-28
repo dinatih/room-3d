@@ -464,8 +464,9 @@ export function useAgentController(
       const dz = tz - stateRef.current.z;
       const dist = Math.sqrt(dx * dx + dz * dz);
 
-      // Seuil d'arrivée souple à 15 cm (pour les waypoints de passage) ou 5 cm (pour les smart objects)
-      const ARRIVAL_THRESHOLD = (currentInstruction.type === 'USE_OBJECT' || (!hasNavStep && currentInstruction.smartObjectId)) ? 8.0 : 18.0;
+      // Seuil d'arrivée souple : 30 cm pour duo-zone, 8 cm pour smart objects, 18 cm pour les waypoints
+      const isDuoZone = currentInstruction.smartObjectId === 'duo-zone';
+      const ARRIVAL_THRESHOLD = isDuoZone ? 30.0 : ((currentInstruction.type === 'USE_OBJECT' || (!hasNavStep && currentInstruction.smartObjectId)) ? 8.0 : 18.0);
 
       if (dist < ARRIVAL_THRESHOLD) {
         // Arrivé au waypoint
@@ -697,7 +698,7 @@ export function useAgentController(
           stateRef.current.animation = duoRoleRef.current === 'roleA'
             ? 'animations/poses_idles/miley_armature_p2_standoff_provokes_m1.glb'
             : 'animations/poses_idles/miley_armature_p2_standoff_provokes_m2.glb';
-          stateRef.current.rotY = duoRoleRef.current === 'roleA' ? Math.PI : 0;
+          stateRef.current.rotY = 0;
 
           // À la moitié du délai (10s), appeler le PNJ le plus proche
           if (duoWaitTimerRef.current >= 10.0 && !duoInvitedRef.current) {

@@ -142,13 +142,13 @@ class DuoSessionManager {
     const [bx, by, bz] = this.basePos;
     const dist = def.dist ?? 50;
 
-    let posA: [number, number, number] = [bx, by, bz + dist / 2];
-    let posB: [number, number, number] = [bx, by, bz - dist / 2];
+    let posA: [number, number, number] = [bx + dist, by, bz];
+    let posB: [number, number, number] = [bx, by, bz];
 
     if (def.offsetA) posA = [bx + def.offsetA[0], by + def.offsetA[1], bz + def.offsetA[2]];
     if (def.offsetB) posB = [bx + def.offsetB[0], by + def.offsetB[1], bz + def.offsetB[2]];
 
-    const rotA = def.rotA !== undefined ? def.rotA : Math.PI;
+    const rotA = def.rotA !== undefined ? def.rotA : 0;
     const rotB = def.rotB !== undefined ? def.rotB : 0;
 
     return {
