@@ -15,8 +15,10 @@ export function Lack90282180({ onSize, ...props }: SceneItemProps) {
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
+    scene.rotation.set(0, 0, 0);
     removeGlbLines(scene);
     scene.scale.setScalar(100);
+    scene.rotation.x = -Math.PI / 2;
     mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
