@@ -32,7 +32,8 @@ Xbot effectue des rondes de contrôle et d'inspection dans les logements :
 | 10 | Porte d'entrée | `INTERACT` | Ouverture de la porte (`entryDoor = true`) |
 | 11 | `outdoor-entry-door` | `MOVE_TO` | Sortie vers le couloir extérieur |
 | 12 | Porte d'entrée | `INTERACT` | Fermeture de la porte (`entryDoor = false`) |
-| 13 | `outdoor-neighbor-door` | `MOVE_TO` | Marche jusqu'au palier de l'appartement voisin |
+| 13 | `building-b-corridor` | `MOVE_TO` | Marche jusqu'à l'entrée couloir du Bâtiment B |
+| 14 | Entrée Bât B | `WAIT` | Attente de 1min30 (90s) avant la prochaine ronde |
 
 ---
 

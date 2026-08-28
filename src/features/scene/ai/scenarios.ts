@@ -107,12 +107,12 @@ export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
   { type: 'MOVE_TO', targetNodeId: 'corridor-center' },
   { type: 'ROTATE_360', duration: 4.0, animation: 'animations/poses_idles/anim_texting_while_standing.glb' },
 
-  // ── 5. Sortie et direction porte du voisin ──
+  // ── 5. Sortie et direction entrée couloir Bâtiment B (attente 1min30 avant prochaine ronde) ──
   { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, animation: 'animations/interactions/anim_open_door_outwards.glb', duration: 0.8 },
   { type: 'MOVE_TO', targetNodeId: 'outdoor-entry-door' },
   { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.5 },
-  { type: 'MOVE_TO', targetNodeId: 'outdoor-neighbor-door' },
-  { type: 'WAIT', duration: 4.0, animation: 'animations/poses_idles/anim_texting_while_standing.glb' }
+  { type: 'MOVE_TO', smartObjectId: 'building-b-corridor', slotId: 'visit' },
+  { type: 'WAIT', duration: 90.0, animation: 'animations/poses_idles/anim_texting_while_standing.glb' }
 ];
 
 // Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)

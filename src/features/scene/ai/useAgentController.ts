@@ -32,7 +32,10 @@ export const NPC_WALK_ANIMATIONS = [
   'animations/locomotion/anim_wheelbarrow_walk_2.glb'
 ];
 
-export function getRandomNpcWalkAnimation(): string {
+export function getRandomNpcWalkAnimation(characterId?: string): string {
+  if (characterId === 'xbot') {
+    return 'animations/locomotion/anim_walking.glb';
+  }
   return NPC_WALK_ANIMATIONS[Math.floor(Math.random() * NPC_WALK_ANIMATIONS.length)];
 }
 
@@ -110,8 +113,8 @@ export function useAgentController(
   const dynamicNavIndexRef = useRef(0);
   const activeNavStepIndexRef = useRef<number>(-1);
 
-  // Animation de marche aléatoire courante pour les trajets
-  const currentWalkAnimRef = useRef<string>(getRandomNpcWalkAnimation());
+  // Animation de marche courante pour les trajets (fixe anim_walking pour Xbot, variée pour autres PNJ)
+  const currentWalkAnimRef = useRef<string>(getRandomNpcWalkAnimation(_characterId));
 
   // Ref pour éviter les logs dupliqués à chaque frame
   const lastLogRef = useRef<string>('');
@@ -553,7 +556,7 @@ export function useAgentController(
           }
         } else {
           statusRef.current = 'IDLE';
-          currentWalkAnimRef.current = getRandomNpcWalkAnimation();
+          currentWalkAnimRef.current = getRandomNpcWalkAnimation(_characterId);
           if (hasNavStep) {
             dynamicNavIndexRef.current++;
             if (dynamicNavIndexRef.current >= dynamicNavQueueRef.current.length) {
