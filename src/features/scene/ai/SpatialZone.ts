@@ -144,40 +144,45 @@ export class SpatialZone {
 }
 
 /**
- * Définition des volumes 3D des pièces de l'appartement et de l'environnement
+ * Définition des volumes 3D des pièces de l'appartement et de l'environnement,
+ * directement indexés et délimités par les piliers architecturaux (PILLAR_DEFS).
  */
 export const SPATIAL_ZONES_CONFIG: SpatialZoneDef[] = [
   {
     id: 'living',
     name: 'Séjour / Salon',
     environment: 'indoor',
+    // Délimité par : corner-nw, corner-ne, corner-se, corner-sw, niche-beam, kitchen-*, door-living-*
     bounds: {
-      min: [0, 0, 0],
-      max: [300, 250, 400]
+      min: [-15, 0, -10],
+      max: [330, 250, 407.2]
     }
   },
   {
     id: 'bathroom',
     name: 'Salle de bain',
     environment: 'indoor',
+    // Délimité par : bath-nw, bath-ne, bath-se, shower-*, door-bath-*, diag-sw
     bounds: {
-      min: [-10, 0, 400],
-      max: [192, 250, 680]
+      min: [-15, 0, 460],
+      max: [195.6, 250, 685]
     }
   },
   {
     id: 'corridor',
     name: 'Couloir Entrée',
     environment: 'indoor',
+    // Délimité par : placard couloir (kitchen-ne, kitchen-se), corner-se, door-living-*, door-bath-*, diag-ne, door-entry-w
     bounds: {
-      min: [192, 0, 400],
-      max: [300, 250, 680]
+      min: [130, 0, 400],
+      max: [330, 250, 685]
     }
   },
   {
     id: 'garden',
     name: 'Jardin & Terrasse Nord',
     environment: 'outdoor',
+    // Délimité par : corner-nw-ext, corner-ne-ext, garden-e
     bounds: {
       min: [-100, 0, -800],
       max: [450, 500, 0]
@@ -187,6 +192,7 @@ export const SPATIAL_ZONES_CONFIG: SpatialZoneDef[] = [
     id: 'outdoor_corridor',
     name: 'Extérieur Couloir / Sortie Sud-Ouest',
     environment: 'outdoor',
+    // Délimité par : diag-sw-end, issue sud
     bounds: {
       min: [-500, 0, 100],
       max: [-10, 500, 1200]
