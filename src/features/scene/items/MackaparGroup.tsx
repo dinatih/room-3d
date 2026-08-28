@@ -1,29 +1,22 @@
-/**
- * MackaparGroup.tsx — Mackapär + salopette + 2 boîtes Drona sur le dessus.
- *
- * Coordonnées locales : Y=0 = sol, centré XZ.
- * Placement monde : wrapper group dans Placements.tsx (GlbPlacements)
- *   → position=[MACK_X, 0, MACK_Z], rotation-y={Math.PI / 2}
- * Utilisé aussi dans l'inventaire via registry.ts.
- */
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Mackapar50530988 } from './Mackapar50530988';
+import { Spruttig20317079 } from './Spruttig20317079';
 // import { Salopette }   from './Salopette';
 import { DroneCell } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
-// const RAIL_Y = 165; // hauteur de la barre porte-vêtements
+// Hauteurs des tringles de penderie MACKAPÄR (hook height cintre = 19 cm)
+const TOP_RAIL_Y    = 178 - 19; // 159 cm
+const BOTTOM_RAIL_Y = 102 - 19; // 83 cm
+const HANGER_Z      = [-25, -15, -5, 5, 15, 25];
+const HANGER_ROTS   = [0.03, -0.04, 0.02, -0.03, 0.05, -0.02];
+
 const DF     = 33;  // taille boîte Drona
 
 // ── Drona (2 boîtes sur le dessus) ───────────────────────────────────────────
-// Positions locales dérivées depuis DronaBoxes.tsx addSingle() :
-//   world (mpCX ± 20, 200+DF/2+0.2, mpCZ+0.5), rotY=π/2
-//   wrapper rotY=π/2 → x_local = dz, z_local = −dx
-//   → (0.5, 200+DF/2+0.2, ±20), rotY=0
-
 const dronaMatrices = (() => {
   const dummy = new THREE.Object3D();
   const dronaY = 200 + DF / 2 + 0.2;
@@ -50,6 +43,31 @@ export function MackaparGroup({ onSize }: SceneItemProps) {
       <group userData={{ animUnit: true, isIkea: true }}>
         <Mackapar50530988 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
+
+      {/* 6 cintres Spruttig sur le portant supérieur */}
+      {HANGER_Z.map((z, i) => (
+        <group
+          key={`top-hanger-${i}`}
+          position={[0, TOP_RAIL_Y, z]}
+          rotation={[0, HANGER_ROTS[i], 0]}
+          userData={{ animUnit: true, isIkea: true, itemName: `Cintre Spruttig Haut ${i + 1}` }}
+        >
+          <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      ))}
+
+      {/* 6 cintres Spruttig sur le portant inférieur */}
+      {HANGER_Z.map((z, i) => (
+        <group
+          key={`bottom-hanger-${i}`}
+          position={[0, BOTTOM_RAIL_Y, z]}
+          rotation={[0, -HANGER_ROTS[i], 0]}
+          userData={{ animUnit: true, isIkea: true, itemName: `Cintre Spruttig Bas ${i + 1}` }}
+        >
+          <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      ))}
+
       {/* Salopette suspendue à la barre */}
       {/* <group userData={{ animUnit: true, isIkea: true }}>
         <group position={[0, RAIL_Y - 120, 0]}>
@@ -70,3 +88,4 @@ export function MackaparGroup({ onSize }: SceneItemProps) {
     </group>
   );
 }
+
