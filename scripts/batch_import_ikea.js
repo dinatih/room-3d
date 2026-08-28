@@ -35,15 +35,7 @@ const toComponentName = (name) => {
 };
 
 const URLS = [
-    'https://www.ikea.com/fr/fr/p/vathult-eclairage-led-element-miroir-couleur-aluminium-40467548/',
-    'https://www.ikea.com/fr/fr/p/tisken-panier-a-ventouse-blanc-40381253/',
-    'https://www.ikea.com/fr/fr/p/nissedal-miroir-noir-50320320/',
-    'https://www.ikea.com/fr/fr/p/nissedal-miroir-noir-70320319/',
-    'https://www.ikea.com/fr/fr/p/nissedal-miroir-noir-30320321/',
-    'https://www.ikea.com/fr/fr/p/vallamosse-mitigeur-thermostatique-pour-douche-chrome-10349655/',
-    'https://www.ikea.com/fr/fr/p/lillviken-bouchon-20317852/',
-    'https://www.ikea.com/fr/fr/p/brogrund-barre-porte-serviettes-acier-inoxydable-30328534/',
-    'https://www.ikea.com/fr/fr/p/brogrund-etagere-murale-ou-porte-serviettes-acier-inoxydable-70333982/'
+    'https://www.ikea.com/fr/fr/p/vallamosse-barre-avec-douchette-haut-reglable-chrome-10349660/'
 ];
 
 async function importUrl(browser, url) {
@@ -298,5 +290,6 @@ useGLTF.preload('/${itemGlbRelPath}');
     }
 
     await browser.close();
-    console.log('\nAll 17 items imported successfully!');
+    console.log('\nImport finished!');
+    process.exit(0);
 })();

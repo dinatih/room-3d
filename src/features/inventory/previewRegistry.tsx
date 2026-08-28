@@ -1,3 +1,4 @@
+import { Vallamosse10349660 } from '@features/scene/items/Vallamosse10349660';
 import { Brogrund70333982 } from '@features/scene/items/Brogrund70333982';
 import { Brogrund30328534 } from '@features/scene/items/Brogrund30328534';
 import { Lillviken20317852 } from '@features/scene/items/Lillviken20317852';
@@ -98,6 +99,7 @@ import { GoogleNestMini }                             from '@features/scene/item
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'vallamosse10349660': Vallamosse10349660,
   'brogrund70333982': Brogrund70333982,
   'brogrund30328534': Brogrund30328534,
   'lillviken20317852': Lillviken20317852,
