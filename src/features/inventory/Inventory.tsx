@@ -7,6 +7,8 @@ import { INVENTORY, CATEGORIES, STORAGE_SPACES, type InventoryItem, type Storage
 import { InventoryPreview } from './InventoryPreview';
 import { SpatialZonePreview } from './SpatialZonePreview';
 import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
+import { DUO_ANIMATIONS } from '@features/scene/ai/duoAnimations';
+import { duoSessionManager } from '@features/scene/ai/duoSessionManager';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 type PreviewTarget = InventoryItem | StorageSpace | SpatialZone | null;
@@ -258,6 +260,72 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
         <div className="inventory-detail-notes">
           {(item as any).notes || "Aucune note descriptive disponible pour cet élément."}
         </div>
+
+        {!isStorage && !isZone && (item as InventoryItem).category === 'walkers' && item.id !== 'ushiro' && item.id !== 'robin-bird' && (
+          <>
+            <hr className="inventory-detail-divider" />
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <div className="inventory-detail-section-label mb-0">👯‍♀️ Animations Duo (Meneur / Rôle A : {(item as any).name})</div>
+              <button
+                type="button"
+                className="btn btn-sm btn-warning text-dark px-2 py-0 fw-bold shadow-sm"
+                style={{ fontSize: '11px', borderRadius: '4px' }}
+                title="Lancer une animation de couple aléatoire avec un partenaire au hasard 🎲"
+                onClick={() => {
+                  const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
+                  if (randomAnim) {
+                    duoSessionManager.forceDuoAnimationWithLeader((item as any).id, randomAnim);
+                  }
+                }}
+              >
+                🎲 Aléatoire
+              </button>
+            </div>
+
+            <div className="mb-2">
+              <select
+                className="form-select form-select-sm"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) {
+                    const def = DUO_ANIMATIONS.find(a => a.id === val);
+                    if (def) {
+                      duoSessionManager.forceDuoAnimationWithLeader((item as any).id, def);
+                    }
+                  }
+                }}
+                defaultValue=""
+                style={{ fontSize: '12px' }}
+              >
+                <option value="" disabled>Sélectionner une animation de couple...</option>
+                {DUO_ANIMATIONS.map(a => (
+                  <option key={a.id} value={a.id}>
+                    {a.icon} {a.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="d-flex flex-column gap-1 overflow-auto" style={{ maxHeight: '180px', paddingRight: '4px' }}>
+              {DUO_ANIMATIONS.map(a => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => duoSessionManager.forceDuoAnimationWithLeader((item as any).id, a)}
+                  className="btn btn-sm btn-outline-secondary text-start d-flex align-items-center justify-content-between px-2 py-1 bg-white border"
+                  style={{ fontSize: '11px', borderRadius: '6px' }}
+                >
+                  <span className="text-truncate me-2">
+                    <span className="me-1">{a.icon}</span> {a.label}
+                  </span>
+                  <span className="badge bg-light text-secondary border" style={{ fontSize: '9px' }}>
+                    x3
+                  </span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         <div className="inventory-detail-actions mt-3">
           <button className="inventory-btn-edit" onClick={() => alert(`Modifier : ${(item as any).name}`)}>✏️ Modifier</button>

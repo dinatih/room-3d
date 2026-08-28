@@ -327,6 +327,61 @@ class DuoSessionManager {
     this.emitChange();
     return { targetA, targetB };
   }
+
+  /**
+   * Force le déclenchement d'une animation de couple avec un meneur (Rôle A) spécifique (ex: depuis l'Inventaire du personnage).
+   * Choisit aléatoirement un autre PNJ autonome comme partenaire (Rôle B).
+   */
+  public forceDuoAnimationWithLeader(leaderId: string, def: DuoAnimationDef, partnerId?: string): { targetA: string; targetB: string } | null {
+    const targetA = leaderId;
+
+    // Si aucun partenaire n'est spécifié, choisir un autre PNJ autonome au hasard
+    let targetB = partnerId;
+    if (!targetB) {
+      const candidates = Array.from(AUTONOMOUS_NPC_IDS).filter(id => id !== targetA);
+      targetB = candidates[Math.floor(Math.random() * candidates.length)] || (targetA === 'native' ? 'rosanna' : 'native');
+    }
+
+    if (!targetA || !targetB || targetA === targetB) {
+      return null;
+    }
+
+    // Libérer les anciens occupants éventuels
+    if (this.participantA && this.participantA.characterId !== targetA) {
+      OccupancyManager.releaseSlot('duo-zone', 'roleA', this.participantA.characterId);
+    }
+    if (this.participantB && this.participantB.characterId !== targetB) {
+      OccupancyManager.releaseSlot('duo-zone', 'roleB', this.participantB.characterId);
+    }
+
+    // Configurer la session avec cette animation unique jouée 3 fois
+    this.playlist = [def];
+    this.currentAnimIndex = 0;
+    this.currentRepeatIndex = 0;
+    this.sessionTimer = def.duration ?? 5.0;
+    this.isSessionPlaying = false;
+    this.isSessionComplete = false;
+
+    // Assigner les 2 rôles
+    OccupancyManager.claimSlot('duo-zone', 'roleA', targetA);
+    this.participantA = { characterId: targetA, role: 'roleA', isReady: false };
+
+    OccupancyManager.claimSlot('duo-zone', 'roleB', targetB);
+    this.participantB = { characterId: targetB, role: 'roleB', isReady: false };
+
+    appLog('duo-zone', `🎮 Inventaire Personnage : "${def.label}" (x${this.repeatsPerAnim}) assignée à ${targetA} (Meneur) et ${targetB} (Partenaire aléatoire) !`);
+
+    // Émettre l'invitation prioritaire aux 2 PNJs ciblés
+    document.dispatchEvent(new CustomEvent('npc-invite-duo', {
+      detail: { targetId: targetA, fromId: 'Inventory', forceRole: 'roleA' }
+    }));
+    document.dispatchEvent(new CustomEvent('npc-invite-duo', {
+      detail: { targetId: targetB, fromId: 'Inventory', forceRole: 'roleB' }
+    }));
+
+    this.emitChange();
+    return { targetA, targetB };
+  }
 }
 
 export const duoSessionManager = new DuoSessionManager();
