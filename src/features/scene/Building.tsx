@@ -1591,10 +1591,10 @@ function MergedReflector({ planes, position, rotationY }: {
 
 function MirrorsD() {
   const W_M = 65, H_M = 65;
-  const FT = 1.8, FD = 2.2; // épaisseur fine plaquée au mur (2.2 cm)
+  const FT = 1.8, FD = 5.0; // épaisseur standard Nissedal 5cm
   const cx  = (KITCHEN_X1 + DOOR_START) / 2;
-  const fz  = ROOM_D - FD / 2;
-  const mirZ = ROOM_D - FD + 0.3; // glace affleurante dans le cadre
+  const fz  = ROOM_D - 2 - FD / 2;
+  const mirZ = ROOM_D - 2 - FD + 0.5; // glace à 0.5cm du bord avant
 
   const planes = useMemo(() => [0, 1, 2].map(i => {
     const cy = (WALL_H - 3.5) - H_M / 2 - i * (H_M + 0.5);
@@ -1611,7 +1611,7 @@ function MirrorsD() {
         return (
           <group key={i} userData={{ animUnit: true }}>
             <group position={[cx, cy - H_M / 2, fz]}>
-              <NissedalGlbFrame glb={GLB_65x65} targetD={FD} />
+              <NissedalGlbFrame glb={GLB_65x65} />
             </group>
           </group>
         );
@@ -1625,11 +1625,11 @@ function MirrorsD() {
 function MirrorsA() {
   const MA_W = 40, MA_H = 150;
   const M4_W = 70, M4_H = 160;
-  const FT = 1.8, FD = 2.2; // épaisseur fine plaquée au mur (2.2 cm)
+  const FT = 1.8, FD = 5.0; // épaisseur standard Nissedal 5cm
   const MA_START_Z  = kallaxW1 + 10;
   const MA_BOTTOM_Y = 6;
   const fx  = FD / 2; // centré pour être flush au mur à X=0
-  const mirX = FD - 0.3; // glace affleurante à 0.3cm du bord avant
+  const mirX = FD - 0.5; // glace à 0.5cm du bord avant
 
   const planes = useMemo(() => {
     const p: { w: number; h: number; x: number; y: number }[] = [];
@@ -1659,7 +1659,7 @@ function MirrorsA() {
           <group key={i} userData={{ animUnit: true }}>
             {/* cadre GLB — rotation-y=-π/2 : glace locale -Z → monde +X (face pièce) */}
             <group position={[fx, MA_BOTTOM_Y, mz]} rotation-y={-Math.PI / 2}>
-              <NissedalGlbFrame glb={GLB_40x150} targetD={FD} />
+              <NissedalGlbFrame glb={GLB_40x150} />
             </group>
           </group>
         );
