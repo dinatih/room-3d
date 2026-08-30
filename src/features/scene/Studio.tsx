@@ -53,7 +53,7 @@ const Inventory = lazy(() => import('@features/inventory/Inventory').then(module
 import {
   ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NEIGHBORS, LAYER_LIDAR,
-  LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER,
+  LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER, LAYER_ANIMALS,
 } from '@config';
 
 
@@ -444,7 +444,9 @@ export function Studio() {
             <Walker />
           </CategoryLayerGroup>
           {/* Animaux autonomes (Oiseau Robin, Chien Shiba Inu) */}
-          <Animals />
+          <CategoryLayerGroup layer={LAYER_ANIMALS}>
+            <Animals />
+          </CategoryLayerGroup>
           <GlobalSkeletonHelpers show={layers.skeleton} />
           {/*
            * LAYER_EQUIPMENT (1) — équipements sanitaires et cuisine.
