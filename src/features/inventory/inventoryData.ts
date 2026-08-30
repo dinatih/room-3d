@@ -175,6 +175,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'oral-b-toothbrush-head', name: 'Tête de brosse à dents Oral-B',    brand: 'Oral-B', category: 'bathroom', qty: 6, dims: { w: 1.6, d: 2.1, h: 7.2 }, notes: 'Recharge brosse électrique', glbPath: 'items/oral-b-toothbrush-head/oral-b-toothbrush-head.glb' },
   { id: 'philips-mg9558',   name: 'Tondeuse Philips MG9558/15 Series 9000', brand: 'Philips', category: 'bathroom', qty: 1, dims: { w: 4.5, d: 4.5, h: 22 }, notes: 'Multi-groomer 13 accessoires — barbe, corps, visage — IPX7, 120 min autonomie, 1h charge — SDB vasque' },
   { id: 'bathtub',          name: 'Baignoire',                      brand: '',         category: 'bathroom',  qty: 1, dims: { w: 150,  d: 70,   h: 50   }, notes: 'Coins arrondis, jardin' },
+  { id: 'bird-feeder',      name: 'Mangeoire à oiseaux',            brand: '',         category: 'decor',     qty: 1, dims: { w: 20,   d: 20,   h: 35   }, notes: "Suspendue sous le balcon dans l'angle Nord-Ouest du jardin", glbPath: 'items/bird_feeder/bird_feeder.glb' },
 
   // ── CLOTHING ─────────────────────────────────────────────────────────────────
   { id: 'salopette',        name: 'Salopette noire',                brand: '',         category: 'clothing',  qty: 1, dims: { w: 6,   d: 40,  h: 150 }, notes: 'Noire, suspendue', glbPath: 'characters/clothing/salopette-noir.glb' },

@@ -100,10 +100,12 @@ import { Walker }                                      from '@features/scene/Wal
 import { CHARACTERS }                                 from '@features/scene/walkerConfig';
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
+import { BirdFeeder }                                 from '@features/scene/items/BirdFeeder';
 import { GoogleNestMini }                             from '@features/scene/items/GoogleNestMini';
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'bird-feeder':            BirdFeeder,
   'kallax20275814': Kallax20275814,
   'kallax90301555': Kallax90301555,
   'kallax20301554': Kallax20301554,

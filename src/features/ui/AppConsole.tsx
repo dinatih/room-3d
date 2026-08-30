@@ -17,6 +17,7 @@ const TAG_COLORS: Record<string, string> = {
   system:   '#ffffff',
   perf:     '#ffaa00',
   error:    '#ff0000',
+  robin:    '#ff8833',
   // Tags NPC : peuplés dynamiquement depuis CHARACTERS
   ...Object.fromEntries(CHARACTERS.map(c => [c.id, c.color])),
 };

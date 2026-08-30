@@ -6,8 +6,11 @@ import { useGLTF, useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { isAppIdle } from '@features/scene/idleState';
 import { glbLocalBBox } from '@features/scene/glbUtils';
+import { appLog } from '@features/ui/AppConsole';
 
 const GLB_PATH = '/characters/robin/robin.glb';
+
+export const BIRD_FEEDER_POS = new THREE.Vector3(95, 219, -165);
 
 type AIState = {
   mode: 'autonomous' | 'forced';
@@ -18,6 +21,7 @@ type AIState = {
 
 // Points d'intérêts dans le jardin (Z < 0) et zones AI etendues
 const LANDING_POINTS = [
+  BIRD_FEEDER_POS,                   // Mangeoire à oiseaux (sous balcon NO)
   new THREE.Vector3(149, 50, -231),  // Baignoire (rebord)
   new THREE.Vector3(270, 75, -110),  // ArmrestSofa (dossier)
   new THREE.Vector3(100, 75, -80),   // ArmlessSofa (dossier)
@@ -159,9 +163,12 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
             const flyClip = animations.find(a => a.name === 'Robin_Bird_Fly') || animations[0];
             mixerRef.current.clipAction(flyClip).setLoop(THREE.LoopRepeat, Infinity).play();
           } else {
-            // Randomly switch idle animations (Eat, Call, Idle) occasionally
+            // Switch idle animations (Eat, Call, Idle) occasionally
             if (Math.random() < 0.01) {
-              const idleAnimNames = ['Robin_Bird_Idle', 'Robin_Bird_Idle2', 'Robin_Bird_Eat', 'Robin_Bird_Call'];
+              const isAtFeeder = modelRef.current.position.distanceTo(BIRD_FEEDER_POS) < 10;
+              const idleAnimNames = isAtFeeder
+                ? ['Robin_Bird_Eat', 'Robin_Bird_Eat', 'Robin_Bird_Idle', 'Robin_Bird_Call']
+                : ['Robin_Bird_Idle', 'Robin_Bird_Idle2', 'Robin_Bird_Eat', 'Robin_Bird_Call'];
               const randIdle = idleAnimNames[Math.floor(Math.random() * idleAnimNames.length)];
               const clip = animations.find(a => a.name === randIdle) || animations[0];
               mixerRef.current.stopAllAction();
@@ -176,11 +183,16 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
             // Arrived
             modelRef.current.position.copy(ai.targetPos);
             ai.state = 'idle';
-            ai.timer = 3 + Math.random() * 5; // Pause 3-8s
+            const isAtFeeder = ai.targetPos.distanceTo(BIRD_FEEDER_POS) < 5;
+            ai.timer = isAtFeeder ? (5 + Math.random() * 5) : (3 + Math.random() * 5); // Reste plus longtemps à la mangeoire
             
             mixerRef.current.stopAllAction();
-            const idleClip = animations.find(a => a.name === 'Robin_Bird_Idle') || animations[0];
+            const idleClip = animations.find(a => a.name === (isAtFeeder ? 'Robin_Bird_Eat' : 'Robin_Bird_Idle')) || animations[0];
             mixerRef.current.clipAction(idleClip).setLoop(THREE.LoopRepeat, Infinity).play();
+
+            if (isAtFeeder) {
+              appLog('robin', '🌾 Se pose sur la mangeoire sous le balcon et picore des graines');
+            }
           } else {
             // Move & Rotate towards target
             const dir = new THREE.Vector3().subVectors(ai.targetPos, modelRef.current.position).normalize();

@@ -66,6 +66,7 @@ import { ArmlessSofa }  from './items/ArmlessSofa';
 import { Bathtub }      from './items/Bathtub';
 import { ChestBench }   from './items/ChestBench';
 import { PottedPalm }   from './items/PottedPalm';
+import { BirdFeeder }   from './items/BirdFeeder';
 
 // import { JoggingSuit }  from './items/JoggingSuit';
 import { ShibaInu }    from './items/ShibaInu';
@@ -703,6 +704,10 @@ export function Garden() {
         </group>
         <group position={[264, 0, -320]} rotation={[0, -Math.PI / 2, 0]} userData={{ isIkea: true, itemName: 'Boîte de Rangement Vättersö' }}>
           <Vatterso20562909 item={stub('vatterso-20562909')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+        {/* Mangeoire à oiseaux sous le balcon (angle Nord-Ouest terrasse) */}
+        <group position={[95, 214, -165]} userData={{ animUnit: true, skipMerge: true, itemName: 'Mangeoire à Oiseaux' }}>
+          <BirdFeeder item={stub('bird-feeder')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </MergedStaticGroup>
     </>
