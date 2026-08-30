@@ -254,20 +254,21 @@ export function Minimap() {
       <div
         className="position-fixed"
         style={{
-          bottom: isMobile ? 12 : 20,
-          right: isMobile ? 12 : 20,
+          bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom) + 12px)' : 20,
+          left: isMobile ? 12 : undefined,
+          right: isMobile ? undefined : 20,
           zIndex: 90,
           pointerEvents: 'auto',
         }}
       >
         <button
           onClick={() => setIsCollapsed(false)}
-          className="btn btn-dark shadow-sm glass-card border-secondary text-white d-flex align-items-center gap-1.5 rounded-3 px-2 py-1"
+          className="btn btn-dark shadow-sm glass-card border-secondary text-white d-flex align-items-center gap-1.5 rounded-3 px-2 py-1.5"
           style={{ cursor: 'pointer', opacity: 0.95 }}
           title="Afficher la minimap (Touche 8)"
         >
           <span style={{ fontSize: '11px', fontWeight: 600 }}>🗺️ Plan 2D [8]</span>
-          <span style={{ fontSize: '10px' }}>➕</span>
+          <span style={{ fontSize: '11px' }}>➕</span>
         </button>
       </div>
     );
@@ -305,13 +306,14 @@ export function Minimap() {
           </div>
         </div>
       ) : (
-        /* FLOATING MINIMAP: Bottom-Right compact radar */
+        /* FLOATING MINIMAP: Bottom-Left on mobile (away from D-Pad), Bottom-Right on desktop */
         <div
           className="position-fixed glass-card shadow-sm p-1 rounded-3"
           style={{
-            bottom: isMobile ? 12 : 20,
-            right: isMobile ? 12 : 20,
-            width: isMobile ? 130 : 155,
+            bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom) + 12px)' : 20,
+            left: isMobile ? 12 : undefined,
+            right: isMobile ? undefined : 20,
+            width: isMobile ? 125 : 155,
             zIndex: 90,
             pointerEvents: 'auto',
           }}
@@ -323,7 +325,7 @@ export function Minimap() {
               display: 'block',
               width: '100%',
               height: 'auto',
-              maxHeight: '175px',
+              maxHeight: isMobile ? '160px' : '175px',
               objectFit: 'contain',
               background: 'transparent',
               opacity: 0.95,
@@ -334,16 +336,18 @@ export function Minimap() {
           <button
             onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
             title="Agrandir le plan"
-            className="btn btn-dark btn-sm position-absolute d-flex align-items-center justify-content-center"
+            className="btn btn-dark btn-sm position-absolute d-flex align-items-center justify-content-center border-secondary shadow-sm"
             style={{
               top: 6,
               left: 6,
-              width: 22,
-              height: 22,
+              width: 28,
+              height: 28,
               padding: 0,
-              fontSize: '10px',
-              opacity: 0.85,
-              borderRadius: '4px',
+              fontSize: '13px',
+              opacity: 0.95,
+              borderRadius: '6px',
+              zIndex: 10,
+              cursor: 'pointer',
             }}
           >
             ⛶
@@ -351,16 +355,18 @@ export function Minimap() {
           <button
             onClick={(e) => { e.stopPropagation(); setIsCollapsed(true); }}
             title="Réduire"
-            className="btn btn-dark btn-sm position-absolute d-flex align-items-center justify-content-center"
+            className="btn btn-dark btn-sm position-absolute d-flex align-items-center justify-content-center border-secondary shadow-sm"
             style={{
               top: 6,
               right: 6,
-              width: 22,
-              height: 22,
+              width: 28,
+              height: 28,
               padding: 0,
-              fontSize: '11px',
-              opacity: 0.85,
-              borderRadius: '4px',
+              fontSize: '13px',
+              opacity: 0.95,
+              borderRadius: '6px',
+              zIndex: 10,
+              cursor: 'pointer',
             }}
           >
             ➖
