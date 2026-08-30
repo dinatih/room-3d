@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { glbLocalBBox } from '@features/scene/glbUtils';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
@@ -43,8 +44,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
 
-    scene.updateMatrixWorld(true);
-    const rawBox = new THREE.Box3().setFromObject(scene);
+    const rawBox = glbLocalBBox(scene);
     const rawSize = rawBox.getSize(new THREE.Vector3());
 
     const targetHeight = 40; // 40 cm au garrot
