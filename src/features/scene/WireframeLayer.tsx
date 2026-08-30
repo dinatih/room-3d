@@ -13,6 +13,13 @@ export function WireframeLayer() {
     const alteredMaterials = new Set<THREE.Material>();
 
     scene.traverse(obj => {
+      // Ignorer la SkySphere et les objets célestes
+      let curr: THREE.Object3D | null = obj;
+      while (curr) {
+        if (curr.name === 'SkySphere' || curr.name === 'skysphere' || curr.userData?.isSky) return;
+        curr = curr.parent;
+      }
+
       const mesh = obj as THREE.Mesh;
       if (!mesh.isMesh || !mesh.material) return;
 

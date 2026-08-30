@@ -63,7 +63,7 @@ export function SkySphere() {
   }, [currentHdri, scene, invalidate]);
 
   return (
-    <group position={SKY_CENTER}>
+    <group position={SKY_CENTER} name="SkySphere" userData={{ isSky: true }}>
       <SpaceBackdrop />
       {texture && <FadingSkyDome texture={texture} />}
       {texture && <ExteriorSkyShell texture={texture} />}

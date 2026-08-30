@@ -123,9 +123,9 @@ export function DoorEntry({ actionState, onSize }: SceneItemProps) {
         </mesh>
       </group>
 
-      {/* Linteau au-dessus de la porte d'entrée (Y=204 à 250) */}
+      {/* Linteau au-dessus de la porte d'entrée ajusté à l'ouverture exacte de 90cm (Y=204 à 250) */}
       <mesh position={[0, H + 23, 0]} material={wallMat} castShadow receiveShadow>
-        <boxGeometry args={[W + FW * 2, 46, WW]} />
+        <boxGeometry args={[W, 46, WW]} />
       </mesh>
     </group>
   );
