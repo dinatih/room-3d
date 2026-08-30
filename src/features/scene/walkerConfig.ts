@@ -57,7 +57,7 @@ export const ACCESSORIES_MESH_NAMES = new Set([
   'grenades', 'accessories', 'handgun_part'
 ]);
 
-export type LaraCountMode = 2 | 4 | 10 | 15;
+export type LaraCountMode = 1 | 2 | 4 | 10 | 15;
 
 export const FOUR_PLAYERS_LARA_IDS = new Set([
   'native', 'xbot', 'rosanna', 'cha'
@@ -68,6 +68,15 @@ export const PERF_EXCLUDED_LARA_IDS = new Set([
 ]);
 
 export function isCharacterVisibleInMode(id: string, mode: LaraCountMode = 15, activeWalkerId?: string): boolean {
+  if (mode === 1) {
+    // Mode 1 : Uniquement Xbot pour le debug / performances maximales (aucun modèle Lara)
+    if (activeWalkerId && activeWalkerId === 'xbot') return id === 'xbot';
+    if (activeWalkerId && activeWalkerId !== 'xbot') {
+      // Si l'utilisateur a explicitement sélectionné un autre perso, on l'affiche lui seul
+      return id === activeWalkerId;
+    }
+    return id === 'xbot';
+  }
   if (mode === 2) {
     if (id === 'xbot') return true;
     if (activeWalkerId && activeWalkerId !== 'xbot') {

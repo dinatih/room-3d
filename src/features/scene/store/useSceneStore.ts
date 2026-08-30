@@ -14,11 +14,13 @@ function parseUrlNpcCount(): LaraCountMode {
       if (lower === '10' || lower === 'eco') return 10;
       if (lower === '4' || lower === 'quad') return 4;
       if (lower === '2' || lower === 'duo' || lower === 'min') return 2;
+      if (lower === '1' || lower === 'solo' || lower === 'xbot') return 1;
       const num = parseInt(lower, 10);
       if (num >= 15) return 15;
       if (num >= 10) return 10;
       if (num >= 4) return 4;
-      if (num >= 1) return 2;
+      if (num >= 2) return 2;
+      if (num >= 1) return 1;
     }
   } catch {}
   return 4;

@@ -1210,7 +1210,9 @@ export function SidePanel({
               👥 Nombre de Personnages
             </span>
             <span className="badge bg-primary" style={{ fontSize: '9px' }}>
-              {(layers.laraCount ?? (isMobile ? 2 : 15)) === 2
+              {(layers.laraCount ?? (isMobile ? 2 : 15)) === 1
+                ? '1 (Xbot seul)'
+                : (layers.laraCount ?? (isMobile ? 2 : 15)) === 2
                 ? '2 (Xbot + Lara)'
                 : (layers.laraCount ?? (isMobile ? 2 : 15)) === 4
                 ? '4 (Lara, Xbot, Rosanna, Cha)'
@@ -1220,6 +1222,15 @@ export function SidePanel({
             </span>
           </div>
           <div className="btn-group btn-group-sm w-100" role="group">
+            <button
+              type="button"
+              className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 1 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
+              style={{ fontSize: isMobile ? '13px' : '11px', background: (layers.laraCount ?? (isMobile ? 2 : 15)) === 1 ? undefined : 'transparent' }}
+              onClick={() => useSceneStore.getState().setLaraCount(1)}
+              title="1 PNJ (Xbot uniquement - léger)"
+            >
+              1
+            </button>
             <button
               type="button"
               className={`btn btn-sm ${(layers.laraCount ?? (isMobile ? 2 : 15)) === 2 ? 'btn-primary text-white' : 'btn-outline-secondary text-dark'}`}
@@ -1519,7 +1530,7 @@ export function SidePanel({
   const personnageHeaderButtons = (
     <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
       <div className="btn-group btn-group-sm" role="group">
-        {([2, 4, 10, 15] as const).map((cnt) => {
+        {([1, 2, 4, 10, 15] as const).map((cnt) => {
           const currentCount = layers.laraCount ?? (isMobile ? 2 : 15);
           const isActive = currentCount === cnt;
           return (
@@ -1535,7 +1546,7 @@ export function SidePanel({
                 background: isActive ? undefined : 'rgba(255, 255, 255, 0.65)',
                 border: '1px solid rgba(0, 0, 0, 0.15)',
               }}
-              title={`Afficher ${cnt} PNJ (${cnt === 2 ? '2 Duo' : cnt === 4 ? '4 (Lara, Xbot, Rosanna, Cha)' : cnt === 10 ? '10 Eco' : '15 Tous'})`}
+              title={`Afficher ${cnt} PNJ (${cnt === 1 ? '1 Xbot seul (Léger)' : cnt === 2 ? '2 Duo' : cnt === 4 ? '4 (Lara, Xbot, Rosanna, Cha)' : cnt === 10 ? '10 Eco' : '15 Tous'})`}
               onClick={(e) => {
                 e.stopPropagation();
                 useSceneStore.getState().setLaraCount(cnt);
