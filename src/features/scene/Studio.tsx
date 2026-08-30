@@ -439,11 +439,12 @@ export function Studio() {
            */}
           <Walls pillarsOnly={layers.pillarsOnly} />
           <Floor />
-          {/* LAYER_WALKER (18) — Personnages 3D & Animaux autonomes */}
+          {/* LAYER_WALKER (18) — Personnages 3D */}
           <CategoryLayerGroup layer={LAYER_WALKER}>
             <Walker />
-            <Animals />
           </CategoryLayerGroup>
+          {/* Animaux autonomes (Shiba Inu & Oiseau Robin) sur Layer par défaut (0) */}
+          <Animals />
           <GlobalSkeletonHelpers show={layers.skeleton} />
           {/*
            * LAYER_EQUIPMENT (1) — équipements sanitaires et cuisine.
