@@ -31,6 +31,18 @@ interface MeasurementItem {
 function DimensionLine({ item }: { item: MeasurementItem }) {
   const { start, end, valueCm, name, color = '#ffc107' } = item;
 
+  // Distance 3D actuelle calculée directement entre les deux points d'ancrage du modèle
+  const dx = end[0] - start[0];
+  const dy = end[1] - start[1];
+  const dz = end[2] - start[2];
+  const modelDist = Math.round(Math.sqrt(dx * dx + dy * dy + dz * dz) * 10) / 10;
+  const delta = Math.round((modelDist - valueCm) * 10) / 10;
+  const absDelta = Math.abs(delta);
+
+  // Couleur d'état du delta (vert si conforme, ambre si faible écart, rouge si incohérence)
+  const deltaColor = absDelta <= 0.5 ? '#4ade80' : absDelta <= 2.0 ? '#38bdf8' : '#f87171';
+  const deltaSign = delta > 0 ? `+${delta}` : `${delta}`;
+
   // Calcul du point milieu pour le badge
   const mid: [number, number, number] = [
     (start[0] + end[0]) / 2,
@@ -40,10 +52,7 @@ function DimensionLine({ item }: { item: MeasurementItem }) {
 
   // Calcul des ticks d'extrémité perpendiculaires aux faces internes
   const tickGeo = useMemo(() => {
-    const tickLen = 5;
-    const dx = end[0] - start[0];
-    const dy = end[1] - start[1];
-    const dz = end[2] - start[2];
+    const tickLen = 6;
 
     let perpX = 0;
     let perpY = 0;
@@ -71,7 +80,7 @@ function DimensionLine({ item }: { item: MeasurementItem }) {
     ];
 
     return { startTick, endTick };
-  }, [start, end]);
+  }, [start, end, dx, dy, dz]);
 
   return (
     <group renderOrder={99999}>
@@ -79,7 +88,7 @@ function DimensionLine({ item }: { item: MeasurementItem }) {
       <Line
         points={[start, end]}
         color={color}
-        lineWidth={3}
+        lineWidth={3.5}
         depthTest={false}
       />
 
@@ -97,42 +106,68 @@ function DimensionLine({ item }: { item: MeasurementItem }) {
         depthTest={false}
       />
 
-      {/* Marqueurs d'ancrage sur les surfaces */}
+      {/* Marqueurs sphériques d'ancrage sur les surfaces */}
       <mesh position={start}>
-        <sphereGeometry args={[1.2, 12, 12]} />
+        <sphereGeometry args={[1.5, 12, 12]} />
         <meshBasicMaterial color={color} depthTest={false} />
       </mesh>
       <mesh position={end}>
-        <sphereGeometry args={[1.2, 12, 12]} />
+        <sphereGeometry args={[1.5, 12, 12]} />
         <meshBasicMaterial color={color} depthTest={false} />
       </mesh>
 
-      {/* Badge HTML flottant */}
-      <Html position={mid} center distanceFactor={160} style={{ pointerEvents: 'auto' }}>
+      {/* Badge HTML flottant avec comparaison Mesure Réelle vs Modèle 3D */}
+      <Html position={mid} center distanceFactor={150} style={{ pointerEvents: 'auto' }}>
         <div
-          title={`${name} : ${valueCm} cm\n${item.description}`}
+          title={`${name}\n• Mesure réelle (laser) : ${valueCm} cm\n• Modèle 3D actuel : ${modelDist} cm\n• Écart (3D - réel) : ${deltaSign} cm\n\n${item.description}`}
           style={{
-            background: 'rgba(15, 23, 42, 0.90)',
+            background: 'rgba(10, 15, 29, 0.94)',
             color: '#fff',
             border: `1.5px solid ${color}`,
-            borderRadius: 6,
-            padding: '2px 7px',
+            borderRadius: 7,
+            padding: '3px 9px',
             fontSize: '11px',
             fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontWeight: 600,
-            whiteSpace: 'nowrap',
-            boxShadow: `0 2px 8px rgba(0, 0, 0, 0.4), 0 0 10px ${color}44`,
-            backdropFilter: 'blur(4px)',
+            boxShadow: `0 4px 14px rgba(0, 0, 0, 0.5), 0 0 12px ${color}33`,
+            backdropFilter: 'blur(6px)',
             display: 'flex',
             alignItems: 'center',
-            gap: 4,
+            gap: 6,
             cursor: 'help',
             userSelect: 'none',
+            whiteSpace: 'nowrap',
           }}
         >
-          <span style={{ color, fontSize: '10px' }}>📐</span>
-          <span style={{ color: '#f8fafc' }}>{valueCm} cm</span>
-          <span style={{ color: '#94a3b8', fontSize: '9px', fontWeight: 400 }}>({name})</span>
+          {/* Label de la mesure */}
+          <span style={{ color: '#94a3b8', fontSize: '10px', fontWeight: 500 }}>{name} :</span>
+
+          {/* Valeur réelle mesurée au laser */}
+          <span style={{ color: '#f8fafc', fontWeight: 700 }}>
+            📐 {valueCm} cm
+          </span>
+
+          {/* Séparateur */}
+          <span style={{ color: 'rgba(255, 255, 255, 0.25)' }}>|</span>
+
+          {/* Distance actuelle dans la modélisation 3D */}
+          <span style={{ color: '#cbd5e1', fontSize: '10px' }}>
+            3D: <strong style={{ color: '#fff' }}>{modelDist}</strong> cm
+          </span>
+
+          {/* Écart (Delta) */}
+          <span
+            style={{
+              background: 'rgba(0, 0, 0, 0.45)',
+              color: deltaColor,
+              borderRadius: 4,
+              padding: '1px 5px',
+              fontSize: '10px',
+              fontWeight: 700,
+              border: `1px solid ${deltaColor}55`,
+            }}
+          >
+            {absDelta <= 0.5 ? '✓ 0' : `Δ ${deltaSign} cm`}
+          </span>
         </div>
       </Html>
     </group>
@@ -144,8 +179,8 @@ export function RealMeasurementsLayer() {
   const cameraMode = useSceneStore(state => state.cameraMode);
 
   const measurements: MeasurementItem[] = useMemo(() => {
-    // Hauteur d'élévation pour les cotes horizontales (surélevé en 2D pour vue dessus)
-    const yBase = cameraMode === 'top' ? 275 : 18;
+    // Dessiner les cotes au niveau du plafond (Y=238 cm) en vue 3D, ou surélevé (Y=275 cm) en vue 2D Top
+    const yBase = cameraMode === 'top' ? 275 : WALL_H - 12;
 
     return [
       // 1. Largeur / profondeur du placard couloir le long de l'axe Z (traverse le placard)
