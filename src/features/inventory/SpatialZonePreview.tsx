@@ -207,7 +207,7 @@ export function SpatialZonePreview({
           target={[centerX, centerY, centerZ]}
           enableDamping
           dampingFactor={0.05}
-          maxPolarAngle={isTopView ? Math.PI / 2 : Math.PI / 2 - 0.02}
+          maxPolarAngle={Math.PI}
           minDistance={40}
           maxDistance={camDistance * 3.5}
         />
