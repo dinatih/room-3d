@@ -6,7 +6,6 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
-import { glbLocalBBox } from '@features/scene/glbUtils';
 
 const GLB_PATH = '/characters/ushiro/shiba_inu_dog_ushiro.glb';
 
@@ -35,15 +34,17 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
 
-    const box = glbLocalBBox(scene);
+    scene.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(scene);
     const size = box.getSize(new THREE.Vector3());
 
     if (size.y > 0) {
-      scene.scale.setScalar(38 / size.y); // Scale to 38cm height (taille reelle shiba inu au garrot)
+      scene.scale.setScalar(40 / size.y); // Hauteur cible 40cm
     } else {
       scene.scale.setScalar(1);
     }
-    const scaledBox = glbLocalBBox(scene);
+    scene.updateMatrixWorld(true);
+    const scaledBox = new THREE.Box3().setFromObject(scene);
     scene.position.set(0, -scaledBox.min.y, 0);
     onSize?.(scaledBox.getSize(new THREE.Vector3()));
 
