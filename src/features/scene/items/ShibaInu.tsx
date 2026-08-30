@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { glbLocalBBox } from '@features/scene/glbUtils';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
@@ -51,17 +52,19 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
-    scene.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(scene);
-    const size = box.getSize(new THREE.Vector3());
+    scene.position.set(0, 0, 0);
+    scene.rotation.set(0, 0, 0);
 
-    if (size.y > 0) {
-      scene.scale.setScalar(40 / size.y);
+    const rawBox = glbLocalBBox(scene);
+    const rawSize = rawBox.getSize(new THREE.Vector3());
+
+    if (rawSize.y > 0) {
+      scene.scale.setScalar(40 / rawSize.y);
     } else {
-      scene.scale.setScalar(1); // fallback
+      scene.scale.setScalar(1);
     }
-    scene.updateMatrixWorld(true);
-    const scaledBox = new THREE.Box3().setFromObject(scene);
+
+    const scaledBox = glbLocalBBox(scene);
     scene.position.set(0, -scaledBox.min.y, 0);
 
     scene.traverse(c => {
@@ -74,9 +77,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
         if (m.geometry.boundingSphere) {
-          // Le nœud racine du GLB est normalisé à une échelle de 1.
-          // Un rayon local de 250 unités donne un rayon monde de 250 * (40 / 98.8) = ~101 cm dans la scène 3D.
-          m.geometry.boundingSphere.radius = 250.0;
+          m.geometry.boundingSphere.radius = Math.max(m.geometry.boundingSphere.radius * 10, 100.0);
         }
       }
       if (m.material) {
