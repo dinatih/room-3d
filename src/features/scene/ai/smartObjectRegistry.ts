@@ -118,7 +118,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'sit',
         name: 'S\'asseoir',
-        offset: [85, 0, 272],
+        offset: [85, 0, 280],
         rotY: Math.PI / 2,
         animations_random: 'seated_front',
         duration: 40.0,
