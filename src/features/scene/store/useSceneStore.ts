@@ -91,6 +91,7 @@ const initialLayers: LayerState = {
   doors: true,
   neighbors: false,
   xray: false,
+  wireframe: false,
   mirrors: true,
   mirrorsHD: false,
   plan: false,

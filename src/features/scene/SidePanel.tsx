@@ -304,6 +304,7 @@ export interface LayerState {
   furniture: boolean;
   neighbors:  boolean;
   xray:       boolean;
+  wireframe:  boolean;
   mirrors:       boolean;
   mirrorsHD:  boolean;
   plan:         boolean;
@@ -808,6 +809,7 @@ export function SidePanel({
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
       {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
       {layerBtn('cyan',   'X-Ray 🩻',      'xray')}
+      {layerBtn('cyan',   'Wireframe coloré 🕸', 'wireframe')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('yellow', 'Lumières HD ✨', 'lightsHD')}
       {layerBtn('green',  'Gazon 3D 🌿',   'grass')}

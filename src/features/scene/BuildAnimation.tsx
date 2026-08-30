@@ -236,8 +236,8 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
         b.getWorldPosition(vB);
         // 1. Trier par Y (bas -> haut)
         if (Math.abs(vA.y - vB.y) > 1) return vA.y - vB.y;
-        // 2. Trier par Z (Nord -> Sud)
-        if (Math.abs(vA.z - vB.z) > 1) return vA.z - vB.z;
+        // 2. Trier par Z (Sud -> Nord : Z décroissant, du fond vers la baie vitrée)
+        if (Math.abs(vA.z - vB.z) > 1) return vB.z - vA.z;
         // 3. Trier par X (Ouest -> Est)
         return vA.x - vB.x;
       });

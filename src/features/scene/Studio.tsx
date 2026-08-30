@@ -22,6 +22,7 @@ import { Walker } from './Walker';
 import { AiZonesHelper } from './ai/AiZonesHelper';
 import { CollisionDebugHelper } from './ai/CollisionDebugHelper';
 import { XRayLayer }        from '@features/scene/XRayLayer';
+import { WireframeLayer }   from '@features/scene/WireframeLayer';
 import { WallEdgesLayer, EdgeHoverRaycaster, EdgeHoverOverlay } from '@features/scene/WallEdgesLayer';
 import { GridLayer }        from '@features/scene/Grid';
 import { LightHelpers }     from '@features/scene/LightHelpers';
@@ -413,6 +414,7 @@ export function Studio() {
         <GlbReveal />
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.xray        && <XRayLayer />}
+        {layers.wireframe   && <WireframeLayer />}
         <Suspense fallback={null}>
           <AiZonesHelper />
           <CollisionDebugHelper />
