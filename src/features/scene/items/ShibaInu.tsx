@@ -32,7 +32,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
     scene.position.set(0, 0, 0);
-    scene.rotation.set(0, 0, 0);
+    scene.rotation.set(-Math.PI / 2, 0, 0);
 
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
