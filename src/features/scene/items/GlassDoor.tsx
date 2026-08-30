@@ -258,20 +258,20 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
         <boxGeometry args={[W_INNER + 2, 3.8, 1.2]} />
       </instancedMesh>
 
-      {/* Murets bas (Intérieur Z=-5, Extérieur Z=-20) */}
+      {/* Murets bas élargis pour boucher tout l'espace d'ouverture (Intérieur Z=-5, Extérieur Z=-20) */}
       <mesh position={[0, 12.5, -5]} material={wallMat} castShadow receiveShadow>
-        <boxGeometry args={[W_TOTAL, 25, 10]} />
+        <boxGeometry args={[170, 25, 10]} />
       </mesh>
       <mesh position={[0, 12.5, -20]} material={wallMat} castShadow receiveShadow>
-        <boxGeometry args={[W_TOTAL, 25, 20]} />
+        <boxGeometry args={[170, 25, 20]} />
       </mesh>
 
-      {/* Linteaux hauts (Intérieur Z=-5, Extérieur Z=-20) */}
+      {/* Linteaux hauts élargis pour boucher tout l'espace d'ouverture (Intérieur Z=-5, Extérieur Z=-20) */}
       <mesh position={[0, 237.5, -5]} material={wallMat} castShadow receiveShadow>
-        <boxGeometry args={[W_TOTAL, 25, 10]} />
+        <boxGeometry args={[170, 25, 10]} />
       </mesh>
       <mesh position={[0, 237.5, -20]} material={wallMat} castShadow receiveShadow>
-        <boxGeometry args={[W_TOTAL, 25, 20]} />
+        <boxGeometry args={[170, 25, 20]} />
       </mesh>
     </group>
   );
