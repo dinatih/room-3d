@@ -6,7 +6,6 @@ import { useGLTF, useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { isAppIdle } from '@features/scene/idleState';
 import { glbLocalBBox } from '@features/scene/glbUtils';
-import { LAYER_ANIMALS } from '@features/scene/config';
 
 const GLB_PATH = '/characters/robin/robin.glb';
 
@@ -75,7 +74,6 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
-      m.layers.enable(LAYER_ANIMALS);
       if (m.geometry) {
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();

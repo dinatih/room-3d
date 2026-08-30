@@ -7,7 +7,6 @@ import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
 import { glbLocalBBox } from '@features/scene/glbUtils';
-import { LAYER_ANIMALS } from '@features/scene/config';
 
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
 
@@ -51,7 +50,6 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
-      m.layers.enable(LAYER_ANIMALS);
       if (m.geometry) {
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
