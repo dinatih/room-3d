@@ -43,6 +43,7 @@ import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
 import { useAppIdle }                  from './idleState';
 import { MeasurementTool }            from './MeasurementTool';
+import { RealMeasurementsLayer }      from './RealMeasurementsLayer';
 import { AppConsole }                 from '@features/ui/AppConsole';
 import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
 
@@ -304,6 +305,9 @@ export function Studio() {
       } else if (e.key === 'w' || e.key === 'W') {
         onToggleLayer('wallEdges');
         cameraState.invalidate?.();
+      } else if (e.key === 'u' || e.key === 'U') {
+        onToggleLayer('measuredDimensions');
+        cameraState.invalidate?.();
       } else if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') {
         setHideUI(h => !h);
       }
@@ -423,6 +427,7 @@ export function Studio() {
           <CollisionDebugHelper />
         </Suspense>
         {layers.wallEdges   && <WallEdgesLayer />}
+        {layers.measuredDimensions && <RealMeasurementsLayer />}
 
         {layers.wallEdges   && <EdgeHoverRaycaster />}
         {layers.grid        && <GridLayer depthTest={layers.gridDepth} />}

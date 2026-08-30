@@ -167,6 +167,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Déshabiller les Lara (toggle)" keys={['X']} />
               <R label="Squelettes / Bones (toggle)" keys={['K']} />
               <R label="Arêtes des murs (toggle)"   keys={['W']} />
+              <R label="Mesures réelles 📐 (toggle)" keys={['U']} />
               <R label="Quitter walk / top-down"    keys={['Échap']} />
               <R label="Changer de personnage"      keys={['L']} />
             </div>
@@ -317,6 +318,7 @@ export interface LayerState {
   ceiling:      boolean;
   doors:        boolean;
   wallEdges:    boolean;
+  measuredDimensions: boolean;
   lidar:        boolean;
   lights:       boolean;
   lightsHD:     boolean;
@@ -808,7 +810,8 @@ export function SidePanel({
 
       {layerBtn('teal',   'Grille 🌐',     'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
-      {layerBtn('red',    'Aff. arêtes murs', 'wallEdges')}
+      {layerBtn('yellow', 'Mesures réelles 📐 (U)', 'measuredDimensions')}
+      {layerBtn('red',    'Aff. arêtes murs (W)', 'wallEdges')}
       {layerBtn('cyan',   'X-Ray 🩻',      'xray')}
       {layerBtn('cyan',   'Wireframe coloré 🕸', 'wireframe')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}

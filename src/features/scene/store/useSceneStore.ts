@@ -105,6 +105,7 @@ const initialLayers: LayerState = {
   skeleton: false,
   ceiling: false,
   wallEdges: false,
+  measuredDimensions: false,
   lidar: false,
   lights: false,
   lightsHD: false,
