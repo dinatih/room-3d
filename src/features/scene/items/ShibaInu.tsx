@@ -11,6 +11,15 @@ const GLB_PATH = '/characters/ushiro/shiba_inu_dog_ushiro.glb';
 
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
 
+function findDogClip(animations: THREE.AnimationClip[], keyword: string): THREE.AnimationClip {
+  const kw = keyword.toLowerCase();
+  return (
+    animations.find(a => a.name.toLowerCase().includes(kw)) ||
+    animations.find(a => a.name.toLowerCase().includes('idle')) ||
+    animations[0]
+  );
+}
+
 export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPreview = false, onSize }: { isPreview?: boolean, previewAnim?: string, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
   const { scene, animations } = useGLTFClone(GLB_PATH);
   const { invalidate } = useThree();
@@ -73,15 +82,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     if (animations.length > 0) {
       const mixer = new THREE.AnimationMixer(scene);
       mixerRef.current = mixer;
-      const animMap: Record<string, string> = {
-        'idle': 'Dog|Dog|Idle', 'jump': 'Dog|Dog|Jump', 'run': 'Dog|Dog|Run',
-        'sitdown': 'Dog|Dog|SitDown', 'walk': 'Dog|Dog|Walk'
-      };
-      let targetAnimName = 'Dog|Dog|Idle';
-      if (isPreview && previewAnim) {
-        targetAnimName = animMap[previewAnim] || 'Dog|Dog|Idle';
-      }
-      const clip = animations.find(a => a.name === targetAnimName) || animations[0];
+      const clip = findDogClip(animations, previewAnim || 'idle');
       const action = mixer.clipAction(clip);
       action.setLoop(THREE.LoopRepeat, Infinity);
       action.reset().play();
@@ -170,8 +171,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
             ai.state = dist > 150 ? 'running' : 'walking';
             
             mixerRef.current.stopAllAction();
-            const clipName = ai.state === 'running' ? 'Dog|Dog|Run' : 'Dog|Dog|Walk';
-            const clip = animations.find(a => a.name === clipName) || animations[4];
+            const clip = findDogClip(animations, ai.state === 'running' ? 'run' : 'walk');
             const action = mixerRef.current.clipAction(clip);
             action.setLoop(THREE.LoopRepeat, Infinity);
             action.reset().play();
@@ -185,8 +185,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
             ai.timer = 3 + Math.random() * 8; // wait 3 to 11 seconds
             
             mixerRef.current.stopAllAction();
-            const clipName = Math.random() > 0.5 ? 'Dog|Dog|Idle' : 'Dog|Dog|SitDown';
-            const clip = animations.find(a => a.name === clipName) || animations[0];
+            const clip = findDogClip(animations, Math.random() > 0.5 ? 'idle' : 'sitdown');
             const action = mixerRef.current.clipAction(clip);
             action.setLoop(THREE.LoopRepeat, Infinity);
             action.reset().play();
