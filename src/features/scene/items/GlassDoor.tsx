@@ -101,6 +101,7 @@ function useHingeGeo() {
 }
 
 const pvcMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.15, metalness: 0.05 });
+const wallMat = new THREE.MeshStandardMaterial({ color: '#f5f4ef', roughness: 0.85, metalness: 0.05 });
 const glassMaterial = new THREE.MeshPhysicalMaterial({
   color: '#b2e0ff',
   transparent: true,
@@ -256,6 +257,22 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
       <instancedMesh ref={instancedShutterRef} args={[null as any, null as any, 50]} material={shutterMaterial} castShadow receiveShadow>
         <boxGeometry args={[W_INNER + 2, 3.8, 1.2]} />
       </instancedMesh>
+
+      {/* Murets bas (Intérieur Z=-5, Extérieur Z=-20) */}
+      <mesh position={[0, 12.5, -5]} material={wallMat} castShadow receiveShadow>
+        <boxGeometry args={[W_TOTAL, 25, 10]} />
+      </mesh>
+      <mesh position={[0, 12.5, -20]} material={wallMat} castShadow receiveShadow>
+        <boxGeometry args={[W_TOTAL, 25, 20]} />
+      </mesh>
+
+      {/* Linteaux hauts (Intérieur Z=-5, Extérieur Z=-20) */}
+      <mesh position={[0, 237.5, -5]} material={wallMat} castShadow receiveShadow>
+        <boxGeometry args={[W_TOTAL, 25, 10]} />
+      </mesh>
+      <mesh position={[0, 237.5, -20]} material={wallMat} castShadow receiveShadow>
+        <boxGeometry args={[W_TOTAL, 25, 20]} />
+      </mesh>
     </group>
   );
 }

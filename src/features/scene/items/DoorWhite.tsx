@@ -139,6 +139,7 @@ interface DoorImplProps {
 const frameMaterial = new THREE.MeshStandardMaterial({ color: '#f0ede8', roughness: 0.35 });
 const doorPanelMaterial = new THREE.MeshStandardMaterial({ color: '#f5f5f5', roughness: 0.4 });
 const doorHandleMaterial = new THREE.MeshStandardMaterial({ color: '#999999', metalness: 0.85, roughness: 0.15 });
+const wallMat = new THREE.MeshStandardMaterial({ color: '#f5f4ef', roughness: 0.85, metalness: 0.05 });
 
 function DoorImpl({
   actionKey,
@@ -188,6 +189,11 @@ function DoorImpl({
         {/* Poignées */}
         <mesh position={[handleX, 100, 0]} geometry={handleGeo} material={doorHandleMaterial} />
       </group>
+
+      {/* Linteau au-dessus de la porte (Y=204 à 250) */}
+      <mesh position={[0, H + 23, 0]} material={wallMat} castShadow receiveShadow>
+        <boxGeometry args={[W + 5, 46, wallThickness]} />
+      </mesh>
     </group>
   );
 }

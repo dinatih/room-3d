@@ -19,16 +19,15 @@ import {
   ROOM_W, ROOM_D, WALL_H,
   NICHE_X, NICHE_Z_START,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
-  DOOR_START, DOOR_END, DOOR_H,
+  DOOR_START, DOOR_END,
   BATH_Z_END,
   DiagWall,
 } from '@config';
 
 export const WALL_THICKNESS      = 10; // standard wall thickness (cm)
 export const PARTITION_THICKNESS = 7.2; // internal partition thickness (cm)
-const GLASS_START = 100;  // début baie vitrée mur C (aligné à 95cm + 5cm latte)
+const GLASS_START = 95;  // début baie vitrée mur C (aligné à 51cm + 5cm latte)
 const GLASS_END   = 260; // fin baie vitrée mur C (aligné à 316 - 51cm - 5cm latte)
-const GLASS_TOP_Y = 225; // hauteur du linteau de baie vitrée
 
 export const CORR_WALL_X = 192 + PARTITION_THICKNESS / 2; // centre du mur couloir gauche (SDB = 202cm interior depuis X=-10)
 
@@ -217,8 +216,6 @@ export const WALL_DEFS: WallDef[] = [
   // ── MUR SUD (Z=400) ────────────────────────────────────────────────────────
   ...splitW({ axis: 'x', x1: pEast('corner-sw'), x2: pWest('kitchen-sw'), zc: pZ('corner-sw'), t: PARTITION_THICKNESS }),
   ...splitW({ axis: 'x', x1: pEast('kitchen-se'), x2: pWest('door-living-w'), zc: pZ('corner-sw'), t: PARTITION_THICKNESS }),
-  // Linteau au-dessus de la porte principale (3D seulement)
-  ...splitW({ axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: pZ('corner-sw'), yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none', t: PARTITION_THICKNESS }),
   ...splitW({ axis: 'x', x1: pEast('door-living-e'), x2: pWest('corner-se'), zc: pZ('corner-sw'), t: PARTITION_THICKNESS }),
   // Porte principale (2D uniquement)
   ...splitW({ axis: 'x', x1: pEast('door-living-w'), x2: pWest('door-living-e'), zc: ROOM_D, segKind: 'door', t: PARTITION_THICKNESS }),
@@ -236,9 +233,6 @@ export const WALL_DEFS: WallDef[] = [
   ...splitW({ axis: 'z', xc: pX('bath-ne'), z1: pSouth('bath-ne'), z2: pNorth('door-bath-n'), t: PARTITION_THICKNESS }),
   // Segment après porte
   ...splitW({ axis: 'z', xc: pX('bath-ne'), z1: pSouth('door-bath-s'), z2: pNorth('bath-se'), t: PARTITION_THICKNESS }),
-  // Linteau au-dessus de la porte couloir (3D seulement)
-  ...splitW({ axis: 'z', xc: pX('bath-ne'), z1: pNorth('door-bath-n'), z2: pNorth('door-bath-s'),
-    yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none', t: PARTITION_THICKNESS, mat: 'west' }),
   // Porte couloir SDB (2D uniquement)
   ...splitW({ axis: 'z', xc: pX('bath-ne'), z1: pNorth('door-bath-n'), z2: pNorth('door-bath-s'), segKind: 'door', t: PARTITION_THICKNESS }),
 
@@ -252,16 +246,6 @@ export const WALL_DEFS: WallDef[] = [
   ...splitW({ axis: 'x', x1: pEast('glass-east'), x2: pWest('corner-ne'), zc: pZ('corner-ne'), mat: 'north' }),
   // Panneau est extérieur (béton)
   ...splitW({ axis: 'x', x1: pEast('glass-east-ext'), x2: pWest('corner-ne-ext'), zc: pZ('corner-ne-ext'), t: 20, mat: 'north', h: WALL_H - 0.1 }),
-
-  // Baie vitrée — couches dissociées
-  // Muret bas (Intérieur)
-  ...splitW({ axis: 'x', x1: pEast('glass-west'), x2: pWest('glass-east'), zc: -5, mat: 'north', h: 25, segKind: 'none' }),
-  // Muret bas (Extérieur)
-  ...splitW({ axis: 'x', x1: pEast('glass-west-ext'), x2: pWest('glass-east-ext'), zc: -20, t: 20, mat: 'north', h: 25, segKind: 'none' }),
-  // Linteau (Intérieur)
-  ...splitW({ axis: 'x', x1: pEast('glass-west'), x2: pWest('glass-east'), zc: -5, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' }),
-  // Linteau (Extérieur)
-  ...splitW({ axis: 'x', x1: pEast('glass-west-ext'), x2: pWest('glass-east-ext'), zc: -20, t: 20, mat: 'north', yBase: GLASS_TOP_Y, h: WALL_H - GLASS_TOP_Y, segKind: 'none' }),
 
   // ── Douche ─────────────────────────────────────────────────────────────────
   ...splitW({ axis: 'z', xc: pX('shower-ne'), z1: pSouth('shower-ne'), z2: pNorth('shower-se'), t: PARTITION_THICKNESS }),

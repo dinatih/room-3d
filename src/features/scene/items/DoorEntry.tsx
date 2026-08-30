@@ -76,6 +76,7 @@ const whiteFrameMaterial = new THREE.MeshStandardMaterial({ color: '#f5f5f0', ro
 const redPanelMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', roughness: 0.5, metalness: 0.1 });
 const metalHandleMaterial = new THREE.MeshStandardMaterial({ color: '#999999', metalness: 0.85, roughness: 0.15 });
 const knobMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', metalness: 0.3, roughness: 0.4 });
+const wallMat = new THREE.MeshStandardMaterial({ color: '#f5f4ef', roughness: 0.85, metalness: 0.05 });
 
 export function DoorEntry({ actionState, onSize }: SceneItemProps) {
   const doorRef = useRef<THREE.Group>(null!);
@@ -121,6 +122,11 @@ export function DoorEntry({ actionState, onSize }: SceneItemProps) {
           <sphereGeometry args={[5, 16, 12]} />
         </mesh>
       </group>
+
+      {/* Linteau au-dessus de la porte d'entrée (Y=204 à 250) */}
+      <mesh position={[0, H + 23, 0]} material={wallMat} castShadow receiveShadow>
+        <boxGeometry args={[W + FW * 2, 46, WW]} />
+      </mesh>
     </group>
   );
 }

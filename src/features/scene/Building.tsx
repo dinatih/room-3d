@@ -25,7 +25,7 @@ import { useSceneStore } from './store/useSceneStore';
 import {
   ROOM_W, ROOM_D, WALL_H,
   NICHE_X, NICHE_Z_START,
-  DOOR_START, DOOR_END, DOOR_H,
+  DOOR_START, DOOR_END,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   BATH_Z_END,
   DiagWall,
@@ -557,8 +557,7 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                 return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
               return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
             })}
-            {/* Mur diagonal */}
-            <SplitDiagBox d1={DiagWall.door.start} d2={DiagWall.door.end} yBase={DOOR_H} h={WALL_H - DOOR_H} userData={{ animUnit: true, brickType: 'wall', side: 'diag', itemName: 'Linteau Porte Entrée' }} />
+            {/* Mur diagonal (partie pleine après la porte d'entrée) */}
             <SplitDiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag', itemName: 'Mur diagonal' }} />
 
             {/* Panneaux bois occultants jardin */}
