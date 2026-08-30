@@ -133,14 +133,6 @@ const ACTIONS: Record<string, ActionDef> = {
     toggleKey: 'eastGlassDoor'
   },
   glassDoorLeftOpen: { btnLabel: 'Ouvrir / Fermer Gauche', toggleKey: 'glassDoorV2LeftOpen' },
-  bimDoorLeftOpen: { 
-    btnLabel: () => useSceneStore.getState().furniture.bimDoorLeftOpen ? 'Fermer Gauche' : 'Ouvrir Gauche', 
-    toggleKey: 'bim-door-left-open' 
-  },
-  bimDoorRightOpen: { 
-    btnLabel: () => useSceneStore.getState().furniture.bimDoorRightOpen ? 'Fermer Droit' : 'Ouvrir Droit', 
-    toggleKey: 'bim-door-right-open' 
-  },
   glassDoorShutter: {
     btnLabel: () => {
       const pos = useSceneStore.getState().furniture.glassDoorV2ShutterPos;

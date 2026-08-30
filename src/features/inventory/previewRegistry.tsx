@@ -92,7 +92,6 @@ import { Tent }                                       from '@features/scene/item
 import { Vihals }                                     from '@features/scene/items/Vihals';
 import { Rebound }                                    from '@features/scene/items/Rebound';
 import { Linky }                                      from '@features/scene/items/Linky';
-import { BimDoubleDoor }                              from '@features/scene/items/BimDoubleDoor';
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
 import { ElectricRacket }                             from '@features/scene/items/ElectricRacket';
 import { Drona }                                      from '@features/scene/items/Drona';
@@ -150,7 +149,6 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'door-living':            DoorLiving,
   'door-sdb':               DoorBath,
   'door-glass':             GlassDoor,
-  'door-bim-double':        BimDoubleDoor,
   'door-frame':             DoorFrame,
   'lillhavet80461276':      Lillhavet80461276,
   'toilet':                 Toilet,
@@ -228,8 +226,6 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'living-door-toggle':    ['Ouvrir', 'Fermer'],
   'bathroom-door-toggle':  ['Ouvrir', 'Fermer'],
   'east-glass-door-toggle':           ['Ouvrir', 'Fermer'],
-  'bim-door-left-open':               ['Ouvrir Gauche', 'Fermer Gauche'],
-  'bim-door-right-open':              ['Ouvrir Droit', 'Fermer Droit'],
   'wc-lid-toggle':         ['Ouvrir Couvercle', 'Fermer Couvercle'],
   'wc-seat-toggle':        ['Ouvrir Siège', 'Fermer Siège'],
   'wc-flush':              ['Appuyer sur la chasse', 'Relâcher la chasse'],

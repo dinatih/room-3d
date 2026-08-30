@@ -138,7 +138,7 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
     onSize(new THREE.Vector3(W_TOTAL, GLASS_TOP, WW));
   }, [onSize]);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     const s = stateRef.current;
     let moved = false;
     const actualLeftOpen = s.isOpenRight && s.isOpenLeft;
@@ -148,16 +148,37 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
     const rightTarget = s.isOpenRight ? Math.PI / 2 : (isLeftOpen ? Math.PI / 2 : 0);
 
     const dLeft = leftTarget - leftRotRef.current;
-    if (Math.abs(dLeft) > 0.001) { leftRotRef.current += dLeft * 0.12; moved = true; }
-    else leftRotRef.current = leftTarget;
+    if (Math.abs(dLeft) > 0.001) {
+      leftRotRef.current += dLeft * Math.min(1, 10 * delta);
+      moved = true;
+    } else if (leftRotRef.current !== leftTarget) {
+      leftRotRef.current = leftTarget;
+      moved = true;
+    }
 
     const dRight = rightTarget - rightRotRef.current;
-    if (Math.abs(dRight) > 0.001) { rightRotRef.current += dRight * 0.12; moved = true; }
-    else rightRotRef.current = rightTarget;
+    if (Math.abs(dRight) > 0.001) {
+      rightRotRef.current += dRight * Math.min(1, 10 * delta);
+      moved = true;
+    } else if (rightRotRef.current !== rightTarget) {
+      rightRotRef.current = rightTarget;
+      moved = true;
+    }
+
+    // Animation du volet roulant (0 à 100%)
+    const targetShutter = typeof s.targetShutter === 'number' ? s.targetShutter : (s.targetShutter ? 100 : 0);
+    const dShutter = targetShutter - shutterPercentRef.current;
+    if (Math.abs(dShutter) > 0.1) {
+      shutterPercentRef.current += dShutter * Math.min(1, 6 * delta);
+      moved = true;
+    } else if (shutterPercentRef.current !== targetShutter) {
+      shutterPercentRef.current = targetShutter;
+      moved = true;
+    }
 
     if (moved) {
-      rightDoorRef.current.rotation.y = rightRotRef.current;
-      leftDoorRef.current.rotation.y = leftRotRef.current;
+      if (rightDoorRef.current) rightDoorRef.current.rotation.y = rightRotRef.current;
+      if (leftDoorRef.current) leftDoorRef.current.rotation.y = leftRotRef.current;
 
       if (handleRef.current) {
         const maxTilt = 35 * (Math.PI / 180);
@@ -170,7 +191,8 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
       if (instancedShutterRef.current) {
         const currentHeight = (200 * shutterPercentRef.current) / 100;
-        instancedShutterRef.current.count = Math.max(0, Math.min(50, Math.ceil(currentHeight / 4)));
+        const count = Math.max(0, Math.min(50, Math.ceil(currentHeight / 4)));
+        instancedShutterRef.current.count = count;
       }
       invalidate();
     }
@@ -179,11 +201,17 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
   useLayoutEffect(() => {
     const dummy = new THREE.Object3D();
     for (let i = 0; i < 50; i++) {
-      dummy.position.set(0, 25 + 200 - i * 4 - 2, -4);
+      dummy.position.set(0, 225 - i * 4 - 2, -4);
       dummy.updateMatrix();
       instancedShutterRef.current.setMatrixAt(i, dummy.matrix);
     }
     instancedShutterRef.current.instanceMatrix.needsUpdate = true;
+    const initialPos = typeof stateRef.current.targetShutter === 'number'
+      ? stateRef.current.targetShutter
+      : (stateRef.current.targetShutter ? 100 : 0);
+    shutterPercentRef.current = initialPos;
+    const initialHeight = (200 * initialPos) / 100;
+    instancedShutterRef.current.count = Math.max(0, Math.min(50, Math.ceil(initialHeight / 4)));
   }, []);
 
   const W_INNER = W_TOTAL - FRAME * 2;
@@ -225,7 +253,7 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
         <mesh position={[0, 0, 0]} geometry={hingeGeo} material={metalMaterial} />
       </group>
 
-      <instancedMesh ref={instancedShutterRef} args={[null as any, null as any, 50]} material={shutterMaterial}>
+      <instancedMesh ref={instancedShutterRef} args={[null as any, null as any, 50]} material={shutterMaterial} castShadow receiveShadow>
         <boxGeometry args={[W_INNER + 2, 3.8, 1.2]} />
       </instancedMesh>
     </group>

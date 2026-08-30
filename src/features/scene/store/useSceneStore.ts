@@ -81,9 +81,6 @@ const initialFurniture: FurnitureState = {
   sofaArmLeft: true,
   sofaArmRight: false,
   mackaparDoors: true,
-  bimDoubleDoor: true,
-  bimDoorLeftOpen: false,
-  bimDoorRightOpen: false,
   showerDoor: false,
 };
 
@@ -196,8 +193,6 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 't
     'ninja-toggle': 'ninja',
     'sofa-arm-left': 'sofaArmLeft',
     'sofa-arm-right': 'sofaArmRight',
-    'bim-door-left-open': 'bimDoorLeftOpen',
-    'bim-door-right-open': 'bimDoorRightOpen',
     'corr-doors-toggle': 'corrDoors',
     'sdb-closet-toggle': 'sdbClosetL',
     'sdb-closet-l-toggle': 'sdbClosetL',

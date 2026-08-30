@@ -275,9 +275,6 @@ export interface FurnitureState {
   livingDoor:   boolean;
   bathroomDoor: boolean;
   corrDoors:    boolean;
-  bimDoubleDoor:     boolean;
-  bimDoorLeftOpen:   boolean;
-  bimDoorRightOpen:  boolean;
   sdbClosetL:   boolean;
   sdbClosetR:   boolean;
   cbnWest:      boolean;
@@ -623,9 +620,8 @@ export function SidePanel({
       {furnitureBtn('Porte Séjour', 'livingDoor', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Porte SDB', 'bathroomDoor', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Baie Vitrée Est', 'eastGlassDoor', 'OUVERT', 'FERMÉ')}
-      {furnitureBtn('Porte Double BIM', 'bimDoubleDoor', 'ON', 'OFF')}
       {furnitureBtn('Baie Vitrée Ouest', 'glassDoorV2LeftOpen', 'OUVERT', 'FERMÉ')}
-      {furnitureBtn('Volets', 'glassDoorV2ShutterPos', 'ON', 'OFF', v => `${v}%`)}
+      {furnitureBtn('Volets', 'glassDoorV2ShutterPos', 'ON', 'OFF', v => typeof v === 'number' ? (v === 0 ? 'OUVERT' : v === 100 ? 'FERMÉ' : `${v}%`) : `${v}%`)}
       
       <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>PLACARDS</div>
       {furnitureBtn('Placard Couloir', 'corrDoors', 'OUVERT', 'FERMÉ')}

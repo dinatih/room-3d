@@ -393,12 +393,7 @@ export function useAgentController(
         }
       } else if (currentInstruction.type === 'INTERACT' || currentInstruction.type === 'WAIT') {
         if (currentInstruction.triggerEventKey) {
-          let key = currentInstruction.triggerEventKey;
-          
-          if (key === 'eastGlassDoor' && useSceneStore.getState().furniture.bimDoubleDoor) {
-            key = 'bimDoorRightOpen';
-          }
-
+          const key = currentInstruction.triggerEventKey;
           const store = useSceneStore.getState();
           const resolved = resolveStoreKey(key);
           const furniture = store.furniture as any;
@@ -521,10 +516,7 @@ export function useAgentController(
             stateRef.current.rotY = currentInstruction.rotY;
           }
           if (currentInstruction.triggerEventKey) {
-            let key = currentInstruction.triggerEventKey;
-            if (key === 'eastGlassDoor' && useSceneStore.getState().furniture.bimDoubleDoor) {
-              key = 'bimDoorRightOpen';
-            }
+            const key = currentInstruction.triggerEventKey;
             const store = useSceneStore.getState();
             const resolved = resolveStoreKey(key);
             const furniture = store.furniture as any;
