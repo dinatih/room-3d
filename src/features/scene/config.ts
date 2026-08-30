@@ -6,8 +6,10 @@
 // =============================================
 // MESURES RÉELLES (Télémètre laser / Mètre ruban)
 // =============================================
-/** Distance X entre la jambe ouest de la porte séjour (door-living-w) et le mur est SDB (bath-ne) : 52 cm */
-export const MEASURED_DIST_DOOR_LIVING_W_TO_BATH_NE = 52;
+/** Largeur / profondeur Z du placard couloir entre le retour porte séjour (door-living-w) et le mur SDB (bath-ne) : 52 cm */
+export const MEASURED_DIST_CORRIDOR_CLOSET_Z        = 52;
+export const MEASURED_DIST_DOOR_LIVING_W_TO_BATH_NE = MEASURED_DIST_CORRIDOR_CLOSET_Z;
+
 
 /** Distance Z entre le mur nord de la SDB (Z de bath-nw/kitchen-nw) et shower-ne : 141 cm */
 export const MEASURED_DIST_BATH_N_TO_SHOWER_NE      = 141;

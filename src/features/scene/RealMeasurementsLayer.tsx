@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Html, Line } from '@react-three/drei';
 import { useSceneStore } from './store/useSceneStore';
 import {
-  MEASURED_DIST_DOOR_LIVING_W_TO_BATH_NE,
+  MEASURED_DIST_CORRIDOR_CLOSET_Z,
   MEASURED_DIST_BATH_N_TO_SHOWER_NE,
   MEASURED_DIST_BATH_W_TO_DOOR_BATH_N,
   MEASURED_DIST_KITCHEN_SW_TO_SE,
@@ -13,11 +13,9 @@ import {
   MEASURED_HEIGHT_FLOOR_TO_CEILING,
   ROOM_W,
   WALL_H,
-  NICHE_X,
   NICHE_Z_START,
-  KITCHEN_Z,
 } from '@config';
-import { pX, pZ, pEast, CORR_WALL_X } from './wallData';
+import { pEast, pWest, pNorth, pSouth, pZ, CORR_WALL_X } from './wallData';
 
 interface MeasurementItem {
   id: string;
@@ -40,9 +38,9 @@ function DimensionLine({ item }: { item: MeasurementItem }) {
     (start[2] + end[2]) / 2,
   ];
 
-  // Calcul des ticks d'extrémité (perpendiculaires)
+  // Calcul des ticks d'extrémité perpendiculaires aux faces internes
   const tickGeo = useMemo(() => {
-    const tickLen = 6;
+    const tickLen = 5;
     const dx = end[0] - start[0];
     const dy = end[1] - start[1];
     const dz = end[2] - start[2];
@@ -77,7 +75,7 @@ function DimensionLine({ item }: { item: MeasurementItem }) {
 
   return (
     <group renderOrder={99999}>
-      {/* Ligne principale */}
+      {/* Ligne principale de cote */}
       <Line
         points={[start, end]}
         color={color}
@@ -85,7 +83,7 @@ function DimensionLine({ item }: { item: MeasurementItem }) {
         depthTest={false}
       />
 
-      {/* Ticks d'extrémités */}
+      {/* Ticks d'arêtes perpendiculaires aux faces internes */}
       <Line
         points={tickGeo.startTick}
         color={color}
@@ -99,13 +97,13 @@ function DimensionLine({ item }: { item: MeasurementItem }) {
         depthTest={false}
       />
 
-      {/* Points d'ancrage aux extrémités */}
+      {/* Marqueurs d'ancrage sur les surfaces */}
       <mesh position={start}>
-        <sphereGeometry args={[1.5, 12, 12]} />
+        <sphereGeometry args={[1.2, 12, 12]} />
         <meshBasicMaterial color={color} depthTest={false} />
       </mesh>
       <mesh position={end}>
-        <sphereGeometry args={[1.5, 12, 12]} />
+        <sphereGeometry args={[1.2, 12, 12]} />
         <meshBasicMaterial color={color} depthTest={false} />
       </mesh>
 
@@ -114,7 +112,7 @@ function DimensionLine({ item }: { item: MeasurementItem }) {
         <div
           title={`${name} : ${valueCm} cm\n${item.description}`}
           style={{
-            background: 'rgba(15, 23, 42, 0.88)',
+            background: 'rgba(15, 23, 42, 0.90)',
             color: '#fff',
             border: `1.5px solid ${color}`,
             borderRadius: 6,
@@ -146,115 +144,115 @@ export function RealMeasurementsLayer() {
   const cameraMode = useSceneStore(state => state.cameraMode);
 
   const measurements: MeasurementItem[] = useMemo(() => {
-    // Hauteur standard d'élévation au-dessus du sol pour les cotes horizontales
+    // Hauteur d'élévation pour les cotes horizontales (surélevé en 2D pour vue dessus)
     const yBase = cameraMode === 'top' ? 275 : 18;
 
     return [
-      // 1. Distance porte séjour Ouest -> Mur Est SDB
+      // 1. Largeur / profondeur du placard couloir le long de l'axe Z (traverse le placard)
       {
-        id: 'door-living-w-to-bath-ne',
-        name: 'Porte Séjour ↔ SDB',
-        valueCm: MEASURED_DIST_DOOR_LIVING_W_TO_BATH_NE,
-        start: [pX('door-living-w'), yBase, pZ('door-living-w')],
-        end: [pX('bath-ne'), yBase, pZ('door-living-w')],
+        id: 'corr-closet-z',
+        name: 'Placard Couloir',
+        valueCm: MEASURED_DIST_CORRIDOR_CLOSET_Z,
+        start: [CORR_WALL_X - 18, yBase, pSouth('door-living-w')],
+        end: [CORR_WALL_X - 18, yBase, pNorth('bath-ne')],
         color: '#ffc107',
-        description: 'Distance entre la jambe ouest de la porte séjour et le mur Est SDB',
-        axis: 'x',
-      },
-
-      // 2. Distance Mur Nord SDB -> Douche NE
-      {
-        id: 'bath-n-to-shower-ne',
-        name: 'Mur Nord SDB ↔ Douche NE',
-        valueCm: MEASURED_DIST_BATH_N_TO_SHOWER_NE,
-        start: [pX('shower-ne'), yBase, KITCHEN_Z + 3.6],
-        end: [pX('shower-ne'), yBase, pZ('shower-ne')],
-        color: '#00e5ff',
-        description: 'Distance entre le mur nord de la SDB et la séparation douche NE',
+        description: 'Largeur/profondeur intérieure du placard couloir entre la face sud porte séjour (door-living-w) et la face nord mur SDB (bath-ne)',
         axis: 'z',
       },
 
-      // 3. Distance Mur Ouest SDB -> Porte SDB Nord
+      // 2. Distance Mur Nord SDB -> Douche NE (axe Z, face interne sud mur nord à face nord douche)
+      {
+        id: 'bath-n-to-shower-ne',
+        name: 'Nord SDB ↔ Douche',
+        valueCm: MEASURED_DIST_BATH_N_TO_SHOWER_NE,
+        start: [pWest('shower-ne') - 2, yBase, pSouth('bath-nw')],
+        end: [pWest('shower-ne') - 2, yBase, pNorth('shower-ne')],
+        color: '#00e5ff',
+        description: 'Distance intérieure Z entre la face sud du mur nord SDB et la face nord de la douche NE',
+        axis: 'z',
+      },
+
+      // 3. Distance Mur Ouest SDB -> Porte SDB Nord (axe X, face interne ouest à face interne ouest porte SDB)
       {
         id: 'bath-w-to-door-bath-n',
-        name: 'Largeur SDB Intérieure',
+        name: 'Largeur Intérieure SDB',
         valueCm: MEASURED_DIST_BATH_W_TO_DOOR_BATH_N,
-        start: [NICHE_X, yBase, pZ('door-bath-n')],
-        end: [CORR_WALL_X, yBase, pZ('door-bath-n')],
+        start: [pEast('bath-nw'), yBase, pZ('door-bath-n')],
+        end: [pWest('door-bath-n'), yBase, pZ('door-bath-n')],
         color: '#76ff03',
-        description: 'Largeur intérieure SDB entre mur Ouest et la porte SDB Nord',
+        description: 'Largeur intérieure entre la face interne du mur ouest et la face interne du mur porte SDB',
         axis: 'x',
       },
 
-      // 4. Largeur ouverture cuisine
+      // 4. Largeur ouverture cuisine (axe X, face interne est kitchen-sw à face interne ouest kitchen-se)
       {
         id: 'kitchen-sw-to-se',
         name: 'Ouverture Cuisine',
         valueCm: MEASURED_DIST_KITCHEN_SW_TO_SE,
-        start: [pX('kitchen-sw'), yBase, pZ('kitchen-sw')],
-        end: [pX('kitchen-se'), yBase, pZ('kitchen-se')],
+        start: [pEast('kitchen-sw'), yBase, pNorth('kitchen-sw') + 5],
+        end: [pWest('kitchen-se'), yBase, pNorth('kitchen-sw') + 5],
         color: '#ff4081',
-        description: 'Largeur d’ouverture du renfoncement cuisine (kitchen-sw ↔ kitchen-se)',
+        description: 'Largeur de passage entre la face interne de kitchen-sw et la face interne de kitchen-se',
         axis: 'x',
       },
 
-      // 5. Profondeur Séjour Mur Est
+      // 5. Profondeur Séjour Mur Est (axe Z, face interne sud mur nord à face interne nord mur sud)
       {
         id: 'corner-ne-to-se',
         name: 'Profondeur Séjour Est',
         valueCm: MEASURED_DIST_CORNER_NE_TO_SE,
-        start: [ROOM_W - 8, yBase, pZ('corner-ne') + 5],
-        end: [ROOM_W - 8, yBase, pZ('corner-se') - 5],
+        start: [ROOM_W - 6, yBase, pSouth('corner-ne')],
+        end: [ROOM_W - 6, yBase, pNorth('corner-se')],
         color: '#e040fb',
-        description: 'Profondeur du séjour le long du mur Est (corner-ne ↔ corner-se)',
+        description: 'Distance intérieure entre la face sud du mur nord et la face nord du mur sud (le long du mur Est)',
         axis: 'z',
       },
 
-      // 6. Largeur de douche
+      // 6. Largeur de douche (axe X, face interne ouest à face interne retour douche)
       {
         id: 'shower-nw-to-ne',
         name: 'Largeur Douche',
         valueCm: MEASURED_DIST_SHOWER_NW_TO_NE,
-        start: [NICHE_X, yBase, pZ('shower-ne')],
-        end: [pX('shower-ne'), yBase, pZ('shower-ne')],
+        start: [pEast('shower-nw'), yBase, pNorth('shower-ne') + 5],
+        end: [pWest('shower-ne'), yBase, pNorth('shower-ne') + 5],
         color: '#00e676',
-        description: 'Largeur de la douche entre mur Ouest et séparation NE',
+        description: 'Largeur intérieure de la douche entre la face interne ouest et le retour douche NE',
         axis: 'x',
       },
 
-      // 7. Passage couloir Est
+      // 7. Passage couloir Est (axe X, face externe est cloison SDB à face interne ouest mur Est)
       {
         id: 'door-bath-e-to-corr-e',
-        name: 'Passage Couloir Est',
+        name: 'Largeur Couloir',
         valueCm: MEASURED_DIST_DOOR_BATH_E_TO_CORR_E,
-        start: [CORR_WALL_X, yBase, 540],
-        end: [ROOM_W, yBase, 540],
+        start: [pEast('door-bath-n'), yBase, 540],
+        end: [ROOM_W - 2, yBase, 540],
         color: '#ff9100',
-        description: 'Largeur de passage du couloir entre porte SDB et mur Est',
+        description: 'Largeur intérieure de passage du couloir entre la face externe de la cloison SDB et le mur Est',
         axis: 'x',
       },
 
-      // 8. Largeur Séjour Poutre / Mur Est
+      // 8. Largeur Séjour Poutre ↔ Mur Est (axe X, face interne est poutre à face interne ouest mur Est)
       {
         id: 'niche-beam-to-east-wall',
         name: 'Largeur Séjour Poutre ↔ Est',
         valueCm: MEASURED_DIST_NICHE_BEAM_TO_EAST_WALL,
         start: [pEast('niche-beam'), yBase, NICHE_Z_START],
-        end: [ROOM_W, yBase, NICHE_Z_START],
+        end: [ROOM_W - 2, yBase, NICHE_Z_START],
         color: '#ffd600',
-        description: 'Largeur du séjour entre la poutre/niche et le mur Est',
+        description: 'Largeur intérieure du séjour entre la face interne de la poutre ouest et la face interne du mur Est',
         axis: 'x',
       },
 
-      // 9. Hauteur sous plafond
+      // 9. Hauteur sous plafond (axe Y, surface du parquet à sous-face du plafond)
       {
         id: 'floor-to-ceiling',
-        name: 'Hauteur sous plafond',
+        name: 'Hauteur Parquet ↔ Plafond',
         valueCm: MEASURED_HEIGHT_FLOOR_TO_CEILING,
-        start: [ROOM_W - 25, 0, 30],
-        end: [ROOM_W - 25, WALL_H, 30],
+        start: [ROOM_W - 15, 0, 30],
+        end: [ROOM_W - 15, WALL_H, 30],
         color: '#b388ff',
-        description: 'Hauteur réelle mesurée du parquet au plafond',
+        description: 'Hauteur mesurée entre la surface du parquet et le plafond',
         axis: 'y',
       },
     ];
