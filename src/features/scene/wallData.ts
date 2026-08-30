@@ -238,7 +238,7 @@ export const WALL_DEFS: WallDef[] = [
   ...splitW({ axis: 'z', xc: pX('bath-ne'), z1: pSouth('door-bath-s'), z2: pNorth('bath-se'), t: PARTITION_THICKNESS }),
   // Linteau au-dessus de la porte couloir (3D seulement)
   ...splitW({ axis: 'z', xc: pX('bath-ne'), z1: pNorth('door-bath-n'), z2: pNorth('door-bath-s'),
-    yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none', t: PARTITION_THICKNESS }),
+    yBase: DOOR_H, h: WALL_H - DOOR_H, segKind: 'none', t: PARTITION_THICKNESS, mat: 'west' }),
   // Porte couloir SDB (2D uniquement)
   ...splitW({ axis: 'z', xc: pX('bath-ne'), z1: pNorth('door-bath-n'), z2: pNorth('door-bath-s'), segKind: 'door', t: PARTITION_THICKNESS }),
 

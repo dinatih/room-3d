@@ -547,14 +547,19 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
           <group name="walls">
             {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
               const mat = MAT_MAP[d.mat ?? 'default'];
-              const uData = { animUnit: true, brickType: 'wall', side: d.mat };
+              const uData = {
+                animUnit: true,
+                brickType: 'wall',
+                side: d.mat ?? 'misc',
+                itemName: d.yBase ? 'Linteau mur' : ((d.h ?? WALL_H) < 50 ? 'Muret bas' : 'Mur'),
+              };
               if (d.axis === 'z')
                 return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
               return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
             })}
             {/* Mur diagonal */}
-            <SplitDiagBox d1={DiagWall.door.start} d2={DiagWall.door.end} yBase={DOOR_H} h={WALL_H - DOOR_H} userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
-            <SplitDiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag' }} />
+            <SplitDiagBox d1={DiagWall.door.start} d2={DiagWall.door.end} yBase={DOOR_H} h={WALL_H - DOOR_H} userData={{ animUnit: true, brickType: 'wall', side: 'diag', itemName: 'Linteau Porte Entrée' }} />
+            <SplitDiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag', itemName: 'Mur diagonal' }} />
 
             {/* Panneaux bois occultants jardin */}
             {GARDEN_PANEL_DEFS.map((p, i) => (
@@ -1815,6 +1820,8 @@ export function DoorsPlaced() {
         position={[(pEast('glass-west') + pWest('glass-east')) / 2, 105, 0]}
         userData={{
           animUnit: true,
+          isIkea: true,
+          itemName: 'Porte-fenêtre double vitrée',
           hoverAction: {
             label: 'Porte-fenêtre',
             actions: ['eastGlassDoor', 'glassDoorLeftOpen', 'glassDoorShutter']
@@ -1824,19 +1831,19 @@ export function DoorsPlaced() {
       </group>
       <group
         position={[(DOOR_START + DOOR_END) / 2, DOOR_HEIGHT / 2, ROOM_D + PARTITION_THICKNESS / 2]}
-        userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
+        userData={{ animUnit: true, isIkea: true, itemName: 'Porte séjour', hoverAction: { label: 'Porte séjour', actionId: 'livingDoor' } }}>
         <DoorLiving item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
         position={[CORR_WALL_X, DOOR_HEIGHT / 2, 560]}
         rotation-y={Math.PI / 2}
-        userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Porte SDB', actionId: 'bathroomDoor' } }}>
+        userData={{ animUnit: true, isIkea: true, itemName: 'Porte SDB', hoverAction: { label: 'Porte SDB', actionId: 'bathroomDoor' } }}>
         <DoorBath item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group
         position={[entry.wx, entry.wy, entry.wz]}
         rotation-y={entry.diagRotY}
-        userData={{ animUnit: true, isIkea: true, hoverAction: { label: 'Porte entrée', actionId: 'entryDoor' } }}>
+        userData={{ animUnit: true, isIkea: true, itemName: 'Porte entrée', hoverAction: { label: 'Porte entrée', actionId: 'entryDoor' } }}>
         <DoorEntry item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
     </group>
