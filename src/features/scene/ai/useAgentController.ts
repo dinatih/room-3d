@@ -128,10 +128,12 @@ export function useAgentController(
   useEffect(() => {
     const onInvite = (e: any) => {
       if (e.detail?.targetId === _characterId) {
+        // Si le personnage est déjà en train de faire la duo-zone ou dans la duo-zone, ignorer
+        if (claimedSlotRef.current?.objectId === 'duo-zone' || duoRoleRef.current) return;
         const role = (e.detail?.forceRole as DuoRole) || duoSessionManager.joinDuoZone(_characterId);
         if (role) {
           duoRoleRef.current = role;
-          if (claimedSlotRef.current && (claimedSlotRef.current.objectId !== 'duo-zone' || claimedSlotRef.current.slotId !== role)) {
+          if (claimedSlotRef.current) {
             OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
             claimedSlotRef.current = null;
           }
@@ -710,13 +712,18 @@ export function useAgentController(
     } else if (statusRef.current === 'INTERACTING') {
       // ── Gestion spéciale pour duo-zone (✨ Scène Duo) ──
       if (currentInstruction.smartObjectId === 'duo-zone') {
+        // Session terminée ou terminée pour ce personnage
         if (duoSessionManager.isCompletedFor(_characterId)) {
           duoSessionManager.leaveDuoZone(_characterId);
           claimedSlotRef.current = null;
           duoRoleRef.current = null;
           duoInvitedRef.current = false;
+          dynamicNavQueueRef.current = [];
+          dynamicNavIndexRef.current = 0;
           statusRef.current = 'IDLE';
-          stepIndexRef.current++;
+          if (!hasNavStep) {
+            stepIndexRef.current++;
+          }
           return update(dt);
         }
 
@@ -741,8 +748,12 @@ export function useAgentController(
             claimedSlotRef.current = null;
             duoRoleRef.current = null;
             duoInvitedRef.current = false;
+            dynamicNavQueueRef.current = [];
+            dynamicNavIndexRef.current = 0;
             statusRef.current = 'IDLE';
-            stepIndexRef.current++;
+            if (!hasNavStep) {
+              stepIndexRef.current++;
+            }
             return update(dt);
           }
           return stateRef.current;
@@ -772,8 +783,12 @@ export function useAgentController(
           claimedSlotRef.current = null;
           duoRoleRef.current = null;
           duoInvitedRef.current = false;
+          dynamicNavQueueRef.current = [];
+          dynamicNavIndexRef.current = 0;
           statusRef.current = 'IDLE';
-          stepIndexRef.current++;
+          if (!hasNavStep) {
+            stepIndexRef.current++;
+          }
           return update(dt);
         }
 
