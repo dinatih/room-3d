@@ -3,7 +3,6 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
-import { glbLocalBBox } from '@features/scene/glbUtils';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
@@ -28,43 +27,19 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     timer: 2.0
   });
 
-  // Handle Preview Animations
-  useEffect(() => {
-    if (!isPreview || !mixerRef.current || !previewAnim) return;
-    
-    const animMap: Record<string, string> = {
-      'idle': 'Dog|Dog|Idle', 'jump': 'Dog|Dog|Jump', 'run': 'Dog|Dog|Run',
-      'sitdown': 'Dog|Dog|SitDown', 'walk': 'Dog|Dog|Walk'
-    };
-    
-    const targetAnimName = animMap[previewAnim] || 'Dog|Dog|Idle';
-    const clip = animations.find(a => a.name === targetAnimName) || animations[0];
-    
-    if (clip) {
-      mixerRef.current.stopAllAction();
-      const action = mixerRef.current.clipAction(clip);
-      action.setLoop(THREE.LoopRepeat, Infinity);
-      action.clampWhenFinished = false;
-      action.reset().play();
-      playingRef.current = true;
-    }
-  }, [isPreview, previewAnim, animations]);
-
   useLayoutEffect(() => {
     scene.scale.setScalar(1);
-    scene.position.set(0, 0, 0);
-    scene.rotation.set(0, 0, 0);
+    scene.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = box.getSize(new THREE.Vector3());
 
-    const rawBox = glbLocalBBox(scene);
-    const rawSize = rawBox.getSize(new THREE.Vector3());
-
-    if (rawSize.y > 0) {
-      scene.scale.setScalar(40 / rawSize.y);
+    if (size.y > 0) {
+      scene.scale.setScalar(40 / size.y); // Scale to 40cm height
     } else {
       scene.scale.setScalar(1);
     }
-
-    const scaledBox = glbLocalBBox(scene);
+    scene.updateMatrixWorld(true);
+    const scaledBox = new THREE.Box3().setFromObject(scene);
     scene.position.set(0, -scaledBox.min.y, 0);
 
     scene.traverse(c => {
@@ -102,18 +77,26 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     return () => { mixerRef.current?.stopAllAction(); };
   }, [scene, animations, isPreview]);
 
-  // Initial animation
+  // Handle Initial State / Preview
   useEffect(() => {
-    if (!isPreview && mixerRef.current && animations.length > 0) {
-      mixerRef.current.stopAllAction();
-      const clip = animations.find(a => a.name === 'Dog|Dog|Idle') || animations[0];
-      const action = mixerRef.current.clipAction(clip);
-      action.setLoop(THREE.LoopRepeat, Infinity);
-      action.reset().play();
-      playingRef.current = true;
-      invalidate();
+    if (!mixerRef.current || animations.length === 0) return;
+    
+    mixerRef.current.stopAllAction();
+    const animMap: Record<string, string> = {
+      'idle': 'Dog|Dog|Idle', 'jump': 'Dog|Dog|Jump', 'run': 'Dog|Dog|Run',
+      'sitdown': 'Dog|Dog|SitDown', 'walk': 'Dog|Dog|Walk'
+    };
+    let targetAnimName = 'Dog|Dog|Idle';
+    if (isPreview && previewAnim) {
+      targetAnimName = animMap[previewAnim] || 'Dog|Dog|Idle';
     }
-  }, [isPreview, animations, invalidate]);
+    const clip = animations.find(a => a.name === targetAnimName) || animations[0];
+    const action = mixerRef.current.clipAction(clip);
+    action.setLoop(THREE.LoopRepeat, Infinity);
+    action.reset().play();
+    playingRef.current = true;
+    invalidate();
+  }, [animations, invalidate, isPreview, previewAnim]);
 
   useEffect(() => {
     if (isPreview) return;
