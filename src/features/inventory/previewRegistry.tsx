@@ -268,13 +268,13 @@ CHARACTERS.forEach(char => {
   } as any;
 });
 
-SCENE_REGISTRY['ushiro'] = function ShibaPreview({ actionState }: { actionState?: any }) {
-  return <ShibaInu isPreview={true} previewAnim={actionState?.walkerAnim} />;
+SCENE_REGISTRY['ushiro'] = function ShibaPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
+  return <ShibaInu isPreview={true} previewAnim={actionState?.walkerAnim} onSize={onSize} />;
 } as any;
 SCENE_REGISTRY['shiba-inu'] = SCENE_REGISTRY['ushiro'];
 
-SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState }: { actionState?: any }) {
-  return <RobinBird isPreview={true} previewAnim={actionState?.walkerAnim} />;
+SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
+  return <RobinBird isPreview={true} previewAnim={actionState?.walkerAnim} onSize={onSize} />;
 } as any;
 
 WIGS_ITEMS.forEach(wig => {
