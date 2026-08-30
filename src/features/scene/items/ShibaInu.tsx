@@ -53,9 +53,8 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
       scene.scale.setScalar(1);
     }
     scene.updateMatrixWorld(true);
-    const scaledBox = new THREE.Box3().setFromObject(scene);
-    scene.position.set(0, -scaledBox.min.y, 0);
-    onSize?.(scaledBox.getSize(new THREE.Vector3()));
+    scene.position.set(0, 0, 0);
+    onSize?.(new THREE.Vector3(size.x * (40 / (size.y || 1)), 40, size.z * (40 / (size.y || 1))));
 
     scene.traverse(c => {
       const m = c as THREE.Mesh;
