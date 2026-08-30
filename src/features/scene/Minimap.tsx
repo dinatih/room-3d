@@ -197,28 +197,25 @@ function drawMinimap(
 
 export function Minimap() {
   const isMobile = useIsMobile();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const floatingCanvasRef = useRef<HTMLCanvasElement>(null);
+  const expandedCanvasRef = useRef<HTMLCanvasElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const smallW = isMobile ? SMALL_W_MOBILE : SMALL_W_DESKTOP;
-  const canvasW = expanded
-    ? Math.round(Math.min(window.innerWidth * 0.85, (window.innerHeight * 0.85) / PLAN_ASPECT))
-    : smallW;
-  const canvasH = expanded
-    ? Math.round(canvasW * PLAN_ASPECT)
-    : Math.round(canvasW * 1.35);
+  const smallH = Math.round(smallW * 1.35);
 
+  // Boucle de rendu pour la minimap compacte (flottante)
   useEffect(() => {
-    if (isCollapsed) return;
-    const canvas = canvasRef.current;
+    if (isCollapsed || expanded) return;
+    const canvas = floatingCanvasRef.current;
     if (!canvas) return;
-    
+
     const dpr = Math.max(window.devicePixelRatio || 1, 2);
-    canvas.width  = Math.round(canvasW * dpr);
-    canvas.height = Math.round(canvasH * dpr);
-    canvas.style.width = `${canvasW}px`;
-    canvas.style.height = `${canvasH}px`;
+    canvas.width = Math.round(smallW * dpr);
+    canvas.height = Math.round(smallH * dpr);
+    canvas.style.width = `${smallW}px`;
+    canvas.style.height = `${smallH}px`;
 
     let rafId: number;
     const loop = () => {
@@ -230,7 +227,36 @@ export function Minimap() {
     return () => {
       cancelAnimationFrame(rafId);
     };
-  }, [canvasW, canvasH, smallW, isCollapsed]);
+  }, [smallW, smallH, isCollapsed, expanded]);
+
+  // Boucle de rendu pour la minimap agrandie (modal)
+  useEffect(() => {
+    if (!expanded) return;
+    const canvas = expandedCanvasRef.current;
+    if (!canvas) return;
+
+    const maxW = Math.min(window.innerWidth * 0.85, 800);
+    const maxH = Math.min(window.innerHeight * 0.80, 800);
+    const expW = Math.round(Math.min(maxW, maxH / PLAN_ASPECT));
+    const expH = Math.round(expW * PLAN_ASPECT);
+
+    const dpr = Math.max(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(expW * dpr);
+    canvas.height = Math.round(expH * dpr);
+    canvas.style.width = `${expW}px`;
+    canvas.style.height = `${expH}px`;
+
+    let rafId: number;
+    const loop = () => {
+      drawMinimap(canvas, smallW);
+      rafId = requestAnimationFrame(loop);
+    };
+    loop();
+
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
+  }, [expanded, smallW]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -276,44 +302,47 @@ export function Minimap() {
 
   return (
     <>
-      {/* Dimmed backdrop when expanded */}
+      {/* EXPANDED MODAL VIEW */}
       {expanded && (
-        <div 
-          onClick={() => setExpanded(false)}
-          className="position-fixed inset-0 bg-dark bg-opacity-50"
-          style={{ backdropFilter: 'blur(4px)', zIndex: 2000 }}
-        />
-      )}
-
-      {expanded ? (
-        /* EXPANDED VIEW: Styled inside a Bootstrap Card */
         <div
           className="position-fixed inset-0 d-flex align-items-center justify-content-center"
-          style={{ zIndex: 2001 }}
+          style={{
+            background: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            zIndex: 2000,
+          }}
           onClick={() => setExpanded(false)}
         >
           <div 
-            className="card glass-card shadow-lg p-2"
+            className="card glass-card shadow-lg p-2.5 rounded-3"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '95vw', maxHeight: '95vh' }}
+            style={{ maxWidth: '95vw', maxHeight: '95vh', pointerEvents: 'auto' }}
           >
             <div className="card-header border-0 bg-transparent p-0 d-flex justify-content-between align-items-center mb-2">
-              <span className="fw-semibold text-muted text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.06em', color: 'var(--text) !important' }}>
+              <span className="fw-bold text-dark text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.06em' }}>
                 📍 Plan 2D de la pièce
               </span>
-              <button type="button" className="btn-close" aria-label="Close" onClick={() => setExpanded(false)}></button>
+              <button 
+                type="button" 
+                className="btn-close" 
+                aria-label="Close" 
+                onClick={() => setExpanded(false)}
+              />
             </div>
-            <div className="position-relative">
+            <div className="position-relative d-flex justify-content-center">
               <canvas 
-                ref={canvasRef} 
-                className="rounded" 
+                ref={expandedCanvasRef} 
+                className="rounded-2 shadow-inner" 
                 style={{ display: 'block', background: 'transparent' }} 
               />
             </div>
           </div>
         </div>
-      ) : (
-        /* FLOATING MINIMAP: Bottom-Left on mobile (away from D-Pad), Bottom-Right on desktop */
+      )}
+
+      {/* FLOATING MINIMAP: Bottom-Left on mobile (away from D-Pad), Bottom-Right on desktop */}
+      {!expanded && (
         <div
           className="position-fixed glass-card shadow-sm p-1 rounded-3"
           style={{
@@ -326,7 +355,7 @@ export function Minimap() {
           }}
         >
           <canvas
-            ref={canvasRef}
+            ref={floatingCanvasRef}
             className="rounded-2"
             style={{
               display: 'block',

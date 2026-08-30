@@ -221,6 +221,38 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     flex: 1,
   };
 
+  // Gestion du drag de redimensionnement depuis le coin inférieur gauche
+  const handleResizePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startW = containerRef.current ? containerRef.current.offsetWidth : (savedDimensionsRef.current.width ?? 460);
+    const startH = containerRef.current ? containerRef.current.offsetHeight : (savedDimensionsRef.current.height ?? 215);
+
+    const onPointerMove = (ev: PointerEvent) => {
+      // Déplacement vers la gauche augmente la largeur (car container fixé à droite: top: 0, right: 0)
+      const deltaX = startX - ev.clientX;
+      const deltaY = ev.clientY - startY;
+      const newW = Math.max(280, Math.min(window.innerWidth * 0.95, startW + deltaX));
+      const newH = Math.max(80, Math.min(window.innerHeight * 0.85, startH + deltaY));
+      
+      savedDimensionsRef.current = { width: newW, height: newH };
+      if (containerRef.current) {
+        containerRef.current.style.width = `${newW}px`;
+        containerRef.current.style.height = `${newH}px`;
+      }
+    };
+
+    const onPointerUp = () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  };
+
   // ── Rendu ──────────────────────────────────────────────────────────────
   return (
     <div
@@ -297,6 +329,35 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
             );
           })}
           <div ref={bottomRef} />
+        </div>
+      )}
+
+      {/* Poignée de redimensionnement manuelle (bas-gauche) */}
+      {visible && (
+        <div
+          onPointerDown={handleResizePointerDown}
+          title="Redimensionner la console (Glisser)"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            width: 22,
+            height: 22,
+            cursor: 'nesw-resize',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'flex-start',
+            padding: '2px',
+            color: '#00ff88',
+            opacity: 0.75,
+            zIndex: 10,
+            userSelect: 'none',
+            touchAction: 'none',
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M1 15h14v-2H1v2zm0-4h10V9H1v2zm0-4h6V5H1v2z" />
+          </svg>
         </div>
       )}
     </div>
