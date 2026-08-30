@@ -25,7 +25,7 @@ import { useThree } from '@react-three/fiber';
 import {
   LAYER_STRUCTURE, LAYER_EQUIPMENT, LAYER_FURNITURE,
   LAYER_NEIGHBORS, LAYER_LIDAR, LAYER_MIRRORS, LAYER_WALKER,
-  LAYER_WALKER_DETAIL
+  LAYER_WALKER_DETAIL, LAYER_ANIMALS
 } from '@config';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -39,6 +39,7 @@ interface SceneLayers {
   lidar:      boolean;
   mirrors:    boolean;
   walker:     boolean;
+  animals?:   boolean;
 }
 
 // ── CategoryLayerGroup ────────────────────────────────────────────────────────
@@ -95,6 +96,7 @@ export function SceneLayerController({ layers }: { layers: SceneLayers }) {
       [LAYER_LIDAR,     layers.lidar],
       [LAYER_MIRRORS,   layers.mirrors],
       [LAYER_WALKER,    layers.walker],
+      [LAYER_ANIMALS,   layers.animals ?? true],
     ];
     toggles.forEach(([l, visible]) => {
       if (visible) camera.layers.enable(l);

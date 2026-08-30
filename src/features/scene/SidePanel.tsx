@@ -326,6 +326,7 @@ export interface LayerState {
   realSun:      boolean;
   grass:        boolean;
   walker:       boolean;
+  animals:      boolean;
   accessories:  boolean;
   laraPistols:  boolean;
   laraNude?:    boolean;
@@ -795,6 +796,7 @@ export function SidePanel({
       {layerBtn('peach',  'Portes',        'doors')}
       {layerBtn('peach',  'Équipements',   'equipment')}
       {layerBtn('purple', 'Mobilier',      'furniture')}
+      {layerBtn('blue',   'Animaux 🐕🐦',  'animals')}
       {layerBtn('purple', 'Miroirs',       'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
       {layerBtn('gray',   'Lidar 📸',        'lidar')}

@@ -17,7 +17,7 @@ import { Minimap }          from '@features/scene/Minimap';
 import { Walls, Floor, Mirrors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
-import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes } from './Placements';
+import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes, Animals } from './Placements';
 import { Walker } from './Walker';
 import { AiZonesHelper } from './ai/AiZonesHelper';
 import { CollisionDebugHelper } from './ai/CollisionDebugHelper';
@@ -53,7 +53,7 @@ const Inventory = lazy(() => import('@features/inventory/Inventory').then(module
 import {
   ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NEIGHBORS, LAYER_LIDAR,
-  LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER,
+  LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER, LAYER_ANIMALS,
 } from '@config';
 
 
@@ -442,6 +442,10 @@ export function Studio() {
           {/* LAYER_WALKER (18) — Personnages 3D */}
           <CategoryLayerGroup layer={LAYER_WALKER}>
             <Walker />
+          </CategoryLayerGroup>
+          {/* LAYER_ANIMALS (20) — Animaux autonomes (Oiseau Robin, Chien Shiba Inu) */}
+          <CategoryLayerGroup layer={LAYER_ANIMALS}>
+            <Animals />
           </CategoryLayerGroup>
           <GlobalSkeletonHelpers show={layers.skeleton} />
           {/*

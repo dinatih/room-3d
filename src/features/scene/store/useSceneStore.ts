@@ -115,6 +115,7 @@ const initialLayers: LayerState = {
   realSun: false,
   grass: false,
   walker: true,
+  animals: true,
   accessories: true,
   laraPistols: true,
   laraNude: false,

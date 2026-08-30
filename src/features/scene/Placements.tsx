@@ -705,11 +705,20 @@ export function Garden() {
           <Vatterso20562909 item={stub('vatterso-20562909')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </MergedStaticGroup>
+    </>
+  );
+}
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ANIMALS — Oiseau Robin & Chien Shiba Inu (Animaux autonomes / Walkers)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export function Animals() {
+  return (
+    <>
       <group userData={{ skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
         <RobinBird />
       </group>
-
       <group userData={{ skipMerge: true, itemName: 'Shiba Inu', hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
         <ShibaInu />
       </group>

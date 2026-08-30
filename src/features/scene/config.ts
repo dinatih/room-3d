@@ -74,4 +74,5 @@ export const LAYER_WALKER_DETAIL = 16; // Meshes walker masqués en main camera 
 export const LAYER_MIRRORS       = 17; // Miroirs NISSEDAL / Reflector
 export const LAYER_WALKER        = 18; // Personnages 3D
 export const LAYER_AI_ZONES      = 19; // Zones IA, cercles, flèches et labels texte
+export const LAYER_ANIMALS       = 20; // Animaux autonomes (Oiseau Robin, Chien Shiba Inu)
 
