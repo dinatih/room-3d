@@ -44,17 +44,21 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     scene.rotation.set(0, 0, 0);
 
     scene.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(scene);
-    const size = box.getSize(new THREE.Vector3());
+    const rawBox = new THREE.Box3().setFromObject(scene);
+    const rawSize = rawBox.getSize(new THREE.Vector3());
 
-    if (size.y > 0) {
-      scene.scale.setScalar(40 / size.y); // Hauteur cible 40cm
-    } else {
-      scene.scale.setScalar(1);
-    }
-    scene.updateMatrixWorld(true);
+    const targetHeight = 40; // 40 cm au garrot
+    const scaleFactor = rawSize.y > 0 ? targetHeight / rawSize.y : 1;
+
+    scene.scale.setScalar(scaleFactor);
     scene.position.set(0, 0, 0);
-    onSize?.(new THREE.Vector3(size.x * (40 / (size.y || 1)), 40, size.z * (40 / (size.y || 1))));
+
+    const finalSize = new THREE.Vector3(
+      rawSize.x * scaleFactor,
+      targetHeight,
+      rawSize.z * scaleFactor
+    );
+    onSize?.(finalSize);
 
     scene.traverse(c => {
       const m = c as THREE.Mesh;
