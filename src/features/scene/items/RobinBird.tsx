@@ -75,7 +75,6 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
-      m.layers.disable(0);
       m.layers.enable(LAYER_ANIMALS);
       if (m.geometry) {
         m.geometry.computeBoundingBox();
