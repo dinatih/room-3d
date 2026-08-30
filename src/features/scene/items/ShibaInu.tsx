@@ -129,7 +129,11 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   }, [invalidate, isPreview, animations]);
 
   useFrame((_, delta) => {
-    if (isAppIdle() || !mixerRef.current || !modelRef.current) return;
+    if (!mixerRef.current) return;
+    mixerRef.current.update(delta);
+    invalidate();
+
+    if (isAppIdle() || !modelRef.current) return;
     
     if (!isPreview) {
       const ai = aiStateRef.current;
@@ -206,9 +210,6 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
         yaw: modelRef.current.rotation.y
       };
     }
-    
-    mixerRef.current.update(delta);
-    invalidate();
   });
 
   return (

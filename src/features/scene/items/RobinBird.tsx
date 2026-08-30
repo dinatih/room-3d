@@ -61,7 +61,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     const size = box.getSize(new THREE.Vector3());
 
     if (size.y > 0) {
-      scene.scale.setScalar(10 / size.y); // Scale to 10cm height
+      scene.scale.setScalar(15 / size.y); // Scale to 15cm height
     } else {
       scene.scale.setScalar(1);
     }
@@ -135,7 +135,11 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
 
   // Boucle de jeu (IA & Animation)
   useFrame((_, delta) => {
-    if (isAppIdle() || !mixerRef.current || !modelRef.current) return;
+    if (!mixerRef.current) return;
+    mixerRef.current.update(delta);
+    invalidate();
+
+    if (isAppIdle() || !modelRef.current) return;
     
     if (!isPreview) {
       const ai = aiStateRef.current;
@@ -196,9 +200,6 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
         }
       }
     }
-
-    mixerRef.current.update(delta);
-    invalidate();
   });
 
   return (
