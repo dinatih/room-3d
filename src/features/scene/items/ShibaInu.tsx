@@ -8,10 +8,12 @@ import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 
+const GLB_PATH = '/characters/ushiro/shiba_inu_dog_ushiro.glb';
+
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
 
 export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPreview = false, onSize }: { isPreview?: boolean, previewAnim?: string, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
-  const { scene, animations } = useGLTFClone('/characters/ushiro/shiba_inu_dog_ushiro.glb');
+  const { scene, animations } = useGLTFClone(GLB_PATH);
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
   const playingRef = useRef(false);
@@ -37,7 +39,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     const size = box.getSize(new THREE.Vector3());
 
     if (size.y > 0) {
-      scene.scale.setScalar(40 / size.y); // Scale to 40cm height
+      scene.scale.setScalar(50 / size.y); // Scale to 50cm height
     } else {
       scene.scale.setScalar(1);
     }
@@ -53,17 +55,6 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
       if (m.geometry) {
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
-        if (m.geometry.boundingSphere) {
-          m.geometry.boundingSphere.radius = Math.max(m.geometry.boundingSphere.radius * 10, 100.0);
-        }
-      }
-      if (m.material) {
-        const mat = m.material as THREE.MeshStandardMaterial;
-        mat.metalness = 0;
-        mat.roughness = 0.8;
-        mat.transparent = false;
-        mat.alphaTest = 0;
-        mat.depthWrite = true;
       }
     });
 
@@ -219,4 +210,4 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   );
 }
 
-useGLTF.preload('/characters/ushiro/shiba_inu_dog_ushiro.glb');
+useGLTF.preload(GLB_PATH);
