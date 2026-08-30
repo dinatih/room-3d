@@ -6,10 +6,11 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
+import { glbLocalBBox } from '@features/scene/glbUtils';
 
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
 
-export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPreview = false }: { isPreview?: boolean, previewAnim?: string, showSkeletonPreview?: boolean }) {
+export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPreview = false, onSize }: { isPreview?: boolean, previewAnim?: string, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
   const { scene, animations } = useGLTFClone('/characters/ushiro/shiba_inu_dog_ushiro.glb');
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
@@ -28,9 +29,11 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   });
 
   useLayoutEffect(() => {
-    scene.scale.setScalar(1);
-    scene.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(scene);
+    scene.scale.set(1, 1, 1);
+    scene.position.set(0, 0, 0);
+    scene.rotation.set(0, 0, 0);
+
+    const box = glbLocalBBox(scene);
     const size = box.getSize(new THREE.Vector3());
 
     if (size.y > 0) {
@@ -38,16 +41,15 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     } else {
       scene.scale.setScalar(1);
     }
-    scene.updateMatrixWorld(true);
-    const scaledBox = new THREE.Box3().setFromObject(scene);
+    const scaledBox = glbLocalBBox(scene);
     scene.position.set(0, -scaledBox.min.y, 0);
+    onSize?.(scaledBox.getSize(new THREE.Vector3()));
 
     scene.traverse(c => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
-      m.frustumCulled = true;
       if (m.geometry) {
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
@@ -66,7 +68,21 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     });
 
     if (animations.length > 0) {
-      mixerRef.current = new THREE.AnimationMixer(scene);
+      const mixer = new THREE.AnimationMixer(scene);
+      mixerRef.current = mixer;
+      const animMap: Record<string, string> = {
+        'idle': 'Dog|Dog|Idle', 'jump': 'Dog|Dog|Jump', 'run': 'Dog|Dog|Run',
+        'sitdown': 'Dog|Dog|SitDown', 'walk': 'Dog|Dog|Walk'
+      };
+      let targetAnimName = 'Dog|Dog|Idle';
+      if (isPreview && previewAnim) {
+        targetAnimName = animMap[previewAnim] || 'Dog|Dog|Idle';
+      }
+      const clip = animations.find(a => a.name === targetAnimName) || animations[0];
+      const action = mixer.clipAction(clip);
+      action.setLoop(THREE.LoopRepeat, Infinity);
+      action.reset().play();
+      playingRef.current = true;
     }
 
     if (modelRef.current && !isPreview) {
@@ -74,29 +90,13 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
       modelRef.current.rotation.y = -Math.PI / 4;
     }
 
-    return () => { mixerRef.current?.stopAllAction(); };
-  }, [scene, animations, isPreview]);
-
-  // Handle Initial State / Preview
-  useEffect(() => {
-    if (!mixerRef.current || animations.length === 0) return;
-    
-    mixerRef.current.stopAllAction();
-    const animMap: Record<string, string> = {
-      'idle': 'Dog|Dog|Idle', 'jump': 'Dog|Dog|Jump', 'run': 'Dog|Dog|Run',
-      'sitdown': 'Dog|Dog|SitDown', 'walk': 'Dog|Dog|Walk'
-    };
-    let targetAnimName = 'Dog|Dog|Idle';
-    if (isPreview && previewAnim) {
-      targetAnimName = animMap[previewAnim] || 'Dog|Dog|Idle';
-    }
-    const clip = animations.find(a => a.name === targetAnimName) || animations[0];
-    const action = mixerRef.current.clipAction(clip);
-    action.setLoop(THREE.LoopRepeat, Infinity);
-    action.reset().play();
-    playingRef.current = true;
     invalidate();
-  }, [animations, invalidate, isPreview, previewAnim]);
+
+    return () => {
+      mixerRef.current?.stopAllAction();
+      mixerRef.current?.uncacheRoot(scene);
+    };
+  }, [scene, animations, isPreview, previewAnim, invalidate, onSize]);
 
   useEffect(() => {
     if (isPreview) return;

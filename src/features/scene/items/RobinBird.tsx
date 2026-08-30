@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useGLTF, useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { isAppIdle } from '@features/scene/idleState';
+import { glbLocalBBox } from '@features/scene/glbUtils';
 
 const GLB_PATH = '/characters/robin/robin.glb';
 
@@ -52,9 +53,11 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
   });
 
   useLayoutEffect(() => {
-    scene.scale.setScalar(1);
-    scene.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(scene);
+    scene.scale.set(1, 1, 1);
+    scene.position.set(0, 0, 0);
+    scene.rotation.set(0, 0, 0);
+
+    const box = glbLocalBBox(scene);
     const size = box.getSize(new THREE.Vector3());
 
     if (size.y > 0) {
@@ -62,8 +65,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     } else {
       scene.scale.setScalar(1);
     }
-    scene.updateMatrixWorld(true);
-    const scaledBox = new THREE.Box3().setFromObject(scene);
+    const scaledBox = glbLocalBBox(scene);
     scene.position.set(0, -scaledBox.min.y, 0);
     onSize?.(scaledBox.getSize(new THREE.Vector3()));
 
@@ -72,7 +74,6 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
-      m.frustumCulled = true;
       if (m.geometry) {
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
@@ -91,32 +92,30 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     });
 
     if (animations.length > 0) {
-      mixerRef.current = new THREE.AnimationMixer(scene);
+      const mixer = new THREE.AnimationMixer(scene);
+      mixerRef.current = mixer;
+      let targetAnimName = 'Robin_Bird_Idle';
+      if (isPreview && previewAnim) {
+        targetAnimName = previewAnim;
+      }
+      const clip = animations.find(a => a.name === targetAnimName) || animations[0];
+      const action = mixer.clipAction(clip);
+      action.setLoop(THREE.LoopRepeat, Infinity);
+      action.reset().play();
+      isPlayingRef.current = true;
     }
 
     if (modelRef.current && !isPreview) {
       modelRef.current.position.copy(LANDING_POINTS[0]);
     }
 
-    return () => { mixerRef.current?.stopAllAction(); };
-  }, [scene, animations, isPreview]);
-
-  // Handle Initial State / Preview
-  useEffect(() => {
-    if (!mixerRef.current || animations.length === 0) return;
-    
-    mixerRef.current.stopAllAction();
-    let targetAnimName = 'Robin_Bird_Idle';
-    if (isPreview && previewAnim) {
-      targetAnimName = previewAnim;
-    }
-    const clip = animations.find(a => a.name === targetAnimName) || animations[0];
-    const action = mixerRef.current.clipAction(clip);
-    action.setLoop(THREE.LoopRepeat, Infinity);
-    action.reset().play();
-    isPlayingRef.current = true;
     invalidate();
-  }, [animations, invalidate, isPreview, previewAnim]);
+
+    return () => {
+      mixerRef.current?.stopAllAction();
+      mixerRef.current?.uncacheRoot(scene);
+    };
+  }, [scene, animations, isPreview, previewAnim, invalidate, onSize]);
 
   // Listener événements de l'UI (Menu Hover)
   useEffect(() => {
