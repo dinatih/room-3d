@@ -55,6 +55,17 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
       if (m.geometry) {
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
+        if (m.geometry.boundingSphere) {
+          m.geometry.boundingSphere.radius = Math.max(m.geometry.boundingSphere.radius * 10, 100.0);
+        }
+      }
+      if (m.material) {
+        const mat = m.material as THREE.MeshStandardMaterial;
+        mat.metalness = 0;
+        mat.roughness = 0.8;
+        mat.transparent = false;
+        mat.alphaTest = 0;
+        mat.depthWrite = true;
       }
     });
 
