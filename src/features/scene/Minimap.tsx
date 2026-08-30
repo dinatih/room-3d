@@ -235,9 +235,9 @@ export function Minimap() {
     const canvas = expandedCanvasRef.current;
     if (!canvas) return;
 
-    const maxW = Math.min(window.innerWidth * 0.85, 800);
-    const maxH = Math.min(window.innerHeight * 0.80, 800);
-    const expW = Math.round(Math.min(maxW, maxH / PLAN_ASPECT));
+    const maxW = Math.min(window.innerWidth * 0.90, 750);
+    const maxH = Math.min(window.innerHeight * 0.80, 750);
+    const expW = Math.max(260, Math.round(Math.min(maxW, maxH / PLAN_ASPECT)));
     const expH = Math.round(expW * PLAN_ASPECT);
 
     const dpr = Math.max(window.devicePixelRatio || 1, 2);
@@ -248,7 +248,7 @@ export function Minimap() {
 
     let rafId: number;
     const loop = () => {
-      drawMinimap(canvas, smallW);
+      drawMinimap(canvas, expW);
       rafId = requestAnimationFrame(loop);
     };
     loop();
@@ -256,7 +256,7 @@ export function Minimap() {
     return () => {
       cancelAnimationFrame(rafId);
     };
-  }, [expanded, smallW]);
+  }, [expanded]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -305,19 +305,32 @@ export function Minimap() {
       {/* EXPANDED MODAL VIEW */}
       {expanded && (
         <div
-          className="position-fixed inset-0 d-flex align-items-center justify-content-center"
+          className="position-fixed d-flex align-items-center justify-content-center"
           style={{
-            background: 'rgba(0, 0, 0, 0.6)',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0, 0, 0, 0.65)',
             backdropFilter: 'blur(6px)',
             WebkitBackdropFilter: 'blur(6px)',
-            zIndex: 2000,
+            zIndex: 99999,
+            pointerEvents: 'auto',
           }}
           onClick={() => setExpanded(false)}
         >
           <div 
-            className="card glass-card shadow-lg p-2.5 rounded-3"
+            className="card glass-card shadow-lg p-2.5 rounded-3 border-0"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '95vw', maxHeight: '95vh', pointerEvents: 'auto' }}
+            style={{
+              maxWidth: '95vw',
+              maxHeight: '95vh',
+              pointerEvents: 'auto',
+              background: 'rgba(255, 255, 255, 0.92)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+            }}
           >
             <div className="card-header border-0 bg-transparent p-0 d-flex justify-content-between align-items-center mb-2">
               <span className="fw-bold text-dark text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.06em' }}>
@@ -330,10 +343,10 @@ export function Minimap() {
                 onClick={() => setExpanded(false)}
               />
             </div>
-            <div className="position-relative d-flex justify-content-center">
+            <div className="position-relative d-flex justify-content-center overflow-hidden rounded-2">
               <canvas 
                 ref={expandedCanvasRef} 
-                className="rounded-2 shadow-inner" 
+                className="rounded-2 shadow-sm" 
                 style={{ display: 'block', background: 'transparent' }} 
               />
             </div>
