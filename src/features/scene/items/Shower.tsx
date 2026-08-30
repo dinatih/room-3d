@@ -81,6 +81,7 @@ const glassMat = new THREE.MeshPhysicalMaterial({
   metalness: 0.05,
   envMapIntensity: 1.2,
   side: THREE.DoubleSide,
+  depthWrite: false,
 });
 const frameMat = new THREE.MeshStandardMaterial({
   color: 0xd8d8d8,

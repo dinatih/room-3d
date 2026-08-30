@@ -17,6 +17,8 @@ export function optimizeMaterials(root: THREE.Object3D) {
       if ((mat as any).transparent && ((mat as any).map || (mat as any).alphaMap)) {
         (mat as any).transparent = false;
         (mat as any).alphaTest = 0.5;
+        (mat as any).depthWrite = true;
+        if ('transmission' in mat) (mat as any).transmission = 0;
         mat.needsUpdate = true;
       }
     }

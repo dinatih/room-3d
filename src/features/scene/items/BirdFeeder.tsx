@@ -17,6 +17,23 @@ export function BirdFeeder({ onSize }: SceneItemProps) {
   useLayoutEffect(() => {
     removeGlbLines(scene);
     scene.scale.set(1, 1, 1);
+
+    // Corriger les matériaux : le GLB original contient alphaMode: 'BLEND' et transmission: 1 par erreur
+    scene.traverse(child => {
+      const mesh = child as THREE.Mesh;
+      if (mesh.isMesh && mesh.material) {
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        mats.forEach(mat => {
+          mat.transparent = false;
+          mat.depthWrite = true;
+          mat.depthTest = true;
+          mat.alphaTest = 0;
+          if ('transmission' in mat) (mat as any).transmission = 0;
+          if ('opacity' in mat) mat.opacity = 1;
+        });
+      }
+    });
+
     const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
     const s = TARGET_H / Math.max(raw.x, raw.y, raw.z);
     scene.scale.setScalar(s);

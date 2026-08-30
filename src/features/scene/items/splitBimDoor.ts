@@ -28,6 +28,8 @@ export function splitBimDoor(originalScene: THREE.Group) {
         mat.roughness = 0.1;
         mat.metalness = 0.1;
         mat.color = new THREE.Color('#aaccff');
+        mat.depthWrite = false;
+        mat.side = THREE.DoubleSide;
       }
     }
 
