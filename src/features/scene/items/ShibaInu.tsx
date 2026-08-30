@@ -70,12 +70,16 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
         }
       }
       if (m.material) {
-        const mat = m.material as THREE.MeshStandardMaterial;
-        mat.metalness = 0;
-        mat.roughness = 0.8;
-        mat.transparent = false;
-        mat.alphaTest = 0;
-        mat.depthWrite = true;
+        const mats = Array.isArray(m.material) ? m.material : [m.material];
+        mats.forEach(mat => {
+          const stdMat = mat as THREE.MeshStandardMaterial;
+          if (stdMat.isMeshStandardMaterial) {
+            stdMat.metalness = 0;
+            stdMat.roughness = 0.8;
+          }
+          mat.transparent = false;
+          mat.depthWrite = true;
+        });
       }
     });
 
