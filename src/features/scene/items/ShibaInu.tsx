@@ -39,7 +39,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     const size = box.getSize(new THREE.Vector3());
 
     if (size.y > 0) {
-      scene.scale.setScalar(50 / size.y); // Scale to 50cm height
+      scene.scale.setScalar(38 / size.y); // Scale to 38cm height (taille reelle shiba inu au garrot)
     } else {
       scene.scale.setScalar(1);
     }
