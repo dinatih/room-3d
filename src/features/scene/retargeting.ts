@@ -167,13 +167,8 @@ export function buildHairChain(hairBones: THREE.Bone[]) {
           tipPrev: tipWorld.clone(),
         });
       }
-    } else {
-      console.log(`[buildHairChain] baseParent is null for bone ${bones[0].name}`);
     }
-  } else {
-    console.log(`[buildHairChain] bones array is empty`);
   }
-  console.log(`[buildHairChain] Returning chain of length ${hairChain.length}`);
   return hairChain;
 }
 
@@ -228,7 +223,6 @@ export function buildWigChains(wigBones: THREE.Bone[]) {
     });
   }
 
-  console.log(`[buildWigChains] Returning wig chain of length ${wigChain.length}`);
   return wigChain;
 }
 

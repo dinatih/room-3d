@@ -186,10 +186,6 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
       
       if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
         const sm = child as THREE.SkinnedMesh;
-        if (!(window as any)._skinLogged2) {
-          console.log("[Wig] SkinnedMesh found:", sm.name, "with", sm.skeleton.bones.length, "bones.");
-          (window as any)._skinLogged2 = true;
-        }
         // Extract bones DIRECTLY from the SkinnedMesh's skeleton!
         if (extractedBones.length === 0) {
           const isRootOrScalp = (n: string) => {
@@ -278,7 +274,7 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
       }
     });
     
-    console.log("Wig extracted bones directly from skeleton:", extractedBones.length); hairBonesRef.current = extractedBones;
+    hairBonesRef.current = extractedBones;
     if (onBonesExtracted) {
       onBonesExtracted(hairBonesRef.current);
     }
