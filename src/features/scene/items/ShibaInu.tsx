@@ -212,7 +212,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   });
 
   return (
-    <group ref={modelRef as any}>
+    <group ref={modelRef as any} position={isPreview ? undefined : [180, 0, -120]} rotation={isPreview ? undefined : [0, -Math.PI / 4, 0]}>
       <primitive object={scene} />
     </group>
   );

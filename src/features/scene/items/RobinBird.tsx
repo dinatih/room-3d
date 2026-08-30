@@ -203,7 +203,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
   });
 
   return (
-    <group ref={modelRef}>
+    <group ref={modelRef} position={isPreview ? undefined : LANDING_POINTS[0]}>
       <primitive object={scene} />
     </group>
   );
