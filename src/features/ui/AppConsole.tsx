@@ -61,7 +61,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const [isPaused, setIsPaused] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const savedDimensionsRef = useRef<{ width?: number; height?: number }>({ width: 460, height: 215 });
+  const savedDimensionsRef = useRef<{ width?: number; height?: number }>({ width: 620, height: 110 });
 
   // Injecter la Google Font JetBrains Mono une seule fois
   useEffect(() => {
@@ -80,7 +80,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     if (!containerRef.current || typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
-        if (visible && entry.contentRect.height > 60) {
+        if (visible && entry.contentRect.height > 40) {
           savedDimensionsRef.current = {
             width: entry.contentRect.width,
             height: entry.contentRect.height,
@@ -134,8 +134,8 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     position: 'fixed',
     top: 0,
     right: 0,
-    width: visible && savedDimensionsRef.current.width ? `${savedDimensionsRef.current.width}px` : '460px',
-    height: visible && savedDimensionsRef.current.height ? `${savedDimensionsRef.current.height}px` : 'auto',
+    width: visible && savedDimensionsRef.current.width ? `${savedDimensionsRef.current.width}px` : '620px',
+    height: visible && savedDimensionsRef.current.height ? `${savedDimensionsRef.current.height}px` : '110px',
     maxWidth: '90vw',
     minWidth: '280px',
     zIndex: 9999,
@@ -146,7 +146,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     flexDirection: 'column',
     resize: visible ? 'both' : 'none',
     overflow: 'hidden',
-    minHeight: visible ? '80px' : 'auto',
+    minHeight: visible ? '60px' : 'auto',
     maxHeight: visible ? '85vh' : 'auto',
     boxShadow: visible ? '0 4px 20px rgba(0, 0, 0, 0.7)' : 'none',
   };
@@ -191,8 +191,7 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
 
   const logAreaStyle: React.CSSProperties = {
     flex: 1,
-    height: '180px',
-    minHeight: '60px',
+    minHeight: '40px',
     overflowY: 'auto',
     background: 'rgba(0, 0, 0, 0.85)',
     padding: '6px 10px',
@@ -227,15 +226,15 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     e.stopPropagation();
     const startX = e.clientX;
     const startY = e.clientY;
-    const startW = containerRef.current ? containerRef.current.offsetWidth : (savedDimensionsRef.current.width ?? 460);
-    const startH = containerRef.current ? containerRef.current.offsetHeight : (savedDimensionsRef.current.height ?? 215);
+    const startW = containerRef.current ? containerRef.current.offsetWidth : (savedDimensionsRef.current.width ?? 620);
+    const startH = containerRef.current ? containerRef.current.offsetHeight : (savedDimensionsRef.current.height ?? 110);
 
     const onPointerMove = (ev: PointerEvent) => {
       // Déplacement vers la gauche augmente la largeur (car container fixé à droite: top: 0, right: 0)
       const deltaX = startX - ev.clientX;
       const deltaY = ev.clientY - startY;
       const newW = Math.max(280, Math.min(window.innerWidth * 0.95, startW + deltaX));
-      const newH = Math.max(80, Math.min(window.innerHeight * 0.85, startH + deltaY));
+      const newH = Math.max(60, Math.min(window.innerHeight * 0.85, startH + deltaY));
       
       savedDimensionsRef.current = { width: newW, height: newH };
       if (containerRef.current) {
