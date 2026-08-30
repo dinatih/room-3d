@@ -190,9 +190,9 @@ function DoorImpl({
         <mesh position={[handleX, 100, 0]} geometry={handleGeo} material={doorHandleMaterial} />
       </group>
 
-      {/* Linteau au-dessus de la porte ajusté à l'ouverture exacte de 83cm (Y=204 à 250) */}
+      {/* Linteau au-dessus de la porte ajusté à l'ouverture exacte de 86cm (Y=204 à 250) */}
       <mesh position={[0, H + 23, 0]} material={wallMat} castShadow receiveShadow>
-        <boxGeometry args={[W, 46, wallThickness]} />
+        <boxGeometry args={[86, 46, wallThickness]} />
       </mesh>
     </group>
   );

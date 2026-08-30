@@ -301,6 +301,9 @@ export function Studio() {
       } else if (e.key === 'k' || e.key === 'K') {
         onToggleLayer('skeleton');
         cameraState.invalidate?.();
+      } else if (e.key === 'w' || e.key === 'W') {
+        onToggleLayer('wallEdges');
+        cameraState.invalidate?.();
       } else if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') {
         setHideUI(h => !h);
       }
