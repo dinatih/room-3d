@@ -17,7 +17,7 @@ import { CHARACTERS, isCharacterVisibleInMode } from './walkerConfig';
 import { useSceneStore } from './store/useSceneStore';
 
 const SMALL_W_DESKTOP = 140;
-const SMALL_W_MOBILE  = 140;
+const SMALL_W_MOBILE  = 115;
 
 // ── Icône avion (plan 2D) ─────────────────────────────────────────────────────
 function drawPlaneIcon(
@@ -357,12 +357,12 @@ export function Minimap() {
       {/* FLOATING MINIMAP: Bottom-Left on mobile (away from D-Pad), Bottom-Right on desktop */}
       {!expanded && (
         <div
-          className="position-fixed glass-card shadow-sm p-1 rounded-3"
+          className="position-fixed glass-card shadow-sm p-1 rounded-3 overflow-hidden"
           style={{
             bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom) + 12px)' : 20,
             left: isMobile ? 12 : undefined,
             right: isMobile ? undefined : 20,
-            width: isMobile ? 125 : 155,
+            width: smallW + 8,
             zIndex: 90,
             pointerEvents: 'auto',
           }}
@@ -372,10 +372,8 @@ export function Minimap() {
             className="rounded-2"
             style={{
               display: 'block',
-              width: '100%',
-              height: 'auto',
-              maxHeight: isMobile ? '160px' : '175px',
-              objectFit: 'contain',
+              width: `${smallW}px`,
+              height: `${smallH}px`,
               background: 'transparent',
               opacity: 0.95,
               cursor: 'pointer',
@@ -389,10 +387,10 @@ export function Minimap() {
             style={{
               top: 6,
               left: 6,
-              width: 28,
-              height: 28,
+              width: isMobile ? 24 : 28,
+              height: isMobile ? 24 : 28,
               padding: 0,
-              fontSize: '13px',
+              fontSize: isMobile ? '11px' : '13px',
               opacity: 0.95,
               borderRadius: '6px',
               zIndex: 10,
@@ -408,10 +406,10 @@ export function Minimap() {
             style={{
               top: 6,
               right: 6,
-              width: 28,
-              height: 28,
+              width: isMobile ? 24 : 28,
+              height: isMobile ? 24 : 28,
               padding: 0,
-              fontSize: '13px',
+              fontSize: isMobile ? '11px' : '13px',
               opacity: 0.95,
               borderRadius: '6px',
               zIndex: 10,
