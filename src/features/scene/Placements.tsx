@@ -716,6 +716,15 @@ export function Garden() {
 export function Animals() {
   return (
     <>
+      {/* Repère visuel temporaire pour tester le montage F5 */}
+      <mesh position={[149, 60, -231]}>
+        <boxGeometry args={[20, 20, 20]} />
+        <meshStandardMaterial color="red" />
+      </mesh>
+      <mesh position={[180, 20, -120]}>
+        <boxGeometry args={[30, 30, 30]} />
+        <meshStandardMaterial color="cyan" />
+      </mesh>
       <group userData={{ skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
         <RobinBird />
       </group>
