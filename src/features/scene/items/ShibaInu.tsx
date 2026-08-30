@@ -104,13 +104,15 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   // Initial animation
   useEffect(() => {
     if (!isPreview && mixerRef.current && animations.length > 0) {
+      mixerRef.current.stopAllAction();
       const clip = animations.find(a => a.name === 'Dog|Dog|Idle') || animations[0];
       const action = mixerRef.current.clipAction(clip);
       action.setLoop(THREE.LoopRepeat, Infinity);
       action.reset().play();
       playingRef.current = true;
+      invalidate();
     }
-  }, [isPreview, animations]);
+  }, [isPreview, animations, invalidate]);
 
   useEffect(() => {
     if (isPreview) return;
