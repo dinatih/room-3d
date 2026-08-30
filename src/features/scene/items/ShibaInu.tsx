@@ -6,7 +6,6 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
-import { glbLocalBBox } from '@features/scene/glbUtils';
 
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
 
@@ -29,8 +28,9 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   });
 
   useLayoutEffect(() => {
-    scene.scale.set(1, 1, 1);
-    const box = glbLocalBBox(scene);
+    scene.scale.setScalar(1);
+    scene.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(scene);
     const size = box.getSize(new THREE.Vector3());
 
     if (size.y > 0) {
@@ -38,7 +38,8 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
     } else {
       scene.scale.setScalar(1);
     }
-    const scaledBox = glbLocalBBox(scene);
+    scene.updateMatrixWorld(true);
+    const scaledBox = new THREE.Box3().setFromObject(scene);
     scene.position.set(0, -scaledBox.min.y, 0);
 
     scene.traverse(c => {
