@@ -17,7 +17,7 @@ import { Minimap }          from '@features/scene/Minimap';
 import { Walls, Floor, Mirrors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
-import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes, Animals } from './Placements';
+import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes } from './Placements';
 import { Walker } from './Walker';
 import { AiZonesHelper } from './ai/AiZonesHelper';
 import { CollisionDebugHelper } from './ai/CollisionDebugHelper';
@@ -443,8 +443,6 @@ export function Studio() {
           <CategoryLayerGroup layer={LAYER_WALKER}>
             <Walker />
           </CategoryLayerGroup>
-          {/* Animaux autonomes (Shiba Inu & Oiseau Robin) sur Layer par défaut (0) */}
-          <Animals />
           <GlobalSkeletonHelpers show={layers.skeleton} />
           {/*
            * LAYER_EQUIPMENT (1) — équipements sanitaires et cuisine.
