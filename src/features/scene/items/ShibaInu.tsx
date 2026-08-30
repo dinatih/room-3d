@@ -56,7 +56,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
         if (m.geometry.boundingSphere) {
-          m.geometry.boundingSphere.radius = Math.max(m.geometry.boundingSphere.radius * 10, 100.0);
+          m.geometry.boundingSphere.radius = Math.max(m.geometry.boundingSphere.radius * 10, 50.0);
         }
       }
       if (m.material) {
