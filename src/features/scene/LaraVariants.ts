@@ -162,7 +162,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                 mat.emissiveIntensity = 0;
              }
           } else if (isCha) {
-             const isHairBase = matName.includes('hair_base') || meshName.includes('hair_base') || matName.includes('hair.classic') || (!matName.includes('braid') && !matName.includes('pony') && !meshName.includes('braid') && !meshName.includes('pony'));
+             const isHairBase = meshName === 'hair_base' || matName.includes('hair2');
              if (isHairBase) {
                mat.map = null; // Kill dark texture to see chatain
                mat.color.setHex(0x5c3a21); // Châtain
@@ -454,8 +454,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         }
 
         // MARISSA TATTOOS ON SKIN (Lion head on forearm & leg tattoo "BEAUTY IS AS BEAUTY DOES")
-        // N'appliquer que sur les bras/jambes spécifiques, jamais sur le torse
-        if (isMarissa && isSkin && (matName.includes('arm') || matName.includes('leg') || meshName.includes('arm') || meshName.includes('leg') || matName.includes('finger') || meshName.includes('finger')) && !meshName.includes('body')) {
+        // N'appliquer que sur les bras/jambes spécifiques (arms, fingers, body_legs)
+        if (isMarissa && (meshName === 'arms' || meshName === 'fingers' || meshName === 'body_legs' || matName.includes('arm') || matName.includes('finger') || (matName.includes('body') && meshName.includes('leg')))) {
           applyMarissaTattoos(mat);
         }
       });
