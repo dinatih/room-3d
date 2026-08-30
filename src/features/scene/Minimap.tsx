@@ -287,22 +287,29 @@ export function Minimap() {
 
       {expanded ? (
         /* EXPANDED VIEW: Styled inside a Bootstrap Card */
-        <div 
-          className="card glass-card shadow-lg p-2 position-fixed"
-          style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 2001 }}
+        <div
+          className="position-fixed inset-0 d-flex align-items-center justify-content-center"
+          style={{ zIndex: 2001 }}
+          onClick={() => setExpanded(false)}
         >
-          <div className="card-header border-0 bg-transparent p-0 d-flex justify-content-between align-items-center mb-2">
-            <span className="fw-semibold text-muted text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.06em', color: 'var(--text) !important' }}>
-              📍 Plan 2D de la pièce
-            </span>
-            <button type="button" className="btn-close" aria-label="Close" onClick={() => setExpanded(false)}></button>
-          </div>
-          <div className="position-relative">
-            <canvas 
-              ref={canvasRef} 
-              className="rounded" 
-              style={{ display: 'block', background: 'transparent' }} 
-            />
+          <div 
+            className="card glass-card shadow-lg p-2"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '95vw', maxHeight: '95vh' }}
+          >
+            <div className="card-header border-0 bg-transparent p-0 d-flex justify-content-between align-items-center mb-2">
+              <span className="fw-semibold text-muted text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.06em', color: 'var(--text) !important' }}>
+                📍 Plan 2D de la pièce
+              </span>
+              <button type="button" className="btn-close" aria-label="Close" onClick={() => setExpanded(false)}></button>
+            </div>
+            <div className="position-relative">
+              <canvas 
+                ref={canvasRef} 
+                className="rounded" 
+                style={{ display: 'block', background: 'transparent' }} 
+              />
+            </div>
           </div>
         </div>
       ) : (

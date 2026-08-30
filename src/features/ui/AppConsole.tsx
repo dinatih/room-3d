@@ -229,41 +229,42 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     >
       {/* Header */}
       <div style={headerStyle}>
-        <span style={titleStyle}>
-          <span>🤖</span>
-          <span>APP LOGS</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
-            onClick={() => setIsPaused(p => !p)}
-            style={{
-              background: isPaused ? 'rgba(255, 170, 0, 0.2)' : 'rgba(0, 255, 136, 0.1)',
-              border: `1px solid ${isPaused ? '#ffaa00' : '#00ff88'}`,
-              color: isPaused ? '#ffaa00' : '#00ff88',
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '9px',
-              lineHeight: 1,
-              padding: '2px 6px',
-              cursor: 'pointer',
-              borderRadius: '2px',
-              marginLeft: '10px'
+            style={closeBtnStyle}
+            onClick={() => setVisible(v => !v)}
+            title={visible ? 'Masquer la console' : 'Afficher la console'}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,255,136,0.15)';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#00ff88';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'none';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0,255,136,0.4)';
             }}
           >
-            {isPaused ? '▶ REPRENDRE' : '⏸ PAUSE'}
+            {visible ? '✕' : '▲'}
           </button>
-        </span>
+          <span style={titleStyle}>
+            <span>🤖</span>
+            <span>APP LOGS</span>
+          </span>
+        </div>
         <button
-          style={closeBtnStyle}
-          onClick={() => setVisible(v => !v)}
-          title={visible ? 'Masquer la console' : 'Afficher la console'}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,255,136,0.15)';
-            (e.currentTarget as HTMLButtonElement).style.borderColor = '#00ff88';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.background = 'none';
-            (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0,255,136,0.4)';
+          onClick={() => setIsPaused(p => !p)}
+          style={{
+            background: isPaused ? 'rgba(255, 170, 0, 0.2)' : 'rgba(0, 255, 136, 0.1)',
+            border: `1px solid ${isPaused ? '#ffaa00' : '#00ff88'}`,
+            color: isPaused ? '#ffaa00' : '#00ff88',
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '9px',
+            lineHeight: 1,
+            padding: '2px 6px',
+            cursor: 'pointer',
+            borderRadius: '2px',
           }}
         >
-          {visible ? '✕' : '▲'}
+          {isPaused ? '▶ REPRENDRE' : '⏸ PAUSE'}
         </button>
       </div>
 
