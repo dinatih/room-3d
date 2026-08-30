@@ -35,6 +35,7 @@ import {
   LAYER_AI_ZONES,
   LAYER_LIDAR,
   LAYER_NEIGHBORS,
+  LAYER_ANIMALS,
 } from '@config';
 
 const BLDG_Z_MIN =  -30;
@@ -1468,7 +1469,7 @@ export function Floor() {
 
 const kallaxW1 = 40.5; // kallaxW(1)
 
-const MIRROR_BASE_MASK = (1 << 0) | (1 << LAYER_WALKER_DETAIL) | (1 << LAYER_WALKER);
+const MIRROR_BASE_MASK = (1 << 0) | (1 << LAYER_WALKER_DETAIL) | (1 << LAYER_WALKER) | (1 << LAYER_ANIMALS);
 const MIRROR_EXCLUDED_MASK = (1 << LAYER_AI_ZONES) | (1 << LAYER_LIDAR) | (1 << LAYER_NEIGHBORS);
 
 // Compteur global de profondeur de réflexion.
