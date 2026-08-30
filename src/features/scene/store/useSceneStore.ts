@@ -225,7 +225,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   furniture: initialFurniture,
   layers: initialLayers,
   extraStates: initialExtraStates,
-  activeWalkerId: 'native',
+  activeWalkerId: initialLayers.laraCount === 1 ? 'xbot' : 'native',
   currentHdri: getRandomHdriId(),
   measurementActive: false,
   cameraMode: 'orbit',
@@ -239,6 +239,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   setLaraCount: (count) => {
     updateUrlNpcCount(count);
     set((state) => ({
+      activeWalkerId: count === 1 ? 'xbot' : state.activeWalkerId,
       layers: { ...state.layers, laraCount: count, showAllLaraStyles: true }
     }));
     cameraState.invalidate?.();

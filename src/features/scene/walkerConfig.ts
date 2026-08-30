@@ -69,12 +69,7 @@ export const PERF_EXCLUDED_LARA_IDS = new Set([
 
 export function isCharacterVisibleInMode(id: string, mode: LaraCountMode = 15, activeWalkerId?: string): boolean {
   if (mode === 1) {
-    // Mode 1 : Uniquement Xbot pour le debug / performances maximales (aucun modèle Lara)
-    if (activeWalkerId && activeWalkerId === 'xbot') return id === 'xbot';
-    if (activeWalkerId && activeWalkerId !== 'xbot') {
-      // Si l'utilisateur a explicitement sélectionné un autre perso, on l'affiche lui seul
-      return id === activeWalkerId;
-    }
+    // Mode 1 (Xbot seul) : Strictement Xbot uniquement (aucun modèle Lara n'est instancié/chargé)
     return id === 'xbot';
   }
   if (mode === 2) {

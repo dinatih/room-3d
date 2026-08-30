@@ -47,7 +47,7 @@ function InternalWalker(props: WalkerProps) {
 
   const charactersWithAnims = useMemo(() => {
     return CHARACTERS.map(char => {
-      const isLara = true;
+      const isLara = char.isLara !== false;
       const idleAnim = idleGltf.animations[0].clone();
       idleAnim.name = 'idle';
       (idleAnim as any).userData = { animScene: idleGltf.scene };
@@ -90,8 +90,7 @@ function InternalWalker(props: WalkerProps) {
       return charactersWithAnims.filter(char => char.id === props.previewCharacterId);
     }
     return charactersWithAnims.filter(char =>
-      char.id === activeWalkerId ||
-      (showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeWalkerId))
+      showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeWalkerId)
     );
   }, [activeWalkerId, charactersWithAnims, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles]);
 
