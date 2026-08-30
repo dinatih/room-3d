@@ -51,7 +51,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   }, [isPreview, previewAnim, animations]);
 
   useLayoutEffect(() => {
-    scene.scale.set(1, 1, 1);
+    scene.scale.setScalar(1);
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
 
@@ -84,15 +84,16 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
         const mat = m.material as THREE.MeshStandardMaterial;
         mat.metalness = 0;
         mat.roughness = 0.8;
+        mat.transparent = false;
+        mat.alphaTest = 0;
+        mat.depthWrite = true;
       }
     });
 
     if (animations.length > 0) {
-      const mixer = new THREE.AnimationMixer(scene);
-      mixerRef.current = mixer;
+      mixerRef.current = new THREE.AnimationMixer(scene);
     }
 
-    // Set initial transform
     if (modelRef.current && !isPreview) {
       modelRef.current.position.set(180, 0, -120);
       modelRef.current.rotation.y = -Math.PI / 4;
