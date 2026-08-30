@@ -163,10 +163,14 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
              }
           } else if (isCha) {
              const isHairBase = meshName === 'hair_base' || matName.includes('hair2');
+             mat.map = null; // Supprime la texture sombre GLTF
              if (isHairBase) {
-               mat.map = null; // Kill dark texture to see chatain
-               mat.color.setHex(0x5c3a21); // Châtain
+               mat.color.setHex(0x5c3a21); // Châtain pour hair_base
                mat.emissive.setHex(0x2d1a0e);
+               mat.emissiveIntensity = 0.05;
+             } else {
+               mat.color.setHex(0xbc9c74); // Châtain-blond plus clair pour les autres cheveux / tresse
+               mat.emissive.setHex(0xbc9c74);
                mat.emissiveIntensity = 0.05;
              }
           } else if (isMarissa) {
