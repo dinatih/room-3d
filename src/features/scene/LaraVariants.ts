@@ -162,10 +162,13 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                 mat.emissiveIntensity = 0;
              }
           } else if (isCha) {
-             mat.map = null; // Kill dark texture to see blonde-chatain
-             mat.color.setHex(0xbc9c74); // Blonde-chatain
-             mat.emissive.setHex(0xbc9c74);
-             mat.emissiveIntensity = 0.05;
+             const isHairBase = matName.includes('hair_base') || meshName.includes('hair_base') || matName.includes('hair.classic') || (!matName.includes('braid') && !matName.includes('pony') && !meshName.includes('braid') && !meshName.includes('pony'));
+             if (isHairBase) {
+               mat.map = null; // Kill dark texture to see chatain
+               mat.color.setHex(0x5c3a21); // Châtain
+               mat.emissive.setHex(0x2d1a0e);
+               mat.emissiveIntensity = 0.05;
+             }
           } else if (isMarissa) {
               mat.map = null;
               mat.color.setHex(0x9e7344); // Châtain clair
@@ -239,7 +242,6 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair && !isBuckle &&
                               !(!isDelphina && isGear) &&
                               !(isCha && (isShirt || isBoot)) &&
-                              !(isSabira && !isTop) &&
                               !isRajaa;
 
           if (shouldColor) {
@@ -294,8 +296,11 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   forceProcedural = false;
                 }
              } else if (isSabira) {
-                if (isTop || isShorts) {
-                  color = 0xffd700; // Yellow top / shorts
+                if (isShorts) {
+                  color = 0xa2c4d9; // Blue jean comme Rosanna
+                  forceProcedural = false;
+                } else if (isTop) {
+                  color = 0xffd700; // Yellow top
                   forceProcedural = false;
                 } else {
                   color = 0x151515; // Black boots / gear
@@ -448,9 +453,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           }
         }
 
-        // MARISSA TATTOOS ON SKIN (Lion head on forearm)
+        // MARISSA TATTOOS ON SKIN (Lion head on forearm & leg tattoo "BEAUTY IS AS BEAUTY DOES")
         // N'appliquer que sur les bras/jambes spécifiques, jamais sur le torse
-        if (isMarissa && isSkin && (matName.includes('arm') || meshName.includes('arm') || matName.includes('finger') || meshName.includes('finger')) && !meshName.includes('body')) {
+        if (isMarissa && isSkin && (matName.includes('arm') || matName.includes('leg') || meshName.includes('arm') || meshName.includes('leg') || matName.includes('finger') || meshName.includes('finger')) && !meshName.includes('body')) {
           applyMarissaTattoos(mat);
         }
       });
