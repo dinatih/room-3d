@@ -725,10 +725,10 @@ export function Animals() {
         <boxGeometry args={[30, 30, 30]} />
         <meshStandardMaterial color="cyan" />
       </mesh>
-      <group userData={{ skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
+      <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actionId: 'robin-bird-replay' } }}>
         <RobinBird />
       </group>
-      <group userData={{ skipMerge: true, itemName: 'Shiba Inu', hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
+      <group userData={{ animUnit: true, noAnim: true, skipMerge: true, itemName: 'Shiba Inu', hoverAction: { label: 'Shiba Inu', actionId: 'shiba-replay' } }}>
         <ShibaInu />
       </group>
     </>
