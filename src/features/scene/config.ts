@@ -2,9 +2,45 @@
 // CONFIG
 // =============================================
 // 1 unit = 1cm
+
+// =============================================
+// MESURES RÉELLES (Télémètre laser / Mètre ruban)
+// =============================================
+/** Distance X entre la jambe ouest de la porte séjour (door-living-w) et le mur est SDB (bath-ne) : 52 cm */
+export const MEASURED_DIST_DOOR_LIVING_W_TO_BATH_NE = 52;
+
+/** Distance Z entre le mur nord de la SDB (Z de bath-nw/kitchen-nw) et shower-ne : 141 cm */
+export const MEASURED_DIST_BATH_N_TO_SHOWER_NE      = 141;
+
+/** Distance X entre le mur ouest SDB et la porte sdb nord (door-bath-n) / largeur intérieure SDB : 202 cm */
+export const MEASURED_DIST_BATH_W_TO_DOOR_BATH_N    = 202;
+
+/** Largeur de l'ouverture cuisine entre kitchen-sw et kitchen-se : 102 cm */
+export const MEASURED_DIST_KITCHEN_SW_TO_SE         = 102;
+
+/** Profondeur du séjour le long du mur Est entre corner-ne et corner-se : 405 cm */
+export const MEASURED_DIST_CORNER_NE_TO_SE          = 405;
+
+/** Largeur de la douche entre shower-nw et shower-ne : 71 cm */
+export const MEASURED_DIST_SHOWER_NW_TO_NE          = 71;
+
+/** Largeur du couloir entre la porte SDB (door-bath-e) et le mur Est couloir (corner-se.x / diag-ne.x) : 116 cm */
+export const MEASURED_DIST_DOOR_BATH_E_TO_CORR_E    = 116;
+
+/** Largeur de la pièce entre niche-beam (poutre/niche) et le mur Est (corner-ne.x / corner-se.x) : 316 cm */
+export const MEASURED_DIST_NICHE_BEAM_TO_EAST_WALL  = 316;
+
+/** Hauteur sous plafond mesurée entre parquet et plafond : 250 cm */
+export const MEASURED_HEIGHT_FLOOR_TO_CEILING       = 250;
+
+// =============================================
+// DIMENSIONS DU MODÈLE 3D
+// =============================================
 export const ROOM_W = 316; // 3,16m — largeur réelle du séjour
 export const ROOM_D = 400; // 4m
 export const WALL_H = 250; // 2.5m
+
+
 
 // Porte : 80cm d'ouverture, alignée après mur couloir (X=200)
 export const DOOR_START = 200; // cm 200
