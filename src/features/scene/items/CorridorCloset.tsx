@@ -18,7 +18,11 @@ import { PARTITION_THICKNESS } from '../wallData';
 const CLOSET_W = DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS);  // ≈ 62.8 cm
 const CLOSET_D = KITCHEN_Z  - (ROOM_D    + PARTITION_THICKNESS);   // ≈ 52.8 cm
 
-// Pivot porte : coin est / nord du caisson en local
+// Pivot porte : coin NE du caisson — charnière sur la face est, au ras du mur nord
+// La face EXTÉRIEURE de la porte (côté couloir) doit être alignée sur le pivot en X,
+// pas le centre du panneau. Ainsi, quand la porte s'ouvre (+π/2 vers l'Est),
+// le 1 cm de matière qui était côté couloir pivote vers le NORD exactement jusqu'au
+// mur nord (Z = -CLOSET_D/2), sans pénétrer dedans.
 const DOOR_PIVOT_X =  CLOSET_W / 2;
 const DOOR_PIVOT_Z = -CLOSET_D / 2;
 
@@ -39,6 +43,7 @@ export function CorridorCloset({ actionState, onSize }: SceneItemProps) {
   }, []);
 
   useFrame(() => {
+    // +π/2 CCW (vu d'en haut) : l'extrémité sud pivote vers l'Est (couloir) ✓
     const target = isOpen ? Math.PI / 2 : 0;
     const delta  = target - doorRef.current.rotation.y;
     if (Math.abs(delta) > 0.001) {
@@ -58,13 +63,15 @@ export function CorridorCloset({ actionState, onSize }: SceneItemProps) {
         </mesh>
       ))}
 
-      {/* Porte pivotante — remplit toute la hauteur et profondeur du caisson */}
+      {/* Porte pivotante — face extérieure (est) alignée sur le pivot en X.
+          Centre décalé de -1 cm en X : face ext à x=0 (pivot), face int à x=-2.
+          À l'ouverture +π/2, x=0 → z=0 et x=-2 → z=+2 : aucune pénétration nord. */}
       <group ref={doorRef} position={[DOOR_PIVOT_X, 0, DOOR_PIVOT_Z]}
         userData={{ hoverAction: { label: 'Placard couloir', actionId: 'corrDoors' } }}>
-        <mesh position={[0, WALL_H / 2, CLOSET_D / 2]} castShadow material={doorMat}>
+        <mesh position={[-1, WALL_H / 2, CLOSET_D / 2]} castShadow material={doorMat}>
           <boxGeometry args={[2, WALL_H - DOOR_GAP * 2, CLOSET_D - DOOR_GAP * 2]} />
         </mesh>
-        <mesh position={[2, WALL_H / 2, CLOSET_D - 6]} material={handleMat}>
+        <mesh position={[-1, WALL_H / 2, CLOSET_D - 6]} material={handleMat}>
           <boxGeometry args={[3, 20, 1.2]} />
         </mesh>
       </group>
