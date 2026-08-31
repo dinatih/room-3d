@@ -1758,12 +1758,35 @@ function MirrorBath({ showReflection }: { showReflection: boolean }) {
   );
 }
 
-// ── Export principal ──────────────────────────────────────────────────────────
+// ── Exports séparés ──────────────────────────────────────────────────────────
+//
+// MirrorFrames  → placé dans CategoryLayerGroup LAYER_FURNITURE (toujours visible)
+// MirrorReflectors → placé dans CategoryLayerGroup LAYER_MIRRORS (masqué par le toggle)
 
+/** Cadres GLB/procéduraux des miroirs — toujours visibles (LAYER_FURNITURE). */
+export function MirrorFrames() {
+  return (
+    <MergedStaticGroup name="merged-mirror-frames">
+      <MirrorsD showReflection={false} />
+      <MirrorsA showReflection={false} />
+    </MergedStaticGroup>
+  );
+}
+
+/** Plans de réflexion Reflector — masqués via le toggle Miroirs (LAYER_MIRRORS). */
+export function MirrorReflectors() {
+  return (
+    <>
+      <MirrorsD showReflection={true} />
+      <MirrorsA showReflection={true} />
+      <MirrorBath showReflection={true} />
+    </>
+  );
+}
+
+/** @deprecated Utiliser MirrorFrames + MirrorReflectors dans Studio.tsx */
 export function Mirrors() {
-  // showMirrors = false → plans de réflexion masqués (gain perf), cadres GLB toujours visibles
   const showMirrors = useSceneStore(state => state.layers.mirrors);
-
   return (
     <MergedStaticGroup name="merged-mirror-frames">
       <MirrorsD showReflection={showMirrors} />
