@@ -1643,7 +1643,7 @@ function MergedReflector({ planes, position, rotationY }: {
 
 // ── 3× Nissedal 65×65 — Mur Sud ────────────────────────────────────────────────
 
-function MirrorsD() {
+function MirrorsD({ showReflection }: { showReflection: boolean }) {
   const W_M = 65, H_M = 65;
   const FT = 1.8;
   const cx  = (KITCHEN_X1 + DOOR_START) / 2;
@@ -1659,7 +1659,7 @@ function MirrorsD() {
 
   return (
     <>
-      <MergedReflector planes={planes} position={[0, 0, mirZ]} rotationY={Math.PI} />
+      {showReflection && <MergedReflector planes={planes} position={[0, 0, mirZ]} rotationY={Math.PI} />}
       {([0, 1, 2] as const).map((i) => {
         const cy = (WALL_H - 3.5) - H_M / 2 - i * (H_M + 0.5);
         return (
@@ -1676,7 +1676,7 @@ function MirrorsD() {
 
 // ── 3× Nissedal 40×150 + 1× 70×160 — Mur Ouest ──────────────────────────────────
 
-function MirrorsA() {
+function MirrorsA({ showReflection }: { showReflection: boolean }) {
   const MA_W = 40, MA_H = 150;
   const M4_W = 70, M4_H = 160;
   const FT = 1.8, FD = 5.0; // épaisseur standard Nissedal 5cm
@@ -1704,7 +1704,7 @@ function MirrorsA() {
 
   return (
     <>
-      <MergedReflector planes={planes} position={[mirX, 0, 0]} rotationY={Math.PI / 2} />
+      {showReflection && <MergedReflector planes={planes} position={[mirX, 0, 0]} rotationY={Math.PI / 2} />}
 
       {([0, 1, 2] as const).map((i) => {
         const mz = MA_START_Z + MA_W / 2 + i * MA_W;
@@ -1737,7 +1737,7 @@ function MirrorsA() {
 
 // ── Miroir vasque bath ────────────────────────────────────────────────────────
 
-function MirrorBath() {
+function MirrorBath({ showReflection }: { showReflection: boolean }) {
   const VANITY_W    = 60, VANITY_D = 47, VANITY_Y0 = 30, VANITY_H = 50;
   const VANITY_CX   = DOOR_START - 84;
   const VANITY_CZ   = KITCHEN_Z + PARTITION_THICKNESS + 1 + VANITY_D / 2;
@@ -1746,6 +1746,8 @@ function MirrorBath() {
   const mirrorH     = 90;
   const mirrorY     = counterTopY + mirrorH / 2;
   const mirrorZ     = -VANITY_D / 2 + 0.5;
+
+  if (!showReflection) return null;
 
   return (
     <ReflectorMirror
@@ -1759,14 +1761,14 @@ function MirrorBath() {
 // ── Export principal ──────────────────────────────────────────────────────────
 
 export function Mirrors() {
+  // showMirrors = false → plans de réflexion masqués (gain perf), cadres GLB toujours visibles
   const showMirrors = useSceneStore(state => state.layers.mirrors);
-  if (!showMirrors) return null;
 
   return (
     <MergedStaticGroup name="merged-mirror-frames">
-      <MirrorsD />
-      <MirrorsA />
-      <MirrorBath />
+      <MirrorsD showReflection={showMirrors} />
+      <MirrorsA showReflection={showMirrors} />
+      <MirrorBath showReflection={showMirrors} />
     </MergedStaticGroup>
   );
 }
