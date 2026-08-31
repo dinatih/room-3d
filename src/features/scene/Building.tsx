@@ -1643,7 +1643,7 @@ function MergedReflector({ planes, position, rotationY }: {
 
 // ── 3× Nissedal 65×65 — Mur Sud ────────────────────────────────────────────────
 
-function MirrorsD({ showReflection }: { showReflection: boolean }) {
+function MirrorsD({ showReflection, reflectorOnly = false }: { showReflection: boolean; reflectorOnly?: boolean }) {
   const W_M = 65, H_M = 65;
   const FT = 1.8;
   const cx  = (KITCHEN_X1 + DOOR_START) / 2;
@@ -1660,7 +1660,7 @@ function MirrorsD({ showReflection }: { showReflection: boolean }) {
   return (
     <>
       {showReflection && <MergedReflector planes={planes} position={[0, 0, mirZ]} rotationY={Math.PI} />}
-      {([0, 1, 2] as const).map((i) => {
+      {!reflectorOnly && ([0, 1, 2] as const).map((i) => {
         const cy = (WALL_H - 3.5) - H_M / 2 - i * (H_M + 0.5);
         return (
           <group key={i} userData={{ animUnit: true }}>
@@ -1676,7 +1676,7 @@ function MirrorsD({ showReflection }: { showReflection: boolean }) {
 
 // ── 3× Nissedal 40×150 + 1× 70×160 — Mur Ouest ──────────────────────────────────
 
-function MirrorsA({ showReflection }: { showReflection: boolean }) {
+function MirrorsA({ showReflection, reflectorOnly = false }: { showReflection: boolean; reflectorOnly?: boolean }) {
   const MA_W = 40, MA_H = 150;
   const M4_W = 70, M4_H = 160;
   const FT = 1.8, FD = 5.0; // épaisseur standard Nissedal 5cm
@@ -1706,7 +1706,7 @@ function MirrorsA({ showReflection }: { showReflection: boolean }) {
     <>
       {showReflection && <MergedReflector planes={planes} position={[mirX, 0, 0]} rotationY={Math.PI / 2} />}
 
-      {([0, 1, 2] as const).map((i) => {
+      {!reflectorOnly && ([0, 1, 2] as const).map((i) => {
         const mz = MA_START_Z + MA_W / 2 + i * MA_W;
 
         return (
@@ -1720,7 +1720,7 @@ function MirrorsA({ showReflection }: { showReflection: boolean }) {
       })}
 
       {/* 4e miroir 70×160 (procédural) */}
-      {(() => {
+      {!reflectorOnly && (() => {
         const mz = MA_START_Z + 3 * MA_W + M4_W / 2;
 
         return (
@@ -1773,12 +1773,12 @@ export function MirrorFrames() {
   );
 }
 
-/** Plans de réflexion Reflector — masqués via le toggle Miroirs (LAYER_MIRRORS). */
+/** Plans de réflexion Reflector uniquement — pas de cadres GLB (déjà dans MirrorFrames). */
 export function MirrorReflectors() {
   return (
     <>
-      <MirrorsD showReflection={true} />
-      <MirrorsA showReflection={true} />
+      <MirrorsD showReflection={true} reflectorOnly={true} />
+      <MirrorsA showReflection={true} reflectorOnly={true} />
       <MirrorBath showReflection={true} />
     </>
   );
