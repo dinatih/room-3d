@@ -3,19 +3,27 @@
  * Rendu en coordonnées locales : X/Z centrés sur le caisson, Y=0 = sol.
  * Porte pivotante animée en douceur (charnière coin CLOSET_X1 / CLOSET_Z0).
  * Utilisé dans Furniture.tsx (scène) et dans l'inventaire (SCENE_REGISTRY).
+ *
+ * Dimensions calculées depuis les constantes réelles :
+ *   W = DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS)  ≈ 62.8 cm
+ *   D = KITCHEN_Z  - (ROOM_D    + PARTITION_THICKNESS)   ≈ 52.8 cm
  */
 import { useRef, useLayoutEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
+import { ROOM_D, KITCHEN_X1, KITCHEN_Z, DOOR_START, WALL_H } from '@config';
+import { PARTITION_THICKNESS } from '../wallData';
 
-const CLOSET_W = 60;   // DOOR_START - KITCHEN_X1  = 190 - 130
-const CLOSET_D = 52;   // Mesure réelle : MEASURED_DIST_CORRIDOR_CLOSET_Z = 52 cm
-const WALL_H   = 250;
+const CLOSET_W = DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS);  // ≈ 62.8 cm
+const CLOSET_D = KITCHEN_Z  - (ROOM_D    + PARTITION_THICKNESS);   // ≈ 52.8 cm
 
-// Pivot porte : coin CLOSET_X1 / CLOSET_Z0 en local
-const DOOR_PIVOT_X =  CLOSET_W / 2;  //  30
-const DOOR_PIVOT_Z = -CLOSET_D / 2;  // -25
+// Pivot porte : coin est / nord du caisson en local
+const DOOR_PIVOT_X =  CLOSET_W / 2;
+const DOOR_PIVOT_Z = -CLOSET_D / 2;
+
+// Jeu minimal entre porte et parois (0.2 cm de chaque côté)
+const DOOR_GAP = 0.2;
 
 const shelfMat  = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.4 });
 const doorMat   = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
@@ -43,18 +51,18 @@ export function CorridorCloset({ actionState, onSize }: SceneItemProps) {
 
   return (
     <group>
-      {/* Étagères */}
+      {/* Étagères — remplissent toute la largeur et profondeur du caisson */}
       {[60, 120, 180].map((y) => (
         <mesh key={y} position={[0, y, 0]} castShadow receiveShadow material={shelfMat}>
-          <boxGeometry args={[CLOSET_W - 4, 3, CLOSET_D]} />
+          <boxGeometry args={[CLOSET_W, 3, CLOSET_D]} />
         </mesh>
       ))}
 
-      {/* Porte pivotante */}
+      {/* Porte pivotante — remplit toute la hauteur et profondeur du caisson */}
       <group ref={doorRef} position={[DOOR_PIVOT_X, 0, DOOR_PIVOT_Z]}
         userData={{ hoverAction: { label: 'Placard couloir', actionId: 'corrDoors' } }}>
-        <mesh position={[0, (WALL_H - 10) / 2, CLOSET_D / 2]} castShadow material={doorMat}>
-          <boxGeometry args={[2, WALL_H - 10, CLOSET_D - 2]} />
+        <mesh position={[0, WALL_H / 2, CLOSET_D / 2]} castShadow material={doorMat}>
+          <boxGeometry args={[2, WALL_H - DOOR_GAP * 2, CLOSET_D - DOOR_GAP * 2]} />
         </mesh>
         <mesh position={[2, WALL_H / 2, CLOSET_D - 6]} material={handleMat}>
           <boxGeometry args={[3, 20, 1.2]} />
