@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
 
 const CLOSET_W = 60;   // DOOR_START - KITCHEN_X1  = 190 - 130
-const CLOSET_D = 50;   // KITCHEN_Z  - (ROOM_D + W) = 460 - 410
+const CLOSET_D = 52;   // Mesure réelle : MEASURED_DIST_CORRIDOR_CLOSET_Z = 52 cm
 const WALL_H   = 250;
 
 // Pivot porte : coin CLOSET_X1 / CLOSET_Z0 en local
