@@ -109,7 +109,7 @@ function ShadowWarmup() {
 /** Active/désactive les ombres en réponse au toggle UI. */
 function ShadowController({ enabled }: { enabled: boolean }) {
   const { gl, scene, invalidate } = useThree();
-  
+
   useEffect(() => {
     (window as any).__THREE_SCENE__ = scene;
   }, [scene]);
@@ -343,7 +343,7 @@ export function Studio() {
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
         frameloop={showInventory || isIdle ? 'never' : 'demand'}
-        /* 
+        /*
          * ── Placement & configuration initiale de la caméra 3D ───────────────
          * - fov: 50° (champ de vision vertical naturel)
          * - near: 5 cm (évite le clipping avec les objets proches)

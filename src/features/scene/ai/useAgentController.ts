@@ -29,7 +29,8 @@ export const NPC_WALK_ANIMATIONS = [
   'animations/locomotion/anim_unarmed_walk_forward.glb',
   'animations/locomotion/anim_walking.glb',
   'animations/locomotion/anim_walking_slow.glb',
-  'animations/locomotion/anim_wheelbarrow_walk_2.glb'
+  'animations/locomotion/anim_wheelbarrow_walk_2.glb',
+  'animations/poses_idles/miley_armature_walk_relaxed_loop.glb',
 ];
 
 export function getRandomNpcWalkAnimation(characterId?: string): string {
@@ -107,7 +108,7 @@ export function useAgentController(
   const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
   const startPosRef = useRef<{x: number, y: number, z: number, rotY: number} | null>(initialPos);
   const claimedSlotRef = useRef<{ objectId: string; slotId: string } | null>(null);
-  
+
   // Navigation dynamique inter-pièces
   const dynamicNavQueueRef = useRef<AgentInstruction[]>([]);
   const dynamicNavIndexRef = useRef(0);
@@ -175,7 +176,7 @@ export function useAgentController(
     dynamicNavQueueRef.current = [];
     dynamicNavIndexRef.current = 0;
     activeNavStepIndexRef.current = -1;
-    
+
     // Sync starting position directly with the first action zone or real position
     if (scenario) {
       const stepCoords = scenario.length > 0 ? resolveInstructionCoords(scenario[0], null) : null;
@@ -324,7 +325,7 @@ export function useAgentController(
             // Aucun slot libre sur ce meuble (ex. chaise de bureau ou WC déjà pris par un autre perso)
             const occupant = OccupancyManager.getOccupant(objId, reqSlotId);
             const objName = SMART_OBJECTS[objId]?.name || objId;
-            
+
             if (loop) {
               appLog(_characterId, `⚠️ ${objName} est occupé${occupant ? ` (${occupant})` : ''}, recherche d'une autre place...`);
               // Passer toutes les étapes liées à ce meuble dans le scénario
@@ -361,13 +362,13 @@ export function useAgentController(
 
       if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START' || currentInstruction.type === 'USE_OBJECT') {
         const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
-        
+
         // Calculer le chemin inter-pièces UNIQUEMENT une seule fois par instruction principale
         if (!hasNavStep && activeNavStepIndexRef.current !== stepIndexRef.current) {
           activeNavStepIndexRef.current = stepIndexRef.current;
           const startRoom = getRoomFromCoords(stateRef.current.x, stateRef.current.z);
           const targetRoom = getRoomFromCoords(target.tx, target.tz);
-          
+
           if (startRoom !== targetRoom) {
             const navSteps = buildNavigationWaypoints(
               { x: stateRef.current.x, z: stateRef.current.z },
@@ -572,7 +573,7 @@ export function useAgentController(
         // Déplacement
         stateRef.current.y = 0;
         stateRef.current.animation = currentWalkAnimRef.current;
-        
+
         let dirX = dx / dist;
         let dirZ = dz / dist;
 
@@ -688,7 +689,7 @@ export function useAgentController(
 
         // Rotation orientée vers la direction effective de déplacement (contournement fluide)
         const targetRot = Math.atan2(steerX, steerZ);
-        
+
         // Shortest path rotation
         let rotDiff = targetRot - stateRef.current.rotY;
         while (rotDiff > Math.PI) rotDiff -= 2 * Math.PI;
@@ -807,7 +808,7 @@ export function useAgentController(
       if (target.ty !== undefined) {
         stateRef.current.y = target.ty;
       }
-      
+
       const targetRotY = currentInstruction.rotY !== undefined ? currentInstruction.rotY : target.rotY;
       if (targetRotY !== undefined) {
         let rotDiff = targetRotY - stateRef.current.rotY;

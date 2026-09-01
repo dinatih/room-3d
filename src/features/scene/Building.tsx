@@ -1268,9 +1268,9 @@ function BathSkirting() {
 // ── Couloir PVC Rouge (devant porte d'entrée, 3 apparts) ──────────────────────
 function RedPVCCorridor() {
   const WIDTH = 120;
-  const TOTAL_LENGTH = 1200; 
+  const TOTAL_LENGTH = 1200;
   // Centre du mur diagonal du milieu (le studio courant)
-  const dCenter = DiagWall.len / 2; 
+  const dCenter = DiagWall.len / 2;
   // Décalé à l'extérieur : moitié du mur (5) + moitié du couloir (60) = 65
   const center = DiagWall.p(dCenter, DiagWall.depth / 2 + WIDTH / 2);
 
@@ -1305,7 +1305,7 @@ function RedPVCCorridor() {
         <planeGeometry args={[TOTAL_LENGTH, WIDTH]} />
         <primitive object={mat} attach="material" />
       </mesh>
-      
+
       {/* Dalle béton jaune alignée sur la dalle du studio (épaisseur 10cm, sommet à y=-3.5) */}
       <mesh position={[0, -8.5, 0]} castShadow receiveShadow userData={{ brickType: 'floor' }}>
         <boxGeometry args={[TOTAL_LENGTH, 10, WIDTH]} />

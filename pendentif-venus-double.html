@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Pendentif double Vénus — Three.js</title>
+<style>
+  html, body { margin:0; height:100%; background:#ffffff; overflow:hidden; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
+  #c { width:100%; height:100%; display:block; touch-action:none; cursor:grab; }
+  #c:active { cursor:grabbing; }
+  #caption {
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%);
+    font-size:12px; letter-spacing:.08em; color:#9a9a9a; text-transform:uppercase;
+    pointer-events:none; user-select:none;
+  }
+  #hint {
+    position:fixed; right:18px; top:16px; font-size:11px; color:#bdbdbd;
+    pointer-events:none; user-select:none;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="caption">Argent poli — glisser pour orbiter</div>
+<div id="hint">Three.js</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  // ---------------------------------------------------------------
+  // Shape builders
+  // ---------------------------------------------------------------
+  function ringShape(R, tube) {
+    const shape = new THREE.Shape();
+    shape.absarc(0, 0, R, 0, Math.PI * 2, false);
+    const hole = new THREE.Path();
+    hole.absarc(0, 0, R - tube, 0, Math.PI * 2, true);
+    shape.holes.push(hole);
+    return shape;
+  }
+
+  // Venus "female" tail: a plus-sign outline.
+  // w = half stroke width, up = reach into the ring's solid band,
+  // down = tail length below center, side = half-span of the crossbar.
+  function crossShape(w, up, down, side) {
+    const shape = new THREE.Shape();
+    const pts = [
+      [-w, up], [w, up], [w, w],
+      [side, w], [side, -w], [w, -w],
+      [w, -down], [-w, -down], [-w, -w],
+      [-side, -w], [-side, w], [-w, w]
+    ];
+    shape.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], pts[i][1]);
+    shape.closePath();
+    return shape;
+  }
+
+  // The fused crossbar + two stems, as a single shape (no overlap between
+  // pieces, so no z-fighting) with a small triangular notch cut into the
+  // bar right above the gap between the stems — the gap plus that notch
+  // reads as a simple house silhouette.
+  function houseYokeShape(barHalfThickness, barOuterX, stemInnerX, stemOuterX, barCenterY, stemBottomY) {
+    const w = barHalfThickness;
+    const barTop = barCenterY + w;
+    const barBottom = barCenterY - w;
+    const shape = new THREE.Shape();
+    const pts = [
+      [-barOuterX, barTop], [barOuterX, barTop], [barOuterX, barBottom],
+      [stemOuterX, barBottom], [stemOuterX, stemBottomY],
+      [stemInnerX, stemBottomY], [stemInnerX, barBottom],
+      [-stemInnerX, barBottom], [-stemInnerX, stemBottomY],
+      [-stemOuterX, stemBottomY], [-stemOuterX, barBottom],
+      [-barOuterX, barBottom]
+    ];
+    shape.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], pts[i][1]);
+    shape.closePath();
+
+    const roofApexY = barTop - 1;
+    const roof = new THREE.Path();
+    roof.moveTo(-stemInnerX, barBottom);
+    roof.lineTo(stemInnerX, barBottom);
+    roof.lineTo(0, roofApexY);
+    roof.closePath();
+    shape.holes.push(roof);
+
+    return shape;
+  }
+
+  function elongatedRingShape(rx, ry, tube) {
+    const shape = new THREE.Shape();
+    const steps = 64;
+    for (let i = 0; i <= steps; i++) {
+      const a = (i / steps) * Math.PI * 2;
+      const x = Math.cos(a) * rx, y = Math.sin(a) * ry;
+      if (i === 0) shape.moveTo(x, y); else shape.lineTo(x, y);
+    }
+    const hole = new THREE.Path();
+    const irx = Math.max(rx - tube, 0.001), iry = Math.max(ry - tube, 0.001);
+    for (let i = 0; i <= steps; i++) {
+      const a = (i / steps) * Math.PI * 2;
+      const x = Math.cos(a) * irx, y = Math.sin(a) * iry;
+      if (i === 0) hole.moveTo(x, y); else hole.lineTo(x, y);
+    }
+    shape.holes.push(hole);
+    return shape;
+  }
+
+  function extrudeMesh(shape, depth, material, zOffset, bevel) {
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth: depth,
+      bevelEnabled: !!bevel,
+      bevelThickness: bevel ? 1 : 0,
+      bevelSize: bevel ? 0.9 : 0,
+      bevelSegments: bevel ? 3 : 0,
+      curveSegments: 48
+    });
+    geo.translate(0, 0, zOffset);
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
+  }
+
+  // ---------------------------------------------------------------
+  // Build the pendant: two interlocked Venus (female) symbols + bail
+  // ---------------------------------------------------------------
+  function buildPendant(material) {
+    const group = new THREE.Group();
+
+    // Proportions matched to the reference photo's stated dimensions
+    // (30mm wide x 33mm tall), scaled up so 1 real mm ~= 3.33 scene units.
+    const R = 30;        // ring outer radius
+    const tube = 8.7;    // ring band width
+    const depth = 6;     // extrusion thickness
+    const eps = 0.08;    // tiny z-nudge so overlapping flat pieces don't z-fight
+
+    const crossW = 4.0;              // tail stroke half-width
+    const tailLength = 40;           // total visible tail length, ring bottom to tip
+                                      // (shorter crosses)
+    const barCenterOffset = tailLength / 2;
+    const crossUp = barCenterOffset + 6.5;  // centered bar (not a Latin-cross layout),
+                                             // + a small extra reach up into the ring
+    const crossDown = tailLength - barCenterOffset;
+    const crossSide = 14.5;          // arms reach just past center so the two
+                                      // bars touch (barely overlapping, no gap)
+
+    // Two circles side by side, same height, overlapping generously in the
+    // middle (like the reference photo) — two plain, separate symmetric
+    // crosses below, each with its bar centered on its own stem.
+    const centers = [
+      { x: -14, y: 0 },
+      { x: 14, y: 0 }
+    ];
+
+    centers.forEach((c, idx) => {
+      const zBase = idx * eps * 2;
+
+      const ring = ringShape(R, tube);
+      const ringMesh = extrudeMesh(ring, depth, material, zBase, true);
+      ringMesh.position.set(c.x, c.y, 0);
+      group.add(ringMesh);
+
+      const cross = crossShape(crossW, crossUp, crossDown, crossSide);
+      const crossMesh = extrudeMesh(cross, depth, material, zBase + eps, true);
+      crossMesh.position.set(c.x, c.y - R - barCenterOffset, 0);
+      group.add(crossMesh);
+    });
+
+    // Bail (chain loop), centered above the point where the two rings meet
+    const bailShape = elongatedRingShape(8, 12, 4.3);
+    const bailMesh = extrudeMesh(bailShape, depth, material, eps * 6, true);
+    bailMesh.position.set(0, R + 14, 0);
+    group.add(bailMesh);
+
+    // Small jump ring linking the bail to the body
+    const jumpGeo = new THREE.TorusGeometry(6, 1.7, 16, 48);
+    const jumpMesh = new THREE.Mesh(jumpGeo, material);
+    jumpMesh.position.set(0, R + 2, depth / 2);
+    jumpMesh.castShadow = true;
+    jumpMesh.receiveShadow = true;
+    group.add(jumpMesh);
+
+    // Recenter on the origin
+    const box = new THREE.Box3().setFromObject(group);
+    const c = new THREE.Vector3();
+    box.getCenter(c);
+    group.children.forEach(ch => ch.position.sub(c));
+
+    return group;
+  }
+
+  // ---------------------------------------------------------------
+  // Studio environment (for realistic polished-steel reflections)
+  // ---------------------------------------------------------------
+  function buildEnvScene() {
+    const scene = new THREE.Scene();
+
+    // Dark studio backdrop — the strip lights below need something dark
+    // to contrast against, or they blend into the background and the
+    // metal reads as flat gray instead of shiny.
+    const sphereGeo = new THREE.SphereGeometry(60, 32, 32);
+    const posAttr = sphereGeo.attributes.position;
+    const colors = [];
+    const top = new THREE.Color(0x4a4d52);
+    const bottom = new THREE.Color(0x0b0b0d);
+    for (let i = 0; i < posAttr.count; i++) {
+      const y = posAttr.getY(i) / 60;
+      const t = THREE.MathUtils.clamp(y * 0.5 + 0.5, 0, 1);
+      const col = bottom.clone().lerp(top, t);
+      colors.push(col.r, col.g, col.b);
+    }
+    sphereGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    const sphereMat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide });
+    scene.add(new THREE.Mesh(sphereGeo, sphereMat));
+
+    // Bright, narrow "softbox" strips against the dark backdrop — this
+    // light/dark contrast is what makes a chrome/silver surface read as
+    // shiny. A uniformly bright environment (my earlier version) reflects
+    // back as a flat, washed-out gray, which was the problem.
+    const stripMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const stripDefs = [
+      { w: 10, h: 60, x: -48, y: 15, z: 25, ry: Math.PI / 2.6 },
+      { w: 8, h: 55, x: 44, y: 5, z: 20, ry: -Math.PI / 2.3 },
+      { w: 45, h: 7, x: 0, y: 40, z: -20, rx: Math.PI / 2.6 },
+      { w: 6, h: 40, x: 10, y: -20, z: -35, ry: Math.PI / 5 },
+      { w: 30, h: 6, x: -20, y: -30, z: 25, rx: -Math.PI / 3 }
+    ];
+    stripDefs.forEach(d => {
+      const strip = new THREE.Mesh(new THREE.PlaneGeometry(d.w, d.h), stripMat);
+      strip.position.set(d.x, d.y, d.z);
+      if (d.rx) strip.rotation.x = d.rx;
+      if (d.ry) strip.rotation.y = d.ry;
+      scene.add(strip);
+    });
+
+    return scene;
+  }
+
+  // ---------------------------------------------------------------
+  // Scene setup
+  // ---------------------------------------------------------------
+  const canvas = document.getElementById('c');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xffffff);
+
+  const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, 2000);
+  camera.position.set(0, 10, 320);
+
+  // Environment (reflections)
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  pmrem.compileEquirectangularShader();
+  const envRT = pmrem.fromScene(buildEnvScene(), 0.04);
+  scene.environment = envRT.texture;
+
+  // Lights
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x555555, 0.35));
+  const key = new THREE.DirectionalLight(0xffffff, 1.6);
+  key.position.set(80, 140, 120);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.left = -120;
+  key.shadow.camera.right = 120;
+  key.shadow.camera.top = 120;
+  key.shadow.camera.bottom = -120;
+  key.shadow.camera.near = 10;
+  key.shadow.camera.far = 500;
+  key.shadow.bias = -0.0005;
+  scene.add(key);
+
+  const fill = new THREE.DirectionalLight(0xffffff, 0.5);
+  fill.position.set(-100, 40, 80);
+  scene.add(fill);
+
+  const rim = new THREE.DirectionalLight(0xffffff, 0.6);
+  rim.position.set(0, -60, -120);
+  scene.add(rim);
+
+  // Material: polished silver / stainless steel
+  const material = new THREE.MeshPhysicalMaterial({
+    color: 0xfafafa,
+    metalness: 1.0,
+    roughness: 0.1,
+    envMapIntensity: 1.4,
+    clearcoat: 0.3,
+    clearcoatRoughness: 0.15
+  });
+
+  // Pendant
+  const pendant = buildPendant(material);
+  pendant.rotation.x = 0.06;
+  const rig = new THREE.Group();
+  rig.add(pendant);
+  scene.add(rig);
+
+  // Ground shadow catcher
+  const shadowMat = new THREE.ShadowMaterial({ opacity: 0.18 });
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), shadowMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -100;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // ---------------------------------------------------------------
+  // Simple orbit-style pointer controls (no external addon needed)
+  // ---------------------------------------------------------------
+  let dragging = false, lastX = 0, lastY = 0;
+  let rotY = 0.35, rotX = 0.15;
+  let autoRotate = true;
+
+  canvas.addEventListener('pointerdown', (e) => {
+    dragging = true; autoRotate = false;
+    lastX = e.clientX; lastY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointerup', () => { dragging = false; });
+  canvas.addEventListener('pointercancel', () => { dragging = false; });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    rotY += dx * 0.008;
+    rotX = THREE.MathUtils.clamp(rotX + dy * 0.008, -1.1, 1.1);
+  });
+
+  let dist = 320;
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    dist = THREE.MathUtils.clamp(dist + e.deltaY * 0.15, 160, 600);
+  }, { passive: false });
+
+  function updateCamera() {
+    camera.position.x = Math.sin(rotY) * Math.cos(rotX) * dist;
+    camera.position.z = Math.cos(rotY) * Math.cos(rotX) * dist;
+    camera.position.y = Math.sin(rotX) * dist + 20;
+    camera.lookAt(0, 0, 0);
+  }
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    if (autoRotate) rotY += 0.0028;
+    updateCamera();
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

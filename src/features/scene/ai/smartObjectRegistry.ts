@@ -283,7 +283,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     ]
   },
 
-
   'bathtub-garden': {
     id: 'bathtub-garden',
     name: 'Baignoire Jardin',
@@ -466,7 +465,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre l\'air au fond',
         offset: [150, 0, -600],
         rotY: 0,
-        animation: 'animations/poses_idles/anim_female_standing_pose.glb',
+        animation: 'animations/poses_idles/miley_armature_change_pose.glb',
         duration: 6.0,
       }
     ]

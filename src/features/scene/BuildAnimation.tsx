@@ -72,6 +72,7 @@ function collectScene(scene: THREE.Scene) {
   const pillars: THREE.Object3D[] = [];
   const wallsBySide = new Map<string, THREE.Object3D[]>();
   const ikea: THREE.Object3D[] = [];
+  const doors: THREE.Object3D[] = [];
   const mannequins: THREE.Object3D[] = [];
   const rest: THREE.Object3D[] = [];
   const ceiling: THREE.Object3D[] = [];
@@ -109,6 +110,10 @@ function collectScene(scene: THREE.Scene) {
       isMannequin = true;
     }
 
+    // Les portes sont des items isIkea dont le itemName commence par "Porte"
+    const isDoor = isIkea && typeof o.userData?.itemName === 'string' &&
+      o.userData.itemName.toLowerCase().startsWith('porte');
+
     if (isMannequin) mannequins.push(o);
     else if (brickType === 'ceiling') ceiling.push(o);
     else if (brickType === 'floor') floor.push(o);
@@ -120,6 +125,7 @@ function collectScene(scene: THREE.Scene) {
     }
     else if (brickType === 'ground') { /* ignore */ }
     else if (brickType === 'skirting') skirting.push(o);
+    else if (isDoor) doors.push(o);
     else if (isIkea) ikea.push(o);
     else rest.push(o);
   }
@@ -158,7 +164,7 @@ function collectScene(scene: THREE.Scene) {
   }
 
   scene.children.forEach(child => visit(child, 0));
-  return { floor, skirting, pillars, wallsBySide, ikea, mannequins, rest, ceiling };
+  return { floor, skirting, pillars, wallsBySide, ikea, doors, mannequins, rest, ceiling };
 }
 
 
@@ -208,12 +214,13 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
     const remerge = unmergeScene(s3);
 
     // 2. Ensuite on collecte
-    const { floor, skirting, pillars, wallsBySide, ikea, mannequins, rest, ceiling } = collectScene(s3);
+    const { floor, skirting, pillars, wallsBySide, ikea, doors, mannequins, rest, ceiling } = collectScene(s3);
 
-    // L'ordre demandé : plinthes/sol, piliers, ikea, reste, murs, plafond, puis mannequins en tout dernier
+    // L'ordre : sol+portes simultanés, plinthes, piliers simultanés, ikea, reste, murs, plafond, mannequins
     const groupedObjects: AnimObj[] = [];
     let cursor = 0;
 
+    // Ajoute chaque item séquentiellement (stagger STAGGER_MS entre eux)
     const addSequential = (items: THREE.Object3D[]) => {
       items.forEach(obj => {
         groupedObjects.push({
@@ -226,6 +233,23 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
         });
         cursor += STAGGER_MS;
       });
+    };
+
+    // Ajoute tous les items avec le MÊME startTime (tombée simultanée), puis avance le curseur d'un seul stagger
+    const addSimultaneous = (items: THREE.Object3D[]) => {
+      if (items.length === 0) return;
+      const t = cursor;
+      items.forEach(obj => {
+        groupedObjects.push({
+          obj,
+          origPos: obj.position.clone(),
+          origVisible: obj.visible,
+          localDropVec: computeLocalDropVec(obj, DROP_HEIGHT),
+          startTime: t,
+          duration: FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN),
+        });
+      });
+      cursor += STAGGER_MS;
     };
 
     const sortByYZX = (arr: THREE.Object3D[]) => {
@@ -245,16 +269,22 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
     const allWalls: THREE.Object3D[] = [];
     wallsBySide.forEach(group => allWalls.push(...group));
 
+    // Sol + portes : tombent en même temps dès le début
+    addSimultaneous([...sortByYZX(floor), ...sortByYZX(doors)]);
+
+    // Plinthes séquentielles
+    addSequential(sortByYZX(skirting));
+
+    // Piliers : tous simultanés
+    addSimultaneous(pillars);
+
+    // Meubles, reste, murs, plafond, mannequins
     const mixedObjects = [
-      ...skirting,
-      ...pillars,
       ...ikea,
       ...rest,
       ...mannequins,
       ...allWalls
     ];
-
-    addSequential(sortByYZX(floor));
     addSequential(sortByYZX(mixedObjects));
     addSequential(sortByYZX(ceiling));
 
