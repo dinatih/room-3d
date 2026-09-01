@@ -230,7 +230,7 @@ export function Equipment() {
         />
       </group>
       {/* VÅTHULT — bandeau LED 35 cm au-dessus du miroir vasque (top miroir = 174) */}
-      <group position={[DOOR_START - 84, 176, KITCHEN_Z + PARTITION_THICKNESS + 2.1]} userData={{ itemName: 'Bandeau LED Våthult' }}>
+      <group position={[DOOR_START - 84, 176, KITCHEN_Z + PARTITION_THICKNESS - 2]} userData={{ itemName: 'Bandeau LED Våthult' }}>
         <Vathult40467548 item={stub('vathult-350')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* Niche douche 70×70cm : Centre : KITCHEN_Z + PARTITION_THICKNESS + 140 + PARTITION_THICKNESS / 2 + 35 */}
@@ -754,8 +754,8 @@ const DF = 33;
 export function DronaBoxes() {
   const cbZ = KITCHEN_Z + PARTITION_THICKNESS + 1 + 18.5; // 486.7
   const standalone = [
-    { cx: DOOR_START - 31, cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },
-    { cx: NICHE_X + 20,    cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: 0 },
+    { cx: DOOR_START - 31, cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: Math.PI / 2 },
+    { cx: NICHE_X + 20,    cy: 60 + DF / 2 + 0.2, cz: cbZ, rotY: Math.PI / 2 },
     { cx: 16.5,            cy: 0 + DF / 2 + 0.2,  cz: 268, rotY: Math.PI / 2 },
   ];
   return (

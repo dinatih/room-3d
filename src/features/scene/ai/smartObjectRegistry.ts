@@ -205,12 +205,12 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'shower',
     name: 'Douche',
     category: 'hygiene',
-    position: [25, 0, 645],
+    position: [25, 15, 645],
     slots: [
       {
         slotId: 'take-shower-1',
         name: 'Prendre une douche (Centre)',
-        offset: [25, 0, 645],
+        offset: [25, 15, 645],
         rotY: 0,
         animation: 'animations/poses_idles/miley_armature_posing_f.glb',
         duration: 25.0,
@@ -218,7 +218,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'take-shower-2',
         name: 'Prendre une douche (Gauche)',
-        offset: [8, 0, 645],
+        offset: [8, 15, 645],
         rotY: Math.PI / 2,
         animation: 'animations/poses_idles/miley_armature_posing_f.glb',
         duration: 25.0,
@@ -226,7 +226,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'take-shower-3',
         name: 'Prendre une douche (Droite)',
-        offset: [42, 0, 645],
+        offset: [42, 15, 645],
         rotY: -Math.PI / 2,
         animation: 'animations/poses_idles/miley_armature_posing_f.glb',
         duration: 25.0,
@@ -260,7 +260,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'pick-item',
         name: 'Prendre un objet',
         offset: [30, 0, 535],
-        rotY: Math.PI,
+        rotY: Math.PI + Math.PI / 8,
         animation: 'animations/poses_idles/anim_texting_while_standing.glb',
         duration: 3.5,
       }
