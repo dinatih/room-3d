@@ -151,7 +151,6 @@ function collectScene(scene: THREE.Scene) {
   const skirting: THREE.Object3D[] = [];
   const pillars: THREE.Object3D[] = [];
   const wallsBySide = new Map<string, THREE.Object3D[]>();
-  const ikea: THREE.Object3D[] = [];
   const mannequins: THREE.Object3D[] = [];
   const rest: THREE.Object3D[] = [];
   const ceiling: THREE.Object3D[] = [];
@@ -176,11 +175,6 @@ function collectScene(scene: THREE.Scene) {
     if (o.userData?.type === 'pillar') isPillar = true;
     else o.traverse(c => { if (c.userData?.type === 'pillar') isPillar = true; });
 
-    let isIkea = o.userData?.isIkea;
-    if (!isIkea) {
-      o.traverseAncestors(p => { if (p.userData?.isIkea) isIkea = true; });
-    }
-
     let isMannequin = o.userData?.isMannequin;
     if (!isMannequin) {
       o.traverse(c => { if (c.userData?.isMannequin) isMannequin = true; });
@@ -200,7 +194,6 @@ function collectScene(scene: THREE.Scene) {
     }
     else if (brickType === 'ground') { /* ignore */ }
     else if (brickType === 'skirting') skirting.push(o);
-    else if (isIkea) ikea.push(o);
     else rest.push(o);
   }
 
@@ -238,7 +231,7 @@ function collectScene(scene: THREE.Scene) {
   }
 
   scene.children.forEach(child => visit(child, 0));
-  return { floor, skirting, pillars, wallsBySide, ikea, mannequins, rest, ceiling };
+  return { floor, skirting, pillars, wallsBySide, mannequins, rest, ceiling };
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -489,7 +482,7 @@ export function BuildAnimationMatrix({
     const remerge = unmergeScene(s3);
     s3.updateMatrixWorld(true);
 
-    const { floor, skirting, pillars, wallsBySide, ikea, mannequins, rest, ceiling } = collectScene(s3);
+    const { floor, skirting, pillars, wallsBySide, mannequins, rest, ceiling } = collectScene(s3);
 
     const floorSet = new Set(floor);
     let cursor = 0;
@@ -509,8 +502,8 @@ export function BuildAnimationMatrix({
     // 1. Skirting (plinthes, d'un coup)
     addGrouped(skirting);
 
-    // 2. Rest + Ikea + Mannequins (aléatoire, stagger)
-    const furniture = shuffle([...ikea, ...rest, ...mannequins]);
+    // 2. Rest + Mannequins (aléatoire, stagger)
+    const furniture = shuffle([...rest, ...mannequins]);
     addGrouped(furniture, true);
 
     // 3. Pillars (un par un)

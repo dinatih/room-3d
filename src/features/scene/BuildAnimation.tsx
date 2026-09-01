@@ -71,7 +71,6 @@ function collectScene(scene: THREE.Scene) {
   const skirting: THREE.Object3D[] = [];
   const pillars: THREE.Object3D[] = [];
   const wallsBySide = new Map<string, THREE.Object3D[]>();
-  const ikea: THREE.Object3D[] = [];
   const doors: THREE.Object3D[] = [];
   const mannequins: THREE.Object3D[] = [];
   const rest: THREE.Object3D[] = [];
@@ -97,11 +96,6 @@ function collectScene(scene: THREE.Scene) {
     if (o.userData?.type === 'pillar') isPillar = true;
     else o.traverse(c => { if (c.userData?.type === 'pillar') isPillar = true; });
 
-    let isIkea = o.userData?.isIkea;
-    if (!isIkea) {
-      o.traverseAncestors(p => { if (p.userData?.isIkea) isIkea = true; });
-    }
-
     let isMannequin = o.userData?.isMannequin;
     if (!isMannequin) {
       o.traverse(c => { if (c.userData?.isMannequin) isMannequin = true; });
@@ -110,8 +104,8 @@ function collectScene(scene: THREE.Scene) {
       isMannequin = true;
     }
 
-    // Les portes sont des items isIkea dont le itemName commence par "Porte"
-    const isDoor = isIkea && typeof o.userData?.itemName === 'string' &&
+    // Les portes se reconnaissent uniquement par leur itemName
+    const isDoor = typeof o.userData?.itemName === 'string' &&
       o.userData.itemName.toLowerCase().startsWith('porte');
 
     if (isMannequin) mannequins.push(o);
@@ -126,7 +120,6 @@ function collectScene(scene: THREE.Scene) {
     else if (brickType === 'ground') { /* ignore */ }
     else if (brickType === 'skirting') skirting.push(o);
     else if (isDoor) doors.push(o);
-    else if (isIkea) ikea.push(o);
     else rest.push(o);
   }
 
@@ -164,7 +157,7 @@ function collectScene(scene: THREE.Scene) {
   }
 
   scene.children.forEach(child => visit(child, 0));
-  return { floor, skirting, pillars, wallsBySide, ikea, doors, mannequins, rest, ceiling };
+  return { floor, skirting, pillars, wallsBySide, doors, mannequins, rest, ceiling };
 }
 
 
@@ -214,9 +207,9 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
     const remerge = unmergeScene(s3);
 
     // 2. Ensuite on collecte
-    const { floor, skirting, pillars, wallsBySide, ikea, doors, mannequins, rest, ceiling } = collectScene(s3);
+    const { floor, skirting, pillars, wallsBySide, doors, mannequins, rest, ceiling } = collectScene(s3);
 
-    // L'ordre : sol+portes simultanés, plinthes, piliers simultanés, ikea, reste, murs, plafond, mannequins
+    // L'ordre : sol+portes simultanés, plinthes, piliers simultanés, reste, murs, plafond, mannequins
     const groupedObjects: AnimObj[] = [];
     let cursor = 0;
 
@@ -280,7 +273,6 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
 
     // Meubles, reste, murs, plafond, mannequins
     const mixedObjects = [
-      ...ikea,
       ...rest,
       ...mannequins,
       ...allWalls
