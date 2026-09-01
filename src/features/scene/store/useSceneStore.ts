@@ -180,6 +180,7 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 't
   const map: Record<string, string> = {
     freezer: 'freezerOpen',
     tv: 'tvOn',
+    'tv-toggle': 'tvOn',
     'lamp-toggle': 'lampOn',
     'lamp-bath-toggle': 'lampBath',
     'lamp-corridor-toggle': 'lampCorridor',
@@ -200,6 +201,14 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 't
     'sdb-closet-l-toggle': 'sdbClosetL',
     'sdb-closet-r-toggle': 'sdbClosetR',
     'shower-door-toggle': 'showerDoor',
+    'cbn-west-toggle': 'cbnWest',
+    'cbn-east-toggle': 'cbnEast',
+    'east-glass-door-toggle': 'eastGlassDoor',
+    'entry-door-toggle': 'entryDoor',
+    'living-door-toggle': 'livingDoor',
+    'bathroom-door-toggle': 'bathroomDoor',
+    'glass-door-v2-left-open': 'glassDoorV2LeftOpen',
+    'glass-door-v2-shutter-pos': 'glassDoorV2ShutterPos',
   };
 
 

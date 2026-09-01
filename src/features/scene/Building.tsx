@@ -1817,12 +1817,12 @@ const DOOR_HEIGHT  = 204;
 export function DoorsPlaced() {
   const layers = useSceneStore(state => state.layers);
   const as = useFurnitureToggles({
-    eastGlassDoor:         'east-glass-door-toggle',
-    livingDoor:            'living-door-toggle',
-    bathroomDoor:          'bathroom-door-toggle',
-    entryDoor:             'entry-door-toggle',
-    glassDoorV2LeftOpen:   'glass-door-v2-left-open',
-    glassDoorV2ShutterPos: 'glass-door-v2-shutter-pos',
+    'east-glass-door-toggle':  'east-glass-door-toggle',
+    'living-door-toggle':      'living-door-toggle',
+    'bathroom-door-toggle':    'bathroom-door-toggle',
+    'entry-door-toggle':       'entry-door-toggle',
+    'glass-door-v2-left-open': 'glass-door-v2-left-open',
+    'glass-door-v2-shutter-pos':'glass-door-v2-shutter-pos',
   });
 
   const entry = useMemo(() => {
