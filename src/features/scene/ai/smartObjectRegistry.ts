@@ -160,7 +160,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'flush',
         name: 'Tirer la chasse',
-        offset: [50, 0, 530],
+        offset: [50, 0, 550],
         rotY: Math.PI,
         animation: 'animations/emotes_gestures/anim_shaking_hands_2.glb',
         duration: 2.0,
@@ -172,12 +172,12 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'vasque-sdb',
     name: 'Vasque Salle de bain',
     category: 'hygiene',
-    position: [116, 0, 545],
+    position: [116, 0, 530],
     slots: [
       {
         slotId: 'wash-hands',
         name: 'Se laver les mains',
-        offset: [116, 0, 545],
+        offset: [116, 0, 530],
         rotY: Math.PI,
         animation: 'animations/poses_idles/anim_texting_while_standing.glb',
         duration: 5.0,
@@ -185,7 +185,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'brush-teeth',
         name: 'Se laver les dents',
-        offset: [116, 0, 545],
+        offset: [116, 0, 530],
         rotY: Math.PI,
         animation: 'animations/poses_idles/anim_texting_while_standing.glb',
         duration: 5.0,
@@ -193,7 +193,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'shave-makeup',
         name: 'Se Raser / Maquiller',
-        offset: [116, 0, 545],
+        offset: [116, 0, 530],
         rotY: Math.PI,
         animation: 'animations/poses_idles/anim_texting_while_standing.glb',
         duration: 5.0,
@@ -646,7 +646,7 @@ export function buildSmartObjectInstructionSequence(
   if (objectId === 'toilet') {
     return [
       { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'use' },
-      { type: 'INTERACT', smartObjectId: 'toilet', slotId: 'flush' },
+      { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'flush' },
       { type: 'USE_OBJECT', smartObjectId: 'vasque-sdb', slotId: 'wash-hands' }
     ];
   }

@@ -72,7 +72,7 @@ export function SpruttigInstances({
       args={[geometry, material, count]}
       castShadow
       receiveShadow
-      userData={userData ?? { animUnit: true, isIkea: true, itemName: 'Cintres Spruttig' }}
+      userData={userData ?? { animUnit: true, itemName: 'Cintres Spruttig' }}
     />
   );
 }

@@ -161,55 +161,55 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
   return (
     <group ref={ref}>
       {/* Plan de travail */}
-      <group userData={{ animUnit: true, isIkea: true }}>
+      <group userData={{ animUnit: true }}>
         <group position={[KIT_W / 2, COUNTER_H, KIT_D / 2]}>
           <Counter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
 
       {/* Évier — bord arrière à 10.5 cm du fond de niche (Z=60) */}
-      <group userData={{ animUnit: true, isIkea: true }}>
+      <group userData={{ animUnit: true }}>
         <group position={[CABINET_W / 2, COUNTER_H + COUNTER_SLAB - 15, 26]}>
           <Boholmen99157501 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
 
       {/* Plaques */}
-      <group userData={{ animUnit: true, isIkea: true }}>
+      <group userData={{ animUnit: true }}>
         <group position={[CABINET_W + FRIDGE_W / 2, COUNTER_H + COUNTER_SLAB - 4.5, KIT_D / 2]} rotation={[0, -Math.PI, 0]}>
           <Valbildad20467592 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
 
       {/* Meuble sous évier */}
-      <group userData={{ animUnit: true, isIkea: true }}>
+      <group userData={{ animUnit: true }}>
         <group position={[CABINET_W / 2, 10, KIT_D / 2]}>
           <KitchenCabinet item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
 
       {/* Réfrigérateur */}
-      <group userData={{ animUnit: true, isIkea: true }}>
+      <group userData={{ animUnit: true }}>
         <group position={[CABINET_W + FRIDGE_W / 2, 0, KIT_D / 2]}>
           <Fridge item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
 
       {/* Meuble haut */}
-      <group userData={{ animUnit: true, isIkea: true }}>
+      <group userData={{ animUnit: true }}>
         <UpperCabinet />
       </group>
 
       {/* Hotte aspirante UTDRAG intégrée dans le meuble haut au-dessus des plaques */}
-      <group userData={{ animUnit: true, isIkea: true }}>
-        <group position={[CABINET_W + FRIDGE_W / 2, 153, 41.5]} rotation-y={Math.PI}>
+      <group userData={{ animUnit: true }}>
+        <group position={[CABINET_W + FRIDGE_W / 2, 148.5, 32]} rotation-y={Math.PI}>
           <Utdrag10389142 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </group>
 
       {/* 3 boîtes Drona sur le meuble haut */}
       {!noDrona && DRONA_TRANSFORMS.map((t, i) => (
-        <group key={i} userData={{ animUnit: true, isIkea: true }}>
+        <group key={i} userData={{ animUnit: true }}>
           <group position={t.p} quaternion={t.q} scale={t.s}>
             <DroneCell />
           </group>

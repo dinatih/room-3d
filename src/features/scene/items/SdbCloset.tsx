@@ -152,7 +152,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
       <mesh geometry={shelfGeo} castShadow receiveShadow material={shelfMat} />
 
       {/* Étagère à chaussures GREJIG le long de la porte droite du placard (côté Ouest) */}
-      <group position={[X_CLOSED_L, 0, 20]} rotation={[0, 0, 0]} userData={{ animUnit: true, isIkea: true, itemName: 'Étagère chaussures Grejig SDB' }}>
+      <group position={[X_CLOSED_L, 0, 20]} rotation={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Étagère chaussures Grejig SDB' }}>
         <Grejig40329868 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>

@@ -51,14 +51,14 @@ export function MackaparGroup({ onSize }: SceneItemProps) {
 
   return (
     <group ref={ref}>
-      <group userData={{ animUnit: true, isIkea: true }}>
+      <group userData={{ animUnit: true }}>
         <Mackapar50530988 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* 12 cintres Spruttig instanciés en un seul draw call */}
       <SpruttigInstances
         transforms={MACKAPAR_HANGER_TRANSFORMS}
-        userData={{ animUnit: true, isIkea: true, itemName: 'Cintres Spruttig Mackapär' }}
+        userData={{ animUnit: true, itemName: 'Cintres Spruttig Mackapär' }}
       />
 
       {/* Salopette suspendue à la barre */}
@@ -71,7 +71,7 @@ export function MackaparGroup({ onSize }: SceneItemProps) {
         const p = new THREE.Vector3().setFromMatrixPosition(m);
         const q = new THREE.Quaternion().setFromRotationMatrix(m);
         return (
-          <group key={i} userData={{ animUnit: true, isIkea: true }}>
+          <group key={i} userData={{ animUnit: true }}>
             <group position={p} quaternion={q}>
               <DroneCell />
             </group>

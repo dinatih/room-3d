@@ -53,7 +53,7 @@ export function Mulig30179435({ onSize, ...props }: SceneItemProps) {
       {/* 6 cintres Spruttig instanciés en un seul draw call */}
       <SpruttigInstances
         transforms={MULIG_HANGER_TRANSFORMS}
-        userData={{ animUnit: true, isIkea: true, itemName: 'Cintres Spruttig Mulig' }}
+        userData={{ animUnit: true, itemName: 'Cintres Spruttig Mulig' }}
       />
     </group>
   );

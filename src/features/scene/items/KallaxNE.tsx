@@ -79,18 +79,18 @@ export function KallaxNE({ onSize }: SceneItemProps) {
   return (
     <group ref={ref}>
       {/* 2×1 bas — spans Y ∈ [0, h1] */}
-      <group position={[0, h1, 0]} userData={{ animUnit: true, isIkea: true }}>
+      <group position={[0, h1, 0]} userData={{ animUnit: true }}>
         <Kallax2x1 item={k('kallax-ne-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       
       {/* 2×2 haut — spans Y ∈ [h1, h1+h2] */}
-      <group position={[0, h1 + h2, 0]} userData={{ animUnit: true, isIkea: true }}>
+      <group position={[0, h1 + h2, 0]} userData={{ animUnit: true }}>
         <Kallax2x2 item={k('kallax-ne-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       
       {/* DRONA Instances individuelles pour animation */}
       {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true, isIkea: true }}>
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
           <DroneCell />
         </group>
       ))}
@@ -98,7 +98,7 @@ export function KallaxNE({ onSize }: SceneItemProps) {
       {/* VARIERA 32×28 sur sommet 2×2, coin Nord-Est (local +X=mur Nord, +Z=mur Est).
           rotY=0 : grand axe (32) le long X (= world Z, parallèle mur Est).
           Back panel (local +Z) contre mur Est. Opening face pièce (world -X). */}
-      <group position={[W2_HALF - VAR2_W / 2 - 4, h1 + h2, DEP_HALF - VAR2_D / 2 - 10]} userData={{ animUnit: true, isIkea: true }}>
+      <group position={[W2_HALF - VAR2_W / 2 - 4, h1 + h2, DEP_HALF - VAR2_D / 2 - 10]} userData={{ animUnit: true }}>
         <Variera60136623 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>

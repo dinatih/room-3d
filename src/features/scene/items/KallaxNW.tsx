@@ -72,20 +72,20 @@ export function KallaxNW({ onSize }: SceneItemProps) {
     <group ref={ref}>
       {/* Sous-groupe GLB — masqué par le toggle GLB, visible par défaut */}
       {/* nwB 2×1 pivoté, Y ∈ [0, w2] */}
-      <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true, isIkea: true }}>
+      <group position={[px, w2 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true }}>
         <Kallax2x1 item={k('kallax-nw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* nwM 1×1 pivoté, Y ∈ [w2, w2+w1] */}
-      <group position={[px, w2 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true, isIkea: true }}>
+      <group position={[px, w2 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true }}>
         <Kallax1x1 item={k('kallax-nw-1x1-a')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* nwT 1×1 pivoté, Y ∈ [w2+w1, w2+2×w1] */}
-      <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true, isIkea: true }}>
+      <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true }}>
         <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       {/* DRONA Instances individuelles pour animation */}
       {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true, isIkea: true }}>
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
           <DroneCell />
         </group>
       ))}
