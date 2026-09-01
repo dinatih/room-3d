@@ -160,17 +160,17 @@ import { MergedStaticGroup } from './Building';
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function Equipment() {
-  const as = useFurnitureToggles({
-    'lamp-bath-toggle':    'lamp-bath-toggle',
-    'lamp-corridor-toggle':'lamp-corridor-toggle',
-    'corr-doors-toggle':   'corr-doors-toggle',
-    'sdb-closet-l-toggle': 'sdb-closet-l-toggle',
-    'sdb-closet-r-toggle': 'sdb-closet-r-toggle',
-    'shower-door-toggle':  'shower-door-toggle',
-    'wc-lid-toggle':       'wc-lid-toggle',
-    'wc-seat-toggle':      'wc-seat-toggle',
-    'wc-flush':            'wc-flush',
-  });
+  const as = useFurnitureToggles([
+    'lamp-bath-toggle',
+    'lamp-corridor-toggle',
+    'corr-doors-toggle',
+    'sdb-closet-l-toggle',
+    'sdb-closet-r-toggle',
+    'shower-door-toggle',
+    'wc-lid-toggle',
+    'wc-seat-toggle',
+    'wc-flush',
+  ]);
   const HW_R = 28, HW_H = 65;
   const SDB_CX  = (NICHE_X + DOOR_START) / 2;
   const SDB_CZ  = (KITCHEN_Z + PARTITION_THICKNESS + BATH_Z_END) / 2;
@@ -298,12 +298,12 @@ function LinkyGaine() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function Furniture() {
-  const as = useFurnitureToggles({
-    'cbn-west-toggle': 'cbn-west-toggle',
-    'cbn-east-toggle': 'cbn-east-toggle',
-    'ninja-toggle':    'ninja-toggle',
-    'bin-toggle':      'bin-toggle',
-  });
+  const as = useFurnitureToggles([
+    'cbn-west-toggle',
+    'cbn-east-toggle',
+    'ninja-toggle',
+    'bin-toggle',
+  ]);
   const cbZ = KITCHEN_Z + PARTITION_THICKNESS + 1 + 18.5; // 486.7
   return (
     <>
@@ -446,7 +446,7 @@ function Desks() {
 
 export function Furnishings() {
   const TV_Y = WALL_H - 10 - TV_H / 2;
-  const as = useFurnitureToggles({ 'tv-toggle': 'tv-toggle' });
+  const as = useFurnitureToggles(['tv-toggle']);
   return (
     <MergedStaticGroup name="merged-furnishings">
       <Beds />
@@ -534,9 +534,7 @@ function AirPerformer_() {
 
 
 function LampOla_() {
-  const as = useFurnitureToggles({
-    'lamp-toggle': 'lamp-toggle',
-  });
+  const as = useFurnitureToggles(['lamp-toggle']);
   const lampOn = !!as['lamp-toggle'];
   const lightsHD = useSceneStore((state) => state.layers.lightsHD);
   const [targetObj, setTargetObj] = useState<THREE.Object3D | null>(null);
@@ -672,10 +670,7 @@ export function Decor() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function Garden() {
-  const as = useFurnitureToggles({
-    'sofa-arm-left':  'sofa-arm-left',
-    'sofa-arm-right': 'sofa-arm-right',
-  });
+  const as = useFurnitureToggles(['sofa-arm-left', 'sofa-arm-right']);
   return (
     <>
       <MergedStaticGroup name="merged-garden">

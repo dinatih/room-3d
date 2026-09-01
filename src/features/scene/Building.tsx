@@ -1816,14 +1816,14 @@ const DOOR_HEIGHT  = 204;
 
 export function DoorsPlaced() {
   const layers = useSceneStore(state => state.layers);
-  const as = useFurnitureToggles({
-    'east-glass-door-toggle':  'east-glass-door-toggle',
-    'living-door-toggle':      'living-door-toggle',
-    'bathroom-door-toggle':    'bathroom-door-toggle',
-    'entry-door-toggle':       'entry-door-toggle',
-    'glass-door-v2-left-open': 'glass-door-v2-left-open',
-    'glass-door-v2-shutter-pos':'glass-door-v2-shutter-pos',
-  });
+  const as = useFurnitureToggles([
+    'east-glass-door-toggle',
+    'living-door-toggle',
+    'bathroom-door-toggle',
+    'entry-door-toggle',
+    'glass-door-v2-left-open',
+    'glass-door-v2-shutter-pos',
+  ]);
 
   const entry = useMemo(() => {
     // origin = point A avec un offset de 5cm vers l'extérieur (off=5)
