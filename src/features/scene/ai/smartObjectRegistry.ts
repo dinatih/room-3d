@@ -120,7 +120,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir',
         offset: [85, 0, 280],
         rotY: Math.PI / 2,
-        animations_random: 'seated_front',
+        animation: 'interactions/anim_writing.glb',
         duration: 40.0,
       }
     ]
@@ -162,7 +162,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Tirer la chasse',
         offset: [50, 0, 550],
         rotY: Math.PI,
-        animation: 'animations/emotes_gestures/anim_shaking_hands_2.glb',
+        animation: 'animations/interactions/anim_bartending.glb',
+        // interactions/anim_cards.glb, interactions/anim_drinking_fountain.glb,
         duration: 2.0,
         triggerEventKey: 'wc-flush'
       }
@@ -378,7 +379,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Cuisiner',
         offset: [80, 0, 370],
         rotY: -Math.PI / 2,
-        animation: 'animations/emotes_gestures/anim_shaking_hands_2.glb',
+        animation: 'animations/locomotion/anim_entering_code.glb',
         duration: 10.0,
       }
     ]
@@ -429,7 +430,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Ranger des affaires',
         offset: [220, 0, 435],
         rotY: -Math.PI / 2,
-        animation: 'animations/emotes_gestures/anim_shaking_hands_2.glb',
+        animation: 'animations/locomotion/anim_entering_code.glb',
         duration: 2.5,
       }
     ]
@@ -479,7 +480,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'trash',
         name: 'Jeter les poubelles',
-        offset: [-350, 0, 1002],
+        offset: [-350, 0, 1010],
         rotY: Math.PI / 2,
         animation: 'animations/emotes_gestures/anim_hand_raising.glb',
         duration: 5.0,
@@ -487,7 +488,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'visit',
         name: 'Consulter son téléphone',
-        offset: [-350, 0, 1002],
+        offset: [-350, 0, 1000],
         rotY: Math.PI / 2,
         animation: 'animations/poses_idles/anim_texting_while_standing.glb',
         duration: 6.0,
@@ -542,7 +543,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     slots: [
       {
         slotId: 'roleA',
-        name: 'Rôle A (Sandra / Meneur)',
+        name: 'Rôle A (Meneur)',
         offset: [-150, 0, -300],
         rotY: 0,
         animation: 'animations/poses_idles/anim_female_standing_pose.glb',
@@ -550,7 +551,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       },
       {
         slotId: 'roleB',
-        name: 'Rôle B (Rajaa / Partenaire)',
+        name: 'Rôle B (Partenaire)',
         offset: [-200, 0, -300],
         rotY: 0,
         animation: 'animations/poses_idles/anim_female_standing_pose_1.glb',
