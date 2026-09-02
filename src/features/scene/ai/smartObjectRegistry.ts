@@ -577,9 +577,9 @@ export function getSmartObjectsByCategory(category: SmartObjectCategory): SmartO
 }
 
 const MILEY_DANCE_ANIMS = [
-  'animations/dances/miley_armature_10_dance_like_sidestep.glb',
+  'animations/combat/miley_armature_10_dance_like_sidestep.glb',
   'animations/dances/miley_armature_aerobic_dance.glb',
-  'animations/dances/miley_armature_air_dance.glb',
+  'animations/sports_fitness/miley_armature_air_dance.glb',
   'animations/dances/miley_armature_couple_pop_dance_f.glb',
   'animations/dances/miley_armature_couple_pop_dance_m.glb',
   'animations/dances/miley_armature_dance_graceful.glb',

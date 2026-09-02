@@ -38,8 +38,8 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
       // 'animations/poses_idles/anim_cheering_while_sitting.glb',
       'animations/poses_idles/miley_armature_sit_talk.glb',
       'animations/poses_idles/miley_armature_sit_look_up_laugh.glb',
-      // 'animations/interactions/anim_having_a_meeting_female.glb',
-      // 'animations/interactions/anim_having_a_meeting_male.glb',
+      'animations/interactions/anim_having_a_meeting_female.glb',
+      'animations/interactions/anim_having_a_meeting_male.glb',
     ],
   },
 

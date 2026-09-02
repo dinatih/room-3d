@@ -32,7 +32,7 @@ export const DUO_ANIMATIONS: DuoAnimationDef[] = [
   { id: 's5', label: 'S5', icon: '🥋', animA: 'animations/combat/miley_armature_s5_sparring_block_kick.glb', animB: 'animations/combat/miley_armature_s5_sparring_block_hit.glb', dist: 100, duration: 4.0 },
   { id: 't1', label: 'T1', icon: '🤼', animA: 'animations/interactions/miley_armature_t1_attack_thrown.glb', animB: 'animations/combat/miley_armature_t1_hit_suplex.glb', dist: 110, duration: 4.5 },
   { id: 't3', label: 'T3', icon: '🤼', animA: 'animations/locomotion/miley_armature_t3_fall_shoulder_throw.glb', animB: 'animations/interactions/miley_armature_t3_attack_shoulder_throw.glb', dist: 100, duration: 4.5 },
-  { id: 't4', label: 'T4', icon: '🤼', animA: 'animations/dances/miley_armature_t4_fall_belly_to_back_slam.glb', animB: 'animations/combat/miley_armature_t4_attack_knee_strike.glb', dist: 100, duration: 4.5 },
+  { id: 't4', label: 'T4', icon: '🤼', animA: 'animations/combat/miley_armature_t4_fall_belly_to_back_slam.glb', animB: 'animations/combat/miley_armature_t4_attack_knee_strike.glb', dist: 100, duration: 4.5 },
   { id: 't5', label: 'T5', icon: '🤼', animA: 'animations/emotes_gestures/miley_armature_t5_attack_headlock_takeover.glb', animB: 'animations/locomotion/miley_armature_t5_fall_headlock_takeover.glb', dist: 400, offsetB: [0, 0, -10], duration: 4.5 },
   { id: 'pop_dance', label: 'Pop Dance', icon: '🕺', animA: 'animations/dances/miley_armature_couple_pop_dance_m.glb', animB: 'animations/dances/miley_armature_couple_pop_dance_f.glb', dist: 0, duration: 8.0 },
   { id: 'energetic_dance', label: 'Energetic Dance', icon: '🕺', animA: 'animations/dances/miley_armature_energetic_dance_m.glb', animB: 'animations/dances/miley_armature_energetic_dance_f.glb', dist: 100, duration: 8.0 },
