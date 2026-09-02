@@ -121,7 +121,9 @@ export function CharacterAnimSelector({
 
   const handleCopyAnim = (anim: { value: string; label: string }, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    const filename = anim.value.split('/').pop() || anim.value;
+    // Supprime uniquement le premier segment ("animations/") pour conserver le sous-dossier de catégorie
+    const parts = anim.value.split('/');
+    const filename = parts.length > 1 ? parts.slice(1).join('/') : anim.value;
     navigator.clipboard.writeText(filename);
     setCopiedAnim(anim.value);
     setTimeout(() => setCopiedAnim(null), 2000);
