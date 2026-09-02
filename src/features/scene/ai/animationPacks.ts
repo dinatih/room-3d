@@ -60,7 +60,7 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
     id: 'laying_pack',
     name: 'Animations allongées / au sol',
     animations: [
-      'animations/poses_idles/anim_laying.glb',
+      { animation: 'animations/poses_idles/anim_laying.glb', rotYOffset: Math.PI / 2 },
       'animations/poses_idles/anim_laying_1.glb',
       'animations/poses_idles/anim_laying_idle.glb',
       'animations/poses_idles/anim_laying_idle_1.glb',
@@ -198,6 +198,10 @@ ANIMATION_PACKS['sitting_side']      = ANIMATION_PACKS['seated_side'];
 /**
  * Résout une animation aléatoire ou définie et son orientation finale (avec rotY offset si nécessaire)
  * pour un slot d'interaction donné.
+ *
+ * Dans un pack nommé, chaque entrée peut être :
+ *   - une string  : 'animations/poses_idles/anim_laying.glb'
+ *   - un objet    : { animation: 'animations/poses_idles/anim_laying.glb', rotYOffset: Math.PI / 2 }
  */
 export function resolveSlotAnimation(slot: {
   animation?: string;
@@ -207,7 +211,7 @@ export function resolveSlotAnimation(slot: {
 }): { animation: string; rotY: number } {
   const baseRotY = slot.rotY;
 
-  // 1. Pack nommé (ex: 'sitted_front_pack' ou 'side_sitted_pack')
+  // 1. Pack nommé (ex: 'laying_pack', 'seated_front', ...)
   if (typeof slot.animations_random === 'string' && ANIMATION_PACKS[slot.animations_random]) {
     const pack = ANIMATION_PACKS[slot.animations_random];
     const item = pack.animations[Math.floor(Math.random() * pack.animations.length)];
@@ -224,20 +228,19 @@ export function resolveSlotAnimation(slot: {
     }
   }
 
-  // 2. Tableau direct d'animations dans animations_random ou availableAnims
+  // 2. Tableau direct de strings dans animations_random ou availableAnims
   const animList = Array.isArray(slot.animations_random)
     ? slot.animations_random
     : (slot.availableAnims && slot.availableAnims.length > 0 ? slot.availableAnims : null);
 
   if (animList && animList.length > 0) {
-    const chosen = animList[Math.floor(Math.random() * animList.length)];
     return {
-      animation: chosen,
+      animation: animList[Math.floor(Math.random() * animList.length)],
       rotY: baseRotY,
     };
   }
 
-  // 3. Animation unique spécifiée ou fallback sitting idle
+  // 3. Animation unique spécifiée ou fallback
   return {
     animation: slot.animation || 'animations/poses_idles/anim_sitting_idle.glb',
     rotY: baseRotY,

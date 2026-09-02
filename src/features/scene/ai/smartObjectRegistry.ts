@@ -395,7 +395,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un ingrédient',
         offset: [250, 0, 320],
         rotY: Math.PI / 2,
-        animation: 'animations/emotes_gestures/anim_hand_raising.glb',
+        animation: 'animations/locomotion/anim_entering_code.glb',
         duration: 2.5,
       }
     ]

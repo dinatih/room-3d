@@ -96,7 +96,7 @@ const gap        = (KIT_W_FULL - 3 * DF) / 4;  // 0.25
 
 const DRONA_MATRICES = [0, 1, 2].map(i => {
   const x = gap + DF / 2 + i * (DF + gap);      // 16.75, 50, 83.25
-  return rot90.clone().setPosition(x, 195 + DF / 2 + 0.2, KIT_D - 38 / 2 - 0.5);
+  return rot90.clone().setPosition(x, 194 + DF / 2, (KIT_D - 38 / 2 - 0.5) - 12);
   //                                                         40.5
 });
 

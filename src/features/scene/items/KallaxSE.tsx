@@ -41,11 +41,11 @@ function k(id: string) { return { id } as any; }
 
 export function KallaxSE({ onSize }: SceneItemProps) {
   const ref = useRef<THREE.Group>(null!);
-  const px = -h1 / 2; // -20.5 : center the pivoted Kallax at X=0
+  const px = (-h1 / 2) + 3; // -20.5 : center the pivoted Kallax at X=0
 
   const dronaMatrices = useMemo(() => {
     const rot = new THREE.Matrix4(); // Identité
-    return DRONA_POSITIONS.map(([x, y, z]) => rot.clone().setPosition(x, y, z));
+    return DRONA_POSITIONS.map(([x, y, z]) => rot.clone().setPosition(x + 3, y, z));
   }, []);
 
   const dronaTransforms = useMemo(() => {
