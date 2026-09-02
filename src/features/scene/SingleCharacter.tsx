@@ -109,7 +109,12 @@ function cacheDynamicGLTF(path: string): Promise<any> {
   const pending = new Promise((resolve, reject) => {
     const loader = new GLTFLoader(silentManager);
     loader.setDRACOLoader(dracoLoader);
-    loader.load(path, resolve, undefined, reject);
+    loader.load(path, resolve, undefined, (err) => {
+      // Enrichit l'erreur avec le chemin GLB pour faciliter le debug
+      const msg = `[GLB 404] Fichier introuvable : "${path}" — ${(err as any)?.message ?? err}`;
+      console.error(msg);
+      reject(new Error(msg));
+    });
   });
   globalGLTFCache.set(path, pending);
   while (globalGLTFCache.size > MAX_DYNAMIC_GLTF_CACHE) {
@@ -771,6 +776,8 @@ export function SingleCharacter({
           }
           invalidate();
         }
+      }, undefined, (err) => {
+        console.error(`[GLB 404] customIdleAnimPath introuvable : "${customIdleAnimPath}" —`, err);
       });
     }
   }, [customIdleAnimPath, id, scene, invalidate]);

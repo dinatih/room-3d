@@ -43,7 +43,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Dormir couché',
         offset: [74, 45, 150],
         rotY: Math.PI / 2,
-        animation: 'animations/poses_idles/anim_sleeping_idle.glb',
+        animations_random: 'laying_pack',
         duration: 45.0,
       }
     ]
@@ -86,7 +86,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Dormir couché',
         offset: [270, 45, 190],
         rotY: Math.PI / 2,
-        animation: 'animations/poses_idles/anim_sleeping_idle.glb',
+        animations_random: 'laying_pack',
         duration: 45.0,
       }
     ]
@@ -120,7 +120,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir',
         offset: [85, 0, 280],
         rotY: Math.PI / 2,
-        animation: 'interactions/anim_writing.glb',
+        animations_random: 'seated_front',
         duration: 40.0,
       }
     ]
@@ -530,7 +530,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danser sous la pluie',
         offset: [0, 0, -400],
         rotY: 0,
-        animation: 'animations/dances/miley_armature_sensual_dance_01.glb',
+        animations_random: 'all_dances',
         duration: 12.0,
       }
     ]
