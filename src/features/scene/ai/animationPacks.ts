@@ -55,6 +55,29 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
     ],
   },
 
+  // ── PACK ALLONGÉ / AU SOL ─────────────────────────────────────────────────
+  laying_pack: {
+    id: 'laying_pack',
+    name: 'Animations allongées / au sol',
+    animations: [
+      'animations/poses_idles/anim_laying.glb',
+      'animations/poses_idles/anim_laying_1.glb',
+      'animations/poses_idles/anim_laying_idle.glb',
+      'animations/poses_idles/anim_laying_idle_1.glb',
+      'animations/poses_idles/anim_laying_mild_cough.glb',
+      'animations/poses_idles/anim_laying_seizure.glb',
+      'animations/poses_idles/anim_laying_severe_cough.glb',
+      'animations/poses_idles/anim_laying_shrugging.glb',
+      'animations/poses_idles/anim_laying_sleeping.glb',
+      'animations/poses_idles/anim_male_laying_pose.glb',
+      'animations/poses_idles/anim_male_laying_pose_1.glb',
+      'animations/poses_idles/anim_male_laying_pose_2.glb',
+      'animations/poses_idles/anim_sitting_idle_1.glb',
+      'animations/poses_idles/anim_situps.glb',
+      'animations/poses_idles/anim_sleeping_idle.glb',
+    ],
+  },
+
   // ── PACK DANSES (toutes les danses du dossier dances/) ────────────────────
   all_dances: {
     id: 'all_dances',
