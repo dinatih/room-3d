@@ -169,7 +169,7 @@ export function CharacterAnimSelector({
 
   const playRandomAnim = () => {
     resetAppIdle();
-    const pool = (filteredAnims.length > 0 ? filteredAnims : WALKER_ANIM_OPTIONS).filter(a => a.value !== 'idle');
+    const pool = filteredAnims.filter(a => a.value !== 'idle');
     if (!pool.length) return;
     const randomAnim = pool[Math.floor(Math.random() * pool.length)];
     if (randomAnim) {
