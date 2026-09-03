@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Html } from '@react-three/drei';
 import { findCharacter } from './walkerConfig';
-import type { AppLogEntry } from '@features/ui/AppConsole';
+import { APP_LOG_HISTORY, type AppLogEntry } from '@features/ui/AppConsole';
 
 interface CharacterThoughtBubbleProps {
   characterId: string;
@@ -25,7 +25,9 @@ export function CharacterThoughtBubble({
   isActive,
   isFirstPerson = false,
 }: CharacterThoughtBubbleProps) {
-  const [logs, setLogs] = useState<AppLogEntry[]>([]);
+  const [logs, setLogs] = useState<AppLogEntry[]>(() => {
+    return APP_LOG_HISTORY.filter(l => l.tag.toLowerCase() === characterId.toLowerCase());
+  });
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const charConfig = findCharacter(characterId);
   const themeColor = charConfig?.color || '#00d2ff';
@@ -33,21 +35,24 @@ export function CharacterThoughtBubble({
 
   // Écoute des logs émis dans l'application filtrés pour ce personnage
   useEffect(() => {
+    // Re-synchroniser avec l'historique quand l'id du personnage change
+    setLogs(APP_LOG_HISTORY.filter(l => l.tag.toLowerCase() === characterId.toLowerCase()));
+
     const handleLog = (e: Event) => {
-      const ev = e as CustomEvent<{ tag: string; message: string; timestamp: number }>;
+      const ev = e as CustomEvent<AppLogEntry>;
       const { tag, message, timestamp } = ev.detail;
       if (tag.toLowerCase() === characterId.toLowerCase()) {
         setLogs(prev => {
-          const next = [...prev, { id: Date.now() + Math.random(), tag, message, timestamp }];
-          if (next.length > 20) return next.slice(-20);
+          const next = [...prev, { id: ev.detail.id || Date.now(), tag, message, timestamp }];
+          if (next.length > 30) return next.slice(-30);
           return next;
         });
       }
     };
 
-    window.addEventListener('app-log', handleLog);
+    document.addEventListener('app-log', handleLog);
     return () => {
-      window.removeEventListener('app-log', handleLog);
+      document.removeEventListener('app-log', handleLog);
     };
   }, [characterId]);
 

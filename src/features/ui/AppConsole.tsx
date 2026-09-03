@@ -36,11 +36,22 @@ export interface AppLogEntry {
 
 // ── Singleton : émettre un log depuis n'importe où ─────────────────────────
 let _logCounter = 0;
+export const APP_LOG_HISTORY: AppLogEntry[] = [];
 
 export const appLog = (tag: string, message: string): void => {
+  const entry: AppLogEntry = {
+    id: ++_logCounter,
+    tag,
+    message,
+    timestamp: Date.now(),
+  };
+  APP_LOG_HISTORY.push(entry);
+  if (APP_LOG_HISTORY.length > 200) {
+    APP_LOG_HISTORY.shift();
+  }
   document.dispatchEvent(
     new CustomEvent('app-log', {
-      detail: { tag, message, timestamp: Date.now() },
+      detail: entry,
     })
   );
 };

@@ -267,6 +267,7 @@ export function SingleCharacter({
   const userAnimOverrideRef = useRef<boolean>(false);
   const prevFirstPersonRef = useRef<boolean | null>(null);
   const hasLoggedIdleRef = useRef<boolean>(false);
+  const lastLoggedAnimRef = useRef<string>('');
 
   const [equipment, setEquipment] = useState<{ holster: boolean; pistols: boolean; backpack: boolean }>({
     holster: true,
@@ -944,6 +945,13 @@ export function SingleCharacter({
         to.reset().fadeIn(0.2).play();
         to.setEffectiveWeight(1);
         activeActionName.current = target;
+
+        if (isActive && !isPreview && lastLoggedAnimRef.current !== target) {
+          lastLoggedAnimRef.current = target;
+          const cleanName = target.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || target;
+          const emoji = target === 'walk' ? '🚶‍♂️' : (target === 'idle' ? '🧘' : '💃');
+          appLog(id, `${emoji} Animation : ${cleanName}`);
+        }
       }
     }
 
