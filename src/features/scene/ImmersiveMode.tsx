@@ -90,19 +90,19 @@ export function ImmersiveMode() {
       invalidate();
     };
 
-    // ── Touch hold (1 doigt) → avancer | 2 doigts → pivoter ──────────────────
+    // ── Touch hold (1 doigt ou clic) → avancer | 2 doigts → pivoter ──────────────────
     let touchStartX = 0;
     let initialAlphaOffset = 0;
 
     const onTouchStart = (e: TouchEvent) => {
       if (!active.current) return;
-      e.preventDefault();
       if (e.touches.length === 2) {
         walking.current = false;
         touchStartX = e.touches[0].clientX;
         initialAlphaOffset = alphaOffset.current || 0;
       } else if (e.touches.length === 1) {
         walking.current = true;
+        invalidate();
       }
     };
 
@@ -118,9 +118,24 @@ export function ImmersiveMode() {
 
     const onTouchEnd = (e: TouchEvent) => {
       if (!active.current) return;
-      if (e.touches.length < 2) {
+      if (e.touches.length === 0 || e.touches.length < 2) {
         walking.current = false;
+        invalidate();
       }
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (!active.current) return;
+      if (e.button === 0) {
+        walking.current = true;
+        invalidate();
+      }
+    };
+
+    const onPointerUp = () => {
+      if (!active.current) return;
+      walking.current = false;
+      invalidate();
     };
 
     // ── Fullscreen quitté depuis navigateur ────────────────────────────────────
@@ -170,9 +185,11 @@ export function ImmersiveMode() {
 
     btn.addEventListener('click', () => { active.current ? exit() : enter(); });
 
-    gl.domElement.addEventListener('touchstart',  onTouchStart, { passive: false });
-    gl.domElement.addEventListener('touchmove',   onTouchMove,  { passive: false });
-    gl.domElement.addEventListener('touchend',    onTouchEnd,   { passive: true  });
+    gl.domElement.addEventListener('touchstart',  onTouchStart, { passive: true });
+    gl.domElement.addEventListener('touchmove',   onTouchMove,  { passive: true });
+    window.addEventListener('touchend',           onTouchEnd,   { passive: true });
+    window.addEventListener('pointerdown',        onPointerDown);
+    window.addEventListener('pointerup',          onPointerUp);
     document.addEventListener('fullscreenchange', onFsChange);
 
     return () => {
@@ -184,7 +201,9 @@ export function ImmersiveMode() {
       }
       gl.domElement.removeEventListener('touchstart',  onTouchStart);
       gl.domElement.removeEventListener('touchmove',   onTouchMove);
-      gl.domElement.removeEventListener('touchend',    onTouchEnd);
+      window.removeEventListener('touchend',           onTouchEnd);
+      window.removeEventListener('pointerdown',        onPointerDown);
+      window.removeEventListener('pointerup',          onPointerUp);
       document.removeEventListener('fullscreenchange', onFsChange);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,7 +242,19 @@ export function ImmersiveMode() {
       dir.y = 0;
       dir.normalize();
       pos.current.addScaledVector(dir, WALK_SPEED * dt);
+
+      cameraState.isWalking = true;
+      cameraState.isMoving = true;
+      cameraState.lastUserControlTime = performance.now();
+      cameraState.walkerX = pos.current.x;
+      cameraState.walkerZ = pos.current.z;
+      cameraState.walkYaw = Math.atan2(dir.x, dir.z);
       invalidate();
+    } else {
+      cameraState.isWalking = true;
+      cameraState.isMoving = false;
+      cameraState.walkerX = pos.current.x;
+      cameraState.walkerZ = pos.current.z;
     }
 
     camera.position.copy(pos.current);

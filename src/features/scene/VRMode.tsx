@@ -171,12 +171,29 @@ export function VRMode() {
   }, []);
 
   useFrame(() => {
-    if (!gl.xr.isPresenting || !walkingRef.current || !rigRef.current) return;
-    const dir = new THREE.Vector3();
-    camera.getWorldDirection(dir);
-    dir.y = 0;
-    dir.normalize();
-    rigRef.current.position.addScaledVector(dir, WALK_SPEED);
+    if (!gl.xr.isPresenting || !rigRef.current) return;
+
+    if (walkingRef.current) {
+      const dir = new THREE.Vector3();
+      camera.getWorldDirection(dir);
+      dir.y = 0;
+      dir.normalize();
+      rigRef.current.position.addScaledVector(dir, WALK_SPEED);
+
+      cameraState.isWalking = true;
+      cameraState.isMoving = true;
+      cameraState.lastUserControlTime = performance.now();
+      cameraState.walkerX = rigRef.current.position.x;
+      cameraState.walkerZ = rigRef.current.position.z;
+      cameraState.walkYaw = Math.atan2(dir.x, dir.z);
+    } else {
+      if (cameraState.isXR) {
+        cameraState.isWalking = true;
+        cameraState.isMoving = false;
+        cameraState.walkerX = rigRef.current.position.x;
+        cameraState.walkerZ = rigRef.current.position.z;
+      }
+    }
   });
 
   return null;

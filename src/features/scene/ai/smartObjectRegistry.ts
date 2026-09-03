@@ -18,8 +18,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Nord)',
         offset: [90, 0, 80],
         rotY: Math.PI / 2,
-        // animations_random: 'seated_front',
-        animation: 'animations/poses_idles/anim_sitting_thumbs_up.glb',
+        animations_random: 'seated_front',
         duration: 15.0,
       },
       {

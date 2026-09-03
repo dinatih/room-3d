@@ -154,8 +154,10 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Vue perspective (reset)"    keys={['O']} />
               <R label="Walk mode (cycle 3P / FPV)" keys={['M']} />
               <R label="Vue 3ème personne directe"  keys={['3']} />
-              <R label="Vue FPV 1ère personne directe" keys={['1']} />
-              <R label="Minimap 2D (toggle)"        keys={['8']} />
+              <R label="Bulle de pensées 💭 (toggle)" keys={['6']} />
+              <R label="Pistolets Lara 🔫 (toggle)" keys={['7']} />
+              <R label="Accessoires Lara 🎒 (toggle)" keys={['8']} />
+              <R label="Minimap 2D (toggle)"        keys={['9']} />
               <R label="Masquer toute l'UI (Vue clean)" keys={['0']} />
               <R label="Console de logs (toggle)"   keys={['B']} />
               <R label="Vue top-down (toggle)"      keys={['T']} />

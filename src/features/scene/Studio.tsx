@@ -140,14 +140,17 @@ function ShadowController({ enabled }: { enabled: boolean }) {
 function FrameloopController({ isIdle, showInventory }: { isIdle: boolean; showInventory: boolean }) {
   const setFrameloop = useThree((state) => state.setFrameloop);
   const invalidate = useThree((state) => state.invalidate);
+  const gl = useThree((state) => state.gl);
 
   useEffect(() => {
-    const loop = showInventory || isIdle ? 'never' : 'demand';
+    // Si on est en VR WebXR ou en mode Immersif gyro, on ne suspend jamais le frameloop
+    const isXRActive = cameraState.isXR || gl.xr?.isPresenting;
+    const loop = (showInventory || (isIdle && !isXRActive)) ? 'never' : 'demand';
     setFrameloop(loop);
     if (loop !== 'never') {
       invalidate();
     }
-  }, [isIdle, showInventory, setFrameloop, invalidate]);
+  }, [isIdle, showInventory, setFrameloop, invalidate, gl]);
 
   return null;
 }
@@ -307,6 +310,15 @@ export function Studio() {
         cameraState.invalidate?.();
       } else if (e.key === 'u' || e.key === 'U') {
         onToggleLayer('measuredDimensions');
+        cameraState.invalidate?.();
+      } else if (e.key === '6' || e.code === 'Digit6' || e.code === 'Numpad6') {
+        onToggleLayer('thoughtBubble');
+        cameraState.invalidate?.();
+      } else if (e.key === '7' || e.code === 'Digit7' || e.code === 'Numpad7') {
+        onToggleLayer('laraPistols');
+        cameraState.invalidate?.();
+      } else if (e.key === '8' || e.code === 'Digit8' || e.code === 'Numpad8') {
+        onToggleLayer('accessories');
         cameraState.invalidate?.();
       } else if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') {
         setHideUI(h => !h);

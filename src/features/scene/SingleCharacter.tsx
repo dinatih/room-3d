@@ -906,7 +906,7 @@ export function SingleCharacter({
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
 
-    const isMoving = !isPreview && isActive && cameraState.isUserControlling() && cameraState.isMoving;
+    const isMoving = !isPreview && isActive && (cameraState.isXR ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
     let target = isPreview
       ? (walkerAnim || 'idle')
       : (customAnimName.current || (isMoving ? 'walk' : (isNPC && customIdleAnimPath && !isAutonomous ? customIdleAnimPath : 'idle')));

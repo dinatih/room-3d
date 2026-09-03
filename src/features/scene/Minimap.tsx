@@ -267,7 +267,7 @@ export function Minimap() {
       if (e.key === 'Escape' && expanded) {
         setExpanded(false);
       }
-      if (e.key === '8' || e.code === 'Digit8' || e.code === 'Numpad8') {
+      if (e.key === '9' || e.code === 'Digit9' || e.code === 'Numpad9') {
         setIsCollapsed(c => !c);
       }
     };

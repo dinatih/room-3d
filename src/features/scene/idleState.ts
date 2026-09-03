@@ -39,6 +39,44 @@ if (typeof window !== 'undefined') {
   window.addEventListener('click', onUserActivity, { capture: true, passive: true });
   window.addEventListener('input', onUserActivity, { capture: true, passive: true });
 
+  // Événements gyroscopiques / capteurs mobiles pour la VR / mode immersif
+  let lastGyroReset = 0;
+  let lastAlpha: number | null = null;
+  let lastBeta: number | null = null;
+  let lastGamma: number | null = null;
+
+  window.addEventListener('deviceorientation', (e: DeviceOrientationEvent) => {
+    if (e.alpha === null || e.beta === null || e.gamma === null) return;
+    if (lastAlpha === null || lastBeta === null || lastGamma === null) {
+      lastAlpha = e.alpha;
+      lastBeta = e.beta;
+      lastGamma = e.gamma;
+      return;
+    }
+    // Si l'utilisateur bouge la tête / son téléphone de plus de 1 degré
+    const dAlpha = Math.abs(e.alpha - lastAlpha);
+    const dBeta  = Math.abs(e.beta - lastBeta);
+    const dGamma = Math.abs(e.gamma - lastGamma);
+    if (dAlpha > 0.8 || dBeta > 0.8 || dGamma > 0.8) {
+      lastAlpha = e.alpha;
+      lastBeta = e.beta;
+      lastGamma = e.gamma;
+      const now = performance.now();
+      if (now - lastGyroReset > 1000) {
+        lastGyroReset = now;
+        resetAppIdle();
+      }
+    }
+  }, { capture: true, passive: true });
+
+  window.addEventListener('devicemotion', () => {
+    const now = performance.now();
+    if (now - lastGyroReset > 2000) {
+      lastGyroReset = now;
+      resetAppIdle();
+    }
+  }, { capture: true, passive: true });
+
   // Vérification périodique du seuil d'inactivité (toutes les 500ms)
   setInterval(() => {
     const idle = isAppIdle();
