@@ -65,7 +65,6 @@ export function CharacterThoughtBubble({
     <group position={[0, 205, 0]}>
       <Html
         center
-        distanceFactor={180}
         zIndexRange={[100, 0]}
         style={{
           pointerEvents: 'auto',
@@ -78,22 +77,24 @@ export function CharacterThoughtBubble({
             e.stopPropagation();
             setIsExpanded(prev => !prev);
           }}
+          title={isExpanded ? "Cliquer pour réduire" : "Cliquer pour agrandir"}
           style={{
             position: 'relative',
-            minWidth: '180px',
-            maxWidth: isExpanded ? '340px' : '260px',
-            background: 'rgba(13, 17, 23, 0.90)',
+            width: 'max-content',
+            minWidth: '220px',
+            maxWidth: isExpanded ? '520px' : '380px',
+            background: 'rgba(13, 17, 23, 0.92)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             border: `1.5px solid ${themeColor}`,
-            borderRadius: '14px',
-            padding: '8px 12px',
+            borderRadius: '12px',
+            padding: '7px 12px',
             color: '#f0f6fc',
-            boxShadow: `0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px ${themeColor}44`,
+            boxShadow: `0 8px 24px rgba(0, 0, 0, 0.65), 0 0 16px ${themeColor}44`,
             fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '11px',
-            transition: 'all 0.2s ease-out',
-            transform: 'translateY(-10px)',
+            fontSize: '11.5px',
+            transition: 'max-width 0.2s ease-out',
+            transform: 'translateY(-12px)',
           }}
         >
           {/* Header de la bulle */}
@@ -102,19 +103,19 @@ export function CharacterThoughtBubble({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: '6px',
+              gap: '10px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
               paddingBottom: '4px',
               marginBottom: '6px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 600 }}>
-              <span style={{ fontSize: '13px' }}>{emoji}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+              <span style={{ fontSize: '14px' }}>{emoji}</span>
               <span style={{ color: themeColor }}>{characterName}</span>
               {isActive && (
                 <span
                   style={{
-                    fontSize: '8px',
+                    fontSize: '8.5px',
                     padding: '1px 5px',
                     borderRadius: '4px',
                     background: '#238636',
@@ -130,8 +131,8 @@ export function CharacterThoughtBubble({
             </div>
             <span
               style={{
-                fontSize: '9px',
-                color: 'rgba(255, 255, 255, 0.5)',
+                fontSize: '9.5px',
+                color: 'rgba(255, 255, 255, 0.55)',
                 fontFamily: 'monospace',
               }}
             >
@@ -139,14 +140,15 @@ export function CharacterThoughtBubble({
             </span>
           </div>
 
-          {/* Corps des logs / Pensées */}
+          {/* Corps des logs / Pensées (1 ligne par log) */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '4px',
-              maxHeight: isExpanded ? '160px' : '90px',
+              gap: '3px',
+              maxHeight: isExpanded ? '180px' : '95px',
               overflowY: 'auto',
+              overflowX: 'hidden',
             }}
           >
             {logs.length === 0 ? (
@@ -155,6 +157,7 @@ export function CharacterThoughtBubble({
                   color: 'rgba(255, 255, 255, 0.5)',
                   fontStyle: 'italic',
                   padding: '2px 0',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 💭 En attente d'action...
@@ -165,21 +168,23 @@ export function CharacterThoughtBubble({
                 return (
                   <div
                     key={entry.id}
+                    title={entry.message}
                     style={{
                       display: 'flex',
-                      alignItems: 'baseline',
-                      gap: '5px',
-                      color: isLast ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
+                      alignItems: 'center',
+                      gap: '6px',
+                      color: isLast ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
                       fontWeight: isLast ? 600 : 400,
-                      lineHeight: '1.3',
-                      fontSize: '10.5px',
+                      lineHeight: '1.4',
+                      fontSize: '11px',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     <span
                       style={{
-                        fontSize: '9px',
+                        fontSize: '9.5px',
                         color: themeColor,
-                        opacity: 0.8,
+                        opacity: 0.85,
                         fontFamily: 'monospace',
                         flexShrink: 0,
                       }}
@@ -188,7 +193,9 @@ export function CharacterThoughtBubble({
                     </span>
                     <span
                       style={{
-                        wordBreak: 'break-word',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       {entry.message}
@@ -206,8 +213,8 @@ export function CharacterThoughtBubble({
                 marginTop: '4px',
                 paddingTop: '3px',
                 borderTop: '1px dashed rgba(255, 255, 255, 0.1)',
-                fontSize: '8.5px',
-                color: 'rgba(255, 255, 255, 0.4)',
+                fontSize: '9px',
+                color: 'rgba(255, 255, 255, 0.45)',
                 textAlign: 'center',
               }}
             >
@@ -225,7 +232,7 @@ export function CharacterThoughtBubble({
               width: '10px',
               height: '10px',
               borderRadius: '50%',
-              background: 'rgba(13, 17, 23, 0.90)',
+              background: 'rgba(13, 17, 23, 0.92)',
               border: `1.5px solid ${themeColor}`,
             }}
           />
@@ -233,12 +240,12 @@ export function CharacterThoughtBubble({
             style={{
               position: 'absolute',
               bottom: '-15px',
-              left: '46%',
+              left: '47%',
               transform: 'translateX(-50%)',
               width: '6px',
               height: '6px',
               borderRadius: '50%',
-              background: 'rgba(13, 17, 23, 0.90)',
+              background: 'rgba(13, 17, 23, 0.92)',
               border: `1px solid ${themeColor}`,
             }}
           />
@@ -246,12 +253,12 @@ export function CharacterThoughtBubble({
             style={{
               position: 'absolute',
               bottom: '-20px',
-              left: '43%',
+              left: '44%',
               transform: 'translateX(-50%)',
               width: '3.5px',
               height: '3.5px',
               borderRadius: '50%',
-              background: 'rgba(13, 17, 23, 0.90)',
+              background: 'rgba(13, 17, 23, 0.92)',
               border: `1px solid ${themeColor}`,
             }}
           />
