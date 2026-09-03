@@ -40,6 +40,7 @@ import { AUTONOMOUS_NPC_IDS } from './walkerConfig';
 
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 export { WALKER_ANIM_OPTIONS };
+import { CharacterThoughtBubble } from './CharacterThoughtBubble';
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
 
@@ -237,6 +238,7 @@ export function SingleCharacter({
   const laraShoes = useSceneStore(state => state.layers.laraShoes ?? true);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
+  const showThoughtBubble = useSceneStore(state => state.layers.thoughtBubble ?? true);
   const { scene } = useGLTFClone(modelPath);
   const charLabel = name || (isNPC ? `PNJ (${id})` : `Personnage (${id})`);
 
@@ -1300,6 +1302,14 @@ export function SingleCharacter({
       )}
       {!isPreview && <HeartParachute customAnimName={customAnimName} />}
       {!isPreview && (isActive ? <GroundPoint color="#0058a3" /> : <GroundPoint color="#ff2222" />)}
+      {!isPreview && isActive && showThoughtBubble && (
+        <CharacterThoughtBubble
+          characterId={id}
+          characterName={charLabel}
+          isActive={isActive}
+          isFirstPerson={cameraMode === 'fpv' || cameraState.mode === 'fpv'}
+        />
+      )}
     </group>
   );
 }

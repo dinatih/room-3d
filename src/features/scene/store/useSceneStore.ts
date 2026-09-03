@@ -147,6 +147,7 @@ const initialLayers: LayerState = {
   debugNpcCollisions: false,
   furnitureCollisions: true,
   debugFurnitureCollisions: false,
+  thoughtBubble: true,
 };
 
 const initialExtraStates: Record<string, boolean> = {
