@@ -59,7 +59,7 @@ export function CharacterThoughtBubble({
   // Si on est en FPV direct sur le perso actif, on ne gêne pas sa vue
   if (isFirstPerson) return null;
 
-  const displayedLogs = isExpanded ? logs.slice(-8) : logs.slice(-MAX_BUBBLE_LOGS);
+  const displayedLogs = isExpanded ? logs : logs.slice(-MAX_BUBBLE_LOGS);
 
   return (
     <group position={[0, 205, 0]}>
@@ -77,13 +77,13 @@ export function CharacterThoughtBubble({
             e.stopPropagation();
             setIsExpanded(prev => !prev);
           }}
-          title={isExpanded ? "Cliquer pour réduire" : "Cliquer pour agrandir"}
+          title={isExpanded ? "Cliquer pour réduire" : "Cliquer pour voir tout l'historique"}
           style={{
             position: 'relative',
             width: 'max-content',
             minWidth: '220px',
-            maxWidth: isExpanded ? '520px' : '380px',
-            background: 'rgba(13, 17, 23, 0.92)',
+            maxWidth: isExpanded ? '540px' : '380px',
+            background: 'rgba(13, 17, 23, 0.94)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             border: `1.5px solid ${themeColor}`,
@@ -140,15 +140,19 @@ export function CharacterThoughtBubble({
             </span>
           </div>
 
-          {/* Corps des logs / Pensées (1 ligne par log) */}
+          {/* Corps des logs / Pensées (1 ligne par log avec scrollbar) */}
           <div
+            onClick={(e) => isExpanded && e.stopPropagation()}
             style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '3px',
-              maxHeight: isExpanded ? '180px' : '95px',
+              maxHeight: isExpanded ? '240px' : '95px',
               overflowY: 'auto',
               overflowX: 'hidden',
+              paddingRight: isExpanded ? '6px' : '2px',
+              scrollbarWidth: 'thin',
+              scrollbarColor: `${themeColor} transparent`,
             }}
           >
             {logs.length === 0 ? (
@@ -206,19 +210,23 @@ export function CharacterThoughtBubble({
             )}
           </div>
 
-          {/* Indication clic pour agrandir */}
+          {/* Indication clic pour agrandir / réduire */}
           {logs.length > MAX_BUBBLE_LOGS && (
             <div
               style={{
-                marginTop: '4px',
-                paddingTop: '3px',
-                borderTop: '1px dashed rgba(255, 255, 255, 0.1)',
+                marginTop: '5px',
+                paddingTop: '4px',
+                borderTop: '1px dashed rgba(255, 255, 255, 0.12)',
                 fontSize: '9px',
-                color: 'rgba(255, 255, 255, 0.45)',
+                color: 'rgba(255, 255, 255, 0.55)',
                 textAlign: 'center',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '4px',
               }}
             >
-              {isExpanded ? '▲ Réduire' : '▼ Déplier l\'historique'}
+              <span>{isExpanded ? '▲ Réduire' : `▼ Déplier tous les logs (${logs.length})`}</span>
             </div>
           )}
 

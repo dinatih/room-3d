@@ -465,13 +465,17 @@ export function useAgentController(
         // Log action INTERACT
         const animation = currentInstruction.animation || target.anim || '';
         const duration = timerRef.current;
-        const logKey = `interact-${stepIndexRef.current}-${dynamicNavIndexRef.current}-${animation}`;
+        const objName = currentInstruction.smartObjectId ? (SMART_OBJECTS[currentInstruction.smartObjectId]?.name || currentInstruction.smartObjectId) : '';
+        const slotInfo = currentInstruction.slotId ? ` (slot ${currentInstruction.slotId})` : '';
+        const triggerInfo = currentInstruction.triggerEventKey ? ` ⚡ ${currentInstruction.triggerEventKey}` : '';
+        const logKey = `interact-${stepIndexRef.current}-${dynamicNavIndexRef.current}-${animation}-${objName}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
           const label = animation
-            ? animation.replace('animations/', '').replace('.glb', '')
+            ? animation.replace('animations/', '').replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ')
             : currentInstruction.type;
-          appLog(_characterId, `🎭 Action: ${label} (${duration.toFixed(1)}s)`);
+          const objPrefix = objName ? `[${objName}${slotInfo}] ` : '';
+          appLog(_characterId, `🎭 Action: ${objPrefix}${label}${triggerInfo} (${duration.toFixed(1)}s)`);
         }
       } else if (currentInstruction.type === 'ROTATE_360') {
         statusRef.current = 'INTERACTING';
@@ -561,13 +565,17 @@ export function useAgentController(
           const duration = timerRef.current;
           const isDuoWaiting = currentInstruction.smartObjectId === 'duo-zone' && duoSessionManager.isWaitingPartner(_characterId);
           if (!isDuoWaiting) {
-            const logKey = `interact-${stepIndexRef.current}-${animation}`;
+            const objName = currentInstruction.smartObjectId ? (SMART_OBJECTS[currentInstruction.smartObjectId]?.name || currentInstruction.smartObjectId) : '';
+            const slotInfo = currentInstruction.slotId ? ` (slot ${currentInstruction.slotId})` : '';
+            const triggerInfo = currentInstruction.triggerEventKey ? ` ⚡ ${currentInstruction.triggerEventKey}` : '';
+            const logKey = `interact-${stepIndexRef.current}-${animation}-${objName}`;
             if (lastLogRef.current !== logKey) {
               lastLogRef.current = logKey;
               const label = animation
-                ? animation.replace('animations/', '').replace('.glb', '')
+                ? animation.replace('animations/', '').replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ')
                 : 'USE_OBJECT';
-              appLog(_characterId, `🎭 Action: ${label} (${duration.toFixed(1)}s)`);
+              const objPrefix = objName ? `[${objName}${slotInfo}] ` : '';
+              appLog(_characterId, `🎭 Action: ${objPrefix}${label}${triggerInfo} (${duration.toFixed(1)}s)`);
             }
           }
         } else {
