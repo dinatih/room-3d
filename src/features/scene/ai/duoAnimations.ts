@@ -48,5 +48,6 @@ export const DUO_ANIMATIONS: DuoAnimationDef[] = [
   { id: 'shoulder_throw', label: 'Projection épaule', icon: '🥋', animA: 'animations/interactions/anim_shoulder_throw_victim.glb', animB: 'animations/interactions/anim_shoulder_throw_aggressor.glb', dist: 0, duration: 5.0 },
   { id: 'kiss_man_woman', label: 'Baiser Homme / Femme', icon: '💋', animA: 'animations/emotes_gestures/anim_kiss_from_woman.glb', animB: 'animations/emotes_gestures/anim_kiss_from_man.glb', dist: 0, rotB: Math.PI, offsetB: [0, 0, 50], duration: 5.0 },
   { id: 'kiss', label: 'Baiser', icon: '💏', animA: 'animations/emotes_gestures/anim_kiss.glb', animB: 'animations/emotes_gestures/anim_kiss_1.glb', dist: 0, rotB: Math.PI, offsetB: [0, 0, 50], duration: 5.0 },
-  { id: 'brutal_assassination', label: 'Assassinat brutal', icon: '🗡️', animA: 'animations/combat/anim_brutal_assassination.glb', animB: 'animations/combat/anim_brutal_assassination_1.glb', dist: 0, rotB: Math.PI, duration: 5.5 }
+  { id: 'brutal_assassination', label: 'Assassinat brutal', icon: '🗡️', animA: 'animations/combat/anim_brutal_assassination.glb', animB: 'animations/combat/anim_brutal_assassination_1.glb', dist: 0, rotB: Math.PI, duration: 5.5 },
+  { id: 'hokey_pokey', label: 'Hokey Pokey', icon: '👯', animA: 'animations/dances/anim_hokey_pokey.glb', animB: 'animations/dances/anim_hokey_pokey.glb', dist: 100, duration: 11.7 }
 ];

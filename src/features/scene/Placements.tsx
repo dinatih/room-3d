@@ -56,7 +56,7 @@ import { Kejserlig90511501 } from './items/Kejserlig90511501';
 import { Backpack } from './items/Backpack';
 // Garden items
 
-import { Vihals }        from './items/Vihals';
+// import { Vihals }        from './items/Vihals';
 import { Rebound }       from './items/Rebound';
 import { Linky }         from './items/Linky';
 import { LaserDistanceMaster } from './items/LaserDistanceMaster';
