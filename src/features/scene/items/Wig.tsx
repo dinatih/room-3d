@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { LAYER_WALKER, LAYER_FURNITURE } from '@config';
+import { RIGGED_WIGS_PATHS } from '@features/inventory/inventoryData';
 
 export const HAIR_COLORS: Record<string, THREE.Color> = {
   naturel:  new THREE.Color(0.4, 0.25, 0.1),
@@ -36,6 +37,8 @@ export interface WigProps {
   attachTo?: THREE.Object3D | null;
 }
 
+export { RIGGED_WIGS_PATHS };
+
 function disposeOwnedWigMaterials(root: THREE.Object3D) {
   root.traverse((node: any) => {
     if (!node.isMesh || !node.material) return;
@@ -47,14 +50,13 @@ function disposeOwnedWigMaterials(root: THREE.Object3D) {
 }
 
 export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = false, onBonesExtracted, attachTo }: WigProps) {
-  const { scene: fullScene } = useGLTF('characters/wigs/hair_pack_part_2.glb');
+  const strId = String(id);
+  const cleanId = strId.replace(/^hair_/, '');
+  const gltfPath = RIGGED_WIGS_PATHS[strId] || RIGGED_WIGS_PATHS[cleanId] || (typeof id === 'string' && id.endsWith('.glb') ? id : 'characters/wigs/zepeto_hair.glb');
+  const { scene: fullScene } = useGLTF(gltfPath);
   const clonedHairRef = useRef<THREE.Group>(null!);
   
   const scene = useMemo(() => {
-    // Parse ID and map to 100 series (e.g. "2" -> "102")
-    const numId = typeof id === 'string' ? parseInt(id.replace('hair_', ''), 10) : id;
-    const gltfId = isNaN(numId) ? id : (numId < 100 ? 100 + numId : numId);
-
     // Clone the ENTIRE scene to ensure SkinnedMesh binds perfectly to the bones
     const clonedFullScene = SkeletonUtils.clone(fullScene) as THREE.Group;
     
@@ -70,51 +72,84 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     clonedFullScene.traverse(child => {
       if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
         const sm = child as THREE.SkinnedMesh;
-        sm.userData.itemName = `Perruque (${gltfId})`;
+        sm.userData.itemName = `Perruque (${cleanId})`;
         sm.frustumCulled = false;
         // Reconstruct the skeleton using the cloned bones instead of the originals
         const newBones = sm.skeleton.bones.map(b => clonedBones[b.name] || b);
         const newSkeleton = new THREE.Skeleton(newBones, sm.skeleton.boneInverses);
         sm.bind(newSkeleton, sm.bindMatrix);
       } else if ((child as THREE.Mesh).isMesh) {
-        child.userData.itemName = `Perruque (${gltfId})`;
+        child.userData.itemName = `Perruque (${cleanId})`;
         child.frustumCulled = false;
       }
     });
 
-
-    
-    let sg: THREE.Object3D | null = null;
-    clonedFullScene.traverse(child => {
-      if (!sg && child.name.startsWith(`Hair${gltfId}_ARM_`)) sg = child as THREE.Object3D;
-    });
-
-    if (!sg) return new THREE.Group();
+    let sg: THREE.Object3D | null = clonedFullScene;
     
     let hairHeadBone: THREE.Object3D | null = null;
     (sg as THREE.Object3D).traverse((c: any) => {
       const nLower = c.name.toLowerCase();
-      if ((nLower.startsWith('bip_head') || nLower === 'head') && !hairHeadBone) {
+      if ((nLower.startsWith('bip_head') || nLower.startsWith('head')) && !hairHeadBone) {
         hairHeadBone = c;
       }
     });
 
-    const s = 1.4;
+    const wigFixes: Record<string, { scale: number, rotation: [number, number, number], offset: [number, number, number] }> = {
+      'pigtails': { scale: 0.3, rotation: [Math.PI / 2, 0, 0], offset: [0, 0, 0] },
+      'hair_pigtails': { scale: 0.3, rotation: [Math.PI / 2, 0, 0], offset: [0, 0, 0] },
+      'very_long': { scale: 0.02, rotation: [Math.PI / 2, 0, 0], offset: [0, 0, 0] },
+      'hair_very_long': { scale: 0.02, rotation: [Math.PI / 2, 0, 0], offset: [0, 0, 0] },
+      'two_white_ponytails': { scale: 0.3, rotation: [Math.PI / 2, 0, 0], offset: [0, 0, 0] },
+      'hair_two_white_ponytails': { scale: 0.3, rotation: [Math.PI / 2, 0, 0], offset: [0, 0, 0] },
+      'wavy_ponytail': { scale: 0.1, rotation: [0, 0, 0], offset: [0, -0.05, 0] },
+      'hair_wavy_ponytail': { scale: 0.1, rotation: [0, 0, 0], offset: [0, -0.05, 0] },
+      // Coupes 100 à 112 (issues de wig_100.glb à wig_112.glb)
+      '100': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_100': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      '101': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_101': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      '102': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_102': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      '103': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_103': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      '104': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_104': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      '105': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_105': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      '106': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_106': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      '107': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_107': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      '108': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_108': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      '109': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_109': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      '110': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_110': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      '111': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_111': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      '112': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+      'hair_112': { scale: 1.4, rotation: [0, 0, 0], offset: [0, 0, 0] },
+    };
     
+    const fix = wigFixes[strId] || wigFixes[cleanId] || { scale: 1.0, rotation: [0, 0, 0], offset: [0, 0, 0] };
+    const s = fix.scale;
+
     if (hairHeadBone) {
       (sg as THREE.Object3D).updateMatrixWorld(true);
       const headPos = (hairHeadBone as THREE.Object3D).position.clone();
       (sg as THREE.Object3D).position.set(
-        -headPos.x * s * scale,
-        -headPos.y * s * scale + (attachTo ? 0.07 : 0),
-        -headPos.z * s * scale
+        -headPos.x * s * scale + fix.offset[0],
+        -headPos.y * s * scale + (attachTo ? 0.07 : 0) + fix.offset[1],
+        -headPos.z * s * scale + fix.offset[2]
       );
     } else {
-      (sg as THREE.Object3D).position.set(0, 0.15 * scale, 0);
+      (sg as THREE.Object3D).position.set(fix.offset[0], 0.15 * scale + fix.offset[1], fix.offset[2]);
     }
 
     // Apply the user requested scale DIRECTLY to sg instead of the wrapper group
     (sg as THREE.Object3D).scale.set(s * scale, s * scale, s * scale);
+    (sg as THREE.Object3D).rotation.set(fix.rotation[0], fix.rotation[1], fix.rotation[2]);
     (sg as THREE.Object3D).userData.isWigRoot = true;
 
     // Fix SkeletonHelper by reparenting the root bone to sg so it inherits the correct world transform
@@ -134,7 +169,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     }
 
     return (sg as THREE.Object3D);
-  }, [fullScene, id, scale]);
+  }, [fullScene, id, scale, cleanId, strId, attachTo]);
 
   const hairBonesRef = useRef<WigBone[]>([]);
   
@@ -307,3 +342,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     </group>
   );
 }
+
+// Alias pour compatibilité
+export const RiggedWig = Wig;

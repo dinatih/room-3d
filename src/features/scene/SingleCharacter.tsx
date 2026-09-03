@@ -6,9 +6,7 @@ import { useRef, useLayoutEffect, useEffect, useMemo, useState, useCallback } fr
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { Famnig27470460 } from './items/Famnig27470460';
-import { Wig } from './items/Wig';
-import { RiggedWig, HAIR_COLORS } from './items/RiggedWig';
-import { isRiggedWig } from '@features/inventory/inventoryData';
+import { Wig, HAIR_COLORS } from './items/Wig';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
@@ -1291,25 +1289,14 @@ export function SingleCharacter({
       <primitive ref={modelRef} object={scene} />
 
       {headBoneState && id !== 'native' && variant !== 'native' && haircut !== 'original' && (
-        isRiggedWig(haircut as string) ? (
-          <RiggedWig
-            id={haircut.replace('hair_', '')}
-            color={hairColor}
-            onBonesExtracted={(bones) => {
-              customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
-            }}
-            attachTo={headBoneState}
-          />
-        ) : (
-          <Wig
-            id={haircut.replace('hair_', '')}
-            color={hairColor}
-            onBonesExtracted={(bones) => {
-              customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
-            }}
-            attachTo={headBoneState}
-          />
-        )
+        <Wig
+          id={haircut.replace('hair_', '')}
+          color={hairColor}
+          onBonesExtracted={(bones) => {
+            customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
+          }}
+          attachTo={headBoneState}
+        />
       )}
       {!isPreview && <HeartParachute customAnimName={customAnimName} />}
       {!isPreview && (isActive ? <GroundPoint color="#0058a3" /> : <GroundPoint color="#ff2222" />)}
