@@ -29,6 +29,7 @@ export function CharacterThoughtBubble({
     return APP_LOG_HISTORY.filter(l => l.tag.toLowerCase() === characterId.toLowerCase());
   });
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const charConfig = findCharacter(characterId);
   const themeColor = charConfig?.color || '#00d2ff';
   const emoji = charConfig?.emoji || '👤';
@@ -44,7 +45,7 @@ export function CharacterThoughtBubble({
       if (tag.toLowerCase() === characterId.toLowerCase()) {
         setLogs(prev => {
           const next = [...prev, { id: ev.detail.id || Date.now(), tag, message, timestamp }];
-          if (next.length > 30) return next.slice(-30);
+          if (next.length > 50) return next.slice(-50);
           return next;
         });
       }
@@ -55,6 +56,16 @@ export function CharacterThoughtBubble({
       document.removeEventListener('app-log', handleLog);
     };
   }, [characterId]);
+
+  const handleCopy = (e: React.MouseEvent, entry: AppLogEntry) => {
+    e.stopPropagation();
+    const formatted = `[${formatBubbleTime(entry.timestamp)}] ${characterName}: ${entry.message}`;
+    navigator.clipboard?.writeText(formatted).catch(() => {});
+    setCopiedId(entry.id);
+    setTimeout(() => {
+      setCopiedId(prev => (prev === entry.id ? null : prev));
+    }, 1500);
+  };
 
   // Si on est en FPV direct sur le perso actif, on ne gêne pas sa vue
   if (isFirstPerson) return null;
@@ -176,34 +187,62 @@ export function CharacterThoughtBubble({
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px',
+                      justifyContent: 'space-between',
+                      gap: '8px',
                       color: isLast ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
                       fontWeight: isLast ? 600 : 400,
                       lineHeight: '1.4',
                       fontSize: '11px',
                       whiteSpace: 'nowrap',
+                      padding: '1px 2px',
+                      borderRadius: '4px',
                     }}
                   >
-                    <span
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+                      <span
+                        style={{
+                          fontSize: '9.5px',
+                          color: themeColor,
+                          opacity: 0.85,
+                          fontFamily: 'monospace',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {formatBubbleTime(entry.timestamp)}
+                      </span>
+                      <span
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {entry.message}
+                      </span>
+                    </div>
+
+                    {/* Bouton Copier la ligne */}
+                    <button
+                      type="button"
+                      onClick={(e) => handleCopy(e, entry)}
+                      title="Copier ce log"
                       style={{
-                        fontSize: '9.5px',
-                        color: themeColor,
-                        opacity: 0.85,
-                        fontFamily: 'monospace',
+                        background: copiedId === entry.id ? 'rgba(35, 134, 54, 0.4)' : 'rgba(255, 255, 255, 0.08)',
+                        border: copiedId === entry.id ? '1px solid #238636' : '1px solid rgba(255, 255, 255, 0.15)',
+                        color: copiedId === entry.id ? '#3fb950' : 'rgba(255, 255, 255, 0.7)',
+                        borderRadius: '4px',
+                        padding: '1px 5px',
+                        fontSize: '9px',
+                        cursor: 'pointer',
                         flexShrink: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '2px',
+                        transition: 'all 0.15s ease',
                       }}
                     >
-                      {formatBubbleTime(entry.timestamp)}
-                    </span>
-                    <span
-                      style={{
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {entry.message}
-                    </span>
+                      {copiedId === entry.id ? '✓' : '📋'}
+                    </button>
                   </div>
                 );
               })
