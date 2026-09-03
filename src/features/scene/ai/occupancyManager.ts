@@ -29,7 +29,7 @@ class SmartObjectOccupancyManager {
     }
 
     // Règles spécifiques d'exclusion mutuelle par meuble :
-    
+
     // 1. Toilettes : occupation totale si quelqu'un est dessus ou tire la chasse
     if (objectId === 'toilet') {
       for (const [k, r] of this.occupiedSlots.entries()) {
@@ -42,21 +42,21 @@ class SmartObjectOccupancyManager {
     // 2. Lits (bed-west, bed-east) :
     // - Si quelqu'un est couché ('lie-down'), tout le lit est occupé.
     // - Si quelqu'un veut se coucher ('lie-down'), aucun slot de siège ne doit être pris.
-    if (objectId.startsWith('bed-')) {
-      if (slotId === 'lie-down') {
-        for (const [k, r] of this.occupiedSlots.entries()) {
-          if (k.startsWith(`${objectId}:`) && (!forCharacterId || r.characterId !== forCharacterId)) {
-            return true;
-          }
-        }
-      } else {
-        const lieDownKey = this.slotKey(objectId, 'lie-down');
-        const lieDownRes = this.occupiedSlots.get(lieDownKey);
-        if (lieDownRes && (!forCharacterId || lieDownRes.characterId !== forCharacterId)) {
-          return true;
-        }
-      }
-    }
+    // if (objectId.startsWith('bed-')) {
+    //   if (slotId === 'lie-down') {
+    //     for (const [k, r] of this.occupiedSlots.entries()) {
+    //       if (k.startsWith(`${objectId}:`) && (!forCharacterId || r.characterId !== forCharacterId)) {
+    //         return true;
+    //       }
+    //     }
+    //   } else {
+    //     const lieDownKey = this.slotKey(objectId, 'lie-down');
+    //     const lieDownRes = this.occupiedSlots.get(lieDownKey);
+    //     if (lieDownRes && (!forCharacterId || lieDownRes.characterId !== forCharacterId)) {
+    //       return true;
+    //     }
+    //   }
+    // }
 
     return false;
   }

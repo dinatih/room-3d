@@ -692,7 +692,7 @@ export function Garden() {
           <PottedPalm item={{} as any} actionState={{}} onSize={() => {}} />
         </group>
         <group position={[52, 0, 326]} rotation={[0, 0, 0]} userData={{ itemName: 'Meuble Vihals' }}>
-          <Vihals item={{} as any} actionState={{ 'vihals-toggle': true }} onSize={() => {}} />
+          {/*<Vihals item={{} as any} actionState={{ 'vihals-toggle': true }} onSize={() => {}} />*/}
         </group>
         <group position={[210, -3.48, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true, itemName: 'Rebound Jardin' }}>
           <Rebound item={{} as any} actionState={{}} onSize={() => {}} />

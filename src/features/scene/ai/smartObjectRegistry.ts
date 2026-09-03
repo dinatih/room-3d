@@ -466,7 +466,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre l\'air au fond',
         offset: [150, 0, -600],
         rotY: 0,
-        animation: 'animations/poses_idles/miley_armature_change_pose.glb',
+        animations_random: 'all_dances',
         duration: 6.0,
       }
     ]
@@ -482,7 +482,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Jeter les poubelles',
         offset: [-350, 0, 1010],
         rotY: Math.PI / 2,
-        animation: 'animations/emotes_gestures/anim_hand_raising.glb',
+        animations_random: 'all_dances',
         duration: 5.0,
       },
       {
@@ -506,15 +506,15 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Aller au lavomatique',
         offset: [-350, 0, -200],
         rotY: Math.PI / 2,
-        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
+        animations_random: 'all_dances',
         duration: 6.0,
       },
       {
         slotId: 'admire',
         name: 'Observer la cour',
-        offset: [-350, 0, -200],
+        offset: [-300, 0, -200],
         rotY: Math.PI / 2,
-        animation: 'animations/poses_idles/anim_female_standing_pose_1.glb',
+        animations_random: 'all_dances',
         duration: 6.0,
       }
     ]
