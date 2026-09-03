@@ -73,12 +73,14 @@ export function RiggedWig({ id, color, offset = [0, 0, 0], scale = 1, windEnable
       if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
         const sm = child as THREE.SkinnedMesh;
         sm.userData.itemName = `Perruque (${cleanId})`;
+        sm.frustumCulled = false;
         // Reconstruct the skeleton using the cloned bones instead of the originals
         const newBones = sm.skeleton.bones.map(b => clonedBones[b.name] || b);
         const newSkeleton = new THREE.Skeleton(newBones, sm.skeleton.boneInverses);
         sm.bind(newSkeleton, sm.bindMatrix);
       } else if ((child as THREE.Mesh).isMesh) {
         child.userData.itemName = `Perruque (${cleanId})`;
+        child.frustumCulled = false;
       }
     });
 

@@ -73,7 +73,7 @@ export function CharacterThoughtBubble({
   const displayedLogs = isExpanded ? logs : logs.slice(-MAX_BUBBLE_LOGS);
 
   return (
-    <group position={[0, 205, 0]}>
+    <group position={[0, 240, -40]}>
       <Html
         center
         zIndexRange={[100, 0]}

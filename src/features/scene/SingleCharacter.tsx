@@ -249,6 +249,9 @@ export function SingleCharacter({
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         child.userData = { ...child.userData, itemName: charLabel };
+        // Désactiver le culling individuel des sous-parties skinnées pour éviter
+        // que des membres disparaissent quand la caméra est proche
+        child.frustumCulled = false;
       }
     });
   }, [scene, charLabel]);
