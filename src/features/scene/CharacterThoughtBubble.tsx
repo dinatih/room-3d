@@ -81,7 +81,7 @@ export function CharacterThoughtBubble({
           pointerEvents: 'auto',
           userSelect: 'none',
           cursor: 'pointer',
-          transform: 'translate(-50%, calc(-100% - 28px))',
+          transform: 'translate(-50%, calc(-100% - 56px))',
           willChange: 'transform',
         }}
       >
@@ -270,15 +270,15 @@ export function CharacterThoughtBubble({
             </div>
           )}
 
-          {/* Queue de bulle de pensée (cercles décroissants en bas, alignés verticalement) */}
+          {/* Queue de bulle de pensée (cercles décroissants en bas, espacés sur la distance doublée) */}
           <div
             style={{
               position: 'absolute',
-              bottom: '-9px',
+              bottom: '-16px',
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '10px',
-              height: '10px',
+              width: '11px',
+              height: '11px',
               borderRadius: '50%',
               background: 'rgba(13, 17, 23, 0.92)',
               border: `1.5px solid ${themeColor}`,
@@ -287,11 +287,11 @@ export function CharacterThoughtBubble({
           <div
             style={{
               position: 'absolute',
-              bottom: '-16px',
+              bottom: '-31px',
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '6.5px',
-              height: '6.5px',
+              width: '7.5px',
+              height: '7.5px',
               borderRadius: '50%',
               background: 'rgba(13, 17, 23, 0.92)',
               border: `1.2px solid ${themeColor}`,
@@ -300,11 +300,11 @@ export function CharacterThoughtBubble({
           <div
             style={{
               position: 'absolute',
-              bottom: '-22px',
+              bottom: '-44px',
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '4px',
-              height: '4px',
+              width: '4.5px',
+              height: '4.5px',
               borderRadius: '50%',
               background: 'rgba(13, 17, 23, 0.92)',
               border: `1px solid ${themeColor}`,

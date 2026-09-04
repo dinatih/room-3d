@@ -13,7 +13,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   appliance: '#e040fb',
   outdoor: '#76ff03',
   decor: '#b388ff',
-  door: '#ff5252'
+  door: '#ff5252',
+  dance: '#ff007f'
 };
 
 /**

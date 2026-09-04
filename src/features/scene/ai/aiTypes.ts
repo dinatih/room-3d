@@ -7,7 +7,8 @@ export type SmartObjectCategory =
   | 'storage'      // Kallax, placards, armoires
   | 'door'         // Portes simples, coulissantes, baies vitrées
   | 'outdoor'      // Jardin, fond du jardin, entrées bâtiment
-  | 'decor';       // Plantes, miroirs, oiseaux
+  | 'decor'        // Plantes, miroirs, oiseaux
+  | 'dance';       // Pistes et spots de danse
 
 export interface InteractionSlot {
   slotId: string;             // ex: 'seat_1', 'seat_2', 'lie_down', 'use'

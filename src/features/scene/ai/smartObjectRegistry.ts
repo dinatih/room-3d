@@ -521,7 +521,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   'rain-dance': {
     id: 'rain-dance',
     name: 'Jardin Nord (Pluie)',
-    category: 'outdoor',
+    category: 'dance',
     position: [0, 0, -400],
     slots: [
       {
@@ -560,15 +560,31 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   },
 
   // ── POINTS DE DANSE (SALON & SDB) ──────────────────────────────────────────
-  'dance-bed-west': {
-    id: 'dance-bed-west',
-    name: 'Danse (Devant Lit Ouest)',
-    category: 'decor',
+  'dance-bed-west-north': {
+    id: 'dance-bed-west-north',
+    name: 'Danse (Lit Ouest Nord)',
+    category: 'dance',
+    position: [140, 0, 80],
+    slots: [
+      {
+        slotId: 'dance',
+        name: 'Danse devant Lit Ouest (Nord)',
+        offset: [140, 0, 80],
+        rotY: Math.PI / 2,
+        animations_random: 'all_dances',
+        duration: 15.0,
+      }
+    ]
+  },
+  'dance-bed-west-mid': {
+    id: 'dance-bed-west-mid',
+    name: 'Danse (Lit Ouest Milieu)',
+    category: 'dance',
     position: [140, 0, 150],
     slots: [
       {
         slotId: 'dance',
-        name: 'Danse devant Lit Ouest',
+        name: 'Danse devant Lit Ouest (Milieu)',
         offset: [140, 0, 150],
         rotY: Math.PI / 2,
         animations_random: 'all_dances',
@@ -576,16 +592,64 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       }
     ]
   },
-  'dance-bed-east': {
-    id: 'dance-bed-east',
-    name: 'Danse (Devant Lit Est)',
-    category: 'decor',
+  'dance-bed-west-south': {
+    id: 'dance-bed-west-south',
+    name: 'Danse (Lit Ouest Sud)',
+    category: 'dance',
+    position: [140, 0, 220],
+    slots: [
+      {
+        slotId: 'dance',
+        name: 'Danse devant Lit Ouest (Sud)',
+        offset: [140, 0, 220],
+        rotY: Math.PI / 2,
+        animations_random: 'all_dances',
+        duration: 15.0,
+      }
+    ]
+  },
+  'dance-bed-east-north': {
+    id: 'dance-bed-east-north',
+    name: 'Danse (Lit Est Nord)',
+    category: 'dance',
+    position: [195, 0, 120],
+    slots: [
+      {
+        slotId: 'dance',
+        name: 'Danse devant Lit Est (Nord)',
+        offset: [195, 0, 120],
+        rotY: -Math.PI / 2,
+        animations_random: 'all_dances',
+        duration: 15.0,
+      }
+    ]
+  },
+  'dance-bed-east-mid': {
+    id: 'dance-bed-east-mid',
+    name: 'Danse (Lit Est Milieu)',
+    category: 'dance',
     position: [195, 0, 190],
     slots: [
       {
         slotId: 'dance',
-        name: 'Danse devant Lit Est',
+        name: 'Danse devant Lit Est (Milieu)',
         offset: [195, 0, 190],
+        rotY: -Math.PI / 2,
+        animations_random: 'all_dances',
+        duration: 15.0,
+      }
+    ]
+  },
+  'dance-bed-east-south': {
+    id: 'dance-bed-east-south',
+    name: 'Danse (Lit Est Sud)',
+    category: 'dance',
+    position: [195, 0, 260],
+    slots: [
+      {
+        slotId: 'dance',
+        name: 'Danse devant Lit Est (Sud)',
+        offset: [195, 0, 260],
         rotY: -Math.PI / 2,
         animations_random: 'all_dances',
         duration: 15.0,
@@ -595,7 +659,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   'dance-chair-office': {
     id: 'dance-chair-office',
     name: 'Danse (Devant Chaise Bureau)',
-    category: 'decor',
+    category: 'dance',
     position: [135, 0, 280],
     slots: [
       {
@@ -611,7 +675,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   'dance-mirror-south': {
     id: 'dance-mirror-south',
     name: 'Danse (Devant Miroir Sud)',
-    category: 'decor',
+    category: 'dance',
     position: [160, 0, 310],
     slots: [
       {
@@ -627,7 +691,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   'dance-glass-door-right': {
     id: 'dance-glass-door-right',
     name: 'Danse (Devant Porte-fenêtre Droite)',
-    category: 'decor',
+    category: 'dance',
     position: [215, 0, 50],
     slots: [
       {
@@ -643,7 +707,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   'dance-bathroom': {
     id: 'dance-bathroom',
     name: 'Danse (Salle de Bain)',
-    category: 'decor',
+    category: 'dance',
     position: [100, 0, 530],
     slots: [
       {
