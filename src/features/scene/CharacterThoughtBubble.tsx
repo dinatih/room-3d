@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 import { Html } from '@react-three/drei';
 import { findCharacter } from './walkerConfig';
 import { APP_LOG_HISTORY, type AppLogEntry } from '@features/ui/AppConsole';
@@ -34,6 +36,14 @@ export function CharacterThoughtBubble({
   const themeColor = charConfig?.color || '#00d2ff';
   const emoji = charConfig?.emoji || '👤';
 
+  const bubbleGroupRef = useRef<THREE.Group>(null);
+  const headWorldPos = useRef(new THREE.Vector3());
+  const camWorldPos = useRef(new THREE.Vector3());
+  const camDir = useRef(new THREE.Vector3());
+  const camRight = useRef(new THREE.Vector3());
+  const camUp = useRef(new THREE.Vector3());
+  const offsetTarget = useRef(new THREE.Vector3());
+
   // Écoute des logs émis dans l'application filtrés pour ce personnage
   useEffect(() => {
     // Re-synchroniser avec l'historique quand l'id du personnage change
@@ -57,6 +67,55 @@ export function CharacterThoughtBubble({
     };
   }, [characterId]);
 
+  // Repositionnement dynamique dans le repère caméra pour ne JAMAIS cacher le personnage
+  useFrame(({ camera }) => {
+    if (!bubbleGroupRef.current || isFirstPerson) return;
+
+    const parent = bubbleGroupRef.current.parent;
+    if (!parent) return;
+
+    // Position mondiale du centre tête / torse du personnage
+    parent.getWorldPosition(headWorldPos.current);
+    headWorldPos.current.y += 180; // Hauteur tête en cm
+
+    camera.getWorldPosition(camWorldPos.current);
+    camera.getWorldDirection(camDir.current); // Direction de visée de la caméra
+
+    // Détection de l'angle de vue vertical (pitch / top-down)
+    // camDir.y proche de -1.0 signifie que la caméra regarde directement vers le bas
+    const isTopDown = camDir.current.y < -0.7; // Vue plongeante / zénithale
+
+    // Vecteur horizontal caméra droite (axe X écran)
+    camRight.current.crossVectors(camDir.current, camera.up).normalize();
+    // Vecteur caméra haut (axe Y écran)
+    camUp.current.copy(camera.up).normalize();
+
+    // Position cible mondiale pour la bulle
+    const target = offsetTarget.current;
+
+    if (isTopDown) {
+      // En vue du dessus : décaler la bulle au sol vers le bas de l'écran ou sur le côté
+      // afin de laisser le personnage 100% visible et dégagé
+      target.copy(headWorldPos.current)
+        .addScaledVector(camUp.current, -80)   // Décalage vers le bas de l'écran
+        .addScaledVector(camRight.current, 70); // Légèrement sur la droite
+      target.y = Math.max(10, headWorldPos.current.y + 40);
+    } else {
+      // En vue normale / face / dos / profil :
+      // On élève la bulle au-dessus de la tête (+60cm) dans le repère caméra
+      // et on la recule légèrement sur l'axe optique (-30cm) pour qu'elle ne coupe pas la silhouette
+      target.copy(headWorldPos.current)
+        .addScaledVector(camUp.current, 60)
+        .addScaledVector(camDir.current, -30);
+    }
+
+    // Convertir la position mondiale cible en coordonnées locales du parent
+    parent.worldToLocal(target);
+
+    // Lissage fluide (lerp) pour éviter les sauts lors des rotations rapides de caméra
+    bubbleGroupRef.current.position.lerp(target, 0.2);
+  });
+
   const handleCopy = (e: React.MouseEvent, entry: AppLogEntry) => {
     e.stopPropagation();
     const formatted = `[${formatBubbleTime(entry.timestamp)}] ${characterName}: ${entry.message}`;
@@ -73,7 +132,7 @@ export function CharacterThoughtBubble({
   const displayedLogs = isExpanded ? logs : logs.slice(-MAX_BUBBLE_LOGS);
 
   return (
-    <group position={[0, 240, -40]}>
+    <group ref={bubbleGroupRef} position={[0, 240, -40]}>
       <Html
         center
         zIndexRange={[100, 0]}
