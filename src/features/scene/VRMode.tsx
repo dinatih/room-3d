@@ -115,7 +115,9 @@ export function VRMode() {
     const onSessionStart = () => {
       cameraState.isXR = true;
       camera.position.set(0, 0, 0);
-      rig.position.set(ROOM_W / 2, 170, ROOM_D / 2);
+      const startX = Number.isFinite(cameraState.walkerX) ? cameraState.walkerX : ROOM_W / 2;
+      const startZ = Number.isFinite(cameraState.walkerZ) ? cameraState.walkerZ : ROOM_D / 2;
+      rig.position.set(startX, 170, startZ);
       rig.add(camera);
 
       const hint = document.createElement('div');

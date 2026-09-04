@@ -147,7 +147,9 @@ export function ImmersiveMode() {
     async function enter() {
       active.current   = true;
       cameraState.isXR = true;
-      pos.current.set(ROOM_W / 2, activeWalkH(), ROOM_D / 2);
+      const startX = Number.isFinite(cameraState.walkerX) ? cameraState.walkerX : ROOM_W / 2;
+      const startZ = Number.isFinite(cameraState.walkerZ) ? cameraState.walkerZ : ROOM_D / 2;
+      pos.current.set(startX, activeWalkH(), startZ);
       orient.current   = null;
       alphaOffset.current = null;
       btn.textContent  = '✕ Quitter';
