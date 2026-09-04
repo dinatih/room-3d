@@ -557,6 +557,104 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         duration: 8.0,
       }
     ]
+  },
+
+  // ── POINTS DE DANSE (SALON & SDB) ──────────────────────────────────────────
+  'dance-bed-west': {
+    id: 'dance-bed-west',
+    name: 'Danse (Devant Lit Ouest)',
+    category: 'decor',
+    position: [140, 0, 150],
+    slots: [
+      {
+        slotId: 'dance',
+        name: 'Danse devant Lit Ouest',
+        offset: [140, 0, 150],
+        rotY: Math.PI / 2,
+        animations_random: 'all_dances',
+        duration: 15.0,
+      }
+    ]
+  },
+  'dance-bed-east': {
+    id: 'dance-bed-east',
+    name: 'Danse (Devant Lit Est)',
+    category: 'decor',
+    position: [195, 0, 190],
+    slots: [
+      {
+        slotId: 'dance',
+        name: 'Danse devant Lit Est',
+        offset: [195, 0, 190],
+        rotY: -Math.PI / 2,
+        animations_random: 'all_dances',
+        duration: 15.0,
+      }
+    ]
+  },
+  'dance-chair-office': {
+    id: 'dance-chair-office',
+    name: 'Danse (Devant Chaise Bureau)',
+    category: 'decor',
+    position: [135, 0, 280],
+    slots: [
+      {
+        slotId: 'dance',
+        name: 'Danse devant Chaise Bureau',
+        offset: [135, 0, 280],
+        rotY: Math.PI / 2,
+        animations_random: 'all_dances',
+        duration: 15.0,
+      }
+    ]
+  },
+  'dance-mirror-south': {
+    id: 'dance-mirror-south',
+    name: 'Danse (Devant Miroir Sud)',
+    category: 'decor',
+    position: [160, 0, 310],
+    slots: [
+      {
+        slotId: 'dance',
+        name: 'Danse devant Miroir Sud',
+        offset: [160, 0, 310],
+        rotY: 0,
+        animations_random: 'all_dances',
+        duration: 15.0,
+      }
+    ]
+  },
+  'dance-glass-door-right': {
+    id: 'dance-glass-door-right',
+    name: 'Danse (Devant Porte-fenêtre Droite)',
+    category: 'decor',
+    position: [215, 0, 50],
+    slots: [
+      {
+        slotId: 'dance',
+        name: 'Danse devant Porte-fenêtre Droite',
+        offset: [215, 0, 50],
+        rotY: Math.PI,
+        animations_random: 'all_dances',
+        duration: 15.0,
+      }
+    ]
+  },
+  'dance-bathroom': {
+    id: 'dance-bathroom',
+    name: 'Danse (Salle de Bain)',
+    category: 'decor',
+    position: [100, 0, 530],
+    slots: [
+      {
+        slotId: 'dance',
+        name: 'Danse dans la Salle de Bain',
+        offset: [100, 0, 530],
+        rotY: Math.PI,
+        animations_random: 'all_dances',
+        duration: 15.0,
+      }
+    ]
   }
 };
 
