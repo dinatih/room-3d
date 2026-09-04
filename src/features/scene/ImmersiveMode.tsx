@@ -190,8 +190,10 @@ export function ImmersiveMode() {
     gl.domElement.addEventListener('touchstart',  onTouchStart, { passive: true });
     gl.domElement.addEventListener('touchmove',   onTouchMove,  { passive: true });
     window.addEventListener('touchend',           onTouchEnd,   { passive: true });
+    window.addEventListener('touchcancel',        onTouchEnd,   { passive: true });
     window.addEventListener('pointerdown',        onPointerDown);
     window.addEventListener('pointerup',          onPointerUp);
+    window.addEventListener('pointercancel',      onPointerUp);
     document.addEventListener('fullscreenchange', onFsChange);
 
     return () => {
@@ -204,8 +206,10 @@ export function ImmersiveMode() {
       gl.domElement.removeEventListener('touchstart',  onTouchStart);
       gl.domElement.removeEventListener('touchmove',   onTouchMove);
       window.removeEventListener('touchend',           onTouchEnd);
+      window.removeEventListener('touchcancel',        onTouchEnd);
       window.removeEventListener('pointerdown',        onPointerDown);
       window.removeEventListener('pointerup',          onPointerUp);
+      window.removeEventListener('pointercancel',      onPointerUp);
       document.removeEventListener('fullscreenchange', onFsChange);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -829,10 +829,10 @@ export function SingleCharacter({
     } else {
       if (isActive) {
         const isUserManuallyMoving = 
-          (cameraState.mode === 'orbit' && cameraState.isUserControlling()) ||
-          (cameraState.isXR && (cameraState.isMoving || cameraState.isUserControlling()));
+          cameraState.isXR ||
+          (cameraState.mode === 'orbit' && cameraState.isUserControlling());
 
-        if (isGuidedTour || (!isUserManuallyMoving && isAutonomous)) {
+        if (!cameraState.isXR && (isGuidedTour || (!isUserManuallyMoving && isAutonomous))) {
           // Mode autonome / visite guidée
           const agentState = updateAgent(delta);
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
@@ -846,7 +846,7 @@ export function SingleCharacter({
           cameraState.isAIControlled = true;
           cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
         } else {
-          // Mode contrôle manuel utilisateur (flèches clavier)
+          // Mode contrôle manuel utilisateur (flèches clavier ou VR/Immersif)
           groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
           groupRef.current.rotation.y = cameraState.walkYaw;
           groupRef.current.visible = !cameraState.walkerHidden;
@@ -914,7 +914,7 @@ export function SingleCharacter({
       ? (walkerAnim || 'idle')
       : (customAnimName.current || (isMoving ? 'walk' : (isNPC && customIdleAnimPath && !isAutonomous ? customIdleAnimPath : 'idle')));
 
-    if (isActive && !isGuidedTour && cameraState.isUserControlling() && customAnimName.current) {
+    if (isActive && !isGuidedTour && (cameraState.isXR || cameraState.isUserControlling()) && customAnimName.current) {
       customAnimName.current = null;
     }
 
