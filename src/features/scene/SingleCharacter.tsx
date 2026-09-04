@@ -292,7 +292,7 @@ export function SingleCharacter({
 
   useEffect(() => {
     if (groupRef.current) {
-      const isFirstPerson = isActive && (cameraMode === 'fpv' || cameraState.mode === 'fpv');
+      const isFirstPerson = isActive && (cameraMode === 'fpv' || cameraState.mode === 'fpv' || cameraState.isXR);
       updateCharacterLayers(groupRef.current, isFirstPerson);
       prevFirstPersonRef.current = isFirstPerson;
     }
@@ -744,7 +744,7 @@ export function SingleCharacter({
     }
 
     if (groupRef.current) {
-      updateCharacterLayers(groupRef.current, isActive && cameraState.mode === 'fpv');
+      updateCharacterLayers(groupRef.current, isActive && (cameraState.mode === 'fpv' || cameraState.isXR));
     }
 
     invalidate();
@@ -876,7 +876,7 @@ export function SingleCharacter({
         groupRef.current.visible = false;
       }
 
-      const isFirstPerson = isActive && cameraState.mode === 'fpv';
+      const isFirstPerson = isActive && (cameraState.mode === 'fpv' || cameraState.isXR);
       if (prevFirstPersonRef.current !== isFirstPerson) {
         if (groupRef.current) {
           updateCharacterLayers(groupRef.current, isFirstPerson);
@@ -1307,7 +1307,7 @@ export function SingleCharacter({
           characterId={id}
           characterName={charLabel}
           isActive={isActive}
-          isFirstPerson={cameraMode === 'fpv' || cameraState.mode === 'fpv'}
+          isFirstPerson={cameraMode === 'fpv' || cameraState.mode === 'fpv' || cameraState.isXR}
         />
       )}
     </group>
