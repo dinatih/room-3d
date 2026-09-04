@@ -270,11 +270,11 @@ export function CharacterThoughtBubble({
             </div>
           )}
 
-          {/* Queue de bulle de pensée (cercles décroissants en bas) */}
+          {/* Queue de bulle de pensée (cercles décroissants en bas, alignés verticalement) */}
           <div
             style={{
               position: 'absolute',
-              bottom: '-8px',
+              bottom: '-9px',
               left: '50%',
               transform: 'translateX(-50%)',
               width: '10px',
@@ -287,24 +287,24 @@ export function CharacterThoughtBubble({
           <div
             style={{
               position: 'absolute',
-              bottom: '-15px',
-              left: '47%',
+              bottom: '-16px',
+              left: '50%',
               transform: 'translateX(-50%)',
-              width: '6px',
-              height: '6px',
+              width: '6.5px',
+              height: '6.5px',
               borderRadius: '50%',
               background: 'rgba(13, 17, 23, 0.92)',
-              border: `1px solid ${themeColor}`,
+              border: `1.2px solid ${themeColor}`,
             }}
           />
           <div
             style={{
               position: 'absolute',
-              bottom: '-20px',
-              left: '44%',
+              bottom: '-22px',
+              left: '50%',
               transform: 'translateX(-50%)',
-              width: '3.5px',
-              height: '3.5px',
+              width: '4px',
+              height: '4px',
               borderRadius: '50%',
               background: 'rgba(13, 17, 23, 0.92)',
               border: `1px solid ${themeColor}`,
