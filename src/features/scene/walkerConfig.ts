@@ -13,7 +13,6 @@ export interface CharacterConfig {
   variant?: LaraVariant;
   height: number;
   sittingScenePath?: string;
-  customIdleAnimPath?: string;
   isLara?: boolean;
 }
 

@@ -143,7 +143,6 @@ function InternalWalker(props: WalkerProps) {
             previewRotationY={charRot}
             previewHaircut={props.previewHaircut}
             previewHairColor={props.previewHairColor}
-            customIdleAnimPath={char.customIdleAnimPath}
             characterIndex={CHARACTERS.findIndex(candidate => candidate.id === char.id)}
           />
         );

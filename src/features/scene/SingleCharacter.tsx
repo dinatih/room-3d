@@ -170,15 +170,14 @@ export interface SingleCharacterProps extends WalkerProps {
   npcPosition?: [number, number, number];
   npcRotationY?: number;
   sittingScene?: THREE.Group;
-  customIdleAnimPath?: string;
 }
 
-function HeartParachute({ customAnimName }: { customAnimName: React.MutableRefObject<string | null> }) {
+function HeartParachute({ currentAnimClip }: { currentAnimClip: React.MutableRefObject<string | null> }) {
   const groupRef = useRef<THREE.Group>(null!);
 
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.visible = customAnimName.current === 'animations/locomotion/anim_falling.glb';
+      groupRef.current.visible = currentAnimClip.current === 'animations/locomotion/anim_falling.glb';
     }
   });
 
@@ -214,7 +213,6 @@ export function SingleCharacter({
   npcPosition = [0, 0, 0],
   npcRotationY = 0,
   sittingScene,
-  customIdleAnimPath,
   previewPosition,
   previewRotationY
 }: SingleCharacterProps) {
@@ -264,7 +262,7 @@ export function SingleCharacter({
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const actionsRef = useRef<Record<string, THREE.AnimationAction>>({});
   const activeActionName = useRef<string>('');
-  const customAnimName = useRef<string | null>(null);
+  const currentAnimClip = useRef<string | null>(null);
   const userAnimOverrideRef = useRef<boolean>(false);
   const prevFirstPersonRef = useRef<boolean | null>(null);
   const hasLoggedIdleRef = useRef<boolean>(false);
@@ -451,8 +449,8 @@ export function SingleCharacter({
     mixerRef.current = mixer;
 
     mixer.addEventListener('finished', (e) => {
-      if (customAnimName.current && actionsRef.current[customAnimName.current] === e.action) {
-        customAnimName.current = null;
+      if (currentAnimClip.current && actionsRef.current[currentAnimClip.current] === e.action) {
+        currentAnimClip.current = null;
         userAnimOverrideRef.current = false;
       }
     });
@@ -534,14 +532,14 @@ export function SingleCharacter({
     if (!scene || !mixerRef.current) return;
     const isTPose = path === 'tpose' || path === 'animations/poses_idles/anim_t_pose.glb';
     if (isTPose) {
-      customAnimName.current = 'tpose';
+      currentAnimClip.current = 'tpose';
       if (isUserOverride) userAnimOverrideRef.current = true;
       invalidate();
       return;
     }
 
     if (path === 'idle') {
-      customAnimName.current = null;
+      currentAnimClip.current = null;
       userAnimOverrideRef.current = false;
       invalidate();
       return;
@@ -584,7 +582,7 @@ export function SingleCharacter({
         }
       }
 
-      customAnimName.current = path;
+      currentAnimClip.current = path;
       if (isUserOverride) userAnimOverrideRef.current = true;
       invalidate();
     };
@@ -606,7 +604,7 @@ export function SingleCharacter({
   useEffect(() => {
     if (!isPreview) return;
     if (!walkerAnim || walkerAnim === 'idle') {
-      customAnimName.current = null;
+      currentAnimClip.current = null;
       userAnimOverrideRef.current = false;
       invalidate();
       return;
@@ -750,42 +748,6 @@ export function SingleCharacter({
     invalidate();
   }, [scene, parts, haircut, hairColor, variant, isActive, headBoneState, invalidate]);
 
-  useEffect(() => {
-    if (customIdleAnimPath && scene && mixerRef.current && !actionsRef.current[customIdleAnimPath]) {
-      const loader = new GLTFLoader();
-      loader.load(customIdleAnimPath, (gltf: any) => {
-        const clip = gltf.animations[0];
-        if (clip) {
-          const cacheKey = id + '_' + customIdleAnimPath;
-          let finalClip = _retargetCache[cacheKey];
-          if (!finalClip) {
-            gltf.scene.updateMatrixWorld(true);
-            finalClip = retargetClip(clip, scene, gltf.scene);
-            cacheRetargetedClip(cacheKey, finalClip);
-          }
-          finalClip.name = customIdleAnimPath;
-
-          const mixer = mixerRef.current;
-          if (!mixer) return;
-
-          let action = actionsRef.current[customIdleAnimPath];
-          if (!action) {
-            action = mixer.clipAction(finalClip);
-            action.setLoop(THREE.LoopRepeat, Infinity);
-            action.clampWhenFinished = false;
-            action.enabled = true;
-            action.play();
-            action.setEffectiveWeight(0);
-            actionsRef.current[customIdleAnimPath] = action;
-          }
-          invalidate();
-        }
-      }, undefined, (err) => {
-        console.error(`[GLB 404] customIdleAnimPath introuvable : "${customIdleAnimPath}" —`, err);
-      });
-    }
-  }, [customIdleAnimPath, id, scene, invalidate]);
-
   useFrame((state, rawDelta) => {
     const delta = Math.min(rawDelta, 0.1);
     if (!groupRef.current || !mixerRef.current) return;
@@ -824,7 +786,7 @@ export function SingleCharacter({
       const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId);
       groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode;
       if (!userAnimOverrideRef.current) {
-        customAnimName.current = null;
+        currentAnimClip.current = null;
       }
     } else {
       if (isActive) {
@@ -837,7 +799,7 @@ export function SingleCharacter({
           const agentState = updateAgent(delta);
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
-          customAnimName.current = agentState.animation;
+          currentAnimClip.current = agentState.animation;
           groupRef.current.visible = !cameraState.walkerHidden;
 
           cameraState.walkerX = agentState.x;
@@ -851,7 +813,7 @@ export function SingleCharacter({
           groupRef.current.rotation.y = cameraState.walkYaw;
           groupRef.current.visible = !cameraState.walkerHidden;
           cameraState.isAIControlled = false;
-          customAnimName.current = null;
+          currentAnimClip.current = null;
           cameraState.positions[id] = { x: cameraState.walkerX, y: 0, z: cameraState.walkerZ, yaw: cameraState.walkYaw };
           
           setAgentPosition(cameraState.walkerX, 0, cameraState.walkerZ);
@@ -862,7 +824,7 @@ export function SingleCharacter({
         groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
         groupRef.current.rotation.y = agentState.rotY;
         if (!userAnimOverrideRef.current) {
-          customAnimName.current = agentState.animation;
+          currentAnimClip.current = agentState.animation;
         }
         const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId);
         groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode && agentState.isSpawned;
@@ -912,10 +874,10 @@ export function SingleCharacter({
     const isMoving = !isPreview && isActive && (cameraState.isXR ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
     let target = isPreview
       ? (walkerAnim || 'idle')
-      : (customAnimName.current || (isMoving ? 'walk' : (isNPC && customIdleAnimPath && !isAutonomous ? customIdleAnimPath : 'idle')));
+      : (currentAnimClip.current || (isMoving ? 'walk' : 'idle'));
 
-    if (isActive && !isGuidedTour && (cameraState.isXR || cameraState.isUserControlling()) && customAnimName.current) {
-      customAnimName.current = null;
+    if (isActive && !isGuidedTour && (cameraState.isXR || cameraState.isUserControlling()) && currentAnimClip.current) {
+      currentAnimClip.current = null;
     }
 
     if (!actions[target] && target.endsWith('.glb')) {
@@ -1300,7 +1262,7 @@ export function SingleCharacter({
           attachTo={headBoneState}
         />
       )}
-      {!isPreview && <HeartParachute customAnimName={customAnimName} />}
+      {!isPreview && <HeartParachute currentAnimClip={currentAnimClip} />}
       {!isPreview && (isActive ? <GroundPoint color="#0058a3" /> : <GroundPoint color="#ff2222" />)}
       {!isPreview && isActive && showThoughtBubble && (
         <CharacterThoughtBubble
