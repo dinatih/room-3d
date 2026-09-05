@@ -150,22 +150,35 @@ export function useAgentController(
   useEffect(() => {
     const onInvite = (e: any) => {
       if (e.detail?.targetId === _characterId) {
-        // Si le personnage est déjà en train de faire la duo-zone ou dans la duo-zone, ignorer
-        if (claimedSlotRef.current?.objectId === 'duo-zone' || duoRoleRef.current) return;
         const role = (e.detail?.forceRole as DuoRole) || duoSessionManager.joinDuoZone(_characterId);
         if (role) {
           duoRoleRef.current = role;
-          if (claimedSlotRef.current) {
+          if (claimedSlotRef.current && (claimedSlotRef.current.objectId !== 'duo-zone' || claimedSlotRef.current.slotId !== role)) {
             OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
             claimedSlotRef.current = null;
           }
           claimedSlotRef.current = { objectId: 'duo-zone', slotId: role };
-          dynamicNavQueueRef.current = [
-            { type: 'USE_OBJECT', smartObjectId: 'duo-zone', slotId: role }
-          ];
-          dynamicNavIndexRef.current = 0;
-          statusRef.current = 'IDLE';
-          appLog(_characterId, `🏃‍♂️ Répond à l'appel de ${e.detail.fromId} (${role === 'roleA' ? 'Meneur' : 'Partenaire'}) et rejoint la ✨ Scène Duo !`);
+
+          if (e.detail?.alreadyThere) {
+            statusRef.current = 'INTERACTING';
+            dynamicNavQueueRef.current = [
+              { type: 'USE_OBJECT', smartObjectId: 'duo-zone', slotId: role }
+            ];
+            dynamicNavIndexRef.current = 0;
+            duoSessionManager.markReady(_characterId);
+            const animState = duoSessionManager.getCurrentAnimState();
+            if (animState) {
+              const clip = role === 'roleA' ? animState.clipA : animState.clipB;
+              stateRef.current.animation = clip;
+            }
+          } else {
+            dynamicNavQueueRef.current = [
+              { type: 'USE_OBJECT', smartObjectId: 'duo-zone', slotId: role }
+            ];
+            dynamicNavIndexRef.current = 0;
+            statusRef.current = 'IDLE';
+            appLog(_characterId, `🏃‍♂️ Répond à l'appel de ${e.detail.fromId} (${role === 'roleA' ? 'Meneur' : 'Partenaire'}) et rejoint la ✨ Scène Duo !`);
+          }
         }
       }
     };
@@ -757,8 +770,8 @@ export function useAgentController(
             : 'animations/poses_idles/anim_female_standing_pose_1.glb';
           stateRef.current.rotY = 0;
 
-          // À la moitié du délai (10s), appeler le PNJ le plus proche
-          if (duoWaitTimerRef.current >= 10.0 && !duoInvitedRef.current) {
+          // Invitation immédiate sans délai dès qu'on attend un partenaire
+          if (!duoInvitedRef.current) {
             duoInvitedRef.current = true;
             duoSessionManager.inviteNearestNpc(_characterId);
           }

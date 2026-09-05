@@ -307,54 +307,65 @@ class DuoSessionManager {
   public forceDuoAnimation(def: DuoAnimationDef): { targetA: string; targetB: string } | null {
     const [bx, , bz] = this.basePos;
 
-    // Trier tous les PNJs autonomes par distance croissante au centre de la Duo Zone
-    const sortedNpcs: { id: string; dist: number }[] = [];
-    for (const npcId of AUTONOMOUS_NPC_IDS) {
-      const pos = cameraState.positions[npcId];
-      const dist = pos ? Math.hypot(pos.x - bx, pos.z - bz) : Infinity;
-      sortedNpcs.push({ id: npcId, dist });
-    }
-    sortedNpcs.sort((a, b) => a.dist - b.dist);
+    // 1. Vérifier si des participants sont déjà présents sur la Duo Zone
+    let targetA: string | null = this.participantA?.characterId || null;
+    let targetB: string | null = this.participantB?.characterId || null;
 
-    const availableIds = sortedNpcs.map(n => n.id);
-    const targetA = availableIds[0] || 'native';
-    const targetB = availableIds[1] || 'rosanna';
+    // Si un ou deux manquent, chercher les PNJs autonomes les plus proches
+    if (!targetA || !targetB) {
+      const sortedNpcs: { id: string; dist: number }[] = [];
+      for (const npcId of AUTONOMOUS_NPC_IDS) {
+        if (npcId === targetA || npcId === targetB) continue;
+        const pos = cameraState.positions[npcId];
+        const dist = pos ? Math.hypot(pos.x - bx, pos.z - bz) : Infinity;
+        sortedNpcs.push({ id: npcId, dist });
+      }
+      sortedNpcs.sort((a, b) => a.dist - b.dist);
+
+      const availableIds = sortedNpcs.map(n => n.id);
+      if (!targetA) targetA = availableIds[0] || 'native';
+      if (!targetB) targetB = (availableIds[0] === targetA ? availableIds[1] : availableIds[0]) || 'rosanna';
+    }
 
     if (!targetA || !targetB || targetA === targetB) {
       return null;
     }
 
-    // Libérer les anciens occupants éventuels
-    if (this.participantA && this.participantA.characterId !== targetA) {
-      OccupancyManager.releaseSlot('duo-zone', 'roleA', this.participantA.characterId);
-    }
-    if (this.participantB && this.participantB.characterId !== targetB) {
-      OccupancyManager.releaseSlot('duo-zone', 'roleB', this.participantB.characterId);
-    }
-
-    // Configurer la session avec cette animation unique jouée 3 fois
+    // Configurer la session avec l'animation sélectionnée
     this.playlist = [def];
     this.currentAnimIndex = 0;
     this.currentRepeatIndex = 0;
     this.sessionTimer = def.duration ?? 5.0;
-    this.isSessionPlaying = false;
     this.isSessionComplete = false;
 
-    // Assigner les 2 rôles
+    // Vérifier la présence physique des participants (à moins de 60 cm du centre de duo-zone)
+    const posA = cameraState.positions[targetA];
+    const posB = cameraState.positions[targetB];
+    const isAlreadyThereA = posA ? Math.hypot(posA.x - bx, posA.z - bz) < 80 : false;
+    const isAlreadyThereB = posB ? Math.hypot(posB.x - bx, posB.z - bz) < 80 : false;
+
+    // Assigner les rôles
     OccupancyManager.claimSlot('duo-zone', 'roleA', targetA);
-    this.participantA = { characterId: targetA, role: 'roleA', isReady: false };
+    this.participantA = { characterId: targetA, role: 'roleA', isReady: isAlreadyThereA };
 
     OccupancyManager.claimSlot('duo-zone', 'roleB', targetB);
-    this.participantB = { characterId: targetB, role: 'roleB', isReady: false };
+    this.participantB = { characterId: targetB, role: 'roleB', isReady: isAlreadyThereB };
 
-    appLog('duo-zone', `🎮 Sélection SidePanel : "${def.label}" (x${this.repeatsPerAnim}) assignée à ${targetA} (Meneur) et ${targetB} (Partenaire) !`);
+    // Si les 2 sont déjà sur place, lancer directement la session
+    if (isAlreadyThereA && isAlreadyThereB) {
+      this.isSessionPlaying = true;
+      appLog('duo-zone', `🎭 Duo instantané (2 déjà sur place) : "${def.label}" avec ${targetA} & ${targetB}`);
+    } else {
+      this.isSessionPlaying = false;
+      appLog('duo-zone', `🎮 Appel Duo : "${def.label}" assignée à ${targetA} (Meneur) et ${targetB} (Partenaire)`);
+    }
 
-    // Émettre l'invitation prioritaire aux 2 PNJs ciblés
+    // Inviter les personnages
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-      detail: { targetId: targetA, fromId: 'SidePanel', forceRole: 'roleA' }
+      detail: { targetId: targetA, fromId: 'SidePanel', forceRole: 'roleA', alreadyThere: isAlreadyThereA }
     }));
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-      detail: { targetId: targetB, fromId: 'SidePanel', forceRole: 'roleB' }
+      detail: { targetId: targetB, fromId: 'SidePanel', forceRole: 'roleB', alreadyThere: isAlreadyThereB }
     }));
 
     this.emitChange();
