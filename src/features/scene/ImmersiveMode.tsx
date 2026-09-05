@@ -263,6 +263,10 @@ export function ImmersiveMode() {
       cameraState.walkerZ = pos.current.z;
     }
 
+    if (cameraState.headSocketActive) {
+      pos.current.y += (cameraState.headWorldPos[1] - pos.current.y) * 0.15;
+    }
+
     camera.position.copy(pos.current);
   });
 

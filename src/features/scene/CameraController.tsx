@@ -136,22 +136,22 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const orbitYaw  = useRef(initialWalker.rot);
   const orbitYawOffset = useRef(0); // Différentiel d'angle relatif au personnage
   const orbitPitch = useRef(0.25);
-  const orbitDistance = useRef(220);
+  const orbitDistance = useRef(440); // 440 cm par défaut : reculé de 2x par rapport aux 220 cm d'origine
   const keys      = useRef(new Set<string>());
   const dragging  = useRef(false);
 
   // Saved perspective state for top-down → orbit restore
   const savedPerspPos    = useRef(new THREE.Vector3(...PERSP_POS));
   const savedPerspTarget = useRef(new THREE.Vector3(...PERSP_TARGET));
-  // FOV sauvegardé avant entrée walk (restauré à la sortie)
   const savedFov         = useRef(50);
-  const minimapThrottle  = useRef(0); // accumulateur pour throttler drawMinimap (~15fps)
+  const minimapThrottle  = useRef(0);
 
   // ── Walk helpers ────────────────────────────────────────────────────────────
 
   /**
    * Recalcule la position et la visée (target) de la caméra :
-   * - En mode FPV (1ère personne) : caméra aux yeux du personnage, orientation selon walkYaw / walkPitch.
+   * - En mode FPV (1ère personne) : caméra attachée au socket de la tête du personnage (True First Person),
+   *   position issue à 100% de l'os (debout ou assis), orientation pilotée par walkYaw / walkPitch + option head bobbing.
    * - En mode Walk (3ème personne) : orbite libre autour du personnage (orbitYaw / orbitPitch / orbitDistance).
    */
   function updateWalkLook() {
@@ -161,23 +161,46 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const isFPV = modeRef.current === 'fpv';
 
     if (isFPV) {
-      const cosP = Math.cos(walkPitch.current);
-      const targetX = walkPos.current.x;
-      const targetY = walkPos.current.y;
-      const targetZ = walkPos.current.z;
+      // Si le socket de tête est actif dans le squelette, on suit la position réelle de l'os à 100%
+      let posX = walkPos.current.x;
+      let posY = walkPos.current.y;
+      let posZ = walkPos.current.z;
 
+      if (cameraState.headSocketActive) {
+        posX = cameraState.headWorldPos[0];
+        posY = cameraState.headWorldPos[1];
+        posZ = cameraState.headWorldPos[2];
+        // Met également à jour walkPos.current.y pour maintenir la cohérence
+        walkPos.current.y = posY;
+      }
+
+      // Gestion de la rotation FPV :
+      // La rotation principale est 100% contrôlée par le joueur (walkYaw, walkPitch).
+      // Si l'option fpvHeadBobbing est activée (via store ou cameraState), on ajoute une subtile nuance de l'animation.
+      const bobbingEnabled = cameraState.fpvHeadBobbing || (useSceneStore.getState().layers.fpvHeadBobbing ?? false);
+      let effPitch = walkPitch.current;
+      let effYaw = walkYaw.current;
+
+      if (bobbingEnabled && cameraState.headSocketActive) {
+        // Nuance additive très légère (5% à 8%) pour donner vie à la caméra sans provoquer de motion sickness
+        effPitch += (cameraState.headPitch * 0.08);
+      }
+
+      const cosP = Math.cos(effPitch);
       const lookDist = 200;
       ctrl.target.set(
-        targetX + Math.sin(walkYaw.current) * cosP * lookDist,
-        targetY + Math.sin(walkPitch.current) * lookDist,
-        targetZ + Math.cos(walkYaw.current) * cosP * lookDist
+        posX + Math.sin(effYaw) * cosP * lookDist,
+        posY + Math.sin(effPitch) * lookDist,
+        posZ + Math.cos(effYaw) * cosP * lookDist
       );
-      camera.position.set(targetX, targetY, targetZ);
+      camera.position.set(posX, posY, posZ);
       ctrl.update();
     } else {
       // ── Mode 3ème Personne Intelligent & Cinématique ──
       const targetX = walkPos.current.x;
-      const targetY = walkPos.current.y * 0.75; // hauteur torse / regard
+      // Cible en hauteur dynamique : si assis ou debout, s'adapte à la position de la tête ou à 75% du corps
+      const currentHeadY = cameraState.headSocketActive ? cameraState.headWorldPos[1] : walkPos.current.y;
+      const targetY = currentHeadY * 0.75;
       const targetZ = walkPos.current.z;
 
       // Si l'utilisateur est en train de corriger l'angle manuellement (souris ou touches), on met à jour le différentiel
@@ -224,10 +247,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       orbitYaw.current = walkYaw.current;
       orbitYawOffset.current = 0;
       orbitPitch.current = 0.25;
-      orbitDistance.current = 220;
+      orbitDistance.current = 440; // 2x plus éloigné (440 au lieu de 220)
 
       const targetX = x;
-      const targetY = walkPos.current.y * 0.75;
+      const currentHeadY = cameraState.headSocketActive ? cameraState.headWorldPos[1] : walkPos.current.y;
+      const targetY = currentHeadY * 0.75;
       const targetZ = z;
       const dist = orbitDistance.current;
       const cosP = Math.cos(orbitPitch.current);

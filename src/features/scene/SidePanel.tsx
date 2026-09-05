@@ -366,6 +366,7 @@ export interface LayerState {
   characterShadows: boolean;
   characterWireframe?: boolean;
   thoughtBubble?: boolean;
+  fpvHeadBobbing?: boolean;
 }
 
 
@@ -1543,6 +1544,28 @@ export function SidePanel({
                 }));
               }}
             />
+          </div>
+
+          <div className="border-top pt-2 mt-2">
+            <button
+              type="button"
+              className="btn btn-sm w-100 d-flex justify-content-between align-items-center px-2 py-1"
+              style={{
+                background: layers.fpvHeadBobbing ? 'rgba(255, 107, 157, 0.15)' : 'rgba(0, 0, 0, 0.04)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                fontSize: '11px',
+              }}
+              onClick={() => {
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, fpvHeadBobbing: !st.layers.fpvHeadBobbing }
+                }));
+              }}
+            >
+              <span>🎥 Head Bobbing (Vue FPS)</span>
+              <span className={`badge ${layers.fpvHeadBobbing ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+                {layers.fpvHeadBobbing ? 'ACTIF' : 'DÉSACTIVÉ'}
+              </span>
+            </button>
           </div>
         </div>
       )}

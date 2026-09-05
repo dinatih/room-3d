@@ -14,6 +14,8 @@ export interface CharacterConfig {
   height: number;
   sittingScenePath?: string;
   isLara?: boolean;
+  /** Décalage local [X, Y, Z] du socket caméra par rapport au bone de la tête */
+  eyeOffset?: [number, number, number];
 }
 
 export const CHARACTERS: CharacterConfig[] = [

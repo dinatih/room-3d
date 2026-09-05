@@ -212,6 +212,11 @@ export function VRMode() {
         cameraState.walkerZ = rigRef.current.position.z;
       }
     }
+
+    // Ajustement de la hauteur du rig selon le socket de tête (assis vs debout)
+    if (cameraState.headSocketActive) {
+      rigRef.current.position.y += (cameraState.headWorldPos[1] - rigRef.current.position.y) * 0.15;
+    }
   });
 
   return null;
