@@ -220,6 +220,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       }
 
       // Calcul de la distance d'orbite avec léger recul dynamique
+      // Placer la caméra derrière le personnage : à walkYaw + Math.PI
       const dist = orbitDistance.current;
       const cosP = Math.cos(orbitPitch.current);
       const sinP = Math.sin(orbitPitch.current);
@@ -237,6 +238,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       camera.position.x += (camX - camera.position.x) * lerpFactor;
       camera.position.y += (camY - camera.position.y) * lerpFactor;
       camera.position.z += (camZ - camera.position.z) * lerpFactor;
+      camera.lookAt(ctrl.target);
       ctrl.update();
     }
   }
@@ -244,6 +246,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   function enterWalk(x: number, z: number, walkMode: 'walk' | 'fpv' = 'walk') {
     walkPos.current = { x, y: activeWalkH(), z };
     if (walkMode === 'walk') {
+      // Placer la caméra derrière l'avatar (regardant vers son dos dans la direction de sa marche)
       orbitYaw.current = walkYaw.current;
       orbitYawOffset.current = 0;
       orbitPitch.current = 0.25;
@@ -263,6 +266,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       camera.position.set(camX, camY, camZ);
       if (ctrlRef.current) {
         ctrlRef.current.target.set(targetX, targetY, targetZ);
+        camera.lookAt(targetX, targetY, targetZ);
         ctrlRef.current.update();
       }
     } else {
