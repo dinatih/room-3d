@@ -1720,8 +1720,8 @@ function MirrorBath({ showReflection }: { showReflection: boolean }) {
   return (
     <ReflectorMirror
       w={mirrorW} h={mirrorH}
-      position={[VANITY_CX, mirrorY, VANITY_CZ + mirrorZ + 0.1]}
-      rotationY={Math.PI}
+      position={[VANITY_CX, mirrorY, VANITY_CZ + mirrorZ + 0.3]}
+      rotationY={0}
     />
   );
 }
