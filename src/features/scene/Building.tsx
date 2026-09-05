@@ -1513,6 +1513,8 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
+      // En WebXR, le sous-rendu Reflector réinitialise le framebuffer XR et brise les matrices stéréo
+      if (renderer.xr.isPresenting || (camera as any).isArrayCamera) return;
 
       // 1. Test d'orientation : la caméra doit être devant la face réfléchissante
       mir.getWorldPosition(mirWorldPos);
@@ -1524,9 +1526,7 @@ function ReflectorMirror({ w, h, position, rotationY }: {
 
       // 2. Frustum Culling : le miroir doit être dans le champ de vision de la caméra
       if (geometry.boundingBox) {
-        // S'assurer que les matrices monde de la caméra sont à jour
-        camera.updateMatrixWorld();
-        const matWorldInv = camera.matrixWorldInverse.clone();
+        const matWorldInv = camera.matrixWorldInverse;
         projScreenMatrix.multiplyMatrices(camera.projectionMatrix, matWorldInv);
         frustum.setFromProjectionMatrix(projScreenMatrix);
         worldBox.copy(geometry.boundingBox).applyMatrix4(mir.matrixWorld);
@@ -1600,6 +1600,8 @@ function MergedReflector({ planes, position, rotationY }: {
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
+      // En WebXR, le sous-rendu Reflector réinitialise le framebuffer XR et brise les matrices stéréo
+      if (renderer.xr.isPresenting || (camera as any).isArrayCamera) return;
 
       // 1. Test d'orientation : la caméra doit être devant la face réfléchissante
       mir.getWorldPosition(mirWorldPos);
@@ -1611,9 +1613,7 @@ function MergedReflector({ planes, position, rotationY }: {
 
       // 2. Frustum Culling : le miroir doit être dans le champ de vision de la caméra
       if (geometry.boundingBox) {
-        // S'assurer que les matrices monde de la caméra sont à jour
-        camera.updateMatrixWorld();
-        const matWorldInv = camera.matrixWorldInverse.clone();
+        const matWorldInv = camera.matrixWorldInverse;
         projScreenMatrix.multiplyMatrices(camera.projectionMatrix, matWorldInv);
         frustum.setFromProjectionMatrix(projScreenMatrix);
         worldBox.copy(geometry.boundingBox).applyMatrix4(mir.matrixWorld);
