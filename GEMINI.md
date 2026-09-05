@@ -23,12 +23,12 @@ npx tsc --noEmit     # Vérifier la validité des types TypeScript
 ## Stack & Architecture
 
 - **Technologies** : React 18 + Three.js + `@react-three/fiber` (R3F) + `@react-three/drei` + Vite + TypeScript.
-- **Aliases d'importation** :
+<!--- **Aliases d'importation** :
   - `@shared/*` → `src/*` (types et configurations partagés)
   - `@features/*` → `src/features/*` (domaines fonctionnels)
-  - `@config` → `src/config.ts` (constantes de la pièce)
+  - `@config` → `src/config.ts` (constantes de la pièce)-->
 
-## Règles d'implémentation des items (`src/features/scene/items/`)
+<!--## Règles d'implémentation des items (`src/features/scene/items/`)
 
 Chaque meuble ou objet interactif est un composant autonome implémentant l'interface `SceneItemProps` :
 - **Coordonnées locales** : Centré en X/Z, base au sol à Y=0 (ou sur la surface d'appui).
@@ -37,16 +37,16 @@ Chaque meuble ou objet interactif est un composant autonome implémentant l'inte
 - **Calcul des dimensions (Pattern B)** :
   - Toujours utiliser `glbLocalBBox(scene)` pour obtenir la Bounding Box locale en ignorant les transformations du parent.
   - Toujours faire `scene.scale.set(1, 1, 1)` au tout début du `useLayoutEffect` avant de lire la Box pour éviter les corruptions de scale lors des remounts liés à Suspense.
-  - Appeler `onSize(dimensions)` à la fin de l'effet.
+  - Appeler `onSize(dimensions)` à la fin de l'effet.-->
 
-## États UI et Synchronisation (Événements)
+<!--## États UI et Synchronisation (Événements)
 
 Les actions utilisateur (allumer une lampe, ouvrir une porte, changer la vitesse du ventilateur) sont transmises via des `CustomEvent` nommés `furniture-toggle` :
 ```ts
 document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value } }))
 ```
 - Pour écouter ces états de manière factorisée, utiliser le hook `useFurnitureToggles` dans `Placements.tsx`.
-- Pour les animations R3F (`useFrame`), synchroniser l'état réactif dans des refs locales (ex. `const isPowerOnRef = useRef(false)`) afin d'éviter les closures obsolètes dans la boucle d'animation.
+- Pour les animations R3F (`useFrame`), synchroniser l'état réactif dans des refs locales (ex. `const isPowerOnRef = useRef(false)`) afin d'éviter les closures obsolètes dans la boucle d'animation.-->
 
 ## Signatures des Commits Git
 
@@ -60,4 +60,12 @@ Pour différencier l'origine des commits (IDE vs CLI/agy), toujours ajouter le c
 - **Explications de code** : Lors des modifications de code R3F, expliquer brièvement les hooks utilisés et la logique de rendu pour aider à consolider la maîtrise de React.
 - **Validation** : Toujours lancer `npx tsc --noEmit` après avoir modifié du code pour garantir l'absence d'erreurs de typage.
 - **Commit automatique** : L'agent DOIT toujours commiter ses modifications de code via `git commit` à chaque fois qu'une réponse est envoyée, sans attendre d'instruction explicite.
-- **Interdiction de bash pour l'édition** : Ne JAMAIS utiliser le terminal `bash` (avec des commandes comme `sed`, `cat`, `echo`, ou `grep` pour modifier ou lire des fichiers). Tu DOIS impérativement utiliser tes outils d'édition natifs (`replace_file_content`, `multi_replace_file_content`, `view_file`) pour ne pas spammer l'utilisateur avec des demandes d'autorisation dans la console.
+<!--- **Interdiction de bash pour l'édition** : Ne JAMAIS utiliser le terminal `bash` (avec des commandes comme `sed`, `cat`, `echo`, ou `grep` pour modifier ou lire des fichiers). Tu DOIS impérativement utiliser tes outils d'édition natifs (`replace_file_content`, `multi_replace_file_content`, `view_file`) pour ne pas spammer l'utilisateur avec des demandes d'autorisation dans la console.-->
+
+## Économie de quota et limitation d'investigation
+
+- **Lectures efficaces** : Utiliser des plages de lecture larges (100 à 300 lignes) lors des appels `view_file` pour éviter de morceler les lectures.
+- **Budget d'outils par tour** : Ne JAMAIS dépasser 6 à 8 appels d'outils au total par message utilisateur. Si une analyse complexe nécessite plus d'étapes, s'interrompre et faire un point avec l'utilisateur au lieu de boucler.
+- **Interdiction absolue d'explorer `node_modules`** : Se concentrer exclusivement sur le code du projet (`src/`). Ne jamais lire ou parcourir les dossiers de dépendances externes.
+- **Action directe** : Dès qu'une piste ou une cause probable est identifiée, appliquer la correction et tester immédiatement au lieu de sur-analyser.
+
