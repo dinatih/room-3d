@@ -155,6 +155,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Vue perspective (reset)"    keys={['O']} />
               <R label="Walk mode (cycle 3P / FPV)" keys={['M']} />
               <R label="Vue 3ème personne directe"  keys={['3']} />
+              <R label="Ambiance HDRI aléatoire 🎲" keys={['5']} />
               <R label="Bulle de pensées 💭 (toggle)" keys={['6']} />
               <R label="Pistolets Lara 🔫 (toggle)" keys={['7']} />
               <R label="Accessoires Lara 🎒 (toggle)" keys={['8']} />
@@ -498,6 +499,31 @@ export function SidePanel({
     handleRandomHairColor();
   };
 
+  const handleRandomHdri = () => {
+    const otherHdris = HDRI_LIST.filter(h => h.id !== currentHdri);
+    const next = otherHdris[Math.floor(Math.random() * otherHdris.length)];
+    if (next) {
+      setHdri(next.id);
+    }
+  };
+
+  const layersHeaderButtons = (
+    <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
+      <button
+        type="button"
+        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold"
+        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
+        title="Changer aléatoirement d'ambiance HDRI 🎲 (Touche 5)"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleRandomHdri();
+        }}
+      >
+        🎲
+      </button>
+    </div>
+  );
+
   useEffect(() => {
     const handleToggleHaircut = () => {
       setGlobalHaircut(prev => {
@@ -788,12 +814,8 @@ export function SidePanel({
           <button
             type="button"
             className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
-            onClick={() => {
-              const otherHdris = HDRI_LIST.filter(h => h.id !== currentHdri);
-              const next = otherHdris[Math.floor(Math.random() * otherHdris.length)];
-              setHdri(next.id);
-            }}
-            title="HDRI aléatoire 🎲"
+            onClick={handleRandomHdri}
+            title="HDRI aléatoire 🎲 (Touche 5)"
             style={{ fontSize: '11px', lineHeight: 1 }}
           >
             🎲
@@ -1830,6 +1852,7 @@ export function SidePanel({
             <div className="d-flex justify-content-between align-items-center p-3 border-bottom text-dark">
               <span className="fw-bold">{sheetTitle[activeTab]}</span>
               <div className="d-flex align-items-center gap-2">
+                {activeTab === 'layers' && layersHeaderButtons}
                 {activeTab === 'personnage' && personnageHeaderButtons}
                 {activeTab === 'anims' && animHeaderButtons}
                 {activeTab === 'animsCouple' && duoAnimHeaderButtons}
@@ -2015,7 +2038,7 @@ export function SidePanel({
         <DevToolsGroups Group={Group} />
 
         <Group emoji="📷" title="Vues">{ViewsSection}</Group>
-        <Group emoji="📑" title="Calques">{LayersSection}</Group>
+        <Group emoji="📑" title="Calques" extra={layersHeaderButtons}>{LayersSection}</Group>
         <Group emoji="🎮" title="Interactif">{InteractifSection}</Group>
         <Group emoji="👤" title="Personnage" extra={personnageHeaderButtons}>{PersonnageSection}</Group>
         <Group emoji="💃" title="Animations Perso" extra={animHeaderButtons}>{AnimationsSection}</Group>

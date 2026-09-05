@@ -41,6 +41,7 @@ import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/sc
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
+import { HDRI_LIST }                  from '@features/scene/hdriConfig';
 import { useAppIdle }                  from './idleState';
 import { MeasurementTool }            from './MeasurementTool';
 import { RealMeasurementsLayer }      from './RealMeasurementsLayer';
@@ -311,6 +312,13 @@ export function Studio() {
       } else if (e.key === 'u' || e.key === 'U') {
         onToggleLayer('measuredDimensions');
         cameraState.invalidate?.();
+      } else if (e.key === '5' || e.code === 'Digit5' || e.code === 'Numpad5') {
+        const store = useSceneStore.getState();
+        const otherHdris = HDRI_LIST.filter(h => h.id !== store.currentHdri);
+        const next = otherHdris[Math.floor(Math.random() * otherHdris.length)];
+        if (next) {
+          store.setHdri(next.id);
+        }
       } else if (e.key === '6' || e.code === 'Digit6' || e.code === 'Numpad6') {
         onToggleLayer('thoughtBubble');
         cameraState.invalidate?.();
