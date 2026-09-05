@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useLayoutEffect, Suspense } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
@@ -160,12 +160,36 @@ function SpatialZoneFpsCollector({ onFps }: { onFps: (fps: number) => void }) {
   return null;
 }
 
+function SpatialZoneStatsCollector({ onStats }: { onStats?: (s: { triangles: number; drawCalls: number }) => void }) {
+  const { gl } = useThree();
+  const lastReportRef = useRef<number>(0);
+
+  useFrame(() => {
+    if (!onStats) return;
+    const now = performance.now();
+    if (now - lastReportRef.current > 500) {
+      lastReportRef.current = now;
+      const render = gl.info.render;
+      if (render) {
+        onStats({
+          triangles: render.triangles,
+          drawCalls: render.calls,
+        });
+      }
+    }
+  });
+
+  return null;
+}
+
 export function SpatialZonePreview({
   zone,
-  height = '100%'
+  height = '100%',
+  onStats,
 }: {
   zone: SpatialZone;
   height?: number | string;
+  onStats?: (s: { triangles: number; drawCalls: number }) => void;
 }) {
   const min = zone.bounds.min;
   const max = zone.bounds.max;
@@ -244,6 +268,7 @@ export function SpatialZonePreview({
         </Suspense>
 
         <SpatialZoneFpsCollector onFps={handleFps} />
+        <SpatialZoneStatsCollector onStats={onStats} />
 
         <OrbitControls
           makeDefault

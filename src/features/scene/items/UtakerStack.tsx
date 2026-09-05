@@ -11,7 +11,7 @@ import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 const BED_WIDTH_Z = 83;
-const SEPARATED_GAP = 50; // espace visible entre les lits en mode simple
+const SEPARATED_GAP = 100; // espace visible entre les lits en mode simple
 
 export function UtakerStack({ actionState, onSize }: SceneItemProps) {
   const groupRef = useRef<THREE.Group>(null!);

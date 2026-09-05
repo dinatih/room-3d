@@ -62,7 +62,11 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
       <div className="inventory-detail-wrap">
         {/* Rendu 3D isolé de la pièce / espace sans obstruction */}
         <div className="inventory-detail-hero">
-          <SpatialZonePreview zone={zone} height="100%" />
+          <SpatialZonePreview
+            zone={zone}
+            height="100%"
+            onStats={s => setGlbStats({ triangles: s.triangles, drawCalls: s.drawCalls })}
+          />
         </div>
 
         <div className="inventory-detail-body">
@@ -92,6 +96,22 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
               <div className="inventory-spec-label">SmartObjects interactifs</div>
               <div className="inventory-spec-value" style={{ color: 'var(--red)', fontWeight: 'bold' }}>
                 {smartObjects.length} meuble{smartObjects.length > 1 ? 's' : ''}
+              </div>
+            </div>
+            <div className="inventory-spec-card" style={{ borderLeft: '3px solid #0284c7', background: '#f0f9ff' }}>
+              <div className="inventory-spec-label" style={{ color: '#0284c7' }}>Triangles & Draw Calls</div>
+              <div className="inventory-spec-value" style={{ fontSize: 13, fontWeight: 600 }}>
+                {glbStats ? (
+                  <>
+                    <span>{glbStats.triangles.toLocaleString()} tris</span>
+                    <span style={{ color: '#9ca3af', margin: '0 5px' }}>·</span>
+                    <span style={{ color: glbStats.drawCalls > 80 ? '#dc2626' : '#16a34a' }}>
+                      {glbStats.drawCalls} draw call{glbStats.drawCalls > 1 ? 's' : ''}
+                    </span>
+                  </>
+                ) : (
+                  <span style={{ color: '#9ca3af', fontSize: 12 }}>Calcul en cours…</span>
+                )}
               </div>
             </div>
           </div>

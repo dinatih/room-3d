@@ -236,9 +236,32 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
   }, [grounded, preserveOriginXZ, onTargetChange, onStats, glbPath]);
 
   useLayoutEffect(() => {
-    // Small delay to ensure skeleton/skinning matrices are computed
-    const timer = setTimeout(fit, 50);
-    return () => clearTimeout(timer);
+    // If glbPath is present, trigger size fetch
+    if (glbPath && !glbSizeCache.has(glbPath)) {
+      fetch(glbPath, { method: 'HEAD' })
+        .then(res => {
+          const len = res.headers.get('content-length');
+          if (len) {
+            const sz = parseInt(len, 10);
+            if (!isNaN(sz)) {
+              glbSizeCache.set(glbPath, sz);
+              fit();
+            }
+          }
+        })
+        .catch(() => {});
+    }
+
+    // Retries to ensure async GLTF / cloned components (like Variera) compute matrices & meshes
+    fit();
+    const t1 = setTimeout(fit, 60);
+    const t2 = setTimeout(fit, 250);
+    const t3 = setTimeout(fit, 800);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [fit, item?.id, glbPath]);
 
   return (
@@ -362,9 +385,9 @@ export function InventoryPreview({
     : (currentAnimOpt ? currentAnimOpt.label : (actionStates.walkerAnim || 'Idle'));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width, flexShrink: 0 }}>
-    <div style={{ width: '100%', height, background: '#d2d2d2', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
-      {!item && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444', fontSize: 12, pointerEvents: 'none' }}>Sélectionner un objet</div>}
+    <div className="inventory-preview-container" style={{ width }}>
+      <div className="inventory-preview-canvas-wrap" style={{ height: height === '100%' ? undefined : height }}>
+        {!item && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444', fontSize: 12, pointerEvents: 'none' }}>Sélectionner un objet</div>}
       {item && (
         <>
           {has3D && hasPhotos && (

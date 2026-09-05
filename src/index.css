@@ -365,11 +365,22 @@ button, input, select, textarea {
 }
 .inventory-detail-hero {
   width: 100%;
-  aspect-ratio: 1 / 1;
-  max-height: 70vh;
-  background: var(--border);
   position: relative;
+}
+.inventory-preview-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex-shrink: 0;
+}
+.inventory-preview-canvas-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 65vh;
+  background: #d2d2d2;
   overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
 }
 .inventory-detail-body {
   padding: 1.1rem 1.25rem;
