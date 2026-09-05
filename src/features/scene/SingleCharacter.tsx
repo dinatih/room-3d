@@ -893,12 +893,12 @@ export function SingleCharacter({
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
 
-    const isMoving = !isPreview && isActive && (cameraState.isXR ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
+    const isMoving = !isPreview && isActive && (cameraState.isXR || cameraState.mode === 'walk' || cameraState.mode === 'fpv' ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
     let target = isPreview
       ? (walkerAnim || 'idle')
       : (currentAnimClip.current || (isMoving ? 'walk' : 'idle'));
 
-    if (isActive && !isGuidedTour && (cameraState.isXR || cameraState.isUserControlling()) && currentAnimClip.current) {
+    if (isActive && !isGuidedTour && (cameraState.isXR || cameraState.mode === 'walk' || cameraState.mode === 'fpv' || cameraState.isUserControlling()) && currentAnimClip.current) {
       currentAnimClip.current = null;
     }
 
