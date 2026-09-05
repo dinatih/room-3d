@@ -34,16 +34,6 @@ export const cameraState = {
   positions: {} as Record<string, {x: number, y: number, z: number, yaw: number}>,
   /** Hauteur (cm) du walker — écrit par Walker.tsx, lue par les caméras walk */
   walkerHeight: 173.4 as number,
-  /** Position monde réelle de la tête/yeux calculée depuis le socket du squelette */
-  headWorldPos: [140, 161.26, 30] as [number, number, number],
-  /** Rotation monde réelle de la tête calculée depuis le squelette (pour head bobbing) */
-  headPitch: 0 as number,
-  headRoll:  0 as number,
-  headYaw:   0 as number,
-  /** Vrai si le walker actif a un bone de tête valide et met à jour headWorldPos */
-  headSocketActive: false as boolean,
-  /** Option Head Bobbing en FPV (nuance de rotation de l'animation) */
-  fpvHeadBobbing: false as boolean,
   /** Déclenché par CameraController chaque frame — la minimap s'y abonne */
   onUpdate:   null as (() => void) | null,
   /** Enregistré par CameraController ; appeler pour forcer un frame R3F. */

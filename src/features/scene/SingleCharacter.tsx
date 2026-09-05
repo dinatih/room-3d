@@ -309,7 +309,6 @@ export function SingleCharacter({
 
   // Collision bones
   const headBoneRef = useRef<THREE.Bone | null>(null);
-  const cameraSocketRef = useRef<THREE.Group | null>(null);
   const spine2BoneRef = useRef<THREE.Bone | null>(null);
   const spineBoneRef = useRef<THREE.Bone | null>(null);
   const hipsBoneRef = useRef<THREE.Bone | null>(null);
@@ -401,25 +400,6 @@ export function SingleCharacter({
     headBoneRef.current = parts.bones.head;
     lShoulderRef.current = parts.bones.lShoulder;
     rShoulderRef.current = parts.bones.rShoulder;
-
-    // ── Camera Socket (True First Person Attachment) ─────────────────────────
-    if (parts.bones.head) {
-      let socket = parts.bones.head.getObjectByName('camera_socket') as THREE.Group | null;
-      if (!socket) {
-        socket = new THREE.Group();
-        socket.name = 'camera_socket';
-        parts.bones.head.add(socket);
-      }
-      // Récupération de l'offset paramétrable du personnage ou fallback universel (pont du nez / yeux)
-      const charConfig = CHARACTERS.find(c => c.id === id);
-      const [ox, oy, oz] = charConfig?.eyeOffset ?? [0, 8.5, 10.5];
-      socket.position.set(ox, oy, oz);
-      socket.rotation.set(0, 0, 0);
-      socket.scale.set(1, 1, 1);
-      cameraSocketRef.current = socket;
-    } else {
-      cameraSocketRef.current = null;
-    }
 
     if (parts.bones.hips) {
       const parent = scene.parent || scene;
@@ -812,8 +792,6 @@ export function SingleCharacter({
       if (isActive) {
         const isUserManuallyMoving = 
           cameraState.isXR ||
-          cameraState.mode === 'walk' ||
-          cameraState.mode === 'fpv' ||
           (cameraState.mode === 'orbit' && cameraState.isUserControlling());
 
         if (!cameraState.isXR && (isGuidedTour || (!isUserManuallyMoving && isAutonomous))) {
@@ -893,12 +871,12 @@ export function SingleCharacter({
     const mixer = mixerRef.current;
     const actions = actionsRef.current;
 
-    const isMoving = !isPreview && isActive && (cameraState.isXR || cameraState.mode === 'walk' || cameraState.mode === 'fpv' ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
+    const isMoving = !isPreview && isActive && (cameraState.isXR ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
     let target = isPreview
       ? (walkerAnim || 'idle')
       : (currentAnimClip.current || (isMoving ? 'walk' : 'idle'));
 
-    if (isActive && !isGuidedTour && (cameraState.isXR || cameraState.mode === 'walk' || cameraState.mode === 'fpv' || cameraState.isUserControlling()) && currentAnimClip.current) {
+    if (isActive && !isGuidedTour && (cameraState.isXR || cameraState.isUserControlling()) && currentAnimClip.current) {
       currentAnimClip.current = null;
     }
 
@@ -1263,24 +1241,6 @@ export function SingleCharacter({
       }
 
       physicsPrevDt.current = simDt;
-    }
-
-    // ── Synchronisation du Camera Socket vers cameraState (pour True FPV et VR) ──
-    if (isActive && cameraSocketRef.current) {
-      cameraSocketRef.current.getWorldPosition(_tmpV1);
-      cameraState.headWorldPos[0] = _tmpV1.x;
-      cameraState.headWorldPos[1] = _tmpV1.y;
-      cameraState.headWorldPos[2] = _tmpV1.z;
-
-      // Récupération de la rotation globale de la tête pour head bobbing
-      cameraSocketRef.current.getWorldQuaternion(_animBreastQ);
-      _eulerBreast.setFromQuaternion(_animBreastQ, 'YXZ');
-      cameraState.headPitch = _eulerBreast.x;
-      cameraState.headYaw = _eulerBreast.y;
-      cameraState.headRoll = _eulerBreast.z;
-      cameraState.headSocketActive = true;
-    } else if (isActive && !cameraSocketRef.current) {
-      cameraState.headSocketActive = false;
     }
 
     if (!isPaused) {
