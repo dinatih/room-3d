@@ -4,6 +4,31 @@ Ce guide documente les outils, commandes et méthodologies utilisés pour mesure
 
 ---
 
+## 0. Résultats d'Audit : Vue globale du projet (Date : 05/09/2026)
+
+Mesure effectuée via `scc` en excluant `node_modules`, `dist`, `build` et `.git` :
+
+| Langage / Extension | Fichiers | Lignes totales | Lignes vides (Blanks) | Commentaires | Code effectif (SLOC) | Complexité brute |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TypeScript / TSX** | 234 | 39 765 | 4 178 | 2 972 | **32 615** | 6 815 |
+| **Markdown** (`.md`) | 14 | 1 675 | 398 | 0 | **1 277** | 0 |
+| **JavaScript** (`.js`) | 11 | 1 351 | 140 | 41 | **1 170** | 828 |
+| **CSS** (`.css`) | 1 | 555 | 16 | 12 | **527** | 0 |
+| **HTML** (`.html`) | 2 | 530 | 52 | 0 | **478** | 0 |
+| **JSON** (`.json`) | 4 | 296 | 0 | 0 | **296** | 0 |
+| **Python** (`.py`) | 3 | 275 | 52 | 21 | **202** | 46 |
+| **Shell** (`.sh`) | 1 | 50 | 8 | 11 | **31** | 12 |
+| **Total** | **272** | **44 537** | **4 852** | **3 058** | **36 627** | **7 701** |
+
+### Détail du code applicatif (`src/`) par extension
+| Extension | Rôle | Fichiers | SLOC (Code) | Commentaires | Espaces | Lignes totales |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `.tsx` | Composants React / R3F | 195 | **25 338** | 2 311 | 3 434 | 31 083 |
+| `.ts` | Logique métier, types, stores, math 3D | 38 | **7 226** | 660 | 739 | 8 625 |
+| `.css` | Styles globaux | 1 | **527** | 12 | 16 | 555 |
+
+---
+
 ## 1. Outils sélectionnés & Rôles
 
 ### A. SCC (Sloc, Cloc and Code) ou Tokei
