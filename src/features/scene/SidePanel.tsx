@@ -20,6 +20,7 @@ const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
 import { useSceneStore } from './store/useSceneStore';
+import { positionState } from './positionState';
 import { HDRI_LIST } from './hdriConfig';
 import { CHARACTERS, isCharacterVisibleInMode, npcLabel, type LaraCountMode } from './walkerConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
@@ -638,6 +639,28 @@ export function SidePanel({
       
       <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>MOBILIER & ÉLECTRO</div>
       {furnitureBtn('Lit Double', 'bedDouble', 'DOUBLE', 'SÉPARÉ')}
+      {furniture.bedDouble && (
+        <button
+          className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
+          onClick={() => {
+            document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-position' } }));
+          }}
+          style={{
+            fontSize: isMobile ? '14px' : '11px',
+            minHeight: isMobile ? '48px' : undefined,
+            background: 'transparent',
+          }}
+        >
+          <span>Lit Double (Position)</span>
+          <span className="badge bg-primary" style={{ fontSize: '9px' }}>
+            {(() => {
+              const p = positionState['bed-position'];
+              const labels = ['Centré', 'Mur Ouest', 'Mur Est'];
+              return p ? labels[p.idx] ?? `Pos ${p.idx + 1}` : 'Centré';
+            })()}
+          </span>
+        </button>
+      )}
       {furnitureBtn('Accoudoir Canapé Gauche', 'sofaArmLeft')}
       {furnitureBtn('Accoudoir Canapé Droit', 'sofaArmRight')}
       {furnitureBtn('Congélateur', 'freezerOpen', 'OUVERT', 'FERMÉ')}

@@ -365,9 +365,31 @@ export function Furniture() {
 // FURNISHINGS — meubles avec état animé (lit, bureaux, TV)
 // ═══════════════════════════════════════════════════════════════════════════════
 
+const DOUBLE_BED_POSITIONS = [
+  { label: 'Centré',    west: { x: ROOM_W / 2 - 83 / 2, z: 190 }, east: { x: ROOM_W / 2 + 83 / 2, z: 190 } },
+  { label: 'Mur Ouest', west: { x: 74, z: 151.5 },               east: { x: 74 + 83, z: 151.5 } },
+  { label: 'Mur Est',   west: { x: (ROOM_W - 4 - 83 / 2) - 83, z: 190 }, east: { x: ROOM_W - 4 - 83 / 2, z: 190 } },
+];
+
 function Beds() {
   const toggles = useFurnitureToggles(['bed-double']);
   const isDouble = !!toggles['bed-double'];
+  const [doublePosIdx, setDoublePosIdx] = useState(0);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { key } = (e as CustomEvent).detail as { key: string };
+      if (key === 'bed-position') {
+        setDoublePosIdx(i => (i + 1) % DOUBLE_BED_POSITIONS.length);
+      }
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, []);
+
+  useEffect(() => {
+    positionState['bed-position'] = { idx: doublePosIdx, total: DOUBLE_BED_POSITIONS.length };
+  }, [doublePosIdx]);
 
   // Dimensions : largeur d'un lit = 83 cm, longueur = 205 cm.
   // Orientés avec rotation-y = Math.PI / 2 : largeur le long de X, longueur le long de Z.
@@ -376,31 +398,37 @@ function Beds() {
   // - Lit Ouest : X = 74, Z = 151.5
   // - Lit Est   : X = ROOM_W - 4 - 83/2 = 270.5, Z = 190
   //
-  // Mode double (collés bord à bord au centre du studio) :
-  // - Total largeur = 2 * 83 = 166 cm
-  // - Centre studio X = ROOM_W / 2 = 158 cm
-  // - Lit Ouest : centre X = 158 - 83/2 = 116.5, Z = 190
-  // - Lit Est   : centre X = 158 + 83/2 = 199.5, Z = 190
+  // Mode double (3 positions possibles) :
+  // 1. Centré : centré au milieu du studio (X = 158)
+  // 2. Mur Ouest : lit Ouest reste à sa place contre le mur, lit Est se colle à sa droite
+  // 3. Mur Est : lit Est reste à sa place contre le mur, lit Ouest se colle à sa gauche
+
+  const currentDoublePos = DOUBLE_BED_POSITIONS[doublePosIdx];
 
   const westPos = isDouble
-    ? { x: ROOM_W / 2 - 83 / 2, z: 190 }
+    ? currentDoublePos.west
     : { x: 74, z: 151.5 };
 
   const eastPos = isDouble
-    ? { x: ROOM_W / 2 + 83 / 2, z: 190 }
+    ? currentDoublePos.east
     : { x: ROOM_W - 4 - 83 / 2, z: 190 };
+
+  const hoverActions = isDouble ? ['bed-double', 'bed-position'] : ['bed-double'];
+  const hoverLabel = isDouble
+    ? `Lit Utåker Double (${currentDoublePos.label})`
+    : 'Lit Utåker (Lits séparés)';
 
   return (
     <>
       {/* Lit Ouest (haut, principal) */}
       <PositionTransition x={westPos.x} z={westPos.z} ry={Math.PI / 2}>
-        <group userData={{ animUnit: true, hoverAction: { label: isDouble ? 'Lit Utåker Double' : 'Lit Utåker Ouest (Principal)', actions: ['bed-double'] } }}>
+        <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: hoverActions } }}>
           <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </PositionTransition>
       {/* Lit Est (bas, secondaire, amour) */}
       <PositionTransition x={eastPos.x} z={eastPos.z} ry={Math.PI / 2}>
-        <group userData={{ animUnit: true, hoverAction: { label: isDouble ? 'Lit Utåker Double' : 'Lit Utåker Est (Secondaire)', actions: ['bed-double'] } }}>
+        <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: hoverActions } }}>
           <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </PositionTransition>

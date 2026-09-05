@@ -236,6 +236,7 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'tv-toggle':             ['Allumer', 'Éteindre'],
   'bin-toggle':            ['Ouvrir', 'Fermer'],
   'bed-double':            ['Mettre en lit double', 'Séparer en lits simples'],
+  'bed-position':          ['Position lit double →', 'Position lit double →'],
   'desk-toggle':           ['Debout', 'Assis'],
   'desk1-toggle':          ['Debout', 'Assis'],
   'desk1-position':        ['Position →', 'Position →'],

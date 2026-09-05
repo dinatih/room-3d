@@ -159,6 +159,11 @@ const ACTIONS: Record<string, ActionDef> = {
   lampBath:        { btnLabel: () => useSceneStore.getState().furniture.lampBath ? 'Éteindre SDB' : 'Allumer SDB', toggleKey: 'lampBath' },
   lampCorridor:    { btnLabel: () => useSceneStore.getState().furniture.lampCorridor ? 'Éteindre Couloir' : 'Allumer Couloir', toggleKey: 'lampCorridor' },
   'bed-double':    { btnLabel: () => useSceneStore.getState().furniture.bedDouble ? 'Lits séparés' : 'Lit double', toggleKey: 'bed-double' },
+  'bed-position':  { btnLabel: () => {
+    const p = positionState['bed-position'];
+    const labels = ['Centré', 'Mur Ouest', 'Mur Est'];
+    return p ? `Position (${labels[p.idx] ?? p.idx + 1}) →` : 'Changer position →';
+  }, toggleKey: 'bed-position' },
   'desk1-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk1-toggle'  },
   'desk1-position':{ btnLabel: () => { const p = positionState['desk1-position'];   return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'desk1-position'},
   'desk2-toggle':  { btnLabel: 'Assis / Debout',     toggleKey: 'desk2-toggle'  },
