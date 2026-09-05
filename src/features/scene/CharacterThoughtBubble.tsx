@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Html } from '@react-three/drei';
 import { findCharacter } from './walkerConfig';
 import { APP_LOG_HISTORY, type AppLogEntry } from '@features/ui/AppConsole';
+import { useSceneStore } from '@features/scene/store/useSceneStore';
 
 interface CharacterThoughtBubbleProps {
   characterId: string;
@@ -30,6 +31,9 @@ export function CharacterThoughtBubble({
   });
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const toggleLayer = useSceneStore(state => state.toggleLayer);
+
   const charConfig = findCharacter(characterId);
   const themeColor = charConfig?.color || '#00d2ff';
   const emoji = charConfig?.emoji || '👤';
@@ -57,6 +61,13 @@ export function CharacterThoughtBubble({
     };
   }, [characterId]);
 
+  // Scroll tout en bas lors de l'agrandissement ou de nouveaux logs
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
+  }, [isExpanded, logs]);
+
   const handleCopy = (e: React.MouseEvent, entry: AppLogEntry) => {
     e.stopPropagation();
     const formatted = `[${formatBubbleTime(entry.timestamp)}] ${characterName}: ${entry.message}`;
@@ -65,6 +76,11 @@ export function CharacterThoughtBubble({
     setTimeout(() => {
       setCopiedId(prev => (prev === entry.id ? null : prev));
     }, 1500);
+  };
+
+  const handleClose = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleLayer('thoughtBubble');
   };
 
   // Si on est en FPV direct sur le perso actif, on ne gêne pas sa vue
@@ -90,11 +106,18 @@ export function CharacterThoughtBubble({
             e.stopPropagation();
             setIsExpanded(prev => !prev);
           }}
+          onWheel={(e) => {
+            // Empêche l'événement de molette d'atteindre OrbitControls et de zoomer la scène
+            e.stopPropagation();
+          }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+          }}
           title={isExpanded ? "Cliquer pour réduire" : "Cliquer pour voir tout l'historique"}
           style={{
             position: 'relative',
             width: 'max-content',
-            minWidth: '220px',
+            minWidth: '240px',
             maxWidth: isExpanded ? '540px' : '380px',
             background: 'rgba(13, 17, 23, 0.94)',
             backdropFilter: 'blur(8px)',
@@ -141,20 +164,61 @@ export function CharacterThoughtBubble({
                 </span>
               )}
             </div>
-            <span
-              style={{
-                fontSize: '9.5px',
-                color: 'rgba(255, 255, 255, 0.55)',
-                fontFamily: 'monospace',
-              }}
-            >
-              {logs.length > 0 ? `${logs.length} logs` : 'en attente'}
-            </span>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span
+                style={{
+                  fontSize: '9.5px',
+                  color: 'rgba(255, 255, 255, 0.55)',
+                  fontFamily: 'monospace',
+                }}
+              >
+                {logs.length > 0 ? `${logs.length} logs` : 'en attente'}
+              </span>
+
+              {/* Croix pour fermer la bulle en changeant le toggle thoughtBubble */}
+              <button
+                type="button"
+                onClick={handleClose}
+                title="Fermer la bulle de pensée"
+                aria-label="Fermer la bulle de pensée"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  borderRadius: '50%',
+                  width: '18px',
+                  height: '18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                  lineHeight: '1',
+                  padding: 0,
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 80, 80, 0.3)';
+                  e.currentTarget.style.color = '#ff6b6b';
+                  e.currentTarget.style.borderColor = 'rgba(255, 80, 80, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                }}
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Corps des logs / Pensées (1 ligne par log avec scrollbar) */}
           <div
+            ref={scrollContainerRef}
             onClick={(e) => isExpanded && e.stopPropagation()}
+            onWheel={(e) => e.stopPropagation()}
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -165,6 +229,7 @@ export function CharacterThoughtBubble({
               paddingRight: isExpanded ? '6px' : '2px',
               scrollbarWidth: 'thin',
               scrollbarColor: `${themeColor} transparent`,
+              overscrollBehavior: 'contain',
             }}
           >
             {logs.length === 0 ? (
