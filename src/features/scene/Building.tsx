@@ -1501,48 +1501,19 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     mir.position.set(...position);
     mir.rotation.y = rotationY;
 
-    const mirWorldPos = new THREE.Vector3();
-    const camWorldPos = new THREE.Vector3();
-    const mirNormal = new THREE.Vector3(0, 0, 1);
-    const camToMir = new THREE.Vector3();
-    const mirQuat = new THREE.Quaternion();
-    const projScreenMatrix = new THREE.Matrix4();
-    const frustum = new THREE.Frustum();
-    const worldBox = new THREE.Box3();
-
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
-      // En WebXR, le sous-rendu Reflector réinitialise le framebuffer XR et brise les matrices stéréo
-      if (renderer.xr.isPresenting || (camera as any).isArrayCamera) return;
-
-      // 1. Test d'orientation : la caméra doit être devant la face réfléchissante
-      mir.getWorldPosition(mirWorldPos);
-      camera.getWorldPosition(camWorldPos);
-      mir.getWorldQuaternion(mirQuat);
-      mirNormal.set(0, 0, 1).applyQuaternion(mirQuat);
-      camToMir.subVectors(mirWorldPos, camWorldPos);
-      if (camToMir.dot(mirNormal) >= 0) return;
-
-      // 2. Frustum Culling : le miroir doit être dans le champ de vision de la caméra
-      if (geometry.boundingBox) {
-        const matWorldInv = camera.matrixWorldInverse;
-        projScreenMatrix.multiplyMatrices(camera.projectionMatrix, matWorldInv);
-        frustum.setFromProjectionMatrix(projScreenMatrix);
-        worldBox.copy(geometry.boundingBox).applyMatrix4(mir.matrixWorld);
-        if (!frustum.intersectsBox(worldBox)) return;
-      }
+      if (renderer.xr.isPresenting) return;
 
       _reflectionDepth++;
 
-      // Adaptation dynamique (résolution / layer mask)
       const targetRes = cameraState.mirrorsHD ? 512 : 256;
       const renderTarget = (mir as any).getRenderTarget();
       if (renderTarget && renderTarget.width !== targetRes) {
         renderTarget.setSize(targetRes, targetRes);
       }
 
-      // Sync layer mask to the cached reflection camera (exclude AI zones and unwanted overlays)
       const mirrorMask = (cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
 
       const reflectionCamera = (mir as any).getReflectionCamera(camera);
@@ -1588,37 +1559,10 @@ function MergedReflector({ planes, position, rotationY }: {
     mir.position.set(...position);
     mir.rotation.y = rotationY;
 
-    const mirWorldPos = new THREE.Vector3();
-    const camWorldPos = new THREE.Vector3();
-    const mirNormal = new THREE.Vector3(0, 0, 1);
-    const camToMir = new THREE.Vector3();
-    const mirQuat = new THREE.Quaternion();
-    const projScreenMatrix = new THREE.Matrix4();
-    const frustum = new THREE.Frustum();
-    const worldBox = new THREE.Box3();
-
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
-      // En WebXR, le sous-rendu Reflector réinitialise le framebuffer XR et brise les matrices stéréo
-      if (renderer.xr.isPresenting || (camera as any).isArrayCamera) return;
-
-      // 1. Test d'orientation : la caméra doit être devant la face réfléchissante
-      mir.getWorldPosition(mirWorldPos);
-      camera.getWorldPosition(camWorldPos);
-      mir.getWorldQuaternion(mirQuat);
-      mirNormal.set(0, 0, 1).applyQuaternion(mirQuat);
-      camToMir.subVectors(mirWorldPos, camWorldPos);
-      if (camToMir.dot(mirNormal) >= 0) return;
-
-      // 2. Frustum Culling : le miroir doit être dans le champ de vision de la caméra
-      if (geometry.boundingBox) {
-        const matWorldInv = camera.matrixWorldInverse;
-        projScreenMatrix.multiplyMatrices(camera.projectionMatrix, matWorldInv);
-        frustum.setFromProjectionMatrix(projScreenMatrix);
-        worldBox.copy(geometry.boundingBox).applyMatrix4(mir.matrixWorld);
-        if (!frustum.intersectsBox(worldBox)) return;
-      }
+      if (renderer.xr.isPresenting) return;
 
       _reflectionDepth++;
 
@@ -1628,7 +1572,6 @@ function MergedReflector({ planes, position, rotationY }: {
         renderTarget.setSize(targetRes, targetRes);
       }
 
-      // Sync layer mask to the cached reflection camera (exclude AI zones and unwanted overlays)
       const mirrorMask = (cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
 
       const reflectionCamera = (mir as any).getReflectionCamera(camera);
