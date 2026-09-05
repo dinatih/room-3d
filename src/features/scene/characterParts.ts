@@ -338,7 +338,7 @@ export function applyRenderProperties(parts: CharacterParts, opts: RenderPropert
     const canCastShadow = opts.characterShadows && !item.isInternalInvisible;
     item.mesh.castShadow = canCastShadow;
     item.mesh.receiveShadow = canCastShadow;
-    item.mesh.frustumCulled = true;
+    item.mesh.frustumCulled = false;
 
     const mat = item.mesh.material;
     if (mat) {
