@@ -270,7 +270,20 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         ctrlRef.current.update();
       }
     } else {
+      // ── Mode FPV (1ère personne) ──
       walkPitch.current = 0;
+      const posY = cameraState.headSocketActive ? cameraState.headWorldPos[1] : activeWalkH();
+      camera.position.set(x, posY, z);
+      if (ctrlRef.current) {
+        const cosP = Math.cos(walkPitch.current);
+        const lookDist = 200;
+        const targetX = x + Math.sin(walkYaw.current) * cosP * lookDist;
+        const targetY = posY + Math.sin(walkPitch.current) * lookDist;
+        const targetZ = z + Math.cos(walkYaw.current) * cosP * lookDist;
+        ctrlRef.current.target.set(targetX, targetY, targetZ);
+        camera.lookAt(targetX, targetY, targetZ);
+        ctrlRef.current.update();
+      }
     }
     const ctrl = ctrlRef.current;
     if (ctrl) {
