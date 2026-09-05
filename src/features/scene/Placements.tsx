@@ -366,16 +366,44 @@ export function Furniture() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function Beds() {
+  const toggles = useFurnitureToggles(['bed-double']);
+  const isDouble = !!toggles['bed-double'];
+
+  // Dimensions : largeur d'un lit = 83 cm, longueur = 205 cm.
+  // Orientés avec rotation-y = Math.PI / 2 : largeur le long de X, longueur le long de Z.
+  //
+  // Mode simple (séparé) :
+  // - Lit Ouest : X = 74, Z = 151.5
+  // - Lit Est   : X = ROOM_W - 4 - 83/2 = 270.5, Z = 190
+  //
+  // Mode double (collés bord à bord au centre du studio) :
+  // - Total largeur = 2 * 83 = 166 cm
+  // - Centre studio X = ROOM_W / 2 = 158 cm
+  // - Lit Ouest : centre X = 158 - 83/2 = 116.5, Z = 190
+  // - Lit Est   : centre X = 158 + 83/2 = 199.5, Z = 190
+
+  const westPos = isDouble
+    ? { x: ROOM_W / 2 - 83 / 2, z: 190 }
+    : { x: 74, z: 151.5 };
+
+  const eastPos = isDouble
+    ? { x: ROOM_W / 2 + 83 / 2, z: 190 }
+    : { x: ROOM_W - 4 - 83 / 2, z: 190 };
+
   return (
     <>
-      {/* Lit Ouest (haut, principal) — au sol (Y = 0), contre la Drona qui est contre le Mackapar (Z = 151.5) */}
-      <group position={[74, 0, 151.5]} rotation-y={Math.PI / 2} userData={{ animUnit: true,hoverAction: { label: 'Lit Utåker Ouest (Principal)' } }}>
-        <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      {/* Lit Est (bas, secondaire, amour) — au sol (Y = 0), position fixe mur Est (Z = 190 cm) */}
-      <group position={[ROOM_W - 4 - 83 / 2, 0, 190]} rotation-y={Math.PI / 2} userData={{ animUnit: true,hoverAction: { label: 'Lit Utåker Est (Secondaire)' } }}>
-        <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
+      {/* Lit Ouest (haut, principal) */}
+      <PositionTransition x={westPos.x} z={westPos.z} ry={Math.PI / 2}>
+        <group userData={{ animUnit: true, hoverAction: { label: isDouble ? 'Lit Utåker Double' : 'Lit Utåker Ouest (Principal)', actions: ['bed-double'] } }}>
+          <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      </PositionTransition>
+      {/* Lit Est (bas, secondaire, amour) */}
+      <PositionTransition x={eastPos.x} z={eastPos.z} ry={Math.PI / 2}>
+        <group userData={{ animUnit: true, hoverAction: { label: isDouble ? 'Lit Utåker Double' : 'Lit Utåker Est (Secondaire)', actions: ['bed-double'] } }}>
+          <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      </PositionTransition>
     </>
   );
 }

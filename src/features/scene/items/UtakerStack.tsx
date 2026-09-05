@@ -1,9 +1,8 @@
 /**
- * UtakerStack.tsx — Paire complète de lits Utåker (bas + haut empilés).
+ * UtakerStack.tsx — Paire complète de lits Utåker.
  * Pour la preview inventaire de l'item 'utaker-stack'.
  * Actions :
- *   bed-toggle → true = lits désempilés (côte à côte), false = empilés
- *   bed-sofa   → true = configuration canapé (haut retourné contre le bas)
+ *   bed-double → true = lit double (collés bord à bord), false = lits simples séparés (avec espace)
  */
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
@@ -11,34 +10,29 @@ import { UtakerFrame } from './UtakerFrame';
 import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
-const LOWER_TOP_Y = 23;  // hauteur du cadre bas (= GLB max Y ≈ 23.3 cm)
 const BED_WIDTH_Z = 83;
-const SOFA_GAP_Z  = 233; // distance entre lits en mode canapé (= ROOM_W - 83 dans Placements)
-const SOFA_X_OFFSET = 46;
+const SEPARATED_GAP = 50; // espace visible entre les lits en mode simple
 
 export function UtakerStack({ actionState, onSize }: SceneItemProps) {
   const groupRef = useRef<THREE.Group>(null!);
-  const unstacked = !!actionState['bed-toggle'];
-  const sofa      = !!actionState['bed-sofa'];
+  const isDouble = !!actionState['bed-double'];
 
-  const stacked = !unstacked && !sofa;
-  const upperPos: [number, number, number] = sofa
-    ? [SOFA_X_OFFSET, 0, -SOFA_GAP_Z]
-    : stacked
-      ? [0, LOWER_TOP_Y, 0]
-      : [0, 0, -BED_WIDTH_Z];
-  const upperRot: [number, number, number] = [0, 0, 0];
+  // En mode double : collés bord à bord [0, 0, -BED_WIDTH_Z]
+  // En mode simple séparé : espacés pour bien distinguer les deux lits 1p
+  const upperPos: [number, number, number] = isDouble
+    ? [0, 0, -BED_WIDTH_Z]
+    : [0, 0, -(BED_WIDTH_Z + SEPARATED_GAP)];
 
   useLayoutEffect(() => {
     if (!groupRef.current) return;
     groupRef.current.updateMatrixWorld(true);
     onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
-  }, [unstacked, sofa]);
+  }, [isDouble]);
 
   return (
     <group ref={groupRef}>
       <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      <group position={upperPos} rotation={upperRot}>
+      <group position={upperPos}>
         <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </group>

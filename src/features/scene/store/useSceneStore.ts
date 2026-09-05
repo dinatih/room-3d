@@ -66,9 +66,7 @@ const initialFurniture: FurnitureState = {
   cbnWest: false,
   cbnEast: false,
   cabinet: false,
-  bedStacked: true,
-  bedSofa: true,
-  bedPosition: false,
+  bedDouble: false,
   smorkullPos: false,
   lampOn: false,
   lampBath: false,
@@ -187,9 +185,7 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 't
     'lamp-corridor-toggle': 'lampCorridor',
     'lamp-sdb-toggle': 'lampBath',
     'lamp-couloir-toggle': 'lampCorridor',
-    'bed-toggle': 'bedStacked',
-    'bed-sofa': 'bedSofa',
-    'bed-position': 'bedPosition',
+    'bed-double': 'bedDouble',
     'smorkull-position': 'smorkullPos',
     bin: 'bin-toggle',
     'bin-toggle': 'bin-toggle',
@@ -288,12 +284,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lamp-bath-toggle' } }));
       } else if (key === 'lampCorridor') {
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lamp-corridor-toggle' } }));
-      } else if (key === 'bedStacked') {
-        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-toggle' } }));
-      } else if (key === 'bedSofa') {
-        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-sofa' } }));
-      } else if (key === 'bedPosition') {
-        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-position' } }));
+      } else if (key === 'bedDouble') {
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-double', value: nextFurniture.bedDouble } }));
       } else if (key === 'smorkullPos') {
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'smorkull-position' } }));
       }

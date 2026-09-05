@@ -284,9 +284,7 @@ export interface FurnitureState {
   cbnWest:      boolean;
   cbnEast:      boolean;
   cabinet:      boolean;
-  bedStacked:   boolean;
-  bedSofa:      boolean;
-  bedPosition:  boolean;
+  bedDouble:    boolean;
   smorkullPos:  boolean;
   lampOn:       boolean;
   lampBath:     boolean;
@@ -639,9 +637,7 @@ export function SidePanel({
       {furnitureBtn('Meuble sous évier', 'cabinet', 'OUVERT', 'FERMÉ')}
       
       <div className="text-muted fw-bold p-2 bg-light border-bottom" style={{ fontSize: '10px' }}>MOBILIER & ÉLECTRO</div>
-      {furnitureBtn('Lit Superposé', 'bedStacked', 'EMPILÉ', 'SÉPARÉ')}
-      {furnitureBtn('Lit Canapé', 'bedSofa', 'CANAPÉ', 'LIT')}
-      {furnitureBtn('Lit Déplié', 'bedPosition', 'DÉPLIÉ', 'PLIÉ')}
+      {furnitureBtn('Lit Double', 'bedDouble', 'DOUBLE', 'SÉPARÉ')}
       {furnitureBtn('Accoudoir Canapé Gauche', 'sofaArmLeft')}
       {furnitureBtn('Accoudoir Canapé Droit', 'sofaArmRight')}
       {furnitureBtn('Congélateur', 'freezerOpen', 'OUVERT', 'FERMÉ')}
