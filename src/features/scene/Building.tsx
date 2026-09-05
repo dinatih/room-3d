@@ -1502,6 +1502,7 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     mir.rotation.y = rotationY;
 
     const mirWorldPos = new THREE.Vector3();
+    const camWorldPos = new THREE.Vector3();
     const mirNormal = new THREE.Vector3(0, 0, 1);
     const camToMir = new THREE.Vector3();
     const mirQuat = new THREE.Quaternion();
@@ -1515,14 +1516,18 @@ function ReflectorMirror({ w, h, position, rotationY }: {
 
       // 1. Test d'orientation : la caméra doit être devant la face réfléchissante
       mir.getWorldPosition(mirWorldPos);
+      camera.getWorldPosition(camWorldPos);
       mir.getWorldQuaternion(mirQuat);
       mirNormal.set(0, 0, 1).applyQuaternion(mirQuat);
-      camToMir.subVectors(mirWorldPos, camera.position);
+      camToMir.subVectors(mirWorldPos, camWorldPos);
       if (camToMir.dot(mirNormal) >= 0) return;
 
       // 2. Frustum Culling : le miroir doit être dans le champ de vision de la caméra
       if (geometry.boundingBox) {
-        projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+        // S'assurer que les matrices monde de la caméra sont à jour
+        camera.updateMatrixWorld();
+        const matWorldInv = camera.matrixWorldInverse.clone();
+        projScreenMatrix.multiplyMatrices(camera.projectionMatrix, matWorldInv);
         frustum.setFromProjectionMatrix(projScreenMatrix);
         worldBox.copy(geometry.boundingBox).applyMatrix4(mir.matrixWorld);
         if (!frustum.intersectsBox(worldBox)) return;
@@ -1584,6 +1589,7 @@ function MergedReflector({ planes, position, rotationY }: {
     mir.rotation.y = rotationY;
 
     const mirWorldPos = new THREE.Vector3();
+    const camWorldPos = new THREE.Vector3();
     const mirNormal = new THREE.Vector3(0, 0, 1);
     const camToMir = new THREE.Vector3();
     const mirQuat = new THREE.Quaternion();
@@ -1597,14 +1603,18 @@ function MergedReflector({ planes, position, rotationY }: {
 
       // 1. Test d'orientation : la caméra doit être devant la face réfléchissante
       mir.getWorldPosition(mirWorldPos);
+      camera.getWorldPosition(camWorldPos);
       mir.getWorldQuaternion(mirQuat);
       mirNormal.set(0, 0, 1).applyQuaternion(mirQuat);
-      camToMir.subVectors(mirWorldPos, camera.position);
+      camToMir.subVectors(mirWorldPos, camWorldPos);
       if (camToMir.dot(mirNormal) >= 0) return;
 
       // 2. Frustum Culling : le miroir doit être dans le champ de vision de la caméra
       if (geometry.boundingBox) {
-        projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+        // S'assurer que les matrices monde de la caméra sont à jour
+        camera.updateMatrixWorld();
+        const matWorldInv = camera.matrixWorldInverse.clone();
+        projScreenMatrix.multiplyMatrices(camera.projectionMatrix, matWorldInv);
         frustum.setFromProjectionMatrix(projScreenMatrix);
         worldBox.copy(geometry.boundingBox).applyMatrix4(mir.matrixWorld);
         if (!frustum.intersectsBox(worldBox)) return;
