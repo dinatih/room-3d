@@ -90,22 +90,22 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
       'animations/dances/anim_booty_hip_hop_dance.glb',
       'animations/dances/anim_breakdance_1990.glb',
       'animations/dances/anim_breakdance_1990_3.glb',
-      'animations/dances/anim_breakdance_ending_1.glb',
-      'animations/dances/anim_breakdance_ending_2.glb',
-      'animations/dances/anim_breakdance_ending_3.glb',
+      // 'animations/dances/anim_breakdance_ending_1.glb',
+      // 'animations/dances/anim_breakdance_ending_2.glb',
+      // 'animations/dances/anim_breakdance_ending_3.glb',
       'animations/dances/anim_breakdance_footwork_1.glb',
       'animations/dances/anim_breakdance_footwork_2.glb',
       'animations/dances/anim_breakdance_footwork_3.glb',
       'animations/dances/anim_breakdance_footwork_to_freeze.glb',
-      'animations/dances/anim_breakdance_footwork_to_idle.glb',
+      // 'animations/dances/anim_breakdance_footwork_to_idle.glb',
       'animations/dances/anim_breakdance_freeze_var_1.glb',
       'animations/dances/anim_breakdance_freeze_var_2.glb',
       'animations/dances/anim_breakdance_freeze_var_3.glb',
       'animations/dances/anim_breakdance_freeze_var_4.glb',
       'animations/dances/anim_breakdance_freezes.glb',
-      'animations/dances/anim_breakdance_ready.glb',
-      'animations/dances/anim_breakdance_ready_2.glb',
-      'animations/dances/anim_breakdance_ready_3.glb',
+      // 'animations/dances/anim_breakdance_ready.glb',
+      // 'animations/dances/anim_breakdance_ready_2.glb',
+      // 'animations/dances/anim_breakdance_ready_3.glb',
       'animations/dances/anim_breakdance_swipes.glb',
       'animations/dances/anim_breakdance_uprock.glb',
       'animations/dances/anim_breakdance_uprock_2.glb',
@@ -144,7 +144,7 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
       'animations/dances/anim_jazz_dancing.glb',
       'animations/dances/anim_jazz_dancing_1.glb',
       'animations/dances/anim_jazz_dancing_2.glb',
-      'animations/dances/anim_jazz_dancing_4.glb',
+      // 'animations/dances/anim_jazz_dancing_4.glb',
       'animations/dances/anim_locking_hip_hop_dance.glb',
       'animations/dances/anim_macarena_dance.glb',
       'animations/dances/anim_northern_soul_spin_combo.glb',
@@ -197,7 +197,7 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
     ],
   },
 };
-
+// [26:25] Rosanna: 🎭 Action: [Lit Utåker Ouest (Principal) (slot lie-down)] poses idles/anim male laying pose 1 (45.0s)
 // ── Alias pratiques & rétrocompatibilité ─────────────────────────────────────
 ANIMATION_PACKS['seated_front_pack'] = ANIMATION_PACKS['seated_front'];
 ANIMATION_PACKS['seated_side_pack']  = ANIMATION_PACKS['seated_side'];

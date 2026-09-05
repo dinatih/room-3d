@@ -115,8 +115,10 @@ export function VRMode() {
     const onSessionStart = () => {
       cameraState.isXR = true;
       camera.position.set(0, 0, 0);
-      const startX = Number.isFinite(cameraState.walkerX) ? cameraState.walkerX : ROOM_W / 2;
-      const startZ = Number.isFinite(cameraState.walkerZ) ? cameraState.walkerZ : ROOM_D / 2;
+      const activeId = (window as any).activeWalkerId || 'lara';
+      const pos = cameraState.positions[activeId];
+      const startX = pos ? pos.x : (Number.isFinite(cameraState.walkerX) ? cameraState.walkerX : ROOM_W / 2);
+      const startZ = pos ? pos.z : (Number.isFinite(cameraState.walkerZ) ? cameraState.walkerZ : ROOM_D / 2);
       rig.position.set(startX, 170, startZ);
       rig.add(camera);
 
@@ -134,18 +136,27 @@ export function VRMode() {
     const onSessionEnd = () => {
       cameraState.isXR = false;
       walkingRef.current = false;
+      cameraState.isMoving = false;
       scene.add(camera);  // reparente au root de la scène
     };
 
     gl.xr.addEventListener('sessionstart', onSessionStart);
     gl.xr.addEventListener('sessionend',   onSessionEnd);
 
-    // ── Touch fallback pour avancer (si le controller WebXR échoue sur certains mobiles) ──
-    const onWalkStart = () => { walkingRef.current = true; };
-    const onWalkEnd   = () => { walkingRef.current = false; };
+    // ── Touch fallback pour avancer (uniquement quand WebXR est actif) ──
+    const onWalkStart = (e: Event) => {
+      if (!gl.xr.isPresenting) return;
+      // Éviter d'intercepter les clics sur les boutons DOM ou UI
+      if (e.target && (e.target as HTMLElement).tagName === 'BUTTON') return;
+      walkingRef.current = true;
+    };
+    const onWalkEnd = () => {
+      if (!gl.xr.isPresenting) return;
+      walkingRef.current = false;
+    };
 
-    window.addEventListener('touchstart', onWalkStart);
-    window.addEventListener('touchend',   onWalkEnd);
+    window.addEventListener('touchstart', onWalkStart, { passive: true });
+    window.addEventListener('touchend',   onWalkEnd, { passive: true });
     window.addEventListener('mousedown',  onWalkStart);
     window.addEventListener('mouseup',    onWalkEnd);
 
@@ -172,22 +183,27 @@ export function VRMode() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (!gl.xr.isPresenting || !rigRef.current) return;
+    const dt = Math.min(delta, 0.1) * 60;
 
     if (walkingRef.current) {
       const dir = new THREE.Vector3();
-      camera.getWorldDirection(dir);
+      // Obtenir la caméra WebXR active pour le calcul précis de la direction de vue
+      const xrCam = gl.xr.getCamera() || camera;
+      xrCam.getWorldDirection(dir);
       dir.y = 0;
-      dir.normalize();
-      rigRef.current.position.addScaledVector(dir, WALK_SPEED);
+      if (dir.lengthSq() > 1e-4) {
+        dir.normalize();
+        rigRef.current.position.addScaledVector(dir, WALK_SPEED * dt);
 
-      cameraState.isWalking = true;
-      cameraState.isMoving = true;
-      cameraState.lastUserControlTime = performance.now();
-      cameraState.walkerX = rigRef.current.position.x;
-      cameraState.walkerZ = rigRef.current.position.z;
-      cameraState.walkYaw = Math.atan2(dir.x, dir.z);
+        cameraState.isWalking = true;
+        cameraState.isMoving = true;
+        cameraState.lastUserControlTime = performance.now();
+        cameraState.walkerX = rigRef.current.position.x;
+        cameraState.walkerZ = rigRef.current.position.z;
+        cameraState.walkYaw = Math.atan2(dir.x, dir.z);
+      }
     } else {
       if (cameraState.isXR) {
         cameraState.isWalking = true;

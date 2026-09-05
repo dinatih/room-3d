@@ -700,9 +700,9 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
             const t = Math.min(f / fps, duration);
             newTimes[f] = t;
             const phase = (t / duration) * 2.0 * Math.PI;
-            const dx = 0.8 * Math.cos(phase);
+            const dx = 0.5 * Math.cos(phase);
             const dy = 0.0;
-            const dz = -1.6 * Math.sin(phase * 2.0);
+            const dz = 0.0; // Pas d'oscillation avant/arrière pour éviter la saccade sur la marche in-place
 
             const dP = new THREE.Vector3(dx, dy, dz)
               .applyQuaternion(P_src)
