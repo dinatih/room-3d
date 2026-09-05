@@ -77,8 +77,8 @@ button, input, select, textarea {
   color: var(--text);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
-  width: min(97vw, 1100px);
-  height: 88vh;
+  width: 97vw;
+  height: 92vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -365,9 +365,11 @@ button, input, select, textarea {
 }
 .inventory-detail-hero {
   width: 100%;
-  min-height: 300px;
+  aspect-ratio: 1 / 1;
+  max-height: 70vh;
   background: var(--border);
   position: relative;
+  overflow: hidden;
 }
 .inventory-detail-body {
   padding: 1.1rem 1.25rem;

@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect, useRef, useLayoutEffect, Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { SpatialZone } from '@features/scene/ai/SpatialZone';
+import { drawFps } from '@features/scene/DevToolsOverlay';
 
 // Rendu complet et officiel du Studio
 import { Walls, Floor, Mirrors, DoorsPlaced } from '@features/scene/Building';
@@ -145,9 +146,23 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
   );
 }
 
+function SpatialZoneFpsCollector({ onFps }: { onFps: (fps: number) => void }) {
+  const lastTime = useRef(performance.now());
+  useFrame(() => {
+    const now = performance.now();
+    const dt = now - lastTime.current;
+    lastTime.current = now;
+    if (dt > 0 && dt < 2000) {
+      const fps = Math.round(1000 / dt);
+      onFps(fps);
+    }
+  });
+  return null;
+}
+
 export function SpatialZonePreview({
   zone,
-  height = 340
+  height = '100%'
 }: {
   zone: SpatialZone;
   height?: number | string;
@@ -163,6 +178,12 @@ export function SpatialZonePreview({
   const camDistance = Math.max(220, maxDim * 1.35);
 
   const [isTopView, setIsTopView] = useState(false);
+  const [showFpsGraph, setShowFpsGraph] = useState(true);
+  const [fpsSamples, setFpsSamples] = useState<number[]>([]);
+  const [currentFps, setCurrentFps] = useState<number>(60);
+  const fpsCanvasRef = useRef<HTMLCanvasElement>(null);
+  const samplesRef = useRef<number[]>([]);
+  const lastUpdateRef = useRef<number>(0);
 
   // Raccourci clavier 'T' pour basculer en Vue du dessus (Top View)
   useEffect(() => {
@@ -179,9 +200,29 @@ export function SpatialZonePreview({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const handleFps = (fps: number) => {
+    const s = samplesRef.current;
+    s.push(fps);
+    if (s.length > 80) s.shift();
+    if (fpsCanvasRef.current) {
+      drawFps(fpsCanvasRef.current, s);
+    }
+    const now = performance.now();
+    if (now - lastUpdateRef.current > 300) {
+      lastUpdateRef.current = now;
+      setCurrentFps(fps);
+      setFpsSamples([...s]);
+    }
+  };
+
   const camPosition: [number, number, number] = isTopView
     ? [centerX, camDistance * 1.8, centerZ + 0.01]
     : [centerX + camDistance * 0.75, centerY + camDistance * 0.7, centerZ + camDistance * 0.75];
+
+  const valid = fpsSamples.filter(v => v > 0);
+  const fpsMin = valid.length ? Math.min(...valid) : 0;
+  const fpsMax = valid.length ? Math.max(...valid) : 0;
+  const fpsColor = currentFps >= 50 ? '#16a34a' : currentFps >= 30 ? '#d97706' : '#dc2626';
 
   return (
     <div style={{ width: '100%', height, position: 'relative', background: '#0b1120', borderRadius: 8, overflow: 'hidden' }}>
@@ -201,6 +242,8 @@ export function SpatialZonePreview({
         <Suspense fallback={null}>
           <StudioCroppedScene zone={zone} />
         </Suspense>
+
+        <SpatialZoneFpsCollector onFps={handleFps} />
 
         <OrbitControls
           makeDefault
@@ -241,6 +284,22 @@ export function SpatialZonePreview({
         gap: 6
       }}>
         <button
+          onClick={() => setShowFpsGraph(v => !v)}
+          style={{
+            background: showFpsGraph ? 'rgba(15, 23, 42, 0.9)' : 'rgba(15, 23, 42, 0.65)',
+            color: '#ffffff',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '3px 8px',
+            borderRadius: 4,
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer',
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          📊 {showFpsGraph ? 'Masquer FPS' : 'Afficher FPS'}
+        </button>
+        <button
           onClick={() => setIsTopView(prev => !prev)}
           style={{
             background: isTopView ? '#0284c7' : 'rgba(15, 23, 42, 0.85)',
@@ -257,6 +316,36 @@ export function SpatialZonePreview({
           {isTopView ? '📐 Vue 3D Persp (T)' : '🗺️ Vue Top (T)'}
         </button>
       </div>
+
+      {/* Frame Rate Graph Overlay */}
+      {showFpsGraph && (
+        <div style={{
+          position: 'absolute',
+          bottom: 28,
+          left: 10,
+          background: 'rgba(15, 23, 42, 0.88)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: 6,
+          padding: '6px 8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(6px)',
+          zIndex: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 10 }}>
+            <span style={{ color: fpsColor, fontWeight: 700 }}>{currentFps} FPS</span>
+            <span style={{ color: '#94a3b8', fontSize: 9 }}>min:{fpsMin} max:{fpsMax}</span>
+          </div>
+          <canvas
+            ref={fpsCanvasRef}
+            width={164}
+            height={46}
+            style={{ display: 'block', borderRadius: 4 }}
+          />
+        </div>
+      )}
 
       <div style={{
         position: 'absolute',

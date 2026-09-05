@@ -27,15 +27,65 @@ function disposePreviewScene(root: THREE.Object3D) {
   });
 }
 
-function GlbScene({ glbPath, onSize }: { glbPath: string; onSize?: () => void; }) {
+export interface GlbDebugStats {
+  fileSize?: number;
+  triangles: number;
+  drawCalls: number;
+}
+
+const glbSizeCache = new Map<string, number>();
+
+function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () => void; onStats?: (s: GlbDebugStats) => void }) {
   const [scene, setScene] = useState<THREE.Group | null>(null);
   useEffect(() => {
     const draco = new DRACOLoader(); draco.setDecoderPath('/draco/');
     const loader = new GLTFLoader(); loader.setDRACOLoader(draco);
     let cancelled = false;
+
+    // Fetch file size if not cached
+    if (glbPath) {
+      if (glbSizeCache.has(glbPath)) {
+        // already cached
+      } else {
+        fetch(glbPath, { method: 'HEAD' })
+          .then(res => {
+            const len = res.headers.get('content-length');
+            if (len) {
+              const sz = parseInt(len, 10);
+              if (!isNaN(sz)) glbSizeCache.set(glbPath, sz);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+
     loader.load(glbPath, gltf => {
-      if (cancelled) disposePreviewScene(gltf.scene);
-      else setScene(gltf.scene);
+      if (cancelled) {
+        disposePreviewScene(gltf.scene);
+      } else {
+        setScene(gltf.scene);
+
+        // Compute geometry stats
+        let tris = 0;
+        let meshes = 0;
+        gltf.scene.traverse((node: any) => {
+          if (node.isMesh && node.geometry) {
+            meshes++;
+            const geom = node.geometry as THREE.BufferGeometry;
+            if (geom.index) {
+              tris += geom.index.count / 3;
+            } else if (geom.attributes?.position) {
+              tris += geom.attributes.position.count / 3;
+            }
+          }
+        });
+        const sz = glbSizeCache.get(glbPath);
+        onStats?.({
+          fileSize: sz,
+          triangles: Math.round(tris),
+          drawCalls: meshes,
+        });
+      }
     }, undefined, () => undefined);
     return () => {
       cancelled = true;
@@ -45,7 +95,7 @@ function GlbScene({ glbPath, onSize }: { glbPath: string; onSize?: () => void; }
         return null;
       });
     };
-  }, [glbPath]);
+  }, [glbPath, onStats]);
 
   useLayoutEffect(() => {
     if (scene) onSize?.();
@@ -102,7 +152,7 @@ function FitCamera({ target = [0, 0, 0] }: { target?: [number, number, number] }
   return null;
 }
 
-function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, glbPath, onTargetChange }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; }) {
+function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, glbPath, onTargetChange, onStats }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; onStats?: (s: GlbDebugStats) => void; }) {
   const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!), [, setScale] = useState(1);
   const [worldSize, setWorldSize] = useState<{ x: number; y: number; z: number } | null>(null);
 
@@ -111,6 +161,8 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     outerRef.current.scale.set(1, 1, 1); outerRef.current.position.set(0, 0, 0); outerRef.current.updateMatrixWorld(true);
     
     const box = new THREE.Box3();
+    let totalTris = 0;
+    let totalMeshes = 0;
     innerRef.current.traverse(o => {
       if ((o as THREE.Mesh).isMesh && o.visible) {
         let p: THREE.Object3D | null = o;
@@ -123,6 +175,15 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
           p = p.parent;
         }
         if (isVis) {
+          const mesh = o as THREE.Mesh;
+          totalMeshes++;
+          if (mesh.geometry) {
+            if (mesh.geometry.index) {
+              totalTris += mesh.geometry.index.count / 3;
+            } else if (mesh.geometry.attributes?.position) {
+              totalTris += mesh.geometry.attributes.position.count / 3;
+            }
+          }
           const meshBox = new THREE.Box3().setFromObject(o);
           if (!meshBox.isEmpty()) {
             box.union(meshBox);
@@ -130,6 +191,15 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
         }
       }
     });
+
+    if (totalMeshes > 0 && onStats) {
+      const sz = glbPath ? glbSizeCache.get(glbPath) : undefined;
+      onStats({
+        fileSize: sz,
+        triangles: Math.round(totalTris),
+        drawCalls: totalMeshes,
+      });
+    }
 
     if (box.isEmpty()) return;
     
@@ -163,7 +233,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
         onTargetChange([0, 0, 0]);
       }
     }
-  }, [grounded, preserveOriginXZ, onTargetChange]);
+  }, [grounded, preserveOriginXZ, onTargetChange, onStats, glbPath]);
 
   useLayoutEffect(() => {
     // Small delay to ensure skeleton/skinning matrices are computed
@@ -175,7 +245,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     <group>
       <group ref={outerRef}>
         <group ref={innerRef}>
-          {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} />}
+          {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} onStats={onStats} />}
         </group>
       </group>
       {showDims && item?.dims && worldSize && <Dimensions dims={item.dims} worldSize={worldSize} grounded={grounded} />}
@@ -183,9 +253,9 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
   );
 }
 
-function RegistryScene({ item, actionState, showDims, onTargetChange }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; onTargetChange?: (t: [number, number, number]) => void; }) {
+function RegistryScene({ item, actionState, showDims, onTargetChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; onTargetChange?: (t: [number, number, number]) => void; onStats?: (s: GlbDebugStats) => void; }) {
   const Component = SCENE_REGISTRY[item.id], isWalker = item.category === 'walkers';
-  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isWalker} showDims={showDims} glbPath={item.glbPath} onTargetChange={onTargetChange} />;
+  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isWalker} showDims={showDims} glbPath={item.glbPath} onTargetChange={onTargetChange} onStats={onStats} />;
 }
 
 function PhotoGallery({ photos, initialIndex = 0, onIndexChange }: { photos: string[], initialIndex?: number, onIndexChange?: (i: number) => void }) {
@@ -222,10 +292,11 @@ type PreviewTarget = InventoryItem | StorageSpace | null;
 export function InventoryPreview({
   item,
   width = '100%',
-  height = 300,
+  height = '100%',
   hideFooter = false,
   initialDuoAnim,
   initialDuoPartner,
+  onGlbStats,
 }: {
   item: PreviewTarget;
   width?: string | number;
@@ -233,6 +304,7 @@ export function InventoryPreview({
   hideFooter?: boolean;
   initialDuoAnim?: DuoAnimationDef;
   initialDuoPartner?: string;
+  onGlbStats?: (s: GlbDebugStats | null) => void;
 }) {
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
   const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = !!photos && photos.length > 0;
@@ -310,7 +382,7 @@ export function InventoryPreview({
               <FitCamera target={target} />
               <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={true} minDistance={0.3} maxDistance={50} target={target} onStart={() => setAutoRotate(false)} />
               <Grid infiniteGrid fadeDistance={15} cellColor="#999999" sectionColor="#666666" cellSize={0.2} sectionSize={1} position={[0, -0.001, 0]} />
-              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} /></Suspense>
+              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers show={actionStates.showBones} />
             </Canvas>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}

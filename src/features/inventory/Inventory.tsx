@@ -39,10 +39,12 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
 
   const [selectedDuoAnim, setSelectedDuoAnim] = useState<DuoAnimationDef | undefined>(undefined);
   const [selectedDuoPartner, setSelectedDuoPartner] = useState<string | undefined>(undefined);
+  const [glbStats, setGlbStats] = useState<{ fileSize?: number; triangles: number; drawCalls: number } | null>(null);
 
   useEffect(() => {
     setSelectedDuoAnim(undefined);
     setSelectedDuoPartner(undefined);
+    setGlbStats(null);
   }, [item?.id]);
 
   const isZone = item instanceof SpatialZone;
@@ -60,7 +62,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
       <div className="inventory-detail-wrap">
         {/* Rendu 3D isolé de la pièce / espace sans obstruction */}
         <div className="inventory-detail-hero">
-          <SpatialZonePreview zone={zone} height={320} />
+          <SpatialZonePreview zone={zone} height="100%" />
         </div>
 
         <div className="inventory-detail-body">
@@ -156,17 +158,19 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
     : 'Rangement';
 
   const dimsStr = `${(item as any).dims.w} × ${(item as any).dims.d} × ${(item as any).dims.h} cm`;
+  const glbPath = !isStorage ? (item as InventoryItem).glbPath : undefined;
 
   return (
     <div className="inventory-detail-wrap">
-      {/* 3D Preview Canvas / Photo Gallery as Hero */}
+      {/* 3D Preview Canvas / Photo Gallery as Hero (Ratio Carré) */}
       <div className="inventory-detail-hero">
         <InventoryPreview
           item={item as any}
-          height={300}
+          height="100%"
           hideFooter={true}
           initialDuoAnim={selectedDuoAnim}
           initialDuoPartner={selectedDuoPartner}
+          onGlbStats={setGlbStats}
         />
       </div>
 
@@ -201,6 +205,12 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           {!isStorage && (
             <span className="inventory-badge-tag inventory-badge-red" style={{ fontSize: 11, padding: '3px 9px' }}>
               {catLabel}
+            </span>
+          )}
+
+          {glbPath && (
+            <span className="inventory-badge-tag" style={{ fontSize: 11, padding: '3px 9px', background: '#f3e8ff', color: '#6b21a8' }}>
+              🎲 Modèle GLB 3D
             </span>
           )}
         </div>
@@ -246,6 +256,42 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
                 <div className="inventory-spec-label">Lieu de stockage</div>
                 <div className="inventory-spec-value">
                   {(item as InventoryItem).location ?? '—'}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Informations GLB & Performance 3D si présent */}
+          {glbPath && (
+            <>
+              <div className="inventory-spec-card" style={{ borderLeft: '3px solid #7c3aed', background: '#faf5ff' }}>
+                <div className="inventory-spec-label" style={{ color: '#7c3aed' }}>Fichier GLB</div>
+                <div className="inventory-spec-value" style={{ fontSize: 12, wordBreak: 'break-all' }}>
+                  {glbPath.split('/').pop()}
+                  {glbStats?.fileSize !== undefined ? (
+                    <span style={{ display: 'block', fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+                      Taille : {glbStats.fileSize > 1024 * 1024 
+                        ? `${(glbStats.fileSize / (1024 * 1024)).toFixed(2)} Mo`
+                        : `${(glbStats.fileSize / 1024).toFixed(1)} Ko`}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="inventory-spec-card" style={{ borderLeft: '3px solid #7c3aed', background: '#faf5ff' }}>
+                <div className="inventory-spec-label" style={{ color: '#7c3aed' }}>Triangles & Draw Calls</div>
+                <div className="inventory-spec-value" style={{ fontSize: 13, fontWeight: 600 }}>
+                  {glbStats ? (
+                    <>
+                      <span>{glbStats.triangles.toLocaleString()} tris</span>
+                      <span style={{ color: '#9ca3af', margin: '0 5px' }}>·</span>
+                      <span style={{ color: glbStats.drawCalls > 10 ? '#dc2626' : '#16a34a' }}>
+                        {glbStats.drawCalls} draw call{glbStats.drawCalls > 1 ? 's' : ''}
+                      </span>
+                    </>
+                  ) : (
+                    <span style={{ color: '#9ca3af', fontSize: 12 }}>Calcul en cours…</span>
+                  )}
                 </div>
               </div>
             </>
