@@ -248,8 +248,15 @@ export function SpatialZonePreview({
   const fpsMax = valid.length ? Math.max(...valid) : 0;
   const fpsColor = currentFps >= 50 ? '#16a34a' : currentFps >= 30 ? '#d97706' : '#dc2626';
 
+  const [liveStats, setLiveStats] = useState<{ triangles: number; drawCalls: number } | null>(null);
+
+  const handleStats = (s: { triangles: number; drawCalls: number }) => {
+    setLiveStats(s);
+    onStats?.(s);
+  };
+
   return (
-    <div style={{ width: '100%', height, position: 'relative', background: '#0b1120', borderRadius: 8, overflow: 'hidden' }}>
+    <div style={{ width: '100%', height, aspectRatio: '1 / 1', maxHeight: '65vh', position: 'relative', background: '#0b1120', borderRadius: 8, overflow: 'hidden' }}>
       <Canvas
         camera={{ position: camPosition, fov: 42, near: 1, far: 8000 }}
         key={`${zone.id}-${isTopView ? 'top' : 'persp'}`}
@@ -268,7 +275,7 @@ export function SpatialZonePreview({
         </Suspense>
 
         <SpatialZoneFpsCollector onFps={handleFps} />
-        <SpatialZoneStatsCollector onStats={onStats} />
+        <SpatialZoneStatsCollector onStats={handleStats} />
 
         <OrbitControls
           makeDefault
@@ -342,7 +349,7 @@ export function SpatialZonePreview({
         </button>
       </div>
 
-      {/* Frame Rate Graph Overlay */}
+      {/* Frame Rate Graph Overlay & Triangles/Draw Calls */}
       {showFpsGraph && (
         <div style={{
           position: 'absolute',
@@ -369,6 +376,24 @@ export function SpatialZonePreview({
             height={46}
             style={{ display: 'block', borderRadius: 4 }}
           />
+          {liveStats && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              fontSize: 9,
+              color: '#cbd5e1',
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+              paddingTop: 3,
+              marginTop: 1,
+              fontFamily: 'monospace'
+            }}>
+              <span>📐 {liveStats.triangles.toLocaleString()} tris</span>
+              <span style={{ color: liveStats.drawCalls > 80 ? '#f87171' : '#4ade80' }}>
+                ⚡ {liveStats.drawCalls} calls
+              </span>
+            </div>
+          )}
         </div>
       )}
 
