@@ -1504,7 +1504,12 @@ function ReflectorMirror({ w, h, position, rotationY }: {
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
-      if (renderer.xr.isPresenting) return;
+
+      const renderCam = (camera as any).isArrayCamera && (camera as any).cameras?.[0]
+        ? (camera as any).cameras[0]
+        : camera;
+
+      const savedProj = renderCam.projectionMatrix.clone();
 
       _reflectionDepth++;
 
@@ -1516,17 +1521,18 @@ function ReflectorMirror({ w, h, position, rotationY }: {
 
       const mirrorMask = (cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
 
-      const reflectionCamera = (mir as any).getReflectionCamera(camera);
+      const reflectionCamera = (mir as any).getReflectionCamera(renderCam);
       if (reflectionCamera) {
         reflectionCamera.layers.mask = mirrorMask;
       }
 
-      const oldMask = camera.layers.mask;
-      camera.layers.mask = mirrorMask;
+      const oldMask = renderCam.layers.mask;
+      renderCam.layers.mask = mirrorMask;
 
-      origOnBeforeRender(renderer, scene, camera, geometry, material, group);
+      origOnBeforeRender(renderer, scene, renderCam, geometry, material, group);
 
-      camera.layers.mask = oldMask;
+      renderCam.projectionMatrix.copy(savedProj);
+      renderCam.layers.mask = oldMask;
       _reflectionDepth--;
     };
 
@@ -1562,7 +1568,14 @@ function MergedReflector({ planes, position, rotationY }: {
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
-      if (renderer.xr.isPresenting) return;
+
+      // En mode WebXR, utiliser la caméra de l'œil gauche pour le reflet plutôt que l'ArrayCamera globale
+      const renderCam = (camera as any).isArrayCamera && (camera as any).cameras?.[0]
+        ? (camera as any).cameras[0]
+        : camera;
+
+      // Sauvegarder la matrice de projection de la caméra d'origine pour éviter toute corruption
+      const savedProj = renderCam.projectionMatrix.clone();
 
       _reflectionDepth++;
 
@@ -1574,17 +1587,19 @@ function MergedReflector({ planes, position, rotationY }: {
 
       const mirrorMask = (cameraState.mirrorsHD ? (camera.layers.mask | MIRROR_BASE_MASK) : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
 
-      const reflectionCamera = (mir as any).getReflectionCamera(camera);
+      const reflectionCamera = (mir as any).getReflectionCamera(renderCam);
       if (reflectionCamera) {
         reflectionCamera.layers.mask = mirrorMask;
       }
 
-      const oldMask = camera.layers.mask;
-      camera.layers.mask = mirrorMask;
+      const oldMask = renderCam.layers.mask;
+      renderCam.layers.mask = mirrorMask;
 
-      origOnBeforeRender(renderer, scene, camera, geometry, material, group);
+      origOnBeforeRender(renderer, scene, renderCam, geometry, material, group);
 
-      camera.layers.mask = oldMask;
+      // Restaurer la projection et le layer mask intacts
+      renderCam.projectionMatrix.copy(savedProj);
+      renderCam.layers.mask = oldMask;
       _reflectionDepth--;
     };
 
@@ -1706,7 +1721,7 @@ function MirrorBath({ showReflection }: { showReflection: boolean }) {
     <ReflectorMirror
       w={mirrorW} h={mirrorH}
       position={[VANITY_CX, mirrorY, VANITY_CZ + mirrorZ + 0.1]}
-      rotationY={0}
+      rotationY={Math.PI}
     />
   );
 }
