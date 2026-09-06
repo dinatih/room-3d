@@ -107,14 +107,14 @@ function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () =
 }
 
 function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, d: number, h: number }; worldSize: { x: number; y: number; z: number }; grounded?: boolean; }) {
-  const hx = worldSize.x / 2, hy = worldSize.y / 2, hz = worldSize.z / 2, off = 0.08, LC = '#0058a3';
-  const pill: React.CSSProperties = { background: 'rgba(255, 255, 255, 0.25)', padding: '1px 3px', color: LC, fontSize: 12, whiteSpace: 'nowrap', pointerEvents: 'none', backdropFilter: 'blur(2px)', borderRadius: 2 };
+  const hx = worldSize.x / 2, hy = worldSize.y / 2, hz = worldSize.z / 2, off = Math.max(5, Math.min(worldSize.x, worldSize.z) * 0.1), LC = '#0058a3';
+  const pill: React.CSSProperties = { background: 'rgba(255, 255, 255, 0.4)', padding: '2px 5px', color: LC, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', pointerEvents: 'none', backdropFilter: 'blur(3px)', borderRadius: 3 };
   
   const axes = useMemo(() => {
-    const h = new THREE.AxesHelper(0.5);
+    const h = new THREE.AxesHelper(Math.max(20, Math.max(worldSize.x, worldSize.y, worldSize.z) * 0.25));
     h.renderOrder = 999; (h.material as THREE.Material).depthTest = false;
     return h;
-  }, []);
+  }, [worldSize.x, worldSize.y, worldSize.z]);
 
   const groupY = grounded ? 0 : -hy;
 
@@ -122,40 +122,50 @@ function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, 
     <group position={[0, groupY, 0]}>
       <primitive object={axes} />
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.015, 0.02, 32]} />
-        <meshBasicMaterial color={LC} transparent opacity={0.3} />
+        <ringGeometry args={[1.5, 2, 32]} />
+        <meshBasicMaterial color={LC} transparent opacity={0.3} side={THREE.DoubleSide} />
       </mesh>
 
       {/* Height */}
-      <Line points={[[hx + off, 0, hz], [hx + off, hy * 2, hz]]} color={LC} lineWidth={1} />
-      <Html position={[hx + off, hy, hz]} center distanceFactor={2}><div style={pill}>{dims.h} cm</div></Html>
+      <Line points={[[hx + off, 0, hz], [hx + off, hy * 2, hz]]} color={LC} lineWidth={1.5} />
+      <Html position={[hx + off, hy, hz]} center distanceFactor={150}><div style={pill}>{dims.h} cm</div></Html>
       
       {/* Width */}
-      <Line points={[[-hx, 0, hz], [-hx, -off, hz + off]]} color={LC} lineWidth={1} />
-      <Line points={[[ hx, 0, hz], [ hx, -off, hz + off]]} color={LC} lineWidth={1} />
-      <Line points={[[-hx, -off, hz + off], [hx, -off, hz + off]]} color={LC} lineWidth={1} />
-      <Html position={[0, -off, hz + off]} center distanceFactor={2}><div style={pill}>{dims.w} cm</div></Html>
+      <Line points={[[-hx, 0, hz], [-hx, -off, hz + off]]} color={LC} lineWidth={1.5} />
+      <Line points={[[ hx, 0, hz], [ hx, -off, hz + off]]} color={LC} lineWidth={1.5} />
+      <Line points={[[-hx, -off, hz + off], [hx, -off, hz + off]]} color={LC} lineWidth={1.5} />
+      <Html position={[0, -off, hz + off]} center distanceFactor={150}><div style={pill}>{dims.w} cm</div></Html>
       
       {/* Depth */}
-      <Line points={[[hx, 0, -hz], [hx + off, 0, -hz - off]]} color={LC} lineWidth={1} />
-      <Line points={[[hx, 0,  hz], [hx + off, 0,  hz + off]]} color={LC} lineWidth={1} />
-      <Line points={[[hx + off, 0, -hz - off], [hx + off, 0, hz + off]]} color={LC} lineWidth={1} />
-      <Html position={[hx + off, 0, 0]} center distanceFactor={2} rotation={[0, Math.PI / 2, 0]}><div style={pill}>{dims.d} cm</div></Html>
+      <Line points={[[hx, 0, -hz], [hx + off, 0, -hz - off]]} color={LC} lineWidth={1.5} />
+      <Line points={[[hx, 0,  hz], [hx + off, 0,  hz + off]]} color={LC} lineWidth={1.5} />
+      <Line points={[[hx + off, 0, -hz - off], [hx + off, 0, hz + off]]} color={LC} lineWidth={1.5} />
+      <Html position={[hx + off, 0, 0]} center distanceFactor={150} rotation={[0, Math.PI / 2, 0]}><div style={pill}>{dims.d} cm</div></Html>
     </group>
   );
 }
 
-function FitCamera({ target = [0, 0, 0] }: { target?: [number, number, number] }) {
+function FitCamera({ target = [0, 0, 0], boundsRadius }: { target?: [number, number, number]; boundsRadius?: number }) {
   const { camera } = useThree();
   useLayoutEffect(() => {
     camera.layers.enableAll();
+    if (boundsRadius && boundsRadius > 0) {
+      const perspCam = camera as THREE.PerspectiveCamera;
+      const fovRad = (perspCam.fov * Math.PI) / 180;
+      // Distance idéale pour englober l'objet avec une marge de respiration de 30%
+      const dist = (boundsRadius / Math.sin(fovRad / 2)) * 1.15;
+      camera.position.set(dist * 0.75, target[1] + dist * 0.45, dist * 0.95);
+      camera.near = Math.max(0.5, dist / 100);
+      camera.far = Math.max(2000, dist * 20);
+      camera.updateProjectionMatrix();
+    }
     camera.lookAt(new THREE.Vector3(...target));
-  }, [camera, target]);
+  }, [camera, target, boundsRadius]);
   return null;
 }
 
-function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, glbPath, onTargetChange, onStats }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; onStats?: (s: GlbDebugStats) => void; }) {
-  const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!), [, setScale] = useState(1);
+function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, glbPath, onTargetChange, onBoundsChange, onStats }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (radius: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
+  const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!);
   const [worldSize, setWorldSize] = useState<{ x: number; y: number; z: number } | null>(null);
 
   const fit = useCallback(() => {
@@ -205,37 +215,35 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
 
     if (box.isEmpty()) return;
     
-    // Calculate sizing based on the actual world-space box of the scaled model
+    // Dimensions réelles en cm (1 unité = 1 cm)
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
-    const max = Math.max(size.x, size.y, size.z);
     
-    // We want the item to fit comfortably in the preview scene
-    const s = 1.0 / max;
-    setScale(s); 
-    setWorldSize({ x: size.x * s, y: size.y * s, z: size.z * s });
-    outerRef.current.scale.setScalar(s);
+    setWorldSize({ x: size.x, y: size.y, z: size.z });
     
-    // Offset outer group to center the item
-    const px = preserveOriginXZ ? 0 : -center.x * s;
-    const pz = preserveOriginXZ ? 0 : -center.z * s;
+    // Offset outer group to center the item in X/Z
+    const px = preserveOriginXZ ? 0 : -center.x;
+    const pz = preserveOriginXZ ? 0 : -center.z;
 
     if (grounded) {
       // Position the root so that the lowest point of the mesh (box.min.y) is at Y=0
-      outerRef.current.position.set(px, -box.min.y * s, pz);
+      outerRef.current.position.set(px, -box.min.y, pz);
     } else {
       // Center vertically in view
-      outerRef.current.position.set(px, -center.y * s, pz);
+      outerRef.current.position.set(px, -center.y, pz);
     }
+
+    const sphere = box.getBoundingSphere(new THREE.Sphere());
+    onBoundsChange?.(Math.max(15, sphere.radius));
 
     if (onTargetChange) {
       if (grounded) {
-        onTargetChange([0, (size.y * s) / 2, 0]);
+        onTargetChange([0, size.y / 2, 0]);
       } else {
         onTargetChange([0, 0, 0]);
       }
     }
-  }, [grounded, preserveOriginXZ, onTargetChange, onStats, glbPath]);
+  }, [grounded, preserveOriginXZ, onTargetChange, onBoundsChange, onStats, glbPath]);
 
   useLayoutEffect(() => {
     // If glbPath is present, trigger size fetch
@@ -273,15 +281,15 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
           {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} onStats={onStats} />}
         </group>
       </group>
-      <GroundPoint color="#0058a3" scale={0.01} />
+      <GroundPoint color="#0058a3" />
       {showDims && item?.dims && worldSize && <Dimensions dims={item.dims} worldSize={worldSize} grounded={grounded} />}
     </group>
   );
 }
 
-function RegistryScene({ item, actionState, showDims, onTargetChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; onTargetChange?: (t: [number, number, number]) => void; onStats?: (s: GlbDebugStats) => void; }) {
+function RegistryScene({ item, actionState, showDims, onTargetChange, onBoundsChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (r: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
   const Component = SCENE_REGISTRY[item.id], isWalker = item.category === 'walkers';
-  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isWalker} showDims={showDims} glbPath={item.glbPath} onTargetChange={onTargetChange} onStats={onStats} />;
+  return <CenteredItem Component={Component} actionState={actionState} item={item} grounded={true} preserveOriginXZ={isWalker} showDims={showDims} glbPath={item.glbPath} onTargetChange={onTargetChange} onBoundsChange={onBoundsChange} onStats={onStats} />;
 }
 
 function PhotoGallery({ photos, initialIndex = 0, onIndexChange }: { photos: string[], initialIndex?: number, onIndexChange?: (i: number) => void }) {
@@ -337,6 +345,7 @@ export function InventoryPreview({
   const actionKeys: string[] = item && 'category' in item && (item as InventoryItem).category === 'walkers' ? [] : ((item as any)?.actions || []);
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(true);
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
+  const [boundsRadius, setBoundsRadius] = useState<number>(50);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [showAnimSelector, setShowAnimSelector] = useState(false);
   useEffect(() => {
@@ -347,6 +356,7 @@ export function InventoryPreview({
     setViewMode('3d');
     setAutoRotate(true);
     setTarget([0, 0, 0]);
+    setBoundsRadius(50);
     setPhotoIdx(0);
     setShowAnimSelector(false);
   }, [item?.id]);
@@ -401,15 +411,15 @@ export function InventoryPreview({
             </div>
           )}
           {showing3D ? (
-            <Canvas key={item.id} frameloop="always" camera={{ fov: 45, near: 0.01, far: 8000, position: [1.4, 0.9, 1.8] }} gl={{ antialias: true, alpha: false }} onCreated={({ scene, camera }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); }}>
+            <Canvas key={item.id} frameloop="always" camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false }} onCreated={({ scene, camera }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); }}>
               <SkySphere />
               <ambientLight intensity={1.2} />
-              <directionalLight position={[3, 5, 3]} intensity={1.5} />
-              <directionalLight position={[-2, 1, -2]} intensity={0.5} color="#aabbff" />
-              <FitCamera target={target} />
-              <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={true} minDistance={0.3} maxDistance={50} target={target} onStart={() => setAutoRotate(false)} />
-              <Grid infiniteGrid fadeDistance={15} cellColor="#999999" sectionColor="#666666" cellSize={0.2} sectionSize={1} position={[0, -0.001, 0]} />
-              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} onStats={onGlbStats} /></Suspense>
+              <directionalLight position={[150, 250, 150]} intensity={1.5} />
+              <directionalLight position={[-100, 50, -100]} intensity={0.5} color="#aabbff" />
+              <FitCamera target={target} boundsRadius={boundsRadius} />
+              <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={true} minDistance={2} maxDistance={2500} target={target} onStart={() => setAutoRotate(false)} />
+              <Grid infiniteGrid fadeDistance={800} cellColor="#999999" sectionColor="#666666" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />
+              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers show={actionStates.showBones} />
             </Canvas>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
