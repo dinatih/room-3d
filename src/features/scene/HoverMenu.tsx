@@ -187,6 +187,7 @@ const ACTIONS: Record<string, ActionDef> = {
   },
   'walker-meshes':         { btnLabel: 'Meshes',             toggleKey: 'walker-meshes'     },
   'sofa-arm-left':         { btnLabel: 'Accoudoir Gauche',  toggleKey: 'sofaArmLeft'       },
+  'sofa-arm-right':        { btnLabel: 'Accoudoir Droit',   toggleKey: 'sofaArmRight'      },
   'walker-anim-lara':      { btnLabel: 'Jouer une animation', toggleKey: 'walker-anim-lara', type: 'select', options: WALKER_ANIM_OPTIONS },
   'walker-anim-xbot':      { btnLabel: 'Jouer une animation', toggleKey: 'walker-anim-xbot', type: 'select', options: WALKER_ANIM_OPTIONS },
   'lara-custom-holster':   { btnLabel: 'Holsters & Boucle', toggleKey: 'lara-custom-holster' },
@@ -642,6 +643,8 @@ export function HoverOverlay() {
         <div
           onMouseEnter={() => { hoverState.cancelHide?.(); }}
           onTouchEnd={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
           style={{
             position: 'fixed', left: modalLeft, top: modalTop, zIndex: 300,
             background: 'rgba(10,10,20,0.45)',
