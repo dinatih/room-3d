@@ -55,26 +55,63 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
     ],
   },
 
-  // ── PACK ALLONGÉ / AU SOL ─────────────────────────────────────────────────
+  // ── PACK ALLONGÉ DE FACE / SUR LE DOS (Orientation standard) ──────────────
+  laying_front: {
+    id: 'laying_front',
+    name: 'Animations allongées de face (sur le dos)',
+    defaultRotYOffset: Math.PI / 2, // Aligné dans l'axe de longueur standard du lit
+    animations: [
+      'animations/poses_idles/anim_laying.glb',
+      'animations/poses_idles/anim_laying_1.glb',
+      'animations/poses_idles/anim_laying_idle.glb',
+      'animations/poses_idles/anim_laying_mild_cough.glb',
+      'animations/poses_idles/anim_laying_seizure.glb',
+      'animations/poses_idles/anim_laying_severe_cough.glb',
+      'animations/poses_idles/anim_laying_shrugging.glb',
+      { animation: 'animations/poses_idles/anim_laying_sleeping.glb', rotYOffset: 0 },
+      'animations/poses_idles/anim_male_laying_pose_1.glb',
+      'animations/poses_idles/anim_male_laying_pose_2.glb',
+      { animation: 'animations/poses_idles/anim_female_laying_pose_3.glb', rotYOffset: 0 },
+      { animation: 'animations/poses_idles/anim_situps.glb', rotYOffset: 0 },
+    ],
+  },
+
+  // ── PACK ALLONGÉ SUR LE CÔTÉ (Sur le flanc / profil) ─────────────────────
+  laying_side: {
+    id: 'laying_side',
+    name: 'Animations allongées sur le côté',
+    defaultRotYOffset: 0,
+    animations: [
+      { animation: 'animations/poses_idles/anim_female_laying_pose.glb', rotYOffset: -Math.PI / 8 },
+      { animation: 'animations/poses_idles/anim_female_laying_pose_1.glb', rotYOffset: 0 },
+      { animation: 'animations/poses_idles/anim_female_laying_pose_4.glb', rotYOffset: 0 },
+      { animation: 'animations/poses_idles/anim_female_laying_pose_9.glb', rotYOffset: 0 },
+      { animation: 'animations/poses_idles/anim_male_laying_pose.glb', rotYOffset: Math.PI },
+      { animation: 'animations/poses_idles/anim_sleeping_idle.glb', rotYOffset: Math.PI / 6 },
+    ],
+  },
+
+  // ── PACK ALLONGÉ GLOBAL (Mix de face et côté pour rétrocompatibilité) ───────
   laying_pack: {
     id: 'laying_pack',
-    name: 'Animations allongées / au sol',
+    name: 'Toutes les animations allongées',
+    defaultRotYOffset: Math.PI / 2,
     animations: [
-      { animation: 'animations/poses_idles/anim_laying.glb', rotYOffset: Math.PI / 2 },
-      { animation: 'animations/poses_idles/anim_laying_1.glb', rotYOffset: Math.PI / 2 },
-      { animation: 'animations/poses_idles/anim_laying_idle.glb', rotYOffset: Math.PI / 2  },
-      { animation: 'animations/poses_idles/anim_laying_idle_1.glb', rotYOffset: Math.PI / 2  },
-      { animation: 'animations/poses_idles/anim_laying_mild_cough.glb', rotYOffset: Math.PI / 2  },
-      { animation: 'animations/poses_idles/anim_laying_seizure.glb', rotYOffset: Math.PI / 2  },
-      { animation: 'animations/poses_idles/anim_laying_severe_cough.glb', rotYOffset: Math.PI / 2  },
-      { animation: 'animations/poses_idles/anim_laying_shrugging.glb', rotYOffset: Math.PI / 2  },
-      { animation: 'animations/poses_idles/anim_laying_sleeping.glb' },
-      { animation: 'animations/poses_idles/anim_male_laying_pose.glb', rotYOffset: Math.PI / 2 },
-      { animation: 'animations/poses_idles/anim_male_laying_pose_1.glb', rotYOffset: Math.PI / 2 },
-      { animation: 'animations/poses_idles/anim_male_laying_pose_2.glb', rotYOffset: Math.PI / 2 },
-      { animation: 'animations/poses_idles/anim_sitting_idle_1.glb', rotYOffset: Math.PI / 2  },
-      { animation: 'animations/poses_idles/anim_situps.glb' },
-      { animation: 'animations/poses_idles/anim_sleeping_idle.glb' , rotYOffset: Math.PI / 2 },
+      'animations/poses_idles/anim_laying.glb',
+      'animations/poses_idles/anim_laying_1.glb',
+      'animations/poses_idles/anim_laying_idle.glb',
+      'animations/poses_idles/anim_laying_mild_cough.glb',
+      'animations/poses_idles/anim_laying_seizure.glb',
+      'animations/poses_idles/anim_laying_severe_cough.glb',
+      'animations/poses_idles/anim_laying_shrugging.glb',
+      { animation: 'animations/poses_idles/anim_laying_sleeping.glb', rotYOffset: 0 },
+      'animations/poses_idles/anim_male_laying_pose_1.glb',
+      'animations/poses_idles/anim_male_laying_pose_2.glb',
+      { animation: 'animations/poses_idles/anim_female_laying_pose_1.glb', rotYOffset: 0 },
+      { animation: 'animations/poses_idles/anim_female_laying_pose_4.glb', rotYOffset: 0 },
+      { animation: 'animations/poses_idles/anim_female_laying_pose_9.glb', rotYOffset: 0 },
+      { animation: 'animations/poses_idles/anim_male_laying_pose.glb', rotYOffset: Math.PI },
+      { animation: 'animations/poses_idles/anim_sleeping_idle.glb', rotYOffset: Math.PI / 6 },
     ],
   },
 
@@ -93,10 +130,10 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
       // 'animations/dances/anim_breakdance_ending_1.glb',
       // 'animations/dances/anim_breakdance_ending_2.glb',
       // 'animations/dances/anim_breakdance_ending_3.glb',
-      'animations/dances/anim_breakdance_footwork_1.glb',
-      'animations/dances/anim_breakdance_footwork_2.glb',
-      'animations/dances/anim_breakdance_footwork_3.glb',
-      'animations/dances/anim_breakdance_footwork_to_freeze.glb',
+      // 'animations/dances/anim_breakdance_footwork_1.glb',
+      // 'animations/dances/anim_breakdance_footwork_2.glb',
+      // 'animations/dances/anim_breakdance_footwork_3.glb',
+      // 'animations/dances/anim_breakdance_footwork_to_freeze.glb',
       // 'animations/dances/anim_breakdance_footwork_to_idle.glb',
       'animations/dances/anim_breakdance_freeze_var_1.glb',
       'animations/dances/anim_breakdance_freeze_var_2.glb',
@@ -205,6 +242,12 @@ ANIMATION_PACKS['sitted_front_pack'] = ANIMATION_PACKS['seated_front'];
 ANIMATION_PACKS['side_sitted_pack']  = ANIMATION_PACKS['seated_side'];
 ANIMATION_PACKS['sitting_front']     = ANIMATION_PACKS['seated_front'];
 ANIMATION_PACKS['sitting_side']      = ANIMATION_PACKS['seated_side'];
+ANIMATION_PACKS['laying_front_pack'] = ANIMATION_PACKS['laying_front'];
+ANIMATION_PACKS['laying_side_pack']  = ANIMATION_PACKS['laying_side'];
+ANIMATION_PACKS['lay_front']         = ANIMATION_PACKS['laying_front'];
+ANIMATION_PACKS['lay_side']          = ANIMATION_PACKS['laying_side'];
+ANIMATION_PACKS['lay_front_pack']    = ANIMATION_PACKS['laying_front'];
+ANIMATION_PACKS['lay_side_pack']     = ANIMATION_PACKS['laying_side'];
 
 /**
  * Résout une animation aléatoire ou définie et son orientation finale (avec rotY offset si nécessaire)
