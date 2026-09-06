@@ -7,9 +7,13 @@ export interface SteeringResult {
   steerZ: number;
 }
 
+const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
+const TWO_PI = 2 * Math.PI;
+
 /**
  * Calcule la direction résultante (steerX, steerZ) en combinant la direction vers la cible
  * et les forces répulsives d'évitement des autres personnages et des meubles.
+ * Réutilise une structure statique partagée pour zéro allocation d'objet par frame.
  */
 export function computeSteeringVector(
   characterId: string,
@@ -24,16 +28,19 @@ export function computeSteeringVector(
   let avoidanceForceZ = 0;
 
   // Si nous sommes très proches du waypoint de destination (< 30 cm), réduire l'évitement pour garantir l'arrivée
-  const targetProximityDampener = Math.min(1.0, distToTarget / 30.0);
+  const targetProximityDampener = distToTarget < 30.0 ? distToTarget / 30.0 : 1.0;
 
   // ── 1. Évitement et contournement des autres personnages (NPCs et joueur) ──
   const isNpcCollisionsEnabled = useSceneStore.getState().layers.npcCollisions;
   if (isNpcCollisionsEnabled) {
     const AVOID_RADIUS = 35;
     const LOOKAHEAD_DIST = 70;
+    const positions = cameraState.positions;
 
-    for (const [otherId, pos] of Object.entries(cameraState.positions)) {
-      if (otherId === characterId || !pos) continue;
+    for (const otherId in positions) {
+      if (otherId === characterId) continue;
+      const pos = positions[otherId];
+      if (!pos) continue;
 
       const toOtherX = pos.x - currentX;
       const toOtherZ = pos.z - currentZ;
@@ -51,13 +58,10 @@ export function computeSteeringVector(
 
             const lateralWeight = Math.max(0.2, (AVOID_RADIUS - perpDist) / AVOID_RADIUS);
             const proximityWeight = Math.max(0.3, (LOOKAHEAD_DIST - otherDist) / LOOKAHEAD_DIST);
-            const steerIntensity = 1.0 * lateralWeight * proximityWeight * targetProximityDampener;
+            const steerIntensity = lateralWeight * proximityWeight * targetProximityDampener;
 
-            const perpX = -dirZ * steerSide;
-            const perpZ = dirX * steerSide;
-
-            avoidanceForceX += perpX * steerIntensity;
-            avoidanceForceZ += perpZ * steerIntensity;
+            avoidanceForceX += -dirZ * steerSide * steerIntensity;
+            avoidanceForceZ += dirX * steerSide * steerIntensity;
 
             if (otherDist < AVOID_RADIUS) {
               const repulseIntensity = ((AVOID_RADIUS - otherDist) / AVOID_RADIUS) * 0.7 * targetProximityDampener;
@@ -74,8 +78,10 @@ export function computeSteeringVector(
   const isFurnitureCollisionsEnabled = useSceneStore.getState().layers.furnitureCollisions;
   if (isFurnitureCollisionsEnabled) {
     const furnitureObstacles = getActiveFurnitureObstacles();
+    const len = furnitureObstacles.length;
 
-    for (const obs of furnitureObstacles) {
+    for (let i = 0; i < len; i++) {
+      const obs = furnitureObstacles[i];
       if (targetSmartObjectId && obs.smartObjectIds && obs.smartObjectIds.includes(targetSmartObjectId)) {
         continue;
       }
@@ -97,7 +103,7 @@ export function computeSteeringVector(
 
             const lateralWeight = Math.max(0.3, (obs.radius - perpDist) / obs.radius);
             const proximityWeight = Math.max(0.3, (obsLookahead - obsDist) / obsLookahead);
-            const steerIntensity = 1.0 * lateralWeight * proximityWeight * targetProximityDampener;
+            const steerIntensity = lateralWeight * proximityWeight * targetProximityDampener;
 
             avoidanceForceX += -dirZ * steerSide * steerIntensity;
             avoidanceForceZ += dirX * steerSide * steerIntensity;
@@ -119,16 +125,19 @@ export function computeSteeringVector(
     steerZ = dirZ;
   }
 
-  return { steerX, steerZ };
+  SHARED_STEER.steerX = steerX;
+  SHARED_STEER.steerZ = steerZ;
+  return SHARED_STEER;
 }
 
 /**
  * Calcule l'incrément de rotation pour s'orienter de manière fluide vers targetRotY.
+ * Utilise une normalisation angulaire directe sans boucle while.
  */
 export function computeRotYStep(currentRotY: number, targetRotY: number, rotSpeed: number, dt: number): number {
-  let rotDiff = targetRotY - currentRotY;
-  while (rotDiff > Math.PI) rotDiff -= 2 * Math.PI;
-  while (rotDiff < -Math.PI) rotDiff += 2 * Math.PI;
+  let rotDiff = (targetRotY - currentRotY) % TWO_PI;
+  if (rotDiff > Math.PI) rotDiff -= TWO_PI;
+  else if (rotDiff < -Math.PI) rotDiff += TWO_PI;
 
   const maxRot = rotSpeed * dt;
   if (Math.abs(rotDiff) <= maxRot) {

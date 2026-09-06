@@ -376,10 +376,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'cook',
         name: 'Cuisiner Four',
-        offset: [80, 0, 370],
         rotY: -Math.PI / 2,
         animation: 'animations/locomotion/anim_entering_code.glb',
-        duration: 10.0,
       },
       {
         slotId: 'cook',
@@ -387,7 +385,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [80, 0, 370],
         rotY: 0,
         animation: 'animations/interactions/anim_bartending.glb',
-        duration: 10.0,
       }
     ]
   },
@@ -474,7 +471,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [150, 0, -600],
         rotY: 0,
         animations_random: 'all_dances',
-        duration: 6.0,
+        repeatCount: 4,
+        repeatVariation: false,
       }
     ]
   },
@@ -538,7 +536,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [0, 0, -400],
         rotY: 0,
         animations_random: 'all_dances',
-        duration: 12.0,
+        repeatCount: 4,
+        repeatVariation: true,
       }
     ]
   },
@@ -660,7 +659,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [195, 0, 260],
         rotY: -Math.PI / 2,
         animations_random: 'all_dances',
-        duration: 15.0,
+        repeatCount: 4,
+        repeatVariation: false,
       }
     ]
   },
@@ -676,7 +676,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [135, 0, 280],
         rotY: Math.PI / 2,
         animations_random: 'all_dances',
-        duration: 15.0,
+        repeatCount: 4,
+        repeatVariation: true,
       }
     ]
   },

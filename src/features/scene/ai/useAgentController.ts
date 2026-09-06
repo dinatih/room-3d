@@ -76,6 +76,25 @@ export function useAgentController(
   const repeatVariationRef = useRef<boolean>(false);
   const currentClipDurationRef = useRef<number>(4.0);
 
+  // Cache de la résolution de l'instruction en cours pour éviter de réallouer / recalculer resolveInstructionCoords à chaque frame
+  const cachedCoordsRef = useRef<ReturnType<typeof resolveInstructionCoords> | null>(null);
+  const cachedCoordsInstructionRef = useRef<AgentInstruction | null>(null);
+
+  const getResolvedCoords = (instr: AgentInstruction) => {
+    if (cachedCoordsInstructionRef.current !== instr || !cachedCoordsRef.current) {
+      cachedCoordsInstructionRef.current = instr;
+      cachedCoordsRef.current = resolveInstructionCoords(instr, startPosRef.current);
+    }
+    return cachedCoordsRef.current;
+  };
+
+  const releaseClaimedSlot = () => {
+    if (claimedSlotRef.current) {
+      OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
+      claimedSlotRef.current = null;
+    }
+  };
+
   // Libérer toutes les réservations au démontage et écouter les invitations de duo
   useEffect(() => {
     const onInvite = (e: any) => {
@@ -84,8 +103,7 @@ export function useAgentController(
         if (role) {
           duoRoleRef.current = role;
           if (claimedSlotRef.current && (claimedSlotRef.current.objectId !== 'duo-zone' || claimedSlotRef.current.slotId !== role)) {
-            OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
-            claimedSlotRef.current = null;
+            releaseClaimedSlot();
           }
           claimedSlotRef.current = { objectId: 'duo-zone', slotId: role };
 
@@ -98,8 +116,7 @@ export function useAgentController(
             duoSessionManager.markReady(_characterId);
             const animState = duoSessionManager.getCurrentAnimState();
             if (animState) {
-              const clip = role === 'roleA' ? animState.clipA : animState.clipB;
-              stateRef.current.animation = clip;
+              stateRef.current.animation = role === 'roleA' ? animState.clipA : animState.clipB;
             }
           } else {
             dynamicNavQueueRef.current = [
@@ -160,6 +177,8 @@ export function useAgentController(
     dynamicNavQueueRef.current = [];
     dynamicNavIndexRef.current = 0;
     activeNavStepIndexRef.current = -1;
+    cachedCoordsInstructionRef.current = null;
+    cachedCoordsRef.current = null;
 
     if (scenario) {
       const stepCoords = scenario.length > 0 ? resolveInstructionCoords(scenario[0], null) : null;
@@ -207,6 +226,8 @@ export function useAgentController(
   };
 
   const advanceToNextStep = (hasNavStep: boolean) => {
+    cachedCoordsInstructionRef.current = null;
+    cachedCoordsRef.current = null;
     if (hasNavStep) {
       dynamicNavIndexRef.current++;
       if (dynamicNavIndexRef.current >= dynamicNavQueueRef.current.length) {
@@ -217,8 +238,7 @@ export function useAgentController(
       stepIndexRef.current++;
       const nextInstr = scenario && stepIndexRef.current < scenario.length ? scenario[stepIndexRef.current] : null;
       if (claimedSlotRef.current && (!nextInstr || nextInstr.smartObjectId !== claimedSlotRef.current.objectId)) {
-        OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
-        claimedSlotRef.current = null;
+        releaseClaimedSlot();
       }
     }
   };
@@ -230,6 +250,8 @@ export function useAgentController(
     duoInvitedRef.current = false;
     dynamicNavQueueRef.current = [];
     dynamicNavIndexRef.current = 0;
+    cachedCoordsInstructionRef.current = null;
+    cachedCoordsRef.current = null;
     statusRef.current = 'IDLE';
   };
 
@@ -279,13 +301,12 @@ export function useAgentController(
 
     // ── 2. Fin de scénario / Bouclage ──
     if (stepIndexRef.current >= scenario.length && dynamicNavQueueRef.current.length === 0) {
-      if (claimedSlotRef.current) {
-        OccupancyManager.releaseSlot(claimedSlotRef.current.objectId, claimedSlotRef.current.slotId, _characterId);
-        claimedSlotRef.current = null;
-      }
+      releaseClaimedSlot();
       if (loop) {
         stepIndexRef.current = 0;
         activeNavStepIndexRef.current = -1;
+        cachedCoordsInstructionRef.current = null;
+        cachedCoordsRef.current = null;
         const loopKey = `loop-${_characterId}`;
         if (lastLogRef.current !== loopKey) {
           lastLogRef.current = loopKey;
@@ -330,6 +351,8 @@ export function useAgentController(
             }
             dynamicNavQueueRef.current = [];
             dynamicNavIndexRef.current = 0;
+            cachedCoordsInstructionRef.current = null;
+            cachedCoordsRef.current = null;
             return update(dt);
           }
         } else if (OccupancyManager.isSlotOccupied(objId, reqSlotId, _characterId)) {
@@ -356,6 +379,8 @@ export function useAgentController(
               }
               dynamicNavQueueRef.current = [];
               dynamicNavIndexRef.current = 0;
+              cachedCoordsInstructionRef.current = null;
+              cachedCoordsRef.current = null;
               return update(dt);
             } else {
               appLog(_characterId, `⚠️ ${objName} est actuellement occupé${occupant ? ` (${occupant})` : ''}`);
@@ -379,7 +404,7 @@ export function useAgentController(
       }
 
       if (currentInstruction.type === 'MOVE_TO' || currentInstruction.type === 'RETURN_TO_START' || currentInstruction.type === 'USE_OBJECT') {
-        const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
+        const target = getResolvedCoords(currentInstruction);
 
         if (!hasNavStep && activeNavStepIndexRef.current !== stepIndexRef.current) {
           activeNavStepIndexRef.current = stepIndexRef.current;
@@ -394,6 +419,8 @@ export function useAgentController(
             if (navSteps.length > 0) {
               dynamicNavQueueRef.current = navSteps;
               dynamicNavIndexRef.current = 0;
+              cachedCoordsInstructionRef.current = null;
+              cachedCoordsRef.current = null;
               return update(dt);
             }
           }
@@ -428,25 +455,24 @@ export function useAgentController(
         }
 
         statusRef.current = 'INTERACTING';
-        const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
+        const target = getResolvedCoords(currentInstruction);
         if (!currentInstruction.animation && target.anim) currentInstruction.animation = target.anim;
         if (currentInstruction.rotY === undefined && target.rotY !== undefined) currentInstruction.rotY = target.rotY;
         if (!currentInstruction.duration && target.duration) currentInstruction.duration = target.duration;
         timerRef.current = currentInstruction.duration || target.duration || 1.0;
 
         const animation = currentInstruction.animation || target.anim || '';
-        const duration = timerRef.current;
         const objName = currentInstruction.smartObjectId ? (SMART_OBJECTS[currentInstruction.smartObjectId]?.name || currentInstruction.smartObjectId) : '';
-        const slotInfo = currentInstruction.slotId ? ` (slot ${currentInstruction.slotId})` : '';
-        const triggerInfo = currentInstruction.triggerEventKey ? ` ⚡ ${currentInstruction.triggerEventKey}` : '';
         const logKey = `interact-${stepIndexRef.current}-${dynamicNavIndexRef.current}-${animation}-${objName}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
+          const slotInfo = currentInstruction.slotId ? ` (slot ${currentInstruction.slotId})` : '';
+          const triggerInfo = currentInstruction.triggerEventKey ? ` ⚡ ${currentInstruction.triggerEventKey}` : '';
           const label = animation
             ? animation.replace('animations/', '').replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ')
             : currentInstruction.type;
           const objPrefix = objName ? `[${objName}${slotInfo}] ` : '';
-          appLog(_characterId, `🎭 Action: ${objPrefix}${label}${triggerInfo} (${duration.toFixed(1)}s)`);
+          appLog(_characterId, `🎭 Action: ${objPrefix}${label}${triggerInfo} (${timerRef.current.toFixed(1)}s)`);
         }
       } else if (currentInstruction.type === 'ROTATE_360') {
         statusRef.current = 'INTERACTING';
@@ -463,7 +489,7 @@ export function useAgentController(
 
     // ── 4. Déplacement (MOVING) ──
     if (statusRef.current === 'MOVING') {
-      const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
+      const target = getResolvedCoords(currentInstruction);
       const dx = target.tx - stateRef.current.x;
       const dz = target.tz - stateRef.current.z;
       const dist = Math.hypot(dx, dz);
@@ -506,21 +532,20 @@ export function useAgentController(
           triggerInstructionEvent(currentInstruction);
 
           const animation = currentInstruction.animation || target.anim || '';
-          const duration = timerRef.current;
           const isDuoWaiting = currentInstruction.smartObjectId === 'duo-zone' && duoSessionManager.isWaitingPartner(_characterId);
           if (!isDuoWaiting) {
             const objName = currentInstruction.smartObjectId ? (SMART_OBJECTS[currentInstruction.smartObjectId]?.name || currentInstruction.smartObjectId) : '';
-            const slotInfo = currentInstruction.slotId ? ` (slot ${currentInstruction.slotId})` : '';
-            const triggerInfo = currentInstruction.triggerEventKey ? ` ⚡ ${currentInstruction.triggerEventKey}` : '';
             const logKey = `interact-${stepIndexRef.current}-${animation}-${objName}`;
             if (lastLogRef.current !== logKey) {
               lastLogRef.current = logKey;
+              const slotInfo = currentInstruction.slotId ? ` (slot ${currentInstruction.slotId})` : '';
+              const triggerInfo = currentInstruction.triggerEventKey ? ` ⚡ ${currentInstruction.triggerEventKey}` : '';
               const label = animation
                 ? animation.replace('animations/', '').replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ')
                 : 'USE_OBJECT';
               const objPrefix = objName ? `[${objName}${slotInfo}] ` : '';
               const repeatsInfo = targetRepeatsRef.current > 1 ? ` x${targetRepeatsRef.current}` : '';
-              appLog(_characterId, `🎭 Action: ${objPrefix}${label}${triggerInfo} (${duration.toFixed(1)}s${repeatsInfo})`);
+              appLog(_characterId, `🎭 Action: ${objPrefix}${label}${triggerInfo} (${timerRef.current.toFixed(1)}s${repeatsInfo})`);
             }
           }
         } else {
@@ -591,7 +616,7 @@ export function useAgentController(
         return stateRef.current;
       }
 
-      const target = resolveInstructionCoords(currentInstruction, startPosRef.current);
+      const target = getResolvedCoords(currentInstruction);
       stateRef.current.animation = currentInstruction.animation || target.anim || 'idle';
       if (target.ty !== undefined) stateRef.current.y = target.ty;
 
