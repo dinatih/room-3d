@@ -273,7 +273,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
           {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} onStats={onStats} />}
         </group>
       </group>
-      <GroundPoint color="#0058a3" />
+      <GroundPoint color="#0058a3" scale={0.01} />
       {showDims && item?.dims && worldSize && <Dimensions dims={item.dims} worldSize={worldSize} grounded={grounded} />}
     </group>
   );
