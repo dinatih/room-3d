@@ -208,9 +208,11 @@ export function useCameraFrameUpdate({
     if (keys.current.size > 0) {
       invalidate();
       const k = keys.current;
-      const isArrowPress = k.has('ArrowUp') || k.has('ArrowDown') || k.has('ArrowLeft') || k.has('ArrowRight');
-      if (isArrowPress) {
-        cameraState.lastUserControlTime = performance.now();
+      if (modeRef.current === 'fpv') {
+        const isArrowPress = k.has('ArrowUp') || k.has('ArrowDown') || k.has('ArrowLeft') || k.has('ArrowRight');
+        if (isArrowPress) {
+          cameraState.lastUserControlTime = performance.now();
+        }
       }
 
       const sp = WALK_SPEED * dt;
