@@ -140,7 +140,8 @@ export function useAgentController(
             ? queue[idx]
             : (scenario && stepIndexRef.current < scenario.length ? scenario[stepIndexRef.current] : null);
           if (currentInstruction && !currentInstruction.duration) {
-            timerRef.current = e.detail.duration;
+            // Si c'est une micro-anim ou une pose fixe (<= 1s), maintenir pendant 10 secondes par défaut
+            timerRef.current = e.detail.duration <= 1.0 ? 10.0 : e.detail.duration;
           }
         }
       }
@@ -556,7 +557,8 @@ export function useAgentController(
 
           if (currentInstruction.smartObjectId !== 'duo-zone') {
             const explicitDuration = currentInstruction.duration || target.duration;
-            timerRef.current = explicitDuration || getEstimatedClipDuration(currentInstruction.animation || target.anim);
+            const estimated = getEstimatedClipDuration(currentInstruction.animation || target.anim);
+            timerRef.current = explicitDuration || (estimated <= 1.0 ? 10.0 : estimated);
           }
 
           stateRef.current.y = target.ty ?? 0;
@@ -676,9 +678,10 @@ export function useAgentController(
               }
             }
           }
+          const estimated = getEstimatedClipDuration(currentInstruction.animation || stateRef.current.animation);
           const cycleDuration = currentInstruction.duration
             || target.duration
-            || getEstimatedClipDuration(currentInstruction.animation || stateRef.current.animation);
+            || (estimated <= 1.0 ? 10.0 : estimated);
           timerRef.current = cycleDuration;
           return stateRef.current;
         }
