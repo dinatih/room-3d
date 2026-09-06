@@ -108,6 +108,7 @@ export function AiZonesHelper() {
   const visible = useSceneStore(s => s.layers.aiZones);
   const cameraMode = useSceneStore(s => s.cameraMode);
   const [toggleVersion, setToggleVersion] = useState(0);
+  const [hoveredSlotKey, setHoveredSlotKey] = useState<string | null>(null);
 
   useEffect(() => {
     const handler = () => setToggleVersion(v => v + 1);
@@ -153,9 +154,7 @@ export function AiZonesHelper() {
     return new THREE.ShapeGeometry(shape);
   }, []);
 
-
   if (!visible) return null;
-
 
   const isTopView = cameraMode === 'top';
   const baseHeight = isTopView ? 280 : 1.2;
@@ -163,8 +162,8 @@ export function AiZonesHelper() {
 
   return (
     <group renderOrder={99999}>
-      {/* ── Points de passage / Waypoints ── */}
-      {Object.values(WAYPOINTS).map(wp => {
+      {/* ── Points de passage / Waypoints (masqués lorsqu'un slot est survolé) ── */}
+      {!hoveredSlotKey && Object.values(WAYPOINTS).map(wp => {
         const sprite = waypointSprites[wp.id];
         return (
           <group key={`wp-${wp.id}`} position={[wp.x, baseHeight, wp.z]}>
@@ -193,12 +192,70 @@ export function AiZonesHelper() {
 
         return (
           <group key={`smart-${obj.id}`}>
-            {/* Label Sprite Billboardé 100% visible à travers les murs */}
-            {sprite && <primitive object={sprite} position={[avgX, labelHeight, avgZ]} />}
+            {/* Label Sprite Billboardé : masqué si un slot quelconque est survolé */}
+            {!hoveredSlotKey && sprite && (
+              <primitive object={sprite} position={[avgX, labelHeight, avgZ]} />
+            )}
 
             {/* Cibles au sol + flèches d'orientation pour chaque slot */}
             {obj.slots.map(slot => {
+              const slotKey = `${obj.id}:::${slot.slotId}`;
+              const isHovered = hoveredSlotKey === slotKey;
+
+              // Si un slot est survolé et que ce n'est pas celui-ci, le cacher
+              if (hoveredSlotKey && !isHovered) {
+                return null;
+              }
+
               const pos = slot.offset ?? obj.position;
+
+              // Construction du sprite de détails complets pour le slot survolé
+              let detailSprite: THREE.Sprite | null = null;
+              if (isHovered) {
+                const lines: string[] = [
+                  `Objet : ${obj.name} [${obj.id}]`,
+                  `Slot ID : ${slot.slotId}`,
+                  `Position : [${pos.map(n => Math.round(n * 10) / 10).join(', ')}]`,
+                ];
+
+                if (slot.relative !== undefined) {
+                  lines.push(`Relative : ${slot.relative ? 'true' : 'false'}`);
+                }
+                if (slot.approachOffset) {
+                  lines.push(`Approach : [${slot.approachOffset.map(n => Math.round(n * 10) / 10).join(', ')}]`);
+                }
+
+                const degRot = Math.round((((slot.rotY ?? obj.rotationY ?? 0) * 180) / Math.PI) % 360);
+                lines.push(`RotY : ${(slot.rotY ?? obj.rotationY ?? 0).toFixed(2)} rad (${degRot}°)`);
+
+                if (slot.animation) lines.push(`Animation : ${slot.animation}`);
+                if (slot.animations_random) {
+                  const anims = Array.isArray(slot.animations_random)
+                    ? slot.animations_random.join(', ')
+                    : slot.animations_random;
+                  lines.push(`Pack/Anims : ${anims}`);
+                }
+                if (slot.availableAnims?.length) {
+                  lines.push(`Variantes : ${slot.availableAnims.join(', ')}`);
+                }
+                if (slot.duration !== undefined) {
+                  lines.push(`Durée : ${slot.duration}s`);
+                }
+                if (slot.repeatCount !== undefined) {
+                  lines.push(`Répétitions : ${slot.repeatCount}${slot.repeatVariation ? ' (variation)' : ''}`);
+                }
+                if (slot.triggerEventKey) {
+                  lines.push(`Trigger : ${slot.triggerEventKey}${slot.triggerTargetState !== undefined ? ` = ${slot.triggerTargetState}` : ''}`);
+                }
+
+                detailSprite = makeLabelSprite(
+                  `🎯 ${slot.name}`,
+                  lines,
+                  '#00ffcc',
+                  isTopView ? 5.5 : 4.5
+                );
+              }
+
               return (
                 <group
                   key={`slot-${obj.id}-${slot.slotId}`}
@@ -209,24 +266,56 @@ export function AiZonesHelper() {
                       actions: [`smart-object:::${obj.id}:::${slot.slotId}`],
                     },
                   }}
+                  onPointerOver={(e) => {
+                    e.stopPropagation();
+                    setHoveredSlotKey(slotKey);
+                  }}
+                  onPointerOut={(e) => {
+                    e.stopPropagation();
+                    setHoveredSlotKey(current => (current === slotKey ? null : current));
+                  }}
                 >
-                  {/* Cible au sol */}
+                  {/* Cible au sol (légèrement agrandie et mise en valeur si survolée) */}
                   <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                    <circleGeometry args={[10, 32]} />
-                    <meshBasicMaterial color={color} opacity={0.4} transparent depthTest={false} depthWrite={false} />
+                    <circleGeometry args={[isHovered ? 13 : 10, 32]} />
+                    <meshBasicMaterial
+                      color={isHovered ? '#ffffff' : color}
+                      opacity={isHovered ? 0.85 : 0.4}
+                      transparent
+                      depthTest={false}
+                      depthWrite={false}
+                    />
                   </mesh>
                   <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                    <ringGeometry args={[8, 10, 32]} />
-                    <meshBasicMaterial color={color} depthTest={false} depthWrite={false} />
+                    <ringGeometry args={[isHovered ? 11 : 8, isHovered ? 13 : 10, 32]} />
+                    <meshBasicMaterial
+                      color={isHovered ? '#00ffcc' : color}
+                      depthTest={false}
+                      depthWrite={false}
+                    />
                   </mesh>
                   {/* Flèche d'orientation triangulaire 2D plate — base plate et pointe nette */}
                   <mesh
                     geometry={arrowGeo}
                     rotation={[-Math.PI / 2, 0, slot.rotY ?? obj.rotationY ?? 0]}
                     position={[0, 0.2, 0]}
+                    scale={isHovered ? [1.3, 1.3, 1.3] : [1, 1, 1]}
                   >
-                    <meshBasicMaterial color="#ffffff" depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+                    <meshBasicMaterial
+                      color={isHovered ? '#00ffcc' : '#ffffff'}
+                      depthTest={false}
+                      depthWrite={false}
+                      side={THREE.DoubleSide}
+                    />
                   </mesh>
+
+                  {/* Sprite de détails affiché au-dessus du slot survolé */}
+                  {detailSprite && (
+                    <primitive
+                      object={detailSprite}
+                      position={[0, isTopView ? 20 : 35, 0]}
+                    />
+                  )}
                 </group>
               );
             })}
