@@ -31,10 +31,9 @@ export interface SmartObjectDef {
   id: string;                 // Identifiant unique (ex: 'bed-west', 'toilet', 'sofa-garden-east')
   name: string;               // Nom affiché (ex: 'Lit Utåker Ouest')
   category: SmartObjectCategory;
-  itemId?: string;            // Identifiant de l'objet 3D / inventaire lié (ex: 'sdb-closet', 'desk-bollsidan-1')
+  itemId?: string;            // Identifiant de l'objet 3D / inventaire lié (ex: 'sdb-closet', 'desk-bollsidan-1', 'bed-double')
   position?: [number, number, number]; // Position monde de référence [x, y, z] (optionnel si itemId présent)
   rotationY?: number;         // Orientation monde de l'objet (optionnel si itemId présent)
-  anchorKey?: string;         // Clé dans positionState pour meuble dynamique multiposition (déprécié au profit de itemId)
   slots: InteractionSlot[];   // Slots d'interaction disponibles
   requiresDoorAccess?: { doorKey: string; approachNode?: string }; // Pré-conditions si nécessaire
 }

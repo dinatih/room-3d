@@ -117,14 +117,14 @@ function getDynamicTransform(anchorKey: string): ObjectTransform | undefined {
  * Récupère le transform (position monde + rotation Ry) d'un objet 3D.
  * Gère de manière transparente les objets statiques et les objets dynamiques multipositions.
  */
-export function getObjectTransform(itemIdOrAnchorKey: string): ObjectTransform | undefined {
-  // 1. Vérifie si c'est directement un anchorKey dynamique ou un alias d'itemId dynamique
-  const anchorKey = ITEM_TO_ANCHOR_KEY[itemIdOrAnchorKey] || itemIdOrAnchorKey;
-  if (DYNAMIC_FURNITURE_ANCHORS[anchorKey]) {
-    const dyn = getDynamicTransform(anchorKey);
+export function getObjectTransform(itemId: string): ObjectTransform | undefined {
+  // 1. Vérifie si l'item correspond à un meuble dynamique dans positionState
+  const dynamicKey = ITEM_TO_ANCHOR_KEY[itemId];
+  if (dynamicKey && DYNAMIC_FURNITURE_ANCHORS[dynamicKey]) {
+    const dyn = getDynamicTransform(dynamicKey);
     if (dyn) return dyn;
   }
 
   // 2. Vérifie les objets statiques
-  return getStaticObjectTransform(itemIdOrAnchorKey);
+  return getStaticObjectTransform(itemId);
 }

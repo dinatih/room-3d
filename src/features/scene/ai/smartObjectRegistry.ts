@@ -12,9 +12,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'bed-double',
     name: 'Lit Utåker Double',
     category: 'bed',
-    anchorKey: 'bed-position',
-    position: [150, 0, 190],
-    rotationY: Math.PI / 2,
+    itemId: 'bed-double',
     slots: [
       {
         slotId: 'seat-left',
@@ -129,8 +127,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'desk-bollsidan-1',
     name: 'Bureau Bollsidan 1',
     category: 'surface',
-    anchorKey: 'desk1-position',
-    position: [73.5, 0, 18],
+    itemId: 'desk-bollsidan-1',
     slots: [
       {
         slotId: 'work-sitting',
@@ -147,8 +144,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'chair-office',
     name: 'Chaise de Bureau',
     category: 'seating',
-    anchorKey: 'smorkull-position',
-    position: [85, 0, 272],
+    itemId: 'chair-office',
     slots: [
       {
         slotId: 'sit',
@@ -165,8 +161,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'desk-bollsidan-2',
     name: 'Bureau Bollsidan 2',
     category: 'surface',
-    anchorKey: 'desk2-position',
-    position: [200, 0, 170],
+    itemId: 'desk-bollsidan-2',
     slots: [
       {
         slotId: 'work-standing',
@@ -891,18 +886,16 @@ export function buildSmartObjectInstructionSequence(
 
 /**
  * Résout un SmartObject en coordonnées monde.
- * Si l'objet est lié à un objet 3D réel ou meuble multiposition (itemId ou anchorKey),
- * sa position monde et son orientation Ry sont résolues dynamiquement,
- * et tous les slots déclarés comme `relative` voient leur offset et rotY
- * transformés dans le repère monde de l'objet.
+ * Si l'objet est lié à un objet 3D réel (itemId), sa position monde et son orientation Ry
+ * sont résolues dynamiquement, et tous les slots déclarés comme `relative` voient leur offset
+ * et rotY transformés dans le repère monde de l'objet.
  */
 export function getSmartObject(objectId: string): ResolvedSmartObject | undefined {
   const base = SMART_OBJECTS[objectId];
   if (!base) return undefined;
 
-  // 1. Résolution de la transformation monde via getObjectTransform (supporte itemId ou anchorKey)
-  const targetBinding = base.itemId || base.anchorKey;
-  const transform = targetBinding ? getObjectTransform(targetBinding) : undefined;
+  // 1. Résolution de la transformation monde via getObjectTransform
+  const transform = base.itemId ? getObjectTransform(base.itemId) : undefined;
 
   const objX = transform ? transform.position[0] : (base.position?.[0] ?? 0);
   const objY = transform ? transform.position[1] : (base.position?.[1] ?? 0);
@@ -915,7 +908,7 @@ export function getSmartObject(objectId: string): ResolvedSmartObject | undefine
   // 2. Transformation locale -> monde avec rotation Ry pour les slots
   const resolvedSlots = base.slots.map(slot => {
     // Si l'objet est lié à un objet 3D réel et que slot.relative n'est pas faux, ou si slot.relative === true
-    const isRelative = slot.relative !== undefined ? slot.relative : Boolean(targetBinding);
+    const isRelative = slot.relative !== undefined ? slot.relative : Boolean(base.itemId);
 
     if (!isRelative) {
       return {
