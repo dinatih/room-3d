@@ -438,9 +438,11 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
             }
           }
 
+          const isLayingAnim = animNameLower.includes('laying') || animNameLower.includes('sleeping') || animNameLower.includes('situps');
+
           for (let j = 0; j < clone.values.length / 3; j++) {
             let yVal = clone.values[3*j+1] + yMinDelta;
-            if (isRootJointTranslation && (animNameLower.includes('laying') || animNameLower.includes('sleeping'))) {
+            if (isRootJointTranslation && isLayingAnim) {
               yVal = 0.12; 
             }
             const isTPose = animNameLower.includes('t-pose') || animNameLower.includes('t_pose') || animNameLower.includes('tpose');
@@ -452,6 +454,13 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               .applyQuaternion(P_src)
               .applyQuaternion(P_tgt_inv);
             const resPos = bone.defaultPosition.clone().add(dP);
+
+            if (isLayingAnim) {
+              // Au sol, le bassin d'un corps allongé est à ~12cm de hauteur (le dos reposant à Y=0)
+              const groundHipsY = 12.0;
+              const animDeltaY = (clone.values[3*j+1] - clone.values[1]) * computedHipsRatio;
+              resPos.y = groundHipsY + animDeltaY;
+            }
 
             clone.values[3*j] = resPos.x;
             clone.values[3*j+1] = resPos.y;
