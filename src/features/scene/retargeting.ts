@@ -174,12 +174,27 @@ export function buildHairChain(hairBones: THREE.Bone[]) {
 
 export const _retargetCache: Record<string, THREE.AnimationClip> = {};
 
+const _targetBoneNameCache = new WeakMap<THREE.Object3D, Map<string, string | null>>();
+
 export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: string, sourceHairMap: Map<string, string> | null = null): string | null {
+  // Check instance cache first (only when sourceHairMap is not customized or matches standard)
+  let instanceCache = _targetBoneNameCache.get(targetInstance);
+  if (!instanceCache) {
+    instanceCache = new Map<string, string | null>();
+    _targetBoneNameCache.set(targetInstance, instanceCache);
+  }
+
+  const cacheKey = sourceHairMap ? `${baseName}_withHairMap` : baseName;
+  if (instanceCache.has(cacheKey)) {
+    return instanceCache.get(cacheKey)!;
+  }
+
   const baseNameLower = baseName.toLowerCase();
   if (baseNameLower.includes('hair') || baseNameLower.includes('ponytail')) {
     if (sourceHairMap && sourceHairMap.has(baseNameLower)) {
       const targetName = sourceHairMap.get(baseNameLower);
       if (targetName && targetInstance.getObjectByName(targetName)) {
+        instanceCache.set(cacheKey, targetName);
         return targetName;
       }
     }
@@ -188,6 +203,7 @@ export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: 
       const N = numMatch[1];
       const targetName = `hair_${N}`;
       if (targetInstance.getObjectByName(targetName)) {
+        instanceCache.set(cacheKey, targetName);
         return targetName;
       }
     }
@@ -204,10 +220,9 @@ export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: 
     const segment = fingerMatch[2];
     const resolvedFinger = resolveTargetFingerBoneName(targetInstance, side, type, segment);
     if (resolvedFinger) {
-      // console.log(`[FINGER] Mapped ${baseName} -> ${resolvedFinger}`);
+      instanceCache.set(cacheKey, resolvedFinger);
       return resolvedFinger;
     }
-    // console.log(`[FINGER_FAIL] Could not map ${baseName} (${side}, ${type}, ${segment})`);
   }
 
   const synonyms = BONE_SYNONYMS[baseName];
@@ -228,7 +243,10 @@ export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: 
           }
         }
       });
-      if (foundName) return foundName;
+      if (foundName) {
+        instanceCache.set(cacheKey, foundName);
+        return foundName;
+      }
     }
   }
 
@@ -245,9 +263,12 @@ export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: 
 
   for (const cand of candidates) {
     if (targetInstance.getObjectByName(cand)) {
+      instanceCache.set(cacheKey, cand);
       return cand;
     }
   }
+
+  instanceCache.set(cacheKey, null);
   return null;
 }
 
@@ -547,7 +568,22 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
 
   const tracks: THREE.KeyframeTrack[] = [];
 
-
+  // Cache clavicle existence check once for the entire clip to avoid traversing targetInstance per arm track
+  const clavicleSynonymsLeft = BONE_SYNONYMS['LeftShoulder'] || [];
+  const clavicleSynonymsRight = BONE_SYNONYMS['RightShoulder'] || [];
+  let targetHasLeftClavicle = false;
+  let targetHasRightClavicle = false;
+  targetInstance.traverse(node => {
+    if ((node as any).isBone) {
+      const n = (node.name || '').toLowerCase();
+      if (!targetHasLeftClavicle && clavicleSynonymsLeft.some(s => n.includes(s))) {
+        targetHasLeftClavicle = true;
+      }
+      if (!targetHasRightClavicle && clavicleSynonymsRight.some(s => n.includes(s))) {
+        targetHasRightClavicle = true;
+      }
+    }
+  });
 
   for (const tr of workingClip.tracks) {
     const [boneFull, prop] = tr.name.split('.');
@@ -713,19 +749,9 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               B_src = new THREE.Quaternion();
             }
 
-
             // Check if we need to bake clavicle animation into the arm (if target lacks a clavicle)
             if (baseName === 'LeftArm' || baseName === 'RightArm') {
-              const clavicleBaseName = baseName === 'LeftArm' ? 'LeftShoulder' : 'RightShoulder';
-              const clavicleSynonyms = BONE_SYNONYMS[clavicleBaseName] || [];
-              let targetHasClavicle = false;
-              targetInstance.traverse(node => {
-                if ((node as any).isBone && !targetHasClavicle) {
-                  if (clavicleSynonyms.some(s => node.name.toLowerCase().includes(s))) {
-                    targetHasClavicle = true;
-                  }
-                }
-              });
+              const targetHasClavicle = baseName === 'LeftArm' ? targetHasLeftClavicle : targetHasRightClavicle;
               
               if (!targetHasClavicle) {
                 // Target lacks clavicle. Find the clavicle track in the source animation.
