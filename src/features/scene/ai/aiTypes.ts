@@ -31,12 +31,18 @@ export interface SmartObjectDef {
   id: string;                 // Identifiant unique (ex: 'bed-west', 'toilet', 'sofa-garden-east')
   name: string;               // Nom affiché (ex: 'Lit Utåker Ouest')
   category: SmartObjectCategory;
-  position: [number, number, number]; // Position monde de référence [x, y, z]
-  rotationY?: number;         // Orientation monde de l'objet
-  anchorKey?: string;         // Clé dans positionState pour meuble dynamique multiposition (ex: 'desk2-position')
+  itemId?: string;            // Identifiant de l'objet 3D / inventaire lié (ex: 'sdb-closet', 'desk-bollsidan-1')
+  position?: [number, number, number]; // Position monde de référence [x, y, z] (optionnel si itemId présent)
+  rotationY?: number;         // Orientation monde de l'objet (optionnel si itemId présent)
+  anchorKey?: string;         // Clé dans positionState pour meuble dynamique multiposition (déprécié au profit de itemId)
   slots: InteractionSlot[];   // Slots d'interaction disponibles
   requiresDoorAccess?: { doorKey: string; approachNode?: string }; // Pré-conditions si nécessaire
 }
+
+export type ResolvedSmartObject = SmartObjectDef & {
+  position: [number, number, number];
+  rotationY: number;
+};
 
 export interface SmartAction {
   actionId: string;

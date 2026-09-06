@@ -1,4 +1,4 @@
-import { SmartObjectDef, Waypoint, SpatialZoneDef, InteractionType } from './aiTypes';
+import { SmartObjectDef, ResolvedSmartObject, Waypoint, SpatialZoneDef, InteractionType } from './aiTypes';
 import { WAYPOINTS } from './ZoneNodes';
 import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
@@ -35,7 +35,7 @@ export class SpatialZone {
   public environment: 'indoor' | 'outdoor';
   public bounds: BoundingBox3D;
 
-  private smartObjects: Map<string, SmartObjectDef> = new Map();
+  private smartObjects: Map<string, ResolvedSmartObject> = new Map();
   private waypoints: Map<string, Waypoint> = new Map();
 
   constructor(def: SpatialZoneDef) {
@@ -52,7 +52,7 @@ export class SpatialZone {
     return isPointInBounds(position, this.bounds);
   }
 
-  public registerSmartObject(obj: SmartObjectDef): void {
+  public registerSmartObject(obj: ResolvedSmartObject): void {
     this.smartObjects.set(obj.id, obj);
   }
 
@@ -60,7 +60,7 @@ export class SpatialZone {
     this.smartObjects.delete(objectId);
   }
 
-  public getSmartObjects(): SmartObjectDef[] {
+  public getSmartObjects(): ResolvedSmartObject[] {
     return Array.from(this.smartObjects.values());
   }
 
@@ -97,6 +97,7 @@ export class SpatialZone {
 
     for (const rawObj of this.smartObjects.values()) {
       const obj = getSmartObject(rawObj.id) || rawObj;
+      if (!obj || !obj.position) continue;
       // Filtrage par catégorie ou par slots d'interaction
       const matchesCategory = obj.category === interactionTypeOrCategory;
       const matchingSlots = obj.slots.filter(slot => {
@@ -240,7 +241,9 @@ class SpatialZoneManagerClass {
     }
 
     // Indexation des SmartObjects
-    for (const obj of Object.values(SMART_OBJECTS)) {
+    for (const key of Object.keys(SMART_OBJECTS)) {
+      const obj = getSmartObject(key);
+      if (!obj || !obj.position) continue;
       for (const zone of this.zones.values()) {
         if (zone.contains(obj.position)) {
           zone.registerSmartObject(obj);

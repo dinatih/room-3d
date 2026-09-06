@@ -118,7 +118,9 @@ export function AiZonesHelper() {
 
   // Liste résolue des SmartObjects (monde / dynamique)
   const resolvedSmartObjects = useMemo(() => {
-    return Object.keys(SMART_OBJECTS).map(id => getSmartObject(id) || SMART_OBJECTS[id]);
+    return Object.keys(SMART_OBJECTS)
+      .map(id => getSmartObject(id))
+      .filter((obj): obj is NonNullable<typeof obj> => Boolean(obj && obj.position));
   }, [toggleVersion]);
 
   // Génération mémoïsée des sprites de labels

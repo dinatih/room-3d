@@ -1,7 +1,6 @@
-import { SmartObjectDef, SmartObjectCategory, AgentInstruction } from './aiTypes';
+import { SmartObjectDef, SmartObjectCategory, AgentInstruction, ResolvedSmartObject } from './aiTypes';
 import { OccupancyManager } from './occupancyManager';
-import { positionState } from '../positionState';
-import { DYNAMIC_FURNITURE_ANCHORS } from '../furniturePositions';
+import { getObjectTransform } from '../objectTransforms';
 
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
@@ -274,12 +273,13 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'sdb-closet',
     name: 'Placard Salle de bain',
     category: 'storage',
-    position: [130, 0, 600],
+    itemId: 'sdb-closet',
     slots: [
       {
         slotId: 'pick-laundry',
         name: 'Prendre le sac de Linge sale',
-        offset: [130, 0, 565],
+        relative: true,
+        offset: [0, 0, -35], // 35 cm devant le placard dans la SDB
         rotY: 0,
         animation: 'take_object_mid',
         duration: 3.5,
@@ -772,11 +772,13 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
 /**
  * Utilitaires d'accès et de requêtage pour les Smart Objects
  */
-export function getAllSmartObjects(): SmartObjectDef[] {
-  return Object.keys(SMART_OBJECTS).map(id => getSmartObject(id) || SMART_OBJECTS[id]);
+export function getAllSmartObjects(): ResolvedSmartObject[] {
+  return Object.keys(SMART_OBJECTS)
+    .map(id => getSmartObject(id))
+    .filter((obj): obj is ResolvedSmartObject => Boolean(obj));
 }
 
-export function getSmartObjectsByCategory(category: SmartObjectCategory): SmartObjectDef[] {
+export function getSmartObjectsByCategory(category: SmartObjectCategory): ResolvedSmartObject[] {
   return getAllSmartObjects().filter(obj => obj.category === category);
 }
 
@@ -888,50 +890,38 @@ export function buildSmartObjectInstructionSequence(
 }
 
 /**
- * Résout un SmartObject en coordonnées monde dynamiques.
- * Si l'objet est lié à un meuble multiposition (anchorKey), sa position,
- * la position de ses slots relatifs et leur orientation sont transformées
- * selon l'état actuel de positionState.
+ * Résout un SmartObject en coordonnées monde.
+ * Si l'objet est lié à un objet 3D réel ou meuble multiposition (itemId ou anchorKey),
+ * sa position monde et son orientation Ry sont résolues dynamiquement,
+ * et tous les slots déclarés comme `relative` voient leur offset et rotY
+ * transformés dans le repère monde de l'objet.
  */
-export function getSmartObject(objectId: string): SmartObjectDef | undefined {
+export function getSmartObject(objectId: string): ResolvedSmartObject | undefined {
   const base = SMART_OBJECTS[objectId];
   if (!base) return undefined;
 
-  if (!base.anchorKey) {
-    const defaultRot = base.rotationY ?? 0;
-    const hasSlotsWithoutRotY = base.slots.some(s => s.rotY === undefined);
-    if (!hasSlotsWithoutRotY) {
-      return base;
-    }
-    return {
-      ...base,
-      slots: base.slots.map(s => ({
-        ...s,
-        rotY: s.rotY ?? defaultRot,
-      }))
-    };
-  }
+  // 1. Résolution de la transformation monde via getObjectTransform (supporte itemId ou anchorKey)
+  const targetBinding = base.itemId || base.anchorKey;
+  const transform = targetBinding ? getObjectTransform(targetBinding) : undefined;
 
-  const anchorList = DYNAMIC_FURNITURE_ANCHORS[base.anchorKey];
-  if (!anchorList || anchorList.length === 0) {
-    return base;
-  }
+  const objX = transform ? transform.position[0] : (base.position?.[0] ?? 0);
+  const objY = transform ? transform.position[1] : (base.position?.[1] ?? 0);
+  const objZ = transform ? transform.position[2] : (base.position?.[2] ?? 0);
+  const objRy = transform ? transform.rotationY : (base.rotationY ?? 0);
 
-  const state = positionState[base.anchorKey];
-  const idx = state ? (state.idx % anchorList.length) : 0;
-  const anchor = anchorList[idx] || anchorList[0];
+  const cos = Math.cos(objRy);
+  const sin = Math.sin(objRy);
 
-  const anchorX = anchor.x;
-  const anchorZ = anchor.z;
-  const anchorRy = anchor.ry;
-
-  const cos = Math.cos(anchorRy);
-  const sin = Math.sin(anchorRy);
-
-  // Transformation locale -> monde avec rotation Ry
+  // 2. Transformation locale -> monde avec rotation Ry pour les slots
   const resolvedSlots = base.slots.map(slot => {
-    if (!slot.relative) {
-      return slot;
+    // Si l'objet est lié à un objet 3D réel et que slot.relative n'est pas faux, ou si slot.relative === true
+    const isRelative = slot.relative !== undefined ? slot.relative : Boolean(targetBinding);
+
+    if (!isRelative) {
+      return {
+        ...slot,
+        rotY: slot.rotY ?? objRy,
+      };
     }
 
     const localOffset = slot.offset || [0, 0, 0];
@@ -942,9 +932,9 @@ export function getSmartObject(objectId: string): SmartObjectDef | undefined {
     const oz = localOffset[2];
 
     const worldOffset: [number, number, number] = [
-      anchorX + ox * cos + oz * sin,
-      oy,
-      anchorZ - ox * sin + oz * cos,
+      objX + ox * cos + oz * sin,
+      objY + oy,
+      objZ - ox * sin + oz * cos,
     ];
 
     let worldApproach: [number, number, number] | undefined = undefined;
@@ -953,15 +943,15 @@ export function getSmartObject(objectId: string): SmartObjectDef | undefined {
       const ay = localApproach[1];
       const az = localApproach[2];
       worldApproach = [
-        anchorX + ax * cos + az * sin,
-        ay,
-        anchorZ - ax * sin + az * cos,
+        objX + ax * cos + az * sin,
+        objY + ay,
+        objZ - ax * sin + az * cos,
       ];
     }
 
     // Orientation finale : slot.rotY relatif à l'objet, ou rotation propre de l'objet si rotY absent
     const slotRot = slot.rotY !== undefined ? slot.rotY : 0;
-    const worldRotY = (anchorRy + slotRot) % (Math.PI * 2);
+    const worldRotY = (objRy + slotRot) % (Math.PI * 2);
 
     return {
       ...slot,
@@ -973,8 +963,8 @@ export function getSmartObject(objectId: string): SmartObjectDef | undefined {
 
   return {
     ...base,
-    position: [anchorX, base.position[1], anchorZ],
-    rotationY: anchorRy,
+    position: [objX, objY, objZ],
+    rotationY: objRy,
     slots: resolvedSlots,
   };
 }
