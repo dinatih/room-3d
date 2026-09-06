@@ -210,8 +210,8 @@ export function CharacterAnimSelector({
 
   return (
     <div
-      className="d-flex flex-column bg-transparent overflow-hidden text-dark"
-      style={{ maxHeight, outline: 'none' }}
+      className="d-flex flex-column h-100 bg-transparent overflow-hidden text-dark"
+      style={{ maxHeight, height: '100%', outline: 'none' }}
       tabIndex={0}
       onKeyDown={handleKeyDownAnims}
     >
