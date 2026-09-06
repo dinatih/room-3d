@@ -299,6 +299,7 @@ export function HoverRaycaster() {
       raycaster.layers.disable(LAYER_NEIGHBORS);
       raycaster.layers.disable(LAYER_LIDAR);
       const hits = raycaster.intersectObjects(candidates, true);
+      let bestAction: { label: string; actionIds: string[] } | null = null;
 
       for (const hit of hits) {
         if (!hit.object.visible) continue;
@@ -326,10 +327,18 @@ export function HoverRaycaster() {
         if (side === 'west' || side === 'east' || side === 'north' || side === 'both') continue;
 
         const action = resolveAction(hit.object);
-        if (action && action.actionIds.some(id => getActionDef(id))) return action;
+        if (action && action.actionIds.some(id => getActionDef(id))) {
+          // Si on touche un smart-object (ex: cercle AiZone Dormir/S'asseoir), priorité absolue immédiate
+          if (action.actionIds.some(id => id.startsWith('smart-object:::'))) {
+            return action;
+          }
+          if (!bestAction) {
+            bestAction = action;
+          }
+        }
         continue;
       }
-      return null;
+      return bestAction;
     }
 
     // ── Souris : hover → dot (Uniquement après 3s d'arrêt complet de la souris) ──
