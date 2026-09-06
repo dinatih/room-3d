@@ -104,8 +104,13 @@ export function KitchenCabinet({ actionState, onSize }: SceneItemProps) {
     const pivot = pivotRef.current;
     if (!pivot) return;
     const targetAngle = openRef.current ? Math.PI / 2 : 0;
+    if (pivot.rotation.y === targetAngle) return;
     const diff = targetAngle - pivot.rotation.y;
-    if (Math.abs(diff) < 0.001) return;
+    if (Math.abs(diff) < 0.001) {
+      pivot.rotation.y = targetAngle;
+      invalidate();
+      return;
+    }
     pivot.rotation.y += diff * Math.min(delta * 8, 1);
     invalidate();
   });

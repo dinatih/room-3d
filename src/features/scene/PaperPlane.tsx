@@ -452,8 +452,6 @@ export function PaperPlane({ onExit, model = 'paper', onViewModeChange }: PaperP
       const wz = cameraState.walkerZ;
       const wh = cameraState.walkerHeight * 0.93;
       camera.position.set(wx, wh, wz);
-
-      camera.position.lerp(_va.current, 0.08);
       camera.lookAt(s.pos);
     }
 

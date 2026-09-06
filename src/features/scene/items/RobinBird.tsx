@@ -11,6 +11,7 @@ import { appLog } from '@features/ui/AppConsole';
 const GLB_PATH = '/characters/robin/robin.glb';
 
 export const BIRD_FEEDER_POS = new THREE.Vector3(95, 219, -165);
+const _tmpBirdDir = new THREE.Vector3();
 
 type AIState = {
   mode: 'autonomous' | 'forced';
@@ -139,11 +140,9 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
 
   // Boucle de jeu (IA & Animation)
   useFrame((_, delta) => {
-    if (!mixerRef.current) return;
+    if (isAppIdle() || !modelRef.current || !mixerRef.current) return;
     mixerRef.current.update(delta);
     invalidate();
-
-    if (isAppIdle() || !modelRef.current) return;
     
     if (!isPreview) {
       const ai = aiStateRef.current;
@@ -167,7 +166,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
             if (Math.random() < 0.01) {
               const isAtFeeder = modelRef.current.position.distanceTo(BIRD_FEEDER_POS) < 10;
               const idleAnimNames = isAtFeeder
-                ? ['Robin_Bird_Eat', 'Robin_Bird_Eat', 'Robin_Bird_Idle', 'Robin_Bird_Call']
+                 ? ['Robin_Bird_Eat', 'Robin_Bird_Eat', 'Robin_Bird_Idle', 'Robin_Bird_Call']
                 : ['Robin_Bird_Idle', 'Robin_Bird_Idle2', 'Robin_Bird_Eat', 'Robin_Bird_Call'];
               const randIdle = idleAnimNames[Math.floor(Math.random() * idleAnimNames.length)];
               const clip = animations.find(a => a.name === randIdle) || animations[0];
@@ -195,11 +194,8 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
             }
           } else {
             // Move & Rotate towards target
-            const dir = new THREE.Vector3().subVectors(ai.targetPos, modelRef.current.position).normalize();
-            
-            // Add some arc to the flight (Y height) based on distance left vs total distance
-            // Actually simple straight line for now
-            modelRef.current.position.add(dir.multiplyScalar(speed));
+            const dir = _tmpBirdDir.subVectors(ai.targetPos, modelRef.current.position).normalize();
+            modelRef.current.position.addScaledVector(dir, speed);
             
             // Look at target
             const targetRot = Math.atan2(dir.x, dir.z);

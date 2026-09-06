@@ -8,6 +8,7 @@ import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
 
 const GLB_PATH = '/characters/ushiro/shiba_inu_dog_ushiro.glb';
+const _tmpDogDir = new THREE.Vector3();
 
 type AIState = { mode: 'autonomous' | 'forced', state: 'idle' | 'walking' | 'running', targetPos: THREE.Vector3, timer: number };
 
@@ -140,11 +141,9 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
   }, [invalidate, isPreview, animations]);
 
   useFrame((_, delta) => {
-    if (!mixerRef.current) return;
+    if (isAppIdle() || !modelRef.current || !mixerRef.current) return;
     mixerRef.current.update(delta);
     invalidate();
-
-    if (isAppIdle() || !modelRef.current) return;
     
     if (!isPreview) {
       const ai = aiStateRef.current;
@@ -197,7 +196,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
             action.setLoop(THREE.LoopRepeat, Infinity);
             action.reset().play();
           } else {
-            const dir = new THREE.Vector3().subVectors(ai.targetPos, modelRef.current.position).normalize();
+            const dir = _tmpDogDir.subVectors(ai.targetPos, modelRef.current.position).normalize();
             modelRef.current.position.addScaledVector(dir, speed * delta);
             
             const targetRot = Math.atan2(dir.x, dir.z);

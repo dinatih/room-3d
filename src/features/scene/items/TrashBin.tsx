@@ -32,7 +32,14 @@ export function TrashBin({ actionState, onSize }: SceneItemProps) {
   useFrame(() => {
     if (!lidGroupRef.current) return;
     const target = isOpen ? -Math.PI * 0.62 : 0;
-    lidGroupRef.current.rotation.x += (target - lidGroupRef.current.rotation.x) * 0.12;
+    const current = lidGroupRef.current.rotation.x;
+    if (current === target) return;
+    const diff = target - current;
+    if (Math.abs(diff) < 0.001) {
+      lidGroupRef.current.rotation.x = target;
+      return;
+    }
+    lidGroupRef.current.rotation.x += diff * 0.12;
   });
 
   return (

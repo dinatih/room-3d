@@ -215,6 +215,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
   useFrame((_, delta) => {
     const targetLeft = leftFlat ? 0 : -1.309;
     const targetRight = rightFlat ? 0 : 1.309;
+    if (leftAngleRef.current === targetLeft && rightAngleRef.current === targetRight) return;
 
     let changed = false;
 

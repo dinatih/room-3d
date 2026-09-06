@@ -480,7 +480,7 @@ function Desks() {
           <group userData={{ animUnit: true,}}>
             <Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
           </group>
-          <group position={[0, d2H, 0]} rotation={[0, Math.PI, 0]}>
+          <group position={[0, d2H, -8]} rotation={[0, Math.PI, 0]}>
             <group userData={{ animUnit: true,}}>
               <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
             </group>

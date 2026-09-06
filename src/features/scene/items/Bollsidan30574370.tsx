@@ -135,6 +135,7 @@ function BollsidanGlb({ onSize, height = DEFAULT_H }: { onSize?: SceneItemProps[
   }, [height, applyHeight, clone, onSize]);
 
   useFrame(() => {
+    if (currHRef.current === targetHRef.current) return;
     const diff = targetHRef.current - currHRef.current;
     if (Math.abs(diff) > 0.05) {
       currHRef.current += diff * 0.15;

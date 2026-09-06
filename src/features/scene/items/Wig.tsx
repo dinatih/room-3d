@@ -21,6 +21,10 @@ export const HAIR_COLORS: Record<string, THREE.Color> = {
   violet:   new THREE.Color(0.5,  0.05, 0.9),
 };
 
+const _tmpWindEuler = new THREE.Euler();
+const _tmpWindQ = new THREE.Quaternion();
+const _tmpRainbowColor = new THREE.Color();
+
 export interface WigBone {
   bone: THREE.Bone;
   restQ: THREE.Quaternion;
@@ -299,20 +303,24 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     };
   }, [attachTo, scene]);
 
+  const hasResetWindRef = useRef(false);
+
   // 3. Animation du vent (Mannequin) et couleur arc-en-ciel
   useFrame((state) => {
+    if (attachTo && color !== 'arc-en-ciel') return;
+
     if (color === 'arc-en-ciel' && scene) {
       const hue = (state.clock.elapsedTime * 0.2) % 1;
-      const rainbow = new THREE.Color().setHSL(hue, 0.8, 0.5);
+      _tmpRainbowColor.setHSL(hue, 0.8, 0.5);
       scene.traverse((child: any) => {
         const m = child as THREE.Mesh;
         if (m.isMesh && m.material) {
           if (Array.isArray(m.material)) {
             m.material.forEach(mat => {
-              if (mat && 'color' in mat) (mat as THREE.MeshStandardMaterial).color.copy(rainbow);
+              if (mat && 'color' in mat) (mat as THREE.MeshStandardMaterial).color.copy(_tmpRainbowColor);
             });
           } else if ('color' in m.material) {
-            (m.material as THREE.MeshStandardMaterial).color.copy(rainbow);
+            (m.material as THREE.MeshStandardMaterial).color.copy(_tmpRainbowColor);
           }
         }
       });
@@ -320,18 +328,21 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
 
     if (!attachTo) {
       if (windEnabled && hairBonesRef.current.length > 0) {
+        hasResetWindRef.current = false;
         const t = state.clock.elapsedTime * 3;
         hairBonesRef.current.forEach(({ bone, restQ, index }) => {
           const windX = Math.sin(t + index * 0.5) * 0.15;
           const windZ = Math.cos(t * 0.8 + index * 0.5) * 0.15;
-          const windQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(windX, 0, windZ));
-          bone.quaternion.copy(restQ).multiply(windQ);
+          _tmpWindEuler.set(windX, 0, windZ);
+          _tmpWindQ.setFromEuler(_tmpWindEuler);
+          bone.quaternion.copy(restQ).multiply(_tmpWindQ);
         });
-      } else if (!windEnabled && hairBonesRef.current.length > 0) {
-        // Remise à zéro s'il n'y a pas de vent
+      } else if (!windEnabled && hairBonesRef.current.length > 0 && !hasResetWindRef.current) {
+        // Remise à zéro une seule fois s'il n'y a pas de vent
         hairBonesRef.current.forEach(({ bone, restQ }) => {
           bone.quaternion.copy(restQ);
         });
+        hasResetWindRef.current = true;
       }
     }
   });

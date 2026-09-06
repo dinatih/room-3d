@@ -15,6 +15,7 @@ import {
 import { LANDING_STRIPS } from './LandingStrips';
 import { CHARACTERS, isCharacterVisibleInMode } from './walkerConfig';
 import { useSceneStore } from './store/useSceneStore';
+import { isAppIdle } from './idleState';
 
 const SMALL_W_DESKTOP = 140;
 const SMALL_W_MOBILE  = 115;
@@ -218,11 +219,15 @@ export function Minimap() {
     canvas.style.height = `${smallH}px`;
 
     let rafId: number;
-    const loop = () => {
-      drawMinimap(canvas, smallW);
+    let lastDraw = 0;
+    const loop = (now: number) => {
       rafId = requestAnimationFrame(loop);
+      if (isAppIdle()) return;
+      if (now - lastDraw < 50) return; // Limite à 20 FPS (au lieu de 60/120 FPS continus)
+      lastDraw = now;
+      drawMinimap(canvas, smallW);
     };
-    loop();
+    rafId = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(rafId);
@@ -247,11 +252,15 @@ export function Minimap() {
     canvas.style.height = `${expH}px`;
 
     let rafId: number;
-    const loop = () => {
-      drawMinimap(canvas, expW);
+    let lastDraw = 0;
+    const loop = (now: number) => {
       rafId = requestAnimationFrame(loop);
+      if (isAppIdle()) return;
+      if (now - lastDraw < 40) return; // Limite à 25 FPS quand agrandie
+      lastDraw = now;
+      drawMinimap(canvas, expW);
     };
-    loop();
+    rafId = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(rafId);

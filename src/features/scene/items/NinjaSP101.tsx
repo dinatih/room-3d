@@ -74,12 +74,15 @@ export function NinjaSP101({ actionState, onSize }: SceneItemProps) {
 
   useFrame(() => {
     const target = isOpen ? Math.PI / 2 : 0;
-    const delta = target - doorRef.current.rotation.x;
+    const current = doorRef.current.rotation.x;
+    if (current === target) return;
+    const delta = target - current;
     if (Math.abs(delta) > 0.001) {
       doorRef.current.rotation.x += delta * 0.15;
       invalidate();
     } else {
       doorRef.current.rotation.x = target;
+      invalidate();
     }
   });
 

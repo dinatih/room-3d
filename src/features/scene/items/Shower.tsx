@@ -94,17 +94,26 @@ function ShowerDoor({ isOpen }: { isOpen: boolean }) {
   const hw = DOOR_W / 2;
   const hf = FRAME / 2;
   const pivotRef = useRef<THREE.Group>(null!);
+  const { invalidate } = useThree();
 
   useFrame((_, delta) => {
     if (!pivotRef.current) return;
     // Rotation cible : ouverture vers l'extérieur de la douche (angle positif vers la SDB)
     const targetAngle = isOpen ? Math.PI * 0.47 : 0;
+    const current = pivotRef.current.rotation.y;
+    if (current === targetAngle) return;
+    if (Math.abs(targetAngle - current) < 0.001) {
+      pivotRef.current.rotation.y = targetAngle;
+      invalidate();
+      return;
+    }
     pivotRef.current.rotation.y = THREE.MathUtils.damp(
-      pivotRef.current.rotation.y,
+      current,
       targetAngle,
       8,
       delta
     );
+    invalidate();
   });
 
 

@@ -83,7 +83,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'lie-down',
         name: 'Dormir couché',
         offset: [74, 45, 150],
-        animations_random: 'laying_pack',
+        animations_random: 'laying_front',
+        rotY: -Math.PI,
         duration: 45.0,
       }
     ]
@@ -93,7 +94,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Lit Utåker Est (Secondaire)',
     category: 'bed',
     position: [270, 0, 190],
-    rotationY: Math.PI,
+    rotationY: -Math.PI / 2,
     slots: [
       {
         slotId: 'seat-north',
@@ -117,8 +118,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'lie-down',
         name: 'Dormir couché',
         offset: [270, 45, 190],
-        rotY: Math.PI / 2,
-        animations_random: 'laying_pack',
+        animations_random: 'laying_front',
+        rotY: -Math.PI,
         duration: 45.0,
       }
     ]
@@ -173,9 +174,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Travailler debout',
         relative: true,
         offset: [0, 0, -36],
-        rotY: Math.PI,
         animation: 'animations/poses_idles/anim_texting_while_standing.glb',
-        duration: 10.0,
       }
     ]
   },
@@ -256,7 +255,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'take-shower-2',
         name: 'Prendre une douche (Gauche)',
-        offset: [8, 15, 645],
+        offset: [8, 15, 665],
         rotY: Math.PI / 2,
         animation: 'animations/poses_idles/miley_armature_posing_f.glb',
         duration: 25.0,
@@ -264,7 +263,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'take-shower-3',
         name: 'Prendre une douche (Droite)',
-        offset: [42, 15, 645],
+        offset: [42, 15, 665],
         rotY: -Math.PI / 2,
         animation: 'animations/poses_idles/miley_armature_posing_f.glb',
         duration: 25.0,

@@ -33,6 +33,8 @@ import { useCharacterAnimations } from './useCharacterAnimations';
 import { useCharacterPhysics } from './useCharacterPhysics';
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
+const _tmpLgbtaColorA = new THREE.Color();
+const _tmpLgbtaColorB = new THREE.Color();
 
 export function SingleCharacter({
   id,
@@ -548,12 +550,12 @@ export function SingleCharacter({
       if (t > 10) {
         hue = (0.86 + (t - 10) / 5) % 1.0;
       }
-      const c = new THREE.Color().setHSL(hue, 1.0, 0.5);
-      const e = new THREE.Color().setHSL(hue, 1.0, 0.15);
+      _tmpLgbtaColorA.setHSL(hue, 1.0, 0.5);
+      _tmpLgbtaColorB.setHSL(hue, 1.0, 0.15);
       for (let i = 0; i < parts.lgbtaHairMaterials.length; i++) {
         const m = parts.lgbtaHairMaterials[i] as any;
-        if (m.color) m.color.copy(c);
-        if (m.emissive) m.emissive.copy(e);
+        if (m.color) m.color.copy(_tmpLgbtaColorA);
+        if (m.emissive) m.emissive.copy(_tmpLgbtaColorB);
       }
     }
 

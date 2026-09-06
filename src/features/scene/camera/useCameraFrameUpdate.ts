@@ -73,7 +73,6 @@ export function useCameraFrameUpdate({
         cameraState.walkerX = walkPos.current.x;
         cameraState.walkerZ = walkPos.current.z;
       }
-      updateWalkLook();
     } else {
       if (!cameraState.isAIControlled) {
         cameraState.walkerX = walkPos.current.x;

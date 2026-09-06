@@ -93,13 +93,17 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
     const targetL = isOpenRRef.current ? X_CLOSED_R : X_CLOSED_L;
     // groupRRef (en +X) est la Porte Gauche depuis la SDB -> obéit à isOpenL
     const targetR = isOpenLRef.current ? X_CLOSED_L : X_CLOSED_R;
-    const dL = targetL - groupLRef.current.position.x;
-    const dR = targetR - groupRRef.current.position.x;
+    const curL = groupLRef.current.position.x;
+    const curR = groupRRef.current.position.x;
+    if (curL === targetL && curR === targetR) return;
+
+    const dL = targetL - curL;
+    const dR = targetR - curR;
     let changed = false;
     if (Math.abs(dL) > 0.01) {
       groupLRef.current.position.x += dL * 0.12;
       changed = true;
-    } else if (groupLRef.current.position.x !== targetL) {
+    } else if (curL !== targetL) {
       groupLRef.current.position.x = targetL;
       changed = true;
     }
@@ -107,7 +111,7 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
     if (Math.abs(dR) > 0.01) {
       groupRRef.current.position.x += dR * 0.12;
       changed = true;
-    } else if (groupRRef.current.position.x !== targetR) {
+    } else if (curR !== targetR) {
       groupRRef.current.position.x = targetR;
       changed = true;
     }

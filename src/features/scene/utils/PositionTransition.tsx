@@ -30,6 +30,8 @@ export function PositionTransition({ x, z, ry, children }: {
       return;
     }
 
+    if (g.position.x === tx && g.position.z === tz && g.rotation.y === try_) return;
+
     const dx = tx - g.position.x;
     const dz = tz - g.position.z;
     let   dry = try_ - g.rotation.y;

@@ -141,12 +141,18 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
   useFrame((_, delta) => {
     const s = stateRef.current;
-    let moved = false;
     const actualLeftOpen = s.isOpenRight && s.isOpenLeft;
     const isRightOpenEnough = rightRotRef.current > 0.25;
     const leftTarget = (actualLeftOpen && isRightOpenEnough) ? -Math.PI / 2 : 0;
     const isLeftOpen = Math.abs(leftRotRef.current) > 0.05;
     const rightTarget = s.isOpenRight ? Math.PI / 2 : (isLeftOpen ? Math.PI / 2 : 0);
+    const targetShutter = typeof s.targetShutter === 'number' ? s.targetShutter : (s.targetShutter ? 100 : 0);
+
+    if (leftRotRef.current === leftTarget && rightRotRef.current === rightTarget && shutterPercentRef.current === targetShutter) {
+      return;
+    }
+
+    let moved = false;
 
     const dLeft = leftTarget - leftRotRef.current;
     if (Math.abs(dLeft) > 0.001) {
@@ -167,7 +173,6 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
     }
 
     // Animation du volet roulant (0 à 100%)
-    const targetShutter = typeof s.targetShutter === 'number' ? s.targetShutter : (s.targetShutter ? 100 : 0);
     const dShutter = targetShutter - shutterPercentRef.current;
     if (Math.abs(dShutter) > 0.1) {
       shutterPercentRef.current += dShutter * Math.min(1, 6 * delta);
