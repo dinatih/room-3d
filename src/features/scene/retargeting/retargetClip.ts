@@ -446,8 +446,10 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
             // et à hauteur naturelle du bassin au repos (world Y = 12 cm au-dessus du matelas ou sol).
             // Le calcul standard soustrayait srcRestPos (T-pose debout de ~1m) ce qui envoyait le bassin
             // à la tête ou aux pieds, et écrasait l'axe local Y (horizontal sur Lara) au lieu de la hauteur Z.
-            const targetHipsHeight = bone.defaultPosition ? bone.defaultPosition.length() : 99.1;
-            const groundHipsY = 12.0;
+            const isBoneInMeters = bone.defaultPosition && bone.defaultPosition.length() < 5.0;
+            const targetHipsHeight = bone.defaultPosition ? bone.defaultPosition.length() : (isBoneInMeters ? 0.991 : 99.1);
+            // Au sol / matelas, le bassin est à 12 cm. Si l'os cible est en mètres (comme Lara), 12 cm = 0.12 m !
+            const groundHipsY = isBoneInMeters ? 0.12 : 12.0;
 
             const f0Raw = new THREE.Vector3(clone.values[0], clone.values[1], clone.values[2]);
             const f0World = f0Raw.applyQuaternion(P_src).multiplyScalar(computedHipsRatio);
