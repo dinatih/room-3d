@@ -174,7 +174,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Travailler debout',
         relative: true,
         offset: [0, 0, -36],
-        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
+        animation: 'texting',
       }
     ]
   },
@@ -191,7 +191,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Faire ses besoins',
         offset: [50, 0, 500],
         rotY: 0,
-        animation: 'animations/poses_idles/anim_sitting_idle.glb',
+        animation: 'sit_idle',
         duration: 10.0,
       },
       {
@@ -216,7 +216,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Se laver les mains',
         offset: [116, 0, 530],
         rotY: Math.PI,
-        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
+        animation: 'inspect_mid_height',
         duration: 5.0,
       },
       {
@@ -224,7 +224,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Se laver les dents',
         offset: [116, 0, 530],
         rotY: Math.PI,
-        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
+        animation: 'take_object_mid',
         duration: 5.0,
       },
       {
@@ -232,7 +232,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Se Raser / Maquiller',
         offset: [116, 0, 530],
         rotY: Math.PI,
-        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
+        animation: 'inspect_mid_height',
         duration: 5.0,
       }
     ]
@@ -281,7 +281,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre le sac de Linge sale',
         offset: [130, 0, 565],
         rotY: 0,
-        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
+        animation: 'take_object_mid',
         duration: 3.5,
       }
     ]
@@ -298,7 +298,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un objet',
         offset: [30, 0, 535],
         rotY: Math.PI + Math.PI / 8,
-        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
+        animation: 'take_object_mid',
         duration: 3.5,
       }
     ]
@@ -314,7 +314,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un objet',
         offset: [169, 0, 535],
         rotY: Math.PI,
-        animation: 'animations/poses_idles/anim_texting_while_standing.glb',
+        animation: 'inspect_mid_height',
         duration: 3.5,
       }
     ]

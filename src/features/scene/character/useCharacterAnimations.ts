@@ -4,8 +4,10 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { retargetClip, _retargetCache } from '../retargeting';
 import { duoSessionManager } from '../ai/duoSessionManager';
+import { resolveAnimationPath } from '../animations/animationResolver';
 
 const silentManager = new THREE.LoadingManager();
+
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
 const MAX_DYNAMIC_GLTF_CACHE = 12;
@@ -63,15 +65,18 @@ export function useCharacterAnimations({
   const currentAnimClip = useRef<string | null>(null);
   const userAnimOverrideRef = useRef<boolean>(false);
 
-  const loadAndPlayClip = useCallback((path: string, loop = true, isUserOverride = false) => {
+  const loadAndPlayClip = useCallback((pathOrKey: string, loop = true, isUserOverride = false) => {
+
     if (!scene || !mixerRef.current) return;
-    const isTPose = path === 'tpose' || path === 'animations/poses_idles/anim_t_pose.glb';
+    const path = resolveAnimationPath(pathOrKey);
+    const isTPose = path === 'tpose' || path === 'animations/poses_idles/anim_t_pose.glb' || pathOrKey === 't_pose';
     if (isTPose) {
       currentAnimClip.current = 'tpose';
       if (isUserOverride) userAnimOverrideRef.current = true;
       invalidate();
       return;
     }
+
 
     if (path === 'idle') {
       currentAnimClip.current = null;

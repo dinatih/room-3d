@@ -249,12 +249,14 @@ ANIMATION_PACKS['lay_side']          = ANIMATION_PACKS['laying_side'];
 ANIMATION_PACKS['lay_front_pack']    = ANIMATION_PACKS['laying_front'];
 ANIMATION_PACKS['lay_side_pack']     = ANIMATION_PACKS['laying_side'];
 
+import { getRandomAnimationByQuery, resolveAnimationPath, getAnimationDef } from '../animations/animationResolver';
+
 /**
  * Résout une animation aléatoire ou définie et son orientation finale (avec rotY offset si nécessaire)
  * pour un slot d'interaction donné.
  *
  * Dans un pack nommé, chaque entrée peut être :
- *   - une string  : 'animations/poses_idles/anim_laying.glb'
+ *   - une string  : 'animations/poses_idles/anim_laying.glb' ou un alias 'texting', 'sit_idle'
  *   - un objet    : { animation: 'animations/poses_idles/anim_laying.glb', rotYOffset: Math.PI / 2 }
  */
 export function resolveSlotAnimation(slot: {
@@ -265,38 +267,69 @@ export function resolveSlotAnimation(slot: {
 }): { animation: string; rotY: number } {
   const baseRotY = slot.rotY ?? 0;
 
-  // 1. Pack nommé (ex: 'laying_pack', 'seated_front', ...)
+  // 1. Pack nommé historique (ex: 'laying_pack', 'seated_front', ...)
   if (typeof slot.animations_random === 'string' && ANIMATION_PACKS[slot.animations_random]) {
     const pack = ANIMATION_PACKS[slot.animations_random];
     const item = pack.animations[Math.floor(Math.random() * pack.animations.length)];
     if (typeof item === 'string') {
+      const resolvedPath = resolveAnimationPath(item);
+      const def = getAnimationDef(item);
       return {
-        animation: item,
-        rotY: baseRotY + (pack.defaultRotYOffset ?? 0),
+        animation: resolvedPath,
+        rotY: baseRotY + (def?.defaultRotYOffset ?? pack.defaultRotYOffset ?? 0),
       };
     } else {
+      const resolvedPath = resolveAnimationPath(item.animation);
       return {
-        animation: item.animation,
+        animation: resolvedPath,
         rotY: baseRotY + (item.rotYOffset ?? pack.defaultRotYOffset ?? 0),
       };
     }
   }
 
-  // 2. Tableau direct de strings dans animations_random ou availableAnims
+  // 2. Requête par tags ou alias via animations_random (ex: 'tag:sitting', ['tag:dance'], ou un tag direct)
+  if (typeof slot.animations_random === 'string') {
+    const queryResult = getRandomAnimationByQuery(slot.animations_random);
+    if (queryResult) {
+      return {
+        animation: queryResult.animation,
+        rotY: baseRotY + (queryResult.rotYOffset ?? 0),
+      };
+    }
+  }
+
+  // 3. Tableau direct de strings (ou tags) dans animations_random ou availableAnims
   const animList = Array.isArray(slot.animations_random)
     ? slot.animations_random
     : (slot.availableAnims && slot.availableAnims.length > 0 ? slot.availableAnims : null);
 
   if (animList && animList.length > 0) {
+    const chosen = animList[Math.floor(Math.random() * animList.length)];
+    const queryResult = getRandomAnimationByQuery(chosen);
+    if (queryResult) {
+      return {
+        animation: queryResult.animation,
+        rotY: baseRotY + (queryResult.rotYOffset ?? 0),
+      };
+    }
     return {
-      animation: animList[Math.floor(Math.random() * animList.length)],
+      animation: resolveAnimationPath(chosen),
       rotY: baseRotY,
     };
   }
 
-  // 3. Animation unique spécifiée ou fallback
+  // 4. Animation unique spécifiée par alias, id ou chemin direct, ou fallback
+  if (slot.animation) {
+    const def = getAnimationDef(slot.animation);
+    return {
+      animation: def ? def.path : resolveAnimationPath(slot.animation),
+      rotY: baseRotY + (def?.defaultRotYOffset ?? 0),
+    };
+  }
+
   return {
-    animation: slot.animation || 'animations/poses_idles/anim_sitting_idle.glb',
+    animation: resolveAnimationPath('sitting_idle'),
     rotY: baseRotY,
   };
 }
+
