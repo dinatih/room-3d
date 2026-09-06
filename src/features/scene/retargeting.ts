@@ -79,34 +79,78 @@ export const BONE_SYNONYMS: Record<string, string[]> = {
   'RightToeBase': ['legrighttoes', 'ballr', 'toer', 'rlegball', 'toe.r', 'toe_r', 'ball.r', 'ball_r', 'righttoebase']
 };
 
+interface SkeletonIndex {
+  boneNames: string[];
+  boneByName: Map<string, THREE.Bone>;
+  normalizedToReal: Map<string, string>;
+  hasClavicle: boolean;
+}
+
+const _skeletonIndexCache = new WeakMap<THREE.Object3D, SkeletonIndex>();
+
+export function getSkeletonIndex(targetInstance: THREE.Object3D): SkeletonIndex {
+  let cached = _skeletonIndexCache.get(targetInstance);
+  if (cached) return cached;
+
+  const boneNames: string[] = [];
+  const boneByName = new Map<string, THREE.Bone>();
+  const normalizedToReal = new Map<string, string>();
+
+  targetInstance.traverse(node => {
+    if ((node as any).isBone) {
+      const name = node.name;
+      boneNames.push(name);
+      boneByName.set(name, node as THREE.Bone);
+      const normalized = name.toLowerCase().replace(/[:_ .\-]/g, '');
+      if (!normalizedToReal.has(normalized)) {
+        normalizedToReal.set(normalized, name);
+      }
+    }
+  });
+
+  const clavicleSynonyms = ['leftshoulder', 'shoulderl', 'claviclel', 'rightshoulder', 'shoulderr', 'clavicler'];
+  const hasClavicle = boneNames.some(name => {
+    const n = name.toLowerCase();
+    return clavicleSynonyms.some(s => n.includes(s));
+  });
+
+  cached = {
+    boneNames,
+    boneByName,
+    normalizedToReal,
+    hasClavicle
+  };
+  _skeletonIndexCache.set(targetInstance, cached);
+  return cached;
+}
+
 export function resolveTargetFingerBoneName(targetInstance: THREE.Object3D, side: string, type: string, segment: string): string | null {
   const sideChar = side.charAt(0).toLowerCase();
-  const segmentIndex = parseInt(segment) - 1;
+  const segmentIndex = parseInt(segment, 10) - 1;
   const segmentLetter = ['a', 'b', 'c'][segmentIndex] || 'a';
+  const fingerIdx = type === 'thumb' ? 1 : type === 'index' ? 2 : type === 'middle' ? 3 : type === 'ring' ? 4 : 5;
+  const fType = type === 'thumb' ? 'thumb' : 'f_' + type;
 
   const candidates = [
     new RegExp(`^${type}${segment}_${sideChar}$`, 'i'),
-    new RegExp(`arm.*${side}.*finger.*${type === 'thumb' ? 1 : type === 'index' ? 2 : type === 'middle' ? 3 : type === 'ring' ? 4 : 5}${segmentLetter}`, 'i'),
+    new RegExp(`arm.*${side}.*finger.*${fingerIdx}${segmentLetter}`, 'i'),
     new RegExp(`${type}_0${segment}_${sideChar}`, 'i'),
-    new RegExp(`${type === 'thumb' ? 'thumb' : 'f_' + type}\\.0${segment}\\.${sideChar}`, 'i'),
+    new RegExp(`${fType}\\.0${segment}\\.${sideChar}`, 'i'),
     new RegExp(`${sideChar}.*hand.*${type}.*${segmentIndex}`, 'i'),
     new RegExp(`mixamorig.*${side}.*hand.*${type}.*${segment}`, 'i'),
     new RegExp(`mixamorig_${side}_hand_${type}_${segment}`, 'i'),
     new RegExp(`${side}_hand_${type}_${segment}`, 'i')
   ];
 
-  let foundName: string | null = null;
-  targetInstance.traverse(node => {
-    if ((node as any).isBone && !foundName) {
-      for (const rx of candidates) {
-        if (rx.test(node.name)) {
-          foundName = node.name;
-          break;
-        }
+  const index = getSkeletonIndex(targetInstance);
+  for (const name of index.boneNames) {
+    for (const rx of candidates) {
+      if (rx.test(name)) {
+        return name;
       }
     }
-  });
-  return foundName;
+  }
+  return null;
 }
 
 export function getDepth(node: THREE.Object3D): number {
@@ -172,68 +216,15 @@ export function buildHairChain(hairBones: THREE.Bone[]) {
   return hairChain;
 }
 
-export function buildWigChains(wigBones: THREE.Bone[]) {
-  const wigChain: any[] = [];
-  const bones = [...wigBones].sort((a, b) => getDepth(a) - getDepth(b));
-
-  for (const bone of bones) {
-    const parent = bone.parent;
-    if (!parent) continue;
-
-    bone.updateMatrixWorld(true);
-    const parentRestWorldQuat = parent.getWorldQuaternion(new THREE.Quaternion());
-    const boneRestWorldQuat = bone.getWorldQuaternion(new THREE.Quaternion());
-    const parentRestRelQuat = parentRestWorldQuat.clone().invert().multiply(boneRestWorldQuat);
-
-    let axis = new THREE.Vector3(0, -1, 0);
-    let worldLength = 5.0;
-    const child = bone.children.find(x => (x as any).isBone && bones.includes(x as THREE.Bone)) as THREE.Bone | undefined;
-
-    const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-
-    if (child) {
-      child.updateMatrixWorld(true);
-      const childJointWorld = new THREE.Vector3().setFromMatrixPosition(child.matrixWorld);
-      const dist = jointWorld.distanceTo(childJointWorld);
-      if (dist > 0.05) {
-        worldLength = dist;
-        if (child.position.lengthSq() > 1e-6) {
-          axis = child.position.clone().normalize();
-        }
-      }
-    } else {
-      if (bone.position.lengthSq() > 1e-6) {
-        axis = bone.position.clone().normalize();
-      }
-      const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
-      worldLength = Math.max(1.0, 4.0 * (worldScale.y || 1.0));
-    }
-
-    const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
-    const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
-
-    wigChain.push({
-      bone,
-      restLocalQuat: (bone as any).restLocalQuaternion ? (bone as any).restLocalQuaternion.clone() : bone.quaternion.clone(),
-      parentRestRelQuat,
-      axis,
-      worldLength,
-      tipWorld: tipWorld.clone(),
-      tipPrev: tipWorld.clone(),
-    });
-  }
-
-  return wigChain;
-}
-
 export const _retargetCache: Record<string, THREE.AnimationClip> = {};
 
 export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: string, sourceHairMap: Map<string, string> | null = null): string | null {
+  const index = getSkeletonIndex(targetInstance);
   const baseNameLower = baseName.toLowerCase();
   if (baseNameLower.includes('hair') || baseNameLower.includes('ponytail')) {
     if (sourceHairMap && sourceHairMap.has(baseNameLower)) {
       const targetName = sourceHairMap.get(baseNameLower);
-      if (targetName && targetInstance.getObjectByName(targetName)) {
+      if (targetName && index.boneByName.has(targetName)) {
         return targetName;
       }
     }
@@ -241,7 +232,7 @@ export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: 
     if (numMatch) {
       const N = numMatch[1];
       const targetName = `hair_${N}`;
-      if (targetInstance.getObjectByName(targetName)) {
+      if (index.boneByName.has(targetName)) {
         return targetName;
       }
     }
@@ -258,56 +249,125 @@ export function resolveTargetBoneName(targetInstance: THREE.Object3D, baseName: 
     const segment = fingerMatch[2];
     const resolvedFinger = resolveTargetFingerBoneName(targetInstance, side, type, segment);
     if (resolvedFinger) {
-      // console.log(`[FINGER] Mapped ${baseName} -> ${resolvedFinger}`);
       return resolvedFinger;
     }
-    // console.log(`[FINGER_FAIL] Could not map ${baseName} (${side}, ${type}, ${segment})`);
   }
 
   const synonyms = BONE_SYNONYMS[baseName];
   if (synonyms) {
     for (const syn of synonyms) {
-      let foundName: string | null = null;
-      targetInstance.traverse(node => {
-        if ((node as any).isBone && !foundName) {
-          const nameNormalized = node.name.toLowerCase().replace(/[:_ .\-]/g, '');
-          if (nameNormalized === syn || (nameNormalized.includes(syn) &&
-              !nameNormalized.includes(syn + '1') &&
-              !nameNormalized.includes(syn + '2') &&
-              !nameNormalized.includes(syn + '3') &&
-              !nameNormalized.includes(syn + '4'))) {
-            if (!nameNormalized.includes('twist') && !nameNormalized.includes('muscle') && !nameNormalized.includes('offset')) {
-              foundName = node.name;
-            }
+      // 1. Exact match via map
+      if (index.normalizedToReal.has(syn)) {
+        const exactName = index.normalizedToReal.get(syn)!;
+        const norm = exactName.toLowerCase().replace(/[:_ .\-]/g, '');
+        if (!norm.includes('twist') && !norm.includes('muscle') && !norm.includes('offset')) {
+          return exactName;
+        }
+      }
+
+      // 2. Fallback scan on boneNames
+      for (const name of index.boneNames) {
+        const nameNormalized = name.toLowerCase().replace(/[:_ .\-]/g, '');
+        if (nameNormalized.includes(syn) &&
+            !nameNormalized.includes(syn + '1') &&
+            !nameNormalized.includes(syn + '2') &&
+            !nameNormalized.includes(syn + '3') &&
+            !nameNormalized.includes(syn + '4')) {
+          if (!nameNormalized.includes('twist') && !nameNormalized.includes('muscle') && !nameNormalized.includes('offset')) {
+            return name;
           }
         }
-      });
-      if (foundName) return foundName;
+      }
     }
   }
 
+  const lowerPrefix = baseName.charAt(0).toLowerCase() + baseName.slice(1);
   const candidates = [
     'mixamorig:' + baseName,
     'mixamorig_' + baseName,
     'mixamorig' + baseName,
     baseName,
-    'mixamorig:' + baseName.charAt(0).toLowerCase() + baseName.slice(1),
-    'mixamorig_' + baseName.charAt(0).toLowerCase() + baseName.slice(1),
-    'mixamorig' + baseName.charAt(0).toLowerCase() + baseName.slice(1),
-    baseName.charAt(0).toLowerCase() + baseName.slice(1)
+    'mixamorig:' + lowerPrefix,
+    'mixamorig_' + lowerPrefix,
+    'mixamorig' + lowerPrefix,
+    lowerPrefix
   ];
 
   for (const cand of candidates) {
-    if (targetInstance.getObjectByName(cand)) {
+    if (index.boneByName.has(cand)) {
       return cand;
     }
   }
   return null;
 }
 
+// Static pooled structures for zero-allocation retargeting
+const _tmpQ0 = new THREE.Quaternion();
+const _tmpQ1 = new THREE.Quaternion();
+const _tmpQ2 = new THREE.Quaternion();
+const _tmpQ3 = new THREE.Quaternion();
+const _tmpQ4 = new THREE.Quaternion();
+const _tmpV0 = new THREE.Vector3();
+const _tmpV1 = new THREE.Vector3();
+const _tmpV2 = new THREE.Vector3();
+const _tmpV3 = new THREE.Vector3();
+const _pRootRest = new THREE.Vector3();
+const _pHips = new THREE.Vector3();
+const _pRoot = new THREE.Vector3();
+const _pDelta = new THREE.Vector3();
+const _qRootEval = new THREE.Quaternion();
+const _qHipsEval = new THREE.Quaternion();
+
+function evaluateQuaternionTrackFast(track: THREE.KeyframeTrack, t: number, out: THREE.Quaternion): THREE.Quaternion {
+  const trackTimes = track.times;
+  const trackValues = track.values;
+  const len = trackTimes.length;
+  if (t <= trackTimes[0]) {
+    return out.set(trackValues[0], trackValues[1], trackValues[2], trackValues[3]);
+  }
+  if (t >= trackTimes[len - 1]) {
+    const idx = (len - 1) * 4;
+    return out.set(trackValues[idx], trackValues[idx + 1], trackValues[idx + 2], trackValues[idx + 3]);
+  }
+  let i = 0;
+  while (i < len - 1 && trackTimes[i + 1] < t) {
+    i++;
+  }
+  const t0 = trackTimes[i];
+  const t1 = trackTimes[i + 1];
+  const alpha = (t - t0) / (t1 - t0);
+  _tmpQ0.set(trackValues[4 * i], trackValues[4 * i + 1], trackValues[4 * i + 2], trackValues[4 * i + 3]);
+  _tmpQ1.set(trackValues[4 * (i + 1)], trackValues[4 * (i + 1) + 1], trackValues[4 * (i + 1) + 2], trackValues[4 * (i + 1) + 3]);
+  return out.copy(_tmpQ0).slerp(_tmpQ1, alpha);
+}
+
+function evaluateVectorTrackFast(track: THREE.KeyframeTrack, t: number, out: THREE.Vector3): THREE.Vector3 {
+  const trackTimes = track.times;
+  const trackValues = track.values;
+  const len = trackTimes.length;
+  if (t <= trackTimes[0]) {
+    return out.set(trackValues[0], trackValues[1], trackValues[2]);
+  }
+  if (t >= trackTimes[len - 1]) {
+    const idx = (len - 1) * 3;
+    return out.set(trackValues[idx], trackValues[idx + 1], trackValues[idx + 2]);
+  }
+  let i = 0;
+  while (i < len - 1 && trackTimes[i + 1] < t) {
+    i++;
+  }
+  const t0 = trackTimes[i];
+  const t1 = trackTimes[i + 1];
+  const alpha = (t - t0) / (t1 - t0);
+  _tmpV0.set(trackValues[3 * i], trackValues[3 * i + 1], trackValues[3 * i + 2]);
+  _tmpV1.set(trackValues[3 * (i + 1)], trackValues[3 * (i + 1) + 1], trackValues[3 * (i + 1) + 2]);
+  return out.copy(_tmpV0).lerp(_tmpV1, alpha);
+}
+
 export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE.Object3D, animScene: THREE.Object3D | undefined): THREE.AnimationClip {
   const animBones: Record<string, any> = {};
   const sourceHairMap = new Map<string, string>();
+  const targetIndex = getSkeletonIndex(targetInstance);
 
   if (animScene) {
     animScene.updateMatrixWorld(true);
@@ -319,14 +379,14 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
         let name = c.name;
         if (CC3_TO_MIXAMO[name]) name = CC3_TO_MIXAMO[name];
         if (name === 'LeftArm' || name === 'RightArm') {
-          const wQ = c.getWorldQuaternion(new THREE.Quaternion());
-          const dir = new THREE.Vector3(0, 1, 0).applyQuaternion(wQ);
+          const wQ = c.getWorldQuaternion(_tmpQ0);
+          const dir = _tmpV0.set(0, 1, 0).applyQuaternion(wQ);
           // If the arm is pointing downwards (dir.y < -0.1), it's an A-pose.
           if (dir.y < -0.1) {
-            const targetDir = name === 'LeftArm' ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(-1, 0, 0);
-            const offsetQ = new THREE.Quaternion().setFromUnitVectors(dir.normalize(), targetDir);
-            const pWQ = c.parent ? c.parent.getWorldQuaternion(new THREE.Quaternion()) : new THREE.Quaternion();
-            const newWorldQ = offsetQ.clone().multiply(wQ);
+            const targetDir = name === 'LeftArm' ? _tmpV1.set(1, 0, 0) : _tmpV1.set(-1, 0, 0);
+            const offsetQ = _tmpQ1.setFromUnitVectors(dir.normalize(), targetDir);
+            const pWQ = c.parent ? c.parent.getWorldQuaternion(_tmpQ2) : _tmpQ2.identity();
+            const newWorldQ = offsetQ.multiply(wQ);
             c.quaternion.copy(pWQ.invert().multiply(newWorldQ));
           }
         }
@@ -390,15 +450,14 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
   // Detect and fix centimeter positions (scale to meters)
   for (const track of workingClip.tracks) {
     if (track.name.endsWith('.position')) {
-      // Find the maximum absolute value in the track to determine if it's in cm
       let maxVal = 0;
       for (let i = 0; i < track.values.length; i++) {
-        if (Math.abs(track.values[i]) > maxVal) {
-          maxVal = Math.abs(track.values[i]);
+        const absV = Math.abs(track.values[i]);
+        if (absV > maxVal) {
+          maxVal = absV;
         }
       }
       
-      // If the track has values > 5.0, it's almost certainly in centimeters
       if (maxVal > 5.0) {
         for (let i = 0; i < track.values.length; i++) {
           track.values[i] *= 0.01;
@@ -411,28 +470,6 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
   const rootRotTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')) && t.name.endsWith('.quaternion'));
   const hipsRotTrackIndex = workingClip.tracks.findIndex(t => (t.name.toLowerCase().includes('hips') || t.name.toLowerCase().includes('hip') || t.name.toLowerCase().includes('pelvis')) && t.name.endsWith('.quaternion') && !(t.name.toLowerCase().includes('rootjoint') || t.name.toLowerCase().includes('cc_base_boneroot')));
 
-  const evaluateQuaternionTrack = (track: THREE.KeyframeTrack, t: number): THREE.Quaternion => {
-    const trackTimes = track.times;
-    const trackValues = track.values;
-    if (t <= trackTimes[0]) {
-      return new THREE.Quaternion(trackValues[0], trackValues[1], trackValues[2], trackValues[3]);
-    }
-    if (t >= trackTimes[trackTimes.length - 1]) {
-      const idx = (trackTimes.length - 1) * 4;
-      return new THREE.Quaternion(trackValues[idx], trackValues[idx+1], trackValues[idx+2], trackValues[idx+3]);
-    }
-    let i = 0;
-    while (i < trackTimes.length - 1 && trackTimes[i+1] < t) {
-      i++;
-    }
-    const t0 = trackTimes[i];
-    const t1 = trackTimes[i+1];
-    const alpha = (t - t0) / (t1 - t0);
-    const q0 = new THREE.Quaternion(trackValues[4*i], trackValues[4*i+1], trackValues[4*i+2], trackValues[4*i+3]);
-    const q1 = new THREE.Quaternion(trackValues[4*(i+1)], trackValues[4*(i+1)+1], trackValues[4*(i+1)+2], trackValues[4*(i+1)+3]);
-    return q0.slerp(q1, alpha);
-  };
-
   if (rootRotTrackIndex !== -1) {
     const rootRotTrack = workingClip.tracks[rootRotTrackIndex];
     if (hipsRotTrackIndex !== -1) {
@@ -441,19 +478,17 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
       const times = Array.from(timesSet).sort((a, b) => a - b);
       const values = new Float32Array(times.length * 4);
 
-
       for (let i = 0; i < times.length; i++) {
         const t = times[i];
-        const qRoot = evaluateQuaternionTrack(rootRotTrack, t);
-        const qHips = evaluateQuaternionTrack(hipsRotTrack, t);
+        evaluateQuaternionTrackFast(rootRotTrack, t, _qRootEval);
+        evaluateQuaternionTrackFast(hipsRotTrack, t, _qHipsEval);
         
-        // The true world rotation of the hips is the parent's world rotation * local rotation
-        const qCombined = qRoot.clone().multiply(qHips);
+        const qCombined = _tmpQ2.multiplyQuaternions(_qRootEval, _qHipsEval);
         
-        values[4*i] = qCombined.x;
-        values[4*i+1] = qCombined.y;
-        values[4*i+2] = qCombined.z;
-        values[4*i+3] = qCombined.w;
+        values[4 * i] = qCombined.x;
+        values[4 * i + 1] = qCombined.y;
+        values[4 * i + 2] = qCombined.z;
+        values[4 * i + 3] = qCombined.w;
       }
       
       const newHipsRotTrack = new THREE.QuaternionKeyframeTrack('mixamorig:Hips.quaternion', new Float32Array(times), values);
@@ -476,11 +511,8 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
     const rootPosTrack = workingClip.tracks[rootPosTrackIndex];
     let hipsPosTrack = hipsPosTrackIndex !== -1 ? workingClip.tracks[hipsPosTrackIndex] : null;
     
-    // If the animation doesn't have a hips position track (e.g. Miley animations where all translation is on root),
-    // create a static one from the default position so we can still combine them.
     if (!hipsPosTrack && animBones['Hips']) {
       const defPos = animBones['Hips'].defaultPosition.clone();
-      // Ensure it's in meters if it came from CC4 (centimeters)
       if (defPos.length() > 5.0) defPos.multiplyScalar(0.01);
       hipsPosTrack = new THREE.VectorKeyframeTrack(
         'mixamorig:Hips.position',
@@ -495,60 +527,21 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
         const posTimes = rootPosTrack.times;
         const posValues = new Float32Array(posTimes.length * 3);
 
-        const evaluateVectorTrack = (track: THREE.KeyframeTrack, t: number): THREE.Vector3 => {
-          const trackTimes = track.times;
-          const trackValues = track.values;
-          if (t <= trackTimes[0]) return new THREE.Vector3(trackValues[0], trackValues[1], trackValues[2]);
-          if (t >= trackTimes[trackTimes.length - 1]) {
-            const idx = (trackTimes.length - 1) * 3;
-            return new THREE.Vector3(trackValues[idx], trackValues[idx+1], trackValues[idx+2]);
-          }
-          let i = 0;
-          while (i < trackTimes.length - 1 && trackTimes[i+1] < t) i++;
-          const alpha = (t - trackTimes[i]) / (trackTimes[i+1] - trackTimes[i]);
-          const v0 = new THREE.Vector3(trackValues[3*i], trackValues[3*i+1], trackValues[3*i+2]);
-          const v1 = new THREE.Vector3(trackValues[3*(i+1)], trackValues[3*(i+1)+1], trackValues[3*(i+1)+2]);
-          return v0.lerp(v1, alpha);
-        };
-        const evaluateQuaternionTrack = (track: THREE.KeyframeTrack, t: number): THREE.Quaternion => {
-          const trackTimes = track.times;
-          const trackValues = track.values;
-          if (t <= trackTimes[0]) return new THREE.Quaternion(trackValues[0], trackValues[1], trackValues[2], trackValues[3]);
-          if (t >= trackTimes[trackTimes.length - 1]) {
-            const idx = (trackTimes.length - 1) * 4;
-            return new THREE.Quaternion(trackValues[idx], trackValues[idx+1], trackValues[idx+2], trackValues[idx+3]);
-          }
-          let i = 0;
-          while (i < trackTimes.length - 1 && trackTimes[i+1] < t) i++;
-          const alpha = (t - trackTimes[i]) / (trackTimes[i+1] - trackTimes[i]);
-          const q0 = new THREE.Quaternion(trackValues[4*i], trackValues[4*i+1], trackValues[4*i+2], trackValues[4*i+3]);
-          const q1 = new THREE.Quaternion(trackValues[4*(i+1)], trackValues[4*(i+1)+1], trackValues[4*(i+1)+2], trackValues[4*(i+1)+3]);
-          return q0.slerp(q1, alpha);
-        };
-
-        const pRootRest = evaluateVectorTrack(rootPosTrack, posTimes[0]);
-
+        evaluateVectorTrackFast(rootPosTrack, posTimes[0], _pRootRest);
 
         for (let i = 0; i < posTimes.length; i++) {
           const t = posTimes[i];
-          const pRoot = evaluateVectorTrack(rootPosTrack, t);
-          const pHips = evaluateVectorTrack(hipsPosTrack, t);
-          const qRoot = evaluateQuaternionTrack(rootRotTrack, t);
+          evaluateVectorTrackFast(rootPosTrack, t, _pRoot);
+          evaluateVectorTrackFast(hipsPosTrack, t, _pHips);
+          evaluateQuaternionTrackFast(rootRotTrack, t, _qRootEval);
           
-          // pRoot is in CC4 world space (Y-up). pHips is in CC4 root space (Z-up).
-          // 1. Convert hips to Y-up world space:
-          const pHipsWorld = pHips.clone().applyQuaternion(qRoot);
+          _pHips.applyQuaternion(_qRootEval);
+          _pDelta.subVectors(_pRoot, _pRootRest);
+          const pFinalWorld = _pDelta.add(_pHips);
           
-          // 2. Add root motion delta (also in Y-up world space)
-          const pRootDelta = pRoot.clone().sub(pRootRest);
-          const pFinalWorld = pRootDelta.add(pHipsWorld);
-          
-          // We leave it in world space because the generic loop will apply P_src (Identity) and P_tgt_inv (+90 X) 
-          // to correctly project it onto the target bone.
-          
-          posValues[3*i] = pFinalWorld.x;
-          posValues[3*i+1] = pFinalWorld.y;
-          posValues[3*i+2] = pFinalWorld.z;
+          posValues[3 * i] = pFinalWorld.x;
+          posValues[3 * i + 1] = pFinalWorld.y;
+          posValues[3 * i + 2] = pFinalWorld.z;
         }
         
         const newHipsPosTrack = new THREE.VectorKeyframeTrack('mixamorig:Hips.position', new Float32Array(posTimes), posValues);
@@ -576,7 +569,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
       const baseName = match[1];
       if (prop === 'position' && baseName.toLowerCase() === 'hips') {
         const resolvedHipsName = resolveTargetBoneName(targetInstance, 'Hips', sourceHairMap);
-        const bone = resolvedHipsName ? targetInstance.getObjectByName(resolvedHipsName) as any : null;
+        const bone = resolvedHipsName ? targetIndex.boneByName.get(resolvedHipsName) as any : null;
         let refSrcY = 0.991;
         if (animBones[baseName] && animBones[baseName].defaultPosition) {
           refSrcY = animBones[baseName].defaultPosition.length();
@@ -600,8 +593,6 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
   }
 
   const tracks: THREE.KeyframeTrack[] = [];
-
-
 
   for (const tr of workingClip.tracks) {
     const [boneFull, prop] = tr.name.split('.');
@@ -637,32 +628,32 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
 
     // Retarget position for hips
     if (prop === 'position' && isHips) {
-      const bone = targetInstance.getObjectByName(targetBoneName) as any;
+      const bone = targetIndex.boneByName.get(targetBoneName) as any;
       if (bone && bone.defaultPosition) {
         let P_src = null;
         if (isRootJointTranslation) {
-          P_src = new THREE.Quaternion();
+          P_src = _tmpQ3.identity();
         } else if (animBones[baseName]) {
           P_src = animBones[baseName].parentRestWorldQuaternion;
         } else {
-          P_src = new THREE.Quaternion();
+          P_src = _tmpQ3.identity();
         }
 
         const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
           ? bone.parent.restWorldQuaternion
-          : new THREE.Quaternion();
-        const P_tgt_inv = P_tgt.clone().invert();
+          : _tmpQ4.identity();
+        const P_tgt_inv = _tmpQ1.copy(P_tgt).invert();
 
         let srcRestPos = null;
         if (isRootJointTranslation) {
-          srcRestPos = new THREE.Vector3(0, srcHipsDefaultY, 0);
+          srcRestPos = _tmpV2.set(0, srcHipsDefaultY, 0);
         } else if (animBones[baseName]) {
-          srcRestPos = animBones[baseName].defaultPosition.clone();
+          srcRestPos = _tmpV2.copy(animBones[baseName].defaultPosition);
           if (srcRestPos.length() > 5.0) {
             srcRestPos.multiplyScalar(0.01);
           }
         } else {
-          srcRestPos = new THREE.Vector3(0, srcHipsDefaultY * 100, 0);
+          srcRestPos = _tmpV2.set(0, srcHipsDefaultY * 100, 0);
           if (srcRestPos.length() > 5.0) {
             srcRestPos.multiplyScalar(0.01);
           }
@@ -674,9 +665,9 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
 
         let isFlat = true;
         for (let j = 1; j < clone.values.length / 3; j++) {
-          if (Math.abs(clone.values[3*j] - restX) > 0.001 ||
-              Math.abs(clone.values[3*j+1] - restY) > 0.001 ||
-              Math.abs(clone.values[3*j+2] - restZ) > 0.001) {
+          if (Math.abs(clone.values[3 * j] - restX) > 0.001 ||
+              Math.abs(clone.values[3 * j + 1] - restY) > 0.001 ||
+              Math.abs(clone.values[3 * j + 2] - restZ) > 0.001) {
             isFlat = false;
             break;
           }
@@ -702,16 +693,16 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
             const phase = (t / duration) * 2.0 * Math.PI;
             const dx = 0.5 * Math.cos(phase);
             const dy = 0.0;
-            const dz = 0.0; // Pas d'oscillation avant/arrière pour éviter la saccade sur la marche in-place
+            const dz = 0.0;
 
-            const dP = new THREE.Vector3(dx, dy, dz)
+            const dP = _tmpV3.set(dx, dy, dz)
               .applyQuaternion(P_src)
               .applyQuaternion(P_tgt_inv);
-            const resPos = bone.defaultPosition.clone().add(dP);
+            const resPos = _tmpV0.copy(bone.defaultPosition).add(dP);
 
-            newValues[3*f] = resPos.x;
-            newValues[3*f+1] = resPos.y;
-            newValues[3*f+2] = resPos.z;
+            newValues[3 * f] = resPos.x;
+            newValues[3 * f + 1] = resPos.y;
+            newValues[3 * f + 2] = resPos.z;
           }
           clone.times = newTimes;
           clone.values = newValues;
@@ -720,7 +711,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
           if (animNameLower.includes('takedown')) {
             let minY = Infinity;
             for (let j = 0; j < clone.values.length / 3; j++) {
-              if (clone.values[3*j+1] < minY) minY = clone.values[3*j+1];
+              if (clone.values[3 * j + 1] < minY) minY = clone.values[3 * j + 1];
             }
             if (minY < 0) {
               yMinDelta = -minY;
@@ -728,23 +719,23 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
           }
 
           for (let j = 0; j < clone.values.length / 3; j++) {
-            let yVal = clone.values[3*j+1] + yMinDelta;
+            let yVal = clone.values[3 * j + 1] + yMinDelta;
             if (isRootJointTranslation && (animNameLower.includes('laying') || animNameLower.includes('sleeping'))) {
               yVal = 0.12; 
             }
             const isTPose = animNameLower.includes('t-pose') || animNameLower.includes('t_pose') || animNameLower.includes('tpose');
             const dy = (isWalk || isTPose) ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
-            const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
-            const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
+            const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3 * j] - srcRestPos.x) * computedHipsRatio;
+            const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3 * j + 2] - srcRestPos.z) * computedHipsRatio;
 
-            const dP = new THREE.Vector3(dx, dy, dz)
+            const dP = _tmpV3.set(dx, dy, dz)
               .applyQuaternion(P_src)
               .applyQuaternion(P_tgt_inv);
-            const resPos = bone.defaultPosition.clone().add(dP);
+            const resPos = _tmpV0.copy(bone.defaultPosition).add(dP);
 
-            clone.values[3*j] = resPos.x;
-            clone.values[3*j+1] = resPos.y;
-            clone.values[3*j+2] = resPos.z;
+            clone.values[3 * j] = resPos.x;
+            clone.values[3 * j + 1] = resPos.y;
+            clone.values[3 * j + 2] = resPos.z;
           }
         }
       }
@@ -752,106 +743,87 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
 
     // Retarget rotations
     if (prop === 'quaternion') {
-      const bone = targetInstance.getObjectByName(targetBoneName) as any;
-      if (bone) {
-        if (bone.restLocalQuaternion && bone.restWorldQuaternion) {
-          let B_src = null;
-          let P_src = null;
-          let clavicleTrack: THREE.KeyframeTrack | null = null;
-          let clavicleParentRestWorld = new THREE.Quaternion();
-          if (animBones[baseName]) {
-            B_src = animBones[baseName].restWorldQuaternion.clone();
-            P_src = animBones[baseName].parentRestWorldQuaternion.clone();
-            if (isHips) {
-              // Hips world rest rotation must be neutralized so the character stands up (for Mixamo +90X rest poses)
-              B_src = new THREE.Quaternion();
-            }
+      const bone = targetIndex.boneByName.get(targetBoneName) as any;
+      if (bone && bone.restLocalQuaternion && bone.restWorldQuaternion) {
+        let B_src = null;
+        let P_src = null;
+        let clavicleTrack: THREE.KeyframeTrack | null = null;
+        let clavicleParentRestWorld = _tmpQ3;
 
-
-            // Check if we need to bake clavicle animation into the arm (if target lacks a clavicle)
-            if (baseName === 'LeftArm' || baseName === 'RightArm') {
-              const clavicleBaseName = baseName === 'LeftArm' ? 'LeftShoulder' : 'RightShoulder';
-              const clavicleSynonyms = BONE_SYNONYMS[clavicleBaseName] || [];
-              let targetHasClavicle = false;
-              targetInstance.traverse(node => {
-                if ((node as any).isBone && !targetHasClavicle) {
-                  if (clavicleSynonyms.some(s => node.name.toLowerCase().includes(s))) {
-                    targetHasClavicle = true;
-                  }
-                }
-              });
-              
-              if (!targetHasClavicle) {
-                // Target lacks clavicle. Find the clavicle track in the source animation.
-                const clavicleSourceNode = animBones[baseName].bone.parent;
-                if (clavicleSourceNode) {
-                  const clavicleTrackName = `${clavicleSourceNode.name}.quaternion`;
-                  clavicleTrack = rawClip.tracks.find(t => t.name === clavicleTrackName) || null;
-                  if (clavicleTrack) {
-                    const clavicleRestLocal = clavicleSourceNode.quaternion.clone(); // Rest local rotation
-                    clavicleParentRestWorld = P_src.clone().multiply(clavicleRestLocal.invert());
-                  }
-                }
-              }
-            }
-          } else {
-            B_src = new THREE.Quaternion();
-            P_src = new THREE.Quaternion();
+        if (animBones[baseName]) {
+          B_src = animBones[baseName].restWorldQuaternion;
+          P_src = animBones[baseName].parentRestWorldQuaternion;
+          if (isHips) {
+            B_src = _tmpQ4.identity();
           }
 
-          if (B_src && P_src) {
-            const B_tgt = bone.restWorldQuaternion;
-            const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
-              ? bone.parent.restWorldQuaternion
-              : new THREE.Quaternion();
-            const P_tgt_inv = P_tgt.clone().invert();
-            const B_src_inv = B_src.clone().invert();
-
-            for (let j = 0; j < clone.values.length / 4; j++) {
-              const srcLocalQ = new THREE.Quaternion(
-                clone.values[4*j],
-                clone.values[4*j+1],
-                clone.values[4*j+2],
-                clone.values[4*j+3]
-              );
-              
-              let currentP_src = P_src.clone();
+          if ((baseName === 'LeftArm' || baseName === 'RightArm') && !targetIndex.hasClavicle) {
+            const clavicleSourceNode = animBones[baseName].bone.parent;
+            if (clavicleSourceNode) {
+              const clavicleTrackName = `${clavicleSourceNode.name}.quaternion`;
+              clavicleTrack = rawClip.tracks.find(t => t.name === clavicleTrackName) || null;
               if (clavicleTrack) {
-                // Evaluate clavicle animation at this frame
-                const t = clone.times[j];
-                const clavicleAnimatedLocal = evaluateQuaternionTrack(clavicleTrack, t);
-                currentP_src = clavicleParentRestWorld.clone().multiply(clavicleAnimatedLocal);
+                const clavicleRestLocal = _tmpQ0.copy(clavicleSourceNode.quaternion);
+                clavicleParentRestWorld = _tmpQ2.copy(P_src).multiply(clavicleRestLocal.invert());
               }
-
-              const animWorldQ = currentP_src.multiply(srcLocalQ);
-              const deltaQ = animWorldQ.clone().multiply(B_src_inv);
-              const tgtAnimWorldQ = deltaQ.clone().multiply(B_tgt);
-              const tgtLocalQ = P_tgt_inv.clone().multiply(tgtAnimWorldQ).normalize();
-
-              clone.values[4*j]   = tgtLocalQ.x;
-              clone.values[4*j+1] = tgtLocalQ.y;
-              clone.values[4*j+2] = tgtLocalQ.z;
-              clone.values[4*j+3] = tgtLocalQ.w;
             }
-          } else {
-            const parentRestWorldQ = (bone.parent && bone.parent.restWorldQuaternion)
-              ? bone.parent.restWorldQuaternion
-              : new THREE.Quaternion();
-            const parentInv = parentRestWorldQ.clone().invert();
-            const boneRestLocalQ = bone.restLocalQuaternion.clone();
+          }
+        } else {
+          B_src = _tmpQ4.identity();
+          P_src = _tmpQ3.identity();
+        }
 
-            for (let i = 0; i < clone.values.length; i += 4) {
-              const q = new THREE.Quaternion(clone.values[i], clone.values[i+1], clone.values[i+2], clone.values[i+3]);
-              const resQ = parentInv.clone()
-                .multiply(q)
-                .multiply(parentRestWorldQ)
-                .multiply(boneRestLocalQ);
+        if (B_src && P_src) {
+          const B_tgt = bone.restWorldQuaternion;
+          const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
+            ? bone.parent.restWorldQuaternion
+            : _tmpQ0.identity();
+          const P_tgt_inv = _tmpQ1.copy(P_tgt).invert();
+          const B_src_inv = _tmpQ2.copy(B_src).invert();
 
-              clone.values[i] = resQ.x;
-              clone.values[i+1] = resQ.y;
-              clone.values[i+2] = resQ.z;
-              clone.values[i+3] = resQ.w;
+          for (let j = 0; j < clone.values.length / 4; j++) {
+            const srcLocalQ = _tmpQ0.set(
+              clone.values[4 * j],
+              clone.values[4 * j + 1],
+              clone.values[4 * j + 2],
+              clone.values[4 * j + 3]
+            );
+            
+            let currentP_src = P_src;
+            if (clavicleTrack) {
+              const t = clone.times[j];
+              evaluateQuaternionTrackFast(clavicleTrack, t, _tmpQ4);
+              currentP_src = _tmpQ3.multiplyQuaternions(clavicleParentRestWorld, _tmpQ4);
             }
+
+            const animWorldQ = _tmpQ4.multiplyQuaternions(currentP_src, srcLocalQ);
+            const deltaQ = _tmpQ3.multiplyQuaternions(animWorldQ, B_src_inv);
+            const tgtAnimWorldQ = _tmpQ4.multiplyQuaternions(deltaQ, B_tgt);
+            const tgtLocalQ = _tmpQ3.multiplyQuaternions(P_tgt_inv, tgtAnimWorldQ).normalize();
+
+            clone.values[4 * j]     = tgtLocalQ.x;
+            clone.values[4 * j + 1] = tgtLocalQ.y;
+            clone.values[4 * j + 2] = tgtLocalQ.z;
+            clone.values[4 * j + 3] = tgtLocalQ.w;
+          }
+        } else {
+          const parentRestWorldQ = (bone.parent && bone.parent.restWorldQuaternion)
+            ? bone.parent.restWorldQuaternion
+            : _tmpQ0.identity();
+          const parentInv = _tmpQ1.copy(parentRestWorldQ).invert();
+          const boneRestLocalQ = bone.restLocalQuaternion;
+
+          for (let i = 0; i < clone.values.length; i += 4) {
+            const q = _tmpQ2.set(clone.values[i], clone.values[i + 1], clone.values[i + 2], clone.values[i + 3]);
+            const resQ = _tmpQ3.copy(parentInv)
+              .multiply(q)
+              .multiply(parentRestWorldQ)
+              .multiply(boneRestLocalQ);
+
+            clone.values[i]     = resQ.x;
+            clone.values[i + 1] = resQ.y;
+            clone.values[i + 2] = resQ.z;
+            clone.values[i + 3] = resQ.w;
           }
         }
       }
