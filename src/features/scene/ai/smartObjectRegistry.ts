@@ -806,7 +806,7 @@ export function buildSmartObjectInstructionSequence(
   slotId?: string,
   characterId?: string
 ): AgentInstruction[] {
-  const obj = SMART_OBJECTS[objectId];
+  const obj = getSmartObject(objectId) || SMART_OBJECTS[objectId];
   if (!obj || !obj.slots.length) return [];
 
   // Trouver un slot disponible si un characterId est fourni, ou utiliser le slot demandé

@@ -65,6 +65,14 @@ function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () =
       if (cancelled) {
         disposePreviewScene(gltf.scene);
       } else {
+        // Normaliser l'échelle si le modèle est en mètres (IKEA models < 5 unités de haut/large)
+        const rawBox = new THREE.Box3().setFromObject(gltf.scene);
+        const rawSize = rawBox.getSize(new THREE.Vector3());
+        const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z);
+        if (maxDim > 0 && maxDim < 5) {
+          gltf.scene.scale.setScalar(100);
+        }
+
         setScene(gltf.scene);
 
         // Compute geometry stats

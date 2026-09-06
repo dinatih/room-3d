@@ -103,7 +103,10 @@ import { BirdFeeder }                                 from '@features/scene/item
 import { GoogleNestMini }                             from '@features/scene/items/GoogleNestMini';
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
 
+import { Smorkull } from '@features/scene/items/Smorkull';
+
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'smorkull-chair':         Smorkull,
   'bird-feeder':            BirdFeeder,
   'kallax20275814': Kallax20275814,
   'kallax90301555': Kallax90301555,
