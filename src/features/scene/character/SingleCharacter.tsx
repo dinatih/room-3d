@@ -117,7 +117,7 @@ export function SingleCharacter({
   const prevFirstPersonRef = useRef<boolean | null>(null);
   const hasLoggedIdleRef = useRef<boolean>(false);
   const lastLoggedAnimRef = useRef<string>('');
-  const [headBoneState, setHeadBoneState] = useState<THREE.Bone | null>(null);
+  const [isFalling, setIsFalling] = useState<boolean>(false);
 
   const [equipment, setEquipment] = useState<{ holster: boolean; pistols: boolean; backpack: boolean }>({
     holster: true,
@@ -260,24 +260,9 @@ export function SingleCharacter({
     }
 
     hairChainRef.current = buildHairChain(parts.bones.nativeHairBones);
+  }, [scene, parts, isLara, targetHeight, variant]);
 
-    applyClothingAndAccessoriesVisibility(parts, {
-      laraNude,
-      laraTopOff,
-      laraBottomOff,
-      laraShoes,
-      showAccessories,
-      laraPistols,
-      equipment
-    });
-    applyRenderProperties(parts, {
-      characterShadows,
-      showWallhack,
-      characterWireframe
-    });
-  }, [scene, parts, name, isLara, targetHeight, variant]);
-
-  // Visibilité des vêtements et des accessoires
+  // Visibilité des vêtements et des accessoires (synchronisation réactive unique)
   useEffect(() => {
     if (!scene) return;
     applyClothingAndAccessoriesVisibility(parts, {
@@ -428,10 +413,6 @@ export function SingleCharacter({
     const headBone = parts.bones.head;
     if (!headBone) return;
 
-    if (headBoneState !== headBone) {
-      setHeadBoneState(headBone);
-    }
-
     if (haircut === 'original') {
       const ghostWigs = headBone.children.filter((c: any) => c.userData.isWigRoot || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_'));
       ghostWigs.forEach((w: any) => headBone.remove(w));
@@ -447,7 +428,7 @@ export function SingleCharacter({
     }
 
     invalidate();
-  }, [scene, parts, haircut, hairColor, variant, isActive, headBoneState, invalidate]);
+  }, [scene, parts, haircut, hairColor, variant, isActive, invalidate]);
 
   // Boucle frame principale : positionnement, mix d'animations & physiques
   useFrame((state, rawDelta) => {
@@ -648,6 +629,12 @@ export function SingleCharacter({
       }
       mixer.update(delta);
 
+      // Parachute d'atterrissage réactif
+      const falling = currentAnimClip.current === 'animations/locomotion/anim_falling.glb';
+      if (isFalling !== falling) {
+        setIsFalling(falling);
+      }
+
       // Simulation Verlet (cheveux, perruques, poitrine)
       updatePhysics(delta, {
         haircut,
@@ -657,11 +644,9 @@ export function SingleCharacter({
         clockElapsedTime: state.clock.elapsedTime
       }, scene);
     }
-
-    if (!isPaused) {
-      invalidate();
-    }
   });
+
+  const headBone = parts.bones.head;
 
   return (
     <group
@@ -680,17 +665,17 @@ export function SingleCharacter({
     >
       <primitive ref={modelRef} object={scene} />
 
-      {headBoneState && id !== 'native' && variant !== 'native' && haircut !== 'original' && (
+      {headBone && id !== 'native' && variant !== 'native' && haircut !== 'original' && (
         <Wig
           id={haircut.replace('hair_', '')}
           color={hairColor}
           onBonesExtracted={(bones) => {
             customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
           }}
-          attachTo={headBoneState}
+          attachTo={headBone}
         />
       )}
-      {!isPreview && <HeartParachute currentAnimClip={currentAnimClip} />}
+      {!isPreview && <HeartParachute visible={isFalling} />}
       {!isPreview && (isActive ? <GroundPoint color="#0058a3" /> : <GroundPoint color="#ff2222" />)}
       {!isPreview && isActive && showThoughtBubble && (
         <CharacterThoughtBubble

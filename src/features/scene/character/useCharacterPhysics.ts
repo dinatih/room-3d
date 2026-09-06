@@ -105,12 +105,15 @@ export function useCharacterPhysics() {
   };
 
   const updatePhysics = (delta: number, ctx: CharacterPhysicsContext, scene: THREE.Object3D) => {
-    const enableHairPhysics = useSceneStore.getState().layers.hairPhysics;
-    const enableBreastPhysics = useSceneStore.getState().layers.breastPhysics;
+    const layers = useSceneStore.getState().layers;
+    const enableHairPhysics = layers.hairPhysics;
+    const enableBreastPhysics = layers.breastPhysics;
 
-    if (enableHairPhysics || enableBreastPhysics) {
-      scene.updateMatrixWorld(true);
+    if (!enableHairPhysics && !enableBreastPhysics) {
+      return;
     }
+
+    scene.updateMatrixWorld(true);
 
     let simDt = delta;
     if (simDt > 0.05) simDt = 0.05;
@@ -149,13 +152,13 @@ export function useCharacterPhysics() {
         const isWig = (ctx.haircut !== 'original');
         const isHeadMoving = ctx.isMoving || (ctx.targetAnim !== 'idle') || (ctx.walkerAnim && ctx.walkerAnim.toLowerCase().includes('walk')) || (ctx.walkerAnim && ctx.walkerAnim.toLowerCase().includes('run'));
 
-        const userWigStiffness = useSceneStore.getState().layers.wigStiffness ?? 1.0;
-        const userWigDamping = useSceneStore.getState().layers.wigDamping ?? 0.80;
-        const userWigGravity = useSceneStore.getState().layers.wigGravity ?? 1.0;
-        const userWigInertia = useSceneStore.getState().layers.wigInertia ?? 1.0;
-        const userWigTipWeight = useSceneStore.getState().layers.wigTipWeight ?? 1.2;
-        const userWigWind = useSceneStore.getState().layers.wigWind ?? 0.0;
-        const userWigHeadRadius = useSceneStore.getState().layers.wigHeadCollisionRadius ?? 13.0;
+        const userWigStiffness = isWig ? (layers.wigStiffness ?? 1.0) : 1.0;
+        const userWigDamping = isWig ? (layers.wigDamping ?? 0.80) : 0.80;
+        const userWigGravity = isWig ? (layers.wigGravity ?? 1.0) : 1.0;
+        const userWigInertia = isWig ? (layers.wigInertia ?? 1.0) : 1.0;
+        const userWigTipWeight = isWig ? (layers.wigTipWeight ?? 1.2) : 1.2;
+        const userWigWind = isWig ? (layers.wigWind ?? 0.0) : 0.0;
+        const userWigHeadRadius = isWig ? (layers.wigHeadCollisionRadius ?? 13.0) : 13.0;
 
         const baseDamping = isHeadMoving ? 0.70 : 0.85;
         const dampingFactor = isWig 
