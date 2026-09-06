@@ -481,11 +481,12 @@ export function SingleCharacter({
     } else {
       if (isActive) {
         const isUserManuallyMoving = 
-          cameraState.isXR ||
-          cameraState.mode === 'fpv' ||
-          ((cameraState.mode === 'walk' || cameraState.mode === 'orbit') && cameraState.isUserControlling());
+          (cameraState.isXR ||
+           cameraState.mode === 'walk' ||
+           cameraState.mode === 'fpv' ||
+           cameraState.mode === 'orbit') && cameraState.isUserControlling();
 
-        if (!cameraState.isXR && (hasDynamicTask || isGuidedTour || (!isUserManuallyMoving && isAutonomous))) {
+        if (hasDynamicTask || isGuidedTour || (!isUserManuallyMoving && isAutonomous)) {
           const agentState = updateAgent(delta);
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;

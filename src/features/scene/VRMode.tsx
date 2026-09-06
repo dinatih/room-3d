@@ -208,8 +208,13 @@ export function VRMode() {
       if (cameraState.isXR) {
         cameraState.isWalking = true;
         cameraState.isMoving = false;
-        cameraState.walkerX = rigRef.current.position.x;
-        cameraState.walkerZ = rigRef.current.position.z;
+        if (cameraState.isAIControlled) {
+          rigRef.current.position.x = cameraState.walkerX;
+          rigRef.current.position.z = cameraState.walkerZ;
+        } else {
+          cameraState.walkerX = rigRef.current.position.x;
+          cameraState.walkerZ = rigRef.current.position.z;
+        }
       }
     }
   });

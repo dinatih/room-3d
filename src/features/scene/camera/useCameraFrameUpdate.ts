@@ -207,11 +207,12 @@ export function useCameraFrameUpdate({
 
     if (keys.current.size > 0) {
       invalidate();
-      if (modeRef.current === 'fpv') {
+      const k = keys.current;
+      const isArrowPress = k.has('ArrowUp') || k.has('ArrowDown') || k.has('ArrowLeft') || k.has('ArrowRight');
+      if (isArrowPress) {
         cameraState.lastUserControlTime = performance.now();
       }
 
-      const k = keys.current;
       const sp = WALK_SPEED * dt;
 
       if (modeRef.current === 'walk') {

@@ -259,8 +259,13 @@ export function ImmersiveMode() {
     } else {
       cameraState.isWalking = true;
       cameraState.isMoving = false;
-      cameraState.walkerX = pos.current.x;
-      cameraState.walkerZ = pos.current.z;
+      if (cameraState.isAIControlled) {
+        pos.current.x = cameraState.walkerX;
+        pos.current.z = cameraState.walkerZ;
+      } else {
+        cameraState.walkerX = pos.current.x;
+        cameraState.walkerZ = pos.current.z;
+      }
     }
 
     camera.position.copy(pos.current);
