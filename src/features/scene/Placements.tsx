@@ -374,7 +374,20 @@ function AnimatedTopper({
   const current = useRef({ x: targetX, y: targetY, z: targetZ });
   const initialized = useRef(false);
 
-  useFrame((_, delta) => {
+  // Détection du transfert actif entre le lit Ouest et le lit Est
+  const prevIsDouble = useRef(isDouble);
+  const transferProgress = useRef(0); // 1 quand transfert en cours, redescend à 0
+  const isTransferring = useRef(false);
+
+  useEffect(() => {
+    if (initialized.current && prevIsDouble.current !== isDouble) {
+      isTransferring.current = true;
+      transferProgress.current = 1;
+    }
+    prevIsDouble.current = isDouble;
+  }, [isDouble]);
+
+  useFrame(() => {
     const g = groupRef.current;
     if (!g) return;
 
@@ -388,24 +401,33 @@ function AnimatedTopper({
     const c = current.current;
     const dx = targetX - c.x;
     const dz = targetZ - c.z;
-    const distHoriz = Math.hypot(dx, dz);
+    const dy = targetY - c.y;
 
-    if (distHoriz > 0.4 || Math.abs(targetY - c.y) > 0.4) {
-      // Vitesse d'animation fluide
-      const factor = Math.min(delta * 6, 0.2);
-      c.x += dx * factor;
-      c.z += dz * factor;
+    const SPEED = 0.09; // Même vitesse et transition que PositionTransition
+    const SNAP_POS = 0.4;
 
-      // Courbe en cloche (arc) au-dessus des lits pendant le vol
-      const arcHeight = Math.min(distHoriz * 0.4, 30);
-      c.y += (targetY - c.y) * factor;
+    if (Math.abs(dx) > SNAP_POS || Math.abs(dz) > SNAP_POS || Math.abs(dy) > SNAP_POS) {
+      c.x += dx * SPEED;
+      c.z += dz * SPEED;
+      c.y += dy * SPEED;
 
-      g.position.set(c.x, c.y + arcHeight, c.z);
+      // Arc parabolique uniquement lors du transfert entre lits (isDouble toggle)
+      let arc = 0;
+      if (isTransferring.current) {
+        const distHoriz = Math.hypot(dx, dz);
+        arc = Math.min(distHoriz * 0.35, 25);
+        if (distHoriz <= SNAP_POS) {
+          isTransferring.current = false;
+        }
+      }
+
+      g.position.set(c.x, c.y + arc, c.z);
       invalidate();
     } else {
       c.x = targetX;
       c.y = targetY;
       c.z = targetZ;
+      isTransferring.current = false;
       g.position.set(targetX, targetY, targetZ);
     }
   });
