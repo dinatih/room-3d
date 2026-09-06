@@ -313,7 +313,7 @@ export function HoverRaycaster() {
         if (side === 'west' || side === 'east' || side === 'north' || side === 'both') continue;
 
         const action = resolveAction(hit.object);
-        if (action && action.actionIds.some(id => ACTIONS[id])) return action;
+        if (action && action.actionIds.some(id => getActionDef(id))) return action;
         continue;
       }
       return null;
