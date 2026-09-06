@@ -180,9 +180,13 @@ export function useCameraShortcuts({
       // Walk-only keys
       if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
       if (isArrow) {
-        keys.current.add(k);
-        if (e.ctrlKey) keys.current.add('Ctrl' + k);
-        if (e.altKey)  keys.current.add('Alt' + k);
+        if (e.ctrlKey) {
+          keys.current.add('Ctrl' + k);
+        } else if (e.altKey) {
+          keys.current.add('Alt' + k);
+        } else {
+          keys.current.add(k);
+        }
         e.preventDefault();
       }
       if (keys.current.size > 0) invalidate();
