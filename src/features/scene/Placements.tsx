@@ -411,7 +411,7 @@ function AnimatedTopper({
   });
 
   return (
-    <group ref={groupRef} rotation-y={Math.PI / 2}>
+    <group ref={groupRef} rotation-y={0}>
       <Nasfjallet10558045 item={stub('nasfjallet-topper')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
     </group>
   );
