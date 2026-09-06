@@ -533,7 +533,7 @@ function Smorkull_() {
   useEffect(() => {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
-      if (key === 'smorkullPos')
+      if (key === 'smorkullPos' || key === 'smorkull-position')
         setPosIdx(i => (i + 1) % SMORKULL_POSITIONS.length);
     };
     document.addEventListener('furniture-toggle', handler);
