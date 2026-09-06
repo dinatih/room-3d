@@ -1,160 +1,125 @@
 /**
- * CameraController.tsx — port de js/cameraManager.js
+ * CameraController.tsx
  *
  * Modes :
  *   orbit  — OrbitControls standard (défaut)
- *   walk   — première personne WASD + souris (touche M)
- *   top    — vue orthographique du dessus (touche T)
+ *   walk   — troisième personne intelligente avec lissage et suivi de cible
+ *   fpv    — première personne vue subjective (niveau des yeux)
+ *   top    — vue orthographique du dessus (centrée pièce ou suivi walker)
  *
  * Raccourcis clavier :
  *   O          — vue perspective (reset) / orbit libre
- *   M          — reprendre / entrer walk mode
- *   T          — toggle vue top-down
+ *   M          — basculer walk / fpv
+ *   1 / 3      — vue FPV (1) / vue 3ème personne (3)
+ *   T / Y      — vue 2D top pièce (T) / vue 2D top suivi perso (Y)
+ *   L          — cycler les personnages actifs
  *   Échap      — quitter walk mode / top-down
- *   Flèches / WASD  — déplacement walk
- *   ←→         — pivoter (walk)
- *   Ctrl+↑↓    — incliner la caméra (walk)
- *   Alt+↑↓     — monter/descendre (walk)
- *   Clic+glisser    — regarder librement (walk)
+ *   Flèches    — déplacement walk / pan et rotation orbit
  */
-import { useEffect, useRef, useState } from 'react';
-import { useThree, useFrame }          from '@react-three/fiber';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useThree } from '@react-three/fiber';
 import { OrbitControls, OrthographicCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
-
-import { ROOM_W, ROOM_D, WALL_H } from '@config';
 import { cameraState } from './cameraState';
 import { useSceneStore } from './store/useSceneStore';
-import { appLog } from '@features/ui/AppConsole';
-import { CHARACTERS, isCharacterVisibleInMode } from './walkerConfig';
-
-// ── Constantes & Repères de Placement Caméra ───────────────────────────────────
-
-const CX = ROOM_W / 2; // 150 cm — centre X de la pièce
-const CZ = ROOM_D / 2; // 200 cm — centre Z du séjour
-
-const EYE_RATIO  = 0.93; // niveau des yeux ≈ 93% de la taille totale du personnage
-const WALK_SPEED = 2;
-
-/** Hauteur caméra en mode marche = niveau des yeux du walker (≈ 93% de sa taille). */
-function activeWalkH(): number {
-  return cameraState.walkerHeight * EYE_RATIO;
-}
-const MOUSE_SENS  = 0.002;
-
-/**
- * Position de départ de la caméra en mode Perspective / Orbit :
- * X = ROOM_W / 2 = 150 cm (centré horizontalement)
- * Y = 1000 cm = 10 m (vue en hauteur / plongée)
- * Z = -150 cm (reculé vers le nord, côté jardin, regardant vers le sud)
- */
-const PERSP_POS:    [number, number, number] = [ROOM_W / 2, 1000, -150];
-
-/**
- * Cible (look-at target) de la caméra en mode Orbit :
- * X = ROOM_W / 2 = 150 cm (centré)
- * Y = WALL_H / 3 = 83.3 cm (tiers inférieur de la hauteur des murs)
- * Z = ROOM_D / 2 = 200 cm (centre de la pièce)
- */
-const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, WALL_H / 3, ROOM_D / 2];
-
-// Character capsule dimensions (cm): center at CHAR_CY above ground
-
-
-
-type Mode = 'orbit' | 'walk' | 'fpv' | 'top';
-
-// ── Composant ─────────────────────────────────────────────────────────────────
+import { CHARACTERS } from './walkerConfig';
+import {
+  type CameraMode,
+  CX,
+  CZ,
+  EYE_RATIO,
+  PERSP_POS,
+  PERSP_TARGET,
+  activeWalkH,
+  useCameraPointerEvents,
+  useCameraShortcuts,
+  useCameraFrameUpdate,
+} from './camera';
 
 export function CameraController({ planeMode = false }: { planeMode?: boolean } = {}) {
-  const { camera, size, invalidate } = useThree();
+  const { camera, size, invalidate, gl } = useThree();
 
-  // Register invalidate for use outside Canvas (Studio.tsx layer/furniture toggles)
+  // Enregistrement d'invalidate pour usage externe (Studio.tsx, etc.)
   useEffect(() => {
     cameraState.invalidate = invalidate;
-    return () => { cameraState.invalidate = null; };
+    return () => {
+      cameraState.invalidate = null;
+    };
   }, [invalidate]);
-  const [mode, setMode] = useState<Mode>('orbit');
-  const modeRef = useRef<Mode>('orbit');
 
-  // Mirror planeMode in a ref so the keyboard / frame handlers (bound once via
-  // useEffect) can read its latest value without stale-closure issues.
+  const [mode, setMode] = useState<CameraMode>('orbit');
+  const modeRef = useRef<CameraMode>('orbit');
+
   const planeModeRef = useRef(planeMode);
-  useEffect(() => { planeModeRef.current = planeMode; }, [planeMode]);
+  useEffect(() => {
+    planeModeRef.current = planeMode;
+  }, [planeMode]);
 
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
   const prevWalkerId = useRef<string | null>(null);
 
+  // OrbitControls ref
+  const ctrlRef = useRef<OrbitControlsImpl>(null!);
+
+  // Walk state
+  const initialWalker = CHARACTERS.find(c => c.id === useSceneStore.getState().activeWalkerId) || CHARACTERS[0];
+  const walkPos = useRef({ x: initialWalker.pos[0], y: initialWalker.height * EYE_RATIO, z: initialWalker.pos[2] });
+  const walkYaw = useRef(initialWalker.rot);
+  const walkPitch = useRef(0);
+  const orbitYaw = useRef(initialWalker.rot);
+  const orbitYawOffset = useRef(0); // Différentiel d'angle relatif au personnage
+  const orbitPitch = useRef(0.25);
+  const orbitDistance = useRef(220);
+  const keys = useRef(new Set<string>());
+  const dragging = useRef(false);
+
+  // Sauvegarde d'état perspective pour retour depuis top-down
+  const savedPerspPos = useRef(new THREE.Vector3(...PERSP_POS));
+  const savedPerspTarget = useRef(new THREE.Vector3(...PERSP_TARGET));
+  const savedFov = useRef(50);
+  const minimapThrottle = useRef(0);
+  const topFollowRef = useRef(false);
+
+  // Synchronisation du changement de personnage actif
   useEffect(() => {
     if (activeWalkerId !== prevWalkerId.current) {
-        const config = CHARACTERS.find(c => c.id === activeWalkerId);
-        if (config) {
-          const savedPos = cameraState.positions[activeWalkerId];
-          cameraState.walkerX = savedPos ? savedPos.x : config.pos[0];
-          cameraState.walkerZ = savedPos ? savedPos.z : config.pos[2];
-          cameraState.walkerYaw = savedPos ? savedPos.yaw : config.rot;
-          cameraState.walkerHeight = config.height;
+      const config = CHARACTERS.find(c => c.id === activeWalkerId);
+      if (config) {
+        const savedPos = cameraState.positions[activeWalkerId];
+        cameraState.walkerX = savedPos ? savedPos.x : config.pos[0];
+        cameraState.walkerZ = savedPos ? savedPos.z : config.pos[2];
+        cameraState.walkerYaw = savedPos ? savedPos.yaw : config.rot;
+        cameraState.walkerHeight = config.height;
 
-          // Sync movement refs
-          walkPos.current.x = cameraState.walkerX;
-          walkPos.current.z = cameraState.walkerZ;
-          walkYaw.current = cameraState.walkerYaw;
-          orbitYaw.current = cameraState.walkerYaw;
-          walkPos.current.y = activeWalkH();
+        walkPos.current.x = cameraState.walkerX;
+        walkPos.current.z = cameraState.walkerZ;
+        walkYaw.current = cameraState.walkerYaw;
+        orbitYaw.current = cameraState.walkerYaw;
+        walkPos.current.y = activeWalkH();
 
-          invalidate();
-        }
+        invalidate();
+      }
     }
     prevWalkerId.current = activeWalkerId;
   }, [activeWalkerId, invalidate]);
 
-  // sync ref with state so event handlers use latest mode without stale closure
-  function changeMode(m: Mode) {
+  const changeMode = useCallback((m: CameraMode) => {
     modeRef.current = m;
     cameraState.mode = m;
     setMode(m);
-    
-    // Auto-enable HD mirrors in fpv, disable in walk (3rd person) for performance
+
+    // Auto-enable HD mirrors en FPV, disable en walk (3ème pers.) pour les performances
     const isMirrorsHD = useSceneStore.getState().layers.mirrorsHD;
     if (m === 'fpv' && !isMirrorsHD) {
       useSceneStore.getState().toggleLayer('mirrorsHD');
     } else if (m === 'walk' && isMirrorsHD) {
       useSceneStore.getState().toggleLayer('mirrorsHD');
     }
-  }
+  }, []);
 
-  // OrbitControls imperative ref
-  const ctrlRef = useRef<OrbitControlsImpl>(null!);
-
-  // Walk state (refs — updated every frame, no re-render needed)
-  const initialWalker = CHARACTERS.find(c => c.id === useSceneStore.getState().activeWalkerId) || CHARACTERS[0];
-  const walkPos   = useRef({ x: initialWalker.pos[0], y: initialWalker.height * EYE_RATIO, z: initialWalker.pos[2] });
-  const walkYaw   = useRef(initialWalker.rot);
-  const walkPitch = useRef(0);
-  const orbitYaw  = useRef(initialWalker.rot);
-  const orbitYawOffset = useRef(0); // Différentiel d'angle relatif au personnage
-  const orbitPitch = useRef(0.25);
-  const orbitDistance = useRef(220);
-  const keys      = useRef(new Set<string>());
-  const dragging  = useRef(false);
-
-  // Saved perspective state for top-down → orbit restore
-  const savedPerspPos    = useRef(new THREE.Vector3(...PERSP_POS));
-  const savedPerspTarget = useRef(new THREE.Vector3(...PERSP_TARGET));
-  // FOV sauvegardé avant entrée walk (restauré à la sortie)
-  const savedFov         = useRef(50);
-  const minimapThrottle  = useRef(0); // accumulateur pour throttler drawMinimap (~15fps)
-
-  // ── Walk helpers ────────────────────────────────────────────────────────────
-
-  /**
-   * Recalcule la position et la visée (target) de la caméra :
-   * - En mode FPV (1ère personne) : caméra aux yeux du personnage, orientation selon walkYaw / walkPitch.
-   * - En mode Walk (3ème personne) : orbite libre autour du personnage (orbitYaw / orbitPitch / orbitDistance).
-   */
-  function updateWalkLook() {
+  const updateWalkLook = useCallback(() => {
     const ctrl = ctrlRef.current;
     if (!ctrl) return;
 
@@ -175,37 +140,32 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       camera.position.set(targetX, targetY, targetZ);
       ctrl.update();
     } else {
-      // ── Mode 3ème Personne Intelligent & Cinématique ──
+      // Mode 3ème Personne Intelligent & Cinématique
       const targetX = walkPos.current.x;
-      const targetY = walkPos.current.y * 0.75; // hauteur torse / regard
+      const targetY = walkPos.current.y * 0.75;
       const targetZ = walkPos.current.z;
 
-      // Si l'utilisateur est en train de corriger l'angle manuellement (souris ou touches), on met à jour le différentiel
       if (cameraState.isDragging || keys.current.has('ArrowLeft') || keys.current.has('ArrowRight')) {
         let diff = orbitYaw.current - walkYaw.current;
         while (diff > Math.PI) diff -= 2 * Math.PI;
         while (diff < -Math.PI) diff += 2 * Math.PI;
         orbitYawOffset.current = diff;
       } else {
-        // En suivi automatique : la caméra conserve le différentiel d'angle choisi par l'utilisateur tout en suivant les virages du PNJ
         const desiredYaw = walkYaw.current + orbitYawOffset.current;
         let diffYaw = desiredYaw - orbitYaw.current;
         while (diffYaw > Math.PI) diffYaw -= 2 * Math.PI;
         while (diffYaw < -Math.PI) diffYaw += 2 * Math.PI;
-        // Suivi fluide et naturel
         orbitYaw.current += diffYaw * 0.08;
       }
 
-      // Calcul de la distance d'orbite avec léger recul dynamique
       const dist = orbitDistance.current;
       const cosP = Math.cos(orbitPitch.current);
       const sinP = Math.sin(orbitPitch.current);
 
-      let camX = targetX - Math.sin(orbitYaw.current) * cosP * dist;
-      let camY = Math.max(15, targetY + sinP * dist);
-      let camZ = targetZ - Math.cos(orbitYaw.current) * cosP * dist;
+      const camX = targetX - Math.sin(orbitYaw.current) * cosP * dist;
+      const camY = Math.max(15, targetY + sinP * dist);
+      const camZ = targetZ - Math.cos(orbitYaw.current) * cosP * dist;
 
-      // Amortissement doux de la caméra (Smooth Lerp)
       const lerpFactor = 0.15;
       ctrl.target.x += (targetX - ctrl.target.x) * lerpFactor;
       ctrl.target.y += (targetY - ctrl.target.y) * lerpFactor;
@@ -216,9 +176,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       camera.position.z += (camZ - camera.position.z) * lerpFactor;
       ctrl.update();
     }
-  }
+  }, [camera]);
 
-  function enterWalk(x: number, z: number, walkMode: 'walk' | 'fpv' = 'walk') {
+  const enterWalk = useCallback((x: number, z: number, walkMode: 'walk' | 'fpv' = 'walk') => {
     walkPos.current = { x, y: activeWalkH(), z };
     if (walkMode === 'walk') {
       orbitYaw.current = walkYaw.current;
@@ -244,27 +204,30 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     } else {
       walkPitch.current = 0;
     }
+
     const ctrl = ctrlRef.current;
     if (ctrl) {
       ctrl.enableRotate = false;
-      ctrl.enablePan    = false;
-      ctrl.enableZoom   = false;
+      ctrl.enablePan = false;
+      ctrl.enableZoom = false;
     }
+
     const cam = camera as THREE.PerspectiveCamera;
     if (cam.isPerspectiveCamera) savedFov.current = cam.fov;
-    changeMode(walkMode);
-    invalidate(); // déclenche un frame pour que la minimap affiche l'icône
-  }
 
-  function exitWalkMode() {
+    changeMode(walkMode);
+    invalidate();
+  }, [camera, changeMode, invalidate]);
+
+  const exitWalkMode = useCallback(() => {
     dragging.current = false;
     cameraState.isDragging = false;
     keys.current.clear();
     const ctrl = ctrlRef.current;
     if (ctrl) {
       ctrl.enableRotate = true;
-      ctrl.enablePan    = true;
-      ctrl.enableZoom   = true;
+      ctrl.enablePan = true;
+      ctrl.enableZoom = true;
     }
     const cam = camera as THREE.PerspectiveCamera;
     if (cam.isPerspectiveCamera) {
@@ -272,17 +235,15 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       cam.updateProjectionMatrix();
     }
     changeMode('orbit');
-    invalidate(); // met à jour la minimap (supprime l'icône)
-  }
+    invalidate();
+  }, [camera, changeMode, invalidate]);
 
-  const topFollowRef = useRef(false);
-
-  function enterTop(follow = false) {
+  const enterTop = useCallback((follow = false) => {
     if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
-    // Save current perspective so we can restore on exit
     savedPerspPos.current.copy(camera.position);
     if (ctrlRef.current) savedPerspTarget.current.copy(ctrlRef.current.target);
     topFollowRef.current = follow;
+
     if (follow) {
       const targetX = cameraState.walkerX;
       const targetZ = cameraState.walkerZ;
@@ -300,27 +261,23 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
     changeMode('top');
     invalidate();
-  }
+  }, [camera, changeMode, exitWalkMode, invalidate]);
 
-  function exitTop() {
+  const exitTop = useCallback(() => {
     topFollowRef.current = false;
-    // Restore perspective state after OrthographicCamera unmounts (next frame)
     changeMode('orbit');
-    // camera.position / target restored by useEffect below
-  }
+  }, [changeMode]);
 
-  // Restore persp camera after leaving top mode
+  // Restauration de la caméra perspective en sortant du mode top
   useEffect(() => {
     if (mode === 'orbit' && ctrlRef.current) {
-      // Only restore if we had a saved persp (i.e. we came from top mode)
       camera.position.copy(savedPerspPos.current);
       ctrlRef.current.target.copy(savedPerspTarget.current);
       ctrlRef.current.update();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
+  }, [mode, camera]);
 
-  // Sync mode state with useSceneStore
+  // Synchronisation du mode avec le store (une seule fois au changement d'état)
   useEffect(() => {
     useSceneStore.setState({ cameraMode: mode });
     if (mode !== 'top') {
@@ -328,7 +285,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
   }, [mode]);
 
-  // Apply walk look after entering walk (mode ref is set, state follows)
+  // Initialisation walk look lors de l'entrée en mode walk / FPV
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
     if (cam.isPerspectiveCamera) {
@@ -337,572 +294,67 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
 
     if (mode === 'walk' || mode === 'fpv') {
-      // small delay to ensure OrbitControls has processed the enableRotate change
       requestAnimationFrame(() => updateWalkLook());
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
+  }, [mode, camera, updateWalkLook]);
 
-
-
-  function collideMove(curX: number, curZ: number, dx: number, dz: number): { x: number; z: number } {
-    return { x: curX + dx, z: curZ + dz };
-  }
-
-  // ── Keyboard ────────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    const onDown = (e: KeyboardEvent) => {
-      // Plane mode owns input — bail out so arrow/WASD don't move walker or camera.
-      if (planeModeRef.current) return;
-      
-      const target = e.target as HTMLElement;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
-        return;
-      }
-      
-      // Global shortcuts
-      if (e.key === 'Escape') {
-        if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
-        else if (modeRef.current === 'top') exitTop();
-        return;
-      }
-      if (e.key === 'o' || e.key === 'O') {
-        const laraGridActive = useSceneStore.getState().layers.laraGrid;
-        if (laraGridActive) {
-          document.dispatchEvent(new CustomEvent('toggle-lara-haircut'));
-          return;
-        }
-
-        if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
-        else if (modeRef.current === 'top') exitTop();
-        // Reset to default perspective
-        camera.position.set(...PERSP_POS);
-        savedPerspPos.current.set(...PERSP_POS);
-        savedPerspTarget.current.set(...PERSP_TARGET);
-        if (ctrlRef.current) {
-          ctrlRef.current.target.set(...PERSP_TARGET);
-          ctrlRef.current.update();
-        }
-        return;
-      }
-      if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') {
-        enterWalk(walkPos.current.x, walkPos.current.z, 'fpv');
-        appLog('system', '🎥 Mode FPV (1ère personne)');
-        return;
-      }
-      if (e.key === '3' || e.code === 'Digit3' || e.code === 'Numpad3') {
-        enterWalk(walkPos.current.x, walkPos.current.z, 'walk');
-        appLog('system', '🎥 Mode Follow (3ème personne)');
-        return;
-      }
-      if (e.key === 'm' || e.key === 'M') {
-        if (modeRef.current === 'walk') {
-          enterWalk(walkPos.current.x, walkPos.current.z, 'fpv');
-          appLog('system', '🎥 Mode FPV (1ère personne)');
-        } else {
-          // Si en FPV, Orbit ou Top : passer en 3ème personne intelligente
-          enterWalk(walkPos.current.x, walkPos.current.z, 'walk');
-          appLog('system', '🎥 Mode Suivi Intelligent (3ème personne)');
-        }
-        return;
-      }
-      if (e.key === 'l' || e.key === 'L') {
-        const store = useSceneStore.getState();
-        const laraCount = store.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15);
-        const visibleChars = CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, laraCount, store.activeWalkerId));
-        const currentIndex = visibleChars.findIndex(c => c.id === store.activeWalkerId);
-        const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % visibleChars.length;
-        store.setActiveWalkerId(visibleChars[nextIndex].id);
-        return;
-      }
-      if (e.key === 'y' || e.key === 'Y') {
-        if (modeRef.current === 'top' && topFollowRef.current) {
-          exitTop();
-          appLog('system', '🎥 Mode Vue Libre (Orbit)');
-        } else {
-          enterTop(true);
-          appLog('system', '🎥 Mode 2D Top (Suivi Perso)');
-        }
-        return;
-      }
-      if (e.key === 't' || e.key === 'T') {
-        const laraGridActive = useSceneStore.getState().layers.laraGrid;
-        if (laraGridActive) {
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 'animations/poses_idles/anim_t_pose.glb' } }));
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'animations/poses_idles/anim_t_pose.glb' } }));
-        } else {
-          if (modeRef.current === 'top' && !topFollowRef.current) {
-            exitTop();
-            appLog('system', '🎥 Mode Vue Libre (Orbit)');
-          } else {
-            enterTop(false);
-            appLog('system', '🎥 Mode 2D Top (Pièce)');
-          }
-        }
-        return;
-      }
-
-
-      const k = e.key;
-      const isArrow = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(k);
-
-      // Orbit-mode zoom (PageUp/PageDown)
-      if (modeRef.current === 'orbit' && (k === 'PageUp' || k === 'PageDown')) {
-        keys.current.add(k);
-        e.preventDefault();
-        invalidate();
-        return;
-      }
-
-      // Orbit-mode arrow keys (Google Earth style)
-      if (modeRef.current === 'orbit' && isArrow) {
-        if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
-          keys.current.add(k);                      // plain  → move walker
-        } else if (e.shiftKey && e.ctrlKey) {
-          keys.current.add('ShiftCtrl' + k);         // Shift+Ctrl → pan
-        } else if (e.shiftKey) {
-          keys.current.add('Shift' + k);             // Shift  → orbit
-        } else if (e.ctrlKey) {
-          keys.current.add('Ctrl' + k);              // Ctrl   → rotate camera
-        } else if (e.altKey) {
-          keys.current.add('Alt' + k);               // Alt    → pan
-        }
-        e.preventDefault();
-        invalidate();
-        return;
-      }
-
-      // Walk-only keys
-      if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
-      if (isArrow) {
-        keys.current.add(k);
-        if (e.ctrlKey)  keys.current.add('Ctrl' + k);
-        if (e.altKey)   keys.current.add('Alt' + k);
-        e.preventDefault();
-      }
-      // Kick off the first frame — useFrame keeps the loop going while keys held
-      if (keys.current.size > 0) invalidate();
-    };
-
-    const onUp = (e: KeyboardEvent) => {
-      const k = e.key;
-      keys.current.delete(k);
-      keys.current.delete(k.toLowerCase());
-      keys.current.delete(k.toUpperCase());
-      keys.current.delete('Shift'      + k);
-      keys.current.delete('Ctrl'       + k);
-      keys.current.delete('Alt'        + k);
-      keys.current.delete('ShiftCtrl'  + k);
-      // Modifier released → clear all keys that used it
-      if (k === 'Shift')   for (const key of [...keys.current]) { if (key.startsWith('Shift'))   keys.current.delete(key); }
-      if (k === 'Control') for (const key of [...keys.current]) { if (key.startsWith('Ctrl'))    keys.current.delete(key); }
-      if (k === 'Alt')     for (const key of [...keys.current]) { if (key.startsWith('Alt'))     keys.current.delete(key); }
-    };
-
-    // Minimap / panel click → enter walk in that room
-    const onPov = (e: Event) => {
-      const { x, z } = (e as CustomEvent).detail as { x: number; z: number };
-      enterWalk(x, z);
-    };
-
-    // Panel camera preset → move orbit camera
-    const onView = (e: Event) => {
-      const { pos, target } = (e as CustomEvent).detail as {
-        pos: [number, number, number];
-        target: [number, number, number];
-      };
-      if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
-      if (modeRef.current === 'top')  exitTop();
-      camera.position.set(...pos);
-      savedPerspPos.current.set(...pos);
-      savedPerspTarget.current.set(...target);
-      if (ctrlRef.current) { ctrlRef.current.target.set(...target); ctrlRef.current.update(); }
-      invalidate();
-    };
-
-    window.addEventListener('keydown', onDown);
-    window.addEventListener('keyup',   onUp);
-    document.addEventListener('minimap-pov',  onPov);
-    document.addEventListener('camera-pov',   onPov);
-    document.addEventListener('camera-view',  onView);
-    return () => {
-      window.removeEventListener('keydown', onDown);
-      window.removeEventListener('keyup',   onUp);
-      document.removeEventListener('minimap-pov',  onPov);
-      document.removeEventListener('camera-pov',   onPov);
-      document.removeEventListener('camera-view',  onView);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [camera]);
-
-  // ── Mouse drag (walk look) ──────────────────────────────────────────────────
-
-  useEffect(() => {
-
-    // Fallback: grab canvas from document
-    const canvas = document.querySelector('canvas')!;
-
-    let touchLastX = 0;
-    let touchLastY = 0;
-    let touchLastDist = 0;
-
-    const getTouchDist = (e: TouchEvent) => {
-      if (e.touches.length < 2) return 0;
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      return Math.hypot(dx, dy);
-    };
-
-    const onDown  = (e: MouseEvent) => {
-      if ((modeRef.current === 'walk' || modeRef.current === 'fpv') && e.button === 0) {
-        dragging.current = true;
-        cameraState.isDragging = true;
-      }
-    };
-    const onUp    = () => {
-      dragging.current = false;
-      cameraState.isDragging = false;
-    };
-    const onMove  = (e: MouseEvent) => {
-      if (!dragging.current || (modeRef.current !== 'walk' && modeRef.current !== 'fpv')) return;
-      if (modeRef.current === 'walk') {
-        orbitYaw.current   += e.movementX * MOUSE_SENS;
-        orbitPitch.current  = Math.max(-0.6, Math.min(1.45, orbitPitch.current - e.movementY * MOUSE_SENS));
-      } else {
-        walkYaw.current   -= e.movementX * MOUSE_SENS;
-        walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - e.movementY * MOUSE_SENS));
-      }
-      updateWalkLook();
-      invalidate();
-    };
-
-    // ── Mobile Touch controls (Walk orientation & 2-finger Pinch-to-Zoom) ────────
-    const onTouchStart = (e: TouchEvent) => {
-      if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
-      if (e.touches.length === 1) {
-        dragging.current = true;
-        cameraState.isDragging = true;
-        touchLastX = e.touches[0].clientX;
-        touchLastY = e.touches[0].clientY;
-        touchLastDist = 0;
-      } else if (e.touches.length === 2) {
-        dragging.current = false;
-        cameraState.isDragging = false;
-        touchLastDist = getTouchDist(e);
-      }
-    };
-
-    const onTouchMove = (e: TouchEvent) => {
-      if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
-
-      if (e.touches.length === 2) {
-        const dist = getTouchDist(e);
-        if (touchLastDist > 0) {
-          const delta = dist - touchLastDist;
-          if (modeRef.current === 'walk') {
-            orbitDistance.current = Math.max(30, Math.min(800, orbitDistance.current - delta * 0.8));
-            updateWalkLook();
-          } else {
-            const cam = camera as THREE.PerspectiveCamera;
-            if (cam.isPerspectiveCamera) {
-              cam.fov = Math.max(30, Math.min(110, cam.fov - delta * 0.08));
-              cam.updateProjectionMatrix();
-            }
-          }
-          invalidate();
-        }
-        touchLastDist = dist;
-        return;
-      }
-
-      if (!dragging.current || e.touches.length !== 1) return;
-      const dx = e.touches[0].clientX - touchLastX;
-      const dy = e.touches[0].clientY - touchLastY;
-      touchLastX = e.touches[0].clientX;
-      touchLastY = e.touches[0].clientY;
-
-      const TOUCH_SENS = MOUSE_SENS * 1.5;
-      if (modeRef.current === 'walk') {
-        orbitYaw.current   += dx * TOUCH_SENS;
-        orbitPitch.current  = Math.max(-0.6, Math.min(1.45, orbitPitch.current - dy * TOUCH_SENS));
-      } else {
-        walkYaw.current   -= dx * TOUCH_SENS;
-        walkPitch.current  = Math.max(-1.4, Math.min(1.4, walkPitch.current - dy * TOUCH_SENS));
-      }
-      updateWalkLook();
-      invalidate();
-    };
-
-    const onTouchEnd = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        touchLastX = e.touches[0].clientX;
-        touchLastY = e.touches[0].clientY;
-        touchLastDist = 0;
-        dragging.current = true;
-        cameraState.isDragging = true;
-      } else if (e.touches.length === 0) {
-        dragging.current = false;
-        cameraState.isDragging = false;
-        touchLastDist = 0;
-      }
-    };
-
-    // Scroll wheel : en 3ème personne ajuste la distance d'orbite (zoom/dézoom) ; en FPV ajuste le FOV
-    const onWheel = (e: WheelEvent) => {
-      if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
-      e.preventDefault();
-      if (modeRef.current === 'walk') {
-        const step = e.deltaY > 0 ? 15 : -15;
-        orbitDistance.current = Math.max(30, orbitDistance.current + step);
-        updateWalkLook();
-      } else {
-        const cam = camera as THREE.PerspectiveCamera;
-        if (!cam.isPerspectiveCamera) return;
-        const step = e.deltaY > 0 ? 2 : -2;
-        cam.fov = Math.max(30, Math.min(110, cam.fov + step));
-        cam.updateProjectionMatrix();
-      }
-      invalidate();
-    };
-
-    canvas.addEventListener('mousedown', onDown);
-    document.addEventListener('mouseup',   onUp);
-    document.addEventListener('mousemove', onMove);
-
-    canvas.addEventListener('touchstart', onTouchStart, { passive: true });
-    document.addEventListener('touchmove', onTouchMove, { passive: true });
-    document.addEventListener('touchend', onTouchEnd, { passive: true });
-
-    canvas.addEventListener('wheel', onWheel, { passive: false });
-    return () => {
-      canvas.removeEventListener('mousedown', onDown);
-      document.removeEventListener('mouseup',   onUp);
-      document.removeEventListener('mousemove', onMove);
-
-      canvas.removeEventListener('touchstart', onTouchStart);
-      document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend', onTouchEnd);
-
-      canvas.removeEventListener('wheel', onWheel);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ── Frame loop — walk movement ──────────────────────────────────────────────
-
-  useFrame((_, delta) => {
-    if (cameraState.isXR) return;
-    if (planeModeRef.current) return;
-    // Normalize to 60 fps baseline so speed is frame-rate independent
-    const dt = Math.min(delta, 0.1) * 60;
-
-    cameraState.camX     = camera.position.x;
-    cameraState.camZ     = camera.position.z;
-    cameraState.isWalking = modeRef.current === 'walk' || modeRef.current === 'fpv';
-    cameraState.isMoving  = (modeRef.current === 'fpv' && (keys.current.has('ArrowUp') || keys.current.has('ArrowDown')))
-      || (modeRef.current === 'orbit' && (keys.current.has('ArrowUp') || keys.current.has('ArrowDown')));
-
-    if (cameraState.isWalking) {
-      if (!cameraState.isAIControlled) {
-        cameraState.walkYaw   = walkYaw.current;
-        cameraState.walkPitch = modeRef.current === 'walk' ? orbitPitch.current : walkPitch.current;
-      }
-
-      // Sync walker position for minimap in walk mode
-      if (!cameraState.isAIControlled) {
-        cameraState.walkerX = walkPos.current.x;
-        cameraState.walkerZ = walkPos.current.z;
-      }
-      updateWalkLook();
-      
-      // Update store for DevTools
-      useSceneStore.getState().setCameraMode(mode);
-    } else {
-        if (!cameraState.isAIControlled) {
-        cameraState.walkerX = walkPos.current.x;
-        cameraState.walkerZ = walkPos.current.z;
-      }
-    }
-
-    // Sync walker yaw for minimap before onUpdate call
-    cameraState.walkerYaw = cameraState.walkYaw;
-
-    // Save active walker position
-    cameraState.positions[activeWalkerId] = {
-      x: cameraState.walkerX,
-      y: 0,
-      z: cameraState.walkerZ,
-      yaw: cameraState.walkerYaw
-    };
-
-    // Throttle minimap redraw à ~15fps (67ms) — drawFloorPlan est coûteux
-    minimapThrottle.current += delta;
-    if (minimapThrottle.current >= 0.067) {
-      minimapThrottle.current = 0;
-      cameraState.onUpdate?.();
-    }
-
-    // ── Orbit mode keyboard navigation (Google Earth style) ─────────────────────
-    if (modeRef.current === 'orbit' && keys.current.size > 0) {
-      const k   = keys.current;
-      const ctrl = ctrlRef.current;
-      invalidate();
-
-      // Plain arrows — move active walker
-      const isPlainMove = k.has('ArrowLeft') || k.has('ArrowRight') || k.has('ArrowUp') || k.has('ArrowDown');
-      if (isPlainMove) {
-        cameraState.lastUserControlTime = performance.now();
-      }
-
-      if (k.has('ArrowLeft'))  cameraState.walkYaw += 0.03 * dt;
-      if (k.has('ArrowRight')) cameraState.walkYaw -= 0.03 * dt;
-      const wYaw = cameraState.walkYaw;
-      const ws   = WALK_SPEED * dt;
-      {
-        let wdx = 0, wdz = 0;
-        if (k.has('ArrowUp'))   { wdx += Math.sin(wYaw)*ws; wdz += Math.cos(wYaw)*ws; }
-        if (k.has('ArrowDown')) { wdx -= Math.sin(wYaw)*ws; wdz -= Math.cos(wYaw)*ws; }
-        if (wdx !== 0 || wdz !== 0) {
-          const c = collideMove(cameraState.walkerX, cameraState.walkerZ, wdx, wdz);
-          cameraState.walkerX = c.x; cameraState.walkerZ = c.z;
-          // Sync walkPos for potential entry into walk mode
-          walkPos.current.x = c.x;
-          walkPos.current.z = c.z;
-        }
-      }
-
-      if (ctrl) {
-        // Shift+arrows — orbit (rotate camera around target)
-        if (k.has('ShiftArrowLeft') || k.has('ShiftArrowRight') || k.has('ShiftArrowUp') || k.has('ShiftArrowDown')) {
-          const offset = new THREE.Vector3().subVectors(camera.position, ctrl.target);
-          const sph    = new THREE.Spherical().setFromVector3(offset);
-          if (k.has('ShiftArrowLeft'))  sph.theta += 0.03 * dt;
-          if (k.has('ShiftArrowRight')) sph.theta -= 0.03 * dt;
-          if (k.has('ShiftArrowUp'))    sph.phi   -= 0.03 * dt;
-          if (k.has('ShiftArrowDown'))  sph.phi   += 0.03 * dt;
-          sph.makeSafe();
-          camera.position.setFromSpherical(sph).add(ctrl.target);
-          ctrl.update();
-        }
-
-        // Ctrl, Alt ou Shift+Ctrl+arrows — pan rapide (translate camera + target ensemble)
-        const hasPan = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown']
-          .some(a => k.has('Ctrl'+a) || k.has('Alt'+a) || k.has('ShiftCtrl'+a));
-        if (hasPan) {
-          const camDir   = new THREE.Vector3();
-          camera.getWorldDirection(camDir);
-          const camRight = new THREE.Vector3(-camDir.z, 0, camDir.x).normalize();
-          const panStep  = Math.max(3, ctrl.target.distanceTo(camera.position) * 0.015) * dt;
-          const panDelta = new THREE.Vector3();
-          const isPan = (a: string) => k.has('Ctrl'+a) || k.has('Alt'+a) || k.has('ShiftCtrl'+a);
-          const camForward = new THREE.Vector3();
-          camera.getWorldDirection(camForward);
-          camForward.y = 0;
-          camForward.normalize();
-          if (isPan('ArrowLeft'))  panDelta.addScaledVector(camRight,   -panStep);
-          if (isPan('ArrowRight')) panDelta.addScaledVector(camRight,    panStep);
-          if (isPan('ArrowUp'))    panDelta.addScaledVector(camForward,  panStep);
-          if (isPan('ArrowDown'))  panDelta.addScaledVector(camForward, -panStep);
-          camera.position.add(panDelta);
-          ctrl.target.add(panDelta);
-          ctrl.update();
-        }
-      }
-
-      // PageUp/PageDown — zoom (dolly le long de l'axe caméra→cible)
-      if (ctrl && (k.has('PageUp') || k.has('PageDown'))) {
-        const dir  = new THREE.Vector3().subVectors(ctrl.target, camera.position);
-        const dist = dir.length();
-        dir.normalize();
-        const step = dist * 0.01 * dt;
-        if (k.has('PageUp'))   camera.position.addScaledVector(dir,  step);
-        if (k.has('PageDown')) camera.position.addScaledVector(dir, -step);
-        ctrl.update();
-      }
-    }
-
-    if (modeRef.current === 'top' && topFollowRef.current) {
-      const targetX = cameraState.walkerX;
-      const targetZ = cameraState.walkerZ;
-      camera.position.x = targetX;
-      camera.position.z = targetZ;
-      if (ctrlRef.current) {
-        ctrlRef.current.target.set(targetX, 0, targetZ);
-        ctrlRef.current.update();
-      }
-      invalidate();
-    }
-
-    if (modeRef.current !== 'walk' && modeRef.current !== 'fpv') return;
-
-    if (cameraState.isAIControlled) {
-      walkPos.current.x = cameraState.walkerX;
-      walkPos.current.z = cameraState.walkerZ;
-      walkYaw.current = cameraState.walkerYaw;
-    }
-
-    if (keys.current.size > 0) {
-      // Keep rendering while keys are held in walk mode
-      invalidate();
-      if (modeRef.current === 'fpv') {
-        cameraState.lastUserControlTime = performance.now();
-      }
-
-      const k  = keys.current;
-      const sp = WALK_SPEED * dt;
-
-      if (modeRef.current === 'walk') {
-        // 3rd Person : Les touches fléchées orbitent la caméra autour du personnage
-        if (k.has('ArrowLeft'))  orbitYaw.current -= 0.03 * dt;
-        if (k.has('ArrowRight')) orbitYaw.current += 0.03 * dt;
-
-        // Ctrl+Haut / Bas : Zoom (rapprocher / éloigner la caméra)
-        if (k.has('CtrlArrowUp'))   orbitDistance.current = Math.max(30, orbitDistance.current - 4 * dt);
-        if (k.has('CtrlArrowDown')) orbitDistance.current = orbitDistance.current + 4 * dt;
-
-        // Haut / Bas simples : Inclinaison verticale (pitch)
-        if (k.has('ArrowUp') && !k.has('CtrlArrowUp'))     orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
-        if (k.has('ArrowDown') && !k.has('CtrlArrowDown')) orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
-
-        if (k.has('AltArrowUp'))   walkPos.current.y += sp;
-        if (k.has('AltArrowDown')) walkPos.current.y -= sp;
-      } else {
-        // Mode FPV (1ère personne)
-        const yaw  = walkYaw.current;
-        const fwdX = Math.sin(yaw) * sp;
-        const fwdZ = Math.cos(yaw) * sp;
-
-        if (k.has('ArrowLeft'))  walkYaw.current += 0.03 * dt;
-        if (k.has('ArrowRight')) walkYaw.current -= 0.03 * dt;
-
-        if (k.has('CtrlArrowUp'))   walkPitch.current = Math.min( 1.4, walkPitch.current + 0.02 * dt);
-        if (k.has('CtrlArrowDown')) walkPitch.current = Math.max(-1.4, walkPitch.current - 0.02 * dt);
-
-        if (k.has('AltArrowUp'))   walkPos.current.y += sp;
-        if (k.has('AltArrowDown')) walkPos.current.y -= sp;
-
-        let dx = 0, dz = 0;
-        if (k.has('ArrowUp'))   { dx += fwdX; dz += fwdZ; }
-        if (k.has('ArrowDown')) { dx -= fwdX; dz -= fwdZ; }
-        if (dx !== 0 || dz !== 0) {
-          const c = collideMove(walkPos.current.x, walkPos.current.z, dx, dz);
-          walkPos.current.x = c.x;
-          walkPos.current.z = c.z;
-        }
-      }
-    }
-
-    updateWalkLook();
+  // Événements pointeur (souris, touch, molette)
+  useCameraPointerEvents({
+    domElement: gl.domElement,
+    camera,
+    modeRef,
+    orbitYaw,
+    orbitPitch,
+    orbitDistance,
+    walkYaw,
+    walkPitch,
+    dragging,
+    updateWalkLook,
+    invalidate,
   });
 
-  // ── Top-down orthographic frustum ──────────────────────────────────────────
+  // Raccourcis clavier et événements personnalisés (minimap, views)
+  useCameraShortcuts({
+    camera,
+    ctrlRef,
+    modeRef,
+    planeModeRef,
+    topFollowRef,
+    walkPos,
+    keys,
+    savedPerspPos,
+    savedPerspTarget,
+    enterWalk,
+    exitWalkMode,
+    enterTop,
+    exitTop,
+    invalidate,
+  });
 
+  // Boucle de rendu frame
+  useCameraFrameUpdate({
+    camera,
+    ctrlRef,
+    modeRef,
+    planeModeRef,
+    topFollowRef,
+    activeWalkerId,
+    walkPos,
+    walkYaw,
+    walkPitch,
+    orbitYaw,
+    orbitPitch,
+    orbitDistance,
+    keys,
+    minimapThrottle,
+    updateWalkLook,
+    invalidate,
+  });
+
+  // Frustum caméra orthographique (vue dessus)
   const aspect = size.width / size.height;
-  const viewH  = 800;
-  const viewW  = viewH * aspect;
-
-  // ── Render ──────────────────────────────────────────────────────────────────
+  const viewH = 800;
+  const viewW = viewH * aspect;
 
   return (
     <>
@@ -911,9 +363,12 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           makeDefault
           position={topFollowRef.current ? [cameraState.walkerX, 2000, cameraState.walkerZ] : [CX, 2000, CZ]}
           up={[0, 0, -1]}
-          left={-viewW / 2}  right={viewW / 2}
-          top={viewH / 2}    bottom={-viewH / 2}
-          near={1}           far={5000}
+          left={-viewW / 2}
+          right={viewW / 2}
+          top={viewH / 2}
+          bottom={-viewH / 2}
+          near={1}
+          far={5000}
         />
       )}
 
@@ -926,14 +381,16 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         enabled={!planeMode}
         enableRotate={!planeMode && mode !== 'top'}
         screenSpacePanning={mode !== 'walk'}
-        mouseButtons={mode === 'top' ? {
-          LEFT:   THREE.MOUSE.PAN,
-          MIDDLE: THREE.MOUSE.DOLLY,
-          RIGHT:  THREE.MOUSE.ROTATE,
-        } : undefined}
+        mouseButtons={
+          mode === 'top'
+            ? {
+                LEFT: THREE.MOUSE.PAN,
+                MIDDLE: THREE.MOUSE.DOLLY,
+                RIGHT: THREE.MOUSE.ROTATE,
+              }
+            : undefined
+        }
       />
-
-
     </>
   );
 }
