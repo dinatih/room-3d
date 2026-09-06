@@ -226,7 +226,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     const pz = preserveOriginXZ ? 0 : -center.z;
 
     if (grounded) {
-      // Position the root so that the lowest point of the mesh (box.min.y) is at Y=0
+      // Positionne le root pour que le point le plus bas du modèle (les semelles) soit exactement à Y=0
       outerRef.current.position.set(px, -box.min.y, pz);
     } else {
       // Center vertically in view
@@ -418,7 +418,12 @@ export function InventoryPreview({
               <directionalLight position={[-100, 50, -100]} intensity={0.5} color="#aabbff" />
               <FitCamera target={target} boundsRadius={boundsRadius} />
               <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={true} minDistance={2} maxDistance={2500} target={target} onStart={() => setAutoRotate(false)} />
-              <Grid infiniteGrid fadeDistance={800} cellColor="#999999" sectionColor="#666666" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />
+              {/* Disque de sol opaque et grille contrastée */}
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
+                <circleGeometry args={[Math.max(100, boundsRadius * 2.5), 64]} />
+                <meshStandardMaterial color="#c2c2c2" roughness={0.8} />
+              </mesh>
+              <Grid infiniteGrid fadeDistance={800} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />
               <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers show={actionStates.showBones} />
             </Canvas>

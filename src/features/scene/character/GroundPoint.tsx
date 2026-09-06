@@ -7,13 +7,14 @@ export function GroundPoint({ color = '#0058a3', scale = 1 }: { color?: string; 
     // Dessiné dans le plan XY local de la Shape :
     // Y+ correspond à +Z dans la scène après rotation X = -PI/2
     // X=0 est l'axe de symétrie pour un centrage parfait
-    s.moveTo(0, 8.5);       // Pointe avant
-    s.lineTo(2.4, 4.6);     // Aile droite
-    s.lineTo(1.1, 5.0);     // Encoche droite
-    s.lineTo(1.1, 2.5);     // Pied droit
-    s.lineTo(-1.1, 2.5);    // Pied gauche
-    s.lineTo(-1.1, 5.0);    // Encoche gauche
-    s.lineTo(-2.4, 4.6);    // Aile gauche
+    // Y- correspond à l'avant face au personnage (-Z) une fois le mesh incliné à plat
+    s.moveTo(0, -8.5);       // Pointe avant
+    s.lineTo(2.4, -4.6);     // Aile droite
+    s.lineTo(1.1, -5.0);     // Encoche droite
+    s.lineTo(1.1, -2.5);     // Pied droit
+    s.lineTo(-1.1, -2.5);    // Pied gauche
+    s.lineTo(-1.1, -5.0);    // Encoche gauche
+    s.lineTo(-2.4, -4.6);    // Aile gauche
     s.closePath();
     return s;
   }, []);
