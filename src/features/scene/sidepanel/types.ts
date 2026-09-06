@@ -62,7 +62,6 @@ export interface FurnitureState {
   cbnEast:      boolean;
   cabinet:      boolean;
   bedDouble:    boolean;
-  smorkullPos:  boolean;
   lampOn:       boolean;
   lampBath:     boolean;
   lampCorridor: boolean;

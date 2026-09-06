@@ -67,7 +67,6 @@ const initialFurniture: FurnitureState = {
   cbnEast: false,
   cabinet: false,
   bedDouble: false,
-  smorkullPos: false,
   lampOn: false,
   lampBath: false,
   lampCorridor: false,
@@ -187,7 +186,6 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 't
     'lamp-sdb-toggle': 'lampBath',
     'lamp-couloir-toggle': 'lampCorridor',
     'bed-double': 'bedDouble',
-    'smorkull-position': 'smorkullPos',
     bin: 'bin-toggle',
     'bin-toggle': 'bin-toggle',
     ninja: 'ninja',
@@ -287,8 +285,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lamp-corridor-toggle' } }));
       } else if (key === 'bedDouble') {
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-double', value: nextFurniture.bedDouble } }));
-      } else if (key === 'smorkullPos') {
-        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'smorkull-position' } }));
       }
 
       cameraState.invalidate?.();
