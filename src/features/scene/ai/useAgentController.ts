@@ -279,7 +279,8 @@ export function useAgentController(
   };
 
   const update = (dt: number): AgentState => {
-    if (!scenario) {
+    const hasNavStepInUpdate = dynamicNavIndexRef.current < dynamicNavQueueRef.current.length;
+    if (!scenario && !hasNavStepInUpdate) {
       stateRef.current.animation = 'idle';
       return stateRef.current;
     }
@@ -322,10 +323,12 @@ export function useAgentController(
       return stateRef.current;
     }
 
+    const scenarioLength = scenario ? scenario.length : 0;
+
     // ── 2. Fin de scénario / Bouclage ──
-    if (stepIndexRef.current >= scenario.length && dynamicNavQueueRef.current.length === 0) {
+    if (stepIndexRef.current >= scenarioLength && dynamicNavQueueRef.current.length === 0) {
       releaseClaimedSlot();
-      if (loop) {
+      if (loop && scenarioLength > 0) {
         stepIndexRef.current = 0;
         activeNavStepIndexRef.current = -1;
         cachedCoordsInstructionRef.current = null;
@@ -348,7 +351,12 @@ export function useAgentController(
     const hasNavStep = dynamicNavIndexRef.current < dynamicNavQueueRef.current.length;
     const currentInstruction = hasNavStep
       ? dynamicNavQueueRef.current[dynamicNavIndexRef.current]
-      : scenario[stepIndexRef.current];
+      : (scenario ? scenario[stepIndexRef.current] : null);
+
+    if (!currentInstruction) {
+      stateRef.current.animation = 'idle';
+      return stateRef.current;
+    }
 
     // ── 3. État IDLE : Initialisation et réservation de l'instruction ──
     if (statusRef.current === 'IDLE') {
@@ -368,7 +376,7 @@ export function useAgentController(
               currentInstruction.duration = slot.duration;
               currentInstruction.rotY = slot.rotY;
             }
-          } else if (loop) {
+          } else if (loop && scenario) {
             while (stepIndexRef.current < scenario.length && scenario[stepIndexRef.current].smartObjectId === objId) {
               stepIndexRef.current++;
             }
@@ -395,7 +403,7 @@ export function useAgentController(
             const occupant = OccupancyManager.getOccupant(objId, reqSlotId);
             const objName = SMART_OBJECTS[objId]?.name || objId;
 
-            if (loop) {
+            if (loop && scenario) {
               appLog(_characterId, `⚠️ ${objName} est occupé${occupant ? ` (${occupant})` : ''}, recherche d'une autre place...`);
               while (stepIndexRef.current < scenario.length && scenario[stepIndexRef.current].smartObjectId === objId) {
                 stepIndexRef.current++;
@@ -695,5 +703,9 @@ export function useAgentController(
     stateRef.current.rotY = rotY;
   };
 
-  return { update, setPosition, setRotation };
+  const hasPendingDynamicTask = () => {
+    return dynamicNavQueueRef.current.length > 0 && dynamicNavIndexRef.current < dynamicNavQueueRef.current.length;
+  };
+
+  return { update, setPosition, setRotation, hasPendingDynamicTask };
 }

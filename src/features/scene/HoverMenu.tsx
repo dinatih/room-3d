@@ -805,7 +805,7 @@ export function HoverOverlay() {
 
                     if (closestCharId) {
                       appLog(closestCharId, `🤖 Ordre SmartObject: ${closestCharId} assigné à ${obj?.name ?? objectId} (${slot?.name ?? slotId})`);
-                      window.dispatchEvent(
+                      document.dispatchEvent(
                         new CustomEvent('agent-force-smartobject', {
                           detail: {
                             targetId: closestCharId,

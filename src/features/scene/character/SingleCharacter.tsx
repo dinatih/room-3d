@@ -198,7 +198,12 @@ export function SingleCharacter({
   const hasSkyDrop = isNPC && !isExcepted && isAutonomous;
   const spawnDelay = hasSkyDrop ? ((characterIndex ?? 0) * 1.0) : 0;
 
-  const { update: updateAgent, setPosition: setAgentPosition, setRotation: setAgentRotation } = useAgentController(
+  const {
+    update: updateAgent,
+    setPosition: setAgentPosition,
+    setRotation: setAgentRotation,
+    hasPendingDynamicTask,
+  } = useAgentController(
     id,
     finalScenario,
     loopScenario,
@@ -446,6 +451,8 @@ export function SingleCharacter({
       hasLoggedIdleRef.current = false;
     }
 
+    const hasDynamicTask = hasPendingDynamicTask();
+
     if (isPreview) {
       if (previewPosition) {
         groupRef.current.position.set(previewPosition[0], previewPosition[1], previewPosition[2]);
@@ -479,7 +486,7 @@ export function SingleCharacter({
           cameraState.mode === 'fpv' ||
           (cameraState.mode === 'orbit' && cameraState.isUserControlling());
 
-        if (!cameraState.isXR && (isGuidedTour || (!isUserManuallyMoving && isAutonomous))) {
+        if (!cameraState.isXR && (hasDynamicTask || isGuidedTour || (!isUserManuallyMoving && isAutonomous))) {
           const agentState = updateAgent(delta);
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
@@ -559,7 +566,7 @@ export function SingleCharacter({
       ? (walkerAnim || 'idle')
       : (currentAnimClip.current || (isMoving ? 'walk' : 'idle'));
 
-    if (isActive && !isGuidedTour && (cameraState.isXR || cameraState.isUserControlling()) && currentAnimClip.current) {
+    if (isActive && !isGuidedTour && !hasDynamicTask && (cameraState.isXR || cameraState.isUserControlling()) && currentAnimClip.current) {
       currentAnimClip.current = null;
     }
 
