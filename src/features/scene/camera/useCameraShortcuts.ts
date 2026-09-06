@@ -5,6 +5,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { CameraMode, WalkPosition } from './types';
 import { PERSP_POS, PERSP_TARGET } from './cameraConstants';
 import { useSceneStore } from '../store/useSceneStore';
+import { cameraState } from '../cameraState';
 import { appLog } from '@features/ui/AppConsole';
 import { CHARACTERS, isCharacterVisibleInMode } from '../walkerConfig';
 
@@ -80,24 +81,30 @@ export function useCameraShortcuts({
       }
 
       if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') {
-        enterWalk(walkPos.current.x, walkPos.current.z, 'fpv');
+        const curX = cameraState.walkerX ?? walkPos.current.x;
+        const curZ = cameraState.walkerZ ?? walkPos.current.z;
+        enterWalk(curX, curZ, 'fpv');
         appLog('system', '🎥 Mode FPV (1ère personne)');
         return;
       }
 
       if (e.key === '3' || e.code === 'Digit3' || e.code === 'Numpad3') {
-        enterWalk(walkPos.current.x, walkPos.current.z, 'walk');
+        const curX = cameraState.walkerX ?? walkPos.current.x;
+        const curZ = cameraState.walkerZ ?? walkPos.current.z;
+        enterWalk(curX, curZ, 'walk');
         appLog('system', '🎥 Mode Follow (3ème personne)');
         return;
       }
 
       if (e.key === 'm' || e.key === 'M') {
+        const curX = cameraState.walkerX ?? walkPos.current.x;
+        const curZ = cameraState.walkerZ ?? walkPos.current.z;
         if (modeRef.current === 'walk') {
-          enterWalk(walkPos.current.x, walkPos.current.z, 'fpv');
+          enterWalk(curX, curZ, 'fpv');
           appLog('system', '🎥 Mode FPV (1ère personne)');
         } else {
           // Si en FPV, Orbit ou Top : passer en 3ème personne intelligente
-          enterWalk(walkPos.current.x, walkPos.current.z, 'walk');
+          enterWalk(curX, curZ, 'walk');
           appLog('system', '🎥 Mode Suivi Intelligent (3ème personne)');
         }
         return;

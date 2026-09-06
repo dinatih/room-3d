@@ -180,6 +180,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   const enterWalk = useCallback((x: number, z: number, walkMode: 'walk' | 'fpv' = 'walk') => {
     walkPos.current = { x, y: activeWalkH(), z };
+    if (cameraState.walkYaw !== undefined) {
+      walkYaw.current = cameraState.walkYaw;
+    }
     if (walkMode === 'walk') {
       orbitYaw.current = walkYaw.current;
       orbitYawOffset.current = 0;
