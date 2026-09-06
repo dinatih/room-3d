@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { AgentInstruction } from './aiTypes';
-import { SMART_OBJECTS } from './smartObjectRegistry';
+import { SMART_OBJECTS, buildSmartObjectInstructionSequence } from './smartObjectRegistry';
 import { resolveSlotAnimation } from './animationPacks';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
@@ -146,11 +146,34 @@ export function useAgentController(
       }
     };
 
+    const onForceSmartObject = (e: any) => {
+      if (e.detail?.targetId === _characterId && e.detail?.objectId) {
+        const { objectId, slotId } = e.detail;
+        releaseClaimedSlot();
+        duoSessionManager.leaveDuoZone(_characterId);
+        duoRoleRef.current = null;
+        duoInvitedRef.current = false;
+
+        const seq = buildSmartObjectInstructionSequence(objectId, slotId, _characterId);
+        if (seq && seq.length > 0) {
+          dynamicNavQueueRef.current = seq;
+          dynamicNavIndexRef.current = 0;
+          activeNavStepIndexRef.current = -1;
+          statusRef.current = 'IDLE';
+          cachedCoordsInstructionRef.current = null;
+          cachedCoordsRef.current = null;
+          appLog(_characterId, `⚡ Ordre direct reçu : ${objectId}${slotId ? ` (${slotId})` : ''}`);
+        }
+      }
+    };
+
     document.addEventListener('npc-invite-duo', onInvite);
     document.addEventListener('walker-clip-loaded', onClipLoaded);
+    document.addEventListener('agent-force-smartobject', onForceSmartObject);
     return () => {
       document.removeEventListener('npc-invite-duo', onInvite);
       document.removeEventListener('walker-clip-loaded', onClipLoaded);
+      document.removeEventListener('agent-force-smartobject', onForceSmartObject);
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
     };

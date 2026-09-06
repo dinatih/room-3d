@@ -14,6 +14,7 @@ import { cameraState } from '@features/scene/cameraState';
 import { appLog } from '@features/ui/AppConsole';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
+import { getSmartObject } from './ai/smartObjectRegistry';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
 
@@ -206,6 +207,17 @@ function getActionDef(actionId: string): ActionDef | undefined {
   if (actionId.startsWith('select-walker-')) {
     return {
       btnLabel: '🎯 Définir comme personnage actif',
+      toggleKey: actionId,
+    };
+  }
+  if (actionId.startsWith('smart-object:::')) {
+    // Format : smart-object:::{objectId}:::{slotId}
+    const [, objectId, slotId] = actionId.split(':::');
+    const obj = getSmartObject(objectId);
+    const slot = obj?.slots.find(s => s.slotId === slotId);
+    const slotName = slot?.name || slotId || 'Interagir';
+    return {
+      btnLabel: `⚡ Utiliser (${slotName})`,
       toggleKey: actionId,
     };
   }
@@ -768,6 +780,43 @@ export function HoverOverlay() {
                     const targetWalkerId = action.toggleKey.replace('select-walker-', '');
                     useSceneStore.getState().setActiveWalkerId(targetWalkerId);
                     appLog(targetWalkerId, `🎯 Personnage actif défini : ${state.lockedLabel}`);
+                  } else if (action.toggleKey.startsWith('smart-object:::')) {
+                    const [, objectId, slotId] = action.toggleKey.split(':::');
+                    const obj = getSmartObject(objectId);
+                    const slot = obj?.slots.find(s => s.slotId === slotId);
+                    const targetPos = slot?.offset ?? obj?.position ?? [0, 0, 0];
+
+                    // Trouver le personnage le plus proche (en excluant les animaux comme le shiba)
+                    let closestCharId: string | null = null;
+                    let minDistance = Infinity;
+
+                    const candidateIds = Object.keys(cameraState.positions);
+
+                    for (const charId of candidateIds) {
+                      if (charId === 'shiba') continue;
+                      const pos = cameraState.positions[charId];
+                      if (!pos) continue;
+                      const dist = Math.hypot(pos.x - targetPos[0], pos.z - targetPos[2]);
+                      if (dist < minDistance) {
+                        minDistance = dist;
+                        closestCharId = charId;
+                      }
+                    }
+
+                    if (closestCharId) {
+                      appLog(closestCharId, `🤖 Ordre SmartObject: ${closestCharId} assigné à ${obj?.name ?? objectId} (${slot?.name ?? slotId})`);
+                      window.dispatchEvent(
+                        new CustomEvent('agent-force-smartobject', {
+                          detail: {
+                            targetId: closestCharId,
+                            objectId,
+                            slotId,
+                          },
+                        })
+                      );
+                    } else {
+                      appLog('system', `⚠️ Aucun personnage actif trouvé pour interagir avec ${objectId}`);
+                    }
                   } else {
                     useSceneStore.getState().triggerAction(action.toggleKey);
                   }

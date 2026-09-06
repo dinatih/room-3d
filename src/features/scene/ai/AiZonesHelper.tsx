@@ -200,7 +200,16 @@ export function AiZonesHelper() {
             {obj.slots.map(slot => {
               const pos = slot.offset ?? obj.position;
               return (
-                <group key={`slot-${obj.id}-${slot.slotId}`} position={[pos[0], baseHeight, pos[2]]}>
+                <group
+                  key={`slot-${obj.id}-${slot.slotId}`}
+                  position={[pos[0], baseHeight, pos[2]]}
+                  userData={{
+                    hoverAction: {
+                      label: `${obj.name} (${slot.name})`,
+                      actions: [`smart-object:::${obj.id}:::${slot.slotId}`],
+                    },
+                  }}
+                >
                   {/* Cible au sol */}
                   <mesh rotation={[-Math.PI / 2, 0, 0]}>
                     <circleGeometry args={[10, 32]} />

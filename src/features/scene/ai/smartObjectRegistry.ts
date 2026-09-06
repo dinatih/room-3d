@@ -172,7 +172,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'work-standing',
         name: 'Travailler debout',
         relative: true,
-        offset: [0, 0, 30],
+        offset: [0, 0, -36],
         rotY: Math.PI,
         animation: 'animations/poses_idles/anim_texting_while_standing.glb',
         duration: 10.0,
@@ -200,8 +200,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Tirer la chasse',
         offset: [50, 0, 550],
         rotY: Math.PI,
-        animation: 'animations/interactions/anim_bartending.glb',
-        // interactions/anim_cards.glb, interactions/anim_drinking_fountain.glb,
+        animation: 'animations/interactions/anim_button_pushing.glb',
         duration: 2.0,
         triggerEventKey: 'wc-flush'
       }
@@ -424,6 +423,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [80, 0, 370],
         rotY: 0,
         animation: 'animations/interactions/anim_bartending.glb',
+        // interactions/anim_cards.glb, interactions/anim_drinking_fountain.glb,
       }
     ]
   },
