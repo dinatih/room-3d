@@ -440,31 +440,57 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
 
           const isLayingAnim = animNameLower.includes('laying') || animNameLower.includes('sleeping') || animNameLower.includes('situps');
 
-          for (let j = 0; j < clone.values.length / 3; j++) {
-            let yVal = clone.values[3*j+1] + yMinDelta;
-            if (isRootJointTranslation && isLayingAnim) {
-              yVal = 0.12; 
+          if (isLayingAnim) {
+            // Dans les animations couchées (Mixamo et autres), le personnage est déjà allongé horizontalement.
+            // Les hanches doivent être positionnées au centre horizontal du slot (world X=0, world Z=0)
+            // et à hauteur naturelle du bassin au repos (world Y = 12 cm au-dessus du matelas ou sol).
+            // Le calcul standard soustrayait srcRestPos (T-pose debout de ~1m) ce qui envoyait le bassin
+            // à la tête ou aux pieds, et écrasait l'axe local Y (horizontal sur Lara) au lieu de la hauteur Z.
+            const targetHipsHeight = bone.defaultPosition ? bone.defaultPosition.length() : 99.1;
+            const groundHipsY = 12.0;
+
+            const f0Raw = new THREE.Vector3(clone.values[0], clone.values[1], clone.values[2]);
+            const f0World = f0Raw.applyQuaternion(P_src).multiplyScalar(computedHipsRatio);
+
+            for (let j = 0; j < clone.values.length / 3; j++) {
+              const rawPos = new THREE.Vector3(clone.values[3*j], clone.values[3*j+1], clone.values[3*j+2]);
+              const worldPos = rawPos.applyQuaternion(P_src).multiplyScalar(computedHipsRatio);
+
+              // On conserve les micro-variations naturelles de l'animation (respiration, tremblement) par rapport à f0
+              const animDeltaX = worldPos.x - f0World.x;
+              const animDeltaY = worldPos.y - f0World.y;
+              const animDeltaZ = worldPos.z - f0World.z;
+
+              const deltaWorld = new THREE.Vector3(
+                animDeltaX,
+                (groundHipsY + animDeltaY) - targetHipsHeight,
+                animDeltaZ
+              );
+
+              const dP = deltaWorld.applyQuaternion(P_tgt_inv);
+              const resPos = bone.defaultPosition.clone().add(dP);
+
+              clone.values[3*j] = resPos.x;
+              clone.values[3*j+1] = resPos.y;
+              clone.values[3*j+2] = resPos.z;
             }
-            const isTPose = animNameLower.includes('t-pose') || animNameLower.includes('t_pose') || animNameLower.includes('tpose');
-            const dy = (isWalk || isTPose) ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
-            const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
-            const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
+          } else {
+            for (let j = 0; j < clone.values.length / 3; j++) {
+              let yVal = clone.values[3*j+1] + yMinDelta;
+              const isTPose = animNameLower.includes('t-pose') || animNameLower.includes('t_pose') || animNameLower.includes('tpose');
+              const dy = (isWalk || isTPose) ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
+              const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
+              const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
 
-            const dP = new THREE.Vector3(dx, dy, dz)
-              .applyQuaternion(P_src)
-              .applyQuaternion(P_tgt_inv);
-            const resPos = bone.defaultPosition.clone().add(dP);
+              const dP = new THREE.Vector3(dx, dy, dz)
+                .applyQuaternion(P_src)
+                .applyQuaternion(P_tgt_inv);
+              const resPos = bone.defaultPosition.clone().add(dP);
 
-            if (isLayingAnim) {
-              // Au sol, le bassin d'un corps allongé est à ~12cm de hauteur (le dos reposant à Y=0)
-              const groundHipsY = 12.0;
-              const animDeltaY = (clone.values[3*j+1] - clone.values[1]) * computedHipsRatio;
-              resPos.y = groundHipsY + animDeltaY;
+              clone.values[3*j] = resPos.x;
+              clone.values[3*j+1] = resPos.y;
+              clone.values[3*j+2] = resPos.z;
             }
-
-            clone.values[3*j] = resPos.x;
-            clone.values[3*j+1] = resPos.y;
-            clone.values[3*j+2] = resPos.z;
           }
         }
       }
