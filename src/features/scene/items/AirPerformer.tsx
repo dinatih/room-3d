@@ -134,6 +134,8 @@ export function AirPerformer({ onSize }: SceneItemProps) {
   const pm25Ref = useRef(8);
   const timeSinceLastAqiUpdate = useRef(0);
   const timeSinceStateSync = useRef(0);
+  const timeSinceScreenUpdate = useRef(0);
+  const lastScreenDrawnState = useRef<{ power: boolean; mode: string; speed: number; pm25: number } | null>(null);
 
   // Sync state values to refs for safe closure-free use inside useFrame
   const powerRef = useRef(false);
@@ -795,8 +797,30 @@ export function AirPerformer({ onSize }: SceneItemProps) {
     // 5. Update particles
     updateParticles(delta);
 
-    // 6. Draw dynamic screen texture
-    updateScreenTexture(time);
+    // 6. Draw dynamic screen texture (optimized: only redraw on state change or at 10Hz when ON)
+    timeSinceScreenUpdate.current += delta;
+    const roundedPm25 = Math.round(pm25Ref.current);
+    const lastState = lastScreenDrawnState.current;
+    const stateChanged =
+      !lastState ||
+      lastState.power !== power ||
+      lastState.mode !== mode ||
+      lastState.speed !== speed ||
+      lastState.pm25 !== roundedPm25;
+
+    if (!power) {
+      if (stateChanged) {
+        updateScreenTexture(time);
+        lastScreenDrawnState.current = { power, mode, speed, pm25: roundedPm25 };
+      }
+    } else {
+      // When ON, update on state change or throttle pulse animation to ~10 Hz (every 100ms)
+      if (stateChanged || timeSinceScreenUpdate.current >= 0.1) {
+        timeSinceScreenUpdate.current = 0;
+        updateScreenTexture(time);
+        lastScreenDrawnState.current = { power, mode, speed, pm25: roundedPm25 };
+      }
+    }
 
     // 7. Sync PM2.5 state occasionally to update hover label text
     timeSinceStateSync.current += delta;
