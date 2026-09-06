@@ -14,7 +14,6 @@ import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 
 import { Anneland70481722 } from './Anneland70481722';
 import { Vestmarka90470195 } from './Vestmarka90470195';
-import { Nasfjallet10558045 } from './Nasfjallet10558045';
 
 const BAS_GLB  = 'items/utåker lit empilable 80x200 pin (bas)/UTÅKER lit empilable 80x200 pin (bas).glb';
 const HAUT_GLB = 'items/utåker lit empilable 80x200 pin (haut)/UTÅKER lit empilable 80x200 pin (haut).glb';
@@ -118,11 +117,6 @@ export function UtakerFrame({ item, onSize, hasTopper: explicitTopper }: UtakerF
           <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
             <Anneland70481722 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
           </group>
-          {hasTopper && (
-            <group position={[0, 11 + 24, 0]} rotation-y={Math.PI / 2}>
-              <Nasfjallet10558045 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-            </group>
-          )}
           <RealisticDuvet topY={topY} drop={drop} />
           <RealisticBolsters topY={topY} />
         </>
@@ -131,11 +125,6 @@ export function UtakerFrame({ item, onSize, hasTopper: explicitTopper }: UtakerF
           <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
             <Vestmarka90470195 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
           </group>
-          {hasTopper && (
-            <group position={[0, 11 + 18, 0]} rotation-y={Math.PI / 2}>
-              <Nasfjallet10558045 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-            </group>
-          )}
           <RealisticDuvet topY={topY} drop={drop} />
           <RealisticBolsters topY={topY} zOffset={26} />
         </>

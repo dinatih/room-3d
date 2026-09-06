@@ -9,7 +9,8 @@
  *   Garden / GardenGlb — jardin (procédural + GLB)
  *   Backpacks — sacs à dos procéduraux
  */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 
@@ -31,6 +32,7 @@ import { TV, TV_H }      from './items/TV';
 import { MllseG2Pro }    from './items/MllseG2Pro';
 import { JblCharge3 }   from './items/JblCharge3';
 import { UtakerFrame }   from './items/UtakerFrame';
+import { Nasfjallet10558045 } from './items/Nasfjallet10558045';
 import { Bollsidan30574370 } from './items/Bollsidan30574370';
 import { AirPerformer }  from './items/AirPerformer';
 import { TrashBin }      from './items/TrashBin';
@@ -351,6 +353,70 @@ export function Furniture() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 
+function AnimatedTopper({
+  isDouble,
+  westPos,
+  eastPos,
+}: {
+  isDouble: boolean;
+  westPos: { x: number; z: number };
+  eastPos: { x: number; z: number };
+}) {
+  const groupRef = useRef<THREE.Group>(null!);
+  const { invalidate } = useThree();
+
+  // Y=11 (sommier) + 24 (anneland) = 35 pour lit Ouest
+  // Y=11 (sommier) + 18 (vestmarka) = 29 pour lit Est
+  const targetX = isDouble ? eastPos.x : westPos.x;
+  const targetY = isDouble ? 29 : 35;
+  const targetZ = isDouble ? eastPos.z : westPos.z;
+
+  const current = useRef({ x: targetX, y: targetY, z: targetZ });
+  const initialized = useRef(false);
+
+  useFrame((_, delta) => {
+    const g = groupRef.current;
+    if (!g) return;
+
+    if (!initialized.current) {
+      initialized.current = true;
+      current.current = { x: targetX, y: targetY, z: targetZ };
+      g.position.set(targetX, targetY, targetZ);
+      return;
+    }
+
+    const c = current.current;
+    const dx = targetX - c.x;
+    const dz = targetZ - c.z;
+    const distHoriz = Math.hypot(dx, dz);
+
+    if (distHoriz > 0.4 || Math.abs(targetY - c.y) > 0.4) {
+      // Vitesse d'animation fluide
+      const factor = Math.min(delta * 6, 0.2);
+      c.x += dx * factor;
+      c.z += dz * factor;
+
+      // Courbe en cloche (arc) au-dessus des lits pendant le vol
+      const arcHeight = Math.min(distHoriz * 0.4, 30);
+      c.y += (targetY - c.y) * factor;
+
+      g.position.set(c.x, c.y + arcHeight, c.z);
+      invalidate();
+    } else {
+      c.x = targetX;
+      c.y = targetY;
+      c.z = targetZ;
+      g.position.set(targetX, targetY, targetZ);
+    }
+  });
+
+  return (
+    <group ref={groupRef} rotation-y={Math.PI / 2}>
+      <Nasfjallet10558045 item={stub('nasfjallet-topper')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+    </group>
+  );
+}
+
 function Beds() {
   const toggles = useFurnitureToggles(['bed-double']);
   const isDouble = !!toggles['bed-double'];
@@ -382,16 +448,6 @@ function Beds() {
 
   // Dimensions : largeur d'un lit = 83 cm, longueur = 205 cm.
   // Orientés avec rotation-y = Math.PI / 2 : largeur le long de X, longueur le long de Z.
-  //
-  // Mode simple (séparé) :
-  // - Lit Ouest : X = 74, Z = 151.5
-  // - Lit Est   : X = ROOM_W - 4 - 83/2 = 270.5, Z = 190
-  //
-  // Mode double (3 positions possibles) :
-  // 1. Centré : centré au milieu du studio (X = 158)
-  // 2. Mur Ouest : lit Ouest reste à sa place contre le mur, lit Est se colle à sa droite
-  // 3. Mur Est : lit Est reste à sa place contre le mur, lit Ouest se colle à sa gauche
-
   const currentDoublePos = DOUBLE_BED_POSITIONS[doublePosIdx];
 
   const westPos = isDouble
@@ -409,18 +465,22 @@ function Beds() {
 
   return (
     <>
-      {/* Lit Ouest (haut, principal) : surmatelas en mode séparé, retiré en mode lit double */}
+      {/* Lit Ouest (haut, principal) : surmatelas retiré en mode lit double */}
       <PositionTransition x={westPos.x} z={westPos.z} ry={Math.PI / 2}>
         <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: hoverActions } }}>
           <UtakerFrame item={{ id: 'utaker-upper' } as any} hasTopper={!isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </PositionTransition>
-      {/* Lit Est (bas, secondaire) : pas de surmatelas en mode séparé, reçoit le surmatelas en mode lit double pour égaliser à 22cm vs 24cm */}
+
+      {/* Lit Est (bas, secondaire) : reçoit le surmatelas en mode lit double */}
       <PositionTransition x={eastPos.x} z={eastPos.z} ry={Math.PI / 2}>
         <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: hoverActions } }}>
           <UtakerFrame item={{ id: 'utaker-lower' } as any} hasTopper={isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </PositionTransition>
+
+      {/* Surmatelas autonome qui vole en arc d'un lit à l'autre lors du basculement */}
+      <AnimatedTopper isDouble={isDouble} westPos={westPos} eastPos={eastPos} />
     </>
   );
 }
