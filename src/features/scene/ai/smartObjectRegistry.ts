@@ -9,17 +9,59 @@ import { DYNAMIC_FURNITURE_ANCHORS } from '../furniturePositions';
  */
 export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   // ── LITS ───────────────────────────────────────────────────────────────────
+  'bed-double': {
+    id: 'bed-double',
+    name: 'Lit Utåker Double',
+    category: 'bed',
+    anchorKey: 'bed-position',
+    position: [150, 0, 190],
+    rotationY: Math.PI / 2,
+    slots: [
+      {
+        slotId: 'seat-left',
+        name: 'S\'asseoir (Gauche)',
+        relative: true,
+        offset: [0, 0, -50],
+        animations_random: 'seated_front',
+        duration: 15.0,
+      },
+      {
+        slotId: 'seat-right',
+        name: 'S\'asseoir (Droite)',
+        relative: true,
+        offset: [0, 0, 50],
+        animations_random: 'seated_front',
+        duration: 15.0,
+      },
+      {
+        slotId: 'lie-down-left',
+        name: 'Dormir couché (Gauche)',
+        relative: true,
+        offset: [-35, 45, 0],
+        animations_random: 'laying_pack',
+        duration: 45.0,
+      },
+      {
+        slotId: 'lie-down-right',
+        name: 'Dormir couché (Droite)',
+        relative: true,
+        offset: [35, 45, 0],
+        animations_random: 'laying_pack',
+        duration: 45.0,
+      }
+    ]
+  },
   'bed-west': {
     id: 'bed-west',
     name: 'Lit Utåker Ouest (Principal)',
     category: 'bed',
     position: [74, 0, 151.5],
+    rotationY: Math.PI / 2,
     slots: [
       {
         slotId: 'seat-north',
         name: 'S\'asseoir (Nord)',
         offset: [90, 0, 80],
-        rotY: Math.PI / 2,
         animations_random: 'seated_front',
         duration: 15.0,
       },
@@ -27,7 +69,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'seat-middle',
         name: 'S\'asseoir (Milieu)',
         offset: [90, 0, 150],
-        rotY: Math.PI / 2,
         animations_random: 'seated_front',
         duration: 15.0,
       },
@@ -35,7 +76,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'seat-south',
         name: 'S\'asseoir (Sud)',
         offset: [90, 0, 220],
-        rotY: Math.PI / 2,
         animations_random: 'seated_front',
         duration: 15.0,
       },
@@ -43,7 +83,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'lie-down',
         name: 'Dormir couché',
         offset: [74, 45, 150],
-        rotY: Math.PI / 2,
         animations_random: 'laying_pack',
         duration: 45.0,
       }
@@ -54,26 +93,24 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Lit Utåker Est (Secondaire)',
     category: 'bed',
     position: [270, 0, 190],
+    rotationY: Math.PI,
     slots: [
       {
         slotId: 'seat-north',
         name: 'S\'asseoir (Nord)',
         offset: [245, 0, 120],
-        rotY: Math.PI,
         animations_random: 'seated_front',
       },
       {
         slotId: 'seat-middle',
         name: 'S\'asseoir (Milieu)',
         offset: [245, 0, 190],
-        rotY: Math.PI,
         animations_random: 'seated_front',
       },
       {
         slotId: 'seat-south',
         name: 'S\'asseoir (Sud)',
         offset: [245, 0, 260],
-        rotY: Math.PI,
         animations_random: 'seated_front',
       },
       {
@@ -862,7 +899,18 @@ export function getSmartObject(objectId: string): SmartObjectDef | undefined {
   if (!base) return undefined;
 
   if (!base.anchorKey) {
-    return base;
+    const defaultRot = base.rotationY ?? 0;
+    const hasSlotsWithoutRotY = base.slots.some(s => s.rotY === undefined);
+    if (!hasSlotsWithoutRotY) {
+      return base;
+    }
+    return {
+      ...base,
+      slots: base.slots.map(s => ({
+        ...s,
+        rotY: s.rotY ?? defaultRot,
+      }))
+    };
   }
 
   const anchorList = DYNAMIC_FURNITURE_ANCHORS[base.anchorKey];
@@ -912,11 +960,15 @@ export function getSmartObject(objectId: string): SmartObjectDef | undefined {
       ];
     }
 
+    // Orientation finale : slot.rotY relatif à l'objet, ou rotation propre de l'objet si rotY absent
+    const slotRot = slot.rotY !== undefined ? slot.rotY : 0;
+    const worldRotY = (anchorRy + slotRot) % (Math.PI * 2);
+
     return {
       ...slot,
       offset: worldOffset,
       approachOffset: worldApproach,
-      rotY: (anchorRy + slot.rotY) % (Math.PI * 2),
+      rotY: worldRotY,
     };
   });
 

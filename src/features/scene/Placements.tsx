@@ -134,7 +134,8 @@ import {
   DESK1_POSITIONS,
   DESK2_POSITIONS,
   SMORKULL_POSITIONS,
-  AIRPERFORMER_POSITIONS
+  AIRPERFORMER_POSITIONS,
+  DOUBLE_BED_POSITIONS
 } from './furniturePositions';
 
 import { MergedStaticGroup } from './Building';
@@ -349,11 +350,6 @@ export function Furniture() {
 // FURNISHINGS — meubles avec état animé (lit, bureaux, TV)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const DOUBLE_BED_POSITIONS = [
-  { label: 'Centré',    west: { x: ROOM_W / 2 - 83 / 2, z: 190 }, east: { x: ROOM_W / 2 + 83 / 2, z: 190 } },
-  { label: 'Mur Ouest', west: { x: 74, z: 151.5 },               east: { x: 74 + 83, z: 151.5 } },
-  { label: 'Mur Est',   west: { x: (ROOM_W - 4 - 83 / 2) - 83, z: 190 }, east: { x: ROOM_W - 4 - 83 / 2, z: 190 } },
-];
 
 function Beds() {
   const toggles = useFurnitureToggles(['bed-double']);
@@ -373,7 +369,10 @@ function Beds() {
 
   useEffect(() => {
     positionState['bed-position'] = { idx: doublePosIdx, total: DOUBLE_BED_POSITIONS.length };
-  }, [doublePosIdx]);
+    positionState['bed-double'] = { idx: isDouble ? 1 : 0, total: 2 };
+    positionState['bed-west-position'] = { idx: isDouble ? doublePosIdx : -1, total: DOUBLE_BED_POSITIONS.length };
+    positionState['bed-east-position'] = { idx: isDouble ? doublePosIdx : -1, total: DOUBLE_BED_POSITIONS.length };
+  }, [doublePosIdx, isDouble]);
 
   // Dimensions : largeur d'un lit = 83 cm, longueur = 205 cm.
   // Orientés avec rotation-y = Math.PI / 2 : largeur le long de X, longueur le long de Z.

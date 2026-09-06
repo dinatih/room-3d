@@ -213,7 +213,7 @@ export function AiZonesHelper() {
                   {/* Flèche d'orientation triangulaire 2D plate — base plate et pointe nette */}
                   <mesh
                     geometry={arrowGeo}
-                    rotation={[-Math.PI / 2, 0, slot.rotY]}
+                    rotation={[-Math.PI / 2, 0, slot.rotY ?? obj.rotationY ?? 0]}
                     position={[0, 0.2, 0]}
                   >
                     <meshBasicMaterial color="#ffffff" depthTest={false} depthWrite={false} side={THREE.DoubleSide} />

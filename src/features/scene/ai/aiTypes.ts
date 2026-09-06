@@ -16,7 +16,7 @@ export interface InteractionSlot {
   relative?: boolean;         // Si true, offset et approachOffset sont exprimés dans le repère local de l'objet parent
   offset?: [number, number, number]; // Position relative ou absolue d'interaction [x, y, z] (hérite de obj.position si absent)
   approachOffset?: [number, number, number]; // Position d'arrivée avant d'interagir
-  rotY: number;               // Orientation (radians relative si relative=true ou absolue)
+  rotY?: number;              // Orientation (radians relative si relative=true ou absolue) ; hérite de obj.rotationY si non spécifié
   animation?: string;         // Chemin vers le clip d'animation GLB
   duration?: number;          // Durée par défaut en secondes (si vide/non fourni, l'animation est jouée repeatCount fois)
   repeatCount?: number;       // Nombre de fois où l'animation est jouée si duration est omis (défaut: 1)

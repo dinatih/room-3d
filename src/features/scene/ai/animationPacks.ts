@@ -216,11 +216,11 @@ ANIMATION_PACKS['sitting_side']      = ANIMATION_PACKS['seated_side'];
  */
 export function resolveSlotAnimation(slot: {
   animation?: string;
-  rotY: number;
+  rotY?: number;
   animations_random?: string | string[];
   availableAnims?: string[];
 }): { animation: string; rotY: number } {
-  const baseRotY = slot.rotY;
+  const baseRotY = slot.rotY ?? 0;
 
   // 1. Pack nommé (ex: 'laying_pack', 'seated_front', ...)
   if (typeof slot.animations_random === 'string' && ANIMATION_PACKS[slot.animations_random]) {
