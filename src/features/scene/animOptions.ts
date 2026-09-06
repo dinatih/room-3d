@@ -851,3 +851,23 @@ export const WALKER_ANIM_OPTIONS = [
   return a.label.localeCompare(b.label, 'fr', { sensitivity: 'base' });
 });
 
+// Map des durées estimées extraites des labels (ex: "4.1s")
+const DURATION_MAP: Record<string, number> = {};
+for (const opt of WALKER_ANIM_OPTIONS) {
+  const match = opt.label.match(/([\d.]+)s/);
+  if (match) {
+    const dur = parseFloat(match[1]);
+    if (!isNaN(dur) && dur > 0) {
+      DURATION_MAP[opt.value] = dur;
+    }
+  }
+}
+
+/**
+ * Retourne la durée estimée en secondes d'un clip GLB (ou fallback si non répertorié).
+ */
+export function getEstimatedClipDuration(animPath?: string, fallback: number = 3.5): number {
+  if (!animPath) return fallback;
+  return DURATION_MAP[animPath] ?? fallback;
+}
+

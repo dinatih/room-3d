@@ -113,7 +113,7 @@ export class SpatialZone {
           : false;
 
         if (!isOccupied) {
-          const targetCoords = slot.approachOffset ?? slot.offset;
+          const targetCoords = slot.approachOffset ?? slot.offset ?? obj.position;
           const dist = Math.hypot(targetCoords[0] - agentX, targetCoords[2] - agentZ);
           
           const approachWaypoint: Waypoint = {

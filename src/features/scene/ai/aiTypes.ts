@@ -13,11 +13,13 @@ export type SmartObjectCategory =
 export interface InteractionSlot {
   slotId: string;             // ex: 'seat_1', 'seat_2', 'lie_down', 'use'
   name: string;               // Label lisible
-  offset: [number, number, number]; // Position relative ou absolue d'interaction [x, y, z]
+  offset?: [number, number, number]; // Position relative ou absolue d'interaction [x, y, z] (hérite de obj.position si absent)
   approachOffset?: [number, number, number]; // Position d'arrivée avant d'interagir
   rotY: number;               // Orientation (radians)
   animation?: string;         // Chemin vers le clip d'animation GLB
-  duration?: number;          // Durée par défaut en secondes
+  duration?: number;          // Durée par défaut en secondes (si vide/non fourni, l'animation est jouée repeatCount fois)
+  repeatCount?: number;       // Nombre de fois où l'animation est jouée si duration est omis (défaut: 1)
+  repeatVariation?: boolean;  // Si repeatCount > 1 avec animations_random : true = animation différente tirée à chaque répétition, false = même anim répétée X fois (défaut: false)
   availableAnims?: string[];  // Variantes possibles pour l'aléatoire
   animations_random?: string | string[]; // Pack nommé (ex: 'sitted_front_pack', 'side_sitted_pack') ou liste d'anims
   triggerEventKey?: string;   // Event à déclencher (ex: 'wc-flush', 'eastGlassDoor')
@@ -92,6 +94,8 @@ export interface AgentInstruction {
   actionId?: string; // for INTERACT
   animation?: string; // animation to play
   duration?: number; // for WAIT or INTERACT
+  repeatCount?: number; // number of repetitions if duration is not set (default 1)
+  repeatVariation?: boolean; // whether to re-randomize animation on each repeat cycle
   triggerEventKey?: string; // event to dispatch
   triggerTargetState?: boolean; // optional target state to force
   rotY?: number; // target rotation to face during interaction

@@ -375,10 +375,18 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     slots: [
       {
         slotId: 'cook',
-        name: 'Cuisiner',
+        name: 'Cuisiner Four',
         offset: [80, 0, 370],
         rotY: -Math.PI / 2,
         animation: 'animations/locomotion/anim_entering_code.glb',
+        duration: 10.0,
+      },
+      {
+        slotId: 'cook',
+        name: 'Cuisiner Plaques',
+        offset: [80, 0, 370],
+        rotY: 0,
+        animation: 'animations/interactions/anim_bartending.glb',
         duration: 10.0,
       }
     ]
@@ -785,6 +793,8 @@ export function buildSmartObjectInstructionSequence(
     slotId: slot.slotId,
     animation: chosenAnim,
     duration: slot.duration,
+    repeatCount: slot.repeatCount,
+    repeatVariation: slot.repeatVariation,
     rotY: slot.rotY,
     triggerEventKey: slot.triggerEventKey,
     triggerTargetState: slot.triggerTargetState

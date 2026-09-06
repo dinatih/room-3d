@@ -175,8 +175,8 @@ export function AiZonesHelper() {
         const slotsCount = obj.slots.length;
         
         // Centre moyen pour le label unifié
-        const avgX = obj.slots.reduce((sum, s) => sum + s.offset[0], 0) / (slotsCount || 1);
-        const avgZ = obj.slots.reduce((sum, s) => sum + s.offset[2], 0) / (slotsCount || 1);
+        const avgX = obj.slots.reduce((sum, s) => sum + (s.offset ? s.offset[0] : obj.position[0]), 0) / (slotsCount || 1);
+        const avgZ = obj.slots.reduce((sum, s) => sum + (s.offset ? s.offset[2] : obj.position[2]), 0) / (slotsCount || 1);
         const sprite = smartObjectSprites[obj.id];
 
         return (
@@ -186,7 +186,7 @@ export function AiZonesHelper() {
 
             {/* Cibles au sol + flèches d'orientation pour chaque slot */}
             {obj.slots.map(slot => {
-              const pos = slot.offset;
+              const pos = slot.offset ?? obj.position;
               return (
                 <group key={`slot-${obj.id}-${slot.slotId}`} position={[pos[0], baseHeight, pos[2]]}>
                   {/* Cible au sol */}

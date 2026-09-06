@@ -582,6 +582,10 @@ export function SingleCharacter({
         }
       }
 
+      document.dispatchEvent(new CustomEvent('walker-clip-loaded', {
+        detail: { id, path, duration: finalClip.duration }
+      }));
+
       currentAnimClip.current = path;
       if (isUserOverride) userAnimOverrideRef.current = true;
       invalidate();

@@ -10,6 +10,7 @@ import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
 import { getActiveFurnitureObstacles } from './furnitureObstacles';
 import { appLog } from '@features/ui/AppConsole';
+import { getEstimatedClipDuration } from '../animOptions';
 
 export interface AgentState {
   x: number;
@@ -61,7 +62,7 @@ export function getRandomNpcWalkAnimation(characterId?: string): string {
   return NPC_WALK_ANIMATIONS[Math.floor(Math.random() * NPC_WALK_ANIMATIONS.length)];
 }
 
-function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number; z: number } | null): { tx: number; ty?: number; tz: number; label: string; rotY?: number; anim?: string; duration?: number } {
+function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number; z: number } | null): { tx: number; ty?: number; tz: number; label: string; rotY?: number; anim?: string; duration?: number; repeatCount?: number; repeatVariation?: boolean } {
   if (instr.type === 'RETURN_TO_START' && startPos) {
     return { tx: startPos.x, tz: startPos.z, label: 'point de départ' };
   }
@@ -75,7 +76,7 @@ function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number
     const slot = instr.slotId
       ? (obj.slots.find(s => s.slotId === instr.slotId) ?? obj.slots[0])
       : obj.slots[0];
-    const pos = slot ? (slot.approachOffset ?? slot.offset) : obj.position;
+    const pos = slot ? (slot.approachOffset ?? slot.offset ?? obj.position) : obj.position;
     const resolved = slot ? resolveSlotAnimation(slot) : null;
     return {
       tx: pos[0],
@@ -84,7 +85,9 @@ function resolveInstructionCoords(instr: AgentInstruction, startPos: { x: number
       label: `${obj.name}${slot ? ` (${slot.name})` : ''}`,
       rotY: resolved?.rotY ?? slot?.rotY,
       anim: resolved?.animation ?? slot?.animation,
-      duration: slot?.duration
+      duration: slot?.duration,
+      repeatCount: slot?.repeatCount,
+      repeatVariation: slot?.repeatVariation
     };
   }
   if (instr.targetPos) {
@@ -146,6 +149,12 @@ export function useAgentController(
   const duoWaitTimerRef = useRef<number>(0);
   const duoInvitedRef = useRef<boolean>(false);
 
+  // Répétitions d'animation et variations pour SmartObjects
+  const repeatIndexRef = useRef<number>(0);
+  const targetRepeatsRef = useRef<number>(1);
+  const repeatVariationRef = useRef<boolean>(false);
+  const currentClipDurationRef = useRef<number>(4.0);
+
   // Libérer toutes les réservations au démontage et écouter les invitations de duo
   useEffect(() => {
     const onInvite = (e: any) => {
@@ -183,9 +192,28 @@ export function useAgentController(
       }
     };
 
+    const onClipLoaded = (e: any) => {
+      if (e.detail?.id === _characterId && typeof e.detail?.duration === 'number' && e.detail.duration > 0) {
+        currentClipDurationRef.current = e.detail.duration;
+        // Si l'interaction actuelle n'a pas de durée explicite, ajuster le timer restant à la vraie durée du clip
+        if (statusRef.current === 'INTERACTING') {
+          const queue = dynamicNavQueueRef.current;
+          const idx = dynamicNavIndexRef.current;
+          const currentInstruction = (queue.length > 0 && idx < queue.length)
+            ? queue[idx]
+            : (scenario && stepIndexRef.current < scenario.length ? scenario[stepIndexRef.current] : null);
+          if (currentInstruction && !currentInstruction.duration) {
+            timerRef.current = e.detail.duration;
+          }
+        }
+      }
+    };
+
     document.addEventListener('npc-invite-duo', onInvite);
+    document.addEventListener('walker-clip-loaded', onClipLoaded);
     return () => {
       document.removeEventListener('npc-invite-duo', onInvite);
+      document.removeEventListener('walker-clip-loaded', onClipLoaded);
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
     };
@@ -203,6 +231,8 @@ export function useAgentController(
     const isFallNow = hasSkyDrop && spawnDelay === 0;
 
     stepIndexRef.current = 0;
+    repeatIndexRef.current = 0;
+    targetRepeatsRef.current = 1;
     timerRef.current = isFallNow ? 6.0 : 0;
     statusRef.current = isWait ? 'WAITING' : (isFallNow ? 'FALLING' : 'IDLE');
     delayTimerRef.current = spawnDelay;
@@ -529,6 +559,10 @@ export function useAgentController(
         // Si l'instruction est USE_OBJECT, on enchaîne directement sur l'interaction !
         if (currentInstruction.type === 'USE_OBJECT') {
           statusRef.current = 'INTERACTING';
+          repeatIndexRef.current = 0;
+          targetRepeatsRef.current = currentInstruction.repeatCount ?? target.repeatCount ?? 1;
+          repeatVariationRef.current = currentInstruction.repeatVariation ?? target.repeatVariation ?? false;
+
           if (currentInstruction.smartObjectId === 'duo-zone') {
             duoSessionManager.markReady(_characterId);
             duoWaitTimerRef.current = 0;
@@ -548,7 +582,13 @@ export function useAgentController(
             currentInstruction.duration = target.duration;
           }
           if (currentInstruction.smartObjectId !== 'duo-zone') {
-            timerRef.current = currentInstruction.duration || target.duration || 1.0;
+            const explicitDuration = currentInstruction.duration || target.duration;
+            if (explicitDuration) {
+              timerRef.current = explicitDuration;
+            } else {
+              const estimated = getEstimatedClipDuration(currentInstruction.animation || target.anim);
+              timerRef.current = estimated;
+            }
           }
           stateRef.current.y = target.ty ?? 0;
           if (currentInstruction.rotY !== undefined) {
@@ -588,7 +628,8 @@ export function useAgentController(
                 ? animation.replace('animations/', '').replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ')
                 : 'USE_OBJECT';
               const objPrefix = objName ? `[${objName}${slotInfo}] ` : '';
-              appLog(_characterId, `🎭 Action: ${objPrefix}${label}${triggerInfo} (${duration.toFixed(1)}s)`);
+              const repeatsInfo = targetRepeatsRef.current > 1 ? ` x${targetRepeatsRef.current}` : '';
+              appLog(_characterId, `🎭 Action: ${objPrefix}${label}${triggerInfo} (${duration.toFixed(1)}s${repeatsInfo})`);
             }
           }
         } else {
@@ -866,6 +907,34 @@ export function useAgentController(
 
       timerRef.current -= dt;
       if (timerRef.current <= 0) {
+        // Répétition d'animation
+        if (repeatIndexRef.current + 1 < targetRepeatsRef.current) {
+          repeatIndexRef.current++;
+          if (repeatVariationRef.current && currentInstruction.smartObjectId && currentInstruction.slotId) {
+            const obj = SMART_OBJECTS[currentInstruction.smartObjectId];
+            const slot = obj?.slots?.find(s => s.slotId === currentInstruction.slotId);
+            if (slot) {
+              const res = resolveSlotAnimation(slot);
+              if (res.animation) {
+                currentInstruction.animation = res.animation;
+                stateRef.current.animation = res.animation;
+              }
+              if (res.rotY !== undefined) {
+                currentInstruction.rotY = res.rotY;
+                stateRef.current.rotY = res.rotY;
+              }
+            }
+          }
+          // Réinitialiser le timer pour le cycle suivant
+          const cycleDuration = currentInstruction.duration
+            || target.duration
+            || getEstimatedClipDuration(currentInstruction.animation || stateRef.current.animation);
+          timerRef.current = cycleDuration;
+          return stateRef.current;
+        }
+
+        repeatIndexRef.current = 0;
+        targetRepeatsRef.current = 1;
         statusRef.current = 'IDLE';
         stateRef.current.y = startPosRef.current?.y ?? 0;
         if (hasNavStep) {
