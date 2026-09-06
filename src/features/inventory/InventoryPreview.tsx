@@ -11,6 +11,8 @@ import { CharacterAnimSelector } from '@features/scene/CharacterAnimSelector';
 import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
 import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/ai/duoAnimations';
 import { CHARACTERS } from '@features/scene/walkerConfig';
+import { GroundPoint } from '@features/scene/character/GroundPoint';
+import { SkySphere } from '@features/scene/SkySphere';
 
 function disposePreviewScene(root: THREE.Object3D) {
   root.traverse((node: any) => {
@@ -271,6 +273,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
           {Component ? <Component item={item ?? {} as any} actionState={actionState} onSize={fit} /> : <GlbScene glbPath={glbPath!} onSize={fit} onStats={onStats} />}
         </group>
       </group>
+      <GroundPoint color="#0058a3" />
       {showDims && item?.dims && worldSize && <Dimensions dims={item.dims} worldSize={worldSize} grounded={grounded} />}
     </group>
   );
@@ -398,7 +401,8 @@ export function InventoryPreview({
             </div>
           )}
           {showing3D ? (
-            <Canvas key={item.id} frameloop="always" camera={{ fov: 45, near: 0.01, far: 100, position: [1.4, 0.9, 1.8] }} gl={{ antialias: true, alpha: false }} onCreated={({ scene, camera }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); scene.fog = new THREE.Fog('#d2d2d2', 4, 15); }}>
+            <Canvas key={item.id} frameloop="always" camera={{ fov: 45, near: 0.01, far: 8000, position: [1.4, 0.9, 1.8] }} gl={{ antialias: true, alpha: false }} onCreated={({ scene, camera }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); }}>
+              <SkySphere />
               <ambientLight intensity={1.2} />
               <directionalLight position={[3, 5, 3]} intensity={1.5} />
               <directionalLight position={[-2, 1, -2]} intensity={0.5} color="#aabbff" />

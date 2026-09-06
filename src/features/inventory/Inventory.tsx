@@ -451,7 +451,43 @@ export function Inventory({
   const [selected, setSelected]           = useState<PreviewTarget>(null);
   const [focusedIndex, setFocusedIndex]   = useState(-1);
   const [showMobileModal, setShowMobileModal] = useState(false);
+  const [listWidth, setListWidth]         = useState(() => {
+    try {
+      const saved = localStorage.getItem('inventory_list_width');
+      return saved ? Math.max(220, Math.min(800, parseInt(saved, 10))) : 380;
+    } catch {
+      return 380;
+    }
+  });
+  const [isResizing, setIsResizing]       = useState(false);
   const tableContainerRef                 = useRef<HTMLDivElement>(null);
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    const startX = e.clientX;
+    const startWidth = listWidth;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const newWidth = Math.max(200, Math.min(window.innerWidth * 0.75, startWidth + delta));
+      setListWidth(newWidth);
+    };
+
+    const onMouseUp = (upEvent: MouseEvent) => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      setIsResizing(false);
+      const finalDelta = upEvent.clientX - startX;
+      const finalWidth = Math.max(200, Math.min(window.innerWidth * 0.75, startWidth + finalDelta));
+      try {
+        localStorage.setItem('inventory_list_width', Math.round(finalWidth).toString());
+      } catch {}
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
 
   useEffect(() => {
     if (initialCategory) {
@@ -602,9 +638,12 @@ export function Inventory({
         </div>
 
         {/* LAYOUT SPLIT */}
-        <div className="inventory-layout">
+        <div className="inventory-layout" style={{ userSelect: isResizing ? 'none' : undefined }}>
           {/* LIST PANE */}
-          <div className="inventory-pane-list">
+          <div
+            className="inventory-pane-list"
+            style={{ width: isMobile ? '100%' : `${listWidth}px` }}
+          >
             <div className="inventory-list-header">
               <span className="inventory-list-header-title">Tous les items</span>
               <div className="inventory-filter-tabs">
@@ -751,6 +790,24 @@ export function Inventory({
               )}
             </div>
           </div>
+
+          {/* SPLITTER DRAG HANDLE (desktop) */}
+          {!isMobile && (
+            <div
+              onMouseDown={handleResizeStart}
+              style={{
+                width: 6,
+                cursor: 'col-resize',
+                background: isResizing ? 'var(--red)' : 'rgba(0, 0, 0, 0.08)',
+                transition: isResizing ? 'none' : 'background 0.15s ease',
+                zIndex: 10,
+                position: 'relative',
+                flexShrink: 0,
+              }}
+              className="inventory-splitter-handle"
+              title="Glisser pour redimensionner la liste / preview 3D"
+            />
+          )}
 
           {/* DETAIL PANE (desktop) */}
           <div className="inventory-pane-detail">
