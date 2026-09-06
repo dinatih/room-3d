@@ -11,6 +11,7 @@ import { hoverState } from '@features/scene/hoverState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { positionState } from '@features/scene/positionState';
 import { cameraState } from '@features/scene/cameraState';
+import { appLog } from '@features/ui/AppConsole';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 
@@ -179,6 +180,10 @@ const ACTIONS: Record<string, ActionDef> = {
   airPerformerSpeed:       { btnLabel: 'Vitesse +/-',        toggleKey: 'airPerformerSpeed' },
   'airperformer-position': { btnLabel: () => { const p = positionState['airperformer-position']; return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'airperformer-position' },
   'raskog-large-position': { btnLabel: () => { const p = positionState['raskog-large-position'];    return p ? `Position ${p.idx + 1}/${p.total}` : 'Changer position'; }, toggleKey: 'raskog-large-position'    },
+  'select-walker': {
+    btnLabel: '🎯 Définir comme personnage actif',
+    toggleKey: 'select-walker'
+  },
   'walker-meshes':         { btnLabel: 'Meshes',             toggleKey: 'walker-meshes'     },
   'sofa-arm-left':         { btnLabel: 'Accoudoir Gauche',  toggleKey: 'sofaArmLeft'       },
   'walker-anim-lara':      { btnLabel: 'Jouer une animation', toggleKey: 'walker-anim-lara', type: 'select', options: WALKER_ANIM_OPTIONS },
@@ -194,6 +199,18 @@ const ACTIONS: Record<string, ActionDef> = {
     }))
   ] },
 };
+
+// Helper to resolve action definition (supports dynamic actions like select-walker-*)
+function getActionDef(actionId: string): ActionDef | undefined {
+  if (ACTIONS[actionId]) return ACTIONS[actionId];
+  if (actionId.startsWith('select-walker-')) {
+    return {
+      btnLabel: '🎯 Définir comme personnage actif',
+      toggleKey: actionId,
+    };
+  }
+  return undefined;
+}
 
 function resolveAction(obj: THREE.Object3D): { label: string; actionIds: string[] } | null {
   let cur: THREE.Object3D | null = obj;
@@ -574,7 +591,7 @@ export function HoverOverlay() {
   }, []);
 
   const lockedActions = showModal
-    ? state.lockedActionIds.map(id => ACTIONS[id]).filter(Boolean)
+    ? state.lockedActionIds.map(id => getActionDef(id)).filter(Boolean) as ActionDef[]
     : [];
 
   let modalLeft = 0, modalTop = 0;
@@ -747,7 +764,13 @@ export function HoverOverlay() {
               <button
                 key={i}
                 onClick={() => {
-                  useSceneStore.getState().triggerAction(action.toggleKey);
+                  if (action.toggleKey.startsWith('select-walker-')) {
+                    const targetWalkerId = action.toggleKey.replace('select-walker-', '');
+                    useSceneStore.getState().setActiveWalkerId(targetWalkerId);
+                    appLog(targetWalkerId, `🎯 Personnage actif défini : ${state.lockedLabel}`);
+                  } else {
+                    useSceneStore.getState().triggerAction(action.toggleKey);
+                  }
                   hoverState.locked      = false;
                   hoverState.touchActive = false;
                   hoverState.onUpdate?.();
