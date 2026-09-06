@@ -574,7 +574,11 @@ export function SingleCharacter({
     let isTemporaryLoadingFallback = false;
     if (!actions[target] && target.endsWith('.glb')) {
       loadAndPlayClip(target);
-      target = 'idle';
+      if (activeActionName.current && actions[activeActionName.current]) {
+        target = activeActionName.current;
+      } else {
+        target = 'idle';
+      }
       isTemporaryLoadingFallback = true;
     }
 

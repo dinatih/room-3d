@@ -152,7 +152,8 @@ export function useCharacterAnimations({
     mixerRef.current = mixer;
 
     mixer.addEventListener('finished', (e) => {
-      if (currentAnimClip.current && actionsRef.current[currentAnimClip.current] === e.action) {
+      const currentAction = currentAnimClip.current ? actionsRef.current[currentAnimClip.current] : null;
+      if (currentAction === e.action && e.action.loop === THREE.LoopOnce) {
         currentAnimClip.current = null;
         userAnimOverrideRef.current = false;
       }
