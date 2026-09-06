@@ -360,12 +360,18 @@ function Beds() {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
       if (key === 'bed-position') {
-        setDoublePosIdx(i => (i + 1) % DOUBLE_BED_POSITIONS.length);
+        setDoublePosIdx(i => {
+          const next = (i + 1) % DOUBLE_BED_POSITIONS.length;
+          positionState['bed-position'] = { idx: next, total: DOUBLE_BED_POSITIONS.length };
+          positionState['bed-west-position'] = { idx: isDouble ? next : -1, total: DOUBLE_BED_POSITIONS.length };
+          positionState['bed-east-position'] = { idx: isDouble ? next : -1, total: DOUBLE_BED_POSITIONS.length };
+          return next;
+        });
       }
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
-  }, []);
+  }, [isDouble]);
 
   useEffect(() => {
     positionState['bed-position'] = { idx: doublePosIdx, total: DOUBLE_BED_POSITIONS.length };
@@ -429,9 +435,21 @@ function Desks() {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
       if (key === 'desk1-toggle')   setD1H(h => h === SIT_H ? STAND_H : SIT_H);
-      if (key === 'desk1-position') setD1Pos(i => (i + 1) % DESK1_POSITIONS.length);
+      if (key === 'desk1-position') {
+        setD1Pos(i => {
+          const next = (i + 1) % DESK1_POSITIONS.length;
+          positionState['desk1-position'] = { idx: next, total: DESK1_POSITIONS.length };
+          return next;
+        });
+      }
       if (key === 'desk2-toggle')   setD2H(h => h === SIT_H ? STAND_H : SIT_H);
-      if (key === 'desk2-position') setD2Pos(i => (i + 1) % DESK2_POSITIONS.length);
+      if (key === 'desk2-position') {
+        setD2Pos(i => {
+          const next = (i + 1) % DESK2_POSITIONS.length;
+          positionState['desk2-position'] = { idx: next, total: DESK2_POSITIONS.length };
+          return next;
+        });
+      }
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
@@ -533,8 +551,13 @@ function Smorkull_() {
   useEffect(() => {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
-      if (key === 'smorkull-position')
-        setPosIdx(i => (i + 1) % SMORKULL_POSITIONS.length);
+      if (key === 'smorkull-position') {
+        setPosIdx(i => {
+          const next = (i + 1) % SMORKULL_POSITIONS.length;
+          positionState['smorkull-position'] = { idx: next, total: SMORKULL_POSITIONS.length };
+          return next;
+        });
+      }
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
@@ -555,7 +578,13 @@ function AirPerformer_() {
   useEffect(() => {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
-      if (key === 'airperformer-position') setPosIdx(i => (i + 1) % AIRPERFORMER_POSITIONS.length);
+      if (key === 'airperformer-position') {
+        setPosIdx(i => {
+          const next = (i + 1) % AIRPERFORMER_POSITIONS.length;
+          positionState['airperformer-position'] = { idx: next, total: AIRPERFORMER_POSITIONS.length };
+          return next;
+        });
+      }
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
