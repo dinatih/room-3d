@@ -16,225 +16,92 @@ export interface AnimationPackDef {
   animations: Array<string | AnimationPackItem>;
 }
 
+import { getRandomAnimationByQuery, resolveAnimationPath, getAnimationDef, getAnimationsByTags } from '../animations/animationResolver';
+
+/**
+ * Packs d'animations dérivés sémantiquement à partir des tags du registre.
+ * Garantit que l'ajout d'une animation dans le registre (avec ses tags et son rotYOffset natif)
+ * l'intègre automatiquement dans les packs correspondants, sans duplication de chemins.
+ */
 export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
-  // ── PACK ASSISE DE FACE (Orientation de base 0°) ───────────────────────────
+  // ── ASSISE DE FACE (0°) ────────────────────────────────────────────────────
   seated_front: {
     id: 'seated_front',
     name: 'Poses assises de face',
     defaultRotYOffset: 0,
-    animations: [
-      'animations/poses_idles/anim_sitting_idle.glb',
-      'animations/poses_idles/anim_sitting_2.glb',
-      // 'animations/poses_idles/anim_sitting_thumbs_up.glb',
-      'animations/poses_idles/anim_sitting_talking_1.glb',
-      'animations/poses_idles/anim_sitting_talking.glb',
-      'animations/poses_idles/anim_sitting_laughing.glb',
-      'animations/combat/anim_sitting_gun_motion.glb',
-      'animations/poses_idles/anim_sitting_disbelief.glb',
-      'animations/poses_idles/anim_sitting.glb',
-      'animations/poses_idles/anim_male_sitting_pose_2.glb',
-      'animations/poses_idles/anim_male_sitting_pose_1.glb',
-      'animations/poses_idles/anim_female_sitting_pose.glb',
-      // 'animations/poses_idles/anim_cheering_while_sitting.glb',
-      'animations/poses_idles/miley_armature_sit_talk.glb',
-      'animations/poses_idles/miley_armature_sit_look_up_laugh.glb',
-      'animations/interactions/anim_having_a_meeting_female.glb',
-      'animations/interactions/anim_having_a_meeting_male.glb',
-    ],
+    get animations() {
+      return getAnimationsByTags(['seated_front']).map((d) => ({
+        animation: d.path,
+        rotYOffset: d.defaultRotYOffset ?? 0,
+      }));
+    },
   },
 
-  // ── PACK ASSISE DE CÔTÉ (Orientation décalée de 90° / π/2) ────────────────
+  // ── ASSISE DE CÔTÉ (90° / π/2) ─────────────────────────────────────────────
   seated_side: {
     id: 'seated_side',
     name: 'Poses assises de côté (90°)',
-    defaultRotYOffset: Math.PI / 2, // Rotation de départ décalée de 90°
-    animations: [
-      'animations/poses_idles/anim_female_sitting_pose_1.glb',
-      'animations/poses_idles/anim_female_sitting_pose_2.glb',
-      'animations/poses_idles/anim_female_sitting_pose_3.glb',
-    ],
+    defaultRotYOffset: Math.PI / 2,
+    get animations() {
+      return getAnimationsByTags(['seated_side']).map((d) => ({
+        animation: d.path,
+        rotYOffset: d.defaultRotYOffset ?? Math.PI / 2,
+      }));
+    },
   },
 
-  // ── PACK ALLONGÉ DE FACE / SUR LE DOS (Orientation standard) ──────────────
+  // ── ALLONGÉ SUR LE DOS / FACE ──────────────────────────────────────────────
   laying_front: {
     id: 'laying_front',
     name: 'Animations allongées de face (sur le dos)',
-    defaultRotYOffset: Math.PI / 2, // Aligné dans l'axe de longueur standard du lit
-    animations: [
-      'animations/poses_idles/anim_laying.glb',
-      'animations/poses_idles/anim_laying_1.glb',
-      'animations/poses_idles/anim_laying_idle.glb',
-      'animations/poses_idles/anim_laying_mild_cough.glb',
-      'animations/poses_idles/anim_laying_seizure.glb',
-      'animations/poses_idles/anim_laying_severe_cough.glb',
-      'animations/poses_idles/anim_laying_shrugging.glb',
-      { animation: 'animations/poses_idles/anim_laying_sleeping.glb', rotYOffset: 0 },
-      'animations/poses_idles/anim_male_laying_pose_1.glb',
-      'animations/poses_idles/anim_male_laying_pose_2.glb',
-      { animation: 'animations/poses_idles/anim_female_laying_pose_3.glb', rotYOffset: 0 },
-      { animation: 'animations/poses_idles/anim_situps.glb', rotYOffset: 0 },
-    ],
+    defaultRotYOffset: Math.PI / 2,
+    get animations() {
+      return getAnimationsByTags(['laying_front']).map((d) => ({
+        animation: d.path,
+        rotYOffset: d.defaultRotYOffset ?? Math.PI / 2,
+      }));
+    },
   },
 
-  // ── PACK ALLONGÉ SUR LE CÔTÉ (Sur le flanc / profil) ─────────────────────
+  // ── ALLONGÉ SUR LE CÔTÉ (Profil) ───────────────────────────────────────────
   laying_side: {
     id: 'laying_side',
     name: 'Animations allongées sur le côté',
     defaultRotYOffset: 0,
-    animations: [
-      { animation: 'animations/poses_idles/anim_female_laying_pose.glb', rotYOffset: -Math.PI / 8 },
-      { animation: 'animations/poses_idles/anim_female_laying_pose_1.glb', rotYOffset: 0 },
-      { animation: 'animations/poses_idles/anim_female_laying_pose_4.glb', rotYOffset: 0 },
-      { animation: 'animations/poses_idles/anim_female_laying_pose_9.glb', rotYOffset: 0 },
-      { animation: 'animations/poses_idles/anim_male_laying_pose.glb', rotYOffset: Math.PI },
-      { animation: 'animations/poses_idles/anim_sleeping_idle.glb', rotYOffset: Math.PI / 6 },
-    ],
+    get animations() {
+      return getAnimationsByTags(['laying_side']).map((d) => ({
+        animation: d.path,
+        rotYOffset: d.defaultRotYOffset ?? 0,
+      }));
+    },
   },
 
-  // ── PACK ALLONGÉ GLOBAL (Mix de face et côté pour rétrocompatibilité) ───────
+  // ── TOUTES LES POSES ALLONGÉES ─────────────────────────────────────────────
   laying_pack: {
     id: 'laying_pack',
     name: 'Toutes les animations allongées',
     defaultRotYOffset: Math.PI / 2,
-    animations: [
-      'animations/poses_idles/anim_laying.glb',
-      'animations/poses_idles/anim_laying_1.glb',
-      'animations/poses_idles/anim_laying_idle.glb',
-      'animations/poses_idles/anim_laying_mild_cough.glb',
-      'animations/poses_idles/anim_laying_seizure.glb',
-      'animations/poses_idles/anim_laying_severe_cough.glb',
-      'animations/poses_idles/anim_laying_shrugging.glb',
-      { animation: 'animations/poses_idles/anim_laying_sleeping.glb', rotYOffset: 0 },
-      'animations/poses_idles/anim_male_laying_pose_1.glb',
-      'animations/poses_idles/anim_male_laying_pose_2.glb',
-      { animation: 'animations/poses_idles/anim_female_laying_pose_1.glb', rotYOffset: 0 },
-      { animation: 'animations/poses_idles/anim_female_laying_pose_4.glb', rotYOffset: 0 },
-      { animation: 'animations/poses_idles/anim_female_laying_pose_9.glb', rotYOffset: 0 },
-      { animation: 'animations/poses_idles/anim_male_laying_pose.glb', rotYOffset: Math.PI },
-      { animation: 'animations/poses_idles/anim_sleeping_idle.glb', rotYOffset: Math.PI / 6 },
-    ],
+    get animations() {
+      return getAnimationsByTags(['laying']).map((d) => ({
+        animation: d.path,
+        rotYOffset: d.defaultRotYOffset ?? Math.PI / 2,
+      }));
+    },
   },
 
-  // ── PACK DANSES (toutes les danses du dossier dances/) ────────────────────
+  // ── TOUTES LES DANSES ──────────────────────────────────────────────────────
   all_dances: {
     id: 'all_dances',
     name: 'Toutes les danses',
-    animations: [
-      'animations/poses_idles/miley_armature_change_pose.glb',
-      'animations/dances/anim_arms_hip_hop_dance.glb',
-      'animations/dances/anim_belly_dance.glb',
-      'animations/dances/anim_bellydancing.glb',
-      'animations/dances/anim_booty_hip_hop_dance.glb',
-      'animations/dances/anim_breakdance_1990.glb',
-      'animations/dances/anim_breakdance_1990_3.glb',
-      // 'animations/dances/anim_breakdance_ending_1.glb',
-      // 'animations/dances/anim_breakdance_ending_2.glb',
-      // 'animations/dances/anim_breakdance_ending_3.glb',
-      // 'animations/dances/anim_breakdance_footwork_1.glb',
-      // 'animations/dances/anim_breakdance_footwork_2.glb',
-      // 'animations/dances/anim_breakdance_footwork_3.glb',
-      // 'animations/dances/anim_breakdance_footwork_to_freeze.glb',
-      // 'animations/dances/anim_breakdance_footwork_to_idle.glb',
-      'animations/dances/anim_breakdance_freeze_var_1.glb',
-      'animations/dances/anim_breakdance_freeze_var_2.glb',
-      'animations/dances/anim_breakdance_freeze_var_3.glb',
-      'animations/dances/anim_breakdance_freeze_var_4.glb',
-      'animations/dances/anim_breakdance_freezes.glb',
-      // 'animations/dances/anim_breakdance_ready.glb',
-      // 'animations/dances/anim_breakdance_ready_2.glb',
-      // 'animations/dances/anim_breakdance_ready_3.glb',
-      'animations/dances/anim_breakdance_swipes.glb',
-      // 'animations/dances/anim_breakdance_uprock.glb',
-      // 'animations/dances/anim_breakdance_uprock_2.glb',
-      // 'animations/dances/anim_breakdance_uprock_to_ground.glb',
-      // 'animations/dances/anim_breakdance_uprock_to_ground_2.glb',
-      // 'animations/dances/anim_breakdance_uprock_var_1.glb',
-      // 'animations/dances/anim_breakdance_uprock_var_1_end.glb',
-      // 'animations/dances/anim_breakdance_uprock_var_1_start.glb',
-      // 'animations/dances/anim_breakdance_uprock_var_2.glb',
-      // 'animations/dances/anim_brooklyn_uprock.glb',
-      'animations/dances/anim_can_can.glb',
-      'animations/dances/anim_crossleg_freeze.glb',
-      'animations/dances/anim_dancing.glb',
-      'animations/dances/anim_dancing_1.glb',
-      'animations/dances/anim_dancing_2.glb',
-      'animations/dances/anim_dancing_6.glb',
-      'animations/dances/anim_dancing_running_man.glb',
-      'animations/dances/anim_dancing_twerk.glb',
-      'animations/dances/anim_gangnam_style.glb',
-      'animations/dances/anim_head_spinning.glb',
-      'animations/dances/anim_hip_hop_dancing.glb',
-      'animations/dances/anim_hip_hop_dancing_1.glb',
-      'animations/dances/anim_hip_hop_dancing_2.glb',
-      'animations/dances/anim_hip_hop_dancing_3.glb',
-      'animations/dances/anim_hip_hop_dancing_4.glb',
-      'animations/dances/anim_hip_hop_dancing_5.glb',
-      'animations/dances/anim_hip_hop_dancing_6.glb',
-      'animations/dances/anim_hip_hop_dancing_13.glb',
-      'animations/dances/anim_hip_hop_dancing_14.glb',
-      'animations/dances/anim_hip_hop_dancing_17.glb',
-      'animations/dances/anim_hip_hop_dancing_18.glb',
-      'animations/dances/anim_hip_hop_dancing_19.glb',
-      'animations/dances/anim_house_dancing.glb',
-      'animations/dances/anim_house_dancing_1.glb',
-      'animations/dances/anim_house_dancing_2.glb',
-      'animations/dances/anim_jazz_dancing.glb',
-      'animations/dances/anim_jazz_dancing_1.glb',
-      'animations/dances/anim_jazz_dancing_2.glb',
-      // 'animations/dances/anim_jazz_dancing_4.glb',
-      'animations/dances/anim_locking_hip_hop_dance.glb',
-      'animations/dances/anim_macarena_dance.glb',
-      'animations/dances/anim_northern_soul_spin_combo.glb',
-      'animations/dances/anim_robot_hip_hop_dance.glb',
-      'animations/dances/anim_rumba_dancing.glb',
-      'animations/dances/anim_salsa_dancing.glb',
-      'animations/dances/anim_salsa_dancing_1.glb',
-      'animations/dances/anim_salsa_dancing_2.glb',
-      'animations/dances/anim_salsa_dancing_3.glb',
-      'animations/dances/anim_salsa_dancing_4.glb',
-      'animations/dances/anim_salsa_dancing_5.glb',
-      'animations/dances/anim_salsa_dancing_man.glb',
-      'animations/dances/anim_samba_dancing.glb',
-      'animations/dances/anim_samba_dancing_1.glb',
-      'animations/dances/anim_samba_dancing_2.glb',
-      'animations/dances/anim_samba_dancing_5.glb',
-      'animations/dances/anim_silly_dancing.glb',
-      'animations/dances/anim_silly_dancing_2.glb',
-      'animations/dances/anim_snake_hip_hop_dance.glb',
-      'animations/dances/anim_step_hip_hop_dance.glb',
-      'animations/dances/anim_swing_dancing.glb',
-      'animations/dances/anim_tut_hip_hop_dance.glb',
-      'animations/dances/anim_twist_dance.glb',
-      'animations/dances/anim_ymca_dance.glb',
-      'animations/dances/miley_armature_aerobic_dance.glb',
-      'animations/dances/miley_armature_couple_pop_dance_f.glb',
-      'animations/dances/miley_armature_couple_pop_dance_m.glb',
-      'animations/dances/miley_armature_dance_graceful.glb',
-      'animations/dances/miley_armature_dancetomusic_f.glb',
-      'animations/dances/miley_armature_energetic_dance_f.glb',
-      'animations/dances/miley_armature_energetic_dance_m.glb',
-      'animations/dances/miley_armature_groove_jump_up.glb',
-      'animations/dances/miley_armature_livingroom_swing_m.glb',
-      'animations/dances/miley_armature_sensual_dance_01.glb',
-      'animations/dances/miley_armature_sensual_dance_02.glb',
-      'animations/dances/miley_armature_sensual_dance_03.glb',
-      'animations/dances/miley_armature_slow_dance_f.glb',
-      'animations/dances/miley_armature_slow_dance_m.glb',
-      'animations/dances/miley_armature_taunt_dance_loop.glb',
-      'animations/dances/miley_armature_down_01.glb',
-      'animations/dances/miley_armature_f_h_magespellcast_05.glb',
-      'animations/dances/miley_armature_musicalplaytime_f.glb',
-      'animations/dances/miley_armature_routine_05.glb',
-      'animations/dances/anim_hokey_pokey.glb',
-      'animations/dances/anim_listening_to_music.glb',
-      'animations/dances/anim_rapping.glb',
-      'animations/dances/anim_singing.glb',
-      'animations/dances/anim_speedbag.glb',
-      'animations/dances/anim_thriller_part_2.glb',
-    ],
+    get animations() {
+      return getAnimationsByTags(['dance']).map((d) => ({
+        animation: d.path,
+        rotYOffset: d.defaultRotYOffset ?? 0,
+      }));
+    },
   },
 };
-// [26:25] Rosanna: 🎭 Action: [Lit Utåker Ouest (Principal) (slot lie-down)] poses idles/anim male laying pose 1 (45.0s)
+
 // ── Alias pratiques & rétrocompatibilité ─────────────────────────────────────
 ANIMATION_PACKS['seated_front_pack'] = ANIMATION_PACKS['seated_front'];
 ANIMATION_PACKS['seated_side_pack']  = ANIMATION_PACKS['seated_side'];
@@ -249,10 +116,9 @@ ANIMATION_PACKS['lay_side']          = ANIMATION_PACKS['laying_side'];
 ANIMATION_PACKS['lay_front_pack']    = ANIMATION_PACKS['laying_front'];
 ANIMATION_PACKS['lay_side_pack']     = ANIMATION_PACKS['laying_side'];
 
-import { getRandomAnimationByQuery, resolveAnimationPath, getAnimationDef } from '../animations/animationResolver';
-
 /**
  * Résout une animation aléatoire ou définie et son orientation finale (avec rotY offset si nécessaire)
+
  * pour un slot d'interaction donné.
  *
  * Dans un pack nommé, chaque entrée peut être :
