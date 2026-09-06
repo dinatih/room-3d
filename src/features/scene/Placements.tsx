@@ -409,16 +409,16 @@ function Beds() {
 
   return (
     <>
-      {/* Lit Ouest (haut, principal) */}
+      {/* Lit Ouest (haut, principal) : surmatelas en mode séparé, retiré en mode lit double */}
       <PositionTransition x={westPos.x} z={westPos.z} ry={Math.PI / 2}>
         <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: hoverActions } }}>
-          <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <UtakerFrame item={{ id: 'utaker-upper' } as any} hasTopper={!isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </PositionTransition>
-      {/* Lit Est (bas, secondaire, amour) */}
+      {/* Lit Est (bas, secondaire) : pas de surmatelas en mode séparé, reçoit le surmatelas en mode lit double pour égaliser à 22cm vs 24cm */}
       <PositionTransition x={eastPos.x} z={eastPos.z} ry={Math.PI / 2}>
         <group userData={{ animUnit: true, hoverAction: { label: hoverLabel, actions: hoverActions } }}>
-          <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <UtakerFrame item={{ id: 'utaker-lower' } as any} hasTopper={isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
       </PositionTransition>
     </>

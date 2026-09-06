@@ -77,15 +77,38 @@ function Cadre({ glbPath }: { glbPath: string }) {
   return <primitive object={scene} />;
 }
 
-export function UtakerFrame({ item, onSize }: SceneItemProps) {
+interface UtakerFrameProps extends SceneItemProps {
+  hasTopper?: boolean;
+}
+
+export function UtakerFrame({ item, onSize, hasTopper: explicitTopper }: UtakerFrameProps) {
   const groupRef = useRef<THREE.Group>(null!);
   const isUpper  = item.id === 'utaker-upper';
   const glbPath  = isUpper ? HAUT_GLB : BAS_GLB;
 
+  // Par défaut : lit haut (Ouest) a le surmatelas, lit bas (Est) ne l'a pas.
+  // En mode double, explicitTopper permet d'inverser (surmatelas sur l'Est pour égaliser 22cm vs 24cm).
+  const hasTopper = explicitTopper !== undefined ? explicitTopper : isUpper;
+
   useLayoutEffect(() => {
     groupRef.current.updateMatrixWorld(true);
     onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
-  }, []);
+  }, [hasTopper]);
+
+  // Matelas base :
+  // - Lit Ouest (isUpper) : ÅNNELAND 24cm, pos Y = 11 -> sommet matelas = 11 + 24 = 35cm
+  //   - Avec surmatelas (4cm) : sommet = 39cm
+  //   - Sans surmatelas : sommet = 35cm
+  // - Lit Est (!isUpper) : VESTMARKA 18cm, pos Y = 11 -> sommet matelas = 11 + 18 = 29cm
+  //   - Avec surmatelas (4cm) : sommet = 33cm (22cm de literie au dessus du sommier 11cm)
+  //   - Sans surmatelas : sommet = 29cm
+  const topY = isUpper
+    ? (hasTopper ? 39 : 35)
+    : (hasTopper ? 33 : 29);
+
+  const drop = isUpper
+    ? (hasTopper ? 20 : 16)
+    : (hasTopper ? 17 : 14);
 
   return (
     <group ref={groupRef}>
@@ -95,19 +118,26 @@ export function UtakerFrame({ item, onSize }: SceneItemProps) {
           <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
             <Anneland70481722 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
           </group>
-          <group position={[0, 11 + 24, 0]} rotation-y={Math.PI / 2}>
-            <Nasfjallet10558045 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-          </group>
-          <RealisticDuvet topY={39} drop={20} />
-          <RealisticBolsters topY={39} />
+          {hasTopper && (
+            <group position={[0, 11 + 24, 0]} rotation-y={Math.PI / 2}>
+              <Nasfjallet10558045 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+            </group>
+          )}
+          <RealisticDuvet topY={topY} drop={drop} />
+          <RealisticBolsters topY={topY} />
         </>
       ) : (
         <>
           <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
             <Vestmarka90470195 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
           </group>
-          <RealisticDuvet topY={29} drop={14} />
-          <RealisticBolsters topY={29} zOffset={26} />
+          {hasTopper && (
+            <group position={[0, 11 + 18, 0]} rotation-y={Math.PI / 2}>
+              <Nasfjallet10558045 item={item} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+            </group>
+          )}
+          <RealisticDuvet topY={topY} drop={drop} />
+          <RealisticBolsters topY={topY} zOffset={26} />
         </>
       )}
     </group>
