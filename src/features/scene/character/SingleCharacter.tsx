@@ -2,7 +2,7 @@
  * SingleCharacter.tsx — Personnages (Walkers & NPCs).
  * Version modulaire intégrant animations, physique Verlet, styles/accessoires et agent IA.
  */
-import { useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
+import { useRef, useLayoutEffect, useEffect, useMemo, useState, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
@@ -650,8 +650,25 @@ export function SingleCharacter({
     }
   });
 
+  const handleContextMenu = useCallback((e: any) => {
+    if (isPreview) return;
+    e.stopPropagation();
+    if (e.nativeEvent && typeof e.nativeEvent.preventDefault === 'function') {
+      e.nativeEvent.preventDefault();
+    }
+    if (activeWalkerId !== id) {
+      useSceneStore.getState().setActiveWalkerId(id);
+      appLog(id, `🎯 Personnage actif sélectionné : ${charLabel}`);
+    }
+  }, [isPreview, activeWalkerId, id, charLabel]);
+
   return (
-    <group ref={groupRef} name={charLabel} userData={{ name: charLabel, itemName: charLabel, animUnit: true, noAnim: true }}>
+    <group
+      ref={groupRef}
+      name={charLabel}
+      userData={{ name: charLabel, itemName: charLabel, animUnit: true, noAnim: true }}
+      onContextMenu={handleContextMenu}
+    >
       <primitive ref={modelRef} object={scene} />
 
       {headBoneState && id !== 'native' && variant !== 'native' && haircut !== 'original' && (
