@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useSceneStore } from '../store/useSceneStore';
 import { WAYPOINTS } from './ZoneNodes';
-import { SMART_OBJECTS } from './smartObjectRegistry';
+import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
 
 const CATEGORY_COLORS: Record<string, string> = {
   bed: '#ff4081',
@@ -107,6 +107,18 @@ function makeLabelSprite(
 export function AiZonesHelper() {
   const visible = useSceneStore(s => s.layers.aiZones);
   const cameraMode = useSceneStore(s => s.cameraMode);
+  const [toggleVersion, setToggleVersion] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setToggleVersion(v => v + 1);
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, []);
+
+  // Liste résolue des SmartObjects (monde / dynamique)
+  const resolvedSmartObjects = useMemo(() => {
+    return Object.keys(SMART_OBJECTS).map(id => getSmartObject(id) || SMART_OBJECTS[id]);
+  }, [toggleVersion]);
 
   // Génération mémoïsée des sprites de labels
   const waypointSprites = useMemo(() => {
@@ -170,7 +182,7 @@ export function AiZonesHelper() {
       })}
 
       {/* ── Smart Objects et leurs Slots d'affordance ── */}
-      {Object.values(SMART_OBJECTS).map(obj => {
+      {resolvedSmartObjects.map(obj => {
         const color = CATEGORY_COLORS[obj.category] || '#00ff88';
         const slotsCount = obj.slots.length;
         

@@ -1,5 +1,7 @@
 import { SmartObjectDef, SmartObjectCategory, AgentInstruction } from './aiTypes';
 import { OccupancyManager } from './occupancyManager';
+import { positionState } from '../positionState';
+import { DYNAMIC_FURNITURE_ANCHORS } from '../furniturePositions';
 
 /**
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
@@ -59,8 +61,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [245, 0, 120],
         rotY: Math.PI,
         animations_random: 'seated_front',
-        animation: 'animations/poses_idles/anim_female_sitting_pose_1.glb',
-        duration: 15.0,
       },
       {
         slotId: 'seat-middle',
@@ -68,8 +68,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [245, 0, 190],
         rotY: Math.PI,
         animations_random: 'seated_front',
-        animation: 'animations/poses_idles/anim_female_sitting_pose_1.glb',
-        duration: 15.0,
       },
       {
         slotId: 'seat-south',
@@ -77,8 +75,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [245, 0, 260],
         rotY: Math.PI,
         animations_random: 'seated_front',
-        animation: 'animations/poses_idles/anim_female_sitting_pose_3.glb',
-        duration: 15.0,
       },
       {
         slotId: 'lie-down',
@@ -96,12 +92,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'desk-bollsidan-1',
     name: 'Bureau Bollsidan 1',
     category: 'surface',
-    position: [75, 0, 60],
+    anchorKey: 'desk1-position',
+    position: [73.5, 0, 18],
     slots: [
       {
         slotId: 'work-sitting',
         name: 'Travailler assis',
-        offset: [75, 0, 60],
+        relative: true,
+        offset: [0, 0, 30],
         rotY: Math.PI,
         animations_random: 'seated_front',
         duration: 10.0,
@@ -112,13 +110,15 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'chair-office',
     name: 'Chaise de Bureau',
     category: 'seating',
+    anchorKey: 'smorkull-position',
     position: [85, 0, 272],
     slots: [
       {
         slotId: 'sit',
         name: 'S\'asseoir',
-        offset: [85, 0, 280],
-        rotY: Math.PI / 2,
+        relative: true,
+        offset: [0, 0, 0],
+        rotY: 0,
         animations_random: 'seated_front',
         duration: 40.0,
       }
@@ -128,12 +128,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'desk-bollsidan-2',
     name: 'Bureau Bollsidan 2',
     category: 'surface',
-    position: [200, 0, 215],
+    anchorKey: 'desk2-position',
+    position: [200, 0, 170],
     slots: [
       {
         slotId: 'work-standing',
         name: 'Travailler debout',
-        offset: [200, 0, 215],
+        relative: true,
+        offset: [0, 0, 30],
         rotY: Math.PI,
         animation: 'animations/poses_idles/anim_texting_while_standing.glb',
         duration: 10.0,
@@ -734,16 +736,12 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
 /**
  * Utilitaires d'accès et de requêtage pour les Smart Objects
  */
-export function getSmartObject(id: string): SmartObjectDef | undefined {
-  return SMART_OBJECTS[id];
-}
-
 export function getAllSmartObjects(): SmartObjectDef[] {
-  return Object.values(SMART_OBJECTS);
+  return Object.keys(SMART_OBJECTS).map(id => getSmartObject(id) || SMART_OBJECTS[id]);
 }
 
 export function getSmartObjectsByCategory(category: SmartObjectCategory): SmartObjectDef[] {
-  return Object.values(SMART_OBJECTS).filter(obj => obj.category === category);
+  return getAllSmartObjects().filter(obj => obj.category === category);
 }
 
 const MILEY_DANCE_ANIMS = [
@@ -851,4 +849,81 @@ export function buildSmartObjectInstructionSequence(
   }
 
   return [baseInstruction];
+}
+
+/**
+ * Résout un SmartObject en coordonnées monde dynamiques.
+ * Si l'objet est lié à un meuble multiposition (anchorKey), sa position,
+ * la position de ses slots relatifs et leur orientation sont transformées
+ * selon l'état actuel de positionState.
+ */
+export function getSmartObject(objectId: string): SmartObjectDef | undefined {
+  const base = SMART_OBJECTS[objectId];
+  if (!base) return undefined;
+
+  if (!base.anchorKey) {
+    return base;
+  }
+
+  const anchorList = DYNAMIC_FURNITURE_ANCHORS[base.anchorKey];
+  if (!anchorList || anchorList.length === 0) {
+    return base;
+  }
+
+  const state = positionState[base.anchorKey];
+  const idx = state ? (state.idx % anchorList.length) : 0;
+  const anchor = anchorList[idx] || anchorList[0];
+
+  const anchorX = anchor.x;
+  const anchorZ = anchor.z;
+  const anchorRy = anchor.ry;
+
+  const cos = Math.cos(anchorRy);
+  const sin = Math.sin(anchorRy);
+
+  // Transformation locale -> monde avec rotation Ry
+  const resolvedSlots = base.slots.map(slot => {
+    if (!slot.relative) {
+      return slot;
+    }
+
+    const localOffset = slot.offset || [0, 0, 0];
+    const localApproach = slot.approachOffset;
+
+    const ox = localOffset[0];
+    const oy = localOffset[1];
+    const oz = localOffset[2];
+
+    const worldOffset: [number, number, number] = [
+      anchorX + ox * cos + oz * sin,
+      oy,
+      anchorZ - ox * sin + oz * cos,
+    ];
+
+    let worldApproach: [number, number, number] | undefined = undefined;
+    if (localApproach) {
+      const ax = localApproach[0];
+      const ay = localApproach[1];
+      const az = localApproach[2];
+      worldApproach = [
+        anchorX + ax * cos + az * sin,
+        ay,
+        anchorZ - ax * sin + az * cos,
+      ];
+    }
+
+    return {
+      ...slot,
+      offset: worldOffset,
+      approachOffset: worldApproach,
+      rotY: (anchorRy + slot.rotY) % (Math.PI * 2),
+    };
+  });
+
+  return {
+    ...base,
+    position: [anchorX, base.position[1], anchorZ],
+    rotationY: anchorRy,
+    slots: resolvedSlots,
+  };
 }

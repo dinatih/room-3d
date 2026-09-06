@@ -1,6 +1,6 @@
 import { AgentInstruction } from '../aiTypes';
 import { WAYPOINTS } from '../ZoneNodes';
-import { SMART_OBJECTS } from '../smartObjectRegistry';
+import { getSmartObject } from '../smartObjectRegistry';
 import { resolveSlotAnimation } from '../animationPacks';
 import { ResolvedInstructionCoords } from './agentTypes';
 
@@ -16,8 +16,8 @@ export function resolveInstructionCoords(
     const node = WAYPOINTS[waypointId];
     return { tx: node.x, tz: node.z, label: node.name || node.id, rotY: instr.rotY ?? node.rotationY };
   }
-  if (instr.smartObjectId && SMART_OBJECTS[instr.smartObjectId]) {
-    const obj = SMART_OBJECTS[instr.smartObjectId];
+  const obj = instr.smartObjectId ? getSmartObject(instr.smartObjectId) : undefined;
+  if (obj) {
     const slot = instr.slotId
       ? (obj.slots.find(s => s.slotId === instr.slotId) ?? obj.slots[0])
       : obj.slots[0];

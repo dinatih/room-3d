@@ -130,28 +130,12 @@ const MIRROR_CX  = 160; // (130 + 190) / 2
 const SIT_H   = 70;
 const STAND_H = 103;
 
-const DESK1_POSITIONS = [
-  { x: 73.5, z: 18,   ry: 0           },
-  { x: 22,   z: 74.5, ry: Math.PI / 2 },
-  { x: 40,  z: 60,  ry: Math.PI     },
-] as const;
-
-const DESK2_POSITIONS = [
-  { x: 200, z: 170, ry: Math.PI     },
-  { x: 85,  z: 151, ry: Math.PI / 2 },
-] as const;
-
-const SMORKULL_POSITIONS = [
-  { x: 85,  z: 272, ry: Math.PI / 2  }, // entre le lit Ouest et le Mackapar (avancé de +50X)
-  { x: 150, z: 100, ry: Math.PI      },
-  { x: 150, z: 300, ry: Math.PI      },
-  { x: 240, z: 38,  ry: -Math.PI / 2 }, // devant KallaxNE
-];
-
-const AIRPERFORMER_POSITIONS = [
-  { x: 261, z: w2 - 10, ry: 0 }, // devant KallaxNE (face x=277, centre z=37.75) — par défaut
-  { x: 200, z: 100,    ry: 0 },
-];
+import {
+  DESK1_POSITIONS,
+  DESK2_POSITIONS,
+  SMORKULL_POSITIONS,
+  AIRPERFORMER_POSITIONS
+} from './furniturePositions';
 
 import { MergedStaticGroup } from './Building';
 

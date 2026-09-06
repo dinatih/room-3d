@@ -10,31 +10,18 @@ export interface FurnitureObstacle {
   smartObjectIds?: string[];
 }
 
-/**
- * Positions possibles des meubles configurables par HoverMenu
- */
-export const DESK1_POSITIONS = [
-  { x: 73.5, z: 18 },
-  { x: 22,   z: 74.5 },
-  { x: 40,   z: 60 },
-];
-
-export const DESK2_POSITIONS = [
-  { x: 200, z: 170 },
-  { x: 85,  z: 151 },
-];
-
-export const SMORKULL_POSITIONS = [
-  { x: 85,  z: 272 },
-  { x: 150, z: 100 },
-  { x: 150, z: 300 },
-  { x: 240, z: 38 },
-];
-
-export const AIRPERFORMER_POSITIONS = [
-  { x: 261, z: 65.5 },
-  { x: 200, z: 100 },
-];
+export {
+  DESK1_POSITIONS,
+  DESK2_POSITIONS,
+  SMORKULL_POSITIONS,
+  AIRPERFORMER_POSITIONS
+} from '../furniturePositions';
+import {
+  DESK1_POSITIONS,
+  DESK2_POSITIONS,
+  SMORKULL_POSITIONS,
+  AIRPERFORMER_POSITIONS
+} from '../furniturePositions';
 
 /**
  * Récupère en temps réel la liste des obstacles physiques (meubles) au sol.

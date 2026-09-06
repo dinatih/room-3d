@@ -1,6 +1,6 @@
 import { SmartObjectDef, Waypoint, SpatialZoneDef, InteractionType } from './aiTypes';
 import { WAYPOINTS } from './ZoneNodes';
-import { SMART_OBJECTS } from './smartObjectRegistry';
+import { SMART_OBJECTS, getSmartObject } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
 
 /**
@@ -95,7 +95,8 @@ export class SpatialZone {
     const agentX = agentPosition ? (Array.isArray(agentPosition) ? agentPosition[0] : agentPosition.x) : 0;
     const agentZ = agentPosition ? (Array.isArray(agentPosition) ? agentPosition[2] : agentPosition.z) : 0;
 
-    for (const obj of this.smartObjects.values()) {
+    for (const rawObj of this.smartObjects.values()) {
+      const obj = getSmartObject(rawObj.id) || rawObj;
       // Filtrage par catégorie ou par slots d'interaction
       const matchesCategory = obj.category === interactionTypeOrCategory;
       const matchingSlots = obj.slots.filter(slot => {

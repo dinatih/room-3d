@@ -13,9 +13,10 @@ export type SmartObjectCategory =
 export interface InteractionSlot {
   slotId: string;             // ex: 'seat_1', 'seat_2', 'lie_down', 'use'
   name: string;               // Label lisible
+  relative?: boolean;         // Si true, offset et approachOffset sont exprimés dans le repère local de l'objet parent
   offset?: [number, number, number]; // Position relative ou absolue d'interaction [x, y, z] (hérite de obj.position si absent)
   approachOffset?: [number, number, number]; // Position d'arrivée avant d'interagir
-  rotY: number;               // Orientation (radians)
+  rotY: number;               // Orientation (radians relative si relative=true ou absolue)
   animation?: string;         // Chemin vers le clip d'animation GLB
   duration?: number;          // Durée par défaut en secondes (si vide/non fourni, l'animation est jouée repeatCount fois)
   repeatCount?: number;       // Nombre de fois où l'animation est jouée si duration est omis (défaut: 1)
@@ -32,6 +33,7 @@ export interface SmartObjectDef {
   category: SmartObjectCategory;
   position: [number, number, number]; // Position monde de référence [x, y, z]
   rotationY?: number;         // Orientation monde de l'objet
+  anchorKey?: string;         // Clé dans positionState pour meuble dynamique multiposition (ex: 'desk2-position')
   slots: InteractionSlot[];   // Slots d'interaction disponibles
   requiresDoorAccess?: { doorKey: string; approachNode?: string }; // Pré-conditions si nécessaire
 }
