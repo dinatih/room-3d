@@ -569,9 +569,11 @@ export function SingleCharacter({
       currentAnimClip.current = null;
     }
 
+    let isTemporaryLoadingFallback = false;
     if (!actions[target] && target.endsWith('.glb')) {
       loadAndPlayClip(target);
       target = 'idle';
+      isTemporaryLoadingFallback = true;
     }
 
     const isTPose = target === 'tpose' || target === 'animations/poses_idles/anim_t_pose.glb';
@@ -600,7 +602,7 @@ export function SingleCharacter({
         to.setEffectiveWeight(1);
         activeActionName.current = target;
 
-        if (isActive && !isPreview && lastLoggedAnimRef.current !== target) {
+        if (isActive && !isPreview && !isTemporaryLoadingFallback && lastLoggedAnimRef.current !== target) {
           lastLoggedAnimRef.current = target;
           // Si c'est une animation de marche (déjà mentionnée dans "Marche vers [anim]"), on évite le doublon de log
           const isWalkAnim = target === 'walk' || target.includes('/locomotion/') || target.includes('walk') || target.includes('run');

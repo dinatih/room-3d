@@ -585,7 +585,6 @@ export function useAgentController(
           statusRef.current = 'IDLE';
           currentWalkAnimRef.current = getRandomNpcWalkAnimation(_characterId);
           advanceToNextStep(hasNavStep);
-          stateRef.current.animation = 'idle';
         }
       } else {
         stateRef.current.y = 0;
