@@ -444,10 +444,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               yVal = 0.12; 
             }
             const isTPose = animNameLower.includes('t-pose') || animNameLower.includes('t_pose') || animNameLower.includes('tpose');
-            const isIdle = animNameLower.includes('idle') || animNameLower === 'animation';
-            // L'animation idle de Miley présente une légère flexion/rotation des chevilles qui relève les semelles de ~1.8cm par rapport à la rest pose
-            const idleFootCorrection = isIdle ? -1.8 : 0.0;
-            const dy = (isWalk || isTPose) ? 0.0 : ((yVal - srcRestPos.y) * computedHipsRatio + idleFootCorrection);
+            const dy = (isWalk || isTPose) ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
             const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
             const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
 
