@@ -463,7 +463,9 @@ export function useAgentController(
         const logKey = `move-${stepIndexRef.current}-${dynamicNavIndexRef.current}-${target.label}`;
         if (lastLogRef.current !== logKey) {
           lastLogRef.current = logKey;
-          appLog(_characterId, `🚶‍♂️ Marche vers ${target.label} (${target.tx.toFixed(0)}, ${target.tz.toFixed(0)})`);
+          const animName = (currentWalkAnimRef.current || 'walk')
+            .split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || 'walk';
+          appLog(_characterId, `🚶‍♂️ Marche vers ${target.label} (${target.tx.toFixed(0)}, ${target.tz.toFixed(0)}) [${animName}]`);
         }
       } else if (currentInstruction.type === 'INTERACT' || currentInstruction.type === 'WAIT') {
         if (currentInstruction.triggerEventKey) {

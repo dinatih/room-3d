@@ -602,9 +602,13 @@ export function SingleCharacter({
 
         if (isActive && !isPreview && lastLoggedAnimRef.current !== target) {
           lastLoggedAnimRef.current = target;
-          const cleanName = target.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || target;
-          const emoji = target === 'walk' ? '🚶‍♂️' : (target === 'idle' ? '🧘' : '💃');
-          appLog(id, `${emoji} Animation : ${cleanName}`);
+          // Si c'est une animation de marche (déjà mentionnée dans "Marche vers [anim]"), on évite le doublon de log
+          const isWalkAnim = target === 'walk' || target.includes('/locomotion/') || target.includes('walk') || target.includes('run');
+          if (!isWalkAnim) {
+            const cleanName = target.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || target;
+            const emoji = target === 'idle' ? '🧘' : '💃';
+            appLog(id, `${emoji} Animation : ${cleanName}`);
+          }
         }
       }
     }
