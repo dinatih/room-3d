@@ -62,6 +62,7 @@ export function ProfileSection({ isMobile, onOpenCv }: ProfileSectionProps) {
       {/* Points forts */}
       <div className="p-2 rounded bg-white bg-opacity-40 border border-light-subtle text-muted" style={{ fontSize: '10px', lineHeight: 1.4 }}>
         <div>🎯 <strong>8+ ans d'expérience</strong> en startups (JobTeaser, Saisirprudhommes, Tracktor, Mooncard)</div>
+        <div>⚡ <strong>Opérationnel Jour 1</strong> : sans temps d'onboarding, autonome et pragmatique</div>
         <div>💡 <strong>Stack</strong> : Ruby on Rails, TypeScript, React 18, R3F / Three.js, PostgreSQL, Heroku, Linux</div>
         <div>🤖 <strong>Productivité</strong> démultipliée par l'encadrement d'agents IA</div>
       </div>
