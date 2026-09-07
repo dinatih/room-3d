@@ -61,7 +61,7 @@ export function CvModal({ initialCv = 'devops', onClose }: CvModalProps) {
     <div
       className="modal fade show d-block"
       tabIndex={-1}
-      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', zIndex: 1100 }}
+      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', zIndex: 10050 }}
       onClick={onClose}
     >
       <div
@@ -71,7 +71,10 @@ export function CvModal({ initialCv = 'devops', onClose }: CvModalProps) {
       >
         <div className="modal-content text-dark glass-card shadow-lg d-flex flex-column h-100 border-0" style={{ background: 'rgba(255, 255, 255, 0.95)' }}>
           {/* Header */}
-          <div className="modal-header border-bottom py-2 px-3 d-flex align-items-center justify-content-between">
+          <div
+            className="modal-header border-bottom py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2"
+            style={{ position: 'relative', zIndex: 10, userSelect: 'none' }}
+          >
             <div className="d-flex align-items-center gap-3">
               <i className="bi bi-file-earmark-person fs-4 text-danger"></i>
               <div>
