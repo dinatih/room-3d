@@ -45,6 +45,8 @@ interface SceneStore {
   currentHdri: string;
   measurementActive: boolean;
   cameraMode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane';
+  isCvModalOpen: boolean;
+  setCvModalOpen: (open: boolean) => void;
   setMeasurementActive: (active: boolean) => void;
   setCameraMode: (mode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane') => void;
   setLaraCount: (count: LaraCountMode) => void;
@@ -232,6 +234,10 @@ export const useSceneStore = create<SceneStore>((set) => ({
   currentHdri: getRandomHdriId(),
   measurementActive: false,
   cameraMode: 'orbit',
+  isCvModalOpen: false,
+  setCvModalOpen: (open: boolean) => {
+    set({ isCvModalOpen: open });
+  },
   setMeasurementActive: (active: boolean) => {
     set({ measurementActive: active });
     cameraState.invalidate?.();

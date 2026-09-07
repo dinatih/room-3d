@@ -138,7 +138,7 @@ function ShadowController({ enabled }: { enabled: boolean }) {
   return null;
 }
 
-function FrameloopController({ isIdle, showInventory }: { isIdle: boolean; showInventory: boolean }) {
+function FrameloopController({ isIdle, showInventory, isCvModalOpen }: { isIdle: boolean; showInventory: boolean; isCvModalOpen: boolean }) {
   const setFrameloop = useThree((state) => state.setFrameloop);
   const invalidate = useThree((state) => state.invalidate);
   const gl = useThree((state) => state.gl);
@@ -146,12 +146,12 @@ function FrameloopController({ isIdle, showInventory }: { isIdle: boolean; showI
   useEffect(() => {
     // Si on est en VR WebXR ou en mode Immersif gyro, on ne suspend jamais le frameloop
     const isXRActive = cameraState.isXR || gl.xr?.isPresenting;
-    const loop = (showInventory || (isIdle && !isXRActive)) ? 'never' : 'demand';
+    const loop = (showInventory || isCvModalOpen || (isIdle && !isXRActive)) ? 'never' : 'demand';
     setFrameloop(loop);
     if (loop !== 'never') {
       invalidate();
     }
-  }, [isIdle, showInventory, setFrameloop, invalidate, gl]);
+  }, [isIdle, showInventory, isCvModalOpen, setFrameloop, invalidate, gl]);
 
   return null;
 }
@@ -355,6 +355,7 @@ export function Studio() {
     setAnimDurations(d => ({ ...d, [key]: ms }));
 
   const isIdle = useAppIdle();
+  const isCvModalOpen = useSceneStore(state => state.isCvModalOpen);
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
@@ -362,7 +363,7 @@ export function Studio() {
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
-        frameloop={showInventory || isIdle ? 'never' : 'demand'}
+        frameloop={showInventory || isCvModalOpen || isIdle ? 'never' : 'demand'}
         /*
          * ── Placement & configuration initiale de la caméra 3D ───────────────
          * - fov: 50° (champ de vision vertical naturel)
@@ -423,7 +424,7 @@ export function Studio() {
         <PerformanceMonitor />
         <ShadowWarmup />
         <ShadowController enabled={layers.shadows} />
-        <FrameloopController isIdle={isIdle} showInventory={showInventory} />
+        <FrameloopController isIdle={isIdle} showInventory={showInventory} isCvModalOpen={isCvModalOpen} />
         {planeMode    && <PaperPlane
                            onExit={() => setPlaneMode(false)}
                            model={planeModel}

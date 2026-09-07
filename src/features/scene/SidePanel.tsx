@@ -82,10 +82,17 @@ export function SidePanel({
   const [activeTab, setActiveTab] = useState<TabKey>(null);
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
+  const setCvModalOpen = useSceneStore(state => state.setCvModalOpen);
 
   const handleOpenCv = (type: CvType = 'devops') => {
     setSelectedCvType(type);
     setShowCvModal(true);
+    setCvModalOpen(true);
+  };
+
+  const handleCloseCv = () => {
+    setShowCvModal(false);
+    setCvModalOpen(false);
   };
 
   useEffect(() => {
@@ -312,13 +319,13 @@ export function SidePanel({
   );
 
   const profileHeaderButtons = (
-    <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
+    <div className="d-flex align-items-center gap-1.5 pe-1" onClick={e => e.stopPropagation()}>
       <a
         href="https://github.com/dinatih"
         target="_blank"
         rel="noreferrer"
-        className="btn btn-sm btn-dark text-white p-0 px-1 border-0 shadow-sm d-flex align-items-center justify-content-center"
-        style={{ fontSize: '12px', lineHeight: 1, borderRadius: '4px', height: '22px', minWidth: '24px' }}
+        className="btn btn-sm btn-dark text-white p-0 border-0 shadow-sm d-flex align-items-center justify-content-center"
+        style={{ fontSize: '12px', lineHeight: 1, borderRadius: '4px', height: '22px', width: '24px' }}
         title="Voir mon profil GitHub"
       >
         <i className="bi bi-github"></i>
@@ -327,16 +334,16 @@ export function SidePanel({
         href="https://www.linkedin.com/in/dinatih/"
         target="_blank"
         rel="noreferrer"
-        className="btn btn-sm btn-primary text-white p-0 px-1 border-0 shadow-sm d-flex align-items-center justify-content-center"
-        style={{ fontSize: '12px', lineHeight: 1, borderRadius: '4px', height: '22px', minWidth: '24px', background: '#0a66c2', borderColor: '#0a66c2' }}
+        className="btn btn-sm btn-primary text-white p-0 border-0 shadow-sm d-flex align-items-center justify-content-center"
+        style={{ fontSize: '12px', lineHeight: 1, borderRadius: '4px', height: '22px', width: '24px', background: '#0a66c2', borderColor: '#0a66c2' }}
         title="Voir mon profil LinkedIn"
       >
         <i className="bi bi-linkedin"></i>
       </a>
       <button
         type="button"
-        className="btn btn-sm btn-danger text-white p-0 px-1.5 border-0 shadow-sm fw-bold d-flex align-items-center gap-1 justify-content-center"
-        style={{ fontSize: '11px', lineHeight: 1, borderRadius: '4px', height: '22px' }}
+        className="btn btn-sm btn-danger text-white px-2 border-0 shadow-sm fw-bold d-flex align-items-center gap-1 justify-content-center"
+        style={{ fontSize: '11px', lineHeight: 1, borderRadius: '4px', height: '22px', whiteSpace: 'nowrap' }}
         title="Afficher mes CVs (Ingénieur DevOps / Admin Systèmes)"
         onClick={(e) => {
           e.stopPropagation();
@@ -618,7 +625,7 @@ export function SidePanel({
 
         {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
         {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
-        {showCvModal   && <CvModal        initialCv={selectedCvType} onClose={() => setShowCvModal(false)} />}
+        {showCvModal   && <CvModal        initialCv={selectedCvType} onClose={handleCloseCv} />}
       </>
     );
   }
@@ -672,7 +679,7 @@ export function SidePanel({
 
       {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
-      {showCvModal   && <CvModal        initialCv={selectedCvType} onClose={() => setShowCvModal(false)} />}
+      {showCvModal   && <CvModal        initialCv={selectedCvType} onClose={handleCloseCv} />}
     </>
   );
 }
