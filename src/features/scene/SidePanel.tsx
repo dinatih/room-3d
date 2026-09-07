@@ -28,12 +28,14 @@ import {
 import { Group } from './sidepanel/Group';
 import { ShortcutsModal } from './sidepanel/modals/ShortcutsModal';
 import { ViewsModal } from './sidepanel/modals/ViewsModal';
+import { CvModal, type CvType } from './sidepanel/modals/CvModal';
 import { ViewsSection } from './sidepanel/sections/ViewsSection';
 import { LayersSection } from './sidepanel/sections/LayersSection';
 import { InteractiveSection } from './sidepanel/sections/InteractiveSection';
 import { CharacterSection } from './sidepanel/sections/CharacterSection';
 import { AnimationsSection } from './sidepanel/sections/AnimationsSection';
 import { DuoAnimationsSection } from './sidepanel/sections/DuoAnimationsSection';
+import { ProfileSection } from './sidepanel/sections/ProfileSection';
 
 // ── Re-exports publics pour compatibilité ascendante ──────────────────────────
 export type {
@@ -74,10 +76,17 @@ export function SidePanel({
   const isMobile = useIsMobile();
   const [showViews, setShowViews] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showCvModal, setShowCvModal] = useState(false);
+  const [selectedCvType, setSelectedCvType] = useState<CvType>('devops');
   const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>(null);
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
+
+  const handleOpenCv = (type: CvType = 'devops') => {
+    setSelectedCvType(type);
+    setShowCvModal(true);
+  };
 
   useEffect(() => {
     if (!layers.realSun) { setSunInfo(null); return; }
@@ -302,7 +311,51 @@ export function SidePanel({
     </div>
   );
 
+  const profileHeaderButtons = (
+    <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
+      <a
+        href="https://github.com/dinatih"
+        target="_blank"
+        rel="noreferrer"
+        className="btn btn-sm btn-dark text-white p-0 px-1 border-0 shadow-sm fw-bold d-flex align-items-center justify-content-center"
+        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px', height: '20px', minWidth: '22px' }}
+        title="Voir mon profil GitHub"
+      >
+        🐙
+      </a>
+      <a
+        href="https://www.linkedin.com/in/dinatih/"
+        target="_blank"
+        rel="noreferrer"
+        className="btn btn-sm btn-primary text-white p-0 px-1 border-0 shadow-sm fw-bold d-flex align-items-center justify-content-center"
+        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px', height: '20px', minWidth: '22px' }}
+        title="Voir mon profil LinkedIn"
+      >
+        💼
+      </a>
+      <button
+        type="button"
+        className="btn btn-sm btn-danger text-white p-0 px-1 border-0 shadow-sm fw-bold d-flex align-items-center justify-content-center"
+        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px', height: '20px' }}
+        title="Afficher mes CVs (Ingénieur DevOps / Admin Systèmes)"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleOpenCv('devops');
+        }}
+      >
+        📄 CV
+      </button>
+    </div>
+  );
+
   // Instanciations des sections
+  const profileSectionContent = (
+    <ProfileSection
+      isMobile={isMobile}
+      onOpenCv={handleOpenCv}
+    />
+  );
+
   const viewsSectionContent = (
     <ViewsSection
       isMobile={isMobile}
@@ -376,6 +429,7 @@ export function SidePanel({
   if (isMobile) {
     const sheetOpen = activeTab !== null;
     const sheetTitle: Record<Exclude<TabKey, null>, string> = {
+      profile: '💼 Profil & CV',
       views: '📷 Vues',
       layers: '📑 Calques',
       personnage: '👤 Personnage',
@@ -385,6 +439,7 @@ export function SidePanel({
       interactif: '🎮 Interactif',
     };
     const sheetBody: Record<Exclude<TabKey, null>, React.ReactNode> = {
+      profile: profileSectionContent,
       views: viewsSectionContent,
       layers: layersSectionContent,
       interactif: interactiveSectionContent,
@@ -419,6 +474,7 @@ export function SidePanel({
             <div className="d-flex justify-content-between align-items-center p-3 border-bottom text-dark">
               <span className="fw-bold">{sheetTitle[activeTab]}</span>
               <div className="d-flex align-items-center gap-2">
+                {activeTab === 'profile' && profileHeaderButtons}
                 {activeTab === 'layers' && layersHeaderButtons}
                 {activeTab === 'personnage' && personnageHeaderButtons}
                 {activeTab === 'anims' && animHeaderButtons}
@@ -561,6 +617,7 @@ export function SidePanel({
 
         {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
         {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
+        {showCvModal   && <CvModal        initialCv={selectedCvType} onClose={() => setShowCvModal(false)} />}
       </>
     );
   }
@@ -596,6 +653,11 @@ export function SidePanel({
           </button>
         </div>
 
+        {/* ── Section C.V. / Profil Ingénieur / Qui suis-je ? ── */}
+        <Group emoji="💼" title="Profil & CV" extra={profileHeaderButtons} defaultOpen={false}>
+          {profileSectionContent}
+        </Group>
+
         {/* ── Dev Tools / Perf ── */}
         <DevToolsGroups Group={Group} />
 
@@ -609,6 +671,7 @@ export function SidePanel({
 
       {showViews     && <ViewsModal     onClose={() => setShowViews(false)} />}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
+      {showCvModal   && <CvModal        initialCv={selectedCvType} onClose={() => setShowCvModal(false)} />}
     </>
   );
 }
