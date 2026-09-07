@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export type CvType = 'devops' | 'admin';
 
@@ -10,20 +10,52 @@ interface CvModalProps {
 export function CvModal({ initialCv = 'devops', onClose }: CvModalProps) {
   const [activeCv, setActiveCv] = useState<CvType>(initialCv);
 
+  useEffect(() => {
+    setActiveCv(initialCv);
+  }, [initialCv]);
+
   const cvFiles = {
     devops: {
       title: 'Ingénieur DevOps',
       pdf: '/cv-ingenieur-devops.pdf',
+      filename: 'cv-david-herelle-ingenieur-devops.pdf',
       badge: 'DevOps / Cloud / SRE',
     },
     admin: {
       title: 'Administrateur Systèmes',
       pdf: '/cv-administrateur-systemes.pdf',
+      filename: 'cv-david-herelle-administrateur-systemes.pdf',
       badge: 'Linux / SysAdmin / Infra',
     },
   };
 
   const current = cvFiles[activeCv];
+
+  const handleOpenFullscreen = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.open(current.pdf, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleDownloadPdf = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const response = await fetch(current.pdf);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = current.filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.warn('Erreur download fetch, fallback direct:', err);
+      window.open(current.pdf, '_blank');
+    }
+  };
 
   return (
     <div
@@ -55,7 +87,10 @@ export function CvModal({ initialCv = 'devops', onClose }: CvModalProps) {
               <button
                 type="button"
                 className={`btn btn-sm d-flex align-items-center gap-1.5 ${activeCv === 'devops' ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'}`}
-                onClick={() => setActiveCv('devops')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveCv('devops');
+                }}
                 style={{ fontSize: '12px' }}
               >
                 <i className="bi bi-cpu"></i>
@@ -64,7 +99,10 @@ export function CvModal({ initialCv = 'devops', onClose }: CvModalProps) {
               <button
                 type="button"
                 className={`btn btn-sm d-flex align-items-center gap-1.5 ${activeCv === 'admin' ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'}`}
-                onClick={() => setActiveCv('admin')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveCv('admin');
+                }}
                 style={{ fontSize: '12px' }}
               >
                 <i className="bi bi-hdd-network"></i>
@@ -73,25 +111,24 @@ export function CvModal({ initialCv = 'devops', onClose }: CvModalProps) {
             </div>
 
             <div className="d-flex align-items-center gap-2">
-              <a
-                href={current.pdf}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={handleOpenFullscreen}
                 className="btn btn-sm btn-outline-primary py-1 px-2 d-flex align-items-center gap-1"
                 style={{ fontSize: '11px' }}
-                title="Ouvrir dans un nouvel onglet"
+                title="Ouvrir le PDF en plein écran"
               >
                 <i className="bi bi-box-arrow-up-right"></i> Plein écran
-              </a>
-              <a
-                href={current.pdf}
-                download
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
                 className="btn btn-sm btn-outline-success py-1 px-2 d-flex align-items-center gap-1"
                 style={{ fontSize: '11px' }}
                 title="Télécharger le PDF"
               >
                 <i className="bi bi-download"></i> PDF
-              </a>
+              </button>
               <button
                 type="button"
                 className="btn-close"
