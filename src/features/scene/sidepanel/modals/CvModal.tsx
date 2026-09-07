@@ -41,7 +41,7 @@ export function CvModal({ initialCv = 'devops', onClose }: CvModalProps) {
           {/* Header */}
           <div className="modal-header border-bottom py-2 px-3 d-flex align-items-center justify-content-between">
             <div className="d-flex align-items-center gap-3">
-              <span className="fs-5">📄</span>
+              <i className="bi bi-file-earmark-person fs-4 text-danger"></i>
               <div>
                 <h5 className="modal-title fs-6 fw-bold mb-0">Curriculum Vitae — David Herelle</h5>
                 <small className="text-muted" style={{ fontSize: '11px' }}>
@@ -54,19 +54,21 @@ export function CvModal({ initialCv = 'devops', onClose }: CvModalProps) {
             <div className="btn-group btn-group-sm" role="group">
               <button
                 type="button"
-                className={`btn btn-sm ${activeCv === 'devops' ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'}`}
+                className={`btn btn-sm d-flex align-items-center gap-1.5 ${activeCv === 'devops' ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'}`}
                 onClick={() => setActiveCv('devops')}
                 style={{ fontSize: '12px' }}
               >
-                🛠️ CV Ingénieur DevOps
+                <i className="bi bi-cpu"></i>
+                <span>CV Ingénieur DevOps</span>
               </button>
               <button
                 type="button"
-                className={`btn btn-sm ${activeCv === 'admin' ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'}`}
+                className={`btn btn-sm d-flex align-items-center gap-1.5 ${activeCv === 'admin' ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary'}`}
                 onClick={() => setActiveCv('admin')}
                 style={{ fontSize: '12px' }}
               >
-                🐧 CV Admin Systèmes
+                <i className="bi bi-hdd-network"></i>
+                <span>CV Admin Systèmes</span>
               </button>
             </div>
 
@@ -79,7 +81,7 @@ export function CvModal({ initialCv = 'devops', onClose }: CvModalProps) {
                 style={{ fontSize: '11px' }}
                 title="Ouvrir dans un nouvel onglet"
               >
-                <span>↗️</span> Plein écran
+                <i className="bi bi-box-arrow-up-right"></i> Plein écran
               </a>
               <a
                 href={current.pdf}
@@ -88,7 +90,7 @@ export function CvModal({ initialCv = 'devops', onClose }: CvModalProps) {
                 style={{ fontSize: '11px' }}
                 title="Télécharger le PDF"
               >
-                <span>⬇️</span> PDF
+                <i className="bi bi-download"></i> PDF
               </a>
               <button
                 type="button"

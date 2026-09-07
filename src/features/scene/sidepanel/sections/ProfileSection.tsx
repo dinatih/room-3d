@@ -34,8 +34,8 @@ export function ProfileSection({ isMobile, onOpenCv }: ProfileSectionProps) {
           style={{ fontSize: isMobile ? '13px' : '11px' }}
           onClick={() => onOpenCv('devops')}
         >
-          <span className="d-flex align-items-center gap-1.5">
-            <span>🛠️</span>
+          <span className="d-flex align-items-center gap-2">
+            <i className="bi bi-cpu text-danger" style={{ fontSize: '13px' }}></i>
             <span className="fw-semibold">CV Ingénieur DevOps</span>
           </span>
           <span className="badge bg-danger bg-opacity-25 text-danger border border-danger-subtle" style={{ fontSize: '9px' }}>
@@ -49,8 +49,8 @@ export function ProfileSection({ isMobile, onOpenCv }: ProfileSectionProps) {
           style={{ fontSize: isMobile ? '13px' : '11px' }}
           onClick={() => onOpenCv('admin')}
         >
-          <span className="d-flex align-items-center gap-1.5">
-            <span>🐧</span>
+          <span className="d-flex align-items-center gap-2">
+            <i className="bi bi-hdd-network text-primary" style={{ fontSize: '13px' }}></i>
             <span className="fw-semibold">CV Administrateur Systèmes</span>
           </span>
           <span className="badge bg-primary bg-opacity-25 text-primary border border-primary-subtle" style={{ fontSize: '9px' }}>
@@ -73,19 +73,21 @@ export function ProfileSection({ isMobile, onOpenCv }: ProfileSectionProps) {
           href="https://github.com/dinatih"
           target="_blank"
           rel="noreferrer"
-          className="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center gap-1 py-1"
-          style={{ fontSize: '10px' }}
+          className="btn btn-sm btn-dark flex-grow-1 d-flex align-items-center justify-content-center gap-1.5 py-1.5 shadow-sm"
+          style={{ fontSize: '11px' }}
         >
-          <span>🐙</span> GitHub
+          <i className="bi bi-github" style={{ fontSize: '13px' }}></i>
+          <span className="fw-semibold">GitHub</span>
         </a>
         <a
           href="https://www.linkedin.com/in/dinatih/"
           target="_blank"
           rel="noreferrer"
-          className="btn btn-sm btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-1 py-1"
-          style={{ fontSize: '10px' }}
+          className="btn btn-sm btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-1.5 py-1.5 shadow-sm"
+          style={{ fontSize: '11px', background: '#0a66c2', borderColor: '#0a66c2' }}
         >
-          <span>💼</span> LinkedIn
+          <i className="bi bi-linkedin" style={{ fontSize: '13px' }}></i>
+          <span className="fw-semibold">LinkedIn</span>
         </a>
       </div>
     </div>

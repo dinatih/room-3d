@@ -317,33 +317,34 @@ export function SidePanel({
         href="https://github.com/dinatih"
         target="_blank"
         rel="noreferrer"
-        className="btn btn-sm btn-dark text-white p-0 px-1 border-0 shadow-sm fw-bold d-flex align-items-center justify-content-center"
-        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px', height: '20px', minWidth: '22px' }}
+        className="btn btn-sm btn-dark text-white p-0 px-1 border-0 shadow-sm d-flex align-items-center justify-content-center"
+        style={{ fontSize: '12px', lineHeight: 1, borderRadius: '4px', height: '22px', minWidth: '24px' }}
         title="Voir mon profil GitHub"
       >
-        🐙
+        <i className="bi bi-github"></i>
       </a>
       <a
         href="https://www.linkedin.com/in/dinatih/"
         target="_blank"
         rel="noreferrer"
-        className="btn btn-sm btn-primary text-white p-0 px-1 border-0 shadow-sm fw-bold d-flex align-items-center justify-content-center"
-        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px', height: '20px', minWidth: '22px' }}
+        className="btn btn-sm btn-primary text-white p-0 px-1 border-0 shadow-sm d-flex align-items-center justify-content-center"
+        style={{ fontSize: '12px', lineHeight: 1, borderRadius: '4px', height: '22px', minWidth: '24px', background: '#0a66c2', borderColor: '#0a66c2' }}
         title="Voir mon profil LinkedIn"
       >
-        💼
+        <i className="bi bi-linkedin"></i>
       </a>
       <button
         type="button"
-        className="btn btn-sm btn-danger text-white p-0 px-1 border-0 shadow-sm fw-bold d-flex align-items-center justify-content-center"
-        style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px', height: '20px' }}
+        className="btn btn-sm btn-danger text-white p-0 px-1.5 border-0 shadow-sm fw-bold d-flex align-items-center gap-1 justify-content-center"
+        style={{ fontSize: '11px', lineHeight: 1, borderRadius: '4px', height: '22px' }}
         title="Afficher mes CVs (Ingénieur DevOps / Admin Systèmes)"
         onClick={(e) => {
           e.stopPropagation();
           handleOpenCv('devops');
         }}
       >
-        📄 CV
+        <i className="bi bi-file-earmark-person"></i>
+        <span>CV</span>
       </button>
     </div>
   );
