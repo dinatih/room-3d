@@ -843,14 +843,7 @@ export const WALKER_ANIM_OPTIONS = [
   { value: "animations/interactions/anim_zombie_neck_bite.glb", label: "zombie neck bite (123f / 4.1s, 167KB)" },
   { value: "animations/interactions/anim_zombie_scream.glb", label: "zombie scream (85f / 2.8s, 136KB)" },
 
-  // Test batch yoga (MOYO)
-  { value: "animations/yoga/anim_yoga_akarna_dhanurasana_a.glb", label: "[YOGA] Akarna Dhanurasana A (629f / 21.0s, 249KB)" },
-  { value: "animations/yoga/anim_yoga_boat_pose_or_paripurna_navasana_a.glb", label: "[YOGA] Boat Pose Paripurna Navasana A (427f / 14.2s, 176KB)" },
-  { value: "animations/yoga/anim_yoga_bridge_pose_or_setu_bandha_sarvangasana_a.glb", label: "[YOGA] Bridge Pose Setu Bandha Sarvangasana A (844f / 28.1s, 326KB)" },
-  { value: "animations/yoga/anim_yoga_camel_pose_or_ustrasana_a.glb", label: "[YOGA] Camel Pose Ustrasana A (774f / 25.8s, 301KB)" },
-  { value: "animations/yoga/anim_yoga_chair_pose_or_utkatasana_a.glb", label: "[YOGA] Chair Pose Utkatasana A (435f / 14.5s, 179KB)" },
-  { value: "animations/yoga/anim_yoga_downward_facing_dog_pose_or_adho_mukha_svanasana_a.glb", label: "[YOGA] Downward Facing Dog Adho Mukha Svanasana A (480f / 16.0s, 195KB)" },
-  { value: "animations/yoga/anim_yoga_eagle_pose_or_garudasana_a.glb", label: "[YOGA] Eagle Pose Garudasana A (785f / 26.2s, 305KB)" },
+  { value: "animations/yoga/anim_yoga_front_back_walking.glb", label: "[YOGA] Front Back Walking (430f / 14.3s, 560KB)" },
 
 
 ].filter((v, i, a) => a.findIndex(t => t.value === v.value) === i).sort((a, b) => {
