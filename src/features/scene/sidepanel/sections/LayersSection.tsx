@@ -120,7 +120,6 @@ export function LayersSection({
       {layerBtn('blue',   'Animaux 🐕🐦',  'animals')}
       {layerBtn('purple', 'Miroirs',       'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
-      {layerBtn('gray',   'Lidar 📸',        'lidar')}
       {layerBtn('gray',   'Zones IA 🤖',    'aiZones')}
       {layerBtn('blue',   'Collisions inter-PNJ 👥', 'npcCollisions')}
       {layers.npcCollisions && layerBtn('cyan', '↳ Debug PNJ (Rayon 70cm) ⭕', 'debugNpcCollisions')}
