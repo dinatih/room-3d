@@ -235,49 +235,51 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
 
         {/* ── Murs ─────────────────────────────────────────────────────────────── */}
         {!pillarsOnly && (
-          <group name="walls">
-            {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
-              const mat = MAT_MAP[d.mat ?? 'default'];
-              const uData = {
-                animUnit: true,
-                brickType: 'wall',
-                side: d.mat ?? 'misc',
-                itemName: d.yBase ? 'Linteau mur' : ((d.h ?? WALL_H) < 50 ? 'Muret bas' : 'Mur'),
-              };
-              if (d.axis === 'z')
-                return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
-              return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
-            })}
-            {/* Mur diagonal (partie pleine après la porte d'entrée) */}
-            <SplitDiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag', itemName: 'Mur diagonal' }} />
+          <MergedStaticGroup name="merged-walls">
+            <group name="walls">
+              {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
+                const mat = MAT_MAP[d.mat ?? 'default'];
+                const uData = {
+                  animUnit: true,
+                  brickType: 'wall',
+                  side: d.mat ?? 'misc',
+                  itemName: d.yBase ? 'Linteau mur' : ((d.h ?? WALL_H) < 50 ? 'Muret bas' : 'Mur'),
+                };
+                if (d.axis === 'z')
+                  return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
+                return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
+              })}
+              {/* Mur diagonal (partie pleine après la porte d'entrée) */}
+              <SplitDiagBox d1={DiagWall.door.end} d2={DiagWall.len - WALL_THICKNESS} userData={{ animUnit: true, brickType: 'wall', side: 'diag', itemName: 'Mur diagonal' }} />
 
-            {/* Panneaux bois occultants jardin */}
-            {GARDEN_PANEL_DEFS.map((p, i) => (
-              <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ skipMerge: true, animUnit: true, brickType: 'wall', side: 'garden' }}>
-                <WoodenFencePanel w={p.w} h={p.h} d={p.d} />
-              </group>
-            ))}
+              {/* Panneaux bois occultants jardin */}
+              {GARDEN_PANEL_DEFS.map((p, i) => (
+                <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ skipMerge: true, animUnit: true, brickType: 'wall', side: 'garden' }}>
+                  <WoodenFencePanel w={p.w} h={p.h} d={p.d} />
+                </group>
+              ))}
 
-            {/* Mur en face du jardin (parallèle au Mur diag) */}
-            {(() => {
-              const wallLen = 1200;
-              const cx = 150;
-              const cz = -786.33;
-              const rotY = DiagWall.rotY + Math.PI / 2;
-              return (
-                <mesh
-                  ref={(m) => { if (m) m.material = northMats as any; }}
-                  position={[cx, WALL_H / 2, cz]}
-                  rotation-y={rotY}
-                  castShadow
-                  receiveShadow
-                  userData={{ animUnit: true, brickType: 'wall', side: 'gardenFront' }}
-                >
-                  <boxGeometry args={[wallLen, WALL_H, 40]} />
-                </mesh>
-              );
-            })()}
-          </group>
+              {/* Mur en face du jardin (parallèle au Mur diag) */}
+              {(() => {
+                const wallLen = 1200;
+                const cx = 150;
+                const cz = -786.33;
+                const rotY = DiagWall.rotY + Math.PI / 2;
+                return (
+                  <mesh
+                    ref={(m) => { if (m) m.material = northMats as any; }}
+                    position={[cx, WALL_H / 2, cz]}
+                    rotation-y={rotY}
+                    castShadow
+                    receiveShadow
+                    userData={{ animUnit: true, brickType: 'wall', side: 'gardenFront' }}
+                  >
+                    <boxGeometry args={[wallLen, WALL_H, 40]} />
+                  </mesh>
+                );
+              })()}
+            </group>
+          </MergedStaticGroup>
         )}
       </group>
     </>
