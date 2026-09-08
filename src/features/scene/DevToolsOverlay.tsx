@@ -68,14 +68,23 @@ export function DevToolsGroups({ Group }: {
   Group: React.ComponentType<{ emoji: string; title: string; defaultOpen?: boolean; children: React.ReactNode }>;
 }) {
   const [, setTick] = useState(0);
-  const fpsCanvasRef = useRef<HTMLCanvasElement>(null);
+  const fpsCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const fpsCanvasCallback = useCallback((canvas: HTMLCanvasElement | null) => {
+    fpsCanvasRef.current = canvas;
+    devState.fpsCanvas = canvas;
+    if (canvas && devState.fpsSamples.length > 0) {
+      drawFps(canvas, devState.fpsSamples);
+    }
+  }, []);
 
   const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     devState.onUpdate = () => setTick(t => t + 1);
-    if (fpsCanvasRef.current) devState.fpsCanvas = fpsCanvasRef.current;
-    return () => { devState.onUpdate = null; devState.fpsCanvas = null; };
+    return () => {
+      devState.onUpdate = null;
+      devState.fpsCanvas = null;
+    };
   }, []);
 
   const samples  = devState.fpsSamples;
@@ -97,7 +106,7 @@ export function DevToolsGroups({ Group }: {
       <Group emoji="📊" title="Perf" defaultOpen>
         <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
           <canvas
-            ref={fpsCanvasRef}
+            ref={fpsCanvasCallback}
             width={FPS_W} height={FPS_H}
             style={{ display: 'block', margin: '0 8px 4px', borderRadius: 4, boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
           />
