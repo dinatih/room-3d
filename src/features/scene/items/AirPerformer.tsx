@@ -703,24 +703,45 @@ export function AirPerformer({ onSize }: SceneItemProps) {
 
   // ── R3F frame update loop ──────────────────────────────────────────────────
   useFrame((state, delta) => {
-    const time = state.clock.getElapsedTime();
-
-    // 1. Device Oscillation Logic
-    if (power) {
-      oscillationTimeRef.current += delta * 0.25;
-      const maxAngleRad = (90 * Math.PI) / 180;
-      if (oscillatingGroupRef.current) {
-        oscillatingGroupRef.current.rotation.y =
-          Math.sin(oscillationTimeRef.current * Math.PI) * (maxAngleRad / 2);
-      }
-    } else {
-      if (oscillatingGroupRef.current) {
+    // Si l'appareil est éteint et que l'oscillation/lumières sont stabilisées à 0, ne rien faire (économie GPU/CPU)
+    if (!power) {
+      if (oscillatingGroupRef.current && Math.abs(oscillatingGroupRef.current.rotation.y) > 0.001) {
         oscillatingGroupRef.current.rotation.y = THREE.MathUtils.lerp(
           oscillatingGroupRef.current.rotation.y,
           0,
           delta * 2.0
         );
+        invalidate();
       }
+      if (matHeater.emissiveIntensity > 0.01) {
+        matHeater.emissiveIntensity = THREE.MathUtils.lerp(matHeater.emissiveIntensity, 0, delta * 3.0);
+        if (heaterLightRef.current) heaterLightRef.current.intensity = THREE.MathUtils.lerp(heaterLightRef.current.intensity, 0, delta * 3.0);
+        invalidate();
+      }
+      if (screenGlowLightRef.current && screenGlowLightRef.current.intensity > 0.01) {
+        screenGlowLightRef.current.intensity = THREE.MathUtils.lerp(screenGlowLightRef.current.intensity, 0, delta * 3.0);
+        invalidate();
+      }
+      // Si toutes les particules sont inactives et le canvas dessiné, sortir
+      const hasActiveParticles = particleData.some(p => p.active);
+      if (hasActiveParticles) {
+        updateParticles(delta);
+        invalidate();
+      }
+      return;
+    }
+
+    // Appareil ALLUMÉ : invalider la frame pour animer
+    invalidate();
+
+    const time = state.clock.getElapsedTime();
+
+    // 1. Device Oscillation Logic
+    oscillationTimeRef.current += delta * 0.25;
+    const maxAngleRad = (90 * Math.PI) / 180;
+    if (oscillatingGroupRef.current) {
+      oscillatingGroupRef.current.rotation.y =
+        Math.sin(oscillationTimeRef.current * Math.PI) * (maxAngleRad / 2);
     }
 
     // 2. Heater Glow Pulses

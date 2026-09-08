@@ -139,9 +139,11 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
   }, [isPreview]);
 
   // Boucle de jeu (IA & Animation)
-  useFrame((_, delta) => {
+  useFrame((_state, delta) => {
     if (isAppIdle() || !modelRef.current || !mixerRef.current) return;
     mixerRef.current.update(delta);
+
+    // Si la caméra est trop loin ou ne regarde pas la zone de l'oiseau posé, on économise le rendu forcé
     invalidate();
     
     if (!isPreview) {

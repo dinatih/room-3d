@@ -225,8 +225,12 @@ export function DevToolsCollector() {
       lowFpsCount.current = Math.max(0, lowFpsCount.current - 1);
     }
 
+    // Dessiner le canvas FPS throttlé à ~10 FPS (toutes les 100ms) au lieu de chaque frame
     if (devState.fpsCanvas && devState.fpsSamples.length > 0) {
-      drawFps(devState.fpsCanvas, devState.fpsSamples);
+      if (now - (devState as any).lastFpsDraw > 100 || !(devState as any).lastFpsDraw) {
+        (devState as any).lastFpsDraw = now;
+        drawFps(devState.fpsCanvas, devState.fpsSamples);
+      }
     }
 
     // Throttle React updates to 4fps (250ms)
