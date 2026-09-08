@@ -671,9 +671,11 @@ export function Floor() {
       </group>
 
       <group name="slab-group" userData={{ itemName: 'Dalle Béton' }}>
-        <SlabUnit x={0} z={0} />
-        <SlabUnit x={ 346} z={-199.76} />
-        <SlabUnit x={-346} z={ 199.76} />
+        <MergedStaticGroup name="merged-slab">
+          <SlabUnit x={0} z={0} />
+          <SlabUnit x={ 346} z={-199.76} />
+          <SlabUnit x={-346} z={ 199.76} />
+        </MergedStaticGroup>
       </group>
 
       <group name="ceiling-group" userData={{ itemName: 'Plafonds' }}>

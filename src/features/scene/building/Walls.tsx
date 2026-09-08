@@ -15,6 +15,7 @@ import {
 import {
   wallMat, northMats, southMats, MAT_MAP, caplessX, caplessZ, makeExtrudeGeo
 } from './buildingCommon';
+import { MergedStaticGroup } from './MergedStaticGroup';
 import { DoorsPlaced } from './DoorsPlaced';
 
 /** Ref module-level vers le group Walls — consommé par Neighbors pour clone. */
@@ -204,31 +205,33 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
         {showLabels && <PillarLabels />}
 
         {/* ── Piliers ────────────────────────────────────────────────────────── */}
-        <group name="pillars">
-          {PILLAR_DEFS.map((p) => {
-            const pp = p as any;
-            const pw = pp.w ?? WALL_THICKNESS;
-            const pd = pp.d ?? WALL_THICKNESS;
-            const rot = pp.rot ?? 0;
-            if (rot) {
+        <MergedStaticGroup name="merged-pillars">
+          <group name="pillars">
+            {PILLAR_DEFS.map((p) => {
+              const pp = p as any;
+              const pw = pp.w ?? WALL_THICKNESS;
+              const pd = pp.d ?? WALL_THICKNESS;
+              const rot = pp.rot ?? 0;
+              if (rot) {
+                return (
+                  <mesh key={pp.id} position={[pp.x, WALL_H / 2, pp.z]} rotation-y={rot}
+                        material={wallMat} castShadow receiveShadow
+                        userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: pp.id }}>
+                    <boxGeometry args={[pw, WALL_H, pd]} />
+                  </mesh>
+                );
+              }
               return (
-                <mesh key={pp.id} position={[pp.x, WALL_H / 2, pp.z]} rotation-y={rot}
-                      material={wallMat} castShadow receiveShadow
-                      userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: pp.id }}>
-                  <boxGeometry args={[pw, WALL_H, pd]} />
-                </mesh>
+                <P key={pp.id} w={pw} h={WALL_H} d={pd} x={pp.x} y={WALL_H / 2} z={pp.z}
+                  userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: pp.id }} />
               );
-            }
-            return (
-              <P key={pp.id} w={pw} h={WALL_H} d={pd} x={pp.x} y={WALL_H / 2} z={pp.z}
-                userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: pp.id }} />
-            );
-          })}
-          <mesh geometry={diagGeos.diagPillar} material={wallMat} castShadow receiveShadow
-            userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: 'diag-ne-kite' }} />
-          <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
-            userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: 'diag-sw-kite' }} />
-        </group>
+            })}
+            <mesh geometry={diagGeos.diagPillar} material={wallMat} castShadow receiveShadow
+              userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: 'diag-ne-kite' }} />
+            <mesh geometry={diagGeos.diagPillarSW} material={wallMat} castShadow receiveShadow
+              userData={{ animUnit: true, brickType: 'wall', type: 'pillar', id: 'diag-sw-kite' }} />
+          </group>
+        </MergedStaticGroup>
 
         {/* ── Murs ─────────────────────────────────────────────────────────────── */}
         {!pillarsOnly && (
