@@ -98,6 +98,19 @@ export function LayersSection({
             </option>
           ))}
         </select>
+        {(() => {
+          const activeHdri = HDRI_LIST.find((h) => h.id === currentHdri);
+          const fileName = activeHdri ? activeHdri.url.split('/').pop() : '';
+          return fileName ? (
+            <div
+              className="text-muted mt-1 text-truncate"
+              style={{ fontSize: '10px', userSelect: 'all' }}
+              title={fileName}
+            >
+              📁 {fileName}
+            </div>
+          ) : null;
+        })()}
       </div>
       {layerBtn('green',  'Structure',     'structure')}
       {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}

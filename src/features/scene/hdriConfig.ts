@@ -40,7 +40,6 @@ export const HDRI_LIST: HdriItem[] = [
 
   // --- Campagne, Champs, Prairies & Sports extérieurs ---
   { id: 'field_040', name: 'Vaste champ champêtre 🌾☀️', url: '/environment/hdri/HDR_040_Field.hdr', type: 'hdr' },
-  { id: 'green_hills_111', name: 'Collines verdoyantes & Plein ciel ⛰️', url: '/environment/hdri/111_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'riverbed_127', name: 'Lit de rivière caillouteux & Montagnes 🏞️', url: '/environment/hdri/127_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'meadow_sunrise_151', name: 'Colline herbeuse & Prairie au lever du jour 🌾', url: '/environment/hdri/151_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'meadow_dusk_189', name: 'Grand pré verdoyant au crépuscule 🌾', url: '/environment/hdri/189_hdrmaps_com_free_10K.hdr', type: 'hdr' },
@@ -78,8 +77,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'harbor_3', name: 'Port maritime & Quais ⛵⚓', url: '/environment/hdri/Harbor_3_Free.hdr', type: 'hdr' },
 
   // --- Ciel, Altitude, Dômes & HDRI-Skies ---
-  { id: 'blue_sky_sun_051', name: 'Dôme de ciel bleu & Plein soleil ☀️', url: '/environment/hdri/051_hdrmaps_com_free_10K.hdr', type: 'hdr' },
-  { id: 'horizon_dawn_101', name: 'Horizon dégagé & Aube rosée 🌅', url: '/environment/hdri/101_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'above_clouds_flight_117', name: 'Vol au-dessus des nuages & Reliefs ☁️✈️', url: '/environment/hdri/117_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'cloud_sea_high_121', name: 'Mer de nuages & Haute altitude ☁️', url: '/environment/hdri/121_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'kiara_dawn', name: 'Aube dorée Kiara 🌅', url: '/environment/hdri/kiara_1_dawn_1k.hdr', type: 'hdr' },
