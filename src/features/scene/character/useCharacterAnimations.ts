@@ -2,7 +2,7 @@ import { useRef, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
-import { retargetClip, _retargetCache } from '../retargeting';
+import { retargetClip, _retargetCache } from '../retargeting/index';
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { resolveAnimationPath } from '../animations/animationResolver';
 

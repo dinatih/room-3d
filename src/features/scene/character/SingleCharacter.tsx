@@ -11,7 +11,7 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Wig, HAIR_COLORS } from '../items/Wig';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS } from '../walkerConfig';
-import { buildHairChain } from '../retargeting';
+import { buildHairChain } from '../retargeting/index';
 import {
   extractCharacterParts,
   applyClothingAndAccessoriesVisibility,
