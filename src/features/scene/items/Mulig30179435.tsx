@@ -12,7 +12,7 @@ const HANGER_ROTS = [0.04, -0.03, 0.05, -0.02, 0.03, -0.04];
 // Barre Mulig à ~18.5 cm de hauteur (18.5 - 19 cm hook height = -0.5 cm)
 // Barre avancée à X = 10.5 cm par rapport au centre de Mulig
 const RAIL_X = 10.5;
-const RAIL_Y = 18.5 - 19;
+const RAIL_Y = -0.5;
 
 const MULIG_HANGER_TRANSFORMS = HANGER_Z.map((z, i) => ({
   position: [RAIL_X, RAIL_Y, z] as [number, number, number],

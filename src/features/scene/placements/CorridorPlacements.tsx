@@ -28,7 +28,7 @@ const stub = (id: string): Item =>
 // Linky Enedis monté en façade à ~130 cm du sol.
 const LINKY_GAINE_W   = 6.5;            // X — profondeur (depuis mur est)
 const LINKY_GAINE_L   = 25.5;           // Z — largeur le long du mur
-const LINKY_GAINE_Z0  = ROOM_D + 10 + 6; // 416 — 6 cm de la face couloir du mur sud séjour (Z=ROOM_D+W=410)
+const LINKY_GAINE_Z0  = ROOM_D + 16;     // 416 — 6 cm de la face couloir du mur sud séjour (Z=ROOM_D+W=410)
 const LINKY_GAINE_X1  = ROOM_W;         // colle au mur est (X=316)
 const LINKY_GAINE_X0  = ROOM_W - LINKY_GAINE_W;
 const LINKY_GAINE_CX  = (LINKY_GAINE_X0 + LINKY_GAINE_X1) / 2; // 312.75

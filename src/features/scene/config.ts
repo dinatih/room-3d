@@ -87,7 +87,7 @@ export const DiagWall = {
   cos: _COS,
   rotY: Math.atan2(_DX, _DZ),
   slope: (_CZ - _AZ) / (_CX - _AX),
-  door: { start: 10, width: 90, end: 10 + 90 },
+  door: { start: 10, width: 90, end: 100 },
   /** 
    * Calcule un point (x, z) le long du mur diagonal.
    * @param d Distance depuis le point A (Est) vers C (Ouest)

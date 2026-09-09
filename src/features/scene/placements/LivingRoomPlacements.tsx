@@ -72,14 +72,14 @@ const lackTopY = lackY + 5;
 const mannRot = Math.atan2(150 - lackCX, 200 - lackCZ);
 
 const MUL_D = 13;
-const mulCZ = NICHE_Z_START - 110 - 40;
+const mulCZ = NICHE_Z_START - 150;
 
 const MEUBLE_T_X = ROOM_W - 13.75;
 const MEUBLE_T_Z = KALLAX_SE_Z;
 const MEUBLE_T_Y = KALLAX_SE_TOP + 50; // dessus kallax SE + freezer
 
 const LAMP_ROT_Y = Math.atan2(ROOM_W / 2 - MEUBLE_T_X, ROOM_D / 2 - MEUBLE_T_Z);
-const MACK_X = 42 - 10; // 32 cm : contre le mur Ouest en tenant compte de la profondeur du meuble et de l'alignement
+const MACK_X = 32; // contre le mur Ouest en tenant compte de la profondeur du meuble et de l'alignement
 const MACK_Z = ROOM_D - w2 - 16;
 const MIRROR_CX = 160;
 
@@ -205,7 +205,7 @@ function Beds() {
 
   const eastPos = isDouble
     ? currentDoublePos.east
-    : { x: ROOM_W - 4 - 83 / 2, z: 190 };
+    : { x: ROOM_W - 45.5, z: 190 };
 
   const hoverActions = isDouble ? ['bed-double', 'bed-position'] : ['bed-double'];
   const hoverLabel = isDouble

@@ -31,7 +31,7 @@ const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
 
 const DF = 33;
-const cbZ = KITCHEN_Z + PARTITION_THICKNESS + 1 + 18.5; // 486.7
+const cbZ = KITCHEN_Z + PARTITION_THICKNESS + 19.5; // 486.7
 
 export function BathroomEquipment() {
   const as = useFurnitureToggles([
@@ -137,12 +137,12 @@ export function BathroomFurniture() {
       </group>
 
       {/* TACKAN lavabo */}
-      <group position={[DOOR_START - 84 + 15, 83, KITCHEN_Z + PARTITION_THICKNESS + 5]} userData={{ itemName: 'Distributeur Tackan Lavabo' }}>
+      <group position={[DOOR_START - 69, 83, KITCHEN_Z + PARTITION_THICKNESS + 5]} userData={{ itemName: 'Distributeur Tackan Lavabo' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* TISKEN sur miroir vasque */}
-      <group position={[DOOR_START - 84 - 22, 129, KITCHEN_Z + PARTITION_THICKNESS + 2.1]} rotation={[Math.PI / 2, 0, 0]} userData={{ itemName: 'Crochet Tisken' }}>
+      <group position={[DOOR_START - 106, 129, KITCHEN_Z + PARTITION_THICKNESS + 2.1]} rotation={[Math.PI / 2, 0, 0]} userData={{ itemName: 'Crochet Tisken' }}>
         <Tisken40381253 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
