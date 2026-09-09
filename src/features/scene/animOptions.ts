@@ -254,7 +254,6 @@ export const WALKER_ANIM_OPTIONS = [
   { value: "animations/dances/anim_breakdance_ready.glb", label: "breakdance ready (43f / 1.4s, 101KB)" },
   { value: "animations/dances/anim_breakdance_ready_2.glb", label: "breakdance ready (33f / 1.1s, 92KB)" },
   { value: "animations/dances/anim_breakdance_ready_3.glb", label: "breakdance ready (64f / 2.1s, 112KB)" },
-  { value: "animations/dances/anim_breakdance_swipes.glb", label: "breakdance swipes (91f / 3.0s, 140KB)" },
   { value: "animations/dances/anim_breakdance_uprock.glb", label: "breakdance uprock (64f / 2.1s, 118KB)" },
   { value: "animations/dances/anim_breakdance_uprock_2.glb", label: "breakdance uprock (109f / 3.6s, 155KB)" },
   { value: "animations/dances/anim_breakdance_uprock_to_ground.glb", label: "breakdance uprock to ground (37f / 1.2s, 95KB)" },
