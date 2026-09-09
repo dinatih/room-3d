@@ -45,22 +45,18 @@ function DimensionLine({ item }: { item: MeasurementItem }) {
   const deltaSign = delta > 0 ? `+${delta}` : `${delta}`;
 
   // Calcul du point milieu pour le badge
-  // En mode 'top' 2D, on applique un décalage perpendiculaire (offset) pour que le badge ne masque pas les traits courts
+  // En mode 'top' 2D, décalage le long de l'axe Z pour dégager la ligne de mesure
   const mid: [number, number, number] = useMemo(() => {
     const mx = (start[0] + end[0]) / 2;
     const my = (start[1] + end[1]) / 2;
     const mz = (start[2] + end[2]) / 2;
 
     if (cameraMode === 'top') {
-      // Décalage en Z pour les segments selon l'axe X, et en X pour les segments selon l'axe Z
-      if (Math.abs(dx) > Math.abs(dz)) {
-        return [mx, my, mz - 18];
-      } else {
-        return [mx - 22, my, mz];
-      }
+      // Décalage en Z pour placer le badge au-dessus du trait de mesure
+      return [mx, my, mz - 16];
     }
     return [mx, my, mz];
-  }, [start, end, cameraMode, dx, dz]);
+  }, [start, end, cameraMode]);
 
   // Calcul des ticks d'extrémité perpendiculaires aux faces internes
   const tickGeo = useMemo(() => {
