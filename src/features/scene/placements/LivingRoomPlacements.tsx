@@ -79,7 +79,7 @@ const MEUBLE_T_Z = KALLAX_SE_Z;
 const MEUBLE_T_Y = KALLAX_SE_TOP + 50; // dessus kallax SE + freezer
 
 const LAMP_ROT_Y = Math.atan2(ROOM_W / 2 - MEUBLE_T_X, ROOM_D / 2 - MEUBLE_T_Z);
-const MACK_X = 74 + 42; // NICHE_X = 74
+const MACK_X = 42;
 const MACK_Z = ROOM_D - w2 - 16;
 const MIRROR_CX = 160;
 
