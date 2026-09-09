@@ -85,6 +85,7 @@ export function useDronaGeo(): THREE.BufferGeometry {
 }
 
 export function Drona({ onSize }: SceneItemProps) {
+  const mode = useSceneStore(state => state.furniture.dronaMode) ?? 'high';
   const geo = useDronaGeo();
 
   useLayoutEffect(() => {
@@ -96,24 +97,26 @@ export function Drona({ onSize }: SceneItemProps) {
     onSize(size);
   }, [geo, onSize]);
 
-  return <mesh geometry={geo} material={dronaMat} castShadow receiveShadow />;
+  return <mesh key={mode} geometry={geo} material={dronaMat} castShadow receiveShadow />;
 }
 
 /** Boîte Drona unique — à placer dans un <group position rotation>. */
 export function DroneCell() {
+  const mode = useSceneStore(state => state.furniture.dronaMode) ?? 'high';
   const geo = useDronaGeo();
-  return <mesh geometry={geo} material={dronaMat} castShadow receiveShadow userData={{ skipMerge: true }} />;
+  return <mesh key={mode} geometry={geo} material={dronaMat} castShadow receiveShadow userData={{ skipMerge: true }} />;
 }
 
 /** N boîtes Drona via InstancedMesh. Chaque Matrix4 encode position + rotation. */
 export function DronaInstances({ matrices }: { matrices: THREE.Matrix4[] }) {
+  const mode = useSceneStore(state => state.furniture.dronaMode) ?? 'high';
   const geo = useDronaGeo();
   const N = matrices.length;
   const apply = (mesh: THREE.InstancedMesh) => {
     matrices.forEach((m, i) => mesh.setMatrixAt(i, m));
     mesh.instanceMatrix.needsUpdate = true;
   };
-  return <instancedMesh args={[geo, dronaMat, N]} castShadow receiveShadow onUpdate={apply} />;
+  return <instancedMesh key={mode} args={[geo, dronaMat, N]} castShadow receiveShadow onUpdate={apply} />;
 }
 
 useGLTF.preload(GLB_DRONA_HIGH);
