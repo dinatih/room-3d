@@ -7,7 +7,6 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { cameraState } from '@features/scene/cameraState';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150, GLB_65x65 } from '../items/NissedalMirror';
-import { useSceneStore } from '../store/useSceneStore';
 import { MergedStaticGroup } from './MergedStaticGroup';
 import { PARTITION_THICKNESS } from '../wallData';
 import {
@@ -266,14 +265,3 @@ export function MirrorReflectors() {
   );
 }
 
-/** @deprecated Utiliser MirrorFrames + MirrorReflectors dans Studio.tsx */
-export function Mirrors() {
-  const showMirrors = useSceneStore(state => state.layers.mirrors);
-  return (
-    <MergedStaticGroup name="merged-mirror-frames">
-      <MirrorsD showReflection={showMirrors} />
-      <MirrorsA showReflection={showMirrors} />
-      <MirrorBath showReflection={showMirrors} />
-    </MergedStaticGroup>
-  );
-}

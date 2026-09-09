@@ -11,7 +11,7 @@ export function resolveInstructionCoords(
   if (instr.type === 'RETURN_TO_START' && startPos) {
     return { tx: startPos.x, tz: startPos.z, label: 'point de départ' };
   }
-  const waypointId = instr.targetWaypointId || instr.targetNodeId;
+  const waypointId = instr.targetWaypointId;
   if (waypointId && WAYPOINTS[waypointId]) {
     const node = WAYPOINTS[waypointId];
     return { tx: node.x, tz: node.z, label: node.name || node.id, rotY: instr.rotY ?? node.rotationY };

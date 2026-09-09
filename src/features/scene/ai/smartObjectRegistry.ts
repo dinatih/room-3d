@@ -60,21 +60,18 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Nord)',
         offset: [90, 0, 80],
         animations_random: 'seated_front',
-        duration: 15.0,
       },
       {
         slotId: 'seat-middle',
         name: 'S\'asseoir (Milieu)',
         offset: [90, 0, 150],
         animations_random: 'seated_front',
-        duration: 15.0,
       },
       {
         slotId: 'seat-south',
         name: 'S\'asseoir (Sud)',
         offset: [90, 0, 220],
         animations_random: 'seated_front',
-        duration: 15.0,
       },
       {
         slotId: 'lie-down',
@@ -835,13 +832,13 @@ export function buildSmartObjectInstructionSequence(
   // Traitement spécifique des meubles avec portes et routines composées
   if (objectId === 'shower') {
     return [
-      { type: 'MOVE_TO', targetNodeId: 'bathroom-shower-entry', rotY: 0 },
+      { type: 'MOVE_TO', targetWaypointId: 'bathroom-shower-entry', rotY: 0 },
       { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: true, animation: 'animations/interactions/anim_open_door_outwards.glb', duration: 0.8, rotY: 0 },
       { type: 'MOVE_TO', smartObjectId: 'shower', slotId: slot.slotId },
       { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.5 },
       baseInstruction,
       { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: true, duration: 0.8 },
-      { type: 'MOVE_TO', targetNodeId: 'bathroom-shower-entry', rotY: Math.PI },
+      { type: 'MOVE_TO', targetWaypointId: 'bathroom-shower-entry', rotY: Math.PI },
       { type: 'INTERACT', smartObjectId: 'shower', slotId: slot.slotId, triggerEventKey: 'shower-door-toggle', triggerTargetState: false, duration: 0.5, rotY: Math.PI }
     ];
   }

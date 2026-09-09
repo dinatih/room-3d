@@ -96,7 +96,6 @@ export interface AgentInstruction {
   smartObjectId?: string; // target smart object ID
   slotId?: string; // specific slot inside the smart object
   targetWaypointId?: string; // Waypoint cible pour la navigation
-  targetNodeId?: string; // rétro-compatibilité temporaire instruction JSON/scenarios
   targetPos?: [number, number, number]; // direct position instead of waypoint
   actionId?: string; // for INTERACT
   animation?: string; // animation to play

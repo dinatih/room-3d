@@ -354,5 +354,3 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
   );
 }
 
-// Alias pour compatibilité
-export const RiggedWig = Wig;

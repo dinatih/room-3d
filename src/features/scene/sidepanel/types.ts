@@ -143,14 +143,11 @@ export interface LayerState {
   fpvHeadBobbing?: boolean;
 }
 
-export interface SidePanelProps {
-  layers:          LayerState;
-  onToggleLayer:   (key: keyof LayerState) => void;
-}
-
 export type LidarMode = 0 | 1 | 2 | 3;
 
-export interface SidePanelProps2 extends SidePanelProps {
+export interface SidePanelProps {
+  layers:                  LayerState;
+  onToggleLayer:           (key: keyof LayerState) => void;
   onOpenInventory:         () => void;
   lidarMode:               LidarMode;
   onCycleLidar:            () => void;

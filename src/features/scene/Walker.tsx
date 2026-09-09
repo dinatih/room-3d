@@ -8,7 +8,7 @@
 import { Suspense, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
-import { SingleCharacter } from './SingleCharacter';
+import { SingleCharacter } from './character';
 import { CHARACTERS, isCharacterVisibleInMode, type CharacterConfig, ACCESSORIES_MESH_NAMES } from './walkerConfig';
 export { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES };
 

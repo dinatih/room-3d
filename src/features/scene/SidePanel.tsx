@@ -23,7 +23,7 @@ import { duoSessionManager } from './ai/duoSessionManager';
 import {
   TABS, ALL_HAIR_COLORS,
   type FurnitureState, type LayerState, type SidePanelProps,
-  type SidePanelProps2, type LidarMode, type TabKey,
+  type LidarMode, type TabKey,
 } from './sidepanel/types';
 import { Group } from './sidepanel/Group';
 import { ShortcutsModal } from './sidepanel/modals/ShortcutsModal';
@@ -37,12 +37,10 @@ import { AnimationsSection } from './sidepanel/sections/AnimationsSection';
 import { DuoAnimationsSection } from './sidepanel/sections/DuoAnimationsSection';
 import { ProfileSection } from './sidepanel/sections/ProfileSection';
 
-// ── Re-exports publics pour compatibilité ascendante ──────────────────────────
 export type {
   FurnitureState,
   LayerState,
   SidePanelProps,
-  SidePanelProps2,
   LidarMode,
 };
 export { Group } from './sidepanel/Group';
@@ -72,7 +70,7 @@ export function SidePanel({
   showLandingStrips = false,
   onToggleLandingStrips,
   onToggleHideUI,
-}: SidePanelProps2) {
+}: SidePanelProps) {
   const isMobile = useIsMobile();
   const [showViews, setShowViews] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);

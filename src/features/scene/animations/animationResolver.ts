@@ -52,8 +52,7 @@ export function getAnimationDef(key: string): AnimationDefinition | undefined {
 
 /**
  * Résout une clé (id, alias ou chemin direct) vers le chemin GLB réel.
- * Rétrocompatible : si la clé n'est pas dans le registre mais semble être un chemin (ex: finit par .glb),
- * elle est renvoyée telle quelle.
+ * Si la clé n'est pas trouvée dans le registre mais est déjà un chemin, elle est renvoyée directement.
  */
 export function resolveAnimationPath(keyOrPath: string): string {
   if (!keyOrPath) return '';

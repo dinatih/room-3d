@@ -39,10 +39,3 @@ export function Furniture() {
   );
 }
 
-// Rétro-compatibilité pour d'éventuels imports de Studio.tsx (ou dev tools)
-export { LivingRoomPlacements as Furnishings };
-export { LivingRoomPlacements as Decor };
-export { GardenPlacements as Garden };
-export function Animals() { return null; }
-export function Backpacks() { return null; }
-export function DronaBoxes() { return null; }
