@@ -30,6 +30,7 @@ interface MeasurementItem {
 
 function DimensionLine({ item }: { item: MeasurementItem }) {
   const { start, end, valueCm, name, color = '#ffc107' } = item;
+  const cameraMode = useSceneStore(state => state.cameraMode);
 
   // Distance 3D actuelle calculée directement entre les deux points d'ancrage du modèle
   const dx = end[0] - start[0];
@@ -117,7 +118,12 @@ function DimensionLine({ item }: { item: MeasurementItem }) {
       </mesh>
 
       {/* Badge HTML flottant avec comparaison Mesure Réelle vs Modèle 3D */}
-      <Html position={mid} center distanceFactor={150} style={{ pointerEvents: 'auto' }}>
+      <Html
+        position={mid}
+        center
+        distanceFactor={cameraMode === 'top' ? undefined : 150}
+        style={{ pointerEvents: 'auto' }}
+      >
         <div
           title={`${name}\n• Mesure réelle (laser) : ${valueCm} cm\n• Modèle 3D actuel : ${modelDist} cm\n• Écart (3D - réel) : ${deltaSign} cm\n\n${item.description}`}
           style={{
