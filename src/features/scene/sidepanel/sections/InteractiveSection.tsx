@@ -120,6 +120,7 @@ export function InteractiveSection({
       {furnitureBtn('Accoudoir Canapé Droit', 'sofaArmRight')}
       {furnitureBtn('Congélateur', 'freezerOpen', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Réfrigérateur', 'fridge', 'OUVERT', 'FERMÉ')}
+      {furnitureBtn('Boîtes DRÖNA', 'dronaMode', 'HIGH', 'LOW', v => v === 'high' ? 'High (45k)' : v === 'low' ? 'Low (1.6k)' : 'Procédural (12t)')}
       {furnitureBtn('TV Allumée', 'tvOn')}
       {triggerBtn('Bureau 1 (Assis/Debout)', 'desk1-toggle')}
       {triggerBtn('Bureau 1 (Position)', 'desk1-position')}

@@ -81,6 +81,7 @@ const initialFurniture: FurnitureState = {
   sofaArmRight: false,
   mackaparDoors: true,
   showerDoor: false,
+  dronaMode: 'high',
 };
 
 const initialLayers: LayerState = {
@@ -266,6 +267,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
         const cur = state.furniture.glassDoorV2ShutterPos;
         const next = cur === 0 ? 70 : cur === 70 ? 90 : cur === 90 ? 100 : 0;
         nextFurniture = { ...state.furniture, glassDoorV2ShutterPos: next };
+        document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: next } }));
+      } else if (key === 'dronaMode') {
+        const cur = state.furniture.dronaMode;
+        const next = cur === 'high' ? 'low' : cur === 'low' ? 'procedural' : 'high';
+        nextFurniture = { ...state.furniture, dronaMode: next };
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: next } }));
       } else if (key === 'glassDoorV2LeftOpen') {
         const nextLeft = !state.furniture.glassDoorV2LeftOpen;
