@@ -270,7 +270,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: next } }));
       } else if (key === 'dronaMode') {
         const cur = state.furniture.dronaMode;
-        const next = cur === 'high' ? 'low' : cur === 'low' ? 'procedural' : 'high';
+        const next = cur === 'high' ? 'low' : cur === 'low' ? 'procedural' : cur === 'procedural' ? 'hidden' : 'high';
         nextFurniture = { ...state.furniture, dronaMode: next };
         document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: next } }));
       } else if (key === 'glassDoorV2LeftOpen') {

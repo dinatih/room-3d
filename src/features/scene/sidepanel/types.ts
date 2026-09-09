@@ -74,7 +74,7 @@ export interface FurnitureState {
   glassDoorV2ShutterPos: number;
   mackaparDoors: boolean;
   showerDoor: boolean;
-  dronaMode: 'high' | 'low' | 'procedural';
+  dronaMode: 'high' | 'low' | 'procedural' | 'hidden';
 }
 
 export interface LayerState {

@@ -3,10 +3,11 @@
  * Coordonnées locales : centré par bbox, Y=0 = sol, rouge.
  * Le GLB officiel IKEA est en mètres → scale ×100 pour la scène (1 unité = 1 cm).
  *
- * Supporte 3 modes de géométrie (commutable via useSceneStore / SidePanel) :
+ * Supporte 4 modes (commutable via useSceneStore / SidePanel) :
  *   - 'high'       : modèle officiel IKEA d'origine (~45k tris / boîte)
  *   - 'low'        : modèle décimé (~1.6k tris / boîte)
  *   - 'procedural' : BoxGeometry Three.js légère (~12 tris / boîte)
+ *   - 'hidden'     : boîtes complètement masquées (0 tris)
  *
  * Exports :
  *   Drona          — composant SceneItemProps (instance unique, inventaire)
@@ -97,6 +98,7 @@ export function Drona({ onSize }: SceneItemProps) {
     onSize(size);
   }, [geo, onSize]);
 
+  if (mode === 'hidden') return null;
   return <mesh key={mode} geometry={geo} material={dronaMat} castShadow receiveShadow />;
 }
 
@@ -104,6 +106,7 @@ export function Drona({ onSize }: SceneItemProps) {
 export function DroneCell() {
   const mode = useSceneStore(state => state.furniture.dronaMode) ?? 'high';
   const geo = useDronaGeo();
+  if (mode === 'hidden') return null;
   return <mesh key={mode} geometry={geo} material={dronaMat} castShadow receiveShadow userData={{ skipMerge: true }} />;
 }
 
@@ -116,6 +119,7 @@ export function DronaInstances({ matrices }: { matrices: THREE.Matrix4[] }) {
     matrices.forEach((m, i) => mesh.setMatrixAt(i, m));
     mesh.instanceMatrix.needsUpdate = true;
   };
+  if (mode === 'hidden') return null;
   return <instancedMesh key={mode} args={[geo, dronaMat, N]} castShadow receiveShadow onUpdate={apply} />;
 }
 
