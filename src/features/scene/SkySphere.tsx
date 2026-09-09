@@ -64,45 +64,18 @@ export function SkySphere() {
   return (
     <group position={SKY_CENTER} name="SkySphere" userData={{ isSky: true }}>
       <SpaceBackdrop />
-      {texture && <FadingSkyDome texture={texture} />}
-      {texture && <ExteriorSkyShell texture={texture} />}
+      {texture && <CombinedSkyDome texture={texture} />}
     </group>
   );
 }
 
-function FadingSkyDome({ texture }: { texture: THREE.Texture }) {
-  const materialRef = useRef<THREE.MeshBasicMaterial>(null);
-  const skyCenter = useMemo(() => new THREE.Vector3(...SKY_CENTER), []);
-
-  useFrame(({ camera }) => {
-    const material = materialRef.current;
-    if (!material) return;
-
-    const dist = camera.position.distanceTo(skyCenter);
-    const fadeOut = THREE.MathUtils.smoothstep(dist, SKY_FADE_START, SKY_FADE_END);
-    material.opacity = 1 - fadeOut;
-    material.visible = material.opacity > 0.01;
-  });
-
-  return (
-    <mesh renderOrder={-1000}>
-      <sphereGeometry args={[SKY_RADIUS, 96, 96]} />
-      <meshBasicMaterial
-        ref={materialRef}
-        map={texture}
-        side={THREE.BackSide}
-        depthTest
-        depthWrite={false}
-        fog={false}
-        transparent
-      />
-    </mesh>
-  );
-}
-
-function ExteriorSkyShell({ texture }: { texture: THREE.Texture }) {
+function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
+  const domeMatRef = useRef<THREE.MeshBasicMaterial>(null);
   const shellRef = useRef<THREE.Mesh>(null);
   const wireRef = useRef<THREE.Mesh>(null);
+  const skyCenter = useMemo(() => new THREE.Vector3(...SKY_CENTER), []);
+  const lastDistRef = useRef<number>(-1);
+
   const shellMaterial = useMemo(() => new THREE.MeshBasicMaterial({
     map: texture,
     side: THREE.FrontSide,
@@ -112,6 +85,7 @@ function ExteriorSkyShell({ texture }: { texture: THREE.Texture }) {
     transparent: true,
     opacity: 0,
   }), [texture]);
+
   const wireMaterial = useMemo(() => new THREE.MeshBasicMaterial({
     color: 0xff233d,
     side: THREE.FrontSide,
@@ -122,14 +96,24 @@ function ExteriorSkyShell({ texture }: { texture: THREE.Texture }) {
     opacity: 0,
     wireframe: true,
   }), []);
-  const skyCenter = useMemo(() => new THREE.Vector3(...SKY_CENTER), []);
 
   useFrame(({ camera }) => {
+    const domeMat = domeMatRef.current;
     const shell = shellRef.current;
     const wire = wireRef.current;
-    if (!shell || !wire) return;
+    if (!domeMat || !shell || !wire) return;
 
     const dist = camera.position.distanceTo(skyCenter);
+    // Optimisation : ignorer le recalcul si la distance caméra n'a pas varié de plus de 5cm
+    if (Math.abs(dist - lastDistRef.current) < 5) return;
+    lastDistRef.current = dist;
+
+    // 1. Dôme intérieur
+    const fadeOut = THREE.MathUtils.smoothstep(dist, SKY_FADE_START, SKY_FADE_END);
+    domeMat.opacity = 1 - fadeOut;
+    domeMat.visible = domeMat.opacity > 0.01;
+
+    // 2. Coque extérieure
     const shellFade = THREE.MathUtils.smoothstep(dist, EXTERIOR_FADE_START, EXTERIOR_FADE_END);
     const wireFade = THREE.MathUtils.smoothstep(dist, WIREFRAME_FADE_START, WIREFRAME_FADE_END);
     const visible = shellFade > 0.01 || wireFade > 0.01;
@@ -142,6 +126,18 @@ function ExteriorSkyShell({ texture }: { texture: THREE.Texture }) {
 
   return (
     <>
+      <mesh renderOrder={-1000}>
+        <sphereGeometry args={[SKY_RADIUS, 96, 96]} />
+        <meshBasicMaterial
+          ref={domeMatRef}
+          map={texture}
+          side={THREE.BackSide}
+          depthTest
+          depthWrite={false}
+          fog={false}
+          transparent
+        />
+      </mesh>
       <mesh ref={shellRef} material={shellMaterial} renderOrder={-900} visible={false}>
         <sphereGeometry args={[SKY_RADIUS, 96, 96]} />
       </mesh>

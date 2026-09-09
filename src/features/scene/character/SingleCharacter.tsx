@@ -35,6 +35,9 @@ import { useCharacterPhysics } from './useCharacterPhysics';
 const EMPTY_SCENARIO: AgentInstruction[] = [];
 const _tmpLgbtaColorA = new THREE.Color();
 const _tmpLgbtaColorB = new THREE.Color();
+const _charFrustum = new THREE.Frustum();
+const _charProjScreenMatrix = new THREE.Matrix4();
+const _charBoundingSphere = new THREE.Sphere();
 
 export function SingleCharacter({
   id,
@@ -654,13 +657,27 @@ export function SingleCharacter({
       }
 
       // Simulation Verlet (cheveux, perruques, poitrine)
-      updatePhysics(delta, {
-        haircut,
-        isMoving,
-        targetAnim: target,
-        walkerAnim,
-        clockElapsedTime: state.clock.elapsedTime
-      }, scene);
+      // Optimisation Frustum Culling : on n'exécute la physique que si le personnage est visible par la caméra
+      const isVisibleInFrustum = (() => {
+        if (!state.camera) return true;
+        const cam = state.camera;
+        _charProjScreenMatrix.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+        _charFrustum.setFromProjectionMatrix(_charProjScreenMatrix);
+        _charBoundingSphere.center.copy(groupRef.current.position);
+        _charBoundingSphere.center.y += 90; // Centre approximatif du buste/tête
+        _charBoundingSphere.radius = 120;
+        return _charFrustum.intersectsSphere(_charBoundingSphere);
+      })();
+
+      if (isVisibleInFrustum) {
+        updatePhysics(delta, {
+          haircut,
+          isMoving,
+          targetAnim: target,
+          walkerAnim,
+          clockElapsedTime: state.clock.elapsedTime
+        }, scene);
+      }
     }
   });
 
