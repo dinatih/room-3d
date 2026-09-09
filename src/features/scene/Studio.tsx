@@ -16,8 +16,8 @@ import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
 import { Minimap }          from '@features/scene/Minimap';
 import { Walls, Floor, MirrorFrames, MirrorReflectors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
-import { CategoryLayerGroup, SceneLayerController }  from '@features/scene/sceneLayer';
-import { Equipment, Furniture, Furnishings, Decor, Backpacks, Garden, DronaBoxes, Animals } from './Placements';
+import { CategoryLayerGroup, SceneLayerController } from '@features/scene/sceneLayer';
+import { Equipment, Furniture } from './Placements';
 import { Walker } from './Walker';
 import { AiZonesHelper } from './ai/AiZonesHelper';
 import { CollisionDebugHelper } from './ai/CollisionDebugHelper';
@@ -485,12 +485,6 @@ export function Studio() {
 
           <CategoryLayerGroup layer={LAYER_FURNITURE}>
             <Furniture />
-            <Furnishings />
-            <Decor />
-            <Backpacks />
-            <Garden />
-            <Animals />
-            <DronaBoxes />
             {/* Cadres GLB Nissedal — toujours visibles, indépendant du toggle Miroirs */}
             <MirrorFrames />
           </CategoryLayerGroup>
