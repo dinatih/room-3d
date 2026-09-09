@@ -231,10 +231,11 @@ export function AiZonesHelper() {
                 lines.push(`RotY : ${(slot.rotY ?? obj.rotationY ?? 0).toFixed(2)} rad (${degRot}°)`);
 
                 if (slot.animation) lines.push(`Animation : ${slot.animation}`);
-                if (slot.animations_random) {
-                  const anims = Array.isArray(slot.animations_random)
-                    ? slot.animations_random.join(', ')
-                    : slot.animations_random;
+                const animRandom = slot.animationsRandom;
+                if (animRandom) {
+                  const anims = Array.isArray(animRandom)
+                    ? animRandom.join(', ')
+                    : animRandom;
                   lines.push(`Pack/Anims : ${anims}`);
                 }
                 if (slot.availableAnims?.length) {

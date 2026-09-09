@@ -20,9 +20,9 @@ export interface InteractionSlot {
   animation?: string;         // Chemin vers le clip d'animation GLB
   duration?: number;          // Durée par défaut en secondes (si vide/non fourni, l'animation est jouée repeatCount fois)
   repeatCount?: number;       // Nombre de fois où l'animation est jouée si duration est omis (défaut: 1)
-  repeatVariation?: boolean;  // Si repeatCount > 1 avec animations_random : true = animation différente tirée à chaque répétition, false = même anim répétée X fois (défaut: false)
+  repeatVariation?: boolean;  // Si repeatCount > 1 avec animationsRandom : true = animation différente tirée à chaque répétition, false = même anim répétée X fois (défaut: false)
   availableAnims?: string[];  // Variantes possibles pour l'aléatoire
-  animations_random?: string | string[]; // Pack nommé (ex: 'sitted_front_pack', 'side_sitted_pack') ou liste d'anims
+  animationsRandom?: string | string[]; // Pack nommé (ex: 'sitted_front_pack', 'side_sitted_pack') ou liste d'anims
   triggerEventKey?: string;   // Event à déclencher (ex: 'wc-flush', 'eastGlassDoor')
   triggerTargetState?: boolean;
 }

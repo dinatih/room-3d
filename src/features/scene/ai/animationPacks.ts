@@ -128,14 +128,16 @@ ANIMATION_PACKS['lay_side_pack']     = ANIMATION_PACKS['laying_side'];
 export function resolveSlotAnimation(slot: {
   animation?: string;
   rotY?: number;
+  animationsRandom?: string | string[];
   animations_random?: string | string[];
   availableAnims?: string[];
 }): { animation: string; rotY: number } {
   const baseRotY = slot.rotY ?? 0;
+  const animRandom = slot.animationsRandom ?? slot.animations_random;
 
   // 1. Pack nommé historique (ex: 'laying_pack', 'seated_front', ...)
-  if (typeof slot.animations_random === 'string' && ANIMATION_PACKS[slot.animations_random]) {
-    const pack = ANIMATION_PACKS[slot.animations_random];
+  if (typeof animRandom === 'string' && ANIMATION_PACKS[animRandom]) {
+    const pack = ANIMATION_PACKS[animRandom];
     const item = pack.animations[Math.floor(Math.random() * pack.animations.length)];
     if (typeof item === 'string') {
       const resolvedPath = resolveAnimationPath(item);
@@ -153,9 +155,9 @@ export function resolveSlotAnimation(slot: {
     }
   }
 
-  // 2. Requête par tags ou alias via animations_random (ex: 'tag:sitting', ['tag:dance'], ou un tag direct)
-  if (typeof slot.animations_random === 'string') {
-    const queryResult = getRandomAnimationByQuery(slot.animations_random);
+  // 2. Requête par tags ou alias via animationsRandom (ex: 'tag:sitting', ['tag:dance'], ou un tag direct)
+  if (typeof animRandom === 'string') {
+    const queryResult = getRandomAnimationByQuery(animRandom);
     if (queryResult) {
       return {
         animation: queryResult.animation,
@@ -164,9 +166,9 @@ export function resolveSlotAnimation(slot: {
     }
   }
 
-  // 3. Tableau direct de strings (ou tags) dans animations_random ou availableAnims
-  const animList = Array.isArray(slot.animations_random)
-    ? slot.animations_random
+  // 3. Tableau direct de strings (ou tags) dans animationsRandom ou availableAnims
+  const animList = Array.isArray(animRandom)
+    ? animRandom
     : (slot.availableAnims && slot.availableAnims.length > 0 ? slot.availableAnims : null);
 
   if (animList && animList.length > 0) {
