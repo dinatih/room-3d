@@ -3,7 +3,6 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { retargetClip, _retargetCache } from '../retargeting/index';
-import { duoSessionManager } from '../ai/duoSessionManager';
 import { resolveAnimationPath } from '../animations/animationResolver';
 
 const silentManager = new THREE.LoadingManager();
@@ -114,17 +113,6 @@ export function useCharacterAnimations({
         action.setLoop(THREE.LoopRepeat, Infinity);
         action.clampWhenFinished = false;
       }
-
-      if (duoSessionManager.isPlaying()) {
-        const currentAnimState = duoSessionManager.getCurrentAnimState();
-        if (currentAnimState && (currentAnimState.clipA === path || currentAnimState.clipB === path)) {
-          duoSessionManager.updateRealClipDuration(currentAnimState.def.id, finalClip.duration);
-        }
-      }
-
-      document.dispatchEvent(new CustomEvent('walker-clip-loaded', {
-        detail: { id, path, duration: finalClip.duration }
-      }));
 
       currentAnimClip.current = path;
       if (isUserOverride) userAnimOverrideRef.current = true;

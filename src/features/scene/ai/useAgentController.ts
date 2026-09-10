@@ -74,7 +74,6 @@ export function useAgentController(
   const repeatIndexRef = useRef<number>(0);
   const targetRepeatsRef = useRef<number>(1);
   const repeatVariationRef = useRef<boolean>(false);
-  const currentClipDurationRef = useRef<number>(4.0);
 
   // Cache de la résolution de l'instruction en cours pour éviter de réallouer / recalculer resolveInstructionCoords à chaque frame
   const cachedCoordsRef = useRef<ReturnType<typeof resolveInstructionCoords> | null>(null);
@@ -130,23 +129,6 @@ export function useAgentController(
       }
     };
 
-    const onClipLoaded = (e: any) => {
-      if (e.detail?.id === _characterId && typeof e.detail?.duration === 'number' && e.detail.duration > 0) {
-        currentClipDurationRef.current = e.detail.duration;
-        if (statusRef.current === 'INTERACTING') {
-          const queue = dynamicNavQueueRef.current;
-          const idx = dynamicNavIndexRef.current;
-          const currentInstruction = (queue.length > 0 && idx < queue.length)
-            ? queue[idx]
-            : (scenario && stepIndexRef.current < scenario.length ? scenario[stepIndexRef.current] : null);
-          if (currentInstruction && !currentInstruction.duration) {
-            // Si c'est une micro-anim ou une pose fixe (<= 1s), maintenir pendant 10 secondes par défaut
-            timerRef.current = e.detail.duration <= 1.0 ? 10.0 : e.detail.duration;
-          }
-        }
-      }
-    };
-
     const onForceSmartObject = (e: any) => {
       if (e.detail?.targetId === _characterId && e.detail?.objectId) {
         const { objectId, slotId } = e.detail;
@@ -169,11 +151,9 @@ export function useAgentController(
     };
 
     document.addEventListener('npc-invite-duo', onInvite);
-    document.addEventListener('walker-clip-loaded', onClipLoaded);
     document.addEventListener('agent-force-smartobject', onForceSmartObject);
     return () => {
       document.removeEventListener('npc-invite-duo', onInvite);
-      document.removeEventListener('walker-clip-loaded', onClipLoaded);
       document.removeEventListener('agent-force-smartobject', onForceSmartObject);
       OccupancyManager.releaseAllForCharacter(_characterId);
       duoSessionManager.leaveDuoZone(_characterId);
