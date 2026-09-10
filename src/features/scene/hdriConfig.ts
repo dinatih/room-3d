@@ -71,7 +71,7 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'jetty_twilight_183', name: 'Crépuscule marin depuis la digue 🌊🌌', url: '/environment/hdri/183_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'ocean_cloud_reflection_185', name: 'Ciel nuageux & Reflet océanique ☁️🌊', url: '/environment/hdri/185_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'venice_sunset', name: 'Coucher de soleil à Venise 🌇', url: '/environment/hdri/venice_sunset_1k.hdr', type: 'hdr' },
-  { id: 'river_road_112', name: 'Route côtière le long du fleuve 🌊🛣️', url: '/environment/hdri/HDR_112_River_Road_2.hdr', type: 'hdr' },
+
   { id: 'harbor_3', name: 'Port maritime & Quais ⛵⚓', url: '/environment/hdri/Harbor_3_Free.hdr', type: 'hdr' },
 
   // --- Ciel, Altitude, Dômes & HDRI-Skies ---
@@ -110,8 +110,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'empty_warehouse', name: 'Entrepôt industriel désaffecté 🏭', url: '/environment/hdri/empty_warehouse_01_1k.hdr', type: 'hdr' },
   { id: 'st_fagans_interior', name: 'Intérieur historique St Fagans 🏛️', url: '/environment/hdri/st_fagans_interior_1k.hdr', type: 'hdr' },
   { id: 'parking_lot_111', name: 'Parking urbain en plein jour 🚗🏢', url: '/environment/hdri/HDR_111_Parking_Lot_2.hdr', type: 'hdr' },
-  { id: 'city_night_lights', name: 'Panorama urbain nocturne & Lumières 🌃✨', url: '/environment/hdri/HDR_Free_City_Night_Lights.hdr', type: 'hdr' },
-  { id: 'night_free', name: 'Ciel nocturne étoilé & Ambiance 🌌🌙', url: '/environment/hdri/night_free.hdr', type: 'hdr' },
   { id: 'stonewall', name: 'Allée pavée & Mur de pierre historique 🧱🏛️', url: '/environment/hdri/Stonewall.hdr', type: 'hdr' },
   { id: 'broumov_runway', name: 'Piste d\'aérodrome Broumov 🛫🛣️', url: '/environment/hdri/broumov-airport-runway_4K.hdr', type: 'hdr' },
   { id: 'calvary_chapels', name: 'Chapelles du Mont Calvaire ⛪⛰️', url: '/environment/hdri/calvary-hill-chapels_4K.hdr', type: 'hdr' },
