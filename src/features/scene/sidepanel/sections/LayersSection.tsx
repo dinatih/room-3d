@@ -107,7 +107,7 @@ export function LayersSection({
               style={{ fontSize: '10px', userSelect: 'all' }}
               title={fileName}
             >
-              📁 {fileName}
+              {fileName}
             </div>
           ) : null;
         })()}

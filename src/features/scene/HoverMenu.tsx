@@ -756,7 +756,7 @@ export function HoverOverlay() {
                       color: '#ffd700',
                     }}>
                       <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={filename}>
-                        📁 {filename}
+                        {filename}
                       </div>
                       <button
                         type="button"

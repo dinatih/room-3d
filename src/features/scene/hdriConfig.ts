@@ -42,7 +42,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'field_040', name: 'Vaste champ champêtre 🌾☀️', url: '/environment/hdri/HDR_040_Field.hdr', type: 'hdr' },
   { id: 'riverbed_127', name: 'Lit de rivière caillouteux & Montagnes 🏞️', url: '/environment/hdri/127_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'meadow_sunrise_151', name: 'Colline herbeuse & Prairie au lever du jour 🌾', url: '/environment/hdri/151_hdrmaps_com_free_10K.hdr', type: 'hdr' },
-  { id: 'meadow_dusk_189', name: 'Grand pré verdoyant au crépuscule 🌾', url: '/environment/hdri/189_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'field_cloudy_194', name: 'Grand champ vert & Ciel nuageux 🌾☁️', url: '/environment/hdri/194_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'countryside_cumulus_196', name: 'Campagne estivale & Grands cumulus 🌾☀️', url: '/environment/hdri/196_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'lebombo', name: 'Savane & Prairie Lebombo 🌾', url: '/environment/hdri/lebombo_1k.hdr', type: 'hdr' },
@@ -58,7 +57,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'alpine_peaks_107', name: 'Pics alpins enneigés au coucher du soleil 🏔️', url: '/environment/hdri/107_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'frozen_lake_108', name: 'Lac gelé & Pont en hiver ❄️', url: '/environment/hdri/108_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'ski_slope_128', name: 'Piste de ski & Sommets enneigés ⛷️❄️', url: '/environment/hdri/128_hdrmaps_com_free_10K.hdr', type: 'hdr' },
-  { id: 'snow_mountains_evening', name: 'Montagnes enneigées au crépuscule 🏔️❄️', url: '/environment/hdri/HdrOutdoorSnowMountainsEveningClear001_8k.hdr', type: 'hdr' },
   { id: 'frozen_river_overcast', name: 'Rivière gelée sous ciel couvert ❄️🌊', url: '/environment/hdri/overcast-frozen-river_4K.hdr', type: 'hdr' },
 
   // --- Mer, Plage, Lacs & Horizons Marins ---
@@ -93,7 +91,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'sky_759', name: 'Ciel radieux & Horizon vaste 759 🌤️', url: '/environment/hdri/759-hdri-skies-com.hdr', type: 'hdr' },
   { id: 'sky_763', name: 'Ciel chaud de mi-journée 763 ☀️', url: '/environment/hdri/763-hdri-skies-com.hdr', type: 'hdr' },
   { id: 'sky_764', name: 'Ciel clair & Ambiance solaire 764 🌤️', url: '/environment/hdri/764-hdri-skies-com.hdr', type: 'hdr' },
-  { id: 'sky_765', name: 'Dôme azuréen & Nuages fins 765 ⛅', url: '/environment/hdri/765-hdri-skies-com.hdr', type: 'hdr' },
   { id: 'sky_789', name: 'Ciel doré de fin d\'après-midi 789 🌅', url: '/environment/hdri/789-hdri-skies-com.hdr', type: 'hdr' },
   { id: 'sky_790', name: 'Ciel dramatique & Nuages denses 790 🌥️', url: '/environment/hdri/790-hdri-skies-com.hdr', type: 'hdr' },
   { id: 'sky_791', name: 'Ciel couvert & Lumière diffuse 791 ☁️', url: '/environment/hdri/791-hdri-skies-com.hdr', type: 'hdr' },
@@ -112,7 +109,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'ruins_overgrown_109', name: 'Ruines anciennes & Végétation 🏛️🌿', url: '/environment/hdri/109_hdrmaps_com_free_10K.hdr', type: 'hdr' },
   { id: 'empty_warehouse', name: 'Entrepôt industriel désaffecté 🏭', url: '/environment/hdri/empty_warehouse_01_1k.hdr', type: 'hdr' },
   { id: 'st_fagans_interior', name: 'Intérieur historique St Fagans 🏛️', url: '/environment/hdri/st_fagans_interior_1k.hdr', type: 'hdr' },
-  { id: 'tunnel_110', name: 'Tunnel urbain illuminé 🚇💡', url: '/environment/hdri/HDR_110_Tunnel.hdr', type: 'hdr' },
   { id: 'parking_lot_111', name: 'Parking urbain en plein jour 🚗🏢', url: '/environment/hdri/HDR_111_Parking_Lot_2.hdr', type: 'hdr' },
   { id: 'city_night_lights', name: 'Panorama urbain nocturne & Lumières 🌃✨', url: '/environment/hdri/HDR_Free_City_Night_Lights.hdr', type: 'hdr' },
   { id: 'night_free', name: 'Ciel nocturne étoilé & Ambiance 🌌🌙', url: '/environment/hdri/night_free.hdr', type: 'hdr' },
