@@ -1,19 +1,11 @@
 /**
- * GridLayout.tsx — Vue "inventaire" en grille 3D.
+ * GridLayout.tsx — Vue inventaire 3D en étagère / grille verticale.
  *
- * Affiche tous les objets GLB de l'inventaire, rangés par zone (couloir,
- * sdb, salon, jardin) sur un plan X/Z à Y=0, avec des labels texte au-dessus
- * de chaque rangée et un sol de référence semi-transparent.
+ * Affiche les objets 3D de l'inventaire rangés par zone (Couloir, SDB, Cuisine, Salon, Jardin),
+ * organisés sous forme de vitrine / grille verticale (en X / Y, orientée face caméra)
+ * pour inspecter l'inventaire global d'un seul coup d'œil sans collision avec l'appartement.
  *
- * Activation : layers.inventoryGrid (toggle dans le SidePanel → LayersSection).
- *
- * Architecture R3F :
- *   - <GridLayout> est un composant R3F monté directement dans le <Canvas>.
- *   - Chaque objet est rendu par <GridItem> qui utilise le hook useGLTF (Drei)
- *     pour charger le GLB via le cache partagé.
- *   - Les labels utilisent <Text> de @react-three/drei.
- *   - La grille est calculée côté JS : cellules de CELL_SIZE cm,
- *     N colonnes par rangée, séparation entre zones de ZONE_GAP cm.
+ * Échelle du projet : 1 unité = 1 cm.
  */
 
 import React, { Component, Suspense, useMemo } from 'react';
@@ -42,7 +34,7 @@ class GridItemErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
   }
 
   componentDidCatch(error: any) {
-    console.warn('[GridLayout] Failed to load GLB:', error);
+    console.warn('[GridLayout] Error loading item GLB:', error);
   }
 
   render() {
@@ -53,93 +45,160 @@ class GridItemErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
   }
 }
 
-// ── Constantes de mise en page ────────────────────────────────────────────────
+// ── Configuration de la grille verticale ──────────────────────────────────────
 
-/** Taille de cellule (cm). Laisse un peu d'espace autour du plus grand objet. */
-const CELL_SIZE = 120;
+/** Largeur et hauteur d'une case de rangement (cm) */
+const CELL_W = 100;
+const CELL_H = 90;
 
-/** Nombre de colonnes par rangée. */
-const COLS = 6;
+/** Nombre de colonnes par zone */
+const COLS_PER_ZONE = 4;
 
-/** Séparation (cm) entre deux zones. */
-const ZONE_GAP = 80;
+/** Espacement horizontal entre les colonnes de zones */
+const ZONE_SPACING_X = 120;
 
-/** Hauteur des labels de zone au-dessus du sol. */
-const LABEL_Y = 140;
+/** Taille maximale de l'objet affiché dans sa case */
+const TARGET_DISPLAY_SIZE = 65;
 
-/**
- * Taille max d'affichage : les GLBs sont auto-scalés pour tenir dans cette
- * dimension (en cm dans l'espace scène — 1 unité = 1 cm).
- */
-const MAX_DISPLAY_SIZE = CELL_SIZE * 0.75;
+// ── Définition des Zones principales demandées ─────────────────────────────────
 
-// ── Zones et leur mapping ─────────────────────────────────────────────────────
-
-interface Zone {
+interface ZoneDef {
   id: string;
   label: string;
   emoji: string;
-  color: THREE.ColorRepresentation;
-  /** Filtre sur item.category. */
-  categories: string[];
+  color: string;
 }
 
-const ZONES: Zone[] = [
+const ZONES: ZoneDef[] = [
   {
-    id: 'salon',
-    label: 'Séjour / Chambre',
-    emoji: '🛋️',
-    color: 0x4a7fc1,
-    categories: ['furniture', 'decor', 'storage', 'tech', 'tools', 'clothing'],
+    id: 'couloir',
+    label: 'Couloir & Entrée',
+    emoji: '🚪',
+    color: '#f39c12',
   },
   {
     id: 'sdb',
-    label: 'Salle de bain',
+    label: 'Salle de bain & WC',
     emoji: '🚿',
-    color: 0x3da58a,
-    categories: ['bathroom'],
+    color: '#00cec9',
   },
   {
-    id: 'kitchen',
+    id: 'salon',
+    label: 'Salon & Séjour',
+    emoji: '🛋️',
+    color: '#0984e3',
+  },
+  {
+    id: 'cuisine',
     label: 'Cuisine',
     emoji: '🍳',
-    color: 0xe07b39,
-    categories: ['kitchen'],
+    color: '#e17055',
   },
   {
     id: 'jardin',
-    label: 'Jardin / Terrasse',
+    label: 'Jardin & Balcon',
     emoji: '🌿',
-    color: 0x5a9e4f,
-    categories: ['garden', 'outdoor'],
-  },
-  {
-    id: 'wigs',
-    label: 'Perruques',
-    emoji: '💇',
-    color: 0xb06dae,
-    categories: ['wigs'],
+    color: '#00b894',
   },
 ];
 
-const FALLBACK_ZONE: Zone = {
-  id: 'autres',
-  label: 'Autres',
-  emoji: '📦',
-  color: 0x888888,
-  categories: [],
-};
+/**
+ * Classe un item d'inventaire dans l'une des 5 zones réelles
+ */
+function classifyItem(item: InventoryItem): string {
+  const text = `${item.id} ${item.name} ${item.notes ?? ''} ${item.category}`.toLowerCase();
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function getZone(item: InventoryItem): Zone {
-  for (const zone of ZONES) {
-    if (zone.categories.includes(item.category)) return zone;
+  // 1. Jardin / Extérieur
+  if (
+    text.includes('jardin') ||
+    text.includes('extérieur') ||
+    text.includes('exterieur') ||
+    text.includes('terrasse') ||
+    text.includes('balcon') ||
+    text.includes('oiseau') ||
+    text.includes('altappen') ||
+    text.includes('vatterso') ||
+    item.category === 'garden' ||
+    item.category === 'outdoor'
+  ) {
+    return 'jardin';
   }
-  return FALLBACK_ZONE;
+
+  // 2. Couloir / Entrée
+  if (
+    text.includes('couloir') ||
+    text.includes('entrée') ||
+    text.includes('entree') ||
+    text.includes('linky') ||
+    text.includes('trottinette') ||
+    text.includes('chaussure') ||
+    text.includes('grejig') ||
+    text.includes('mackapar') ||
+    text.includes('patère') ||
+    text.includes('patere') ||
+    text.includes('sekiner') ||
+    text.includes('enudden') ||
+    text.includes('klyket')
+  ) {
+    return 'couloir';
+  }
+
+  // 3. Salle de bain / WC
+  if (
+    item.category === 'bathroom' ||
+    text.includes('sdb') ||
+    text.includes('bain') ||
+    text.includes('douche') ||
+    text.includes('wc') ||
+    text.includes('toilet') ||
+    text.includes('lavabo') ||
+    text.includes('vasque') ||
+    text.includes('serviette') ||
+    text.includes('miroir') ||
+    text.includes('nissedal') ||
+    text.includes('brogrund') ||
+    text.includes('storavan') ||
+    text.includes('vallamosse') ||
+    text.includes('havback') ||
+    text.includes('tisken')
+  ) {
+    return 'sdb';
+  }
+
+  // 4. Cuisine
+  if (
+    item.category === 'kitchen' ||
+    text.includes('cuisine') ||
+    text.includes('évier') ||
+    text.includes('evier') ||
+    text.includes('cuisson') ||
+    text.includes('plaque') ||
+    text.includes('hotte') ||
+    text.includes('casserole') ||
+    text.includes('faitout') ||
+    text.includes('couvert') ||
+    text.includes('cuillère') ||
+    text.includes('fourchette') ||
+    text.includes('couteau') ||
+    text.includes('vaisselle') ||
+    text.includes('frigo') ||
+    text.includes('boholmen') ||
+    text.includes('utdrag') ||
+    text.includes('valbildad') ||
+    text.includes('middagsmat') ||
+    text.includes('annons') ||
+    text.includes('fornuft') ||
+    text.includes('lillviken') ||
+    text.includes('rinnig')
+  ) {
+    return 'cuisine';
+  }
+
+  // 5. Salon / Séjour (par défaut : mobilier de séjour, bureau, tech, déco, literie)
+  return 'salon';
 }
 
-// ── Composant item individuel ─────────────────────────────────────────────────
+// ── Composant d'affichage d'un modèle 3D ──────────────────────────────────────
 
 interface GridItemProps {
   item: InventoryItem;
@@ -152,23 +211,31 @@ function GridItemInner({ item, position }: GridItemProps) {
   const { clone, scale } = useMemo(() => {
     const clone = gltf.scene.clone(true);
 
-    // Réinitialiser la transform du clone racine
     clone.position.set(0, 0, 0);
     clone.rotation.set(0, 0, 0);
     clone.scale.set(1, 1, 1);
 
+    // Calculer la bounding box brute
     const box = new THREE.Box3().setFromObject(clone);
     const size = box.getSize(new THREE.Vector3());
 
-    // Centrer horizontalement, poser à Y=0
+    // Si le modèle est en mètres (< 3), le convertir en centimètres
+    const rawMax = Math.max(size.x, size.y, size.z);
+    if (rawMax > 0 && rawMax < 4) {
+      clone.scale.setScalar(100);
+      box.setFromObject(clone);
+      box.getSize(size);
+    }
+
+    // Centrer géométriquement l'objet au milieu de sa case (X=0, Y=0, Z=0)
     const center = box.getCenter(new THREE.Vector3());
-    clone.position.set(-center.x, -box.min.y, -center.z);
+    clone.position.sub(center);
 
-    // Auto-scale pour tenir dans MAX_DISPLAY_SIZE
+    // Mettre à l'échelle pour s'inscrire harmonieusement dans la case
     const maxDim = Math.max(size.x, size.y, size.z);
-    const scale = maxDim > 0 ? Math.min(1, MAX_DISPLAY_SIZE / maxDim) : 1;
+    const targetScale = maxDim > 0 ? TARGET_DISPLAY_SIZE / maxDim : 1;
 
-    return { clone, scale };
+    return { clone, scale: targetScale };
   }, [gltf]);
 
   return (
@@ -188,128 +255,140 @@ function GridItem({ item, position }: GridItemProps) {
   );
 }
 
-// ── Composant principal ───────────────────────────────────────────────────────
+// ── Composant Principal : GridLayout ──────────────────────────────────────────
 
 export function GridLayout() {
-  // Filtrer uniquement les items ayant un GLB (perruques incluses si souhaité)
-  const glbItems = useMemo(
-    () => INVENTORY.filter(item => !!item.glbPath),
-    [],
-  );
+  // Liste des items avec un fichier GLB réel (en excluant les 70+ perruques pour la clarté)
+  const items = useMemo(() => {
+    return INVENTORY.filter(
+      (item) => !!item.glbPath && !item.glbPath.includes('wigs') && item.category !== 'wigs'
+    );
+  }, []);
 
-  // Grouper par zone
-  const groupedByZone = useMemo(() => {
-    const map = new Map<string, { zone: Zone; items: InventoryItem[] }>();
+  // Regroupement par zone
+  const groupedZones = useMemo(() => {
+    const map = new Map<string, InventoryItem[]>();
+    for (const z of ZONES) map.set(z.id, []);
 
-    for (const item of glbItems) {
-      const zone = getZone(item);
-      if (!map.has(zone.id)) {
-        map.set(zone.id, { zone, items: [] });
-      }
-      map.get(zone.id)!.items.push(item);
-    }
-
-    // Ordonner selon ZONES puis FALLBACK
-    const ordered: { zone: Zone; items: InventoryItem[] }[] = [];
-    for (const zone of [...ZONES, FALLBACK_ZONE]) {
-      if (map.has(zone.id)) {
-        ordered.push(map.get(zone.id)!);
+    for (const item of items) {
+      const zoneId = classifyItem(item);
+      if (map.has(zoneId)) {
+        map.get(zoneId)!.push(item);
+      } else {
+        map.get('salon')!.push(item);
       }
     }
-    return ordered;
-  }, [glbItems]);
 
-  // Calculer les offsets Z de début de chaque zone
-  const zoneOffsets = useMemo(() => {
-    const offsets: number[] = [];
-    let currentZ = 0;
-    for (const { items } of groupedByZone) {
-      offsets.push(currentZ);
-      const rows = Math.ceil(items.length / COLS);
-      currentZ += rows * CELL_SIZE + ZONE_GAP;
-    }
-    return offsets;
-  }, [groupedByZone]);
+    return ZONES.map((zone) => ({
+      ...zone,
+      items: map.get(zone.id) ?? [],
+    })).filter((z) => z.items.length > 0);
+  }, [items]);
 
-  const gridWidth = COLS * CELL_SIZE;
+  // Positionnement en X de chaque section de zone
+  const zoneLayouts = useMemo(() => {
+    let currentX = 0;
+    return groupedZones.map((zone) => {
+      const cols = Math.min(COLS_PER_ZONE, Math.max(1, zone.items.length));
+      const width = cols * CELL_W;
+      const x = currentX;
+      currentX += width + ZONE_SPACING_X;
+      return {
+        ...zone,
+        startX: x,
+        cols,
+        width,
+      };
+    });
+  }, [groupedZones]);
+
+  // Largeur totale pour centrer la vitrine en face du salon
+  const totalWidth = zoneLayouts.reduce((acc, z) => Math.max(acc, z.startX + z.width), 0);
+  const offsetX = -totalWidth / 2 + 158; // Centré autour de ROOM_W / 2 (~158 cm)
+  const baseZ = -220; // Situé en retrait devant la baie vitrée / jardin
 
   return (
-    <group>
-      {groupedByZone.map(({ zone, items }, zoneIdx) => {
-        const zoneZ    = zoneOffsets[zoneIdx];
-        const rows     = Math.ceil(items.length / COLS);
-        const zoneDepth = rows * CELL_SIZE;
-        const centerX  = (gridWidth - CELL_SIZE) / 2;
-        const centerZ  = zoneZ + zoneDepth / 2;
+    <group position={[offsetX, 40, baseZ]}>
+      {zoneLayouts.map((zone) => {
+        const rows = Math.ceil(zone.items.length / zone.cols);
+        const totalHeight = rows * CELL_H;
+        const centerX = zone.startX + zone.width / 2 - CELL_W / 2;
 
         return (
           <group key={zone.id}>
-            {/* Sol semi-transparent de zone */}
-            <mesh position={[centerX, -0.5, centerZ]} receiveShadow>
-              <boxGeometry args={[gridWidth, 1, zoneDepth]} />
+            {/* 🏷️ Titre de la zone */}
+            <Text
+              position={[centerX, totalHeight + 35, 0]}
+              fontSize={24}
+              color={zone.color}
+              anchorX="center"
+              anchorY="bottom"
+              outlineWidth={1.5}
+              outlineColor="#111111"
+            >
+              {`${zone.emoji} ${zone.label} (${zone.items.length})`}
+            </Text>
+
+            {/* 📋 Panneau d'arrière-plan de la zone */}
+            <mesh
+              position={[centerX, totalHeight / 2 - CELL_H / 2, -15]}
+              receiveShadow
+            >
+              <planeGeometry args={[zone.width + 20, totalHeight + 20]} />
               <meshStandardMaterial
                 color={zone.color}
                 transparent
                 opacity={0.12}
-                roughness={1}
-                metalness={0}
+                roughness={0.8}
+                metalness={0.1}
               />
             </mesh>
 
-            {/* Label de zone */}
-            <Text
-              position={[centerX, LABEL_Y, zoneZ - 24]}
-              fontSize={18}
-              color={zone.color as THREE.ColorRepresentation}
-              anchorX="center"
-              anchorY="bottom"
-              outlineWidth={1}
-              outlineColor="#000000"
-            >
-              {`${zone.emoji} ${zone.label} (${items.length})`}
-            </Text>
+            {/* Cadre fin délimitant la section */}
+            <lineSegments position={[centerX, totalHeight / 2 - CELL_H / 2, -14]}>
+              <edgesGeometry args={[new THREE.PlaneGeometry(zone.width + 20, totalHeight + 20)]} />
+              <lineBasicMaterial color={zone.color} transparent opacity={0.4} />
+            </lineSegments>
 
-            {/* Trait séparateur de zone */}
-            <mesh position={[centerX, 0.5, zoneZ - 3]}>
-              <boxGeometry args={[gridWidth, 1, 3]} />
-              <meshStandardMaterial color={zone.color} />
-            </mesh>
+            {/* 📦 Cellules et objets de la grille */}
+            {zone.items.map((item, idx) => {
+              const col = idx % zone.cols;
+              const row = Math.floor(idx / zone.cols);
 
-            {/* Items */}
-            {items.map((item, idx) => {
-              const col = idx % COLS;
-              const row = Math.floor(idx / COLS);
-              const x = col * CELL_SIZE;
-              const z = zoneZ + row * CELL_SIZE;
+              // Grille verticale : X en largeur, Y en hauteur (de haut en bas)
+              const cellX = zone.startX + col * CELL_W;
+              const cellY = (rows - 1 - row) * CELL_H;
 
               return (
-                <group key={item.id}>
-                  {/* Plateau de cellule */}
-                  <mesh position={[x, -0.2, z]}>
-                    <boxGeometry args={[CELL_SIZE - 4, 0.4, CELL_SIZE - 4]} />
-                    <meshStandardMaterial
-                      color={zone.color}
-                      transparent
-                      opacity={0.06}
-                    />
+                <group key={item.id} position={[cellX, cellY, 0]}>
+                  {/* Fond de case / étagère */}
+                  <mesh position={[0, 0, -10]}>
+                    <planeGeometry args={[CELL_W - 12, CELL_H - 12]} />
+                    <meshBasicMaterial color="#ffffff" transparent opacity={0.05} />
                   </mesh>
 
-                  {/* GLB */}
-                  <GridItem item={item} position={[x, 0, z]} />
+                  {/* Tablette d'étagère sous l'objet */}
+                  <mesh position={[0, -CELL_H / 2 + 8, 0]}>
+                    <boxGeometry args={[CELL_W - 10, 2, 35]} />
+                    <meshStandardMaterial color={zone.color} roughness={0.5} />
+                  </mesh>
 
-                  {/* Label de l'objet */}
+                  {/* Modèle 3D centré dans la case */}
+                  <GridItem item={item} position={[0, 0, 5]} />
+
+                  {/* Nom de l'objet sous la case */}
                   <Text
-                    position={[x, -8, z + CELL_SIZE * 0.43]}
+                    position={[0, -CELL_H / 2 + 2, 18]}
                     fontSize={6.5}
-                    color="#cccccc"
+                    color="#f1f2f6"
                     anchorX="center"
                     anchorY="top"
-                    maxWidth={CELL_SIZE - 8}
+                    maxWidth={CELL_W - 10}
                     textAlign="center"
-                    outlineWidth={0.4}
+                    outlineWidth={0.6}
                     outlineColor="#000000"
                   >
-                    {item.name.length > 42 ? item.name.slice(0, 40) + '…' : item.name}
+                    {item.name.length > 32 ? `${item.name.slice(0, 30)}…` : item.name}
                   </Text>
                 </group>
               );
