@@ -113,6 +113,7 @@ const initialLayers: LayerState = {
   pillarsOnly: false,
   realSun: false,
   grass: false,
+  gardenWallScan: true,
   walker: true,
   animals: true,
   accessories: true,
@@ -173,7 +174,7 @@ const initialExtraStates: Record<string, boolean> = {
   aiFullTour: false,
 };
 
-export function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 'transient'; name: string } {
+export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'extra' | 'transient'; name: string } {
   const furnitureKeys = Object.keys(initialFurniture);
 
   if (furnitureKeys.includes(key)) {
@@ -209,13 +210,22 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'extra' | 't
     'bathroom-door-toggle': 'bathroomDoor',
     'glass-door-v2-left-open': 'glassDoorV2LeftOpen',
     'glass-door-v2-shutter-pos': 'glassDoorV2ShutterPos',
+    'garden-wall-scan': 'gardenWallScan',
+    'garden-wall-toggle': 'gardenWallScan',
   };
 
+  const layerKeys = Object.keys(initialLayers);
+  if (layerKeys.includes(key)) {
+    return { type: 'layer', name: key };
+  }
 
   if (key in map) {
     const mapped = map[key];
     if (furnitureKeys.includes(mapped)) {
       return { type: 'furniture', name: mapped };
+    }
+    if (layerKeys.includes(mapped)) {
+      return { type: 'layer', name: mapped };
     }
     return { type: 'extra', name: mapped };
   }
@@ -351,6 +361,13 @@ export const useSceneStore = create<SceneStore>((set) => ({
         }
         cameraState.invalidate?.();
         return { furniture: nextFurniture };
+      });
+    } else if (resolved.type === 'layer') {
+      const lKey = resolved.name as keyof LayerState;
+      set((state) => {
+        const nextLayers = { ...state.layers, [lKey]: !state.layers[lKey] };
+        cameraState.invalidate?.();
+        return { layers: nextLayers };
       });
     } else if (resolved.type === 'extra') {
       set((state) => {

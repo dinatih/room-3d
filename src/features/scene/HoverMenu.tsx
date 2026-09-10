@@ -200,6 +200,10 @@ const ACTIONS: Record<string, ActionDef> = {
       label: wig.name
     }))
   ] },
+  'garden-wall-toggle': {
+    btnLabel: () => useSceneStore.getState().layers.gardenWallScan ? 'Basculer en mur classique' : 'Basculer en Scan 3D (Seoul)',
+    toggleKey: 'garden-wall-scan',
+  },
 };
 
 // Helper to resolve action definition (supports dynamic actions like select-walker-*)

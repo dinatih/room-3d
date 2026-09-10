@@ -103,6 +103,7 @@ export interface LayerState {
   pillarsOnly:    boolean;
   realSun:      boolean;
   grass:        boolean;
+  gardenWallScan: boolean;
   walker:       boolean;
   animals:      boolean;
   accessories:  boolean;

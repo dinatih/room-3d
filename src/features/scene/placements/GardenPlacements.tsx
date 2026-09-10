@@ -48,7 +48,7 @@ export function GardenPlacements() {
         </group>
 
         {/* Yucca Elephantipes en pot (derrière la baignoire) */}
-        <group position={[105, 0, -355]} rotation={[0, 0.4, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Yucca Elephantipes' }}>
+        <group position={[155, 0, -355]} rotation={[0, Math.PI, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Yucca Elephantipes' }}>
           <PottedYucca item={{} as any} actionState={{}} onSize={() => {}} />
         </group>
 
