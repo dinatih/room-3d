@@ -27,18 +27,18 @@ export function GardenPlacements() {
     <>
       <MergedStaticGroup name="merged-garden">
         {/* Canapé Jardin Est avec accoudoirs togglables */}
-        <group position={[270, 0, -110]} rotation={[0, Math.PI, 0]}
+        <group position={[270, 0, -110]} rotation={[0, -Math.PI / 2, 0]}
                userData={{ skipMerge: true, itemName: 'Canapé Jardin Est', hoverAction: { label: 'Canapé de jardin', actions: ['sofa-arm-left', 'sofa-arm-right'] } }}>
           <ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} />
         </group>
 
         {/* Canapé Jardin Ouest */}
-        <group position={[100, 0, -80]} rotation={[0, Math.PI, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Canapé Jardin Ouest' }}>
+        <group position={[100, 0, -80]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Canapé Jardin Ouest' }}>
           <ArmlessSofa item={{} as any} actionState={{}} onSize={() => {}} />
         </group>
 
         {/* Banc Coffre */}
-        <group position={[40, 0, -90]} userData={{ animUnit: true, skipMerge: true, itemName: 'Banc Coffre Jardin' }}>
+        <group position={[40, 0, -90]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Banc Coffre Jardin' }}>
           <ChestBench item={{} as any} actionState={{}} onSize={() => {}} />
         </group>
 

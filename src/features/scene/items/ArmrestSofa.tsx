@@ -157,7 +157,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
 
   // Set sizing bounding box once
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(61, 89, 157));
+    onSize(new THREE.Vector3(157, 89, 61));
   }, [onSize]);
 
   // Procedural textures and materials
@@ -250,7 +250,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
   });
 
   return (
-    <group>
+    <group rotation={[0, -Math.PI / 2, 0]}>
       {/* ── 1. BASE FRAME & LEGS ────────────────────────────────────────────── */}
       {/* Rattan Seat Rim */}
       <mesh geometry={seatFrameRimGeo} material={rattanMat} position={[0, 37, 0]} castShadow receiveShadow />

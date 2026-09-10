@@ -1,7 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 export function GroundPoint({ color = '#0058a3', scale = 1 }: { color?: string; scale?: number }) {
+  const groupRef = useRef<THREE.Group>(null);
+
   const arrowShape = useMemo(() => {
     const s = new THREE.Shape();
     // Dessiné dans le plan XY local de la Shape :
@@ -19,22 +22,30 @@ export function GroundPoint({ color = '#0058a3', scale = 1 }: { color?: string; 
     return s;
   }, []);
 
+  useFrame(({ camera }) => {
+    if (!groupRef.current) return;
+    // Si la caméra regarde depuis le dessous (vue de dessous, Y < 0),
+    // positionner le marqueur à -0.05 pour être au premier plan par rapport à la face inférieure (Y=0)
+    const sign = camera.position.y < 0 ? -1 : 1;
+    groupRef.current.position.y = 0.05 * scale * sign;
+  });
+
   return (
-    <group position={[0, 0.05 * scale, 0]} scale={scale} name="GroundPoint">
+    <group ref={groupRef} position={[0, 0.05 * scale, 0]} scale={scale} name="GroundPoint" renderOrder={10}>
       {/* Anneau extérieur - visible sur les 2 faces */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[4, 5, 48]} />
-        <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} />
+        <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} depthTest={false} />
       </mesh>
       {/* Disque central - visible sur les 2 faces */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[1.2, 32]} />
-        <meshBasicMaterial color={color} side={THREE.DoubleSide} />
+        <meshBasicMaterial color={color} side={THREE.DoubleSide} depthTest={false} />
       </mesh>
-      {/* Flèche d'orientation 2D dirigée vers l'avant (+Z) - visible sur les 2 faces */}
+      {/* Flèche d'orientation 2D dirigée vers l'avant (-Z) - visible sur les 2 faces */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <shapeGeometry args={[arrowShape]} />
-        <meshBasicMaterial color={color} side={THREE.DoubleSide} />
+        <meshBasicMaterial color={color} side={THREE.DoubleSide} depthTest={false} />
       </mesh>
     </group>
   );
