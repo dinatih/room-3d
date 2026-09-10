@@ -311,6 +311,9 @@ export function Studio() {
         onToggleLayer('wallEdges');
         cameraState.invalidate?.();
       } else if (e.key === 'u' || e.key === 'U') {
+        onToggleLayer('inventoryGrid');
+        cameraState.invalidate?.();
+      } else if (e.key === 'n' || e.key === 'N') {
         onToggleLayer('measuredDimensions');
         cameraState.invalidate?.();
       } else if (e.key === '5' || e.code === 'Digit5' || e.code === 'Numpad5') {

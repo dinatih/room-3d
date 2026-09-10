@@ -466,7 +466,7 @@ export function GridLayout() {
     const cuisineRows = Math.ceil(cuisineItems.length / 3);
     const cuisineHeight = cuisineRows * CELL_H;
 
-    const verticalGap = 75;
+    const verticalGap = 130;
 
     return [
       // Colonne Gauche : SDB en bas (Y=0), Couloir au-dessus
@@ -534,27 +534,27 @@ export function GridLayout() {
 
         return (
           <group key={zone.id} position={[0, baseY, 0]}>
-            {/* 🏷️ Titre de la zone */}
+            {/* 🏷️ Titre de la zone : placé juste au-dessus du panneau */}
             <Text
-              position={[centerX, totalHeight + 30, 0]}
-              fontSize={22}
+              position={[centerX, totalHeight + 14, 2]}
+              fontSize={18}
               color={zone.color}
               anchorX="center"
               anchorY="bottom"
-              outlineWidth={1.4}
+              outlineWidth={1.2}
               outlineColor="#111111"
             >
               {`${zone.emoji} ${zone.label} (${items.length})`}
             </Text>
 
-            {/* 📋 Fond opaque */}
-            <mesh position={[centerX, totalHeight / 2 - CELL_H / 2, -15]}>
+            {/* 📋 Fond opaque reculé à Z=-30 pour ne pas couper le dos des objets */}
+            <mesh position={[centerX, totalHeight / 2 - CELL_H / 2, -30]}>
               <planeGeometry args={[width + 16, totalHeight + 16]} />
               <meshBasicMaterial color="#1e272e" />
             </mesh>
 
             {/* Cadre de couleur */}
-            <lineSegments position={[centerX, totalHeight / 2 - CELL_H / 2, -14]}>
+            <lineSegments position={[centerX, totalHeight / 2 - CELL_H / 2, -29]}>
               <edgesGeometry args={[new THREE.PlaneGeometry(width + 16, totalHeight + 16)]} />
               <lineBasicMaterial color={zone.color} />
             </lineSegments>
@@ -570,23 +570,23 @@ export function GridLayout() {
               return (
                 <group key={item.id} position={[cellX, cellY, 0]}>
                   {/* Fond de case */}
-                  <mesh position={[0, 0, -10]}>
+                  <mesh position={[0, 0, -25]}>
                     <planeGeometry args={[CELL_W - 8, CELL_H - 8]} />
                     <meshBasicMaterial color="#2d3436" />
                   </mesh>
 
                   {/* Tablette d'étagère */}
                   <mesh position={[0, -CELL_H / 2 + 6, 0]}>
-                    <boxGeometry args={[CELL_W - 8, 2, 30]} />
+                    <boxGeometry args={[CELL_W - 8, 2, 45]} />
                     <meshBasicMaterial color={zone.color} />
                   </mesh>
 
-                  {/* Modèle 3D ou procédural */}
-                  <GridItem item={item} position={[0, 0, 5]} />
+                  {/* Modèle 3D avancé à Z=15 pour ne jamais être coupé */}
+                  <GridItem item={item} position={[0, 0, 15]} />
 
                   {/* Nom de l'objet */}
                   <Text
-                    position={[0, -CELL_H / 2 + 1, 16]}
+                    position={[0, -CELL_H / 2 + 1, 30]}
                     fontSize={6.2}
                     color="#ffffff"
                     anchorX="center"
