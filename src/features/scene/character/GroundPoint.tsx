@@ -31,21 +31,21 @@ export function GroundPoint({ color = '#0058a3', scale = 1 }: { color?: string; 
   });
 
   return (
-    <group ref={groupRef} position={[0, 0.05 * scale, 0]} scale={scale} name="GroundPoint" renderOrder={10}>
+    <group ref={groupRef} position={[0, 0.05 * scale, 0]} scale={scale} name="GroundPoint">
       {/* Anneau extérieur - visible sur les 2 faces */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[4, 5, 48]} />
-        <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} depthTest={false} />
+        <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} />
       </mesh>
       {/* Disque central - visible sur les 2 faces */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[1.2, 32]} />
-        <meshBasicMaterial color={color} side={THREE.DoubleSide} depthTest={false} />
+        <meshBasicMaterial color={color} side={THREE.DoubleSide} />
       </mesh>
       {/* Flèche d'orientation 2D dirigée vers l'avant (-Z) - visible sur les 2 faces */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <shapeGeometry args={[arrowShape]} />
-        <meshBasicMaterial color={color} side={THREE.DoubleSide} depthTest={false} />
+        <meshBasicMaterial color={color} side={THREE.DoubleSide} />
       </mesh>
     </group>
   );
