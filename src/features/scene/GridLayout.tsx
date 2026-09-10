@@ -16,11 +16,42 @@
  *     N colonnes par rangée, séparation entre zones de ZONE_GAP cm.
  */
 
-import { Suspense, useMemo } from 'react';
+import React, { Component, Suspense, useMemo } from 'react';
 import { useGLTF, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
 import { INVENTORY, type InventoryItem } from '@features/inventory/inventoryData';
+
+interface ErrorBoundaryProps {
+  fallback?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class GridItemErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any) {
+    console.warn('[GridLayout] Failed to load GLB:', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? null;
+    }
+    return this.props.children;
+  }
+}
 
 // ── Constantes de mise en page ────────────────────────────────────────────────
 
@@ -149,9 +180,11 @@ function GridItemInner({ item, position }: GridItemProps) {
 
 function GridItem({ item, position }: GridItemProps) {
   return (
-    <Suspense fallback={null}>
-      <GridItemInner item={item} position={position} />
-    </Suspense>
+    <GridItemErrorBoundary fallback={null}>
+      <Suspense fallback={null}>
+        <GridItemInner item={item} position={position} />
+      </Suspense>
+    </GridItemErrorBoundary>
   );
 }
 

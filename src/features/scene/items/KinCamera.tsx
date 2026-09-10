@@ -5,7 +5,7 @@ import type { SceneItemProps } from '@shared/types';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 
 export function KinCamera({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone('media/sandbox/camera_render.glb');
+  const { scene } = useGLTFClone('items/kin-fine-camera/kin-fine-camera.glb');
 
   useLayoutEffect(() => {
     // 1. Reset scale pour lire la vraie bounding box
