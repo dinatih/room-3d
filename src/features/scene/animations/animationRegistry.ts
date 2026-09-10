@@ -1,14 +1,8 @@
 /**
  * animationRegistry.ts — Registre centralisé et sémantique des animations.
- * Permet d'associer un ID canonique, des alias contextuels, des tags et des métadonnées
- * à chaque fichier d'animation GLB.
+ * Associe à chaque fichier GLB un ID canonique, des alias, des tags et des métadonnées.
  *
- * Structure :
- *   1. MANUAL_ANIMATION_DEFINITIONS  — Entrées curées à la main (alias, rotOffset, tags fins)
- *   2. DISABLED_DANCES_PATHS         — Set des danses exclues des packs aléatoires
- *   3. AUTO_ANIMATION_DEFINITIONS    — Entrées statiques (générées, mais hardcodées pour
- *                                      pouvoir commenter/désactiver facilement une ligne)
- *   4. ANIMATION_DEFINITIONS         — Export final = MANUAL + AUTO
+ * Pour désactiver temporairement une animation : commenter son bloc { ... }.
  */
 
 export interface AnimationDefinition {
@@ -21,7 +15,7 @@ export interface AnimationDefinition {
   duration?: number;           // Durée indicative en secondes
 }
 
-export const MANUAL_ANIMATION_DEFINITIONS: AnimationDefinition[] = [
+export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   // ── POSES DE BASE & REPOS ──────────────────────────────────────────────────
   {
     id: 't_pose',
@@ -394,41 +388,9 @@ export const MANUAL_ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['abs_workout', 'situp'],
     tags: ['fitness', 'workout', 'laying', 'bed'],
     defaultRotYOffset: 0,
-  }
-];
+  },
 
-// Animations explicitement désactivées ou exclues des packs aléatoires (ex: endings/footwork incomplets)
-export const DISABLED_DANCES_PATHS = new Set([
-  'animations/dances/anim_breakdance_ending_1.glb',
-  'animations/dances/anim_breakdance_ending_2.glb',
-  'animations/dances/anim_breakdance_ending_3.glb',
-  'animations/dances/anim_breakdance_footwork_1.glb',
-  'animations/dances/anim_breakdance_footwork_2.glb',
-  'animations/dances/anim_breakdance_footwork_3.glb',
-  'animations/dances/anim_breakdance_footwork_to_freeze.glb',
-  'animations/dances/anim_breakdance_footwork_to_idle.glb',
-  'animations/dances/anim_breakdance_ready.glb',
-  'animations/dances/anim_breakdance_ready_2.glb',
-  'animations/dances/anim_breakdance_ready_3.glb',
-  'animations/dances/anim_breakdance_uprock.glb',
-  'animations/dances/anim_breakdance_uprock_2.glb',
-  'animations/dances/anim_breakdance_uprock_to_ground.glb',
-  'animations/dances/anim_breakdance_uprock_to_ground_2.glb',
-  'animations/dances/anim_breakdance_uprock_var_1.glb',
-  'animations/dances/anim_breakdance_uprock_var_1_end.glb',
-  'animations/dances/anim_breakdance_uprock_var_1_start.glb',
-  'animations/dances/anim_breakdance_uprock_var_2.glb',
-  'animations/dances/anim_brooklyn_uprock.glb',
-  'animations/dances/anim_jazz_dancing_4.glb',
-  'animations/dances/anim_breakdance_1990_3.glb',
-]);
-
-/**
- * AUTO_ANIMATION_DEFINITIONS — Entrées statiques hardcodées (ex-générées dynamiquement).
- * Commenter une ligne = exclure temporairement l'animation du système.
- * Tags attribués selon le dossier d'origine et le nom de fichier.
- */
-export const AUTO_ANIMATION_DEFINITIONS: AnimationDefinition[] = [
+  // ── AUTO (statiques — commenter un bloc pour désactiver temporairement) ──
   {
     id: 'miley_armature_01_rightward_movement_after_dodge',
     path: 'animations/combat/miley_armature_01_rightward_movement_after_dodge.glb',
@@ -5742,9 +5704,4 @@ export const AUTO_ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     tags: ['yoga', 'fitness', 'pose'],
     duration: 14.3,
   },
-];
-
-export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
-  ...MANUAL_ANIMATION_DEFINITIONS,
-  ...AUTO_ANIMATION_DEFINITIONS,
 ];
