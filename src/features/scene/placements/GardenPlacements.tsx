@@ -13,6 +13,8 @@ import { Rebound } from '../items/Rebound';
 import { Vatterso20562909 } from '../items/Vatterso20562909';
 import { RobinBird } from '../items/RobinBird';
 import { ShibaInu } from '../items/ShibaInu';
+import { FemaleAnatomyBones } from '../items/FemaleAnatomyBones';
+import { FemaleAnatomyMuscles } from '../items/FemaleAnatomyMuscles';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
@@ -62,6 +64,14 @@ export function GardenPlacements() {
         {/* Mangeoire à oiseaux sous le balcon */}
         <group position={[95, 214, -165]} userData={{ animUnit: true, skipMerge: true, itemName: 'Mangeoire à Oiseaux' }}>
           <BirdFeeder item={stub('bird-feeder')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+
+        {/* Statues anatomiques (Chera - Squelette & Muscles) */}
+        <group position={[30, 0, -220]} rotation={[0, Math.PI / 4, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Anatomie Féminine (Squelette)' }}>
+          <FemaleAnatomyBones item={{} as any} actionState={{}} onSize={() => {}} />
+        </group>
+        <group position={[30, 0, -280]} rotation={[0, Math.PI / 4, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Anatomie Féminine (Muscles)' }}>
+          <FemaleAnatomyMuscles item={{} as any} actionState={{}} onSize={() => {}} />
         </group>
       </MergedStaticGroup>
 
