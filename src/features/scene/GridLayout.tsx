@@ -1,9 +1,11 @@
 /**
- * GridLayout.tsx — Vue inventaire 3D en étagère / grille verticale.
+ * GridLayout.tsx — Vue inventaire 3D en vitrine / grille verticale face à la caméra.
  *
- * Affiche les objets 3D de l'inventaire rangés par zone (Couloir, SDB, Cuisine, Salon, Jardin),
- * organisés sous forme de vitrine / grille verticale (en X / Y, orientée face caméra)
- * pour inspecter l'inventaire global d'un seul coup d'œil sans collision avec l'appartement.
+ * Affiche les objets 3D de l'appartement classés par zone (Couloir, SDB, Cuisine, Salon, Jardin).
+ * - Exclut les PNJ (Lara, XBot, etc.) et les animaux (Shiba, Robin, etc.)
+ * - Exclut les perruques
+ * - Normalise les objets 3D et applique une source de lumière frontale dédiée
+ *   afin qu'aucun objet ne soit plongé dans l'ombre du dos de l'appartement.
  *
  * Échelle du projet : 1 unité = 1 cm.
  */
@@ -47,20 +49,13 @@ class GridItemErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
 
 // ── Configuration de la grille verticale ──────────────────────────────────────
 
-/** Largeur et hauteur d'une case de rangement (cm) */
 const CELL_W = 100;
-const CELL_H = 90;
-
-/** Nombre de colonnes par zone */
+const CELL_H = 95;
 const COLS_PER_ZONE = 4;
+const ZONE_SPACING_X = 130;
+const TARGET_DISPLAY_SIZE = 60;
 
-/** Espacement horizontal entre les colonnes de zones */
-const ZONE_SPACING_X = 120;
-
-/** Taille maximale de l'objet affiché dans sa case */
-const TARGET_DISPLAY_SIZE = 65;
-
-// ── Définition des Zones principales demandées ─────────────────────────────────
+// ── Définition des Zones ──────────────────────────────────────────────────────
 
 interface ZoneDef {
   id: string;
@@ -103,7 +98,48 @@ const ZONES: ZoneDef[] = [
 ];
 
 /**
- * Classe un item d'inventaire dans l'une des 5 zones réelles
+ * Filtre strict pour exclure les personnages, perruques et animaux
+ */
+function isAllowedInventoryItem(item: InventoryItem): boolean {
+  if (!item.glbPath) return false;
+  const path = item.glbPath.toLowerCase();
+  const id = item.id.toLowerCase();
+  const cat = (item.category || '').toLowerCase();
+  const name = (item.name || '').toLowerCase();
+
+  // Exclure perruques
+  if (cat === 'wigs' || path.includes('wigs') || path.includes('hair') || id.startsWith('hair_')) {
+    return false;
+  }
+
+  // Exclure personnages (Lara, XBot, etc.)
+  if (
+    cat === 'walkers' ||
+    path.includes('characters/') ||
+    id.includes('lara') ||
+    id.includes('xbot') ||
+    id.includes('walker') ||
+    name.includes('lara')
+  ) {
+    return false;
+  }
+
+  // Exclure animaux (Shiba Inu, Robin Bird, etc.)
+  if (
+    id.includes('shiba') ||
+    id.includes('ushiro') ||
+    id.includes('robin') ||
+    name.includes('shiba') ||
+    name.includes('oiseau robin')
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Classe un item d'inventaire dans l'une des 5 zones
  */
 function classifyItem(item: InventoryItem): string {
   const text = `${item.id} ${item.name} ${item.notes ?? ''} ${item.category}`.toLowerCase();
@@ -115,9 +151,9 @@ function classifyItem(item: InventoryItem): string {
     text.includes('exterieur') ||
     text.includes('terrasse') ||
     text.includes('balcon') ||
-    text.includes('oiseau') ||
     text.includes('altappen') ||
     text.includes('vatterso') ||
+    text.includes('mangeoire') ||
     item.category === 'garden' ||
     item.category === 'outdoor'
   ) {
@@ -194,7 +230,7 @@ function classifyItem(item: InventoryItem): string {
     return 'cuisine';
   }
 
-  // 5. Salon / Séjour (par défaut : mobilier de séjour, bureau, tech, déco, literie)
+  // 5. Salon / Séjour (par défaut)
   return 'salon';
 }
 
@@ -215,19 +251,39 @@ function GridItemInner({ item, position }: GridItemProps) {
     clone.rotation.set(0, 0, 0);
     clone.scale.set(1, 1, 1);
 
-    // Calculer la bounding box brute
+    // Activer ombres et s'assurer que les matériaux ne sont pas transparents par erreur
+    clone.traverse((child: any) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        if (child.material) {
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach((m: any) => {
+            // Empêcher l'invisibilité des matériaux transparents sans map
+            if (m.transparent && !m.map && !m.alphaMap && m.opacity < 0.15) {
+              m.opacity = 1;
+              m.transparent = false;
+            }
+          });
+        }
+      }
+    });
+
+    // Bounding box locale réelle
+    clone.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(clone);
     const size = box.getSize(new THREE.Vector3());
 
-    // Si le modèle est en mètres (< 3), le convertir en centimètres
+    // Si le modèle est en mètres (< 5 cm dans la box brute), le convertir en centimètres
     const rawMax = Math.max(size.x, size.y, size.z);
-    if (rawMax > 0 && rawMax < 4) {
+    if (rawMax > 0 && rawMax < 5) {
       clone.scale.setScalar(100);
+      clone.updateMatrixWorld(true);
       box.setFromObject(clone);
       box.getSize(size);
     }
 
-    // Centrer géométriquement l'objet au milieu de sa case (X=0, Y=0, Z=0)
+    // Centrer l'objet dans la case (X=0, Y=0, Z=0)
     const center = box.getCenter(new THREE.Vector3());
     clone.position.sub(center);
 
@@ -258,11 +314,9 @@ function GridItem({ item, position }: GridItemProps) {
 // ── Composant Principal : GridLayout ──────────────────────────────────────────
 
 export function GridLayout() {
-  // Liste des items avec un fichier GLB réel (en excluant les 70+ perruques pour la clarté)
+  // Liste filtrée sans perso, perruques, ni animaux
   const items = useMemo(() => {
-    return INVENTORY.filter(
-      (item) => !!item.glbPath && !item.glbPath.includes('wigs') && item.category !== 'wigs'
-    );
+    return INVENTORY.filter(isAllowedInventoryItem);
   }, []);
 
   // Regroupement par zone
@@ -302,13 +356,20 @@ export function GridLayout() {
     });
   }, [groupedZones]);
 
-  // Largeur totale pour centrer la vitrine en face du salon
+  // Centrage de la vitrine au-dessus et devant la scène
   const totalWidth = zoneLayouts.reduce((acc, z) => Math.max(acc, z.startX + z.width), 0);
-  const offsetX = -totalWidth / 2 + 158; // Centré autour de ROOM_W / 2 (~158 cm)
-  const baseZ = -220; // Situé en retrait devant la baie vitrée / jardin
+  const offsetX = -totalWidth / 2 + 158; // centré par rapport à la pièce (ROOM_W = 316)
+  const baseZ = -220; // Devant le jardin face caméra
 
   return (
     <group position={[offsetX, 40, baseZ]}>
+      {/* 💡 Lumière directionnelle frontale dédiée à la vitrine pour éclairer parfaitement tous les objets */}
+      <directionalLight
+        position={[totalWidth / 2, 400, 500]}
+        intensity={2.2}
+        color="#ffffff"
+      />
+
       {zoneLayouts.map((zone) => {
         const rows = Math.ceil(zone.items.length / zone.cols);
         const totalHeight = rows * CELL_H;
@@ -329,7 +390,7 @@ export function GridLayout() {
               {`${zone.emoji} ${zone.label} (${zone.items.length})`}
             </Text>
 
-            {/* 📋 Panneau d'arrière-plan de la zone */}
+            {/* 📋 Panneau d'arrière-plan semi-transparent */}
             <mesh
               position={[centerX, totalHeight / 2 - CELL_H / 2, -15]}
               receiveShadow
@@ -338,45 +399,45 @@ export function GridLayout() {
               <meshStandardMaterial
                 color={zone.color}
                 transparent
-                opacity={0.12}
+                opacity={0.16}
                 roughness={0.8}
                 metalness={0.1}
               />
             </mesh>
 
-            {/* Cadre fin délimitant la section */}
+            {/* Cadre délimitant */}
             <lineSegments position={[centerX, totalHeight / 2 - CELL_H / 2, -14]}>
               <edgesGeometry args={[new THREE.PlaneGeometry(zone.width + 20, totalHeight + 20)]} />
-              <lineBasicMaterial color={zone.color} transparent opacity={0.4} />
+              <lineBasicMaterial color={zone.color} transparent opacity={0.6} />
             </lineSegments>
 
-            {/* 📦 Cellules et objets de la grille */}
+            {/* 📦 Cellules et objets */}
             {zone.items.map((item, idx) => {
               const col = idx % zone.cols;
               const row = Math.floor(idx / zone.cols);
 
-              // Grille verticale : X en largeur, Y en hauteur (de haut en bas)
+              // X en largeur, Y en hauteur (du haut vers le bas)
               const cellX = zone.startX + col * CELL_W;
               const cellY = (rows - 1 - row) * CELL_H;
 
               return (
                 <group key={item.id} position={[cellX, cellY, 0]}>
-                  {/* Fond de case / étagère */}
+                  {/* Fond de case */}
                   <mesh position={[0, 0, -10]}>
                     <planeGeometry args={[CELL_W - 12, CELL_H - 12]} />
-                    <meshBasicMaterial color="#ffffff" transparent opacity={0.05} />
+                    <meshBasicMaterial color="#ffffff" transparent opacity={0.06} />
                   </mesh>
 
                   {/* Tablette d'étagère sous l'objet */}
                   <mesh position={[0, -CELL_H / 2 + 8, 0]}>
                     <boxGeometry args={[CELL_W - 10, 2, 35]} />
-                    <meshStandardMaterial color={zone.color} roughness={0.5} />
+                    <meshStandardMaterial color={zone.color} roughness={0.4} />
                   </mesh>
 
-                  {/* Modèle 3D centré dans la case */}
+                  {/* Modèle 3D centré */}
                   <GridItem item={item} position={[0, 0, 5]} />
 
-                  {/* Nom de l'objet sous la case */}
+                  {/* Nom de l'objet */}
                   <Text
                     position={[0, -CELL_H / 2 + 2, 18]}
                     fontSize={6.5}
