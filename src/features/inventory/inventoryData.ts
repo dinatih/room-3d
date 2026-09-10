@@ -196,6 +196,7 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'lamp-ola',         name: 'Lampe OLA',                      brand: 'IKEA',     category: 'lighting',     qty: 1, dims: { w: 30,  d: 30,  h: 120 }, notes: 'Sur pied, meuble TV', glbPath: 'items/lamp-ola/lamp-ola.glb', photos: ['items/lamp-ola/lamp-ola_3d_preview.png'] },
 
   { id: 'potted-palm',      name: 'Palmier en pot',                 brand: '',         category: 'decor',     qty: 1, dims: { w: 60,  d: 60,  h: 150 }, notes: 'Jardin, entre canapé et desserte', glbPath: 'items/plant-monstera/potted_palm.glb', photos: ['items/plant-monstera/potted_palm_3d_preview.png'] },
+  { id: 'yucca-elephantipes', name: 'Yucca Elephantipes en pot',    brand: 'IKEA',     category: 'decor',     qty: 1, dims: { w: 50,  d: 50,  h: 140 }, notes: 'Jardin, derrière la baignoire', glbPath: 'items/plant-yucca/yucca_elephantipes.glb' },
   { id: 'palm-leaf',        name: 'Feuille de palmier artificielle', brand: '',        category: 'decor',     qty: 1, dims: { w: 40,  d: 40,  h: 80  }, notes: 'Plante artificielle Palm_Leaf1', glbPath: 'items/plant-monstera/plant-monstera.glb', photos: ['items/plant-monstera/plant-monstera_3d_preview.png'] },
   { id: 'jogging-suit',     name: 'Jogging suit',                   brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 20,  h: 170 }, notes: 'Jardin, près de la baignoire', glbPath: 'characters/clothing/realistic_human_cloths.glb' },
 

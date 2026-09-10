@@ -8,6 +8,7 @@ import { ArmlessSofa } from '../items/ArmlessSofa';
 import { Bathtub } from '../items/Bathtub';
 import { ChestBench } from '../items/ChestBench';
 import { PottedPalm } from '../items/PottedPalm';
+import { PottedYucca } from '../items/PottedYucca';
 import { BirdFeeder } from '../items/BirdFeeder';
 import { Rebound } from '../items/Rebound';
 import { Vatterso20562909 } from '../items/Vatterso20562909';
@@ -44,6 +45,11 @@ export function GardenPlacements() {
         {/* Baignoire Balnéo */}
         <group position={[120, 0, -300]} rotation={[0, 1, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Baignoire Balnéo' }}>
           <Bathtub item={{} as any} actionState={{}} onSize={() => {}} />
+        </group>
+
+        {/* Yucca Elephantipes en pot (derrière la baignoire) */}
+        <group position={[105, 0, -355]} rotation={[0, 0.4, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Yucca Elephantipes' }}>
+          <PottedYucca item={{} as any} actionState={{}} onSize={() => {}} />
         </group>
 
         {/* Palmier en pot */}
