@@ -149,6 +149,7 @@ const initialLayers: LayerState = {
   debugFurnitureCollisions: false,
   thoughtBubble: true,
   fpvHeadBobbing: false,
+  inventoryGrid: false,
 };
 
 const initialExtraStates: Record<string, boolean> = {

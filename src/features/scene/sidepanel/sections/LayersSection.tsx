@@ -128,6 +128,7 @@ export function LayersSection({
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
 
+      {layerBtn('orange', 'Grille inventaire 📦', 'inventoryGrid')}
       {layerBtn('teal',   'Grille 🌐',     'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
       {layerBtn('yellow', 'Mesures réelles 📐 (U)', 'measuredDimensions')}

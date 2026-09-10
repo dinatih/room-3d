@@ -47,6 +47,7 @@ import { MeasurementTool }            from './MeasurementTool';
 import { RealMeasurementsLayer }      from './RealMeasurementsLayer';
 import { AppConsole }                 from '@features/ui/AppConsole';
 import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
+import { GridLayout }            from '@features/scene/GridLayout';
 
 // The inventory pulls in a second R3F canvas, its GLTF loaders and a large
 // catalogue. Do not parse it until the user explicitly opens the inventory.
@@ -452,6 +453,11 @@ export function Studio() {
 
         {layers.wallEdges   && <EdgeHoverRaycaster />}
         {layers.grid        && <GridLayer depthTest={layers.gridDepth} />}
+        {layers.inventoryGrid && (
+          <Suspense fallback={null}>
+            <GridLayout />
+          </Suspense>
+        )}
         {layers.lights      && <LightHelpers />}
         {layers.plan        && <FloorPlan />}
         {cameraMode === 'top' && measurementActive && <MeasurementTool />}

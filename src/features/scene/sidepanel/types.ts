@@ -142,6 +142,7 @@ export interface LayerState {
   characterWireframe?: boolean;
   thoughtBubble?: boolean;
   fpvHeadBobbing?: boolean;
+  inventoryGrid?: boolean;
 }
 
 export type LidarMode = 0 | 1 | 2 | 3;
