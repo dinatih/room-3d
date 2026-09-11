@@ -292,13 +292,15 @@ const sortedCharacters = [...CHARACTERS].sort((a, b) => {
 
 sortedCharacters.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
-    const photos = char.path.includes('xbot')
+    const photos = char.id === 'sci-fi-girl'
+      ? ['characters/sci_fi_girl/sci_fi_girl_preview.png']
+      : char.path.includes('xbot')
       ? ['characters/xbot/Xbot_official_3d_preview.png']
       : (char.id === 'inyeong' ? ['characters/inyeong/nitro_anim_inyeong_3d_preview.png'] : undefined);
     INVENTORY.push({
       id: char.id,
       name: char.name,
-      brand: char.id === 'xbot' || char.id === 'xbot_studio' ? 'Mixamo' : (char.id === 'inyeong' ? 'Nitro' : 'Lara Croft Style'),
+      brand: char.id === 'xbot' || char.id === 'xbot_studio' ? 'Mixamo' : (char.id === 'inyeong' ? 'Nitro' : (char.id === 'sci-fi-girl' ? 'Fadly Romdhani' : 'Lara Croft Style')),
       category: 'walkers',
       qty: 1,
       dims: { w: char.id === 'inyeong' ? 57 : 45, d: char.id === 'inyeong' ? 78 : 25, h: char.height },
@@ -306,6 +308,8 @@ sortedCharacters.forEach(char => {
       ...(photos ? { photos } : {}),
       notes: char.id === 'inyeong'
         ? 'Personnage animé : Inyeong en combinaison de vol Nitro avec casque et visière.'
+        : char.id === 'sci-fi-girl'
+        ? 'Personnage Sci-Fi Girl v02 adapté en T-Pose Mixamo (Fadly Romdhani).'
         : `Personnage : ${char.name}.`
     });
   }
@@ -333,18 +337,6 @@ INVENTORY.push({
   glbPath: 'characters/robin/robin.glb',
   photos: ['characters/robin/robin_3d_preview.png'],
   notes: `Personnage : Oiseau Robin.`
-});
-
-INVENTORY.push({
-  id: 'sci-fi-girl',
-  name: 'Sci-Fi Girl (Inyeong)',
-  brand: 'Fadly Romdhani',
-  category: 'walkers',
-  qty: 1,
-  dims: { w: 45, d: 25, h: 170 },
-  glbPath: 'characters/sci_fi_girl/sci_fi_girl.glb',
-  photos: ['characters/sci_fi_girl/sci_fi_girl_preview.png'],
-  notes: 'Personnage Sci-Fi Girl v02 avec cycle de marche walkcycle (Fadly Romdhani).'
 });
 
 export interface WigItem {

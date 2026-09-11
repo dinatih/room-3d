@@ -514,7 +514,7 @@ export function InventoryPreview({
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
   const isWalkerItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
-  const isHumanWalker = isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird', 'sci-fi-girl'].includes(item.id);
+  const isHumanWalker = isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id);
   const animControllerBottom = hideFooter ? 6 : 42;
   const datumBannerBottom = isWalkerItem ? (animControllerBottom + 58) : 8;
   const debugUrlsBottom = isWalkerItem ? (animControllerBottom + 58) : (hideFooter ? 4 : 40);
@@ -968,7 +968,7 @@ export function InventoryPreview({
                     </div>
                   )}
 
-                  {!['ushiro', 'shiba-inu', 'robin-bird', 'sci-fi-girl'].includes(item.id) && (
+                  {!['ushiro', 'shiba-inu', 'robin-bird', 'sci-fi-girl', 'inyeong', 'xbot'].includes(item.id) && (
                     <>
                       <select value={actionStates.previewHaircut || 'original'} onChange={e => setActionStates(s => ({ ...s, previewHaircut: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
                         <option value="original">Coupe d'origine</option>
