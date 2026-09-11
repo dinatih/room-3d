@@ -34,12 +34,12 @@ export function Metod50205532({ onSize, ...props }: SceneItemProps) {
     if (shelfRef.current) {
       shelfRef.current.position.set(0, shelfY, 0.5);
     }
-    // Plaque / montant vertical à 11 cm du bord droit, du bas jusqu'à l'étagère
+    // Plaque / montant vertical à 11 cm du bord droit (X négatif face au meuble), du bas jusqu'à l'étagère
     if (dividerRef.current) {
       const bottomY = 1.8;
       const topY = shelfY - 0.9;
       const divHeight = topY - bottomY;
-      dividerRef.current.position.set(halfW - 11, bottomY + divHeight / 2, 0.5);
+      dividerRef.current.position.set(-(halfW - 11), bottomY + divHeight / 2, 0.5);
     }
     onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene, onSize]);
@@ -53,7 +53,7 @@ export function Metod50205532({ onSize, ...props }: SceneItemProps) {
         <meshStandardMaterial color="#f0f0f0" roughness={0.35} metalness={0.05} />
       </mesh>
       {/* Plaque / montant vertical à 11 cm du bord droit du meuble, du bas jusqu'à l'étagère */}
-      <mesh ref={dividerRef} position={[9, 30.45, 0.5]}>
+      <mesh ref={dividerRef} position={[-9, 30.45, 0.5]}>
         <boxGeometry args={[1.8, 57.3, 35]} />
         <meshStandardMaterial color="#f0f0f0" roughness={0.35} metalness={0.05} />
       </mesh>
