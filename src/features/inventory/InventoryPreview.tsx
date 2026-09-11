@@ -855,6 +855,7 @@ export function InventoryPreview({
                                 isPaused: false,
                                 walkerAnim: undefined
                               }));
+                              useAnimPreviewStore.getState().play();
                             }
                           }}
                           style={{
@@ -890,6 +891,7 @@ export function InventoryPreview({
                                 isPaused: false,
                                 walkerAnim: undefined
                               }));
+                              useAnimPreviewStore.getState().play();
                             }
                           }}
                           style={{ padding: '3px 6px', fontSize: 10, background: '#ffc107', color: '#000', border: '1px solid #d39e00', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}
@@ -941,7 +943,10 @@ export function InventoryPreview({
 
                           <button
                             type="button"
-                            onClick={() => setActionStates(s => ({ ...s, duoAnimDef: undefined, walkerAnim: 'idle' }))}
+                            onClick={() => {
+                              setActionStates(s => ({ ...s, duoAnimDef: undefined, walkerAnim: 'idle' }));
+                              useAnimPreviewStore.getState().play();
+                            }}
                             style={{ padding: '2px 5px', fontSize: 10, background: '#6c757d', border: '1px solid #545b62', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
                             title="Quitter le mode duo"
                           >

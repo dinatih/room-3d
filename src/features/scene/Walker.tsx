@@ -135,6 +135,8 @@ function InternalWalker(props: WalkerProps) {
             animations={char.charAnims}
             variant={char.variant}
             isNPC={!isActive}
+            isDuoRoleB={isDuoRoleB}
+            duoAnimDef={props.duoAnimDef}
             npcPosition={char.pos}
             npcRotationY={char.rot}
             sittingScene={char.sittingScene}

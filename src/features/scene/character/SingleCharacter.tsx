@@ -60,7 +60,9 @@ export function SingleCharacter({
   npcRotationY = 0,
   sittingScene,
   previewPosition,
-  previewRotationY
+  previewRotationY,
+  duoAnimDef,
+  isDuoRoleB = false,
 }: SingleCharacterProps) {
   const [localHaircut, setLocalHaircut] = useState<string>('original');
   const haircut = isPreview && previewHaircut ? previewHaircut : localHaircut;
@@ -626,20 +628,32 @@ export function SingleCharacter({
     }
 
     if (isPreview) {
-      if (isTPose) {
+      if (isDuoRoleB) {
+        // En mode Duo, le Rôle B suit STRICTEMENT l'horloge partagée pilotée par le Rôle A
+        if (activeActionName.current && actions[activeActionName.current]) {
+          const actB = actions[activeActionName.current];
+          const clipB = actB.getClip();
+          const store = useAnimPreviewStore.getState();
+          if (clipB && clipB.duration > 0) {
+            actB.time = store.currentTime % clipB.duration;
+            actB.paused = false;
+            mixer.update(0);
+          }
+        }
+      } else if (isTPose) {
         useAnimPreviewStore.getState().setClipInfo('T-Pose', 0, true);
       } else if (activeActionName.current && actions[activeActionName.current]) {
         const act = actions[activeActionName.current];
         const clip = act.getClip();
         if (clip && clip.duration > 0) {
           const store = useAnimPreviewStore.getState();
-          const cleanName = activeActionName.current.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || activeActionName.current;
+          const cleanName = duoAnimDef
+            ? duoAnimDef.label
+            : (activeActionName.current.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || activeActionName.current);
           store.setClipInfo(cleanName, clip.duration, false);
 
           if (store.isPlaying && !store.isScrubbing) {
-            // Seul le personnage actif ou le Rôle A avance l'horloge partagée pour éviter la double incrémentation en Duo
-            const isDriver = isActive || !isNPC;
-            const newTime = isDriver ? store.tick(delta) : store.currentTime;
+            const newTime = store.tick(delta);
             act.time = newTime;
           } else {
             act.time = store.currentTime;

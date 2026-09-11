@@ -90,7 +90,7 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
       duration,
       fps,
       isTPose,
-      currentTime: (nameChanged || isTPose) ? 0 : Math.min(current.currentTime, duration),
+      currentTime: isTPose ? 0 : (nameChanged && !current.isScrubbing && current.isPlaying ? 0 : Math.min(current.currentTime, duration)),
     });
   },
 

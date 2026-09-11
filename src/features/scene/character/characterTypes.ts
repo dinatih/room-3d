@@ -1,6 +1,7 @@
 import type * as THREE from 'three';
 import type { LaraVariant } from '../LaraVariants';
 import type { CharacterConfig } from '../walkerConfig';
+import type { DuoAnimationDef } from '../ai/duoAnimations';
 
 export interface WalkerProps {
   isPreview?: boolean;
@@ -12,6 +13,9 @@ export interface WalkerProps {
   isPaused?: boolean;
   previewPosition?: [number, number, number];
   previewRotationY?: number;
+  duoAnimDef?: DuoAnimationDef;
+  duoPartnerId?: string;
+  isDuoRoleB?: boolean;
 }
 
 export interface SingleCharacterProps extends WalkerProps {
