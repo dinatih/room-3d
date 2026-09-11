@@ -539,21 +539,12 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
           }
 
           if (B_src && P_src) {
-            // For finger bones: recompose B from parent * restLocal for both src and tgt.
-            // This transfers only the pure local delta, fixing hand/finger mismatch
-            // when Xbot bind pose fingers differ from Lara T-pose fingers.
-            const isFingerBone = /hand(thumb|index|middle|ring|pinky)/i.test(baseName);
+            const B_tgt = bone.restWorldQuaternion;
             const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
               ? bone.parent.restWorldQuaternion
               : new THREE.Quaternion();
-            const B_tgt = isFingerBone
-              ? P_tgt.clone().multiply(bone.restLocalQuaternion)
-              : bone.restWorldQuaternion;
-            const B_src_eff = isFingerBone && animBones[baseName]
-              ? P_src.clone().multiply(animBones[baseName].restLocalQuaternion)
-              : B_src;
             const P_tgt_inv = P_tgt.clone().invert();
-            const B_src_inv = B_src_eff.clone().invert();
+            const B_src_inv = B_src.clone().invert();
 
             for (let j = 0; j < clone.values.length / 4; j++) {
               const srcLocalQ = new THREE.Quaternion(
