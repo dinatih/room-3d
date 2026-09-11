@@ -341,7 +341,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           {(item as any).notes || "Aucune note descriptive disponible pour cet élément."}
         </div>
 
-        {!isStorage && !isZone && (item as InventoryItem).category === 'walkers' && item.id !== 'ushiro' && item.id !== 'robin-bird' && (
+        {!isStorage && !isZone && (item as InventoryItem).category === 'walkers' && item.id !== 'ushiro' && item.id !== 'robin-bird' && item.id !== 'nitro-inyeong' && (
           <>
             <hr className="inventory-detail-divider" />
             <div className="d-flex justify-content-between align-items-center mb-2">

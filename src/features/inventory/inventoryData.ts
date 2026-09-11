@@ -331,6 +331,18 @@ INVENTORY.push({
   notes: `Personnage : Oiseau Robin.`
 });
 
+INVENTORY.push({
+  id: 'nitro-inyeong',
+  name: 'Inyeong (Nitro)',
+  brand: 'Personnage',
+  category: 'walkers',
+  qty: 1,
+  dims: { w: 57, d: 78, h: 165 },
+  glbPath: 'characters/inyeong/nitro_anim_inyeong.glb',
+  photos: ['characters/inyeong/nitro_anim_inyeong_3d_preview.png'],
+  notes: 'Personnage animé : Inyeong en combinaison de vol Nitro avec casque et visière.'
+});
+
 export interface WigItem {
   id: string;
   name: string;

@@ -498,7 +498,7 @@ export function InventoryPreview({
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
   const isWalkerItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
-  const isHumanWalker = isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id);
+  const isHumanWalker = isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird', 'nitro-inyeong'].includes(item.id);
   const animControllerBottom = hideFooter ? 6 : 42;
   const datumBannerBottom = isWalkerItem ? (animControllerBottom + 58) : 8;
   const debugUrlsBottom = isWalkerItem ? (animControllerBottom + 58) : (hideFooter ? 4 : 40);
