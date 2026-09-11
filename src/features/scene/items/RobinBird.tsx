@@ -152,14 +152,18 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
         const store = useAnimPreviewStore.getState();
         store.setClipInfo(`Robin ${clip.name}`, clip.duration, false);
         const action = mixerRef.current.clipAction(clip);
+        const animDelta = delta * (store.speed || 1);
         if (store.isPlaying && !store.isScrubbing) {
-          const nextTime = store.tick(delta);
-          action.time = nextTime;
+          action.paused = false;
+          mixerRef.current.update(animDelta);
+          store.setCurrentTime(action.time % clip.duration);
         } else {
+          action.setEffectiveWeight(1);
+          (action as any)._fadeDuration = 0;
+          (action as any)._weight = 1;
           action.time = store.currentTime;
+          mixerRef.current.update(0);
         }
-        action.paused = false;
-        mixerRef.current.update(0);
       }
       invalidate();
       return;

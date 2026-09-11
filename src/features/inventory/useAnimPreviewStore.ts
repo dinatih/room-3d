@@ -18,6 +18,7 @@ export interface AnimPreviewState {
   setSpeed: (speed: number) => void;
   setLooping: (loop: boolean) => void;
   setScrubbing: (scrubbing: boolean) => void;
+  setCurrentTime: (time: number) => void;
   seekToTime: (time: number) => void;
   seekToFrame: (frame: number) => void;
   stepFrame: (deltaFrames: number) => void;
@@ -44,6 +45,12 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
   setSpeed: (speed: number) => set({ speed }),
   setLooping: (isLooping: boolean) => set({ isLooping }),
   setScrubbing: (isScrubbing: boolean) => set({ isScrubbing }),
+
+  setCurrentTime: (time: number) => {
+    const { isScrubbing } = get();
+    if (isScrubbing) return;
+    set({ currentTime: time });
+  },
 
   seekToTime: (time: number) => {
     const { duration } = get();
