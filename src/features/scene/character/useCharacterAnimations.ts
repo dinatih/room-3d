@@ -43,6 +43,12 @@ export function cacheRetargetedClip(key: string, clip: THREE.AnimationClip) {
   _retargetCache[key] = clip;
 }
 
+export function clearRetargetCache() {
+  for (const key of Object.keys(_retargetCache)) {
+    delete _retargetCache[key];
+  }
+}
+
 export interface UseCharacterAnimationsProps {
   id: string;
   scene: THREE.Group;
@@ -162,8 +168,6 @@ export function useCharacterAnimations({
       const action = mixer.clipAction(finalClip);
       actionsRef.current[clip.name] = action;
       action.enabled = true;
-      action.play();
-      action.setEffectiveWeight(0);
     });
 
     return () => {

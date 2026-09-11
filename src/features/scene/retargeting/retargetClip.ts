@@ -512,8 +512,12 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
                 // Target lacks clavicle. Find the clavicle track in the source animation.
                 const clavicleSourceNode = animBones[baseName].bone.parent;
                 if (clavicleSourceNode) {
-                  const clavicleTrackName = `${clavicleSourceNode.name}.quaternion`;
-                  parentBakeTrack = rawClip.tracks.find(t => t.name === clavicleTrackName) || null;
+                  const sNodeName = clavicleSourceNode.name.toLowerCase().replace(/[:_]/g, '');
+                  parentBakeTrack = rawClip.tracks.find(t => {
+                    if (!t.name.endsWith('.quaternion')) return false;
+                    const bName = t.name.split('.')[0].toLowerCase().replace(/[:_]/g, '');
+                    return bName === sNodeName || bName.endsWith(baseName === 'LeftArm' ? 'leftshoulder' : 'rightshoulder');
+                  }) || null;
                   if (parentBakeTrack) {
                     const clavicleRestLocal = clavicleSourceNode.quaternion.clone(); // Rest local rotation
                     parentBakeRestWorld = P_src.clone().multiply(clavicleRestLocal.invert());
@@ -524,8 +528,12 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               // Target lacks Spine1. Find the Spine1 track in the source animation.
               const spine1SourceNode = animBones[baseName].bone.parent;
               if (spine1SourceNode) {
-                const spine1TrackName = `${spine1SourceNode.name}.quaternion`;
-                parentBakeTrack = rawClip.tracks.find(t => t.name === spine1TrackName) || null;
+                const sNodeName = spine1SourceNode.name.toLowerCase().replace(/[:_]/g, '');
+                parentBakeTrack = rawClip.tracks.find(t => {
+                  if (!t.name.endsWith('.quaternion')) return false;
+                  const bName = t.name.split('.')[0].toLowerCase().replace(/[:_]/g, '');
+                  return bName === sNodeName || bName.endsWith('spine1');
+                }) || null;
                 if (parentBakeTrack) {
                   const spine1RestLocal = spine1SourceNode.quaternion.clone();
                   parentBakeRestWorld = P_src.clone().multiply(spine1RestLocal.invert());
