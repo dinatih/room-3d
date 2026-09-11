@@ -508,10 +508,6 @@ export function InventoryPreview({
 
   const isWalkerItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
   const isHumanWalker = isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id);
-  const currentAnimOpt = isHumanWalker ? WALKER_ANIM_OPTIONS.find(a => a.value === (actionStates.walkerAnim || 'idle')) : null;
-  const currentAnimLabel = actionStates.walkerAnim === 'tpose'
-    ? 'T-Pose'
-    : (currentAnimOpt ? currentAnimOpt.label : (actionStates.walkerAnim || 'Idle'));
 
   return (
     <div className="inventory-preview-container" style={{ width }}>
@@ -699,35 +695,50 @@ export function InventoryPreview({
                   </div>
 
                   {isHumanWalker ? (
-                    <button
-                      onClick={() => {
-                        setShowAnimSelector(v => !v);
-                        if (!showAnimSelector) {
-                          setActionStates(s => ({ ...s, duoAnimDef: undefined }));
-                        }
-                      }}
-                      style={{
-                        padding: '4px 8px',
-                        fontSize: 10,
-                        fontWeight: 'bold',
-                        background: showAnimSelector ? '#c82333' : 'rgba(0,0,0,0.7)',
-                        border: `1px solid ${showAnimSelector ? '#dc3545' : '#555'}`,
-                        borderRadius: 4,
-                        color: '#fff',
-                        cursor: 'pointer',
-                        maxWidth: 130,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 4
-                      }}
-                      title={typeof currentAnimLabel === 'string' ? currentAnimLabel : undefined}
-                    >
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        🎬 {currentAnimLabel}
-                      </span>
-                      <span style={{ fontSize: 8, opacity: 0.8 }}>{showAnimSelector ? '▲' : '▼'}</span>
-                    </button>
+                    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                      <select
+                        value={actionStates.walkerAnim || 'idle'}
+                        onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value, duoAnimDef: undefined }))}
+                        style={{
+                          padding: '2px 4px',
+                          fontSize: 10,
+                          background: 'rgba(0,0,0,0.7)',
+                          border: '1px solid #555',
+                          borderRadius: 4,
+                          color: '#fff',
+                          outline: 'none',
+                          maxWidth: 130
+                        }}
+                        title="Sélectionner une animation"
+                      >
+                        {WALKER_ANIM_OPTIONS.map(opt => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAnimSelector(v => !v);
+                          if (!showAnimSelector) {
+                            setActionStates(s => ({ ...s, duoAnimDef: undefined }));
+                          }
+                        }}
+                        style={{
+                          padding: '2px 5px',
+                          fontSize: 10,
+                          background: showAnimSelector ? '#c82333' : 'rgba(0,0,0,0.6)',
+                          border: `1px solid ${showAnimSelector ? '#dc3545' : '#777'}`,
+                          borderRadius: 4,
+                          color: '#fff',
+                          cursor: 'pointer'
+                        }}
+                        title="Recherche & filtres d'animations"
+                      >
+                        🔍
+                      </button>
+                    </div>
                   ) : (
                     <select value={actionStates.walkerAnim || 'idle'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
                       {['ushiro', 'shiba-inu'].includes(item.id) ? (

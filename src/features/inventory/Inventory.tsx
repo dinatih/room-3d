@@ -577,7 +577,9 @@ export function Inventory({
         onClose();
         return;
       }
-      if (isTyping || tag === 'BUTTON') return;
+      const targetEl = e.target as HTMLElement | null;
+      const isInsidePreview = !!targetEl?.closest?.('.inventory-preview-container') || !!targetEl?.closest?.('.inventory-preview-canvas-wrap');
+      if (isTyping || tag === 'BUTTON' || tag === 'SELECT' || isInsidePreview) return;
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setFocusedIndex(i => Math.min(i + 1, navList.length - 1));
