@@ -167,18 +167,18 @@ export function MaillotInyeong({
 
     ctx.clearRect(0, 0, 1024, 1024);
 
-    // Nom "INYEONG" au dos en noir mat avec la police Bebas Neue
+    // Nom "INYEONG" au dos en 2x plus grand (260px) avec la police Bebas Neue
     ctx.fillStyle = '#111111';
-    ctx.font = '700 130px "Bebas Neue", "Impact", "Arial Black", sans-serif';
+    ctx.font = '700 260px "Bebas Neue", "Impact", "Arial Black", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.letterSpacing = '8px';
-    ctx.fillText(String(playerName).toUpperCase(), 512, 210);
+    ctx.letterSpacing = '6px';
+    ctx.fillText(String(playerName).toUpperCase(), 512, 190);
 
     // Numéro imposant style maillot de foot en Bebas Neue
-    ctx.font = '700 520px "Bebas Neue", "Impact", "Arial Black", sans-serif';
+    ctx.font = '700 500px "Bebas Neue", "Impact", "Arial Black", sans-serif';
     ctx.letterSpacing = '0px';
-    ctx.fillText(String(playerNumber), 512, 590);
+    ctx.fillText(String(playerNumber), 512, 630);
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.anisotropy = 8;
