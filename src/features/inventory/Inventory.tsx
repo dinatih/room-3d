@@ -578,8 +578,8 @@ export function Inventory({
         return;
       }
       const targetEl = e.target as HTMLElement | null;
-      const isInsidePreview = !!targetEl?.closest?.('.inventory-preview-container') || !!targetEl?.closest?.('.inventory-preview-canvas-wrap');
-      if (isTyping || tag === 'BUTTON' || tag === 'SELECT' || isInsidePreview) return;
+      const isInsideList = !!targetEl?.closest?.('.inventory-pane-list');
+      if (!isInsideList || isTyping || tag === 'BUTTON' || tag === 'SELECT') return;
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setFocusedIndex(i => Math.min(i + 1, navList.length - 1));
@@ -688,6 +688,7 @@ export function Inventory({
                         className={`inventory-item-row${isSelected ? ' active' : ''}`}
                         onClick={() => {
                           setSelected(target);
+                          setFocusedIndex(navList.indexOf(target));
                           if (isMobile) {
                             setShowMobileModal(true);
                           }
@@ -737,6 +738,7 @@ export function Inventory({
                       className={`inventory-item-row${isSelected ? ' active' : ''}`}
                       onClick={() => {
                         setSelected(target);
+                        setFocusedIndex(navList.indexOf(target));
                         if (isMobile) {
                           setShowMobileModal(true);
                         }
