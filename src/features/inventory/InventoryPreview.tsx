@@ -1,5 +1,5 @@
 import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html, Line, Grid, OrthographicCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
@@ -41,6 +41,12 @@ const glbSizeCache = new Map<string, number>();
 
 function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () => void; onStats?: (s: GlbDebugStats) => void }) {
   const [scene, setScene] = useState<THREE.Group | null>(null);
+  const mixerRef = useRef<THREE.AnimationMixer | null>(null);
+
+  useFrame((_, delta) => {
+    mixerRef.current?.update(delta);
+  });
+
   useEffect(() => {
     const draco = new DRACOLoader(); draco.setDecoderPath('/draco/');
     const loader = new GLTFLoader(); loader.setDRACOLoader(draco);
@@ -77,6 +83,14 @@ function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () =
 
         setScene(gltf.scene);
 
+        if (gltf.animations && gltf.animations.length > 0) {
+          const mixer = new THREE.AnimationMixer(gltf.scene);
+          gltf.animations.forEach(clip => {
+            mixer.clipAction(clip).play();
+          });
+          mixerRef.current = mixer;
+        }
+
         // Compute geometry stats
         let tris = 0;
         let meshes = 0;
@@ -102,6 +116,8 @@ function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () =
     return () => {
       cancelled = true;
       draco.dispose();
+      mixerRef.current?.stopAllAction();
+      mixerRef.current = null;
       setScene(previous => {
         if (previous) disposePreviewScene(previous);
         return null;
@@ -498,7 +514,7 @@ export function InventoryPreview({
   const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
 
   const isWalkerItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
-  const isHumanWalker = isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id);
+  const isHumanWalker = isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird', 'sci-fi-girl'].includes(item.id);
   const animControllerBottom = hideFooter ? 6 : 42;
   const datumBannerBottom = isWalkerItem ? (animControllerBottom + 58) : 8;
   const debugUrlsBottom = isWalkerItem ? (animControllerBottom + 58) : (hideFooter ? 4 : 40);
@@ -952,7 +968,7 @@ export function InventoryPreview({
                     </div>
                   )}
 
-                  {!['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id) && (
+                  {!['ushiro', 'shiba-inu', 'robin-bird', 'sci-fi-girl'].includes(item.id) && (
                     <>
                       <select value={actionStates.previewHaircut || 'original'} onChange={e => setActionStates(s => ({ ...s, previewHaircut: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
                         <option value="original">Coupe d'origine</option>

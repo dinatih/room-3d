@@ -577,8 +577,10 @@ export function SingleCharacter({
       currentAnimClip.current = null;
     }
 
+    const isTPose = target === 'tpose' || target === 'animations/poses_idles/anim_t_pose.glb' || target.endsWith('/anim_t_pose.glb');
+
     let isTemporaryLoadingFallback = false;
-    if (!actions[target] && target.endsWith('.glb')) {
+    if (!isTPose && !actions[target] && target.endsWith('.glb')) {
       loadAndPlayClip(target);
       if (activeActionName.current && actions[activeActionName.current]) {
         target = activeActionName.current;
@@ -588,19 +590,24 @@ export function SingleCharacter({
       isTemporaryLoadingFallback = true;
     }
 
-    const isTPose = target === 'tpose' || target === 'animations/poses_idles/anim_t_pose.glb';
-
     if (isTPose) {
-      if (activeActionName.current && actions[activeActionName.current]) {
-        actions[activeActionName.current].fadeOut(0.15);
+      if (activeActionName.current !== 'tpose') {
+        if (activeActionName.current && actions[activeActionName.current]) {
+          actions[activeActionName.current].stop();
+        }
+        mixer.stopAllAction();
+        activeActionName.current = 'tpose';
       }
-      activeActionName.current = 'tpose';
       scene.traverse((c: any) => {
+        if (c.isSkinnedMesh && c.skeleton) {
+          c.skeleton.pose();
+        }
         if (c.isBone) {
           if (c.userData.restPos) c.position.copy(c.userData.restPos);
           if (c.userData.restQuat) c.quaternion.copy(c.userData.restQuat);
         }
       });
+      scene.updateMatrixWorld(true);
     } else {
       const to = actions[target];
       if (to && activeActionName.current !== target) {

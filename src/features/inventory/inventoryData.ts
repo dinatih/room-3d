@@ -335,6 +335,18 @@ INVENTORY.push({
   notes: `Personnage : Oiseau Robin.`
 });
 
+INVENTORY.push({
+  id: 'sci-fi-girl',
+  name: 'Sci-Fi Girl (Inyeong)',
+  brand: 'Fadly Romdhani',
+  category: 'walkers',
+  qty: 1,
+  dims: { w: 45, d: 25, h: 170 },
+  glbPath: 'characters/sci_fi_girl/sci_fi_girl.glb',
+  photos: ['characters/sci_fi_girl/sci_fi_girl_preview.png'],
+  notes: 'Personnage Sci-Fi Girl v02 avec cycle de marche walkcycle (Fadly Romdhani).'
+});
+
 export interface WigItem {
   id: string;
   name: string;
