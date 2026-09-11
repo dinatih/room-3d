@@ -1,6 +1,6 @@
 import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, Line, Grid } from '@react-three/drei';
+import { OrbitControls, Html, Line, Grid, OrthographicCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three';
@@ -157,7 +157,7 @@ function FitCamera({ target = [0, 0, 0], boundsRadius }: { target?: [number, num
   const { camera } = useThree();
   useLayoutEffect(() => {
     camera.layers.enableAll();
-    if (boundsRadius && boundsRadius > 0) {
+    if ((camera as any).isPerspectiveCamera && boundsRadius && boundsRadius > 0) {
       const perspCam = camera as THREE.PerspectiveCamera;
       const fovRad = (perspCam.fov * Math.PI) / 180;
       // Distance idéale pour englober l'objet avec une marge de respiration de 30%
@@ -170,6 +170,108 @@ function FitCamera({ target = [0, 0, 0], boundsRadius }: { target?: [number, num
     camera.lookAt(new THREE.Vector3(...target));
   }, [camera, target, boundsRadius]);
   return null;
+}
+
+function OrthoCameraControls({
+  mode,
+  target = [0, 0, 0],
+  boundsRadius = 50,
+}: {
+  mode: 'front' | 'side' | 'feet';
+  target?: [number, number, number];
+  boundsRadius?: number;
+}) {
+  const { size } = useThree();
+  const aspect = size.width / Math.max(1, size.height);
+  const ctrlRef = useRef<any>(null);
+
+  const viewH = useMemo(() => {
+    if (mode === 'feet') return 35;
+    return Math.max(70, boundsRadius * 2.2);
+  }, [mode, boundsRadius]);
+
+  const viewW = viewH * aspect;
+
+  const camTarget: [number, number, number] = useMemo(() => {
+    if (mode === 'feet') return [0, 10, 0];
+    return [0, target[1], 0];
+  }, [mode, target]);
+
+  const camPos: [number, number, number] = useMemo(() => {
+    if (mode === 'front' || mode === 'feet') {
+      return [0, camTarget[1], 1000];
+    }
+    return [1000, camTarget[1], 0];
+  }, [mode, camTarget]);
+
+  useEffect(() => {
+    if (ctrlRef.current) {
+      ctrlRef.current.target.set(camTarget[0], camTarget[1], camTarget[2]);
+      ctrlRef.current.update();
+    }
+  }, [camTarget]);
+
+  return (
+    <>
+      <OrthographicCamera
+        key={`${mode}-${viewH}-${aspect.toFixed(2)}`}
+        makeDefault
+        position={camPos}
+        left={-viewW / 2}
+        right={viewW / 2}
+        top={viewH / 2}
+        bottom={-viewH / 2}
+        near={1}
+        far={5000}
+      />
+      <OrbitControls
+        ref={ctrlRef}
+        target={camTarget}
+        enableRotate={false}
+        enablePan={true}
+        enableZoom={true}
+        screenSpacePanning={true}
+        minZoom={0.2}
+        maxZoom={50}
+      />
+    </>
+  );
+}
+
+function GroundDatumLines({ mode }: { mode: 'front' | 'side' | 'feet' }) {
+  const isSide = mode === 'side';
+  const span = 150;
+
+  const linePoints = (y: number): [[number, number, number], [number, number, number]] => {
+    if (isSide) {
+      return [[0, y, -span], [0, y, span]];
+    }
+    return [[-span, y, 0], [span, y, 0]];
+  };
+
+  return (
+    <group position={[0, 0, 0]}>
+      {/* Ligne de sol principale Y = 0 (Vert fluo haute visibilité) */}
+      <Line points={linePoints(0)} color="#00ff66" lineWidth={2.5} />
+      <Line points={linePoints(0.01)} color="#00ff66" lineWidth={1.5} />
+
+      {/* Ligne de tolérance +2 cm (Jaune) */}
+      <Line points={linePoints(2)} color="#ffbb00" lineWidth={1} dashed dashSize={2} gapSize={1} />
+
+      {/* Ligne de tolérance -2 cm (Rouge) */}
+      <Line points={linePoints(-2)} color="#ff4444" lineWidth={1} dashed dashSize={2} gapSize={1} />
+
+      {/* Repères gradués en mode zoom pieds */}
+      {mode === 'feet' && (
+        <>
+          <Line points={linePoints(5)} color="#88ccff" lineWidth={0.8} dashed dashSize={1.5} gapSize={1.5} />
+          <Line points={linePoints(10)} color="#88ccff" lineWidth={0.8} dashed dashSize={1.5} gapSize={1.5} />
+          <Line points={linePoints(15)} color="#88ccff" lineWidth={0.8} dashed dashSize={1.5} gapSize={1.5} />
+          <Line points={linePoints(20)} color="#88ccff" lineWidth={0.8} dashed dashSize={1.5} gapSize={1.5} />
+        </>
+      )}
+    </group>
+  );
 }
 
 function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, glbPath, onTargetChange, onBoundsChange, onStats }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (radius: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
@@ -356,6 +458,7 @@ export function InventoryPreview({
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [showAnimSelector, setShowAnimSelector] = useState(false);
+  const [previewView, setPreviewView] = useState<'free' | 'front' | 'side' | 'feet'>('free');
   useEffect(() => {
     setActionStates(initialDuoAnim ? {
       duoAnimDef: initialDuoAnim,
@@ -367,6 +470,7 @@ export function InventoryPreview({
     setBoundsRadius(50);
     setPhotoIdx(0);
     setShowAnimSelector(false);
+    setPreviewView('free');
   }, [item?.id]);
 
   useEffect(() => {
@@ -424,8 +528,17 @@ export function InventoryPreview({
               <ambientLight intensity={1.2} />
               <directionalLight position={[150, 250, 150]} intensity={1.5} />
               <directionalLight position={[-100, 50, -100]} intensity={0.5} color="#aabbff" />
-              <FitCamera target={target} boundsRadius={boundsRadius} />
-              <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={true} minDistance={2} maxDistance={2500} target={target} onStart={() => setAutoRotate(false)} />
+              {previewView === 'free' ? (
+                <>
+                  <FitCamera target={target} boundsRadius={boundsRadius} />
+                  <OrbitControls autoRotate={autoRotate} autoRotateSpeed={1.2} enablePan={true} minDistance={2} maxDistance={2500} target={target} onStart={() => setAutoRotate(false)} />
+                </>
+              ) : (
+                <>
+                  <OrthoCameraControls mode={previewView} target={target} boundsRadius={boundsRadius} />
+                  <GroundDatumLines mode={previewView} />
+                </>
+              )}
               {/* Disque de sol gris à 70% d'opacité */}
               <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
                 <circleGeometry args={[Math.max(100, boundsRadius * 2.5), 64]} />
@@ -436,9 +549,119 @@ export function InventoryPreview({
               <GlobalSkeletonHelpers show={actionStates.showBones} />
             </Canvas>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
-          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
             <button onClick={() => setShowDims(v => !v)} style={{ padding: '3px 8px', fontSize: 11, background: 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📏 {showDims ? 'Masquer Dims' : 'Afficher Dims'}</button>
+            {showing3D && (
+              <div style={{ display: 'flex', background: 'rgba(0,0,0,0.7)', borderRadius: 4, padding: 2, gap: 2, border: '1px solid #555' }}>
+                <button
+                  type="button"
+                  onClick={() => setPreviewView('free')}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: 10,
+                    fontWeight: previewView === 'free' ? 'bold' : 'normal',
+                    background: previewView === 'free' ? '#0058a3' : 'transparent',
+                    border: 'none',
+                    borderRadius: 3,
+                    color: '#fff',
+                    cursor: 'pointer'
+                  }}
+                  title="Vue 3D Perspective libre (rotation 360°)"
+                >
+                  🌐 3D
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewView('front');
+                    setAutoRotate(false);
+                  }}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: 10,
+                    fontWeight: previewView === 'front' ? 'bold' : 'normal',
+                    background: previewView === 'front' ? '#0058a3' : 'transparent',
+                    border: 'none',
+                    borderRadius: 3,
+                    color: '#fff',
+                    cursor: 'pointer'
+                  }}
+                  title="Vue Orthographique de Face (alignée sur l'axe du sol)"
+                >
+                  👤 Face
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewView('side');
+                    setAutoRotate(false);
+                  }}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: 10,
+                    fontWeight: previewView === 'side' ? 'bold' : 'normal',
+                    background: previewView === 'side' ? '#0058a3' : 'transparent',
+                    border: 'none',
+                    borderRadius: 3,
+                    color: '#fff',
+                    cursor: 'pointer'
+                  }}
+                  title="Vue Orthographique de Profil (alignée sur l'axe du sol)"
+                >
+                  🚶 Profil
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewView('feet');
+                    setAutoRotate(false);
+                  }}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: 10,
+                    fontWeight: previewView === 'feet' ? 'bold' : 'normal',
+                    background: previewView === 'feet' ? '#2a9d3a' : 'transparent',
+                    border: 'none',
+                    borderRadius: 3,
+                    color: '#fff',
+                    cursor: 'pointer'
+                  }}
+                  title="Zoom Orthographique Sol & Pieds (debug alignement Y=0)"
+                >
+                  🦶 Sol
+                </button>
+              </div>
+            )}
           </div>
+          {showing3D && previewView !== 'free' && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 8,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 3,
+                background: 'rgba(0, 0, 0, 0.8)',
+                backdropFilter: 'blur(6px)',
+                color: '#fff',
+                padding: '3px 12px',
+                borderRadius: 12,
+                fontSize: 10,
+                display: 'flex',
+                gap: 10,
+                alignItems: 'center',
+                pointerEvents: 'none',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span>📐 Vue Ortho : <strong>{previewView === 'front' ? 'Face' : previewView === 'side' ? 'Profil' : 'Gros plan Sol & Pieds'}</strong></span>
+              <span style={{ color: '#00ff66', fontWeight: 'bold' }}>— 0 cm (Sol)</span>
+              <span style={{ color: '#ffbb00' }}>┄ +2 cm</span>
+              <span style={{ color: '#ff4444' }}>┄ -2 cm</span>
+              <span style={{ color: '#aaa', fontSize: 9 }}>↕ Molette: Zoom | Glisser: Pan</span>
+            </div>
+          )}
           {showing3D && 'category' in item && ((item as any).category === 'walkers' || (item as any).category === 'wigs') && (
             <div style={{ position: 'absolute', top: 40, left: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }} onClick={e => e.stopPropagation()}>
               <button onClick={() => setActionStates(s => ({ ...s, showBones: !s.showBones }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.showBones ? '#0058a3' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}</button>
