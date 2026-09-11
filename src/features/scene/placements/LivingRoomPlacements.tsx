@@ -23,6 +23,8 @@ import { SneakersRed } from '../items/SneakersRed';
 import { Grejig40329868 } from '../items/Grejig40329868';
 import { Stackstod60620144 } from '../items/Stackstod60620144';
 import { Lagerpoppel00561816 } from '../items/Lagerpoppel00561816';
+import { MaillotInyeong } from '../items/MaillotInyeong';
+import { Spruttig20317079 } from '../items/Spruttig20317079';
 import { PalmLeaf } from '../items/PalmLeaf';
 import { Laptop } from '../items/Laptop';
 import { Phone } from '../items/Phone';
@@ -550,6 +552,21 @@ export function LivingRoomPlacements() {
         <group position={[-29, -40, 0]}>
           <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
+      </group>
+
+      {/* Maillot de foot Coréen Inyeong suspendu sur cintre au mur Est entre les 2 coussins (dos visible vers la pièce) */}
+      <group
+        position={[ROOM_W - 1.2, 212, ROOM_D / 2]}
+        rotation={[0, Math.PI / 2, 0]}
+        userData={{ animUnit: true, itemName: 'Maillot Coréen - Inyeong', skipMerge: true }}
+      >
+        {/* Petit piton/crochet mural discret */}
+        <mesh position={[0, 18.5, 0.8]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.4, 0.4, 1.6, 8]} />
+          <meshStandardMaterial color="#222222" roughness={0.3} metalness={0.8} />
+        </mesh>
+        <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <MaillotInyeong />
       </group>
 
       {/* Décor plafond */}

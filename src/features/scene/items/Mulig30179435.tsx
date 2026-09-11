@@ -6,7 +6,6 @@ import { SceneItemProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { SpruttigInstances } from './Spruttig20317079';
 import { TShirt } from './TShirt';
-import { MaillotInyeong } from './MaillotInyeong';
 
 // ── 6 cintres Spruttig sur la tringle Mulig ──────────────────────────────────
 const HANGER_Z   = [-20, -12, -4, 4, 12, 20];
@@ -62,12 +61,6 @@ export function Mulig30179435({ onSize, ...props }: SceneItemProps) {
       <TShirt
         position={[RAIL_X, RAIL_Y, HANGER_Z[2]]}
         rotation={[0, HANGER_ROTS[2], 0]}
-      />
-
-      {/* Maillot de foot Coréen (Inyeong #25) suspendu sur le 4ème cintre (z = 4) */}
-      <MaillotInyeong
-        position={[RAIL_X, RAIL_Y, HANGER_Z[3]]}
-        rotation={[0, HANGER_ROTS[3], 0]}
       />
     </group>
   );
