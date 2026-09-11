@@ -9,7 +9,7 @@ import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 // Hauteurs des tringles de penderie MACKAPÄR
-const TOP_RAIL_Y    = 182; // 183 - 1 cm
+const TOP_RAIL_Y    = 174; // 182 - 8 cm
 const BOTTOM_RAIL_Y = 106; // 107 - 1 cm
 const HANGER_Z      = [-25, -15, -5, 5, 15, 25];
 const HANGER_ROTS   = [0.03, -0.04, 0.02, -0.03, 0.05, -0.02];
