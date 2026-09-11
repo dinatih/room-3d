@@ -181,20 +181,21 @@ function OrthoCameraControls({
   target?: [number, number, number];
   boundsRadius?: number;
 }) {
-  const { size } = useThree();
+  const { size, camera } = useThree();
   const aspect = size.width / Math.max(1, size.height);
   const ctrlRef = useRef<any>(null);
+  const camRef = useRef<THREE.OrthographicCamera>(null);
 
   const viewH = useMemo(() => {
-    if (mode === 'feet') return 35;
-    return Math.max(70, boundsRadius * 2.2);
+    if (mode === 'feet') return 45; // 45 cm: vue rapprochée sur les pieds
+    return Math.max(80, (boundsRadius || 50) * 2.2); // Vue d'ensemble du personnage
   }, [mode, boundsRadius]);
 
   const viewW = viewH * aspect;
 
   const camTarget: [number, number, number] = useMemo(() => {
-    if (mode === 'feet') return [0, 10, 0];
-    return [0, target[1], 0];
+    if (mode === 'feet') return [0, 15, 0];
+    return [0, target[1] || 85, 0];
   }, [mode, target]);
 
   const camPos: [number, number, number] = useMemo(() => {
@@ -203,6 +204,19 @@ function OrthoCameraControls({
     }
     return [1000, camTarget[1], 0];
   }, [mode, camTarget]);
+
+  useLayoutEffect(() => {
+    camera.layers.enableAll();
+    if (camRef.current) {
+      camRef.current.layers.enableAll();
+      camRef.current.left = -viewW / 2;
+      camRef.current.right = viewW / 2;
+      camRef.current.top = viewH / 2;
+      camRef.current.bottom = -viewH / 2;
+      camRef.current.position.set(camPos[0], camPos[1], camPos[2]);
+      camRef.current.updateProjectionMatrix();
+    }
+  }, [camera, camPos, viewW, viewH]);
 
   useEffect(() => {
     if (ctrlRef.current) {
@@ -214,8 +228,10 @@ function OrthoCameraControls({
   return (
     <>
       <OrthographicCamera
+        ref={camRef}
         key={`${mode}-${viewH}-${aspect.toFixed(2)}`}
         makeDefault
+        manual
         position={camPos}
         left={-viewW / 2}
         right={viewW / 2}
