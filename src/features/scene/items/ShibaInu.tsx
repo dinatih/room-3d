@@ -6,6 +6,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
+import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 
 const GLB_PATH = '/characters/ushiro/shiba_inu_dog_ushiro.glb';
 const _tmpDogDir = new THREE.Vector3();
@@ -142,6 +143,24 @@ export function ShibaInu({ isPreview = false, previewAnim = '', showSkeletonPrev
 
   useFrame((_, delta) => {
     if (isAppIdle() || !modelRef.current || !mixerRef.current) return;
+    if (isPreview) {
+      const clip = findDogClip(animations, previewAnim || 'idle');
+      if (clip && clip.duration > 0) {
+        const store = useAnimPreviewStore.getState();
+        store.setClipInfo(`Shiba ${clip.name}`, clip.duration, false);
+        const action = mixerRef.current.clipAction(clip);
+        if (store.isPlaying && !store.isScrubbing) {
+          const nextTime = store.tick(delta);
+          action.time = nextTime;
+        } else {
+          action.time = store.currentTime;
+        }
+        action.paused = false;
+        mixerRef.current.update(0);
+      }
+      invalidate();
+      return;
+    }
     mixerRef.current.update(delta);
     invalidate();
     

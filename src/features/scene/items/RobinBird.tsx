@@ -7,6 +7,7 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { isAppIdle } from '@features/scene/idleState';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 import { appLog } from '@features/ui/AppConsole';
+import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 
 const GLB_PATH = '/characters/robin/robin.glb';
 
@@ -141,6 +142,28 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
   // Boucle de jeu (IA & Animation)
   useFrame((_state, delta) => {
     if (isAppIdle() || !modelRef.current || !mixerRef.current) return;
+    if (isPreview) {
+      let targetAnimName = 'Robin_Bird_Idle';
+      if (previewAnim) {
+        targetAnimName = previewAnim;
+      }
+      const clip = animations.find(a => a.name === targetAnimName) || animations[0];
+      if (clip && clip.duration > 0) {
+        const store = useAnimPreviewStore.getState();
+        store.setClipInfo(`Robin ${clip.name}`, clip.duration, false);
+        const action = mixerRef.current.clipAction(clip);
+        if (store.isPlaying && !store.isScrubbing) {
+          const nextTime = store.tick(delta);
+          action.time = nextTime;
+        } else {
+          action.time = store.currentTime;
+        }
+        action.paused = false;
+        mixerRef.current.update(0);
+      }
+      invalidate();
+      return;
+    }
     mixerRef.current.update(delta);
 
     // Si la caméra est trop loin ou ne regarde pas la zone de l'oiseau posé, on économise le rendu forcé

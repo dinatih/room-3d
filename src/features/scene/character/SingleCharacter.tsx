@@ -31,6 +31,7 @@ import { GroundPoint } from './GroundPoint';
 import { HeartParachute } from './HeartParachute';
 import { useCharacterAnimations } from './useCharacterAnimations';
 import { useCharacterPhysics } from './useCharacterPhysics';
+import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
 const _tmpLgbtaColorA = new THREE.Color();
@@ -624,14 +625,53 @@ export function SingleCharacter({
       }
     }
 
-    if (!isPaused && !isTPose) {
-      if (isPreview && walkerAnim && walkerAnim !== 'idle' && walkerAnim !== 'tpose' && activeActionName.current && actions[activeActionName.current]) {
+    if (isPreview) {
+      if (isTPose) {
+        useAnimPreviewStore.getState().setClipInfo('T-Pose', 0, true);
+      } else if (activeActionName.current && actions[activeActionName.current]) {
         const act = actions[activeActionName.current];
         const clip = act.getClip();
         if (clip && clip.duration > 0) {
-          act.time = state.clock.elapsedTime % clip.duration;
+          const store = useAnimPreviewStore.getState();
+          const cleanName = activeActionName.current.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || activeActionName.current;
+          store.setClipInfo(cleanName, clip.duration, false);
+
+          if (store.isPlaying && !store.isScrubbing) {
+            // Seul le personnage actif ou le Rôle A avance l'horloge partagée pour éviter la double incrémentation en Duo
+            const isDriver = isActive || !isNPC;
+            const newTime = isDriver ? store.tick(delta) : store.currentTime;
+            act.time = newTime;
+          } else {
+            act.time = store.currentTime;
+          }
+          act.paused = false;
+          mixer.update(0);
         }
-      } else if (!isPreview && duoSessionManager.isPlaying()) {
+      }
+
+      const store = useAnimPreviewStore.getState();
+      const isVisibleInFrustum = (() => {
+        if (!state.camera) return true;
+        const cam = state.camera;
+        _charProjScreenMatrix.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+        _charFrustum.setFromProjectionMatrix(_charProjScreenMatrix);
+        _charBoundingSphere.center.copy(groupRef.current.position);
+        _charBoundingSphere.center.y += 90; // Centre approximatif du buste/tête
+        _charBoundingSphere.radius = 120;
+        return _charFrustum.intersectsSphere(_charBoundingSphere);
+      })();
+
+      if (isVisibleInFrustum) {
+        updatePhysics(store.isPlaying && !isTPose ? delta * store.speed : 0, {
+          haircut,
+          isMoving,
+          targetAnim: target,
+          walkerAnim,
+          clockElapsedTime: store.currentTime
+        }, scene);
+      }
+    } else if (!isPaused && !isTPose) {
+      if (duoSessionManager.isPlaying()) {
         const partA = duoSessionManager.getParticipantA();
         const partB = duoSessionManager.getParticipantB();
         if (partA?.characterId === id || partB?.characterId === id) {

@@ -13,6 +13,8 @@ import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/ai/duoAnim
 import { CHARACTERS } from '@features/scene/walkerConfig';
 import { GroundPoint } from '@features/scene/character/GroundPoint';
 import { SkySphere } from '@features/scene/SkySphere';
+import { useAnimPreviewStore } from './useAnimPreviewStore';
+import { AnimFrameController } from './AnimFrameController';
 
 function disposePreviewScene(root: THREE.Object3D) {
   root.traverse((node: any) => {
@@ -463,6 +465,8 @@ export function InventoryPreview({
   const [photoIdx, setPhotoIdx] = useState(0);
   const [showAnimSelector, setShowAnimSelector] = useState(false);
   const [previewView, setPreviewView] = useState<'free' | 'front' | 'side'>('free');
+  const isAnimPlaying = useAnimPreviewStore(s => s.isPlaying);
+
   useEffect(() => {
     setActionStates(initialDuoAnim ? {
       duoAnimDef: initialDuoAnim,
@@ -475,6 +479,7 @@ export function InventoryPreview({
     setPhotoIdx(0);
     setShowAnimSelector(false);
     setPreviewView('free');
+    useAnimPreviewStore.getState().reset();
   }, [item?.id]);
 
   useEffect(() => {
@@ -486,6 +491,7 @@ export function InventoryPreview({
         walkerAnim: undefined,
         isPaused: false
       }));
+      useAnimPreviewStore.getState().play();
     }
   }, [initialDuoAnim, initialDuoPartner]);
 
@@ -493,6 +499,9 @@ export function InventoryPreview({
 
   const isWalkerItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
   const isHumanWalker = isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id);
+  const animControllerBottom = hideFooter ? 6 : 42;
+  const datumBannerBottom = isWalkerItem ? (animControllerBottom + 58) : 8;
+  const debugUrlsBottom = isWalkerItem ? (animControllerBottom + 58) : (hideFooter ? 4 : 40);
   const currentAnimOpt = isHumanWalker ? WALKER_ANIM_OPTIONS.find(a => a.value === (actionStates.walkerAnim || 'idle')) : null;
   const currentAnimLabel = actionStates.walkerAnim === 'tpose'
     ? 'T-Pose'
@@ -517,11 +526,12 @@ export function InventoryPreview({
       isPaused: false,
       duoAnimDef: undefined
     }));
+    useAnimPreviewStore.getState().play();
   }, [actionStates.walkerAnim]);
 
   // Raccourcis clavier dans la preview 3D :
   // 'K' pour afficher / masquer le squelette
-  // Flèches Haut / Bas / Gauche / Droite pour changer d'animation sur le personnage sélectionné
+  // Flèches Haut / Bas pour changer d'animation sur le personnage sélectionné
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const targetEl = e.target as HTMLElement | null;
@@ -536,11 +546,11 @@ export function InventoryPreview({
         if (targetEl?.tagName === 'SELECT') {
           return;
         }
-        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        if (e.key === 'ArrowDown') {
           e.preventDefault();
           e.stopPropagation();
           cycleAnim('next');
-        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        } else if (e.key === 'ArrowUp') {
           e.preventDefault();
           e.stopPropagation();
           cycleAnim('prev');
@@ -672,7 +682,7 @@ export function InventoryPreview({
             <div
               style={{
                 position: 'absolute',
-                bottom: 8,
+                bottom: datumBannerBottom,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 zIndex: 3,
@@ -704,7 +714,14 @@ export function InventoryPreview({
               {(item as any).category === 'walkers' && (
                 <>
                   <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                    <button onClick={() => setActionStates(s => ({ ...s, isPaused: !s.isPaused }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.isPaused ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }} title={actionStates.isPaused ? "Play" : "Pause"}>{actionStates.isPaused ? '▶️' : '⏸️'}</button>
+                    <button
+                      type="button"
+                      onClick={() => useAnimPreviewStore.getState().togglePlay()}
+                      style={{ padding: '3px 8px', fontSize: 11, background: !isAnimPlaying ? '#e63946' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}
+                      title={!isAnimPlaying ? "Play" : "Pause"}
+                    >
+                      {!isAnimPlaying ? '▶️' : '⏸️'}
+                    </button>
                     {isHumanWalker && (
                       <>
                         <button onClick={() => setActionStates(s => ({ ...s, walkerAnim: 'tpose' }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.walkerAnim === 'tpose' ? '#2a9d3a' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }} title="T-Pose (Rest)">📐</button>
@@ -715,6 +732,7 @@ export function InventoryPreview({
                             if (pool.length > 0) {
                               const randomAnim = pool[Math.floor(Math.random() * pool.length)];
                               setActionStates(s => ({ ...s, walkerAnim: randomAnim.value, isPaused: false }));
+                              useAnimPreviewStore.getState().play();
                             }
                           }}
                           style={{ padding: '3px 8px', fontSize: 11, background: '#ffc107', color: '#000', border: '1px solid #d39e00', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}
@@ -726,6 +744,7 @@ export function InventoryPreview({
                           type="button"
                           onClick={() => {
                             setActionStates(s => ({ ...s, walkerAnim: 'idle', isPaused: false }));
+                            useAnimPreviewStore.getState().play();
                           }}
                           style={{ padding: '3px 8px', fontSize: 11, background: '#6c757d', color: '#fff', border: '1px solid #545b62', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}
                           title="Remettre en Idle / Arrêter l'animation"
@@ -967,7 +986,7 @@ export function InventoryPreview({
             <div
               style={{
                 position: 'absolute',
-                bottom: 8,
+                bottom: datumBannerBottom,
                 left: 8,
                 right: 8,
                 zIndex: 4,
@@ -1018,6 +1037,7 @@ export function InventoryPreview({
                 activeAnimValue={actionStates.walkerAnim || 'idle'}
                 onSelectAnim={(val) => {
                   setActionStates(s => ({ ...s, walkerAnim: val }));
+                  useAnimPreviewStore.getState().play();
                   setShowAnimSelector(false);
                 }}
                 onClose={() => setShowAnimSelector(false)}
@@ -1039,9 +1059,18 @@ export function InventoryPreview({
           )}
 
           {/* Debug URLs Overlay */}
-          <div style={{ position: 'absolute', bottom: hideFooter ? 4 : 40, left: 8, zIndex: 3, fontSize: 9, opacity: 0.5, color: '#222', textShadow: '0 0 2px rgba(255,255,255,0.8)', pointerEvents: 'none', whiteSpace: 'nowrap', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'monospace' }} title={`${glbPath || 'No GLB'} | ${photos ? photos.join(', ') : 'No photos'}`}>
+          <div style={{ position: 'absolute', bottom: debugUrlsBottom, left: 8, zIndex: 3, fontSize: 9, opacity: 0.5, color: '#222', textShadow: '0 0 2px rgba(255,255,255,0.8)', pointerEvents: 'none', whiteSpace: 'nowrap', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'monospace' }} title={`${glbPath || 'No GLB'} | ${photos ? photos.join(', ') : 'No photos'}`}>
             {glbPath ? `GLB: ${glbPath}` : 'No GLB'} {photos && photos.length > 0 ? `| IMG: ${photos[0]} ${photos.length > 1 ? `(+${photos.length-1})` : ''}` : ''}
           </div>
+
+          {/* Contrôleur de Frame & Timeline Mixamo en bas de la vue 3D */}
+          {showing3D && isWalkerItem && (
+            <AnimFrameController
+              animName={actionStates.duoAnimDef ? actionStates.duoAnimDef.label : currentAnimLabel}
+              onCycleAnim={cycleAnim}
+              bottom={animControllerBottom}
+            />
+          )}
 
           {!hideFooter && (
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '6px 10px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center' }}>
