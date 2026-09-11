@@ -576,7 +576,7 @@ export function InventoryPreview({
           )}
           {showing3D ? (
             <Canvas key={item.id} frameloop="always" camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false }} onCreated={({ scene, camera }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); }}>
-              <SkySphere />
+              <SkySphere envOnly />
               <ambientLight intensity={1.2} />
               <directionalLight position={[150, 250, 150]} intensity={1.5} />
               <directionalLight position={[-100, 50, -100]} intensity={0.5} color="#aabbff" />

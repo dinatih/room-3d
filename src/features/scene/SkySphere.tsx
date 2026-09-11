@@ -18,7 +18,7 @@ const textureCache = new Map<string, THREE.Texture>();
 const rgbeLoader = new RGBELoader();
 const textureLoader = new THREE.TextureLoader();
 
-export function SkySphere() {
+export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
   const currentHdri = useSceneStore(state => state.currentHdri);
   const [texture, setTexture] = useState<THREE.Texture | null>(() => {
     const initialHdri = getHdriById(currentHdri);
@@ -60,6 +60,8 @@ export function SkySphere() {
       isMounted = false;
     };
   }, [currentHdri, scene, invalidate]);
+
+  if (envOnly) return null;
 
   return (
     <group position={SKY_CENTER} name="SkySphere" userData={{ isSky: true }}>
