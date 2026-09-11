@@ -808,6 +808,7 @@ export const WALKER_ANIM_OPTIONS = [
   { value: "animations/interactions/anim_zombie_scream.glb", label: "zombie scream (85f / 2.8s, 136KB)" },
 
   { value: "animations/yoga/anim_yoga_front_back_walking.glb", label: "[YOGA] Front Back Walking (430f / 14.3s, 560KB)" },
+  { value: "animations/yoga/anim_yoga_boat_pose_or_paripurna_navasana_a.glb", label: "[YOGA] Boat Pose Paripurna Navasana A (427f / 14.2s, 398KB)" },
 
 
 ].filter((v, i, a) => a.findIndex(t => t.value === v.value) === i).sort((a, b) => {
