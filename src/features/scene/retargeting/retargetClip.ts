@@ -297,9 +297,10 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
 
   const tracks: THREE.KeyframeTrack[] = [];
 
-  // Cache clavicle existence check once for the entire clip
+  // Cache existence checks once for the entire clip
   const targetHasLeftClavicle = Boolean(resolveTargetBoneName(targetInstance, 'LeftShoulder', sourceHairMap));
   const targetHasRightClavicle = Boolean(resolveTargetBoneName(targetInstance, 'RightShoulder', sourceHairMap));
+  const targetHasSpine1 = Boolean(resolveTargetBoneName(targetInstance, 'Spine1', sourceHairMap));
 
   for (const tr of workingClip.tracks) {
     const [boneFull, prop] = tr.name.split('.');
@@ -493,8 +494,8 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
         if (bone.restLocalQuaternion && bone.restWorldQuaternion) {
           let B_src = null;
           let P_src = null;
-          let clavicleTrack: THREE.KeyframeTrack | null = null;
-          let clavicleParentRestWorld = new THREE.Quaternion();
+          let parentBakeTrack: THREE.KeyframeTrack | null = null;
+          let parentBakeRestWorld = new THREE.Quaternion();
           if (animBones[baseName]) {
             B_src = animBones[baseName].restWorldQuaternion.clone();
             P_src = animBones[baseName].parentRestWorldQuaternion.clone();
@@ -503,7 +504,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               B_src = new THREE.Quaternion();
             }
 
-            // Check if we need to bake clavicle animation into the arm (if target lacks a clavicle)
+            // Check if we need to bake a missing parent bone animation into the child (e.g. clavicle into arm, or Spine1 into Spine2)
             if (baseName === 'LeftArm' || baseName === 'RightArm') {
               const targetHasClavicle = baseName === 'LeftArm' ? targetHasLeftClavicle : targetHasRightClavicle;
               
@@ -512,11 +513,22 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
                 const clavicleSourceNode = animBones[baseName].bone.parent;
                 if (clavicleSourceNode) {
                   const clavicleTrackName = `${clavicleSourceNode.name}.quaternion`;
-                  clavicleTrack = rawClip.tracks.find(t => t.name === clavicleTrackName) || null;
-                  if (clavicleTrack) {
+                  parentBakeTrack = rawClip.tracks.find(t => t.name === clavicleTrackName) || null;
+                  if (parentBakeTrack) {
                     const clavicleRestLocal = clavicleSourceNode.quaternion.clone(); // Rest local rotation
-                    clavicleParentRestWorld = P_src.clone().multiply(clavicleRestLocal.invert());
+                    parentBakeRestWorld = P_src.clone().multiply(clavicleRestLocal.invert());
                   }
+                }
+              }
+            } else if (baseName === 'Spine2' && !targetHasSpine1) {
+              // Target lacks Spine1. Find the Spine1 track in the source animation.
+              const spine1SourceNode = animBones[baseName].bone.parent;
+              if (spine1SourceNode) {
+                const spine1TrackName = `${spine1SourceNode.name}.quaternion`;
+                parentBakeTrack = rawClip.tracks.find(t => t.name === spine1TrackName) || null;
+                if (parentBakeTrack) {
+                  const spine1RestLocal = spine1SourceNode.quaternion.clone();
+                  parentBakeRestWorld = P_src.clone().multiply(spine1RestLocal.invert());
                 }
               }
             }
@@ -542,11 +554,11 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               );
               
               let currentP_src = P_src.clone();
-              if (clavicleTrack) {
-                // Evaluate clavicle animation at this frame
+              if (parentBakeTrack) {
+                // Evaluate missing parent bone animation at this frame
                 const t = clone.times[j];
-                const clavicleAnimatedLocal = evaluateQuaternionTrack(clavicleTrack, t);
-                currentP_src = clavicleParentRestWorld.clone().multiply(clavicleAnimatedLocal);
+                const parentAnimatedLocal = evaluateQuaternionTrack(parentBakeTrack, t);
+                currentP_src = parentBakeRestWorld.clone().multiply(parentAnimatedLocal);
               }
 
               const animWorldQ = currentP_src.multiply(srcLocalQ);
