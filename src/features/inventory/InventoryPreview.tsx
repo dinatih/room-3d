@@ -489,25 +489,67 @@ export function InventoryPreview({
     }
   }, [initialDuoAnim, initialDuoPartner]);
 
-  // Raccourci clavier 'K' pour afficher / masquer le squelette dans la preview 3D
+  const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
+
+  const isWalkerItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
+  const isHumanWalker = isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id);
+  const currentAnimOpt = isHumanWalker ? WALKER_ANIM_OPTIONS.find(a => a.value === (actionStates.walkerAnim || 'idle')) : null;
+  const currentAnimLabel = actionStates.walkerAnim === 'tpose'
+    ? 'T-Pose'
+    : (currentAnimOpt ? currentAnimOpt.label : (actionStates.walkerAnim || 'Idle'));
+
+  const cycleAnim = useCallback((direction: 'next' | 'prev') => {
+    const pool = WALKER_ANIM_OPTIONS;
+    if (!pool.length) return;
+    const currentVal = actionStates.walkerAnim || 'idle';
+    const currIdx = pool.findIndex(a => a.value === currentVal);
+    let nextIdx = 0;
+    if (currIdx === -1) {
+      nextIdx = direction === 'next' ? 0 : pool.length - 1;
+    } else {
+      nextIdx = direction === 'next'
+        ? (currIdx + 1) % pool.length
+        : (currIdx - 1 + pool.length) % pool.length;
+    }
+    setActionStates(s => ({
+      ...s,
+      walkerAnim: pool[nextIdx].value,
+      isPaused: false,
+      duoAnimDef: undefined
+    }));
+  }, [actionStates.walkerAnim]);
+
+  // Raccourcis clavier dans la preview 3D :
+  // 'K' pour afficher / masquer le squelette
+  // Flèches Haut / Bas / Gauche / Droite pour changer d'animation sur le personnage sélectionné
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const targetEl = e.target as HTMLElement;
+      const targetEl = e.target as HTMLElement | null;
       if (targetEl && (targetEl.tagName === 'INPUT' || targetEl.tagName === 'TEXTAREA' || targetEl.isContentEditable)) {
         return;
       }
       if (e.key === 'k' || e.key === 'K') {
         setActionStates(s => ({ ...s, showBones: !s.showBones }));
+        return;
+      }
+      if (isHumanWalker && !showAnimSelector) {
+        if (targetEl?.tagName === 'SELECT') {
+          return;
+        }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          e.stopPropagation();
+          cycleAnim('next');
+        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          e.stopPropagation();
+          cycleAnim('prev');
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const showing3D = has3D && (!hasPhotos || viewMode === '3d'), showingPhotos = hasPhotos && (!has3D || viewMode === 'photos');
-
-  const isWalkerItem = showing3D && item && 'category' in item && ((item as any).category === 'walkers');
-  const isHumanWalker = isWalkerItem && !['ushiro', 'shiba-inu', 'robin-bird'].includes(item.id);
+  }, [isHumanWalker, showAnimSelector, cycleAnim]);
 
   return (
     <div className="inventory-preview-container" style={{ width }}>
@@ -695,50 +737,48 @@ export function InventoryPreview({
                   </div>
 
                   {isHumanWalker ? (
-                    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                      <select
-                        value={actionStates.walkerAnim || 'idle'}
-                        onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value, duoAnimDef: undefined }))}
-                        style={{
-                          padding: '2px 4px',
-                          fontSize: 10,
-                          background: 'rgba(0,0,0,0.7)',
-                          border: '1px solid #555',
-                          borderRadius: 4,
-                          color: '#fff',
-                          outline: 'none',
-                          maxWidth: 130
-                        }}
-                        title="Sélectionner une animation"
-                      >
-                        {WALKER_ANIM_OPTIONS.map(opt => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAnimSelector(v => !v);
-                          if (!showAnimSelector) {
-                            setActionStates(s => ({ ...s, duoAnimDef: undefined }));
-                          }
-                        }}
-                        style={{
-                          padding: '2px 5px',
-                          fontSize: 10,
-                          background: showAnimSelector ? '#c82333' : 'rgba(0,0,0,0.6)',
-                          border: `1px solid ${showAnimSelector ? '#dc3545' : '#777'}`,
-                          borderRadius: 4,
-                          color: '#fff',
-                          cursor: 'pointer'
-                        }}
-                        title="Recherche & filtres d'animations"
-                      >
-                        🔍
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      tabIndex={0}
+                      onClick={() => {
+                        setShowAnimSelector(v => !v);
+                        if (!showAnimSelector) {
+                          setActionStates(s => ({ ...s, duoAnimDef: undefined }));
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          cycleAnim('next');
+                        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          cycleAnim('prev');
+                        }
+                      }}
+                      style={{
+                        padding: '4px 8px',
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        background: showAnimSelector ? '#c82333' : 'rgba(0,0,0,0.7)',
+                        border: `1px solid ${showAnimSelector ? '#dc3545' : '#555'}`,
+                        borderRadius: 4,
+                        color: '#fff',
+                        cursor: 'pointer',
+                        maxWidth: 140,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 4
+                      }}
+                      title={typeof currentAnimLabel === 'string' ? currentAnimLabel : undefined}
+                    >
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        🎬 {currentAnimLabel}
+                      </span>
+                      <span style={{ fontSize: 8, opacity: 0.8 }}>{showAnimSelector ? '▲' : '▼'}</span>
+                    </button>
                   ) : (
                     <select value={actionStates.walkerAnim || 'idle'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
                       {['ushiro', 'shiba-inu'].includes(item.id) ? (

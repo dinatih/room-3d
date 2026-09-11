@@ -220,6 +220,24 @@ export function CharacterAnimSelector({
   };
 
   useEffect(() => {
+    const handleGlobalKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose?.();
+        return;
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        e.stopPropagation();
+        selectNextAnim(e.key === 'ArrowDown' ? 'next' : 'prev');
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKey, true);
+    return () => window.removeEventListener('keydown', handleGlobalKey, true);
+  }, [selectNextAnim, onClose]);
+
+  useEffect(() => {
     if (activeAnimValue && animsContainerRef.current) {
       const container = animsContainerRef.current;
       const frameId = requestAnimationFrame(() => {
