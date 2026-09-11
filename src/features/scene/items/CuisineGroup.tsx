@@ -8,13 +8,11 @@
  */
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
-import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import { Counter }        from './Counter';
 import { Boholmen99157501 } from './Boholmen99157501';
 import { Valbildad20467592 } from './Valbildad20467592';
 import { Utdrag10389142 } from './Utdrag10389142';
+import { Metod50205532 }  from './Metod50205532';
 import { KitchenCabinet } from './KitchenCabinet';
 import { Fridge }         from './Fridge';
 import { DroneCell } from './Drona';
@@ -37,52 +35,6 @@ const COUNTER_H   = 90;
 const COUNTER_SLAB = 3;
 const CABINET_W   = 40;
 const FRIDGE_W    = 60;
-
-// ── Meuble haut ───────────────────────────────────────────────────────────────
-
-const METOD_WALL_GLB = 'items/metod rangement mural blanc 40x37x100 cm/METOD Rangement mural blanc 40x37x100 cm.glb';
-
-function UpperCabinet() {
-  const { scene } = useGLTFClone(METOD_WALL_GLB);
-  const groupRef = useRef<THREE.Group>(null!);
-
-  useLayoutEffect(() => {
-    removeGlbLines(scene);
-    scene.scale.set(1, 1, 1);
-    scene.scale.setScalar(100);
-    scene.rotation.set(-Math.PI / 2, 0, 0); // Z-up GLB → debout, -X flip profondeur vers salle
-    mergeGlbByMaterial(scene);
-    const box = glbLocalBBox(scene);
-
-    // Centre le scene debout : X/Z centré à 0, Y bas à 0
-    scene.position.set(
-      -(box.min.x + box.max.x) / 2,
-      -box.min.y,
-      -(box.min.z + box.max.z) / 2,
-    );
-
-    // Le group wrapper applique Rz(PI/2) → couche le cabinet sur le côté :
-    //   scene X (largeur 40) → group Y (hauteur 40)
-    //   scene Y (hauteur 100) → group -X → centré à KIT_W/2
-    //   scene Z (profondeur 37) → group Z → dos flush fond niche
-    const half_w  = (box.max.x - box.min.x) / 2;
-    const height_h = box.max.y - box.min.y;
-    const half_d  = (box.max.z - box.min.z) / 2;
-    groupRef.current.position.set(
-      KIT_W / 2 + height_h / 2,
-      COUNTER_H + COUNTER_SLAB + 60 + half_w,
-      KIT_D - half_d,
-    );
-  }, [scene]);
-
-  return (
-    <group ref={groupRef} rotation={[0, 0, Math.PI / 2]}>
-      <primitive object={scene} />
-    </group>
-  );
-}
-
-useGLTF.preload(METOD_WALL_GLB);
 
 // ── Drona (3 boîtes sur le meuble haut) ──────────────────────────────────────
 // World: x=[46.75, 80, 113.25], y=211.7, z=440.5, rotY=π
@@ -195,9 +147,11 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
         </group>
       </group>
 
-      {/* Meuble haut */}
+      {/* Meuble haut METOD 40×37×100 couché */}
       <group userData={{ animUnit: true }}>
-        <UpperCabinet />
+        <group position={[KIT_W / 2 + 100 / 2, COUNTER_H + COUNTER_SLAB + 60 + 40 / 2, KIT_D - 37 / 2]} rotation={[0, 0, Math.PI / 2]}>
+          <Metod50205532 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
       </group>
 
       {/* Hotte aspirante UTDRAG intégrée dans le meuble haut au-dessus des plaques */}

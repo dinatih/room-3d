@@ -32,6 +32,7 @@ import { Middagsmat60463714 } from '@features/scene/items/Middagsmat60463714';
 import { Annons80298474 } from '@features/scene/items/Annons80298474';
 import { Tasjon80392023 } from '@features/scene/items/Tasjon80392023';
 import { Pepprig70567650 } from '@features/scene/items/Pepprig70567650';
+import { Metod50205532 } from '@features/scene/items/Metod50205532';
 /**
  * Registry des composants TSX dédiés par item.id.
  * Uniquement pour les items interactifs (open/close) ou procéduraux (pas de glbPath).
@@ -144,6 +145,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'middagsmat60463714': Middagsmat60463714,
   'annons80298474': Annons80298474,
   'pepprig70567650': Pepprig70567650,
+  'metod50205532': Metod50205532,
   // ── Interactifs (open/close) ───────────────────────────────────────────────
   'freezer':                Freezer,
   'fridge':                 Fridge,
