@@ -252,7 +252,7 @@ export function SingleCharacter({
     scene.rotation.set(0, 0, 0);
     scene.updateMatrixWorld(true);
 
-    const baseHeight = isLara ? 173.4 : 181.0;
+    const baseHeight = isLara ? 173.4 : (id === 'inyeong' ? 165.0 : 181.0);
     const scaleFactor = (targetHeight / baseHeight) * 100.0;
     scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
     scene.updateMatrixWorld(true);
@@ -273,7 +273,7 @@ export function SingleCharacter({
     }
 
     hairChainRef.current = buildHairChain(parts.bones.nativeHairBones);
-  }, [scene, parts, isLara, targetHeight, variant]);
+  }, [scene, parts, isLara, targetHeight, variant, id]);
 
   // Visibilité des vêtements et des accessoires (synchronisation réactive unique)
   useEffect(() => {

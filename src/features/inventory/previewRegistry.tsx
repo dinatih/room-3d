@@ -303,9 +303,6 @@ WIGS_ITEMS.forEach(wig => {
 
 
 import { Blaskata50569513 } from '@features/scene/items/Blaskata50569513';
-import { NitroInyeong } from '@features/scene/items/NitroInyeong';
 
 SCENE_REGISTRY['blaskata50569513'] = Blaskata50569513 as any;
-SCENE_REGISTRY['nitro-inyeong'] = function NitroInyeongPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
-  return <NitroInyeong showSkeletonPreview={actionState?.showBones} onSize={onSize} />;
-} as any;
+SCENE_REGISTRY['nitro-inyeong'] = SCENE_REGISTRY['inyeong'];

@@ -292,17 +292,21 @@ const sortedCharacters = [...CHARACTERS].sort((a, b) => {
 
 sortedCharacters.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
-    const photos = char.path.includes('xbot') ? ['characters/xbot/Xbot_official_3d_preview.png'] : undefined;
+    const photos = char.path.includes('xbot')
+      ? ['characters/xbot/Xbot_official_3d_preview.png']
+      : (char.id === 'inyeong' ? ['characters/inyeong/nitro_anim_inyeong_3d_preview.png'] : undefined);
     INVENTORY.push({
       id: char.id,
       name: char.name,
-      brand: char.id === 'xbot' || char.id === 'xbot_studio' ? 'Mixamo' : 'Lara Croft Style',
+      brand: char.id === 'xbot' || char.id === 'xbot_studio' ? 'Mixamo' : (char.id === 'inyeong' ? 'Nitro' : 'Lara Croft Style'),
       category: 'walkers',
       qty: 1,
-      dims: { w: 45, d: 25, h: char.height },
+      dims: { w: char.id === 'inyeong' ? 57 : 45, d: char.id === 'inyeong' ? 78 : 25, h: char.height },
       glbPath: char.path,
       ...(photos ? { photos } : {}),
-      notes: `Personnage : ${char.name}.`
+      notes: char.id === 'inyeong'
+        ? 'Personnage animé : Inyeong en combinaison de vol Nitro avec casque et visière.'
+        : `Personnage : ${char.name}.`
     });
   }
 });
@@ -329,18 +333,6 @@ INVENTORY.push({
   glbPath: 'characters/robin/robin.glb',
   photos: ['characters/robin/robin_3d_preview.png'],
   notes: `Personnage : Oiseau Robin.`
-});
-
-INVENTORY.push({
-  id: 'nitro-inyeong',
-  name: 'Inyeong (Nitro)',
-  brand: 'Personnage',
-  category: 'walkers',
-  qty: 1,
-  dims: { w: 57, d: 78, h: 165 },
-  glbPath: 'characters/inyeong/nitro_anim_inyeong.glb',
-  photos: ['characters/inyeong/nitro_anim_inyeong_3d_preview.png'],
-  notes: 'Personnage animé : Inyeong en combinaison de vol Nitro avec casque et visière.'
 });
 
 export interface WigItem {
