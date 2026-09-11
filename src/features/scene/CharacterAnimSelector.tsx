@@ -16,7 +16,18 @@ export const ANIM_CATEGORIES = [
   { key: 'locomotion', label: 'Locomotion', icon: '🏃' },
   { key: 'poses_idles', label: 'Poses & Idles', icon: '🧘' },
   { key: 'sports_fitness', label: 'Sports & Fitness', icon: '⚽' },
+  { key: 'yoga', label: 'Yoga & Mocap', icon: '🧘‍♀️' },
 ] as const;
+
+let globalLastAnimSearch = '';
+let globalLastSelectedCategories: string[] = [];
+try {
+  globalLastAnimSearch = sessionStorage.getItem('anim_search_filter') || '';
+  const savedCats = sessionStorage.getItem('anim_selected_categories');
+  if (savedCats) {
+    globalLastSelectedCategories = JSON.parse(savedCats);
+  }
+} catch {}
 
 export function getAnimCategory(val: string): string {
   if (val === 'idle' || val === 'tpose') return 'poses_idles';
@@ -58,8 +69,30 @@ export function CharacterAnimSelector({
   const isMobileHook = useIsMobile();
   const isMobile = isMobileProp !== undefined ? isMobileProp : isMobileHook;
 
-  const [animSearch, setAnimSearch] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [animSearch, setAnimSearchState] = useState(() => globalLastAnimSearch);
+  const [selectedCategories, setSelectedCategoriesState] = useState<string[]>(() => globalLastSelectedCategories);
+
+  const setAnimSearch = useCallback((val: string | ((prev: string) => string)) => {
+    setAnimSearchState(prev => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      globalLastAnimSearch = next;
+      try {
+        sessionStorage.setItem('anim_search_filter', next);
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const setSelectedCategories = useCallback((val: string[] | ((prev: string[]) => string[])) => {
+    setSelectedCategoriesState(prev => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      globalLastSelectedCategories = next;
+      try {
+        sessionStorage.setItem('anim_selected_categories', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const [copiedAnim, setCopiedAnim] = useState<string | null>(null);

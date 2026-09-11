@@ -817,8 +817,12 @@ export const WALKER_ANIM_OPTIONS = [
 ].filter((v, i, a) => a.findIndex(t => t.value === v.value) === i).sort((a, b) => {
   if (a.value === "idle") return -1;
   if (b.value === "idle") return 1;
-  const isATPose = a.value.includes("t_pose") || a.value.includes("t-pose") || a.value === "tpose";
-  const isBTPose = b.value.includes("t_pose") || b.value.includes("t-pose") || b.value === "tpose";
+  const isTPoseOpt = (opt: { value: string; label: string }) => {
+    const v = opt.value.toLowerCase();
+    return v === "tpose" || v === "t-pose" || v.endsWith("/anim_t_pose.glb") || v.endsWith("/anim_tpose.glb") || opt.label.toLowerCase().includes("t-pose");
+  };
+  const isATPose = isTPoseOpt(a);
+  const isBTPose = isTPoseOpt(b);
   if (isATPose && !isBTPose) return -1;
   if (isBTPose && !isATPose) return 1;
   return a.label.localeCompare(b.label, 'fr', { sensitivity: 'base' });

@@ -278,6 +278,33 @@ export const INVENTORY: InventoryItem[] = [
 
 import { CHARACTERS } from '@features/scene/walkerConfig';
 
+const sortedCharacters = [...CHARACTERS].sort((a, b) => {
+  const priority = ['xbot', 'native'];
+  const aIdx = priority.indexOf(a.id);
+  const bIdx = priority.indexOf(b.id);
+  if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+  if (aIdx !== -1) return -1;
+  if (bIdx !== -1) return 1;
+  return 0;
+});
+
+sortedCharacters.forEach(char => {
+  if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
+    const photos = char.path.includes('xbot') ? ['characters/xbot/Xbot_official_3d_preview.png'] : undefined;
+    INVENTORY.push({
+      id: char.id,
+      name: char.name,
+      brand: char.id === 'xbot' || char.id === 'xbot_studio' ? 'Mixamo' : 'Lara Croft Style',
+      category: 'walkers',
+      qty: 1,
+      dims: { w: 45, d: 25, h: char.height },
+      glbPath: char.path,
+      ...(photos ? { photos } : {}),
+      notes: `Personnage : ${char.name}.`
+    });
+  }
+});
+
 INVENTORY.push({
   id: 'ushiro',
   name: 'Chien Ushiro (Shiba Inu)',
@@ -300,23 +327,6 @@ INVENTORY.push({
   glbPath: 'characters/robin/robin.glb',
   photos: ['characters/robin/robin_3d_preview.png'],
   notes: `Personnage : Oiseau Robin.`
-});
-
-CHARACTERS.forEach(char => {
-  if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
-    const photos = char.path.includes('xbot') ? ['characters/xbot/Xbot_official_3d_preview.png'] : undefined;
-    INVENTORY.push({
-      id: char.id,
-      name: char.name,
-      brand: char.id === 'xbot_studio' ? 'Mixamo' : 'Lara Croft Style',
-      category: 'walkers',
-      qty: 1,
-      dims: { w: 45, d: 25, h: char.height },
-      glbPath: char.path,
-      ...(photos ? { photos } : {}),
-      notes: `Personnage : ${char.name}.`
-    });
-  }
 });
 
 export interface WigItem {
