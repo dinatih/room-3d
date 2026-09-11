@@ -2,6 +2,7 @@ import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Mackapar50530988 } from './Mackapar50530988';
 import { SpruttigInstances } from './Spruttig20317079';
+import { TShirt } from './TShirt';
 // import { Salopette }   from './Salopette';
 import { DroneCell } from './Drona';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
@@ -59,6 +60,12 @@ export function MackaparGroup({ onSize }: SceneItemProps) {
       <SpruttigInstances
         transforms={MACKAPAR_HANGER_TRANSFORMS}
         userData={{ animUnit: true, itemName: 'Cintres Spruttig Mackapär' }}
+      />
+
+      {/* T-shirt noir suspendu sur le cintre le plus à l'ouest de la barre basse (z = -25) */}
+      <TShirt
+        position={[0, BOTTOM_RAIL_Y, HANGER_Z[0]]}
+        rotation={[0, -HANGER_ROTS[0], 0]}
       />
 
       {/* Salopette suspendue à la barre */}

@@ -5,7 +5,6 @@ import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scen
 import { SceneItemProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { SpruttigInstances } from './Spruttig20317079';
-import { TShirt } from './TShirt';
 
 // ── 6 cintres Spruttig sur la tringle Mulig ──────────────────────────────────
 const HANGER_Z   = [-20, -12, -4, 4, 12, 20];
@@ -55,12 +54,6 @@ export function Mulig30179435({ onSize, ...props }: SceneItemProps) {
       <SpruttigInstances
         transforms={MULIG_HANGER_TRANSFORMS}
         userData={{ animUnit: true, itemName: 'Cintres Spruttig Mulig' }}
-      />
-
-      {/* T-shirt basique noir suspendu sur le 3ème cintre (z = -4) */}
-      <TShirt
-        position={[RAIL_X, RAIL_Y, HANGER_Z[2]]}
-        rotation={[0, HANGER_ROTS[2], 0]}
       />
     </group>
   );
