@@ -104,6 +104,7 @@ import { GoogleNestMini }                             from '@features/scene/item
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
 
 import { Smorkull } from '@features/scene/items/Smorkull';
+import { TShirt } from '@features/scene/items/TShirt';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'smorkull-chair':         Smorkull,
@@ -205,6 +206,8 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'tyco-rebound':           Rebound,
   'google-nest-mini':       GoogleNestMini,
   'lagerpoppel00561816':    Lagerpoppel00561816,
+  'tshirt-noir-L':          TShirt,
+  'tshirt-noir-XL':         TShirt,
 
   // ── Composites (assemblages multi-pièces) ─────────────────────────────────
   'kallax-ne-stack':        KallaxNE,
