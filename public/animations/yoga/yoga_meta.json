@@ -7,7 +7,7 @@
     "title": "Akarna Dhanurasana",
     "frames": 629,
     "duration": 21.0,
-    "size_kb": 249
+    "size_kb": 381
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/test/221004/03596/221004_yogi_nexus_body_hands_03596_Bharadvajas_Twist_pose_or_Bharadvajasana_I_-a_stageii.npz",
@@ -17,7 +17,7 @@
     "title": "Bharadvajas Twist pose - Bharadvajasana I",
     "frames": 1117,
     "duration": 37.2,
-    "size_kb": 424
+    "size_kb": 557
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Boat_Pose_or_Paripurna_Navasana_-a_stageii.npz",
@@ -37,7 +37,7 @@
     "title": "Bound Angle Pose - Baddha Konasana",
     "frames": 696,
     "duration": 23.2,
-    "size_kb": 273
+    "size_kb": 405
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Bow_Pose_or_Dhanurasana_-a_stageii.npz",
@@ -47,7 +47,7 @@
     "title": "Bow Pose - Dhanurasana",
     "frames": 637,
     "duration": 21.2,
-    "size_kb": 252
+    "size_kb": 384
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Bridge_Pose_or_Setu_Bandha_Sarvangasana_-a_stageii.npz",
@@ -57,7 +57,7 @@
     "title": "Bridge Pose - Setu Bandha Sarvangasana",
     "frames": 844,
     "duration": 28.1,
-    "size_kb": 326
+    "size_kb": 459
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Camel_Pose_or_Ustrasana_-a_stageii.npz",
@@ -67,7 +67,7 @@
     "title": "Camel Pose - Ustrasana",
     "frames": 774,
     "duration": 25.8,
-    "size_kb": 301
+    "size_kb": 433
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Cat_Cow_Pose_or_Marjaryasana_-a_stageii.npz",
@@ -77,7 +77,7 @@
     "title": "Cat Cow Pose - Marjaryasana",
     "frames": 505,
     "duration": 16.8,
-    "size_kb": 204
+    "size_kb": 337
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Chair_Pose_or_Utkatasana_-a_stageii.npz",
@@ -87,7 +87,7 @@
     "title": "Chair Pose - Utkatasana",
     "frames": 435,
     "duration": 14.5,
-    "size_kb": 179
+    "size_kb": 311
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Child_Pose_or_Balasana_-a_stageii.npz",
@@ -97,7 +97,7 @@
     "title": "Child Pose - Balasana",
     "frames": 671,
     "duration": 22.4,
-    "size_kb": 264
+    "size_kb": 404
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Cobra_Pose_or_Bhujangasana_-a_stageii.npz",
@@ -107,7 +107,7 @@
     "title": "Cobra Pose - Bhujangasana",
     "frames": 683,
     "duration": 22.8,
-    "size_kb": 268
+    "size_kb": 400
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Corpse_Pose_or_Savasana_-a_stageii.npz",
@@ -117,7 +117,7 @@
     "title": "Corpse Pose - Savasana",
     "frames": 655,
     "duration": 21.8,
-    "size_kb": 258
+    "size_kb": 391
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Cow_Face_Pose_or_Gomukhasana_-a_stageii.npz",
@@ -127,7 +127,7 @@
     "title": "Cow Face Pose - Gomukhasana",
     "frames": 942,
     "duration": 31.4,
-    "size_kb": 361
+    "size_kb": 493
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Crane_Crow_Pose_or_Bakasana_-a_stageii.npz",
@@ -137,7 +137,7 @@
     "title": "Crane Crow Pose - Bakasana",
     "frames": 786,
     "duration": 26.2,
-    "size_kb": 305
+    "size_kb": 437
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Dolphin_Plank_Pose_or_Makara_Adho_Mukha_Svanasana_-a_stageii.npz",
@@ -147,7 +147,7 @@
     "title": "Dolphin Plank Pose - Makara Adho Mukha Svanasana",
     "frames": 574,
     "duration": 19.1,
-    "size_kb": 229
+    "size_kb": 361
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Dolphin_Pose_or_Ardha_Pincha_Mayurasana_-a_stageii.npz",
@@ -157,7 +157,7 @@
     "title": "Dolphin Pose - Ardha Pincha Mayurasana",
     "frames": 547,
     "duration": 18.2,
-    "size_kb": 219
+    "size_kb": 352
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Downward-Facing_Dog_pose_or_Adho_Mukha_Svanasana_-a_stageii.npz",
@@ -167,7 +167,7 @@
     "title": "Downward-Facing Dog pose - Adho Mukha Svanasana",
     "frames": 480,
     "duration": 16.0,
-    "size_kb": 195
+    "size_kb": 328
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Eagle_Pose_or_Garudasana_-a_stageii.npz",
@@ -177,7 +177,7 @@
     "title": "Eagle Pose - Garudasana",
     "frames": 785,
     "duration": 26.2,
-    "size_kb": 305
+    "size_kb": 437
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Eight-Angle_Pose_or_Astavakrasana_-a_stageii.npz",
@@ -187,7 +187,7 @@
     "title": "Eight-Angle Pose - Astavakrasana",
     "frames": 529,
     "duration": 17.6,
-    "size_kb": 213
+    "size_kb": 345
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Extended_Puppy_Pose_or_Uttana_Shishosana_-a_stageii.npz",
@@ -197,7 +197,7 @@
     "title": "Extended Puppy Pose - Uttana Shishosana",
     "frames": 755,
     "duration": 25.2,
-    "size_kb": 294
+    "size_kb": 426
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Extended_Revolved_Side_Angle_Pose_or_Utthita_Parsvakonasana_-a_stageii.npz",
@@ -207,7 +207,7 @@
     "title": "Extended Revolved Side Angle Pose - Utthita Parsvakonasana",
     "frames": 568,
     "duration": 18.9,
-    "size_kb": 227
+    "size_kb": 359
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Extended_Revolved_Triangle_Pose_or_Utthita_Trikonasana_-a_stageii.npz",
@@ -217,7 +217,7 @@
     "title": "Extended Revolved Triangle Pose - Utthita Trikonasana",
     "frames": 783,
     "duration": 26.1,
-    "size_kb": 304
+    "size_kb": 436
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Feathered_Peacock_Pose_or_Pincha_Mayurasana_-a_stageii.npz",
@@ -227,7 +227,7 @@
     "title": "Feathered Peacock Pose - Pincha Mayurasana",
     "frames": 1070,
     "duration": 35.7,
-    "size_kb": 407
+    "size_kb": 540
   },
   {
     "npz": "/home/dinatih/3D Resources/animations/MOYO_smplh_gendered/train/221004/03596/221004_yogi_nexus_body_hands_03596_Firefly_Pose_or_Tittibhasana_-a_stageii.npz",
