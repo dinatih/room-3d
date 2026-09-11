@@ -155,9 +155,15 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
   const leftAngleRef = useRef(leftFlat ? 0 : -1.309);
   const rightAngleRef = useRef(rightFlat ? 0 : 1.309);
 
-  // Set sizing bounding box once
+  // Set sizing bounding box once & initialize armrest rotations
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(157, 89, 61));
+    if (leftGroupRef.current) {
+      leftGroupRef.current.rotation.x = leftAngleRef.current;
+    }
+    if (rightGroupRef.current) {
+      rightGroupRef.current.rotation.x = rightAngleRef.current;
+    }
   }, [onSize]);
 
   // Procedural textures and materials
@@ -289,7 +295,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
 
       {/* ── 3. ANIMATED LEFT ARMREST (Visual Left in room = +Z 57.5) ────────────── */}
       {/* Pivot at Z = 57.5, Y = 41. Local armrest extends into +Z */}
-      <group ref={leftGroupRef} position={[0, 41, 57.5]} userData={{ hoverAction: { label: 'Accoudoir Gauche', actionId: 'sofa-arm-left' } }}>
+      <group ref={leftGroupRef} position={[0, 41, 57.5]} rotation={[leftAngleRef.current, 0, 0]} userData={{ hoverAction: { label: 'Accoudoir Gauche', actionId: 'sofa-arm-left' } }}>
         {/* Rattan Armrest Frame */}
         <mesh geometry={armFrameGeo} material={rattanMat} position={[0, -3, 17.125]} castShadow receiveShadow />
         {/* Left Cushion Section */}
@@ -299,7 +305,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
 
       {/* ── 4. ANIMATED RIGHT ARMREST (Visual Right in room = -Z -57.5) ──────────── */}
       {/* Pivot at Z = -57.5, Y = 41. Local armrest extends into -Z */}
-      <group ref={rightGroupRef} position={[0, 41, -57.5]} userData={{ hoverAction: { label: 'Accoudoir Droit', actionId: 'sofa-arm-right' } }}>
+      <group ref={rightGroupRef} position={[0, 41, -57.5]} rotation={[rightAngleRef.current, 0, 0]} userData={{ hoverAction: { label: 'Accoudoir Droit', actionId: 'sofa-arm-right' } }}>
         {/* Rattan Armrest Frame */}
         <mesh geometry={armFrameGeo} material={rattanMat} position={[0, -3, -17.125]} castShadow receiveShadow />
         {/* Right Cushion Section */}
