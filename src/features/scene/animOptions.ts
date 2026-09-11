@@ -807,7 +807,10 @@ export const WALKER_ANIM_OPTIONS = [
   { value: "animations/interactions/anim_zombie_neck_bite.glb", label: "zombie neck bite (123f / 4.1s, 167KB)" },
   { value: "animations/interactions/anim_zombie_scream.glb", label: "zombie scream (85f / 2.8s, 136KB)" },
 
-  { value: "animations/yoga/anim_yoga_front_back_walking.glb", label: "[YOGA] Front Back Walking (430f / 14.3s, 560KB)" },
+  { value: "animations/yoga/anim_yoga_circle_around.glb", label: "[YOGA] Circle Around (433f / 14.4s, 392KB)" },
+  { value: "animations/yoga/anim_yoga_front_back_walking.glb", label: "[YOGA] Front Back Walking (430f / 14.3s, 340KB)" },
+  { value: "animations/yoga/anim_yoga_random_movements_jumps.glb", label: "[YOGA] Random Movements Jumps (409f / 13.6s, 460KB)" },
+  { value: "animations/yoga/anim_yoga_random_movements_squats.glb", label: "[YOGA] Random Movements Squats (720f / 24.0s, 565KB)" },
   { value: "animations/yoga/anim_yoga_boat_pose_or_paripurna_navasana_a.glb", label: "[YOGA] Boat Pose Paripurna Navasana A (427f / 14.2s, 398KB)" },
 
 
