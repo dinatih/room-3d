@@ -78,7 +78,7 @@ const initialFurniture: FurnitureState = {
   glassDoorV2LeftOpen: false,
   glassDoorV2ShutterPos: 0,
   sofaArmLeft: true,
-  sofaArmRight: false,
+  sofaArmRight: true,
   mackaparDoors: true,
   showerDoor: false,
   dronaMode: 'high',
