@@ -5,6 +5,7 @@
  */
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
+import { getAnimationDef } from './animations/animationResolver';
 import { resetAppIdle } from './idleState';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
@@ -485,7 +486,16 @@ export function CharacterAnimSelector({
         ) : (
           filteredAnims.map(anim => {
             const isActive = activeAnimValue === anim.value;
-            const isPose = anim.label.toLowerCase().includes('pose') || anim.value.toLowerCase().includes('pose');
+            const def = getAnimationDef(anim.value);
+            let duration = def?.duration;
+            if (duration === undefined && anim.label) {
+              const m = anim.label.match(/\/ ([\d.]+)s,/);
+              if (m) duration = parseFloat(m[1]);
+            }
+            if (duration === undefined && (anim.value === 'tpose' || anim.value.includes('anim_t_pose'))) {
+              duration = 0.1;
+            }
+            const isPose = duration !== undefined && duration <= 0.15;
             const filename = anim.value.split('/').pop() || anim.value;
             const animCat = getAnimCategory(anim.value);
             const catObj = ANIM_CATEGORIES.find(c => c.key === animCat);
