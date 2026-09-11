@@ -394,7 +394,8 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
         }
 
         const animNameLower = rawClip.name.toLowerCase();
-        const isWalk = (animNameLower.includes('walk') ||
+        const isYoga = animNameLower.includes('yoga');
+        const isWalk = !isYoga && (animNameLower.includes('walk') ||
                         animNameLower.includes('run') ||
                         animNameLower.includes('step') ||
                         animNameLower.includes('stairs')) &&
@@ -479,7 +480,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
           } else {
             for (let j = 0; j < clone.values.length / 3; j++) {
               let yVal = clone.values[3*j+1] + yMinDelta;
-              const isTPose = animNameLower.includes('t-pose') || animNameLower.includes('t_pose') || animNameLower.includes('tpose');
+              const isTPose = animNameLower === 'tpose' || animNameLower === 't-pose' || animNameLower.includes('anim_t_pose') || animNameLower.includes('anim_tpose');
               const dy = (isWalk || isTPose) ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
               const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
               const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
