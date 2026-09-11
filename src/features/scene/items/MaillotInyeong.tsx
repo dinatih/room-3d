@@ -3,7 +3,7 @@
  * Modèle procédural rouge vif (#c8102e) avec col et détails noirs,
  * flocage au dos "INYEONG" et numéro 25, écusson Taegeuk sur la poitrine.
  */
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { GroupProps } from '@react-three/fiber';
 import type { SceneItemProps } from '@shared/types';
@@ -15,11 +15,20 @@ export interface MaillotInyeongProps extends Partial<SceneItemProps>, GroupProps
 
 export function MaillotInyeong({
   playerName = 'INYEONG',
-  playerNumber = '25',
+  playerNumber = '24',
   onSize,
   ...props
 }: MaillotInyeongProps) {
   const groupRef = useRef<THREE.Group>(null!);
+  const [fontReady, setFontReady] = useState(false);
+
+  useEffect(() => {
+    if (typeof document !== 'undefined' && 'fonts' in document) {
+      document.fonts.load('1em "Bebas Neue"').then(() => {
+        setFontReady(true);
+      }).catch(() => {});
+    }
+  }, []);
 
   const HALF_D = 1.0;
 
@@ -158,23 +167,23 @@ export function MaillotInyeong({
 
     ctx.clearRect(0, 0, 1024, 1024);
 
-    // Nom "INYEONG" au dos en noir mat
+    // Nom "INYEONG" au dos en noir mat avec la police Bebas Neue
     ctx.fillStyle = '#111111';
-    ctx.font = '900 100px "Arial Black", "Impact", sans-serif';
+    ctx.font = '700 130px "Bebas Neue", "Impact", "Arial Black", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.letterSpacing = '6px';
-    ctx.fillText(String(playerName).toUpperCase(), 512, 220);
+    ctx.letterSpacing = '8px';
+    ctx.fillText(String(playerName).toUpperCase(), 512, 210);
 
-    // Numéro "25" imposant style maillot de foot
-    ctx.font = '900 440px "Impact", "Arial Black", sans-serif';
+    // Numéro imposant style maillot de foot en Bebas Neue
+    ctx.font = '700 520px "Bebas Neue", "Impact", "Arial Black", sans-serif';
     ctx.letterSpacing = '0px';
-    ctx.fillText(String(playerNumber), 512, 620);
+    ctx.fillText(String(playerNumber), 512, 590);
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.anisotropy = 8;
     return tex;
-  }, [playerName, playerNumber]);
+  }, [playerName, playerNumber, fontReady]);
 
   // Écusson Corée (Taegeuk rouge/bleu) et numéro poitrine
   const frontCrestTexture = useMemo(() => {
@@ -218,13 +227,13 @@ export function MaillotInyeong({
     ctx.beginPath();
     ctx.arc(cx, cy, r, Math.PI / 2, -Math.PI / 2, true);
     ctx.arc(cx, cy - r / 2, r / 2, -Math.PI / 2, Math.PI / 2, true);
-    ctx.arc(cx, cy + r / 2, r / 2, -Math.PI / 2, Math.PI / 2, false);
+    ctx.arc(cx, cy + r / 2, r / 2, Math.PI / 2, -Math.PI / 2, false);
     ctx.fill();
     ctx.restore();
 
-    // Petit numéro 25 sur la poitrine côté droit
+    // Petit numéro sur la poitrine côté droit en Bebas Neue
     ctx.fillStyle = '#111111';
-    ctx.font = '900 135px "Impact", "Arial Black", sans-serif';
+    ctx.font = '700 160px "Bebas Neue", "Impact", "Arial Black", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(String(playerNumber), 370, 256);
@@ -232,7 +241,7 @@ export function MaillotInyeong({
     const tex = new THREE.CanvasTexture(canvas);
     tex.anisotropy = 8;
     return tex;
-  }, [playerNumber]);
+  }, [playerNumber, fontReady]);
 
   useLayoutEffect(() => {
     if (groupRef.current && onSize) {
