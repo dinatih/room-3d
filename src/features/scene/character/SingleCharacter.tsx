@@ -252,7 +252,7 @@ export function SingleCharacter({
     scene.rotation.set(0, 0, 0);
     scene.updateMatrixWorld(true);
 
-    const baseHeight = isLara ? 173.4 : (id === 'inyeong' ? 165.0 : 181.0);
+    const baseHeight = isLara ? 173.4 : (id === 'inyeong' ? 165.0 : (id === 'sci-fi-girl' ? 170.0 : 181.0));
     const scaleFactor = (targetHeight / baseHeight) * 100.0;
     scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
     scene.updateMatrixWorld(true);

@@ -69,6 +69,10 @@ export const PERF_EXCLUDED_LARA_IDS = new Set([
 ]);
 
 export function isCharacterVisibleInMode(id: string, mode: LaraCountMode = 15, activeWalkerId?: string): boolean {
+  if (id === 'sci-fi-girl') {
+    // Uniquement dans le studio / preview d'inventaire, pas dans la scène principale
+    return false;
+  }
   if (mode === 1) {
     // Mode 1 (Xbot seul) : Strictement Xbot uniquement (aucun modèle Lara n'est instancié/chargé)
     return id === 'xbot';
