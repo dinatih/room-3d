@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CC3_TO_MIXAMO, BONE_SYNONYMS } from './boneMappings';
+import { CC3_TO_MIXAMO } from './boneMappings';
 import { getDepth } from './hairChain';
 import { resolveTargetBoneName } from './boneResolver';
 
@@ -297,22 +297,9 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
 
   const tracks: THREE.KeyframeTrack[] = [];
 
-  // Cache clavicle existence check once for the entire clip to avoid traversing targetInstance per arm track
-  const clavicleSynonymsLeft = BONE_SYNONYMS['LeftShoulder'] || [];
-  const clavicleSynonymsRight = BONE_SYNONYMS['RightShoulder'] || [];
-  let targetHasLeftClavicle = false;
-  let targetHasRightClavicle = false;
-  targetInstance.traverse(node => {
-    if ((node as any).isBone) {
-      const n = (node.name || '').toLowerCase();
-      if (!targetHasLeftClavicle && clavicleSynonymsLeft.some(s => n.includes(s))) {
-        targetHasLeftClavicle = true;
-      }
-      if (!targetHasRightClavicle && clavicleSynonymsRight.some(s => n.includes(s))) {
-        targetHasRightClavicle = true;
-      }
-    }
-  });
+  // Cache clavicle existence check once for the entire clip
+  const targetHasLeftClavicle = Boolean(resolveTargetBoneName(targetInstance, 'LeftShoulder', sourceHairMap));
+  const targetHasRightClavicle = Boolean(resolveTargetBoneName(targetInstance, 'RightShoulder', sourceHairMap));
 
   for (const tr of workingClip.tracks) {
     const [boneFull, prop] = tr.name.split('.');
