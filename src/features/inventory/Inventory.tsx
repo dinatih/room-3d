@@ -461,6 +461,7 @@ export function Inventory({
   });
   const [isResizing, setIsResizing]       = useState(false);
   const tableContainerRef                 = useRef<HTMLDivElement>(null);
+  const searchInputRef                    = useRef<HTMLInputElement>(null);
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -618,16 +619,34 @@ export function Inventory({
             Inventaire
           </div>
           <div className="inventory-topbar-search">
-            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <svg className="inventory-search-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
             </svg>
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Rechercher un item…"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
+            {search && (
+              <button
+                type="button"
+                className="inventory-search-clear"
+                onClick={() => {
+                  setSearch('');
+                  searchInputRef.current?.focus();
+                }}
+                aria-label="Effacer la recherche"
+                title="Effacer la recherche"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
           </div>
           <div className="inventory-topbar-actions">
             <span className="inventory-topbar-count">
