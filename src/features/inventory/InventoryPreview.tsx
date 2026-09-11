@@ -177,7 +177,7 @@ function OrthoCameraControls({
   target = [0, 0, 0],
   boundsRadius = 50,
 }: {
-  mode: 'front' | 'side' | 'feet';
+  mode: 'front' | 'side';
   target?: [number, number, number];
   boundsRadius?: number;
 }) {
@@ -187,19 +187,17 @@ function OrthoCameraControls({
   const camRef = useRef<THREE.OrthographicCamera>(null);
 
   const viewH = useMemo(() => {
-    if (mode === 'feet') return 45; // 45 cm: vue rapprochée sur les pieds
-    return Math.max(80, (boundsRadius || 50) * 2.2); // Vue d'ensemble du personnage
-  }, [mode, boundsRadius]);
+    return Math.max(80, (boundsRadius || 50) * 2.2); // Vue d'ensemble
+  }, [boundsRadius]);
 
   const viewW = viewH * aspect;
 
   const camTarget: [number, number, number] = useMemo(() => {
-    if (mode === 'feet') return [0, 15, 0];
     return [0, target[1] || 85, 0];
-  }, [mode, target]);
+  }, [target]);
 
   const camPos: [number, number, number] = useMemo(() => {
-    if (mode === 'front' || mode === 'feet') {
+    if (mode === 'front') {
       return [0, camTarget[1], 1000];
     }
     return [1000, camTarget[1], 0];
@@ -254,7 +252,7 @@ function OrthoCameraControls({
   );
 }
 
-function GroundDatumLines({ mode }: { mode: 'front' | 'side' | 'feet' }) {
+function GroundDatumLines({ mode }: { mode: 'front' | 'side' }) {
   const isSide = mode === 'side';
   const span = 150;
 
@@ -276,16 +274,6 @@ function GroundDatumLines({ mode }: { mode: 'front' | 'side' | 'feet' }) {
 
       {/* Ligne de tolérance -2 cm (Rouge) */}
       <Line points={linePoints(-2)} color="#ff4444" lineWidth={1} dashed dashSize={2} gapSize={1} />
-
-      {/* Repères gradués en mode zoom pieds */}
-      {mode === 'feet' && (
-        <>
-          <Line points={linePoints(5)} color="#88ccff" lineWidth={0.8} dashed dashSize={1.5} gapSize={1.5} />
-          <Line points={linePoints(10)} color="#88ccff" lineWidth={0.8} dashed dashSize={1.5} gapSize={1.5} />
-          <Line points={linePoints(15)} color="#88ccff" lineWidth={0.8} dashed dashSize={1.5} gapSize={1.5} />
-          <Line points={linePoints(20)} color="#88ccff" lineWidth={0.8} dashed dashSize={1.5} gapSize={1.5} />
-        </>
-      )}
     </group>
   );
 }
@@ -474,7 +462,7 @@ export function InventoryPreview({
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [showAnimSelector, setShowAnimSelector] = useState(false);
-  const [previewView, setPreviewView] = useState<'free' | 'front' | 'side' | 'feet'>('free');
+  const [previewView, setPreviewView] = useState<'free' | 'front' | 'side'>('free');
   useEffect(() => {
     setActionStates(initialDuoAnim ? {
       duoAnimDef: initialDuoAnim,
@@ -565,89 +553,82 @@ export function InventoryPreview({
               <GlobalSkeletonHelpers show={actionStates.showBones} />
             </Canvas>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
-          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+          {showing3D && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 8,
+                left: hasPhotos ? 82 : 8,
+                zIndex: 3,
+                display: 'flex',
+                background: 'rgba(0,0,0,0.7)',
+                borderRadius: 4,
+                padding: 2,
+                gap: 2,
+                border: '1px solid #555'
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setPreviewView('free')}
+                style={{
+                  padding: '2px 6px',
+                  fontSize: 10,
+                  fontWeight: previewView === 'free' ? 'bold' : 'normal',
+                  background: previewView === 'free' ? '#0058a3' : 'transparent',
+                  border: 'none',
+                  borderRadius: 3,
+                  color: '#fff',
+                  cursor: 'pointer'
+                }}
+                title="Vue 3D Perspective libre (rotation 360°)"
+              >
+                🌐 3D
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPreviewView('front');
+                  setAutoRotate(false);
+                }}
+                style={{
+                  padding: '2px 6px',
+                  fontSize: 10,
+                  fontWeight: previewView === 'front' ? 'bold' : 'normal',
+                  background: previewView === 'front' ? '#0058a3' : 'transparent',
+                  border: 'none',
+                  borderRadius: 3,
+                  color: '#fff',
+                  cursor: 'pointer'
+                }}
+                title="Vue Orthographique de Face (alignée sur le sol)"
+              >
+                👤 Face
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPreviewView('side');
+                  setAutoRotate(false);
+                }}
+                style={{
+                  padding: '2px 6px',
+                  fontSize: 10,
+                  fontWeight: previewView === 'side' ? 'bold' : 'normal',
+                  background: previewView === 'side' ? '#0058a3' : 'transparent',
+                  border: 'none',
+                  borderRadius: 3,
+                  color: '#fff',
+                  cursor: 'pointer'
+                }}
+                title="Vue Orthographique de Profil (alignée sur le sol)"
+              >
+                🚶 Profil
+              </button>
+            </div>
+          )}
+          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3 }}>
             <button onClick={() => setShowDims(v => !v)} style={{ padding: '3px 8px', fontSize: 11, background: 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📏 {showDims ? 'Masquer Dims' : 'Afficher Dims'}</button>
-            {showing3D && (
-              <div style={{ display: 'flex', background: 'rgba(0,0,0,0.7)', borderRadius: 4, padding: 2, gap: 2, border: '1px solid #555' }}>
-                <button
-                  type="button"
-                  onClick={() => setPreviewView('free')}
-                  style={{
-                    padding: '2px 6px',
-                    fontSize: 10,
-                    fontWeight: previewView === 'free' ? 'bold' : 'normal',
-                    background: previewView === 'free' ? '#0058a3' : 'transparent',
-                    border: 'none',
-                    borderRadius: 3,
-                    color: '#fff',
-                    cursor: 'pointer'
-                  }}
-                  title="Vue 3D Perspective libre (rotation 360°)"
-                >
-                  🌐 3D
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPreviewView('front');
-                    setAutoRotate(false);
-                  }}
-                  style={{
-                    padding: '2px 6px',
-                    fontSize: 10,
-                    fontWeight: previewView === 'front' ? 'bold' : 'normal',
-                    background: previewView === 'front' ? '#0058a3' : 'transparent',
-                    border: 'none',
-                    borderRadius: 3,
-                    color: '#fff',
-                    cursor: 'pointer'
-                  }}
-                  title="Vue Orthographique de Face (alignée sur l'axe du sol)"
-                >
-                  👤 Face
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPreviewView('side');
-                    setAutoRotate(false);
-                  }}
-                  style={{
-                    padding: '2px 6px',
-                    fontSize: 10,
-                    fontWeight: previewView === 'side' ? 'bold' : 'normal',
-                    background: previewView === 'side' ? '#0058a3' : 'transparent',
-                    border: 'none',
-                    borderRadius: 3,
-                    color: '#fff',
-                    cursor: 'pointer'
-                  }}
-                  title="Vue Orthographique de Profil (alignée sur l'axe du sol)"
-                >
-                  🚶 Profil
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPreviewView('feet');
-                    setAutoRotate(false);
-                  }}
-                  style={{
-                    padding: '2px 6px',
-                    fontSize: 10,
-                    fontWeight: previewView === 'feet' ? 'bold' : 'normal',
-                    background: previewView === 'feet' ? '#2a9d3a' : 'transparent',
-                    border: 'none',
-                    borderRadius: 3,
-                    color: '#fff',
-                    cursor: 'pointer'
-                  }}
-                  title="Zoom Orthographique Sol & Pieds (debug alignement Y=0)"
-                >
-                  🦶 Sol
-                </button>
-              </div>
-            )}
           </div>
           {showing3D && previewView !== 'free' && (
             <div
@@ -671,7 +652,7 @@ export function InventoryPreview({
                 whiteSpace: 'nowrap'
               }}
             >
-              <span>📐 Vue Ortho : <strong>{previewView === 'front' ? 'Face' : previewView === 'side' ? 'Profil' : 'Gros plan Sol & Pieds'}</strong></span>
+              <span>📐 Vue Ortho : <strong>{previewView === 'front' ? 'Face' : 'Profil'}</strong></span>
               <span style={{ color: '#00ff66', fontWeight: 'bold' }}>— 0 cm (Sol)</span>
               <span style={{ color: '#ffbb00' }}>┄ +2 cm</span>
               <span style={{ color: '#ff4444' }}>┄ -2 cm</span>
