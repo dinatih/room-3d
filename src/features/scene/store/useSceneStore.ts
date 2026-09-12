@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
-import type { FurnitureState, LayerState } from '@features/scene/SidePanel';
+import type { FurnitureState, LayerState, GroundType } from '@features/scene/SidePanel';
 import type { LaraCountMode } from '@features/scene/walkerConfig';
 
 function parseUrlNpcCount(): LaraCountMode {
@@ -53,6 +53,7 @@ interface SceneStore {
   setHdri: (id: string) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
   toggleLayer: (key: keyof LayerState) => void;
+  setGroundType: (type: GroundType) => void;
   triggerAction: (key: string) => void;
   setActiveWalkerId: (id: string) => void;
 }
@@ -113,6 +114,7 @@ const initialLayers: LayerState = {
   pillarsOnly: false,
   realSun: false,
   bermudaGrass: true,
+  groundType: 'bermuda',
   gardenWallScan: true,
   walker: true,
   animals: true,
@@ -335,7 +337,39 @@ export const useSceneStore = create<SceneStore>((set) => ({
     });
   },
 
+  setGroundType: (type) => {
+    set((state) => {
+      cameraState.invalidate?.();
+      return {
+        layers: {
+          ...state.layers,
+          groundType: type,
+          bermudaGrass: type !== 'none',
+        },
+      };
+    });
+  },
+
   triggerAction: (key) => {
+    if (key === 'bermuda-grass-toggle' || key === 'ground-type-cycle') {
+      const order: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine', 'mud_leaves', 'none'];
+      set((state) => {
+        const cur = state.layers.groundType ?? 'bermuda';
+        const nextIdx = (order.indexOf(cur) + 1) % order.length;
+        const next = order[nextIdx];
+        cameraState.invalidate?.();
+        return {
+          layers: {
+            ...state.layers,
+            groundType: next,
+            bermudaGrass: next !== 'none',
+          },
+        };
+      });
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key } }));
+      return;
+    }
+
     const resolved = resolveStoreKey(key);
     if (resolved.type === 'furniture') {
       const fKey = resolved.name as keyof FurnitureState;

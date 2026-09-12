@@ -77,6 +77,8 @@ export interface FurnitureState {
   dronaMode: 'high' | 'low' | 'procedural' | 'hidden';
 }
 
+export type GroundType = 'bermuda' | 'medium_01' | 'medium_02' | 'celandine' | 'mud_leaves' | 'none';
+
 export interface LayerState {
   structure: boolean;
   equipment: boolean;
@@ -103,6 +105,7 @@ export interface LayerState {
   pillarsOnly:    boolean;
   realSun:      boolean;
   bermudaGrass: boolean;
+  groundType?:  GroundType;
   gardenWallScan: boolean;
   walker:       boolean;
   animals:      boolean;

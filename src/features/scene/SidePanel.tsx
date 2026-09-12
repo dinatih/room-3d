@@ -22,7 +22,7 @@ import { duoSessionManager } from './ai/duoSessionManager';
 
 import {
   TABS, ALL_HAIR_COLORS,
-  type FurnitureState, type LayerState, type SidePanelProps,
+  type FurnitureState, type LayerState, type GroundType, type SidePanelProps,
   type LidarMode, type TabKey,
 } from './sidepanel/types';
 import { Group } from './sidepanel/Group';
@@ -40,6 +40,7 @@ import { ProfileSection } from './sidepanel/sections/ProfileSection';
 export type {
   FurnitureState,
   LayerState,
+  GroundType,
   SidePanelProps,
   LidarMode,
 };
