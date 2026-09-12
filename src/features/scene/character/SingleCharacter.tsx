@@ -272,7 +272,7 @@ export function SingleCharacter({
       applyLaraVariantStyles(scene, variant);
     }
 
-    hairChainRef.current = buildHairChain(parts.bones.nativeHairBones);
+    hairChainRef.current = isLara ? buildHairChain(parts.bones.nativeHairBones) : [];
   }, [scene, parts, isLara, targetHeight, variant, id]);
 
   // Visibilité des vêtements et des accessoires (synchronisation réactive unique)

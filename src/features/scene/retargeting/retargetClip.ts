@@ -16,7 +16,9 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
       if (c.isBone) {
         let name = c.name;
         if (CC3_TO_MIXAMO[name]) name = CC3_TO_MIXAMO[name];
-        if (name === 'LeftArm' || name === 'RightArm') {
+        const match = name.match(/mixamorig[:_]?(.+)/i);
+        const baseName = match ? match[1] : name;
+        if (baseName === 'LeftArm' || baseName === 'RightArm') {
           const wQ = c.getWorldQuaternion(new THREE.Quaternion());
           const dir = new THREE.Vector3(0, 1, 0).applyQuaternion(wQ);
           // If the arm is pointing downwards (dir.y < -0.1), it's an A-pose.
