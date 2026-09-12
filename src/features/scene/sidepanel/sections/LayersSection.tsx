@@ -1,6 +1,6 @@
 import { useSceneStore } from '../../store/useSceneStore';
 import { HDRI_LIST } from '@features/scene/hdriConfig';
-import { dispatchKey, type LayerState, type LidarMode } from '../types';
+import { dispatchKey, type LayerState, type LidarMode, type GroundType } from '../types';
 
 export interface LayersSectionProps {
   layers: LayerState;
@@ -13,6 +13,15 @@ export interface LayersSectionProps {
   sunInfo: { time: string; el: number } | null;
   handleRandomHdri: () => void;
 }
+
+const GROUND_OPTIONS: { id: GroundType; label: string }[] = [
+  { id: 'bermuda',    label: 'Gazon Bermuda 🌱' },
+  { id: 'medium_01',  label: 'Gazon Moyen 1 🌿' },
+  { id: 'medium_02',  label: 'Gazon Moyen 2 🌾' },
+  { id: 'celandine',  label: 'Prairie Fleurie 🌼' },
+  { id: 'mud_leaves', label: 'Terre & Feuilles 🍂' },
+  { id: 'none',       label: 'Vert uni 🟩' },
+];
 
 export function LayersSection({
   layers,
@@ -27,6 +36,8 @@ export function LayersSection({
 }: LayersSectionProps) {
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
+  const setGroundType = useSceneStore(state => state.setGroundType);
+  const currentGroundType = layers.groundType ?? (layers.bermudaGrass ? 'bermuda' : 'none');
 
   const b0 = (_color: string, label: string, onClick: () => void) => {
     return (
@@ -137,7 +148,24 @@ export function LayersSection({
       {layerBtn('cyan',   'Wireframe coloré 🕸', 'wireframe')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('yellow', 'Lumières HD ✨', 'lightsHD')}
-      {layerBtn('green',  'Gazon Bermuda 🌱', 'bermudaGrass')}
+      {layerBtn('green',  'Sol extérieur 🌿', 'bermudaGrass')}
+      {layers.bermudaGrass && (
+        <div className="px-3 py-1 border-bottom bg-transparent d-flex align-items-center justify-content-between gap-2">
+          <span className="text-muted" style={{ fontSize: '10px' }}>Type :</span>
+          <select
+            className="form-select form-select-sm bg-transparent text-dark border-secondary"
+            style={{ fontSize: isMobile ? '13px' : '11px', maxWidth: '200px' }}
+            value={currentGroundType}
+            onChange={(e) => setGroundType(e.target.value as GroundType)}
+          >
+            {GROUND_OPTIONS.map(opt => (
+              <option key={opt.id} value={opt.id} className="bg-light text-dark">
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       {layerBtn('teal',   'Mur jardin : Scan 3D 🎨', 'gardenWallScan')}
       {layerBtn('cyan',   'LiDAR scan 📡', 'lidar')}
       {layers.lidar && b0('cyan', ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}

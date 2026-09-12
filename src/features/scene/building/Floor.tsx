@@ -592,6 +592,7 @@ export function RedPVCCorridor() {
 
 export function Floor() {
   const bermudaGrass = useSceneStore(state => state.layers.bermudaGrass);
+  const groundType = useSceneStore(state => state.layers.groundType);
 
   const slabShape = useMemo(() => new THREE.Shape([
     new THREE.Vector2(-20, 30),
@@ -700,7 +701,7 @@ export function Floor() {
         </MergedStaticGroup>
       </group>
 
-      <BermudaGround active={bermudaGrass} />
+      <BermudaGround active={bermudaGrass} groundType={groundType} />
     </>
   );
 }
