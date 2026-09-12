@@ -195,7 +195,7 @@ function OrthoCameraControls({
   target = [0, 0, 0],
   boundsRadius = 50,
 }: {
-  mode: 'front' | 'side';
+  mode: 'front' | 'side' | 'top';
   target?: [number, number, number];
   boundsRadius?: number;
 }) {
@@ -211,14 +211,20 @@ function OrthoCameraControls({
   const viewW = viewH * aspect;
 
   const camTarget: [number, number, number] = useMemo(() => {
+    if (mode === 'top') {
+      return [0, 0, 0];
+    }
     return [0, target[1] || 85, 0];
-  }, [target]);
+  }, [mode, target]);
 
   const camPos: [number, number, number] = useMemo(() => {
     if (mode === 'front') {
       return [0, camTarget[1], 1000];
     }
-    return [1000, camTarget[1], 0];
+    if (mode === 'side') {
+      return [1000, camTarget[1], 0];
+    }
+    return [0, 1000, 0];
   }, [mode, camTarget]);
 
   useLayoutEffect(() => {
@@ -229,10 +235,16 @@ function OrthoCameraControls({
       camRef.current.right = viewW / 2;
       camRef.current.top = viewH / 2;
       camRef.current.bottom = -viewH / 2;
+      if (mode === 'top') {
+        camRef.current.up.set(0, 0, -1);
+      } else {
+        camRef.current.up.set(0, 1, 0);
+      }
       camRef.current.position.set(camPos[0], camPos[1], camPos[2]);
+      camRef.current.lookAt(camTarget[0], camTarget[1], camTarget[2]);
       camRef.current.updateProjectionMatrix();
     }
-  }, [camera, camPos, viewW, viewH]);
+  }, [camera, mode, camPos, camTarget, viewW, viewH]);
 
   useEffect(() => {
     if (ctrlRef.current) {
@@ -270,9 +282,24 @@ function OrthoCameraControls({
   );
 }
 
-function GroundDatumLines({ mode }: { mode: 'front' | 'side' }) {
-  const isSide = mode === 'side';
+function GroundDatumLines({ mode }: { mode: 'front' | 'side' | 'top' }) {
   const span = 150;
+
+  if (mode === 'top') {
+    return (
+      <group position={[0, 0.05, 0]}>
+        {/* Axe latéral X (Alignement T-Pose des bras : Vert) */}
+        <Line points={[[-span, 0, 0], [span, 0, 0]]} color="#00ff66" lineWidth={2} />
+        {/* Axe antéro-postérieur Z (Axe de regard / marche : Bleu) */}
+        <Line points={[[0, 0, -span], [0, 0, span]]} color="#0088ff" lineWidth={2} />
+        {/* Lignes de repère latérales ±10 cm */}
+        <Line points={[[-span, 0, 10], [span, 0, 10]]} color="#ffbb00" lineWidth={1} dashed dashSize={2} gapSize={1} />
+        <Line points={[[-span, 0, -10], [span, 0, -10]]} color="#ffbb00" lineWidth={1} dashed dashSize={2} gapSize={1} />
+      </group>
+    );
+  }
+
+  const isSide = mode === 'side';
 
   const linePoints = (y: number): [[number, number, number], [number, number, number]] => {
     if (isSide) {
@@ -480,7 +507,7 @@ export function InventoryPreview({
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [showAnimSelector, setShowAnimSelector] = useState(false);
-  const [previewView, setPreviewView] = useState<'free' | 'front' | 'side'>('free');
+  const [previewView, setPreviewView] = useState<'free' | 'front' | 'side' | 'top'>('free');
   const isAnimPlaying = useAnimPreviewStore(s => s.isPlaying);
 
   useEffect(() => {
@@ -684,6 +711,26 @@ export function InventoryPreview({
               >
                 🚶 Profil
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPreviewView('top');
+                  setAutoRotate(false);
+                }}
+                style={{
+                  padding: '2px 6px',
+                  fontSize: 10,
+                  fontWeight: previewView === 'top' ? 'bold' : 'normal',
+                  background: previewView === 'top' ? '#0058a3' : 'transparent',
+                  border: 'none',
+                  borderRadius: 3,
+                  color: '#fff',
+                  cursor: 'pointer'
+                }}
+                title="Vue Orthographique de Dessus (alignement T-Pose des bras)"
+              >
+                🔝 Dessus
+              </button>
             </div>
           )}
           <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3 }}>
@@ -711,10 +758,20 @@ export function InventoryPreview({
                 whiteSpace: 'nowrap'
               }}
             >
-              <span>📐 Vue Ortho : <strong>{previewView === 'front' ? 'Face' : 'Profil'}</strong></span>
-              <span style={{ color: '#00ff66', fontWeight: 'bold' }}>— 0 cm (Sol)</span>
-              <span style={{ color: '#ffbb00' }}>┄ +2 cm</span>
-              <span style={{ color: '#ff4444' }}>┄ -2 cm</span>
+              <span>📐 Vue Ortho : <strong>{previewView === 'front' ? 'Face' : previewView === 'side' ? 'Profil' : 'Dessus'}</strong></span>
+              {previewView === 'top' ? (
+                <>
+                  <span style={{ color: '#00ff66', fontWeight: 'bold' }}>— Axe X (Bras)</span>
+                  <span style={{ color: '#0088ff', fontWeight: 'bold' }}>— Axe Z (Regard)</span>
+                  <span style={{ color: '#ffbb00' }}>┄ ±10 cm</span>
+                </>
+              ) : (
+                <>
+                  <span style={{ color: '#00ff66', fontWeight: 'bold' }}>— 0 cm (Sol)</span>
+                  <span style={{ color: '#ffbb00' }}>┄ +2 cm</span>
+                  <span style={{ color: '#ff4444' }}>┄ -2 cm</span>
+                </>
+              )}
               <span style={{ color: '#aaa', fontSize: 9 }}>↕ Molette: Zoom | Glisser: Pan</span>
             </div>
           )}
