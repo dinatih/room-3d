@@ -401,10 +401,27 @@ def convert_hayley():
             if vg:
                 vg.name = new_name
 
-    # 6. Align arms into perfect horizontal T-pose
-    print("=== 6. Aligning arms to strictly collinear horizontal T-Pose ===")
+    # 6. Align clavicles and arms into perfect horizontal T-pose
+    print("=== 6. Aligning clavicles and arms to strictly collinear horizontal T-Pose ===")
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.mode_set(mode='POSE')
+
+    def align_bone_direction(pb_from, pb_to, target_dir):
+        bpy.context.view_layer.update()
+        v = (pb_to.head - pb_from.head).normalized()
+        q = v.rotation_difference(target_dir)
+        T = Matrix.Translation(pb_from.head)
+        pb_from.matrix = T @ q.to_matrix().to_4x4() @ T.inverted() @ pb_from.matrix
+        bpy.context.view_layer.update()
+
+    # Align clavicles to natural human slope (-6 deg down, +10 deg forward) instead of excessive -23 deg droop
+    angle_down = math.radians(-6)
+    angle_fwd = math.radians(10)
+    tgt_l_scap = Vector((math.cos(angle_down) * math.cos(angle_fwd), math.sin(angle_down), math.sin(angle_fwd))).normalized()
+    tgt_r_scap = Vector((-math.cos(angle_down) * math.cos(angle_fwd), math.sin(angle_down), math.sin(angle_fwd))).normalized()
+
+    align_bone_direction(arm.pose.bones['mixamorig:LeftShoulder'], arm.pose.bones['mixamorig:LeftArm'], tgt_l_scap)
+    align_bone_direction(arm.pose.bones['mixamorig:RightShoulder'], arm.pose.bones['mixamorig:RightArm'], tgt_r_scap)
 
     def align_arm_chain(pb_arm, pb_forearm, pb_wrist, pb_mid, target_dir):
         bpy.context.view_layer.update()
@@ -460,6 +477,10 @@ def convert_hayley():
     bpy.ops.pose.armature_apply()
     bpy.ops.object.mode_set(mode='EDIT')
     eb = arm.data.edit_bones
+    if 'mixamorig:LeftShoulder' in eb and 'mixamorig:LeftArm' in eb:
+        eb['mixamorig:LeftShoulder'].tail = eb['mixamorig:LeftArm'].head
+    if 'mixamorig:RightShoulder' in eb and 'mixamorig:RightArm' in eb:
+        eb['mixamorig:RightShoulder'].tail = eb['mixamorig:RightArm'].head
     if 'mixamorig:LeftHand' in eb and 'mixamorig:LeftHandMiddle1' in eb:
         eb['mixamorig:LeftHand'].tail = eb['mixamorig:LeftHandMiddle1'].head
     if 'mixamorig:RightHand' in eb and 'mixamorig:RightHandMiddle1' in eb:
