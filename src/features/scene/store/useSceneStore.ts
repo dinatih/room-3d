@@ -37,6 +37,21 @@ export function updateUrlNpcCount(count: LaraCountMode) {
 
 import { getRandomHdriId } from '@features/scene/hdriConfig';
 
+export const GRASS_TYPES: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine', 'mud_leaves'];
+
+export function getRandomGrassType(): GroundType {
+  if (typeof window !== 'undefined') {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlGrass = params.get('grass') ?? params.get('ground') ?? params.get('herbe');
+      if (urlGrass && GRASS_TYPES.includes(urlGrass as GroundType)) {
+        return urlGrass as GroundType;
+      }
+    } catch {}
+  }
+  return GRASS_TYPES[Math.floor(Math.random() * GRASS_TYPES.length)];
+}
+
 interface SceneStore {
   furniture: FurnitureState;
   layers: LayerState;
@@ -114,7 +129,7 @@ const initialLayers: LayerState = {
   pillarsOnly: false,
   realSun: false,
   bermudaGrass: true,
-  groundType: 'bermuda',
+  groundType: getRandomGrassType(),
   gardenWallScan: true,
   walker: true,
   animals: true,

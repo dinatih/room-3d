@@ -1,4 +1,4 @@
-import { useSceneStore } from '../../store/useSceneStore';
+import { useSceneStore, getRandomGrassType } from '../../store/useSceneStore';
 import { HDRI_LIST } from '@features/scene/hdriConfig';
 import { dispatchKey, type LayerState, type LidarMode, type GroundType } from '../types';
 
@@ -152,18 +152,29 @@ export function LayersSection({
       {layers.bermudaGrass && (
         <div className="px-3 py-1 border-bottom bg-transparent d-flex align-items-center justify-content-between gap-2">
           <span className="text-muted" style={{ fontSize: '10px' }}>Type :</span>
-          <select
-            className="form-select form-select-sm bg-transparent text-dark border-secondary"
-            style={{ fontSize: isMobile ? '13px' : '11px', maxWidth: '200px' }}
-            value={currentGroundType}
-            onChange={(e) => setGroundType(e.target.value as GroundType)}
-          >
-            {GROUND_OPTIONS.map(opt => (
-              <option key={opt.id} value={opt.id} className="bg-light text-dark">
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div className="d-flex align-items-center gap-1">
+            <select
+              className="form-select form-select-sm bg-transparent text-dark border-secondary"
+              style={{ fontSize: isMobile ? '13px' : '11px', maxWidth: '175px' }}
+              value={currentGroundType}
+              onChange={(e) => setGroundType(e.target.value as GroundType)}
+            >
+              {GROUND_OPTIONS.map(opt => (
+                <option key={opt.id} value={opt.id} className="bg-light text-dark">
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
+              onClick={() => setGroundType(getRandomGrassType())}
+              title="Herbe aléatoire 🎲"
+              style={{ fontSize: '11px', lineHeight: 1 }}
+            >
+              🎲
+            </button>
+          </div>
         </div>
       )}
       {layerBtn('teal',   'Mur jardin : Scan 3D 🎨', 'gardenWallScan')}
