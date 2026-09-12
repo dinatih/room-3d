@@ -1025,7 +1025,7 @@ export function InventoryPreview({
                     </div>
                   )}
 
-                  {!['ushiro', 'shiba-inu', 'robin-bird', 'inyeong', 'xbot'].includes(item.id) && (
+                  {!['ushiro', 'shiba-inu', 'robin-bird', 'inyeong', 'hayley', 'xbot'].includes(item.id) && (
                     <>
                       <select value={actionStates.previewHaircut || 'original'} onChange={e => setActionStates(s => ({ ...s, previewHaircut: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
                         <option value="original">Coupe d'origine</option>

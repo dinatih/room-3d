@@ -35,7 +35,8 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'xbot',     name: 'Xbot',     emoji: '🤖', color: '#aaaaaa',  path: 'characters/xbot/Xbot_official.glb', pos: [288, 0, 603], rot: 0, variant: 'native', height: 173.4, isLara: false },
   { id: 'sandra',   name: 'Sandra',   emoji: '🥊', color: '#ff4444',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'sandra', height: 173.4 },
   { id: 'rajaa',    name: 'Rajaa',    emoji: '🚗', color: '#aacc44',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'rajaa',  height: 173.4 },
-  { id: 'inyeong',  name: 'Inyeong (Nitro)', emoji: '🪖', color: '#ff4444', path: 'characters/inyeong/nitro_anim_inyeong.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 165, isLara: false }
+  { id: 'inyeong',  name: 'Inyeong (Nitro)', emoji: '🪖', color: '#ff4444', path: 'characters/inyeong/nitro_anim_inyeong.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 165, isLara: false },
+  { id: 'hayley',   name: 'Hayley (Inyeong)', emoji: '👒', color: '#ff66aa', path: 'characters/hayley/hayley.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false }
 ];
 
 /** Retourne le label complet d'un NPC : "emoji nom" (utile dans les UI pour éviter les noms en dur) */
@@ -59,13 +60,14 @@ export const ACCESSORIES_MESH_NAMES = new Set([
 
 export type LaraCountMode = 1 | 2 | 4 | 10 | 15;
 
-export const FOUR_PLAYERS_LARA_IDS = new Set([
-  'native', 'xbot', 'rosanna', 'cha'
-]);
+/** Nombres de Laras autorisés dans le sélecteur d'options (1, 2, 4, 10, 15) */
+export const LARA_COUNT_MODES: LaraCountMode[] = [1, 2, 4, 10, 15];
 
-export const PERF_EXCLUDED_LARA_IDS = new Set([
-  'sara', 'safa', 'romana', 'angelina', 'lgbta'
-]);
+/** Liste des 4 Laras activées pour le mode 4 joueuses */
+export const FOUR_PLAYERS_LARA_IDS = new Set(['xbot', 'native', 'rosanna', 'marissa']);
+
+/** Laras secondaires désactivées en mode 10 joueuses */
+export const PERF_EXCLUDED_LARA_IDS = new Set(['angelina', 'lgbta']);
 
 export function isCharacterVisibleInMode(id: string, mode: LaraCountMode = 15, activeWalkerId?: string): boolean {
   if (mode === 1) {
@@ -93,5 +95,5 @@ export function isCharacterVisibleInMode(id: string, mode: LaraCountMode = 15, a
 
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
-  'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'inyeong'
+  'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'inyeong', 'hayley'
 ]);

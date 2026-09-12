@@ -294,19 +294,25 @@ sortedCharacters.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
     const photos = char.path.includes('xbot')
       ? ['characters/xbot/Xbot_official_3d_preview.png']
-      : (char.id === 'inyeong' ? ['characters/inyeong/nitro_anim_inyeong_3d_preview.png'] : undefined);
+      : (char.id === 'inyeong'
+        ? ['characters/inyeong/nitro_anim_inyeong_3d_preview.png']
+        : (char.id === 'hayley'
+          ? ['characters/hayley/hayley_3d_preview.png']
+          : undefined));
     INVENTORY.push({
       id: char.id,
       name: char.name,
-      brand: char.id === 'xbot' || char.id === 'xbot_studio' ? 'Mixamo' : (char.id === 'inyeong' ? 'Nitro' : 'Lara Croft Style'),
+      brand: char.id === 'xbot' || char.id === 'xbot_studio' ? 'Mixamo' : (char.id === 'inyeong' ? 'Nitro' : (char.id === 'hayley' ? 'Inyeong' : 'Lara Croft Style')),
       category: 'walkers',
       qty: 1,
-      dims: { w: char.id === 'inyeong' ? 57 : 45, d: char.id === 'inyeong' ? 78 : 25, h: char.height },
+      dims: { w: char.id === 'inyeong' ? 57 : (char.id === 'hayley' ? 50 : 45), d: char.id === 'inyeong' ? 78 : (char.id === 'hayley' ? 30 : 25), h: char.height },
       glbPath: char.path,
       ...(photos ? { photos } : {}),
       notes: char.id === 'inyeong'
         ? 'Personnage animé : Inyeong en combinaison de vol Nitro avec casque et visière.'
-        : `Personnage : ${char.name}.`
+        : (char.id === 'hayley'
+          ? 'Personnage animé : Hayley (Inyeong) en tenue stylée avec chapeau, lunettes et bottes.'
+          : `Personnage : ${char.name}.`)
     });
   }
 });
