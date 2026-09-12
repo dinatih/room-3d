@@ -51,6 +51,10 @@ function BermudaGroundMesh() {
       }
     });
 
+    if (textures.map) {
+      textures.map.colorSpace = THREE.SRGBColorSpace;
+    }
+
     return new THREE.MeshStandardMaterial({
       map: textures.map,
       normalMap: textures.normalMap,
