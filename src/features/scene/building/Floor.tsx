@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { useSceneStore } from '../store/useSceneStore';
 import { GrassGround } from '../GrassGround';
+import { BermudaGround } from './BermudaGround';
 import { MergedStaticGroup } from './MergedStaticGroup';
 import {
   ROOM_W, ROOM_D, WALL_H, NICHE_X, NICHE_Z_START, DOOR_START, DOOR_END,
@@ -12,7 +13,7 @@ import {
 } from '@config';
 import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X } from '../wallData';
 import {
-  COLORS, skirtingMat, noCapMat, slabConcreteTop, slabConcreteSide, groundExteriorMat,
+  COLORS, skirtingMat, noCapMat, slabConcreteTop, slabConcreteSide,
   boxFaceMats, qrGeo
 } from './buildingCommon';
 import { P } from './Walls';
@@ -592,6 +593,7 @@ export function RedPVCCorridor() {
 
 export function Floor() {
   const showGrass = useSceneStore(state => state.layers.grass);
+  const bermudaGrass = useSceneStore(state => state.layers.bermudaGrass);
 
   const slabShape = useMemo(() => new THREE.Shape([
     new THREE.Vector2(-20, 30),
@@ -700,15 +702,7 @@ export function Floor() {
         </MergedStaticGroup>
       </group>
 
-      <mesh
-        ref={(m) => { if (m) m.material = groundExteriorMat; }}
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[150, -10, 0]}
-        receiveShadow
-        userData={{ brickType: 'ground', itemName: 'Terrain Extérieur' }}
-      >
-        <planeGeometry args={[1100, 2000]} />
-      </mesh>
+      <BermudaGround active={bermudaGrass} />
 
       {showGrass && <GrassGround yPos={-3.48} />}
     </>

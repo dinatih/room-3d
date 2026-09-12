@@ -113,6 +113,7 @@ const initialLayers: LayerState = {
   pillarsOnly: false,
   realSun: false,
   grass: false,
+  bermudaGrass: true,
   gardenWallScan: true,
   walker: true,
   animals: true,
@@ -212,6 +213,8 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
     'glass-door-v2-shutter-pos': 'glassDoorV2ShutterPos',
     'garden-wall-scan': 'gardenWallScan',
     'garden-wall-toggle': 'gardenWallScan',
+    'bermuda-grass': 'bermudaGrass',
+    'bermuda-grass-toggle': 'bermudaGrass',
   };
 
   const layerKeys = Object.keys(initialLayers);
