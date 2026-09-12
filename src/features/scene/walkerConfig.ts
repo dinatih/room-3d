@@ -38,7 +38,8 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'inyeong',  name: 'Inyeong (Nitro)', emoji: '🪖', color: '#ff4444', path: 'characters/inyeong/nitro_anim_inyeong.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 165, isLara: false },
   { id: 'hayley',   name: 'Hayley (Inyeong)', emoji: '👒', color: '#ff66aa', path: 'characters/hayley/hayley.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false },
   { id: 'gloria',   name: 'Gloria (Red Hair)', emoji: '👩‍🦰', color: '#e04040', path: 'characters/gloria/gloria.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false },
-  { id: 'zoe',      name: 'Zoe (Red)', emoji: '👠', color: '#c02040', path: 'characters/zoe/zoe.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false }
+  { id: 'zoe',      name: 'Zoe (Red)', emoji: '👠', color: '#c02040', path: 'characters/zoe/zoe.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false },
+  { id: 'sophia',   name: 'Sophia (Doll)', emoji: '🎀', color: '#ff77aa', path: 'characters/sophia/sophia.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false }
 ];
 
 /** Retourne le label complet d'un NPC : "emoji nom" (utile dans les UI pour éviter les noms en dur) */
@@ -97,5 +98,5 @@ export function isCharacterVisibleInMode(id: string, mode: LaraCountMode = 15, a
 
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
-  'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'inyeong', 'hayley', 'gloria', 'zoe'
+  'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'inyeong', 'hayley', 'gloria', 'zoe', 'sophia'
 ]);
