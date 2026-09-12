@@ -406,7 +406,7 @@ def convert_hayley():
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.mode_set(mode='POSE')
 
-    def align_arm_chain(pb_arm, pb_forearm, pb_wrist, target_dir):
+    def align_arm_chain(pb_arm, pb_forearm, pb_wrist, pb_mid, target_dir):
         bpy.context.view_layer.update()
         v1 = (pb_forearm.head - pb_arm.head).normalized()
         q1 = v1.rotation_difference(target_dir)
@@ -422,9 +422,7 @@ def convert_hayley():
         pb_forearm.matrix = rot_mat2 @ pb_forearm.matrix
         bpy.context.view_layer.update()
 
-        v3 = (pb_wrist.tail - pb_wrist.head).normalized()
-        if (v3.dot(target_dir)) < 0:
-            v3 = -v3
+        v3 = (pb_mid.head - pb_wrist.head).normalized()
         q3 = v3.rotation_difference(target_dir)
         T3 = Matrix.Translation(pb_wrist.head)
         rot_mat3 = T3 @ q3.to_matrix().to_4x4() @ T3.inverted()
@@ -435,12 +433,14 @@ def convert_hayley():
         arm.pose.bones['mixamorig:LeftArm'],
         arm.pose.bones['mixamorig:LeftForeArm'],
         arm.pose.bones['mixamorig:LeftHand'],
+        arm.pose.bones['mixamorig:LeftHandMiddle1'],
         Vector((1.0, 0.0, 0.0))
     )
     align_arm_chain(
         arm.pose.bones['mixamorig:RightArm'],
         arm.pose.bones['mixamorig:RightForeArm'],
         arm.pose.bones['mixamorig:RightHand'],
+        arm.pose.bones['mixamorig:RightHandMiddle1'],
         Vector((-1.0, 0.0, 0.0))
     )
 
@@ -458,6 +458,12 @@ def convert_hayley():
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.mode_set(mode='POSE')
     bpy.ops.pose.armature_apply()
+    bpy.ops.object.mode_set(mode='EDIT')
+    eb = arm.data.edit_bones
+    if 'mixamorig:LeftHand' in eb and 'mixamorig:LeftHandMiddle1' in eb:
+        eb['mixamorig:LeftHand'].tail = eb['mixamorig:LeftHandMiddle1'].head
+    if 'mixamorig:RightHand' in eb and 'mixamorig:RightHandMiddle1' in eb:
+        eb['mixamorig:RightHand'].tail = eb['mixamorig:RightHandMiddle1'].head
     bpy.ops.object.mode_set(mode='OBJECT')
 
     # 8. Height calibration to 1.68m (168 cm) and Grounding

@@ -796,21 +796,6 @@ export function InventoryPreview({
                         <button
                           type="button"
                           onClick={() => {
-                            const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle' && a.value !== 'tpose' && a.value !== 'animations/poses_idles/anim_t_pose.glb');
-                            if (pool.length > 0) {
-                              const randomAnim = pool[Math.floor(Math.random() * pool.length)];
-                              setActionStates(s => ({ ...s, walkerAnim: randomAnim.value, isPaused: false }));
-                              useAnimPreviewStore.getState().play();
-                            }
-                          }}
-                          style={{ padding: '3px 8px', fontSize: 11, background: '#ffc107', color: '#000', border: '1px solid #d39e00', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}
-                          title="Lancer une animation aléatoire"
-                        >
-                          🎲
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
                             setActionStates(s => ({ ...s, walkerAnim: 'idle', isPaused: false }));
                             useAnimPreviewStore.getState().play();
                           }}
@@ -824,48 +809,66 @@ export function InventoryPreview({
                   </div>
 
                   {isHumanWalker ? (
-                    <button
-                      type="button"
-                      tabIndex={0}
-                      onClick={() => {
-                        setShowAnimSelector(v => !v);
-                        if (!showAnimSelector) {
-                          setActionStates(s => ({ ...s, duoAnimDef: undefined }));
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          cycleAnim('next');
-                        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          cycleAnim('prev');
-                        }
-                      }}
-                      style={{
-                        padding: '4px 8px',
-                        fontSize: 10,
-                        fontWeight: 'bold',
-                        background: showAnimSelector ? '#c82333' : 'rgba(0,0,0,0.7)',
-                        border: `1px solid ${showAnimSelector ? '#dc3545' : '#555'}`,
-                        borderRadius: 4,
-                        color: '#fff',
-                        cursor: 'pointer',
-                        maxWidth: 140,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 4
-                      }}
-                      title={typeof currentAnimLabel === 'string' ? currentAnimLabel : undefined}
-                    >
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        🎬 {currentAnimLabel}
-                      </span>
-                      <span style={{ fontSize: 8, opacity: 0.8 }}>{showAnimSelector ? '▲' : '▼'}</span>
-                    </button>
+                    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          setShowAnimSelector(v => !v);
+                          if (!showAnimSelector) {
+                            setActionStates(s => ({ ...s, duoAnimDef: undefined }));
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            cycleAnim('next');
+                          } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            cycleAnim('prev');
+                          }
+                        }}
+                        style={{
+                          padding: '4px 8px',
+                          fontSize: 10,
+                          fontWeight: 'bold',
+                          background: showAnimSelector ? '#c82333' : 'rgba(0,0,0,0.7)',
+                          border: `1px solid ${showAnimSelector ? '#dc3545' : '#555'}`,
+                          borderRadius: 4,
+                          color: '#fff',
+                          cursor: 'pointer',
+                          maxWidth: 140,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 4
+                        }}
+                        title={typeof currentAnimLabel === 'string' ? currentAnimLabel : undefined}
+                      >
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          🎬 {currentAnimLabel}
+                        </span>
+                        <span style={{ fontSize: 8, opacity: 0.8 }}>{showAnimSelector ? '▲' : '▼'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle' && a.value !== 'tpose' && a.value !== 'animations/poses_idles/anim_t_pose.glb');
+                          if (pool.length > 0) {
+                            const randomAnim = pool[Math.floor(Math.random() * pool.length)];
+                            setActionStates(s => ({ ...s, walkerAnim: randomAnim.value, isPaused: false }));
+                            useAnimPreviewStore.getState().play();
+                          }
+                        }}
+                        style={{ padding: '3px 6px', fontSize: 10, background: '#ffc107', color: '#000', border: '1px solid #d39e00', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}
+                        title="Lancer une animation solo aléatoire 🎲"
+                      >
+                        🎲
+                      </button>
+                    </div>
                   ) : (
                     <select value={actionStates.walkerAnim || 'idle'} onChange={e => setActionStates(s => ({ ...s, walkerAnim: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120 }}>
                       {['ushiro', 'shiba-inu'].includes(item.id) ? (
