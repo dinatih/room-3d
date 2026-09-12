@@ -4,7 +4,6 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { useSceneStore } from '../store/useSceneStore';
-import { GrassGround } from '../GrassGround';
 import { BermudaGround } from './BermudaGround';
 import { MergedStaticGroup } from './MergedStaticGroup';
 import {
@@ -592,7 +591,6 @@ export function RedPVCCorridor() {
 }
 
 export function Floor() {
-  const showGrass = useSceneStore(state => state.layers.grass);
   const bermudaGrass = useSceneStore(state => state.layers.bermudaGrass);
 
   const slabShape = useMemo(() => new THREE.Shape([
@@ -703,8 +701,6 @@ export function Floor() {
       </group>
 
       <BermudaGround active={bermudaGrass} />
-
-      {showGrass && <GrassGround yPos={-3.48} />}
     </>
   );
 }
