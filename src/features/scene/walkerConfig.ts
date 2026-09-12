@@ -35,8 +35,7 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'xbot',     name: 'Xbot',     emoji: '🤖', color: '#aaaaaa',  path: 'characters/xbot/Xbot_official.glb', pos: [288, 0, 603], rot: 0, variant: 'native', height: 173.4, isLara: false },
   { id: 'sandra',   name: 'Sandra',   emoji: '🥊', color: '#ff4444',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'sandra', height: 173.4 },
   { id: 'rajaa',    name: 'Rajaa',    emoji: '🚗', color: '#aacc44',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'rajaa',  height: 173.4 },
-  { id: 'inyeong',  name: 'Inyeong (Nitro)', emoji: '🪖', color: '#ff4444', path: 'characters/inyeong/nitro_anim_inyeong.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 165, isLara: false },
-  { id: 'sci-fi-girl', name: 'Sci-Fi Girl', emoji: '🦾', color: '#00ccff', path: 'characters/sci_fi_girl/sci_fi_girl.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 170, isLara: false }
+  { id: 'inyeong',  name: 'Inyeong (Nitro)', emoji: '🪖', color: '#ff4444', path: 'characters/inyeong/nitro_anim_inyeong.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 165, isLara: false }
 ];
 
 /** Retourne le label complet d'un NPC : "emoji nom" (utile dans les UI pour éviter les noms en dur) */
@@ -69,10 +68,6 @@ export const PERF_EXCLUDED_LARA_IDS = new Set([
 ]);
 
 export function isCharacterVisibleInMode(id: string, mode: LaraCountMode = 15, activeWalkerId?: string): boolean {
-  if (id === 'sci-fi-girl') {
-    // Uniquement dans le studio / preview d'inventaire, pas dans la scène principale
-    return false;
-  }
   if (mode === 1) {
     // Mode 1 (Xbot seul) : Strictement Xbot uniquement (aucun modèle Lara n'est instancié/chargé)
     return id === 'xbot';
