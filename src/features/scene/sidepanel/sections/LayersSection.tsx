@@ -137,7 +137,6 @@ export function LayersSection({
       {layerBtn('cyan',   'Wireframe coloré 🕸', 'wireframe')}
       {layerBtn('yellow', 'Lumières ☀',    'lights')}
       {layerBtn('yellow', 'Lumières HD ✨', 'lightsHD')}
-      {layerBtn('green',  'Gazon 3D 🌿',   'grass')}
       {layerBtn('green',  'Gazon Bermuda 🌱', 'bermudaGrass')}
       {layerBtn('teal',   'Mur jardin : Scan 3D 🎨', 'gardenWallScan')}
       {layerBtn('cyan',   'LiDAR scan 📡', 'lidar')}

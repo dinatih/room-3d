@@ -112,7 +112,6 @@ const initialLayers: LayerState = {
   shadows: true,
   pillarsOnly: false,
   realSun: false,
-  grass: false,
   bermudaGrass: true,
   gardenWallScan: true,
   walker: true,

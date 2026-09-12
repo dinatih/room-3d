@@ -5,6 +5,7 @@
 export const WALKER_ANIM_OPTIONS = [
   { value: "idle", label: "Idle / Return to Default" },
   { value: "animations/poses_idles/anim_t_pose.glb", label: "📐 T-Pose (Rest)" },
+  { value: "animations/emotes_gestures/anim_inyeong_nitro_intro.glb", label: "✨ [INYEONG] Nitro Signature Intro (359f / 6.0s)" },
   { value: "animations/combat/miley_armature_01_rightward_movement_after_dodge.glb", label: "[MILEY] 01 Rightward Movement After Dodge (249f / 4.2s, 423KB)" },
   { value: "animations/combat/miley_armature_02_leftward_movement_after_dodge.glb", label: "[MILEY] 02 Leftward Movement After Dodge (261f / 4.3s, 490KB)" },
   { value: "animations/combat/miley_armature_03_side_movement_and_head_strikes.glb", label: "[MILEY] 03 Side Movement And Head Strikes (569f / 9.5s, 1015KB)" },
