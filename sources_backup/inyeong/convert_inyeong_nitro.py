@@ -1,6 +1,24 @@
 import bpy, math, os
 from mathutils import Matrix, Vector
 
+def merge_vg(mesh, src_name, dst_name):
+    src_vg = mesh.vertex_groups.get(src_name)
+    if not src_vg:
+        return
+    dst_vg = mesh.vertex_groups.get(dst_name)
+    if not dst_vg:
+        dst_vg = mesh.vertex_groups.new(name=dst_name)
+    for v in mesh.data.vertices:
+        for g in v.groups:
+            if g.group == src_vg.index and g.weight > 0:
+                cur_w = 0.0
+                for dg in v.groups:
+                    if dg.group == dst_vg.index:
+                        cur_w = dg.weight
+                        break
+                dst_vg.add([v.index], min(1.0, cur_w + g.weight), 'REPLACE')
+    mesh.vertex_groups.remove(src_vg)
+
 def convert_inyeong():
     fbx_path = os.path.abspath("sources_backup/inyeong/raw/source/Nitro.fbx")
     out_glb = os.path.abspath("public/characters/inyeong/nitro_anim_inyeong.glb")
@@ -28,41 +46,92 @@ def convert_inyeong():
     bpy.ops.pose.transforms_clear()
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    # 3. Edit Mode bone cleanup and hierarchy fix
-    print("=== 3. Cleaning bones in Edit Mode ===")
+    # 3. Merge secondary vertex groups into main deform bones
+    print("=== 3. Merging secondary vertex groups into main deform bones ===")
+    for m in meshes:
+        # Transfer all facial / tongue / teeth / jaw groups to Head
+        for g in list(m.vertex_groups):
+            name = g.name
+            if name.startswith('Face_'):
+                merge_vg(m, name, 'Head')
+            elif 'Hair' in name:
+                merge_vg(m, name, 'Head')
+            elif 'Head_Acce' in name:
+                merge_vg(m, name, 'Head')
+            elif name in ['LeftHandRing', 'LeftHandPinky']:
+                merge_vg(m, name, 'LeftWrist')
+            elif name in ['RightHandRing', 'RightHandPinky']:
+                merge_vg(m, name, 'RightWrist')
+            elif name in ['LeftUpArm_1']:
+                merge_vg(m, name, 'LeftShoulder')
+            elif name in ['RightUpArm_1']:
+                merge_vg(m, name, 'RightShoulder')
+            elif name in ['LeftElbow_Pt_1']:
+                merge_vg(m, name, 'LeftElbow')
+            elif name in ['RightElbow_Pt_1']:
+                merge_vg(m, name, 'RightElbow')
+            elif 'Spine_Acce' in name:
+                merge_vg(m, name, 'Spine3')
+            elif 'Pelvis_Acce' in name:
+                merge_vg(m, name, 'Pelvis')
+
+    # 4. Clean Armature Edit Bones
+    print("=== 4. Cleaning Armature bones to exact Mixamo set ===")
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.mode_set(mode='EDIT')
     edit_bones = arm.data.edit_bones
 
-    # Unparent Pelvis from Root
+    # Unparent Pelvis so it becomes the single, clean root bone
     if 'Pelvis' in edit_bones:
         edit_bones['Pelvis'].parent = None
 
-    # Reparent essential accessory bones
-    if 'LeftUpArm_1' in edit_bones and 'LeftShoulder' in edit_bones:
-        edit_bones['LeftUpArm_1'].parent = edit_bones['LeftShoulder']
-    if 'LeftElbow_Pt_1' in edit_bones and 'LeftElbow' in edit_bones:
-        edit_bones['LeftElbow_Pt_1'].parent = edit_bones['LeftElbow']
-    if 'RightElbow_Pt_1' in edit_bones and 'RightElbow' in edit_bones:
-        edit_bones['RightElbow_Pt_1'].parent = edit_bones['RightElbow']
+    # Reparent finger chains directly to LeftWrist / RightWrist
+    # (since palm metacarpals LeftHandRing and LeftHandPinky were merged into Wrist)
+    if 'LeftHandRing1' in edit_bones and 'LeftWrist' in edit_bones:
+        edit_bones['LeftHandRing1'].parent = edit_bones['LeftWrist']
+    if 'LeftHandPinky1' in edit_bones and 'LeftWrist' in edit_bones:
+        edit_bones['LeftHandPinky1'].parent = edit_bones['LeftWrist']
+    if 'RightHandRing1' in edit_bones and 'RightWrist' in edit_bones:
+        edit_bones['RightHandRing1'].parent = edit_bones['RightWrist']
+    if 'RightHandPinky1' in edit_bones and 'RightWrist' in edit_bones:
+        edit_bones['RightHandPinky1'].parent = edit_bones['RightWrist']
 
-    # Delete dummy leaf bones that have no vertices weighted
-    delete_keywords = ['decor', 'socket', 'weapon', 'drv', 'camera', 'e_main', 'e_lefthand', 'e_righthand', 'rl_boneroot', 'root', 'hp_']
-    bones_to_remove = []
-    for b in edit_bones:
-        nl = b.name.lower()
-        if b.name in ['RL_BoneRoot', 'Root'] or any(k in nl for k in delete_keywords):
-            bones_to_remove.append(b.name)
+    # Reparent LeftWrist to LeftElbow directly
+    if 'LeftWrist' in edit_bones and 'LeftElbow' in edit_bones:
+        edit_bones['LeftWrist'].parent = edit_bones['LeftElbow']
+    if 'RightWrist' in edit_bones and 'RightElbow' in edit_bones:
+        edit_bones['RightWrist'].parent = edit_bones['RightElbow']
 
+    # Define all standard bones to KEEP
+    standard_bones = {
+        'Pelvis', 'Spine1', 'Spine2', 'Spine3', 'Neck', 'Head',
+        'LeftClavicle', 'LeftShoulder', 'LeftElbow', 'LeftWrist',
+        'LeftHandThumb1', 'LeftHandThumb2', 'LeftHandThumb3',
+        'LeftHandIndex1', 'LeftHandIndex2', 'LeftHandIndex3',
+        'LeftHandMiddle1', 'LeftHandMiddle2', 'LeftHandMiddle3',
+        'LeftHandRing1', 'LeftHandRing2', 'LeftHandRing3',
+        'LeftHandPinky1', 'LeftHandPinky2', 'LeftHandPinky3',
+        'RightClavicle', 'RightShoulder', 'RightElbow', 'RightWrist',
+        'RightHandThumb1', 'RightHandThumb2', 'RightHandThumb3',
+        'RightHandIndex1', 'RightHandIndex2', 'RightHandIndex3',
+        'RightHandMiddle1', 'RightHandMiddle2', 'RightHandMiddle3',
+        'RightHandRing1', 'RightHandRing2', 'RightHandRing3',
+        'RightHandPinky1', 'RightHandPinky2', 'RightHandPinky3',
+        'LeftThigh', 'LeftKnee', 'LeftFoot', 'LeftToe',
+        'RightThigh', 'RightKnee', 'RightFoot', 'RightToe'
+    }
+
+    # Delete all other bones
+    bones_to_remove = [b.name for b in edit_bones if b.name not in standard_bones]
     for bname in bones_to_remove:
         if bname in edit_bones:
             edit_bones.remove(edit_bones[bname])
 
-    print(f"Removed {len(bones_to_remove)} dummy bones. Remaining bones: {len(edit_bones)}")
+    print(f"Kept {len(edit_bones)} standard bones. Removed {len(bones_to_remove)} secondary/dummy bones.")
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    # 4. Bone name mapping to standard Mixamo naming
-    print("=== 4. Mapping bones to Mixamo standard ===")
+    # 5. Bone name mapping to standard Mixamo naming
+    print("=== 5. Mapping bones to standard Mixamo names ===")
     bone_map = {
         'Pelvis': 'mixamorig:Hips',
         'Spine1': 'mixamorig:Spine',
@@ -84,12 +153,12 @@ def convert_inyeong():
         'LeftHandMiddle1': 'mixamorig:LeftHandMiddle1',
         'LeftHandMiddle2': 'mixamorig:LeftHandMiddle2',
         'LeftHandMiddle3': 'mixamorig:LeftHandMiddle3',
-        'LeftHandRing': 'mixamorig:LeftHandRing1',
-        'LeftHandRing1': 'mixamorig:LeftHandRing2',
-        'LeftHandRing2': 'mixamorig:LeftHandRing3',
-        'LeftHandPinky': 'mixamorig:LeftHandPinky1',
-        'LeftHandPinky1': 'mixamorig:LeftHandPinky2',
-        'LeftHandPinky2': 'mixamorig:LeftHandPinky3',
+        'LeftHandRing1': 'mixamorig:LeftHandRing1',
+        'LeftHandRing2': 'mixamorig:LeftHandRing2',
+        'LeftHandRing3': 'mixamorig:LeftHandRing3',
+        'LeftHandPinky1': 'mixamorig:LeftHandPinky1',
+        'LeftHandPinky2': 'mixamorig:LeftHandPinky2',
+        'LeftHandPinky3': 'mixamorig:LeftHandPinky3',
         # Right Arm
         'RightClavicle': 'mixamorig:RightShoulder',
         'RightShoulder': 'mixamorig:RightArm',
@@ -104,12 +173,12 @@ def convert_inyeong():
         'RightHandMiddle1': 'mixamorig:RightHandMiddle1',
         'RightHandMiddle2': 'mixamorig:RightHandMiddle2',
         'RightHandMiddle3': 'mixamorig:RightHandMiddle3',
-        'RightHandRing': 'mixamorig:RightHandRing1',
-        'RightHandRing1': 'mixamorig:RightHandRing2',
-        'RightHandRing2': 'mixamorig:RightHandRing3',
-        'RightHandPinky': 'mixamorig:RightHandPinky1',
-        'RightHandPinky1': 'mixamorig:RightHandPinky2',
-        'RightHandPinky2': 'mixamorig:RightHandPinky3',
+        'RightHandRing1': 'mixamorig:RightHandRing1',
+        'RightHandRing2': 'mixamorig:RightHandRing2',
+        'RightHandRing3': 'mixamorig:RightHandRing3',
+        'RightHandPinky1': 'mixamorig:RightHandPinky1',
+        'RightHandPinky2': 'mixamorig:RightHandPinky2',
+        'RightHandPinky3': 'mixamorig:RightHandPinky3',
         # Legs
         'LeftThigh': 'mixamorig:LeftUpLeg',
         'LeftKnee': 'mixamorig:LeftLeg',
@@ -121,36 +190,19 @@ def convert_inyeong():
         'RightToe': 'mixamorig:RightToeBase',
     }
 
-    # Rename bones in armature
     for old_name, new_name in bone_map.items():
         b = arm.data.bones.get(old_name)
         if b:
             b.name = new_name
 
-    # Rename vertex groups on all meshes
     for m in meshes:
         for old_name, new_name in bone_map.items():
             vg = m.vertex_groups.get(old_name)
             if vg:
                 vg.name = new_name
 
-    # Merge LeftUpArm_1 (armband) weight into mixamorig:LeftArm
-    for m in meshes:
-        vg_armband = m.vertex_groups.get('LeftUpArm_1')
-        if vg_armband:
-            vg_arm = m.vertex_groups.get('mixamorig:LeftArm')
-            if not vg_arm:
-                vg_arm = m.vertex_groups.new(name='mixamorig:LeftArm')
-            for i in range(len(m.data.vertices)):
-                try:
-                    w = vg_armband.weight(i)
-                    if w > 0:
-                        vg_arm.add([i], w, 'ADD')
-                except RuntimeError:
-                    pass
-
-    # 5. Global 90° rotation around Z to align character facing direction
-    print("=== 5. Applying 90° rotation around Z ===")
+    # 6. Global 90° rotation around Z
+    print("=== 6. Applying 90° rotation around Z ===")
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
 
@@ -164,14 +216,13 @@ def convert_inyeong():
     for m in meshes:
         m.parent = arm
 
-    # 6. Perfect T-Pose alignment in Pose Mode
-    print("=== 6. Aligning arms to strictly collinear T-Pose ===")
+    # 7. T-Pose Arm Alignment in Pose Mode
+    print("=== 7. Aligning arms to strictly collinear T-Pose ===")
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.mode_set(mode='POSE')
 
     def align_arm_chain(pb_arm, pb_forearm, pb_wrist, target_dir):
         bpy.context.view_layer.update()
-        # Upper Arm
         v1 = (pb_forearm.head - pb_arm.head).normalized()
         q1 = v1.rotation_difference(target_dir)
         T1 = Matrix.Translation(pb_arm.head)
@@ -179,7 +230,6 @@ def convert_inyeong():
         pb_arm.matrix = rot_mat1 @ pb_arm.matrix
         bpy.context.view_layer.update()
 
-        # Forearm
         v2 = (pb_wrist.head - pb_forearm.head).normalized()
         q2 = v2.rotation_difference(target_dir)
         T2 = Matrix.Translation(pb_forearm.head)
@@ -187,7 +237,6 @@ def convert_inyeong():
         pb_forearm.matrix = rot_mat2 @ pb_forearm.matrix
         bpy.context.view_layer.update()
 
-        # Wrist
         v3 = (pb_wrist.tail - pb_wrist.head).normalized()
         if (v3.dot(target_dir)) < 0:
             v3 = -v3
@@ -201,7 +250,7 @@ def convert_inyeong():
     align_arm_chain(arm.pose.bones['mixamorig:RightArm'], arm.pose.bones['mixamorig:RightForeArm'], arm.pose.bones['mixamorig:RightHand'], Vector((-1.0, 0.0, 0.0)))
 
     # Bake pose into mesh vertex coordinates
-    print("=== 7. Baking T-Pose to meshes and rest pose ===")
+    print("=== 8. Baking T-Pose to meshes and rest pose ===")
     bpy.ops.object.mode_set(mode='OBJECT')
     for m in meshes:
         bpy.context.view_layer.objects.active = m
@@ -216,8 +265,8 @@ def convert_inyeong():
     bpy.ops.pose.armature_apply()
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    # 8. Height Calibration & Grounding
-    print("=== 8. Calibrating height to 1.65m and grounding ===")
+    # 9. Height Calibration & Grounding
+    print("=== 9. Calibrating height to 1.65m and grounding ===")
     min_z = 9999.0
     max_z = -9999.0
     for m in meshes:
@@ -229,7 +278,6 @@ def convert_inyeong():
     current_height = max_z - min_z
     print(f"Current mesh height: {current_height:.3f} (min_z: {min_z:.3f}, max_z: {max_z:.3f})")
 
-    # Target height 1.65 meters
     target_h = 1.65
     scale_factor = target_h / current_height
 
@@ -237,14 +285,12 @@ def convert_inyeong():
     bpy.ops.transform.resize(value=(scale_factor, scale_factor, scale_factor))
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
 
-    # Recalculate min_z after scale
     min_z = 9999.0
     for m in meshes:
         for v in m.bound_box:
             world_v = m.matrix_world @ Vector(v)
             if world_v.z < min_z: min_z = world_v.z
 
-    # Center Hips in X/Y and ground feet at Z = 0
     hips_bone = arm.data.bones.get('mixamorig:Hips')
     hips_world = arm.matrix_world @ hips_bone.head_local if hips_bone else Vector((0, 0, 0))
     offset = Vector((-hips_world.x, -hips_world.y, -min_z))
@@ -263,13 +309,13 @@ def convert_inyeong():
             h = arm.matrix_world @ b.head_local
             print(f"{bname}: ({h.x:.4f}, {h.y:.4f}, {h.z:.4f})")
 
-    # 9. Save .blend
-    print(f"=== 9. Saving .blend to {out_blend} ===")
+    # 10. Save .blend
+    print(f"=== 10. Saving .blend to {out_blend} ===")
     os.makedirs(os.path.dirname(out_blend), exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=out_blend)
 
-    # 10. Export GLB
-    print(f"=== 10. Exporting GLB to {out_glb} ===")
+    # 11. Export GLB
+    print(f"=== 11. Exporting GLB to {out_glb} ===")
     os.makedirs(os.path.dirname(out_glb), exist_ok=True)
     bpy.ops.export_scene.gltf(
         filepath=out_glb,
@@ -282,8 +328,8 @@ def convert_inyeong():
     )
     print(f"Successfully exported GLB: {out_glb} ({os.path.getsize(out_glb)} bytes)")
 
-    # 11. Render 3D Preview Thumbnail
-    print("=== 11. Rendering preview thumbnail ===")
+    # 12. Render Preview Thumbnail
+    print("=== 12. Rendering preview thumbnail ===")
     render_preview(out_preview)
 
 def render_preview(out_path):
@@ -297,26 +343,12 @@ def render_preview(out_path):
     scene.render.image_settings.file_format = 'PNG'
     scene.render.filepath = out_path
 
-    # Add Camera
     cam_data = bpy.data.cameras.new("PreviewCam")
     cam_obj = bpy.data.objects.new("PreviewCam", cam_data)
     scene.collection.objects.link(cam_obj)
     scene.camera = cam_obj
     cam_obj.location = (0.0, -2.4, 1.1)
     cam_obj.rotation_euler = (math.radians(82), 0, 0)
-
-    # Add Lights
-    light_data1 = bpy.data.lights.new(name="KeyLight", type='SUN')
-    light_data1.energy = 3.5
-    light_obj1 = bpy.data.objects.new(name="KeyLight", object_data=light_data1)
-    scene.collection.objects.link(light_obj1)
-    light_obj1.rotation_euler = (math.radians(45), math.radians(15), math.radians(-30))
-
-    light_data2 = bpy.data.lights.new(name="FillLight", type='SUN')
-    light_data2.energy = 2.0
-    light_obj2 = bpy.data.objects.new(name="FillLight", object_data=light_data2)
-    scene.collection.objects.link(light_obj2)
-    light_obj2.rotation_euler = (math.radians(30), math.radians(-20), math.radians(150))
 
     bpy.ops.render.render(write_still=True)
     print(f"Rendered preview to {out_path}")

@@ -34,7 +34,11 @@ export function GlobalSkeletonHelpers({ show }: { show: boolean }) {
           if (!isVis) return;
 
           if (skinnedMesh.skeleton && skinnedMesh.skeleton.bones.length > 0) {
-            let topBone = skinnedMesh.skeleton.bones[0];
+            const hipsBone = skinnedMesh.skeleton.bones.find((b: any) => {
+              const nl = (b.name || '').toLowerCase();
+              return nl.includes('hips') || nl.includes('pelvis');
+            });
+            let topBone = hipsBone || skinnedMesh.skeleton.bones[0];
             while (topBone.parent && (topBone.parent as THREE.Bone).isBone) {
               topBone = topBone.parent as THREE.Bone;
             }
@@ -61,7 +65,7 @@ export function GlobalSkeletonHelpers({ show }: { show: boolean }) {
 
       // Remove helpers for skeletons that no longer exist
       helpersRef.current.forEach((helper, topBone) => {
-        if (!currentTopBones.has(topBone) || !topBone.parent) {
+        if (!currentTopBones.has(topBone)) {
           helper.removeFromParent();
           helper.dispose();
           helpersRef.current.delete(topBone);

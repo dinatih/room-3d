@@ -427,7 +427,7 @@ export function SingleCharacter({
     if (!headBone) return;
 
     if (haircut === 'original') {
-      const ghostWigs = headBone.children.filter((c: any) => c.userData.isWigRoot || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_'));
+      const ghostWigs = headBone.children.filter((c: any) => !c.isBone && (c.userData.isWigRoot || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_')));
       ghostWigs.forEach((w: any) => headBone.remove(w));
     }
 
