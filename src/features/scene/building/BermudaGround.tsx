@@ -59,9 +59,10 @@ export const GROUND_CONFIGS: Record<Exclude<GroundType, 'none'>, GroundConfig> =
 interface BermudaGroundProps {
   active?: boolean;
   groundType?: GroundType;
+  yPos?: number;
 }
 
-export function BermudaGround({ active = true, groundType = 'bermuda' }: BermudaGroundProps) {
+export function BermudaGround({ active = true, groundType = 'bermuda', yPos = -4.5 }: BermudaGroundProps) {
   const effectiveType = active ? groundType : 'none';
 
   if (effectiveType === 'none' || !(effectiveType in GROUND_CONFIGS)) {
@@ -69,7 +70,7 @@ export function BermudaGround({ active = true, groundType = 'bermuda' }: Bermuda
       <mesh
         material={groundExteriorMat}
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[150, -10, 0]}
+        position={[150, yPos, 0]}
         receiveShadow
         userData={{
           brickType: 'ground',
@@ -83,10 +84,10 @@ export function BermudaGround({ active = true, groundType = 'bermuda' }: Bermuda
   }
 
   const config = GROUND_CONFIGS[effectiveType as Exclude<GroundType, 'none'>];
-  return <TexturedGroundMesh key={config.id} config={config} />;
+  return <TexturedGroundMesh key={config.id} config={config} yPos={yPos} />;
 }
 
-function TexturedGroundMesh({ config }: { config: GroundConfig }) {
+function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: number }) {
   const textures = useTexture({
     map: config.diffuse,
     normalMap: config.normal,
@@ -124,7 +125,7 @@ function TexturedGroundMesh({ config }: { config: GroundConfig }) {
     <mesh
       material={material}
       rotation={[-Math.PI / 2, 0, 0]}
-      position={[150, -10, 0]}
+      position={[150, yPos, 0]}
       receiveShadow
       userData={{
         brickType: 'ground',
