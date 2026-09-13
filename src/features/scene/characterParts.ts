@@ -421,7 +421,7 @@ export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D) {
 
       if (isHairOrLash) {
         m.transparent = false;
-        (m as any).alphaTest = 0.5;
+        (m as any).alphaTest = 0.35;
         m.depthWrite = true;
         m.side = THREE.DoubleSide;
         m.needsUpdate = true;
