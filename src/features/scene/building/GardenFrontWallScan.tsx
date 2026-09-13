@@ -41,6 +41,34 @@ export function GardenFrontWallScan({
         mesh.castShadow = true;
         mesh.receiveShadow = true;
 
+        // Suppression de la face arrière (-Z) pour voir à travers depuis l'extérieur,
+        // à l'identique du mur procédural (northMats).
+        if (mesh.geometry) {
+          const geo = mesh.geometry.clone();
+          const norm = geo.attributes.normal;
+          if (geo.index && norm) {
+            const idx = geo.index;
+            const newIndices: number[] = [];
+            for (let i = 0; i < idx.count; i += 3) {
+              const i0 = idx.getX(i);
+              const i1 = idx.getX(i + 1);
+              const i2 = idx.getX(i + 2);
+              const n0 = new THREE.Vector3(
+                norm.getX(i0),
+                norm.getY(i0),
+                norm.getZ(i0)
+              ).transformDirection(child.matrixWorld);
+
+              // Les triangles dont la normale pointe vers -Z (face arrière) sont ignorés
+              if (n0.z >= -0.5) {
+                newIndices.push(i0, i1, i2);
+              }
+            }
+            geo.setIndex(newIndices);
+          }
+          mesh.geometry = geo;
+        }
+
         // Conversion en MeshStandardMaterial pour réagir à l'éclairage et aux ombres
         if (mesh.material) {
           const originalMat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
@@ -51,8 +79,10 @@ export function GardenFrontWallScan({
               map,
               roughness: 0.85,
               metalness: 0.05,
-              side: THREE.DoubleSide,
+              side: THREE.FrontSide,
             });
+          } else if ('side' in (originalMat as any)) {
+            (originalMat as any).side = THREE.FrontSide;
           }
         }
       }
