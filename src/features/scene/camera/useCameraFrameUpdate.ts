@@ -204,6 +204,10 @@ export function useCameraFrameUpdate({
       walkYaw.current = cameraState.walkerYaw;
     }
 
+    if (modeRef.current === 'walk') {
+      invalidate();
+    }
+
     if (keys.current.size > 0) {
       invalidate();
       const k = keys.current;

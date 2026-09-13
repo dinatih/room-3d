@@ -32,6 +32,10 @@ export const cameraState = {
   walkerYaw: (CHARACTERS[0]?.rot ?? 1.9) as number,
   /** Positions enregistrées de tous les walkers */
   positions: {} as Record<string, {x: number, y: number, z: number, yaw: number}>,
+  /** Position monde réelle de la tête du walker actif (calculée dynamiquement par SingleCharacter d'après le squelette 3D) */
+  activeHeadPos: null as { x: number; y: number; z: number } | null,
+  /** Position monde réelle des hanches / centre de masse du walker actif */
+  activeHipsPos: null as { x: number; y: number; z: number } | null,
   /** Hauteur (cm) du walker — écrit par Walker.tsx, lue par les caméras walk */
   walkerHeight: 173.4 as number,
   /** Déclenché par CameraController chaque frame — la minimap s'y abonne */

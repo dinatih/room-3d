@@ -171,11 +171,29 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       camera.position.set(targetX, targetY, targetZ);
       ctrl.update();
     } else {
-      // Mode 3ème Personne Intelligent & Cinématique
+      // Mode 3ème Personne Intelligent & Cinématique (style Lara Croft / Tomb Raider)
       const bobY = isBobbingEnabled ? bobOffset.current.y * 0.5 : 0;
-      const targetX = walkPos.current.x;
-      const targetY = walkPos.current.y * 0.75 + bobY;
-      const targetZ = walkPos.current.z;
+      const head = cameraState.activeHeadPos;
+      const hips = cameraState.activeHipsPos;
+
+      let targetX = walkPos.current.x;
+      let targetY = walkPos.current.y * 0.75 + bobY;
+      let targetZ = walkPos.current.z;
+
+      if (head) {
+        if (hips) {
+          // Point focal dynamique : 65% tête, 35% torse/hanches (centrage anatomique naturel)
+          // S'adapte instantanément et fluidement quand le perso est debout, assis, couché ou en mouvement
+          targetX = head.x * 0.65 + hips.x * 0.35;
+          targetY = (head.y * 0.65 + hips.y * 0.35) + bobY;
+          targetZ = head.z * 0.65 + hips.z * 0.35;
+        } else {
+          const headOffsetY = Math.min(18, Math.max(5, (head.y / 160) * 18));
+          targetX = head.x;
+          targetY = Math.max(15, head.y - headOffsetY) + bobY;
+          targetZ = head.z;
+        }
+      }
 
       if (cameraState.isDragging || keys.current.has('ArrowLeft') || keys.current.has('ArrowRight')) {
         let diff = orbitYaw.current - walkYaw.current;
@@ -198,7 +216,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       const camY = Math.max(15, targetY + sinP * dist);
       const camZ = targetZ - Math.cos(orbitYaw.current) * cosP * dist;
 
-      const lerpFactor = 0.15;
+      // Détection de saut brusque / changement de pièce (> 350 cm)
+      const distToTarget = Math.hypot(targetX - ctrl.target.x, targetZ - ctrl.target.z);
+      const isSnap = distToTarget > 350;
+      const lerpFactor = isSnap ? 1.0 : 0.15;
+
       ctrl.target.x += (targetX - ctrl.target.x) * lerpFactor;
       ctrl.target.y += (targetY - ctrl.target.y) * lerpFactor;
       ctrl.target.z += (targetZ - ctrl.target.z) * lerpFactor;
@@ -221,9 +243,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       orbitPitch.current = 0.25;
       orbitDistance.current = 220;
 
-      const targetX = x;
-      const targetY = walkPos.current.y * 0.75;
-      const targetZ = z;
+      const head = cameraState.activeHeadPos;
+      const hips = cameraState.activeHipsPos;
+      const targetX = head && hips ? head.x * 0.65 + hips.x * 0.35 : (head ? head.x : x);
+      const targetY = head && hips ? head.y * 0.65 + hips.y * 0.35 : (head ? Math.max(15, head.y - 15) : walkPos.current.y * 0.75);
+      const targetZ = head && hips ? head.z * 0.65 + hips.z * 0.35 : (head ? head.z : z);
       const dist = orbitDistance.current;
       const cosP = Math.cos(orbitPitch.current);
       const sinP = Math.sin(orbitPitch.current);

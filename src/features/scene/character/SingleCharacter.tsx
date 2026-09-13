@@ -41,6 +41,8 @@ const _tmpLgbtaColorB = new THREE.Color();
 const _charFrustum = new THREE.Frustum();
 const _charProjScreenMatrix = new THREE.Matrix4();
 const _charBoundingSphere = new THREE.Sphere();
+const _tmpHeadWorldPos = new THREE.Vector3();
+const _tmpHipsWorldPos = new THREE.Vector3();
 
 export function SingleCharacter({
   id,
@@ -121,6 +123,18 @@ export function SingleCharacter({
 
   // Extraction structurée des maillages et des os
   const parts = useMemo(() => extractCharacterParts(scene), [scene]);
+  const headBone = parts.bones.head;
+  const hipsBone = parts.bones.hips;
+
+  // Nettoyage de la référence de tête caméra quand le personnage n'est plus actif
+  useEffect(() => {
+    return () => {
+      if (isActive) {
+        cameraState.activeHeadPos = null;
+        cameraState.activeHipsPos = null;
+      }
+    };
+  }, [isActive]);
 
   const groupRef = useRef<THREE.Group>(null!);
   const modelRef = useRef<THREE.Object3D>(null!);
@@ -761,9 +775,33 @@ export function SingleCharacter({
         }, scene);
       }
     }
-  });
 
-  const headBone = parts.bones.head;
+    // Suivi dynamique de la tête et du torse pour la caméra 3ème personne (style Tomb Raider)
+    if (isActive && !isPreview) {
+      if (headBone) {
+        headBone.updateWorldMatrix(true, false);
+        headBone.getWorldPosition(_tmpHeadWorldPos);
+        if (!cameraState.activeHeadPos) {
+          cameraState.activeHeadPos = { x: _tmpHeadWorldPos.x, y: _tmpHeadWorldPos.y, z: _tmpHeadWorldPos.z };
+        } else {
+          cameraState.activeHeadPos.x = _tmpHeadWorldPos.x;
+          cameraState.activeHeadPos.y = _tmpHeadWorldPos.y;
+          cameraState.activeHeadPos.z = _tmpHeadWorldPos.z;
+        }
+      }
+      if (hipsBone) {
+        hipsBone.updateWorldMatrix(true, false);
+        hipsBone.getWorldPosition(_tmpHipsWorldPos);
+        if (!cameraState.activeHipsPos) {
+          cameraState.activeHipsPos = { x: _tmpHipsWorldPos.x, y: _tmpHipsWorldPos.y, z: _tmpHipsWorldPos.z };
+        } else {
+          cameraState.activeHipsPos.x = _tmpHipsWorldPos.x;
+          cameraState.activeHipsPos.y = _tmpHipsWorldPos.y;
+          cameraState.activeHipsPos.z = _tmpHipsWorldPos.z;
+        }
+      }
+    }
+  });
 
   return (
     <group
