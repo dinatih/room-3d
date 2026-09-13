@@ -9,6 +9,7 @@ export const EYE_RATIO  = 0.93; // niveau des yeux ≈ 93% de la taille totale d
 export const WALK_SPEED = 2;
 export const MOUSE_SENS = 0.002;
 export const DEFAULT_ORBIT_DISTANCE = 440; // 440 cm (2x plus loin en vue 3ème personne, initialement 220 cm)
+export const DEFAULT_ORBIT_PITCH = Math.PI / 4; // 45° en radians (~0.785 rad) — inclinaison plongeante
 
 /** Hauteur caméra en mode marche = niveau des yeux du walker (≈ 93% de sa taille). */
 export function activeWalkH(): number {
