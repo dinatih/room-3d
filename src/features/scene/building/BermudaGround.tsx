@@ -118,6 +118,8 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       roughnessMap: textures.roughnessMap,
       roughness: 0.9,
       metalness: 0.02,
+      transparent: true,
+      opacity: 0.8,
     });
   }, [textures, config.tileSize]);
 
