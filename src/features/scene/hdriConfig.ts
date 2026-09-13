@@ -113,7 +113,6 @@ export const HDRI_LIST: HdriItem[] = [
   { id: 'stonewall', name: 'Allée pavée & Mur de pierre historique 🧱🏛️', url: '/environment/hdri/Stonewall.hdr', type: 'hdr' },
   { id: 'broumov_runway', name: 'Piste d\'aérodrome Broumov 🛫🛣️', url: '/environment/hdri/broumov-airport-runway_4K.hdr', type: 'hdr' },
   { id: 'calvary_chapels', name: 'Chapelles du Mont Calvaire ⛪⛰️', url: '/environment/hdri/calvary-hill-chapels_4K.hdr', type: 'hdr' },
-  { id: 'chapel_interior', name: 'Intérieur solennel de chapelle ⛪🕯️', url: '/environment/hdri/chapel-interior_4K.hdr', type: 'hdr' },
   { id: 'container_dock', name: 'Zone portuaire & Conteneurs 📦🏗️', url: '/environment/hdri/container_free.hdr', type: 'hdr' },
   { id: 'machinery_room', name: 'Salle des machines sous néons 🏭⚡', url: '/environment/hdri/fluorescent-lit-machinery-room_4K.hdr', type: 'hdr' },
   { id: 'historic_flour_mill', name: 'Moulin à farine historique 🏛️🌾', url: '/environment/hdri/historic-flour-mill_4K.hdr', type: 'hdr' },
