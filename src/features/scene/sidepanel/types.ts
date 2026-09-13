@@ -117,6 +117,7 @@ export interface LayerState {
   laraShoes?:   boolean;
   laraCount?:   LaraCountMode;
   showAllLaraStyles: boolean;
+  extraCharacters?: boolean;
   wallhack: boolean;
   aiZones: boolean;
   npcCollisions: boolean;

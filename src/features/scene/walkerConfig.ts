@@ -72,7 +72,25 @@ export const FOUR_PLAYERS_LARA_IDS = new Set(['xbot', 'native', 'rosanna', 'mari
 /** Laras secondaires désactivées en mode 10 joueuses */
 export const PERF_EXCLUDED_LARA_IDS = new Set(['angelina', 'lgbta']);
 
-export function isCharacterVisibleInMode(id: string, mode: LaraCountMode = 15, activeWalkerId?: string): boolean {
+/** Détermine si un personnage fait partie des extras (tous ceux qui ne sont ni Lara ni Xbot) */
+export function isExtraCharacter(c: CharacterConfig | string): boolean {
+  const char = typeof c === 'string' ? findCharacter(c) : c;
+  if (!char) return false;
+  return char.id !== 'xbot' && char.isLara === false;
+}
+
+/** Liste des personnages extras (ni Lara ni Xbot) */
+export const EXTRA_CHARACTERS = CHARACTERS.filter(isExtraCharacter);
+
+export function isCharacterVisibleInMode(
+  id: string,
+  mode: LaraCountMode = 15,
+  activeWalkerId?: string,
+  extraCharacters: boolean = true
+): boolean {
+  if (!extraCharacters && isExtraCharacter(id)) {
+    return activeWalkerId === id;
+  }
   if (mode === 1) {
     // Mode 1 (Xbot seul) : Strictement Xbot uniquement (aucun modèle Lara n'est instancié/chargé)
     return id === 'xbot';

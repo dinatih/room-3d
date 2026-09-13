@@ -1,5 +1,5 @@
 import { useSceneStore } from '../../store/useSceneStore';
-import { CHARACTERS, isCharacterVisibleInMode, npcLabel } from '@features/scene/walkerConfig';
+import { CHARACTERS, isCharacterVisibleInMode, npcLabel, EXTRA_CHARACTERS } from '@features/scene/walkerConfig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
 import type { LayerState } from '../types';
 
@@ -72,7 +72,7 @@ export function CharacterSection({
                 useSceneStore.getState().setActiveWalkerId(e.target.value);
               }}
             >
-              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeWalkerId) || c.id === activeWalkerId).map(c => (
+              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeWalkerId, layers.extraCharacters ?? true) || c.id === activeWalkerId).map(c => (
                 <option key={c.id} value={c.id} className="bg-light text-dark">
                   {npcLabel(c)}
                 </option>
@@ -742,6 +742,42 @@ export function CharacterSection({
           </div>
         </div>
       )}
+
+      {/* ── Toggle Personnages Extra (tout en bas) ── */}
+      <div className="p-2 border-top bg-transparent d-flex flex-column gap-1 mt-2">
+        <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          🎭 Personnages Hors-Série
+        </div>
+        <button 
+          type="button"
+          className="btn btn-light w-100 text-start rounded-0 border-0 py-2 px-3 text-dark d-flex align-items-center justify-content-between shadow-none"
+          onClick={() => onToggleLayer('extraCharacters')}
+          title={`Spawner les personnages extra (${EXTRA_CHARACTERS.length}) : ${EXTRA_CHARACTERS.map(c => c.name).join(', ')}`}
+          style={{ 
+            fontSize: isMobile ? '14px' : '11px',
+            minHeight: isMobile ? '48px' : undefined,
+            background: (layers.extraCharacters ?? true) ? 'rgba(13, 110, 253, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+            borderRadius: '4px',
+            fontWeight: (layers.extraCharacters ?? true) ? 600 : 400
+          }}
+        >
+          <div className="d-flex flex-column">
+            <div className="d-flex align-items-center gap-2">
+              <span>🎭</span>
+              <span>Spawner Personnages Extra</span>
+              <span className="badge bg-primary text-white" style={{ fontSize: '9px' }}>
+                {EXTRA_CHARACTERS.length}
+              </span>
+            </div>
+            <div className="text-muted ps-4" style={{ fontSize: '9px' }}>
+              Ni Lara ni Xbot ({EXTRA_CHARACTERS.map(c => c.name).join(', ')})
+            </div>
+          </div>
+          <span className={`badge ${(layers.extraCharacters ?? true) ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+            {(layers.extraCharacters ?? true) ? 'ON' : 'OFF'}
+          </span>
+        </button>
+      </div>
     </div>
   );
 }

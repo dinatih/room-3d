@@ -117,6 +117,7 @@ const initialLayers: LayerState = {
   // NPC count initialized from URL param (ex: ?npc=15 or ?npc=10 or ?npc=2) or fallback to 2
   laraCount: parseUrlNpcCount(),
   showAllLaraStyles: true,
+  extraCharacters: true,
   wallhack: false,
   skeleton: false,
   ceiling: false,
