@@ -390,12 +390,48 @@ export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D) {
         return;
       }
 
-      // 2. Traitement des yeux (pupille + cornée + blanc des yeux)
+      // 2. Fards à paupières / maquillage (Zoe eyeshadow) : transparent sans écriture dans le Z-buffer
+      if (matName.includes('eyeshadow') || meshName.includes('eyeshadow')) {
+        m.transparent = true;
+        m.depthWrite = false;
+        m.needsUpdate = true;
+        return;
+      }
+
+      // 4. Verres de lunettes et visières de casque (ex: Hayley, Inyeong)
+      if (matName.includes('glass') || meshName.includes('glass') || matName.includes('lens')) {
+        m.transparent = true;
+        m.depthWrite = false;
+        if ('opacity' in m && (m as any).opacity === 1) {
+          (m as any).opacity = 0.5;
+        }
+        m.needsUpdate = true;
+        return;
+      }
+
+      // 5. Cils, sourcils et cheveux : découpe alpha (alphaTest) OPAQUE pour éliminer les bugs de tri transparents
+      const isHairOrLash = matName.includes('hair') ||
+                          matName.includes('lash') ||
+                          matName.includes('cil') ||
+                          matName.includes('scalp') ||
+                          meshName.includes('hair') ||
+                          meshName.includes('lash') ||
+                          meshName.includes('cil') ||
+                          meshName.includes('scalp');
+
+      if (isHairOrLash) {
+        m.transparent = false;
+        (m as any).alphaTest = 0.5;
+        m.depthWrite = true;
+        m.side = THREE.DoubleSide;
+        m.needsUpdate = true;
+        return;
+      }
+
+      // 6. Traitement des yeux (pupille + cornée + blanc des yeux)
       const isEye = (matName.includes('eye') || meshName.includes('eye')) &&
-                    !matName.includes('lash') &&
                     !matName.includes('shadow') &&
                     !matName.includes('brow') &&
-                    !meshName.includes('lash') &&
                     !meshName.includes('shadow') &&
                     !meshName.includes('brow');
 
@@ -416,31 +452,12 @@ export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D) {
         return;
       }
 
-      // 3. Fards à paupières / maquillage (Zoe eyeshadow) : transparent sans écriture dans le Z-buffer
-      if (matName.includes('eyeshadow') || meshName.includes('eyeshadow')) {
-        m.transparent = true;
-        m.depthWrite = false;
-        m.needsUpdate = true;
-        return;
-      }
-
-      // 4. Verres de lunettes et visières de casque (ex: Hayley, Inyeong)
-      if (matName.includes('glass') || meshName.includes('glass')) {
-        m.transparent = true;
-        m.depthWrite = false;
-        m.needsUpdate = true;
-        return;
-      }
-
-      // 5. Cils et sourcils : découpe alpha (alphaTest) pour éviter les artefacts de tri transparents
-      if (matName.includes('lash') || meshName.includes('lash')) {
-        m.transparent = false;
-        (m as any).alphaTest = 0.5;
-        m.depthWrite = true;
-        m.side = THREE.DoubleSide;
-        m.needsUpdate = true;
-        return;
-      }
+      // 7. TOUT LE RESTE (Corps, peau, visage, vêtements, chaussures, accessoires) : FORCER OPAQUE !
+      // Indispensable car les exports GLTF définissent souvent alphaMode: BLEND par erreur sur la peau ou les habits.
+      m.transparent = false;
+      m.depthWrite = true;
+      (m as any).alphaTest = 0;
+      m.needsUpdate = true;
     });
   });
 }
