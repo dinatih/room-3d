@@ -5,7 +5,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
-import { removeGlbLines } from '@features/scene/glbUtils';
+import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import { LAYER_WALKER } from '@config';
 
 interface CharacterBaseballCapProps {
@@ -26,17 +26,26 @@ export function CharacterBaseballCap({ attachTo, color = 0xcc0000 }: CharacterBa
     if (!scene || !attachTo) return;
 
     removeGlbLines(scene);
+    scene.scale.set(1, 1, 1);
 
-    // Échelle pour adapter la casquette (base 20 cm) aux proportions de la tête dans l'espace de l'armature
-    const scale = 0.021;
-    scene.scale.setScalar(scale);
+    // Dimensions brutes du GLB (identique à BaseballCap.tsx du studio)
+    const rawSize = glbLocalBBox(scene).getSize(new THREE.Vector3());
+    // Dans le studio, BaseballCap fait 20 cm (1 unité = 1 cm).
+    // Lara étant scalée x100 dans SingleCharacter (1 unité = 1 mètre = 100 cm),
+    // 20 cm dans l'espace de l'armature correspondent exactement à 0.20 unité.
+    scene.scale.setScalar(0.20 / rawSize.x);
+
+    // Centrage de la casquette : base à Y=0, centré en X/Z
+    const box = glbLocalBBox(scene);
+    scene.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2,
+    );
 
     // Ajustement de pose pour épouser le crâne et le front de Lara
-    // - Y = 0.105 (au-dessus du cou, au niveau du front)
-    // - Z = -0.012 (centré sur le crâne, visière vers l'avant +Z)
-    // - RotX = -0.08 (légère inclinaison naturelle vers l'arrière)
-    scene.position.set(0, 0.105, -0.012);
-    scene.rotation.set(-0.08, 0, 0);
+    capGroup.position.set(0, 0.105, -0.012);
+    capGroup.rotation.set(-0.08, 0, 0);
 
     const redMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(color),
