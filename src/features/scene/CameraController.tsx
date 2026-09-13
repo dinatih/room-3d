@@ -74,6 +74,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const orbitDistance = useRef(220);
   const keys = useRef(new Set<string>());
   const dragging = useRef(false);
+  const bobOffset = useRef({ y: 0, side: 0 });
+  const bobPhase = useRef(0);
+  const lastWalkerPos = useRef({ x: initialWalker.pos[0], z: initialWalker.pos[2] });
 
   // Sauvegarde d'état perspective pour retour depuis top-down
   const savedPerspPos = useRef(new THREE.Vector3(...PERSP_POS));
@@ -98,6 +101,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         walkYaw.current = cameraState.walkerYaw;
         orbitYaw.current = cameraState.walkerYaw;
         walkPos.current.y = activeWalkH();
+
+        lastWalkerPos.current.x = cameraState.walkerX;
+        lastWalkerPos.current.z = cameraState.walkerZ;
 
         invalidate();
       }
@@ -124,12 +130,37 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (!ctrl) return;
 
     const isFPV = modeRef.current === 'fpv';
+    const isBobbingEnabled = useSceneStore.getState().layers.fpvHeadBobbing ?? false;
+
+    // Calcul du déplacement réel pour cadencer le bobbing
+    const dx = cameraState.walkerX - lastWalkerPos.current.x;
+    const dz = cameraState.walkerZ - lastWalkerPos.current.z;
+    const movedDist = Math.hypot(dx, dz);
+    lastWalkerPos.current.x = cameraState.walkerX;
+    lastWalkerPos.current.z = cameraState.walkerZ;
+
+    if (isBobbingEnabled && movedDist > 0.05) {
+      // Cadence proportionnelle à la foulée (~70 cm par cycle complet)
+      bobPhase.current += movedDist * (Math.PI / 35);
+      const targetBobY = Math.sin(bobPhase.current * 2) * 2.0;
+      const targetBobSide = Math.cos(bobPhase.current) * 0.9;
+      bobOffset.current.y += (targetBobY - bobOffset.current.y) * 0.3;
+      bobOffset.current.side += (targetBobSide - bobOffset.current.side) * 0.3;
+    } else {
+      bobOffset.current.y += (0 - bobOffset.current.y) * 0.15;
+      bobOffset.current.side += (0 - bobOffset.current.side) * 0.15;
+    }
 
     if (isFPV) {
       const cosP = Math.cos(walkPitch.current);
-      const targetX = walkPos.current.x;
-      const targetY = walkPos.current.y;
-      const targetZ = walkPos.current.z;
+      const bobY = isBobbingEnabled ? bobOffset.current.y : 0;
+      const bobSide = isBobbingEnabled ? bobOffset.current.side : 0;
+      const sideX = Math.cos(walkYaw.current) * bobSide;
+      const sideZ = -Math.sin(walkYaw.current) * bobSide;
+
+      const targetX = walkPos.current.x + sideX;
+      const targetY = walkPos.current.y + bobY;
+      const targetZ = walkPos.current.z + sideZ;
 
       const lookDist = 200;
       ctrl.target.set(
@@ -141,8 +172,9 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       ctrl.update();
     } else {
       // Mode 3ème Personne Intelligent & Cinématique
+      const bobY = isBobbingEnabled ? bobOffset.current.y * 0.5 : 0;
       const targetX = walkPos.current.x;
-      const targetY = walkPos.current.y * 0.75;
+      const targetY = walkPos.current.y * 0.75 + bobY;
       const targetZ = walkPos.current.z;
 
       if (cameraState.isDragging || keys.current.has('ArrowLeft') || keys.current.has('ArrowRight')) {
