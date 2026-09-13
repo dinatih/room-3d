@@ -16,6 +16,48 @@ export interface AnimationDefinition {
 }
 
 export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
+  // ── ANIMATIONS SIGNATURES DES PERSONNAGES ───────────────────────────────────
+  {
+    id: 'inyeong_nitro_intro',
+    path: 'animations/emotes_gestures/anim_inyeong_nitro_intro.glb',
+    label: 'Inyeong Nitro Signature Intro',
+    aliases: ['inyeong_intro', 'nitro_intro', 'inyeong_signature'],
+    tags: ['signature', 'inyeong', 'nitro', 'intro', 'emotes'],
+    duration: 6.0,
+  },
+  {
+    id: 'hayley_signature_intro',
+    path: 'animations/emotes_gestures/anim_hayley_intro.glb',
+    label: 'Hayley Signature Intro',
+    aliases: ['hayley_intro', 'hayley_signature'],
+    tags: ['signature', 'hayley', 'intro', 'emotes'],
+    duration: 7.7,
+  },
+  {
+    id: 'gloria_signature_intro',
+    path: 'animations/emotes_gestures/anim_gloria_intro.glb',
+    label: 'Gloria Signature Intro',
+    aliases: ['gloria_intro', 'gloria_signature'],
+    tags: ['signature', 'gloria', 'intro', 'emotes'],
+    duration: 13.3,
+  },
+  {
+    id: 'zoe_signature_intro',
+    path: 'animations/emotes_gestures/anim_zoe_intro.glb',
+    label: 'Zoe Signature Pose & Motion',
+    aliases: ['zoe_intro', 'zoe_signature', 'zoe_pose'],
+    tags: ['signature', 'zoe', 'intro', 'pose'],
+    duration: 36.1,
+  },
+  {
+    id: 'sophia_victory_dance',
+    path: 'animations/dances/anim_sophia_victory_dance.glb',
+    label: 'Sophia Victory Dance',
+    aliases: ['sophia_dance', 'sophia_victory', 'sophia_signature'],
+    tags: ['signature', 'sophia', 'dance', 'victory'],
+    duration: 66.7,
+  },
+
   // ── POSES DE BASE & REPOS ──────────────────────────────────────────────────
   {
     id: 't_pose',
