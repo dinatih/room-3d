@@ -93,7 +93,7 @@ export function useCameraPointerEvents({
         if (touchLastDist > 0) {
           const delta = dist - touchLastDist;
           if (modeRef.current === 'walk') {
-            orbitDistance.current = Math.max(30, Math.min(800, orbitDistance.current - delta * 0.8));
+            orbitDistance.current = Math.max(30, Math.min(1200, orbitDistance.current - delta * 0.8));
             updateWalkLook();
           } else {
             const cam = camera as THREE.PerspectiveCamera;

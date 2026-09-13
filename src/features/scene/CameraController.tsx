@@ -33,6 +33,7 @@ import {
   PERSP_POS,
   PERSP_TARGET,
   activeWalkH,
+  DEFAULT_ORBIT_DISTANCE,
   useCameraPointerEvents,
   useCameraShortcuts,
   useCameraFrameUpdate,
@@ -71,7 +72,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const orbitYaw = useRef(initialWalker.rot);
   const orbitYawOffset = useRef(0); // Différentiel d'angle relatif au personnage
   const orbitPitch = useRef(0.25);
-  const orbitDistance = useRef(220);
+  const orbitDistance = useRef(DEFAULT_ORBIT_DISTANCE);
   const keys = useRef(new Set<string>());
   const dragging = useRef(false);
   const bobOffset = useRef({ y: 0, side: 0 });
@@ -241,7 +242,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       orbitYaw.current = walkYaw.current;
       orbitYawOffset.current = 0;
       orbitPitch.current = 0.25;
-      orbitDistance.current = 220;
+      orbitDistance.current = DEFAULT_ORBIT_DISTANCE;
 
       const head = cameraState.activeHeadPos;
       const hips = cameraState.activeHipsPos;
