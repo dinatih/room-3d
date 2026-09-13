@@ -347,10 +347,101 @@ export function applyRenderProperties(parts: CharacterParts, opts: RenderPropert
         const m = mats[j] as any;
         if (m) {
           m.depthTest = !opts.showWallhack;
-          m.depthWrite = !opts.showWallhack;
+          m.depthWrite = opts.showWallhack ? false : !m.transparent;
           m.wireframe = opts.characterWireframe;
         }
       }
     }
   }
 }
+
+/**
+ * Normalise les matériaux des personnages non-Lara (Sophia, Zoe, Gloria, Inyeong, Hayley, etc.)
+ * - Supprime/masque les couches d'occlusion ou de larme opaques/parasites (ex: EyeOcclusion sur Sophia)
+ * - Rétablit l'opacité et les reflets naturels pour les yeux (pupille + blanc des yeux)
+ * - Assure la transparence et le non-blocage Z-buffer pour verres/visières et fards à paupières
+ * - Applique alphaTest sur les cils
+ */
+export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D) {
+  scene.traverse(node => {
+    const mesh = node as THREE.Mesh;
+    if (!mesh.isMesh) return;
+
+    const meshName = (mesh.name || '').toLowerCase();
+    const mat = mesh.material;
+    if (!mat) return;
+
+    const mats = Array.isArray(mat) ? mat : [mat];
+    mats.forEach(m => {
+      if (!m) return;
+      const matName = (m.name || '').toLowerCase();
+
+      // 1. Masquer les maillages d'occlusion oculaire ou de larmes qui créent un dôme noir/terne sur les yeux (ex: Sophia EyeOcclusion)
+      if (
+        meshName.includes('eyeocclusion') ||
+        meshName.includes('eye_occlusion') ||
+        matName.includes('eyeocclusion') ||
+        matName.includes('eye_occlusion') ||
+        matName.includes('eyemoisture') ||
+        matName.includes('tear')
+      ) {
+        mesh.visible = false;
+        m.visible = false;
+        return;
+      }
+
+      // 2. Traitement des yeux (pupille + cornée + blanc des yeux)
+      const isEye = (matName.includes('eye') || meshName.includes('eye')) &&
+                    !matName.includes('lash') &&
+                    !matName.includes('shadow') &&
+                    !matName.includes('brow') &&
+                    !meshName.includes('lash') &&
+                    !meshName.includes('shadow') &&
+                    !meshName.includes('brow');
+
+      if (isEye) {
+        m.visible = true;
+        m.transparent = false;
+        m.depthWrite = true;
+        (m as any).alphaTest = 0;
+        if ('color' in m && (m as any).color) {
+          (m as any).color.setHex(0xffffff);
+        }
+        if ('emissive' in m && (m as any).emissive) {
+          (m as any).emissive.setHex(0x000000);
+        }
+        if ('roughness' in m) (m as any).roughness = 0.2;
+        if ('metalness' in m) (m as any).metalness = 0;
+        m.needsUpdate = true;
+        return;
+      }
+
+      // 3. Fards à paupières / maquillage (Zoe eyeshadow) : transparent sans écriture dans le Z-buffer
+      if (matName.includes('eyeshadow') || meshName.includes('eyeshadow')) {
+        m.transparent = true;
+        m.depthWrite = false;
+        m.needsUpdate = true;
+        return;
+      }
+
+      // 4. Verres de lunettes et visières de casque (ex: Hayley, Inyeong)
+      if (matName.includes('glass') || meshName.includes('glass')) {
+        m.transparent = true;
+        m.depthWrite = false;
+        m.needsUpdate = true;
+        return;
+      }
+
+      // 5. Cils et sourcils : découpe alpha (alphaTest) pour éviter les artefacts de tri transparents
+      if (matName.includes('lash') || meshName.includes('lash')) {
+        m.transparent = false;
+        (m as any).alphaTest = 0.5;
+        m.depthWrite = true;
+        m.side = THREE.DoubleSide;
+        m.needsUpdate = true;
+        return;
+      }
+    });
+  });
+}
+

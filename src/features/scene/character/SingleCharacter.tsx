@@ -17,6 +17,7 @@ import {
   extractCharacterParts,
   applyClothingAndAccessoriesVisibility,
   applyRenderProperties,
+  normalizeNonLaraCharacterMaterials,
 } from '../characterParts';
 import { ACTION_FULL_TOUR, buildAutonomousScenario } from '../ai/scenarios';
 import type { AgentInstruction } from '../ai/aiTypes';
@@ -269,8 +270,10 @@ export function SingleCharacter({
       scene.position.z -= hipsLocal.z;
     }
 
-    if (variant) {
+    if (isLara && variant) {
       applyLaraVariantStyles(scene, variant);
+    } else if (!isLara) {
+      normalizeNonLaraCharacterMaterials(scene);
     }
 
     hairChainRef.current = isLara ? buildHairChain(parts.bones.nativeHairBones) : [];
@@ -278,7 +281,7 @@ export function SingleCharacter({
 
   // Visibilité des vêtements et des accessoires (synchronisation réactive unique)
   useEffect(() => {
-    if (!scene) return;
+    if (!scene || !isLara) return;
     applyClothingAndAccessoriesVisibility(parts, {
       laraNude,
       laraTopOff,
@@ -289,7 +292,7 @@ export function SingleCharacter({
       equipment
     });
     invalidate();
-  }, [parts, scene, equipment, laraNude, laraTopOff, laraBottomOff, laraShoes, showAccessories, laraPistols, invalidate]);
+  }, [parts, scene, equipment, laraNude, laraTopOff, laraBottomOff, laraShoes, showAccessories, laraPistols, invalidate, isLara]);
 
   // Propriétés de rendu : ombres, wallhack, fil de fer
   useEffect(() => {

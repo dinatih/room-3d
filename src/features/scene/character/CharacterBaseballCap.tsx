@@ -44,8 +44,8 @@ export function CharacterBaseballCap({ attachTo, color = 0xcc0000 }: CharacterBa
     );
 
     // Ajustement de pose pour épouser le crâne et le front de Lara
-    capGroup.position.set(0, 0.105, -0.012);
-    capGroup.rotation.set(-0.08, 0, 0);
+    capGroup.position.set(-0.01, 0.20, 0.03);
+    capGroup.rotation.set(-0.28, 0, 0);
 
     const redMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(color),
