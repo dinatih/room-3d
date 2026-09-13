@@ -9,6 +9,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Wig, HAIR_COLORS } from '../items/Wig';
+import { CharacterBaseballCap } from './CharacterBaseballCap';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS } from '../walkerConfig';
 import { buildHairChain } from '../retargeting/index';
@@ -777,6 +778,10 @@ export function SingleCharacter({
       }}
     >
       <primitive ref={modelRef} object={scene} />
+
+      {headBone && (variant === 'vivida' || id === 'vivida') && (
+        <CharacterBaseballCap attachTo={headBone} />
+      )}
 
       {headBone && id !== 'native' && variant !== 'native' && haircut !== 'original' && (
         <Wig
