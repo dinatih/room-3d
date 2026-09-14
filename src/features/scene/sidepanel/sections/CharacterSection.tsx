@@ -72,7 +72,7 @@ export function CharacterSection({
                 useSceneStore.getState().setActiveWalkerId(e.target.value);
               }}
             >
-              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeWalkerId, layers.extraCharacters ?? true) || c.id === activeWalkerId).map(c => (
+              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeWalkerId, layers.extraCharacters ?? false) || c.id === activeWalkerId).map(c => (
                 <option key={c.id} value={c.id} className="bg-light text-dark">
                   {npcLabel(c)}
                 </option>
@@ -756,9 +756,9 @@ export function CharacterSection({
           style={{ 
             fontSize: isMobile ? '14px' : '11px',
             minHeight: isMobile ? '48px' : undefined,
-            background: (layers.extraCharacters ?? true) ? 'rgba(13, 110, 253, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+            background: (layers.extraCharacters ?? false) ? 'rgba(13, 110, 253, 0.08)' : 'rgba(0, 0, 0, 0.04)',
             borderRadius: '4px',
-            fontWeight: (layers.extraCharacters ?? true) ? 600 : 400
+            fontWeight: (layers.extraCharacters ?? false) ? 600 : 400
           }}
         >
           <div className="d-flex flex-column">
@@ -773,8 +773,8 @@ export function CharacterSection({
               Ni Lara ni Xbot ({EXTRA_CHARACTERS.map(c => c.name).join(', ')})
             </div>
           </div>
-          <span className={`badge ${(layers.extraCharacters ?? true) ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
-            {(layers.extraCharacters ?? true) ? 'ON' : 'OFF'}
+          <span className={`badge ${(layers.extraCharacters ?? false) ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+            {(layers.extraCharacters ?? false) ? 'ON' : 'OFF'}
           </span>
         </button>
       </div>

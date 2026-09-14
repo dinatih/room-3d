@@ -40,7 +40,7 @@ function InternalWalker(props: WalkerProps) {
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
   const laraCount = useSceneStore(state => state.layers.laraCount ?? 4);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
-  const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? true);
+  const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const idleGltf = useGLTF('animations/poses_idles/miley_armature_idle01_f.glb');
   const walkingGltf = useGLTF('animations/locomotion/anim_walking.glb');
   const runningGltf = useGLTF('animations/locomotion/anim_running.glb');
@@ -124,30 +124,31 @@ function InternalWalker(props: WalkerProps) {
           : char.id === activeWalkerId;
 
         return (
-          <SingleCharacter
-            {...props}
-            key={char.id + (isDuoRoleB ? '-partner' : '')}
-            id={char.id}
-            name={char.name}
-            modelPath={char.path}
-            isLara={char.isLara ?? true}
-            targetHeight={char.height}
-            isActive={isActive}
-            animations={char.charAnims}
-            variant={char.variant}
-            isNPC={!isActive}
-            isDuoRoleB={isDuoRoleB}
-            duoAnimDef={props.duoAnimDef}
-            npcPosition={char.pos}
-            npcRotationY={char.rot}
-            sittingScene={char.sittingScene}
-            walkerAnim={charAnim}
-            previewPosition={charPos}
-            previewRotationY={charRot}
-            previewHaircut={props.previewHaircut}
-            previewHairColor={props.previewHairColor}
-            characterIndex={CHARACTERS.findIndex(candidate => candidate.id === char.id)}
-          />
+          <Suspense key={char.id + (isDuoRoleB ? '-partner' : '')} fallback={null}>
+            <SingleCharacter
+              {...props}
+              id={char.id}
+              name={char.name}
+              modelPath={char.path}
+              isLara={char.isLara ?? true}
+              targetHeight={char.height}
+              isActive={isActive}
+              animations={char.charAnims}
+              variant={char.variant}
+              isNPC={!isActive}
+              isDuoRoleB={isDuoRoleB}
+              duoAnimDef={props.duoAnimDef}
+              npcPosition={char.pos}
+              npcRotationY={char.rot}
+              sittingScene={char.sittingScene}
+              walkerAnim={charAnim}
+              previewPosition={charPos}
+              previewRotationY={charRot}
+              previewHaircut={props.previewHaircut}
+              previewHairColor={props.previewHairColor}
+              characterIndex={CHARACTERS.findIndex(candidate => candidate.id === char.id)}
+            />
+          </Suspense>
         );
       })}
     </>

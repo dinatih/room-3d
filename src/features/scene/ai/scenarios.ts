@@ -141,6 +141,11 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
   lgbta:    'sofa-garden-west',
   sandra:   'duo-zone',
   rajaa:    'duo-zone',
+  inyeong:  'chair-office',
+  hayley:   'kallax-ne',
+  gloria:   'sofa-garden-east',
+  zoe:      'mirror-south',
+  sophia:   'building-b-corridor',
 };
 
 /**

@@ -304,7 +304,7 @@ sortedCharacters.forEach(char => {
               ? ['characters/zoe/zoe_3d_preview.png']
               : (char.id === 'sophia'
                 ? ['characters/sophia/sophia_3d_preview.png']
-                : undefined)))));
+                : (!char.isLara ? [char.path.replace(/\.glb$/, '_3d_preview.png')] : undefined))))));
     INVENTORY.push({
       id: char.id,
       name: char.name,
@@ -320,12 +320,12 @@ sortedCharacters.forEach(char => {
                 ? 'Reallusion'
                 : (char.id === 'sophia'
                   ? 'Sophia Doll'
-                  : 'Lara Croft Style'))))),
+                  : (!char.isLara ? 'Mixamo' : 'Lara Croft Style')))))),
       category: 'walkers',
       qty: 1,
       dims: {
-        w: char.id === 'inyeong' ? 57 : (['hayley', 'gloria', 'zoe', 'sophia'].includes(char.id) ? 50 : 45),
-        d: char.id === 'inyeong' ? 78 : (['hayley', 'gloria', 'zoe', 'sophia'].includes(char.id) ? 30 : 25),
+        w: char.id === 'inyeong' ? 57 : (!char.isLara ? 50 : 45),
+        d: char.id === 'inyeong' ? 78 : (!char.isLara ? 30 : 25),
         h: char.height
       },
       glbPath: char.path,
@@ -340,7 +340,9 @@ sortedCharacters.forEach(char => {
               ? 'Personnage animé : Zoe élégante en robe rouge et talons hauts.'
               : (char.id === 'sophia'
                 ? 'Personnage animé : Sophia Doll au style poupée avec cheveux longs et tenue soignée.'
-                : `Personnage : ${char.name}.`))))
+                : (!char.isLara
+                  ? `Personnage animé standard Mixamo : ${char.name}.`
+                  : `Personnage : ${char.name}.`)))))
     });
   }
 });

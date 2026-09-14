@@ -11,7 +11,7 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Wig, HAIR_COLORS } from '../items/Wig';
 import { CharacterBaseballCap } from './CharacterBaseballCap';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials } from '../LaraVariants';
-import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS } from '../walkerConfig';
+import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../walkerConfig';
 import { buildHairChain } from '../retargeting/index';
 import {
   extractCharacterParts,
@@ -77,6 +77,7 @@ export function SingleCharacter({
   const laraGrid = useSceneStore(state => state.layers.laraGrid);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const laraCount = useSceneStore(state => state.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15));
+  const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const showWallhack = useSceneStore(state => state.layers.wallhack);
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
@@ -218,7 +219,7 @@ export function SingleCharacter({
   const finalScenario = isGuidedTour ? activeActionScenario : (isAutonomous ? autonomousScenario : EMPTY_SCENARIO);
   const loopScenario = isAutonomous;
 
-  const isExcepted = id === 'xbot';
+  const isExcepted = id === 'xbot' || isExtraCharacter(id);
   const hasSkyDrop = isNPC && !isExcepted && isAutonomous;
   const spawnDelay = hasSkyDrop ? ((characterIndex ?? 0) * 1.0) : 0;
 
@@ -268,7 +269,13 @@ export function SingleCharacter({
     scene.rotation.set(0, 0, 0);
     scene.updateMatrixWorld(true);
 
-    const baseHeight = isLara ? 173.4 : (id === 'inyeong' ? 165.0 : (id === 'hayley' || id === 'gloria' || id === 'zoe' || id === 'sophia' ? 168.0 : 181.0));
+    const baseHeight = isLara
+      ? 173.4
+      : (id === 'inyeong'
+        ? 165.0
+        : (id === 'hayley' || id === 'gloria' || id === 'zoe' || id === 'sophia'
+          ? 168.0
+          : (findCharacter(id)?.height || 181.0)));
     const scaleFactor = (targetHeight / baseHeight) * 100.0;
     scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
     scene.updateMatrixWorld(true);
@@ -499,7 +506,7 @@ export function SingleCharacter({
       const targetZ = 200;
       groupRef.current.position.set(targetX, targetY, targetZ);
       groupRef.current.rotation.y = 0;
-      const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId);
+      const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters);
       groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode;
       if (!userAnimOverrideRef.current) {
         currentAnimClip.current = null;
@@ -541,7 +548,7 @@ export function SingleCharacter({
         if (!userAnimOverrideRef.current) {
           currentAnimClip.current = agentState.animation;
         }
-        const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId);
+        const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters);
         groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode && agentState.isSpawned;
 
         if (agentState.isSpawned && isVisibleInCountMode) {

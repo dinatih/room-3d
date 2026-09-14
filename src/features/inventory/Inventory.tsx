@@ -8,7 +8,8 @@ import { InventoryPreview } from './InventoryPreview';
 import { SpatialZonePreview } from './SpatialZonePreview';
 import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
 import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/ai/duoAnimations';
-import { CHARACTERS } from '@features/scene/walkerConfig';
+import { CHARACTERS, isExtraCharacter } from '@features/scene/walkerConfig';
+import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
 type PreviewTarget = InventoryItem | StorageSpace | SpatialZone | null;
@@ -37,6 +38,7 @@ function getCategoryEmoji(cat: string): string {
 function ItemDetailContent({ item }: { item: PreviewTarget }) {
   if (!item) return null;
 
+  const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const [selectedDuoAnim, setSelectedDuoAnim] = useState<DuoAnimationDef | undefined>(undefined);
   const [selectedDuoPartner, setSelectedDuoPartner] = useState<string | undefined>(undefined);
   const [glbStats, setGlbStats] = useState<{ fileSize?: number; triangles: number; drawCalls: number } | null>(null);
@@ -353,7 +355,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
                 title="Lancer une animation de couple aléatoire dans la preview 3D 🎲"
                 onClick={() => {
                   const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
-                  const otherChars = CHARACTERS.filter(c => c.id !== item.id);
+                  const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
                   const randPartner = otherChars[Math.floor(Math.random() * otherChars.length)]?.id;
                   if (randomAnim) {
                     setSelectedDuoAnim(randomAnim);
@@ -375,7 +377,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
                   } else {
                     const def = DUO_ANIMATIONS.find(a => a.id === val);
                     if (def) {
-                      const otherChars = CHARACTERS.filter(c => c.id !== item.id);
+                      const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
                       const randPartner = selectedDuoPartner || (otherChars[0]?.id ?? 'rosanna');
                       setSelectedDuoAnim(def);
                       setSelectedDuoPartner(randPartner);
@@ -402,7 +404,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
                     key={a.id}
                     type="button"
                     onClick={() => {
-                      const otherChars = CHARACTERS.filter(c => c.id !== item.id);
+                      const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
                       const partner = selectedDuoPartner || (otherChars[0]?.id ?? 'rosanna');
                       setSelectedDuoAnim(a);
                       setSelectedDuoPartner(partner);
@@ -490,15 +492,17 @@ export function Inventory({
     window.addEventListener('mouseup', onMouseUp);
   };
 
+  const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
+
   useEffect(() => {
     if (initialCategory) {
       setActiveCat(initialCategory);
       if (initialCategory === 'walkers') {
-        const firstWalker = INVENTORY.find(i => i.category === 'walkers' && i.id !== 'ushiro' && i.id !== 'robin-bird');
+        const firstWalker = INVENTORY.find(i => i.category === 'walkers' && i.id !== 'ushiro' && i.id !== 'robin-bird' && (extraCharacters || !isExtraCharacter(i.id)));
         if (firstWalker) setSelected(firstWalker);
       }
     }
-  }, [initialCategory, visible]);
+  }, [initialCategory, visible, extraCharacters]);
 
   // SpatialZones list
   const spatialZones = useMemo(() => {
@@ -513,6 +517,7 @@ export function Inventory({
     if (activeCat === 'spaces') return [];
     const q = search.trim().toLowerCase();
     return INVENTORY.filter(i => {
+      if (!extraCharacters && isExtraCharacter(i.id)) return false;
       if (activeCat === 'actionnable' && !i.actions?.length) return false;
       if (activeCat === 'glbs'        && !i.glbPath)         return false;
       
@@ -525,7 +530,7 @@ export function Inventory({
                !(i.notes ?? '').toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [activeCat, search]);
+  }, [activeCat, search, extraCharacters]);
 
   const showSpaces = activeCat === 'storage' || activeCat === 'actionnable';
   const spaces = activeCat === 'actionnable'
@@ -547,10 +552,12 @@ export function Inventory({
   // Reset focus on list update
   useEffect(() => { setFocusedIndex(-1); }, [navList]);
 
-  // Auto-select first item on desktop startup
+  // Auto-select first item on desktop startup or if currently selected item is hidden
   useEffect(() => {
-    if (!isMobile && !selected && navList.length > 0) {
+    if (!isMobile && (!selected || !navList.some(item => (item as any).id === selected.id)) && navList.length > 0) {
       setSelected(navList[0]);
+    } else if (selected && !navList.some(item => (item as any).id === selected.id)) {
+      setSelected(null);
     }
   }, [isMobile, navList, selected]);
 

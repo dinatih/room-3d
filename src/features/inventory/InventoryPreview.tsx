@@ -10,7 +10,8 @@ import { GlobalSkeletonHelpers } from '@features/scene/utils/GlobalSkeletonHelpe
 import { CharacterAnimSelector } from '@features/scene/CharacterAnimSelector';
 import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
 import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/ai/duoAnimations';
-import { CHARACTERS } from '@features/scene/walkerConfig';
+import { CHARACTERS, isExtraCharacter } from '@features/scene/walkerConfig';
+import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { GroundPoint } from '@features/scene/character/GroundPoint';
 import { SkySphere } from '@features/scene/SkySphere';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
@@ -502,6 +503,7 @@ export function InventoryPreview({
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
   const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = !!photos && photos.length > 0;
   const actionKeys: string[] = item && 'category' in item && (item as InventoryItem).category === 'walkers' ? [] : ((item as any)?.actions || []);
+  const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(true);
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
@@ -917,7 +919,7 @@ export function InventoryPreview({
                               setActionStates(s => ({ ...s, duoAnimDef: undefined, walkerAnim: 'idle' }));
                             } else {
                               const def = DUO_ANIMATIONS.find(a => a.id === val);
-                              const otherChars = CHARACTERS.filter(c => c.id !== item.id);
+                              const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
                               const defaultPartner = actionStates.duoPartnerId || (otherChars[0]?.id ?? 'rosanna');
                               setActionStates(s => ({
                                 ...s,
@@ -952,7 +954,7 @@ export function InventoryPreview({
                           type="button"
                           onClick={() => {
                             const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
-                            const otherChars = CHARACTERS.filter(c => c.id !== item.id);
+                            const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
                             const randChar = otherChars[Math.floor(Math.random() * otherChars.length)];
                             if (randomAnim && randChar) {
                               setActionStates(s => ({
@@ -992,7 +994,7 @@ export function InventoryPreview({
                             }}
                             title="Changer le partenaire (Rôle B)"
                           >
-                            {CHARACTERS.filter(c => c.id !== item.id).map(c => (
+                            {CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id))).map(c => (
                               <option key={c.id} value={c.id}>B: {c.name}</option>
                             ))}
                           </select>
@@ -1000,7 +1002,7 @@ export function InventoryPreview({
                           <button
                             type="button"
                             onClick={() => {
-                              const otherChars = CHARACTERS.filter(c => c.id !== item.id);
+                              const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
                               const randChar = otherChars[Math.floor(Math.random() * otherChars.length)];
                               if (randChar) {
                                 setActionStates(s => ({ ...s, duoPartnerId: randChar.id }));
@@ -1028,7 +1030,7 @@ export function InventoryPreview({
                     </div>
                   )}
 
-                  {!['ushiro', 'shiba-inu', 'robin-bird', 'inyeong', 'hayley', 'xbot', 'gloria', 'zoe', 'sophia'].includes(item.id) && (
+                  {!['ushiro', 'shiba-inu', 'robin-bird', 'xbot'].includes(item.id) && !isExtraCharacter(item.id) && (
                     <>
                       <select value={actionStates.previewHaircut || 'original'} onChange={e => setActionStates(s => ({ ...s, previewHaircut: e.target.value }))} style={{ padding: '2px 4px', fontSize: 10, background: 'rgba(0,0,0,0.7)', border: '1px solid #555', borderRadius: 4, color: '#fff', outline: 'none', maxWidth: 120, marginTop: 4 }}>
                         <option value="original">Coupe d'origine</option>

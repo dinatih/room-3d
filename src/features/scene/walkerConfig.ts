@@ -38,8 +38,23 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'inyeong',  name: 'Inyeong (Nitro)', emoji: '🪖', color: '#ff4444', path: 'characters/inyeong/nitro_anim_inyeong.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 165, isLara: false },
   { id: 'hayley',   name: 'Hayley (Inyeong)', emoji: '👒', color: '#ff66aa', path: 'characters/hayley/hayley.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false },
   { id: 'gloria',   name: 'Gloria (Red Hair)', emoji: '👩‍🦰', color: '#e04040', path: 'characters/gloria/gloria.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false },
-  { id: 'zoe',      name: 'Zoe (Red)', emoji: '👠', color: '#c02040', path: 'characters/zoe/zoe.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false },
-  { id: 'sophia',   name: 'Sophia (Doll)', emoji: '🎀', color: '#ff77aa', path: 'characters/sophia/sophia.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false }
+  { id: 'zoe',       name: 'Zoe (Red)',             emoji: '👠', color: '#c02040', path: 'characters/zoe/zoe.glb',             pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false },
+  { id: 'sophia',    name: 'Sophia (Doll)',         emoji: '🎀', color: '#ff77aa', path: 'characters/sophia/sophia.glb',       pos: [0, 0, 0], rot: 0, variant: 'native', height: 168, isLara: false },
+  { id: 'alex',      name: 'Alex',                  emoji: '🧢', color: '#4a90e2', path: 'characters/alex/alex.glb',           pos: [0, 0, 0], rot: 0, variant: 'native', height: 177.7, isLara: false },
+  { id: 'david',     name: 'David',                 emoji: '👔', color: '#357abd', path: 'characters/david/david.glb',         pos: [0, 0, 0], rot: 0, variant: 'native', height: 176.7, isLara: false },
+  { id: 'mannequin', name: 'Mannequin',             emoji: '🧍', color: '#888888', path: 'characters/mannequin/mannequin.glb', pos: [0, 0, 0], rot: 0, variant: 'native', height: 176.9, isLara: false },
+  { id: 'michelle',  name: 'Michelle',              emoji: '💃', color: '#e056fd', path: 'characters/michelle/michelle.glb',   pos: [0, 0, 0], rot: 0, variant: 'native', height: 166.5, isLara: false },
+  { id: 'lola',      name: 'Lola (Styperek)',       emoji: '👠', color: '#eb4d4b', path: 'characters/lola/lola.glb',           pos: [0, 0, 0], rot: 0, variant: 'native', height: 199.4, isLara: false },
+  { id: 'jennifer',  name: 'Jennifer',              emoji: '👩', color: '#f0932b', path: 'characters/jennifer/jennifer.glb',   pos: [0, 0, 0], rot: 0, variant: 'native', height: 178.4, isLara: false },
+  { id: 'arissa',    name: 'Arissa',                emoji: '🧕', color: '#6ab04c', path: 'characters/arissa/arissa.glb',       pos: [0, 0, 0], rot: 0, variant: 'native', height: 179.6, isLara: false },
+  { id: 'astra',     name: 'Astra',                 emoji: '🚀', color: '#22a6b3', path: 'characters/astra/astra.glb',         pos: [0, 0, 0], rot: 0, variant: 'native', height: 172.6, isLara: false },
+  { id: 'dummy',     name: 'Dummy',                 emoji: '🪵', color: '#95afc0', path: 'characters/dummy/dummy.glb',         pos: [0, 0, 0], rot: 0, variant: 'native', height: 176.6, isLara: false },
+  { id: 'jody',      name: 'Jody',                  emoji: '👱‍♀️', color: '#ffbe76', path: 'characters/jody/jody.glb',           pos: [0, 0, 0], rot: 0, variant: 'native', height: 174.4, isLara: false },
+  { id: 'kachujin',  name: 'Kachujin (Rosales)',    emoji: '🥷', color: '#30336b', path: 'characters/kachujin/kachujin.glb',   pos: [0, 0, 0], rot: 0, variant: 'native', height: 207.7, isLara: false },
+  { id: 'medea',     name: 'Medea (Arrebola)',      emoji: '🧙‍♀️', color: '#be2edd', path: 'characters/medea/medea.glb',         pos: [0, 0, 0], rot: 0, variant: 'native', height: 165.1, isLara: false },
+  { id: 'megan',     name: 'Megan',                 emoji: '👩‍🦰', color: '#badc58', path: 'characters/megan/megan.glb',         pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.5, isLara: false },
+  { id: 'olivia',    name: 'Olivia',                emoji: '🕶️', color: '#686de0', path: 'characters/olivia/olivia.glb',       pos: [0, 0, 0], rot: 0, variant: 'native', height: 174.6, isLara: false },
+  { id: 'sophie',    name: 'Sophie',                emoji: '💁‍♀️', color: '#c7ecee', path: 'characters/sophie/sophie.glb',       pos: [0, 0, 0], rot: 0, variant: 'native', height: 176.9, isLara: false }
 ];
 
 /** Retourne le label complet d'un NPC : "emoji nom" (utile dans les UI pour éviter les noms en dur) */
@@ -86,10 +101,10 @@ export function isCharacterVisibleInMode(
   id: string,
   mode: LaraCountMode = 15,
   activeWalkerId?: string,
-  extraCharacters: boolean = true
+  extraCharacters: boolean = false
 ): boolean {
-  if (!extraCharacters && isExtraCharacter(id)) {
-    return activeWalkerId === id;
+  if (isExtraCharacter(id)) {
+    return extraCharacters || activeWalkerId === id;
   }
   if (mode === 1) {
     // Mode 1 (Xbot seul) : Strictement Xbot uniquement (aucun modèle Lara n'est instancié/chargé)
@@ -116,5 +131,6 @@ export function isCharacterVisibleInMode(
 
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
-  'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'inyeong', 'hayley', 'gloria', 'zoe', 'sophia'
+  'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'inyeong', 'hayley', 'gloria', 'zoe', 'sophia',
+  'alex', 'david', 'mannequin', 'michelle', 'lola', 'jennifer', 'arissa', 'astra', 'dummy', 'jody', 'kachujin', 'medea', 'megan', 'olivia', 'sophie'
 ]);
