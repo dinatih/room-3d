@@ -1,5 +1,5 @@
 import { useSceneStore } from '../../store/useSceneStore';
-import { CHARACTERS, isCharacterVisibleInMode, npcLabel, EXTRA_CHARACTERS } from '@features/scene/walkerConfig';
+import { CHARACTERS, isCharacterVisibleInMode, npcLabel, EXTRA_CHARACTERS, findCharacter } from '@features/scene/walkerConfig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
 import type { LayerState } from '../types';
 
@@ -31,6 +31,7 @@ export function CharacterSection({
   handleRandomHaircut,
 }: CharacterSectionProps) {
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
+  const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const extraStates = useSceneStore(state => state.extraStates);
 
   const layerBtn = (
@@ -48,10 +49,11 @@ export function CharacterSection({
           minHeight: isMobile ? '48px' : undefined,
           background: 'transparent',
           opacity: on ? 1 : 0.55,
+          fontWeight: on ? 600 : 400
         }}
       >
         <span>{label}</span>
-        <span className={`badge ${on ? 'bg-danger' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+        <span className={`badge ${on ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
           {on ? 'ON' : 'OFF'}
         </span>
       </button>
@@ -72,7 +74,7 @@ export function CharacterSection({
                 useSceneStore.getState().setActiveWalkerId(e.target.value);
               }}
             >
-              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeWalkerId, layers.extraCharacters ?? false) || c.id === activeWalkerId).map(c => (
+              {CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, layers.laraCount ?? (isMobile ? 2 : 15), activeWalkerId, layers.extraCharacters ?? false, activeExtraIds) || c.id === activeWalkerId).map(c => (
                 <option key={c.id} value={c.id} className="bg-light text-dark">
                   {npcLabel(c)}
                 </option>
@@ -752,7 +754,7 @@ export function CharacterSection({
           type="button"
           className="btn btn-light w-100 text-start rounded-0 border-0 py-2 px-3 text-dark d-flex align-items-center justify-content-between shadow-none"
           onClick={() => onToggleLayer('extraCharacters')}
-          title={`Spawner les personnages extra (${EXTRA_CHARACTERS.length}) : ${EXTRA_CHARACTERS.map(c => c.name).join(', ')}`}
+          title={`Spawner 5 personnages extra aléatoires (sur ${EXTRA_CHARACTERS.length})`}
           style={{ 
             fontSize: isMobile ? '14px' : '11px',
             minHeight: isMobile ? '48px' : undefined,
@@ -764,13 +766,15 @@ export function CharacterSection({
           <div className="d-flex flex-column">
             <div className="d-flex align-items-center gap-2">
               <span>🎭</span>
-              <span>Spawner Personnages Extra</span>
+              <span>Personnages Extra (5 aléatoires)</span>
               <span className="badge bg-primary text-white" style={{ fontSize: '9px' }}>
-                {EXTRA_CHARACTERS.length}
+                5 / {EXTRA_CHARACTERS.length}
               </span>
             </div>
             <div className="text-muted ps-4" style={{ fontSize: '9px' }}>
-              Ni Lara ni Xbot ({EXTRA_CHARACTERS.map(c => c.name).join(', ')})
+              {(layers.extraCharacters ?? false)
+                ? `Actifs : ${activeExtraIds.map(id => findCharacter(id)?.name || id).join(', ')}`
+                : `Tirage de 5 au hasard parmi ${EXTRA_CHARACTERS.length} à chaque activation`}
             </div>
           </div>
           <span className={`badge ${(layers.extraCharacters ?? false) ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>

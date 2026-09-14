@@ -102,6 +102,7 @@ function drawMinimap(
   const showAllLaraStyles = useSceneStore.getState().layers.showAllLaraStyles;
   const laraCount = useSceneStore.getState().layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15);
   const extraCharacters = useSceneStore.getState().layers.extraCharacters ?? false;
+  const activeExtraIds = useSceneStore.getState().activeExtraIds;
   ctx.save();
   ctx.fillStyle   = 'rgba(0, 102, 255, 0.4)';
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';
@@ -110,7 +111,7 @@ function drawMinimap(
   CHARACTERS.forEach(char => {
     if (char.id !== activeWalkerId) {
       if (!showAllLaraStyles) return;
-      if (!isCharacterVisibleInMode(char.id, laraCount, activeWalkerId, extraCharacters)) return;
+      if (!isCharacterVisibleInMode(char.id, laraCount, activeWalkerId, extraCharacters, activeExtraIds)) return;
       const currentPos = cameraState.positions[char.id];
       if (!currentPos) return;
       const x = currentPos.x;

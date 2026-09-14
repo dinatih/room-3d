@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
 import type { FurnitureState, LayerState, GroundType } from '@features/scene/SidePanel';
-import type { LaraCountMode } from '@features/scene/walkerConfig';
+import { type LaraCountMode, pickRandomExtraCharacterIds, isExtraCharacter } from '@features/scene/walkerConfig';
 
 function parseUrlNpcCount(): LaraCountMode {
   if (typeof window === 'undefined') return 4;
@@ -57,6 +57,7 @@ interface SceneStore {
   layers: LayerState;
   extraStates: Record<string, boolean>;
   activeWalkerId: string;
+  activeExtraIds: string[];
   currentHdri: string;
   measurementActive: boolean;
   cameraMode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane';
@@ -68,6 +69,7 @@ interface SceneStore {
   setHdri: (id: string) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
   toggleLayer: (key: keyof LayerState) => void;
+  randomizeExtraCharacters: (count?: number) => void;
   setGroundType: (type: GroundType) => void;
   triggerAction: (key: string) => void;
   setActiveWalkerId: (id: string) => void;
@@ -266,6 +268,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   layers: initialLayers,
   extraStates: initialExtraStates,
   activeWalkerId: initialLayers.laraCount === 1 ? 'xbot' : 'native',
+  activeExtraIds: pickRandomExtraCharacterIds(5),
   currentHdri: getRandomHdriId(),
   measurementActive: false,
   cameraMode: 'orbit',
@@ -340,7 +343,14 @@ export const useSceneStore = create<SceneStore>((set) => ({
 
   toggleLayer: (key) => {
     set((state) => {
-      const nextLayers = { ...state.layers, [key]: !state.layers[key] };
+      const isActivating = !state.layers[key];
+      const nextLayers = { ...state.layers, [key]: isActivating };
+      let nextActiveExtraIds = state.activeExtraIds;
+
+      if (key === 'extraCharacters' && isActivating) {
+        // Tirage aléatoire de 5 personnages extra à chaque réactivation
+        nextActiveExtraIds = pickRandomExtraCharacterIds(5, state.activeWalkerId);
+      }
       if (key === 'mirrors') {
         // Force l'invalidation pour que SceneLayerController mette à jour le mask camera
         cameraState.invalidate?.();
@@ -352,8 +362,15 @@ export const useSceneStore = create<SceneStore>((set) => ({
         cameraState.walkerHidden = !nextLayers.walker;
       }
       cameraState.invalidate?.();
-      return { layers: nextLayers };
+      return { layers: nextLayers, activeExtraIds: nextActiveExtraIds };
     });
+  },
+
+  randomizeExtraCharacters: (count = 5) => {
+    set((state) => ({
+      activeExtraIds: pickRandomExtraCharacterIds(count, state.activeWalkerId)
+    }));
+    cameraState.invalidate?.();
   },
 
   setGroundType: (type) => {
@@ -440,8 +457,14 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   setActiveWalkerId: (id) => {
-    set({ activeWalkerId: id });
-    cameraState.invalidate?.();
+    set((state) => {
+      let nextActiveExtraIds = state.activeExtraIds;
+      if (isExtraCharacter(id) && !state.activeExtraIds.includes(id)) {
+        nextActiveExtraIds = [id, ...state.activeExtraIds.filter(x => x !== id).slice(0, 4)];
+      }
+      cameraState.invalidate?.();
+      return { activeWalkerId: id, activeExtraIds: nextActiveExtraIds };
+    });
   },
 }));
 

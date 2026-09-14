@@ -113,7 +113,7 @@ export function useCameraShortcuts({
       if (e.key === 'l' || e.key === 'L') {
         const store = useSceneStore.getState();
         const laraCount = store.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15);
-        const visibleChars = CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, laraCount, store.activeWalkerId, store.layers.extraCharacters ?? false));
+        const visibleChars = CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, laraCount, store.activeWalkerId, store.layers.extraCharacters ?? false, store.activeExtraIds));
         const currentIndex = visibleChars.findIndex(c => c.id === store.activeWalkerId);
         const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % visibleChars.length;
         store.setActiveWalkerId(visibleChars[nextIndex].id);

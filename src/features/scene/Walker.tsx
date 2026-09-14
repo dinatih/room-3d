@@ -41,6 +41,7 @@ function InternalWalker(props: WalkerProps) {
   const laraCount = useSceneStore(state => state.layers.laraCount ?? 4);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
+  const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const idleGltf = useGLTF('animations/poses_idles/miley_armature_idle01_f.glb');
   const walkingGltf = useGLTF('animations/locomotion/anim_walking.glb');
   const runningGltf = useGLTF('animations/locomotion/anim_running.glb');
@@ -91,9 +92,9 @@ function InternalWalker(props: WalkerProps) {
       return charactersWithAnims.filter(char => char.id === props.previewCharacterId);
     }
     return charactersWithAnims.filter(char =>
-      showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeWalkerId, extraCharacters)
+      showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeWalkerId, extraCharacters, activeExtraIds)
     );
-  }, [activeWalkerId, charactersWithAnims, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters]);
+  }, [activeWalkerId, charactersWithAnims, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters, activeExtraIds]);
 
   return (
     <>

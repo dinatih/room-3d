@@ -97,14 +97,38 @@ export function isExtraCharacter(c: CharacterConfig | string): boolean {
 /** Liste des personnages extras (ni Lara ni Xbot) */
 export const EXTRA_CHARACTERS = CHARACTERS.filter(isExtraCharacter);
 
+/** Nombre de personnages extra spawnés aléatoirement dans la scène 3D */
+export const DEFAULT_EXTRA_SPAWN_COUNT = 5;
+
+/** Tire au sort N personnages extra distincts (par défaut 5), en garantissant l'inclusion d'un ID requis si fourni */
+export function pickRandomExtraCharacterIds(count: number = DEFAULT_EXTRA_SPAWN_COUNT, requiredId?: string): string[] {
+  const allExtraIds = EXTRA_CHARACTERS.map(c => c.id);
+  const shuffled = [...allExtraIds].sort(() => 0.5 - Math.random());
+  const selected = new Set<string>();
+  if (requiredId && allExtraIds.includes(requiredId)) {
+    selected.add(requiredId);
+  }
+  for (const id of shuffled) {
+    if (selected.size >= count) break;
+    selected.add(id);
+  }
+  return Array.from(selected);
+}
+
 export function isCharacterVisibleInMode(
   id: string,
   mode: LaraCountMode = 15,
   activeWalkerId?: string,
-  extraCharacters: boolean = false
+  extraCharacters: boolean = false,
+  activeExtraIds?: string[] | Set<string>
 ): boolean {
   if (isExtraCharacter(id)) {
-    return extraCharacters || activeWalkerId === id;
+    if (activeWalkerId === id) return true;
+    if (!extraCharacters) return false;
+    if (activeExtraIds) {
+      return activeExtraIds instanceof Set ? activeExtraIds.has(id) : activeExtraIds.includes(id);
+    }
+    return true;
   }
   if (mode === 1) {
     // Mode 1 (Xbot seul) : Strictement Xbot uniquement (aucun modèle Lara n'est instancié/chargé)

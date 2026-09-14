@@ -78,6 +78,7 @@ export function SingleCharacter({
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const laraCount = useSceneStore(state => state.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15));
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
+  const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const showWallhack = useSceneStore(state => state.layers.wallhack);
   const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
@@ -506,7 +507,7 @@ export function SingleCharacter({
       const targetZ = 200;
       groupRef.current.position.set(targetX, targetY, targetZ);
       groupRef.current.rotation.y = 0;
-      const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters);
+      const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters, activeExtraIds);
       groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode;
       if (!userAnimOverrideRef.current) {
         currentAnimClip.current = null;
@@ -548,7 +549,7 @@ export function SingleCharacter({
         if (!userAnimOverrideRef.current) {
           currentAnimClip.current = agentState.animation;
         }
-        const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters);
+        const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters, activeExtraIds);
         groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode && agentState.isSpawned;
 
         if (agentState.isSpawned && isVisibleInCountMode) {
