@@ -204,6 +204,10 @@ const ACTIONS: Record<string, ActionDef> = {
     btnLabel: () => useSceneStore.getState().layers.gardenWallScan ? 'Basculer en mur classique' : 'Basculer en Scan 3D (Seoul)',
     toggleKey: 'garden-wall-scan',
   },
+  utdrag: {
+    btnLabel: () => useSceneStore.getState().extraStates.utdrag ? 'Rentrer la hotte' : 'Déplier la hotte',
+    toggleKey: 'utdrag',
+  },
 };
 
 // Helper to resolve action definition (supports dynamic actions like select-walker-*)
@@ -288,6 +292,77 @@ export function HoverRaycaster() {
     }
     hoverState.cancelHide = cancelHide;
 
+    const occlusionRaycaster = new THREE.Raycaster();
+
+    function isOccluded(targetPoint: THREE.Vector3, targetObj: THREE.Object3D): boolean {
+      const dir = targetPoint.clone().sub(camera.position);
+      const dist = dir.length();
+      if (dist < 1.0) return false;
+      dir.normalize();
+
+      occlusionRaycaster.set(camera.position, dir);
+      occlusionRaycaster.near = 0.5;
+      occlusionRaycaster.far = Math.max(0.6, dist - 1.0);
+      occlusionRaycaster.layers.enableAll();
+      occlusionRaycaster.layers.disable(LAYER_NEIGHBORS);
+      occlusionRaycaster.layers.disable(LAYER_LIDAR);
+
+      const occHits = occlusionRaycaster.intersectObjects(scene.children, true);
+
+      // Trouver la racine de l'objet cible pour éviter l'auto-occlusion
+      let targetRoot: THREE.Object3D = targetObj;
+      while (targetRoot.parent && targetRoot.parent !== scene) {
+        if (targetRoot.userData?.hoverAction) break;
+        targetRoot = targetRoot.parent;
+      }
+
+      for (const occ of occHits) {
+        if (!occ.object.visible) continue;
+
+        // Ignorer les éléments non surfaciques (lignes, sprites, points)
+        if ((occ.object as any).isLine || (occ.object as any).isSprite || (occ.object as any).isPoints) continue;
+
+        // Ignorer si l'occulteur fait partie du même objet interactif
+        let cur: THREE.Object3D | null = occ.object;
+        let isSelf = false;
+        while (cur) {
+          if (cur === targetRoot || cur === targetObj || cur.userData?.hoverAction === targetRoot.userData?.hoverAction) {
+            isSelf = true;
+            break;
+          }
+          cur = cur.parent;
+        }
+        if (isSelf) continue;
+
+        // Ignorer plafonds, sols et helpers
+        if (occ.object.userData?.brickType === 'ceiling' || occ.object.userData?.brickType === 'ground') continue;
+        if (occ.object.userData?.isHelper || occ.object.name?.includes('helper') || occ.object.name?.includes('Helper')) continue;
+
+        // Ignorer les objets transparents (verre, portes vitrées, etc.)
+        const mat = (occ.object as THREE.Mesh).material as any;
+        if (mat) {
+          const isTransparent = Array.isArray(mat)
+            ? mat.every(m => (m.transparent && (m.opacity ?? 1) < 0.4) || m.transmission > 0.4)
+            : ((mat.transparent && (mat.opacity ?? 1) < 0.4) || mat.transmission > 0.4);
+          if (isTransparent) continue;
+        }
+
+        // Ignorer les murs coupés / escamotés selon la vue
+        let side = null;
+        cur = occ.object;
+        while (cur) {
+          if (cur.userData?.side) { side = cur.userData.side; break; }
+          cur = cur.parent;
+        }
+        if (side === 'west' || side === 'east' || side === 'north' || side === 'both') continue;
+
+        // Un obstacle opaque se trouve entre la caméra et l'objet
+        return true;
+      }
+
+      return false;
+    }
+
     function raycastAt(clientX: number, clientY: number): { label: string; actionIds: string[] } | null {
       if (cameraState.isDragging) return null;
 
@@ -332,6 +407,11 @@ export function HoverRaycaster() {
 
         const action = resolveAction(hit.object);
         if (action && action.actionIds.some(id => getActionDef(id))) {
+          // Vérifier si l'objet est masqué par un mur ou obstacle devant lui
+          if (isOccluded(hit.point, hit.object)) {
+            continue;
+          }
+
           // Si on touche un smart-object (ex: cercle AiZone Dormir/S'asseoir), priorité absolue immédiate
           if (action.actionIds.some(id => id.startsWith('smart-object:::'))) {
             return action;

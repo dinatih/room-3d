@@ -1,6 +1,6 @@
 import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect, useRef, useEffect } from 'react';
-import { useFrame, useThree, ThreeEvent } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { glbLocalBBox, optimizeMaterials, removeGlbLines } from '@features/scene/glbUtils';
 import { SceneItemProps } from '@shared/types';
@@ -90,14 +90,8 @@ export function Utdrag10389142({ onSize, actionState, ...props }: SceneItemProps
     }
   });
 
-  const handleClick = (e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    openRef.current = !openRef.current;
-    invalidate();
-  };
-
   return (
-    <group {...props} onClick={handleClick}>
+    <group {...props}>
       <primitive object={scene} />
     </group>
   );

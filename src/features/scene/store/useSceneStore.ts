@@ -117,7 +117,7 @@ const initialLayers: LayerState = {
   // NPC count initialized from URL param (ex: ?npc=15 or ?npc=10 or ?npc=2) or fallback to 2
   laraCount: parseUrlNpcCount(),
   showAllLaraStyles: true,
-  extraCharacters: true,
+  extraCharacters: false,
   wallhack: false,
   skeleton: false,
   ceiling: false,
@@ -173,6 +173,7 @@ const initialLayers: LayerState = {
 
 const initialExtraStates: Record<string, boolean> = {
   ninja: false,
+  utdrag: false,
   'bin-toggle': false,
   wcLid: false,
   'walker-meshes': false,
@@ -213,6 +214,8 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
     'bin-toggle': 'bin-toggle',
     ninja: 'ninja',
     'ninja-toggle': 'ninja',
+    utdrag: 'utdrag',
+    'utdrag-toggle': 'utdrag',
     'sofa-arm-left': 'sofaArmLeft',
     'sofa-arm-right': 'sofaArmRight',
     'corr-doors-toggle': 'corrDoors',
