@@ -257,6 +257,7 @@ export const ACTION_LABELS: Record<string, [string, string]> = {
   'sofa-arm-left':         ['Mettre à plat G', 'Relever G'],
   'sofa-arm-right':        ['Mettre à plat D', 'Relever D'],
   'nestMini':              ['Ok Google 🎙️', 'Ok Google 🎙️'],
+  'utdrag-toggle':         ['Déplier', 'Rentrer'],
 };
 
 CHARACTERS.forEach(char => {
