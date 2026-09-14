@@ -462,6 +462,15 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         if (isMarissa && (meshName === 'arms' || meshName === 'fingers' || meshName === 'body_legs' || matName.includes('arm') || matName.includes('finger') || (matName.includes('body') && meshName.includes('leg')))) {
           applyMarissaTattoos(mat);
         }
+
+        // SARA FRONT NECK TATTOO (Tatouage en losange du menton au bas du cou)
+        if (isSara) {
+          if (meshName === 'face' || matName.includes('face')) {
+            applySaraFaceNeckTattoo(mat);
+          } else if (meshName === 'body_torso' || (meshName.includes('body') && matName.includes('body') && !meshName.includes('leg'))) {
+            applySaraTorsoNeckTattoo(mat);
+          }
+        }
       });
     }
   });
@@ -634,6 +643,330 @@ function drawMarissaTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
   lines.forEach((line, idx) => {
     ctx.fillText(line, 0, startY + idx * lineHeight);
   });
+
+  ctx.restore();
+}
+
+// ── SARA FRONT NECK TATTOO CANVAS GENERATORS ─────────────────────────────────
+
+const saraNeckTattooTextureCache: Record<string, THREE.CanvasTexture> = {};
+
+function applySaraFaceNeckTattoo(mat: THREE.MeshStandardMaterial) {
+  mat.map = getSaraFaceNeckTattooTexture();
+  mat.needsUpdate = true;
+}
+
+function applySaraTorsoNeckTattoo(mat: THREE.MeshStandardMaterial) {
+  mat.map = getSaraTorsoNeckTattooTexture();
+  mat.needsUpdate = true;
+}
+
+function getSaraFaceNeckTattooTexture(): THREE.CanvasTexture {
+  if (saraNeckTattooTextureCache['sara_face_tattoo']) {
+    return saraNeckTattooTextureCache['sara_face_tattoo'];
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.flipY = false;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  saraNeckTattooTextureCache['sara_face_tattoo'] = tex;
+
+  const drawAll = (img?: HTMLImageElement) => {
+    if (!ctx) return;
+    if (img) {
+      try {
+        ctx.drawImage(img, 0, 0, 512, 512);
+      } catch {
+        ctx.fillStyle = '#dca888';
+        ctx.fillRect(0, 0, 512, 512);
+      }
+    } else {
+      ctx.fillStyle = '#dca888';
+      ctx.fillRect(0, 0, 512, 512);
+    }
+    drawSaraFaceNeckTattooOnCanvas(ctx);
+    tex.needsUpdate = true;
+  };
+
+  const img = new Image();
+  img.src = 'characters/lara/textures/8000.png';
+  img.onload = () => drawAll(img);
+  img.onerror = () => drawAll();
+  drawAll();
+
+  return tex;
+}
+
+function getSaraTorsoNeckTattooTexture(): THREE.CanvasTexture {
+  if (saraNeckTattooTextureCache['sara_torso_tattoo']) {
+    return saraNeckTattooTextureCache['sara_torso_tattoo'];
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.flipY = false;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  saraNeckTattooTextureCache['sara_torso_tattoo'] = tex;
+
+  const drawAll = (img?: HTMLImageElement) => {
+    if (!ctx) return;
+    if (img) {
+      try {
+        ctx.drawImage(img, 0, 0, 512, 512);
+      } catch {
+        ctx.fillStyle = '#dca888';
+        ctx.fillRect(0, 0, 512, 512);
+      }
+    } else {
+      ctx.fillStyle = '#dca888';
+      ctx.fillRect(0, 0, 512, 512);
+    }
+    drawSaraTorsoNeckTattooOnCanvas(ctx);
+    tex.needsUpdate = true;
+  };
+
+  const img = new Image();
+  img.src = 'characters/lara/textures/8001.png';
+  img.onload = () => drawAll(img);
+  img.onerror = () => drawAll();
+  drawAll();
+
+  return tex;
+}
+
+/** Dessine la pointe supérieure du losange sous le menton sur la texture du visage (8000.png) */
+function drawSaraFaceNeckTattooOnCanvas(ctx: CanvasRenderingContext2D) {
+  ctx.save();
+  ctx.translate(305, 305);
+  ctx.rotate(-Math.PI / 4);
+
+  const inkDark = 'rgba(14, 16, 22, 0.96)';
+  const inkMedium = 'rgba(22, 24, 32, 0.85)';
+  const inkFine = 'rgba(28, 30, 40, 0.65)';
+  const rubyRed = 'rgba(185, 20, 34, 0.92)';
+
+  const drawDiamond = (top: number, bottom: number, left: number, right: number) => {
+    ctx.beginPath();
+    ctx.moveTo(0, top);
+    ctx.lineTo(right, 0);
+    ctx.lineTo(0, bottom);
+    ctx.lineTo(left, 0);
+    ctx.closePath();
+  };
+
+  // 1. Bordure extérieure du losange
+  ctx.strokeStyle = inkDark;
+  ctx.lineWidth = 1.5;
+  drawDiamond(-38, 38, -20, 20);
+  ctx.stroke();
+
+  ctx.strokeStyle = inkMedium;
+  ctx.lineWidth = 0.8;
+  drawDiamond(-35.5, 35.5, -18, 18);
+  ctx.stroke();
+
+  // Pointillisme le long des arêtes
+  ctx.fillStyle = inkDark;
+  const numDots = 9;
+  for (let i = 0; i <= numDots; i++) {
+    const t = i / numDots;
+    const xTR = t * 20;
+    const yTR = -38 + t * 38;
+    const xBR = 20 - t * 20;
+    const yBR = t * 38;
+    for (const [x, y] of [[xTR, yTR], [-xTR, yTR], [xBR, yBR], [-xBR, yBR]]) {
+      ctx.beginPath();
+      ctx.arc(x * 1.06, y * 1.06, 0.75, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // 2. Losange intermédiaire
+  ctx.strokeStyle = inkDark;
+  ctx.lineWidth = 1.1;
+  drawDiamond(-24, 24, -12, 12);
+  ctx.stroke();
+
+  // 3. Cœur en losange avec accent rouge rubis (signature Sara)
+  ctx.fillStyle = rubyRed;
+  drawDiamond(-10, 10, -5, 5);
+  ctx.fill();
+  ctx.strokeStyle = inkDark;
+  ctx.lineWidth = 0.9;
+  ctx.stroke();
+
+  // Centre noir au cœur du rubis
+  ctx.fillStyle = inkDark;
+  drawDiamond(-4, 4, -2, 2);
+  ctx.fill();
+
+  // 4. Lignes géométriques sacrées et chevrons
+  ctx.strokeStyle = inkFine;
+  ctx.lineWidth = 0.7;
+  ctx.beginPath();
+  ctx.moveTo(0, -35); ctx.lineTo(0, -11);
+  ctx.moveTo(0, 11); ctx.lineTo(0, 35);
+  ctx.moveTo(-18, 0); ctx.lineTo(-6, 0);
+  ctx.moveTo(6, 0); ctx.lineTo(18, 0);
+  ctx.stroke();
+
+  // Chevrons
+  for (const dy of [-18, 18]) {
+    const sign = dy < 0 ? -1 : 1;
+    ctx.beginPath();
+    ctx.moveTo(-5, dy - sign * 3);
+    ctx.lineTo(0, dy);
+    ctx.lineTo(5, dy - sign * 3);
+    ctx.stroke();
+  }
+
+  // 5. Finitions vers le menton (gouttes / pointes)
+  ctx.fillStyle = inkDark;
+  ctx.beginPath(); ctx.arc(0, -42, 1.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, -45, 0.9, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, -48, 0.6, 0, Math.PI * 2); ctx.fill();
+
+  ctx.restore();
+}
+
+/** Dessine le corps principal du tatouage en losange sur le cou (8001.png) du menton au bas de la gorge */
+function drawSaraTorsoNeckTattooOnCanvas(ctx: CanvasRenderingContext2D) {
+  ctx.save();
+  // Centre du cou sur 8001.png : X=462 le long de la gorge, Y=273 en largeur
+  ctx.translate(462, 273);
+  // Rotation pour que l'axe local Y descende le long de la gorge (du menton aux clavicules)
+  ctx.rotate(-Math.PI / 2);
+
+  const inkDark = 'rgba(14, 16, 22, 0.96)';
+  const inkMedium = 'rgba(22, 24, 32, 0.85)';
+  const inkFine = 'rgba(28, 30, 40, 0.65)';
+  const rubyRed = 'rgba(185, 20, 34, 0.92)';
+
+  const drawDiamond = (top: number, bottom: number, left: number, right: number) => {
+    ctx.beginPath();
+    ctx.moveTo(0, top);
+    ctx.lineTo(right, 0);
+    ctx.lineTo(0, bottom);
+    ctx.lineTo(left, 0);
+    ctx.closePath();
+  };
+
+  // 1. Grand losange principal (du haut du cou jusqu'au creux claviculaire)
+  ctx.strokeStyle = inkDark;
+  ctx.lineWidth = 1.6;
+  drawDiamond(-36, 36, -22, 22);
+  ctx.stroke();
+
+  ctx.strokeStyle = inkMedium;
+  ctx.lineWidth = 0.9;
+  drawDiamond(-33.5, 33.5, -20, 20);
+  ctx.stroke();
+
+  // Pointillisme sacré sur le pourtour extérieur
+  ctx.fillStyle = inkDark;
+  const numDots = 12;
+  for (let i = 0; i <= numDots; i++) {
+    const t = i / numDots;
+    const xTR = t * 22;
+    const yTR = -36 + t * 36;
+    const xBR = 22 - t * 22;
+    const yBR = t * 36;
+    for (const [x, y] of [[xTR, yTR], [-xTR, yTR], [xBR, yBR], [-xBR, yBR]]) {
+      ctx.beginPath();
+      ctx.arc(x * 1.07, y * 1.07, 0.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // 2. Losange intermédiaire
+  ctx.strokeStyle = inkDark;
+  ctx.lineWidth = 1.2;
+  drawDiamond(-24, 24, -14, 14);
+  ctx.stroke();
+
+  ctx.strokeStyle = inkFine;
+  ctx.lineWidth = 0.7;
+  drawDiamond(-21.5, 21.5, -12.5, 12.5);
+  ctx.stroke();
+
+  // 3. Losange intérieur
+  ctx.strokeStyle = inkDark;
+  ctx.lineWidth = 1.0;
+  drawDiamond(-13, 13, -7.5, 7.5);
+  ctx.stroke();
+
+  // 4. Rubis central rouge (signature Sara)
+  ctx.fillStyle = rubyRed;
+  drawDiamond(-7.5, 7.5, -4.5, 4.5);
+  ctx.fill();
+  ctx.strokeStyle = inkDark;
+  ctx.lineWidth = 0.9;
+  ctx.stroke();
+
+  // Cœur sombre au centre
+  ctx.fillStyle = inkDark;
+  drawDiamond(-3, 3, -1.8, 1.8);
+  ctx.fill();
+
+  // 5. Rayons géométriques en croix
+  ctx.strokeStyle = inkFine;
+  ctx.lineWidth = 0.75;
+  ctx.beginPath();
+  ctx.moveTo(0, -33); ctx.lineTo(0, -8.5);
+  ctx.moveTo(0, 8.5);  ctx.lineTo(0, 33);
+  ctx.moveTo(-20, 0);  ctx.lineTo(-5, 0);
+  ctx.moveTo(5, 0);   ctx.lineTo(20, 0);
+  ctx.stroke();
+
+  // Chevrons gothiques dans les quadrants supérieur et inférieur
+  for (const dy of [-18, -9, 9, 18]) {
+    const sign = dy < 0 ? -1 : 1;
+    const span = 6;
+    ctx.beginPath();
+    ctx.moveTo(-span, dy - sign * 3.5);
+    ctx.lineTo(0, dy);
+    ctx.lineTo(span, dy - sign * 3.5);
+    ctx.stroke();
+  }
+
+  // Arcs fins dans les coins latéraux
+  for (const s of [-1, 1]) {
+    for (let r = 4; r <= 10; r += 3) {
+      ctx.beginPath();
+      ctx.arc(s * 14, 0, r, s > 0 ? Math.PI * 0.6 : -Math.PI * 0.4, s > 0 ? Math.PI * 1.4 : Math.PI * 0.4);
+      ctx.stroke();
+    }
+  }
+
+  // 6. Pendentifs / finitions aux pointes
+  // Pointe haute (vers le menton)
+  ctx.fillStyle = inkDark;
+  ctx.beginPath(); ctx.arc(0, -39, 1.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, -42, 0.9, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, -45, 0.6, 0, Math.PI * 2); ctx.fill();
+
+  // Pointe basse (vers le bas du cou / creux claviculaire)
+  ctx.strokeStyle = inkMedium;
+  ctx.lineWidth = 0.9;
+  ctx.beginPath(); ctx.moveTo(0, 36); ctx.lineTo(0, 42); ctx.stroke();
+  // Gouttelette en diamant
+  ctx.fillStyle = inkDark;
+  drawDiamond(41, 47, -2.5, 2.5);
+  ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 50, 0.8, 0, Math.PI * 2); ctx.fill();
+
+  // Pointes latérales
+  for (const s of [-1, 1]) {
+    ctx.beginPath(); ctx.arc(s * 24, 0, 1.0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(s * 27, 0, 0.7, 0, Math.PI * 2); ctx.fill();
+  }
 
   ctx.restore();
 }
