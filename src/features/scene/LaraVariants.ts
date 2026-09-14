@@ -463,6 +463,11 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           applyMarissaTattoos(mat);
         }
 
+        // DELPHINA FLORAL TATTOOS ON SKIN (Arabesques et fleurs le long des bras et des jambes)
+        if (isDelphina && (meshName === 'arms' || meshName === 'fingers' || meshName === 'body_legs' || matName.includes('arm') || matName.includes('finger') || (matName.includes('body') && meshName.includes('leg')))) {
+          applyDelphinaTattoos(mat);
+        }
+
         // SARA FRONT NECK TATTOO (Tatouage en losange du menton au bas du cou)
         if (isSara && (meshName === 'body_torso' || (meshName.includes('body') && matName.includes('body') && !meshName.includes('leg')))) {
           applySaraTorsoNeckTattoo(mat);
@@ -640,6 +645,243 @@ function drawMarissaTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
     ctx.fillText(line, 0, startY + idx * lineHeight);
   });
 
+  ctx.restore();
+}
+
+// ── DELPHINA FLORAL TATTOO CANVAS GENERATOR ──────────────────────────────────
+
+const delphinaTattooTextureCache: Record<string, THREE.CanvasTexture> = {};
+
+function applyDelphinaTattoos(mat: THREE.MeshStandardMaterial) {
+  mat.map = getDelphinaTattooTexture();
+  mat.needsUpdate = true;
+}
+
+function getDelphinaTattooTexture(): THREE.CanvasTexture {
+  if (delphinaTattooTextureCache['delphina_tattoos']) {
+    return delphinaTattooTextureCache['delphina_tattoos'];
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.flipY = false;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  delphinaTattooTextureCache['delphina_tattoos'] = tex;
+
+  const drawAll = (img?: HTMLImageElement) => {
+    if (!ctx) return;
+    if (img) {
+      try {
+        ctx.drawImage(img, 0, 0, 512, 512);
+      } catch {
+        ctx.fillStyle = '#dca888';
+        ctx.fillRect(0, 0, 512, 512);
+      }
+    } else {
+      ctx.fillStyle = '#dca888';
+      ctx.fillRect(0, 0, 512, 512);
+    }
+    drawDelphinaFloralTattoosOnCanvas(ctx);
+    tex.needsUpdate = true;
+  };
+
+  const img = new Image();
+  img.src = 'characters/lara/textures/8001.png';
+  img.onload = () => drawAll(img);
+  img.onerror = () => drawAll();
+  drawAll();
+
+  return tex;
+}
+
+function drawDelphinaFloralTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
+  const inkDark = 'rgba(16, 18, 24, 0.95)';
+
+  function drawFlower(
+    cx: number,
+    cy: number,
+    radius: number,
+    numPetals: number,
+    angleOffset = 0,
+    colorAccent = 'rgba(220, 80, 110, 0.75)'
+  ) {
+    if (!ctx) return;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angleOffset);
+    for (let i = 0; i < numPetals; i++) {
+      const angle = (i * Math.PI * 2) / numPetals;
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(-radius * 0.45, -radius * 0.5, -radius * 0.4, -radius, 0, -radius * 1.15);
+      ctx.bezierCurveTo(radius * 0.4, -radius, radius * 0.45, -radius * 0.5, 0, 0);
+      ctx.fillStyle = 'rgba(24, 26, 34, 0.88)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(12, 14, 18, 0.95)';
+      ctx.lineWidth = 0.9;
+      ctx.stroke();
+
+      if (colorAccent) {
+        ctx.beginPath();
+        ctx.moveTo(0, -2);
+        ctx.quadraticCurveTo(-radius * 0.2, -radius * 0.45, 0, -radius * 0.75);
+        ctx.quadraticCurveTo(radius * 0.2, -radius * 0.45, 0, -2);
+        ctx.fillStyle = colorAccent;
+        ctx.fill();
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(0, -2);
+      ctx.lineTo(0, -radius * 0.85);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.lineWidth = 0.6;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.28, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(18, 18, 22, 0.95)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(230, 190, 80, 0.85)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255, 230, 140, 0.9)';
+    for (let j = 0; j < 6; j++) {
+      const a = (j * Math.PI * 2) / 6;
+      const r = radius * 0.16;
+      ctx.beginPath();
+      ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 0.7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawLeaf(bx: number, by: number, length: number, angle: number, width = length * 0.42) {
+    if (!ctx) return;
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(-width, -length * 0.4, -width * 0.8, -length * 0.85, 0, -length);
+    ctx.bezierCurveTo(width * 0.8, -length * 0.85, width, -length * 0.4, 0, 0);
+    ctx.fillStyle = 'rgba(22, 32, 26, 0.82)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(14, 18, 16, 0.95)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -length * 0.92);
+    ctx.strokeStyle = 'rgba(80, 160, 100, 0.45)';
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── 1. TATOUAGE FLORAL LE LONG DES BRAS (Épaule -> Poignet) ──
+  ctx.save();
+  ctx.strokeStyle = inkDark;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(75, 250);
+  ctx.bezierCurveTo(105, 235, 135, 260, 168, 242);
+  ctx.bezierCurveTo(200, 225, 230, 248, 260, 226);
+  ctx.bezierCurveTo(280, 215, 298, 245, 318, 225);
+  ctx.stroke();
+
+  // Vrille secondaire entrelacée
+  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = 'rgba(25, 28, 38, 0.75)';
+  ctx.beginPath();
+  ctx.moveTo(85, 242);
+  ctx.bezierCurveTo(115, 255, 145, 230, 180, 252);
+  ctx.bezierCurveTo(210, 240, 240, 220, 275, 242);
+  ctx.bezierCurveTo(295, 235, 305, 220, 315, 230);
+  ctx.stroke();
+
+  // Fleurs le long du bras
+  drawFlower(85, 248, 10, 5, 0.2, 'rgba(235, 100, 130, 0.85)');
+  drawFlower(125, 245, 12, 6, 0.8, 'rgba(220, 80, 120, 0.9)');
+  drawFlower(168, 240, 9.5, 5, 0.5, 'rgba(240, 120, 145, 0.8)');
+  drawFlower(208, 232, 13, 6, 1.2, 'rgba(215, 75, 115, 0.9)');
+  drawFlower(252, 234, 11, 5, 0.4, 'rgba(230, 95, 130, 0.85)');
+  drawFlower(290, 228, 9, 5, 0.9, 'rgba(245, 130, 155, 0.8)');
+  drawFlower(314, 226, 6.5, 4, 0.3, 'rgba(250, 150, 170, 0.75)');
+
+  // Feuilles botaniques
+  const armLeaves: [number, number, number, number][] = [
+    [80, 240, 11, -1.1], [102, 252, 12, 1.3], [115, 238, 10, -0.8],
+    [142, 255, 13, 1.5], [155, 235, 11, -1.3], [185, 232, 12, -0.6],
+    [195, 248, 13, 1.7], [225, 228, 14, -1.2], [238, 245, 12, 1.4],
+    [270, 222, 11, -0.9], [282, 240, 12, 1.5], [305, 222, 8, -1.0]
+  ];
+  for (const [lx, ly, llen, lang] of armLeaves) {
+    drawLeaf(lx, ly, llen, lang);
+  }
+
+  // Pétales flottants
+  const armPetals: [number, number][] = [[95, 255], [135, 232], [178, 252], [220, 222], [265, 248], [300, 218]];
+  ctx.fillStyle = 'rgba(235, 110, 140, 0.85)';
+  for (const [px, py] of armPetals) {
+    ctx.beginPath(); ctx.ellipse(px, py, 2.2, 1.2, 0.6, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+
+  // ── 2. TATOUAGE FLORAL LE LONG DES JAMBES (Cuisse -> Genou -> Mollet) ──
+  ctx.save();
+  ctx.strokeStyle = inkDark;
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(48, 415);
+  ctx.bezierCurveTo(75, 435, 100, 395, 130, 420);
+  ctx.bezierCurveTo(160, 440, 185, 385, 215, 412);
+  ctx.bezierCurveTo(240, 430, 255, 390, 275, 405);
+  ctx.stroke();
+
+  ctx.lineWidth = 0.9;
+  ctx.strokeStyle = 'rgba(25, 28, 38, 0.75)';
+  ctx.beginPath();
+  ctx.moveTo(60, 405);
+  ctx.bezierCurveTo(90, 390, 115, 430, 148, 408);
+  ctx.bezierCurveTo(175, 390, 200, 435, 230, 400);
+  ctx.bezierCurveTo(250, 385, 265, 420, 280, 398);
+  ctx.stroke();
+
+  // Fleurs le long de la jambe
+  drawFlower(55, 418, 11, 6, 0.3, 'rgba(225, 85, 125, 0.85)');
+  drawFlower(92, 405, 14, 6, 1.0, 'rgba(210, 70, 115, 0.9)');
+  drawFlower(132, 416, 15, 7, 0.6, 'rgba(230, 90, 130, 0.88)');
+  drawFlower(172, 410, 12, 5, 1.4, 'rgba(215, 75, 120, 0.85)');
+  drawFlower(215, 412, 13.5, 6, 0.7, 'rgba(220, 80, 125, 0.88)');
+  drawFlower(252, 402, 11, 5, 1.1, 'rgba(235, 105, 140, 0.8)');
+  drawFlower(276, 404, 8, 5, 0.4, 'rgba(245, 125, 155, 0.75)');
+
+  // Feuilles botaniques
+  const legLeaves: [number, number, number, number][] = [
+    [50, 425, 12, 1.1], [70, 410, 13, -1.2], [82, 430, 14, 1.6],
+    [110, 395, 15, -0.9], [122, 435, 14, 1.7], [148, 425, 13, 0.8],
+    [160, 392, 14, -1.3], [185, 430, 15, 1.5], [200, 395, 13, -1.0],
+    [228, 425, 12, 1.4], [240, 392, 11, -1.2], [265, 415, 10, 1.2]
+  ];
+  for (const [lx, ly, llen, lang] of legLeaves) {
+    drawLeaf(lx, ly, llen, lang, llen * 0.44);
+  }
+
+  // Pétales flottants le long de la jambe
+  const legPetals: [number, number][] = [[68, 435], [105, 385], [145, 445], [188, 380], [225, 438], [260, 388]];
+  ctx.fillStyle = 'rgba(235, 105, 135, 0.85)';
+  for (const [px, py] of legPetals) {
+    ctx.beginPath(); ctx.ellipse(px, py, 2.5, 1.4, 0.8, 0, Math.PI * 2); ctx.fill();
+  }
   ctx.restore();
 }
 
