@@ -16,7 +16,7 @@ import {
   DiagWall,
 } from '@config';
 import {
-  pEast, pWest,
+  pEast, pWest, pNorth, pSouth, pX,
   WALL_THICKNESS, PARTITION_THICKNESS,
   CORR_WALL_X,
 } from './wallData';
@@ -28,20 +28,19 @@ const EXT_WEST_X = NICHE_X - WALL_THICKNESS; // X=-20 : face extérieure continu
 const EXT_EAST_X = ROOM_W + WALL_THICKNESS;  // X=326 : face extérieure mur Est
 const EXT_NORTH_Z = -30;                     // Z=-30 : face extérieure mur Nord (béton 20cm)
 
-// DiagWall faces
-const DIAG_EXT_START = DiagWall.p(0, 5);
-const DIAG_EXT_DOOR_S = DiagWall.p(DiagWall.door.start, 5);
-const DIAG_EXT_DOOR_E = DiagWall.p(DiagWall.door.end, 5);
-const DIAG_EXT_END = DiagWall.p(DiagWall.len, 5);
+// DiagWall faces (off=0 est la face intérieure de la diagonale, off=10 est la face extérieure)
+const DIAG_EXT_START  = DiagWall.p(0, WALL_THICKNESS);
+const DIAG_EXT_DOOR_S = DiagWall.p(DiagWall.door.start, WALL_THICKNESS);
+const DIAG_EXT_DOOR_E = DiagWall.p(DiagWall.door.end, WALL_THICKNESS);
+const DIAG_EXT_END    = DiagWall.p(DiagWall.len, WALL_THICKNESS);
 
-const DIAG_INT_START = DiagWall.p(0, -5);
-const DIAG_INT_DOOR_S = DiagWall.p(DiagWall.door.start, -5);
-const DIAG_INT_DOOR_E = DiagWall.p(DiagWall.door.end, -5);
-const DIAG_INT_END = DiagWall.p(DiagWall.len, -5);
+const DIAG_INT_START  = DiagWall.p(0, 0);
+const DIAG_INT_DOOR_S = DiagWall.p(DiagWall.door.start, 0);
+const DIAG_INT_DOOR_E = DiagWall.p(DiagWall.door.end, 0);
+const DIAG_INT_END    = DiagWall.p(DiagWall.len, 0);
 
 const SH_HALF = PARTITION_THICKNESS / 2; // 3.6 cm
 const CORR_W_X = CORR_WALL_X - SH_HALF;   // 192.0 cm (face Ouest / SDB de la cloison couloir)
-const CORR_E_X = CORR_WALL_X + SH_HALF;   // 199.2 cm (face Est / couloir de la cloison couloir)
 
 // ── 1. MURS BÉTON / PORTEURS (Structure extérieure) ─────────────────────────
 export const SEG_CONCRETE_WALLS: Seg[] = [
@@ -160,16 +159,16 @@ export const SEG_PARTITIONS: Seg[] = [
   // Face SDB continue sous la gaine, la cuisine et le placard
   [NICHE_X, KITCHEN_Z + PARTITION_THICKNESS, CORR_W_X, KITCHEN_Z + PARTITION_THICKNESS],
 
-  // ── Cloison Couloir / SDB (X=195.6, épaisseur 7.2cm) ──────────────────────
+  // ── Cloison Couloir / SDB (épaisseur 7.2cm, indexée sur piliers) ──────────
   // Face couloir (Est)
-  [CORR_E_X, KITCHEN_Z, CORR_E_X, 513.4],
-  [CORR_E_X, 606.6, CORR_E_X, BATH_Z_END],
+  [pEast('bath-ne'), pSouth('bath-ne'), pEast('bath-ne'), pNorth('door-bath-n')],
+  [pEast('door-bath-s'), pSouth('door-bath-s'), pEast('bath-se'), pNorth('bath-se')],
   // Face SDB (Ouest)
-  [CORR_W_X, KITCHEN_Z + PARTITION_THICKNESS, CORR_W_X, 513.4],
-  [CORR_W_X, 606.6, CORR_W_X, BATH_Z_END],
+  [pWest('bath-ne'), pSouth('bath-ne'), pWest('bath-ne'), pNorth('door-bath-n')],
+  [pWest('door-bath-s'), pSouth('door-bath-s'), pWest('bath-se'), pNorth('bath-se')],
   // Encadrements porte SDB
-  [CORR_W_X, 513.4, CORR_E_X, 513.4],
-  [CORR_W_X, 606.6, CORR_E_X, 606.6],
+  [pWest('door-bath-n'), pNorth('door-bath-n'), pEast('door-bath-n'), pNorth('door-bath-n')],
+  [pWest('door-bath-s'), pSouth('door-bath-s'), pEast('door-bath-s'), pSouth('door-bath-s')],
 
   // ── Cloisons Douche (2 faces complètes, épaisseur 7.2cm) ───────────────────
   // Cloison verticale Est (axe X=65)
@@ -194,7 +193,9 @@ export const SEG_DOORS: Seg[] = [
   // Porte placard couloir (en façade Est à X=200)
   [DOOR_START, ROOM_D + PARTITION_THICKNESS, DOOR_START, KITCHEN_Z],
   // PC-SDB (porte couloir → salle de bain)
-  [CORR_WALL_X, 513.4, CORR_WALL_X, 606.6],
+  [pX('door-bath-n'), pNorth('door-bath-n'), pX('door-bath-s'), pSouth('door-bath-s')],
+  // Porte placard SDB (double porte coulissante en façade Sud à Z=BATH_Z_END)
+  [pEast('shower-ne'), BATH_Z_END, pWest('bath-se'), BATH_Z_END],
   // P3 — porte d'entrée diagonale
   [DIAG_INT_DOOR_S.x, DIAG_INT_DOOR_S.z, DIAG_INT_DOOR_E.x, DIAG_INT_DOOR_E.z],
 ];

@@ -148,43 +148,6 @@ export function drawFloorPlan(
     ctx.restore();
   }
 
-  // Kites d'angle pour le mur diagonal (jonctions A et C)
-  const eP0 = DiagWall.p(0, DiagWall.depth);
-  const tC = (WALL_THICKNESS - (eP0.x - DiagWall.A.x)) / DiagWall.sin;
-  const cX = DiagWall.A.x + WALL_THICKNESS;
-  const cZ = eP0.z + tC * DiagWall.cos;
-  const kiteNE = [
-    [eP0.x, eP0.z],
-    [cX, cZ],
-    [DiagWall.A.x + WALL_THICKNESS, DiagWall.A.z],
-    [DiagWall.A.x, DiagWall.A.z],
-  ];
-
-  const ePLen = DiagWall.p(DiagWall.len, DiagWall.depth);
-  const tC_sw = ((DiagWall.C.x - WALL_THICKNESS) - ePLen.x) / DiagWall.sin;
-  const cX_sw = DiagWall.C.x - WALL_THICKNESS;
-  const cZ_sw = ePLen.z + tC_sw * DiagWall.cos;
-  const kiteSW = [
-    [DiagWall.C.x, DiagWall.C.z],
-    [DiagWall.C.x - WALL_THICKNESS, DiagWall.C.z],
-    [cX_sw, cZ_sw],
-    [ePLen.x, ePLen.z],
-  ];
-
-  for (const kite of [kiteNE, kiteSW]) {
-    ctx.fillStyle = 'rgba(74, 85, 104, 0.45)';
-    ctx.strokeStyle = '#2d3748';
-    ctx.lineWidth = Math.max(S * 2.2, 1.6);
-    ctx.beginPath();
-    ctx.moveTo(tx(kite[0][0]), tz(kite[0][1]));
-    for (let i = 1; i < kite.length; i++) {
-      ctx.lineTo(tx(kite[i][0]), tz(kite[i][1]));
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  }
-
   // ── Portes ──────────────────────────────────────────────────────────────────
   ctx.strokeStyle = '#cc0000';
   ctx.lineWidth = Math.max(S * 2.5, 1.2);
