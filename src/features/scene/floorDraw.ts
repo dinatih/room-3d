@@ -14,7 +14,7 @@ import {
 // Jardin diagonal endpoint (parallèle à MDiag)
 const GARDEN_JC_Z = -140 + DiagWall.slope * 320;
 import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_WINDOWS } from './floorData';
-import { GARDEN_PANEL_DEFS } from './wallData';
+import { GARDEN_PANEL_DEFS, PARTITION_THICKNESS, CORR_WALL_X } from './wallData';
 
 const PAD = 20;
 export const PLAN_X_MIN = NICHE_X - PAD;
@@ -39,22 +39,47 @@ export function drawFloorPlan(
 
   // ── Sols ────────────────────────────────────────────────────────────────────
   ctx.fillStyle = 'rgba(212, 164, 55, 0.12)';
+  // Séjour
   ctx.fillRect(tx(0), tz(0), ROOM_W * S, ROOM_D * S);
   ctx.fillRect(tx(NICHE_X), tz(NICHE_Z_START), -NICHE_X * S, (ROOM_D - NICHE_Z_START) * S);
+  // Cuisine
   ctx.fillRect(tx(KITCHEN_X0), tz(ROOM_D), (KITCHEN_X1 - KITCHEN_X0) * S, (KITCHEN_Z - ROOM_D) * S);
-  ctx.fillRect(tx(KITCHEN_X1), tz(ROOM_D), (DOOR_START - KITCHEN_X1) * S, (KITCHEN_Z - ROOM_D) * S);
+  // Placard couloir (intérieur net)
+  ctx.fillRect(
+    tx(KITCHEN_X1 + PARTITION_THICKNESS),
+    tz(ROOM_D + PARTITION_THICKNESS),
+    (DOOR_START - (KITCHEN_X1 + PARTITION_THICKNESS)) * S,
+    (KITCHEN_Z - (ROOM_D + PARTITION_THICKNESS)) * S,
+  );
+  // Couloir droit
   ctx.fillRect(tx(DOOR_START), tz(ROOM_D), (ROOM_W - DOOR_START) * S, (DiagWall.A.z - ROOM_D) * S);
   ctx.beginPath();
   ctx.moveTo(tx(DOOR_START), tz(DiagWall.A.z));
   ctx.lineTo(tx(ROOM_W),     tz(DiagWall.A.z));
   ctx.lineTo(tx(DOOR_START), tz(BATH_Z_END));
   ctx.closePath(); ctx.fill();
-  ctx.fillRect(tx(NICHE_X), tz(KITCHEN_Z), (DOOR_START - NICHE_X) * S, (BATH_Z_END - KITCHEN_Z) * S);
+  // SDB (intérieur net à Z=467.2)
+  const corrInnerW = CORR_WALL_X - PARTITION_THICKNESS / 2; // 192.0 cm
+  ctx.fillRect(
+    tx(NICHE_X),
+    tz(KITCHEN_Z + PARTITION_THICKNESS),
+    (corrInnerW - NICHE_X) * S,
+    (BATH_Z_END - (KITCHEN_Z + PARTITION_THICKNESS)) * S,
+  );
   ctx.beginPath();
   ctx.moveTo(tx(NICHE_X), tz(BATH_Z_END));
-  ctx.lineTo(tx(DOOR_START),   tz(BATH_Z_END));
+  ctx.lineTo(tx(corrInnerW), tz(BATH_Z_END));
   ctx.lineTo(tx(NICHE_X), tz(DiagWall.C.z));
   ctx.closePath(); ctx.fill();
+
+  // ── Gaine technique (coffrage fermé à gauche de la cuisine) ─────────────────
+  ctx.fillStyle = 'rgba(120, 130, 140, 0.15)';
+  ctx.fillRect(
+    tx(NICHE_X),
+    tz(ROOM_D + PARTITION_THICKNESS),
+    (KITCHEN_X0 - PARTITION_THICKNESS - NICHE_X) * S,
+    (KITCHEN_Z - (ROOM_D + PARTITION_THICKNESS)) * S,
+  );
 
   // ── Jardin ──────────────────────────────────────────────────────────────────
   ctx.fillStyle = 'rgba(74, 158, 84, 0.08)';
