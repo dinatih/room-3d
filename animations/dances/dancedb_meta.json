@@ -1,0 +1,65 @@
+[
+  {
+    "name": "Reggaeton Vaso 01",
+    "glb": "animations/dances/anim_reggaeton_vaso_01.glb",
+    "frames": 3849,
+    "duration": 128.3,
+    "size_kb": 1629
+  },
+  {
+    "name": "Salsa Shines Vaso 01",
+    "glb": "animations/dances/anim_salsa_shines_vaso_01.glb",
+    "frames": 3826,
+    "duration": 127.5,
+    "size_kb": 1575
+  },
+  {
+    "name": "Hiphop Fanie C3D",
+    "glb": "animations/dances/anim_hiphop_fanie_c3d.glb",
+    "frames": 3897,
+    "duration": 129.9,
+    "size_kb": 1693
+  },
+  {
+    "name": "Musical Theater Fanie C3D",
+    "glb": "animations/dances/anim_musical_theater_fanie_c3d.glb",
+    "frames": 3823,
+    "duration": 127.4,
+    "size_kb": 1574
+  },
+  {
+    "name": "Zumba Fanie C3D",
+    "glb": "animations/dances/anim_zumba_fanie_c3d.glb",
+    "frames": 6750,
+    "duration": 225.0,
+    "size_kb": 2924
+  },
+  {
+    "name": "Belly Dance 2 Anna Cortesi C3D",
+    "glb": "animations/dances/anim_bellydance2_anna_cortesi_c3d.glb",
+    "frames": 8423,
+    "duration": 280.8,
+    "size_kb": 2919
+  },
+  {
+    "name": "RandB Anna Cortesi C3D",
+    "glb": "animations/dances/anim_randb_anna_cortesi_c3d.glb",
+    "frames": 4142,
+    "duration": 138.1,
+    "size_kb": 1515
+  },
+  {
+    "name": "Reggaeton Stefanos C3D",
+    "glb": "animations/dances/anim_reggaeton_stefanos_c3d.glb",
+    "frames": 4900,
+    "duration": 163.3,
+    "size_kb": 2204
+  },
+  {
+    "name": "Salsa Stefanos C3D",
+    "glb": "animations/dances/anim_salsa_stefanos_c3d.glb",
+    "frames": 5894,
+    "duration": 196.5,
+    "size_kb": 2550
+  }
+]
