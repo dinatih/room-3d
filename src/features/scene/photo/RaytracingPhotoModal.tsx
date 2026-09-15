@@ -8,6 +8,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { WebGLPathTracer, PhysicalCamera } from 'three-gpu-pathtracer';
+import {
+  LAYER_STRUCTURE,
+  LAYER_EQUIPMENT,
+  LAYER_FURNITURE,
+  LAYER_WALKER,
+  LAYER_MIRRORS,
+  LAYER_ANIMALS,
+} from '@config';
 
 export interface RaytracingPhotoModalProps {
   scene: THREE.Scene;
@@ -43,10 +51,11 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
   const animFrameIdRef = useRef<number | null>(null);
   const originalMaterialsMapRef = useRef<Map<THREE.Mesh, THREE.Material | THREE.Material[]>>(new Map());
   const hiddenHelpersRef = useRef<THREE.Object3D[]>([]);
+  const tempLightsRef = useRef<THREE.Light[]>([]);
 
   // Paramètres de rendu
   const [resolution, setResolution] = useState<ResolutionPreset>('fit');
-  const [targetSamples, setTargetSamples] = useState<number>(100);
+  const [targetSamples, setTargetSamples] = useState<number>(40);
   const [bounces, setBounces] = useState<number>(6);
   const [exposure, setExposure] = useState<number>(1.0);
 
@@ -84,6 +93,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     try {
       const raycaster = new THREE.Raycaster();
       raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+      raycaster.layers.mask = camera.layers.mask;
       const hits = raycaster.intersectObjects(scene.children, true);
       if (hits.length > 0) {
         setFocusDistance(Math.round(hits[0].distance));
@@ -99,12 +109,20 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     scene.traverse((obj) => {
       const name = (obj.name || '').toLowerCase();
 
-      // Masquer les dômes de ciel 3D (le path-tracer utilise nativement scene.environment)
-      if (name.includes('skysphere') || (obj.userData && obj.userData.isSky)) {
-        if (obj.visible) {
-          obj.visible = false;
-          hidden.push(obj);
-        }
+      // Masquer les dômes de ciel 3D et backdrops (le path-tracer utilise nativement scene.environment)
+      if (
+        name.includes('skysphere') ||
+        name.includes('skydome') ||
+        name.includes('spacebackdrop') ||
+        name.includes('sunsphere') ||
+        (obj.userData && obj.userData.isSky)
+      ) {
+        obj.traverse((child) => {
+          if (child.visible) {
+            child.visible = false;
+            hidden.push(child);
+          }
+        });
         return;
       }
 
@@ -120,19 +138,25 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
       // Masquer les helpers, grilles, repères et gizmos visuels de dev
       const isHelper =
         obj.type.includes('Helper') ||
+        (obj as any).isSkeletonHelper ||
         name.includes('helper') ||
         name.includes('gizmo') ||
         name.includes('grid') ||
         name.includes('landingstrip') ||
         name.includes('collision') ||
         name.includes('aizone') ||
-        name.includes('hover') ||
+        name.includes('hoveroverlay') ||
+        name.includes('edgehover') ||
         name.includes('measurement') ||
-        name.includes('skeleton');
+        name.includes('skeletonhelper');
 
       if (isHelper && obj.visible) {
-        obj.visible = false;
-        hidden.push(obj);
+        obj.traverse((child) => {
+          if (child.visible) {
+            child.visible = false;
+            hidden.push(child);
+          }
+        });
         return;
       }
 
@@ -175,20 +199,51 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
           return;
         }
 
-        // three-gpu-pathtracer exige impérativement m.color avec des composantes .r, .g, .b valides
-        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        let needsReplace = false;
+        const isArray = Array.isArray(mesh.material);
+        const mats = isArray ? (mesh.material as THREE.Material[]) : [mesh.material as THREE.Material];
+        let modified = false;
 
-        for (const m of mats) {
+        const newMats = mats.map((m) => {
           if (!m) {
-            needsReplace = true;
-            break;
+            modified = true;
+            return new THREE.MeshStandardMaterial({ color: 0xd0d0d0, roughness: 0.5 });
           }
-          // Matériau sans propriété color valide (ex: ShaderMaterial, MeshNormalMaterial, MeshDepthMaterial, etc.)
+
+          // Matériaux invisibles (ex: noCapMat sur découpes de murs sans embouts)
+          // Remplacer par un matériau complètement transparent pour que les rayons le traversent sans créer de bloc noir
+          if (m.visible === false || m.opacity === 0) {
+            modified = true;
+            return new THREE.MeshStandardMaterial({
+              transparent: true,
+              opacity: 0,
+              roughness: 1,
+              depthWrite: false,
+            });
+          }
+
+          // Matériau sans propriété color valide
           if (!(m as any).color || typeof (m as any).color.r !== 'number') {
-            needsReplace = true;
-            break;
+            modified = true;
+            return new THREE.MeshStandardMaterial({
+              color: 0xd0d0d0,
+              roughness: 0.5,
+              metalness: 0.1,
+            });
           }
+
+          // Matériaux Basic (non PBR) -> conversion en Standard pour réagir correctement aux rebonds de lumière
+          if (m.type === 'MeshBasicMaterial' && !(m as any).isMeshStandardMaterial) {
+            modified = true;
+            return new THREE.MeshStandardMaterial({
+              color: (m as any).color,
+              map: (m as any).map ?? null,
+              transparent: m.transparent,
+              opacity: m.opacity,
+              roughness: 0.8,
+              metalness: 0.1,
+            });
+          }
+
           // Sécuriser les propriétés physiques optionnelles que three-gpu-pathtracer inspecte via 'prop' in m
           if ('emissive' in m && (!(m as any).emissive || typeof (m as any).emissive.r !== 'number')) {
             (m as any).emissive = new THREE.Color(0x000000);
@@ -202,19 +257,32 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
           if ('attenuationColor' in m && (!(m as any).attenuationColor || typeof (m as any).attenuationColor.r !== 'number')) {
             (m as any).attenuationColor = new THREE.Color(0xffffff);
           }
-        }
 
-        if (needsReplace) {
+          return m;
+        });
+
+        if (modified) {
           matMap.set(mesh, mesh.material);
-          mesh.material = new THREE.MeshStandardMaterial({
-            color: 0xd0d0d0,
-            roughness: 0.5,
-            metalness: 0.1,
-          });
+          mesh.material = isArray ? newMats : newMats[0];
         }
       }
     });
 
+    // Lumières de débouchage douces pour compenser l'ignorance d'AmbientLight dans le path-tracer
+    const fillLights: THREE.Light[] = [];
+    const fill1 = new THREE.DirectionalLight(0xb0c8e8, 0.7);
+    fill1.position.set(-500, 600, -300);
+    fill1.name = 'raytracing-fill-1';
+    scene.add(fill1);
+    fillLights.push(fill1);
+
+    const fill2 = new THREE.DirectionalLight(0xffeedd, 0.5);
+    fill2.position.set(150, 400, 200);
+    fill2.name = 'raytracing-fill-2';
+    scene.add(fill2);
+    fillLights.push(fill2);
+
+    tempLightsRef.current = fillLights;
     hiddenHelpersRef.current = hidden;
     originalMaterialsMapRef.current = matMap;
   }, [scene]);
@@ -230,7 +298,13 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
       mesh.material = origMat;
     });
     originalMaterialsMapRef.current.clear();
-  }, []);
+
+    tempLightsRef.current.forEach((light) => {
+      scene.remove(light);
+      light.dispose();
+    });
+    tempLightsRef.current = [];
+  }, [scene]);
 
   // Calcul des dimensions du canvas selon le preset de résolution
   const getRenderDimensions = useCallback(() => {
@@ -297,6 +371,16 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     physCamera.bokehSize = dofEnabled ? physCamera.getFocalLength() / physCamera.fStop : 0;
     physCamera.updateProjectionMatrix();
     physCamera.updateMatrixWorld();
+
+    // Synchronisation complète des layers Three.js avec la caméra active de la scène
+    physCamera.layers.mask = camera.layers.mask;
+    // S'assurer que les calques essentiels du studio sont activés
+    physCamera.layers.enable(LAYER_STRUCTURE);
+    physCamera.layers.enable(LAYER_EQUIPMENT);
+    physCamera.layers.enable(LAYER_FURNITURE);
+    physCamera.layers.enable(LAYER_WALKER);
+    physCamera.layers.enable(LAYER_MIRRORS);
+    physCamera.layers.enable(LAYER_ANIMALS);
     physCameraRef.current = physCamera;
 
     // Path Tracer
@@ -428,6 +512,9 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
 
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+    if (physCameraRef.current) {
+      raycaster.layers.mask = physCameraRef.current.layers.mask;
+    }
     const hits = raycaster.intersectObjects(scene.children, true);
 
     if (hits.length > 0) {

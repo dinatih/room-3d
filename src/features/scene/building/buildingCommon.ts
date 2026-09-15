@@ -17,7 +17,7 @@ export const COLORS = {
 
 // Matériaux module-level partagés
 export const wallMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
-export const noCapMat = new THREE.MeshBasicMaterial({ visible: false });
+export const noCapMat = new THREE.MeshBasicMaterial({ visible: false, transparent: true, opacity: 0 });
 export const skirtingMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.4 });
 
 // BoxGeometry face order : [+X(0), -X(1), +Y(2), -Y(3), +Z(4), -Z(5)]
