@@ -39,124 +39,133 @@ const DIAG_INT_DOOR_S = DiagWall.p(DiagWall.door.start, -5);
 const DIAG_INT_DOOR_E = DiagWall.p(DiagWall.door.end, -5);
 const DIAG_INT_END = DiagWall.p(DiagWall.len, -5);
 
-// ── SEG_WALLS (2 faces par mur/cloison) ────────────────────────────────────────
+const SH_HALF = PARTITION_THICKNESS / 2; // 3.6 cm
 
-export const SEG_WALLS: Seg[] = [
-  // ── 1. ENVELOPPE EXTÉRIEURE DU BÂTIMENT ─────────────────────────────────────
-  // Mur Ouest extérieur (continu du coin Nord-Ouest à l'angle Sud Diagonale)
+// ── 1. MURS BÉTON / PORTEURS (Structure extérieure) ─────────────────────────
+export const SEG_CONCRETE_WALLS: Seg[] = [
+  // ── Mur Ouest béton (épaisseur 10cm, X in [-20, -10]) ─────────────────────
+  // Face extérieure
   [EXT_WEST_X, EXT_NORTH_Z, EXT_WEST_X, DIAG_EXT_END.z],
+  // Face intérieure béton
+  [NICHE_X, EXT_NORTH_Z, NICHE_X, DIAG_INT_END.z],
+  // Fermeture / about Nord
+  [EXT_WEST_X, EXT_NORTH_Z, NICHE_X, EXT_NORTH_Z],
 
-  // Mur Nord extérieur (panneau béton ouest, de X=-20 à la baie vitrée X=95)
+  // ── Mur Nord béton (panneau ouest, épaisseur 20cm, Z in [-30, -10]) ───────
+  // Face Nord (extérieure)
   [EXT_WEST_X, EXT_NORTH_Z, pEast('glass-west'), EXT_NORTH_Z],
-
-  // Mur Nord extérieur (panneau béton est, de la baie vitrée X=260 à X=326)
-  [pWest('glass-east'), EXT_NORTH_Z, EXT_EAST_X, EXT_NORTH_Z],
-
-  // Mur Est extérieur (du jardin Z=-220 jusqu'à l'angle Sud Diagonale Z=542)
-  [EXT_EAST_X, -220, EXT_EAST_X, DiagWall.A.z],
-
-  // Mur diagonal extérieur (segment 1 avant porte, segment 2 après porte)
-  [DIAG_EXT_START.x, DIAG_EXT_START.z, DIAG_EXT_DOOR_S.x, DIAG_EXT_DOOR_S.z],
-  [DIAG_EXT_DOOR_E.x, DIAG_EXT_DOOR_E.z, DIAG_EXT_END.x, DIAG_EXT_END.z],
-
-  // Fermeture extérieure angle Est avec mur diagonal
-  [EXT_EAST_X, DiagWall.A.z, DIAG_EXT_START.x, DIAG_EXT_START.z],
-  // Fermeture extérieure angle Ouest avec mur diagonal
-  [EXT_WEST_X, DIAG_EXT_END.z, DIAG_EXT_END.x, DIAG_EXT_END.z],
-
-  // ── 2. BAIE VITRÉE : RETOURS DE MAÇONNERIE (TABLEAUX) ──────────────────────
+  // Face Sud (côté jardin)
+  [NICHE_X, -10, pEast('glass-west'), -10],
+  // Tableau ouest baie vitrée
   [pEast('glass-west'), EXT_NORTH_Z, pEast('glass-west'), 0],
+
+  // ── Mur Nord béton (panneau est, épaisseur 20cm, Z in [-30, -10]) ─────────
+  // Face Nord (extérieure)
+  [pWest('glass-east'), EXT_NORTH_Z, EXT_EAST_X, EXT_NORTH_Z],
+  // Face Sud (côté jardin/placo)
+  [pWest('glass-east'), -10, ROOM_W, -10],
+  // Tableau est baie vitrée
   [pWest('glass-east'), EXT_NORTH_Z, pWest('glass-east'), 0],
 
-  // ── 3. PANNEAUX NORD INTÉRIEURS (PLACO) & MARCHE BÉTON JARDIN ───────────────
-  // Marche / décrochement béton côté jardin (sans dépasser vers le haut !)
-  [-10, EXT_NORTH_Z, -10, -10],
-  [-10, -10, pEast('glass-west'), -10],
-  [pWest('glass-east'), -10, ROOM_W, -10],
-  [ROOM_W, -10, ROOM_W, 0],
+  // ── Mur Est béton (épaisseur 10cm, X in [316, 326]) ───────────────────────
+  // Face extérieure (du fond du jardin Z=-220 à la diagonale Z=542)
+  [EXT_EAST_X, -220, EXT_EAST_X, DiagWall.A.z],
+  // Face intérieure jardin (du fond du jardin Z=-220 au mur C Z=0)
+  [ROOM_W, -220, ROOM_W, 0],
+  // Face intérieure séjour & couloir (de Z=0 à la diagonale Z=542)
+  [ROOM_W, 0, ROOM_W, DiagWall.A.z],
+  // About Nord au fond du jardin
+  [ROOM_W, -220, EXT_EAST_X, -220],
 
-  // Face intérieure séjour Mur Nord (placo)
-  [0, 0, pEast('glass-west'), 0],
-  [pWest('glass-east'), 0, ROOM_W, 0],
-
-  // ── 4. SÉJOUR : FACES INTÉRIEURES ───────────────────────────────────────────
-  // Mur Est intérieur
-  [ROOM_W, 0, ROOM_W, ROOM_D],
-
-  // Mur Ouest intérieur (avant niche)
-  [0, 0, 0, NICHE_Z_START],
-  // Décrochement niche (retour horizontal)
-  [0, NICHE_Z_START, NICHE_X, NICHE_Z_START],
-  // Mur Ouest fond de niche
-  [NICHE_X, NICHE_Z_START, NICHE_X, ROOM_D],
-
-  // Face Nord de la cloison de séparation Séjour / Cuisine-Couloir (Z=400)
-  [NICHE_X, ROOM_D, DOOR_START, ROOM_D],
-  [DOOR_END, ROOM_D, ROOM_W, ROOM_D],
-
-  // ── 5. PORTE DU SÉJOUR : ENCADREMENTS ───────────────────────────────────────
-  [DOOR_START, ROOM_D, DOOR_START, ROOM_D + PARTITION_THICKNESS],
-  [DOOR_END, ROOM_D, DOOR_END, ROOM_D + PARTITION_THICKNESS],
-
-  // ── 6. CLOISONS CUISINE & COULOIR ──────────────────────────────────────────
-  // Face Sud de la cloison de séparation Séjour (Z=ROOM_D + PARTITION_THICKNESS)
-  [NICHE_X, ROOM_D + PARTITION_THICKNESS, KITCHEN_X0 - PARTITION_THICKNESS, ROOM_D + PARTITION_THICKNESS],
-  [KITCHEN_X1 + PARTITION_THICKNESS, ROOM_D + PARTITION_THICKNESS, DOOR_START, ROOM_D + PARTITION_THICKNESS],
-  [DOOR_END, ROOM_D + PARTITION_THICKNESS, ROOM_W, ROOM_D + PARTITION_THICKNESS],
-
-  // Cloison Ouest cuisine (épaisseur 7.2)
-  [KITCHEN_X0, ROOM_D + PARTITION_THICKNESS, KITCHEN_X0, KITCHEN_Z],
-  [KITCHEN_X0 - PARTITION_THICKNESS, ROOM_D + PARTITION_THICKNESS, KITCHEN_X0 - PARTITION_THICKNESS, KITCHEN_Z],
-
-  // Cloison Est cuisine (épaisseur 7.2)
-  [KITCHEN_X1, ROOM_D + PARTITION_THICKNESS, KITCHEN_X1, KITCHEN_Z],
-  [KITCHEN_X1 + PARTITION_THICKNESS, ROOM_D + PARTITION_THICKNESS, KITCHEN_X1 + PARTITION_THICKNESS, KITCHEN_Z],
-
-  // Fond cuisine / Cloison Nord SDB (Z=KITCHEN_Z et Z=KITCHEN_Z + PARTITION_THICKNESS)
-  [KITCHEN_X0, KITCHEN_Z, KITCHEN_X1, KITCHEN_Z],
-  [NICHE_X, KITCHEN_Z + PARTITION_THICKNESS, CORR_WALL_X - PARTITION_THICKNESS / 2, KITCHEN_Z + PARTITION_THICKNESS],
-
-  // ── 7. CLOISON COULOIR / SDB (X=195.6, épaisseur 7.2) ──────────────────────
-  // Face couloir (Est)
-  [CORR_WALL_X + PARTITION_THICKNESS / 2, KITCHEN_Z, CORR_WALL_X + PARTITION_THICKNESS / 2, 513.4],
-  [CORR_WALL_X + PARTITION_THICKNESS / 2, 606.6, CORR_WALL_X + PARTITION_THICKNESS / 2, BATH_Z_END],
-
-  // Face SDB (Ouest)
-  [CORR_WALL_X - PARTITION_THICKNESS / 2, KITCHEN_Z + PARTITION_THICKNESS, CORR_WALL_X - PARTITION_THICKNESS / 2, 513.4],
-  [CORR_WALL_X - PARTITION_THICKNESS / 2, 606.6, CORR_WALL_X - PARTITION_THICKNESS / 2, BATH_Z_END],
-
-  // Encadrements porte SDB
-  [CORR_WALL_X - PARTITION_THICKNESS / 2, 513.4, CORR_WALL_X + PARTITION_THICKNESS / 2, 513.4],
-  [CORR_WALL_X - PARTITION_THICKNESS / 2, 606.6, CORR_WALL_X + PARTITION_THICKNESS / 2, 606.6],
-
-  // Mur Est du couloir (face intérieure)
-  [ROOM_W, ROOM_D + PARTITION_THICKNESS, ROOM_W, DiagWall.A.z],
-
-  // ── 8. SALLE DE BAIN, DOUCHE & WC ──────────────────────────────────────────
-  // Mur Ouest intérieur SDB / WC
-  [NICHE_X, ROOM_D + PARTITION_THICKNESS, NICHE_X, DIAG_INT_END.z],
-
-  // Cloison Douche
-  [65, BATH_Z_END, 65, BATH_Z_END + 70],
-  [NICHE_X, BATH_Z_END + 70, 65, BATH_Z_END + 70],
-
-  // ── 9. MUR DIAGONAL INTÉRIEUR & PORTE D'ENTRÉE ──────────────────────────────
-  // Segment Est avant porte
+  // ── Mur diagonal bâtiment (structure extérieure) ─────────────────────────
+  // Face extérieure (segment 1 avant porte, segment 2 après porte)
+  [DIAG_EXT_START.x, DIAG_EXT_START.z, DIAG_EXT_DOOR_S.x, DIAG_EXT_DOOR_S.z],
+  [DIAG_EXT_DOOR_E.x, DIAG_EXT_DOOR_E.z, DIAG_EXT_END.x, DIAG_EXT_END.z],
+  // Face intérieure (segment 1 avant porte, segment 2 après porte)
   [DIAG_INT_START.x, DIAG_INT_START.z, DIAG_INT_DOOR_S.x, DIAG_INT_DOOR_S.z],
-  // Segment Ouest après porte
   [DIAG_INT_DOOR_E.x, DIAG_INT_DOOR_E.z, DIAG_INT_END.x, DIAG_INT_END.z],
-
-  // Encadrements porte d'entrée diagonale
+  // Encadrements porte d'entrée
   [DIAG_INT_DOOR_S.x, DIAG_INT_DOOR_S.z, DIAG_EXT_DOOR_S.x, DIAG_EXT_DOOR_S.z],
   [DIAG_INT_DOOR_E.x, DIAG_INT_DOOR_E.z, DIAG_EXT_DOOR_E.x, DIAG_EXT_DOOR_E.z],
-
-  // Jonctions intérieures angles Diagonale
+  // Jonctions d'angles diagonale
+  [EXT_EAST_X, DiagWall.A.z, DIAG_EXT_START.x, DIAG_EXT_START.z],
   [ROOM_W, DiagWall.A.z, DIAG_INT_START.x, DIAG_INT_START.z],
+  [EXT_WEST_X, DIAG_EXT_END.z, DIAG_EXT_END.x, DIAG_EXT_END.z],
   [NICHE_X, DIAG_INT_END.z, DIAG_INT_END.x, DIAG_INT_END.z],
 ];
 
-// ── SEG_DOORS ─────────────────────────────────────────────────────────────────
+// ── 2. CLOISONS & DOUBLAGES PLACO (Compartimentage intérieur) ────────────────
+export const SEG_PARTITIONS: Seg[] = [
+  // ── Doublage placo séjour Mur Ouest (épaisseur 10cm, X in [-10, 0]) ───────
+  // Face intérieure séjour (s'arrête à la niche à Z=280)
+  [0, 0, 0, NICHE_Z_START],
+  // Retour placo à la niche
+  [0, NICHE_Z_START, NICHE_X, NICHE_Z_START],
+  // Retour placo au Nord
+  [0, 0, NICHE_X, 0],
 
+  // ── Doublage placo séjour Mur Nord (Z=0) ──────────────────────────────────
+  [0, 0, pEast('glass-west'), 0],
+  [pWest('glass-east'), 0, ROOM_W, 0],
+  // Retour placo Est à Z=0
+  [ROOM_W, -10, ROOM_W, 0],
+
+  // ── Cloison de séparation Séjour / Cuisine-Couloir (Z=400, épaisseur 7.2) ──
+  // À gauche de la cuisine
+  [NICHE_X, ROOM_D, KITCHEN_X0 - PARTITION_THICKNESS, ROOM_D],
+  [NICHE_X, ROOM_D + PARTITION_THICKNESS, KITCHEN_X0 - PARTITION_THICKNESS, ROOM_D + PARTITION_THICKNESS],
+  // Entre cuisine et porte séjour
+  [KITCHEN_X1 + PARTITION_THICKNESS, ROOM_D, DOOR_START, ROOM_D],
+  [KITCHEN_X1 + PARTITION_THICKNESS, ROOM_D + PARTITION_THICKNESS, DOOR_START, ROOM_D + PARTITION_THICKNESS],
+  // À droite de la porte séjour
+  [DOOR_END, ROOM_D, ROOM_W, ROOM_D],
+  [DOOR_END, ROOM_D + PARTITION_THICKNESS, ROOM_W, ROOM_D + PARTITION_THICKNESS],
+  // Encadrements de porte séjour
+  [DOOR_START, ROOM_D, DOOR_START, ROOM_D + PARTITION_THICKNESS],
+  [DOOR_END, ROOM_D, DOOR_END, ROOM_D + PARTITION_THICKNESS],
+
+  // ── Cloisons Cuisine (épaisseur 7.2cm) ─────────────────────────────────────
+  // Cloison Ouest
+  [KITCHEN_X0, ROOM_D, KITCHEN_X0, KITCHEN_Z],
+  [KITCHEN_X0 - PARTITION_THICKNESS, ROOM_D, KITCHEN_X0 - PARTITION_THICKNESS, KITCHEN_Z],
+  [KITCHEN_X0 - PARTITION_THICKNESS, ROOM_D, KITCHEN_X0, ROOM_D],
+  // Cloison Est
+  [KITCHEN_X1, ROOM_D, KITCHEN_X1, KITCHEN_Z],
+  [KITCHEN_X1 + PARTITION_THICKNESS, ROOM_D, KITCHEN_X1 + PARTITION_THICKNESS, KITCHEN_Z],
+  [KITCHEN_X1, ROOM_D, KITCHEN_X1 + PARTITION_THICKNESS, ROOM_D],
+  // Fond cuisine (Z=460) & cloison Nord SDB (Z=467.2)
+  [KITCHEN_X0 - PARTITION_THICKNESS, KITCHEN_Z, KITCHEN_X1 + PARTITION_THICKNESS, KITCHEN_Z],
+  [NICHE_X, KITCHEN_Z + PARTITION_THICKNESS, CORR_WALL_X - SH_HALF, KITCHEN_Z + PARTITION_THICKNESS],
+  [CORR_WALL_X - SH_HALF, KITCHEN_Z, CORR_WALL_X - SH_HALF, KITCHEN_Z + PARTITION_THICKNESS],
+
+  // ── Cloison Couloir / SDB (X=195.6, épaisseur 7.2cm) ──────────────────────
+  // Face couloir (Est)
+  [CORR_WALL_X + SH_HALF, KITCHEN_Z, CORR_WALL_X + SH_HALF, 513.4],
+  [CORR_WALL_X + SH_HALF, 606.6, CORR_WALL_X + SH_HALF, BATH_Z_END],
+  // Face SDB (Ouest)
+  [CORR_WALL_X - SH_HALF, KITCHEN_Z + PARTITION_THICKNESS, CORR_WALL_X - SH_HALF, 513.4],
+  [CORR_WALL_X - SH_HALF, 606.6, CORR_WALL_X - SH_HALF, BATH_Z_END],
+  // Encadrements porte SDB
+  [CORR_WALL_X - SH_HALF, 513.4, CORR_WALL_X + SH_HALF, 513.4],
+  [CORR_WALL_X - SH_HALF, 606.6, CORR_WALL_X + SH_HALF, 606.6],
+
+  // ── Cloisons Douche (2 faces complètes, épaisseur 7.2cm) ───────────────────
+  // Cloison verticale Est (axe X=65)
+  [65 - SH_HALF, BATH_Z_END, 65 - SH_HALF, 680 - SH_HALF], // face intérieure douche
+  [65 + SH_HALF, BATH_Z_END, 65 + SH_HALF, 680 + SH_HALF], // face extérieure SDB
+  [65 - SH_HALF, BATH_Z_END, 65 + SH_HALF, BATH_Z_END],    // nez de cloison au Nord
+  // Cloison horizontale Sud (axe Z=680)
+  [NICHE_X, 680 - SH_HALF, 65 - SH_HALF, 680 - SH_HALF],   // face intérieure douche
+  [NICHE_X, 680 + SH_HALF, 65 + SH_HALF, 680 + SH_HALF],   // face Sud vers WC/diag
+];
+
+// ── SEG_WALLS (tous les segments combinés) ────────────────────────────────────
+export const SEG_WALLS: Seg[] = [
+  ...SEG_CONCRETE_WALLS,
+  ...SEG_PARTITIONS,
+];
+
+// ── SEG_DOORS ─────────────────────────────────────────────────────────────────
 export const SEG_DOORS: Seg[] = [
   // Porte séjour (Z=400)
   [DOOR_START, ROOM_D, DOOR_END, ROOM_D],
@@ -169,8 +178,7 @@ export const SEG_DOORS: Seg[] = [
 ];
 
 // ── SEG_WINDOWS ───────────────────────────────────────────────────────────────
-
 export const SEG_WINDOWS: Seg[] = [
-  [pEast('glass-west'), 0, pWest('glass-east'), 0], // baie vitrée (mur C)
-  [NICHE_X, BATH_Z_END, 60, BATH_Z_END],            // vitrage douche
+  [pEast('glass-west'), 0, pWest('glass-east'), 0],       // baie vitrée (mur C)
+  [NICHE_X, BATH_Z_END, 65 - SH_HALF, BATH_Z_END],        // vitrage douche
 ];

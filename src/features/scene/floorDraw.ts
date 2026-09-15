@@ -13,7 +13,7 @@ import {
 
 // Jardin diagonal endpoint (parallèle à MDiag)
 const GARDEN_JC_Z = -140 + DiagWall.slope * 320;
-import { SEG_WALLS, SEG_DOORS, SEG_WINDOWS } from './floorData';
+import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_WINDOWS } from './floorData';
 import { GARDEN_PANEL_DEFS } from './wallData';
 
 const PAD = 20;
@@ -78,9 +78,17 @@ export function drawFloorPlan(
   ctx.lineCap = 'butt';
   ctx.lineJoin = 'miter';
 
-  ctx.strokeStyle = '#78808a';
-  ctx.lineWidth = Math.max(S * 2, 1.2);
-  for (const [x1, z1, x2, z2] of SEG_WALLS) {
+  // 1. Murs porteurs / béton (traits épais et foncés)
+  ctx.strokeStyle = '#2d3748';
+  ctx.lineWidth = Math.max(S * 2.5, 1.8);
+  for (const [x1, z1, x2, z2] of SEG_CONCRETE_WALLS) {
+    ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke();
+  }
+
+  // 2. Cloisons et doublages placo (traits fins et plus clairs)
+  ctx.strokeStyle = '#8a94a0';
+  ctx.lineWidth = Math.max(S * 1.5, 1.1);
+  for (const [x1, z1, x2, z2] of SEG_PARTITIONS) {
     ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke();
   }
 
