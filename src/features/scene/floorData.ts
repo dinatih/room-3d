@@ -9,8 +9,7 @@ import {
   pEast, pWest, pNorth, pSouth, pX, pZ,
   SEG_DIAG_CONCRETE_WALLS,
   SEG_DIAG_ENTRY_DOOR,
-  DIAG_EXT_END,
-  DIAG_INT_END,
+  DIAG_EXT_Z_END,
 } from './wallData';
 
 export type Seg = [number, number, number, number]; // x1, z1, x2, z2
@@ -19,9 +18,9 @@ export type Seg = [number, number, number, number]; // x1, z1, x2, z2
 export const SEG_CONCRETE_WALLS: Seg[] = [
   // ── Mur Ouest béton (corner-nw-ext / corner-nw) ───────────────────────────
   // Face extérieure continue
-  [pWest('corner-nw-ext'), pNorth('corner-nw-ext'), pWest('corner-nw-ext'), DIAG_EXT_END.z],
+  [pWest('corner-nw-ext'), pNorth('corner-nw-ext'), pWest('corner-nw-ext'), DIAG_EXT_Z_END],
   // Face intérieure béton continue
-  [pEast('corner-nw-ext'), pNorth('corner-nw-ext'), pEast('corner-nw-ext'), DIAG_INT_END.z],
+  [pEast('corner-nw-ext'), pNorth('corner-nw-ext'), pEast('corner-nw-ext'), pSouth('diag-sw')],
   // About Nord (fermeture angle Nord-Ouest)
   [pWest('corner-nw-ext'), pNorth('corner-nw-ext'), pEast('corner-nw-ext'), pNorth('corner-nw-ext')],
 

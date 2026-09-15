@@ -166,44 +166,30 @@ export const pEast  = (id: PillarId) => pX(id) + pW(id) / 2;
 export const pNorth = (id: PillarId) => pZ(id) - pD(id) / 2;
 export const pSouth = (id: PillarId) => pZ(id) + pD(id) / 2;
 
-// ── Mur diagonal : géométrie et points remarquables ──────────────────────────
+// ── Mur diagonal : segments 2D et repères ────────────────────────────────────
 export { DiagWall };
+const { door: dDoor, len: dLen, p: dP } = DiagWall;
+const pExt = (d: number) => dP(d, WALL_THICKNESS);
+const pInt = (d: number) => dP(d, 0);
 
-// off=0 : face intérieure reliant A et C ; off=WALL_THICKNESS : face extérieure
-export const DIAG_EXT_START  = DiagWall.p(0, WALL_THICKNESS);
-export const DIAG_EXT_DOOR_S = DiagWall.p(DiagWall.door.start, WALL_THICKNESS);
-export const DIAG_EXT_DOOR_E = DiagWall.p(DiagWall.door.end, WALL_THICKNESS);
-export const DIAG_EXT_END    = DiagWall.p(DiagWall.len, WALL_THICKNESS);
-
-export const DIAG_INT_START  = DiagWall.p(0, 0);
-export const DIAG_INT_DOOR_S = DiagWall.p(DiagWall.door.start, 0);
-export const DIAG_INT_DOOR_E = DiagWall.p(DiagWall.door.end, 0);
-export const DIAG_INT_END    = DiagWall.p(DiagWall.len, 0);
-
-// Jardin diagonal endpoint (parallèle au mur diagonal)
 export const GARDEN_JC_Z = -140 + DiagWall.slope * 320;
+export const DIAG_EXT_Z_END = pExt(dLen).z;
 
-/** Segments 2D de la structure diagonale (face extérieure, intérieure, encadrements, jonctions A et C). */
 export const SEG_DIAG_CONCRETE_WALLS: [number, number, number, number][] = [
-  // Face extérieure
-  [DIAG_EXT_START.x, DIAG_EXT_START.z, DIAG_EXT_DOOR_S.x, DIAG_EXT_DOOR_S.z],
-  [DIAG_EXT_DOOR_E.x, DIAG_EXT_DOOR_E.z, DIAG_EXT_END.x, DIAG_EXT_END.z],
-  // Face intérieure
-  [DIAG_INT_START.x, DIAG_INT_START.z, DIAG_INT_DOOR_S.x, DIAG_INT_DOOR_S.z],
-  [DIAG_INT_DOOR_E.x, DIAG_INT_DOOR_E.z, DIAG_INT_END.x, DIAG_INT_END.z],
-  // Encadrements porte d'entrée
-  [DIAG_INT_DOOR_S.x, DIAG_INT_DOOR_S.z, DIAG_EXT_DOOR_S.x, DIAG_EXT_DOOR_S.z],
-  [DIAG_INT_DOOR_E.x, DIAG_INT_DOOR_E.z, DIAG_EXT_DOOR_E.x, DIAG_EXT_DOOR_E.z],
-  // Jonctions d'angles diagonale
-  [pEast('diag-ne'), pSouth('diag-ne'), DIAG_EXT_START.x, DIAG_EXT_START.z],
-  [pWest('diag-ne'), pSouth('diag-ne'), DIAG_INT_START.x, DIAG_INT_START.z],
-  [pWest('diag-sw'), DIAG_EXT_END.z, DIAG_EXT_END.x, DIAG_EXT_END.z],
-  [pEast('diag-sw'), DIAG_INT_END.z, DIAG_INT_END.x, DIAG_INT_END.z],
+  [pExt(0).x, pExt(0).z, pExt(dDoor.start).x, pExt(dDoor.start).z],
+  [pExt(dDoor.end).x, pExt(dDoor.end).z, pExt(dLen).x, pExt(dLen).z],
+  [pInt(0).x, pInt(0).z, pInt(dDoor.start).x, pInt(dDoor.start).z],
+  [pInt(dDoor.end).x, pInt(dDoor.end).z, pInt(dLen).x, pInt(dLen).z],
+  [pInt(dDoor.start).x, pInt(dDoor.start).z, pExt(dDoor.start).x, pExt(dDoor.start).z],
+  [pInt(dDoor.end).x, pInt(dDoor.end).z, pExt(dDoor.end).x, pExt(dDoor.end).z],
+  [pEast('diag-ne'), pSouth('diag-ne'), pExt(0).x, pExt(0).z],
+  [pWest('diag-ne'), pSouth('diag-ne'), pInt(0).x, pInt(0).z],
+  [pWest('diag-sw'), pExt(dLen).z, pExt(dLen).x, pExt(dLen).z],
+  [pEast('diag-sw'), pInt(dLen).z, pInt(dLen).x, pInt(dLen).z],
 ];
 
-/** Segment 2D de la porte d'entrée diagonale P3. */
 export const SEG_DIAG_ENTRY_DOOR: [number, number, number, number] = [
-  DIAG_INT_DOOR_S.x, DIAG_INT_DOOR_S.z, DIAG_INT_DOOR_E.x, DIAG_INT_DOOR_E.z,
+  pInt(dDoor.start).x, pInt(dDoor.start).z, pInt(dDoor.end).x, pInt(dDoor.end).z,
 ];
 
 
