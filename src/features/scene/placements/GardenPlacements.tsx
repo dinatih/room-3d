@@ -17,6 +17,7 @@ import { ShibaInu } from '../items/ShibaInu';
 import { FemaleAnatomyBones } from '../items/FemaleAnatomyBones';
 import { FemaleAnatomyMuscles } from '../items/FemaleAnatomyMuscles';
 import { HumanSkeleton } from '../items/HumanSkeleton';
+import { FemaleAnatomyTrio } from '../items/FemaleAnatomyTrio';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
@@ -84,6 +85,11 @@ export function GardenPlacements() {
         {/* Squelette Humain couché */}
         <group position={[600, 0, -700]} userData={{ animUnit: true, skipMerge: true, itemName: 'Squelette Humain' }}>
           <HumanSkeleton item={{} as any} actionState={{}} onSize={() => {}} />
+        </group>
+
+        {/* Trio Anatomique Féminin (Corps, Squelette, Muscles) */}
+        <group position={[480, 0, -700]} userData={{ animUnit: true, skipMerge: true, itemName: 'Trio Anatomique Féminin' }}>
+          <FemaleAnatomyTrio item={{} as any} actionState={{}} onSize={() => {}} />
         </group>
       </MergedStaticGroup>
 
