@@ -500,30 +500,43 @@ export function Inventory({
     }
   }, [initialCategory, visible]);
 
+function normalizeSearchStr(str: string): string {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
   // SpatialZones list
   const spatialZones = useMemo(() => {
     const all = SpatialZoneManager.getAllZones();
-    const q = search.trim().toLowerCase();
+    const q = normalizeSearchStr(search);
     if (!q) return all;
-    return all.filter(z => z.name.toLowerCase().includes(q) || z.id.toLowerCase().includes(q));
+    return all.filter(z => normalizeSearchStr(z.name).includes(q) || normalizeSearchStr(z.id).includes(q));
   }, [search]);
 
   // Filter items list
   const items = useMemo(() => {
     if (activeCat === 'spaces') return [];
-    const q = search.trim().toLowerCase();
+    const q = normalizeSearchStr(search);
     return INVENTORY.filter(i => {
       // Tous les personnages sont visibles dans l'inventaire pour debug
       if (activeCat === 'actionnable' && !i.actions?.length) return false;
       if (activeCat === 'glbs'        && !i.glbPath)         return false;
       
-      if (activeCat !== 'all' && activeCat !== 'actionnable' && activeCat !== 'glbs') {
+      // Si une recherche textuelle est saisie, chercher dans tout le catalogue pour ne pas masquer de résultats
+      if (!q && activeCat !== 'all' && activeCat !== 'actionnable' && activeCat !== 'glbs') {
         if (i.category !== activeCat) return false;
       }
 
-      if (q && !i.name.toLowerCase().includes(q) &&
-               !i.brand.toLowerCase().includes(q) &&
-               !(i.notes ?? '').toLowerCase().includes(q)) return false;
+      if (q) {
+        const itemText = normalizeSearchStr(
+          `${i.id} ${i.name} ${i.brand} ${i.notes ?? ''} ${(i.tags ?? []).join(' ')}`
+        );
+        const qAlt = q.replace(/pendantif/g, 'pendentif').replace(/pendentif/g, 'pendantif');
+        if (!itemText.includes(q) && !itemText.includes(qAlt)) return false;
+      }
       return true;
     });
   }, [activeCat, search]);
