@@ -59,6 +59,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
   const [currentSamples, setCurrentSamples] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isBuildingScene, setIsBuildingScene] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [fps, setFps] = useState<number>(0);
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
@@ -66,14 +67,28 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
   // Anneau visuel autofocus
   const [focusRing, setFocusRing] = useState<{ x: number; y: number; visible: boolean }>({ x: 0, y: 0, visible: false });
 
+  // Fermeture par touche Échap ou F10
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'F10') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
   // Initialisation de la distance de focus initiale au point d'impact central de la caméra
   useEffect(() => {
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-    const hits = raycaster.intersectObjects(scene.children, true);
-    if (hits.length > 0) {
-      setFocusDistance(Math.round(hits[0].distance));
-    }
+    try {
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+      const hits = raycaster.intersectObjects(scene.children, true);
+      if (hits.length > 0) {
+        setFocusDistance(Math.round(hits[0].distance));
+      }
+    } catch {}
   }, [scene, camera]);
 
   // Préparation de la scène avant construction du BVH (remplacement des miroirs, masquage des helpers)
@@ -82,19 +97,41 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     const matMap = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
 
     scene.traverse((obj) => {
-      // Masquer les helpers, grilles, repères et gizmos visuels de dev
       const name = (obj.name || '').toLowerCase();
+
+      // Masquer les dômes de ciel 3D (le path-tracer utilise nativement scene.environment)
+      if (name.includes('skysphere') || (obj.userData && obj.userData.isSky)) {
+        if (obj.visible) {
+          obj.visible = false;
+          hidden.push(obj);
+        }
+        return;
+      }
+
+      // Masquer nuages de points (Lidar) et lignes (non supportés par le raytracing surfacique)
+      if ((obj as any).isPoints || (obj as any).isLine || (obj as any).isLineSegments) {
+        if (obj.visible) {
+          obj.visible = false;
+          hidden.push(obj);
+        }
+        return;
+      }
+
+      // Masquer les helpers, grilles, repères et gizmos visuels de dev
       const isHelper =
         obj.type.includes('Helper') ||
         name.includes('helper') ||
         name.includes('gizmo') ||
         name.includes('grid') ||
         name.includes('landingstrip') ||
+        name.includes('collision') ||
+        name.includes('aizone') ||
         name.includes('hover');
 
       if (isHelper && obj.visible) {
         obj.visible = false;
         hidden.push(obj);
+        return;
       }
 
       // Traiter les surfaces de miroir réflecteur raster pour leur donner une réflexion physique PBR
@@ -117,13 +154,11 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
 
   // Restauration de la scène après fermeture ou rendu
   const restoreScene = useCallback(() => {
-    // Restaurer les helpers
     hiddenHelpersRef.current.forEach((obj) => {
       obj.visible = true;
     });
     hiddenHelpersRef.current = [];
 
-    // Restaurer les matériaux d'origine
     originalMaterialsMapRef.current.forEach((origMat, mesh) => {
       mesh.material = origMat;
     });
@@ -166,6 +201,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
 
     prepareScene();
     setIsBuildingScene(true);
+    setErrorMessage(null);
     setCurrentSamples(0);
     setElapsedSeconds(0);
 
@@ -206,16 +242,25 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     pathTracer.renderDelay = 0;
     pathTracer.dynamicLowRes = true;
     pathTracer.lowResScale = 0.25;
+    pathTracer.textureSize.set(1024, 1024);
 
-    // Transmission de la scène et de la caméra au Path Tracer
-    try {
-      pathTracer.setScene(scene, physCamera);
-      pathTracerRef.current = pathTracer;
-      setIsBuildingScene(false);
-    } catch (err) {
-      console.error('Erreur initialisation WebGLPathTracer:', err);
-      setIsBuildingScene(false);
-    }
+    let isDisposed = false;
+
+    // Laisser le temps au navigateur d'afficher le spinner avant la construction synchrone du BVH
+    const timer = setTimeout(() => {
+      if (isDisposed) return;
+      try {
+        console.log('[Raytracing] Construction du BVH pour la scène...');
+        pathTracer.setScene(scene, physCamera);
+        pathTracerRef.current = pathTracer;
+        setIsBuildingScene(false);
+        console.log('[Raytracing] Scène prête ! Démarrage de l\'accumulation.');
+      } catch (err: any) {
+        console.error('[Raytracing] Erreur initialisation WebGLPathTracer:', err);
+        setErrorMessage(err?.message || 'Échec de la génération du maillage BVH.');
+        setIsBuildingScene(false);
+      }
+    }, 60);
 
     let lastTime = performance.now();
     let frameCount = 0;
@@ -246,6 +291,8 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     animFrameIdRef.current = requestAnimationFrame(renderLoop);
 
     return () => {
+      isDisposed = true;
+      clearTimeout(timer);
       if (animFrameIdRef.current) {
         cancelAnimationFrame(animFrameIdRef.current);
       }
@@ -261,7 +308,6 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     scene,
     camera,
     resolution,
-    bounces,
     prepareScene,
     restoreScene,
     getRenderDimensions,
@@ -428,44 +474,64 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
           className="flex-grow-1 d-flex flex-column align-items-center justify-content-center p-3 position-relative overflow-hidden"
           style={{ background: 'radial-gradient(circle at center, #111528 0%, #05070f 100%)' }}
         >
-          {isBuildingScene ? (
-            <div className="text-center p-4">
-              <div className="spinner-border text-warning mb-3" role="status" style={{ width: '3rem', height: '3rem' }} />
-              <h5 className="fw-bold">Génération du maillage BVH spatial…</h5>
-              <p className="text-white-50 small mb-0">Préparation des géométries et des textures physiques</p>
-            </div>
-          ) : (
-            <div className="position-relative shadow-lg border border-secondary border-opacity-25 rounded overflow-hidden">
-              <canvas
-                ref={canvasRef}
-                onClick={handleCanvasClick}
+          <div className="position-relative shadow-lg border border-secondary border-opacity-25 rounded overflow-hidden">
+            {/* Le canvas est TOUJOURS présent dans le DOM pour que canvasRef.current soit disponible */}
+            <canvas
+              ref={canvasRef}
+              onClick={handleCanvasClick}
+              style={{
+                display: 'block',
+                cursor: dofEnabled ? 'crosshair' : 'default',
+                maxWidth: '100%',
+                maxHeight: 'calc(100vh - 180px)',
+                objectFit: 'contain',
+              }}
+              title={dofEnabled ? 'Cliquez sur n\'importe quel point pour ajuster l\'autofocus 🎯' : undefined}
+            />
+
+            {/* Spinner overlay pendant la génération initiale du BVH */}
+            {isBuildingScene && (
+              <div
+                className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center p-4 text-center"
+                style={{ background: 'rgba(5, 7, 15, 0.94)', zIndex: 10 }}
+              >
+                <div className="spinner-border text-warning mb-3" role="status" style={{ width: '3rem', height: '3rem' }} />
+                <h5 className="fw-bold">Génération du maillage BVH spatial…</h5>
+                <p className="text-white-50 small mb-0">Préparation des géométries et des textures physiques</p>
+              </div>
+            )}
+
+            {/* Erreur éventuelle */}
+            {errorMessage && (
+              <div
+                className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center p-4 text-center"
+                style={{ background: 'rgba(25, 5, 5, 0.95)', zIndex: 11 }}
+              >
+                <div className="fs-1 mb-2">⚠️</div>
+                <h5 className="fw-bold text-danger">Erreur Raytracing</h5>
+                <p className="text-white-50 small mb-3">{errorMessage}</p>
+                <button onClick={handleRestart} className="btn btn-warning btn-sm">Réessayer</button>
+              </div>
+            )}
+
+            {/* Réticule autofocus animé au clic */}
+            {focusRing.visible && (
+              <div
+                className="position-absolute border border-warning rounded-circle"
                 style={{
-                  display: 'block',
-                  cursor: dofEnabled ? 'crosshair' : 'default',
-                  maxWidth: '100%',
-                  maxHeight: 'calc(100vh - 180px)',
-                  objectFit: 'contain',
+                  left: focusRing.x - 20,
+                  top: focusRing.y - 20,
+                  width: 40,
+                  height: 40,
+                  pointerEvents: 'none',
+                  animation: 'pulse 0.6s ease-out',
+                  boxShadow: '0 0 10px rgba(255, 193, 7, 0.8)',
                 }}
-                title={dofEnabled ? 'Cliquez sur n\'importe quel point pour ajuster l\'autofocus 🎯' : undefined}
               />
+            )}
 
-              {/* Réticule autofocus animé au clic */}
-              {focusRing.visible && (
-                <div
-                  className="position-absolute border border-warning rounded-circle"
-                  style={{
-                    left: focusRing.x - 20,
-                    top: focusRing.y - 20,
-                    width: 40,
-                    height: 40,
-                    pointerEvents: 'none',
-                    animation: 'pulse 0.6s ease-out',
-                    boxShadow: '0 0 10px rgba(255, 193, 7, 0.8)',
-                  }}
-                />
-              )}
-
-              {/* Overlay statut de convergence */}
+            {/* Overlay statut de convergence */}
+            {!isBuildingScene && !errorMessage && (
               <div
                 className="position-absolute bottom-0 start-0 w-100 p-2 d-flex align-items-center justify-content-between text-white"
                 style={{
@@ -487,8 +553,8 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
                   <span>Cadence : {fps} éch/s</span>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* ── Panneau de réglages latéral ────────────────────────── */}
