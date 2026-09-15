@@ -7,6 +7,9 @@ SOURCE_GLB = "/home/dinatih/3D Resources/humans/skeletons_and_flesh.glb"
 OUTPUT_DIR = "/home/dinatih/Projects/room-3d/public/characters/skeleton"
 OUTPUT_GLB = os.path.join(OUTPUT_DIR, "skeleton.glb")
 OUTPUT_PNG = os.path.join(OUTPUT_DIR, "skeleton_3d_preview.png")
+OUTPUT_BLEND_PUBLIC = os.path.join(OUTPUT_DIR, "skeleton_tpose.blend")
+OUTPUT_BLEND_BACKUP_DIR = "/home/dinatih/Projects/room-3d/sources_backup/skeleton"
+OUTPUT_BLEND_BACKUP = os.path.join(OUTPUT_BLEND_BACKUP_DIR, "skeleton_tpose.blend")
 
 BONE_MAP = {
     'ValveBiped.Bip01_Pelvis_181': 'mixamorig:Hips',
@@ -128,6 +131,8 @@ def render_preview(glb_path, out_png):
 
 def convert_skeleton():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_BLEND_BACKUP_DIR, exist_ok=True)
+
     print("Loading source GLB:", SOURCE_GLB)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=SOURCE_GLB)
@@ -171,7 +176,7 @@ def convert_skeleton():
             if old_name in m.vertex_groups:
                 m.vertex_groups[old_name].name = new_name
 
-    # Scale to ~175cm height
+    # Scale to 175cm height
     bbox_corners = [m.matrix_world @ mathutils.Vector(c) for m in meshes for c in m.bound_box]
     curr_h = max(v.z for v in bbox_corners) - min(v.z for v in bbox_corners)
     scale_mult = 1.75 / curr_h
@@ -185,13 +190,70 @@ def convert_skeleton():
     bbox_corners = [m.matrix_world @ mathutils.Vector(c) for m in meshes for c in m.bound_box]
     min_z = min(v.z for v in bbox_corners)
     max_z = max(v.z for v in bbox_corners)
-    final_h = (max_z - min_z) * 100.0
-    print(f"Final calculated height: {final_h:.1f} cm (min_z: {min_z:.4f})")
-
     if abs(min_z) > 0.001:
         arm.location.z -= min_z
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.transform_apply(location=True, rotation=False, scale=False)
+
+    # --- ADJUST ARMS FROM A-POSE TO TRUE T-POSE ---
+    print("Adjusting arms from A-pose to TRUE horizontal T-pose...")
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode='POSE')
+
+    # 1. Align LeftArm to (1, 0, 0)
+    p_l_arm = arm.pose.bones['mixamorig:LeftArm']
+    p_l_fore = arm.pose.bones['mixamorig:LeftForeArm']
+    v_l = (p_l_fore.head - p_l_arm.head).normalized()
+    q_l = v_l.rotation_difference(mathutils.Vector((1, 0, 0)))
+    m_world_l = arm.matrix_world @ p_l_arm.matrix
+    m_world_l_new = mathutils.Matrix.Translation(p_l_arm.head) @ q_l.to_matrix().to_4x4() @ mathutils.Matrix.Translation(-p_l_arm.head) @ m_world_l
+    p_l_arm.matrix = arm.matrix_world.inverted() @ m_world_l_new
+    bpy.context.view_layer.update()
+
+    # 2. Align LeftForeArm to (1, 0, 0)
+    p_l_hand = arm.pose.bones['mixamorig:LeftHand']
+    v_l_fore = (p_l_hand.head - p_l_fore.head).normalized()
+    q_l_fore = v_l_fore.rotation_difference(mathutils.Vector((1, 0, 0)))
+    m_world_lf = arm.matrix_world @ p_l_fore.matrix
+    m_world_lf_new = mathutils.Matrix.Translation(p_l_fore.head) @ q_l_fore.to_matrix().to_4x4() @ mathutils.Matrix.Translation(-p_l_fore.head) @ m_world_lf
+    p_l_fore.matrix = arm.matrix_world.inverted() @ m_world_lf_new
+    bpy.context.view_layer.update()
+
+    # 3. Align RightArm to (-1, 0, 0)
+    p_r_arm = arm.pose.bones['mixamorig:RightArm']
+    p_r_fore = arm.pose.bones['mixamorig:RightForeArm']
+    v_r = (p_r_fore.head - p_r_arm.head).normalized()
+    q_r = v_r.rotation_difference(mathutils.Vector((-1, 0, 0)))
+    m_world_r = arm.matrix_world @ p_r_arm.matrix
+    m_world_r_new = mathutils.Matrix.Translation(p_r_arm.head) @ q_r.to_matrix().to_4x4() @ mathutils.Matrix.Translation(-p_r_arm.head) @ m_world_r
+    p_r_arm.matrix = arm.matrix_world.inverted() @ m_world_r_new
+    bpy.context.view_layer.update()
+
+    # 4. Align RightForeArm to (-1, 0, 0)
+    p_r_hand = arm.pose.bones['mixamorig:RightHand']
+    v_r_fore = (p_r_hand.head - p_r_fore.head).normalized()
+    q_r_fore = v_r_fore.rotation_difference(mathutils.Vector((-1, 0, 0)))
+    m_world_rf = arm.matrix_world @ p_r_fore.matrix
+    m_world_rf_new = mathutils.Matrix.Translation(p_r_fore.head) @ q_r_fore.to_matrix().to_4x4() @ mathutils.Matrix.Translation(-p_r_fore.head) @ m_world_rf
+    p_r_fore.matrix = arm.matrix_world.inverted() @ m_world_rf_new
+    bpy.context.view_layer.update()
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Apply deformation to meshes
+    for m in meshes:
+        bpy.context.view_layer.objects.active = m
+        for mod in list(m.modifiers):
+            if mod.type == 'ARMATURE':
+                bpy.ops.object.modifier_copy(modifier=mod.name)
+                bpy.ops.object.modifier_apply(modifier=mod.name)
+                break
+
+    # Apply pose as rest pose on armature
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode='POSE')
+    bpy.ops.pose.armature_apply(selected=False)
+    bpy.ops.object.mode_set(mode='OBJECT')
 
     # Clear animations
     for act in list(bpy.data.actions):
@@ -199,7 +261,13 @@ def convert_skeleton():
     for obj in bpy.data.objects:
         obj.animation_data_clear()
 
-    # Export GLB
+    # Save .blend files
+    print(f"Saving blend file to: {OUTPUT_BLEND_PUBLIC}")
+    bpy.ops.wm.save_as_mainfile(filepath=OUTPUT_BLEND_PUBLIC)
+    print(f"Saving backup blend file to: {OUTPUT_BLEND_BACKUP}")
+    bpy.ops.wm.save_as_mainfile(filepath=OUTPUT_BLEND_BACKUP)
+
+    # Export clean GLB
     bpy.ops.export_scene.gltf(
         filepath=OUTPUT_GLB,
         export_format="GLB",
@@ -209,12 +277,11 @@ def convert_skeleton():
         export_cameras=False,
         export_lights=False
     )
-    print(f"Exported clean skeleton GLB to: {OUTPUT_GLB} ({os.path.getsize(OUTPUT_GLB)} bytes)")
+    print(f"Exported true T-pose skeleton GLB: {OUTPUT_GLB} ({os.path.getsize(OUTPUT_GLB)} bytes)")
 
     # Render Preview
     render_preview(OUTPUT_GLB, OUTPUT_PNG)
-    print("All done!")
-    return round(final_h, 1)
+    print("All conversion completed successfully!")
 
 if __name__ == "__main__":
     convert_skeleton()
