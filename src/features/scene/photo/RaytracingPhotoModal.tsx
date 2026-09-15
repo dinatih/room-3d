@@ -172,13 +172,25 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
       if ((obj as THREE.Mesh).isMesh) {
         const mesh = obj as THREE.Mesh;
 
-        // Miroir réflecteur raster -> surface physique PBR
-        if (name.includes('reflector') || (mesh.material as any)?.isReflectorMaterial) {
+        // Détecter un miroir réflecteur (Reflector Three.js ou surface de miroir)
+        const isReflector =
+          (obj as any).type === 'Reflector' ||
+          typeof (obj as any).getRenderTarget === 'function' ||
+          (obj as any).isReflector ||
+          (mesh.material as any)?.name === 'ReflectorShader' ||
+          ((mesh.material as any)?.uniforms && 'textureMatrix' in (mesh.material as any).uniforms) ||
+          name.includes('reflector') ||
+          name.includes('mirror') ||
+          name.includes('miroir') ||
+          (obj.parent && ((obj.parent.name || '').toLowerCase().includes('reflector') || (obj.parent.name || '').toLowerCase().includes('mirror')));
+
+        if (isReflector) {
           matMap.set(mesh, mesh.material);
           mesh.material = new THREE.MeshStandardMaterial({
             color: 0xffffff,
-            roughness: 0.02,
-            metalness: 0.98,
+            roughness: 0.0,
+            metalness: 1.0,
+            side: THREE.DoubleSide,
           });
           return;
         }
@@ -386,6 +398,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     // Path Tracer
     const pathTracer = new WebGLPathTracer(renderer);
     pathTracer.bounces = bounces;
+    pathTracer.transmissiveBounces = bounces;
     pathTracer.filterGlossyFactor = 0.5;
     pathTracer.renderToCanvas = true;
     pathTracer.fadeDuration = 0;
@@ -497,6 +510,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
   useEffect(() => {
     if (pathTracerRef.current) {
       pathTracerRef.current.bounces = bounces;
+      pathTracerRef.current.transmissiveBounces = bounces;
       pathTracerRef.current.reset();
       setCurrentSamples(0);
     }

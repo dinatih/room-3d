@@ -74,22 +74,22 @@ export function GardenPlacements() {
           <BirdFeeder item={stub('bird-feeder')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
 
-        {/* Statues anatomiques (Chera - Squelette & Muscles) */}
-        <group position={[30, 0, -220]} rotation={[0, Math.PI / 4, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Anatomie Féminine (Squelette)' }}>
+        {/* Statues anatomiques (Chera - Squelette & Muscles) déplacées à gauche du trio */}
+        <group position={[270, 0, -700]} userData={{ animUnit: true, skipMerge: true, itemName: 'Anatomie Féminine (Squelette)' }}>
           <FemaleAnatomyBones item={{} as any} actionState={{}} onSize={() => {}} />
         </group>
-        <group position={[30, 0, -280]} rotation={[0, Math.PI / 4, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Anatomie Féminine (Muscles)' }}>
+        <group position={[340, 0, -700]} userData={{ animUnit: true, skipMerge: true, itemName: 'Anatomie Féminine (Muscles)' }}>
           <FemaleAnatomyMuscles item={{} as any} actionState={{}} onSize={() => {}} />
-        </group>
-
-        {/* Squelette Humain couché */}
-        <group position={[600, 0, -700]} userData={{ animUnit: true, skipMerge: true, itemName: 'Squelette Humain' }}>
-          <HumanSkeleton item={{} as any} actionState={{}} onSize={() => {}} />
         </group>
 
         {/* Trio Anatomique Féminin (Corps, Squelette, Muscles) */}
         <group position={[480, 0, -700]} userData={{ animUnit: true, skipMerge: true, itemName: 'Trio Anatomique Féminin' }}>
           <FemaleAnatomyTrio item={{} as any} actionState={{}} onSize={() => {}} />
+        </group>
+
+        {/* Squelette Humain couché */}
+        <group position={[600, 0, -700]} userData={{ animUnit: true, skipMerge: true, itemName: 'Squelette Humain' }}>
+          <HumanSkeleton item={{} as any} actionState={{}} onSize={() => {}} />
         </group>
       </MergedStaticGroup>
 
