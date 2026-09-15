@@ -15,6 +15,7 @@ import { GroundPoint } from '@features/scene/character/GroundPoint';
 import { SkySphere } from '@features/scene/SkySphere';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
 import { AnimFrameController } from './AnimFrameController';
+import { useSceneStore } from '@features/scene/store/useSceneStore';
 
 function disposePreviewScene(root: THREE.Object3D) {
   root.traverse((node: any) => {
@@ -509,6 +510,7 @@ export function InventoryPreview({
   const [showAnimSelector, setShowAnimSelector] = useState(false);
   const [previewView, setPreviewView] = useState<'free' | 'front' | 'side' | 'top'>('free');
   const isAnimPlaying = useAnimPreviewStore(s => s.isPlaying);
+  const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
 
   useEffect(() => {
     setActionStates(initialDuoAnim ? {
@@ -917,7 +919,7 @@ export function InventoryPreview({
                               setActionStates(s => ({ ...s, duoAnimDef: undefined, walkerAnim: 'idle' }));
                             } else {
                               const def = DUO_ANIMATIONS.find(a => a.id === val);
-                              const otherChars = CHARACTERS.filter(c => c.id !== item.id);
+                              const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
                               const defaultPartner = actionStates.duoPartnerId || (otherChars[0]?.id ?? 'rosanna');
                               setActionStates(s => ({
                                 ...s,
@@ -952,7 +954,7 @@ export function InventoryPreview({
                           type="button"
                           onClick={() => {
                             const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
-                            const otherChars = CHARACTERS.filter(c => c.id !== item.id);
+                            const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
                             const randChar = otherChars[Math.floor(Math.random() * otherChars.length)];
                             if (randomAnim && randChar) {
                               setActionStates(s => ({
@@ -992,7 +994,7 @@ export function InventoryPreview({
                             }}
                             title="Changer le partenaire (Rôle B)"
                           >
-                            {CHARACTERS.filter(c => c.id !== item.id).map(c => (
+                            {CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id))).map(c => (
                               <option key={c.id} value={c.id}>B: {c.name}</option>
                             ))}
                           </select>
@@ -1000,7 +1002,7 @@ export function InventoryPreview({
                           <button
                             type="button"
                             onClick={() => {
-                              const otherChars = CHARACTERS.filter(c => c.id !== item.id);
+                              const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
                               const randChar = otherChars[Math.floor(Math.random() * otherChars.length)];
                               if (randChar) {
                                 setActionStates(s => ({ ...s, duoPartnerId: randChar.id }));
