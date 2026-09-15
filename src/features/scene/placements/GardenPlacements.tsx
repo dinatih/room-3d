@@ -81,8 +81,8 @@ export function GardenPlacements() {
           <FemaleAnatomyMuscles item={{} as any} actionState={{}} onSize={() => {}} />
         </group>
 
-        {/* Squelette Humain */}
-        <group position={[700, 0, -700]} userData={{ animUnit: true, skipMerge: true, itemName: 'Squelette Humain' }}>
+        {/* Squelette Humain couché */}
+        <group position={[600, 0, -700]} userData={{ animUnit: true, skipMerge: true, itemName: 'Squelette Humain' }}>
           <HumanSkeleton item={{} as any} actionState={{}} onSize={() => {}} />
         </group>
       </MergedStaticGroup>

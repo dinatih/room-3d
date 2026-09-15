@@ -17,7 +17,8 @@ export function HumanSkeleton({ onSize }: SceneItemProps) {
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
-    scene.rotation.x = Math.PI / 2;
+    // Couché à plat sur le dos (axe Z = tête aux pieds, rotation Z pour avoir le torse vers le haut)
+    scene.rotation.set(0, 0, Math.PI);
     scene.scale.set(1, 1, 1);
     const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
     const s = TARGET_H / Math.max(raw.x, raw.y, raw.z);
