@@ -11,8 +11,6 @@ import {
   DiagWall,
 } from '@config';
 
-// Jardin diagonal endpoint (parallèle à MDiag)
-const GARDEN_JC_Z = -140 + DiagWall.slope * 320;
 import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_WINDOWS } from './floorData';
 import {
   GARDEN_PANEL_DEFS,
@@ -21,6 +19,7 @@ import {
   PILLAR_DEFS,
   PillarDef,
   WALL_THICKNESS,
+  GARDEN_JC_Z,
 } from './wallData';
 
 const PAD = 20;

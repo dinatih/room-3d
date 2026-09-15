@@ -5,25 +5,15 @@
  * (PILLAR_DEFS / helpers pEast, pWest, pNorth, pSouth, pX, pZ de wallData.ts)
  * comme source unique de vérité géométrique, éliminant les constantes redondantes.
  */
-import { DiagWall } from '@config';
 import {
   pEast, pWest, pNorth, pSouth, pX, pZ,
-  WALL_THICKNESS,
+  SEG_DIAG_CONCRETE_WALLS,
+  SEG_DIAG_ENTRY_DOOR,
+  DIAG_EXT_END,
+  DIAG_INT_END,
 } from './wallData';
 
 export type Seg = [number, number, number, number]; // x1, z1, x2, z2
-
-// ── Mur diagonal (faces dérivées du DiagWall) ─────────────────────────────────
-// off=0 : face intérieure reliant les angles A et C ; off=WALL_THICKNESS : face extérieure
-const DIAG_EXT_START  = DiagWall.p(0, WALL_THICKNESS);
-const DIAG_EXT_DOOR_S = DiagWall.p(DiagWall.door.start, WALL_THICKNESS);
-const DIAG_EXT_DOOR_E = DiagWall.p(DiagWall.door.end, WALL_THICKNESS);
-const DIAG_EXT_END    = DiagWall.p(DiagWall.len, WALL_THICKNESS);
-
-const DIAG_INT_START  = DiagWall.p(0, 0);
-const DIAG_INT_DOOR_S = DiagWall.p(DiagWall.door.start, 0);
-const DIAG_INT_DOOR_E = DiagWall.p(DiagWall.door.end, 0);
-const DIAG_INT_END    = DiagWall.p(DiagWall.len, 0);
 
 // ── 1. MURS BÉTON / PORTEURS (Structure extérieure) ─────────────────────────
 export const SEG_CONCRETE_WALLS: Seg[] = [
@@ -58,21 +48,8 @@ export const SEG_CONCRETE_WALLS: Seg[] = [
   // About Nord au fond du jardin
   [pWest('garden-e'), pSouth('garden-e'), pEast('garden-e'), pSouth('garden-e')],
 
-  // ── Mur diagonal bâtiment (structure extérieure) ─────────────────────────
-  // Face extérieure
-  [DIAG_EXT_START.x, DIAG_EXT_START.z, DIAG_EXT_DOOR_S.x, DIAG_EXT_DOOR_S.z],
-  [DIAG_EXT_DOOR_E.x, DIAG_EXT_DOOR_E.z, DIAG_EXT_END.x, DIAG_EXT_END.z],
-  // Face intérieure
-  [DIAG_INT_START.x, DIAG_INT_START.z, DIAG_INT_DOOR_S.x, DIAG_INT_DOOR_S.z],
-  [DIAG_INT_DOOR_E.x, DIAG_INT_DOOR_E.z, DIAG_INT_END.x, DIAG_INT_END.z],
-  // Encadrements porte d'entrée
-  [DIAG_INT_DOOR_S.x, DIAG_INT_DOOR_S.z, DIAG_EXT_DOOR_S.x, DIAG_EXT_DOOR_S.z],
-  [DIAG_INT_DOOR_E.x, DIAG_INT_DOOR_E.z, DIAG_EXT_DOOR_E.x, DIAG_EXT_DOOR_E.z],
-  // Jonctions d'angles diagonale
-  [pEast('diag-ne'), pSouth('diag-ne'), DIAG_EXT_START.x, DIAG_EXT_START.z],
-  [pWest('diag-ne'), pSouth('diag-ne'), DIAG_INT_START.x, DIAG_INT_START.z],
-  [pWest('diag-sw'), DIAG_EXT_END.z, DIAG_EXT_END.x, DIAG_EXT_END.z],
-  [pEast('diag-sw'), DIAG_INT_END.z, DIAG_INT_END.x, DIAG_INT_END.z],
+  // ── Mur diagonal bâtiment (centralisé dans wallData.ts) ───────────────────
+  ...SEG_DIAG_CONCRETE_WALLS,
 ];
 
 // ── 2. CLOISONS & DOUBLAGES PLACO (Compartimentage intérieur) ────────────────
@@ -176,7 +153,7 @@ export const SEG_DOORS: Seg[] = [
   // Porte placard SDB (double porte coulissante en façade Sud)
   [pEast('shower-ne'), pNorth('shower-ne'), pWest('bath-se'), pNorth('bath-se')],
   // P3 — porte d'entrée diagonale
-  [DIAG_INT_DOOR_S.x, DIAG_INT_DOOR_S.z, DIAG_INT_DOOR_E.x, DIAG_INT_DOOR_E.z],
+  SEG_DIAG_ENTRY_DOOR,
 ];
 
 // ── SEG_WINDOWS ───────────────────────────────────────────────────────────────
