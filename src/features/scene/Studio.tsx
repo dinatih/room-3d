@@ -9,6 +9,7 @@ import {
   ACESFilmicToneMapping, PCFSoftShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
+  PerspectiveCamera,
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
@@ -52,6 +53,7 @@ import { GridLayout }            from '@features/scene/GridLayout';
 // The inventory pulls in a second R3F canvas, its GLTF loaders and a large
 // catalogue. Do not parse it until the user explicitly opens the inventory.
 const Inventory = lazy(() => import('@features/inventory/Inventory').then(module => ({ default: module.Inventory })));
+const RaytracingPhotoModal = lazy(() => import('./photo/RaytracingPhotoModal').then(module => ({ default: module.RaytracingPhotoModal })));
 
 
 import {
@@ -139,7 +141,7 @@ function ShadowController({ enabled }: { enabled: boolean }) {
   return null;
 }
 
-function FrameloopController({ isIdle, showInventory, isCvModalOpen }: { isIdle: boolean; showInventory: boolean; isCvModalOpen: boolean }) {
+function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoModeOpen }: { isIdle: boolean; showInventory: boolean; isCvModalOpen: boolean; isPhotoModeOpen: boolean }) {
   const setFrameloop = useThree((state) => state.setFrameloop);
   const invalidate = useThree((state) => state.invalidate);
   const gl = useThree((state) => state.gl);
@@ -147,13 +149,21 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen }: { isIdle:
   useEffect(() => {
     // Si on est en VR WebXR ou en mode Immersif gyro, on ne suspend jamais le frameloop
     const isXRActive = cameraState.isXR || gl.xr?.isPresenting;
-    const loop = (showInventory || isCvModalOpen || (isIdle && !isXRActive)) ? 'never' : 'demand';
+    const loop = (showInventory || isCvModalOpen || isPhotoModeOpen || (isIdle && !isXRActive)) ? 'never' : 'demand';
     setFrameloop(loop);
     if (loop !== 'never') {
       invalidate();
     }
-  }, [isIdle, showInventory, isCvModalOpen, setFrameloop, invalidate, gl]);
+  }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, setFrameloop, invalidate, gl]);
 
+  return null;
+}
+
+function ActiveCameraCapture({ onCapture }: { onCapture: (cam: PerspectiveCamera) => void }) {
+  const { camera } = useThree();
+  useEffect(() => {
+    onCapture(camera as PerspectiveCamera);
+  }, [camera, onCapture]);
   return null;
 }
 
@@ -334,6 +344,9 @@ export function Studio() {
         cameraState.invalidate?.();
       } else if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') {
         setHideUI(h => !h);
+      } else if (e.key === 'F10' || e.code === 'F10') {
+        e.preventDefault();
+        useSceneStore.getState().setPhotoModeOpen(true);
       }
     };
 
@@ -360,6 +373,9 @@ export function Studio() {
 
   const isIdle = useAppIdle();
   const isCvModalOpen = useSceneStore(state => state.isCvModalOpen);
+  const isPhotoModeOpen = useSceneStore(state => state.isPhotoModeOpen);
+  const activeSceneRef = useRef<Scene | null>(null);
+  const activeCameraRef = useRef<PerspectiveCamera | null>(null);
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
@@ -367,7 +383,7 @@ export function Studio() {
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
-        frameloop={showInventory || isCvModalOpen || isIdle ? 'never' : 'demand'}
+        frameloop={showInventory || isCvModalOpen || isPhotoModeOpen || isIdle ? 'never' : 'demand'}
         /*
          * ── Placement & configuration initiale de la caméra 3D ───────────────
          * - fov: 50° (champ de vision vertical naturel)
@@ -393,6 +409,9 @@ export function Studio() {
         }}
         onCreated={({ scene, gl, camera }) => {
           (window as any).threeScene = scene;
+          (window as any).threeCamera = camera;
+          activeSceneRef.current = scene;
+          activeCameraRef.current = camera as PerspectiveCamera;
           scene.background = new Color(0x02030a);
           gl.shadowMap.enabled = true;
           camera.layers.enableAll();
@@ -401,6 +420,7 @@ export function Studio() {
           setupEnvironment(scene, gl);
         }}
       >
+        <ActiveCameraCapture onCapture={(cam) => { activeCameraRef.current = cam; }} />
         <SkySphere />
         <ambientLight color={0x8899bb} intensity={0.6} />
         {layers.realSun ? <><SunLight /><SunSphere /></> : (
@@ -428,7 +448,7 @@ export function Studio() {
         <PerformanceMonitor />
         <ShadowWarmup />
         <ShadowController enabled={layers.shadows} />
-        <FrameloopController isIdle={isIdle} showInventory={showInventory} isCvModalOpen={isCvModalOpen} />
+        <FrameloopController isIdle={isIdle} showInventory={showInventory} isCvModalOpen={isCvModalOpen} isPhotoModeOpen={isPhotoModeOpen} />
         {planeMode    && <PaperPlane
                            onExit={() => setPlaneMode(false)}
                            model={planeModel}
@@ -577,6 +597,15 @@ export function Studio() {
           {layers.wallEdges && <EdgeHoverOverlay />}
           <AppConsole hidden={showInventory} />
         </>
+      )}
+      {isPhotoModeOpen && activeSceneRef.current && activeCameraRef.current && (
+        <Suspense fallback={null}>
+          <RaytracingPhotoModal
+            scene={activeSceneRef.current}
+            camera={activeCameraRef.current}
+            onClose={() => useSceneStore.getState().setPhotoModeOpen(false)}
+          />
+        </Suspense>
       )}
       {hideUI && (
         <button

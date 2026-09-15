@@ -35,6 +35,21 @@ export function ViewsSection({
 
   return (
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
+      <button
+        className="btn btn-warning text-dark w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 fw-bold d-flex align-items-center justify-content-between shadow-sm"
+        onClick={() => useSceneStore.getState().setPhotoModeOpen(true)}
+        style={{
+          fontSize: isMobile ? '13px' : '11px',
+          minHeight: isMobile ? '44px' : undefined,
+          background: 'linear-gradient(90deg, #ffc107 0%, #ffca2c 100%)',
+        }}
+        title="Prendre une photo au Raytracing Ultra-Réaliste (Touche F10)"
+      >
+        <span className="d-flex align-items-center gap-1.5">
+          <span>📸 Photo Raytracing HD</span>
+        </span>
+        <kbd className="bg-dark text-white border-0 px-1 rounded font-monospace" style={{ fontSize: '9px' }}>F10</kbd>
+      </button>
       {b0('gray',   'Perspective / Orbit (Raccourci O)', () => dispatchKey('o'))}
       {b0('gray',   'Walk générique (Raccourci M)',    () => dispatchKey('m'))}
       {b0('gray',   'Vue 3ème personne (Raccourci 3)', () => dispatchKey('3'))}

@@ -62,7 +62,9 @@ interface SceneStore {
   measurementActive: boolean;
   cameraMode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane';
   isCvModalOpen: boolean;
+  isPhotoModeOpen: boolean;
   setCvModalOpen: (open: boolean) => void;
+  setPhotoModeOpen: (open: boolean) => void;
   setMeasurementActive: (active: boolean) => void;
   setCameraMode: (mode: 'orbit' | 'walk' | 'fpv' | 'top' | 'plane') => void;
   setLaraCount: (count: LaraCountMode) => void;
@@ -273,8 +275,13 @@ export const useSceneStore = create<SceneStore>((set) => ({
   measurementActive: false,
   cameraMode: 'orbit',
   isCvModalOpen: false,
+  isPhotoModeOpen: false,
   setCvModalOpen: (open: boolean) => {
     set({ isCvModalOpen: open });
+  },
+  setPhotoModeOpen: (open: boolean) => {
+    set({ isPhotoModeOpen: open });
+    cameraState.invalidate?.();
   },
   setMeasurementActive: (active: boolean) => {
     set({ measurementActive: active });

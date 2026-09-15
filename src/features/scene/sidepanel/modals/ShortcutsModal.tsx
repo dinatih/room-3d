@@ -25,6 +25,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
           <div className="modal-body py-1">
             <div>
               <Section title="Global" />
+              <R label="Photo Raytracing HD 📸"     keys={['F10']} />
               <R label="Inventaire (toggle)"        keys={['I']} />
               <R label="Inventaire Personnages (direct)" keys={['P']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
