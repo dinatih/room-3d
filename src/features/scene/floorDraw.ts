@@ -14,7 +14,14 @@ import {
 // Jardin diagonal endpoint (parallèle à MDiag)
 const GARDEN_JC_Z = -140 + DiagWall.slope * 320;
 import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_WINDOWS } from './floorData';
-import { GARDEN_PANEL_DEFS, PARTITION_THICKNESS, CORR_WALL_X } from './wallData';
+import {
+  GARDEN_PANEL_DEFS,
+  PARTITION_THICKNESS,
+  CORR_WALL_X,
+  PILLAR_DEFS,
+  PillarDef,
+  WALL_THICKNESS,
+} from './wallData';
 
 const PAD = 20;
 export const PLAN_X_MIN = NICHE_X - PAD;
@@ -115,6 +122,67 @@ export function drawFloorPlan(
   ctx.lineWidth = Math.max(S * 1.5, 1.1);
   for (const [x1, z1, x2, z2] of SEG_PARTITIONS) {
     ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke();
+  }
+
+  // ── Piliers & Poteaux structurels (PILLAR_DEFS) ─────────────────────────────
+  for (const p of PILLAR_DEFS as readonly PillarDef[]) {
+    const pw = p.w ?? WALL_THICKNESS;
+    const pd = p.d ?? WALL_THICKNESS;
+    const rot = p.rot ?? 0;
+    const isConcrete = pw >= 10 || pd >= 10;
+
+    ctx.save();
+    ctx.translate(tx(p.x), tz(p.z));
+    if (rot) ctx.rotate(-rot);
+
+    const w = pw * S;
+    const d = pd * S;
+
+    ctx.fillStyle = isConcrete ? 'rgba(74, 85, 104, 0.45)' : 'rgba(160, 174, 192, 0.35)';
+    ctx.fillRect(-w / 2, -d / 2, w, d);
+
+    ctx.strokeStyle = isConcrete ? '#2d3748' : '#718096';
+    ctx.lineWidth = Math.max(isConcrete ? S * 2.2 : S * 1.4, 1.1);
+    ctx.strokeRect(-w / 2, -d / 2, w, d);
+
+    ctx.restore();
+  }
+
+  // Kites d'angle pour le mur diagonal (jonctions A et C)
+  const eP0 = DiagWall.p(0, DiagWall.depth);
+  const tC = (WALL_THICKNESS - (eP0.x - DiagWall.A.x)) / DiagWall.sin;
+  const cX = DiagWall.A.x + WALL_THICKNESS;
+  const cZ = eP0.z + tC * DiagWall.cos;
+  const kiteNE = [
+    [eP0.x, eP0.z],
+    [cX, cZ],
+    [DiagWall.A.x + WALL_THICKNESS, DiagWall.A.z],
+    [DiagWall.A.x, DiagWall.A.z],
+  ];
+
+  const ePLen = DiagWall.p(DiagWall.len, DiagWall.depth);
+  const tC_sw = ((DiagWall.C.x - WALL_THICKNESS) - ePLen.x) / DiagWall.sin;
+  const cX_sw = DiagWall.C.x - WALL_THICKNESS;
+  const cZ_sw = ePLen.z + tC_sw * DiagWall.cos;
+  const kiteSW = [
+    [DiagWall.C.x, DiagWall.C.z],
+    [DiagWall.C.x - WALL_THICKNESS, DiagWall.C.z],
+    [cX_sw, cZ_sw],
+    [ePLen.x, ePLen.z],
+  ];
+
+  for (const kite of [kiteNE, kiteSW]) {
+    ctx.fillStyle = 'rgba(74, 85, 104, 0.45)';
+    ctx.strokeStyle = '#2d3748';
+    ctx.lineWidth = Math.max(S * 2.2, 1.6);
+    ctx.beginPath();
+    ctx.moveTo(tx(kite[0][0]), tz(kite[0][1]));
+    for (let i = 1; i < kite.length; i++) {
+      ctx.lineTo(tx(kite[i][0]), tz(kite[i][1]));
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
   }
 
   // ── Portes ──────────────────────────────────────────────────────────────────
