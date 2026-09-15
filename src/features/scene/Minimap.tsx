@@ -242,16 +242,29 @@ export function Minimap() {
     const canvas = expandedCanvasRef.current;
     if (!canvas) return;
 
-    const maxW = Math.min(window.innerWidth * 0.90, 750);
-    const maxH = Math.min(window.innerHeight * 0.80, 750);
-    const expW = Math.max(260, Math.round(Math.min(maxW, maxH / PLAN_ASPECT)));
-    const expH = Math.round(expW * PLAN_ASPECT);
+    let currentExpW = 200;
 
-    const dpr = Math.max(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(expW * dpr);
-    canvas.height = Math.round(expH * dpr);
-    canvas.style.width = `${expW}px`;
-    canvas.style.height = `${expH}px`;
+    const resize = () => {
+      // Marge de sécurité verticale : header (30px), padding card (~40px), marges écran (~40px)
+      const chromeH = 75;
+      const availW = Math.min(window.innerWidth * 0.92, 700);
+      const availH = Math.max(140, window.innerHeight * 0.88 - chromeH);
+
+      // Calcul proportionnel strict pour que la minimap s'affiche TOUJOURS EN ENTIER sans être coupée
+      const fitW = Math.min(availW, availH / PLAN_ASPECT);
+      const expW = Math.max(80, Math.round(fitW));
+      const expH = Math.round(expW * PLAN_ASPECT);
+      currentExpW = expW;
+
+      const dpr = Math.max(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(expW * dpr);
+      canvas.height = Math.round(expH * dpr);
+      canvas.style.width = `${expW}px`;
+      canvas.style.height = `${expH}px`;
+    };
+
+    resize();
+    window.addEventListener('resize', resize);
 
     let rafId: number;
     let lastDraw = 0;
@@ -260,11 +273,12 @@ export function Minimap() {
       if (isAppIdle()) return;
       if (now - lastDraw < 40) return; // Limite à 25 FPS quand agrandie
       lastDraw = now;
-      drawMinimap(canvas, expW);
+      drawMinimap(canvas, currentExpW);
     };
     rafId = requestAnimationFrame(loop);
 
     return () => {
+      window.removeEventListener('resize', resize);
       cancelAnimationFrame(rafId);
     };
   }, [expanded]);
@@ -336,11 +350,13 @@ export function Minimap() {
             className="card glass-card shadow-lg p-2.5 rounded-3 border-0"
             onClick={(e) => e.stopPropagation()}
             style={{
-              maxWidth: '95vw',
-              maxHeight: '95vh',
+              maxWidth: '96vw',
+              maxHeight: '94vh',
               pointerEvents: 'auto',
               background: 'rgba(255, 255, 255, 0.92)',
               boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             <div className="card-header border-0 bg-transparent p-0 d-flex justify-content-between align-items-center mb-2">

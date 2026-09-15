@@ -20,7 +20,7 @@ const PAD = 20;
 export const PLAN_X_MIN = NICHE_X - PAD;
 export const PLAN_X_MAX = ROOM_W + PAD;
 export const PLAN_Z_MIN = -350;
-export const PLAN_Z_MAX = 760;
+export const PLAN_Z_MAX = 770;
 export const PLAN_ASPECT = (PLAN_Z_MAX - PLAN_Z_MIN) / (PLAN_X_MAX - PLAN_X_MIN);
 
 export function drawFloorPlan(
@@ -64,7 +64,7 @@ export function drawFloorPlan(
   ctx.closePath(); ctx.fill();
 
   ctx.strokeStyle = '#4a9e54';
-  ctx.lineWidth = Math.max(S * 4, 1);
+  ctx.lineWidth = Math.max(S * 3, 1);
   ctx.lineCap = 'round';
   ctx.setLineDash([3 * sc, 2 * sc]);
   for (const [x1, z1, x2, z2] of [
@@ -74,25 +74,27 @@ export function drawFloorPlan(
   }
   ctx.setLineDash([]);
 
-  // ── Segments ────────────────────────────────────────────────────────────────
-  const wallW = Math.max(S * 8, 1.5);
-  ctx.lineCap = 'round';
+  // ── Segments Murs (2 faces par mur/cloison) ──────────────────────────────────
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
 
-  ctx.strokeStyle = '#bbb';
-  ctx.lineWidth = wallW;
+  ctx.strokeStyle = '#78808a';
+  ctx.lineWidth = Math.max(S * 2, 1.2);
   for (const [x1, z1, x2, z2] of SEG_WALLS) {
     ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke();
   }
 
+  // ── Portes ──────────────────────────────────────────────────────────────────
   ctx.strokeStyle = '#cc0000';
-  ctx.lineWidth = Math.max(wallW * 0.5, 1);
+  ctx.lineWidth = Math.max(S * 2.5, 1.2);
   ctx.setLineDash([2 * sc, 2 * sc]);
   for (const [x1, z1, x2, z2] of SEG_DOORS) {
     ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke();
   }
 
-  ctx.strokeStyle = '#4488ff';
-  ctx.lineWidth = Math.max(wallW * 0.5, 1);
+  // ── Fenêtres ────────────────────────────────────────────────────────────────
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = Math.max(S * 2.5, 1.2);
   ctx.setLineDash([]);
   for (const [x1, z1, x2, z2] of SEG_WINDOWS) {
     ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke();
