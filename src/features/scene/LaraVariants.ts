@@ -658,8 +658,8 @@ function applyDelphinaTattoos(mat: THREE.MeshStandardMaterial) {
 }
 
 function getDelphinaTattooTexture(): THREE.CanvasTexture {
-  if (delphinaTattooTextureCache['delphina_tattoos']) {
-    return delphinaTattooTextureCache['delphina_tattoos'];
+  if (delphinaTattooTextureCache['delphina_floral_v3']) {
+    return delphinaTattooTextureCache['delphina_floral_v3'];
   }
 
   const canvas = document.createElement('canvas');
@@ -669,7 +669,7 @@ function getDelphinaTattooTexture(): THREE.CanvasTexture {
   const tex = new THREE.CanvasTexture(canvas);
   tex.flipY = false;
   tex.colorSpace = THREE.SRGBColorSpace;
-  delphinaTattooTextureCache['delphina_tattoos'] = tex;
+  delphinaTattooTextureCache['delphina_floral_v3'] = tex;
 
   const drawAll = (img?: HTMLImageElement) => {
     if (!ctx) return;
@@ -698,7 +698,8 @@ function getDelphinaTattooTexture(): THREE.CanvasTexture {
 }
 
 function drawDelphinaFloralTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
-  const inkDark = 'rgba(16, 18, 24, 0.95)';
+  const inkDark = 'rgba(12, 14, 20, 0.98)';
+  const inkSecondary = 'rgba(28, 32, 42, 0.85)';
 
   function drawFlower(
     cx: number,
@@ -706,7 +707,7 @@ function drawDelphinaFloralTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
     radius: number,
     numPetals: number,
     angleOffset = 0,
-    colorAccent = 'rgba(220, 80, 110, 0.75)'
+    colorAccent = 'rgba(235, 75, 120, 0.92)'
   ) {
     if (!ctx) return;
     ctx.save();
@@ -718,19 +719,19 @@ function drawDelphinaFloralTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
       ctx.rotate(angle);
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.bezierCurveTo(-radius * 0.45, -radius * 0.5, -radius * 0.4, -radius, 0, -radius * 1.15);
-      ctx.bezierCurveTo(radius * 0.4, -radius, radius * 0.45, -radius * 0.5, 0, 0);
-      ctx.fillStyle = 'rgba(24, 26, 34, 0.88)';
+      ctx.bezierCurveTo(-radius * 0.45, -radius * 0.45, -radius * 0.4, -radius, 0, -radius * 1.15);
+      ctx.bezierCurveTo(radius * 0.4, -radius, radius * 0.45, -radius * 0.45, 0, 0);
+      ctx.fillStyle = 'rgba(22, 24, 30, 0.92)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(12, 14, 18, 0.95)';
-      ctx.lineWidth = 0.9;
+      ctx.strokeStyle = 'rgba(10, 12, 16, 0.98)';
+      ctx.lineWidth = 1.0;
       ctx.stroke();
 
       if (colorAccent) {
         ctx.beginPath();
         ctx.moveTo(0, -2);
-        ctx.quadraticCurveTo(-radius * 0.2, -radius * 0.45, 0, -radius * 0.75);
-        ctx.quadraticCurveTo(radius * 0.2, -radius * 0.45, 0, -2);
+        ctx.quadraticCurveTo(-radius * 0.22, -radius * 0.45, 0, -radius * 0.78);
+        ctx.quadraticCurveTo(radius * 0.22, -radius * 0.45, 0, -2);
         ctx.fillStyle = colorAccent;
         ctx.fill();
       }
@@ -738,32 +739,32 @@ function drawDelphinaFloralTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
       ctx.beginPath();
       ctx.moveTo(0, -2);
       ctx.lineTo(0, -radius * 0.85);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-      ctx.lineWidth = 0.6;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.lineWidth = 0.7;
       ctx.stroke();
       ctx.restore();
     }
 
     ctx.beginPath();
-    ctx.arc(0, 0, radius * 0.28, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(18, 18, 22, 0.95)';
+    ctx.arc(0, 0, radius * 0.32, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(15, 16, 22, 0.96)';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(230, 190, 80, 0.85)';
-    ctx.lineWidth = 0.8;
+    ctx.strokeStyle = 'rgba(240, 200, 80, 0.9)';
+    ctx.lineWidth = 0.9;
     ctx.stroke();
 
-    ctx.fillStyle = 'rgba(255, 230, 140, 0.9)';
+    ctx.fillStyle = 'rgba(255, 235, 140, 0.95)';
     for (let j = 0; j < 6; j++) {
       const a = (j * Math.PI * 2) / 6;
-      const r = radius * 0.16;
+      const r = radius * 0.18;
       ctx.beginPath();
-      ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 0.7, 0, Math.PI * 2);
+      ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 0.8, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
   }
 
-  function drawLeaf(bx: number, by: number, length: number, angle: number, width = length * 0.42) {
+  function drawLeaf(bx: number, by: number, length: number, angle: number, width = length * 0.45) {
     if (!ctx) return;
     ctx.save();
     ctx.translate(bx, by);
@@ -772,115 +773,182 @@ function drawDelphinaFloralTattoosOnCanvas(ctx: CanvasRenderingContext2D) {
     ctx.moveTo(0, 0);
     ctx.bezierCurveTo(-width, -length * 0.4, -width * 0.8, -length * 0.85, 0, -length);
     ctx.bezierCurveTo(width * 0.8, -length * 0.85, width, -length * 0.4, 0, 0);
-    ctx.fillStyle = 'rgba(22, 32, 26, 0.82)';
+    ctx.fillStyle = 'rgba(20, 32, 24, 0.88)';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(14, 18, 16, 0.95)';
-    ctx.lineWidth = 0.8;
+    ctx.strokeStyle = 'rgba(10, 16, 12, 0.98)';
+    ctx.lineWidth = 0.9;
     ctx.stroke();
 
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(0, -length * 0.92);
-    ctx.strokeStyle = 'rgba(80, 160, 100, 0.45)';
-    ctx.lineWidth = 0.6;
+    ctx.strokeStyle = 'rgba(90, 180, 110, 0.55)';
+    ctx.lineWidth = 0.7;
     ctx.stroke();
     ctx.restore();
   }
 
-  // ── 1. TATOUAGE FLORAL LE LONG DES BRAS (Épaule -> Poignet) ──
+  // ── 1. TATOUAGE FLORAL LE LONG DES BRAS (Épaule -> Avant-bras -> Poignet) ──
+  // En pose idle, la face latérale externe (visible de face/3/4) est à py ≈ 185..215
+  // La face avant/biceps est à py ≈ 215..250.
+  // On trace deux lianes entrelacées couvrant les deux faces :
   ctx.save();
+
+  // Liane 1 : Face latérale externe (pleinement visible en vue studio et 3/4)
   ctx.strokeStyle = inkDark;
-  ctx.lineWidth = 1.4;
+  ctx.lineWidth = 1.8;
   ctx.beginPath();
-  ctx.moveTo(75, 250);
-  ctx.bezierCurveTo(105, 235, 135, 260, 168, 242);
-  ctx.bezierCurveTo(200, 225, 230, 248, 260, 226);
-  ctx.bezierCurveTo(280, 215, 298, 245, 318, 225);
+  ctx.moveTo(60, 202);
+  ctx.bezierCurveTo(95, 188, 130, 212, 165, 195);
+  ctx.bezierCurveTo(200, 182, 235, 210, 270, 192);
+  ctx.bezierCurveTo(285, 185, 302, 208, 318, 196);
   ctx.stroke();
 
-  // Vrille secondaire entrelacée
-  ctx.lineWidth = 0.8;
-  ctx.strokeStyle = 'rgba(25, 28, 38, 0.75)';
+  // Liane 2 : Face avant / biceps et avant-bras
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = inkSecondary;
   ctx.beginPath();
-  ctx.moveTo(85, 242);
-  ctx.bezierCurveTo(115, 255, 145, 230, 180, 252);
-  ctx.bezierCurveTo(210, 240, 240, 220, 275, 242);
-  ctx.bezierCurveTo(295, 235, 305, 220, 315, 230);
+  ctx.moveTo(70, 242);
+  ctx.bezierCurveTo(105, 225, 140, 252, 175, 230);
+  ctx.bezierCurveTo(210, 218, 245, 245, 280, 225);
+  ctx.bezierCurveTo(295, 218, 308, 238, 320, 224);
   ctx.stroke();
 
-  // Fleurs le long du bras
-  drawFlower(85, 248, 10, 5, 0.2, 'rgba(235, 100, 130, 0.85)');
-  drawFlower(125, 245, 12, 6, 0.8, 'rgba(220, 80, 120, 0.9)');
-  drawFlower(168, 240, 9.5, 5, 0.5, 'rgba(240, 120, 145, 0.8)');
-  drawFlower(208, 232, 13, 6, 1.2, 'rgba(215, 75, 115, 0.9)');
-  drawFlower(252, 234, 11, 5, 0.4, 'rgba(230, 95, 130, 0.85)');
-  drawFlower(290, 228, 9, 5, 0.9, 'rgba(245, 130, 155, 0.8)');
-  drawFlower(314, 226, 6.5, 4, 0.3, 'rgba(250, 150, 170, 0.75)');
+  // Lianes spiralées de jonction entre face latérale et face avant
+  ctx.lineWidth = 1.0;
+  ctx.strokeStyle = 'rgba(18, 20, 26, 0.82)';
+  const armSpirals: [number, number, number, number, number, number, number, number][] = [
+    [85, 198, 98, 220, 115, 215, 125, 238],
+    [148, 202, 160, 222, 178, 218, 190, 225],
+    [215, 192, 230, 218, 245, 208, 255, 232],
+    [275, 194, 288, 214, 298, 205, 308, 226]
+  ];
+  for (const [x1, y1, cx1, cy1, cx2, cy2, x2, y2] of armSpirals) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.bezierCurveTo(cx1, cy1, cx2, cy2, x2, y2);
+    ctx.stroke();
+  }
 
-  // Feuilles botaniques
+  // Grandes fleurs épanouies sur les deux faces du bras
+  // Face externe (visible en caméra 3/4)
+  drawFlower(78, 198, 11.5, 5, 0.2, 'rgba(245, 70, 110, 0.95)');
+  drawFlower(120, 192, 13.0, 6, 0.7, 'rgba(235, 60, 100, 0.95)');
+  drawFlower(168, 196, 11.0, 5, 0.4, 'rgba(250, 90, 130, 0.9)');
+  drawFlower(218, 190, 13.5, 6, 1.1, 'rgba(230, 50, 95, 0.95)');
+  drawFlower(265, 194, 11.5, 5, 0.5, 'rgba(240, 75, 115, 0.92)');
+  drawFlower(305, 196, 8.5, 4, 0.8, 'rgba(255, 110, 145, 0.88)');
+
+  // Face avant / intérieure
+  drawFlower(95, 238, 12.0, 5, 0.3, 'rgba(230, 65, 105, 0.92)');
+  drawFlower(142, 245, 10.5, 5, 0.9, 'rgba(245, 80, 120, 0.9)');
+  drawFlower(192, 226, 13.0, 6, 0.6, 'rgba(235, 55, 100, 0.95)');
+  drawFlower(242, 238, 11.0, 5, 1.2, 'rgba(240, 70, 110, 0.92)');
+  drawFlower(288, 226, 9.0, 4, 0.4, 'rgba(250, 95, 135, 0.88)');
+
+  // Feuilles botaniques le long des branches du bras
   const armLeaves: [number, number, number, number][] = [
-    [80, 240, 11, -1.1], [102, 252, 12, 1.3], [115, 238, 10, -0.8],
-    [142, 255, 13, 1.5], [155, 235, 11, -1.3], [185, 232, 12, -0.6],
-    [195, 248, 13, 1.7], [225, 228, 14, -1.2], [238, 245, 12, 1.4],
-    [270, 222, 11, -0.9], [282, 240, 12, 1.5], [305, 222, 8, -1.0]
+    [70, 192, 12, -1.0], [90, 206, 11, 1.2], [108, 185, 13, -0.8],
+    [132, 204, 12, 1.4], [152, 188, 13, -1.1], [180, 205, 14, 1.5],
+    [202, 184, 12, -0.9], [232, 202, 13, 1.3], [250, 186, 12, -1.2],
+    [280, 200, 11, 1.4], [80, 248, 12, 1.3], [112, 230, 11, -0.9],
+    [160, 252, 12, 1.4], [178, 222, 13, -1.2], [225, 248, 12, 1.5],
+    [260, 222, 11, -0.8], [298, 238, 10, 1.3]
   ];
   for (const [lx, ly, llen, lang] of armLeaves) {
     drawLeaf(lx, ly, llen, lang);
   }
 
   // Pétales flottants
-  const armPetals: [number, number][] = [[95, 255], [135, 232], [178, 252], [220, 222], [265, 248], [300, 218]];
-  ctx.fillStyle = 'rgba(235, 110, 140, 0.85)';
+  const armPetals: [number, number][] = [
+    [86, 212], [130, 182], [156, 214], [210, 202], [252, 180], [292, 212],
+    [105, 252], [172, 242], [235, 218], [275, 244]
+  ];
+  ctx.fillStyle = 'rgba(240, 85, 125, 0.92)';
   for (const [px, py] of armPetals) {
-    ctx.beginPath(); ctx.ellipse(px, py, 2.2, 1.2, 0.6, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(px, py, 2.5, 1.4, 0.6, 0, Math.PI * 2);
+    ctx.fill();
   }
   ctx.restore();
 
   // ── 2. TATOUAGE FLORAL LE LONG DES JAMBES (Cuisse -> Genou -> Mollet) ──
+  // La zone exposée entre le bas du short et le haut des bottes est à px ≈ 100..250.
+  // La face latérale externe (visible en 3/4) est à py ≈ 350..385
+  // La face avant (rotule, tibia) est à py ≈ 390..430
   ctx.save();
+
+  // Liane 1 : Face latérale externe
   ctx.strokeStyle = inkDark;
+  ctx.lineWidth = 1.9;
+  ctx.beginPath();
+  ctx.moveTo(85, 372);
+  ctx.bezierCurveTo(115, 355, 145, 385, 175, 366);
+  ctx.bezierCurveTo(205, 350, 235, 380, 265, 362);
+  ctx.stroke();
+
+  // Liane 2 : Face avant du genou et de la cuisse
   ctx.lineWidth = 1.6;
+  ctx.strokeStyle = inkSecondary;
   ctx.beginPath();
-  ctx.moveTo(48, 415);
-  ctx.bezierCurveTo(75, 435, 100, 395, 130, 420);
-  ctx.bezierCurveTo(160, 440, 185, 385, 215, 412);
-  ctx.bezierCurveTo(240, 430, 255, 390, 275, 405);
+  ctx.moveTo(95, 418);
+  ctx.bezierCurveTo(125, 395, 155, 428, 185, 404);
+  ctx.bezierCurveTo(215, 385, 245, 422, 275, 398);
   ctx.stroke();
 
-  ctx.lineWidth = 0.9;
-  ctx.strokeStyle = 'rgba(25, 28, 38, 0.75)';
-  ctx.beginPath();
-  ctx.moveTo(60, 405);
-  ctx.bezierCurveTo(90, 390, 115, 430, 148, 408);
-  ctx.bezierCurveTo(175, 390, 200, 435, 230, 400);
-  ctx.bezierCurveTo(250, 385, 265, 420, 280, 398);
-  ctx.stroke();
+  // Lianes spiralées contournant le genou
+  ctx.lineWidth = 1.1;
+  ctx.strokeStyle = 'rgba(16, 18, 24, 0.85)';
+  const legSpirals: [number, number, number, number, number, number, number, number][] = [
+    [105, 368, 118, 392, 130, 385, 140, 416],
+    [155, 375, 168, 398, 182, 388, 195, 412],
+    [210, 360, 225, 388, 238, 378, 252, 408]
+  ];
+  for (const [x1, y1, cx1, cy1, cx2, cy2, x2, y2] of legSpirals) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.bezierCurveTo(cx1, cy1, cx2, cy2, x2, y2);
+    ctx.stroke();
+  }
 
-  // Fleurs le long de la jambe
-  drawFlower(55, 418, 11, 6, 0.3, 'rgba(225, 85, 125, 0.85)');
-  drawFlower(92, 405, 14, 6, 1.0, 'rgba(210, 70, 115, 0.9)');
-  drawFlower(132, 416, 15, 7, 0.6, 'rgba(230, 90, 130, 0.88)');
-  drawFlower(172, 410, 12, 5, 1.4, 'rgba(215, 75, 120, 0.85)');
-  drawFlower(215, 412, 13.5, 6, 0.7, 'rgba(220, 80, 125, 0.88)');
-  drawFlower(252, 402, 11, 5, 1.1, 'rgba(235, 105, 140, 0.8)');
-  drawFlower(276, 404, 8, 5, 0.4, 'rgba(245, 125, 155, 0.75)');
+  // Fleurs épanouies sur la cuisse et le genou
+  // Face externe
+  drawFlower(95, 368, 12.0, 5, 0.4, 'rgba(240, 65, 105, 0.95)');
+  drawFlower(135, 365, 14.5, 6, 0.9, 'rgba(230, 50, 95, 0.95)');
+  drawFlower(175, 368, 15.5, 7, 0.5, 'rgba(245, 75, 120, 0.95)'); // Plein centre du genou extérieur
+  drawFlower(218, 360, 13.0, 6, 1.2, 'rgba(235, 60, 105, 0.92)');
+  drawFlower(258, 366, 10.5, 5, 0.6, 'rgba(250, 90, 130, 0.88)');
 
-  // Feuilles botaniques
+  // Face avant (rotule et tibia)
+  drawFlower(115, 412, 13.0, 6, 0.3, 'rgba(235, 55, 100, 0.95)');
+  drawFlower(155, 420, 15.0, 7, 0.8, 'rgba(245, 70, 115, 0.95)'); // Face avant rotule
+  drawFlower(195, 402, 13.5, 6, 0.6, 'rgba(230, 50, 95, 0.95)');
+  drawFlower(238, 416, 11.5, 5, 1.0, 'rgba(240, 65, 110, 0.92)');
+  drawFlower(272, 400, 9.0, 4, 0.5, 'rgba(255, 100, 140, 0.88)');
+
+  // Feuilles botaniques le long de la jambe
   const legLeaves: [number, number, number, number][] = [
-    [50, 425, 12, 1.1], [70, 410, 13, -1.2], [82, 430, 14, 1.6],
-    [110, 395, 15, -0.9], [122, 435, 14, 1.7], [148, 425, 13, 0.8],
-    [160, 392, 14, -1.3], [185, 430, 15, 1.5], [200, 395, 13, -1.0],
-    [228, 425, 12, 1.4], [240, 392, 11, -1.2], [265, 415, 10, 1.2]
+    [88, 360, 13, -1.1], [112, 380, 12, 1.4], [128, 354, 14, -0.9],
+    [152, 382, 15, 1.5], [168, 355, 14, -1.2], [192, 378, 15, 1.6],
+    [210, 350, 13, -1.0], [235, 375, 13, 1.3], [250, 352, 11, -1.1],
+    [102, 425, 13, 1.3], [128, 402, 12, -1.0], [145, 432, 14, 1.5],
+    [172, 410, 13, -1.2], [212, 428, 13, 1.4], [228, 394, 12, -0.9],
+    [262, 420, 11, 1.2]
   ];
   for (const [lx, ly, llen, lang] of legLeaves) {
     drawLeaf(lx, ly, llen, lang, llen * 0.44);
   }
 
-  // Pétales flottants le long de la jambe
-  const legPetals: [number, number][] = [[68, 435], [105, 385], [145, 445], [188, 380], [225, 438], [260, 388]];
-  ctx.fillStyle = 'rgba(235, 105, 135, 0.85)';
+  // Pétales flottants
+  const legPetals: [number, number][] = [
+    [105, 355], [148, 392], [182, 356], [225, 388], [245, 350],
+    [122, 428], [168, 395], [205, 432], [252, 385]
+  ];
+  ctx.fillStyle = 'rgba(240, 80, 120, 0.92)';
   for (const [px, py] of legPetals) {
-    ctx.beginPath(); ctx.ellipse(px, py, 2.5, 1.4, 0.8, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(px, py, 2.6, 1.5, 0.7, 0, Math.PI * 2);
+    ctx.fill();
   }
   ctx.restore();
 }
