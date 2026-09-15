@@ -91,7 +91,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     } catch {}
   }, [scene, camera]);
 
-  // Préparation de la scène avant construction du BVH (remplacement des miroirs, masquage des helpers)
+  // Préparation de la scène avant construction du BVH (remplacement des miroirs, masquage des helpers, assainissement des matériaux)
   const prepareScene = useCallback(() => {
     const hidden: THREE.Object3D[] = [];
     const matMap = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
@@ -108,8 +108,8 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
         return;
       }
 
-      // Masquer nuages de points (Lidar) et lignes (non supportés par le raytracing surfacique)
-      if ((obj as any).isPoints || (obj as any).isLine || (obj as any).isLineSegments) {
+      // Masquer nuages de points (Lidar), lignes et sprites (non supportés par le raytracing surfacique)
+      if ((obj as any).isPoints || (obj as any).isLine || (obj as any).isLineSegments || (obj as any).isSprite) {
         if (obj.visible) {
           obj.visible = false;
           hidden.push(obj);
@@ -126,7 +126,9 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
         name.includes('landingstrip') ||
         name.includes('collision') ||
         name.includes('aizone') ||
-        name.includes('hover');
+        name.includes('hover') ||
+        name.includes('measurement') ||
+        name.includes('skeleton');
 
       if (isHelper && obj.visible) {
         obj.visible = false;
@@ -134,15 +136,80 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
         return;
       }
 
-      // Traiter les surfaces de miroir réflecteur raster pour leur donner une réflexion physique PBR
+      // Assainir les sources de lumière (three-gpu-pathtracer lit light.color.r directement)
+      if ((obj as any).isLight) {
+        const light = obj as THREE.Light;
+        if (!light.color || typeof (light.color as any).r !== 'number') {
+          light.color = new THREE.Color(0xffffff);
+        }
+      }
+
+      // Traiter et assainir les Mesh
       if ((obj as THREE.Mesh).isMesh) {
         const mesh = obj as THREE.Mesh;
+
+        // Miroir réflecteur raster -> surface physique PBR
         if (name.includes('reflector') || (mesh.material as any)?.isReflectorMaterial) {
           matMap.set(mesh, mesh.material);
           mesh.material = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             roughness: 0.02,
             metalness: 0.98,
+          });
+          return;
+        }
+
+        // Géométrie invalide ou vide -> masquer
+        if (!mesh.geometry || !mesh.geometry.attributes?.position || mesh.geometry.attributes.position.count === 0) {
+          if (mesh.visible) {
+            obj.visible = false;
+            hidden.push(obj);
+          }
+          return;
+        }
+
+        // Matériau manquant -> matériau standard par défaut
+        if (!mesh.material) {
+          matMap.set(mesh, mesh.material);
+          mesh.material = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.5 });
+          return;
+        }
+
+        // three-gpu-pathtracer exige impérativement m.color avec des composantes .r, .g, .b valides
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        let needsReplace = false;
+
+        for (const m of mats) {
+          if (!m) {
+            needsReplace = true;
+            break;
+          }
+          // Matériau sans propriété color valide (ex: ShaderMaterial, MeshNormalMaterial, MeshDepthMaterial, etc.)
+          if (!(m as any).color || typeof (m as any).color.r !== 'number') {
+            needsReplace = true;
+            break;
+          }
+          // Sécuriser les propriétés physiques optionnelles que three-gpu-pathtracer inspecte via 'prop' in m
+          if ('emissive' in m && (!(m as any).emissive || typeof (m as any).emissive.r !== 'number')) {
+            (m as any).emissive = new THREE.Color(0x000000);
+          }
+          if ('sheenColor' in m && (!(m as any).sheenColor || typeof (m as any).sheenColor.r !== 'number')) {
+            (m as any).sheenColor = new THREE.Color(0x000000);
+          }
+          if ('specularColor' in m && (!(m as any).specularColor || typeof (m as any).specularColor.r !== 'number')) {
+            (m as any).specularColor = new THREE.Color(0xffffff);
+          }
+          if ('attenuationColor' in m && (!(m as any).attenuationColor || typeof (m as any).attenuationColor.r !== 'number')) {
+            (m as any).attenuationColor = new THREE.Color(0xffffff);
+          }
+        }
+
+        if (needsReplace) {
+          matMap.set(mesh, mesh.material);
+          mesh.material = new THREE.MeshStandardMaterial({
+            color: 0xd0d0d0,
+            roughness: 0.5,
+            metalness: 0.1,
           });
         }
       }
@@ -273,8 +340,15 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
         setCurrentSamples(samples);
 
         if (samples < targetSamples) {
-          pathTracerRef.current.renderSample();
-          frameCount++;
+          try {
+            pathTracerRef.current.renderSample();
+            frameCount++;
+          } catch (err: any) {
+            console.error('[Raytracing] Erreur renderSample:', err);
+            setErrorMessage(err?.message || 'Erreur pendant le calcul du raytracing.');
+            setIsPaused(true);
+            return;
+          }
 
           const now = performance.now();
           if (now - lastTime >= 1000) {
