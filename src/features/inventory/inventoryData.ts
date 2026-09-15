@@ -336,7 +336,9 @@ sortedCharacters.forEach(char => {
                 ? 'Reallusion'
                 : (char.id === 'sophia'
                   ? 'Sophia Doll'
-                  : (!char.isLara ? 'Mixamo' : 'Lara Croft Style')))))),
+                  : (char.id === 'skeleton'
+                    ? 'Anatomy'
+                    : (!char.isLara ? 'Mixamo' : 'Lara Croft Style'))))))),
       category: 'walkers',
       qty: 1,
       dims: {
@@ -356,9 +358,11 @@ sortedCharacters.forEach(char => {
               ? 'Personnage animé : Zoe élégante en robe rouge et talons hauts.'
               : (char.id === 'sophia'
                 ? 'Personnage animé : Sophia Doll au style poupée avec cheveux longs et tenue soignée.'
-                : (!char.isLara
-                  ? `Personnage animé standard Mixamo : ${char.name}.`
-                  : `Personnage : ${char.name}.`)))))
+                : (char.id === 'skeleton'
+                  ? 'Personnage animé : Squelette anatomique complet avec organes internes et cage thoracique.'
+                  : (!char.isLara
+                    ? `Personnage animé standard Mixamo : ${char.name}.`
+                    : `Personnage : ${char.name}.`))))))
     });
   }
 });
