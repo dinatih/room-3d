@@ -107,6 +107,7 @@ import { Lagerpoppel00561816 }                         from '@features/scene/ite
 import { Smorkull } from '@features/scene/items/Smorkull';
 import { TShirt } from '@features/scene/items/TShirt';
 import { MaillotInyeong } from '@features/scene/items/MaillotInyeong';
+import { DoubleVenusPendant } from '@features/scene/items/DoubleVenusPendant';
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'smorkull-chair':         Smorkull,
@@ -212,6 +213,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'tshirt-noir-L':          TShirt,
   'tshirt-noir-XL':         TShirt,
   'maillot-coreen-inyeong': MaillotInyeong,
+  'double-venus-pendant':   DoubleVenusPendant,
 
   // ── Composites (assemblages multi-pièces) ─────────────────────────────────
   'kallax-ne-stack':        KallaxNE,
