@@ -133,7 +133,7 @@ const pInt = (d: number) => dP(d, 0);
 const seg  = (p1: { x: number; z: number }, p2: { x: number; z: number }): [number, number, number, number] =>
   [p1.x, p1.z, p2.x, p2.z];
 
-export const GARDEN_JC_Z = -140 + DiagWall.slope * 320;
+export const GARDEN_JC_Z = -140 + DiagWall.slope * (pWest('corner-ne-ext') - pEast('corner-nw-ext'));
 
 // Calcul des apex des coins extérieurs (intersection des faces orthogonales et de la face diagonale)
 const eP0 = dP(0, WT);

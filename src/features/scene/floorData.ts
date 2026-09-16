@@ -6,7 +6,7 @@
  * comme source unique de vérité géométrique, éliminant les constantes redondantes.
  */
 import {
-  pEast, pWest, pNorth, pSouth, pX, pZ,
+  pEast, pWest, pNorth, pSouth, pZ,
   SEG_DIAG_CONCRETE_WALLS,
   SEG_DIAG_ENTRY_DOOR,
   DIAG_EXT_Z_END,
@@ -143,8 +143,8 @@ export const SEG_DOORS: Seg[] = [
   [pEast('door-living-w'), pNorth('door-living-w'), pWest('door-living-e'), pNorth('door-living-e')],
   // Porte placard couloir
   [pEast('door-living-w'), pSouth('door-living-w'), pEast('door-living-w'), pNorth('bath-ne')],
-  // PC-SDB (porte couloir → salle de bain)
-  [pX('door-bath-n'), pNorth('door-bath-n'), pX('door-bath-s'), pSouth('door-bath-s')],
+  // PC-SDB (porte couloir → salle de bain, alignée à droite côté couloir)
+  [pEast('door-bath-n'), pNorth('door-bath-n'), pEast('door-bath-s'), pSouth('door-bath-s')],
   // Porte placard SDB (double porte coulissante en façade Sud)
   [pEast('shower-ne'), pNorth('shower-ne'), pWest('bath-se'), pNorth('bath-se')],
   // P3 — porte d'entrée diagonale

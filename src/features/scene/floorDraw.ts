@@ -24,6 +24,7 @@ import {
   PILLAR_KITE_SW,
   pNorth,
   pEast,
+  pWest,
 } from './wallData';
 
 const PAD = 20;
@@ -94,7 +95,7 @@ export function drawFloorPlan(
   // ── Jardin ──────────────────────────────────────────────────────────────────
   const gardenZ0    = pNorth('corner-nw-ext'); // Z=-30 (commence 20cm plus haut, au nu extérieur du mur nord)
   const gardenXWest = pEast('corner-nw-ext');  // X=-10 (bord intérieur pilier nord-ouest)
-  const gardenXEast = pEast('corner-ne-ext');  // X=310 (bord extérieur mur est)
+  const gardenXEast = pWest('corner-ne-ext');  // X=300 (face Ouest du mur est / bord intérieur palissade)
 
   ctx.fillStyle = 'rgba(74, 158, 84, 0.08)';
   ctx.beginPath();
