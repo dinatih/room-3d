@@ -82,19 +82,34 @@ export function LayersSection({
   return (
     <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '45vh' }}>
       <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
-        <div className="d-flex justify-content-between align-items-center mb-1">
-          <div className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div className="d-flex justify-content-between align-items-center mb-1 gap-2">
+          <div className="text-muted fw-semibold text-dark text-nowrap" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             🌆 Ambiance HDRI / Ciel
           </div>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
-            onClick={handleRandomHdri}
-            title="HDRI aléatoire 🎲 (Touche 5)"
-            style={{ fontSize: '11px', lineHeight: 1 }}
-          >
-            🎲
-          </button>
+          <div className="d-flex align-items-center gap-1 text-end" style={{ minWidth: 0 }}>
+            {(() => {
+              const activeHdri = HDRI_LIST.find((h) => h.id === currentHdri);
+              const displayName = activeHdri?.name || '';
+              return displayName ? (
+                <span
+                  className="text-dark fw-medium"
+                  style={{ fontSize: '9px', wordBreak: 'break-word', whiteSpace: 'normal', lineHeight: 1.15 }}
+                  title={displayName}
+                >
+                  {displayName}
+                </span>
+              ) : null;
+            })()}
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary p-0 px-1 border-0 flex-shrink-0"
+              onClick={handleRandomHdri}
+              title="HDRI aléatoire 🎲 (Touche 5)"
+              style={{ fontSize: '11px', lineHeight: 1 }}
+            >
+              🎲
+            </button>
+          </div>
         </div>
         <select
           className="form-select form-select-sm bg-transparent text-dark border-secondary"
@@ -114,8 +129,8 @@ export function LayersSection({
           const fileName = activeHdri ? activeHdri.url.split('/').pop() : '';
           return fileName ? (
             <div
-              className="text-muted mt-1 text-truncate"
-              style={{ fontSize: '10px', userSelect: 'all' }}
+              className="text-muted mt-1"
+              style={{ fontSize: '10px', userSelect: 'all', wordBreak: 'break-all', whiteSpace: 'normal' }}
               title={fileName}
             >
               {fileName}

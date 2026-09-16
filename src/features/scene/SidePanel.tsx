@@ -207,11 +207,27 @@ export function SidePanel({
   }, [isMobile, activeTab]);
 
   // En-têtes boutons pour desktop et mobile
+  const activeHdriItem = HDRI_LIST.find(h => h.id === currentHdri);
+  const activeHdriName = activeHdriItem?.name ?? currentHdri;
+
   const layersHeaderButtons = (
-    <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
+    <div className="d-flex align-items-center gap-1.5 pe-1" onClick={e => e.stopPropagation()}>
+      <span
+        className="text-dark fw-medium text-end"
+        style={{
+          fontSize: '9px',
+          maxWidth: '120px',
+          wordBreak: 'break-word',
+          whiteSpace: 'normal',
+          lineHeight: 1.15,
+        }}
+        title={activeHdriName}
+      >
+        {activeHdriName}
+      </span>
       <button
         type="button"
-        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold"
+        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold flex-shrink-0"
         style={{ fontSize: '11px', lineHeight: 1.2, borderRadius: '4px' }}
         title="Changer aléatoirement d'ambiance HDRI 🎲 (Touche 5)"
         onClick={(e) => {
