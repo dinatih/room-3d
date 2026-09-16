@@ -145,7 +145,7 @@ export const SEG_DOORS: Seg[] = [
   // Porte placard couloir
   [pEast('door-living-w'), pSouth('door-living-w'), pEast('door-living-w'), pNorth('bath-ne')],
   // PC-SDB (porte couloir → salle de bain, alignée à droite côté couloir)
-  [pEast('door-bath-n'), pNorth('door-bath-n'), pEast('door-bath-s'), pSouth('door-bath-s')],
+  [pEast('door-bath-n'), pSouth('door-bath-n'), pEast('door-bath-s'), pNorth('door-bath-s')],
   // Porte placard SDB (double porte coulissante en façade Sud)
   [pEast('shower-ne'), pNorth('shower-ne'), pWest('bath-se'), pNorth('bath-se')],
   // P3 — porte d'entrée diagonale
@@ -190,10 +190,10 @@ export const DOOR_SWINGS: DoorSwingDef[] = [
     endAngle: 0,
     anticlockwise: true,
   },
-  // 3. Porte SDB (PC-SDB) — pivot côté Sud (door-bath-s), s'ouvre vers l'intérieur SDB (Ouest)
+  // 3. Porte SDB (PC-SDB) — pivot côté Sud (face interne door-bath-s), s'ouvre vers l'intérieur SDB (Ouest)
   {
-    pivot: { x: pEast('door-bath-s'), z: pSouth('door-bath-s') },
-    radius: pSouth('door-bath-s') - pNorth('door-bath-n'),
+    pivot: { x: pEast('door-bath-s'), z: pNorth('door-bath-s') },
+    radius: pNorth('door-bath-s') - pSouth('door-bath-n'),
     startAngle: Math.PI * 1.5,
     endAngle: Math.PI,
     anticlockwise: true,
