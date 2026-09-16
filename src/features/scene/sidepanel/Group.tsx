@@ -14,12 +14,13 @@ export function Group({ emoji, title, defaultOpen = false, extra, children }: Gr
     <div className="card shadow-sm glass-card overflow-hidden">
       <div className="card-header p-0 border-0 bg-transparent d-flex align-items-center justify-content-between">
         <button
-          className="btn flex-grow-1 text-start py-2 px-3 fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none"
+          className={`btn ${extra ? 'flex-shrink-0' : 'flex-grow-1'} text-start py-2 px-3 fw-bold d-flex align-items-center justify-content-between text-dark border-0 shadow-none`}
           onClick={() => setOpen(!open)}
           style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em' }}
         >
           <span>{emoji} {title}</span>
           <span 
+            className={extra ? 'ms-2' : ''}
             style={{ 
               fontSize: '8px', 
               color: 'var(--muted)',
@@ -31,7 +32,7 @@ export function Group({ emoji, title, defaultOpen = false, extra, children }: Gr
           </span>
         </button>
         {extra && (
-          <div className="pe-2 d-flex align-items-center" onClick={e => e.stopPropagation()}>
+          <div className="pe-2 d-flex align-items-center flex-grow-1 justify-content-end overflow-hidden" style={{ minWidth: 0 }} onClick={e => e.stopPropagation()}>
             {extra}
           </div>
         )}

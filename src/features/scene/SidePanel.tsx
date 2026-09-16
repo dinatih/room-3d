@@ -211,17 +211,10 @@ export function SidePanel({
   const activeHdriName = activeHdriItem?.name ?? currentHdri;
 
   const layersHeaderButtons = (
-    <div className="d-flex align-items-center gap-1.5 pe-1" onClick={e => e.stopPropagation()}>
+    <div className="d-flex align-items-center gap-1.5 overflow-hidden" style={{ minWidth: 0 }} onClick={e => e.stopPropagation()}>
       <span
-        className="text-dark fw-medium text-end text-truncate d-inline-block"
-        style={{
-          fontSize: '10px',
-          maxWidth: '115px',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          verticalAlign: 'middle',
-        }}
+        className="text-dark fw-medium text-end text-truncate flex-grow-1"
+        style={{ fontSize: '10px' }}
         title={activeHdriName}
       >
         {activeHdriName}

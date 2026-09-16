@@ -86,14 +86,14 @@ export function LayersSection({
           <div className="text-muted fw-semibold text-dark text-nowrap" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             🌆 Ambiance HDRI / Ciel
           </div>
-          <div className="d-flex align-items-center gap-1 text-end" style={{ minWidth: 0 }}>
+          <div className="d-flex align-items-center gap-1 text-end overflow-hidden" style={{ minWidth: 0 }}>
             {(() => {
               const activeHdri = HDRI_LIST.find((h) => h.id === currentHdri);
               const displayName = activeHdri?.name || '';
               return displayName ? (
                 <span
-                  className="text-dark fw-medium text-truncate d-inline-block"
-                  style={{ fontSize: '9px', maxWidth: '100px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                  className="text-dark fw-medium text-truncate flex-grow-1"
+                  style={{ fontSize: '9px' }}
                   title={displayName}
                 >
                   {displayName}
