@@ -11,7 +11,7 @@ import {
   DiagWall,
 } from '@config';
 
-import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_WINDOWS, DOOR_SWINGS } from './floorData';
+import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_CLOSETS, SEG_WINDOWS, DOOR_SWINGS } from './floorData';
 import {
   GARDEN_PANEL_DEFS,
   PARTITION_THICKNESS,
@@ -216,6 +216,14 @@ export function drawFloorPlan(
   ctx.lineWidth = Math.max(S * 2.5, 1.2);
   ctx.setLineDash([2 * sc, 2 * sc]);
   for (const [x1, z1, x2, z2] of SEG_DOORS) {
+    ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke();
+  }
+
+  // ── Placards (portes coulissantes et seuils en gris clair plus discret) ───
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = Math.max(S * 2.0, 1.1);
+  ctx.setLineDash([2 * sc, 2 * sc]);
+  for (const [x1, z1, x2, z2] of SEG_CLOSETS) {
     ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke();
   }
 

@@ -138,18 +138,22 @@ export const SEG_WALLS: Seg[] = [
   ...SEG_PARTITIONS,
 ];
 
-// ── SEG_DOORS ─────────────────────────────────────────────────────────────────
+// ── SEG_DOORS (portes battantes principales) ─────────────────────────────────
 export const SEG_DOORS: Seg[] = [
   // Porte séjour
   [pEast('door-living-w'), pNorth('door-living-w'), pWest('door-living-e'), pNorth('door-living-e')],
-  // Porte placard couloir
-  [pEast('door-living-w'), pSouth('door-living-w'), pEast('door-living-w'), pNorth('bath-ne')],
   // PC-SDB (porte couloir → salle de bain, alignée à droite côté couloir)
   [pEast('door-bath-n'), pSouth('door-bath-n'), pEast('door-bath-s'), pNorth('door-bath-s')],
-  // Porte placard SDB (double porte coulissante en façade Sud)
-  [pEast('shower-ne'), pNorth('shower-ne'), pWest('bath-se'), pNorth('bath-se')],
   // P3 — porte d'entrée diagonale
   SEG_DIAG_ENTRY_DOOR,
+];
+
+// ── SEG_CLOSETS (portes de placards / rangements, en gris clair plus discret) ─
+export const SEG_CLOSETS: Seg[] = [
+  // Porte placard couloir
+  [pEast('door-living-w'), pSouth('door-living-w'), pEast('door-living-w'), pNorth('bath-ne')],
+  // Porte placard SDB (double porte coulissante en façade Sud)
+  [pEast('shower-ne'), pNorth('shower-ne'), pWest('bath-se'), pNorth('bath-se')],
 ];
 
 // ── SEG_WINDOWS ───────────────────────────────────────────────────────────────
@@ -189,6 +193,8 @@ export const DOOR_SWINGS: DoorSwingDef[] = [
     startAngle: Math.PI / 2,
     endAngle: 0,
     anticlockwise: true,
+    color: '#94a3b8',
+    fillColor: 'rgba(148, 163, 184, 0.08)',
   },
   // 3. Porte SDB (PC-SDB) — pivot côté Sud (face interne door-bath-s), s'ouvre vers l'intérieur SDB (Ouest)
   {
