@@ -8,6 +8,7 @@ import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
 import { getEstimatedClipDuration } from '../animOptions';
+import { resolveAnimationPath } from '../animations/animationResolver';
 
 import { AgentState, AgentStatus } from './agent/agentTypes';
 import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation } from './agent/agentWalkAnimations';
@@ -538,6 +539,7 @@ export function useAgentController(
         if (currentInstruction.rotY === undefined && target.rotY !== undefined) currentInstruction.rotY = target.rotY;
         if (!currentInstruction.duration && target.duration) currentInstruction.duration = target.duration;
         timerRef.current = currentInstruction.duration || target.duration || 1.0;
+        stateRef.current.animation = resolveAnimationPath(currentInstruction.animation || target.anim || 'idle');
 
         const animation = currentInstruction.animation || target.anim || '';
         const objName = currentInstruction.smartObjectId ? (SMART_OBJECTS[currentInstruction.smartObjectId]?.name || currentInstruction.smartObjectId) : '';
@@ -603,6 +605,7 @@ export function useAgentController(
             const explicitDuration = currentInstruction.duration || target.duration;
             const estimated = getEstimatedClipDuration(currentInstruction.animation || target.anim);
             timerRef.current = explicitDuration || (estimated <= 1.0 ? 10.0 : estimated);
+            stateRef.current.animation = resolveAnimationPath(currentInstruction.animation || target.anim || 'idle');
           }
 
           stateRef.current.y = target.ty ?? 0;
@@ -695,7 +698,7 @@ export function useAgentController(
       }
 
       const target = getResolvedCoords(currentInstruction);
-      stateRef.current.animation = currentInstruction.animation || target.anim || 'idle';
+      stateRef.current.animation = resolveAnimationPath(currentInstruction.animation || target.anim || 'idle');
       if (target.ty !== undefined) stateRef.current.y = target.ty;
 
       const targetRotY = currentInstruction.rotY !== undefined ? currentInstruction.rotY : target.rotY;

@@ -24,6 +24,7 @@ import type { AgentInstruction } from '../ai/aiTypes';
 import { useAgentController } from '../ai/useAgentController';
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
+import { resolveAnimationPath } from '../animations/animationResolver';
 import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
 import { CharacterThoughtBubble } from '../CharacterThoughtBubble';
 
@@ -599,7 +600,7 @@ export function SingleCharacter({
     const actions = actionsRef.current;
 
     const isMoving = !isPreview && isActive && (cameraState.isXR ? cameraState.isMoving : (cameraState.isUserControlling() && cameraState.isMoving));
-    let target = isPreview
+    const rawTarget = isPreview
       ? (walkerAnim || 'idle')
       : (currentAnimClip.current || (isMoving ? 'walk' : 'idle'));
 
@@ -607,13 +608,18 @@ export function SingleCharacter({
       currentAnimClip.current = null;
     }
 
+    let target = (rawTarget === 'idle' || rawTarget === 'walk' || rawTarget === 'run' || rawTarget === 'tpose')
+      ? rawTarget
+      : resolveAnimationPath(rawTarget);
+
     const isTPose = target === 'tpose' || target === 'animations/poses_idles/anim_t_pose.glb' || target.endsWith('/anim_t_pose.glb');
 
     let isTemporaryLoadingFallback = false;
-    if (!isTPose && !actions[target] && target.endsWith('.glb')) {
+    if (!isTPose && !actions[target]) {
       loadAndPlayClip(target);
       if (activeActionName.current && actions[activeActionName.current]) {
-        target = activeActionName.current;
+        const prevIsLocomotion = activeActionName.current.includes('walk') || activeActionName.current.includes('run') || activeActionName.current === 'walk' || activeActionName.current === 'run';
+        target = prevIsLocomotion ? 'idle' : activeActionName.current;
       } else {
         target = 'idle';
       }

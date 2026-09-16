@@ -110,6 +110,9 @@ export function useCharacterAnimations({
         action = mixer.clipAction(finalClip);
         action.enabled = true;
         actionsRef.current[path] = action;
+        if (pathOrKey && pathOrKey !== path) {
+          actionsRef.current[pathOrKey] = action;
+        }
       }
 
       if (!loop) {
