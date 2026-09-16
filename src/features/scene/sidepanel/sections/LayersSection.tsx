@@ -92,8 +92,8 @@ export function LayersSection({
               const displayName = activeHdri?.name || '';
               return displayName ? (
                 <span
-                  className="text-dark fw-medium"
-                  style={{ fontSize: '9px', wordBreak: 'break-word', whiteSpace: 'normal', lineHeight: 1.15 }}
+                  className="text-dark fw-medium text-truncate d-inline-block"
+                  style={{ fontSize: '9px', maxWidth: '100px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                   title={displayName}
                 >
                   {displayName}

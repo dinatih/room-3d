@@ -213,13 +213,14 @@ export function SidePanel({
   const layersHeaderButtons = (
     <div className="d-flex align-items-center gap-1.5 pe-1" onClick={e => e.stopPropagation()}>
       <span
-        className="text-dark fw-medium text-end"
+        className="text-dark fw-medium text-end text-truncate d-inline-block"
         style={{
-          fontSize: '9px',
-          maxWidth: '120px',
-          wordBreak: 'break-word',
-          whiteSpace: 'normal',
-          lineHeight: 1.15,
+          fontSize: '10px',
+          maxWidth: '115px',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          verticalAlign: 'middle',
         }}
         title={activeHdriName}
       >
