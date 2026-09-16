@@ -133,30 +133,16 @@ export function CharacterThoughtBubble({
           }}
         >
           {/* Header de la bulle */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '10px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
-              paddingBottom: '4px',
-              marginBottom: '6px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+          <div className="d-flex align-items-center justify-content-between pb-1 mb-1 border-bottom border-white-subtle gap-2">
+            <div className="d-flex align-items-center gap-1 fw-semibold">
               <span style={{ fontSize: '14px' }}>{emoji}</span>
               <span style={{ color: themeColor }}>{characterName}</span>
               {isActive && (
                 <span
+                  className="badge bg-success text-white fw-bold text-uppercase"
                   style={{
                     fontSize: '8.5px',
                     padding: '1px 5px',
-                    borderRadius: '4px',
-                    background: '#238636',
-                    color: '#ffffff',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                   }}
                 >
@@ -165,13 +151,10 @@ export function CharacterThoughtBubble({
               )}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="d-flex align-items-center gap-2">
               <span
-                style={{
-                  fontSize: '9.5px',
-                  color: 'rgba(255, 255, 255, 0.55)',
-                  fontFamily: 'monospace',
-                }}
+                className="font-monospace text-white-50"
+                style={{ fontSize: '9.5px' }}
               >
                 {logs.length > 0 ? `${logs.length} logs` : 'en attente'}
               </span>
@@ -179,23 +162,16 @@ export function CharacterThoughtBubble({
               {/* Croix pour fermer la bulle en changeant le toggle thoughtBubble */}
               <button
                 type="button"
+                className="btn btn-sm p-0 rounded-circle border border-white-subtle d-flex align-items-center justify-content-center text-white-50"
                 onClick={handleClose}
                 title="Fermer la bulle de pensée"
                 aria-label="Fermer la bulle de pensée"
                 style={{
                   background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  borderRadius: '50%',
                   width: '18px',
                   height: '18px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
                   fontSize: '11px',
                   lineHeight: '1',
-                  padding: 0,
                   transition: 'all 0.15s ease',
                 }}
                 onMouseEnter={(e) => {
@@ -219,28 +195,16 @@ export function CharacterThoughtBubble({
             ref={scrollContainerRef}
             onClick={(e) => isExpanded && e.stopPropagation()}
             onWheel={(e) => e.stopPropagation()}
+            className="d-flex flex-column gap-1 overflow-x-hidden overflow-y-auto pe-1"
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '3px',
               maxHeight: isExpanded ? '240px' : '95px',
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              paddingRight: isExpanded ? '6px' : '2px',
               scrollbarWidth: 'thin',
               scrollbarColor: `${themeColor} transparent`,
               overscrollBehavior: 'contain',
             }}
           >
             {logs.length === 0 ? (
-              <div
-                style={{
-                  color: 'rgba(255, 255, 255, 0.5)',
-                  fontStyle: 'italic',
-                  padding: '2px 0',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+              <div className="text-white-50 fst-italic py-1 text-nowrap">
                 💭 En attente d'action...
               </div>
             ) : (
@@ -250,39 +214,27 @@ export function CharacterThoughtBubble({
                   <div
                     key={entry.id}
                     title={entry.message}
+                    className={`d-flex align-items-center justify-content-between gap-2 py-0 px-1 rounded-1 overflow-hidden ${
+                      isLast ? 'text-white fw-semibold' : 'text-white-50 fw-normal'
+                    }`}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '8px',
-                      color: isLast ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
-                      fontWeight: isLast ? 600 : 400,
                       lineHeight: '1.4',
                       fontSize: '11px',
-                      whiteSpace: 'nowrap',
-                      padding: '1px 2px',
-                      borderRadius: '4px',
+                      minWidth: 0,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+                    <div className="d-flex align-items-center gap-1.5 overflow-hidden flex-grow-1" style={{ minWidth: 0 }}>
                       <span
+                        className="font-monospace flex-shrink-0"
                         style={{
                           fontSize: '9.5px',
                           color: themeColor,
                           opacity: 0.85,
-                          fontFamily: 'monospace',
-                          flexShrink: 0,
                         }}
                       >
                         {formatBubbleTime(entry.timestamp)}
                       </span>
-                      <span
-                        style={{
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
+                      <span className="text-truncate flex-grow-1">
                         {entry.message}
                       </span>
                     </div>
@@ -290,20 +242,15 @@ export function CharacterThoughtBubble({
                     {/* Bouton Copier la ligne */}
                     <button
                       type="button"
+                      className="btn btn-sm py-0 px-1 rounded-1 flex-shrink-0 d-flex align-items-center gap-1 border-0"
                       onClick={(e) => handleCopy(e, entry)}
                       title="Copier ce log"
                       style={{
                         background: copiedId === entry.id ? 'rgba(35, 134, 54, 0.4)' : 'rgba(255, 255, 255, 0.08)',
                         border: copiedId === entry.id ? '1px solid #238636' : '1px solid rgba(255, 255, 255, 0.15)',
                         color: copiedId === entry.id ? '#3fb950' : 'rgba(255, 255, 255, 0.7)',
-                        borderRadius: '4px',
-                        padding: '1px 5px',
                         fontSize: '9px',
                         cursor: 'pointer',
-                        flexShrink: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '2px',
                         transition: 'all 0.15s ease',
                       }}
                     >
@@ -318,17 +265,10 @@ export function CharacterThoughtBubble({
           {/* Indication clic pour agrandir / réduire */}
           {logs.length > MAX_BUBBLE_LOGS && (
             <div
+              className="d-flex justify-content-center align-items-center gap-1 mt-1 pt-1 border-top border-white-subtle text-white-50 user-select-none"
               style={{
-                marginTop: '5px',
-                paddingTop: '4px',
-                borderTop: '1px dashed rgba(255, 255, 255, 0.12)',
                 fontSize: '9px',
-                color: 'rgba(255, 255, 255, 0.55)',
-                textAlign: 'center',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '4px',
+                borderStyle: 'dashed',
               }}
             >
               <span>{isExpanded ? '▲ Réduire' : `▼ Déplier tous les logs (${logs.length})`}</span>
