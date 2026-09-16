@@ -8,7 +8,7 @@ import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
 import { getEstimatedClipDuration } from '../animOptions';
-import { resolveAnimationPath } from '../animations/animationResolver';
+import { resolveAnimationId } from '../animations/animationResolver';
 
 import { AgentState, AgentStatus } from './agent/agentTypes';
 import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation } from './agent/agentWalkAnimations';
@@ -77,7 +77,7 @@ export function useAgentController(
     y: deployment.y,
     z: initialPos.z,
     rotY: initialPos.rotY,
-    animation: isCurrentlyFalling ? 'animations/locomotion/anim_falling.glb' : (firstCoords?.anim || 'idle'),
+    animation: isCurrentlyFalling ? 'anim_falling' : (firstCoords?.anim ? resolveAnimationId(firstCoords.anim) : 'idle'),
     isSpawned: !isStillWaiting
   });
 
@@ -247,8 +247,8 @@ export function useAgentController(
       stateRef.current.rotY = real.rotY;
       stateRef.current.isSpawned = deployment.status !== 'WAITING';
       stateRef.current.animation = deployment.status === 'FALLING'
-        ? 'animations/locomotion/anim_falling.glb'
-        : (deployment.status === 'WAITING' ? 'idle' : (stepCoords?.anim || 'idle'));
+        ? 'anim_falling'
+        : (deployment.status === 'WAITING' ? 'idle' : (stepCoords?.anim ? resolveAnimationId(stepCoords.anim) : 'idle'));
       startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY };
     }
   }
@@ -352,7 +352,7 @@ export function useAgentController(
         stateRef.current.y = targetY + (2500 - targetY) * (p_inv * p_inv * p_inv);
         deployment.y = stateRef.current.y;
       }
-      stateRef.current.animation = 'animations/locomotion/anim_falling.glb';
+      stateRef.current.animation = 'anim_falling';
       return stateRef.current;
     }
 
@@ -365,7 +365,7 @@ export function useAgentController(
         deployment.hasCompleted = true;
         appLog(_characterId, `🎯 Déploiement terminé (Atterrissage réussi)`);
       }
-      stateRef.current.animation = 'animations/poses_idles/anim_crouch_to_stand.glb';
+      stateRef.current.animation = 'anim_crouch_to_stand';
       return stateRef.current;
     }
 
@@ -539,7 +539,7 @@ export function useAgentController(
         if (currentInstruction.rotY === undefined && target.rotY !== undefined) currentInstruction.rotY = target.rotY;
         if (!currentInstruction.duration && target.duration) currentInstruction.duration = target.duration;
         timerRef.current = currentInstruction.duration || target.duration || 1.0;
-        stateRef.current.animation = resolveAnimationPath(currentInstruction.animation || target.anim || 'idle');
+        stateRef.current.animation = resolveAnimationId(currentInstruction.animation || target.anim || 'idle');
 
         const animation = currentInstruction.animation || target.anim || '';
         const objName = currentInstruction.smartObjectId ? (SMART_OBJECTS[currentInstruction.smartObjectId]?.name || currentInstruction.smartObjectId) : '';
@@ -605,7 +605,7 @@ export function useAgentController(
             const explicitDuration = currentInstruction.duration || target.duration;
             const estimated = getEstimatedClipDuration(currentInstruction.animation || target.anim);
             timerRef.current = explicitDuration || (estimated <= 1.0 ? 10.0 : estimated);
-            stateRef.current.animation = resolveAnimationPath(currentInstruction.animation || target.anim || 'idle');
+            stateRef.current.animation = resolveAnimationId(currentInstruction.animation || target.anim || 'idle');
           }
 
           stateRef.current.y = target.ty ?? 0;
@@ -698,7 +698,7 @@ export function useAgentController(
       }
 
       const target = getResolvedCoords(currentInstruction);
-      stateRef.current.animation = resolveAnimationPath(currentInstruction.animation || target.anim || 'idle');
+      stateRef.current.animation = resolveAnimationId(currentInstruction.animation || target.anim || 'idle');
       if (target.ty !== undefined) stateRef.current.y = target.ty;
 
       const targetRotY = currentInstruction.rotY !== undefined ? currentInstruction.rotY : target.rotY;

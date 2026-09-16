@@ -169,6 +169,8 @@ export type DoorSwingDef = {
   startAngle: number;
   endAngle: number;
   anticlockwise: boolean;
+  color?: string;
+  fillColor?: string;
 };
 
 export const DOOR_SWINGS: DoorSwingDef[] = [
@@ -197,6 +199,7 @@ export const DOOR_SWINGS: DoorSwingDef[] = [
     anticlockwise: true,
   },
   // 4. Porte d'entrée diagonale (P3) — pivot côté Est/haut (dDoor.start), s'ouvre vers l'intérieur (couloir)
+  // Ouverte à 120° (Math.PI * 1.5) pour être strictement parallèle au mur Est vertical (X=ROOM_W)
   (() => {
     const p1 = DiagWall.p(DiagWall.door.start, 0);
     const p2 = DiagWall.p(DiagWall.door.end, 0);
@@ -205,9 +208,39 @@ export const DOOR_SWINGS: DoorSwingDef[] = [
       pivot: p1,
       radius: DiagWall.door.end - DiagWall.door.start,
       startAngle,
-      endAngle: startAngle + Math.PI / 2,
+      endAngle: Math.PI * 1.5,
       anticlockwise: false,
     };
   })(),
+  // 5. Porte de douche — pivot côté Ouest (shower-nw), s'ouvre vers la SDB (Nord)
+  {
+    pivot: { x: pEast('shower-nw'), z: pNorth('shower-ne') },
+    radius: pWest('shower-ne') - pEast('shower-nw'),
+    startAngle: 0,
+    endAngle: Math.PI * 1.5,
+    anticlockwise: true,
+    color: '#3b82f6',
+    fillColor: 'rgba(59, 130, 246, 0.05)',
+  },
+  // 6. Porte-fenêtre double vitrée (battant Ouest) — pivot Ouest, s'ouvre vers le séjour (Sud)
+  {
+    pivot: { x: pEast('glass-west'), z: pSouth('glass-west') },
+    radius: (pWest('glass-east') - pEast('glass-west')) / 2,
+    startAngle: 0,
+    endAngle: Math.PI / 2,
+    anticlockwise: false,
+    color: '#3b82f6',
+    fillColor: 'rgba(59, 130, 246, 0.05)',
+  },
+  // 7. Porte-fenêtre double vitrée (battant Est) — pivot Est, s'ouvre vers le séjour (Sud)
+  {
+    pivot: { x: pWest('glass-east'), z: pSouth('glass-east') },
+    radius: (pWest('glass-east') - pEast('glass-west')) / 2,
+    startAngle: Math.PI,
+    endAngle: Math.PI / 2,
+    anticlockwise: true,
+    color: '#3b82f6',
+    fillColor: 'rgba(59, 130, 246, 0.05)',
+  },
 ];
 

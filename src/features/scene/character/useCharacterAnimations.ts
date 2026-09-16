@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { retargetClip, _retargetCache } from '../retargeting/index';
-import { resolveAnimationPath } from '../animations/animationResolver';
+import { resolveAnimationPath, getAnimationDef } from '../animations/animationResolver';
 
 const silentManager = new THREE.LoadingManager();
 
@@ -71,10 +71,12 @@ export function useCharacterAnimations({
   const userAnimOverrideRef = useRef<boolean>(false);
 
   const loadAndPlayClip = useCallback((pathOrKey: string, loop = true, isUserOverride = false) => {
-
     if (!scene || !mixerRef.current) return;
-    const path = resolveAnimationPath(pathOrKey);
-    const isTPose = path === 'tpose' || path === 'animations/poses_idles/anim_t_pose.glb' || pathOrKey === 't_pose';
+    const def = getAnimationDef(pathOrKey);
+    const animId = def ? def.id : pathOrKey;
+    const path = def ? def.path : resolveAnimationPath(pathOrKey);
+
+    const isTPose = animId === 'tpose' || animId === 'anim_t_pose' || path === 'tpose' || path === 'animations/poses_idles/anim_t_pose.glb' || pathOrKey === 't_pose';
     if (isTPose) {
       currentAnimClip.current = 'tpose';
       if (isUserOverride) userAnimOverrideRef.current = true;
@@ -82,8 +84,7 @@ export function useCharacterAnimations({
       return;
     }
 
-
-    if (path === 'idle') {
+    if (pathOrKey === 'idle' || animId === 'idle' || path === 'idle') {
       currentAnimClip.current = null;
       userAnimOverrideRef.current = false;
       invalidate();
@@ -95,23 +96,35 @@ export function useCharacterAnimations({
       const mixer = mixerRef.current;
       if (!mixer) return;
 
-      clip.name = path;
-      const cacheKey = id + '_' + path;
+      clip.name = animId;
+      const cacheKey = id + '_' + animId;
       let finalClip = _retargetCache[cacheKey];
       if (!finalClip) {
         if (sourceScene) sourceScene.updateMatrixWorld(true);
         finalClip = retargetClip(clip, scene, sourceScene);
         cacheRetargetedClip(cacheKey, finalClip);
       }
-      finalClip.name = path;
+      finalClip.name = animId;
 
-      let action = actionsRef.current[path];
+      let action = actionsRef.current[animId] || actionsRef.current[path];
       if (!action) {
         action = mixer.clipAction(finalClip);
         action.enabled = true;
-        actionsRef.current[path] = action;
-        if (pathOrKey && pathOrKey !== path) {
+        // Indexer sous l'ID canonique
+        actionsRef.current[animId] = action;
+        // Indexer sous la clé/alias demandé
+        if (pathOrKey && pathOrKey !== animId) {
           actionsRef.current[pathOrKey] = action;
+        }
+        // Indexer sous le chemin GLB
+        if (path && path !== animId) {
+          actionsRef.current[path] = action;
+        }
+        // Indexer sous tous les alias connus de la définition
+        if (def?.aliases) {
+          for (const alias of def.aliases) {
+            actionsRef.current[alias] = action;
+          }
         }
       }
 
@@ -123,7 +136,7 @@ export function useCharacterAnimations({
         action.clampWhenFinished = false;
       }
 
-      currentAnimClip.current = path;
+      currentAnimClip.current = animId;
       if (isUserOverride) userAnimOverrideRef.current = true;
       invalidate();
     };

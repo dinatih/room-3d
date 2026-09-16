@@ -64,6 +64,19 @@ export function resolveAnimationPath(keyOrPath: string): string {
 }
 
 /**
+ * Résout une clé (alias, nom de slot ou chemin) vers l'ID canonique de l'animation dans le registre.
+ * Si l'animation n'est pas trouvée, renvoie la clé nettoyée.
+ */
+export function resolveAnimationId(keyOrPath: string): string {
+  if (!keyOrPath) return '';
+  const def = getAnimationDef(keyOrPath);
+  if (def) {
+    return def.id;
+  }
+  return keyOrPath;
+}
+
+/**
  * Retourne toutes les définitions d'animations correspondant à un ou plusieurs tags.
  * @param tags Tag unique ou tableau de tags
  * @param matchMode 'all' = doit posséder tous les tags, 'any' = doit posséder au moins un tag

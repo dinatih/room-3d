@@ -24,7 +24,7 @@ import type { AgentInstruction } from '../ai/aiTypes';
 import { useAgentController } from '../ai/useAgentController';
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
-import { resolveAnimationPath } from '../animations/animationResolver';
+import { resolveAnimationId } from '../animations/animationResolver';
 import { APP_IDLE_TIMEOUT_SECONDS, isAppIdle } from '../idleState';
 import { CharacterThoughtBubble } from '../CharacterThoughtBubble';
 
@@ -610,9 +610,9 @@ export function SingleCharacter({
 
     let target = (rawTarget === 'idle' || rawTarget === 'walk' || rawTarget === 'run' || rawTarget === 'tpose')
       ? rawTarget
-      : resolveAnimationPath(rawTarget);
+      : resolveAnimationId(rawTarget);
 
-    const isTPose = target === 'tpose' || target === 'animations/poses_idles/anim_t_pose.glb' || target.endsWith('/anim_t_pose.glb');
+    const isTPose = target === 'tpose' || target === 'anim_t_pose' || target === 'animations/poses_idles/anim_t_pose.glb' || target.endsWith('/anim_t_pose.glb');
 
     let isTemporaryLoadingFallback = false;
     if (!isTPose && !actions[target]) {
@@ -765,7 +765,7 @@ export function SingleCharacter({
       mixer.update(delta);
 
       // Parachute d'atterrissage réactif
-      const falling = currentAnimClip.current === 'animations/locomotion/anim_falling.glb';
+      const falling = currentAnimClip.current === 'anim_falling' || currentAnimClip.current === 'animations/locomotion/anim_falling.glb';
       if (isFalling !== falling) {
         setIsFalling(falling);
       }
