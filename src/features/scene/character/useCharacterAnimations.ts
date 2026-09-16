@@ -52,7 +52,7 @@ export function clearRetargetCache() {
 export interface UseCharacterAnimationsProps {
   id: string;
   scene: THREE.Group;
-  animations: THREE.AnimationClip[];
+  animations?: THREE.AnimationClip[];
   sittingScene?: THREE.Group;
   invalidate: () => void;
 }
@@ -60,8 +60,6 @@ export interface UseCharacterAnimationsProps {
 export function useCharacterAnimations({
   id,
   scene,
-  animations,
-  sittingScene,
   invalidate
 }: UseCharacterAnimationsProps) {
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
@@ -76,17 +74,10 @@ export function useCharacterAnimations({
     const animId = def ? def.id : pathOrKey;
     const path = def ? def.path : resolveAnimationPath(pathOrKey);
 
-    const isTPose = animId === 'tpose' || animId === 'anim_t_pose' || path === 'tpose' || path === 'animations/poses_idles/anim_t_pose.glb' || pathOrKey === 't_pose';
+    const isTPose = animId === 'tpose' || animId === 't_pose' || animId === 'anim_t_pose' || path === 'tpose' || path === 'animations/poses_idles/anim_t_pose.glb' || pathOrKey === 't_pose' || pathOrKey === 'tpose';
     if (isTPose) {
-      currentAnimClip.current = 'tpose';
+      currentAnimClip.current = 't_pose';
       if (isUserOverride) userAnimOverrideRef.current = true;
-      invalidate();
-      return;
-    }
-
-    if (pathOrKey === 'idle' || animId === 'idle' || path === 'idle') {
-      currentAnimClip.current = null;
-      userAnimOverrideRef.current = false;
       invalidate();
       return;
     }
@@ -136,26 +127,23 @@ export function useCharacterAnimations({
         action.clampWhenFinished = false;
       }
 
-      currentAnimClip.current = animId;
-      if (isUserOverride) userAnimOverrideRef.current = true;
+      if (isUserOverride) {
+        currentAnimClip.current = animId;
+        userAnimOverrideRef.current = true;
+      }
       invalidate();
     };
 
-    const existingAnim = animations?.find(a => a.name === path);
-    if (existingAnim) {
-      handleClip(existingAnim, existingAnim.userData?.animScene as THREE.Object3D | undefined);
-    } else {
-      const loadCallback = (gltf: any) => {
-        const sourceScene = gltf.scene;
-        if (sourceScene) sourceScene.updateMatrixWorld(true);
-        handleClip(gltf.animations[0], sourceScene);
-      };
+    const loadCallback = (gltf: any) => {
+      const sourceScene = gltf.scene;
+      if (sourceScene) sourceScene.updateMatrixWorld(true);
+      handleClip(gltf.animations[0], sourceScene);
+    };
 
-      cacheDynamicGLTF(path).then(loadCallback).catch(console.error);
-    }
-  }, [id, scene, animations, invalidate]);
+    cacheDynamicGLTF(path).then(loadCallback).catch(console.error);
+  }, [id, scene, invalidate]);
 
-  // Initialisation du mixer et pré-retargeting des animations de base
+  // Initialisation du mixer et pré-chargement dynamique de l'idle
   useEffect(() => {
     if (!scene) return;
     const mixer = new THREE.AnimationMixer(scene);
@@ -171,26 +159,14 @@ export function useCharacterAnimations({
 
     actionsRef.current = {};
 
-    animations.forEach(clip => {
-      const isExternal = clip.name.endsWith('.glb');
-      const actualAnimScene = (clip as any).userData?.animScene || (isExternal ? sittingScene : undefined);
-      const cacheKey = id + '_' + clip.name;
-      let finalClip = _retargetCache[cacheKey];
-      if (!finalClip) {
-        finalClip = retargetClip(clip, scene, actualAnimScene);
-        cacheRetargetedClip(cacheKey, finalClip);
-      }
-
-      const action = mixer.clipAction(finalClip);
-      actionsRef.current[clip.name] = action;
-      action.enabled = true;
-    });
+    // Pré-chargement automatique de la pose idle par défaut
+    loadAndPlayClip('idle');
 
     return () => {
       mixer.stopAllAction();
       mixer.uncacheRoot(scene);
     };
-  }, [id, scene, animations, sittingScene]);
+  }, [scene, loadAndPlayClip]);
 
   // Écouteur global pour walker-anim-finished
   useEffect(() => {

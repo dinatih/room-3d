@@ -58,12 +58,10 @@ export function SingleCharacter({
   isPaused = false,
   previewHaircut,
   previewHairColor,
-  animations,
   variant,
   isNPC = false,
   npcPosition = [0, 0, 0],
   npcRotationY = 0,
-  sittingScene,
   previewPosition,
   previewRotationY,
   duoAnimDef,
@@ -165,8 +163,6 @@ export function SingleCharacter({
   } = useCharacterAnimations({
     id,
     scene,
-    animations,
-    sittingScene,
     invalidate
   });
 
@@ -403,7 +399,13 @@ export function SingleCharacter({
 
       if (isForMe && e.detail?.value) {
         const path = e.detail.value;
-        loadAndPlayClip(path, e.detail?.loop !== false, true);
+        if (path === 'idle' || path === 'stop') {
+          currentAnimClip.current = null;
+          userAnimOverrideRef.current = false;
+          invalidate();
+        } else {
+          loadAndPlayClip(path, e.detail?.loop !== false, true);
+        }
       }
       handleToggleHairColor(e);
       handleToggleHaircut(e);
@@ -608,20 +610,19 @@ export function SingleCharacter({
       currentAnimClip.current = null;
     }
 
-    let target = (rawTarget === 'idle' || rawTarget === 'walk' || rawTarget === 'run' || rawTarget === 'tpose')
-      ? rawTarget
-      : resolveAnimationId(rawTarget);
+    let target = resolveAnimationId(rawTarget);
 
-    const isTPose = target === 'tpose' || target === 'anim_t_pose' || target === 'animations/poses_idles/anim_t_pose.glb' || target.endsWith('/anim_t_pose.glb');
+    const isTPose = target === 'tpose' || target === 't_pose' || target === 'anim_t_pose' || target === 'animations/poses_idles/anim_t_pose.glb' || target.endsWith('/anim_t_pose.glb');
 
     let isTemporaryLoadingFallback = false;
     if (!isTPose && !actions[target]) {
       loadAndPlayClip(target);
+      const idleId = resolveAnimationId('idle');
       if (activeActionName.current && actions[activeActionName.current]) {
-        const prevIsLocomotion = activeActionName.current.includes('walk') || activeActionName.current.includes('run') || activeActionName.current === 'walk' || activeActionName.current === 'run';
-        target = prevIsLocomotion ? 'idle' : activeActionName.current;
-      } else {
-        target = 'idle';
+        const prevIsLocomotion = activeActionName.current.includes('walk') || activeActionName.current.includes('run');
+        target = (prevIsLocomotion && actions[idleId]) ? idleId : activeActionName.current;
+      } else if (actions[idleId]) {
+        target = idleId;
       }
       isTemporaryLoadingFallback = true;
     }
@@ -669,7 +670,7 @@ export function SingleCharacter({
           const isWalkAnim = target === 'walk' || target.includes('/locomotion/') || target.includes('walk') || target.includes('run');
           if (!isWalkAnim) {
             const cleanName = target.split('/').pop()?.replace('.glb', '').replace(/^(anim_|miley_armature_)/, '').replace(/_/g, ' ') || target;
-            const emoji = target === 'idle' ? '🧘' : '💃';
+            const emoji = (target === resolveAnimationId('idle') || target === 'idle') ? '🧘' : '💃';
             appLog(id, `${emoji} Animation : ${cleanName}`);
           }
         }

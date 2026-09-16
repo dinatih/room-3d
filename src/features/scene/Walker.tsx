@@ -9,6 +9,7 @@ import { Suspense, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { SingleCharacter } from './character';
+import { cacheDynamicGLTF } from './character/useCharacterAnimations';
 import { CHARACTERS, isCharacterVisibleInMode, type CharacterConfig, ACCESSORIES_MESH_NAMES } from './walkerConfig';
 export { CHARACTERS, type CharacterConfig, ACCESSORIES_MESH_NAMES };
 
@@ -42,59 +43,32 @@ function InternalWalker(props: WalkerProps) {
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
-  const idleGltf = useGLTF('animations/poses_idles/miley_armature_idle01_f.glb');
-  const walkingGltf = useGLTF('animations/locomotion/anim_walking.glb');
-  const runningGltf = useGLTF('animations/locomotion/anim_running.glb');
 
-
-  const charactersWithAnims = useMemo(() => {
-    return CHARACTERS.map(char => {
-      const isLara = char.isLara !== false;
-      const idleAnim = idleGltf.animations[0].clone();
-      idleAnim.name = 'idle';
-      (idleAnim as any).userData = { animScene: idleGltf.scene };
-
-      const walkAnim = walkingGltf.animations[0].clone();
-      walkAnim.name = 'walk';
-      (walkAnim as any).userData = { animScene: walkingGltf.scene };
-
-      const runAnim = runningGltf.animations[0].clone();
-      runAnim.name = 'run';
-      (runAnim as any).userData = { animScene: runningGltf.scene };
-
-      const charAnims = [
-        idleAnim,
-        walkAnim,
-        runAnim,
-      ];
-      return {
-        ...char,
-        isLara,
-        charAnims,
-        // Special animations are loaded only when requested by SingleCharacter.
-        sittingScene: undefined
-      };
-    });
-  }, [idleGltf, walkingGltf, runningGltf]);
+  const characters = useMemo(() => {
+    return CHARACTERS.map(char => ({
+      ...char,
+      isLara: char.isLara !== false,
+    }));
+  }, []);
 
   const mountedCharacters = useMemo(() => {
     if (props.isPreview) {
       if (props.duoAnimDef) {
         const leaderId = props.previewCharacterId || 'native';
         const partnerId = props.duoPartnerId || (leaderId === 'native' ? 'rosanna' : 'native');
-        const leader = charactersWithAnims.find(char => char.id === leaderId) || charactersWithAnims[0];
-        const partner = charactersWithAnims.find(char => char.id === partnerId) || charactersWithAnims.find(char => char.id !== leaderId) || charactersWithAnims[0];
+        const leader = characters.find(char => char.id === leaderId) || characters[0];
+        const partner = characters.find(char => char.id === partnerId) || characters.find(char => char.id !== leaderId) || characters[0];
         return [
           { ...leader, isDuoRoleA: true },
           { ...partner, isDuoRoleB: true }
         ];
       }
-      return charactersWithAnims.filter(char => char.id === props.previewCharacterId);
+      return characters.filter(char => char.id === props.previewCharacterId);
     }
-    return charactersWithAnims.filter(char =>
+    return characters.filter(char =>
       showAllLaraStyles && isCharacterVisibleInMode(char.id, laraCount, activeWalkerId, extraCharacters, activeExtraIds)
     );
-  }, [activeWalkerId, charactersWithAnims, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters, activeExtraIds]);
+  }, [activeWalkerId, characters, laraCount, props.isPreview, props.previewCharacterId, props.duoAnimDef, props.duoPartnerId, showAllLaraStyles, extraCharacters, activeExtraIds]);
 
   return (
     <>
@@ -134,14 +108,12 @@ function InternalWalker(props: WalkerProps) {
               isLara={char.isLara ?? true}
               targetHeight={char.height}
               isActive={isActive}
-              animations={char.charAnims}
               variant={char.variant}
               isNPC={!isActive}
               isDuoRoleB={isDuoRoleB}
               duoAnimDef={props.duoAnimDef}
               npcPosition={char.pos}
               npcRotationY={char.rot}
-              sittingScene={char.sittingScene}
               walkerAnim={charAnim}
               previewPosition={charPos}
               previewRotationY={charRot}
@@ -168,8 +140,9 @@ export function Walker(props: WalkerProps) {
 const LARA_PATH = 'characters/lara/lara_native.glb';
 
 useGLTF.preload(LARA_PATH);
-useGLTF.preload('animations/poses_idles/miley_armature_idle01_f.glb');
-useGLTF.preload('animations/locomotion/anim_walking.glb');
-useGLTF.preload('animations/locomotion/anim_running.glb');
-
 useGLTF.preload('/items/famnig27470460/Famnig27470460.glb');
+
+// Pré-chauffage asynchrone des animations de base
+cacheDynamicGLTF('animations/poses_idles/miley_armature_idle01_f.glb');
+cacheDynamicGLTF('animations/locomotion/anim_walking.glb');
+cacheDynamicGLTF('animations/locomotion/anim_running.glb');

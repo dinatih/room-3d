@@ -25,7 +25,7 @@ export interface SingleCharacterProps extends WalkerProps {
   isLara: boolean;
   targetHeight: number;
   isActive: boolean;
-  animations: THREE.AnimationClip[];
+  animations?: THREE.AnimationClip[];
 
   variant?: LaraVariant;
   isNPC?: boolean;
