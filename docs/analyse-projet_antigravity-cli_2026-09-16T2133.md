@@ -1,6 +1,6 @@
 # Analyse complète du projet — room-3d
 
-> **Auteur** : Antigravity Agent (CLI)  
+> **Auteur** : Antigravity Agent (CLI) — modèle **Claude Opus 4.6 (Thinking)** par Anthropic  
 > **Date** : 2026-09-16 à 21:33 (Europe/Paris)  
 > **Conversation** : `be14dc4c-fcdc-427c-a3ae-4b047a0cf239`
 
