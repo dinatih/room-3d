@@ -10,6 +10,7 @@ import {
   SEG_DIAG_CONCRETE_WALLS,
   SEG_DIAG_ENTRY_DOOR,
   DIAG_EXT_Z_END,
+  CORNER_NE_APEX,
 } from './wallData';
 
 export type Seg = [number, number, number, number]; // x1, z1, x2, z2
@@ -38,8 +39,8 @@ export const SEG_CONCRETE_WALLS: Seg[] = [
   [pWest('glass-east'), pNorth('corner-ne-ext'), pWest('glass-east'), pSouth('glass-east')],
 
   // ── Mur Est béton (garden-e, corner-ne, diag-ne) ──────────────────────────
-  // Face extérieure (du fond du jardin à la diagonale)
-  [pEast('garden-e'), pSouth('garden-e'), pEast('diag-ne'), pSouth('diag-ne')],
+  // Face extérieure (du fond du jardin à la diagonale via l'apex)
+  [pEast('garden-e'), pSouth('garden-e'), CORNER_NE_APEX.x, CORNER_NE_APEX.z],
   // Face intérieure jardin (du fond du jardin au mur C)
   [pWest('garden-e'), pSouth('garden-e'), pWest('corner-ne'), pSouth('corner-ne-ext')],
   // Face intérieure séjour & couloir (du mur C à la diagonale)

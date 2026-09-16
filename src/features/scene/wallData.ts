@@ -134,7 +134,32 @@ const seg  = (p1: { x: number; z: number }, p2: { x: number; z: number }): [numb
   [p1.x, p1.z, p2.x, p2.z];
 
 export const GARDEN_JC_Z = -140 + DiagWall.slope * 320;
-export const DIAG_EXT_Z_END = pExt(dLen).z;
+
+// Calcul des apex des coins extérieurs (intersection des faces orthogonales et de la face diagonale)
+const eP0 = dP(0, WT);
+const tC = (WT - (eP0.x - DiagWall.A.x)) / DiagWall.sin;
+export const CORNER_NE_APEX = { x: DiagWall.A.x + WT, z: eP0.z + tC * DiagWall.cos };
+
+const ePLen = dP(dLen, WT);
+const tC_sw = ((DiagWall.C.x - WT) - ePLen.x) / DiagWall.sin;
+export const CORNER_SW_APEX = { x: DiagWall.C.x - WT, z: ePLen.z + tC_sw * DiagWall.cos };
+
+export const DIAG_EXT_Z_END = CORNER_SW_APEX.z;
+
+// Piliers d'angle biseautés (kites) correspondant à diag-ne-kite et diag-sw-kite
+export const PILLAR_KITE_NE: [number, number][] = [
+  [eP0.x, eP0.z],
+  [CORNER_NE_APEX.x, CORNER_NE_APEX.z],
+  [CORNER_NE_APEX.x, DiagWall.A.z],
+  [DiagWall.A.x, DiagWall.A.z],
+];
+
+export const PILLAR_KITE_SW: [number, number][] = [
+  [DiagWall.C.x, DiagWall.C.z],
+  [CORNER_SW_APEX.x, DiagWall.C.z],
+  [CORNER_SW_APEX.x, CORNER_SW_APEX.z],
+  [ePLen.x, ePLen.z],
+];
 
 export const SEG_DIAG_CONCRETE_WALLS: [number, number, number, number][] = [
   seg(pExt(0),           pExt(dDoor.start)),
@@ -143,10 +168,6 @@ export const SEG_DIAG_CONCRETE_WALLS: [number, number, number, number][] = [
   seg(pInt(dDoor.end),   pInt(dLen)),
   seg(pInt(dDoor.start), pExt(dDoor.start)),
   seg(pInt(dDoor.end),   pExt(dDoor.end)),
-  [pEast('diag-ne'), pSouth('diag-ne'), pExt(0).x,    pExt(0).z],
-  [pWest('diag-ne'), pSouth('diag-ne'), pInt(0).x,    pInt(0).z],
-  [pWest('diag-sw'), pExt(dLen).z,      pExt(dLen).x, pExt(dLen).z],
-  [pEast('diag-sw'), pInt(dLen).z,      pInt(dLen).x, pInt(dLen).z],
 ];
 
 export const SEG_DIAG_ENTRY_DOOR: [number, number, number, number] =

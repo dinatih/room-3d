@@ -20,6 +20,8 @@ import {
   PillarDef,
   WALL_THICKNESS,
   GARDEN_JC_Z,
+  PILLAR_KITE_NE,
+  PILLAR_KITE_SW,
 } from './wallData';
 
 const PAD = 20;
@@ -145,6 +147,21 @@ export function drawFloorPlan(
     ctx.strokeRect(-w / 2, -d / 2, w, d);
 
     ctx.restore();
+  }
+
+  // ── Piliers d'angles biseautés (kites) du mur diagonal ──────────────────────
+  ctx.fillStyle = 'rgba(74, 85, 104, 0.45)';
+  ctx.strokeStyle = '#2d3748';
+  ctx.lineWidth = Math.max(S * 2.2, 1.1);
+  for (const pts of [PILLAR_KITE_NE, PILLAR_KITE_SW]) {
+    ctx.beginPath();
+    ctx.moveTo(tx(pts[0][0]), tz(pts[0][1]));
+    for (let i = 1; i < pts.length; i++) {
+      ctx.lineTo(tx(pts[i][0]), tz(pts[i][1]));
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
   }
 
   // ── Portes ──────────────────────────────────────────────────────────────────

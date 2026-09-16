@@ -6,7 +6,8 @@ import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSceneStore } from '../store/useSceneStore';
 import {
-  WALL_DEFS, PILLAR_DEFS, WALL_THICKNESS, GARDEN_PANEL_DEFS
+  WALL_DEFS, PILLAR_DEFS, WALL_THICKNESS, GARDEN_PANEL_DEFS,
+  PILLAR_KITE_NE, PILLAR_KITE_SW,
 } from '../wallData';
 import { WoodenFencePanel } from '../items/WoodenFencePanel';
 import { GardenFrontWallScan } from './GardenFrontWallScan';
@@ -165,39 +166,10 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
   const gardenWallScan = useSceneStore(state => state.layers.gardenWallScan);
   const showLabels = pillarsOnly || wallEdges;
 
-  const diagGeos = useMemo(() => {
-    const eP0 = DiagWall.p(0, DiagWall.depth);
-    const tC = (WALL_THICKNESS - (eP0.x - DiagWall.A.x)) / DiagWall.sin;
-    const cX = DiagWall.A.x + WALL_THICKNESS;
-    const cZ = eP0.z + tC * DiagWall.cos;
-
-    const diagPillar = makeExtrudeGeo(
-      [
-        [eP0.x,          eP0.z],
-        [cX,             cZ],
-        [DiagWall.A.x + WALL_THICKNESS, DiagWall.A.z],
-        [DiagWall.A.x,     DiagWall.A.z],
-      ],
-      WALL_H,
-    );
-
-    const ePLen = DiagWall.p(DiagWall.len, DiagWall.depth);
-    const tC_sw  = ((DiagWall.C.x - WALL_THICKNESS) - ePLen.x) / DiagWall.sin;
-    const cX_sw  = DiagWall.C.x - WALL_THICKNESS;
-    const cZ_sw  = ePLen.z + tC_sw * DiagWall.cos;
-
-    const diagPillarSW = makeExtrudeGeo(
-      [
-        [DiagWall.C.x,     DiagWall.C.z],
-        [DiagWall.C.x - WALL_THICKNESS, DiagWall.C.z],
-        [cX_sw,            cZ_sw],
-        [ePLen.x,          ePLen.z],
-      ],
-      WALL_H,
-    );
-
-    return { diagPillar, diagPillarSW };
-  }, []);
+  const diagGeos = useMemo(() => ({
+    diagPillar: makeExtrudeGeo(PILLAR_KITE_NE, WALL_H),
+    diagPillarSW: makeExtrudeGeo(PILLAR_KITE_SW, WALL_H),
+  }), []);
 
   return (
     <>

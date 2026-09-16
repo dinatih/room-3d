@@ -221,7 +221,7 @@ export function SingleCharacter({
   const loopScenario = isAutonomous;
 
   const isExcepted = id === 'xbot' || isExtraCharacter(id);
-  const hasSkyDrop = isNPC && !isExcepted && isAutonomous;
+  const hasSkyDrop = !isExcepted && isAutonomous;
   const spawnDelay = hasSkyDrop ? ((characterIndex ?? 0) * 1.0) : 0;
 
   const {
@@ -524,13 +524,17 @@ export function SingleCharacter({
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
           groupRef.current.rotation.y = agentState.rotY;
           currentAnimClip.current = agentState.animation;
-          groupRef.current.visible = !cameraState.walkerHidden;
+          groupRef.current.visible = !cameraState.walkerHidden && agentState.isSpawned;
 
           cameraState.walkerX = agentState.x;
           cameraState.walkerZ = agentState.z;
           cameraState.walkYaw = agentState.rotY;
           cameraState.isAIControlled = true;
-          cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
+          if (agentState.isSpawned) {
+            cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
+          } else {
+            delete cameraState.positions[id];
+          }
         } else {
           groupRef.current.position.set(cameraState.walkerX, 0, cameraState.walkerZ);
           groupRef.current.rotation.y = cameraState.walkYaw;
