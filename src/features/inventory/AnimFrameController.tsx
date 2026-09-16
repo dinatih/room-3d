@@ -409,11 +409,9 @@ export function AnimFrameController({
               </button>
             )}
             <span
+              className="text-truncate d-inline-block"
               style={{
-                maxWidth: 100,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                maxWidth: 110,
                 fontSize: 10,
                 fontWeight: 600,
                 color: '#38bdf8',
@@ -421,6 +419,7 @@ export function AnimFrameController({
                 padding: '2px 6px',
                 borderRadius: 3,
                 border: '1px solid rgba(56, 189, 248, 0.3)',
+                verticalAlign: 'middle',
               }}
               title={`Animation active : ${displayName}`}
             >

@@ -163,11 +163,11 @@ export function DevToolsGroups({ Group }: {
                       TOP TRIANGLES <span style={{ color: '#6b7280', fontWeight: 400 }}>· coupables</span>
                     </div>
                     {devState.topObjects.slice(0, 10).map((obj) => (
-                      <div key={obj.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 10px', fontSize: 11 }}>
-                        <span style={{ color: '#111827', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130 }} title={obj.name}>
+                      <div key={obj.name} className="d-flex align-items-center justify-content-between px-2 py-0 overflow-hidden" style={{ fontSize: 11, minWidth: 0 }}>
+                        <span className="text-truncate flex-grow-1 fw-medium" style={{ color: '#111827' }} title={obj.name}>
                           {obj.name}
                         </span>
-                        <span style={{ color: heatColor(obj.tris, 50_000, 200_000), fontWeight: 600, flexShrink: 0, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>
+                        <span className="flex-shrink-0 ms-2 fw-semibold" style={{ color: heatColor(obj.tris, 50_000, 200_000), fontVariantNumeric: 'tabular-nums' }}>
                           {(obj.tris / 1000).toFixed(1)}k
                         </span>
                       </div>

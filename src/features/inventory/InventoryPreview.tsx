@@ -842,17 +842,14 @@ export function InventoryPreview({
                           color: '#fff',
                           cursor: 'pointer',
                           maxWidth: 140,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: 4
                         }}
+                        className="d-flex align-items-center justify-content-between gap-1 overflow-hidden"
                         title={typeof currentAnimLabel === 'string' ? currentAnimLabel : undefined}
                       >
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span className="text-truncate flex-grow-1">
                           🎬 {currentAnimLabel}
                         </span>
-                        <span style={{ fontSize: 8, opacity: 0.8 }}>{showAnimSelector ? '▲' : '▼'}</span>
+                        <span style={{ fontSize: 8, opacity: 0.8 }} className="flex-shrink-0">{showAnimSelector ? '▲' : '▼'}</span>
                       </button>
 
                       <button
@@ -1137,7 +1134,19 @@ export function InventoryPreview({
           )}
 
           {/* Debug URLs Overlay */}
-          <div style={{ position: 'absolute', bottom: debugUrlsBottom, left: 8, zIndex: 3, fontSize: 9, opacity: 0.5, color: '#222', textShadow: '0 0 2px rgba(255,255,255,0.8)', pointerEvents: 'none', whiteSpace: 'nowrap', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'monospace' }} title={`${glbPath || 'No GLB'} | ${photos ? photos.join(', ') : 'No photos'}`}>
+          <div
+            className="position-absolute text-truncate mw-100 font-monospace pe-none"
+            style={{
+              bottom: debugUrlsBottom,
+              left: 8,
+              zIndex: 3,
+              fontSize: 9,
+              opacity: 0.5,
+              color: '#222',
+              textShadow: '0 0 2px rgba(255,255,255,0.8)',
+            }}
+            title={`${glbPath || 'No GLB'} | ${photos ? photos.join(', ') : 'No photos'}`}
+          >
             {glbPath ? `GLB: ${glbPath}` : 'No GLB'} {photos && photos.length > 0 ? `| IMG: ${photos[0]} ${photos.length > 1 ? `(+${photos.length-1})` : ''}` : ''}
           </div>
 

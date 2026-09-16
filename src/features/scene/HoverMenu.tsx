@@ -827,23 +827,23 @@ export function HoverOverlay() {
                   </select>
 
                   {action.toggleKey.startsWith('walker-anim') && val && val !== 'idle' && (
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 6,
-                      background: 'rgba(255,215,0,0.12)',
-                      border: '1px solid rgba(255,215,0,0.3)',
-                      borderRadius: 6,
-                      padding: '4px 8px',
-                      fontSize: 10,
-                      color: '#ffd700',
-                    }}>
-                      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={filename}>
+                    <div
+                      className="d-flex align-items-center justify-content-between gap-2 overflow-hidden rounded-2"
+                      style={{
+                        minWidth: 0,
+                        background: 'rgba(255,215,0,0.12)',
+                        border: '1px solid rgba(255,215,0,0.3)',
+                        padding: '4px 8px',
+                        fontSize: 10,
+                        color: '#ffd700',
+                      }}
+                    >
+                      <div className="text-truncate flex-grow-1" title={filename}>
                         {filename}
                       </div>
                       <button
                         type="button"
+                        className="btn btn-sm py-0 px-2 fw-bold text-white flex-shrink-0 border-0"
                         onClick={() => {
                           navigator.clipboard.writeText(filename);
                           setCopiedHover(true);
@@ -851,14 +851,9 @@ export function HoverOverlay() {
                         }}
                         style={{
                           background: 'rgba(255,215,0,0.25)',
-                          color: '#fff',
-                          border: 'none',
                           borderRadius: 4,
-                          padding: '2px 6px',
                           fontSize: 9,
-                          fontWeight: 700,
                           cursor: 'pointer',
-                          whiteSpace: 'nowrap',
                         }}
                       >
                         {copiedHover ? '✓ Copié !' : '📋 Copier'}
