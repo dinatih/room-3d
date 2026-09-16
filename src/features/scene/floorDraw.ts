@@ -11,7 +11,7 @@ import {
   DiagWall,
 } from '@config';
 
-import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_WINDOWS } from './floorData';
+import { SEG_CONCRETE_WALLS, SEG_PARTITIONS, SEG_DOORS, SEG_WINDOWS, DOOR_SWINGS } from './floorData';
 import {
   GARDEN_PANEL_DEFS,
   PARTITION_THICKNESS,
@@ -176,7 +176,40 @@ export function drawFloorPlan(
     ctx.stroke();
   }
 
-  // ── Portes ──────────────────────────────────────────────────────────────────
+  // ── Débattement des portes à battant (quarts de cercle et vantaux ouverts) ──
+  for (const swing of DOOR_SWINGS) {
+    const cx = tx(swing.pivot.x);
+    const cz = tz(swing.pivot.z);
+    const r  = swing.radius * S;
+
+    // 1. Surface balayée par l'ouverture (secteur angulaire très léger)
+    ctx.fillStyle = 'rgba(204, 0, 0, 0.05)';
+    ctx.beginPath();
+    ctx.moveTo(cx, cz);
+    ctx.arc(cx, cz, r, swing.startAngle, swing.endAngle, swing.anticlockwise);
+    ctx.closePath();
+    ctx.fill();
+
+    // 2. Vantail ouvert à 90° (trait plein fin)
+    const openX = cx + r * Math.cos(swing.endAngle);
+    const openZ = cz + r * Math.sin(swing.endAngle);
+    ctx.strokeStyle = '#cc0000';
+    ctx.lineWidth = Math.max(S * 1.5, 1.0);
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(cx, cz);
+    ctx.lineTo(openX, openZ);
+    ctx.stroke();
+
+    // 3. Arc de trajectoire (quart de cercle en tirets fins)
+    ctx.lineWidth = Math.max(S * 1.2, 0.8);
+    ctx.setLineDash([2 * sc, 2 * sc]);
+    ctx.beginPath();
+    ctx.arc(cx, cz, r, swing.startAngle, swing.endAngle, swing.anticlockwise);
+    ctx.stroke();
+  }
+
+  // ── Portes (seuils en pointillés) ───────────────────────────────────────────
   ctx.strokeStyle = '#cc0000';
   ctx.lineWidth = Math.max(S * 2.5, 1.2);
   ctx.setLineDash([2 * sc, 2 * sc]);

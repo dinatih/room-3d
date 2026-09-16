@@ -11,6 +11,7 @@ import {
   SEG_DIAG_ENTRY_DOOR,
   DIAG_EXT_Z_END,
   CORNER_NE_APEX,
+  DiagWall,
 } from './wallData';
 
 export type Seg = [number, number, number, number]; // x1, z1, x2, z2
@@ -158,3 +159,55 @@ export const SEG_WINDOWS: Seg[] = [
   // Vitrage douche
   [pEast('shower-nw'), pNorth('shower-ne'), pWest('shower-ne'), pNorth('shower-ne')],
 ];
+
+// ── DÉBATTEMENT DES PORTES À BATTANT (DOOR_SWINGS) ───────────────────────────
+// Définit le pivot, le rayon et l'arc de rotation (quart de cercle) pour chaque
+// porte à battant. Exclut le placard SDB qui est une double porte coulissante.
+export type DoorSwingDef = {
+  pivot: { x: number; z: number };
+  radius: number;
+  startAngle: number;
+  endAngle: number;
+  anticlockwise: boolean;
+};
+
+export const DOOR_SWINGS: DoorSwingDef[] = [
+  // 1. Porte séjour — pivot côté Est (door-living-e), s'ouvre vers le séjour (Nord)
+  {
+    pivot: { x: pWest('door-living-e'), z: pNorth('door-living-e') },
+    radius: pWest('door-living-e') - pEast('door-living-w'),
+    startAngle: Math.PI,
+    endAngle: Math.PI * 1.5,
+    anticlockwise: false,
+  },
+  // 2. Porte placard couloir — pivot côté Nord (door-living-w), s'ouvre vers le couloir (Est)
+  {
+    pivot: { x: pEast('door-living-w'), z: pSouth('door-living-w') },
+    radius: pNorth('bath-ne') - pSouth('door-living-w'),
+    startAngle: Math.PI / 2,
+    endAngle: 0,
+    anticlockwise: true,
+  },
+  // 3. Porte SDB (PC-SDB) — pivot côté Sud (door-bath-s), s'ouvre vers l'intérieur SDB (Ouest)
+  {
+    pivot: { x: pEast('door-bath-s'), z: pSouth('door-bath-s') },
+    radius: pSouth('door-bath-s') - pNorth('door-bath-n'),
+    startAngle: Math.PI * 1.5,
+    endAngle: Math.PI,
+    anticlockwise: true,
+  },
+  // 4. Porte d'entrée diagonale (P3) — pivot côté Est/haut (dDoor.start), s'ouvre vers l'intérieur (couloir)
+  (() => {
+    const p1 = DiagWall.p(DiagWall.door.start, 0);
+    const p2 = DiagWall.p(DiagWall.door.end, 0);
+    const startAngle = Math.atan2(p2.z - p1.z, p2.x - p1.x);
+    return {
+      pivot: p1,
+      radius: DiagWall.door.end - DiagWall.door.start,
+      startAngle,
+      endAngle: startAngle + Math.PI / 2,
+      anticlockwise: false,
+    };
+  })(),
+];
+
