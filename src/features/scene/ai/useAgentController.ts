@@ -18,6 +18,26 @@ import { handleDuoInteraction } from './agent/agentDuoHandler';
 export type { AgentState };
 export { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation };
 
+interface AgentDeploymentState {
+  hasStarted: boolean;
+  hasLoggedFalling: boolean;
+  hasCompleted: boolean;
+  status: AgentStatus;
+  y: number;
+  timer: number;
+  delayTimer: number;
+}
+
+const agentDeploymentMap = new Map<string, AgentDeploymentState>();
+
+export function resetAgentDeployment(characterId?: string) {
+  if (characterId) {
+    agentDeploymentMap.delete(characterId);
+  } else {
+    agentDeploymentMap.clear();
+  }
+}
+
 export function useAgentController(
   _characterId: string,
   scenario: AgentInstruction[] | null,
@@ -32,28 +52,41 @@ export function useAgentController(
     ? { x: firstCoords.tx, y: firstCoords.ty ?? 0, z: firstCoords.tz, rotY: firstCoords.rotY ?? 0 }
     : getRealPosition();
 
-  const isWaiting = hasSkyDrop && spawnDelay > 0;
-  const isFallingImmediately = hasSkyDrop && spawnDelay === 0;
+  let deployment = agentDeploymentMap.get(_characterId);
+  if (!deployment) {
+    const isWaiting = hasSkyDrop && spawnDelay > 0;
+    const isFallingImmediately = hasSkyDrop && spawnDelay === 0;
+    deployment = {
+      hasStarted: isFallingImmediately,
+      hasLoggedFalling: false,
+      hasCompleted: !hasSkyDrop,
+      status: isWaiting ? 'WAITING' : (isFallingImmediately ? 'FALLING' : 'IDLE'),
+      y: hasSkyDrop ? 2500 : initialPos.y,
+      timer: isFallingImmediately ? 6.0 : 0,
+      delayTimer: spawnDelay,
+    };
+    agentDeploymentMap.set(_characterId, deployment);
+  }
+
+  const isStillWaiting = deployment.status === 'WAITING';
+  const isCurrentlyFalling = deployment.status === 'FALLING';
 
   const stateRef = useRef<AgentState>({
     x: initialPos.x,
-    y: hasSkyDrop ? 2500 : initialPos.y,
+    y: deployment.y,
     z: initialPos.z,
     rotY: initialPos.rotY,
-    animation: isFallingImmediately ? 'animations/locomotion/anim_falling.glb' : (hasSkyDrop ? 'idle' : (firstCoords?.anim || 'idle')),
-    isSpawned: !isWaiting
+    animation: isCurrentlyFalling ? 'animations/locomotion/anim_falling.glb' : (firstCoords?.anim || 'idle'),
+    isSpawned: !isStillWaiting
   });
 
   const stepIndexRef = useRef(0);
-  const timerRef = useRef(isFallingImmediately ? 6.0 : 0);
-  const statusRef = useRef<AgentStatus>(
-    isWaiting ? 'WAITING' : (isFallingImmediately ? 'FALLING' : 'IDLE')
-  );
-  const delayTimerRef = useRef(spawnDelay);
+  const timerRef = useRef(deployment.timer);
+  const statusRef = useRef<AgentStatus>(deployment.status);
+  const delayTimerRef = useRef(deployment.delayTimer);
   const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
   const startPosRef = useRef<{ x: number; y: number; z: number; rotY: number } | null>(initialPos);
   const claimedSlotRef = useRef<{ objectId: string; slotId: string } | null>(null);
-  const hasDeployedRef = useRef<boolean>(false);
 
   // Navigation dynamique inter-pièces
   const dynamicNavQueueRef = useRef<AgentInstruction[]>([]);
@@ -169,16 +202,31 @@ export function useAgentController(
       duoRoleRef.current = null;
       duoInvitedRef.current = false;
     }
-    const shouldSkyDrop = hasSkyDrop && !hasDeployedRef.current;
+    // SkyDrop n'est initialisé que si le personnage n'a pas encore démarré son déploiement
+    const shouldSkyDrop = hasSkyDrop && !deployment.hasStarted;
     const isWait = shouldSkyDrop && spawnDelay > 0;
     const isFallNow = shouldSkyDrop && spawnDelay === 0;
 
     stepIndexRef.current = 0;
     repeatIndexRef.current = 0;
     targetRepeatsRef.current = 1;
-    timerRef.current = isFallNow ? 6.0 : 0;
-    statusRef.current = isWait ? 'WAITING' : (isFallNow ? 'FALLING' : 'IDLE');
-    delayTimerRef.current = spawnDelay;
+
+    if (shouldSkyDrop) {
+      timerRef.current = isFallNow ? 6.0 : 0;
+      statusRef.current = isWait ? 'WAITING' : (isFallNow ? 'FALLING' : 'IDLE');
+      delayTimerRef.current = spawnDelay;
+      deployment.status = statusRef.current;
+      deployment.timer = timerRef.current;
+      deployment.delayTimer = spawnDelay;
+      if (isFallNow) {
+        deployment.hasStarted = true;
+      }
+    } else {
+      statusRef.current = deployment.status;
+      timerRef.current = deployment.timer;
+      delayTimerRef.current = deployment.delayTimer;
+    }
+
     prevScenarioRef.current = scenario;
     dynamicNavQueueRef.current = [];
     dynamicNavIndexRef.current = 0;
@@ -193,16 +241,14 @@ export function useAgentController(
         : getRealPosition();
 
       stateRef.current.x = real.x;
-      stateRef.current.y = shouldSkyDrop ? 2500 : real.y;
+      stateRef.current.y = deployment.y;
       stateRef.current.z = real.z;
       stateRef.current.rotY = real.rotY;
-      stateRef.current.isSpawned = !isWait;
-      stateRef.current.animation = isFallNow ? 'animations/locomotion/anim_falling.glb' : (shouldSkyDrop ? 'idle' : (stepCoords?.anim || 'idle'));
+      stateRef.current.isSpawned = deployment.status !== 'WAITING';
+      stateRef.current.animation = deployment.status === 'FALLING'
+        ? 'animations/locomotion/anim_falling.glb'
+        : (deployment.status === 'WAITING' ? 'idle' : (stepCoords?.anim || 'idle'));
       startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY };
-      if (isFallNow && !hasDeployedRef.current) {
-        hasDeployedRef.current = true;
-        appLog(_characterId, `🪂 Déploiement : Tombée du ciel en parachute`);
-      }
     }
   }
 
@@ -272,29 +318,38 @@ export function useAgentController(
     // ── 1. Gestion SkyDrop (Spawn / Chute / Atterrissage) ──
     if (statusRef.current === 'WAITING') {
       delayTimerRef.current -= dt;
+      deployment.delayTimer = delayTimerRef.current;
       if (delayTimerRef.current <= 0) {
         statusRef.current = 'FALLING';
         timerRef.current = 6.0;
         stateRef.current.isSpawned = true;
-        if (!hasDeployedRef.current) {
-          hasDeployedRef.current = true;
-          appLog(_characterId, `🪂 Déploiement : Tombée du ciel en parachute`);
-        }
+        deployment.status = 'FALLING';
+        deployment.timer = 6.0;
+        deployment.hasStarted = true;
       }
       stateRef.current.animation = 'idle';
       return stateRef.current;
     }
 
     if (statusRef.current === 'FALLING') {
+      if (!deployment.hasLoggedFalling) {
+        deployment.hasLoggedFalling = true;
+        appLog(_characterId, `🪂 Déploiement : Tombée du ciel en parachute`);
+      }
       timerRef.current -= dt;
+      deployment.timer = timerRef.current;
       if (timerRef.current <= 0) {
         stateRef.current.y = startPosRef.current?.y ?? 0;
         statusRef.current = 'LANDING';
         timerRef.current = 1.96;
+        deployment.status = 'LANDING';
+        deployment.timer = 1.96;
+        deployment.y = stateRef.current.y;
       } else {
         const p_inv = timerRef.current / 6.0;
         const targetY = startPosRef.current?.y ?? 0;
         stateRef.current.y = targetY + (2500 - targetY) * (p_inv * p_inv * p_inv);
+        deployment.y = stateRef.current.y;
       }
       stateRef.current.animation = 'animations/locomotion/anim_falling.glb';
       return stateRef.current;
@@ -302,8 +357,11 @@ export function useAgentController(
 
     if (statusRef.current === 'LANDING') {
       timerRef.current -= dt;
+      deployment.timer = timerRef.current;
       if (timerRef.current <= 0) {
         statusRef.current = 'IDLE';
+        deployment.status = 'IDLE';
+        deployment.hasCompleted = true;
         appLog(_characterId, `🎯 Déploiement terminé (Atterrissage réussi)`);
       }
       stateRef.current.animation = 'animations/poses_idles/anim_crouch_to_stand.glb';
@@ -680,6 +738,8 @@ export function useAgentController(
       }
     }
 
+    deployment.status = statusRef.current;
+    deployment.y = stateRef.current.y;
     return stateRef.current;
   };
 
@@ -687,6 +747,7 @@ export function useAgentController(
     stateRef.current.x = x;
     stateRef.current.y = y;
     stateRef.current.z = z;
+    deployment.y = y;
   };
 
   const setRotation = (rotY: number) => {

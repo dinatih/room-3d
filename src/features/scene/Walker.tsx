@@ -172,4 +172,4 @@ useGLTF.preload('animations/poses_idles/miley_armature_idle01_f.glb');
 useGLTF.preload('animations/locomotion/anim_walking.glb');
 useGLTF.preload('animations/locomotion/anim_running.glb');
 
-useGLTF.preload('items/famnig27470460/Famnig27470460.glb');
+useGLTF.preload('/items/famnig27470460/Famnig27470460.glb');
