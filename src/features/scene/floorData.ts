@@ -21,21 +21,16 @@ export const SEG_CONCRETE_WALLS: Seg[] = [
   // Face extérieure continue
   [pWest('corner-nw-ext'), pNorth('corner-nw-ext'), pWest('corner-nw-ext'), DIAG_EXT_Z_END],
   // Face intérieure béton continue
-  [pEast('corner-nw-ext'), pNorth('corner-nw-ext'), pEast('corner-nw-ext'), pSouth('diag-sw')],
-  // About Nord (fermeture angle Nord-Ouest)
-  [pWest('corner-nw-ext'), pNorth('corner-nw-ext'), pEast('corner-nw-ext'), pNorth('corner-nw-ext')],
-
+  [pEast('corner-nw-ext'), pSouth('corner-nw-ext'), pEast('corner-nw-ext'), pSouth('diag-sw')],
   // ── Mur Nord béton (panneau ouest & est, baie vitrée) ─────────────────────
-  // Panneau Ouest extérieur & jardin
-  [pWest('corner-nw-ext'), pNorth('corner-nw-ext'), pEast('glass-west-ext'), pNorth('corner-nw-ext')],
-  [pEast('corner-nw-ext'), pSouth('corner-nw-ext'), pEast('glass-west'), pSouth('corner-nw-ext')],
-  // Tableau Ouest baie vitrée
+  // Face extérieure continue nord à Z=-30 (du coin ouest au coin est via seuil baie vitrée)
+  [pWest('corner-nw-ext'), pNorth('corner-nw-ext'), pEast('corner-ne-ext'), pNorth('corner-nw-ext')],
+  // Face intérieure béton ouest à Z=-10 (mur porteur 20cm de profondeur)
+  [pWest('corner-nw-ext'), pSouth('corner-nw-ext'), pEast('glass-west-ext'), pSouth('corner-nw-ext')],
+  // Face intérieure béton est à Z=-10 (mur porteur 20cm de profondeur)
+  [pWest('glass-east-ext'), pSouth('corner-ne-ext'), pEast('corner-ne-ext'), pSouth('corner-ne-ext')],
+  // Tableaux baie vitrée (de la façade extérieure Z=-30 au nu intérieur Z=0)
   [pEast('glass-west'), pNorth('corner-nw-ext'), pEast('glass-west'), pSouth('glass-west')],
-
-  // Panneau Est extérieur & jardin
-  [pWest('glass-east-ext'), pNorth('corner-ne-ext'), pEast('corner-ne-ext'), pNorth('corner-ne-ext')],
-  [pWest('glass-east'), pSouth('corner-ne-ext'), pWest('corner-ne'), pSouth('corner-ne-ext')],
-  // Tableau Est baie vitrée
   [pWest('glass-east'), pNorth('corner-ne-ext'), pWest('glass-east'), pSouth('glass-east')],
 
   // ── Mur Est béton (garden-e, corner-ne, diag-ne) ──────────────────────────

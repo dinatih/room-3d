@@ -22,6 +22,8 @@ import {
   GARDEN_JC_Z,
   PILLAR_KITE_NE,
   PILLAR_KITE_SW,
+  pNorth,
+  pEast,
 } from './wallData';
 
 const PAD = 20;
@@ -90,18 +92,27 @@ export function drawFloorPlan(
   );
 
   // ── Jardin ──────────────────────────────────────────────────────────────────
+  const gardenZ0    = pNorth('corner-nw-ext'); // Z=-30 (commence 20cm plus haut, au nu extérieur du mur nord)
+  const gardenXWest = pEast('corner-nw-ext');  // X=-10 (bord intérieur pilier nord-ouest)
+  const gardenXEast = pEast('corner-ne-ext');  // X=310 (bord extérieur mur est)
+
   ctx.fillStyle = 'rgba(74, 158, 84, 0.08)';
   ctx.beginPath();
-  ctx.moveTo(tx(-10), tz(-10)); ctx.lineTo(tx(-10), tz(-140));
-  ctx.lineTo(tx(310), tz(GARDEN_JC_Z)); ctx.lineTo(tx(310), tz(-10));
-  ctx.closePath(); ctx.fill();
+  ctx.moveTo(tx(gardenXWest), tz(gardenZ0));
+  ctx.lineTo(tx(gardenXWest), tz(-140));
+  ctx.lineTo(tx(gardenXEast), tz(GARDEN_JC_Z));
+  ctx.lineTo(tx(gardenXEast), tz(gardenZ0));
+  ctx.closePath();
+  ctx.fill();
 
   ctx.strokeStyle = '#4a9e54';
   ctx.lineWidth = Math.max(S * 3, 1);
   ctx.lineCap = 'round';
   ctx.setLineDash([3 * sc, 2 * sc]);
   for (const [x1, z1, x2, z2] of [
-    [-10, -10, -10, -140], [-10, -140, 310, GARDEN_JC_Z], [310, GARDEN_JC_Z, 310, -10],
+    [gardenXWest, gardenZ0, gardenXWest, -140],
+    [gardenXWest, -140, gardenXEast, GARDEN_JC_Z],
+    [gardenXEast, GARDEN_JC_Z, gardenXEast, gardenZ0],
   ] as [number, number, number, number][]) {
     ctx.beginPath(); ctx.moveTo(tx(x1), tz(z1)); ctx.lineTo(tx(x2), tz(z2)); ctx.stroke();
   }
