@@ -181,19 +181,21 @@ export function drawFloorPlan(
     const cx = tx(swing.pivot.x);
     const cz = tz(swing.pivot.z);
     const r  = swing.radius * S;
+    const color = swing.color ?? '#cc0000';
+    const fillColor = swing.fillColor ?? 'rgba(204, 0, 0, 0.05)';
 
     // 1. Surface balayée par l'ouverture (secteur angulaire très léger)
-    ctx.fillStyle = 'rgba(204, 0, 0, 0.05)';
+    ctx.fillStyle = fillColor;
     ctx.beginPath();
     ctx.moveTo(cx, cz);
     ctx.arc(cx, cz, r, swing.startAngle, swing.endAngle, swing.anticlockwise);
     ctx.closePath();
     ctx.fill();
 
-    // 2. Vantail ouvert à 90° (trait plein fin)
+    // 2. Vantail ouvert (trait plein fin)
     const openX = cx + r * Math.cos(swing.endAngle);
     const openZ = cz + r * Math.sin(swing.endAngle);
-    ctx.strokeStyle = '#cc0000';
+    ctx.strokeStyle = color;
     ctx.lineWidth = Math.max(S * 1.5, 1.0);
     ctx.setLineDash([]);
     ctx.beginPath();
