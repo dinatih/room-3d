@@ -91,7 +91,7 @@ export function SingleCharacter({
   const showThoughtBubble = useSceneStore(state => state.layers.thoughtBubble ?? true);
   const cameraMode = useSceneStore(state => state.cameraMode);
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
-  const extraStates = useSceneStore(state => state.extraStates);
+  const aiFullTour = useSceneStore(state => state.extraStates.aiFullTour);
 
   const { scene } = useGLTFClone(modelPath);
   const charLabel = name || (isNPC ? `PNJ (${id})` : `Personnage (${id})`);
@@ -200,9 +200,9 @@ export function SingleCharacter({
 
   // Gestion des scénarios IA
   const activeActionKey = useMemo(() => {
-    if (extraStates.aiFullTour) return 'aiFullTour';
+    if (aiFullTour) return 'aiFullTour';
     return null;
-  }, [extraStates]);
+  }, [aiFullTour]);
 
   const activeActionScenario = useMemo(() => {
     if (activeActionKey === 'aiFullTour') return ACTION_FULL_TOUR;

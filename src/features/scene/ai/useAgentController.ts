@@ -53,6 +53,7 @@ export function useAgentController(
   const prevScenarioRef = useRef<AgentInstruction[] | null | undefined>(undefined);
   const startPosRef = useRef<{ x: number; y: number; z: number; rotY: number } | null>(initialPos);
   const claimedSlotRef = useRef<{ objectId: string; slotId: string } | null>(null);
+  const hasDeployedRef = useRef<boolean>(false);
 
   // Navigation dynamique inter-pièces
   const dynamicNavQueueRef = useRef<AgentInstruction[]>([]);
@@ -168,8 +169,9 @@ export function useAgentController(
       duoRoleRef.current = null;
       duoInvitedRef.current = false;
     }
-    const isWait = hasSkyDrop && spawnDelay > 0;
-    const isFallNow = hasSkyDrop && spawnDelay === 0;
+    const shouldSkyDrop = hasSkyDrop && !hasDeployedRef.current;
+    const isWait = shouldSkyDrop && spawnDelay > 0;
+    const isFallNow = shouldSkyDrop && spawnDelay === 0;
 
     stepIndexRef.current = 0;
     repeatIndexRef.current = 0;
@@ -191,13 +193,14 @@ export function useAgentController(
         : getRealPosition();
 
       stateRef.current.x = real.x;
-      stateRef.current.y = hasSkyDrop ? 2500 : real.y;
+      stateRef.current.y = shouldSkyDrop ? 2500 : real.y;
       stateRef.current.z = real.z;
       stateRef.current.rotY = real.rotY;
       stateRef.current.isSpawned = !isWait;
-      stateRef.current.animation = isFallNow ? 'animations/locomotion/anim_falling.glb' : (hasSkyDrop ? 'idle' : (stepCoords?.anim || 'idle'));
+      stateRef.current.animation = isFallNow ? 'animations/locomotion/anim_falling.glb' : (shouldSkyDrop ? 'idle' : (stepCoords?.anim || 'idle'));
       startPosRef.current = { x: real.x, y: real.y, z: real.z, rotY: real.rotY };
-      if (isFallNow) {
+      if (isFallNow && !hasDeployedRef.current) {
+        hasDeployedRef.current = true;
         appLog(_characterId, `🪂 Déploiement : Tombée du ciel en parachute`);
       }
     }
@@ -273,7 +276,10 @@ export function useAgentController(
         statusRef.current = 'FALLING';
         timerRef.current = 6.0;
         stateRef.current.isSpawned = true;
-        appLog(_characterId, `🪂 Déploiement : Tombée du ciel en parachute`);
+        if (!hasDeployedRef.current) {
+          hasDeployedRef.current = true;
+          appLog(_characterId, `🪂 Déploiement : Tombée du ciel en parachute`);
+        }
       }
       stateRef.current.animation = 'idle';
       return stateRef.current;
