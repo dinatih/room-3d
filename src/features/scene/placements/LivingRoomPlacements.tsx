@@ -501,6 +501,8 @@ export function LivingRoomFurniture() {
 // Pass 2 — Furnishings (Habillage & confort fonctionnel)
 export function LivingRoomFurnishings() {
   const DF = 33;
+  const TV_Y = WALL_H - 10 - TV_H / 2;
+  const as = useFurnitureToggles(['tv-toggle']);
 
   return (
     <MergedStaticGroup name="merged-living-room-furnishings">
@@ -559,18 +561,8 @@ export function LivingRoomFurnishings() {
 
       {/* Lampe Ola */}
       <LampOla_ />
-    </MergedStaticGroup>
-  );
-}
 
-// Pass 3 — Decor (Détails & habillage de surface)
-export function LivingRoomDecor() {
-  const TV_Y = WALL_H - 10 - TV_H / 2;
-  const as = useFurnitureToggles(['tv-toggle']);
-
-  return (
-    <MergedStaticGroup name="merged-living-room-decor">
-      {/* Objets et accessoires posés sur les bureaux */}
+      {/* Objets et accessoires de travail posés sur les bureaux (Stackstod, Laptop, Phone, Mug) */}
       <DeskDecor />
 
       {/* Enceinte JBL Charge 3 sur Kallax NE */}
@@ -578,6 +570,29 @@ export function LivingRoomDecor() {
         <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
+      {/* TV */}
+      <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
+        rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]} userData={{ itemName: 'Téléviseur' }}>
+        <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* Mini PC */}
+      <group position={[ROOM_W - 25, 40, 30]} userData={{ itemName: 'Mini PC MLLSE' }}>
+        <MllseG2Pro item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* Google Nest Mini */}
+      <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, 0, 0]} userData={{ itemName: 'Google Nest Mini' }}>
+        <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+    </MergedStaticGroup>
+  );
+}
+
+// Pass 3 — Decor (Détails & habillage de surface)
+export function LivingRoomDecor() {
+  return (
+    <MergedStaticGroup name="merged-living-room-decor">
       {/* Têtes de mannequin 1 (Kallax NW) et 3 (Meuble T) */}
       <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]}>
         <KallaxNWMannequins />
@@ -617,22 +632,6 @@ export function LivingRoomDecor() {
 
       {/* Baskets Sneakers Rouges sur range-chaussures */}
       <SneakersPair />
-
-      {/* TV */}
-      <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
-        rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]} userData={{ itemName: 'Téléviseur' }}>
-        <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
-      </group>
-
-      {/* Mini PC */}
-      <group position={[ROOM_W - 25, 40, 30]} userData={{ itemName: 'Mini PC MLLSE' }}>
-        <MllseG2Pro item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
-      {/* Google Nest Mini */}
-      <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, 0, 0]} userData={{ itemName: 'Google Nest Mini' }}>
-        <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
     </MergedStaticGroup>
   );
 }
