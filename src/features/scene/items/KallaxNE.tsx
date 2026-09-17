@@ -27,16 +27,8 @@ const VAR2_W = 32, VAR2_D = 28, VAR2_H = 16; // VARIERA 32×28×16 demi-étag
 
 function k(id: string) { return { id } as any; }
 
-// ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxNE({ onSize }: SceneItemProps) {
-  const ref = useRef<THREE.Group>(null!);
-
-  useLayoutEffect(() => {
-    ref.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
-  }, []);
-
+export function KallaxNEDrona() {
   const dronaMatrices = useMemo(() => {
     const matrices: THREE.Matrix4[] = [];
     const p = new THREE.Vector3();
@@ -77,6 +69,28 @@ export function KallaxNE({ onSize }: SceneItemProps) {
   }, [dronaMatrices]);
 
   return (
+    <>
+      {/* DRONA Instances individuelles pour animation */}
+      {dronaTransforms.map((t, i) => (
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+          <DroneCell />
+        </group>
+      ))}
+    </>
+  );
+}
+
+// ── Composant principal ───────────────────────────────────────────────────────
+
+export function KallaxNE({ onSize, noDrona }: SceneItemProps & { noDrona?: boolean }) {
+  const ref = useRef<THREE.Group>(null!);
+
+  useLayoutEffect(() => {
+    ref.current.updateMatrixWorld(true);
+    onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
+  }, []);
+
+  return (
     <group ref={ref}>
       {/* 2×1 bas — spans Y ∈ [0, h1] */}
       <group position={[0, h1, 0]} userData={{ animUnit: true }}>
@@ -88,12 +102,7 @@ export function KallaxNE({ onSize }: SceneItemProps) {
         <Kallax2x2 item={k('kallax-ne-2x2')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
       
-      {/* DRONA Instances individuelles pour animation */}
-      {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
-          <DroneCell />
-        </group>
-      ))}
+      {!noDrona && <KallaxNEDrona />}
 
       {/* VARIERA 32×28 sur sommet 2×2, coin Nord-Est (local +X=mur Nord, +Z=mur Est).
           rotY=0 : grand axe (32) le long X (= world Z, parallèle mur Est).

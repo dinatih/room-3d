@@ -17,48 +17,41 @@ import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
-const TF = 3.5, TI = 1.5, NH = 34, NW_K = 33.5;
-const tw   = (cols: number) => cols * NW_K + 2 * TF + (cols - 1) * TI;
+const TF = 3.5, TI = 1.5, NH = 34;
 const th   = (rows: number) => rows * NH  + 2 * TF + (rows - 1) * TI;
 const h1   = th(1);              // 41
 const h2   = th(2);              // 76.5
 const DF   = 33;                 // Drona box size
-const TOP  = h2 * 2 + h1;       // 194 — dessus de la tour
 const PIZZA_Y = h2 + h2 / 2 + TI / 2;  // 115.5 — position four pizza
 
 function k(id: string) { return { id } as any; }
 
-// ── Positions des 4 cases dans un Kallax 2×2 (relatives au centre du Kallax) ──
-function cells22(): [number, number, number][] {
-  const W = tw(2), H = th(2); // 75.5, 76.5
-  const out: [number, number, number][] = [];
-  for (let r = 0; r < 2; r++) {
-    for (let c = 0; c < 2; c++) {
-      out.push([
-        -(W / 2) + TF + NW_K / 2 + c * (NW_K + TI),
-         (H / 2) - TF - NH  / 2 - r * (NH  + TI),
-        0,
-      ]);
-    }
-  }
-  return out;
-}
-
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxCuisine({ actionState, onSize }: SceneItemProps) {
-  const ref = useRef<THREE.Group>(null!);
-
+export function KallaxCuisineDrona() {
   const dronaMatrices = useMemo(() => {
-    const rot = new THREE.Matrix4(); // Identité
-    const inside = cells22().map(([cx, cy, cz]) =>
-      rot.clone().setPosition(cx, h2 / 2 + cy, cz),
-    );
-    const top = [-18, 18].map(x =>
-      rot.clone().setPosition(x, TOP + DF / 2 + 0.2, 0),
-    );
-    return [...inside, ...top];
+    const matrices: THREE.Matrix4[] = [];
+    const p = new THREE.Vector3();
+    const q = new THREE.Quaternion();
+    const s = new THREE.Vector3(1, 1, 1);
+    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0);
+    
+    // 4 dans le 2×2 bas (cases [0,0], [0,1], [1,0], [1,1])
+    for (const x of [-17.5, 17.5]) {
+      for (const y of [-20.5, -56]) {
+        p.set(x, h2 + y, 0);
+        matrices.push(new THREE.Matrix4().compose(p, q, s));
+      }
+    }
+    
+    // 2 sur le dessus (2×1 haut Y ∈ [2×h2+h1, 2×h2+h1+DF])
+    const topY = 2 * h2 + h1 + DF / 2 + 0.2;
+    for (const x of [-17.5, 17.5]) {
+      p.set(x, topY, 0);
+      matrices.push(new THREE.Matrix4().compose(p, q, s));
+    }
+    return matrices;
   }, []);
 
   const dronaTransforms = useMemo(() => {
@@ -70,6 +63,23 @@ export function KallaxCuisine({ actionState, onSize }: SceneItemProps) {
       return { p, q, s };
     });
   }, [dronaMatrices]);
+
+  return (
+    <>
+      {/* DRONA Instances individuelles pour animation (6 Drona : 4 dans le 2x2 bas + 2 sur le dessus) */}
+      {dronaTransforms.map((t, i) => (
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+          <DroneCell />
+        </group>
+      ))}
+    </>
+  );
+}
+
+// ── Composant principal ───────────────────────────────────────────────────────
+
+export function KallaxCuisine({ onSize, actionState, noDrona }: SceneItemProps & { noDrona?: boolean }) {
+  const ref = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
@@ -90,12 +100,8 @@ export function KallaxCuisine({ actionState, onSize }: SceneItemProps) {
       <group position={[0, h2 + h2 + h1, 0]} userData={{ animUnit: true }}>
         <Kallax2x1 item={k('kallax-sw-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* DRONA Instances individuelles pour animation (6 Drona : 4 dans le 2x2 bas + 2 sur le dessus) */}
-      {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
-          <DroneCell />
-        </group>
-      ))}
+      
+      {!noDrona && <KallaxCuisineDrona />}
 
       {/* Mini four Ninja SP101EU — dans la case basse du 2×2 spec */}
       <group position={[-8, PIZZA_Y, 0]} rotation-y={Math.PI} userData={{ animUnit: true }}>

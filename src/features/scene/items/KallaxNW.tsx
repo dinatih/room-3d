@@ -42,12 +42,7 @@ const DRONA_POSITIONS: [number, number, number][] = [
 
 function k(id: string) { return { id } as any; }
 
-// ── Composant principal ───────────────────────────────────────────────────────
-
-export function KallaxNW({ onSize }: SceneItemProps) {
-  const ref = useRef<THREE.Group>(null!);
-  const px = -h1 / 2; // -20.5 : center the pivoted Kallax at X=0
-
+export function KallaxNWDrona() {
   const dronaMatrices = useMemo(() => {
     const rot = new THREE.Matrix4(); // Identité
     return DRONA_POSITIONS.map(([x, y, z]) => rot.clone().setPosition(x, y, z));
@@ -62,6 +57,47 @@ export function KallaxNW({ onSize }: SceneItemProps) {
       return { p, q, s };
     });
   }, [dronaMatrices]);
+
+  return (
+    <>
+      {/* DRONA Instances individuelles pour animation */}
+      {dronaTransforms.map((t, i) => (
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+          <DroneCell />
+        </group>
+      ))}
+    </>
+  );
+}
+
+export function KallaxNWMannequins() {
+  return (
+    <>
+      {/* MannequinHead centré sur sommet tour, pivoté 45° vers centre pièce.
+          Head forward = +Z local. rotY=3π/4 → world +X+Z (diagonale corner→centre). */}
+      <group
+        position={[0, w2 + 2 * w1, 6]}
+        rotation-y={(3 * Math.PI) / 4}
+        userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 1', actions: ['mannequin-kallax-nw-random', 'mannequin-kallax-nw-wig', 'mannequin-kallax-nw-color', 'mannequin-kallax-nw-wind'] } }}
+      >
+        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="kallax-nw" />
+      </group>
+
+      {/* Tête de mannequin 3 sur MeubleT */}
+      <group position={[59.5, 0, 0.75]} rotation-y={Math.PI}>
+        <group position={[0, 55, 0]} rotation-y={-Math.PI / 8} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 3', actions: ['mannequin-meubleT-random', 'mannequin-meubleT-wig', 'mannequin-meubleT-color', 'mannequin-meubleT-wind'] } }}>
+          <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="meubleT" />
+        </group>
+      </group>
+    </>
+  );
+}
+
+// ── Composant principal ───────────────────────────────────────────────────────
+
+export function KallaxNW({ onSize, noDrona, noMannequins }: SceneItemProps & { noDrona?: boolean; noMannequins?: boolean }) {
+  const ref = useRef<THREE.Group>(null!);
+  const px = -h1 / 2; // -20.5 : center the pivoted Kallax at X=0
 
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
@@ -83,22 +119,9 @@ export function KallaxNW({ onSize }: SceneItemProps) {
       <group position={[px, w2 + w1 + w1 / 2, 0]} rotation={[0, 0, Math.PI / 2]} userData={{ animUnit: true }}>
         <Kallax1x1 item={k('kallax-nw-1x1-b')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      {/* DRONA Instances individuelles pour animation */}
-      {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
-          <DroneCell />
-        </group>
-      ))}
 
-      {/* MannequinHead centré sur sommet tour, pivoté 45° vers centre pièce.
-          Head forward = +Z local. rotY=3π/4 → world +X+Z (diagonale corner→centre). */}
-      <group
-        position={[0, w2 + 2 * w1, 6]}
-        rotation-y={(3 * Math.PI) / 4}
-        userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 1', actions: ['mannequin-kallax-nw-random', 'mannequin-kallax-nw-wig', 'mannequin-kallax-nw-color', 'mannequin-kallax-nw-wind'] } }}
-      >
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="kallax-nw" />
-      </group>
+      {!noDrona && <KallaxNWDrona />}
+      {!noMannequins && <KallaxNWMannequins />}
 
       {/* VARIERA demi-étagère sur sommet tour, longueur plaquée contre mur Nord.
           rotY=-π/2 : grand axe (32) le long de Z, profondeur (13) le long de X.
@@ -113,9 +136,6 @@ export function KallaxNW({ onSize }: SceneItemProps) {
       {/* MeubleT — au sol (Y = 0) à gauche des meubles Kallax, plaqué contre la glace des miroirs */}
       <group position={[59.5, 0, 0.75]} rotation-y={Math.PI}>
         <MeubleT item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        <group position={[0, 55, 0]} rotation-y={-Math.PI / 8} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 3', actions: ['mannequin-meubleT-random', 'mannequin-meubleT-wig', 'mannequin-meubleT-color', 'mannequin-meubleT-wind'] } }}>
-          <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="meubleT" />
-        </group>
       </group>
 
     </group>

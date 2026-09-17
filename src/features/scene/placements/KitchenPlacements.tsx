@@ -4,7 +4,7 @@ import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 
 import { CuisineGroup, CuisineDrona, CuisineLillhavet } from '../items/CuisineGroup';
-import { KallaxCuisine } from '../items/KallaxCuisine';
+import { KallaxCuisine, KallaxCuisineDrona } from '../items/KallaxCuisine';
 import { LaserDistanceMaster } from '../items/LaserDistanceMaster';
 import { TrashBin } from '../items/TrashBin';
 import { Tackan } from '../items/Tackan';
@@ -43,9 +43,9 @@ export function KitchenFurniture() {
 
   return (
     <MergedStaticGroup name="merged-kitchen-furniture">
-      {/* Kallax Cuisine en séparation */}
+      {/* Kallax Cuisine en séparation (structure sans Drona) */}
       <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ itemName: 'Kallax Cuisine' }}>
-        <KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} />
+        <KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} noDrona />
       </group>
 
       {/* Poubelle TATAY — angle KallaxCuisine × Mackapar */}
@@ -63,6 +63,11 @@ export function KitchenFurnishings() {
       {/* Boîtes Drona intégrées à la cuisine */}
       <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ itemName: 'Boîtes Drona Cuisine' }}>
         <CuisineDrona />
+      </group>
+
+      {/* Boîtes Drona intégrées au Kallax Cuisine */}
+      <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+        <KallaxCuisineDrona />
       </group>
 
       {/* LILLHAVET — égouttoir dans le meuble haut cuisine */}

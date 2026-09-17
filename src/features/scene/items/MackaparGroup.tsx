@@ -40,9 +40,45 @@ const dronaMatrices = (() => {
   });
 })();
 
+export function MackaparHangers() {
+  return (
+    <>
+      {/* 12 cintres Spruttig instanciés en un seul draw call */}
+      <SpruttigInstances
+        transforms={MACKAPAR_HANGER_TRANSFORMS}
+        userData={{ animUnit: true, itemName: 'Cintres Spruttig Mackapär' }}
+      />
+
+      {/* T-shirt noir suspendu sur le cintre le plus à l'ouest de la barre basse (z = -25) */}
+      <TShirt
+        position={[0, BOTTOM_RAIL_Y, HANGER_Z[0]]}
+        rotation={[0, -HANGER_ROTS[0], 0]}
+      />
+    </>
+  );
+}
+
+export function MackaparDrona() {
+  return (
+    <>
+      {dronaMatrices.map((m, i) => {
+        const p = new THREE.Vector3().setFromMatrixPosition(m);
+        const q = new THREE.Quaternion().setFromRotationMatrix(m);
+        return (
+          <group key={i} userData={{ animUnit: true }}>
+            <group position={p} quaternion={q}>
+              <DroneCell />
+            </group>
+          </group>
+        );
+      })}
+    </>
+  );
+}
+
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function MackaparGroup({ onSize }: SceneItemProps) {
+export function MackaparGroup({ onSize, noDrona, noHangers }: SceneItemProps & { noDrona?: boolean; noHangers?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
@@ -56,35 +92,8 @@ export function MackaparGroup({ onSize }: SceneItemProps) {
         <Mackapar50530988 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      {/* 12 cintres Spruttig instanciés en un seul draw call */}
-      <SpruttigInstances
-        transforms={MACKAPAR_HANGER_TRANSFORMS}
-        userData={{ animUnit: true, itemName: 'Cintres Spruttig Mackapär' }}
-      />
-
-      {/* T-shirt noir suspendu sur le cintre le plus à l'ouest de la barre basse (z = -25) */}
-      <TShirt
-        position={[0, BOTTOM_RAIL_Y, HANGER_Z[0]]}
-        rotation={[0, -HANGER_ROTS[0], 0]}
-      />
-
-      {/* Salopette suspendue à la barre */}
-      {/* <group userData={{ animUnit: true, isIkea: true }}>
-        <group position={[0, RAIL_Y - 120, 0]}>
-          <Salopette item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-      </group> */}
-      {dronaMatrices.map((m, i) => {
-        const p = new THREE.Vector3().setFromMatrixPosition(m);
-        const q = new THREE.Quaternion().setFromRotationMatrix(m);
-        return (
-          <group key={i} userData={{ animUnit: true }}>
-            <group position={p} quaternion={q}>
-              <DroneCell />
-            </group>
-          </group>
-        );
-      })}
+      {!noHangers && <MackaparHangers />}
+      {!noDrona && <MackaparDrona />}
     </group>
   );
 }

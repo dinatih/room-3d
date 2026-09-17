@@ -10,11 +10,11 @@ import { PositionTransition } from '../utils/PositionTransition';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 
-import { KallaxNE } from '../items/KallaxNE';
-import { KallaxSE } from '../items/KallaxSE';
-import { KallaxNW } from '../items/KallaxNW';
+import { KallaxNE, KallaxNEDrona } from '../items/KallaxNE';
+import { KallaxSE, KallaxSEDrona } from '../items/KallaxSE';
+import { KallaxNW, KallaxNWDrona, KallaxNWMannequins } from '../items/KallaxNW';
 import { JblCharge3 } from '../items/JblCharge3';
-import { MackaparGroup } from '../items/MackaparGroup';
+import { MackaparGroup, MackaparDrona, MackaparHangers } from '../items/MackaparGroup';
 import { MannequinHead } from '../items/MannequinHead';
 import { GoogleNestMini } from '../items/GoogleNestMini';
 import { Mulig30179435 } from '../items/Mulig30179435';
@@ -450,17 +450,17 @@ function SneakersPair() {
 export function LivingRoomFurniture() {
   return (
     <MergedStaticGroup name="merged-living-room-furniture">
-      {/* Meubles Kallax */}
+      {/* Meubles Kallax (structure sans Drona ni Mannequins) */}
       <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ itemName: 'Kallax NW' }}>
-        <KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noMannequins />
       </group>
 
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ itemName: 'Kallax NE' }}>
-        <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
 
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]} userData={{ itemName: 'Kallax SE' }}>
-        <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
 
       {/* Lits et Bureaux */}
@@ -470,9 +470,9 @@ export function LivingRoomFurniture() {
       {/* Fauteuil Smörkull */}
       <Smorkull_ />
 
-      {/* Meuble Mackapär */}
+      {/* Meuble Mackapär (structure sans Drona ni cintres) */}
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ itemName: 'Meuble Mackapär' }}>
-        <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noHangers />
       </group>
 
       {/* Rangement chaussures Grejig */}
@@ -514,9 +514,44 @@ export function LivingRoomFurnishings() {
         <Mulig30179435 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
+      {/* Boîtes Drona Kallax NW */}
+      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+        <KallaxNWDrona />
+      </group>
+
+      {/* Boîtes Drona Kallax NE */}
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]}>
+        <KallaxNEDrona />
+      </group>
+
+      {/* Boîtes Drona Kallax SE */}
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]}>
+        <KallaxSEDrona />
+      </group>
+
+      {/* Boîtes Drona et Cintres Mackapär */}
+      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2}>
+        <MackaparDrona />
+        <MackaparHangers />
+      </group>
+
       {/* Boîte Drona au sol mur Ouest */}
       <group position={[16.5, DF / 2 + 0.2, 268]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte Drona Sol Ouest' }}>
         <DroneCell />
+      </group>
+
+      {/* Maillot de foot Coréen Inyeong suspendu sur cintre au mur Est */}
+      <group
+        position={[ROOM_W - 1.2, 212, ROOM_D / 2]}
+        rotation={[0, Math.PI / 2, 0]}
+        userData={{ animUnit: true, itemName: 'Maillot Coréen - Inyeong', skipMerge: true }}
+      >
+        <mesh position={[0, 18.5, 0.8]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.4, 0.4, 1.6, 8]} />
+          <meshStandardMaterial color="#222222" roughness={0.3} metalness={0.8} />
+        </mesh>
+        <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <MaillotInyeong />
       </group>
 
       {/* Purificateur Air Performer */}
@@ -524,18 +559,6 @@ export function LivingRoomFurnishings() {
 
       {/* Lampe Ola */}
       <LampOla_ />
-
-      {/* Coussins Lagerpoppel mur Est */}
-      <group position={[ROOM_W - 10, WALL_H, ROOM_D / 2 - 38]} rotation={[0, -Math.PI / 2, -0.967]} userData={{ animUnit: true, itemName: 'Coussin LAGERPOPPEL 1 (Mur Est Nord)' }}>
-        <group position={[29, -40, 0]}>
-          <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-      </group>
-      <group position={[ROOM_W - 10, WALL_H, ROOM_D / 2 + 38]} rotation={[0, -Math.PI / 2, 0.967]} userData={{ animUnit: true, itemName: 'Coussin LAGERPOPPEL 2 (Mur Est Sud)' }}>
-        <group position={[-29, -40, 0]}>
-          <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-      </group>
     </MergedStaticGroup>
   );
 }
@@ -555,6 +578,11 @@ export function LivingRoomDecor() {
         <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
+      {/* Têtes de mannequin 1 (Kallax NW) et 3 (Meuble T) */}
+      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+        <KallaxNWMannequins />
+      </group>
+
       {/* Tête de mannequin 2 sur Kallax NE */}
       <group position={[ROOM_W - 14, 118, w2 - 11]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, itemName: 'Tête de mannequin 2', hoverAction: { label: 'Tête de mannequin 2', actions: ['mannequin-kallax-ne-random', 'mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="kallax-ne" />
@@ -570,6 +598,18 @@ export function LivingRoomDecor() {
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lamp" />
       </group>
 
+      {/* Coussins Lagerpoppel mur Est */}
+      <group position={[ROOM_W - 10, WALL_H, ROOM_D / 2 - 38]} rotation={[0, -Math.PI / 2, -0.967]} userData={{ animUnit: true, itemName: 'Coussin LAGERPOPPEL 1 (Mur Est Nord)' }}>
+        <group position={[29, -40, 0]}>
+          <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      </group>
+      <group position={[ROOM_W - 10, WALL_H, ROOM_D / 2 + 38]} rotation={[0, -Math.PI / 2, 0.967]} userData={{ animUnit: true, itemName: 'Coussin LAGERPOPPEL 2 (Mur Est Sud)' }}>
+        <group position={[-29, -40, 0]}>
+          <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      </group>
+
       {/* Sac à dos */}
       <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Sac à Dos' }}>
         <Backpack item={{} as any} actionState={{}} onSize={() => {}} />
@@ -577,20 +617,6 @@ export function LivingRoomDecor() {
 
       {/* Baskets Sneakers Rouges sur range-chaussures */}
       <SneakersPair />
-
-      {/* Maillot de foot Coréen Inyeong suspendu sur cintre au mur Est */}
-      <group
-        position={[ROOM_W - 1.2, 212, ROOM_D / 2]}
-        rotation={[0, Math.PI / 2, 0]}
-        userData={{ animUnit: true, itemName: 'Maillot Coréen - Inyeong', skipMerge: true }}
-      >
-        <mesh position={[0, 18.5, 0.8]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.4, 0.4, 1.6, 8]} />
-          <meshStandardMaterial color="#222222" roughness={0.3} metalness={0.8} />
-        </mesh>
-        <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        <MaillotInyeong />
-      </group>
 
       {/* TV */}
       <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"

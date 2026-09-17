@@ -37,12 +37,7 @@ const DRONA_POSITIONS: [number, number, number][] = [
 
 function k(id: string) { return { id } as any; }
 
-// ── Composant principal ───────────────────────────────────────────────────────
-
-export function KallaxSE({ onSize }: SceneItemProps) {
-  const ref = useRef<THREE.Group>(null!);
-  const px = (-h1 / 2) + 3; // -20.5 : center the pivoted Kallax at X=0
-
+export function KallaxSEDrona() {
   const dronaMatrices = useMemo(() => {
     const rot = new THREE.Matrix4(); // Identité
     return DRONA_POSITIONS.map(([x, y, z]) => rot.clone().setPosition(x + 3, y, z));
@@ -57,6 +52,24 @@ export function KallaxSE({ onSize }: SceneItemProps) {
       return { p, q, s };
     });
   }, [dronaMatrices]);
+
+  return (
+    <>
+      {/* DRONA Instances individuelles pour animation */}
+      {dronaTransforms.map((t, i) => (
+        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
+          <DroneCell />
+        </group>
+      ))}
+    </>
+  );
+}
+
+// ── Composant principal ───────────────────────────────────────────────────────
+
+export function KallaxSE({ onSize, noDrona }: SceneItemProps & { noDrona?: boolean }) {
+  const ref = useRef<THREE.Group>(null!);
+  const px = (-h1 / 2) + 3; // -20.5 : center the pivoted Kallax at X=0
 
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
@@ -80,12 +93,7 @@ export function KallaxSE({ onSize }: SceneItemProps) {
         <Kallax2x1 item={k('kallax-se-2x1')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      {/* DRONA Instances individuelles pour animation */}
-      {dronaTransforms.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ animUnit: true }}>
-          <DroneCell />
-        </group>
-      ))}
+      {!noDrona && <KallaxSEDrona />}
 
       {/* ShoeHatRack — au sol, côté mur D, flush mur B */}
       {/* local: x = stack_z − z_world = −w1/2, z = x_world − stack_x = DEP/2 */}
