@@ -246,30 +246,18 @@ export function CharacterThoughtBubble({
                   <div
                     key={entry.id}
                     title={entry.message}
-                    className={`d-flex align-items-center justify-content-between gap-2 px-1 rounded-1 overflow-hidden flex-shrink-0 ${
+                    className={`d-flex align-items-start justify-content-between gap-2 px-2 py-1 rounded-1 overflow-hidden flex-shrink-0 ${
                       isLast ? 'text-white fw-semibold bg-white bg-opacity-10' : 'text-light fw-normal'
                     }`}
-                    style={{
-                      lineHeight: '1.35',
-                      fontSize: '11px',
-                      minWidth: 0,
-                      minHeight: '1.25rem', // 20px en unité relative rem (base 16px)
-                      paddingTop: '0.1rem',
-                      paddingBottom: '0.1rem',
-                    }}
                   >
-                    <div className="d-flex align-items-center gap-1.5 overflow-hidden flex-grow-1" style={{ minWidth: 0 }}>
+                    <div className="d-flex align-items-start gap-2 flex-grow-1 overflow-hidden">
                       <span
-                        className="font-monospace flex-shrink-0"
-                        style={{
-                          fontSize: '9.5px',
-                          color: themeColor,
-                          opacity: 0.9,
-                        }}
+                        className="badge bg-white bg-opacity-10 font-monospace flex-shrink-0 px-1 py-0 mt-1 user-select-none"
+                        style={{ color: themeColor }}
                       >
                         {formatBubbleTime(entry.timestamp)}
                       </span>
-                      <span className={`${isExpanded ? '' : 'text-truncate'} flex-grow-1`}>
+                      <span className={`flex-grow-1 text-break ${isExpanded ? '' : 'text-truncate'}`}>
                         {entry.message}
                       </span>
                     </div>
@@ -277,17 +265,11 @@ export function CharacterThoughtBubble({
                     {/* Bouton Copier la ligne */}
                     <button
                       type="button"
-                      className="btn btn-sm py-0 px-1 rounded-1 flex-shrink-0 d-flex align-items-center gap-1 border-0"
+                      className={`btn btn-sm px-1 py-0 border-0 flex-shrink-0 align-self-start mt-1 ${
+                        copiedId === entry.id ? 'btn-outline-success' : 'btn-outline-secondary text-white-50'
+                      }`}
                       onClick={(e) => handleCopy(e, entry)}
                       title="Copier ce log"
-                      style={{
-                        background: copiedId === entry.id ? 'rgba(35, 134, 54, 0.4)' : 'rgba(255, 255, 255, 0.08)',
-                        border: copiedId === entry.id ? '1px solid #238636' : '1px solid rgba(255, 255, 255, 0.15)',
-                        color: copiedId === entry.id ? '#3fb950' : 'rgba(255, 255, 255, 0.7)',
-                        fontSize: '9px',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
                     >
                       {copiedId === entry.id ? '✓' : '📋'}
                     </button>
