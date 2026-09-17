@@ -60,10 +60,10 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
 
   // ── POSES DE BASE & REPOS ──────────────────────────────────────────────────
   {
-    id: 't_pose',
+    id: 'tpose',
     path: 'animations/poses_idles/anim_t_pose.glb',
     label: 'T-Pose (Rest)',
-    aliases: ['tpose', 'rest_pose'],
+    aliases: ['t_pose', 't-pose', 'rest_pose', 'anim_t_pose'],
     tags: ['pose', 'rest', 'debug'],
     duration: 0.1,
   },

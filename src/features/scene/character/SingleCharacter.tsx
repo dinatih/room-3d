@@ -612,7 +612,7 @@ export function SingleCharacter({
 
     let target = resolveAnimationId(rawTarget);
 
-    const isTPose = target === 'tpose' || target === 't_pose' || target === 'anim_t_pose' || target === 'animations/poses_idles/anim_t_pose.glb' || target.endsWith('/anim_t_pose.glb');
+    const isTPose = target === 'tpose';
 
     let isTemporaryLoadingFallback = false;
     if (!isTPose && !actions[target]) {

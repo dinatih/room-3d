@@ -264,15 +264,31 @@ export function CharacterThoughtBubble({
 
           {/* Indication clic pour agrandir / réduire */}
           {logs.length > MAX_BUBBLE_LOGS && (
-            <div
-              className="d-flex justify-content-center align-items-center gap-1 mt-1 pt-1 border-top border-white-subtle text-white-50 user-select-none"
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(prev => !prev);
+              }}
+              className="btn btn-sm w-100 py-1 mt-1 border-0 text-white-50 d-flex justify-content-center align-items-center gap-1 user-select-none"
               style={{
-                fontSize: '9px',
-                borderStyle: 'dashed',
+                fontSize: '9.5px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'background 0.15s ease, color 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)';
               }}
             >
               <span>{isExpanded ? '▲ Réduire' : `▼ Déplier tous les logs (${logs.length})`}</span>
-            </div>
+            </button>
           )}
 
           {/* Queue de bulle de pensée (cercles décroissants en bas, espacés sur la distance doublée) */}

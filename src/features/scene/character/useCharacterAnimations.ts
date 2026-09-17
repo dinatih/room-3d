@@ -74,9 +74,9 @@ export function useCharacterAnimations({
     const animId = def ? def.id : pathOrKey;
     const path = def ? def.path : resolveAnimationPath(pathOrKey);
 
-    const isTPose = animId === 'tpose' || animId === 't_pose' || animId === 'anim_t_pose' || path === 'tpose' || path === 'animations/poses_idles/anim_t_pose.glb' || pathOrKey === 't_pose' || pathOrKey === 'tpose';
+    const isTPose = animId === 'tpose';
     if (isTPose) {
-      currentAnimClip.current = 't_pose';
+      currentAnimClip.current = 'tpose';
       if (isUserOverride) userAnimOverrideRef.current = true;
       invalidate();
       return;

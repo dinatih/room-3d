@@ -449,7 +449,7 @@ export function SidePanel({
       profile: '💼 Profil & CV',
       views: '📷 Vues',
       layers: '📑 Calques',
-      personnage: '👤 Personnage',
+      personnage: '👤 PNJ',
       perf: '📊 Perf',
       anims: '💃 Animations Perso',
       animsCouple: '👯‍♀️ Animations Couple',
@@ -681,7 +681,7 @@ export function SidePanel({
         <Group emoji="📷" title="Vues">{viewsSectionContent}</Group>
         <Group emoji="📑" title="Calques" extra={layersHeaderButtons}>{layersSectionContent}</Group>
         <Group emoji="🎮" title="Interactif">{interactiveSectionContent}</Group>
-        <Group emoji="👤" title="Personnage" extra={personnageHeaderButtons}>{characterSectionContent}</Group>
+        <Group emoji="👤" title="PNJ" extra={personnageHeaderButtons}>{characterSectionContent}</Group>
         <Group emoji="💃" title="Animations Perso" extra={animHeaderButtons}>{animationsSectionContent}</Group>
         <Group emoji="👯‍♀️" title="Animations Couple" extra={duoAnimHeaderButtons}>{duoAnimationsSectionContent}</Group>
       </div>
