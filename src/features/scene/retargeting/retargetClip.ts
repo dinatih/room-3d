@@ -470,7 +470,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
           } else {
             for (let j = 0; j < clone.values.length / 3; j++) {
               let yVal = clone.values[3*j+1] + yMinDelta;
-              const isTPose = animNameLower === 'tpose' || animNameLower === 't-pose' || animNameLower.includes('anim_t_pose') || animNameLower.includes('anim_tpose');
+              const isTPose = animNameLower.includes('tpose');
               const dy = (isWalk || isTPose) ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
               const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
               const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;

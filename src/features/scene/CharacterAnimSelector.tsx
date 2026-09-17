@@ -492,7 +492,7 @@ export function CharacterAnimSelector({
               const m = anim.label.match(/\/ ([\d.]+)s,/);
               if (m) duration = parseFloat(m[1]);
             }
-            if (duration === undefined && (anim.value === 'tpose' || anim.value.includes('anim_t_pose'))) {
+            if (duration === undefined && anim.value === 'tpose') {
               duration = 0.1;
             }
             const isPose = duration !== undefined && duration <= 0.15;
