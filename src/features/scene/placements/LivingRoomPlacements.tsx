@@ -91,10 +91,14 @@ function AnimatedTopper({
   isDouble,
   westPos,
   eastPos,
+  hoverLabel,
+  hoverActions,
 }: {
   isDouble: boolean;
   westPos: { x: number; z: number };
   eastPos: { x: number; z: number };
+  hoverLabel: string;
+  hoverActions: string[];
 }) {
   const groupRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
@@ -163,7 +167,17 @@ function AnimatedTopper({
   });
 
   return (
-    <group ref={groupRef} rotation-y={0}>
+    <group
+      ref={groupRef}
+      position={[targetX, targetY, targetZ]}
+      rotation-y={0}
+      userData={{
+        skipMerge: true,
+        animUnit: true,
+        itemName: 'Surmatelas NÄSFJÄLLET',
+        hoverAction: { label: hoverLabel, actions: hoverActions },
+      }}
+    >
       <Nasfjallet10558045 item={stub('nasfjallet-topper')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
     </group>
   );
@@ -227,7 +241,13 @@ function Beds() {
         </group>
       </PositionTransition>
 
-      <AnimatedTopper isDouble={isDouble} westPos={westPos} eastPos={eastPos} />
+      <AnimatedTopper
+        isDouble={isDouble}
+        westPos={westPos}
+        eastPos={eastPos}
+        hoverLabel={hoverLabel}
+        hoverActions={hoverActions}
+      />
     </>
   );
 }

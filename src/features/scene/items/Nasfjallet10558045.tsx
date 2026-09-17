@@ -14,6 +14,8 @@ export function Nasfjallet10558045({ onSize, ...props }: SceneItemProps) {
   const { scene } = useGLTFClone('/items/nasfjallet10558045/Nasfjallet10558045.glb');
 
   useLayoutEffect(() => {
+    scene.scale.set(1, 1, 1);
+    scene.rotation.set(0, 0, 0);
     removeGlbLines(scene);
     scene.scale.setScalar(100);
     mergeGlbByMaterial(scene);
@@ -27,7 +29,7 @@ export function Nasfjallet10558045({ onSize, ...props }: SceneItemProps) {
   }, [scene, onSize]);
 
   return (
-    <group {...props}>
+    <group {...props} userData={{ skipMerge: true, ...(props as any).userData }}>
       <primitive object={scene} />
     </group>
   );
