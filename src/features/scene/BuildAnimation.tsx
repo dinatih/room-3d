@@ -1,12 +1,12 @@
 import { useFrame, useThree } from '@react-three/fiber';
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { appLog } from '@features/ui/AppConsole';
 
-const DROP_HEIGHT = 450;
-const FALL_MS_MIN = 450;
-const FALL_MS_MAX = 650;
-const STAGGER_MS  = 60;
+const DROP_HEIGHT = 2000;
+const FALL_MS_MIN = 400;
+const FALL_MS_MAX = 800;
+const STAGGER_MS  = 120;
 
 function easeOutCubic(x: number): number {
   return 1 - Math.pow(1 - x, 3);
@@ -220,11 +220,27 @@ export function BuildAnimation({
     // 2. Ensuite on collecte
     const { floor, skirting, pillars, wallsBySide, doors, mannequins, rest, ceiling } = collectScene(s3);
 
+    // L'ordre original : sol+portes simultanés, plinthes, piliers simultanés, reste, murs, plafond, mannequins
     const groupedObjects: AnimObj[] = [];
     let cursor = 0;
 
-    // Ajoute tous les items avec le MÊME startTime (tombée simultanée), puis avance le curseur
-    const addSimultaneous = (items: THREE.Object3D[], stepMs: number = STAGGER_MS) => {
+    // Ajoute chaque item séquentiellement (stagger STAGGER_MS entre eux)
+    const addSequential = (items: THREE.Object3D[]) => {
+      items.forEach(obj => {
+        groupedObjects.push({
+          obj,
+          origPos: obj.position.clone(),
+          origVisible: obj.visible,
+          localDropVec: computeLocalDropVec(obj, DROP_HEIGHT),
+          startTime: cursor,
+          duration: FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN),
+        });
+        cursor += STAGGER_MS;
+      });
+    };
+
+    // Ajoute tous les items avec le MÊME startTime (tombée simultanée), puis avance le curseur d'un seul stagger
+    const addSimultaneous = (items: THREE.Object3D[]) => {
       if (items.length === 0) return;
       const t = cursor;
       items.forEach(obj => {
@@ -237,7 +253,7 @@ export function BuildAnimation({
           duration: FALL_MS_MIN + Math.random() * (FALL_MS_MAX - FALL_MS_MIN),
         });
       });
-      cursor += stepMs;
+      cursor += STAGGER_MS;
     };
 
     const sortByYZX = (arr: THREE.Object3D[]) => {
@@ -254,46 +270,43 @@ export function BuildAnimation({
         return vA.x - vB.x;
       });
     };
+    const allWalls: THREE.Object3D[] = [];
+    wallsBySide.forEach(group => allWalls.push(...group));
 
-    // 1. Sol + portes : tombent en même temps dès le début (t = 0)
-    addSimultaneous([...sortByYZX(floor), ...sortByYZX(doors)], 160);
+    // Sol + portes : tombent en même temps dès le début
+    addSimultaneous([...sortByYZX(floor), ...sortByYZX(doors)]);
 
-    // 2. Plinthes
-    addSimultaneous(sortByYZX(skirting), 100);
+    // Plinthes séquentielles
+    addSequential(sortByYZX(skirting));
 
-    // 3. Piliers
-    addSimultaneous(pillars, 100);
+    // Piliers : tous simultanés
+    addSimultaneous(pillars);
 
-    // 4. Murs : tombée progressive par face (Nord, Sud, Est, Ouest, Diag...)
-    wallsBySide.forEach(group => {
-      addSimultaneous(group, 80);
-    });
-
-    // 5. Meubles & mannequins : vagues compactes de 4 objets
-    const furniture = [...sortByYZX(rest), ...sortByYZX(mannequins)];
-    for (let i = 0; i < furniture.length; i += 4) {
-      addSimultaneous(furniture.slice(i, i + 4), 45);
-    }
-
-    // 6. Plafond en dernier
-    addSimultaneous(sortByYZX(ceiling), 120);
+    // Meubles, reste, murs, plafond, mannequins
+    const mixedObjects = [
+      ...rest,
+      ...mannequins,
+      ...allWalls
+    ];
+    addSequential(sortByYZX(mixedObjects));
+    addSequential(sortByYZX(ceiling));
 
     const objects = groupedObjects;
 
     const totalEnd = objects.length > 0 
-      ? objects[objects.length - 1].startTime + objects[objects.length - 1].duration + 150 
+      ? objects[objects.length - 1].startTime + objects[objects.length - 1].duration + 200 
       : 1000;
     
     onDuration?.(totalEnd);
 
-    // 3. Pré-compiler les shaders de la scène unmergée pour éviter les freezes GPU
+    // 3. Pré-compiler les shaders de la scène unmergée pour éviter les freezes GPU lors des apparitions
     try {
       gl.compile(s3, camera);
     } catch {
       // Ignorer si compilation immédiate non disponible
     }
 
-    // 4. Décaler tout vers le HAUT (DROP_HEIGHT = 450cm) et cacher les objets en attente
+    // 4. Décaler tout vers le HAUT et cacher les objets en attente pour préserver le GPU
     objects.forEach(a => {
       a.obj.position.x = a.origPos.x + a.localDropVec.x;
       a.obj.position.y = a.origPos.y + a.localDropVec.y;
@@ -305,7 +318,7 @@ export function BuildAnimation({
       objects,
       totalEnd,
       startTime: null,
-      warmupFrames: 2,
+      warmupFrames: 1,
       remerge,
       finished: false,
     };
@@ -323,6 +336,13 @@ export function BuildAnimation({
       }
     };
   }, [scene, camera, gl, invalidate, onDuration]);
+
+  // Réveil immédiat du frameloop R3F dès que started devient true
+  useEffect(() => {
+    if (started) {
+      invalidate();
+    }
+  }, [started, invalidate]);
 
   useFrame(() => {
     const st = stateRef.current;

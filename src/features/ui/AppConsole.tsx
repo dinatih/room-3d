@@ -107,10 +107,11 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   // Écouter les CustomEvents 'app-log'
   useEffect(() => {
     const handler = (e: Event) => {
-      const ev = e as CustomEvent<{ tag: string; message: string; timestamp: number }>;
-      const { tag, message, timestamp } = ev.detail;
+      const ev = e as CustomEvent<{ id?: number; tag: string; message: string; timestamp: number }>;
+      const { id, tag, message, timestamp } = ev.detail;
+      const logId = id ?? ++_logCounter;
       setLogs(prev => {
-        const entry: AppLogEntry = { id: ++_logCounter, tag, message, timestamp };
+        const entry: AppLogEntry = { id: logId, tag, message, timestamp };
         const next = [...prev, entry];
         return next.length > MAX_LOGS ? next.slice(next.length - MAX_LOGS) : next;
       });
@@ -319,10 +320,10 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
               En attente de logs…
             </div>
           )}
-          {logs.map(entry => {
+          {logs.map((entry, idx) => {
             const color = getTagColor(entry.tag);
             return (
-              <div key={entry.id} style={lineStyle}>
+              <div key={`${entry.id}_${idx}`} style={lineStyle}>
                 <span style={tsStyle}>[{formatTime(entry.timestamp)}]</span>
                 <span
                   style={{
