@@ -4,7 +4,7 @@
 
 export const WALKER_ANIM_OPTIONS = [
   { value: "idle", label: "Idle / Return to Default" },
-  { value: "animations/poses_idles/anim_t_pose.glb", label: "📐 T-Pose (Rest)" },
+  { value: "tpose", label: "📐 T-Pose (Rest)" },
   { value: "animations/emotes_gestures/anim_inyeong_nitro_intro.glb", label: "✨ [INYEONG] Nitro Signature Intro (359f / 6.0s)" },
   { value: "animations/emotes_gestures/anim_hayley_intro.glb", label: "👒 [HAYLEY] Signature Intro (231f / 7.7s)" },
   { value: "animations/emotes_gestures/anim_gloria_intro.glb", label: "👩‍🦰 [GLORIA] Signature Intro (398f / 13.3s)" },
@@ -912,8 +912,7 @@ export const WALKER_ANIM_OPTIONS = [
   if (a.value === "idle") return -1;
   if (b.value === "idle") return 1;
   const isTPoseOpt = (opt: { value: string; label: string }) => {
-    const v = opt.value.toLowerCase();
-    return v === "tpose" || v === "t-pose" || v.endsWith("/anim_t_pose.glb") || v.endsWith("/anim_tpose.glb") || opt.label.toLowerCase().includes("t-pose");
+    return opt.value === "tpose";
   };
   const isATPose = isTPoseOpt(a);
   const isBTPose = isTPoseOpt(b);

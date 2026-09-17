@@ -46,6 +46,24 @@ function drawPlaneIcon(
   ctx.restore();
 }
 
+const floorPlanCache = new Map<string, HTMLCanvasElement>();
+
+function getCachedFloorPlan(w: number, h: number): HTMLCanvasElement {
+  const key = `${w}x${h}`;
+  let cached = floorPlanCache.get(key);
+  if (!cached || cached.width !== w || cached.height !== h) {
+    cached = document.createElement('canvas');
+    cached.width = w;
+    cached.height = h;
+    const ctx = cached.getContext('2d');
+    if (ctx) {
+      drawFloorPlan(ctx, w, h);
+    }
+    floorPlanCache.set(key, cached);
+  }
+  return cached;
+}
+
 function drawMinimap(
   canvas: HTMLCanvasElement,
   smallW: number,
@@ -91,8 +109,9 @@ function drawMinimap(
     }
   }
 
-  // Plan partagé
-  drawFloorPlan(ctx, W, canvas.height);
+  // Plan partagé (mis en cache sur un canvas offscreen pour épargner le CPU à chaque frame)
+  const cachedPlan = getCachedFloorPlan(W, H);
+  ctx.drawImage(cachedPlan, 0, 0);
 
   const R  = 5 * sc;
   const BW = 8 * sc, BH = 4 * sc;

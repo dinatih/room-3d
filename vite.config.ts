@@ -46,6 +46,14 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    watch: {
+      ignored: [
+        '**/public/environment/hdri/**',
+        '**/public/models/**',
+        '**/public/characters/**',
+        '**/.git/**',
+      ],
+    },
   },
   build: {
     rollupOptions: {

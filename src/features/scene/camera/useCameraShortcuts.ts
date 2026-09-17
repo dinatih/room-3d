@@ -134,8 +134,8 @@ export function useCameraShortcuts({
       if (e.key === 't' || e.key === 'T') {
         const laraGridActive = useSceneStore.getState().layers.laraGrid;
         if (laraGridActive) {
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 'animations/poses_idles/anim_t_pose.glb' } }));
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'animations/poses_idles/anim_t_pose.glb' } }));
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-lara', value: 'tpose' } }));
+          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'walker-anim-xbot', value: 'tpose' } }));
         } else {
           if (modeRef.current === 'top' && !topFollowRef.current) {
             exitTop();

@@ -855,7 +855,7 @@ export function InventoryPreview({
                       <button
                         type="button"
                         onClick={() => {
-                          const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle' && a.value !== 'tpose' && a.value !== 'animations/poses_idles/anim_t_pose.glb');
+                          const pool = WALKER_ANIM_OPTIONS.filter(a => a.value !== 'idle' && a.value !== 'tpose');
                           if (pool.length > 0) {
                             const randomAnim = pool[Math.floor(Math.random() * pool.length)];
                             setActionStates(s => ({ ...s, walkerAnim: randomAnim.value, isPaused: false }));
