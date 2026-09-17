@@ -118,7 +118,7 @@ export function CharacterThoughtBubble({
             position: 'relative',
             width: 'max-content',
             minWidth: '240px',
-            maxWidth: isExpanded ? '540px' : '380px',
+            maxWidth: isExpanded ? '600px' : '380px',
             background: 'rgba(13, 17, 23, 0.94)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
@@ -197,7 +197,7 @@ export function CharacterThoughtBubble({
             onWheel={(e) => e.stopPropagation()}
             className="d-flex flex-column gap-1 overflow-x-hidden overflow-y-auto pe-1"
             style={{
-              maxHeight: isExpanded ? '240px' : '95px',
+              maxHeight: isExpanded ? '280px' : '95px',
               scrollbarWidth: 'thin',
               scrollbarColor: `${themeColor} transparent`,
               overscrollBehavior: 'contain',
@@ -214,13 +214,14 @@ export function CharacterThoughtBubble({
                   <div
                     key={entry.id}
                     title={entry.message}
-                    className={`d-flex align-items-center justify-content-between gap-2 py-0 px-1 rounded-1 overflow-hidden ${
-                      isLast ? 'text-white fw-semibold' : 'text-white-50 fw-normal'
+                    className={`d-flex align-items-center justify-content-between gap-2 py-1 px-1 rounded-1 overflow-hidden flex-shrink-0 ${
+                      isLast ? 'text-white fw-semibold bg-white bg-opacity-10' : 'text-light fw-normal'
                     }`}
                     style={{
                       lineHeight: '1.4',
                       fontSize: '11px',
                       minWidth: 0,
+                      minHeight: '22px',
                     }}
                   >
                     <div className="d-flex align-items-center gap-1.5 overflow-hidden flex-grow-1" style={{ minWidth: 0 }}>
@@ -229,12 +230,12 @@ export function CharacterThoughtBubble({
                         style={{
                           fontSize: '9.5px',
                           color: themeColor,
-                          opacity: 0.85,
+                          opacity: 0.9,
                         }}
                       >
                         {formatBubbleTime(entry.timestamp)}
                       </span>
-                      <span className="text-truncate flex-grow-1">
+                      <span className={`${isExpanded ? '' : 'text-truncate'} flex-grow-1`}>
                         {entry.message}
                       </span>
                     </div>
