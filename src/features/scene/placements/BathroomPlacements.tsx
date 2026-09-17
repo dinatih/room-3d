@@ -22,10 +22,9 @@ import {
   WALL_H,
   NICHE_X,
   KITCHEN_Z,
-  BATH_Z_END,
   DOOR_START,
 } from '@config';
-import { PARTITION_THICKNESS } from '../wallData';
+import { PARTITION_THICKNESS, BATH_Z_END } from '../wallData';
 
 const stub = (id: string): Item =>
   ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });

@@ -7,7 +7,6 @@ import {
   ROOM_W, ROOM_D, DOOR_START,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   NICHE_X, NICHE_Z_START,
-  BATH_Z_END,
   DiagWall,
 } from '@config';
 
@@ -22,6 +21,7 @@ import {
   GARDEN_JC_Z,
   PILLAR_KITE_NE,
   PILLAR_KITE_SW,
+  BATH_Z_END,
   pNorth,
   pEast,
   pWest,

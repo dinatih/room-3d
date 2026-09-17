@@ -124,6 +124,9 @@ export const pEast  = (id: PillarId) => pX(id) + pW(id) / 2;
 export const pNorth = (id: PillarId) => pZ(id) - pD(id) / 2;
 export const pSouth = (id: PillarId) => pZ(id) + pD(id) / 2;
 
+// Repère Z du fond de la SDB / poutre placard déduit du pilier de référence
+export const BATH_Z_END = pZ('shower-ne');
+
 // ── Mur diagonal : repères et segments 2D ─────────────────────────────────────
 export { DiagWall };
 const { door: dDoor, len: dLen, p: dP } = DiagWall;
@@ -238,9 +241,8 @@ export const WALL_DEFS: WallDef[] = [
   ...wallX(pZ('bath-nw'),    pEast('kitchen-ne'),  pWest('bath-ne'),     'default', PT),
 
   // ── Cloison Couloir / SDB ───────────────────────────────────────────────────
-  ...wallZ(pX('bath-ne'), pSouth('bath-ne'),     pNorth('door-bath-n'), 'default', PT),
-  ...wallZ(pX('bath-ne'), pSouth('door-bath-s'), pNorth('bath-se'),     'default', PT),
-  { axis: 'z', xc: pX('bath-ne'), z1: pNorth('door-bath-n'), z2: pNorth('door-bath-s'), segKind: 'door', t: PT },
+  ...wallZ(pX('bath-ne'), pSouth('bath-ne'), pNorth('door-bath-n'), 'default', PT),
+  { axis: 'z', xc: pX('bath-ne'), z1: pSouth('door-bath-n'), z2: pNorth('door-bath-s'), segKind: 'door', t: PT },
 
   // ── Mur Nord (Façade baie vitrée) ───────────────────────────────────────────
   ...wallX(pZ('corner-nw'),     pEast('corner-nw'),     pWest('glass-west'),     'north'),

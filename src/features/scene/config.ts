@@ -59,9 +59,6 @@ export const KITCHEN_Z = ROOM_D + KITCHEN_DEPTH; // Z=460
 export const NICHE_X = -10; // 10cm vers X-
 export const NICHE_Z_START = ROOM_D - 120; // Z=280
 
-// Corridor / SDB boundaries
-export const BATH_Z_END = KITCHEN_Z + 150;
-
 // Mur diagonal bâtiment — paramètre physique unique : angle intérieur au coin Est (NE)
 // (angle entre mur Est et le mur diagonal, mesuré à l'intérieur de la pièce)
 // Mesure sur place : 118–120°  |  modèle actuel : 122.5°

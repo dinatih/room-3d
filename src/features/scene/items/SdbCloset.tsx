@@ -11,7 +11,8 @@ import { useRef, useLayoutEffect, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
-import { DiagWall, BATH_Z_END } from '@config';
+import { DiagWall } from '@config';
+import { BATH_Z_END } from '../wallData';
 import { Grejig40329868 } from './Grejig40329868';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 

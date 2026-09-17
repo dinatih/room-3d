@@ -8,9 +8,9 @@ import { BermudaGround } from './BermudaGround';
 import { MergedStaticGroup } from './MergedStaticGroup';
 import {
   ROOM_W, ROOM_D, WALL_H, NICHE_X, NICHE_Z_START, DOOR_START, DOOR_END,
-  KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, BATH_Z_END, DiagWall
+  KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, DiagWall
 } from '@config';
-import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X } from '../wallData';
+import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X, BATH_Z_END } from '../wallData';
 import {
   COLORS, skirtingMat, noCapMat, slabConcreteTop, slabConcreteSide,
   boxFaceMats, qrGeo
