@@ -142,7 +142,9 @@ export function LayersSection({
       {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
       {layerBtn('peach',  'Portes',        'doors')}
       {layerBtn('peach',  'Équipements',   'equipment')}
-      {layerBtn('purple', 'Mobilier',      'furniture')}
+      {layerBtn('purple', 'Mobilier (Furniture)',      'furniture')}
+      {layerBtn('purple', 'Habillage (Furnishings)',   'furnishings')}
+      {layerBtn('purple', 'Décoration (Decor)',        'decor')}
       {layerBtn('blue',   'Animaux 🐕🐦',  'animals')}
       {layerBtn('purple', 'Miroirs',       'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
@@ -154,10 +156,10 @@ export function LayersSection({
       {layerBtn('gray',   'Ombres',        'shadows')}
       {layerBtn('blue',   'Voisins',       'neighbors')}
 
-      {layerBtn('orange', 'Grille inventaire 📦', 'inventoryGrid')}
+      {layerBtn('orange', 'Grille inventaire 📦 (U)', 'inventoryGrid')}
       {layerBtn('teal',   'Grille 🌐',     'grid')}
       {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
-      {layerBtn('yellow', 'Mesures réelles 📐 (U)', 'measuredDimensions')}
+      {layerBtn('yellow', 'Mesures réelles 📐 (N)', 'measuredDimensions')}
       {layerBtn('red',    'Aff. arêtes murs (W)', 'wallEdges')}
       {layerBtn('cyan',   'X-Ray 🩻',      'xray')}
       {layerBtn('cyan',   'Wireframe coloré 🕸', 'wireframe')}
