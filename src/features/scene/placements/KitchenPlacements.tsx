@@ -81,18 +81,16 @@ export function KitchenFurnishings() {
       <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ itemName: 'Égouttoir Lillhavet' }}>
         <CuisineLillhavet />
       </group>
-    </MergedStaticGroup>
-  );
-}
 
-// Pass 3 — Decor (Détails & habillage de surface)
-export function KitchenDecor() {
-  return (
-    <MergedStaticGroup name="merged-kitchen-decor">
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
       <group position={[KITCHEN_X0 + 5, 93, KITCHEN_Z - 5]} userData={{ itemName: 'Distributeur Tackan Cuisine' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
   );
+}
+
+// Pass 3 — Decor (Détails & habillage de surface)
+export function KitchenDecor() {
+  return null;
 }

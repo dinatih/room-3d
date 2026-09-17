@@ -142,14 +142,7 @@ export function BathroomFurnishings() {
       <group position={[NICHE_X + 20, 60 + DF / 2 + 0.2, cbZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte Drona SDB Ouest' }}>
         <DroneCell />
       </group>
-    </MergedStaticGroup>
-  );
-}
 
-// Pass 3 — Decor (Détails & habillage de surface)
-export function BathroomDecor() {
-  return (
-    <MergedStaticGroup name="merged-bathroom-decor">
       {/* TACKAN douche */}
       <group position={[NICHE_X + 40, 80, BATH_Z_END + 69]} userData={{ itemName: 'Distributeur Tackan Douche' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -166,4 +159,9 @@ export function BathroomDecor() {
       </group>
     </MergedStaticGroup>
   );
+}
+
+// Pass 3 — Decor (Détails & habillage de surface)
+export function BathroomDecor() {
+  return null;
 }
