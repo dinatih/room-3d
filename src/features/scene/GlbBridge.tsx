@@ -22,14 +22,17 @@ interface GlbBridgeProps extends SceneItemProps {
   rotation?: [number, number, number];
 }
 
+const DEFAULT_ROTATION: [number, number, number] = [0, 0, 0];
+
 export function GlbBridge({ 
   glbPath, onSize, 
   grounded = true, 
   scale, 
   targetHeight, 
-  rotation = [0, 0, 0]
+  rotation = DEFAULT_ROTATION
 }: GlbBridgeProps) {
   const { scene } = useGLTFClone(glbPath);
+  const [rx, ry, rz] = rotation;
 
   useLayoutEffect(() => {
     // 1. Détection automatique du type de source
@@ -39,7 +42,7 @@ export function GlbBridge({
 
     // 2. Reset & Nettoyage
     removeGlbLines(scene);
-    scene.rotation.set(...rotation);
+    scene.rotation.set(rx, ry, rz);
     scene.scale.set(1, 1, 1);
     scene.position.set(0, 0, 0);
     scene.updateMatrixWorld(true);
@@ -74,9 +77,9 @@ export function GlbBridge({
     }
 
     // 8. Rapport des dimensions
-    onSize({ w: size.x, d: size.z, h: size.y } as any);
+    onSize?.({ w: size.x, d: size.z, h: size.y } as any);
     
-  }, [scene, glbPath, onSize, grounded, scale, targetHeight, rotation]);
+  }, [scene, glbPath, onSize, grounded, scale, targetHeight, rx, ry, rz]);
 
   return <primitive object={scene} />;
 }

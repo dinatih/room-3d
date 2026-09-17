@@ -2,7 +2,7 @@
  * Inventory.tsx — port de js/ui/inventory.js
  * Styled using Bootstrap 5.3, custom red theme variables and fully responsive.
  */
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { INVENTORY, CATEGORIES, STORAGE_SPACES, type InventoryItem, type StorageSpace } from './inventoryData';
 import { InventoryPreview } from './InventoryPreview';
 import { SpatialZonePreview } from './SpatialZonePreview';
@@ -42,6 +42,16 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
   const [selectedDuoAnim, setSelectedDuoAnim] = useState<DuoAnimationDef | undefined>(undefined);
   const [selectedDuoPartner, setSelectedDuoPartner] = useState<string | undefined>(undefined);
   const [glbStats, setGlbStats] = useState<{ fileSize?: number; triangles: number; drawCalls: number } | null>(null);
+
+  const handleGlbStats = useCallback((s: { fileSize?: number; triangles: number; drawCalls: number } | null) => {
+    setGlbStats(prev => {
+      if (!s && !prev) return prev;
+      if (s && prev && s.fileSize === prev.fileSize && s.triangles === prev.triangles && s.drawCalls === prev.drawCalls) {
+        return prev;
+      }
+      return s;
+    });
+  }, []);
 
   useEffect(() => {
     setSelectedDuoAnim(undefined);
@@ -192,7 +202,7 @@ function ItemDetailContent({ item }: { item: PreviewTarget }) {
           hideFooter={true}
           initialDuoAnim={selectedDuoAnim}
           initialDuoPartner={selectedDuoPartner}
-          onGlbStats={setGlbStats}
+          onGlbStats={handleGlbStats}
         />
       </div>
 

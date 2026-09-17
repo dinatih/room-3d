@@ -328,6 +328,9 @@ function GroundDatumLines({ mode }: { mode: 'front' | 'side' | 'top' }) {
 function CenteredItem({ Component, actionState, item, grounded = false, preserveOriginXZ = false, showDims = false, glbPath, onTargetChange, onBoundsChange, onStats }: { Component?: any; actionState: Record<string, any>; item: PreviewTarget; grounded?: boolean; preserveOriginXZ?: boolean; showDims?: boolean; glbPath?: string; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (radius: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
   const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!);
   const [worldSize, setWorldSize] = useState<{ x: number; y: number; z: number } | null>(null);
+  const lastTargetYRef = useRef<number | null>(null);
+  const lastRadiusRef = useRef<number | null>(null);
+  const lastStatsRef = useRef<{ sz?: number; tris: number; calls: number } | null>(null);
 
   const fit = useCallback(() => {
     if (!outerRef.current || !innerRef.current) return;
@@ -367,11 +370,20 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
 
     if (totalMeshes > 0 && onStats) {
       const sz = glbPath ? glbSizeCache.get(glbPath) : undefined;
-      onStats({
-        fileSize: sz,
-        triangles: Math.round(totalTris),
-        drawCalls: totalMeshes,
-      });
+      const tris = Math.round(totalTris);
+      if (
+        !lastStatsRef.current ||
+        lastStatsRef.current.sz !== sz ||
+        lastStatsRef.current.tris !== tris ||
+        lastStatsRef.current.calls !== totalMeshes
+      ) {
+        lastStatsRef.current = { sz, tris, calls: totalMeshes };
+        onStats({
+          fileSize: sz,
+          triangles: tris,
+          drawCalls: totalMeshes,
+        });
+      }
     }
 
     if (box.isEmpty()) return;
@@ -380,7 +392,17 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
     
-    setWorldSize({ x: size.x, y: size.y, z: size.z });
+    setWorldSize(prev => {
+      if (
+        prev &&
+        Math.abs(prev.x - size.x) < 0.01 &&
+        Math.abs(prev.y - size.y) < 0.01 &&
+        Math.abs(prev.z - size.z) < 0.01
+      ) {
+        return prev;
+      }
+      return { x: size.x, y: size.y, z: size.z };
+    });
     
     // Offset outer group to center the item in X/Z
     const px = preserveOriginXZ ? 0 : -center.x;
@@ -395,18 +417,26 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     }
 
     const sphere = box.getBoundingSphere(new THREE.Sphere());
-    onBoundsChange?.(Math.max(15, sphere.radius));
+    const newRadius = Math.max(15, sphere.radius);
+    if (lastRadiusRef.current === null || Math.abs(lastRadiusRef.current - newRadius) > 0.5) {
+      lastRadiusRef.current = newRadius;
+      onBoundsChange?.(newRadius);
+    }
 
     if (onTargetChange) {
-      if (grounded) {
-        onTargetChange([0, size.y / 2, 0]);
-      } else {
-        onTargetChange([0, 0, 0]);
+      const targetY = grounded ? size.y / 2 : 0;
+      if (lastTargetYRef.current === null || Math.abs(lastTargetYRef.current - targetY) > 0.1) {
+        lastTargetYRef.current = targetY;
+        onTargetChange([0, targetY, 0]);
       }
     }
   }, [grounded, preserveOriginXZ, onTargetChange, onBoundsChange, onStats, glbPath]);
 
   useLayoutEffect(() => {
+    lastStatsRef.current = null;
+    lastRadiusRef.current = null;
+    lastTargetYRef.current = null;
+
     // If glbPath is present, trigger size fetch
     if (glbPath && !glbSizeCache.has(glbPath)) {
       fetch(glbPath, { method: 'HEAD' })
