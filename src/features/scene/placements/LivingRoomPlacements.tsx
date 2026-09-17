@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -25,7 +25,6 @@ import { Stackstod60620144 } from '../items/Stackstod60620144';
 import { Lagerpoppel00561816 } from '../items/Lagerpoppel00561816';
 import { MaillotInyeong } from '../items/MaillotInyeong';
 import { Spruttig20317079 } from '../items/Spruttig20317079';
-import { PalmLeaf } from '../items/PalmLeaf';
 import { Laptop } from '../items/Laptop';
 import { Phone } from '../items/Phone';
 import { Kejserlig90511501 } from '../items/Kejserlig90511501';
@@ -447,23 +446,6 @@ function SneakersPair() {
   );
 }
 
-function CeilingPalmLeaves() {
-  const placements = useMemo(() => Array.from({ length: 1 }, () => ({
-    x: 40 + Math.random() * (ROOM_W - 80),
-    z: 40 + Math.random() * (ROOM_D - 80),
-    ry: Math.random() * Math.PI * 2,
-  })), []);
-  return (
-    <>
-      {placements.map((p, i) => (
-        <group key={i} position={[p.x, WALL_H, p.z]} rotation={[Math.PI, p.ry, 0]} userData={{ animUnit: true, itemName: 'Feuilles Palmier Plafond' }}>
-          <PalmLeaf item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-      ))}
-    </>
-  );
-}
-
 // Pass 1 — Furniture (Structure & gros volumes)
 export function LivingRoomFurniture() {
   return (
@@ -485,16 +467,6 @@ export function LivingRoomFurniture() {
       <Beds />
       <Desks />
 
-      {/* Étagère Lack */}
-      <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Étagère Lack' }}>
-        <Lack90282180 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
-      {/* Penderie Mulig */}
-      <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Penderie Mulig' }}>
-        <Mulig30179435 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
       {/* Fauteuil Smörkull */}
       <Smorkull_ />
 
@@ -514,6 +486,14 @@ export function LivingRoomFurniture() {
       <group position={[21, 1, 110]} userData={{ animUnit: true, itemName: 'Poubelle Fniss Séjour' }}>
         <Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
+
+      {/* Sacs Dimpa mur Ouest (posés au sol, utilisés comme poufs) */}
+      <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ itemName: 'Sac Dimpa Ouest 1' }}>
+        <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+      <group position={[16, 0, 220]} rotation-y={Math.PI / 2} userData={{ itemName: 'Sac Dimpa Ouest 2' }}>
+        <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
     </MergedStaticGroup>
   );
 }
@@ -524,22 +504,19 @@ export function LivingRoomFurnishings() {
 
   return (
     <MergedStaticGroup name="merged-living-room-furnishings">
-      {/* Sacs Dimpa mur Ouest */}
-      <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ itemName: 'Sac Dimpa Ouest 1' }}>
-        <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <group position={[16, 0, 220]} rotation-y={Math.PI / 2} userData={{ itemName: 'Sac Dimpa Ouest 2' }}>
-        <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      {/* Étagère Lack */}
+      <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Étagère Lack' }}>
+        <Lack90282180 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      {/* Drona au sol mur Ouest */}
+      {/* Penderie Mulig */}
+      <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Penderie Mulig' }}>
+        <Mulig30179435 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* Boîte Drona au sol mur Ouest */}
       <group position={[16.5, DF / 2 + 0.2, 268]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte Drona Sol Ouest' }}>
         <DroneCell />
-      </group>
-
-      {/* Sac à dos */}
-      <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Sac à Dos' }}>
-        <Backpack item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 
       {/* Purificateur Air Performer */}
@@ -547,9 +524,6 @@ export function LivingRoomFurnishings() {
 
       {/* Lampe Ola */}
       <LampOla_ />
-
-      {/* Baskets Sneakers Rouges */}
-      <SneakersPair />
 
       {/* Coussins Lagerpoppel mur Est */}
       <group position={[ROOM_W - 10, WALL_H, ROOM_D / 2 - 38]} rotation={[0, -Math.PI / 2, -0.967]} userData={{ animUnit: true, itemName: 'Coussin LAGERPOPPEL 1 (Mur Est Nord)' }}>
@@ -561,20 +535,6 @@ export function LivingRoomFurnishings() {
         <group position={[-29, -40, 0]}>
           <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
-      </group>
-
-      {/* Maillot de foot Coréen Inyeong suspendu sur cintre au mur Est entre les 2 coussins */}
-      <group
-        position={[ROOM_W - 1.2, 212, ROOM_D / 2]}
-        rotation={[0, Math.PI / 2, 0]}
-        userData={{ animUnit: true, itemName: 'Maillot Coréen - Inyeong', skipMerge: true }}
-      >
-        <mesh position={[0, 18.5, 0.8]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.4, 0.4, 1.6, 8]} />
-          <meshStandardMaterial color="#222222" roughness={0.3} metalness={0.8} />
-        </mesh>
-        <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        <MaillotInyeong />
       </group>
     </MergedStaticGroup>
   );
@@ -610,6 +570,28 @@ export function LivingRoomDecor() {
         <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lamp" />
       </group>
 
+      {/* Sac à dos */}
+      <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Sac à Dos' }}>
+        <Backpack item={{} as any} actionState={{}} onSize={() => {}} />
+      </group>
+
+      {/* Baskets Sneakers Rouges sur range-chaussures */}
+      <SneakersPair />
+
+      {/* Maillot de foot Coréen Inyeong suspendu sur cintre au mur Est */}
+      <group
+        position={[ROOM_W - 1.2, 212, ROOM_D / 2]}
+        rotation={[0, Math.PI / 2, 0]}
+        userData={{ animUnit: true, itemName: 'Maillot Coréen - Inyeong', skipMerge: true }}
+      >
+        <mesh position={[0, 18.5, 0.8]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.4, 0.4, 1.6, 8]} />
+          <meshStandardMaterial color="#222222" roughness={0.3} metalness={0.8} />
+        </mesh>
+        <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <MaillotInyeong />
+      </group>
+
       {/* TV */}
       <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
         rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]} userData={{ itemName: 'Téléviseur' }}>
@@ -625,9 +607,6 @@ export function LivingRoomDecor() {
       <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, 0, 0]} userData={{ itemName: 'Google Nest Mini' }}>
         <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-
-      {/* Décor plafond */}
-      <CeilingPalmLeaves />
     </MergedStaticGroup>
   );
 }

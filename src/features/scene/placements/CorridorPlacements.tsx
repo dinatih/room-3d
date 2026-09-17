@@ -33,7 +33,7 @@ const LINKY_GAINE_X1  = ROOM_W;         // colle au mur est (X=316)
 const LINKY_GAINE_X0  = ROOM_W - LINKY_GAINE_W;
 const LINKY_GAINE_CX  = (LINKY_GAINE_X0 + LINKY_GAINE_X1) / 2; // 312.75
 const LINKY_GAINE_CZ  = LINKY_GAINE_Z0 + LINKY_GAINE_L / 2;    // 512.75
-const LINKY_MOUNT_Y   = 120;            // hauteur base du Linky (bas du compteur à 120 cm du sol)
+const LINKY_MOUNT_Y   = 170;            // hauteur base du Linky (bas du compteur à 170 cm du sol)
 const linkyGaineMat   = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.7, metalness: 0.05 });
 
 function LinkyGaine() {
