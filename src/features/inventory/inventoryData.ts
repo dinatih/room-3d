@@ -338,7 +338,9 @@ sortedCharacters.forEach(char => {
                   ? 'Sophia Doll'
                   : (char.id === 'skeleton'
                     ? 'Anatomy'
-                    : (!char.isLara ? 'Mixamo' : 'Lara Croft Style'))))))),
+                    : (char.id === 'curious_skeleton'
+                      ? 'Skeleton'
+                      : (!char.isLara ? 'Mixamo' : 'Lara Croft Style')))))))),
       category: 'walkers',
       qty: 1,
       dims: {
@@ -360,9 +362,11 @@ sortedCharacters.forEach(char => {
                 ? 'Personnage animé : Sophia Doll au style poupée avec cheveux longs et tenue soignée.'
                 : (char.id === 'skeleton'
                   ? 'Personnage animé : Squelette anatomique complet avec organes internes et cage thoracique.'
-                  : (!char.isLara
-                    ? `Personnage animé standard Mixamo : ${char.name}.`
-                    : `Personnage : ${char.name}.`))))))
+                  : (char.id === 'curious_skeleton'
+                    ? 'Personnage animé : Squelette stylisé Curious Skeleton en T-pose anatomique calibrée.'
+                    : (!char.isLara
+                      ? `Personnage animé standard Mixamo : ${char.name}.`
+                      : `Personnage : ${char.name}.`)))))))
     });
   }
 });

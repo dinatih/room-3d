@@ -55,7 +55,8 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'megan',     name: 'Megan',                 emoji: '👩‍🦰', color: '#badc58', path: 'characters/megan/megan.glb',         pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.5, isLara: false },
   { id: 'olivia',    name: 'Olivia',                emoji: '🕶️', color: '#686de0', path: 'characters/olivia/olivia.glb',       pos: [0, 0, 0], rot: 0, variant: 'native', height: 174.6, isLara: false },
   { id: 'sophie',    name: 'Sophie',                emoji: '💁‍♀️', color: '#c7ecee', path: 'characters/sophie/sophie.glb',       pos: [0, 0, 0], rot: 0, variant: 'native', height: 176.9, isLara: false },
-  { id: 'skeleton',  name: 'Skeleton',              emoji: '💀', color: '#e0e0e0', path: 'characters/skeleton/skeleton.glb',   pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.0, isLara: false }
+  { id: 'skeleton',          name: 'Skeleton',              emoji: '💀', color: '#e0e0e0', path: 'characters/skeleton/skeleton.glb',                   pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.0, isLara: false },
+  { id: 'curious_skeleton',  name: 'Curious Skeleton',      emoji: '🦴', color: '#dcdde1', path: 'characters/curious_skeleton/curious_skeleton.glb',   pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.0, isLara: false }
 ];
 
 /** Retourne le label complet d'un NPC : "emoji nom" (utile dans les UI pour éviter les noms en dur) */
@@ -157,5 +158,5 @@ export function isCharacterVisibleInMode(
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
   'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'inyeong', 'hayley', 'gloria', 'zoe', 'sophia',
-  'alex', 'david', 'mannequin', 'michelle', 'lola', 'jennifer', 'arissa', 'astra', 'dummy', 'jody', 'kachujin', 'medea', 'megan', 'olivia', 'sophie', 'skeleton'
+  'alex', 'david', 'mannequin', 'michelle', 'lola', 'jennifer', 'arissa', 'astra', 'dummy', 'jody', 'kachujin', 'medea', 'megan', 'olivia', 'sophie', 'skeleton', 'curious_skeleton'
 ]);
