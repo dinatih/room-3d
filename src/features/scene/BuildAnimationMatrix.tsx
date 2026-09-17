@@ -19,7 +19,7 @@ import { appLog } from '@features/ui/AppConsole';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
-const DROP_HEIGHT      = 2000;
+const DROP_HEIGHT      = 450;
 const STAGGER_MS       = 110;
 const FALL_MS_MIN      = 600;
 const FALL_MS_MAX      = 950;

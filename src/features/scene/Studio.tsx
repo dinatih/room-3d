@@ -141,7 +141,7 @@ function ShadowController({ enabled }: { enabled: boolean }) {
   return null;
 }
 
-function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoModeOpen }: { isIdle: boolean; showInventory: boolean; isCvModalOpen: boolean; isPhotoModeOpen: boolean }) {
+function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isAnimActive }: { isIdle: boolean; showInventory: boolean; isCvModalOpen: boolean; isPhotoModeOpen: boolean; isAnimActive: boolean }) {
   const setFrameloop = useThree((state) => state.setFrameloop);
   const invalidate = useThree((state) => state.invalidate);
   const gl = useThree((state) => state.gl);
@@ -149,12 +149,14 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
   useEffect(() => {
     // Si on est en VR WebXR ou en mode Immersif gyro, on ne suspend jamais le frameloop
     const isXRActive = cameraState.isXR || gl.xr?.isPresenting;
-    const loop = (showInventory || isCvModalOpen || isPhotoModeOpen || (isIdle && !isXRActive)) ? 'never' : 'demand';
+    const loop = (showInventory || isCvModalOpen || isPhotoModeOpen || (isIdle && !isXRActive))
+      ? 'never'
+      : (isAnimActive ? 'always' : 'demand');
     setFrameloop(loop);
     if (loop !== 'never') {
       invalidate();
     }
-  }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, setFrameloop, invalidate, gl]);
+  }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isAnimActive, setFrameloop, invalidate, gl]);
 
   return null;
 }
@@ -168,8 +170,10 @@ function ActiveCameraCapture({ onCapture }: { onCapture: (cam: PerspectiveCamera
 }
 
 function LoadingProgress({
+  sceneReady,
   onLaunch,
 }: {
+  sceneReady: boolean;
   onLaunch: () => void;
 }) {
   const { progress, active, item } = useProgress();
@@ -186,10 +190,11 @@ function LoadingProgress({
     const btnStart = document.getElementById('btn-start-now');
 
     if (bar) bar.style.width = `${progress}%`;
-    if (itemEl && item) itemEl.textContent = item;
+    if (itemEl && item && !doneRef.current) itemEl.textContent = item;
 
     if (!active && progress >= 100 && !doneRef.current) {
       doneRef.current = true;
+      if (itemEl) itemEl.textContent = sceneReady ? '✅ Scène 3D prête !' : '⚡ Optimisation GPU & compilation des shaders…';
 
       if (countdownContainer) countdownContainer.style.display = 'flex';
       let remainingSeconds = 5;
@@ -219,8 +224,10 @@ function LoadingProgress({
           launchApp();
         }
       }, 1000);
+    } else if (doneRef.current && sceneReady && itemEl && itemEl.textContent?.includes('⚡')) {
+      itemEl.textContent = '✅ Scène 3D prête !';
     }
-  }, [progress, active, item, onLaunch]);
+  }, [progress, active, item, sceneReady, onLaunch]);
 
   return null;
 }
@@ -357,17 +364,22 @@ export function Studio() {
   }, [onToggleLayer]);
 
 
-  const [buildAnim,       setBuildAnim]       = useState(false);
-  const [buildAnimMatrix, setBuildAnimMatrix] = useState(false);
+  const [buildAnim,        setBuildAnim]        = useState(true);
+  const [buildAnimStarted, setBuildAnimStarted] = useState(false);
+  const [buildAnimMatrix,  setBuildAnimMatrix]  = useState(false);
+  const [sceneWarmReady,   setSceneWarmReady]   = useState(false);
   const [animDurations, setAnimDurations] = useState<Record<string, number>>({});
 
   const stopAll = () => {
-    setBuildAnim(false); setBuildAnimMatrix(false);
+    setBuildAnim(false); setBuildAnimStarted(false); setBuildAnimMatrix(false);
   };
 
   const start = (set: React.Dispatch<React.SetStateAction<boolean>>) => () => {
     stopAll();
-    setTimeout(() => set(true), 50);
+    setTimeout(() => {
+      set(true);
+      setBuildAnimStarted(true);
+    }, 50);
   };
 
   const setDuration = (key: string) => (ms: number) =>
@@ -387,19 +399,24 @@ export function Studio() {
     }
   }, []);
 
+  const handleReady = useCallback(() => {
+    setSceneWarmReady(true);
+  }, []);
+
   const handleLaunch = useCallback(() => {
-    setBuildAnim(true);
-    // Sécurité : si jamais onReady ne se déclenche pas sous 2s, on révèle quand même la scène
-    setTimeout(revealScene, 2000);
+    setBuildAnimStarted(true);
+    revealScene();
   }, [revealScene]);
+
+  const isAnimActive = (buildAnim && buildAnimStarted) || buildAnimMatrix;
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <LoadingProgress onLaunch={handleLaunch} />
+      <LoadingProgress sceneReady={sceneWarmReady} onLaunch={handleLaunch} />
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
-        frameloop={showInventory || isCvModalOpen || isPhotoModeOpen || isIdle ? 'never' : 'demand'}
+        frameloop={showInventory || isCvModalOpen || isPhotoModeOpen || isIdle ? 'never' : (isAnimActive ? 'always' : 'demand')}
         /*
          * ── Placement & configuration initiale de la caméra 3D ───────────────
          * - fov: 50° (champ de vision vertical naturel)
@@ -464,7 +481,7 @@ export function Studio() {
         <PerformanceMonitor />
         <ShadowWarmup />
         <ShadowController enabled={layers.shadows} />
-        <FrameloopController isIdle={isIdle} showInventory={showInventory} isCvModalOpen={isCvModalOpen} isPhotoModeOpen={isPhotoModeOpen} />
+        <FrameloopController isIdle={isIdle} showInventory={showInventory} isCvModalOpen={isCvModalOpen} isPhotoModeOpen={isPhotoModeOpen} isAnimActive={isAnimActive} />
         {planeMode    && <PaperPlane
                            onExit={() => setPlaneMode(false)}
                            model={planeModel}
@@ -503,8 +520,8 @@ export function Studio() {
         {/* Contenu 3D — masqué en mode Plan */}
         <Suspense fallback={null}>
         {/* Animations — exécutées une fois les éléments Suspense 3D résolus */}
-        {buildAnim       && <BuildAnimation       onReady={revealScene} onFinish={() => setBuildAnim(false)}       onDuration={setDuration('buildAnim')} />}
-        {buildAnimMatrix && <BuildAnimationMatrix onReady={revealScene} onFinish={() => setBuildAnimMatrix(false)} onDuration={setDuration('buildAnimMatrix')} />}
+        {buildAnim       && <BuildAnimation       started={buildAnimStarted} onReady={handleReady} onFinish={() => { setBuildAnim(false); setBuildAnimStarted(false); }} onDuration={setDuration('buildAnim')} />}
+        {buildAnimMatrix && <BuildAnimationMatrix onReady={handleReady} onFinish={() => setBuildAnimMatrix(false)} onDuration={setDuration('buildAnimMatrix')} />}
         <CameraController planeMode={planeMode} />
         <group visible={!layers.plan}>
 
