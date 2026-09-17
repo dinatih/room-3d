@@ -167,81 +167,17 @@ function ActiveCameraCapture({ onCapture }: { onCapture: (cam: PerspectiveCamera
   return null;
 }
 
-/**
- * SceneWarmupController — s'exécute quand useProgress() atteint 100%.
- * Compile les shaders (gl.compileAsync), force le calcul des shadow maps
- * et effectue 2 rendus de chauffe hors écran AVANT de libérer l'écran de chargement.
- * Cela absorbe le pic CPU/GPU dans le préchargement au lieu de faire ramer l'animation.
- */
-function SceneWarmupController({ onWarmedUp }: { onWarmedUp: () => void }) {
-  const { gl, scene, camera, invalidate } = useThree();
-  const { progress, active } = useProgress();
-  const warmedRef = useRef(false);
-
-  useEffect(() => {
-    if (!active && progress >= 100 && !warmedRef.current) {
-      warmedRef.current = true;
-
-      const labelEl = document.getElementById('loading-label');
-      const itemEl = document.getElementById('loading-item');
-      if (labelEl) labelEl.textContent = 'OPTIMISATION DE LA SCÈNE 3D…';
-      if (itemEl) itemEl.textContent = 'Compilation des shaders et pré-calcul des ombres…';
-
-      // Laisser un court instant pour que le DOM se mette à jour et que Suspense se résolve
-      const timer = setTimeout(async () => {
-        try {
-          if (gl.compileAsync) {
-            await gl.compileAsync(scene, camera);
-          } else {
-            gl.compile(scene, camera);
-          }
-        } catch {
-          gl.compile(scene, camera);
-        }
-
-        // Forcer le calcul des ombres et exécuter 2 frames de chauffe
-        gl.shadowMap.needsUpdate = true;
-        gl.render(scene, camera);
-        invalidate();
-
-        requestAnimationFrame(() => {
-          gl.render(scene, camera);
-          invalidate();
-          onWarmedUp();
-        });
-      }, 50);
-
-      return () => clearTimeout(timer);
-    }
-  }, [active, progress, gl, scene, camera, invalidate, onWarmedUp]);
-
-  return null;
-}
-
 function LoadingProgress({
-  isWarmedUp,
   onLaunch,
 }: {
-  isWarmedUp: boolean;
   onLaunch: () => void;
 }) {
-  const { progress, item } = useProgress();
+  const { progress, active, item } = useProgress();
+  const doneRef = useRef(false);
   const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startedCountdownRef = useRef(false);
 
   useEffect(() => {
     const bar = document.getElementById('loading-bar');
-    const itemEl = document.getElementById('loading-item');
-
-    if (bar) bar.style.width = `${progress}%`;
-    if (itemEl && item && !isWarmedUp) itemEl.textContent = item;
-  }, [progress, item, isWarmedUp]);
-
-  useEffect(() => {
-    if (!isWarmedUp || startedCountdownRef.current) return;
-    startedCountdownRef.current = true;
-
-    const labelEl = document.getElementById('loading-label');
     const itemEl = document.getElementById('loading-item');
     const countdownContainer = document.getElementById('loading-countdown-container');
     const timerEl = document.getElementById('loading-countdown-timer');
@@ -249,42 +185,42 @@ function LoadingProgress({
     const btnPause = document.getElementById('btn-pause-launch');
     const btnStart = document.getElementById('btn-start-now');
 
-    if (labelEl) labelEl.textContent = 'SCÈNE PRÊTE';
-    if (itemEl) itemEl.textContent = 'Tous les éléments 3D sont compilés et prêts.';
-    if (countdownContainer) countdownContainer.style.display = 'flex';
+    if (bar) bar.style.width = `${progress}%`;
+    if (itemEl && item) itemEl.textContent = item;
 
-    let remainingSeconds = 5;
+    if (!active && progress >= 100 && !doneRef.current) {
+      doneRef.current = true;
 
-    const launchApp = () => {
-      if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-      if (textEl) textEl.textContent = '🚀 Lancement en cours…';
-      if (btnStart) btnStart.setAttribute('disabled', 'true');
-      if (btnPause) btnPause.setAttribute('disabled', 'true');
-      onLaunch();
-    };
+      if (countdownContainer) countdownContainer.style.display = 'flex';
+      let remainingSeconds = 5;
 
-    if (btnStart) btnStart.onclick = launchApp;
-
-    if (btnPause) {
-      btnPause.onclick = () => {
+      const launchApp = () => {
         if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-        if (textEl) textEl.textContent = '⏸ Lancement automatique suspendu. Prenez le temps de lire !';
-        btnPause.style.display = 'none';
+        if (textEl) textEl.textContent = '🚀 Lancement de la scène 3D…';
+        if (btnStart) btnStart.setAttribute('disabled', 'true');
+        if (btnPause) btnPause.style.display = 'none';
+        onLaunch();
       };
-    }
 
-    countdownTimerRef.current = setInterval(() => {
-      remainingSeconds--;
-      if (timerEl) timerEl.textContent = remainingSeconds.toString();
-      if (remainingSeconds <= 0) {
-        launchApp();
+      if (btnStart) btnStart.onclick = launchApp;
+
+      if (btnPause) {
+        btnPause.onclick = () => {
+          if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+          if (textEl) textEl.textContent = '⏸ Lancement automatique suspendu. Prenez le temps de lire !';
+          btnPause.style.display = 'none';
+        };
       }
-    }, 1000);
 
-    return () => {
-      if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-    };
-  }, [isWarmedUp, onLaunch]);
+      countdownTimerRef.current = setInterval(() => {
+        remainingSeconds--;
+        if (timerEl) timerEl.textContent = remainingSeconds.toString();
+        if (remainingSeconds <= 0) {
+          launchApp();
+        }
+      }, 1000);
+    }
+  }, [progress, active, item, onLaunch]);
 
   return null;
 }
@@ -443,8 +379,6 @@ export function Studio() {
   const activeSceneRef = useRef<Scene | null>(null);
   const activeCameraRef = useRef<PerspectiveCamera | null>(null);
 
-  const [isSceneWarmedUp, setIsSceneWarmedUp] = useState(false);
-
   const revealScene = useCallback(() => {
     const cover = document.getElementById('loading');
     if (cover && !cover.classList.contains('hidden')) {
@@ -455,13 +389,13 @@ export function Studio() {
 
   const handleLaunch = useCallback(() => {
     setBuildAnim(true);
-    // Sécurité : si jamais onReady ne se déclenche pas sous 1.5s, on révèle quand même la scène
-    setTimeout(revealScene, 1500);
+    // Sécurité : si jamais onReady ne se déclenche pas sous 2s, on révèle quand même la scène
+    setTimeout(revealScene, 2000);
   }, [revealScene]);
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <LoadingProgress isWarmedUp={isSceneWarmedUp} onLaunch={handleLaunch} />
+      <LoadingProgress onLaunch={handleLaunch} />
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
@@ -503,7 +437,6 @@ export function Studio() {
         }}
       >
         <ActiveCameraCapture onCapture={(cam) => { activeCameraRef.current = cam; }} />
-        <SceneWarmupController onWarmedUp={() => setIsSceneWarmedUp(true)} />
         <SkySphere />
         <ambientLight color={0x8899bb} intensity={0.6} />
         {layers.realSun ? <><SunLight /><SunSphere /></> : (

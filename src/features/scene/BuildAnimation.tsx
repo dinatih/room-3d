@@ -190,7 +190,6 @@ interface AnimState {
   objects: AnimObj[];
   totalEnd: number;
   startTime: number | null;
-  lastTime: number;
   warmupFrames: number;
   remerge: () => void;
   finished: boolean;
@@ -317,8 +316,7 @@ export function BuildAnimation({
       objects,
       totalEnd,
       startTime: null,
-      lastTime: 0,
-      warmupFrames: 2,
+      warmupFrames: 1,
       remerge,
       finished: false,
     };
@@ -341,12 +339,13 @@ export function BuildAnimation({
     const st = stateRef.current;
     if (!st || st.finished) return;
 
-    // Frames de chauffe : laisse le GPU compiler les shaders et uploader les géométries
-    // sans consommer le temps de l'animation
+    // Frame de chauffe : laisse le GPU compiler les shaders et uploader les géométries
+    // derrière l'écran blanc sans consommer le temps de l'animation
     if (st.warmupFrames > 0) {
       st.warmupFrames--;
       invalidate();
       if (st.warmupFrames === 0) {
+        st.startTime = performance.now();
         onReady?.();
       }
       return;
@@ -355,16 +354,7 @@ export function BuildAnimation({
     const now = performance.now();
     if (st.startTime === null) {
       st.startTime = now;
-      st.lastTime = now;
     }
-
-    // Protection anti-lag : si le CPU ou GPU freeze (> 100ms), on décale startTime
-    // pour éviter que le lag ne saute la moitié de l'animation.
-    const frameDelta = now - st.lastTime;
-    if (frameDelta > 100) {
-      st.startTime += (frameDelta - 16);
-    }
-    st.lastTime = now;
 
     const elapsed = now - st.startTime;
 

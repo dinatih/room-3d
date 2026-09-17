@@ -472,7 +472,6 @@ export function BuildAnimationMatrix({
     totalEnd: number;
     startTime: number | null;
     prevTime: number | null;
-    lastTime: number;
     warmupFrames: number;
     remerge: () => void;
     rain: ReturnType<typeof createRain>;
@@ -576,8 +575,7 @@ export function BuildAnimationMatrix({
       totalEnd,
       startTime: null,
       prevTime: null,
-      lastTime: 0,
-      warmupFrames: 2,
+      warmupFrames: 1,
       remerge,
       rain,
       origFog,
@@ -605,11 +603,12 @@ export function BuildAnimationMatrix({
     const st = stateRef.current;
     if (!st || st.finished) return;
 
-    // Frames de chauffe : laisse le GPU compiler les shaders sans consommer le chrono
+    // Frame de chauffe : laisse le GPU compiler les shaders sans consommer le chrono
     if (st.warmupFrames > 0) {
       st.warmupFrames--;
       invalidate();
       if (st.warmupFrames === 0) {
+        st.startTime = performance.now();
         onReady?.();
       }
       return;
@@ -618,16 +617,8 @@ export function BuildAnimationMatrix({
     const now = performance.now();
     if (st.startTime === null) {
       st.startTime = now;
-      st.lastTime = now;
     }
     if (st.prevTime === null) st.prevTime = now;
-
-    // Protection anti-lag : si le CPU gèle (> 100ms), décaler startTime
-    const frameDelta = now - st.lastTime;
-    if (frameDelta > 100) {
-      st.startTime += (frameDelta - 16);
-    }
-    st.lastTime = now;
 
     const elapsed = now - st.startTime;
     const dt = delta;
