@@ -460,9 +460,11 @@ function createRain(scene: THREE.Scene) {
 export function BuildAnimationMatrix({
   onFinish,
   onDuration,
+  onReady,
 }: {
   onFinish: () => void;
   onDuration?: (ms: number) => void;
+  onReady?: () => void;
 }) {
   const { scene, invalidate } = useThree();
   const stateRef = useRef<{
@@ -470,6 +472,8 @@ export function BuildAnimationMatrix({
     totalEnd: number;
     startTime: number | null;
     prevTime: number | null;
+    lastTime: number;
+    warmupFrames: number;
     remerge: () => void;
     rain: ReturnType<typeof createRain>;
     origFog: THREE.Fog | THREE.FogExp2 | null;
@@ -542,14 +546,12 @@ export function BuildAnimationMatrix({
 
     const totalEnd =
       objects.length > 0
-        ? objects[objects.length - 1].startTime +
-          objects[objects.length - 1].duration +
-          200
+        ? objects[objects.length - 1].startTime + objects[objects.length - 1].duration + 300
         : 1000;
 
     onDuration?.(totalEnd);
 
-    // Déplacement initial
+    // Positionner immédiatement tout en haut (ou en bas pour le sol)
     objects.forEach((a) => {
       const localDelta = DROP_HEIGHT * a.worldToLocalY;
       a.obj.position.y = a.fromBelow
@@ -574,6 +576,8 @@ export function BuildAnimationMatrix({
       totalEnd,
       startTime: null,
       prevTime: null,
+      lastTime: 0,
+      warmupFrames: 2,
       remerge,
       rain,
       origFog,
@@ -601,9 +605,29 @@ export function BuildAnimationMatrix({
     const st = stateRef.current;
     if (!st || st.finished) return;
 
+    // Frames de chauffe : laisse le GPU compiler les shaders sans consommer le chrono
+    if (st.warmupFrames > 0) {
+      st.warmupFrames--;
+      invalidate();
+      if (st.warmupFrames === 0) {
+        onReady?.();
+      }
+      return;
+    }
+
     const now = performance.now();
-    if (st.startTime === null) st.startTime = now;
+    if (st.startTime === null) {
+      st.startTime = now;
+      st.lastTime = now;
+    }
     if (st.prevTime === null) st.prevTime = now;
+
+    // Protection anti-lag : si le CPU gèle (> 100ms), décaler startTime
+    const frameDelta = now - st.lastTime;
+    if (frameDelta > 100) {
+      st.startTime += (frameDelta - 16);
+    }
+    st.lastTime = now;
 
     const elapsed = now - st.startTime;
     const dt = delta;

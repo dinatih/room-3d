@@ -65,11 +65,6 @@ export function GardenFurnishings() {
       <group position={[210, -3.48, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true, itemName: 'Rebound Jardin' }}>
         <Rebound item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
-
-      {/* Mangeoire à oiseaux sous le balcon */}
-      <group position={[95, 214, -165]} userData={{ animUnit: true, skipMerge: true, itemName: 'Mangeoire à Oiseaux' }}>
-        <BirdFeeder item={stub('bird-feeder')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
     </MergedStaticGroup>
   );
 }
@@ -78,6 +73,11 @@ export function GardenFurnishings() {
 export function GardenDecor() {
   return (
     <MergedStaticGroup name="merged-garden-decor">
+      {/* Mangeoire / nid à oiseaux sous le balcon */}
+      <group position={[95, 214, -165]} userData={{ animUnit: true, skipMerge: true, itemName: 'Mangeoire à Oiseaux' }}>
+        <BirdFeeder item={stub('bird-feeder')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
       {/* Yucca Elephantipes en pot (derrière la baignoire) */}
       <group position={[155, 0, -355]} rotation={[0, Math.PI, 0]} userData={{ animUnit: true, skipMerge: true, itemName: 'Yucca Elephantipes' }}>
         <PottedYucca item={{} as any} actionState={{}} onSize={() => {}} />

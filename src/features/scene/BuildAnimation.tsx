@@ -190,12 +190,22 @@ interface AnimState {
   objects: AnimObj[];
   totalEnd: number;
   startTime: number | null;
+  lastTime: number;
+  warmupFrames: number;
   remerge: () => void;
   finished: boolean;
 }
 
-export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void, onDuration?: (ms: number) => void }) {
-  const { scene, invalidate } = useThree();
+export function BuildAnimation({
+  onFinish,
+  onDuration,
+  onReady,
+}: {
+  onFinish: () => void;
+  onDuration?: (ms: number) => void;
+  onReady?: () => void;
+}) {
+  const { scene, camera, gl, invalidate } = useThree();
   const stateRef = useRef<AnimState | null>(null);
 
   useLayoutEffect(() => {
@@ -288,7 +298,14 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
     
     onDuration?.(totalEnd);
 
-    // 3. Décaler tout vers le HAUT et cacher les objets en attente pour préserver le GPU
+    // 3. Pré-compiler les shaders de la scène unmergée pour éviter les freezes GPU lors des apparitions
+    try {
+      gl.compile(s3, camera);
+    } catch {
+      // Ignorer si compilation immédiate non disponible
+    }
+
+    // 4. Décaler tout vers le HAUT et cacher les objets en attente pour préserver le GPU
     objects.forEach(a => {
       a.obj.position.x = a.origPos.x + a.localDropVec.x;
       a.obj.position.y = a.origPos.y + a.localDropVec.y;
@@ -300,6 +317,8 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
       objects,
       totalEnd,
       startTime: null,
+      lastTime: 0,
+      warmupFrames: 2,
       remerge,
       finished: false,
     };
@@ -316,14 +335,37 @@ export function BuildAnimation({ onFinish, onDuration }: { onFinish: () => void,
         stateRef.current.remerge();
       }
     };
-  }, [scene, invalidate]);
+  }, [scene, camera, gl, invalidate, onDuration]);
 
   useFrame(() => {
     const st = stateRef.current;
     if (!st || st.finished) return;
 
+    // Frames de chauffe : laisse le GPU compiler les shaders et uploader les géométries
+    // sans consommer le temps de l'animation
+    if (st.warmupFrames > 0) {
+      st.warmupFrames--;
+      invalidate();
+      if (st.warmupFrames === 0) {
+        onReady?.();
+      }
+      return;
+    }
+
     const now = performance.now();
-    if (st.startTime === null) st.startTime = now;
+    if (st.startTime === null) {
+      st.startTime = now;
+      st.lastTime = now;
+    }
+
+    // Protection anti-lag : si le CPU ou GPU freeze (> 100ms), on décale startTime
+    // pour éviter que le lag ne saute la moitié de l'animation.
+    const frameDelta = now - st.lastTime;
+    if (frameDelta > 100) {
+      st.startTime += (frameDelta - 16);
+    }
+    st.lastTime = now;
+
     const elapsed = now - st.startTime;
 
     st.objects.forEach(a => {
