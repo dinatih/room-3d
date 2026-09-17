@@ -214,14 +214,16 @@ export function CharacterThoughtBubble({
                   <div
                     key={entry.id}
                     title={entry.message}
-                    className={`d-flex align-items-center justify-content-between gap-2 py-1 px-1 rounded-1 overflow-hidden flex-shrink-0 ${
+                    className={`d-flex align-items-center justify-content-between gap-2 px-1 rounded-1 overflow-hidden flex-shrink-0 ${
                       isLast ? 'text-white fw-semibold bg-white bg-opacity-10' : 'text-light fw-normal'
                     }`}
                     style={{
-                      lineHeight: '1.4',
+                      lineHeight: '1.35',
                       fontSize: '11px',
                       minWidth: 0,
-                      minHeight: '22px',
+                      minHeight: '1.25rem', // 20px en unité relative rem (base 16px)
+                      paddingTop: '0.1rem',
+                      paddingBottom: '0.1rem',
                     }}
                   >
                     <div className="d-flex align-items-center gap-1.5 overflow-hidden flex-grow-1" style={{ minWidth: 0 }}>
