@@ -9,11 +9,11 @@
  *   - GardenPlacements.tsx    (canapés, baignoire balnéo, mangeoire, animaux Robin & Shiba...)
  */
 
-import { BathroomEquipment, BathroomFurniture } from './placements/BathroomPlacements';
-import { KitchenEquipment, KitchenFurniture } from './placements/KitchenPlacements';
-import { CorridorEquipment, CorridorFurniture } from './placements/CorridorPlacements';
-import { LivingRoomPlacements } from './placements/LivingRoomPlacements';
-import { GardenPlacements } from './placements/GardenPlacements';
+import { BathroomEquipment, BathroomFurniture, BathroomFurnishings, BathroomDecor } from './placements/BathroomPlacements';
+import { KitchenEquipment, KitchenFurniture, KitchenFurnishings, KitchenDecor } from './placements/KitchenPlacements';
+import { CorridorEquipment, CorridorFurniture, CorridorFurnishings } from './placements/CorridorPlacements';
+import { LivingRoomFurniture, LivingRoomFurnishings, LivingRoomDecor } from './placements/LivingRoomPlacements';
+import { GardenFurniture, GardenFurnishings, GardenDecor, GardenAnimals } from './placements/GardenPlacements';
 
 // Layer 1 — Équipements sanitaires, cuisine et technique
 export function Equipment() {
@@ -26,15 +26,41 @@ export function Equipment() {
   );
 }
 
-// Layer 2 — Mobilier et aménagement
+// Pass 1 — Furniture : Structure & gros volumes (collisions strictes au sol, bloque le passage, définit les zones)
 export function Furniture() {
   return (
     <>
       <BathroomFurniture />
       <KitchenFurniture />
       <CorridorFurniture />
-      <LivingRoomPlacements />
-      <GardenPlacements />
+      <LivingRoomFurniture />
+      <GardenFurniture />
+    </>
+  );
+}
+
+// Pass 2 — Furnishings : Habillage & confort fonctionnel (s'ancre murs/sols/fenêtres, sans bloquer la circulation)
+export function Furnishings() {
+  return (
+    <>
+      <BathroomFurnishings />
+      <KitchenFurnishings />
+      <CorridorFurnishings />
+      <LivingRoomFurnishings />
+      <GardenFurnishings />
+    </>
+  );
+}
+
+// Pass 3 — Decor : Détails & habillage de surface (props sur meubles, décorations murales, plantes)
+export function Decor() {
+  return (
+    <>
+      <BathroomDecor />
+      <KitchenDecor />
+      <LivingRoomDecor />
+      <GardenDecor />
+      <GardenAnimals />
     </>
   );
 }

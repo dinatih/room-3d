@@ -276,11 +276,6 @@ function Desks() {
           <group userData={{ animUnit: true }}>
             <Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} />
           </group>
-          <group position={[0, d1H, 0]} rotation={[0, Math.PI, 0]}>
-            <group position={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Organiseur STACKSTOD Bureau 1' }}>
-              <Stackstod60620144 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-            </group>
-          </group>
         </group>
       </PositionTransition>
       <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
@@ -288,19 +283,55 @@ function Desks() {
           <group userData={{ animUnit: true }}>
             <Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} />
           </group>
-          <group position={[0, d2H, -8]} rotation={[0, Math.PI, 0]}>
-            <group userData={{ animUnit: true }}>
-              <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
+        </group>
+      </PositionTransition>
+    </>
+  );
+}
+
+function DeskDecor() {
+  const [d1H, setD1H] = useState(SIT_H);
+  const [d2H, setD2H] = useState(STAND_H);
+  const [d1Pos, setD1Pos] = useState(0);
+  const [d2Pos, setD2Pos] = useState(0);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { key } = (e as CustomEvent).detail as { key: string };
+      if (key === 'desk1-toggle') setD1H(h => h === SIT_H ? STAND_H : SIT_H);
+      if (key === 'desk1-position') setD1Pos(i => (i + 1) % DESK1_POSITIONS.length);
+      if (key === 'desk2-toggle') setD2H(h => h === SIT_H ? STAND_H : SIT_H);
+      if (key === 'desk2-position') setD2Pos(i => (i + 1) % DESK2_POSITIONS.length);
+    };
+    document.addEventListener('furniture-toggle', handler);
+    return () => document.removeEventListener('furniture-toggle', handler);
+  }, []);
+
+  const p1 = DESK1_POSITIONS[d1Pos];
+  const p2 = DESK2_POSITIONS[d2Pos];
+
+  return (
+    <>
+      <PositionTransition x={p1.x} z={p1.z} ry={p1.ry}>
+        <group position={[0, d1H, 0]} rotation={[0, Math.PI, 0]}>
+          <group position={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Organiseur STACKSTOD Bureau 1' }}>
+            <Stackstod60620144 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          </group>
+        </group>
+      </PositionTransition>
+      <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
+        <group position={[0, d2H, -8]} rotation={[0, Math.PI, 0]}>
+          <group userData={{ animUnit: true }}>
+            <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
+          </group>
+          <group userData={{ animUnit: true }}>
+            <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
+              <Phone item={{} as any} actionState={{}} onSize={() => {}} />
             </group>
-            <group userData={{ animUnit: true }}>
-              <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
-                <Phone item={{} as any} actionState={{}} onSize={() => {}} />
-              </group>
-            </group>
-            <group userData={{ animUnit: true }}>
-              <group position={[-22, 0, -7]}>
-                <Kejserlig90511501 item={{} as any} actionState={{}} onSize={() => {}} />
-              </group>
+          </group>
+          <group userData={{ animUnit: true }}>
+            <group position={[-22, 0, -7]}>
+              <Kejserlig90511501 item={{} as any} actionState={{}} onSize={() => {}} />
             </group>
           </group>
         </group>
@@ -370,40 +401,35 @@ function LampOla_() {
   const [targetObj, setTargetObj] = useState<THREE.Object3D | null>(null);
 
   return (
-    <>
-      <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 10]} rotation-y={LAMP_ROT_Y}
-        userData={{ skipMerge: true, animUnit: true, itemName: 'Lampe OLA', hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
-        <LampOla item={NOOP_ITEM} actionState={{ on: lampOn }} onSize={NOOP_SIZE} />
-        <object3D ref={setTargetObj} position={[0, 250, 15]} />
-        {targetObj && (
-          <spotLight
-            target={targetObj}
-            position={[0, 100, 0]}
-            angle={Math.PI / 3.2}
-            penumbra={0.7}
-            intensity={lampOn && lightsHD ? 350 : 0}
-            distance={0}
-            decay={1.0}
-            color={0xfff2dc}
-            castShadow={lightsHD}
-            shadow-mapSize={[1024, 1024]}
-            shadow-bias={-0.001}
-            shadow-camera-near={5}
-            shadow-camera-far={800}
-          />
-        )}
-        <pointLight
-          position={[0, 96, 0]}
-          intensity={lampOn ? (lightsHD ? 35 : 3.5) : 0}
-          distance={lightsHD ? 180 : 350}
-          decay={lightsHD ? 1.5 : 2.0}
+    <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 10]} rotation-y={LAMP_ROT_Y}
+      userData={{ skipMerge: true, animUnit: true, itemName: 'Lampe OLA', hoverAction: { label: 'Lampe OLA', actionId: 'lamp-toggle' } }}>
+      <LampOla item={NOOP_ITEM} actionState={{ on: lampOn }} onSize={NOOP_SIZE} />
+      <object3D ref={setTargetObj} position={[0, 250, 15]} />
+      {targetObj && (
+        <spotLight
+          target={targetObj}
+          position={[0, 100, 0]}
+          angle={Math.PI / 3.2}
+          penumbra={0.7}
+          intensity={lampOn && lightsHD ? 350 : 0}
+          distance={0}
+          decay={1.0}
           color={0xfff2dc}
+          castShadow={lightsHD}
+          shadow-mapSize={[1024, 1024]}
+          shadow-bias={-0.001}
+          shadow-camera-near={5}
+          shadow-camera-far={800}
         />
-      </group>
-      <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z + 10]} rotation-y={LAMP_ROT_Y - Math.PI / 8} userData={{ skipMerge: true, itemName: 'Tête de mannequin 5', hoverAction: { label: 'Tête de mannequin 5', actions: ['mannequin-lamp-random', 'mannequin-lamp-wig', 'mannequin-lamp-color', 'mannequin-lamp-wind'] } }}>
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lamp" />
-      </group>
-    </>
+      )}
+      <pointLight
+        position={[0, 96, 0]}
+        intensity={lampOn ? (lightsHD ? 35 : 3.5) : 0}
+        distance={lightsHD ? 180 : 350}
+        decay={lightsHD ? 1.5 : 2.0}
+        color={0xfff2dc}
+      />
+    </group>
   );
 }
 
@@ -438,13 +464,10 @@ function CeilingPalmLeaves() {
   );
 }
 
-export function LivingRoomPlacements() {
-  const TV_Y = WALL_H - 10 - TV_H / 2;
-  const as = useFurnitureToggles(['tv-toggle']);
-  const DF = 33;
-
+// Pass 1 — Furniture (Structure & gros volumes)
+export function LivingRoomFurniture() {
   return (
-    <MergedStaticGroup name="merged-living-room">
+    <MergedStaticGroup name="merged-living-room-furniture">
       {/* Meubles Kallax */}
       <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ itemName: 'Kallax NW' }}>
         <KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -454,18 +477,53 @@ export function LivingRoomPlacements() {
         <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      <group position={[ROOM_W - KALLAX_DEPTH / 2 - 15, 118, w2 - 11]} userData={{ itemName: 'Enceinte JBL Charge 3' }}>
-        <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
-      <group position={[ROOM_W - 14, 118, w2 - 11]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, itemName: 'Tête de mannequin 2', hoverAction: { label: 'Tête de mannequin 2', actions: ['mannequin-kallax-ne-random', 'mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="kallax-ne" />
-      </group>
-
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]} userData={{ itemName: 'Kallax SE' }}>
         <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
+      {/* Lits et Bureaux */}
+      <Beds />
+      <Desks />
+
+      {/* Étagère Lack */}
+      <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Étagère Lack' }}>
+        <Lack90282180 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* Penderie Mulig */}
+      <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Penderie Mulig' }}>
+        <Mulig30179435 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* Fauteuil Smörkull */}
+      <Smorkull_ />
+
+      {/* Meuble Mackapär */}
+      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ itemName: 'Meuble Mackapär' }}>
+        <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* Rangement chaussures Grejig */}
+      {[0, 18, 36].map(y => (
+        <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ animUnit: true, itemName: `Range-chaussures Grejig ${y / 18 + 1}` }}>
+          <Grejig40329868 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
+      ))}
+
+      {/* Poubelle Fniss Séjour */}
+      <group position={[21, 1, 110]} userData={{ animUnit: true, itemName: 'Poubelle Fniss Séjour' }}>
+        <Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+    </MergedStaticGroup>
+  );
+}
+
+// Pass 2 — Furnishings (Habillage & confort fonctionnel)
+export function LivingRoomFurnishings() {
+  const DF = 33;
+
+  return (
+    <MergedStaticGroup name="merged-living-room-furnishings">
       {/* Sacs Dimpa mur Ouest */}
       <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ itemName: 'Sac Dimpa Ouest 1' }}>
         <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -484,63 +542,14 @@ export function LivingRoomPlacements() {
         <Backpack item={{} as any} actionState={{}} onSize={() => {}} />
       </group>
 
-      {/* Lits et Bureaux */}
-      <Beds />
-      <Desks />
-
-      {/* TV */}
-      <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
-        rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]} userData={{ itemName: 'Téléviseur' }}>
-        <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
-      </group>
-
-      {/* Mini PC */}
-      <group position={[ROOM_W - 25, 40, 30]} userData={{ itemName: 'Mini PC MLLSE' }}>
-        <MllseG2Pro item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
-      {/* Étagère Lack + mannequin */}
-      <group position={[lackCX, lackY, lackCZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Étagère Lack' }}>
-        <Lack90282180 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-      <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]} userData={{ skipMerge: true, itemName: 'Tête de mannequin 4', hoverAction: { label: 'Tête de mannequin 4', actions: ['mannequin-lack-random', 'mannequin-lack-wig', 'mannequin-lack-color', 'mannequin-lack-wind'] } }}>
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lack" />
-      </group>
-
-      {/* Penderie Mulig */}
-      <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Penderie Mulig' }}>
-        <Mulig30179435 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
-      {/* Google Nest Mini */}
-      <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, 0, 0]} userData={{ itemName: 'Google Nest Mini' }}>
-        <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
-      {/* Poubelle Fniss Séjour */}
-      <group position={[21, 1, 110]} userData={{ animUnit: true, itemName: 'Poubelle Fniss Séjour' }}>
-        <Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
-      {/* Fauteuil Smörkull & Air Performer */}
-      <Smorkull_ />
+      {/* Purificateur Air Performer */}
       <AirPerformer_ />
 
       {/* Lampe Ola */}
       <LampOla_ />
 
-      {/* Meuble Mackapär */}
-      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ itemName: 'Meuble Mackapär' }}>
-        <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
-      {/* Rangement chaussures Grejig & Baskets */}
+      {/* Baskets Sneakers Rouges */}
       <SneakersPair />
-      {[0, 18, 36].map(y => (
-        <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ animUnit: true, itemName: `Range-chaussures Grejig ${y / 18 + 1}` }}>
-          <Grejig40329868 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
-      ))}
 
       {/* Coussins Lagerpoppel mur Est */}
       <group position={[ROOM_W - 10, WALL_H, ROOM_D / 2 - 38]} rotation={[0, -Math.PI / 2, -0.967]} userData={{ animUnit: true, itemName: 'Coussin LAGERPOPPEL 1 (Mur Est Nord)' }}>
@@ -554,13 +563,12 @@ export function LivingRoomPlacements() {
         </group>
       </group>
 
-      {/* Maillot de foot Coréen Inyeong suspendu sur cintre au mur Est entre les 2 coussins (dos visible vers la pièce) */}
+      {/* Maillot de foot Coréen Inyeong suspendu sur cintre au mur Est entre les 2 coussins */}
       <group
         position={[ROOM_W - 1.2, 212, ROOM_D / 2]}
         rotation={[0, Math.PI / 2, 0]}
         userData={{ animUnit: true, itemName: 'Maillot Coréen - Inyeong', skipMerge: true }}
       >
-        {/* Petit piton/crochet mural discret */}
         <mesh position={[0, 18.5, 0.8]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.4, 0.4, 1.6, 8]} />
           <meshStandardMaterial color="#222222" roughness={0.3} metalness={0.8} />
@@ -568,9 +576,68 @@ export function LivingRoomPlacements() {
         <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         <MaillotInyeong />
       </group>
+    </MergedStaticGroup>
+  );
+}
+
+// Pass 3 — Decor (Détails & habillage de surface)
+export function LivingRoomDecor() {
+  const TV_Y = WALL_H - 10 - TV_H / 2;
+  const as = useFurnitureToggles(['tv-toggle']);
+
+  return (
+    <MergedStaticGroup name="merged-living-room-decor">
+      {/* Objets et accessoires posés sur les bureaux */}
+      <DeskDecor />
+
+      {/* Enceinte JBL Charge 3 sur Kallax NE */}
+      <group position={[ROOM_W - KALLAX_DEPTH / 2 - 15, 118, w2 - 11]} userData={{ itemName: 'Enceinte JBL Charge 3' }}>
+        <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* Tête de mannequin 2 sur Kallax NE */}
+      <group position={[ROOM_W - 14, 118, w2 - 11]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, itemName: 'Tête de mannequin 2', hoverAction: { label: 'Tête de mannequin 2', actions: ['mannequin-kallax-ne-random', 'mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
+        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="kallax-ne" />
+      </group>
+
+      {/* Tête de mannequin 4 sur étagère Lack */}
+      <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]} userData={{ skipMerge: true, itemName: 'Tête de mannequin 4', hoverAction: { label: 'Tête de mannequin 4', actions: ['mannequin-lack-random', 'mannequin-lack-wig', 'mannequin-lack-color', 'mannequin-lack-wind'] } }}>
+        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lack" />
+      </group>
+
+      {/* Tête de mannequin 5 sur meuble OLA */}
+      <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z + 10]} rotation-y={LAMP_ROT_Y - Math.PI / 8} userData={{ skipMerge: true, itemName: 'Tête de mannequin 5', hoverAction: { label: 'Tête de mannequin 5', actions: ['mannequin-lamp-random', 'mannequin-lamp-wig', 'mannequin-lamp-color', 'mannequin-lamp-wind'] } }}>
+        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lamp" />
+      </group>
+
+      {/* TV */}
+      <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
+        rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]} userData={{ itemName: 'Téléviseur' }}>
+        <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* Mini PC */}
+      <group position={[ROOM_W - 25, 40, 30]} userData={{ itemName: 'Mini PC MLLSE' }}>
+        <MllseG2Pro item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* Google Nest Mini */}
+      <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, 0, 0]} userData={{ itemName: 'Google Nest Mini' }}>
+        <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
 
       {/* Décor plafond */}
       <CeilingPalmLeaves />
     </MergedStaticGroup>
+  );
+}
+
+export function LivingRoomPlacements() {
+  return (
+    <>
+      <LivingRoomFurniture />
+      <LivingRoomFurnishings />
+      <LivingRoomDecor />
+    </>
   );
 }

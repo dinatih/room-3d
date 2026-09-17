@@ -7,7 +7,7 @@ import { drawFps } from '@features/scene/DevToolsOverlay';
 
 // Rendu complet et officiel du Studio
 import { Walls, Floor, MirrorFrames, MirrorReflectors, DoorsPlaced } from '@features/scene/Building';
-import { Equipment, Furniture } from '@features/scene/Placements';
+import { Equipment, Furniture, Furnishings, Decor } from '@features/scene/Placements';
 import { SkySphere } from '@features/scene/SkySphere';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -78,6 +78,8 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
         <DoorsPlaced />
         <Equipment />
         <Furniture />
+        <Furnishings />
+        <Decor />
         <MirrorFrames />
         <MirrorReflectors />
       </group>

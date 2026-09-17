@@ -108,6 +108,8 @@ const initialLayers: LayerState = {
   structure: true,
   equipment: true,
   furniture: true,
+  furnishings: true,
+  decor: true,
   doors: true,
   neighbors: false,
   xray: false,

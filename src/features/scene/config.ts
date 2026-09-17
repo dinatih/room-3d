@@ -38,9 +38,9 @@ export const MEASURED_HEIGHT_FLOOR_TO_CEILING       = 250;
 // =============================================
 // DIMENSIONS DU MODÈLE 3D
 // =============================================
-export const ROOM_W = 316; // 3,16m — largeur réelle du séjour
+export const ROOM_W = MEASURED_DIST_NICHE_BEAM_TO_EAST_WALL; // 3,16m — largeur réelle du séjour
 export const ROOM_D = 400; // 4m
-export const WALL_H = 250; // 2.5m
+export const WALL_H = MEASURED_HEIGHT_FLOOR_TO_CEILING; // 2.5m
 
 
 
@@ -85,7 +85,7 @@ export const DiagWall = {
   rotY: Math.atan2(_DX, _DZ),
   slope: (_CZ - _AZ) / (_CX - _AX),
   door: { start: 10, width: 90, end: 100 },
-  /** 
+  /**
    * Calcule un point (x, z) le long du mur diagonal.
    * @param d Distance depuis le point A (Est) vers C (Ouest)
    * @param off Offset perpendiculaire. Positif = extérieur, Négatif = intérieur.
@@ -110,4 +110,5 @@ export const LAYER_MIRRORS       = 17; // Miroirs NISSEDAL / Reflector
 export const LAYER_WALKER        = 18; // Personnages 3D
 export const LAYER_AI_ZONES      = 19; // Zones IA, cercles, flèches et labels texte
 export const LAYER_ANIMALS       = 20; // Animaux autonomes (Oiseau Robin, Chien Shiba Inu)
-
+export const LAYER_FURNISHINGS   = 21; // Tapis, rideaux, lampadaire, coussins (Habillage & confort fonctionnel)
+export const LAYER_DECOR         = 22; // Tasses, plantes en pot, cadres, props (Détails & habillage de surface)

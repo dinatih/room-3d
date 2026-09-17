@@ -34,6 +34,7 @@ export function KitchenEquipment() {
   );
 }
 
+// Pass 1 — Furniture (Structure & gros volumes)
 export function KitchenFurniture() {
   const as = useFurnitureToggles([
     'ninja-toggle',
@@ -42,27 +43,45 @@ export function KitchenFurniture() {
 
   return (
     <MergedStaticGroup name="merged-kitchen-furniture">
-      {/* Boîtes Drona intégrées à la cuisine */}
-      <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ itemName: 'Boîtes Drona Cuisine' }}>
-        <CuisineDrona />
-      </group>
-
-      {/* Kallax Cuisine en séparation avec son télémètre dans la Drona */}
+      {/* Kallax Cuisine en séparation */}
       <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ itemName: 'Kallax Cuisine' }}>
         <KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} />
-        <group position={[17.5, 6.25, -5]} rotation={[Math.PI / 2, 0, 0]} userData={{ itemName: 'Télémètre Laserliner' }}>
-          <LaserDistanceMaster item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        </group>
       </group>
 
       {/* Poubelle TATAY — angle KallaxCuisine × Mackapar */}
       <group position={[NICHE_X + KALLAX_DEPTH + 18, 0, MACK_Z + w2 / 2 - 6]} rotation-y={Math.PI / 2} userData={{ itemName: 'Poubelle Tatay' }}>
         <TrashBin item={stub('trash-bin')} actionState={as} onSize={NOOP_SIZE} />
       </group>
+    </MergedStaticGroup>
+  );
+}
+
+// Pass 2 — Furnishings (Habillage & confort fonctionnel)
+export function KitchenFurnishings() {
+  return (
+    <MergedStaticGroup name="merged-kitchen-furnishings">
+      {/* Boîtes Drona intégrées à la cuisine */}
+      <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ itemName: 'Boîtes Drona Cuisine' }}>
+        <CuisineDrona />
+      </group>
 
       {/* LILLHAVET — égouttoir dans le meuble haut cuisine */}
       <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ itemName: 'Égouttoir Lillhavet' }}>
         <CuisineLillhavet />
+      </group>
+    </MergedStaticGroup>
+  );
+}
+
+// Pass 3 — Decor (Détails & habillage de surface)
+export function KitchenDecor() {
+  return (
+    <MergedStaticGroup name="merged-kitchen-decor">
+      {/* Télémètre Laserliner posé dans la Drona du Kallax Cuisine */}
+      <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]}>
+        <group position={[17.5, 6.25, -5]} rotation={[Math.PI / 2, 0, 0]} userData={{ itemName: 'Télémètre Laserliner' }}>
+          <LaserDistanceMaster item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        </group>
       </group>
 
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}

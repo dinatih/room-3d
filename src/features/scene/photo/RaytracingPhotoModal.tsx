@@ -12,6 +12,8 @@ import {
   LAYER_STRUCTURE,
   LAYER_EQUIPMENT,
   LAYER_FURNITURE,
+  LAYER_FURNISHINGS,
+  LAYER_DECOR,
   LAYER_WALKER,
   LAYER_MIRRORS,
   LAYER_ANIMALS,
@@ -403,6 +405,8 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     physCamera.layers.enable(LAYER_STRUCTURE);
     physCamera.layers.enable(LAYER_EQUIPMENT);
     physCamera.layers.enable(LAYER_FURNITURE);
+    physCamera.layers.enable(LAYER_FURNISHINGS);
+    physCamera.layers.enable(LAYER_DECOR);
     physCamera.layers.enable(LAYER_WALKER);
     physCamera.layers.enable(LAYER_MIRRORS);
     physCamera.layers.enable(LAYER_ANIMALS);

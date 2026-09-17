@@ -104,22 +104,35 @@ export function BathroomEquipment() {
   );
 }
 
+// Pass 1 — Furniture (Structure & gros volumes)
 export function BathroomFurniture() {
   const as = useFurnitureToggles(['cbn-west-toggle', 'cbn-east-toggle']);
 
   return (
     <MergedStaticGroup name="merged-bathroom-furniture">
-      {/* Tapis Gazon SDB */}
-      <group position={[(NICHE_X + DOOR_START) / 2 - 5, 0, BATH_Z_END - 53]} userData={{ itemName: 'Tapis Gazon SDB' }}>
-        <GrassRug item={stub('grass-rug')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
       {/* Meubles SDB Ouest et Est */}
       <group position={[NICHE_X + 20, 0, cbZ]} userData={{ animUnit: true, itemName: 'Meuble SDB Ouest' }}>
         <BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={NOOP_SIZE} />
       </group>
       <group position={[DOOR_START - 31, 0, cbZ]} userData={{ animUnit: true, itemName: 'Meuble SDB Est' }}>
         <BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} />
+      </group>
+
+      {/* Poubelle Fniss SDB */}
+      <group position={[110, 1, 500]} userData={{ animUnit: true, itemName: 'Poubelle Fniss SDB' }}>
+        <Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      </group>
+    </MergedStaticGroup>
+  );
+}
+
+// Pass 2 — Furnishings (Habillage & confort fonctionnel)
+export function BathroomFurnishings() {
+  return (
+    <MergedStaticGroup name="merged-bathroom-furnishings">
+      {/* Tapis Gazon SDB */}
+      <group position={[(NICHE_X + DOOR_START) / 2 - 5, 0, BATH_Z_END - 53]} userData={{ itemName: 'Tapis Gazon SDB' }}>
+        <GrassRug item={stub('grass-rug')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Boîtes Drona sur meubles hauts SDB */}
@@ -129,7 +142,14 @@ export function BathroomFurniture() {
       <group position={[NICHE_X + 20, 60 + DF / 2 + 0.2, cbZ]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte Drona SDB Ouest' }}>
         <DroneCell />
       </group>
+    </MergedStaticGroup>
+  );
+}
 
+// Pass 3 — Decor (Détails & habillage de surface)
+export function BathroomDecor() {
+  return (
+    <MergedStaticGroup name="merged-bathroom-decor">
       {/* TACKAN douche */}
       <group position={[NICHE_X + 40, 80, BATH_Z_END + 69]} userData={{ itemName: 'Distributeur Tackan Douche' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
@@ -143,11 +163,6 @@ export function BathroomFurniture() {
       {/* TISKEN sur miroir vasque */}
       <group position={[DOOR_START - 106, 129, KITCHEN_Z + PARTITION_THICKNESS + 2.1]} rotation={[Math.PI / 2, 0, 0]} userData={{ itemName: 'Crochet Tisken' }}>
         <Tisken40381253 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-      </group>
-
-      {/* Poubelle Fniss SDB */}
-      <group position={[110, 1, 500]} userData={{ animUnit: true, itemName: 'Poubelle Fniss SDB' }}>
-        <Fniss40295439 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
   );

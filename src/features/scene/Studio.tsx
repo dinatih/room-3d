@@ -18,7 +18,7 @@ import { Minimap }          from '@features/scene/Minimap';
 import { Walls, Floor, MirrorFrames, MirrorReflectors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController } from '@features/scene/sceneLayer';
-import { Equipment, Furniture } from './Placements';
+import { Equipment, Furniture, Furnishings, Decor } from './Placements';
 import { Walker } from './Walker';
 import { AiZonesHelper } from './ai/AiZonesHelper';
 import { CollisionDebugHelper } from './ai/CollisionDebugHelper';
@@ -58,7 +58,7 @@ const RaytracingPhotoModal = lazy(() => import('./photo/RaytracingPhotoModal').t
 
 import {
   ROOM_W,
-  LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_NEIGHBORS, LAYER_LIDAR,
+  LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR, LAYER_NEIGHBORS, LAYER_LIDAR,
   LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER,
 } from '@config';
 
@@ -512,10 +512,27 @@ export function Studio() {
             <Equipment />
           </CategoryLayerGroup>
 
+          {/*
+           * LAYER_FURNITURE (12) — Structure & gros volumes.
+           */}
           <CategoryLayerGroup layer={LAYER_FURNITURE}>
             <Furniture />
-            {/* Cadres GLB Nissedal — toujours visibles, indépendant du toggle Miroirs */}
+          </CategoryLayerGroup>
+
+          {/*
+           * LAYER_FURNISHINGS (21) — Habillage & confort fonctionnel.
+           */}
+          <CategoryLayerGroup layer={LAYER_FURNISHINGS}>
+            <Furnishings />
+            {/* Cadres GLB Nissedal — habillage mural */}
             <MirrorFrames />
+          </CategoryLayerGroup>
+
+          {/*
+           * LAYER_DECOR (22) — Détails & habillage de surface.
+           */}
+          <CategoryLayerGroup layer={LAYER_DECOR}>
+            <Decor />
           </CategoryLayerGroup>
 
           {/* LAYER_MIRRORS (17) — plans de réflexion Reflector uniquement (coûteux) */}

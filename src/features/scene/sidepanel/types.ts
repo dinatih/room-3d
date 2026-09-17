@@ -83,6 +83,8 @@ export interface LayerState {
   structure: boolean;
   equipment: boolean;
   furniture: boolean;
+  furnishings: boolean;
+  decor: boolean;
   neighbors:  boolean;
   xray:       boolean;
   wireframe:  boolean;
