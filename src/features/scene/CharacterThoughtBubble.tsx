@@ -98,7 +98,6 @@ export function CharacterThoughtBubble({
           userSelect: 'none',
           cursor: 'pointer',
           transform: 'translate(-50%, calc(-100% - 56px))',
-          willChange: 'transform',
         }}
       >
         <div
@@ -119,16 +118,18 @@ export function CharacterThoughtBubble({
             width: 'max-content',
             minWidth: '240px',
             maxWidth: isExpanded ? '600px' : '380px',
-            background: 'rgba(13, 17, 23, 0.94)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
+            background: 'rgba(13, 17, 23, 0.96)',
             border: `1.5px solid ${themeColor}`,
             borderRadius: '12px',
             padding: '7px 12px',
             color: '#f0f6fc',
             boxShadow: `0 8px 24px rgba(0, 0, 0, 0.65), 0 0 16px ${themeColor}44`,
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '11.5px',
+            fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+            fontSize: '11px',
+            WebkitFontSmoothing: 'antialiased',
+            MozOsxFontSmoothing: 'grayscale',
+            textRendering: 'optimizeLegibility',
+            backfaceVisibility: 'hidden',
             transition: 'max-width 0.2s ease-out',
           }}
         >
