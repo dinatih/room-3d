@@ -87,7 +87,7 @@ export function BathroomEquipment() {
       </group>
 
       {/* VÅTHULT — bandeau LED 35 cm au-dessus du miroir vasque */}
-      <group position={[DOOR_START - 84, 176, KITCHEN_Z + PARTITION_THICKNESS - 2]} userData={{ itemName: 'Bandeau LED Våthult' }}>
+      <group position={[DOOR_START - 84, 176, KITCHEN_Z + PARTITION_THICKNESS - 2]} userData={{ animUnit: true, itemName: 'Bandeau LED Våthult' }}>
         <Vathult40467548 item={stub('vathult-350')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
@@ -131,7 +131,7 @@ export function BathroomFurnishings() {
   return (
     <MergedStaticGroup name="merged-bathroom-furnishings">
       {/* Tapis Gazon SDB */}
-      <group position={[(NICHE_X + DOOR_START) / 2 - 5, 0, BATH_Z_END - 53]} userData={{ itemName: 'Tapis Gazon SDB' }}>
+      <group position={[(NICHE_X + DOOR_START) / 2 - 5, 0, BATH_Z_END - 53]} userData={{ animUnit: true, itemName: 'Tapis Gazon SDB' }}>
         <GrassRug item={stub('grass-rug')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
@@ -144,17 +144,17 @@ export function BathroomFurnishings() {
       </group>
 
       {/* TACKAN douche */}
-      <group position={[NICHE_X + 40, 80, BATH_Z_END + 69]} userData={{ itemName: 'Distributeur Tackan Douche' }}>
+      <group position={[NICHE_X + 40, 80, BATH_Z_END + 69]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Douche' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* TACKAN lavabo */}
-      <group position={[DOOR_START - 69, 83, KITCHEN_Z + PARTITION_THICKNESS + 5]} userData={{ itemName: 'Distributeur Tackan Lavabo' }}>
+      <group position={[DOOR_START - 69, 83, KITCHEN_Z + PARTITION_THICKNESS + 5]} userData={{ animUnit: true, itemName: 'Distributeur Tackan Lavabo' }}>
         <Tackan item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* TISKEN sur miroir vasque */}
-      <group position={[DOOR_START - 106, 129, KITCHEN_Z + PARTITION_THICKNESS + 2.1]} rotation={[Math.PI / 2, 0, 0]} userData={{ itemName: 'Crochet Tisken' }}>
+      <group position={[DOOR_START - 106, 129, KITCHEN_Z + PARTITION_THICKNESS + 2.1]} rotation={[Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Crochet Tisken' }}>
         <Tisken40381253 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>

@@ -471,15 +471,15 @@ export function LivingRoomFurniture() {
   return (
     <MergedStaticGroup name="merged-living-room-furniture">
       {/* Meubles Kallax (structure sans Drona ni Mannequins) */}
-      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ itemName: 'Kallax NW' }}>
+      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Kallax NW' }}>
         <KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noMannequins />
       </group>
 
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ itemName: 'Kallax NE' }}>
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Kallax NE' }}>
         <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
 
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]} userData={{ itemName: 'Kallax SE' }}>
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Kallax SE' }}>
         <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
 
@@ -491,7 +491,7 @@ export function LivingRoomFurniture() {
       <Smorkull_ />
 
       {/* Meuble Mackapär (structure sans Drona ni cintres) */}
-      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ itemName: 'Meuble Mackapär' }}>
+      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Meuble Mackapär' }}>
         <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noHangers />
       </group>
 
@@ -508,15 +508,16 @@ export function LivingRoomFurniture() {
       </group>
 
       {/* Sacs Dimpa mur Ouest (posés au sol, utilisés comme poufs) */}
-      <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ itemName: 'Sac Dimpa Ouest 1' }}>
+      <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Sac Dimpa Ouest 1' }}>
         <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[16, 0, 220]} rotation-y={Math.PI / 2} userData={{ itemName: 'Sac Dimpa Ouest 2' }}>
+      <group position={[16, 0, 220]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Sac Dimpa Ouest 2' }}>
         <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
   );
 }
+
 
 // Pass 2 — Furnishings (Habillage & confort fonctionnel)
 export function LivingRoomFurnishings() {
@@ -586,23 +587,23 @@ export function LivingRoomFurnishings() {
       <DeskDecor />
 
       {/* Enceinte JBL Charge 3 sur Kallax NE */}
-      <group position={[ROOM_W - KALLAX_DEPTH / 2 - 15, 118, w2 - 11]} userData={{ itemName: 'Enceinte JBL Charge 3' }}>
+      <group position={[ROOM_W - KALLAX_DEPTH / 2 - 15, 118, w2 - 11]} userData={{ animUnit: true, itemName: 'Enceinte JBL Charge 3' }}>
         <JblCharge3 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* TV */}
       <group position={[ROOM_W - 28, TV_Y, 50]} rotation-order="YXZ"
-        rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]} userData={{ itemName: 'Téléviseur' }}>
+        rotation={[-Math.PI / 36, (3 * Math.PI) / 4, 0]} userData={{ animUnit: true, itemName: 'Téléviseur' }}>
         <TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />
       </group>
 
       {/* Mini PC */}
-      <group position={[ROOM_W - 25, 40, 30]} userData={{ itemName: 'Mini PC MLLSE' }}>
+      <group position={[ROOM_W - 25, 40, 30]} userData={{ animUnit: true, itemName: 'Mini PC MLLSE' }}>
         <MllseG2Pro item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
       {/* Google Nest Mini */}
-      <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, 0, 0]} userData={{ itemName: 'Google Nest Mini' }}>
+      <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, 0, 0]} userData={{ animUnit: true, itemName: 'Google Nest Mini' }}>
         <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>

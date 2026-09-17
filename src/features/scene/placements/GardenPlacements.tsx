@@ -50,7 +50,7 @@ export function GardenFurniture() {
       </group>
 
       {/* Boîte de rangement Vättersö */}
-      <group position={[264, 0, -320]} rotation={[0, -Math.PI / 2, 0]} userData={{ itemName: 'Boîte de Rangement Vättersö' }}>
+      <group position={[264, 0, -320]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte de Rangement Vättersö' }}>
         <Vatterso20562909 item={stub('vatterso-20562909')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>
