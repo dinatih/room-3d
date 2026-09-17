@@ -152,8 +152,8 @@ export const SEG_DOORS: Seg[] = [
 export const SEG_CLOSETS: Seg[] = [
   // Porte placard couloir
   [pEast('door-living-w'), pSouth('door-living-w'), pEast('door-living-w'), pNorth('bath-ne')],
-  // Porte placard SDB (double porte coulissante en façade Sud)
-  [pEast('shower-ne'), pNorth('shower-ne'), pWest('bath-se'), pNorth('bath-se')],
+  // Porte placard SDB (double porte coulissante centrée dans l'axe de la poutre/piliers)
+  [pEast('shower-ne'), pZ('shower-ne'), pWest('bath-se'), pZ('bath-se')],
 ];
 
 // ── SEG_WINDOWS ───────────────────────────────────────────────────────────────
