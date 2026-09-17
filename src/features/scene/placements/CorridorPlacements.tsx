@@ -33,7 +33,7 @@ const LINKY_GAINE_X1  = ROOM_W;         // colle au mur est (X=316)
 const LINKY_GAINE_X0  = ROOM_W - LINKY_GAINE_W;
 const LINKY_GAINE_CX  = (LINKY_GAINE_X0 + LINKY_GAINE_X1) / 2; // 312.75
 const LINKY_GAINE_CZ  = LINKY_GAINE_Z0 + LINKY_GAINE_L / 2;    // 512.75
-const LINKY_MOUNT_Y   = 170;            // hauteur base du Linky (bas du compteur)
+const LINKY_MOUNT_Y   = 120;            // hauteur base du Linky (bas du compteur à 120 cm du sol)
 const linkyGaineMat   = new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.7, metalness: 0.05 });
 
 function LinkyGaine() {
@@ -45,7 +45,7 @@ function LinkyGaine() {
       </mesh>
       {/* Linky face -X (vers le couloir). GLB front +Z → rotation-y = -π/2.
           Profondeur GLB ≈ 7.1 cm → recule Linky pour que son dos affleure la gaine. */}
-      <group position={[LINKY_GAINE_X0 - 7.1 / 2, LINKY_MOUNT_Y, LINKY_GAINE_CZ]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={[LINKY_GAINE_X0 - 7.1 / 2, LINKY_MOUNT_Y, LINKY_GAINE_CZ]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Compteur Linky' }}>
         <Linky item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </>

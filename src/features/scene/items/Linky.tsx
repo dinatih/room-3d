@@ -11,19 +11,20 @@ export function Linky({ onSize, ...props }: SceneItemProps) {
   const { scene } = useGLTFClone(GLB);
 
   useLayoutEffect(() => {
-    // 1. Reset scale et nettoyage des arêtes parasites
-    scene.scale.set(1, 1, 1);
+    // 1. Conversion mètres -> centimètres (1 unité = 1 cm)
+    // Le modèle d'origine fait 0.20m de haut, il doit faire 20cm
+    scene.scale.set(100, 100, 100);
     removeGlbLines(scene);
     mergeGlbByMaterial(scene);
 
-    // 2. Mesure locale
+    // 2. Mesure de la boîte locale post-scale
     const box = glbLocalBBox(scene);
     const center = box.getCenter(new THREE.Vector3());
 
-    // 3. Centrage local en X/Z et base à Y=0
+    // 3. Centrage local en X/Z et calage de la base à Y=0
     scene.position.set(-center.x, -box.min.y, -center.z);
 
-    // 4. Notification des dimensions réelles
+    // 4. Notification des dimensions mesurées
     onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene, onSize]);
 
