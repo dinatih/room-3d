@@ -171,13 +171,16 @@ function ActiveCameraCapture({ onCapture }: { onCapture: (cam: PerspectiveCamera
 
 function LoadingProgress({
   sceneReady,
+  onAssetsLoaded,
   onLaunch,
 }: {
   sceneReady: boolean;
+  onAssetsLoaded: () => void;
   onLaunch: () => void;
 }) {
   const { progress, active, item } = useProgress();
   const doneRef = useRef(false);
+  const isLaunchingRef = useRef(false);
   const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -194,6 +197,7 @@ function LoadingProgress({
 
     if (!active && progress >= 100 && !doneRef.current) {
       doneRef.current = true;
+      onAssetsLoaded();
       if (itemEl) itemEl.textContent = sceneReady ? '✅ Scène 3D prête !' : '⚡ Optimisation GPU & compilation des shaders…';
 
       if (countdownContainer) countdownContainer.style.display = 'flex';
@@ -201,10 +205,15 @@ function LoadingProgress({
 
       const launchApp = () => {
         if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-        if (textEl) textEl.textContent = '🚀 Lancement de la scène 3D…';
         if (btnStart) btnStart.setAttribute('disabled', 'true');
         if (btnPause) btnPause.style.display = 'none';
-        onLaunch();
+        if (sceneReady) {
+          if (textEl) textEl.textContent = '🚀 Lancement de la scène 3D…';
+          onLaunch();
+        } else {
+          isLaunchingRef.current = true;
+          if (textEl) textEl.textContent = '⚡ Optimisation GPU en cours… Lancement imminent !';
+        }
       };
 
       if (btnStart) btnStart.onclick = launchApp;
@@ -224,10 +233,17 @@ function LoadingProgress({
           launchApp();
         }
       }, 1000);
-    } else if (doneRef.current && sceneReady && itemEl && itemEl.textContent?.includes('⚡')) {
-      itemEl.textContent = '✅ Scène 3D prête !';
+    } else if (doneRef.current) {
+      if (sceneReady && itemEl && itemEl.textContent?.includes('⚡')) {
+        itemEl.textContent = '✅ Scène 3D prête !';
+      }
+      if (isLaunchingRef.current && sceneReady) {
+        isLaunchingRef.current = false;
+        if (textEl) textEl.textContent = '🚀 Lancement de la scène 3D…';
+        onLaunch();
+      }
     }
-  }, [progress, active, item, sceneReady, onLaunch]);
+  }, [progress, active, item, sceneReady, onAssetsLoaded, onLaunch]);
 
   return null;
 }
@@ -364,11 +380,15 @@ export function Studio() {
   }, [onToggleLayer]);
 
 
-  const [buildAnim,        setBuildAnim]        = useState(true);
+  const [buildAnim,        setBuildAnim]        = useState(false);
   const [buildAnimStarted, setBuildAnimStarted] = useState(false);
   const [buildAnimMatrix,  setBuildAnimMatrix]  = useState(false);
   const [sceneWarmReady,   setSceneWarmReady]   = useState(false);
-  const [animDurations, setAnimDurations] = useState<Record<string, number>>({});
+  const [animDurations,    setAnimDurations]    = useState<Record<string, number>>({});
+
+  const handleAssetsLoaded = useCallback(() => {
+    setBuildAnim(true);
+  }, []);
 
   const stopAll = () => {
     setBuildAnim(false); setBuildAnimStarted(false); setBuildAnimMatrix(false);
@@ -381,6 +401,10 @@ export function Studio() {
       setBuildAnimStarted(true);
     }, 50);
   };
+
+  const handleDuration = useCallback((ms: number) => {
+    setAnimDurations(d => d.buildAnim === ms ? d : ({ ...d, buildAnim: ms }));
+  }, []);
 
   const setDuration = (key: string) => (ms: number) =>
     setAnimDurations(d => ({ ...d, [key]: ms }));
@@ -408,11 +432,16 @@ export function Studio() {
     revealScene();
   }, [revealScene]);
 
+  const handleFinish = useCallback(() => {
+    setBuildAnim(false);
+    setBuildAnimStarted(false);
+  }, []);
+
   const isAnimActive = buildAnim || buildAnimMatrix;
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <LoadingProgress sceneReady={sceneWarmReady} onLaunch={handleLaunch} />
+      <LoadingProgress sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onLaunch={handleLaunch} />
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
@@ -520,7 +549,7 @@ export function Studio() {
         {/* Contenu 3D — masqué en mode Plan */}
         <Suspense fallback={null}>
         {/* Animations — exécutées une fois les éléments Suspense 3D résolus */}
-        {buildAnim       && <BuildAnimation       started={buildAnimStarted} onReady={handleReady} onFinish={() => { setBuildAnim(false); setBuildAnimStarted(false); }} onDuration={setDuration('buildAnim')} />}
+        {buildAnim       && <BuildAnimation       started={buildAnimStarted} onReady={handleReady} onFinish={handleFinish} onDuration={handleDuration} />}
         {buildAnimMatrix && <BuildAnimationMatrix onReady={handleReady} onFinish={() => setBuildAnimMatrix(false)} onDuration={setDuration('buildAnimMatrix')} />}
         <CameraController planeMode={planeMode} />
         <group visible={!layers.plan}>

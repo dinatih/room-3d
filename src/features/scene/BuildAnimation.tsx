@@ -209,6 +209,13 @@ export function BuildAnimation({
   const { scene, camera, gl, invalidate } = useThree();
   const stateRef = useRef<AnimState | null>(null);
 
+  const onFinishRef = useRef(onFinish);
+  onFinishRef.current = onFinish;
+  const onDurationRef = useRef(onDuration);
+  onDurationRef.current = onDuration;
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+
   useLayoutEffect(() => {
     (window as any).isAnimProRunning = true;
     const s3 = scene as unknown as THREE.Scene;
@@ -297,7 +304,7 @@ export function BuildAnimation({
       ? objects[objects.length - 1].startTime + objects[objects.length - 1].duration + 200 
       : 1000;
     
-    onDuration?.(totalEnd);
+    onDurationRef.current?.(totalEnd);
 
     // 3. Décaler tout vers le HAUT à DROP_HEIGHT (en restant visible pour la chauffe GPU)
     objects.forEach(a => {
@@ -335,7 +342,7 @@ export function BuildAnimation({
         stateRef.current.remerge();
       }
     };
-  }, [scene, camera, gl, invalidate, onDuration]);
+  }, [scene, camera, gl, invalidate]);
 
   // Réveil immédiat du frameloop R3F dès que started devient true
   useEffect(() => {
@@ -359,7 +366,7 @@ export function BuildAnimation({
           a.obj.visible = false;
         });
         invalidate();
-        onReady?.();
+        onReadyRef.current?.();
       }
       return;
     }
@@ -404,7 +411,7 @@ export function BuildAnimation({
       invalidate();
       const durSec = ((performance.now() - (st.startTime ?? now)) / 1000).toFixed(1);
       appLog('anim', `✨ Animation "Tombée du ciel" terminée en ${durSec}s (${st.objects.length} éléments assemblés)`);
-      onFinish();
+      onFinishRef.current();
     }
   });
 
