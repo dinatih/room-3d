@@ -226,7 +226,7 @@ export function CharacterThoughtBubble({
             ref={scrollContainerRef}
             onClick={(e) => isExpanded && e.stopPropagation()}
             onWheel={(e) => e.stopPropagation()}
-            className="d-flex flex-column gap-1 overflow-x-hidden overflow-y-auto pe-1"
+            className="d-flex flex-column gap-0 overflow-x-hidden overflow-y-auto pe-1"
             style={{
               maxHeight: isExpanded ? '280px' : '95px',
               scrollbarWidth: 'thin',
@@ -246,13 +246,13 @@ export function CharacterThoughtBubble({
                   <div
                     key={entry.id}
                     title={entry.message}
-                    className={`d-flex align-items-start justify-content-between gap-2 px-2 py-1 rounded-1 overflow-hidden flex-shrink-0 ${
+                    className={`d-flex align-items-start justify-content-between gap-1 px-1 py-0 rounded-1 overflow-hidden flex-shrink-0 ${
                       isLast ? 'text-white fw-semibold bg-white bg-opacity-10' : 'text-light fw-normal'
                     }`}
                   >
                     <div className="d-flex align-items-start gap-2 flex-grow-1 overflow-hidden">
                       <span
-                        className="badge bg-white bg-opacity-10 font-monospace flex-shrink-0 px-1 py-0 mt-1 user-select-none"
+                        className="font-monospace flex-shrink-0 user-select-none"
                         style={{ color: themeColor }}
                       >
                         {formatBubbleTime(entry.timestamp)}
@@ -265,8 +265,8 @@ export function CharacterThoughtBubble({
                     {/* Bouton Copier la ligne */}
                     <button
                       type="button"
-                      className={`btn btn-sm px-1 py-0 border-0 flex-shrink-0 align-self-start mt-1 ${
-                        copiedId === entry.id ? 'btn-outline-success' : 'btn-outline-secondary text-white-50'
+                      className={`btn btn-sm p-0 border-0 flex-shrink-0 align-self-start ${
+                        copiedId === entry.id ? 'text-success' : 'text-white-50'
                       }`}
                       onClick={(e) => handleCopy(e, entry)}
                       title="Copier ce log"
