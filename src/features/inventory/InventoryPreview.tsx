@@ -9,6 +9,7 @@ import { SCENE_REGISTRY, ACTION_LABELS } from './previewRegistry';
 import { GlobalSkeletonHelpers } from '@features/scene/utils/GlobalSkeletonHelpers';
 import { CharacterAnimSelector } from '@features/scene/CharacterAnimSelector';
 import { WALKER_ANIM_OPTIONS } from '@features/scene/animOptions';
+import { resolveAnimationId } from '@features/scene/animations/animationResolver';
 import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/ai/duoAnimations';
 import { CHARACTERS, isExtraCharacter } from '@features/scene/walkerConfig';
 import { GroundPoint } from '@features/scene/character/GroundPoint';
@@ -547,7 +548,8 @@ export function InventoryPreview({
   const animControllerBottom = hideFooter ? 6 : 42;
   const datumBannerBottom = isWalkerItem ? (animControllerBottom + 58) : 8;
   const debugUrlsBottom = isWalkerItem ? (animControllerBottom + 58) : (hideFooter ? 4 : 40);
-  const currentAnimOpt = isHumanWalker ? WALKER_ANIM_OPTIONS.find(a => a.value === (actionStates.walkerAnim || 'idle')) : null;
+  const currentTargetId = resolveAnimationId(actionStates.walkerAnim || 'idle');
+  const currentAnimOpt = isHumanWalker ? WALKER_ANIM_OPTIONS.find(a => a.value === currentTargetId || a.value === actionStates.walkerAnim) : null;
   const currentAnimLabel = actionStates.walkerAnim === 'tpose'
     ? 'T-Pose'
     : (currentAnimOpt ? currentAnimOpt.label : (actionStates.walkerAnim || 'Idle'));
@@ -556,7 +558,8 @@ export function InventoryPreview({
     const pool = WALKER_ANIM_OPTIONS;
     if (!pool.length) return;
     const currentVal = actionStates.walkerAnim || 'idle';
-    const currIdx = pool.findIndex(a => a.value === currentVal);
+    const targetId = resolveAnimationId(currentVal);
+    const currIdx = pool.findIndex(a => a.value === targetId || a.value === currentVal);
     let nextIdx = 0;
     if (currIdx === -1) {
       nextIdx = direction === 'next' ? 0 : pool.length - 1;

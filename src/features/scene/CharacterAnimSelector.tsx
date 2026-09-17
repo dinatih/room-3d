@@ -32,8 +32,10 @@ try {
 
 export function getAnimCategory(val: string): string {
   if (val === 'idle' || val === 'tpose') return 'poses_idles';
-  if (val.startsWith('animations/')) {
-    const parts = val.split('/');
+  const def = getAnimationDef(val);
+  const path = def ? def.path : val;
+  if (path.startsWith('animations/')) {
+    const parts = path.split('/');
     if (parts.length > 1) {
       return parts[1];
     }
@@ -155,9 +157,10 @@ export function CharacterAnimSelector({
 
   const handleCopyAnim = (anim: { value: string; label: string }, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    // Supprime uniquement le premier segment ("animations/") pour conserver le sous-dossier de catégorie
-    const parts = anim.value.split('/');
-    const filename = parts.length > 1 ? parts.slice(1).join('/') : anim.value;
+    const def = getAnimationDef(anim.value);
+    const path = def ? def.path : anim.value;
+    const parts = path.split('/');
+    const filename = parts.length > 1 ? parts.slice(1).join('/') : path;
     navigator.clipboard.writeText(filename);
     setCopiedAnim(anim.value);
     setTimeout(() => setCopiedAnim(null), 2000);
@@ -466,7 +469,7 @@ export function CharacterAnimSelector({
               </button>
             </div>
             <div className="font-monospace text-muted text-truncate" style={{ fontSize: '9px' }}>
-              📁 {activeAnimOpt.value.split('/').pop()}
+              📁 {(getAnimationDef(activeAnimOpt.value)?.path || activeAnimOpt.value).split('/').pop()}
             </div>
           </div>
         )}
@@ -485,8 +488,8 @@ export function CharacterAnimSelector({
           </div>
         ) : (
           filteredAnims.map(anim => {
-            const isActive = activeAnimValue === anim.value;
             const def = getAnimationDef(anim.value);
+            const isActive = activeAnimValue === anim.value || (def && (def.id === activeAnimValue || def.path === activeAnimValue));
             let duration = def?.duration;
             if (duration === undefined && anim.label) {
               const m = anim.label.match(/\/ ([\d.]+)s,/);
