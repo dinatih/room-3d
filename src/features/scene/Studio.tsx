@@ -408,7 +408,7 @@ export function Studio() {
     revealScene();
   }, [revealScene]);
 
-  const isAnimActive = (buildAnim && buildAnimStarted) || buildAnimMatrix;
+  const isAnimActive = buildAnim || buildAnimMatrix;
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>

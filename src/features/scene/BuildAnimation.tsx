@@ -299,26 +299,26 @@ export function BuildAnimation({
     
     onDuration?.(totalEnd);
 
-    // 3. Pré-compiler les shaders de la scène unmergée pour éviter les freezes GPU lors des apparitions
+    // 3. Décaler tout vers le HAUT à DROP_HEIGHT (en restant visible pour la chauffe GPU)
+    objects.forEach(a => {
+      a.obj.position.x = a.origPos.x + a.localDropVec.x;
+      a.obj.position.y = a.origPos.y + a.localDropVec.y;
+      a.obj.position.z = a.origPos.z + a.localDropVec.z;
+      a.obj.visible = a.origVisible;
+    });
+
+    // 4. Pré-compiler les shaders de la scène unmergée pour éviter les freezes GPU
     try {
       gl.compile(s3, camera);
     } catch {
       // Ignorer si compilation immédiate non disponible
     }
 
-    // 4. Décaler tout vers le HAUT et cacher les objets en attente pour préserver le GPU
-    objects.forEach(a => {
-      a.obj.position.x = a.origPos.x + a.localDropVec.x;
-      a.obj.position.y = a.origPos.y + a.localDropVec.y;
-      a.obj.position.z = a.origPos.z + a.localDropVec.z;
-      a.obj.visible = false;
-    });
-
     stateRef.current = {
       objects,
       totalEnd,
       startTime: null,
-      warmupFrames: 1,
+      warmupFrames: 2,
       remerge,
       finished: false,
     };
@@ -348,12 +348,17 @@ export function BuildAnimation({
     const st = stateRef.current;
     if (!st || st.finished) return;
 
-    // Frame de chauffe : laisse le GPU compiler les shaders et uploader les géométries
-    // derrière l'écran de chargement sans consommer le temps de l'animation
+    // Frames de chauffe : laisse le GPU compiler les shaders et uploader les géométries
+    // derrière l'écran de chargement opaque (tout est à Y=2000)
     if (st.warmupFrames > 0) {
       st.warmupFrames--;
       invalidate();
       if (st.warmupFrames === 0) {
+        // Une fois les shaders compilés en GPU, on masque les objets en attente de leur chute
+        st.objects.forEach(a => {
+          a.obj.visible = false;
+        });
+        invalidate();
         onReady?.();
       }
       return;

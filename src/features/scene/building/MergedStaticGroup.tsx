@@ -11,7 +11,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
 
   useLayoutEffect(() => {
     if (!sourceRef.current || !mergedRef.current) return;
-    if ((window as any).isAnimProRunning) return;
+
 
     const src = sourceRef.current;
     const dst = mergedRef.current;
