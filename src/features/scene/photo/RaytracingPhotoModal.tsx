@@ -316,6 +316,19 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
       light.dispose();
     });
     tempLightsRef.current = [];
+
+    // Nettoyer les structures BVH (boundsTree) construites par three-mesh-bvh sur les géométries
+    scene.traverse((obj) => {
+      if ((obj as THREE.Mesh).isMesh) {
+        const geom = (obj as THREE.Mesh).geometry;
+        if (geom && (geom as any).boundsTree) {
+          try {
+            (geom as any).disposeBoundsTree?.();
+          } catch {}
+          delete (geom as any).boundsTree;
+        }
+      }
+    });
   }, [scene]);
 
   // Calcul des dimensions du canvas selon le preset de résolution
@@ -429,12 +442,12 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     let lastTime = performance.now();
     let frameCount = 0;
     let sampleStartTime = performance.now();
+    let lastSampleUpdate = 0;
 
     // Boucle d'accumulation d'échantillons
     const renderLoop = () => {
       if (pathTracerRef.current && !isPaused) {
         const samples = pathTracerRef.current.samples;
-        setCurrentSamples(samples);
 
         if (samples < targetSamples) {
           try {
@@ -448,11 +461,25 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
           }
 
           const now = performance.now();
+          // Throttling du setState React : màj toutes les 120ms au lieu de re-render React 60x par seconde
+          if (now - lastSampleUpdate >= 120) {
+            setCurrentSamples(samples);
+            lastSampleUpdate = now;
+          }
+
           if (now - lastTime >= 1000) {
             setFps(Math.round((frameCount * 1000) / (now - lastTime)));
             frameCount = 0;
             lastTime = now;
             setElapsedSeconds(Math.round((now - sampleStartTime) / 1000));
+          }
+        } else {
+          // Échantillonnage cible atteint : on fige les stats sans re-render React intempestif
+          const now = performance.now();
+          if (now - lastSampleUpdate >= 250) {
+            setCurrentSamples(targetSamples);
+            setFps(0);
+            lastSampleUpdate = now;
           }
         }
       }
