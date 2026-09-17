@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Html } from '@react-three/drei';
 import { findCharacter } from './walkerConfig';
 import { APP_LOG_HISTORY, type AppLogEntry } from '@features/ui/AppConsole';
@@ -61,10 +61,40 @@ export function CharacterThoughtBubble({
     };
   }, [characterId]);
 
-  // Scroll tout en bas lors de l'agrandissement ou de nouveaux logs
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+  // Maintien du scroll tout en bas lors du dépliage ou de l'arrivée de nouveaux logs
+  const wasExpandedRef = useRef(isExpanded);
+
+  useLayoutEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const isJustExpanded = isExpanded && !wasExpandedRef.current;
+    wasExpandedRef.current = isExpanded;
+
+    const scrollToBottom = () => {
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
+    };
+
+    if (isJustExpanded) {
+      // Dépliage : force le scroll immédiatement tout en bas
+      scrollToBottom();
+      const raf1 = requestAnimationFrame(() => {
+        scrollToBottom();
+        requestAnimationFrame(scrollToBottom);
+      });
+      return () => cancelAnimationFrame(raf1);
+    } else if (isExpanded) {
+      // Si déjà déplié et qu'un nouveau log arrive :
+      // On ne force le scroll en bas que si l'utilisateur était déjà proche du bas (à moins de 50px)
+      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
+      if (isNearBottom) {
+        scrollToBottom();
+      }
+    } else {
+      // Replié : scroll tout en bas
+      scrollToBottom();
     }
   }, [isExpanded, logs]);
 
@@ -202,6 +232,7 @@ export function CharacterThoughtBubble({
               scrollbarWidth: 'thin',
               scrollbarColor: `${themeColor} transparent`,
               overscrollBehavior: 'contain',
+              overflowAnchor: 'none',
             }}
           >
             {logs.length === 0 ? (

@@ -13,7 +13,6 @@ import {
   NICHE_X, NICHE_Z_START,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z,
   DOOR_START, DOOR_END,
-  BATH_Z_END,
   DiagWall,
 } from '@config';
 
@@ -89,7 +88,7 @@ export const PILLAR_DEFS = [
   // ── Salle de Bain & Douche ────────────────────────────────────────────────
   { id: 'bath-nw',        x: NICHE_X - WT / 2,      z: KITCHEN_Z + PT / 2, w: WT, d: PT },
   { id: 'bath-ne',        x: CORR_WALL_X,           z: KITCHEN_Z + PT / 2, w: PT, d: PT },
-  { id: 'bath-se',        x: CORR_WALL_X,           z: BATH_Z_END + PT / 2, w: PT, d: PT },
+  { id: 'bath-se',        x: CORR_WALL_X,           z: SHOWER_Z_N,          w: PT, d: PT },
   { id: 'shower-nw',      x: NICHE_X - WT / 2,      z: SHOWER_Z_N,          w: WT, d: PT },
   { id: 'shower-ne',      x: 65,                    z: SHOWER_Z_N,          w: PT, d: PT },
   { id: 'shower-sw',      x: NICHE_X - WT / 2,      z: SHOWER_Z_S,          w: WT, d: PT },
