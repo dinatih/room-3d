@@ -384,7 +384,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
       powerPreference: 'high-performance',
       preserveDrawingBuffer: true,
     });
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMapping = THREE.AgXToneMapping;
     renderer.toneMappingExposure = exposure;
     renderer.setSize(width, height, false);
     rendererRef.current = renderer;

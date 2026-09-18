@@ -6,7 +6,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 
 import { useProgress, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
 import {
-  ACESFilmicToneMapping, PCFSoftShadowMap, Color,
+  AgXToneMapping, PCFSoftShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
   PerspectiveCamera,
@@ -478,7 +478,7 @@ export function Studio() {
         gl={{
           antialias:    true,
           alpha:        false,
-          toneMapping:  ACESFilmicToneMapping,
+          toneMapping:  AgXToneMapping,
           toneMappingExposure: 1,
         }}
         onCreated={({ scene, gl, camera }) => {

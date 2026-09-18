@@ -688,11 +688,11 @@ export function InventoryPreview({
             </div>
           )}
           {showing3D ? (
-            <Canvas key={item.id} frameloop="always" camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false }} onCreated={({ scene, camera }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); }}>
+            <Canvas key={item.id} frameloop="always" camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
               <SkySphere envOnly />
-              <ambientLight intensity={1.2} />
-              <directionalLight position={[150, 250, 150]} intensity={1.5} />
-              <directionalLight position={[-100, 50, -100]} intensity={0.5} color="#aabbff" />
+              <ambientLight intensity={0.7} />
+              <directionalLight position={[150, 250, 150]} intensity={1.0} />
+              <directionalLight position={[-100, 50, -100]} intensity={0.4} color="#aabbff" />
               {previewView === 'free' ? (
                 <>
                   <FitCamera target={target} boundsRadius={boundsRadius} />
