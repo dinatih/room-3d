@@ -1,6 +1,7 @@
 import { cameraState } from '../../cameraState';
 import { useSceneStore } from '../../store/useSceneStore';
 import { getActiveFurnitureObstacles } from '../furnitureObstacles';
+import { doorCollisionState, DOOR_CONFIGS } from '../../doorObstacles';
 
 export interface SteeringResult {
   steerX: number;
@@ -107,6 +108,50 @@ export function computeSteeringVector(
 
             avoidanceForceX += -dirZ * steerSide * steerIntensity;
             avoidanceForceZ += dirX * steerSide * steerIntensity;
+          }
+        }
+      }
+    }
+  }
+
+  // ── 3. Évitement des battants de portes ouverts ──
+  const isDoorCollisionsEnabled = isFurnitureCollisionsEnabled;
+  if (isDoorCollisionsEnabled) {
+    for (const key of ['living', 'glassRight', 'glassLeft'] as const) {
+      const d = doorCollisionState[key];
+      const cfg = DOOR_CONFIGS[key];
+      if (!d.isOpen || Math.abs(d.angle) < 0.1) continue;
+
+      const angle = Math.abs(d.angle);
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+      const dirLeafX = cosA * cfg.closedDir.x + sinA * cfg.openNormal.x;
+      const dirLeafZ = cosA * cfg.closedDir.z + sinA * cfg.openNormal.z;
+
+      for (const fraction of [0.4, 0.75, 1.0]) {
+        const obsX = cfg.pivot.x + dirLeafX * cfg.length * fraction;
+        const obsZ = cfg.pivot.z + dirLeafZ * cfg.length * fraction;
+        const obsRadius = 22;
+
+        const toObsX = obsX - currentX;
+        const toObsZ = obsZ - currentZ;
+        const obsDist = Math.hypot(toObsX, toObsZ);
+        const obsLookahead = obsRadius + 35;
+
+        if (obsDist > 0.1 && obsDist < obsLookahead) {
+          const forwardProj = toObsX * dirX + toObsZ * dirZ;
+          if (forwardProj > 0) {
+            const perpDist = Math.abs(-dirZ * toObsX + dirX * toObsZ);
+            if (perpDist < obsRadius) {
+              const cross = dirX * toObsZ - dirZ * toObsX;
+              const steerSide = cross >= 0 ? -1 : 1;
+              const lateralWeight = Math.max(0.3, (obsRadius - perpDist) / obsRadius);
+              const proximityWeight = Math.max(0.3, (obsLookahead - obsDist) / obsLookahead);
+              const steerIntensity = lateralWeight * proximityWeight * targetProximityDampener;
+
+              avoidanceForceX += -dirZ * steerSide * steerIntensity;
+              avoidanceForceZ += dirX * steerSide * steerIntensity;
+            }
           }
         }
       }

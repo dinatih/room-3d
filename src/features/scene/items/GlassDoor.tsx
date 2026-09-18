@@ -9,6 +9,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
+import { computeDoorAllowedAngle, DOOR_CONFIGS, doorCollisionState } from '../doorObstacles';
 
 const W_TOTAL   = 160;
 const SILL_H    = 20;
@@ -141,12 +142,20 @@ export function GlassDoor({ actionState, onSize }: SceneItemProps) {
 
   useFrame((_, delta) => {
     const s = stateRef.current;
+    const allowedRight = computeDoorAllowedAngle(DOOR_CONFIGS.glassRight);
+    const allowedLeft = computeDoorAllowedAngle(DOOR_CONFIGS.glassLeft);
+
     const actualLeftOpen = s.isOpenRight && s.isOpenLeft;
     const isRightOpenEnough = rightRotRef.current > 0.25;
-    const leftTarget = (actualLeftOpen && isRightOpenEnough) ? -Math.PI / 2 : 0;
+    const leftTarget = (actualLeftOpen && isRightOpenEnough) ? -allowedLeft : 0;
     const isLeftOpen = Math.abs(leftRotRef.current) > 0.05;
-    const rightTarget = s.isOpenRight ? Math.PI / 2 : (isLeftOpen ? Math.PI / 2 : 0);
+    const rightTarget = s.isOpenRight ? allowedRight : (isLeftOpen ? allowedRight : 0);
     const targetShutter = typeof s.targetShutter === 'number' ? s.targetShutter : (s.targetShutter ? 100 : 0);
+
+    doorCollisionState.glassRight.angle = rightRotRef.current;
+    doorCollisionState.glassRight.isOpen = s.isOpenRight;
+    doorCollisionState.glassLeft.angle = leftRotRef.current;
+    doorCollisionState.glassLeft.isOpen = actualLeftOpen;
 
     if (leftRotRef.current === leftTarget && rightRotRef.current === rightTarget && shutterPercentRef.current === targetShutter) {
       return;

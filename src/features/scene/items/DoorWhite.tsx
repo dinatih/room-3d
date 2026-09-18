@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneItemProps } from '@shared/types';
 import { WALL_THICKNESS, PARTITION_THICKNESS } from '../wallData';
+import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, type DoorConfig } from '../doorObstacles';
 
 const W  = 83;     // Largeur panneau (ouvrant de 83 cm)
 const H  = 204;    // Hauteur standard
@@ -134,6 +135,8 @@ interface DoorImplProps {
   actionState: Record<string, any>;
   onSize: (v: THREE.Vector3) => void;
   wallThickness?: number;
+  doorConfig?: DoorConfig;
+  doorStateKey?: 'living';
 }
 
 const frameMaterial = new THREE.MeshStandardMaterial({ color: '#f0ede8', roughness: 0.35 });
@@ -150,7 +153,9 @@ function DoorImpl({
   openAngle,
   actionState,
   onSize,
-  wallThickness = WALL_THICKNESS
+  wallThickness = WALL_THICKNESS,
+  doorConfig,
+  doorStateKey,
 }: DoorImplProps) {
   const doorRef = useRef<THREE.Group>(null!);
   const isOpen = actionState[actionKey] ?? false;
@@ -164,8 +169,20 @@ function DoorImpl({
   }, [wallThickness]);
 
   useFrame(() => {
-    const target = isOpen ? openAngle : 0;
+    let target = 0;
+    if (isOpen) {
+      if (doorConfig) {
+        const allowed = computeDoorAllowedAngle(doorConfig);
+        target = Math.sign(openAngle) * allowed;
+      } else {
+        target = openAngle;
+      }
+    }
     const current = doorRef.current.rotation.y;
+    if (doorStateKey && doorCollisionState[doorStateKey]) {
+      doorCollisionState[doorStateKey].angle = current;
+      doorCollisionState[doorStateKey].isOpen = isOpen;
+    }
     if (current === target) return;
     const delta = target - current;
     if (Math.abs(delta) > 0.001) {
@@ -205,6 +222,8 @@ export function DoorLiving({ actionState, onSize }: SceneItemProps) {
       actionKey="living-door-toggle"
       pivotX={W / 2}   panelX={-W / 2}   handleX={-W + 15}   mancheDir={1}
       openAngle={-Math.PI / 2}
+      doorConfig={DOOR_CONFIGS.living}
+      doorStateKey="living"
       actionState={actionState} onSize={onSize}
       wallThickness={PARTITION_THICKNESS}
     />
