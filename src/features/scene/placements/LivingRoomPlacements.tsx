@@ -471,15 +471,15 @@ export function LivingRoomFurniture() {
   return (
     <MergedStaticGroup name="merged-living-room-furniture">
       {/* Meubles Kallax (structure sans Drona ni Mannequins) */}
-      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Kallax NW' }}>
+      <group position={[KALLAX_DEPTH / 2, 0, w1 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax NW' }}>
         <KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noMannequins />
       </group>
 
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Kallax NE' }}>
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, w2 / 2]} rotation={[0, Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax NE' }}>
         <KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
 
-      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Kallax SE' }}>
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax SE' }}>
         <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
 
@@ -491,7 +491,7 @@ export function LivingRoomFurniture() {
       <Smorkull_ />
 
       {/* Meuble Mackapär (structure sans Drona ni cintres) */}
-      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Meuble Mackapär' }}>
+      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, animUnit: true, itemName: 'Meuble Mackapär' }}>
         <MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noHangers />
       </group>
 
@@ -508,10 +508,10 @@ export function LivingRoomFurniture() {
       </group>
 
       {/* Sacs Dimpa mur Ouest (posés au sol, utilisés comme poufs) */}
-      <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Sac Dimpa Ouest 1' }}>
+      <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, animUnit: true, itemName: 'Sac Dimpa Ouest 1' }}>
         <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
-      <group position={[16, 0, 220]} rotation-y={Math.PI / 2} userData={{ animUnit: true, itemName: 'Sac Dimpa Ouest 2' }}>
+      <group position={[16, 0, 220]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, animUnit: true, itemName: 'Sac Dimpa Ouest 2' }}>
         <Dimpa10056770 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </MergedStaticGroup>

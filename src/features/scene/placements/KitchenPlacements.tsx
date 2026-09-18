@@ -27,7 +27,7 @@ export function KitchenEquipment() {
   return (
     <MergedStaticGroup name="merged-kitchen-equipment">
       {/* Meubles Cuisine (évier, structure) */}
-      <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ animUnit: true, itemName: 'Meubles Cuisine' }}>
+      <group position={[KITCHEN_X0, 0, ROOM_D]} userData={{ skipMerge: true, animUnit: true, itemName: 'Meubles Cuisine' }}>
         <CuisineGroup item={stub('cuisine-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
       </group>
     </MergedStaticGroup>
@@ -44,7 +44,7 @@ export function KitchenFurniture() {
   return (
     <MergedStaticGroup name="merged-kitchen-furniture">
       {/* Kallax Cuisine en séparation (structure sans Drona) */}
-      <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Kallax Cuisine' }}>
+      <group position={[NICHE_X + KALLAX_DEPTH / 2, 0, ROOM_D - w2 / 2]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax Cuisine' }}>
         <KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} noDrona />
       </group>
 
