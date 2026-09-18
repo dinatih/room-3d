@@ -506,9 +506,11 @@ export function SidePanel({
             </div>
 
             <div className="overflow-auto p-2" style={{ flex: 1 }}>
-              <div className="d-flex flex-column bg-transparent">
-                {sheetBody[activeTab]}
-              </div>
+                {Object.entries(sheetBody).map(([k, content]) => (
+                  <div key={k} style={{ display: activeTab === k ? 'block' : 'none' }}>
+                    {content}
+                  </div>
+                ))}
             </div>
           </div>
         )}

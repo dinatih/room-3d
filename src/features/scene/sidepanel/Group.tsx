@@ -37,11 +37,12 @@ export function Group({ emoji, title, defaultOpen = false, extra, children }: Gr
           </div>
         )}
       </div>
-      {open && (
-        <div className="card-body p-0 bg-transparent d-flex flex-column border-top border-light-subtle">
-          {children}
-        </div>
-      )}
+      <div
+        className="card-body p-0 bg-transparent flex-column border-top border-light-subtle"
+        style={{ display: open ? 'flex' : 'none' }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
