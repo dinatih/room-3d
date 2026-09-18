@@ -443,17 +443,17 @@ export function useCharacterPhysics() {
         if (baseRestScale) {
           if (breastSquash > 0) {
             // Taux de compression sur la profondeur (impact torse avant/arrière)
-            const depthComp = Math.max(-0.25, Math.min(0.25, breastImpulseRef.current.z * 0.08 * softnessFactor * breastSquash));
+            const depthComp = Math.max(-0.60, Math.min(0.60, breastImpulseRef.current.z * 0.08 * softnessFactor * breastSquash));
             // Taux de compression sur la hauteur (inertie verticale haut/bas)
-            const vertComp = Math.max(-0.20, Math.min(0.20, breastImpulseRef.current.y * 0.06 * softnessFactor * breastSquash));
+            const vertComp = Math.max(-0.50, Math.min(0.50, breastImpulseRef.current.y * 0.06 * softnessFactor * breastSquash));
 
             if (Math.abs(axis.y) > 0.7) {
               // Axe principal Y = longueur/profondeur du sein
-              const sy = Math.max(0.7, Math.min(1.3, 1.0 - depthComp));
-              const sz = Math.max(0.75, Math.min(1.25, 1.0 + vertComp));
+              const sy = Math.max(0.35, Math.min(2.0, 1.0 - depthComp));
+              const sz = Math.max(0.40, Math.min(1.8, 1.0 + vertComp));
               // Préservation volumétrique sur X (élargissement latéral compensatoire)
-              const volumeComp = 1.0 / Math.sqrt(Math.max(0.4, sy * sz));
-              const sx = Math.max(0.75, Math.min(1.3, volumeComp));
+              const volumeComp = 1.0 / Math.sqrt(Math.max(0.2, sy * sz));
+              const sx = Math.max(0.40, Math.min(2.0, volumeComp));
 
               bone.scale.set(
                 baseRestScale.x * sx,
@@ -462,10 +462,10 @@ export function useCharacterPhysics() {
               );
             } else {
               // Axe principal Z
-              const sz = Math.max(0.7, Math.min(1.3, 1.0 - depthComp));
-              const sy = Math.max(0.75, Math.min(1.25, 1.0 + vertComp));
-              const volumeComp = 1.0 / Math.sqrt(Math.max(0.4, sy * sz));
-              const sx = Math.max(0.75, Math.min(1.3, volumeComp));
+              const sz = Math.max(0.35, Math.min(2.0, 1.0 - depthComp));
+              const sy = Math.max(0.40, Math.min(1.8, 1.0 + vertComp));
+              const volumeComp = 1.0 / Math.sqrt(Math.max(0.2, sy * sz));
+              const sx = Math.max(0.40, Math.min(2.0, volumeComp));
 
               bone.scale.set(
                 baseRestScale.x * sx,

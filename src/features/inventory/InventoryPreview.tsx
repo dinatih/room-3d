@@ -547,6 +547,7 @@ export function InventoryPreview({
   const toggleLayer = useSceneStore(state => state.toggleLayer);
 
   const [showPnjPanel, setShowPnjPanel] = useState<boolean>(false);
+  const [selectedBoneName, setSelectedBoneName] = useState<string | null>(null);
   const [globalHaircut, setGlobalHaircut] = useState<string>('original');
   const [globalHairColor, setGlobalHairColor] = useState<string>('rose');
   const lastWigRef = useRef<string>('hair_101');
@@ -587,6 +588,7 @@ export function InventoryPreview({
     setPhotoIdx(0);
     setShowAnimSelector(false);
     setShowPnjPanel(false);
+    setSelectedBoneName(null);
     setPreviewView('free');
     useAnimPreviewStore.getState().reset();
   }, [item?.id]);
@@ -704,7 +706,11 @@ export function InventoryPreview({
               )}
               <Grid infiniteGrid fadeDistance={800} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} />
               <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={actionStates} showDims={showDims} onTargetChange={setTarget} onBoundsChange={setBoundsRadius} onStats={onGlbStats} /></Suspense>
-              <GlobalSkeletonHelpers show={actionStates.showBones} />
+              <GlobalSkeletonHelpers
+                show={actionStates.showBones}
+                selectedBoneName={selectedBoneName}
+                onSelectBoneName={setSelectedBoneName}
+              />
             </Canvas>
           ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
           {showing3D && (
@@ -869,7 +875,18 @@ export function InventoryPreview({
           {showing3D && 'category' in item && ((item as any).category === 'walkers' || (item as any).category === 'wigs') && (
             <div style={{ position: 'absolute', top: 40, left: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }} onClick={e => e.stopPropagation()}>
               <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                <button onClick={() => setActionStates(s => ({ ...s, showBones: !s.showBones }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.showBones ? '#0058a3' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}</button>
+                <button
+                  onClick={() => {
+                    setActionStates(s => {
+                      const next = !s.showBones;
+                      if (!next) setSelectedBoneName(null);
+                      return { ...s, showBones: next };
+                    });
+                  }}
+                  style={{ padding: '3px 8px', fontSize: 11, background: actionStates.showBones ? '#0058a3' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}
+                >
+                  {actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}
+                </button>
                 {isHumanWalker && (
                   <button
                     type="button"
@@ -890,6 +907,20 @@ export function InventoryPreview({
                   </button>
                 )}
               </div>
+
+              {actionStates.showBones && selectedBoneName && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, background: 'rgba(230, 57, 70, 0.95)', color: '#fff', padding: '3px 8px', borderRadius: 4, fontSize: 10, fontWeight: 'bold', maxWidth: 240, boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+                  <span className="text-truncate">🎨 Influence : <span style={{ fontFamily: 'monospace', textDecoration: 'underline' }}>{selectedBoneName}</span></span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBoneName(null)}
+                    style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 12, padding: '0 2px', lineHeight: 1 }}
+                    title="Désactiver l'influence de l'os"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
               
               {(item as any).category === 'walkers' && (
                 <>
@@ -1197,10 +1228,11 @@ export function InventoryPreview({
             </div>
           )}
 
-          {/* Panneau latéral Section PNJ & Physique Buste */}
-          {showPnjPanel && isHumanWalker && (
+          {/* Panneau latéral Section PNJ & Physique Buste (Persistant en DOM pour préserver le scroll) */}
+          {isHumanWalker && (
             <div
               style={{
+                display: showPnjPanel ? 'flex' : 'none',
                 position: 'absolute',
                 top: 40,
                 right: 8,
@@ -1212,7 +1244,6 @@ export function InventoryPreview({
                 boxShadow: '-4px 4px 24px rgba(0, 0, 0, 0.35)',
                 borderRadius: 8,
                 border: '1px solid #ced4da',
-                display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden'
               }}

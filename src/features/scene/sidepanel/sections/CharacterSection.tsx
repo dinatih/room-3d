@@ -747,7 +747,7 @@ export function CharacterSection({
               type="range"
               className="form-range"
               min="0.0"
-              max="2.0"
+              max="4.0"
               step="0.05"
               value={layers.breastTranslation ?? 0.15}
               onChange={(e) => {
@@ -771,9 +771,9 @@ export function CharacterSection({
             <input
               type="range"
               className="form-range"
-              min="0.05"
-              max="2.0"
-              step="0.05"
+              min="0.1"
+              max="10.0"
+              step="0.1"
               value={layers.breastMaxTravel ?? 0.5}
               onChange={(e) => {
                 const val = parseFloat(e.target.value);
@@ -797,7 +797,7 @@ export function CharacterSection({
               type="range"
               className="form-range"
               min="0.0"
-              max="2.0"
+              max="4.0"
               step="0.05"
               value={layers.breastSquash ?? 0.25}
               onChange={(e) => {
