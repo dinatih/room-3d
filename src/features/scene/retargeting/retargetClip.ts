@@ -548,7 +548,24 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
           }
 
           if (B_src && P_src) {
-            const B_tgt = bone.restWorldQuaternion;
+            let B_tgt = bone.restWorldQuaternion;
+            if (baseName === 'LeftArm' || baseName === 'RightArm') {
+              const childBone = bone.children.find((c: any) => c.isBone);
+              if (childBone) {
+                const boneWorldPos = new THREE.Vector3();
+                const childWorldPos = new THREE.Vector3();
+                bone.getWorldPosition(boneWorldPos);
+                childBone.getWorldPosition(childWorldPos);
+                const worldArmDir = childWorldPos.sub(boneWorldPos).normalize();
+                if (worldArmDir.y < -0.15) {
+                  const targetDir = baseName === 'LeftArm'
+                    ? new THREE.Vector3(1, 0, 0)
+                    : new THREE.Vector3(-1, 0, 0);
+                  const aPoseOffset = new THREE.Quaternion().setFromUnitVectors(worldArmDir, targetDir);
+                  B_tgt = aPoseOffset.multiply(bone.restWorldQuaternion.clone());
+                }
+              }
+            }
             const P_tgt = (bone.parent && bone.parent.restWorldQuaternion)
               ? bone.parent.restWorldQuaternion
               : new THREE.Quaternion();
