@@ -57,7 +57,8 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'sophie',    name: 'Sophie',                emoji: '💁‍♀️', color: '#c7ecee', path: 'characters/sophie/sophie.glb',       pos: [0, 0, 0], rot: 0, variant: 'native', height: 176.9, isLara: false },
   { id: 'skeleton',          name: 'Skeleton',              emoji: '💀', color: '#e0e0e0', path: 'characters/skeleton/skeleton.glb',                   pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.0, isLara: false },
   { id: 'curious_skeleton',  name: 'Curious Skeleton',      emoji: '🦴', color: '#dcdde1', path: 'characters/curious_skeleton/curious_skeleton.glb',   pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.0, isLara: false },
-  { id: 'valby',             name: 'Valby (Nano Suit)',     emoji: '🫧', color: '#00d2ff', path: 'characters/valby/valby.glb',                         pos: [0, 0, 0], rot: 0, variant: 'native', height: 168.0, isLara: false }
+  { id: 'valby',             name: 'Valby (Nano Suit)',     emoji: '🫧', color: '#00d2ff', path: 'characters/valby/valby.glb',                         pos: [0, 0, 0], rot: 0, variant: 'native', height: 168.0, isLara: false },
+  { id: 'james',             name: 'James',                 emoji: '🧑', color: '#e74c3c', path: 'characters/james/james.glb',                         pos: [0, 0, 0], rot: 0, variant: 'native', height: 182.0, isLara: false },
 ];
 
 /** Retourne le label complet d'un NPC : "emoji nom" (utile dans les UI pour éviter les noms en dur) */
