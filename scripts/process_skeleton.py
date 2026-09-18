@@ -80,11 +80,17 @@ def process_skeleton():
         if vg:
             obj7.vertex_groups.remove(vg)
 
-    # 3. Save updated blend files
-    print(f"Saving blend to {BLEND_SRC}...")
-    bpy.ops.wm.save_as_mainfile(filepath=BLEND_SRC)
+    # 3. Save updated blend file
     print(f"Saving blend to {BLEND_PUBLIC}...")
     bpy.ops.wm.save_as_mainfile(filepath=BLEND_PUBLIC)
+
+    # Maintain symlink in sources_backup to avoid duplicating large binary files
+    if not os.path.islink(BLEND_SRC):
+        if os.path.exists(BLEND_SRC):
+            os.remove(BLEND_SRC)
+        rel_target = os.path.relpath(BLEND_PUBLIC, os.path.dirname(BLEND_SRC))
+        os.symlink(rel_target, BLEND_SRC)
+        print(f"Maintained symlink: {BLEND_SRC} -> {rel_target}")
 
     # 4. Export clean GLB
     print(f"Exporting GLB to {GLB_PUBLIC}...")

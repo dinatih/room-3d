@@ -380,11 +380,17 @@ def convert_curious_skeleton():
     for obj in bpy.data.objects:
         obj.animation_data_clear()
 
-    # Save .blend files
+    # Save .blend file
     print(f"Saving .blend file to: {OUTPUT_BLEND_PUBLIC}")
     bpy.ops.wm.save_as_mainfile(filepath=OUTPUT_BLEND_PUBLIC)
-    print(f"Saving backup .blend file to: {OUTPUT_BLEND_BACKUP}")
-    bpy.ops.wm.save_as_mainfile(filepath=OUTPUT_BLEND_BACKUP)
+
+    # Maintain symlink in sources_backup to avoid duplicating large binary files
+    if not os.path.islink(OUTPUT_BLEND_BACKUP):
+        if os.path.exists(OUTPUT_BLEND_BACKUP):
+            os.remove(OUTPUT_BLEND_BACKUP)
+        rel_target = os.path.relpath(OUTPUT_BLEND_PUBLIC, os.path.dirname(OUTPUT_BLEND_BACKUP))
+        os.symlink(rel_target, OUTPUT_BLEND_BACKUP)
+        print(f"Maintained symlink: {OUTPUT_BLEND_BACKUP} -> {rel_target}")
 
     # Export clean GLB
     bpy.ops.export_scene.gltf(
