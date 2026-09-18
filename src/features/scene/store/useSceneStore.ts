@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { cameraState } from '@features/scene/cameraState';
 import type { FurnitureState, LayerState, GroundType } from '@features/scene/SidePanel';
-import { type LaraCountMode, pickRandomExtraCharacterIds, isExtraCharacter } from '@features/scene/walkerConfig';
+import { type LaraCountMode, pickRandomExtraCharacterIds, isExtraCharacter, EXTRA_CHARACTERS } from '@features/scene/walkerConfig';
 
 function parseUrlNpcCount(): LaraCountMode {
   if (typeof window === 'undefined') return 4;
@@ -72,6 +72,10 @@ interface SceneStore {
   toggleFurniture: (key: keyof FurnitureState) => void;
   toggleLayer: (key: keyof LayerState) => void;
   randomizeExtraCharacters: (count?: number) => void;
+  setActiveExtraIds: (ids: string[]) => void;
+  toggleExtraCharacter: (id: string) => void;
+  selectAllExtraCharacters: () => void;
+  clearExtraCharacters: () => void;
   setGroundType: (type: GroundType) => void;
   triggerAction: (key: string) => void;
   setActiveWalkerId: (id: string) => void;
@@ -357,8 +361,10 @@ export const useSceneStore = create<SceneStore>((set) => ({
       let nextActiveExtraIds = state.activeExtraIds;
 
       if (key === 'extraCharacters' && isActivating) {
-        // Tirage aléatoire de 5 personnages extra à chaque réactivation
-        nextActiveExtraIds = pickRandomExtraCharacterIds(5, state.activeWalkerId);
+        // Conserve la sélection utilisateur ou tire 5 personnages aléatoires si aucun n'est sélectionné
+        if (!state.activeExtraIds || state.activeExtraIds.length === 0) {
+          nextActiveExtraIds = pickRandomExtraCharacterIds(5, state.activeWalkerId);
+        }
       }
       if (key === 'mirrors') {
         // Force l'invalidation pour que SceneLayerController mette à jour le mask camera
@@ -377,7 +383,47 @@ export const useSceneStore = create<SceneStore>((set) => ({
 
   randomizeExtraCharacters: (count = 5) => {
     set((state) => ({
-      activeExtraIds: pickRandomExtraCharacterIds(count, state.activeWalkerId)
+      activeExtraIds: pickRandomExtraCharacterIds(count, state.activeWalkerId),
+      layers: { ...state.layers, extraCharacters: true }
+    }));
+    cameraState.invalidate?.();
+  },
+
+  setActiveExtraIds: (ids: string[]) => {
+    set((state) => ({
+      activeExtraIds: ids,
+      layers: ids.length > 0 && !state.layers.extraCharacters
+        ? { ...state.layers, extraCharacters: true }
+        : state.layers
+    }));
+    cameraState.invalidate?.();
+  },
+
+  toggleExtraCharacter: (id: string) => {
+    set((state) => {
+      const exists = state.activeExtraIds.includes(id);
+      const nextActiveExtraIds = exists
+        ? state.activeExtraIds.filter(x => x !== id)
+        : [...state.activeExtraIds, id];
+      const nextLayers = (!exists && !state.layers.extraCharacters)
+        ? { ...state.layers, extraCharacters: true }
+        : state.layers;
+      cameraState.invalidate?.();
+      return { activeExtraIds: nextActiveExtraIds, layers: nextLayers };
+    });
+  },
+
+  selectAllExtraCharacters: () => {
+    set((state) => ({
+      activeExtraIds: EXTRA_CHARACTERS.map(c => c.id),
+      layers: { ...state.layers, extraCharacters: true }
+    }));
+    cameraState.invalidate?.();
+  },
+
+  clearExtraCharacters: () => {
+    set(() => ({
+      activeExtraIds: []
     }));
     cameraState.invalidate?.();
   },
@@ -469,7 +515,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
     set((state) => {
       let nextActiveExtraIds = state.activeExtraIds;
       if (isExtraCharacter(id) && !state.activeExtraIds.includes(id)) {
-        nextActiveExtraIds = [id, ...state.activeExtraIds.filter(x => x !== id).slice(0, 4)];
+        nextActiveExtraIds = [id, ...state.activeExtraIds.filter(x => x !== id)];
       }
       cameraState.invalidate?.();
       return { activeWalkerId: id, activeExtraIds: nextActiveExtraIds };

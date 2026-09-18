@@ -1,6 +1,7 @@
 import { useSceneStore } from '../../store/useSceneStore';
-import { CHARACTERS, isCharacterVisibleInMode, npcLabel, EXTRA_CHARACTERS, findCharacter } from '@features/scene/walkerConfig';
+import { CHARACTERS, isCharacterVisibleInMode, npcLabel } from '@features/scene/walkerConfig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
+import { ExtraCharactersSelector } from './ExtraCharactersSelector';
 import type { LayerState } from '../types';
 
 export interface CharacterSectionProps {
@@ -61,7 +62,7 @@ export function CharacterSection({
   };
 
   return (
-    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '40vh' }}>
+    <div className="d-flex flex-column bg-transparent overflow-auto" style={{ maxHeight: '60vh' }}>
       {layers.walker && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
           <div>
@@ -745,44 +746,12 @@ export function CharacterSection({
         </div>
       )}
 
-      {/* ── Toggle Personnages Extra (tout en bas) ── */}
-      <div className="p-2 border-top bg-transparent d-flex flex-column gap-1 mt-2">
-        <div className="text-muted fw-semibold mb-1 text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          🎭 Personnages Hors-Série
-        </div>
-        <button 
-          type="button"
-          className="btn btn-light w-100 text-start rounded-0 border-0 py-2 px-3 text-dark d-flex align-items-center justify-content-between shadow-none"
-          onClick={() => onToggleLayer('extraCharacters')}
-          title={`Spawner 5 personnages extra aléatoires (sur ${EXTRA_CHARACTERS.length}) (Raccourci: E)`}
-          style={{ 
-            fontSize: isMobile ? '14px' : '11px',
-            minHeight: isMobile ? '48px' : undefined,
-            background: (layers.extraCharacters ?? false) ? 'rgba(13, 110, 253, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-            borderRadius: '4px',
-            fontWeight: (layers.extraCharacters ?? false) ? 600 : 400
-          }}
-        >
-          <div className="d-flex flex-column">
-            <div className="d-flex align-items-center gap-2">
-              <span>🎭</span>
-              <span>Personnages Extra (5 aléatoires)</span>
-              <kbd className="bg-secondary text-white px-1 rounded" style={{ fontSize: '9px' }}>E</kbd>
-              <span className="badge bg-primary text-white" style={{ fontSize: '9px' }}>
-                5 / {EXTRA_CHARACTERS.length}
-              </span>
-            </div>
-            <div className="text-muted ps-4" style={{ fontSize: '9px' }}>
-              {(layers.extraCharacters ?? false)
-                ? `Actifs : ${activeExtraIds.map(id => findCharacter(id)?.name || id).join(', ')}`
-                : `Tirage de 5 au hasard parmi ${EXTRA_CHARACTERS.length} à chaque activation`}
-            </div>
-          </div>
-          <span className={`badge ${(layers.extraCharacters ?? false) ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
-            {(layers.extraCharacters ?? false) ? 'ON' : 'OFF'}
-          </span>
-        </button>
-      </div>
+      {/* ── Sélecteur Multiple Personnages Extra ── */}
+      <ExtraCharactersSelector
+        isMobile={isMobile}
+        onToggleLayer={onToggleLayer}
+        extraCharactersEnabled={layers.extraCharacters ?? false}
+      />
     </div>
   );
 }
