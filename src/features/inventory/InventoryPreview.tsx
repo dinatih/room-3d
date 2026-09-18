@@ -1229,10 +1229,9 @@ export function InventoryPreview({
           )}
 
           {/* Panneau latéral Section PNJ & Physique Buste (Persistant en DOM pour préserver le scroll) */}
-          {isHumanWalker && (
-            <div
+          <div
               style={{
-                display: showPnjPanel ? 'flex' : 'none',
+                display: isHumanWalker && showPnjPanel ? 'flex' : 'none',
                 position: 'absolute',
                 top: 40,
                 right: 8,
@@ -1306,8 +1305,7 @@ export function InventoryPreview({
                   handleRandomHaircut={handleRandomHaircut}
                 />
               </div>
-            </div>
-          )}
+          </div>
 
           {/* Modal / Tiroir de sélection d'animations pour personnages humains */}
           {showAnimSelector && isHumanWalker && (
