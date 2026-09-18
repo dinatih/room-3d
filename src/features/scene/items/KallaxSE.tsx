@@ -67,7 +67,7 @@ export function KallaxSEDrona() {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxSE({ onSize, noDrona }: SceneItemProps & { noDrona?: boolean }) {
+export function KallaxSE({ onSize, noDrona, noCaps }: SceneItemProps & { noDrona?: boolean; noCaps?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
   const px = (-h1 / 2) + 3; // -20.5 : center the pivoted Kallax at X=0
 
@@ -98,7 +98,7 @@ export function KallaxSE({ onSize, noDrona }: SceneItemProps & { noDrona?: boole
       {/* ShoeHatRack — au sol, côté mur D, flush mur B */}
       {/* local: x = stack_z − z_world = −w1/2, z = x_world − stack_x = DEP/2 */}
       <group position={[-w1 / 2, 0, DEP / 2]} rotation-y={-Math.PI} userData={{ animUnit: true }}>
-        <ShoeHatRack item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <ShoeHatRack item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noCaps={noCaps} />
       </group>
     </group>
   );

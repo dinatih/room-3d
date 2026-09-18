@@ -19,12 +19,21 @@ const MULIG_HANGER_TRANSFORMS = HANGER_Z.map((z, i) => ({
   rotation: [0, HANGER_ROTS[i], 0] as [number, number, number],
 }));
 
+export function MuligHangers() {
+  return (
+    <SpruttigInstances
+      transforms={MULIG_HANGER_TRANSFORMS}
+      userData={{ animUnit: true, itemName: 'Cintres Spruttig Mulig' }}
+    />
+  );
+}
+
 /**
  * MULIG Tringle à vêtements, blanc
  * Price: 4,99
  * URL: https://www.ikea.com/fr/fr/p/mulig-tringle-a-vetements-blanc-30179435/
  */
-export function Mulig30179435({ onSize, ...props }: SceneItemProps) {
+export function Mulig30179435({ onSize, noHangers, ...props }: SceneItemProps & { noHangers?: boolean }) {
   const { scene } = useGLTFClone('/items/mulig30179435/Mulig30179435.glb');
   const groupRef = useRef<THREE.Group>(null!);
 
@@ -51,10 +60,7 @@ export function Mulig30179435({ onSize, ...props }: SceneItemProps) {
       <primitive object={scene} />
 
       {/* 6 cintres Spruttig instanciés en un seul draw call */}
-      <SpruttigInstances
-        transforms={MULIG_HANGER_TRANSFORMS}
-        userData={{ animUnit: true, itemName: 'Cintres Spruttig Mulig' }}
-      />
+      {!noHangers && <MuligHangers />}
     </group>
   );
 }

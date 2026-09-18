@@ -43,8 +43,20 @@ function Tube({ p1, p2 }: { p1: [number,number,number]; p2: [number,number,numbe
   );
 }
 
+export function ShoeHatRackCaps() {
+  return (
+    <>
+      {HOOK_XS.flatMap(x => ([Y_MID, Y_TOP] as const).map(barY => (
+        <group key={`${x}-${barY}`} position={[x, barY + 1.5, TR + 5.5]} rotation={[Math.PI / 2, 0, 0]}>
+          <BaseballCap onSize={() => {}} actionState={{}} item={{} as any} />
+        </group>
+      )))}
+    </>
+  );
+}
+
 // ── Composant ─────────────────────────────────────────────────────────────────
-export function ShoeHatRack({ onSize }: SceneItemProps) {
+export function ShoeHatRack({ onSize, noCaps }: SceneItemProps & { noCaps?: boolean }) {
   useLayoutEffect(() => {
     onSize(new THREE.Vector3(W, H, D));
   }, []);
@@ -94,13 +106,11 @@ export function ShoeHatRack({ onSize }: SceneItemProps) {
           <Tube p1={[x, barY+7,      TR]} p2={[x, barY+11.5, TR+5.5]}    />
           {/* Crochet bas */}
           <Tube p1={[x, barY+3.85,   TR]} p2={[x, barY+6.85,  TR+4]}     />
-          
-          {/* Casquette sur le crochet haut */}
-          <group position={[x, barY+1.5, TR+5.5]} rotation={[Math.PI/2, 0, 0]}>
-            <BaseballCap onSize={() => {}} actionState={{}} item={{} as any} />
-          </group>
         </group>
       )))}
+
+      {/* Casquettes sur les crochets hauts */}
+      {!noCaps && <ShoeHatRackCaps />}
     </group>
   );
 }

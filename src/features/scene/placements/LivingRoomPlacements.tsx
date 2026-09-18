@@ -17,7 +17,8 @@ import { JblCharge3 } from '../items/JblCharge3';
 import { MackaparGroup, MackaparDrona, MackaparHangers } from '../items/MackaparGroup';
 import { MannequinHead } from '../items/MannequinHead';
 import { GoogleNestMini } from '../items/GoogleNestMini';
-import { Mulig30179435 } from '../items/Mulig30179435';
+import { Mulig30179435, MuligHangers } from '../items/Mulig30179435';
+import { ShoeHatRackCaps } from '../items/ShoeHatRack';
 import { Smorkull } from '../items/Smorkull';
 import { SneakersRed } from '../items/SneakersRed';
 import { Grejig40329868 } from '../items/Grejig40329868';
@@ -480,7 +481,7 @@ export function LivingRoomFurniture() {
       </group>
 
       <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]} userData={{ skipMerge: true, animUnit: true, itemName: 'Kallax SE' }}>
-        <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona />
+        <KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noCaps />
       </group>
 
       {/* Lits et Bureaux */}
@@ -532,9 +533,9 @@ export function LivingRoomFurnishings() {
         <Lack90282180 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
 
-      {/* Penderie Mulig */}
+      {/* Penderie Mulig (structure sans cintres) */}
       <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ animUnit: true, itemName: 'Penderie Mulig' }}>
-        <Mulig30179435 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Mulig30179435 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noHangers />
       </group>
 
       {/* Boîtes Drona Kallax NW */}
@@ -552,10 +553,9 @@ export function LivingRoomFurnishings() {
         <KallaxSEDrona />
       </group>
 
-      {/* Boîtes Drona et Cintres Mackapär */}
+      {/* Boîtes Drona Mackapär */}
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2}>
         <MackaparDrona />
-        <MackaparHangers />
       </group>
 
       {/* Boîte Drona au sol mur Ouest */}
@@ -654,6 +654,23 @@ export function LivingRoomDecor() {
 
       {/* Baskets Sneakers Rouges sur range-chaussures */}
       <SneakersPair />
+
+      {/* Cintres et vêtements Mackapär (T-shirt noir + cintres Spruttig) */}
+      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, itemName: 'Cintres et T-shirt Mackapär' }}>
+        <MackaparHangers />
+      </group>
+
+      {/* Cintres Penderie Mulig */}
+      <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ skipMerge: true, itemName: 'Cintres Penderie Mulig' }}>
+        <MuligHangers />
+      </group>
+
+      {/* Casquettes sur ShoeHatRack (flanc Kallax SE) */}
+      <group position={[ROOM_W - KALLAX_DEPTH / 2, 0, KALLAX_SE_Z]} rotation={[0, Math.PI / 2, 0]}>
+        <group position={[-w1 / 2, 0, KALLAX_DEPTH / 2]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
+          <ShoeHatRackCaps />
+        </group>
+      </group>
     </MergedStaticGroup>
   );
 }
