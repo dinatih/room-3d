@@ -9,6 +9,7 @@ export interface WalkerProps {
   previewHaircut?: string;
   previewHairColor?: string;
   characterIndex?: number;
+  totalCharacters?: number;
   walkerAnim?: string;
   isPaused?: boolean;
   previewPosition?: [number, number, number];

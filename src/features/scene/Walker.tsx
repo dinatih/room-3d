@@ -29,6 +29,7 @@ export interface WalkerProps {
   previewHaircut?: string;
   previewHairColor?: string;
   characterIndex?: number;
+  totalCharacters?: number;
   walkerAnim?: string;
   isPaused?: boolean;
   previewPosition?: [number, number, number];
@@ -72,7 +73,7 @@ function InternalWalker(props: WalkerProps) {
 
   return (
     <>
-      {mountedCharacters.map((char: any) => {
+      {mountedCharacters.map((char: any, index: number) => {
         const isDuoRoleA = char.isDuoRoleA;
         const isDuoRoleB = char.isDuoRoleB;
 
@@ -119,7 +120,8 @@ function InternalWalker(props: WalkerProps) {
               previewRotationY={charRot}
               previewHaircut={props.previewHaircut}
               previewHairColor={props.previewHairColor}
-              characterIndex={CHARACTERS.findIndex(candidate => candidate.id === char.id)}
+              characterIndex={props.characterIndex !== undefined ? props.characterIndex : index}
+              totalCharacters={mountedCharacters.length}
             />
           </Suspense>
         );

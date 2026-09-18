@@ -2,6 +2,7 @@ import { useSceneStore } from '../../store/useSceneStore';
 import { CHARACTERS, isCharacterVisibleInMode, npcLabel } from '@features/scene/walkerConfig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
 import { ExtraCharactersSelector } from './ExtraCharactersSelector';
+import { frameLaraGridCamera } from '@features/scene/character/laraGridUtils';
 import type { LayerState } from '../types';
 
 export interface CharacterSectionProps {
@@ -496,9 +497,6 @@ export function CharacterSection({
         className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between"
         onClick={() => {
           onToggleLayer('laraGrid');
-          if (!layers.laraGrid) {
-            document.dispatchEvent(new CustomEvent('camera-view', { detail: { pos: [150, 450, 600], target: [150, 450, 200] } }));
-          }
         }}
         style={{ 
           fontSize: isMobile ? '13px' : '11px', 
@@ -514,6 +512,20 @@ export function CharacterSection({
           {layers.laraGrid ? 'ON' : 'OFF'}
         </span>
       </button>
+      {layers.laraGrid && (
+        <div className="p-2 border-bottom bg-light">
+          <button
+            type="button"
+            className="btn btn-outline-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-1"
+            style={{ fontSize: isMobile ? '12px' : '10px' }}
+            onClick={() => frameLaraGridCamera()}
+            title="Recadrer la caméra sur le centre de la grille de personnages"
+          >
+            <span>🎯</span>
+            <span>Recadrer la caméra sur la grille</span>
+          </button>
+        </div>
+      )}
 
       {/* ── Réglages Physique Buste ── */}
       {layers.walker && (

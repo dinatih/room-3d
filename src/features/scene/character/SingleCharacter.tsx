@@ -36,6 +36,7 @@ import { HeartParachute } from './HeartParachute';
 import { useCharacterAnimations } from './useCharacterAnimations';
 import { useCharacterPhysics } from './useCharacterPhysics';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
+import { getLaraGridPosition } from './laraGridUtils';
 
 const EMPTY_SCENARIO: AgentInstruction[] = [];
 const _tmpLgbtaColorA = new THREE.Color();
@@ -55,6 +56,7 @@ export function SingleCharacter({
   isActive,
   isPreview = false,
   characterIndex = 0,
+  totalCharacters = 1,
   walkerAnim = 'idle',
   isPaused = false,
   previewHaircut,
@@ -512,11 +514,7 @@ export function SingleCharacter({
       }
       groupRef.current.visible = true;
     } else if (laraGrid) {
-      const row = Math.floor(characterIndex / 5);
-      const col = characterIndex % 5;
-      const targetX = 150 + (col - 2) * 120;
-      const targetY = 400 + row * 220;
-      const targetZ = 200;
+      const { x: targetX, y: targetY, z: targetZ } = getLaraGridPosition(characterIndex, totalCharacters);
       groupRef.current.position.set(targetX, targetY, targetZ);
       groupRef.current.rotation.y = 0;
       const isVisibleInCountMode = isCharacterVisibleInMode(id, laraCount, activeWalkerId, extraCharacters, activeExtraIds);
@@ -524,6 +522,7 @@ export function SingleCharacter({
       if (!userAnimOverrideRef.current) {
         currentAnimClip.current = null;
       }
+      cameraState.positions[id] = { x: targetX, y: targetY, z: targetZ, yaw: 0 };
     } else {
       if (isActive) {
         const isUserManuallyMoving = 

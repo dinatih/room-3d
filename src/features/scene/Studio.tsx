@@ -49,6 +49,7 @@ import { RealMeasurementsLayer }      from './RealMeasurementsLayer';
 import { AppConsole }                 from '@features/ui/AppConsole';
 import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
 import { GridLayout }            from '@features/scene/GridLayout';
+import { frameLaraGridCamera }   from './character/laraGridUtils';
 
 // The inventory pulls in a second R3F canvas, its GLTF loaders and a large
 // catalogue. Do not parse it until the user explicitly opens the inventory.
@@ -307,6 +308,18 @@ export function Studio() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // Recadrage dynamique de la caméra sur la grille de comparaison (centrée sur tous les PNJ de la scène)
+  const laraGridActive = useSceneStore(state => state.layers.laraGrid);
+  const laraCount = useSceneStore(state => state.layers.laraCount);
+  const extraCharacters = useSceneStore(state => state.layers.extraCharacters);
+  const activeExtraIds = useSceneStore(state => state.activeExtraIds);
+
+  useEffect(() => {
+    if (laraGridActive) {
+      frameLaraGridCamera();
+    }
+  }, [laraGridActive, laraCount, extraCharacters, activeExtraIds]);
+
   // G → toggle mode grille lara (ignoré quand un input/textarea est focus)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -315,11 +328,7 @@ export function Studio() {
       if (t && /^(input|textarea|select)$/i.test(t.tagName)) return;
 
       if (e.key === 'g' || e.key === 'G') {
-        const currentGrid = useSceneStore.getState().layers.laraGrid;
         onToggleLayer('laraGrid');
-        if (!currentGrid) {
-          document.dispatchEvent(new CustomEvent('camera-view', { detail: { pos: [150, 450, 600], target: [150, 450, 200] } }));
-        }
         cameraState.invalidate?.();
       } else if (e.key === 'z' || e.key === 'Z') {
         onToggleLayer('laraTopOff');
