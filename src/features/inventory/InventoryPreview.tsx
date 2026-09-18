@@ -17,6 +17,7 @@ import { SkySphere } from '@features/scene/SkySphere';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
 import { AnimFrameController } from './AnimFrameController';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
+import { CharacterSection } from '@features/scene/sidepanel/sections/CharacterSection';
 
 function disposePreviewScene(root: THREE.Object3D) {
   root.traverse((node: any) => {
@@ -542,6 +543,37 @@ export function InventoryPreview({
   const [previewView, setPreviewView] = useState<'free' | 'front' | 'side' | 'top'>('free');
   const isAnimPlaying = useAnimPreviewStore(s => s.isPlaying);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
+  const layers = useSceneStore(state => state.layers);
+  const toggleLayer = useSceneStore(state => state.toggleLayer);
+
+  const [showPnjPanel, setShowPnjPanel] = useState<boolean>(false);
+  const [globalHaircut, setGlobalHaircut] = useState<string>('original');
+  const [globalHairColor, setGlobalHairColor] = useState<string>('rose');
+  const lastWigRef = useRef<string>('hair_101');
+
+  const handleRandomHairColor = () => {
+    const allColors = ['rose', 'naturel', 'noir', 'brun', 'chatain', 'blond', 'roux', 'rouge', 'bleu', 'vert', 'violet', 'arc-en-ciel'];
+    const otherColors = allColors.filter(c => c !== globalHairColor);
+    const newColor = otherColors[Math.floor(Math.random() * otherColors.length)];
+    setGlobalHairColor(newColor);
+    setActionStates(s => ({ ...s, previewHairColor: newColor }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircolor', value: newColor } }));
+  };
+
+  const handleRandomHaircut = () => {
+    const allHaircuts = ['original', ...WIGS_ITEMS.map(w => w.id)];
+    const otherHaircuts = allHaircuts.filter(h => h !== globalHaircut);
+    const newHaircut = otherHaircuts[Math.floor(Math.random() * otherHaircuts.length)];
+    setGlobalHaircut(newHaircut);
+    if (newHaircut !== 'original') lastWigRef.current = newHaircut;
+    setActionStates(s => ({ ...s, previewHaircut: newHaircut }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: newHaircut } }));
+  };
+
+  const handleRandomHaircutAndColor = () => {
+    handleRandomHaircut();
+    handleRandomHairColor();
+  };
 
   useEffect(() => {
     setActionStates(initialDuoAnim ? {
@@ -554,6 +586,7 @@ export function InventoryPreview({
     setBoundsRadius(50);
     setPhotoIdx(0);
     setShowAnimSelector(false);
+    setShowPnjPanel(false);
     setPreviewView('free');
     useAnimPreviewStore.getState().reset();
   }, [item?.id]);
@@ -768,7 +801,30 @@ export function InventoryPreview({
               </button>
             </div>
           )}
-          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3 }}>
+          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3, display: 'flex', gap: 6, alignItems: 'center' }}>
+            {isHumanWalker && (
+              <button
+                type="button"
+                onClick={() => setShowPnjPanel(v => !v)}
+                style={{
+                  padding: '3px 8px',
+                  fontSize: 11,
+                  background: showPnjPanel ? '#c82333' : 'rgba(0,0,0,0.55)',
+                  border: `1px solid ${showPnjPanel ? '#dc3545' : '#444'}`,
+                  borderRadius: 4,
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: showPnjPanel ? 'bold' : 'normal',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+                title={showPnjPanel ? "Masquer la section PNJ" : "Afficher la section PNJ (Physique buste, tenues, perruques...)"}
+              >
+                <span>💃</span>
+                <span>{showPnjPanel ? 'Masquer Section PNJ' : 'Section PNJ'}</span>
+              </button>
+            )}
             <button onClick={() => setShowDims(v => !v)} style={{ padding: '3px 8px', fontSize: 11, background: 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>📏 {showDims ? 'Masquer Dims' : 'Afficher Dims'}</button>
           </div>
           {showing3D && previewView !== 'free' && (
@@ -812,7 +868,28 @@ export function InventoryPreview({
           )}
           {showing3D && 'category' in item && ((item as any).category === 'walkers' || (item as any).category === 'wigs') && (
             <div style={{ position: 'absolute', top: 40, left: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }} onClick={e => e.stopPropagation()}>
-              <button onClick={() => setActionStates(s => ({ ...s, showBones: !s.showBones }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.showBones ? '#0058a3' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}</button>
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <button onClick={() => setActionStates(s => ({ ...s, showBones: !s.showBones }))} style={{ padding: '3px 8px', fontSize: 11, background: actionStates.showBones ? '#0058a3' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{actionStates.showBones ? '🦴 Cacher Squelette' : '🦴 Voir Squelette'}</button>
+                {isHumanWalker && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPnjPanel(v => !v)}
+                    style={{
+                      padding: '3px 8px',
+                      fontSize: 11,
+                      background: showPnjPanel ? '#c82333' : 'rgba(0,0,0,0.55)',
+                      border: `1px solid ${showPnjPanel ? '#dc3545' : '#444'}`,
+                      borderRadius: 4,
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontWeight: showPnjPanel ? 'bold' : 'normal',
+                    }}
+                    title={showPnjPanel ? "Masquer la section PNJ" : "Afficher la section PNJ (Physique buste, tenues, perruques...)"}
+                  >
+                    💃 {showPnjPanel ? 'Fermer PNJ' : 'Panneau PNJ'}
+                  </button>
+                )}
+              </div>
               
               {(item as any).category === 'walkers' && (
                 <>
@@ -1117,6 +1194,87 @@ export function InventoryPreview({
               <span style={{ fontSize: 10, opacity: 0.9, whiteSpace: 'nowrap', marginLeft: 8 }}>
                 A: {(item as any).name} | B: {CHARACTERS.find(c => c.id === (actionStates.duoPartnerId || (item.id === 'native' ? 'rosanna' : 'native')))?.name || actionStates.duoPartnerId}
               </span>
+            </div>
+          )}
+
+          {/* Panneau latéral Section PNJ & Physique Buste */}
+          {showPnjPanel && isHumanWalker && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 40,
+                right: 8,
+                bottom: datumBannerBottom + (actionStates.walkerAnim && actionStates.walkerAnim !== 'idle' ? 68 : 12),
+                width: 330,
+                maxWidth: 'calc(100% - 16px)',
+                zIndex: 9,
+                background: '#ffffff',
+                boxShadow: '-4px 4px 24px rgba(0, 0, 0, 0.35)',
+                borderRadius: 8,
+                border: '1px solid #ced4da',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden'
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  padding: '8px 12px',
+                  background: '#f8f9fa',
+                  borderBottom: '1px solid #dee2e6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexShrink: 0
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 12, color: '#212529' }}>
+                  <span>💃</span>
+                  <span>Section PNJ & Physique Buste</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPnjPanel(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: 16,
+                    lineHeight: 1,
+                    cursor: 'pointer',
+                    color: '#6c757d',
+                    padding: '0 4px'
+                  }}
+                  title="Fermer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={{ flex: 1, overflowY: 'auto', padding: '4px 6px 16px 6px' }}>
+                <CharacterSection
+                  layers={layers}
+                  onToggleLayer={toggleLayer}
+                  isMobile={false}
+                  globalHairColor={globalHairColor}
+                  setGlobalHairColor={(c) => {
+                    setGlobalHairColor(c);
+                    setActionStates(s => ({ ...s, previewHairColor: c }));
+                    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircolor', value: c } }));
+                  }}
+                  globalHaircut={globalHaircut}
+                  setGlobalHaircut={(h) => {
+                    setGlobalHaircut(h);
+                    if (h !== 'original') lastWigRef.current = h;
+                    setActionStates(s => ({ ...s, previewHaircut: h }));
+                    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: h } }));
+                  }}
+                  lastWigRef={lastWigRef}
+                  handleRandomHaircutAndColor={handleRandomHaircutAndColor}
+                  handleRandomHairColor={handleRandomHairColor}
+                  handleRandomHaircut={handleRandomHaircut}
+                />
+              </div>
             </div>
           )}
 
