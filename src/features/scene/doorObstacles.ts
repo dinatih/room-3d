@@ -56,12 +56,12 @@ export const doorCollisionState = {
  */
 const STATIC_BOX_OBSTACLES: BoxObstacle[] = [
   // Tour Kallax SE + Congélateur CHiQ (Mur B / Sud-Est)
-  // X: 260 à 316 (Kallax profondeur 39, freezer largeur ~48)
-  // Z: 280 à 360 (Z_SE = 319.75, Kallax 75.5 large)
+  // X: face avant freezer à X = 273.5, Kallax SE à X = 277 (centre X = 296.5)
+  // Z: Kallax SE [282, 357.5], Freezer [296, 344]
   {
-    minX: 255,
+    minX: 273.5,
     maxX: ROOM_W,
-    minZ: 280,
+    minZ: 282,
     maxZ: 358,
     yMin: 0,
     yMax: 160,
@@ -224,9 +224,10 @@ export function computeDoorAllowedAngle(door: DoorConfig): number {
     }
   }
 
-  // 2. Meubles dynamiques
+  // 2. Meubles dynamiques (exclure le congélateur qui est déjà modélisé exactement dans STATIC_BOX_OBSTACLES)
   const furniture = getActiveFurnitureObstacles();
   for (const f of furniture) {
+    if (f.id === 'freezer') continue;
     const contact = testCircleCollision(door, {
       x: f.x,
       z: f.z,
@@ -272,7 +273,7 @@ export const DOOR_CONFIGS = {
     maxAngle: Math.PI / 2,
     yMin: 0,
     yMax: 204,
-    margin: 3.0,
+    margin: 1.5,
   } satisfies DoorConfig,
 
   glassRight: {
