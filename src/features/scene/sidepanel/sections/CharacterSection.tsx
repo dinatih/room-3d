@@ -734,6 +734,56 @@ export function CharacterSection({
             />
           </div>
 
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                ↕️ Rebond / Translation (breastTranslation)
+              </span>
+              <span className={`badge ${(layers.breastTranslation ?? 0.15) > 0 ? 'bg-primary' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+                {(layers.breastTranslation ?? 0.15) === 0 ? 'Désactivé' : `${(layers.breastTranslation ?? 0.15).toFixed(2)}x`}
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.0"
+              max="2.0"
+              step="0.05"
+              value={layers.breastTranslation ?? 0.15}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, breastTranslation: val }
+                }));
+              }}
+            />
+          </div>
+
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                📏 Course Max Rebond (breastMaxTravel)
+              </span>
+              <span className="badge bg-dark text-white" style={{ fontSize: '9px' }}>
+                {(layers.breastMaxTravel ?? 0.5).toFixed(2)} cm
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.05"
+              max="2.0"
+              step="0.05"
+              value={layers.breastMaxTravel ?? 0.5}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, breastMaxTravel: val }
+                }));
+              }}
+            />
+          </div>
+
           <div className="border-top pt-2 mt-2">
             <button
               type="button"

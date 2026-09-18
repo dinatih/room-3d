@@ -357,6 +357,8 @@ export function useCharacterPhysics() {
     const breastLagDelay = useSceneStore.getState().layers.breastLagDelay ?? 1.0;
     const maxBreastAngleDeg = useSceneStore.getState().layers.maxBreastAngle ?? 25;
     const maxBreastAngleXZDeg = useSceneStore.getState().layers.maxBreastAngleXZ ?? 35;
+    const breastTranslation = useSceneStore.getState().layers.breastTranslation ?? 0.15;
+    const breastMaxTravel = useSceneStore.getState().layers.breastMaxTravel ?? 0.5;
 
     const maxBreastAngleRad = (maxBreastAngleDeg * Math.PI) / 180;
     const maxBreastAngleXZRad = (maxBreastAngleXZDeg * Math.PI) / 180;
@@ -410,14 +412,27 @@ export function useCharacterPhysics() {
         // Déplacement élastique vertical et en profondeur (translation du buste, comme dans The First Descendant)
         const baseRestPos = (bone as any).userData?.restPos || restPos;
         if (baseRestPos) {
-          const dispY = Math.max(-0.9, Math.min(0.9, breastImpulseRef.current.y * 0.04 * softnessFactor));
-          const dispZ = Math.max(-0.7, Math.min(0.7, breastImpulseRef.current.z * 0.035 * softnessFactor));
-          const dispX = Math.max(-0.4, Math.min(0.4, breastImpulseRef.current.x * 0.02 * softnessFactor));
-          bone.position.set(
-            baseRestPos.x + dispX,
-            baseRestPos.y + dispY,
-            baseRestPos.z + dispZ
-          );
+          if (breastTranslation > 0) {
+            const maxTravelCm = Math.max(0.05, breastMaxTravel);
+            // Déplacement en centimètres monde
+            const dispY_cm = Math.max(-maxTravelCm, Math.min(maxTravelCm, breastImpulseRef.current.y * 0.05 * softnessFactor * breastTranslation));
+            const dispZ_cm = Math.max(-maxTravelCm * 0.8, Math.min(maxTravelCm * 0.8, breastImpulseRef.current.z * 0.04 * softnessFactor * breastTranslation));
+            const dispX_cm = Math.max(-maxTravelCm * 0.4, Math.min(maxTravelCm * 0.4, breastImpulseRef.current.x * 0.02 * softnessFactor * breastTranslation));
+
+            // Conversion cm -> espace local de l'os selon l'échelle réelle de l'armature
+            bone.getWorldScale(_tmpV4);
+            const invScaleX = _tmpV4.x > 1e-4 ? (1.0 / _tmpV4.x) : 0.01;
+            const invScaleY = _tmpV4.y > 1e-4 ? (1.0 / _tmpV4.y) : 0.01;
+            const invScaleZ = _tmpV4.z > 1e-4 ? (1.0 / _tmpV4.z) : 0.01;
+
+            bone.position.set(
+              baseRestPos.x + dispX_cm * invScaleX,
+              baseRestPos.y + dispY_cm * invScaleY,
+              baseRestPos.z + dispZ_cm * invScaleZ
+            );
+          } else {
+            bone.position.copy(baseRestPos);
+          }
         }
         bone.userData.hasPhysicsApplied = true;
       }
