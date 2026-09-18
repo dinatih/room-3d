@@ -56,7 +56,7 @@ Pour différencier l'origine des commits (IDE vs CLI/agy), toujours ajouter le c
 
 ## Directives de communication avec l'utilisateur
 
-- **Références aux fichiers et lignes** : Ne pas générer de liens markdown avec l'URL brute `(zed://...)` car le terminal CLI affiche l'URL complète à côté du texte. Indiquer simplement les fichiers et lignes sous forme de code propre, par exemple : `NomFichier.tsx:Ligne` ou `chemin/NomFichier.tsx:Ligne`.
+- **Format des liens de code pour Zed** : Ne JAMAIS utiliser la syntaxe d'ancre `#L<num>` (comme `file:///path#L96`), car Zed tente de créer un fichier inexistant `path#L96`. Pour ouvrir un fichier à une ligne précise dans Zed, TOUJOURS utiliser le schéma natif avec un libellé propre : `[NomFichier.tsx:Ligne](zed://file/chemin/absolu:Ligne)`.
 - **Validation** : Toujours lancer `npx tsc --noEmit` après avoir modifié du code pour garantir l'absence d'erreurs de typage.
 - **Commit automatique** : L'agent DOIT toujours commiter ses modifications de code via `git commit` à chaque fois qu'une réponse est envoyée, sans attendre d'instruction explicite.
 
