@@ -91,9 +91,11 @@ export function useCharacterPhysics() {
       const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
       const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
       const initialRestQ = (bone as any).restLocalQuaternion ? (bone as any).restLocalQuaternion.clone() : bone.quaternion.clone();
+      const initialRestPos = (bone as any).userData?.restPos ? (bone as any).userData.restPos.clone() : bone.position.clone();
       breastChain.push({
         bone,
         restQuat: initialRestQ,
+        restPos: initialRestPos,
         axis,
         length,
         worldLength,
@@ -359,7 +361,12 @@ export function useCharacterPhysics() {
     const maxBreastAngleRad = (maxBreastAngleDeg * Math.PI) / 180;
     const maxBreastAngleXZRad = (maxBreastAngleXZDeg * Math.PI) / 180;
 
-    if (enableBreastPhysics && breastIntensity > 0 && breastChainRef.current.length > 0) {
+    const isBakedBustAnimation = Boolean(
+      (ctx.targetAnim && ctx.targetAnim.toLowerCase().includes('signature')) ||
+      (ctx.walkerAnim && ctx.walkerAnim.toLowerCase().includes('signature'))
+    );
+
+    if (enableBreastPhysics && !isBakedBustAnimation && breastIntensity > 0 && breastChainRef.current.length > 0) {
       const mass = Math.max(0.2, breastMass);
       const stiffness = (35.0 * braElasticity * breastFirmness);
       const damping = 10.0 * (1.0 + breastLagDelay * 0.4);
@@ -388,7 +395,7 @@ export function useCharacterPhysics() {
       }
 
       for (let i = 0; i < breastChainRef.current.length; i++) {
-        const { bone, restQuat } = breastChainRef.current[i];
+        const { bone, restQuat, restPos } = breastChainRef.current[i];
 
         let swingX = Math.max(-maxBreastAngleRad, Math.min(maxBreastAngleRad, breastImpulseRef.current.y * 0.25));
         let swingY = Math.max(-maxBreastAngleXZRad, Math.min(maxBreastAngleXZRad, breastImpulseRef.current.x * 0.45 * softnessFactor));
@@ -399,6 +406,34 @@ export function useCharacterPhysics() {
 
         const baseRest = (bone as any).userData?.restQuat || (bone as any).restLocalQuaternion || restQuat;
         bone.quaternion.copy(baseRest).multiply(_animBreastQ);
+
+        // Déplacement élastique vertical et en profondeur (translation du buste, comme dans The First Descendant)
+        const baseRestPos = (bone as any).userData?.restPos || restPos;
+        if (baseRestPos) {
+          const dispY = Math.max(-0.9, Math.min(0.9, breastImpulseRef.current.y * 0.04 * softnessFactor));
+          const dispZ = Math.max(-0.7, Math.min(0.7, breastImpulseRef.current.z * 0.035 * softnessFactor));
+          const dispX = Math.max(-0.4, Math.min(0.4, breastImpulseRef.current.x * 0.02 * softnessFactor));
+          bone.position.set(
+            baseRestPos.x + dispX,
+            baseRestPos.y + dispY,
+            baseRestPos.z + dispZ
+          );
+        }
+        bone.userData.hasPhysicsApplied = true;
+      }
+    } else if (breastChainRef.current.length > 0) {
+      // Nettoyage / Réinitialisation propre si la physique est désactivée ou qu'une animation bake joue
+      for (let i = 0; i < breastChainRef.current.length; i++) {
+        const { bone, restQuat, restPos } = breastChainRef.current[i];
+        if (bone.userData?.hasPhysicsApplied) {
+          if (!isBakedBustAnimation) {
+            const baseRest = (bone as any).userData?.restQuat || (bone as any).restLocalQuaternion || restQuat;
+            const baseRestPos = (bone as any).userData?.restPos || restPos;
+            if (baseRest) bone.quaternion.copy(baseRest);
+            if (baseRestPos) bone.position.copy(baseRestPos);
+          }
+          bone.userData.hasPhysicsApplied = false;
+        }
       }
     }
 

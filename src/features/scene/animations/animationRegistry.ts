@@ -57,6 +57,14 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     tags: ['signature', 'sophia', 'dance', 'victory'],
     duration: 66.7,
   },
+  {
+    id: 'valby_signature_intro',
+    path: 'animations/emotes_gestures/anim_valby_signature.glb',
+    label: 'Valby Signature Emote & Pose',
+    aliases: ['valby_intro', 'valby_signature', 'valby_pose', 'valby_emote'],
+    tags: ['signature', 'valby', 'intro', 'emotes', 'pose'],
+    duration: 13.0,
+  },
 
   // ── POSES DE BASE & REPOS ──────────────────────────────────────────────────
   {
