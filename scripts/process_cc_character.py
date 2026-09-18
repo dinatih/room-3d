@@ -28,6 +28,9 @@ CC_TO_MIXAMO = {
     'CC_Base_R_Calf': 'mixamorig:RightLeg',
     'CC_Base_R_Foot': 'mixamorig:RightFoot',
     'CC_Base_R_ToeBase': 'mixamorig:RightToeBase',
+    # Poitrine native CC3/CC4
+    'CC_Base_L_Breast': 'breast_left',
+    'CC_Base_R_Breast': 'breast_right',
     # Fingers Left
     'CC_Base_L_Thumb1': 'mixamorig:LeftHandThumb1',
     'CC_Base_L_Thumb2': 'mixamorig:LeftHandThumb2',
@@ -289,23 +292,47 @@ def process_character(char_id, input_path, texture_dirs, target_height_cm=172.0)
         eb_hips.parent = None
         print("  ✅ mixamorig:Hips détaché en racine unique de l'armature")
 
-    # Supprimer les anciens os de poitrine CC3 s'il y en a
-    for name in list(eb.keys()):
-        if 'breast' in name.lower():
-            eb.remove(eb[name])
+    # 8. Reparenter les bones de poitrine natifs à Spine2 et créer les bones d'extrémité
+    parent_bone = eb.get('mixamorig:Spine2')
+    eb_bl = eb.get('breast_left') or eb.get('CC_Base_L_Breast')
+    eb_br = eb.get('breast_right') or eb.get('CC_Base_R_Breast')
+
+    if eb_bl:
+        eb_bl.name = 'breast_left'
+        eb_bl.parent = parent_bone
+        eb_bl.use_deform = True
+        dir_l = (eb_bl.tail - eb_bl.head).normalized() if (eb_bl.tail - eb_bl.head).length > 0.001 else Vector((0, -1, 0))
+        if 'breast_left_end' not in eb:
+            ble = eb.new('breast_left_end')
+            ble.head = eb_bl.tail
+            ble.tail = eb_bl.tail + dir_l * 0.025
+            ble.parent = eb_bl
+            ble.use_deform = False
+        print("  ✅ breast_left et breast_left_end configurés sous mixamorig:Spine2")
+
+    if eb_br:
+        eb_br.name = 'breast_right'
+        eb_br.parent = parent_bone
+        eb_br.use_deform = True
+        dir_r = (eb_br.tail - eb_br.head).normalized() if (eb_br.tail - eb_br.head).length > 0.001 else Vector((0, -1, 0))
+        if 'breast_right_end' not in eb:
+            bre = eb.new('breast_right_end')
+            bre.head = eb_br.tail
+            bre.tail = eb_br.tail + dir_r * 0.025
+            bre.parent = eb_br
+            bre.use_deform = False
+        print("  ✅ breast_right et breast_right_end configurés sous mixamorig:Spine2")
 
     # Supprimer CC_Base_BoneRoot et tous les os secondaires fusionnés
     bones_to_delete = set(list(BONES_TO_MERGE.keys()) + ['CC_Base_BoneRoot', 'neutral_bone', 'CC_Base_Pivot'])
-    # Détecter également tout os non-mixamo restant (ex: DW_C4_Sunglasses_B, default, etc.)
     for b in list(eb.keys()):
-        if not b.startswith('mixamorig:') and 'breast' not in b:
+        if not b.startswith('mixamorig:') and not b.startswith('breast_'):
             bones_to_delete.add(b)
 
     # Fusionner les vertex groups des os restants inconnus vers leur parent ou Head
     for b_name in bones_to_delete:
         target_name = BONES_TO_MERGE.get(b_name)
         if not target_name:
-            # Fallback vers Head ou Spine2
             target_name = 'mixamorig:Head' if ('sunglass' in b_name.lower() or 'glass' in b_name.lower() or 'hair' in b_name.lower()) else 'mixamorig:Spine2'
         for m in meshes:
             src_vg = m.vertex_groups.get(b_name)
@@ -330,7 +357,7 @@ def process_character(char_id, input_path, texture_dirs, target_height_cm=172.0)
     valid_bone_names = set(b.name for b in arm.data.bones)
     for m in meshes:
         for vg in list(m.vertex_groups):
-            if vg.name not in valid_bone_names and 'breast' not in vg.name:
+            if vg.name not in valid_bone_names:
                 m.vertex_groups.remove(vg)
 
     # 9. Détacher les maillages de la hiérarchie objet de l'Armature pour éliminer neutral_bone au glTF export
@@ -379,148 +406,43 @@ def process_character(char_id, input_path, texture_dirs, target_height_cm=172.0)
         bpy.ops.object.transform_apply(location=True, rotation=False, scale=False)
         print(f"  ✅ Pieds calés au sol Z=0 (ajustement {min_z:.4f}m)")
 
-    # 12. Détection anatomique exacte des sommets mammaires
-    s2 = arm.data.bones.get('mixamorig:Spine2')
-    s2_head_w = arm.matrix_world @ s2.head_local
-    s2_tail_w = arm.matrix_world @ s2.tail_local
-    s2_head_z = s2_head_w.z
-    s2_mid_y = (s2_head_w.y + s2_tail_w.y) / 2.0
+    # 12. Synchronisation des vêtements / soutiens-gorge avec la poitrine du corps
+    body_obj = bpy.data.objects.get('CC_Base_Body')
+    if body_obj:
+        for m in meshes:
+            if m != body_obj:
+                # Vérifier si ce maillage a des sommets au niveau de la poitrine
+                s2 = arm.data.bones.get('mixamorig:Spine2')
+                s2_head_z = (arm.matrix_world @ s2.head_local).z
+                mat = m.matrix_world
+                near_chest = any((s2_head_z - 0.20 <= (mat @ v.co).z <= s2_head_z + 0.25) and ((mat @ v.co).y < -0.05) for v in m.data.vertices)
+                if near_chest and not m.vertex_groups.get('breast_left'):
+                    # Transférer les poids des groupes breast_left et breast_right
+                    dt = m.modifiers.new(name='BreastWeightTransfer', type='DATA_TRANSFER')
+                    dt.object = body_obj
+                    dt.use_vert_data = True
+                    dt.data_types_verts = {'VGROUP_WEIGHTS'}
+                    dt.vert_mapping = 'NEAREST'
+                    bpy.context.view_layer.objects.active = m
+                    bpy.ops.object.datalayout_transfer(modifier=dt.name)
+                    bpy.ops.object.modifier_apply(modifier=dt.name)
+                    print(f"  ✨ Poids de poitrine transférés sur {m.name}")
 
-    front_verts = []
-    spine_names = ['mixamorig:Spine', 'mixamorig:Spine1', 'mixamorig:Spine2']
+    # 13. Garantie absolue zéro sommet non-pondéré (résolution définitive des tétons/sommets figés)
+    total_unweighted_fixed = 0
     for m in meshes:
-        vgs = [m.vertex_groups.get(n) for n in spine_names]
-        vgs = [g for g in vgs if g is not None]
-        if not vgs: continue
-        mat = m.matrix_world
         for v in m.data.vertices:
-            w = sum(g.weight for g in v.groups if any(g.group == vg.index for vg in vgs))
-            if w > 0.10:
-                wco = mat @ v.co
-                # Devant la colonne et dans la tranche verticale de la poitrine
-                if wco.y < (s2_mid_y - 0.01) and (s2_head_z - 0.22 <= wco.z <= s2_head_z + 0.28):
-                    front_verts.append(wco.copy())
+            tot_w = sum(g.weight for g in v.groups)
+            if tot_w < 0.001:
+                # Rattacher au torse pour suivre le corps à 100%
+                vg = m.vertex_groups.get('mixamorig:Spine2') or m.vertex_groups.new(name='mixamorig:Spine2')
+                vg.add([v.index], 1.0, 'REPLACE')
+                total_unweighted_fixed += 1
 
-    left_verts = [p for p in front_verts if p.x > 0.015]
-    right_verts = [p for p in front_verts if p.x < -0.015]
-
-    if not left_verts or not right_verts:
-        # Fallback proportionnel si les sommets sont très proches du centre
-        print("  ⚠️ Détection sommets élargie...")
-        left_verts = [p for p in front_verts if p.x > 0.005]
-        right_verts = [p for p in front_verts if p.x < -0.005]
-
-    peak_l = min(left_verts, key=lambda p: p.y)
-    peak_r = min(right_verts, key=lambda p: p.y)
-    print(f"  📍 Peak gauche: ({peak_l.x:.4f}, {peak_l.y:.4f}, {peak_l.z:.4f})")
-    print(f"  📍 Peak droit:  ({peak_r.x:.4f}, {peak_r.y:.4f}, {peak_r.z:.4f})")
-
-    # 13. Créer les bones anatomiques aux dimensions exactes
-    arm_inv = arm.matrix_world.inverted()
-    bpy.context.view_layer.objects.active = arm
-    bpy.ops.object.mode_set(mode='EDIT')
-    eb = arm.data.edit_bones
-    parent_bone = eb.get('mixamorig:Spine2')
-
-    base_l_w = Vector((peak_l.x * 0.70, s2_mid_y - 0.02, peak_l.z))
-    base_r_w = Vector((peak_r.x * 0.70, s2_mid_y - 0.02, peak_r.z))
-    tip_l_w = Vector((peak_l.x, peak_l.y, peak_l.z))
-    tip_r_w = Vector((peak_r.x, peak_r.y, peak_r.z))
-    tip_l_end_w = tip_l_w + Vector((0.0, -0.025, 0.0))
-    tip_r_end_w = tip_r_w + Vector((0.0, -0.025, 0.0))
-
-    base_l = arm_inv @ base_l_w
-    base_r = arm_inv @ base_r_w
-    tip_l = arm_inv @ tip_l_w
-    tip_r = arm_inv @ tip_r_w
-    tip_l_end = arm_inv @ tip_l_end_w
-    tip_r_end = arm_inv @ tip_r_end_w
-
-    bl = eb.new('breast_left')
-    bl.head = base_l
-    bl.tail = tip_l
-    bl.parent = parent_bone
-    bl.use_deform = True
-
-    ble = eb.new('breast_left_end')
-    ble.head = tip_l
-    ble.tail = tip_l_end
-    ble.parent = bl
-    ble.use_deform = False
-
-    br = eb.new('breast_right')
-    br.head = base_r
-    br.tail = tip_r
-    br.parent = parent_bone
-    br.use_deform = True
-
-    bre = eb.new('breast_right_end')
-    bre.head = tip_r
-    bre.tail = tip_r_end
-    bre.parent = br
-    bre.use_deform = False
-
-    bpy.ops.object.mode_set(mode='OBJECT')
-    print("  ✅ 4 bones de poitrine créés aux dimensions anatomiques exactes")
-
-    # 14. Skinning volumétrique fluide (sans pointe)
-    Rx = 0.075
-    Ry = 0.085
-    Rz = 0.080
-    max_transfer_ratio = 0.50
-
-    for m in meshes:
-        vg_bl = m.vertex_groups.get('breast_left') or m.vertex_groups.new(name='breast_left')
-        vg_br = m.vertex_groups.get('breast_right') or m.vertex_groups.new(name='breast_right')
-        spine_vgs = [m.vertex_groups.get(n) for n in spine_names]
-        spine_vgs = [g for g in spine_vgs if g is not None]
-        if not spine_vgs: continue
-
-        assigned_l, assigned_r = [], []
-        mat = m.matrix_world
-        for v in m.data.vertices:
-            wco = mat @ v.co
-            vg_weights = {vg.index: 0.0 for vg in spine_vgs}
-            for g in v.groups:
-                if g.group in vg_weights:
-                    vg_weights[g.group] = g.weight
-            total_spine_w = sum(vg_weights.values())
-            if total_spine_w < 0.04: continue
-
-            dx_l = (wco.x - peak_l.x) / Rx
-            dy_l = (wco.y - peak_l.y) / Ry
-            dz_l = (wco.z - peak_l.z) / Rz
-            d_l = (dx_l**2 + dy_l**2 + dz_l**2) ** 0.5
-
-            dx_r = (wco.x - peak_r.x) / Rx
-            dy_r = (wco.y - peak_r.y) / Ry
-            dz_r = (wco.z - peak_r.z) / Rz
-            d_r = (dx_r**2 + dy_r**2 + dz_r**2) ** 0.5
-
-            if d_l < 1.0 and wco.x >= -0.005:
-                falloff = ((1.0 - d_l**2) ** 2)
-                transfer = falloff * max_transfer_ratio * total_spine_w
-                if transfer > 0.01:
-                    assigned_l.append((v.index, transfer, vg_weights, total_spine_w))
-            elif d_r < 1.0 and wco.x <= 0.005:
-                falloff = ((1.0 - d_r**2) ** 2)
-                transfer = falloff * max_transfer_ratio * total_spine_w
-                if transfer > 0.01:
-                    assigned_r.append((v.index, transfer, vg_weights, total_spine_w))
-
-        for vi, trans, vg_w, tot in assigned_l:
-            vg_bl.add([vi], trans, 'ADD')
-            for vg_idx, w in vg_w.items():
-                if w > 0.001:
-                    m.vertex_groups[vg_idx].add([vi], w - trans * (w / tot), 'REPLACE')
-        for vi, trans, vg_w, tot in assigned_r:
-            vg_br.add([vi], trans, 'ADD')
-            for vg_idx, w in vg_w.items():
-                if w > 0.001:
-                    m.vertex_groups[vg_idx].add([vi], w - trans * (w / tot), 'REPLACE')
-
-        if assigned_l or assigned_r:
-            print(f"  ✨ {m.name}: L={len(assigned_l)}, R={len(assigned_r)} sommets skinnés")
+    if total_unweighted_fixed > 0:
+        print(f"  🛡️ {total_unweighted_fixed} sommets orphelins (non-pondérés) rattachés à mixamorig:Spine2")
+    else:
+        print("  🛡️ 100% des sommets sont parfaitement pondérés !")
 
     # 15. Nettoyage final des actions
     for act in list(bpy.data.actions):
