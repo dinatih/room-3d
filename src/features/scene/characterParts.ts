@@ -443,6 +443,14 @@ export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D) {
         (m as any).alphaTest = 0.35;
         m.depthWrite = true;
         m.side = THREE.DoubleSide;
+        // Cheveux/cils : diélectriques, pas de métal
+        if ('metalness' in m) (m as any).metalness = 0.0;
+        if ('metalnessMap' in m) (m as any).metalnessMap = null;
+        if ('roughness' in m) (m as any).roughness = 0.85;
+        if ('roughnessMap' in m) (m as any).roughnessMap = null;
+        if ('specularIntensity' in m) (m as any).specularIntensity = 0.0;
+        if ('specularIntensityMap' in m) (m as any).specularIntensityMap = null;
+        if ('specularColorMap' in m) (m as any).specularColorMap = null;
         m.needsUpdate = true;
         return;
       }
@@ -467,17 +475,40 @@ export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D) {
         }
         if ('roughness' in m) (m as any).roughness = 0.2;
         if ('metalness' in m) (m as any).metalness = 0;
+        if ('metalnessMap' in m) (m as any).metalnessMap = null;
+        if ('roughnessMap' in m) (m as any).roughnessMap = null;
         m.needsUpdate = true;
         return;
       }
 
-      // 7. TOUT LE RESTE (Corps, peau, visage, vêtements, chaussures, accessoires) : FORCER OPAQUE !
-      // Indispensable car les exports GLTF définissent souvent alphaMode: BLEND par erreur sur la peau ou les habits.
+      // 7. TOUT LE RESTE (Corps, peau, visage, vêtements, chaussures, accessoires)
+      // ── Correction du bug de brillance Mixamo ────────────────────────────────────
+      // Mixamo exporte en Specular/Glossiness (legacy) converti en glTF PBR :
+      //   • metallicFactor = 0.5 au lieu de 0 (peau/tissus sont des diélectriques)
+      //   • La texture Glossiness est branchée comme roughnessMap, mais le sens est
+      //     INVERSE (Glossiness 1.0 = miroir, Roughness 1.0 = mat) → effet latex/vinyl.
+      //   • L'extension KHR_materials_specular ajoute des reflets parasites (hotspots).
+      // Solution : forcer metalness=0, supprimer les maps erronées, roughness fixe mat.
       m.transparent = false;
       m.depthWrite = true;
       (m as any).alphaTest = 0;
+
+      // Peau humaine, coton, polyester, cuir = diélectriques → metalness DOIT être 0
+      if ('metalness' in m) (m as any).metalness = 0.0;
+      // Supprimer la metalnessMap (canal B souvent non nul sur atlas Mixamo)
+      if ('metalnessMap' in m) (m as any).metalnessMap = null;
+      // Roughness mat : la Glossiness map branchée en roughnessMap donne ~0.25 (miroir)
+      // On force une valeur physiquement cohérente pour tissu/peau et on retire la map.
+      if ('roughness' in m) (m as any).roughness = 0.82;
+      if ('roughnessMap' in m) (m as any).roughnessMap = null;
+      // Neutraliser KHR_materials_specular (specularTexture → hotspots blancs brillants)
+      if ('specularIntensity' in m) (m as any).specularIntensity = 0.0;
+      if ('specularIntensityMap' in m) (m as any).specularIntensityMap = null;
+      if ('specularColorMap' in m) (m as any).specularColorMap = null;
+
       m.needsUpdate = true;
     });
   });
 }
+
 
