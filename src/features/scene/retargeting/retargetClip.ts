@@ -552,11 +552,9 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
             if (baseName === 'LeftArm' || baseName === 'RightArm') {
               const childBone = bone.children.find((c: any) => c.isBone);
               if (childBone) {
-                const boneWorldPos = new THREE.Vector3();
-                const childWorldPos = new THREE.Vector3();
-                bone.getWorldPosition(boneWorldPos);
-                childBone.getWorldPosition(childWorldPos);
-                const worldArmDir = childWorldPos.sub(boneWorldPos).normalize();
+                const boneWorldPos = bone.restWorldPosition || bone.getWorldPosition(new THREE.Vector3());
+                const childWorldPos = childBone.restWorldPosition || childBone.getWorldPosition(new THREE.Vector3());
+                const worldArmDir = childWorldPos.clone().sub(boneWorldPos).normalize();
                 if (worldArmDir.y < -0.15) {
                   const targetDir = baseName === 'LeftArm'
                     ? new THREE.Vector3(1, 0, 0)

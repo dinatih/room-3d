@@ -161,6 +161,9 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
     if (!o.restWorldQuaternion) {
       o.restWorldQuaternion = o.getWorldQuaternion(new THREE.Quaternion());
     }
+    if (!o.restWorldPosition) {
+      o.restWorldPosition = o.getWorldPosition(new THREE.Vector3());
+    }
 
     if (o.isMesh && !o.userData.isCustomHair) {
       const mesh = o as THREE.Mesh;
