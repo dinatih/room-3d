@@ -13,6 +13,7 @@ import { CharacterBaseballCap } from './CharacterBaseballCap';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../walkerConfig';
 import { buildHairChain } from '../retargeting/index';
+import { glbLocalBBox } from '@features/scene/glbUtils';
 import {
   extractCharacterParts,
   applyClothingAndAccessoriesVisibility,
@@ -287,6 +288,14 @@ export function SingleCharacter({
       const hipsLocal = parent.worldToLocal(hipsWorld);
       scene.position.x -= hipsLocal.x;
       scene.position.z -= hipsLocal.z;
+    }
+
+    // Auto-élévation au niveau du sol (Y = 0) pour les modèles ayant leurs pieds modélisés sous Y=0
+    if (!isLara) {
+      const localBox = glbLocalBBox(scene);
+      if (localBox.min.y < -1.0) {
+        scene.position.y -= localBox.min.y;
+      }
     }
 
     if (isLara && variant) {

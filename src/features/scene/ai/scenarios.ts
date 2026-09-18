@@ -147,6 +147,23 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
   zoe:      'mirror-south',
   sophia:   'building-b-corridor',
   valby:    'bathtub-garden',
+  alex:     'building-b-corridor',
+  david:    'dance-bed-east-north',
+  mannequin:'dance-mirror-south',
+  michelle: 'dance-bathroom',
+  lola:     'dance-glass-door-right',
+  jennifer: 'dance-bed-west-mid',
+  arissa:   'dance-bed-east-mid',
+  astra:    'building-b-garden',
+  dummy:    'dance-chair-office',
+  jody:     'dance-bed-west-north',
+  kachujin: 'garden-fresh-air',
+  medea:    'dance-bed-east-south',
+  megan:    'dance-bed-west-south',
+  olivia:   'sofa-garden-west',
+  sophie:   'corridor-closet',
+  skeleton: 'sdb-closet',
+  curious_skeleton: 'rain-dance',
 };
 
 /**

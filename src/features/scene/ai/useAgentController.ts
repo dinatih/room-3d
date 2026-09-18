@@ -736,7 +736,7 @@ export function useAgentController(
         repeatIndexRef.current = 0;
         targetRepeatsRef.current = 1;
         statusRef.current = 'IDLE';
-        stateRef.current.y = startPosRef.current?.y ?? 0;
+        stateRef.current.y = 0;
         advanceToNextStep(hasNavStep);
       }
     }
