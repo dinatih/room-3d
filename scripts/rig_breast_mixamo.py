@@ -131,21 +131,23 @@ def compute_breast_positions(arm_obj, spine2_name='mixamorig:Spine2'):
     # Z = haut (+Z)
 
     lateral   = bone_len * 0.80   # décalage latéral depuis le centre (±X)
-    forward   = bone_len * 1.20   # à quelle distance en avant du dos (+Y)
+    forward   = bone_len * 1.20   # à quelle distance en avant du perso
     vert_up   = bone_len * 0.10   # légèrement plus haut que le centre
 
     # Le tip pointe vers l'avant et légèrement vers l'extérieur
-    tip_fwd   = bone_len * 0.60   # avance supplémentaire du tip
-    tip_lat   = bone_len * 0.20   # légèrement plus large au tip
-    tip_up    = bone_len * 0.10   # légèrement plus haut au tip
+    tip_fwd   = bone_len * 0.60
+    tip_lat   = bone_len * 0.20
+    tip_up    = bone_len * 0.10
 
-    # Base des bones (là où ils s'accrochent à Spine2)
-    base_l = chest_center + Vector(( lateral,  forward, vert_up))
-    base_r = chest_center + Vector((-lateral,  forward, vert_up))
+    # IMPORTANT : les personnages Mixamo font face à +Z en Three.js
+    # → en Blender (après import GLB) le "avant" du perso = -Y (pas +Y)
+    # Blender +Y → GLB -Z → behind character facing +Z
+    # Blender -Y → GLB +Z → IN FRONT of character facing +Z  ✅
+    base_l = chest_center + Vector(( lateral, -forward, vert_up))
+    base_r = chest_center + Vector((-lateral, -forward, vert_up))
 
-    # Tip des bones (bout du sein, pointe vers l'avant-extérieur)
-    tip_l  = base_l + Vector(( tip_lat, tip_fwd, tip_up))
-    tip_r  = base_r + Vector((-tip_lat, tip_fwd, tip_up))
+    tip_l  = base_l + Vector(( tip_lat, -tip_fwd, tip_up))
+    tip_r  = base_r + Vector((-tip_lat, -tip_fwd, tip_up))
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -231,10 +233,11 @@ def redistribute_breast_weights(meshes, arm_obj, spine2_name='mixamorig:Spine2')
     z_min = z_spine2_head - 0.01
     z_max = z_spine2_tail + 0.02
 
-    # Seuil Y : légèrement en arrière du milieu de Spine2 → capture l'avant du buste
-    y_front_threshold = spine2_mid_y - 0.005
+    # Seuil Y : le "devant" du perso est à -Y en Blender (perso face +Z en Three.js)
+    # On garde les verts avec Y < spine2_mid_y (= verts à l'avant du corps)
+    y_front_threshold = spine2_mid_y + 0.005  # légèrement du côté avant
 
-    print(f"  Zone thorax Z=[{z_min:.3f}, {z_max:.3f}], Y > {y_front_threshold:.3f}")
+    print(f"  Zone thorax Z=[{z_min:.3f}, {z_max:.3f}], Y < {y_front_threshold:.3f}")
 
     for mesh_obj in meshes:
         mesh = mesh_obj.data
@@ -255,7 +258,7 @@ def redistribute_breast_weights(meshes, arm_obj, spine2_name='mixamorig:Spine2')
             # Filtre spatial strict
             if co.z < z_min or co.z > z_max:
                 continue
-            if co.y <= y_front_threshold:   # doit être devant (Y > 0)
+            if co.y >= y_front_threshold:   # doit être devant (-Y en Blender)
                 continue
             for g in v.groups:
                 if g.group == vg_spine2.index and g.weight > 0.05:
