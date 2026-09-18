@@ -56,12 +56,9 @@ Pour différencier l'origine des commits (IDE vs CLI/agy), toujours ajouter le c
 
 ## Directives de communication avec l'utilisateur
 
-- **Pas de LaTeX** : Ne jamais utiliser les symboles de dollars (`$`) ou d'expressions mathématiques de type LaTeX dans les réponses de chat, car elles provoquent des bugs d'affichage dans l'interface utilisateur. Écrire les formules et les unités en texte brut (ex: "1 unité = 1 cm").
-- **Explications de code** : Lors des modifications de code R3F, expliquer brièvement les hooks utilisés et la logique de rendu pour aider à consolider la maîtrise de React.
-- **Format des liens de code pour Zed** : Ne JAMAIS utiliser la syntaxe d'ancre `#L<num>` (comme `file:///path#L96`), car Zed tente de créer un fichier inexistant `path#L96`. Pour ouvrir un fichier à une ligne précise dans Zed, TOUJOURS utiliser le schéma natif avec un libellé propre : `[NomFichier.tsx:Ligne](zed://file/chemin/absolu:Ligne)`.
+- **Références aux fichiers et lignes** : Ne pas générer de liens markdown avec l'URL brute `(zed://...)` car le terminal CLI affiche l'URL complète à côté du texte. Indiquer simplement les fichiers et lignes sous forme de code propre, par exemple : `NomFichier.tsx:Ligne` ou `chemin/NomFichier.tsx:Ligne`.
 - **Validation** : Toujours lancer `npx tsc --noEmit` après avoir modifié du code pour garantir l'absence d'erreurs de typage.
 - **Commit automatique** : L'agent DOIT toujours commiter ses modifications de code via `git commit` à chaque fois qu'une réponse est envoyée, sans attendre d'instruction explicite.
-<!--- **Interdiction de bash pour l'édition** : Ne JAMAIS utiliser le terminal `bash` (avec des commandes comme `sed`, `cat`, `echo`, ou `grep` pour modifier ou lire des fichiers). Tu DOIS impérativement utiliser tes outils d'édition natifs (`replace_file_content`, `multi_replace_file_content`, `view_file`) pour ne pas spammer l'utilisateur avec des demandes d'autorisation dans la console.-->
 
 ## Économie de quota et limitation d'investigation
 
@@ -79,4 +76,3 @@ Pour différencier l'origine des commits (IDE vs CLI/agy), toujours ajouter le c
 - **Budget d'outils par tour** : Ne JAMAIS dépasser 6 à 8 appels d'outils au total par message utilisateur. Si une analyse nécessite plus d'étapes, s'interrompre et faire un point avec l'utilisateur au lieu de boucler.
 - **Interdiction absolue d'explorer `node_modules`** : Se concentrer exclusivement sur le code du projet (`src/`). Ne jamais lire ou parcourir les dossiers de dépendances externes.
 - **Action directe** : Dès qu'une piste ou une cause probable est identifiée, appliquer la correction et tester immédiatement au lieu de sur-analyser.
-
