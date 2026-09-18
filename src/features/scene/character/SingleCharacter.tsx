@@ -271,7 +271,7 @@ export function SingleCharacter({
       ? 173.4
       : (id === 'inyeong'
         ? 165.0
-        : (id === 'hayley' || id === 'gloria' || id === 'zoe' || id === 'sophia'
+        : (id === 'hayley' || id === 'gloria' || id === 'zoe' || id === 'sophia' || id === 'valby'
           ? 168.0
           : (findCharacter(id)?.height || 181.0)));
     const scaleFactor = (targetHeight / baseHeight) * 100.0;

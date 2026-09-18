@@ -138,7 +138,7 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
       if ((nLower.includes('hair') || nLower.includes('pony') || nLower.includes('braid')) && !o.userData.isCustomHair) {
         nativeHairBones.push(o as THREE.Bone);
       }
-      if (nLower.includes('breast')) {
+      if (nLower.includes('breast') && !nLower.includes('end') && !nLower.includes('tip') && !nLower.includes('parent')) {
         breastBones.push(o as THREE.Bone);
       }
       if (!o.defaultPosition) {

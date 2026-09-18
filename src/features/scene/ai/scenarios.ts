@@ -146,6 +146,7 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
   gloria:   'sofa-garden-east',
   zoe:      'mirror-south',
   sophia:   'building-b-corridor',
+  valby:    'bathtub-garden',
 };
 
 /**
