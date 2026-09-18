@@ -200,6 +200,13 @@ def render_preview(glb_path, out_png):
     bpy.ops.render.render(write_still=True)
     print(f"  📷 Preview rendue: {out_png}")
 
+def is_hair_or_face(mesh_name):
+    n = mesh_name.lower()
+    keywords = ('hair', 'scalp', 'wavy', 'curly', 'braid', 'bun', 'fringe', 'bang',
+                'ponytail', 'side_part', 'dread', 'afro', 'part_', 'eye', 'teeth',
+                'tongue', 'tear', 'occlusion', 'lash', 'brow')
+    return any(kw in n for kw in keywords)
+
 def process_character(char_id, input_path, texture_dirs, target_height_cm=172.0):
     print("\n" + "="*65)
     print(f"🚀 Traitement de {char_id} ({input_path})")
@@ -253,13 +260,38 @@ def process_character(char_id, input_path, texture_dirs, target_height_cm=172.0)
     # 4. Relier les textures
     relink_textures(texture_dirs)
 
-    # 5. Renommer les vertex groups principaux sur tous les maillages
+    # 5. Préparation des poids de buste (65% breast, 35% Spine2 comme Jennifer) et nettoyage sur cheveux/yeux
+    for m in meshes:
+        if is_hair_or_face(m.name):
+            for vg_name in ('CC_Base_L_Breast', 'CC_Base_R_Breast', 'breast_left', 'breast_right'):
+                vg = m.vertex_groups.get(vg_name)
+                if vg:
+                    m.vertex_groups.remove(vg)
+            continue
+
+        s2_vg = m.vertex_groups.get('mixamorig:Spine2') or m.vertex_groups.get('CC_Base_Spine02')
+        if not s2_vg:
+            s2_vg = m.vertex_groups.new(name='CC_Base_Spine02')
+
+        for b_src, b_tgt in (('CC_Base_L_Breast', 'breast_left'), ('CC_Base_R_Breast', 'breast_right')):
+            vg = m.vertex_groups.get(b_src) or m.vertex_groups.get(b_tgt)
+            if vg:
+                vg.name = b_tgt
+                for v in m.data.vertices:
+                    for g in v.groups:
+                        if g.group == vg.index:
+                            w = g.weight
+                            if w > 0.0005:
+                                g.weight = w * 0.65
+                                s2_vg.add([v.index], w * 0.35, 'ADD')
+
+    # 6. Renommer les vertex groups principaux sur tous les maillages
     for m in meshes:
         for vg in m.vertex_groups:
             if vg.name in CC_TO_MIXAMO:
                 vg.name = CC_TO_MIXAMO[vg.name]
 
-    # 6. Fusionner les vertex groups des os secondaires vers les os parents
+    # 7. Fusionner les vertex groups des os secondaires vers les os parents
     for m in meshes:
         for src_name, tgt_name in BONES_TO_MERGE.items():
             src_vg = m.vertex_groups.get(src_name)
@@ -276,52 +308,120 @@ def process_character(char_id, input_path, texture_dirs, target_height_cm=172.0)
                     tgt_vg.add([v.index], w, 'ADD')
             m.vertex_groups.remove(src_vg)
 
-    # 7. Renommer les os principaux dans l'armature
+    # 8. Renommer les os principaux dans l'armature
     for b in arm.data.bones:
         if b.name in CC_TO_MIXAMO:
             b.name = CC_TO_MIXAMO[b.name]
 
-    # 8. Unparent mixamorig:Hips et supprimer CC_Base_BoneRoot et tous les os secondaires
+    # 9. CONVERSION A-POSE EN VRAIE T-POSE (XBot style)
+    # Rotation des bras à l'horizontale parfaite (vecteur (1,0,0) et (-1,0,0))
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode='POSE')
+    for side, target_dir in [('Left', Vector((1.0, 0.0, 0.0))), ('Right', Vector((-1.0, 0.0, 0.0)))]:
+        pb = arm.pose.bones.get(f'mixamorig:{side}Arm')
+        if pb:
+            v_curr = (pb.tail - pb.head).normalized()
+            q_diff = v_curr.rotation_difference(target_dir)
+            pb.matrix = Matrix.Translation(pb.head) @ q_diff.to_matrix().to_4x4() @ Matrix.Translation(-pb.head) @ pb.matrix
+
+    bpy.context.view_layer.update()
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Cuisson de la T-pose sur la géométrie des maillages (en préservant les shape keys faciales)
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    for m in meshes:
+        eval_obj = m.evaluated_get(depsgraph)
+        eval_mesh = eval_obj.to_mesh()
+        if m.data.shape_keys:
+            basis = m.data.shape_keys.key_blocks.get('Basis')
+            if basis:
+                old_basis = [Vector(v.co) for v in basis.data]
+                new_basis = [Vector(v.co) for v in eval_mesh.vertices]
+                for kb in m.data.shape_keys.key_blocks:
+                    if kb == basis:
+                        for i, v in enumerate(new_basis):
+                            kb.data[i].co = v
+                    else:
+                        for i in range(len(new_basis)):
+                            diff = kb.data[i].co - old_basis[i]
+                            if diff.length_squared > 1e-6:
+                                kb.data[i].co = new_basis[i] + diff
+                            else:
+                                kb.data[i].co = new_basis[i]
+                for i, v in enumerate(new_basis):
+                    m.data.vertices[i].co = v
+        else:
+            for i, v in enumerate(eval_mesh.vertices):
+                m.data.vertices[i].co = v.co
+        eval_obj.to_mesh_clear()
+
+    # Application de la T-pose comme Rest Pose officielle sur l'armature
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode='POSE')
+    bpy.ops.pose.armature_apply(selected=False)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    print("  ✅ Conversion A-pose -> vraie T-pose (XBot) appliquée et cuite au rest pose")
+
+    # 10. Unparent mixamorig:Hips et configuration anatomique des os de poitrine
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.mode_set(mode='EDIT')
     eb = arm.data.edit_bones
 
-    # Détacher Hips pour qu'il devienne l'os racine unique (comme Mixamo)
     eb_hips = eb.get('mixamorig:Hips')
     if eb_hips:
         eb_hips.parent = None
         print("  ✅ mixamorig:Hips détaché en racine unique de l'armature")
 
-    # 8. Reparenter les bones de poitrine natifs à Spine2 et créer les bones d'extrémité
+    # Positionnement anatomique des os de poitrine (base à la cage thoracique, pointe au téton)
     parent_bone = eb.get('mixamorig:Spine2')
-    eb_bl = eb.get('breast_left') or eb.get('CC_Base_L_Breast')
-    eb_br = eb.get('breast_right') or eb.get('CC_Base_R_Breast')
+    body_obj = bpy.data.objects.get('CC_Base_Body')
+    if body_obj and parent_bone:
+        s2_mid_y = (parent_bone.head.y + parent_bone.tail.y) / 2.0
+        z_min = parent_bone.head.z - 0.05
+        z_max = parent_bone.tail.z + 0.05
 
-    if eb_bl:
-        eb_bl.name = 'breast_left'
-        eb_bl.parent = parent_bone
-        eb_bl.use_deform = True
-        dir_l = (eb_bl.tail - eb_bl.head).normalized() if (eb_bl.tail - eb_bl.head).length > 0.001 else Vector((0, -1, 0))
-        if 'breast_left_end' not in eb:
-            ble = eb.new('breast_left_end')
-            ble.head = eb_bl.tail
-            ble.tail = eb_bl.tail + dir_l * 0.025
+        l_cands = [v for v in body_obj.data.vertices if v.co.x > 0.03 and z_min < v.co.z < z_max]
+        r_cands = [v for v in body_obj.data.vertices if v.co.x < -0.03 and z_min < v.co.z < z_max]
+        if l_cands and r_cands:
+            min_l = min(l_cands, key=lambda v: v.co.y)
+            min_r = min(r_cands, key=lambda v: v.co.y)
+
+            tip_l = Vector(min_l.co)
+            tip_r = Vector(min_r.co)
+            base_l = Vector((tip_l.x * 0.45, s2_mid_y, tip_l.z))
+            base_r = Vector((tip_r.x * 0.45, s2_mid_y, tip_r.z))
+
+            eb_bl = eb.get('breast_left') or eb.get('CC_Base_L_Breast') or eb.new('breast_left')
+            eb_bl.name = 'breast_left'
+            eb_bl.head = base_l
+            eb_bl.tail = tip_l
+            eb_bl.parent = parent_bone
+            eb_bl.use_deform = True
+            dir_l = (tip_l - base_l).normalized()
+            len_l = (tip_l - base_l).length
+
+            ble = eb.get('breast_left_end') or eb.new('breast_left_end')
+            ble.head = tip_l
+            ble.tail = tip_l + dir_l * len_l
             ble.parent = eb_bl
             ble.use_deform = False
-        print("  ✅ breast_left et breast_left_end configurés sous mixamorig:Spine2")
+            print(f"  ✅ breast_left configuré: base={base_l}, pointe={tip_l}, longueur={len_l*100:.1f} cm")
 
-    if eb_br:
-        eb_br.name = 'breast_right'
-        eb_br.parent = parent_bone
-        eb_br.use_deform = True
-        dir_r = (eb_br.tail - eb_br.head).normalized() if (eb_br.tail - eb_br.head).length > 0.001 else Vector((0, -1, 0))
-        if 'breast_right_end' not in eb:
-            bre = eb.new('breast_right_end')
-            bre.head = eb_br.tail
-            bre.tail = eb_br.tail + dir_r * 0.025
+            eb_br = eb.get('breast_right') or eb.get('CC_Base_R_Breast') or eb.new('breast_right')
+            eb_br.name = 'breast_right'
+            eb_br.head = base_r
+            eb_br.tail = tip_r
+            eb_br.parent = parent_bone
+            eb_br.use_deform = True
+            dir_r = (tip_r - base_r).normalized()
+            len_r = (tip_r - base_r).length
+
+            bre = eb.get('breast_right_end') or eb.new('breast_right_end')
+            bre.head = tip_r
+            bre.tail = tip_r + dir_r * len_r
             bre.parent = eb_br
             bre.use_deform = False
-        print("  ✅ breast_right et breast_right_end configurés sous mixamorig:Spine2")
+            print(f"  ✅ breast_right configuré: base={base_r}, pointe={tip_r}, longueur={len_r*100:.1f} cm")
 
     # Supprimer CC_Base_BoneRoot et tous les os secondaires fusionnés
     bones_to_delete = set(list(BONES_TO_MERGE.keys()) + ['CC_Base_BoneRoot', 'neutral_bone', 'CC_Base_Pivot'])
@@ -333,7 +433,7 @@ def process_character(char_id, input_path, texture_dirs, target_height_cm=172.0)
     for b_name in bones_to_delete:
         target_name = BONES_TO_MERGE.get(b_name)
         if not target_name:
-            target_name = 'mixamorig:Head' if ('sunglass' in b_name.lower() or 'glass' in b_name.lower() or 'hair' in b_name.lower()) else 'mixamorig:Spine2'
+            target_name = 'mixamorig:Head' if ('sunglass' in b_name.lower() or 'glass' in b_name.lower() or is_hair_or_face(b_name)) else 'mixamorig:Spine2'
         for m in meshes:
             src_vg = m.vertex_groups.get(b_name)
             if src_vg:
@@ -360,7 +460,7 @@ def process_character(char_id, input_path, texture_dirs, target_height_cm=172.0)
             if vg.name not in valid_bone_names:
                 m.vertex_groups.remove(vg)
 
-    # 9. Détacher les maillages de la hiérarchie objet de l'Armature pour éliminer neutral_bone au glTF export
+    # 11. Détacher les maillages de la hiérarchie objet de l'Armature pour éliminer neutral_bone au glTF export
     for m in meshes:
         mat = m.matrix_world.copy()
         m.parent = None
@@ -378,7 +478,7 @@ def process_character(char_id, input_path, texture_dirs, target_height_cm=172.0)
     bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
     print("  ✅ Échelles et rotations appliquées (scale = 1.0, meshes unparented)")
 
-    # 10. Calibrer la hauteur globale au besoin (en mètres dans Blender)
+    # 12. Calibrer la hauteur globale au besoin (en mètres dans Blender)
     bbox_all = [m.matrix_world @ mathutils.Vector(c) for m in meshes for c in m.bound_box]
     min_z = min(v.z for v in bbox_all)
     max_z = max(v.z for v in bbox_all)
@@ -393,7 +493,7 @@ def process_character(char_id, input_path, texture_dirs, target_height_cm=172.0)
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
         print(f"  ✅ Redimensionné à {target_height_cm:.1f} cm (facteur {scale_mult:.3f})")
 
-    # 11. Calage au sol (Z = 0)
+    # 13. Calage au sol (Z = 0)
     bbox_all = [m.matrix_world @ mathutils.Vector(c) for m in meshes for c in m.bound_box]
     min_z = min(v.z for v in bbox_all)
     max_z = max(v.z for v in bbox_all)
@@ -406,11 +506,11 @@ def process_character(char_id, input_path, texture_dirs, target_height_cm=172.0)
         bpy.ops.object.transform_apply(location=True, rotation=False, scale=False)
         print(f"  ✅ Pieds calés au sol Z=0 (ajustement {min_z:.4f}m)")
 
-    # 12. Synchronisation des vêtements / soutiens-gorge avec la poitrine du corps
+    # 14. Synchronisation des vêtements / soutiens-gorge avec la poitrine du corps
     body_obj = bpy.data.objects.get('CC_Base_Body')
     if body_obj:
         for m in meshes:
-            if m != body_obj:
+            if m != body_obj and not is_hair_or_face(m.name):
                 # Vérifier si ce maillage a des sommets au niveau de la poitrine
                 s2 = arm.data.bones.get('mixamorig:Spine2')
                 s2_head_z = (arm.matrix_world @ s2.head_local).z
