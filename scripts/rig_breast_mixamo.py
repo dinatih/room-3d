@@ -89,18 +89,17 @@ def find_meshes(arm):
 # Calcul de position anatomique des bones
 # ---------------------------------------------------------------------------
 
-def compute_breast_positions(arm_obj, spine2_name='mixamorig:Spine2'):
+def compute_breast_positions(arm_obj, meshes, spine2_name='mixamorig:Spine2'):
     """
     Axes Blender après import GLB :
-        X = gauche/droite  (Gauche = +X)
-        Y = avant (+) / arrière (-)    ← c'est ici que vont les seins !
-        Z = haut (+) / bas (-)
+    IMPORTANT : les personnages Mixamo font face à +Z en Three.js.
+    → en Blender (après import GLB), "avant du perso" = -Y.
 
-    Les breast bones doivent être :
-      - En avant du dos (+Y)
-      - Légèrement latéraux (±X)
-      - À la hauteur de Spine2 (même Z que le centre de Spine2)
-      - Pointe vers l'avant-extérieur
+    Au lieu d'une formule fixe, on lit la géométrie réelle des meshes :
+      1. Collecte les vertices pondérés par Spine2, côté avant (-Y) et à la bonne hauteur Z
+      2. Calcule le centroïde gauche (X>0) et droit (X<0) → positon réelle de chaque sein
+      3. Trouve le point le plus en avant (min Y) pour orienter le tip
+    Cela s'adapte automatiquement à chaque silhouette.
     """
     arm = arm_obj.data
     bpy.context.view_layer.objects.active = arm_obj
@@ -111,49 +110,101 @@ def compute_breast_positions(arm_obj, spine2_name='mixamorig:Spine2'):
     if spine2 is None:
         for b in eb:
             if 'Spine2' in b.name or 'spine2' in b.name.lower():
-                spine2 = b
-                break
+                spine2 = b; break
     if spine2 is None:
         bpy.ops.object.mode_set(mode='OBJECT')
         raise RuntimeError(f"Bone '{spine2_name}' introuvable dans l'armature.")
 
-    spine2_head = Vector(spine2.head)
-    spine2_tail = Vector(spine2.tail)
-    # Centre de Spine2 = base des breast bones
-    chest_center = spine2_head.lerp(spine2_tail, 0.5)
-
-    # Longueur de Spine2 pour calibrer (typiquement ~0.10-0.14 m pour Mixamo)
-    bone_len = (spine2_tail - spine2_head).length
-
-    # --- AXES CORRECTS ---
-    # X = gauche (+X pour gauche, -X pour droite)
-    # Y = avant (+Y = devant le personnage, là où sont les seins)
-    # Z = haut (+Z)
-
-    lateral   = bone_len * 0.80   # décalage latéral depuis le centre (±X)
-    forward   = bone_len * 1.20   # à quelle distance en avant du perso
-    vert_up   = bone_len * 0.10   # légèrement plus haut que le centre
-
-    # Le tip pointe vers l'avant et légèrement vers l'extérieur
-    tip_fwd   = bone_len * 0.60
-    tip_lat   = bone_len * 0.20
-    tip_up    = bone_len * 0.10
-
-    # IMPORTANT : les personnages Mixamo font face à +Z en Three.js
-    # → en Blender (après import GLB) le "avant" du perso = -Y (pas +Y)
-    # Blender +Y → GLB -Z → behind character facing +Z
-    # Blender -Y → GLB +Z → IN FRONT of character facing +Z  ✅
-    base_l = chest_center + Vector(( lateral, -forward, vert_up))
-    base_r = chest_center + Vector((-lateral, -forward, vert_up))
-
-    tip_l  = base_l + Vector(( tip_lat, -tip_fwd, tip_up))
-    tip_r  = base_r + Vector((-tip_lat, -tip_fwd, tip_up))
+    s2_head    = Vector(spine2.head)
+    s2_tail    = Vector(spine2.tail)
+    s2_mid_y   = (s2_head.y + s2_tail.y) / 2.0
+    bone_len   = (s2_tail - s2_head).length
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    print(f"  Spine2 head={spine2_head}, tail={spine2_tail}, bone_len={bone_len:.4f}m")
-    print(f"  breast_left  base={base_l}, tip={tip_l}")
-    print(f"  breast_right base={base_r}, tip={tip_r}")
+    # Zone de recherche : hauteur de Spine2 ± petite marge, côté avant (Y < s2_mid_y)
+    z_min = s2_head.z - 0.01
+    z_max = s2_tail.z + 0.01
+    y_max = s2_mid_y + 0.005  # tout ce qui est devant le dos
+
+    # --- Collecte des vertices de poitrine depuis le(s) mesh(es) ---
+    left_pts  = []   # X ≥ 0 (gauche en Blender)
+    right_pts = []   # X < 0 (droite en Blender)
+
+    for mesh_obj in meshes:
+        mesh = mesh_obj.data
+        vg = mesh_obj.vertex_groups.get(spine2_name)
+        if vg is None:
+            continue
+        mat = mesh_obj.matrix_world
+        for v in mesh.vertices:
+            wco = mat @ v.co
+            if not (z_min <= wco.z <= z_max):
+                continue
+            if wco.y >= y_max:      # Exclut le dos
+                continue
+            sw = 0.0
+            for g in v.groups:
+                if g.group == vg.index:
+                    sw = g.weight; break
+            if sw < 0.05:
+                continue
+            pt = Vector((wco.x, wco.y, wco.z))
+            if wco.x >= 0:
+                left_pts.append(pt)
+            else:
+                right_pts.append(pt)
+
+    print(f"  Front thorax verts: L={len(left_pts)}, R={len(right_pts)}")
+
+    if len(left_pts) >= 10 and len(right_pts) >= 10:
+        # --- Approche géométrique ---
+        def stats(pts):
+            n = len(pts)
+            cx = sum(p.x for p in pts) / n
+            cy = sum(p.y for p in pts) / n
+            cz = sum(p.z for p in pts) / n
+            min_y = min(p.y for p in pts)   # point le plus en avant (-Y)
+            min_x = min(p.x for p in pts)   # extrême latéral gauche
+            max_x = max(p.x for p in pts)
+            return Vector((cx, cy, cz)), min_y, min_x, max_x
+
+        cent_l, min_y_l, _, max_x_l = stats(left_pts)
+        cent_r, min_y_r, min_x_r, _ = stats(right_pts)
+
+        # Base : centroïde légèrement rapatrié vers le dos (15% vers +Y)
+        pull_back = 0.15
+        base_l = cent_l.lerp(Vector((cent_l.x, s2_mid_y, cent_l.z)), pull_back)
+        base_r = cent_r.lerp(Vector((cent_r.x, s2_mid_y, cent_r.z)), pull_back)
+
+        # Tip : pointe vers le point le plus en avant + léger offset supplémentaire
+        tip_extra_forward = bone_len * 0.40
+        tip_extra_lat     = bone_len * 0.08
+        tip_extra_up      = bone_len * 0.05
+
+        tip_l = Vector((cent_l.x + tip_extra_lat,
+                        min_y_l  - tip_extra_forward,
+                        cent_l.z + tip_extra_up))
+        tip_r = Vector((cent_r.x - tip_extra_lat,
+                        min_y_r  - tip_extra_forward,
+                        cent_r.z + tip_extra_up))
+
+        method = "geometry"
+    else:
+        # --- Fallback formule si pas assez de verts ---
+        print("  ⚠ Pas assez de verts front, fallback formule.")
+        chest_center = s2_head.lerp(s2_tail, 0.40)
+        lateral = bone_len * 0.70
+        forward = bone_len * 1.00
+        vert_up = bone_len * 0.05
+        base_l = chest_center + Vector(( lateral, -forward, vert_up))
+        base_r = chest_center + Vector((-lateral, -forward, vert_up))
+        tip_l  = base_l + Vector(( bone_len*0.15, -bone_len*0.50, bone_len*0.05))
+        tip_r  = base_r + Vector((-bone_len*0.15, -bone_len*0.50, bone_len*0.05))
+        method = "formula"
+
+    print(f"  [{method}] breast_left  base={base_l}, tip={tip_l}")
+    print(f"  [{method}] breast_right base={base_r}, tip={tip_r}")
 
     return base_l, tip_l, base_r, tip_r, spine2_name
 
@@ -387,8 +438,8 @@ def main():
     remove_existing_breast_bones(arm)
     remove_existing_breast_vgroups(meshes)
 
-    # Calcule les positions anatomiques (axes Blender corrects)
-    base_l, tip_l, base_r, tip_r, parent_name = compute_breast_positions(arm)
+    # Calcule les positions anatomiques (géométrie réelle du mesh)
+    base_l, tip_l, base_r, tip_r, parent_name = compute_breast_positions(arm, meshes)
 
     # Ajoute les bones
     add_breast_bones(arm, base_l, tip_l, base_r, tip_r, parent_name)
