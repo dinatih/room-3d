@@ -59,6 +59,8 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'curious_skeleton',  name: 'Curious Skeleton',      emoji: '🦴', color: '#dcdde1', path: 'characters/curious_skeleton/curious_skeleton.glb',   pos: [0, 0, 0], rot: 0, variant: 'native', height: 175.0, isLara: false },
   { id: 'valby',             name: 'Valby (Nano Suit)',     emoji: '🫧', color: '#00d2ff', path: 'characters/valby/valby.glb',                         pos: [0, 0, 0], rot: 0, variant: 'native', height: 168.0, isLara: false },
   { id: 'james',             name: 'James',                 emoji: '🧑', color: '#e74c3c', path: 'characters/james/james.glb',                         pos: [0, 0, 0], rot: 0, variant: 'native', height: 182.0, isLara: false },
+  { id: 'lady_deadpool',     name: 'Lady Deadpool',         emoji: '⚔️', color: '#e74c3c', path: 'characters/lady_deadpool/lady_deadpool.glb',         pos: [0, 0, 0], rot: 0, variant: 'native', height: 161.2, isLara: false },
+  { id: 'ivy',               name: 'Ivy',                   emoji: '🌿', color: '#2ecc71', path: 'characters/ivy/ivy.glb',                             pos: [0, 0, 0], rot: 0, variant: 'native', height: 170.5, isLara: false },
 ];
 
 /** Retourne le label complet d'un NPC : "emoji nom" (utile dans les UI pour éviter les noms en dur) */
@@ -160,5 +162,5 @@ export function isCharacterVisibleInMode(
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
   'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'inyeong', 'hayley', 'gloria', 'zoe', 'sophia', 'valby',
-  'alex', 'david', 'mannequin', 'michelle', 'lola', 'jennifer', 'arissa', 'astra', 'dummy', 'jody', 'kachujin', 'medea', 'megan', 'olivia', 'sophie', 'skeleton', 'curious_skeleton'
+  'alex', 'david', 'mannequin', 'michelle', 'lola', 'jennifer', 'arissa', 'astra', 'dummy', 'jody', 'kachujin', 'medea', 'megan', 'olivia', 'sophie', 'skeleton', 'curious_skeleton', 'james', 'lady_deadpool', 'ivy'
 ]);
