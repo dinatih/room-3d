@@ -339,6 +339,9 @@ export function Studio() {
       } else if (e.key === 'a' || e.key === 'A') {
         onToggleLayer('aiZones');
         cameraState.invalidate?.();
+      } else if (e.key === 'e' || e.key === 'E') {
+        onToggleLayer('extraCharacters');
+        cameraState.invalidate?.();
       } else if (e.key === 'k' || e.key === 'K') {
         onToggleLayer('skeleton');
         cameraState.invalidate?.();

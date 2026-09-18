@@ -754,7 +754,7 @@ export function CharacterSection({
           type="button"
           className="btn btn-light w-100 text-start rounded-0 border-0 py-2 px-3 text-dark d-flex align-items-center justify-content-between shadow-none"
           onClick={() => onToggleLayer('extraCharacters')}
-          title={`Spawner 5 personnages extra aléatoires (sur ${EXTRA_CHARACTERS.length})`}
+          title={`Spawner 5 personnages extra aléatoires (sur ${EXTRA_CHARACTERS.length}) (Raccourci: E)`}
           style={{ 
             fontSize: isMobile ? '14px' : '11px',
             minHeight: isMobile ? '48px' : undefined,
@@ -767,6 +767,7 @@ export function CharacterSection({
             <div className="d-flex align-items-center gap-2">
               <span>🎭</span>
               <span>Personnages Extra (5 aléatoires)</span>
+              <kbd className="bg-secondary text-white px-1 rounded" style={{ fontSize: '9px' }}>E</kbd>
               <span className="badge bg-primary text-white" style={{ fontSize: '9px' }}>
                 5 / {EXTRA_CHARACTERS.length}
               </span>

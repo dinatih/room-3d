@@ -28,6 +28,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Photo Raytracing HD 📸"     keys={['F10']} />
               <R label="Inventaire (toggle)"        keys={['I']} />
               <R label="Inventaire Personnages (direct)" keys={['P']} />
+              <R label="Personnages Extra 🎭 (toggle)" keys={['E']} />
               <R label="Zones IA (toggle)"          keys={['A']} />
               <R label="Vue perspective (reset)"    keys={['O']} />
               <R label="Walk mode (cycle 3P / FPV)" keys={['M']} />

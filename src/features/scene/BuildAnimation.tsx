@@ -220,7 +220,16 @@ export function BuildAnimation({
     (window as any).isAnimProRunning = true;
     const s3 = scene as unknown as THREE.Scene;
     (window as any).__THREE_SCENE__ = s3;
-    
+
+    let rafId: number;
+    let cancelled = false;
+
+    // Différer d'un tick RAF pour que tous les useLayoutEffect des composants GLB
+    // (Kallax2x1, Kallax2x2, MackaparGroup...) aient eu le temps de s'exécuter
+    // et d'injecter leurs meshes dans la scène Three.js avant la collecte.
+    rafId = requestAnimationFrame(() => {
+      if (cancelled) return;
+
     // 1. D'abord on unmerge (ça cache les merged, ça montre les originaux)
     const remerge = unmergeScene(s3);
 
@@ -331,8 +340,11 @@ export function BuildAnimation({
     };
     
     invalidate();
+    }); // fin du requestAnimationFrame
 
     return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
       (window as any).isAnimProRunning = false;
       if (stateRef.current) {
         stateRef.current.objects.forEach(a => {

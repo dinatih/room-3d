@@ -13,6 +13,7 @@
  *   1 / 3      — vue FPV (1) / vue 3ème personne (3)
  *   T / Y      — vue 2D top pièce (T) / vue 2D top suivi perso (Y)
  *   L          — cycler les personnages actifs
+ *   E          — basculer les personnages extra (5 aléatoires)
  *   Échap      — quitter walk mode / top-down
  *   Flèches    — déplacement walk / pan et rotation orbit
  */
