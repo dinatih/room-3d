@@ -563,19 +563,6 @@ export function LivingRoomFurnishings() {
         <DroneCell />
       </group>
 
-      {/* Maillot de foot Coréen Inyeong suspendu sur cintre au mur Est */}
-      <group
-        position={[ROOM_W - 1.2, 212, ROOM_D / 2]}
-        rotation={[0, Math.PI / 2, 0]}
-        userData={{ animUnit: true, itemName: 'Maillot Coréen - Inyeong', skipMerge: true }}
-      >
-        <mesh position={[0, 18.5, 0.8]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.4, 0.4, 1.6, 8]} />
-          <meshStandardMaterial color="#222222" roughness={0.3} metalness={0.8} />
-        </mesh>
-        <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
-        <MaillotInyeong />
-      </group>
 
       {/* Purificateur Air Performer */}
       <AirPerformer_ />
@@ -644,6 +631,20 @@ export function LivingRoomDecor() {
         <group position={[-29, -40, 0]}>
           <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
         </group>
+      </group>
+
+      {/* Maillot de foot Coréen Inyeong suspendu sur cintre au mur Est */}
+      <group
+        position={[ROOM_W - 1.2, 212, ROOM_D / 2]}
+        rotation={[0, Math.PI / 2, 0]}
+        userData={{ animUnit: true, itemName: 'Maillot Coréen - Inyeong', skipMerge: true }}
+      >
+        <mesh position={[0, 18.5, 0.8]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.4, 0.4, 1.6, 8]} />
+          <meshStandardMaterial color="#222222" roughness={0.3} metalness={0.8} />
+        </mesh>
+        <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <MaillotInyeong />
       </group>
 
       {/* Sac à dos */}

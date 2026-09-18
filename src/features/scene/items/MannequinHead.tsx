@@ -18,7 +18,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
-import { LAYER_FURNITURE } from '@config';
+import { LAYER_DECOR } from '@config';
 import { Wig, HAIR_COLORS } from './Wig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
 
@@ -129,7 +129,7 @@ export function MannequinHead({
     scene.scale.set(1, 1, 1);
     scene.traverse(o => {
       if ((o as THREE.Mesh).isMesh) {
-        o.layers.set(LAYER_FURNITURE);
+        o.layers.set(LAYER_DECOR);
       }
     });
     const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());

@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { LAYER_WALKER, LAYER_FURNITURE } from '@config';
+import { LAYER_WALKER, LAYER_DECOR } from '@config';
 import { RIGGED_WIGS_PATHS } from '@features/inventory/inventoryData';
 
 export const HAIR_COLORS: Record<string, THREE.Color> = {
@@ -215,7 +215,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         if (attachTo) {
           m.layers.set(LAYER_WALKER);
         } else {
-          m.layers.set(LAYER_FURNITURE);
+          m.layers.set(LAYER_DECOR);
         }
         
         const targetColor = color && HAIR_COLORS[color] ? HAIR_COLORS[color] : null;
