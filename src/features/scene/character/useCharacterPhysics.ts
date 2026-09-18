@@ -362,6 +362,7 @@ export function useCharacterPhysics() {
     const breastTranslation = useSceneStore.getState().layers.breastTranslation ?? 0.15;
     const breastMaxTravel = useSceneStore.getState().layers.breastMaxTravel ?? 0.5;
     const breastSquash = useSceneStore.getState().layers.breastSquash ?? 0.25;
+    const breastGravity = useSceneStore.getState().layers.breastGravity ?? 1.0;
 
     const maxBreastAngleRad = (maxBreastAngleDeg * Math.PI) / 180;
     const maxBreastAngleXZRad = (maxBreastAngleXZDeg * Math.PI) / 180;
@@ -402,9 +403,23 @@ export function useCharacterPhysics() {
       for (let i = 0; i < breastChainRef.current.length; i++) {
         const { bone, restQuat, restPos, restScale, axis } = breastChainRef.current[i];
 
-        let swingX = Math.max(-maxBreastAngleRad, Math.min(maxBreastAngleRad, breastImpulseRef.current.y * 0.25));
+        // Vecteur gravité monde (0, -1, 0) projeté dans l'espace local du parent de l'os
+        const parent = bone.parent;
+        const localGrav = _tmpV3.set(0, -1, 0);
+        if (parent) {
+          parent.getWorldQuaternion(_parentWQuat);
+          localGrav.applyQuaternion(_parentWQuat.invert());
+        }
+
+        // Inclinaison sous gravité (les seins pendent naturellement quand le torse est penché)
+        const gravAngleInfluence = 0.35 * breastGravity * Math.min(1.5, softnessFactor);
+        let swingX = Math.max(-maxBreastAngleRad, Math.min(maxBreastAngleRad,
+          breastImpulseRef.current.y * 0.25 + localGrav.z * maxBreastAngleRad * gravAngleInfluence
+        ));
         let swingY = Math.max(-maxBreastAngleXZRad, Math.min(maxBreastAngleXZRad, breastImpulseRef.current.x * 0.45 * softnessFactor));
-        let swingZ = Math.max(-maxBreastAngleXZRad, Math.min(maxBreastAngleXZRad, breastImpulseRef.current.z * 0.45 * softnessFactor));
+        let swingZ = Math.max(-maxBreastAngleXZRad, Math.min(maxBreastAngleXZRad,
+          breastImpulseRef.current.z * 0.45 * softnessFactor - localGrav.x * maxBreastAngleXZRad * gravAngleInfluence * 0.5
+        ));
 
         _eulerBreast.set(swingX, swingY, swingZ, 'ZXY');
         _animBreastQ.setFromEuler(_eulerBreast);
@@ -412,15 +427,27 @@ export function useCharacterPhysics() {
         const baseRest = (bone as any).userData?.restQuat || (bone as any).restLocalQuaternion || restQuat;
         bone.quaternion.copy(baseRest).multiply(_animBreastQ);
 
-        // Déplacement élastique vertical et en profondeur (translation du buste, comme dans The First Descendant)
+        // Déplacement élastique et gravitationnel (translation du buste vers le bas monde)
         const baseRestPos = (bone as any).userData?.restPos || restPos;
         if (baseRestPos) {
           if (breastTranslation > 0) {
             const maxTravelCm = Math.max(0.05, breastMaxTravel);
-            // Déplacement en centimètres monde
-            const dispY_cm = Math.max(-maxTravelCm, Math.min(maxTravelCm, breastImpulseRef.current.y * 0.05 * softnessFactor * breastTranslation));
-            const dispZ_cm = Math.max(-maxTravelCm * 0.8, Math.min(maxTravelCm * 0.8, breastImpulseRef.current.z * 0.04 * softnessFactor * breastTranslation));
-            const dispX_cm = Math.max(-maxTravelCm * 0.4, Math.min(maxTravelCm * 0.4, breastImpulseRef.current.x * 0.02 * softnessFactor * breastTranslation));
+
+            // Déplacement dynamique par inertie
+            const dynDispY = breastImpulseRef.current.y * 0.05 * softnessFactor * breastTranslation;
+            const dynDispZ = breastImpulseRef.current.z * 0.04 * softnessFactor * breastTranslation;
+            const dynDispX = breastImpulseRef.current.x * 0.02 * softnessFactor * breastTranslation;
+
+            // Déplacement statique par gravité (tire vers le bas du repère monde)
+            const gravStrengthCm = maxTravelCm * 0.65 * Math.min(1.6, softnessFactor) * mass * breastGravity * Math.min(2.0, breastTranslation);
+            const gravDispX = localGrav.x * gravStrengthCm;
+            const gravDispY = localGrav.y * gravStrengthCm;
+            const gravDispZ = localGrav.z * gravStrengthCm;
+
+            // Déplacement total combiné en cm monde
+            const dispX_cm = Math.max(-maxTravelCm, Math.min(maxTravelCm, dynDispX + gravDispX));
+            const dispY_cm = Math.max(-maxTravelCm, Math.min(maxTravelCm, dynDispY + gravDispY));
+            const dispZ_cm = Math.max(-maxTravelCm, Math.min(maxTravelCm, dynDispZ + gravDispZ));
 
             // Conversion cm -> espace local de l'os selon l'échelle réelle de l'armature
             bone.getWorldScale(_tmpV4);

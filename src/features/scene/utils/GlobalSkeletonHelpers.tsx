@@ -48,8 +48,9 @@ export function GlobalSkeletonHelpers({
   const activeSelectedBone = useRef<THREE.Bone | null>(null);
   const activeSelectedName = externalSelectedName !== undefined ? externalSelectedName : (internalSelectedBone?.name || null);
 
-  // Sauvegarde des matériaux originaux des SkinnedMeshes pour la heatmap
+  // Sauvegarde des matériaux originaux et attributs color des SkinnedMeshes pour la heatmap
   const modifiedMeshesRef = useRef<Map<THREE.SkinnedMesh, THREE.Material | THREE.Material[]>>(new Map());
+  const originalColorsRef = useRef<Map<THREE.SkinnedMesh, THREE.BufferAttribute | THREE.InterleavedBufferAttribute>>(new Map());
 
   // Vecteurs temporaires pour les calculs géométriques
   const bonePosRef = useRef(new THREE.Vector3());
@@ -62,11 +63,21 @@ export function GlobalSkeletonHelpers({
   const restoreOriginalMaterials = useCallback(() => {
     modifiedMeshesRef.current.forEach((origMat, mesh) => {
       mesh.material = origMat;
-      if (mesh.geometry && mesh.geometry.attributes.color) {
+      if (Array.isArray(origMat)) {
+        origMat.forEach(m => { m.needsUpdate = true; });
+      } else if (origMat) {
+        origMat.needsUpdate = true;
+      }
+      const origColor = originalColorsRef.current.get(mesh);
+      if (origColor && mesh.geometry) {
+        mesh.geometry.setAttribute('color', origColor);
+        mesh.geometry.attributes.color.needsUpdate = true;
+      } else if (mesh.geometry && mesh.geometry.attributes.color) {
         mesh.geometry.deleteAttribute('color');
       }
     });
     modifiedMeshesRef.current.clear();
+    originalColorsRef.current.clear();
   }, []);
 
   // Appliquer la heatmap d'influence style Sketchfab pour l'os sélectionné
@@ -89,13 +100,9 @@ export function GlobalSkeletonHelpers({
         const skinWeightAttr = geom.attributes.skinWeight;
         if (!skinIndexAttr || !skinWeightAttr) return;
 
-        // Sauvegarder le matériau d'origine
-        if (!modifiedMeshesRef.current.has(mesh)) {
-          modifiedMeshesRef.current.set(mesh, mesh.material);
-        }
-
         const count = geom.attributes.position.count;
         const colors = new Float32Array(count * 3);
+        let maxWeight = 0;
 
         for (let i = 0; i < count; i++) {
           let totalWeight = 0;
@@ -104,16 +111,28 @@ export function GlobalSkeletonHelpers({
               totalWeight += skinWeightAttr.getComponent(i, c);
             }
           }
+          if (totalWeight > maxWeight) maxWeight = totalWeight;
           weightToColor(totalWeight, tmpColor);
           colors[i * 3] = tmpColor.r;
           colors[i * 3 + 1] = tmpColor.g;
           colors[i * 3 + 2] = tmpColor.b;
         }
 
+        // Si cet os n'a aucune influence sur ce mesh spécifique, ne pas altérer son matériau
+        if (maxWeight <= 0.0001) return;
+
+        // Sauvegarder le matériau d'origine et l'attribut color
+        if (!modifiedMeshesRef.current.has(mesh)) {
+          modifiedMeshesRef.current.set(mesh, mesh.material);
+          if (geom.attributes.color) {
+            originalColorsRef.current.set(mesh, geom.attributes.color.clone());
+          }
+        }
+
         geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         geom.attributes.color.needsUpdate = true;
 
-        // Matériau affichant les vertex colors avec prise en compte du skinning
+        // Matériau affichant les vertex colors
         const heatMat = new THREE.MeshBasicMaterial({
           vertexColors: true,
           wireframe: false,

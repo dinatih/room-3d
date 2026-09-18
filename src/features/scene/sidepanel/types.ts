@@ -138,6 +138,7 @@ export interface LayerState {
   breastTranslation?: number;
   breastMaxTravel?: number;
   breastSquash?: number;
+  breastGravity?: number;
   hairPhysics: boolean;
   wigPhysics?: boolean;
   wigStiffness?: number;

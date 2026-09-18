@@ -809,6 +809,31 @@ export function CharacterSection({
             />
           </div>
 
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                🌍 Gravité Buste (breastGravity)
+              </span>
+              <span className={`badge ${(layers.breastGravity ?? 1.0) > 0 ? 'bg-danger text-white' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+                {(layers.breastGravity ?? 1.0) === 0 ? 'Désactivé' : `${(layers.breastGravity ?? 1.0).toFixed(2)}x`}
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.0"
+              max="3.0"
+              step="0.05"
+              value={layers.breastGravity ?? 1.0}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, breastGravity: val }
+                }));
+              }}
+            />
+          </div>
+
           <div className="border-top pt-2 mt-2">
             <button
               type="button"

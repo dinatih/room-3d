@@ -110,10 +110,12 @@ def detect_breast_peaks(arm_obj, meshes, spine2_name='mixamorig:Spine2'):
     if not s2:
         raise RuntimeError(f"Bone {spine2_name} introuvable.")
 
-    s2_head_z = s2.head_local.z
-    s2_mid_y = (s2.head_local.y + s2.tail_local.y) / 2.0
+    s2_head_w = arm_obj.matrix_world @ s2.head_local
+    s2_tail_w = arm_obj.matrix_world @ s2.tail_local
+    s2_head_z = s2_head_w.z
+    s2_mid_y = (s2_head_w.y + s2_tail_w.y) / 2.0
 
-    # Collecte tous les vertices du torse avant
+    # Collecte tous les vertices du torse avant (en espace monde)
     front_verts = []
     for m in meshes:
         vgs = [m.vertex_groups.get(n) for n in ['mixamorig:Spine', 'mixamorig:Spine1', spine2_name, 'mixamorig:Spine3']]
@@ -152,19 +154,29 @@ def add_breast_bones_at_peaks(arm_obj, peak_l, peak_r, parent_name, s2_mid_y):
     Crée les bones breast_left et breast_right traversant le sein de la base au sommet.
     Base = ancrée dans le thorax derrière le sein.
     Tip  = au sommet du sein (peak).
+    Convertit les coordonnées monde vers le repère local de l'armature.
     """
+    arm_inv = arm_obj.matrix_world.inverted()
+
     bpy.context.view_layer.objects.active = arm_obj
     bpy.ops.object.mode_set(mode='EDIT')
     eb = arm_obj.data.edit_bones
 
     parent_bone = eb.get(parent_name)
 
-    # Base à mi-chemin vers la cage thoracique
-    base_l = Vector((peak_l.x * 0.70, s2_mid_y - 0.02, peak_l.z))
-    base_r = Vector((peak_r.x * 0.70, s2_mid_y - 0.02, peak_r.z))
+    # Coordonnées monde
+    base_l_w = Vector((peak_l.x * 0.70, s2_mid_y - 0.02, peak_l.z))
+    base_r_w = Vector((peak_r.x * 0.70, s2_mid_y - 0.02, peak_r.z))
+    tip_l_w = Vector((peak_l.x, peak_l.y, peak_l.z))
+    tip_r_w = Vector((peak_r.x, peak_r.y, peak_r.z))
 
-    tip_l = Vector((peak_l.x, peak_l.y, peak_l.z))
-    tip_r = Vector((peak_r.x, peak_r.y, peak_r.z))
+    # Transformation vers le repère local de l'armature
+    base_l = arm_inv @ base_l_w
+    base_r = arm_inv @ base_r_w
+    tip_l = arm_inv @ tip_l_w
+    tip_r = arm_inv @ tip_r_w
+    tip_l_end = arm_inv @ (tip_l_w + Vector((0.0, -0.035, 0.0)))
+    tip_r_end = arm_inv @ (tip_r_w + Vector((0.0, -0.035, 0.0)))
 
     # Breast Left
     bl = eb.new('breast_left')
@@ -175,7 +187,7 @@ def add_breast_bones_at_peaks(arm_obj, peak_l, peak_r, parent_name, s2_mid_y):
 
     ble = eb.new('breast_left_end')
     ble.head = tip_l
-    ble.tail = tip_l + Vector((0.0, -0.035, 0.0))
+    ble.tail = tip_l_end
     ble.parent = bl
     ble.use_deform = False
 
@@ -188,7 +200,7 @@ def add_breast_bones_at_peaks(arm_obj, peak_l, peak_r, parent_name, s2_mid_y):
 
     bre = eb.new('breast_right_end')
     bre.head = tip_r
-    bre.tail = tip_r + Vector((0.0, -0.035, 0.0))
+    bre.tail = tip_r_end
     bre.parent = br
     bre.use_deform = False
 
