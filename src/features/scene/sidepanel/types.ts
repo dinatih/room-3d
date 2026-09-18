@@ -137,6 +137,7 @@ export interface LayerState {
   maxBreastAngleXZ?: number;
   breastTranslation?: number;
   breastMaxTravel?: number;
+  breastSquash?: number;
   hairPhysics: boolean;
   wigPhysics?: boolean;
   wigStiffness?: number;

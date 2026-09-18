@@ -92,10 +92,12 @@ export function useCharacterPhysics() {
       const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
       const initialRestQ = (bone as any).restLocalQuaternion ? (bone as any).restLocalQuaternion.clone() : bone.quaternion.clone();
       const initialRestPos = (bone as any).userData?.restPos ? (bone as any).userData.restPos.clone() : bone.position.clone();
+      const initialRestScale = (bone as any).userData?.restScale ? (bone as any).userData.restScale.clone() : bone.scale.clone();
       breastChain.push({
         bone,
         restQuat: initialRestQ,
         restPos: initialRestPos,
+        restScale: initialRestScale,
         axis,
         length,
         worldLength,
@@ -359,6 +361,7 @@ export function useCharacterPhysics() {
     const maxBreastAngleXZDeg = useSceneStore.getState().layers.maxBreastAngleXZ ?? 35;
     const breastTranslation = useSceneStore.getState().layers.breastTranslation ?? 0.15;
     const breastMaxTravel = useSceneStore.getState().layers.breastMaxTravel ?? 0.5;
+    const breastSquash = useSceneStore.getState().layers.breastSquash ?? 0.25;
 
     const maxBreastAngleRad = (maxBreastAngleDeg * Math.PI) / 180;
     const maxBreastAngleXZRad = (maxBreastAngleXZDeg * Math.PI) / 180;
@@ -397,7 +400,7 @@ export function useCharacterPhysics() {
       }
 
       for (let i = 0; i < breastChainRef.current.length; i++) {
-        const { bone, restQuat, restPos } = breastChainRef.current[i];
+        const { bone, restQuat, restPos, restScale, axis } = breastChainRef.current[i];
 
         let swingX = Math.max(-maxBreastAngleRad, Math.min(maxBreastAngleRad, breastImpulseRef.current.y * 0.25));
         let swingY = Math.max(-maxBreastAngleXZRad, Math.min(maxBreastAngleXZRad, breastImpulseRef.current.x * 0.45 * softnessFactor));
@@ -434,18 +437,61 @@ export function useCharacterPhysics() {
             bone.position.copy(baseRestPos);
           }
         }
+
+        // Déformation élastique volumétrique (Squash & Stretch : aplatissement en profondeur Z et élargissement X/Y)
+        const baseRestScale = (bone as any).userData?.restScale || restScale;
+        if (baseRestScale) {
+          if (breastSquash > 0) {
+            // Taux de compression sur la profondeur (impact torse avant/arrière)
+            const depthComp = Math.max(-0.25, Math.min(0.25, breastImpulseRef.current.z * 0.08 * softnessFactor * breastSquash));
+            // Taux de compression sur la hauteur (inertie verticale haut/bas)
+            const vertComp = Math.max(-0.20, Math.min(0.20, breastImpulseRef.current.y * 0.06 * softnessFactor * breastSquash));
+
+            if (Math.abs(axis.y) > 0.7) {
+              // Axe principal Y = longueur/profondeur du sein
+              const sy = Math.max(0.7, Math.min(1.3, 1.0 - depthComp));
+              const sz = Math.max(0.75, Math.min(1.25, 1.0 + vertComp));
+              // Préservation volumétrique sur X (élargissement latéral compensatoire)
+              const volumeComp = 1.0 / Math.sqrt(Math.max(0.4, sy * sz));
+              const sx = Math.max(0.75, Math.min(1.3, volumeComp));
+
+              bone.scale.set(
+                baseRestScale.x * sx,
+                baseRestScale.y * sy,
+                baseRestScale.z * sz
+              );
+            } else {
+              // Axe principal Z
+              const sz = Math.max(0.7, Math.min(1.3, 1.0 - depthComp));
+              const sy = Math.max(0.75, Math.min(1.25, 1.0 + vertComp));
+              const volumeComp = 1.0 / Math.sqrt(Math.max(0.4, sy * sz));
+              const sx = Math.max(0.75, Math.min(1.3, volumeComp));
+
+              bone.scale.set(
+                baseRestScale.x * sx,
+                baseRestScale.y * sy,
+                baseRestScale.z * sz
+              );
+            }
+          } else {
+            bone.scale.copy(baseRestScale);
+          }
+        }
+
         bone.userData.hasPhysicsApplied = true;
       }
     } else if (breastChainRef.current.length > 0) {
       // Nettoyage / Réinitialisation propre si la physique est désactivée ou qu'une animation bake joue
       for (let i = 0; i < breastChainRef.current.length; i++) {
-        const { bone, restQuat, restPos } = breastChainRef.current[i];
+        const { bone, restQuat, restPos, restScale } = breastChainRef.current[i];
         if (bone.userData?.hasPhysicsApplied) {
           if (!isBakedBustAnimation) {
             const baseRest = (bone as any).userData?.restQuat || (bone as any).restLocalQuaternion || restQuat;
             const baseRestPos = (bone as any).userData?.restPos || restPos;
+            const baseRestScale = (bone as any).userData?.restScale || restScale;
             if (baseRest) bone.quaternion.copy(baseRest);
             if (baseRestPos) bone.position.copy(baseRestPos);
+            if (baseRestScale) bone.scale.copy(baseRestScale);
           }
           bone.userData.hasPhysicsApplied = false;
         }

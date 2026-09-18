@@ -161,6 +161,7 @@ const initialLayers: LayerState = {
   maxBreastAngleXZ: 5,
   breastTranslation: 0.15,
   breastMaxTravel: 0.5,
+  breastSquash: 0.25,
   hairPhysics: true,
   wigPhysics: true,
   wigStiffness: 1.0,

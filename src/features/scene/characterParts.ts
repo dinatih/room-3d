@@ -153,6 +153,9 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
       if (!o.userData.restQuat) {
         o.userData.restQuat = o.quaternion.clone();
       }
+      if (!o.userData.restScale) {
+        o.userData.restScale = o.scale.clone();
+      }
     }
 
     if (!o.restWorldQuaternion) {
@@ -234,6 +237,22 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
     }
   });
 
+  // 4b. S'assurer que chaque os de buste a un os enfant d'extrémité (tip/end)
+  // Indispensable pour que SkeletonHelper ("Voir Squelette") visualise les segments et pour la direction physique
+  for (const bone of breastBones) {
+    const hasBoneChild = bone.children.some((c: any) => c.isBone);
+    if (!hasBoneChild) {
+      const tipBone = new THREE.Bone();
+      tipBone.name = bone.name.endsWith('_base') ? bone.name.replace('_base', '_end') : `${bone.name}_end`;
+      const isMeters = Math.abs(bone.position.y) < 1.0 && Math.abs(bone.position.x) < 1.0;
+      const tipDist = isMeters ? 0.08 : 8.0;
+      tipBone.position.set(0, tipDist, 0);
+      bone.add(tipBone);
+      bone.updateMatrixWorld(true);
+    }
+  }
+
+  // 5. Final Output Object
   return {
     bones: {
       hips,

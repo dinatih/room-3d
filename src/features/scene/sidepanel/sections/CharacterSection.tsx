@@ -784,6 +784,31 @@ export function CharacterSection({
             />
           </div>
 
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span className="text-muted fw-semibold text-dark" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                🍈 Aplatissement / Squash & Stretch (breastSquash)
+              </span>
+              <span className={`badge ${(layers.breastSquash ?? 0.25) > 0 ? 'bg-info text-dark' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+                {(layers.breastSquash ?? 0.25) === 0 ? 'Désactivé' : `${(layers.breastSquash ?? 0.25).toFixed(2)}x`}
+              </span>
+            </div>
+            <input
+              type="range"
+              className="form-range"
+              min="0.0"
+              max="2.0"
+              step="0.05"
+              value={layers.breastSquash ?? 0.25}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, breastSquash: val }
+                }));
+              }}
+            />
+          </div>
+
           <div className="border-top pt-2 mt-2">
             <button
               type="button"
