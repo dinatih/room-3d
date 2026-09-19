@@ -47,7 +47,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Zoe Signature Pose & Motion',
     aliases: ['zoe_intro', 'zoe_signature', 'zoe_pose'],
     tags: ['signature', 'zoe', 'intro', 'pose'],
-    duration: 36.1,
+    duration: 18.0,
   },
   {
     id: 'sophia_victory_dance',
@@ -55,7 +55,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: 'Sophia Victory Dance',
     aliases: ['sophia_dance', 'sophia_victory', 'sophia_signature'],
     tags: ['signature', 'sophia', 'dance', 'victory'],
-    duration: 66.7,
+    duration: 33.4,
   },
   {
     id: 'valby_signature_intro',
