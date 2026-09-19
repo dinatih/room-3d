@@ -59,6 +59,7 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'ivy',               name: 'Ivy',                   emoji: '🌿', color: '#2ecc71', path: 'characters/ivy/ivy.glb',                             pos: [0, 0, 0], rot: 0, variant: 'native', height: 170.5, isLara: false },
   { id: 'rose',              name: 'Rose (Red)',            emoji: '🌹', color: '#e84118', path: 'characters/rose/rose.glb',                           pos: [0, 0, 0], rot: 0, variant: 'native', height: 172.0, isLara: false },
   { id: 'beth',              name: 'Beth (Red Hair)',       emoji: '👩‍🦰', color: '#e67e22', path: 'characters/beth/beth.glb',                           pos: [0, 0, 0], rot: 0, variant: 'native', height: 169.3, isLara: false },
+  { id: 'lewis',             name: 'Lewis',                 emoji: '🧑🏾‍🦲', color: '#d63031', path: 'characters/lewis/lewis.glb',                         pos: [0, 0, 0], rot: 0, variant: 'native', height: 177.1, isLara: false },
 ];
 
 /** Retourne le label complet d'un NPC : "emoji nom" (utile dans les UI pour éviter les noms en dur) */
@@ -160,5 +161,5 @@ export function isCharacterVisibleInMode(
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
   'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'cha', 'vivida', 'sabira', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'inyeong', 'hayley', 'gloria', 'zoe', 'sophia', 'valby',
-  'alex', 'david', 'mannequin', 'lola', 'jennifer', 'arissa', 'astra', 'dummy', 'jody', 'megan', 'olivia', 'sophie', 'skeleton', 'curious_skeleton', 'james', 'ivy', 'rose', 'beth'
+  'alex', 'david', 'mannequin', 'lola', 'jennifer', 'arissa', 'astra', 'dummy', 'jody', 'megan', 'olivia', 'sophie', 'skeleton', 'curious_skeleton', 'james', 'ivy', 'rose', 'beth', 'lewis'
 ]);
