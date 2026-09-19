@@ -224,22 +224,17 @@ export function CharacterAnimSelector({
   };
 
   useEffect(() => {
+    if (!onClose) return;
     const handleGlobalKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        onClose?.();
-        return;
-      }
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        e.stopPropagation();
-        selectNextAnim(e.key === 'ArrowDown' ? 'next' : 'prev');
+        onClose();
       }
     };
-    window.addEventListener('keydown', handleGlobalKey, true);
-    return () => window.removeEventListener('keydown', handleGlobalKey, true);
-  }, [selectNextAnim, onClose]);
+    window.addEventListener('keydown', handleGlobalKey);
+    return () => window.removeEventListener('keydown', handleGlobalKey);
+  }, [onClose]);
 
   useEffect(() => {
     if (activeAnimValue && animsContainerRef.current) {
