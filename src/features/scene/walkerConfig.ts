@@ -105,6 +105,21 @@ export function isExtraCharacter(c: CharacterConfig | string): boolean {
 /** Liste des personnages extras (ni Lara ni Xbot) */
 export const EXTRA_CHARACTERS = CHARACTERS.filter(isExtraCharacter);
 
+/** Groupe des 4 personnages Redmans */
+export const REDMAN_EXTRA_IDS = ['alex', 'david', 'james', 'lewis'] as const;
+
+/** Groupe des personnages Anatomiques (modèles anatomiques, mannequins et squelettes) */
+export const ANATOMICAL_EXTRA_IDS = [
+  'zoe',
+  'sophia',
+  'mannequin',
+  'maynard',
+  'beth',
+  'dummy',
+  'skeleton',
+  'curious_skeleton'
+] as const;
+
 /** Nombre de personnages extra spawnés aléatoirement dans la scène 3D */
 export const DEFAULT_EXTRA_SPAWN_COUNT = 5;
 

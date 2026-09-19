@@ -76,6 +76,7 @@ interface SceneStore {
   toggleExtraCharacter: (id: string) => void;
   selectAllExtraCharacters: () => void;
   clearExtraCharacters: () => void;
+  toggleExtraGroup: (groupIds: readonly string[] | string[]) => void;
   setGroundType: (type: GroundType) => void;
   triggerAction: (key: string, targetState?: boolean) => void;
   setActiveWalkerId: (id: string) => void;
@@ -430,6 +431,20 @@ export const useSceneStore = create<SceneStore>((set) => ({
       activeExtraIds: []
     }));
     cameraState.invalidate?.();
+  },
+
+  toggleExtraGroup: (groupIds: readonly string[] | string[]) => {
+    set((state) => {
+      const allSelected = groupIds.every(id => state.activeExtraIds.includes(id));
+      const nextActiveExtraIds = allSelected
+        ? state.activeExtraIds.filter(id => !groupIds.includes(id))
+        : Array.from(new Set([...state.activeExtraIds, ...groupIds]));
+      const nextLayers = (!allSelected && !state.layers.extraCharacters)
+        ? { ...state.layers, extraCharacters: true }
+        : state.layers;
+      cameraState.invalidate?.();
+      return { activeExtraIds: nextActiveExtraIds, layers: nextLayers };
+    });
   },
 
   setGroundType: (type) => {

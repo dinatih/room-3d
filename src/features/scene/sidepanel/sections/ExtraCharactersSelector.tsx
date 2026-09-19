@@ -1,6 +1,12 @@
 import { useState, useMemo, ChangeEvent } from 'react';
 import { useSceneStore } from '../../store/useSceneStore';
-import { EXTRA_CHARACTERS, findCharacter, npcLabel } from '@features/scene/walkerConfig';
+import {
+  EXTRA_CHARACTERS,
+  REDMAN_EXTRA_IDS,
+  ANATOMICAL_EXTRA_IDS,
+  findCharacter,
+  npcLabel,
+} from '@features/scene/walkerConfig';
 
 interface ExtraCharactersSelectorProps {
   isMobile: boolean;
@@ -16,6 +22,7 @@ export function ExtraCharactersSelector({
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const activeWalkerId = useSceneStore(state => state.activeWalkerId);
   const toggleExtraCharacter = useSceneStore(state => state.toggleExtraCharacter);
+  const toggleExtraGroup = useSceneStore(state => state.toggleExtraGroup);
   const selectAllExtraCharacters = useSceneStore(state => state.selectAllExtraCharacters);
   const clearExtraCharacters = useSceneStore(state => state.clearExtraCharacters);
   const randomizeExtraCharacters = useSceneStore(state => state.randomizeExtraCharacters);
@@ -34,6 +41,18 @@ export function ExtraCharactersSelector({
 
   const activeCount = activeExtraIds.length;
   const totalCount = EXTRA_CHARACTERS.length;
+
+  const redmansCount = useMemo(
+    () => REDMAN_EXTRA_IDS.filter(id => activeExtraIds.includes(id)).length,
+    [activeExtraIds]
+  );
+  const allRedmansSelected = redmansCount === REDMAN_EXTRA_IDS.length;
+
+  const anatomicalCount = useMemo(
+    () => ANATOMICAL_EXTRA_IDS.filter(id => activeExtraIds.includes(id)).length,
+    [activeExtraIds]
+  );
+  const allAnatomicalSelected = anatomicalCount === ANATOMICAL_EXTRA_IDS.length;
 
   const handleNativeSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const selected = Array.from(e.target.selectedOptions, option => option.value);
@@ -117,6 +136,59 @@ export function ExtraCharactersSelector({
             title={useNativeSelect ? "Basculer vers la liste interactive avec cases à cocher" : "Basculer vers le select multiple HTML natif"}
           >
             {useNativeSelect ? '📋 Vue Liste' : '🔽 Select HTML'}
+          </button>
+        </div>
+
+        {/* Sélections rapides par groupe : Redmans & Anatomiques */}
+        <div className="d-flex gap-1" role="group" aria-label="Sélection groupée">
+          <button
+            type="button"
+            className={`btn btn-sm py-1 px-2 flex-fill text-nowrap d-flex align-items-center justify-content-center gap-1 ${
+              allRedmansSelected
+                ? 'btn-danger text-white'
+                : 'btn-outline-danger'
+            }`}
+            style={{ fontSize: '10px', fontWeight: allRedmansSelected ? 600 : 400 }}
+            onClick={() => toggleExtraGroup(REDMAN_EXTRA_IDS)}
+            title={
+              allRedmansSelected
+                ? 'Désélectionner les 4 Redmans (Alex, David, James, Lewis)'
+                : 'Sélectionner les 4 Redmans (Alex, David, James, Lewis)'
+            }
+          >
+            <span>{allRedmansSelected ? '✓' : '+'}</span>
+            <span>🔴 4 Redmans</span>
+            <span
+              className={`badge rounded-pill ${allRedmansSelected ? 'bg-white text-danger' : 'bg-danger text-white'}`}
+              style={{ fontSize: '8px', padding: '1px 5px' }}
+            >
+              {redmansCount}/{REDMAN_EXTRA_IDS.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className={`btn btn-sm py-1 px-2 flex-fill text-nowrap d-flex align-items-center justify-content-center gap-1 ${
+              allAnatomicalSelected
+                ? 'btn-primary text-white'
+                : 'btn-outline-primary'
+            }`}
+            style={{ fontSize: '10px', fontWeight: allAnatomicalSelected ? 600 : 400 }}
+            onClick={() => toggleExtraGroup(ANATOMICAL_EXTRA_IDS)}
+            title={
+              allAnatomicalSelected
+                ? 'Désélectionner les 8 Anatomiques (Zoe, Sophia, Mannequin, Maynard, Beth, Dummy, 2 squelettes)'
+                : 'Sélectionner les 8 Anatomiques (Zoe, Sophia, Mannequin, Maynard, Beth, Dummy, 2 squelettes)'
+            }
+          >
+            <span>{allAnatomicalSelected ? '✓' : '+'}</span>
+            <span>🦴 8 Anatomiques</span>
+            <span
+              className={`badge rounded-pill ${allAnatomicalSelected ? 'bg-white text-primary' : 'bg-primary text-white'}`}
+              style={{ fontSize: '8px', padding: '1px 5px' }}
+            >
+              {anatomicalCount}/{ANATOMICAL_EXTRA_IDS.length}
+            </span>
           </button>
         </div>
 
