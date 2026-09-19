@@ -252,7 +252,9 @@ export function computeDoorAllowedAngle(door: DoorConfig): number {
       yMin: 0,
       yMax: 180,
     });
-    if (contact !== null && contact < minAllowed) {
+    // Ignorer les contacts < 35° (~0.6 rad) pour ne jamais bloquer ou refermer la porte
+    // quand un PNJ franchit le passage / seuil de la porte
+    if (contact !== null && contact >= 0.6 && contact < minAllowed) {
       minAllowed = contact;
     }
   }

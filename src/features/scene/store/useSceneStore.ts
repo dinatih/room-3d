@@ -77,7 +77,7 @@ interface SceneStore {
   selectAllExtraCharacters: () => void;
   clearExtraCharacters: () => void;
   setGroundType: (type: GroundType) => void;
-  triggerAction: (key: string) => void;
+  triggerAction: (key: string, targetState?: boolean) => void;
   setActiveWalkerId: (id: string) => void;
 }
 
@@ -445,7 +445,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
     });
   },
 
-  triggerAction: (key) => {
+  triggerAction: (key, targetState) => {
     if (key === 'bermuda-grass-toggle' || key === 'ground-type-cycle') {
       const order: GroundType[] = ['bermuda', 'medium_01', 'medium_02', 'celandine', 'mud_leaves', 'none'];
       set((state) => {
@@ -475,7 +475,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
           const next = cur === 0 ? 70 : cur === 70 ? 90 : cur === 90 ? 100 : 0;
           nextFurniture = { ...state.furniture, glassDoorV2ShutterPos: next };
         } else if (fKey === 'glassDoorV2LeftOpen') {
-          const nextLeft = !state.furniture.glassDoorV2LeftOpen;
+          const nextLeft = targetState !== undefined ? targetState : !state.furniture.glassDoorV2LeftOpen;
           const nextRight = nextLeft ? true : state.furniture.eastGlassDoor;
           nextFurniture = {
             ...state.furniture,
@@ -488,7 +488,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
             }, 0);
           }
         } else {
-          nextFurniture = { ...state.furniture, [fKey]: !state.furniture[fKey] as any };
+          const nextVal = targetState !== undefined ? targetState : !state.furniture[fKey];
+          nextFurniture = { ...state.furniture, [fKey]: nextVal as any };
         }
         cameraState.invalidate?.();
         return { furniture: nextFurniture };
@@ -496,22 +497,24 @@ export const useSceneStore = create<SceneStore>((set) => ({
     } else if (resolved.type === 'layer') {
       const lKey = resolved.name as keyof LayerState;
       set((state) => {
-        const nextLayers = { ...state.layers, [lKey]: !state.layers[lKey] };
+        const nextVal = targetState !== undefined ? targetState : !state.layers[lKey];
+        const nextLayers = { ...state.layers, [lKey]: nextVal };
         cameraState.invalidate?.();
         return { layers: nextLayers };
       });
     } else if (resolved.type === 'extra') {
       set((state) => {
-        const nextExtra = { ...state.extraStates, [resolved.name]: !state.extraStates[resolved.name] };
+        const nextVal = targetState !== undefined ? targetState : !state.extraStates[resolved.name];
+        const nextExtra = { ...state.extraStates, [resolved.name]: nextVal };
         cameraState.invalidate?.();
         return { extraStates: nextExtra };
       });
     }
 
     // Always dispatch custom events for compatibility
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key } }));
+    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, value: targetState } }));
     if (resolved.type === 'furniture' && resolved.name !== key) {
-      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: resolved.name } }));
+      document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: resolved.name, value: targetState } }));
     }
   },
 
