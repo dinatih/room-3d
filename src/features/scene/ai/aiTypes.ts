@@ -25,6 +25,10 @@ export interface InteractionSlot {
   animationsRandom?: string | string[]; // Pack nommé (ex: 'sitted_front_pack', 'side_sitted_pack') ou liste d'anims
   triggerEventKey?: string;   // Event à déclencher (ex: 'wc-flush', 'eastGlassDoor')
   triggerTargetState?: boolean;
+  // ── Support Duo Animation ──
+  isDuo?: boolean;            // Indique une interaction à deux personnages synchronisés
+  duoAnimId?: string;         // Identifiant de l'animation duo (dans DUO_ANIMATIONS, ex: 'sit_cuddle')
+  duoRole?: 'roleA' | 'roleB'; // Rôle assigné au slot
 }
 
 export interface SmartObjectDef {

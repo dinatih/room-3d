@@ -151,6 +151,16 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         rotY: 0,
         animationsRandom: 'seated_front',
         duration: 40.0,
+      },
+      {
+        slotId: 'sit-cuddle',
+        name: 'Câlin à deux (Sit Cuddle)',
+        isDuo: true,
+        duoAnimId: 'sit_cuddle',
+        relative: true,
+        offset: [0, 0, 0],
+        rotY: 0,
+        duration: 12.0,
       }
     ]
   },
@@ -772,6 +782,16 @@ export function getAllSmartObjects(): ResolvedSmartObject[] {
 
 export function getSmartObjectsByCategory(category: SmartObjectCategory): ResolvedSmartObject[] {
   return getAllSmartObjects().filter(obj => obj.category === category);
+}
+
+export function isDuoSlot(objectId?: string, slotId?: string): boolean {
+  if (!objectId) return false;
+  if (objectId === 'duo-zone') return true;
+  const obj = SMART_OBJECTS[objectId];
+  if (!obj) return false;
+  if (!slotId) return obj.slots.some(s => s.isDuo);
+  const slot = obj.slots.find(s => s.slotId === slotId);
+  return Boolean(slot?.isDuo);
 }
 
 const MILEY_DANCE_ANIMS = [

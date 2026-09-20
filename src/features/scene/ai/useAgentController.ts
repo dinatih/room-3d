@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { AgentInstruction } from './aiTypes';
-import { SMART_OBJECTS, buildSmartObjectInstructionSequence } from './smartObjectRegistry';
+import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { resolveSlotAnimation } from './animationPacks';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
@@ -133,18 +133,20 @@ export function useAgentController(
   useEffect(() => {
     const onInvite = (e: any) => {
       if (e.detail?.targetId === _characterId) {
-        const role = (e.detail?.forceRole as DuoRole) || duoSessionManager.joinDuoZone(_characterId);
+        const targetObjId = e.detail?.objectId || 'duo-zone';
+        const role = (e.detail?.forceRole as DuoRole) || (targetObjId === 'duo-zone' ? duoSessionManager.joinDuoZone(_characterId) : 'roleA');
         if (role) {
           duoRoleRef.current = role;
-          if (claimedSlotRef.current && (claimedSlotRef.current.objectId !== 'duo-zone' || claimedSlotRef.current.slotId !== role)) {
+          const targetSlotId = e.detail?.slotId || role;
+          if (claimedSlotRef.current && (claimedSlotRef.current.objectId !== targetObjId || claimedSlotRef.current.slotId !== targetSlotId)) {
             releaseClaimedSlot();
           }
-          claimedSlotRef.current = { objectId: 'duo-zone', slotId: role };
+          claimedSlotRef.current = { objectId: targetObjId, slotId: targetSlotId };
 
           if (e.detail?.alreadyThere) {
             statusRef.current = 'INTERACTING';
             dynamicNavQueueRef.current = [
-              { type: 'USE_OBJECT', smartObjectId: 'duo-zone', slotId: role }
+              { type: 'USE_OBJECT', smartObjectId: targetObjId, slotId: targetSlotId }
             ];
             dynamicNavIndexRef.current = 0;
             duoSessionManager.markReady(_characterId);
@@ -154,11 +156,12 @@ export function useAgentController(
             }
           } else {
             dynamicNavQueueRef.current = [
-              { type: 'USE_OBJECT', smartObjectId: 'duo-zone', slotId: role }
+              { type: 'USE_OBJECT', smartObjectId: targetObjId, slotId: targetSlotId }
             ];
             dynamicNavIndexRef.current = 0;
             statusRef.current = 'IDLE';
-            appLog(_characterId, `🏃‍♂️ Répond à l'appel de ${e.detail.fromId} (${role === 'roleA' ? 'Meneur' : 'Partenaire'}) et rejoint la ✨ Scène Duo !`);
+            const locName = targetObjId === 'duo-zone' ? 'la ✨ Scène Duo' : (SMART_OBJECTS[targetObjId]?.name || targetObjId);
+            appLog(_characterId, `🏃‍♂️ Répond à l'appel de ${e.detail.fromId} (${role === 'roleA' ? 'Meneur' : 'Partenaire'}) et rejoint ${locName} !`);
           }
         }
       }
@@ -410,13 +413,18 @@ export function useAgentController(
         const objId = currentInstruction.smartObjectId;
         const reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
 
-        if (objId === 'duo-zone') {
-          const role = duoSessionManager.joinDuoZone(_characterId);
+        const isDuo = objId === 'duo-zone' || isDuoSlot(objId, reqSlotId);
+        if (isDuo) {
+          let role = duoRoleRef.current;
+          if (!role) {
+            role = objId === 'duo-zone' ? duoSessionManager.joinDuoZone(_characterId) : 'roleA';
+            if (role) duoRoleRef.current = role;
+          }
           if (role) {
             duoRoleRef.current = role;
-            currentInstruction.slotId = role;
-            claimedSlotRef.current = { objectId: objId, slotId: role };
-            const slot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === role);
+            currentInstruction.slotId = reqSlotId || role;
+            claimedSlotRef.current = { objectId: objId, slotId: currentInstruction.slotId };
+            const slot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId || s.slotId === role);
             if (slot) {
               currentInstruction.animation = slot.animation;
               currentInstruction.duration = slot.duration;
@@ -575,7 +583,8 @@ export function useAgentController(
       const dist = Math.hypot(dx, dz);
 
       const isDuoZone = currentInstruction.smartObjectId === 'duo-zone';
-      const ARRIVAL_THRESHOLD = isDuoZone ? 30.0 : ((currentInstruction.type === 'USE_OBJECT' || (!hasNavStep && currentInstruction.smartObjectId)) ? 8.0 : 18.0);
+      const isDuoAction = isDuoZone || isDuoSlot(currentInstruction.smartObjectId, currentInstruction.slotId);
+      const ARRIVAL_THRESHOLD = isDuoAction ? 30.0 : ((currentInstruction.type === 'USE_OBJECT' || (!hasNavStep && currentInstruction.smartObjectId)) ? 8.0 : 18.0);
 
       if (dist < ARRIVAL_THRESHOLD) {
         stateRef.current.x = target.tx;
@@ -587,21 +596,26 @@ export function useAgentController(
           targetRepeatsRef.current = currentInstruction.repeatCount ?? target.repeatCount ?? 1;
           repeatVariationRef.current = currentInstruction.repeatVariation ?? target.repeatVariation ?? false;
 
-          if (currentInstruction.smartObjectId === 'duo-zone') {
+          if (isDuoAction) {
             duoSessionManager.markReady(_characterId);
             duoWaitTimerRef.current = 0;
             const animState = duoSessionManager.getCurrentAnimState();
             timerRef.current = animState?.duration ?? 5.0;
-            stateRef.current.animation = duoRoleRef.current === 'roleA'
-              ? 'animations/poses_idles/anim_female_standing_pose.glb'
-              : 'animations/poses_idles/anim_female_standing_pose_1.glb';
+            const isSmartChair = currentInstruction.smartObjectId === 'chair-office';
+            stateRef.current.animation = isSmartChair
+              ? (duoRoleRef.current === 'roleA'
+                  ? 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb'
+                  : 'animations/poses_idles/miley_armature_sit_cuddle_hug_f.glb')
+              : (duoRoleRef.current === 'roleA'
+                  ? 'animations/poses_idles/anim_female_standing_pose.glb'
+                  : 'animations/poses_idles/anim_female_standing_pose_1.glb');
           }
 
           if (!currentInstruction.animation && target.anim) currentInstruction.animation = target.anim;
           if (currentInstruction.rotY === undefined && target.rotY !== undefined) currentInstruction.rotY = target.rotY;
           if (!currentInstruction.duration && target.duration) currentInstruction.duration = target.duration;
 
-          if (currentInstruction.smartObjectId !== 'duo-zone') {
+          if (!isDuoAction) {
             const explicitDuration = currentInstruction.duration || target.duration;
             const estimated = getEstimatedClipDuration(currentInstruction.animation || target.anim);
             timerRef.current = explicitDuration || (estimated <= 1.0 ? 10.0 : estimated);
@@ -614,7 +628,7 @@ export function useAgentController(
           triggerInstructionEvent(currentInstruction);
 
           const animation = currentInstruction.animation || target.anim || '';
-          const isDuoWaiting = currentInstruction.smartObjectId === 'duo-zone' && duoSessionManager.isWaitingPartner(_characterId);
+          const isDuoWaiting = isDuoAction && duoSessionManager.isWaitingPartner(_characterId);
           if (!isDuoWaiting) {
             const objName = currentInstruction.smartObjectId ? (SMART_OBJECTS[currentInstruction.smartObjectId]?.name || currentInstruction.smartObjectId) : '';
             const logKey = `interact-${stepIndexRef.current}-${animation}-${objName}`;
@@ -661,7 +675,8 @@ export function useAgentController(
       }
     } else if (statusRef.current === 'INTERACTING') {
       // ── 5. Interactions (INTERACTING) ──
-      if (currentInstruction.smartObjectId === 'duo-zone') {
+      const isDuoAction = currentInstruction.smartObjectId === 'duo-zone' || isDuoSlot(currentInstruction.smartObjectId, currentInstruction.slotId);
+      if (isDuoAction) {
         const isEnded = handleDuoInteraction({
           characterId: _characterId,
           dt,

@@ -3,8 +3,16 @@ import { OccupancyManager } from './occupancyManager';
 import { appLog } from '@features/ui/AppConsole';
 import { cameraState } from '../cameraState';
 import { AUTONOMOUS_NPC_IDS } from '../walkerConfig';
+import { getSmartObject } from './smartObjectRegistry';
 
 export type DuoRole = 'roleA' | 'roleB';
+
+export interface DuoLocation {
+  objectId: string;                    // ex: 'chair-office' ou 'duo-zone'
+  slotId?: string;                     // ex: 'sit-cuddle' ou 'roleA'
+  anchorPos: [number, number, number]; // Position monde de référence
+  anchorRotY: number;                  // Orientation monde (radians)
+}
 
 export interface DuoSessionParticipant {
   characterId: string;
@@ -27,6 +35,11 @@ type SessionListener = () => void;
 
 class DuoSessionManager {
   public readonly basePos: [number, number, number] = [-200, 0, -300];
+  private currentLocation: DuoLocation = {
+    objectId: 'duo-zone',
+    anchorPos: [-200, 0, -300],
+    anchorRotY: 0,
+  };
 
   private participantA: DuoSessionParticipant | null = null;
   private participantB: DuoSessionParticipant | null = null;
@@ -154,6 +167,10 @@ class DuoSessionManager {
     return !isParticipant;
   }
 
+  public getCurrentLocation(): DuoLocation {
+    return this.currentLocation;
+  }
+
   /**
    * Récupère les données d'animation et de placement calculées pour l'animation courante.
    */
@@ -162,17 +179,30 @@ class DuoSessionManager {
     const def = this.playlist[this.currentAnimIndex];
     if (!def) return null;
 
-    const [bx, by, bz] = this.basePos;
-    const dist = def.dist ?? 50;
+    const [bx, by, bz] = this.currentLocation.anchorPos;
+    const ry = this.currentLocation.anchorRotY;
+    const cos = Math.cos(ry);
+    const sin = Math.sin(ry);
 
-    let posA: [number, number, number] = [bx + dist, by, bz];
-    let posB: [number, number, number] = [bx, by, bz];
+    const transformLocalToWorld = (localOffset: [number, number, number]): [number, number, number] => {
+      const [lx, ly, lz] = localOffset;
+      return [
+        bx + lx * cos + lz * sin,
+        by + ly,
+        bz - lx * sin + lz * cos,
+      ];
+    };
 
-    if (def.offsetA) posA = [bx + def.offsetA[0], by + def.offsetA[1], bz + def.offsetA[2]];
-    if (def.offsetB) posB = [bx + def.offsetB[0], by + def.offsetB[1], bz + def.offsetB[2]];
+    const dist = def.dist ?? (def.offsetB ? 0 : 50);
 
-    const rotA = def.rotA !== undefined ? def.rotA : 0;
-    const rotB = def.rotB !== undefined ? def.rotB : 0;
+    const localA: [number, number, number] = def.offsetA ?? (def.offsetB ? [0, 0, 0] : [dist, 0, 0]);
+    const localB: [number, number, number] = def.offsetB ?? [0, 0, 0];
+
+    const posA = transformLocalToWorld(localA);
+    const posB = transformLocalToWorld(localB);
+
+    const rotA = (ry + (def.rotA !== undefined ? def.rotA : 0)) % (Math.PI * 2);
+    const rotB = (ry + (def.rotB !== undefined ? def.rotB : 0)) % (Math.PI * 2);
 
     return {
       def,
@@ -225,12 +255,32 @@ class DuoSessionManager {
    * Un PNJ quitte la zone (suite à fin normale ou timeout).
    */
   public leaveDuoZone(characterId: string): void {
+    const loc = this.currentLocation;
+    const objId = loc.objectId;
+    const slotId = loc.slotId;
+
     if (this.participantA?.characterId === characterId) {
-      OccupancyManager.releaseSlot('duo-zone', 'roleA', characterId);
+      if (objId === 'duo-zone') {
+        OccupancyManager.releaseSlot('duo-zone', 'roleA', characterId);
+      } else {
+        if (slotId) {
+          OccupancyManager.releaseSlot(objId, `${slotId}:roleA`, characterId);
+          OccupancyManager.releaseSlot(objId, slotId, characterId);
+        }
+        OccupancyManager.releaseSlot(objId, 'roleA', characterId);
+      }
       this.participantA = null;
     }
     if (this.participantB?.characterId === characterId) {
-      OccupancyManager.releaseSlot('duo-zone', 'roleB', characterId);
+      if (objId === 'duo-zone') {
+        OccupancyManager.releaseSlot('duo-zone', 'roleB', characterId);
+      } else {
+        if (slotId) {
+          OccupancyManager.releaseSlot(objId, `${slotId}:roleB`, characterId);
+          OccupancyManager.releaseSlot(objId, slotId, characterId);
+        }
+        OccupancyManager.releaseSlot(objId, 'roleB', characterId);
+      }
       this.participantB = null;
     }
 
@@ -241,17 +291,22 @@ class DuoSessionManager {
       this.currentRepeatIndex = 0;
       this.sessionTimer = 0;
       this.playlist = [];
+      this.currentLocation = {
+        objectId: 'duo-zone',
+        anchorPos: [-200, 0, -300],
+        anchorRotY: 0,
+      };
     }
     this.emitChange();
   }
 
   /**
-   * Trouve le PNJ autonome le plus proche de la Duo Zone et lui envoie une invitation.
+   * Trouve le PNJ autonome le plus proche du spot actif et lui envoie une invitation.
    */
   public inviteNearestNpc(callerId: string): string | null {
     if (this.participantA && this.participantB) return null;
 
-    const [bx, , bz] = this.basePos;
+    const [bx, , bz] = this.currentLocation.anchorPos;
     let closestId: string | null = null;
     let minDistance = Infinity;
 
@@ -272,14 +327,105 @@ class DuoSessionManager {
     }
 
     if (closestId) {
-      appLog('duo-zone', `📢 ${callerId} invite ${closestId} (${minDistance.toFixed(0)} cm) à rejoindre la ✨ Scène Duo !`);
+      const locLabel = this.currentLocation.objectId === 'duo-zone'
+        ? '✨ Scène Duo'
+        : (getSmartObject(this.currentLocation.objectId)?.name || this.currentLocation.objectId);
+      appLog('duo-zone', `📢 ${callerId} invite ${closestId} (${minDistance.toFixed(0)} cm) à rejoindre ${locLabel} !`);
       document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-        detail: { targetId: closestId, fromId: callerId }
+        detail: {
+          targetId: closestId,
+          fromId: callerId,
+          objectId: this.currentLocation.objectId,
+          slotId: this.currentLocation.slotId,
+        }
       }));
       return closestId;
     }
 
     return null;
+  }
+
+  /**
+   * Lance une animation Duo sur un SmartObject donné (ex: 'chair-office', 'sit-cuddle').
+   */
+  public startDuoOnSmartObject(
+    objectId: string,
+    slotId: string,
+    def: DuoAnimationDef,
+    leaderId: string,
+    partnerId?: string
+  ): { targetA: string; targetB: string } | null {
+    const obj = getSmartObject(objectId);
+    if (!obj) return null;
+
+    const slot = obj.slots.find(s => s.slotId === slotId) || obj.slots[0];
+    const anchorPos: [number, number, number] = slot?.offset ?? obj.position ?? [0, 0, 0];
+    const anchorRotY: number = slot?.rotY ?? obj.rotationY ?? 0;
+
+    const targetA = leaderId;
+    let targetB = partnerId;
+    if (!targetB) {
+      const candidates = Array.from(AUTONOMOUS_NPC_IDS).filter(id => id !== targetA);
+      candidates.sort((a, b) => {
+        const pa = cameraState.positions[a];
+        const pb = cameraState.positions[b];
+        const da = pa ? Math.hypot(pa.x - anchorPos[0], pa.z - anchorPos[2]) : Infinity;
+        const db = pb ? Math.hypot(pb.x - anchorPos[0], pb.z - anchorPos[2]) : Infinity;
+        return da - db;
+      });
+      targetB = candidates[0] || (targetA === 'native' ? 'rosanna' : 'native');
+    }
+
+    if (!targetA || !targetB || targetA === targetB) return null;
+
+    // Définir l'emplacement actif
+    this.currentLocation = {
+      objectId,
+      slotId,
+      anchorPos,
+      anchorRotY,
+    };
+
+    // Configurer la session
+    this.playlist = [def];
+    this.currentAnimIndex = 0;
+    this.currentRepeatIndex = 0;
+    this.sessionTimer = def.duration ?? 5.0;
+    this.isSessionPlaying = false;
+    this.isSessionComplete = false;
+
+    // Réservations d'occupation
+    OccupancyManager.claimSlot(objectId, `${slotId}:roleA`, targetA);
+    OccupancyManager.claimSlot(objectId, slotId, targetA);
+    this.participantA = { characterId: targetA, role: 'roleA', isReady: false };
+
+    OccupancyManager.claimSlot(objectId, `${slotId}:roleB`, targetB);
+    this.participantB = { characterId: targetB, role: 'roleB', isReady: false };
+
+    appLog(objectId, `🛋️ Session Duo "${def.label}" lancée sur ${obj.name} entre ${targetA} (Meneur) et ${targetB} (Partenaire) !`);
+
+    // Envoyer l'ordre aux deux agents
+    document.dispatchEvent(new CustomEvent('npc-invite-duo', {
+      detail: {
+        targetId: targetA,
+        fromId: 'SmartObject',
+        objectId,
+        slotId,
+        forceRole: 'roleA',
+      }
+    }));
+    document.dispatchEvent(new CustomEvent('npc-invite-duo', {
+      detail: {
+        targetId: targetB,
+        fromId: 'SmartObject',
+        objectId,
+        slotId,
+        forceRole: 'roleB',
+      }
+    }));
+
+    this.emitChange();
+    return { targetA, targetB };
   }
 
   /**

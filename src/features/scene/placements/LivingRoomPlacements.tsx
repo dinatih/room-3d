@@ -380,7 +380,19 @@ function Smorkull_() {
   const p = SMORKULL_POSITIONS[posIdx];
   return (
     <PositionTransition x={p.x} z={p.z} ry={p.ry}>
-      <group userData={{ skipMerge: true, animUnit: true, itemName: 'Smörkull', hoverAction: { label: 'Smörkull', actionId: 'smorkull-position' } }}>
+      <group userData={{
+        skipMerge: true,
+        animUnit: true,
+        itemName: 'Smörkull',
+        hoverAction: {
+          label: 'Chaise Smörkull',
+          actions: [
+            'smorkull-position',
+            'smart-object:::chair-office:::sit',
+            'smart-object:::chair-office:::sit-cuddle',
+          ]
+        }
+      }}>
         <Smorkull item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
       </group>
     </PositionTransition>

@@ -15,6 +15,8 @@ import { appLog } from '@features/ui/AppConsole';
 import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { getSmartObject } from './ai/smartObjectRegistry';
+import { duoSessionManager } from './ai/duoSessionManager';
+import { DUO_ANIMATIONS } from './ai/duoAnimations';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
 
@@ -225,8 +227,9 @@ function getActionDef(actionId: string): ActionDef | undefined {
     const obj = getSmartObject(objectId);
     const slot = obj?.slots.find(s => s.slotId === slotId);
     const slotName = slot?.name || slotId || 'Interagir';
+    const prefix = slot?.isDuo ? '🛋️ Duo' : '⚡ Utiliser';
     return {
-      btnLabel: `⚡ Utiliser (${slotName})`,
+      btnLabel: `${prefix} (${slotName})`,
       toggleKey: actionId,
     };
   }
@@ -877,36 +880,66 @@ export function HoverOverlay() {
                     const slot = obj?.slots.find(s => s.slotId === slotId);
                     const targetPos = slot?.offset ?? obj?.position ?? [0, 0, 0];
 
-                    // Trouver le personnage le plus proche (en excluant les animaux comme le shiba)
-                    let closestCharId: string | null = null;
-                    let minDistance = Infinity;
+                    if (slot?.isDuo && slot?.duoAnimId) {
+                      const def = DUO_ANIMATIONS.find(d => d.id === slot.duoAnimId);
+                      if (def) {
+                        const activeId = useSceneStore.getState().activeWalkerId;
+                        const leaderId = (activeId && activeId !== 'shiba' && activeId !== 'robin')
+                          ? activeId
+                          : undefined;
 
-                    const candidateIds = Object.keys(cameraState.positions);
+                        const candidateIds = Object.keys(cameraState.positions).filter(id => id !== 'shiba' && id !== 'robin');
+                        candidateIds.sort((a, b) => {
+                          const pa = cameraState.positions[a];
+                          const pb = cameraState.positions[b];
+                          const da = pa ? Math.hypot(pa.x - targetPos[0], pa.z - targetPos[2]) : Infinity;
+                          const db = pb ? Math.hypot(pb.x - targetPos[0], pb.z - targetPos[2]) : Infinity;
+                          return da - db;
+                        });
 
-                    for (const charId of candidateIds) {
-                      if (charId === 'shiba') continue;
-                      const pos = cameraState.positions[charId];
-                      if (!pos) continue;
-                      const dist = Math.hypot(pos.x - targetPos[0], pos.z - targetPos[2]);
-                      if (dist < minDistance) {
-                        minDistance = dist;
-                        closestCharId = charId;
+                        const chosenLeader = leaderId || candidateIds[0] || 'native';
+                        const chosenPartner = candidateIds.find(id => id !== chosenLeader) || 'rosanna';
+
+                        duoSessionManager.startDuoOnSmartObject(
+                          objectId,
+                          slotId,
+                          def,
+                          chosenLeader,
+                          chosenPartner
+                        );
                       }
-                    }
-
-                    if (closestCharId) {
-                      appLog(closestCharId, `🤖 Ordre SmartObject: ${closestCharId} assigné à ${obj?.name ?? objectId} (${slot?.name ?? slotId})`);
-                      document.dispatchEvent(
-                        new CustomEvent('agent-force-smartobject', {
-                          detail: {
-                            targetId: closestCharId,
-                            objectId,
-                            slotId,
-                          },
-                        })
-                      );
                     } else {
-                      appLog('system', `⚠️ Aucun personnage actif trouvé pour interagir avec ${objectId}`);
+                      // Trouver le personnage le plus proche (en excluant les animaux comme le shiba)
+                      let closestCharId: string | null = null;
+                      let minDistance = Infinity;
+
+                      const candidateIds = Object.keys(cameraState.positions);
+
+                      for (const charId of candidateIds) {
+                        if (charId === 'shiba' || charId === 'robin') continue;
+                        const pos = cameraState.positions[charId];
+                        if (!pos) continue;
+                        const dist = Math.hypot(pos.x - targetPos[0], pos.z - targetPos[2]);
+                        if (dist < minDistance) {
+                          minDistance = dist;
+                          closestCharId = charId;
+                        }
+                      }
+
+                      if (closestCharId) {
+                        appLog(closestCharId, `🤖 Ordre SmartObject: ${closestCharId} assigné à ${obj?.name ?? objectId} (${slot?.name ?? slotId})`);
+                        document.dispatchEvent(
+                          new CustomEvent('agent-force-smartobject', {
+                            detail: {
+                              targetId: closestCharId,
+                              objectId,
+                              slotId,
+                            },
+                          })
+                        );
+                      } else {
+                        appLog('system', `⚠️ Aucun personnage actif trouvé pour interagir avec ${objectId}`);
+                      }
                     }
                   } else {
                     useSceneStore.getState().triggerAction(action.toggleKey);

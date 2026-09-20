@@ -36,10 +36,21 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
   if (isWaiting) {
     const nextTimer = duoWaitTimer + dt;
     setDuoWaitTimer(nextTimer);
-    state.animation = duoRole === 'roleA'
-      ? 'animations/poses_idles/anim_female_standing_pose.glb'
-      : 'animations/poses_idles/anim_female_standing_pose_1.glb';
-    state.rotY = 0;
+    const loc = duoSessionManager.getCurrentLocation();
+    if (loc.objectId === 'chair-office') {
+      state.animation = duoRole === 'roleA'
+        ? 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb'
+        : 'animations/poses_idles/miley_armature_sit_cuddle_hug_f.glb';
+      state.rotY = loc.anchorRotY;
+      state.x = loc.anchorPos[0];
+      state.y = loc.anchorPos[1];
+      state.z = loc.anchorPos[2];
+    } else {
+      state.animation = duoRole === 'roleA'
+        ? 'animations/poses_idles/anim_female_standing_pose.glb'
+        : 'animations/poses_idles/anim_female_standing_pose_1.glb';
+      state.rotY = 0;
+    }
 
     if (!duoInvited) {
       setDuoInvited(true);
