@@ -177,12 +177,12 @@ export function ExtraCharactersSelector({
             onClick={() => toggleExtraGroup(ANATOMICAL_EXTRA_IDS)}
             title={
               allAnatomicalSelected
-                ? 'Désélectionner les 8 Anatomiques (Zoe, Sophia, Mannequin, Maynard, Beth, Dummy, 2 squelettes)'
-                : 'Sélectionner les 8 Anatomiques (Zoe, Sophia, Mannequin, Maynard, Beth, Dummy, 2 squelettes)'
+                ? 'Désélectionner les 9 Anatomiques (Zoe, Sophia, Mannequin, Maynard, Beth, Dummy, Rose, 2 squelettes)'
+                : 'Sélectionner les 9 Anatomiques (Zoe, Sophia, Mannequin, Maynard, Beth, Dummy, Rose, 2 squelettes)'
             }
           >
             <span>{allAnatomicalSelected ? '✓' : '+'}</span>
-            <span>🦴 8 Anatomiques</span>
+            <span>🦴 9 Anatomiques</span>
             <span
               className={`badge rounded-pill ${allAnatomicalSelected ? 'bg-white text-primary' : 'bg-primary text-white'}`}
               style={{ fontSize: '8px', padding: '1px 5px' }}

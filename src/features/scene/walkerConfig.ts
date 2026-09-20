@@ -117,7 +117,8 @@ export const ANATOMICAL_EXTRA_IDS = [
   'beth',
   'dummy',
   'skeleton',
-  'curious_skeleton'
+  'curious_skeleton',
+  'rose'
 ] as const;
 
 /** Nombre de personnages extra spawnés aléatoirement dans la scène 3D */
