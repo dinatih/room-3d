@@ -18,6 +18,8 @@ export function ViewsSection({
   const setMeasurementActive = useSceneStore(state => state.setMeasurementActive);
   const cameraMode = useSceneStore(state => state.cameraMode);
   const fpvRealisticEyes = useSceneStore(state => state.layers.fpvRealisticEyes ?? false);
+  const fpvStabilization = useSceneStore(state => state.layers.fpvStabilization ?? true);
+  const fpvStabilizationFactor = useSceneStore(state => state.layers.fpvStabilizationFactor ?? 0.7);
 
   const b0 = (_color: string, label: string, onClick: () => void) => {
     return (
@@ -69,6 +71,23 @@ export function ViewsSection({
           <span>👁️ Caméra Yeux Réaliste</span>
           <span className={`badge ${fpvRealisticEyes ? 'bg-info text-dark' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
             {fpvRealisticEyes ? 'ACTIVE' : 'DÉSACTIVÉE'}
+          </span>
+        </button>
+      )}
+      {cameraMode === 'fpv' && fpvRealisticEyes && (
+        <button
+          className="btn btn-light w-100 text-start rounded-0 border-0 border-bottom py-1.5 px-3 text-dark d-flex align-items-center justify-content-between"
+          onClick={() => {
+            useSceneStore.setState(st => ({
+              layers: { ...st.layers, fpvStabilization: !(st.layers.fpvStabilization ?? true) }
+            }));
+          }}
+          style={{ fontSize: isMobile ? '13px' : '10.5px', background: 'transparent' }}
+          title="Amortit les secousses et saccades de la tête"
+        >
+          <span className="ps-2">⚖️ Stabilisation ({Math.round(fpvStabilizationFactor * 100)}%)</span>
+          <span className={`badge ${fpvStabilization ? 'bg-info text-dark' : 'bg-secondary'}`} style={{ fontSize: '8.5px' }}>
+            {fpvStabilization ? 'ACTIVE' : 'OFF'}
           </span>
         </button>
       )}

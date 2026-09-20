@@ -876,6 +876,55 @@ export function CharacterSection({
                 {layers.fpvRealisticEyes ? 'ACTIF' : 'DÉSACTIVÉ'}
               </span>
             </button>
+
+            {layers.fpvRealisticEyes && (
+              <div className="mt-2 p-1.5 rounded" style={{ background: 'rgba(0, 0, 0, 0.03)', border: '1px solid rgba(0, 0, 0, 0.06)' }}>
+                <button
+                  type="button"
+                  className="btn btn-sm w-100 d-flex justify-content-between align-items-center px-1 py-1"
+                  style={{
+                    background: (layers.fpvStabilization ?? true) ? 'rgba(0, 204, 255, 0.12)' : 'transparent',
+                    border: 'none',
+                    fontSize: '10.5px',
+                  }}
+                  title="Amortit et stabilise les mouvements brusques ou violents de la tête"
+                  onClick={() => {
+                    useSceneStore.setState(st => ({
+                      layers: { ...st.layers, fpvStabilization: !(st.layers.fpvStabilization ?? true) }
+                    }));
+                  }}
+                >
+                  <span>⚖️ Stabilisation Caméra</span>
+                  <span className={`badge ${(layers.fpvStabilization ?? true) ? 'bg-info text-dark' : 'bg-secondary'}`} style={{ fontSize: '8.5px' }}>
+                    {(layers.fpvStabilization ?? true) ? 'ACTIVE' : 'OFF'}
+                  </span>
+                </button>
+
+                {(layers.fpvStabilization ?? true) && (
+                  <div className="mt-1.5 px-1">
+                    <div className="d-flex justify-content-between text-muted" style={{ fontSize: '9.5px' }}>
+                      <span>Amorti des secousses</span>
+                      <span className="fw-bold text-dark">{Math.round((layers.fpvStabilizationFactor ?? 0.7) * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      className="form-range mt-0.5"
+                      style={{ height: '4px' }}
+                      min="0.0"
+                      max="0.95"
+                      step="0.05"
+                      value={layers.fpvStabilizationFactor ?? 0.7}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        useSceneStore.setState(st => ({
+                          layers: { ...st.layers, fpvStabilizationFactor: val }
+                        }));
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

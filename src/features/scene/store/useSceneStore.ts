@@ -185,6 +185,8 @@ const initialLayers: LayerState = {
   thoughtBubble: true,
   fpvHeadBobbing: false,
   fpvRealisticEyes: false,
+  fpvStabilization: true,
+  fpvStabilizationFactor: 0.7,
   inventoryGrid: false,
 };
 

@@ -155,6 +155,8 @@ export interface LayerState {
   thoughtBubble?: boolean;
   fpvHeadBobbing?: boolean;
   fpvRealisticEyes?: boolean;
+  fpvStabilization?: boolean;
+  fpvStabilizationFactor?: number;
   inventoryGrid?: boolean;
 }
 

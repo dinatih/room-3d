@@ -41,6 +41,10 @@ import {
   useCameraFrameUpdate,
 } from './camera';
 
+const _tmpEyeTargetVec = new THREE.Vector3();
+const _tmpEyeLookVec = new THREE.Vector3();
+const _tmpEyeUpVec = new THREE.Vector3();
+
 export function CameraController({ planeMode = false }: { planeMode?: boolean } = {}) {
   const { camera, size, invalidate, gl } = useThree();
 
@@ -80,6 +84,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const bobOffset = useRef({ y: 0, side: 0 });
   const bobPhase = useRef(0);
   const lastWalkerPos = useRef({ x: initialWalker.pos[0], z: initialWalker.pos[2] });
+  const smoothedEyePos = useRef(new THREE.Vector3());
+  const smoothedLookTarget = useRef(new THREE.Vector3());
+  const smoothedUp = useRef(new THREE.Vector3(0, 1, 0));
+  const hasInitialStabilizedPos = useRef(false);
 
   // Sauvegarde d'état perspective pour retour depuis top-down
   const savedPerspPos = useRef(new THREE.Vector3(...PERSP_POS));
@@ -107,6 +115,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
         lastWalkerPos.current.x = cameraState.walkerX;
         lastWalkerPos.current.z = cameraState.walkerZ;
+        hasInitialStabilizedPos.current = false;
 
         invalidate();
       }
@@ -167,27 +176,53 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         const eyeY = eyes.y + fwd.y * 2.0;
         const eyeZ = eyes.z + fwd.z * 2.0;
 
+        const storeLayers = useSceneStore.getState().layers;
+        const isStabilizationActive = storeLayers.fpvStabilization ?? true;
+        const stabFactor = Math.max(0.0, Math.min(0.95, storeLayers.fpvStabilizationFactor ?? 0.7));
+
         const lookDist = 200;
+        const targetEyeVec = _tmpEyeTargetVec.set(eyeX, eyeY, eyeZ);
+        const targetLookVec = _tmpEyeLookVec;
         if (Math.abs(walkPitch.current) > 0.001) {
           const cosP = Math.cos(walkPitch.current);
           const sinP = Math.sin(walkPitch.current);
-          ctrl.target.set(
+          targetLookVec.set(
             eyeX + fwd.x * cosP * lookDist,
             eyeY + (fwd.y * cosP + sinP) * lookDist,
             eyeZ + fwd.z * cosP * lookDist
           );
         } else {
-          ctrl.target.set(
+          targetLookVec.set(
             eyeX + fwd.x * lookDist,
             eyeY + fwd.y * lookDist,
             eyeZ + fwd.z * lookDist
           );
         }
 
-        camera.position.set(eyeX, eyeY, eyeZ);
-        if (up) {
-          camera.up.set(up.x, up.y, up.z);
+        const targetUpVec = _tmpEyeUpVec.set(up?.x ?? 0, up?.y ?? 1, up?.z ?? 0);
+
+        // Détection de premier placement ou de téléportation brusque (> 100 cm)
+        const distFromCurrent = smoothedEyePos.current.distanceTo(targetEyeVec);
+        if (!hasInitialStabilizedPos.current || distFromCurrent > 100) {
+          smoothedEyePos.current.copy(targetEyeVec);
+          smoothedLookTarget.current.copy(targetLookVec);
+          smoothedUp.current.copy(targetUpVec);
+          hasInitialStabilizedPos.current = true;
+        } else if (isStabilizationActive && stabFactor > 0.01) {
+          // Facteur d'amorti progressif : atténue les saccades et secousses brusques de tête
+          const lerpFactor = Math.max(0.04, 1.0 - stabFactor * 0.92);
+          smoothedEyePos.current.lerp(targetEyeVec, lerpFactor);
+          smoothedLookTarget.current.lerp(targetLookVec, lerpFactor);
+          smoothedUp.current.lerp(targetUpVec, lerpFactor).normalize();
+        } else {
+          smoothedEyePos.current.copy(targetEyeVec);
+          smoothedLookTarget.current.copy(targetLookVec);
+          smoothedUp.current.copy(targetUpVec);
         }
+
+        camera.position.copy(smoothedEyePos.current);
+        ctrl.target.copy(smoothedLookTarget.current);
+        camera.up.copy(smoothedUp.current);
         ctrl.update();
       } else {
         const cosP = Math.cos(walkPitch.current);
@@ -314,6 +349,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const cam = camera as THREE.PerspectiveCamera;
     if (cam.isPerspectiveCamera) savedFov.current = cam.fov;
 
+    hasInitialStabilizedPos.current = false;
     changeMode(walkMode);
     invalidate();
   }, [camera, changeMode, invalidate]);
@@ -333,6 +369,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       cam.fov = savedFov.current;
       cam.updateProjectionMatrix();
     }
+    hasInitialStabilizedPos.current = false;
     camera.up.set(0, 1, 0);
     changeMode('orbit');
     invalidate();
