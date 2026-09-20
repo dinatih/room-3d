@@ -127,13 +127,13 @@ export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
 
 // Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)
 export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
-  native:   'desk-bollsidan-1',
+  native:   'desk-bollsidan-2',
   rosanna:  'bed-east',
   marissa:  'sofa-garden-east',
   delphina: 'shower',
   sara:     'building-b-garden',
   cha:      'cuisine-group',
-  vivida:   'desk-bollsidan-2',
+  vivida:   'desk-bollsidan-1',
   sabira:   'rain-dance',
   safa:     'garden-fresh-air',
   romana:   'bed-west',
