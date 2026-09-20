@@ -164,7 +164,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
 
     if (isFPV) {
-      const isRealisticEyes = (useSceneStore.getState().layers.fpvRealisticEyes ?? false) && !!cameraState.activeEyesPos && !!cameraState.activeHeadForward;
+      const isRealisticEyes = (useSceneStore.getState().layers.fpvRealisticEyes ?? true) && !!cameraState.activeEyesPos && !!cameraState.activeHeadForward;
 
       if (isRealisticEyes && cameraState.activeEyesPos && cameraState.activeHeadForward) {
         const eyes = cameraState.activeEyesPos;

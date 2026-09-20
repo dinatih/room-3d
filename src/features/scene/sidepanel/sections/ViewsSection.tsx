@@ -17,7 +17,7 @@ export function ViewsSection({
   const measurementActive = useSceneStore(state => state.measurementActive);
   const setMeasurementActive = useSceneStore(state => state.setMeasurementActive);
   const cameraMode = useSceneStore(state => state.cameraMode);
-  const fpvRealisticEyes = useSceneStore(state => state.layers.fpvRealisticEyes ?? false);
+  const fpvRealisticEyes = useSceneStore(state => state.layers.fpvRealisticEyes ?? true);
   const fpvStabilization = useSceneStore(state => state.layers.fpvStabilization ?? true);
   const fpvStabilizationFactor = useSceneStore(state => state.layers.fpvStabilizationFactor ?? 0.7);
 
