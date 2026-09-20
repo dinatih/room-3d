@@ -9,8 +9,8 @@ const silentManager = new THREE.LoadingManager();
 
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
-const MAX_DYNAMIC_GLTF_CACHE = 12;
-const MAX_RETARGETED_CLIPS = 48;
+const MAX_DYNAMIC_GLTF_CACHE = 256;
+const MAX_RETARGETED_CLIPS = 1024;
 const globalGLTFCache = new Map<string, Promise<any>>();
 
 export function cacheDynamicGLTF(path: string): Promise<any> {
@@ -76,6 +76,8 @@ export function useCharacterAnimations({
   const activeActionName = useRef<string>('');
   const currentAnimClip = useRef<string | null>(null);
   const userAnimOverrideRef = useRef<boolean>(false);
+  const pendingLoadsRef = useRef<Set<string>>(new Set());
+  const failedLoadsRef = useRef<Set<string>>(new Set());
 
   const loadAndPlayClip = useCallback((pathOrKey: string, loop = true, isUserOverride = false) => {
     if (!scene || !mixerRef.current) return;
@@ -91,10 +93,27 @@ export function useCharacterAnimations({
       return;
     }
 
+    // Éviter de recharger si l'action existe déjà
+    if (actionsRef.current[animId] || actionsRef.current[path] || (pathOrKey && actionsRef.current[pathOrKey])) {
+      return;
+    }
+
+    // Verrou anti-spam à 60 FPS : évite de lancer des dizaines de requêtes async simultanées pour le même clip
+    const loadKey = `${id}_${animId}`;
+    if (pendingLoadsRef.current.has(loadKey) || failedLoadsRef.current.has(loadKey)) {
+      return;
+    }
+    pendingLoadsRef.current.add(loadKey);
+
     const handleClip = (clip: THREE.AnimationClip, sourceScene: THREE.Object3D | undefined) => {
+      pendingLoadsRef.current.delete(loadKey);
       if (!clip) return;
       const mixer = mixerRef.current;
       if (!mixer) return;
+
+      // Déjà instancié entre temps
+      let action = actionsRef.current[animId] || actionsRef.current[path];
+      if (action) return;
 
       clip.name = animId;
       const cacheKey = id + '_' + animId;
@@ -106,25 +125,22 @@ export function useCharacterAnimations({
       }
       finalClip.name = animId;
 
-      let action = actionsRef.current[animId] || actionsRef.current[path];
-      if (!action) {
-        action = mixer.clipAction(finalClip);
-        action.enabled = true;
-        // Indexer sous l'ID canonique
-        actionsRef.current[animId] = action;
-        // Indexer sous la clé/alias demandé
-        if (pathOrKey && pathOrKey !== animId) {
-          actionsRef.current[pathOrKey] = action;
-        }
-        // Indexer sous le chemin GLB
-        if (path && path !== animId) {
-          actionsRef.current[path] = action;
-        }
-        // Indexer sous tous les alias connus de la définition
-        if (def?.aliases) {
-          for (const alias of def.aliases) {
-            actionsRef.current[alias] = action;
-          }
+      action = mixer.clipAction(finalClip);
+      action.enabled = true;
+      // Indexer sous l'ID canonique
+      actionsRef.current[animId] = action;
+      // Indexer sous la clé/alias demandé
+      if (pathOrKey && pathOrKey !== animId) {
+        actionsRef.current[pathOrKey] = action;
+      }
+      // Indexer sous le chemin GLB
+      if (path && path !== animId) {
+        actionsRef.current[path] = action;
+      }
+      // Indexer sous tous les alias connus de la définition
+      if (def?.aliases) {
+        for (const alias of def.aliases) {
+          actionsRef.current[alias] = action;
         }
       }
 
@@ -149,7 +165,13 @@ export function useCharacterAnimations({
       handleClip(gltf.animations[0], sourceScene);
     };
 
-    cacheDynamicGLTF(path).then(loadCallback).catch(console.error);
+    cacheDynamicGLTF(path)
+      .then(loadCallback)
+      .catch((err) => {
+        pendingLoadsRef.current.delete(loadKey);
+        failedLoadsRef.current.add(loadKey);
+        console.error(err);
+      });
   }, [id, scene, invalidate]);
 
   // Initialisation du mixer et pré-chargement dynamique de l'idle
@@ -167,6 +189,8 @@ export function useCharacterAnimations({
     });
 
     actionsRef.current = {};
+    pendingLoadsRef.current.clear();
+    failedLoadsRef.current.clear();
 
     // Pré-chargement automatique de la pose idle par défaut
     loadAndPlayClip('idle');
@@ -174,6 +198,9 @@ export function useCharacterAnimations({
     return () => {
       mixer.stopAllAction();
       mixer.uncacheRoot(scene);
+      actionsRef.current = {};
+      pendingLoadsRef.current.clear();
+      failedLoadsRef.current.clear();
     };
   }, [scene, loadAndPlayClip]);
 
