@@ -105,6 +105,7 @@ export function useAgentController(
   const duoRoleRef = useRef<DuoRole | null>(null);
   const duoWaitTimerRef = useRef<number>(0);
   const duoInvitedRef = useRef<boolean>(false);
+  const lastDuoEndTimeRef = useRef<number>(0);
 
   // Répétitions d'animation et variations pour SmartObjects
   const repeatIndexRef = useRef<number>(0);
@@ -414,24 +415,30 @@ export function useAgentController(
         const objId = currentInstruction.smartObjectId;
         let reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
 
-        // Si l'objet est chair-office et que le slot visé est 'sit' (solo),
-        // donner une chance (35%) de lancer spontanément l'action duo 'sit-cuddle' et d'appeler un partenaire
-        if (objId === 'chair-office' && reqSlotId === 'sit' && Math.random() < 0.35) {
-          if (!OccupancyManager.isSlotOccupied('chair-office', 'sit-cuddle', _characterId)) {
-            reqSlotId = 'sit-cuddle';
-            currentInstruction.slotId = 'sit-cuddle';
+        const targetSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId);
+        const isSeatedFrontSlot = targetSlot?.animationsRandom === 'seated_front'
+          || (Array.isArray(targetSlot?.animationsRandom) && targetSlot.animationsRandom.includes('seated_front'))
+          || reqSlotId === 'sit-cuddle';
+
+        const isDuoCooldown = Date.now() - lastDuoEndTimeRef.current < 25000;
+
+        // Si le slot utilise 'seated_front' (chaise, lits, canapés, etc.) et que le cooldown est passé :
+        // donner une chance (30%) de déclencher spontanément le câlin à deux ('sit_cuddle') avec un partenaire
+        let shouldTriggerDuo = isDuoSlot(objId, reqSlotId);
+        if (!shouldTriggerDuo && isSeatedFrontSlot && !isDuoCooldown && Math.random() < 0.30) {
+          if (!OccupancyManager.isSlotOccupied(objId, reqSlotId, _characterId)) {
+            shouldTriggerDuo = true;
           }
         }
 
-        const isDuo = objId === 'duo-zone' || isDuoSlot(objId, reqSlotId);
+        const isDuo = objId === 'duo-zone' || shouldTriggerDuo;
         if (isDuo) {
           let role = duoRoleRef.current;
           if (!role) {
             if (objId === 'duo-zone') {
               role = duoSessionManager.joinDuoZone(_characterId);
             } else {
-              const slot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId);
-              const def = DUO_ANIMATIONS.find(d => d.id === slot?.duoAnimId);
+              const def = DUO_ANIMATIONS.find(d => d.id === 'sit_cuddle');
               if (def) {
                 const duoRes = duoSessionManager.startDuoOnSmartObject(objId, reqSlotId, def, _characterId);
                 if (duoRes) {
@@ -622,8 +629,8 @@ export function useAgentController(
             duoWaitTimerRef.current = 0;
             const animState = duoSessionManager.getCurrentAnimState();
             timerRef.current = animState?.duration ?? 5.0;
-            const isSmartChair = currentInstruction.smartObjectId === 'chair-office';
-            stateRef.current.animation = isSmartChair
+            const isSmartObject = currentInstruction.smartObjectId !== 'duo-zone';
+            stateRef.current.animation = isSmartObject
               ? (duoRoleRef.current === 'roleA'
                   ? 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb'
                   : 'animations/poses_idles/miley_armature_sit_cuddle_hug_f.glb')
@@ -707,14 +714,17 @@ export function useAgentController(
           duoInvited: duoInvitedRef.current,
           onSessionEnded: () => {
             resetDuoState();
-            if (!hasNavStep) stepIndexRef.current++;
+            stepIndexRef.current++;
+            lastDuoEndTimeRef.current = Date.now();
           },
           setDuoWaitTimer: (t) => { duoWaitTimerRef.current = t; },
           setDuoInvited: (inv) => { duoInvitedRef.current = inv; }
         });
 
         if (isEnded) {
-          return update(dt);
+          statusRef.current = 'IDLE';
+          currentWalkAnimRef.current = getRandomNpcWalkAnimation(_characterId);
+          return stateRef.current;
         }
         return stateRef.current;
       }

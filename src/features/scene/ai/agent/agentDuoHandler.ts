@@ -37,7 +37,7 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
     const nextTimer = duoWaitTimer + dt;
     setDuoWaitTimer(nextTimer);
     const loc = duoSessionManager.getCurrentLocation();
-    if (loc.objectId === 'chair-office') {
+    if (loc.objectId !== 'duo-zone') {
       state.animation = duoRole === 'roleA'
         ? 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb'
         : 'animations/poses_idles/miley_armature_sit_cuddle_hug_f.glb';

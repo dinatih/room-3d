@@ -47,7 +47,7 @@ class DuoSessionManager {
   private playlist: DuoAnimationDef[] = [];
   private currentAnimIndex = 0;
   private currentRepeatIndex = 0;
-  public readonly repeatsPerAnim = 3;
+  public repeatsPerAnim = 3;
   private sessionTimer = 0;
   private isSessionPlaying = false;
   private isSessionComplete = false;
@@ -386,10 +386,11 @@ class DuoSessionManager {
       anchorRotY,
     };
 
-    // Configurer la session
+    // Configurer la session (1 seule répétition propre pour les interactions de meubles)
     this.playlist = [def];
     this.currentAnimIndex = 0;
     this.currentRepeatIndex = 0;
+    this.repeatsPerAnim = 1;
     this.sessionTimer = def.duration ?? 5.0;
     this.isSessionPlaying = false;
     this.isSessionComplete = false;
