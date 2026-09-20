@@ -49,6 +49,15 @@ export function clearRetargetCache() {
   }
 }
 
+export function clearCharacterRetargetCache(characterId: string) {
+  const prefix = characterId + '_';
+  for (const key of Object.keys(_retargetCache)) {
+    if (key.startsWith(prefix)) {
+      delete _retargetCache[key];
+    }
+  }
+}
+
 export interface UseCharacterAnimationsProps {
   id: string;
   scene: THREE.Group;

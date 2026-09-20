@@ -9,6 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "optimize:glb": "node scripts/optimize-lara.js",
+    "optimize:extras": "node scripts/optimize-extras.mjs",
     "test-bone": "node scratch/run_test.cjs"
   },
   "dependencies": {

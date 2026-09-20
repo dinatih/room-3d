@@ -5,6 +5,7 @@
 import { useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
@@ -12,6 +13,8 @@ import { Wig, HAIR_COLORS } from '../items/Wig';
 import { CharacterBaseballCap } from './CharacterBaseballCap';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../walkerConfig';
+import { disposeCharacterResources } from './characterDisposal';
+import { clearCharacterRetargetCache } from './useCharacterAnimations';
 import { buildHairChain } from '../retargeting/index';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 import {
@@ -123,7 +126,17 @@ export function SingleCharacter({
     });
   }, [scene, charLabel, isPreview, isActive, id]);
 
-  useEffect(() => () => disposeLaraVariantMaterials(scene), [scene]);
+  // Libération propre des ressources GPU (textures, matériaux, géométries), cache GLTF et retargeting au démontage
+  useEffect(() => {
+    return () => {
+      disposeLaraVariantMaterials(scene);
+      if (isExtraCharacter(id)) {
+        disposeCharacterResources(scene);
+        useGLTF.clear(modelPath);
+        clearCharacterRetargetCache(id);
+      }
+    };
+  }, [id, modelPath, scene]);
 
   // Extraction structurée des maillages et des os
   const parts = useMemo(() => extractCharacterParts(scene), [scene]);
