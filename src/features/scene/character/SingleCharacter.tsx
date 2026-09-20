@@ -11,7 +11,7 @@ import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Wig, HAIR_COLORS } from '../items/Wig';
 import { CharacterBaseballCap } from './CharacterBaseballCap';
-import { applyLaraVariantStyles, disposeLaraVariantMaterials } from '../LaraVariants';
+import { applyLaraVariantStyles, disposeLaraVariantMaterials, applyLaraRealisticTextures } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../walkerConfig';
 import { disposeCharacterResources } from './characterDisposal';
 import { clearCharacterRetargetCache } from './useCharacterAnimations';
@@ -96,6 +96,7 @@ export function SingleCharacter({
   const laraTopOff = useSceneStore(state => state.layers.laraTopOff ?? false);
   const laraBottomOff = useSceneStore(state => state.layers.laraBottomOff ?? false);
   const laraShoes = useSceneStore(state => state.layers.laraShoes ?? true);
+  const laraRealisticTextures = useSceneStore(state => state.layers.laraRealisticTextures ?? true);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
   const showThoughtBubble = useSceneStore(state => state.layers.thoughtBubble ?? true);
@@ -323,14 +324,26 @@ export function SingleCharacter({
       }
     }
 
-    if (isLara && variant) {
-      applyLaraVariantStyles(scene, variant);
-    } else if (!isLara) {
+    if (isLara) {
+      if (variant) {
+        applyLaraVariantStyles(scene, variant);
+      }
+      if (laraRealisticTextures) {
+        applyLaraRealisticTextures(scene, true);
+      }
+    } else {
       normalizeNonLaraCharacterMaterials(scene);
     }
 
     hairChainRef.current = isLara ? buildHairChain(parts.bones.nativeHairBones) : [];
-  }, [scene, parts, isLara, targetHeight, variant, id]);
+  }, [scene, parts, isLara, targetHeight, variant, id, laraRealisticTextures]);
+
+  // Textures réalistes (peau et tissus mats) pour les Lara
+  useEffect(() => {
+    if (!scene || !isLara) return;
+    applyLaraRealisticTextures(scene, laraRealisticTextures);
+    invalidate();
+  }, [scene, isLara, laraRealisticTextures, invalidate]);
 
   // Visibilité des vêtements et des accessoires (synchronisation réactive unique)
   useEffect(() => {

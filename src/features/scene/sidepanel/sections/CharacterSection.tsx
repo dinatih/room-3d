@@ -418,6 +418,7 @@ export function CharacterSection({
       <div className="text-muted fw-semibold mb-1 text-dark mt-3" style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⚙️ Options d'affichage</div>
       {layerBtn('light',  'Personnage 3D (Walker)', 'walker')}
       {layerBtn('gray',   'Ombres personnage 👤', 'characterShadows')}
+      {layerBtn('pink',   'Peau & tissus réalistes (Mat) 🧴', 'laraRealisticTextures')}
       {layerBtn('light',  'Pistolets Lara 🔫', 'laraPistols')}
       {layerBtn('light',  'Accessoires Lara 🎒', 'accessories')}
       {layerBtn('pink',   'Déshabiller Lara 👙 (X)', 'laraNude')}

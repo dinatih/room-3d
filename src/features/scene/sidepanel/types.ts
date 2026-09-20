@@ -117,6 +117,7 @@ export interface LayerState {
   laraTopOff?:  boolean;
   laraBottomOff?: boolean;
   laraShoes?:   boolean;
+  laraRealisticTextures?: boolean;
   laraCount?:   LaraCountMode;
   showAllLaraStyles: boolean;
   extraCharacters?: boolean;

@@ -151,6 +151,7 @@ const initialLayers: LayerState = {
   laraTopOff: false,
   laraBottomOff: false,
   laraShoes: true,
+  laraRealisticTextures: true,
   breastPhysics: true,
   breastIntensity: 1.0,
   breastMass: 1,

@@ -1137,3 +1137,140 @@ function drawSaraTorsoNeckTattooOnCanvas(ctx: CanvasRenderingContext2D) {
     ctx.restore();
   }
 }
+
+/**
+ * Applique des textures de peau et de tissu réalistes (mates) sur les modèles de Lara
+ * pour éliminer la brillance excessive (effet plastique / latex) sous les éclairages PBR.
+ */
+export function applyLaraRealisticTextures(model: THREE.Object3D, realistic: boolean) {
+  model.traverse(node => {
+    const mesh = node as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    if (mesh.userData?.isCustomHair || mesh.userData?.isWigRoot) return;
+
+    const meshName = (mesh.name || '').toLowerCase();
+    const mat = mesh.material;
+    if (!mat) return;
+
+    const mats = Array.isArray(mat) ? mat : [mat];
+    mats.forEach(m => {
+      if (!m) return;
+      const matName = (m.name || '').toLowerCase();
+
+      // Sauvegarde des propriétés d'origine si non déjà sauvegardées
+      if (m.userData.__origRoughness === undefined && 'roughness' in m) {
+        m.userData.__origRoughness = (m as any).roughness;
+      }
+      if (m.userData.__origMetalness === undefined && 'metalness' in m) {
+        m.userData.__origMetalness = (m as any).metalness;
+      }
+      if (m.userData.__origSpecularIntensity === undefined && 'specularIntensity' in m) {
+        m.userData.__origSpecularIntensity = (m as any).specularIntensity;
+      }
+
+      // Restauration du mode d'origine si désactivé
+      if (!realistic) {
+        if (m.userData.__origRoughness !== undefined && 'roughness' in m) {
+          (m as any).roughness = m.userData.__origRoughness;
+        } else if ('roughness' in m) {
+          (m as any).roughness = 0.5;
+        }
+        if (m.userData.__origMetalness !== undefined && 'metalness' in m) {
+          (m as any).metalness = m.userData.__origMetalness;
+        } else if ('metalness' in m) {
+          (m as any).metalness = 0.0;
+        }
+        if (m.userData.__origSpecularIntensity !== undefined && 'specularIntensity' in m) {
+          (m as any).specularIntensity = m.userData.__origSpecularIntensity;
+        }
+        m.needsUpdate = true;
+        return;
+      }
+
+      // ── MODE RÉALISTE (MAT) ──────────────────────────────────────────────
+
+      // 1. Métal / Armes / Boucles / Piercings : conserver l'aspect métallique brillant
+      const isMetal = matName.includes('buckle') || meshName.includes('buckle') ||
+                      matName.includes('metal') || meshName.includes('metal') ||
+                      matName.includes('handgun') || meshName.includes('handgun') ||
+                      matName.includes('piercing') || meshName.includes('piercing');
+      if (isMetal) {
+        return;
+      }
+
+      // 2. Verres et visières (lunettes)
+      const isGlasses = matName.includes('glass') || meshName.includes('glass') || matName.includes('lens');
+      if (isGlasses) {
+        return;
+      }
+
+      // 3. Yeux (cornée et sclère) : éclat et reflets humides naturels
+      const isEye = (matName.includes('eye') || meshName.includes('eye')) &&
+                    !matName.includes('lash') && !meshName.includes('lash');
+      if (isEye) {
+        if ('roughness' in m) (m as any).roughness = 0.25;
+        if ('metalness' in m) (m as any).metalness = 0.0;
+        m.needsUpdate = true;
+        return;
+      }
+
+      // 4. Cheveux et cils : matériau kératinique mat
+      const isHairOrLash = matName.includes('hair') || meshName.includes('hair') ||
+                           matName.includes('braid') || meshName.includes('braid') ||
+                           matName.includes('pony') || meshName.includes('pony') ||
+                           matName.includes('lash') || meshName.includes('lash');
+      if (isHairOrLash) {
+        if ('roughness' in m) (m as any).roughness = 0.85;
+        if ('metalness' in m) (m as any).metalness = 0.0;
+        if ('specularIntensity' in m) (m as any).specularIntensity = 0.0;
+        m.needsUpdate = true;
+        return;
+      }
+
+      // 5. Peau humaine (visage, bras, mains, torse, jambes, pieds, corps nu) :
+      // Diélectrique naturel sans reflets huileux / plastiques
+      const isSkin = matName.includes('skin') || matName.includes('face') || matName.includes('head') ||
+                     matName.includes('body') || matName.includes('arm') || matName.includes('leg') ||
+                     matName.includes('finger') || matName.includes('hand') || matName.includes('feet') ||
+                     meshName.includes('face') || meshName.includes('arms') || meshName.includes('fingers') ||
+                     meshName.includes('body_torso') || meshName.includes('body_legs') ||
+                     meshName.includes('body_nude');
+      if (isSkin) {
+        if ('roughness' in m) (m as any).roughness = 0.82;
+        if ('metalness' in m) (m as any).metalness = 0.0;
+        if ('metalnessMap' in m) (m as any).metalnessMap = null;
+        if ('specularIntensity' in m) (m as any).specularIntensity = 0.0;
+        if ('specularIntensityMap' in m) (m as any).specularIntensityMap = null;
+        if ('specularColorMap' in m) (m as any).specularColorMap = null;
+        m.needsUpdate = true;
+        return;
+      }
+
+      // 6. Cuir & chaussures (bottes, holsters, ceinturons) : finition cuir souple satinée
+      const isLeather = matName.includes('gear') || meshName.includes('gear') ||
+                        matName.includes('holster') || meshName.includes('holster') ||
+                        matName.includes('boot') || meshName.includes('boot');
+      if (isLeather) {
+        if ('roughness' in m) (m as any).roughness = 0.78;
+        if ('metalness' in m) (m as any).metalness = 0.0;
+        if ('metalnessMap' in m) (m as any).metalnessMap = null;
+        if ('specularIntensity' in m) (m as any).specularIntensity = 0.05;
+        if ('specularIntensityMap' in m) (m as any).specularIntensityMap = null;
+        if ('specularColorMap' in m) (m as any).specularColorMap = null;
+        m.needsUpdate = true;
+        return;
+      }
+
+      // 7. Vêtements & tissus (t-shirt, débardeur, short, sac à dos, gants, sous-vêtements) :
+      // Coton, denim, toile de sac = diélectriques parfaitement mats
+      if ('roughness' in m) (m as any).roughness = 0.85;
+      if ('metalness' in m) (m as any).metalness = 0.0;
+      if ('metalnessMap' in m) (m as any).metalnessMap = null;
+      if ('specularIntensity' in m) (m as any).specularIntensity = 0.0;
+      if ('specularIntensityMap' in m) (m as any).specularIntensityMap = null;
+      if ('specularColorMap' in m) (m as any).specularColorMap = null;
+      m.needsUpdate = true;
+    });
+  });
+}
+
