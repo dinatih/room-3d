@@ -4,6 +4,7 @@ import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from '.
 import { resolveSlotAnimation } from './animationPacks';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
+import { DUO_ANIMATIONS } from './duoAnimations';
 import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
@@ -411,13 +412,33 @@ export function useAgentController(
     if (statusRef.current === 'IDLE') {
       if (!hasNavStep && currentInstruction.smartObjectId) {
         const objId = currentInstruction.smartObjectId;
-        const reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
+        let reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
+
+        // Si l'objet est chair-office et que le slot visé est 'sit' (solo),
+        // donner une chance (35%) de lancer spontanément l'action duo 'sit-cuddle' et d'appeler un partenaire
+        if (objId === 'chair-office' && reqSlotId === 'sit' && Math.random() < 0.35) {
+          if (!OccupancyManager.isSlotOccupied('chair-office', 'sit-cuddle', _characterId)) {
+            reqSlotId = 'sit-cuddle';
+            currentInstruction.slotId = 'sit-cuddle';
+          }
+        }
 
         const isDuo = objId === 'duo-zone' || isDuoSlot(objId, reqSlotId);
         if (isDuo) {
           let role = duoRoleRef.current;
           if (!role) {
-            role = objId === 'duo-zone' ? duoSessionManager.joinDuoZone(_characterId) : 'roleA';
+            if (objId === 'duo-zone') {
+              role = duoSessionManager.joinDuoZone(_characterId);
+            } else {
+              const slot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId);
+              const def = DUO_ANIMATIONS.find(d => d.id === slot?.duoAnimId);
+              if (def) {
+                const duoRes = duoSessionManager.startDuoOnSmartObject(objId, reqSlotId, def, _characterId);
+                if (duoRes) {
+                  role = 'roleA';
+                }
+              }
+            }
             if (role) duoRoleRef.current = role;
           }
           if (role) {
