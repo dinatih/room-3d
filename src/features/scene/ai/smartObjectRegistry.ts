@@ -176,6 +176,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [0, 0, -36],
         animation: 'texting',
+        duration: 23.6,
       }
     ]
   },
