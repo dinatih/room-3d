@@ -1412,14 +1412,14 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     id: 'miley_armature_sit_cuddle_hug_f',
     path: 'animations/poses_idles/miley_armature_sit_cuddle_hug_f.glb',
     label: `[MILEY] Sit Cuddle Hug F (722f / 12.0s, 1084KB)`,
-    tags: ['poses_idles', 'sitting'],
+    tags: ['poses_idles', 'sitting', 'seated_front'],
     duration: 12,
   },
   {
     id: 'miley_armature_sit_cuddle_hug_m',
     path: 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb',
     label: `[MILEY] Sit Cuddle Hug M (722f / 12.0s, 965KB)`,
-    tags: ['poses_idles', 'sitting'],
+    tags: ['poses_idles', 'sitting', 'seated_front'],
     duration: 12,
   },
   {
