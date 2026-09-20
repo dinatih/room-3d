@@ -3,6 +3,8 @@ import * as THREE from 'three';
 export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivida' | 'sabira' | 'safa' | 'sandra' | 'rajaa' | 'angelina' | 'romana' | 'lgbta';
 
 const textureCache: Record<string, THREE.Texture> = {};
+const grayscaleTextureCache = new Map<string, THREE.Texture>();
+let rosannaBullsTextureCache: THREE.CanvasTexture | null = null;
 
 function getTexture(url: string): THREE.Texture {
   if (!textureCache[url]) {
@@ -19,6 +21,10 @@ function createGrayscaleTexture(
   mode: 'vivida' | 'light' | 'white-boost' | 'standard' = 'standard'
 ): THREE.Texture | null {
   if (!originalTex || !originalTex.image) return null;
+  const cacheKey = (originalTex.uuid || originalTex.name || 'tex') + '_' + mode;
+  const cached = grayscaleTextureCache.get(cacheKey);
+  if (cached) return cached;
+
   const img = originalTex.image as HTMLImageElement | HTMLCanvasElement;
   const width = img.width || 1024;
   const height = img.height || 1024;
@@ -50,6 +56,7 @@ function createGrayscaleTexture(
   newTex.flipY = originalTex.flipY;
   newTex.colorSpace = THREE.SRGBColorSpace;
   newTex.needsUpdate = true;
+  grayscaleTextureCache.set(cacheKey, newTex);
   return newTex;
 }
 
@@ -407,24 +414,27 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   mat.emissive = new THREE.Color(0xff0000);
                   mat.emissiveIntensity = 0.01;
 
-                  // BULLS 66 Text
-                  const canvas = document.createElement('canvas');
-                  canvas.width = 1024; canvas.height = 1024;
-                  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
-                  if (ctx && mat.map && mat.map.image) {
-                    ctx.drawImage(mat.map.image as any, 0, 0, 1024, 1024);
-                    ctx.fillStyle = 'black'; ctx.textAlign = 'center';
+                  // BULLS 66 Text (mis en cache pour éviter toute réallocation mémoire)
+                  if (!rosannaBullsTextureCache && mat.map && mat.map.image) {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1024; canvas.height = 1024;
+                    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+                    if (ctx) {
+                      ctx.drawImage(mat.map.image as any, 0, 0, 1024, 1024);
+                      ctx.fillStyle = 'black'; ctx.textAlign = 'center';
+                      ctx.font = '900 80px Graduate';
+                      ctx.fillText('BULLS', 700, 750);
+                      ctx.font = '900 150px Graduate';
+                      ctx.fillText('66', 700, 870);
 
-                    // X=700 comme demandé
-                    ctx.font = '900 80px Graduate';
-                    ctx.fillText('BULLS', 700, 750);
-                    ctx.font = '900 150px Graduate';
-                    ctx.fillText('66', 700, 870);
-
-                    const newTex = new THREE.CanvasTexture(canvas);
-                    newTex.flipY = false;
-                    newTex.colorSpace = THREE.SRGBColorSpace;
-                    mat.map = newTex;
+                      const newTex = new THREE.CanvasTexture(canvas);
+                      newTex.flipY = false;
+                      newTex.colorSpace = THREE.SRGBColorSpace;
+                      rosannaBullsTextureCache = newTex;
+                    }
+                  }
+                  if (rosannaBullsTextureCache) {
+                    mat.map = rosannaBullsTextureCache;
                     mat.needsUpdate = true;
                   }
                }

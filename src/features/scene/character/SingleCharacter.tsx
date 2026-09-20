@@ -136,10 +136,10 @@ export function SingleCharacter({
   useEffect(() => {
     return () => {
       disposeLaraVariantMaterials(scene);
+      clearCharacterRetargetCache(id);
       if (isExtraCharacter(id)) {
         disposeCharacterResources(scene);
         useGLTF.clear(modelPath);
-        clearCharacterRetargetCache(id);
       }
     };
   }, [id, modelPath, scene]);
@@ -200,18 +200,6 @@ export function SingleCharacter({
     updatePhysics
   } = useCharacterPhysics();
 
-  // Rotation périodique coiffures variant LGBT+
-  useEffect(() => {
-    if (variant === 'lgbta') {
-      const interval = setInterval(() => {
-        const index = Math.floor(Math.random() * 13);
-        if (index >= 0 && index <= 12) {
-          setLocalHaircut('hair_' + (100 + index));
-        }
-      }, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [variant]);
 
   // Synchronisation des layers (visibilité miroir vs FPV)
   useEffect(() => {

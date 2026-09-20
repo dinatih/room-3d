@@ -43,13 +43,38 @@ export interface WigProps {
 
 export { RIGGED_WIGS_PATHS };
 
-function disposeOwnedWigMaterials(root: THREE.Object3D) {
+function disposeOwnedWigResources(root: THREE.Object3D) {
+  const disposedGeometries = new Set<THREE.BufferGeometry>();
+  const disposedMaterials = new Set<THREE.Material>();
+  const disposedTextures = new Set<THREE.Texture>();
+
   root.traverse((node: any) => {
-    if (!node.isMesh || !node.material) return;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    materials.forEach((material: THREE.Material) => {
-      if (material.userData.__ownedWigMaterial) material.dispose();
-    });
+    if (node.isMesh) {
+      if (node.geometry && !disposedGeometries.has(node.geometry)) {
+        disposedGeometries.add(node.geometry);
+        node.geometry.dispose();
+      }
+      if (node.material) {
+        const materials = Array.isArray(node.material) ? node.material : [node.material];
+        for (const mat of materials) {
+          if (!mat || disposedMaterials.has(mat)) continue;
+          if (mat.userData.__ownedWigMaterial) {
+            disposedMaterials.add(mat);
+            for (const key of Object.keys(mat)) {
+              const prop = (mat as any)[key];
+              if (prop && typeof prop === 'object' && prop.isTexture && !disposedTextures.has(prop)) {
+                disposedTextures.add(prop);
+                prop.dispose();
+              }
+            }
+            mat.dispose();
+          }
+        }
+      }
+      if (node.skeleton) {
+        node.skeleton.dispose();
+      }
+    }
   });
 }
 
@@ -287,7 +312,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       if (existingWigs.length > 0) {
         console.log(`[Wig Setup] removing ${existingWigs.length} old wigs:`, existingWigs.map((w: any) => w.name));
         existingWigs.forEach((w: any) => {
-          disposeOwnedWigMaterials(w);
+          disposeOwnedWigResources(w);
           attachTo.remove(w);
         });
       }
@@ -298,7 +323,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       if (attachTo && scene) {
         console.log(`[Wig Cleanup] removing scene ${scene.name} (uuid: ${scene.uuid})`);
         attachTo.remove(scene);
-        disposeOwnedWigMaterials(scene);
+        disposeOwnedWigResources(scene);
       }
     };
   }, [attachTo, scene]);

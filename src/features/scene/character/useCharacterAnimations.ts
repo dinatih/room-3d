@@ -107,7 +107,10 @@ export function useCharacterAnimations({
 
     const handleClip = (clip: THREE.AnimationClip, sourceScene: THREE.Object3D | undefined) => {
       pendingLoadsRef.current.delete(loadKey);
-      if (!clip) return;
+      if (!clip) {
+        failedLoadsRef.current.add(loadKey);
+        return;
+      }
       const mixer = mixerRef.current;
       if (!mixer) return;
 
