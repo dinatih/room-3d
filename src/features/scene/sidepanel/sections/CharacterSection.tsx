@@ -854,6 +854,27 @@ export function CharacterSection({
                 {layers.fpvHeadBobbing ? 'ACTIF' : 'DÉSACTIVÉ'}
               </span>
             </button>
+
+            <button
+              type="button"
+              className="btn btn-sm w-100 d-flex justify-content-between align-items-center px-2 py-1 mt-1.5"
+              style={{
+                background: layers.fpvRealisticEyes ? 'rgba(0, 204, 255, 0.15)' : 'rgba(0, 0, 0, 0.04)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                fontSize: '11px',
+              }}
+              title="Positionne la caméra au centre exact des yeux de Lara / PNJ et suit précisément les rotations et inclinaisons de la tête"
+              onClick={() => {
+                useSceneStore.setState(st => ({
+                  layers: { ...st.layers, fpvRealisticEyes: !st.layers.fpvRealisticEyes }
+                }));
+              }}
+            >
+              <span>👁️ FPV Réaliste (Caméra Yeux)</span>
+              <span className={`badge ${layers.fpvRealisticEyes ? 'bg-info text-dark' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
+                {layers.fpvRealisticEyes ? 'ACTIF' : 'DÉSACTIVÉ'}
+              </span>
+            </button>
           </div>
         </div>
       )}

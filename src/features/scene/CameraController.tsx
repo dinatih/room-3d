@@ -155,24 +155,61 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
 
     if (isFPV) {
-      const cosP = Math.cos(walkPitch.current);
-      const bobY = isBobbingEnabled ? bobOffset.current.y : 0;
-      const bobSide = isBobbingEnabled ? bobOffset.current.side : 0;
-      const sideX = Math.cos(walkYaw.current) * bobSide;
-      const sideZ = -Math.sin(walkYaw.current) * bobSide;
+      const isRealisticEyes = (useSceneStore.getState().layers.fpvRealisticEyes ?? false) && !!cameraState.activeEyesPos && !!cameraState.activeHeadForward;
 
-      const targetX = walkPos.current.x + sideX;
-      const targetY = walkPos.current.y + bobY;
-      const targetZ = walkPos.current.z + sideZ;
+      if (isRealisticEyes && cameraState.activeEyesPos && cameraState.activeHeadForward) {
+        const eyes = cameraState.activeEyesPos;
+        const fwd = cameraState.activeHeadForward;
+        const up = cameraState.activeHeadUp;
 
-      const lookDist = 200;
-      ctrl.target.set(
-        targetX + Math.sin(walkYaw.current) * cosP * lookDist,
-        targetY + Math.sin(walkPitch.current) * lookDist,
-        targetZ + Math.cos(walkYaw.current) * cosP * lookDist
-      );
-      camera.position.set(targetX, targetY, targetZ);
-      ctrl.update();
+        // Petite avance de 2 cm dans la direction du regard pour éliminer tout risque de clipping avec les cils/nez
+        const eyeX = eyes.x + fwd.x * 2.0;
+        const eyeY = eyes.y + fwd.y * 2.0;
+        const eyeZ = eyes.z + fwd.z * 2.0;
+
+        const lookDist = 200;
+        if (Math.abs(walkPitch.current) > 0.001) {
+          const cosP = Math.cos(walkPitch.current);
+          const sinP = Math.sin(walkPitch.current);
+          ctrl.target.set(
+            eyeX + fwd.x * cosP * lookDist,
+            eyeY + (fwd.y * cosP + sinP) * lookDist,
+            eyeZ + fwd.z * cosP * lookDist
+          );
+        } else {
+          ctrl.target.set(
+            eyeX + fwd.x * lookDist,
+            eyeY + fwd.y * lookDist,
+            eyeZ + fwd.z * lookDist
+          );
+        }
+
+        camera.position.set(eyeX, eyeY, eyeZ);
+        if (up) {
+          camera.up.set(up.x, up.y, up.z);
+        }
+        ctrl.update();
+      } else {
+        const cosP = Math.cos(walkPitch.current);
+        const bobY = isBobbingEnabled ? bobOffset.current.y : 0;
+        const bobSide = isBobbingEnabled ? bobOffset.current.side : 0;
+        const sideX = Math.cos(walkYaw.current) * bobSide;
+        const sideZ = -Math.sin(walkYaw.current) * bobSide;
+
+        const targetX = walkPos.current.x + sideX;
+        const targetY = walkPos.current.y + bobY;
+        const targetZ = walkPos.current.z + sideZ;
+
+        const lookDist = 200;
+        ctrl.target.set(
+          targetX + Math.sin(walkYaw.current) * cosP * lookDist,
+          targetY + Math.sin(walkPitch.current) * lookDist,
+          targetZ + Math.cos(walkYaw.current) * cosP * lookDist
+        );
+        camera.position.set(targetX, targetY, targetZ);
+        camera.up.set(0, 1, 0);
+        ctrl.update();
+      }
     } else {
       // Mode 3ème Personne Intelligent & Cinématique (style Lara Croft / Tomb Raider)
       const bobY = isBobbingEnabled ? bobOffset.current.y * 0.5 : 0;
@@ -296,6 +333,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       cam.fov = savedFov.current;
       cam.updateProjectionMatrix();
     }
+    camera.up.set(0, 1, 0);
     changeMode('orbit');
     invalidate();
   }, [camera, changeMode, invalidate]);

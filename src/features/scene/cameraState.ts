@@ -36,6 +36,12 @@ export const cameraState = {
   activeHeadPos: null as { x: number; y: number; z: number } | null,
   /** Position monde réelle des hanches / centre de masse du walker actif */
   activeHipsPos: null as { x: number; y: number; z: number } | null,
+  /** Position monde réelle du centre des deux yeux du walker actif (pour FPV réaliste) */
+  activeEyesPos: null as { x: number; y: number; z: number } | null,
+  /** Vecteur unitaire avant (gaze/forward) de la tête du walker actif */
+  activeHeadForward: null as { x: number; y: number; z: number } | null,
+  /** Vecteur unitaire haut (up) de la tête du walker actif */
+  activeHeadUp: null as { x: number; y: number; z: number } | null,
   /** Hauteur (cm) du walker — écrit par Walker.tsx, lue par les caméras walk */
   walkerHeight: 173.4 as number,
   /** Déclenché par CameraController chaque frame — la minimap s'y abonne */

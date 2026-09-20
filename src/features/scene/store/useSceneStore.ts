@@ -183,6 +183,7 @@ const initialLayers: LayerState = {
   debugFurnitureCollisions: false,
   thoughtBubble: true,
   fpvHeadBobbing: false,
+  fpvRealisticEyes: false,
   inventoryGrid: false,
 };
 

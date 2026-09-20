@@ -49,6 +49,11 @@ const _charProjScreenMatrix = new THREE.Matrix4();
 const _charBoundingSphere = new THREE.Sphere();
 const _tmpHeadWorldPos = new THREE.Vector3();
 const _tmpHipsWorldPos = new THREE.Vector3();
+const _tmpLeftEyeWorldPos = new THREE.Vector3();
+const _tmpRightEyeWorldPos = new THREE.Vector3();
+const _tmpEyesWorldPos = new THREE.Vector3();
+const _tmpHeadForward = new THREE.Vector3();
+const _tmpHeadUp = new THREE.Vector3();
 
 export function SingleCharacter({
   id,
@@ -142,13 +147,18 @@ export function SingleCharacter({
   const parts = useMemo(() => extractCharacterParts(scene), [scene]);
   const headBone = parts.bones.head;
   const hipsBone = parts.bones.hips;
+  const leftEyeBone = useMemo(() => (scene ? (scene.getObjectByName('head_eyeball_left') as THREE.Bone | null) : null), [scene]);
+  const rightEyeBone = useMemo(() => (scene ? (scene.getObjectByName('head_eyeball_right') as THREE.Bone | null) : null), [scene]);
 
-  // Nettoyage de la référence de tête caméra quand le personnage n'est plus actif
+  // Nettoyage de la référence de tête et d'yeux caméra quand le personnage n'est plus actif
   useEffect(() => {
     return () => {
       if (isActive) {
         cameraState.activeHeadPos = null;
         cameraState.activeHipsPos = null;
+        cameraState.activeEyesPos = null;
+        cameraState.activeHeadForward = null;
+        cameraState.activeHeadUp = null;
       }
     };
   }, [isActive]);
@@ -816,7 +826,7 @@ export function SingleCharacter({
       }
     }
 
-    // Suivi dynamique de la tête et du torse pour la caméra 3ème personne (style Tomb Raider)
+    // Suivi dynamique de la tête, du torse et des yeux (3ème personne et FPV réaliste)
     if (isActive && !isPreview) {
       if (headBone) {
         headBone.updateWorldMatrix(true, false);
@@ -827,6 +837,48 @@ export function SingleCharacter({
           cameraState.activeHeadPos.x = _tmpHeadWorldPos.x;
           cameraState.activeHeadPos.y = _tmpHeadWorldPos.y;
           cameraState.activeHeadPos.z = _tmpHeadWorldPos.z;
+        }
+
+        // Direction du regard (forward Z) et axe haut (up Y) de la tête
+        _tmpHeadForward.set(0, 0, 1).transformDirection(headBone.matrixWorld);
+        _tmpHeadUp.set(0, 1, 0).transformDirection(headBone.matrixWorld);
+
+        if (!cameraState.activeHeadForward) {
+          cameraState.activeHeadForward = { x: _tmpHeadForward.x, y: _tmpHeadForward.y, z: _tmpHeadForward.z };
+        } else {
+          cameraState.activeHeadForward.x = _tmpHeadForward.x;
+          cameraState.activeHeadForward.y = _tmpHeadForward.y;
+          cameraState.activeHeadForward.z = _tmpHeadForward.z;
+        }
+
+        if (!cameraState.activeHeadUp) {
+          cameraState.activeHeadUp = { x: _tmpHeadUp.x, y: _tmpHeadUp.y, z: _tmpHeadUp.z };
+        } else {
+          cameraState.activeHeadUp.x = _tmpHeadUp.x;
+          cameraState.activeHeadUp.y = _tmpHeadUp.y;
+          cameraState.activeHeadUp.z = _tmpHeadUp.z;
+        }
+
+        // Calcul précis du milieu des deux yeux
+        if (leftEyeBone && rightEyeBone) {
+          leftEyeBone.updateWorldMatrix(true, false);
+          rightEyeBone.updateWorldMatrix(true, false);
+          leftEyeBone.getWorldPosition(_tmpLeftEyeWorldPos);
+          rightEyeBone.getWorldPosition(_tmpRightEyeWorldPos);
+          _tmpEyesWorldPos.addVectors(_tmpLeftEyeWorldPos, _tmpRightEyeWorldPos).multiplyScalar(0.5);
+        } else {
+          // Fallback pour modèles sans os oculaires dédiés : décalage anatomique depuis la tête
+          _tmpEyesWorldPos.copy(_tmpHeadWorldPos)
+            .addScaledVector(_tmpHeadUp, 10.16)
+            .addScaledVector(_tmpHeadForward, 7.04);
+        }
+
+        if (!cameraState.activeEyesPos) {
+          cameraState.activeEyesPos = { x: _tmpEyesWorldPos.x, y: _tmpEyesWorldPos.y, z: _tmpEyesWorldPos.z };
+        } else {
+          cameraState.activeEyesPos.x = _tmpEyesWorldPos.x;
+          cameraState.activeEyesPos.y = _tmpEyesWorldPos.y;
+          cameraState.activeEyesPos.z = _tmpEyesWorldPos.z;
         }
       }
       if (hipsBone) {

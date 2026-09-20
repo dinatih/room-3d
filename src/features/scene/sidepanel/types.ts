@@ -153,6 +153,7 @@ export interface LayerState {
   characterWireframe?: boolean;
   thoughtBubble?: boolean;
   fpvHeadBobbing?: boolean;
+  fpvRealisticEyes?: boolean;
   inventoryGrid?: boolean;
 }
 
