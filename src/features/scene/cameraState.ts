@@ -22,6 +22,7 @@ export const cameraState = {
   lastUserControlTime: 0 as number,
   /** Vérifie si l'utilisateur a pris la main manuellement récemment (< 12s) */
   isUserControlling(): boolean {
+    if (this.lastUserControlTime === 0) return false;
     return (performance.now() - this.lastUserControlTime) < 12000;
   },
   walkYaw:   0     as number,

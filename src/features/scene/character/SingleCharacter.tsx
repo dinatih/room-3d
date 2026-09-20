@@ -253,6 +253,7 @@ export function SingleCharacter({
     setPosition: setAgentPosition,
     setRotation: setAgentRotation,
     hasPendingDynamicTask,
+    initialPos,
   } = useAgentController(
     id,
     finalScenario,
@@ -286,6 +287,15 @@ export function SingleCharacter({
     spawnDelay,
     hasSkyDrop
   );
+
+  // Synchronisation initiale des coordonnées caméra/walker actif dès le montage
+  useLayoutEffect(() => {
+    if (isActive && !isPreview && initialPos) {
+      cameraState.walkerX = initialPos.x;
+      cameraState.walkerZ = initialPos.z;
+      cameraState.walkYaw = initialPos.rotY;
+    }
+  }, [isActive, isPreview, initialPos]);
 
   // Setup échelle, offsets hanches, physiques et matériaux
   useLayoutEffect(() => {
@@ -911,6 +921,9 @@ export function SingleCharacter({
   return (
     <group
       ref={groupRef}
+      visible={false}
+      position={[initialPos?.x ?? 0, hasSkyDrop ? 2500 : (initialPos?.y ?? 0), initialPos?.z ?? 0]}
+      rotation={[0, initialPos?.rotY ?? 0, 0]}
       name={charLabel}
       userData={{
         name: charLabel,

@@ -776,5 +776,5 @@ export function useAgentController(
     return dynamicNavQueueRef.current.length > 0 && dynamicNavIndexRef.current < dynamicNavQueueRef.current.length;
   };
 
-  return { update, setPosition, setRotation, hasPendingDynamicTask };
+  return { update, setPosition, setRotation, hasPendingDynamicTask, initialPos };
 }
