@@ -81,6 +81,7 @@ export type GroundType = 'bermuda' | 'medium_01' | 'medium_02' | 'celandine' | '
 
 export interface LayerState {
   structure: boolean;
+  environment: boolean;
   equipment: boolean;
   furniture: boolean;
   furnishings: boolean;

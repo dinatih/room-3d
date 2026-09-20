@@ -17,6 +17,7 @@ import {
   LAYER_WALKER,
   LAYER_MIRRORS,
   LAYER_ANIMALS,
+  LAYER_ENVIRONMENT,
 } from '@config';
 
 export interface RaytracingPhotoModalProps {
@@ -410,6 +411,7 @@ export function RaytracingPhotoModal({ scene, camera, onClose }: RaytracingPhoto
     physCamera.layers.enable(LAYER_WALKER);
     physCamera.layers.enable(LAYER_MIRRORS);
     physCamera.layers.enable(LAYER_ANIMALS);
+    physCamera.layers.enable(LAYER_ENVIRONMENT);
     physCameraRef.current = physCamera;
 
     // Path Tracer

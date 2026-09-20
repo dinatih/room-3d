@@ -112,3 +112,4 @@ export const LAYER_AI_ZONES      = 19; // Zones IA, cercles, flèches et labels 
 export const LAYER_ANIMALS       = 20; // Animaux autonomes (Oiseau Robin, Chien Shiba Inu)
 export const LAYER_FURNISHINGS   = 21; // Tapis, rideaux, lampadaire, coussins (Habillage & confort fonctionnel)
 export const LAYER_DECOR         = 22; // Tasses, plantes en pot, cadres, props (Détails & habillage de surface)
+export const LAYER_ENVIRONMENT   = 23; // Ciel (skysphere) et herbe (sol extérieur)

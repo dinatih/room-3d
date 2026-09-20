@@ -60,7 +60,7 @@ const RaytracingPhotoModal = lazy(() => import('./photo/RaytracingPhotoModal').t
 import {
   ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR, LAYER_NEIGHBORS, LAYER_LIDAR,
-  LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER,
+  LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER, LAYER_ENVIRONMENT,
 } from '@config';
 
 
@@ -497,7 +497,14 @@ export function Studio() {
         <ActiveCameraCapture onCapture={(cam) => { activeCameraRef.current = cam; }} />
         <SkySphere />
         <ambientLight color={0x8899bb} intensity={0.6} />
-        {layers.realSun ? <><SunLight /><SunSphere /></> : (
+        {layers.realSun ? (
+          <>
+            <SunLight />
+            <CategoryLayerGroup layer={LAYER_ENVIRONMENT}>
+              <SunSphere />
+            </CategoryLayerGroup>
+          </>
+        ) : (
           <directionalLight
             color={0xfff5e0}
             position={[500, 700, 400]}

@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { useSceneStore } from './store/useSceneStore';
 import { getHdriById } from './hdriConfig';
+import { CategoryLayerGroup } from './sceneLayer';
+import { LAYER_ENVIRONMENT } from '@config';
 
 const SKY_CENTER: [number, number, number] = [150, 0, 150];
 const SKY_RADIUS = 3600;
@@ -64,10 +66,12 @@ export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
   if (envOnly) return null;
 
   return (
-    <group position={SKY_CENTER} name="SkySphere" userData={{ isSky: true }}>
-      <SpaceBackdrop />
-      {texture && <CombinedSkyDome texture={texture} />}
-    </group>
+    <CategoryLayerGroup layer={LAYER_ENVIRONMENT}>
+      <group position={SKY_CENTER} name="SkySphere" userData={{ isSky: true }}>
+        <SpaceBackdrop />
+        {texture && <CombinedSkyDome texture={texture} />}
+      </group>
+    </CategoryLayerGroup>
   );
 }
 

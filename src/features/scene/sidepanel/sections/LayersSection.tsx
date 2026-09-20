@@ -139,6 +139,7 @@ export function LayersSection({
         })()}
       </div>
       {layerBtn('green',  'Structure',     'structure')}
+      {layerBtn('green',  'Environnement (Ciel & Herbe) 🌤️🌿', 'environment')}
       {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
       {layerBtn('peach',  'Portes',        'doors')}
       {layerBtn('peach',  'Équipements',   'equipment')}

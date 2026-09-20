@@ -111,6 +111,7 @@ const initialFurniture: FurnitureState = {
 
 const initialLayers: LayerState = {
   structure: true,
+  environment: true,
   equipment: true,
   furniture: true,
   furnishings: true,
@@ -254,6 +255,8 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
     'garden-wall-toggle': 'gardenWallScan',
     'bermuda-grass': 'bermudaGrass',
     'bermuda-grass-toggle': 'bermudaGrass',
+    'environment-toggle': 'environment',
+    'sky-grass-toggle': 'environment',
   };
 
   const layerKeys = Object.keys(initialLayers);

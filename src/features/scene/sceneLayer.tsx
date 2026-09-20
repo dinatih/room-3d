@@ -25,7 +25,7 @@ import { useThree } from '@react-three/fiber';
 import {
   LAYER_STRUCTURE, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR,
   LAYER_NEIGHBORS, LAYER_LIDAR, LAYER_MIRRORS, LAYER_WALKER,
-  LAYER_WALKER_DETAIL, LAYER_ANIMALS
+  LAYER_WALKER_DETAIL, LAYER_ANIMALS, LAYER_ENVIRONMENT
 } from '@config';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -33,6 +33,7 @@ import {
 /** Sous-ensemble de LayerState pertinent pour les layers Three.js. */
 interface SceneLayers {
   structure:    boolean;
+  environment?: boolean;
   equipment:    boolean;
   furniture:    boolean;
   furnishings:  boolean;
@@ -92,6 +93,7 @@ export function SceneLayerController({ layers }: { layers: SceneLayers }) {
     //  de masquer un objet sur 2 layers en désactivant un seul bit)
     const toggles: [number, boolean][] = [
       [LAYER_STRUCTURE,   layers.structure],
+      [LAYER_ENVIRONMENT, layers.environment ?? true],
       [LAYER_EQUIPMENT,   layers.equipment],
       [LAYER_FURNITURE,   layers.furniture],
       [LAYER_FURNISHINGS, layers.furnishings],
