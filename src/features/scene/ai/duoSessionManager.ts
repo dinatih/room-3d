@@ -161,10 +161,16 @@ class DuoSessionManager {
   }
 
   public isCompletedFor(characterId: string): boolean {
+    // Session explicitement terminée (toutes les anims jouées)
     if (this.isSessionComplete) return true;
+    // Session vide = aucun participant inscrit = terminée
     if (!this.participantA && !this.participantB) return true;
-    const isParticipant = this.participantA?.characterId === characterId || this.participantB?.characterId === characterId;
-    return !isParticipant;
+    // Si ce PNJ n'est pas participant, la session est terminée pour lui
+    const isParticipant = this.participantA?.characterId === characterId
+                       || this.participantB?.characterId === characterId;
+    if (!isParticipant) return true;
+    // Si le PNJ est participant, il attend ou joue → pas terminé
+    return false;
   }
 
   public getCurrentLocation(): DuoLocation {
@@ -369,7 +375,7 @@ class DuoSessionManager {
     def: DuoAnimationDef,
     leaderId: string,
     partnerId?: string
-  ): { targetA: string; targetB: string } | null {
+  ): { targetA: string; targetB: string; posA: [number,number,number]; posB: [number,number,number]; rotA: number; rotB: number } | null {
     const obj = getSmartObject(objectId);
     if (!obj) return null;
 
@@ -433,21 +439,10 @@ class DuoSessionManager {
     const rotA = (anchorRotY + (def.rotA ?? 0)) % (Math.PI * 2);
     const rotB = (anchorRotY + (def.rotB ?? 0)) % (Math.PI * 2);
 
-    appLog(objectId, `🛋️ Session Duo "${def.label}" lancée sur ${obj.name} entre ${targetA} (Meneur) et ${targetB} (Partenaire) !`);
+    appLog(objectId, `🛋️ Session Duo "${def.label}" lancée sur ${obj.name} entre ${targetA} (Meneur A) et ${targetB} (Partenaire B) !`);
 
-    // Envoyer l'ordre au Meneur (Rôle A) : naviguer vers son slot habituel
-    document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-      detail: {
-        targetId: targetA,
-        fromId: 'SmartObject',
-        objectId,
-        slotId,
-        forceRole: 'roleA',
-        targetPos: posA,
-        targetRotY: rotA,
-      }
-    }));
-    // Envoyer l'ordre au Partenaire (Rôle B) : naviguer vers posB (coordonnées précalculées)
+    // Le Leader (Rôle A) gère sa propre navigation directement (son appelant a les coords dans le retour).
+    // On dispatche seulement l'event vers le Partenaire (Rôle B).
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
       detail: {
         targetId: targetB,
@@ -461,7 +456,7 @@ class DuoSessionManager {
     }));
 
     this.emitChange();
-    return { targetA, targetB };
+    return { targetA, targetB, posA, posB, rotA, rotB };
   }
 
   /**

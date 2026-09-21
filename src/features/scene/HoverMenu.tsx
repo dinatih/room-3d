@@ -900,13 +900,28 @@ export function HoverOverlay() {
                         const chosenLeader = leaderId || candidateIds[0] || 'native';
                         const chosenPartner = candidateIds.find(id => id !== chosenLeader) || 'rosanna';
 
-                        duoSessionManager.startDuoOnSmartObject(
+                        const duoResult = duoSessionManager.startDuoOnSmartObject(
                           objectId,
                           slotId,
                           def,
                           chosenLeader,
                           chosenPartner
                         );
+                        // Le leader (Rôle A) doit être invité explicitement depuis le HoverMenu
+                        // (startDuoOnSmartObject ne dispatche plus d'event vers lui)
+                        if (duoResult) {
+                          document.dispatchEvent(new CustomEvent('npc-invite-duo', {
+                            detail: {
+                              targetId: duoResult.targetA,
+                              fromId: 'HoverMenu',
+                              objectId,
+                              slotId,
+                              forceRole: 'roleA',
+                              targetPos: duoResult.posA,
+                              targetRotY: duoResult.rotA,
+                            }
+                          }));
+                        }
                       }
                     } else {
                       // Trouver le personnage le plus proche (en excluant les animaux comme le shiba)

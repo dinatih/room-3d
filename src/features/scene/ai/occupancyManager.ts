@@ -154,7 +154,10 @@ class SmartObjectOccupancyManager {
     }
 
     // Cherche parmi tous les slots de l'objet de façon aléatoire pour varier les actions (dormir couché, assises variées...)
-    const availableSlots = obj.slots.filter(slot => !this.isSlotOccupied(objectId, slot.slotId, characterId));
+    // Les slots isDuo sont exclus — ils ne peuvent être utilisés qu'en session Duo coordonnée.
+    const availableSlots = obj.slots.filter(slot =>
+      !slot.isDuo && !this.isSlotOccupied(objectId, slot.slotId, characterId)
+    );
     if (availableSlots.length > 0) {
       const randomSlot = availableSlots[Math.floor(Math.random() * availableSlots.length)];
       return randomSlot.slotId;
