@@ -217,6 +217,21 @@ class DuoSessionManager {
   }
 
   /**
+   * Retourne la position monde de posB pour le slot courant, utilisée pendant la phase d'attente
+   * (avant que la session ne démarre, getCurrentAnimState() retourne null).
+   */
+  public getWaitPosB(): [number, number, number] {
+    const def = this.playlist[0];
+    const [bx, by, bz] = this.currentLocation.anchorPos;
+    const ry = this.currentLocation.anchorRotY;
+    const cos = Math.cos(ry);
+    const sin = Math.sin(ry);
+    const localB: [number, number, number] = def?.offsetB ?? [0, 0, 0];
+    const [lx, ly, lz] = localB;
+    return [bx + lx * cos + lz * sin, by + ly, bz - lx * sin + lz * cos];
+  }
+
+  /**
    * Horloge centrale de la session Duo.
    * Seul le rôle A (meneur) décrémente le timer pour garantir une synchronisation parfaite sans doublon.
    */
@@ -403,9 +418,24 @@ class DuoSessionManager {
     OccupancyManager.claimSlot(objectId, `${slotId}:roleB`, targetB);
     this.participantB = { characterId: targetB, role: 'roleB', isReady: false };
 
+    // Calculer les coordonnées monde de posA et posB pour l'animation Duo
+    const [bx, by, bz] = anchorPos;
+    const cos = Math.cos(anchorRotY);
+    const sin = Math.sin(anchorRotY);
+    const transformLocalToWorld = (localOffset: [number, number, number]): [number, number, number] => {
+      const [lx, ly, lz] = localOffset;
+      return [bx + lx * cos + lz * sin, by + ly, bz - lx * sin + lz * cos];
+    };
+    const localA: [number, number, number] = def.offsetA ?? [0, 0, 0];
+    const localB: [number, number, number] = def.offsetB ?? [0, 0, 0];
+    const posA = transformLocalToWorld(localA);
+    const posB = transformLocalToWorld(localB);
+    const rotA = (anchorRotY + (def.rotA ?? 0)) % (Math.PI * 2);
+    const rotB = (anchorRotY + (def.rotB ?? 0)) % (Math.PI * 2);
+
     appLog(objectId, `🛋️ Session Duo "${def.label}" lancée sur ${obj.name} entre ${targetA} (Meneur) et ${targetB} (Partenaire) !`);
 
-    // Envoyer l'ordre aux deux agents
+    // Envoyer l'ordre au Meneur (Rôle A) : naviguer vers son slot habituel
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
       detail: {
         targetId: targetA,
@@ -413,15 +443,20 @@ class DuoSessionManager {
         objectId,
         slotId,
         forceRole: 'roleA',
+        targetPos: posA,
+        targetRotY: rotA,
       }
     }));
+    // Envoyer l'ordre au Partenaire (Rôle B) : naviguer vers posB (coordonnées précalculées)
     document.dispatchEvent(new CustomEvent('npc-invite-duo', {
       detail: {
         targetId: targetB,
         fromId: 'SmartObject',
         objectId,
-        slotId,
+        slotId: `${slotId}:roleB`,
         forceRole: 'roleB',
+        targetPos: posB,
+        targetRotY: rotB,
       }
     }));
 

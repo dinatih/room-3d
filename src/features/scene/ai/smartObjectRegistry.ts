@@ -791,7 +791,9 @@ export function isDuoSlot(objectId?: string, slotId?: string): boolean {
   const obj = SMART_OBJECTS[objectId];
   if (!obj) return false;
   if (!slotId) return obj.slots.some(s => s.isDuo);
-  const slot = obj.slots.find(s => s.slotId === slotId);
+  // Accepter les slotIds avec suffixe ':roleA' / ':roleB' (ex: 'sit-cuddle:roleB')
+  const baseSlotId = slotId.replace(/:role[AB]$/, '');
+  const slot = obj.slots.find(s => s.slotId === baseSlotId || s.slotId === slotId);
   return Boolean(slot?.isDuo);
 }
 

@@ -145,10 +145,14 @@ export function useAgentController(
           }
           claimedSlotRef.current = { objectId: targetObjId, slotId: targetSlotId };
 
+          // Coordonnées précalculées transmises par startDuoOnSmartObject (posA / posB monde)
+          const eventTargetPos = e.detail?.targetPos as [number, number, number] | undefined;
+          const eventTargetRotY = e.detail?.targetRotY as number | undefined;
+
           if (e.detail?.alreadyThere) {
             statusRef.current = 'INTERACTING';
             dynamicNavQueueRef.current = [
-              { type: 'USE_OBJECT', smartObjectId: targetObjId, slotId: targetSlotId }
+              { type: 'USE_OBJECT', smartObjectId: targetObjId, slotId: targetSlotId, targetPos: eventTargetPos, rotY: eventTargetRotY }
             ];
             dynamicNavIndexRef.current = 0;
             duoSessionManager.markReady(_characterId);
@@ -158,7 +162,7 @@ export function useAgentController(
             }
           } else {
             dynamicNavQueueRef.current = [
-              { type: 'USE_OBJECT', smartObjectId: targetObjId, slotId: targetSlotId }
+              { type: 'USE_OBJECT', smartObjectId: targetObjId, slotId: targetSlotId, targetPos: eventTargetPos, rotY: eventTargetRotY }
             ];
             dynamicNavIndexRef.current = 0;
             statusRef.current = 'IDLE';

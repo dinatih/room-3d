@@ -36,15 +36,28 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
   if (isWaiting) {
     const nextTimer = duoWaitTimer + dt;
     setDuoWaitTimer(nextTimer);
+
+    if (nextTimer > 20.0) {
+      appLog(characterId, `⏳ Duo timeout : pas de partenaire, reprise du parcours`);
+      onSessionEnded();
+      return true;
+    }
+
     const loc = duoSessionManager.getCurrentLocation();
     if (loc.objectId !== 'duo-zone') {
       state.animation = duoRole === 'roleA'
         ? 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb'
         : 'animations/poses_idles/miley_armature_sit_cuddle_hug_f.glb';
+
+      // Rôle A → ancre sur anchorPos ; Rôle B → ancre sur posB (offsetB transformé)
+      const waitPos = duoRole === 'roleB'
+        ? duoSessionManager.getWaitPosB()
+        : loc.anchorPos;
+
+      state.x = waitPos[0];
+      state.y = waitPos[1];
+      state.z = waitPos[2];
       state.rotY = loc.anchorRotY;
-      state.x = loc.anchorPos[0];
-      state.y = loc.anchorPos[1];
-      state.z = loc.anchorPos[2];
     } else {
       state.animation = duoRole === 'roleA'
         ? 'animations/poses_idles/anim_female_standing_pose.glb'
@@ -57,11 +70,6 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
       duoSessionManager.inviteNearestNpc(characterId);
     }
 
-    if (nextTimer > 20.0) {
-      appLog(characterId, `⏳ Duo timeout : pas de partenaire, reprise du parcours`);
-      onSessionEnded();
-      return true;
-    }
     return false; // toujours en attente
   }
 

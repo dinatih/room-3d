@@ -138,7 +138,7 @@ function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () =
 function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, d: number, h: number }; worldSize: { x: number; y: number; z: number }; grounded?: boolean; }) {
   const hx = worldSize.x / 2, hy = worldSize.y / 2, hz = worldSize.z / 2, off = Math.max(5, Math.min(worldSize.x, worldSize.z) * 0.1), LC = '#0058a3';
   const pill: React.CSSProperties = { background: 'rgba(255, 255, 255, 0.4)', padding: '2px 5px', color: LC, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', pointerEvents: 'none', backdropFilter: 'blur(3px)', borderRadius: 3 };
-  
+
   const axes = useMemo(() => {
     const h = new THREE.AxesHelper(Math.max(20, Math.max(worldSize.x, worldSize.y, worldSize.z) * 0.25));
     h.renderOrder = 999; (h.material as THREE.Material).depthTest = false;
@@ -158,13 +158,13 @@ function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, 
       {/* Height */}
       <Line points={[[hx + off, 0, hz], [hx + off, hy * 2, hz]]} color={LC} lineWidth={1.5} />
       <Html position={[hx + off, hy, hz]} center distanceFactor={150}><div style={pill}>{dims.h} cm</div></Html>
-      
+
       {/* Width */}
       <Line points={[[-hx, 0, hz], [-hx, -off, hz + off]]} color={LC} lineWidth={1.5} />
       <Line points={[[ hx, 0, hz], [ hx, -off, hz + off]]} color={LC} lineWidth={1.5} />
       <Line points={[[-hx, -off, hz + off], [hx, -off, hz + off]]} color={LC} lineWidth={1.5} />
       <Html position={[0, -off, hz + off]} center distanceFactor={150}><div style={pill}>{dims.w} cm</div></Html>
-      
+
       {/* Depth */}
       <Line points={[[hx, 0, -hz], [hx + off, 0, -hz - off]]} color={LC} lineWidth={1.5} />
       <Line points={[[hx, 0,  hz], [hx + off, 0,  hz + off]]} color={LC} lineWidth={1.5} />
@@ -336,7 +336,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
   const fit = useCallback(() => {
     if (!outerRef.current || !innerRef.current) return;
     outerRef.current.scale.set(1, 1, 1); outerRef.current.position.set(0, 0, 0); outerRef.current.updateMatrixWorld(true);
-    
+
     const box = new THREE.Box3();
     let totalTris = 0;
     let totalMeshes = 0;
@@ -388,11 +388,11 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     }
 
     if (box.isEmpty()) return;
-    
+
     // Dimensions réelles en cm (1 unité = 1 cm)
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
-    
+
     setWorldSize(prev => {
       if (
         prev &&
@@ -404,7 +404,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
       }
       return { x: size.x, y: size.y, z: size.z };
     });
-    
+
     // Offset outer group to center the item in X/Z
     const px = preserveOriginXZ ? 0 : -center.x;
     const pz = preserveOriginXZ ? 0 : -center.z;
@@ -921,7 +921,7 @@ export function InventoryPreview({
                   </button>
                 </div>
               )}
-              
+
               {(item as any).category === 'walkers' && (
                 <>
                   <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
@@ -1228,7 +1228,7 @@ export function InventoryPreview({
             </div>
           )}
 
-          {/* Panneau latéral Section PNJ & Physique Buste (Persistant en DOM pour préserver le scroll) */}
+          {/* Panneau latéral Section PNJ (Persistant en DOM pour préserver le scroll) */}
           <div
               style={{
                 display: isHumanWalker && showPnjPanel ? 'flex' : 'none',
@@ -1261,7 +1261,7 @@ export function InventoryPreview({
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 12, color: '#212529' }}>
                   <span>💃</span>
-                  <span>Section PNJ & Physique Buste</span>
+                  <span>Section PNJ</span>
                 </div>
                 <button
                   type="button"

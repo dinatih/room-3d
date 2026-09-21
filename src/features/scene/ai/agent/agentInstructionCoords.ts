@@ -16,6 +16,17 @@ export function resolveInstructionCoords(
     const node = WAYPOINTS[waypointId];
     return { tx: node.x, tz: node.z, label: node.name || node.id, rotY: instr.rotY ?? node.rotationY };
   }
+  // Si targetPos est fourni explicitement, il est prioritaire (ex: Rôle B d'une animation Duo sur SmartObject)
+  if (instr.targetPos) {
+    const obj2 = instr.smartObjectId ? getSmartObject(instr.smartObjectId) : undefined;
+    return {
+      tx: instr.targetPos[0],
+      ty: instr.targetPos[1],
+      tz: instr.targetPos[2],
+      label: obj2 ? `${obj2.name} (posB)` : `pos(${instr.targetPos[0].toFixed(0)}, ${instr.targetPos[2].toFixed(0)})`,
+      rotY: instr.rotY,
+    };
+  }
   const obj = instr.smartObjectId ? getSmartObject(instr.smartObjectId) : undefined;
   if (obj) {
     const slot = instr.slotId
@@ -34,9 +45,6 @@ export function resolveInstructionCoords(
       repeatCount: slot?.repeatCount,
       repeatVariation: slot?.repeatVariation
     };
-  }
-  if (instr.targetPos) {
-    return { tx: instr.targetPos[0], tz: instr.targetPos[2], label: `pos(${instr.targetPos[0].toFixed(0)}, ${instr.targetPos[2].toFixed(0)})` };
   }
   return { tx: 0, tz: 0, label: 'inconnu' };
 }
