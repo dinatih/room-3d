@@ -4,7 +4,7 @@ import { useTexture } from '@react-three/drei';
 import type { GroundType } from '../sidepanel/types';
 import { groundExteriorMat } from './buildingCommon';
 import { CategoryLayerGroup } from '../sceneLayer';
-import { LAYER_GRASS } from '@config';
+import { LAYER_GRASS, LAYER_FLOOR_COVERINGS } from '@config';
 
 export interface GroundConfig {
   id: GroundType;
@@ -65,11 +65,12 @@ interface BermudaGroundProps {
 }
 
 export function BermudaGround({ active = true, groundType = 'bermuda', yPos = -4.5 }: BermudaGroundProps) {
-  if (!active) return null;
+  const showTexturedGrass = active && groundType !== 'none' && (groundType in GROUND_CONFIGS);
 
   return (
-    <CategoryLayerGroup layer={LAYER_GRASS}>
-      {groundType === 'none' || !(groundType in GROUND_CONFIGS) ? (
+    <>
+      {/* Rectangle vert uni : terrain extérieur rattaché à Revêtement sol (LAYER_FLOOR_COVERINGS) */}
+      <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
         <mesh
           material={groundExteriorMat}
           rotation={[-Math.PI / 2, 0, 0]}
@@ -83,10 +84,19 @@ export function BermudaGround({ active = true, groundType = 'bermuda', yPos = -4
         >
           <planeGeometry args={[1100, 2000]} />
         </mesh>
-      ) : (
-        <TexturedGroundMesh key={GROUND_CONFIGS[groundType as Exclude<GroundType, 'none'>].id} config={GROUND_CONFIGS[groundType as Exclude<GroundType, 'none'>]} yPos={yPos} />
+      </CategoryLayerGroup>
+
+      {/* Herbe texturée PBR : rattachée au calque Herbe (LAYER_GRASS) */}
+      {showTexturedGrass && (
+        <CategoryLayerGroup layer={LAYER_GRASS}>
+          <TexturedGroundMesh
+            key={GROUND_CONFIGS[groundType as Exclude<GroundType, 'none'>].id}
+            config={GROUND_CONFIGS[groundType as Exclude<GroundType, 'none'>]}
+            yPos={yPos + 0.05}
+          />
+        </CategoryLayerGroup>
       )}
-    </CategoryLayerGroup>
+    </>
   );
 }
 

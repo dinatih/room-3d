@@ -10,7 +10,7 @@ import { CategoryLayerGroup } from '../sceneLayer';
 import {
   ROOM_W, ROOM_D, WALL_H, NICHE_X, NICHE_Z_START, DOOR_START, DOOR_END,
   KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, DiagWall,
-  LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE, LAYER_GRASS
+  LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE
 } from '@config';
 import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X, BATH_Z_END } from '../wallData';
 import {
@@ -707,9 +707,7 @@ export function Floor() {
         </group>
       </CategoryLayerGroup>
 
-      <CategoryLayerGroup layer={LAYER_GRASS}>
-        <BermudaGround active={bermudaGrass} groundType={groundType} />
-      </CategoryLayerGroup>
+      <BermudaGround active={bermudaGrass} groundType={groundType} />
     </>
   );
 }
