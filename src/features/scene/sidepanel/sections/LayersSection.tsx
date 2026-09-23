@@ -142,8 +142,8 @@ export function LayersSection({
       {layerBtn('orange',    'Revêtements sol (+ plinthes) 🪵', 'floorCoverings')}
       {layerBtn('secondary', 'Dalle et plafond 🏛️',            'structure')}
       {layerBtn('peach',     'Portes 🚪',                      'doors')}
-      {layerBtn('teal',      'Ciel / Terrain 🌤️',              'environment')}
-      {layerBtn('green',     'Herbe (Sol extérieur) 🌱',       'bermudaGrass')}
+      {layerBtn('teal',      'Ciel & Atmosphère 🌤️',           'environment')}
+      {layerBtn('green',     'Herbe & Terrain ext. 🌱',        'bermudaGrass')}
       {layers.bermudaGrass && (
         <div className="px-3 py-1 border-bottom bg-transparent d-flex align-items-center justify-content-between gap-2">
           <span className="text-muted" style={{ fontSize: '10px' }}>Type :</span>

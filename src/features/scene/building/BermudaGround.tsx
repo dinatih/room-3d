@@ -4,7 +4,7 @@ import { useTexture } from '@react-three/drei';
 import type { GroundType } from '../sidepanel/types';
 import { groundExteriorMat } from './buildingCommon';
 import { CategoryLayerGroup } from '../sceneLayer';
-import { LAYER_ENVIRONMENT } from '@config';
+import { LAYER_GRASS } from '@config';
 
 export interface GroundConfig {
   id: GroundType;
@@ -65,11 +65,11 @@ interface BermudaGroundProps {
 }
 
 export function BermudaGround({ active = true, groundType = 'bermuda', yPos = -4.5 }: BermudaGroundProps) {
-  const effectiveType = active ? groundType : 'none';
+  if (!active) return null;
 
   return (
-    <CategoryLayerGroup layer={LAYER_ENVIRONMENT}>
-      {effectiveType === 'none' || !(effectiveType in GROUND_CONFIGS) ? (
+    <CategoryLayerGroup layer={LAYER_GRASS}>
+      {groundType === 'none' || !(groundType in GROUND_CONFIGS) ? (
         <mesh
           material={groundExteriorMat}
           rotation={[-Math.PI / 2, 0, 0]}
@@ -84,7 +84,7 @@ export function BermudaGround({ active = true, groundType = 'bermuda', yPos = -4
           <planeGeometry args={[1100, 2000]} />
         </mesh>
       ) : (
-        <TexturedGroundMesh key={GROUND_CONFIGS[effectiveType as Exclude<GroundType, 'none'>].id} config={GROUND_CONFIGS[effectiveType as Exclude<GroundType, 'none'>]} yPos={yPos} />
+        <TexturedGroundMesh key={GROUND_CONFIGS[groundType as Exclude<GroundType, 'none'>].id} config={GROUND_CONFIGS[groundType as Exclude<GroundType, 'none'>]} yPos={yPos} />
       )}
     </CategoryLayerGroup>
   );
