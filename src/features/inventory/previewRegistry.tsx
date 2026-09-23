@@ -91,7 +91,6 @@ import { TrashBin }                                   from '@features/scene/item
 import { VacuumCleaner }                              from '@features/scene/items/VacuumCleaner';
 import { Tent }                                       from '@features/scene/items/Tent';
 import { Vihals }                                     from '@features/scene/items/Vihals';
-import { Rebound }                                    from '@features/scene/items/Rebound';
 import { Linky }                                      from '@features/scene/items/Linky';
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
 import { ElectricRacket }                             from '@features/scene/items/ElectricRacket';
@@ -207,7 +206,6 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'vacuum-cleaner':         VacuumCleaner,
   'tent-quechua-2sec':      Tent,
   'vihals-chair':           Vihals,
-  'tyco-rebound':           Rebound,
   'google-nest-mini':       GoogleNestMini,
   'lagerpoppel00561816':    Lagerpoppel00561816,
   'tshirt-noir-L':          TShirt,

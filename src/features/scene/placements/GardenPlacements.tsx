@@ -10,7 +10,6 @@ import { ChestBench } from '../items/ChestBench';
 import { PottedPalm } from '../items/PottedPalm';
 import { PottedYucca } from '../items/PottedYucca';
 import { BirdFeeder } from '../items/BirdFeeder';
-// import { Rebound } from '../items/Rebound';
 import { Vatterso20562909 } from '../items/Vatterso20562909';
 import { RobinBird } from '../items/RobinBird';
 import { ShibaInu } from '../items/ShibaInu';
