@@ -95,6 +95,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const savedFov = useRef(50);
   const minimapThrottle = useRef(0);
   const topFollowRef = useRef(false);
+  const savedMirrorsRef = useRef(false);
 
   // Synchronisation du changement de personnage actif
   useEffect(() => {
@@ -124,6 +125,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   }, [activeWalkerId, invalidate]);
 
   const changeMode = useCallback((m: CameraMode) => {
+    const prev = modeRef.current;
     modeRef.current = m;
     cameraState.mode = m;
     setMode(m);
@@ -134,6 +136,20 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       useSceneStore.getState().toggleLayer('mirrorsHD');
     } else if (m === 'walk' && isMirrorsHD) {
       useSceneStore.getState().toggleLayer('mirrorsHD');
+    }
+
+    // Vues Top (ortho) : Désactiver le calque Miroir dans les 2 Vues Top (pièce et suivi perso)
+    const isMirrors = useSceneStore.getState().layers.mirrors;
+    if (m === 'top' && prev !== 'top') {
+      if (isMirrors) {
+        savedMirrorsRef.current = true;
+        useSceneStore.getState().toggleLayer('mirrors');
+      }
+    } else if (m !== 'top' && prev === 'top') {
+      if (savedMirrorsRef.current && !useSceneStore.getState().layers.mirrors) {
+        useSceneStore.getState().toggleLayer('mirrors');
+      }
+      savedMirrorsRef.current = false;
     }
   }, []);
 
@@ -377,8 +393,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   const enterTop = useCallback((follow = false) => {
     if (modeRef.current === 'walk' || modeRef.current === 'fpv') exitWalkMode();
-    savedPerspPos.current.copy(camera.position);
-    if (ctrlRef.current) savedPerspTarget.current.copy(ctrlRef.current.target);
+    if (modeRef.current !== 'top') {
+      savedPerspPos.current.copy(camera.position);
+      if (ctrlRef.current) savedPerspTarget.current.copy(ctrlRef.current.target);
+    }
     topFollowRef.current = follow;
 
     if (follow) {
