@@ -421,8 +421,7 @@ export function useAgentController(
 
         const targetSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId);
         const isSeatedFrontSlot = targetSlot?.animationsRandom === 'seated-front'
-          || targetSlot?.animationsRandom === 'seated_front'
-          || (Array.isArray(targetSlot?.animationsRandom) && (targetSlot.animationsRandom.includes('seated-front') || targetSlot.animationsRandom.includes('seated_front')))
+          || (Array.isArray(targetSlot?.animationsRandom) && targetSlot.animationsRandom.includes('seated-front'))
           || reqSlotId === 'sit-cuddle';
 
         const isDuoCooldown = Date.now() - lastDuoEndTimeRef.current < 25000;
@@ -453,7 +452,7 @@ export function useAgentController(
             } else {
               // Déclenchement autonome : le leader gère sa propre navigation directement
               // sans passer par onInvite (évite la corruption d'état et la boucle infinie)
-              const def = DUO_ANIMATIONS.find(d => d.id === 'sit-cuddle' || d.id === 'sit_cuddle');
+              const def = DUO_ANIMATIONS.find(d => d.id === 'sit-cuddle');
               if (def) {
                 const duoRes = duoSessionManager.startDuoOnSmartObject(objId, reqSlotId, def, _characterId);
                 if (duoRes) {

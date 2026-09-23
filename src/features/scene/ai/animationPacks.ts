@@ -102,38 +102,19 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
   },
 };
 
-// ── Alias pratiques & rétrocompatibilité (kebab-case & snake_case) ───────────
-ANIMATION_PACKS['seated_front']      = ANIMATION_PACKS['seated-front'];
-ANIMATION_PACKS['seated_side']       = ANIMATION_PACKS['seated-side'];
-ANIMATION_PACKS['laying_front']      = ANIMATION_PACKS['laying-front'];
-ANIMATION_PACKS['laying_side']       = ANIMATION_PACKS['laying-side'];
-ANIMATION_PACKS['laying_pack']       = ANIMATION_PACKS['laying-pack'];
-ANIMATION_PACKS['all_dances']        = ANIMATION_PACKS['all-dances'];
-
+// ── Alias pratiques (kebab-case) ─────────────────────────────────────────────
 ANIMATION_PACKS['seated-front-pack'] = ANIMATION_PACKS['seated-front'];
-ANIMATION_PACKS['seated_front_pack'] = ANIMATION_PACKS['seated-front'];
 ANIMATION_PACKS['seated-side-pack']  = ANIMATION_PACKS['seated-side'];
-ANIMATION_PACKS['seated_side_pack']  = ANIMATION_PACKS['seated-side'];
 ANIMATION_PACKS['sitted-front-pack'] = ANIMATION_PACKS['seated-front'];
-ANIMATION_PACKS['sitted_front_pack'] = ANIMATION_PACKS['seated-front'];
 ANIMATION_PACKS['side-sitted-pack']  = ANIMATION_PACKS['seated-side'];
-ANIMATION_PACKS['side_sitted_pack']  = ANIMATION_PACKS['seated-side'];
 ANIMATION_PACKS['sitting-front']     = ANIMATION_PACKS['seated-front'];
-ANIMATION_PACKS['sitting_front']     = ANIMATION_PACKS['seated-front'];
 ANIMATION_PACKS['sitting-side']      = ANIMATION_PACKS['seated-side'];
-ANIMATION_PACKS['sitting_side']      = ANIMATION_PACKS['seated-side'];
 ANIMATION_PACKS['laying-front-pack'] = ANIMATION_PACKS['laying-front'];
-ANIMATION_PACKS['laying_front_pack'] = ANIMATION_PACKS['laying-front'];
 ANIMATION_PACKS['laying-side-pack']  = ANIMATION_PACKS['laying-side'];
-ANIMATION_PACKS['laying_side_pack']  = ANIMATION_PACKS['laying-side'];
 ANIMATION_PACKS['lay-front']         = ANIMATION_PACKS['laying-front'];
-ANIMATION_PACKS['lay_front']         = ANIMATION_PACKS['laying-front'];
 ANIMATION_PACKS['lay-side']          = ANIMATION_PACKS['laying-side'];
-ANIMATION_PACKS['lay_side']          = ANIMATION_PACKS['laying-side'];
 ANIMATION_PACKS['lay-front-pack']    = ANIMATION_PACKS['laying-front'];
-ANIMATION_PACKS['lay_front_pack']    = ANIMATION_PACKS['laying-front'];
 ANIMATION_PACKS['lay-side-pack']     = ANIMATION_PACKS['laying-side'];
-ANIMATION_PACKS['lay_side_pack']     = ANIMATION_PACKS['laying-side'];
 
 /**
  * Résout une animation aléatoire ou définie et son orientation finale (avec rotY offset si nécessaire)

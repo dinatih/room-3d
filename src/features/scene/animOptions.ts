@@ -15,7 +15,7 @@ export const WALKER_ANIM_OPTIONS: AnimOption[] = [
   { value: 'idle', label: 'Idle / Return to Default' },
   { value: 'tpose', label: '📐 T-Pose (Rest)' },
   ...ANIMATION_DEFINITIONS
-    .filter(d => d.id !== 'idle' && d.id !== 'tpose' && d.id !== 'miley-idle-01' && d.id !== 'miley_idle_01')
+    .filter(d => d.id !== 'idle' && d.id !== 'tpose' && d.id !== 'miley-idle-01')
     .map(d => ({
       value: d.id,
       label: d.label || d.id,
