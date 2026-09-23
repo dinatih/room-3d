@@ -25,12 +25,12 @@ import { getRandomAnimationByQuery, resolveAnimationPath, getAnimationDef, getAn
  */
 export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
   // ── ASSISE DE FACE (0°) ────────────────────────────────────────────────────
-  seated_front: {
-    id: 'seated_front',
+  'seated-front': {
+    id: 'seated-front',
     name: 'Poses assises de face',
     defaultRotYOffset: 0,
     get animations() {
-      return getAnimationsByTags(['seated_front']).map((d) => ({
+      return getAnimationsByTags(['seated-front']).map((d) => ({
         animation: d.path,
         rotYOffset: d.defaultRotYOffset ?? 0,
       }));
@@ -38,12 +38,12 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
   },
 
   // ── ASSISE DE CÔTÉ (90° / π/2) ─────────────────────────────────────────────
-  seated_side: {
-    id: 'seated_side',
+  'seated-side': {
+    id: 'seated-side',
     name: 'Poses assises de côté (90°)',
     defaultRotYOffset: Math.PI / 2,
     get animations() {
-      return getAnimationsByTags(['seated_side']).map((d) => ({
+      return getAnimationsByTags(['seated-side']).map((d) => ({
         animation: d.path,
         rotYOffset: d.defaultRotYOffset ?? Math.PI / 2,
       }));
@@ -51,12 +51,12 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
   },
 
   // ── ALLONGÉ SUR LE DOS / FACE ──────────────────────────────────────────────
-  laying_front: {
-    id: 'laying_front',
+  'laying-front': {
+    id: 'laying-front',
     name: 'Animations allongées de face (sur le dos)',
     defaultRotYOffset: Math.PI / 2,
     get animations() {
-      return getAnimationsByTags(['laying_front']).map((d) => ({
+      return getAnimationsByTags(['laying-front']).map((d) => ({
         animation: d.path,
         rotYOffset: d.defaultRotYOffset ?? Math.PI / 2,
       }));
@@ -64,12 +64,12 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
   },
 
   // ── ALLONGÉ SUR LE CÔTÉ (Profil) ───────────────────────────────────────────
-  laying_side: {
-    id: 'laying_side',
+  'laying-side': {
+    id: 'laying-side',
     name: 'Animations allongées sur le côté',
     defaultRotYOffset: 0,
     get animations() {
-      return getAnimationsByTags(['laying_side']).map((d) => ({
+      return getAnimationsByTags(['laying-side']).map((d) => ({
         animation: d.path,
         rotYOffset: d.defaultRotYOffset ?? 0,
       }));
@@ -77,8 +77,8 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
   },
 
   // ── TOUTES LES POSES ALLONGÉES ─────────────────────────────────────────────
-  laying_pack: {
-    id: 'laying_pack',
+  'laying-pack': {
+    id: 'laying-pack',
     name: 'Toutes les animations allongées',
     defaultRotYOffset: Math.PI / 2,
     get animations() {
@@ -90,8 +90,8 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
   },
 
   // ── TOUTES LES DANSES ──────────────────────────────────────────────────────
-  all_dances: {
-    id: 'all_dances',
+  'all-dances': {
+    id: 'all-dances',
     name: 'Toutes les danses',
     get animations() {
       return getAnimationsByTags(['dance']).map((d) => ({
@@ -102,19 +102,38 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
   },
 };
 
-// ── Alias pratiques & rétrocompatibilité ─────────────────────────────────────
-ANIMATION_PACKS['seated_front_pack'] = ANIMATION_PACKS['seated_front'];
-ANIMATION_PACKS['seated_side_pack']  = ANIMATION_PACKS['seated_side'];
-ANIMATION_PACKS['sitted_front_pack'] = ANIMATION_PACKS['seated_front'];
-ANIMATION_PACKS['side_sitted_pack']  = ANIMATION_PACKS['seated_side'];
-ANIMATION_PACKS['sitting_front']     = ANIMATION_PACKS['seated_front'];
-ANIMATION_PACKS['sitting_side']      = ANIMATION_PACKS['seated_side'];
-ANIMATION_PACKS['laying_front_pack'] = ANIMATION_PACKS['laying_front'];
-ANIMATION_PACKS['laying_side_pack']  = ANIMATION_PACKS['laying_side'];
-ANIMATION_PACKS['lay_front']         = ANIMATION_PACKS['laying_front'];
-ANIMATION_PACKS['lay_side']          = ANIMATION_PACKS['laying_side'];
-ANIMATION_PACKS['lay_front_pack']    = ANIMATION_PACKS['laying_front'];
-ANIMATION_PACKS['lay_side_pack']     = ANIMATION_PACKS['laying_side'];
+// ── Alias pratiques & rétrocompatibilité (kebab-case & snake_case) ───────────
+ANIMATION_PACKS['seated_front']      = ANIMATION_PACKS['seated-front'];
+ANIMATION_PACKS['seated_side']       = ANIMATION_PACKS['seated-side'];
+ANIMATION_PACKS['laying_front']      = ANIMATION_PACKS['laying-front'];
+ANIMATION_PACKS['laying_side']       = ANIMATION_PACKS['laying-side'];
+ANIMATION_PACKS['laying_pack']       = ANIMATION_PACKS['laying-pack'];
+ANIMATION_PACKS['all_dances']        = ANIMATION_PACKS['all-dances'];
+
+ANIMATION_PACKS['seated-front-pack'] = ANIMATION_PACKS['seated-front'];
+ANIMATION_PACKS['seated_front_pack'] = ANIMATION_PACKS['seated-front'];
+ANIMATION_PACKS['seated-side-pack']  = ANIMATION_PACKS['seated-side'];
+ANIMATION_PACKS['seated_side_pack']  = ANIMATION_PACKS['seated-side'];
+ANIMATION_PACKS['sitted-front-pack'] = ANIMATION_PACKS['seated-front'];
+ANIMATION_PACKS['sitted_front_pack'] = ANIMATION_PACKS['seated-front'];
+ANIMATION_PACKS['side-sitted-pack']  = ANIMATION_PACKS['seated-side'];
+ANIMATION_PACKS['side_sitted_pack']  = ANIMATION_PACKS['seated-side'];
+ANIMATION_PACKS['sitting-front']     = ANIMATION_PACKS['seated-front'];
+ANIMATION_PACKS['sitting_front']     = ANIMATION_PACKS['seated-front'];
+ANIMATION_PACKS['sitting-side']      = ANIMATION_PACKS['seated-side'];
+ANIMATION_PACKS['sitting_side']      = ANIMATION_PACKS['seated-side'];
+ANIMATION_PACKS['laying-front-pack'] = ANIMATION_PACKS['laying-front'];
+ANIMATION_PACKS['laying_front_pack'] = ANIMATION_PACKS['laying-front'];
+ANIMATION_PACKS['laying-side-pack']  = ANIMATION_PACKS['laying-side'];
+ANIMATION_PACKS['laying_side_pack']  = ANIMATION_PACKS['laying-side'];
+ANIMATION_PACKS['lay-front']         = ANIMATION_PACKS['laying-front'];
+ANIMATION_PACKS['lay_front']         = ANIMATION_PACKS['laying-front'];
+ANIMATION_PACKS['lay-side']          = ANIMATION_PACKS['laying-side'];
+ANIMATION_PACKS['lay_side']          = ANIMATION_PACKS['laying-side'];
+ANIMATION_PACKS['lay-front-pack']    = ANIMATION_PACKS['laying-front'];
+ANIMATION_PACKS['lay_front_pack']    = ANIMATION_PACKS['laying-front'];
+ANIMATION_PACKS['lay-side-pack']     = ANIMATION_PACKS['laying-side'];
+ANIMATION_PACKS['lay_side_pack']     = ANIMATION_PACKS['laying-side'];
 
 /**
  * Résout une animation aléatoire ou définie et son orientation finale (avec rotY offset si nécessaire)
@@ -196,7 +215,7 @@ export function resolveSlotAnimation(slot: {
   }
 
   return {
-    animation: resolveAnimationPath('sitting_idle'),
+    animation: resolveAnimationPath('sitting-idle'),
     rotY: baseRotY,
   };
 }

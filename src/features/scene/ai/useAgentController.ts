@@ -420,14 +420,15 @@ export function useAgentController(
         let reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
 
         const targetSlot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId);
-        const isSeatedFrontSlot = targetSlot?.animationsRandom === 'seated_front'
-          || (Array.isArray(targetSlot?.animationsRandom) && targetSlot.animationsRandom.includes('seated_front'))
+        const isSeatedFrontSlot = targetSlot?.animationsRandom === 'seated-front'
+          || targetSlot?.animationsRandom === 'seated_front'
+          || (Array.isArray(targetSlot?.animationsRandom) && (targetSlot.animationsRandom.includes('seated-front') || targetSlot.animationsRandom.includes('seated_front')))
           || reqSlotId === 'sit-cuddle';
 
         const isDuoCooldown = Date.now() - lastDuoEndTimeRef.current < 25000;
 
-        // Si le slot utilise 'seated_front' (chaise, lits, canapés, etc.) et que le cooldown est passé :
-        // donner une chance (30%) de déclencher spontanément le câlin à deux ('sit_cuddle') avec un partenaire.
+        // Si le slot utilise 'seated-front' (chaise, lits, canapés, etc.) et que le cooldown est passé :
+        // donner une chance (30%) de déclencher spontanément le câlin à deux ('sit-cuddle') avec un partenaire.
         // La décision ne se prend qu'une seule fois (guard sur duoRoleRef + pas de session en cours).
         let shouldTriggerDuo = isDuoSlot(objId, reqSlotId);
         if (
@@ -452,7 +453,7 @@ export function useAgentController(
             } else {
               // Déclenchement autonome : le leader gère sa propre navigation directement
               // sans passer par onInvite (évite la corruption d'état et la boucle infinie)
-              const def = DUO_ANIMATIONS.find(d => d.id === 'sit_cuddle');
+              const def = DUO_ANIMATIONS.find(d => d.id === 'sit-cuddle' || d.id === 'sit_cuddle');
               if (def) {
                 const duoRes = duoSessionManager.startDuoOnSmartObject(objId, reqSlotId, def, _characterId);
                 if (duoRes) {

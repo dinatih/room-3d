@@ -16,6 +16,12 @@ function buildIndexes() {
   for (const def of ANIMATION_DEFINITIONS) {
     // Clé ID
     keyToDefMap.set(def.id.toLowerCase(), def);
+    if (def.id.includes('-')) {
+      keyToDefMap.set(def.id.replace(/-/g, '_').toLowerCase(), def);
+    } else if (def.id.includes('_')) {
+      keyToDefMap.set(def.id.replace(/_/g, '-').toLowerCase(), def);
+    }
+
     // Clé Path
     keyToDefMap.set(def.path.toLowerCase(), def);
     
@@ -23,6 +29,11 @@ function buildIndexes() {
     if (def.aliases) {
       for (const alias of def.aliases) {
         keyToDefMap.set(alias.toLowerCase(), def);
+        if (alias.includes('-')) {
+          keyToDefMap.set(alias.replace(/-/g, '_').toLowerCase(), def);
+        } else if (alias.includes('_')) {
+          keyToDefMap.set(alias.replace(/_/g, '-').toLowerCase(), def);
+        }
       }
     }
 
@@ -35,6 +46,20 @@ function buildIndexes() {
         tagToDefsMap.set(normalizedTag, list);
       }
       list.push(def);
+
+      const altTag = normalizedTag.includes('-')
+        ? normalizedTag.replace(/-/g, '_')
+        : (normalizedTag.includes('_') ? normalizedTag.replace(/_/g, '-') : null);
+      if (altTag) {
+        let altList = tagToDefsMap.get(altTag);
+        if (!altList) {
+          altList = [];
+          tagToDefsMap.set(altTag, altList);
+        }
+        if (!altList.includes(def)) {
+          altList.push(def);
+        }
+      }
     }
   }
 }

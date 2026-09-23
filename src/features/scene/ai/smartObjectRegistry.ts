@@ -19,28 +19,28 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'asseoir (Gauche)',
         relative: true,
         offset: [0, 0, -50],
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-right',
         name: 'S\'asseoir (Droite)',
         relative: true,
         offset: [0, 0, 50],
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       },
       {
         slotId: 'lie-down-left',
         name: 'Dormir couché (Gauche)',
         relative: true,
         offset: [-35, 45, 0],
-        animationsRandom: 'laying_pack',
+        animationsRandom: 'laying-pack',
       },
       {
         slotId: 'lie-down-right',
         name: 'Dormir couché (Droite)',
         relative: true,
         offset: [35, 45, 0],
-        animationsRandom: 'laying_pack',
+        animationsRandom: 'laying-pack',
       }
     ]
   },
@@ -55,25 +55,25 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'seat-north',
         name: 'S\'asseoir (Nord)',
         offset: [90, 0, 80],
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-middle',
         name: 'S\'asseoir (Milieu)',
         offset: [90, 0, 150],
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-south',
         name: 'S\'asseoir (Sud)',
         offset: [90, 0, 220],
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       },
       {
         slotId: 'lie-down',
         name: 'Dormir couché',
         offset: [74, 45, 150],
-        animationsRandom: 'laying_front',
+        animationsRandom: 'laying-front',
         rotY: -Math.PI,
       }
     ]
@@ -89,25 +89,25 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'seat-north',
         name: 'S\'asseoir (Nord)',
         offset: [245, 0, 120],
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-middle',
         name: 'S\'asseoir (Milieu)',
         offset: [245, 0, 190],
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-south',
         name: 'S\'asseoir (Sud)',
         offset: [245, 0, 260],
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       },
       {
         slotId: 'lie-down',
         name: 'Dormir couché',
         offset: [270, 45, 190],
-        animationsRandom: 'laying_front',
+        animationsRandom: 'laying-front',
         rotY: Math.PI,
       }
     ]
@@ -126,7 +126,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [0, 0, 30],
         rotY: Math.PI,
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       }
     ]
   },
@@ -142,13 +142,13 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [0, 0, 0],
         rotY: 0,
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       },
       {
         slotId: 'sit-cuddle',
         name: 'Câlin à deux (Sit Cuddle)',
         isDuo: true,
-        duoAnimId: 'sit_cuddle',
+        duoAnimId: 'sit-cuddle',
         relative: true,
         offset: [0, 0, 0],
         rotY: 0,
@@ -184,7 +184,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Faire ses besoins',
         offset: [50, 0, 500],
         rotY: 0,
-        animation: 'sit_idle',
+        animation: 'sit-idle',
         duration: 10.0,
       },
       {
@@ -209,21 +209,21 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Se laver les mains',
         offset: [116, 0, 530],
         rotY: Math.PI,
-        animation: 'inspect_mid_height',
+        animation: 'inspect-mid-height',
       },
       {
         slotId: 'brush-teeth',
         name: 'Se laver les dents',
         offset: [116, 0, 530],
         rotY: Math.PI,
-        animation: 'take_object_mid',
+        animation: 'take-object-mid',
       },
       {
         slotId: 'shave-makeup',
         name: 'Se Raser / Maquiller',
         offset: [116, 0, 530],
         rotY: Math.PI,
-        animation: 'inspect_mid_height',
+        animation: 'inspect-mid-height',
       }
     ]
   },
@@ -270,7 +270,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [0, 0, -35], // 35 cm devant le placard dans la SDB
         rotY: 0,
-        animation: 'take_object_mid',
+        animation: 'take-object-mid',
       }
     ]
   },
@@ -286,7 +286,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un objet',
         offset: [30, 0, 535],
         rotY: Math.PI + Math.PI / 8,
-        animation: 'take_object_mid',
+        animation: 'take-object-mid',
       }
     ]
   },
@@ -301,7 +301,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre un objet',
         offset: [169, 0, 535],
         rotY: Math.PI,
-        animation: 'inspect_mid_height',
+        animation: 'inspect-mid-height',
       }
     ]
   },
@@ -317,7 +317,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Se relaxer au centre',
         offset: [120, 0, -300],
         rotY: Math.PI / 4,
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
         duration: 30.0,
       },
       {
@@ -325,7 +325,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Bain Côté Ouest',
         offset: [80, 0, -330],
         rotY: Math.PI / 4,
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
         duration: 30.0,
       },
       {
@@ -333,7 +333,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Bain Côté Est',
         offset: [160, 0, -270],
         rotY: Math.PI + Math.PI / 4,
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
         duration: 30.0,
       }
     ]
@@ -351,14 +351,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Place assise 1',
         offset: [270, 0, -80],
         rotY: - Math.PI / 2,
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-2',
         name: 'Place assise 2',
         offset: [270, 0, -140],
         rotY: - Math.PI / 2,
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       }
     ]
   },
@@ -373,14 +373,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Place assise 1',
         offset: [100, 0, -60],
         rotY: Math.PI / 2,
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       },
       {
         slotId: 'seat-2',
         name: 'Place assise 2',
         offset: [100, 0, -100],
         rotY: Math.PI / 2,
-        animationsRandom: 'seated_front',
+        animationsRandom: 'seated-front',
       }
     ]
   },
@@ -486,7 +486,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Prendre l\'air au fond',
         offset: [150, 0, -600],
         rotY: 0,
-        animationsRandom: 'all_dances',
+        animationsRandom: 'all-dances',
         repeatCount: 4,
         repeatVariation: false,
       }
@@ -502,7 +502,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'watchdog',
         name: 'Gardien',
         rotY: Math.PI / 2,
-        animationsRandom: 'all_dances',
+        animationsRandom: 'all-dances',
       },
     ]
   },
@@ -517,7 +517,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Jeter les poubelles',
         offset: [-350, 0, 1010],
         rotY: Math.PI / 2,
-        animationsRandom: 'all_dances',
+        animationsRandom: 'all-dances',
       },
       {
         slotId: 'visit',
@@ -539,14 +539,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Aller au lavomatique',
         offset: [-300, 0, -200],
         rotY: Math.PI / 2,
-        animationsRandom: 'all_dances',
+        animationsRandom: 'all-dances',
       },
       {
         slotId: 'admire',
         name: 'Observer la cour',
         offset: [-300, 0, -200],
         rotY: Math.PI / 2,
-        animationsRandom: 'all_dances',
+        animationsRandom: 'all-dances',
       }
     ]
   },
@@ -672,7 +672,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'poses-6',
         name: 'Poses 6',
         offset: [400, 0, -100],
-        animationsRandom: 'poses_idle',
+        animationsRandom: 'poses-idles',
         repeatCount: 6,
         repeatVariation: true,
       },
@@ -680,7 +680,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'hip-hop-breakdance',
         name: 'Hip-hop Breakdance',
         offset: [500, 0, 300],
-        animationsRandom: ['hip-hop', 'breakdance'],
+        animationsRandom: ['hiphop', 'breakdance'],
         repeatCount: 6,
         repeatVariation: true,
       },
@@ -688,7 +688,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'hip-hop-breakdance',
         name: 'Hip-hop Breakdance',
         offset: [400, 0, 300],
-        animationsRandom: ['hip-hop', 'breakdance'],
+        animationsRandom: ['reggaeton', 'musical-theater', 'zumba', 'oriental', 'rnb'],
         repeatCount: 6,
         repeatVariation: true,
       },
@@ -705,7 +705,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danser sous la pluie',
         offset: [0, 0, -400],
         rotY: 0,
-        animationsRandom: 'all_dances',
+        animationsRandom: 'all-dances',
         repeatCount: 4,
         repeatVariation: true,
       }
@@ -746,7 +746,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danse devant Lit Ouest (Nord)',
         offset: [140, 0, 80],
         rotY: Math.PI / 2,
-        animationsRandom: 'dance_tight',
+        animationsRandom: 'dance-tight',
       }
     ]
   },
@@ -761,7 +761,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danse devant Lit Ouest (Milieu)',
         offset: [140, 0, 150],
         rotY: Math.PI / 2,
-        animationsRandom: 'dance_tight',
+        animationsRandom: 'dance-tight',
       }
     ]
   },
@@ -776,7 +776,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danse devant Lit Ouest (Sud)',
         offset: [140, 0, 220],
         rotY: Math.PI / 2,
-        animationsRandom: 'dance_tight',
+        animationsRandom: 'dance-tight',
       }
     ]
   },
@@ -791,7 +791,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danse devant Lit Est (Nord)',
         offset: [195, 0, 120],
         rotY: -Math.PI / 2,
-        animationsRandom: 'dance_tight',
+        animationsRandom: 'dance-tight',
       }
     ]
   },
@@ -806,7 +806,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danse devant Lit Est (Milieu)',
         offset: [195, 0, 190],
         rotY: -Math.PI / 2,
-        animationsRandom: 'dance_tight',
+        animationsRandom: 'dance-tight',
       }
     ]
   },
@@ -821,7 +821,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danse devant Lit Est (Sud)',
         offset: [195, 0, 260],
         rotY: -Math.PI / 2,
-        animationsRandom: 'dance_tight',
+        animationsRandom: 'dance-tight',
         repeatCount: 4,
         repeatVariation: false,
       }
@@ -837,7 +837,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'dance',
         name: 'Danse devant Chaise Bureau',
         rotY: Math.PI / 2,
-        animationsRandom: 'dance_tight',
+        animationsRandom: 'dance-tight',
         repeatCount: 4,
         repeatVariation: true,
       }
@@ -853,7 +853,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'dance',
         name: 'Danse devant Miroir Sud',
         rotY: 0,
-        animationsRandom: 'dance_tight',
+        animationsRandom: 'dance-tight',
       }
     ]
   },
@@ -868,7 +868,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   //       name: 'Danse devant Porte-fenêtre Droite',
   //       offset: [215, 0, 50],
   //       rotY: Math.PI,
-  //       animationsRandom: 'dance_tight',
+  //       animationsRandom: 'dance-tight',
   //       duration: 15.0,
   //     }
   //   ]
@@ -884,7 +884,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   //       name: 'Danse dans la Salle de Bain',
   //       offset: [100, 0, 530],
   //       rotY: Math.PI,
-  //       animationsRandom: 'dance_tight',
+  //       animationsRandom: 'dance-tight',
   //       duration: 15.0,
   //     }
   //   ]
