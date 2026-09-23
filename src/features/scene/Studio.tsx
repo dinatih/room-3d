@@ -15,10 +15,10 @@ import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
 import { SidePanel, type LidarMode } from '@features/scene/SidePanel';
 import { Minimap }          from '@features/scene/Minimap';
-import { Walls, Floor, MirrorFrames, MirrorReflectors } from './Building';
+import { Walls, Floor, DoorsPlaced, MirrorFrames, MirrorReflectors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController } from '@features/scene/sceneLayer';
-import { Equipment, Furniture, Furnishings, Decor } from './Placements';
+import { Equipment, Furniture, Furnishings, Decor, Animals } from './Placements';
 import { Walker } from './Walker';
 import { AiZonesHelper } from './ai/AiZonesHelper';
 import { CollisionDebugHelper } from './ai/CollisionDebugHelper';
@@ -61,7 +61,7 @@ import {
   ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR, LAYER_NEIGHBORS, LAYER_LIDAR,
   LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER, LAYER_ENVIRONMENT,
-  LAYER_WALL_STRUCTURE, LAYER_AI_ZONES,
+  LAYER_WALL_STRUCTURE, LAYER_AI_ZONES, LAYER_DOORS, LAYER_ANIMALS,
 } from '@config';
 
 
@@ -578,12 +578,18 @@ export function Studio() {
 
           {/*
            * LAYER_WALL_STRUCTURE (24) — murs, cloisons, linteaux, piliers
+           * LAYER_DOORS (26) — portes (séjour, SDB, entrée, baie vitrée)
            * LAYER_STRUCTURE (0) — dalle béton, plafonds (géré dans Floor)
            * LAYER_FLOOR_COVERINGS (25) — parquet, carrelage, pvc, plinthes (géré dans Floor)
            */}
           <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE}>
             <Walls pillarsOnly={layers.pillarsOnly} />
           </CategoryLayerGroup>
+
+          <CategoryLayerGroup layer={LAYER_DOORS}>
+            {!layers.pillarsOnly && <DoorsPlaced />}
+          </CategoryLayerGroup>
+
           <Floor />
           {/* LAYER_WALKER (18) — Personnages 3D */}
           <CategoryLayerGroup layer={LAYER_WALKER}>
@@ -619,6 +625,11 @@ export function Studio() {
            */}
           <CategoryLayerGroup layer={LAYER_DECOR}>
             <Decor />
+          </CategoryLayerGroup>
+
+          {/* LAYER_ANIMALS (20) — Animaux autonomes (Robin Bird, Shiba Inu) */}
+          <CategoryLayerGroup layer={LAYER_ANIMALS}>
+            <Animals />
           </CategoryLayerGroup>
 
           {/* LAYER_MIRRORS (17) — plans de réflexion Reflector uniquement (coûteux) */}

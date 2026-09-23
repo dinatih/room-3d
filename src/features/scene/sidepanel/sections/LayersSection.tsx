@@ -138,37 +138,12 @@ export function LayersSection({
           ) : null;
         })()}
       </div>
-      {layerBtn('green',  'Structure murale 🧱',            'wallStructure')}
-      {layerBtn('orange', 'Revêtements sol (+ plinthes) 🪵', 'floorCoverings')}
-      {layerBtn('secondary', 'Dalle & Structure de base 🏛️', 'structure')}
-      {layerBtn('green',  'Environnement (Ciel & Herbe) 🌤️🌿', 'environment')}
-      {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
-      {layerBtn('peach',  'Portes',        'doors')}
-      {layerBtn('peach',  'Équipements',   'equipment')}
-      {layerBtn('purple', 'Mobilier (Furniture)',      'furniture')}
-      {layerBtn('purple', 'Habillage (Furnishings)',   'furnishings')}
-      {layerBtn('purple', 'Décoration (Decor)',        'decor')}
-      {layerBtn('blue',   'Animaux 🐕🐦',  'animals')}
-      {layerBtn('purple', 'Miroirs',       'mirrors')}
-      {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
-      {layerBtn('cyan',   'Zones IA 🤖 (A)', 'aiZones')}
-      {layerBtn('blue',   'Collisions inter-PNJ 👥', 'npcCollisions')}
-      {layers.npcCollisions && layerBtn('cyan', '↳ Debug PNJ (Rayon 70cm) ⭕', 'debugNpcCollisions')}
-      {layerBtn('blue',   'Collisions objets/meubles 🪑', 'furnitureCollisions')}
-      {layers.furnitureCollisions && layerBtn('cyan', '↳ Debug Objets/Meubles 📐', 'debugFurnitureCollisions')}
-      {layerBtn('gray',   'Ombres',        'shadows')}
-      {layerBtn('blue',   'Voisins',       'neighbors')}
-
-      {layerBtn('orange', 'Grille inventaire 📦 (U)', 'inventoryGrid')}
-      {layerBtn('teal',   'Grille 🌐',     'grid')}
-      {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
-      {layerBtn('yellow', 'Mesures réelles 📐 (N)', 'measuredDimensions')}
-      {layerBtn('red',    'Aff. arêtes murs (W)', 'wallEdges')}
-      {layerBtn('cyan',   'X-Ray 🩻',      'xray')}
-      {layerBtn('cyan',   'Wireframe coloré 🕸', 'wireframe')}
-      {layerBtn('yellow', 'Lumières ☀',    'lights')}
-      {layerBtn('yellow', 'Lumières HD ✨', 'lightsHD')}
-      {layerBtn('green',  'Sol extérieur 🌿', 'bermudaGrass')}
+      {layerBtn('green',     'Structure murale 🧱',            'wallStructure')}
+      {layerBtn('orange',    'Revêtements sol (+ plinthes) 🪵', 'floorCoverings')}
+      {layerBtn('secondary', 'Dalle et plafond 🏛️',            'structure')}
+      {layerBtn('peach',     'Portes 🚪',                      'doors')}
+      {layerBtn('teal',      'Ciel / Terrain 🌤️',              'environment')}
+      {layerBtn('green',     'Herbe (Sol extérieur) 🌱',       'bermudaGrass')}
       {layers.bermudaGrass && (
         <div className="px-3 py-1 border-bottom bg-transparent d-flex align-items-center justify-content-between gap-2">
           <span className="text-muted" style={{ fontSize: '10px' }}>Type :</span>
@@ -197,6 +172,31 @@ export function LayersSection({
           </div>
         </div>
       )}
+      {layerBtn('gray',      'Piliers seuls',                  'pillarsOnly')}
+      {layerBtn('peach',     'Équipements',                    'equipment')}
+      {layerBtn('purple',    'Mobilier (Furniture)',           'furniture')}
+      {layerBtn('purple',    'Habillage (Furnishings)',        'furnishings')}
+      {layerBtn('purple',    'Décoration (Decor)',             'decor')}
+      {layerBtn('blue',      'Animaux 🐕🐦',                   'animals')}
+      {layerBtn('purple',    'Miroirs',                        'mirrors')}
+      {layers.mirrors && layerBtn('purple', 'Miroirs HD',       'mirrorsHD')}
+      {layerBtn('cyan',      'Zones IA 🤖 (A)',                'aiZones')}
+      {layerBtn('blue',   'Collisions inter-PNJ 👥', 'npcCollisions')}
+      {layers.npcCollisions && layerBtn('cyan', '↳ Debug PNJ (Rayon 70cm) ⭕', 'debugNpcCollisions')}
+      {layerBtn('blue',   'Collisions objets/meubles 🪑', 'furnitureCollisions')}
+      {layers.furnitureCollisions && layerBtn('cyan', '↳ Debug Objets/Meubles 📐', 'debugFurnitureCollisions')}
+      {layerBtn('gray',   'Ombres',        'shadows')}
+      {layerBtn('blue',   'Voisins',       'neighbors')}
+
+      {layerBtn('orange', 'Grille inventaire 📦 (U)', 'inventoryGrid')}
+      {layerBtn('teal',   'Grille 🌐',     'grid')}
+      {layers.grid && layerBtn('teal', 'Grille Depth', 'gridDepth')}
+      {layerBtn('yellow', 'Mesures réelles 📐 (N)', 'measuredDimensions')}
+      {layerBtn('red',    'Aff. arêtes murs (W)', 'wallEdges')}
+      {layerBtn('cyan',   'X-Ray 🩻',      'xray')}
+      {layerBtn('cyan',   'Wireframe coloré 🕸', 'wireframe')}
+      {layerBtn('yellow', 'Lumières ☀',    'lights')}
+      {layerBtn('yellow', 'Lumières HD ✨', 'lightsHD')}
       {layerBtn('teal',   'Mur jardin : Scan 3D 🎨', 'gardenWallScan')}
       {layerBtn('cyan',   'LiDAR scan 📡', 'lidar')}
       {layers.lidar && b0('cyan', ['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}

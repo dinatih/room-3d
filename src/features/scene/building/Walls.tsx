@@ -18,7 +18,6 @@ import {
   wallMat, northMats, southMats, MAT_MAP, caplessX, caplessZ, makeExtrudeGeo
 } from './buildingCommon';
 import { MergedStaticGroup } from './MergedStaticGroup';
-import { DoorsPlaced } from './DoorsPlaced';
 
 /** Ref module-level vers le group Walls — consommé par Neighbors pour clone. */
 export const wallsGroupRef = { current: null as THREE.Group | null };
@@ -173,8 +172,6 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
 
   return (
     <>
-      {!pillarsOnly && <DoorsPlaced />}
-
       <group ref={(g) => { wallsGroupRef.current = g; }} name="walls-group" userData={{ itemName: 'Murs & Structure' }}>
         {showLabels && <PillarLabels />}
 

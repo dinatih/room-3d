@@ -60,6 +60,14 @@ export function Decor() {
       <KitchenDecor />
       <LivingRoomDecor />
       <GardenDecor />
+    </>
+  );
+}
+
+// Pass 4 — Animals : Animaux autonomes (Robin Bird, Shiba Inu)
+export function Animals() {
+  return (
+    <>
       <GardenAnimals />
     </>
   );

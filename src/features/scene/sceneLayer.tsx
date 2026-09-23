@@ -27,6 +27,7 @@ import {
   LAYER_NEIGHBORS, LAYER_LIDAR, LAYER_MIRRORS, LAYER_WALKER,
   LAYER_WALKER_DETAIL, LAYER_ANIMALS, LAYER_ENVIRONMENT,
   LAYER_WALL_STRUCTURE, LAYER_FLOOR_COVERINGS, LAYER_AI_ZONES,
+  LAYER_DOORS, LAYER_GRASS,
 } from '@config';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -36,8 +37,10 @@ interface SceneLayers {
   structure:       boolean;
   wallStructure?:  boolean;
   floorCoverings?: boolean;
+  doors?:          boolean;
   aiZones?:        boolean;
   environment?:    boolean;
+  bermudaGrass?:   boolean;
   equipment:       boolean;
   furniture:       boolean;
   furnishings:     boolean;
@@ -97,8 +100,10 @@ export function SceneLayerController({ layers }: { layers: SceneLayers }) {
       [LAYER_STRUCTURE,       layers.structure],
       [LAYER_WALL_STRUCTURE,  layers.wallStructure ?? true],
       [LAYER_FLOOR_COVERINGS, layers.floorCoverings ?? true],
+      [LAYER_DOORS,           layers.doors ?? true],
       [LAYER_AI_ZONES,        layers.aiZones ?? false],
       [LAYER_ENVIRONMENT,     layers.environment ?? true],
+      [LAYER_GRASS,           layers.bermudaGrass ?? true],
       [LAYER_EQUIPMENT,       layers.equipment],
       [LAYER_FURNITURE,       layers.furniture],
       [LAYER_FURNISHINGS,     layers.furnishings],
