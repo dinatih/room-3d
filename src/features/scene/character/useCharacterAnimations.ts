@@ -131,7 +131,7 @@ export function useCharacterAnimations({
       return;
     }
 
-    // Verrou anti-spam à 60 FPS : évite de lancer des dizaines de requêtes async simultanées pour le même clip
+    // Verrou anti-spam : évite de lancer des requêtes async simultanées pour le même clip
     const loadKey = `${id}_${animId}`;
     if (pendingLoadsRef.current.has(loadKey) || failedLoadsRef.current.has(loadKey)) {
       return;

@@ -43,7 +43,7 @@ export interface WigProps {
 
 export { RIGGED_WIGS_PATHS };
 
-function disposeOwnedWigResources(root: THREE.Object3D) {
+export function disposeOwnedWigResources(root: THREE.Object3D) {
   const disposedGeometries = new Set<THREE.BufferGeometry>();
   const disposedMaterials = new Set<THREE.Material>();
   const disposedTextures = new Set<THREE.Texture>();

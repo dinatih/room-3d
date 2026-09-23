@@ -9,7 +9,7 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
-import { Wig, HAIR_COLORS } from '../items/Wig';
+import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
 import { CharacterBaseballCap } from './CharacterBaseballCap';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, applyLaraRealisticTextures } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../walkerConfig';
@@ -54,6 +54,18 @@ const _tmpRightEyeWorldPos = new THREE.Vector3();
 const _tmpEyesWorldPos = new THREE.Vector3();
 const _tmpHeadForward = new THREE.Vector3();
 const _tmpHeadUp = new THREE.Vector3();
+
+const LGBTA_HAIRCUTS = [
+  'original',
+  'hair_100', 'hair_101', 'hair_102', 'hair_103', 'hair_104',
+  'hair_105', 'hair_106', 'hair_107', 'hair_108', 'hair_109',
+  'hair_110', 'hair_111', 'hair_112'
+];
+
+const LGBTA_HAIR_COLORS = [
+  'arc-en-ciel', 'rose', 'violet', 'bleu', 'vert', 'rouge',
+  'blanc', 'blond', 'roux', 'brun', 'noir'
+];
 
 export function SingleCharacter({
   id,
@@ -200,6 +212,18 @@ export function SingleCharacter({
     updatePhysics
   } = useCharacterPhysics();
 
+  // Rotation périodique coiffures et couleurs variant LGBT+ (toutes les 20s)
+  useEffect(() => {
+    if (variant === 'lgbta') {
+      const interval = setInterval(() => {
+        const nextHaircut = LGBTA_HAIRCUTS[Math.floor(Math.random() * LGBTA_HAIRCUTS.length)];
+        const nextColor = LGBTA_HAIR_COLORS[Math.floor(Math.random() * LGBTA_HAIR_COLORS.length)];
+        setLocalHaircut(nextHaircut);
+        setLocalHairColor(nextColor);
+      }, 20000);
+      return () => clearInterval(interval);
+    }
+  }, [variant]);
 
   // Synchronisation des layers (visibilité miroir vs FPV)
   useEffect(() => {
@@ -500,7 +524,10 @@ export function SingleCharacter({
 
     if (haircut === 'original') {
       const ghostWigs = headBone.children.filter((c: any) => !c.isBone && (c.userData.isWigRoot || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_')));
-      ghostWigs.forEach((w: any) => headBone.remove(w));
+      ghostWigs.forEach((w: any) => {
+        disposeOwnedWigResources(w);
+        headBone.remove(w);
+      });
     }
 
     const existingAttachment = headBone.getObjectByName('lara_custom_hair_attachment');
@@ -948,7 +975,11 @@ export function SingleCharacter({
         />
       )}
       {!isPreview && <HeartParachute visible={isFalling} />}
-      {!isPreview && (isActive ? <GroundPoint color="#0058a3" /> : <GroundPoint color="#ff2222" />)}
+      {!isPreview ? (
+        isActive ? <GroundPoint color="#0058a3" /> : <GroundPoint color="#ff2222" />
+      ) : (
+        isDuoRoleB && <GroundPoint color="#ff2222" />
+      )}
       {!isPreview && isActive && showThoughtBubble && (
         <CharacterThoughtBubble
           characterId={id}
