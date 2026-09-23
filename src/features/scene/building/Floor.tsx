@@ -6,9 +6,11 @@ import * as THREE from 'three';
 import { useSceneStore } from '../store/useSceneStore';
 import { BermudaGround } from './BermudaGround';
 import { MergedStaticGroup } from './MergedStaticGroup';
+import { CategoryLayerGroup } from '../sceneLayer';
 import {
   ROOM_W, ROOM_D, WALL_H, NICHE_X, NICHE_Z_START, DOOR_START, DOOR_END,
-  KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, DiagWall
+  KITCHEN_X0, KITCHEN_X1, KITCHEN_Z, DiagWall,
+  LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE, LAYER_ENVIRONMENT
 } from '@config';
 import { WALL_THICKNESS, PARTITION_THICKNESS, CORR_WALL_X, BATH_Z_END } from '../wallData';
 import {
@@ -652,56 +654,62 @@ export function Floor() {
 
   return (
     <>
-      <group name="parquet-group" userData={{ itemName: 'Sol Parquet' }}>
-        <Parquet />
-      </group>
+      <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
+        <group name="parquet-group" userData={{ itemName: 'Sol Parquet' }}>
+          <Parquet />
+        </group>
 
-      <group name="tile-group" userData={{ itemName: 'Carrelage Sol' }}>
-        <Tile />
-      </group>
+        <group name="tile-group" userData={{ itemName: 'Carrelage Sol' }}>
+          <Tile />
+        </group>
 
-      <group name="pvc-corridor-group" userData={{ itemName: 'Couloir PVC' }}>
-        <RedPVCCorridor />
-      </group>
+        <group name="pvc-corridor-group" userData={{ itemName: 'Couloir PVC' }}>
+          <RedPVCCorridor />
+        </group>
 
-      <group name="skirting-group" userData={{ animUnit: true, brickType: 'skirting', itemName: 'Plinthes' }}>
-        <MergedStaticGroup name="merged-skirting">
-          <Baseboards />
-          <BathSkirting />
-        </MergedStaticGroup>
-      </group>
+        <group name="skirting-group" userData={{ animUnit: true, brickType: 'skirting', itemName: 'Plinthes' }}>
+          <MergedStaticGroup name="merged-skirting">
+            <Baseboards />
+            <BathSkirting />
+          </MergedStaticGroup>
+        </group>
+      </CategoryLayerGroup>
 
-      <group name="slab-group" userData={{ itemName: 'Dalle Béton' }}>
-        <MergedStaticGroup name="merged-slab">
-          <SlabUnit x={0} z={0} />
-          <SlabUnit x={ 346} z={-199.76} />
-          <SlabUnit x={-346} z={ 199.76} />
-        </MergedStaticGroup>
-      </group>
+      <CategoryLayerGroup layer={LAYER_STRUCTURE}>
+        <group name="slab-group" userData={{ itemName: 'Dalle Béton' }}>
+          <MergedStaticGroup name="merged-slab">
+            <SlabUnit x={0} z={0} />
+            <SlabUnit x={ 346} z={-199.76} />
+            <SlabUnit x={-346} z={ 199.76} />
+          </MergedStaticGroup>
+        </group>
 
-      <group name="ceiling-group" userData={{ itemName: 'Plafonds' }}>
-        <MergedStaticGroup name="merged-ceiling">
-          <group position={[0, WALL_H - 1, 0]}>
+        <group name="ceiling-group" userData={{ itemName: 'Plafonds' }}>
+          <MergedStaticGroup name="merged-ceiling">
+            <group position={[0, WALL_H - 1, 0]}>
+              <mesh
+                geometry={ceilBottomGeo}
+                material={ceilBottomBack}
+                receiveShadow
+                userData={{ brickType: 'ceiling' }}
+              />
+            </group>
+
             <mesh
-              geometry={ceilBottomGeo}
-              material={ceilBottomBack}
+              ref={(m) => { if (m) m.material = ceilMats as any; }}
+              position={[300 - 235 / 2 + 16, WALL_H - 1 + CEIL_THICK / 2, BLDG_Z_MIN - 75]}
               receiveShadow
               userData={{ brickType: 'ceiling' }}
-            />
-          </group>
+            >
+              <boxGeometry args={[235, CEIL_THICK, 150]} />
+            </mesh>
+          </MergedStaticGroup>
+        </group>
+      </CategoryLayerGroup>
 
-          <mesh
-            ref={(m) => { if (m) m.material = ceilMats as any; }}
-            position={[300 - 235 / 2 + 16, WALL_H - 1 + CEIL_THICK / 2, BLDG_Z_MIN - 75]}
-            receiveShadow
-            userData={{ brickType: 'ceiling' }}
-          >
-            <boxGeometry args={[235, CEIL_THICK, 150]} />
-          </mesh>
-        </MergedStaticGroup>
-      </group>
-
-      <BermudaGround active={bermudaGrass} groundType={groundType} />
+      <CategoryLayerGroup layer={LAYER_ENVIRONMENT}>
+        <BermudaGround active={bermudaGrass} groundType={groundType} />
+      </CategoryLayerGroup>
     </>
   );
 }

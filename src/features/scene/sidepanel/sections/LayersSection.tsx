@@ -138,7 +138,9 @@ export function LayersSection({
           ) : null;
         })()}
       </div>
-      {layerBtn('green',  'Structure',     'structure')}
+      {layerBtn('green',  'Structure murale 🧱',            'wallStructure')}
+      {layerBtn('orange', 'Revêtements sol (+ plinthes) 🪵', 'floorCoverings')}
+      {layerBtn('secondary', 'Dalle & Structure de base 🏛️', 'structure')}
       {layerBtn('green',  'Environnement (Ciel & Herbe) 🌤️🌿', 'environment')}
       {layerBtn('gray',   'Piliers seuls', 'pillarsOnly')}
       {layerBtn('peach',  'Portes',        'doors')}
@@ -149,7 +151,7 @@ export function LayersSection({
       {layerBtn('blue',   'Animaux 🐕🐦',  'animals')}
       {layerBtn('purple', 'Miroirs',       'mirrors')}
       {layers.mirrors && layerBtn('purple', 'Miroirs HD',    'mirrorsHD')}
-      {layerBtn('gray',   'Zones IA 🤖',    'aiZones')}
+      {layerBtn('cyan',   'Zones IA 🤖 (A)', 'aiZones')}
       {layerBtn('blue',   'Collisions inter-PNJ 👥', 'npcCollisions')}
       {layers.npcCollisions && layerBtn('cyan', '↳ Debug PNJ (Rayon 70cm) ⭕', 'debugNpcCollisions')}
       {layerBtn('blue',   'Collisions objets/meubles 🪑', 'furnitureCollisions')}

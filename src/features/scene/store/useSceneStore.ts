@@ -111,6 +111,8 @@ const initialFurniture: FurnitureState = {
 
 const initialLayers: LayerState = {
   structure: true,
+  wallStructure: true,
+  floorCoverings: true,
   environment: true,
   equipment: true,
   furniture: true,

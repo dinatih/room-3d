@@ -61,6 +61,7 @@ import {
   ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR, LAYER_NEIGHBORS, LAYER_LIDAR,
   LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER, LAYER_ENVIRONMENT,
+  LAYER_WALL_STRUCTURE, LAYER_AI_ZONES,
 } from '@config';
 
 
@@ -549,7 +550,9 @@ export function Studio() {
         {layers.xray        && <XRayLayer />}
         {layers.wireframe   && <WireframeLayer />}
         <Suspense fallback={null}>
-          <AiZonesHelper />
+          <CategoryLayerGroup layer={LAYER_AI_ZONES}>
+            <AiZonesHelper />
+          </CategoryLayerGroup>
           <CollisionDebugHelper />
         </Suspense>
         {layers.wallEdges   && <WallEdgesLayer />}
@@ -574,11 +577,13 @@ export function Studio() {
         <group visible={!layers.plan}>
 
           {/*
-           * LAYER_STRUCTURE (0) — défaut Three.js, reflété dans les miroirs.
-           * Pas de CategoryLayerGroup : les objets sont sur le layer 0 par défaut.
-           * Walker inclus ici → reflété dans les miroirs.
+           * LAYER_WALL_STRUCTURE (24) — murs, cloisons, linteaux, piliers
+           * LAYER_STRUCTURE (0) — dalle béton, plafonds (géré dans Floor)
+           * LAYER_FLOOR_COVERINGS (25) — parquet, carrelage, pvc, plinthes (géré dans Floor)
            */}
-          <Walls pillarsOnly={layers.pillarsOnly} />
+          <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE}>
+            <Walls pillarsOnly={layers.pillarsOnly} />
+          </CategoryLayerGroup>
           <Floor />
           {/* LAYER_WALKER (18) — Personnages 3D */}
           <CategoryLayerGroup layer={LAYER_WALKER}>

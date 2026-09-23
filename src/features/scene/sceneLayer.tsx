@@ -25,24 +25,28 @@ import { useThree } from '@react-three/fiber';
 import {
   LAYER_STRUCTURE, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR,
   LAYER_NEIGHBORS, LAYER_LIDAR, LAYER_MIRRORS, LAYER_WALKER,
-  LAYER_WALKER_DETAIL, LAYER_ANIMALS, LAYER_ENVIRONMENT
+  LAYER_WALKER_DETAIL, LAYER_ANIMALS, LAYER_ENVIRONMENT,
+  LAYER_WALL_STRUCTURE, LAYER_FLOOR_COVERINGS, LAYER_AI_ZONES,
 } from '@config';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 /** Sous-ensemble de LayerState pertinent pour les layers Three.js. */
 interface SceneLayers {
-  structure:    boolean;
-  environment?: boolean;
-  equipment:    boolean;
-  furniture:    boolean;
-  furnishings:  boolean;
-  decor:        boolean;
-  neighbors:    boolean;
-  lidar:        boolean;
-  mirrors:      boolean;
-  walker:       boolean;
-  animals?:     boolean;
+  structure:       boolean;
+  wallStructure?:  boolean;
+  floorCoverings?: boolean;
+  aiZones?:        boolean;
+  environment?:    boolean;
+  equipment:       boolean;
+  furniture:       boolean;
+  furnishings:     boolean;
+  decor:           boolean;
+  neighbors:       boolean;
+  lidar:           boolean;
+  mirrors:         boolean;
+  walker:          boolean;
+  animals?:        boolean;
 }
 
 // ── CategoryLayerGroup ────────────────────────────────────────────────────────
@@ -85,24 +89,25 @@ export function CategoryLayerGroup({
 export function SceneLayerController({ layers }: { layers: SceneLayers }) {
   const { camera, invalidate } = useThree();
 
-
-
   useEffect(() => {
     // LAYER_GLB (4) est géré par React visible sur les groupes GLB, pas camera.layers
     // (camera.layers = OR : objet visible si partage n'importe quel bit → impossible
     //  de masquer un objet sur 2 layers en désactivant un seul bit)
     const toggles: [number, boolean][] = [
-      [LAYER_STRUCTURE,   layers.structure],
-      [LAYER_ENVIRONMENT, layers.environment ?? true],
-      [LAYER_EQUIPMENT,   layers.equipment],
-      [LAYER_FURNITURE,   layers.furniture],
-      [LAYER_FURNISHINGS, layers.furnishings],
-      [LAYER_DECOR,       layers.decor],
-      [LAYER_NEIGHBORS,   layers.neighbors],
-      [LAYER_LIDAR,       layers.lidar],
-      [LAYER_MIRRORS,     layers.mirrors],
-      [LAYER_WALKER,      layers.walker],
-      [LAYER_ANIMALS,     layers.animals ?? true],
+      [LAYER_STRUCTURE,       layers.structure],
+      [LAYER_WALL_STRUCTURE,  layers.wallStructure ?? true],
+      [LAYER_FLOOR_COVERINGS, layers.floorCoverings ?? true],
+      [LAYER_AI_ZONES,        layers.aiZones ?? false],
+      [LAYER_ENVIRONMENT,     layers.environment ?? true],
+      [LAYER_EQUIPMENT,       layers.equipment],
+      [LAYER_FURNITURE,       layers.furniture],
+      [LAYER_FURNISHINGS,     layers.furnishings],
+      [LAYER_DECOR,           layers.decor],
+      [LAYER_NEIGHBORS,       layers.neighbors],
+      [LAYER_LIDAR,           layers.lidar],
+      [LAYER_MIRRORS,         layers.mirrors],
+      [LAYER_WALKER,          layers.walker],
+      [LAYER_ANIMALS,         layers.animals ?? true],
     ];
     toggles.forEach(([l, visible]) => {
       if (visible) camera.layers.enable(l);
