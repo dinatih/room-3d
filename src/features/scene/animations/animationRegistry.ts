@@ -414,7 +414,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_bachata_vaso_01.glb',
     label: 'Bachata Vaso 01',
     aliases: ['dance-bachata-vaso', 'bachata-vaso', 'bachata-1'],
-    tags: ['dance-wide', 'latin', 'bachata', 'party'],
+    tags: ['dance-wide', 'latin', 'bachata', 'party', 'dance-from-npz'],
     duration: 133.6,
   },
   {
@@ -422,7 +422,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_bachata_stefanos_c3d.glb',
     label: 'Bachata Stefanos C3D',
     aliases: ['dance-bachata-stefanos', 'bachata-stefanos', 'bachata-2'],
-    tags: ['dance-wide', 'latin', 'bachata', 'party'],
+    tags: ['dance-wide', 'latin', 'bachata', 'party', 'dance-from-npz'],
     duration: 144.2,
   },
   {
@@ -430,7 +430,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_bachata_stefanos_v2_c3d.glb',
     label: 'Bachata Stefanos v2 C3D',
     aliases: ['dance-bachata-stefanos-v2', 'bachata-stefanos-v2', 'bachata-3'],
-    tags: ['dance-wide', 'latin', 'bachata', 'party'],
+    tags: ['dance-wide', 'latin', 'bachata', 'party', 'dance-from-npz'],
     duration: 123.7,
   },
   {
@@ -438,7 +438,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_reggaeton_vaso_01.glb',
     label: 'Reggaeton Vaso 01 (3849f / 128.3s, 1629KB)',
     aliases: ['dance-reggaeton-vaso', 'reggaeton-vaso', 'anim-reggaeton-vaso-01'],
-    tags: ['dance', 'latin', 'reggaeton', 'dance-wide', 'party'],
+    tags: ['dance', 'latin', 'reggaeton', 'dance-wide', 'party', 'dance-from-npz'],
     duration: 128.3,
   },
   {
@@ -446,7 +446,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_salsa_shines_vaso_01.glb',
     label: 'Salsa Shines Vaso 01 (3826f / 127.5s, 1575KB)',
     aliases: ['dance-salsa-shines-vaso', 'salsa-shines-vaso', 'anim-salsa-shines-vaso-01'],
-    tags: ['dance', 'latin', 'salsa', 'dance-wide', 'party'],
+    tags: ['dance', 'latin', 'salsa', 'dance-wide', 'party', 'dance-from-npz'],
     duration: 127.5,
   },
   {
@@ -454,7 +454,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_hiphop_fanie_c3d.glb',
     label: 'Hiphop Fanie C3D (3897f / 129.9s, 1693KB)',
     aliases: ['dance-hiphop-fanie', 'hiphop-fanie', 'anim-hiphop-fanie-c3d'],
-    tags: ['dance', 'hiphop', 'urban', 'dance-wide', 'party'],
+    tags: ['dance', 'hiphop', 'urban', 'dance-wide', 'party', 'dance-from-npz'],
     duration: 129.9,
   },
   {
@@ -462,7 +462,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_musical_theater_fanie_c3d.glb',
     label: 'Musical Theater Fanie C3D (3823f / 127.4s, 1574KB)',
     aliases: ['dance-musical-theater-fanie', 'musical-theater-fanie', 'anim-musical-theater-fanie-c3d'],
-    tags: ['dance', 'musical-theater', 'theater', 'dance-wide', 'party'],
+    tags: ['dance', 'musical-theater', 'theater', 'dance-wide', 'party', 'dance-from-npz'],
     duration: 127.4,
   },
   {
@@ -470,7 +470,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_zumba_fanie_c3d.glb',
     label: 'Zumba Fanie C3D (6750f / 225.0s, 2924KB)',
     aliases: ['dance-zumba-fanie', 'zumba-fanie', 'anim-zumba-fanie-c3d'],
-    tags: ['dance', 'fitness', 'zumba', 'dance-wide', 'party'],
+    tags: ['dance', 'fitness', 'zumba', 'dance-wide', 'party', 'dance-from-npz'],
     duration: 225.0,
   },
   {
@@ -478,7 +478,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_bellydance2_anna_cortesi_c3d.glb',
     label: 'Belly Dance 2 Anna Cortesi C3D (8423f / 280.8s, 2919KB)',
     aliases: ['dance-bellydance2-anna-cortesi', 'bellydance2-anna-cortesi', 'anim-bellydance2-anna-cortesi-c3d'],
-    tags: ['dance', 'oriental', 'bellydance', 'dance-tight', 'party'],
+    tags: ['dance', 'oriental', 'bellydance', 'dance-tight', 'party', 'dance-from-npz'],
     duration: 280.8,
   },
   {
@@ -486,7 +486,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_randb_anna_cortesi_c3d.glb',
     label: 'RandB Anna Cortesi C3D (4142f / 138.1s, 1515KB)',
     aliases: ['dance-randb-anna-cortesi', 'randb-anna-cortesi', 'rnb-anna-cortesi', 'anim-randb-anna-cortesi-c3d'],
-    tags: ['dance', 'rnb', 'randb', 'urban', 'dance-wide', 'party'],
+    tags: ['dance', 'rnb', 'randb', 'urban', 'dance-wide', 'party', 'dance-from-npz'],
     duration: 138.1,
   },
   {
@@ -494,7 +494,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_reggaeton_stefanos_c3d.glb',
     label: 'Reggaeton Stefanos C3D (4900f / 163.3s, 2204KB)',
     aliases: ['dance-reggaeton-stefanos', 'reggaeton-stefanos', 'anim-reggaeton-stefanos-c3d'],
-    tags: ['dance', 'latin', 'reggaeton', 'dance-wide', 'party'],
+    tags: ['dance', 'latin', 'reggaeton', 'dance-wide', 'party', 'dance-from-npz'],
     duration: 163.3,
   },
   {
@@ -502,7 +502,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_salsa_stefanos_c3d.glb',
     label: 'Salsa Stefanos C3D (5894f / 196.5s, 2550KB)',
     aliases: ['dance-salsa-stefanos', 'salsa-stefanos', 'anim-salsa-stefanos-c3d'],
-    tags: ['dance', 'latin', 'salsa', 'dance-wide', 'party'],
+    tags: ['dance', 'latin', 'salsa', 'dance-wide', 'party', 'dance-from-npz'],
     duration: 196.5,
   },
   {
@@ -1808,21 +1808,21 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     id: 'anim-bachata-stefanos-c3d',
     path: 'animations/dances/anim_bachata_stefanos_c3d.glb',
     label: `Bachata Stefanos C3D (4326f / 144.2s, 1603KB)`,
-    tags: ['dance', 'bachata'],
+    tags: ['dance', 'bachata', 'dance-from-npz'],
     duration: 144.2,
   },
   {
     id: 'anim-bachata-stefanos-v2-c3d',
     path: 'animations/dances/anim_bachata_stefanos_v2_c3d.glb',
     label: `Bachata Stefanos v2 C3D (3711f / 123.7s, 1373KB)`,
-    tags: ['dance', 'bachata'],
+    tags: ['dance', 'bachata', 'dance-from-npz'],
     duration: 123.7,
   },
   {
     id: 'anim-bachata-vaso-01',
     path: 'animations/dances/anim_bachata_vaso_01.glb',
     label: `Bachata Vaso 01 (4008f / 133.6s, 1478KB)`,
-    tags: ['dance', 'dance-wide', 'bachata'],
+    tags: ['dance', 'dance-wide', 'bachata', 'dance-from-npz'],
     duration: 133.6,
   },
   {
