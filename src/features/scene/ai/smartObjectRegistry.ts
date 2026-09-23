@@ -20,7 +20,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [0, 0, -50],
         animationsRandom: 'seated_front',
-        duration: 15.0,
       },
       {
         slotId: 'seat-right',
@@ -28,7 +27,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [0, 0, 50],
         animationsRandom: 'seated_front',
-        duration: 15.0,
       },
       {
         slotId: 'lie-down-left',
@@ -36,7 +34,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [-35, 45, 0],
         animationsRandom: 'laying_pack',
-        duration: 45.0,
       },
       {
         slotId: 'lie-down-right',
@@ -44,7 +41,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [35, 45, 0],
         animationsRandom: 'laying_pack',
-        duration: 45.0,
       }
     ]
   },
@@ -79,7 +75,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [74, 45, 150],
         animationsRandom: 'laying_front',
         rotY: -Math.PI,
-        duration: 45.0,
       }
     ]
   },
@@ -113,8 +108,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Dormir couché',
         offset: [270, 45, 190],
         animationsRandom: 'laying_front',
-        rotY: -Math.PI,
-        duration: 45.0,
+        rotY: Math.PI,
       }
     ]
   },
@@ -133,7 +127,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [0, 0, 30],
         rotY: Math.PI,
         animationsRandom: 'seated_front',
-        duration: 10.0,
       }
     ]
   },
@@ -150,7 +143,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [0, 0, 0],
         rotY: 0,
         animationsRandom: 'seated_front',
-        duration: 40.0,
       },
       {
         slotId: 'sit-cuddle',
@@ -160,7 +152,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [0, 0, 0],
         rotY: 0,
-        duration: 12.0,
+        duration: 12.0, // TODO:
       }
     ]
   },
@@ -176,7 +168,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [0, 0, -36],
         animation: 'texting',
-        duration: 23.6,
       }
     ]
   },
@@ -219,7 +210,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [116, 0, 530],
         rotY: Math.PI,
         animation: 'inspect_mid_height',
-        duration: 5.0,
       },
       {
         slotId: 'brush-teeth',
@@ -227,7 +217,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [116, 0, 530],
         rotY: Math.PI,
         animation: 'take_object_mid',
-        duration: 5.0,
       },
       {
         slotId: 'shave-makeup',
@@ -235,7 +224,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [116, 0, 530],
         rotY: Math.PI,
         animation: 'inspect_mid_height',
-        duration: 5.0,
       }
     ]
   },
@@ -249,26 +237,24 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'take-shower-1',
         name: 'Prendre une douche (Centre)',
-        offset: [25, 15, 645],
+        offset: [30, 15, 645],
         rotY: 0,
         animation: 'animations/poses_idles/miley_armature_posing_f.glb',
         duration: 25.0,
       },
       {
         slotId: 'take-shower-2',
-        name: 'Prendre une douche (Gauche)',
-        offset: [8, 15, 665],
+        name: 'Prendre une douche (Droite)',
+        offset: [8, 15, 635],
         rotY: Math.PI / 2,
         animation: 'animations/poses_idles/miley_armature_posing_f.glb',
-        duration: 25.0,
       },
       {
         slotId: 'take-shower-3',
-        name: 'Prendre une douche (Droite)',
-        offset: [42, 15, 665],
+        name: 'Prendre une douche (Gauche)',
+        offset: [42, 15, 660],
         rotY: -Math.PI / 2,
         animation: 'animations/poses_idles/miley_armature_posing_f.glb',
-        duration: 25.0,
       }
     ]
   },
@@ -285,7 +271,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [0, 0, -35], // 35 cm devant le placard dans la SDB
         rotY: 0,
         animation: 'take_object_mid',
-        duration: 3.5,
       }
     ]
   },
@@ -302,7 +287,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [30, 0, 535],
         rotY: Math.PI + Math.PI / 8,
         animation: 'take_object_mid',
-        duration: 3.5,
       }
     ]
   },
@@ -318,7 +302,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [169, 0, 535],
         rotY: Math.PI,
         animation: 'inspect_mid_height',
-        duration: 3.5,
       }
     ]
   },
@@ -367,17 +350,15 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'seat-1',
         name: 'Place assise 1',
         offset: [270, 0, -80],
-        rotY: Math.PI,
-        animationsRandom: 'seated_side',
-        duration: 15.0,
+        rotY: - Math.PI / 2,
+        animationsRandom: 'seated_front',
       },
       {
         slotId: 'seat-2',
         name: 'Place assise 2',
         offset: [270, 0, -140],
-        rotY: Math.PI,
-        animationsRandom: 'seated_side',
-        duration: 15.0,
+        rotY: - Math.PI / 2,
+        animationsRandom: 'seated_front',
       }
     ]
   },
@@ -393,7 +374,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [100, 0, -60],
         rotY: Math.PI / 2,
         animationsRandom: 'seated_front',
-        duration: 15.0,
       },
       {
         slotId: 'seat-2',
@@ -401,7 +381,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [100, 0, -100],
         rotY: Math.PI / 2,
         animationsRandom: 'seated_front',
-        duration: 15.0,
       }
     ]
   },
@@ -441,7 +420,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [250, 0, 320],
         rotY: Math.PI / 2,
         animation: 'animations/locomotion/anim_entering_code.glb',
-        duration: 2.5,
       }
     ]
   },
@@ -460,7 +438,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [240, 0, 38],
         rotY: Math.PI / 2,
         animation: 'animations/poses_idles/anim_texting_while_standing.glb',
-        duration: 5.0,
       }
     ]
   },
@@ -476,7 +453,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [220, 0, 435],
         rotY: -Math.PI / 2,
         animation: 'animations/locomotion/anim_entering_code.glb',
-        duration: 2.5,
       }
     ]
   },
@@ -492,7 +468,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [160, 0, 340],
         rotY: 0,
         animation: 'animations/poses_idles/miley_armature_change_pose.glb',
-        duration: 45.0,
       }
     ]
   },
@@ -517,6 +492,20 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       }
     ]
   },
+  'building-b-corridor-end': {
+    id: 'building-b-corridor-end',
+    name: 'Gardien Fond Bâtiment B (Couloir)',
+    category: 'outdoor',
+    position: [650, 0, 400],
+    slots: [
+      {
+        slotId: 'watchdog',
+        name: 'Gardien',
+        rotY: Math.PI / 2,
+        animationsRandom: 'all_dances',
+      },
+    ]
+  },
   'building-b-corridor': {
     id: 'building-b-corridor',
     name: 'Entrée Bâtiment B (Couloir)',
@@ -529,7 +518,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [-350, 0, 1010],
         rotY: Math.PI / 2,
         animationsRandom: 'all_dances',
-        duration: 5.0,
       },
       {
         slotId: 'visit',
@@ -537,7 +525,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [-350, 0, 1000],
         rotY: Math.PI / 2,
         animation: 'animations/poses_idles/anim_texting_while_standing.glb',
-        duration: 6.0,
       }
     ]
   },
@@ -550,10 +537,9 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'laundromat',
         name: 'Aller au lavomatique',
-        offset: [-350, 0, -200],
+        offset: [-300, 0, -200],
         rotY: Math.PI / 2,
         animationsRandom: 'all_dances',
-        duration: 6.0,
       },
       {
         slotId: 'admire',
@@ -561,8 +547,151 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [-300, 0, -200],
         rotY: Math.PI / 2,
         animationsRandom: 'all_dances',
-        duration: 6.0,
       }
+    ]
+  },
+  'west-neighbor-flat': {
+    id: 'west-neighbor-flat',
+    name: 'Studio voisin Ouest (Églantine)',
+    category: 'outdoor',
+    position: [-200, 0, 500],
+    slots: [
+      {
+        slotId: 'yoga',
+        name: 'Yoga',
+        offset: [-160, 0, 500],
+        animationsRandom: 'yoga',
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'yoga-3',
+        name: 'Yoga Terasse (Églantine)',
+        offset: [-160, 0, 100],
+        animationsRandom: 'yoga',
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'yoga-2',
+        name: 'Yoga 2',
+        offset: [-160, 0, 300],
+        animationsRandom: 'yoga',
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'yoga-4',
+        name: 'Yoga Ouest',
+        offset: [-300, 0, 500],
+        animationsRandom: 'yoga',
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'yoga-5',
+        name: 'Yoga Terasse (Églantine)',
+        offset: [-300, 0, 100],
+        animationsRandom: 'yoga',
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'yoga-6',
+        name: 'Yoga 2',
+        offset: [-300, 0, 300],
+        animationsRandom: 'yoga',
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'yoga-7',
+        name: 'Yoga 7',
+        offset: [-200, 0, 700],
+        animationsRandom: 'yoga',
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'yoga-8',
+        name: 'Yoga 8',
+        offset: [-300, 0, 700],
+        animationsRandom: 'yoga',
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+    ]
+  },
+  'est-neighbor-flat': {
+    id: 'est-neighbor-flat',
+    name: 'Studio voisin Est (Damien)',
+    category: 'outdoor',
+    position: [500, 0, 100],
+    slots: [
+      {
+        slotId: 'salsa-samba',
+        name: 'Salsa Samba',
+        offset: [500, 0, 100],
+        animationsRandom: ['salsa', 'samba'],
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'bachata-2',
+        name: 'Bachata 2',
+        offset: [500, 0, -300],
+        animationsRandom: ['bachata'],
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'combat-3',
+        name: 'Combat 3',
+        offset: [500, 0, -100],
+        animationsRandom: 'combat',
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'locomotion-4',
+        name: 'Locomotion 4',
+        offset: [400, 0, 100],
+        animationsRandom: 'locomotion',
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'interactions-5',
+        name: 'Interactions 5',
+        offset: [400, 0, -300],
+        animationsRandom: 'interactions',
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'poses-6',
+        name: 'Poses 6',
+        offset: [400, 0, -100],
+        animationsRandom: 'poses_idle',
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'hip-hop-breakdance',
+        name: 'Hip-hop Breakdance',
+        offset: [500, 0, 300],
+        animationsRandom: ['hip-hop', 'breakdance'],
+        repeatCount: 6,
+        repeatVariation: true,
+      },
+      {
+        slotId: 'hip-hop-breakdance',
+        name: 'Hip-hop Breakdance',
+        offset: [400, 0, 300],
+        animationsRandom: ['hip-hop', 'breakdance'],
+        repeatCount: 6,
+        repeatVariation: true,
+      },
     ]
   },
   'rain-dance': {
@@ -594,7 +723,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [-150, 0, -300],
         rotY: 0,
         animation: 'animations/poses_idles/anim_female_standing_pose.glb',
-        duration: 8.0,
       },
       {
         slotId: 'roleB',
@@ -602,7 +730,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [-200, 0, -300],
         rotY: 0,
         animation: 'animations/poses_idles/anim_female_standing_pose_1.glb',
-        duration: 8.0,
       }
     ]
   },
@@ -619,8 +746,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danse devant Lit Ouest (Nord)',
         offset: [140, 0, 80],
         rotY: Math.PI / 2,
-        animationsRandom: 'all_dances',
-        duration: 15.0,
+        animationsRandom: 'dance_tight',
       }
     ]
   },
@@ -635,8 +761,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danse devant Lit Ouest (Milieu)',
         offset: [140, 0, 150],
         rotY: Math.PI / 2,
-        animationsRandom: 'all_dances',
-        duration: 15.0,
+        animationsRandom: 'dance_tight',
       }
     ]
   },
@@ -651,8 +776,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danse devant Lit Ouest (Sud)',
         offset: [140, 0, 220],
         rotY: Math.PI / 2,
-        animationsRandom: 'all_dances',
-        duration: 15.0,
+        animationsRandom: 'dance_tight',
       }
     ]
   },
@@ -667,8 +791,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danse devant Lit Est (Nord)',
         offset: [195, 0, 120],
         rotY: -Math.PI / 2,
-        animationsRandom: 'all_dances',
-        duration: 15.0,
+        animationsRandom: 'dance_tight',
       }
     ]
   },
@@ -683,8 +806,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danse devant Lit Est (Milieu)',
         offset: [195, 0, 190],
         rotY: -Math.PI / 2,
-        animationsRandom: 'all_dances',
-        duration: 15.0,
+        animationsRandom: 'dance_tight',
       }
     ]
   },
@@ -699,7 +821,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danse devant Lit Est (Sud)',
         offset: [195, 0, 260],
         rotY: -Math.PI / 2,
-        animationsRandom: 'all_dances',
+        animationsRandom: 'dance_tight',
         repeatCount: 4,
         repeatVariation: false,
       }
@@ -714,9 +836,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'dance',
         name: 'Danse devant Chaise Bureau',
-        offset: [135, 0, 280],
         rotY: Math.PI / 2,
-        animationsRandom: 'all_dances',
+        animationsRandom: 'dance_tight',
         repeatCount: 4,
         repeatVariation: true,
       }
@@ -731,45 +852,43 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'dance',
         name: 'Danse devant Miroir Sud',
-        offset: [160, 0, 310],
         rotY: 0,
-        animationsRandom: 'all_dances',
-        duration: 15.0,
+        animationsRandom: 'dance_tight',
       }
     ]
   },
-  'dance-glass-door-right': {
-    id: 'dance-glass-door-right',
-    name: 'Danse (Devant Porte-fenêtre Droite)',
-    category: 'dance',
-    position: [215, 0, 50],
-    slots: [
-      {
-        slotId: 'dance',
-        name: 'Danse devant Porte-fenêtre Droite',
-        offset: [215, 0, 50],
-        rotY: Math.PI,
-        animationsRandom: 'all_dances',
-        duration: 15.0,
-      }
-    ]
-  },
-  'dance-bathroom': {
-    id: 'dance-bathroom',
-    name: 'Danse (Salle de Bain)',
-    category: 'dance',
-    position: [100, 0, 530],
-    slots: [
-      {
-        slotId: 'dance',
-        name: 'Danse dans la Salle de Bain',
-        offset: [100, 0, 530],
-        rotY: Math.PI,
-        animationsRandom: 'all_dances',
-        duration: 15.0,
-      }
-    ]
-  }
+  // 'dance-glass-door-right': {
+  //   id: 'dance-glass-door-right',
+  //   name: 'Danse (Devant Porte-fenêtre Droite)',
+  //   category: 'dance',
+  //   position: [215, 0, 50],
+  //   slots: [
+  //     {
+  //       slotId: 'dance',
+  //       name: 'Danse devant Porte-fenêtre Droite',
+  //       offset: [215, 0, 50],
+  //       rotY: Math.PI,
+  //       animationsRandom: 'dance_tight',
+  //       duration: 15.0,
+  //     }
+  //   ]
+  // },
+  // 'dance-bathroom': {
+  //   id: 'dance-bathroom',
+  //   name: 'Danse (Salle de Bain)',
+  //   category: 'dance',
+  //   position: [100, 0, 530],
+  //   slots: [
+  //     {
+  //       slotId: 'dance',
+  //       name: 'Danse dans la Salle de Bain',
+  //       offset: [100, 0, 530],
+  //       rotY: Math.PI,
+  //       animationsRandom: 'dance_tight',
+  //       duration: 15.0,
+  //     }
+  //   ]
+  // }
 };
 
 /**

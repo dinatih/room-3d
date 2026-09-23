@@ -308,4 +308,3 @@ WIGS_ITEMS.forEach(wig => {
 import { Blaskata50569513 } from '@features/scene/items/Blaskata50569513';
 
 SCENE_REGISTRY['blaskata50569513'] = Blaskata50569513 as any;
-SCENE_REGISTRY['nitro-inyeong'] = SCENE_REGISTRY['inyeong'];

@@ -10,7 +10,7 @@ import { ChestBench } from '../items/ChestBench';
 import { PottedPalm } from '../items/PottedPalm';
 import { PottedYucca } from '../items/PottedYucca';
 import { BirdFeeder } from '../items/BirdFeeder';
-import { Rebound } from '../items/Rebound';
+// import { Rebound } from '../items/Rebound';
 import { Vatterso20562909 } from '../items/Vatterso20562909';
 import { RobinBird } from '../items/RobinBird';
 import { ShibaInu } from '../items/ShibaInu';
@@ -59,14 +59,7 @@ export function GardenFurniture() {
 
 // Pass 2 — Furnishings (Habillage & confort fonctionnel)
 export function GardenFurnishings() {
-  return (
-    <MergedStaticGroup name="merged-garden-furnishings">
-      {/* Rebounder */}
-      <group position={[210, -3.48, -200]} rotation={[0, -Math.PI / 5, 0]} userData={{ animUnit: true, itemName: 'Rebound Jardin' }}>
-        <Rebound item={{} as any} actionState={{}} onSize={() => {}} />
-      </group>
-    </MergedStaticGroup>
-  );
+  return null;
 }
 
 // Pass 3 — Decor (Détails & habillage de surface)

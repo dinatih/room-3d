@@ -374,7 +374,7 @@ export function useAgentController(
         deployment.hasCompleted = true;
         appLog(_characterId, `🎯 Déploiement terminé (Atterrissage réussi)`);
       }
-      stateRef.current.animation = 'anim_crouch_to_stand';
+      stateRef.current.animation = 'anim_pistol_kneel_to_stand';
       return stateRef.current;
     }
 

@@ -6,7 +6,7 @@ import { Waypoint } from './aiTypes';
  * Les meubles et interactions spécifiques sont gérés via SMART_OBJECTS (smartObjectRegistry.ts).
  */
 export const WAYPOINTS: Record<string, Waypoint> = {
-  'living-corridor-door':   { id: 'living-corridor-door',   name: 'Séjour (Devant Porte)',       x: 230, z: 350 },
+  'living-corridor-door':   { id: 'living-corridor-door',   name: 'Séjour (Devant Porte)',       x: 210, z: 350 },
   'corridor-entry-door':    { id: 'corridor-entry-door',    name: 'Couloir (Devant Entrée)',     x: 255, z: 510 },
   'outdoor-entry-door':     { id: 'outdoor-entry-door',     name: 'Extérieur (Devant Porte)',    x: 288, z: 603 },
   'corridor-bathroom-door': { id: 'corridor-bathroom-door', name: 'Couloir (Devant Porte SDB)',  x: 235, z: 560 },
@@ -21,8 +21,3 @@ export const WAYPOINTS: Record<string, Waypoint> = {
   'corridor-center':        { id: 'corridor-center',        name: 'Centre Couloir',              x: 240, z: 480 },
   'outdoor-neighbor-door':  { id: 'outdoor-neighbor-door',  name: 'Devant Porte Voisin',         x: -58, z: 802 },
 };
-
-
-
-
-

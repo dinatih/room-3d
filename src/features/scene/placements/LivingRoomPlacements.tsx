@@ -571,7 +571,7 @@ export function LivingRoomFurnishings() {
       </group>
 
       {/* Boîte Drona au sol mur Ouest */}
-      <group position={[16.5, DF / 2 + 0.2, 268]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte Drona Sol Ouest' }}>
+      <group position={[22, DF / 2 + 0.2, 272]} rotation={[0, Math.PI / 2, 0]} userData={{ animUnit: true, itemName: 'Boîte Drona Sol Ouest' }}>
         <DroneCell />
       </group>
 

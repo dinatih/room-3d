@@ -310,52 +310,46 @@ sortedCharacters.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
     const photos = char.path.includes('xbot')
       ? ['characters/xbot/Xbot_official_3d_preview.png']
-      : (char.id === 'inyeong'
-        ? ['characters/inyeong/nitro_anim_inyeong_3d_preview.png']
-        : (char.id === 'hayley'
-          ? ['characters/hayley/hayley_3d_preview.png']
-          : (char.id === 'gloria'
-            ? ['characters/gloria/gloria_3d_preview.png']
-            : (char.id === 'zoe'
-              ? ['characters/zoe/zoe_3d_preview.png']
-              : (char.id === 'sophia'
-                ? ['characters/sophia/sophia_3d_preview.png']
-                : (!char.isLara ? [char.path.replace(/\.glb$/, '_3d_preview.png')] : undefined))))));
+      : (char.id === 'hayley'
+        ? ['characters/hayley/hayley_3d_preview.png']
+        : (char.id === 'gloria'
+          ? ['characters/gloria/gloria_3d_preview.png']
+          : (char.id === 'zoe'
+            ? ['characters/zoe/zoe_3d_preview.png']
+            : (char.id === 'sophia'
+              ? ['characters/sophia/sophia_3d_preview.png']
+              : (!char.isLara ? [char.path.replace(/\.glb$/, '_3d_preview.png')] : undefined)))));
     INVENTORY.push({
       id: char.id,
       name: char.name,
       brand: char.id === 'xbot' || char.id === 'xbot_studio'
         ? 'Mixamo'
-        : (char.id === 'inyeong'
-          ? 'Nitro'
-          : (char.id === 'hayley'
-            ? 'Inyeong'
-            : (char.id === 'gloria'
-              ? 'NPC002'
-              : (char.id === 'zoe'
-                ? 'Reallusion'
-                : (char.id === 'sophia'
-                  ? 'Sophia Doll'
-                  : (char.id === 'skeleton'
-                    ? 'Anatomy'
-                    : (char.id === 'curious_skeleton'
-                      ? 'Skeleton'
-                      : (char.id === 'valby'
-                        ? 'The First Descendant'
-                        : (!char.isLara ? 'Mixamo' : 'Lara Croft Style'))))))))),
+        : (char.id === 'hayley'
+          ? 'Inyeong'
+          : (char.id === 'gloria'
+            ? 'NPC002'
+            : (char.id === 'zoe'
+              ? 'Reallusion'
+              : (char.id === 'sophia'
+                ? 'Sophia Doll'
+                : (char.id === 'skeleton'
+                  ? 'Anatomy'
+                  : (char.id === 'curious_skeleton'
+                    ? 'Skeleton'
+                    : (char.id === 'valby'
+                      ? 'The First Descendant'
+                      : (!char.isLara ? 'Mixamo' : 'Lara Croft Style')))))))),
       category: 'walkers',
       qty: 1,
       dims: {
-        w: char.id === 'inyeong' ? 57 : (!char.isLara ? 50 : 45),
-        d: char.id === 'inyeong' ? 78 : (!char.isLara ? 30 : 25),
+        w: !char.isLara ? 50 : 45,
+        d: !char.isLara ? 30 : 25,
         h: char.height
       },
       glbPath: char.path,
       ...(photos ? { photos } : {}),
-      notes: char.id === 'inyeong'
-        ? 'Personnage animé : Inyeong en combinaison de vol Nitro avec casque et visière.'
-        : (char.id === 'hayley'
-          ? 'Personnage animé : Hayley (Inyeong) en tenue stylée avec chapeau, lunettes et bottes.'
+      notes: char.id === 'hayley'
+        ? 'Personnage animé : Hayley (Inyeong) en tenue stylée avec chapeau, lunettes et bottes.'
           : (char.id === 'gloria'
             ? 'Personnage animé : Gloria aux cheveux roux avec gants et tenue stylée.'
             : (char.id === 'zoe'
@@ -370,7 +364,7 @@ sortedCharacters.forEach(char => {
                       ? 'Personnage animé : Valby en combinaison nano body suit avec casque et physique de buste dynamique.'
                       : (!char.isLara
                         ? `Personnage animé standard Mixamo : ${char.name}.`
-                        : `Personnage : ${char.name}.`))))))))
+                        : `Personnage : ${char.name}.`)))))))
     });
   }
 });

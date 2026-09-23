@@ -39,7 +39,9 @@ export const AUTONOMOUS_SMART_OBJECTS: string[] = [
   'duo-zone',
   'garden-fresh-air',
   'building-b-corridor',
-  'building-b-garden'
+  'building-b-garden',
+  'est-neighbor-flat',
+  'west-neighbor-flat'
 ];
 
 /**
@@ -121,7 +123,7 @@ export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
   { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, animation: 'animations/interactions/anim_open_door_outwards.glb', duration: 0.8 },
   { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
   { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.5 },
-  { type: 'MOVE_TO', smartObjectId: 'building-b-corridor', slotId: 'visit' },
+  { type: 'MOVE_TO', smartObjectId: 'building-b-corridor-end', slotId: 'visit' },
   { type: 'WAIT', duration: 90.0, animation: 'animations/poses_idles/anim_texting_while_standing.glb' }
 ];
 
@@ -133,34 +135,27 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
   delphina: 'shower',
   sara:     'building-b-garden',
   cha:      'cuisine-group',
-  vivida:   'desk-bollsidan-1',
-  sabira:   'rain-dance',
-  safa:     'garden-fresh-air',
-  romana:   'bed-west',
-  angelina: 'bathtub-garden',
-  lgbta:    'sofa-garden-west',
+  vivida:   'west-neighbor-flat',
+  sabira:   'west-neighbor-flat',
+  safa:     'west-neighbor-flat',
+  romana:   'west-neighbor-flat',
+  angelina: 'west-neighbor-flat',
+  lgbta:    'west-neighbor-flat',
   sandra:   'duo-zone',
   rajaa:    'duo-zone',
-  inyeong:  'chair-office',
   hayley:   'kallax-ne',
   gloria:   'sofa-garden-east',
-  zoe:      'mirror-south',
+  zoe:      'west-neighbor-flat',
   sophia:   'building-b-corridor',
   valby:    'bathtub-garden',
-  alex:     'building-b-corridor',
-  david:    'dance-bed-east-north',
-  mannequin:'dance-mirror-south',
-  lola:     'dance-glass-door-right',
+  alex:     'est-neighbor-flat',
+  david:    'est-neighbor-flat',
+  james:    'est-neighbor-flat',
+  lewis:    'est-neighbor-flat',
+  mannequin:'est-neighbor-flat',
   jennifer: 'dance-bed-west-mid',
-  arissa:   'dance-bed-east-mid',
-  astra:    'building-b-garden',
-  dummy:    'dance-chair-office',
-  jody:     'dance-bed-west-north',
-  megan:    'dance-bed-west-south',
-  olivia:   'sofa-garden-west',
-  sophie:   'corridor-closet',
-  skeleton: 'sdb-closet',
-  curious_skeleton: 'rain-dance',
+  skeleton: 'est-neighbor-flat',
+  curious_skeleton: 'est-neighbor-flat',
 };
 
 /**
