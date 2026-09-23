@@ -199,9 +199,7 @@ class DuoSessionManager {
       ];
     };
 
-    const dist = def.dist ?? (def.offsetB ? 0 : 50);
-
-    const localA: [number, number, number] = def.offsetA ?? (def.offsetB ? [0, 0, 0] : [dist, 0, 0]);
+    const localA: [number, number, number] = [0, 0, 0];
     const localB: [number, number, number] = def.offsetB ?? [0, 0, 0];
 
     const posA = transformLocalToWorld(localA);
@@ -432,7 +430,7 @@ class DuoSessionManager {
       const [lx, ly, lz] = localOffset;
       return [bx + lx * cos + lz * sin, by + ly, bz - lx * sin + lz * cos];
     };
-    const localA: [number, number, number] = def.offsetA ?? [0, 0, 0];
+    const localA: [number, number, number] = [0, 0, 0];
     const localB: [number, number, number] = def.offsetB ?? [0, 0, 0];
     const posA = transformLocalToWorld(localA);
     const posB = transformLocalToWorld(localB);
