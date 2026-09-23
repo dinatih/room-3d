@@ -793,7 +793,16 @@ export function SingleCharacter({
         const partB = duoSessionManager.getParticipantB();
         if (partA?.characterId === id || partB?.characterId === id) {
           const currentAnimState = duoSessionManager.getCurrentAnimState();
-          if (currentAnimState && activeActionName.current && (currentAnimState.clipA === activeActionName.current || currentAnimState.clipB === activeActionName.current)) {
+          if (
+            currentAnimState &&
+            activeActionName.current &&
+            (
+              currentAnimState.clipA === activeActionName.current ||
+              currentAnimState.clipB === activeActionName.current ||
+              resolveAnimationId(currentAnimState.clipA) === activeActionName.current ||
+              resolveAnimationId(currentAnimState.clipB) === activeActionName.current
+            )
+          ) {
             const act = actions[activeActionName.current];
             if (act) {
               const clipDur = act.getClip().duration;

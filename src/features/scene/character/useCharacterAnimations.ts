@@ -9,9 +9,29 @@ const silentManager = new THREE.LoadingManager();
 
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
-const MAX_DYNAMIC_GLTF_CACHE = 256;
-const MAX_RETARGETED_CLIPS = 1024;
+const MAX_DYNAMIC_GLTF_CACHE = 64;
+const MAX_RETARGETED_CLIPS = 256;
 const globalGLTFCache = new Map<string, Promise<any>>();
+
+function disposeGltfResources(gltf: any) {
+  if (!gltf?.scene) return;
+  gltf.scene.traverse((child: any) => {
+    if (child.isMesh) {
+      child.geometry?.dispose();
+      if (Array.isArray(child.material)) {
+        child.material.forEach((m: any) => {
+          m?.map?.dispose?.();
+          m?.normalMap?.dispose?.();
+          m?.dispose?.();
+        });
+      } else if (child.material) {
+        child.material.map?.dispose?.();
+        child.material.normalMap?.dispose?.();
+        child.material.dispose?.();
+      }
+    }
+  });
+}
 
 export function cacheDynamicGLTF(path: string): Promise<any> {
   const cached = globalGLTFCache.get(path);
@@ -31,20 +51,32 @@ export function cacheDynamicGLTF(path: string): Promise<any> {
   });
   globalGLTFCache.set(path, pending);
   while (globalGLTFCache.size > MAX_DYNAMIC_GLTF_CACHE) {
-    globalGLTFCache.delete(globalGLTFCache.keys().next().value!);
+    const oldestKey = globalGLTFCache.keys().next().value;
+    if (oldestKey) {
+      const oldPromise = globalGLTFCache.get(oldestKey);
+      globalGLTFCache.delete(oldestKey);
+      if (oldPromise) {
+        oldPromise.then(disposeGltfResources).catch(() => {});
+      }
+    }
   }
   return pending;
 }
 
 export function cacheRetargetedClip(key: string, clip: THREE.AnimationClip) {
   if (!_retargetCache[key] && Object.keys(_retargetCache).length >= MAX_RETARGETED_CLIPS) {
-    delete _retargetCache[Object.keys(_retargetCache)[0]];
+    const oldestKey = Object.keys(_retargetCache)[0];
+    if (oldestKey) {
+      _retargetCache[oldestKey]?.tracks?.forEach(t => (t as any).dispose?.());
+      delete _retargetCache[oldestKey];
+    }
   }
   _retargetCache[key] = clip;
 }
 
 export function clearRetargetCache() {
   for (const key of Object.keys(_retargetCache)) {
+    _retargetCache[key]?.tracks?.forEach(t => (t as any).dispose?.());
     delete _retargetCache[key];
   }
 }
@@ -53,6 +85,7 @@ export function clearCharacterRetargetCache(characterId: string) {
   const prefix = characterId + '_';
   for (const key of Object.keys(_retargetCache)) {
     if (key.startsWith(prefix)) {
+      _retargetCache[key]?.tracks?.forEach(t => (t as any).dispose?.());
       delete _retargetCache[key];
     }
   }
