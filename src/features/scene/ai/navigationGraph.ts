@@ -290,8 +290,8 @@ const ADJACENCY: Record<RoomId, RoomId[]> = {
   garden: ['living', 'west_neighbor', 'east_neighbor', 'outdoor_garden'],
   west_neighbor: ['garden', 'outdoor_garden'],
   east_neighbor: ['garden', 'outdoor_garden'],
-  outdoor_corridor: ['corridor'],
-  outdoor_garden: ['garden', 'west_neighbor', 'east_neighbor']
+  outdoor_corridor: ['corridor', 'outdoor_garden'],
+  outdoor_garden: ['garden', 'west_neighbor', 'east_neighbor', 'outdoor_corridor']
 };
 
 
