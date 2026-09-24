@@ -275,24 +275,17 @@ export function computeDoorDynamics(
     const contactBack = alpha + beta;
 
     // A. Blocage et refoulement dynamique de la porte :
+    // Un obstacle cylindrique occupe l'intervalle angulaire [contactFront, contactBack].
+    // 1. Si la porte est déjà ouverte au-delà de l'obstacle (currentAngle > contactBack - 0.02),
+    //    le battant a déjà franchi l'obstacle : l'obstacle est sur le côté fermé et n'aspire
+    //    JAMAIS la porte ouverte en arrière (supprime l'aspiration au chambranle et à la baie vitrée).
+    // 2. Si la porte est en deçà (currentAngle < contactFront) ou actuellement en pénétration
+    //    avec l'obstacle (contactFront <= currentAngle <= contactBack) :
+    //    l'obstacle contraint le débattement maximal à contactFront (effet repoussoir au congélateur).
     if (contactFront <= furnitureMaxAngle && contactBack >= 0) {
-      // Zone de passage du chambranle (alpha < 0.80 rad / ~46°) vs zone ouverte / meuble (alpha >= 0.80 rad, ex: congélateur CHiQ)
-      const isDoorwayPassage = alpha < 0.80;
-
-      if (!isDoorwayPassage) {
-        // Dans la zone ouverte (devant le congélateur / Kallax SE) :
-        // Le corps du PNJ repousse le battant (effet repoussoir) pour éviter que la porte ne le traverse !
+      if (currentAngle <= contactBack - 0.02) {
         if (contactFront < minAllowed) {
           minAllowed = contactFront;
-        }
-      } else {
-        // Dans le passage du chambranle :
-        // Ne bloque l'ouverture que si la porte s'ouvre vers le PNJ (currentAngle < contactFront - 0.05).
-        // Si la porte est déjà ouverte au-delà, le PNJ qui traverse n'aspire JAMAIS le battant vers lui.
-        if (currentAngle < contactFront - 0.05) {
-          if (contactFront < minAllowed) {
-            minAllowed = contactFront;
-          }
         }
       }
     }
@@ -303,7 +296,7 @@ export function computeDoorDynamics(
       const angleDiff = alpha - currentAngle;
       // Le PNJ est au contact du battant et pousse vers l'ouverture
       if (angleDiff > -beta && angleDiff < beta + 0.3) {
-        const pushAngle = Math.min(minAllowed, Math.max(0, contactBack));
+        const pushAngle = Math.min(furnitureMaxAngle, Math.max(0, contactBack));
         if (pushAngle > maxPush) {
           maxPush = pushAngle;
         }
