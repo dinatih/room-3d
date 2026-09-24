@@ -18,7 +18,7 @@
  *   Flèches    — déplacement walk / pan et rotation orbit
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, OrthographicCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -40,6 +40,9 @@ import {
   useCameraShortcuts,
   useCameraFrameUpdate,
 } from './camera';
+
+const FPV_DEFAULT_FOV = 85;
+const FPV_DEFAULT_PITCH = -0.22; // ~ -12.6° sous l'horizon pour bien cadrer le torse et les bras des PNJ
 
 const _tmpEyeTargetVec = new THREE.Vector3();
 const _tmpEyeLookVec = new THREE.Vector3();
@@ -93,6 +96,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const savedPerspPos = useRef(new THREE.Vector3(...PERSP_POS));
   const savedPerspTarget = useRef(new THREE.Vector3(...PERSP_TARGET));
   const savedFov = useRef(50);
+  const prevIsXR = useRef(cameraState.isXR);
   const minimapThrottle = useRef(0);
   const topFollowRef = useRef(false);
   const savedMirrorsRef = useRef(false);
@@ -352,7 +356,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         ctrlRef.current.update();
       }
     } else {
-      walkPitch.current = 0;
+      walkPitch.current = FPV_DEFAULT_PITCH;
     }
 
     const ctrl = ctrlRef.current;
@@ -363,7 +367,20 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
 
     const cam = camera as THREE.PerspectiveCamera;
-    if (cam.isPerspectiveCamera) savedFov.current = cam.fov;
+    if (cam.isPerspectiveCamera) {
+      if (walkMode === 'fpv') {
+        if (modeRef.current !== 'fpv') {
+          savedFov.current = cam.fov;
+        }
+        if (!cameraState.isXR) {
+          cam.fov = FPV_DEFAULT_FOV;
+          cam.updateProjectionMatrix();
+        }
+      } else {
+        cam.fov = savedFov.current;
+        cam.updateProjectionMatrix();
+      }
+    }
 
     hasInitialStabilizedPos.current = false;
     changeMode(walkMode);
@@ -452,6 +469,23 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       requestAnimationFrame(() => updateWalkLook());
     }
   }, [mode, camera, updateWalkLook]);
+
+  // Synchronisation du FOV lors de l'entrée/sortie du mode VR / Immersif
+  useFrame(() => {
+    if (prevIsXR.current !== cameraState.isXR) {
+      prevIsXR.current = cameraState.isXR;
+      const cam = camera as THREE.PerspectiveCamera;
+      if (cam.isPerspectiveCamera) {
+        if (cameraState.isXR) {
+          cam.fov = savedFov.current;
+        } else if (modeRef.current === 'fpv') {
+          cam.fov = FPV_DEFAULT_FOV;
+        }
+        cam.updateProjectionMatrix();
+        invalidate();
+      }
+    }
+  });
 
   // Événements pointeur (souris, touch, molette)
   useCameraPointerEvents({

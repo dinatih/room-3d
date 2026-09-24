@@ -97,8 +97,8 @@ export function useCameraPointerEvents({
             updateWalkLook();
           } else {
             const cam = camera as THREE.PerspectiveCamera;
-            if (cam.isPerspectiveCamera) {
-              cam.fov = Math.max(30, Math.min(110, cam.fov - delta * 0.08));
+            if (cam.isPerspectiveCamera && !cameraState.isXR) {
+              cam.fov = Math.max(30, Math.min(120, cam.fov - delta * 0.08));
               cam.updateProjectionMatrix();
             }
           }
@@ -150,9 +150,9 @@ export function useCameraPointerEvents({
         updateWalkLook();
       } else {
         const cam = camera as THREE.PerspectiveCamera;
-        if (!cam.isPerspectiveCamera) return;
+        if (!cam.isPerspectiveCamera || cameraState.isXR) return;
         const step = e.deltaY > 0 ? 2 : -2;
-        cam.fov = Math.max(30, Math.min(110, cam.fov + step));
+        cam.fov = Math.max(30, Math.min(120, cam.fov + step));
         cam.updateProjectionMatrix();
       }
       invalidate();
