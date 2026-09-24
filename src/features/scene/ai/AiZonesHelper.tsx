@@ -151,26 +151,6 @@ export function AiZonesHelper() {
     return map;
   }, []);
 
-  const smartObjectSprites = useMemo(() => {
-    const map: Record<string, THREE.Sprite> = {};
-    Object.values(SMART_OBJECTS).forEach(obj => {
-      const color = CATEGORY_COLORS[obj.category] || '#00ff88';
-      const lines = obj.slots.map(s => {
-        const isOccupied = OccupancyManager.isSlotOccupied(obj.id, s.slotId);
-        const occupant = OccupancyManager.getOccupant(obj.id, s.slotId);
-        const status = isOccupied ? `[Occupé: ${occupant ?? 'PNJ'}]` : '[Libre]';
-        const animName = s.animation
-          ? s.animation.split('/').pop()?.replace('.glb', '')
-          : s.animationsRandom
-          ? `pack:${s.animationsRandom}`
-          : 'anim';
-        return `• ${s.name} ${status} 🎬 ${animName}`;
-      });
-      map[obj.id] = makeLabelSprite(`✨ ${obj.name}`, lines, color, 4.8);
-    });
-    return map;
-  }, [toggleVersion]);
-
   // Géométrie mémoïsée du triangle d'orientation 2D (arêtes droites nettes, base plate)
   const arrowGeo = useMemo(() => {
     const shape = new THREE.Shape();
@@ -186,7 +166,6 @@ export function AiZonesHelper() {
 
   const isTopView = cameraMode === 'top';
   const baseHeight = isTopView ? 280 : 1.2;
-  const labelHeight = isTopView ? 290 : 26;
 
   return (
     <group renderOrder={99999}>
@@ -208,44 +187,10 @@ export function AiZonesHelper() {
         );
       })}
 
-      {/* ── Smart Objects et leurs Slots d'affordance ── */}
+      {/* ── Smart Objects et leurs Slots d'affordance (cercles 10cm au sol, détails au survol) ── */}
       {resolvedSmartObjects.map(obj => {
-        const slotsCount = obj.slots.length;
-        
-        // Centre moyen pour le label unifié
-        const avgX = obj.slots.reduce((sum, s) => sum + (s.offset ? s.offset[0] : obj.position[0]), 0) / (slotsCount || 1);
-        const avgZ = obj.slots.reduce((sum, s) => sum + (s.offset ? s.offset[2] : obj.position[2]), 0) / (slotsCount || 1);
-        const sprite = smartObjectSprites[obj.id];
-
         return (
           <group key={`smart-${obj.id}`}>
-            {/* Label Sprite Billboardé : cliquable pour ouvrir l'objet dans le panneau */}
-            {!hoveredSlotKey && sprite && (
-              <group
-                position={[avgX, labelHeight, avgZ]}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (obj.slots.length > 0) {
-                    setSelectedSlot({ objectId: obj.id, slotId: obj.slots[0].slotId });
-                  }
-                }}
-                onPointerOver={(e) => {
-                  e.stopPropagation();
-                  document.body.style.cursor = 'pointer';
-                }}
-                onPointerOut={(e) => {
-                  e.stopPropagation();
-                  document.body.style.cursor = '';
-                }}
-              >
-                <primitive object={sprite} />
-                {/* Hit plane pour le billboard sprite */}
-                <mesh visible={false}>
-                  <planeGeometry args={[sprite.scale.x, sprite.scale.y]} />
-                  <meshBasicMaterial />
-                </mesh>
-              </group>
-            )}
 
             {/* Cibles au sol + flèches d'orientation pour chaque slot */}
             {obj.slots.map(slot => {
@@ -267,8 +212,8 @@ export function AiZonesHelper() {
               let detailSprite: THREE.Sprite | null = null;
               if (isHovered) {
                 const lines: string[] = [
-                  `Objet : ${obj.name} [${obj.id}]`,
-                  `Slot ID : ${slot.slotId}`,
+                  `✨ Meuble : ${obj.name} [${obj.id}]`,
+                  `🎯 Slot : ${slot.name} [${slot.slotId}]`,
                   `Statut : ${isOccupied ? `Occupé (${occupant ?? 'PNJ'})` : 'Disponible'}`,
                   `Position : [${pos.map(n => Math.round(n * 10) / 10).join(', ')}]`,
                 ];
@@ -283,7 +228,9 @@ export function AiZonesHelper() {
                 const degRot = Math.round((((slot.rotY ?? obj.rotationY ?? 0) * 180) / Math.PI) % 360);
                 lines.push(`RotY : ${(slot.rotY ?? obj.rotationY ?? 0).toFixed(2)} rad (${degRot}°)`);
 
-                if (slot.animation) lines.push(`Animation : ${slot.animation}`);
+                if (slot.animation) {
+                  lines.push(`Animation : ${slot.animation.split('/').pop()?.replace('.glb', '')}`);
+                }
                 const animRandom = slot.animationsRandom;
                 if (animRandom) {
                   const anims = Array.isArray(animRandom)
@@ -292,7 +239,7 @@ export function AiZonesHelper() {
                   lines.push(`Pack/Anims : ${anims}`);
                 }
                 if (slot.availableAnims?.length) {
-                  lines.push(`Variantes : ${slot.availableAnims.join(', ')}`);
+                  lines.push(`Variantes : ${slot.availableAnims.map(a => a.split('/').pop()?.replace('.glb', '')).join(', ')}`);
                 }
                 if (slot.duration !== undefined) {
                   lines.push(`Durée : ${slot.duration}s`);
@@ -304,12 +251,22 @@ export function AiZonesHelper() {
                   lines.push(`Trigger : ${slot.triggerEventKey}${slot.triggerTargetState !== undefined ? ` = ${slot.triggerTargetState}` : ''}`);
                 }
 
+                if (obj.slots.length > 1) {
+                  const otherSlots = obj.slots
+                    .filter(s => s.slotId !== slot.slotId)
+                    .map(s => {
+                      const occ = OccupancyManager.isSlotOccupied(obj.id, s.slotId);
+                      return `${s.name} [${occ ? 'Occupé' : 'Libre'}]`;
+                    });
+                  lines.push(`Autres slots : ${otherSlots.join(' | ')}`);
+                }
+
                 lines.push('👉 Cliquer pour ordonner à un PNJ');
 
                 detailSprite = makeLabelSprite(
-                  `🎯 ${slot.name} (${isOccupied ? '❌ Occupé' : '✅ Dispo'})`,
+                  `✨ ${obj.name} — ${slot.name} (${isOccupied ? '❌ Occupé' : '✅ Dispo'})`,
                   lines,
-                  isOccupied ? '#f87171' : '#00ffcc',
+                  CATEGORY_COLORS[obj.category] || (isOccupied ? '#f87171' : '#00ffcc'),
                   isTopView ? 5.5 : 4.5
                 );
               }
@@ -341,31 +298,30 @@ export function AiZonesHelper() {
                 >
                   {/* Volume de collision 3D invisible (facilite grandement le clic en perspective) */}
                   <mesh position={[0, 15, 0]}>
-                    <cylinderGeometry args={[26, 26, 32, 16]} />
+                    <cylinderGeometry args={[18, 18, 30, 16]} />
                     <meshBasicMaterial
                       transparent
-                      opacity={isHovered || isSelected ? 0.25 : 0.001}
-                      color={slotColor}
+                      opacity={0.0001}
                       depthWrite={false}
                       depthTest={false}
                     />
                   </mesh>
 
-                  {/* Marqueur 3D au sol : disque principal */}
-                  <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]}>
-                    <circleGeometry args={[isHovered || isSelected ? 22 : 18, 32]} />
+                  {/* Marqueur 3D au sol : 10cm comme avant (13cm si survolé ou sélectionné) */}
+                  <mesh rotation={[-Math.PI / 2, 0, 0]}>
+                    <circleGeometry args={[isHovered || isSelected ? 13 : 10, 32]} />
                     <meshBasicMaterial
                       color={isHovered ? '#ffffff' : slotColor}
-                      opacity={isHovered || isSelected ? 0.8 : 0.4}
+                      opacity={isHovered || isSelected ? 0.85 : 0.4}
                       transparent
                       depthTest={false}
                       depthWrite={false}
                     />
                   </mesh>
 
-                  {/* Anneau extérieur contrasté */}
-                  <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.15, 0]}>
-                    <ringGeometry args={[isHovered || isSelected ? 18 : 14, isHovered || isSelected ? 22 : 18, 32]} />
+                  {/* Anneau extérieur */}
+                  <mesh rotation={[-Math.PI / 2, 0, 0]}>
+                    <ringGeometry args={[isHovered || isSelected ? 11 : 8, isHovered || isSelected ? 13 : 10, 32]} />
                     <meshBasicMaterial
                       color={isHovered ? '#00ffcc' : isSelected ? '#ffffff' : slotColor}
                       depthTest={false}
@@ -377,24 +333,14 @@ export function AiZonesHelper() {
                   <mesh
                     geometry={arrowGeo}
                     rotation={[-Math.PI / 2, 0, slot.rotY ?? obj.rotationY ?? 0]}
-                    position={[0, 0.25, 0]}
-                    scale={isHovered || isSelected ? [1.5, 1.5, 1.5] : [1.1, 1.1, 1.1]}
+                    position={[0, 0.2, 0]}
+                    scale={isHovered || isSelected ? [1.3, 1.3, 1.3] : [1, 1, 1]}
                   >
                     <meshBasicMaterial
                       color={isHovered ? '#00ffcc' : isSelected ? '#38bdf8' : '#ffffff'}
                       depthTest={false}
                       depthWrite={false}
                       side={THREE.DoubleSide}
-                    />
-                  </mesh>
-
-                  {/* Balise / sphère interactive au-dessus du slot */}
-                  <mesh position={[0, 8, 0]}>
-                    <sphereGeometry args={[isHovered || isSelected ? 3.5 : 2.5, 16, 16]} />
-                    <meshBasicMaterial
-                      color={isSelected ? '#ffffff' : slotColor}
-                      depthTest={false}
-                      depthWrite={false}
                     />
                   </mesh>
 
