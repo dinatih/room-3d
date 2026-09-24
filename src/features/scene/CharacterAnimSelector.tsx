@@ -168,6 +168,8 @@ export function CharacterAnimSelector({
 
   const filteredAnims = useMemo(() => {
     const q = animSearch.trim().toLowerCase();
+    const qUnderscore = q.replace(/-/g, '_');
+    const qHyphen = q.replace(/_/g, '-');
     return WALKER_ANIM_OPTIONS.filter(a => {
       if (selectedCategories.length > 0) {
         const cat = getAnimCategory(a.value);
@@ -176,7 +178,17 @@ export function CharacterAnimSelector({
         }
       }
       if (q) {
-        return a.label.toLowerCase().includes(q) || a.value.toLowerCase().includes(q);
+        const def = getAnimationDef(a.value);
+        const path = def ? def.path.toLowerCase() : '';
+        const val = a.value.toLowerCase();
+        const label = a.label.toLowerCase();
+        return (
+          label.includes(q) ||
+          val.includes(q) ||
+          val.includes(qHyphen) ||
+          path.includes(q) ||
+          path.includes(qUnderscore)
+        );
       }
       return true;
     });
