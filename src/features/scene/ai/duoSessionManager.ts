@@ -365,6 +365,64 @@ class DuoSessionManager {
   }
 
   /**
+   * Résout la playlist d'animations pour un slot ou un SmartObject donné.
+   */
+  public resolveSlotPlaylist(objectId: string, slotId?: string): DuoAnimationDef[] {
+    const obj = getSmartObject(objectId);
+    const slot = obj?.slots.find(s => s.slotId === slotId) || obj?.slots[0];
+    if (slot?.duoPool && slot.duoPool.length > 0) {
+      const count = Math.min(slot.duoCount ?? 3, slot.duoPool.length);
+      const shuffled = [...slot.duoPool].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, count)
+        .map(id => DUO_ANIMATIONS.find(d => d.id === id))
+        .filter((d): d is DuoAnimationDef => Boolean(d));
+    } else if (slot?.duoAnimId) {
+      const def = DUO_ANIMATIONS.find(d => d.id === slot.duoAnimId);
+      return def ? [def] : [];
+    } else {
+      const count = slot?.duoCount ?? 3;
+      const shuffled = [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, count);
+    }
+  }
+
+  /**
+   * Démarre une session Duo directement à partir d'un SmartObject et de son slot,
+   * en résolvant automatiquement sa playlist et les participants.
+   */
+  public startDuoSession(
+    objectId: string,
+    slotId?: string,
+    leaderId?: string,
+    partnerId?: string
+  ): { targetA: string; targetB: string; posA: [number,number,number]; posB: [number,number,number]; rotA: number; rotB: number; actualSlotId: string } | null {
+    const obj = getSmartObject(objectId);
+    if (!obj) return null;
+    const slot = obj.slots.find(s => s.slotId === slotId) || obj.slots[0];
+    const actualSlotId = slot?.slotId || slotId || 'duo';
+    const playlist = this.resolveSlotPlaylist(objectId, actualSlotId);
+    if (playlist.length === 0) return null;
+
+    let resolvedLeader = leaderId;
+    if (!resolvedLeader) {
+      const anchorPos = slot?.offset ?? obj.position ?? [0, 0, 0];
+      const candidates = Object.keys(cameraState.positions).filter(id => id !== 'shiba' && id !== 'robin');
+      candidates.sort((a, b) => {
+        const pa = cameraState.positions[a];
+        const pb = cameraState.positions[b];
+        const da = pa ? Math.hypot(pa.x - anchorPos[0], pa.z - anchorPos[2]) : Infinity;
+        const db = pb ? Math.hypot(pb.x - anchorPos[0], pb.z - anchorPos[2]) : Infinity;
+        return da - db;
+      });
+      resolvedLeader = candidates[0] || 'native';
+    }
+
+    const res = this.startDuoOnSmartObject(objectId, actualSlotId, playlist, resolvedLeader, partnerId);
+    if (!res) return null;
+    return { ...res, actualSlotId };
+  }
+
+  /**
    * Lance une animation Duo sur un SmartObject donné (ex: 'chair-office', 'sit-cuddle').
    */
   public startDuoOnSmartObject(

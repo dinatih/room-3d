@@ -16,7 +16,6 @@ import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { getSmartObject } from './ai/smartObjectRegistry';
 import { duoSessionManager } from './ai/duoSessionManager';
-import { DUO_ANIMATIONS, type DuoAnimationDef } from './ai/duoAnimations';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
 
@@ -881,62 +880,30 @@ export function HoverOverlay() {
                     const targetPos = slot?.offset ?? obj?.position ?? [0, 0, 0];
 
                     if (slot?.isDuo) {
-                      let playlist: DuoAnimationDef[] = [];
-                      if (slot.duoPool && slot.duoPool.length > 0) {
-                        const count = Math.min(slot.duoCount ?? 3, slot.duoPool.length);
-                        const shuffled = [...slot.duoPool].sort(() => Math.random() - 0.5);
-                        playlist = shuffled.slice(0, count)
-                          .map(id => DUO_ANIMATIONS.find(d => d.id === id))
-                          .filter((d): d is DuoAnimationDef => Boolean(d));
-                      } else if (slot.duoAnimId) {
-                        const def = DUO_ANIMATIONS.find(d => d.id === slot.duoAnimId);
-                        if (def) playlist = [def];
-                      } else {
-                        const count = slot.duoCount ?? 3;
-                        const shuffled = [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5);
-                        playlist = shuffled.slice(0, count);
-                      }
+                      const activeId = useSceneStore.getState().activeWalkerId;
+                      const leaderId = (activeId && activeId !== 'shiba' && activeId !== 'robin')
+                        ? activeId
+                        : undefined;
 
-                      if (playlist.length > 0) {
-                        const activeId = useSceneStore.getState().activeWalkerId;
-                        const leaderId = (activeId && activeId !== 'shiba' && activeId !== 'robin')
-                          ? activeId
-                          : undefined;
-
-                        const candidateIds = Object.keys(cameraState.positions).filter(id => id !== 'shiba' && id !== 'robin');
-                        candidateIds.sort((a, b) => {
-                          const pa = cameraState.positions[a];
-                          const pb = cameraState.positions[b];
-                          const da = pa ? Math.hypot(pa.x - targetPos[0], pa.z - targetPos[2]) : Infinity;
-                          const db = pb ? Math.hypot(pb.x - targetPos[0], pb.z - targetPos[2]) : Infinity;
-                          return da - db;
-                        });
-
-                        const chosenLeader = leaderId || candidateIds[0] || 'native';
-                        const chosenPartner = candidateIds.find(id => id !== chosenLeader) || 'rosanna';
-
-                        const duoResult = duoSessionManager.startDuoOnSmartObject(
-                          objectId,
-                          slotId,
-                          playlist,
-                          chosenLeader,
-                          chosenPartner
-                        );
-                        // Le leader (Rôle A) doit être invité explicitement depuis le HoverMenu
-                        // (startDuoOnSmartObject ne dispatche plus d'event vers lui)
-                        if (duoResult) {
-                          document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-                            detail: {
-                              targetId: duoResult.targetA,
-                              fromId: 'HoverMenu',
-                              objectId,
-                              slotId,
-                              forceRole: 'roleA',
-                              targetPos: duoResult.posA,
-                              targetRotY: duoResult.rotA,
-                            }
-                          }));
-                        }
+                      const duoResult = duoSessionManager.startDuoSession(
+                        objectId,
+                        slotId,
+                        leaderId
+                      );
+                      // Le leader (Rôle A) doit être invité explicitement depuis le HoverMenu
+                      // (startDuoOnSmartObject ne dispatche plus d'event vers lui)
+                      if (duoResult) {
+                        document.dispatchEvent(new CustomEvent('npc-invite-duo', {
+                          detail: {
+                            targetId: duoResult.targetA,
+                            fromId: 'HoverMenu',
+                            objectId,
+                            slotId,
+                            forceRole: 'roleA',
+                            targetPos: duoResult.posA,
+                            targetRotY: duoResult.rotA,
+                          }
+                        }));
                       }
                     } else {
                       // Trouver le personnage le plus proche (en excluant les animaux comme le shiba)

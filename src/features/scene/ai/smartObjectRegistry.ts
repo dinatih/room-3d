@@ -705,7 +705,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Danser sous la pluie',
         offset: [0, 0, -400],
         rotY: 0,
-        animationsRandom: 'all-dances',
+        animationsRandom: 'dance-from-npz',
         repeatCount: 4,
         repeatVariation: true,
       }

@@ -4,7 +4,6 @@ import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from '.
 import { resolveSlotAnimation } from './animationPacks';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
-import { DUO_ANIMATIONS, type DuoAnimationDef } from './duoAnimations';
 import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
@@ -452,37 +451,18 @@ export function useAgentController(
             } else {
               // Déclenchement autonome : le leader gère sa propre navigation directement
               // sans passer par onInvite (évite la corruption d'état et la boucle infinie)
-              const slot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId) || SMART_OBJECTS[objId]?.slots[0];
-              let playlist: DuoAnimationDef[] = [];
-              if (slot?.duoPool && slot.duoPool.length > 0) {
-                const count = Math.min(slot.duoCount ?? 3, slot.duoPool.length);
-                const shuffled = [...slot.duoPool].sort(() => Math.random() - 0.5);
-                playlist = shuffled.slice(0, count)
-                  .map(id => DUO_ANIMATIONS.find(d => d.id === id))
-                  .filter((d): d is DuoAnimationDef => Boolean(d));
-              } else if (slot?.duoAnimId) {
-                const def = DUO_ANIMATIONS.find(d => d.id === slot.duoAnimId);
-                if (def) playlist = [def];
-              } else {
-                const count = slot?.duoCount ?? 3;
-                const shuffled = [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5);
-                playlist = shuffled.slice(0, count);
-              }
-              if (playlist.length > 0) {
-                const actualSlotId = reqSlotId || slot?.slotId || 'duo';
-                const duoRes = duoSessionManager.startDuoOnSmartObject(objId, actualSlotId, playlist, _characterId);
-                if (duoRes) {
-                  role = 'roleA';
-                  duoRoleRef.current = 'roleA';
-                  // Configurer l'instruction pour naviguer vers posA (coords monde précalculées)
-                  currentInstruction.targetPos = duoRes.posA;
-                  currentInstruction.slotId = `${actualSlotId}:roleA`;
-                  currentInstruction.rotY = duoRes.rotA;
-                  claimedSlotRef.current = { objectId: objId, slotId: `${actualSlotId}:roleA` };
-                  // Invalider le cache de coords pour forcer le recalcul avec targetPos
-                  cachedCoordsInstructionRef.current = null;
-                  cachedCoordsRef.current = null;
-                }
+              const duoRes = duoSessionManager.startDuoSession(objId, reqSlotId, _characterId);
+              if (duoRes) {
+                role = 'roleA';
+                duoRoleRef.current = 'roleA';
+                // Configurer l'instruction pour naviguer vers posA (coords monde précalculées)
+                currentInstruction.targetPos = duoRes.posA;
+                currentInstruction.slotId = `${duoRes.actualSlotId}:roleA`;
+                currentInstruction.rotY = duoRes.rotA;
+                claimedSlotRef.current = { objectId: objId, slotId: `${duoRes.actualSlotId}:roleA` };
+                // Invalider le cache de coords pour forcer le recalcul avec targetPos
+                cachedCoordsInstructionRef.current = null;
+                cachedCoordsRef.current = null;
               }
             }
             if (role) duoRoleRef.current = role;
