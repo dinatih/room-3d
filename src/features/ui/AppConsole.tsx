@@ -69,11 +69,11 @@ const MAX_LOGS = 200;
 // ── Composant ──────────────────────────────────────────────────────────────
 export function AppConsole({ hidden = false }: { hidden?: boolean }) {
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const savedDimensionsRef = useRef<{ width?: number; height?: number }>({ width: 620, height: 110 });
+  const savedDimensionsRef = useRef<{ width?: number; height?: number }>({ width: 500, height: 100 });
 
   // Injecter la Google Font JetBrains Mono une seule fois
   useEffect(() => {
@@ -147,10 +147,10 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     position: 'fixed',
     top: 0,
     right: 0,
-    width: visible && savedDimensionsRef.current.width ? `${savedDimensionsRef.current.width}px` : '620px',
-    height: visible && savedDimensionsRef.current.height ? `${savedDimensionsRef.current.height}px` : '110px',
-    maxWidth: '90vw',
-    minWidth: '280px',
+    width: visible ? (savedDimensionsRef.current.width ? `${savedDimensionsRef.current.width}px` : '500px') : 'auto',
+    height: visible ? (savedDimensionsRef.current.height ? `${savedDimensionsRef.current.height}px` : '100px') : 'auto',
+    maxWidth: visible ? '90vw' : 'auto',
+    minWidth: visible ? '280px' : 'auto',
     zIndex: 9999,
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: '11px',
@@ -161,21 +161,26 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
     overflow: 'hidden',
     minHeight: visible ? '60px' : 'auto',
     maxHeight: visible ? '85vh' : 'auto',
-    boxShadow: visible ? '0 4px 20px rgba(0, 0, 0, 0.7)' : 'none',
+    boxShadow: visible ? '0 4px 20px rgba(0, 0, 0, 0.7)' : '0 2px 8px rgba(0, 0, 0, 0.5)',
+    borderBottomLeftRadius: visible ? '0' : '4px',
   };
 
   const headerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '4px 10px',
-    background: 'rgba(0, 0, 0, 0.95)',
-    borderTop: '1px solid #00ff88',
-    borderBottom: '1px solid rgba(0, 255, 136, 0.25)',
+    justifyContent: visible ? 'space-between' : 'center',
+    padding: visible ? '4px 10px' : '3px 8px',
+    background: 'rgba(0, 0, 0, 0.92)',
+    borderTop: 'none',
+    borderRight: 'none',
+    borderLeft: '1px solid rgba(0, 255, 136, 0.4)',
+    borderBottom: '1px solid rgba(0, 255, 136, 0.3)',
+    borderBottomLeftRadius: visible ? '0' : '4px',
     color: '#00ff88',
-    cursor: 'default',
+    cursor: visible ? 'default' : 'pointer',
     userSelect: 'none',
     flexShrink: 0,
+    transition: 'background 0.2s',
   };
 
   const titleStyle: React.CSSProperties = {
@@ -272,44 +277,65 @@ export function AppConsole({ hidden = false }: { hidden?: boolean }) {
       style={containerStyle}
     >
       {/* Header */}
-      <div style={headerStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            style={closeBtnStyle}
-            onClick={() => setVisible(v => !v)}
-            title={visible ? 'Masquer la console' : 'Afficher la console'}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,255,136,0.15)';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = '#00ff88';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'none';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0,255,136,0.4)';
-            }}
-          >
-            {visible ? '✕' : '▲'}
-          </button>
+      <div
+        style={headerStyle}
+        onClick={() => { if (!visible) setVisible(true); }}
+        title={!visible ? 'Ouvrir la console App Logs (B)' : undefined}
+        onMouseEnter={e => {
+          if (!visible) {
+            (e.currentTarget as HTMLDivElement).style.background = 'rgba(0, 255, 136, 0.15)';
+          }
+        }}
+        onMouseLeave={e => {
+          if (!visible) {
+            (e.currentTarget as HTMLDivElement).style.background = 'rgba(0, 0, 0, 0.92)';
+          }
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {visible && (
+            <button
+              style={closeBtnStyle}
+              onClick={(e) => {
+                e.stopPropagation();
+                setVisible(false);
+              }}
+              title="Masquer la console (B)"
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,255,136,0.15)';
+                (e.currentTarget as HTMLButtonElement).style.borderColor = '#00ff88';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'none';
+                (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0,255,136,0.4)';
+              }}
+            >
+              ✕
+            </button>
+          )}
           <span style={titleStyle}>
             <span>🤖</span>
             <span>APP LOGS</span>
           </span>
         </div>
-        <button
-          onClick={() => setIsPaused(p => !p)}
-          style={{
-            background: isPaused ? 'rgba(255, 170, 0, 0.2)' : 'rgba(0, 255, 136, 0.1)',
-            border: `1px solid ${isPaused ? '#ffaa00' : '#00ff88'}`,
-            color: isPaused ? '#ffaa00' : '#00ff88',
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '9px',
-            lineHeight: 1,
-            padding: '2px 6px',
-            cursor: 'pointer',
-            borderRadius: '2px',
-          }}
-        >
-          {isPaused ? '▶ REPRENDRE' : '⏸ PAUSE'}
-        </button>
+        {visible && (
+          <button
+            onClick={() => setIsPaused(p => !p)}
+            style={{
+              background: isPaused ? 'rgba(255, 170, 0, 0.2)' : 'rgba(0, 255, 136, 0.1)',
+              border: `1px solid ${isPaused ? '#ffaa00' : '#00ff88'}`,
+              color: isPaused ? '#ffaa00' : '#00ff88',
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '9px',
+              lineHeight: 1,
+              padding: '2px 6px',
+              cursor: 'pointer',
+              borderRadius: '2px',
+            }}
+          >
+            {isPaused ? '▶ REPRENDRE' : '⏸ PAUSE'}
+          </button>
+        )}
       </div>
 
       {/* Log area */}

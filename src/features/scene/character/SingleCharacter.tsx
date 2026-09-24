@@ -108,7 +108,7 @@ export function SingleCharacter({
   const laraTopOff = useSceneStore(state => state.layers.laraTopOff ?? false);
   const laraBottomOff = useSceneStore(state => state.layers.laraBottomOff ?? false);
   const laraShoes = useSceneStore(state => state.layers.laraShoes ?? true);
-  const laraRealisticTextures = useSceneStore(state => state.layers.laraRealisticTextures ?? true);
+  const laraRealisticTextures = useSceneStore(state => state.layers.laraRealisticTextures ?? false);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
   const showThoughtBubble = useSceneStore(state => state.layers.thoughtBubble ?? true);
