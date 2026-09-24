@@ -104,13 +104,19 @@ function makeLabelSprite(
   return sprite;
 }
 
+import { useThree } from '@react-three/fiber';
 import { OccupancyManager } from './occupancyManager';
 import { useZoneAiDebugStore } from './zoneAiDebugStore';
 
 export function AiZonesHelper() {
   const visible = useSceneStore(s => s.layers.aiZones);
   const cameraMode = useSceneStore(s => s.cameraMode);
+  const { raycaster } = useThree();
   const [toggleVersion, setToggleVersion] = useState(0);
+
+  useEffect(() => {
+    raycaster.layers.enableAll();
+  }, [raycaster]);
   const [hoveredSlotKey, setHoveredSlotKey] = useState<string | null>(null);
   const selectedSlot = useZoneAiDebugStore(s => s.selectedSlot);
   const setSelectedSlot = useZoneAiDebugStore(s => s.setSelectedSlot);
@@ -213,9 +219,32 @@ export function AiZonesHelper() {
 
         return (
           <group key={`smart-${obj.id}`}>
-            {/* Label Sprite Billboardé : masqué si un slot quelconque est survolé */}
+            {/* Label Sprite Billboardé : cliquable pour ouvrir l'objet dans le panneau */}
             {!hoveredSlotKey && sprite && (
-              <primitive object={sprite} position={[avgX, labelHeight, avgZ]} />
+              <group
+                position={[avgX, labelHeight, avgZ]}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (obj.slots.length > 0) {
+                    setSelectedSlot({ objectId: obj.id, slotId: obj.slots[0].slotId });
+                  }
+                }}
+                onPointerOver={(e) => {
+                  e.stopPropagation();
+                  document.body.style.cursor = 'pointer';
+                }}
+                onPointerOut={(e) => {
+                  e.stopPropagation();
+                  document.body.style.cursor = '';
+                }}
+              >
+                <primitive object={sprite} />
+                {/* Hit plane pour le billboard sprite */}
+                <mesh visible={false}>
+                  <planeGeometry args={[sprite.scale.x, sprite.scale.y]} />
+                  <meshBasicMaterial />
+                </mesh>
+              </group>
             )}
 
             {/* Cibles au sol + flèches d'orientation pour chaque slot */}
@@ -310,37 +339,62 @@ export function AiZonesHelper() {
                     document.body.style.cursor = '';
                   }}
                 >
-                  {/* Cible au sol (légèrement agrandie et mise en valeur si survolée ou sélectionnée) */}
-                  <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                    <circleGeometry args={[isHovered || isSelected ? 13 : 10, 32]} />
+                  {/* Volume de collision 3D invisible (facilite grandement le clic en perspective) */}
+                  <mesh position={[0, 15, 0]}>
+                    <cylinderGeometry args={[26, 26, 32, 16]} />
+                    <meshBasicMaterial
+                      transparent
+                      opacity={isHovered || isSelected ? 0.25 : 0.001}
+                      color={slotColor}
+                      depthWrite={false}
+                      depthTest={false}
+                    />
+                  </mesh>
+
+                  {/* Marqueur 3D au sol : disque principal */}
+                  <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]}>
+                    <circleGeometry args={[isHovered || isSelected ? 22 : 18, 32]} />
                     <meshBasicMaterial
                       color={isHovered ? '#ffffff' : slotColor}
-                      opacity={isHovered || isSelected ? 0.85 : 0.4}
+                      opacity={isHovered || isSelected ? 0.8 : 0.4}
                       transparent
                       depthTest={false}
                       depthWrite={false}
                     />
                   </mesh>
-                  <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                    <ringGeometry args={[isHovered || isSelected ? 11 : 8, isHovered || isSelected ? 13 : 10, 32]} />
+
+                  {/* Anneau extérieur contrasté */}
+                  <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.15, 0]}>
+                    <ringGeometry args={[isHovered || isSelected ? 18 : 14, isHovered || isSelected ? 22 : 18, 32]} />
                     <meshBasicMaterial
                       color={isHovered ? '#00ffcc' : isSelected ? '#ffffff' : slotColor}
                       depthTest={false}
                       depthWrite={false}
                     />
                   </mesh>
-                  {/* Flèche d'orientation triangulaire 2D plate — base plate et pointe nette */}
+
+                  {/* Flèche d'orientation triangulaire 2D plate */}
                   <mesh
                     geometry={arrowGeo}
                     rotation={[-Math.PI / 2, 0, slot.rotY ?? obj.rotationY ?? 0]}
-                    position={[0, 0.2, 0]}
-                    scale={isHovered || isSelected ? [1.3, 1.3, 1.3] : [1, 1, 1]}
+                    position={[0, 0.25, 0]}
+                    scale={isHovered || isSelected ? [1.5, 1.5, 1.5] : [1.1, 1.1, 1.1]}
                   >
                     <meshBasicMaterial
                       color={isHovered ? '#00ffcc' : isSelected ? '#38bdf8' : '#ffffff'}
                       depthTest={false}
                       depthWrite={false}
                       side={THREE.DoubleSide}
+                    />
+                  </mesh>
+
+                  {/* Balise / sphère interactive au-dessus du slot */}
+                  <mesh position={[0, 8, 0]}>
+                    <sphereGeometry args={[isHovered || isSelected ? 3.5 : 2.5, 16, 16]} />
+                    <meshBasicMaterial
+                      color={isSelected ? '#ffffff' : slotColor}
+                      depthTest={false}
+                      depthWrite={false}
                     />
                   </mesh>
 

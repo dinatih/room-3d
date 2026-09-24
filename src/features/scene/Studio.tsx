@@ -62,7 +62,7 @@ import {
   ROOM_W,
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR, LAYER_NEIGHBORS, LAYER_LIDAR,
   LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER, LAYER_ENVIRONMENT,
-  LAYER_WALL_STRUCTURE, LAYER_AI_ZONES, LAYER_DOORS, LAYER_ANIMALS,
+  LAYER_WALL_STRUCTURE, LAYER_DOORS, LAYER_ANIMALS,
 } from '@config';
 
 
@@ -551,9 +551,7 @@ export function Studio() {
         {layers.xray        && <XRayLayer />}
         {layers.wireframe   && <WireframeLayer />}
         <Suspense fallback={null}>
-          <CategoryLayerGroup layer={LAYER_AI_ZONES}>
-            <AiZonesHelper />
-          </CategoryLayerGroup>
+          <AiZonesHelper />
           <CollisionDebugHelper />
         </Suspense>
         {layers.wallEdges   && <WallEdgesLayer />}
