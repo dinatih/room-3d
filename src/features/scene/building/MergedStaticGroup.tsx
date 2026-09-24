@@ -99,6 +99,9 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData }
       geos.forEach(g => g.dispose());
       if (!merged) continue;
 
+      merged.computeBoundingBox();
+      merged.computeBoundingSphere();
+
       const m = new THREE.Mesh(merged, mat);
       m.name = name;
       m.castShadow = true;

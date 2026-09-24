@@ -8,6 +8,7 @@ import { useThree } from '@react-three/fiber';
 
 import { wallsGroupRef } from './Building';
 import { LAYER_NEIGHBORS } from '@config';
+import { useSceneStore } from './store/useSceneStore';
 
 const neighborMat = new THREE.MeshStandardMaterial({
   color: 0xa8c8e8, roughness: 0.85,
@@ -18,6 +19,7 @@ const neighborMat = new THREE.MeshStandardMaterial({
 function NeighborApartment({ offsetX, offsetZ }: { offsetX: number; offsetZ: number }) {
   const groupRef = useRef<THREE.Group>(null);
   const { invalidate } = useThree();
+  const pillarsOnly = useSceneStore((state) => state.layers.pillarsOnly);
 
   useLayoutEffect(() => {
     const src = wallsGroupRef.current;
@@ -26,19 +28,22 @@ function NeighborApartment({ offsetX, offsetZ }: { offsetX: number; offsetZ: num
 
     const clone = src.clone(true);
     clone.traverse((o) => {
+      o.frustumCulled = false;
       o.layers.set(LAYER_NEIGHBORS);
       o.userData = { ...o.userData, noAnim: true };
       delete (o.userData as any).animUnit;
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
+      mesh.frustumCulled = false;
       mesh.material = neighborMat;
       mesh.castShadow = false;
+      mesh.receiveShadow = false;
     });
     dst.add(clone);
     invalidate();
 
     return () => { dst.remove(clone); };
-  }, [invalidate]);
+  }, [invalidate, pillarsOnly]);
 
   return <group ref={groupRef} position={[offsetX, 0, offsetZ]} />;
 }
