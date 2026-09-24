@@ -718,14 +718,8 @@ export function SingleCharacter({
         const from = (activeActionName.current && activeActionName.current !== 'tpose') ? actions[activeActionName.current] : null;
         if (from) from.fadeOut(0.2);
 
-        const isOnceAnim = target === 'anim-pistol-kneel-to-stand';
-        if (isOnceAnim) {
-          to.setLoop(THREE.LoopOnce, 1);
-          to.clampWhenFinished = true;
-        } else {
-          to.setLoop(THREE.LoopRepeat, Infinity);
-          to.clampWhenFinished = false;
-        }
+        to.setLoop(THREE.LoopRepeat, Infinity);
+        to.clampWhenFinished = false;
 
         to.reset().fadeIn(0.2).play();
         to.setEffectiveWeight(1);

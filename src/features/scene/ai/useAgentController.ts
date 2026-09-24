@@ -46,7 +46,8 @@ export function useAgentController(
   getRealPosition: () => { x: number; y: number; z: number; rotY: number },
   onComplete?: () => void,
   spawnDelay: number = 0,
-  hasSkyDrop: boolean = false
+  hasSkyDrop: boolean = false,
+  landingAnim: string = 'anim-pistol-kneel-to-stand'
 ) {
   const firstCoords = (scenario && scenario.length > 0) ? resolveInstructionCoords(scenario[0], null) : null;
   const initialPos = (firstCoords && (firstCoords.tx !== 0 || firstCoords.tz !== 0))
@@ -350,7 +351,7 @@ export function useAgentController(
       if (timerRef.current <= 0) {
         stateRef.current.y = startPosRef.current?.y ?? 0;
         statusRef.current = 'LANDING';
-        const landingDuration = getAnimationDef('anim-pistol-kneel-to-stand')?.duration ?? 1.4;
+        const landingDuration = getAnimationDef(landingAnim)?.duration ?? 1.4;
         timerRef.current = landingDuration;
         deployment.status = 'LANDING';
         deployment.timer = landingDuration;
@@ -374,7 +375,7 @@ export function useAgentController(
         deployment.hasCompleted = true;
         appLog(_characterId, `🎯 Déploiement terminé (Atterrissage réussi)`);
       }
-      stateRef.current.animation = 'anim-pistol-kneel-to-stand';
+      stateRef.current.animation = resolveAnimationId(landingAnim);
       return stateRef.current;
     }
 
