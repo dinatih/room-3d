@@ -308,9 +308,7 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       // Remove any previously attached hair armatures to prevent duplicate wigs
       const existingWigs = attachTo.children.filter((c: any) => c.userData.isWigRoot || /^[0-9]+$/.test(c.name) || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_'));
       
-      console.log(`[Wig Setup] attaching scene ${scene.name} (uuid: ${scene.uuid}). headBone currently has ${attachTo.children.length} children:`, attachTo.children.map((c: any) => c.name));
       if (existingWigs.length > 0) {
-        console.log(`[Wig Setup] removing ${existingWigs.length} old wigs:`, existingWigs.map((w: any) => w.name));
         existingWigs.forEach((w: any) => {
           disposeOwnedWigResources(w);
           attachTo.remove(w);
@@ -321,7 +319,6 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
     }
     return () => {
       if (attachTo && scene) {
-        console.log(`[Wig Cleanup] removing scene ${scene.name} (uuid: ${scene.uuid})`);
         attachTo.remove(scene);
         disposeOwnedWigResources(scene);
       }
