@@ -384,7 +384,7 @@ export function applyRenderProperties(parts: CharacterParts, opts: RenderPropert
  * - Assure la transparence et le non-blocage Z-buffer pour verres/visières et fards à paupières
  * - Applique alphaTest sur les cils
  */
-export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D) {
+export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D, characterId?: string) {
   scene.traverse(node => {
     const mesh = node as THREE.Mesh;
     if (!mesh.isMesh) return;
@@ -508,6 +508,13 @@ export function normalizeNonLaraCharacterMaterials(scene: THREE.Object3D) {
       if ('specularIntensity' in m) (m as any).specularIntensity = 0.0;
       if ('specularIntensityMap' in m) (m as any).specularIntensityMap = null;
       if ('specularColorMap' in m) (m as any).specularColorMap = null;
+
+      // Teint de peau foncé pour le Mannequin (aligné sur la carnation sombre d'Alex)
+      if (characterId === 'mannequin' || meshName.includes('mannequin') || matName.includes('ch36')) {
+        if ('color' in m && (m as any).color) {
+          (m as any).color.set('#7a7068');
+        }
+      }
 
       m.needsUpdate = true;
     });

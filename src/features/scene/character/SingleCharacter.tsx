@@ -360,7 +360,7 @@ export function SingleCharacter({
         applyLaraRealisticTextures(scene, true);
       }
     } else {
-      normalizeNonLaraCharacterMaterials(scene);
+      normalizeNonLaraCharacterMaterials(scene, id);
     }
 
     hairChainRef.current = isLara ? buildHairChain(parts.bones.nativeHairBones) : [];
