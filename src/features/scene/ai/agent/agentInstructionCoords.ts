@@ -32,7 +32,7 @@ export function resolveInstructionCoords(
     const slot = instr.slotId
       ? (obj.slots.find(s => s.slotId === instr.slotId) ?? obj.slots[0])
       : obj.slots[0];
-    const pos = slot ? (slot.approachOffset ?? slot.offset ?? obj.position) : obj.position;
+    const pos = (slot?.approachOffset ?? slot?.offset) ?? [0, 0, 0];
     const resolved = slot ? resolveSlotAnimation(slot) : null;
     return {
       tx: pos[0],

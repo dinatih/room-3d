@@ -440,7 +440,7 @@ class DuoSessionManager {
       || obj.slots[0];
     const actualSlotId = slotId || slot?.slotId || 'duo';
 
-    const anchorPos: [number, number, number] = slot?.offset ?? obj.position ?? [0, 0, 0];
+    const anchorPos: [number, number, number] = slot?.offset ?? [0, 0, 0];
     const anchorRotY: number = slot?.rotY ?? obj.rotationY ?? 0;
     const [bx, by, bz] = anchorPos;
 

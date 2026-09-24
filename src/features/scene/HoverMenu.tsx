@@ -878,7 +878,7 @@ export function HoverOverlay() {
                     const [, objectId, slotId] = action.toggleKey.split(':::');
                     const obj = getSmartObject(objectId);
                     const slot = obj?.slots.find(s => s.slotId === slotId);
-                    const targetPos = slot?.offset ?? obj?.position ?? [0, 0, 0];
+                    const targetPos = slot?.offset ?? [0, 0, 0];
 
                     if (slot?.isDuo) {
                       const activeId = useSceneStore.getState().activeWalkerId;

@@ -98,7 +98,7 @@ export function ZoneAiDebugOverlay() {
     const slot = obj?.slots.find((s) => s.slotId === sId);
     if (!obj || !slot) return;
 
-    const targetPos = slot.offset ?? obj.position ?? [0, 0, 0];
+    const targetPos = slot.offset ?? [0, 0, 0];
 
     // Trouver le PNJ cible
     let targetChar: string | null = null;

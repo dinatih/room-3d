@@ -206,7 +206,7 @@ export function AiZonesHelper() {
                 return null;
               }
 
-              const pos = slot.offset ?? obj.position;
+              const pos = slot.offset ?? [0, 0, 0];
               const slotColor = isOccupied ? '#ef4444' : isSelected ? '#38bdf8' : '#00e5ff';
 
               // Construction du sprite de détails complets pour le slot survolé
