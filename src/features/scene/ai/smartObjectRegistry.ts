@@ -184,7 +184,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'use',
         name: 'Faire ses besoins',
-        offset: [50, 0, 500],
         rotY: 0,
         animation: 'sit-idle',
         duration: 10.0,
@@ -210,21 +209,18 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'wash-hands',
         name: 'Se laver les mains',
-        offset: [116, 0, 530],
         rotY: Math.PI,
         animation: 'inspect-mid-height',
       },
       {
         slotId: 'brush-teeth',
         name: 'Se laver les dents',
-        offset: [116, 0, 530],
         rotY: Math.PI,
         animation: 'take-object-mid',
       },
       {
         slotId: 'shave-makeup',
         name: 'Se Raser / Maquiller',
-        offset: [116, 0, 530],
         rotY: Math.PI,
         animation: 'inspect-mid-height',
       }
@@ -318,7 +314,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'center',
         name: 'Se relaxer au centre',
-        offset: [120, 0, -300],
         rotY: Math.PI / 4,
         animationsRandom: 'seated-front',
         duration: 30.0,
@@ -404,7 +399,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'cook',
         name: 'Cuisiner Plaques',
-        offset: [80, 0, 370],
         rotY: 0,
         animation: 'anim-bartending',
         // interactions/anim_cards.glb, interactions/anim_drinking_fountain.glb,
@@ -420,7 +414,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'open-pick',
         name: 'Prendre un ingrédient',
-        offset: [250, 0, 320],
         rotY: Math.PI / 2,
         animation: 'anim-entering-code',
       }
@@ -438,7 +431,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'inspect',
         name: 'Prendre un objet en hauteur',
-        offset: [240, 0, 38],
         rotY: Math.PI / 2,
         animation: 'anim-texting-while-standing',
       }
@@ -453,7 +445,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'open-tidy',
         name: 'Ranger des affaires',
-        offset: [220, 0, 435],
         rotY: -Math.PI / 2,
         animation: 'anim-entering-code',
       }
@@ -634,7 +625,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'salsa-samba',
         name: 'Salsa Samba',
-        offset: [500, 0, 100],
         animationsRandom: ['salsa', 'samba'],
         repeatCount: 6,
         repeatVariation: true,
@@ -706,7 +696,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'dance-in-rain',
         name: 'Danser sous la pluie',
-        offset: [0, 0, -400],
         rotY: 0,
         animationsRandom: 'dance-from-npz',
         repeatCount: 4,
@@ -724,7 +713,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'duo-random',
         name: 'Session Duo Aléatoire',
         isDuo: true,
-        offset: [-100, 0, -200],
         rotY: 0,
         get duoPool() {
           return getAllDuoAnimationIds();
@@ -743,7 +731,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'hugs-trio',
         name: 'Enchaîner 3 Câlins & Baisers',
         isDuo: true,
-        offset: [160, 0, 200],
         rotY: 0,
         duoPool: ['slow_dance', 'cuddle_kiss', 'eye_to_eye', 'farewell_kiss'],
         duoCount: 3,
@@ -760,7 +747,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'combat-session',
         name: 'Duo Combat Aléatoire',
         isDuo: true,
-        offset: [500, 0, 700],
         rotY: 0,
         duoPool: [
           'b1', 'd1', 'd4', 'f2', 'h1', 'h2', 'h4', 'ko1', 'ko2', 'ko3',
@@ -783,7 +769,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'dance',
         name: 'Danse devant Lit Ouest (Nord)',
-        offset: [140, 0, 80],
         rotY: Math.PI / 2,
         animationsRandom: 'dance-tight',
       }
@@ -798,7 +783,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'dance',
         name: 'Danse devant Lit Ouest (Milieu)',
-        offset: [140, 0, 150],
         rotY: Math.PI / 2,
         animationsRandom: 'dance-tight',
       }
@@ -813,7 +797,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'dance',
         name: 'Danse devant Lit Ouest (Sud)',
-        offset: [140, 0, 220],
         rotY: Math.PI / 2,
         animationsRandom: 'dance-tight',
       }
@@ -828,7 +811,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'dance',
         name: 'Danse devant Lit Est (Nord)',
-        offset: [195, 0, 120],
         rotY: -Math.PI / 2,
         animationsRandom: 'dance-tight',
       }
@@ -843,7 +825,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'dance',
         name: 'Danse devant Lit Est (Milieu)',
-        offset: [195, 0, 190],
         rotY: -Math.PI / 2,
         animationsRandom: 'dance-tight',
       }
@@ -858,7 +839,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       {
         slotId: 'dance',
         name: 'Danse devant Lit Est (Sud)',
-        offset: [195, 0, 260],
         rotY: -Math.PI / 2,
         animationsRandom: 'dance-tight',
         repeatCount: 4,
@@ -1073,6 +1053,7 @@ export function getSmartObject(objectId: string): ResolvedSmartObject | undefine
     if (!isRelative) {
       return {
         ...slot,
+        offset: slot.offset ?? [objX, objY, objZ],
         rotY: slot.rotY ?? objRy,
       };
     }
