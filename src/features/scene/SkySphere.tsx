@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
 import { useSceneStore } from './store/useSceneStore';
 import { getHdriById } from './hdriConfig';
 import { CategoryLayerGroup } from './sceneLayer';
@@ -17,7 +17,7 @@ const EXTERIOR_FADE_START = SKY_RADIUS * 0.98;
 const EXTERIOR_FADE_END = SKY_RADIUS * 1.22;
 
 const textureCache = new Map<string, THREE.Texture>();
-const rgbeLoader = new RGBELoader();
+const hdrLoader = new HDRLoader();
 const textureLoader = new THREE.TextureLoader();
 
 export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
@@ -53,7 +53,7 @@ export function SkySphere({ envOnly = false }: { envOnly?: boolean } = {}) {
     };
 
     if (hdri.type === 'hdr') {
-      rgbeLoader.load(hdri.url, onLoad);
+      hdrLoader.load(hdri.url, onLoad);
     } else {
       textureLoader.load(hdri.url, onLoad);
     }
