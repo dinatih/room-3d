@@ -636,10 +636,12 @@ export function Studio() {
             <MirrorReflectors />
           </CategoryLayerGroup>
 
-          {/* LAYER_NEIGHBORS (5) — appartements voisins */}
-          <CategoryLayerGroup layer={LAYER_NEIGHBORS}>
-            <Neighbors />
-          </CategoryLayerGroup>
+          {/* LAYER_NEIGHBORS (14) — appartements voisins */}
+          {layers.neighbors && (
+            <CategoryLayerGroup layer={LAYER_NEIGHBORS}>
+              <Neighbors />
+            </CategoryLayerGroup>
+          )}
 
           {/* LAYER_LIDAR (6) — monté conditionnellement (point cloud lourd) */}
           {layers.lidar && (

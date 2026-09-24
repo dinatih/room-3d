@@ -137,6 +137,14 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
   curious_skeleton: 'combat-point',
 };
 
+export const NEIGHBOR_SMART_OBJECT_IDS = new Set(['west-neighbor-flat', 'est-neighbor-flat']);
+
+export function isNeighborCharacter(characterId?: string): boolean {
+  if (!characterId) return false;
+  const preferred = INITIAL_SMART_OBJECT_BY_CHAR[characterId];
+  return preferred ? NEIGHBOR_SMART_OBJECT_IDS.has(preferred) : false;
+}
+
 /**
  * Construit un scénario autonome complet de vie quotidienne
  */
