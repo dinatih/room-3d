@@ -8,7 +8,7 @@ import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
 import { getEstimatedClipDuration } from '../animOptions';
-import { resolveAnimationId } from '../animations/animationResolver';
+import { resolveAnimationId, getAnimationDef } from '../animations/animationResolver';
 
 import { AgentState, AgentStatus } from './agent/agentTypes';
 import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation } from './agent/agentWalkAnimations';
@@ -350,9 +350,10 @@ export function useAgentController(
       if (timerRef.current <= 0) {
         stateRef.current.y = startPosRef.current?.y ?? 0;
         statusRef.current = 'LANDING';
-        timerRef.current = 1.96;
+        const landingDuration = getAnimationDef('anim-pistol-kneel-to-stand')?.duration ?? 1.4;
+        timerRef.current = landingDuration;
         deployment.status = 'LANDING';
-        deployment.timer = 1.96;
+        deployment.timer = landingDuration;
         deployment.y = stateRef.current.y;
       } else {
         const p_inv = timerRef.current / 6.0;
