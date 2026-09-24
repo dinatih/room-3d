@@ -22,7 +22,9 @@ import {
   applyClothingAndAccessoriesVisibility,
   applyRenderProperties,
   normalizeNonLaraCharacterMaterials,
+  isHeadMesh,
 } from '../characterParts';
+import { LAYER_WALKER_DETAIL } from '@config';
 import { ACTION_FULL_TOUR, buildAutonomousScenario } from '../ai/scenarios';
 import type { AgentInstruction } from '../ai/aiTypes';
 import { useAgentController } from '../ai/useAgentController';
@@ -234,6 +236,59 @@ export function SingleCharacter({
       prevFirstPersonRef.current = isFirstPerson;
     }
   }, [cameraMode, isActive]);
+
+  // Masquage de la tête en mode FPV (1ère personne) pour les modèles à maillage unique (ex: mannequin)
+  useEffect(() => {
+    if (!scene || !headBone || !isActive) return;
+    const hasSeparateHead = parts.allRenderMeshes.some(r => isHeadMesh(r.mesh));
+    if (hasSeparateHead) return;
+
+    const meshesToHook: THREE.Mesh[] = [];
+    scene.traverse(child => {
+      if ((child as THREE.Mesh).isMesh && (child as THREE.SkinnedMesh).isSkinnedMesh) {
+        meshesToHook.push(child as THREE.Mesh);
+      }
+    });
+
+    const origHooks = meshesToHook.map(m => ({
+      mesh: m,
+      onBeforeRender: m.onBeforeRender,
+      onAfterRender: m.onAfterRender,
+    }));
+
+    meshesToHook.forEach(mesh => {
+      mesh.onBeforeRender = (_renderer, _sc, cam) => {
+        const isFpv = cameraState.mode === 'fpv' || cameraState.isXR;
+        if (isFpv && headBone) {
+          const isMirror = (cam.layers.mask & (1 << LAYER_WALKER_DETAIL)) !== 0;
+          if (isMirror) {
+            headBone.scale.set(1, 1, 1);
+          } else {
+            headBone.scale.set(0.0001, 0.0001, 0.0001);
+          }
+          headBone.updateMatrixWorld(true);
+        }
+      };
+
+      mesh.onAfterRender = () => {
+        if (headBone && headBone.scale.x < 0.5) {
+          headBone.scale.set(1, 1, 1);
+          headBone.updateMatrixWorld(true);
+        }
+      };
+    });
+
+    return () => {
+      origHooks.forEach(({ mesh, onBeforeRender, onAfterRender }) => {
+        mesh.onBeforeRender = onBeforeRender;
+        mesh.onAfterRender = onAfterRender;
+      });
+      if (headBone && headBone.scale.x < 0.5) {
+        headBone.scale.set(1, 1, 1);
+        headBone.updateMatrixWorld(true);
+      }
+    };
+  }, [scene, headBone, isActive, parts]);
 
   // Gestion des scénarios IA
   const activeActionKey = useMemo(() => {
@@ -902,6 +957,9 @@ export function SingleCharacter({
     // Suivi dynamique de la tête, du torse et des yeux (3ème personne et FPV réaliste)
     if (isActive && !isPreview) {
       if (headBone) {
+        if (headBone.scale.x < 0.5) {
+          headBone.scale.set(1, 1, 1);
+        }
         headBone.updateWorldMatrix(true, false);
         headBone.getWorldPosition(_tmpHeadWorldPos);
         if (!cameraState.activeHeadPos) {
@@ -941,9 +999,12 @@ export function SingleCharacter({
           _tmpEyesWorldPos.addVectors(_tmpLeftEyeWorldPos, _tmpRightEyeWorldPos).multiplyScalar(0.5);
         } else {
           // Fallback pour modèles sans os oculaires dédiés : décalage anatomique depuis la tête
+          const isMannequin = id === 'mannequin';
+          const upOffset = isMannequin ? 11.2 : 10.16;
+          const forwardOffset = isMannequin ? 16.5 : (!isLara ? 14.0 : 7.04);
           _tmpEyesWorldPos.copy(_tmpHeadWorldPos)
-            .addScaledVector(_tmpHeadUp, 10.16)
-            .addScaledVector(_tmpHeadForward, 7.04);
+            .addScaledVector(_tmpHeadUp, upOffset)
+            .addScaledVector(_tmpHeadForward, forwardOffset);
         }
 
         if (!cameraState.activeEyesPos) {
