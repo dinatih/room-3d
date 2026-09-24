@@ -419,6 +419,30 @@ button, input, select, textarea {
   user-select: none;
   -webkit-user-select: none;
 }
+.inventory-preview-overlay-panel {
+  position: absolute;
+  top: 40px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: fit-content;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 6px 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  user-select: none;
+}
+.inventory-preview-overlay-panel.left {
+  left: 8px;
+  max-width: calc(100% - 16px);
+}
+.inventory-preview-overlay-panel.right {
+  right: 8px;
+}
 .inventory-detail-body {
   padding: 1.1rem 1.25rem;
 }
