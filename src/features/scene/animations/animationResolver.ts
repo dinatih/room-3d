@@ -18,6 +18,19 @@ function buildIndexes() {
     keyToDefMap.set(def.id.toLowerCase(), def);
     // Clé Path
     keyToDefMap.set(def.path.toLowerCase(), def);
+    keyToDefMap.set(def.path.replace(/^\//, '').toLowerCase(), def);
+
+    // Nom de fichier direct et version slugifiée avec tirets
+    const filename = def.path.split('/').pop()?.replace(/\.(glb|gltf)$/i, '').toLowerCase();
+    if (filename) {
+      if (!keyToDefMap.has(filename)) {
+        keyToDefMap.set(filename, def);
+      }
+      const slugified = filename.replace(/_/g, '-');
+      if (!keyToDefMap.has(slugified)) {
+        keyToDefMap.set(slugified, def);
+      }
+    }
     
     // Clés Alias
     if (def.aliases) {

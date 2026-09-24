@@ -432,7 +432,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'inspect',
         name: 'Prendre un objet en hauteur',
         rotY: Math.PI / 2,
-        animation: 'anim-texting-while-standing',
+        animation: 'texting-standing',
       }
     ]
   },
@@ -461,7 +461,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'S\'admirer dans le miroir',
         offset: [160, 0, 340],
         rotY: 0,
-        animation: 'miley-armature-change-pose',
+        animation: 'miley-change-pose',
       }
     ]
   },
@@ -518,7 +518,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Consulter son téléphone',
         offset: [-350, 0, 1000],
         rotY: Math.PI / 2,
-        animation: 'anim-texting-while-standing',
+        animation: 'texting-standing',
       }
     ]
   },

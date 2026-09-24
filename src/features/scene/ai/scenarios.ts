@@ -102,7 +102,7 @@ export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
   { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
   { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.5 },
   { type: 'MOVE_TO', smartObjectId: 'building-b-corridor-end', slotId: 'visit' },
-  { type: 'WAIT', duration: 90.0, animation: 'anim-texting-while-standing' }
+  { type: 'WAIT', duration: 90.0, animation: 'texting-standing' }
 ];
 
 // Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)

@@ -118,6 +118,11 @@ export function useCharacterAnimations({
     const animId = def ? def.id : pathOrKey;
     const path = def ? def.path : resolveAnimationPath(pathOrKey);
 
+    if (!path || (!path.endsWith('.glb') && !path.endsWith('.gltf') && !path.includes('/'))) {
+      console.warn(`[useCharacterAnimations] Animation introuvable pour la clé "${pathOrKey}". Chargement ignoré.`);
+      return;
+    }
+
     const isTPose = animId === 'tpose';
     if (isTPose) {
       currentAnimClip.current = 'tpose';
