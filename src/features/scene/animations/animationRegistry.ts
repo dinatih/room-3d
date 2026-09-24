@@ -6459,5 +6459,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: `[YOGA] Yogic sleep pose (1815f / 60.5s, 808KB)`,
     tags: ['yoga', 'fitness', 'laying-front'],
     duration: 60.5,
+    defaultOffset: [0, 0, 80],
   },
 ];

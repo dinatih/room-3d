@@ -208,6 +208,24 @@ export const SPATIAL_ZONES_CONFIG: SpatialZoneDef[] = [
       min: [-600, 0, -800],
       max: [-100, 500, 100]
     }
+  },
+  {
+    id: 'west_neighbor',
+    name: 'Studio voisin Ouest (Églantine)',
+    environment: 'outdoor',
+    bounds: {
+      min: [-500, 0, 0],
+      max: [-20, 250, 750]
+    }
+  },
+  {
+    id: 'east_neighbor',
+    name: 'Studio voisin Est (Damien)',
+    environment: 'outdoor',
+    bounds: {
+      min: [320, 0, -420],
+      max: [650, 250, 350]
+    }
   }
 ];
 

@@ -1,48 +1,77 @@
 import { AgentInstruction } from './aiTypes';
 
-export type RoomId = 'living' | 'corridor' | 'bathroom' | 'garden' | 'outdoor_corridor' | 'outdoor_garden';
+export type RoomId =
+  | 'living'
+  | 'corridor'
+  | 'bathroom'
+  | 'garden'
+  | 'west_neighbor'
+  | 'east_neighbor'
+  | 'outdoor_corridor'
+  | 'outdoor_garden';
 
 /**
  * Détermine la pièce (RoomId) à partir de coordonnées 2D (x, z).
  * Repères architecturaux de l'appartement :
- * - Séjour (living) : 0 <= Z <= 400
- * - Jardin (garden) : Z < 0 et X >= -100 (terrasse et jardin nord direct)
- * - Couloir (corridor) : Z > 400 et X >= 192
- * - Salle de bain (bathroom) : Z > 400 et X < 192
- * - Extérieur Couloir / Sortie Bâtiment B (outdoor_corridor) : Z > 400 et X < 192 (dehors au sud-ouest) ou X < -100 avec Z > 0
- * - Extérieur Cours / Jardin Bâtiment B (outdoor_garden) : X < -100 et Z <= 0, ou grand déport nord (Z < -500)
+ * - Séjour (living) : -10 <= X <= 300 et 0 <= Z <= 400
+ * - Couloir (corridor) : 192 <= X <= 310 et 400 < Z <= 580
+ * - Salle de bain (bathroom) : -10 <= X < 192 et 400 <= Z <= 680
+ * - Jardin intérieur / terrasse nord (garden) : -10 <= X <= 300 et -420 <= Z < 0
+ * - Studio voisin Ouest (west_neighbor) : X < -10 et 0 <= Z <= 750 (terrasse à Z~100)
+ * - Studio voisin Est (east_neighbor) : X > 300 et -420 <= Z <= 350 (terrasse à Z~-250)
+ * - Extérieur Couloir / Sortie Sud-Ouest (outdoor_corridor) : Z > 680, ou (X > 270 && Z > 580), ou (X < -10 && Z > 750), ou (X > 300 && Z > 350)
+ * - Extérieur Cours / Jardin Ouest & Grand Nord (outdoor_garden) : X < -100 et Z <= 0, ou Z < -420
  */
 export function getRoomFromCoords(x: number, z: number): RoomId {
-  // Salle de bain complète (inclut le receveur de douche jusqu'à Z=675 et les sanitaires)
+  // Salle de bain complète (inclut le receveur de douche jusqu'à Z=680 et les sanitaires)
   if (x >= -10 && x < 192 && z >= 400 && z <= 680) {
     return 'bathroom';
   }
 
-  // Extérieur Bâtiment B (Cour Jardin Ouest / Nord)
-  if (x < -100 && z <= 100) {
-    return 'outdoor_garden';
-  }
-  if (z < -500) {
-    return 'outdoor_garden';
+  // Couloir intérieur (Z > 400 et X >= 192 jusqu'à la porte d'entrée)
+  if (x >= 192 && x <= 310 && z >= 400 && z <= 580) {
+    return 'corridor';
   }
 
-  // Extérieur Bâtiment B (Sortie Couloir Sud-Ouest / Rue)
-  if ((x < -100 && z > 100) || z > 680 || (x > 270 && z > 580)) {
+  // Studio voisin Ouest (Églantine) & sa terrasse
+  if (x < -10 && z >= 0 && z <= 750) {
+    return 'west_neighbor';
+  }
+
+  // Studio voisin Est (Damien) & sa terrasse
+  if (x > 300 && z >= -420 && z <= 350) {
+    return 'east_neighbor';
+  }
+
+  // Extérieur Bâtiment B (Sortie Couloir Sud-Ouest / Ruelle sud)
+  if ((x < -10 && z > 750) || z > 680 || (x > 270 && z > 580) || (x > 300 && z > 350)) {
     return 'outdoor_corridor';
   }
 
-  // Jardin intérieur / terrasse
+  // Extérieur Bâtiment B (Cour Jardin Ouest / Nord)
+  if (x < -100 && z <= 0) {
+    return 'outdoor_garden';
+  }
+  if (z < -420) {
+    return 'outdoor_garden';
+  }
+
+  // Jardin intérieur / terrasse nord
   if (z < 0) {
     return 'garden';
   }
 
-  // Séjour
-  if (z <= 400) {
+  // Séjour intérieur
+  if (z <= 400 && x >= -10 && x <= 300) {
     return 'living';
   }
 
-  // Zone sud couloir (Z > 400 et X >= 192)
-  return 'corridor';
+  // Zone sud couloir
+  if (z > 400) {
+    return 'corridor';
+  }
+
+  return 'living';
 }
 
 
@@ -74,7 +103,8 @@ export const ROOM_PORTALS: RoomPortal[] = [
     traverseInstructions: [
       { type: 'MOVE_TO', targetWaypointId: 'garden-patio' },
       { type: 'INTERACT', triggerEventKey: 'eastGlassDoor', triggerTargetState: true, duration: 0.4 },
-      { type: 'MOVE_TO', targetWaypointId: 'living-glass-door' }
+      { type: 'MOVE_TO', targetWaypointId: 'living-glass-door' },
+      { type: 'MOVE_TO', targetPos: [200, 0, 80] } // Avance dans le salon
     ]
   },
 
@@ -139,7 +169,98 @@ export const ROOM_PORTALS: RoomPortal[] = [
     ]
   },
 
+  // ── JARDIN <-> STUDIO VOISIN OUEST (Passage par la terrasse Ouest) ──
+  {
+    from: 'garden',
+    to: 'west_neighbor',
+    traverseInstructions: [
+      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-west' },
+      { type: 'MOVE_TO', targetWaypointId: 'west-neighbor-terrace' }
+    ]
+  },
+  {
+    from: 'west_neighbor',
+    to: 'garden',
+    traverseInstructions: [
+      { type: 'MOVE_TO', targetWaypointId: 'west-neighbor-terrace' },
+      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-west' },
+      { type: 'MOVE_TO', targetWaypointId: 'garden-patio' }
+    ]
+  },
 
+  // ── JARDIN <-> STUDIO VOISIN EST (Contournement palissade bois vers terrasse Est) ──
+  {
+    from: 'garden',
+    to: 'east_neighbor',
+    traverseInstructions: [
+      { type: 'MOVE_TO', targetWaypointId: 'garden-north' },
+      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-east' },
+      { type: 'MOVE_TO', targetWaypointId: 'east-neighbor-terrace' }
+    ]
+  },
+  {
+    from: 'east_neighbor',
+    to: 'garden',
+    traverseInstructions: [
+      { type: 'MOVE_TO', targetWaypointId: 'east-neighbor-terrace' },
+      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-east' },
+      { type: 'MOVE_TO', targetWaypointId: 'garden-north' },
+      { type: 'MOVE_TO', targetWaypointId: 'garden-patio' }
+    ]
+  },
+
+  // ── JARDIN <-> COUR EXTÉRIEURE / JARDIN BÂTIMENT B ──
+  {
+    from: 'garden',
+    to: 'outdoor_garden',
+    traverseInstructions: [
+      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-west' }
+    ]
+  },
+  {
+    from: 'outdoor_garden',
+    to: 'garden',
+    traverseInstructions: [
+      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-west' },
+      { type: 'MOVE_TO', targetWaypointId: 'garden-patio' }
+    ]
+  },
+
+  // ── COUR EXTÉRIEURE <-> STUDIO VOISIN OUEST ──
+  {
+    from: 'outdoor_garden',
+    to: 'west_neighbor',
+    traverseInstructions: [
+      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-west' },
+      { type: 'MOVE_TO', targetWaypointId: 'west-neighbor-terrace' }
+    ]
+  },
+  {
+    from: 'west_neighbor',
+    to: 'outdoor_garden',
+    traverseInstructions: [
+      { type: 'MOVE_TO', targetWaypointId: 'west-neighbor-terrace' },
+      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-west' }
+    ]
+  },
+
+  // ── COUR EXTÉRIEURE <-> STUDIO VOISIN EST ──
+  {
+    from: 'outdoor_garden',
+    to: 'east_neighbor',
+    traverseInstructions: [
+      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-east' },
+      { type: 'MOVE_TO', targetWaypointId: 'east-neighbor-terrace' }
+    ]
+  },
+  {
+    from: 'east_neighbor',
+    to: 'outdoor_garden',
+    traverseInstructions: [
+      { type: 'MOVE_TO', targetWaypointId: 'east-neighbor-terrace' },
+      { type: 'MOVE_TO', targetWaypointId: 'outdoor-garden-east' }
+    ]
+  },
 
   // ── COURS EXTÉRIEURE <-> COULOIR EXTÉRIEUR (Passage direct Cour Bât B) ──
   {
@@ -165,9 +286,11 @@ const ADJACENCY: Record<RoomId, RoomId[]> = {
   living: ['garden', 'corridor'],
   corridor: ['living', 'bathroom', 'outdoor_corridor'],
   bathroom: ['corridor'],
-  garden: ['living', 'outdoor_garden'],
+  garden: ['living', 'west_neighbor', 'east_neighbor', 'outdoor_garden'],
+  west_neighbor: ['garden', 'outdoor_garden'],
+  east_neighbor: ['garden', 'outdoor_garden'],
   outdoor_corridor: ['corridor', 'outdoor_garden'],
-  outdoor_garden: ['garden', 'outdoor_corridor']
+  outdoor_garden: ['garden', 'west_neighbor', 'east_neighbor', 'outdoor_corridor']
 };
 
 
