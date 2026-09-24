@@ -16,7 +16,7 @@ import { LAYER_NEIGHBORS, LAYER_LIDAR } from '@config';
 import { WALKER_ANIM_OPTIONS } from './animOptions';
 import { getSmartObject } from './ai/smartObjectRegistry';
 import { duoSessionManager } from './ai/duoSessionManager';
-import { DUO_ANIMATIONS } from './ai/duoAnimations';
+import { DUO_ANIMATIONS, type DuoAnimationDef } from './ai/duoAnimations';
 
 // ── Actions disponibles ───────────────────────────────────────────────────────
 
@@ -880,9 +880,24 @@ export function HoverOverlay() {
                     const slot = obj?.slots.find(s => s.slotId === slotId);
                     const targetPos = slot?.offset ?? obj?.position ?? [0, 0, 0];
 
-                    if (slot?.isDuo && slot?.duoAnimId) {
-                      const def = DUO_ANIMATIONS.find(d => d.id === slot.duoAnimId);
-                      if (def) {
+                    if (slot?.isDuo) {
+                      let playlist: DuoAnimationDef[] = [];
+                      if (slot.duoPool && slot.duoPool.length > 0) {
+                        const count = Math.min(slot.duoCount ?? 3, slot.duoPool.length);
+                        const shuffled = [...slot.duoPool].sort(() => Math.random() - 0.5);
+                        playlist = shuffled.slice(0, count)
+                          .map(id => DUO_ANIMATIONS.find(d => d.id === id))
+                          .filter((d): d is DuoAnimationDef => Boolean(d));
+                      } else if (slot.duoAnimId) {
+                        const def = DUO_ANIMATIONS.find(d => d.id === slot.duoAnimId);
+                        if (def) playlist = [def];
+                      } else {
+                        const count = slot.duoCount ?? 3;
+                        const shuffled = [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5);
+                        playlist = shuffled.slice(0, count);
+                      }
+
+                      if (playlist.length > 0) {
                         const activeId = useSceneStore.getState().activeWalkerId;
                         const leaderId = (activeId && activeId !== 'shiba' && activeId !== 'robin')
                           ? activeId
@@ -903,7 +918,7 @@ export function HoverOverlay() {
                         const duoResult = duoSessionManager.startDuoOnSmartObject(
                           objectId,
                           slotId,
-                          def,
+                          playlist,
                           chosenLeader,
                           chosenPartner
                         );

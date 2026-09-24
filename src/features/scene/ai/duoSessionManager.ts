@@ -370,12 +370,16 @@ class DuoSessionManager {
   public startDuoOnSmartObject(
     objectId: string,
     slotId: string,
-    def: DuoAnimationDef,
+    defOrPlaylist: DuoAnimationDef | DuoAnimationDef[],
     leaderId: string,
     partnerId?: string
   ): { targetA: string; targetB: string; posA: [number,number,number]; posB: [number,number,number]; rotA: number; rotB: number } | null {
     const obj = getSmartObject(objectId);
     if (!obj) return null;
+
+    const playlist = Array.isArray(defOrPlaylist) ? defOrPlaylist : [defOrPlaylist];
+    if (playlist.length === 0) return null;
+    const def = playlist[0];
 
     const slot = obj.slots.find(s => s.slotId === slotId) || obj.slots[0];
     const anchorPos: [number, number, number] = slot?.offset ?? obj.position ?? [0, 0, 0];
@@ -405,8 +409,8 @@ class DuoSessionManager {
       anchorRotY,
     };
 
-    // Configurer la session (1 seule répétition propre pour les interactions de meubles)
-    this.playlist = [def];
+    // Configurer la session (1 seule répétition propre par animation dans la playlist)
+    this.playlist = playlist;
     this.currentAnimIndex = 0;
     this.currentRepeatIndex = 0;
     this.repeatsPerAnim = 1;

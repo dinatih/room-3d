@@ -718,18 +718,51 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     position: [-200, 0, -300],
     slots: [
       {
-        slotId: 'roleA',
-        name: 'Rôle A (Meneur)',
-        offset: [-150, 0, -300],
-        rotY: 0,
-        animation: 'animations/poses_idles/anim_female_standing_pose.glb',
-      },
-      {
-        slotId: 'roleB',
-        name: 'Rôle B (Partenaire)',
+        slotId: 'duo-random',
+        name: 'Session Duo Aléatoire',
+        isDuo: true,
         offset: [-200, 0, -300],
         rotY: 0,
-        animation: 'animations/poses_idles/anim_female_standing_pose_1.glb',
+        duoCount: 3,
+      }
+    ]
+  },
+  'hugs-point': {
+    id: 'hugs-point',
+    name: '💖 Point Câlins',
+    category: 'decor',
+    position: [160, 0, 200],
+    slots: [
+      {
+        slotId: 'hugs-trio',
+        name: 'Enchaîner 3 Câlins & Baisers',
+        isDuo: true,
+        offset: [160, 0, 200],
+        rotY: 0,
+        duoPool: ['slow_dance', 'cuddle_kiss', 'eye_to_eye', 'farewell_kiss'],
+        duoCount: 3,
+      }
+    ]
+  },
+  'combat-point': {
+    id: 'combat-point',
+    name: '🥋 Zone de Combat',
+    category: 'outdoor',
+    position: [500, 0, 700],
+    slots: [
+      {
+        slotId: 'combat-session',
+        name: 'Duo Combat Aléatoire',
+        isDuo: true,
+        offset: [500, 0, 700],
+        rotY: 0,
+        duoPool: [
+          'b1', 'd1', 'd4', 'f2', 'h1', 'h2', 'h4', 'ko1', 'ko2', 'ko3',
+          'p1', 'p2', 's1', 's2', 's3', 's4', 's5', 't1', 't3', 't4', 't5',
+          'double_leg_takedown', 'double_leg_takedown_pair', 'release_hostage',
+          'fist_fight', 'taken_hostage', 'shoulder_throw', 'brutal_assassination'
+        ],
+        duoCount: 3,
       }
     ]
   },

@@ -44,26 +44,25 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
     }
 
     const loc = duoSessionManager.getCurrentLocation();
-    if (loc.objectId !== 'duo-zone') {
+    if (loc.objectId === 'chair-office') {
       state.animation = duoRole === 'roleA'
         ? 'animations/poses_idles/miley_armature_sit_cuddle_hug_m.glb'
         : 'animations/poses_idles/miley_armature_sit_cuddle_hug_f.glb';
-
-      // Rôle A → ancre sur anchorPos ; Rôle B → ancre sur posB (offsetB transformé)
-      const waitPos = duoRole === 'roleB'
-        ? duoSessionManager.getWaitPosB()
-        : loc.anchorPos;
-
-      state.x = waitPos[0];
-      state.y = waitPos[1];
-      state.z = waitPos[2];
-      state.rotY = loc.anchorRotY;
     } else {
       state.animation = duoRole === 'roleA'
         ? 'animations/poses_idles/anim_female_standing_pose.glb'
         : 'animations/poses_idles/anim_female_standing_pose_1.glb';
-      state.rotY = 0;
     }
+
+    // Rôle A → ancre sur anchorPos ; Rôle B → ancre sur posB (offsetB transformé)
+    const waitPos = duoRole === 'roleB'
+      ? duoSessionManager.getWaitPosB()
+      : loc.anchorPos;
+
+    state.x = waitPos[0];
+    state.y = waitPos[1];
+    state.z = waitPos[2];
+    state.rotY = loc.anchorRotY;
 
     if (!duoInvited) {
       setDuoInvited(true);

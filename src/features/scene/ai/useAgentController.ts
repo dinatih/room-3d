@@ -4,7 +4,7 @@ import { SMART_OBJECTS, buildSmartObjectInstructionSequence, isDuoSlot } from '.
 import { resolveSlotAnimation } from './animationPacks';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
-import { DUO_ANIMATIONS } from './duoAnimations';
+import { DUO_ANIMATIONS, type DuoAnimationDef } from './duoAnimations';
 import { buildNavigationWaypoints, getRoomFromCoords } from './navigationGraph';
 import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
 import { appLog } from '@features/ui/AppConsole';
@@ -452,17 +452,33 @@ export function useAgentController(
             } else {
               // Déclenchement autonome : le leader gère sa propre navigation directement
               // sans passer par onInvite (évite la corruption d'état et la boucle infinie)
-              const def = DUO_ANIMATIONS.find(d => d.id === 'sit-cuddle');
-              if (def) {
-                const duoRes = duoSessionManager.startDuoOnSmartObject(objId, reqSlotId, def, _characterId);
+              const slot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId) || SMART_OBJECTS[objId]?.slots[0];
+              let playlist: DuoAnimationDef[] = [];
+              if (slot?.duoPool && slot.duoPool.length > 0) {
+                const count = Math.min(slot.duoCount ?? 3, slot.duoPool.length);
+                const shuffled = [...slot.duoPool].sort(() => Math.random() - 0.5);
+                playlist = shuffled.slice(0, count)
+                  .map(id => DUO_ANIMATIONS.find(d => d.id === id))
+                  .filter((d): d is DuoAnimationDef => Boolean(d));
+              } else if (slot?.duoAnimId) {
+                const def = DUO_ANIMATIONS.find(d => d.id === slot.duoAnimId);
+                if (def) playlist = [def];
+              } else {
+                const count = slot?.duoCount ?? 3;
+                const shuffled = [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5);
+                playlist = shuffled.slice(0, count);
+              }
+              if (playlist.length > 0) {
+                const actualSlotId = reqSlotId || slot?.slotId || 'duo';
+                const duoRes = duoSessionManager.startDuoOnSmartObject(objId, actualSlotId, playlist, _characterId);
                 if (duoRes) {
                   role = 'roleA';
                   duoRoleRef.current = 'roleA';
                   // Configurer l'instruction pour naviguer vers posA (coords monde précalculées)
                   currentInstruction.targetPos = duoRes.posA;
-                  currentInstruction.slotId = `${reqSlotId}:roleA`;
+                  currentInstruction.slotId = `${actualSlotId}:roleA`;
                   currentInstruction.rotY = duoRes.rotA;
-                  claimedSlotRef.current = { objectId: objId, slotId: `${reqSlotId}:roleA` };
+                  claimedSlotRef.current = { objectId: objId, slotId: `${actualSlotId}:roleA` };
                   // Invalider le cache de coords pour forcer le recalcul avec targetPos
                   cachedCoordsInstructionRef.current = null;
                   cachedCoordsRef.current = null;
@@ -478,10 +494,10 @@ export function useAgentController(
               currentInstruction.slotId = reqSlotId || role;
               claimedSlotRef.current = { objectId: objId, slotId: currentInstruction.slotId };
             }
-            // Pour duo-zone : garder l'animation et la durée du slot
+            // Pour duo-zone : garder l'animation et la durée du slot si définies
             if (objId === 'duo-zone') {
               const slot = SMART_OBJECTS[objId]?.slots.find(s => s.slotId === reqSlotId || s.slotId === role);
-              if (slot) {
+              if (slot && slot.animation) {
                 currentInstruction.animation = slot.animation;
                 currentInstruction.duration = slot.duration;
                 currentInstruction.rotY = slot.rotY;

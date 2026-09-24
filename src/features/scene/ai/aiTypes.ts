@@ -28,6 +28,8 @@ export interface InteractionSlot {
   // ── Support Duo Animation ──
   isDuo?: boolean;            // Indique une interaction à deux personnages synchronisés
   duoAnimId?: string;         // Identifiant de l'animation duo (dans DUO_ANIMATIONS, ex: 'sit_cuddle')
+  duoPool?: string[];         // Liste restreinte d'IDs pour tirage aléatoire (ex: hugs ou combat)
+  duoCount?: number;          // Nombre d'animations à enchaîner dans la session (défaut: 1 ou 3)
   duoRole?: 'roleA' | 'roleB'; // Rôle assigné au slot
 }
 
