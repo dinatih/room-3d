@@ -44,7 +44,9 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
     }
 
     const loc = duoSessionManager.getCurrentLocation(characterId);
-    const isCuddle = loc.slotId === 'sit-cuddle' || loc.objectId === 'chair-office';
+    const session = duoSessionManager.getSessionFor(characterId);
+    const curAnimDef = session?.playlist[session.currentAnimIndex] || session?.playlist[0];
+    const isCuddle = curAnimDef?.id === 'sit-cuddle' || loc.slotId === 'sit-cuddle';
     if (isCuddle) {
       state.animation = duoRole === 'roleA'
         ? 'miley-armature-sit-cuddle-hug-m'

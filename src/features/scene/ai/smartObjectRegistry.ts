@@ -732,7 +732,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Enchaîner 3 Câlins & Baisers',
         isDuo: true,
         rotY: 0,
-        duoPool: ['slow_dance', 'cuddle_kiss', 'eye_to_eye', 'farewell_kiss'],
+        duoPool: ['slow_dance', 'cuddle_kiss', 'eye_to_eye', 'farewell_kiss', 'sit-cuddle'],
         duoCount: 3,
       }
     ]

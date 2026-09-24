@@ -646,9 +646,11 @@ export function useAgentController(
             const animState = duoSessionManager.getCurrentAnimState(_characterId);
             timerRef.current = animState?.duration ?? 5.0;
             const curLoc = duoSessionManager.getCurrentLocation(_characterId);
-            const isCuddle = curLoc.slotId === 'sit-cuddle'
-              || currentInstruction.slotId?.includes('sit-cuddle')
-              || currentInstruction.smartObjectId === 'chair-office';
+            const session = duoSessionManager.getSessionFor(_characterId);
+            const curAnimDef = session?.playlist[session.currentAnimIndex] || session?.playlist[0];
+            const isCuddle = curAnimDef?.id === 'sit-cuddle'
+              || curLoc.slotId === 'sit-cuddle'
+              || currentInstruction.slotId?.includes('sit-cuddle');
             if (animState && duoRoleRef.current) {
               stateRef.current.animation = duoRoleRef.current === 'roleA' ? animState.clipA : animState.clipB;
             } else {
