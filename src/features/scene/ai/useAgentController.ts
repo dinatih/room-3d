@@ -156,7 +156,7 @@ export function useAgentController(
             ];
             dynamicNavIndexRef.current = 0;
             duoSessionManager.markReady(_characterId);
-            const animState = duoSessionManager.getCurrentAnimState();
+            const animState = duoSessionManager.getCurrentAnimState(_characterId);
             if (animState) {
               stateRef.current.animation = role === 'roleA' ? animState.clipA : animState.clipB;
             }
@@ -443,7 +443,7 @@ export function useAgentController(
 
         const isDuoCooldown = Date.now() - lastDuoEndTimeRef.current < 25000;
         const isSeated = targetSlot?.animationsRandom === 'seated-front' || reqSlotId === 'sit-cuddle';
-        const triggerCuddle = isSeated && !isDuoCooldown && !duoSessionManager.isPlaying() && Math.random() < 0.5;
+        const triggerCuddle = isSeated && !isDuoCooldown && !duoSessionManager.isPlaying(_characterId) && Math.random() < 0.5;
 
         const isDuo = objId === 'duo-zone' || isDuoSlot(objId, reqSlotId) || triggerCuddle;
         if (isDuo) {
@@ -654,9 +654,9 @@ export function useAgentController(
           if (isDuoAction) {
             duoSessionManager.markReady(_characterId);
             duoWaitTimerRef.current = 0;
-            const animState = duoSessionManager.getCurrentAnimState();
+            const animState = duoSessionManager.getCurrentAnimState(_characterId);
             timerRef.current = animState?.duration ?? 5.0;
-            const curLoc = duoSessionManager.getCurrentLocation();
+            const curLoc = duoSessionManager.getCurrentLocation(_characterId);
             const isCuddle = curLoc.slotId === 'sit-cuddle'
               || currentInstruction.slotId?.includes('sit-cuddle')
               || currentInstruction.smartObjectId === 'chair-office';

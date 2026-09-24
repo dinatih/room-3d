@@ -813,11 +813,11 @@ export function SingleCharacter({
         }, scene);
       }
     } else if (!isPaused && !isTPose) {
-      if (duoSessionManager.isPlaying()) {
-        const partA = duoSessionManager.getParticipantA();
-        const partB = duoSessionManager.getParticipantB();
+      if (duoSessionManager.isPlaying(id)) {
+        const partA = duoSessionManager.getParticipantA(id);
+        const partB = duoSessionManager.getParticipantB(id);
         if (partA?.characterId === id || partB?.characterId === id) {
-          const currentAnimState = duoSessionManager.getCurrentAnimState();
+          const currentAnimState = duoSessionManager.getCurrentAnimState(id);
           if (
             currentAnimState &&
             activeActionName.current &&
@@ -832,7 +832,7 @@ export function SingleCharacter({
             if (act) {
               const clipDur = act.getClip().duration;
               if (clipDur > 0) {
-                const elapsed = duoSessionManager.getElapsedTimeInRepeat();
+                const elapsed = duoSessionManager.getElapsedTimeInRepeat(id);
                 act.time = elapsed % clipDur;
               }
             }

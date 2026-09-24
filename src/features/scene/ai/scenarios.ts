@@ -148,14 +148,14 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = {
   zoe:      'west-neighbor-flat',
   sophia:   'building-b-corridor',
   valby:    'bathtub-garden',
-  alex:     'est-neighbor-flat',
+  alex:     'hugs-point',
+  mannequin:'hugs-point',
   david:    'est-neighbor-flat',
   james:    'est-neighbor-flat',
   lewis:    'est-neighbor-flat',
-  mannequin:'est-neighbor-flat',
   jennifer: 'dance-bed-west-mid',
-  skeleton: 'est-neighbor-flat',
-  curious_skeleton: 'est-neighbor-flat',
+  skeleton: 'combat-point',
+  curious_skeleton: 'combat-point',
 };
 
 /**

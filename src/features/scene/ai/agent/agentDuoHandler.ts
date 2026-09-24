@@ -43,7 +43,7 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
       return true;
     }
 
-    const loc = duoSessionManager.getCurrentLocation();
+    const loc = duoSessionManager.getCurrentLocation(characterId);
     const isCuddle = loc.slotId === 'sit-cuddle' || loc.objectId === 'chair-office';
     if (isCuddle) {
       state.animation = duoRole === 'roleA'
@@ -57,7 +57,7 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
 
     // Rôle A → ancre sur anchorPos ; Rôle B → ancre sur posB (offsetB transformé)
     const waitPos = duoRole === 'roleB'
-      ? duoSessionManager.getWaitPosB()
+      ? duoSessionManager.getWaitPosB(characterId)
       : loc.anchorPos;
 
     state.x = waitPos[0];
