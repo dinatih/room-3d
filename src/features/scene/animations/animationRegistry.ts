@@ -263,6 +263,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['work-meeting-f', 'desk-meeting-f'],
     tags: ['sitting', 'seated-front', 'work', 'social', 'female'],
     duration: 46.7,
+    defaultOffset: [0, -30, 50],
   },
   {
     id: 'having-a-meeting-male',
@@ -271,6 +272,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['work-meeting-m', 'desk-meeting-m'],
     tags: ['sitting', 'seated-front', 'work', 'social', 'male'],
     duration: 46.7,
+    defaultOffset: [0, -21, 65],
   },
 
   // ── ASSISES DE CÔTÉ (90° / π/2) ────────────────────────────────────────────
