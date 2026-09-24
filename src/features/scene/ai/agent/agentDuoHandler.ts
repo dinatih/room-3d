@@ -44,18 +44,9 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
     }
 
     const loc = duoSessionManager.getCurrentLocation(characterId);
-    const session = duoSessionManager.getSessionFor(characterId);
-    const curAnimDef = session?.playlist[session.currentAnimIndex] || session?.playlist[0];
-    const isCuddle = curAnimDef?.id === 'sit-cuddle' || loc.slotId === 'sit-cuddle';
-    if (isCuddle) {
-      state.animation = duoRole === 'roleA'
-        ? 'miley-armature-sit-cuddle-hug-m'
-        : 'miley-armature-sit-cuddle-hug-f';
-    } else {
-      state.animation = duoRole === 'roleA'
-        ? 'female-standing-pose'
-        : 'female-standing-pose-1';
-    }
+    state.animation = duoRole === 'roleA'
+      ? 'anim-female-standing-pose'
+      : 'anim-female-standing-pose-1';
 
     // Rôle A → ancre sur anchorPos ; Rôle B → ancre sur posB (offsetB transformé)
     const waitPos = duoRole === 'roleB'

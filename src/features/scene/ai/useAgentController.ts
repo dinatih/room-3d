@@ -654,23 +654,12 @@ export function useAgentController(
             duoSessionManager.markReady(_characterId);
             duoWaitTimerRef.current = 0;
             const animState = duoSessionManager.getCurrentAnimState(_characterId);
-            timerRef.current = animState?.duration ?? 5.0;
-            const curLoc = duoSessionManager.getCurrentLocation(_characterId);
-            const session = duoSessionManager.getSessionFor(_characterId);
-            const curAnimDef = session?.playlist[session.currentAnimIndex] || session?.playlist[0];
-            const isCuddle = curAnimDef?.id === 'sit-cuddle'
-              || curLoc.slotId === 'sit-cuddle'
-              || currentInstruction.slotId?.includes('sit-cuddle');
             if (animState && duoRoleRef.current) {
               stateRef.current.animation = duoRoleRef.current === 'roleA' ? animState.clipA : animState.clipB;
             } else {
-              stateRef.current.animation = isCuddle
-                ? (duoRoleRef.current === 'roleA'
-                    ? 'miley-armature-sit-cuddle-hug-m'
-                    : 'miley-armature-sit-cuddle-hug-f')
-                : (duoRoleRef.current === 'roleA'
-                    ? 'female-standing-pose'
-                    : 'female-standing-pose-1');
+              stateRef.current.animation = duoRoleRef.current === 'roleA'
+                ? 'anim-female-standing-pose'
+                : 'anim-female-standing-pose-1';
             }
           }
 
