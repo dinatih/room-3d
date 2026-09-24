@@ -1,4 +1,4 @@
-import { getAnimationDef } from '../animations/animationResolver';
+import { ANIMATION_DEFINITIONS } from '../animations/animationRegistry';
 
 export interface DuoAnimationDef {
   id: string;
@@ -58,9 +58,19 @@ const RAW_DUO_ANIMATIONS: RawDuoAnimationDef[] = [
   { id: 'hokey_pokey', label: 'Hokey Pokey', icon: '👯', animA: 'hokey-pokey', animB: 'hokey-pokey', offsetB: [-100, 0, 0] }
 ];
 
+const animDurationMap = new Map<string, number>();
+for (const def of ANIMATION_DEFINITIONS) {
+  animDurationMap.set(def.id.toLowerCase(), def.duration);
+  if (def.aliases) {
+    for (const a of def.aliases) {
+      animDurationMap.set(a.toLowerCase(), def.duration);
+    }
+  }
+}
+
 export const DUO_ANIMATIONS: DuoAnimationDef[] = RAW_DUO_ANIMATIONS.map((def) => ({
   ...def,
-  duration: def.duration ?? getAnimationDef(def.animA)?.duration ?? 5.0,
+  duration: def.duration ?? animDurationMap.get(def.animA.toLowerCase()) ?? 5.0,
 }));
 
 /**

@@ -49,6 +49,9 @@ buildIndexes();
  */
 export function getAnimationDef(key: string): AnimationDefinition | undefined {
   if (!key) return undefined;
+  if (keyToDefMap.size === 0) {
+    buildIndexes();
+  }
   return keyToDefMap.get(key.trim().toLowerCase());
 }
 
