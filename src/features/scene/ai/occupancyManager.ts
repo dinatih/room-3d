@@ -19,6 +19,15 @@ class SmartObjectOccupancyManager {
   }
 
   /**
+   * Indique si un objet est à usage exclusif (un seul personnage à la fois sur l'ensemble de ses slots).
+   */
+  isExclusiveObject(objectId: string): boolean {
+    if (objectId === 'vasque-sdb' || objectId === 'toilet') return true;
+    const obj = SMART_OBJECTS[objectId];
+    return !!obj?.exclusive;
+  }
+
+  /**
    * Vérifie si un slot donné est occupé par un AUTRE personnage.
    */
   isSlotOccupied(objectId: string, slotId: string, forCharacterId?: string): boolean {
@@ -30,35 +39,16 @@ class SmartObjectOccupancyManager {
 
     // Règles spécifiques d'exclusion mutuelle par meuble :
 
-    // 1. Toilettes : occupation totale si quelqu'un est dessus ou tire la chasse
-    if (objectId === 'toilet') {
+    // 1. Objets à usage exclusif (vasque-sdb, toilet...) : occupation totale si quelqu'un d'autre occupe un slot
+    if (this.isExclusiveObject(objectId)) {
       for (const [k, r] of this.occupiedSlots.entries()) {
-        if (k.startsWith('toilet:') && (!forCharacterId || r.characterId !== forCharacterId)) {
+        if (k.startsWith(`${objectId}:`) && (!forCharacterId || r.characterId !== forCharacterId)) {
           return true;
         }
       }
     }
 
-    // 2. Lits (bed-west, bed-east) :
-    // - Si quelqu'un est couché ('lie-down'), tout le lit est occupé.
-    // - Si quelqu'un veut se coucher ('lie-down'), aucun slot de siège ne doit être pris.
-    // if (objectId.startsWith('bed-')) {
-    //   if (slotId === 'lie-down') {
-    //     for (const [k, r] of this.occupiedSlots.entries()) {
-    //       if (k.startsWith(`${objectId}:`) && (!forCharacterId || r.characterId !== forCharacterId)) {
-    //         return true;
-    //       }
-    //     }
-    //   } else {
-    //     const lieDownKey = this.slotKey(objectId, 'lie-down');
-    //     const lieDownRes = this.occupiedSlots.get(lieDownKey);
-    //     if (lieDownRes && (!forCharacterId || lieDownRes.characterId !== forCharacterId)) {
-    //       return true;
-    //     }
-    //   }
-    // }
-
-    // 3. Chaise de bureau : exclusion mutuelle entre le mode solo 'sit' et le mode duo 'sit-cuddle'
+    // 2. Chaise de bureau : exclusion mutuelle entre le mode solo 'sit' et le mode duo 'sit-cuddle'
     if (objectId === 'chair-office') {
       if (slotId === 'sit') {
         for (const [k, r] of this.occupiedSlots.entries()) {
@@ -86,7 +76,7 @@ class SmartObjectOccupancyManager {
     const res = this.occupiedSlots.get(key);
     if (res) return res.characterId;
 
-    if (objectId === 'toilet') {
+    if (this.isExclusiveObject(objectId)) {
       for (const [k, r] of this.occupiedSlots.entries()) {
         if (k.startsWith(`${objectId}:`)) return r.characterId;
       }
@@ -172,6 +162,14 @@ class SmartObjectOccupancyManager {
   isObjectFullyOccupied(objectId: string, characterId?: string): boolean {
     const obj = SMART_OBJECTS[objectId];
     if (!obj || !obj.slots.length) return false;
+    if (this.isExclusiveObject(objectId)) {
+      for (const [k, r] of this.occupiedSlots.entries()) {
+        if (k.startsWith(`${objectId}:`) && (!characterId || r.characterId !== characterId)) {
+          return true;
+        }
+      }
+      return false;
+    }
     return obj.slots.every(slot => this.isSlotOccupied(objectId, slot.slotId, characterId));
   }
 }

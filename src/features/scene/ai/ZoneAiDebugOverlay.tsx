@@ -156,6 +156,13 @@ export function ZoneAiDebugOverlay() {
         setFeedbackMsg(`⚠️ Impossible de démarrer la session duo sur ${slot.name}`);
       }
     } else {
+      if (OccupancyManager.isSlotOccupied(objId, sId, targetChar)) {
+        const occupant = OccupancyManager.getOccupant(objId, sId);
+        setFeedbackMsg(`⚠️ ${obj.name} est déjà occupé${occupant ? ` (${occupant})` : ''} !`);
+        setTimeout(() => setFeedbackMsg(null), 3500);
+        return;
+      }
+
       document.dispatchEvent(
         new CustomEvent('agent-force-smartobject', {
           detail: {

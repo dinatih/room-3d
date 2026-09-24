@@ -177,6 +177,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'toilet',
     name: 'Toilettes WC',
     category: 'hygiene',
+    exclusive: true,
     position: [50, 0, 500],
     slots: [
       {
@@ -202,6 +203,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'vasque-sdb',
     name: 'Vasque Salle de bain',
     category: 'hygiene',
+    exclusive: true,
     position: [116, 0, 530],
     slots: [
       {

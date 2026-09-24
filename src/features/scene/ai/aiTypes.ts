@@ -42,6 +42,7 @@ export interface SmartObjectDef {
   rotationY?: number;         // Orientation monde de l'objet (optionnel si itemId présent)
   slots: InteractionSlot[];   // Slots d'interaction disponibles
   requiresDoorAccess?: { doorKey: string; approachNode?: string }; // Pré-conditions si nécessaire
+  exclusive?: boolean;        // Si true, un seul personnage à la fois peut utiliser cet objet (exclusivité partagée par tous ses slots)
 }
 
 export type ResolvedSmartObject = SmartObjectDef & {

@@ -176,6 +176,13 @@ export function useAgentController(
     const onForceSmartObject = (e: any) => {
       if (e.detail?.targetId === _characterId && e.detail?.objectId) {
         const { objectId, slotId } = e.detail;
+        const targetSlot = slotId || SMART_OBJECTS[objectId]?.slots[0]?.slotId;
+        if (targetSlot && OccupancyManager.isSlotOccupied(objectId, targetSlot, _characterId)) {
+          const occupant = OccupancyManager.getOccupant(objectId, targetSlot);
+          appLog(_characterId, `⚠️ Action impossible : ${SMART_OBJECTS[objectId]?.name || objectId} est déjà occupé${occupant ? ` (${occupant})` : ''}`);
+          return;
+        }
+
         releaseClaimedSlot();
         duoSessionManager.leaveDuoZone(_characterId);
         duoRoleRef.current = null;
@@ -183,6 +190,10 @@ export function useAgentController(
 
         const seq = buildSmartObjectInstructionSequence(objectId, slotId, _characterId);
         if (seq && seq.length > 0) {
+          if (targetSlot) {
+            OccupancyManager.claimSlot(objectId, targetSlot, _characterId);
+            claimedSlotRef.current = { objectId, slotId: targetSlot };
+          }
           dynamicNavQueueRef.current = seq;
           dynamicNavIndexRef.current = 0;
           activeNavStepIndexRef.current = -1;
@@ -296,6 +307,15 @@ export function useAgentController(
       if (dynamicNavIndexRef.current >= dynamicNavQueueRef.current.length) {
         dynamicNavQueueRef.current = [];
         dynamicNavIndexRef.current = 0;
+        const nextInstr = scenario && stepIndexRef.current < scenario.length ? scenario[stepIndexRef.current] : null;
+        if (claimedSlotRef.current && (!nextInstr || nextInstr.smartObjectId !== claimedSlotRef.current.objectId)) {
+          releaseClaimedSlot();
+        }
+      } else {
+        const nextDynamicInstr = dynamicNavQueueRef.current[dynamicNavIndexRef.current];
+        if (claimedSlotRef.current && (!nextDynamicInstr || nextDynamicInstr.smartObjectId !== claimedSlotRef.current.objectId)) {
+          releaseClaimedSlot();
+        }
       }
     } else {
       stepIndexRef.current++;
