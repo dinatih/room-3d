@@ -5,6 +5,7 @@ import type { GroundType } from '../sidepanel/types';
 import { groundExteriorMat } from './buildingCommon';
 import { CategoryLayerGroup } from '../sceneLayer';
 import { LAYER_GRASS, LAYER_FLOOR_COVERINGS } from '@config';
+import { useSceneStore } from '../store/useSceneStore';
 
 export interface GroundConfig {
   id: GroundType;
@@ -64,27 +65,31 @@ interface BermudaGroundProps {
   yPos?: number;
 }
 
-export function BermudaGround({ active = true, groundType = 'bermuda', yPos = -4.5 }: BermudaGroundProps) {
-  const showTexturedGrass = active && groundType !== 'none' && (groundType in GROUND_CONFIGS);
+export function BermudaGround({ active, groundType = 'bermuda', yPos = -4.5 }: BermudaGroundProps) {
+  const storeBermudaGrass = useSceneStore(state => state.layers.bermudaGrass ?? true);
+  const isGrassActive = active ?? storeBermudaGrass;
+  const showTexturedGrass = isGrassActive && groundType !== 'none' && (groundType in GROUND_CONFIGS);
 
   return (
     <>
-      {/* Rectangle vert uni : terrain extérieur rattaché à Revêtement sol (LAYER_FLOOR_COVERINGS) */}
-      <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
-        <mesh
-          material={groundExteriorMat}
-          rotation={[-Math.PI / 2, 0, 0]}
-          position={[150, yPos, 0]}
-          receiveShadow
-          userData={{
-            brickType: 'ground',
-            itemName: 'Terrain Extérieur',
-            hoverAction: { label: 'Sol : Vert uni', actionId: 'ground-type-cycle' },
-          }}
-        >
-          <planeGeometry args={[1100, 2000]} />
-        </mesh>
-      </CategoryLayerGroup>
+      {/* Rectangle vert uni : terrain extérieur rattaché à Revêtement sol (LAYER_FLOOR_COVERINGS), masqué si le calque Herbe est actif */}
+      {!isGrassActive && (
+        <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS}>
+          <mesh
+            material={groundExteriorMat}
+            rotation={[-Math.PI / 2, 0, 0]}
+            position={[150, yPos, 0]}
+            receiveShadow
+            userData={{
+              brickType: 'ground',
+              itemName: 'Terrain Extérieur',
+              hoverAction: { label: 'Sol : Vert uni', actionId: 'ground-type-cycle' },
+            }}
+          >
+            <planeGeometry args={[1100, 2000]} />
+          </mesh>
+        </CategoryLayerGroup>
+      )}
 
       {/* Herbe texturée PBR : rattachée au calque Herbe (LAYER_GRASS) */}
       {showTexturedGrass && (
@@ -92,7 +97,7 @@ export function BermudaGround({ active = true, groundType = 'bermuda', yPos = -4
           <TexturedGroundMesh
             key={GROUND_CONFIGS[groundType as Exclude<GroundType, 'none'>].id}
             config={GROUND_CONFIGS[groundType as Exclude<GroundType, 'none'>]}
-            yPos={yPos + 0.05}
+            yPos={yPos}
           />
         </CategoryLayerGroup>
       )}
