@@ -65,7 +65,7 @@ interface BermudaGroundProps {
   yPos?: number;
 }
 
-export function BermudaGround({ active, groundType = 'bermuda', yPos = -4.5 }: BermudaGroundProps) {
+export function BermudaGround({ active, groundType = 'bermuda', yPos = -3.5 }: BermudaGroundProps) {
   const storeBermudaGrass = useSceneStore(state => state.layers.bermudaGrass ?? true);
   const isGrassActive = active ?? storeBermudaGrass;
   const showTexturedGrass = isGrassActive && groundType !== 'none' && (groundType in GROUND_CONFIGS);
@@ -138,6 +138,9 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       metalness: 0.02,
       transparent: true,
       opacity: 0.8,
+      polygonOffset: true,
+      polygonOffsetFactor: 2,
+      polygonOffsetUnits: 2,
     });
   }, [textures, config.tileSize]);
 

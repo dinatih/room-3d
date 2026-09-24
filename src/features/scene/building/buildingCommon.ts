@@ -33,13 +33,28 @@ export function boxFaceMats(
 
 // Matériaux dalle béton
 export const slabConcreteTop = new THREE.MeshStandardMaterial({
-  color: COLORS.floor, roughness: 0.6,
+  color: COLORS.floor,
+  roughness: 0.6,
+  polygonOffset: true,
+  polygonOffsetFactor: -1,
+  polygonOffsetUnits: -1,
 });
 export const slabConcreteSide = new THREE.MeshStandardMaterial({
-  color: COLORS.floor, roughness: 0.6, side: THREE.FrontSide,
+  color: COLORS.floor,
+  roughness: 0.6,
+  side: THREE.FrontSide,
+  polygonOffset: true,
+  polygonOffsetFactor: -1,
+  polygonOffsetUnits: -1,
 });
 export const groundExteriorMat = new THREE.MeshStandardMaterial({
-  color: COLORS.ground, roughness: 0.9, transparent: true, opacity: 0.8
+  color: COLORS.ground,
+  roughness: 0.9,
+  transparent: true,
+  opacity: 0.8,
+  polygonOffset: true,
+  polygonOffsetFactor: 2,
+  polygonOffsetUnits: 2,
 });
 
 // Matériaux murs par orientation

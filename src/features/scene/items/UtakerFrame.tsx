@@ -25,6 +25,9 @@ const redFabricMat = new THREE.MeshPhysicalMaterial({
   sheen: 1.0,
   sheenColor: new THREE.Color(0xff5555),
   sheenRoughness: 0.6,
+  polygonOffset: true,
+  polygonOffsetFactor: -1,
+  polygonOffsetUnits: -1,
 });
 
 import { Blaskata50569513 } from './Blaskata50569513';
