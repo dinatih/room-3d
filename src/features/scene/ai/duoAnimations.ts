@@ -69,3 +69,12 @@ export const DUO_ANIMATIONS: DuoAnimationDef[] = RAW_DUO_ANIMATIONS.map((def) =>
 export function getAllDuoAnimationIds(): string[] {
   return DUO_ANIMATIONS.map((def) => def.id);
 }
+
+/**
+ * Retrouve une définition d'animation Duo par son identifiant unique.
+ */
+export function getDuoAnimationDef(id?: string): DuoAnimationDef | undefined {
+  if (!id) return undefined;
+  const clean = id.trim().toLowerCase();
+  return DUO_ANIMATIONS.find((d) => d.id.toLowerCase() === clean);
+}

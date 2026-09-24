@@ -614,7 +614,7 @@ export function SingleCharacter({
           cameraState.walkYaw = agentState.rotY;
           cameraState.isAIControlled = true;
           if (agentState.isSpawned) {
-            cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
+            cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY, anim: agentState.animation };
           } else {
             delete cameraState.positions[id];
           }
@@ -624,7 +624,7 @@ export function SingleCharacter({
           groupRef.current.visible = !cameraState.walkerHidden;
           cameraState.isAIControlled = false;
           currentAnimClip.current = null;
-          cameraState.positions[id] = { x: cameraState.walkerX, y: 0, z: cameraState.walkerZ, yaw: cameraState.walkYaw };
+          cameraState.positions[id] = { x: cameraState.walkerX, y: 0, z: cameraState.walkerZ, yaw: cameraState.walkYaw, anim: currentAnimClip.current || 'idle' };
           
           setAgentPosition(cameraState.walkerX, 0, cameraState.walkerZ);
           setAgentRotation(cameraState.walkYaw);
@@ -640,7 +640,7 @@ export function SingleCharacter({
         groupRef.current.visible = !cameraState.walkerHidden && showAllLaraStyles && isVisibleInCountMode && agentState.isSpawned;
 
         if (agentState.isSpawned && isVisibleInCountMode) {
-          cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY };
+          cameraState.positions[id] = { x: agentState.x, y: agentState.y, z: agentState.z, yaw: agentState.rotY, anim: agentState.animation };
         } else {
           delete cameraState.positions[id];
         }

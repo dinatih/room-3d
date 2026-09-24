@@ -32,7 +32,7 @@ export const cameraState = {
   walkerZ: (CHARACTERS[0]?.pos[2] ?? 30) as number, 
   walkerYaw: (CHARACTERS[0]?.rot ?? 1.9) as number,
   /** Positions enregistrées de tous les walkers */
-  positions: {} as Record<string, {x: number, y: number, z: number, yaw: number}>,
+  positions: {} as Record<string, {x: number, y: number, z: number, yaw: number, anim?: string}>,
   /** Position monde réelle de la tête du walker actif (calculée dynamiquement par SingleCharacter d'après le squelette 3D) */
   activeHeadPos: null as { x: number; y: number; z: number } | null,
   /** Position monde réelle des hanches / centre de masse du walker actif */

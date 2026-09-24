@@ -7,7 +7,7 @@ import { cameraState } from '../cameraState';
 import { CHARACTERS, isCharacterVisibleInMode } from '../walkerConfig';
 import { useZoneAiDebugStore } from './zoneAiDebugStore';
 import { appLog } from '@features/ui/AppConsole';
-import { resolveSlotAnimationInfo } from '../animations/animationResolver';
+import { resolveSlotAnimationInfo, getAnimationDef } from '../animations/animationResolver';
 
 export function ZoneAiDebugOverlay() {
   const visible = useSceneStore((s) => s.layers.aiZones);
@@ -33,13 +33,15 @@ export function ZoneAiDebugOverlay() {
   // Rafraîchir périodiquement et sur les événements pour capter l'occupation des slots
   useEffect(() => {
     const onUpdate = () => setTick((t) => t + 1);
-    const interval = setInterval(onUpdate, 1000);
+    const interval = setInterval(onUpdate, 500);
+    const unsubDuo = duoSessionManager.subscribe(onUpdate);
     document.addEventListener('furniture-toggle', onUpdate);
     document.addEventListener('agent-force-smartobject', onUpdate);
     document.addEventListener('npc-invite-duo', onUpdate);
 
     return () => {
       clearInterval(interval);
+      unsubDuo();
       document.removeEventListener('furniture-toggle', onUpdate);
       document.removeEventListener('agent-force-smartobject', onUpdate);
       document.removeEventListener('npc-invite-duo', onUpdate);
@@ -147,7 +149,7 @@ export function ZoneAiDebugOverlay() {
     const charName = charConfig?.name ?? targetChar;
 
     if (slot.isDuo) {
-      const duoResult = duoSessionManager.startDuoSession(objId, sId, targetChar);
+      const duoResult = duoSessionManager.startDuoSession(objId, sId, targetChar, undefined, chosenAnim);
       if (duoResult) {
         document.dispatchEvent(
           new CustomEvent('npc-invite-duo', {
@@ -414,12 +416,52 @@ export function ZoneAiDebugOverlay() {
                 )}
               </div>
 
-              {/* Smartaction sélectionnée avec ID canonique et durée */}
+              {/* Smartaction sélectionnée ou en cours avec ID canonique et durée */}
               {(() => {
                 const animMeta = resolveSlotAnimationInfo(currentSlot);
+
+                // Vérifier si une session Duo est active sur ce slot
+                const activeDuoSession = currentSlot.isDuo
+                  ? (currentOccupant ? duoSessionManager.getSessionFor(currentOccupant) : null) ||
+                    duoSessionManager.getSessionForSlot(currentObj.id, currentSlot.slotId)
+                  : null;
+
+                const currentPlayingDuoDef = activeDuoSession
+                  ? (activeDuoSession.playlist[activeDuoSession.currentAnimIndex] ?? activeDuoSession.playlist[0])
+                  : null;
+
+                // Vérifier si un occupant solo joue actuellement une animation
+                const occupantAnim = (!currentSlot.isDuo && currentOccupant)
+                  ? cameraState.positions[currentOccupant]?.anim
+                  : null;
+
                 const activeVariant = animMeta.variants?.find((v) => v.canonicalId === selectedActionId);
-                const currentCanonicalId = activeVariant?.canonicalId ?? selectedActionId ?? animMeta.canonicalId;
-                const currentDuration = currentSlot.duration ?? activeVariant?.duration ?? animMeta.duration;
+
+                // Déterminer l'ID canonique et la durée :
+                // 1. Session Duo en direct -> ID canonique du clip duo en cours (ex: 'sit-cuddle', 'cuddle_kiss')
+                // 2. Occupant solo en direct -> animation active du personnage
+                // 3. Variante sélectionnée
+                // 4. ID canonique par défaut du slot
+                const currentCanonicalId =
+                  currentPlayingDuoDef?.id ??
+                  occupantAnim ??
+                  activeVariant?.canonicalId ??
+                  selectedActionId ??
+                  animMeta.canonicalId;
+
+                const currentDuration =
+                  currentPlayingDuoDef?.duration ??
+                  (occupantAnim ? getAnimationDef(occupantAnim)?.duration : undefined) ??
+                  currentSlot.duration ??
+                  activeVariant?.duration ??
+                  animMeta.duration;
+
+                const currentClip =
+                  currentPlayingDuoDef
+                    ? `${currentPlayingDuoDef.animA} / ${currentPlayingDuoDef.animB}`
+                    : (activeVariant?.clipName ?? animMeta.clipName);
+
+                const isPlayingLive = !!(activeDuoSession || (occupantAnim && occupantAnim !== 'idle' && occupantAnim !== 'walk'));
 
                 return (
                   <div
@@ -434,22 +476,58 @@ export function ZoneAiDebugOverlay() {
                       border: '1px solid rgba(255, 255, 255, 0.08)',
                     }}
                   >
-                    <div>
-                      <span style={{ color: '#94a3b8' }}>ID Canonique : </span>
-                      <span style={{ color: '#38bdf8', fontFamily: 'monospace', fontWeight: 700 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                      <span style={{ color: '#94a3b8' }}>
+                        {isPlayingLive ? '🎬 Animation en cours : ' : 'ID Canonique : '}
+                      </span>
+                      <span style={{ color: '#38bdf8', fontFamily: 'monospace', fontWeight: 700, fontSize: 11 }}>
                         {currentCanonicalId}
                       </span>
                       {currentDuration !== undefined && (
-                        <span style={{ color: '#a7f3d0', fontWeight: 700, marginLeft: 6 }}>
+                        <span style={{ color: '#a7f3d0', fontWeight: 700 }}>
                           ({currentDuration.toFixed(1)}s)
+                        </span>
+                      )}
+                      {isPlayingLive && (
+                        <span
+                          style={{
+                            backgroundColor: '#059669',
+                            color: '#ecfdf5',
+                            fontSize: 9,
+                            padding: '1px 5px',
+                            borderRadius: 4,
+                            fontWeight: 700,
+                          }}
+                        >
+                          ▶ EN COURS
                         </span>
                       )}
                     </div>
 
+                    {activeDuoSession && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: '#fef08a' }}>
+                        <span>
+                          🔄 Clip {activeDuoSession.currentAnimIndex + 1}/{activeDuoSession.playlist.length}
+                        </span>
+                        <span>•</span>
+                        <span>
+                          Répétition {activeDuoSession.currentRepeatIndex + 1}/{activeDuoSession.repeatsPerAnim}
+                        </span>
+                        {activeDuoSession.sessionTimer > 0 && (
+                          <>
+                            <span>•</span>
+                            <span style={{ color: '#94a3b8' }}>
+                              reste {activeDuoSession.sessionTimer.toFixed(1)}s
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    )}
+
                     <div>
                       <span style={{ color: '#94a3b8' }}>Clip GLB : </span>
                       <span style={{ color: '#cbd5e1', fontFamily: 'monospace', fontSize: 9 }}>
-                        {activeVariant?.clipName ?? animMeta.clipName}
+                        {currentClip}
                       </span>
                     </div>
 
@@ -625,11 +703,35 @@ export function ZoneAiDebugOverlay() {
 
                     const sMeta = resolveSlotAnimationInfo(s);
 
+                    // Détecter l'animation duo ou solo active en direct
+                    const sDuoSession = s.isDuo
+                      ? (occupant ? duoSessionManager.getSessionFor(occupant) : null) ||
+                        duoSessionManager.getSessionForSlot(obj.id, s.slotId)
+                      : null;
+                    const sLiveDuoDef = sDuoSession
+                      ? (sDuoSession.playlist[sDuoSession.currentAnimIndex] ?? sDuoSession.playlist[0])
+                      : null;
+                    const sOccupantAnim = (!s.isDuo && occupant)
+                      ? cameraState.positions[occupant]?.anim
+                      : null;
+                    const isLivePlaying = !!(sDuoSession || (sOccupantAnim && sOccupantAnim !== 'idle' && sOccupantAnim !== 'walk'));
+
+                    const sDisplayId =
+                      sLiveDuoDef?.id ??
+                      sOccupantAnim ??
+                      sMeta.canonicalId;
+
+                    const sDisplayDuration =
+                      sLiveDuoDef?.duration ??
+                      (sOccupantAnim ? getAnimationDef(sOccupantAnim)?.duration : undefined) ??
+                      s.duration ??
+                      sMeta.duration;
+
                     return (
                       <div
                         key={s.slotId}
                         onClick={() => setSelectedSlot({ objectId: obj.id, slotId: s.slotId })}
-                        title={`Slot: ${s.name}\nStatut: ${isOccupied ? `Occupé (${occupant ?? 'PNJ'})` : 'Disponible'}\nID Canonique: ${sMeta.canonicalId}${sMeta.duration !== undefined ? ` (${sMeta.duration.toFixed(1)}s)` : ''}`}
+                        title={`Slot: ${s.name}\nStatut: ${isOccupied ? `Occupé (${occupant ?? 'PNJ'})` : 'Disponible'}\n${isLivePlaying ? 'Animation en cours' : 'ID Canonique'}: ${sDisplayId}${sDisplayDuration !== undefined ? ` (${sDisplayDuration.toFixed(1)}s)` : ''}`}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -670,11 +772,26 @@ export function ZoneAiDebugOverlay() {
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                          {isLivePlaying && (
+                            <span
+                              style={{
+                                backgroundColor: '#059669',
+                                color: '#ecfdf5',
+                                fontSize: 8,
+                                padding: '1px 3px',
+                                borderRadius: 3,
+                                fontWeight: 700,
+                              }}
+                              title="Animation en cours d'exécution"
+                            >
+                              ▶ LIVE
+                            </span>
+                          )}
                           <span
                             style={{
                               fontSize: 9,
                               fontFamily: 'monospace',
-                              color: '#38bdf8',
+                              color: isLivePlaying ? '#6ee7b7' : '#38bdf8',
                               backgroundColor: 'rgba(0, 0, 0, 0.3)',
                               padding: '1px 5px',
                               borderRadius: 3,
@@ -683,9 +800,9 @@ export function ZoneAiDebugOverlay() {
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                             }}
-                            title={`ID Canonique: ${sMeta.canonicalId}${sMeta.duration !== undefined ? ` (${sMeta.duration.toFixed(1)}s)` : ''}`}
+                            title={`${isLivePlaying ? 'Animation en cours' : 'ID Canonique'}: ${sDisplayId}${sDisplayDuration !== undefined ? ` (${sDisplayDuration.toFixed(1)}s)` : ''}`}
                           >
-                            🎬 {sMeta.canonicalId}{sMeta.duration !== undefined ? ` (${sMeta.duration.toFixed(1)}s)` : ''}
+                            🎬 {sDisplayId}{sDisplayDuration !== undefined ? ` (${sDisplayDuration.toFixed(1)}s)` : ''}
                           </span>
                           <button
                             onClick={(e) => {

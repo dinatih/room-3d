@@ -98,6 +98,22 @@ class DuoSessionManager {
   }
 
   /**
+   * Récupère la session liée à un objet et/ou slot donné.
+   */
+  public getSessionForSlot(objectId: string, slotId?: string): ActiveDuoSession | null {
+    const direct = this.sessions.get(objectId);
+    if (direct && (!slotId || direct.location.slotId === slotId)) {
+      return direct;
+    }
+    for (const session of this.sessions.values()) {
+      if (session.location.objectId === objectId && (!slotId || session.location.slotId === slotId)) {
+        return session;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Première session active (fallback de compatibilité sans id).
    */
   private getFirstActiveSession(): ActiveDuoSession | null {
@@ -393,7 +409,13 @@ class DuoSessionManager {
   /**
    * Résout la playlist d'animations pour un slot ou un SmartObject donné.
    */
-  public resolveSlotPlaylist(objectId: string, slotId?: string): DuoAnimationDef[] {
+  public resolveSlotPlaylist(objectId: string, slotId?: string, forcedAnimId?: string): DuoAnimationDef[] {
+    if (forcedAnimId) {
+      const forcedDef = DUO_ANIMATIONS.find(d => d.id === forcedAnimId);
+      if (forcedDef) {
+        return [forcedDef];
+      }
+    }
     if (slotId === 'sit-cuddle') {
       const def = DUO_ANIMATIONS.find(d => d.id === 'sit-cuddle');
       return def ? [def] : [];
@@ -426,12 +448,13 @@ class DuoSessionManager {
     objectId: string,
     slotId?: string,
     leaderId?: string,
-    partnerId?: string
+    partnerId?: string,
+    forcedAnimId?: string
   ): { targetA: string; targetB: string; posA: [number,number,number]; posB: [number,number,number]; rotA: number; rotB: number; actualSlotId: string } | null {
     const obj = getSmartObject(objectId);
     if (!obj) return null;
 
-    const playlist = this.resolveSlotPlaylist(objectId, slotId);
+    const playlist = this.resolveSlotPlaylist(objectId, slotId, forcedAnimId);
     if (playlist.length === 0) return null;
     const def = playlist[0];
 

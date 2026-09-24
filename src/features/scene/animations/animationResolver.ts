@@ -3,6 +3,7 @@
  */
 
 import { ANIMATION_DEFINITIONS, AnimationDefinition } from './animationRegistry';
+import { getDuoAnimationDef, DuoAnimationDef } from '../ai/duoAnimations';
 
 // Index de recherche rapide par clé (id canonique, alias ou path direct)
 const keyToDefMap = new Map<string, AnimationDefinition>();
@@ -203,17 +204,50 @@ export function resolveSlotAnimationInfo(slot: {
   availableAnims?: string[];
   isDuo?: boolean;
   duoAnimId?: string;
+  duoPool?: string[];
   slotId?: string;
   duration?: number;
 }): SlotAnimationMeta {
   // Cas 1 : Animation Duo
   if (slot.isDuo) {
+    if (slot.duoPool && slot.duoPool.length > 0) {
+      const duoDefs = slot.duoPool
+        .map((id) => getDuoAnimationDef(id))
+        .filter((d): d is DuoAnimationDef => d !== undefined);
+
+      const first = duoDefs[0];
+      const variants = duoDefs.map((d) => ({
+        canonicalId: d.id,
+        duration: d.duration,
+        label: d.label,
+        clipName: `${d.animA} / ${d.animB}`,
+      }));
+
+      return {
+        canonicalId: first?.id ?? slot.duoPool[0],
+        duration: slot.duration ?? first?.duration,
+        label: first?.label ?? first?.id ?? slot.duoPool[0],
+        clipName: first ? `${first.animA} / ${first.animB}` : 'duo',
+        tags: ['duo'],
+        variants: variants.length > 0 ? variants : undefined,
+      };
+    }
+
     const duoId = slot.duoAnimId ?? slot.slotId ?? 'duo';
+    const duoDef = getDuoAnimationDef(duoId);
+    if (duoDef) {
+      return {
+        canonicalId: duoDef.id,
+        duration: slot.duration ?? duoDef.duration,
+        label: duoDef.label,
+        clipName: `${duoDef.animA} / ${duoDef.animB}`,
+        tags: ['duo'],
+      };
+    }
+
     const def = getAnimationDef(duoId);
     return {
-      canonicalId: def?.id ?? duoId,
-      aliasUsed: slot.duoAnimId ?? slot.slotId,
-      allAliases: def?.aliases ?? (slot.duoAnimId ? [slot.duoAnimId] : undefined),
+      canonicalId: def?.id ?? (duoId !== slot.slotId ? duoId : 'duo-action'),
       tags: def?.tags ?? ['duo'],
       clipName: def?.path ? def.path.split('/').pop()?.replace('.glb', '') ?? duoId : duoId,
       duration: slot.duration ?? def?.duration,
