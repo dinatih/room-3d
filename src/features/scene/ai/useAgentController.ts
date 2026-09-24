@@ -593,7 +593,7 @@ export function useAgentController(
             advanceToNextStep(hasNavStep);
             return update(dt);
           }
-          store.triggerAction(currentInstruction.triggerEventKey);
+          store.triggerAction(currentInstruction.triggerEventKey, currentInstruction.triggerTargetState);
         }
 
         statusRef.current = 'INTERACTING';

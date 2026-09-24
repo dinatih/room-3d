@@ -9,7 +9,6 @@
  * Fournit également l'état dynamique des battants pour l'évitement PNJ (agentAvoidance).
  */
 
-import { cameraState } from './cameraState';
 import { getActiveFurnitureObstacles } from './ai/furnitureObstacles';
 import { ROOM_W } from '@config';
 
@@ -236,25 +235,6 @@ export function computeDoorAllowedAngle(door: DoorConfig): number {
       yMax: 150,
     });
     if (contact !== null && contact < minAllowed) {
-      minAllowed = contact;
-    }
-  }
-
-  // 3. PNJ actifs (cameraState.positions)
-  const npcs = cameraState.positions;
-  for (const id in npcs) {
-    const p = npcs[id];
-    if (!p) continue;
-    const contact = testCircleCollision(door, {
-      x: p.x,
-      z: p.z,
-      radius: 28, // Rayon corporel moyen PNJ
-      yMin: 0,
-      yMax: 180,
-    });
-    // Ignorer les contacts < 35° (~0.6 rad) pour ne jamais bloquer ou refermer la porte
-    // quand un PNJ franchit le passage / seuil de la porte
-    if (contact !== null && contact >= 0.6 && contact < minAllowed) {
       minAllowed = contact;
     }
   }
