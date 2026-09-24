@@ -873,7 +873,31 @@ export function InventoryPreview({
             </div>
           )}
           {showing3D && 'category' in item && ((item as any).category === 'walkers' || (item as any).category === 'wigs') && (
-            <div style={{ position: 'absolute', top: 40, left: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }} onClick={e => e.stopPropagation()}>
+            <div
+              style={{
+                position: 'absolute',
+                top: 40,
+                left: 8,
+                zIndex: 3,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                width: 'fit-content',
+                maxWidth: 'calc(100% - 16px)',
+                background: 'rgba(0, 0, 0, 0.45)',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: 8,
+                padding: '6px 8px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+                userSelect: 'none',
+              }}
+              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
+              onPointerDown={e => e.stopPropagation()}
+              onWheel={e => e.stopPropagation()}
+            >
               <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                 <button
                   onClick={() => {
@@ -1345,7 +1369,30 @@ export function InventoryPreview({
           )}
 
           {showing3D && actionKeys.length > 0 && (
-            <div style={{ position: 'absolute', top: 40, right: 8, zIndex: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div
+              style={{
+                position: 'absolute',
+                top: 40,
+                right: 8,
+                zIndex: 3,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                width: 'fit-content',
+                background: 'rgba(0, 0, 0, 0.45)',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: 8,
+                padding: '6px 8px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+                userSelect: 'none',
+              }}
+              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
+              onPointerDown={e => e.stopPropagation()}
+              onWheel={e => e.stopPropagation()}
+            >
               {actionKeys.map(key => {
                 const labels = ACTION_LABELS[key] ?? ['Ouvrir', 'Fermer'], on = !!actionStates[key];
                 return <button key={key} onClick={() => setActionStates(s => ({ ...s, [key]: !on }))} style={{ padding: '3px 8px', fontSize: 11, background: on ? '#0058a3' : 'rgba(0,0,0,0.5)', border: '1px solid #444', borderRadius: 4, color: '#fff', cursor: 'pointer' }}>{on ? labels[1] : labels[0]}</button>;
@@ -1364,6 +1411,8 @@ export function InventoryPreview({
               opacity: 0.5,
               color: '#222',
               textShadow: '0 0 2px rgba(255,255,255,0.8)',
+              pointerEvents: 'none',
+              userSelect: 'none',
             }}
             title={`${glbPath || 'No GLB'} | ${photos ? photos.join(', ') : 'No photos'}`}
           >
