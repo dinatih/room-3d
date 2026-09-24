@@ -1,48 +1,26 @@
 import { AgentInstruction } from './aiTypes';
-import { buildSmartObjectInstructionSequence } from './smartObjectRegistry';
+import { buildSmartObjectInstructionSequence, getAllSmartObjectIds } from './smartObjectRegistry';
 
 /**
  * SCENARIOS — Visite guidée et génération de séquences autonomes basées sur les Smart Objects.
  */
 
-// Liste exhaustive de tous les Smart Objects disponibles pour la vie quotidienne autonome
-export const AUTONOMOUS_SMART_OBJECTS: string[] = [
-  'bed-west',
-  'bed-east',
-  'desk-bollsidan-1',
-  'chair-office',
-  'desk-bollsidan-2',
-  'mirror-south',
-  'sofa-garden-east',
-  'sofa-garden-west',
-  'bathtub-garden',
-  'shower',
-  'toilet',
-  'sdb-closet',
-  'corridor-closet',
-  'drona-west',
-  'drona-east',
-  'kallax-ne',
-  'cuisine-group',
-  'freezer',
-  'rain-dance',
-  'dance-bed-west-north',
-  'dance-bed-west-mid',
-  'dance-bed-west-south',
-  'dance-bed-east-north',
-  'dance-bed-east-mid',
-  'dance-bed-east-south',
-  'dance-chair-office',
-  'dance-mirror-south',
-  'dance-glass-door-right',
-  'dance-bathroom',
-  'duo-zone',
-  'garden-fresh-air',
-  'building-b-corridor',
-  'building-b-garden',
-  'est-neighbor-flat',
-  'west-neighbor-flat'
-];
+// Liste dynamique de tous les Smart Objects disponibles pour la vie quotidienne autonome
+export const AUTONOMOUS_SMART_OBJECTS: string[] = new Proxy([] as string[], {
+  get(_target, prop, receiver) {
+    const all = getAllSmartObjectIds();
+    if (prop === 'length') return all.length;
+    if (prop === Symbol.iterator) return all[Symbol.iterator].bind(all);
+    if (typeof prop === 'string' && !isNaN(Number(prop))) {
+      return all[Number(prop)];
+    }
+    const val = Reflect.get(all, prop, receiver);
+    if (typeof val === 'function') {
+      return (val as Function).bind(all);
+    }
+    return val;
+  }
+});
 
 /**
  * Visite guidée complète de l'appartement (Full Tour)

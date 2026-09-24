@@ -4,6 +4,7 @@ import { appLog } from '@features/ui/AppConsole';
 import { cameraState } from '../cameraState';
 import { AUTONOMOUS_NPC_IDS } from '../walkerConfig';
 import { getSmartObject } from './smartObjectRegistry';
+import { INITIAL_SMART_OBJECT_BY_CHAR } from './scenarios';
 
 export type DuoRole = 'roleA' | 'roleB';
 
@@ -155,7 +156,7 @@ class DuoSessionManager {
 
   public isWaitingPartner(characterId: string): boolean {
     const session = this.getSessionFor(characterId);
-    if (!session) return false;
+    if (!session || session.isSessionPlaying || session.isSessionComplete) return false;
     if (session.participantA?.characterId === characterId && !session.participantB?.isReady) return true;
     if (session.participantB?.characterId === characterId && !session.participantA?.isReady) return true;
     return false;
@@ -247,6 +248,16 @@ class DuoSessionManager {
     const localB: [number, number, number] = def?.offsetB ?? [0, 0, 0];
     const [lx, ly, lz] = localB;
     return [bx + lx * cos + lz * sin, by + ly, bz - lx * sin + lz * cos];
+  }
+
+  /**
+   * Retourne la rotation monde attendue pour posB lors de la phase d'attente.
+   */
+  public getWaitRotB(characterId?: string): number {
+    const session = characterId ? this.getSessionFor(characterId) : this.getFirstActiveSession();
+    const def = session?.playlist[0];
+    const anchorRotY = session?.location.anchorRotY ?? this.defaultLocation.anchorRotY;
+    return (anchorRotY + (def?.rotB ?? 0)) % (Math.PI * 2);
   }
 
   /**
@@ -351,13 +362,25 @@ class DuoSessionManager {
 
     if (closestId) {
       const locLabel = getSmartObject(session.location.objectId)?.name || session.location.objectId;
+      const posB = this.getWaitPosB(callerId);
+      const rotB = this.getWaitRotB(callerId);
+
+      if (session.participantB && session.participantB.characterId !== closestId) {
+        OccupancyManager.releaseSlot(session.location.objectId, `${session.location.slotId}:roleB`, session.participantB.characterId);
+      }
+      session.participantB = { characterId: closestId, role: 'roleB', isReady: false };
+      OccupancyManager.claimSlot(session.location.objectId, `${session.location.slotId}:roleB`, closestId);
+
       appLog(session.location.objectId, `📢 ${callerId} invite ${closestId} (${minDistance.toFixed(0)} cm) à rejoindre ${locLabel} !`);
       document.dispatchEvent(new CustomEvent('npc-invite-duo', {
         detail: {
           targetId: closestId,
           fromId: callerId,
           objectId: session.location.objectId,
-          slotId: session.location.slotId,
+          slotId: `${session.location.slotId}:roleB`,
+          forceRole: 'roleB',
+          targetPos: posB,
+          targetRotY: rotB,
         }
       }));
       return closestId;
@@ -423,31 +446,82 @@ class DuoSessionManager {
     // Si une session existe déjà pour cet objet
     const existing = this.sessions.get(objectId);
     if (existing && !existing.isSessionComplete) {
+      const cos = Math.cos(anchorRotY);
+      const sin = Math.sin(anchorRotY);
+      const curDef = existing.playlist[existing.currentAnimIndex] || def;
+      const localB = curDef.offsetB ?? [0, 0, 0];
+      const posA: [number, number, number] = [bx, by, bz];
+      const posB: [number, number, number] = [
+        bx + localB[0] * cos + localB[2] * sin,
+        by + localB[1],
+        bz - localB[0] * sin + localB[2] * cos,
+      ];
+      const rotA = anchorRotY % (Math.PI * 2);
+      const rotB = (anchorRotY + (curDef.rotB ?? 0)) % (Math.PI * 2);
+
+      // Cas 1 : Le personnage arrivant est déjà le meneur (Rôle A)
       if (existing.participantA?.characterId === leaderId) {
-        const cos = Math.cos(anchorRotY);
-        const sin = Math.sin(anchorRotY);
-        const curDef = existing.playlist[existing.currentAnimIndex] || def;
-        const localB = curDef.offsetB ?? [0, 0, 0];
-        const posA: [number, number, number] = [bx, by, bz];
-        const posB: [number, number, number] = [bx + localB[0] * cos + localB[2] * sin, by + localB[1], bz - localB[0] * sin + localB[2] * cos];
         return {
-          targetA: existing.participantA?.characterId ?? leaderId ?? '',
-          targetB: existing.participantB?.characterId ?? '',
+          targetA: leaderId ?? existing.participantA?.characterId ?? "",
+          targetB: existing.participantB?.characterId ?? "",
           posA,
           posB,
-          rotA: anchorRotY,
-          rotB: (anchorRotY + (curDef.rotB ?? 0)) % (Math.PI * 2),
-          actualSlotId
+          rotA,
+          rotB,
+          actualSlotId,
         };
       }
+
+      // Cas 2 : Le personnage arrivant est déjà le partenaire assigné (Rôle B)
+      if (existing.participantB?.characterId === leaderId) {
+        return {
+          targetA: existing.participantA?.characterId ?? "",
+          targetB: leaderId ?? existing.participantB?.characterId ?? "",
+          posA,
+          posB,
+          rotA,
+          rotB,
+          actualSlotId,
+        };
+      }
+
+      // Cas 3 : La session attend encore son partenaire (Rôle B pas encore sur place)
+      // Le personnage arrivant prend immédiatement la place de partenaire Rôle B !
+      if (!existing.participantB?.isReady && leaderId) {
+        if (existing.participantB && existing.participantB.characterId !== leaderId) {
+          OccupancyManager.releaseSlot(objectId, `${actualSlotId}:roleB`, existing.participantB.characterId);
+        }
+        existing.participantB = { characterId: leaderId, role: "roleB", isReady: false };
+        OccupancyManager.claimSlot(objectId, `${actualSlotId}:roleB`, leaderId);
+
+        appLog(objectId, `🤝 ${leaderId} rejoint la session Duo sur ${obj.name} en Rôle B avec ${existing.participantA?.characterId} !`);
+
+        return {
+          targetA: existing.participantA?.characterId ?? "",
+          targetB: leaderId,
+          posA,
+          posB,
+          rotA,
+          rotB,
+          actualSlotId,
+        };
+      }
+
       // Objet déjà occupé par une autre session duo en cours
       return null;
     }
 
     // Résolution Leader (A) et Partenaire (B)
     const getCandidates = (excludeId?: string) => {
+      // 1. Chercher d'abord un PNJ qui a cet objet comme destination initiale assignée
+      const preferred = Object.entries(INITIAL_SMART_OBJECT_BY_CHAR)
+        .filter(([id, obj]) => obj === objectId && id !== excludeId && !this.getSessionFor(id))
+        .map(([id]) => id);
+      if (preferred.length > 0) {
+        return preferred;
+      }
       return Object.keys(cameraState.positions)
-        .filter(id => id !== 'shiba' && id !== 'robin' && id !== excludeId && !this.getSessionFor(id))
+        .filter(id => id !== "shiba" && id !== "robin" && id !== excludeId && !this.getSessionFor(id))
         .sort((a, b) => {
           const pa = cameraState.positions[a];
           const pb = cameraState.positions[b];

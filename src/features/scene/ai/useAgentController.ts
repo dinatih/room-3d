@@ -151,22 +151,22 @@ export function useAgentController(
           const eventTargetPos = e.detail?.targetPos as [number, number, number] | undefined;
           const eventTargetRotY = e.detail?.targetRotY as number | undefined;
 
+          dynamicNavQueueRef.current = [
+            { type: 'USE_OBJECT', smartObjectId: targetObjId, slotId: targetSlotId, targetPos: eventTargetPos, rotY: eventTargetRotY }
+          ];
+          dynamicNavIndexRef.current = 0;
+          activeNavStepIndexRef.current = -1;
+          cachedCoordsInstructionRef.current = null;
+          cachedCoordsRef.current = null;
+
           if (e.detail?.alreadyThere) {
             statusRef.current = 'INTERACTING';
-            dynamicNavQueueRef.current = [
-              { type: 'USE_OBJECT', smartObjectId: targetObjId, slotId: targetSlotId, targetPos: eventTargetPos, rotY: eventTargetRotY }
-            ];
-            dynamicNavIndexRef.current = 0;
             duoSessionManager.markReady(_characterId);
             const animState = duoSessionManager.getCurrentAnimState(_characterId);
             if (animState) {
               stateRef.current.animation = role === 'roleA' ? animState.clipA : animState.clipB;
             }
           } else {
-            dynamicNavQueueRef.current = [
-              { type: 'USE_OBJECT', smartObjectId: targetObjId, slotId: targetSlotId, targetPos: eventTargetPos, rotY: eventTargetRotY }
-            ];
-            dynamicNavIndexRef.current = 0;
             statusRef.current = 'IDLE';
             const locName = targetObjId ? (SMART_OBJECTS[targetObjId]?.name || targetObjId) : 'le point duo';
             appLog(_characterId, `🏃‍♂️ Répond à l'appel de ${e.detail.fromId} (${role === 'roleA' ? 'Meneur' : 'Partenaire'}) et rejoint ${locName} !`);
@@ -447,13 +447,21 @@ export function useAgentController(
           if (!role) {
             const duoRes = duoSessionManager.startDuoSession(objId, reqSlotId, _characterId);
             if (duoRes) {
-              role = 'roleA';
-              duoRoleRef.current = 'roleA';
-              // Configurer l'instruction pour naviguer vers posA (coords monde précalculées)
-              currentInstruction.targetPos = duoRes.posA;
-              currentInstruction.slotId = `${duoRes.actualSlotId}:roleA`;
-              currentInstruction.rotY = duoRes.rotA;
-              claimedSlotRef.current = { objectId: objId, slotId: `${duoRes.actualSlotId}:roleA` };
+              if (duoRes.targetB === _characterId) {
+                role = 'roleB';
+                duoRoleRef.current = 'roleB';
+                currentInstruction.targetPos = duoRes.posB;
+                currentInstruction.slotId = `${duoRes.actualSlotId}:roleB`;
+                currentInstruction.rotY = duoRes.rotB;
+                claimedSlotRef.current = { objectId: objId, slotId: `${duoRes.actualSlotId}:roleB` };
+              } else {
+                role = 'roleA';
+                duoRoleRef.current = 'roleA';
+                currentInstruction.targetPos = duoRes.posA;
+                currentInstruction.slotId = `${duoRes.actualSlotId}:roleA`;
+                currentInstruction.rotY = duoRes.rotA;
+                claimedSlotRef.current = { objectId: objId, slotId: `${duoRes.actualSlotId}:roleA` };
+              }
               // Invalider le cache de coords pour forcer le recalcul avec targetPos
               cachedCoordsInstructionRef.current = null;
               cachedCoordsRef.current = null;
@@ -641,13 +649,17 @@ export function useAgentController(
             const isCuddle = curLoc.slotId === 'sit-cuddle'
               || currentInstruction.slotId?.includes('sit-cuddle')
               || currentInstruction.smartObjectId === 'chair-office';
-            stateRef.current.animation = isCuddle
-              ? (duoRoleRef.current === 'roleA'
-                  ? 'miley-armature-sit-cuddle-hug-m'
-                  : 'miley-armature-sit-cuddle-hug-f')
-              : (duoRoleRef.current === 'roleA'
-                  ? 'anim-female-standing-pose'
-                  : 'anim-female-standing-pose-1');
+            if (animState && duoRoleRef.current) {
+              stateRef.current.animation = duoRoleRef.current === 'roleA' ? animState.clipA : animState.clipB;
+            } else {
+              stateRef.current.animation = isCuddle
+                ? (duoRoleRef.current === 'roleA'
+                    ? 'miley-armature-sit-cuddle-hug-m'
+                    : 'miley-armature-sit-cuddle-hug-f')
+                : (duoRoleRef.current === 'roleA'
+                    ? 'anim-female-standing-pose'
+                    : 'anim-female-standing-pose-1');
+            }
           }
 
           if (!currentInstruction.animation && target.anim) currentInstruction.animation = target.anim;

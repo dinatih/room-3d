@@ -63,7 +63,9 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
     state.x = waitPos[0];
     state.y = waitPos[1];
     state.z = waitPos[2];
-    state.rotY = loc.anchorRotY;
+    state.rotY = duoRole === 'roleB'
+      ? duoSessionManager.getWaitRotB(characterId)
+      : loc.anchorRotY;
 
     if (!duoInvited) {
       setDuoInvited(true);
@@ -76,7 +78,7 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
   // Ticker l'horloge centrale (par le meneur rôle A)
   duoSessionManager.tickSession(characterId, dt);
 
-  const animState = duoSessionManager.getCurrentAnimState();
+  const animState = duoSessionManager.getCurrentAnimState(characterId);
   if (animState && duoRole) {
     const clip = duoRole === 'roleA' ? animState.clipA : animState.clipB;
     const pos = duoRole === 'roleA' ? animState.posA : animState.posB;
