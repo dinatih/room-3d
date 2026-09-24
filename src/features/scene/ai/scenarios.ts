@@ -98,6 +98,7 @@ export const XBOT_CONCIERGE_TOUR: AgentInstruction[] = [
   { type: 'ROTATE_360', duration: 4.0, animation: 'left-turn' },
 
   // ── 5. Sortie et direction entrée couloir Bâtiment B (attente 1min30 avant prochaine ronde) ──
+  { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' },
   { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.5 },
   { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
   { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.5 },

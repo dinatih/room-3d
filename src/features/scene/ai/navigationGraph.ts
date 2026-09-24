@@ -153,6 +153,7 @@ export const ROOM_PORTALS: RoomPortal[] = [
     from: 'corridor',
     to: 'outdoor_corridor',
     traverseInstructions: [
+      { type: 'MOVE_TO', targetWaypointId: 'corridor-entry-door' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: true, duration: 0.4 },
       { type: 'MOVE_TO', targetWaypointId: 'outdoor-entry-door' },
       { type: 'INTERACT', triggerEventKey: 'entryDoor', triggerTargetState: false, duration: 0.4 }
@@ -289,8 +290,8 @@ const ADJACENCY: Record<RoomId, RoomId[]> = {
   garden: ['living', 'west_neighbor', 'east_neighbor', 'outdoor_garden'],
   west_neighbor: ['garden', 'outdoor_garden'],
   east_neighbor: ['garden', 'outdoor_garden'],
-  outdoor_corridor: ['corridor', 'outdoor_garden'],
-  outdoor_garden: ['garden', 'west_neighbor', 'east_neighbor', 'outdoor_corridor']
+  outdoor_corridor: ['corridor'],
+  outdoor_garden: ['garden', 'west_neighbor', 'east_neighbor']
 };
 
 

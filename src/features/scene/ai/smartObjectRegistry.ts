@@ -498,6 +498,12 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         rotY: Math.PI / 2,
         animationsRandom: 'all-dances',
       },
+      {
+        slotId: 'visit',
+        name: 'Attente couloir',
+        rotY: Math.PI / 2,
+        animation: 'texting-while-standing',
+      },
     ]
   },
   'building-b-corridor': {
