@@ -27,6 +27,7 @@ export interface AnimationDefinition {
    */
   tags: string[];
   defaultRotYOffset?: number;  // Décalage natif de rotation (radians) si l'animation n'est pas alignée sur 0
+  defaultOffset?: [number, number, number]; // Décalage natif de position [x, y, z] (cm) pour corriger les animations hors norme
   duration: number;            // Durée en secondes (obligatoire)
 }
 
@@ -189,6 +190,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['sit-talk-2'],
     tags: ['sitting', 'seated-front', 'social', 'talk'],
     duration: 44.1,
+    defaultOffset: [0, -45, -60],
   },
   {
     id: 'sitting-laughing',
@@ -485,7 +487,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/dances/anim_bellydance2_anna_cortesi_c3d.glb',
     label: 'Belly Dance 2 Anna Cortesi C3D (8423f / 280.8s, 2919KB)',
     aliases: ['dance-bellydance2-anna-cortesi', 'bellydance2-anna-cortesi'],
-    tags: ['dance', 'oriental', 'bellydance', 'dance-tight', 'party', 'dance-from-npz'],
+    tags: ['dance', 'oriental', 'bellydance', 'party', 'dance-from-npz'],
     duration: 280.8,
   },
   {
@@ -1811,9 +1813,9 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     tags: ['combat'],
     duration: 5.9,
   },
-  
-  
-  
+
+
+
   {
     id: 'back-squat',
     path: 'animations/sports_fitness/anim_back_squat.glb',
@@ -5070,7 +5072,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     tags: ['poses-idles'],
     duration: 1.7,
   },
-  
+
   {
     id: 'standing-idle-looking-ver-1',
     path: 'animations/poses_idles/anim_standing_idle_looking_ver_1.glb',

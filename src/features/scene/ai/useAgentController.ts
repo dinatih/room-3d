@@ -805,6 +805,12 @@ export function useAgentController(
                 currentInstruction.rotY = res.rotY;
                 stateRef.current.rotY = res.rotY;
               }
+              cachedCoordsInstructionRef.current = null;
+              cachedCoordsRef.current = null;
+              const updatedTarget = getResolvedCoords(currentInstruction);
+              stateRef.current.x = updatedTarget.tx;
+              stateRef.current.y = updatedTarget.ty ?? 0;
+              stateRef.current.z = updatedTarget.tz;
             }
           }
           const estimated = getEstimatedClipDuration(currentInstruction.animation || stateRef.current.animation);

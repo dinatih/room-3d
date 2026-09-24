@@ -34,12 +34,28 @@ export function resolveInstructionCoords(
       : obj.slots[0];
     const pos = (slot?.approachOffset ?? slot?.offset) ?? [0, 0, 0];
     const resolved = slot ? resolveSlotAnimation(slot) : null;
+    const finalRotY = resolved?.rotY ?? slot?.rotY;
+
+    let tx = pos[0];
+    let ty = pos[1] ?? 0;
+    let tz = pos[2];
+
+    if (resolved?.offset) {
+      const rot = finalRotY ?? 0;
+      const [ox, oy, oz] = resolved.offset;
+      const cos = Math.cos(rot);
+      const sin = Math.sin(rot);
+      tx += ox * cos + oz * sin;
+      ty += oy;
+      tz += -ox * sin + oz * cos;
+    }
+
     return {
-      tx: pos[0],
-      ty: pos[1],
-      tz: pos[2],
+      tx,
+      ty,
+      tz,
       label: `${obj.name}${slot ? ` (${slot.name})` : ''}`,
-      rotY: resolved?.rotY ?? slot?.rotY,
+      rotY: finalRotY,
       anim: resolved?.animation ?? slot?.animation,
       duration: slot?.duration,
       repeatCount: slot?.repeatCount,

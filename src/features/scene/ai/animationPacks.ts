@@ -7,12 +7,14 @@
 export interface AnimationPackItem {
   animation: string;
   rotYOffset?: number; // Décalage d'orientation en radians propre à l'animation
+  offset?: [number, number, number]; // Décalage de position propre à l'animation
 }
 
 export interface AnimationPackDef {
   id: string;
   name: string;
   defaultRotYOffset?: number; // Décalage de rotation par défaut pour tout le pack (ex: Math.PI / 2 pour side_sitted_pack)
+  defaultOffset?: [number, number, number]; // Décalage de position par défaut pour tout le pack
   animations: Array<string | AnimationPackItem>;
 }
 
@@ -33,6 +35,7 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
       return getAnimationsByTags(['seated-front']).map((d) => ({
         animation: d.path,
         rotYOffset: d.defaultRotYOffset ?? 0,
+        offset: d.defaultOffset,
       }));
     },
   },
@@ -46,6 +49,7 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
       return getAnimationsByTags(['seated-side']).map((d) => ({
         animation: d.path,
         rotYOffset: d.defaultRotYOffset ?? Math.PI / 2,
+        offset: d.defaultOffset,
       }));
     },
   },
@@ -59,6 +63,7 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
       return getAnimationsByTags(['laying-front']).map((d) => ({
         animation: d.path,
         rotYOffset: d.defaultRotYOffset ?? Math.PI / 2,
+        offset: d.defaultOffset,
       }));
     },
   },
@@ -72,6 +77,7 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
       return getAnimationsByTags(['laying-side']).map((d) => ({
         animation: d.path,
         rotYOffset: d.defaultRotYOffset ?? 0,
+        offset: d.defaultOffset,
       }));
     },
   },
@@ -85,6 +91,7 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
       return getAnimationsByTags(['laying']).map((d) => ({
         animation: d.path,
         rotYOffset: d.defaultRotYOffset ?? Math.PI / 2,
+        offset: d.defaultOffset,
       }));
     },
   },
@@ -97,6 +104,7 @@ export const ANIMATION_PACKS: Record<string, AnimationPackDef> = {
       return getAnimationsByTags(['dance']).map((d) => ({
         animation: d.path,
         rotYOffset: d.defaultRotYOffset ?? 0,
+        offset: d.defaultOffset,
       }));
     },
   },
@@ -131,7 +139,7 @@ export function resolveSlotAnimation(slot: {
   animationsRandom?: string | string[];
   animations_random?: string | string[];
   availableAnims?: string[];
-}): { animation: string; rotY: number } {
+}): { animation: string; rotY: number; offset?: [number, number, number] } {
   const baseRotY = slot.rotY ?? 0;
   const animRandom = slot.animationsRandom ?? slot.animations_random;
 
@@ -145,12 +153,15 @@ export function resolveSlotAnimation(slot: {
       return {
         animation: resolvedPath,
         rotY: baseRotY + (def?.defaultRotYOffset ?? pack.defaultRotYOffset ?? 0),
+        offset: def?.defaultOffset ?? pack.defaultOffset,
       };
     } else {
       const resolvedPath = resolveAnimationPath(item.animation);
+      const def = getAnimationDef(item.animation);
       return {
         animation: resolvedPath,
         rotY: baseRotY + (item.rotYOffset ?? pack.defaultRotYOffset ?? 0),
+        offset: item.offset ?? def?.defaultOffset ?? pack.defaultOffset,
       };
     }
   }
@@ -162,6 +173,7 @@ export function resolveSlotAnimation(slot: {
       return {
         animation: queryResult.animation,
         rotY: baseRotY + (queryResult.rotYOffset ?? 0),
+        offset: queryResult.defaultOffset,
       };
     }
   }
@@ -178,11 +190,14 @@ export function resolveSlotAnimation(slot: {
       return {
         animation: queryResult.animation,
         rotY: baseRotY + (queryResult.rotYOffset ?? 0),
+        offset: queryResult.defaultOffset,
       };
     }
+    const def = getAnimationDef(chosen);
     return {
       animation: resolveAnimationPath(chosen),
       rotY: baseRotY,
+      offset: def?.defaultOffset,
     };
   }
 
@@ -192,12 +207,15 @@ export function resolveSlotAnimation(slot: {
     return {
       animation: def ? def.path : resolveAnimationPath(slot.animation),
       rotY: baseRotY + (def?.defaultRotYOffset ?? 0),
+      offset: def?.defaultOffset,
     };
   }
 
+  const fallbackDef = getAnimationDef('sitting-idle');
   return {
     animation: resolveAnimationPath('sitting-idle'),
     rotY: baseRotY,
+    offset: fallbackDef?.defaultOffset,
   };
 }
 

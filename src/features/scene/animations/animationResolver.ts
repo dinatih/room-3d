@@ -114,13 +114,13 @@ export function getAnimationsByTags(
 export function getRandomAnimationByQuery(
   query: string | string[],
   matchMode: 'all' | 'any' = 'all'
-): { animation: string; rotYOffset?: number; id?: string } | null {
+): { animation: string; rotYOffset?: number; defaultOffset?: [number, number, number]; id?: string } | null {
   // Cas 1 : tags passés sous forme de tableau
   if (Array.isArray(query)) {
     const matches = getAnimationsByTags(query, matchMode);
     if (matches.length === 0) return null;
     const picked = matches[Math.floor(Math.random() * matches.length)];
-    return { animation: picked.path, rotYOffset: picked.defaultRotYOffset, id: picked.id };
+    return { animation: picked.path, rotYOffset: picked.defaultRotYOffset, defaultOffset: picked.defaultOffset, id: picked.id };
   }
 
   // Cas 2 : query sous forme de chaîne préfixée par "tag:" (ex: "tag:sitting" ou "tag:sitting,happy")
@@ -130,7 +130,7 @@ export function getRandomAnimationByQuery(
     const matches = getAnimationsByTags(tags, matchMode);
     if (matches.length === 0) return null;
     const picked = matches[Math.floor(Math.random() * matches.length)];
-    return { animation: picked.path, rotYOffset: picked.defaultRotYOffset, id: picked.id };
+    return { animation: picked.path, rotYOffset: picked.defaultRotYOffset, defaultOffset: picked.defaultOffset, id: picked.id };
   }
 
   // Cas 3 : si la chaîne correspond exactement à un tag connu
@@ -138,14 +138,14 @@ export function getRandomAnimationByQuery(
     const matches = tagToDefsMap.get(query.toLowerCase())!;
     if (matches.length > 0) {
       const picked = matches[Math.floor(Math.random() * matches.length)];
-      return { animation: picked.path, rotYOffset: picked.defaultRotYOffset, id: picked.id };
+      return { animation: picked.path, rotYOffset: picked.defaultRotYOffset, defaultOffset: picked.defaultOffset, id: picked.id };
     }
   }
 
   // Cas 4 : Résolution d'un alias ou ID unique
   const def = getAnimationDef(query);
   if (def) {
-    return { animation: def.path, rotYOffset: def.defaultRotYOffset, id: def.id };
+    return { animation: def.path, rotYOffset: def.defaultRotYOffset, defaultOffset: def.defaultOffset, id: def.id };
   }
 
   return null;
@@ -160,12 +160,15 @@ export interface SlotAnimationMeta {
   clipName: string;          // Nom du fichier / clip
   duration?: number;
   label?: string;
+  defaultRotYOffset?: number;
+  defaultOffset?: [number, number, number];
   variants?: Array<{
     canonicalId: string;
     aliasUsed?: string;
     clipName: string;
     duration?: number;
     label?: string;
+    defaultRotYOffset?: number;
   }>;
 }
 
@@ -215,6 +218,8 @@ export function resolveSlotAnimationInfo(slot: {
       clipName: def?.path ? def.path.split('/').pop()?.replace('.glb', '') ?? duoId : duoId,
       duration: slot.duration ?? def?.duration,
       label: def?.label || def?.id || duoId,
+      defaultRotYOffset: def?.defaultRotYOffset,
+      defaultOffset: def?.defaultOffset,
     };
   }
 
@@ -240,6 +245,8 @@ export function resolveSlotAnimationInfo(slot: {
         clipName: v.split('/').pop()?.replace('.glb', '') ?? v,
         duration: vDef?.duration,
         label: vDef?.label || vDef?.id,
+        defaultRotYOffset: vDef?.defaultRotYOffset,
+        defaultOffset: vDef?.defaultOffset,
       };
     });
 
@@ -258,6 +265,8 @@ export function resolveSlotAnimationInfo(slot: {
       clipName: def?.path ? def.path.split('/').pop()?.replace('.glb', '') ?? clip : clip,
       duration: slot.duration ?? def?.duration,
       label: def?.label || def?.id,
+      defaultRotYOffset: def?.defaultRotYOffset,
+      defaultOffset: def?.defaultOffset,
       variants,
     };
   }
@@ -290,6 +299,8 @@ export function resolveSlotAnimationInfo(slot: {
       clipName: d.path.split('/').pop()?.replace('.glb', '') ?? d.id,
       duration: d.duration,
       label: d.label || d.id,
+      defaultRotYOffset: d.defaultRotYOffset,
+      defaultOffset: d.defaultOffset,
     }));
 
     return {
@@ -301,6 +312,8 @@ export function resolveSlotAnimationInfo(slot: {
       clipName: first?.path ? first.path.split('/').pop()?.replace('.glb', '') ?? packStr : packStr,
       duration,
       label: first?.label || first?.id,
+      defaultRotYOffset: first?.defaultRotYOffset,
+      defaultOffset: first?.defaultOffset,
       variants: variants.length > 0 ? variants : undefined,
     };
   }
