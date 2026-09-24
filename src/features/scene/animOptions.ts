@@ -7,6 +7,7 @@ import { ANIMATION_DEFINITIONS } from './animations/animationRegistry';
 import { getAnimationDef } from './animations/animationResolver';
 
 export interface AnimOption {
+  /** Clé/identifiant d'animation en kebab-case strict (jamais de snake_case) */
   value: string;
   label: string;
 }
