@@ -2603,6 +2603,20 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     duration: 2.4,
   },
   {
+    id: 'anim-best-double-leg-takedown-attacker',
+    path: 'animations/combat/anim_best_double_leg_takedown_attacker.glb',
+    label: `Best Double Leg Takedown - Attacker (218f / 7.3s, 393KB)`,
+    tags: ['combat'],
+    duration: 7.3,
+  },
+  {
+    id: 'anim-best-double-leg-takedown-victim',
+    path: 'animations/combat/anim_best_double_leg_takedown_victim.glb',
+    label: `Best Double Leg Takedown - Victim (218f / 7.3s, 248KB)`,
+    tags: ['combat'],
+    duration: 7.3,
+  },
+  {
     id: 'anim-double-leg-takedown---attacker',
     path: 'animations/combat/anim_double_leg_takedown___attacker.glb',
     label: `Double Leg Takedown   Attacker (218f / 7.3s, 247KB)`,
